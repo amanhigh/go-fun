@@ -1,0 +1,15 @@
+{
+	"ImportPath": "github.com/amanhigh/go-fun",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
+	"Packages": [
+		"./tutorial/"
+	],
+	"Deps": [
+		{
+			"ImportPath": "golang.org/x/tour/tree",
+			"Comment": "go.r60-298-g97f0ee8",
+			"Rev": "97f0ee8b016282b578395cd0dda1f9c3aabf81ec"
+		}
+	]
+}
