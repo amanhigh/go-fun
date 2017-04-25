@@ -22,6 +22,7 @@ func main() {
 
 
 	/** Wait for 3 Events to Be Processed & Exit */
+	fmt.Println("Wating for Events")
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(3)
 	go pathWatcher("/aman", c, &waitGroup)
@@ -34,12 +35,8 @@ func printPath(path string, c *zk.Conn) {
 }
 
 func pathWatcher(path string, c *zk.Conn, wg *sync.WaitGroup) {
-	_, _, cha, _ := c.GetW(path)
-	for {
-		ev := <-cha
-		o, _, cn, _ := c.GetW(ev.Path)
+	for o, _, cha, _ := c.GetW(path); ; wg.Done() {
+		o, _, cha, _ = c.GetW((<-cha).Path)
 		fmt.Println("Event Processed:", string(o))
-		wg.Done()
-		cha = cn
 	}
 }
