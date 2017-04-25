@@ -25,7 +25,7 @@ func main() {
 	fmt.Println("Wating for Events")
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(3)
-	go pathWatcher("/aman", c, &waitGroup)
+	go pathWatcherSelect("/aman", c, &waitGroup)
 	waitGroup.Wait()
 }
 
@@ -38,5 +38,19 @@ func pathWatcher(path string, c *zk.Conn, wg *sync.WaitGroup) {
 	for o, _, cha, _ := c.GetW(path); ; wg.Done() {
 		o, _, cha, _ = c.GetW((<-cha).Path)
 		fmt.Println("Event Processed:", string(o))
+	}
+}
+
+func pathWatcherSelect(path string, c *zk.Conn, wg *sync.WaitGroup) {
+	o, _, cha, _ := c.GetW(path)
+	for {
+		select {
+		case e := <-cha:
+			o, _, cha, _ = c.GetW(e.Path)
+			fmt.Println("Event Processed:", string(o))
+		case t := <-time.After(1 * time.Second):
+			fmt.Println("No Event Recived:", t)
+		}
+		wg.Done()
 	}
 }
