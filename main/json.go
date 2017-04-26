@@ -14,12 +14,23 @@ type person struct {
 func main() {
 	p1 := person{"Aman", 29, 9844415553}
 	//fmt.Println(p1)
-	if result, e := json.Marshal(p1); e == nil {
-		fmt.Println("Encoded:", string(result))
-		var pDecoded person
-		json.Unmarshal(result, &pDecoded)
-		fmt.Printf("Decoded: %+v\n", pDecoded)
+	encodedPerson := encodePerson(p1)
+	fmt.Println("Encoded:", string(encodedPerson))
+
+	decodedPerson := decodePerson(encodedPerson)
+	fmt.Printf("Decoded: %+v\n", decodedPerson)
+}
+func decodePerson(encodedPerson string) person {
+	var pDecoded person
+	json.Unmarshal([]byte(encodedPerson), &pDecoded)
+	return pDecoded
+}
+
+func encodePerson(p1 person) (string) {
+	if decodedPerson, e := json.Marshal(p1); e == nil {
+		return string(decodedPerson)
 	} else {
 		fmt.Println("Error:", e)
+		return ""
 	}
 }
