@@ -4,11 +4,12 @@ import (
 	"testing"
 )
 
+var per = person{"Zoye", 44, 8983333}
+
 func Test_encodePerson(t *testing.T) {
 	type args struct {
 		p1 person
 	}
-	per := person{"Zoye", 44, 8983333}
 	tests := []struct {
 		name string
 		args args
@@ -26,6 +27,7 @@ func Test_encodePerson(t *testing.T) {
 }
 
 func BenchmarkEncode(b *testing.B) {
-
+	for n := 0; n < b.N; n++ {
+		encodePerson(per)
+	}
 }
-
