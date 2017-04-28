@@ -24,3 +24,8 @@ func Test_encodePerson(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkEncode(b *testing.B) {
+
+}
+

@@ -1,4 +1,4 @@
-package main
+package zoo
 
 import (
 	"time"
