@@ -20,7 +20,6 @@ func main() {
 	c.Delete(tPath, -1)
 	printPath(tPath, c)
 
-
 	/** Wait for 3 Events to Be Processed & Exit */
 	fmt.Println("Wating for Events")
 	waitGroup := sync.WaitGroup{}
@@ -43,6 +42,7 @@ func pathWatcher(path string, c *zk.Conn, wg *sync.WaitGroup) {
 
 func pathWatcherSelect(path string, c *zk.Conn, wg *sync.WaitGroup) {
 	o, _, cha, _ := c.GetW(path)
+	timeout := time.After(5 * time.Second)
 	for {
 		select {
 		case e := <-cha:
@@ -50,6 +50,8 @@ func pathWatcherSelect(path string, c *zk.Conn, wg *sync.WaitGroup) {
 			fmt.Println("Event Processed:", string(o))
 		case t := <-time.After(1 * time.Second):
 			fmt.Println("No Event Recived:", t)
+		case <-timeout:
+			fmt.Println("Timeout Out")
 		}
 		wg.Done()
 	}
