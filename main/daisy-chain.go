@@ -7,10 +7,10 @@ func main() {
 
 	leftmost, rightMost := buildDaisyChain(n)
 
-	/** Start whisper on Right Most Node */
+	/** Start whisper on Right Most Node (If not Go it would go into deadlock as channel is unbuffered) */
 	go func(c chan int) { c <- 1 }(rightMost)
 
-	/** Wait for Whisped to be heard on leftMost (Other End) of Chain */
+	/** Wait for Whisper to be heard on leftMost (Other End) of Chain */
 	fmt.Println(<-leftmost)
 }
 
