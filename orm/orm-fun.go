@@ -64,13 +64,17 @@ func playProduct(db *gorm.DB) {
 }
 func migrate(db *gorm.DB) {
 	/** Clear Old Tables */
-	db.DropTable(&Product{}, &Vertical{})
+	//db.DropTable(&Product{}, &Vertical{})
 	// Migrate the schema
 	db.AutoMigrate(&Product{}, &Vertical{})
 }
 
 func createVertical(db *gorm.DB) {
 	vertical := &Vertical{}
-	db.First(vertical, "name=?", "Shirts")
-	db.Create(&Vertical{Name: "Shirts"})
+	if dbc := db.First(vertical, "name=?", "Shirts"); dbc.Error == nil {
+		fmt.Println("Vertical Exists", dbc.Value.(*Vertical).Name)
+	} else {
+		fmt.Println("Error Fetching Vertical:", dbc.Error)
+		db.Create(&Vertical{Name: "Shirts"})
+	}
 }
