@@ -16,20 +16,29 @@ func main() {
 	}
 	defer db.Close()
 
+	playProduct(db)
+
+	//schemaAlterPlay(db)
+}
+
+func schemaAlterPlay(db *gorm.DB) {
+	db.Model(&Product{}).DropColumn("code")
+	//db.DropTable(&Product{})
+}
+
+func playProduct(db *gorm.DB) {
 	// Migrate the schema
 	db.AutoMigrate(&Product{})
-
 	// Create
 	db.Create(&Product{Code: "L1212", Price: 1000})
-
 	// Read
 	var product Product
-	db.First(&product, 1)                   // find product with id 1
-	db.First(&product, "code = ?", "L1212") // find product with code l1212
-
+	db.First(&product, 1)
+	// find product with id 1
+	db.First(&product, "code = ?", "L1212")
+	// find product with code l1212
 	// Update - update product's price to 2000
 	db.Model(&product).Update("Price", 2000)
-
 	// Delete - delete product
 	db.Delete(&product)
 }
