@@ -11,8 +11,8 @@ type Product struct {
 	Code       string `gorm:"size 5"`
 	Price      uint
 	IgnoreMe   string `gorm:"-"` // Ignore this field
-	Vertical   Vertical
-	VerticalID int
+	Vertical   Vertical `gorm:"ForeignKey:VerticalID"`
+	VerticalID uint
 }
 
 type Vertical struct {
@@ -32,29 +32,29 @@ func main() {
 	}
 	defer db.Close()
 
+	migrate(db)
+
 	playProduct(db)
 
-	db.Create(&Product{Code: "LongCode", Price: 4})
+	//db.Create(&Product{Code: "LongCode", Price: 4})
 
 	//schemaAlterPlay(db)
 }
 
 func schemaAlterPlay(db *gorm.DB) {
 	db.Model(&Product{}).DropColumn("code")
-	//db.DropTable(&Product{})
 }
 
 func playProduct(db *gorm.DB) {
-	// Migrate the schema
-	db.AutoMigrate(&Product{}, &Vertical{})
 	createVertical(db)
+
 	// Create
 	db.Create(&Product{Code: "L1212", Price: 1000, VerticalID: 1})
 	// Read
 	var product Product
 	db.First(&product, 1)
 	// find product with id 1
-	db.First(&product, "code = ?", "L1212").Related(&Vertical{})
+	db.First(&product, "code = ?", "L1212").Preload("Vertical")
 	fmt.Println("Vertical ID:", product.VerticalID, "Vertical Name:", product.Vertical.Name)
 	// find product with code l1212
 	// Update - update product's price to 2000
@@ -62,11 +62,15 @@ func playProduct(db *gorm.DB) {
 	// Delete - delete product
 	db.Delete(&product)
 }
+func migrate(db *gorm.DB) {
+	/** Clear Old Tables */
+	db.DropTable(&Product{}, &Vertical{})
+	// Migrate the schema
+	db.AutoMigrate(&Product{}, &Vertical{})
+}
+
 func createVertical(db *gorm.DB) {
 	vertical := &Vertical{}
 	db.First(vertical, "name=?", "Shirts")
-	if vertical == nil {
-		fmt.Println("Missing Vertical Creating One")
-		db.Create(&Vertical{Name: "Shirts"})
-	}
+	db.Create(&Vertical{Name: "Shirts"})
 }
