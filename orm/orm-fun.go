@@ -11,8 +11,8 @@ type Product struct {
 	Code       string `gorm:"size 5"`
 	Price      uint
 	IgnoreMe   string `gorm:"-"` // Ignore this field
-	Vertical   Vertical `gorm:"ForeignKey:VerticalID"`
-	VerticalID uint
+	Vertical   Vertical
+	VerticalId uint //Must be vertical_id in DB or won't work automatically.
 }
 
 type Vertical struct {
@@ -49,13 +49,13 @@ func playProduct(db *gorm.DB) {
 	createVertical(db)
 
 	// Create
-	db.Create(&Product{Code: "L1212", Price: 1000, VerticalID: 1})
+	db.Create(&Product{Code: "L1212", Price: 1000, VerticalId: 1})
 	// Read
 	var product Product
 	db.First(&product, 1)
 	// find product with id 1
-	db.First(&product, "code = ?", "L1212").Preload("Vertical")
-	fmt.Println("Vertical ID:", product.VerticalID, "Vertical Name:", product.Vertical.Name)
+	db.Preload("Vertical").First(&product, "code = ?", "L1212")
+	fmt.Println("Vertical ID:", product.VerticalId, "Vertical Name:", product.Vertical.Name)
 	// find product with code l1212
 	// Update - update product's price to 2000
 	db.Model(&product).Update("Price", 2000)
