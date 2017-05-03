@@ -6,6 +6,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"fmt"
 	"os"
+	"bitbucket.org/liamstask/goose/lib/goose"
 )
 
 type Product struct {
@@ -48,7 +49,8 @@ func (p *Product) AfterFind() (err error) {
 var jsonLogger = &log.Logger{Out: os.Stdout, Formatter: new(log.JSONFormatter), Level: log.InfoLevel}
 
 func main() {
-	db, err := gorm.Open("mysql", "root@/aman?charset=utf8&parseTime=True&loc=Local")
+	dbConf, _ := goose.NewDBConf("/Users/amanpreet.singh/IdeaProjects/GoArena/src/github.com/amanhigh/go-fun/orm/db/", "development", "mysql")
+	db, err := gorm.Open(dbConf.PgSchema, dbConf.Driver.OpenStr)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"DB":   "aman",
