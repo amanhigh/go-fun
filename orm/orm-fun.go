@@ -82,7 +82,8 @@ func queryProduct(db *gorm.DB) {
 	fmt.Println("Id Range Search Count: ", len(*products))
 
 	//Struct Query
-	db.Where(&Product{Price: 2000}).Last(product)
+	db.Where(&Product{Price: 2000}).Where(&Product{Code:"L1212"}).Last(product) //And
+	db.Where(&Product{Price: 2000}).Or(&Product{Code:"L1212"}).Last(product) //Or
 	fmt.Println("Query By Struct, ID:", product.ID)
 }
 
