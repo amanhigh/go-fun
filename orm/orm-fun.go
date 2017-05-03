@@ -25,6 +25,23 @@ func (p *Product) TableName() string {
 	return "MeraProduct"
 }
 
+// begin transaction
+// -> BeforeSave
+// -> BeforeCreate/Update
+// save before associations
+// update timestamp `CreatedAt`, `UpdatedAt`
+// save self
+// reload fields that have default value and its value is blank
+// save after associations
+// -> AfterCreate
+// -> AfterSave/Update
+// commit or rollback transaction
+
+func (p *Product) AfterFind() (err error) {
+	p.IgnoreMe = "Ignore" + p.Code
+	return nil
+}
+
 func main() {
 	db, err := gorm.Open("mysql", "root@/aman?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
@@ -54,13 +71,18 @@ func playProduct(db *gorm.DB) {
 
 	queryProduct(db)
 
-	// find product with code l1212
-	// Update - update product's price to 2000
-	db.Model(&product).Update("Price", 1500)
-	db.Model(&product).Update(&Product{Code: "MyCode"})
+	productUpdates(db, product)
 
 	// Delete - delete product
 	db.Delete(&product)
+}
+func productUpdates(db *gorm.DB, product *Product) {
+	// Update without Callbacks
+	db.Model(&product).UpdateColumn("code", "No Callback")
+	//Single Field Update
+	db.Model(&product).Update("Price", 1500)
+	//Struct Update
+	db.Model(&product).Update(&Product{Code: "MyCode"})
 }
 func queryProduct(db *gorm.DB) {
 	// First Query
@@ -69,7 +91,7 @@ func queryProduct(db *gorm.DB) {
 
 	// Preload with Where Clause
 	db.Preload("Vertical").First(product, "code = ?", "L1212")
-	fmt.Println("Vertical ID:", product.VerticalId, "Vertical Name:", product.Vertical.Name)
+	fmt.Println("Vertical ID:", product.VerticalId, "Vertical Name:", product.Vertical.Name, "Ignore Me:", product.IgnoreMe)
 
 	//Query all Non Deleted Products
 	products := new([]Product)
