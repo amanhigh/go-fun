@@ -56,7 +56,9 @@ func playProduct(db *gorm.DB) {
 
 	// find product with code l1212
 	// Update - update product's price to 2000
-	db.Model(&product).Update("Price", 2000)
+	db.Model(&product).Update("Price", 1500)
+	db.Model(&product).Update(&Product{Code: "MyCode"})
+
 	// Delete - delete product
 	db.Delete(&product)
 }
