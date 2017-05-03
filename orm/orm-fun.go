@@ -5,6 +5,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	log "github.com/Sirupsen/logrus"
 	"fmt"
+	"os"
 )
 
 type Product struct {
@@ -46,17 +47,32 @@ func (p *Product) AfterFind() (err error) {
 func main() {
 	db, err := gorm.Open("mysql", "root@/aman?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
-		panic("failed to connect database")
+		log.WithFields(log.Fields{
+			"DB":   "aman",
+			"User": "root",
+			"Type": "mysql",
+		}).Panic("failed to connect database")
 	}
 	defer db.Close()
 
+	prepLogger()
 	migrate(db)
+
 
 	playProduct(db)
 
 	//db.Create(&Product{Code: "LongCode", Price: 4})
 
 	//schemaAlterPlay(db)
+}
+func prepLogger() {
+	// Log as JSON instead of the default ASCII formatter.
+	//log.SetFormatter(&log.JSONFormatter{})
+	// Output to stdout instead of the default stderr
+	// Can be any io.Writer, see below for File example
+	log.SetOutput(os.Stdout)
+	// Only log the warning severity or above.
+	log.SetLevel(log.InfoLevel)
 }
 
 func schemaAlterPlay(db *gorm.DB) {
@@ -92,11 +108,13 @@ func queryProduct(db *gorm.DB) {
 
 	// Preload with Where Clause
 	db.Preload("Vertical").First(product, "code = ?", "L1212")
-	log.WithFields(log.Fields{
+
+	logContext := log.WithFields(log.Fields{
 		"Vertical ID:":  product.VerticalId,
 		"Vertical Name": product.Vertical.Name,
 		"Ignore Me":     product.IgnoreMe,
-	}).Info("Product Details")
+	})
+	logContext.Info("Product Details")
 
 	//Query all Non Deleted Products
 	products := new([]Product)
