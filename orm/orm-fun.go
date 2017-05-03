@@ -71,9 +71,9 @@ func queryProduct(db *gorm.DB) {
 
 	//Query all Non Deleted Products
 	products := new([]Product)
-	db.Where("code = ?", "L1212").Find(products)
+	db.Unscoped().Where("code = ?", "L1212").Find(products)
 	for _, product := range *products {
-		fmt.Println("Non Deleted Product Found: ", product.ID)
+		fmt.Println("Deleted/Undeleted Product Found: ", product.ID)
 	}
 
 	//Struct Query
