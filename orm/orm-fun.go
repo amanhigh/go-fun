@@ -3,6 +3,7 @@ package main
 import "github.com/jinzhu/gorm"
 import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	log "github.com/Sirupsen/logrus"
 	"fmt"
 )
 
@@ -91,7 +92,11 @@ func queryProduct(db *gorm.DB) {
 
 	// Preload with Where Clause
 	db.Preload("Vertical").First(product, "code = ?", "L1212")
-	fmt.Println("Vertical ID:", product.VerticalId, "Vertical Name:", product.Vertical.Name, "Ignore Me:", product.IgnoreMe)
+	log.WithFields(log.Fields{
+		"Vertical ID:":  product.VerticalId,
+		"Vertical Name": product.Vertical.Name,
+		"Ignore Me":     product.IgnoreMe,
+	}).Info("Product Details")
 
 	//Query all Non Deleted Products
 	products := new([]Product)
