@@ -17,7 +17,7 @@ type Product struct {
 
 type Vertical struct {
 	gorm.Model
-	Name string `gorm:"unique"`
+	Name string `gorm:"unique;default:'Shirts'"`
 }
 
 //Default Name would be products
@@ -75,6 +75,7 @@ func createVertical(db *gorm.DB) {
 		fmt.Println("Vertical Exists", dbc.Value.(*Vertical).Name)
 	} else {
 		fmt.Println("Error Fetching Vertical:", dbc.Error)
-		db.Create(&Vertical{Name: "Shirts"})
+		db.Create(&Vertical{})
+		fmt.Println("New Vertical Created")
 	}
 }
