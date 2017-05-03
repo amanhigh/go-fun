@@ -82,8 +82,8 @@ func queryProduct(db *gorm.DB) {
 	fmt.Println("Id Range Search Count: ", len(*products))
 
 	//Struct Query
-	db.Where(&Product{Price: 2000}).Where(&Product{Code:"L1212"}).Last(product) //And
-	db.Where(&Product{Price: 2000}).Or(&Product{Code:"L1212"}).Last(product) //Or
+	db.Where(&Product{Price: 2000}).Where(&Product{Code: "L1212"}).Last(product) //And
+	db.Where(&Product{Price: 2000}).Or(&Product{Code: "L1212"}).Last(product)    //Or
 	fmt.Println("Query By Struct, ID:", product.ID)
 }
 
@@ -96,11 +96,15 @@ func migrate(db *gorm.DB) {
 
 func createVertical(db *gorm.DB) {
 	vertical := &Vertical{}
-	if dbc := db.First(vertical, "name=?", "Shirts"); dbc.Error == nil {
-		fmt.Println("Vertical Exists", dbc.Value.(*Vertical).Name)
-	} else {
-		fmt.Println("Error Fetching Vertical:", dbc.Error)
-		db.Create(&Vertical{})
-		fmt.Println("New Vertical Created")
-	}
+	db.FirstOrCreate(&vertical)
+	verticalCount := new(int)
+	db.Model(&Vertical{}).Count(verticalCount)
+	fmt.Println("Vertical Count:", *verticalCount)
+	//if dbc := db.First(vertical, "name=?", "Shirts"); dbc.Error == nil {
+	//	fmt.Println("Vertical Exists", dbc.Value.(*Vertical).Name)
+	//} else {
+	//	fmt.Println("Error Fetching Vertical:", dbc.Error)
+	//	db.Create(&Vertical{})
+	//	fmt.Println("New Vertical Created")
+	//}
 }
