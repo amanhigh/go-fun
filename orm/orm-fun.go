@@ -128,6 +128,10 @@ func createVertical(db *gorm.DB) {
 	verticalCount := new(int)
 	db.Model(&Vertical{}).Count(verticalCount)
 	fmt.Println("Vertical Count:", *verticalCount)
+
+	found := db.Model(&Vertical{Name: "Not Present"}).RecordNotFound()
+	fmt.Println("FOUND Value:", found)
+
 	//if dbc := db.First(vertical, "name=?", "Shirts"); dbc.Error == nil {
 	//	fmt.Println("Vertical Exists", dbc.Value.(*Vertical).Name)
 	//} else {
