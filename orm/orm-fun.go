@@ -77,17 +77,21 @@ func queryProduct(db *gorm.DB) {
 	}
 
 	//Query Id Range
-	db.Unscoped().Not([]int64{5, 6, 10}).Find(products)
-	db.Unscoped().Where([]int64{5, 6, 10}).Find(products)
+	codes := new([]string)
+	db.Not([]int64{5, 6, 10}).Find(products).Pluck("code", codes)
+	fmt.Printf("CODES: %+v\n", *codes)
+	db.Unscoped().Where([]int64{5, 6, 10}).Limit(3).Limit(-1).Find(products)
 	fmt.Println("Id Range Search Count: ", len(*products))
 
 	//Struct Query
 	db.Order("code desc,price asc").Where(&Product{Price: 2000}).Where(&Product{Code: "L1212"}).Last(product) //And
-	db.Where(&Product{Price: 2000}).Or(&Product{Code: "L1212"}).Last(product)                        //Or
+	db.Where(&Product{Price: 2000}).Or(&Product{Code: "L1212"}).Last(product)                                 //Or
 	fmt.Println("Query By Struct, ID:", product.ID)
 }
 
 func migrate(db *gorm.DB) {
+	/** Print SQL */
+	//db.LogMode(true)
 	/** Clear Old Tables */
 	//db.DropTable(&Product{}, &Vertical{})
 	// Migrate the schema
