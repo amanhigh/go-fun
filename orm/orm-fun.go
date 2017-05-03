@@ -49,19 +49,38 @@ func playProduct(db *gorm.DB) {
 	createVertical(db)
 
 	// Create
-	db.Create(&Product{Code: "L1212", Price: 1000, VerticalId: 1})
-	// Read
-	var product Product
-	db.First(&product, 1)
-	// find product with id 1
-	db.Preload("Vertical").First(&product, "code = ?", "L1212")
-	fmt.Println("Vertical ID:", product.VerticalId, "Vertical Name:", product.Vertical.Name)
+	product := &Product{Code: "L1212", Price: 1000, VerticalId: 1}
+	db.Create(product)
+
+	queryProduct(db)
+
 	// find product with code l1212
 	// Update - update product's price to 2000
 	db.Model(&product).Update("Price", 2000)
 	// Delete - delete product
 	db.Delete(&product)
 }
+func queryProduct(db *gorm.DB) {
+	// First Query
+	product := new(Product)
+	db.First(product, 1)
+
+	// Preload with Where Clause
+	db.Preload("Vertical").First(product, "code = ?", "L1212")
+	fmt.Println("Vertical ID:", product.VerticalId, "Vertical Name:", product.Vertical.Name)
+
+	//Query all Non Deleted Products
+	products := new([]Product)
+	db.Where("code = ?", "L1212").Find(products)
+	for _, product := range *products {
+		fmt.Println("Non Deleted Product Found: ", product.ID)
+	}
+
+	//Struct Query
+	db.Where(&Product{Price:2000}).Last(product)
+	fmt.Println("Query By Struct, ID:",product.ID)
+}
+
 func migrate(db *gorm.DB) {
 	/** Clear Old Tables */
 	//db.DropTable(&Product{}, &Vertical{})
