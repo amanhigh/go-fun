@@ -76,9 +76,14 @@ func queryProduct(db *gorm.DB) {
 		fmt.Println("Deleted/Undeleted Product Found: ", product.ID)
 	}
 
+	//Query Id Range
+	db.Unscoped().Not([]int64{5, 6, 10}).Find(products)
+	db.Unscoped().Where([]int64{5, 6, 10}).Find(products)
+	fmt.Println("Id Range Search Count: ", len(*products))
+
 	//Struct Query
-	db.Where(&Product{Price:2000}).Last(product)
-	fmt.Println("Query By Struct, ID:",product.ID)
+	db.Where(&Product{Price: 2000}).Last(product)
+	fmt.Println("Query By Struct, ID:", product.ID)
 }
 
 func migrate(db *gorm.DB) {
