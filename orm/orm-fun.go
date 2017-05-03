@@ -44,6 +44,9 @@ func (p *Product) AfterFind() (err error) {
 	return nil
 }
 
+/** Extra Json Logger */
+var jsonLogger = &log.Logger{Out: os.Stdout, Formatter: new(log.JSONFormatter), Level: log.InfoLevel}
+
 func main() {
 	db, err := gorm.Open("mysql", "root@/aman?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
@@ -57,7 +60,6 @@ func main() {
 
 	prepLogger()
 	migrate(db)
-
 
 	playProduct(db)
 
@@ -109,12 +111,13 @@ func queryProduct(db *gorm.DB) {
 	// Preload with Where Clause
 	db.Preload("Vertical").First(product, "code = ?", "L1212")
 
-	logContext := log.WithFields(log.Fields{
+	fields := log.Fields{
 		"Vertical ID:":  product.VerticalId,
 		"Vertical Name": product.Vertical.Name,
 		"Ignore Me":     product.IgnoreMe,
-	})
-	logContext.Info("Product Details")
+	}
+	log.WithFields(fields).Info("Product Details")
+	jsonLogger.WithFields(fields).Info("Product Details")
 
 	//Query all Non Deleted Products
 	products := new([]Product)
