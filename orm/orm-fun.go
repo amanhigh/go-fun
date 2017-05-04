@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"github.com/amanhigh/go-fun/fun"
+	"github.com/amanhigh/go-fun/orm/model"
 )
 
 type Product struct {
@@ -14,13 +15,8 @@ type Product struct {
 	Code       string `gorm:"size 5"`
 	Price      uint
 	IgnoreMe   string `gorm:"-"` // Ignore this field
-	Vertical   Vertical
+	Vertical   model.Vertical
 	VerticalId uint //Must be vertical_id in DB or won't work automatically.
-}
-
-type Vertical struct {
-	gorm.Model
-	Name string `gorm:"unique;default:'Shirts'"`
 }
 
 //Default Name would be products
@@ -139,17 +135,17 @@ func migrate(db *gorm.DB) {
 	/** Clear Old Tables */
 	//db.DropTable(&Product{}, &Vertical{})
 	// Migrate the schema
-	db.AutoMigrate(&Product{}, &Vertical{})
+	db.AutoMigrate(&Product{}, &model.Vertical{})
 }
 
 func createVertical(db *gorm.DB) {
-	vertical := &Vertical{}
+	vertical := &model.Vertical{}
 	db.FirstOrCreate(&vertical)
 	verticalCount := new(int)
-	db.Model(&Vertical{}).Count(verticalCount)
+	db.Model(&model.Vertical{}).Count(verticalCount)
 	fmt.Println("Vertical Count:", *verticalCount)
 
-	found := db.Model(&Vertical{Name: "Not Present"}).RecordNotFound()
+	found := db.Model(&model.Vertical{Name: "Not Present"}).RecordNotFound()
 	fmt.Println("FOUND Value:", found)
 
 	//if dbc := db.First(vertical, "name=?", "Shirts"); dbc.Error == nil {
