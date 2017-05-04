@@ -14,6 +14,13 @@ func main() {
 	format := flag.String("format", "json", "Encoding format")
 	flag.Parse()
 
+	if *typeName == "" || *packageName == "" {
+		flag.Usage()
+		return
+	}
+
+	fmt.Println(os.Args[0])
+
 	m := Metadata{PackageName: *packageName, Type: *typeName}
 	g := &Generator{Format: *format}
 	outputFile := getFileName(typeName)
