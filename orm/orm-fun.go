@@ -138,6 +138,10 @@ func createVertical(db *gorm.DB) {
 	db.Model(&model.Vertical{}).Count(verticalCount)
 	fmt.Println("Vertical Count:", *verticalCount)
 
+	fmt.Println("\n\nVertical Json WRITE")
+	vertical.WriteTo(os.Stdout)
+	fmt.Println("\nVertical Json WRITE\n\n")
+
 	found := db.Model(&model.Vertical{Name: "Not Present"}).RecordNotFound()
 	fmt.Println("FOUND Value:", found)
 
