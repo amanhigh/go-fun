@@ -20,3 +20,12 @@ func build() (*gorm.DB) {
 	}
 	return db
 }
+
+func Migrate(db *gorm.DB,values ...interface{}) {
+	/** Print SQL */
+	//db.LogMode(true)
+	/** Clear Old Tables */
+	//db.DropTable(&Product{}, &Vertical{})
+	// Migrate the schema
+	db.AutoMigrate(values)
+}

@@ -49,7 +49,7 @@ func main() {
 	defer db.Close()
 
 	prepLogger()
-	migrate(db)
+	fun.Migrate(db,&Product{}, &model.Vertical{})
 
 	playProduct(db)
 
@@ -129,14 +129,7 @@ func queryProduct(db *gorm.DB) {
 	fmt.Println("Query By Struct, ID:", product.ID)
 }
 
-func migrate(db *gorm.DB) {
-	/** Print SQL */
-	//db.LogMode(true)
-	/** Clear Old Tables */
-	//db.DropTable(&Product{}, &Vertical{})
-	// Migrate the schema
-	db.AutoMigrate(&Product{}, &model.Vertical{})
-}
+
 
 func createVertical(db *gorm.DB) {
 	vertical := &model.Vertical{}
