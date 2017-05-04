@@ -49,7 +49,7 @@ func main() {
 	defer db.Close()
 
 	prepLogger()
-	fun.Migrate(db,&Product{}, &model.Vertical{})
+	//fun.Migrate(db,&Product{}, &model.Vertical{})
 
 	playProduct(db)
 
