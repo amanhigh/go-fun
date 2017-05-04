@@ -1,0 +1,15 @@
+package {{ .PackageName }}
+
+import (
+	"encoding/json"
+	"io"
+)
+
+func ({{ .Object }} {{ .Type }}) WriteTo(writer io.Writer) (int64, error) {
+  data, err := json.Marshal({{ .MarshalObject }})
+  if err != nil {
+  	return 0, err
+  }
+  length, err := writer.Write(data)
+  return int64(length), err
+}
