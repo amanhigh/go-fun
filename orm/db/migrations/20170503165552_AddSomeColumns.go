@@ -20,7 +20,6 @@ func migrateData() {
 	db.Find(verticals)
 	for _, vertical := range *verticals {
 		vertical.MyColumn = "My" + vertical.Name
-		fmt.Printf("Migrating: %+v\n", vertical)
 		db.Save(vertical)
 	}
 }
