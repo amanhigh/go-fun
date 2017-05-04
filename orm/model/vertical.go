@@ -1,4 +1,5 @@
 package model
+//go:generate jsongen -type=Vertical -package model
 
 import "github.com/jinzhu/gorm"
 
