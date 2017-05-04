@@ -14,16 +14,20 @@ func main() {
 	format := flag.String("format", "json", "Encoding format")
 	flag.Parse()
 
-	outputFile := strings.ToLower(*typeName) + "_json_writer.go"
+	m := Metadata{PackageName: *packageName, Type: *typeName}
+	g := &Generator{Format: *format}
+	outputFile := getFileName(typeName)
+
 	writer, _ := os.Create(filepath.Join(outputFile))
 	defer writer.Close()
 
-	jsonGenerator := &Generator{Format: *format}
-
-	m := Metadata{PackageName: *packageName, Type: *typeName}
-	if err := jsonGenerator.Generate(writer, m); err != nil {
+	if err := g.Generate(writer, m); err != nil {
 		panic(err)
 	}
 
 	fmt.Printf("Generated %s %s\n", *format, outputFile)
+}
+
+func getFileName(typeName *string) (string) {
+	return strings.ToLower(*typeName) + "_json_writer.go"
 }

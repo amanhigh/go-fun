@@ -6,11 +6,13 @@ import (
 	"errors"
 )
 
-const JSON = "json"
+const (
+	JSON = "json"
+)
 
 type Metadata struct {
-	PackageName   string
-	Type          string
+	PackageName string
+	Type        string
 }
 
 type Generator struct {
@@ -20,7 +22,7 @@ type Generator struct {
 func (g *Generator) Generate(writer io.Writer, metadata Metadata) error {
 	tmpl, err := g.template()
 	if err != nil {
-		return nil
+		return err
 	}
 
 	return tmpl.Execute(writer, metadata)
