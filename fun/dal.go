@@ -18,14 +18,17 @@ func build() (*gorm.DB) {
 			"Type": "mysql",
 		}).Panic("failed to connect database")
 	}
+
+	/** Print SQL */
+	//db.LogMode(true)
+
 	return db
 }
 
 func Migrate(db *gorm.DB,values ...interface{}) {
-	/** Print SQL */
-	//db.LogMode(true)
 	/** Clear Old Tables */
 	//db.DropTable(&Product{}, &Vertical{})
-	// Migrate the schema
+
+	/** AutoMigrate Schema */
 	db.AutoMigrate(values)
 }
