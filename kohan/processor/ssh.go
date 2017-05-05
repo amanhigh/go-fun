@@ -5,6 +5,7 @@ import (
 	"flag"
 	"errors"
 	"github.com/amanhigh/go-fun/kohan/util"
+	"strings"
 )
 
 type SshProcessor struct {
@@ -36,8 +37,10 @@ func (p *SshProcessor) Process(commandName string) (bool) {
 func splitAnsibleConfig(configPath string) error {
 	if configPath != "" {
 		if lines, e := util.ReadLines(configPath); e == nil {
-			for _, line := range lines {
-				fmt.Println(line, )
+			splitMap := buildSplitMap(lines)
+			fmt.Println("Split Complete")
+			for key, value := range splitMap {
+				fmt.Println(key, len(value))
 			}
 			return nil
 		} else {
@@ -46,6 +49,27 @@ func splitAnsibleConfig(configPath string) error {
 	} else {
 		return errors.New("Missing Config Path")
 	}
+}
+
+func buildSplitMap(lines []string) map[string][]string {
+	splitMap := make(map[string][]string)
+	var group string
+	for _, line := range lines {
+		switch {
+		case strings.HasPrefix(line, "["):
+			group = strings.Trim(line, "[]")
+			//fmt.Println("Creating New Group:", group)
+			splitMap[group] = make([]string, 1)
+			break
+		case strings.HasPrefix(line, "10"):
+			ip := strings.Split(line, " ")[0]
+			//fmt.Printf("Adding %s to %s\n", ip, group)
+			splitMap[group] = append(splitMap[group], ip)
+			break
+		default:
+		}
+	}
+	return splitMap
 }
 
 func (p *SshProcessor) Help() string {
