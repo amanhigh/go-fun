@@ -5,7 +5,6 @@ import (
 	"flag"
 	"errors"
 	"github.com/amanhigh/go-fun/kohan/util"
-	"strings"
 )
 
 type SshProcessor struct {
@@ -23,7 +22,6 @@ func (p *SshProcessor) Process(commandName string) (bool) {
 		e = splitAnsibleConfig(*filePath)
 	default:
 		fmt.Println(p.Help())
-		return false
 	}
 
 	if e != nil {
@@ -37,8 +35,8 @@ func (p *SshProcessor) Process(commandName string) (bool) {
 func splitAnsibleConfig(configPath string) error {
 	if configPath != "" {
 		if lines, e := util.ReadLines(configPath); e == nil {
-			splitMap := buildSplitMap(lines)
-			muxMap := mergeMux(splitMap)
+			splitMap := util.BuildSplitMap(lines)
+			muxMap := util.MergeMux(splitMap)
 
 			fmt.Println("\033[1;32mAnsible Split Complete\033[0m")
 			for key, value := range muxMap {
@@ -53,39 +51,6 @@ func splitAnsibleConfig(configPath string) error {
 	} else {
 		return errors.New("Missing Config Path")
 	}
-}
-
-func mergeMux(splitMap map[string][]string) map[string][]string {
-	muxMap := make(map[string][]string)
-	for key, value := range splitMap {
-		if strings.Contains(key, "mux") {
-			muxMap["mux"] = append(muxMap["mux"], value...)
-		} else {
-			muxMap[key] = value
-		}
-	}
-	return muxMap
-}
-
-func buildSplitMap(lines []string) map[string][]string {
-	splitMap := make(map[string][]string)
-	var group string
-	for _, line := range lines {
-		switch {
-		case strings.HasPrefix(line, "["):
-			group = strings.Trim(line, "[]")
-			//fmt.Println("Creating New Group:", group)
-			splitMap[group] = make([]string, 0)
-			break
-		case strings.HasPrefix(line, "10"):
-			ip := strings.Split(line, " ")[0]
-			//fmt.Printf("Adding %s to %s\n", ip, group)
-			splitMap[group] = append(splitMap[group], ip)
-			break
-		default:
-		}
-	}
-	return splitMap
 }
 
 func (p *SshProcessor) Help() string {
