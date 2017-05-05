@@ -1,6 +1,7 @@
 package processor
 
 type Processor struct {
+	Args []string
 }
 
 type ProcessorI interface {
