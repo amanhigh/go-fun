@@ -25,14 +25,19 @@ func (p *SshProcessor) Process(commandName string) (bool) {
 	}
 
 	if e != nil {
-		print(e)
+		fmt.Println(e.Error())
+		flag.Usage()
 		return false
 	}
 	return true
 }
 
 func splitAnsibleConfig(configPath string) error {
-	return nil
+	if configPath != "" {
+		return nil
+	} else {
+		return errors.New("Missing Config Path")
+	}
 }
 
 func (p *SshProcessor) Help() string {
