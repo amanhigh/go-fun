@@ -13,3 +13,8 @@ func ReadLines(path string) ([]string, error) {
 		return nil, e
 	}
 }
+
+func WriteLines(path string, lines []string) {
+	ips := strings.Join(lines, "\n")
+	ioutil.WriteFile(path, []byte(ips), 0644)
+}

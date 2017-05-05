@@ -6,7 +6,6 @@ import (
 	"errors"
 	"github.com/amanhigh/go-fun/kohan/util"
 	"strings"
-	"io/ioutil"
 )
 
 type SshProcessor struct {
@@ -44,11 +43,8 @@ func splitAnsibleConfig(configPath string) error {
 			fmt.Println("Split Complete")
 			for key, value := range muxMap {
 				fmt.Println(key, len(value))
-
 				clusterPath := fmt.Sprintf("%s/%s.txt", util.CLUSTER_PATH, key)
-				ips := strings.Join(value, "\n")
-
-				ioutil.WriteFile(clusterPath, []byte(ips), 0644)
+				util.WriteLines(clusterPath, value)
 			}
 			return nil
 		} else {
