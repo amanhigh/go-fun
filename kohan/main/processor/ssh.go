@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"flag"
 	"errors"
-	"io/ioutil"
+	"github.com/amanhigh/go-fun/kohan/util"
 )
 
 type SshProcessor struct {
@@ -35,8 +35,10 @@ func (p *SshProcessor) Process(commandName string) (bool) {
 
 func splitAnsibleConfig(configPath string) error {
 	if configPath != "" {
-		if content, e := ioutil.ReadFile(configPath); e == nil {
-			fmt.Println(string(content))
+		if lines, e := util.ReadLines(configPath); e == nil {
+			for _, line := range lines {
+				fmt.Println(line, )
+			}
 			return nil
 		} else {
 			return e
