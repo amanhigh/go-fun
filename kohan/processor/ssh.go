@@ -40,7 +40,7 @@ func splitAnsibleConfig(configPath string) error {
 			splitMap := buildSplitMap(lines)
 			muxMap := mergeMux(splitMap)
 
-			fmt.Println("Split Complete")
+			fmt.Println("\033[1;32mAnsible Split Complete\033[0m")
 			for key, value := range muxMap {
 				fmt.Println(key, len(value))
 				clusterPath := fmt.Sprintf("%s/%s.txt", util.CLUSTER_PATH, key)
