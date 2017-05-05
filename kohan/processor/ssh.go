@@ -75,7 +75,7 @@ func buildSplitMap(lines []string) map[string][]string {
 		case strings.HasPrefix(line, "["):
 			group = strings.Trim(line, "[]")
 			//fmt.Println("Creating New Group:", group)
-			splitMap[group] = make([]string, 1)
+			splitMap[group] = make([]string, 0)
 			break
 		case strings.HasPrefix(line, "10"):
 			ip := strings.Split(line, " ")[0]
