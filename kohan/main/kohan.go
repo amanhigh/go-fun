@@ -8,16 +8,14 @@ import (
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Println("Usage: kohan <Processor Name> <Command Name>")
+		fmt.Println("Usage: kohan <Processor Name> <Command Name>/help")
 		os.Exit(1)
 	}
 
 	processorName := os.Args[1]
 	command := os.Args[2]
-	fmt.Printf("Running Command %s:%s\n", processorName, command)
 
 	pMap := getProcessorMap()
-
 	if p, ok := pMap[processorName]; ok {
 		p.Process(command)
 	} else {
