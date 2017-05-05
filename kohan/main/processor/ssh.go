@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"flag"
 	"errors"
+	"io/ioutil"
 )
 
 type SshProcessor struct {
@@ -12,21 +13,21 @@ type SshProcessor struct {
 
 func (p *SshProcessor) Process(commandName string) (bool) {
 	var e error
+	flagSet := flag.NewFlagSet(commandName, flag.ExitOnError)
+
 	switch commandName {
 	case "splitConfig":
-		filePath := flag.String("f", "", "File Path of Ansible Config")
-		flag.Parse()
+		filePath := flagSet.String("f", "", "File Path of Ansible Config")
+		flagSet.Parse(p.Args)
 		e = splitAnsibleConfig(*filePath)
-	case "help":
-		fmt.Println(p.Help())
 	default:
-		e = errors.New("Unknown Command: " + commandName)
 		fmt.Println(p.Help())
+		return false
 	}
 
 	if e != nil {
 		fmt.Println(e.Error())
-		flag.Usage()
+		flagSet.Usage()
 		return false
 	}
 	return true
@@ -34,7 +35,12 @@ func (p *SshProcessor) Process(commandName string) (bool) {
 
 func splitAnsibleConfig(configPath string) error {
 	if configPath != "" {
-		return nil
+		if content, e := ioutil.ReadFile(configPath); e == nil {
+			fmt.Println(string(content))
+			return nil
+		} else {
+			return e
+		}
 	} else {
 		return errors.New("Missing Config Path")
 	}

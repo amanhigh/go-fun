@@ -8,7 +8,7 @@ import (
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Println("Usage: kohan <Processor Name> <Command Name>/help")
+		fmt.Println("Usage: kohan <Processor Name> <Command Name>")
 		os.Exit(1)
 	}
 
