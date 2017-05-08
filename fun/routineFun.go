@@ -105,15 +105,22 @@ func multiChannel() {
 
 func fibonacciMultiChannel(c, quit chan int) {
 	x, y := 0, 1
+	overallTimeout := time.After(1 * time.Minute)
 	for {
 		select {
 		case c <- x:
-			x, y = y, x + y
+			x, y = y, x+y
 		case <-quit:
 			fmt.Println("quit")
 			return
+		case <-time.After(2 * time.Second):
+			fmt.Println("Operation Timeout. Operation won't wait more  than 2 Seconds.")
+			return
+		case overallTimeout:
+			fmt.Println("It has been more than a minute since loop started. Returning")
+			return
 		default:
-		// Run when no other case is ready
+			// Run when no other case is ready
 			fmt.Println("    .")
 			time.Sleep(50 * time.Millisecond)
 		}
@@ -125,7 +132,7 @@ func fibonacci(n int, c chan int) {
 	x, y := 0, 1
 	for i := 0; i < n; i++ {
 		c <- x
-		x, y = y, x + y
+		x, y = y, x+y
 	}
 	close(c)
 }
@@ -137,7 +144,6 @@ func sum(a []int, c chan int) {
 	}
 	c <- sum
 }
-
 
 // Walk walks the tree t sending all values
 // from the tree to the channel ch.
