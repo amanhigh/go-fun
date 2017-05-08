@@ -1,32 +1,36 @@
 package main
 
 import (
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"testing"
 )
 
-var per = person{"Zoye", 44, 8983333}
-
-func Test_encodePerson(t *testing.T) {
-	type args struct {
-		p1 person
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{"Encode Test", args{per}, "{\"name\":\"Zoye\",\"Age\":44,\"MobileNumber\":8983333}"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := encodePerson(tt.args.p1); got != tt.want {
-				t.Errorf("encodePerson() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+func TestJson(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Books Suite")
 }
 
+var _ = Describe("Json Encode/Decode", func() {
+	var per person
+	personJson := `{"name":"Zoye","Age":44,"MobileNumber":8983333}`
+
+	BeforeEach(func() {
+		per = person{"Zoye", 44, 8983333}
+	})
+
+	It("should encode Properly", func() {
+		Expect(encodePerson(per)).To(Equal(personJson))
+	})
+
+	It("should decode Properly", func() {
+		Expect(decodePerson(personJson)).To(Equal(per))
+	})
+})
+
 func BenchmarkEncode(b *testing.B) {
+	var per = person{"Zoye", 44, 8983333}
+
 	for n := 0; n < b.N; n++ {
 		encodePerson(per)
 	}
