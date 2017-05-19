@@ -116,7 +116,7 @@ func fibonacciMultiChannel(c, quit chan int) {
 		case <-time.After(2 * time.Second):
 			fmt.Println("Operation Timeout. Operation won't wait more  than 2 Seconds.")
 			return
-		case overallTimeout:
+		case <-overallTimeout:
 			fmt.Println("It has been more than a minute since loop started. Returning")
 			return
 		default:
