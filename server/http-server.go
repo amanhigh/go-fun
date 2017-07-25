@@ -30,6 +30,9 @@ func stream(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 
+	// Listen to the closing of the http connection via the CloseNotifier
+	//notify := w.(http.CloseNotifier).CloseNotify()
+
 	if f, ok := w.(http.Flusher); !ok {
 		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
 		return
