@@ -5,11 +5,12 @@ import "strings"
 func MergeMux(splitMap map[string][]string) map[string][]string {
 	muxMap := make(map[string][]string)
 	for key, value := range splitMap {
+		/* Collate Mux into single mux File */
 		if strings.Contains(key, "mux") {
 			muxMap["mux"] = append(muxMap["mux"], value...)
-		} else {
-			muxMap[key] = value
 		}
+		/* Also retain all individual groups */
+		muxMap[key] = value
 	}
 	return muxMap
 }
