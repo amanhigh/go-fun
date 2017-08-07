@@ -37,6 +37,10 @@ func main() {
 	}
 }
 
+/*
+	Fires Given Request treating it as SSE Request & Provides a channel to listen for SSE Events.
+	Context can be used to cancel listening to events before server closes stream.
+ */
 func fireSSERequest(request *http.Request, ctx context.Context) (eventChannel chan SseEvent, err error) {
 	/* Add Header to accept streaming events */
 	request.Header.Set("Accept", "text/event-stream")
@@ -56,6 +60,10 @@ func fireSSERequest(request *http.Request, ctx context.Context) (eventChannel ch
 	return
 }
 
+/*
+	Given a response reads it and provides updates SSE Event updates on  channel provided to it.
+	Context can be used to cancel listening to events before server closes stream.
+ */
 func liveRequestLoop(response *http.Response, eventChannel chan SseEvent, ctx context.Context) {
 	defer response.Body.Close()
 	br := bufio.NewReader(response.Body)
@@ -89,6 +97,7 @@ func liveRequestLoop(response *http.Response, eventChannel chan SseEvent, ctx co
 	}
 }
 
+/* Builds a SSE Event from read line */
 func buildEvent(readBytes []byte) SseEvent {
 	/* Split Actual Data & Marker Delimiter */
 	splitLine := bytes.Split(readBytes, delim)
