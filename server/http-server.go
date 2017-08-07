@@ -10,6 +10,7 @@ import (
 func main() {
 	http.HandleFunc("/", handleRoot)
 	http.HandleFunc("/stream", stream)
+	fmt.Printf("Listening on :%+v\n", "localhost:8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		fmt.Printf("Error:%+v\n", err)
 	}
