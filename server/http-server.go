@@ -39,12 +39,12 @@ func stream(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		for i := 0; i < 10; i++ {
-			fmt.Fprint(w, fmt.Sprintf("Streaming: %v\n", i))
+			fmt.Fprint(w, fmt.Sprintf("data: Streaming - %v\n\n", i))
 			f.Flush()
 			time.Sleep(time.Second)
 		}
 	}
 
-	fmt.Fprint(w, "Streaming Finished :)")
+	fmt.Fprint(w, "data: Streaming Finished :)\n\n")
 
 }
