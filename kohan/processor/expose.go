@@ -19,8 +19,10 @@ func (p *ExposeProcessor) Process(commandName string) (bool) {
 		cmd := flagSet.String("cmd", "", "Command To Run")
 		cluster := flagSet.String("cl", "", "Cluster To Run On")
 		parallelism := flagSet.Int("p", 50, "Parallelism")
+		psshType := flagSet.String("t", "fast", "fast/display/slow")
 		e = flagSet.Parse(p.Args)
-		commander.FastPssh.Run(*cmd, *cluster, *parallelism)
+		selectedPssh := getPsshFromType(*psshType)
+		selectedPssh.Run(*cmd, *cluster, *parallelism)
 	default:
 		fmt.Println(p.Help())
 	}
@@ -31,6 +33,21 @@ func (p *ExposeProcessor) Process(commandName string) (bool) {
 		return false
 	}
 	return true
+}
+func getPsshFromType(psshType string) commander.Pssh {
+	var selectedPssh commander.Pssh
+	switch psshType {
+	case "fast":
+		selectedPssh = commander.FastPssh
+		break
+	case "slow":
+		selectedPssh = commander.SlowPssh
+	case "display":
+		selectedPssh = commander.DisplayPssh
+
+	}
+	commander.PrintYellow(fmt.Sprintf("Using %v PSSH", psshType))
+	return selectedPssh
 }
 
 func (p *ExposeProcessor) Help() string {
