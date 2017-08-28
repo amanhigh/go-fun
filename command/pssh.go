@@ -17,9 +17,13 @@ func (self *Pssh) Run(cmd string, cluster string, parallelism int) {
 	psshCmd := fmt.Sprintf("script %v pssh -h %v -t %v -o %v -e %v %v -p %v '%v';",
 		CONSOLE_FILE, getClusterFile(cluster), self.Timeout, self.outputPath, self.errorPath, self.getDisplayFlag(), parallelism, cmd)
 	PrintCommand(psshCmd)
-	RunCommand(fmt.Sprintf("grep FAILURE %v | awk '{print $4}' > %v", getClusterFile("console"), getClusterFile("fail")))
-	PrintYellow("Failed Hosts:")
-	PrintCommand(fmt.Sprintf("cat %v", getClusterFile("fail")))
+
+	RunIf(fmt.Sprintf("grep FAILURE %v", getClusterFile("console.txt")), func() {
+		PrintCommand(fmt.Sprintf("grep FAILURE %v | awk '{print $4}' > %v", getClusterFile("console"), getClusterFile("fail")))
+		PrintYellow("Failed Hosts:")
+		PrintCommand(fmt.Sprintf("cat %v", getClusterFile("fail")))
+	})
+
 }
 
 func getClusterFile(name string) string {
