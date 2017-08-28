@@ -12,3 +12,8 @@ func RunCommand(cmd string) (string, error) {
 	}
 	return string(output), err
 }
+
+func PrintCommand(cmd string) {
+	output, _ := RunCommand(cmd)
+	PrintWhite(output)
+}
