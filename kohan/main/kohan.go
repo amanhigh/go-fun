@@ -28,6 +28,7 @@ func getProcessorMap() map[string]processor.ProcessorI {
 	p := processor.Processor{Args: os.Args[3:]}
 
 	return map[string]processor.ProcessorI{
-		"ssh": &processor.SshProcessor{p},
+		"ssh":    &processor.SshProcessor{p},
+		"expose": &processor.ExposeProcessor{p},
 	}
 }
