@@ -14,6 +14,10 @@ type Pssh struct {
 }
 
 func (self *Pssh) Run(cmd string, cluster string, parallelism int) {
+	clearOutputPaths()
+
+	PrintWhite("Running Parallel SSH on cluster " + cluster)
+
 	psshCmd := fmt.Sprintf("script %v pssh -h %v -t %v -o %v -e %v %v -p %v '%v';",
 		CONSOLE_FILE, getClusterFile(cluster), self.Timeout, self.outputPath, self.errorPath, self.getDisplayFlag(), parallelism, cmd)
 	PrintCommand(psshCmd)
@@ -23,7 +27,10 @@ func (self *Pssh) Run(cmd string, cluster string, parallelism int) {
 		PrintYellow("Failed Hosts:")
 		PrintCommand(fmt.Sprintf("cat %v", getClusterFile("fail")))
 	})
-
+}
+func clearOutputPaths() {
+	RecreateDir(OUTPUT_PATH, 0755)
+	RecreateDir(ERROR_PATH, 0755)
 }
 
 func getClusterFile(name string) string {
