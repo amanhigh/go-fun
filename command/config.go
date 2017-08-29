@@ -8,7 +8,7 @@ const OUTPUT_PATH = "/tmp/output"
 const ERROR_PATH = "/tmp/error"
 const CONSOLE_FILE = CLUSTER_PATH + "/console.txt"
 
-const RELEASE_FILE = "~/Documents/release.txt"
+const RELEASE_FILE = "/Users/amanpreet.singh/Documents/release.txt"
 const DEFAULT_PERM = os.FileMode(0755)
 
 /* Date/Time */
