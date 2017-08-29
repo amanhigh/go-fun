@@ -12,7 +12,7 @@ func RunCommand(cmd string) (string, error) {
 
 func PrintCommand(cmd string) {
 	if output, err := RunCommand(cmd); err != nil {
-		fmt.Printf("Error Executing Command: CMD:%v ERROR:%+v\n", cmd, err)
+		PrintRed(fmt.Sprintf("Error Executing Command: CMD:%v ERROR:%+v\n", cmd, err))
 	} else {
 		PrintWhite(output)
 	}

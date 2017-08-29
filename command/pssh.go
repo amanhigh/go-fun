@@ -16,7 +16,7 @@ type Pssh struct {
 func (self *Pssh) Run(cmd string, cluster string, parallelism int) {
 	clearOutputPaths()
 
-	PrintWhite("Running Parallel SSH on cluster " + cluster)
+	PrintWhite(fmt.Sprintf("Running Parallel SSH. Cluster: %v Parallelism:%v", cluster,parallelism))
 
 	psshCmd := fmt.Sprintf("script %v pssh -h %v -t %v -o %v -e %v %v -p %v '%v';",
 		CONSOLE_FILE, getClusterFile(cluster), self.Timeout, self.outputPath, self.errorPath, self.getDisplayFlag(), parallelism, cmd)
