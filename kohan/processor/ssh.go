@@ -19,7 +19,7 @@ func (p *SshProcessor) Process(commandName string) (bool) {
 	case "splitConfig":
 		filePath := flagSet.String("f", "", "File Path of Ansible Config")
 		flagSet.Parse(p.Args)
-		e = splitAnsibleConfig(*filePath)
+		e = SplitAnsibleConfig(*filePath)
 	default:
 		fmt.Println(p.Help())
 	}
@@ -32,7 +32,7 @@ func (p *SshProcessor) Process(commandName string) (bool) {
 	return true
 }
 
-func splitAnsibleConfig(configPath string) error {
+func SplitAnsibleConfig(configPath string) error {
 	if configPath != "" {
 		if lines, e := util.ReadLines(configPath); e == nil {
 			splitMap := util.BuildSplitMap(lines)
