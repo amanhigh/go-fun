@@ -17,6 +17,8 @@ func (self *ExposeProcessor) Process(commandName string) (bool) {
 	switch commandName {
 	case "pssh":
 		e = self.psshHandler(flagSet)
+	case "getVersion":
+		e = self.getVersionHandler(flagSet)
 	default:
 		fmt.Println(self.Help())
 	}
@@ -27,6 +29,14 @@ func (self *ExposeProcessor) Process(commandName string) (bool) {
 		return false
 	}
 	return true
+}
+func (self *ExposeProcessor) getVersionHandler(flagSet *flag.FlagSet) error {
+	pkg := flagSet.String("pkg", "", "Package Name")
+	host := flagSet.String("host", "", "Host For Fetching Version")
+	versionType := flagSet.String("type", "", "Type dpkg/latest for Version")
+	e := flagSet.Parse(self.Args)
+	commander.GetVersion(*pkg, *host, *versionType)
+	return e
 }
 
 func (self *ExposeProcessor) psshHandler(flagSet *flag.FlagSet) error {
@@ -57,5 +67,5 @@ func getPsshFromType(psshType string) commander.Pssh {
 }
 
 func (self *ExposeProcessor) Help() string {
-	return `Commands: pssh`
+	return `Commands: pssh,getVersion`
 }
