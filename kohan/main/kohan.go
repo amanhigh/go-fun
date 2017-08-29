@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"github.com/amanhigh/go-fun/kohan/processor"
+	processor2 "github.com/Flipkart/elb/scripts/kohan/processor"
 )
 
 func main() {
@@ -30,5 +31,6 @@ func getProcessorMap() map[string]processor.ProcessorI {
 	return map[string]processor.ProcessorI{
 		"ssh":    &processor.SshProcessor{p},
 		"expose": &processor.ExposeProcessor{p},
+		"elb":    &processor2.ElbProcessor{p},
 	}
 }
