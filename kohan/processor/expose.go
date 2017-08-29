@@ -10,21 +10,15 @@ type ExposeProcessor struct {
 	Processor
 }
 
-func (p *ExposeProcessor) Process(commandName string) (bool) {
+func (self *ExposeProcessor) Process(commandName string) (bool) {
 	var e error
 	flagSet := flag.NewFlagSet(commandName, flag.ExitOnError)
 
 	switch commandName {
 	case "pssh":
-		cmd := flagSet.String("cmd", "", "Command To Run")
-		cluster := flagSet.String("cl", "", "Cluster To Run On")
-		parallelism := flagSet.Int("p", 50, "Parallelism")
-		psshType := flagSet.String("t", "fast", "fast/display/slow")
-		e = flagSet.Parse(p.Args)
-		selectedPssh := getPsshFromType(*psshType)
-		selectedPssh.Run(*cmd, *cluster, *parallelism)
+		e = self.psshHandler(flagSet)
 	default:
-		fmt.Println(p.Help())
+		fmt.Println(self.Help())
 	}
 
 	if e != nil {
@@ -34,6 +28,18 @@ func (p *ExposeProcessor) Process(commandName string) (bool) {
 	}
 	return true
 }
+
+func (self *ExposeProcessor) psshHandler(flagSet *flag.FlagSet) error {
+	cmd := flagSet.String("cmd", "", "Command To Run")
+	cluster := flagSet.String("cl", "", "Cluster To Run On")
+	parallelism := flagSet.Int("p", 50, "Parallelism")
+	psshType := flagSet.String("t", "fast", "fast/display/slow")
+	e := flagSet.Parse(self.Args)
+	selectedPssh := getPsshFromType(*psshType)
+	selectedPssh.Run(*cmd, *cluster, *parallelism)
+	return e
+}
+
 func getPsshFromType(psshType string) commander.Pssh {
 	var selectedPssh commander.Pssh
 	switch psshType {
@@ -50,6 +56,6 @@ func getPsshFromType(psshType string) commander.Pssh {
 	return selectedPssh
 }
 
-func (p *ExposeProcessor) Help() string {
+func (self *ExposeProcessor) Help() string {
 	return `Commands: pssh`
 }
