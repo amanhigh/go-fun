@@ -10,7 +10,7 @@ func VersionCheck(pkgNameCsv string, cluster string) {
 	packageList := strings.Split(pkgNameCsv, ",")
 
 	cmd := fmt.Sprintf("dpkg -l | grep '%v'", strings.Join(packageList, `\|`))
-	FastPssh.Run(cmd, cluster, DEFAULT_PARALELISM)
+	FastPssh.Run(cmd, cluster, DEFAULT_PARALELISM, true)
 
 	for pkgVersion, count := range computeVersionCountMap() {
 		PrintGreen(fmt.Sprintf("%v: %v", pkgVersion, count))

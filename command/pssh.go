@@ -13,14 +13,17 @@ type Pssh struct {
 	displayOutput bool
 }
 
-func (self *Pssh) Run(cmd string, cluster string, parallelism int) {
+func (self *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput bool) {
 	clearOutputPaths()
-
-	PrintWhite(fmt.Sprintf("Running Parallel SSH. Cluster: %v Parallelism:%v", cluster,parallelism))
 
 	psshCmd := fmt.Sprintf(`script %v pssh -h %v -t %v -o %v -e %v %v -p %v "%v";`,
 		CONSOLE_FILE, getClusterFile(cluster), self.Timeout, self.outputPath, self.errorPath, self.getDisplayFlag(), parallelism, cmd)
-	PrintCommand(psshCmd)
+	if disableOutput {
+		RunCommandPrintError(psshCmd)
+	} else {
+		PrintWhite(fmt.Sprintf("Running Parallel SSH. Cluster: %v Parallelism:%v", cluster, parallelism))
+		PrintCommand(psshCmd)
+	}
 
 	RunIf(fmt.Sprintf("grep FAILURE %v", getClusterFile("console.txt")), func() {
 		PrintCommand(fmt.Sprintf("grep FAILURE %v | awk '{print $4}' > %v", getClusterFile("console"), getClusterFile("fail")))

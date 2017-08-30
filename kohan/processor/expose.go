@@ -56,7 +56,7 @@ func (self *ExposeProcessor) psshHandler(flagSet *flag.FlagSet) error {
 	psshType := flagSet.String("t", "fast", "fast/display/slow")
 	e := flagSet.Parse(self.Args)
 	selectedPssh := getPsshFromType(*psshType)
-	selectedPssh.Run(*cmd, *cluster, *parallelism)
+	selectedPssh.Run(*cmd, *cluster, *parallelism,false)
 	return e
 }
 
