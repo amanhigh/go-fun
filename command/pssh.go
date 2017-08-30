@@ -1,6 +1,9 @@
 package commander
 
-import "fmt"
+import (
+	"fmt"
+	"io/ioutil"
+)
 
 var FastPssh = Pssh{10, OUTPUT_PATH, ERROR_PATH, false,}
 var DisplayPssh = Pssh{10, OUTPUT_PATH, ERROR_PATH, true,}
@@ -25,7 +28,7 @@ func (self *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput
 		PrintCommand(psshCmd)
 	}
 
-	RunIf(fmt.Sprintf("grep FAILURE %v", getClusterFile("console.txt")), func() {
+	RunIf(fmt.Sprintf("grep FAILURE %v", getClusterFile("console.txt")), func(output string) {
 		PrintCommand(fmt.Sprintf("grep FAILURE %v | awk '{print $4}' > %v", getClusterFile("console"), getClusterFile("fail")))
 		PrintYellow("Failed Hosts:")
 		PrintCommand(fmt.Sprintf("cat %v", getClusterFile("fail")))
@@ -34,6 +37,11 @@ func (self *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput
 func clearOutputPaths() {
 	ClearDirectory(OUTPUT_PATH)
 	ClearDirectory(ERROR_PATH)
+}
+
+func WriteClusterFile(clusterName string, content string) {
+	filePath := getClusterFile(clusterName)
+	ioutil.WriteFile(filePath, []byte(content), DEFAULT_PERM)
 }
 
 func getClusterFile(name string) string {

@@ -24,9 +24,9 @@ func PrintCommand(cmd string) {
 	}
 }
 
-func RunIf(cmd string, lambda func()) {
-	if _, err := runCommand(cmd); err == nil {
-		lambda()
+func RunIf(cmd string, lambda func(output string)) {
+	if output, err := runCommand(cmd); err == nil {
+		lambda(output)
 	}
 }
 
