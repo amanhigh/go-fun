@@ -4,9 +4,15 @@ import (
 	"fmt"
 	"strings"
 	"os"
+	"regexp"
+	"strconv"
+	log "github.com/Sirupsen/logrus"
 )
 
-var checks = []string{"down", "inactive"}
+var checks = []string{"down", "inactive", "not"}
+var SECOND_REGEX, _ = regexp.Compile("(\\d+) seconds")
+
+const MIN_SECOND = 4
 
 func VersionCheck(pkgNameCsv string, cluster string) {
 	PrintBlue(fmt.Sprintf("Verifying Versions For Packages: %v on cluster %v", pkgNameCsv, cluster))
@@ -31,21 +37,61 @@ func VerifyStatus(cmd string, cluster string) {
 	PrintCommand("cat * | awk '{print $1,$2,$3}' | sort | uniq -c | sort -r")
 
 	RunIf("find  . -type f -empty | cut -c3-", func(output string) {
-		PrintRed(fmt.Sprintf("Empty Files Found:\n%v", output))
-		WriteClusterFile("empty",output)
+		if len(output) > 0 {
+			PrintRed(fmt.Sprintf("Empty Files Found:\n%v", output))
+			WriteClusterFile("empty", output)
+		}
 	})
 
-	//	sc down;
-	//	sc inactive;
-	//		echo -en "\033[1;34m Extracting Bad States \033[0m \n"
-	//	sc out | awk -F: '{print $1}' | cut -c 3- > $cluster_path/oor.txt;
-	//	sc not | awk -F: '{print $1}' | cut -c 3- > $cluster_path/not.txt;
-	//	sc inactive | awk -F: '{print $1}' | cut -c 3- > $cluster_path/inactive.txt;
+	contentMap := ReadFileMap(OUTPUT_PATH)
+	PrintBlue("Extracting Bad States")
+	performBadStateChecks(contentMap)
 
-	//echo -en "\033[1;34m Seconds \033[0m \n"
-	//grep -inrR "seconds" . 2> /dev/null | head -2
-	//
+	minFound := performSecondsCheck(contentMap)
+	PrintYellow(fmt.Sprintf("Second Check Complete. Min Second Detected: %v", minFound))
+}
 
+/* Helpers */
+func performBadStateChecks(contentMap map[string][]string) {
+	for _, check := range checks {
+		PrintBlue("Performing Check: " + check)
+		if keyWordLines, keyWordIps := extractKeywordLines(contentMap, check); len(keyWordLines) > 0 {
+			PrintRed(strings.Join(keyWordLines, "\n"))
+			WriteClusterFile(check, strings.Join(keyWordIps, "\n"))
+		}
+	}
+}
+func performSecondsCheck(contentMap map[string][]string) int {
+	minFound := 0
+	if lines, _ := extractKeywordLines(contentMap, "seconds"); len(lines) > 0 {
+		for _, line := range lines {
+			matchString := SECOND_REGEX.FindStringSubmatch(line)
+			if second, err := strconv.Atoi(matchString[1]); err == nil {
+				if second < MIN_SECOND {
+					PrintRed(fmt.Sprintf("Probable Restart Detected. Second: %v", second))
+				}
+				if minFound < second {
+					minFound = second
+				}
+			} else {
+				log.WithFields(log.Fields{"Error": err}).Error("Error Parsing Second")
+			}
+		}
+	}
+	return minFound
+}
+func extractKeywordLines(contentMap map[string][]string, keyWord string) ([]string, []string) {
+	keyWordLines := []string{}
+	keyWordIps := []string{}
+	for ip, lines := range contentMap {
+		for _, line := range lines {
+			if ok := strings.Contains(line, keyWord); ok {
+				keyWordLines = append(keyWordLines, line)
+				keyWordIps = append(keyWordIps, ip)
+			}
+		}
+	}
+	return keyWordLines, keyWordIps
 }
 
 func computeVersionCountMap() map[string]int {

@@ -21,6 +21,8 @@ func (self *ExposeProcessor) Process(commandName string) (bool) {
 		e = self.getVersionHandler(flagSet)
 	case "versionCheck":
 		e = self.versionCheckHandler(flagSet)
+	case "verifyStatus":
+		e = self.verifyStatusHandler(flagSet)
 	default:
 		fmt.Println(self.Help())
 	}
@@ -49,6 +51,14 @@ func (self *ExposeProcessor) versionCheckHandler(flagSet *flag.FlagSet) error {
 	return e
 }
 
+func (self *ExposeProcessor) verifyStatusHandler(flagSet *flag.FlagSet) error {
+	cmd := flagSet.String("cmd", "", "Status Check Command")
+	cluster := flagSet.String("cl", "", "Cluster To Run On")
+	e := flagSet.Parse(self.Args)
+	commander.VerifyStatus(*cmd, *cluster)
+	return e
+}
+
 func (self *ExposeProcessor) psshHandler(flagSet *flag.FlagSet) error {
 	cmd := flagSet.String("cmd", "", "Command To Run")
 	cluster := flagSet.String("cl", "", "Cluster To Run On")
@@ -56,7 +66,7 @@ func (self *ExposeProcessor) psshHandler(flagSet *flag.FlagSet) error {
 	psshType := flagSet.String("t", "fast", "fast/display/slow")
 	e := flagSet.Parse(self.Args)
 	selectedPssh := getPsshFromType(*psshType)
-	selectedPssh.Run(*cmd, *cluster, *parallelism,false)
+	selectedPssh.Run(*cmd, *cluster, *parallelism, false)
 	return e
 }
 
@@ -77,5 +87,5 @@ func getPsshFromType(psshType string) commander.Pssh {
 }
 
 func (self *ExposeProcessor) Help() string {
-	return `Commands: pssh,getVersion,versionCheck`
+	return `Commands: pssh,getVersion,versionCheck,verifyStatus`
 }
