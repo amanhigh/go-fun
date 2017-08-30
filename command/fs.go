@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
+	"strings"
 )
 
 func AppendFile(path string, content string) {
@@ -20,13 +21,19 @@ func AppendFile(path string, content string) {
 
 func ReadAllFiles(dirPath string) ([]string) {
 	contents := []string{}
+	contentMap := ReadFileMap(dirPath)
+	for _, value := range contentMap {
+		contents = append(contents, value...)
+	}
+	return contents
+}
+
+func ReadFileMap(dirPath string) (map[string][]string) {
+	contents := map[string][]string{}
 	if fileInfos, err := ioutil.ReadDir(dirPath); err == nil {
 		for _, info := range fileInfos {
-			if content, err := ioutil.ReadFile(fmt.Sprintf("%v/%v", dirPath, info.Name())); err == nil {
-				contents = append(contents, string(content))
-			} else {
-				log.WithFields(log.Fields{"Error": err}).Error("Error Reading File")
-			}
+			filePath := fmt.Sprintf("%v/%v", dirPath, info.Name())
+			contents[info.Name()] = ReadAllLines(filePath)
 		}
 	} else {
 		log.WithFields(log.Fields{"Directory": dirPath, "Error": err}).Error("Error Reading Directory")
@@ -34,10 +41,19 @@ func ReadAllFiles(dirPath string) ([]string) {
 	return contents
 }
 
-func ClearDirectory(dirPath string)  {
+func ReadAllLines(filePath string) []string {
+	if content, err := ioutil.ReadFile(filePath); err == nil {
+		return strings.Split(string(content), "\n")
+	} else {
+		log.WithFields(log.Fields{"Error": err}).Error("Error Reading File")
+		return []string{}
+	}
+}
+
+func ClearDirectory(dirPath string) {
 	if fileInfos, err := ioutil.ReadDir(dirPath); err == nil {
 		for _, info := range fileInfos {
-			filePath:= fmt.Sprintf("%v/%v", dirPath,info.Name())
+			filePath := fmt.Sprintf("%v/%v", dirPath, info.Name())
 			os.Remove(filePath)
 		}
 	}
