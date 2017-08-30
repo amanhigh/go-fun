@@ -10,6 +10,7 @@ const CONSOLE_FILE = CLUSTER_PATH + "/console.txt"
 
 const RELEASE_FILE = "/Users/amanpreet.singh/Documents/release.txt"
 const DEFAULT_PERM = os.FileMode(0755)
+const DEFAULT_PARALELISM = 50
 
 /* Date/Time */
 const LAYOUT = "Jan 2, 2006 at 3:04pm (MST)"
