@@ -43,11 +43,22 @@ func ReadFileMap(dirPath string) (map[string][]string) {
 
 func ReadAllLines(filePath string) []string {
 	if content, err := ioutil.ReadFile(filePath); err == nil {
-		return strings.Split(string(content), "\n")
+		lines := strings.Split(string(content), "\n")
+		return filterEmptyLines(lines)
 	} else {
 		log.WithFields(log.Fields{"Error": err}).Error("Error Reading File")
 		return []string{}
 	}
+}
+
+func filterEmptyLines(lines []string) []string {
+	nonEmptyLines := []string{}
+	for _, line := range lines {
+		if len(line) > 0 {
+			nonEmptyLines = append(nonEmptyLines, line)
+		}
+	}
+	return nonEmptyLines
 }
 
 func ClearDirectory(dirPath string) {
