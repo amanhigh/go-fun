@@ -32,8 +32,8 @@ func (self *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput
 	})
 }
 func clearOutputPaths() {
-	RecreateDir(OUTPUT_PATH, 0755)
-	RecreateDir(ERROR_PATH, 0755)
+	ClearDirectory(OUTPUT_PATH)
+	ClearDirectory(ERROR_PATH)
 }
 
 func getClusterFile(name string) string {
