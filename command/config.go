@@ -9,7 +9,7 @@ const ERROR_PATH = "/tmp/error"
 const CONSOLE_FILE = CLUSTER_PATH + "/console.txt"
 
 const RELEASE_FILE = "/Users/amanpreet.singh/Documents/release.txt"
-const DEFAULT_PERM = os.FileMode(0755)
+const DEFAULT_PERM = os.FileMode(0644) //Owner RW,Group R,Other R
 const DEFAULT_PARALELISM = 50
 
 /* Date/Time */
