@@ -4,13 +4,14 @@ import (
 	"os/exec"
 	"fmt"
 	"strings"
+	log "github.com/Sirupsen/logrus"
 )
 
 func RunCommandPrintError(cmd string) (string) {
 	if output, err := runCommand(cmd); err == nil {
 		return string(output)
 	} else {
-		PrintRed(err.Error())
+		log.WithFields(log.Fields{"CMD": cmd, "Error": err}).Fatal("Error Running Command")
 		return ""
 	}
 }
