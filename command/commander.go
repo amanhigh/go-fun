@@ -33,6 +33,14 @@ func RunIf(cmd string, lambda func(output string)) bool {
 	return false
 }
 
+func RunNotIf(cmd string, lambda func(output string)) bool {
+	if output, err := runCommand(cmd); err != nil {
+		lambda(output)
+		return true
+	}
+	return false
+}
+
 func runCommand(cmd string) (string, error) {
 	output, err := exec.Command("sh", "-c", cmd).Output()
 	return strings.TrimSpace(string(output)), err
