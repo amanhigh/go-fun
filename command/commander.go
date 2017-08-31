@@ -24,10 +24,12 @@ func PrintCommand(cmd string) {
 	}
 }
 
-func RunIf(cmd string, lambda func(output string)) {
+func RunIf(cmd string, lambda func(output string)) bool {
 	if output, err := runCommand(cmd); err == nil {
 		lambda(output)
+		return true
 	}
+	return false
 }
 
 func runCommand(cmd string) (string, error) {
