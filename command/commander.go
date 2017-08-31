@@ -18,7 +18,7 @@ func RunCommandPrintError(cmd string) (string) {
 func PrintCommand(cmd string) {
 	if output, err := runCommand(cmd); err != nil {
 		PrintWhite(output)
-		PrintRed(fmt.Sprintf("Error Executing Pssh: %v\n CMD:%v\n", err, cmd))
+		PrintRed(fmt.Sprintf("Error Executing ssh: %v\n CMD:%v\n", err, cmd))
 	} else {
 		PrintWhite(output)
 	}
