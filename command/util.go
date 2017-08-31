@@ -1,14 +1,8 @@
 package commander
 
-import (
-	"bufio"
-	"os"
-	"strings"
-)
+import "regexp"
 
-func PromptInput(promptText string) string {
-	PrintWhite(promptText)
-	reader := bufio.NewReader(os.Stdin)
-	text, _ := reader.ReadString('\n')
-	return strings.TrimSpace(text)
+func ReplaceRegEx(content string,search string,replace string) string {
+	matcher := regexp.MustCompile(search)
+	return matcher.ReplaceAllString(content, replace)
 }
