@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"os"
 	"strings"
+	"fmt"
+	"strconv"
 )
 
 func PromptInput(promptText string) string {
@@ -24,5 +26,18 @@ func NoConfirm(msg string, runLamda func()) {
 	input := PromptInput(msg + " N/n to Abort")
 	if !strings.EqualFold(input, "N") {
 		runLamda()
+	}
+}
+
+func DisplayMenu(msg string, options []string) (int, string) {
+	PrintYellow(msg)
+	for i, option := range options {
+		PrintWhite(fmt.Sprintf("%v. %v", i+1, option))
+	}
+	input := PromptInput("Please Select an Option.")
+	if selection, err := strconv.Atoi(input); err == nil {
+		return selection, options[selection-1]
+	} else {
+		return -1, "INVALID"
 	}
 }
