@@ -8,7 +8,7 @@ func GetBranch() string {
 }
 
 func GitCommit(msg string, filePath string) {
-	PrintCommand(fmt.Sprintf("git commit -m %v %v", msg, filePath))
+	PrintCommand(fmt.Sprintf("git commit -m '%v' %v", msg, filePath))
 }
 
 func GitDiff() {
