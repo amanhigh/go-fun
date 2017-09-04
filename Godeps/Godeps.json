@@ -3,13 +3,314 @@
 	"GoVersion": "go1.8",
 	"GodepVersion": "v79",
 	"Packages": [
-		"./tutorial/"
+		"./..."
 	],
 	"Deps": [
+		{
+			"ImportPath": "bitbucket.org/liamstask/goose/lib/goose",
+			"Rev": "8488cc47d90c8a502b1c41a462a6d9cc8ee0a895"
+		},
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.11.5-12-g10f801e",
+			"Rev": "10f801ebc38b33738c9d17d50860f484a0988ff5"
+		},
+		{
+			"ImportPath": "github.com/cheekybits/genny/generic",
+			"Rev": "9127e812e1e9e501ce899a18121d316ecb52e4ba"
+		},
+		{
+			"ImportPath": "github.com/go-sql-driver/mysql",
+			"Comment": "v1.2-194-g7ebe0a5",
+			"Rev": "7ebe0a500653eeb1859664bed5e48dec1e164e73"
+		},
+		{
+			"ImportPath": "github.com/jinzhu/gorm",
+			"Comment": "v1.0-12-g57c7212",
+			"Rev": "57c72125b3087e1ed02c16f23a1f381cde3aaf2c"
+		},
+		{
+			"ImportPath": "github.com/jinzhu/gorm/dialects/mysql",
+			"Comment": "v1.0-12-g57c7212",
+			"Rev": "57c72125b3087e1ed02c16f23a1f381cde3aaf2c"
+		},
+		{
+			"ImportPath": "github.com/jinzhu/inflection",
+			"Rev": "3272df6c21d04180007eb3349844c89a3856bc25"
+		},
+		{
+			"ImportPath": "github.com/kylelemons/go-gypsy/yaml",
+			"Comment": "go.weekly.2011-11-02-19-g42fc2c7",
+			"Rev": "42fc2c7ee9b8bd0ff636cd2d7a8c0a49491044c5"
+		},
+		{
+			"ImportPath": "github.com/lib/pq",
+			"Comment": "go1.0-cutoff-96-gee1442b",
+			"Rev": "ee1442bda7bd1b6a84e913bdb421cb1874ec629d"
+		},
+		{
+			"ImportPath": "github.com/lib/pq/oid",
+			"Comment": "go1.0-cutoff-96-gee1442b",
+			"Rev": "ee1442bda7bd1b6a84e913bdb421cb1874ec629d"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-sqlite3",
+			"Comment": "v1.1.0-67-g7204887",
+			"Rev": "7204887cf3a42df1cfaa5505dc3a3427f6dded8b"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/config",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/internal/codelocation",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/internal/containernode",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/internal/failer",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/internal/leafnodes",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/internal/remote",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/internal/spec",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/internal/spec_iterator",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/internal/specrunner",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/internal/suite",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/internal/testingtproxy",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/internal/writer",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/reporters",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/reporters/stenographer",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/reporters/stenographer/support/go-colorable",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/reporters/stenographer/support/go-isatty",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/types",
+			"Comment": "v1.3.1-7-g83438ca",
+			"Rev": "83438ca4278f2f56757b9ab2cb15dd4f596d84e8"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega",
+			"Comment": "v1.1.0-6-gda1d0e4",
+			"Rev": "da1d0e434025dec4c843b8f05171992bb6c8dfcc"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/format",
+			"Comment": "v1.1.0-6-gda1d0e4",
+			"Rev": "da1d0e434025dec4c843b8f05171992bb6c8dfcc"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/internal/assertion",
+			"Comment": "v1.1.0-6-gda1d0e4",
+			"Rev": "da1d0e434025dec4c843b8f05171992bb6c8dfcc"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/internal/asyncassertion",
+			"Comment": "v1.1.0-6-gda1d0e4",
+			"Rev": "da1d0e434025dec4c843b8f05171992bb6c8dfcc"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/internal/oraclematcher",
+			"Comment": "v1.1.0-6-gda1d0e4",
+			"Rev": "da1d0e434025dec4c843b8f05171992bb6c8dfcc"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/internal/testingtsupport",
+			"Comment": "v1.1.0-6-gda1d0e4",
+			"Rev": "da1d0e434025dec4c843b8f05171992bb6c8dfcc"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/matchers",
+			"Comment": "v1.1.0-6-gda1d0e4",
+			"Rev": "da1d0e434025dec4c843b8f05171992bb6c8dfcc"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/matchers/support/goraph/bipartitegraph",
+			"Comment": "v1.1.0-6-gda1d0e4",
+			"Rev": "da1d0e434025dec4c843b8f05171992bb6c8dfcc"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/matchers/support/goraph/edge",
+			"Comment": "v1.1.0-6-gda1d0e4",
+			"Rev": "da1d0e434025dec4c843b8f05171992bb6c8dfcc"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/matchers/support/goraph/node",
+			"Comment": "v1.1.0-6-gda1d0e4",
+			"Rev": "da1d0e434025dec4c843b8f05171992bb6c8dfcc"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/matchers/support/goraph/util",
+			"Comment": "v1.1.0-6-gda1d0e4",
+			"Rev": "da1d0e434025dec4c843b8f05171992bb6c8dfcc"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/types",
+			"Comment": "v1.1.0-6-gda1d0e4",
+			"Rev": "da1d0e434025dec4c843b8f05171992bb6c8dfcc"
+		},
+		{
+			"ImportPath": "github.com/samuel/go-zookeeper/zk",
+			"Rev": "1d7be4effb13d2d908342d349d71a284a7542693"
+		},
+		{
+			"ImportPath": "github.com/ziutek/mymysql/godrv",
+			"Comment": "v1.5.4-25-g1d19cbf",
+			"Rev": "1d19cbf98d83564cc561192ae7d7183d795f7ac7"
+		},
+		{
+			"ImportPath": "github.com/ziutek/mymysql/mysql",
+			"Comment": "v1.5.4-25-g1d19cbf",
+			"Rev": "1d19cbf98d83564cc561192ae7d7183d795f7ac7"
+		},
+		{
+			"ImportPath": "github.com/ziutek/mymysql/native",
+			"Comment": "v1.5.4-25-g1d19cbf",
+			"Rev": "1d19cbf98d83564cc561192ae7d7183d795f7ac7"
+		},
+		{
+			"ImportPath": "golang.org/x/net/html",
+			"Rev": "feeb485667d1fdabe727840fe00adc22431bc86e"
+		},
+		{
+			"ImportPath": "golang.org/x/net/html/atom",
+			"Rev": "feeb485667d1fdabe727840fe00adc22431bc86e"
+		},
+		{
+			"ImportPath": "golang.org/x/net/html/charset",
+			"Rev": "feeb485667d1fdabe727840fe00adc22431bc86e"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "7ddbeae9ae08c6a06a59597f0c9edbc5ff2444ce"
+		},
+		{
+			"ImportPath": "golang.org/x/text/encoding",
+			"Rev": "19e3104b43db45fca0303f489a9536087b184802"
+		},
+		{
+			"ImportPath": "golang.org/x/text/encoding/charmap",
+			"Rev": "19e3104b43db45fca0303f489a9536087b184802"
+		},
+		{
+			"ImportPath": "golang.org/x/text/encoding/htmlindex",
+			"Rev": "19e3104b43db45fca0303f489a9536087b184802"
+		},
+		{
+			"ImportPath": "golang.org/x/text/encoding/internal",
+			"Rev": "19e3104b43db45fca0303f489a9536087b184802"
+		},
+		{
+			"ImportPath": "golang.org/x/text/encoding/internal/identifier",
+			"Rev": "19e3104b43db45fca0303f489a9536087b184802"
+		},
+		{
+			"ImportPath": "golang.org/x/text/encoding/japanese",
+			"Rev": "19e3104b43db45fca0303f489a9536087b184802"
+		},
+		{
+			"ImportPath": "golang.org/x/text/encoding/korean",
+			"Rev": "19e3104b43db45fca0303f489a9536087b184802"
+		},
+		{
+			"ImportPath": "golang.org/x/text/encoding/simplifiedchinese",
+			"Rev": "19e3104b43db45fca0303f489a9536087b184802"
+		},
+		{
+			"ImportPath": "golang.org/x/text/encoding/traditionalchinese",
+			"Rev": "19e3104b43db45fca0303f489a9536087b184802"
+		},
+		{
+			"ImportPath": "golang.org/x/text/encoding/unicode",
+			"Rev": "19e3104b43db45fca0303f489a9536087b184802"
+		},
+		{
+			"ImportPath": "golang.org/x/text/internal/tag",
+			"Rev": "19e3104b43db45fca0303f489a9536087b184802"
+		},
+		{
+			"ImportPath": "golang.org/x/text/internal/utf8internal",
+			"Rev": "19e3104b43db45fca0303f489a9536087b184802"
+		},
+		{
+			"ImportPath": "golang.org/x/text/language",
+			"Rev": "19e3104b43db45fca0303f489a9536087b184802"
+		},
+		{
+			"ImportPath": "golang.org/x/text/runes",
+			"Rev": "19e3104b43db45fca0303f489a9536087b184802"
+		},
+		{
+			"ImportPath": "golang.org/x/text/transform",
+			"Rev": "19e3104b43db45fca0303f489a9536087b184802"
+		},
 		{
 			"ImportPath": "golang.org/x/tour/tree",
 			"Comment": "go.r60-298-g97f0ee8",
 			"Rev": "97f0ee8b016282b578395cd0dda1f9c3aabf81ec"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b"
 		}
 	]
 }
