@@ -69,7 +69,6 @@ func (self *HttpClient) DoRequest(method string, url string, body interface{}, u
 
 	/* Encode Json */
 	if requestBody, err = json.Marshal(body); err == nil {
-
 		/* Build Request */
 		if request, err = http.NewRequest(method, url, bytes.NewReader(requestBody)); err == nil {
 			timeoutContext, cancelFunction := context.WithTimeout(context.Background(), self.Timeout)
@@ -85,8 +84,8 @@ func (self *HttpClient) DoRequest(method string, url string, body interface{}, u
 				/* Check If Request was Successful */
 				statusCode = response.StatusCode
 				if response.StatusCode == http.StatusOK {
-					/* Read Body & Decode */
-					if responseBytes, err = ioutil.ReadAll(response.Body); err == nil {
+					/* Read Body & Decode if Response came & unmarshal entity is supplied */
+					if responseBytes, err = ioutil.ReadAll(response.Body); err == nil && unmarshalledResponse!=nil {
 						err = json.Unmarshal(responseBytes, unmarshalledResponse)
 					}
 				} else {
