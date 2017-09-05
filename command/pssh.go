@@ -44,6 +44,11 @@ func WriteClusterFile(clusterName string, content string) {
 	ioutil.WriteFile(filePath, []byte(content), DEFAULT_PERM)
 }
 
+func ReadClusterFile(clusterName string) []string {
+	filePath := getClusterFile(clusterName)
+	return ReadAllLines(filePath)
+}
+
 func getClusterFile(name string) string {
 	return fmt.Sprintf("%v/%v.txt", CLUSTER_PATH, name)
 }
