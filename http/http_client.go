@@ -17,7 +17,8 @@ var NoKeepAliveClient = BuildNonKeepAliveClient()
 var KeepAliveClient = BuildKeepAliveClient(60*time.Second, 10)
 
 type HttpClient struct {
-	Client *http.Client
+	Client  *http.Client
+	Timeout time.Duration
 }
 
 /* Constructors */
@@ -30,6 +31,7 @@ func BuildNonKeepAliveClient() *HttpClient {
 				MaxIdleConnsPerHost: -1,
 			},
 		},
+		Timeout: 5 * time.Second,
 	}
 }
 
@@ -44,22 +46,23 @@ func BuildKeepAliveClient(dialTimeout time.Duration, idleConnectionsPerHost int)
 				MaxIdleConnsPerHost: idleConnectionsPerHost,
 			},
 		},
+		Timeout: 5 * time.Second,
 	}
 }
 
-func (self *HttpClient) DoGet(url string, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error) {
-	return self.DoRequest("GET",url,nil,unmarshalledResponse,timeout)
+func (self *HttpClient) DoGet(url string, unmarshalledResponse interface{}) (statusCode int, err error) {
+	return self.DoRequest("GET", url, nil, unmarshalledResponse)
 }
 
 /*
 	Makes a Post Request with Given Url & Body under specified timeout.
 	Incase of Success you will recieve unmarshalled Response or error otherwise
  */
-func (self *HttpClient) DoPost(url string, body interface{}, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error) {
-	return self.DoRequest("POST",url,body,unmarshalledResponse,timeout)
+func (self *HttpClient) DoPost(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error) {
+	return self.DoRequest("POST", url, body, unmarshalledResponse)
 }
 
-func (self *HttpClient) DoRequest(method string, url string, body interface{}, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error) {
+func (self *HttpClient) DoRequest(method string, url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error) {
 	var requestBody, responseBytes []byte
 	var request *http.Request
 	var response *http.Response
@@ -69,7 +72,7 @@ func (self *HttpClient) DoRequest(method string, url string, body interface{}, u
 
 		/* Build Request */
 		if request, err = http.NewRequest(method, url, bytes.NewReader(requestBody)); err == nil {
-			timeoutContext, cancelFunction := context.WithTimeout(context.Background(), timeout)
+			timeoutContext, cancelFunction := context.WithTimeout(context.Background(), self.Timeout)
 
 			/* Set Content Type Header */
 			request.Header.Set("Content-Type", "application/json")
