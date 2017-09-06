@@ -7,9 +7,9 @@ import (
 
 func Jcurl(url string, pipe string) (output string) {
 	if pipe == "" {
-		output = RunCommandPrintError(fmt.Sprintf("curl -s %v | jq .", url))
+		output = RunCommandPrintError(fmt.Sprintf("curl -s '%v' | jq .", url))
 	} else {
-		output = RunCommandPrintError(fmt.Sprintf("curl -s %v | jq . | %v", url, pipe))
+		output = RunCommandPrintError(fmt.Sprintf("curl -s '%v' | jq . | %v", url, pipe))
 	}
 	return
 }
