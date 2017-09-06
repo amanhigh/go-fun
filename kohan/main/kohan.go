@@ -32,5 +32,6 @@ func getProcessorMap() map[string]processor.ProcessorI {
 		"ssh":    &processor.SshProcessor{p},
 		"expose": &processor.ExposeProcessor{p},
 		"elb":    &processor2.ElbProcessor{p},
+		"cosmosd":    &processor2.CosmosDebugProcessor{p},
 	}
 }
