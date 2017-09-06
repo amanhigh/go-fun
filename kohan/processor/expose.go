@@ -19,6 +19,8 @@ func (self *ExposeProcessor) Process(commandName string) (bool) {
 		e = self.psshHandler(flagSet)
 	case "getVersion":
 		e = self.getVersionHandler(flagSet)
+	case "indexedIp":
+		e = self.handleIndexedIp(flagSet)
 	case "versionCheck":
 		e = self.versionCheckHandler(flagSet)
 	case "verifyStatus":
@@ -40,6 +42,14 @@ func (self *ExposeProcessor) getVersionHandler(flagSet *flag.FlagSet) error {
 	versionType := flagSet.String("type", "", "Type dpkg/latest for Version")
 	e := flagSet.Parse(self.Args)
 	commander.GetVersion(*pkg, *host, *versionType)
+	return e
+}
+
+func (self *ExposeProcessor) handleIndexedIp(flagSet *flag.FlagSet) error {
+	cluster := flagSet.String("cl", "", "Cluster Name")
+	index := flagSet.Int("i", -1, "Index of Ip")
+	e := flagSet.Parse(self.Args)
+	commander.IndexedIp(*cluster, *index)
 	return e
 }
 
@@ -87,5 +97,5 @@ func getPsshFromType(psshType string) commander.Pssh {
 }
 
 func (self *ExposeProcessor) Help() string {
-	return `Commands: pssh,getVersion,versionCheck,verifyStatus`
+	return `Commands: pssh,getVersion,indexedIp,versionCheck,verifyStatus`
 }

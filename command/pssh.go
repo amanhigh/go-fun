@@ -49,6 +49,15 @@ func ReadClusterFile(clusterName string) []string {
 	return ReadAllLines(filePath)
 }
 
+func IndexedIp(clusterName string, index int) {
+	ips := ReadClusterFile(clusterName)
+	if index <= len(ips) {
+		fmt.Println(ips[index])
+	} else {
+		fmt.Println("INVALID")
+	}
+}
+
 func getClusterFile(name string) string {
 	return fmt.Sprintf("%v/%v.txt", CLUSTER_PATH, name)
 }
