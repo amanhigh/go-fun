@@ -27,13 +27,12 @@ func VersionCheck(pkgNameCsv string, cluster string) {
 }
 
 func VerifyStatus(cmd string, cluster string) {
-	PrintBlue("Running on Cluster: " + cluster)
+	PrintBlue("Running Sanity on Cluster: " + cluster)
 
 	//pr $cluster 100 "$cmd;sudo /etc/init.d/nsca status;sudo /etc/init.d/cosmos-jmx status" 10 > /dev/null;
 	FastPssh.Run(cmd, cluster, 200, true)
 	os.Chdir(OUTPUT_PATH)
 
-	PrintBlue("Summary")
 	PrintCommand("cat * | awk '{print $1,$2,$3}' | sort | uniq -c | sort -r")
 
 	RunIf("find  . -type f -empty | cut -c3-", func(output string) {
@@ -44,7 +43,6 @@ func VerifyStatus(cmd string, cluster string) {
 	})
 
 	contentMap := ReadFileMap(OUTPUT_PATH)
-	PrintBlue("Extracting Bad States")
 	performBadStateChecks(contentMap)
 
 	minFound := performSecondsCheck(contentMap)
@@ -54,13 +52,15 @@ func VerifyStatus(cmd string, cluster string) {
 /* Helpers */
 func performBadStateChecks(contentMap map[string][]string) {
 	for _, check := range checks {
-		PrintBlue("Performing Check: " + check)
 		if keyWordLines, keyWordIps := extractKeywordLines(contentMap, check); len(keyWordLines) > 0 {
+			PrintBlue("Check Failed: " + check)
 			PrintRed(strings.Join(keyWordLines, "\n"))
 			WriteClusterFile(check, strings.Join(keyWordIps, "\n"))
 		}
 	}
+	PrintGreen(fmt.Sprintf("Checks Complete: %v", checks))
 }
+
 func performSecondsCheck(contentMap map[string][]string) int {
 	minFound := 0
 	if lines, _ := extractKeywordLines(contentMap, "seconds"); len(lines) > 0 {
