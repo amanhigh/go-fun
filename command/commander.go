@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	log "github.com/Sirupsen/logrus"
+	"os"
 )
 
 func RunCommandPrintError(cmd string) (string) {
@@ -44,4 +45,15 @@ func RunNotIf(cmd string, lambda func(output string)) bool {
 func runCommand(cmd string) (string, error) {
 	output, err := exec.Command("sh", "-c", cmd).Output()
 	return strings.TrimSpace(string(output)), err
+}
+
+func LiveCommand(cmd string) {
+	command := exec.Command("sh", "-c", cmd)
+	/* Connect Command Outputs */
+	command.Stdout=os.Stdout
+	command.Stderr=os.Stderr
+
+	/* Start Command Wait for Finish */
+	command.Start()
+	command.Wait()
 }

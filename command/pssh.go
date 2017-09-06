@@ -25,7 +25,7 @@ func (self *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput
 		RunCommandPrintError(psshCmd)
 	} else {
 		PrintWhite(fmt.Sprintf("Running Parallel SSH. Cluster: %v Parallelism:%v", cluster, parallelism))
-		PrintCommand(psshCmd)
+		LiveCommand(psshCmd)
 	}
 
 	RunIf(fmt.Sprintf("grep FAILURE %v", getClusterFile("console.txt")), func(output string) {
