@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 )
 
-var FastPssh = Pssh{10, OUTPUT_PATH, ERROR_PATH, false,}
+var FastPssh = Pssh{20, OUTPUT_PATH, ERROR_PATH, false,}
 var DisplayPssh = Pssh{10, OUTPUT_PATH, ERROR_PATH, true,}
 var SlowPssh = Pssh{240, OUTPUT_PATH, ERROR_PATH, false,}
 
