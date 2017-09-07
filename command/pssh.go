@@ -52,7 +52,7 @@ func ReadClusterFile(clusterName string) []string {
 func IndexedIp(clusterName string, index int) {
 	ips := ReadClusterFile(clusterName)
 	if index <= len(ips) {
-		fmt.Println(ips[index])
+		fmt.Println(ips[index-1])
 	} else {
 		fmt.Println("INVALID")
 	}
