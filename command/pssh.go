@@ -20,7 +20,7 @@ type Pssh struct {
 func (self *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput bool) {
 	clearOutputPaths()
 
-	psshCmd := fmt.Sprintf(`script %v pssh -h %v -t %v -o %v -e %v %v -p %v '%v'';`,
+	psshCmd := fmt.Sprintf(`script %v pssh -h %v -t %v -o %v -e %v %v -p %v '%v'`,
 		CONSOLE_FILE, getClusterFile(cluster), self.Timeout, self.outputPath, self.errorPath, self.getDisplayFlag(), parallelism, cmd)
 	if disableOutput {
 		RunCommandPrintError(psshCmd)
