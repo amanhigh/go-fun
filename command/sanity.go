@@ -30,7 +30,7 @@ func VerifyStatus(cmd string, cluster string) {
 	PrintBlue("Running Sanity on Cluster: " + cluster)
 
 	//pr $cluster 100 "$cmd;sudo /etc/init.d/nsca status;sudo /etc/init.d/cosmos-jmx status" 10 > /dev/null;
-	FastPssh.Run(cmd, cluster, 200, true)
+	NORMAL_PSSH.Run(cmd, cluster, 200, true)
 	os.Chdir(OUTPUT_PATH)
 
 	PrintCommand("cat * | awk '{print $1,$2,$3}' | sort | uniq -c | sort -r")
