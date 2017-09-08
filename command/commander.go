@@ -10,7 +10,7 @@ import (
 
 func RunCommandPrintError(cmd string) (string) {
 	if output, err := runCommand(cmd); err == nil {
-		return string(output)
+		return output
 	} else {
 		log.WithFields(log.Fields{"CMD": cmd, "Error": err}).Fatal("Error Running Command")
 		return ""
