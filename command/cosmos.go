@@ -13,7 +13,6 @@ func CosmosCurl(host string, startMin int, endMin int, metric string, pipe strin
 		PrintWhite(cosmosUrl)
 	}
 	output := Jcurl(cosmosUrl, pipe)
-	PrintWhite(output)
 	return output
 }
 
@@ -27,7 +26,6 @@ func CosmosRates(host string, startMin int, endMin int, metric string) []int {
 		PrintWhite(cosmosUrl)
 	}
 	result := Jcurl(cosmosUrl, "jq -r '.[] | .dps'")
-	PrintWhite(result)
 
 	/* Unmarshal Json */
 	rate := map[string]int{}
