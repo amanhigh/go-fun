@@ -7,7 +7,7 @@ import (
 	"sort"
 )
 
-func CosmosCurl(host string, startMin int, endMin int, metric string,pipe string) string {
+func CosmosCurl(host string, startMin int, endMin int, metric string, pipe string) string {
 	cosmosUrl := fmt.Sprintf("http://%v/api/query?start=%vm-ago&end=%vm-ago&m=%v", host, startMin, endMin, metric)
 	PrintWhite(cosmosUrl)
 	output := Jcurl(cosmosUrl, pipe)
@@ -23,6 +23,7 @@ func CosmosRates(host string, startMin int, endMin int, metric string) []int {
 	cosmosUrl := fmt.Sprintf("http://%v/api/query?start=%vm-ago&end=%vm-ago&m=%v", host, startMin, endMin, metric)
 	PrintWhite(cosmosUrl)
 	result := Jcurl(cosmosUrl, "jq -r '.[] | .dps'")
+	PrintWhite(result)
 
 	/* Unmarshal Json */
 	rate := map[string]int{}
@@ -37,27 +38,23 @@ func CosmosRates(host string, startMin int, endMin int, metric string) []int {
 		timeStampMap[intTimestamp] = dps
 	}
 
-	/* Sort Time Stamps & Dps Accordingly  */
+	/* Sort Time Stamps & Compute Rates  */
 	sort.Ints(sortedTimeStamp)
-	sortedDps := []int{}
-	//lastTimeStamp := 0
-	for _, timestamp := range sortedTimeStamp {
-		//fmt.Printf("Timestamp:%v Last:%v Diff:%v\n", timestamp, lastTimeStamp, timestamp-lastTimeStamp)
-		sortedDps = append(sortedDps, timeStampMap[timestamp])
-		//lastTimeStamp = timestamp
-	}
-
-	/* Compute Rates */
-	lastDps := 0
 	computedRates := []int{}
-	for i, dps := range sortedDps {
-		//commander.PrintWhite(fmt.Sprintf("I: %v Dps: %v Last:%v Diff:%v", i, dps, lastDps, dps-lastDps))
+	lastTimeStamp := 0
+	lastDps := 0
+	for i, timestamp := range sortedTimeStamp {
+		dps := timeStampMap[timestamp]
+		timeStampDiff := timestamp - lastTimeStamp
+		dpsDiff := dps - lastDps
+		computedRate := dpsDiff / timeStampDiff
 		if i > 0 {
-			computedRate := dps - lastDps
+			//fmt.Printf("I: %v Timestamp:%v LastTime:%v TimeDiff:%v Dps: %v LastDps:%v DpsDiff:%v Rate:%v\n", i, timestamp, lastTimeStamp, timeStampDiff, dps, lastDps, dpsDiff, computedRate)
 			computedRates = append(computedRates, computedRate)
 		}
+		lastTimeStamp = timestamp
 		lastDps = dps
 	}
+
 	return computedRates
 }
-
