@@ -18,6 +18,18 @@ func PrintBlue(text string) {
 	PrintColor(34, text)
 }
 
+func PrintSkyBlue(text string) {
+	PrintColor(96, text)
+}
+
+func PrintPink(text string) {
+	PrintColor(95, text)
+}
+
+func PrintDarkGreen(text string) {
+	PrintColor(92, text)
+}
+
 func PrintWhite(text string) {
 	PrintColor(28, text)
 }
