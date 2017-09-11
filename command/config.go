@@ -27,7 +27,7 @@ func DebugControl(flag bool) {
 		PrintSkyBlue("Enabling Debug Mode")
 		ioutil.WriteFile(DEBUG_FILE, []byte{}, DEFAULT_PERM)
 	} else {
-		PrintDarkGreen("Disabling Debug Mode")
+		PrintRed("Disabling Debug Mode")
 		os.Remove(DEBUG_FILE)
 	}
 	PrintYellow(fmt.Sprintf("Debug Mode: %v", IsDebugMode()))

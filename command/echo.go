@@ -26,10 +26,6 @@ func PrintPink(text string) {
 	PrintColor(95, text)
 }
 
-func PrintDarkGreen(text string) {
-	PrintColor(92, text)
-}
-
 func PrintWhite(text string) {
 	PrintColor(28, text)
 }
