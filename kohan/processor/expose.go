@@ -25,6 +25,8 @@ func (self *ExposeProcessor) Process(commandName string) (bool) {
 		e = self.versionCheckHandler(flagSet)
 	case "verifyStatus":
 		e = self.verifyStatusHandler(flagSet)
+	case "debugControl":
+		e = self.debugControlHandler(flagSet)
 	default:
 		fmt.Println(self.Help())
 	}
@@ -36,6 +38,7 @@ func (self *ExposeProcessor) Process(commandName string) (bool) {
 	}
 	return true
 }
+
 func (self *ExposeProcessor) getVersionHandler(flagSet *flag.FlagSet) error {
 	pkg := flagSet.String("pkg", "", "Package Name")
 	host := flagSet.String("host", "", "Host For Fetching Version")
@@ -80,6 +83,13 @@ func (self *ExposeProcessor) psshHandler(flagSet *flag.FlagSet) error {
 	return e
 }
 
+func (self *ExposeProcessor) debugControlHandler(flagSet *flag.FlagSet) error {
+	f := flagSet.Bool("f", false, "Enable Disable Flag true/false")
+	e := flagSet.Parse(self.Args)
+	commander.DebugControl(*f)
+	return e
+}
+
 func getPsshFromType(psshType string) commander.Pssh {
 	var selectedPssh commander.Pssh
 	switch psshType {
@@ -97,5 +107,5 @@ func getPsshFromType(psshType string) commander.Pssh {
 }
 
 func (self *ExposeProcessor) Help() string {
-	return `Commands: pssh,getVersion,indexedIp,versionCheck,verifyStatus`
+	return `Commands: pssh,getVersion,indexedIp,versionCheck,verifyStatus,debugControl`
 }
