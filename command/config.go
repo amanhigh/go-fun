@@ -3,6 +3,7 @@ package commander
 import (
 	"os"
 	"io/ioutil"
+	"fmt"
 )
 
 /* PSSH */
@@ -23,10 +24,13 @@ const LAYOUT = "Jan 2, 2006 at 3:04pm (MST)"
 
 func DebugControl(flag bool) {
 	if flag {
+		PrintSkyBlue("Enabling Debug Mode")
 		ioutil.WriteFile(DEBUG_FILE, []byte{}, DEFAULT_PERM)
 	} else {
+		PrintDarkGreen("Disabling Debug Mode")
 		os.Remove(DEBUG_FILE)
 	}
+	PrintYellow(fmt.Sprintf("Debug Mode: %v", IsDebugMode()))
 }
 
 func IsDebugMode() bool {
