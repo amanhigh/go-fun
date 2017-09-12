@@ -6,7 +6,7 @@ import (
 )
 
 var FastPssh = Pssh{20, OUTPUT_PATH, ERROR_PATH, false,}
-var NORMAL_PSSH=Pssh{30, OUTPUT_PATH, ERROR_PATH, false,}
+var NORMAL_PSSH = Pssh{30, OUTPUT_PATH, ERROR_PATH, false,}
 var DisplayPssh = Pssh{10, OUTPUT_PATH, ERROR_PATH, true,}
 var SlowPssh = Pssh{240, OUTPUT_PATH, ERROR_PATH, false,}
 
@@ -57,6 +57,10 @@ func IndexedIp(clusterName string, index int) {
 	} else {
 		fmt.Println("INVALID")
 	}
+}
+
+func SearchContent(regex string) string {
+	return RunCommandPrintError(fmt.Sprintf("grep -inrR '%v' %v", regex, OUTPUT_PATH))
 }
 
 func getClusterFile(name string) string {
