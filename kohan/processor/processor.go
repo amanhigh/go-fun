@@ -3,15 +3,17 @@ package processor
 import (
 	"flag"
 	"fmt"
-	"github.com/amanhigh/go-fun/command"
 	"strings"
+	"github.com/amanhigh/go-fun/command"
 )
 
 /* Interface */
 type HandleFunc func(*flag.FlagSet, []string) error
+type DirectFunc func()
 
 type HandlerI interface {
-	GetHandleMap() (map[string]HandleFunc)
+	GetArgedHandlers() (map[string]HandleFunc)
+	GetNonArgedHandlers() (map[string]DirectFunc)
 }
 
 type ProcessorI interface {
@@ -28,9 +30,10 @@ func (self *Processor) Process(commandName string, args []string) (bool) {
 	var e error
 	flagSet := flag.NewFlagSet(commandName, flag.ExitOnError)
 
-	handlerMap := self.Handler.GetHandleMap()
-	if handleFunc, ok := handlerMap[commandName]; ok {
+	if handleFunc, ok := self.Handler.GetArgedHandlers()[commandName]; ok {
 		handleFunc(flagSet, args)
+	} else if directFunc, ok := self.Handler.GetNonArgedHandlers()[commandName]; ok {
+		directFunc()
 	} else {
 		commander.PrintWhite(self.Help())
 	}
@@ -44,9 +47,20 @@ func (self *Processor) Process(commandName string, args []string) (bool) {
 }
 
 func (self *Processor) Help() string {
+	return fmt.Sprintf("Commands: Direct - %v\n Flagged - %v\n", getCommandHelpString(self.Handler.GetArgedHandlers()), getDirectHelpString(self.Handler.GetNonArgedHandlers()))
+}
+
+func getCommandHelpString(funcs map[string]HandleFunc) (string) {
 	commandNames := []string{}
-	for command := range self.Handler.GetHandleMap() {
+	for command := range funcs {
 		commandNames = append(commandNames, command)
 	}
-	return "Commands: " + strings.Join(commandNames, ", ")
+	return strings.Join(commandNames, ", ")
+}
+func getDirectHelpString(funcs map[string]DirectFunc) (string) {
+	commandNames := []string{}
+	for command := range funcs {
+		commandNames = append(commandNames, command)
+	}
+	return strings.Join(commandNames, ", ")
 }

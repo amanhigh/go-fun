@@ -9,7 +9,7 @@ import (
 type ExposeProcessor struct {
 }
 
-func (self *ExposeProcessor) GetHandleMap() (map[string]HandleFunc) {
+func (self *ExposeProcessor) GetArgedHandlers() (map[string]HandleFunc) {
 	return map[string]HandleFunc{
 		"pssh":         self.psshHandler,
 		"getVersion":   self.getVersionHandler,
@@ -18,6 +18,10 @@ func (self *ExposeProcessor) GetHandleMap() (map[string]HandleFunc) {
 		"verifyStatus": self.verifyStatusHandler,
 		"debugControl": self.debugControlHandler,
 	}
+}
+
+func (self *ExposeProcessor) GetNonArgedHandlers() (map[string]DirectFunc) {
+	return map[string]DirectFunc{}
 }
 
 func (self *ExposeProcessor) getVersionHandler(flagSet *flag.FlagSet, args []string) error {

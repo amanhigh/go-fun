@@ -5,10 +5,12 @@ import (
 	"os"
 	"github.com/amanhigh/go-fun/kohan/processor"
 	"github.com/amanhigh/go-fun/command"
+	processor2 "github.com/Flipkart/elb/scripts/kohan/processor"
 )
 
 var PROCESSOR_MAP = map[string]processor.ProcessorI{
 	"expose": &processor.Processor{&processor.ExposeProcessor{}},
+	"elb": &processor.Processor{&processor2.ElbProcessor{}},
 }
 
 func main() {
@@ -39,7 +41,5 @@ func main() {
 }
 
 func Help() {
-	//"expose":  &processor.ExposeProcessor{p},
-	//	"elb":     &processor2.ElbProcessor{p},
 	//	"cosmosd": &processor2.CosmosDebugProcessor{p},
 }
