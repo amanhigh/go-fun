@@ -16,36 +16,34 @@ var PROCESSOR_MAP = map[string]processor.ProcessorI{
 }
 
 func main() {
+	/* Processor Not Specified */
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: kohan <Processor Name> <Command Name>")
 		Help()
 		os.Exit(1)
-	} else if len(os.Args) < 3 {
-		processorName := os.Args[1]
-		if p, ok := PROCESSOR_MAP[processorName]; ok {
-			commander.PrintWhite(p.Help())
-		} else {
-			commander.PrintRed("Unknown Processor: " + processorName)
-			Help()
-		}
-		os.Exit(1)
 	}
 
 	processorName := os.Args[1]
-	command := os.Args[2]
-
-	if p, ok := PROCESSOR_MAP[processorName]; ok {
-		p.Process(command, os.Args[3:])
-	} else {
+	selectedProcessor, ok := PROCESSOR_MAP[processorName]
+	/* Specified Processor Not Found */
+	if !ok {
 		commander.PrintRed("Unknown Processor: " + processorName)
 		Help()
+		os.Exit(1)
 	}
 
+	/* Command Not Specified */
+	if len(os.Args) < 3 {
+		commander.PrintWhite(selectedProcessor.Help())
+	} else {
+		command := os.Args[2]
+		selectedProcessor.Process(command, os.Args[3:])
+	}
 }
 
 func Help() {
 	names := []string{}
-	for name, _ := range PROCESSOR_MAP {
+	for name := range PROCESSOR_MAP {
 		names = append(names, name)
 	}
 
