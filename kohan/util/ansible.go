@@ -1,12 +1,16 @@
 package util
 
-import "strings"
+import (
+	"strings"
+	"fmt"
+	"errors"
+)
 
 func MergeMux(splitMap map[string][]string) map[string][]string {
 	muxMap := make(map[string][]string)
 	for key, value := range splitMap {
 		/* Collate Mux into single mux File */
-		if strings.Contains(key, "mux") || strings.Contains(key,"-v1") {
+		if strings.Contains(key, "mux") || strings.Contains(key, "-v1") {
 			muxMap["mux"] = append(muxMap["mux"], value...)
 		}
 		/* Also retain all individual groups */
@@ -34,4 +38,25 @@ func BuildSplitMap(lines []string) map[string][]string {
 		}
 	}
 	return splitMap
+}
+
+func SplitAnsibleConfig(configPath string) error {
+	if configPath != "" {
+		if lines, e := ReadLines(configPath); e == nil {
+			splitMap := BuildSplitMap(lines)
+			muxMap := MergeMux(splitMap)
+
+			fmt.Println("\033[1;32mAnsible Split Complete\033[0m")
+			for key, value := range muxMap {
+				fmt.Println(key, len(value))
+				clusterPath := fmt.Sprintf("%s/%s.txt", CLUSTER_PATH, key)
+				WriteLines(clusterPath, value)
+			}
+			return nil
+		} else {
+			return e
+		}
+	} else {
+		return errors.New("Missing Config Path")
+	}
 }
