@@ -7,85 +7,66 @@ import (
 )
 
 type ExposeProcessor struct {
-	Processor
 }
 
-func (self *ExposeProcessor) Process(commandName string) (bool) {
-	var e error
-	flagSet := flag.NewFlagSet(commandName, flag.ExitOnError)
-
-	switch commandName {
-	case "pssh":
-		e = self.psshHandler(flagSet)
-	case "getVersion":
-		e = self.getVersionHandler(flagSet)
-	case "indexedIp":
-		e = self.handleIndexedIp(flagSet)
-	case "versionCheck":
-		e = self.versionCheckHandler(flagSet)
-	case "verifyStatus":
-		e = self.verifyStatusHandler(flagSet)
-	case "debugControl":
-		e = self.debugControlHandler(flagSet)
-	default:
-		fmt.Println(self.Help())
+func (self *ExposeProcessor) GetHandleMap() (map[string]HandleFunc) {
+	return map[string]HandleFunc{
+		"pssh":         self.psshHandler,
+		"getVersion":   self.getVersionHandler,
+		"indexedIp":    self.handleIndexedIp,
+		"versionCheck": self.versionCheckHandler,
+		"verifyStatus": self.verifyStatusHandler,
+		"debugControl": self.debugControlHandler,
 	}
-
-	if e != nil {
-		fmt.Println(e.Error())
-		flagSet.Usage()
-		return false
-	}
-	return true
 }
 
-func (self *ExposeProcessor) getVersionHandler(flagSet *flag.FlagSet) error {
+func (self *ExposeProcessor) getVersionHandler(flagSet *flag.FlagSet, args []string) error {
 	pkg := flagSet.String("pkg", "", "Package Name")
 	host := flagSet.String("host", "", "Host For Fetching Version")
 	versionType := flagSet.String("type", "", "Type dpkg/latest for Version")
-	e := flagSet.Parse(self.Args)
+	e := flagSet.Parse(args)
 	commander.GetVersion(*pkg, *host, *versionType)
 	return e
 }
 
-func (self *ExposeProcessor) handleIndexedIp(flagSet *flag.FlagSet) error {
+func (self *ExposeProcessor) handleIndexedIp(flagSet *flag.FlagSet, args []string) error {
 	cluster := flagSet.String("cl", "", "Cluster Name")
 	index := flagSet.Int("i", -1, "Index of Ip")
-	e := flagSet.Parse(self.Args)
+	e := flagSet.Parse(args)
 	commander.IndexedIp(*cluster, *index)
 	return e
 }
 
-func (self *ExposeProcessor) versionCheckHandler(flagSet *flag.FlagSet) error {
+func (self *ExposeProcessor) versionCheckHandler(flagSet *flag.FlagSet, args []string) error {
 	pkg := flagSet.String("pkg", "", "CSV List of Package Names")
 	cluster := flagSet.String("cl", "", "Cluster To Run On")
-	e := flagSet.Parse(self.Args)
+	e := flagSet.Parse(args)
 	commander.VersionCheck(*pkg, *cluster)
 	return e
 }
 
-func (self *ExposeProcessor) verifyStatusHandler(flagSet *flag.FlagSet) error {
+func (self *ExposeProcessor) verifyStatusHandler(flagSet *flag.FlagSet, args []string) error {
 	cmd := flagSet.String("cmd", "", "Status Check Command")
 	cluster := flagSet.String("cl", "", "Cluster To Run On")
-	e := flagSet.Parse(self.Args)
+	e := flagSet.Parse(args)
 	commander.VerifyStatus(*cmd, *cluster)
 	return e
 }
 
-func (self *ExposeProcessor) psshHandler(flagSet *flag.FlagSet) error {
+func (self *ExposeProcessor) psshHandler(flagSet *flag.FlagSet, args []string) error {
 	cmd := flagSet.String("cmd", "", "Command To Run")
 	cluster := flagSet.String("cl", "", "Cluster To Run On")
 	parallelism := flagSet.Int("p", commander.DEFAULT_PARALELISM, "Parallelism")
 	psshType := flagSet.String("t", "fast", "fast/display/slow")
-	e := flagSet.Parse(self.Args)
+	e := flagSet.Parse(args)
 	selectedPssh := getPsshFromType(*psshType)
 	selectedPssh.Run(*cmd, *cluster, *parallelism, false)
 	return e
 }
 
-func (self *ExposeProcessor) debugControlHandler(flagSet *flag.FlagSet) error {
+func (self *ExposeProcessor) debugControlHandler(flagSet *flag.FlagSet, args []string) error {
 	f := flagSet.Bool("f", false, "Enable Disable Flag true/false")
-	e := flagSet.Parse(self.Args)
+	e := flagSet.Parse(args)
 	commander.DebugControl(*f)
 	return e
 }
@@ -104,8 +85,4 @@ func getPsshFromType(psshType string) commander.Pssh {
 	}
 	commander.PrintYellow(fmt.Sprintf("Using %v PSSH", psshType))
 	return selectedPssh
-}
-
-func (self *ExposeProcessor) Help() string {
-	return `Commands: pssh,getVersion,indexedIp,versionCheck,verifyStatus,debugControl`
 }

@@ -8,7 +8,8 @@ import (
 )
 
 var PROCESSOR_MAP = map[string]processor.ProcessorI{
-	"ssh": &processor.Processor{&processor.SshProcessor{}},
+	"ssh":    &processor.Processor{&processor.SshProcessor{}},
+	"expose": &processor.Processor{&processor.ExposeProcessor{}},
 }
 
 func main() {
