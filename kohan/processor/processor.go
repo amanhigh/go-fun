@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"strings"
-	"github.com/amanhigh/go-fun/commander"
+	"github.com/amanhigh/go-fun/util"
 )
 
 /* Interface */
@@ -35,7 +35,7 @@ func (self *Processor) Process(commandName string, args []string) (bool) {
 	} else if directFunc, ok := self.Handler.GetNonArgedHandlers()[commandName]; ok {
 		directFunc()
 	} else {
-		commander.PrintWhite(self.Help())
+		util.PrintWhite(self.Help())
 	}
 
 	if e != nil {

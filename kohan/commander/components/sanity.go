@@ -7,6 +7,9 @@ import (
 	"regexp"
 	"strconv"
 	log "github.com/Sirupsen/logrus"
+	. "github.com/amanhigh/go-fun/util"
+	. "github.com/amanhigh/go-fun/kohan/commander/tools"
+	"github.com/amanhigh/go-fun/kohan/commander"
 )
 
 var checks = []string{"down", "inactive", "not"}
@@ -19,7 +22,7 @@ func VersionCheck(pkgNameCsv string, cluster string) {
 	packageList := strings.Split(pkgNameCsv, ",")
 
 	cmd := fmt.Sprintf("dpkg -l | grep '%v'", strings.Join(packageList, `\|`))
-	FastPssh.Run(cmd, cluster, DEFAULT_PARALELISM, true)
+	FastPssh.Run(cmd, cluster, commander.DEFAULT_PARALELISM, true)
 
 	for pkgVersion, count := range computeVersionCountMap() {
 		PrintGreen(fmt.Sprintf("%v: %v", pkgVersion, count))
@@ -31,7 +34,7 @@ func VerifyStatus(cmd string, cluster string) {
 
 	//pr $cluster 100 "$cmd;sudo /etc/init.d/nsca status;sudo /etc/init.d/cosmos-jmx status" 10 > /dev/null;
 	NORMAL_PSSH.Run(cmd, cluster, 200, true)
-	os.Chdir(OUTPUT_PATH)
+	os.Chdir(commander.OUTPUT_PATH)
 
 	PrintCommand("cat * | awk '{print $1,$2,$3}' | sort | uniq -c | sort -r")
 
@@ -42,7 +45,7 @@ func VerifyStatus(cmd string, cluster string) {
 		}
 	})
 
-	contentMap := ReadFileMap(OUTPUT_PATH)
+	contentMap := ReadFileMap(commander.OUTPUT_PATH)
 	performBadStateChecks(contentMap)
 
 	minFound := performSecondsCheck(contentMap)
@@ -96,7 +99,7 @@ func extractKeywordLines(contentMap map[string][]string, keyWord string) ([]stri
 
 func computeVersionCountMap() map[string]int {
 	versionCountMap := map[string]int{}
-	lines := ReadAllFiles(OUTPUT_PATH)
+	lines := ReadAllFiles(commander.OUTPUT_PATH)
 	for _, line := range lines {
 		fields := strings.Fields(line)
 		pkgName := fields[1]

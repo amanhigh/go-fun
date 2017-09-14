@@ -1,8 +1,10 @@
-package apps
+package tools
 
 import (
 	"fmt"
 	"io/ioutil"
+	. "github.com/amanhigh/go-fun/util"
+	. "github.com/amanhigh/go-fun/kohan/commander"
 )
 
 var FastPssh = Pssh{20, OUTPUT_PATH, ERROR_PATH, false,}

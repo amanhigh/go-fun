@@ -3,6 +3,9 @@ package components
 import (
 	"fmt"
 	"time"
+	"github.com/amanhigh/go-fun/util"
+	"github.com/amanhigh/go-fun/kohan/commander"
+	"github.com/amanhigh/go-fun/kohan/commander/tools"
 )
 
 func GetVersion(pkgName string, host string, versionType string) {
@@ -15,19 +18,19 @@ func GetVersion(pkgName string, host string, versionType string) {
 }
 
 func GetDpkgVersion(pkgName string, host string) {
-	PrintBlue(fmt.Sprintf("Fetching Config for %v from %v", pkgName, host))
+	util.PrintBlue(fmt.Sprintf("Fetching Config for %v from %v", pkgName, host))
 	cmd := fmt.Sprintf(`ssh %v dpkg -l | grep "%v" | tail -1 | awk '{print $3}'`, host, pkgName)
-	dpkgVersion := RunCommandPrintError(cmd)
-	versionString := fmt.Sprintf("\n%v - %v - HostVersion: %v", pkgName, dpkgVersion, time.Now().Format(LAYOUT))
-	PrintYellow(versionString)
-	AppendFile(RELEASE_FILE,versionString)
+	dpkgVersion := tools.RunCommandPrintError(cmd)
+	versionString := fmt.Sprintf("\n%v - %v - HostVersion: %v", pkgName, dpkgVersion, time.Now().Format(commander.LAYOUT))
+	util.PrintYellow(versionString)
+	util.AppendFile(commander.RELEASE_FILE,versionString)
 }
 
 func GetLatestVersion(pkgName string, host string) {
-	PrintBlue(fmt.Sprintf("Fetching LatestVersion for %v from %v", pkgName, host))
+	util.PrintBlue(fmt.Sprintf("Fetching LatestVersion for %v from %v", pkgName, host))
 	cmd := fmt.Sprintf(`ssh %v "sudo apt-get update > /dev/null; apt-cache madison %v | head -1" | awk '{print $3}'`, host, pkgName)
-	latestVersion := RunCommandPrintError(cmd)
+	latestVersion := tools.RunCommandPrintError(cmd)
 	versionString := fmt.Sprintf("\n%v - %v - LatestVersion ", pkgName, latestVersion)
-	PrintYellow(versionString)
-	AppendFile(RELEASE_FILE,versionString)
+	util.PrintYellow(versionString)
+	util.AppendFile(commander.RELEASE_FILE,versionString)
 }

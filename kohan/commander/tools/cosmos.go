@@ -1,16 +1,18 @@
-package apps
+package tools
 
 import (
 	"fmt"
 	"encoding/json"
 	"strconv"
 	"sort"
+	"github.com/amanhigh/go-fun/kohan/commander"
+	"github.com/amanhigh/go-fun/util"
 )
 
 func CosmosCurl(host string, startMin int, endMin int, metric string, pipe string) string {
 	cosmosUrl := fmt.Sprintf("http://%v/api/query?start=%vm-ago&end=%vm-ago&m=%v", host, startMin, endMin, metric)
-	if IsDebugMode() {
-		PrintWhite(cosmosUrl)
+	if commander.IsDebugMode() {
+		util.PrintWhite(cosmosUrl)
 	}
 	output := Jcurl(cosmosUrl, pipe)
 	return output
@@ -22,8 +24,8 @@ as its Dps.
 */
 func CosmosRates(host string, startMin int, endMin int, metric string) []int {
 	cosmosUrl := fmt.Sprintf("http://%v/api/query?start=%vm-ago&end=%vm-ago&m=%v", host, startMin, endMin, metric)
-	if IsDebugMode() {
-		PrintWhite(cosmosUrl)
+	if commander.IsDebugMode() {
+		util.PrintWhite(cosmosUrl)
 	}
 	result := Jcurl(cosmosUrl, "jq -r '.[] | .dps'")
 

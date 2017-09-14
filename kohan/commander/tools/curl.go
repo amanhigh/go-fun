@@ -1,8 +1,9 @@
-package apps
+package tools
 
 import (
 	"fmt"
 	"strings"
+	"github.com/amanhigh/go-fun/util"
 )
 
 func Jcurl(url string, pipe string) (output string) {
@@ -16,7 +17,7 @@ func Jcurl(url string, pipe string) (output string) {
 
 func ContentPiperSplit(content string, pipe string) ([]string) {
 	output := ContentPiper(content, pipe)
-	return FilterEmptyLines(strings.Split(output, "\n"))
+	return util.FilterEmptyLines(strings.Split(output, "\n"))
 }
 
 func ContentPiper(content string, pipe string) (string) {

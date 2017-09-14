@@ -1,9 +1,10 @@
-package apps
+package tools
 
 import (
 	"os/exec"
 	"fmt"
 	"strings"
+	. "github.com/amanhigh/go-fun/util"
 	log "github.com/Sirupsen/logrus"
 	"os"
 )

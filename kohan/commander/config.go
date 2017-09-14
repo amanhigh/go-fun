@@ -4,6 +4,7 @@ import (
 	"os"
 	"io/ioutil"
 	"fmt"
+	"github.com/amanhigh/go-fun/util"
 )
 
 /* PSSH */
@@ -13,8 +14,6 @@ const ERROR_PATH = "/tmp/error"
 const CONSOLE_FILE = CLUSTER_PATH + "/console.txt"
 
 const RELEASE_FILE = "/Users/amanpreet.singh/Documents/release.txt"
-const DEFAULT_PERM = os.FileMode(0644)     //Owner RW,Group R,Other R
-const DIR_DEFAULT_PERM = os.FileMode(0755) //Owner RWX,Group RX,Other RX
 const DEFAULT_PARALELISM = 50
 
 const DEBUG_FILE string = "/tmp/kohandebug"
@@ -24,15 +23,15 @@ const LAYOUT = "Jan 2, 2006 at 3:04pm (MST)"
 
 func DebugControl(flag bool) {
 	if flag {
-		PrintSkyBlue("Enabling Debug Mode")
-		ioutil.WriteFile(DEBUG_FILE, []byte{}, DEFAULT_PERM)
+		util.PrintSkyBlue("Enabling Debug Mode")
+		ioutil.WriteFile(DEBUG_FILE, []byte{}, util.DEFAULT_PERM)
 	} else {
-		PrintRed("Disabling Debug Mode")
+		util.PrintRed("Disabling Debug Mode")
 		os.Remove(DEBUG_FILE)
 	}
-	PrintYellow(fmt.Sprintf("Debug Mode: %v", IsDebugMode()))
+	util.PrintYellow(fmt.Sprintf("Debug Mode: %v", IsDebugMode()))
 }
 
 func IsDebugMode() bool {
-	return PathExists(DEBUG_FILE)
+	return util.PathExists(DEBUG_FILE)
 }

@@ -8,6 +8,9 @@ import (
 	"strings"
 )
 
+const DEFAULT_PERM = os.FileMode(0644)     //Owner RW,Group R,Other R
+const DIR_DEFAULT_PERM = os.FileMode(0755) //Owner RWX,Group RX,Other RX
+
 func AppendFile(path string, content string) {
 	if f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0600); err == nil {
 		defer f.Close()
