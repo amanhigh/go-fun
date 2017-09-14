@@ -4,34 +4,42 @@ import (
 	"fmt"
 	"os"
 	"github.com/amanhigh/go-fun/kohan/processor"
-	processor2 "github.com/Flipkart/elb/scripts/kohan/processor"
+	"github.com/amanhigh/go-fun/command"
 )
 
+var PROCESSOR_MAP = map[string]processor.ProcessorI{
+	"ssh": &processor.Processor{&processor.SshProcessor{}},
+}
+
 func main() {
-	if len(os.Args) < 3 {
+	if len(os.Args) < 2 {
 		fmt.Println("Usage: kohan <Processor Name> <Command Name>")
+		os.Exit(1)
+	} else if len(os.Args) < 3 {
+		processorName := os.Args[1]
+		if p, ok := PROCESSOR_MAP[processorName]; ok {
+			commander.PrintWhite(p.Help())
+		} else {
+			commander.PrintRed("Unknown Processor: " + processorName)
+			commander.PrintWhite("Valid List")
+		}
 		os.Exit(1)
 	}
 
 	processorName := os.Args[1]
 	command := os.Args[2]
 
-	pMap := getProcessorMap()
-	if p, ok := pMap[processorName]; ok {
-		p.Process(command)
+	if p, ok := PROCESSOR_MAP[processorName]; ok {
+		p.Process(command, os.Args[3:])
 	} else {
-		fmt.Println("Unknown Processor:", processorName)
+		commander.PrintRed("Unknown Processor: " + processorName)
+		commander.PrintWhite("Valid List")
 	}
 
 }
 
-func getProcessorMap() map[string]processor.ProcessorI {
-	p := processor.Processor{Args: os.Args[3:]}
-
-	return map[string]processor.ProcessorI{
-		"ssh":    &processor.SshProcessor{p},
-		"expose": &processor.ExposeProcessor{p},
-		"elb":    &processor2.ElbProcessor{p},
-		"cosmosd":    &processor2.CosmosDebugProcessor{p},
-	}
+func Help() {
+	//"expose":  &processor.ExposeProcessor{p},
+	//	"elb":     &processor2.ElbProcessor{p},
+	//	"cosmosd": &processor2.CosmosDebugProcessor{p},
 }
