@@ -1,4 +1,4 @@
-package main
+package orm
 
 import "github.com/jinzhu/gorm"
 import (
@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 	"github.com/amanhigh/go-fun/fun"
-	"github.com/amanhigh/go-fun/orm/model"
+	"github.com/amanhigh/go-fun/learn/orm/model"
 )
 
 type Product struct {

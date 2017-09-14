@@ -1,4 +1,4 @@
-package main
+package json
 
 import (
 	. "github.com/onsi/ginkgo"

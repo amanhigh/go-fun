@@ -1,4 +1,4 @@
-package fun
+package orm
 
 import (
 	"github.com/jinzhu/gorm"
