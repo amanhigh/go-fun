@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"github.com/amanhigh/go-fun/kohan/processor"
-	"github.com/amanhigh/go-fun/command"
+	"github.com/amanhigh/go-fun/commander"
 	processor2 "github.com/Flipkart/elb/scripts/kohan/processor"
 	"strings"
 )

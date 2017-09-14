@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"strings"
-	"github.com/amanhigh/go-fun/command"
+	"github.com/amanhigh/go-fun/commander"
 )
 
 /* Interface */

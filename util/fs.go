@@ -1,4 +1,4 @@
-package commander
+package util
 
 import (
 	"os"
@@ -59,6 +59,12 @@ func PathExists(path string) bool {
 	}
 	return true
 }
+
+func RecreateDir(path string) {
+	os.RemoveAll(path)
+	os.MkdirAll(path, DIR_DEFAULT_PERM)
+}
+
 func ClearDirectory(dirPath string) {
 	if fileInfos, err := ioutil.ReadDir(dirPath); err == nil {
 		for _, info := range fileInfos {

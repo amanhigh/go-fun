@@ -3,7 +3,7 @@ package processor
 import (
 	"flag"
 	"fmt"
-	"github.com/amanhigh/go-fun/command"
+	"github.com/amanhigh/go-fun/commander"
 )
 
 type ExposeProcessor struct {
