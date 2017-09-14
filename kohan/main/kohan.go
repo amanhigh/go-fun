@@ -6,16 +6,19 @@ import (
 	"github.com/amanhigh/go-fun/kohan/processor"
 	"github.com/amanhigh/go-fun/command"
 	processor2 "github.com/Flipkart/elb/scripts/kohan/processor"
+	"strings"
 )
 
 var PROCESSOR_MAP = map[string]processor.ProcessorI{
-	"expose": &processor.Processor{&processor.ExposeProcessor{}},
-	"elb": &processor.Processor{&processor2.ElbProcessor{}},
+	"expose":  &processor.Processor{&processor.ExposeProcessor{}},
+	"elb":     &processor.Processor{&processor2.ElbProcessor{}},
+	"cosmosd": &processor.Processor{&processor2.CosmosDebugProcessor{}},
 }
 
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: kohan <Processor Name> <Command Name>")
+		Help()
 		os.Exit(1)
 	} else if len(os.Args) < 3 {
 		processorName := os.Args[1]
@@ -23,7 +26,7 @@ func main() {
 			commander.PrintWhite(p.Help())
 		} else {
 			commander.PrintRed("Unknown Processor: " + processorName)
-			commander.PrintWhite("Valid List")
+			Help()
 		}
 		os.Exit(1)
 	}
@@ -35,11 +38,16 @@ func main() {
 		p.Process(command, os.Args[3:])
 	} else {
 		commander.PrintRed("Unknown Processor: " + processorName)
-		commander.PrintWhite("Valid List")
+		Help()
 	}
 
 }
 
 func Help() {
-	//	"cosmosd": &processor2.CosmosDebugProcessor{p},
+	names := []string{}
+	for name, _ := range PROCESSOR_MAP {
+		names = append(names, name)
+	}
+
+	commander.PrintWhite("Valid Processors: " + strings.Join(names, ", "))
 }

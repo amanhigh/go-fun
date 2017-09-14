@@ -47,7 +47,7 @@ func (self *Processor) Process(commandName string, args []string) (bool) {
 }
 
 func (self *Processor) Help() string {
-	return fmt.Sprintf("Commands: Direct - %v\n Flagged - %v\n", getCommandHelpString(self.Handler.GetArgedHandlers()), getDirectHelpString(self.Handler.GetNonArgedHandlers()))
+	return fmt.Sprintf("Commands:\n Flagged - %v\n Direct - %v\n", getCommandHelpString(self.Handler.GetArgedHandlers()), getDirectHelpString(self.Handler.GetNonArgedHandlers()))
 }
 
 func getCommandHelpString(funcs map[string]HandleFunc) (string) {
