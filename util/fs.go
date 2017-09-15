@@ -33,15 +33,23 @@ func ReadAllFiles(dirPath string) ([]string) {
 
 func ReadFileMap(dirPath string) (map[string][]string) {
 	contents := map[string][]string{}
+	for _, filePath := range ListFiles(dirPath) {
+		contents[filePath] = ReadAllLines(filePath)
+	}
+	return contents
+}
+
+func ListFiles(dirPath string) ([]string) {
+	filePaths := []string{}
 	if fileInfos, err := ioutil.ReadDir(dirPath); err == nil {
 		for _, info := range fileInfos {
 			filePath := fmt.Sprintf("%v/%v", dirPath, info.Name())
-			contents[info.Name()] = ReadAllLines(filePath)
+			filePaths = append(filePaths, filePath)
 		}
 	} else {
 		log.WithFields(log.Fields{"Directory": dirPath, "Error": err}).Error("Error Reading Directory")
 	}
-	return contents
+	return filePaths
 }
 
 func ReadAllLines(filePath string) []string {
