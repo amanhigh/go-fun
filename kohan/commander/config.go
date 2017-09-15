@@ -18,9 +18,6 @@ const DEFAULT_PARALELISM = 50
 
 const DEBUG_FILE string = "/tmp/kohandebug"
 
-/* Date/Time */
-const LAYOUT = "Jan 2, 2006 at 3:04pm (MST)"
-
 func DebugControl(flag bool) {
 	if flag {
 		util.PrintSkyBlue("Enabling Debug Mode")

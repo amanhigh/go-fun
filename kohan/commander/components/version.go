@@ -21,9 +21,9 @@ func GetDpkgVersion(pkgName string, host string) {
 	util.PrintBlue(fmt.Sprintf("Fetching Config for %v from %v", pkgName, host))
 	cmd := fmt.Sprintf(`ssh %v dpkg -l | grep "%v" | tail -1 | awk '{print $3}'`, host, pkgName)
 	dpkgVersion := tools.RunCommandPrintError(cmd)
-	versionString := fmt.Sprintf("\n%v - %v - HostVersion: %v", pkgName, dpkgVersion, time.Now().Format(commander.LAYOUT))
+	versionString := fmt.Sprintf("\n%v - %v - HostVersion: %v", pkgName, dpkgVersion, util.FormatTime(time.Now(), util.PRINT_LAYOUT))
 	util.PrintYellow(versionString)
-	util.AppendFile(commander.RELEASE_FILE,versionString)
+	util.AppendFile(commander.RELEASE_FILE, versionString)
 }
 
 func GetLatestVersion(pkgName string, host string) {
@@ -32,5 +32,5 @@ func GetLatestVersion(pkgName string, host string) {
 	latestVersion := tools.RunCommandPrintError(cmd)
 	versionString := fmt.Sprintf("\n%v - %v - LatestVersion ", pkgName, latestVersion)
 	util.PrintYellow(versionString)
-	util.AppendFile(commander.RELEASE_FILE,versionString)
+	util.AppendFile(commander.RELEASE_FILE, versionString)
 }
