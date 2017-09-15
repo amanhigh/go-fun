@@ -7,6 +7,7 @@ import (
 	. "github.com/amanhigh/go-fun/util"
 	log "github.com/Sirupsen/logrus"
 	"os"
+	"github.com/amanhigh/go-fun/kohan/commander"
 )
 
 func RunCommandPrintError(cmd string) (string) {
@@ -24,6 +25,10 @@ func RunCommandIgnoreError(cmd string) (string) {
 }
 
 func PrintCommand(cmd string) {
+	if commander.IsDebugMode() {
+		PrintWhite(cmd)
+	}
+
 	if output, err := runCommand(cmd); err != nil {
 		PrintWhite(output)
 		PrintRed(fmt.Sprintf("Error Executing ssh: %v\n CMD:%v\n", err, cmd))
