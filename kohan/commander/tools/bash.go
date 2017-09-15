@@ -26,7 +26,7 @@ func RunCommandIgnoreError(cmd string) (string) {
 
 func PrintCommand(cmd string) {
 	if commander.IsDebugMode() {
-		PrintWhite(cmd)
+		PrintPink(cmd)
 	}
 
 	if output, err := runCommand(cmd); err != nil {

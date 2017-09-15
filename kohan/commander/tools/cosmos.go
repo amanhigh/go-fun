@@ -12,7 +12,7 @@ import (
 func CosmosCurl(host string, startMin int, endMin int, metric string, pipe string) string {
 	cosmosUrl := fmt.Sprintf("http://%v/api/query?start=%vm-ago&end=%vm-ago&m=%v", host, startMin, endMin, metric)
 	if commander.IsDebugMode() {
-		util.PrintWhite(cosmosUrl)
+		util.PrintPink(cosmosUrl)
 	}
 	output := Jcurl(cosmosUrl, pipe)
 	return output
@@ -25,7 +25,7 @@ as its Dps.
 func CosmosRates(host string, startMin int, endMin int, metric string) []int {
 	cosmosUrl := fmt.Sprintf("http://%v/api/query?start=%vm-ago&end=%vm-ago&m=%v", host, startMin, endMin, metric)
 	if commander.IsDebugMode() {
-		util.PrintWhite(cosmosUrl)
+		util.PrintPink(cosmosUrl)
 	}
 	result := Jcurl(cosmosUrl, "jq -r '.[] | .dps'")
 
