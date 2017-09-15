@@ -62,7 +62,7 @@ func IndexedIp(clusterName string, index int) {
 }
 
 func SearchContent(regex string) string {
-	return RunCommandPrintError(fmt.Sprintf("grep -inrR '%v' %v", regex, OUTPUT_PATH))
+	return RunCommandIgnoreError(fmt.Sprintf("grep -inrR '%v' %v", regex, OUTPUT_PATH))
 }
 
 func getClusterFile(name string) string {

@@ -13,9 +13,14 @@ func RunCommandPrintError(cmd string) (string) {
 	if output, err := runCommand(cmd); err == nil {
 		return output
 	} else {
-		log.WithFields(log.Fields{"CMD": cmd, "Error": err}).Fatal("Error Running Command")
+		log.WithFields(log.Fields{"CMD": cmd, "Error": err}).Error("Error Running Command")
 		return ""
 	}
+}
+
+func RunCommandIgnoreError(cmd string) (string) {
+	output, _ := runCommand(cmd)
+	return output
 }
 
 func PrintCommand(cmd string) {
@@ -51,8 +56,8 @@ func runCommand(cmd string) (string, error) {
 func LiveCommand(cmd string) {
 	command := exec.Command("sh", "-c", cmd)
 	/* Connect Command Outputs */
-	command.Stdout=os.Stdout
-	command.Stderr=os.Stderr
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
 
 	/* Start Command Wait for Finish */
 	command.Start()
