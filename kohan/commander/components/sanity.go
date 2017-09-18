@@ -10,6 +10,7 @@ import (
 	. "github.com/amanhigh/go-fun/util"
 	. "github.com/amanhigh/go-fun/kohan/commander/tools"
 	"github.com/amanhigh/go-fun/kohan/commander"
+	"math"
 )
 
 var checks = []string{"down", "inactive", "not"}
@@ -65,20 +66,21 @@ func performBadStateChecks(contentMap map[string][]string) {
 }
 
 func performSecondsCheck(contentMap map[string][]string) int {
-	minFound := 0
+	minFound := math.MaxInt64
 	if lines, _ := extractKeywordLines(contentMap, "seconds"); len(lines) > 0 {
 		for _, line := range lines {
 			matchString := SECOND_REGEX.FindStringSubmatch(line)
 			if second, err := strconv.Atoi(matchString[1]); err == nil {
-				if second < MIN_SECOND {
-					PrintRed(fmt.Sprintf("Probable Restart Detected. Second: %v", second))
-				}
-				if minFound < second {
+				if second < minFound {
 					minFound = second
 				}
 			} else {
 				log.WithFields(log.Fields{"Error": err}).Error("Error Parsing Second")
 			}
+		}
+
+		if minFound < MIN_SECOND {
+			PrintRed(fmt.Sprintf("Probable Restart Detected. Second: %v", minFound))
 		}
 	}
 	return minFound
