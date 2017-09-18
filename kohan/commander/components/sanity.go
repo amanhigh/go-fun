@@ -57,7 +57,7 @@ func VerifyStatus(cmd string, cluster string) {
 
 func VerifyNetworkParameters(cluster string) {
 	PrintYellow("\nVerifying Network Parameters. Cluster: " + cluster)
-	Md5Checker("sudo sysctl -a | grep net", cluster)
+	Md5Checker("sudo sysctl -a | grep net | grep -v rss_key", cluster)
 }
 
 /* Helpers */
