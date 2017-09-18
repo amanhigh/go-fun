@@ -52,12 +52,15 @@ func VerifyStatus(cmd string, cluster string) {
 	minFound := performSecondsCheck(contentMap)
 	PrintBlue(fmt.Sprintf("Second Check Complete. Min Second Detected: %v", minFound))
 
-	VerifyNetworkParameters(cluster)
+	//TODO:Move out of Debug Mode.
+	if commander.IsDebugMode(){
+		VerifyNetworkParameters(cluster)
+	}
 }
 
 func VerifyNetworkParameters(cluster string) {
 	PrintYellow("\nVerifying Network Parameters. Cluster: " + cluster)
-	Md5Checker("sudo sysctl -a | grep net | grep -v rss_key", cluster)
+	Md5Checker("sudo sysctl -a | grep net | grep -v rss_key | grep -v nf_log", cluster)
 }
 
 /* Helpers */
