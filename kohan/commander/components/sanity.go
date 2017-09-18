@@ -50,11 +50,13 @@ func VerifyStatus(cmd string, cluster string) {
 	performBadStateChecks(contentMap)
 
 	minFound := performSecondsCheck(contentMap)
-	PrintYellow(fmt.Sprintf("Second Check Complete. Min Second Detected: %v", minFound))
+	PrintBlue(fmt.Sprintf("Second Check Complete. Min Second Detected: %v", minFound))
+
+	VerifyNetworkParameters(cluster)
 }
 
 func VerifyNetworkParameters(cluster string) {
-	PrintYellow("Verifying Network Parameters. Cluster: " + cluster)
+	PrintYellow("\nVerifying Network Parameters. Cluster: " + cluster)
 	Md5Checker("sudo sysctl -a | grep net", cluster)
 }
 
