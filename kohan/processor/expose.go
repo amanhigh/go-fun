@@ -56,7 +56,7 @@ func (self *ExposeProcessor) verifyStatusHandler(flagSet *flag.FlagSet, args []s
 	cmd := flagSet.String("cmd", "", "Status Check Command")
 	cluster := flagSet.String("cl", "", "Cluster To Run On")
 	e := flagSet.Parse(args)
-	components.VersionCheck(*cmd, *cluster)
+	components.VerifyStatus(*cmd, *cluster)
 	return e
 }
 
