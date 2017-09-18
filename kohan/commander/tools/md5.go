@@ -60,11 +60,13 @@ func Md5Checker(cmd string, cluster string) {
 
 		/* Perform Diff on first file of top two md5's */
 		first := sortList[0]
-		second := sortList[1]
 		firstFile := first.fileList[0]
-		secondFile := second.fileList[0]
-		util.PrintRed(fmt.Sprintf("Diffing Top two: %v (%v) vs %v (%v)", firstFile, first.hash, secondFile, second.hash))
-		fmt.Println(RunCommandIgnoreError(fmt.Sprintf("colordiff %v %v", firstFile, secondFile)))
+		for i := 1; i < len(sortList); i++ {
+			current := sortList[i]
+			currentFile := current.fileList[0]
+			util.PrintRed(fmt.Sprintf("Diffing Top with Current: %v (%v) vs %v (%v)", firstFile, first.hash, currentFile, current.hash))
+			fmt.Println(RunCommandIgnoreError(fmt.Sprintf("colordiff %v %v", firstFile, currentFile)))
+		}
 	} else {
 		util.PrintGreen(fmt.Sprintf("Single Md5 Found, Cluster Homogenous. Hash:%v Count:%v", sortList[0].hash, sortList[0].count))
 	}
