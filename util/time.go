@@ -17,3 +17,13 @@ func TimeAgo(duration time.Duration) time.Time {
 func TimeAfter(duration time.Duration) time.Time {
 	return time.Now().Add(duration)
 }
+
+/**
+Using Hour String Compute Todays Data
+"4:05AM"
+ */
+func TodaysHour(string string) time.Time {
+	parsedHourMin, _ := time.Parse(time.Kitchen, string)
+	year, month, day := time.Now().Date()
+	return time.Date(year, month, day, parsedHourMin.Hour(), parsedHourMin.Minute(), 0, 0, time.UTC)
+}
