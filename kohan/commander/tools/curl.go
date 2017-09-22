@@ -4,9 +4,14 @@ import (
 	"fmt"
 	"strings"
 	"github.com/amanhigh/go-fun/util"
+	"github.com/amanhigh/go-fun/kohan/commander"
 )
 
 func Jcurl(url string, pipe string) (output string) {
+	if commander.IsDebugMode() {
+		util.PrintPink(url)
+	}
+
 	if pipe == "" {
 		output = RunCommandPrintError(fmt.Sprintf("curl -s '%v' | jq .", url))
 	} else {
