@@ -9,7 +9,7 @@ import (
 )
 
 func PromptInput(promptText string) string {
-	PrintWhite(promptText)
+	PrintSkyBlue(promptText)
 	reader := bufio.NewReader(os.Stdin)
 	text, _ := reader.ReadString('\n')
 	return strings.TrimSpace(text)
