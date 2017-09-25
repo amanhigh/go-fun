@@ -7,15 +7,17 @@ import (
 	"github.com/amanhigh/go-fun/kohan/commander"
 )
 
+const TIMEOUT = 5
+
 func Jcurl(url string, pipe string) (output string) {
 	if commander.IsDebugMode() {
 		util.PrintPink(url)
 	}
 
 	if pipe == "" {
-		output = RunCommandPrintError(fmt.Sprintf("curl -s '%v' | jq .", url))
+		output = RunCommandPrintError(fmt.Sprintf("curl -m %v -s '%v' | jq .", TIMEOUT, url))
 	} else {
-		output = RunCommandPrintError(fmt.Sprintf("curl -s '%v' | jq . | %v", url, pipe))
+		output = RunCommandPrintError(fmt.Sprintf("curl -m %v -s '%v' | jq . | %v", TIMEOUT, url, pipe))
 	}
 	return
 }
