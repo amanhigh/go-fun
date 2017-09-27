@@ -60,7 +60,11 @@ func runCommand(cmd string) (string, error) {
 
 func LiveCommand(cmd string) {
 	command := exec.Command("sh", "-c", cmd)
+	if commander.IsDebugMode() {
+		PrintSkyBlue(cmd)
+	}
 	/* Connect Command Outputs */
+	command.Stdin = os.Stdin
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 
