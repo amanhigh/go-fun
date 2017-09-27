@@ -12,6 +12,7 @@ import (
 var PROCESSOR_MAP = map[string]processor.ProcessorI{
 	"expose":  &processor.Processor{&processor.ExposeProcessor{}},
 	"elb":     &processor.Processor{&processor2.ElbProcessor{}},
+	"infra":     &processor.Processor{&processor2.InfraProcessor{}},
 	"cosmosd": &processor.Processor{&processor2.CosmosDebugProcessor{}},
 }
 
