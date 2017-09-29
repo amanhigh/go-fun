@@ -63,11 +63,13 @@ func (self *ExposeProcessor) verifyStatusHandler(flagSet *flag.FlagSet, args []s
 func (self *ExposeProcessor) psshHandler(flagSet *flag.FlagSet, args []string) error {
 	cmd := flagSet.String("cmd", "", "Command To Run")
 	cluster := flagSet.String("cl", "", "Cluster To Run On")
-	parallelism := flagSet.Int("p", commander.DEFAULT_PARALELISM, "Parallelism")
 	psshType := flagSet.String("t", "fast", "fast/display/slow")
+	parallelism := flagSet.Int("p", commander.DEFAULT_PARALELISM, "Parallelism")
+	start := flagSet.Int("s", -1, "Start Index (Starting from 1)")
+	end := flagSet.Int("e", -1, "End Index")
 	e := flagSet.Parse(args)
 	selectedPssh := getPsshFromType(*psshType)
-	selectedPssh.Run(*cmd, *cluster, *parallelism, false)
+	selectedPssh.RunRange(*cmd, *cluster, *parallelism, false, *start, *end)
 	return e
 }
 

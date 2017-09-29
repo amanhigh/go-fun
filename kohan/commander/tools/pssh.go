@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	. "github.com/amanhigh/go-fun/util"
 	. "github.com/amanhigh/go-fun/kohan/commander"
+	"strings"
 )
 
 var FastPssh = Pssh{20, OUTPUT_PATH, ERROR_PATH, false,}
@@ -37,9 +38,25 @@ func (self *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput
 		PrintCommand(fmt.Sprintf("cat %v", getClusterFile("fail")))
 	})
 }
+
+func (self *Pssh) RunRange(cmd string, cluster string, parallelism int, disableOutput bool, start int, end int) {
+	if start != -1 && end != -1 {
+		subClusterName := cluster + "m"
+		ExtractSubCluster(cluster, subClusterName, start-1, end)
+		self.Run(cmd, subClusterName, parallelism, disableOutput)
+	} else {
+		self.Run(cmd, cluster, parallelism, disableOutput)
+	}
+}
+
 func clearOutputPaths() {
 	ClearDirectory(OUTPUT_PATH)
 	ClearDirectory(ERROR_PATH)
+}
+
+func ExtractSubCluster(clusterName string, subClusterName string, start int, end int) {
+	ips := ReadAllLines(getClusterFile(clusterName))
+	WriteClusterFile(subClusterName, strings.Join(ips[start:end], "\n"))
 }
 
 func WriteClusterFile(clusterName string, content string) {
