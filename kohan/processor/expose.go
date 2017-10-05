@@ -31,8 +31,9 @@ func (self *ExposeProcessor) getVersionHandler(flagSet *flag.FlagSet, args []str
 	pkg := flagSet.String("pkg", "", "Package Name")
 	host := flagSet.String("host", "", "Host For Fetching Version")
 	versionType := flagSet.String("type", "", "Type dpkg/latest for Version")
+	comment := flagSet.String("c", "N/A", "Comment for this release")
 	e := flagSet.Parse(args)
-	components.GetVersion(*pkg, *host, *versionType)
+	components.GetVersion(*pkg, *host, *versionType, *comment)
 	return e
 }
 

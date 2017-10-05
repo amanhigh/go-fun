@@ -8,12 +8,12 @@ import (
 	"github.com/amanhigh/go-fun/kohan/commander/tools"
 )
 
-func GetVersion(pkgName string, host string, versionType string) {
+func GetVersion(pkgName string, host string, versionType string, comment string) {
 	switch versionType {
 	case "dpkg":
 		GetDpkgVersion(pkgName, host)
 	case "latest":
-		GetLatestVersion(pkgName, host)
+		GetLatestVersion(pkgName, host, comment)
 	}
 }
 
@@ -26,11 +26,11 @@ func GetDpkgVersion(pkgName string, host string) {
 	util.AppendFile(commander.RELEASE_FILE, versionString)
 }
 
-func GetLatestVersion(pkgName string, host string) {
+func GetLatestVersion(pkgName string, host string, comment string) {
 	util.PrintBlue(fmt.Sprintf("Fetching LatestVersion for %v from %v", pkgName, host))
 	cmd := fmt.Sprintf(`ssh %v "sudo apt-get update > /dev/null; apt-cache madison %v | head -1" | awk '{print $3}'`, host, pkgName)
 	latestVersion := tools.RunCommandPrintError(cmd)
-	versionString := fmt.Sprintf("\n%v - %v - LatestVersion ", pkgName, latestVersion)
+	versionString := fmt.Sprintf("\n%v - %v - LatestVersion [ %v ]", pkgName, latestVersion, comment)
 	util.PrintYellow(versionString)
 	util.AppendFile(commander.RELEASE_FILE, versionString)
 }
