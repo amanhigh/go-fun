@@ -7,7 +7,7 @@ import (
 	"github.com/amanhigh/go-fun/kohan/commander"
 )
 
-const TIMEOUT = 5
+const TIMEOUT = 10
 
 func Jcurl(url string, pipe string) (output string) {
 	if commander.IsDebugMode() {
