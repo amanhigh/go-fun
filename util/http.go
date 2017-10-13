@@ -12,9 +12,9 @@ import (
 	"errors"
 )
 
-var NoKeepAliveClient = BuildNonKeepAliveClient()
+var NoKeepAliveClient = BuildNonKeepAliveClient(5 * time.Second)
 
-var KeepAliveClient = BuildKeepAliveClient(60*time.Second, 10)
+var KeepAliveClient = BuildKeepAliveClient(time.Second, 5*time.Second, 10)
 
 type HttpClient struct {
 	Client  *http.Client
@@ -22,7 +22,7 @@ type HttpClient struct {
 }
 
 /* Constructors */
-func BuildNonKeepAliveClient() *HttpClient {
+func BuildNonKeepAliveClient(requestTimeout time.Duration) *HttpClient {
 	return &HttpClient{
 		Client: &http.Client{
 			Transport: &http.Transport{
@@ -31,22 +31,22 @@ func BuildNonKeepAliveClient() *HttpClient {
 				MaxIdleConnsPerHost: -1,
 			},
 		},
-		Timeout: 5 * time.Second,
+		Timeout: requestTimeout,
 	}
 }
 
-func BuildKeepAliveClient(dialTimeout time.Duration, idleConnectionsPerHost int) *HttpClient {
+func BuildKeepAliveClient(dialTimeout time.Duration, requestTimeout time.Duration, idleConnectionsPerHost int) *HttpClient {
 	return &HttpClient{
 		Client: &http.Client{
 			Transport: &http.Transport{
 				Dial: (&net.Dialer{
-					Timeout:   dialTimeout,
-					KeepAlive: dialTimeout * 60,
+					Timeout:   dialTimeout,      // Connect Timeout
+					KeepAlive: dialTimeout * 60, //Idle Timeout Before Closing Connection
 				}).Dial,
 				MaxIdleConnsPerHost: idleConnectionsPerHost,
 			},
 		},
-		Timeout: 5 * time.Second,
+		Timeout: requestTimeout, //Request Timeout
 	}
 }
 
@@ -85,7 +85,7 @@ func (self *HttpClient) DoRequest(method string, url string, body interface{}, u
 				statusCode = response.StatusCode
 				if response.StatusCode == http.StatusOK {
 					/* Read Body & Decode if Response came & unmarshal entity is supplied */
-					if responseBytes, err = ioutil.ReadAll(response.Body); err == nil && unmarshalledResponse!=nil {
+					if responseBytes, err = ioutil.ReadAll(response.Body); err == nil && unmarshalledResponse != nil {
 						err = json.Unmarshal(responseBytes, unmarshalledResponse)
 					}
 				} else {
