@@ -15,6 +15,10 @@ func GitPush(){
 	PrintCommand("git push origin")
 }
 
+func GitReset(){
+	PrintCommand("git reset --hard")
+}
+
 func GitDiff() {
 	PrintCommand("git diff -U0")
 }
