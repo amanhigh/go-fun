@@ -2,18 +2,18 @@ package main
 
 import (
 	"fmt"
-	"time"
-	"math/rand"
-	"math"
-	"runtime"
-	"strings"
-	"strconv"
 	"io"
+	"math"
+	"math/rand"
 	"os"
-	"github.com/amanhigh/go-fun/fun"
+	"runtime"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
 )
 
-var global, second_global int = 5, 10
+var global, second_global = 5, 10
 
 var (
 	r, i rune = 8, 9
@@ -53,6 +53,7 @@ func main() {
 	fmt.Println("The time is", time.Now())
 
 	variableFun()
+	safeMapFun()
 	mathFun()
 	miscFun()
 	collectionFun()
@@ -61,8 +62,8 @@ func main() {
 	pointerFun()
 	errorHandling()
 	lambdaFun()
-	fun.GoRoutineFun()
-	fun.StartCrawl()
+	GoRoutineFun()
+	StartCrawl()
 }
 
 func (r rot13Reader) Read(b []byte) (n int, e error) {
@@ -99,7 +100,7 @@ func closure() {
 	}
 
 	fmt.Println("Fibonacci")
-	f := fibonacci()
+	f := fibonacciRecurse()
 	for i := 0; i < 10; i++ {
 		fmt.Print(f(), ",")
 	}
@@ -107,7 +108,7 @@ func closure() {
 
 // fibonacci is a function that returns
 // a function that returns an int.
-func fibonacci() func() int {
+func fibonacciRecurse() func() int {
 	lastFibBeforeUpdate, lastFib := 0, 0
 	fib := 1
 	return func() int {
@@ -226,6 +227,18 @@ func loopFun() {
 	}
 
 	fmt.Println("Sum:", sum)
+}
+
+func safeMapFun()  {
+	mapV := sync.Map{}
+	mapV.Store("Aman", "Preet,Singh")
+	mapV.Store("Aman1", "Preet,Done")
+	fmt.Println(mapV.Load("Aman1"))
+	mapV.Range(func(key, value interface{}) bool {
+		stringValue :=value.(string)
+		fmt.Printf("Key:%v Value:%v\n", key, strings.Split(stringValue, ","))
+		return true
+	})
 }
 
 func switchFun() {
