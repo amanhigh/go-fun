@@ -41,7 +41,7 @@ func BuildKeepAliveClient(dialTimeout time.Duration, requestTimeout time.Duratio
 			Transport: &http.Transport{
 				Dial: (&net.Dialer{
 					Timeout:   dialTimeout,      // Connect Timeout
-					KeepAlive: dialTimeout * 60, //Idle Timeout Before Closing Connection
+					KeepAlive: (dialTimeout + requestTimeout) * 120, //Idle Timeout Before Closing Connection
 				}).Dial,
 				MaxIdleConnsPerHost: idleConnectionsPerHost,
 			},
