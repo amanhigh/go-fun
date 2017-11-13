@@ -1,57 +1,104 @@
 package util
 
 import (
-	"time"
-	"net"
-	"encoding/json"
 	"bytes"
-	"io/ioutil"
-	"fmt"
-	"net/http"
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	http2 "github.com/Flipkart/elb/elb/models/http"
+	"golang.org/x/oauth2/clientcredentials"
+	"io/ioutil"
+	"net"
+	"net/http"
+	"net/url"
+	"time"
 )
 
-var NoKeepAliveClient = BuildNonKeepAliveClient(5 * time.Second)
+var NoKeepAliveClient = NewHttpClient(time.Second, 5*time.Second, false, -1, false)
 
-var KeepAliveClient = BuildKeepAliveClient(time.Second, 5*time.Second, 10)
+var KeepAliveClient = NewHttpClient(time.Second, 5*time.Second, true, 64, false)
+
+/**
+	returns:
+	200 - Decoded Response (if interface provided), status code, no error
+	Non 200 - Nil Response, status code, error (Non 200 Response)
+	Deserialization Failed - Nil Response, status code, deserialization error
+	Http Error - Nil Response, Zero Status Code, error (Http Error that occurred)
+ */
+type HttpClientInterface interface {
+	DoGet(url string, unmarshalledResponse interface{}) (statusCode int, err error)
+	DoPost(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error)
+	DoPut(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error)
+	DoDelete(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error)
+
+	DoGetWithTimeout(url string, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error)
+	DoPostWithTimeout(url string, body interface{}, unmarshalledResponse interface{}, timout time.Duration) (statusCode int, err error)
+
+	DoRequest(request *http.Request, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error)
+}
 
 type HttpClient struct {
 	Client  *http.Client
 	Timeout time.Duration
 }
 
-/* Constructors */
-func BuildNonKeepAliveClient(requestTimeout time.Duration) *HttpClient {
-	return &HttpClient{
-		Client: &http.Client{
-			Transport: &http.Transport{
-				DisableCompression:  true,
-				DisableKeepAlives:   true,
-				MaxIdleConnsPerHost: -1,
-			},
-		},
-		Timeout: requestTimeout,
-	}
-}
+/**
+	dialTimeout: Connect Timeout
+	requestTimeout: Time allowed for an Http Request
 
-func BuildKeepAliveClient(dialTimeout time.Duration, requestTimeout time.Duration, idleConnectionsPerHost int) *HttpClient {
+	KeepAlive Parameters:
+	keepAlive: Enable/Disable Keep Alive
+	idleConnectionsPerHost: Can be -1 if no keep alive or number of Max Idle KeepAlive connections to keep in pool.
+
+	enableCompression: Enable/Disable gzip compression
+ */
+func NewHttpClient(dialTimeout time.Duration, requestTimeout time.Duration, enableKeepAlive bool, idleConnectionsPerHost int, enableCompression bool) HttpClientInterface {
 	return &HttpClient{
 		Client: &http.Client{
 			Transport: &http.Transport{
-				Dial: (&net.Dialer{
-					Timeout:   dialTimeout,      // Connect Timeout
-					KeepAlive: (dialTimeout + requestTimeout) * 120, //Idle Timeout Before Closing Connection
-				}).Dial,
+				DisableCompression: !enableCompression,
+				DisableKeepAlives:  !enableKeepAlive,
+				DialContext: (&net.Dialer{
+					Timeout:   dialTimeout,                          // Connect Timeout
+					KeepAlive: (dialTimeout + requestTimeout) * 120, //Idle Timeout Before Closing Keepalive Connection
+				}).DialContext,
 				MaxIdleConnsPerHost: idleConnectionsPerHost,
+			},
+			CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
+				return errors.New("It is a Redirect!")
 			},
 		},
 		Timeout: requestTimeout, //Request Timeout
 	}
 }
 
+func NewAuthNClient(config http2.AuthNConfig, targetClientId string) HttpClientInterface {
+	conf := &clientcredentials.Config{
+		ClientID:     config.ClientId,
+		ClientSecret: config.Secret,
+		TokenURL:     config.TokenUrl,
+		EndpointParams: url.Values{
+			"client_id":        []string{config.ClientId},
+			"client_secret":    []string{config.Secret},
+			"target_client_id": []string{targetClientId},
+		},
+	}
+	ctx, _ := context.WithTimeout(context.Background(), config.RequestTimeout)
+	return &HttpClient{
+		Client:  conf.Client(ctx),
+		Timeout: config.RequestTimeout, //Request Timeout
+	}
+}
+
+/*
+	Makes a Get Request & Unmarshalles Response into unmarshalledResponse if
+	provided else returns Status Code.
+
+	Incase of Error returns error that occured
+ */
 func (self *HttpClient) DoGet(url string, unmarshalledResponse interface{}) (statusCode int, err error) {
-	return self.DoRequest("GET", url, nil, unmarshalledResponse)
+	return self.fireRequest("GET", url, nil, unmarshalledResponse, -1)
 }
 
 /*
@@ -59,41 +106,92 @@ func (self *HttpClient) DoGet(url string, unmarshalledResponse interface{}) (sta
 	Incase of Success you will recieve unmarshalled Response or error otherwise
  */
 func (self *HttpClient) DoPost(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error) {
-	return self.DoRequest("POST", url, body, unmarshalledResponse)
+	return self.fireRequest("POST", url, body, unmarshalledResponse, -1)
 }
 
-func (self *HttpClient) DoRequest(method string, url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error) {
-	var requestBody, responseBytes []byte
-	var request *http.Request
+/*
+	Makes a Post Request with Given Url & Body under specified timeout.
+	Incase of Success you will recieve unmarshalled Response or error otherwise
+ */
+func (self *HttpClient) DoPut(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error) {
+	return self.fireRequest("PUT", url, body, unmarshalledResponse, -1)
+}
+
+/*
+	Makes a Post Request with Given Url & Body under specified timeout.
+	Incase of Success you will recieve unmarshalled Response or error otherwise
+ */
+func (self *HttpClient) DoDelete(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error) {
+	return self.fireRequest("DELETE", url, body, unmarshalledResponse, -1)
+}
+
+/**
+	Ignores Global Timeout of HttpClient and uses provided timeout fo Http call.
+ */
+func (self *HttpClient) DoGetWithTimeout(url string, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error) {
+	return self.fireRequest("GET", url, nil, unmarshalledResponse, timeout)
+}
+
+/**
+	Ignores Global Timeout of HttpClient and uses provided timeout fo Http call.
+ */
+func (self *HttpClient) DoPostWithTimeout(url string, body interface{}, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error) {
+	return self.fireRequest("POST", url, body, unmarshalledResponse, timeout)
+}
+
+/**
+	Given a request and unmarshal body, fire Http Client Return Unmarshalled Response
+ */
+func (self *HttpClient) DoRequest(request *http.Request, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error) {
+	var responseBytes []byte
 	var response *http.Response
+
+	timeoutContext, cancelFunction := context.WithTimeout(context.Background(), self.getTimeOut(timeout))
+	/* Set Content Type Header */
+	request.Header.Set("Content-Type", "application/json")
+	/* Execute Request */
+	defer cancelFunction()
+	if response, err = self.Client.Do(request.WithContext(timeoutContext)); err == nil {
+		defer response.Body.Close()
+
+		/* Check If Request was Successful */
+		statusCode = response.StatusCode
+		if response.StatusCode == http.StatusOK {
+			/* Read Body & Decode if Response came & unmarshal entity is supplied */
+			if responseBytes, err = ioutil.ReadAll(response.Body); err == nil && unmarshalledResponse != nil {
+				err = json.Unmarshal(responseBytes, unmarshalledResponse)
+			}
+		} else {
+			err = errors.New(fmt.Sprintf("Non 200 Response. Status Code: %v", response.StatusCode))
+		}
+	}
+
+	return
+}
+
+func (self *HttpClient) fireRequest(method string, url string, body interface{}, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error) {
+	var requestBody []byte
+	var request *http.Request
 
 	/* Encode Json */
 	if requestBody, err = json.Marshal(body); err == nil {
 		/* Build Request */
 		if request, err = http.NewRequest(method, url, bytes.NewReader(requestBody)); err == nil {
-			timeoutContext, cancelFunction := context.WithTimeout(context.Background(), self.Timeout)
-
-			/* Set Content Type Header */
-			request.Header.Set("Content-Type", "application/json")
-
-			/* Execute Request */
-			defer cancelFunction()
-			if response, err = self.Client.Do(request.WithContext(timeoutContext)); err == nil {
-				defer response.Body.Close()
-
-				/* Check If Request was Successful */
-				statusCode = response.StatusCode
-				if response.StatusCode == http.StatusOK {
-					/* Read Body & Decode if Response came & unmarshal entity is supplied */
-					if responseBytes, err = ioutil.ReadAll(response.Body); err == nil && unmarshalledResponse != nil {
-						err = json.Unmarshal(responseBytes, unmarshalledResponse)
-					}
-				} else {
-					err = errors.New(fmt.Sprintf("Non 200 Response. Status Code: %v", response.StatusCode))
-				}
-			}
+			return self.DoRequest(request, unmarshalledResponse, timeout)
 		}
 	}
 
 	return
+}
+
+/**
+	Returns timeout if its non Zero or Client Level Timeout otherwise
+ */
+func (self *HttpClient) getTimeOut(timeout time.Duration) time.Duration {
+	if timeout < 0 {
+		return self.Timeout
+	} else {
+		return timeout
+	}
+
 }
