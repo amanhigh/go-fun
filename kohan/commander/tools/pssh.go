@@ -70,21 +70,17 @@ func ReadClusterFile(clusterName string) []string {
 	return ReadAllLines(filePath)
 }
 
-func GetClusterHost(clusterName string, index int) (string, error) {
+func GetClusterHost(clusterName string, index int) string {
 	ips := ReadClusterFile(clusterName)
 	if index <= len(ips) {
-		return ips[index-1], nil
+		return ips[index-1]
 	} else {
-		return "", errors.New("INVALID")
+		return "INVALID"
 	}
 }
 
 func IndexedIp(clusterName string, index int) {
-	if ip, err := GetClusterHost(clusterName, index); err == nil {
-		fmt.Println(ip)
-	} else {
-		fmt.Println(err)
-	}
+	fmt.Println(GetClusterHost(clusterName,index))
 }
 
 func SearchContent(regex string) string {
