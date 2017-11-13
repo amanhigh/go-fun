@@ -1,10 +1,11 @@
 package tools
 
 import (
+	"errors"
 	"fmt"
-	"io/ioutil"
-	. "github.com/amanhigh/go-fun/util"
 	. "github.com/amanhigh/go-fun/kohan/commander"
+	. "github.com/amanhigh/go-fun/util"
+	"io/ioutil"
 	"strings"
 )
 
@@ -69,12 +70,20 @@ func ReadClusterFile(clusterName string) []string {
 	return ReadAllLines(filePath)
 }
 
-func IndexedIp(clusterName string, index int) {
+func GetClusterHost(clusterName string, index int) (string, error) {
 	ips := ReadClusterFile(clusterName)
 	if index <= len(ips) {
-		fmt.Println(ips[index-1])
+		return ips[index-1], nil
 	} else {
-		fmt.Println("INVALID")
+		return "", errors.New("INVALID")
+	}
+}
+
+func IndexedIp(clusterName string, index int) {
+	if ip, err := GetClusterHost(clusterName, index); err == nil {
+		fmt.Println(ip)
+	} else {
+		fmt.Println(err)
 	}
 }
 
