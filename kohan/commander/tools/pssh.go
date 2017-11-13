@@ -1,7 +1,6 @@
 package tools
 
 import (
-	"errors"
 	"fmt"
 	. "github.com/amanhigh/go-fun/kohan/commander"
 	. "github.com/amanhigh/go-fun/util"
