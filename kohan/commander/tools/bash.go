@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 )
 
 func RunCommandPrintError(cmd string) (string) {
@@ -19,7 +20,8 @@ func RunCommandPrintError(cmd string) (string) {
 	}
 }
 
-func RunAsyncCommand(heading string, cmd string) {
+func RunAsyncCommand(heading string, cmd string, wg *sync.WaitGroup) {
+	wg.Add(1)
 	go func() {
 		output, err := runCommand(cmd)
 		PrintSkyBlue(heading)
@@ -28,6 +30,7 @@ func RunAsyncCommand(heading string, cmd string) {
 		} else {
 			PrintWhite(err.Error())
 		}
+		wg.Done()
 	}()
 }
 
