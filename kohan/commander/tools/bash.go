@@ -1,13 +1,13 @@
 package tools
 
 import (
-	"os/exec"
 	"fmt"
-	"strings"
-	. "github.com/amanhigh/go-fun/util"
 	log "github.com/Sirupsen/logrus"
-	"os"
 	"github.com/amanhigh/go-fun/kohan/commander"
+	. "github.com/amanhigh/go-fun/util"
+	"os"
+	"os/exec"
+	"strings"
 )
 
 func RunCommandPrintError(cmd string) (string) {
@@ -17,6 +17,18 @@ func RunCommandPrintError(cmd string) (string) {
 		log.WithFields(log.Fields{"CMD": cmd, "Error": err}).Error("Error Running Command")
 		return ""
 	}
+}
+
+func RunAsyncCommand(heading string, cmd string) {
+	go func() {
+		output, err := runCommand(cmd)
+		PrintSkyBlue(heading)
+		if err == nil {
+			PrintWhite(output)
+		} else {
+			PrintWhite(err.Error())
+		}
+	}()
 }
 
 func RunCommandIgnoreError(cmd string) (string) {
