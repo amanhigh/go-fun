@@ -22,3 +22,7 @@ func GitReset(){
 func GitDiff() {
 	PrintCommand("git diff -U0")
 }
+
+func GetHeadCommit() string  {
+	return RunCommandPrintError("git rev-parse HEAD")
+}
