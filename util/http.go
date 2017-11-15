@@ -15,9 +15,13 @@ import (
 	"time"
 )
 
-var NoKeepAliveClient = NewHttpClient(time.Second, 5*time.Second, false, -1, false)
+const (
+	DIAL_TIMEOUT    = 2 * time.Second
+	REQUEST_TIMEOUT = 5 * time.Second
+)
 
-var KeepAliveClient = NewHttpClient(time.Second, 5*time.Second, true, 64, false)
+var NoKeepAliveClient = NewHttpClient(DIAL_TIMEOUT, REQUEST_TIMEOUT, false, -1, false)
+var KeepAliveClient = NewHttpClient(DIAL_TIMEOUT, REQUEST_TIMEOUT, true, 64, false)
 
 /**
 	returns:
