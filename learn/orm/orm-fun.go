@@ -6,7 +6,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"fmt"
 	"os"
-	"github.com/amanhigh/go-fun/fun"
 	"github.com/amanhigh/go-fun/learn/orm/model"
 )
 
@@ -45,7 +44,7 @@ func (p *Product) AfterFind() (err error) {
 var jsonLogger = &log.Logger{Out: os.Stdout, Formatter: new(log.JSONFormatter), Level: log.InfoLevel}
 
 func main() {
-	db := fun.DB
+	db := DB
 	defer db.Close()
 
 	prepLogger()

@@ -3,8 +3,8 @@ package migrations
 import (
 	"database/sql"
 	"fmt"
-	"github.com/amanhigh/go-fun/fun"
 	"github.com/amanhigh/go-fun/learn/orm/model"
+	"github.com/amanhigh/go-fun/learn/orm"
 )
 
 // Up is executed when this migration is applied
@@ -14,7 +14,7 @@ func Up_20170503165552(txn *sql.Tx) {
 	migrateData()
 }
 func migrateData() {
-	db := fun.DB
+	db := orm.DB
 	defer db.Close()
 	verticals := new([]model.Vertical)
 	db.Find(verticals)
