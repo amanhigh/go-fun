@@ -6,13 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	http2 "github.com/Flipkart/elb/elb/models/http"
 	"golang.org/x/oauth2/clientcredentials"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
+	"github.com/amanhigh/go-fun/models"
 )
 
 const (
@@ -77,7 +77,7 @@ func NewHttpClient(dialTimeout time.Duration, requestTimeout time.Duration, enab
 	}
 }
 
-func NewAuthNClient(config http2.AuthNConfig, targetClientId string) HttpClientInterface {
+func NewAuthNClient(config models.AuthNConfig, targetClientId string) HttpClientInterface {
 	conf := &clientcredentials.Config{
 		ClientID:     config.ClientId,
 		ClientSecret: config.Secret,
