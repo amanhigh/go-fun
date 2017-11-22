@@ -15,11 +15,7 @@ func GitPush() {
 	PrintCommand("git push origin")
 }
 
-func GitReset() {
-	PrintCommand("git reset --hard")
-}
-
-func GitResetFile(path string) {
+func GitReset(path string) {
 	PrintCommand("git checkout HEAD -- " + path)
 }
 
