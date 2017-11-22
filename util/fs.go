@@ -1,10 +1,11 @@
 package util
 
 import (
-	"os"
-	"io/ioutil"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
+	"io/ioutil"
+	"os"
+	"regexp"
 	"strings"
 )
 
@@ -50,6 +51,19 @@ func ListFiles(dirPath string) ([]string) {
 		log.WithFields(log.Fields{"Directory": dirPath, "Error": err}).Error("Error Reading Directory")
 	}
 	return filePaths
+}
+
+func ReplaceContent(path string, findRegex string, replace string) {
+	if bytes, err := ioutil.ReadFile(path); err == nil {
+		if reg, err := regexp.Compile(findRegex); err == nil {
+			newContent := reg.ReplaceAll(bytes, []byte(replace))
+			ioutil.WriteFile(path, newContent, DEFAULT_PERM)
+		} else {
+			log.WithFields(log.Fields{"Error": err}).Error("Invalid Regex")
+		}
+	} else {
+		log.WithFields(log.Fields{"Error": err}).Error("Missing File")
+	}
 }
 
 func ReadAllLines(filePath string) []string {
