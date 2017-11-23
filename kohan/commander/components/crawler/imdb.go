@@ -9,6 +9,7 @@ import (
 	. "github.com/amanhigh/go-fun/models/crawler"
 	"sync"
 	log "github.com/Sirupsen/logrus"
+	"io/ioutil"
 )
 
 type ImdbCrawler struct {
@@ -27,7 +28,7 @@ func NewImdbCrawler(year int, language string, cutoff int) *ImdbCrawler {
 func (self *ImdbCrawler) Crawl() {
 	/* Build Channel & WG for Parallel Parsers */
 	imdbInfoChannel := make(chan ImdbInfo, 512)
-	waitGroup := sync.WaitGroup{}
+	waitGroup := &sync.WaitGroup{}
 	waitGroup.Add(1)
 
 	/* Fire First Crawler */
@@ -43,7 +44,6 @@ func (self *ImdbCrawler) Crawl() {
 			} else {
 				failedInfos = append(failedInfos, value)
 			}
-			value.Print()
 		}
 	}()
 
@@ -53,21 +53,27 @@ func (self *ImdbCrawler) Crawl() {
 
 	/* Output Good/Bad Movies in Separete Sections */
 	util.PrintYellow("Passed Info")
+	urls := []string{}
 	for _, info := range passedInfos {
 		info.Print()
+		urls = append(urls, info.Link)
 	}
+	ioutil.WriteFile(GOOD_URL_FILE, []byte(strings.Join(urls, "\n")), util.DEFAULT_PERM)
 
 	util.PrintYellow("Failed Info")
+	urls = []string{}
 	for _, info := range failedInfos {
 		info.Print()
+		urls = append(urls, info.Link)
 	}
+	ioutil.WriteFile(BAD_URL_FILE, []byte(strings.Join(urls, "\n")), util.DEFAULT_PERM)
 }
 
 /**
 	Recursively Crawl Given Page moving to next if next link is available.
 	Write all Movies of current page onto channel
  */
-func (self *ImdbCrawler) crawlRecursive(page *util.Page, infos chan ImdbInfo, waitGroup sync.WaitGroup) {
+func (self *ImdbCrawler) crawlRecursive(page *util.Page, infos chan ImdbInfo, waitGroup *sync.WaitGroup) {
 	util.PrintYellow("Processing: " + page.Document.Url.String())
 
 	/* If Next Link is Present Crawl It */
