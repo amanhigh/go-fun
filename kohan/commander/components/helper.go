@@ -2,14 +2,15 @@ package components
 
 import (
 	"fmt"
+	"github.com/amanhigh/go-fun/util"
 	"strconv"
 	"strings"
 )
 
-func Printf(template string, paramPara string, marker string) {
+func Printf(templateFile string, paramFile string, marker string) {
 
-	for _, templateSplit := range strings.Split(template, "\n") {
-		for _, paramLine := range strings.Split(paramPara, "\n") {
+	for _, templateSplit := range util.ReadAllLines(templateFile) {
+		for _, paramLine := range util.ReadAllLines(paramFile) {
 
 			template := templateSplit
 			for i, param := range strings.Split(paramLine, " ") {

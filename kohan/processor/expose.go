@@ -63,11 +63,11 @@ func (self *ExposeProcessor) verifyStatusHandler(flagSet *flag.FlagSet, args []s
 }
 
 func (self *ExposeProcessor) handlePrintf(flagSet *flag.FlagSet, args []string) error {
-	template := flagSet.String("c", "", "Command Template")
-	params := flagSet.String("p", "", "Params to Merge")
+	templateFile := flagSet.String("c", "", "Template File")
+	paramFile := flagSet.String("p", "", "Params File")
 	marker := flagSet.String("m", "#", "Marker")
 	e := flagSet.Parse(args)
-	components.Printf(*template, *params, *marker)
+	components.Printf(*templateFile, *paramFile, *marker)
 	return e
 }
 
