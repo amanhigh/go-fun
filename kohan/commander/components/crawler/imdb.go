@@ -39,7 +39,7 @@ func (self *ImdbCrawler) Crawl() {
 	var failedInfos []ImdbInfo
 	go func() {
 		for value := range imdbInfoChannel {
-			if value.Rating > float64(self.cutoff) {
+			if value.Rating > float64(self.cutoff) || value.Rating < 0.1 {
 				passedInfos = append(passedInfos, value)
 			} else {
 				failedInfos = append(failedInfos, value)
