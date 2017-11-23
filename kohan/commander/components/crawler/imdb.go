@@ -25,12 +25,17 @@ func NewImdbCrawler(year int, language string, cutoff int) *ImdbCrawler {
 }
 
 func (self *ImdbCrawler) Crawl() {
+	/* Build Channel & WG for Parallel Parsers */
 	imdbInfoChannel := make(chan ImdbInfo, 512)
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(1)
+
+	/* Fire First Crawler */
 	go self.crawlRecursive(self.page, imdbInfoChannel, waitGroup)
-	passedInfos := []ImdbInfo{}
-	failedInfos := []ImdbInfo{}
+
+	/* Fire Parallel Consumer to Separate Movies */
+	var passedInfos []ImdbInfo
+	var failedInfos []ImdbInfo
 	go func() {
 		for value := range imdbInfoChannel {
 			if value.Rating > float64(self.cutoff) {
@@ -41,9 +46,12 @@ func (self *ImdbCrawler) Crawl() {
 			value.Print()
 		}
 	}()
+
+	/* Wait Till all Parsers Complete & Close Channel */
 	waitGroup.Wait()
 	close(imdbInfoChannel)
 
+	/* Output Good/Bad Movies in Separete Sections */
 	util.PrintYellow("Passed Info")
 	for _, info := range passedInfos {
 		info.Print()
@@ -55,6 +63,10 @@ func (self *ImdbCrawler) Crawl() {
 	}
 }
 
+/**
+	Recursively Crawl Given Page moving to next if next link is available.
+	Write all Movies of current page onto channel
+ */
 func (self *ImdbCrawler) crawlRecursive(page *util.Page, infos chan ImdbInfo, waitGroup sync.WaitGroup) {
 	util.PrintYellow("Processing: " + page.Document.Url.String())
 

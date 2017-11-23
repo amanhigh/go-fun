@@ -12,5 +12,5 @@ type ImdbInfo struct {
 }
 
 func (self *ImdbInfo) Print() {
-	util.PrintWhite(fmt.Sprintf("%v - %v : %.2f", self.Name, self.Link, self.Rating))
+	util.PrintWhite(fmt.Sprintf("%v: %.2f - %v", self.Name, self.Rating, self.Link))
 }
