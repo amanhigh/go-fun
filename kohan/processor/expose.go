@@ -3,10 +3,10 @@ package processor
 import (
 	"flag"
 	"fmt"
-	"github.com/amanhigh/go-fun/kohan/commander/components"
-	"github.com/amanhigh/go-fun/util"
-	. "github.com/amanhigh/go-fun/kohan/commander/tools"
 	"github.com/amanhigh/go-fun/kohan/commander"
+	"github.com/amanhigh/go-fun/kohan/commander/components"
+	. "github.com/amanhigh/go-fun/kohan/commander/tools"
+	"github.com/amanhigh/go-fun/util"
 )
 
 type ExposeProcessor struct {
@@ -17,6 +17,7 @@ func (self *ExposeProcessor) GetArgedHandlers() (map[string]HandleFunc) {
 		"pssh":         self.psshHandler,
 		"getVersion":   self.getVersionHandler,
 		"indexedIp":    self.handleIndexedIp,
+		"printf":       self.handlePrintf,
 		"versionCheck": self.versionCheckHandler,
 		"verifyStatus": self.verifyStatusHandler,
 		"debugControl": self.debugControlHandler,
@@ -58,6 +59,15 @@ func (self *ExposeProcessor) verifyStatusHandler(flagSet *flag.FlagSet, args []s
 	cluster := flagSet.String("cl", "", "Cluster To Run On")
 	e := flagSet.Parse(args)
 	components.VerifyStatus(*cmd, *cluster)
+	return e
+}
+
+func (self *ExposeProcessor) handlePrintf(flagSet *flag.FlagSet, args []string) error {
+	template := flagSet.String("c", "", "Command Template")
+	params := flagSet.String("p", "", "Params to Merge")
+	marker := flagSet.String("m", "#", "Marker")
+	e := flagSet.Parse(args)
+	components.Printf(*template, *params, *marker)
 	return e
 }
 
