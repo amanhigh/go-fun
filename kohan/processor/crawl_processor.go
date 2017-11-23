@@ -21,7 +21,7 @@ func (self *CrawlProcessor) GetNonArgedHandlers() (map[string]DirectFunc) {
 func (self *CrawlProcessor) handleImdb(flagSet *flag.FlagSet, args []string) error {
 	year := flagSet.Int("y", 2015, "Year of Movie")
 	cutoff := flagSet.Int("c", 5, "Movie Cutoff")
-	langCode := flagSet.String("l", "en", "Language Code")
+	langCode := flagSet.String("l", "en", "Language Code [pa,en,hi]")
 	e := flagSet.Parse(args)
 	crawler.NewImdbCrawler(*year, *langCode, *cutoff).Crawl()
 	return e
