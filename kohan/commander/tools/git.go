@@ -11,18 +11,18 @@ func GitCommit(msg string, filePath string) {
 	PrintCommand(fmt.Sprintf("git commit -m '%v' %v", msg, filePath))
 }
 
-func GitPush(){
+func GitPush() {
 	PrintCommand("git push origin")
 }
 
-func GitReset(){
-	PrintCommand("git reset --hard")
+func GitReset(path string) {
+	PrintCommand("git checkout HEAD -- " + path)
 }
 
 func GitDiff() {
 	PrintCommand("git diff -U0")
 }
 
-func GetHeadCommit() string  {
+func GetHeadCommit() string {
 	return RunCommandPrintError("git rev-parse HEAD")
 }
