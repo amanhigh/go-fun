@@ -6,16 +6,17 @@ import (
 	"strings"
 )
 
-func Printf(template string, params string, marker string) {
-	paramSplit := strings.Split(params, "\n")
+func Printf(template string, paramPara string, marker string) {
 
-	for _, param := range paramSplit {
-		command := template
-		split := strings.Split(param, " ")
+	for _, templateSplit := range strings.Split(template, "\n") {
+		for _, paramLine := range strings.Split(paramPara, "\n") {
 
-		for i, value := range split {
-			command = strings.Replace(command, marker+strconv.Itoa(i+1), value, -1)
+			template := templateSplit
+			for i, param := range strings.Split(paramLine, " ") {
+				template = strings.Replace(template, marker+strconv.Itoa(i+1), param, -1)
+			}
+			fmt.Println(template)
 		}
-		fmt.Printf("%+v\n", command)
+		fmt.Println("")
 	}
 }
