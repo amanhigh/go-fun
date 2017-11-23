@@ -85,7 +85,7 @@ func (self *ImdbCrawler) crawlRecursive(page *util.Page, infos chan ImdbInfo, wa
 	}
 
 	/* Find Links for this Page */
-	self.findLinks(self.page, infos)
+	self.findLinks(page, infos)
 	waitGroup.Done()
 }
 
