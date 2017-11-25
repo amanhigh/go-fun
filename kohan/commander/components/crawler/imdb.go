@@ -7,54 +7,70 @@ import (
 	"strconv"
 	"github.com/amanhigh/go-fun/util"
 	. "github.com/amanhigh/go-fun/models/crawler"
-	"sync"
 	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
 )
 
 type ImdbCrawler struct {
 	cutoff int
-	page   *util.Page
+	topUrl string
+
+	infoChannel chan ImdbInfo
+	passedInfos []ImdbInfo
+	failedInfos []ImdbInfo
 }
 
-func NewImdbCrawler(year int, language string, cutoff int) *ImdbCrawler {
-	url := fmt.Sprintf("http://www.imdb.com/search/title?release_date=%v&primary_language=%v&view=simple&ref_=rlm_yr", year, language)
+func NewImdbCrawler(year int, language string, cutoff int) Crawler {
 	return &ImdbCrawler{
-		cutoff: cutoff,
-		page:   util.NewPage(url),
+		cutoff:      cutoff,
+		topUrl:      fmt.Sprintf("http://www.imdb.com/search/title?release_date=%v&primary_language=%v&view=simple&ref_=rlm_yr", year, language),
+		infoChannel: make(chan ImdbInfo, 512),
+		passedInfos: []ImdbInfo{},
+		failedInfos: []ImdbInfo{},
 	}
 }
 
-func (self *ImdbCrawler) Crawl() {
-	/* Build Channel & WG for Parallel Parsers */
-	imdbInfoChannel := make(chan ImdbInfo, 512)
-	waitGroup := &sync.WaitGroup{}
-	waitGroup.Add(1)
+func (self *ImdbCrawler) GetBaseUrl() string {
+	return self.topUrl
+}
 
-	/* Fire First Crawler */
-	go self.crawlRecursive(self.page, imdbInfoChannel, waitGroup)
+func (self *ImdbCrawler) GatherLinks(page *util.Page) {
+	page.Document.Find(".lister-col-wrapper").Each(func(i int, lineItem *goquery.Selection) {
+		ratingFloat := getRating(lineItem)
+		name, link := page.ParseAnchor(lineItem.Find("a"))
+		self.infoChannel <- ImdbInfo{Name: strings.TrimSuffix(name, "12345678910X"), Link: link, Rating: ratingFloat}
+	})
+}
 
+func (self *ImdbCrawler) NextPageLink(page *util.Page) (url string, ok bool) {
+	var params string
+	nextPageElement := page.Document.Find(".next-page")
+	if params, ok = nextPageElement.Attr(util.HREF); ok {
+		url = self.getImdbUrl(page, params)
+	}
+	return
+}
+
+func (self *ImdbCrawler) GatherComplete() {
+	close(self.infoChannel)
+}
+
+func (self *ImdbCrawler) BuildSet() {
 	/* Fire Parallel Consumer to Separate Movies */
-	var passedInfos []ImdbInfo
-	var failedInfos []ImdbInfo
-	go func() {
-		for value := range imdbInfoChannel {
-			if value.Rating >= float64(self.cutoff) || value.Rating < 0.1 {
-				passedInfos = append(passedInfos, value)
-			} else {
-				failedInfos = append(failedInfos, value)
-			}
+	for value := range self.infoChannel {
+		if value.Rating >= float64(self.cutoff) || value.Rating < 0.1 {
+			self.passedInfos = append(self.passedInfos, value)
+		} else {
+			self.failedInfos = append(self.failedInfos, value)
 		}
-	}()
+	}
+}
 
-	/* Wait Till all Parsers Complete & Close Channel */
-	waitGroup.Wait()
-	close(imdbInfoChannel)
-
-	/* Output Good/Bad Movies in Separete Sections */
+func (self *ImdbCrawler) PrintSet() {
+	/* Output Good/Bad Movies in Separate Sections */
 	util.PrintYellow("Passed Info")
 	urls := []string{}
-	for _, info := range passedInfos {
+	for _, info := range self.passedInfos {
 		info.Print()
 		urls = append(urls, info.Link)
 	}
@@ -62,43 +78,15 @@ func (self *ImdbCrawler) Crawl() {
 
 	util.PrintYellow("Failed Info")
 	urls = []string{}
-	for _, info := range failedInfos {
+	for _, info := range self.failedInfos {
 		info.Print()
 		urls = append(urls, info.Link)
 	}
 	ioutil.WriteFile(BAD_URL_FILE, []byte(strings.Join(urls, "\n")), util.DEFAULT_PERM)
 }
 
-/**
-	Recursively Crawl Given Page moving to next if next link is available.
-	Write all Movies of current page onto channel
- */
-func (self *ImdbCrawler) crawlRecursive(page *util.Page, infos chan ImdbInfo, waitGroup *sync.WaitGroup) {
-	util.PrintYellow("Processing: " + page.Document.Url.String())
-
-	/* If Next Link is Present Crawl It */
-	nextPageElement := page.Document.Find(".next-page")
-	if params, ok := nextPageElement.Attr(util.HREF); ok {
-		nextUrl := self.getImdbUrl(params)
-		waitGroup.Add(1)
-		go self.crawlRecursive(util.NewPage(nextUrl), infos, waitGroup)
-	}
-
-	/* Find Links for this Page */
-	self.findLinks(page, infos)
-	waitGroup.Done()
-}
-
-func (self *ImdbCrawler) getImdbUrl(params string) string {
-	return fmt.Sprintf("http://%v%v%v", self.page.Document.Url.Host, self.page.Document.Url.Path, params)
-}
-
-func (self *ImdbCrawler) findLinks(page *util.Page, infoChannel chan ImdbInfo) {
-	page.Document.Find(".lister-col-wrapper").Each(func(i int, lineItem *goquery.Selection) {
-		ratingFloat := getRating(lineItem)
-		name, link := page.ParseAnchor(lineItem.Find("a"))
-		infoChannel <- ImdbInfo{Name: strings.TrimSuffix(name, "12345678910X"), Link: link, Rating: ratingFloat}
-	})
+func (self *ImdbCrawler) getImdbUrl(page *util.Page, params string) string {
+	return fmt.Sprintf("http://%v%v%v", page.Document.Url.Host, page.Document.Url.Path, params)
 }
 
 /* Helpers */
