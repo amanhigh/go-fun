@@ -34,12 +34,15 @@ func (self *ImdbCrawler) GetBaseUrl() string {
 	return self.topUrl
 }
 
-func (self *ImdbCrawler) GatherLinks(page *util.Page) {
+func (self *ImdbCrawler) GatherLinks(page *util.Page) (int) {
+	count := 0
 	page.Document.Find(".lister-col-wrapper").Each(func(i int, lineItem *goquery.Selection) {
 		ratingFloat := getRating(lineItem)
 		name, link := page.ParseAnchor(lineItem.Find("a"))
 		self.infoChannel <- ImdbInfo{Name: strings.TrimSuffix(name, "12345678910X"), Link: link, Rating: ratingFloat}
+		count++
 	})
+	return count
 }
 
 func (self *ImdbCrawler) NextPageLink(page *util.Page) (url string, ok bool) {

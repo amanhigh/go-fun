@@ -3,6 +3,9 @@ package crawler
 import (
 	"github.com/amanhigh/go-fun/util"
 	"sync"
+	"context"
+	"sync/atomic"
+	"fmt"
 )
 
 const (
@@ -12,7 +15,7 @@ const (
 
 type Crawler interface {
 	GetBaseUrl() string
-	GatherLinks(page *util.Page)
+	GatherLinks(page *util.Page) int
 	NextPageLink(page *util.Page) (string, bool)
 	GatherComplete()
 	BuildSet()
@@ -20,7 +23,19 @@ type Crawler interface {
 }
 
 type CrawlerManager struct {
-	Crawler Crawler
+	Crawler    Crawler
+	ctx        context.Context
+	cancelFunc context.CancelFunc
+
+	collectCount  int32
+	RequiredCount int32
+}
+
+func NewCrawlerManager(crawler Crawler, requiredCount int) *CrawlerManager {
+	return &CrawlerManager{
+		Crawler:       crawler,
+		RequiredCount: int32(requiredCount),
+	}
 }
 
 func (self *CrawlerManager) Crawl() {
@@ -47,15 +62,18 @@ func (self *CrawlerManager) Crawl() {
 	Write all Movies of current page onto channel
  */
 func (self *CrawlerManager) crawlRecursive(page *util.Page, waitGroup *sync.WaitGroup) {
-	util.PrintYellow("Processing: " + page.Document.Url.String())
+	collected := atomic.LoadInt32(&self.collectCount)
+	if collected < self.RequiredCount {
+		util.PrintYellow(fmt.Sprintf("Processing: %v Collected: %v", page.Document.Url.String(), collected))
 
-	/* If Next Link is Present Crawl It */
-	if link, ok := self.Crawler.NextPageLink(page); ok {
-		waitGroup.Add(1)
-		go self.crawlRecursive(util.NewPage(link), waitGroup)
+		/* If Next Link is Present Crawl It */
+		if link, ok := self.Crawler.NextPageLink(page); ok {
+			waitGroup.Add(1)
+			go self.crawlRecursive(util.NewPage(link), waitGroup)
+		}
+		/* Find Links for this Page */
+		linksGathered := self.Crawler.GatherLinks(page)
+		atomic.AddInt32(&self.collectCount, int32(linksGathered))
 	}
-
-	/* Find Links for this Page */
-	self.Crawler.GatherLinks(page)
 	waitGroup.Done()
 }
