@@ -3,7 +3,6 @@ package util
 import (
 	"bitbucket.org/liamstask/goose/lib/goose"
 	log "github.com/Sirupsen/logrus"
-	"github.com/amanhigh/go-fun/kohan/commander"
 	"github.com/jinzhu/gorm"
 )
 
@@ -15,7 +14,7 @@ func NewDb(path string) *gorm.DB {
 		return nil
 	} else {
 		/** Print SQL */
-		if commander.IsDebugMode() {
+		if IsDebugMode() {
 			db.LogMode(true)
 		}
 		return db
