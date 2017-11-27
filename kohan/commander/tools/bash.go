@@ -3,7 +3,6 @@ package tools
 import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
-	"github.com/amanhigh/go-fun/kohan/commander"
 	. "github.com/amanhigh/go-fun/util"
 	"os"
 	"os/exec"
@@ -40,7 +39,7 @@ func RunCommandIgnoreError(cmd string) (string) {
 }
 
 func PrintCommand(cmd string) {
-	if commander.IsDebugMode() {
+	if IsDebugMode() {
 		PrintPink(cmd)
 	}
 
@@ -75,7 +74,7 @@ func runCommand(cmd string) (string, error) {
 
 func LiveCommand(cmd string) {
 	command := exec.Command("sh", "-c", cmd)
-	if commander.IsDebugMode() {
+	if IsDebugMode() {
 		PrintSkyBlue(cmd)
 	}
 	/* Connect Command Outputs */

@@ -2,15 +2,14 @@ package tools
 
 import (
 	"fmt"
-	"strings"
 	"github.com/amanhigh/go-fun/util"
-	"github.com/amanhigh/go-fun/kohan/commander"
+	"strings"
 )
 
 const TIMEOUT = 10
 
 func Jcurl(url string, pipe string) (output string) {
-	if commander.IsDebugMode() {
+	if util.IsDebugMode() {
 		util.PrintPink(url)
 	}
 

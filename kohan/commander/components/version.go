@@ -2,10 +2,9 @@ package components
 
 import (
 	"fmt"
-	"time"
-	"github.com/amanhigh/go-fun/util"
-	"github.com/amanhigh/go-fun/kohan/commander"
 	"github.com/amanhigh/go-fun/kohan/commander/tools"
+	"github.com/amanhigh/go-fun/util"
+	"time"
 )
 
 func GetVersion(pkgName string, host string, versionType string, comment string) {
@@ -23,7 +22,7 @@ func GetDpkgVersion(pkgName string, host string) {
 	dpkgVersion := tools.RunCommandPrintError(cmd)
 	versionString := fmt.Sprintf("\n%v - %v - HostVersion: %v", pkgName, dpkgVersion, util.FormatTime(time.Now(), util.PRINT_LAYOUT))
 	util.PrintYellow(versionString)
-	util.AppendFile(commander.RELEASE_FILE, versionString)
+	util.AppendFile(util.RELEASE_FILE, versionString)
 }
 
 func GetLatestVersion(pkgName string, host string, comment string) {
@@ -32,5 +31,5 @@ func GetLatestVersion(pkgName string, host string, comment string) {
 	latestVersion := tools.RunCommandPrintError(cmd)
 	versionString := fmt.Sprintf("\n%v - %v - LatestVersion [ %v ]", pkgName, latestVersion, comment)
 	util.PrintYellow(versionString)
-	util.AppendFile(commander.RELEASE_FILE, versionString)
+	util.AppendFile(util.RELEASE_FILE, versionString)
 }
