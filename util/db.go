@@ -21,6 +21,10 @@ func NewDb(path string) *gorm.DB {
 	}
 }
 
+func TruncateTable(db *gorm.DB, tableName string) {
+	db.Exec("truncate table " + tableName)
+}
+
 func Migrate(db *gorm.DB, values ...interface{}) {
 	/** AutoMigrate Schema */
 	db.AutoMigrate(values)
