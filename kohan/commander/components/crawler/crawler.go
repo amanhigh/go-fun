@@ -29,6 +29,8 @@ type CrawlerManager struct {
 	ctx        context.Context
 	cancelFunc context.CancelFunc
 
+	verbose bool
+
 	/* Counts to track collected & required */
 	collected int32
 	required  int32
@@ -38,11 +40,12 @@ type CrawlerManager struct {
 	badInfo     []CrawlInfo
 }
 
-func NewCrawlerManager(crawler Crawler, requiredCount int) *CrawlerManager {
+func NewCrawlerManager(crawler Crawler, requiredCount int, verbose bool) *CrawlerManager {
 	return &CrawlerManager{
 		Crawler:     crawler,
 		required:    int32(requiredCount),
 		infoChannel: make(chan CrawlInfo, BUFFER_SIZE),
+		verbose:     verbose,
 	}
 }
 
@@ -82,10 +85,10 @@ func (self *CrawlerManager) PrintSet(good []CrawlInfo, bad []CrawlInfo) {
 	if ok := self.Crawler.PrintSet(good, bad); ok {
 		/* Output Good/Bad Info in Separate Sections */
 		util.PrintGreen(fmt.Sprintf("Passed Info: %v", len(good)))
-		printWriteCrawledInfo(good, GOOD_URL_FILE)
+		self.printWriteCrawledInfo(good, GOOD_URL_FILE)
 
 		util.PrintYellow(fmt.Sprintf("Failed Info: %v", len(bad)))
-		printWriteCrawledInfo(bad, BAD_URL_FILE)
+		self.printWriteCrawledInfo(bad, BAD_URL_FILE)
 	}
 }
 
@@ -93,10 +96,12 @@ func (self *CrawlerManager) PrintSet(good []CrawlInfo, bad []CrawlInfo) {
 	Print Info using interface and write extracted links to
 	GOOD/BAD Files for Chrome Processing
  */
-func printWriteCrawledInfo(infos []CrawlInfo, filePath string) {
+func (self *CrawlerManager) printWriteCrawledInfo(infos []CrawlInfo, filePath string) {
 	var urls []string
 	for _, info := range infos {
-		info.Print()
+		if self.verbose {
+			info.Print()
+		}
 		urls = append(urls, info.ToUrl())
 	}
 	ioutil.WriteFile(filePath, []byte(strings.Join(urls, "\n")), util.DEFAULT_PERM)
