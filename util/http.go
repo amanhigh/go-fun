@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"golang.org/x/oauth2/clientcredentials"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -160,12 +161,21 @@ func (self *HttpClient) DoRequest(request *http.Request, unmarshalledResponse in
 
 		/* Check If Request was Successful */
 		statusCode = response.StatusCode
+
+		/* Decode Body if 200 else throw error */
 		if response.StatusCode == http.StatusOK {
-			/* Read Body & Decode if Response came & unmarshal entity is supplied */
-			if responseBytes, err = ioutil.ReadAll(response.Body); err == nil && unmarshalledResponse != nil {
-				err = json.Unmarshal(responseBytes, unmarshalledResponse)
+			if unmarshalledResponse != nil {
+				/* Read Body & Decode if Response came & unmarshal entity is supplied */
+				if responseBytes, err = ioutil.ReadAll(response.Body); err == nil {
+					err = json.Unmarshal(responseBytes, unmarshalledResponse)
+				}
+			} else {
+				/* Discard body if not read */
+				io.Copy(ioutil.Discard, response.Body)
 			}
 		} else {
+			/* Discard body if not read */
+			io.Copy(ioutil.Discard, response.Body)
 			err = errors.New(fmt.Sprintf("Non 200 Response. Status Code: %v", response.StatusCode))
 		}
 	}
