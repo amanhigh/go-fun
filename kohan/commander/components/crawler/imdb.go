@@ -16,9 +16,10 @@ type ImdbCrawler struct {
 }
 
 func NewImdbCrawler(year int, language string, cutoff int) Crawler {
+	util.PrintYellow(fmt.Sprintf("ImdbCrawler: Year:%v Lang:%v Cutoff: %v", year, language, cutoff))
 	return &ImdbCrawler{
 		cutoff: cutoff,
-		topUrl: fmt.Sprintf("http://www.imdb.com/search/title?release_date=%v&primary_language=%v&view=simple&ref_=rlm_yr", year, language),
+		topUrl: fmt.Sprintf("http://www.imdb.com/search/title?release_date=%v&primary_language=%v&view=simple&title_type=feature&sort=num_votes,desc", year, language),
 	}
 }
 
