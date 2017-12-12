@@ -50,6 +50,7 @@ func NewCrawlerManager(crawler Crawler, requiredCount int, verbose bool) *Crawle
 }
 
 func (self *CrawlerManager) Crawl() {
+	util.PrintYellow(fmt.Sprintf("Crawling for %v Links", self.required))
 	topPage := util.NewPage(self.Crawler.GetBaseUrl())
 
 	/* Fire First Crawler */
