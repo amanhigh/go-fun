@@ -3,11 +3,10 @@ package tools
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"github.com/amanhigh/go-fun/kohan/commander"
-	"strings"
-	"sort"
 	"fmt"
 	"github.com/amanhigh/go-fun/util"
+	"sort"
+	"strings"
 )
 
 type md5Info struct {
@@ -30,7 +29,7 @@ func GetMD5Hash(text string) string {
 func Md5Checker(cmd string, cluster string) {
 	/* Run Command to get Ip Wise output */
 	FastPssh.Run(cmd, cluster, 200, true)
-	files := util.ReadFileMap(commander.OUTPUT_PATH)
+	files := util.ReadFileMap(util.OUTPUT_PATH)
 
 	/* Compute Md5 and store as list with count */
 	hashMap := map[string]*md5Info{}

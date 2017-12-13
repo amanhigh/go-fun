@@ -1,12 +1,11 @@
 package components
 
 import (
-	"strings"
-	"fmt"
 	"errors"
-	. "github.com/amanhigh/go-fun/util"
+	"fmt"
 	"github.com/amanhigh/go-fun/kohan/commander/tools"
-	"github.com/amanhigh/go-fun/kohan/commander"
+	. "github.com/amanhigh/go-fun/util"
+	"strings"
 )
 
 func MergeMux(splitMap map[string][]string) map[string][]string {
@@ -50,7 +49,7 @@ func SplitAnsibleConfig(configPath string) error {
 		muxMap := MergeMux(splitMap)
 
 		for cluster, value := range muxMap {
-			if commander.IsDebugMode(){
+			if IsDebugMode(){
 				fmt.Println(cluster, len(value))
 			}
 			tools.WriteClusterFile(cluster, strings.Join(value, "\n"))

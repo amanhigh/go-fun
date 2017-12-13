@@ -2,7 +2,6 @@ package tools
 
 import (
 	"fmt"
-	. "github.com/amanhigh/go-fun/kohan/commander"
 	. "github.com/amanhigh/go-fun/util"
 	"io/ioutil"
 	"strings"

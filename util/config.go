@@ -1,10 +1,9 @@
-package commander
+package util
 
 import (
-	"os"
-	"io/ioutil"
 	"fmt"
-	"github.com/amanhigh/go-fun/util"
+	"io/ioutil"
+	"os"
 )
 
 /* PSSH */
@@ -20,15 +19,15 @@ const DEBUG_FILE string = "/tmp/kohandebug"
 
 func DebugControl(flag bool) {
 	if flag {
-		util.PrintSkyBlue("Enabling Debug Mode")
-		ioutil.WriteFile(DEBUG_FILE, []byte{}, util.DEFAULT_PERM)
+		PrintSkyBlue("Enabling Debug Mode")
+		ioutil.WriteFile(DEBUG_FILE, []byte{}, DEFAULT_PERM)
 	} else {
-		util.PrintRed("Disabling Debug Mode")
+		PrintRed("Disabling Debug Mode")
 		os.Remove(DEBUG_FILE)
 	}
-	util.PrintYellow(fmt.Sprintf("Debug Mode: %v", IsDebugMode()))
+	PrintYellow(fmt.Sprintf("Debug Mode: %v", IsDebugMode()))
 }
 
 func IsDebugMode() bool {
-	return util.PathExists(DEBUG_FILE)
+	return PathExists(DEBUG_FILE)
 }

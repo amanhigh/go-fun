@@ -3,7 +3,6 @@ package processor
 import (
 	"flag"
 	"fmt"
-	"github.com/amanhigh/go-fun/kohan/commander"
 	"github.com/amanhigh/go-fun/kohan/commander/components"
 	. "github.com/amanhigh/go-fun/kohan/commander/tools"
 	"github.com/amanhigh/go-fun/util"
@@ -75,7 +74,7 @@ func (self *ExposeProcessor) psshHandler(flagSet *flag.FlagSet, args []string) e
 	cmd := flagSet.String("cmd", "", "Command To Run")
 	cluster := flagSet.String("cl", "", "Cluster To Run On")
 	psshType := flagSet.String("t", "fast", "fast/display/slow")
-	parallelism := flagSet.Int("p", commander.DEFAULT_PARALELISM, "Parallelism")
+	parallelism := flagSet.Int("p", util.DEFAULT_PARALELISM, "Parallelism")
 	start := flagSet.Int("s", -1, "Start Index (Starting from 1)")
 	end := flagSet.Int("e", -1, "End Index")
 	e := flagSet.Parse(args)
@@ -87,7 +86,7 @@ func (self *ExposeProcessor) psshHandler(flagSet *flag.FlagSet, args []string) e
 func (self *ExposeProcessor) debugControlHandler(flagSet *flag.FlagSet, args []string) error {
 	f := flagSet.Bool("f", false, "Enable Disable Flag true/false")
 	e := flagSet.Parse(args)
-	commander.DebugControl(*f)
+	util.DebugControl(*f)
 	return e
 }
 
