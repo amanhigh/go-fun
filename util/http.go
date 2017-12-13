@@ -167,7 +167,13 @@ func (self *HttpClient) DoRequest(request *http.Request, unmarshalledResponse in
 			if unmarshalledResponse != nil {
 				/* Read Body & Decode if Response came & unmarshal entity is supplied */
 				if responseBytes, err = ioutil.ReadAll(response.Body); err == nil {
-					err = json.Unmarshal(responseBytes, unmarshalledResponse)
+
+					/* Return If its string else unmarshal Body */
+					if stringInterface, ok := unmarshalledResponse.(*string); ok {
+						*stringInterface = string(responseBytes)
+					} else {
+						err = json.Unmarshal(responseBytes, unmarshalledResponse)
+					}
 				}
 			} else {
 				/* Discard body if not read */
