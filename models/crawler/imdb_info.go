@@ -18,7 +18,7 @@ func (self *ImdbInfo) Print() {
 }
 
 func (self *ImdbInfo) GoodBad() error {
-	if self.Rating >= float64(self.CutOff) || self.Rating < 0.1 {
+	if self.Rating < float64(self.CutOff) {
 		return errors.New(fmt.Sprintf("Subpar Rating %v < %v", self.Rating, self.CutOff))
 	}
 	return nil
