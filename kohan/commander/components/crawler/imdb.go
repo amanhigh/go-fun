@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"strings"
-	"strconv"
 	"github.com/amanhigh/go-fun/util"
 	. "github.com/amanhigh/go-fun/models/crawler"
-	log "github.com/Sirupsen/logrus"
 	"net/http"
 	"io/ioutil"
 )
@@ -43,7 +41,11 @@ func (self *ImdbCrawler) GatherLinks(page *util.Page, ch chan CrawlInfo) {
 	page.Document.Find(".lister-col-wrapper").Each(func(i int, lineItem *goquery.Selection) {
 		ratingFloat := getRating(lineItem)
 		name, link := page.ParseAnchor(lineItem.Find("a"))
-		ch <- &ImdbInfo{Name: strings.TrimSuffix(name, "12345678910X"), Link: link, Rating: ratingFloat, CutOff: self.cutoff}
+
+		page := util.NewPageUsingClient("http://www.imdb.com/title/tt2871010/", self.client)
+		myRating := util.ParseFloat(page.Document.Find(".star-rating-value").Text())
+
+		ch <- &ImdbInfo{Name: strings.TrimSuffix(name, "12345678910X"), Link: link, Rating: ratingFloat, MyRating: myRating, CutOff: self.cutoff}
 	})
 }
 
