@@ -14,11 +14,14 @@ import (
 	"net/url"
 	"time"
 	"github.com/amanhigh/go-fun/models"
+	"net/http/cookiejar"
+	log "github.com/Sirupsen/logrus"
 )
 
 const (
-	DIAL_TIMEOUT    = 2 * time.Second
-	REQUEST_TIMEOUT = 5 * time.Second
+	DIAL_TIMEOUT     = 2 * time.Second
+	REQUEST_TIMEOUT  = 5 * time.Second
+	IDLE_CONNECTIONS = 64
 )
 
 var NoKeepAliveClient = NewHttpClient(DIAL_TIMEOUT, REQUEST_TIMEOUT, false, -1, false)
@@ -59,8 +62,10 @@ type HttpClient struct {
 	enableCompression: Enable/Disable gzip compression
  */
 func NewHttpClient(dialTimeout time.Duration, requestTimeout time.Duration, enableKeepAlive bool, idleConnectionsPerHost int, enableCompression bool) HttpClientInterface {
+	jar, _ := cookiejar.New(nil)
 	return &HttpClient{
 		Client: &http.Client{
+			Jar: jar,
 			Transport: &http.Transport{
 				DisableCompression: !enableCompression,
 				DisableKeepAlives:  !enableKeepAlive,
@@ -76,6 +81,16 @@ func NewHttpClient(dialTimeout time.Duration, requestTimeout time.Duration, enab
 		},
 		Timeout: requestTimeout, //Request Timeout
 	}
+}
+
+func NewHttpClientWithCookies(cookieUrl string, cookies []*http.Cookie, keepAlive bool, compression bool) HttpClientInterface {
+	client := NewHttpClient(DIAL_TIMEOUT, REQUEST_TIMEOUT, keepAlive, IDLE_CONNECTIONS, compression).(*HttpClient)
+	if u, err := url.Parse(cookieUrl); err == nil {
+		client.Client.Jar.SetCookies(u, cookies)
+	} else {
+		log.WithFields(log.Fields{"Error": err}).Error("")
+	}
+	return client
 }
 
 func NewAuthNClient(config models.AuthNConfig, targetClientId string) HttpClientInterface {
