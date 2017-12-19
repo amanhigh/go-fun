@@ -74,7 +74,7 @@ func (self *CrawlerManager) Crawl() {
 func (self *CrawlerManager) getPage(crawlUrl string) *util.Page {
 	response := ""
 	if _, err := self.Crawler.SupplyClient().DoGet(crawlUrl, &response); err == nil {
-		return util.NewPageFromString(response)
+		return util.NewPageFromString(crawlUrl, response)
 	} else {
 		log.WithFields(log.Fields{"URL": crawlUrl, "Error": err}).Error("Error Querying URL")
 		return nil

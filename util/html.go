@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"golang.org/x/net/html"
 	"strings"
+	"net/url"
 )
 
 const HREF = "href"
@@ -14,9 +15,11 @@ type Page struct {
 	Document *goquery.Document
 }
 
-func NewPageFromString(response string) *Page {
+func NewPageFromString(rawUrl string, response string) *Page {
 	if root, err := html.Parse(strings.NewReader(response)); err == nil {
-		return &Page{Document: goquery.NewDocumentFromNode(root)}
+		doc := goquery.NewDocumentFromNode(root)
+		doc.Url, _ = url.Parse(rawUrl)
+		return &Page{Document: doc}
 	} else {
 		log.WithFields(log.Fields{"Error": err}).Error("Error Parsing Response")
 		return nil
