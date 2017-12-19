@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"sync/atomic"
+	log "github.com/Sirupsen/logrus"
 )
 
 const (
@@ -22,6 +23,7 @@ type Crawler interface {
 	GatherLinks(page *util.Page, ch chan CrawlInfo)
 	NextPageLink(page *util.Page) (string, bool)
 	PrintSet(good []CrawlInfo, bad []CrawlInfo) bool
+	SupplyClient() util.HttpClientInterface
 }
 
 type CrawlerManager struct {
@@ -51,7 +53,7 @@ func NewCrawlerManager(crawler Crawler, requiredCount int, verbose bool) *Crawle
 
 func (self *CrawlerManager) Crawl() {
 	util.PrintYellow(fmt.Sprintf("Crawling for %v Links", self.required))
-	topPage := util.NewPage(self.Crawler.GetBaseUrl())
+	topPage := self.getPage(self.Crawler.GetBaseUrl())
 
 	/* Fire First Crawler */
 	waitGroup := &sync.WaitGroup{}
@@ -67,6 +69,16 @@ func (self *CrawlerManager) Crawl() {
 
 	/* Print Organised Links */
 	self.PrintSet(self.goodInfo, self.badInfo)
+}
+
+func (self *CrawlerManager) getPage(crawlUrl string) *util.Page {
+	response := ""
+	if _, err := self.Crawler.SupplyClient().DoGet(crawlUrl, &response); err == nil {
+		return util.NewPageFromString(response)
+	} else {
+		log.WithFields(log.Fields{"URL": crawlUrl, "Error": err}).Error("Error Querying URL")
+		return nil
+	}
 }
 
 func (self *CrawlerManager) BuildSet() {

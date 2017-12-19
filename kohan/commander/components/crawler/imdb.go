@@ -8,23 +8,36 @@ import (
 	"github.com/amanhigh/go-fun/util"
 	. "github.com/amanhigh/go-fun/models/crawler"
 	log "github.com/Sirupsen/logrus"
+	"net/http"
 )
 
 type ImdbCrawler struct {
 	cutoff int
 	topUrl string
+	client util.HttpClientInterface
 }
 
 func NewImdbCrawler(year int, language string, cutoff int) Crawler {
 	util.PrintYellow(fmt.Sprintf("ImdbCrawler: Year:%v Lang:%v Cutoff: %v", year, language, cutoff))
+	cookie := http.Cookie{
+		Name:  "id",
+		Value: "BCYm44974ysbRDVVO-s7tU5yUq9U4YPkgsJfsFvExqCVyYROQ5DZFYOlvxXn_Qbz66YQ-9lbSEu8%0D%0AFScmxPQRR00lNpUDgYocF5LZAIHkoZBpa2h9nwrYjnjLeogvJ10XxGBoLTD3EcII_q8CI6ECkDvs%0D%0AUizQECDhh9djHRbr_OkxONhGHs-T1CnwE4ovxzRYnq5NrRps6KbwEpxQX7qqNO-CrFQlwQXpn7X3%0D%0AVDG-DSGwtzA%0D%0A",
+	}
+
+	client := util.NewHttpClientWithCookies("http://www.imdb.com", []*http.Cookie{&cookie}, true, true)
 	return &ImdbCrawler{
 		cutoff: cutoff,
 		topUrl: fmt.Sprintf("http://www.imdb.com/search/title?release_date=%v&primary_language=%v&view=simple&title_type=feature&sort=num_votes,desc", year, language),
+		client: client,
 	}
 }
 
 func (self *ImdbCrawler) GetBaseUrl() string {
 	return self.topUrl
+}
+
+func (self *ImdbCrawler) SupplyClient() util.HttpClientInterface {
+	return self.client
 }
 
 func (self *ImdbCrawler) GatherLinks(page *util.Page, ch chan CrawlInfo) {
