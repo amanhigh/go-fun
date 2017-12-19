@@ -15,15 +15,21 @@ type Page struct {
 	Document *goquery.Document
 }
 
-func NewPageFromString(rawUrl string, response string) *Page {
-	if root, err := html.Parse(strings.NewReader(response)); err == nil {
-		doc := goquery.NewDocumentFromNode(root)
-		doc.Url, _ = url.Parse(rawUrl)
-		return &Page{Document: doc}
+func NewPageUsingClient(rawUrl string, client HttpClientInterface) *Page {
+	response := ""
+	page := Page{}
+	if _, err := client.DoGet(rawUrl, &response); err == nil {
+		if root, err := html.Parse(strings.NewReader(response)); err == nil {
+			doc := goquery.NewDocumentFromNode(root)
+			doc.Url, _ = url.Parse(rawUrl)
+			page.Document = doc
+		} else {
+			log.WithFields(log.Fields{"Error": err}).Error("Error Parsing Response")
+		}
 	} else {
-		log.WithFields(log.Fields{"Error": err}).Error("Error Parsing Response")
-		return nil
+		log.WithFields(log.Fields{"URL": rawUrl, "Error": err}).Error("Error Querying URL")
 	}
+	return &page
 }
 
 func NewPage(url string) *Page {
