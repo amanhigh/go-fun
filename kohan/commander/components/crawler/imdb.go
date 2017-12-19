@@ -9,6 +9,7 @@ import (
 	. "github.com/amanhigh/go-fun/models/crawler"
 	log "github.com/Sirupsen/logrus"
 	"net/http"
+	"io/ioutil"
 )
 
 type ImdbCrawler struct {
@@ -17,13 +18,11 @@ type ImdbCrawler struct {
 	client util.HttpClientInterface
 }
 
-func NewImdbCrawler(year int, language string, cutoff int) Crawler {
+func NewImdbCrawler(year int, language string, cutoff int, keyFile string) Crawler {
 	util.PrintYellow(fmt.Sprintf("ImdbCrawler: Year:%v Lang:%v Cutoff: %v", year, language, cutoff))
-	cookie := http.Cookie{
-		Name:  "id",
-		Value: "BCYm44974ysbRDVVO-s7tU5yUq9U4YPkgsJfsFvExqCVyYROQ5DZFYOlvxXn_Qbz66YQ-9lbSEu8%0D%0AFScmxPQRR00lNpUDgYocF5LZAIHkoZBpa2h9nwrYjnjLeogvJ10XxGBoLTD3EcII_q8CI6ECkDvs%0D%0AUizQECDhh9djHRbr_OkxONhGHs-T1CnwE4ovxzRYnq5NrRps6KbwEpxQX7qqNO-CrFQlwQXpn7X3%0D%0AVDG-DSGwtzA%0D%0A",
-	}
 
+	key, _ := ioutil.ReadFile(keyFile)
+	cookie := http.Cookie{Name: "id", Value: string(key)}
 	client := util.NewHttpClientWithCookies("http://www.imdb.com", []*http.Cookie{&cookie}, true, true)
 	return &ImdbCrawler{
 		cutoff: cutoff,
