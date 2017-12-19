@@ -67,11 +67,5 @@ func (self *ImdbCrawler) getImdbUrl(page *util.Page, params string) string {
 /* Helpers */
 func getRating(lineItem *goquery.Selection) float64 {
 	ratingElement := lineItem.Find(".col-imdb-rating > strong")
-	rating := strings.TrimSpace(ratingElement.Text())
-	if ratingFloat, err := strconv.ParseFloat(rating, 32); err == nil {
-		return ratingFloat
-	} else {
-		log.WithFields(log.Fields{"Error": err}).Error("Error Parsing Rating")
-		return -1
-	}
+	return util.ParseFloat(ratingElement.Text())
 }
