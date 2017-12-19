@@ -84,7 +84,7 @@ func (self *CrawlerManager) getPage(crawlUrl string) *util.Page {
 func (self *CrawlerManager) BuildSet() {
 	/* Fire Parallel Consumer to Separate Movies */
 	for info := range self.infoChannel {
-		if info.GoodBad() {
+		if info.GoodBad() == nil {
 			self.goodInfo = append(self.goodInfo, info)
 			atomic.AddInt32(&self.collected, 1)
 		} else {

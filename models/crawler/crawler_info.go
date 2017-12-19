@@ -1,7 +1,7 @@
 package crawler
 
 type CrawlInfo interface {
-	GoodBad() bool
+	GoodBad() error
 	ToUrl() string
 	Print()
 }
