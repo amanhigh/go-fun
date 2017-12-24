@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"sync/atomic"
+	"runtime"
 )
 
 const (
@@ -50,7 +51,7 @@ func NewCrawlerManager(crawler Crawler, requiredCount int, verbose bool) *Crawle
 		required:         int32(requiredCount),
 		infoChannel:      make(chan CrawlInfo, BUFFER_SIZE),
 		verbose:          verbose,
-		semaphoreChannel: make(chan int, 3),
+		semaphoreChannel: make(chan int, runtime.NumCPU()),
 	}
 }
 
