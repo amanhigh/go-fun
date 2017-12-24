@@ -4,6 +4,7 @@ import (
 	"github.com/amanhigh/go-fun/util"
 	"fmt"
 	"errors"
+	"github.com/amanhigh/go-fun/util/helper"
 )
 
 type ImdbInfo struct {
@@ -32,5 +33,5 @@ func (self *ImdbInfo) GoodBad() error {
 }
 
 func (self *ImdbInfo) ToUrl() []string {
-	return []string{self.Link}
+	return []string{self.Link, helper.YoutubeSearch(self.Name), helper.YtsSearch(self.Name)}
 }
