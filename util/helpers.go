@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"strconv"
 	log "github.com/Sirupsen/logrus"
+	"strings"
 )
 
 func ReplaceRegEx(content string, search string, replace string) string {
@@ -21,11 +22,16 @@ func FilterEmptyLines(lines []string) []string {
 	return nonEmptyLines
 }
 
-func ParseFloat(value string) float64 {
-	if float, err := strconv.ParseFloat(value, 64); err == nil {
-		return float
-	} else {
-		log.WithFields(log.Fields{"Value": value, "Error": err}).Error("Error Parsing Float value")
-		return -1
+func ParseFloat(value string) (result float64) {
+	var err error
+	result = -1
+
+	floatVal := strings.TrimSpace(value)
+	if floatVal != "" {
+		if result, err = strconv.ParseFloat(floatVal, 64); err != nil {
+			log.WithFields(log.Fields{"Value": value, "Error": err}).Error("Error Parsing Float value")
+		}
 	}
+
+	return
 }

@@ -42,8 +42,8 @@ func (self *ImdbCrawler) GatherLinks(page *util.Page, ch chan CrawlInfo) {
 		ratingFloat := getRating(lineItem)
 		name, link := page.ParseAnchor(lineItem.Find("a"))
 
-		page := util.NewPageUsingClient("http://www.imdb.com/title/tt2871010/", self.client)
-		myRating := util.ParseFloat(page.Document.Find(".star-rating-value").Text())
+		moviePage := util.NewPageUsingClient(link, self.client)
+		myRating := util.ParseFloat(moviePage.Document.Find(".star-rating-value").Text())
 
 		ch <- &ImdbInfo{Name: strings.TrimSuffix(name, "12345678910X"), Link: link, Rating: ratingFloat, MyRating: myRating, CutOff: self.cutoff}
 	})
