@@ -31,6 +31,6 @@ func (self *ImdbInfo) GoodBad() error {
 	return nil
 }
 
-func (self *ImdbInfo) ToUrl() string {
-	return self.Link
+func (self *ImdbInfo) ToUrl() []string {
+	return []string{self.Link}
 }

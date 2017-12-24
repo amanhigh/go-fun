@@ -104,7 +104,7 @@ func (self *CrawlerManager) printWriteCrawledInfo(infos []CrawlInfo, filePath st
 		if self.verbose {
 			info.Print()
 		}
-		urls = append(urls, info.ToUrl())
+		urls = append(urls, info.ToUrl()...)
 	}
 	ioutil.WriteFile(filePath, []byte(strings.Join(urls, "\n")), util.DEFAULT_PERM)
 }
