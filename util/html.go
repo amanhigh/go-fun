@@ -15,13 +15,13 @@ type Page struct {
 	Document *goquery.Document
 }
 
-func NewPageUsingClient(rawUrl string, client HttpClientInterface) *Page {
+func NewPageUsingClient(rawUrl string, client HttpClientInterface) (page *Page) {
 	response := ""
-	page := Page{}
 	if _, err := client.DoGet(rawUrl, &response); err == nil {
 		if root, err := html.Parse(strings.NewReader(response)); err == nil {
 			doc := goquery.NewDocumentFromNode(root)
 			doc.Url, _ = url.Parse(rawUrl)
+			page = &Page{}
 			page.Document = doc
 		} else {
 			log.WithFields(log.Fields{"Error": err}).Error("Error Parsing Response")
@@ -29,7 +29,7 @@ func NewPageUsingClient(rawUrl string, client HttpClientInterface) *Page {
 	} else {
 		log.WithFields(log.Fields{"URL": rawUrl, "Error": err}).Error("Error Querying URL")
 	}
-	return &page
+	return
 }
 
 func NewPage(url string) *Page {
