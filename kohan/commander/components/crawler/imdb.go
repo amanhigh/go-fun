@@ -42,8 +42,6 @@ func (self *ImdbCrawler) SupplyClient() util.HttpClientInterface {
 
 func (self *ImdbCrawler) GatherLinks(page *util.Page, ch chan CrawlInfo) {
 	waitGroup := &sync.WaitGroup{}
-	/* Control Concurrency */
-	sempahorChannel := make(chan int, 8)
 
 	page.Document.Find(".lister-col-wrapper").Each(func(i int, lineItem *goquery.Selection) {
 		/* Read Rating & Link from List Page */
@@ -52,7 +50,6 @@ func (self *ImdbCrawler) GatherLinks(page *util.Page, ch chan CrawlInfo) {
 
 		/* Go Crawl Movie Page for My Rating & Other Details */
 		waitGroup.Add(1)
-		sempahorChannel <- 1
 		go func() {
 			if moviePage := util.NewPageUsingClient(link, self.client); moviePage != nil {
 				myRating := util.ParseFloat(moviePage.Document.Find(".star-rating-value").Text())
@@ -65,7 +62,6 @@ func (self *ImdbCrawler) GatherLinks(page *util.Page, ch chan CrawlInfo) {
 					CutOff:   self.cutoff,
 				}
 			}
-			<-sempahorChannel
 			waitGroup.Done()
 		}()
 	})

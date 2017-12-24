@@ -20,7 +20,7 @@ import (
 
 const (
 	DIAL_TIMEOUT     = 2 * time.Second
-	REQUEST_TIMEOUT  = 5 * time.Second
+	REQUEST_TIMEOUT  = 10 * time.Second
 	IDLE_CONNECTIONS = 64
 )
 
