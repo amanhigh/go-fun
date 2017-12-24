@@ -15,7 +15,11 @@ type ImdbInfo struct {
 }
 
 func (self *ImdbInfo) Print() {
-	util.PrintWhite(fmt.Sprintf("%v: %.2f/%.2f - %v", self.Name, self.MyRating, self.Rating, self.Link))
+	if self.MyRating != -1 {
+		util.PrintWhite(fmt.Sprintf("%v: %.2f/%.2f - %v", self.Name, self.MyRating, self.Rating, self.Link))
+	} else {
+		util.PrintWhite(fmt.Sprintf("%v: %.2f - %v", self.Name, self.Rating, self.Link))
+	}
 }
 
 func (self *ImdbInfo) GoodBad() error {
