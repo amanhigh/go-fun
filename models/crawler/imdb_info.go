@@ -44,7 +44,7 @@ func (self *ImdbInfo) getDownloadLink() string {
 	case "hi":
 		return helper.HotStarSearch(self.Name)
 	default:
-		return helper.YoutubeSearch(self.Name + "Full Movie")
+		return helper.YoutubeSearch(self.Name + " Full Movie")
 	}
 
 }
