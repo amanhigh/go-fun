@@ -24,7 +24,7 @@ func (self *CrawlProcessor) handleImdb(flagSet *flag.FlagSet, args []string) err
 	requiredCount := flagSet.Int("r", 500, "Required Count")
 	verbose := flagSet.Bool("v", false, "Verbose")
 	langCode := flagSet.String("l", "en", "Language Code [pa,en,hi]")
-	keyFile := flagSet.String("l", "/tmp/imdb.key", "Language Code [pa,en,hi]")
+	keyFile := flagSet.String("k", "/tmp/imdb.key", "IMDB Key File")
 	e := flagSet.Parse(args)
 	NewCrawlerManager(NewImdbCrawler(*year, *langCode, *cutoff, *keyFile), *requiredCount, *verbose).Crawl()
 	return e
