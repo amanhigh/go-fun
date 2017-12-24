@@ -56,7 +56,7 @@ func NewCrawlerManager(crawler Crawler, requiredCount int, verbose bool) *Crawle
 }
 
 func (self *CrawlerManager) Crawl() {
-	util.PrintYellow(fmt.Sprintf("Crawling for %v Links", self.required))
+	util.PrintYellow(fmt.Sprintf("Crawling RequiredLinks:%v Cores: %v", self.required, runtime.NumCPU()))
 	topPage := util.NewPageUsingClient(self.Crawler.GetBaseUrl(), self.Crawler.SupplyClient())
 
 	/* Fire First Crawler */
