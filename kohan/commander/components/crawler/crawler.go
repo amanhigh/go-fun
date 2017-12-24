@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	GOOD_URL_FILE = "/tmp/good.url"
-	BAD_URL_FILE  = "/tmp/bad.url"
+	GOOD_URL_FILE = "/tmp/good.txt"
+	BAD_URL_FILE  = "/tmp/bad.txt"
 	BUFFER_SIZE   = 512
 )
 
