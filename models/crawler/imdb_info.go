@@ -34,7 +34,7 @@ func (self *ImdbInfo) GoodBad() error {
 }
 
 func (self *ImdbInfo) ToUrl() []string {
-	return []string{self.Link, helper.YoutubeSearch(self.Name), self.getDownloadLink()}
+	return []string{self.Link, helper.YoutubeSearch(self.Name + " Trailer"), self.getDownloadLink()}
 }
 
 func (self *ImdbInfo) getDownloadLink() string {
