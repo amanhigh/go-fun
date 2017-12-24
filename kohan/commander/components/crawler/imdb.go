@@ -12,9 +12,10 @@ import (
 )
 
 type ImdbCrawler struct {
-	cutoff int
-	topUrl string
-	client util.HttpClientInterface
+	cutoff   int
+	language string
+	topUrl   string
+	client   util.HttpClientInterface
 }
 
 func NewImdbCrawler(year int, language string, cutoff int, keyFile string) Crawler {
@@ -24,9 +25,10 @@ func NewImdbCrawler(year int, language string, cutoff int, keyFile string) Crawl
 	cookie := http.Cookie{Name: "id", Value: string(key)}
 	client := util.NewHttpClientWithCookies("http://www.imdb.com", []*http.Cookie{&cookie}, true, true)
 	return &ImdbCrawler{
-		cutoff: cutoff,
-		topUrl: fmt.Sprintf("http://www.imdb.com/search/title?release_date=%v&primary_language=%v&view=simple&title_type=feature&sort=num_votes,desc", year, language),
-		client: client,
+		cutoff:   cutoff,
+		language: language,
+		topUrl:   fmt.Sprintf("http://www.imdb.com/search/title?release_date=%v&primary_language=%v&view=simple&title_type=feature&sort=num_votes,desc", year, language),
+		client:   client,
 	}
 }
 
@@ -52,7 +54,13 @@ func (self *ImdbCrawler) GatherLinks(page *util.Page, ch chan CrawlInfo) {
 			if moviePage := util.NewPageUsingClient(link, self.client); moviePage != nil {
 				myRating := util.ParseFloat(moviePage.Document.Find(".star-rating-value").Text())
 
-				ch <- &ImdbInfo{Name: strings.TrimSuffix(name, "12345678910X"), Link: link, Rating: ratingFloat, MyRating: myRating, CutOff: self.cutoff}
+				ch <- &ImdbInfo{
+					Name:     strings.TrimSuffix(name, "12345678910X"),
+					Link:     link, Rating: ratingFloat,
+					Language: self.language,
+					MyRating: myRating,
+					CutOff:   self.cutoff,
+				}
 			}
 			waitGroup.Done()
 		}()

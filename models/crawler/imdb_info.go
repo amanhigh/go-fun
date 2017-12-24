@@ -10,6 +10,7 @@ import (
 type ImdbInfo struct {
 	Name     string
 	Link     string
+	Language string
 	Rating   float64
 	MyRating float64
 	CutOff   int
