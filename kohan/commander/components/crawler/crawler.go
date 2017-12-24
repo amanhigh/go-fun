@@ -39,14 +39,18 @@ type CrawlerManager struct {
 	infoChannel chan CrawlInfo
 	goodInfo    []CrawlInfo
 	badInfo     []CrawlInfo
+
+	/* Concurrency Control */
+	semaphoreChannel chan int
 }
 
 func NewCrawlerManager(crawler Crawler, requiredCount int, verbose bool) *CrawlerManager {
 	return &CrawlerManager{
-		Crawler:     crawler,
-		required:    int32(requiredCount),
-		infoChannel: make(chan CrawlInfo, BUFFER_SIZE),
-		verbose:     verbose,
+		Crawler:          crawler,
+		required:         int32(requiredCount),
+		infoChannel:      make(chan CrawlInfo, BUFFER_SIZE),
+		verbose:          verbose,
+		semaphoreChannel: make(chan int, 3),
 	}
 }
 
@@ -114,6 +118,8 @@ func (self *CrawlerManager) printWriteCrawledInfo(infos []CrawlInfo, filePath st
 	Write all Movies of current page onto channel
  */
 func (self *CrawlerManager) crawlRecursive(page *util.Page, waitGroup *sync.WaitGroup) {
+	/* Aquire Grant */
+	self.semaphoreChannel <- 1
 	collected := atomic.LoadInt32(&self.collected)
 
 	if collected < self.required {
@@ -126,5 +132,8 @@ func (self *CrawlerManager) crawlRecursive(page *util.Page, waitGroup *sync.Wait
 		/* Find Links for this Page */
 		self.Crawler.GatherLinks(page, self.infoChannel)
 	}
+
+	/* Release Grant */
+	<-self.semaphoreChannel
 	waitGroup.Done()
 }
