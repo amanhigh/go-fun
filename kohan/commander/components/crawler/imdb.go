@@ -8,6 +8,7 @@ import (
 	. "github.com/amanhigh/go-fun/models/crawler"
 	"net/http"
 	"io/ioutil"
+	"sync"
 )
 
 type ImdbCrawler struct {
@@ -38,15 +39,26 @@ func (self *ImdbCrawler) SupplyClient() util.HttpClientInterface {
 }
 
 func (self *ImdbCrawler) GatherLinks(page *util.Page, ch chan CrawlInfo) {
+	waitGroup := &sync.WaitGroup{}
+
 	page.Document.Find(".lister-col-wrapper").Each(func(i int, lineItem *goquery.Selection) {
+		/* Read Rating & Link from List Page */
 		ratingFloat := getRating(lineItem)
 		name, link := page.ParseAnchor(lineItem.Find("a"))
 
-		moviePage := util.NewPageUsingClient(link, self.client)
-		myRating := util.ParseFloat(moviePage.Document.Find(".star-rating-value").Text())
+		/* Go Crawl Movie Page for My Rating & Other Details */
+		waitGroup.Add(1)
+		go func() {
+			if moviePage := util.NewPageUsingClient(link, self.client); moviePage != nil {
+				myRating := util.ParseFloat(moviePage.Document.Find(".star-rating-value").Text())
 
-		ch <- &ImdbInfo{Name: strings.TrimSuffix(name, "12345678910X"), Link: link, Rating: ratingFloat, MyRating: myRating, CutOff: self.cutoff}
+				ch <- &ImdbInfo{Name: strings.TrimSuffix(name, "12345678910X"), Link: link, Rating: ratingFloat, MyRating: myRating, CutOff: self.cutoff}
+			}
+			waitGroup.Done()
+		}()
 	})
+
+	waitGroup.Wait()
 }
 
 func (self *ImdbCrawler) NextPageLink(page *util.Page) (url string, ok bool) {
