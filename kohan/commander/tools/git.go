@@ -19,8 +19,8 @@ func GitReset(path string) {
 	PrintCommand("git checkout HEAD -- " + path)
 }
 
-func GitDiff() {
-	PrintCommand("git diff -U0")
+func GitDiff(path string) {
+	PrintCommand("git diff -U0 " + path)
 }
 
 func GetHeadCommit() string {
