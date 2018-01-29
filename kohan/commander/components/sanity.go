@@ -18,9 +18,9 @@ var SECOND_REGEX, _ = regexp.Compile("(\\d+) seconds")
 
 const MIN_SECOND = 4
 
-func ClusterSanity(pkgId string, cluster string) {
-	VerifyStatus(pkgId, cluster)
-	VersionCheck(pkgId, cluster)
+func ClusterSanity(pkgName string, cluster string) {
+	VerifyStatus(pkgName, cluster)
+	VersionCheck(pkgName, cluster)
 }
 
 func VersionCheck(pkgNameCsv string, cluster string) {
@@ -35,11 +35,11 @@ func VersionCheck(pkgNameCsv string, cluster string) {
 	}
 }
 
-func VerifyStatus(pkgId string, cluster string) {
+func VerifyStatus(pkgName string, cluster string) {
 	PrintBlue("Running Sanity on Cluster: " + cluster)
 
 	//pr $cluster 100 "$cmd;sudo /etc/init.d/nsca status;sudo /etc/init.d/cosmos-jmx status" 10 > /dev/null;
-	cmd := util.KohanConfig.PackageCheckCommands[pkgId]
+	cmd := util.KohanConfig.PackageCheckCommands[pkgName]
 	NORMAL_PSSH.Run(cmd, cluster, 200, true)
 	os.Chdir(OUTPUT_PATH)
 
