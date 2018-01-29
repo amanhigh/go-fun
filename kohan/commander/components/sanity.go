@@ -19,8 +19,8 @@ var SECOND_REGEX, _ = regexp.Compile("(\\d+) seconds")
 const MIN_SECOND = 4
 
 func ClusterSanity(pkgId string, cluster string) {
-	VersionCheck(pkgId, cluster)
 	VerifyStatus(pkgId, cluster)
+	VersionCheck(pkgId, cluster)
 }
 
 func VersionCheck(pkgNameCsv string, cluster string) {

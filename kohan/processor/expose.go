@@ -13,13 +13,14 @@ type ExposeProcessor struct {
 
 func (self *ExposeProcessor) GetArgedHandlers() (map[string]HandleFunc) {
 	return map[string]HandleFunc{
-		"pssh":         self.psshHandler,
-		"getVersion":   self.getVersionHandler,
-		"indexedIp":    self.handleIndexedIp,
-		"printf":       self.handlePrintf,
-		"versionCheck": self.versionCheckHandler,
-		"verifyStatus": self.verifyStatusHandler,
-		"debugControl": self.debugControlHandler,
+		"pssh":          self.psshHandler,
+		"getVersion":    self.getVersionHandler,
+		"indexedIp":     self.handleIndexedIp,
+		"printf":        self.handlePrintf,
+		"clusterSanity": self.clusterSanityHandler,
+		"versionCheck":  self.versionCheckHandler,
+		"verifyStatus":  self.verifyStatusHandler,
+		"debugControl":  self.debugControlHandler,
 	}
 }
 
@@ -50,6 +51,14 @@ func (self *ExposeProcessor) versionCheckHandler(flagSet *flag.FlagSet, args []s
 	cluster := flagSet.String("cl", "", "Cluster To Run On")
 	e := flagSet.Parse(args)
 	components.VersionCheck(*pkg, *cluster)
+	return e
+}
+
+func (self *ExposeProcessor) clusterSanityHandler(flagSet *flag.FlagSet, args []string) error {
+	pkg := flagSet.String("pkg", "", "Package Id")
+	cluster := flagSet.String("cl", "", "Cluster To Run On")
+	e := flagSet.Parse(args)
+	components.ClusterSanity(*pkg, *cluster)
 	return e
 }
 
