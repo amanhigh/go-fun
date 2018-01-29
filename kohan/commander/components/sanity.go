@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"github.com/Flipkart/elb/scripts/kohan/util"
 	log "github.com/Sirupsen/logrus"
 	. "github.com/amanhigh/go-fun/kohan/commander/tools"
 	. "github.com/amanhigh/go-fun/util"
@@ -17,6 +18,11 @@ var SECOND_REGEX, _ = regexp.Compile("(\\d+) seconds")
 
 const MIN_SECOND = 4
 
+func ClusterSanity(pkgId string, cluster string) {
+	VersionCheck(pkgId, cluster)
+	VerifyStatus(pkgId, cluster)
+}
+
 func VersionCheck(pkgNameCsv string, cluster string) {
 	PrintBlue(fmt.Sprintf("Verifying Versions For Packages: %v on cluster %v", pkgNameCsv, cluster))
 	packageList := strings.Split(pkgNameCsv, ",")
@@ -29,10 +35,11 @@ func VersionCheck(pkgNameCsv string, cluster string) {
 	}
 }
 
-func VerifyStatus(cmd string, cluster string) {
+func VerifyStatus(pkgId string, cluster string) {
 	PrintBlue("Running Sanity on Cluster: " + cluster)
 
 	//pr $cluster 100 "$cmd;sudo /etc/init.d/nsca status;sudo /etc/init.d/cosmos-jmx status" 10 > /dev/null;
+	cmd := util.KohanConfig.PackageCheckCommands[pkgId]
 	NORMAL_PSSH.Run(cmd, cluster, 200, true)
 	os.Chdir(OUTPUT_PATH)
 
@@ -52,7 +59,7 @@ func VerifyStatus(cmd string, cluster string) {
 	PrintBlue(fmt.Sprintf("Second Check Complete. Min Second Detected: %v", minFound))
 
 	//TODO:Move out of Debug Mode.
-	if IsDebugMode(){
+	if IsDebugMode() {
 		VerifyNetworkParameters(cluster)
 	}
 }
