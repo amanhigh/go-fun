@@ -8,6 +8,7 @@ import (
 	. "github.com/amanhigh/go-fun/models/crawler"
 	"net/http"
 	"io/ioutil"
+	log "github.com/Sirupsen/logrus"
 )
 
 type ImdbCrawler struct {
@@ -20,14 +21,18 @@ type ImdbCrawler struct {
 func NewImdbCrawler(year int, language string, cutoff int, keyFile string) Crawler {
 	util.PrintYellow(fmt.Sprintf("ImdbCrawler: Year:%v Lang:%v Cutoff: %v", year, language, cutoff))
 
-	key, _ := ioutil.ReadFile(keyFile)
-	cookie := http.Cookie{Name: "id", Value: string(key)}
-	client := util.NewHttpClientWithCookies("http://www.imdb.com", []*http.Cookie{&cookie}, true, true)
-	return &ImdbCrawler{
-		cutoff:   cutoff,
-		language: language,
-		topUrl:   fmt.Sprintf("http://www.imdb.com/search/title?release_date=%v&primary_language=%v&view=simple&title_type=feature&sort=num_votes,desc", year, language),
-		client:   client,
+	if key, _ := ioutil.ReadFile(keyFile); len(key) > 0 {
+		cookie := http.Cookie{Name: "id", Value: string(key)}
+		client := util.NewHttpClientWithCookies("http://www.imdb.com", []*http.Cookie{&cookie}, true, true)
+		return &ImdbCrawler{
+			cutoff:   cutoff,
+			language: language,
+			topUrl:   fmt.Sprintf("http://www.imdb.com/search/title?release_date=%v&primary_language=%v&view=simple&title_type=feature&sort=num_votes,desc", year, language),
+			client:   client,
+		}
+	} else {
+		log.WithFields(log.Fields{"KeyFile": keyFile}).Fatal("Empty IMDB Key")
+		return nil
 	}
 }
 
