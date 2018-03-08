@@ -2,7 +2,7 @@ package components
 
 import (
 	"fmt"
-	"github.com/Flipkart/elb/scripts/kohan/util"
+	"github.fkinternal.com/Flipkart/elb/scripts/kohan/util"
 	log "github.com/Sirupsen/logrus"
 	. "github.com/amanhigh/go-fun/kohan/commander/tools"
 	. "github.com/amanhigh/go-fun/util"
