@@ -2,7 +2,6 @@ package components
 
 import (
 	"fmt"
-	"github.fkinternal.com/Flipkart/elb/scripts/kohan/util"
 	log "github.com/Sirupsen/logrus"
 	. "github.com/amanhigh/go-fun/kohan/commander/tools"
 	. "github.com/amanhigh/go-fun/util"
@@ -35,11 +34,9 @@ func VersionCheck(pkgNameCsv string, cluster string) {
 	}
 }
 
-func VerifyStatus(pkgName string, cluster string) {
+func VerifyStatus(cmd string, cluster string) {
 	PrintBlue("Running Sanity on Cluster: " + cluster)
 
-	//pr $cluster 100 "$cmd;sudo /etc/init.d/nsca status;sudo /etc/init.d/cosmos-jmx status" 10 > /dev/null;
-	cmd := util.KohanConfig.PackageCheckCommands[pkgName]
 	NORMAL_PSSH.Run(cmd, cluster, 200, true)
 	os.Chdir(OUTPUT_PATH)
 
