@@ -52,14 +52,6 @@ func (self *ExposeProcessor) versionCheckHandler(flagSet *flag.FlagSet, args []s
 	return e
 }
 
-func (self *ExposeProcessor) clusterSanityHandler(flagSet *flag.FlagSet, args []string) error {
-	pkg := flagSet.String("pkg", "", "Package Id")
-	cluster := flagSet.String("cl", "", "Cluster To Run On")
-	e := flagSet.Parse(args)
-	components.ClusterSanity(*pkg, *cluster)
-	return e
-}
-
 func (self *ExposeProcessor) verifyStatusHandler(flagSet *flag.FlagSet, args []string) error {
 	cmd := flagSet.String("cmd", "", "Status Check Command")
 	cluster := flagSet.String("cl", "", "Cluster To Run On")
