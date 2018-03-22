@@ -4,6 +4,7 @@ var (
 	cluster string
 	pkgName string
 	command string
+	marker string
 
 	tyype       string
 	parallelism = -1
