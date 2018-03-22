@@ -1,8 +1,8 @@
 package command
 
 import (
+	"github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
-	. "github.fkinternal.com/Flipkart/elb/elb/util/os"
 	"os"
 )
 
@@ -12,9 +12,9 @@ var (
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		PrintRed(err.Error())
+		util.PrintRed(err.Error())
 		os.Exit(1)
 	} else {
-		PrintGreen("Command Successful")
+		util.PrintGreen("Command Successful")
 	}
 }
