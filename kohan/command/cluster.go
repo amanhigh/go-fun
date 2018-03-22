@@ -6,6 +6,7 @@ import (
 	"github.com/amanhigh/go-fun/kohan/commander/tools"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
+	"github.fkinternal.com/Flipkart/elb/elb/util/helper"
 )
 
 /* Vip add frontend port to vip */
@@ -43,17 +44,31 @@ var clusterPsshCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		selectedPssh := getPsshFromType(tyype)
-		selectedPssh.RunRange(command,cluster,parallelism,false,startIndex,endIndex)
+		selectedPssh.RunRange(command, cluster, parallelism, false, index, endIndex)
+	},
+}
+
+var clusterIndexCmd = &cobra.Command{
+	Use:   "index [Cluster] [index]",
+	Short: "Get Ip for Cluster & Index",
+	Args:  cobra.ExactArgs(2),
+	PreRunE: func(cmd *cobra.Command, args []string) (err error) {
+		index, err = helper.ParseInt(args[1])
+		return
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		tools.IndexedIp(cluster, index)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(clusterCmd)
 	clusterPsshCmd.Flags().StringVarP(&tyype, "type", "t", "fast", "fast/display/slow")
 	clusterPsshCmd.Flags().IntVarP(&parallelism, "parallel", "p", util.DEFAULT_PARALELISM, "Parallelism")
-	clusterPsshCmd.Flags().IntVarP(&startIndex, "start", "s", -1, "Starting Index")
+	clusterPsshCmd.Flags().IntVarP(&index, "start", "s", -1, "Starting Index")
 	clusterPsshCmd.Flags().IntVarP(&endIndex, "end", "e", -1, "Ending Index")
-	clusterCmd.AddCommand(clusterSanityCmd)
+
+	rootCmd.AddCommand(clusterCmd)
+	clusterCmd.AddCommand(clusterSanityCmd,clusterPsshCmd,clusterIndexCmd)
 }
 
 func getPsshFromType(psshType string) tools.Pssh {

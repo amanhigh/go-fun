@@ -7,7 +7,7 @@ var (
 
 	tyype       string
 	parallelism = -1
-	startIndex  = -1
+	index       = -1
 	endIndex    = -1
 
 	enable=false
