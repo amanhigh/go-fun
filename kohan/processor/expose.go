@@ -17,8 +17,6 @@ func (self *ExposeProcessor) GetArgedHandlers() (map[string]HandleFunc) {
 		"getVersion":    self.getVersionHandler,
 		"indexedIp":     self.handleIndexedIp,
 		"printf":        self.handlePrintf,
-		"clusterSanity": self.clusterSanityHandler,
-		"versionCheck":  self.versionCheckHandler,
 		"verifyStatus":  self.verifyStatusHandler,
 		"debugControl":  self.debugControlHandler,
 	}
