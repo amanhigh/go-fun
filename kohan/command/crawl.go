@@ -36,6 +36,6 @@ func init() {
 	imdbCmd.Flags().IntVarP(&count, "cutoff", "o", 5, "Cut Off For Movie")
 	imdbCmd.Flags().StringVarP(&keyFilePath, "path", "p", "/tmp/imdb.key", "IMDB Key File")
 
-	rootCmd.AddCommand(crawlCmd)
+	RootCmd.AddCommand(crawlCmd)
 	crawlCmd.AddCommand(imdbCmd)
 }

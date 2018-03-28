@@ -7,11 +7,11 @@ import (
 )
 
 var (
-	rootCmd = &cobra.Command{}
+	RootCmd = &cobra.Command{}
 )
 
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+	if err := RootCmd.Execute(); err != nil {
 		util.PrintRed(err.Error())
 		os.Exit(1)
 	} else {

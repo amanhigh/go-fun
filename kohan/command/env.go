@@ -26,5 +26,5 @@ func init() {
 	debugCmd.MarkPersistentFlagRequired("enable")
 
 	envCmd.AddCommand(debugCmd)
-	rootCmd.AddCommand(envCmd)
+	RootCmd.AddCommand(envCmd)
 }

@@ -66,7 +66,7 @@ func init() {
 	clusterPsshCmd.Flags().IntVarP(&index, "start", "s", -1, "Starting Index")
 	clusterPsshCmd.Flags().IntVarP(&endIndex, "end", "e", -1, "Ending Index")
 
-	rootCmd.AddCommand(clusterCmd)
+	RootCmd.AddCommand(clusterCmd)
 	clusterCmd.AddCommand(clusterSanityCmd,clusterPsshCmd,clusterIndexCmd)
 }
 

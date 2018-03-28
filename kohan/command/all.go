@@ -40,6 +40,6 @@ var printfCmd = &cobra.Command{
 func init() {
 	printfCmd.Flags().StringVarP(&marker, "marker", "m", "#", "Marker in Template File")
 
-	rootCmd.AddCommand(allCmd)
+	RootCmd.AddCommand(allCmd)
 	allCmd.AddCommand(getVersionCmd,printfCmd)
 }
