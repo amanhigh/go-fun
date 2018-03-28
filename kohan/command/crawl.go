@@ -2,9 +2,8 @@ package command
 
 import (
 	"github.com/amanhigh/go-fun/kohan/commander/components/crawler"
+	"github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
-	"github.fkinternal.com/Flipkart/elb/elb/cli/util"
-	"github.fkinternal.com/Flipkart/elb/elb/util/helper"
 )
 
 var crawlCmd = &cobra.Command{
@@ -20,7 +19,7 @@ var imdbCmd = &cobra.Command{
 	Long:  `Imdb Crawler`,
 	Args:  cobra.ExactArgs(2),
 	PreRunE: func(cmd *cobra.Command, args []string) (err error) {
-		if year, err = helper.ParseInt(args[0]); err == nil {
+		if year, err = util.ParseInt(args[0]); err == nil {
 			util.ValidateEnumArg(args[1], []string{"pa", "en", "hi"})
 		}
 		return

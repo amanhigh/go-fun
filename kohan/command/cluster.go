@@ -6,7 +6,6 @@ import (
 	"github.com/amanhigh/go-fun/kohan/commander/tools"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
-	"github.fkinternal.com/Flipkart/elb/elb/util/helper"
 )
 
 /* Vip add frontend port to vip */
@@ -53,7 +52,7 @@ var clusterIndexCmd = &cobra.Command{
 	Short: "Get Ip for Cluster & Index",
 	Args:  cobra.ExactArgs(2),
 	PreRunE: func(cmd *cobra.Command, args []string) (err error) {
-		index, err = helper.ParseInt(args[1])
+		index, err = util.ParseInt(args[1])
 		return
 	},
 	Run: func(cmd *cobra.Command, args []string) {

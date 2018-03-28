@@ -2,8 +2,8 @@ package command
 
 import (
 	"github.com/amanhigh/go-fun/kohan/commander/components"
+	"github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
-	"github.fkinternal.com/Flipkart/elb/elb/cli/util"
 )
 
 var allCmd = &cobra.Command{
