@@ -12,7 +12,6 @@ import (
 var clusterCmd = &cobra.Command{
 	Use:   "cluster",
 	Short: "Cluster Based Commands",
-	Long:  `Cluster Based Commands`,
 	Args:  cobra.ExactArgs(1),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		cluster = args[0]
@@ -22,7 +21,6 @@ var clusterCmd = &cobra.Command{
 var clusterSanityCmd = &cobra.Command{
 	Use:   "sanity [Cluster] [Package] [Sanity Cmd]",
 	Short: "Checks Sanity of Cluster",
-	Long:  `Checks Sanity of Cluster`,
 	Args:  cobra.ExactArgs(3),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		pkgName = args[1]
@@ -36,7 +34,6 @@ var clusterSanityCmd = &cobra.Command{
 var clusterPsshCmd = &cobra.Command{
 	Use:   "pssh [Cluster] [Cmd]",
 	Short: "Runs Parallel Ssh on Cluster",
-	Long:  `Runs Parallel Ssh on Cluster`,
 	Args:  cobra.ExactArgs(2),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		command = args[2]

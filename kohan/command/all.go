@@ -9,14 +9,12 @@ import (
 var allCmd = &cobra.Command{
 	Use:   "all",
 	Short: "Uncategorized Commands",
-	Long:  `Uncategorized Commands`,
 	Args:  cobra.ExactArgs(1),
 }
 
 var getVersionCmd = &cobra.Command{
 	Use:   "getVersion [Package Name] [Host] [Dpkg/Latest] [Comment]",
 	Short: "Get Version for Package Latest or Dpkg",
-	Long:  `Get Version for Package Latest or Dpkg`,
 	Args:  cobra.ExactArgs(4),
 	PreRunE: func(cmd *cobra.Command, args []string) (err error) {
 		err = util.ValidateEnumArg(args[2], []string{"dpkg", "latest"})
@@ -30,7 +28,6 @@ var getVersionCmd = &cobra.Command{
 var printfCmd = &cobra.Command{
 	Use:   "printf [Template File] [Param File]",
 	Short: "Substitution Helper",
-	Long:  `Substitution Helper`,
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		components.Printf(args[0], args[1], marker)

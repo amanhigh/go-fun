@@ -9,14 +9,12 @@ import (
 var crawlCmd = &cobra.Command{
 	Use:   "crawl",
 	Short: "Different Crawler Commands",
-	Long:  `Different Crawler Commands`,
 	Args:  cobra.ExactArgs(1),
 }
 
 var imdbCmd = &cobra.Command{
 	Use:   "imdb [Year] [Language]",
 	Short: "Imdb Crawler",
-	Long:  `Imdb Crawler`,
 	Args:  cobra.ExactArgs(2),
 	PreRunE: func(cmd *cobra.Command, args []string) (err error) {
 		if year, err = util.ParseInt(args[0]); err == nil {
