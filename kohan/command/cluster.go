@@ -36,7 +36,7 @@ var clusterPsshCmd = &cobra.Command{
 	Short: "Runs Parallel Ssh on Cluster",
 	Args:  cobra.ExactArgs(2),
 	PreRun: func(cmd *cobra.Command, args []string) {
-		command = args[2]
+		command = args[1]
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		selectedPssh := getPsshFromType(tyype)
