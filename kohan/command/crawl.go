@@ -31,7 +31,7 @@ func init() {
 	crawlCmd.PersistentFlags().IntVarP(&count, "count", "c", 200, "Count of entries to be crawled")
 	crawlCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable Verbose Mode")
 
-	imdbCmd.Flags().IntVarP(&count, "cutoff", "o", 5, "Cut Off For Movie")
+	imdbCmd.Flags().IntVarP(&cutOff, "cutoff", "o", 5, "Cut Off For Movie")
 	imdbCmd.Flags().StringVarP(&keyFilePath, "path", "p", "/tmp/imdb.key", "IMDB Key File")
 
 	RootCmd.AddCommand(crawlCmd)
