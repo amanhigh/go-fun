@@ -3,19 +3,20 @@ package util
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
+	"github.com/amanhigh/go-fun/models"
 	"golang.org/x/oauth2/clientcredentials"
 	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"time"
-	"github.com/amanhigh/go-fun/models"
-	"net/http/cookiejar"
-	log "github.com/Sirupsen/logrus"
 )
 
 const (
@@ -24,8 +25,9 @@ const (
 	IDLE_CONNECTIONS = 64
 )
 
-var NoKeepAliveClient = NewHttpClient(DIAL_TIMEOUT, REQUEST_TIMEOUT, false, -1, false)
-var KeepAliveClient = NewHttpClient(DIAL_TIMEOUT, REQUEST_TIMEOUT, true, 64, false)
+var NoKeepAliveClient = NewHttpClient(DIAL_TIMEOUT, REQUEST_TIMEOUT, false, -1, false, false)
+var KeepAliveClient = NewHttpClient(DIAL_TIMEOUT, REQUEST_TIMEOUT, true, 64, false, false)
+var KeepAliveInsecureClient = NewHttpClient(DIAL_TIMEOUT, REQUEST_TIMEOUT, true, 64, false, true)
 
 /**
 	returns:
@@ -61,7 +63,7 @@ type HttpClient struct {
 
 	enableCompression: Enable/Disable gzip compression
  */
-func NewHttpClient(dialTimeout time.Duration, requestTimeout time.Duration, enableKeepAlive bool, idleConnectionsPerHost int, enableCompression bool) HttpClientInterface {
+func NewHttpClient(dialTimeout time.Duration, requestTimeout time.Duration, enableKeepAlive bool, idleConnectionsPerHost int, enableCompression bool, allowInsecure bool) HttpClientInterface {
 	jar, _ := cookiejar.New(nil)
 	return &HttpClient{
 		Client: &http.Client{
@@ -74,6 +76,7 @@ func NewHttpClient(dialTimeout time.Duration, requestTimeout time.Duration, enab
 					KeepAlive: (dialTimeout + requestTimeout) * 120, //Idle Timeout Before Closing Keepalive Connection
 				}).DialContext,
 				MaxIdleConnsPerHost: idleConnectionsPerHost,
+				TLSClientConfig:     &tls.Config{InsecureSkipVerify: allowInsecure},
 			},
 			CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 				return errors.New("It is a Redirect!")
@@ -84,7 +87,7 @@ func NewHttpClient(dialTimeout time.Duration, requestTimeout time.Duration, enab
 }
 
 func NewHttpClientWithCookies(cookieUrl string, cookies []*http.Cookie, keepAlive bool, compression bool) HttpClientInterface {
-	client := NewHttpClient(DIAL_TIMEOUT, REQUEST_TIMEOUT, keepAlive, IDLE_CONNECTIONS, compression).(*HttpClient)
+	client := NewHttpClient(DIAL_TIMEOUT, REQUEST_TIMEOUT, keepAlive, IDLE_CONNECTIONS, compression, false).(*HttpClient)
 	if u, err := url.Parse(cookieUrl); err == nil {
 		client.Client.Jar.SetCookies(u, cookies)
 	} else {
