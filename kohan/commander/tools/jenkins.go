@@ -13,7 +13,7 @@ var compile = regexp.MustCompile("FINAL_DEB=.*_(.*)_all.deb")
 
 type JenkinsClientInterface interface {
 	Build(job string, params map[string]string) (buildNumber int64, err error)
-	Status(jobName string, jobId int64) (status string, version string, err error)
+	Status(jobName string, buildNumber int64) (status string, version string, err error)
 }
 
 type JenkinsClient struct {
