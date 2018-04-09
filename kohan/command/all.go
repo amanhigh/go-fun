@@ -13,15 +13,15 @@ var allCmd = &cobra.Command{
 }
 
 var getVersionCmd = &cobra.Command{
-	Use:   "getVersion [Package Name] [Host] [Dpkg/Latest] [Comment]",
+	Use:   "getVersion [Package Name] [Dpkg/Latest] [Host] [Comment]",
 	Short: "Get Version for Package Latest or Dpkg",
 	Args:  cobra.ExactArgs(4),
 	PreRunE: func(cmd *cobra.Command, args []string) (err error) {
-		err = util.ValidateEnumArg(args[2], []string{"dpkg", "latest"})
+		err = util.ValidateEnumArg(args[1], []string{"dpkg", "latest"})
 		return
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		components.GetVersion(args[0], args[1], args[2], args[3])
+		components.GetVersion(args[0], args[2], args[1], args[3])
 	},
 }
 
