@@ -39,9 +39,9 @@ func (self *JenkinsClient) Status(jobName string) (status string, version string
 	if job, err = self.jenkins.GetJob(jobName); err == nil {
 		if build, err = job.GetLastBuild(); err == nil {
 			if build, err = self.jenkins.GetBuild(jobName, build.GetBuildNumber()); err == nil {
-				for ; build.IsRunning(); {
-					util.PrintWhite(fmt.Sprintf("Job: %v", build.GetResult()))
-					time.Sleep(5 * time.Second)
+				for i := 1; build.IsRunning(); i++ {
+					util.PrintWhite(fmt.Sprintf("Job Running - %v", i))
+					time.Sleep(10 * time.Second)
 				}
 				if match := compile.FindStringSubmatch(build.GetConsoleOutput()); len(match) > 1 {
 					version = match[1]
