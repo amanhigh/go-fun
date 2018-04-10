@@ -12,8 +12,8 @@ import (
 var compile = regexp.MustCompile("FINAL_DEB=.*_(.*)_all.deb")
 
 type JenkinsClientInterface interface {
-	Build(job string, params map[string]string) (buildNumber int64, err error)
-	Status(jobName string, buildNumber int64) (status string, version string, err error)
+	Build(job string, params map[string]string) (err error)
+	Status(jobName string) (status string, version string, err error)
 }
 
 type JenkinsClient struct {
@@ -28,21 +28,27 @@ func NewJenkinsClient(ip string, userName string, apiKey string) JenkinsClientIn
 	return &JenkinsClient{jenkins: jenkins}
 }
 
-func (self *JenkinsClient) Build(job string, params map[string]string) (buildNumber int64, err error) {
-	return self.jenkins.BuildJob(job, params)
+func (self *JenkinsClient) Build(job string, params map[string]string) (err error) {
+	_, err = self.jenkins.BuildJob(job, params)
+	return
 }
 
-func (self *JenkinsClient) Status(jobName string, buildNumber int64) (status string, version string, err error) {
+func (self *JenkinsClient) Status(jobName string) (status string, version string, err error) {
+	var job *gojenkins.Job
 	var build *gojenkins.Build
-	if build, err = self.jenkins.GetBuild(jobName, buildNumber); err == nil {
-		for ; build.IsRunning(); {
-			util.PrintWhite(fmt.Sprintf("Job Running: %v", build.GetDuration()))
-			time.Sleep(5 * time.Second)
+	if job, err = self.jenkins.GetJob(jobName); err == nil {
+		if build, err = job.GetLastBuild(); err == nil {
+			if build, err = self.jenkins.GetBuild(jobName, build.GetBuildNumber()); err == nil {
+				for ; build.IsRunning(); {
+					util.PrintWhite(fmt.Sprintf("Job: %v", build.GetResult()))
+					time.Sleep(5 * time.Second)
+				}
+				if match := compile.FindStringSubmatch(build.GetConsoleOutput()); len(match) > 1 {
+					version = match[1]
+				}
+				status = build.GetResult()
+			}
 		}
-		if match := compile.FindStringSubmatch(build.GetConsoleOutput()); len(match) > 1 {
-			version = match[1]
-		}
-		status = build.GetResult()
 	}
 	return
 }
