@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var compile = regexp.MustCompile("FINAL_DEB=.*_(.*)_all.deb")
+var compile = regexp.MustCompile("version : (.*)")
 
 type JenkinsClientInterface interface {
 	Build(job string, params map[string]string) (err error)
