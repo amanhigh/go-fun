@@ -20,45 +20,45 @@ func Encrypt(key, text string) (encryptedText string, err error) {
 
 	/* Create New Cipher */
 	if block, err := aes.NewCipher(keyBytes); err == nil {
-		/* Do Base 64 Encoding */
-		base64Text := base64.StdEncoding.EncodeToString(textBytes)
-
 		/* Build Cipher Text Placeholder */
-		ciphertext := make([]byte, aes.BlockSize+len(base64Text))
+		ciphertext := make([]byte, aes.BlockSize+len(textBytes))
 
-		/* Encryt using AES */
+		/* Encrypt using AES */
 		iv := ciphertext[:aes.BlockSize]
 		if _, err := io.ReadFull(rand.Reader, iv); err == nil {
 			cfb := cipher.NewCFBEncrypter(block, iv)
-			cfb.XORKeyStream(ciphertext[aes.BlockSize:], []byte(base64Text))
-			encryptedText = string(ciphertext)
+			cfb.XORKeyStream(ciphertext[aes.BlockSize:], []byte(textBytes))
+
+			/* Do Base64 Encoding on Encrypted Text */
+			encryptedText = base64.URLEncoding.EncodeToString(ciphertext)
 		}
 	}
 	return
 }
 
 func Decrypt(key, text string) (decryptedText string, err error) {
+	var textBytes[]byte
 	keyBytes := []byte(key)
-	textBytes := []byte(text)
 
-	/* Create New Cipher */
-	if block, err := aes.NewCipher(keyBytes); err == nil {
-		/* Check Minimum Cipher TExt Length */
-		if len(textBytes) > aes.BlockSize {
-			/* Extract Block of Text to be Encrypted */
-			textRight := textBytes[:aes.BlockSize]
-			textBytes = textBytes[aes.BlockSize:]
+	/* Decode Base64 to get back Encrpted Text */
+	if textBytes, err = base64.URLEncoding.DecodeString(text); err == nil {
+		/* Create New Cipher */
+		if block, err := aes.NewCipher(keyBytes); err == nil {
+			/* Check Minimum Cipher Text Length */
+			if len(textBytes) > aes.BlockSize {
+				/* Extract Block of Text to be Encrypted */
+				textRight := textBytes[:aes.BlockSize]
+				textBytes = textBytes[aes.BlockSize:]
 
-			/* Decrypt Aes */
-			cfb := cipher.NewCFBDecrypter(block, textRight)
-			cfb.XORKeyStream(textBytes, textBytes)
+				/* Decrypt Aes */
+				cfb := cipher.NewCFBDecrypter(block, textRight)
+				cfb.XORKeyStream(textBytes, textBytes)
 
-			/* Decode Base64 */
-			if decodedBytes, err := base64.StdEncoding.DecodeString(string(textBytes)); err == nil {
-				decryptedText = string(decodedBytes)
+				/* Convert Decrypted Bytes to String */
+				decryptedText = string(textBytes)
+			} else {
+				err = CIPHER_TOO_SHORT
 			}
-		} else {
-			err = CIPHER_TOO_SHORT
 		}
 	}
 	return
