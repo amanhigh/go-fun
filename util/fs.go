@@ -69,7 +69,7 @@ func ReplaceContent(path string, findRegex string, replace string) {
 func ReadAllLines(filePath string) []string {
 	if content, err := ioutil.ReadFile(filePath); err == nil {
 		lines := strings.Split(string(content), "\n")
-		return FilterEmptyLines(lines)
+		return lines
 	} else {
 		log.WithFields(log.Fields{"Error": err}).Error("Error Reading File")
 		return []string{}
