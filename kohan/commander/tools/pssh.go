@@ -68,6 +68,14 @@ func ReadClusterFile(clusterName string) []string {
 	return ReadAllLines(filePath)
 }
 
+func RemoveCluster(mainClusterName string, removeClusterName string) int {
+	mainSet := ReadClusterFile(mainClusterName)
+	removeSet := ReadClusterFile(removeClusterName)
+	finalSet := SliceMinus(mainSet, removeSet)
+	WriteClusterFile(mainClusterName, strings.Join(finalSet, "\n"))
+	return len(mainSet) - len(finalSet)
+}
+
 func GetClusterHost(clusterName string, index int) string {
 	ips := ReadClusterFile(clusterName)
 	if index <= len(ips) {
@@ -78,7 +86,7 @@ func GetClusterHost(clusterName string, index int) string {
 }
 
 func IndexedIp(clusterName string, index int) {
-	fmt.Println(GetClusterHost(clusterName,index))
+	fmt.Println(GetClusterHost(clusterName, index))
 }
 
 func SearchContent(regex string) string {
