@@ -32,6 +32,7 @@ func (self *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput
 	}
 
 	RunIf(fmt.Sprintf("grep FAILURE %v", getClusterFile("console")), func(output string) {
+		PrintCommand(fmt.Sprintf("grep SUCCESS %v | awk '{print $4}' > %v", getClusterFile("console"), getClusterFile("pass")))
 		PrintCommand(fmt.Sprintf("grep FAILURE %v | awk '{print $4}' > %v", getClusterFile("console"), getClusterFile("fail")))
 		PrintYellow("Failed Hosts:")
 		PrintCommand(fmt.Sprintf("cat %v", getClusterFile("fail")))
