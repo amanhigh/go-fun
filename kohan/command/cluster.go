@@ -58,12 +58,12 @@ var clusterIndexCmd = &cobra.Command{
 }
 
 var clusterRemoveCmd = &cobra.Command{
-	Use:   "remove [Remove Cluster] [Main Cluster]",
+	Use:   "remove [Main Cluster] [Remove Cluster]",
 	Short: "Removes Ips in Remove Cluster from Main Cluster",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		count := tools.RemoveCluster(args[1], args[0])
-		util.PrintGreen(fmt.Sprintf("%v items removed from %v", count, args[1]))
+		count := tools.RemoveCluster(args[0], args[1])
+		util.PrintGreen(fmt.Sprintf("%v items removed from %v", count, args[0]))
 	},
 }
 
