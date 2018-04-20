@@ -57,6 +57,16 @@ var clusterIndexCmd = &cobra.Command{
 	},
 }
 
+var clusterRemoveCmd = &cobra.Command{
+	Use:   "remove [Main Cluster] [Remove Cluster]",
+	Short: "Removes Ips in Remove Cluster from Main Cluster",
+	Args:  cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		count := tools.RemoveCluster(args[0], args[1])
+		util.PrintGreen(fmt.Sprintf("%v items removed from %v", count, args[0]))
+	},
+}
+
 func init() {
 	clusterPsshCmd.Flags().StringVarP(&tyype, "type", "t", "fast", "fast/display/slow")
 	clusterPsshCmd.Flags().IntVarP(&parallelism, "parallel", "p", util.DEFAULT_PARALELISM, "Parallelism")
@@ -64,7 +74,7 @@ func init() {
 	clusterPsshCmd.Flags().IntVarP(&endIndex, "end", "e", -1, "Ending Index")
 
 	RootCmd.AddCommand(clusterCmd)
-	clusterCmd.AddCommand(clusterSanityCmd,clusterPsshCmd,clusterIndexCmd)
+	clusterCmd.AddCommand(clusterSanityCmd, clusterPsshCmd, clusterIndexCmd,clusterRemoveCmd)
 }
 
 func getPsshFromType(psshType string) tools.Pssh {
