@@ -1,8 +1,8 @@
 package sort
 
 func MergeSort(input []int, start int, end int) {
-
-	if end-start > 0 {
+	/* End If we have Single Element Left */
+	if start < end {
 		/* Break Problem */
 		mid := (start + end) / 2
 		/* Solve Subproblems */
