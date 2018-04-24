@@ -6,12 +6,16 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
-	"strings"
 	"io"
+	"bufio"
 )
 
 const DEFAULT_PERM = os.FileMode(0644)     //Owner RW,Group R,Other R
 const DIR_DEFAULT_PERM = os.FileMode(0755) //Owner RWX,Group RX,Other RX
+/*
+	Helpfull File Related Cheatsheet
+	https://www.devdungeon.com/content/working-files-go#read_quick
+*/
 
 func AppendFile(path string, content string) {
 	if f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0600); err == nil {
@@ -66,15 +70,19 @@ func ReplaceContent(path string, findRegex string, replace string) {
 		log.WithFields(log.Fields{"Error": err}).Error("Missing File")
 	}
 }
-
-func ReadAllLines(filePath string) []string {
-	if content, err := ioutil.ReadFile(filePath); err == nil {
-		lines := strings.Split(string(content), "\r\n")
-		return lines
+/**
+	Reads all Lines from a File.
+ */
+func ReadAllLines(filePath string) (lines []string) {
+	if file, err := os.Open(filePath); err == nil {
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan(){
+			lines = append(lines, scanner.Text())
+		}
 	} else {
 		log.WithFields(log.Fields{"Error": err}).Error("Error Reading File")
-		return []string{}
 	}
+	return
 }
 
 func ReadInts(reader io.Reader, n int) ([]int) {
