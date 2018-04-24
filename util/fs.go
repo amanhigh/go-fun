@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"io"
 )
 
 const DEFAULT_PERM = os.FileMode(0644)     //Owner RW,Group R,Other R
@@ -74,6 +75,14 @@ func ReadAllLines(filePath string) []string {
 		log.WithFields(log.Fields{"Error": err}).Error("Error Reading File")
 		return []string{}
 	}
+}
+
+func ReadInts(reader io.Reader, n int) ([]int) {
+	a := make([]int, n)
+	for i := 0; i < n; i++ {
+		fmt.Fscan(reader, &a[i])
+	}
+	return a
 }
 
 func PathExists(path string) bool {
