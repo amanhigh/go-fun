@@ -1,13 +1,14 @@
 package util
 
 import (
+	"bufio"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
+	"io"
 	"io/ioutil"
 	"os"
 	"regexp"
-	"io"
-	"bufio"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 const DEFAULT_PERM = os.FileMode(0644)     //Owner RW,Group R,Other R
@@ -28,7 +29,7 @@ func AppendFile(path string, content string) {
 	}
 }
 
-func ReadAllFiles(dirPath string) ([]string) {
+func ReadAllFiles(dirPath string) []string {
 	contents := []string{}
 	contentMap := ReadFileMap(dirPath)
 	for _, value := range contentMap {
@@ -37,7 +38,7 @@ func ReadAllFiles(dirPath string) ([]string) {
 	return contents
 }
 
-func ReadFileMap(dirPath string) (map[string][]string) {
+func ReadFileMap(dirPath string) map[string][]string {
 	contents := map[string][]string{}
 	for _, filePath := range ListFiles(dirPath) {
 		contents[filePath] = ReadAllLines(filePath)
@@ -45,7 +46,7 @@ func ReadFileMap(dirPath string) (map[string][]string) {
 	return contents
 }
 
-func ListFiles(dirPath string) ([]string) {
+func ListFiles(dirPath string) []string {
 	filePaths := []string{}
 	if fileInfos, err := ioutil.ReadDir(dirPath); err == nil {
 		for _, info := range fileInfos {
@@ -70,13 +71,14 @@ func ReplaceContent(path string, findRegex string, replace string) {
 		log.WithFields(log.Fields{"Error": err}).Error("Missing File")
 	}
 }
+
 /**
-	Reads all Lines from a File.
- */
+Reads all Lines from a File.
+*/
 func ReadAllLines(filePath string) (lines []string) {
 	if file, err := os.Open(filePath); err == nil {
 		scanner := bufio.NewScanner(file)
-		for scanner.Scan(){
+		for scanner.Scan() {
 			lines = append(lines, scanner.Text())
 		}
 	} else {
@@ -85,7 +87,7 @@ func ReadAllLines(filePath string) (lines []string) {
 	return
 }
 
-func ReadInts(reader io.Reader, n int) ([]int) {
+func ReadInts(reader io.Reader, n int) []int {
 	a := make([]int, n)
 	for i := 0; i < n; i++ {
 		fmt.Fscan(reader, &a[i])

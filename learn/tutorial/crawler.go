@@ -16,13 +16,13 @@ type SafeMap struct {
 	mux sync.Mutex
 }
 
-func (m *SafeMap ) Add(url string) {
+func (m *SafeMap) Add(url string) {
 	m.mux.Lock()
 	m.m[url] = true
 	m.mux.Unlock()
 }
 
-func (m *SafeMap ) Contains(url string) (ok bool) {
+func (m *SafeMap) Contains(url string) (ok bool) {
 	m.mux.Lock()
 	_, ok = m.m[url]
 	m.mux.Unlock()
@@ -33,7 +33,7 @@ func StartCrawl() {
 	site := "http://golang.org/"
 	fmt.Println("\n\nCrawling", site)
 	/** Seed UrlMap With Top Url */
-	urlMap := SafeMap{m: map[string]bool{site:true}}
+	urlMap := SafeMap{m: map[string]bool{site: true}}
 	Crawl(site, 4, fetcher, urlMap)
 }
 
@@ -61,7 +61,7 @@ func Crawl(url string, depth int, fetcher Fetcher, urlMap SafeMap) {
 			defer waitGroup.Done()
 			if !urlMap.Contains(u) {
 				urlMap.Add(u)
-				Crawl(u, depth - 1, fetcher, urlMap)
+				Crawl(u, depth-1, fetcher, urlMap)
 			}
 		}(url)
 	}

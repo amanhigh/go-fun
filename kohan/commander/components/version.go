@@ -2,9 +2,10 @@ package components
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/amanhigh/go-fun/kohan/commander/tools"
 	"github.com/amanhigh/go-fun/util"
-	"time"
 )
 
 func GetVersion(pkgName string, host string, versionType string, comment string) {

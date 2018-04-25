@@ -1,12 +1,13 @@
 package util
 
 import (
+	"fmt"
+	"net/url"
+	"strings"
+
 	"github.com/PuerkitoBio/goquery"
 	log "github.com/Sirupsen/logrus"
-	"fmt"
 	"golang.org/x/net/html"
-	"strings"
-	"net/url"
 )
 
 const HREF = "href"

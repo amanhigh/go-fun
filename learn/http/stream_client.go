@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-	"io"
-	"bytes"
 	"bufio"
+	"bytes"
 	"context"
+	"fmt"
+	"io"
+	"net/http"
 )
 
 //Event is a go representation of an http server-sent event
@@ -40,7 +40,7 @@ func main() {
 /*
 	Fires Given Request treating it as SSE Request & Provides a channel to listen for SSE Events.
 	Context can be used to cancel listening to events before server closes stream.
- */
+*/
 func fireSSERequest(request *http.Request, ctx context.Context) (eventChannel chan SseEvent, err error) {
 	/* Add Header to accept streaming events */
 	request.Header.Set("Accept", "text/event-stream")
@@ -63,7 +63,7 @@ func fireSSERequest(request *http.Request, ctx context.Context) (eventChannel ch
 /*
 	Given a response reads it and provides updates SSE Event updates on  channel provided to it.
 	Context can be used to cancel listening to events before server closes stream.
- */
+*/
 func liveRequestLoop(response *http.Response, eventChannel chan SseEvent, ctx context.Context) {
 	defer response.Body.Close()
 	br := bufio.NewReader(response.Body)

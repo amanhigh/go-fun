@@ -1,9 +1,10 @@
 package command
 
 import (
+	"os"
+
 	"github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var (

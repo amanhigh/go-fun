@@ -1,8 +1,8 @@
 package json
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 )
 
 type person struct {
@@ -26,7 +26,7 @@ func decodePerson(encodedPerson string) person {
 	return pDecoded
 }
 
-func encodePerson(p1 person) (string) {
+func encodePerson(p1 person) string {
 	if decodedPerson, e := json.Marshal(p1); e == nil {
 		return string(decodedPerson)
 	} else {

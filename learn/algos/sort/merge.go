@@ -17,7 +17,7 @@ func Merge(input []int, start int, mid int, end int) {
 	i, j, k := start, mid+1, 0
 
 	/* Copy Minimum of Left & Right */
-	for ; i <= mid && j <= end; {
+	for i <= mid && j <= end {
 		if input[i] < input[j] {
 			result[k] = input[i]
 			i++

@@ -2,11 +2,12 @@ package tools
 
 import (
 	"fmt"
+	"regexp"
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/bndr/gojenkins"
-	"regexp"
-	"time"
 )
 
 var compile = regexp.MustCompile("version : (.*)")

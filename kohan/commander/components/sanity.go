@@ -2,14 +2,15 @@ package components
 
 import (
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	. "github.com/amanhigh/go-fun/kohan/commander/tools"
-	. "github.com/amanhigh/go-fun/util"
 	"math"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
+	. "github.com/amanhigh/go-fun/kohan/commander/tools"
+	. "github.com/amanhigh/go-fun/util"
 )
 
 var checks = []string{"down", "inactive", "not"}
@@ -17,7 +18,7 @@ var SECOND_REGEX, _ = regexp.Compile("(\\d+) seconds")
 
 const MIN_SECOND = 4
 
-func ClusterSanity(pkgName string,cmd string, cluster string) {
+func ClusterSanity(pkgName string, cmd string, cluster string) {
 	VerifyStatus(cmd, cluster)
 	VersionCheck(pkgName, cluster)
 }

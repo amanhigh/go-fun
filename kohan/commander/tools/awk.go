@@ -1,8 +1,9 @@
 package tools
 
 import (
-	"time"
 	"fmt"
+	"time"
+
 	"github.com/amanhigh/go-fun/util"
 )
 

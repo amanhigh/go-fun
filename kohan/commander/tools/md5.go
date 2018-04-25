@@ -4,9 +4,10 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"github.com/amanhigh/go-fun/util"
 	"sort"
 	"strings"
+
+	"github.com/amanhigh/go-fun/util"
 )
 
 type md5Info struct {
@@ -47,7 +48,7 @@ func Md5Checker(cmd string, cluster string) {
 
 	/* If more than one Md5 Sums Found */
 	if len(sortList) > 1 {
-		util.PrintRed(fmt.Sprintf("Multiple MD5 Detected, Cluster Non Homogenous.", ))
+		util.PrintRed(fmt.Sprintf("Multiple MD5 Detected, Cluster Non Homogenous."))
 
 		/* Sort Md5 List by Count */
 		sort.Slice(sortList, func(i, j int) bool {

@@ -3,9 +3,10 @@ package util
 import (
 	"errors"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"strconv"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 func ParseFloat(value string) (result float64) {
@@ -22,7 +23,7 @@ func ParseFloat(value string) (result float64) {
 	return
 }
 
-func ParseInt(value string) (i int,err error) {
+func ParseInt(value string) (i int, err error) {
 	if i, err = strconv.Atoi(value); err != nil {
 		err = errors.New(fmt.Sprintf("%v is not a Valid Integer", value))
 	}

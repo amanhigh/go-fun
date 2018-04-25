@@ -1,9 +1,10 @@
 package json
 
 import (
+	"testing"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"testing"
 )
 
 func TestJson(t *testing.T) {

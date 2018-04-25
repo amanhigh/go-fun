@@ -13,7 +13,6 @@ var (
 	CIPHER_TOO_SHORT = errors.New("ciphertext too short")
 )
 
-
 func Encrypt(key, text string) (encryptedText string, err error) {
 	keyBytes := []byte(key)
 	textBytes := []byte(text)
@@ -37,7 +36,7 @@ func Encrypt(key, text string) (encryptedText string, err error) {
 }
 
 func Decrypt(key, text string) (decryptedText string, err error) {
-	var textBytes[]byte
+	var textBytes []byte
 	keyBytes := []byte(key)
 
 	/* Decode Base64 to get back Encrpted Text */

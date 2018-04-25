@@ -3,6 +3,7 @@ package genny
 
 import (
 	"fmt"
+
 	"github.com/cheekybits/genny/generic"
 )
 

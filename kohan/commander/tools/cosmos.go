@@ -3,9 +3,10 @@ package tools
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/amanhigh/go-fun/util"
 	"sort"
 	"strconv"
+
+	"github.com/amanhigh/go-fun/util"
 )
 
 func CosmosCurl(host string, startMin int, endMin int, metric string, pipe string) string {

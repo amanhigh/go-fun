@@ -1,8 +1,8 @@
 package practice
 
 import (
-	"strings"
 	"fmt"
+	"strings"
 	"unicode"
 )
 
@@ -16,9 +16,9 @@ func AnagramGroups(words []string) map[string][]string {
 }
 
 func fingerPrint(word string) (fingerPrint []int) {
-	fingerPrint=make([]int,26)
-	for _,c := range word{
-		cc:=unicode.ToLower(c)
+	fingerPrint = make([]int, 26)
+	for _, c := range word {
+		cc := unicode.ToLower(c)
 		fingerPrint[cc-'a']++
 	}
 	return

@@ -3,8 +3,9 @@ package migrations
 import (
 	"database/sql"
 	"fmt"
-	"github.com/amanhigh/go-fun/learn/orm/model"
+
 	"github.com/amanhigh/go-fun/learn/orm"
+	"github.com/amanhigh/go-fun/learn/orm/model"
 )
 
 // Up is executed when this migration is applied

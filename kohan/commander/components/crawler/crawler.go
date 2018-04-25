@@ -1,15 +1,16 @@
 package crawler
 
 import (
-	"github.com/amanhigh/go-fun/util"
-	"sync"
 	"context"
 	"fmt"
-	. "github.com/amanhigh/go-fun/models/crawler"
 	"io/ioutil"
-	"strings"
-	"sync/atomic"
 	"runtime"
+	"strings"
+	"sync"
+	"sync/atomic"
+
+	. "github.com/amanhigh/go-fun/models/crawler"
+	"github.com/amanhigh/go-fun/util"
 )
 
 const (
@@ -100,9 +101,9 @@ func (self *CrawlerManager) PrintSet(good []CrawlInfo, bad []CrawlInfo) {
 }
 
 /**
-	Print Info using interface and write extracted links to
-	GOOD/BAD Files for Chrome Processing
- */
+Print Info using interface and write extracted links to
+GOOD/BAD Files for Chrome Processing
+*/
 func (self *CrawlerManager) printWriteCrawledInfo(infos []CrawlInfo, filePath string) {
 	var urls []string
 	for _, info := range infos {
@@ -115,9 +116,9 @@ func (self *CrawlerManager) printWriteCrawledInfo(infos []CrawlInfo, filePath st
 }
 
 /**
-	Recursively Crawl Given Page moving to next if next link is available.
-	Write all Movies of current page onto channel
- */
+Recursively Crawl Given Page moving to next if next link is available.
+Write all Movies of current page onto channel
+*/
 func (self *CrawlerManager) crawlRecursive(page *util.Page, waitGroup *sync.WaitGroup) {
 	/* Aquire Grant */
 	self.semaphoreChannel <- 1

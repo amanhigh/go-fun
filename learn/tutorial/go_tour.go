@@ -17,7 +17,7 @@ var global, second_global = 5, 10
 
 var (
 	r, i rune = 8, 9
-	g = 0.867 + 0.5i // complex128
+	g         = 0.867 + 0.5i // complex128
 )
 
 const (
@@ -96,7 +96,7 @@ func closure() {
 	fmt.Println("Closure")
 	pos, neg := adder(), adder()
 	for i := 0; i < 10; i++ {
-		fmt.Println(pos(i), neg(-2 * i))
+		fmt.Println(pos(i), neg(-2*i))
 	}
 
 	fmt.Println("Fibonacci")
@@ -112,7 +112,7 @@ func fibonacciRecurse() func() int {
 	lastFibBeforeUpdate, lastFib := 0, 0
 	fib := 1
 	return func() int {
-		lastFibBeforeUpdate, lastFib, fib = lastFib, fib, lastFib + fib // Simultaneous Assignment :D
+		lastFibBeforeUpdate, lastFib, fib = lastFib, fib, lastFib+fib // Simultaneous Assignment :D
 		return lastFibBeforeUpdate
 	}
 }
@@ -157,7 +157,7 @@ func collectionFun() {
 	s := []struct {
 		i int
 		b bool
-	}{{2, true}, {3, false}, {5, true}, {7, true}, {11, false}, {13, true} }
+	}{{2, true}, {3, false}, {5, true}, {7, true}, {11, false}, {13, true}}
 	fmt.Println(s)
 	s = s[2:4] // The capacity of a slice is the number of elements in the underlying array, counting from the first element in the slice.
 	fmt.Printf("len=%d cap=%d %v\n", len(s), cap(s), s)
@@ -168,13 +168,13 @@ func collectionFun() {
 	}
 
 	/** Two Dimensional */
-	var twod [5][5] uint8 //Array 5x5
+	var twod [5][5]uint8 //Array 5x5
 	twod[1][1] = 5
 	fmt.Println("Two Dimensional:", twod[1][1])
 
 	fmt.Printf("Len: %d, Cap: %d\n", len(twod), cap(twod))
 
-	hashMap := map[string]int{"One":1, "Two":2}
+	hashMap := map[string]int{"One": 1, "Two": 2}
 	v2, ok := hashMap["Two"] //Ok Holds if element is present or not.
 	fmt.Println("HashMap:", hashMap["One"], "-", v2, ok)
 
@@ -198,7 +198,7 @@ func pointerFun() {
 	i, j := 42, 2701
 
 	p := &i         // point to i
-	fmt.Println(p) // Address of i (Value of p)
+	fmt.Println(p)  // Address of i (Value of p)
 	fmt.Println(*p) // read i through the pointer
 	*p = 21         // set i through the pointer
 	fmt.Println(i)  // see the new value of i
@@ -229,13 +229,13 @@ func loopFun() {
 	fmt.Println("Sum:", sum)
 }
 
-func safeMapFun()  {
+func safeMapFun() {
 	mapV := sync.Map{}
 	mapV.Store("Aman", "Preet,Singh")
 	mapV.Store("Aman1", "Preet,Done")
 	fmt.Println(mapV.Load("Aman1"))
 	mapV.Range(func(key, value interface{}) bool {
-		stringValue :=value.(string)
+		stringValue := value.(string)
 		fmt.Printf("Key:%v Value:%v\n", key, strings.Split(stringValue, ","))
 		return true
 	})
@@ -354,7 +354,7 @@ type Abser interface {
 }
 
 func (v *Vertex) Abs() float64 {
-	return math.Sqrt(v.X * v.X + v.Y * v.Y)
+	return math.Sqrt(v.X*v.X + v.Y*v.Y)
 }
 
 func mathFun() {
@@ -389,7 +389,7 @@ func typeCheck() {
 }
 
 func needInt(x int) int {
-	return x * 10 + 1
+	return x*10 + 1
 }
 func needFloat(x float64) float64 {
 	return x * 0.1
@@ -488,7 +488,7 @@ func ff() {
 func gg(i int) {
 	if i > 3 {
 		fmt.Println("Panicking!")
-		panic(fmt.Sprintf("%v", i * 10))
+		panic(fmt.Sprintf("%v", i*10))
 	}
 	defer fmt.Println("Defer in gg", i)
 	fmt.Println("Printing in gg", i)

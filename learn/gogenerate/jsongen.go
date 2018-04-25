@@ -2,10 +2,10 @@ package main
 
 import (
 	"flag"
-	"os"
-	"strings"
-	"path/filepath"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 func main() {
@@ -35,6 +35,6 @@ func main() {
 	fmt.Printf("Generated %s %s\n", *format, outputFile)
 }
 
-func getFileName(typeName *string) (string) {
+func getFileName(typeName *string) string {
 	return strings.ToLower(*typeName) + "_json_writer.go"
 }

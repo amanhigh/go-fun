@@ -2,10 +2,10 @@ package util
 
 import (
 	"bufio"
-	"os"
-	"strings"
 	"fmt"
+	"os"
 	"strconv"
+	"strings"
 )
 
 func PromptInput(promptText string) string {

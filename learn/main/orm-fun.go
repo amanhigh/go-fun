@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/amanhigh/go-fun/learn/orm/model"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"os"
 )
 
 type Product struct {
@@ -128,8 +129,6 @@ func queryProduct(db *gorm.DB) {
 	db.Where(&Product{Price: 2000}).Or(&Product{Code: "L1212"}).Last(product)                                 //Or
 	fmt.Println("Query By Struct, ID:", product.ID)
 }
-
-
 
 func createVertical(db *gorm.DB) {
 	vertical := &model.Vertical{}

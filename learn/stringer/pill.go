@@ -1,4 +1,5 @@
 package stringer
+
 //go:generate stringer -type=Pill
 
 type Pill int

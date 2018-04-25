@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+
 	"github.com/amanhigh/go-fun/kohan/commander/components"
 	"github.com/amanhigh/go-fun/kohan/commander/tools"
 	"github.com/amanhigh/go-fun/util"
@@ -74,7 +75,7 @@ func init() {
 	clusterPsshCmd.Flags().IntVarP(&endIndex, "end", "e", -1, "Ending Index")
 
 	RootCmd.AddCommand(clusterCmd)
-	clusterCmd.AddCommand(clusterSanityCmd, clusterPsshCmd, clusterIndexCmd,clusterRemoveCmd)
+	clusterCmd.AddCommand(clusterSanityCmd, clusterPsshCmd, clusterIndexCmd, clusterRemoveCmd)
 }
 
 func getPsshFromType(psshType string) tools.Pssh {

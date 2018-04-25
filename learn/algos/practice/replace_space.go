@@ -1,8 +1,8 @@
 package practice
 
-func ReplaceSpace(input string) (string) {
+func ReplaceSpace(input string) string {
 	spaceCount := 0
-	for _,c := range input {
+	for _, c := range input {
 		if c == ' ' {
 			spaceCount++
 		}

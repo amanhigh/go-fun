@@ -38,5 +38,5 @@ func init() {
 	printfCmd.Flags().StringVarP(&marker, "marker", "m", "#", "Marker in Template File")
 
 	RootCmd.AddCommand(allCmd)
-	allCmd.AddCommand(getVersionCmd,printfCmd)
+	allCmd.AddCommand(getVersionCmd, printfCmd)
 }

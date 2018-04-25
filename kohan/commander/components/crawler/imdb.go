@@ -2,13 +2,14 @@ package crawler
 
 import (
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"strings"
-	"github.com/amanhigh/go-fun/util"
-	. "github.com/amanhigh/go-fun/models/crawler"
-	"net/http"
 	"io/ioutil"
+	"net/http"
+	"strings"
+
+	"github.com/PuerkitoBio/goquery"
 	log "github.com/Sirupsen/logrus"
+	. "github.com/amanhigh/go-fun/models/crawler"
+	"github.com/amanhigh/go-fun/util"
 )
 
 type ImdbCrawler struct {
@@ -55,8 +56,8 @@ func (self *ImdbCrawler) GatherLinks(page *util.Page, ch chan CrawlInfo) {
 			myRating := util.ParseFloat(moviePage.Document.Find(".star-rating-value").Text())
 
 			ch <- &ImdbInfo{
-				Name:     strings.TrimSuffix(name, "12345678910X"),
-				Link:     link, Rating: ratingFloat,
+				Name: strings.TrimSuffix(name, "12345678910X"),
+				Link: link, Rating: ratingFloat,
 				Language: self.language,
 				MyRating: myRating,
 				CutOff:   self.cutoff,

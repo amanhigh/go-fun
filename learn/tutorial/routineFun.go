@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"time"
-	"golang.org/x/tour/tree"
 	"sync"
+	"time"
+
+	"golang.org/x/tour/tree"
 )
 
 type Tree struct {
@@ -71,11 +72,11 @@ func fibFun() {
 	multiChannel()
 }
 
-func sumFun() (int) {
+func sumFun() int {
 	s := []int{7, 2, 8, -9, 4, 0}
 	/** With Buffer 2 now will work even if no goroutine is used
-	    as now two responses can be buffered hence single thread won't block.
-	 */
+	  as now two responses can be buffered hence single thread won't block.
+	*/
 	iChannel := make(chan int, 2)
 	mid := len(s) / 2
 	go sum(s[:mid], iChannel)
@@ -149,7 +150,7 @@ func sum(a []int, c chan int) {
 // from the tree to the channel ch.
 func Walk(t *tree.Tree, ch chan int) {
 	/** Inorder Traversal if Node is not null */
-	if (t != nil) {
+	if t != nil {
 		Walk(t.Left, ch)
 		ch <- t.Value
 		Walk(t.Right, ch)
@@ -175,7 +176,7 @@ func Same(t1, t2 *tree.Tree) bool {
 	for y := range c1 {
 		z := <-c2
 		fmt.Printf("Y:%v Z:%v\n", y, z)
-		if (y != z) {
+		if y != z {
 			return false
 		}
 	}

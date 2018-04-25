@@ -13,8 +13,8 @@ func QuickSort(input []int, start int, end int) {
 }
 
 /**
-		Ensure everything less than pivot is moved left of Partition Index (pIndex)
-		Post this everything on left of pivot is less than pivot and right is greater than pivot
+Ensure everything less than pivot is moved left of Partition Index (pIndex)
+Post this everything on left of pivot is less than pivot and right is greater than pivot
 */
 func Partition(input []int, start int, end int) (pIndex int) {
 	pivot := input[end]
@@ -30,7 +30,7 @@ func Partition(input []int, start int, end int) (pIndex int) {
 
 	//fmt.Println("Partition", start, pIndex, end, input[start:end+1])
 	/* Place Pivot at end of partition
-		(No increment of pIndex unlike in Loop as its last placement)
+	(No increment of pIndex unlike in Loop as its last placement)
 	*/
 	input[pIndex], input[end] = input[end], input[pIndex]
 	return

@@ -1,10 +1,11 @@
 package main
 
 import (
-	"time"
 	"fmt"
-	"github.com/samuel/go-zookeeper/zk"
 	"sync"
+	"time"
+
+	"github.com/samuel/go-zookeeper/zk"
 )
 
 func main() {

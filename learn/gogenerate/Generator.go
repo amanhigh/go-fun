@@ -1,9 +1,9 @@
 package main
 
 import (
+	"errors"
 	"io"
 	"text/template"
-	"errors"
 )
 
 const (

@@ -2,9 +2,10 @@ package components
 
 import (
 	"fmt"
-	"github.com/amanhigh/go-fun/util"
 	"strconv"
 	"strings"
+
+	"github.com/amanhigh/go-fun/util"
 )
 
 func Printf(templateFile string, paramFile string, marker string) {

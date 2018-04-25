@@ -2,8 +2,9 @@ package tools
 
 import (
 	"fmt"
-	"github.com/amanhigh/go-fun/util"
 	"strings"
+
+	"github.com/amanhigh/go-fun/util"
 )
 
 const TIMEOUT = 10
@@ -21,12 +22,12 @@ func Jcurl(url string, pipe string) (output string) {
 	return
 }
 
-func ContentPiperSplit(content string, pipe string) ([]string) {
+func ContentPiperSplit(content string, pipe string) []string {
 	output := ContentPiper(content, pipe)
 	return util.FilterEmptyLines(strings.Split(output, "\n"))
 }
 
-func ContentPiper(content string, pipe string) (string) {
+func ContentPiper(content string, pipe string) string {
 	output := RunCommandPrintError(fmt.Sprintf("echo '%v' | %v", content, pipe))
 	return output
 }

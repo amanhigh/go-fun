@@ -7,9 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/amanhigh/go-fun/models"
-	"golang.org/x/oauth2/clientcredentials"
 	"io"
 	"io/ioutil"
 	"net"
@@ -17,6 +14,10 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/amanhigh/go-fun/models"
+	"golang.org/x/oauth2/clientcredentials"
 )
 
 const (
@@ -30,12 +31,12 @@ var KeepAliveClient = NewHttpClient(DIAL_TIMEOUT, REQUEST_TIMEOUT, true, 64, fal
 var KeepAliveInsecureClient = NewHttpClient(DIAL_TIMEOUT, REQUEST_TIMEOUT, true, 64, false, true)
 
 /**
-	returns:
-	200 - Decoded Response (if interface provided), status code, no error
-	Non 200 - Nil Response, status code, error (Non 200 Response)
-	Deserialization Failed - Nil Response, status code, deserialization error
-	Http Error - Nil Response, Zero Status Code, error (Http Error that occurred)
- */
+returns:
+200 - Decoded Response (if interface provided), status code, no error
+Non 200 - Nil Response, status code, error (Non 200 Response)
+Deserialization Failed - Nil Response, status code, deserialization error
+Http Error - Nil Response, Zero Status Code, error (Http Error that occurred)
+*/
 type HttpClientInterface interface {
 	DoGet(url string, unmarshalledResponse interface{}) (statusCode int, err error)
 	DoPost(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error)
@@ -54,15 +55,15 @@ type HttpClient struct {
 }
 
 /**
-	dialTimeout: Connect Timeout
-	requestTimeout: Time allowed for an Http Request
+dialTimeout: Connect Timeout
+requestTimeout: Time allowed for an Http Request
 
-	KeepAlive Parameters:
-	keepAlive: Enable/Disable Keep Alive
-	idleConnectionsPerHost: Can be -1 if no keep alive or number of Max Idle KeepAlive connections to keep in pool.
+KeepAlive Parameters:
+keepAlive: Enable/Disable Keep Alive
+idleConnectionsPerHost: Can be -1 if no keep alive or number of Max Idle KeepAlive connections to keep in pool.
 
-	enableCompression: Enable/Disable gzip compression
- */
+enableCompression: Enable/Disable gzip compression
+*/
 func NewHttpClient(dialTimeout time.Duration, requestTimeout time.Duration, enableKeepAlive bool, idleConnectionsPerHost int, enableCompression bool, allowInsecure bool) HttpClientInterface {
 	jar, _ := cookiejar.New(nil)
 	return &HttpClient{
@@ -119,7 +120,7 @@ func NewAuthNClient(config models.AuthNConfig, targetClientId string) HttpClient
 	provided else returns Status Code.
 
 	Incase of Error returns error that occured
- */
+*/
 func (self *HttpClient) DoGet(url string, unmarshalledResponse interface{}) (statusCode int, err error) {
 	return self.fireRequest("GET", url, nil, unmarshalledResponse, -1)
 }
@@ -127,7 +128,7 @@ func (self *HttpClient) DoGet(url string, unmarshalledResponse interface{}) (sta
 /*
 	Makes a Post Request with Given Url & Body under specified timeout.
 	Incase of Success you will recieve unmarshalled Response or error otherwise
- */
+*/
 func (self *HttpClient) DoPost(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error) {
 	return self.fireRequest("POST", url, body, unmarshalledResponse, -1)
 }
@@ -135,7 +136,7 @@ func (self *HttpClient) DoPost(url string, body interface{}, unmarshalledRespons
 /*
 	Makes a Post Request with Given Url & Body under specified timeout.
 	Incase of Success you will recieve unmarshalled Response or error otherwise
- */
+*/
 func (self *HttpClient) DoPut(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error) {
 	return self.fireRequest("PUT", url, body, unmarshalledResponse, -1)
 }
@@ -143,28 +144,28 @@ func (self *HttpClient) DoPut(url string, body interface{}, unmarshalledResponse
 /*
 	Makes a Post Request with Given Url & Body under specified timeout.
 	Incase of Success you will recieve unmarshalled Response or error otherwise
- */
+*/
 func (self *HttpClient) DoDelete(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error) {
 	return self.fireRequest("DELETE", url, body, unmarshalledResponse, -1)
 }
 
 /**
-	Ignores Global Timeout of HttpClient and uses provided timeout fo Http call.
- */
+Ignores Global Timeout of HttpClient and uses provided timeout fo Http call.
+*/
 func (self *HttpClient) DoGetWithTimeout(url string, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error) {
 	return self.fireRequest("GET", url, nil, unmarshalledResponse, timeout)
 }
 
 /**
-	Ignores Global Timeout of HttpClient and uses provided timeout fo Http call.
- */
+Ignores Global Timeout of HttpClient and uses provided timeout fo Http call.
+*/
 func (self *HttpClient) DoPostWithTimeout(url string, body interface{}, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error) {
 	return self.fireRequest("POST", url, body, unmarshalledResponse, timeout)
 }
 
 /**
-	Given a request and unmarshal body, fire Http Client Return Unmarshalled Response
- */
+Given a request and unmarshal body, fire Http Client Return Unmarshalled Response
+*/
 func (self *HttpClient) DoRequest(request *http.Request, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error) {
 	var responseBytes []byte
 	var response *http.Response
@@ -223,8 +224,8 @@ func (self *HttpClient) fireRequest(method string, url string, body interface{},
 }
 
 /**
-	Returns timeout if its non Zero or Client Level Timeout otherwise
- */
+Returns timeout if its non Zero or Client Level Timeout otherwise
+*/
 func (self *HttpClient) getTimeOut(timeout time.Duration) time.Duration {
 	if timeout < 0 {
 		return self.Timeout

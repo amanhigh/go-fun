@@ -1,9 +1,10 @@
 package crawler
 
 import (
-	"github.com/amanhigh/go-fun/util"
-	"fmt"
 	"errors"
+	"fmt"
+
+	"github.com/amanhigh/go-fun/util"
 	"github.com/amanhigh/go-fun/util/helper"
 )
 

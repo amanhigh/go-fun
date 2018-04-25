@@ -2,15 +2,16 @@ package tools
 
 import (
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	. "github.com/amanhigh/go-fun/util"
 	"os"
 	"os/exec"
 	"strings"
 	"sync"
+
+	log "github.com/Sirupsen/logrus"
+	. "github.com/amanhigh/go-fun/util"
 )
 
-func RunCommandPrintError(cmd string) (string) {
+func RunCommandPrintError(cmd string) string {
 	if output, err := runCommand(cmd); err == nil {
 		return output
 	} else {
@@ -33,7 +34,7 @@ func RunAsyncCommand(heading string, cmd string, wg *sync.WaitGroup) {
 	}()
 }
 
-func RunCommandIgnoreError(cmd string) (string) {
+func RunCommandIgnoreError(cmd string) string {
 	output, _ := runCommand(cmd)
 	return output
 }
