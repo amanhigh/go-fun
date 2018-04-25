@@ -1,6 +1,9 @@
 package util
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 /* Layouts */
 const PRINT_LAYOUT = "Jan 2, 2006 at 3:04pm (MST)"
@@ -19,11 +22,14 @@ func TimeAfter(duration time.Duration) time.Time {
 }
 
 /**
-Using Hour String Compute Todays Data
-"4:05AM"
- */
-func TodaysHour(string string) time.Time {
-	parsedHourMin, _ := time.Parse(time.Kitchen, string)
-	year, month, day := time.Now().Date()
+Using Day & Hour String Compute Date & Time
+"24 4:05AM" "<Day> <Time>"
+*/
+func DaysHour(input string) (computedTime time.Time) {
+	var day int
+	var timeString string
+	fmt.Sscanf(input, "%d %s", &day, &timeString)
+	parsedHourMin, _ := time.Parse(time.Kitchen, timeString)
+	year, month, _ := time.Now().Date()
 	return time.Date(year, month, day, parsedHourMin.Hour(), parsedHourMin.Minute(), 0, 0, time.UTC)
 }
