@@ -1,4 +1,4 @@
-package hackerrank
+package cracking
 
 func LeftRotate(input []int, rotationCount int) (rotatedArray []int) {
 	if len(input) >= rotationCount {
