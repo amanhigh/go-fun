@@ -11,7 +11,7 @@ func MatchBrace(input string) (match bool) {
 		case '{':
 			fallthrough
 		case '[':
-			stack.Push(c)
+			stack.Push(int(c))
 			match = true //Don't Break loop in Push
 		case ')':
 			match = '(' == stack.Pop()
