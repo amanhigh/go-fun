@@ -47,11 +47,13 @@ type HttpClientInterface interface {
 	DoPostWithTimeout(url string, body interface{}, unmarshalledResponse interface{}, timout time.Duration) (statusCode int, err error)
 
 	DoRequest(request *http.Request, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error)
+	AddHeader(key string, value string)
 }
 
 type HttpClient struct {
-	Client  *http.Client
-	Timeout time.Duration
+	Client    *http.Client
+	Timeout   time.Duration
+	HeaderMap map[string]string
 }
 
 /**
@@ -233,4 +235,11 @@ func (self *HttpClient) getTimeOut(timeout time.Duration) time.Duration {
 		return timeout
 	}
 
+}
+
+/**
+Add header required for the request
+*/
+func (self *HttpClient) AddHeader(key string, value string) {
+	self.HeaderMap[key] = value
 }
