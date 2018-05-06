@@ -3,10 +3,11 @@ package util
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"regexp"
+
+	"strconv"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -87,10 +88,12 @@ func ReadAllLines(filePath string) (lines []string) {
 	return
 }
 
-func ReadInts(reader io.Reader, n int) []int {
+func ReadInts(scanner *bufio.Scanner, n int) []int {
 	a := make([]int, n)
-	for i := 0; i < n; i++ {
-		fmt.Fscan(reader, &a[i])
+	for i := 0; i < n && scanner.Scan(); i++ {
+		if value, err := strconv.Atoi(scanner.Text()); err == nil {
+			a[i] = value
+		}
 	}
 	return a
 }
