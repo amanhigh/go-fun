@@ -88,6 +88,9 @@ func ReadAllLines(filePath string) (lines []string) {
 	return
 }
 
+/**
+Scanner must be split on words
+*/
 func ReadInts(scanner *bufio.Scanner, n int) []int {
 	a := make([]int, n)
 	for i := 0; i < n && scanner.Scan(); i++ {
