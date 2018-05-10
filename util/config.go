@@ -15,7 +15,9 @@ const CONSOLE_FILE = CLUSTER_PATH + "/console.txt"
 const RELEASE_FILE = "/Users/amanpreet.singh/Documents/release.txt"
 const DEFAULT_PARALELISM = 50
 
-const DEBUG_FILE string = "/tmp/kohandebug"
+const DEBUG_FILE = "/tmp/kohandebug"
+
+var KOHAN_DEBUG = false
 
 func DebugControl(flag bool) {
 	if flag {
@@ -29,5 +31,5 @@ func DebugControl(flag bool) {
 }
 
 func IsDebugMode() bool {
-	return PathExists(DEBUG_FILE)
+	return KOHAN_DEBUG || PathExists(DEBUG_FILE)
 }
