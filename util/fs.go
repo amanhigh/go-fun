@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strings"
 
 	"strconv"
 
@@ -45,6 +46,11 @@ func ReadFileMap(dirPath string) map[string][]string {
 		contents[filePath] = ReadAllLines(filePath)
 	}
 	return contents
+}
+
+func PrintFile(title string, filepath string) {
+	PrintSkyBlue(title)
+	fmt.Println(strings.Join(ReadAllLines(filepath), "\n"))
 }
 
 func ListFiles(dirPath string) []string {
