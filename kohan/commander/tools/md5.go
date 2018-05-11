@@ -48,7 +48,7 @@ func Md5Checker(cmd string, cluster string) {
 
 	/* If more than one Md5 Sums Found */
 	if len(sortList) > 1 {
-		util.PrintRed(fmt.Sprintf("Multiple MD5 Detected, Cluster Non Homogenous."))
+		util.PrintRed(fmt.Sprintf("Multiple MD5 Detected, Cluster Non Homogenous: %v", cluster))
 
 		/* Sort Md5 List by Count */
 		sort.Slice(sortList, func(i, j int) bool {
@@ -72,6 +72,6 @@ func Md5Checker(cmd string, cluster string) {
 			fmt.Println(RunCommandIgnoreError(fmt.Sprintf("colordiff %v %v", firstFile, currentFile)))
 		}
 	} else {
-		util.PrintGreen(fmt.Sprintf("Single Md5 Found, Cluster Homogenous. Hash:%v Count:%v", sortList[0].hash, sortList[0].count))
+		util.PrintGreen(fmt.Sprintf("Single Md5 Found, Cluster Homogenous: %v Hash:%v Count:%v", cluster, sortList[0].hash, sortList[0].count))
 	}
 }

@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/amanhigh/go-fun/kohan/commander/components"
 	"github.com/amanhigh/go-fun/kohan/commander/tools"
@@ -69,11 +70,13 @@ var clusterRemoveCmd = &cobra.Command{
 }
 
 var clusterMd5Cmd = &cobra.Command{
-	Use:   "md5 [cmd] [cluster]",
+	Use:   "md5 [cmd] [cluster(s) Space Separated]",
 	Short: "Md5 Verification and Diff",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		tools.Md5Checker(args[0], args[1])
+		for _, cluster := range strings.Fields(args[1]) {
+			tools.Md5Checker(args[0], cluster)
+		}
 	},
 }
 
