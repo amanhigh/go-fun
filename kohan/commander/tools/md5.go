@@ -64,7 +64,11 @@ func Md5Checker(cmd string, cluster string) {
 		for i := 1; i < len(sortList); i++ {
 			current := sortList[i]
 			currentFile := current.fileList[0]
-			util.PrintRed(fmt.Sprintf("Diffing Top with Current: %v (%v) vs %v (%v)", firstFile, first.hash, currentFile, current.hash))
+			util.PrintSkyBlue(fmt.Sprintf("Diffing Top with Current: %v (%v) vs %v (%v)", firstFile, first.hash, currentFile, current.hash))
+			if util.IsDebugMode() {
+				util.PrintFile(firstFile, firstFile)
+				util.PrintFile(currentFile, currentFile)
+			}
 			fmt.Println(RunCommandIgnoreError(fmt.Sprintf("colordiff %v %v", firstFile, currentFile)))
 		}
 	} else {
