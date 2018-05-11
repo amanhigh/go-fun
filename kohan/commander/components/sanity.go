@@ -26,14 +26,17 @@ func ClusterSanity(pkgName string, cmd string, cluster string) {
 }
 
 func VersionCheck(pkgNameCsv string, cluster string) {
-	PrintBlue(fmt.Sprintf("Verifying Versions For Packages: %v on cluster %v", pkgNameCsv, cluster))
 	packageList := strings.Split(pkgNameCsv, ",")
 
 	cmd := fmt.Sprintf("dpkg -l | grep '%v'", strings.Join(packageList, `\|`))
 	FastPssh.Run(cmd, cluster, DEFAULT_PARALELISM, true)
 
-	for pkgVersion, count := range computeVersionCountMap() {
-		PrintGreen(fmt.Sprintf("%v: %v", pkgVersion, count))
+	versionCountMap := computeVersionCountMap()
+	for pkgVersion, count := range versionCountMap {
+		PrintGreen(fmt.Sprintf("%v : %v", pkgVersion, count))
+	}
+	if len(versionCountMap) != 1 {
+		PrintRed(fmt.Sprintf("Multiple Versions Found on %v", cluster))
 	}
 }
 
@@ -55,8 +58,12 @@ func VerifyStatus(cmd string, cluster string) {
 	contentMap := ReadFileMap(OUTPUT_PATH)
 	performBadStateChecks(contentMap)
 
-	minFound := performSecondsCheck(contentMap)
-	PrintBlue(fmt.Sprintf("Second Check Complete. Min Second Detected: %v", minFound))
+	minUptime := getMinUptime(contentMap)
+	if minUptime < MIN_SECOND {
+		PrintRed(fmt.Sprintf("Probable Restart Detected. Second: %v", minUptime))
+	} else {
+		PrintGreen(fmt.Sprintf("Checks Complete, Min Uptime (seconds): %v", minUptime))
+	}
 
 	//TODO:Move out of Debug Mode.
 	if IsDebugMode() {
@@ -78,10 +85,9 @@ func performBadStateChecks(contentMap map[string][]string) {
 			WriteClusterFile(check, strings.Join(keyWordIps, "\n"))
 		}
 	}
-	PrintGreen(fmt.Sprintf("Checks Complete: %v", checks))
 }
 
-func performSecondsCheck(contentMap map[string][]string) int {
+func getMinUptime(contentMap map[string][]string) int {
 	minFound := math.MaxInt64
 	if lines, _ := extractKeywordLines(contentMap, "seconds"); len(lines) > 0 {
 		for _, line := range lines {
@@ -93,10 +99,6 @@ func performSecondsCheck(contentMap map[string][]string) int {
 			} else {
 				log.WithFields(log.Fields{"Error": err}).Error("Error Parsing Second")
 			}
-		}
-
-		if minFound < MIN_SECOND {
-			PrintRed(fmt.Sprintf("Probable Restart Detected. Second: %v", minFound))
 		}
 	}
 	return minFound
