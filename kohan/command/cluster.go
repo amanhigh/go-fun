@@ -68,6 +68,15 @@ var clusterRemoveCmd = &cobra.Command{
 	},
 }
 
+var clusterMd5Cmd = &cobra.Command{
+	Use:   "md5 [cmd] [cluster]",
+	Short: "Md5 Verification and Diff",
+	Args:  cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		tools.Md5Checker(args[0], args[1])
+	},
+}
+
 func init() {
 	clusterPsshCmd.Flags().StringVarP(&tyype, "type", "t", "fast", "fast/display/slow")
 	clusterPsshCmd.Flags().IntVarP(&parallelism, "parallel", "p", util.DEFAULT_PARALELISM, "Parallelism")
@@ -75,7 +84,7 @@ func init() {
 	clusterPsshCmd.Flags().IntVarP(&endIndex, "end", "e", -1, "Ending Index")
 
 	RootCmd.AddCommand(clusterCmd)
-	clusterCmd.AddCommand(clusterSanityCmd, clusterPsshCmd, clusterIndexCmd, clusterRemoveCmd)
+	clusterCmd.AddCommand(clusterSanityCmd, clusterPsshCmd, clusterIndexCmd, clusterRemoveCmd, clusterMd5Cmd)
 }
 
 func getPsshFromType(psshType string) tools.Pssh {
