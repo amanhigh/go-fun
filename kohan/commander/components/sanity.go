@@ -55,7 +55,7 @@ func VerifyStatus(cmd string, cluster string) {
 		}
 	})
 
-	contentMap := ReadFileMap(OUTPUT_PATH)
+	contentMap := ReadFileMap(OUTPUT_PATH, true)
 	performBadStateChecks(contentMap)
 
 	minUptime := getMinUptime(contentMap)

@@ -30,7 +30,7 @@ func GetMD5Hash(text string) string {
 func Md5Checker(cmd string, cluster string) {
 	/* Run Command to get Ip Wise output */
 	FastPssh.Run(cmd, cluster, 200, true)
-	files := util.ReadFileMap(util.OUTPUT_PATH)
+	files := util.ReadFileMap(util.OUTPUT_PATH, true)
 
 	/* Compute Md5 and store as list with count */
 	hashMap := map[string]*md5Info{}
