@@ -50,6 +50,18 @@ func ReadFileMap(dirPath string, readEmpty bool) map[string][]string {
 	return contents
 }
 
+func FindReplaceFile(filePath string, find string, replace string) (err error) {
+	var compile *regexp.Regexp
+	var fileBytes []byte
+	if fileBytes, err = ioutil.ReadFile(filePath); err == nil {
+		if compile, err = regexp.Compile(find); err == nil {
+			replacedBytes := compile.ReplaceAll(fileBytes, []byte(replace))
+			ioutil.WriteFile(filePath, replacedBytes, DEFAULT_PERM)
+		}
+	}
+	return
+}
+
 func PrintFile(title string, filepath string) {
 	PrintSkyBlue(title)
 	fmt.Println(strings.Join(ReadAllLines(filepath), "\n"))

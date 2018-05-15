@@ -17,7 +17,7 @@ func Jcurl(url string, pipe string) (output string) {
 	if pipe == "" {
 		output = RunCommandPrintError(fmt.Sprintf("curl -m %v -s '%v' | jq .", TIMEOUT, url))
 	} else {
-		output = RunCommandPrintError(fmt.Sprintf("curl -m %v -s '%v' | jq . | %v", TIMEOUT, url, pipe))
+		output = RunCommandPrintError(fmt.Sprintf("curl -m %v -s '%v' | %v", TIMEOUT, url, pipe))
 	}
 	return
 }
