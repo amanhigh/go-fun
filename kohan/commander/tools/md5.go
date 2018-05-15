@@ -30,7 +30,7 @@ func GetMD5Hash(text string) string {
 func Md5Checker(cmd string, cluster string) {
 	/* Run Command to get Ip Wise output */
 	FastPssh.Run(cmd, cluster, 200, true)
-	files := util.ReadFileMap(util.OUTPUT_PATH)
+	files := util.ReadFileMap(util.OUTPUT_PATH, true)
 
 	/* Compute Md5 and store as list with count */
 	hashMap := map[string]*md5Info{}
@@ -48,7 +48,7 @@ func Md5Checker(cmd string, cluster string) {
 
 	/* If more than one Md5 Sums Found */
 	if len(sortList) > 1 {
-		util.PrintRed(fmt.Sprintf("Multiple MD5 Detected, Cluster Non Homogenous."))
+		util.PrintRed(fmt.Sprintf("Multiple MD5 Detected, Cluster Non Homogenous: %v", cluster))
 
 		/* Sort Md5 List by Count */
 		sort.Slice(sortList, func(i, j int) bool {
@@ -64,10 +64,14 @@ func Md5Checker(cmd string, cluster string) {
 		for i := 1; i < len(sortList); i++ {
 			current := sortList[i]
 			currentFile := current.fileList[0]
-			util.PrintRed(fmt.Sprintf("Diffing Top with Current: %v (%v) vs %v (%v)", firstFile, first.hash, currentFile, current.hash))
+			util.PrintSkyBlue(fmt.Sprintf("Diffing Top with Current: %v (%v) vs %v (%v)", firstFile, first.hash, currentFile, current.hash))
+			if util.IsDebugMode() {
+				util.PrintFile(firstFile, firstFile)
+				util.PrintFile(currentFile, currentFile)
+			}
 			fmt.Println(RunCommandIgnoreError(fmt.Sprintf("colordiff %v %v", firstFile, currentFile)))
 		}
 	} else {
-		util.PrintGreen(fmt.Sprintf("Single Md5 Found, Cluster Homogenous. Hash:%v Count:%v", sortList[0].hash, sortList[0].count))
+		util.PrintGreen(fmt.Sprintf("Single Md5 Found, Cluster Homogenous: %v Hash:%v Count:%v", cluster, sortList[0].hash, sortList[0].count))
 	}
 }

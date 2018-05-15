@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strings"
 
 	"strconv"
 
@@ -32,19 +33,26 @@ func AppendFile(path string, content string) {
 
 func ReadAllFiles(dirPath string) []string {
 	contents := []string{}
-	contentMap := ReadFileMap(dirPath)
+	contentMap := ReadFileMap(dirPath, false)
 	for _, value := range contentMap {
 		contents = append(contents, value...)
 	}
 	return contents
 }
 
-func ReadFileMap(dirPath string) map[string][]string {
+func ReadFileMap(dirPath string, readEmpty bool) map[string][]string {
 	contents := map[string][]string{}
 	for _, filePath := range ListFiles(dirPath) {
-		contents[filePath] = ReadAllLines(filePath)
+		if lines := ReadAllLines(filePath); len(lines) > 0 || readEmpty {
+			contents[filePath] = lines
+		}
 	}
 	return contents
+}
+
+func PrintFile(title string, filepath string) {
+	PrintSkyBlue(title)
+	fmt.Println(strings.Join(ReadAllLines(filepath), "\n"))
 }
 
 func ListFiles(dirPath string) []string {

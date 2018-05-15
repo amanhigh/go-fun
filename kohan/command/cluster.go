@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/amanhigh/go-fun/kohan/commander/components"
 	"github.com/amanhigh/go-fun/kohan/commander/tools"
@@ -68,6 +69,17 @@ var clusterRemoveCmd = &cobra.Command{
 	},
 }
 
+var clusterMd5Cmd = &cobra.Command{
+	Use:   "md5 [cmd] [cluster(s) Space Separated]",
+	Short: "Md5 Verification and Diff",
+	Args:  cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		for _, cluster := range strings.Fields(args[1]) {
+			tools.Md5Checker(args[0], cluster)
+		}
+	},
+}
+
 func init() {
 	clusterPsshCmd.Flags().StringVarP(&tyype, "type", "t", "fast", "fast/display/slow")
 	clusterPsshCmd.Flags().IntVarP(&parallelism, "parallel", "p", util.DEFAULT_PARALELISM, "Parallelism")
@@ -75,7 +87,7 @@ func init() {
 	clusterPsshCmd.Flags().IntVarP(&endIndex, "end", "e", -1, "Ending Index")
 
 	RootCmd.AddCommand(clusterCmd)
-	clusterCmd.AddCommand(clusterSanityCmd, clusterPsshCmd, clusterIndexCmd, clusterRemoveCmd)
+	clusterCmd.AddCommand(clusterSanityCmd, clusterPsshCmd, clusterIndexCmd, clusterRemoveCmd, clusterMd5Cmd)
 }
 
 func getPsshFromType(psshType string) tools.Pssh {

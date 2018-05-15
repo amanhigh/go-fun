@@ -1,7 +1,10 @@
 package command
 
 import (
+	"strings"
+
 	"github.com/amanhigh/go-fun/kohan/commander/components"
+	"github.com/amanhigh/go-fun/kohan/commander/tools"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
 )
@@ -34,9 +37,18 @@ var printfCmd = &cobra.Command{
 	},
 }
 
+var syncCmd = &cobra.Command{
+	Use:   "sync [srcHost] [srcDir] [targetHost(s) Space Separated]",
+	Short: "Syncs Remote Host Directory with target hosts",
+	Args:  cobra.ExactArgs(3),
+	Run: func(cmd *cobra.Command, args []string) {
+		tools.Sync(args[0], args[1], args[1], strings.Fields(args[2]))
+	},
+}
+
 func init() {
 	printfCmd.Flags().StringVarP(&marker, "marker", "m", "#", "Marker in Template File")
 
 	RootCmd.AddCommand(allCmd)
-	allCmd.AddCommand(getVersionCmd, printfCmd)
+	allCmd.AddCommand(getVersionCmd, printfCmd, syncCmd)
 }
