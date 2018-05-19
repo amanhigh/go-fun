@@ -6,7 +6,7 @@ var stairMem = map[int]int{}
 Eg. For n 1,3,7 answer is 1,4,44
 https://www.hackerrank.com/challenges/ctci-recursive-staircase/problem
 */
-func Possibilities(n int, steps, taken []int) (result int) {
+func Staircase(n int, steps, taken []int) (result int) {
 	/* If Steps are remaining try to take using available steps */
 	if n > 0 {
 		var ok bool
@@ -14,11 +14,11 @@ func Possibilities(n int, steps, taken []int) (result int) {
 		if result, ok = stairMem[n]; !ok {
 			/* Try each step, n may go negative if step is greater but it will return */
 			for _, step := range steps {
-				result += Possibilities(n-step, steps, append(taken, step))
+				result += Staircase(n-step, steps, append(taken, step))
 			}
 			stairMem[n] = result
 		}
-		//result += Possibilities(n, steps[1:], taken)
+		//result += Staircase(n, steps[1:], taken)
 	} else if n == 0 {
 		/* N becomes exactly zero is a valid combination count as result */
 		result = 1
@@ -27,4 +27,25 @@ func Possibilities(n int, steps, taken []int) (result int) {
 	}
 	/* If n is negative it was invalid solution don't count it ,hence result zero */
 	return
+}
+
+func StaircaseDp(n int) int {
+	/* Base Case */
+	base := []int{0, 1, 2, 4}
+	var store []int
+
+	/* Init Dp Array if not base case */
+	if n > 3 {
+		store = make([]int, n+1)
+		copy(store, base)
+	} else {
+		store = base
+	}
+
+	/* Compute for the rest */
+	for i := 4; i <= n; i++ {
+		store[i] = store[i-1] + store[i-2] + store[i-3]
+	}
+
+	return store[n]
 }
