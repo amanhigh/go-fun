@@ -1,5 +1,7 @@
 package sort
 
+import "fmt"
+
 func MergeSort(input []int, start int, end int) {
 	/* End If we have Single Element Left */
 	if start < end {
@@ -40,5 +42,6 @@ func Merge(input []int, start int, mid int, end int) {
 		k++
 	}
 
+	fmt.Println("Range:", start, mid, end, input[start:end+1], input[start:mid+1], input[mid+1:end+1], result)
 	copy(input[start:end+1], result)
 }
