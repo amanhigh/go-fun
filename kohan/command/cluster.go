@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -40,9 +41,12 @@ var clusterPsshCmd = &cobra.Command{
 	PreRun: func(cmd *cobra.Command, args []string) {
 		command = args[1]
 	},
-	Run: func(cmd *cobra.Command, args []string) {
-		selectedPssh := getPsshFromType(tyype)
-		selectedPssh.RunRange(command, cluster, parallelism, false, index, endIndex)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var selectedPssh tools.Pssh
+		if selectedPssh, err = getPsshFromType(tyype); err == nil {
+			selectedPssh.RunRange(command, cluster, parallelism, false, index, endIndex)
+		}
+		return
 	},
 }
 
@@ -90,15 +94,16 @@ func init() {
 	clusterCmd.AddCommand(clusterSanityCmd, clusterPsshCmd, clusterIndexCmd, clusterRemoveCmd, clusterMd5Cmd)
 }
 
-func getPsshFromType(psshType string) tools.Pssh {
-	var selectedPssh tools.Pssh
+func getPsshFromType(psshType string) (selectedPssh tools.Pssh, err error) {
 	switch psshType {
+	case "f":
+		selectedPssh = tools.FastPssh
 	case "s":
 		selectedPssh = tools.SlowPssh
 	case "d":
 		selectedPssh = tools.DisplayPssh
 	default:
-		selectedPssh = tools.FastPssh
+		err = errors.New("Invalid Pssh Type: " + psshType)
 	}
-	return selectedPssh
+	return
 }
