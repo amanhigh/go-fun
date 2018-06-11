@@ -81,7 +81,7 @@ var clusterMd5Cmd = &cobra.Command{
 }
 
 func init() {
-	clusterPsshCmd.Flags().StringVarP(&tyype, "type", "t", "fast", "fast/display/slow")
+	clusterPsshCmd.Flags().StringVarP(&tyype, "type", "t", "f", "First alphabet of fast/display/slow")
 	clusterPsshCmd.Flags().IntVarP(&parallelism, "parallel", "p", util.DEFAULT_PARALELISM, "Parallelism")
 	clusterPsshCmd.Flags().IntVarP(&index, "start", "s", -1, "Starting Index")
 	clusterPsshCmd.Flags().IntVarP(&endIndex, "end", "e", -1, "Ending Index")
@@ -93,14 +93,12 @@ func init() {
 func getPsshFromType(psshType string) tools.Pssh {
 	var selectedPssh tools.Pssh
 	switch psshType {
-	case "fast":
-		selectedPssh = tools.FastPssh
-		break
-	case "slow":
+	case "s":
 		selectedPssh = tools.SlowPssh
-	case "display":
+	case "d":
 		selectedPssh = tools.DisplayPssh
-
+	default:
+		selectedPssh = tools.FastPssh
 	}
 	util.PrintYellow(fmt.Sprintf("Using %v PSSH", psshType))
 	return selectedPssh
