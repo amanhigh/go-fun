@@ -100,6 +100,5 @@ func getPsshFromType(psshType string) tools.Pssh {
 	default:
 		selectedPssh = tools.FastPssh
 	}
-	util.PrintYellow(fmt.Sprintf("Using %v PSSH", psshType))
 	return selectedPssh
 }
