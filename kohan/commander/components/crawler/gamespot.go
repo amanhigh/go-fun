@@ -20,19 +20,18 @@ func NewGameSpotCrawler(topLink string) Crawler {
 func (self *GamespotCrawler) GatherLinks(page *util.Page, ch chan crawler.CrawlInfo) {
 	games := page.Document.Find("h3.media-title")
 	games.Each(func(i int, selection *goquery.Selection) {
-		gameName := selection.Text()
+		info := crawler.GameInfo{Name: selection.Text()}
 		if gameLink, ok := selection.Parent().Parent().Attr(util.HREF); ok {
-			ch <- &crawler.GameInfo{Name: gameName, Link: getGamespotLink(page, gameLink)}
-		} else {
-			fmt.Println("Missing Link: ", gameName)
+			info.Link = getGamespotLink(page, gameLink)
 		}
+		ch <- &info
 	})
 }
 
 func (self *GamespotCrawler) NextPageLink(page *util.Page) (url string, ok bool) {
 	nextPage := page.Document.Find("li.skip.next a")
-	if uri, ok := nextPage.Attr(util.HREF); ok {
-		url = getGamespotLink(page, uri)
+	if url, ok = nextPage.Attr(util.HREF); ok {
+		url = getGamespotLink(page, url)
 	}
 	return
 }
