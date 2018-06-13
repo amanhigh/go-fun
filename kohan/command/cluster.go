@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -40,9 +41,12 @@ var clusterPsshCmd = &cobra.Command{
 	PreRun: func(cmd *cobra.Command, args []string) {
 		command = args[1]
 	},
-	Run: func(cmd *cobra.Command, args []string) {
-		selectedPssh := getPsshFromType(tyype)
-		selectedPssh.RunRange(command, cluster, parallelism, false, index, endIndex)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var selectedPssh tools.Pssh
+		if selectedPssh, err = getPsshFromType(tyype); err == nil {
+			selectedPssh.RunRange(command, cluster, parallelism, false, index, endIndex)
+		}
+		return
 	},
 }
 
@@ -81,7 +85,7 @@ var clusterMd5Cmd = &cobra.Command{
 }
 
 func init() {
-	clusterPsshCmd.Flags().StringVarP(&tyype, "type", "t", "fast", "fast/display/slow")
+	clusterPsshCmd.Flags().StringVarP(&tyype, "type", "t", "f", "First alphabet of fast/display/slow")
 	clusterPsshCmd.Flags().IntVarP(&parallelism, "parallel", "p", util.DEFAULT_PARALELISM, "Parallelism")
 	clusterPsshCmd.Flags().IntVarP(&index, "start", "s", -1, "Starting Index")
 	clusterPsshCmd.Flags().IntVarP(&endIndex, "end", "e", -1, "Ending Index")
@@ -90,18 +94,16 @@ func init() {
 	clusterCmd.AddCommand(clusterSanityCmd, clusterPsshCmd, clusterIndexCmd, clusterRemoveCmd, clusterMd5Cmd)
 }
 
-func getPsshFromType(psshType string) tools.Pssh {
-	var selectedPssh tools.Pssh
+func getPsshFromType(psshType string) (selectedPssh tools.Pssh, err error) {
 	switch psshType {
-	case "fast":
+	case "f":
 		selectedPssh = tools.FastPssh
-		break
-	case "slow":
+	case "s":
 		selectedPssh = tools.SlowPssh
-	case "display":
+	case "d":
 		selectedPssh = tools.DisplayPssh
-
+	default:
+		err = errors.New("Invalid Pssh Type: " + psshType)
 	}
-	util.PrintYellow(fmt.Sprintf("Using %v PSSH", psshType))
-	return selectedPssh
+	return
 }
