@@ -22,7 +22,7 @@ type JenkinsClient struct {
 }
 
 func NewJenkinsClient(ip string, userName string, apiKey string) JenkinsClientInterface {
-	jenkins := gojenkins.CreateJenkins(util.KeepAliveInsecureClient.(*util.HttpClient).Client, fmt.Sprintf("https://%v/", ip), userName, apiKey)
+	jenkins := gojenkins.CreateJenkins(fmt.Sprintf("https://%v/", ip), userName, apiKey)
 	if _, err := jenkins.Init(); err != nil {
 		log.WithFields(log.Fields{"Error": err}).Fatal("Error Building Jenkins Client")
 	}
