@@ -9,16 +9,27 @@ import (
 
 const TIMEOUT = 10
 
+const (
+	CURL_METHOD_GET  = "GET"
+	CURL_METHOD_POST = "POST"
+	CURL_METHOD_PUT  = "PUT"
+)
+
 func Jcurl(url string, pipe string) (output string) {
 	if util.IsDebugMode() {
 		util.PrintPink(url)
 	}
 
 	if pipe == "" {
-		output = RunCommandPrintError(fmt.Sprintf("curl -m %v -s '%v' | jq .", TIMEOUT, url))
+		output = Curl(url, CURL_METHOD_GET, "jq .")
 	} else {
-		output = RunCommandPrintError(fmt.Sprintf("curl -m %v -s '%v' | %v", TIMEOUT, url, pipe))
+		output = Curl(url, CURL_METHOD_GET, pipe)
 	}
+	return
+}
+
+func Curl(url string, method string, pipe string) (output string) {
+	output = RunCommandPrintError(fmt.Sprintf("curl -m %v -X%v -s '%v' | %v", TIMEOUT, method, url, pipe))
 	return
 }
 
