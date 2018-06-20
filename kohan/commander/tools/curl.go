@@ -21,15 +21,29 @@ func Jcurl(url string, pipe string) (output string) {
 	}
 
 	if pipe == "" {
-		output = Curl(url, CURL_METHOD_GET, "jq .")
+		output = CurlGet(url, "jq .")
 	} else {
-		output = Curl(url, CURL_METHOD_GET, pipe)
+		output = CurlGet(url, pipe)
 	}
 	return
 }
 
-func Curl(url string, method string, pipe string) (output string) {
-	output = RunCommandPrintError(fmt.Sprintf("curl -m %v -X%v -s '%v' | %v", TIMEOUT, method, url, pipe))
+func CurlGet(url string, pipe string) (output string) {
+	output = Curl(url, CURL_METHOD_GET, "", pipe)
+	return
+}
+
+func CurlPut(url string, filePath string, params string, pipe string) (output string) {
+	output = Curl(url, CURL_METHOD_PUT, fmt.Sprintf("-d @%v %v", filePath, params), pipe)
+	return
+}
+
+func Curl(url string, method string, params string, pipe string) (output string) {
+	cmd := fmt.Sprintf("curl -m %v -X%v -s '%v' %v", TIMEOUT, method, url, params)
+	if pipe != "" {
+		cmd += " | " + pipe
+	}
+	output = RunCommandPrintError(cmd)
 	return
 }
 
