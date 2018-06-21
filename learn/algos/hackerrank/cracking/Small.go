@@ -42,3 +42,24 @@ func FindLonely(ints []int) int {
 	}
 	return lonelyInt
 }
+
+/**
+0 3 4 2 -> True
+0 2 5 3 -> False
+*/
+func KangarooMeet(ints []int) bool {
+	x1, v1, x2, v2 := ints[0], ints[1], ints[2], ints[3]
+	/* x1<=x2  */
+	initialLead := x2 - x1
+	speedDifference := v1 - v2
+	/* If both have same speed must start at same position */
+	if speedDifference == 0 {
+		return x1 == x2
+	} else {
+		/*
+			If there is speed difference v1 should have higher speed because x1 <= x2.
+			Initial lead should be able to cover in s steps only if lead%speedDiff==0
+		*/
+		return v1 >= v2 && initialLead%speedDifference == 0
+	}
+}
