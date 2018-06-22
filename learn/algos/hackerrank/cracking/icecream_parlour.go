@@ -3,7 +3,7 @@ package cracking
 import "sort"
 
 type IceCream struct {
-	index int
+	index int //holds orignal index of icecream, so its not lost in sort.
 	price int
 }
 
@@ -15,6 +15,12 @@ func ToIcecreams(prices []int) (icecreams []IceCream) {
 	return
 }
 
+/**
+Given the value of and the of each flavor for trips to the Ice Cream Parlor,
+help Sunny and Johnny choose two distinct flavors such that they spend their entire pool of money during each visit
+
+https://www.hackerrank.com/challenges/ctci-ice-cream-parlor/problem
+*/
 func FindIcecreams(icecreams []IceCream, money int) (values []int, indices []int) {
 	/* Sort Icecreams on price */
 	sort.Slice(icecreams, func(i, j int) bool {
@@ -27,17 +33,17 @@ func FindIcecreams(icecreams []IceCream, money int) (values []int, indices []int
 		current := icecreams[i]
 
 		/* Find amount for pair to be equal to money */
-		key := money - current.price
+		balance := money - current.price
 
-		/* Binary Search for key */
+		/* Binary Search for balance */
 		j := sort.Search(l, func(k int) bool {
 			/* Since array is sorted consider items only greater than i
 			It also prevents icecream i to be selected twice */
-			return k > i && icecreams[k].price >= key
+			return k > i && icecreams[k].price >= balance
 		})
 
-		/* If a key is found supply back values and original indices */
-		if j < l && icecreams[j].price == key {
+		/* If a icecream is found supply back values and original indices */
+		if j < l && icecreams[j].price == balance {
 			ith := icecreams[i]
 			jth := icecreams[j]
 

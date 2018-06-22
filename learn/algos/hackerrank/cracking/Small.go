@@ -11,8 +11,11 @@ func LeftRotate(input []int, rotationCount int) (rotatedArray []int) {
 
 var mem []int
 
-//mem = make([]int, n+1)
+/**
+Find nth Fibonacci number.
 
+Memoization, mem = make([]int, n+1)
+*/
 func Fibonacci(n int) (result int) {
 	memFib := mem[n]
 	if n == 0 || n == 1 {
@@ -27,7 +30,9 @@ func Fibonacci(n int) (result int) {
 }
 
 /**
-1) Any number xor'd with itself will give zero. 2) Any number xor'd with zero will give the number. 3) We are told there is an odd number of numbers in the array and they are all pairs of the same number, apart from one.
+1) Any number xor'd with itself will give zero.
+2) Any number xor'd with zero will give the number.
+3) We are told there is an odd number of numbers in the array and they are all pairs of the same number, apart from one.
 
 So if we xor all the numbers in the array together then any which are the same will cancel out - and give zero as the result of all the xors.
 
@@ -44,6 +49,13 @@ func FindLonely(ints []int) int {
 }
 
 /**
+Complete the function kangaroo which takes starting location and speed of both kangaroos as input,
+and return or appropriately.
+
+Can you determine if the kangaroos will ever land at the same location at the same time?
+
+https://www.hackerrank.com/challenges/kangaroo/problem
+
 0 3 4 2 -> True
 0 2 5 3 -> False
 */

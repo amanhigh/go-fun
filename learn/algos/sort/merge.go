@@ -1,5 +1,13 @@
 package sort
 
+/**
+	Conceptually, a merge sort works as follows:
+
+    Divide the unsorted list into n sublists, each containing 1 element (a list of 1 element is considered sorted).
+    Repeatedly merge sublists to produce new sorted sublists until there is only 1 sublist remaining. This will be the sorted list.
+
+	Produces Stable Sort, Space O(n), Time nlog(n)
+*/
 func MergeSort(input []int, start int, end int) (inversion int) {
 	/* End If we have Single Element Left */
 	if start < end {
@@ -26,7 +34,18 @@ func Merge(input []int, start int, mid int, end int) (inversion int) {
 			k++
 		} else {
 			result[k] = input[j]
-			/* https://www.youtube.com/watch?v=k9RQh21KrH8 */
+			/*
+				Eg.
+				1,2,8,4,5 has two inversions 8,4 and 8,5
+				Inversion is a[i] > a[j] where i<j
+				Inversion tells how far we are from sorted array.
+
+				Since left and right segments are sorted.
+				When input[i] > input[j] then number at location i forms inversion with
+				all numbers right of it i.e. mid-i+1
+
+				https://www.youtube.com/watch?v=k9RQh21KrH8
+			*/
 			inversion += mid - i + 1
 			j++
 			k++

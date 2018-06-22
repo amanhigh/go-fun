@@ -4,6 +4,8 @@ package cracking
 Visited all -1 before start
 n-rows
 m-columns
+
+https://www.hackerrank.com/challenges/ctci-connected-cell-in-a-grid/problem
 */
 func FindRegion(cells, visited [][]int, n, m int) (max int) {
 	for i := 0; i < n; i++ {

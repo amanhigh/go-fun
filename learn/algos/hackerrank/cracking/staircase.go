@@ -3,7 +3,14 @@ package cracking
 var stairMem = map[int]int{}
 
 /**
-Eg. For n 1,3,7 answer is 1,4,44
+Davis has a number of staircases in his house and he likes to climb each staircase 1, 2, or 3 steps at a time.
+Being a very precocious child, he wonders how many ways there are to reach the top of the staircase.
+
+Eg.
+For n 1,3,7 answer is 1,4,44
+[]steps: []int{1,2,3} as described in problem above.
+[]taken: Purely for debugging
+
 https://www.hackerrank.com/challenges/ctci-recursive-staircase/problem
 */
 func Staircase(n int, steps, taken []int) (result int) {
