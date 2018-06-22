@@ -9,21 +9,24 @@ func LeftRotate(input []int, rotationCount int) (rotatedArray []int) {
 	return
 }
 
-var mem []int
-
 /**
 Find nth Fibonacci number.
-
-Memoization, mem = make([]int, n+1)
 */
-func Fibonacci(n int) (result int) {
+var mem []int
+
+func Fibonacci(n int) int {
+	mem = make([]int, n+1)
+	return FibonacciRecursive(n)
+}
+
+func FibonacciRecursive(n int) (result int) {
 	memFib := mem[n]
 	if n == 0 || n == 1 {
 		result = n
 	} else if memFib != 0 {
 		result = memFib
 	} else {
-		result = Fibonacci(n-1) + Fibonacci(n-2)
+		result = FibonacciRecursive(n-1) + FibonacciRecursive(n-2)
 		mem[n] = result
 	}
 	return
