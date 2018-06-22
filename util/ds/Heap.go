@@ -79,14 +79,19 @@ func (self *Heap) swap(i, j int) {
 }
 
 func (self *Heap) Add(value int) {
+	/* Add new element at end */
 	self.data = append(self.data, value)
+	/* Heapify Up to ensure parent child order is mantained */
 	self.heapifyUp()
 }
 
 func (self *Heap) Poll() (value int) {
 	if self.Size() > 0 {
+		/* Return root & swap root with last element */
 		value, self.data[0] = self.data[0], self.data[self.Size()-1]
+		/* Shrink size as last element is now at root location */
 		self.data = self.data[:self.Size()-1]
+		/* Heapify down to ensure parent child order is maintained */
 		self.heapifyDown()
 	}
 	return
@@ -100,7 +105,7 @@ func (self *Heap) Peek() (value int) {
 }
 
 func (self *Heap) heapifyUp() {
-	//Start from bottom till root, swapping until parent is bigger than child
+	//Start from bottom till root, swapping until parent is out of order w.r.t child
 	for i := self.Size() - 1; self.hasParent(i) && self.up(self.parent(i), self.data[i]); i = self.getParentIndex(i) {
 		self.swap(self.getParentIndex(i), i)
 	}
@@ -110,6 +115,7 @@ func (self *Heap) heapifyDown() {
 	//Start from Root replacing node with smaller of left & right child
 	for i := 0; self.hasLeft(i); {
 		s := self.getLeftChildIndex(i)
+		//TODO:Right/left wrong w.r.t self.down fix post tests
 		if self.hasRight(i) && self.down(self.right(i), self.left(i)) {
 			s = self.getRightChildIndex(i)
 		}
