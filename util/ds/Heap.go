@@ -1,5 +1,8 @@
 package ds
 
+/**
+Heap - https://www.youtube.com/watch?v=t0Cq6tVNRBA
+*/
 type Heap struct {
 	data []int
 	up   func(parent, node int) bool
