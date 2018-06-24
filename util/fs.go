@@ -8,8 +8,6 @@ import (
 	"regexp"
 	"strings"
 
-	"strconv"
-
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -106,19 +104,6 @@ func ReadAllLines(filePath string) (lines []string) {
 		log.WithFields(log.Fields{"Error": err}).Error("Error Reading File")
 	}
 	return
-}
-
-/**
-Scanner must be split on words
-*/
-func ReadInts(scanner *bufio.Scanner, n int) []int {
-	a := make([]int, n)
-	for i := 0; i < n && scanner.Scan(); i++ {
-		if value, err := strconv.Atoi(scanner.Text()); err == nil {
-			a[i] = value
-		}
-	}
-	return a
 }
 
 func PathExists(path string) bool {
