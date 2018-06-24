@@ -3,6 +3,7 @@ package util
 import (
 	"bufio"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -29,5 +30,14 @@ func ReadInt(scanner *bufio.Scanner) (n int) {
 func NewStringScanner(s string) (scanner *bufio.Scanner) {
 	scanner = bufio.NewScanner(strings.NewReader(s))
 	scanner.Split(bufio.ScanWords)
+	return
+}
+
+func NewFileScanner(path string) (scanner *bufio.Scanner, err error) {
+	var file *os.File
+	if file, err = os.Open(path); err == nil {
+		scanner = bufio.NewScanner(file)
+		scanner.Split(bufio.ScanWords)
+	}
 	return
 }
