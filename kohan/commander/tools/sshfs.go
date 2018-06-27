@@ -14,5 +14,5 @@ func SshfsMount(host string, remotePath string, localPath string) {
 }
 
 func SshfsUnmount(localPath string) {
-	RunCommandPrintError(fmt.Sprintf("umount %v", localPath))
+	RunCommandPrintError(fmt.Sprintf("umount -f %v", localPath))
 }
