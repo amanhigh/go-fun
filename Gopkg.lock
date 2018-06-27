@@ -115,9 +115,12 @@
 
 [[projects]]
   name = "github.com/spf13/cobra"
-  packages = ["."]
-  revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
-  version = "v0.0.3"
+  packages = [
+    ".",
+    "doc"
+  ]
+  revision = "1505704e8e6b01d54c95f52a7febb7f5a4246382"
+  source = "github.com/amanhigh/cobra"
 
 [[projects]]
   name = "github.com/spf13/pflag"
@@ -211,6 +214,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cdc0ae2f89bb86f713f09fffe28f426233939bfaac3d1e8eaa62f0cf174b65a2"
+  inputs-digest = "5257df159f0d7f36c74048992f1a8dd47f9c2502faddf29c3e69944b05c9685f"
   solver-name = "gps-cdcl"
   solver-version = 1
