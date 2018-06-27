@@ -1,5 +1,7 @@
 package challenge
 
+import "math"
+
 /**
 	We define subsequence as any subset of an array. We define a subarray as a contiguous subsequence in an array.
 
@@ -17,8 +19,15 @@ func MaxSubArray(input []int) (result []int) {
 Brute Force O(n^2)
 */
 func MaxSubArrayBruteForce(input []int) (result []int) {
-	contigousSum := 0
+	/*
+		Mistake #1 as array can have negative numbers
+		Sums should start negative.
+	*/
+	contigousSum := -math.MaxInt32
 	nonContigousSum := 0
+	if input[0] < 0 {
+		nonContigousSum = input[0]
+	}
 	n := len(input)
 	for i := 0; i < n; i++ {
 		sum := 0
