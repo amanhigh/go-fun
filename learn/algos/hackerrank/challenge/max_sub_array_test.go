@@ -4,6 +4,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"bufio"
+
 	. "github.com/amanhigh/go-fun/learn/algos/hackerrank/challenge"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/amanhigh/go-fun/util/helper"
@@ -14,22 +16,30 @@ var _ = Describe("MaxSubArray", func() {
 		input = `2
 4
 1 2 3 4
-4
-1 2 3 4
 6
-2 -1 2 3 4 -5
-5
-2 -1 2 3 4
-10 11`
+2 -1 2 3 4 -5`
+		output = `
+10 10
+10 11
+`
 	)
 
-	It("should be correct", func() {
-		scanner := util.NewStringScanner(input)
-		n := util.ReadInt(scanner)
+	var (
+		inScan  *bufio.Scanner
+		outScan *bufio.Scanner
+	)
+
+	AfterEach(func() {
+		n := util.ReadInt(inScan)
 		for i := 0; i < n; i++ {
-			_, ints := helper.ReadCountInts(scanner)
-			_, expected := helper.ReadCountInts(scanner)
+			_, ints := helper.ReadCountInts(inScan)
+			expected := util.ReadInts(outScan, 2)
 			Expect(MaxSubArray(ints)).To(Equal(expected))
 		}
+	})
+
+	It("should be correct", func() {
+		inScan = util.NewStringScanner(input)
+		outScan = util.NewStringScanner(output)
 	})
 })
