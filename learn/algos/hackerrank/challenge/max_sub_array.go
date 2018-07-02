@@ -21,9 +21,19 @@ func MaxSubArray(input []int) (result []int) {
 https://www.youtube.com/watch?v=86CQq3pKSUw
 */
 func KadensAlgorithm(input []int) (result []int) {
-	sum, global_sum, nonContigousSum := input[0], input[0], input[0]
+	sum, global_sum, nonContigousSum := input[0], input[0], 0
 
 	for i, value := range input {
+		/*
+			#Mistake 2 Check this Commit
+			Didn't correctly find nonContigous Sum
+			Include only positives values and handle all negative values case
+			at end.
+		*/
+		if value > 0 {
+			nonContigousSum += value
+		}
+
 		if i > 0 {
 			if sum+value < value {
 				/* Max Subarray starts here, drop previous max subarray */
@@ -34,11 +44,6 @@ func KadensAlgorithm(input []int) (result []int) {
 					subarray plus this element
 				*/
 				sum += value
-			}
-
-			/* Since there can be holes only include elment if it increases sum */
-			if nonContigousSum < nonContigousSum+value {
-				nonContigousSum += value
 			}
 
 			/*
@@ -52,6 +57,18 @@ func KadensAlgorithm(input []int) (result []int) {
 			//fmt.Println("Trace:", i, sum, global_sum)
 		}
 	}
+
+	/*
+		#Mistake 2 Fix
+		If all values are negative then we would have not included anything
+		in contigous sum and it must be equal to global sum.
+
+		If there is even one positive value then global_sum can't be less than 0
+	*/
+	if global_sum < 0 {
+		nonContigousSum = global_sum
+	}
+
 	return []int{global_sum, nonContigousSum}
 }
 

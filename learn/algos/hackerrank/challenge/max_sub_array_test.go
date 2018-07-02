@@ -66,4 +66,13 @@ var _ = Describe("MaxSubArray", func() {
 -10 -10
 5 6`)
 	})
+
+	It("should be correct nonContigous Sum", func() {
+		inScan = util.NewStringScanner(`
+1
+5
+-1 2 -3 4 5`)
+		outScan = util.NewStringScanner(`
+9 11`)
+	})
 })
