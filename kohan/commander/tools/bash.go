@@ -40,10 +40,6 @@ func RunCommandIgnoreError(cmd string) string {
 }
 
 func PrintCommand(cmd string) {
-	if IsDebugMode() {
-		PrintPink(cmd)
-	}
-
 	if output, err := runCommand(cmd); err != nil {
 		PrintWhite(output)
 		PrintRed(fmt.Sprintf("Error Executing: %v\n CMD:%v\n", err, cmd))
@@ -69,6 +65,9 @@ func RunNotIf(cmd string, lambda func(output string)) bool {
 }
 
 func runCommand(cmd string) (string, error) {
+	if IsDebugMode() {
+		PrintPink(cmd)
+	}
 	output, err := exec.Command("sh", "-c", cmd).Output()
 	return strings.TrimSpace(string(output)), err
 }
@@ -76,7 +75,7 @@ func runCommand(cmd string) (string, error) {
 func LiveCommand(cmd string) {
 	command := exec.Command("sh", "-c", cmd)
 	if IsDebugMode() {
-		PrintSkyBlue(cmd)
+		PrintPink(cmd)
 	}
 	/* Connect Command Outputs */
 	command.Stdin = os.Stdin
