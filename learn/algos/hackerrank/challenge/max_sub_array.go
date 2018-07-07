@@ -13,14 +13,14 @@ import (
 
 	https://www.hackerrank.com/challenges/maxsubarray/problem
 */
-func MaxSubArray(input []int) (result []int) {
-	return KadensAlgorithm(input)
+func MaxSubArray(input []int) (arraySum, segmentSum, start, end int) {
+	return MaxSubArrayBruteForce(input)
 }
 
 /**
 https://www.youtube.com/watch?v=86CQq3pKSUw
 */
-func KadensAlgorithm(input []int) (result []int) {
+func KadensAlgorithm(input []int) (arraySum, segmentSum, start, end int) {
 	sum, global_sum, nonContigousSum := input[0], input[0], 0
 
 	for i, value := range input {
@@ -69,22 +69,18 @@ func KadensAlgorithm(input []int) (result []int) {
 		nonContigousSum = global_sum
 	}
 
-	return []int{global_sum, nonContigousSum}
+	return global_sum, nonContigousSum, 0, 0
 }
 
 /**
 Brute Force O(n^2)
 */
-func MaxSubArrayBruteForce(input []int) (result []int) {
+func MaxSubArrayBruteForce(input []int) (contigousSum, nonContigousSum, start, end int) {
 	/*
 		Mistake #1 as array can have negative numbers
 		Sums should start negative.
 	*/
-	contigousSum := -math.MaxInt32
-	nonContigousSum := 0
-	if input[0] < 0 {
-		nonContigousSum = input[0]
-	}
+	contigousSum, nonContigousSum = -math.MaxInt32, 0
 	n := len(input)
 	for i := 0; i < n; i++ {
 		sum := 0
@@ -93,15 +89,27 @@ func MaxSubArrayBruteForce(input []int) (result []int) {
 			sum += input[j]
 			if sum > contigousSum {
 				/* Subarry elements must be placed next to each other */
+				start = i
+				end = j
 				contigousSum = sum
 			}
 			//fmt.Println(i, j, input[i:j+1], sum, contigousSum)
 		}
 
-		/* Sub Segment Sum may have gaps */
-		if nonContigousSum < nonContigousSum+input[i] {
+		/*
+			#Mistake 2 Check this Commit
+			Didn't correctly find nonContigous Sum
+			Include only positives values and handle all negative values case
+			at end.
+		*/
+		if input[i] > 0 {
 			nonContigousSum += input[i]
 		}
 	}
-	return []int{contigousSum, nonContigousSum}
+
+	if contigousSum < 0 {
+		nonContigousSum = contigousSum
+	}
+
+	return
 }

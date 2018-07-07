@@ -13,7 +13,7 @@ import (
 	"github.com/amanhigh/go-fun/util/helper"
 )
 
-var _ = Describe("MaxSubArray", func() {
+var _ = FDescribe("MaxSubArray", func() {
 	var (
 		input = `2
 4
@@ -21,8 +21,8 @@ var _ = Describe("MaxSubArray", func() {
 6
 2 -1 2 3 4 -5`
 		output = `
-10 10
-10 11
+10 10 0 3
+10 11 0 4
 `
 	)
 
@@ -35,8 +35,9 @@ var _ = Describe("MaxSubArray", func() {
 		n := util.ReadInt(inScan)
 		for i := 0; i < n; i++ {
 			_, ints := helper.ReadCountInts(inScan)
-			expected := util.ReadInts(outScan, 2)
-			Expect(MaxSubArray(ints)).To(Equal(expected), fmt.Sprintf("Input: %v Expected: %v", ints, expected))
+			expected := util.ReadInts(outScan, 4)
+			arraySum, segmentSum, start, end := MaxSubArray(ints)
+			Expect([]int{arraySum, segmentSum, start, end}).To(Equal(expected), fmt.Sprintf("Input: %v Expected: %v", ints, expected))
 		}
 	})
 
@@ -59,12 +60,12 @@ var _ = Describe("MaxSubArray", func() {
 -10
 6
 1 -1 -1 -1 -1 5`)
-		outScan = util.NewStringScanner(`1 1
--1 -1
-1 1
-6 6
--10 -10
-5 6`)
+		outScan = util.NewStringScanner(`1 1 0 0
+-1 -1 0 0
+1 1 0 0
+6 6 0 2
+-10 -10 0 0
+5 6 5 5`)
 	})
 
 	It("should be correct nonContigous Sum", func() {
@@ -73,6 +74,6 @@ var _ = Describe("MaxSubArray", func() {
 5
 -1 2 -3 4 5`)
 		outScan = util.NewStringScanner(`
-9 11`)
+9 11 3 4`)
 	})
 })
