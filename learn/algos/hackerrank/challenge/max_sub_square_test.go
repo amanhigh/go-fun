@@ -21,7 +21,7 @@ var _ = Describe("MaxSubSquare", func() {
 		n := util.ReadInt(scanner)
 		m := util.ReadInt(scanner)
 		inputMatrix := helper.ReadMatrix(scanner, n, m)
-		coordinates, sum := challenge.MaximumSumSubSquare(inputMatrix, n)
+		coordinates, sum := challenge.MaximumSumSubSquare(inputMatrix, n, m)
 		/* Top,Left,Bottom,Right = 1,1,2,2 */
 		Expect(sum).To(Equal(16))
 		Expect(coordinates).To(Equal([]int{1, 1, 2, 2}))
