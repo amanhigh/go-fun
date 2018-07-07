@@ -11,7 +11,7 @@ import (
 
 var _ = Describe("MaxSubSquare", func() {
 	var (
-		input = `3
+		input = `3 3
 -1 -2 -4
 -8 -2 5
 -3 6 7`
@@ -19,7 +19,8 @@ var _ = Describe("MaxSubSquare", func() {
 	It("should compute sum", func() {
 		scanner := util.NewStringScanner(input)
 		n := util.ReadInt(scanner)
-		inputMatrix := helper.ReadMatrix(scanner, n)
+		m := util.ReadInt(scanner)
+		inputMatrix := helper.ReadMatrix(scanner, n, m)
 		coordinates, sum := challenge.MaximumSumSubSquare(inputMatrix, n)
 		/* Top,Left,Bottom,Right = 1,1,2,2 */
 		Expect(sum).To(Equal(16))

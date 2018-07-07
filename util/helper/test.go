@@ -12,10 +12,10 @@ func ReadCountInts(scanner *bufio.Scanner) (n int, ints []int) {
 	return
 }
 
-func ReadMatrix(scanner *bufio.Scanner, n int) (matrix [][]int) {
+func ReadMatrix(scanner *bufio.Scanner, n, m int) (matrix [][]int) {
 	matrix = make([][]int, n)
 	for i := 0; i < n; i++ {
-		matrix[i] = util.ReadInts(scanner, n)
+		matrix[i] = util.ReadInts(scanner, m)
 	}
 	return
 }
