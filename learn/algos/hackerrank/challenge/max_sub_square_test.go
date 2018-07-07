@@ -18,10 +18,11 @@ var _ = Describe("MaxSubSquare", func() {
 	)
 	It("should compute sum", func() {
 		scanner := util.NewStringScanner(input)
-		inputMatrix := helper.ReadMatrix(scanner, util.ReadInt(scanner))
-		coordinates, sum := challenge.MaximumSumSubSquare(inputMatrix)
+		n := util.ReadInt(scanner)
+		inputMatrix := helper.ReadMatrix(scanner, n)
+		coordinates, sum := challenge.MaximumSumSubSquare(inputMatrix, n)
 		/* Top,Left,Bottom,Right = 1,1,2,2 */
-		Expect(coordinates).To(Equal([]int{1, 1, 2, 2}))
 		Expect(sum).To(Equal(16))
+		Expect(coordinates).To(Equal([]int{1, 1, 2, 2}))
 	})
 })
