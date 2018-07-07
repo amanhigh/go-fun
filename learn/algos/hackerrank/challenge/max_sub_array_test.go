@@ -13,7 +13,7 @@ import (
 	"github.com/amanhigh/go-fun/util/helper"
 )
 
-var _ = FDescribe("MaxSubArray", func() {
+var _ = Describe("MaxSubArray", func() {
 	var (
 		input = `2
 4

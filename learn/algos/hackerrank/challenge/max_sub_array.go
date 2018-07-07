@@ -14,14 +14,15 @@ import (
 	https://www.hackerrank.com/challenges/maxsubarray/problem
 */
 func MaxSubArray(input []int) (arraySum, segmentSum, start, end int) {
-	return MaxSubArrayBruteForce(input)
+	return KadensAlgorithm(input)
 }
 
 /**
 https://www.youtube.com/watch?v=86CQq3pKSUw
 */
-func KadensAlgorithm(input []int) (arraySum, segmentSum, start, end int) {
-	sum, global_sum, nonContigousSum := input[0], input[0], 0
+func KadensAlgorithm(input []int) (contigousSum, nonContigousSum, start, end int) {
+	contigousSum, nonContigousSum = input[0], 0
+	sum := 0
 
 	for i, value := range input {
 		/*
@@ -34,28 +35,33 @@ func KadensAlgorithm(input []int) (arraySum, segmentSum, start, end int) {
 			nonContigousSum += value
 		}
 
-		if i > 0 {
-			if sum+value < value {
-				/* Max Subarray starts here, drop previous max subarray */
-				sum = value
-			} else {
-				/*
-					This element is part of max subarray hence previous max
-					subarray plus this element
-				*/
-				sum += value
+		if sum+value < value {
+			/* To Handle decrementing array -1,-2,-3,-4 */
+			if sum < value {
+				/* Mark start only if current value is greater than previous sum */
+				start = i
 			}
 
+			/* Max Subarray starts here, drop previous max subarray */
+			sum = value
+		} else {
 			/*
-				Global Sum can be more than sum in between
-				as its not max sum at this index, its max sum
-				till now over any index.
+				This element is part of max subarray hence previous max
+				subarray plus this element
 			*/
-			if global_sum < sum {
-				global_sum = sum
-			}
-			//fmt.Println("Trace:", i, sum, global_sum)
+			sum += value
 		}
+
+		/*
+			Global Sum can be more than sum in between
+			as its not max sum at this index, its max sum
+			till now over any index.
+		*/
+		if contigousSum < sum {
+			contigousSum = sum
+			end = i
+		}
+		//fmt.Println("Trace:", i, sum, contigousSum)
 	}
 
 	/*
@@ -63,13 +69,13 @@ func KadensAlgorithm(input []int) (arraySum, segmentSum, start, end int) {
 		If all values are negative then we would have not included anything
 		in contigous sum and it must be equal to global sum.
 
-		If there is even one positive value then global_sum can't be less than 0
+		If there is even one positive value then contigousSum can't be less than 0
 	*/
-	if global_sum < 0 {
-		nonContigousSum = global_sum
+	if contigousSum < 0 {
+		nonContigousSum = contigousSum
 	}
 
-	return global_sum, nonContigousSum, 0, 0
+	return
 }
 
 /**
