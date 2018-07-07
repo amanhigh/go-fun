@@ -7,20 +7,22 @@ import (
 /**
 cooridantes = top,left,bottom,right
 */
-func MaximumSumSubSquare(input [][]int, n, m int) (coordinates []int, maxSum int) {
-	return MaximumSumSubSquareSmart(input, n, m)
+func MaximumSumSubRectangle(input [][]int, n, m int) (coordinates []int, maxSum int) {
+	return MaximumSumSubRectangleSmart(input, n, m)
 }
 
 /**
+n - Rows
+m - Columns
 O(nm^2)
 
 https://www.youtube.com/watch?v=yCQN096CwWM
 */
-func MaximumSumSubSquareSmart(input [][]int, n, m int) (coordinates []int, maxSum int) {
+func MaximumSumSubRectangleSmart(input [][]int, n, m int) (coordinates []int, maxSum int) {
 	maxSum = -math.MaxInt32
-	for jStart := 0; jStart < n; jStart++ {
+	for jStart := 0; jStart < m; jStart++ {
 		columnSum := make([]int, n)
-		for jEnd := jStart; jEnd < n; jEnd++ {
+		for jEnd := jStart; jEnd < m; jEnd++ {
 			/* Sum Column to previous Sum O(n)*/
 			for i := 0; i < n; i++ {
 				columnSum[i] += input[i][jEnd]
@@ -41,13 +43,13 @@ func MaximumSumSubSquareSmart(input [][]int, n, m int) (coordinates []int, maxSu
 Vary top-left and bottom-right for all possible combinations and sum.
 O(n^4) or O(n^2m^2) incase fo rectangle
 */
-func MaximumSumSubSquareBruteForce(input [][]int, n, m int) (coordinates []int, maxSum int) {
+func MaximumSumSubRectangleBruteForce(input [][]int, n, m int) (coordinates []int, maxSum int) {
 	maxSum = -math.MaxInt32
-	for i := 0; i < n; i++ {
-		for j := 0; j < n; j++ {
-			for k := 0; k < n; k++ {
-				for l := 0; l < n; l++ {
-					cords := []int{i, j, k, l}
+	for iStart := 0; iStart < n; iStart++ {
+		for jStart := 0; jStart < m; jStart++ {
+			for iEnd := 0; iEnd < n; iEnd++ {
+				for jEnd := 0; jEnd < m; jEnd++ {
+					cords := []int{iStart, jStart, iEnd, jEnd}
 					sum := SumSquare(input, cords)
 					if sum > maxSum {
 						coordinates = cords
