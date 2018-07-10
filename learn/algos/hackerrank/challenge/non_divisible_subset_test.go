@@ -19,6 +19,6 @@ var _ = Describe("NonDivisibleSubset", func() {
 		n := util.ReadInt(scanner)
 		k := util.ReadInt(scanner)
 		ints := util.ReadInts(scanner, n)
-		Expect(NonDivisibleSubset(ints, n, k)).To(Equal(3))
+		Expect(NonDivisibleSubset(ints, k)).To(Equal(3))
 	})
 })
