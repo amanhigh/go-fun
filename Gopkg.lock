@@ -129,6 +129,12 @@
   version = "v1.0.1"
 
 [[projects]]
+  name = "github.com/thoas/go-funk"
+  packages = ["."]
+  revision = "e2f8da694c9c4fa123eea42cb0d6d47e08f11ff6"
+  version = "0.3"
+
+[[projects]]
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   revision = "9f005a07e0d31d45e6656d241bb5c0f2efd4bc94"
@@ -214,6 +220,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5257df159f0d7f36c74048992f1a8dd47f9c2502faddf29c3e69944b05c9685f"
+  inputs-digest = "21a44ea6af93f81ce6f0d338f9b9114635e4abf124c14a2f3d24df465170e7a8"
   solver-name = "gps-cdcl"
   solver-version = 1
