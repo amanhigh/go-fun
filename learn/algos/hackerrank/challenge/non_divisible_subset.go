@@ -1,6 +1,8 @@
 package challenge
 
-import "github.com/thoas/go-funk"
+import (
+	"github.com/thoas/go-funk"
+)
 
 /**
 https://www.hackerrank.com/challenges/non-divisible-subset/problem
@@ -13,14 +15,15 @@ func NonDivisibleSubset(input []int, k int) (result int) {
 
 func NonDivisibleSubsetRecursive(input, permute []int, k, r int) (result int) {
 	if r == len(permute) {
-		//fmt.Println(permute)
 		sum := funk.SumInt(permute)
 		if sum%k == 0 {
+			//fmt.Println(permute)
 			result++
 		}
 	}
 
 	for i, val := range input {
+		//fmt.Println(val, input[i+1:], permute)
 		result += NonDivisibleSubsetRecursive(input[i+1:], append(permute, val), k, r)
 	}
 	return

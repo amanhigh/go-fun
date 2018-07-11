@@ -9,16 +9,24 @@ import (
 )
 
 var _ = Describe("NonDivisibleSubset", func() {
-	var (
-		input = `4 3
-1 7 2 4`
-	)
 
 	It("should work case 1", func() {
-		scanner := util.NewStringScanner(input)
-		n := util.ReadInt(scanner)
-		k := util.ReadInt(scanner)
-		ints := util.ReadInts(scanner, n)
+		ints, k := readInputNonDivisible(`4 3
+1 7 2 4`)
 		Expect(NonDivisibleSubset(ints, k)).To(Equal(3))
 	})
+
+	It("should work case 2", func() {
+		ints, k := readInputNonDivisible(`5 5
+2 7 12 17 22`)
+		Expect(NonDivisibleSubset(ints, k)).To(Equal(5))
+	})
 })
+
+func readInputNonDivisible(input string) (ints []int, k int) {
+	scanner := util.NewStringScanner(input)
+	n := util.ReadInt(scanner)
+	k = util.ReadInt(scanner)
+	ints = util.ReadInts(scanner, n)
+	return
+}
