@@ -1,30 +1,29 @@
 package challenge
 
-import (
-	"github.com/thoas/go-funk"
-)
-
 /**
 https://www.hackerrank.com/challenges/non-divisible-subset/problem
-
+https://www.geeksforgeeks.org/subset-no-pair-sum-divisible-k/
 C(n,r) - http://www.mathwords.com/c/combination_formula.htm
 */
 func NonDivisibleSubset(input []int, k int) (result int) {
-	return NonDivisibleSubsetRecursive(input, []int{}, k, 2)
-}
+	modulos := make([]int, k)
+	for _, value := range input {
+		modulos[value%k]++
+	}
 
-func NonDivisibleSubsetRecursive(input, permute []int, k, r int) (result int) {
-	if r == len(permute) {
-		sum := funk.SumInt(permute)
-		if sum%k == 0 {
-			//fmt.Println(permute)
-			result++
+	if 1 < modulos[0] {
+		result = 1
+	} else {
+		result = modulos[0]
+	}
+
+	for i := 1; i <= k/2; i++ {
+		if modulos[i] < modulos[k-i] {
+			result += modulos[k-i]
+		} else {
+			result += modulos[i]
 		}
 	}
 
-	for i, val := range input {
-		//fmt.Println(val, input[i+1:], permute)
-		result += NonDivisibleSubsetRecursive(input[i+1:], append(permute, val), k, r)
-	}
 	return
 }
