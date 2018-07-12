@@ -21,6 +21,12 @@ var _ = Describe("NonDivisibleSubset", func() {
 2 7 12 17 22`)
 		Expect(NonDivisibleSubset(ints, k)).To(Equal(5))
 	})
+
+	It("should work case 3", func() {
+		ints, k := readInputNonDivisible(`10 4
+1 2 3 4 5 6 7 8 9 10`)
+		Expect(NonDivisibleSubset(ints, k)).To(Equal(5))
+	})
 })
 
 func readInputNonDivisible(input string) (ints []int, k int) {
