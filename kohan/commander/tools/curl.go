@@ -7,7 +7,7 @@ import (
 	"github.com/amanhigh/go-fun/util"
 )
 
-const TIMEOUT = 10
+const TIMEOUT = 60
 
 const (
 	CURL_METHOD_GET  = "GET"
