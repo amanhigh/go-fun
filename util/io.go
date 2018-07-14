@@ -21,6 +21,14 @@ func ReadInts(scanner *bufio.Scanner, n int) []int {
 	return a
 }
 
+func ReadStrings(scanner *bufio.Scanner, n int) []string {
+	a := make([]string, n)
+	for i := 0; i < n && scanner.Scan(); i++ {
+		a[i] = scanner.Text()
+	}
+	return a
+}
+
 func ReadInt(scanner *bufio.Scanner) (n int) {
 	scanner.Scan()
 	fmt.Sscanf(scanner.Text(), "%d", &n)

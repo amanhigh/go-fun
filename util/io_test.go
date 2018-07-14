@@ -10,11 +10,13 @@ import (
 
 	"fmt"
 
+	"strings"
+
 	. "github.com/amanhigh/go-fun/util"
 )
 
 var _ = Describe("Io", func() {
-	Context("String Scanner", func() {
+	Context("Int Scanner", func() {
 		var (
 			n          = 7
 			line       = "100 100 50 40 40 20 10"
@@ -50,6 +52,16 @@ var _ = Describe("Io", func() {
 			Expect(m).To(Equal(n))
 			ints := ReadInts(scanner, m)
 			Expect(ints).To(Equal(line_array))
+		})
+	})
+
+	Context("String Scanner", func() {
+		var (
+			stringList = []string{"Test1", "Test2"}
+		)
+		It("should read strings", func() {
+			scanner := NewStringScanner(strings.Join(stringList, "\n"))
+			Expect(ReadStrings(scanner, len(stringList))).To(Equal(stringList))
 		})
 	})
 })
