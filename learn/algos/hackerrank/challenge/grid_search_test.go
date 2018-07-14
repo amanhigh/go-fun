@@ -6,6 +6,8 @@ import (
 
 	"bufio"
 
+	"fmt"
+
 	"github.com/amanhigh/go-fun/learn/algos/hackerrank/challenge"
 	"github.com/amanhigh/go-fun/util"
 )
@@ -17,7 +19,7 @@ var _ = Describe("GridSearch", func() {
 		output := []bool{true, false}
 		for i := 0; i < c; i++ {
 			grid, search := readSet(scanner)
-			Expect(challenge.GridSearch(grid, search)).To(Equal(output[i]))
+			Expect(challenge.GridSearch(grid, search)).To(Equal(output[i]), fmt.Sprintf("Failed Case %v", i+1))
 		}
 
 	})
