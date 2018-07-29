@@ -39,9 +39,6 @@ func (self *GamespotCrawler) PrintSet(good []crawler.CrawlInfo, bad []crawler.Cr
 	return true
 }
 
-func (self *GamespotCrawler) GetBaseUrl() string {
-	return self.topUrl
-}
-func (self *GamespotCrawler) SupplyClient() util.HttpClientInterface {
-	return util.KeepAliveClient
+func (self *GamespotCrawler) GetTopPage() *util.Page {
+	return util.NewPage(self.topUrl)
 }

@@ -20,11 +20,10 @@ const (
 )
 
 type Crawler interface {
-	GetBaseUrl() string
 	GatherLinks(page *util.Page, ch chan CrawlInfo)
 	NextPageLink(page *util.Page) (string, bool)
 	PrintSet(good []CrawlInfo, bad []CrawlInfo) bool
-	SupplyClient() util.HttpClientInterface
+	GetTopPage() *util.Page
 }
 
 type CrawlerManager struct {
@@ -58,12 +57,11 @@ func NewCrawlerManager(crawler Crawler, requiredCount int, verbose bool) *Crawle
 
 func (self *CrawlerManager) Crawl() {
 	util.PrintYellow(fmt.Sprintf("Crawling RequiredLinks:%v Cores: %v", self.required, runtime.NumCPU()))
-	topPage := util.NewPageUsingClient(self.Crawler.GetBaseUrl(), self.Crawler.SupplyClient())
 
 	/* Fire First Crawler */
 	waitGroup := &sync.WaitGroup{}
 	waitGroup.Add(1)
-	go self.crawlRecursive(topPage, waitGroup)
+	go self.crawlRecursive(self.Crawler.GetTopPage(), waitGroup)
 
 	/* Collect & Organise Crawled Links */
 	go self.BuildSet()

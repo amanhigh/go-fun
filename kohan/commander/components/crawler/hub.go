@@ -37,10 +37,6 @@ func (self *HubCrawler) PrintSet(good []crawler.CrawlInfo, bad []crawler.CrawlIn
 	return true
 }
 
-func (self *HubCrawler) GetBaseUrl() string {
-	return self.topUrl
-}
-
-func (self *HubCrawler) SupplyClient() util.HttpClientInterface {
-	return util.KeepAliveClient
+func (self *HubCrawler) GetTopPage() *util.Page {
+	return util.NewPage(self.topUrl)
 }

@@ -37,12 +37,8 @@ func NewImdbCrawler(year int, language string, cutoff int, keyFile string) Crawl
 	}
 }
 
-func (self *ImdbCrawler) GetBaseUrl() string {
-	return self.topUrl
-}
-
-func (self *ImdbCrawler) SupplyClient() util.HttpClientInterface {
-	return self.client
+func (self *ImdbCrawler) GetTopPage() *util.Page {
+	return util.NewPageUsingClient(self.topUrl, self.client)
 }
 
 func (self *ImdbCrawler) GatherLinks(page *util.Page, ch chan CrawlInfo) {
