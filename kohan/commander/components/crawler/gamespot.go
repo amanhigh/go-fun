@@ -1,11 +1,10 @@
 package crawler
 
 import (
-	"fmt"
-
 	"github.com/PuerkitoBio/goquery"
 	"github.com/amanhigh/go-fun/models/crawler"
 	"github.com/amanhigh/go-fun/util"
+	"github.com/amanhigh/go-fun/util/helper"
 )
 
 type GamespotCrawler struct {
@@ -22,7 +21,7 @@ func (self *GamespotCrawler) GatherLinks(page *util.Page, ch chan crawler.CrawlI
 	games.Each(func(i int, selection *goquery.Selection) {
 		info := crawler.GameInfo{Name: selection.Text()}
 		if gameLink, ok := selection.Parent().Parent().Attr(util.HREF); ok {
-			info.Link = getGamespotLink(page, gameLink)
+			info.Link = helper.GetAbsoluteLink(page, gameLink)
 		}
 		ch <- &info
 	})
@@ -31,7 +30,7 @@ func (self *GamespotCrawler) GatherLinks(page *util.Page, ch chan crawler.CrawlI
 func (self *GamespotCrawler) NextPageLink(page *util.Page) (url string, ok bool) {
 	nextPage := page.Document.Find("li.skip.next a")
 	if url, ok = nextPage.Attr(util.HREF); ok {
-		url = getGamespotLink(page, url)
+		url = helper.GetAbsoluteLink(page, url)
 	}
 	return
 }
@@ -45,8 +44,4 @@ func (self *GamespotCrawler) GetBaseUrl() string {
 }
 func (self *GamespotCrawler) SupplyClient() util.HttpClientInterface {
 	return util.KeepAliveClient
-}
-
-func getGamespotLink(page *util.Page, uri string) string {
-	return fmt.Sprintf("https://%v%v", page.Document.Url.Host, uri)
 }

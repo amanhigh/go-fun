@@ -25,3 +25,6 @@ func PrintTempCurlCommand(cmd string) {
 func getCmd(cmd string) string {
 	return fmt.Sprintf("cat %v | %v", TEMP_CURL_FILE, cmd)
 }
+func GetAbsoluteLink(page *util.Page, uri string) string {
+	return fmt.Sprintf("https://%v%v", page.Document.Url.Host, uri)
+}
