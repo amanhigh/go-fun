@@ -36,6 +36,15 @@ var gameCmd = &cobra.Command{
 	},
 }
 
+var hubCmd = &cobra.Command{
+	Use:   "hub [toplink]",
+	Short: "Hub Crawler",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		crawler.NewCrawlerManager(crawler.NewHubCrawler(args[0]), count, verbose).Crawl()
+	},
+}
+
 func init() {
 	crawlCmd.PersistentFlags().IntVarP(&count, "count", "c", 200, "Count of entries to be crawled")
 	crawlCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable Verbose Mode")
@@ -44,5 +53,5 @@ func init() {
 	imdbCmd.Flags().StringVarP(&keyFilePath, "path", "p", "/tmp/imdb.key", "IMDB Key File")
 
 	RootCmd.AddCommand(crawlCmd)
-	crawlCmd.AddCommand(imdbCmd, gameCmd)
+	crawlCmd.AddCommand(imdbCmd, gameCmd, hubCmd)
 }

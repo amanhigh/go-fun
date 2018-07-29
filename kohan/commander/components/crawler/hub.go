@@ -19,8 +19,8 @@ func NewHubCrawler(topLink string) Crawler {
 func (self *HubCrawler) GatherLinks(page *util.Page, ch chan crawler.CrawlInfo) {
 	hubs := page.Document.Find(".js-pop a")
 	hubs.Each(func(i int, selection *goquery.Selection) {
-		if linkInfo, ok := selection.Attr(util.HREF); ok {
-			ch <- &crawler.LinkInfo{linkInfo}
+		if href, ok := selection.Attr(util.HREF); ok {
+			ch <- &crawler.LinkInfo{helper.GetAbsoluteLink(page, href)}
 		}
 	})
 }
