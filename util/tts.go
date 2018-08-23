@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/api/option"
-	texttospeech2 "google.golang.org/genproto/googleapis/cloud/texttospeech/v1"
 	"io/ioutil"
 )
 
@@ -20,12 +19,15 @@ type TtsClient interface {
 
 type GoogleTtsClient struct {
 	lang            string
-	voice           texttospeech2.SsmlVoiceGender
+	voice           string
 	credentialsFile string
 	client          *texttospeech.Client
 }
 
-func NewGoogleTtsClient(credFilePath string, voice texttospeech2.SsmlVoiceGender) (ttsClient TtsClient, err error) {
+/**
+util.NewGoogleTtsClient(util.GOOGLE_CREDS_FILE,"en-US-Wavenet-B")
+*/
+func NewGoogleTtsClient(credFilePath, voice string) (ttsClient TtsClient, err error) {
 	var client *texttospeech.Client
 	if client, err = texttospeech.NewClient(context.Background(), option.WithCredentialsFile(credFilePath)); err == nil {
 		ttsClient = &GoogleTtsClient{
@@ -55,11 +57,11 @@ func (self *GoogleTtsClient) newSynthesisRequest(text string) texttospeech2.Synt
 		Input: &texttospeech2.SynthesisInput{
 			InputSource: &texttospeech2.SynthesisInput_Text{Text: text},
 		},
-		// Build the voice request, select the language code ("en-US") and the SSML
-		// voice gender ("neutral").
+		// Build the gender request, select the language code ("en-US") and the SSML
+		// gender gender ("neutral").
 		Voice: &texttospeech2.VoiceSelectionParams{
 			LanguageCode: self.lang,
-			SsmlGender:   self.voice,
+			Name:         self.voice,
 		},
 		// Select the type of audio file you want returned.
 		AudioConfig: &texttospeech2.AudioConfig{
