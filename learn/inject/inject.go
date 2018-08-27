@@ -14,14 +14,15 @@ type DatabaseClient struct {
 	Name string
 }
 
-type DependencyContainer struct {
+type MyComponent struct {
 	Db    *DatabaseClient `inject:""`
 	Redis *RedisClient    `inject:""`
 }
 
-type DependencyWrapperAnon struct {
-	Container *DependencyContainer `inject:"private"`
-	Anon      *DatabaseClient      `inject:"anon"`
+type MyApplication struct {
+	Container        *MyComponent    `inject:"private"`
+	Anon             *DatabaseClient `inject:"anon"`
+	NonInjectedField string
 }
 
 /**
@@ -31,19 +32,19 @@ https://github.com/facebookgo/inject/blob/master/example_test.go
 func DependencyInjection() {
 	graph := inject.Graph{}
 
-	container := DependencyContainer{}
-	container.Redis = &RedisClient{"My Redis Client"}
+	component := MyComponent{}
+	component.Redis = &RedisClient{"MyRedisClient"}
 
-	wrapper := DependencyWrapperAnon{}
+	myApp := MyApplication{}
 	err := graph.Provide(
-		&inject.Object{Value: &RedisClient{"Redis Client"}},
-		&inject.Object{Value: &DatabaseClient{"Database Client"}},
-		&inject.Object{Value: &DatabaseClient{"Anon Database Client"}, Name: "anon"},
-		&inject.Object{Value: &wrapper},
+		&inject.Object{Value: &RedisClient{"RedisClient"}},
+		&inject.Object{Value: &DatabaseClient{"DatabaseClient"}},
+		&inject.Object{Value: &DatabaseClient{"AnonDatabaseClient"}, Name: "anon"},
+		&inject.Object{Value: &myApp},
 	)
 
 	graph.Provide(
-		&inject.Object{Value: &container},
+		&inject.Object{Value: &component},
 	)
 
 	if err == nil {
@@ -52,7 +53,7 @@ func DependencyInjection() {
 		fmt.Println(err)
 	}
 
-	fmt.Printf("Database: %s\n", container.Db.Name)
-	fmt.Printf("Redis: %s\n", container.Redis.Name)
-	fmt.Printf("[wrapper] Anon:%v DB:%v Redis:%v\n", wrapper.Anon.Name, wrapper.Container.Db.Name, wrapper.Container.Redis.Name)
+	fmt.Printf("Database: %s\n", component.Db.Name)
+	fmt.Printf("Redis: %s\n", component.Redis.Name)
+	fmt.Printf("[wrapper] Anon:%v DB:%v Redis:%v NonInjected:%v\n", myApp.Anon.Name, myApp.Container.Db.Name, myApp.Container.Redis.Name, myApp.NonInjectedField)
 }
