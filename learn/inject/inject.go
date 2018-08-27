@@ -22,6 +22,11 @@ type DependencyContainer struct {
 	Redis *RedisClient    `inject`
 }
 
+type DependencyWrapperAnon struct {
+	Container *DependencyContainer `inject`
+	Anon      *AnonDatabaseClient  `inject`
+}
+
 /**
 https://scene-si.org/2016/06/16/dependency-injection-patterns-in-go/
 */
@@ -39,6 +44,13 @@ func DependencyInjection() {
 	injector.Invoke(useDatabase)
 	injector.Invoke(useAnon)
 
+	wrapper := DependencyWrapperAnon{}
+	if err := getContainer(&wrapper); err == nil {
+		fmt.Printf("[wrapper] Anon:%v DB:%v Redis:%v\n", wrapper.Anon.Name, wrapper.Container.Db.Name, wrapper.Container.Redis.Name)
+	} else {
+		fmt.Println(err)
+	}
+
 	factoryInjector := getFactoryInjector()
 	factoryInjector.Invoke(useFactory)
 }
@@ -49,10 +61,13 @@ func getInjector() inject.Injector {
 	injector.Map(&DatabaseClient{fmt.Sprintf("%v %v", "Hello from DatabaseClient ", time.Now().UnixNano())})
 	injector.Map(&RedisClient{"Hello from RedisClient"})
 	injector.Map(&AnonDatabaseClient{"Hello from AnonDatabaseClient"})
+	container := DependencyContainer{}
+	injector.Apply(&container)
+	injector.Map(&container)
 	return injector
 }
 
-func getContainer(container interface{}) error {
+func getContainer(container interface{}) (err error) {
 	injector := getInjector()
 	return injector.Apply(container)
 }
