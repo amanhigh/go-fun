@@ -20,8 +20,8 @@ type DependencyContainer struct {
 }
 
 type DependencyWrapperAnon struct {
-	Container *DependencyContainer `inject:""`
-	Anon      *DatabaseClient      `inject:""`
+	Container *DependencyContainer `inject:"private"`
+	Anon      *DatabaseClient      `inject:"anon"`
 }
 
 /**
@@ -32,12 +32,18 @@ func DependencyInjection() {
 	graph := inject.Graph{}
 
 	container := DependencyContainer{}
+	container.Redis = &RedisClient{"My Redis Client"}
+
 	wrapper := DependencyWrapperAnon{}
 	err := graph.Provide(
 		&inject.Object{Value: &RedisClient{"Redis Client"}},
 		&inject.Object{Value: &DatabaseClient{"Database Client"}},
-		&inject.Object{Value: &container},
+		&inject.Object{Value: &DatabaseClient{"Anon Database Client"}, Name: "anon"},
 		&inject.Object{Value: &wrapper},
+	)
+
+	graph.Provide(
+		&inject.Object{Value: &container},
 	)
 
 	if err == nil {
