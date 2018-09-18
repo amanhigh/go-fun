@@ -1,0 +1,6 @@
+[template]
+src = "myconfig.conf.tmpl"
+dest = "./myconfig.conf"
+keys = [
+    "HOME",
+]
