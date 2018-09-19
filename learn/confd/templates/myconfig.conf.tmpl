@@ -7,3 +7,5 @@ sequence {{.}};{{end}}
 
 {{range lookupIPV4 "localhost"}}
 server {{.}};{{end}}
+
+my_ip={{index (lookupIPV4 "localhost") 0}}

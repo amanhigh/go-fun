@@ -4,3 +4,5 @@ dest = "./myconfig.conf"
 keys = [
     "/myapp/keyset/key",
 ]
+check_cmd = "ls"
+reload_cmd = "ls"
