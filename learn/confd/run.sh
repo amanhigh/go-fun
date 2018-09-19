@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-confd -onetime -backend env -confdir .
+confd -onetime -backend file -file myapp.yaml -confdir .

@@ -2,7 +2,8 @@
 src = "myconfig.conf.tmpl"
 dest = "./myconfig.conf"
 keys = [
-    "/myapp/keyset/key",
+    "/myapp/database/url",
+    "/myapp/database/user",
 ]
 check_cmd = "ls"
 reload_cmd = "ls"
