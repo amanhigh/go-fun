@@ -1,3 +1,9 @@
 [myconfig]
 my_home = {{getenv "HOME"}}
 my_path = {{getenv "PATH"}}
+
+{{range (seq 1 4)}}
+sequence {{.}};{{end}}
+
+{{range lookupIPV4 "localhost"}}
+server {{.}};{{end}}
