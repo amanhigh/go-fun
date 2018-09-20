@@ -68,9 +68,11 @@ services:
     - -initial-cluster
     - etcd0=http://etcd0:2380,etcd1=http://etcd1:2380,etcd2=http://etcd2:2380
   etcd-viewer:
-    image: nikfoundas/etcd-viewer
+    image: jwesselink/etcd-viewer
     ports:
     - 8080:8080
+    environment:
+      ETCD_CLIENT_URL: http://etcd0:2379
     depends_on:
       - etcd0
 
