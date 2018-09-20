@@ -35,8 +35,7 @@ function kill()
 function reset()
 {
     #Stop and Clean Containers
-    docker-clean -s -c
-#    kill
+    docker-clean stop
 
     #Fire up fresh Setup
     start
