@@ -1,3 +1,4 @@
+//go:generate mockgen -package util -destination http_mock.go -source http.go
 package util
 
 import (
