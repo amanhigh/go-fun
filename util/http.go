@@ -76,10 +76,10 @@ func NewHttpClient(dialTimeout time.Duration, requestTimeout time.Duration, enab
 				DisableCompression: !enableCompression,
 				DisableKeepAlives:  !enableKeepAlive,
 				DialContext: (&net.Dialer{
-					Timeout:   dialTimeout,                          // Connect Timeout
-					KeepAlive: (dialTimeout + requestTimeout) * 120, //Idle Timeout Before Closing Keepalive Connection
+					Timeout: dialTimeout, // Connect Timeout
 				}).DialContext,
 				MaxIdleConnsPerHost: idleConnectionsPerHost,
+				IdleConnTimeout:     (dialTimeout + requestTimeout) * 120, //Idle Timeout Before Closing Keepalive Connection
 				TLSClientConfig:     &tls.Config{InsecureSkipVerify: allowInsecure},
 			},
 			CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
