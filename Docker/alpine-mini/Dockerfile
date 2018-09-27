@@ -2,7 +2,13 @@
 FROM alpine
 MAINTAINER coool.aman@gmail.com
 
+RUN apk update
+
 #add bash shell
-RUN apk add --update bash && rm -rf /var/cache/apk/*
+RUN apk add --update bash
+#add root certs
+RUN apk add ca-certificates
+
+RUN rm -rf /var/cache/apk/*
 
 CMD echo "Small Linux with Bash";/bin/bash
