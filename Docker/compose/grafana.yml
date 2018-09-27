@@ -1,0 +1,27 @@
+version: '3'
+
+#https://blog.laputa.io/try-influxdb-and-grafana-by-docker-6b4d50c6a446
+services:
+  collectd:
+    image: fr3nd/collectd
+    privileged: true
+    network_mode: host
+    volumes:
+    - /proc:/mnt/proc:ro
+    - ./files/collectd.conf:/etc/collectd/collectd.conf
+  influxdb:
+    image: influxdb:1.0
+    ports:
+    - "8083:8083"
+    - "8086:8086"
+    - "25826:25826/udp"
+    volumes:
+    - /var/lib/influxdb
+    - ./files/influxdb.conf:/etc/influxdb/influxdb.conf
+    - ./files/types.db:/usr/share/collectd/types.db:ro
+  grafana:
+    image: grafana/grafana:3.1.1
+    ports:
+    - "3000:3000"
+    volumes:
+    - /var/lib/grafana
