@@ -123,6 +123,6 @@ Valid docker-manage Options:
 * start/restart <srvc>/stop/kill
 * reset/ps/login <srvc> <no.>
 * build <Image Name>
-* set <file"
+* set <file| -f ./compose/grafana.yml>"
     ;;
 esac
