@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  prometheus:
+    image: quay.io/prometheus/prometheus
+    restart: always
+    ports:
+    - 9090:9090
+    volumes:
+      - ./files/prometheus.yml:/etc/prometheus/prometheus.yml
