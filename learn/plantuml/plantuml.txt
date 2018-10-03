@@ -1,0 +1,67 @@
+@startuml
+Client as CL
+archimate #Technology "Comp1"  as C1 <<technology-device>>
+archimate #Technology "Comp2"  as C2 <<technology-device>>
+
+CL -right->> C1: "txt"
+C1 -right->> C2: "label"
+@enduml
+
+@startsalt
+{
+{T
+ + Tree
+ ++ Level1
+ +++ Level2.1
+ ++ Level2
+ +++ Level2.2
+}
+}
+@endsalt
+
+@startuml
+S1: State 1 Description
+S2: State 2 Description
+[*] --> S1: Operation1
+S1 --> S2: Operation1
+S2 --> S1: Operation2
+@enduml
+
+@startuml
+class First {
+    id: int64
+    field: type
+    ..
+    fieldBelowLine: type
+}
+
+class Second {
+}
+
+class Left {
+}
+
+class Right {
+}
+
+First -left- Left
+First -right- Right
+
+First "l1" -- "l2" Second: line text >
+@enduml
+
+@startuml
+control "Controller" as C
+
+C --> Entity1: Event 1
+
+alt Scenario
+    loop LoopCondition
+    Entity1 -> Entity2: Event 2
+    end loop
+else Else Scenario
+    note over Entity2: yellow note text
+end
+@enduml
+
+
