@@ -6,18 +6,25 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
-    configs:
-      - source: elastic_config
-        target: /usr/share/elasticsearch/config/elasticsearch.yml
-#    environment:
-#      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+    volumes:
+    - ./files/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
 
-configs:
-  elastic_config:
-    file: ./files/elasticsearch.yml
-#  logstash_config:
-#    file: ./logstash/config/logstash.yml
-#  logstash_pipeline:
-#    file: ./logstash/pipeline/logstash.conf
-#  kibana_config:
-#    file: ./kibana/config/kibana.yml
+  kibana:
+    image: docker.elastic.co/kibana/kibana-oss:6.4.2
+    ports:
+    - "5601:5601"
+    volumes:
+    - ./files/kibana.yml/:/usr/share/kibana/config/kibana.yml:ro
+
+  logstash:
+      image: docker.elastic.co/logstash/logstash-oss:6.4.2
+      ports:
+      - "5000:5000"
+      - "9600:9600"
+      volumes:
+      - ./files/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./files/logstash-pipeline.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      environment:
+        LS_JAVA_OPTS: "-Xmx256m -Xms256m"
