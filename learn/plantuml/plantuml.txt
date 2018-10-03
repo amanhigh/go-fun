@@ -65,3 +65,44 @@ end
 @enduml
 
 
+@startuml
+
+interface Interface as I1
+[First Component] as C1
+
+package "Some Group" {
+  [Group Component] as G1
+}
+
+node "Other Groups" {
+  C1 - [Second Component]
+  C1 --> I1
+}
+
+cloud {
+  [Example 1] as E1
+}
+
+I1 --> G1
+
+
+database "MySql" {
+  folder "This is my folder" {
+	[Folder 3]
+  }
+
+  frame "Foo" {
+	[Frame]
+  }
+}
+
+
+E1 --> [Folder 3]
+
+note left of E1 : Web Service only
+
+note right of C1
+  A note can also
+  be on several lines
+end note
+@enduml
