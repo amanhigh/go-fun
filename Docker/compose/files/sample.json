@@ -2,12 +2,14 @@
   {
     "fruit": "Apple",
     "size": "small",
-    "color": "Red"
+    "color": "Red",
+    "defects": 2
   },
   {
     "fruit": "Papaya",
     "size": "Large",
     "color": "Yellow",
-    "test": "sweet"
+    "test": "sweet",
+    "defects": 0
   }
 ]
