@@ -50,7 +50,7 @@ function ps()
 
 function logs()
 {
-    eval "${baseCmd//action/logs}"
+    eval "${baseCmd//action/logs} ${1}"
 }
 
 function login()
@@ -105,7 +105,7 @@ ps)
     ps
     ;;
 logs)
-    logs
+    logs "$2"
     ;;
 set)
     set "$2"
