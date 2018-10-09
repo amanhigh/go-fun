@@ -26,5 +26,6 @@ services:
       volumes:
       - ./files/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
       - ./files/logstash-pipeline.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - ./files/sample.yml:/usr/share/logstash/sample.yml:ro
       environment:
         LS_JAVA_OPTS: "-Xmx256m -Xms256m"
