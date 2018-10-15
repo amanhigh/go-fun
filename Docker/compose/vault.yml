@@ -1,0 +1,20 @@
+# Check Docker Logs for Root Key & Seal Key
+# vault kv put secret/aman aman="preet"
+# vault kv get secret/aman or http://127.0.0.1:8200/ui/vault/secrets/secret/list
+
+# vault.json change for consul backend
+# "consul": {
+#      "address": "consul1:8500",
+#      "path": "/vault/"
+#    }
+#
+version: '3.0'
+services:
+  vault:
+    image: vault
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./files/vault.json:/vault/config/vault.json:rw
+    cap_add:
+      - IPC_LOCK
