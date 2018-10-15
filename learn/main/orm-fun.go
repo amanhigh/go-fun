@@ -5,7 +5,7 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/amanhigh/go-fun/learn/orm/model"
+	"github.com/amanhigh/go-fun/learn/frameworks/orm/model"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"

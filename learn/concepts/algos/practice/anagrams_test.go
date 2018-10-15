@@ -4,7 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	. "github.com/amanhigh/go-fun/learn/algos/practice"
+	. "github.com/amanhigh/go-fun/learn/concepts/algospts/algos/practice"
 )
 
 var _ = Describe("Anagrams", func() {

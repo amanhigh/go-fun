@@ -6,7 +6,7 @@ import (
 
 	"bufio"
 
-	"github.com/amanhigh/go-fun/learn/algos/hackerrank/challenge"
+	"github.com/amanhigh/go-fun/learn/concepts/algospts/algos/hackerrank/challenge"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/amanhigh/go-fun/util/helper"
 )

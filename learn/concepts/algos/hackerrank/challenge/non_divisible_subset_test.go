@@ -4,7 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	. "github.com/amanhigh/go-fun/learn/algos/hackerrank/challenge"
+	. "github.com/amanhigh/go-fun/learn/concepts/algospts/algos/hackerrank/challenge"
 	"github.com/amanhigh/go-fun/util"
 )
 
