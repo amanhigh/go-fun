@@ -16,7 +16,7 @@ func Sync(srcHost string, srcDir string, targetDir string, targetHosts []string)
 }
 
 func SudoScp(fileName, srcDirectory, dstDirectory, dstHost string) {
-	util.PrintSkyBlue(fmt.Sprintf("Moving File %v%v to %v:%v", srcDirectory, fileName, dstHost, dstDirectory))
+	util.PrintSkyBlue(fmt.Sprintf("Moving File %v from %v to %v:%v", fileName, srcDirectory, dstHost, dstDirectory))
 	RunCommandPrintError(fmt.Sprintf("scp -rC %v/%v %v:", srcDirectory, fileName, dstHost))
 	RunCommandPrintError(fmt.Sprintf("ssh %v 'sudo mv ~/%v %v'", dstHost, fileName, dstDirectory))
 }
