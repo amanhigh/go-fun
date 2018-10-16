@@ -13,5 +13,10 @@ func Sync(srcHost string, srcDir string, targetDir string, targetHosts []string)
 		RunCommandPrintError(fmt.Sprintf("ssh -A -t %v 'scp -o StrictHostKeyChecking=no -rC %v/* %v:~/sync'", srcHost, srcDir, target))
 		RunCommandPrintError(fmt.Sprintf("ssh %v 'sudo mv ~/sync/* %v;rm -rf ~/sync'", target, targetDir))
 	}
+}
 
+func SudoScp(fileName, srcDirectory, dstDirectory, dstHost string) {
+	util.PrintSkyBlue(fmt.Sprintf("Moving File %v%v to %v:%v", srcDirectory, fileName, dstHost, dstDirectory))
+	RunCommandPrintError(fmt.Sprintf("scp -rC %v/%v %v:", srcDirectory, fileName, dstHost))
+	RunCommandPrintError(fmt.Sprintf("ssh %v 'sudo mv ~/%v %v'", dstHost, fileName, dstDirectory))
 }
