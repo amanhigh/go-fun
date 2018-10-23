@@ -74,6 +74,14 @@ function build-nocache()
     docker build ./$imageName -t $imageName:latest --no-cache
 }
 
+function dexec()
+{
+    name=$1
+    num=$2
+    cmd=$3
+    docker exec compose_${name}_${num} bash -c "$cmd"
+}
+
 function set()
 {
     if [ "$#" -lt 1 ]; then
