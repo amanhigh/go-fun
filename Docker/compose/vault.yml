@@ -4,10 +4,11 @@
 
 # vault.json change for consul backend
 # "consul": {
-#      "address": "consul1:8500",
-#      "path": "/vault/"
-#    }
-#
+#   "address": "consul1:8500",
+#   "advertise_addr":"http://vault:8200",
+#   "path": "/vault/"
+# }
+
 version: '3.0'
 services:
   vault:
