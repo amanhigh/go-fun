@@ -129,7 +129,7 @@ build)
 Valid docker-manage Options:
 
 * start/restart <srvc>/stop/kill
-* reset/ps/login <srvc> <no.>
+* reset/ps/logs [-f Tail]/login <srvc> <no.>
 * build <Image Name>
 * set <file| -f ./compose/grafana.yml>"
     ;;
