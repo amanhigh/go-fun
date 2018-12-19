@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  tinyproxy:
+    image: travix/tinyproxy:latest
+    restart: always
+    ports:
+      - 8888:8888
+    volumes:
+      - ./files/tinyproxy.conf:/etc/tinyproxy.conf
