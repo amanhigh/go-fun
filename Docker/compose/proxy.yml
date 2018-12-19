@@ -8,3 +8,4 @@ services:
       - 8888:8888
     volumes:
       - ./files/tinyproxy.conf:/etc/tinyproxy.conf
+      - ./files/tiny-whitelist.conf:/etc/tiny-whitelist.conf
