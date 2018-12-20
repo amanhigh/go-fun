@@ -8,4 +8,13 @@ services:
       - 8888:8888
     volumes:
       - ./files/tinyproxy.conf:/etc/tinyproxy.conf
-      - ./files/tiny-whitelist.conf:/etc/tiny-whitelist.conf
+      - ./files/whitelist.conf:/etc/whitelist.conf
+
+  squid:
+    image: sameersbn/squid:latest
+    restart: always
+    ports:
+      - 3128:3128
+    volumes:
+      - ./files/squid-config.conf:/etc/squid/squid.conf
+      - ./files/whitelist.conf:/etc/whitelist.conf
