@@ -18,3 +18,12 @@ services:
     volumes:
       - ./files/squid-config.conf:/etc/squid/squid.conf
       - ./files/whitelist.conf:/etc/whitelist.conf
+
+  nginx:
+    image: nginx
+    restart: always
+    ports:
+      - 80:80
+    volumes:
+      - ./files/whitelist.conf:/etc/whitelist.conf
+      - ./files/nginx.conf:/etc/nginx/conf.d/default.conf
