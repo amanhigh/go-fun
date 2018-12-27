@@ -15,6 +15,8 @@ services:
     image: vault
     ports:
       - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "root-token"
     volumes:
       - ./files/vault.json:/vault/config/vault.json:rw
     cap_add:
