@@ -21,3 +21,10 @@ services:
       - ./files/vault.json:/vault/config/vault.json:rw
     cap_add:
       - IPC_LOCK
+
+#    export VAULT_ADDR=http://docker:8200
+
+#    Enable vault version 1 API's
+#    vault login root-token && vault kv get secret &&
+#    vault secrets disable secret &&
+#    vault secrets enable -version=1 -path=secret kv
