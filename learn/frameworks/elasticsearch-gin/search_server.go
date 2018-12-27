@@ -17,7 +17,7 @@ import (
 const (
 	elasticIndexName = "learn"
 	elasticTypeName  = "document"
-	endpoint         = "http://192.168.99.100:9200"
+	endpoint         = "http://docker:9200"
 )
 
 var (
@@ -26,7 +26,7 @@ var (
 
 /*
 	Add document- curl -X POST http://localhost:8080/documents -d '[{ "Title":"Aman", "Content": "Preet"}]'
-	Query Elastic Search - http://192.168.99.100:9200/learn/_search?pretty
+	Query Elastic Search - http://docker:9200/learn/_search?pretty
 	Query API - http://localhost:8080/search?query=aman&skip=1&top=2
 */
 
