@@ -49,7 +49,8 @@ func transitFun(client *api.Client) (err error) {
 
 		//Edit key
 		_, err = client.Logical().Write("/transit/keys/aman/config", map[string]interface{}{
-			"deletion_allowed": true,
+			"deletion_allowed":       true,
+			"allow_plaintext_backup": true,
 		})
 		fmt.Println(err)
 
@@ -78,6 +79,12 @@ func transitFun(client *api.Client) (err error) {
 
 		secret, err = client.Logical().Read("/transit/export/hmac-key/aman/latest")
 		fmt.Println("Export Hmac", err)
+		printSecret(secret)
+
+		//Backup Key
+		secret, err = client.Logical().Read("/transit/backup/aman")
+		fmt.Println("Backup Key", err)
+		//backupKey := secret.Data["backup"].(string)
 		printSecret(secret)
 
 		//Decode using Key
