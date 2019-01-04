@@ -1,24 +1,25 @@
 package vault
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/md5"
+	"encoding/base64"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/vault/api"
 )
 
 func VaultFun() {
-	var data = map[string]interface{}{
-		"Id":       1,
-		"Name":     "Aman",
-		"password": "Preet",
-	}
-
 	var err error
 
 	var client *api.Client
 	if client, err = api.NewClient(&api.Config{Address: "http://docker:8200"}); err == nil {
 		client.SetToken("root-token")
-		err = secretReadWrite(client, data)
+		//err = secretReadWrite(client)
+		err = transitFun(client)
 
 	}
 
@@ -28,7 +29,81 @@ func VaultFun() {
 
 }
 
-func secretReadWrite(client *api.Client, data map[string]interface{}) (err error) {
+func transitFun(client *api.Client) (err error) {
+	//	Transit
+	var secret *api.Secret
+	//Create Key
+	secret, err = client.Logical().Write("transit/keys/aman", map[string]interface{}{
+		"exportable": true,
+		//rsa-4096 - Asymmetric, aes256-gcm96 - Symmetric
+		"type": "aes256-gcm96",
+	})
+	if err == nil {
+		//List Keys
+		secret, _ = client.Logical().List("/transit/keys")
+		printSecret(secret)
+
+		//Read Key Info
+		secret, _ = client.Logical().Read("transit/keys/aman")
+		printSecret(secret)
+
+		//Edit key
+		_, err = client.Logical().Write("/transit/keys/aman/config", map[string]interface{}{
+			"deletion_allowed": true,
+		})
+		fmt.Println(err)
+
+		//Rotate Key
+		_, err := client.Logical().Write("/transit/keys/aman/rotate", nil)
+		secret, _ = client.Logical().Read("transit/keys/aman")
+		fmt.Println("Rotated", err)
+		printSecret(secret)
+		latestVersion := secret.Data["latest_version"]
+
+		//Encrypt Data
+		baseData := base64.StdEncoding.EncodeToString([]byte("aman-secret"))
+		secret, err := client.Logical().Write("/transit/encrypt/aman", map[string]interface{}{
+			"plaintext": baseData,
+		})
+		fmt.Println("Encrypt", err)
+		printSecret(secret)
+		cipher := secret.Data["ciphertext"].(string)
+
+		//Export Key
+		secret, err = client.Logical().Read("/transit/export/encryption-key/aman/latest")
+		fmt.Println("Export Encryption", err)
+		keyMap := secret.Data["keys"].(map[string]interface{})
+		encryptionKey := keyMap[fmt.Sprintf("%v", latestVersion)].(string)
+		printSecret(secret)
+
+		secret, err = client.Logical().Read("/transit/export/hmac-key/aman/latest")
+		fmt.Println("Export Hmac", err)
+		printSecret(secret)
+
+		//Decode using Key
+		fmt.Println(cipher, encryptionKey)
+		//plaintext := decrypt([]byte(cipher), encryptionKey)
+		//fmt.Println(plaintext)
+
+		//Delete Key
+		_, err = client.Logical().Delete("transit/keys/aman")
+		fmt.Println("Delete", err)
+	}
+	return err
+}
+
+func printSecret(secret *api.Secret) {
+	bytes, _ := json.MarshalIndent(secret, "", "\t")
+	fmt.Println(string(bytes))
+}
+
+func secretReadWrite(client *api.Client) (err error) {
+	var data = map[string]interface{}{
+		"Id":       1,
+		"Name":     "Aman",
+		"password": "Preet",
+	}
+
 	var secret *api.Secret
 	path := "/secret/kv/test"
 	if secret, err = client.Logical().Write(path, data); err == nil {
@@ -42,4 +117,28 @@ func secretReadWrite(client *api.Client, data map[string]interface{}) (err error
 		fmt.Println("List:", secret.Data)
 	}
 	return err
+}
+
+func decrypt(data []byte, key string) []byte {
+	block, err := aes.NewCipher([]byte(key))
+	if err != nil {
+		panic(err.Error())
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		panic(err.Error())
+	}
+	nonceSize := gcm.NonceSize()
+	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		panic(err.Error())
+	}
+	return plaintext
+}
+
+func createHash(key string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(key))
+	return hex.EncodeToString(hasher.Sum(nil))
 }
