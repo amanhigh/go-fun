@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/vault/api"
+	"github.com/hashicorp/vault/helper/dhutil"
 )
 
 func VaultFun() {
@@ -75,6 +76,7 @@ func transitFun(client *api.Client) (err error) {
 		fmt.Println("Export Encryption", err)
 		keyMap := secret.Data["keys"].(map[string]interface{})
 		encryptionKey := keyMap[fmt.Sprintf("%v", latestVersion)].(string)
+		decodedEncryptionKey, err := base64.StdEncoding.DecodeString(encryptionKey)
 		printSecret(secret)
 
 		secret, err = client.Logical().Read("/transit/export/hmac-key/aman/latest")
@@ -87,10 +89,15 @@ func transitFun(client *api.Client) (err error) {
 		//backupKey := secret.Data["backup"].(string)
 		printSecret(secret)
 
+		//Encrypt-Decrypt Using Key
+		text := "aman"
+		AAD := []byte("additional authenticated data")
+		generatedCipher, noonce, err := dhutil.EncryptAES([]byte(decodedEncryptionKey), []byte(text), AAD)
+		plaintext, err := dhutil.DecryptAES([]byte(decodedEncryptionKey), generatedCipher, noonce, AAD)
+		fmt.Println("Encrypt/Decrypt GCM:", string(generatedCipher), string(plaintext))
+
 		//Decode using Key
-		fmt.Println(cipher, encryptionKey)
-		//plaintext := decrypt([]byte(cipher), encryptionKey)
-		//fmt.Println(plaintext)
+		fmt.Println("Vault Decryption:", cipher)
 
 		//Delete Key
 		_, err = client.Logical().Delete("transit/keys/aman")
