@@ -9,6 +9,8 @@ import (
 type VaultClientInterface interface {
 	GenerateKey(name, algo string, exportable bool) (secret *api.Secret, err error)
 	GetKey(name string) (secret *api.Secret, err error)
+	ExportKey(name string) (secret *api.Secret, err error)
+	RotateKey(name string) (secret *api.Secret, err error)
 }
 
 type VaultClient struct {
@@ -45,6 +47,18 @@ func (self VaultClient) GenerateKey(name, algo string, exportable bool) (secret 
 
 func (self VaultClient) GetKey(name string) (secret *api.Secret, err error) {
 	secret, err = self.client.Logical().Read(getKeyPath(name))
+	return
+}
+
+func (self VaultClient) ExportKey(name string) (secret *api.Secret, err error) {
+	keyExportPath := fmt.Sprintf("/transit/export/encryption-key/%v/latest", name)
+	secret, err = self.client.Logical().Read(keyExportPath)
+	return
+}
+
+func (self VaultClient) RotateKey(name string) (secret *api.Secret, err error) {
+	keyRotatePath := fmt.Sprintf("/transit/keys/%v/rotate", name)
+	secret, err = self.client.Logical().Write(keyRotatePath, nil)
 	return
 }
 
