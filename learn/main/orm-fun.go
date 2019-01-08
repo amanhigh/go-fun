@@ -8,7 +8,6 @@ import (
 	"github.com/amanhigh/go-fun/learn/frameworks/orm/model"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
 type Product struct {
@@ -46,18 +45,19 @@ func (p *Product) AfterFind() (err error) {
 var jsonLogger = &log.Logger{Out: os.Stdout, Formatter: new(log.JSONFormatter), Level: log.InfoLevel}
 
 func main() {
-	db := util.NewDb("/Users/amanpreet.singh/IdeaProjects/GoArena/src/github.com/amanhigh/go-fun/learn/orm/db")
+	db := util.NewDb("/Users/amanpreet.singh/IdeaProjects/GoArena/src/github.com/amanhigh/go-fun/learn/frameworks/orm/db/")
 	defer db.Close()
 
 	prepLogger()
-	//fun.Migrate(db,&Product{}, &model.Vertical{})
+	db.AutoMigrate(&Product{}, &model.Vertical{})
 
 	playProduct(db)
 
-	//db.Create(&Product{Code: "LongCode", Price: 4})
+	db.Create(&Product{Code: "LongCode", Price: 4})
 
 	//schemaAlterPlay(db)
 }
+
 func prepLogger() {
 	// Log as JSON instead of the default ASCII formatter.
 	//log.SetFormatter(&log.JSONFormatter{})
@@ -70,6 +70,10 @@ func prepLogger() {
 
 func schemaAlterPlay(db *gorm.DB) {
 	db.Model(&Product{}).DropColumn("code")
+}
+
+func TruncateTable(db *gorm.DB, tableName string) {
+	db.Exec("truncate table " + tableName)
 }
 
 func playProduct(db *gorm.DB) {
