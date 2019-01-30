@@ -11,13 +11,19 @@ services:
       - 8080:8080
       - 50000:50000
 
+  #dpkg-deb -b <DEBIAN DIR PATH>
    build-box:
      build: ../build-box
-     restart: always
      volumes:
        - /Users/amanpreet.singh/IdeaProjects/GoArena/:/var/GoArena/
      environment:
        GOPATH: /var/GoArena
+
+   target:
+     image: debian:7
+     command: sleep 100000
+     volumes:
+       - /Users/amanpreet.singh/IdeaProjects/GoArena/:/var/GoArena/
 
 volumes:
   jenkins_home:
