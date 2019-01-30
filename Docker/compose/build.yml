@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+   jenkins:
+     image: jenkins/jenkins:lts
+     restart: always
+     volumes:
+       - jenkins_home:/var/jenkins_home
+       - /Users/amanpreet.singh/IdeaProjects/GoArena/src/github.fkinternal.com/Flipkart/:/var/projects/
+     ports:
+      - 8080:8080
+      - 50000:50000
+
+   build-box:
+     build: ../build-box
+     restart: always
+     volumes:
+       - /Users/amanpreet.singh/IdeaProjects/GoArena/:/var/GoArena/
+     environment:
+       GOPATH: /var/GoArena
+
+volumes:
+  jenkins_home:
