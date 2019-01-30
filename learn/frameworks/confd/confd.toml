@@ -1,0 +1,7 @@
+#https://github.com/kelseyhightower/confd/blob/master/docs/configuration-guide.md
+
+backend="file"
+prefix="/myapp"
+file = [
+  "myapp.yaml",
+]
