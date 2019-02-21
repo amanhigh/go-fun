@@ -19,6 +19,7 @@ services:
      environment:
        GOPATH: /var/GoArena
 
+  #dpkg -i <DEB_FILE>
    target:
      image: debian:7
      command: sleep 100000
