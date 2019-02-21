@@ -85,12 +85,18 @@ function dexec()
 function set()
 {
     if [ "$#" -lt 1 ]; then
-    	echo "Usage $0 set <Path>"
+    	echo "Usage $0 set <ymls> ($COMPOSE_PATH)"
     	return -1;
 	fi
 
-	echo -en "\033[1;34m Setting '$1' to /tmp/docker-manage-v1 \033[0m \n"
-    echo $1 > /tmp/docker-manage-v1
+	PATH="${COMPOSE_PATH:-/Users/amanpreet.singh/IdeaProjects/GoArena/src/github.com/amanhigh/go-fun/Docker/compose}"
+	for f in $1; do
+        YML_PATH="$YML_PATH -f $PATH/$f.yml"
+	done
+
+
+	echo -en "\033[1;34m Setting '$PATH: $1' to /tmp/docker-manage-v1 \033[0m \n"
+    echo $YML_PATH > /tmp/docker-manage-v1
 }
 
 case "$1" in
@@ -116,7 +122,7 @@ logs)
     logs "$2"
     ;;
 set)
-    set "$2"
+    set "${*:2}"
     ;;
 login)
     login $2 $3
@@ -131,6 +137,6 @@ Valid docker-manage Options:
 * start/restart <srvc>/stop/kill
 * reset/ps/logs [-f Tail]/login <srvc> <no.>
 * build <Image Name>
-* set <file| -f ./compose/grafana.yml>"
+* set <files| $COMPOSE_PATH>"
     ;;
 esac
