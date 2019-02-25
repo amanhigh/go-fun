@@ -19,6 +19,7 @@ func JiraFun() {
 	// Pass tp.Client() for issue creation
 	if jiraClient, err = jira.NewClient(nil, "https://issues.apache.org/jira/"); err == nil {
 		if issue, _, err = jiraClient.Issue.Get("MESOS-3325", nil); err == nil {
+			fmt.Printf("IssueId: %s\n", issue.Key)
 			fmt.Printf("%s: %+v\n", issue.Key, issue.Fields.Summary)
 			fmt.Printf("Type: %s\n", issue.Fields.Type.Name)
 			fmt.Printf("Priority: %s\n", issue.Fields.Priority.Name)
