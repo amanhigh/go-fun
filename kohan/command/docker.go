@@ -52,10 +52,52 @@ var dockerResetCmd = &cobra.Command{
 	},
 }
 
+var dockerLogsCmd = &cobra.Command{
+	Use:   "logs [t]",
+	Short: "Show Logs, use t for tailing",
+	Run: func(cmd *cobra.Command, args []string) {
+		action := "logs"
+		if len(args) > 0 {
+			action += " -f"
+		}
+		tools.LiveCommand(getDockerCmd(action))
+	},
+}
+
+var dockerBuildCmd = &cobra.Command{
+	Use:   "build [imageName]",
+	Short: "Rebuild Docker Image without Cache",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		dockerService = args[0]
+		tools.LiveCommand(fmt.Sprintf("cd %v/..;docker build ./%v -t %v:latest", composePath, args[0], args[0]))
+		tools.LiveCommand(getDockerCmd("restart"))
+	},
+}
+
+var dockerLoginCmd = &cobra.Command{
+	Use:   "login [svcName] [#Container]",
+	Short: "Login to Specified Docker Compose Container",
+	Args:  cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		tools.LiveCommand(fmt.Sprintf("docker exec -it compose_%v_%v /bin/bash", args[0], args[1]))
+	},
+}
+
+var dockerRunCmd = &cobra.Command{
+	Use:   "run [svcName] [#Container] [cmd]",
+	Short: "Run a command in Specified Docker Compose Container",
+	Args:  cobra.ExactArgs(3),
+	Run: func(cmd *cobra.Command, args []string) {
+		tools.LiveCommand(fmt.Sprintf("docker exec compose_%v_%v bash -c \"%v\"", args[0], args[1], args[2]))
+	},
+}
+
 var dockerStopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop Docker Compose",
 	Run: func(cmd *cobra.Command, args []string) {
+		tools.LiveCommand("docker build")
 		tools.LiveCommand(getDockerCmd("stop"))
 	},
 }
@@ -105,6 +147,9 @@ func init() {
 
 	dockerCmd.AddCommand(dockerSetCmd)
 	dockerCmd.AddCommand(dockerPsCmd)
+	dockerCmd.AddCommand(dockerLoginCmd)
+	dockerCmd.AddCommand(dockerRunCmd)
+	dockerCmd.AddCommand(dockerLogsCmd)
 
 	dockerCmd.AddCommand(dockerStartCmd)
 	dockerCmd.AddCommand(dockerStopCmd)
@@ -112,6 +157,7 @@ func init() {
 
 	dockerCmd.AddCommand(dockerKillCmd)
 	dockerCmd.AddCommand(dockerResetCmd)
+	dockerCmd.AddCommand(dockerBuildCmd)
 }
 
 func getDockerCmd(action string) (cmd string) {
