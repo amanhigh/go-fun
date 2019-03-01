@@ -131,7 +131,6 @@ var dockerSetCmd = &cobra.Command{
 
 		bytes, _ := yaml.Marshal(frameworks.DockerConfig{
 			Path: dockerPath,
-			Opts: composeOpt,
 		})
 		util.PrintGreen(fmt.Sprintf("Written Config: %v\n\n%v", DOCKER_CONFIG, string(bytes)))
 		err = ioutil.WriteFile(DOCKER_CONFIG, bytes, util.DEFAULT_PERM)
@@ -143,7 +142,7 @@ func init() {
 	RootCmd.AddCommand(dockerCmd)
 	dockerCmd.PersistentFlags().StringVarP(&composePath, "path", "p", "/Users/amanpreet.singh/IdeaProjects/GoArena/src/github.com/amanhigh/go-fun/Docker/compose", "Compose Path for Docker")
 	dockerCmd.PersistentFlags().StringVarP(&dockerService, "svc", "s", "", "Specify Service to Act On")
-	dockerSetCmd.Flags().StringVarP(&composeOpt, "opt", "o", "", "Compose Options like Scale")
+	dockerCmd.PersistentFlags().StringVarP(&composeOpt, "opt", "o", "", "Compose Options.Eg: --scale target=3")
 
 	dockerCmd.AddCommand(dockerSetCmd)
 	dockerCmd.AddCommand(dockerPsCmd)
@@ -164,7 +163,6 @@ func getDockerCmd(action string) (cmd string) {
 	var dockerConfig frameworks.DockerConfig
 	bytes, _ := ioutil.ReadFile(DOCKER_CONFIG)
 	_ = yaml.Unmarshal(bytes, &dockerConfig)
-	cmd = fmt.Sprintf("docker-compose %v %v %v %v", dockerConfig.Path, action, dockerService, dockerConfig.Opts)
-	fmt.Println(cmd)
+	cmd = fmt.Sprintf("docker-compose %v %v %v %v", dockerConfig.Path, action, dockerService, composeOpt)
 	return
 }
