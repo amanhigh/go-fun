@@ -6,7 +6,7 @@ services:
      restart: always
      volumes:
        - jenkins_home:/var/jenkins_home
-       - /Users/amanpreet.singh/IdeaProjects/GoArena/src/github.fkinternal.com/Flipkart/:/var/projects/
+       - $CODE_PATH:/var/projects/
      ports:
       - 8080:8080
       - 50000:50000
