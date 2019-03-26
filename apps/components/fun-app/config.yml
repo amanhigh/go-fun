@@ -1,0 +1,16 @@
+server:
+  port: 8080
+
+db:
+  auto_migrate: true
+  env: "development"
+  path: "/etc/fun-app/db/"
+
+http:
+  dial_timeout: 200ms
+  request_timeout: 2s
+  idle_connection_timeout: 30s
+
+  keep_alive: true
+  compression: false
+  idle_connections_per_host: 20

@@ -1,0 +1,9 @@
+/var/log/fun-app/* {
+        rotate 3
+        size 500M
+
+        missingok
+        notifempty
+        nomail
+        copytruncate
+}
