@@ -1,4 +1,4 @@
-package tools
+package util
 
 import (
 	"crypto/md5"
@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/amanhigh/go-fun/apps/common/tools"
 	"github.com/amanhigh/go-fun/util"
 )
 
@@ -29,7 +30,7 @@ func GetMD5Hash(text string) string {
 
 func Md5Checker(cmd string, cluster string) {
 	/* Run Command to get Ip Wise output */
-	FastPssh.Run(cmd, cluster, 200, true)
+	tools.FastPssh.Run(cmd, cluster, 200, true)
 	files := util.ReadFileMap(util.OUTPUT_PATH, true)
 
 	/* Compute Md5 and store as list with count */
@@ -69,7 +70,7 @@ func Md5Checker(cmd string, cluster string) {
 				util.PrintFile(firstFile, firstFile)
 				util.PrintFile(currentFile, currentFile)
 			}
-			fmt.Println(RunCommandIgnoreError(fmt.Sprintf("colordiff %v %v", firstFile, currentFile)))
+			fmt.Println(tools.RunCommandIgnoreError(fmt.Sprintf("colordiff %v %v", firstFile, currentFile)))
 		}
 	} else {
 		util.PrintGreen(fmt.Sprintf("Single Md5 Found, Cluster Homogenous: %v Hash:%v Count:%v", cluster, sortList[0].hash, sortList[0].count))

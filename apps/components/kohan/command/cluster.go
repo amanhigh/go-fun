@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/amanhigh/go-fun/kohan/commander/components"
-	"github.com/amanhigh/go-fun/kohan/commander/tools"
-	"github.com/amanhigh/go-fun/util"
+	"github.com/amanhigh/go-fun/apps/common/tools"
+	"github.com/amanhigh/go-fun/apps/common/util"
+	"github.com/amanhigh/go-fun/apps/components/kohan/core"
+	util2 "github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +31,7 @@ var clusterSanityCmd = &cobra.Command{
 		command = args[2]
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		components.ClusterSanity(pkgName, command, cluster)
+		core.ClusterSanity(pkgName, command, cluster)
 	},
 }
 
@@ -69,7 +70,7 @@ var clusterRemoveCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		count := tools.RemoveCluster(args[0], args[1])
-		util.PrintGreen(fmt.Sprintf("%v items removed from %v", count, args[0]))
+		util2.PrintGreen(fmt.Sprintf("%v items removed from %v", count, args[0]))
 	},
 }
 
@@ -79,14 +80,14 @@ var clusterMd5Cmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, cluster := range strings.Fields(args[1]) {
-			tools.Md5Checker(args[0], cluster)
+			util.Md5Checker(args[0], cluster)
 		}
 	},
 }
 
 func init() {
 	clusterPsshCmd.Flags().StringVarP(&tyype, "type", "t", "f", "First alphabet of fast/display/slow")
-	clusterPsshCmd.Flags().IntVarP(&parallelism, "parallel", "p", util.DEFAULT_PARALELISM, "Parallelism")
+	clusterPsshCmd.Flags().IntVarP(&parallelism, "parallel", "p", util2.DEFAULT_PARALELISM, "Parallelism")
 	clusterPsshCmd.Flags().IntVarP(&index, "start", "s", -1, "Starting Index")
 	clusterPsshCmd.Flags().IntVarP(&endIndex, "end", "e", -1, "Ending Index")
 

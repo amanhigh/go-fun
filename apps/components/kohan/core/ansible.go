@@ -1,11 +1,11 @@
-package components
+package core
 
 import (
 	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/amanhigh/go-fun/kohan/commander/tools"
+	"github.com/amanhigh/go-fun/apps/common/tools"
 	. "github.com/amanhigh/go-fun/util"
 )
 

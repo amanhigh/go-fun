@@ -1,4 +1,4 @@
-package components
+package core
 
 import (
 	"fmt"
@@ -9,7 +9,8 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	. "github.com/amanhigh/go-fun/kohan/commander/tools"
+	"github.com/amanhigh/go-fun/apps/common/tools"
+	"github.com/amanhigh/go-fun/apps/common/util"
 	. "github.com/amanhigh/go-fun/util"
 )
 
@@ -29,7 +30,7 @@ func VersionCheck(pkgNameCsv string, cluster string) {
 	packageList := strings.Split(pkgNameCsv, ",")
 
 	cmd := fmt.Sprintf("dpkg -l | grep '%v'", strings.Join(packageList, `\|`))
-	FastPssh.Run(cmd, cluster, DEFAULT_PARALELISM, true)
+	tools.FastPssh.Run(cmd, cluster, DEFAULT_PARALELISM, true)
 
 	versionCountMap := computeVersionCountMap()
 	for pkgVersion, count := range versionCountMap {
@@ -43,15 +44,15 @@ func VersionCheck(pkgNameCsv string, cluster string) {
 func VerifyStatus(cmd string, cluster string) {
 	PrintBlue("Running Sanity on Cluster: " + cluster)
 
-	NORMAL_PSSH.Run(cmd, cluster, 200, true)
+	tools.NORMAL_PSSH.Run(cmd, cluster, 200, true)
 	os.Chdir(OUTPUT_PATH)
 
-	PrintCommand("cat * | awk '{print $1,$2,$3}' | sort | uniq -c | sort -r")
+	tools.PrintCommand("cat * | awk '{print $1,$2,$3}' | sort | uniq -c | sort -r")
 
-	RunIf("find  . -type f -empty | cut -c3-", func(output string) {
+	tools.RunIf("find  . -type f -empty | cut -c3-", func(output string) {
 		if len(output) > 0 {
 			PrintRed(fmt.Sprintf("Empty Files Found:\n%v", output))
-			WriteClusterFile("empty", output)
+			tools.WriteClusterFile("empty", output)
 		}
 	})
 
@@ -73,7 +74,7 @@ func VerifyStatus(cmd string, cluster string) {
 
 func VerifyNetworkParameters(cluster string) {
 	PrintYellow("\nVerifying Network Parameters. Cluster: " + cluster)
-	Md5Checker("sudo sysctl -a | grep net | grep -v rss_key | grep -v nf_log", cluster)
+	util.Md5Checker("sudo sysctl -a | grep net | grep -v rss_key | grep -v nf_log", cluster)
 }
 
 /* Helpers */
@@ -82,7 +83,7 @@ func performBadStateChecks(contentMap map[string][]string) {
 		if keyWordLines, keyWordIps := extractKeywordLines(contentMap, check); len(keyWordLines) > 0 {
 			PrintBlue("Check Failed: " + check)
 			PrintRed(strings.Join(keyWordLines, "\n"))
-			WriteClusterFile(check, strings.Join(keyWordIps, "\n"))
+			tools.WriteClusterFile(check, strings.Join(keyWordIps, "\n"))
 		}
 	}
 }

@@ -3,8 +3,8 @@ package command
 import (
 	"strings"
 
-	"github.com/amanhigh/go-fun/kohan/commander/components"
-	"github.com/amanhigh/go-fun/kohan/commander/tools"
+	"github.com/amanhigh/go-fun/apps/common/tools"
+	"github.com/amanhigh/go-fun/apps/components/kohan/core"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
 )
@@ -24,7 +24,7 @@ var getVersionCmd = &cobra.Command{
 		return
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		components.GetVersion(args[0], args[2], args[1], args[3])
+		core.GetVersion(args[0], args[2], args[1], args[3])
 	},
 }
 
@@ -33,7 +33,7 @@ var printfCmd = &cobra.Command{
 	Short: "Substitution Helper",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		components.Printf(args[0], args[1], marker)
+		core.Printf(args[0], args[1], marker)
 	},
 }
 

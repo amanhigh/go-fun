@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/amanhigh/go-fun/kohan/commander/tools"
+	"github.com/amanhigh/go-fun/apps/common/tools"
+
 	"github.com/amanhigh/go-fun/models/learn/frameworks"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 var (

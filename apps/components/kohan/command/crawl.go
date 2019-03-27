@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/amanhigh/go-fun/kohan/commander/components/crawler"
+	"github.com/amanhigh/go-fun/apps/components/kohan/core/crawler"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
 )
