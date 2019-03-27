@@ -6,7 +6,7 @@ services:
      restart: always
      volumes:
        - jenkins_home:/var/jenkins_home
-       - $CODE_PATH:/var/projects/
+       - /Users/amanpreet.singh/IdeaProjects/GoArena/:/var/projects/
      ports:
       - 8080:8080
       - 50000:50000
