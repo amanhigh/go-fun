@@ -1,6 +1,6 @@
 Package: fun-app
-Version: 1.__VERSION__
-Section: aman_high/fun
+Version: 1.1553675016
+Section: amanhigh/fun
 Priority: standard
 Architecture: all
 Depends: logrotate
