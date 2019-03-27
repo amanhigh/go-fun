@@ -2,7 +2,7 @@ package crawler
 
 import (
 	"github.com/PuerkitoBio/goquery"
-	"github.com/amanhigh/go-fun/models/crawler"
+	"github.com/amanhigh/go-fun/apps/models/crawler"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/amanhigh/go-fun/util/helper"
 )

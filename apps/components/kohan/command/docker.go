@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 
 	"github.com/amanhigh/go-fun/apps/common/tools"
+	"github.com/amanhigh/go-fun/apps/models/learn/frameworks"
 
-	"github.com/amanhigh/go-fun/models/learn/frameworks"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"

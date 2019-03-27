@@ -9,7 +9,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	. "github.com/amanhigh/go-fun/models/crawler"
+	. "github.com/amanhigh/go-fun/apps/models/crawler"
 	"github.com/amanhigh/go-fun/util"
 )
 

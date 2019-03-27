@@ -17,8 +17,6 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/amanhigh/go-fun/models"
-	"golang.org/x/oauth2/clientcredentials"
 )
 
 const (
@@ -98,24 +96,6 @@ func NewHttpClientWithCookies(cookieUrl string, cookies []*http.Cookie, keepAliv
 		log.WithFields(log.Fields{"Error": err}).Error("")
 	}
 	return client
-}
-
-func NewAuthNClient(config models.AuthNConfig, targetClientId string) HttpClientInterface {
-	conf := &clientcredentials.Config{
-		ClientID:     config.ClientId,
-		ClientSecret: config.Secret,
-		TokenURL:     config.TokenUrl,
-		EndpointParams: url.Values{
-			"client_id":        []string{config.ClientId},
-			"client_secret":    []string{config.Secret},
-			"target_client_id": []string{targetClientId},
-		},
-	}
-	ctx, _ := context.WithTimeout(context.Background(), config.RequestTimeout)
-	return &HttpClient{
-		Client:  conf.Client(ctx),
-		Timeout: config.RequestTimeout, //Request Timeout
-	}
 }
 
 /*
