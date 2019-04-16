@@ -71,7 +71,7 @@ var dockerBuildCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		dockerService = args[0]
-		tools.LiveCommand(fmt.Sprintf("cd %v/..;docker build ./%v -t %v:latest", composePath, args[0], args[0]))
+		tools.LiveCommand(fmt.Sprintf("cd %v/..;docker build ./%v --no-cache -t %v:latest", composePath, args[0], args[0]))
 		tools.LiveCommand(getDockerCmd("restart"))
 	},
 }
