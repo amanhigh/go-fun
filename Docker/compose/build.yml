@@ -21,7 +21,7 @@ services:
 
   #dpkg -i <DEB_FILE>
    target:
-     image: debian:7
+     image: debian:9
      command: sleep 100000
      volumes:
        - /Users/amanpreet.singh/IdeaProjects/GoArena/:/var/GoArena/

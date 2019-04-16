@@ -1,5 +1,5 @@
 #This is a sample Image
-FROM debian:7
+FROM debian:9
 MAINTAINER coool.aman@gmail.com
 
 #Install Basics
