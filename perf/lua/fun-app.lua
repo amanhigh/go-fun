@@ -9,6 +9,7 @@ require "lua.lib.library"
 
 local header = { ["Content-Type"] = "application/json" }
 local personCount = 1000
+local api = "/person"
 
 init = function()
     payload = file_get_contents("./request/person.json")
@@ -16,13 +17,11 @@ init = function()
 end
 
 request = function()
-    local api = "/person"
-
     --local age = math.random(1,personCount)
     --req.name="Aman-" .. age
     --req.age=age
     --payload=JSON:encode(req)
 
-    print(api .. payload)
+    --print(api .. payload)
     return wrk.format("POST", api, header, payload)
 end
