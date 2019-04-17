@@ -5,6 +5,8 @@
 -- Time: 5:17 PM
 -- To change this template use File | Settings | File Templates.
 --
+JSON = (loadfile "./lua/lib/JSON.lua")()
+
 function shuffle(array)
     local n = #array
     for i = 1, n do
@@ -67,6 +69,25 @@ function mysplit(inputstr, sep)
         i = i + 1
     end
     return t
+end
+
+position = 0
+
+function batch(array, size)
+    if position > #array then
+        position = 1
+        print("Rolling Over Batch Set")
+    end
+    --print('Array Length: ' .. #array .. ' Range: ' .. position .. ' to ' .. position+size)
+
+    local result = {}
+    for i = position, position + size do
+        result[#result + 1] = array[i]
+    end
+    position = position + size
+
+    --print(JSON:encode(result))
+    return result
 end
 
 function batchString(array, position, size)
