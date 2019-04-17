@@ -66,6 +66,18 @@ function mysplit(inputstr, sep)
         return t
 end
 
+function batchString(array,position,size)
+    --    print('Array Length =' .. #array .. ' Range: ' .. position .. ' to ' .. position+size .. ' Values: ' ..array[position] .. '-' .. array[position+size])
+    local result="#"
+    for i = position, position + size do
+        local p=array[i]
+        --    	print('Index: '.. i .. ' Result: ' ..result .. ' Next Val: ' .. p)
+        result=result .. ",\"" .. p .. "\"";
+        --        print("Concat Result: " .. result)
+    end
+    return string.gsub(result,"#,","")
+end
+
 function filterByPattern(tbl,pattern)
      local newtbl= {}
      j=0
