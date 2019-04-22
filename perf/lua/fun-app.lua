@@ -29,6 +29,8 @@ end
 
 response = function(status, headers, body)
     --print(status)
-    resp = JSON:decode(body)
-    logfile:write(status .. " " .. resp.Name .. "\n")
+    --if status ~= 200 then
+        resp = JSON:decode(body)
+        logfile:write(status .. " " .. resp.Name .. "\n")
+    --end
 end
