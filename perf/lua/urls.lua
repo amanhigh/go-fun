@@ -23,6 +23,9 @@ request = function()
     if counter >= #urls then
         counter = 1
         print("Url Set Completed Rolling Over")
+    --else
+    --    print("Data Finished")
+    --    wrk.thread:stop()
     end
 
     --    print(urls[counter])
