@@ -7,7 +7,7 @@
 --
 JSON = (loadfile "./lua/lib/JSON.lua")()
 std_header = { ["Content-Type"] = "application/json" }
-
+wrkLog = io.open("wrk.log", "w");
 
 function shuffle(array)
     local n = #array

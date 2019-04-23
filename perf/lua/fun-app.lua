@@ -9,7 +9,6 @@ require "lua.lib.library"
 
 local personCount = 1000
 local api = "/person"
-local logfile = io.open("wrk.log", "w");
 
 init = function()
     payload = file_get_contents("./request/person.json")
@@ -30,6 +29,6 @@ response = function(status, headers, body)
     --print(status)
     --if status ~= 200 then
         resp = JSON:decode(body)
-        logfile:write(status .. " " .. resp.Name .. "\n")
+        wrkLog:write(status .. " " .. resp.Name .. "\n")
     --end
 end
