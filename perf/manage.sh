@@ -42,17 +42,30 @@ function upload() {
     ssh $ip "~/perf/manage.sh install"
 }
 
+function sync() {
+    scp -rC ./lua/ ./data/ $user@$ip:~/perf
+}
+
 case $1 in
     build) build ;;
     install) install ;;
     upload)
-        if [ "$#" -lt 2 ]; then
-            echo "Usage upload <ip> <optional user>"
-        fi
+    if [ "$#" -lt 2 ]; then
+        echo "Usage upload <ip> <optional user>"
+    fi
 
     ip=${2:-10.34.238.175}
     user=${3:-amanpreet.singh}
     upload $ip $user
+    ;;
+    sync)
+    if [ "$#" -lt 2 ]; then
+        echo "Usage sync <ip> <optional user>"
+    fi
+
+    ip=${2:-10.34.238.175}
+    user=${3:-amanpreet.singh}
+    sync $ip $user
     ;;
     *) echo "Usage: build/run/install"; ;;
 esac
