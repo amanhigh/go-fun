@@ -7,7 +7,6 @@
 --
 require "lua.lib.library"
 
-local header = { ["Content-Type"] = "application/json" }
 local personCount = 1000
 local api = "/person"
 local logfile = io.open("wrk.log", "w");
@@ -24,7 +23,7 @@ request = function()
     --payload=JSON:encode(req)
 
     --print(api .. payload)
-    return wrk.format("POST", api, header, payload)
+    return wrk.format("POST", api, std_header, payload)
 end
 
 response = function(status, headers, body)

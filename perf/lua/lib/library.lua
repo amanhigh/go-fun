@@ -6,6 +6,8 @@
 -- To change this template use File | Settings | File Templates.
 --
 JSON = (loadfile "./lua/lib/JSON.lua")()
+std_header = { ["Content-Type"] = "application/json" }
+
 
 function shuffle(array)
     local n = #array
