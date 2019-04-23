@@ -1,14 +1,5 @@
 #!/usr/bin/env bash
 
-function build() {
-    # Compress Using Tar
-    echo -en "\033[1;34m Tarring New One \033[0m \n"
-    pushd ..
-    tar -jcf ~/Downloads/perf.tar.bz2 "perf"
-    popd
-    echo -en "\033[1;32m Build Complete \033[0m \n"
-}
-
 function install() {
     echo -en '\033[1;34m **Installing Dependencies ** \033[0m \n'
     sudo apt-get install -y --force-yes build-essential libssl-dev;
@@ -27,12 +18,11 @@ function install() {
 }
 
 function upload() {
-    build
     echo -en "\033[1;34m Cleaning Perf \033[0m \n"
     ssh $ip "rm -rf ~/perf"
 
     echo -en "\033[1;34m Uploading Setup as $user to $ip \033[0m \n"
-    scp -rC ~/Downloads/perf.tar.bz2 $user@$ip:
+    rsync -avzh . $user@$ip:~/perf
     echo -en "\033[1;32m Upload Complete \033[0m \n"
 
     echo -en "\033[1;34m Unpacking \033[0m \n"
@@ -43,11 +33,10 @@ function upload() {
 }
 
 function sync() {
-    scp -rC ./lua/ ./data/ $user@$ip:~/perf
+    watch -n1 "rsync -avzh . $user@$ip:~/perf"
 }
 
 case $1 in
-    build) build ;;
     install) install ;;
     upload)
     if [ "$#" -lt 2 ]; then
@@ -65,7 +54,7 @@ case $1 in
 
     ip=${2:-10.34.238.175}
     user=${3:-amanpreet.singh}
-    sync $ip $user
+    sync
     ;;
     *) echo "Usage: build/run/install"; ;;
 esac
