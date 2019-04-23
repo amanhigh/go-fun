@@ -31,7 +31,3 @@ request = function()
     --    print(urls[counter])
     return wrk.format("GET", urls[counter], headers)
 end
-
-response = function(status, headers, body)
-    --     print(status)
-end

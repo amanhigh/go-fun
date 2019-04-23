@@ -9,6 +9,15 @@ JSON = (loadfile "./lua/lib/JSON.lua")()
 std_header = { ["Content-Type"] = "application/json" }
 wrkLog = io.open("wrk.log", "w");
 
+-- Default Response Handler to print & log error
+response = function(status, headers, body)
+    if status ~= 200 then
+        local msg = status .. " " .. body
+        print(msg)
+        wrkLog:write(msg.."\n")
+    end
+end
+
 function shuffle(array)
     local n = #array
     for i = 1, n do
