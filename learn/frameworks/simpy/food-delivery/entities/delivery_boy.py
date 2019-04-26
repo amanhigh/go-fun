@@ -23,9 +23,9 @@ class DeliveryBoy:
         logging.info("%s: Picked Food Order: %d at %d" % (self.name, order.id, self.env.now))
 
     def drive_to_customer(self, order):
-        yield self.env.timeout(2)
+        yield self.env.timeout(order.customer_drive_time())
         logging.info("%s: Reached Customer Order: %d at %d" % (self.name, order.id, self.env.now))
 
     def handover_food(self, order):
-        yield self.env.timeout(2)
-        logging.info("%s: Handedover Food Order: %d at %d" % (self.name, order.id, self.env.now))
+        yield self.env.timeout(order.customer_handover_time())
+        logging.info("%s: Handed over Food Order: %d at %d" % (self.name, order.id, self.env.now))

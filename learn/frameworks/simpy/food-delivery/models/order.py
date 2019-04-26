@@ -13,3 +13,9 @@ class Order:
         self.id = id
         self.restaurant = restaurant
         self.dish = dish
+
+    def customer_drive_time(self):
+        return 2
+
+    def customer_handover_time(self):
+        return 2
