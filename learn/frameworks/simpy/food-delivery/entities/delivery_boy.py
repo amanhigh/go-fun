@@ -19,7 +19,7 @@ class DeliveryBoy:
         logging.info("%s: Reached Restaurant Order: %d at %d" % (self.name, order.id, self.env.now))
 
     def pickup_food(self, order):
-        yield self.env.timeout(2)
+        yield self.env.process(order.restaurant.handover_food(order))
         logging.info("%s: Picked Food Order: %d at %d" % (self.name, order.id, self.env.now))
 
     def drive_to_customer(self, order):
