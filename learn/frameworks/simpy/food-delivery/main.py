@@ -18,12 +18,13 @@ def coordinate_generator(grid):
 
 def setup(env, config):
     xy_generator = coordinate_generator(config['sim']['grid'])
-    dbManager = DeliveryBoyManager(env, config['delivery'],xy_generator)
+    dbManager = DeliveryBoyManager(env, config['delivery'], xy_generator)
     restaurantManager = RestaurantManager(env, config['restaurant'], xy_generator)
     orderManager = OrderManager(env, dbManager, restaurantManager, xy_generator)
 
     # Start Order Generator
-    env.process(orderManager.order_generator(interval=config['sim']['order']['generateInterval'],id=0))
+    env.process(orderManager.order_generator(interval=config['sim']['order']['generateInterval'], id=0))
+    logging.info("-------- Starting Order Generation ----------")
 
     return dbManager
 
@@ -40,4 +41,5 @@ dbManager = setup(env, config)
 until = config['sim']['until']
 logging.info("Running Simulation for %d Time" % until)
 env.run(until=until)
-dbManager.printOrdersServed()
+
+dbManager.printSummary()

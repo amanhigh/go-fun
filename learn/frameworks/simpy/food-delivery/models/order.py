@@ -21,11 +21,12 @@ class Customer:
 
 
 class Order:
-    def __init__(self, id, restaurant, dish, customer):
+    def __init__(self, id, restaurant, dish, customer, orderTime):
         self.id = id
         self.restaurant = restaurant
         self.dish = dish
         self.customer = customer
+        self.orderTime = orderTime
 
     def distance_to_restaurant(self, x, y):
         return math.hypot(x - self.restaurant.x, y - self.restaurant.y)

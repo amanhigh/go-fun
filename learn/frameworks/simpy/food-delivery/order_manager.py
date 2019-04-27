@@ -29,4 +29,4 @@ class OrderManager:
 
             logging.info("NEW_ORDER (O%d): Dish %d Restaurant %d Customer (%d,%d) at %d" % (
                 id, dish.id, restaurant.id, x, y, self.env.now))
-            self.place_order(Order(id, restaurant, dish, customer))
+            self.place_order(Order(id, restaurant, dish, customer, self.env.now))

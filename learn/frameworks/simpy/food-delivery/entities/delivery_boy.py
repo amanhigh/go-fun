@@ -2,14 +2,14 @@ import logging
 
 
 class DeliveryBoy:
-    def __init__(self, env, id, pool, x, y, speed):
+    def __init__(self, env, id, dbManager, x, y, speed):
         self.id = id
         self.speed = speed
         self.name = "DB-%d" % id
         self.x = x
         self.y = y
         self.env = env
-        self.pool = pool
+        self.dbManager = dbManager
         logging.debug("%s: Setup at X:%d,Y:%d" % (self.name, x, y))
 
     def deliver(self, order):
@@ -37,9 +37,9 @@ class DeliveryBoy:
         time_required = self.time_required(distance_to_customer)
         yield self.env.timeout(time_required)
         logging.info(
-            "%s (O%d): REACHED_CUSTOMER Distance: %d TimeTaken: %d at %d" % (
+            "%s (O%d): #REACHED_CUSTOMER# Distance: %d TimeTaken: %d at %d" % (
                 self.name, order.id, distance_to_customer, time_required, self.env.now))
-        yield self.pool.put(self)
+        self.dbManager.reportOrderServed(self, self.env.now - order.orderTime)
 
     def time_required(self, distance):
         # distance = speed x time
