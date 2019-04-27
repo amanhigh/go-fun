@@ -3,33 +3,33 @@ import random
 
 import simpy
 
-from core.order_manager import OrderManager
-from entities.delivery_boy import DeliveryBoy
+from db_manager import DeliveryBoyManager
+from order_manager import OrderManager
 from entities.restaurant import Restaurant
-from models.order import *
+from models.order import Order, Dish
 
 
-def order_generator(interval):
-    i = 1
+def order_generator(interval, id):
     while True:
         yield env.timeout(random.randint(interval - 2, interval + 2))
-        i += 1
-        orderManager.place_order(Order(i, restaurant, Dish(i)))
+        id += 1
+        orderManager.place_order(Order(id, restaurant, Dish(id)))
 
 
 logging.basicConfig(level=logging.DEBUG)
 
 env = simpy.Environment()
-boy = DeliveryBoy(env, 1)
 restaurant = Restaurant(env, 1)
-orderManager = OrderManager(env, boy)
+dbManager = DeliveryBoyManager(env, 1)
+orderManager = OrderManager(env, dbManager)
 
 # Single Order
-order = Order(1, restaurant, Dish(1))
+id = 1
+order = Order(id, restaurant, Dish(id))
 orderManager.place_order(order)
 
 # Order Generator
-env.process(order_generator(4))
+env.process(order_generator(interval=4, id=id + 1))
 
 # Simulate
 env.run(until=20)
