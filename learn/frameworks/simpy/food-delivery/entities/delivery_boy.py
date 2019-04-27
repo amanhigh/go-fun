@@ -8,7 +8,7 @@ class DeliveryBoy:
         self.env = env
 
     def deliver(self, order):
-        logging.info("%s: New Delivery Order: %d at %d" % (self.name, order.id, self.env.now))
+        logging.info("%s: Order: %d delivery received at %d" % (self.name, order.id, self.env.now))
         yield self.env.process(self.drive_to_restaurant(order))
         yield self.env.process(self.pickup_food(order))
         yield self.env.process(self.drive_to_customer(order))

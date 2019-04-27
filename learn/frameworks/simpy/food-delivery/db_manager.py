@@ -1,14 +1,16 @@
-import simpy
-
-import entities.delivery_boy as db
+from entities.delivery_boy import DeliveryBoy
 
 
 class DeliveryBoyManager:
     def __init__(self, env, count):
-        self.registry = simpy.Store(env, count)
-        self.boy = db.DeliveryBoy(env, 1)
-        # for i in range(count):
-        #     put = self.registry.put(db.DeliveryBoy(env, i))
+        # self.registry = simpy.Store(env, count)
+        self.env = env
+        self.dbGenerator = self.delivery_boy_generator(0)
 
     def getdeliveryboy(self):
-        return self.boy
+        return self.dbGenerator.next()
+
+    def delivery_boy_generator(self, i):
+        while True:
+            i += 1
+            yield DeliveryBoy(self.env, i)

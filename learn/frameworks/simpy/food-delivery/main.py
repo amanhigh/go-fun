@@ -29,7 +29,7 @@ order = Order(id, restaurant, Dish(id))
 orderManager.place_order(order)
 
 # Order Generator
-env.process(order_generator(interval=4, id=id + 1))
+env.process(order_generator(interval=4, id=id))
 
 # Simulate
 env.run(until=20)

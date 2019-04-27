@@ -7,7 +7,7 @@ class Restaurant:
     def __init__(self, env, id,kitchencount):
         self.id = id
         self.env = env
-        self.name = "Food Point %d" % id
+        self.name = "RE-%d" % id
         self.orderStore = simpy.FilterStore(env)
         self.kitchen = simpy.Resource(env, kitchencount)
 
