@@ -5,7 +5,7 @@ class Dish:
     # Assumption Prep time for dish
     # is same across all restaurants.
     def prep_time(self):
-        return 5
+        return 10
 
 
 class Order:
