@@ -16,11 +16,11 @@ def order_generator(interval, id):
         orderManager.place_order(Order(id, restaurant, Dish(id)))
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 env = simpy.Environment()
-restaurant = Restaurant(env, id=1, kitchencount=2)
-dbManager = DeliveryBoyManager(env, count=2)
+restaurant = Restaurant(env, id=1, kitchencount=1)
+dbManager = DeliveryBoyManager(env, count=1)
 orderManager = OrderManager(env, dbManager)
 
 # Single Order
@@ -32,4 +32,5 @@ orderManager.place_order(order)
 env.process(order_generator(interval=4, id=id))
 
 # Simulate
-env.run(until=20)
+env.run(until=40)
+dbManager.printOrdersServed()
