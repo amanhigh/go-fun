@@ -19,7 +19,7 @@ class RestaurantManager:
         maxCookTime = dishConfig['cook']['maxTime']
         dishMap = {}
         for i in range(dishCount):
-            dishMap[i] = Dish(i, random.randint(minCookTime, maxCookTime))
+            dishMap[i+1] = Dish(i + 1, random.randint(minCookTime, maxCookTime))
         logging.info("Deciding %d dishes to be cooked between %d - %d" % (dishCount, minCookTime, maxCookTime))
         return dishMap
 
@@ -30,5 +30,13 @@ class RestaurantManager:
         restaurantMap = {}
         logging.info("Built %d Restaurants with %d Kitchens" % (count, kitchenCount))
         for i in range(count):
-            restaurantMap[i] = Restaurant(env, i, kitchenCount)
+            restaurantMap[i+1] = Restaurant(env, i + 1, kitchenCount)
         return restaurantMap
+
+    def get_random_restaurant(self):
+        randint = random.randint(1, self.restaurantCount)
+        return self.restaurantMap[randint]
+
+    def get_random_dish(self):
+        randint = random.randint(1, self.dishCount)
+        return self.dishMap[randint]

@@ -13,7 +13,7 @@ class DeliveryBoyManager:
         self.orderServed = 0
         logging.info("Hired %d Delivery boys" % count)
         for i in range(count):
-            self.freePool.put(DeliveryBoy(self.env, i, self.freePool))
+            self.freePool.put(DeliveryBoy(self.env, i+1, self.freePool))
 
     def deliverOrder(self, order):
         boy = yield self.freePool.get()

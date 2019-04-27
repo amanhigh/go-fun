@@ -1,10 +1,11 @@
+import logging
 import random
 
 from models.order import Order
 
 
 class OrderManager:
-    def __init__(self, env, dbManager,resManager):
+    def __init__(self, env, dbManager, resManager):
         self.env = env
         self.dbManager = dbManager
         self.resManager = resManager
@@ -20,4 +21,7 @@ class OrderManager:
         while True:
             yield self.env.timeout(random.randint(interval - 2, interval + 2))
             id += 1
-            self.place_order(Order(id, restaurant, Dish(id)))
+            restaurant = self.resManager.get_random_restaurant()
+            dish = self.resManager.get_random_dish()
+            logging.info("New Order %d: Dish %d Restaurant %d at %d" % (id, dish.id, restaurant.id,self.env.now))
+            self.place_order(Order(id, restaurant, dish))

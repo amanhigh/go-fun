@@ -10,13 +10,14 @@ class Restaurant:
         self.name = "RE-%d" % id
         self.orderStore = simpy.FilterStore(env)
         self.kitchen = simpy.Resource(env, kitchencount)
+        logging.debug("Restaurant %d: Setup" % id)
 
     def prepare_food(self, order):
-        logging.info("%s (O%d): received at %s" % (self.name, order.id, self.env.now))
+        logging.debug("%s (O%d): received at %s" % (self.name, order.id, self.env.now))
         with self.kitchen.request() as req:
             yield req
 
-            logging.debug("%s (O%d): prep-started at %s" % (self.name, order.id, self.env.now))
+            logging.info("%s (O%d): prep-started at %s" % (self.name, order.id, self.env.now))
             yield self.env.timeout(order.dish.prep_time())
             yield self.orderStore.put(order)
 

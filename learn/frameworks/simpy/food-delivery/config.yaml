@@ -12,4 +12,6 @@ delivery:
   hires: 2 #No. of delivery boys available
 
 sim:
+  order:
+    generateInterval: 4 #Generate new order about (randomized) every x time
   until: 40 #Time till which simulation should be run
