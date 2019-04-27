@@ -1,7 +1,7 @@
 import logging
 import random
 
-from models.order import Order
+from models.order import Order, Customer
 
 
 class OrderManager:
@@ -24,5 +24,9 @@ class OrderManager:
             id += 1
             restaurant = self.resManager.get_random_restaurant()
             dish = self.resManager.get_random_dish()
-            logging.info("NEW_ORDER (O%d): Dish %d Restaurant %d at %d" % (id, dish.id, restaurant.id,self.env.now))
-            self.place_order(Order(id, restaurant, dish))
+            x, y = self.xy_generator.next()
+            customer = Customer(x, y)
+
+            logging.info("NEW_ORDER (O%d): Dish %d Restaurant %d Customer (%d,%d) at %d" % (
+                id, dish.id, restaurant.id, x, y, self.env.now))
+            self.place_order(Order(id, restaurant, dish, customer))

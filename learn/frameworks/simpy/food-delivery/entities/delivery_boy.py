@@ -17,14 +17,14 @@ class DeliveryBoy:
         yield self.env.process(self.drive_to_restaurant(order))
         yield self.env.process(self.pickup_food(order))
         yield self.env.process(self.drive_to_customer(order))
-        yield self.env.process(self.handover_food(order))
 
     def drive_to_restaurant(self, order):
         distance_to_restaurant = order.distance_to_restaurant(self.x, self.y)
+        time_required = self.time_required(distance_to_restaurant)
         logging.info(
             "%s (O%d):STARTING_PICKUP Distance: %d TimeRequired: %d at %d" % (
-                self.name, order.id, distance_to_restaurant, self.time_required(distance_to_restaurant), self.env.now))
-        yield self.env.timeout(2)
+                self.name, order.id, distance_to_restaurant, time_required, self.env.now))
+        yield self.env.timeout(time_required)
         logging.debug("%s (O%d): Reached Restaurant at %d" % (self.name, order.id, self.env.now))
         self.x, self.y = order.restaurant.x, order.restaurant.y
 
@@ -33,12 +33,12 @@ class DeliveryBoy:
         logging.debug("%s (O%d): PICKED_FOOD at %d" % (self.name, order.id, self.env.now))
 
     def drive_to_customer(self, order):
-        yield self.env.timeout(order.customer_drive_time())
-        logging.debug("%s (O%d): REACHED_CUSTOMER at %d" % (self.name, order.id, self.env.now))
-
-    def handover_food(self, order):
-        yield self.env.timeout(order.customer_handover_time())
-        logging.info("%s (O%d): #CUSTOMER_HANDOVER_DONE#  at %d" % (self.name, order.id, self.env.now))
+        distance_to_customer = order.distance_to_customer(self.x, self.y)
+        time_required = self.time_required(distance_to_customer)
+        yield self.env.timeout(time_required)
+        logging.info(
+            "%s (O%d): REACHED_CUSTOMER Distance: %d TimeTaken: %d at %d" % (
+                self.name, order.id, distance_to_customer, time_required, self.env.now))
         yield self.pool.put(self)
 
     def time_required(self, distance):

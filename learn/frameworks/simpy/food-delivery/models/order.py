@@ -14,18 +14,21 @@ class Dish:
         return self.time
 
 
+class Customer:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+
 class Order:
-    def __init__(self, id, restaurant, dish):
+    def __init__(self, id, restaurant, dish, customer):
         self.id = id
         self.restaurant = restaurant
         self.dish = dish
+        self.customer = customer
 
     def distance_to_restaurant(self, x, y):
-        hypot = math.hypot(x - self.restaurant.x, y - self.restaurant.y)
-        return hypot
+        return math.hypot(x - self.restaurant.x, y - self.restaurant.y)
 
-    def customer_drive_time(self):
-        return 2
-
-    def customer_handover_time(self):
-        return 2
+    def distance_to_customer(self, x, y):
+        return math.hypot(x - self.customer.x, y - self.customer.y)
