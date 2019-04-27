@@ -1,36 +1,38 @@
 import logging
-import random
 
 import simpy
+import yaml
 
 from db_manager import DeliveryBoyManager
-from entities.restaurant import Restaurant
-from models.order import Order, Dish
-from order_manager import OrderManager
+from restaurant_manager import RestaurantManager
 
 
-def order_generator(interval, id):
-    while True:
-        yield env.timeout(random.randint(interval - 2, interval + 2))
-        id += 1
-        orderManager.place_order(Order(id, restaurant, Dish(id)))
+def setup(env, config):
+    dbManager = DeliveryBoyManager(env, config['delivery'])
+    restaurantManager = RestaurantManager(env, config['restaurant'])
+    # orderManager = OrderManager(env, dbManager)
+
+    # Single Order
+    # id = 1
+    # order = Order(id, restaurant, Dish(id))
+    # orderManager.place_order(order)
+
+    # Order Generator
+    # env.process(orderManager.order_generator(interval=4, id=id))
+
+    return dbManager
 
 
 logging.basicConfig(level=logging.INFO)
 
+with open("config.yaml", 'r') as stream:
+    config = yaml.load(stream)
+
 env = simpy.Environment()
-restaurant = Restaurant(env, id=1, kitchencount=1)
-dbManager = DeliveryBoyManager(env, count=1)
-orderManager = OrderManager(env, dbManager)
-
-# Single Order
-id = 1
-order = Order(id, restaurant, Dish(id))
-orderManager.place_order(order)
-
-# Order Generator
-env.process(order_generator(interval=4, id=id))
+dbManager = setup(env, config)
 
 # Simulate
-env.run(until=40)
-dbManager.printOrdersServed()
+until = config['sim']['until']
+logging.info("Running Simulation for %d Time" % until)
+env.run(until=until)
+# dbManager.printOrdersServed()

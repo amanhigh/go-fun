@@ -1,3 +1,8 @@
+import random
+
+from models.order import Order
+
+
 class OrderManager:
     def __init__(self, env, dbManager):
         self.env = env
@@ -9,3 +14,9 @@ class OrderManager:
 
         # Tell Delivery Boy to Deliver Food
         self.env.process(self.dbManager.deliverOrder(order))
+
+    def order_generator(self, interval, id):
+        while True:
+            yield self.env.timeout(random.randint(interval - 2, interval + 2))
+            id += 1
+            self.place_order(Order(id, restaurant, Dish(id)))
