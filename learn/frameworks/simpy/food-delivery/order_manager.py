@@ -8,4 +8,4 @@ class OrderManager:
         self.env.process(order.restaurant.prepare_food(order))
 
         # Tell Delivery Boy to Deliver Food
-        self.env.process(self.dbManager.getdeliveryboy().deliver(order))
+        self.env.process(self.dbManager.deliverOrder(order))
