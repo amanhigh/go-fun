@@ -10,6 +10,7 @@ restaurant:
 
 delivery:
   hires: 2 #No. of delivery boys available
+  speed: 15 #Average Speed of Delivery Boy. Grid Squares Per Simulation Time Unit
 
 sim:
   order:

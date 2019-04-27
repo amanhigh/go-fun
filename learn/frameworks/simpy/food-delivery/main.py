@@ -21,19 +21,17 @@ def setup(env, config):
     dbManager = DeliveryBoyManager(env, config['delivery'],xy_generator)
     restaurantManager = RestaurantManager(env, config['restaurant'], xy_generator)
     orderManager = OrderManager(env, dbManager, restaurantManager, xy_generator)
-    print xy_generator.next()
-    print xy_generator.next()
 
     # Start Order Generator
-    # env.process(orderManager.order_generator(interval=config['sim']['order']['generateInterval'],id=0))
+    env.process(orderManager.order_generator(interval=config['sim']['order']['generateInterval'],id=0))
 
     return dbManager
 
 
-logging.basicConfig(level=logging.DEBUG)
-
+# Load Config and Setup
 with open("config.yaml", 'r') as stream:
     config = yaml.load(stream)
+logging.basicConfig(level=logging.INFO)
 
 env = simpy.Environment()
 dbManager = setup(env, config)
@@ -42,4 +40,4 @@ dbManager = setup(env, config)
 until = config['sim']['until']
 logging.info("Running Simulation for %d Time" % until)
 env.run(until=until)
-# dbManager.printOrdersServed()
+dbManager.printOrdersServed()

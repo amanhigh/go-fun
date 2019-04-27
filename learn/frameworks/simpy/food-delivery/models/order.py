@@ -1,4 +1,5 @@
 import logging
+import math
 
 
 class Dish:
@@ -18,6 +19,10 @@ class Order:
         self.id = id
         self.restaurant = restaurant
         self.dish = dish
+
+    def distance_to_restaurant(self, x, y):
+        hypot = math.hypot(x - self.restaurant.x, y - self.restaurant.y)
+        return hypot
 
     def customer_drive_time(self):
         return 2

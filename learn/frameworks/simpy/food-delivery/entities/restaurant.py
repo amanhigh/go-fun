@@ -15,16 +15,16 @@ class Restaurant:
         logging.debug("%s: Setup at X:%d,Y:%d" % (self.name, x, y))
 
     def prepare_food(self, order):
-        logging.debug("%s (O%d): received at %s" % (self.name, order.id, self.env.now))
+        logging.debug("%s (O%d): RECEIVED at %s" % (self.name, order.id, self.env.now))
         with self.kitchen.request() as req:
             yield req
 
-            logging.info("%s (O%d): prep-started at %s" % (self.name, order.id, self.env.now))
+            logging.info("%s (O%d): PREP_STARTED at %s" % (self.name, order.id, self.env.now))
             yield self.env.timeout(order.dish.prep_time())
             yield self.orderStore.put(order)
 
-            logging.info("%s (O%d): #cooked# at %s" % (self.name, order.id, self.env.now))
+            logging.info("%s (O%d): #COOKED# at %s" % (self.name, order.id, self.env.now))
 
     def handover_food(self, order):
         yield self.orderStore.get(lambda o: o.id == order.id)
-        logging.debug("%s (O%d): handed over at %s" % (self.name, order.id, self.env.now))
+        logging.debug("%s (O%d): HANDED_OVER at %s" % (self.name, order.id, self.env.now))
