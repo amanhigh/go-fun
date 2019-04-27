@@ -4,9 +4,9 @@ import random
 import simpy
 
 from db_manager import DeliveryBoyManager
-from order_manager import OrderManager
 from entities.restaurant import Restaurant
 from models.order import Order, Dish
+from order_manager import OrderManager
 
 
 def order_generator(interval, id):
@@ -19,8 +19,8 @@ def order_generator(interval, id):
 logging.basicConfig(level=logging.DEBUG)
 
 env = simpy.Environment()
-restaurant = Restaurant(env, 1)
-dbManager = DeliveryBoyManager(env, 1)
+restaurant = Restaurant(env, id=1, kitchencount=2)
+dbManager = DeliveryBoyManager(env, count=2)
 orderManager = OrderManager(env, dbManager)
 
 # Single Order
