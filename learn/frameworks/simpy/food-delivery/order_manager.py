@@ -4,9 +4,10 @@ from models.order import Order
 
 
 class OrderManager:
-    def __init__(self, env, dbManager):
+    def __init__(self, env, dbManager,resManager):
         self.env = env
         self.dbManager = dbManager
+        self.resManager = resManager
 
     def place_order(self, order):
         # Tell Restaurant to Prepare Food

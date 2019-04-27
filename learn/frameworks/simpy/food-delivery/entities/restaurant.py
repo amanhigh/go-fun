@@ -4,7 +4,7 @@ import simpy
 
 
 class Restaurant:
-    def __init__(self, env, id,kitchencount):
+    def __init__(self, env, id, kitchencount):
         self.id = id
         self.env = env
         self.name = "RE-%d" % id

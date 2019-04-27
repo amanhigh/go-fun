@@ -6,7 +6,7 @@ restaurant:
     count: 10 #No. of Dishes offered by each restaurant
     cook: #All dishes will randomly fall between two times
       minTime: 4 #Cook time for fastest dish
-      maxTime: 10 #Cook time for Slowest Dish
+      maxTime: 20 #Cook time for Slowest Dish
 
 delivery:
   hires: 2 #No. of delivery boys available

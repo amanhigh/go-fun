@@ -1,11 +1,16 @@
+import logging
+
+
 class Dish:
-    def __init__(self, id):
+    def __init__(self, id, time):
         self.id = id
+        self.time = time
+        logging.debug("Dish %d: Cooktime-%d" % (id, time))
 
     # Assumption Prep time for dish
     # is same across all restaurants.
     def prep_time(self):
-        return 10
+        return self.time
 
 
 class Order:

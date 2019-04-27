@@ -5,12 +5,13 @@ import yaml
 
 from db_manager import DeliveryBoyManager
 from restaurant_manager import RestaurantManager
+from order_manager import OrderManager
 
 
 def setup(env, config):
     dbManager = DeliveryBoyManager(env, config['delivery'])
     restaurantManager = RestaurantManager(env, config['restaurant'])
-    # orderManager = OrderManager(env, dbManager)
+    orderManager = OrderManager(env, dbManager,restaurantManager)
 
     # Single Order
     # id = 1
