@@ -15,3 +15,6 @@ sim:
   order:
     generateInterval: 4 #Generate new order about (randomized) every x time
   until: 40 #Time till which simulation should be run
+  grid: #Simulation Grid Size all restaurants,delivery boys,customers will lie on this plane
+    x: 1000
+    y: 1000

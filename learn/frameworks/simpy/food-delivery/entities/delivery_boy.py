@@ -2,11 +2,14 @@ import logging
 
 
 class DeliveryBoy:
-    def __init__(self, env, id, pool):
+    def __init__(self, env, id, pool, x, y):
         self.id = id
         self.name = "DB-%d" % id
+        self.x = x
+        self.y = y
         self.env = env
         self.pool = pool
+        logging.debug("%s: Setup at X:%d,Y:%d" % (self.name, x, y))
 
     def deliver(self, order):
         logging.debug("%s (O%d): received at %d" % (self.name, order.id, self.env.now))

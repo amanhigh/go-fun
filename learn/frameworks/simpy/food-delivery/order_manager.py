@@ -5,10 +5,11 @@ from models.order import Order
 
 
 class OrderManager:
-    def __init__(self, env, dbManager, resManager):
+    def __init__(self, env, dbManager, resManager, xy_generator):
         self.env = env
         self.dbManager = dbManager
         self.resManager = resManager
+        self.xy_generator = xy_generator
 
     def place_order(self, order):
         # Tell Restaurant to Prepare Food

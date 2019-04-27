@@ -4,13 +4,15 @@ import simpy
 
 
 class Restaurant:
-    def __init__(self, env, id, kitchencount):
+    def __init__(self, env, id, kitchencount, x, y):
         self.id = id
         self.env = env
         self.name = "RE-%d" % id
+        self.x = x
+        self.y = y
         self.orderStore = simpy.FilterStore(env)
         self.kitchen = simpy.Resource(env, kitchencount)
-        logging.debug("Restaurant %d: Setup" % id)
+        logging.debug("%s: Setup at X:%d,Y:%d" % (self.name, x, y))
 
     def prepare_food(self, order):
         logging.debug("%s (O%d): received at %s" % (self.name, order.id, self.env.now))
