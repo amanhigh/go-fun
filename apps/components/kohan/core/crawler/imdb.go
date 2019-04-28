@@ -8,6 +8,7 @@ import (
 	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	. "github.com/amanhigh/go-fun/apps/models/crawler"
 	"github.com/amanhigh/go-fun/util"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
 )
@@ -23,11 +24,19 @@ func NewImdbCrawler(year int, language string, cutoff int, keyFile string) Crawl
 	util.PrintYellow(fmt.Sprintf("ImdbCrawler: Year:%v Lang:%v Cutoff: %v", year, language, cutoff))
 
 	if key, _ := ioutil.ReadFile(keyFile); len(key) > 0 {
-		cookie := http.Cookie{Name: "id", Value: string(key)}
+		cookies := []*http.Cookie{}
+		keys := map[string]string{}
+		_ = yaml.Unmarshal(key, keys)
+		for k, v := range keys {
+			cookies = append(cookies, &http.Cookie{Name: k, Value: v})
+		}
+		if util.IsDebugMode() {
+			util.PrintWhite("Using Keys (id,sid):\n " + string(key))
+		}
 		//Clone Config and enable Compression
 		imdbHttpConfig := clients.DefaultHttpClientConfig
 		imdbHttpConfig.Compression = true
-		client := clients.NewHttpClientWithCookies("https://www.imdb.com", []*http.Cookie{&cookie}, imdbHttpConfig)
+		client := clients.NewHttpClientWithCookies("https://www.imdb.com", cookies, imdbHttpConfig)
 		return &ImdbCrawler{
 			cutoff:   cutoff,
 			language: language,

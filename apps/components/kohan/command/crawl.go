@@ -50,7 +50,7 @@ func init() {
 	crawlCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable Verbose Mode")
 
 	imdbCmd.Flags().IntVarP(&cutOff, "cutoff", "o", 5, "Cut Off For Movie")
-	imdbCmd.Flags().StringVarP(&keyFilePath, "path", "p", "/tmp/imdb.key", "IMDB Key File")
+	imdbCmd.Flags().StringVarP(&keyFilePath, "path", "p", "/tmp/imdb.yml", "IMDB Yaml Cookie File (id,sid)")
 
 	RootCmd.AddCommand(crawlCmd)
 	crawlCmd.AddCommand(imdbCmd, gameCmd, hubCmd)
