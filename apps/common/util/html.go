@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"github.com/amanhigh/go-fun/apps/common/clients"
 	"net/url"
 	"strings"
 
@@ -16,7 +17,7 @@ type Page struct {
 	Document *goquery.Document
 }
 
-func NewPageUsingClient(rawUrl string, client HttpClientInterface) (page *Page) {
+func NewPageUsingClient(rawUrl string, client clients.HttpClientInterface) (page *Page) {
 	response := ""
 	if _, err := client.DoGet(rawUrl, &response); err == nil {
 		if root, err := html.Parse(strings.NewReader(response)); err == nil {
@@ -46,7 +47,7 @@ func (self *Page) ParseAnchor(anchor *goquery.Selection) (text string, link stri
 	var ok bool
 	text = anchor.Text()
 	if link, ok = anchor.Attr(HREF); ok {
-		link = fmt.Sprintf("http://%v%v", self.Document.Url.Host, link)
+		link = fmt.Sprintf("https://%v%v", self.Document.Url.Host, link)
 	}
 	return
 }

@@ -3,6 +3,7 @@ package crawler
 import (
 	"context"
 	"fmt"
+	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	"io/ioutil"
 	"runtime"
 	"strings"
@@ -20,10 +21,10 @@ const (
 )
 
 type Crawler interface {
-	GatherLinks(page *util.Page, ch chan CrawlInfo)
-	NextPageLink(page *util.Page) (string, bool)
+	GatherLinks(page *util2.Page, ch chan CrawlInfo)
+	NextPageLink(page *util2.Page) (string, bool)
 	PrintSet(good []CrawlInfo, bad []CrawlInfo) bool
-	GetTopPage() *util.Page
+	GetTopPage() *util2.Page
 }
 
 type CrawlerManager struct {
@@ -117,7 +118,7 @@ func (self *CrawlerManager) printWriteCrawledInfo(infos []CrawlInfo, filePath st
 Recursively Crawl Given Page moving to next if next link is available.
 Write all Movies of current page onto channel
 */
-func (self *CrawlerManager) crawlRecursive(page *util.Page, waitGroup *sync.WaitGroup) {
+func (self *CrawlerManager) crawlRecursive(page *util2.Page, waitGroup *sync.WaitGroup) {
 	/* Aquire Grant */
 	self.semaphoreChannel <- 1
 	collected := atomic.LoadInt32(&self.collected)
@@ -127,7 +128,7 @@ func (self *CrawlerManager) crawlRecursive(page *util.Page, waitGroup *sync.Wait
 		/* If Next Link is Present Crawl It */
 		if link, ok := self.Crawler.NextPageLink(page); ok {
 			waitGroup.Add(1)
-			go self.crawlRecursive(util.NewPage(link), waitGroup)
+			go self.crawlRecursive(util2.NewPage(link), waitGroup)
 		}
 		/* Find Links for this Page */
 		self.Crawler.GatherLinks(page, self.infoChannel)
