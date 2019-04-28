@@ -10,7 +10,7 @@ class DeliveryBoyManager:
         count = config['hires']
         speed = config['speed']
         self.env = env
-        self.freePool = simpy.Store(env, count)
+        self.freePool = simpy.FilterStore(env, count)
         self.orderServed = 0
         self.deliveryTimeTotal = 0
         self.xy_generator = xy_generator
