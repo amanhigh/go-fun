@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"time"
 
@@ -64,8 +65,10 @@ func NewHttpClient(httpClientConfig config.HttpClientConfig) HttpClientInterface
 	defaultHeader := map[string]string{
 		"Content-Type": "application/json",
 	}
+	jar, _ := cookiejar.New(nil)
 	return &HttpClient{
 		Client: &http.Client{
+			Jar: jar,
 			Transport: &http.Transport{
 				DisableCompression: !httpClientConfig.Compression,
 				DisableKeepAlives:  !httpClientConfig.KeepAlive,
