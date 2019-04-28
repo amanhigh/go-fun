@@ -62,4 +62,4 @@ class DeliveryBoyManager:
 
     def getCost(self, order, boy):
         weight = self.algoConfig["weight"]
-        return order.getCost(boy.x, boy.y, weight["restaurant"], weight["customer"])
+        return boy.getCost(order, weight["restaurant"], weight["idle"])

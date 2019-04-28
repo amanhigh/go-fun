@@ -46,3 +46,12 @@ class DeliveryBoy:
     def time_required(self, distance):
         # distance = speed x time
         return distance / self.speed
+
+    def getCost(self, order, RESTAURANT_WEIGHT, IDLE_WEIGHT):
+        time_to_restaurant = self.time_required(order.distance_to_restaurant(self.x, self.y))
+        idleTime = self.env.now - self.lastDeliveryTime
+
+        # Weighted Average Cost based on time req to reach restaurant and idle time
+        cost = ((time_to_restaurant * RESTAURANT_WEIGHT) + (idleTime * IDLE_WEIGHT)) / (
+                RESTAURANT_WEIGHT + IDLE_WEIGHT)
+        return cost
