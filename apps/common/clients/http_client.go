@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -81,6 +82,16 @@ func NewHttpClient(httpClientConfig config.HttpClientConfig) HttpClientInterface
 		Timeout:   httpClientConfig.RequestTimeout, //Request Timeout
 		HeaderMap: defaultHeader,
 	}
+}
+
+func NewHttpClientWithCookies(cookieUrl string, cookies []*http.Cookie, config config.HttpClientConfig) HttpClientInterface {
+	client := NewHttpClient(config).(*HttpClient)
+	if u, err := url.Parse(cookieUrl); err == nil {
+		client.Client.Jar.SetCookies(u, cookies)
+	} else {
+		log.WithFields(log.Fields{"Error": err}).Error("")
+	}
+	return client
 }
 
 /*
@@ -193,6 +204,8 @@ func (self *HttpClient) fireRequest(method string, url string, body interface{},
 	/* Return If its string else marshal Body */
 	if val, ok := body.(string); ok {
 		requestBody = []byte(val)
+	} else if body == nil {
+		requestBody = nil
 	} else {
 		requestBody, err = json.Marshal(body)
 	}
