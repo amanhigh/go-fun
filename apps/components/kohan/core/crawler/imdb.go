@@ -50,7 +50,7 @@ func (self *ImdbCrawler) GatherLinks(page *util2.Page, ch chan CrawlInfo) {
 	page.Document.Find(".lister-col-wrapper").Each(func(i int, lineItem *goquery.Selection) {
 		/* Read Rating & Link from List Page */
 		ratingFloat := getRating(lineItem)
-		name, link := page.ParseAnchor(lineItem.Find("a"))
+		name, link := page.ParseAnchor(lineItem.Find(".lister-item-header a"))
 
 		/* Go Crawl Movie Page for My Rating & Other Details */
 		if moviePage := util2.NewPageUsingClient(link, self.client); moviePage != nil {
