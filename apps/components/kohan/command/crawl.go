@@ -46,7 +46,7 @@ var hubCmd = &cobra.Command{
 }
 
 func init() {
-	crawlCmd.PersistentFlags().IntVarP(&count, "count", "c", 200, "Count of entries to be crawled")
+	crawlCmd.PersistentFlags().IntVarP(&count, "count", "c", 100, "Count of entries to be crawled")
 	crawlCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable Verbose Mode")
 
 	imdbCmd.Flags().IntVarP(&cutOff, "cutoff", "o", 5, "Cut Off For Movie")
