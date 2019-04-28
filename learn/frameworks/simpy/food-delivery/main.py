@@ -24,7 +24,7 @@ def setup(env, config):
 
     # Start Order Generator
     env.process(orderManager.order_generator(interval=config['sim']['order']['generateInterval'], id=0))
-    logging.info("-------- Starting Order Generation ----------")
+    logging.critical("-------- Starting Order Generation ----------")
 
     return dbManager
 
@@ -32,14 +32,14 @@ def setup(env, config):
 # Load Config and Setup
 with open("config.yaml", 'r') as stream:
     config = yaml.load(stream)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.CRITICAL)
 
 env = simpy.Environment()
 dbManager = setup(env, config)
 
 # Simulate
 until = config['sim']['until']
-logging.info("Running Simulation for %d Time" % until)
+logging.critical("Running Simulation for %d Time" % until)
 env.run(until=until)
 
 dbManager.printSummary()

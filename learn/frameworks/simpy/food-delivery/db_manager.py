@@ -14,7 +14,7 @@ class DeliveryBoyManager:
         self.orderServed = 0
         self.deliveryTimeTotal = 0
         self.xy_generator = xy_generator
-        logging.info("Hired %d Delivery boys with Speed %d" % (count, speed))
+        logging.critical("Hired %d Delivery boys with Speed %d" % (count, speed))
         for i in range(count):
             x, y = self.xy_generator.next()
             self.freePool.put(DeliveryBoy(self.env, i + 1, self, x, y, speed))
@@ -29,6 +29,6 @@ class DeliveryBoyManager:
         self.freePool.put(boy)
 
     def printSummary(self):
-        logging.info("-------- Simulation Summary ------------")
-        logging.info("Orders Served: %d" % self.orderServed)
-        logging.info("Average Delivery Time: %f" % (self.deliveryTimeTotal / self.orderServed))
+        logging.critical("-------- Simulation Summary ------------")
+        logging.critical("Orders Served: %d" % self.orderServed)
+        logging.critical("Average Delivery Time: %f" % (self.deliveryTimeTotal / self.orderServed))
