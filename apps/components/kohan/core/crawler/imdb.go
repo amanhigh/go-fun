@@ -2,16 +2,15 @@ package crawler
 
 import (
 	"fmt"
-	"github.com/amanhigh/go-fun/apps/common/clients"
-	util2 "github.com/amanhigh/go-fun/apps/common/util"
-	"github.com/amanhigh/go-fun/util"
-	"io/ioutil"
-	"net/http"
-	"strings"
-
 	"github.com/PuerkitoBio/goquery"
 	log "github.com/Sirupsen/logrus"
+	"github.com/amanhigh/go-fun/apps/common/clients"
+	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	. "github.com/amanhigh/go-fun/apps/models/crawler"
+	"github.com/amanhigh/go-fun/util"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"net/http"
 )
 
 type ImdbCrawler struct {
@@ -25,11 +24,19 @@ func NewImdbCrawler(year int, language string, cutoff int, keyFile string) Crawl
 	util.PrintYellow(fmt.Sprintf("ImdbCrawler: Year:%v Lang:%v Cutoff: %v", year, language, cutoff))
 
 	if key, _ := ioutil.ReadFile(keyFile); len(key) > 0 {
-		cookie := http.Cookie{Name: "id", Value: string(key)}
+		cookies := []*http.Cookie{}
+		keys := map[string]string{}
+		_ = yaml.Unmarshal(key, keys)
+		for k, v := range keys {
+			cookies = append(cookies, &http.Cookie{Name: k, Value: v})
+		}
+		if util.IsDebugMode() {
+			util.PrintWhite("Using Keys (id,sid):\n " + string(key))
+		}
 		//Clone Config and enable Compression
 		imdbHttpConfig := clients.DefaultHttpClientConfig
 		imdbHttpConfig.Compression = true
-		client := clients.NewHttpClientWithCookies("https://www.imdb.com", []*http.Cookie{&cookie}, imdbHttpConfig)
+		client := clients.NewHttpClientWithCookies("https://www.imdb.com", cookies, imdbHttpConfig)
 		return &ImdbCrawler{
 			cutoff:   cutoff,
 			language: language,
@@ -50,14 +57,14 @@ func (self *ImdbCrawler) GatherLinks(page *util2.Page, ch chan CrawlInfo) {
 	page.Document.Find(".lister-col-wrapper").Each(func(i int, lineItem *goquery.Selection) {
 		/* Read Rating & Link from List Page */
 		ratingFloat := getRating(lineItem)
-		name, link := page.ParseAnchor(lineItem.Find("a"))
+		name, link := page.ParseAnchor(lineItem.Find(".lister-item-header a"))
 
 		/* Go Crawl Movie Page for My Rating & Other Details */
 		if moviePage := util2.NewPageUsingClient(link, self.client); moviePage != nil {
 			myRating := util.ParseFloat(moviePage.Document.Find(".star-rating-value").Text())
 
 			ch <- &ImdbInfo{
-				Name: strings.TrimSuffix(name, "12345678910X"),
+				Name: name,
 				Link: link, Rating: ratingFloat,
 				Language: self.language,
 				MyRating: myRating,
@@ -71,7 +78,7 @@ func (self *ImdbCrawler) NextPageLink(page *util2.Page) (url string, ok bool) {
 	var params string
 	nextPageElement := page.Document.Find(".next-page")
 	if params, ok = nextPageElement.Attr(util2.HREF); ok {
-		url = self.getImdbUrl(page, params)
+		url = fmt.Sprintf("https://%v%v", page.Document.Url.Host, params)
 	}
 	return
 }
