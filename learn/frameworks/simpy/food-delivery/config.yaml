@@ -19,3 +19,4 @@ sim:
   grid: #Simulation Grid Size all restaurants,delivery boys,customers will lie on this plane
     x: 1000
     y: 1000
+  logLevel: CRITICAL #CRITICAL - Order Summary, INFO - Start/End each Order, DEBUG - Each Step in Order

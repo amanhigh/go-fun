@@ -32,7 +32,7 @@ def setup(env, config):
 # Load Config and Setup
 with open("config.yaml", 'r') as stream:
     config = yaml.load(stream)
-logging.basicConfig(level=logging.CRITICAL)
+logging.basicConfig(level=config['sim']['logLevel'])
 
 env = simpy.Environment()
 dbManager = setup(env, config)
