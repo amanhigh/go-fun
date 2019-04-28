@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"github.com/PuerkitoBio/goquery"
+	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	"github.com/amanhigh/go-fun/apps/models/crawler"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/amanhigh/go-fun/util/helper"
@@ -16,18 +17,18 @@ func NewHubCrawler(topLink string) Crawler {
 	return &HubCrawler{topUrl: topLink}
 }
 
-func (self *HubCrawler) GatherLinks(page *util.Page, ch chan crawler.CrawlInfo) {
+func (self *HubCrawler) GatherLinks(page *util2.Page, ch chan crawler.CrawlInfo) {
 	hubs := page.Document.Find(".js-pop a")
 	hubs.Each(func(i int, selection *goquery.Selection) {
-		if href, ok := selection.Attr(util.HREF); ok {
+		if href, ok := selection.Attr(util2.HREF); ok {
 			ch <- &crawler.LinkInfo{helper.GetAbsoluteLink(page, href)}
 		}
 	})
 }
 
-func (self *HubCrawler) NextPageLink(page *util.Page) (url string, ok bool) {
+func (self *HubCrawler) NextPageLink(page *util2.Page) (url string, ok bool) {
 	nextPage := page.Document.Find(".page_next > a:nth-child(1)")
-	if url, ok = nextPage.Attr(util.HREF); ok {
+	if url, ok = nextPage.Attr(util2.HREF); ok {
 		url = helper.GetAbsoluteLink(page, url)
 	}
 	return
@@ -37,6 +38,6 @@ func (self *HubCrawler) PrintSet(good []crawler.CrawlInfo, bad []crawler.CrawlIn
 	return true
 }
 
-func (self *HubCrawler) GetTopPage() *util.Page {
-	return util.NewPage(self.topUrl)
+func (self *HubCrawler) GetTopPage() *util2.Page {
+	return util2.NewPage(self.topUrl)
 }

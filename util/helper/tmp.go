@@ -2,6 +2,7 @@ package helper
 
 import (
 	"fmt"
+	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	"io/ioutil"
 
 	"github.com/amanhigh/go-fun/apps/common/tools"
@@ -25,6 +26,6 @@ func PrintTempCurlCommand(cmd string) {
 func getCmd(cmd string) string {
 	return fmt.Sprintf("cat %v | %v", TEMP_CURL_FILE, cmd)
 }
-func GetAbsoluteLink(page *util.Page, uri string) string {
+func GetAbsoluteLink(page *util2.Page, uri string) string {
 	return fmt.Sprintf("https://%v%v", page.Document.Url.Host, uri)
 }
