@@ -78,7 +78,7 @@ func (self *ImdbCrawler) NextPageLink(page *util2.Page) (url string, ok bool) {
 	var params string
 	nextPageElement := page.Document.Find(".next-page")
 	if params, ok = nextPageElement.Attr(util2.HREF); ok {
-		url = self.getImdbUrl(page, params)
+		url = fmt.Sprintf("https://%v%v", page.Document.Url.Host, params)
 	}
 	return
 }
