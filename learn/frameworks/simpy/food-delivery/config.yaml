@@ -19,9 +19,14 @@ delivery:
     # LEAST_COST - Find Guy with Least Cost from free pool and assign (No Order Batching).
     type: LEAST_COST
 
+order:
+  generateInterval: 7 #Generate new order about (randomized) every x time
+  burst:
+    percent: 10 #Percentage of times generate a burst for same restaurant
+    min: 4 #Min/Max number of orders for same restaurant in Burst
+    max: 10
+
 sim:
-  order:
-    generateInterval: 4 #Generate new order about (randomized) every x time
   until: 200 #Time till which simulation should be run
   grid: #Simulation Grid Size all restaurants,delivery boys,customers will lie on this plane
     x: 1000

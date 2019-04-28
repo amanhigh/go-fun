@@ -20,11 +20,10 @@ def setup(env, config):
     xy_generator = coordinate_generator(config['sim']['grid'])
     dbManager = DeliveryBoyManager(env, config['delivery'], xy_generator)
     restaurantManager = RestaurantManager(env, config['restaurant'], xy_generator)
-    orderManager = OrderManager(env, dbManager, restaurantManager, xy_generator)
+    orderManager = OrderManager(env, dbManager, restaurantManager, xy_generator, config['order'])
 
     # Start Order Generator
-    env.process(orderManager.order_generator(interval=config['sim']['order']['generateInterval'], id=0))
-    logging.critical("-------- Starting Order Generation ----------")
+    env.process(orderManager.order_generator())
 
     return dbManager
 
