@@ -10,6 +10,7 @@ class DeliveryBoy:
         self.y = y
         self.env = env
         self.dbManager = dbManager
+        self.lastDeliveryTime = 0
         logging.debug("%s: Setup at X:%d,Y:%d" % (self.name, x, y))
 
     def deliver(self, order):
@@ -39,6 +40,7 @@ class DeliveryBoy:
         logging.info(
             "%s (O%d): #REACHED_CUSTOMER# Distance: %d TimeTaken: %d at %d" % (
                 self.name, order.id, distance_to_customer, time_required, self.env.now))
+        self.lastDeliveryTime = self.env.now
         self.dbManager.reportOrderServed(self, self.env.now - order.orderTime)
 
     def time_required(self, distance):

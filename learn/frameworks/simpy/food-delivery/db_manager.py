@@ -8,17 +8,18 @@ from entities.delivery_boy import DeliveryBoy
 
 class DeliveryBoyManager:
     def __init__(self, env, config, xy_generator):
-        count = config['hires']
         speed = config['speed']
+        self.hireCount = config['hires']
         self.algoConfig = config['algo']
         self.env = env
-        self.freePool = simpy.FilterStore(env, count)
+        self.freePool = simpy.FilterStore(env, self.hireCount)
         self.orderServed = 0
         self.deliveryTimeTotal = 0
+        self.idleTimeTotal = 0
         self.xy_generator = xy_generator
         logging.critical(
-            "Delivery Manager: Hired %d boys with Speed %d, Algo: %s" % (count, speed, self.algoConfig["type"]))
-        for i in range(count):
+            "Delivery Manager: Hired %d boys with Speed %d, Algo: %s" % (self.hireCount, speed, self.algoConfig["type"]))
+        for i in range(self.hireCount):
             x, y = self.xy_generator.next()
             self.freePool.put(DeliveryBoy(self.env, i + 1, self, x, y, speed))
 
@@ -30,7 +31,8 @@ class DeliveryBoyManager:
         else:
             boy = yield self.freePool.get(lambda boy: boy.id == boyId)
 
-        # Find Delivery Boy In Radius
+        # Note down idle time and assign Order
+        self.idleTimeTotal += (self.env.now - boy.lastDeliveryTime)
         self.env.process(boy.deliver(order))
 
     def reportOrderServed(self, boy, deliveryTime):
@@ -42,6 +44,7 @@ class DeliveryBoyManager:
         logging.critical("-------- Simulation Summary ------------")
         logging.critical("Orders Served: %d" % self.orderServed)
         logging.critical("Average Delivery Time: %f" % (self.deliveryTimeTotal / self.orderServed))
+        logging.critical("Average Idle Time: %f" % (self.idleTimeTotal / self.hireCount))
 
     def getDeliveryBoyId(self, order):
 
