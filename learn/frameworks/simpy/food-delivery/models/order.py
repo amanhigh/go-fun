@@ -33,3 +33,11 @@ class Order:
 
     def distance_to_customer(self, x, y):
         return math.hypot(x - self.customer.x, y - self.customer.y)
+
+    def getCost(self, x, y, RESTAURANT_WEIGHT, CUSTOMER_WEIGHT):
+        distance_to_restaurant = self.distance_to_restaurant(x, y)
+        distance_to_customer = self.distance_to_customer(x, y)
+        # Weighted Average Cost based on distance to restaurant and customer
+        cost = ((distance_to_restaurant * RESTAURANT_WEIGHT) + (distance_to_customer * CUSTOMER_WEIGHT)) / (
+                RESTAURANT_WEIGHT + CUSTOMER_WEIGHT)
+        return cost

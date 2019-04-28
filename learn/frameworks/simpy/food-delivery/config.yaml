@@ -11,6 +11,13 @@ restaurant:
 delivery:
   hires: 2 #No. of delivery boys available
   speed: 15 #Average Speed of Delivery Boy. Grid Squares Per Simulation Time Unit
+  algo:
+    weight: #Weights for computing distance cost from delivery boy to customer & restaurant
+      restaurant: 0.5
+      customer: 0.5
+    # FIFO - Take first available guy in the queue irrespective of cost deliver order and return to free pool.
+    # LEAST_COST - Find Guy with Least Cost from free pool and assign (No Order Batching).
+    type: LEAST_COST
 
 sim:
   order:

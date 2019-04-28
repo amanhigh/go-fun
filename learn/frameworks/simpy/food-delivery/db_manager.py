@@ -1,4 +1,5 @@
 import logging
+import sys
 
 import simpy
 
@@ -9,18 +10,27 @@ class DeliveryBoyManager:
     def __init__(self, env, config, xy_generator):
         count = config['hires']
         speed = config['speed']
+        self.algoConfig = config['algo']
         self.env = env
         self.freePool = simpy.FilterStore(env, count)
         self.orderServed = 0
         self.deliveryTimeTotal = 0
         self.xy_generator = xy_generator
-        logging.critical("Hired %d Delivery boys with Speed %d" % (count, speed))
+        logging.critical(
+            "Delivery Manager: Hired %d boys with Speed %d, Algo: %s" % (count, speed, self.algoConfig["type"]))
         for i in range(count):
             x, y = self.xy_generator.next()
             self.freePool.put(DeliveryBoy(self.env, i + 1, self, x, y, speed))
 
     def deliverOrder(self, order):
-        boy = yield self.freePool.get()
+        # Get DB Id to be assigned or assign First Free
+        boyId = self.getDeliveryBoyId(order)
+        if boyId is None:
+            boy = yield self.freePool.get()
+        else:
+            boy = yield self.freePool.get(lambda boy: boy.id == boyId)
+
+        # Find Delivery Boy In Radius
         self.env.process(boy.deliver(order))
 
     def reportOrderServed(self, boy, deliveryTime):
@@ -32,3 +42,21 @@ class DeliveryBoyManager:
         logging.critical("-------- Simulation Summary ------------")
         logging.critical("Orders Served: %d" % self.orderServed)
         logging.critical("Average Delivery Time: %f" % (self.deliveryTimeTotal / self.orderServed))
+
+    def getDeliveryBoyId(self, order):
+
+        if self.algoConfig["type"] == "LEAST_COST":
+            # Find DB with least cost free pool and return
+            minCost, minId = sys.maxint, None
+            for boy in self.freePool.items:
+                cost = self.getCost(order, boy)
+                if cost < minCost:
+                    minCost = cost
+                    minId = boy.id
+            return minId
+        else:
+            return None
+
+    def getCost(self, order, boy):
+        weight = self.algoConfig["weight"]
+        return order.getCost(boy.x, boy.y, weight["restaurant"], weight["customer"])
