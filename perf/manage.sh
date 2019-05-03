@@ -40,21 +40,20 @@ case $1 in
     install) install ;;
     upload)
     if [ "$#" -lt 2 ]; then
-        echo "Usage upload <ip> <optional user>"
+        echo "Usage upload <ip> <user>"
     fi
-
-    ip=${2:-10.34.238.175}
-    user=${3:-amanpreet.singh}
-    upload $ip $user
+    ip=$1
+    user=$2
+    upload
     ;;
     sync)
     if [ "$#" -lt 2 ]; then
-        echo "Usage sync <ip> <optional user>"
+        echo "Usage sync <ip> <user>"
     fi
 
-    ip=${2:-10.34.238.175}
-    user=${3:-amanpreet.singh}
+    ip=$2
+    user=$3
     sync
     ;;
-    *) echo "Usage: build/run/install"; ;;
+    *) echo "Usage: build/run/install/sync"; ;;
 esac

@@ -1,0 +1,34 @@
+restaurant:
+  restaurantCount: 20 #No. of restaurants in Simulation
+  kitchenCount: 5 #Parallel Orders each restaurant can handle
+  #Assumption: All Dishes are made by all restaurants in same time
+  dish:
+    count: 10 #No. of Dishes offered by each restaurant
+    cook: #All dishes will randomly fall between two times
+      minTime: 4 #Cook time for fastest dish
+      maxTime: 20 #Cook time for Slowest Dish
+
+delivery:
+  hires: 20 #No. of delivery boys available
+  speed: 15 #Average Speed of Delivery Boy. Grid Squares Per Simulation Time Unit
+  algo:
+    weight:
+      restaurant: 0.5 #Weightage for how much time it will take to reach restaurant
+      idle: 0.5 #Weightage for how long delivery boy has been idle.
+    # FIFO - Take first available guy in the queue irrespective of cost deliver order and return to free pool.
+    # LEAST_COST - Find Guy with Least Cost from free pool and assign (No Order Batching).
+    type: FIFO
+
+order:
+  generateInterval: 7 #Generate new order about (randomized) every x time
+  burst:
+    percent: 10 #Percentage of times generate a burst for same restaurant
+    min: 4 #Min/Max number of orders for same restaurant in Burst
+    max: 10
+
+sim:
+  until: 2000 #Time till which simulation should be run
+  grid: #Simulation Grid Size all restaurants,delivery boys,customers will lie on this plane
+    x: 1000
+    y: 1000
+  logLevel: CRITICAL #CRITICAL - Order Summary, INFO - Start/End each Order, DEBUG - Each Step in Order
