@@ -41,19 +41,21 @@ case $1 in
     upload)
     if [ "$#" -lt 2 ]; then
         echo "Usage upload <ip> <user>"
+        exit
     fi
-    ip=$1
-    user=$2
+    ip=$2
+    user=$3
     upload
     ;;
     sync)
     if [ "$#" -lt 2 ]; then
         echo "Usage sync <ip> <user>"
+        exit
     fi
 
     ip=$2
     user=$3
     sync
     ;;
-    *) echo "Usage: build/run/install/sync"; ;;
+    *) echo "Usage: upload/install/run/sync"; ;;
 esac
