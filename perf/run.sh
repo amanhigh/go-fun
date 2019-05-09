@@ -1,4 +1,5 @@
 #!/bin/bash
+export PATH=$PATH:~/perf/
 echo "Usage: perf.sh <script> <host:port> <concurrency> <timeout (minutes)>"
 script="$1.lua"
 host=${2:-localhost\:8080}
