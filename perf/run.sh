@@ -7,7 +7,7 @@ con=${3:-10}
 if [ $con == 1 ];then
        th=1;
     else
-        th=2;
+        th=`nproc`;
 fi
 min=${4:-1}
 echo -en "\n\033[1;32m Running Pref(${script}) on $host for $min Minute with $con Concurrency ($th Threads) \033[0m \n"
