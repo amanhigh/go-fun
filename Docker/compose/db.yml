@@ -11,8 +11,8 @@ services:
      environment:
        MYSQL_ROOT_PASSWORD: root
        MYSQL_DATABASE: compute
-       MYSQL_USER: elbuser
-       MYSQL_PASSWORD: elbuser
+       MYSQL_USER: aman
+       MYSQL_PASSWORD: aman
 
    adminer:
        image: adminer
