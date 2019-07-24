@@ -141,7 +141,7 @@ var dockerSetCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(dockerCmd)
-	dockerCmd.PersistentFlags().StringVarP(&composePath, "path", "p", "/Users/amanpreet.singh/IdeaProjects/GoArena/src/github.com/amanhigh/go-fun/Docker/compose", "Compose Path for Docker")
+	dockerCmd.PersistentFlags().StringVarP(&composePath, "path", "p", "/Users/amanpreet.singh/IdeaProjects/Go/go-fun/Docker/compose/", "Compose Path for Docker")
 	dockerCmd.PersistentFlags().StringVarP(&dockerService, "svc", "s", "", "Specify Service to Act On")
 	dockerCmd.PersistentFlags().StringVarP(&composeOpt, "opt", "o", "", "Compose Options.Eg: --scale target=3")
 
