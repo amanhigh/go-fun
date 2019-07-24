@@ -58,7 +58,7 @@ require (
 	github.com/spf13/pflag v1.0.1
 	github.com/teris-io/shortid v0.0.0-20160104014424-6c56cef5189c
 	github.com/trivago/tgo v1.0.5
-	github.com/ugorji/go v1.1.2
+	github.com/ugorji/go v1.1.7
 	github.com/ziutek/mymysql v1.5.4
 	golang.org/x/crypto v0.0.0-20181029021203-45a5f77698d3
 	golang.org/x/net v0.0.0-20190108225652-1e06a53dbb7e
