@@ -21,7 +21,7 @@
 # * Remove Member (only on primary as admin) -  rs.remove("mongo1:27017")
 #
 
-version: '3.1'
+version: '3.0'
 services:
   mongo:
     image: mongo
