@@ -3,12 +3,12 @@ package elasticsearch_gin
 import (
 	"encoding/json"
 	"fmt"
+	. "github.com/amanhigh/go-fun/apps/models/learn/frameworks"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
 
-	. "github.com/amanhigh/go-fun/models/learn/frameworks"
 	"github.com/gin-gonic/gin"
 	"github.com/olivere/elastic"
 	"github.com/teris-io/shortid"
