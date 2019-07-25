@@ -20,6 +20,7 @@
 # * Add Member (only on primary as admin) -  rs.add( { host: "mongo1:27017"} )
 # * Remove Member (only on primary as admin) -  rs.remove("mongo1:27017")
 #
+# Docker Login - mongo -u root -p root --host compose_mongo_1 admin
 
 version: '3.0'
 services:
