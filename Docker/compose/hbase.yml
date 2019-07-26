@@ -1,5 +1,14 @@
 version: "3"
 
+# https://hbase.apache.org/book.html#quickstart
+# login to hbase and run "hbase shell"
+# create 'test', 'cf'
+# list 'test';describe 'test'
+# put 'test', 'row1', 'cf:a', 'value1'; put 'test', 'row2', 'cf:b', 'value2'
+# get 'test', 'row1; scan 'test'
+
+# disable 'test'; drop 'test'
+
 services:
   namenode:
     image: bde2020/hadoop-namenode:2.0.0-hadoop2.7.4-java8
