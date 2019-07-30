@@ -1,5 +1,7 @@
 version: "3"
 
+# Status Check - http://docker:16010/master-status
+
 # https://hbase.apache.org/book.html#quickstart
 # login to hbase and run "hbase shell"
 # create 'test', 'cf'
