@@ -1,31 +1,35 @@
 version: '3'
 
 services:
-   mysql:
-     image: mysql:5.7
-     volumes:
-       - mysql_data:/var/lib/mysql
-     restart: always
-     ports:
+  mysql:
+    image: mysql:5.7
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: always
+    ports:
       - 3306:3306
-     environment:
-       MYSQL_ROOT_PASSWORD: root
-       MYSQL_DATABASE: compute
-       MYSQL_USER: aman
-       MYSQL_PASSWORD: aman
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: compute
+      MYSQL_USER: aman
+      MYSQL_PASSWORD: aman
 
-   mysql-adminer:
-       image: adminer
-       restart: always
-       ports:
-         - 8080:8080
-   myadmin:
-     image: phpmyadmin/phpmyadmin
-     restart: always
-     ports:
-       - 8888:80
-     environment:
-       PMA_HOST: mysql
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+      ADMINER_PLUGINS: sql-log
+
+  myadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - 8888:80
+    environment:
+      PMA_HOST: mysql
 
 volumes:
-     mysql_data:
+  mysql_data:
