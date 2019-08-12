@@ -21,6 +21,9 @@
 #vault write database/roles/aman-mongo-role db_name=aman-mongo creation_statements='{ "db": "admin", "roles": [{ "role": "readWrite" }, {"role": "read", "db": "compute"}] }' default_ttl="1h" max_ttl="24h"
 #vault read database/creds/aman-mongo-role
 
+# Revocation
+# vault lease revoke database/creds/aman-mysql-role/OstydME0HqTS7QmmSB5MQVqN
+
 version: '3.0'
 services:
   vault:
