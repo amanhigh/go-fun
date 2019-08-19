@@ -41,3 +41,11 @@ services:
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: root
+
+  nosql:
+    image: mongoclient/mongoclient
+    restart: always
+    ports:
+      - 3000:3000
+    environment:
+      MONGO_URL: "mongodb://root:root@mongo:27017/admin"
