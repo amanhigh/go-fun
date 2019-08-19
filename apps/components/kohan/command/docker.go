@@ -107,7 +107,7 @@ var dockerStartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start Docker Compose",
 	Run: func(cmd *cobra.Command, args []string) {
-		tools.LiveCommand(getDockerCmd("start"))
+		tools.LiveCommand(getDockerCmd("up -d"))
 	},
 }
 
