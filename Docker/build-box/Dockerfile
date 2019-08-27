@@ -6,8 +6,8 @@ MAINTAINER coool.aman@gmail.com
 RUN apt-get update; apt-get install -y --force-yes ca-certificates wget build-essential openssh-client git
 
 #Install Go1.1
-RUN wget https://dl.google.com/go/go1.11.linux-amd64.tar.gz
-RUN tar -xvf go1.11.linux-amd64.tar.gz
+RUN wget https://dl.google.com/go/go1.12.9.linux-amd64.tar.gz
+RUN tar -xvf go1.12.9.linux-amd64.tar.gz
 RUN mv go /usr/local
 
 ENV GOROOT=/usr/local/go

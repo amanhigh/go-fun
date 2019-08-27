@@ -6,7 +6,7 @@ services:
      restart: always
      volumes:
        - jenkins_home:/var/jenkins_home
-       - /Users/amanpreet.singh/IdeaProjects/GoArena/:/var/projects/
+       - /Users/amanpreet.singh/IdeaProjects:/var/Projects/
      ports:
       - 8080:8080
       - 50000:50000
@@ -15,16 +15,16 @@ services:
    build-box:
      build: ../build-box
      volumes:
-       - /Users/amanpreet.singh/IdeaProjects/GoArena/:/var/GoArena/
+       - /Users/amanpreet.singh/IdeaProjects:/var/Projects/
      environment:
-       GOPATH: /var/GoArena
+       GOPATH: /var/Go
 
   #dpkg -i <DEB_FILE>
    target:
      image: debian:9
      command: sleep 100000
      volumes:
-       - /Users/amanpreet.singh/IdeaProjects/GoArena/:/var/GoArena/
+       - /Users/amanpreet.singh/IdeaProjects:/var/Projects/
 
 volumes:
   jenkins_home:
