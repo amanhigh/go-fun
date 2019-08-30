@@ -91,7 +91,7 @@ var dockerRunCmd = &cobra.Command{
 	Short: "Run a command in Specified Docker Compose Container",
 	Args:  cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
-		tools.LiveCommand(fmt.Sprintf("docker exec compose_%v_%v bash -c \"%v\"", args[0], args[1], args[2]))
+		tools.LiveCommand(fmt.Sprintf("docker exec compose_%v_%v %v -c \"%v\"", args[0], args[1], shell, args[2]))
 	},
 }
 
@@ -145,8 +145,7 @@ func init() {
 	dockerCmd.PersistentFlags().StringVarP(&composePath, "path", "p", "/Users/amanpreet.singh/IdeaProjects/Go/go-fun/Docker/compose/", "Compose Path for Docker")
 	dockerCmd.PersistentFlags().StringVarP(&dockerService, "svc", "s", "", "Specify Service to Act On")
 	dockerCmd.PersistentFlags().StringVarP(&composeOpt, "opt", "o", "", "Compose Options.Eg: --scale target=3")
-
-	dockerLoginCmd.Flags().StringVarP(&shell, "shell", "l", "/bin/bash", "Login Shell")
+	dockerCmd.PersistentFlags().StringVarP(&shell, "shell", "l", "bash", "Login Shell")
 
 	dockerCmd.AddCommand(dockerSetCmd)
 	dockerCmd.AddCommand(dockerPsCmd)
