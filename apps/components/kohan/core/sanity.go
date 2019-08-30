@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/amanhigh/go-fun/apps/common/tools"
 	"github.com/amanhigh/go-fun/apps/common/util"
 	. "github.com/amanhigh/go-fun/util"
+	log "github.com/sirupsen/logrus"
 )
 
 var checks = []string{"down", "inactive", "not"}

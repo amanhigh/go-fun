@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/amanhigh/go-fun/learn/frameworks/orm/model"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
 )
 
 type Product struct {

@@ -2,8 +2,8 @@ package util
 
 import (
 	"bitbucket.org/liamstask/goose/lib/goose"
-	log "github.com/Sirupsen/logrus"
 	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
 )
 
 const (

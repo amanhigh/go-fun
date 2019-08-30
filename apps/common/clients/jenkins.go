@@ -5,9 +5,9 @@ import (
 	"regexp"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/bndr/gojenkins"
+	log "github.com/sirupsen/logrus"
 )
 
 var compile = regexp.MustCompile("version : (.*)")

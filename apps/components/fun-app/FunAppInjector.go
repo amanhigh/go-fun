@@ -3,7 +3,6 @@ package fun_app
 import (
 	"os"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/amanhigh/go-fun/apps/common/clients"
 	"github.com/amanhigh/go-fun/apps/common/metrics"
 	"github.com/amanhigh/go-fun/apps/common/util"
@@ -15,6 +14,7 @@ import (
 	"github.com/facebookgo/inject"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
 )
 
 const (

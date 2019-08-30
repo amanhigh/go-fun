@@ -3,11 +3,11 @@ package crawler
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	log "github.com/Sirupsen/logrus"
 	"github.com/amanhigh/go-fun/apps/common/clients"
 	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	. "github.com/amanhigh/go-fun/apps/models/crawler"
 	"github.com/amanhigh/go-fun/util"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"

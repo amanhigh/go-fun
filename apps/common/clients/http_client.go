@@ -15,8 +15,8 @@ import (
 	"net/url"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/amanhigh/go-fun/apps/models/config"
+	log "github.com/sirupsen/logrus"
 )
 
 /**

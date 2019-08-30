@@ -5,7 +5,6 @@ go 1.12
 require (
 	bitbucket.org/liamstask/goose v0.0.0-20150115234039-8488cc47d90c
 	github.com/PuerkitoBio/goquery v1.3.0
-	github.com/Sirupsen/logrus v0.0.0-20171118124223-95cd2b9c79aa
 	github.com/andybalholm/cascadia v1.0.0 // indirect
 	github.com/andygrunwald/go-jira v1.6.0
 	github.com/bndr/gojenkins v0.0.0-20151017211552-668c6a1cb16b
@@ -57,7 +56,7 @@ require (
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a
 	github.com/samuel/go-zookeeper v0.0.0-20180130194729-c4fab1ac1bec
-	github.com/sirupsen/logrus v1.4.2 // indirect
+	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.1 // indirect
 	github.com/teris-io/shortid v0.0.0-20160104014424-6c56cef5189c
@@ -67,10 +66,9 @@ require (
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
+	golang.org/x/sys v0.0.0-20190403152447-81d4e9dc473e // indirect
 	golang.org/x/text v0.3.1-0.20181227161524-e6919f6577db // indirect
 	golang.org/x/tour v0.0.0-20180314180224-daf29d8a3774
-	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
-	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
 	gopkg.in/yaml.v2 v2.2.2
