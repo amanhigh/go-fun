@@ -36,5 +36,6 @@ services:
       VAULT_TOKEN: "root-token"
     volumes:
       - ./files/vault.json:/vault/config/vault.json:rw
+      - ./files/scripts/:/scripts
     cap_add:
       - IPC_LOCK
