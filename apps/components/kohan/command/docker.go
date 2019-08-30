@@ -16,6 +16,7 @@ var (
 	composePath   = ""
 	composeOpt    = ""
 	dockerService = ""
+	shell         = ""
 )
 
 const DOCKER_CONFIG = "/tmp/docker-config.yml"
@@ -81,7 +82,7 @@ var dockerLoginCmd = &cobra.Command{
 	Short: "Login to Specified Docker Compose Container",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		tools.LiveCommand(fmt.Sprintf("docker exec -it compose_%v_%v /bin/bash", args[0], args[1]))
+		tools.LiveCommand(fmt.Sprintf("docker exec -it compose_%v_%v %v", args[0], args[1], shell))
 	},
 }
 
@@ -144,6 +145,8 @@ func init() {
 	dockerCmd.PersistentFlags().StringVarP(&composePath, "path", "p", "/Users/amanpreet.singh/IdeaProjects/Go/go-fun/Docker/compose/", "Compose Path for Docker")
 	dockerCmd.PersistentFlags().StringVarP(&dockerService, "svc", "s", "", "Specify Service to Act On")
 	dockerCmd.PersistentFlags().StringVarP(&composeOpt, "opt", "o", "", "Compose Options.Eg: --scale target=3")
+
+	dockerLoginCmd.Flags().StringVarP(&shell, "shell", "l", "/bin/bash", "Login Shell")
 
 	dockerCmd.AddCommand(dockerSetCmd)
 	dockerCmd.AddCommand(dockerPsCmd)
