@@ -8,12 +8,8 @@ require (
 	github.com/Sirupsen/logrus v0.0.0-20171118124223-95cd2b9c79aa
 	github.com/andybalholm/cascadia v1.0.0 // indirect
 	github.com/andygrunwald/go-jira v1.6.0
-	github.com/aristanetworks/goarista v0.0.0-20190712234253-ed1100a1c015 // indirect
 	github.com/bndr/gojenkins v0.0.0-20151017211552-668c6a1cb16b
 	github.com/cheekybits/genny v0.0.0-20170328200008-9127e812e1e9
-	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
-	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
-	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20190724012636-11b2859924c1 // indirect
 	github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 // indirect
 	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
@@ -60,21 +56,18 @@ require (
 	github.com/pascaldekloe/goe v0.1.0 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a
-	github.com/remyoudompheng/bigfft v0.0.0-20190512091148-babf20351dd7 // indirect
 	github.com/samuel/go-zookeeper v0.0.0-20180130194729-c4fab1ac1bec
 	github.com/sirupsen/logrus v1.4.2 // indirect
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.1 // indirect
 	github.com/teris-io/shortid v0.0.0-20160104014424-6c56cef5189c
 	github.com/trivago/tgo v1.0.5 // indirect
-	github.com/tsuna/gohbase v0.0.0-20190725190657-3dd1fa8c4feb
 	github.com/ugorji/go v1.1.7 // indirect
 	github.com/ventu-io/go-shortid v0.0.0-20171029131806-771a37caa5cf // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
 	golang.org/x/text v0.3.1-0.20181227161524-e6919f6577db // indirect
-	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
 	golang.org/x/tour v0.0.0-20180314180224-daf29d8a3774
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
