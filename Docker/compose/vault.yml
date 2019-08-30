@@ -32,6 +32,8 @@ services:
       - "8200:8200"
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: "root-token"
+      VAULT_ADDR: "http://0.0.0.0:8200"
+      VAULT_TOKEN: "root-token"
     volumes:
       - ./files/vault.json:/vault/config/vault.json:rw
     cap_add:
