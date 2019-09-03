@@ -1,26 +1,5 @@
-# * rs.initiate({
-#  _id: "shard1",
-#  version: 1,
-#  members: [
-#  { _id: 0, host: "mongo1:27017" },
-#  { _id: 1, host: "mongo2:27017" },
-#  { _id: 2, host: "mongo3:27017" }
-#  ]
-#   })
-# * rs.status()
-# * Create Admin:
-#   - use admin
-#   - db.createUser(
-#  {
-#    user: "admin",
-#    pwd: "changeme",
-#    roles: [ { role: "root", db: "admin" } ]
-#   }
-#  );
-# * Add Member (only on primary as admin) -  rs.add( { host: "mongo1:27017"} )
-# * Remove Member (only on primary as admin) -  rs.remove("mongo1:27017")
-#
 # Docker Login - mongo -u root -p root --host compose_mongo_1 admin
+# Seed Script - dman run mongo 1 "mongo -u root -p root < /scripts/mongo.js"
 
 version: '3.0'
 services:
@@ -30,6 +9,8 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
+    volumes:
+      - ./files/scripts/:/scripts
     ports:
       - 27017:27017
 
