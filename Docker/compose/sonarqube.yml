@@ -11,3 +11,4 @@ services:
       SONARQUBE_JDBC_USERNAME: aman
       SONARQUBE_JDBC_PASSWORD: aman
       SONARQUBE_JDBC_URL: jdbc:postgresql://postgres:5432/compute
+    command: -Dsonar.ce.javaOpts=-Xmx2048m -Dsonar.web.javaOpts=-Xmx2048m
