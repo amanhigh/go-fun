@@ -4,7 +4,10 @@ MAINTAINER coool.aman@gmail.com
 
 RUN apt-get update
 RUN apt-get install -y nginx apache2 apache2-utils curl
+
+#Clean Apt
 RUN apt-get clean
+RUN rm -rf /var/lib/apt/lists/*
 
 ENV var1=Tutorial var2=point
 
