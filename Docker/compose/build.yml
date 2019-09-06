@@ -21,7 +21,7 @@ services:
 
   #dpkg -i <DEB_FILE>
    target:
-     image: debian:9
+     image: openjdk:11.0-stretch
      command: sleep 100000
      volumes:
        - /Users/amanpreet.singh/IdeaProjects:/var/Projects/
