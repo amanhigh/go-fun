@@ -31,7 +31,7 @@ var dockerPsCmd = &cobra.Command{
 	Use:   "ps",
 	Short: "Process Monitor",
 	Run: func(cmd *cobra.Command, args []string) {
-		tools.LiveCommand(fmt.Sprintf("watch -n1 '%v'", getDockerCmd("ps")))
+		tools.LiveCommand(fmt.Sprintf("watch -n1 '%v'", getComposeCmd("ps")))
 	},
 }
 
@@ -39,7 +39,7 @@ var dockerKillCmd = &cobra.Command{
 	Use:   "kill",
 	Short: "Force kill and Clear Volumes",
 	Run: func(cmd *cobra.Command, args []string) {
-		tools.LiveCommand(getDockerCmd("rm -svf"))
+		tools.LiveCommand(getComposeCmd("rm -svf"))
 	},
 }
 
@@ -50,7 +50,7 @@ var dockerResetCmd = &cobra.Command{
 		//Clean old Containers
 		tools.PrintCommand("docker-clean stop")
 
-		tools.LiveCommand(getDockerCmd("up -d"))
+		tools.LiveCommand(getComposeCmd("up -d"))
 	},
 }
 
@@ -62,18 +62,16 @@ var dockerLogsCmd = &cobra.Command{
 		if len(args) > 0 {
 			action += " -f"
 		}
-		tools.LiveCommand(getDockerCmd(action))
+		tools.LiveCommand(getComposeCmd(action))
 	},
 }
 
 var dockerBuildCmd = &cobra.Command{
-	Use:   "build [imageName]",
-	Short: "Rebuild Docker Image without Cache",
-	Args:  cobra.ExactArgs(1),
+	Use:   "build",
+	Short: "Rebuild Docker Service without Cache",
 	Run: func(cmd *cobra.Command, args []string) {
-		dockerService = args[0]
-		tools.LiveCommand(fmt.Sprintf("cd %v/..;docker build ./%v --no-cache -t %v:latest", composePath, args[0], args[0]))
-		tools.LiveCommand(getDockerCmd("restart"))
+		tools.LiveCommand(getComposeCmd("build --no-cache"))
+		tools.LiveCommand(getComposeCmd("up -d --force-recreate"))
 	},
 }
 
@@ -100,7 +98,7 @@ var dockerStopCmd = &cobra.Command{
 	Short: "Stop Docker Compose",
 	Run: func(cmd *cobra.Command, args []string) {
 		tools.LiveCommand("docker build")
-		tools.LiveCommand(getDockerCmd("stop"))
+		tools.LiveCommand(getComposeCmd("stop"))
 	},
 }
 
@@ -108,7 +106,7 @@ var dockerStartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start Docker Compose",
 	Run: func(cmd *cobra.Command, args []string) {
-		tools.LiveCommand(getDockerCmd("up -d"))
+		tools.LiveCommand(getComposeCmd("up -d"))
 	},
 }
 
@@ -116,7 +114,7 @@ var dockerRestartCmd = &cobra.Command{
 	Use:   "restart",
 	Short: "Restart Services",
 	Run: func(cmd *cobra.Command, args []string) {
-		tools.LiveCommand(getDockerCmd("restart"))
+		tools.LiveCommand(getComposeCmd("restart"))
 	},
 }
 
@@ -162,7 +160,7 @@ func init() {
 	dockerCmd.AddCommand(dockerBuildCmd)
 }
 
-func getDockerCmd(action string) (cmd string) {
+func getComposeCmd(action string) (cmd string) {
 	var dockerConfig frameworks.DockerConfig
 	bytes, _ := ioutil.ReadFile(DOCKER_CONFIG)
 	_ = yaml.Unmarshal(bytes, &dockerConfig)
