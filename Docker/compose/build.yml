@@ -8,7 +8,7 @@ services:
        - jenkins_home:/var/jenkins_home
        - /Users/amanpreet.singh/IdeaProjects:/var/Projects/
      ports:
-      - 8080:8080
+      - 8100:8080
       - 50000:50000
 
   #dpkg-deb -b <DEBIAN DIR PATH>
