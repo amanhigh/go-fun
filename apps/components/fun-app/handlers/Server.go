@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,6 +21,9 @@ func (self *FunServer) initRoutes() {
 	personGroup.GET("/all", self.PersonHandlers.GetAllPerson)
 	personGroup.POST("", self.PersonHandlers.CreatePerson)
 	personGroup.DELETE(":id", self.PersonHandlers.DeletePersons)
+
+	//Pprof (Use: http://localhost:8080/debug/pprof/)
+	pprof.Register(self.GinEngine)
 }
 
 func (self *FunServer) Start() (err error) {
