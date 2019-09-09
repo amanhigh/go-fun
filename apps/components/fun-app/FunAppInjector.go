@@ -89,7 +89,7 @@ func initDb(dbConfig config.Db) (db *gorm.DB) {
 			//}
 		}
 	} else {
-		log.WithFields(log.Fields{"DbConfig": dbConfig}).Panic("failed to connect database")
+		log.WithFields(log.Fields{"DbConfig": dbConfig, "Error": err}).Panic("failed to connect database")
 	}
 	return
 }
