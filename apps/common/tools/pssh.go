@@ -88,10 +88,6 @@ func GetClusterHost(clusterName string, index int) string {
 	}
 }
 
-func IndexedIp(clusterName string, index int) {
-	fmt.Println(GetClusterHost(clusterName, index))
-}
-
 func SearchCluster(keyword string) (clusters []string) {
 	PrintBlue("Searching: " + CLUSTER_PATH)
 	files, _ := filepath.Glob(fmt.Sprintf("%v/*%v*", CLUSTER_PATH, keyword))
