@@ -66,7 +66,7 @@ func PrintFile(title string, filepath string) {
 }
 
 func ListFiles(dirPath string) []string {
-	filePaths := []string{}
+	var filePaths []string
 	if fileInfos, err := ioutil.ReadDir(dirPath); err == nil {
 		for _, info := range fileInfos {
 			filePath := fmt.Sprintf("%v/%v", dirPath, info.Name())

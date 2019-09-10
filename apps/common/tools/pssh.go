@@ -3,6 +3,7 @@ package tools
 import (
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 
 	. "github.com/amanhigh/go-fun/util"
@@ -89,6 +90,17 @@ func GetClusterHost(clusterName string, index int) string {
 
 func IndexedIp(clusterName string, index int) {
 	fmt.Println(GetClusterHost(clusterName, index))
+}
+
+func SearchCluster(keyword string) (clusters []string) {
+	PrintBlue("Searching: " + CLUSTER_PATH)
+	files, _ := filepath.Glob(fmt.Sprintf("%v/*%v*", CLUSTER_PATH, keyword))
+	for _, name := range files {
+		fileName := strings.TrimLeft(name, CLUSTER_PATH)
+		cluster := strings.TrimRight(fileName, ".txt")
+		clusters = append(clusters, cluster)
+	}
+	return
 }
 
 func SearchContent(regex string) string {

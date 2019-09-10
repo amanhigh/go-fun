@@ -85,6 +85,15 @@ var clusterMd5Cmd = &cobra.Command{
 	},
 }
 
+var clusterSearchCmd = &cobra.Command{
+	Use:   "search [keyword] ",
+	Short: "Searches for matching Clusters",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(strings.Join(tools.SearchCluster(args[0]), "\n"))
+	},
+}
+
 func init() {
 	clusterPsshCmd.Flags().StringVarP(&tyype, "type", "t", "f", "First alphabet of fast/display/slow")
 	clusterPsshCmd.Flags().IntVarP(&parallelism, "parallel", "p", util2.DEFAULT_PARALELISM, "Parallelism")
@@ -92,7 +101,8 @@ func init() {
 	clusterPsshCmd.Flags().IntVarP(&endIndex, "end", "e", -1, "Ending Index")
 
 	RootCmd.AddCommand(clusterCmd)
-	clusterCmd.AddCommand(clusterSanityCmd, clusterPsshCmd, clusterIndexCmd, clusterRemoveCmd, clusterMd5Cmd)
+	clusterCmd.AddCommand(clusterSanityCmd, clusterPsshCmd, clusterIndexCmd,
+		clusterRemoveCmd, clusterMd5Cmd, clusterSearchCmd)
 }
 
 func getPsshFromType(psshType string) (selectedPssh tools.Pssh, err error) {
