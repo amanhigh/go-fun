@@ -60,7 +60,7 @@ var clusterIndexCmd = &cobra.Command{
 		return
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		tools.IndexedIp(cluster, index)
+		fmt.Println(tools.GetClusterHost(cluster, index))
 	},
 }
 
@@ -86,11 +86,31 @@ var clusterMd5Cmd = &cobra.Command{
 }
 
 var clusterSearchCmd = &cobra.Command{
-	Use:   "search [keyword] ",
+	Use:   "search [keyword] [Opt:Cluster Index] [Opt:Ip Index]",
 	Short: "Searches for matching Clusters",
-	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(strings.Join(tools.SearchCluster(args[0]), "\n"))
+	Args:  cobra.MinimumNArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		clusters := tools.SearchCluster(args[0])
+		fmt.Println(strings.Join(clusters, "\n"))
+
+		c, i := 1, 1
+		switch len(args) {
+		case 1:
+			return
+		case 2:
+			c, err = util2.ParseInt(args[1])
+
+		case 3:
+			if c, err = util2.ParseInt(args[1]); err == nil {
+				i, err = util2.ParseInt(args[2])
+			}
+		}
+
+		if err == nil {
+			ip := tools.GetClusterHost(clusters[c], i)
+			tools.LiveCommand("ssh " + ip)
+		}
+		return
 	},
 }
 
