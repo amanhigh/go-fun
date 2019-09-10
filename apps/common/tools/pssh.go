@@ -92,7 +92,7 @@ func SearchCluster(keyword string) (clusters []string) {
 	PrintBlue("Searching: " + CLUSTER_PATH)
 	files, _ := filepath.Glob(fmt.Sprintf("%v/*%v*", CLUSTER_PATH, keyword))
 	for _, name := range files {
-		fileName := strings.TrimLeft(name, CLUSTER_PATH)
+		fileName := strings.Replace(name, CLUSTER_PATH+"/", "", 1)
 		cluster := strings.TrimRight(fileName, ".txt")
 		clusters = append(clusters, cluster)
 	}
