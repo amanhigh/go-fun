@@ -107,7 +107,7 @@ var clusterSearchCmd = &cobra.Command{
 		}
 
 		if err == nil {
-			ip := tools.GetClusterHost(clusters[c], i)
+			ip := tools.GetClusterHost(clusters[c-1], i)
 			tools.LiveCommand("ssh " + ip)
 		}
 		return
