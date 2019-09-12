@@ -1,0 +1,14 @@
+version: '3'
+
+#Requires Evaluation License
+services:
+  jira:
+    image: atlassian/jira-software
+    restart: always
+    ports:
+      - 8100:8080
+    volumes:
+      - jira-data:/var/atlassian/application-data/jira
+
+volumes:
+  jira-data:
