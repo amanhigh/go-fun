@@ -23,7 +23,11 @@ services:
     image: nginx
     restart: always
     ports:
-      - 80:80
+      - 81:81
+      - 82:82
+      - 83:83
+      - 84:84
+      - 85:85
     volumes:
       - ./files/whitelist.conf:/etc/whitelist.conf
       - ./files/nginx.conf:/etc/nginx/conf.d/default.conf
