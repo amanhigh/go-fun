@@ -51,6 +51,16 @@ var clusterPsshCmd = &cobra.Command{
 	},
 }
 
+var clusterTssCmd = &cobra.Command{
+	Use:   "tss [Cluster]",
+	Short: "Runs Cluster Ssh",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		tools.ClusterSsh(args[0])
+		return
+	},
+}
+
 var clusterIndexCmd = &cobra.Command{
 	Use:   "index [Cluster] [index]",
 	Short: "Get Ip for Cluster & Index",
@@ -122,7 +132,7 @@ func init() {
 
 	RootCmd.AddCommand(clusterCmd)
 	clusterCmd.AddCommand(clusterSanityCmd, clusterPsshCmd, clusterIndexCmd,
-		clusterRemoveCmd, clusterMd5Cmd, clusterSearchCmd)
+		clusterRemoveCmd, clusterMd5Cmd, clusterSearchCmd, clusterTssCmd)
 }
 
 func getPsshFromType(psshType string) (selectedPssh tools.Pssh, err error) {
