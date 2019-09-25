@@ -117,8 +117,14 @@ var clusterSearchCmd = &cobra.Command{
 		}
 
 		if err == nil {
-			ip := tools.GetClusterHost(clusters[c-1], i)
-			tools.LiveCommand("ssh " + ip)
+			/* If Index is Zero do Cluster ssh */
+			clusterName := clusters[c-1]
+			if i == 0 {
+				tools.ClusterSsh(clusterName)
+			} else {
+				ip := tools.GetClusterHost(clusterName, i)
+				tools.LiveCommand("ssh " + ip)
+			}
 		}
 		return
 	},
