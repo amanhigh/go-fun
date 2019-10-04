@@ -20,6 +20,26 @@ C1 -right->> C2: "label"
 @endsalt
 
 @startsalt
+{SI
+Message
+.
+.
+.
+.
+}
+@endsalt
+
+@startsalt
+{S-
+Message
+.
+.
+.
+.
+}
+@endsalt
+
+@startsalt
 {
   Just plain text
   [This is my button]
