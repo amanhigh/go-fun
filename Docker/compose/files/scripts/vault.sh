@@ -3,6 +3,9 @@ vault kv put secret/aman aman="preet"
 #http://docker:8200/ui/vault/secrets/secret/list
 vault kv get secret/aman
 
+#Increase lease Time
+vault write sys/mounts/database/tune max_lease_ttl="87600h"
+
 # Vault Mysql Management
 vault secrets enable database
 vault write database/config/aman-mysql plugin_name=mysql-database-plugin connection_url="{{username}}:{{password}}@tcp(compose_mysql_1:3306)/" allowed_roles="aman-mysql-role" username="root" password="root"
