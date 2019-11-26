@@ -8,6 +8,7 @@ vault write sys/mounts/database/tune max_lease_ttl="87600h"
 
 # Vault Mysql Management
 vault secrets enable database
+# Use plugin_name=mysql-legacy-database-plugin for mysql < 3.7
 vault write database/config/aman-mysql plugin_name=mysql-database-plugin connection_url="{{username}}:{{password}}@tcp(compose_mysql_1:3306)/" allowed_roles="aman-mysql-role" username="root" password="root"
 vault write database/roles/aman-mysql-role db_name=aman-mysql creation_statements="CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}';GRANT SELECT ON *.* TO '{{name}}'@'%';"     default_ttl="1h"     max_ttl="24h"
 vault read database/creds/aman-mysql-role
