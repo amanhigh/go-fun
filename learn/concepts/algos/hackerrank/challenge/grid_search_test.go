@@ -1,6 +1,7 @@
 package challenge_test
 
 import (
+	"github.com/amanhigh/go-fun/learn/concepts/algos/hackerrank/challenge"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -8,7 +9,6 @@ import (
 
 	"fmt"
 
-	"github.com/amanhigh/go-fun/learn/concepts/algospts/algos/hackerrank/challenge"
 	"github.com/amanhigh/go-fun/util"
 )
 

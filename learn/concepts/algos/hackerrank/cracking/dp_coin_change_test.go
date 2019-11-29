@@ -1,10 +1,9 @@
 package cracking_test
 
 import (
+	"github.com/amanhigh/go-fun/learn/concepts/algos/hackerrank/cracking"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	. "github.com/amanhigh/go-fun/learn/concepts/algospts/algos/hackerrank/cracking"
 )
 
 var _ = Describe("DpCoinChange", func() {
@@ -14,6 +13,6 @@ var _ = Describe("DpCoinChange", func() {
 		selectedCoins []int
 	)
 	It("should compute possibilities", func() {
-		Expect(Split(money, coins, selectedCoins)).To(Equal(4))
+		Expect(cracking.Split(money, coins, selectedCoins)).To(Equal(4))
 	})
 })
