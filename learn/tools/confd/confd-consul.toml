@@ -1,6 +1,6 @@
 #https://github.com/kelseyhightower/confd/blob/master/docs/configuration-guide.md
 
-backend="etcd"
+backend="consul"
 prefix="/myapp"
 nodes = [
   "http://docker:8500",
