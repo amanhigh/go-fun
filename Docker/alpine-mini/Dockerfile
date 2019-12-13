@@ -11,4 +11,5 @@ RUN apk add ca-certificates
 
 RUN rm -rf /var/cache/apk/*
 
+CMD echo "Resource Limits: -m 500m --cpus=0.05 --read-only --mount type=tmpfs,destination=/tmp,tmpfs-size=500m"
 CMD echo "Small Linux with Bash";/bin/bash
