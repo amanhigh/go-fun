@@ -1,0 +1,10 @@
+secretGenerator:
+  - name: mysql-pass
+    literals:
+      - password=aman
+
+commonLabels:
+  app: wordpress
+resources:
+  - ./resources/mysql.yml
+  - ./resources/wordpress.yml
