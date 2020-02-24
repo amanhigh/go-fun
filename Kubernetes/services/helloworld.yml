@@ -1,4 +1,17 @@
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-world
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: load-balancer-example
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -20,16 +33,3 @@ spec:
           name: hello-world
           ports:
             - containerPort: 8080
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: hello-world
-spec:
-  type: LoadBalancer
-  ports:
-    - port: 80
-      targetPort: 8080
-  selector:
-    app: load-balancer-example
