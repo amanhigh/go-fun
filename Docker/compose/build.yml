@@ -12,12 +12,13 @@ services:
       - 50000:50000
 
   #dpkg-deb -b <DEBIAN DIR PATH>
+  #Build: dman run build-box 1 'cd /var/Projects/Go/go-fun/apps/components/main/; go build -o app fun-app.go'
    build-box:
      build: ../build-box
      volumes:
        - /Users/amanpreet.singh/IdeaProjects:/var/Projects/
      environment:
-       GOPATH: /var/Go
+       GOPATH: /var/Projects/GoArena
 
   #dpkg -i <DEB_FILE>
    target:
