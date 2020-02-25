@@ -7,7 +7,6 @@ import (
 
 	"github.com/amanhigh/go-fun/util"
 	"github.com/bndr/gojenkins"
-	log "github.com/sirupsen/logrus"
 )
 
 var compile = regexp.MustCompile("version : (.*)")
@@ -21,13 +20,13 @@ type JenkinsClient struct {
 	jenkins *gojenkins.Jenkins
 }
 
-func NewJenkinsClient(ip string, userName string, apiKey string) JenkinsClientInterface {
-	jenkins := gojenkins.CreateJenkins(fmt.Sprintf("https://%v/", ip), userName, apiKey)
-	if _, err := jenkins.Init(); err != nil {
-		log.WithFields(log.Fields{"Error": err}).Fatal("Error Building Jenkins Client")
-	}
-	return &JenkinsClient{jenkins: jenkins}
-}
+//func NewJenkinsClient(ip string, userName string, apiKey string) JenkinsClientInterface {
+//	jenkins := gojenkins.CreateJenkins(fmt.Sprintf("https://%v/", ip), userName, apiKey)
+//	if _, err := jenkins.Init(); err != nil {
+//		log.WithFields(log.Fields{"Error": err}).Fatal("Error Building Jenkins Client")
+//	}
+//	return &JenkinsClient{jenkins: jenkins}
+//}
 
 func (self *JenkinsClient) Build(job string, params map[string]string) (err error) {
 	_, err = self.jenkins.BuildJob(job, params)
