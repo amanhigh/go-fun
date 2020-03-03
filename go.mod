@@ -8,6 +8,7 @@ require (
 	github.com/andygrunwald/go-jira v1.11.1
 	github.com/bndr/gojenkins v1.0.1
 	github.com/cheekybits/genny v1.0.0
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
 	github.com/facebookgo/inject v0.0.0-20180706035515-f23751cae28b
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
@@ -20,6 +21,7 @@ require (
 	github.com/hashicorp/consul/api v1.3.0
 	github.com/hashicorp/vault v1.3.0
 	github.com/hashicorp/vault/api v1.0.5-0.20191108163347-bdd38fca2cff
+	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/jinzhu/gorm v1.9.11
 	github.com/kylelemons/go-gypsy v0.0.0-20160905020020-08cad365cd28 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
@@ -34,5 +36,7 @@ require (
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/net v0.0.0-20191126235420-ef20fe5d7933
 	golang.org/x/tour v0.0.0-20191002171047-6bb846ce41cd
-	gopkg.in/yaml.v2 v2.2.7
+	gopkg.in/yaml.v2 v2.2.8
+	k8s.io/client-go v0.17.3
+	k8s.io/utils v0.0.0-20200124190032-861946025e34 // indirect
 )
