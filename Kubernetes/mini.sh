@@ -8,8 +8,12 @@ minikube start \
 
 minikube dashboard &
 kubectl proxy --port=8091 &
+
+minikube ssh 'sudo cat /var/lib/minikube/certs/sa.pub'
+
 echo -en "\033[1;32m Dashboard: http://localhost:8091/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/# \033[0m \n"
 echo -en "\033[1;32m Swagger: http://localhost:8091/swagger-ui \033[0m \n"
+
 
 
 # Helpful Commands
