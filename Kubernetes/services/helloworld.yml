@@ -47,3 +47,14 @@ spec:
           name: hello-world
           ports:
             - containerPort: 8080
+          volumeMounts: #Token Refreshing every 10 Minutes
+            - mountPath: /var/run/secrets/tokens
+              name: hello-world-token
+      volumes:
+        - name: hello-world-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  audience: hello-world
+                  expirationSeconds: 600
+                  path: hello-world-token
