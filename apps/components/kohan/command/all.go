@@ -46,9 +46,18 @@ var syncCmd = &cobra.Command{
 	},
 }
 
+var investingCmd = &cobra.Command{
+	Use:   "investing filePath",
+	Short: "Syncs Remote Host Directory with target hosts",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		return core.ReformatInvestingFile(args[0])
+	},
+}
+
 func init() {
 	printfCmd.Flags().StringVarP(&marker, "marker", "m", "#", "Marker in Template File")
 
 	RootCmd.AddCommand(allCmd)
-	allCmd.AddCommand(getVersionCmd, printfCmd, syncCmd)
+	allCmd.AddCommand(getVersionCmd, printfCmd, syncCmd, investingCmd)
 }

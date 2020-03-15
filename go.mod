@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	bitbucket.org/liamstask/goose v0.0.0-20150115234039-8488cc47d90c
-	github.com/PuerkitoBio/goquery v1.5.0
+	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/andygrunwald/go-jira v1.11.1
 	github.com/bndr/gojenkins v1.0.1
 	github.com/cheekybits/genny v1.0.0
@@ -34,7 +34,7 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	golang.org/x/net v0.0.0-20191126235420-ef20fe5d7933
+	golang.org/x/net v0.0.0-20200301022130-244492dfa37a
 	golang.org/x/tour v0.0.0-20191002171047-6bb846ce41cd
 	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/client-go v0.17.3

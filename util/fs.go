@@ -106,6 +106,11 @@ func ReadAllLines(filePath string) (lines []string) {
 	return
 }
 
+func WriteLines(filePath string, lines []string) error {
+	content := strings.Join(lines, "\n")
+	return ioutil.WriteFile(filePath, []byte(content), DEFAULT_PERM)
+}
+
 func PathExists(path string) bool {
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
