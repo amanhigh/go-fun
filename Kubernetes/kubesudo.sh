@@ -40,6 +40,6 @@ kubectl config set-credentials kubesudo:$NAMESPACE:$SA \
 
 kubectl config set-context $(kubectl config current-context) --user=kubesudo:$NAMESPACE:$SA > /dev/null
 
-kubectl --kubeconfig=$TMPKUBE $@
+kubectl $@
 
 rm $TMPKUBE
