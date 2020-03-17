@@ -1,8 +1,11 @@
+# Authentication
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: hello-world
+
+# Secret
 ---
 apiVersion: v1
 kind: Secret
@@ -12,6 +15,57 @@ metadata:
     kubernetes.io/service-account.name: hello-world
 type: kubernetes.io/service-account-token
 
+# ---- Authorization -----
+# Role
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: hello-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "watch", "list"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: hello-rolebinding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: hello-service-account
+roleRef:
+  kind: Role
+  name: hello-role
+  apiGroup: rbac.authorization.k8s.io
+
+#Cluster Role
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: hello-cluster-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "watch", "list"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: hello-cluster-rolebinding
+subjects:
+  - kind: ServiceAccount
+    name: hello-cluster-service-account
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: hello-cluster-role
+  apiGroup: rbac.authorization.k8s.io
+
+# Service & Deployment Spec
 ---
 apiVersion: v1
 kind: Service
