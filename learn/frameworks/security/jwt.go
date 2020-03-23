@@ -18,21 +18,21 @@ func JwtFun() {
 	publicKey := privateKey.Public()
 
 	//Marshal to Private Key To PEM Format
-	privatekeyPem := marshalPrivateKey(privateKey)
+	privatekeyPem := MarshalPrivateKey(privateKey)
 	fmt.Println("Private Pem", string(privatekeyPem))
 
 	//Unmarshal Private Key Pem
-	privateKey, _ = unmarshalRSAPrivateKey(string(privatekeyPem))
+	privateKey, _ = UnmarshalRSAPrivateKey(string(privatekeyPem))
 
 	//Marshal to Public Key PEM Format
-	pubkeyPem := marshalPublicKey(publicKey)
+	pubkeyPem := MarshalPublicKey(publicKey)
 	fmt.Println("Public Pem", string(pubkeyPem))
 
 	//Unmarshal Public Key Pem
-	publicKey, _ = unmarshalRSAPublicKey(string(pubkeyPem))
+	publicKey, _ = UnmarshalRSAPublicKey(string(pubkeyPem))
 
 	//Generate Token String
-	tokenString, err := generateToken(privateKey)
+	tokenString, err := GenerateToken(privateKey)
 	fmt.Println("JwtToken", tokenString, err)
 
 	//Parse Token
@@ -44,7 +44,7 @@ func JwtFun() {
 	fmt.Println("ParsedToken", claims["purpose"], claims, claims.Valid(), err)
 }
 
-func generateToken(privateKey *rsa.PrivateKey) (string, error) {
+func GenerateToken(privateKey *rsa.PrivateKey) (string, error) {
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
@@ -60,7 +60,7 @@ func generateToken(privateKey *rsa.PrivateKey) (string, error) {
 	return tokenString, err
 }
 
-func marshalPublicKey(publicKey crypto.PublicKey) []byte {
+func MarshalPublicKey(publicKey crypto.PublicKey) []byte {
 	if pubkeyBytes, err := x509.MarshalPKIXPublicKey(publicKey); err == nil {
 		pubkeyPem := pem.EncodeToMemory(
 			&pem.Block{
@@ -73,7 +73,7 @@ func marshalPublicKey(publicKey crypto.PublicKey) []byte {
 	return nil
 }
 
-func marshalPrivateKey(privateKey *rsa.PrivateKey) []byte {
+func MarshalPrivateKey(privateKey *rsa.PrivateKey) []byte {
 	privatekeyBytes := x509.MarshalPKCS1PrivateKey(privateKey)
 	privatekeyPem := pem.EncodeToMemory(
 		&pem.Block{
@@ -84,7 +84,7 @@ func marshalPrivateKey(privateKey *rsa.PrivateKey) []byte {
 	return privatekeyPem
 }
 
-func unmarshalRSAPublicKey(pemPubKey string) (key *rsa.PublicKey, err error) {
+func UnmarshalRSAPublicKey(pemPubKey string) (key *rsa.PublicKey, err error) {
 	var block *pem.Block
 	var pub interface{}
 	if block, _ = pem.Decode([]byte(pemPubKey)); block != nil {
@@ -100,7 +100,7 @@ func unmarshalRSAPublicKey(pemPubKey string) (key *rsa.PublicKey, err error) {
 	return
 }
 
-func unmarshalRSAPrivateKey(pemPrivateKey string) (key *rsa.PrivateKey, err error) {
+func UnmarshalRSAPrivateKey(pemPrivateKey string) (key *rsa.PrivateKey, err error) {
 	var block *pem.Block
 	var private interface{}
 	if block, _ = pem.Decode([]byte(pemPrivateKey)); block != nil {
