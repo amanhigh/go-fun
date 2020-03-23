@@ -26,7 +26,8 @@ then
     NAMESPACE=default
 fi
 
-TMPKUBE=$(mktemp)
+#TMPKUBE=$(mktemp)
+TMPKUBE="/tmp/kubesudo.cfg"
 
 kubectl config view --flatten --minify > $TMPKUBE
 
@@ -41,5 +42,3 @@ kubectl config set-credentials kubesudo:$NAMESPACE:$SA \
 kubectl config set-context $(kubectl config current-context) --user=kubesudo:$NAMESPACE:$SA > /dev/null
 
 kubectl $@
-
-rm $TMPKUBE
