@@ -1,3 +1,20 @@
+# Authentication
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hello-world
+
+# Secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hello-world-secret
+  annotations:
+    kubernetes.io/service-account.name: hello-world
+type: kubernetes.io/service-account-token
+
 # ---- Authorization -----
 # Role
 ---
