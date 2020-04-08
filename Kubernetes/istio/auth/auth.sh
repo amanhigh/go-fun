@@ -75,3 +75,36 @@ echo "Token: $(echo $TOKEN | cut -d '.' -f2 - | base64 -D -)"
 kubectl exec $(kubectl get pod -l app=sleep -n foo -o jsonpath={.items..metadata.name}) -c sleep -n foo -- curl "http://httpbin.foo:8000/headers" -s -o /dev/null -H "Authorization: Bearer $TOKEN" -w "%{http_code}\n"
 
 kubectl -n foo delete AuthorizationPolicy require-jwt
+
+
+echo -en "\033[1;32m JWT Group Claim: Foo(httpbin) \033[0m \n"
+kubectl apply -f - <<EOF
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: require-jwt-group
+  namespace: foo
+spec:
+  selector:
+    matchLabels:
+      app: httpbin
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+       requestPrincipals: ["testing@secure.istio.io/testing@secure.istio.io"]
+    when:
+    - key: request.auth.claims[groups]
+      values: ["group1"]
+EOF
+
+echo -en "\033[1;31m No JWT\033[0m \n"
+kubectl exec $(kubectl get pod -l app=sleep -n foo -o jsonpath={.items..metadata.name}) -c sleep -n foo -- curl "http://httpbin.foo:8000/headers" -s -o /dev/null -w "%{http_code}\n"
+
+TOKEN=$(curl https://raw.githubusercontent.com/istio/istio/release-1.5/security/tools/jwt/samples/groups-scope.jwt -s)
+
+echo -en "\033[1;32m Valid JWT Group Token \033[0m \n"
+echo "Token: $(echo $TOKEN | cut -d '.' -f2 - | base64 -D -)"
+kubectl exec $(kubectl get pod -l app=sleep -n foo -o jsonpath={.items..metadata.name}) -c sleep -n foo -- curl "http://httpbin.foo:8000/headers" -s -o /dev/null -H "Authorization: Bearer $TOKEN" -w "%{http_code}\n"
+
+kubectl -n foo delete AuthorizationPolicy require-jwt-group
