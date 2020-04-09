@@ -10,3 +10,7 @@ kubectl apply -f <(istioctl kube-inject -f sleep.yaml) -n bar
 kubectl create ns legacy
 kubectl apply -f httpbin.yaml -n legacy
 kubectl apply -f sleep.yaml -n legacy
+
+
+echo -en "\033[1;32m Setting Up Policies \033[0m \n"
+kubectl apply -f foo-get-pod.yml

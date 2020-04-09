@@ -1,0 +1,23 @@
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: foo
+  name: pod-get
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "watch", "list"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: pod-get-sleep
+  namespace: foo
+subjects:
+  - kind: ServiceAccount
+    name: sleep
+roleRef:
+  kind: Role
+  name: pod-get
+  apiGroup: rbac.authorization.k8s.io

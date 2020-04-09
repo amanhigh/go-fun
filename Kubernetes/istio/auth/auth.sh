@@ -1,3 +1,5 @@
+#Login Command -  kubectl exec -it $(kubectl get pod -l app=sleep -n foo -o jsonpath={.items..metadata.name}) -c sleep -n foo -- sh
+
 #Run All Routes
 echo -en "\033[1;32m All Routes \033[0m \n"
 for from in "foo" "bar" "legacy"; do for to in "foo" "bar" "legacy"; do kubectl exec $(kubectl get pod -l app=sleep -n ${from} -o jsonpath={.items..metadata.name}) -c sleep -n ${from} -- curl "http://httpbin.${to}:8000/ip" -s -o /dev/null -w "sleep.${from} to httpbin.${to}: %{http_code}\n"; done; done
@@ -108,3 +110,13 @@ echo "Token: $(echo $TOKEN | cut -d '.' -f2 - | base64 -D -)"
 kubectl exec $(kubectl get pod -l app=sleep -n foo -o jsonpath={.items..metadata.name}) -c sleep -n foo -- curl "http://httpbin.foo:8000/headers" -s -o /dev/null -H "Authorization: Bearer $TOKEN" -w "%{http_code}\n"
 
 kubectl -n foo delete AuthorizationPolicy require-jwt-group
+
+echo -en "\033[1;32m Accessing K8 Service \033[0m \n"
+
+echo -en "\033[1;33m Without K8 Token\033[0m \n"
+kubectl exec $(kubectl get pod -l app=sleep -n foo -o jsonpath={.items..metadata.name}) -c sleep -n foo -- sh -c 'curl -sSk https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/foo/pods/$HOSTNAME -o /dev/null -w "%{http_code}\n"'
+
+
+echo -en "\033[1;33m With K8 Token\033[0m \n"
+kubectl exec $(kubectl get pod -l app=sleep -n foo -o jsonpath={.items..metadata.name}) -c sleep -n foo -- sh -c 'curl -sSk https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/foo/pods/$HOSTNAME -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" -o /dev/null -w "%{http_code}\n"'
+
