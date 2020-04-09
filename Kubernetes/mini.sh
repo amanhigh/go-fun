@@ -1,7 +1,7 @@
 PORT=8091
 minikube delete;
 minikube start \
---memory=8192 --cpus=4 \
+--memory=5120 --cpus=4 \
 --extra-config="apiserver.enable-swagger-ui=true" \
 --extra-config="apiserver.service-account-api-audiences=api" \
 --extra-config="apiserver.service-account-issuer=api" \
