@@ -1,4 +1,5 @@
 #Login Command -  kubectl exec -it $(kubectl get pod -l app=sleep -n foo -o jsonpath={.items..metadata.name}) -c sleep -n foo -- sh
+minikube profile minikube
 
 #Run All Routes
 echo -en "\033[1;32m All Routes \033[0m \n"
@@ -42,7 +43,7 @@ spec:
     - operation:
         methods: ["GET"]
 EOF
-sleep 2
+sleep 4
 
 echo -en "\033[1;32m All Routes (Foo Only) \033[0m \n"
 for from in "foo" "bar" "legacy"; do for to in "foo" "bar" "legacy"; do kubectl exec $(kubectl get pod -l app=sleep -n ${from} -o jsonpath={.items..metadata.name}) -c sleep -n ${from} -- curl "http://httpbin.${to}:8000/ip" -s -o /dev/null -w "sleep.${from} to httpbin.${to}: %{http_code}\n"; done; done
