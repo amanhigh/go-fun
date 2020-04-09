@@ -1,7 +1,6 @@
 PORT=8091
-minikube profile minikube
-minikube delete;
-minikube start \
+minikube -p minikube delete;
+minikube -p minikube start \
 --memory=5120 --cpus=4 \
 --extra-config="apiserver.enable-swagger-ui=true" \
 --extra-config="apiserver.service-account-api-audiences=api" \
@@ -9,8 +8,8 @@ minikube start \
 --extra-config="apiserver.service-account-key-file=/var/lib/minikube/certs/sa.pub" \
 --extra-config="apiserver.service-account-signing-key-file=/var/lib/minikube/certs/sa.key";
 
-minikube ssh 'sudo cat /var/lib/minikube/certs/sa.pub'
-minikube dashboard --url=true &
+minikube -p minikube ssh 'sudo cat /var/lib/minikube/certs/sa.pub'
+minikube -p minikube dashboard --url=true &
 
 echo -en "\033[1;32m Dashboard: http://localhost:$PORT/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/# \033[0m \n"
 echo -en "\033[1;32m Swagger: http://localhost:$PORT/swagger-ui \033[0m \n"

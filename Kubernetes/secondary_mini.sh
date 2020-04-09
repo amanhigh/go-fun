@@ -1,5 +1,4 @@
 PORT=8092
-minikube profile secondary
 minikube -p secondary delete
 minikube -p secondary start \
   --memory=4096 --cpus=4 \
