@@ -1,4 +1,5 @@
 PORT=8091
+minikube profile minikube
 minikube delete;
 minikube start \
 --memory=5120 --cpus=4 \
