@@ -2,7 +2,7 @@ PORT=8092
 minikube profile secondary
 minikube -p secondary delete
 minikube -p secondary start \
-  --memory=2048 --cpus=4 \
+  --memory=4096 --cpus=4 \
   --extra-config="apiserver.service-account-api-audiences=api" \
   --extra-config="apiserver.service-account-issuer=api" \
   --extra-config="apiserver.service-account-key-file=/var/lib/minikube/certs/sa.pub" \
