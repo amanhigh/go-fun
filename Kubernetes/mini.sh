@@ -1,3 +1,4 @@
+PORT=8091
 minikube delete;
 minikube start \
 --memory=8192 --cpus=4 \
@@ -10,9 +11,10 @@ minikube start \
 minikube ssh 'sudo cat /var/lib/minikube/certs/sa.pub'
 minikube dashboard --url=true &
 
-echo -en "\033[1;32m Dashboard: http://localhost:8091/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/# \033[0m \n"
-echo -en "\033[1;32m Swagger: http://localhost:8091/swagger-ui \033[0m \n"
-kubectl proxy --port=8091
+echo -en "\033[1;32m Dashboard: http://localhost:$PORT/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/# \033[0m \n"
+echo -en "\033[1;32m Swagger: http://localhost:$PORT/swagger-ui \033[0m \n"
+echo -en "\033[1;33m Context: `kubectl config current-context`\033[0m \n"
+kubectl proxy --port=$PORT
 
 
 
