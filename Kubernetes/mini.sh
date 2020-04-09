@@ -1,6 +1,7 @@
 PORT=8091
 minikube -p minikube delete;
-minikube -p minikube start \
+minikube  -p minikube start \
+ --vm-driver=virtualbox \
 --memory=5120 --cpus=4 \
 --extra-config="apiserver.enable-swagger-ui=true" \
 --extra-config="apiserver.service-account-api-audiences=api" \
