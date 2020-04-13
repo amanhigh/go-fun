@@ -3,6 +3,7 @@ minikube -p minikube delete;
 minikube  -p minikube start \
  --vm-driver=virtualbox \
 --memory=5120 --cpus=4 \
+--host-only-cidr='24.1.1.100/24' \
 --extra-config="apiserver.enable-swagger-ui=true" \
 --extra-config="apiserver.service-account-api-audiences=api" \
 --extra-config="apiserver.service-account-issuer=api" \
