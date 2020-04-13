@@ -6,8 +6,7 @@ export REMOTE_CLUSTER_NETWORK=secondary-network
 
 echo -en "\033[1;32m Configuring Istio: Primary \033[0m \n"
 minikube profile minikube
-istioctl manifest apply --set profile=default
-istioctl manifest apply -f istio-primary.yaml --set values.global.mtls.enabled=true
+istioctl manifest apply -f istio-primary.yaml
 kubectl label namespace default istio-injection=enabled
 
 echo -en "\033[1;32m Creating Certs \033[0m \n"

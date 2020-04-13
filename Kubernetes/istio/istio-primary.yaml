@@ -10,6 +10,8 @@ spec:
       selfSigned: false
 
     global:
+      mtls:
+        enabled: true
       multiCluster:
         clusterName: ${MAIN_CLUSTER_NAME}
       network: ${MAIN_CLUSTER_NETWORK}
