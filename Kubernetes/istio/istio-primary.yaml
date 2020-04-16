@@ -2,6 +2,8 @@ apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 spec:
   addonComponents:
+    kiali:
+      enabled: true
     citadel:
       enabled: true
   values:
@@ -10,8 +12,8 @@ spec:
       selfSigned: false
 
     global:
-      mtls:
-        enabled: true
+#      mtls:
+#        enabled: true
       multiCluster:
         clusterName: ${MAIN_CLUSTER_NAME}
       network: ${MAIN_CLUSTER_NETWORK}
