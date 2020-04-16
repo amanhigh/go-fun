@@ -1,0 +1,33 @@
+http://localhost:8091/api/v1/namespaces/default/services/hello-world:/proxy/
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-world
+spec:
+  ports:
+    - port: 8080
+  selector:
+    app: hello-world
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hello-world
+  name: hello-world
+spec:
+  selector:
+    matchLabels:
+      app: hello-world
+  template:
+    metadata:
+      labels:
+        app: hello-world
+    spec:
+      containers:
+        - image: gcr.io/google-samples/node-hello:1.0
+          name: hello-world
+          ports:
+            - containerPort: 8080
