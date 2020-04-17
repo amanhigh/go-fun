@@ -2,8 +2,9 @@ PORT=8091
 minikube -p minikube delete;
 minikube  -p minikube start \
  --vm-driver=virtualbox \
---memory=5120 --cpus=4 \
+--memory=3096 --cpus=2 \
 --host-only-cidr='24.1.1.100/24' \
+--cache-images=true \
 --extra-config="apiserver.enable-swagger-ui=true" \
 --extra-config="apiserver.service-account-api-audiences=api" \
 --extra-config="apiserver.service-account-issuer=api" \
