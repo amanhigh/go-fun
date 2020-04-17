@@ -3,7 +3,7 @@ minikube -p secondary delete
 minikube -p secondary start \
   --memory=4096 --cpus=4 \
   --vm-driver=virtualbox \
-  --host-only-cidr='24.1.1.100/24' \
+  --host-only-cidr='22.1.1.100/24' \
   --extra-config="apiserver.service-account-api-audiences=api" \
   --extra-config="apiserver.service-account-issuer=api" \
   --extra-config="apiserver.service-account-key-file=/var/lib/minikube/certs/sa.pub" \
