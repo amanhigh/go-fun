@@ -15,13 +15,13 @@ spec:
 #      mtls:
 #        enabled: true
       multiCluster:
-        clusterName: ${MAIN_CLUSTER_NAME}
-      network: ${MAIN_CLUSTER_NETWORK}
+        clusterName: minikube
+      network: minikube-network
 
       # Mesh network configuration. This is optional and may be omitted if
       # all clusters are on the same network.
       meshNetworks:
-        ${MAIN_CLUSTER_NETWORK}:
+        minikube-network:
           endpoints:
             # Always use Kubernetes as the registry name for the main cluster in the mesh network configuration
             - fromRegistry: Kubernetes
@@ -29,9 +29,9 @@ spec:
             - registry_service_name: istio-ingressgateway.istio-system.svc.cluster.local
               port: 443
 
-        ${REMOTE_CLUSTER_NETWORK}:
+        secondary-network:
           endpoints:
-            - fromRegistry: ${REMOTE_CLUSTER_NAME}
+            - fromRegistry: secondary
           gateways:
             - registry_service_name: istio-ingressgateway.istio-system.svc.cluster.local
               port: 443
