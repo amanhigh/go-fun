@@ -59,6 +59,9 @@ spec:
             - name: spire-agent-socket
               mountPath: /run/spire/sockets
               readOnly: true
+            - name: spire-agent
+              mountPath: /opt/spire/spire-agent
+              readOnly: true
       volumes:
         - name: secret-volume
           secret:
@@ -68,4 +71,7 @@ spec:
           hostPath:
             path: /run/spire/sockets
             type: Directory
+        - name: spire-agent
+          hostPath:
+            path: /Users/amanpreet.singh/IdeaProjects/Go/go-fun/Kubernetes/spire/spire-agent
 ---
