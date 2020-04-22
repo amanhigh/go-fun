@@ -3,7 +3,7 @@ kubectl -f ./spire-server.yaml apply
 echo -en "\033[1;32m Setting Up Spire Agent \033[0m \n"
 kubectl -f ./spire-agent.yaml apply
 
-sleep 10
+sleep 30
 echo -en "\033[1;32m Mapping Agent Spiffe Id \033[0m \n"
 kubectl exec -n spire spire-server-0 -- \
     /opt/spire/bin/spire-server entry create \
