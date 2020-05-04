@@ -28,7 +28,7 @@ curl --user david:password docker:5000/finance/salary/david
 
 #------------------------------------------------
 echo -en "\033[1;32m OPA EVAL (Command Line) \033[0m \n"
-docker run openpolicyagent/opa:0.11.0 eval '1*2+3'
+docker run -it openpolicyagent/opa:0.11.0 eval '1*2+3'
 
 echo -en "\033[1;32m Server Policy  \033[0m \n"
-docker run -v $PWD/../opa/:/inputs openpolicyagent/opa:0.11.0 eval -i /inputs/input.json -d /inputs/server.rego 'data.example.violation[x]'
+docker run -it -v $PWD/../opa/:/inputs openpolicyagent/opa:0.11.0 eval -i /inputs/input.json -d /inputs/server.rego 'data.example.violation[x]'
