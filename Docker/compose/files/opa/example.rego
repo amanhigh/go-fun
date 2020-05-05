@@ -7,6 +7,7 @@ subordinates = {"alice": [], "charlie": [], "bob": ["alice"], "betty": ["charlie
 import input
 
 default allow = false
+default is_manager = false
 
 # Allow users to get their own salaries.
 allow {
@@ -22,4 +23,9 @@ allow {
   input.method == "GET"
   input.path = ["finance", "salary", username]
   subordinates[input.user][_] == username
+}
+
+# Check who is Manager
+is_manager {
+    count(subordinates[input.user]) > 0
 }
