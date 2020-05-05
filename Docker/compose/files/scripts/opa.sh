@@ -1,5 +1,7 @@
 echo -en "\033[1;34m Apply Demo Policy \033[0m \n"
 curl -s -X PUT --data-binary @../opa/example.rego docker:8181/v1/policies/example > /dev/null
+echo -en "\033[1;34m Policy: http://docker:8181/v1/policies/example \033[0m \n"
+echo -en "\033[1;34m Data: http://docker:8181/v1/data/httpapi/authz \033[0m \n"
 sleep 2
 
 echo -en "\033[1;32m Alice Checks Her Own Salary \033[0m \n"
