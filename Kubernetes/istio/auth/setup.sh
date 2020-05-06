@@ -20,3 +20,9 @@ kubectl apply -f sleep.yaml -n legacy
 
 echo -en "\033[1;32m Setting Up Policies \033[0m \n"
 kubectl apply -f foo-get-pod.yml
+
+echo -en "\033[1;32m Setting Up HttpBin (Foo) Gateway \033[0m \n"
+kubectl apply -f httpbin-gateway.yaml -n foo
+
+export GATEWAY_URL=$(minikube ip):$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')
+echo -en "\033[1;32m http://$GATEWAY_URL/headers \033[0m \n"
