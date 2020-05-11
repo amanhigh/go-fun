@@ -1,0 +1,31 @@
+#kubectl -f http-manager.yaml apply -n istio-system
+#istioctl proxy-config bootstrap -n istio-system istio-ingressgateway-87b6fdfb5-84vt7  | jq '.bootstrap.staticResources.listeners'
+#istioctl proxy-config listeners -n istio-system $(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath={.items..metadata.name}) --port 80 -o json | jq ".[0].filterChains[0].filters"
+
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: http-manager-settings
+spec:
+  configPatches:
+    - applyTo: NETWORK_FILTER
+      match:
+        context: ANY
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.http_connection_manager"
+      patch:
+        operation: MERGE
+        value:
+          typed_config:
+            "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager"
+            use_remote_address: true
+            xff_num_trusted_hops: 5
+            #Append Last Cert with current and Forward
+            forwardClientCertDetails: APPEND_FORWARD
+            #Send Certificate in Header
+            "setCurrentClientCertDetails":
+              "subject": true
+              "cert": true
+              "uri": true
