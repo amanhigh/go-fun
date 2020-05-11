@@ -14,3 +14,6 @@ kubectl apply -f ./components/kiali.yaml
 #istioctl manifest apply --set profile=demo
 #-- Dasboards
 #istioctl dashboard kiali
+
+echo -en "\033[1;32m Gateway Filter Chain Check CMD \033[0m \n"
+echo 'istioctl proxy-config listeners -n istio-system $(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath={.items..metadata.name}) --port 80 -o json | jq ".[0].filterChains[0].filters"'
