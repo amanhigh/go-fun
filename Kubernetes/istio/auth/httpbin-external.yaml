@@ -1,0 +1,32 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: external-httpbin
+  namespace: foo
+spec:
+  hosts:
+    - external-httpbin.svc
+  addresses:
+    - 25.0.1.124
+  location: MESH_EXTERNAL
+  ports:
+    - number: 8800
+      name: http
+      protocol: HTTP
+
+
+---
+
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: http-bin-virt-service
+  namespace: foo
+spec:
+  hosts:
+    - external-httpbin.svc
+  http:
+    - timeout: 5s
+      route:
+        - destination:
+            host: external-httpbin.svc
