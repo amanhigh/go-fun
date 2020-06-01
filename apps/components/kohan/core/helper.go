@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	"strconv"
 	"strings"
 	"time"
@@ -62,6 +63,9 @@ func ReformatInvestingFile(filePath string) (err error) {
 			}
 		}
 	}
+
+	//Data from oldest to Newest
+	util2.ReverseArray(outLines)
 	//OverWrite Output Lines
 	return util.WriteLines(filePath, outLines)
 }
