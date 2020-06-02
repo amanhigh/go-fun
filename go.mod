@@ -7,6 +7,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/andygrunwald/go-jira v1.11.1
 	github.com/bndr/gojenkins v1.0.1
+	github.com/bxcodec/faker/v3 v3.3.1
 	github.com/cheekybits/genny v1.0.0 // indirect
 	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
 	github.com/facebookgo/inject v0.0.0-20180706035515-f23751cae28b
