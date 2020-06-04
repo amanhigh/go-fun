@@ -29,13 +29,13 @@ curl --user david:password docker:5000/finance/salary/david
 
 #------------------------------------------------
 echo -en "\033[1;32m OPA EVAL (Command Line) \033[0m \n"
-docker run -it openpolicyagent/opa:0.11.0 eval '1*2+3'
+docker run -it openpolicyagent/opa eval '1*2+3'
 
 echo -en "\033[1;32m Server Policy Evaluation  \033[0m \n"
-docker run -it -v $PWD/../opa/:/inputs openpolicyagent/opa:0.11.0 eval -i /inputs/input.json -d /inputs/authz.rego -d /inputs/authz.json 'data.gofun.authz' -f pretty --profile
+docker run -it -v $PWD/../opa/:/inputs openpolicyagent/opa eval -i /inputs/input.json -d /inputs/authz.rego -d /inputs/authz.json 'data.gofun.authz' -f pretty --profile
 
 echo -en "\033[1;32m Policy Testing \033[0m \n"
-docker run -it -v $PWD/../opa/:/inputs openpolicyagent/opa:0.11.0 test /inputs -v
+docker run -it -v $PWD/../opa/:/inputs openpolicyagent/opa test /inputs -v
 
 #-------------------------------------------------
 echo -en "\033[1;32m OPA Eval (Http API) \033[0m \n"
