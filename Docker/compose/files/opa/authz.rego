@@ -2,6 +2,22 @@ package gofun.authz
 
 default allow = false
 
+#Comprehension: Resource to Role for User
+resources:= {res:roles |
+			#Extract Mapping Record Resource
+			mappings:=data.role_mapping[res]
+
+            #Extract all Roles for this Resource mapped to User
+            roles=[r|
+                 #For Each Mapping
+                 m=mappings[_]
+                 #Match User
+                 match_mapping(m)
+                 #Record Role
+                 r=m.role
+            ]
+}
+
 resource_mappings[mapping]{
 	#Direct Match
 	mapping:=data.role_mapping[input.resource][_]
