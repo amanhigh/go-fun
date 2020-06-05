@@ -2,22 +2,18 @@ package gofun.authz
 
 default allow = false
 
-allow {
-    mappings:=data.role_mapping[input.resource]
-
-    #For each Mapping
-    m:=mappings[_]
-    match_mapping(m)
+resource_mappings[mapping]{
+	#Direct Match
+	mapping:=data.role_mapping[input.resource][_]
+}{
+	#Climb Tree
+    parent := data.resource_tree[input.resource][_]
+    mapping:=data.role_mapping[parent][_]
 }
 
 allow {
-    #Climb Tree
-    parent := data.resource_tree[input.resource][_]
-
-    mappings:=data.role_mapping[parent]
-
     #For each Mapping
-    m:=mappings[_]
+    m:=resource_mappings[_]
     match_mapping(m)
 }
 
@@ -30,6 +26,12 @@ match_mapping(m) {
 
     #Match Role
     match_role(m.role)
+}
+
+#Negation Example
+# !(a | b) = !a & !b
+has_no_role {
+	not allow
 }
 
 match_principle(m)
@@ -96,6 +98,7 @@ match_scope(m)
     endswith(m.scope,".*")
     re_match(m.scope,input.scope)
 }
+
 
 #Test Cases
 test_direct_match {
