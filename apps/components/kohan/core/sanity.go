@@ -19,11 +19,15 @@ var SECOND_REGEX, _ = regexp.Compile("(\\d+) seconds")
 
 const MIN_SECOND = 4
 
-func ClusterSanity(pkgName string, cmd string, cluster string) {
-	if cmd != "" {
-		VerifyStatus(cmd, cluster)
+func ClusterSanity(pkgName string, cmd string, clusterKeyword string) {
+	clusters := tools.SearchCluster(clusterKeyword)
+	for _, cluster := range clusters {
+		PrintYellow("Processing: " + cluster)
+		if cmd != "" {
+			VerifyStatus(cmd, cluster)
+		}
+		VersionCheck(pkgName, cluster)
 	}
-	VersionCheck(pkgName, cluster)
 }
 
 func VersionCheck(pkgNameCsv string, cluster string) {

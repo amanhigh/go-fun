@@ -23,7 +23,7 @@ var clusterCmd = &cobra.Command{
 }
 
 var clusterSanityCmd = &cobra.Command{
-	Use:   "sanity [Cluster] [Package] [Sanity Cmd]",
+	Use:   "sanity [Cluster] [Package(Direct/Regex)] [Sanity Cmd]",
 	Short: "Checks Sanity of Cluster",
 	Args:  cobra.ExactArgs(3),
 	PreRun: func(cmd *cobra.Command, args []string) {
