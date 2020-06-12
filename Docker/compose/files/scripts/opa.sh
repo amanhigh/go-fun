@@ -28,6 +28,13 @@ curl --user david:password docker:5000/finance/salary/charlie
 curl --user david:password docker:5000/finance/salary/david
 
 #------------------------------------------------
+curl -s -X PUT --data-binary @../opa/authz.rego http://docker:8181/v1/policies/authz > /dev/null
+echo -en "\033[1;34m Policy: http://docker:8181/v1/policies/authz \033[0m \n"
+curl -s -X PUT --data-binary @../opa/authz.json http://docker:8181/v1/data/gofun/authz > /dev/null
+echo -en "\033[1;34m Data: http://docker:8181/v1/data/gofun/authz \033[0m \n"
+curl -X POST --data-binary @../opa/input.json 'http://docker:8181/v1/data/gofun/authz/allow'
+
+#------------------------------------------------
 echo -en "\033[1;32m OPA EVAL (Command Line) \033[0m \n"
 docker run -it openpolicyagent/opa eval '1*2+3'
 
