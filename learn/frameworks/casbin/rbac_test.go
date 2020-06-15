@@ -32,7 +32,7 @@ var _ = Describe("Rbac", func() {
 			Expect(err).To(BeNil())
 		})
 
-		It("should give admin for alice", func() {
+		It("should give roles for alice", func() {
 			roles, err := e.GetRolesForUser("alice")
 			Expect(roles).To(Equal([]string{"image-reader"}))
 			Expect(err).To(BeNil())
@@ -40,15 +40,15 @@ var _ = Describe("Rbac", func() {
 	})
 
 	Context("Bob", func() {
-		It("should be able to write image", func() {
-			ok, err := e.Enforce("bob", "image", "write")
+		It("should be able to read image", func() {
+			ok, err := e.Enforce("bob", "image", "read")
 			Expect(ok).To(BeTrue())
 			Expect(err).To(BeNil())
 		})
 
-		It("should give admin for alice", func() {
-			roles, err := e.GetRolesForUser("bob")
-			Expect(roles).To(Equal([]string{"image-writer"}))
+		It("should be able to write image", func() {
+			ok, err := e.Enforce("bob", "image", "write")
+			Expect(ok).To(BeTrue())
 			Expect(err).To(BeNil())
 		})
 	})

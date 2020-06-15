@@ -2,3 +2,4 @@ p, image-reader, image, read
 p, image-writer, image, write
 g, alice, image-reader, scope1
 g, bob, image-writer, scope2
+g, image-writer, image-reader, scope2
