@@ -3,7 +3,7 @@ FROM debian:9
 MAINTAINER coool.aman@gmail.com
 
 #Install Basics
-RUN apt-get update; apt-get install -y --force-yes ca-certificates wget build-essential openssh-client git unzip
+RUN apt-get update; apt-get install -y --force-yes ca-certificates wget build-essential openssh-client git unzip python python-pip
 #Clean Apt
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
