@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  bastillion:
+    image: ecosi/bastillion
+    restart: always
+    ports:
+      - 9090:8080
+      - 8443:8443
+  wssh:
+    image: snsyzb/webssh
+    restart: always
+    ports:
+      - 9091:8080
