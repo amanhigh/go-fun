@@ -8,5 +8,10 @@ services:
      build: ../build-box
      volumes:
        - /Users/amanpreet.singh/IdeaProjects:/var/Projects/
+
+     ports:
+     - 9600:9600
+     - 9605:9605
+     - 9610:9610
      environment:
        GOPATH: /var/Projects/GoArena
