@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+   jenkins:
+     image: jenkins/jenkins:lts
+     restart: always
+     volumes:
+       - jenkins_home:/var/jenkins_home
+       - /Users/amanpreet.singh/IdeaProjects:/var/Projects/
+     ports:
+      - 8100:8080
+      - 50000:50000
+
+volumes:
+  jenkins_home:
