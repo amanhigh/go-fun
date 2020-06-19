@@ -12,7 +12,7 @@ python3.4 python3-pip;
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 
-#Install Go1.1
+#Install Go
 ENV GO_PKG=go1.14.linux-amd64.tar.gz
 RUN wget https://dl.google.com/go/${GO_PKG} --no-check-certificate
 RUN tar -xvf ${GO_PKG}
