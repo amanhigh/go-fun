@@ -5,7 +5,7 @@ MAINTAINER coool.aman@gmail.com
 #Install Basics
 RUN apt-get update; apt-get install -y --force-yes \
 ca-certificates openssh-client \
-wget build-essential git unzip \
+wget build-essential curl vim git unzip \
 python3.4 python3-pip;
 
 #Clean Apt
