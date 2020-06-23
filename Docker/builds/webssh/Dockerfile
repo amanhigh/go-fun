@@ -1,5 +1,3 @@
-#Build CMD: docker build . -t 10.47.7.214/webshell:0.2
-#Run CMD: docker run -it 10.47.7.214/webshell:0.2 -p 8080:8080
 FROM python:3.8-slim
 MAINTAINER coool.aman@gmail.com
 
