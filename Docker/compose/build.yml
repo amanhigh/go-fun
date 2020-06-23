@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  #dpkg-deb -b <DEBIAN DIR PATH>
+  #dpkg-debDockerfileDockerfile -b <DEBIAN DIR PATH>
   #dpkg -i <DEB_FILE>
   #Build: dman run build 1 'cd /var/Projects/Go/go-fun/apps/components/main/; go build -o app fun-app.go'
    build:
