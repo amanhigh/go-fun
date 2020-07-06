@@ -1,0 +1,16 @@
+[Unit]
+Description=Test Script Service
+After=network.target
+
+StartLimitBurst=5
+StartLimitIntervalSec=20
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5
+User=root
+ExecStart=/usr/share/script/test.sh
+
+[Install]
+WantedBy=multi-user.target
