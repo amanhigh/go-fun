@@ -7,13 +7,18 @@ import (
 
 type Metadata struct {
 	PackageName string
+	Imports     []string
 	Type        string
 }
 
 func GenerateFun() {
 	tmpl := template.New("jsonTemplate")
 	if tmpl, err := tmpl.Parse(templateString()); err == nil {
-		_ = tmpl.Execute(os.Stdout, Metadata{PackageName: "com.test.gen", Type: "string"})
+		_ = tmpl.Execute(os.Stdout, Metadata{
+			PackageName: "com.test.gen",
+			Type:        "string",
+			Imports: []string{"encoding/json",
+				"io"}})
 	}
 }
 
@@ -23,10 +28,11 @@ func templateString() string {
 
 package {{ .PackageName }}
 
-import (
-	"encoding/json"
-	"io"
+import ({{range .Imports}}
+{{.}}{{end}}
 )
+
+{{if .Type}}
 
 func (obj {{ .Type }}) WriteTo(writer io.Writer) (int64, error) {
 	data, err := json.Marshal(&obj)
@@ -35,5 +41,10 @@ func (obj {{ .Type }}) WriteTo(writer io.Writer) (int64, error) {
 	}
 	length, err := writer.Write(data)
 	return int64(length), err
-}`
+}
+
+{{ else }}
+	You Missed Supplying Type Variable
+{{end}}.
+`
 }

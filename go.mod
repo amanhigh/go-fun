@@ -19,7 +19,7 @@ require (
 	github.com/gin-contrib/pprof v1.2.1
 	github.com/gin-gonic/gin v1.5.0 // indirect
 	github.com/golang/mock v1.3.1
-	github.com/hashicorp/consul/api v1.3.0 // indirect
+	github.com/hashicorp/consul/api v1.3.0
 	github.com/hashicorp/vault v1.3.0
 	github.com/hashicorp/vault/api v1.0.5-0.20191108163347-bdd38fca2cff
 	github.com/imdario/mergo v0.3.8 // indirect
@@ -29,7 +29,7 @@ require (
 	github.com/olivere/elastic v6.2.26+incompatible // indirect
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.7.1
-	github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563 // indirect
+	github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
