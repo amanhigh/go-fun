@@ -1,8 +1,10 @@
 package libraries
 
 import (
-	"html/template"
+	"fmt"
+	htemplate "html/template"
 	"os"
+	"text/template"
 )
 
 type Metadata struct {
@@ -24,6 +26,7 @@ type ToDo struct {
 func GenerateFun() {
 	printText()
 	printHtml()
+	codeInjection()
 }
 
 /* Text Template */
@@ -108,4 +111,17 @@ func htmlTemplate() string {
     </table>
   </body>
 </html>`
+}
+
+/* Security */
+func codeInjection() {
+	fmt.Println("\nText Template, Script Injection")
+	if t, err := template.New("foo").Parse(`{{define "T"}}Hello, {{.}}!{{end}}`); err == nil {
+		err = t.ExecuteTemplate(os.Stdout, "T", "<script>alert('you have been pwned')</script>")
+	}
+
+	fmt.Println("\n\nHTML Template, Script Injection")
+	if t, err := htemplate.New("foo").Parse(`{{define "T"}}Hello, {{.}}!{{end}}`); err == nil {
+		err = t.ExecuteTemplate(os.Stdout, "T", "<script>alert('you have been pwned')</script>")
+	}
 }
