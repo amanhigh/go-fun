@@ -7,8 +7,12 @@ import (
 	"text/template"
 )
 
+type Inner struct {
+	Name string
+}
+
 type Metadata struct {
-	PackageName string
+	PackageName Inner
 	Imports     []string
 	Type        string
 }
@@ -34,7 +38,7 @@ func printText() {
 	tmpl := template.New("jsonTemplate")
 	if tmpl, err := tmpl.Parse(textTemplate()); err == nil {
 		_ = tmpl.Execute(os.Stdout, Metadata{
-			PackageName: "com.test.gen",
+			PackageName: Inner{Name: "com.test.gen"},
 			Type:        "string",
 			Imports: []string{"encoding/json",
 				"io"}})
@@ -45,7 +49,7 @@ func textTemplate() string {
 	return `//This is Aman's Generated File
 //Request you not to mess with it :)
 
-package {{ .PackageName }}
+package {{ .PackageName.Name }}
 
 import ({{range .Imports}}
 {{.}}{{end}}
@@ -116,12 +120,12 @@ func htmlTemplate() string {
 /* Security */
 func codeInjection() {
 	fmt.Println("\nText Template, Script Injection")
-	if t, err := template.New("foo").Parse(`{{define "T"}}Hello, {{.}}!{{end}}`); err == nil {
+	if t, err := template.New("text").Parse(`{{define "T"}}Hello, {{.}}!{{end}}`); err == nil {
 		err = t.ExecuteTemplate(os.Stdout, "T", "<script>alert('you have been pwned')</script>")
 	}
 
 	fmt.Println("\n\nHTML Template, Script Injection")
-	if t, err := htemplate.New("foo").Parse(`{{define "T"}}Hello, {{.}}!{{end}}`); err == nil {
+	if t, err := htemplate.New("html").Parse(`{{define "T"}}Hello, {{.}}!{{end}}`); err == nil {
 		err = t.ExecuteTemplate(os.Stdout, "T", "<script>alert('you have been pwned')</script>")
 	}
 }
