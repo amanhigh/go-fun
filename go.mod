@@ -9,7 +9,7 @@ require (
 	github.com/bndr/gojenkins v1.0.1
 	github.com/bxcodec/faker/v3 v3.3.1
 	github.com/casbin/casbin/v2 v2.6.10
-	github.com/cheekybits/genny v1.0.0 // indirect
+	github.com/cheekybits/genny v1.0.0
 	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
 	github.com/facebookgo/inject v0.0.0-20180706035515-f23751cae28b
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
