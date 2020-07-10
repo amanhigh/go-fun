@@ -1,6 +1,7 @@
 package json
 
 import (
+	"fmt"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -13,11 +14,15 @@ func TestJson(t *testing.T) {
 }
 
 var _ = Describe("Json Encode/Decode", func() {
+	var (
+		name       = "Zoye"
+		age        = 44
+		number     = int64(88983333)
+		personJson = fmt.Sprintf(`{"name":"%s","Age":%d,"MobileNumber":%d}`, name, age, number)
+	)
 	var per person
-	personJson := `{"name":"Zoye","Age":44,"MobileNumber":8983333}`
-
 	BeforeEach(func() {
-		per = person{"Zoye", 44, 8983333}
+		per = person{name, age, number}
 	})
 
 	It("should encode Properly", func() {
