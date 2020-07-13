@@ -1,8 +1,10 @@
 package json
 
 import (
+	"bytes"
 	"fmt"
 	. "github.com/smartystreets/goconvey/convey"
+	"io"
 	"testing"
 )
 
