@@ -19,7 +19,6 @@ func TestJsonEncode(t *testing.T) {
 
 	Convey("Json", t, func() {
 		Convey("encode", func() {
-			age = 55
 			So(encodePerson(person), ShouldEqual, personJson)
 		})
 
@@ -27,6 +26,16 @@ func TestJsonEncode(t *testing.T) {
 			So(decodePerson(personJson), ShouldResemble, person)
 		})
 
+		Convey("Just Before/After", func() {
+			Convey("Tamper Age", func() {
+				age = 55
+				So(age, ShouldEqual, 55)
+				So(age, ShouldNotEqual, 75)
+				age = 75
+			})
+
+			So(age, ShouldEqual, 75)
+		})
 	})
 
 	//Assertions - https://github.com/smartystreets/goconvey/blob/master/examples/assertion_examples_test.go
