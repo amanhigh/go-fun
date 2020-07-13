@@ -1,0 +1,50 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: trace-sampling
+  namespace: istio-system
+spec:
+  configPatches:
+    - applyTo: NETWORK_FILTER
+      match:
+        context: ANY
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.http_connection_manager"
+      patch:
+        operation: MERGE
+        value:
+          typed_config:
+            "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager"
+            tracing:
+              random_sampling:
+                value: 99.9
+            access_log:
+              - name: envoy.file_access_log
+                config:
+                  path: /dev/stdout
+                  format: '%REQ(:METHOD)% %PROTOCOL% %RESPONSE_CODE% %RESPONSE_FLAGS%'
+---
+
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: gateway-sampling
+  namespace: istio-system
+spec:
+  configPatches:
+    - applyTo: HTTP_ROUTE
+      match:
+        context: GATEWAY
+        routeConfiguration:
+          portNumber: 80
+          vhost:
+            name: "*:80"
+      patch:
+        operation: MERGE
+        value:
+          tracing:
+            random_sampling:
+              numerator: 9990
+              denominator: TEN_THOUSAND
