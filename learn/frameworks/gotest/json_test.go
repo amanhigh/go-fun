@@ -104,30 +104,67 @@ var _ = Describe("Json Encode/Decode", func() {
 	}, 10)
 
 	Context("Interesting Assertions", func() {
+		var (
+			err error
+		)
+
+		It("should match", func() {
+			//Symbol Equivalent to Expect
+			Ω(err).ShouldNot(HaveOccurred())
+		})
+
+		It("should async", func() {
+			Eventually(func() []int {
+				time.Sleep(time.Millisecond * 10)
+				return []int{2, 3}
+			}, time.Millisecond*100, time.Millisecond*2).Should(HaveLen(2))
+		})
+
+		It("should deep equal", func() {
+			pizza := "Cheeseboard Pizza"
+			type FoodSrce string
+
+			Ω(FoodSrce(pizza)).ShouldNot(Equal(pizza))       //will fail
+			Ω(FoodSrce(pizza)).Should(BeEquivalentTo(pizza)) //will pass
+		})
+
 		Context("Channel", func() {
 			var (
 				c chan string
 			)
+
 			BeforeEach(func() {
 				c = make(chan string, 0)
-
 			})
 
-			It("should receive", func() {
-				go DoSomething(c, true)
-				Eventually(c).Should(BeClosed())
+			Context("With Close", func() {
+				AfterEach(func() {
+					Eventually(c).Should(BeClosed())
+				})
+
+				It("should receive", func() {
+					go DoSomething(c, true)
+				})
+
+				It("should receive", func() {
+					go DoSomething(c, true)
+					Eventually(c).Should(Receive(Equal("Done!")))
+				})
 			})
 
-			It("should receive", func() {
-				go DoSomething(c, true)
-				Eventually(c).Should(Receive(Equal("Done!")))
-				Eventually(c, time.Nanosecond).ShouldNot(BeClosed())
-			})
+			Context("No Close", func() {
+				AfterEach(func() {
+					Eventually(c).ShouldNot(BeClosed())
+				})
 
-			It("Channel Check Content", func() {
-				go DoSomething(c, false)
-				Expect(<-c).To(ContainSubstring("Done!"))
-				Eventually(c).ShouldNot(BeClosed())
+				It("Channel Check Content", func() {
+					go DoSomething(c, false)
+					Expect(<-c).To(ContainSubstring("Done!"))
+				})
+
+				It("should not receive", func() {
+					Consistently(c, time.Millisecond*100).ShouldNot(Receive())
+				})
 			})
 		})
 	})
