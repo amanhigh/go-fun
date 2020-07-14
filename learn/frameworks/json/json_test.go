@@ -98,6 +98,17 @@ var _ = Describe("Json Encode/Decode", func() {
 		})
 	})
 
+	Measure("it should do something hard efficiently", func(b Benchmarker) {
+		runtime := b.Time("Encode", func() {
+			output, _ := encodePerson(originalPerson)
+			Expect(output).To(Equal(personJson))
+		})
+
+		Ω(runtime.Seconds()).Should(BeNumerically("<", 0.2), "SomethingHard() shouldn't take too long.")
+
+		b.RecordValue("disk usage (in MB)", 1)
+	}, 10)
+
 	Context("Interesting Assertions", func() {
 		Context("Channel", func() {
 			var (
@@ -127,11 +138,3 @@ var _ = Describe("Json Encode/Decode", func() {
 		})
 	})
 })
-
-func BenchmarkEncode(b *testing.B) {
-	var per = person{"Zoye", 44, 8983333}
-
-	for n := 0; n < b.N; n++ {
-		encodePerson(per)
-	}
-}
