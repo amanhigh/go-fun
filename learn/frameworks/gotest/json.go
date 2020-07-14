@@ -4,6 +4,11 @@ import (
 	"encoding/json"
 )
 
+type PersonEncoder interface {
+	encodePerson(p person) (jsonString string, err error)
+	decodePerson(encodedPerson string) (p person, err error)
+}
+
 type person struct {
 	Name         string `json:"name"`
 	Age          int
@@ -15,9 +20,9 @@ func decodePerson(encodedPerson string) (p person, err error) {
 	return
 }
 
-func encodePerson(p1 person) (jsonString string, err error) {
+func encodePerson(p person) (jsonString string, err error) {
 	var jsonBytes []byte
-	jsonBytes, err = json.Marshal(p1)
+	jsonBytes, err = json.Marshal(p)
 	jsonString = string(jsonBytes)
 	return
 }
