@@ -1,17 +1,11 @@
-package json
+package gotest
 
 import (
 	"fmt"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"testing"
 	"time"
 )
-
-func TestJson(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Books Suite")
-}
 
 var _ = Describe("Json Encode/Decode", func() {
 	var (

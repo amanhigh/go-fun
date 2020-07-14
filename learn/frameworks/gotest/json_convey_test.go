@@ -1,4 +1,4 @@
-package json
+package gotest
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestJsonEncode(t *testing.T) {
+func TestConvey(t *testing.T) {
 	var (
 		name       = "Zoye"
 		age        = 44

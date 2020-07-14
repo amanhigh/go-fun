@@ -1,4 +1,4 @@
-package json_test
+package gotest
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestJson(t *testing.T) {
+func TestGinkgo(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Json Suite")
+	RunSpecs(t, "Go Test Suite")
 }
