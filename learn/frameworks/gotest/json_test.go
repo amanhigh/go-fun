@@ -128,6 +128,22 @@ var _ = Describe("Json Encode/Decode", func() {
 			Ω(FoodSrce(pizza)).Should(BeEquivalentTo(pizza)) //will pass
 		})
 
+		It("should match collection", func() {
+			//Array
+			Ω([]string{"Foo", "FooBar"}).Should(ConsistOf("FooBar", "Foo"))
+			Ω([]string{"Foo", "FooBar"}).Should(ConsistOf(ContainSubstring("Bar"), "Foo"))
+			Ω([]string{"Foo", "FooBar"}).Should(ConsistOf(ContainSubstring("Foo"), ContainSubstring("Foo")))
+			Ω([]string{"Foo", "FooBar"}).Should(ConsistOf([]string{"FooBar", "Foo"}))
+
+			//Map
+			Ω(map[string]string{"Foo": "Bar", "BazFoo": "Duck"}).Should(HaveKey(MatchRegexp(`.+Foo$`)))
+			Ω(map[string]int{"Foo": 3, "BazFoo": 4}).Should(HaveKeyWithValue(MatchRegexp(`.+Foo$`), BeNumerically(">", 3)))
+		})
+
+		It("should panic", func() {
+			Ω(func() { panic("FooBarBaz") }).Should(Panic())
+		})
+
 		Context("Channel", func() {
 			var (
 				c chan string
