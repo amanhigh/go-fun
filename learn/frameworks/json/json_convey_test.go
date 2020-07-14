@@ -19,11 +19,15 @@ func TestJsonEncode(t *testing.T) {
 
 	Convey("Json", t, func() {
 		Convey("encode", func() {
-			So(encodePerson(person), ShouldEqual, personJson)
+			jsonString, err := encodePerson(person)
+			So(err, ShouldBeNil)
+			So(jsonString, ShouldEqual, personJson)
 		})
 
 		Convey("decode", func() {
-			So(decodePerson(personJson), ShouldResemble, person)
+			decodedPerson, err := decodePerson(personJson)
+			So(err, ShouldBeNil)
+			So(decodedPerson, ShouldResemble, person)
 		})
 
 		Convey("Just Before/After", func() {

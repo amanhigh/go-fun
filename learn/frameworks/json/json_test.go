@@ -15,23 +15,37 @@ func TestJson(t *testing.T) {
 
 var _ = Describe("Json Encode/Decode", func() {
 	var (
-		name       = "Zoye"
-		age        = 44
-		number     = int64(88983333)
-		personJson = fmt.Sprintf(`{"name":"%s","Age":%d,"MobileNumber":%d}`, name, age, number)
+		name           = "Zoye"
+		age            = 44
+		number         = int64(88983333)
+		originalPerson person
+		personJson     string
 	)
-	var per person
 	BeforeEach(func() {
-		per = person{name, age, number}
+		originalPerson = person{name, age, number}
+		personJson = fmt.Sprintf(`{"name":"%s","Age":%d,"MobileNumber":%d}`, name, age, number)
+	})
+	Context("Success", func() {
+		It("should encode Properly", func() {
+			jsonString, err := encodePerson(originalPerson)
+			Expect(err).To(BeNil())
+			Expect(jsonString).To(Equal(personJson))
+		})
+
+		It("should decode Properly", func() {
+			decodedPerson, err := decodePerson(personJson)
+			Expect(err).To(BeNil())
+			Expect(decodedPerson).To(Equal(originalPerson))
+		})
 	})
 
-	It("should encode Properly", func() {
-		Expect(encodePerson(per)).To(Equal(personJson))
+	PContext("Fail", func() {
+		It("should throw error on invalid json", func() {
+			_, err := decodePerson("abcd")
+			Expect(err).To(Not(BeNil()))
+		})
 	})
 
-	It("should decode Properly", func() {
-		Expect(decodePerson(personJson)).To(Equal(per))
-	})
 })
 
 func BenchmarkEncode(b *testing.B) {
