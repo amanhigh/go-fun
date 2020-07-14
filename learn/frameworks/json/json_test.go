@@ -2,10 +2,10 @@ package json
 
 import (
 	"fmt"
-	"testing"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"testing"
+	"time"
 )
 
 func TestJson(t *testing.T) {
@@ -39,13 +39,93 @@ var _ = Describe("Json Encode/Decode", func() {
 		})
 	})
 
-	PContext("Fail", func() {
+	Context("Fail", func() {
+		BeforeEach(func() {
+			originalPerson.Name = "Bob"
+		})
+
 		It("should throw error on invalid json", func() {
 			_, err := decodePerson("abcd")
 			Expect(err).To(Not(BeNil()))
 		})
+
+		It("should not match original person", func() {
+			jsonString, err := encodePerson(originalPerson)
+			Expect(err).To(BeNil())
+			Expect(jsonString).To(Not(Equal(personJson)))
+		})
 	})
 
+	Context("Encode", func() {
+		var (
+			jsonString string
+			err        error
+		)
+
+		AfterEach(func() {
+			Expect(err).To(BeNil())
+
+		})
+
+		JustAfterEach(func() {
+			//Creation
+			jsonString, err = encodePerson(originalPerson)
+		})
+
+		Context("Success", func() {
+			AfterEach(func() {
+				Expect(jsonString).To(Equal(personJson))
+			})
+
+			It("should encode Properly", func() {
+			})
+		})
+
+		Context("Fail", func() {
+			//Assertions
+			AfterEach(func() {
+				Expect(jsonString).To(Not(Equal(personJson)))
+			})
+
+			//Configuration
+			It("with changed age", func() {
+				originalPerson.Age = 88
+			})
+
+			It("with changed name", func() {
+				originalPerson.Name = "Bob"
+			})
+		})
+	})
+
+	Context("Interesting Assertions", func() {
+		Context("Channel", func() {
+			var (
+				c chan string
+			)
+			BeforeEach(func() {
+				c = make(chan string, 0)
+
+			})
+
+			It("should receive", func() {
+				go DoSomething(c, true)
+				Eventually(c).Should(BeClosed())
+			})
+
+			It("should receive", func() {
+				go DoSomething(c, true)
+				Eventually(c).Should(Receive(Equal("Done!")))
+				Eventually(c, time.Nanosecond).ShouldNot(BeClosed())
+			})
+
+			It("Channel Check Content", func() {
+				go DoSomething(c, false)
+				Expect(<-c).To(ContainSubstring("Done!"))
+				Eventually(c).ShouldNot(BeClosed())
+			})
+		})
+	})
 })
 
 func BenchmarkEncode(b *testing.B) {

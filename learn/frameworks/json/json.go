@@ -21,3 +21,10 @@ func encodePerson(p1 person) (jsonString string, err error) {
 	jsonString = string(jsonBytes)
 	return
 }
+
+func DoSomething(c chan string, shouldClose bool) {
+	c <- "Done!"
+	if shouldClose {
+		close(c)
+	}
+}
