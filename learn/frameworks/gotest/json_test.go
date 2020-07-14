@@ -4,6 +4,9 @@ import (
 	"fmt"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"time"
 )
 
@@ -183,5 +186,59 @@ var _ = Describe("Json Encode/Decode", func() {
 				})
 			})
 		})
+	})
+
+	Context("Http Test Server", func() {
+		var (
+			server       *httptest.Server
+			getResponse  = "Hello"
+			postResponse = "World"
+
+			err      error
+			response *http.Response
+		)
+
+		BeforeEach(func() {
+			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodGet {
+					w.Write([]byte(getResponse))
+				} else {
+					w.Write([]byte(postResponse))
+				}
+			}))
+		})
+
+		It("should build", func() {
+			Expect(server).To(Not(BeNil()))
+		})
+
+		Context("Calls", func() {
+			var (
+				expectedResponse string
+			)
+
+			AfterEach(func() {
+				//verify response
+				Expect(err).To(BeNil())
+				Expect(response.StatusCode).To(Equal(http.StatusOK))
+				actualResponse, err := ioutil.ReadAll(response.Body)
+				Expect(err).To(BeNil())
+				Expect(actualResponse).To(BeEquivalentTo(expectedResponse))
+
+				server.Close()
+			})
+
+			It("should do Get", func() {
+				response, err = http.Get(server.URL)
+				expectedResponse = getResponse
+			})
+
+			It("should do Post", func() {
+				response, err = http.Post(server.URL, "", nil)
+				expectedResponse = postResponse
+
+			})
+		})
+
 	})
 })
