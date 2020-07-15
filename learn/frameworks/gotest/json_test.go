@@ -288,6 +288,11 @@ var _ = Describe("Json Encode/Decode", func() {
 				BeforeEach(func() {
 					decodeCall = mockEncoder.EXPECT().decodePerson(personJson).Return(per, nil)
 					encodeCall.After(decodeCall)
+
+					//gomock.InOrder(
+					//	mockEncoder.EXPECT().decodePerson(personJson).Return(per, nil),
+					//	mockEncoder.EXPECT().encodePerson(gomock.Eq(per)).Return(personJson, nil),
+					//)
 				})
 
 				It("should decode", func() {
@@ -295,6 +300,7 @@ var _ = Describe("Json Encode/Decode", func() {
 					Expect(err).To(BeNil())
 					Expect(decodedPerson).To(Equal(per))
 					mockEncoder.encodePerson(per)
+
 				})
 			})
 		})
