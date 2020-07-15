@@ -19,7 +19,7 @@ require (
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/gin-contrib/pprof v1.2.1
 	github.com/gin-gonic/gin v1.5.0
-	github.com/golang/mock v1.3.1
+	github.com/golang/mock v1.4.3
 	github.com/hashicorp/consul/api v1.3.0
 	github.com/hashicorp/serf v0.8.3
 	github.com/hashicorp/vault v1.3.0

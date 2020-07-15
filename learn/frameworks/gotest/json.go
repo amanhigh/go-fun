@@ -1,3 +1,4 @@
+//go:generate mockgen -package gotest -destination json_mock.go -source json.go
 package gotest
 
 import (
