@@ -2,6 +2,7 @@ package gotest
 
 import (
 	"fmt"
+	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"io/ioutil"
@@ -240,5 +241,66 @@ var _ = Describe("Json Encode/Decode", func() {
 			})
 		})
 
+	})
+
+	Context("GoMock", func() {
+		var (
+			ctrl        *gomock.Controller
+			mockEncoder *MockPersonEncoder
+		)
+		BeforeEach(func() {
+			ctrl = gomock.NewController(GinkgoT())
+			mockEncoder = NewMockPersonEncoder(ctrl)
+		})
+		Context("Mock", func() {
+			var (
+				encodeCall *gomock.Call
+			)
+			BeforeEach(func() {
+				encodeCall = mockEncoder.EXPECT().encodePerson(gomock.Eq(per)).Return(personJson, nil)
+			})
+
+			It("should return mocked json", func() {
+				json, err := mockEncoder.encodePerson(per)
+				Expect(err).To(BeNil())
+				Expect(json).To(Equal(personJson))
+			})
+
+			Context("Do", func() {
+				var (
+					copiedPerson person
+				)
+				BeforeEach(func() {
+					encodeCall.DoAndReturn(func(per person) { copiedPerson = per }).Return(personJson, nil)
+				})
+
+				It("should Do Something", func() {
+					mockEncoder.encodePerson(per)
+					Expect(copiedPerson).To(Equal(per))
+				})
+
+			})
+
+			Context("Order", func() {
+				var (
+					decodeCall *gomock.Call
+				)
+				BeforeEach(func() {
+					decodeCall = mockEncoder.EXPECT().decodePerson(personJson).Return(per, nil)
+					encodeCall.After(decodeCall)
+				})
+
+				It("should decode", func() {
+					decodedPerson, err := mockEncoder.decodePerson(personJson)
+					Expect(err).To(BeNil())
+					Expect(decodedPerson).To(Equal(per))
+					mockEncoder.encodePerson(per)
+				})
+			})
+		})
+
+		AfterEach(func() {
+			ctrl.Finish()
+		})
 	})
 })
