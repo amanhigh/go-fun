@@ -1,7 +1,7 @@
 PORT=8091
+#Use minikube config set vm-driver virtualbox/docker
 minikube -p minikube delete;
 minikube  -p minikube start \
- --vm-driver=virtualbox \
 --memory=3096 --cpus=2 \
 --host-only-cidr='24.1.1.100/24' \
 --cache-images=true \
