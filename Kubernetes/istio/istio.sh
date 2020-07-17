@@ -1,6 +1,7 @@
 echo -en "\033[1;32m Configuring Istio: Primary \033[0m \n"
 minikube profile minikube
-istioctl manifest apply -f istio-primary.yaml
+istioctl install -f istio-primary.yaml
+#istioctl install --set profile=demo
 kubectl label namespace default istio-injection=enabled
 
 echo -en "\033[1;32m Creating Certs \033[0m \n"
