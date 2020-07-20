@@ -15,3 +15,15 @@ services:
      - 9610:9610
      environment:
        GOPATH: /var/Projects/GoArena
+
+   target:
+     build: ../builds/build-box
+     volumes:
+       - /Users/amanpreet.singh/IdeaProjects:/var/Projects/
+
+     ports:
+     - 9700:9700
+     - 9705:9705
+     - 9710:9610
+     environment:
+       GOPATH: /var/Projects/GoArena
