@@ -10,9 +10,10 @@ services:
        - /Users/amanpreet.singh/IdeaProjects:/var/Projects/
 
      ports:
-     - 9600:9600
-     - 9605:9605
-     - 9610:9610
+     - "9600:9600"
+     - "9605:9605"
+     - "9610:9610"
+     - "2222:22"
      environment:
        GOPATH: /var/Projects/GoArena
 
@@ -22,8 +23,9 @@ services:
        - /Users/amanpreet.singh/IdeaProjects:/var/Projects/
 
      ports:
-     - 9700:9700
-     - 9705:9705
-     - 9710:9610
+     - "9700:9700"
+     - "9705:9705"
+     - "9710:9610"
+     - "2223:22"
      environment:
        GOPATH: /var/Projects/GoArena
