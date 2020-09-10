@@ -1,15 +1,10 @@
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 spec:
-  addonComponents:
-    kiali:
-      enabled: true
-    citadel:
-      enabled: true
   values:
     # selfSigned is required if Citadel is enabled, that is when values.global.istiod.enabled is false.
-    security:
-      selfSigned: false
+#    security:
+#      selfSigned: false
 
     global:
 #      mtls:
