@@ -10,7 +10,9 @@ kubectl create secret generic cacerts -n istio-system \
   --from-file=./certs/root-cert.pem --from-file=./certs/cert-chain.pem
 
 echo -en "\033[1;32m Create Kialia Admin Login \033[0m \n"
+sleep 10
 kubectl apply -f ./components/kiali.yaml
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.7/samples/addons/prometheus.yaml
 kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.7/samples/addons/kiali.yaml
 
 #istioctl manifest apply --set profile=demo
