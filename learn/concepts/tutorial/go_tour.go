@@ -1,4 +1,4 @@
-package main
+package tutorial
 
 import (
 	"fmt"
@@ -48,7 +48,7 @@ type rot13Reader struct {
 	r io.Reader
 }
 
-func main() {
+func GoTour() {
 	fmt.Println("Yay :D :D !")
 	fmt.Println("The time is", time.Now())
 
