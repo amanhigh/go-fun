@@ -1,8 +1,8 @@
-package main
+package tutorial
 
 import "fmt"
 
-func main() {
+func DaisyChain() {
 	const n = 500000
 
 	leftmost, rightMost := buildDaisyChain(n)

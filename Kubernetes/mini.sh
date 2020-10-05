@@ -14,6 +14,7 @@ minikube  -p minikube start \
 minikube -p minikube ssh 'sudo cat /var/lib/minikube/certs/sa.pub'
 minikube -p minikube dashboard --url=true &
 
+echo -en "\033[1;33m Run 'minikube tunnel’ for Emulating ELB\033[0m \n"
 echo -en "\033[1;32m Dashboard: http://localhost:$PORT/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/# \033[0m \n"
 echo -en "\033[1;32m Swagger: http://localhost:$PORT/swagger-ui \033[0m \n"
 echo -en "\033[1;33m Context: `kubectl config current-context`\033[0m \n"
@@ -27,4 +28,4 @@ kubectl proxy --port=$PORT
 # Logs - kubectl logs `kubectl get pods -o name | grep fun-app | head  -1` -f
 # Login - kubectl -it exec `kubectl get pods -o name | grep fun-app | head  -1` bash
 # Delete All - kubectl delete all --all
-#
+# Tunnel (Emulate Load Balancer) - minikube tunnel
