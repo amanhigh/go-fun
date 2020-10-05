@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/amanhigh/go-fun/apps/common/tools"
@@ -47,11 +48,17 @@ var syncCmd = &cobra.Command{
 }
 
 var investingCmd = &cobra.Command{
-	Use:   "investing filePath",
-	Short: "Syncs Remote Host Directory with target hosts",
+	Use:   "investing fileDirectory",
+	Short: "Converts Historical Data Format",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		return core.ReformatInvestingFile(args[0])
+		for _, file := range util.ListFiles(args[0]) {
+			fmt.Println(fmt.Sprintf("Processing: %v", file))
+			if err = core.ReformatInvestingFile(file); err != nil {
+				break
+			}
+		}
+		return
 	},
 }
 
