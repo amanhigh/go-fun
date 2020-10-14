@@ -1,0 +1,186 @@
+{
+  "prod": {
+    "add": {
+      "admin": [
+        {
+          "action": "delete",
+          "effect": "ALLOW",
+          "users": [
+            {
+              "provider": "Azure",
+              "identifier": "john"
+            },
+            {
+              "provider": "GCP",
+              "identifier": "trinity"
+            }
+          ]
+        },
+        {
+          "action": "delete",
+          "effect": "ALLOW",
+          "users": [
+            {
+              "provider": "Azure",
+              "identifier": "aman"
+            },
+            {
+              "provider": "GCP",
+              "identifier": "rohit"
+            }
+          ]
+        }
+      ],
+      "default": [
+        {
+          "action": "link",
+          "effect": "ALLOW",
+          "users": [
+            {
+              "provider": "Azure",
+              "identifier": "singh"
+            },
+            {
+              "provider": "GCP",
+              "identifier": "major"
+            }
+          ]
+        },
+        {
+          "action": "delete",
+          "effect": "ALLOW",
+          "users": [
+            {
+              "provider": "Azure",
+              "identifier": "don"
+            },
+            {
+              "provider": "GCP",
+              "identifier": "delloite"
+            }
+          ]
+        }
+      ]
+    },
+    "remove": {
+      "admin": [
+        {
+          "action": "new",
+          "effect": "ALLOW",
+          "users": [
+            {
+              "provider": "Azure",
+              "identifier": "aman"
+            }
+          ]
+        },
+        {
+          "action": "inject",
+          "effect": "ALLOW",
+          "users": [
+            {
+              "provider": "Azure",
+              "identifier": "john"
+            }
+          ]
+        }
+      ],
+      "default": [
+        {
+          "action": "delete",
+          "effect": "ALLOW",
+          "users": [
+            {
+              "provider": "Azure",
+              "identifier": "singh"
+            },
+            {
+              "provider": "GCP",
+              "identifier": "major"
+            }
+          ]
+        },
+        {
+          "action": "delete",
+          "effect": "ALLOW",
+          "users": [
+            {
+              "provider": "Azure",
+              "identifier": "don"
+            },
+            {
+              "provider": "GCP",
+              "identifier": "delloite"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "stage": {
+    "add": {
+      "admin": [
+        {
+          "action": "delete",
+          "effect": "ALLOW",
+          "users": [
+            {
+              "provider": "Azure",
+              "identifier": "john"
+            },
+            {
+              "provider": "GCP",
+              "identifier": "trinity"
+            }
+          ]
+        },
+        {
+          "action": "delete",
+          "effect": "ALLOW",
+          "users": [
+            {
+              "provider": "Azure",
+              "identifier": "aman"
+            },
+            {
+              "provider": "GCP",
+              "identifier": "rohit"
+            }
+          ]
+        }
+      ]
+    },
+    "remove": {
+      "default": [
+        {
+          "action": "delete",
+          "effect": "ALLOW",
+          "users": [
+            {
+              "provider": "Azure",
+              "identifier": "singh"
+            },
+            {
+              "provider": "GCP",
+              "identifier": "major"
+            }
+          ]
+        },
+        {
+          "action": "delete",
+          "effect": "ALLOW",
+          "users": [
+            {
+              "provider": "Azure",
+              "identifier": "don"
+            },
+            {
+              "provider": "GCP",
+              "identifier": "delloite"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
