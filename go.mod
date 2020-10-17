@@ -3,7 +3,6 @@ module github.com/amanhigh/go-fun
 go 1.12
 
 require (
-	bitbucket.org/liamstask/goose v0.0.0-20150115234039-8488cc47d90c
 	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/andygrunwald/go-jira v1.11.1
 	github.com/bndr/gojenkins v1.0.1
@@ -23,9 +22,7 @@ require (
 	github.com/hashicorp/consul/api v1.3.0
 	github.com/hashicorp/vault v1.3.0
 	github.com/hashicorp/vault/api v1.0.5-0.20191108163347-bdd38fca2cff
-	github.com/jinzhu/gorm v1.9.11
 	github.com/json-iterator/go v1.1.8 // indirect
-	github.com/kylelemons/go-gypsy v0.0.0-20160905020020-08cad365cd28 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
 	github.com/olivere/elastic v6.2.26+incompatible
 	github.com/onsi/ginkgo v1.12.0
@@ -37,7 +34,6 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf
-	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/crypto v0.0.0-20190820162420-60c769a6c586 // indirect
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a
 	golang.org/x/tour v0.0.0-20191002171047-6bb846ce41cd
