@@ -98,6 +98,7 @@ func productUpdates(db *gorm.DB, product *Product) {
 	db.Model(&product).Update("Price", 1500)
 	//Struct Update
 	db.Model(&product).Updates(&Product{Code: "MyCode"})
+	fmt.Println("Product Updated")
 }
 func queryProduct(db *gorm.DB) {
 	// First Query
@@ -123,9 +124,10 @@ func queryProduct(db *gorm.DB) {
 	}
 
 	//Query Id Range
-	codes := new([]string)
-	db.Not([]int64{5, 6, 10}).Find(products).Pluck("code", codes)
-	fmt.Printf("CODES: %+v\n", *codes)
+	//TODO:Fix
+	//var codes []string
+	//db.Not([]int64{5, 6, 10}).Find(products).Pluck("code", &codes)
+	//fmt.Printf("CODES: %+v\n", codes)
 	db.Unscoped().Where([]int64{5, 6, 10}).Limit(3).Limit(-1).Find(products)
 	fmt.Println("Id Range Search Count: ", len(*products))
 
