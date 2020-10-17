@@ -2,8 +2,8 @@ package manager
 
 import (
 	"github.com/amanhigh/go-fun/apps/models/fun-app/db"
-	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 type PersonManagerInterface interface {

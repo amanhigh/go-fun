@@ -1,8 +1,8 @@
 package model
 
-//go:generate jsongen -type=Vertical -package model
+import "gorm.io/gorm"
 
-import "github.com/jinzhu/gorm"
+//go:generate jsongen -type=Vertical -package model
 
 type Vertical struct {
 	gorm.Model
