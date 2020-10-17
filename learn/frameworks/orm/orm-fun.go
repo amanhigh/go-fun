@@ -1,12 +1,13 @@
-package main
+package orm
 
 import (
 	"fmt"
+	util2 "github.com/amanhigh/go-fun/apps/common/util"
+	"gorm.io/gorm"
 	"os"
 
 	"github.com/amanhigh/go-fun/learn/frameworks/orm/model"
-	"github.com/amanhigh/go-fun/util"
-	"github.com/jinzhu/gorm"
+	_ "github.com/amanhigh/go-fun/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -44,9 +45,8 @@ func (p *Product) AfterFind() (err error) {
 /** Extra Json Logger */
 var jsonLogger = &log.Logger{Out: os.Stdout, Formatter: new(log.JSONFormatter), Level: log.InfoLevel}
 
-func main() {
-	db := util.NewDb("/Users/amanpreet.singh/IdeaProjects/GoArena/src/github.com/amanhigh/go-fun/learn/frameworks/orm/db/")
-	defer db.Close()
+func OrmFun() {
+	db, _ := util2.CreateDbConnection("development", "aman:aman@tcp(docker:3306)/compute?charset=utf8&parseTime=True&loc=Local")
 
 	prepLogger()
 	db.AutoMigrate(&Product{}, &model.Vertical{})
@@ -69,7 +69,7 @@ func prepLogger() {
 }
 
 func schemaAlterPlay(db *gorm.DB) {
-	db.Model(&Product{}).DropColumn("code")
+	db.Migrator().DropColumn(&Product{}, "code")
 }
 
 func TruncateTable(db *gorm.DB, tableName string) {
@@ -96,7 +96,7 @@ func productUpdates(db *gorm.DB, product *Product) {
 	//Single Field Update
 	db.Model(&product).Update("Price", 1500)
 	//Struct Update
-	db.Model(&product).Update(&Product{Code: "MyCode"})
+	db.Model(&product).Updates(&Product{Code: "MyCode"})
 }
 func queryProduct(db *gorm.DB) {
 	// First Query
@@ -137,16 +137,15 @@ func queryProduct(db *gorm.DB) {
 func createVertical(db *gorm.DB) {
 	vertical := &model.Vertical{}
 	db.FirstOrCreate(&vertical)
-	verticalCount := new(int)
-	db.Model(&model.Vertical{}).Count(verticalCount)
-	fmt.Println("Vertical Count:", *verticalCount)
+	verticals := db.Model(&model.Vertical{})
+	fmt.Println("Vertical Count:", verticals.RowsAffected)
 
 	fmt.Println("\n\nVertical Json WRITE")
 	vertical.WriteTo(os.Stdout)
 	fmt.Println("\nVertical Json WRITE\n\n")
 
-	found := db.Model(&model.Vertical{Name: "Not Present"}).RecordNotFound()
-	fmt.Println("FOUND Value:", found)
+	found := db.Model(&model.Vertical{Name: "Not Present"})
+	fmt.Println("FOUND Value:", found.Error)
 
 	//if dbc := db.First(vertical, "name=?", "Shirts"); dbc.Error == nil {
 	//	fmt.Println("Vertical Exists", dbc.Value.(*Vertical).Name)
