@@ -123,11 +123,22 @@ func queryProduct(db *gorm.DB) {
 		fmt.Println("Deleted/Undeleted Product Found: ", product.ID)
 	}
 
-	//Query Id Range
+	//Single Field Select
 	//TODO:Fix
 	//var codes []string
 	//db.Not([]int64{5, 6, 10}).Find(products).Pluck("code", &codes)
 	//fmt.Printf("CODES: %+v\n", codes)
+
+	//Multi Field Select
+	var multiSelectProducts []Product
+	db.Select("code", "price").Find(&multiSelectProducts)
+	fmt.Println("Multi Field Select")
+	for _, p := range multiSelectProducts {
+		//Vertical Id is not queried
+		fmt.Println(p.Code, p.Price, p.VerticalID)
+	}
+
+	//Search Id Range
 	db.Unscoped().Where([]int64{5, 6, 10}).Limit(3).Limit(-1).Find(products)
 	fmt.Println("Id Range Search Count: ", len(*products))
 
