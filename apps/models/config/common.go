@@ -22,7 +22,7 @@ type Vault struct {
 
 type Db struct {
 	Env         string `yaml:"env"`
-	Path        string `yaml:"path"`
+	Url         string `yaml:"url"`
 	AutoMigrate bool   `yaml:"auto_migrate"`
 }
 

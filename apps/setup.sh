@@ -13,7 +13,6 @@ FUNAPP_CONFIG=/etc/fun-app
 rm -rf ${FUNAPP_CONFIG}; mkdir -p ${FUNAPP_CONFIG}
 
 sudo ln -s ${APPS_PATH}/components/fun-app/config.yml ${FUNAPP_CONFIG}/config.yml
-sudo ln -s ${APPS_PATH}/components/fun-app/db/ ${FUNAPP_CONFIG}/db
 
 mkdir -p /var/log/fun-app
 chmod 777 /var/log/fun-app
