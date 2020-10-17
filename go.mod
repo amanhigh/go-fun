@@ -21,7 +21,6 @@ require (
 	github.com/gin-gonic/gin v1.5.0
 	github.com/golang/mock v1.4.3
 	github.com/hashicorp/consul/api v1.3.0
-	github.com/hashicorp/serf v0.8.3
 	github.com/hashicorp/vault v1.3.0
 	github.com/hashicorp/vault/api v1.0.5-0.20191108163347-bdd38fca2cff
 	github.com/jinzhu/gorm v1.9.11
@@ -34,7 +33,6 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
 	github.com/sirupsen/logrus v1.4.2
-	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5 // indirect
@@ -44,4 +42,6 @@ require (
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a
 	golang.org/x/tour v0.0.0-20191002171047-6bb846ce41cd
 	gopkg.in/yaml.v2 v2.2.8
+	gorm.io/driver/mysql v1.0.2
+	gorm.io/gorm v1.20.2
 )

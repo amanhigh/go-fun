@@ -1,12 +1,12 @@
 package handlers
 
 import (
+	"gorm.io/gorm"
 	"net/http"
 
 	"github.com/amanhigh/go-fun/apps/components/fun-app/manager"
 	"github.com/amanhigh/go-fun/apps/models/fun-app/server"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 )
 
 type PersonHandler struct {

@@ -1,6 +1,7 @@
 package fun_app
 
 import (
+	"gorm.io/gorm"
 	"os"
 
 	"github.com/amanhigh/go-fun/apps/common/clients"
@@ -13,7 +14,6 @@ import (
 	"github.com/amanhigh/go-fun/apps/models/interfaces"
 	"github.com/facebookgo/inject"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -73,7 +73,7 @@ func createLogfile(path string) (*os.File, error) {
 
 func initDb(dbConfig config.Db) (db *gorm.DB) {
 	var err error
-	if db, err = util.CreateDbConnection(dbConfig.Env, dbConfig.Path); err == nil {
+	if db, err = util.CreateDbConnection(dbConfig.Env, dbConfig.Url); err == nil {
 		if dbConfig.AutoMigrate {
 			/** AutoMigrate Schema */
 			db.AutoMigrate(
