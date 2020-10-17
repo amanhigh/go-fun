@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"errors"
 	"fmt"
 	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	"gorm.io/gorm"
@@ -17,7 +18,7 @@ type Product struct {
 	Price      uint
 	IgnoreMe   string `gorm:"-"` // Ignore this field
 	Vertical   model.Vertical
-	VerticalId uint //Must be vertical_id in DB or won't work automatically.
+	VerticalID uint //Must be vertical_id in DB or won't work automatically.
 }
 
 //Default Name would be products
@@ -37,7 +38,7 @@ func (p *Product) TableName() string {
 // -> AfterSave/Update
 // commit or rollback transaction
 
-func (p *Product) AfterFind() (err error) {
+func (p *Product) AfterFind(_ *gorm.DB) (err error) {
 	p.IgnoreMe = "Ignore" + p.Code
 	return nil
 }
@@ -49,7 +50,7 @@ func OrmFun() {
 	db, _ := util2.CreateDbConnection("development", "aman:aman@tcp(docker:3306)/compute?charset=utf8&parseTime=True&loc=Local")
 
 	prepLogger()
-	db.AutoMigrate(&Product{}, &model.Vertical{})
+	db.AutoMigrate(&Product{}) // Vertical not required Foreign Keys Auto Created
 
 	playProduct(db)
 
@@ -80,7 +81,7 @@ func playProduct(db *gorm.DB) {
 	createVertical(db)
 
 	// Create
-	product := &Product{Code: "L1212", Price: 1000, VerticalId: 1}
+	product := &Product{Code: "L1212", Price: 1000, VerticalID: 1}
 	db.Create(product)
 
 	queryProduct(db)
@@ -107,7 +108,7 @@ func queryProduct(db *gorm.DB) {
 	db.Preload("Vertical").First(product, "code = ?", "L1212")
 
 	fields := log.Fields{
-		"Vertical ID:":  product.VerticalId,
+		"Vertical ID:":  product.VerticalID,
 		"Vertical Name": product.Vertical.Name,
 		"Ignore Me":     product.IgnoreMe,
 	}
@@ -137,15 +138,16 @@ func queryProduct(db *gorm.DB) {
 func createVertical(db *gorm.DB) {
 	vertical := &model.Vertical{}
 	db.FirstOrCreate(&vertical)
-	verticals := db.Model(&model.Vertical{})
-	fmt.Println("Vertical Count:", verticals.RowsAffected)
+	count := new(int64)
+	db.Model(&model.Vertical{}).Count(count)
+	fmt.Println("Vertical Count:", *count)
 
 	fmt.Println("\n\nVertical Json WRITE")
 	vertical.WriteTo(os.Stdout)
 	fmt.Println("\nVertical Json WRITE\n\n")
 
-	found := db.Model(&model.Vertical{Name: "Not Present"})
-	fmt.Println("FOUND Value:", found.Error)
+	result := db.Model(&model.Vertical{Name: "Not Present"})
+	fmt.Println("FOUND Value:", errors.Is(result.Error, gorm.ErrRecordNotFound))
 
 	//if dbc := db.First(vertical, "name=?", "Shirts"); dbc.Error == nil {
 	//	fmt.Println("Vertical Exists", dbc.Value.(*Vertical).Name)
