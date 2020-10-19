@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS MeraProduct;
+DROP TABLE IF EXISTS verticals;
