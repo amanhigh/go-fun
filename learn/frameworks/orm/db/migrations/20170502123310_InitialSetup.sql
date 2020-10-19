@@ -1,7 +1,7 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-create table aman.MeraProduct
+create table MeraProduct
 (
   id int(10) unsigned auto_increment
     primary key,
@@ -18,7 +18,7 @@ create index idx_MeraProduct_deleted_at
   on MeraProduct (deleted_at)
 ;
 
-create table aman.verticals
+create table verticals
 (
   id int(10) unsigned auto_increment
     primary key,
@@ -37,5 +37,5 @@ create index idx_verticals_deleted_at
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-DROP TABLE aman.MeraProduct;
-DROP TABLE aman.verticals;
+DROP TABLE MeraProduct;
+DROP TABLE verticals;
