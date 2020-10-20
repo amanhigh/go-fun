@@ -1,6 +1,7 @@
 package fun_app
 
 import (
+	"fmt"
 	"gorm.io/gorm"
 	"os"
 
@@ -15,6 +16,10 @@ import (
 	"github.com/facebookgo/inject"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/mysql"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 const (
@@ -73,23 +78,27 @@ func createLogfile(path string) (*os.File, error) {
 
 func initDb(dbConfig config.Db) (db *gorm.DB) {
 	var err error
-	if db, err = util.CreateDbConnection(dbConfig.Env, dbConfig.Url); err == nil {
+	if db, err = util.CreateDbConnection(dbConfig); err == nil {
 		if dbConfig.AutoMigrate {
-			/** AutoMigrate Schema */
+			/** Gorm AutoMigrate Schema */
 			db.AutoMigrate(
 				&db2.Person{},
 			)
 
-			/* Goose Migration */
-			//var version int64
-			//MIGRATION_DIR = dbConfig.Path + "/migrations/"
-			//if version, err = goose.GetDBVersion(dbConf); err == nil {
-			//	err = goose.RunMigrations(dbConf, MIGRATION_DIR, version)
-			//
-			//}
+			/* GoMigrate*/
+			var m *migrate.Migrate
+			sourceURL := fmt.Sprintf("file://%v", dbConfig.MigrationSource)
+			dbUrl := fmt.Sprintf("mysql://%v", dbConfig.Url)
+			if m, err = migrate.New(sourceURL, dbUrl); err == nil {
+				if err = m.Up(); err == nil {
+					log.Info("Migration Complete")
+				}
+			}
 		}
-	} else {
-		log.WithFields(log.Fields{"DbConfig": dbConfig, "Error": err}).Panic("failed to connect database")
+	}
+
+	if err != nil {
+		log.WithFields(log.Fields{"DbConfig": dbConfig, "Error": err}).Panic("Failed To Setup DB")
 	}
 	return
 }

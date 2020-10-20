@@ -18,7 +18,8 @@ require (
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/gin-contrib/pprof v1.2.1
 	github.com/gin-gonic/gin v1.5.0
-	github.com/golang/mock v1.4.3
+	github.com/golang-migrate/migrate/v4 v4.13.0
+	github.com/golang/mock v1.4.4
 	github.com/hashicorp/consul/api v1.3.0
 	github.com/hashicorp/vault v1.3.0
 	github.com/hashicorp/vault/api v1.0.5-0.20191108163347-bdd38fca2cff
@@ -26,7 +27,7 @@ require (
 	github.com/mailru/easyjson v0.7.0 // indirect
 	github.com/olivere/elastic v6.2.26+incompatible
 	github.com/onsi/ginkgo v1.12.0
-	github.com/onsi/gomega v1.7.1
+	github.com/onsi/gomega v1.9.0
 	github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
 	github.com/sirupsen/logrus v1.4.2
@@ -34,8 +35,7 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf
-	golang.org/x/crypto v0.0.0-20190820162420-60c769a6c586 // indirect
-	golang.org/x/net v0.0.0-20200301022130-244492dfa37a
+	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc
 	golang.org/x/tour v0.0.0-20191002171047-6bb846ce41cd
 	gopkg.in/yaml.v2 v2.2.8
 	gorm.io/driver/mysql v1.0.2
