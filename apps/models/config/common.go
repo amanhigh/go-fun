@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"gorm.io/gorm/logger"
 	"time"
 )
 
@@ -21,9 +22,12 @@ type Vault struct {
 }
 
 type Db struct {
-	Env         string `yaml:"env"`
-	Url         string `yaml:"url"`
-	AutoMigrate bool   `yaml:"auto_migrate"`
+	Url             string          `yaml:"url"`
+	MigrationSource string          `yaml:"migration_source"`
+	MaxIdle         int             `yaml:"max_idle"`
+	MaxOpen         int             `yaml:"max_open"`
+	AutoMigrate     bool            `yaml:"auto_migrate"`
+	LogLevel        logger.LogLevel `yaml:"log_level"`
 }
 
 type HttpClientConfig struct {
