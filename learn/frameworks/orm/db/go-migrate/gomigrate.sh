@@ -11,7 +11,7 @@ $CMD -path $PATH -database $URL drop
 
 # Apply Migrations
 echo -en "\033[1;32m Apply \033[0m \n"
-$CMD -path $PATH -database $URL up
+$CMD -path $PATH -database $URL up 2
 
 # Check Version
 echo -en "\033[1;32m Version Check \033[0m \n"
@@ -19,8 +19,16 @@ $CMD -path $PATH -database $URL version
 
 # Remove Migration
 echo -en "\033[1;32m Down \033[0m \n"
-$CMD -path $PATH -database $URL down
+$CMD -path $PATH -database $URL down 1
 
 #Version Check
 echo -en "\033[1;32m Version Check (Post Down) \033[0m \n"
+$CMD -path $PATH -database $URL version
+
+#Force Set Version
+echo -en "\033[1;32m Force Version \033[0m \n"
+$CMD -path $PATH -database $URL force 2
+
+#Force Version Check
+echo -en "\033[1;32m Version Check (Post Force) \033[0m \n"
 $CMD -path $PATH -database $URL version

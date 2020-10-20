@@ -1,0 +1,1 @@
+ALTER TABLE verticals DROP COLUMN my_column;

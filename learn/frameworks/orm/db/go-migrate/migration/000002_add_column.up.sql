@@ -1,0 +1,1 @@
+ALTER TABLE verticals ADD my_column VARCHAR(255);
