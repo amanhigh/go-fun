@@ -92,6 +92,9 @@ func initDb(dbConfig config.Db) (db *gorm.DB) {
 			if m, err = migrate.New(sourceURL, dbUrl); err == nil {
 				if err = m.Up(); err == nil {
 					log.Info("Migration Complete")
+				} else if err == migrate.ErrNoChange {
+					//Ignore No Change
+					err = nil
 				}
 			}
 		}
