@@ -39,5 +39,6 @@ require (
 	golang.org/x/tour v0.0.0-20191002171047-6bb846ce41cd
 	gopkg.in/yaml.v2 v2.2.8
 	gorm.io/driver/mysql v1.0.2
+	gorm.io/driver/sqlite v1.1.3
 	gorm.io/gorm v1.20.2
 )

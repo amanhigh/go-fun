@@ -47,7 +47,7 @@ func (p *Product) AfterFind(_ *gorm.DB) (err error) {
 var jsonLogger = &log.Logger{Out: os.Stdout, Formatter: new(log.JSONFormatter), Level: log.InfoLevel}
 
 func OrmFun() {
-	db, _ := util2.CreateDbConnection("development", "aman:aman@tcp(docker:3306)/compute?charset=utf8&parseTime=True&loc=Local")
+	db, _ := util2.CreateTestDb()
 
 	prepLogger()
 	db.AutoMigrate(&Product{}) // Vertical not required Foreign Keys Auto Created
@@ -57,6 +57,7 @@ func OrmFun() {
 	db.Create(&Product{Code: "LongCode", Price: 4})
 
 	//schemaAlterPlay(db)
+	fmt.Println("ORM Fun Finished")
 }
 
 func prepLogger() {

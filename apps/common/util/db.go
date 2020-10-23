@@ -4,6 +4,7 @@ import (
 	"github.com/amanhigh/go-fun/apps/models/config"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -20,5 +21,10 @@ func CreateDbConnection(config config.Db) (db *gorm.DB, err error) {
 			sqlDb.SetMaxOpenConns(20)
 		}
 	}
+	return
+}
+
+func CreateTestDb() (db *gorm.DB, err error) {
+	db, err = gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
 	return
 }
