@@ -12,6 +12,7 @@ RequestId Generator for Gin
 */
 func RequestId(c *gin.Context) {
 	c.Set(models.XRequestID, uuid.New())
+	c.Next()
 }
 
 /**
@@ -25,13 +26,12 @@ func (h *RequestIdHook) Levels() []log.Level {
 	return log.AllLevels
 }
 
+/**
+Add RequestId from Context if Contexts is Present else ignore.
+*/
 func (h *RequestIdHook) Fire(e *log.Entry) error {
-	var value interface{}
-	if e.Context == nil {
-		value = "ContextMissing"
-	} else {
-		value = e.Context.Value(models.XRequestID)
+	if e.Context != nil {
+		e.Data["RequestId"] = e.Context.Value(models.XRequestID)
 	}
-	e.Data["RequestId"] = value
 	return nil
 }

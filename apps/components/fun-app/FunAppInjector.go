@@ -44,6 +44,8 @@ func (self *FunAppInjector) BuildApp() (app interface{}, err error) {
 	var file *os.File
 	if file, err = createLogfile(APP_LOG); err == nil {
 		log.SetOutput(file)
+		//Auto Log RequestId
+		log.AddHook(&metrics.RequestIdHook{})
 
 		/* Gin Engine */
 		engine := gin.New()
