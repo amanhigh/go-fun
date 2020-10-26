@@ -48,7 +48,7 @@ func (self *FunAppInjector) BuildApp() (app interface{}, err error) {
 		/* Gin Engine */
 		engine := gin.New()
 		if file, err = createLogfile(ACCESS_LOG); err == nil {
-			engine.Use(gin.LoggerWithWriter(file), gin.Recovery(), metrics.MatchedPath, metrics.AccessMetrics)
+			engine.Use(gin.LoggerWithWriter(file), gin.Recovery(), metrics.RequestId, metrics.MatchedPath, metrics.AccessMetrics)
 
 			/* Injections */
 			err = self.graph.Provide(
