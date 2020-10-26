@@ -8,10 +8,10 @@ import (
 )
 
 type PersonManagerInterface interface {
-	CreatePerson(background context.Context, person db.Person) (err error)
-	DeletePerson(id string) (err error)
+	CreatePerson(c context.Context, person db.Person) (err error)
+	DeletePerson(c context.Context, id string) (err error)
 
-	GetAllPersons() (persons []db.Person, err error)
+	GetAllPersons(c context.Context) (persons []db.Person, err error)
 }
 
 type PersonManager struct {
@@ -32,12 +32,12 @@ func (self *PersonManager) CreatePerson(c context.Context, person db.Person) (er
 	return
 }
 
-func (self *PersonManager) GetAllPersons() (persons []db.Person, err error) {
+func (self *PersonManager) GetAllPersons(c context.Context) (persons []db.Person, err error) {
 	err = self.Db.Find(&persons).Error
 	return
 }
 
-func (self *PersonManager) DeletePerson(id string) (err error) {
+func (self *PersonManager) DeletePerson(c context.Context, id string) (err error) {
 	var person = db.Person{}
 
 	/* Find Person in DB */

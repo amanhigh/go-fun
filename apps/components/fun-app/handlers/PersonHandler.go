@@ -27,7 +27,7 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 }
 
 func (self *PersonHandler) GetAllPerson(c *gin.Context) {
-	if persons, err := self.Manager.GetAllPersons(); err == nil {
+	if persons, err := self.Manager.GetAllPersons(c); err == nil {
 		c.JSON(http.StatusOK, persons)
 	} else {
 		c.JSON(http.StatusInternalServerError, err.Error())
@@ -35,7 +35,7 @@ func (self *PersonHandler) GetAllPerson(c *gin.Context) {
 }
 
 func (self *PersonHandler) DeletePersons(c *gin.Context) {
-	if err := self.Manager.DeletePerson(c.Param("id")); err == nil {
+	if err := self.Manager.DeletePerson(c, c.Param("id")); err == nil {
 		c.JSON(http.StatusOK, "DELETED")
 	} else {
 		if err == gorm.ErrRecordNotFound {
