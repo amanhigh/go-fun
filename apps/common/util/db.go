@@ -6,19 +6,20 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func CreateDbConnection(config config.Db) (db *gorm.DB, err error) {
 	log.WithFields(log.Fields{"DBConfig": config}).Info("Initing DB")
 
-	if db, err = gorm.Open(mysql.Open(config.Url), &gorm.Config{}); err == nil {
+	if db, err = gorm.Open(mysql.Open(config.Url), &gorm.Config{Logger: logger.Default.LogMode(config.LogLevel)}); err == nil {
 		/** Print SQL */
 		//db.LogMode(true)
 
 		//TODO:From Config
 		if sqlDb, err := db.DB(); err == nil {
-			sqlDb.SetMaxIdleConns(5)
-			sqlDb.SetMaxOpenConns(20)
+			sqlDb.SetMaxIdleConns(config.MaxIdle)
+			sqlDb.SetMaxOpenConns(config.MaxOpen)
 		}
 	}
 	return
