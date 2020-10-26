@@ -16,20 +16,19 @@ func RequestId(c *gin.Context) {
 }
 
 /**
-RequestId Hook to Auto logs RequestId
-from Context
+Processes Context Passed to Logger else ignores.
 */
-type RequestIdHook struct {
+type ContextLogHook struct {
 }
 
-func (h *RequestIdHook) Levels() []log.Level {
+func (h *ContextLogHook) Levels() []log.Level {
 	return log.AllLevels
 }
 
 /**
 Add RequestId from Context if Contexts is Present else ignore.
 */
-func (h *RequestIdHook) Fire(e *log.Entry) error {
+func (h *ContextLogHook) Fire(e *log.Entry) error {
 	if e.Context != nil {
 		e.Data["RequestId"] = e.Context.Value(models.XRequestID)
 	}
