@@ -1,13 +1,14 @@
 package manager
 
 import (
+	"context"
 	"github.com/amanhigh/go-fun/apps/models/fun-app/db"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type PersonManagerInterface interface {
-	CreatePerson(person db.Person) (err error)
+	CreatePerson(background context.Context, person db.Person) (err error)
 	DeletePerson(id string) (err error)
 
 	GetAllPersons() (persons []db.Person, err error)
@@ -17,20 +18,22 @@ type PersonManager struct {
 	Db *gorm.DB `inject:""`
 }
 
-func (self *PersonManager) CreatePerson(person db.Person) (err error) {
+func (self *PersonManager) CreatePerson(c context.Context, person db.Person) (err error) {
 	personFields := log.Fields{"Name": person.Name}
 
 	/*
 		Create new Person
 	*/
 	if err = self.Db.Create(&person).Error; err != nil {
-		log.WithFields(personFields).WithField("Error", err).Error("Error Creating Person")
+		log.WithContext(c).WithFields(personFields).WithField("Error", err).Error("Error Creating Person")
+	} else {
+		log.WithContext(c).WithFields(personFields).Info("Person Created")
 	}
 	return
 }
 
 func (self *PersonManager) GetAllPersons() (persons []db.Person, err error) {
-	err = self.Db.Find(&persons, &db.Person{}).Error
+	err = self.Db.Find(&persons).Error
 	return
 }
 

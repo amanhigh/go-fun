@@ -16,7 +16,7 @@ type PersonHandler struct {
 func (self *PersonHandler) CreatePerson(c *gin.Context) {
 	var request server.PersonRequest
 	if err := c.Bind(&request); err == nil {
-		if err := self.Manager.CreatePerson(request.Person); err == nil {
+		if err := self.Manager.CreatePerson(c, request.Person); err == nil {
 			c.JSON(http.StatusOK, request)
 		} else {
 			c.JSON(http.StatusInternalServerError, err.Error())
