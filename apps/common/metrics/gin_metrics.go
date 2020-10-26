@@ -2,8 +2,6 @@ package metrics
 
 import (
 	"fmt"
-	"github.com/amanhigh/go-fun/apps/models"
-	"github.com/google/uuid"
 	"net/http"
 	"strings"
 
@@ -43,11 +41,4 @@ func AccessMetrics(context *gin.Context) {
 		errorCounter := metrics.GetOrRegister("error."+matchedPath, metrics.NewCounter()).(metrics.Counter)
 		errorCounter.Inc(1)
 	}
-}
-
-/**
-RequestId Generator for Gin
-*/
-func RequestId(c *gin.Context) {
-	c.Set(models.XRequestID, uuid.New())
 }
