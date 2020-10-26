@@ -17,13 +17,13 @@ require (
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/gin-contrib/pprof v1.2.1
-	github.com/gin-gonic/gin v1.5.0
+	github.com/gin-gonic/gin v1.6.3
 	github.com/golang-migrate/migrate/v4 v4.13.0
 	github.com/golang/mock v1.4.4
+	github.com/google/uuid v1.1.1
 	github.com/hashicorp/consul/api v1.3.0
 	github.com/hashicorp/vault v1.3.0
 	github.com/hashicorp/vault/api v1.0.5-0.20191108163347-bdd38fca2cff
-	github.com/json-iterator/go v1.1.8 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
 	github.com/olivere/elastic v6.2.26+incompatible
 	github.com/onsi/ginkgo v1.12.0
