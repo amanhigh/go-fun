@@ -26,3 +26,6 @@ _testmain.go
 .idea
 aman.json
 wrk.log
+
+#DB
+gorm.db
