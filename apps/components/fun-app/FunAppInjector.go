@@ -42,14 +42,14 @@ func (self *FunAppInjector) BuildApp() (app interface{}, err error) {
 
 	/* Set Logger to File */
 	var file *os.File
-	if file, err = createLogfile(APP_LOG); err == nil {
+	if file, err = os.Create(APP_LOG); err == nil {
 		log.SetOutput(file)
 		//Auto Log RequestId
 		log.AddHook(&metrics.ContextLogHook{})
 
 		/* Gin Engine */
 		engine := gin.New()
-		if file, err = createLogfile(ACCESS_LOG); err == nil {
+		if file, err = os.Create(ACCESS_LOG); err == nil {
 			engine.Use(gin.LoggerWithWriter(file), gin.Recovery(), metrics.RequestId, metrics.MatchedPath, metrics.AccessMetrics)
 
 			/* Injections */
@@ -72,10 +72,6 @@ func (self *FunAppInjector) BuildApp() (app interface{}, err error) {
 		}
 	}
 	return
-}
-
-func createLogfile(path string) (*os.File, error) {
-	return os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 }
 
 func initDb(dbConfig config.Db) (db *gorm.DB) {
