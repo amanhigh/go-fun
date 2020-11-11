@@ -18,7 +18,13 @@ type Product struct {
 	Price      uint
 	IgnoreMe   string `gorm:"-"` // Ignore this field
 	Vertical   model.Vertical
-	VerticalID uint //Must be vertical_id in DB or won't work automatically.
+	VerticalID uint      //Must be vertical_id in DB or won't work automatically.
+	Features   []Feature `gorm:"many2many:product_features;"`
+}
+
+type Feature struct {
+	gorm.Model
+	Name string
 }
 
 //Default Name would be products
@@ -82,7 +88,11 @@ func playProduct(db *gorm.DB) {
 	createVertical(db)
 
 	// Create
-	product := &Product{Code: "L1212", Price: 1000, VerticalID: 1}
+	features := []Feature{
+		{Name: "Strong"},
+		{Name: "Light"},
+	}
+	product := &Product{Code: "L1212", Price: 1000, VerticalID: 1, Features: features}
 	db.Create(product)
 
 	queryProduct(db)
