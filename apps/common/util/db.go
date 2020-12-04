@@ -26,6 +26,6 @@ func CreateDbConnection(config config.Db) (db *gorm.DB, err error) {
 }
 
 func CreateTestDb() (db *gorm.DB, err error) {
-	db, err = gorm.Open(sqlite.Open("/tmp/test.db"), &gorm.Config{})
+	db, err = gorm.Open(sqlite.Open("/tmp/gorm.db"), &gorm.Config{})
 	return
 }
