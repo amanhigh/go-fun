@@ -5,6 +5,7 @@ import (
 	"fmt"
 	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"os"
 
 	"github.com/amanhigh/go-fun/learn/frameworks/orm/model"
@@ -109,8 +110,39 @@ func productUpdates(db *gorm.DB, product *Product) {
 	db.Model(&product).Update("Price", 1500)
 	//Struct Update
 	db.Model(&product).Updates(&Product{Code: "MyCode"})
+
+	manyToManyUpdate(db, product)
+
 	fmt.Println("Product Updated")
 }
+
+func manyToManyUpdate(db *gorm.DB, product *Product) {
+	fmt.Println("Before M2M Update: ", len(product.Features), product.Features[0].Name)
+
+	//Existing Assocation needs to be deleted manually
+	db.Delete(product.Features[0])
+
+	//New Associations can be added and Saved. Will not touch existing associations
+	product.Features = []Feature{
+		{Name: "abc"},
+		{Name: "xyz"},
+	}
+
+	//Perform Update
+	db.Save(product)
+
+	//Only Displays New Features not the ones saved in DB's
+	fmt.Println("Post M2M Update: ", len(product.Features), product.Features[0].Name)
+
+	//Reload from Db
+	reloadedProduct := Product{}
+	db.Preload(clause.Associations).First(&reloadedProduct)
+
+	//Reloaded Product displays saved and newly created Features
+	//TODO: Deleted Items are coming why ?
+	fmt.Println("Reloaded M2M Update", len(reloadedProduct.Features), reloadedProduct.Features[0].Name)
+}
+
 func queryProduct(db *gorm.DB) {
 	// First Query
 	product := new(Product)
