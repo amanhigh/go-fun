@@ -36,6 +36,7 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf
+	github.com/xlab/treeprint v1.0.0
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc
 	golang.org/x/tour v0.0.0-20191002171047-6bb846ce41cd
 	gopkg.in/yaml.v2 v2.2.8
