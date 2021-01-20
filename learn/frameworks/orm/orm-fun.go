@@ -136,7 +136,7 @@ func manyToManyUpdate(db *gorm.DB, product *Product) {
 
 	//Reload from Db
 	reloadedProduct := Product{}
-	db.Preload(clause.Associations).First(&reloadedProduct)
+	db.Preload(clause.Associations).First(&reloadedProduct, product.ID)
 
 	//Reloaded Product displays saved and newly created Features
 	//TODO: Deleted Items are coming why ?
