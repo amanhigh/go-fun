@@ -23,6 +23,20 @@ type Product struct {
 	Features   []Feature `gorm:"many2many:product_features;"`
 }
 
+type BackupProduct struct {
+	Product
+}
+
+func (self *BackupProduct) TableName() string {
+	return "BackupProduct"
+}
+
+func (self *BackupProduct) BeforeSave(tx *gorm.DB) (err error) {
+	fmt.Println("Backup Update")
+	//Override and Do nothing to avoid endless loop
+	return
+}
+
 type Feature struct {
 	gorm.Model
 	Name string
@@ -31,6 +45,12 @@ type Feature struct {
 //Default Name would be products
 func (p *Product) TableName() string {
 	return "MeraProduct"
+}
+
+func (u *Product) BeforeSave(tx *gorm.DB) (err error) {
+	//Backup Product
+	tx.Create(&BackupProduct{*u})
+	return
 }
 
 // begin transaction
@@ -60,8 +80,6 @@ func OrmFun() {
 	db.AutoMigrate(&Product{}) // Vertical not required Foreign Keys Auto Created
 
 	playProduct(db)
-
-	db.Create(&Product{Code: "LongCode", Price: 4})
 
 	//schemaAlterPlay(db)
 	fmt.Println("ORM Fun Finished")
@@ -100,8 +118,16 @@ func playProduct(db *gorm.DB) {
 
 	productUpdates(db, product)
 
+	productBackup(db)
+
 	// Delete - delete product
 	db.Delete(&product)
+}
+
+func productBackup(db *gorm.DB) {
+	var count int64
+	db.Model(&BackupProduct{}).Count(&count)
+	fmt.Println("Product Backups: ", count)
 }
 func productUpdates(db *gorm.DB, product *Product) {
 	// Update without Callbacks
