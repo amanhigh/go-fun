@@ -43,7 +43,7 @@ func (p *Product) TableName() string {
 }
 
 func (u *Product) BeforeCreate(tx *gorm.DB) (err error) {
-	//Backup Product
+	//Log Product
 	marshal, _ := json.Marshal(u)
 	u.Version += 1
 	tx.Create(&AuditLog{Operation: "Create", Log: string(marshal)})
@@ -51,7 +51,7 @@ func (u *Product) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 func (u *Product) BeforeUpdate(tx *gorm.DB) (err error) {
-	//Backup Product
+	//Log Product
 	marshal, _ := json.Marshal(u)
 	u.Version += 1
 	tx.Create(&AuditLog{Operation: "Update", Log: string(marshal)})
@@ -59,19 +59,20 @@ func (u *Product) BeforeUpdate(tx *gorm.DB) (err error) {
 }
 
 func (u *Feature) BeforeCreate(tx *gorm.DB) (err error) {
-	//Backup Feature
+	//Log Feature
 	marshal, _ := json.Marshal(u)
 	u.Version += 1
 	tx.Create(&AuditLog{Operation: "Create", Log: string(marshal)})
 	return
 }
 
-//func (u *Feature) BeforeDelete(tx *gorm.DB) (err error) {
-//	//Backup Feature
-//	marshal, _ := json.Marshal(u)
-//	tx.Create(&AuditLog{Operation: "Delete", Log: string(marshal)})
-//	return
-//}
+//Use Value instead of pointer for delete as no version update is required
+func (u Feature) BeforeDelete(tx *gorm.DB) (err error) {
+	//Log Feature
+	marshal, _ := json.Marshal(u)
+	tx.Create(&AuditLog{Operation: "Delete", Log: string(marshal)})
+	return
+}
 
 // begin transaction
 // -> BeforeSave
