@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	util2 "github.com/amanhigh/go-fun/apps/common/util"
@@ -17,24 +18,17 @@ type Product struct {
 	gorm.Model
 	Code       string `gorm:"size 5"`
 	Price      uint
+	Version    int
 	IgnoreMe   string `gorm:"-"` // Ignore this field
 	Vertical   model.Vertical
 	VerticalID uint      //Must be vertical_id in DB or won't work automatically.
 	Features   []Feature `gorm:"many2many:product_features;"`
 }
 
-type BackupProduct struct {
-	Product
-}
-
-func (self *BackupProduct) TableName() string {
-	return "BackupProduct"
-}
-
-func (self *BackupProduct) BeforeSave(tx *gorm.DB) (err error) {
-	fmt.Println("Backup Update")
-	//Override and Do nothing to avoid endless loop
-	return
+type AuditLog struct {
+	gorm.Model
+	Operation string
+	Log       string
 }
 
 type Feature struct {
@@ -47,9 +41,19 @@ func (p *Product) TableName() string {
 	return "MeraProduct"
 }
 
-func (u *Product) BeforeSave(tx *gorm.DB) (err error) {
+func (u *Product) BeforeCreate(tx *gorm.DB) (err error) {
 	//Backup Product
-	tx.Create(&BackupProduct{*u})
+	marshal, _ := json.Marshal(u)
+	u.Version += 1
+	tx.Create(&AuditLog{Operation: "Create", Log: string(marshal)})
+	return
+}
+
+func (u *Product) BeforeUpdate(tx *gorm.DB) (err error) {
+	//Backup Product
+	marshal, _ := json.Marshal(u)
+	u.Version += 1
+	tx.Create(&AuditLog{Operation: "Update", Log: string(marshal)})
 	return
 }
 
@@ -77,7 +81,7 @@ func OrmFun() {
 	db, _ := util2.CreateTestDb()
 
 	prepLogger()
-	db.AutoMigrate(&Product{}) // Vertical not required Foreign Keys Auto Created
+	db.AutoMigrate(&Product{}, &AuditLog{}) // Vertical not required Foreign Keys Auto Created
 
 	playProduct(db)
 
@@ -111,7 +115,7 @@ func playProduct(db *gorm.DB) {
 		{Name: "Strong"},
 		{Name: "Light"},
 	}
-	product := &Product{Code: "L1212", Price: 1000, VerticalID: 1, Features: features}
+	product := &Product{Code: "L1212", Price: 1000, VerticalID: 1, Features: features, Version: 1}
 	db.Create(product)
 
 	queryProduct(db)
@@ -126,8 +130,8 @@ func playProduct(db *gorm.DB) {
 
 func productBackup(db *gorm.DB) {
 	var count int64
-	db.Model(&BackupProduct{}).Count(&count)
-	fmt.Println("Product Backups: ", count)
+	db.Model(&AuditLog{}).Count(&count)
+	fmt.Println("Audit Logs: ", count)
 }
 func productUpdates(db *gorm.DB, product *Product) {
 	// Update without Callbacks

@@ -1,7 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"github.com/amanhigh/go-fun/learn/frameworks/orm"
+)
 
 func main() {
-	fmt.Println("Hello World")
+	orm.OrmFun()
 }
