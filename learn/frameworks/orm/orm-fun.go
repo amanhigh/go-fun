@@ -33,7 +33,8 @@ type AuditLog struct {
 
 type Feature struct {
 	gorm.Model
-	Name string
+	Name    string
+	Version int
 }
 
 //Default Name would be products
@@ -56,6 +57,21 @@ func (u *Product) BeforeUpdate(tx *gorm.DB) (err error) {
 	tx.Create(&AuditLog{Operation: "Update", Log: string(marshal)})
 	return
 }
+
+func (u *Feature) BeforeCreate(tx *gorm.DB) (err error) {
+	//Backup Feature
+	marshal, _ := json.Marshal(u)
+	u.Version += 1
+	tx.Create(&AuditLog{Operation: "Create", Log: string(marshal)})
+	return
+}
+
+//func (u *Feature) BeforeDelete(tx *gorm.DB) (err error) {
+//	//Backup Feature
+//	marshal, _ := json.Marshal(u)
+//	tx.Create(&AuditLog{Operation: "Delete", Log: string(marshal)})
+//	return
+//}
 
 // begin transaction
 // -> BeforeSave
@@ -112,8 +128,8 @@ func playProduct(db *gorm.DB) {
 
 	// Create
 	features := []Feature{
-		{Name: "Strong"},
-		{Name: "Light"},
+		{Name: "Strong", Version: 1},
+		{Name: "Light", Version: 1},
 	}
 	product := &Product{Code: "L1212", Price: 1000, VerticalID: 1, Features: features, Version: 1}
 	db.Create(product)
@@ -155,8 +171,8 @@ func manyToManyUpdate(db *gorm.DB, product *Product) {
 
 	//New Associations can be added and Saved. Will not touch existing associations
 	product.Features = []Feature{
-		{Name: "abc"},
-		{Name: "xyz"},
+		{Name: "abc", Version: 1},
+		{Name: "xyz", Version: 1},
 	}
 
 	//Perform Update
