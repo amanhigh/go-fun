@@ -139,7 +139,8 @@ func productUpdates(db *gorm.DB, product *Product) {
 	//Single Field Update
 	db.Model(&product).Update("Price", 1500)
 	//Struct Update
-	db.Model(&product).Updates(&Product{Code: "MyCode"})
+	product.Code = "MyCode"
+	db.Model(&product).Updates(product)
 
 	manyToManyUpdate(db, product)
 
