@@ -15,6 +15,7 @@ require (
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/structtag v0.0.0-20150214074306-217e25fb9691 // indirect
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
+	github.com/fatih/color v1.7.0
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/gin-contrib/pprof v1.2.1
 	github.com/gin-gonic/gin v1.6.3
