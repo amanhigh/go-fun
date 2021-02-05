@@ -36,7 +36,7 @@ func (self *GamespotCrawler) NextPageLink(page *util2.Page) (url string, ok bool
 	return
 }
 
-func (self *GamespotCrawler) PrintSet(good []crawler.CrawlInfo, bad []crawler.CrawlInfo) bool {
+func (self *GamespotCrawler) PrintSet(good CrawlSet, bad CrawlSet) bool {
 	return true
 }
 

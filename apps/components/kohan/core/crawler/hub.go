@@ -34,7 +34,7 @@ func (self *HubCrawler) NextPageLink(page *util2.Page) (url string, ok bool) {
 	return
 }
 
-func (self *HubCrawler) PrintSet(good []crawler.CrawlInfo, bad []crawler.CrawlInfo) bool {
+func (self *HubCrawler) PrintSet(good CrawlSet, bad CrawlSet) bool {
 	return true
 }
 
