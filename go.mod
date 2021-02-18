@@ -15,6 +15,7 @@ require (
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/structtag v0.0.0-20150214074306-217e25fb9691 // indirect
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
+	github.com/fatih/color v1.7.0
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/gin-contrib/pprof v1.2.1
 	github.com/gin-gonic/gin v1.6.3
@@ -36,7 +37,8 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf
-	github.com/xlab/treeprint v1.0.0
+	github.com/thoas/go-funk v0.7.0
+	github.com/wesovilabs/koazee v0.0.5
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc
 	golang.org/x/tour v0.0.0-20191002171047-6bb846ce41cd
 	gopkg.in/yaml.v2 v2.2.8

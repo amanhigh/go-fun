@@ -18,7 +18,7 @@ func NewHubCrawler(topLink string) Crawler {
 }
 
 func (self *HubCrawler) GatherLinks(page *util2.Page, ch chan crawler.CrawlInfo) {
-	hubs := page.Document.Find(".js-pop a")
+	hubs := page.Document.Find("a[href*='video.php']")
 	hubs.Each(func(i int, selection *goquery.Selection) {
 		if href, ok := selection.Attr(util2.HREF); ok {
 			ch <- &crawler.LinkInfo{helper.GetAbsoluteLink(page, href)}
@@ -34,7 +34,7 @@ func (self *HubCrawler) NextPageLink(page *util2.Page) (url string, ok bool) {
 	return
 }
 
-func (self *HubCrawler) PrintSet(good []crawler.CrawlInfo, bad []crawler.CrawlInfo) bool {
+func (self *HubCrawler) PrintSet(good CrawlSet, bad CrawlSet) bool {
 	return true
 }
 

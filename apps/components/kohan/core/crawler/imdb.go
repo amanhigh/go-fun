@@ -83,7 +83,7 @@ func (self *ImdbCrawler) NextPageLink(page *util2.Page) (url string, ok bool) {
 	return
 }
 
-func (self *ImdbCrawler) PrintSet(good []CrawlInfo, bad []CrawlInfo) bool {
+func (self *ImdbCrawler) PrintSet(good CrawlSet, bad CrawlSet) bool {
 	return true
 }
 
