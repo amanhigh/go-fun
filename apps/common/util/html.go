@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"github.com/amanhigh/go-fun/apps/common/clients"
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -49,5 +50,13 @@ func (self *Page) ParseAnchor(anchor *goquery.Selection) (text string, link stri
 	if link, ok = anchor.Attr(HREF); ok {
 		link = fmt.Sprintf("https://%v%v", self.Document.Url.Host, link)
 	}
+	return
+}
+
+func ParseCookies(rawCookies string) (cookies []*http.Cookie) {
+	header := http.Header{}
+	header.Add("Cookie", rawCookies)
+	request := http.Request{Header: header}
+	cookies = request.Cookies()
 	return
 }
