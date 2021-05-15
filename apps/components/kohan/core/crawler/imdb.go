@@ -8,10 +8,7 @@ import (
 	. "github.com/amanhigh/go-fun/apps/models/crawler"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/fatih/color"
-	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"net/http"
+	"strings"
 )
 
 type ImdbCrawler struct {
@@ -21,37 +18,33 @@ type ImdbCrawler struct {
 	client   clients.HttpClientInterface
 }
 
-func NewImdbCrawler(year int, language string, cutoff int, keyFile string) Crawler {
+func NewImdbCrawler(year int, language string, cutoff int, cookies string) Crawler {
 	util.PrintYellow(fmt.Sprintf("ImdbCrawler: Year:%v Lang:%v Cutoff: %v", year, language, cutoff))
 
-	if key, _ := ioutil.ReadFile(keyFile); len(key) > 0 {
-		cookies := []*http.Cookie{}
-		keys := map[string]string{}
-		_ = yaml.Unmarshal(key, keys)
-		for k, v := range keys {
-			cookies = append(cookies, &http.Cookie{Name: k, Value: v})
-		}
-		if util.IsDebugMode() {
-			util.PrintWhite("Using Keys (id,sid):\n " + string(key))
-		}
-		//Clone Config and enable Compression
-		imdbHttpConfig := clients.DefaultHttpClientConfig
-		imdbHttpConfig.Compression = true
-		client := clients.NewHttpClientWithCookies("https://www.imdb.com", cookies, imdbHttpConfig)
-		return &ImdbCrawler{
-			cutoff:   cutoff,
-			language: language,
-			topUrl:   fmt.Sprintf("https://www.imdb.com/search/title?release_date=%v&primary_language=%v&view=simple&title_type=feature&sort=num_votes,desc", year, language),
-			client:   client,
-		}
-	} else {
-		log.WithFields(log.Fields{"KeyFile": keyFile}).Fatal("Empty IMDB Key")
-		return nil
+	if util.IsDebugMode() {
+		fmt.Println("IMDB Cookie: ", cookies)
+	}
+	//Clone Config and enable Compression
+	imdbHttpConfig := clients.DefaultHttpClientConfig
+	imdbHttpConfig.Compression = true
+	client := clients.NewHttpClientWithCookies("https://www.imdb.com", util2.ParseCookies(cookies), imdbHttpConfig)
+	return &ImdbCrawler{
+		cutoff:   cutoff,
+		language: language,
+		topUrl:   fmt.Sprintf("https://www.imdb.com/search/title?release_date=%v&primary_language=%v&view=simple&title_type=feature&sort=num_votes,desc", year, language),
+		client:   client,
 	}
 }
 
 func (self *ImdbCrawler) GetTopPage() *util2.Page {
-	return util2.NewPageUsingClient(self.topUrl, self.client)
+	topPage := util2.NewPageUsingClient(self.topUrl, self.client)
+	userName := topPage.Document.Find("a.navbar__user-name").Text()
+	if strings.Contains(userName, "Aman") {
+		color.Green("User: %s", userName)
+	} else {
+		color.Red("User Not Logged in Please Check Cookie is Present and Not Stale")
+	}
+	return topPage
 }
 
 func (self *ImdbCrawler) GatherLinks(page *util2.Page, ch chan CrawlInfo) {
