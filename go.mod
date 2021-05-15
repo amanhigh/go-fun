@@ -36,7 +36,6 @@ require (
 	github.com/hashicorp/vault/api v1.0.5-0.20191108163347-bdd38fca2cff
 	github.com/jinzhu/now v1.1.2 // indirect
 	github.com/json-iterator/go v1.1.10 // indirect
-	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
 	github.com/mattn/go-sqlite3 v1.14.6 // indirect
@@ -55,16 +54,14 @@ require (
 	github.com/thoas/go-funk v0.7.0
 	github.com/ugorji/go v1.2.4 // indirect
 	github.com/wesovilabs/koazee v0.0.5
-	github.fkinternal.com/Flipkart/authn-clients.git v0.0.0-20210316151132-502351544b70 // indirect
-	github.fkinternal.com/Flipkart/secengg-go.git/common v1.1.2 // indirect
+	github.com/xlab/treeprint v1.1.0
 	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670 // indirect
 	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4
-	golang.org/x/oauth2 v0.0.0-20210313182246-cd4f82c27b84 // indirect
 	golang.org/x/sys v0.0.0-20210319071255-635bc2c9138d // indirect
 	golang.org/x/text v0.3.5 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
 	golang.org/x/tour v0.0.0-20191002171047-6bb846ce41cd
-	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/genproto v0.0.0-20200825200019-8632dd797987 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/mysql v1.0.5
