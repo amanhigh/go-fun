@@ -43,7 +43,7 @@ func (self *ImdbInfo) getDownloadLink() string {
 	case "en":
 		return helper.YtsSearch(self.Name)
 	case "hi":
-		return helper.HotStarSearch(self.Name)
+		return helper.TSearch(self.Name)
 	default:
 		return helper.YoutubeSearch(self.Name + " Full Movie")
 	}

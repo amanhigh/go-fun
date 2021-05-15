@@ -14,5 +14,9 @@ func YtsSearch(query string) string {
 }
 
 func HotStarSearch(query string) string {
-	return fmt.Sprintf("http://www.hotstar.com/search?q=%v", url.QueryEscape(query))
+	return fmt.Sprintf("http://www.hotstar.com/search?q=%s", url.QueryEscape(query))
+}
+
+func TSearch(query string) string {
+	return fmt.Sprintf("https://www.1337x.to/search/%s/1/", url.QueryEscape(query))
 }
