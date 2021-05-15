@@ -7,6 +7,7 @@ import (
 	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	. "github.com/amanhigh/go-fun/apps/models/crawler"
 	"github.com/amanhigh/go-fun/util"
+	"github.com/fatih/color"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -63,13 +64,18 @@ func (self *ImdbCrawler) GatherLinks(page *util2.Page, ch chan CrawlInfo) {
 		if moviePage := util2.NewPageUsingClient(link, self.client); moviePage != nil {
 			myRating := util.ParseFloat(moviePage.Document.Find(".star-rating-value").Text())
 
-			ch <- &ImdbInfo{
+			info := ImdbInfo{
 				Name: name,
 				Link: link, Rating: ratingFloat,
 				Language: self.language,
 				MyRating: myRating,
 				CutOff:   self.cutoff,
 			}
+
+			if util.IsDebugMode() {
+				color.Cyan("%+v", info)
+			}
+			ch <- &info
 		}
 	})
 }
