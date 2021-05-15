@@ -101,9 +101,15 @@ func (self *CrawlerManager) BuildSet() {
 	/* Fire Parallel Consumer to Separate Movies */
 	for info := range self.infoChannel {
 		if info.GoodBad() == nil {
+			if util.IsDebugMode() {
+				color.Cyan("%+v", info)
+			}
 			self.goodInfo.Add(info)
 			atomic.AddInt32(&self.collected, 1)
 		} else {
+			if util.IsDebugMode() {
+				color.HiMagenta("%+v", info)
+			}
 			self.badInfo.Add(info)
 		}
 	}

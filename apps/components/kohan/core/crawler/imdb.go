@@ -57,18 +57,13 @@ func (self *ImdbCrawler) GatherLinks(page *util2.Page, ch chan CrawlInfo) {
 		if moviePage := util2.NewPageUsingClient(link, self.client); moviePage != nil {
 			myRating := util.ParseFloat(moviePage.Document.Find(".star-rating-value").Text())
 
-			info := ImdbInfo{
+			ch <- &ImdbInfo{
 				Name: name,
 				Link: link, Rating: ratingFloat,
 				Language: self.language,
 				MyRating: myRating,
 				CutOff:   self.cutoff,
 			}
-
-			if util.IsDebugMode() {
-				color.Cyan("%+v", info)
-			}
-			ch <- &info
 		}
 	})
 }
