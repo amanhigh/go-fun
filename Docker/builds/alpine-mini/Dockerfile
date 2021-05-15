@@ -3,13 +3,13 @@
 FROM alpine
 MAINTAINER coool.aman@gmail.com
 
-RUN apk update
+#Add Repo
+RUN echo 'http://dl-cdn.alpinelinux.org/alpine/v3.4/main' >> /etc/apk/repositories
 
-#add bash shell
-RUN apk add --update bash
-#add root certs
-RUN apk add ca-certificates
+#add packages
+RUN apk add --update bash curl ca-certificates
 
+#Clean installtion files
 RUN rm -rf /var/cache/apk/*
 
 # Run as Custom User
