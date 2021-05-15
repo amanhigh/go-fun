@@ -78,9 +78,6 @@ func NewHttpClient(httpClientConfig config.HttpClientConfig) HttpClientInterface
 				IdleConnTimeout:     httpClientConfig.IdleConnectionTimeout, //Idle Timeout Before Closing Keepalive Connection
 				MaxIdleConnsPerHost: httpClientConfig.IdleConnectionsPerHost,
 			},
-			CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
-				return errors.New("It is a Redirect!")
-			},
 		},
 		Timeout:   httpClientConfig.RequestTimeout, //Request Timeout
 		HeaderMap: defaultHeader,
