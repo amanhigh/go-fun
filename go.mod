@@ -41,7 +41,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.6 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/olivere/elastic v6.2.26+incompatible
-	github.com/onsi/ginkgo v1.15.2
+	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.11.0
 	github.com/pierrec/lz4 v2.6.0+incompatible // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563
@@ -56,10 +56,11 @@ require (
 	github.com/wesovilabs/koazee v0.0.5
 	github.com/xlab/treeprint v1.1.0
 	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670 // indirect
-	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4
-	golang.org/x/sys v0.0.0-20210319071255-635bc2c9138d // indirect
+	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
+	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
 	golang.org/x/text v0.3.5 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
+	golang.org/x/tools v0.1.4 // indirect
 	golang.org/x/tour v0.0.0-20191002171047-6bb846ce41cd
 	google.golang.org/genproto v0.0.0-20200825200019-8632dd797987 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
