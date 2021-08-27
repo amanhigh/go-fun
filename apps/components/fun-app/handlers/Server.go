@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"github.com/amanhigh/go-fun/apps/common/util"
 	"net/http"
 	"time"
