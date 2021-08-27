@@ -3,6 +3,7 @@ package fun_app
 import (
 	"fmt"
 	"gorm.io/gorm"
+	"net/http"
 	"os"
 
 	"github.com/amanhigh/go-fun/apps/common/clients"
@@ -55,9 +56,14 @@ func (self *FunAppInjector) BuildApp() (app interface{}, err error) {
 			/* Injections */
 			err = self.graph.Provide(
 				&inject.Object{Value: engine},
-				&inject.Object{Value: self.config.Server.Port, Name: "port"},
+				&inject.Object{Value: &http.Server{
+					Addr:    fmt.Sprintf(":%v", self.config.Server.Port),
+					Handler: engine,
+				}},
 				&inject.Object{Value: server},
 				&inject.Object{Value: &handlers.PersonHandler{}},
+				&inject.Object{Value: &handlers.AdminHandler{}},
+				&inject.Object{Value: util.NewGracefulShutdown()},
 
 				&inject.Object{Value: initDb(self.config.Db)},
 
