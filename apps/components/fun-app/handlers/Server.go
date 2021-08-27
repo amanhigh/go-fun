@@ -48,9 +48,9 @@ func (self *FunServer) Start() (err error) {
 
 	self.Shutdown.Wait()
 
-	// The context is used to inform the server it has 5 seconds to finish
+	// The context is used to inform the server it has few seconds to finish
 	// the request it is currently handling
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := self.Server.Shutdown(ctx); err != nil {
 		log.Fatal("Server forced to shutdown: ", err)
