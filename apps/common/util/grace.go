@@ -27,9 +27,10 @@ func (self *GracefullShutdown) Wait() {
 
 }
 
-func (self *GracefullShutdown) Close() {
+func (self *GracefullShutdown) Stop() {
+	log.Info("GracefulShutdown Stop Received")
+
 	go func() {
 		self.quit <- syscall.SIGINT
-		log.Info("Trying Graceful Shutting with close")
 	}()
 }

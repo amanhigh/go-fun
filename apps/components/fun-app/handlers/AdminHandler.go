@@ -11,7 +11,7 @@ type AdminHandler struct {
 }
 
 func (self *AdminHandler) Stop(c *gin.Context) {
-	self.Shutdown.Close()
+	self.Shutdown.Stop()
 	//TODO:Add check to prevent accidental stop
 	c.JSON(http.StatusOK, "Stop Started")
 }
