@@ -135,7 +135,12 @@ func switchProduct(db *gorm.DB) {
 	/* Manual Switching Read */
 	product := Product{}
 	dbRes = db.Clauses(dbresolver.Write).Where("code = ?", sourceCode).Find(&product)
-	fmt.Println("Manual Switch Read: Found (Source)", product.Code, dbRes.Error)
+	fmt.Println("Manual Switch Read: Found (Source)", product.Code, len(product.Features), dbRes.Error)
+
+	//TODO: Force Switch Preload Doesn't Work.
+	//dbRes = db.Clauses(dbresolver.Write).Preload(clause.Associations, func(db *gorm.DB) *gorm.DB {
+	//	return db.Clauses(dbresolver.Write)
+	//}).Where("code = ?", sourceCode).Find(&product)
 
 	product = Product{}
 	dbRes = db.Clauses(dbresolver.Read).Where("code = ?", sourceCode).Find(&product)
@@ -149,9 +154,9 @@ func switchProduct(db *gorm.DB) {
 	/* Transaction Read */
 	product = Product{}
 	err := db.Transaction(func(tx *gorm.DB) error {
-		return tx.Where("code = ?", sourceCode).Find(&product).Error
+		return tx.Where("code = ?", sourceCode).Preload(clause.Associations).Find(&product).Error
 	})
-	fmt.Println("Transaction Read: Found (Source)", product.Code, err)
+	fmt.Println("Transaction Read: Found (Source)", product.Code, len(product.Features), err)
 
 }
 
