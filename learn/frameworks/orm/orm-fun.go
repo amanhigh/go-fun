@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/logger"
 	"gorm.io/plugin/dbresolver"
 	"os"
+	"time"
 
 	"github.com/amanhigh/go-fun/learn/frameworks/orm/model"
 	_ "github.com/amanhigh/go-fun/util"
@@ -97,6 +99,9 @@ func (p *Product) AfterFind(_ *gorm.DB) (err error) {
 var jsonLogger = &log.Logger{Out: os.Stdout, Formatter: new(log.JSONFormatter), Level: log.InfoLevel}
 
 func OrmFun() {
+	//Can be Run Standalone for testing switch.
+	//switchProduct()
+
 	db, _ := util2.CreateTestDb()
 
 	prepLogger()
@@ -104,33 +109,47 @@ func OrmFun() {
 
 	playProduct(db)
 
-	//switchProduct(db)
-
 	//schemaAlterPlay(db)
 	fmt.Println("******ORM Fun Finished*******")
 }
 
-func switchProduct(db *gorm.DB) {
+func switchProduct() {
 	sourceCode := "Source Product"
+	fmt.Println("***** Setting Up DB Resolver *****")
+
+	db, err := gorm.Open(mysql.Open("aman:aman@tcp(mysql:3306)/compute?charset=utf8&parseTime=True&loc=Local"), &gorm.Config{Logger: logger.Default.LogMode(1)})
+	fmt.Println("Master DB Connect", err)
 
 	/* Setup Resolver to Docker Mysql */
-	fmt.Println("***** Setting Up DB Resolver *****")
 	db.Use(dbresolver.Register(dbresolver.Config{
 		Replicas: []gorm.Dialector{
-			mysql.Open("aman:aman@tcp(mysql:3306)/compute?charset=utf8&parseTime=True&loc=Local"),
+			//sqlite.Open("/tmp/gorm.db"), //All Replica Calls Fail pointed to empty gorm.db since no replication
+			mysql.Open("aman:aman@tcp(mysql:3307)/compute?charset=utf8&parseTime=True&loc=Local"),
 		},
 		Policy: dbresolver.RandomPolicy{},
 	}))
 
+	/* Migrate */
+	db.AutoMigrate(&Product{})
+
 	/* Write Source Products */
+	vertical := model.Vertical{
+		Name:     "Test",
+		MyColumn: "Hello",
+	}
+	db.FirstOrCreate(&vertical)
 	//Auto Switch Writes to Source DB
-	dbRes := db.Save(&Product{
-		Code:    sourceCode,
-		Price:   100,
-		Version: 1,
+	dbRes := db.FirstOrCreate(&Product{
+		Code:     sourceCode,
+		Price:    100,
+		Version:  1,
+		Vertical: vertical,
 	})
 	fmt.Println("Auto Switch Write: Write Success (Source)", dbRes.Error)
 	fmt.Println("[Manual Switch and Write to Replica DB not Possible. Writes are forced to Sources.]")
+
+	//Wait for Replication to Happen
+	time.Sleep(2 * time.Second)
 
 	/* Manual Switching Read */
 	product := Product{}
@@ -144,16 +163,16 @@ func switchProduct(db *gorm.DB) {
 
 	product = Product{}
 	dbRes = db.Clauses(dbresolver.Read).Where("code = ?", sourceCode).Find(&product)
-	fmt.Println("Manual Switch Read: Not Found (Replica)", product.Code, dbRes.Error)
+	fmt.Println("Manual Switch Read: Found (Replica)", product.Code, dbRes.Error)
 
 	/* Auto Switch Read */
 	product = Product{}
 	dbRes = db.Where("code = ?", sourceCode).Find(&product)
-	fmt.Println("Auto Switch Read: Not Found (Replica)", product.Code, dbRes.Error)
+	fmt.Println("Auto Switch Read: Found (Replica)", product.Code, dbRes.Error)
 
 	/* Transaction Read */
 	product = Product{}
-	err := db.Transaction(func(tx *gorm.DB) error {
+	err = db.Transaction(func(tx *gorm.DB) error {
 		return tx.Where("code = ?", sourceCode).Preload(clause.Associations).Find(&product).Error
 	})
 	fmt.Println("Transaction Read: Found (Source)", product.Code, len(product.Features), err)
