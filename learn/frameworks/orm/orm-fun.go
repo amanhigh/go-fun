@@ -167,8 +167,8 @@ func productUpdates(db *gorm.DB, product *Product) {
 func manyToManyUpdate(db *gorm.DB, product *Product) {
 	fmt.Println("Before M2M Update: ", len(product.Features), product.Features[0].Name)
 
-	//Existing Assocation needs to be deleted manually
-	db.Delete(product.Features[0])
+	//Existing Association needs to be deleted manually
+	db.Delete(&product.Features[0])
 
 	//New Associations can be added and Saved. Will not touch existing associations
 	product.Features = []Feature{
@@ -187,8 +187,7 @@ func manyToManyUpdate(db *gorm.DB, product *Product) {
 	db.Preload(clause.Associations).First(&reloadedProduct, product.ID)
 
 	//Reloaded Product displays saved and newly created Features
-	//TODO: Deleted Items are coming why ?
-	fmt.Println("Reloaded M2M Update", len(reloadedProduct.Features), reloadedProduct.Features[0].Name)
+	fmt.Println("Reloaded M2M Update (should have 3 features: 1 old, 2 replaced)", len(reloadedProduct.Features), reloadedProduct.Features[0].Name)
 }
 
 func queryProduct(db *gorm.DB) {
