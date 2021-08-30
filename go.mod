@@ -57,10 +57,10 @@ require (
 	github.com/xlab/treeprint v1.1.0
 	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670 // indirect
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
 	golang.org/x/text v0.3.5 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
-	golang.org/x/tools v0.1.4 // indirect
 	golang.org/x/tour v0.0.0-20191002171047-6bb846ce41cd
 	google.golang.org/genproto v0.0.0-20200825200019-8632dd797987 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
@@ -68,4 +68,5 @@ require (
 	gorm.io/driver/mysql v1.0.5
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.4
+	gorm.io/plugin/dbresolver v1.1.0
 )

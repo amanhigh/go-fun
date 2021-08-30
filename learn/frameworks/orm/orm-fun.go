@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	util2 "github.com/amanhigh/go-fun/apps/common/util"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/plugin/dbresolver"
 	"os"
 
 	"github.com/amanhigh/go-fun/learn/frameworks/orm/model"
@@ -102,8 +104,65 @@ func OrmFun() {
 
 	playProduct(db)
 
+	//switchProduct(db)
+
 	//schemaAlterPlay(db)
-	fmt.Println("ORM Fun Finished")
+	fmt.Println("******ORM Fun Finished*******")
+}
+
+func switchProduct(db *gorm.DB) {
+	sourceCode := "Source Product"
+	replicaCode := "Replica Product"
+
+	/* Setup Resolver to Docker Mysql */
+	fmt.Println("***** Setting Up DB Resolver *****")
+	db.Use(dbresolver.Register(dbresolver.Config{
+		Replicas: []gorm.Dialector{
+			mysql.Open("aman:aman@tcp(mysql:3306)/compute?charset=utf8&parseTime=True&loc=Local"),
+		},
+		Policy: dbresolver.RandomPolicy{},
+	}))
+
+	/* Write DB Specific Products */
+	//Auto Switch Writes to Source DB
+	dbRes := db.Save(&Product{
+		Code:    sourceCode,
+		Price:   100,
+		Version: 1,
+	})
+	fmt.Println("Auto Switch Write: Write Success (Source)", dbRes.Error)
+
+	//Manual Switch and Write to Replica DB
+	//err := db.Clauses(dbresolver.Read).AutoMigrate(&Product{}, &AuditLog{})
+	//fmt.Println("Replica Migrate", err)
+	//dbRes = db.Clauses(dbresolver.Read).Save(&Product{
+	//	Code:    replicaCode,
+	//	Price:   200,
+	//	Version: 2,
+	//})
+	//fmt.Println("Manual Switch Write: Fails (Replica)", dbRes.Error)
+
+	/* Manual Switching Read */
+	product := Product{}
+	dbRes = db.Clauses(dbresolver.Write).Where("code = ?", sourceCode).Find(&product)
+	fmt.Println("Manual Switch Read: Found (Source)", product.Code, dbRes.Error)
+
+	product = Product{}
+	dbRes = db.Clauses(dbresolver.Read).Where("code = ?", sourceCode).Find(&product)
+	fmt.Println("Manual Switch Read: Not Found (Replica)", product.Code, dbRes.Error)
+
+	/* Auto Switch Read */
+	product = Product{}
+	dbRes = db.Clauses(dbresolver.Read).Where("code = ?", replicaCode).Find(&product)
+	fmt.Println("Auto Switch Read: Not Found (Replica)", product.Code, dbRes.Error)
+
+	/* Transaction Read */
+	product = Product{}
+	err := db.Transaction(func(tx *gorm.DB) error {
+		return tx.Where("code = ?", sourceCode).Find(&product).Error
+	})
+	fmt.Println("Transaction Read: Found (Source)", product.Code, err)
+
 }
 
 func prepLogger() {
@@ -125,6 +184,7 @@ func TruncateTable(db *gorm.DB, tableName string) {
 }
 
 func playProduct(db *gorm.DB) {
+	fmt.Println("***** Play Product ******")
 	createVertical(db)
 
 	// Create
