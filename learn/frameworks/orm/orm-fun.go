@@ -112,7 +112,6 @@ func OrmFun() {
 
 func switchProduct(db *gorm.DB) {
 	sourceCode := "Source Product"
-	replicaCode := "Replica Product"
 
 	/* Setup Resolver to Docker Mysql */
 	fmt.Println("***** Setting Up DB Resolver *****")
@@ -123,7 +122,7 @@ func switchProduct(db *gorm.DB) {
 		Policy: dbresolver.RandomPolicy{},
 	}))
 
-	/* Write DB Specific Products */
+	/* Write Source Products */
 	//Auto Switch Writes to Source DB
 	dbRes := db.Save(&Product{
 		Code:    sourceCode,
@@ -131,16 +130,7 @@ func switchProduct(db *gorm.DB) {
 		Version: 1,
 	})
 	fmt.Println("Auto Switch Write: Write Success (Source)", dbRes.Error)
-
-	//Manual Switch and Write to Replica DB
-	//err := db.Clauses(dbresolver.Read).AutoMigrate(&Product{}, &AuditLog{})
-	//fmt.Println("Replica Migrate", err)
-	//dbRes = db.Clauses(dbresolver.Read).Save(&Product{
-	//	Code:    replicaCode,
-	//	Price:   200,
-	//	Version: 2,
-	//})
-	//fmt.Println("Manual Switch Write: Fails (Replica)", dbRes.Error)
+	fmt.Println("[Manual Switch and Write to Replica DB not Possible. Writes are forced to Sources.]")
 
 	/* Manual Switching Read */
 	product := Product{}
@@ -153,7 +143,7 @@ func switchProduct(db *gorm.DB) {
 
 	/* Auto Switch Read */
 	product = Product{}
-	dbRes = db.Clauses(dbresolver.Read).Where("code = ?", replicaCode).Find(&product)
+	dbRes = db.Where("code = ?", sourceCode).Find(&product)
 	fmt.Println("Auto Switch Read: Not Found (Replica)", product.Code, dbRes.Error)
 
 	/* Transaction Read */
