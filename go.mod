@@ -55,6 +55,7 @@ require (
 	github.com/ugorji/go v1.2.4 // indirect
 	github.com/wesovilabs/koazee v0.0.5
 	github.com/xlab/treeprint v1.1.0
+	github.com/zsais/go-gin-prometheus v0.1.0
 	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670 // indirect
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect

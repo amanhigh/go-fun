@@ -9,6 +9,7 @@ import (
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"github.com/zsais/go-gin-prometheus"
 )
 
 type FunServer struct {
@@ -37,6 +38,9 @@ func (self *FunServer) initRoutes() {
 
 func (self *FunServer) Start() (err error) {
 	self.initRoutes()
+	//Visit http://localhost:8080/metrics
+	prometheus := ginprometheus.NewPrometheus("gin")
+	prometheus.Use(self.GinEngine)
 
 	// Initializing the server in a goroutine so that
 	// it won't block the graceful shutdown handling below

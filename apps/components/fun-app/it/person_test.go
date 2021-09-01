@@ -59,4 +59,9 @@ var _ = Describe("Person Integration Test", func() {
 		})
 
 	})
+
+	It("should serve metrics", func() {
+		_, err := clients.TestHttpClient.DoGet(serviceUrl+"/metrics", nil)
+		Expect(err).To(BeNil())
+	})
 })
