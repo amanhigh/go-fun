@@ -87,6 +87,12 @@ func (self *FunAppInjector) BuildApp() (app interface{}, err error) {
 					Help:        "Person Count in Get Persons",
 					ConstLabels: nil,
 				}), Name: "m_person_count"},
+				&inject.Object{Value: promauto.NewHistogram(prometheus.HistogramOpts{
+					Namespace:   NAMESPACE,
+					Name:        "person_create_time",
+					Help:        "Time Taken to Create Person",
+					ConstLabels: nil,
+				}), Name: "m_person_create_time"},
 			)
 
 			if err == nil {

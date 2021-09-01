@@ -11,12 +11,17 @@ import (
 )
 
 type PersonHandler struct {
-	Manager       manager.PersonManagerInterface `inject:""`
-	CreateCounter prometheus.Counter             `inject:"m_create_person"`
-	PersonCounter prometheus.Gauge               `inject:"m_person_count"`
+	Manager          manager.PersonManagerInterface `inject:""`
+	CreateCounter    prometheus.Counter             `inject:"m_create_person"`
+	PersonCounter    prometheus.Gauge               `inject:"m_person_count"`
+	PersonCreateTime prometheus.Histogram           `inject:"m_person_create_time"`
 }
 
 func (self *PersonHandler) CreatePerson(c *gin.Context) {
+	/* Captures Create Person Latency */
+	timer := prometheus.NewTimer(self.PersonCreateTime)
+	defer timer.ObserveDuration()
+
 	self.CreateCounter.Inc()
 
 	var request server.PersonRequest
