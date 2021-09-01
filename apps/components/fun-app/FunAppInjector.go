@@ -2,6 +2,8 @@ package fun_app
 
 import (
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"gorm.io/gorm"
 	"net/http"
 	"os"
@@ -26,6 +28,7 @@ import (
 const (
 	APP_LOG    = "/var/log/fun-app/service.log"
 	ACCESS_LOG = "/var/log/fun-app/access.log"
+	NAMESPACE  = "fun_app"
 )
 
 type FunAppInjector struct {
@@ -70,6 +73,20 @@ func (self *FunAppInjector) BuildApp() (app interface{}, err error) {
 				&inject.Object{Value: clients.NewHttpClient(self.config.Http)},
 
 				&inject.Object{Value: &manager.PersonManager{}},
+
+				/* Metrics */
+				&inject.Object{Value: promauto.NewCounter(prometheus.CounterOpts{
+					Namespace:   NAMESPACE,
+					Name:        "create_person",
+					Help:        "Counts Person Create API",
+					ConstLabels: nil,
+				}), Name: "m_create_person"},
+				&inject.Object{Value: promauto.NewGauge(prometheus.GaugeOpts{
+					Namespace:   NAMESPACE,
+					Name:        "person_count",
+					Help:        "Person Count in Get Persons",
+					ConstLabels: nil,
+				}), Name: "m_person_count"},
 			)
 
 			if err == nil {

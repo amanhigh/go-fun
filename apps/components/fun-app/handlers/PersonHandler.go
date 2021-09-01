@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"gorm.io/gorm"
 	"net/http"
 
@@ -10,10 +11,14 @@ import (
 )
 
 type PersonHandler struct {
-	Manager manager.PersonManagerInterface `inject:""`
+	Manager       manager.PersonManagerInterface `inject:""`
+	CreateCounter prometheus.Counter             `inject:"m_create_person"`
+	PersonCounter prometheus.Gauge               `inject:"m_person_count"`
 }
 
 func (self *PersonHandler) CreatePerson(c *gin.Context) {
+	self.CreateCounter.Inc()
+
 	var request server.PersonRequest
 	if err := c.Bind(&request); err == nil {
 		if err := self.Manager.CreatePerson(c, request.Person); err == nil {
@@ -28,6 +33,7 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 
 func (self *PersonHandler) GetAllPerson(c *gin.Context) {
 	if persons, err := self.Manager.GetAllPersons(c); err == nil {
+		self.PersonCounter.Add(float64(len(persons)))
 		c.JSON(http.StatusOK, persons)
 	} else {
 		c.JSON(http.StatusInternalServerError, err.Error())
