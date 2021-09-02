@@ -75,12 +75,12 @@ func (self *FunAppInjector) BuildApp() (app interface{}, err error) {
 				&inject.Object{Value: &manager.PersonManager{}},
 
 				/* Metrics */
-				&inject.Object{Value: promauto.NewCounter(prometheus.CounterOpts{
+				&inject.Object{Value: promauto.NewCounterVec(prometheus.CounterOpts{
 					Namespace:   NAMESPACE,
 					Name:        "create_person",
 					Help:        "Counts Person Create API",
 					ConstLabels: nil,
-				}), Name: "m_create_person"},
+				}, []string{"gender"}), Name: "m_create_person"},
 				&inject.Object{Value: promauto.NewGauge(prometheus.GaugeOpts{
 					Namespace:   NAMESPACE,
 					Name:        "person_count",

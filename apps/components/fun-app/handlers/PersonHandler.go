@@ -12,7 +12,7 @@ import (
 
 type PersonHandler struct {
 	Manager          manager.PersonManagerInterface `inject:""`
-	CreateCounter    prometheus.Counter             `inject:"m_create_person"`
+	CreateCounter    *prometheus.CounterVec         `inject:"m_create_person"`
 	PersonCounter    prometheus.Gauge               `inject:"m_person_count"`
 	PersonCreateTime prometheus.Histogram           `inject:"m_person_create_time"`
 }
@@ -22,10 +22,10 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 	timer := prometheus.NewTimer(self.PersonCreateTime)
 	defer timer.ObserveDuration()
 
-	self.CreateCounter.Inc()
-
 	var request server.PersonRequest
 	if err := c.Bind(&request); err == nil {
+		self.CreateCounter.WithLabelValues(request.Gender).Inc()
+
 		if err := self.Manager.CreatePerson(c, request.Person); err == nil {
 			c.JSON(http.StatusOK, request)
 		} else {
