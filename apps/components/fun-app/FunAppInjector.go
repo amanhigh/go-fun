@@ -2,12 +2,6 @@ package fun_app
 
 import (
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
-	"gorm.io/gorm"
-	"net/http"
-	"os"
-
 	"github.com/amanhigh/go-fun/apps/common/clients"
 	"github.com/amanhigh/go-fun/apps/common/metrics"
 	"github.com/amanhigh/go-fun/apps/common/util"
@@ -18,7 +12,12 @@ import (
 	"github.com/amanhigh/go-fun/apps/models/interfaces"
 	"github.com/facebookgo/inject"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
+	"net/http"
+	"os"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/mysql"
@@ -99,6 +98,8 @@ func (self *FunAppInjector) BuildApp() (app interface{}, err error) {
 				err = self.graph.Populate()
 			}
 		}
+
+		//go metrics.WriteToFile("metrics.prom",10 * time.Second)
 	}
 	return
 }
