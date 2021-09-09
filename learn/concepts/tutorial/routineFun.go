@@ -20,6 +20,7 @@ func GoRoutineFun() {
 	fibFun()
 	treeFun()
 	mutexFun()
+	eventFun()
 }
 
 func mutexFun() {
@@ -182,4 +183,44 @@ func Same(t1, t2 *tree.Tree) bool {
 	}
 
 	return true
+}
+
+func eventFun() {
+	fmt.Println("\nEvent Fun")
+	i := 0
+	intc := make(chan int, 2)
+
+	wg := sync.WaitGroup{}
+	wg.Add(2) // Starting 2 Go Routines
+
+	go func() {
+		ticker := time.NewTicker(time.Second * 2)
+		shutdown := time.After(time.Second * 10)
+		for {
+			select {
+			case <-ticker.C:
+				fmt.Println("Ticking (2 Sec)", time.Now().Second(), i)
+			case v := <-intc:
+				fmt.Println("Channel Written (5 Sec)", time.Now().Second(), v)
+				i = v
+			case <-shutdown:
+				fmt.Println("Shutdown (10 Sec)", time.Now().Second(), i)
+				wg.Done() //Mark Goroutine Complete
+				return
+			default:
+				//Runs if no other event is ready
+				//fmt.Println("Default", time.Now().Second())
+				//time.Sleep(2 * time.Second)
+			}
+		}
+	}()
+
+	go func() {
+		//Wait Sometime and send Channel Write
+		time.Sleep(4 * time.Second)
+		intc <- 5
+		wg.Done() //Mark Goroutine Complete
+	}()
+
+	wg.Wait()
 }
