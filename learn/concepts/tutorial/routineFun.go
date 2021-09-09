@@ -21,6 +21,7 @@ func GoRoutineFun() {
 	treeFun()
 	mutexFun()
 	eventFun()
+	safeRead()
 }
 
 func mutexFun() {
@@ -57,7 +58,7 @@ func (c *SafeCounter) Value(key string) int {
 }
 
 func treeFun() {
-	fmt.Println("\nWalk The Tree")
+	fmt.Println("\n\nWalk The Tree")
 	fmt.Println(Same(tree.New(2), tree.New(2)))
 }
 
@@ -90,7 +91,7 @@ func sumFun() int {
 }
 
 func multiChannel() {
-	fmt.Println("\nMultiChannel Fibonacci.")
+	fmt.Println("\n\n MultiChannel Fibonacci.")
 	c := make(chan int)
 	quit := make(chan int)
 	/** Consumer */
@@ -186,7 +187,7 @@ func Same(t1, t2 *tree.Tree) bool {
 }
 
 func eventFun() {
-	fmt.Println("\nEvent Fun")
+	fmt.Println("\n\n Event Fun")
 	i := 0
 	intc := make(chan int, 2)
 
@@ -194,17 +195,17 @@ func eventFun() {
 	wg.Add(2) // Starting 2 Go Routines
 
 	go func() {
-		ticker := time.NewTicker(time.Second * 2)
-		shutdown := time.After(time.Second * 10)
+		ticker := time.NewTicker(time.Millisecond * 100)
+		shutdown := time.After(time.Second)
 		for {
 			select {
 			case <-ticker.C:
-				fmt.Println("Ticking (2 Sec)", time.Now().Second(), i)
+				fmt.Println("Ticking (100 ms)", time.Now().UnixMilli(), i)
 			case v := <-intc:
-				fmt.Println("Channel Written (5 Sec)", time.Now().Second(), v)
+				fmt.Println("Channel Written (400 ms)", time.Now().UnixMilli(), v)
 				i = v
 			case <-shutdown:
-				fmt.Println("Shutdown (10 Sec)", time.Now().Second(), i)
+				fmt.Println("Shutdown (1 Sec)", time.Now().UnixMilli(), i)
 				wg.Done() //Mark Goroutine Complete
 				return
 			default:
@@ -217,10 +218,60 @@ func eventFun() {
 
 	go func() {
 		//Wait Sometime and send Channel Write
-		time.Sleep(4 * time.Second)
+		time.Sleep(400 * time.Millisecond)
 		intc <- 5
 		wg.Done() //Mark Goroutine Complete
 	}()
 
 	wg.Wait()
+}
+
+type SafeReadWrite struct {
+	i    int
+	intc chan int
+}
+
+func (self *SafeReadWrite) Write(i int) {
+	self.intc <- i
+}
+
+func (self *SafeReadWrite) Close() {
+	close(self.intc)
+}
+
+func (self *SafeReadWrite) Read() (val int) {
+	select {
+	case v, ok := <-self.intc:
+		//If Channel is Not Closed Update i
+		if ok {
+			fmt.Println("Channel Written (400 ms)", time.Now().UnixMilli(), v)
+			//Update New Value in Cache
+			self.i = v
+		}
+		//Serve Updated i
+		val = self.i
+	default:
+		//Runs if no other event is ready run
+		time.Sleep(100 * time.Millisecond)
+		//Serve Cached i
+		val = self.i
+	}
+	return
+}
+
+func safeRead() {
+	fmt.Println("\n\n Safe Read")
+
+	safe := SafeReadWrite{1, make(chan int, 2)}
+
+	go func() {
+		//Wait Sometime and send Channel Write
+		time.Sleep(400 * time.Millisecond)
+		safe.Write(5)
+		safe.Close()
+	}()
+
+	for i := 0; i < 10; i++ {
+		fmt.Println("Ticking (100 ms)", time.Now().UnixMilli(), safe.Read())
+	}
 }
