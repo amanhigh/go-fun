@@ -1,6 +1,19 @@
 version: '3'
 
 services:
+#  mysql:
+#    image: mysql:5.7
+#    volumes:
+#      - mysql_master_data:/var/lib/mysql
+#    restart: always
+#    ports:
+#      - 3306:3306
+#    environment:
+#      MYSQL_ROOT_PASSWORD: root
+#      MYSQL_DATABASE: compute
+#      MYSQL_USER: aman
+#      MYSQL_PASSWORD: aman
+
   mysql:
     image: docker.io/bitnami/mysql:8.0
     ports:
