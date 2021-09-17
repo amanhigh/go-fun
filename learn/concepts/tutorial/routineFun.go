@@ -2,6 +2,7 @@ package tutorial
 
 import (
 	"fmt"
+	"github.com/amanhigh/go-fun/apps/models/learn"
 	"sync"
 	"time"
 
@@ -226,43 +227,10 @@ func eventFun() {
 	wg.Wait()
 }
 
-type SafeReadWrite struct {
-	i    int
-	intc chan int
-}
-
-func (self *SafeReadWrite) Write(i int) {
-	self.intc <- i
-}
-
-func (self *SafeReadWrite) Close() {
-	close(self.intc)
-}
-
-func (self *SafeReadWrite) Read() (val int) {
-	select {
-	case v, ok := <-self.intc:
-		//If Channel is Not Closed Update i
-		if ok {
-			fmt.Println("Channel Written (400 ms)", time.Now().UnixMilli(), v)
-			//Update New Value in Cache
-			self.i = v
-		}
-		//Serve Updated i
-		val = self.i
-	default:
-		//Runs if no other event is ready run
-		time.Sleep(100 * time.Millisecond)
-		//Serve Cached i
-		val = self.i
-	}
-	return
-}
-
 func safeRead() {
 	fmt.Println("\n\n Safe Read")
 
-	safe := SafeReadWrite{1, make(chan int, 2)}
+	safe := learn.SafeReadWrite{1, make(chan int, 2)}
 
 	go func() {
 		//Wait Sometime and send Channel Write
