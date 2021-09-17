@@ -25,6 +25,7 @@ builds:
 dockers:
     - id: fun-app
       image_templates:
+        - "aman/fun-app"
         - "aman/fun-app:{{ .Version }}"
       dockerfile: ./apps/components/fun-app/Dockerfile
       extra_files:
