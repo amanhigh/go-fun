@@ -1,4 +1,4 @@
-package fun_app
+package common
 
 import (
 	"fmt"
@@ -114,15 +114,17 @@ func initDb(dbConfig config.Db) (db *gorm.DB) {
 			)
 
 			/* GoMigrate*/
-			var m *migrate.Migrate
-			sourceURL := fmt.Sprintf("file://%v", dbConfig.MigrationSource)
-			dbUrl := fmt.Sprintf("mysql://%v", dbConfig.Url)
-			if m, err = migrate.New(sourceURL, dbUrl); err == nil {
-				if err = m.Up(); err == nil {
-					log.Info("Migration Complete")
-				} else if err == migrate.ErrNoChange {
-					//Ignore No Change
-					err = nil
+			if dbConfig.MigrationSource != "" {
+				var m *migrate.Migrate
+				sourceURL := fmt.Sprintf("file://%v", dbConfig.MigrationSource)
+				dbUrl := fmt.Sprintf("mysql://%v", dbConfig.Url)
+				if m, err = migrate.New(sourceURL, dbUrl); err == nil {
+					if err = m.Up(); err == nil {
+						log.Info("Migration Complete")
+					} else if err == migrate.ErrNoChange {
+						//Ignore No Change
+						err = nil
+					}
 				}
 			}
 		}

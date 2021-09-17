@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/amanhigh/go-fun/apps/components/fun-app/common"
 	"io/ioutil"
 
-	fun_app "github.com/amanhigh/go-fun/apps/components/fun-app"
 	config2 "github.com/amanhigh/go-fun/apps/models/config"
 	"github.com/amanhigh/go-fun/apps/models/interfaces"
 	"gopkg.in/yaml.v2"
@@ -19,7 +19,7 @@ func main() {
 			//go gometrics.Log(gometrics.DefaultRegistry, 5*time.Second, log.StandardLogger())
 
 			/* Build Injector */
-			injector := fun_app.NewFunAppInjector(config)
+			injector := common.NewFunAppInjector(config)
 			var app interface{}
 
 			/* Build App */
