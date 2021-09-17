@@ -15,17 +15,17 @@ builds:
     goos:
       - linux
 #      - windows
+    goarch:
+    - amd64
     id: fun
-    binary: fun-app
-    main: ./apps/components/fun-app/fun-app.go
+    binary: fun
+    dir: ./apps/components/fun-app
+    main: fun-app.go
 
-checksum:
-  name_template: 'checksums.txt'
-snapshot:
-  name_template: "{{ incpatch .Version }}-next"
-changelog:
-  sort: asc
-  filters:
-    exclude:
-      - '^docs:'
-      - '^test:'
+dockers:
+    - id: fun-app
+      image_templates:
+        - "aman/fun-app:{{ .Version }}"
+      dockerfile: ./apps/components/fun-app/Dockerfile
+      extra_files:
+        - ./apps/components/fun-app/config.yml
