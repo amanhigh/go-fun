@@ -235,6 +235,7 @@ func safeRead() {
 	go func() {
 		//Wait Sometime and send Channel Write
 		time.Sleep(400 * time.Millisecond)
+		fmt.Println("Writing Now (400 ms)")
 		safe.Write(5)
 		safe.Close()
 	}()
