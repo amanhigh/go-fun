@@ -1,7 +1,6 @@
 package learn
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -23,7 +22,7 @@ func (self *SafeReadWrite) Read() (val int) {
 	case v, ok := <-self.Intc:
 		//If Channel is Not Closed Update I
 		if ok {
-			fmt.Println("Channel Written (400 ms)", time.Now().UnixMilli(), v)
+			//fmt.Println("Channel Written", time.Now().UnixMilli(), v)
 			//Update New Value in Cache
 			self.I = v
 		}
