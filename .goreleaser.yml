@@ -45,3 +45,6 @@ archives:
     format: binary
     replacements:
       amd64: x86_64
+    builds:
+      - fun-app
+      - kohan
