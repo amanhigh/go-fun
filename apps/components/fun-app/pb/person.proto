@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.gofun.";
+option java_outer_classname = "PersonProto";
+
+option go_package = "/grpc";
+
+//protoc person.proto --go_out=.
+
+package gofun;
+
+// The person service definition.
+service PersonService {
+  rpc GetAllPerson (Person) returns (Person) {}
+}
+
+// Person entity
+message Person {
+  string name = 1;
+  int32 age = 2;
+  string gender = 3;
+  int64 version = 4;
+}
