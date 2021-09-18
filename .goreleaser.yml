@@ -2,8 +2,8 @@
 # Variables available - https://goreleaser.com/customization/templates/
 # goreleaser check
 # goreleaser build --snapshot --rm-dist
-# goreleaser release --snapshot --skip-publish --rm-dist (Needs Tag in Format v.<Major>.<Minor>.<Patch> Eg. v.1.0.1)
-#
+# Tag: Create -> git tag v1.0.3; Delete - > git push --delete origin v1.0.2 (Format v.<Major>.<Minor>.<Patch>)
+# goreleaser release --snapshot --skip-publish --rm-dist
 before:
   hooks:
     # You may remove this if you don't use go modules.
