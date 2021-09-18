@@ -39,3 +39,9 @@ dockers:
     skip_push: false
     extra_files:
       - ./apps/components/fun-app/config.yml
+
+archives:
+  - name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format: binary
+    replacements:
+      amd64: x86_64
