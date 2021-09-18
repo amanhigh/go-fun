@@ -2,7 +2,7 @@
 # Variables available - https://goreleaser.com/customization/templates/
 # goreleaser check
 # goreleaser build --snapshot --rm-dist
-# goreleaser release --snapshot --skip-publish --rm-dist
+# goreleaser release --snapshot --skip-publish --rm-dist (Needs Tag in Format v.<Major>.<Minor>.<Patch> Eg. v.1.0.1)
 #
 before:
   hooks:
@@ -29,5 +29,7 @@ dockers:
         - "amanfdk/fun-app"
         - "amanfdk/fun-app:{{ .Version }}"
       dockerfile: ./apps/components/fun-app/Dockerfile
+      #Prerelease Tags won't be pushed e.g. v1.0.0-rc1
+      skip_push: false
       extra_files:
         - ./apps/components/fun-app/config.yml
