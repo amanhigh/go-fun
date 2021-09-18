@@ -1,4 +1,5 @@
 # Make sure to check the documentation at https://goreleaser.com
+# Variables available - https://goreleaser.com/customization/templates/
 # goreleaser check
 # goreleaser build --snapshot --rm-dist
 # goreleaser release --snapshot --skip-publish --rm-dist
@@ -25,8 +26,8 @@ builds:
 dockers:
     - id: fun-app
       image_templates:
-        - "aman/fun-app"
-        - "aman/fun-app:{{ .Version }}"
+        - "amanfdk/fun-app"
+        - "amanfdk/fun-app:{{ .Version }}"
       dockerfile: ./apps/components/fun-app/Dockerfile
       extra_files:
         - ./apps/components/fun-app/config.yml
