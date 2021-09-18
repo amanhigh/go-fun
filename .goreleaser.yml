@@ -11,25 +11,31 @@ before:
     # you may remove this if you don't need go generate
     #- go generate ./...
 builds:
-  - env:
+  - id: fun
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
-#      - windows
+    #      - windows
     goarch:
-    - amd64
-    id: fun
+      - amd64
     binary: fun
     dir: ./apps/components/fun-app
     main: fun-app.go
+  - id: kohan
+    binary: kohan
+    targets:
+      - linux_amd64
+    dir: ./apps/components/kohan
+    main: kohan.go
 
 dockers:
-    - id: fun-app
-      image_templates:
-        - "amanfdk/fun-app"
-        - "amanfdk/fun-app:{{ .Version }}"
-      dockerfile: ./apps/components/fun-app/Dockerfile
-      #Prerelease Tags won't be pushed e.g. v1.0.0-rc1
-      skip_push: false
-      extra_files:
-        - ./apps/components/fun-app/config.yml
+  - id: fun-app
+    image_templates:
+      - "amanfdk/fun-app"
+      - "amanfdk/fun-app:{{ .Version }}"
+    dockerfile: ./apps/components/fun-app/Dockerfile
+    #Prerelease Tags won't be pushed e.g. v1.0.0-rc1
+    skip_push: false
+    extra_files:
+      - ./apps/components/fun-app/config.yml
