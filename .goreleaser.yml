@@ -1,0 +1,47 @@
+# Make sure to check the documentation at https://goreleaser.com
+# Variables available - https://goreleaser.com/customization/templates/
+# goreleaser check
+# goreleaser build --snapshot --rm-dist
+# goreleaser release --snapshot --skip-publish --rm-dist
+# Tag: Create -> git tag v1.0.3; Delete - > git push --delete origin v1.0.2 (Format v.<Major>.<Minor>.<Patch>)
+# goreleaser release--rm-dist (Publish)
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod tidy
+    # you may remove this if you don't need go generate
+    #- go generate ./...
+builds:
+  - id: fun
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    #      - windows
+    goarch:
+      - amd64
+    binary: fun
+    dir: ./apps/components/fun-app
+    main: fun-app.go
+  - id: kohan
+    binary: kohan
+    targets:
+      - linux_amd64
+    dir: ./apps/components/kohan
+    main: kohan.go
+
+dockers:
+  - id: fun-app
+    image_templates:
+      - "amanfdk/fun-app"
+      - "amanfdk/fun-app:{{ .Version }}"
+    dockerfile: ./apps/components/fun-app/Dockerfile
+    #Prerelease Tags won't be pushed e.g. v1.0.0-rc1
+    skip_push: false
+    extra_files:
+      - ./apps/components/fun-app/config.yml
+
+archives:
+  - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    replacements:
+      amd64: x86_64
