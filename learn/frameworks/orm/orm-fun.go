@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/amanhigh/go-fun/apps/common/util"
 	"gorm.io/driver/mysql"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
@@ -102,7 +102,7 @@ func OrmFun() {
 	//Can be Run Standalone for testing switch.
 	//switchProduct()
 
-	db, _ := util2.CreateTestDb()
+	db, _ := util.CreateTestDb()
 
 	prepLogger()
 	db.AutoMigrate(&Product{}, &AuditLog{}) // Vertical not required Foreign Keys Auto Created
