@@ -1,8 +1,6 @@
 package util
 
 import (
-	"errors"
-	"fmt"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
@@ -14,7 +12,8 @@ Resolver Policy which sends traffic to slave,
 incase of error switches to fallback (master).
 
 At given intervals try to revert config back to slave
-based on Pings.
+based on Pings. It needs Ping Table and a Ping dbresolver for it
+to work.
 */
 type FallBackPolicy struct {
 	//Current Pool which should be Used
@@ -29,6 +28,17 @@ type FallBackPolicy struct {
 	pingTable string
 }
 
+const (
+	PING     = "ping"
+	PRIMARY  = 0
+	FALLBACK = 1
+)
+
+/**
+DB with read,write and ping resolver configured.
+RetryInterval at which restore to primary would be tried.
+PingTable Name used to ping db with count query to check connectivity.
+*/
 func NewFallBackPolicy(Db *gorm.DB, retryInterval time.Duration, pingTable string) *FallBackPolicy {
 	return &FallBackPolicy{
 		currentPool: 0,
@@ -44,7 +54,7 @@ Resolve Function Implementation for dbResolver.
 */
 func (self *FallBackPolicy) Resolve(connPools []gorm.ConnPool) gorm.ConnPool {
 	x := self.GetPool()
-	fmt.Println("Pools", len(connPools), x)
+	log.WithFields(log.Fields{"Pool Count": len(connPools), "Current Pool": x}).Info("Pool Info")
 	pool := connPools[x]
 	return pool
 }
@@ -65,21 +75,20 @@ func (self *FallBackPolicy) GetPool() (poolIndex int) {
 	select {
 	case err, ok := <-self.errChan:
 		//If Channel is Not Closed Update Pool
-		fmt.Println("ChanWrite -->", ok, err)
+		//TODO:Handle only disconnection error
 		if ok && err != nil {
 			log.WithFields(log.Fields{"Error": err}).Error("Falling Back to Master for Reads")
 			//Update New Value in Cache
-			self.currentPool = 1
+			self.currentPool = FALLBACK
 		}
 		//Serve Updated Pool
 		poolIndex = self.currentPool
-	case t := <-self.ticker.C:
-		fmt.Println("Ticker", t)
+	case <-self.ticker.C:
 		//If we have switched to Fallback ping primary
-		if self.currentPool == 1 {
+		if self.currentPool == FALLBACK {
 			//Try to Ping Slave if it is up
-			if err := self.Ping(dbresolver.Read); err == nil {
-				self.currentPool = 0
+			if err := self.Ping(); err == nil {
+				self.currentPool = PRIMARY
 				log.Info("Slave Up reverting config for Reads.")
 			} else {
 				log.WithFields(log.Fields{"Error": err}).Warning("Pinged Slave still not up. Reads continue on master")
@@ -93,10 +102,8 @@ func (self *FallBackPolicy) GetPool() (poolIndex int) {
 	return
 }
 
-func (self *FallBackPolicy) Ping(resolver dbresolver.Operation) (err error) {
-	err = errors.New("Not Implemented")
-	//c:=int64(0)
-	//err = self.db.Clauses(resolver).Table("verticals").Count(&c).Error
-	fmt.Println(resolver, err)
+func (self *FallBackPolicy) Ping() (err error) {
+	c := int64(0)
+	err = self.db.Clauses(dbresolver.Use(PING)).Table(self.pingTable).Count(&c).Error
 	return
 }
