@@ -2,7 +2,6 @@ package util_test
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/amanhigh/go-fun/apps/common/util"
@@ -10,6 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"net"
 	"time"
 )
 
@@ -18,7 +18,7 @@ var _ = Describe("DbResolver", func() {
 		interval   = time.Millisecond * 50
 		pingTable  = "test"
 		err        error
-		connErr    = errors.New("Connection Error")
+		connErr    = net.InvalidAddrError("Test")
 		policy     *util.FallBackPolicy
 		db         *sql.DB
 		gormDB     *gorm.DB

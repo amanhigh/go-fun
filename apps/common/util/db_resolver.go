@@ -4,6 +4,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
+	"net"
 	"time"
 )
 
@@ -75,8 +76,8 @@ func (self *FallBackPolicy) GetPool() (poolIndex int) {
 	select {
 	case err, ok := <-self.errChan:
 		//If Channel is Not Closed Update Pool
-		//TODO:Handle only disconnection error
-		if ok && err != nil {
+		_, isNetErr := err.(net.Error)
+		if ok && err != nil && isNetErr {
 			log.WithFields(log.Fields{"Error": err}).Error("Falling Back to Master for Reads")
 			//Update New Value in Cache
 			self.currentPool = POOL_FALLBACK
