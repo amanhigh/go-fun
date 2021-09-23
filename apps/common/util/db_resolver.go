@@ -54,7 +54,7 @@ Resolve Function Implementation for dbResolver.
 */
 func (self *FallBackPolicy) Resolve(connPools []gorm.ConnPool) gorm.ConnPool {
 	x := self.GetPool()
-	log.WithFields(log.Fields{"Pool Count": len(connPools), "Current Pool": x}).Info("Pool Info")
+	log.WithFields(log.Fields{"Pool Count": len(connPools), "Current Pool": x}).Trace("Pool Info")
 	pool := connPools[x]
 	return pool
 }
