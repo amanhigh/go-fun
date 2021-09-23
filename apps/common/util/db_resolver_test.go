@@ -3,6 +3,7 @@ package util_test
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/amanhigh/go-fun/apps/common/util"
 	. "github.com/onsi/ginkgo"
@@ -14,14 +15,15 @@ import (
 
 var _ = Describe("DbResolver", func() {
 	var (
-		interval  = time.Millisecond * 50
-		pingTable = "test"
-		err       error
-		connErr   = errors.New("Connection Error")
-		policy    *util.FallBackPolicy
-		db        *sql.DB
-		gormDB    *gorm.DB
-		mock      sqlmock.Sqlmock
+		interval   = time.Millisecond * 50
+		pingTable  = "test"
+		err        error
+		connErr    = errors.New("Connection Error")
+		policy     *util.FallBackPolicy
+		db         *sql.DB
+		gormDB     *gorm.DB
+		mock       sqlmock.Sqlmock
+		queryRegex = fmt.Sprintf("SELECT count.*%s.*", pingTable)
 	)
 	BeforeEach(func() {
 		/* Mock DB */
@@ -54,7 +56,7 @@ var _ = Describe("DbResolver", func() {
 		Context("On Error", func() {
 			BeforeEach(func() {
 				policy.ReportError(connErr)
-				mock.ExpectQuery("SELECT count").WillReturnError(connErr)
+				mock.ExpectQuery(queryRegex).WillReturnError(connErr)
 			})
 
 			It("should be FALLBACK", func() {
@@ -67,7 +69,7 @@ var _ = Describe("DbResolver", func() {
 
 			Context("Post Recover", func() {
 				BeforeEach(func() {
-					mock.ExpectQuery("SELECT count").WillReturnRows(sqlmock.NewRows([]string{"5"}))
+					mock.ExpectQuery(queryRegex).WillReturnRows(sqlmock.NewRows([]string{"5"}))
 				})
 
 				It("should be PRIMARY", func() {
