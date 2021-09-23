@@ -3,6 +3,7 @@ module github.com/amanhigh/go-fun
 go 1.12
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/andygrunwald/go-jira v1.11.1
 	github.com/bndr/gojenkins v1.0.1
