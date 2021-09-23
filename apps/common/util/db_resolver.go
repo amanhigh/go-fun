@@ -29,9 +29,9 @@ type FallBackPolicy struct {
 }
 
 const (
-	PING     = "ping"
-	PRIMARY  = 0
-	FALLBACK = 1
+	PING          = "ping"
+	POOL_PRIMARY  = 0
+	POOL_FALLBACK = 1
 )
 
 /**
@@ -79,16 +79,16 @@ func (self *FallBackPolicy) GetPool() (poolIndex int) {
 		if ok && err != nil {
 			log.WithFields(log.Fields{"Error": err}).Error("Falling Back to Master for Reads")
 			//Update New Value in Cache
-			self.currentPool = FALLBACK
+			self.currentPool = POOL_FALLBACK
 		}
 		//Serve Updated Pool
 		poolIndex = self.currentPool
 	case <-self.ticker.C:
 		//If we have switched to Fallback ping primary
-		if self.currentPool == FALLBACK {
+		if self.currentPool == POOL_FALLBACK {
 			//Try to Ping Slave if it is up
 			if err := self.Ping(); err == nil {
-				self.currentPool = PRIMARY
+				self.currentPool = POOL_PRIMARY
 				log.Info("Slave Up reverting config for Reads.")
 			} else {
 				log.WithFields(log.Fields{"Error": err}).Warning("Pinged Slave still not up. Reads continue on master")
