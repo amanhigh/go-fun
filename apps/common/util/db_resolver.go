@@ -77,9 +77,14 @@ func (self *FallBackPolicy) Resolve(connPools []gorm.ConnPool) gorm.ConnPool {
 
 /**
 Report any DB Errors which will be used to fallback if applicable
+This ignores any nil or non relevant errors.
 */
 func (self *FallBackPolicy) ReportError(err error) {
-	self.errChan <- err
+	_, isNetErr := err.(net.Error)
+	//Only Act on Network Errors
+	if isNetErr {
+		self.errChan <- err
+	}
 }
 
 /**
@@ -90,9 +95,8 @@ successful Ping
 func (self *FallBackPolicy) GetPool() (poolIndex int) {
 	select {
 	case err, ok := <-self.errChan:
-		_, isNetErr := err.(net.Error)
-		//Process if errorChannel Open we are on Primary Pool and there is a Network Error
-		if ok && self.currentPool == POOL_PRIMARY && isNetErr {
+		//Process if errorChannel Open we are on Primary Pool
+		if ok && self.currentPool == POOL_PRIMARY {
 			log.WithFields(log.Fields{"Error": err}).Error("Falling Back to Master for Reads")
 			self.currentPool = POOL_FALLBACK
 		}

@@ -2,6 +2,7 @@ package util_test
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/amanhigh/go-fun/apps/common/util"
@@ -53,17 +54,13 @@ var _ = Describe("DbResolver", func() {
 			Expect(policy.GetPool()).To(Equal(util.POOL_PRIMARY))
 		})
 
-		Context("On Error", func() {
+		Context("On Valid Error", func() {
 			BeforeEach(func() {
 				policy.ReportError(connErr)
 				mock.ExpectQuery(queryRegex).WillReturnError(connErr)
 			})
 
 			It("should be FALLBACK", func() {
-				Expect(policy.GetPool()).To(Equal(util.POOL_FALLBACK))
-			})
-
-			It("should remain FALLBACK until recovery", func() {
 				Consistently(policy.GetPool).Should(Equal(util.POOL_FALLBACK))
 			})
 
@@ -75,6 +72,20 @@ var _ = Describe("DbResolver", func() {
 				It("should be PRIMARY", func() {
 					Eventually(policy.GetPool).Should(Equal(util.POOL_PRIMARY))
 				})
+			})
+		})
+
+		Context("Should Remain Primary", func() {
+			AfterEach(func() {
+				Consistently(policy.GetPool).Should(Equal(util.POOL_PRIMARY))
+			})
+
+			It("on nil error", func() {
+				policy.ReportError(nil)
+			})
+
+			It("on non net error", func() {
+				policy.ReportError(errors.New("Some Error"))
 			})
 		})
 	})
