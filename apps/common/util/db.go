@@ -26,7 +26,7 @@ func CreateDbConnection(config config.Db) (db *gorm.DB, err error) {
 }
 
 func CreateTestDb() (db *gorm.DB, err error) {
-	//Use Log Level 4 for Debug, 2 for Warnings, 1 for Errors
-	db, err = gorm.Open(sqlite.Open("/tmp/gorm.db"), &gorm.Config{Logger: logger.Default.LogMode(1)})
+	//Use Log Level 4 for Debug, 3 for Warnings, 2 for Errors
+	db, err = gorm.Open(sqlite.Open("/tmp/gorm.db"), &gorm.Config{Logger: logger.Default.LogMode(logger.Error)})
 	return
 }
