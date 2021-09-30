@@ -2,7 +2,6 @@ package play_test
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/amanhigh/go-fun/apps/common/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -50,13 +49,10 @@ var _ = Describe("Docker", func() {
 				Expect(err).To(BeNil())
 
 				db, err = util.CreateMysqlConnection("root", password, "docker", "mysql", port)
-				fmt.Println(db, err)
 				if err != nil {
 					return err
 				}
-				err2 := db.Ping()
-				fmt.Println("Ping", err2)
-				return err2
+				return db.Ping()
 			})
 			Expect(err).To(BeNil())
 		})
