@@ -35,7 +35,7 @@ func CreateTestDb() (db *gorm.DB, err error) {
 }
 
 func CreateMysqlConnection(username, password, host, dbName string, port int) (db *sql.DB, err error) {
-	url := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", username, password, host, port, dbName)
+	url := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", username, password, host, port, dbName)
 	db, err = sql.Open("mysql", url)
 	return
 }
