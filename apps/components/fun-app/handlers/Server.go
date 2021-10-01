@@ -33,6 +33,7 @@ func (self *FunServer) initRoutes() {
 	adminGroup.GET("/stop", self.AdminHandler.Stop)
 
 	//Pprof (Use: http://localhost:8080/debug/pprof/)
+	//go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile
 	pprof.Register(self.GinEngine)
 }
 
