@@ -23,11 +23,11 @@ require (
 	github.com/gin-contrib/pprof v1.2.1
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-playground/validator/v10 v10.4.1
+	github.com/go-redis/redis/v8 v8.11.3
 	github.com/go-resty/resty/v2 v2.6.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang-migrate/migrate/v4 v4.13.0
 	github.com/golang/mock v1.4.4
-	github.com/golang/protobuf v1.5.1 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/uuid v1.2.0
 	github.com/hashicorp/consul/api v1.3.0
@@ -48,7 +48,7 @@ require (
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
 	github.com/olivere/elastic v6.2.26+incompatible
 	github.com/onsi/ginkgo v1.16.4
-	github.com/onsi/gomega v1.11.0
+	github.com/onsi/gomega v1.15.0
 	github.com/ory/dockertest/v3 v3.8.0
 	github.com/pierrec/lz4 v2.6.0+incompatible // indirect
 	github.com/prometheus/client_golang v0.9.3
