@@ -24,6 +24,7 @@ type FunServer struct {
 
 func (self *FunServer) initRoutes() {
 	//Routes
+	//TODO:Add Versioning
 	personGroup := self.GinEngine.Group("/person")
 	personGroup.GET("/all", self.PersonHandler.GetAllPerson)
 	personGroup.POST("", self.PersonHandler.CreatePerson)
@@ -33,6 +34,8 @@ func (self *FunServer) initRoutes() {
 	adminGroup.GET("/stop", self.AdminHandler.Stop)
 
 	//Pprof (Use: http://localhost:8080/debug/pprof/)
+	//go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile
+	//Load Test:  wrk2 http://localhost:8080/person/all/ -t 2 -c 100 -d 1m -R2000
 	pprof.Register(self.GinEngine)
 }
 
