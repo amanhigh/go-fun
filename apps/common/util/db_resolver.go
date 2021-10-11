@@ -58,7 +58,7 @@ PingTable Name used to ping db with count query to check connectivity.
 */
 func NewFallBackPolicy(Db *gorm.DB, retryInterval time.Duration, pingTable string) *FallBackPolicy {
 	return &FallBackPolicy{
-		currentPool: 0,
+		currentPool: POOL_PRIMARY,
 		errChan:     make(chan error, 5),
 		db:          Db,
 		ticker:      time.NewTicker(retryInterval),
