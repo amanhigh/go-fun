@@ -35,6 +35,7 @@ func (self *FunServer) initRoutes() {
 
 	//Pprof (Use: http://localhost:8080/debug/pprof/)
 	//go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile
+	//go tool pprof -http=:8001 http://localhost:8080/debug/pprof/heap
 	//Load Test:  wrk2 http://localhost:8080/person/all/ -t 2 -c 100 -d 1m -R2000
 	pprof.Register(self.GinEngine)
 }
