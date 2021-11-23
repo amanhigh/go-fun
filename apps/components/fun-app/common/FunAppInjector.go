@@ -106,25 +106,32 @@ func (self *FunAppInjector) BuildApp() (app interface{}, err error) {
 
 func initDb(dbConfig config.Db) (db *gorm.DB) {
 	var err error
-	if db, err = util.CreateDbConnection(dbConfig); err == nil {
-		if dbConfig.AutoMigrate {
-			/** Gorm AutoMigrate Schema */
-			db.AutoMigrate(
-				&db2.Person{},
-			)
 
-			/* GoMigrate*/
-			if dbConfig.MigrationSource != "" {
-				var m *migrate.Migrate
-				sourceURL := fmt.Sprintf("file://%v", dbConfig.MigrationSource)
-				dbUrl := fmt.Sprintf("mysql://%v", dbConfig.Url)
-				if m, err = migrate.New(sourceURL, dbUrl); err == nil {
-					if err = m.Up(); err == nil {
-						log.Info("Migration Complete")
-					} else if err == migrate.ErrNoChange {
-						//Ignore No Change
-						err = nil
-					}
+	/* Create Test DB or connect to provided DB */
+	if dbConfig.Url == "" {
+		db, err = util.CreateTestDb()
+	} else {
+		db, err = util.CreateDbConnection(dbConfig)
+	}
+
+	/* Migrate DB */
+	if err == nil && dbConfig.AutoMigrate {
+		/** Gorm AutoMigrate Schema */
+		db.AutoMigrate(
+			&db2.Person{},
+		)
+
+		/* GoMigrate*/
+		if dbConfig.MigrationSource != "" {
+			var m *migrate.Migrate
+			sourceURL := fmt.Sprintf("file://%v", dbConfig.MigrationSource)
+			dbUrl := fmt.Sprintf("mysql://%v", dbConfig.Url)
+			if m, err = migrate.New(sourceURL, dbUrl); err == nil {
+				if err = m.Up(); err == nil {
+					log.Info("Migration Complete")
+				} else if err == migrate.ErrNoChange {
+					//Ignore No Change
+					err = nil
 				}
 			}
 		}
