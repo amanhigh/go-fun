@@ -30,7 +30,8 @@ func CreateDbConnection(config config.Db) (db *gorm.DB, err error) {
 
 func CreateTestDb() (db *gorm.DB, err error) {
 	//Use Log Level 4 for Debug, 3 for Warnings, 2 for Errors
-	db, err = gorm.Open(sqlite.Open("/tmp/gorm.db"), &gorm.Config{Logger: logger.Default.LogMode(logger.Error)})
+	//Can use /tmp/gorm.db for file base Db
+	db, err = gorm.Open(sqlite.Open("file:memdb1?mode=memory&cache=shared"), &gorm.Config{Logger: logger.Default.LogMode(logger.Error)})
 	return
 }
 
