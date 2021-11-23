@@ -8,6 +8,7 @@ require (
 	github.com/andygrunwald/go-jira v1.11.1
 	github.com/bndr/gojenkins v1.0.1
 	github.com/bxcodec/faker/v3 v3.3.1
+	github.com/caarlos0/env/v6 v6.7.2
 	github.com/casbin/casbin/v2 v2.6.10
 	github.com/cheekybits/genny v1.0.0
 	github.com/containerd/continuity v0.2.0 // indirect
