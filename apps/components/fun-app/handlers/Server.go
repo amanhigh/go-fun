@@ -3,13 +3,12 @@ package handlers
 import (
 	"context"
 	"github.com/amanhigh/go-fun/apps/common/util"
-	"net/http"
-	"time"
-
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/zsais/go-gin-prometheus"
+	"net/http"
+	"time"
 )
 
 type FunServer struct {
@@ -48,22 +47,32 @@ func (self *FunServer) Start() (err error) {
 
 	// Initializing the server in a goroutine so that
 	// it won't block the graceful shutdown handling below
-	go func() {
+	var errChan = make(chan error, 1)
+
+	go func(errChan chan error) {
 		if srvErr := self.Server.ListenAndServe(); srvErr != nil && srvErr != http.ErrServerClosed {
-			err = srvErr
+			errChan <- srvErr
 		}
-	}()
+	}(errChan)
 
-	self.Shutdown.Wait()
+	//Read Error From GoRoutine or proceed in one second
+	select {
+	case err = <-errChan:
+		log.Trace("Error while Starting Server", errChan)
+	case <-time.After(time.Second):
+		//No Error Occurred proceed after waiting.
+		self.Shutdown.Wait()
 
-	// The context is used to inform the server it has few seconds to finish
-	// the request it is currently handling
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := self.Server.Shutdown(ctx); err != nil {
-		log.Fatal("Server forced to shutdown: ", err)
+		// The context is used to inform the server it has few seconds to finish
+		// the request it is currently handling
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := self.Server.Shutdown(ctx); err != nil {
+			log.Fatal("Server forced to shutdown: ", err)
+		}
+
+		log.Info("Server exiting")
 	}
 
-	log.Info("Server exiting")
 	return
 }
