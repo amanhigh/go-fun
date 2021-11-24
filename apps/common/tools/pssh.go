@@ -2,6 +2,7 @@ package tools
 
 import (
 	"fmt"
+	"github.com/amanhigh/go-fun/apps/models/config"
 	"github.com/thoas/go-funk"
 	"io/ioutil"
 	"path/filepath"
@@ -10,10 +11,10 @@ import (
 	. "github.com/amanhigh/go-fun/util"
 )
 
-var FastPssh = Pssh{20, OUTPUT_PATH, ERROR_PATH, false}
-var NORMAL_PSSH = Pssh{30, OUTPUT_PATH, ERROR_PATH, false}
-var DisplayPssh = Pssh{10, OUTPUT_PATH, ERROR_PATH, true}
-var SlowPssh = Pssh{240, OUTPUT_PATH, ERROR_PATH, false}
+var FastPssh = Pssh{20, config.OUTPUT_PATH, config.ERROR_PATH, false}
+var NORMAL_PSSH = Pssh{30, config.OUTPUT_PATH, config.ERROR_PATH, false}
+var DisplayPssh = Pssh{10, config.OUTPUT_PATH, config.ERROR_PATH, true}
+var SlowPssh = Pssh{240, config.OUTPUT_PATH, config.ERROR_PATH, false}
 
 type Pssh struct {
 	Timeout       int
@@ -26,7 +27,7 @@ func (self *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput
 	clearOutputPaths()
 
 	psshCmd := fmt.Sprintf(`script %v pssh -h %v -t %v -o %v -e %v %v -p %v '%v'`,
-		CONSOLE_FILE, getClusterFile(cluster), self.Timeout, self.outputPath, self.errorPath, self.getDisplayFlag(), parallelism, cmd)
+		config.CONSOLE_FILE, getClusterFile(cluster), self.Timeout, self.outputPath, self.errorPath, self.getDisplayFlag(), parallelism, cmd)
 	if disableOutput {
 		RunCommandPrintError(psshCmd)
 	} else {
@@ -53,8 +54,8 @@ func (self *Pssh) RunRange(cmd string, cluster string, parallelism int, disableO
 }
 
 func clearOutputPaths() {
-	ClearDirectory(OUTPUT_PATH)
-	ClearDirectory(ERROR_PATH)
+	ClearDirectory(config.OUTPUT_PATH)
+	ClearDirectory(config.ERROR_PATH)
 }
 
 func ExtractSubCluster(clusterName string, subClusterName string, start int, end int) {
@@ -91,10 +92,10 @@ func GetClusterHost(clusterName string, index int) string {
 }
 
 func SearchCluster(keyword string) (clusters []string) {
-	PrintBlue("Searching: " + CLUSTER_PATH)
-	files, _ := filepath.Glob(fmt.Sprintf("%v/*%v*", CLUSTER_PATH, keyword))
+	PrintBlue("Searching: " + config.CLUSTER_PATH)
+	files, _ := filepath.Glob(fmt.Sprintf("%v/*%v*", config.CLUSTER_PATH, keyword))
 	for _, name := range files {
-		fileName := strings.Replace(name, CLUSTER_PATH+"/", "", 1)
+		fileName := strings.Replace(name, config.CLUSTER_PATH+"/", "", 1)
 		cluster := strings.TrimRight(fileName, ".txt")
 		clusters = append(clusters, cluster)
 	}
@@ -102,11 +103,11 @@ func SearchCluster(keyword string) (clusters []string) {
 }
 
 func SearchContent(regex string) string {
-	return RunCommandIgnoreError(fmt.Sprintf("grep -inrR '%v' %v", regex, OUTPUT_PATH))
+	return RunCommandIgnoreError(fmt.Sprintf("grep -inrR '%v' %v", regex, config.OUTPUT_PATH))
 }
 
 func getClusterFile(name string) string {
-	return fmt.Sprintf("%v/%v.txt", CLUSTER_PATH, name)
+	return fmt.Sprintf("%v/%v.txt", config.CLUSTER_PATH, name)
 }
 
 func (self *Pssh) getDisplayFlag() string {

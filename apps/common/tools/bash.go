@@ -2,6 +2,7 @@ package tools
 
 import (
 	"fmt"
+	"github.com/amanhigh/go-fun/apps/components/kohan/core"
 	"os"
 	"os/exec"
 	"strings"
@@ -65,7 +66,7 @@ func RunNotIf(cmd string, lambda func(output string)) bool {
 }
 
 func runCommand(cmd string) (string, error) {
-	if IsDebugMode() {
+	if core.IsDebugMode() {
 		PrintPink(cmd)
 	}
 	output, err := exec.Command("sh", "-c", cmd).Output()
@@ -74,7 +75,7 @@ func runCommand(cmd string) (string, error) {
 
 func LiveCommand(cmd string) {
 	command := exec.Command("sh", "-c", cmd)
-	if IsDebugMode() {
+	if core.IsDebugMode() {
 		PrintPink(cmd)
 	}
 	/* Connect Command Outputs */

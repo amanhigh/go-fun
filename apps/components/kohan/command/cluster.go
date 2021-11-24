@@ -3,6 +3,7 @@ package command
 import (
 	"errors"
 	"fmt"
+	"github.com/amanhigh/go-fun/apps/models/config"
 	"strings"
 
 	"github.com/amanhigh/go-fun/apps/common/tools"
@@ -132,7 +133,7 @@ var clusterSearchCmd = &cobra.Command{
 
 func init() {
 	clusterPsshCmd.Flags().StringVarP(&tyype, "type", "t", "f", "First alphabet of fast/display/slow")
-	clusterPsshCmd.Flags().IntVarP(&parallelism, "parallel", "p", util2.DEFAULT_PARALELISM, "Parallelism")
+	clusterPsshCmd.Flags().IntVarP(&parallelism, "parallel", "p", config.DEFAULT_PARALELISM, "Parallelism")
 	clusterPsshCmd.Flags().IntVarP(&index, "start", "s", -1, "Starting Index")
 	clusterPsshCmd.Flags().IntVarP(&endIndex, "end", "e", -1, "Ending Index")
 

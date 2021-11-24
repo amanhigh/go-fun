@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/amanhigh/go-fun/apps/models/config"
 	"os"
 
 	"github.com/amanhigh/go-fun/util"
@@ -12,7 +13,7 @@ var (
 )
 
 func init() {
-	RootCmd.PersistentFlags().BoolVarP(&util.KOHAN_DEBUG, "debug", "d", util.KOHAN_DEBUG, "Enable Debug")
+	RootCmd.PersistentFlags().BoolVarP(&config.KOHAN_DEBUG, "debug", "d", config.KOHAN_DEBUG, "Enable Debug")
 }
 
 func Execute() {

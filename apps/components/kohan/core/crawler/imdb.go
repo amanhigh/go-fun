@@ -5,6 +5,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/amanhigh/go-fun/apps/common/clients"
 	util2 "github.com/amanhigh/go-fun/apps/common/util"
+	"github.com/amanhigh/go-fun/apps/models/config"
 	. "github.com/amanhigh/go-fun/apps/models/crawler"
 	"github.com/amanhigh/go-fun/util"
 	"github.com/fatih/color"
@@ -21,7 +22,7 @@ type ImdbCrawler struct {
 func NewImdbCrawler(year int, language string, cutoff int, cookies string) Crawler {
 	util.PrintYellow(fmt.Sprintf("ImdbCrawler: Year:%v Lang:%v Cutoff: %v", year, language, cutoff))
 
-	if util.IsDebugMode() {
+	if config.IsDebugMode() {
 		fmt.Println("IMDB Cookie: ", cookies)
 	}
 	//Clone Config and enable Compression

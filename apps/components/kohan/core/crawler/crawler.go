@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	util2 "github.com/amanhigh/go-fun/apps/common/util"
+	"github.com/amanhigh/go-fun/apps/models/config"
 	"github.com/fatih/color"
 	"github.com/wesovilabs/koazee"
 	"io/ioutil"
@@ -101,13 +102,13 @@ func (self *CrawlerManager) BuildSet() {
 	/* Fire Parallel Consumer to Separate Movies */
 	for info := range self.infoChannel {
 		if info.GoodBad() == nil {
-			if util.IsDebugMode() {
+			if config.IsDebugMode() {
 				color.Cyan("%+v", info)
 			}
 			self.goodInfo.Add(info)
 			atomic.AddInt32(&self.collected, 1)
 		} else {
-			if util.IsDebugMode() {
+			if config.IsDebugMode() {
 				color.HiMagenta("%+v", info)
 			}
 			self.badInfo.Add(info)

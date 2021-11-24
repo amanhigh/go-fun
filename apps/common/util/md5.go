@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"github.com/amanhigh/go-fun/apps/models/config"
 	"sort"
 	"strings"
 
@@ -31,7 +32,7 @@ func GetMD5Hash(text string) string {
 func Md5Checker(cmd string, cluster string) {
 	/* Run Command to get Ip Wise output */
 	tools.FastPssh.Run(cmd, cluster, 200, true)
-	files := util.ReadFileMap(util.OUTPUT_PATH, true)
+	files := util.ReadFileMap(config.OUTPUT_PATH, true)
 
 	/* Compute Md5 and store as list with count */
 	hashMap := map[string]*md5Info{}
@@ -66,7 +67,7 @@ func Md5Checker(cmd string, cluster string) {
 			current := sortList[i]
 			currentFile := current.fileList[0]
 			util.PrintSkyBlue(fmt.Sprintf("Diffing Top with Current: %v (%v) vs %v (%v)", firstFile, first.hash, currentFile, current.hash))
-			if util.IsDebugMode() {
+			if config.IsDebugMode() {
 				util.PrintFile(firstFile, firstFile)
 				util.PrintFile(currentFile, currentFile)
 			}

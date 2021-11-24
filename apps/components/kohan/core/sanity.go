@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"github.com/amanhigh/go-fun/apps/models/config"
 	"math"
 	"os"
 	"regexp"
@@ -34,7 +35,7 @@ func VersionCheck(pkgNameCsv string, cluster string) {
 	packageList := strings.Split(pkgNameCsv, ",")
 
 	cmd := fmt.Sprintf("dpkg -l | grep '%v'", strings.Join(packageList, `\|`))
-	tools.FastPssh.Run(cmd, cluster, DEFAULT_PARALELISM, true)
+	tools.FastPssh.Run(cmd, cluster, config.DEFAULT_PARALELISM, true)
 
 	versionCountMap := computeVersionCountMap()
 	for pkgVersion, count := range versionCountMap {
@@ -49,7 +50,7 @@ func VerifyStatus(cmd string, cluster string) {
 	PrintBlue("Running Sanity on Cluster: " + cluster)
 
 	tools.NORMAL_PSSH.Run(cmd, cluster, 200, true)
-	os.Chdir(OUTPUT_PATH)
+	os.Chdir(config.OUTPUT_PATH)
 
 	tools.PrintCommand("cat * | awk '{print $1,$2,$3}' | sort | uniq -c | sort -r")
 
@@ -60,7 +61,7 @@ func VerifyStatus(cmd string, cluster string) {
 		}
 	})
 
-	contentMap := ReadFileMap(OUTPUT_PATH, true)
+	contentMap := ReadFileMap(config.OUTPUT_PATH, true)
 	performBadStateChecks(contentMap)
 
 	minUptime := getMinUptime(contentMap)
@@ -71,7 +72,7 @@ func VerifyStatus(cmd string, cluster string) {
 	}
 
 	//TODO:Move out of Debug Mode.
-	if IsDebugMode() {
+	if config.IsDebugMode() {
 		VerifyNetworkParameters(cluster)
 	}
 }
@@ -124,7 +125,7 @@ func extractKeywordLines(contentMap map[string][]string, keyWord string) ([]stri
 
 func computeVersionCountMap() map[string]int {
 	versionCountMap := map[string]int{}
-	lines := ReadAllFiles(OUTPUT_PATH)
+	lines := ReadAllFiles(config.OUTPUT_PATH)
 	for _, line := range lines {
 		fields := strings.Fields(line)
 		pkgName := fields[1]

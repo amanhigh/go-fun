@@ -2,9 +2,10 @@ package tools
 
 import (
 	"fmt"
+	util "github.com/amanhigh/go-fun/apps/common/util"
+	"github.com/amanhigh/go-fun/apps/components/kohan/core"
+	"github.com/fatih/color"
 	"strings"
-
-	"github.com/amanhigh/go-fun/util"
 )
 
 const TIMEOUT = 60
@@ -16,8 +17,8 @@ const (
 )
 
 func Jcurl(url string, pipe string) (output string) {
-	if util.IsDebugMode() {
-		util.PrintPink(url)
+	if core.IsDebugMode() {
+		color.Magenta(url)
 	}
 
 	if pipe == "" {
@@ -49,7 +50,8 @@ func Curl(url string, method string, params string, pipe string) (output string)
 
 func ContentPiperSplit(content string, pipe string) []string {
 	output := ContentPiper(content, pipe)
-	return util.FilterEmptyLines(strings.Split(output, "\n"))
+	lines := strings.Split(output, "\n")
+	return util.FilterEmptyLines(lines)
 }
 
 func ContentPiper(content string, pipe string) string {

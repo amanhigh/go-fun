@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"github.com/amanhigh/go-fun/apps/models/config"
 	"time"
 
 	"github.com/amanhigh/go-fun/apps/common/tools"
@@ -23,7 +24,7 @@ func GetDpkgVersion(pkgName string, host string) {
 	dpkgVersion := tools.RunCommandPrintError(cmd)
 	versionString := fmt.Sprintf("\n%v - %v - HostVersion: %v", pkgName, dpkgVersion, util.FormatTime(time.Now(), util.PRINT_LAYOUT))
 	util.PrintYellow(versionString)
-	util.AppendFile(util.RELEASE_FILE, versionString)
+	util.AppendFile(config.RELEASE_FILE, versionString)
 }
 
 func GetLatestVersion(pkgName string, host string, comment string) {
@@ -32,5 +33,5 @@ func GetLatestVersion(pkgName string, host string, comment string) {
 	latestVersion := tools.RunCommandPrintError(cmd)
 	versionString := fmt.Sprintf("\n%v - %v - LatestVersion [ %v ]", pkgName, latestVersion, comment)
 	util.PrintYellow(versionString)
-	util.AppendFile(util.RELEASE_FILE, versionString)
+	util.AppendFile(config.RELEASE_FILE, versionString)
 }
