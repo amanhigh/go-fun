@@ -14,6 +14,7 @@ before:
 
     # Unit Tests
     - ginkgo ./apps/models/...
+    - ginkgo ./apps/common/...
 builds:
   - id: fun
     env:
