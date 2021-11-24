@@ -1,7 +1,7 @@
 package sort_test
 
 import (
-	"github.com/amanhigh/go-fun/learn/concepts/algos/sort"
+	sort3 "github.com/amanhigh/go-fun/learn/algos/sort"
 	"github.com/amanhigh/go-fun/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -29,17 +29,17 @@ var _ = Describe("Sort Tests", func() {
 	})
 
 	It("should bubble sort", func() {
-		sort.BubbleSort(input, count)
+		sort3.BubbleSort(input, count)
 		Expect(input).To(Equal(expected))
 	})
 
 	It("should quick sort", func() {
-		sort.QuickSort(input, 0, count-1)
+		sort3.QuickSort(input, 0, count-1)
 		Expect(input).To(Equal(expected))
 	})
 
 	It("should merge sort", func() {
-		sort.MergeSort(input, 0, count-1)
+		sort3.MergeSort(input, 0, count-1)
 		Expect(input).To(Equal(expected))
 	})
 

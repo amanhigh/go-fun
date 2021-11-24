@@ -1,17 +1,17 @@
 package cracking_test
 
 import (
-	"github.com/amanhigh/go-fun/learn/concepts/algos/hackerrank/cracking"
+	cracking2 "github.com/amanhigh/go-fun/learn/algos/hackerrank/cracking"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("BraceMatch", func() {
 	It("should be success", func() {
-		Expect(cracking.MatchBrace("[({()})]")).To(BeTrue())
+		Expect(cracking2.MatchBrace("[({()})]")).To(BeTrue())
 	})
 
 	It("should fail", func() {
-		Expect(cracking.MatchBrace("[({}}]")).To(BeFalse())
+		Expect(cracking2.MatchBrace("[({}}]")).To(BeFalse())
 	})
 })

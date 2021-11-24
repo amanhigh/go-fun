@@ -1,7 +1,7 @@
 package challenge_test
 
 import (
-	"github.com/amanhigh/go-fun/learn/concepts/algos/hackerrank/challenge"
+	challenge2 "github.com/amanhigh/go-fun/learn/algos/hackerrank/challenge"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -14,6 +14,6 @@ var _ = Describe("Leaderboard", func() {
 	)
 
 	It("should compute leader board", func() {
-		Expect(challenge.LeaderBoard(leaderBoard, games)).To(Equal(expectedPosition))
+		Expect(challenge2.LeaderBoard(leaderBoard, games)).To(Equal(expectedPosition))
 	})
 })

@@ -1,7 +1,7 @@
 package challenge_test
 
 import (
-	"github.com/amanhigh/go-fun/learn/concepts/algos/hackerrank/challenge"
+	challenge2 "github.com/amanhigh/go-fun/learn/algos/hackerrank/challenge"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -21,7 +21,7 @@ var _ = Describe("MaxSubSquare", func() {
 	It("should compute sum", func() {
 		scanner := util.NewStringScanner(input)
 		n, m, matrix := readInput(scanner)
-		coordinates, sum := challenge.MaximumSumSubRectangle(matrix, n, m)
+		coordinates, sum := challenge2.MaximumSumSubRectangle(matrix, n, m)
 		/* Top,Left,Bottom,Right = 1,1,2,2 */
 		Expect(sum).To(Equal(16))
 		Expect(coordinates).To(Equal([]int{1, 1, 2, 2}))
@@ -34,7 +34,7 @@ var _ = Describe("MaxSubSquare", func() {
 			{2, -2, -1, 4, -5},
 			{-3, 3, 1, 0, 3},
 		}
-		coordinates, sum := challenge.MaximumSumSubRectangle(input, 4, 5)
+		coordinates, sum := challenge2.MaximumSumSubRectangle(input, 4, 5)
 		/* Top,Left,Bottom,Right = 1,1,2,2 */
 		Expect(sum).To(Equal(18))
 		Expect(coordinates).To(Equal([]int{1, 1, 3, 3}))
@@ -47,7 +47,7 @@ var _ = Describe("MaxSubSquare", func() {
 			{3, 8, 10, 1, 3},
 			{-4, -1, 1, 7, -6},
 		}
-		coordinates, sum := challenge.MaximumSumSubRectangle(input, 4, 5)
+		coordinates, sum := challenge2.MaximumSumSubRectangle(input, 4, 5)
 		/* Top,Left,Bottom,Right = 1,1,2,2 */
 		Expect(sum).To(Equal(29))
 		Expect(coordinates).To(Equal([]int{1, 1, 3, 3}))

@@ -1,7 +1,7 @@
 package cracking_test
 
 import (
-	"github.com/amanhigh/go-fun/learn/concepts/algos/hackerrank/cracking"
+	cracking2 "github.com/amanhigh/go-fun/learn/algos/hackerrank/cracking"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -24,7 +24,7 @@ var _ = Describe("ConnectedGrid", func() {
 	)
 	It("should find correct regions", func() {
 
-		max := cracking.FindRegion(cells, size, n, m)
+		max := cracking2.FindRegion(cells, size, n, m)
 		Expect(max).To(Equal(5))
 	})
 })
