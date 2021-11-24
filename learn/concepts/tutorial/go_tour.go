@@ -415,7 +415,7 @@ func miscFun() {
 	fmt.Printf("%T %v", x, x)
 
 	/** Rot13 */
-	fmt.Println("\n\n")
+	fmt.Println("\n\n ")
 	s := strings.NewReader("Lbh penpxrq gur pbqr!")
 	r := rot13Reader{s}
 	io.Copy(os.Stdout, &r)
