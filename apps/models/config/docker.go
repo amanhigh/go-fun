@@ -1,4 +1,4 @@
-package frameworks
+package config
 
 type DockerConfig struct {
 	Path string
