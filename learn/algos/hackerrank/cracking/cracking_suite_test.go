@@ -9,5 +9,5 @@ import (
 
 func TestCracking(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Cracking Suite")
+	RunSpecs(t, "Algo Cracking Suite")
 }

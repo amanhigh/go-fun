@@ -9,5 +9,5 @@ import (
 
 func TestPractice(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Practice Suite")
+	RunSpecs(t, "Algo Practice Suite")
 }

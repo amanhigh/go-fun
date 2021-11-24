@@ -11,5 +11,5 @@ import (
 func TestSort(t *testing.T) {
 	RegisterFailHandler(Fail)
 	util.SeedRandom()
-	RunSpecs(t, "Sort Suite")
+	RunSpecs(t, "Algo Sort Suite")
 }

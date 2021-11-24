@@ -9,5 +9,5 @@ import (
 
 func TestPlay(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Play Suite")
+	RunSpecs(t, "Frameworks Play Suite")
 }

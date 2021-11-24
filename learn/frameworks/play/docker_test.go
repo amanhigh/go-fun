@@ -10,7 +10,7 @@ import (
 	"github.com/ory/dockertest/v3"
 )
 
-var _ = Describe("Docker", func() {
+var _ = PDescribe("Docker", func() {
 	var (
 		pool *dockertest.Pool
 		err  error

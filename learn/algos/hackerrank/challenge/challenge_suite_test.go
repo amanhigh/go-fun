@@ -9,5 +9,5 @@ import (
 
 func TestChallenge(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Challenge Suite")
+	RunSpecs(t, "Algo Challenge Suite")
 }

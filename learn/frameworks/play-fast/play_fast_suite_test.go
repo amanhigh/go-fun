@@ -9,5 +9,5 @@ import (
 
 func TestPlayFast(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "PlayFast Suite")
+	RunSpecs(t, "Frameworks PlayFast Suite")
 }

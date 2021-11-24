@@ -9,5 +9,5 @@ import (
 
 func TestLearn(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Learn Suite")
+	RunSpecs(t, "Models Learn Suite")
 }
