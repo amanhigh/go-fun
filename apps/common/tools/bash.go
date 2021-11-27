@@ -3,12 +3,12 @@ package tools
 import (
 	"fmt"
 	"github.com/amanhigh/go-fun/apps/components/kohan/core"
+	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"strings"
 	"sync"
 
-	. "github.com/amanhigh/go-fun/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -25,11 +25,11 @@ func RunAsyncCommand(heading string, cmd string, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		output, err := runCommand(cmd)
-		PrintSkyBlue(heading)
+		color.Cyan(heading)
 		if err == nil {
-			PrintWhite(output)
+			color.White(output)
 		} else {
-			PrintWhite(err.Error())
+			color.White(err.Error())
 		}
 		wg.Done()
 	}()
@@ -42,10 +42,10 @@ func RunCommandIgnoreError(cmd string) string {
 
 func PrintCommand(cmd string) {
 	if output, err := runCommand(cmd); err != nil {
-		PrintWhite(output)
-		PrintRed(fmt.Sprintf("Error Executing: %v\n CMD:%v\n", err, cmd))
+		color.White(output)
+		color.Red(fmt.Sprintf("Error Executing: %v\n CMD:%v\n", err, cmd))
 	} else {
-		PrintWhite(output)
+		color.White(output)
 	}
 }
 
@@ -67,7 +67,7 @@ func RunNotIf(cmd string, lambda func(output string)) bool {
 
 func runCommand(cmd string) (string, error) {
 	if core.IsDebugMode() {
-		PrintPink(cmd)
+		color.Magenta(cmd)
 	}
 	output, err := exec.Command("sh", "-c", cmd).Output()
 	return strings.TrimSpace(string(output)), err
@@ -76,7 +76,7 @@ func runCommand(cmd string) (string, error) {
 func LiveCommand(cmd string) {
 	command := exec.Command("sh", "-c", cmd)
 	if core.IsDebugMode() {
-		PrintPink(cmd)
+		color.Magenta(cmd)
 	}
 	/* Connect Command Outputs */
 	command.Stdin = os.Stdin

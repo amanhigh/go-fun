@@ -1,6 +1,7 @@
 package challenge_test
 
 import (
+	helper "github.com/amanhigh/go-fun/apps/common/helper"
 	challenge2 "github.com/amanhigh/go-fun/learn/algos/hackerrank/challenge"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -8,7 +9,6 @@ import (
 	"bufio"
 
 	"github.com/amanhigh/go-fun/util"
-	"github.com/amanhigh/go-fun/util/helper"
 )
 
 var _ = Describe("MaxSubSquare", func() {

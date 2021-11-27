@@ -4,7 +4,9 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"github.com/amanhigh/go-fun/apps/components/kohan/core"
 	"github.com/amanhigh/go-fun/apps/models/config"
+	"github.com/fatih/color"
 	"sort"
 	"strings"
 
@@ -50,14 +52,14 @@ func Md5Checker(cmd string, cluster string) {
 
 	/* If more than one Md5 Sums Found */
 	if len(sortList) > 1 {
-		util.PrintRed(fmt.Sprintf("Multiple MD5 Detected, Cluster Non Homogenous: %v", cluster))
+		color.Red("Multiple MD5 Detected, Cluster Non Homogenous: %v", cluster)
 
 		/* Sort Md5 List by Count */
 		sort.Slice(sortList, func(i, j int) bool {
 			return sortList[i].count > sortList[j].count
 		})
 		for _, value := range sortList {
-			util.PrintBlue(fmt.Sprintf("%v %v", value.hash, value.count))
+			color.Blue("%v %v", value.hash, value.count)
 		}
 
 		/* Perform Diff on first file of top two md5's */
@@ -66,14 +68,14 @@ func Md5Checker(cmd string, cluster string) {
 		for i := 1; i < len(sortList); i++ {
 			current := sortList[i]
 			currentFile := current.fileList[0]
-			util.PrintSkyBlue(fmt.Sprintf("Diffing Top with Current: %v (%v) vs %v (%v)", firstFile, first.hash, currentFile, current.hash))
-			if config.IsDebugMode() {
+			color.Cyan("Diffing Top with Current: %v (%v) vs %v (%v)", firstFile, first.hash, currentFile, current.hash)
+			if core.IsDebugMode() {
 				util.PrintFile(firstFile, firstFile)
 				util.PrintFile(currentFile, currentFile)
 			}
 			fmt.Println(tools.RunCommandIgnoreError(fmt.Sprintf("colordiff %v %v", firstFile, currentFile)))
 		}
 	} else {
-		util.PrintGreen(fmt.Sprintf("Single Md5 Found, Cluster Homogenous: %v Hash:%v Count:%v", cluster, sortList[0].hash, sortList[0].count))
+		color.Green(fmt.Sprintf("Single Md5 Found, Cluster Homogenous: %v Hash:%v Count:%v", cluster, sortList[0].hash, sortList[0].count))
 	}
 }

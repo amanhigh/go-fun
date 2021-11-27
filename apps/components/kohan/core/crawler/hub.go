@@ -2,10 +2,10 @@ package crawler
 
 import (
 	"github.com/PuerkitoBio/goquery"
+	helper "github.com/amanhigh/go-fun/apps/common/helper"
 	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	"github.com/amanhigh/go-fun/apps/models/crawler"
-	"github.com/amanhigh/go-fun/util"
-	"github.com/amanhigh/go-fun/util/helper"
+	"github.com/fatih/color"
 )
 
 type HubCrawler struct {
@@ -13,7 +13,7 @@ type HubCrawler struct {
 }
 
 func NewHubCrawler(topLink string) Crawler {
-	util.PrintYellow("Starting Hub Search")
+	color.Yellow("Starting Hub Search")
 	return &HubCrawler{topUrl: topLink}
 }
 

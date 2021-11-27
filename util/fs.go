@@ -3,6 +3,7 @@ package util
 import (
 	"bufio"
 	"fmt"
+	"github.com/fatih/color"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -61,7 +62,7 @@ func FindReplaceFile(filePath string, find string, replace string) (err error) {
 }
 
 func PrintFile(title string, filepath string) {
-	PrintSkyBlue(title)
+	color.Cyan(title)
 	fmt.Println(strings.Join(ReadAllLines(filepath), "\n"))
 }
 

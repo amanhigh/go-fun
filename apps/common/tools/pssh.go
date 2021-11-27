@@ -3,6 +3,7 @@ package tools
 import (
 	"fmt"
 	"github.com/amanhigh/go-fun/apps/models/config"
+	"github.com/fatih/color"
 	"github.com/thoas/go-funk"
 	"io/ioutil"
 	"path/filepath"
@@ -31,14 +32,14 @@ func (self *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput
 	if disableOutput {
 		RunCommandPrintError(psshCmd)
 	} else {
-		PrintWhite(fmt.Sprintf("Running Parallel SSH. Cluster: %v Parallelism:%v", cluster, parallelism))
+		color.White(fmt.Sprintf("Running Parallel SSH. Cluster: %v Parallelism:%v", cluster, parallelism))
 		LiveCommand(psshCmd)
 	}
 
 	RunIf(fmt.Sprintf("grep FAILURE %v", getClusterFile("console")), func(output string) {
 		PrintCommand(fmt.Sprintf("grep SUCCESS %v | awk '{print $4}' > %v", getClusterFile("console"), getClusterFile("pass")))
 		PrintCommand(fmt.Sprintf("grep FAILURE %v | awk '{print $4}' > %v", getClusterFile("console"), getClusterFile("fail")))
-		PrintYellow("Failed Hosts:")
+		color.Yellow("Failed Hosts:")
 		PrintCommand(fmt.Sprintf("cat %v", getClusterFile("fail")))
 	})
 }
@@ -92,7 +93,7 @@ func GetClusterHost(clusterName string, index int) string {
 }
 
 func SearchCluster(keyword string) (clusters []string) {
-	PrintBlue("Searching: " + config.CLUSTER_PATH)
+	color.Blue("Searching: " + config.CLUSTER_PATH)
 	files, _ := filepath.Glob(fmt.Sprintf("%v/*%v*", config.CLUSTER_PATH, keyword))
 	for _, name := range files {
 		fileName := strings.Replace(name, config.CLUSTER_PATH+"/", "", 1)

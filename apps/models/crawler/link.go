@@ -2,10 +2,9 @@ package crawler
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 
 	"errors"
-
-	"github.com/amanhigh/go-fun/util"
 )
 
 type LinkInfo struct {
@@ -13,7 +12,7 @@ type LinkInfo struct {
 }
 
 func (self *LinkInfo) Print() {
-	util.PrintWhite(fmt.Sprintf("%v", self.Link))
+	color.White(fmt.Sprintf("%v", self.Link))
 }
 
 func (self *LinkInfo) GoodBad() (err error) {
