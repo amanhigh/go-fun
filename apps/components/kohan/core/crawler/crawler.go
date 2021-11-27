@@ -14,7 +14,6 @@ import (
 	"sync/atomic"
 
 	. "github.com/amanhigh/go-fun/apps/models/crawler"
-	"github.com/amanhigh/go-fun/util"
 )
 
 const (
@@ -137,7 +136,7 @@ func (self *CrawlerManager) printWriteCrawledInfo(set CrawlSet, filePath string)
 	if self.verbose {
 		fmt.Println(urlDump)
 	}
-	ioutil.WriteFile(filePath, []byte(urlDump), util.DEFAULT_PERM)
+	ioutil.WriteFile(filePath, []byte(urlDump), util2.DEFAULT_PERM)
 }
 
 /**

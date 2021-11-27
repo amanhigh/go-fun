@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	"github.com/amanhigh/go-fun/apps/models/config"
 	"io/ioutil"
 
@@ -132,7 +133,7 @@ var dockerSetCmd = &cobra.Command{
 			Path: dockerPath,
 		})
 		util.PrintGreen(fmt.Sprintf("Written Config: %v\n\n%v", DOCKER_CONFIG, string(bytes)))
-		err = ioutil.WriteFile(DOCKER_CONFIG, bytes, util.DEFAULT_PERM)
+		err = ioutil.WriteFile(DOCKER_CONFIG, bytes, util2.DEFAULT_PERM)
 		return
 	},
 }

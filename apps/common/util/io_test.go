@@ -1,6 +1,7 @@
 package util_test
 
 import (
+	"github.com/amanhigh/go-fun/apps/common/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -11,8 +12,6 @@ import (
 	"fmt"
 
 	"strings"
-
-	. "github.com/amanhigh/go-fun/util"
 )
 
 var _ = Describe("Io", func() {
@@ -24,12 +23,12 @@ var _ = Describe("Io", func() {
 		)
 
 		It("should build", func() {
-			Expect(NewStringScanner(line)).To(Not(BeNil()))
+			Expect(util.NewStringScanner(line)).To(Not(BeNil()))
 		})
 
 		It("should read int", func() {
-			scanner := NewStringScanner(strconv.Itoa(n))
-			Expect(ReadInt(scanner)).To(Equal(n))
+			scanner := util.NewStringScanner(strconv.Itoa(n))
+			Expect(util.ReadInt(scanner)).To(Equal(n))
 		})
 
 		Context("Read Ints", func() {
@@ -37,20 +36,20 @@ var _ = Describe("Io", func() {
 				scanner *bufio.Scanner
 			)
 			BeforeEach(func() {
-				scanner = NewStringScanner(line)
+				scanner = util.NewStringScanner(line)
 			})
 
 			It("should read ints", func() {
-				Expect(ReadInts(scanner, n)).To(Equal(line_array))
+				Expect(util.ReadInts(scanner, n)).To(Equal(line_array))
 			})
 		})
 
 		It("should read mixed input", func() {
 			text := fmt.Sprintf("%v\n%v", n, line)
-			scanner := NewStringScanner(text)
-			m := ReadInt(scanner)
+			scanner := util.NewStringScanner(text)
+			m := util.ReadInt(scanner)
 			Expect(m).To(Equal(n))
-			ints := ReadInts(scanner, m)
+			ints := util.ReadInts(scanner, m)
 			Expect(ints).To(Equal(line_array))
 		})
 	})
@@ -60,8 +59,8 @@ var _ = Describe("Io", func() {
 			stringList = []string{"Test1", "Test2"}
 		)
 		It("should read strings", func() {
-			scanner := NewStringScanner(strings.Join(stringList, "\n"))
-			Expect(ReadStrings(scanner, len(stringList))).To(Equal(stringList))
+			scanner := util.NewStringScanner(strings.Join(stringList, "\n"))
+			Expect(util.ReadStrings(scanner, len(stringList))).To(Equal(stringList))
 		})
 	})
 })

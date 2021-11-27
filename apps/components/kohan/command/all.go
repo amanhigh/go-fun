@@ -2,11 +2,11 @@ package command
 
 import (
 	"fmt"
+	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	"strings"
 
 	"github.com/amanhigh/go-fun/apps/common/tools"
 	"github.com/amanhigh/go-fun/apps/components/kohan/core"
-	"github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +21,7 @@ var getVersionCmd = &cobra.Command{
 	Short: "Get Version for Package Latest or Dpkg",
 	Args:  cobra.ExactArgs(4),
 	PreRunE: func(cmd *cobra.Command, args []string) (err error) {
-		err = util.ValidateEnumArg(args[1], []string{"dpkg", "latest"})
+		err = util2.ValidateEnumArg(args[1], []string{"dpkg", "latest"})
 		return
 	},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -52,7 +52,7 @@ var investingCmd = &cobra.Command{
 	Short: "Converts Historical Data Format",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		for _, file := range util.ListFiles(args[0]) {
+		for _, file := range util2.ListFiles(args[0]) {
 			fmt.Println(fmt.Sprintf("Processing: %v", file))
 			if err = core.ReformatInvestingFile(file); err != nil {
 				break

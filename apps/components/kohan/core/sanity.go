@@ -11,7 +11,6 @@ import (
 
 	"github.com/amanhigh/go-fun/apps/common/tools"
 	"github.com/amanhigh/go-fun/apps/common/util"
-	. "github.com/amanhigh/go-fun/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -61,7 +60,7 @@ func VerifyStatus(cmd string, cluster string) {
 		}
 	})
 
-	contentMap := ReadFileMap(config.OUTPUT_PATH, true)
+	contentMap := util.ReadFileMap(config.OUTPUT_PATH, true)
 	performBadStateChecks(contentMap)
 
 	minUptime := getMinUptime(contentMap)
@@ -125,7 +124,7 @@ func extractKeywordLines(contentMap map[string][]string, keyWord string) ([]stri
 
 func computeVersionCountMap() map[string]int {
 	versionCountMap := map[string]int{}
-	lines := ReadAllFiles(config.OUTPUT_PATH)
+	lines := util.ReadAllFiles(config.OUTPUT_PATH)
 	for _, line := range lines {
 		fields := strings.Fields(line)
 		pkgName := fields[1]

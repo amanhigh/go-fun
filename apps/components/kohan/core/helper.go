@@ -6,14 +6,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/amanhigh/go-fun/util"
 )
 
 func Printf(templateFile string, paramFile string, marker string) {
 
-	for _, templateSplit := range util.ReadAllLines(templateFile) {
-		for _, paramLine := range util.ReadAllLines(paramFile) {
+	for _, templateSplit := range util2.ReadAllLines(templateFile) {
+		for _, paramLine := range util2.ReadAllLines(paramFile) {
 
 			template := templateSplit
 			for i, param := range strings.Split(paramLine, " ") {
@@ -31,7 +29,7 @@ Date, Open, High, Low, Close, Volume
 */
 func ReformatInvestingFile(filePath string) (err error) {
 	//Read all Lines
-	lines := util.ReadAllLines(filePath)
+	lines := util2.ReadAllLines(filePath)
 	var outLines []string
 	for i, line := range lines {
 		//Skip Header
@@ -67,5 +65,5 @@ func ReformatInvestingFile(filePath string) (err error) {
 	//Data from oldest to Newest
 	util2.ReverseArray(outLines)
 	//OverWrite Output Lines
-	return util.WriteLines(filePath, outLines)
+	return util2.WriteLines(filePath, outLines)
 }

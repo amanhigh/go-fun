@@ -2,13 +2,12 @@ package challenge_test
 
 import (
 	helper "github.com/amanhigh/go-fun/apps/common/helper"
+	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	challenge2 "github.com/amanhigh/go-fun/learn/algos/hackerrank/challenge"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"bufio"
-
-	"github.com/amanhigh/go-fun/util"
 )
 
 var _ = Describe("MaxSubSquare", func() {
@@ -19,7 +18,7 @@ var _ = Describe("MaxSubSquare", func() {
 -3 6 7`
 	)
 	It("should compute sum", func() {
-		scanner := util.NewStringScanner(input)
+		scanner := util2.NewStringScanner(input)
 		n, m, matrix := readInput(scanner)
 		coordinates, sum := challenge2.MaximumSumSubRectangle(matrix, n, m)
 		/* Top,Left,Bottom,Right = 1,1,2,2 */
@@ -56,8 +55,8 @@ var _ = Describe("MaxSubSquare", func() {
 })
 
 func readInput(scanner *bufio.Scanner) (n, m int, matrix [][]int) {
-	n = util.ReadInt(scanner)
-	m = util.ReadInt(scanner)
+	n = util2.ReadInt(scanner)
+	m = util2.ReadInt(scanner)
 	matrix = helper.ReadMatrix(scanner, n, m)
 	return
 }

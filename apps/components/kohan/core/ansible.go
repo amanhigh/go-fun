@@ -3,11 +3,11 @@ package core
 import (
 	"errors"
 	"fmt"
+	"github.com/amanhigh/go-fun/apps/common/util"
 	"github.com/amanhigh/go-fun/apps/models/config"
 	"strings"
 
 	"github.com/amanhigh/go-fun/apps/common/tools"
-	. "github.com/amanhigh/go-fun/util"
 )
 
 func MergeMux(splitMap map[string][]string) map[string][]string {
@@ -46,7 +46,7 @@ func BuildSplitMap(lines []string) map[string][]string {
 
 func SplitAnsibleConfig(configPath string) error {
 	if configPath != "" {
-		lines := ReadAllLines(configPath)
+		lines := util.ReadAllLines(configPath)
 		splitMap := BuildSplitMap(lines)
 		muxMap := MergeMux(splitMap)
 

@@ -11,8 +11,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-
-	. "github.com/amanhigh/go-fun/util"
 )
 
 var FastPssh = Pssh{20, config.OUTPUT_PATH, config.ERROR_PATH, false}
@@ -58,23 +56,23 @@ func (self *Pssh) RunRange(cmd string, cluster string, parallelism int, disableO
 }
 
 func clearOutputPaths() {
-	ClearDirectory(config.OUTPUT_PATH)
-	ClearDirectory(config.ERROR_PATH)
+	util.ClearDirectory(config.OUTPUT_PATH)
+	util.ClearDirectory(config.ERROR_PATH)
 }
 
 func ExtractSubCluster(clusterName string, subClusterName string, start int, end int) {
-	ips := ReadAllLines(getClusterFile(clusterName))
+	ips := util.ReadAllLines(getClusterFile(clusterName))
 	WriteClusterFile(subClusterName, strings.Join(ips[start:end], "\n"))
 }
 
 func WriteClusterFile(clusterName string, content string) {
 	filePath := getClusterFile(clusterName)
-	ioutil.WriteFile(filePath, []byte(content), DEFAULT_PERM)
+	ioutil.WriteFile(filePath, []byte(content), util.DEFAULT_PERM)
 }
 
 func ReadClusterFile(clusterName string) []string {
 	filePath := getClusterFile(clusterName)
-	return ReadAllLines(filePath)
+	return util.ReadAllLines(filePath)
 }
 
 func RemoveCluster(mainClusterName string, removeClusterName string) int {
@@ -109,7 +107,7 @@ func SearchCluster(keyword string) (clusters []string) {
 func Md5Checker(cmd string, cluster string) {
 	/* Run Command to get Ip Wise output */
 	FastPssh.Run(cmd, cluster, 200, true)
-	files := ReadFileMap(config.OUTPUT_PATH, true)
+	files := util.ReadFileMap(config.OUTPUT_PATH, true)
 
 	/* Compute Md5 and store as list with count */
 	hashMap := map[string]*util.Md5Info{}
@@ -145,8 +143,8 @@ func Md5Checker(cmd string, cluster string) {
 			currentFile := current.FileList[0]
 			color.Cyan("Diffing Top with Current: %v (%v) vs %v (%v)", firstFile, first.Hash, currentFile, current.Hash)
 			if core.IsDebugMode() {
-				PrintFile(firstFile, firstFile)
-				PrintFile(currentFile, currentFile)
+				util.PrintFile(firstFile, firstFile)
+				util.PrintFile(currentFile, currentFile)
 			}
 			fmt.Println(RunCommandIgnoreError(fmt.Sprintf("colordiff %v %v", firstFile, currentFile)))
 		}

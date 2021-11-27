@@ -1,11 +1,10 @@
 package challenge_test
 
 import (
+	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	challenge2 "github.com/amanhigh/go-fun/learn/algos/hackerrank/challenge"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"github.com/amanhigh/go-fun/util"
 )
 
 var _ = Describe("NonDivisibleSubset", func() {
@@ -30,9 +29,9 @@ var _ = Describe("NonDivisibleSubset", func() {
 })
 
 func readInputNonDivisible(input string) (ints []int, k int) {
-	scanner := util.NewStringScanner(input)
-	n := util.ReadInt(scanner)
-	k = util.ReadInt(scanner)
-	ints = util.ReadInts(scanner, n)
+	scanner := util2.NewStringScanner(input)
+	n := util2.ReadInt(scanner)
+	k = util2.ReadInt(scanner)
+	ints = util2.ReadInts(scanner, n)
 	return
 }

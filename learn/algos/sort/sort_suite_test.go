@@ -1,7 +1,7 @@
 package sort_test
 
 import (
-	"github.com/amanhigh/go-fun/util"
+	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -10,6 +10,6 @@ import (
 
 func TestSort(t *testing.T) {
 	RegisterFailHandler(Fail)
-	util.SeedRandom()
+	util2.SeedRandom()
 	RunSpecs(t, "Algo Sort Suite")
 }
