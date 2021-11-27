@@ -66,9 +66,9 @@ type CrawlerManager struct {
 	semaphoreChannel chan int
 }
 
-func NewCrawlerManager(crawler Crawler, requiredCount int, verbose bool) *CrawlerManager {
+func NewCrawlerManager(crawlerVar Crawler, requiredCount int, verbose bool) *CrawlerManager {
 	return &CrawlerManager{
-		Crawler:          crawler,
+		Crawler:          crawlerVar,
 		required:         int32(requiredCount),
 		infoChannel:      make(chan crawler.CrawlInfo, BUFFER_SIZE),
 		verbose:          verbose,
