@@ -3,7 +3,7 @@ package challenge_test
 import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/learn/algos/hackerrank/challenge"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

@@ -4,7 +4,7 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"testing"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

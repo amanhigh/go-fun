@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	util2 "github.com/amanhigh/go-fun/common/util"
 	"github.com/go-redis/redis/v8"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/ory/dockertest/v3"
 )

@@ -6,7 +6,7 @@ import (
 	db2 "github.com/amanhigh/go-fun/models/fun-app/db"
 	server2 "github.com/amanhigh/go-fun/models/fun-app/server"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

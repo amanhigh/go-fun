@@ -3,7 +3,7 @@ package sort_test
 import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/learn/algos/sort"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	sort2 "sort"
 )

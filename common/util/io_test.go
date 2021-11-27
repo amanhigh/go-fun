@@ -2,7 +2,7 @@ package util_test
 
 import (
 	util2 "github.com/amanhigh/go-fun/common/util"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"strconv"
