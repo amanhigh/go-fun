@@ -3,13 +3,14 @@ package util
 import (
 	"bufio"
 	"fmt"
+	"github.com/fatih/color"
 	"os"
 	"strconv"
 	"strings"
 )
 
 func PromptInput(promptText string) string {
-	PrintSkyBlue(promptText)
+	color.Cyan(promptText)
 	reader := bufio.NewReader(os.Stdin)
 	text, _ := reader.ReadString('\n')
 	return strings.TrimSpace(text)
@@ -30,9 +31,9 @@ func NoConfirm(msg string, runLamda func()) {
 }
 
 func DisplayMenu(msg string, options []string) (int, string) {
-	PrintYellow(msg)
+	color.Yellow(msg)
 	for i, option := range options {
-		PrintWhite(fmt.Sprintf("%v. %v", i+1, option))
+		color.White(fmt.Sprintf("%v. %v", i+1, option))
 	}
 	input := PromptInput("Please Select an Option.")
 	if selection, err := strconv.Atoi(input); err == nil {
