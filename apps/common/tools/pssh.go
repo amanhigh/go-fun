@@ -2,11 +2,14 @@ package tools
 
 import (
 	"fmt"
+	"github.com/amanhigh/go-fun/apps/common/util"
+	"github.com/amanhigh/go-fun/apps/components/kohan/core"
 	"github.com/amanhigh/go-fun/apps/models/config"
 	"github.com/fatih/color"
 	"github.com/thoas/go-funk"
 	"io/ioutil"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	. "github.com/amanhigh/go-fun/util"
@@ -101,6 +104,55 @@ func SearchCluster(keyword string) (clusters []string) {
 		clusters = append(clusters, cluster)
 	}
 	return
+}
+
+func Md5Checker(cmd string, cluster string) {
+	/* Run Command to get Ip Wise output */
+	FastPssh.Run(cmd, cluster, 200, true)
+	files := ReadFileMap(config.OUTPUT_PATH, true)
+
+	/* Compute Md5 and store as list with count */
+	hashMap := map[string]*util.Md5Info{}
+	var sortList []*util.Md5Info
+
+	for path, content := range files {
+		md5Hash := util.GetMD5Hash(strings.Join(content, "\n"))
+		if _, ok := hashMap[md5Hash]; !ok {
+			info := &util.Md5Info{FileList: []string{}, Hash: md5Hash}
+			hashMap[md5Hash] = info
+			sortList = append(sortList, info)
+		}
+		hashMap[md5Hash].Add(path)
+	}
+
+	/* If more than one Md5 Sums Found */
+	if len(sortList) > 1 {
+		color.Red("Multiple MD5 Detected, Cluster Non Homogenous: %v", cluster)
+
+		/* Sort Md5 List by Count */
+		sort.Slice(sortList, func(i, j int) bool {
+			return sortList[i].Count > sortList[j].Count
+		})
+		for _, value := range sortList {
+			color.Blue("%v %v", value.Hash, value.Count)
+		}
+
+		/* Perform Diff on first file of top two md5's */
+		first := sortList[0]
+		firstFile := first.FileList[0]
+		for i := 1; i < len(sortList); i++ {
+			current := sortList[i]
+			currentFile := current.FileList[0]
+			color.Cyan("Diffing Top with Current: %v (%v) vs %v (%v)", firstFile, first.Hash, currentFile, current.Hash)
+			if core.IsDebugMode() {
+				PrintFile(firstFile, firstFile)
+				PrintFile(currentFile, currentFile)
+			}
+			fmt.Println(RunCommandIgnoreError(fmt.Sprintf("colordiff %v %v", firstFile, currentFile)))
+		}
+	} else {
+		color.Green(fmt.Sprintf("Single Md5 Found, Cluster Homogenous: %v Hash:%v Count:%v", cluster, sortList[0].Hash, sortList[0].Count))
+	}
 }
 
 func SearchContent(regex string) string {
