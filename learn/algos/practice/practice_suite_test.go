@@ -1,4 +1,4 @@
-package learn_test
+package practice_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestLearn(t *testing.T) {
+func TestPractice(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Models Learn Suite")
+	RunSpecs(t, "Algo Practice Suite")
 }

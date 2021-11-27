@@ -2,11 +2,10 @@ package command
 
 import (
 	"fmt"
+	"github.com/amanhigh/go-fun/apps/models/config"
 	"io/ioutil"
 
 	"github.com/amanhigh/go-fun/apps/common/tools"
-	"github.com/amanhigh/go-fun/apps/models/learn/frameworks"
-
 	"github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
@@ -129,7 +128,7 @@ var dockerSetCmd = &cobra.Command{
 		}
 		fmt.Println(dockerPath, composeOpt)
 
-		bytes, _ := yaml.Marshal(frameworks.DockerConfig{
+		bytes, _ := yaml.Marshal(config.DockerConfig{
 			Path: dockerPath,
 		})
 		util.PrintGreen(fmt.Sprintf("Written Config: %v\n\n%v", DOCKER_CONFIG, string(bytes)))
@@ -161,7 +160,7 @@ func init() {
 }
 
 func getComposeCmd(action string) (cmd string) {
-	var dockerConfig frameworks.DockerConfig
+	var dockerConfig config.DockerConfig
 	bytes, _ := ioutil.ReadFile(DOCKER_CONFIG)
 	_ = yaml.Unmarshal(bytes, &dockerConfig)
 	cmd = fmt.Sprintf("docker-compose %v %v %v %v", dockerConfig.Path, action, dockerService, composeOpt)

@@ -2,6 +2,7 @@ package tools
 
 import (
 	"fmt"
+	"github.com/thoas/go-funk"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -74,7 +75,8 @@ func ReadClusterFile(clusterName string) []string {
 func RemoveCluster(mainClusterName string, removeClusterName string) int {
 	mainSet := ReadClusterFile(mainClusterName)
 	removeSet := ReadClusterFile(removeClusterName)
-	finalSet := SliceMinus(mainSet, removeSet)
+	diff, _ := funk.Difference(mainSet, removeSet)
+	finalSet := diff.([]string)
 	WriteClusterFile(mainClusterName, strings.Join(finalSet, "\n"))
 	return len(mainSet) - len(finalSet)
 }

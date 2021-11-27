@@ -1,7 +1,10 @@
 package util
 
 import (
+	"database/sql"
+	"fmt"
 	"github.com/amanhigh/go-fun/apps/models/config"
+	_ "github.com/go-sql-driver/mysql"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
@@ -26,7 +29,14 @@ func CreateDbConnection(config config.Db) (db *gorm.DB, err error) {
 }
 
 func CreateTestDb() (db *gorm.DB, err error) {
-	//Use Log Level 4 for Debug, 2 for Warnings, 1 for Errors
-	db, err = gorm.Open(sqlite.Open("/tmp/gorm.db"), &gorm.Config{Logger: logger.Default.LogMode(1)})
+	//Use Log Level 4 for Debug, 3 for Warnings, 2 for Errors
+	//Can use /tmp/gorm.db for file base Db
+	db, err = gorm.Open(sqlite.Open("file:memdb1?mode=memory&cache=shared"), &gorm.Config{Logger: logger.Default.LogMode(logger.Error)})
+	return
+}
+
+func CreateMysqlConnection(username, password, host, dbName string, port int) (db *sql.DB, err error) {
+	url := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", username, password, host, port, dbName)
+	db, err = sql.Open("mysql", url)
 	return
 }

@@ -1,13 +1,13 @@
-package it_test
+package play_test
 
 import (
+	"testing"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"testing"
 )
 
-func TestIt(t *testing.T) {
+func TestPlay(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "FunApp Suite")
+	RunSpecs(t, "Frameworks Play Suite")
 }
