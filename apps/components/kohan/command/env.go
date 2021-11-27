@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/amanhigh/go-fun/util"
+	"github.com/amanhigh/go-fun/apps/common/util"
 	"github.com/spf13/cobra"
 )
 

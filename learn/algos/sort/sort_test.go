@@ -1,8 +1,8 @@
 package sort_test
 
 import (
+	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	sort3 "github.com/amanhigh/go-fun/learn/algos/sort"
-	"github.com/amanhigh/go-fun/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	sort2 "sort"
@@ -17,7 +17,7 @@ var _ = Describe("Sort Tests", func() {
 	)
 
 	BeforeEach(func() {
-		original = util.RandomInts(count, max)
+		original = util2.RandomInts(count, max)
 
 		/* Make Copies to avoid changing original */
 		input = make([]int, count)

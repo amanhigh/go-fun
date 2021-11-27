@@ -6,13 +6,12 @@ import (
 	"io/ioutil"
 
 	"github.com/amanhigh/go-fun/apps/common/tools"
-	"github.com/amanhigh/go-fun/util"
 )
 
 const TEMP_CURL_FILE = "/tmp/curl.json"
 
 func WriteTempCurl(data string) {
-	ioutil.WriteFile(TEMP_CURL_FILE, []byte(data), util.DEFAULT_PERM)
+	ioutil.WriteFile(TEMP_CURL_FILE, []byte(data), util2.DEFAULT_PERM)
 }
 
 func RunTempCurlCommand(cmd string) string {

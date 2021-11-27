@@ -3,10 +3,10 @@ package core
 import (
 	"errors"
 	"fmt"
+	"github.com/amanhigh/go-fun/apps/common/util"
 	"strings"
 
 	"github.com/amanhigh/go-fun/apps/common/tools"
-	. "github.com/amanhigh/go-fun/util"
 )
 
 func MergeMux(splitMap map[string][]string) map[string][]string {
@@ -45,12 +45,12 @@ func BuildSplitMap(lines []string) map[string][]string {
 
 func SplitAnsibleConfig(configPath string) error {
 	if configPath != "" {
-		lines := ReadAllLines(configPath)
+		lines := util.ReadAllLines(configPath)
 		splitMap := BuildSplitMap(lines)
 		muxMap := MergeMux(splitMap)
 
 		for cluster, value := range muxMap {
-			if IsDebugMode() {
+			if util.IsDebugMode() {
 				fmt.Println(cluster, len(value))
 			}
 			tools.WriteClusterFile(cluster, strings.Join(value, "\n"))

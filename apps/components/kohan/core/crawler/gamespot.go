@@ -2,10 +2,10 @@ package crawler
 
 import (
 	"github.com/PuerkitoBio/goquery"
+	helper "github.com/amanhigh/go-fun/apps/common/helper"
 	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	"github.com/amanhigh/go-fun/apps/models/crawler"
-	"github.com/amanhigh/go-fun/util"
-	"github.com/amanhigh/go-fun/util/helper"
+	"github.com/fatih/color"
 )
 
 type GamespotCrawler struct {
@@ -13,7 +13,7 @@ type GamespotCrawler struct {
 }
 
 func NewGameSpotCrawler(topLink string) Crawler {
-	util.PrintYellow("Starting Game Search")
+	color.Yellow("Starting Game Search")
 	return &GamespotCrawler{topLink}
 }
 

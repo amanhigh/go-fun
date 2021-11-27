@@ -2,11 +2,10 @@ package crawler
 
 import (
 	"fmt"
+	helper "github.com/amanhigh/go-fun/apps/common/helper"
+	"github.com/fatih/color"
 
 	"errors"
-
-	"github.com/amanhigh/go-fun/util"
-	"github.com/amanhigh/go-fun/util/helper"
 )
 
 type GameInfo struct {
@@ -15,7 +14,7 @@ type GameInfo struct {
 }
 
 func (self *GameInfo) Print() {
-	util.PrintWhite(fmt.Sprintf("%v: %v", self.Name, self.Link))
+	color.White(fmt.Sprintf("%v: %v", self.Name, self.Link))
 }
 
 func (self *GameInfo) GoodBad() (err error) {

@@ -1,6 +1,7 @@
 package util
 
 import (
+	"github.com/thoas/go-funk"
 	"regexp"
 	"strings"
 )
@@ -11,13 +12,9 @@ func ReplaceRegEx(content string, search string, replace string) string {
 }
 
 func FilterEmptyLines(lines []string) []string {
-	nonEmptyLines := []string{}
-	for _, line := range lines {
-		if len(line) > 0 {
-			nonEmptyLines = append(nonEmptyLines, line)
-		}
-	}
-	return nonEmptyLines
+	return funk.FilterString(lines, func(s string) bool {
+		return len(s) > 0
+	})
 }
 
 func GoGrep(input string, pattern string) (output string) {

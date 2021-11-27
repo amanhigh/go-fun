@@ -3,6 +3,7 @@ package util
 import (
 	"errors"
 	"fmt"
+	"github.com/thoas/go-funk"
 )
 
 func Verify(err ...error) (e error) {
@@ -15,7 +16,7 @@ func Verify(err ...error) (e error) {
 }
 
 func ValidateEnumArg(arg string, enum []string) (err error) {
-	if ok := SliceContains(arg, enum); !ok {
+	if ok := funk.Contains(enum, arg); !ok {
 		err = errors.New(fmt.Sprintf("%v is not a Valid Argument. Valid Values: %v", arg, enum))
 	}
 	return

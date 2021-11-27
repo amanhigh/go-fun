@@ -1,25 +1,27 @@
 package cracking
 
-import . "github.com/amanhigh/go-fun/util/ds"
+import (
+	"github.com/amanhigh/go-fun/apps/models/ds"
+)
 
 /**
 https://www.youtube.com/watch?v=VmogG01IjYc
 */
 type MedianFinder struct {
-	lowers *Heap
-	uppers *Heap
+	lowers *ds.Heap
+	uppers *ds.Heap
 }
 
 func NewMedianFinder() MedianFinder {
-	maxHeap := NewMaxHeap()
-	minHeap := NewMinHeap()
+	maxHeap := ds.NewMaxHeap()
+	minHeap := ds.NewMinHeap()
 	return MedianFinder{
 		lowers: &maxHeap,
 		uppers: &minHeap,
 	}
 }
 
-func (self *MedianFinder) getSmallerHeap() *Heap {
+func (self *MedianFinder) getSmallerHeap() *ds.Heap {
 	if self.lowers.Size() <= self.uppers.Size() {
 		return self.lowers
 	} else {
@@ -27,7 +29,7 @@ func (self *MedianFinder) getSmallerHeap() *Heap {
 	}
 }
 
-func (self *MedianFinder) getBiggerHeap() *Heap {
+func (self *MedianFinder) getBiggerHeap() *ds.Heap {
 	if self.lowers.Size() > self.uppers.Size() {
 		return self.lowers
 	} else {

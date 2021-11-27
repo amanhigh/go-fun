@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/learn/frameworks/orm/model"
-	_ "github.com/amanhigh/go-fun/util"
 	log "github.com/sirupsen/logrus"
 )
 

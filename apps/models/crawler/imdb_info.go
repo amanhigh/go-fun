@@ -3,9 +3,8 @@ package crawler
 import (
 	"errors"
 	"fmt"
-
-	"github.com/amanhigh/go-fun/util"
-	"github.com/amanhigh/go-fun/util/helper"
+	helper "github.com/amanhigh/go-fun/apps/common/helper"
+	"github.com/fatih/color"
 )
 
 type ImdbInfo struct {
@@ -19,9 +18,9 @@ type ImdbInfo struct {
 
 func (self *ImdbInfo) Print() {
 	if self.MyRating != -1 {
-		util.PrintWhite(fmt.Sprintf("%v: %.2f/%.2f - %v", self.Name, self.MyRating, self.Rating, self.Link))
+		color.White(fmt.Sprintf("%v: %.2f/%.2f - %v", self.Name, self.MyRating, self.Rating, self.Link))
 	} else {
-		util.PrintWhite(fmt.Sprintf("%v: %.2f - %v", self.Name, self.Rating, self.Link))
+		color.White(fmt.Sprintf("%v: %.2f - %v", self.Name, self.Rating, self.Link))
 	}
 }
 

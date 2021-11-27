@@ -3,12 +3,13 @@ package command
 import (
 	"errors"
 	"fmt"
+	"github.com/amanhigh/go-fun/apps/models/config"
+	"github.com/fatih/color"
 	"strings"
 
 	"github.com/amanhigh/go-fun/apps/common/tools"
 	"github.com/amanhigh/go-fun/apps/common/util"
 	"github.com/amanhigh/go-fun/apps/components/kohan/core"
-	util2 "github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
 )
 
@@ -80,7 +81,7 @@ var clusterRemoveCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		count := tools.RemoveCluster(args[0], args[1])
-		util2.PrintGreen(fmt.Sprintf("%v items removed from %v", count, args[0]))
+		color.Green("%v items removed from %v", count, args[0])
 	},
 }
 
@@ -90,7 +91,7 @@ var clusterMd5Cmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, cluster := range strings.Fields(args[1]) {
-			util.Md5Checker(args[0], cluster)
+			tools.Md5Checker(args[0], cluster)
 		}
 	},
 }
@@ -108,11 +109,11 @@ var clusterSearchCmd = &cobra.Command{
 		case 1:
 			return
 		case 2:
-			c, err = util2.ParseInt(args[1])
+			c, err = util.ParseInt(args[1])
 
 		case 3:
-			if c, err = util2.ParseInt(args[1]); err == nil {
-				i, err = util2.ParseInt(args[2])
+			if c, err = util.ParseInt(args[1]); err == nil {
+				i, err = util.ParseInt(args[2])
 			}
 		}
 
@@ -132,7 +133,7 @@ var clusterSearchCmd = &cobra.Command{
 
 func init() {
 	clusterPsshCmd.Flags().StringVarP(&tyype, "type", "t", "f", "First alphabet of fast/display/slow")
-	clusterPsshCmd.Flags().IntVarP(&parallelism, "parallel", "p", util2.DEFAULT_PARALELISM, "Parallelism")
+	clusterPsshCmd.Flags().IntVarP(&parallelism, "parallel", "p", config.DEFAULT_PARALELISM, "Parallelism")
 	clusterPsshCmd.Flags().IntVarP(&index, "start", "s", -1, "Starting Index")
 	clusterPsshCmd.Flags().IntVarP(&endIndex, "end", "e", -1, "Ending Index")
 

@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/amanhigh/go-fun/apps/common/clients"
-	util2 "github.com/amanhigh/go-fun/apps/common/util"
+	util "github.com/amanhigh/go-fun/apps/common/util"
 	. "github.com/amanhigh/go-fun/apps/models/crawler"
-	"github.com/amanhigh/go-fun/util"
 	"github.com/fatih/color"
 	"strings"
 )
@@ -19,7 +18,7 @@ type ImdbCrawler struct {
 }
 
 func NewImdbCrawler(year int, language string, cutoff int, cookies string) Crawler {
-	util.PrintYellow(fmt.Sprintf("ImdbCrawler: Year:%v Lang:%v Cutoff: %v", year, language, cutoff))
+	color.Yellow("ImdbCrawler: Year:%v Lang:%v Cutoff: %v", year, language, cutoff)
 
 	if util.IsDebugMode() {
 		fmt.Println("IMDB Cookie: ", cookies)
@@ -27,7 +26,7 @@ func NewImdbCrawler(year int, language string, cutoff int, cookies string) Crawl
 	//Clone Config and enable Compression
 	imdbHttpConfig := clients.DefaultHttpClientConfig
 	imdbHttpConfig.Compression = true
-	client := clients.NewHttpClientWithCookies("https://www.imdb.com", util2.ParseCookies(cookies), imdbHttpConfig)
+	client := clients.NewHttpClientWithCookies("https://www.imdb.com", util.ParseCookies(cookies), imdbHttpConfig)
 	return &ImdbCrawler{
 		cutoff:   cutoff,
 		language: language,
@@ -36,8 +35,8 @@ func NewImdbCrawler(year int, language string, cutoff int, cookies string) Crawl
 	}
 }
 
-func (self *ImdbCrawler) GetTopPage() *util2.Page {
-	topPage := util2.NewPageUsingClient(self.topUrl, self.client)
+func (self *ImdbCrawler) GetTopPage() *util.Page {
+	topPage := util.NewPageUsingClient(self.topUrl, self.client)
 	userName := topPage.Document.Find("a.navbar__user-name").Text()
 	if strings.Contains(userName, "Aman") {
 		color.Green("User: %s", userName)
@@ -47,14 +46,14 @@ func (self *ImdbCrawler) GetTopPage() *util2.Page {
 	return topPage
 }
 
-func (self *ImdbCrawler) GatherLinks(page *util2.Page, ch chan CrawlInfo) {
+func (self *ImdbCrawler) GatherLinks(page *util.Page, ch chan CrawlInfo) {
 	page.Document.Find(".lister-col-wrapper").Each(func(i int, lineItem *goquery.Selection) {
 		/* Read Rating & Link from List Page */
 		ratingFloat := getRating(lineItem)
 		name, link := page.ParseAnchor(lineItem.Find(".lister-item-header a"))
 
 		/* Go Crawl Movie Page for My Rating & Other Details */
-		if moviePage := util2.NewPageUsingClient(link, self.client); moviePage != nil {
+		if moviePage := util.NewPageUsingClient(link, self.client); moviePage != nil {
 			myRating := util.ParseFloat(moviePage.Document.Find(".star-rating-value").Text())
 
 			ch <- &ImdbInfo{
@@ -68,10 +67,10 @@ func (self *ImdbCrawler) GatherLinks(page *util2.Page, ch chan CrawlInfo) {
 	})
 }
 
-func (self *ImdbCrawler) NextPageLink(page *util2.Page) (url string, ok bool) {
+func (self *ImdbCrawler) NextPageLink(page *util.Page) (url string, ok bool) {
 	var params string
 	nextPageElement := page.Document.Find(".next-page")
-	if params, ok = nextPageElement.Attr(util2.HREF); ok {
+	if params, ok = nextPageElement.Attr(util.HREF); ok {
 		url = fmt.Sprintf("https://%v%v", page.Document.Url.Host, params)
 	}
 	return
@@ -81,7 +80,7 @@ func (self *ImdbCrawler) PrintSet(good CrawlSet, bad CrawlSet) bool {
 	return true
 }
 
-func (self *ImdbCrawler) getImdbUrl(page *util2.Page, params string) string {
+func (self *ImdbCrawler) getImdbUrl(page *util.Page, params string) string {
 	return fmt.Sprintf("https://%v%v%v", page.Document.Url.Host, page.Document.Url.Path, params)
 }
 

@@ -2,10 +2,10 @@ package clients
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"regexp"
 	"time"
 
-	"github.com/amanhigh/go-fun/util"
 	"github.com/bndr/gojenkins"
 )
 
@@ -40,7 +40,7 @@ func (self *JenkinsClient) Status(jobName string) (status string, version string
 		if build, err = job.GetLastBuild(); err == nil {
 			if build, err = self.jenkins.GetBuild(jobName, build.GetBuildNumber()); err == nil {
 				for i := 1; build.IsRunning(); i++ {
-					util.PrintWhite(fmt.Sprintf("Job Running - %v", i))
+					color.White(fmt.Sprintf("Job Running - %v", i))
 					time.Sleep(10 * time.Second)
 				}
 				if match := compile.FindStringSubmatch(build.GetConsoleOutput()); len(match) > 1 {

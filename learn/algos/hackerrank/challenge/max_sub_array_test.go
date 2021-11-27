@@ -1,6 +1,8 @@
 package challenge_test
 
 import (
+	helper "github.com/amanhigh/go-fun/apps/common/helper"
+	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	challenge2 "github.com/amanhigh/go-fun/learn/algos/hackerrank/challenge"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -8,9 +10,6 @@ import (
 	"bufio"
 
 	"fmt"
-
-	"github.com/amanhigh/go-fun/util"
-	"github.com/amanhigh/go-fun/util/helper"
 )
 
 var _ = Describe("MaxSubArray", func() {
@@ -32,22 +31,22 @@ var _ = Describe("MaxSubArray", func() {
 	)
 
 	AfterEach(func() {
-		n := util.ReadInt(inScan)
+		n := util2.ReadInt(inScan)
 		for i := 0; i < n; i++ {
 			_, ints := helper.ReadCountInts(inScan)
-			expected := util.ReadInts(outScan, 4)
+			expected := util2.ReadInts(outScan, 4)
 			arraySum, segmentSum, start, end := challenge2.MaxSubArray(ints)
 			Expect([]int{arraySum, segmentSum, start, end}).To(Equal(expected), fmt.Sprintf("Input: %v Expected: %v", ints, expected))
 		}
 	})
 
 	It("should be correct", func() {
-		inScan = util.NewStringScanner(input)
-		outScan = util.NewStringScanner(output)
+		inScan = util2.NewStringScanner(input)
+		outScan = util2.NewStringScanner(output)
 	})
 
 	It("should be correct 1", func() {
-		inScan = util.NewStringScanner(`6
+		inScan = util2.NewStringScanner(`6
 1
 1
 6
@@ -60,7 +59,7 @@ var _ = Describe("MaxSubArray", func() {
 -10
 6
 1 -1 -1 -1 -1 5`)
-		outScan = util.NewStringScanner(`1 1 0 0
+		outScan = util2.NewStringScanner(`1 1 0 0
 -1 -1 0 0
 1 1 0 0
 6 6 0 2
@@ -69,11 +68,11 @@ var _ = Describe("MaxSubArray", func() {
 	})
 
 	It("should be correct nonContigous Sum", func() {
-		inScan = util.NewStringScanner(`
+		inScan = util2.NewStringScanner(`
 1
 5
 -1 2 -3 4 5`)
-		outScan = util.NewStringScanner(`
+		outScan = util2.NewStringScanner(`
 9 11 3 4`)
 	})
 })

@@ -2,12 +2,12 @@ package tools
 
 import (
 	"fmt"
-	"github.com/amanhigh/go-fun/util"
+	"github.com/fatih/color"
 	"strings"
 )
 
 func ClusterSsh(clusterName string) {
-	util.PrintGreen("Clustering onto " + clusterName)
+	color.Green("Clustering onto " + clusterName)
 	ips := ReadClusterFile(clusterName)
 	LiveCommand(fmt.Sprintf("cssh %s", strings.Join(ips, " ")))
 }
