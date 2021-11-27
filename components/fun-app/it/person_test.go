@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Person Integration Test", func() {
+var _ = Describe("Person Integration Test", Label("it"), func() {
 	var (
 		serviceUrl = "http://localhost:8080"
 		request    server2.PersonRequest
