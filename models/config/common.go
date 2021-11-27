@@ -8,7 +8,7 @@ import (
 )
 
 type Server struct {
-	Host string `yaml:"host"`
+	Host string `env:"HOST"`
 	Port int    `env:"PORT" envDefault:"8080"`
 }
 
