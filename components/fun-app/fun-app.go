@@ -1,0 +1,30 @@
+package main
+
+import (
+	common2 "github.com/amanhigh/go-fun/components/fun-app/common"
+	config3 "github.com/amanhigh/go-fun/models/config"
+	interfaces2 "github.com/amanhigh/go-fun/models/interfaces"
+	"github.com/caarlos0/env/v6"
+)
+
+func main() {
+	var err error
+	var config config3.FunAppConfig
+	/* Read Config */
+	if err = env.Parse(&config); err == nil {
+		//go gometrics.Log(gometrics.DefaultRegistry, 5*time.Second, log.StandardLogger())
+
+		/* Build Injector */
+		injector := common2.NewFunAppInjector(config)
+		var app interface{}
+
+		/* Build App */
+		if app, err = injector.BuildApp(); err == nil {
+			err = app.(interfaces2.ServerInterface).Start()
+		}
+	}
+
+	if err != nil {
+		panic(err)
+	}
+}

@@ -13,9 +13,9 @@ before:
     #- go generate ./...
 
     # Unit Tests
-    - ginkgo ./apps/models/...
-    - ginkgo ./apps/common/...
-    - ginkgo ./learn/...
+    - ginkgo ./models/...
+    - ginkgo ./common/...
+    - ginkgo ./components/learn/...
 builds:
   - id: fun
     env:
@@ -26,13 +26,13 @@ builds:
     goarch:
       - amd64
     binary: fun
-    dir: ./apps/components/fun-app
+    dir: ./components/fun-app
     main: fun-app.go
   - id: kohan
     binary: kohan
     targets:
       - linux_amd64
-    dir: ./apps/components/kohan
+    dir: ./components/kohan
     main: kohan.go
 
 dockers:
@@ -40,11 +40,11 @@ dockers:
     image_templates:
       - "amanfdk/fun-app"
       - "amanfdk/fun-app:{{ .Version }}"
-    dockerfile: ./apps/components/fun-app/Dockerfile
+    dockerfile: ./components/fun-app/Dockerfile
     #Prerelease Tags won't be pushed e.g. v1.0.0-rc1
     skip_push: false
     extra_files:
-      - ./apps/components/fun-app/config.yml
+      - ./components/fun-app/fun-app.go
 
 archives:
   - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
