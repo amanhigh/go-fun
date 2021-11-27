@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/amanhigh/go-fun/apps/models/config"
+	"github.com/fatih/color"
 	"strings"
 
 	"github.com/amanhigh/go-fun/apps/common/tools"
 	"github.com/amanhigh/go-fun/apps/common/util"
 	"github.com/amanhigh/go-fun/apps/components/kohan/core"
-	util2 "github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
 )
 
@@ -81,7 +81,7 @@ var clusterRemoveCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		count := tools.RemoveCluster(args[0], args[1])
-		util2.PrintGreen(fmt.Sprintf("%v items removed from %v", count, args[0]))
+		color.Green("%v items removed from %v", count, args[0])
 	},
 }
 
@@ -91,7 +91,7 @@ var clusterMd5Cmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, cluster := range strings.Fields(args[1]) {
-			util.Md5Checker(args[0], cluster)
+			tools.Md5Checker(args[0], cluster)
 		}
 	},
 }
@@ -109,11 +109,11 @@ var clusterSearchCmd = &cobra.Command{
 		case 1:
 			return
 		case 2:
-			c, err = util2.ParseInt(args[1])
+			c, err = util.ParseInt(args[1])
 
 		case 3:
-			if c, err = util2.ParseInt(args[1]); err == nil {
-				i, err = util2.ParseInt(args[2])
+			if c, err = util.ParseInt(args[1]); err == nil {
+				i, err = util.ParseInt(args[2])
 			}
 		}
 

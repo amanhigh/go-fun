@@ -2,9 +2,9 @@ package command
 
 import (
 	"github.com/amanhigh/go-fun/apps/models/config"
+	"github.com/fatih/color"
 	"os"
 
-	"github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,7 @@ func init() {
 
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		util.PrintRed(err.Error())
+		color.Red(err.Error())
 		os.Exit(1)
 	}
 }

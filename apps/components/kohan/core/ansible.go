@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/amanhigh/go-fun/apps/common/util"
-	"github.com/amanhigh/go-fun/apps/models/config"
 	"strings"
 
 	"github.com/amanhigh/go-fun/apps/common/tools"
@@ -51,7 +50,7 @@ func SplitAnsibleConfig(configPath string) error {
 		muxMap := MergeMux(splitMap)
 
 		for cluster, value := range muxMap {
-			if config.IsDebugMode() {
+			if util.IsDebugMode() {
 				fmt.Println(cluster, len(value))
 			}
 			tools.WriteClusterFile(cluster, strings.Join(value, "\n"))

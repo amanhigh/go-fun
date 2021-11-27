@@ -2,7 +2,7 @@ package tools
 
 import (
 	"fmt"
-	"github.com/amanhigh/go-fun/apps/components/kohan/core"
+	"github.com/amanhigh/go-fun/apps/common/util"
 	"github.com/fatih/color"
 	"os"
 	"os/exec"
@@ -66,7 +66,7 @@ func RunNotIf(cmd string, lambda func(output string)) bool {
 }
 
 func runCommand(cmd string) (string, error) {
-	if core.IsDebugMode() {
+	if util.IsDebugMode() {
 		color.Magenta(cmd)
 	}
 	output, err := exec.Command("sh", "-c", cmd).Output()
@@ -75,7 +75,7 @@ func runCommand(cmd string) (string, error) {
 
 func LiveCommand(cmd string) {
 	command := exec.Command("sh", "-c", cmd)
-	if core.IsDebugMode() {
+	if util.IsDebugMode() {
 		color.Magenta(cmd)
 	}
 	/* Connect Command Outputs */

@@ -3,7 +3,6 @@ package tools
 import (
 	"fmt"
 	"github.com/amanhigh/go-fun/apps/common/util"
-	"github.com/amanhigh/go-fun/apps/components/kohan/core"
 	"github.com/amanhigh/go-fun/apps/models/config"
 	"github.com/fatih/color"
 	"github.com/thoas/go-funk"
@@ -142,7 +141,7 @@ func Md5Checker(cmd string, cluster string) {
 			current := sortList[i]
 			currentFile := current.FileList[0]
 			color.Cyan("Diffing Top with Current: %v (%v) vs %v (%v)", firstFile, first.Hash, currentFile, current.Hash)
-			if core.IsDebugMode() {
+			if util.IsDebugMode() {
 				util.PrintFile(firstFile, firstFile)
 				util.PrintFile(currentFile, currentFile)
 			}

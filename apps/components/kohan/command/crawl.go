@@ -1,9 +1,8 @@
 package command
 
 import (
-	util2 "github.com/amanhigh/go-fun/apps/common/util"
+	"github.com/amanhigh/go-fun/apps/common/util"
 	"github.com/amanhigh/go-fun/apps/components/kohan/core/crawler"
-	"github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +18,7 @@ var imdbCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(3),
 	PreRunE: func(cmd *cobra.Command, args []string) (err error) {
 		if year, err = util.ParseInt(args[0]); err == nil {
-			util2.ValidateEnumArg(args[1], []string{"pa", "en", "hi"})
+			util.ValidateEnumArg(args[1], []string{"pa", "en", "hi"})
 		}
 		return
 	},

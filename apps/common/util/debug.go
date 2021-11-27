@@ -1,7 +1,6 @@
-package core
+package util
 
 import (
-	util2 "github.com/amanhigh/go-fun/apps/common/util"
 	"github.com/amanhigh/go-fun/apps/models/config"
 	"github.com/fatih/color"
 	"io/ioutil"
@@ -11,7 +10,7 @@ import (
 func DebugControl(flag bool) {
 	if flag {
 		color.Cyan("Enabling Debug Mode")
-		ioutil.WriteFile(config.DEBUG_FILE, []byte{}, util2.DEFAULT_PERM)
+		ioutil.WriteFile(config.DEBUG_FILE, []byte{}, DEFAULT_PERM)
 	} else {
 		color.Red("Disabling Debug Mode")
 		os.Remove(config.DEBUG_FILE)
@@ -20,5 +19,5 @@ func DebugControl(flag bool) {
 }
 
 func IsDebugMode() bool {
-	return config.KOHAN_DEBUG || util2.PathExists(config.DEBUG_FILE)
+	return config.KOHAN_DEBUG || PathExists(config.DEBUG_FILE)
 }

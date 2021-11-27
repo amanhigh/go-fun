@@ -2,12 +2,12 @@ package command
 
 import (
 	"fmt"
-	util2 "github.com/amanhigh/go-fun/apps/common/util"
+	"github.com/amanhigh/go-fun/apps/common/util"
 	"github.com/amanhigh/go-fun/apps/models/config"
+	"github.com/fatih/color"
 	"io/ioutil"
 
 	"github.com/amanhigh/go-fun/apps/common/tools"
-	"github.com/amanhigh/go-fun/util"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )
@@ -132,8 +132,8 @@ var dockerSetCmd = &cobra.Command{
 		bytes, _ := yaml.Marshal(config.DockerConfig{
 			Path: dockerPath,
 		})
-		util.PrintGreen(fmt.Sprintf("Written Config: %v\n\n%v", DOCKER_CONFIG, string(bytes)))
-		err = ioutil.WriteFile(DOCKER_CONFIG, bytes, util2.DEFAULT_PERM)
+		color.Green("Written Config: %v\n\n%v", DOCKER_CONFIG, string(bytes))
+		err = ioutil.WriteFile(DOCKER_CONFIG, bytes, util.DEFAULT_PERM)
 		return
 	},
 }

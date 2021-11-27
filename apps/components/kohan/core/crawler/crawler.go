@@ -3,8 +3,7 @@ package crawler
 import (
 	"context"
 	"fmt"
-	util2 "github.com/amanhigh/go-fun/apps/common/util"
-	"github.com/amanhigh/go-fun/apps/models/config"
+	"github.com/amanhigh/go-fun/apps/common/util"
 	"github.com/fatih/color"
 	"github.com/wesovilabs/koazee"
 	"io/ioutil"
@@ -23,10 +22,10 @@ const (
 )
 
 type Crawler interface {
-	GatherLinks(page *util2.Page, ch chan CrawlInfo)
-	NextPageLink(page *util2.Page) (string, bool)
+	GatherLinks(page *util.Page, ch chan CrawlInfo)
+	NextPageLink(page *util.Page) (string, bool)
 	PrintSet(good CrawlSet, bad CrawlSet) bool
-	GetTopPage() *util2.Page
+	GetTopPage() *util.Page
 }
 
 type CrawlSet struct {
@@ -101,13 +100,13 @@ func (self *CrawlerManager) BuildSet() {
 	/* Fire Parallel Consumer to Separate Movies */
 	for info := range self.infoChannel {
 		if info.GoodBad() == nil {
-			if config.IsDebugMode() {
+			if util.IsDebugMode() {
 				color.Cyan("%+v", info)
 			}
 			self.goodInfo.Add(info)
 			atomic.AddInt32(&self.collected, 1)
 		} else {
-			if config.IsDebugMode() {
+			if util.IsDebugMode() {
 				color.HiMagenta("%+v", info)
 			}
 			self.badInfo.Add(info)
@@ -136,14 +135,14 @@ func (self *CrawlerManager) printWriteCrawledInfo(set CrawlSet, filePath string)
 	if self.verbose {
 		fmt.Println(urlDump)
 	}
-	ioutil.WriteFile(filePath, []byte(urlDump), util2.DEFAULT_PERM)
+	ioutil.WriteFile(filePath, []byte(urlDump), util.DEFAULT_PERM)
 }
 
 /**
 Recursively Crawl Given Page moving to next if next link is available.
 Write all Movies of current page onto channel
 */
-func (self *CrawlerManager) crawlRecursive(page *util2.Page, waitGroup *sync.WaitGroup) {
+func (self *CrawlerManager) crawlRecursive(page *util.Page, waitGroup *sync.WaitGroup) {
 	/* Aquire Grant */
 	self.semaphoreChannel <- 1
 	collected := atomic.LoadInt32(&self.collected)
@@ -153,7 +152,7 @@ func (self *CrawlerManager) crawlRecursive(page *util2.Page, waitGroup *sync.Wai
 		/* If Next Link is Present Crawl It */
 		if link, ok := self.Crawler.NextPageLink(page); ok {
 			waitGroup.Add(1)
-			go self.crawlRecursive(util2.NewPage(link), waitGroup)
+			go self.crawlRecursive(util.NewPage(link), waitGroup)
 		}
 		/* Find Links for this Page */
 		self.Crawler.GatherLinks(page, self.infoChannel)

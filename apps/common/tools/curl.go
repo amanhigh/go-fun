@@ -3,7 +3,6 @@ package tools
 import (
 	"fmt"
 	util "github.com/amanhigh/go-fun/apps/common/util"
-	"github.com/amanhigh/go-fun/apps/components/kohan/core"
 	"github.com/fatih/color"
 	"strings"
 )
@@ -17,7 +16,7 @@ const (
 )
 
 func Jcurl(url string, pipe string) (output string) {
-	if core.IsDebugMode() {
+	if util.IsDebugMode() {
 		color.Magenta(url)
 	}
 

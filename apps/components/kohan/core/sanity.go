@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"github.com/amanhigh/go-fun/apps/models/config"
+	"github.com/fatih/color"
 	"math"
 	"os"
 	"regexp"
@@ -22,7 +23,7 @@ const MIN_SECOND = 4
 func ClusterSanity(pkgName string, cmd string, clusterKeyword string) {
 	clusters := tools.SearchCluster(clusterKeyword)
 	for _, cluster := range clusters {
-		PrintYellow("Processing: " + cluster)
+		color.Yellow("Processing: " + cluster)
 		if cmd != "" {
 			VerifyStatus(cmd, cluster)
 		}
@@ -38,15 +39,15 @@ func VersionCheck(pkgNameCsv string, cluster string) {
 
 	versionCountMap := computeVersionCountMap()
 	for pkgVersion, count := range versionCountMap {
-		PrintGreen(fmt.Sprintf("%v : %v", pkgVersion, count))
+		color.Green("%v : %v", pkgVersion, count)
 	}
 	if len(versionCountMap) != 1 {
-		PrintRed(fmt.Sprintf("Multiple Versions Found on %v", cluster))
+		color.Red("Multiple Versions Found on %v", cluster)
 	}
 }
 
 func VerifyStatus(cmd string, cluster string) {
-	PrintBlue("Running Sanity on Cluster: " + cluster)
+	color.Blue("Running Sanity on Cluster: " + cluster)
 
 	tools.NORMAL_PSSH.Run(cmd, cluster, 200, true)
 	os.Chdir(config.OUTPUT_PATH)
@@ -55,7 +56,7 @@ func VerifyStatus(cmd string, cluster string) {
 
 	tools.RunIf("find  . -type f -empty | cut -c3-", func(output string) {
 		if len(output) > 0 {
-			PrintRed(fmt.Sprintf("Empty Files Found:\n%v", output))
+			color.Red(fmt.Sprintf("Empty Files Found:\n%v", output))
 			tools.WriteClusterFile("empty", output)
 		}
 	})
@@ -65,28 +66,28 @@ func VerifyStatus(cmd string, cluster string) {
 
 	minUptime := getMinUptime(contentMap)
 	if minUptime < MIN_SECOND {
-		PrintRed(fmt.Sprintf("Probable Restart Detected. Second: %v", minUptime))
+		color.Red("Probable Restart Detected. Second: %v", minUptime)
 	} else {
-		PrintGreen(fmt.Sprintf("Checks Complete, Min Uptime (seconds): %v", minUptime))
+		color.Green("Checks Complete, Min Uptime (seconds): %v", minUptime)
 	}
 
 	//TODO:Move out of Debug Mode.
-	if config.IsDebugMode() {
+	if util.IsDebugMode() {
 		VerifyNetworkParameters(cluster)
 	}
 }
 
 func VerifyNetworkParameters(cluster string) {
-	PrintYellow("\nVerifying Network Parameters. Cluster: " + cluster)
-	util.Md5Checker("sudo sysctl -a | grep net | grep -v rss_key | grep -v nf_log", cluster)
+	color.Yellow("\nVerifying Network Parameters. Cluster: " + cluster)
+	tools.Md5Checker("sudo sysctl -a | grep net | grep -v rss_key | grep -v nf_log", cluster)
 }
 
 /* Helpers */
 func performBadStateChecks(contentMap map[string][]string) {
 	for _, check := range checks {
 		if keyWordLines, keyWordIps := extractKeywordLines(contentMap, check); len(keyWordLines) > 0 {
-			PrintBlue("Check Failed: " + check)
-			PrintRed(strings.Join(keyWordLines, "\n"))
+			color.Blue("Check Failed: " + check)
+			color.Red(strings.Join(keyWordLines, "\n"))
 			tools.WriteClusterFile(check, strings.Join(keyWordIps, "\n"))
 		}
 	}
