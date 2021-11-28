@@ -13,7 +13,7 @@ before:
     #- go generate ./...
 
     # Unit Tests
-    -  ginkgo -r '--label-filter=!it' .
+    -  ginkgo -r '--label-filter=!it' -cover .
 builds:
   - id: fun
     env:
