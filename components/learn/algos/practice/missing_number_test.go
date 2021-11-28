@@ -2,7 +2,7 @@ package practice_test
 
 import (
 	"github.com/amanhigh/go-fun/components/learn/algos/practice"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

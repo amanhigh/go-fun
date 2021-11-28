@@ -2,7 +2,7 @@ package cracking_test
 
 import (
 	"github.com/amanhigh/go-fun/components/learn/algos/hackerrank/cracking"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

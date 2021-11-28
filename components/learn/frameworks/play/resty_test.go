@@ -3,7 +3,7 @@ package play_test
 import (
 	db2 "github.com/amanhigh/go-fun/models/fun-app/db"
 	"github.com/go-resty/resty/v2"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"net"
 	"net/http"

@@ -2,7 +2,7 @@ package learn_test
 
 import (
 	learn2 "github.com/amanhigh/go-fun/models/learn"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"time"
 )
