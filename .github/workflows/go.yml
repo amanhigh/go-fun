@@ -40,4 +40,9 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Report Coverage
-      run: bash <(curl -s https://codecov.io/bash)
+      uses: codecov/codecov-action@v2
+      with:
+        file: ./coverprofile.out
+        flags: unittests
+        verbose: true
+        name: codecov-go-fun
