@@ -19,6 +19,10 @@ const DIR_DEFAULT_PERM = os.FileMode(0755) //Owner RWX,Group RX,Other RX
 	https://www.devdungeon.com/content/working-files-go#read_quick
 */
 
+func OpenOrCreateFile(path string) (*os.File, error) {
+	return os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, DEFAULT_PERM)
+}
+
 func AppendFile(path string, content string) {
 	if f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0600); err == nil {
 		defer f.Close()
