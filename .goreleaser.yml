@@ -13,7 +13,7 @@ before:
     #- go generate ./...
 
     # Unit Tests
-    -  ginkgo -r '--label-filter=!it' -cover .
+    -  ginkgo -r '--label-filter=!setup' -cover .
 builds:
   - id: fun
     env:
@@ -25,7 +25,7 @@ builds:
       - amd64
     binary: fun
     dir: ./components/fun-app
-    main: fun-app.go
+    main: main.go
   - id: kohan
     binary: kohan
     targets:
@@ -42,7 +42,7 @@ dockers:
     #Prerelease Tags won't be pushed e.g. v1.0.0-rc1
     skip_push: false
     extra_files:
-      - ./components/fun-app/fun-app.go
+      - ./components/fun-app/main.go
 
 archives:
   - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"

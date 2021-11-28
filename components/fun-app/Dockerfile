@@ -3,6 +3,6 @@
 FROM scratch
 ADD ./fun /
 #Create Log Directory in scratch file
-ADD ./components/fun-app/fun-app.go /var/log/fun-app/access.log
+ADD ./components/fun-app/main.go /var/log/fun-app/access.log
 
 CMD ["/fun"]
