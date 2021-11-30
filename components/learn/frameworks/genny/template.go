@@ -17,6 +17,6 @@ type KeyTypeValueTypeMap struct {
 
 func (self *KeyTypeValueTypeMap) PrintType() {
 	for key, value := range self.typedMap {
-		fmt.Printf("Key:+v Value: %v\n", key, value)
+		fmt.Printf("Key:%v Value: %v\n", key, value)
 	}
 }

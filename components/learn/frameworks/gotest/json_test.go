@@ -5,6 +5,7 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gmeasure"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -96,16 +97,19 @@ var _ = Describe("Json Encode/Decode", func() {
 		})
 	})
 
-	Measure("it should do something hard efficiently", func(b Benchmarker) {
-		runtime := b.Time("Encode", func() {
+	It("should do things efficiently", func() {
+		action := "Encode"
+		experiment := gmeasure.NewExperiment("Json Handling")
+		AddReportEntry(experiment.Name, experiment)
+
+		experiment.SampleDuration(action, func(_ int) {
 			output, _ := encodePerson(originalPerson)
 			Expect(output).To(Equal(personJson))
-		})
+		}, gmeasure.SamplingConfig{N: 1000})
+		AddReportEntry(action, experiment.GetStats(action))
 
-		Ω(runtime.Seconds()).Should(BeNumerically("<", 0.2), "SomethingHard() shouldn't take too long.")
-
-		b.RecordValue("disk usage (in MB)", 1)
-	}, 10)
+		Expect(experiment.GetStats(action).DurationFor(gmeasure.StatMax)).To(BeNumerically("<", time.Millisecond))
+	})
 
 	Context("Interesting Assertions", func() {
 		var (

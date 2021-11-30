@@ -3,13 +3,15 @@ package config
 import (
 	"errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm/logger"
 	"time"
 )
 
 type Server struct {
-	Host string `env:"HOST"`
-	Port int    `env:"PORT" envDefault:"8080"`
+	Host     string       `env:"HOST"`
+	Port     int          `env:"PORT" envDefault:"8080"`
+	LogLevel logrus.Level `env:"LOG_LEVEL" envDefault:"info"`
 }
 
 func (self *Server) GetUrl(uri string) string {

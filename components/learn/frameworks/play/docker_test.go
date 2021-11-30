@@ -4,13 +4,14 @@ import (
 	"context"
 	"database/sql"
 	util2 "github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/models"
 	"github.com/go-redis/redis/v8"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/ory/dockertest/v3"
 )
 
-var _ = PDescribe("Docker", func() {
+var _ = Describe("Docker", Label(models.GINKGO_SETUP), func() {
 	var (
 		pool *dockertest.Pool
 		err  error
