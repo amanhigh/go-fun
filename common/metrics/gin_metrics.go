@@ -24,6 +24,7 @@ func MatchedPath(c *gin.Context) {
 Sets Access Metrics for this request
 */
 func AccessMetrics(context *gin.Context) {
+	//TODO:Replace prometheus
 	path, _ := context.Get("matched_path")
 	matchedPath := path.(string)
 

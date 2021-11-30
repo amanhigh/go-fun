@@ -41,8 +41,8 @@ dockers:
     dockerfile: ./components/fun-app/Dockerfile
     #Prerelease Tags won't be pushed e.g. v1.0.0-rc1
     skip_push: false
-    extra_files:
-      - ./components/fun-app/main.go
+#    extra_files:
+#      - ./components/fun-app/main.go
 
 archives:
   - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
