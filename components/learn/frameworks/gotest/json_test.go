@@ -108,7 +108,7 @@ var _ = Describe("Json Encode/Decode", func() {
 		}, gmeasure.SamplingConfig{N: 1000})
 		AddReportEntry(action, experiment.GetStats(action))
 
-		Expect(experiment.GetStats(action).DurationFor(gmeasure.StatMax)).To(BeNumerically("<", time.Millisecond))
+		Expect(experiment.GetStats(action).DurationFor(gmeasure.StatMax)).To(BeNumerically("<", 3*time.Millisecond))
 	})
 
 	Context("Interesting Assertions", func() {
