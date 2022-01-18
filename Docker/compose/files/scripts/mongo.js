@@ -1,5 +1,7 @@
- //Create Admin:
- use; admin;
+//Switch to Admin Schema
+use admin;
+
+//Create Admin:
  db.createUser(
       {
         user: "admin",
@@ -7,6 +9,9 @@
             roles: [ { role: "root", db: "admin" } ]
        }
   );
+
+//Show Users
+// db.getUsers()
 
  //Replication Status
  rs.status();
