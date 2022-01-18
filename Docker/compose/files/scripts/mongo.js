@@ -10,6 +10,9 @@ use admin;
        }
   );
 
+ //Drop User
+db.dropUser("admin")
+
 //Show Users
 // db.getUsers()
 
