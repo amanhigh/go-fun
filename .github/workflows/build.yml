@@ -20,13 +20,12 @@ jobs:
       with:
         go-version: 1.17
 
-#   TODO: Move to Ginkgo GA
     - name: Install deps
       run: |
-        go get github.com/onsi/ginkgo/v2@v2.0.0-rc2
-        go get github.com/onsi/ginkgo/v2/ginkgo/generators@v2.0.0-rc2
-        go get github.com/onsi/ginkgo/v2/ginkgo/internal@v2.0.0-rc2
-        go get github.com/onsi/ginkgo/v2/ginkgo/labels@v2.0.0-rc2
+        go get github.com/onsi/ginkgo/v2
+        go get github.com/onsi/ginkgo/v2/ginkgo/generators
+        go get github.com/onsi/ginkgo/v2/ginkgo/internal
+        go get github.com/onsi/ginkgo/v2/ginkgo/labels
         go install github.com/onsi/ginkgo/v2/ginkgo
 
 

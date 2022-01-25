@@ -48,7 +48,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
 	github.com/olivere/elastic v6.2.26+incompatible
-	github.com/onsi/ginkgo/v2 v2.0.0-rc2
+	github.com/onsi/ginkgo/v2 v2.1.0
 	github.com/onsi/gomega v1.17.0
 	github.com/ory/dockertest/v3 v3.8.0
 	github.com/pierrec/lz4 v2.6.0+incompatible // indirect
