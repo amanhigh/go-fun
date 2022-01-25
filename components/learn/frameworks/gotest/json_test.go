@@ -97,7 +97,7 @@ var _ = Describe("Json Encode/Decode", func() {
 		})
 	})
 
-	It("should do things efficiently", func() {
+	It("should do things efficiently", FlakeAttempts(3), func() {
 		action := "Encode"
 		experiment := gmeasure.NewExperiment("Json Handling")
 		AddReportEntry(experiment.Name, experiment)
