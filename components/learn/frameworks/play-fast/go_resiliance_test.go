@@ -6,6 +6,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/slok/goresilience"
+	"github.com/slok/goresilience/chaos"
 	"github.com/slok/goresilience/circuitbreaker"
 	errors2 "github.com/slok/goresilience/errors"
 	"github.com/slok/goresilience/retry"
@@ -20,7 +21,6 @@ var _ = Describe("GoResiliance", func() {
 	)
 
 	Context("Timeout", func() {
-		// Create our command.
 		var (
 			TIMEOUT = 2 * time.Millisecond
 		)
@@ -52,7 +52,6 @@ var _ = Describe("GoResiliance", func() {
 	})
 
 	Context("Retry", func() {
-		// Create our command.
 		var (
 			RETRY = 2
 		)
@@ -96,7 +95,6 @@ var _ = Describe("GoResiliance", func() {
 	})
 
 	Context("Circuit", func() {
-		// Create our command.
 		var (
 			CIRCUIT_OPEN = 2
 		)
@@ -129,6 +127,30 @@ var _ = Describe("GoResiliance", func() {
 			})
 			Expect(err).To(Equal(errors2.ErrCircuitOpen))
 			Expect(count).To(Equal(CIRCUIT_OPEN))
+		})
+
+	})
+
+	Context("Chaos", func() {
+		var (
+			LATENCY          = 2 * time.Millisecond
+			ERROR_PERCENTILE = 10
+		)
+		BeforeEach(func() {
+			injector := chaos.Injector{}
+			injector.SetLatency(LATENCY)
+			injector.SetErrorPercent(ERROR_PERCENTILE)
+			cmd = chaos.New(chaos.Config{
+				Injector: &injector,
+			})
+
+		})
+
+		It("should fail due to chaos", func() {
+			err := cmd.Run(context.TODO(), func(_ context.Context) error {
+				return nil
+			})
+			Expect(err).To(Equal(errors2.ErrFailureInjected))
 		})
 
 	})
