@@ -6,6 +6,8 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/slok/goresilience"
+	"github.com/slok/goresilience/circuitbreaker"
+	errors2 "github.com/slok/goresilience/errors"
 	"github.com/slok/goresilience/retry"
 	"github.com/slok/goresilience/timeout"
 	"time"
@@ -89,6 +91,44 @@ var _ = Describe("GoResiliance", func() {
 			})
 			Expect(err).To(Not(BeNil()))
 			Expect(count).To(Equal(RETRY + 1))
+		})
+
+	})
+
+	Context("Circuit", func() {
+		// Create our command.
+		var (
+			CIRCUIT_OPEN = 2
+		)
+		BeforeEach(func() {
+			cmd =
+				goresilience.RunnerChain(
+					retry.NewMiddleware(retry.Config{
+						Times: CIRCUIT_OPEN,
+					}),
+					circuitbreaker.NewMiddleware(circuitbreaker.Config{
+						//ErrorPercentThresholdToOpen:        50,
+						MinimumRequestToOpen:         CIRCUIT_OPEN,
+						SuccessfulRequiredOnHalfOpen: CIRCUIT_OPEN / 2,
+						//WaitDurationInOpenState:            5 * time.Second,
+						//MetricsSlidingWindowBucketQuantity: 10,
+						//MetricsBucketDuration:              1 * time.Second,
+					}),
+				)
+		})
+
+		It("should open after failures", func() {
+			count := 0
+			err := cmd.Run(context.TODO(), func(_ context.Context) error {
+				if count < CIRCUIT_OPEN {
+					count++
+					return errors.New("Call Failed")
+				} else {
+					return nil
+				}
+			})
+			Expect(err).To(Equal(errors2.ErrCircuitOpen))
+			Expect(count).To(Equal(CIRCUIT_OPEN))
 		})
 
 	})
