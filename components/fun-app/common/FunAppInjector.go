@@ -15,9 +15,10 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/prometheus/client_golang/prometheus"
+	prometheus2 "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	log "github.com/sirupsen/logrus"
+	ginprometheus "github.com/zsais/go-gin-prometheus"
 	"gorm.io/gorm"
 	"net/http"
 )
@@ -45,7 +46,16 @@ func (self *FunAppInjector) BuildApp() (app interface{}, err error) {
 
 	/* Gin Engine */
 	engine := gin.New()
-	engine.Use(gin.Logger(), gin.Recovery(), metrics2.RequestId, metrics2.MatchedPath, metrics2.AccessMetrics)
+
+	/* Access Metrics */
+	//Visit http://localhost:8080/metrics
+	prometheus := ginprometheus.NewPrometheus("aman")
+	prometheus.ReqCntURLLabelMappingFn = metrics2.AccessMetrics
+	prometheus.Use(engine)
+
+	/* Middleware */
+	engine.Use(gin.Logger(), gin.Recovery(), metrics2.RequestId)
+
 	/* Injections */
 	err = self.graph.Provide(
 		&inject.Object{Value: engine},
@@ -65,19 +75,19 @@ func (self *FunAppInjector) BuildApp() (app interface{}, err error) {
 		&inject.Object{Value: &manager2.PersonManager{}},
 
 		/* Metrics */
-		&inject.Object{Value: promauto.NewCounterVec(prometheus.CounterOpts{
+		&inject.Object{Value: promauto.NewCounterVec(prometheus2.CounterOpts{
 			Namespace:   NAMESPACE,
 			Name:        "create_person",
 			Help:        "Counts Person Create API",
 			ConstLabels: nil,
 		}, []string{"gender"}), Name: "m_create_person"},
-		&inject.Object{Value: promauto.NewGauge(prometheus.GaugeOpts{
+		&inject.Object{Value: promauto.NewGauge(prometheus2.GaugeOpts{
 			Namespace:   NAMESPACE,
 			Name:        "person_count",
 			Help:        "Person Count in Get Persons",
 			ConstLabels: nil,
 		}), Name: "m_person_count"},
-		&inject.Object{Value: promauto.NewHistogram(prometheus.HistogramOpts{
+		&inject.Object{Value: promauto.NewHistogram(prometheus2.HistogramOpts{
 			Namespace:   NAMESPACE,
 			Name:        "person_create_time",
 			Help:        "Time Taken to Create Person",
