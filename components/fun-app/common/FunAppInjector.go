@@ -49,7 +49,7 @@ func (self *FunAppInjector) BuildApp() (app interface{}, err error) {
 
 	/* Access Metrics */
 	//Visit http://localhost:8080/metrics
-	prometheus := ginprometheus.NewPrometheus("aman")
+	prometheus := ginprometheus.NewPrometheus("gin_access")
 	prometheus.ReqCntURLLabelMappingFn = metrics2.AccessMetrics
 	prometheus.Use(engine)
 
