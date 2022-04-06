@@ -244,7 +244,7 @@ func safeMapFun() {
 	mapV.Store("Aman", "Preet,Singh")
 	mapV.Store("Aman1", "Preet,Done")
 	fmt.Println(mapV.Load("Aman1"))
-	mapV.Range(func(key, value interface{}) bool {
+	mapV.Range(func(key, value any) bool {
 		stringValue := value.(string)
 		fmt.Printf("Key:%v Value:%v\n", key, strings.Split(stringValue, ","))
 		return true
@@ -388,7 +388,7 @@ func typeCheck() {
 
 	fmt.Println("\n\nType Check")
 	/** Empty Interface */
-	var i interface{} = "hello"
+	var i any = "hello"
 
 	s := i.(string) //Type Casting
 	fmt.Println(s)

@@ -36,7 +36,7 @@ func JwtFun() {
 	fmt.Println("JwtToken", tokenString, err)
 
 	//Parse Token
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (i interface{}, err error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (i any, err error) {
 		return publicKey, nil
 	})
 
@@ -86,7 +86,7 @@ func MarshalPrivateKey(privateKey *rsa.PrivateKey) []byte {
 
 func UnmarshalRSAPublicKey(pemPubKey string) (key *rsa.PublicKey, err error) {
 	var block *pem.Block
-	var pub interface{}
+	var pub any
 	if block, _ = pem.Decode([]byte(pemPubKey)); block != nil {
 		if pub, err = x509.ParsePKIXPublicKey(block.Bytes); err == nil {
 			switch key := pub.(type) {
@@ -102,7 +102,7 @@ func UnmarshalRSAPublicKey(pemPubKey string) (key *rsa.PublicKey, err error) {
 
 func UnmarshalRSAPrivateKey(pemPrivateKey string) (key *rsa.PrivateKey, err error) {
 	var block *pem.Block
-	var private interface{}
+	var private any
 	if block, _ = pem.Decode([]byte(pemPrivateKey)); block != nil {
 		if private, err = x509.ParsePKCS1PrivateKey(block.Bytes); err == nil {
 			switch key := private.(type) {

@@ -15,7 +15,7 @@ func RunFunApp() {
 
 		/* Build Injector */
 		injector := NewFunAppInjector(config)
-		var app interface{}
+		var app any
 
 		/* Build App */
 		if app, err = injector.BuildApp(); err == nil {

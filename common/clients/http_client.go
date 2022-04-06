@@ -30,16 +30,16 @@ Http Error - Nil Response, Zero Status Code, error (Http Error that occurred)
 const NON_2xx_RESPONSE = "NON_2xx_RESPONSE"
 
 type HttpClientInterface interface {
-	DoGet(url string, unmarshalledResponse interface{}) (statusCode int, err error)
-	DoPost(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error)
-	DoPut(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error)
-	DoDelete(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error)
+	DoGet(url string, unmarshalledResponse any) (statusCode int, err error)
+	DoPost(url string, body any, unmarshalledResponse any) (statusCode int, err error)
+	DoPut(url string, body any, unmarshalledResponse any) (statusCode int, err error)
+	DoDelete(url string, body any, unmarshalledResponse any) (statusCode int, err error)
 
-	DoGetWithTimeout(url string, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error)
-	DoPostWithTimeout(url string, body interface{}, unmarshalledResponse interface{}, timout time.Duration) (statusCode int, err error)
-	DoPutWithTimeout(url string, body interface{}, unmarshalledResponse interface{}, timout time.Duration) (statusCode int, err error)
+	DoGetWithTimeout(url string, unmarshalledResponse any, timeout time.Duration) (statusCode int, err error)
+	DoPostWithTimeout(url string, body any, unmarshalledResponse any, timout time.Duration) (statusCode int, err error)
+	DoPutWithTimeout(url string, body any, unmarshalledResponse any, timout time.Duration) (statusCode int, err error)
 
-	DoRequest(request *http.Request, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error)
+	DoRequest(request *http.Request, unmarshalledResponse any, timeout time.Duration) (statusCode int, err error)
 	SetHeaderMap(headerMap map[string]string)
 }
 
@@ -100,7 +100,7 @@ func NewHttpClientWithCookies(cookieUrl string, cookies []*http.Cookie, config c
 
 	Incase of Error returns error that occured
 */
-func (self *HttpClient) DoGet(url string, unmarshalledResponse interface{}) (statusCode int, err error) {
+func (self *HttpClient) DoGet(url string, unmarshalledResponse any) (statusCode int, err error) {
 	return self.fireRequest("GET", url, nil, unmarshalledResponse, -1)
 }
 
@@ -108,7 +108,7 @@ func (self *HttpClient) DoGet(url string, unmarshalledResponse interface{}) (sta
 	Makes a Post Request with Given Url & Body under specified timeout.
 	Incase of Success you will recieve unmarshalled Response or error otherwise
 */
-func (self *HttpClient) DoPost(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error) {
+func (self *HttpClient) DoPost(url string, body any, unmarshalledResponse any) (statusCode int, err error) {
 	return self.fireRequest("POST", url, body, unmarshalledResponse, -1)
 }
 
@@ -116,7 +116,7 @@ func (self *HttpClient) DoPost(url string, body interface{}, unmarshalledRespons
 	Makes a Post Request with Given Url & Body under specified timeout.
 	Incase of Success you will recieve unmarshalled Response or error otherwise
 */
-func (self *HttpClient) DoPut(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error) {
+func (self *HttpClient) DoPut(url string, body any, unmarshalledResponse any) (statusCode int, err error) {
 	return self.fireRequest("PUT", url, body, unmarshalledResponse, -1)
 }
 
@@ -124,35 +124,35 @@ func (self *HttpClient) DoPut(url string, body interface{}, unmarshalledResponse
 	Makes a Post Request with Given Url & Body under specified timeout.
 	Incase of Success you will recieve unmarshalled Response or error otherwise
 */
-func (self *HttpClient) DoDelete(url string, body interface{}, unmarshalledResponse interface{}) (statusCode int, err error) {
+func (self *HttpClient) DoDelete(url string, body any, unmarshalledResponse any) (statusCode int, err error) {
 	return self.fireRequest("DELETE", url, body, unmarshalledResponse, -1)
 }
 
 /**
 Ignores Global Timeout of HttpClient and uses provided timeout fo Http call.
 */
-func (self *HttpClient) DoGetWithTimeout(url string, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error) {
+func (self *HttpClient) DoGetWithTimeout(url string, unmarshalledResponse any, timeout time.Duration) (statusCode int, err error) {
 	return self.fireRequest("GET", url, nil, unmarshalledResponse, timeout)
 }
 
 /**
 Ignores Global Timeout of HttpClient and uses provided timeout fo Http call.
 */
-func (self *HttpClient) DoPostWithTimeout(url string, body interface{}, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error) {
+func (self *HttpClient) DoPostWithTimeout(url string, body any, unmarshalledResponse any, timeout time.Duration) (statusCode int, err error) {
 	return self.fireRequest("POST", url, body, unmarshalledResponse, timeout)
 }
 
 /**
 Ignores Global Timeout of HttpClient and uses provided timeout fo Http call.
 */
-func (self *HttpClient) DoPutWithTimeout(url string, body interface{}, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error) {
+func (self *HttpClient) DoPutWithTimeout(url string, body any, unmarshalledResponse any, timeout time.Duration) (statusCode int, err error) {
 	return self.fireRequest("PUT", url, body, unmarshalledResponse, timeout)
 }
 
 /**
 Given a request and unmarshal body, fire Http Client Return Unmarshalled Response
 */
-func (self *HttpClient) DoRequest(request *http.Request, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error) {
+func (self *HttpClient) DoRequest(request *http.Request, unmarshalledResponse any, timeout time.Duration) (statusCode int, err error) {
 	var responseBytes []byte
 	var response *http.Response
 
@@ -197,7 +197,7 @@ func (self *HttpClient) DoRequest(request *http.Request, unmarshalledResponse in
 	return
 }
 
-func (self *HttpClient) fireRequest(method string, url string, body interface{}, unmarshalledResponse interface{}, timeout time.Duration) (statusCode int, err error) {
+func (self *HttpClient) fireRequest(method string, url string, body any, unmarshalledResponse any, timeout time.Duration) (statusCode int, err error) {
 	var requestBody []byte
 	var request *http.Request
 

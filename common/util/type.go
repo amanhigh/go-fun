@@ -23,7 +23,7 @@ func ParseInt(value string) (i int, err error) {
 	return
 }
 
-func ReverseArray(input interface{}) {
+func ReverseArray(input any) {
 	n := reflect.ValueOf(input).Len()
 	swap := reflect.Swapper(input)
 	for i, j := 0, n-1; i < j; i, j = i+1, j-1 {

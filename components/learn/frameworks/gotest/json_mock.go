@@ -42,7 +42,7 @@ func (m *MockPersonEncoder) encodePerson(p person) (string, error) {
 }
 
 // encodePerson indicates an expected call of encodePerson
-func (mr *MockPersonEncoderMockRecorder) encodePerson(p interface{}) *gomock.Call {
+func (mr *MockPersonEncoderMockRecorder) encodePerson(p any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "encodePerson", reflect.TypeOf((*MockPersonEncoder)(nil).encodePerson), p)
 }
@@ -57,7 +57,7 @@ func (m *MockPersonEncoder) decodePerson(encodedPerson string) (person, error) {
 }
 
 // decodePerson indicates an expected call of decodePerson
-func (mr *MockPersonEncoderMockRecorder) decodePerson(encodedPerson interface{}) *gomock.Call {
+func (mr *MockPersonEncoderMockRecorder) decodePerson(encodedPerson any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "decodePerson", reflect.TypeOf((*MockPersonEncoder)(nil).decodePerson), encodedPerson)
 }

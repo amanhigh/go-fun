@@ -36,7 +36,7 @@ func NewFunAppInjector(config config2.FunAppConfig) interfaces2.ApplicationInjec
 	return &FunAppInjector{inject.Graph{}, config}
 }
 
-func (self *FunAppInjector) BuildApp() (app interface{}, err error) {
+func (self *FunAppInjector) BuildApp() (app any, err error) {
 	server := &handlers2.FunServer{}
 	app = server
 

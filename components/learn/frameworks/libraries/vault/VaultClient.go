@@ -34,7 +34,7 @@ algo - rsa-4096/2048 - Asymmetric, aes256-gcm96 - Symmetric
 */
 func (self VaultClient) GenerateKey(name, algo string, exportable bool) (secret *api.Secret, err error) {
 	keyPath := getKeyPath(name)
-	secret, err = self.client.Logical().Write(keyPath, map[string]interface{}{
+	secret, err = self.client.Logical().Write(keyPath, map[string]any{
 		"exportable": exportable,
 		"type":       algo,
 	})

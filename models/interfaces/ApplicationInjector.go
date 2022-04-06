@@ -1,5 +1,5 @@
 package interfaces
 
 type ApplicationInjector interface {
-	BuildApp() (app interface{}, err error)
+	BuildApp() (app any, err error)
 }

@@ -34,7 +34,7 @@ func transitFun(client *api.Client) (err error) {
 	//	Transit
 	var secret *api.Secret
 	//Create Key
-	secret, err = client.Logical().Write("transit/keys/aman", map[string]interface{}{
+	secret, err = client.Logical().Write("transit/keys/aman", map[string]any{
 		"exportable": true,
 		//rsa-4096 - Asymmetric, aes256-gcm96 - Symmetric
 		"type": "aes256-gcm96",
@@ -49,7 +49,7 @@ func transitFun(client *api.Client) (err error) {
 		printSecret(secret)
 
 		//Edit key
-		_, err = client.Logical().Write("/transit/keys/aman/config", map[string]interface{}{
+		_, err = client.Logical().Write("/transit/keys/aman/config", map[string]any{
 			"deletion_allowed":       true,
 			"allow_plaintext_backup": true,
 		})
@@ -64,7 +64,7 @@ func transitFun(client *api.Client) (err error) {
 
 		//Encrypt Data
 		baseData := base64.StdEncoding.EncodeToString([]byte("aman-secret"))
-		secret, err := client.Logical().Write("/transit/encrypt/aman", map[string]interface{}{
+		secret, err := client.Logical().Write("/transit/encrypt/aman", map[string]any{
 			"plaintext": baseData,
 		})
 		fmt.Println("Encrypt", err)
@@ -74,7 +74,7 @@ func transitFun(client *api.Client) (err error) {
 		//Export Key
 		secret, err = client.Logical().Read("/transit/export/encryption-key/aman/latest")
 		fmt.Println("Export Encryption", err)
-		keyMap := secret.Data["keys"].(map[string]interface{})
+		keyMap := secret.Data["keys"].(map[string]any)
 		encryptionKey := keyMap[fmt.Sprintf("%v", latestVersion)].(string)
 		decodedEncryptionKey, err := base64.StdEncoding.DecodeString(encryptionKey)
 		printSecret(secret)
@@ -112,7 +112,7 @@ func printSecret(secret *api.Secret) {
 }
 
 func secretReadWrite(client *api.Client) (err error) {
-	var data = map[string]interface{}{
+	var data = map[string]any{
 		"Id":       1,
 		"Name":     "Aman",
 		"password": "Preet",
