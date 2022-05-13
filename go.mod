@@ -31,7 +31,6 @@ require (
 	github.com/onsi/gomega v1.17.0
 	github.com/ory/dockertest/v3 v3.8.0
 	github.com/prometheus/client_golang v0.9.3
-	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
 	github.com/sirupsen/logrus v1.8.1
 	github.com/slok/goresilience v0.2.0
 	github.com/smartystreets/goconvey v1.6.4
@@ -76,6 +75,7 @@ require (
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.13.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
+	github.com/go-zookeeper/zk v1.0.2
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect

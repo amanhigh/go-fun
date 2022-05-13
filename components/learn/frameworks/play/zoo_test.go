@@ -1,11 +1,12 @@
 package play_test
 
 import (
+	"time"
+
 	"github.com/amanhigh/go-fun/models"
+	"github.com/go-zookeeper/zk"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/samuel/go-zookeeper/zk"
-	"time"
 )
 
 //TODO:Complete Migration from zoo.go
