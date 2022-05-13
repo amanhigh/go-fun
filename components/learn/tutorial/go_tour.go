@@ -8,7 +8,6 @@ import (
 	"os"
 	"regexp"
 	"runtime"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -23,10 +22,6 @@ const (
 )
 
 type Day int
-
-type Vertex struct {
-	X, Y float64
-}
 
 type rot13Reader struct {
 	r io.Reader
@@ -291,34 +286,16 @@ func variableFun() {
 	vertexFun()
 
 	fmt.Println("Exported Name Test:", math.Pi)
-
-	/** Returns Control */
-	i, err := strconv.Atoi("XX")
-	if err != nil {
-		fmt.Printf("couldn't convert number: %v\n", err)
-		return
-	}
-	fmt.Println("Converted integer:", i)
 }
 
 func vertexFun() {
-	fmt.Println("\n\nVertexFun")
-	vertex := Vertex{1, 2}
-	ver := vertex
-	pver := &vertex
-	ver.Y = 7
-	pver.Y = 9
-	fmt.Println("Vertex:", vertex)
-	fmt.Println("Vertex (By Value):", ver)
-	fmt.Println("Vertex (By Reference):", pver)
-
 	/** Interface */
-	var a Abser
+	// var a Abser
 	//a=vertex /** Gives Error as Abs takes only Pointer */
-	a = pver
+	// a = pver
 
 	/* While methods with pointer receivers take either a value or a pointer as the receiver when they are called: */
-	fmt.Println("Vertex Method: ", vertex.Abs(), pver.Abs(), a.Abs()) //Methods linked to Struct
+	// fmt.Println("Vertex Method: ", vertex.Abs(), pver.Abs(), a.Abs()) //Methods linked to Struct
 
 	/** Null Handling pver.Abs() Would still work but when Abs will try to access X,Y Null Pointer would come. */
 	//pver=nil;pver.Abs();
@@ -326,13 +303,13 @@ func vertexFun() {
 	//vertex=nil;vertex.Abs()
 }
 
-type Abser interface {
-	Abs() float64
-}
+// type Abser interface {
+// 	Abs() float64
+// }
 
-func (v *Vertex) Abs() float64 {
-	return math.Sqrt(v.X*v.X + v.Y*v.Y)
-}
+// func (v *Vertex) Abs() float64 {
+// 	return math.Sqrt(v.X*v.X + v.Y*v.Y)
+// }
 
 func mathFun() {
 	fmt.Println("\n\nMath Fun")
