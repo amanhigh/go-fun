@@ -14,13 +14,6 @@ import (
 	"time"
 )
 
-var global, second_global = 5, 10
-
-var (
-	r, i rune = 8, 9
-	g         = 0.867 + 0.5i // complex128
-)
-
 const (
 	// Create a huge number by shifting a 1 bit left 100 places.
 	// In other words, the binary number that is 1 followed by 100 zeroes.
@@ -30,16 +23,6 @@ const (
 )
 
 type Day int
-
-const (
-	MONDAY = 1 + iota
-	TUESDAY
-	WEDNESDAY
-	THURSDAY
-	FRIDAY
-	SATURDAY
-	SUNDAY
-)
 
 type Vertex struct {
 	X, Y float64
@@ -305,25 +288,9 @@ func swap(a, b string) (string, string) {
 }
 
 func variableFun() {
-	fmt.Println("\n\nStarting Variable Fun")
-	var local string = "localvariable"
-	shortHand := "Shorthand Variable"
-	const c string = "Constant"
-	fmt.Println("Variables:", global, second_global, local, shortHand)
-	fmt.Println("Constants:", c)
-
-	fmt.Printf("Variables Type: %T Value: %v\n", r, r)
-	fmt.Printf("Variables Type: %T Value: %v\n", i, i)
-	fmt.Printf("Variables Type: %T Value: %v\n", g, g)
-
 	vertexFun()
 
 	fmt.Println("Exported Name Test:", math.Pi)
-
-	typeCheck()
-
-	fmt.Println("Enums")
-	fmt.Println(MONDAY, MONDAY == 1)
 
 	/** Returns Control */
 	i, err := strconv.Atoi("XX")
@@ -382,20 +349,6 @@ func mathFun() {
 	psqrt(8)
 	psqrt(64)
 
-}
-
-func typeCheck() {
-
-	fmt.Println("\n\nType Check")
-	/** Empty Interface */
-	var i any = "hello"
-
-	s := i.(string) //Type Casting
-	fmt.Println(s)
-
-	//f := i.(float64) would raise panic as mismatching type.
-	f, ok := i.(float64) // Test Statement
-	fmt.Println(f, ok)
 }
 
 func needInt(x int) int {

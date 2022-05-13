@@ -7,7 +7,7 @@ import (
 
 var global, second_global = 5, 10
 
-var _ = Describe("GoTour", func() {
+var _ = FDescribe("GoTour", func() {
 
 	Context("Variables", func() {
 		// var (
@@ -32,6 +32,40 @@ var _ = Describe("GoTour", func() {
 			const constant_string = "Constant"
 			Expect(constant_string).To(Not(BeNil()))
 
+		})
+
+		It("should have enums", func() {
+			const (
+				MONDAY = 1 + iota
+				TUESDAY
+				WEDNESDAY
+				THURSDAY
+				FRIDAY
+				SATURDAY
+				SUNDAY
+			)
+
+			Expect(MONDAY).To(Equal(1))
+			Expect(THURSDAY).To(Equal(4))
+		})
+
+		Context("Type Check", func() {
+			var (
+				string_var     = "hello"
+				genric_var any = string_var
+			)
+
+			It("should cast valid string", func() {
+				/** Empty Interface */
+				casted_var, ok := genric_var.(string) //Type Casting
+				Expect(ok).To(BeTrue())
+				Expect(casted_var).To(Equal(string_var))
+			})
+
+			It("should not cast invalid float", func() {
+				_, ok := genric_var.(float64) // Test Statement
+				Expect(ok).To(BeFalse())
+			})
 		})
 
 		// fmt.Printf("Variables Type: %T Value: %v\n", r, r)
