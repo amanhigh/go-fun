@@ -26,6 +26,12 @@ var _ = Describe("SpeedBump", Label(models.GINKGO_SETUP), func() {
 	})
 
 	It("should limit", func() {
+		/*
+			Gin can use gin bump
+			https://github.com/etcinit/speedbump/tree/master/ginbump
+			RateLimitLB() also honors X-Forwarded-For
+		*/
+
 		// Here we create a limiter that will only allow 5 requests per second
 		limiter := speedbump.NewLimiter(client, hasher, 5) //Create one Limiter for each rate limit in usecase
 		// First 5 Request not limited
