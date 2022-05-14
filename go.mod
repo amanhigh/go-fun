@@ -44,6 +44,7 @@ require (
 	golang.org/x/exp v0.0.0-20220317015231-48e79f11773a
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
 	golang.org/x/tour v0.0.0-20191002171047-6bb846ce41cd
+	gopkg.in/redis.v5 v5.2.9
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/mysql v1.0.5
 	gorm.io/driver/sqlite v1.1.4
@@ -54,7 +55,6 @@ require (
 require (
 	github.com/cenkalti/backoff/v3 v3.0.0 // indirect
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
-	gopkg.in/redis.v5 v5.2.9 // indirect
 )
 
 require (
