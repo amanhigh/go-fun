@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/rand"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -227,6 +228,39 @@ var _ = FDescribe("GoTour", func() {
 			word_count := WordCount("Hello World Hello Aman")
 			Expect(word_count["Aman"]).To(Equal(1))
 			Expect(word_count["Hello"]).To(Equal(2))
+		})
+	})
+
+	Context("Switch", func() {
+		It("should tell os", func() {
+			switch os := runtime.GOOS; os {
+			case "darwin":
+				fmt.Println("OS X.")
+			//fallthrough //implicit break if fallthrough not added
+			case "linux":
+				fmt.Println("Linux.")
+			default:
+				// freebsd, openbsd,
+				// plan9, windows...
+				fmt.Printf("%s.", os)
+			}
+		})
+
+		It("should tell weekend", func() {
+			/** Emulates long if/else chains */
+			fmt.Print("When's Saturday? ")
+			today := time.Now().Weekday()
+			switch time.Saturday {
+			case today + 0:
+				fmt.Println("Today.")
+			case today + 1:
+				fmt.Println("Tomorrow.")
+			case today + 2:
+				fmt.Println("In two days.")
+			default:
+				fmt.Println("Too far away.")
+			}
+
 		})
 	})
 
