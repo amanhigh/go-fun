@@ -141,6 +141,26 @@ var _ = FDescribe("GoTour", func() {
 
 	})
 
+	Context("Pointers", func() {
+		var (
+			i, j = 42, 2701
+		)
+		It("should resolve", func() {
+			p := &i                    // point to i
+			Expect(p).To(Not(BeNil())) // Address of i (Value of p)
+			Expect(*p).To(Equal(i))    // read i through the pointer
+			*p = 21                    // set i through the pointer
+			Expect(i).To(Equal(21))    // see the new value of i
+		})
+
+		It("should overwrite", func() {
+			p := &j                 // point to j
+			*p = *p / 37            // divide j through the pointer
+			Expect(j).To(Equal(73)) // see the new value of j
+		})
+
+	})
+
 	Context("Math", func() {
 		const (
 			// Create a huge number by shifting a 1 bit left 100 places.
@@ -244,6 +264,7 @@ var _ = FDescribe("GoTour", func() {
 			Expect(f()).To(Equal(55))
 		})
 	})
+
 })
 
 /* Structs */

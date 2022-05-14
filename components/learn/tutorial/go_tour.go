@@ -21,7 +21,6 @@ func GoTour() {
 	miscFun()
 	collectionFun()
 	switchFun()
-	pointerFun()
 	errorHandling()
 	GoRoutineFun()
 	StartCrawl()
@@ -98,21 +97,6 @@ func WordCount(input string) map[string]int {
 		countMap[f] += 1 //No NPE :), No Init Required because entry value is primitive
 	}
 	return countMap
-}
-
-func pointerFun() {
-	fmt.Println("\n\n Pointer Fun")
-	i, j := 42, 2701
-
-	p := &i         // point to i
-	fmt.Println(p)  // Address of i (Value of p)
-	fmt.Println(*p) // read i through the pointer
-	*p = 21         // set i through the pointer
-	fmt.Println(i)  // see the new value of i
-
-	p = &j         // point to j
-	*p = *p / 37   // divide j through the pointer
-	fmt.Println(j) // see the new value of j
 }
 
 func safeMapFun() {
