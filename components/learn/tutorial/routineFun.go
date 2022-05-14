@@ -2,9 +2,10 @@ package tutorial
 
 import (
 	"fmt"
-	learn2 "github.com/amanhigh/go-fun/models/learn"
 	"sync"
 	"time"
+
+	learn2 "github.com/amanhigh/go-fun/models/learn"
 
 	"golang.org/x/tour/tree"
 )
@@ -20,42 +21,8 @@ func GoRoutineFun() {
 	sumFun()
 	fibFun()
 	treeFun()
-	mutexFun()
 	eventFun()
 	safeRead()
-}
-
-func mutexFun() {
-	fmt.Println("\n\n Mutex Fun")
-	c := SafeCounter{v: make(map[string]int)}
-	for i := 0; i < 1000; i++ {
-		go c.Inc("somekey")
-	}
-
-	time.Sleep(time.Second)
-	fmt.Println(c.Value("somekey"))
-}
-
-// SafeCounter is safe to use concurrently.
-type SafeCounter struct {
-	v   map[string]int
-	mux sync.Mutex
-}
-
-// Inc increments the counter for the given key.
-func (c *SafeCounter) Inc(key string) {
-	c.mux.Lock()
-	// Lock so only one goroutine at a time can access the map c.v.
-	c.v[key]++ //Notice we are not using c.Value which will do deadlock
-	c.mux.Unlock()
-}
-
-// Value returns the current value of the counter for the given key.
-func (c *SafeCounter) Value(key string) int {
-	c.mux.Lock()
-	// Lock so only one goroutine at a time can access the map c.v.
-	defer c.mux.Unlock()
-	return c.v[key]
 }
 
 func treeFun() {

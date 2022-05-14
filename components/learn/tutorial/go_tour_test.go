@@ -16,7 +16,7 @@ import (
 
 var global, second_global = 5, 10
 
-var _ = FDescribe("GoTour", func() {
+var _ = Describe("GoTour", func() {
 
 	Context("Variables", func() {
 		// var (
