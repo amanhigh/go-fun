@@ -214,6 +214,36 @@ var _ = FDescribe("GoTour", func() {
 			Expect(sum).To(Equal(350))
 		})
 	})
+
+	Context("Lamda", func() {
+		It("should pass parameters", func() {
+			Expect(lamdbaCompute(triple, 5)).To(Equal(15))
+		})
+
+		It("should demonstrate closure", func() {
+			// Start with New Adders with Zero State
+			pos, neg := adder(), adder()
+
+			//Run Closures in opposite directions
+			//with varied speeds
+			for i := 0; i < 10; i++ {
+				pos(i)
+				neg(-2 * i)
+			}
+
+			//Match State stored in closure
+			Expect(pos(0)).To(Equal(45))
+			Expect(neg(0)).To(Equal(-90))
+		})
+
+		It("should have fibonacci", func() {
+			f := fibonacciLambda()
+			for i := 0; i < 10; i++ {
+				f()
+			}
+			Expect(f()).To(Equal(55))
+		})
+	})
 })
 
 /* Structs */
@@ -256,4 +286,41 @@ type ErrNegativeSqrt float64
 
 func (e ErrNegativeSqrt) Error() string {
 	return fmt.Sprintf("cannot Sqrt negativ number: %g", float64(e))
+}
+
+/* Lambda Fun */
+type convert func(int) int
+
+func triple(i int) int {
+	return i * 3
+}
+
+func lamdbaCompute(convert_function convert, x int) (result int) {
+	result = convert_function(x)
+	return
+}
+
+/**
+	Adds or Subtracts number passed to it
+	from sum which starts from Zero.
+
+	State is preserved for Sum due to closure
+**/
+func adder() func(int) int {
+	sum := 0
+	return func(x int) int {
+		sum += x
+		return sum
+	}
+}
+
+// fibonacci is a function that returns
+// a function that returns an int.
+func fibonacciLambda() func() int {
+	lastFibBeforeUpdate, lastFib := 0, 0
+	fib := 1
+	return func() int {
+		lastFibBeforeUpdate, lastFib, fib = lastFib, fib, lastFib+fib // Simultaneous Assignment :D
+		return lastFibBeforeUpdate
+	}
 }

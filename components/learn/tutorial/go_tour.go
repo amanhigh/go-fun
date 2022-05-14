@@ -23,7 +23,6 @@ func GoTour() {
 	switchFun()
 	pointerFun()
 	errorHandling()
-	lambdaFun()
 	GoRoutineFun()
 	StartCrawl()
 }
@@ -39,60 +38,6 @@ func (r rot13Reader) Read(b []byte) (n int, e error) {
 		}
 	}
 	return
-}
-
-func print(convert_function convert, x int) {
-	fmt.Println("Lamda Sum:", convert_function(x))
-}
-
-type convert func(int) int
-
-// convert types take an int and return a string value.
-func lambdaFun() {
-	fmt.Println("\n\nLamda Fun")
-	print(double, 5)
-	print(triple, 5)
-	closure()
-}
-func closure() {
-	fmt.Println("Closure")
-	pos, neg := adder(), adder()
-	for i := 0; i < 10; i++ {
-		fmt.Println(pos(i), neg(-2*i))
-	}
-
-	fmt.Println("Fibonacci")
-	f := fibonacciRecurse()
-	for i := 0; i < 10; i++ {
-		fmt.Print(f(), ",")
-	}
-}
-
-// fibonacci is a function that returns
-// a function that returns an int.
-func fibonacciRecurse() func() int {
-	lastFibBeforeUpdate, lastFib := 0, 0
-	fib := 1
-	return func() int {
-		lastFibBeforeUpdate, lastFib, fib = lastFib, fib, lastFib+fib // Simultaneous Assignment :D
-		return lastFibBeforeUpdate
-	}
-}
-
-func adder() func(int) int {
-	sum := 0
-	return func(x int) int {
-		sum += x
-		return sum
-	}
-}
-
-func double(i int) int {
-	return i + i
-}
-
-func triple(i int) int {
-	return i * 3
 }
 
 //https://tour.golang.org/moretypes/18
