@@ -16,7 +16,6 @@ type Tree struct {
 
 func GoRoutineFun() {
 	fmt.Println("\n\nGoRoutine Fun")
-	fibFun()
 	treeFun()
 	eventFun()
 }
@@ -24,68 +23,6 @@ func GoRoutineFun() {
 func treeFun() {
 	fmt.Println("\n\nWalk The Tree")
 	fmt.Println(Same(tree.New(2), tree.New(2)))
-}
-
-func fibFun() {
-	/** Fibonacci */
-	fmt.Println("\n\nFibonacci")
-	c := make(chan int, 10)
-	go fibonacci(cap(c), c)
-	for i := range c {
-		// For loop can detect closed channel and stop
-		fmt.Println(i)
-	}
-	multiChannel()
-}
-
-func multiChannel() {
-	fmt.Println("\n\n MultiChannel Fibonacci.")
-	c := make(chan int)
-	quit := make(chan int)
-	/** Consumer */
-	go func() {
-		for i := 0; i < 10; i++ {
-			fmt.Println(<-c)
-		}
-		quit <- 0
-	}()
-
-	/** Producer */
-	fibonacciMultiChannel(c, quit)
-}
-
-func fibonacciMultiChannel(c, quit chan int) {
-	x, y := 0, 1
-	overallTimeout := time.After(1 * time.Minute)
-	for {
-		select {
-		case c <- x:
-			x, y = y, x+y
-		case <-quit:
-			fmt.Println("quit")
-			return
-		case <-time.After(2 * time.Second):
-			fmt.Println("Operation Timeout. Operation won't wait more  than 2 Seconds.")
-			return
-		case <-overallTimeout:
-			fmt.Println("It has been more than a minute since loop started. Returning")
-			return
-		default:
-			// Run when no other case is ready
-			fmt.Println("    .")
-			time.Sleep(50 * time.Millisecond)
-		}
-
-	}
-}
-
-func fibonacci(n int, c chan int) {
-	x, y := 0, 1
-	for i := 0; i < n; i++ {
-		c <- x
-		x, y = y, x+y
-	}
-	close(c)
 }
 
 // Walk walks the tree t sending all values

@@ -1,6 +1,7 @@
 package tutorial_test
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -38,6 +39,37 @@ var _ = FDescribe("RoutineFun", func() {
 			secondHalfSum, firstHalfSum := <-iChannel, <-iChannel
 			Expect(firstHalfSum).To(Equal(17))
 			Expect(secondHalfSum).To(Equal(-5))
+		})
+
+		It("can compute fibonacci", func() {
+			var i int
+			c := make(chan int, 10)
+			go fibonacci(cap(c), c)
+			for i = range c {
+				// For loop can detect closed channel and stop
+				// fmt.Println(i)
+			}
+			Expect(i).To(Equal(34))
+			Eventually(c).Should(BeClosed())
+		})
+
+		It("can compute fibonacci parallely", func() {
+			defer GinkgoRecover()
+			c := make(chan int)    // Channel to Get Fibonacci Result
+			quit := make(chan int) // Channel to Signal Quit
+
+			/** Producer (Keeps producing result until asked to quit) */
+			go fibonacciMultiChannel(c, quit)
+
+			/** Consumer */
+			for i := 0; i < 10; i++ {
+				<-c //Read Result so next fibonacci can be computed
+			}
+
+			Expect(<-c).To(Equal(55))
+
+			quit <- 0 //Ask Producter to quit after reading required results.
+			Eventually(c).Should(BeClosed())
 		})
 	})
 
@@ -78,4 +110,38 @@ func sumOnChannel(a []int, c chan int) {
 		sum += x
 	}
 	c <- sum
+}
+
+/* Fibonacci */
+func fibonacci(n int, c chan int) {
+	x, y := 0, 1
+	for i := 0; i < n; i++ {
+		c <- x
+		x, y = y, x+y
+	}
+	close(c)
+}
+
+func fibonacciMultiChannel(c, quit chan int) {
+	x, y := 0, 1
+	overallTimeout := time.After(1 * time.Minute)
+	for {
+		select {
+		case c <- x: //Write Fib to Result Channel
+			x, y = y, x+y // Compute Fib
+		case <-quit:
+			close(c) //Close Result Channel
+			return
+		case <-time.After(2 * time.Second):
+			fmt.Println("Operation Timeout. Operation won't wait more  than 2 Seconds.")
+			return
+		case <-overallTimeout:
+			fmt.Println("It has been more than a minute since loop started. Returning")
+			return
+		default:
+			// Run when no other case is ready
+			time.Sleep(5 * time.Millisecond)
+		}
+
+	}
 }
