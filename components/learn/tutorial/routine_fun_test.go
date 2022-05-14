@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("RoutineFun", func() {
+var _ = Describe("RoutineFun", func() {
 
 	Context("Mutex", func() {
 		It("should protect multi threads", func() {
