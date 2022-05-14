@@ -1,27 +1,17 @@
 package tutorial_test
 
 import (
+	"fmt"
 	"math"
+	"math/rand"
 	"strconv"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var global, second_global = 5, 10
-
-/* Structs */
-type Abser interface {
-	Abs() float64
-}
-
-type Vertex struct {
-	X, Y float64
-}
-
-func (v *Vertex) Abs() float64 {
-	return math.Sqrt(v.X*v.X + v.Y*v.Y)
-}
 
 var _ = FDescribe("GoTour", func() {
 
@@ -48,6 +38,10 @@ var _ = FDescribe("GoTour", func() {
 			const constant_string = "Constant"
 			Expect(constant_string).To(Not(BeNil()))
 
+		})
+
+		It("should have exported names", func() {
+			Expect(math.Pi).To(Not(BeNil()))
 		})
 
 		It("should have enums", func() {
@@ -146,4 +140,83 @@ var _ = FDescribe("GoTour", func() {
 
 	})
 
+	Context("Math", func() {
+		const (
+			// Create a huge number by shifting a 1 bit left 100 places.
+			// In other words, the binary number that is 1 followed by 100 zeroes.
+			Big = 1 << 100
+			// Shift it right again 99 places, so we end up with 1<<1, or 2.
+			Small = Big >> 99
+		)
+
+		It("should work", func() {
+
+			fmt.Println("An untyped constant takes the type needed by its context")
+			//Small is 2 and Big is 1^100
+			Expect(needInt(Small)).To(Equal(21))
+			Expect(needFloat(Small)).To(Equal(float64(0.2)))
+			Expect(needFloat(Big)).To(BeNumerically(">", (float64(1.26765))))
+		})
+
+		It("should compute sqrt", func() {
+			input := 8
+			result, err := sqrt(input)
+			Expect(err).To(BeNil())
+			Expect(result).To(Equal(math.Sqrt((float64(input)))))
+		})
+
+		It("should not compute negative sqrt", func() {
+			input := -2
+			_, err := sqrt(input)
+			Expect(err).To(Not(BeNil()))
+		})
+
+		It("should generate random", func() {
+			rand.Seed(time.Now().UnixNano())
+			Expect(rand.Intn(10)).To(Not(BeNil()))
+		})
+
+	})
 })
+
+/* Structs */
+type Abser interface {
+	Abs() float64
+}
+
+type Vertex struct {
+	X, Y float64
+}
+
+func (v *Vertex) Abs() float64 {
+	return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+/* Math */
+func needInt(x int) int {
+	return x*10 + 1
+}
+
+func needFloat(x float64) float64 {
+	return x * 0.1
+}
+
+func sqrt(x int) (float64, error) {
+	if x < 0 {
+		return math.NaN(), ErrNegativeSqrt(x)
+	}
+	fX := float64(x)
+	z := float64(1)
+	z = 1.0
+	for i := 0; i < 10; i++ {
+		z = z - ((math.Pow(z, 2) - fX) / (2 * z))
+	}
+	return z, nil
+}
+
+/* Error Handling */
+type ErrNegativeSqrt float64
+
+func (e ErrNegativeSqrt) Error() string {
+	return fmt.Sprintf("cannot Sqrt negativ number: %g", float64(e))
+}

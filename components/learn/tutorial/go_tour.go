@@ -3,22 +3,12 @@ package tutorial
 import (
 	"fmt"
 	"io"
-	"math"
-	"math/rand"
 	"os"
 	"regexp"
 	"runtime"
 	"strings"
 	"sync"
 	"time"
-)
-
-const (
-	// Create a huge number by shifting a 1 bit left 100 places.
-	// In other words, the binary number that is 1 followed by 100 zeroes.
-	Big = 1 << 100
-	// Shift it right again 99 places, so we end up with 1<<1, or 2.
-	Small = Big >> 99
 )
 
 type Day int
@@ -28,12 +18,7 @@ type rot13Reader struct {
 }
 
 func GoTour() {
-	fmt.Println("Yay :D :D !")
-	fmt.Println("The time is", time.Now())
-
-	variableFun()
 	safeMapFun()
-	mathFun()
 	miscFun()
 	regexFun()
 	collectionFun()
@@ -269,62 +254,8 @@ func switchFun() {
 	}
 }
 
-func printRandom() {
-	rand.Seed(time.Now().UnixNano())
-	fmt.Println("My Random number is", rand.Intn(10))
-}
-
-func add(x, y int) int {
-	return x + y
-}
-
 func swap(a, b string) (string, string) {
 	return b, a
-}
-
-func variableFun() {
-	vertexFun()
-
-	fmt.Println("Exported Name Test:", math.Pi)
-}
-
-func vertexFun() {
-	/** Interface */
-	// var a Abser
-	//a=vertex /** Gives Error as Abs takes only Pointer */
-	// a = pver
-
-	/* While methods with pointer receivers take either a value or a pointer as the receiver when they are called: */
-	// fmt.Println("Vertex Method: ", vertex.Abs(), pver.Abs(), a.Abs()) //Methods linked to Struct
-
-	/** Null Handling pver.Abs() Would still work but when Abs will try to access X,Y Null Pointer would come. */
-	//pver=nil;pver.Abs();
-	/** Null Handling on Type would be error even if error is called on concrete type */
-	//vertex=nil;vertex.Abs()
-}
-
-func mathFun() {
-	fmt.Println("\n\nMath Fun")
-	printRandom()
-	fmt.Println("Adding:", add(5, 8))
-
-	fmt.Println("An untyped constant takes the type needed by its context")
-	//Small is 2 and Big is 1^100
-	fmt.Println(needInt(Small))
-	fmt.Println(needFloat(Small))
-	fmt.Println(needFloat(Big))
-
-	psqrt(-2)
-	psqrt(8)
-	psqrt(64)
-
-}
-
-func needInt(x int) int {
-	return x*10 + 1
-}
-func needFloat(x float64) float64 {
-	return x * 0.1
 }
 
 func miscFun() {
@@ -366,34 +297,6 @@ func deferReturn() (i int) {
 		i++
 	}()
 	return 4
-}
-
-type ErrNegativeSqrt float64
-
-func psqrt(x int) {
-	z, e := sqrt(x)
-	if e != nil {
-		fmt.Println("Error Computing Sqrt for", x)
-		return
-	}
-	fmt.Println("Square Root of", x, "is", z, "Actual Root:", math.Sqrt(float64(x)))
-}
-
-func sqrt(x int) (float64, error) {
-	if x < 0 {
-		return 0, ErrNegativeSqrt(x)
-	}
-	fX := float64(x)
-	z := float64(1)
-	z = 1.0
-	for i := 0; i < 10; i++ {
-		z = z - ((math.Pow(z, 2) - fX) / (2 * z))
-	}
-	return z, nil
-}
-
-func (e ErrNegativeSqrt) Error() string {
-	return fmt.Sprintf("cannot Sqrt negativ number: %g", float64(e))
 }
 
 func errorHandling() {
