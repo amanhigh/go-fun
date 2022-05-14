@@ -12,6 +12,7 @@ require (
 	github.com/casbin/casbin/v2 v2.6.10
 	github.com/cheekybits/genny v1.0.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/etcinit/speedbump v2.0.0+incompatible
 	github.com/facebookgo/inject v0.0.0-20180706035515-f23751cae28b
 	github.com/fatih/color v1.10.0
 	github.com/gin-contrib/pprof v1.2.1
@@ -43,12 +44,15 @@ require (
 	golang.org/x/exp v0.0.0-20220317015231-48e79f11773a
 	golang.org/x/net v0.0.0-20210929193557-e81a3d93ecf6
 	golang.org/x/tour v0.0.0-20191002171047-6bb846ce41cd
+	gopkg.in/redis.v5 v5.2.9
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/mysql v1.0.5
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.4
 	gorm.io/plugin/dbresolver v1.1.0
 )
+
+require github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
