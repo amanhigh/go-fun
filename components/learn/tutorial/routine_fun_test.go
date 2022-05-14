@@ -73,6 +73,29 @@ var _ = FDescribe("RoutineFun", func() {
 		})
 	})
 
+	Context("WaitGroup", func() {
+		It("should help wait", func() {
+			wg := sync.WaitGroup{}
+			wg.Add(2) // Starting 2 Go Routines
+
+			go func() {
+				/* Can Mark Routine start inside if routine count is not known */
+				// wg.Add(1)
+
+				//Business Logic Goes Here
+
+				wg.Done() //Mark Job Done
+			}()
+			go func() {
+				//Business Logic Goes Here
+				wg.Done() //Mark Job Done
+			}()
+
+			wg.Wait() // Wait For Both Go Rouines are Done.
+			Expect(true).To(BeTrue())
+		})
+	})
+
 })
 
 /* Mutex */
