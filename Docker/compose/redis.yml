@@ -5,6 +5,8 @@ services:
     image: bitnami/redis:latest
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+    - 6379:6379
 
   redis-commander:
     image: rediscommander/redis-commander:latest

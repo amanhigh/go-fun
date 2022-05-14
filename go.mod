@@ -14,7 +14,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/etcinit/speedbump v2.0.0+incompatible
 	github.com/facebookgo/inject v0.0.0-20180706035515-f23751cae28b
-	github.com/fatih/color v1.10.0
+	github.com/fatih/color v1.11.0
 	github.com/gin-contrib/pprof v1.2.1
 	github.com/gin-gonic/gin v1.7.0
 	github.com/go-playground/validator/v10 v10.4.1
@@ -24,14 +24,14 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.13.0
 	github.com/golang/mock v1.4.4
 	github.com/google/uuid v1.2.0
-	github.com/hashicorp/consul/api v1.3.0
-	github.com/hashicorp/vault v1.3.0
-	github.com/hashicorp/vault/api v1.0.5-0.20191108163347-bdd38fca2cff
+	github.com/hashicorp/consul/api v1.4.0
+	github.com/hashicorp/vault v1.7.6
+	github.com/hashicorp/vault/api v1.1.1
 	github.com/olivere/elastic v6.2.26+incompatible
 	github.com/onsi/ginkgo/v2 v2.1.3
 	github.com/onsi/gomega v1.17.0
 	github.com/ory/dockertest/v3 v3.8.0
-	github.com/prometheus/client_golang v0.9.3
+	github.com/prometheus/client_golang v1.7.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/slok/goresilience v0.2.0
 	github.com/smartystreets/goconvey v1.6.4
@@ -42,7 +42,7 @@ require (
 	github.com/xlab/treeprint v1.1.0
 	github.com/zsais/go-gin-prometheus v0.1.0
 	golang.org/x/exp v0.0.0-20220317015231-48e79f11773a
-	golang.org/x/net v0.0.0-20210929193557-e81a3d93ecf6
+	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
 	golang.org/x/tour v0.0.0-20191002171047-6bb846ce41cd
 	gopkg.in/redis.v5 v5.2.9
 	gopkg.in/yaml.v2 v2.4.0
@@ -52,7 +52,7 @@ require (
 	gorm.io/plugin/dbresolver v1.1.0
 )
 
-require github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
+require github.com/cenkalti/backoff/v3 v3.0.0 // indirect
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
@@ -60,8 +60,8 @@ require (
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/andybalholm/cascadia v1.1.0 // indirect
-	github.com/armon/go-metrics v0.3.0 // indirect
-	github.com/beorn7/perks v1.0.0 // indirect
+	github.com/armon/go-metrics v0.3.7 // indirect
+	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/containerd/continuity v0.2.0 // indirect
@@ -88,16 +88,16 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-hclog v0.15.0 // indirect
-	github.com/hashicorp/go-immutable-radix v1.1.0 // indirect
+	github.com/hashicorp/go-hclog v0.16.2 // indirect
+	github.com/hashicorp/go-immutable-radix v1.3.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-retryablehttp v0.6.8 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.2 // indirect
-	github.com/hashicorp/golang-lru v0.5.3 // indirect
-	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hashicorp/serf v0.8.3 // indirect
-	github.com/hashicorp/vault/sdk v0.1.14-0.20191112033314-390e96e22eb2 // indirect
+	github.com/hashicorp/golang-lru v0.5.4 // indirect
+	github.com/hashicorp/hcl v1.0.1-0.20201015184941-809e678c39ec // indirect
+	github.com/hashicorp/serf v0.9.5 // indirect
+	github.com/hashicorp/vault/sdk v0.2.1 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
@@ -120,9 +120,9 @@ require (
 	github.com/opencontainers/runc v1.0.2 // indirect
 	github.com/pierrec/lz4 v2.6.0+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4 // indirect
-	github.com/prometheus/common v0.4.0 // indirect
-	github.com/prometheus/procfs v0.0.0-20190507164030-5867b95ac084 // indirect
+	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/prometheus/common v0.11.1 // indirect
+	github.com/prometheus/procfs v0.1.3 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
@@ -131,9 +131,9 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
-	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670 // indirect
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654 // indirect
-	golang.org/x/text v0.3.6 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
 	google.golang.org/genproto v0.0.0-20200825200019-8632dd797987 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
