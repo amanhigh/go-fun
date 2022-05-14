@@ -1,6 +1,7 @@
 package tutorial_test
 
 import (
+	"math"
 	"strconv"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -9,8 +10,17 @@ import (
 
 var global, second_global = 5, 10
 
+/* Structs */
+type Abser interface {
+	Abs() float64
+}
+
 type Vertex struct {
 	X, Y float64
+}
+
+func (v *Vertex) Abs() float64 {
+	return math.Sqrt(v.X*v.X + v.Y*v.Y)
 }
 
 var _ = FDescribe("GoTour", func() {
@@ -82,8 +92,14 @@ var _ = FDescribe("GoTour", func() {
 
 		Context("Struct", func() {
 			var (
-				vertex = Vertex{1, 2}
+				vertex        Vertex
+				pointerVertex *Vertex
 			)
+
+			BeforeEach(func() {
+				vertex = Vertex{1, 2}
+				pointerVertex = &vertex
+			})
 
 			It("should only mutate copy", func() {
 				vertexCopy := vertex
@@ -93,25 +109,35 @@ var _ = FDescribe("GoTour", func() {
 			})
 
 			It("should mutate original on pointer", func() {
-				pointerVertex := &vertex
 				pointerVertex.Y = 9
-
 				Expect(vertex.Y).To(Equal(float64(9)))
 			})
 
-			/** Interface */
-			// var a Abser
-			// //a=vertex /** Gives Error as Abs takes only Pointer */
-			// a = pointerVertex
+			Context("Interface", func() {
 
-			// /* While methods with pointer receivers take either a value or a pointer as the receiver when they are called: */
-			// fmt.Println("Vertex Method: ", vertex.Abs(), pointerVertex.Abs(), a.Abs()) //Methods linked to Struct
+				var (
+					a Abser
+				)
 
-			/** Null Handling pver.Abs() Would still work but when Abs will try to access X,Y Null Pointer would come. */
-			//pver=nil;pver.Abs();
-			/** Null Handling on Type would be error even if error is called on concrete type */
-			//vertex=nil;vertex.Abs()
+				BeforeEach(func() {
+					/** Interface */
+					// a=vertex /** Gives Error as Abs takes only Pointer */
+					a = pointerVertex
+				})
 
+				It("should compute absolute", func() {
+					// /* While methods with pointer receivers take either a value or a pointer as the receiver when they are called: */
+					Expect(vertex.Abs()).To(Equal(pointerVertex.Abs()))
+					Expect(vertex.Abs()).To(Equal(a.Abs()))
+
+					/** Null Handling pver.Abs() Would still work but when Abs will try to access X,Y Null Pointer would come. */
+					// pver = nil
+					// pver.Abs()
+					/** Null Handling on Type would be error even if error is called on concrete type */
+					// vertex = nil
+					// vertex.Abs()
+				})
+			})
 		})
 
 		// fmt.Printf("Variables Type: %T Value: %v\n", r, r)

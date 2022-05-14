@@ -303,14 +303,6 @@ func vertexFun() {
 	//vertex=nil;vertex.Abs()
 }
 
-// type Abser interface {
-// 	Abs() float64
-// }
-
-// func (v *Vertex) Abs() float64 {
-// 	return math.Sqrt(v.X*v.X + v.Y*v.Y)
-// }
-
 func mathFun() {
 	fmt.Println("\n\nMath Fun")
 	printRandom()
