@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -20,7 +19,6 @@ type rot13Reader struct {
 func GoTour() {
 	safeMapFun()
 	miscFun()
-	regexFun()
 	collectionFun()
 	loopFun()
 	switchFun()
@@ -29,14 +27,6 @@ func GoTour() {
 	lambdaFun()
 	GoRoutineFun()
 	StartCrawl()
-}
-
-func regexFun() {
-	fmt.Println("\n\nRegex Fun")
-	s := "aman:aman@tcp(mysql:3306)/compute?charset=utf8&parseTime=True&loc=Local"
-	m := regexp.MustCompile("^(.*)\\((.*)\\)(.*)$")
-	fmt.Println(m.FindAllStringSubmatch(s, 5))
-	fmt.Println(m.ReplaceAllString(s, `$1#$2#$3`))
 }
 
 func (r rot13Reader) Read(b []byte) (n int, e error) {

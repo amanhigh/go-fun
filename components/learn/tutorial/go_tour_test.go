@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -174,6 +175,21 @@ var _ = FDescribe("GoTour", func() {
 		It("should generate random", func() {
 			rand.Seed(time.Now().UnixNano())
 			Expect(rand.Intn(10)).To(Not(BeNil()))
+		})
+
+	})
+
+	Context("Regex", func() {
+		var (
+			mysqlString  = "aman:aman@tcp(mysql:3306)/compute?charset=utf8&parseTime=True&loc=Local"
+			mysqlMatcher = regexp.MustCompile(`^(.*)\((.*)\)(.*)$`)
+		)
+
+		It("should match", func() {
+			matched := mysqlMatcher.FindAllStringSubmatch(mysqlString, 5)
+			Expect(matched[0]).To(HaveLen(4))
+			Expect(matched[0][2]).To(Equal("mysql:3306"))
+			Expect(mysqlMatcher.ReplaceAllString(mysqlString, `$1#$2`)).To(Equal("aman:aman@tcp#mysql:3306"))
 		})
 
 	})
