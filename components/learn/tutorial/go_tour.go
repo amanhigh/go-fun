@@ -18,7 +18,6 @@ func GoTour() {
 	safeMapFun()
 	miscFun()
 	errorHandling()
-	GoRoutineFun()
 	StartCrawl()
 }
 
