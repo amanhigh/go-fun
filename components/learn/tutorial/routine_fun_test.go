@@ -24,6 +24,30 @@ var _ = FDescribe("RoutineFun", func() {
 			Expect(c.Value(key)).To(Equal(500))
 		})
 
+		It("powers safe map", func() {
+			// Safe Map is thread safe
+			mapV := sync.Map{}
+
+			//Add Values
+			mapV.Store("Aman", "Singh")
+			mapV.Store("Foo", "Bar")
+
+			//Read Values
+			val, ok := mapV.Load("Aman")
+			Expect(ok).To(BeTrue())
+			Expect(val).To(Equal("Singh"))
+
+			//Iterate over values
+			mapV.Range(func(key, value any) bool {
+				stringValue := value.(string)
+				Expect(stringValue).To(Not(BeNil()))
+				// fmt.Printf("Key:%v Value:%v\n", key, strings.Split(stringValue, ","))
+				// Indicate to continue iteration
+				return true
+			})
+
+		})
+
 	})
 
 	Context("Channels", func() {

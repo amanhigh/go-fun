@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"sync"
 )
 
 type Day int
@@ -15,9 +14,7 @@ type rot13Reader struct {
 }
 
 func GoTour() {
-	safeMapFun()
 	miscFun()
-	errorHandling()
 	StartCrawl()
 }
 
@@ -46,18 +43,6 @@ func Pic(dx, dy int) [][]uint8 {
 	return result
 }
 
-func safeMapFun() {
-	mapV := sync.Map{}
-	mapV.Store("Aman", "Preet,Singh")
-	mapV.Store("Aman1", "Preet,Done")
-	fmt.Println(mapV.Load("Aman1"))
-	mapV.Range(func(key, value any) bool {
-		stringValue := value.(string)
-		fmt.Printf("Key:%v Value:%v\n", key, strings.Split(stringValue, ","))
-		return true
-	})
-}
-
 func swap(a, b string) (string, string) {
 	return b, a
 }
@@ -76,35 +61,4 @@ func miscFun() {
 	s := strings.NewReader("Lbh penpxrq gur pbqr!")
 	r := rot13Reader{s}
 	io.Copy(os.Stdout, &r)
-}
-
-func errorHandling() {
-	fmt.Println("\n\nError Handling")
-	ff()
-	fmt.Println("Returned normally from ff.")
-}
-
-func ff() {
-	defer func() {
-		/** Recovers whatever value is put in Panic */
-		if r := recover(); r != nil {
-			fmt.Println("Recovered in ff", r)
-		}
-	}()
-
-	fmt.Println("Calling gg.")
-	gg(0)
-
-	/** Below code is not called as after panicking control goes to deferred recover */
-	fmt.Println("Returned normally from gg.")
-}
-
-func gg(i int) {
-	if i > 3 {
-		fmt.Println("Panicking!")
-		panic(fmt.Sprintf("%v", i*10))
-	}
-	defer fmt.Println("Defer in gg", i)
-	fmt.Println("Printing in gg", i)
-	gg(i + 1)
 }
