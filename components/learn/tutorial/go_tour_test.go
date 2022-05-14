@@ -191,7 +191,28 @@ var _ = FDescribe("GoTour", func() {
 			Expect(matched[0][2]).To(Equal("mysql:3306"))
 			Expect(mysqlMatcher.ReplaceAllString(mysqlString, `$1#$2`)).To(Equal("aman:aman@tcp#mysql:3306"))
 		})
+	})
 
+	Context("Loops", func() {
+		It("should do iteration", func() {
+			sum := 0
+			count := 10
+			for i := 0; i < count; i++ {
+				sum += 1
+			}
+			Expect(sum).To(Equal(count))
+		})
+
+		It("should break infinite", func() {
+			sum := 0
+			for {
+				/* Exit Condition */
+				if sum += 50; sum > 300 {
+					break
+				}
+			}
+			Expect(sum).To(Equal(350))
+		})
 	})
 })
 

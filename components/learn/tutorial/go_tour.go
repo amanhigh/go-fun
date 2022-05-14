@@ -20,7 +20,6 @@ func GoTour() {
 	safeMapFun()
 	miscFun()
 	collectionFun()
-	loopFun()
 	switchFun()
 	pointerFun()
 	errorHandling()
@@ -169,27 +168,6 @@ func pointerFun() {
 	p = &j         // point to j
 	*p = *p / 37   // divide j through the pointer
 	fmt.Println(j) // see the new value of j
-}
-
-func loopFun() {
-	fmt.Println("\n\nLoop Fun")
-	sum := 0
-	for i := 0; i < 10; i++ {
-		sum += i
-	}
-
-	//Infinite Loop
-	for {
-		/**Precondition Before If**/
-		if sum += 50; sum > 300 {
-			break
-		} else {
-			//Precondition Variable available Here
-			fmt.Println("Looping Infinite:", sum)
-		}
-	}
-
-	fmt.Println("Sum:", sum)
 }
 
 func safeMapFun() {
