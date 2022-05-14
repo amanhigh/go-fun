@@ -24,6 +24,23 @@ var _ = FDescribe("RoutineFun", func() {
 
 	})
 
+	Context("Channels", func() {
+		It("can sum safely", func() {
+			ints := []int{7, 2, 8, -9, 4, 0}
+			/** With Buffer 2 now will work even if no goroutine is used
+			  as now two responses can be buffered hence single thread won't block.
+			*/
+			iChannel := make(chan int, 2)
+			mid := len(ints) / 2
+			go sumOnChannel(ints[:mid], iChannel)
+			go sumOnChannel(ints[mid:], iChannel)
+
+			secondHalfSum, firstHalfSum := <-iChannel, <-iChannel
+			Expect(firstHalfSum).To(Equal(17))
+			Expect(secondHalfSum).To(Equal(-5))
+		})
+	})
+
 })
 
 /* Mutex */
@@ -47,4 +64,18 @@ func (c *SafeCounter) Value(key string) int {
 	// Lock so only one goroutine at a time can access the map c.v.
 	defer c.mux.Unlock()
 	return c.v[key]
+}
+
+/* Channels */
+
+/**
+	Sum and send result only channel
+	so its threadsafe.
+**/
+func sumOnChannel(a []int, c chan int) {
+	sum := 0
+	for _, x := range a {
+		sum += x
+	}
+	c <- sum
 }

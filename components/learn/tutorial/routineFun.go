@@ -5,8 +5,6 @@ import (
 	"sync"
 	"time"
 
-	learn2 "github.com/amanhigh/go-fun/models/learn"
-
 	"golang.org/x/tour/tree"
 )
 
@@ -18,11 +16,9 @@ type Tree struct {
 
 func GoRoutineFun() {
 	fmt.Println("\n\nGoRoutine Fun")
-	sumFun()
 	fibFun()
 	treeFun()
 	eventFun()
-	safeRead()
 }
 
 func treeFun() {
@@ -40,22 +36,6 @@ func fibFun() {
 		fmt.Println(i)
 	}
 	multiChannel()
-}
-
-func sumFun() int {
-	s := []int{7, 2, 8, -9, 4, 0}
-	/** With Buffer 2 now will work even if no goroutine is used
-	  as now two responses can be buffered hence single thread won't block.
-	*/
-	iChannel := make(chan int, 2)
-	mid := len(s) / 2
-	go sum(s[:mid], iChannel)
-	go sum(s[mid:], iChannel)
-
-	x1, x2 := <-iChannel, <-iChannel
-	x3 := x1 + x2
-	fmt.Printf("%v+%v=%v", x1, x2, x3)
-	return x3
 }
 
 func multiChannel() {
@@ -106,14 +86,6 @@ func fibonacci(n int, c chan int) {
 		x, y = y, x+y
 	}
 	close(c)
-}
-
-func sum(a []int, c chan int) {
-	sum := 0
-	for _, x := range a {
-		sum += x
-	}
-	c <- sum
 }
 
 // Walk walks the tree t sending all values
@@ -192,22 +164,4 @@ func eventFun() {
 	}()
 
 	wg.Wait()
-}
-
-func safeRead() {
-	fmt.Println("\n\n Safe Read")
-
-	safe := learn2.SafeReadWrite{1, make(chan int, 2)}
-
-	go func() {
-		//Wait Sometime and send Channel Write
-		time.Sleep(400 * time.Millisecond)
-		fmt.Println("Writing Now (400 ms)")
-		safe.Write(5)
-		safe.Close()
-	}()
-
-	for i := 0; i < 10; i++ {
-		fmt.Println("Ticking (100 ms)", time.Now().UnixMilli(), safe.Read())
-	}
 }
