@@ -77,31 +77,6 @@ func miscFun() {
 	s := strings.NewReader("Lbh penpxrq gur pbqr!")
 	r := rot13Reader{s}
 	io.Copy(os.Stdout, &r)
-
-	deferFun()
-}
-
-func deferFun() {
-	/** Defer */
-	message := "Captured Argument"
-	defer fmt.Println(message)
-	message = "Now Changed"
-	fmt.Println("Arguments were captured but function excutes post this. Current Value of Message:", message)
-
-	fmt.Println("counting")
-	for i := 0; i < 10; i++ {
-		defer fmt.Println(i)
-	}
-	fmt.Println("done")
-
-	fmt.Println("Value Returned from Defered Function is", deferReturn())
-}
-
-func deferReturn() (i int) {
-	defer func() {
-		i++
-	}()
-	return 4
 }
 
 func errorHandling() {

@@ -274,8 +274,6 @@ var _ = FDescribe("GoTour", func() {
 		)
 
 		It("should work", func() {
-
-			fmt.Println("An untyped constant takes the type needed by its context")
 			//Small is 2 and Big is 1^100
 			Expect(needInt(Small)).To(Equal(21))
 			Expect(needFloat(Small)).To(Equal(float64(0.2)))
@@ -368,6 +366,20 @@ var _ = FDescribe("GoTour", func() {
 		})
 	})
 
+	Context("Defer", func() {
+
+		It("should change message", func() {
+			message := "Captured Argument"
+			//Arguments Captured but will be executed at end.
+			defer Expect(message).To(Equal("Captured Argument"))
+			message = "Now Changed"
+			Expect(message).To(Equal("Now Changed"))
+		})
+
+		It("should increment", func() {
+			Expect(deferReturn()).To(Equal(5))
+		})
+	})
 })
 
 /* Structs */
@@ -459,4 +471,12 @@ func WordCount(input string) map[string]int {
 		countMap[f] += 1 //No NPE :), No Init Required because entry value is primitive
 	}
 	return countMap
+}
+
+/* Defer */
+func deferReturn() (i int) {
+	defer func() {
+		i++
+	}()
+	return 4
 }
