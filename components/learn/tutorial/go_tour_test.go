@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -159,6 +160,74 @@ var _ = FDescribe("GoTour", func() {
 			Expect(j).To(Equal(73)) // see the new value of j
 		})
 
+	})
+
+	Context("Collection", func() {
+		var (
+			a      [2]string
+			primes = [6]int{2, 3, 5, 7, 11, 13}
+		)
+
+		It("should insert values", func() {
+			a[0] = "Hello"
+			a[1] = "World"
+			Expect(a).To(HaveLen(2))
+		})
+
+		It("can be slices", func() {
+			slice := primes[1:4]
+			Expect(slice).To(Equal([]int{3, 5, 7}))
+
+			// Len of slice is count of elements that have been sliced
+			Expect(len(slice)).To(Equal(3))
+			//The capacity of a slice is the number of elements in the underlying array, counting from the first element in the slice.
+			Expect(cap(slice)).To(Equal(5))
+		})
+
+		It("can be two dimensional", func() {
+			/** Two Dimensional */
+			var twod [5][5]uint8 //Array 5x5
+			twod[1][1] = 5
+			Expect(twod[1][1]).To(Equal(uint8(5)))
+			Expect(twod[3][4]).To(Equal(uint8(0)))
+
+			Expect(len(twod)).To(Equal(5))
+			Expect(cap(twod)).To(Equal(5))
+		})
+
+		It("can hold struct", func() {
+			/** Slice referencing the Array as no Size is Specified for Struct Array */
+			structSlice := []struct {
+				i int
+				b bool
+			}{{2, true}, {3, false}}
+
+			Expect(len(structSlice)).To(Equal(2))
+			Expect(cap(structSlice)).To(Equal(2))
+		})
+
+		It("can be map", func() {
+			hashMap := map[string]int{"One": 1, "Two": 2}
+			v2, ok := hashMap["Two"]
+			Expect(ok).To(BeTrue()) //Ok Holds if element is present or not.
+			Expect(v2).To(Equal(2))
+		})
+
+		It("can be built via make and new", func() {
+			make_slice := make([]int, 50, 100)
+			Expect(len(make_slice)).To(Equal(50))
+			Expect(cap(make_slice)).To(Equal(100))
+
+			new_slice := new([100]int)[0:50]
+			Expect(len(new_slice)).To(Equal(50))
+			Expect(cap(new_slice)).To(Equal(100))
+		})
+
+		It("should count words", func() {
+			word_count := WordCount("Hello World Hello Aman")
+			Expect(word_count["Aman"]).To(Equal(1))
+			Expect(word_count["Hello"]).To(Equal(2))
+		})
 	})
 
 	Context("Math", func() {
@@ -344,4 +413,16 @@ func fibonacciLambda() func() int {
 		lastFibBeforeUpdate, lastFib, fib = lastFib, fib, lastFib+fib // Simultaneous Assignment :D
 		return lastFibBeforeUpdate
 	}
+}
+
+/* Collections */
+func WordCount(input string) map[string]int {
+	countMap := make(map[string]int)
+	fmt.Println(countMap)
+	fields := strings.Fields(input)
+	/** Ranges where i is optional can use _,v */
+	for _, f := range fields {
+		countMap[f] += 1 //No NPE :), No Init Required because entry value is primitive
+	}
+	return countMap
 }

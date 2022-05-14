@@ -19,7 +19,6 @@ type rot13Reader struct {
 func GoTour() {
 	safeMapFun()
 	miscFun()
-	collectionFun()
 	switchFun()
 	errorHandling()
 	GoRoutineFun()
@@ -49,54 +48,6 @@ func Pic(dx, dy int) [][]uint8 {
 		}
 	}
 	return result
-}
-
-func collectionFun() {
-	var a [2]string
-	a[0] = "Hello"
-	a[1] = "World"
-	fmt.Println(a)
-	primes := [6]int{2, 3, 5, 7, 11, 13}
-	fmt.Println(primes[1:4]) // Prints 3,5,7 (Its a Reference not Value Copy)
-
-	/** Slice referencing the Array as no Size is Specified for Struct Array */
-	s := []struct {
-		i int
-		b bool
-	}{{2, true}, {3, false}, {5, true}, {7, true}, {11, false}, {13, true}}
-	fmt.Println(s)
-	s = s[2:4] // The capacity of a slice is the number of elements in the underlying array, counting from the first element in the slice.
-	fmt.Printf("len=%d cap=%d %v\n", len(s), cap(s), s)
-
-	/** Ranges where i is optional can use _,v */
-	for i, v := range primes {
-		fmt.Printf("2**%d = %d\n", i, v)
-	}
-
-	/** Two Dimensional */
-	var twod [5][5]uint8 //Array 5x5
-	twod[1][1] = 5
-	fmt.Println("Two Dimensional:", twod[1][1])
-
-	fmt.Printf("Len: %d, Cap: %d\n", len(twod), cap(twod))
-
-	hashMap := map[string]int{"One": 1, "Two": 2}
-	v2, ok := hashMap["Two"] //Ok Holds if element is present or not.
-	fmt.Println("HashMap:", hashMap["One"], "-", v2, ok)
-
-	fmt.Println("Make vs New", len(make([]int, 50, 100)), len(new([100]int)[0:50]))
-
-	fmt.Println("WordCount:", WordCount("Hello World Hello Aman"))
-}
-
-func WordCount(input string) map[string]int {
-	countMap := make(map[string]int)
-	fmt.Println(countMap)
-	fields := strings.Fields(input)
-	for _, f := range fields {
-		countMap[f] += 1 //No NPE :), No Init Required because entry value is primitive
-	}
-	return countMap
 }
 
 func safeMapFun() {
