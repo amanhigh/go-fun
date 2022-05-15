@@ -3,15 +3,22 @@ package config
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm/logger"
-	"time"
 )
 
 type Server struct {
 	Host     string       `env:"HOST"`
 	Port     int          `env:"PORT" envDefault:"8080"`
 	LogLevel logrus.Level `env:"LOG_LEVEL" envDefault:"info"`
+}
+
+type RateLimit struct {
+	// Skip Redis Host to Disable Rate Limiting
+	RedisHost      string `env:"REDIS_RATE_LIMIT"`
+	PerMinuteLimit int64  `env:"PORT" envDefault:"50"`
 }
 
 func (self *Server) GetUrl(uri string) string {
