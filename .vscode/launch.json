@@ -1,0 +1,43 @@
+{
+    "configurations": [
+        {
+            "name": "FunApp",
+            "type": "go",
+            "request": "launch", 
+            "mode": "auto",
+            "program": "${workspaceFolder}/components/fun-app",
+            "args": [
+            ],
+            "env": {
+              "GCLOUD_PROJECT_ID":"my-project"
+            },
+            "showLog": true
+        },
+        {
+            "name": "FunApp (RateLimit)",
+            "type": "go",
+            "request": "launch", 
+            "mode": "auto",
+            "program": "${workspaceFolder}/components/fun-app",
+            "args": [
+            ],
+            "env": {
+              "REDIS_RATE_LIMIT":"docker"
+            },
+            "showLog": true
+        },
+        {
+            "name": "Kohan",
+            "type": "go",
+            "request": "launch", 
+            "mode": "auto",
+            "program": "${workspaceFolder}/components/kohan",
+            "args": [
+            ],
+            "env": {
+              "GCLOUD_PROJECT_ID":"my-project"
+            },
+            "showLog": true
+        },
+    ]
+}
