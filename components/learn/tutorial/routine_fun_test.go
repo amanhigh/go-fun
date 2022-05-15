@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/amanhigh/go-fun/components/learn/tutorial"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"golang.org/x/tour/tree"
@@ -123,6 +124,14 @@ var _ = Describe("RoutineFun", func() {
 
 			wg.Wait() // Wait For Both Go Rouines are Done.
 			Expect(true).To(BeTrue())
+		})
+	})
+
+	Context("Crawler", func() {
+		It("should crawl", func() {
+			site := "http://golang.org/"
+			urlMap := tutorial.StartCrawl(site)
+			Expect(urlMap.Contains("http://golang.org/pkg/os/")).To(BeTrue())
 		})
 	})
 
