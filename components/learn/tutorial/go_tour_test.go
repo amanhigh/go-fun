@@ -2,6 +2,7 @@ package tutorial_test
 
 import (
 	"fmt"
+	"io"
 	"math"
 	"math/rand"
 	"regexp"
@@ -15,6 +16,9 @@ import (
 )
 
 var global, second_global = 5, 10
+
+// Can create new type from existing Types
+type Day int
 
 var _ = Describe("GoTour", func() {
 
@@ -380,6 +384,46 @@ var _ = Describe("GoTour", func() {
 			Expect(deferReturn()).To(Equal(5))
 		})
 	})
+
+	Context("Error Handling", func() {
+		It("should test", func() {
+			defer func() {
+				/** Recovers whatever value is put in Panic */
+				if r := recover(); r != nil {
+					// fmt.Println(r)
+					Expect(r).To(Not(BeNil()))
+				}
+			}()
+
+			panic("Panic Message")
+		})
+	})
+
+	Context("Misc", func() {
+		It("should swap", func() {
+			a, b := swap("World", "Hello")
+			Expect(a).To(Equal("Hello"))
+			Expect(b).To(Equal("World"))
+		})
+
+		It("decode Rot13 encoding", func() {
+			/** Rot13 */
+			s := strings.NewReader("Lbh penpxrq gur pbqr!")
+			r := rot13Reader{s}
+			buf := new(strings.Builder)
+			// io.Copy(os.Stdout, &r) //Print to Terminal
+			io.Copy(buf, &r)
+			Expect(buf.String()).To(Equal("You cracked the code!"))
+
+		})
+
+		It("print Type Name and byte", func() {
+			/** Ascii To Byte */
+			x := "A"[0]
+			result := fmt.Sprintf("Type:%T, Byte: %v", x, x)
+			Expect(result).To(Equal("Type:uint8, Byte: 65"))
+		})
+	})
 })
 
 /* Structs */
@@ -479,4 +523,26 @@ func deferReturn() (i int) {
 		i++
 	}()
 	return 4
+}
+
+/* Misc */
+type rot13Reader struct {
+	r io.Reader
+}
+
+func (r rot13Reader) Read(b []byte) (n int, e error) {
+	/** Named Return Values instead of 'return n,e' */
+	n, e = r.r.Read(b)
+	for i, c := range b {
+		if (c >= 'A' && c < 'N') || (c >= 'a' && c < 'n') {
+			b[i] += 13
+		} else if (c > 'M' && c <= 'Z') || (c > 'm' && c <= 'z') {
+			b[i] -= 13
+		}
+	}
+	return
+}
+
+func swap(a, b string) (string, string) {
+	return b, a
 }

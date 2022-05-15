@@ -15,9 +15,9 @@ goreleaser build --snapshot --rm-dist
 goreleaser release --snapshot --skip-publish --rm-dist
 
 ## Testing
-Testing is handled via Ginkgo. To run all unit tests excluding any integration tests.
+Testing is handled via Ginkgo. To run all unit tests excluding ones require seprate setup.
 
-`ginkgo -r '--label-filter=!it' .`
+`ginkgo -r '--label-filter=!setup' .`
 
 ## FunApp
 Sample Funapp which is rest based app with various tools and tests required as sample.

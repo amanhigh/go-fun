@@ -5,8 +5,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/amanhigh/go-fun/components/learn/tutorial"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"golang.org/x/tour/tree"
 )
 
 var _ = Describe("RoutineFun", func() {
@@ -21,6 +23,30 @@ var _ = Describe("RoutineFun", func() {
 			}
 			time.Sleep(time.Millisecond * 200)
 			Expect(c.Value(key)).To(Equal(500))
+		})
+
+		It("powers safe map", func() {
+			// Safe Map is thread safe
+			mapV := sync.Map{}
+
+			//Add Values
+			mapV.Store("Aman", "Singh")
+			mapV.Store("Foo", "Bar")
+
+			//Read Values
+			val, ok := mapV.Load("Aman")
+			Expect(ok).To(BeTrue())
+			Expect(val).To(Equal("Singh"))
+
+			//Iterate over values
+			mapV.Range(func(key, value any) bool {
+				stringValue := value.(string)
+				Expect(stringValue).To(Not(BeNil()))
+				// fmt.Printf("Key:%v Value:%v\n", key, strings.Split(stringValue, ","))
+				// Indicate to continue iteration
+				return true
+			})
+
 		})
 
 	})
@@ -71,6 +97,11 @@ var _ = Describe("RoutineFun", func() {
 			quit <- 0 //Ask Producter to quit after reading required results.
 			Eventually(c).Should(BeClosed())
 		})
+
+		It("can parallely match Tree", func() {
+			Expect(Same(tree.New(2), tree.New(2))).To(BeTrue())
+			Expect(Same(tree.New(2), tree.New(3))).To(BeFalse())
+		})
 	})
 
 	Context("WaitGroup", func() {
@@ -93,6 +124,14 @@ var _ = Describe("RoutineFun", func() {
 
 			wg.Wait() // Wait For Both Go Rouines are Done.
 			Expect(true).To(BeTrue())
+		})
+	})
+
+	Context("Crawler", func() {
+		It("should crawl", func() {
+			site := "http://golang.org/"
+			urlMap := tutorial.StartCrawl(site)
+			Expect(urlMap.Contains("http://golang.org/pkg/os/")).To(BeTrue())
 		})
 	})
 
@@ -167,4 +206,47 @@ func fibonacciMultiChannel(c, quit chan int) {
 		}
 
 	}
+}
+
+/* Tree */
+
+// Walk walks the tree t sending all values
+// from the tree to the channel ch.
+func Walk(t *tree.Tree, ch chan int) {
+	/** Inorder Traversal if Node is not null */
+	if t != nil {
+		Walk(t.Left, ch)
+		ch <- t.Value
+		Walk(t.Right, ch)
+	}
+}
+
+// Same determines whether the trees
+// t1 and t2 contain the same values.
+func Same(t1, t2 *tree.Tree) bool {
+	//Channels to load Tree Node Values
+	c1 := make(chan int, 5)
+	c2 := make(chan int, 2)
+
+	/** Traverse (Producers) */
+	go func() {
+		Walk(t1, c1)
+		close(c1)
+	}()
+	go func() {
+		Walk(t2, c2)
+		close(c2)
+	}()
+
+	/* Read Channels and Match Values (Consumer) */
+	for y := range c1 {
+		z := <-c2
+		// fmt.Printf("Y:%v Z:%v\n", y, z)
+		if y != z {
+			return false
+		}
+	}
+
+	//All Values matched mark full tree matched
+	return true
 }
