@@ -32,5 +32,5 @@ spec:
               port: 443
 
       # Use the existing istio-ingressgateway.
-      meshExpansion:
-        enabled: true
+      # meshExpansion:
+        # enabled: true
