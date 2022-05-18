@@ -7,7 +7,12 @@ echo -en "\033[1;32m Enabled Istio for Default Namespace \n"
 kubectl label namespace default istio-injection=enabled
 
 echo -en "\033[1;32m Setting Up Kiali \033[0m \n"
-# sleep 10
+helm install --set cr.create=true --set cr.namespace=istio-system \
+--namespace kiali-operator --create-namespace kiali-operator kiali/kiali-operator
+
+# Check Configurations: helm show values kiali/kiali-operator
+# Check Deployment: helm list -n kiali-operator
+
 # kubectl apply -f ./components/kiali.yaml
 # helm install --namespace istio-system --set auth.strategy="anonymous" --repo https://kiali.org/helm-charts kiali-server kiali-server
 
