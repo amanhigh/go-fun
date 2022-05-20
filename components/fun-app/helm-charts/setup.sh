@@ -3,11 +3,11 @@ kubectl label namespace fun-app istio-injection=enabled
 
 echo -en "\033[1;32m Setup Mysql \033[0m \n"
 #TODO: Master Slave Setup
-helm install --set auth.rootPassword=root --set auth.database=compute --set auth.username=aman --set auth.password=aman --wait -n fun-app fun-mysql bitnami/mysql
-helm install --wait -n fun-app fun-mysqladmin bitnami/phpmyadmin
+helm install --set auth.rootPassword=root --set auth.database=compute --set auth.username=aman --set auth.password=aman -n fun-app fun-mysql bitnami/mysql
+helm install -n fun-app fun-mysqladmin bitnami/phpmyadmin
 
 echo -en "\033[1;32m Setup Redis \033[0m \n"
-helm install -n fun-app --set auth.enabled=true --set auth.password="" fun-redis bitnami/redis
+helm install -n fun-app --set auth.enabled=false --set auth.password="" --set replica.replicaCount=1 fun-redis bitnami/redis
 
 
 echo -en "\033[1;32m Setup FunApp \033[0m \n"
