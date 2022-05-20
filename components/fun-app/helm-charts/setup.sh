@@ -3,7 +3,7 @@ kubectl label namespace fun-app istio-injection=enabled
 
 echo -en "\033[1;32m Setup Mysql \033[0m \n"
 #TODO: Master Slave Setup
-helm install --set auth.rootPassword=root --set auth.username=aman --set auth.password=aman --wait -n fun-app fun-mysql bitnami/mysql
+helm install --set auth.rootPassword=root --set auth.database=compute --set auth.username=aman --set auth.password=aman --wait -n fun-app fun-mysql bitnami/mysql
 helm install --wait -n fun-app fun-mysqladmin bitnami/phpmyadmin
 
 
