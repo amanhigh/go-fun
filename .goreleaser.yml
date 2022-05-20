@@ -4,7 +4,7 @@
 # goreleaser build --snapshot --rm-dist
 # goreleaser release --snapshot --skip-publish --rm-dist
 # Tag: Create -> git tag v1.0.3; Delete - > git push --delete origin v1.0.2 (Format v.<Major>.<Minor>.<Patch>)
-# goreleaser release--rm-dist (Publish)
+# goreleaser release --rm-dist (Publish)
 before:
   hooks:
     # You may remove this if you don't use go modules.
