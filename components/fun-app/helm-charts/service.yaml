@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fun-app
+  labels:
+    app: fun-app
+spec:
+  ports:
+  - name: http
+    port: 9000 #Service Port on which its exposed
+    targetPort: 8080 #Connect to Container Port
+  selector:
+    app: fun-app
