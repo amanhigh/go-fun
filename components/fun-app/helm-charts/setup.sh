@@ -6,6 +6,9 @@ echo -en "\033[1;32m Setup Mysql \033[0m \n"
 helm install --set auth.rootPassword=root --set auth.database=compute --set auth.username=aman --set auth.password=aman --wait -n fun-app fun-mysql bitnami/mysql
 helm install --wait -n fun-app fun-mysqladmin bitnami/phpmyadmin
 
+echo -en "\033[1;32m Setup Redis \033[0m \n"
+helm install -n fun-app --set auth.enabled=true --set auth.password="" fun-redis bitnami/redis
+
 
 echo -en "\033[1;32m Setup FunApp \033[0m \n"
 kubectl apply -n fun-app -f .
