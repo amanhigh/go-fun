@@ -30,5 +30,5 @@ spec:
       route:
         - destination:
             port:
-              number: 8000
+              number: 8000 #Port on which Service of App is running
             host: httpbin

@@ -11,7 +11,9 @@ kubectl apply -f $ISTIO_HOME/samples/addons
 
 
 echo -en "\033[1;32m istioctl dashboard kiali \n"
-echo -en "\033[1;32m Kiali: http://localhost:8091/api/v1/namespaces/istio-system/services/kiali:20001/proxy/kiali/ \033[0m \n"
+echo -en "\033[1;32m Kiali: http://localhost:8091/api/v1/namespaces/istio-system/services/kiali:20001/proxy/ \033[0m \n"
+echo -en "\033[1;32m Grafana: http://localhost:8091/api/v1/namespaces/istio-system/services/grafana:3000/proxy/ \033[0m \n"
+echo -en "\033[1;32m Jaeger: http://localhost:8091/api/v1/namespaces/istio-system/services/tracing:80/proxy/ \033[0m \n"
 
 # Helm setup doesn't auto configure with istio etc hence not using for now.
 # echo -en "\033[1;32m Setting Up Kiali \033[0m \n"
