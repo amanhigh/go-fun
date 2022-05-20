@@ -1,9 +1,9 @@
 minikube profile minikube
 
-# Clean Kiali
-kubectl delete kiali --all --all-namespaces
-helm uninstall --namespace kiali-operator kiali-operator
-kubectl delete crd kialis.kiali.io
+# Clean Kiali (via Helm)
+# kubectl delete kiali --all --all-namespaces
+# helm uninstall --namespace kiali-operator kiali-operator
+# kubectl delete crd kialis.kiali.io
 
 # Remove Istio Objects
 istioctl x uninstall -y --purge
