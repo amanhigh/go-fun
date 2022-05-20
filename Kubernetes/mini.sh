@@ -29,3 +29,4 @@ kubectl proxy --port=$PORT
 # Login - kubectl -it exec `kubectl get pods -o name | grep fun-app | head  -1` bash
 # Delete All - kubectl delete all --all
 # Tunnel (Emulate Load Balancer) - minikube tunnel
+# List Emulated Services URL's - minikube service list
