@@ -54,7 +54,7 @@ var _ = Describe("Generic", func() {
 		})
 
 		It("should get values for float", func() {
-			Expect(maps.Values(floats)).To(Equal([]float64{35.98, 26.99}))
+			Expect(maps.Values(floats)).To(ContainElements([]float64{35.98, 26.99}))
 		})
 	})
 
