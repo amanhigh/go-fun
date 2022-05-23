@@ -24,9 +24,12 @@ Sample Funapp which is rest based app with various tools and tests required as s
 
 By default it runs without any dependencies with in memory [sqlite3](https://github.com/mattn/go-sqlite3) database which can be configured via ENV Variables.
 
+
 ------
 ### Direct Run
-`go run ./components/fun-app/`
+`go run ./components/fun-app/` 
+
+<br/> ![](common/images/fun-app/go-run.gif)
 
 ### Docker Run
 `docker run amanfdk/fun-app`
@@ -50,4 +53,3 @@ Install via Helm Coming Soon ...
 - Message Queue
 - Traces
 - Swagger
-- 
