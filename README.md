@@ -31,14 +31,18 @@ By default it runs without any dependencies with in memory [sqlite3](https://git
 
 <br/> ![](common/images/fun-app/go-run.gif)
 
+### Vscode Run
+* Checkout Code
+* Run FunApp Test Configuration
+* Configure [ENV](components/fun-app/.env) if required
+
+<br/> ![](common/images/fun-app/vscode-run.gif)
+
 ### Docker Run
 `docker run amanfdk/fun-app`
 <br/>
 [Docker Hub](https://hub.docker.com/r/amanfdk/fun-app)
 
-### Vscode Run
-* Checkout Code
-* Run FunApp Test Configuration
 
 ### K8/Istio Run
 - Setup K8/Istio Cluster
