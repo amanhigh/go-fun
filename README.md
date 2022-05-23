@@ -24,14 +24,21 @@ Sample Funapp which is rest based app with various tools and tests required as s
 
 By default it runs without any dependencies with in memory [sqlite3](https://github.com/mattn/go-sqlite3) database which can be configured via ENV Variables.
 
+
 ------
 ### Direct Run
-`go run ./components/fun-app/`
+`go run ./components/fun-app/` 
+
+<br/> ![](common/images/fun-app/go-run.gif)
 
 ### Docker Run
 `docker run amanfdk/fun-app`
 <br/>
 [Docker Hub](https://hub.docker.com/r/amanfdk/fun-app)
+
+### Vscode Run
+* Checkout Code
+* Run FunApp Test Configuration
 
 ### K8/Istio Run
 - Setup K8/Istio Cluster
@@ -41,3 +48,8 @@ By default it runs without any dependencies with in memory [sqlite3](https://git
 - Clenup Using: `./components/fun-app/helm-charts/clean.sh`
 
 Install via Helm Coming Soon ...
+
+## TODO
+- Message Queue
+- Traces
+- Swagger

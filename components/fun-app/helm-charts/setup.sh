@@ -15,3 +15,9 @@ kubectl apply -n fun-app -f .
 
 echo -en "\033[1;32m MysqlAdmin: http://localhost:8091/api/v1/namespaces/fun-app/services/fun-mysqladmin-phpmyadmin:80/proxy/index.php?server=fun-mysql \033[0m \n"
 echo -en "\033[1;32m FunApp: http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy/metrics \033[0m \n"
+
+
+
+### Helpful Commands
+# helm init fun-app - Bootstrap Charts
+
