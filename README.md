@@ -33,6 +33,10 @@ By default it runs without any dependencies with in memory [sqlite3](https://git
 <br/>
 [Docker Hub](https://hub.docker.com/r/amanfdk/fun-app)
 
+### Vscode Run
+* Checkout Code
+* Run FunApp Test Configuration
+
 ### K8/Istio Run
 - Setup K8/Istio Cluster
 
@@ -41,3 +45,9 @@ By default it runs without any dependencies with in memory [sqlite3](https://git
 - Clenup Using: `./components/fun-app/helm-charts/clean.sh`
 
 Install via Helm Coming Soon ...
+
+## TODO
+- Message Queue
+- Traces
+- Swagger
+- 

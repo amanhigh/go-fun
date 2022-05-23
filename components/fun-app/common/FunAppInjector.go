@@ -52,6 +52,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	engine := gin.New()
 
 	/* Access Metrics */
+	// TODO: Ingest to Prometheus and configure in helm
 	//Visit http://localhost:8080/metrics
 	prometheus := ginprometheus.NewPrometheus("gin_access")
 	prometheus.ReqCntURLLabelMappingFn = metrics2.AccessMetrics
