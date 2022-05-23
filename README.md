@@ -6,7 +6,7 @@
 
 
 # Go Fun
-Experiments and Fun Go Lang and Frameworks. Also includes tools like docker, k8, istio and perf (wrk)
+Experiments & Fun  with Go Lang and its Frameworks. Also includes tools like docker, k8, istio, observability, and perf.
 
 ## Build
 Use goreleaser for build test. [Install](https://goreleaser.com/install/) if not already installed
