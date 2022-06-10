@@ -12,6 +12,7 @@ var _ = Describe("Primality", func() {
 		Expect(cracking.IsPrime(7)).To(BeTrue())
 		Expect(cracking.IsPrime(13)).To(BeTrue())
 
+		Expect(cracking.IsPrimeSmart(2)).To(BeTrue())
 		Expect(cracking.IsPrimeSmart(7)).To(BeTrue())
 		Expect(cracking.IsPrimeSmart(13)).To(BeTrue())
 	})
@@ -20,6 +21,7 @@ var _ = Describe("Primality", func() {
 		Expect(cracking.IsPrime(8)).To(BeFalse())
 		Expect(cracking.IsPrime(15)).To(BeFalse())
 
+		Expect(cracking.IsPrimeSmart(1)).To(BeFalse())
 		Expect(cracking.IsPrimeSmart(8)).To(BeFalse())
 		Expect(cracking.IsPrimeSmart(15)).To(BeFalse())
 	})
