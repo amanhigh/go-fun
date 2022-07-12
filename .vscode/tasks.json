@@ -9,6 +9,8 @@
             "command": "ginkgo",
             "args": [
                 "-r",
+                "--cover",
+                "--output-dir=/tmp",
                 "--race",
                 "${fileDirname}"
             ],
