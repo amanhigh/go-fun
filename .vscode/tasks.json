@@ -31,15 +31,16 @@
             "args": [
                 "tool",
                 "cover",
-                "-func=/tmp/cover",
+                "-func=/tmp/cover"
             ],
             "group": {
-                "kind": "build",
+                "kind": "test",
                 "isDefault": true
             },
             "dependsOn": [
                 "ginkgo"
-            ]
+            ],
+            "problemMatcher": []
         }
     ]
 }
