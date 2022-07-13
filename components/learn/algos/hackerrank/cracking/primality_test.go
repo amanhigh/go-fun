@@ -15,6 +15,8 @@ var _ = Describe("Primality", func() {
 		Expect(cracking.IsPrimeSmart(2)).To(BeTrue())
 		Expect(cracking.IsPrimeSmart(7)).To(BeTrue())
 		Expect(cracking.IsPrimeSmart(13)).To(BeTrue())
+
+		Expect(cracking.IsPrimeSmart(73)).To(BeTrue())
 	})
 
 	It("should be false for non prime numbers", func() {
@@ -24,6 +26,8 @@ var _ = Describe("Primality", func() {
 		Expect(cracking.IsPrimeSmart(1)).To(BeFalse())
 		Expect(cracking.IsPrimeSmart(8)).To(BeFalse())
 		Expect(cracking.IsPrimeSmart(15)).To(BeFalse())
+
+		Expect(cracking.IsPrimeSmart(25)).To(BeFalse())
 	})
 
 })
