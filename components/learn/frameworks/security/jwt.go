@@ -2,47 +2,14 @@ package security
 
 import (
 	"crypto"
-	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"fmt"
-	"github.com/dgrijalva/jwt-go"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
-
-func JwtFun() {
-	//Generate RSA Key Pair
-	privateKey, _ := rsa.GenerateKey(rand.Reader, 2048)
-	publicKey := privateKey.Public()
-
-	//Marshal to Private Key To PEM Format
-	privatekeyPem := MarshalPrivateKey(privateKey)
-	fmt.Println("Private Pem", string(privatekeyPem))
-
-	//Unmarshal Private Key Pem
-	privateKey, _ = UnmarshalRSAPrivateKey(string(privatekeyPem))
-
-	//Marshal to Public Key PEM Format
-	pubkeyPem := MarshalPublicKey(publicKey)
-	fmt.Println("Public Pem", string(pubkeyPem))
-
-	//Unmarshal Public Key Pem
-	publicKey, _ = UnmarshalRSAPublicKey(string(pubkeyPem))
-
-	//Generate Token String
-	tokenString, err := GenerateToken(privateKey)
-	fmt.Println("JwtToken", tokenString, err)
-
-	//Parse Token
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (i any, err error) {
-		return publicKey, nil
-	})
-
-	claims := token.Claims.(jwt.MapClaims)
-	fmt.Println("ParsedToken", claims["purpose"], claims, claims.Valid(), err)
-}
 
 func GenerateToken(privateKey *rsa.PrivateKey) (string, error) {
 	// Create a new token object, specifying signing method and the claims
