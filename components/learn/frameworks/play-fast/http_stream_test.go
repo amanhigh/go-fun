@@ -38,7 +38,7 @@ func stream(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		for i := 0; i < 10; i++ {
-			fmt.Fprint(w, fmt.Sprintf("data: Streaming - %v\n\n", i))
+			fmt.Fprintf(w, "data: Streaming - %v\n\n", i)
 			f.Flush()
 			time.Sleep(time.Second)
 		}
