@@ -9,13 +9,11 @@
             "command": "ginkgo",
             "args": [
                 "-r",
+                "--coverprofile=cover",
+                "--output-dir=/tmp",
                 "--race",
                 "${fileDirname}"
             ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -24,9 +22,25 @@
                 "showReuseMessage": true,
                 "clear": true
             },
-            "problemMatcher": {
-                "owner": "go",
-            }
+            "problemMatcher": []
+        },
+        {
+            "label": "cover",
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "tool",
+                "cover",
+                "-func=/tmp/cover"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "dependsOn": [
+                "ginkgo"
+            ],
+            "problemMatcher": []
         }
     ]
 }

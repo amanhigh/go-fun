@@ -6,8 +6,7 @@ Each iteration Bubble Largest Element to end of array
 
 Time: n^2, Space: O(1)
 */
-func BubbleSort(ints []int, n int) ([]int, int) {
-	swapCount := 0
+func BubbleSort(ints []int, n int) (swapCount int) {
 	for i := 0; i < n; i++ {
 		for j := i; j < n; j++ {
 			if ints[i] > ints[j] {
@@ -16,5 +15,5 @@ func BubbleSort(ints []int, n int) ([]int, int) {
 			}
 		}
 	}
-	return ints, swapCount
+	return
 }

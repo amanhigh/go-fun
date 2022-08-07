@@ -1,4 +1,4 @@
-package stringer
+package generate
 
 //go:generate stringer -type=Pill
 

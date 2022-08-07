@@ -57,12 +57,13 @@ var _ = Describe("RoutineFun", func() {
 			/** With Buffer 2 now will work even if no goroutine is used
 			  as now two responses can be buffered hence single thread won't block.
 			*/
-			iChannel := make(chan int, 2)
+			iCh1 := make(chan int, 1)
+			iCh2 := make(chan int, 1)
 			mid := len(ints) / 2
-			go sumOnChannel(ints[:mid], iChannel)
-			go sumOnChannel(ints[mid:], iChannel)
+			go sumOnChannel(ints[:mid], iCh1)
+			go sumOnChannel(ints[mid:], iCh2)
 
-			secondHalfSum, firstHalfSum := <-iChannel, <-iChannel
+			firstHalfSum, secondHalfSum := <-iCh1, <-iCh2
 			Expect(firstHalfSum).To(Equal(17))
 			Expect(secondHalfSum).To(Equal(-5))
 		})

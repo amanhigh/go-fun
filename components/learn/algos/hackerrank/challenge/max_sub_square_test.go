@@ -52,6 +52,19 @@ var _ = Describe("MaxSubSquare", func() {
 		Expect(coordinates).To(Equal([]int{1, 1, 3, 3}))
 	})
 
+	It("should compute brute force", func() {
+		input := [][]int{
+			{1, 2, -1, -4, -20},
+			{-8, -3, 4, 2, 1},
+			{3, 8, 10, 1, 3},
+			{-4, -1, 1, 7, -6},
+		}
+		coordinates, sum := challenge.MaximumSumSubRectangleBruteForce(input, 4, 5)
+		/* Top,Left,Bottom,Right = 1,1,2,2 */
+		Expect(sum).To(Equal(29))
+		Expect(coordinates).To(Equal([]int{1, 1, 3, 3}))
+	})
+
 })
 
 func readInput(scanner *bufio.Scanner) (n, m int, matrix [][]int) {

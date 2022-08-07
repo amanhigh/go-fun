@@ -1,39 +1,44 @@
 {
     "configurations": [
         {
+            "name": "Experiment",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/components/learn/experiment.go",
+            "args": [],
+            "showLog": true
+        },
+        {
             "name": "FunApp",
             "type": "go",
-            "request": "launch", 
+            "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/components/fun-app",
-            "args": [
-            ],
+            "args": [],
             "envFile": "${workspaceFolder}/components/fun-app/.env",
             "showLog": true
         },
         {
             "name": "FunApp (RateLimit)",
             "type": "go",
-            "request": "launch", 
+            "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/components/fun-app",
-            "args": [
-            ],
+            "args": [],
             "env": {
-              "REDIS_RATE_LIMIT":"docker"
+                "REDIS_RATE_LIMIT": "docker"
             },
             "showLog": true
         },
         {
             "name": "Kohan",
             "type": "go",
-            "request": "launch", 
+            "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/components/kohan",
-            "args": [
-            ],
-            "env": {
-            },
+            "args": [],
+            "env": {},
             "showLog": true
         },
     ]
