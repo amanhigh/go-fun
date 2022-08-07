@@ -22,6 +22,9 @@ var _ = Describe("Small", func() {
 	It("should KangaroMeet", func() {
 		Expect(cracking.KangarooMeet([]int{0, 3, 4, 2})).To(BeTrue())
 		Expect(cracking.KangarooMeet([]int{0, 2, 5, 3})).To(BeFalse())
+
+		// Same Speed
+		Expect(cracking.KangarooMeet([]int{0, 2, 2, 2})).To(BeFalse())
 	})
 
 	It("should Left Rotate", func() {

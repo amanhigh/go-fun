@@ -2,11 +2,12 @@ package play_fast_test
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/go-resty/resty/v2"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"net/http"
-	"strconv"
 )
 
 var _ = Describe("File Server", func() {

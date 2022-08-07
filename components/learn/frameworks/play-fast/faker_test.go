@@ -1,10 +1,11 @@
-package faker
+package play_fast
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/bxcodec/faker/v3"
 	"reflect"
+
+	"github.com/bxcodec/faker/v3"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 // SomeStructWithTags ...
@@ -64,10 +65,10 @@ type SomeStructWithTags struct {
 	UInt32 uint32 `faker:"boundary_start=0, boundary_end=40"`
 	UInt64 uint64 `faker:"boundary_start=14, boundary_end=50"`
 
-	ASString []string          `faker:"len=50"`
-	SString  string            `faker:"len=25"`
-	MSString map[string]string `faker:"len=30"`
-	MIint    map[int]int       `faker:"boundary_start=5, boundary_end=10"`
+	StringArray  []string          `faker:"len=50"`
+	SingleString string            `faker:"len=25"`
+	StringMap    map[string]string `faker:"len=30"`
+	IntMap       map[int]int       `faker:"boundary_start=5, boundary_end=10"`
 
 	UniqueWord string `faker:"word,unique"`
 
@@ -121,22 +122,48 @@ func CustomGenerator() {
 	})
 }
 
-func FakerFun() {
-	a := SomeStructWithTags{}
-	err := faker.FakeData(&a)
-	if err != nil {
-		fmt.Println(err)
-	}
-	bytes, _ := json.MarshalIndent(a, "", "\t")
-	fmt.Println(string(bytes))
+var _ = Describe("Faker", func() {
 
-	fmt.Println("Custom Generation")
-	CustomGenerator()
-	var sample Sample
-	if err := faker.FakeData(&sample); err == nil {
-		fmt.Println(sample)
-	} else {
-		fmt.Println(err)
-	}
+	var (
+		err error
+	)
 
-}
+	Context("Default", func() {
+		var data = SomeStructWithTags{}
+
+		BeforeEach(func() {
+			err = faker.FakeData(&data)
+			Expect(err).To(BeNil())
+		})
+
+		It("should generate data", func() {
+			Expect(data.Email).To(Not(BeNil()))
+			Expect(data.Date).To(Not(BeNil()))
+			Expect(data.Date).To(Not(BeNil()))
+
+			// bytes, _ := json.MarshalIndent(data, "", "	")
+			// fmt.Println(string(bytes))
+		})
+
+		It("should generate nested data", func() {
+			Expect(data.NestedStruct.Number).To(Not(BeNil()))
+			Expect(data.NestedStruct.AnotherStruct.Image).To(Not(BeNil()))
+		})
+	})
+
+	Context("Custom", func() {
+		var data = Sample{}
+		BeforeEach(func() {
+			CustomGenerator()
+			err = faker.FakeData(&data)
+			Expect(err).To(BeNil())
+		})
+
+		It("should generate", func() {
+			Expect(data.ID).To(Equal(int64(43)))
+			Expect(data.Danger).To(Equal("danger-ranger"))
+			Expect(data.Gondoruwo.Name).To(Equal("Power"))
+			Expect(data.Gondoruwo.Locatadata).To(Equal(324))
+		})
+	})
+})
