@@ -15,7 +15,7 @@ helm install -n fun-app --set auth.enabled=false --set auth.password="" --set re
 echo -en "\033[1;33m K9S Shell to master, 'redis-cli' OR 'redis-cli -h fun-redis-master-0'/fun-redis-replicas \033[0m \n"
 
 echo -en "\033[1;32m Setup FunApp \033[0m \n"
-helm install -n fun-app fun-app .
+helm install -n fun-app fun-app . --set rateLimit.perMin=150
 echo -en "\033[1;33m FunApp: http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy/metrics \033[0m \n"
 
 ### Helpful Commands
@@ -24,8 +24,8 @@ echo -en "\033[1;33m FunApp: http://localhost:8091/api/v1/namespaces/fun-app/ser
 # helm lint . - Check Errors
 
 
-# helm install -n <Namespace> <Chart Name> .
-# helm upgrade -n <Namespace> <Chart Name> .
+# helm install -n <Namespace> <Chart Name> . [--set <key>=<value>]
+# helm upgrade -n <Namespace> <Chart Name> . [--set <key>=<value>]
 
 # helm status -n <Namespace> <Chart Name>
 # helm history -n <Namespace> <Chart Name>

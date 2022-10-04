@@ -24,16 +24,16 @@ spec:
             - containerPort: 8080 # Port on Which App Runs
           env:
             - name: DB_URL
-              value: {{ .Values.service.db_url | quote }}
+              value: {{ .Values.service.dbUrl | quote }}
             - name: HTTP_REQUEST_TIMEOUT
-              value: {{ .Values.service.request_timeout | default "2s" }}
+              value: {{ .Values.service.requestTimeout | default "2s" }}
             - name: HTTP_IDLE_CONNECTION_TIMEOUT
-              value: {{ .Values.service.idle_connection_timeout | default "60s" }}
-            {{- if .Values.rate_limit }}
-            - name: REDIS_RATE_LIMIT
-              value: {{ .Values.rate_limit.redis }}
+              value: {{ .Values.service.idle_connectionTimeout | default "60s" }}
+            {{- if .Values.rateLimit }}
+            - name: REDIS_rateLimit
+              value: {{ .Values.rateLimit.redis }}
             - name: PER_MIN_LIMIT
-              value: "{{ .Values.rate_limit.per_min }}"
+              value: "{{ .Values.rateLimit.perMin }}"
             {{- end }}
           readinessProbe: #Probe to test if Pod is Up
             httpGet:
