@@ -6,7 +6,6 @@ service:
   # requestTimeout: 2s
   # idle_connectionTimeout: 60s
 
-# Try Rate Limit: http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy/person/amanhttp://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy/person/aman
 rateLimit:
   redis: fun-redis-master:6379
   perMin: 300
