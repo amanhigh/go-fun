@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: fun-app
 spec:
-  replicas: 1 #Cound of App Pods
+  replicas: {{ .Values.replicaCount }} #Cound of App Pods
   selector:
     matchLabels:
       app: fun-app
@@ -30,10 +30,9 @@ spec:
             - name: HTTP_IDLE_CONNECTION_TIMEOUT
               value: 60s
             - name: REDIS_RATE_LIMIT
-              value: fun-redis-master:6379
-              # Try Rate Limit: http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy/person/amanhttp://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy/person/aman
+              value: {{ .Values.rate_limit.redis }}
             - name: PER_MIN_LIMIT
-              value: "300"
+              value: "{{ .Values.rate_limit.per_min }}"
           readinessProbe: #Probe to test if Pod is Up
             httpGet:
               port: 8080

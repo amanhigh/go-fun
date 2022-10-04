@@ -15,10 +15,8 @@ helm install -n fun-app --set auth.enabled=false --set auth.password="" --set re
 echo -en "\033[1;33m K9S Shell to master, 'redis-cli' OR 'redis-cli -h fun-redis-master-0'/fun-redis-replicas \033[0m \n"
 
 echo -en "\033[1;32m Setup FunApp \033[0m \n"
-kubectl apply -n fun-app -f .
+helm install -n fun-app fun-app .
 echo -en "\033[1;33m FunApp: http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy/metrics \033[0m \n"
-
-
 
 ### Helpful Commands
 # helm init fun-app - Bootstrap Charts
