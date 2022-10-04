@@ -14,12 +14,9 @@ echo -en "\033[1;32m Setup Redis \033[0m \n"
 helm install -n fun-app --set auth.enabled=false --set auth.password="" --set replica.replicaCount=1 fun-redis bitnami/redis > /dev/null
 echo -en "\033[1;33m K9S Shell to master, 'redis-cli' OR 'redis-cli -h fun-redis-master-0'/fun-redis-replicas \033[0m \n"
 
-
-
 echo -en "\033[1;32m Setup FunApp \033[0m \n"
-# kubectl apply -n fun-app -f .
-
-# echo -en "\033[1;32m FunApp: http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy/metrics \033[0m \n"
+kubectl apply -n fun-app -f .
+echo -en "\033[1;33m FunApp: http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy/metrics \033[0m \n"
 
 
 
