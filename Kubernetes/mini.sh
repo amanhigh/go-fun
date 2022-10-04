@@ -31,6 +31,10 @@ kubectl proxy --port=$PORT
 # Switch Namespace :po <namespace> to see pods of that namespace
 # Portforward: Select Pod, Shift+f (Create PF), f (Show PF)
 
+## kompose: brew install kompose
+# Convert:  kompose convert -f jira.yml
+# Apply: kubectl apply $(ls jira*.yaml | awk ' { print " -f " $NF } ')
+
 # Helpful Commands
 # Docker Start: sudo service docker start
 # Docker Image to Minikube: eval $(minikube docker-env); docker build -t fun-app .
