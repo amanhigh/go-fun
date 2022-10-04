@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"context"
+	"net/http"
+	"time"
+
 	util2 "github.com/amanhigh/go-fun/common/util"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-	"net/http"
-	"time"
 )
 
 type FunServer struct {
@@ -35,6 +36,8 @@ func (self *FunServer) initRoutes() {
 	//go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile
 	//go tool pprof -http=:8001 http://localhost:8080/debug/pprof/heap
 	//Load Test:  wrk2 http://localhost:8080/person/all/ -t 2 -c 100 -d 1m -R2000
+	//Vegeta: echo "GET http://localhost:9000/person/all" | vegeta attack -max-workers=2 -max-connections=100 -duration=1m -rate=2000/1s | tee results.bin | vegeta report
+	//Vegeta Plot: vegeta plot results.bin > ~/Downloads/plot.html
 	pprof.Register(self.GinEngine)
 }
 
