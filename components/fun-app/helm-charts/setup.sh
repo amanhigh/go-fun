@@ -20,4 +20,18 @@ echo -en "\033[1;33m FunApp: http://localhost:8091/api/v1/namespaces/fun-app/ser
 
 ### Helpful Commands
 # helm init fun-app - Bootstrap Charts
+# helm template . - Preview Charts with Values
+# helm lint . - Check Errors
+
+
+# helm install -n <Namespace> <Chart Name> .
+# helm upgrade -n <Namespace> <Chart Name> .
+
+# helm status -n <Namespace> <Chart Name>
+# helm history -n <Namespace> <Chart Name>
+# helm rollback -n <Namespace> <Chart Name> [Revision]
+# helm delete -n <Namespace> <Chart Name>
+
+# helm list -n <Namespace>
+
 
