@@ -9,5 +9,6 @@ spec:
   - name: http
     port: {{ .Values.service.port }} #Service Port on which its exposed
     targetPort: 8080 #Connect to Container Port
+  type: LoadBalancer
   selector:
     app: fun-app
