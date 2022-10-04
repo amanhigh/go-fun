@@ -1,4 +1,6 @@
 Metrics: http://localhost:9000/metrics
 
-Try Rate Limit: http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy/person/amanhttp://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy/person/aman
+{{- if .Values.rateLimit }}
+Try Rate Limit: http://localhost:9000/person/aman
 Current Rate Limit: {{ .Values.rateLimit.perMin }}
+{{- end }}
