@@ -29,10 +29,12 @@ spec:
               value: 2s
             - name: HTTP_IDLE_CONNECTION_TIMEOUT
               value: 60s
+            {{- if .Values.rate_limit }}
             - name: REDIS_RATE_LIMIT
               value: {{ .Values.rate_limit.redis }}
             - name: PER_MIN_LIMIT
               value: "{{ .Values.rate_limit.per_min }}"
+            {{- end }}
           readinessProbe: #Probe to test if Pod is Up
             httpGet:
               port: 8080
