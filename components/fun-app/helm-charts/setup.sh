@@ -1,6 +1,6 @@
 kubectl create ns fun-app
-# TODO: enable istio
-#kubectl label namespace fun-app istio-injection=enabled
+echo -en "\033[1;32m Istio Enabled \033[0m \n"
+kubectl label namespace fun-app istio-injection=enabled
 
 echo -en "\033[1;32m Setup Mysql \033[0m \n"
 #TODO: Master Slave Setup
