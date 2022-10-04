@@ -41,7 +41,7 @@ var GinRequestIdFormatter = func(param gin.LogFormatterParams) string {
 		param.ClientIP,
 		methodColor, param.Method, resetColor,
 		param.Path,
-		param.Keys["X-Request-ID"],
+		param.Keys[models2.XRequestID],
 		param.ErrorMessage,
 	)
 }
