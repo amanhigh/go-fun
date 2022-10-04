@@ -1,5 +1,6 @@
+helm delete -n fun-app fun-mysqladmin
 helm delete -n fun-app fun-mysql
-helm delete -n fun-app fu-redis
+helm delete -n fun-app fun-redis
 # kubectl delete -n fun-app -f .
 
 
