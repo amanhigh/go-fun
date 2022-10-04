@@ -3,6 +3,8 @@
 service:
   port: 9000
   db_url: "aman:aman@tcp(fun-mysql:3306)/compute?charset=utf8&parseTime=True&loc=Local"
+  # request_timeout: 2s
+  # idle_connection_timeout: 60s
 
 # Try Rate Limit: http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy/person/amanhttp://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy/person/aman
 rate_limit:

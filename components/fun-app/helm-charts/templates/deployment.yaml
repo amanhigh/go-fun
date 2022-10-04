@@ -24,11 +24,11 @@ spec:
             - containerPort: 8080 # Port on Which App Runs
           env:
             - name: DB_URL
-              value: {{ .Values.service.db_url}}
+              value: {{ .Values.service.db_url | quote }}
             - name: HTTP_REQUEST_TIMEOUT
-              value: 2s
+              value: {{ .Values.service.request_timeout | default "2s" }}
             - name: HTTP_IDLE_CONNECTION_TIMEOUT
-              value: 60s
+              value: {{ .Values.service.idle_connection_timeout | default "60s" }}
             {{- if .Values.rate_limit }}
             - name: REDIS_RATE_LIMIT
               value: {{ .Values.rate_limit.redis }}
