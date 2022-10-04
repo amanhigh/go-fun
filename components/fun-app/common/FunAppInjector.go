@@ -59,7 +59,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	prometheus.Use(engine)
 
 	/* Middleware */
-	engine.Use(gin.Logger(), gin.Recovery(), metrics2.RequestId)
+	engine.Use(gin.Recovery(), metrics2.RequestId, gin.LoggerWithFormatter(metrics2.GinRequestIdFormatter))
 
 	/* Enable Rate Limit if Redis Host is supplied */
 	if self.config.RateLimit.RedisHost != "" {
@@ -124,11 +124,7 @@ func initDb(dbConfig config2.Db) (db *gorm.DB) {
 	var err error
 
 	/* Create Test DB or connect to provided DB */
-	if dbConfig.Url == "" {
-		db, err = util2.CreateTestDb()
-	} else {
-		db, err = util2.CreateDbConnection(dbConfig)
-	}
+	db, err = util2.CreateDbConnection(dbConfig)
 
 	/* Migrate DB */
 	if err == nil && dbConfig.AutoMigrate {
