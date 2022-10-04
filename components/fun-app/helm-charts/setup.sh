@@ -4,8 +4,9 @@ kubectl create ns fun-app
 
 echo -en "\033[1;32m Setup Mysql \033[0m \n"
 #TODO: Master Slave Setup
-# helm install --set auth.rootPassword=root --set auth.database=compute --set auth.username=aman --set auth.password=aman -n fun-app fun-mysql bitnami/mysql
+helm install --set auth.rootPassword=root --set auth.database=compute --set auth.username=aman --set auth.password=aman -n fun-app fun-mysql bitnami/mysql > /dev/null
 # helm install -n fun-app fun-mysqladmin bitnami/phpmyadmin
+echo -en "\033[1;33m K9S Shell to master, 'mysql -u root -p compute' (Password: root) \033[0m \n"
 
 echo -en "\033[1;32m Setup Redis \033[0m \n"
 helm install -n fun-app --set auth.enabled=false --set auth.password="" --set replica.replicaCount=1 fun-redis bitnami/redis > /dev/null
