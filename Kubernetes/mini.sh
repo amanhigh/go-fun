@@ -29,7 +29,7 @@ kubectl proxy --port=$PORT;
 
 ## k9s
 # k9s --readonly , -n <namespace>, -l <loglevel>
-# k9s :pu (pulse), :dp (deployments), :po (pods), :ns (namespace),:rb (Role Bindings) ,:a (aliases)
+# k9s :pu (pulse), :dp (deployments), :po (pods), :ns (namespace),:rb (Role Bindings) ,:a (aliases), :hpa (autoscaler)
 # Switch Namespace :po <namespace> to see pods of that namespace
 # Portforward: Select Pod, Shift+f (Create PF), f (Show PF)
 
