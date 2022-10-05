@@ -19,6 +19,7 @@ autoscaling:
   maxReplicas: 3
   cpuPercentage: 70
   memoryPercentage: 80
+  scaleDownWindowSeconds: 60 #Time to scaledown post resource usage below limits
 
 mysql:
   auth:

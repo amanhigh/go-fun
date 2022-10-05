@@ -31,9 +31,9 @@ spec:
               cpu: "400m" # 1 Virtual Core = 1000m (Millicores)
           env:
             - name: DB_URL
-              value: {{ .Values.service.dbUrl | quote }}
+              value: {{ .Values.service.dbUrl | quote }} #Adds Quotes if Missing
             - name: HTTP_REQUEST_TIMEOUT
-              value: {{ .Values.service.requestTimeout | default "2s" }}
+              value: {{ .Values.service.requestTimeout | default "2s" }} #Adds Default Values if Missing
             - name: HTTP_IDLE_CONNECTION_TIMEOUT
               value: {{ .Values.service.idle_connectionTimeout | default "60s" }}
             {{- if .Values.rateLimit }}

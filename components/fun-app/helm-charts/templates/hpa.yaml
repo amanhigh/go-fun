@@ -23,4 +23,7 @@ spec:
         target:
           type: Utilization
           averageUtilization: {{ .Values.autoscaling.memoryPercentage }}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: {{ .Values.autoscaling.scaleDownWindowSeconds }}
 {{- end }}
