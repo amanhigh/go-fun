@@ -3,7 +3,6 @@ echo -en "\033[1;32m Istio Enabled \033[0m \n"
 kubectl label namespace fun-app istio-injection=enabled
 
 echo -en "\033[1;32m Setup Mysql \033[0m \n"
-#TODO: Master Slave Setup
 # helm install --set auth.rootPassword=root --set auth.database=compute --set auth.username=aman --set auth.password=aman -n fun-app fun-mysql bitnami/mysql > /dev/null
 echo -en "\033[1;33m K9S Shell to master, 'mysql -u root -p compute' (Password: root) \033[0m \n"
 echo -en "\033[1;33m MysqlAdmin: http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app-phpmyadmin:80/proxy/index.php?server=fun-app-mysql \033[0m \n"

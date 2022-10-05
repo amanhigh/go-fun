@@ -27,6 +27,8 @@ mysql:
     database: compute
     username: aman
     password: aman
+    replicationPassword: copy
+  architecture: replication
 
 redis:
   auth:
