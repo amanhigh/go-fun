@@ -13,13 +13,11 @@ rateLimit:
 
 replicaCount: 1
 
-# TODO: Apply Autoscale
 autoscaling:
-  enabled: false
   minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
+  maxReplicas: 3
+  cpuPercentage: 70
+  memoryPercentage: 80
 
 mysql:
   auth:
