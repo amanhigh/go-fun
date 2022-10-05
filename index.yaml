@@ -1,0 +1,24 @@
+apiVersion: v1
+entries:
+  fun-app:
+  - apiVersion: v2
+    appVersion: 1.0.2
+    created: "2022-10-05T09:53:43.464574617Z"
+    dependencies:
+    - name: mysql
+      repository: '@bitnami'
+      version: ^9.3
+    - name: phpmyadmin
+      repository: '@bitnami'
+      version: ^10.3
+    - name: redis
+      repository: '@bitnami'
+      version: ^17.3
+    description: App build on Go to Have Fun and Learn
+    digest: 1ab2a14776979c3244a7a05d915f4850dd74ecc3dbe7fef2ff7238514ab5df23
+    name: fun-app
+    type: application
+    urls:
+    - https://github.com/amanhigh/go-fun/releases/download/fun-app-1.0.0/fun-app-1.0.0.tgz
+    version: 1.0.0
+generated: "2022-10-05T09:53:43.464586118Z"
