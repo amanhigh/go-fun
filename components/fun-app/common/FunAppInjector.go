@@ -124,7 +124,11 @@ func initDb(dbConfig config2.Db) (db *gorm.DB) {
 	var err error
 
 	/* Create Test DB or connect to provided DB */
-	db, err = util2.CreateDbConnection(dbConfig)
+	if dbConfig.Url == "" {
+		db, err = util2.CreateTestDb()
+	} else {
+		db, err = util2.CreateDbConnection(dbConfig)
+	}
 
 	/* Migrate DB */
 	if err == nil && dbConfig.AutoMigrate {
