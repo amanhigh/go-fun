@@ -17,6 +17,8 @@ minikube -p minikube dashboard --url=true &
 
 minikube addons enable metrics-server
 
+./istio/istio.sh
+
 echo -en "\033[1;33m Run 'minikube tunnel’ for Emulating ELB\033[0m \n"
 echo -en "\033[1;32m Dashboard: http://localhost:$PORT/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/# \033[0m \n"
 echo -en "\033[1;32m Swagger: http://localhost:$PORT/swagger-ui \033[0m \n"
