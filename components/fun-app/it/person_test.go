@@ -2,6 +2,7 @@ package it_test
 
 import (
 	"fmt"
+
 	clients2 "github.com/amanhigh/go-fun/common/clients"
 	db2 "github.com/amanhigh/go-fun/models/fun-app/db"
 	server2 "github.com/amanhigh/go-fun/models/fun-app/server"
@@ -12,6 +13,7 @@ import (
 
 var _ = Describe("Person Integration Test", func() {
 	var (
+		// serviceUrl = "http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy" //K8 endpoint or do PF on 8080 using K9S
 		serviceUrl = "http://localhost:8080"
 		request    server2.PersonRequest
 

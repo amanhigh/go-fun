@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fun-app
+spec:
+  replicas: {{ .Values.replicaCount }} #Cound of App Pods
+  selector:
+    matchLabels:
+      app: fun-app
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: fun-app #Name of App
+        version: v1 #Version of this Deployment
+    spec:
+      serviceAccountName: fun-app
+      containers:
+        - image: amanfdk/fun-app #Image to be used
+          imagePullPolicy: IfNotPresent
+          # command: ["sh","-c","sleep 10000"]
+          name: fun-app
+          ports:
+            - containerPort: 8080 # Port on Which App Runs
+          env:
+            - name: DB_URL
+              value: {{ .Values.service.dbUrl | quote }}
+            - name: HTTP_REQUEST_TIMEOUT
+              value: {{ .Values.service.requestTimeout | default "2s" }}
+            - name: HTTP_IDLE_CONNECTION_TIMEOUT
+              value: {{ .Values.service.idle_connectionTimeout | default "60s" }}
+            {{- if .Values.rateLimit }}
+            - name: REDIS_RATE_LIMIT
+              value: {{ .Values.rateLimit.redis }}
+            - name: PER_MIN_LIMIT
+              value: "{{ .Values.rateLimit.perMin }}"
+            {{- end }}
+          readinessProbe: #Probe to test if Pod is Up
+            httpGet:
+              port: 8080
+              path: /metrics
+            initialDelaySeconds: 3
+            periodSeconds: 3
+            failureThreshold: 3
+          livenessProbe: #Probe to test that Pod is Healthy
+            httpGet:
+              port: 8080
+              path: /metrics
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 3

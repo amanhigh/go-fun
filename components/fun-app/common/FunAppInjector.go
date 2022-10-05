@@ -59,7 +59,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	prometheus.Use(engine)
 
 	/* Middleware */
-	engine.Use(gin.Logger(), gin.Recovery(), metrics2.RequestId)
+	engine.Use(gin.Recovery(), metrics2.RequestId, gin.LoggerWithFormatter(metrics2.GinRequestIdFormatter))
 
 	/* Enable Rate Limit if Redis Host is supplied */
 	if self.config.RateLimit.RedisHost != "" {

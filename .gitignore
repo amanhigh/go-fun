@@ -31,3 +31,6 @@ wrk.log
 #DB
 gorm.db
 dist/
+
+# Helm
+*.tgz
