@@ -15,6 +15,7 @@ before:
     # Unit Tests
     - ginkgo -r '--label-filter=!setup' -cover .
     # Helm Package
+    - helm dependency build ./components/fun-app/charts/
     - helm package ./components/fun-app/charts/ -d ./components/fun-app/dist
 builds:
   - id: fun
