@@ -13,6 +13,14 @@ rateLimit:
 
 replicaCount: 1
 
+resources: # https://medium.com/swlh/understanding-kubernetes-resource-cpu-and-memory-units-30284b3cc866
+  requests: # Minimum Available Required for Pod Creation on New Node.
+    memory: "64Mi" #K9s Mem is Mi Unit
+    cpu: "200m" #K9s CPU is millicore Unit
+  limits: # Max Allowed by Pod to be Consumed
+    memory: "128Mi" #Decimal-> Binary: K (Killobytes): Ki, M:Mi, G: Gi
+    cpu: "400m" # 1 Virtual Core = 1000m (Millicores)
+
 #CPU: kubectl -n fun-app autoscale deployment fun-app --name=fun-app-hpa --cpu-percent=50 --min=1 --max=4
 autoscaling:
   minReplicas: 1
