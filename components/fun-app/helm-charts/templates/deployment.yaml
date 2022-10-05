@@ -22,6 +22,13 @@ spec:
           name: fun-app
           ports:
             - containerPort: 8080 # Port on Which App Runs
+          resources: # https://medium.com/swlh/understanding-kubernetes-resource-cpu-and-memory-units-30284b3cc866
+            requests: # Minimum Available Required for Pod Creation on New Node.
+              memory: "64Mi" #K9s Mem is Mi Unit
+              cpu: "200m" #K9s CPU is millicore Unit
+            limits: # Max Allowed by Pod to be Consumed
+              memory: "128Mi" #Decimal-> Binary: K (Killobytes): Ki, M:Mi, G: Gi
+              cpu: "400m" # 1 Virtual Core = 1000m (Millicores)
           env:
             - name: DB_URL
               value: {{ .Values.service.dbUrl | quote }}
