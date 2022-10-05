@@ -1,12 +1,16 @@
 PORT=8091
 #Use minikube config set vm-driver virtualbox/docker
 minikube -p minikube delete;
-# minikube -p minikube ssh 'sudo cat /var/lib/minikube/certs/sa.pub'
 
 echo -en "\033[1;32m Creating Minikube Cluster \033[0m \n"
-minikube  -p minikube start \
---memory=3096 --cpus=2 \
---cache-images=true > /dev/null ;
+minikube  -p minikube start --memory=3096 --cpus=2 --cache-images=true --host-only-cidr='24.1.1.100/24';
+# TODO: Fix on WSL
+# --extra-config="apiserver.enable-swagger-ui=true";
+# --extra-config="apiserver.service-account-api-audiences=api" \
+# --extra-config="apiserver.service-account-issuer=api" \
+# --extra-config="apiserver.service-account-key-file=/var/lib/minikube/certs/sa.pub" \
+# --extra-config="apiserver.service-account-signing-key-file=/var/lib/minikube/certs/sa.key";
+# minikube -p minikube ssh 'sudo cat /var/lib/minikube/certs/sa.pub'
 
 echo -en "\033[1;32m Minikube Dashboard & Addons \033[0m \n";
 minikube -p minikube dashboard --url=true &
