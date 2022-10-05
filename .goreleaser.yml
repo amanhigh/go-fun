@@ -13,7 +13,9 @@ before:
     #- go generate ./...
 
     # Unit Tests
-    -  ginkgo -r '--label-filter=!setup' -cover .
+    - ginkgo -r '--label-filter=!setup' -cover .
+    # Helm Package
+    - helm package ./components/fun-app/charts/ -d ./components/fun-app/dist
 builds:
   - id: fun
     env:
