@@ -1,5 +1,5 @@
-OP=`echo "read write" | tr ' ' '\n' | gum filter`
-DURATION=`gum input --placeholder "Duration" --value=10s`
+OP=`echo "read write" | tr ' ' '\n' | gum filter --prompt "Load Type: "`
+DURATION=`gum input --prompt "Duration: " --value=30s`
 export URL=http://localhost:9000/person
 
 echo -en "\033[1;32m Running $OP for $DURATION \033[0m \n";
