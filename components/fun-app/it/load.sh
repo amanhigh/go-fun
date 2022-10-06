@@ -1,11 +1,15 @@
-OP=`echo "read write" | tr ' ' '\n' | gum filter --prompt "Load Type: "`
+OP=`echo "read write all" | tr ' ' '\n' | gum filter --prompt "Load Type: "`
 DURATION=`gum input --prompt "Duration: " --value=30s`
 export URL=http://localhost:9000/person
 
 echo -en "\033[1;32m Running $OP for $DURATION \033[0m \n";
 case $OP in
   read)
-    echo "GET http://localhost:9000/person/all" | vegeta attack -duration=$DURATION | vegeta report
+     jq -ncM 'while(true; .+1) | {method: "GET", url: "http://localhost:9000/person/Aman-\(.)"}' | vegeta attack -lazy -format=json -duration=$DURATION | vegeta report
+    ;;
+  
+  all)
+    echo "GET $URL/all" | vegeta attack -duration=$DURATION | vegeta report
     ;;
 
   write)

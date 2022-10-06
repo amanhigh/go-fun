@@ -1,3 +1,4 @@
+# https://stedolan.github.io/jq/manual/
 echo -en "\033[1;32m Map functions \033[0m \n"
 jq '.prod.remove | length' ./sample.json
 jq '.prod | keys' ./sample.json
