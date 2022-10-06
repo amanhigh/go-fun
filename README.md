@@ -19,6 +19,10 @@ Testing is handled via [Ginkgo](https://github.com/onsi/ginkgo). To run all unit
 
 `ginkgo -r '--label-filter=!setup' .`
 
+## Load Test
+* brew install gum vegeta
+* Run `cd ./components/fun-app/it/;./load.sh`
+
 ## FunApp
 Sample Funapp which is rest based app with various tools and tests required as sample.
 

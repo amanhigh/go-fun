@@ -58,6 +58,9 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	prometheus.ReqCntURLLabelMappingFn = metrics2.AccessMetrics
 	prometheus.Use(engine)
 
+	// http://localhost:8080/debug/statsviz/
+	engine.GET("/debug/statsviz/*filepath", metrics2.StatvizMetrics)
+
 	/* Middleware */
 	engine.Use(gin.Recovery(), metrics2.RequestId, gin.LoggerWithFormatter(metrics2.GinRequestIdFormatter))
 

@@ -1,11 +1,12 @@
 package handlers
 
 import (
+	"net/http"
+
 	manager2 "github.com/amanhigh/go-fun/components/fun-app/manager"
 	server2 "github.com/amanhigh/go-fun/models/fun-app/server"
 	"github.com/prometheus/client_golang/prometheus"
 	"gorm.io/gorm"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,6 +34,14 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 		}
 	} else {
 		c.JSON(http.StatusBadRequest, err)
+	}
+}
+
+func (self *PersonHandler) GetPerson(c *gin.Context) {
+	if person, err := self.Manager.GetPerson(c, c.Param("id")); err == nil {
+		c.JSON(http.StatusOK, person)
+	} else {
+		c.JSON(http.StatusInternalServerError, err.Error())
 	}
 }
 
