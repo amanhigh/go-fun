@@ -26,6 +26,7 @@ func (self *FunServer) initRoutes() {
 	//TODO:Add Versioning
 	personGroup := self.GinEngine.Group("/person")
 	personGroup.GET("/all", self.PersonHandler.GetAllPerson)
+	personGroup.GET("/:id", self.PersonHandler.GetPerson)
 	personGroup.POST("", self.PersonHandler.CreatePerson)
 	personGroup.DELETE(":id", self.PersonHandler.DeletePersons)
 
