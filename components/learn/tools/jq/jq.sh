@@ -20,3 +20,4 @@ echo -en "\033[1;32m File Reading & Variables \033[0m \n"
 jq -n --argfile a payload.json '$a'
 jq -ncM --slurpfile a sample.json '$a[]|keys'
 jq '.prod.remove | length as $len | $len+1' ./sample.json
+jq -n  'env.PWD'
