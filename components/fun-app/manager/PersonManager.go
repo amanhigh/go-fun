@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+
 	db2 "github.com/amanhigh/go-fun/models/fun-app/db"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -12,6 +13,7 @@ type PersonManagerInterface interface {
 	DeletePerson(c context.Context, id string) (err error)
 
 	GetAllPersons(c context.Context) (persons []db2.Person, err error)
+	GetPerson(c context.Context, name string) (person db2.Person, err error)
 }
 
 type PersonManager struct {
@@ -34,6 +36,11 @@ func (self *PersonManager) CreatePerson(c context.Context, person db2.Person) (e
 
 func (self *PersonManager) GetAllPersons(c context.Context) (persons []db2.Person, err error) {
 	err = self.Db.Find(&persons).Error
+	return
+}
+
+func (self *PersonManager) GetPerson(c context.Context, name string) (person db2.Person, err error) {
+	err = self.Db.First(&person, "name = ?", name).Error
 	return
 }
 

@@ -3,6 +3,8 @@ package tutorial
 import (
 	"fmt"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Fetcher interface {
@@ -29,12 +31,11 @@ func (m *SafeMap) Contains(url string) (ok bool) {
 	return
 }
 
-func StartCrawl() {
-	site := "http://golang.org/"
-	fmt.Println("\n\nCrawling", site)
+func StartCrawl(site string) (urlMap SafeMap) {
 	/** Seed UrlMap With Top Url */
-	urlMap := SafeMap{m: map[string]bool{site: true}}
+	urlMap = SafeMap{m: map[string]bool{site: true}}
 	Crawl(site, 4, fetcher, urlMap)
+	return
 }
 
 // Crawl uses fetcher to recursively crawl
@@ -48,10 +49,11 @@ func Crawl(url string, depth int, fetcher Fetcher, urlMap SafeMap) {
 	}
 	body, urls, err := fetcher.Fetch(url)
 	if err != nil {
-		fmt.Println(err)
+		log.WithFields(log.Fields{"Error": err}).Debug("Fetch Fail")
 		return
 	}
-	fmt.Printf("Url Hit: %s %q\n", url, body)
+
+	log.WithFields(log.Fields{"Url": url, "Title": body}).Debug("URL_HIT")
 
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(len(urls))
@@ -85,7 +87,7 @@ func (f fakeFetcher) Fetch(url string) (string, []string, error) {
 	}
 
 	/** This is how you Format Error (Not Printf) */
-	return "", nil, fmt.Errorf("Url Miss: %s", url)
+	return "", nil, fmt.Errorf("URL_MISS: %s", url)
 }
 
 // fetcher is a populated fakeFetcher.

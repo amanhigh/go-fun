@@ -1,0 +1,20 @@
+Run 'minikube tunnel' to expose ELB endpoints.
+
+Metrics: http://localhost:9000/metrics
+
+{{- if .Values.rateLimit }}
+Current Rate Limit: {{ .Values.rateLimit.perMin }}
+
+Try Rate Limit: http://localhost:9000/person/all
+Once limit is hit, error changes to '{"messages":["Rate limit exceeded. Try again in 59 seconds from now"],"status":"error"}'
+
+Load Test: echo "GET http://localhost:9000/person/all" | vegeta attack -duration=10s | vegeta report
+Error Set:
+429 Too Many Requests
+
+{{- end }}
+
+Other Components Setup
+- Mysql: Default Port 3306, DB: compute (aman/aman)
+- Redis: redis-cli -h fun-app-redis-master (No Auth)
+- Phpmyadmin: Running on Port 80 (Need Port Forward or Proxy)

@@ -1,7 +1,8 @@
 package config
 
 type FunAppConfig struct {
-	Server Server
-	Db     Db
-	Http   HttpClientConfig
+	Server    Server
+	RateLimit RateLimit
+	Db        Db
+	Http      HttpClientConfig
 }

@@ -1,11 +1,12 @@
 package sort_test
 
 import (
+	sort2 "sort"
+
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/learn/algos/sort"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	sort2 "sort"
 )
 
 var _ = Describe("Sort Tests", func() {
@@ -29,8 +30,9 @@ var _ = Describe("Sort Tests", func() {
 	})
 
 	It("should bubble sort", func() {
-		sort.BubbleSort(input, count)
+		swaps := sort.BubbleSort(input, count)
 		Expect(input).To(Equal(expected))
+		Expect(swaps).To(BeNumerically(">", 0))
 	})
 
 	It("should quick sort", func() {
@@ -39,8 +41,9 @@ var _ = Describe("Sort Tests", func() {
 	})
 
 	It("should merge sort", func() {
-		sort.MergeSort(input, 0, count-1)
+		inversions := sort.MergeSort(input, 0, count-1)
 		Expect(input).To(Equal(expected))
+		Expect(inversions).To(BeNumerically(">", 0))
 	})
 
 })

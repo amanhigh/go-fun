@@ -37,6 +37,9 @@ var _ = Describe("MaxSubArray", func() {
 			expected := util.ReadInts(outScan, 4)
 			arraySum, segmentSum, start, end := challenge.MaxSubArray(ints)
 			Expect([]int{arraySum, segmentSum, start, end}).To(Equal(expected), fmt.Sprintf("Input: %v Expected: %v", ints, expected))
+
+			arraySum, segmentSum, start, end = challenge.MaxSubArrayBruteForce(ints)
+			Expect([]int{arraySum, segmentSum, start, end}).To(Equal(expected), fmt.Sprintf("Input: %v Expected: %v", ints, expected))
 		}
 	})
 

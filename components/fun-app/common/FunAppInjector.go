@@ -2,6 +2,8 @@ package common
 
 import (
 	"fmt"
+	"net/http"
+
 	clients2 "github.com/amanhigh/go-fun/common/clients"
 	metrics2 "github.com/amanhigh/go-fun/common/metrics"
 	util2 "github.com/amanhigh/go-fun/common/util"
@@ -10,6 +12,8 @@ import (
 	config2 "github.com/amanhigh/go-fun/models/config"
 	db3 "github.com/amanhigh/go-fun/models/fun-app/db"
 	interfaces2 "github.com/amanhigh/go-fun/models/interfaces"
+	"github.com/etcinit/speedbump"
+	"github.com/etcinit/speedbump/ginbump"
 	"github.com/facebookgo/inject"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-migrate/migrate/v4"
@@ -19,8 +23,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	log "github.com/sirupsen/logrus"
 	ginprometheus "github.com/zsais/go-gin-prometheus"
+	"gopkg.in/redis.v5"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 const (
@@ -48,13 +52,32 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	engine := gin.New()
 
 	/* Access Metrics */
+	// TODO: Ingest to Prometheus and configure in helm
 	//Visit http://localhost:8080/metrics
 	prometheus := ginprometheus.NewPrometheus("gin_access")
 	prometheus.ReqCntURLLabelMappingFn = metrics2.AccessMetrics
 	prometheus.Use(engine)
 
+	// http://localhost:8080/debug/statsviz/
+	engine.GET("/debug/statsviz/*filepath", metrics2.StatvizMetrics)
+
 	/* Middleware */
-	engine.Use(gin.Logger(), gin.Recovery(), metrics2.RequestId)
+	engine.Use(gin.Recovery(), metrics2.RequestId, gin.LoggerWithFormatter(metrics2.GinRequestIdFormatter))
+
+	/* Enable Rate Limit if Redis Host is supplied */
+	if self.config.RateLimit.RedisHost != "" {
+		// Create a Redis client
+		client := redis.NewClient(&redis.Options{
+			Addr:     self.config.RateLimit.RedisHost,
+			Password: "",
+			DB:       0,
+		})
+
+		// Limit the engine's (Global) or group's (API Level) requests to
+		// 100 requests per client per minute.
+		engine.Use(ginbump.RateLimit(client, speedbump.PerMinuteHasher{}, self.config.RateLimit.PerMinuteLimit))
+		log.WithFields(log.Fields{"RateLimit": self.config.RateLimit.PerMinuteLimit}).Info("Rate Limit Enabled")
+	}
 
 	/* Injections */
 	err = self.graph.Provide(

@@ -4,7 +4,7 @@
 # goreleaser build --snapshot --rm-dist
 # goreleaser release --snapshot --skip-publish --rm-dist
 # Tag: Create -> git tag v1.0.3; Delete - > git push --delete origin v1.0.2 (Format v.<Major>.<Minor>.<Patch>)
-# goreleaser release--rm-dist (Publish)
+# goreleaser release --rm-dist (Publish)
 before:
   hooks:
     # You may remove this if you don't use go modules.
@@ -13,7 +13,10 @@ before:
     #- go generate ./...
 
     # Unit Tests
-    -  ginkgo -r '--label-filter=!setup' -cover .
+    - ginkgo -r '--label-filter=!setup' -cover .
+    # Helm Package
+    - helm dependency build ./components/fun-app/charts/
+    - helm package ./components/fun-app/charts/ -d ./components/fun-app/charts
 builds:
   - id: fun
     env:
@@ -48,3 +51,9 @@ archives:
   - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     replacements:
       amd64: x86_64
+
+release:
+  header: |
+    Welcome to this new release! Enjoy Fun App ..
+  extra_files:
+    - glob: ./components/fun-app/charts/**.tgz

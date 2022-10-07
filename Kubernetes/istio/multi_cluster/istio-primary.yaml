@@ -1,0 +1,36 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+spec:
+  values:
+    # selfSigned is required if Citadel is enabled, that is when values.global.istiod.enabled is false.
+#    security:
+#      selfSigned: false
+
+    global:
+#      mtls:
+#        enabled: true
+      multiCluster:
+        clusterName: minikube
+      network: minikube-network
+
+      # Mesh network configuration. This is optional and may be omitted if
+      # all clusters are on the same network.
+      meshNetworks:
+        minikube-network:
+          endpoints:
+            # Always use Kubernetes as the registry name for the main cluster in the mesh network configuration
+            - fromRegistry: Kubernetes
+          gateways:
+            - registry_service_name: istio-ingressgateway.istio-system.svc.cluster.local
+              port: 443
+
+        secondary-network:
+          endpoints:
+            - fromRegistry: secondary
+          gateways:
+            - registry_service_name: istio-ingressgateway.istio-system.svc.cluster.local
+              port: 443
+
+      # Use the existing istio-ingressgateway.
+      # meshExpansion:
+        # enabled: true

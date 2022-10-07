@@ -1,0 +1,46 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "ginkgo",
+            "type": "shell",
+            "command": "ginkgo",
+            "args": [
+                "-r",
+                "--coverprofile=cover",
+                "--output-dir=/tmp",
+                "--race",
+                "${fileDirname}"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "cover",
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "tool",
+                "cover",
+                "-func=/tmp/cover"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "dependsOn": [
+                "ginkgo"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

@@ -34,3 +34,6 @@ dist/
 
 # Protobuf
 *.pb.go
+
+# Helm
+*.tgz

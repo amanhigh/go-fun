@@ -15,4 +15,9 @@ var _ = Describe("DpCoinChange", func() {
 	It("should compute possibilities", func() {
 		Expect(cracking.Split(money, coins, selectedCoins)).To(Equal(4))
 	})
+
+	It("should compute with dynamic programming", func() {
+		Expect(cracking.SplitDp(money, coins)).To(Equal(4))
+
+	})
 })

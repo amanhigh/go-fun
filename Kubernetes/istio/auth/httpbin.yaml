@@ -29,8 +29,8 @@ metadata:
 spec:
   ports:
   - name: http
-    port: 8000
-    targetPort: 80
+    port: 8000 #Service Port on which its exposed
+    targetPort: 80 #Connect to Container Port
   selector:
     app: httpbin
 ---
@@ -56,4 +56,4 @@ spec:
         imagePullPolicy: IfNotPresent
         name: httpbin
         ports:
-        - containerPort: 80
+        - containerPort: 80 # Port on Which HttpBin Runs
