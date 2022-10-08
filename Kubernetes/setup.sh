@@ -16,7 +16,7 @@ echo -en "\033[1;32m Minikube Dashboard & Addons \033[0m \n";
 minikube -p minikube dashboard --url=true &
 minikube addons enable metrics-server;
 
-./istio/istio.sh;
+./istio/setup.sh;
 
 echo -en "\033[1;32m Minikube Setup \033[0m \n";
 echo -en "\033[1;33m Run 'minikube tunnel' for Emulating ELB\033[0m \n";
