@@ -48,6 +48,8 @@ dev:
       - path: /go
     sync:
       - path: ./
+        excludePaths:
+          - Kubernetes/
         onUpload:
           restartContainer: true
     # Open a terminal and use the following command to start it
