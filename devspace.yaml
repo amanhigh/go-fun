@@ -32,7 +32,7 @@ deployments:
           - image: go-fun
         service:
           ports:
-            - port: 8080
+            - port: 8080 #curl http://app:9000/person/all
 
 # This is a list of `dev` containers that are based on the containers created by your deployments
 dev:

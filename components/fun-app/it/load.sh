@@ -1,3 +1,6 @@
+# kubectl run vegeta --image="peterevans/vegeta" -- sh -c "sleep 10000"
+# Attach and Run: echo "GET http://app:8080/person/all" | vegeta attack | vegeta report (dev- app:8080, image- fun-app:9000)
+
 OP=`echo "read write all" | tr ' ' '\n' | gum filter --prompt "Load Type: "`
 DURATION=`gum input --prompt "Duration: " --value=30s`
 export URL=http://localhost:9000
