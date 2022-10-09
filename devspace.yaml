@@ -57,7 +57,12 @@ dev:
       - path: ./
         startContainer: true # Will start the container after sync is done
         excludePaths:
+          - "*.md"
+          - ".*"
+          - ".out"
           - Kubernetes/
+          - Docker/
+          - source-deb/
         onUpload:
           restartContainer: true
     # Open a terminal and use the following command to start it
