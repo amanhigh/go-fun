@@ -34,7 +34,7 @@ builds:
     targets:
       - linux_amd64
     dir: ./components/kohan
-    main: kohan.go
+    main: main.go
 
 dockers:
   - id: fun-app
