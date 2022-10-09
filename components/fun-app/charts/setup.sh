@@ -14,6 +14,10 @@ echo -en "\033[1;32m Setup FunApp \033[0m \n"
 helm install -n fun-app fun-app . --set rateLimit.perMin=150 > /dev/null
 echo -en "\033[1;33m FunApp: http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy/metrics \033[0m \n"
 
+echo -en "\033[1;32m Vegeta Attack \033[0m \n"
+kubectl run vegeta -n fun-app --image="peterevans/vegeta" -- sh -c "sleep 10000"
+echo -en "\033[1;33m echo 'GET http://app:8080/person/all' | vegeta attack | vegeta report (dev- app:8080, image- fun-app:9000) \033[0m \n"
+
 ### Helpful Commands
 # helm init fun-app - Bootstrap Charts
 # helm template . - Preview Charts with Values
