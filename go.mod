@@ -6,6 +6,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/andygrunwald/go-jira v1.11.1
+	github.com/arl/statsviz v0.5.1
 	github.com/bndr/gojenkins v1.0.1
 	github.com/bxcodec/faker/v3 v3.3.1
 	github.com/caarlos0/env/v6 v6.7.2
@@ -53,7 +54,6 @@ require (
 )
 
 require (
-	github.com/arl/statsviz v0.5.1 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
