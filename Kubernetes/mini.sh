@@ -3,7 +3,7 @@ PORT=8091
 minikube -p minikube delete;
 
 echo -en "\033[1;32m Creating Minikube Cluster \033[0m \n"
-minikube  -p minikube start --memory=3096 --cpus=2 --cache-images=true --host-only-cidr='24.1.1.100/24';
+minikube  -p minikube start --memory=3096 --cpus=3 --cache-images=true --host-only-cidr='24.1.1.100/24';
 # TODO: Fix on WSL
 # --extra-config="apiserver.enable-swagger-ui=true";
 # --extra-config="apiserver.service-account-api-audiences=api" \
