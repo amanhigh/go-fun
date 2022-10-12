@@ -9,3 +9,7 @@ volumes:
     path: /etc/nginx/conf.d/
     hostPath:
       path: /etc/files/resty/
+# replicas: 2
+# podDisruptionBudgetEnabled: false
+
+# command: sleep 1000

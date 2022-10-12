@@ -1,27 +1,45 @@
-answers=`gum choose RESET MYSQL MONGO REDIS PROXY --limit 5`
+# Vars
+CMD="install"
+
+# Flags
+while getopts 'ur' OPTION; do
+  case "$OPTION" in
+    r)
+        echo -en "\033[1;32m Clearing all Helms \033[0m \n"
+        helm delete $(helm list --short)
+        ;;
+    u)
+        echo -en "\033[1;32m Switching to Upgrade \033[0m \n"
+        CMD="upgrade"
+        ;;
+    ?)
+      echo "script usage: $0 [-u] [-r]" >&2
+      exit 1
+      ;;
+  esac
+done
+
+# Prompt
+answers=`gum choose MYSQL MONGO REDIS PROXY --limit 5`
+
 for SVC in $answers
 do
     echo -en "\033[1;32m \n $SVC \033[0m \n"
     case $SVC in
-    RESET)
-        echo -en "\033[1;32m Clearing all Helms \033[0m \n"
-        helm delete $(helm list --short)
-        ;;
-
     MYSQL)
-        helm install mysql bitnami/mysql -f mysql.yml > /dev/null
-        helm install mysql-admin bitnami/phpmyadmin > /dev/null
+        helm $CMD mysql bitnami/mysql -f mysql.yml > /dev/null
+        helm $CMD mysql-admin bitnami/phpmyadmin > /dev/null
         echo -en "\033[1;33m Login: mysql-primary, root/root \033[0m \n"
         ;;
 
     MONGO)
-        helm install mongo bitnami/mongodb -f mongo.yml > /dev/null
+        helm $CMD mongo bitnami/mongodb -f mongo.yml > /dev/null
         echo -en "\033[1;33m mongosh -u root -p root --host localhost  < /etc/files/scripts/mongo.js \033[0m \n"
         ;;
 
     REDIS)
-        helm install redis bitnami/redis -f redis.yml > /dev/null
-        helm install redis-admin onechart/onechart -f redis-admin.yml
+        helm $CMD redis bitnami/redis -f redis.yml > /dev/null
+        helm $CMD redis-admin onechart/onechart -f redis-admin.yml
 
         echo -en "\033[1;33m redis-cli -c incr mycounter \033[0m \n"
         echo -en "\033[1;33m redis-cli -c set mypasswd lol \033[0m \n"
@@ -31,7 +49,7 @@ do
 
     PROXY)
         echo -en "\033[1;32m Resty \033[0m \n"
-        helm install resty onechart/onechart -f resty.yml > /dev/null
+        helm $CMD resty onechart/onechart -f resty.yml > /dev/null
 
         echo -en "\033[1;33m Commander: http://localhost:8090/ \033[0m \n"
         echo -en "\033[1;33m Commander: http://localhost:8090/example \033[0m \n"
