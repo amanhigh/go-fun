@@ -3,3 +3,9 @@ image:
   tag: latest
 
 containerPort: 80
+
+volumes:
+  - name: default-conf
+    path: /etc/nginx/conf.d/
+    hostPath:
+      path: /etc/files/resty/

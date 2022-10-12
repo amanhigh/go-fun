@@ -30,9 +30,13 @@ do
         ;;
 
     PROXY)
-        helm install resty onechart/onechart -f resty.yml
+        echo -en "\033[1;32m Resty \033[0m \n"
+        helm install resty onechart/onechart -f resty.yml > /dev/null
 
         echo -en "\033[1;33m Commander: http://localhost:8090/ \033[0m \n"
+        echo -en "\033[1;33m Commander: http://localhost:8090/example \033[0m \n"
+        echo -en "\033[1;33m Commander: http://localhost:8090/ndtv \033[0m \n"
+
         ;;
 
     *)
