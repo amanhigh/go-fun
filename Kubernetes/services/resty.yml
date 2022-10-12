@@ -1,0 +1,5 @@
+image:
+  repository: openresty/openresty
+  tag: latest
+
+containerPort: 80

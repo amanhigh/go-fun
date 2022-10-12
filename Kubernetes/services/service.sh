@@ -1,4 +1,4 @@
-answers=`gum choose RESET MYSQL MONGO REDIS --limit 5`
+answers=`gum choose RESET MYSQL MONGO REDIS PROXY --limit 5`
 for SVC in $answers
 do
     echo -en "\033[1;32m \n $SVC \033[0m \n"
@@ -20,7 +20,6 @@ do
         ;;
 
     REDIS)
-        #TODO: Move commander generic helm
         helm install redis bitnami/redis -f redis.yml > /dev/null
         helm install redis-admin onechart/onechart -f redis-admin.yml
 
@@ -28,6 +27,12 @@ do
         echo -en "\033[1;33m redis-cli -c set mypasswd lol \033[0m \n"
         echo -en "\033[1;33m redis-cli -c get mypasswd \033[0m \n"
         echo -en "\033[1;33m Commander: http://localhost:8081/ \033[0m \n"
+        ;;
+
+    PROXY)
+        helm install resty onechart/onechart -f resty.yml
+
+        echo -en "\033[1;33m Commander: http://localhost:8090/ \033[0m \n"
         ;;
 
     *)
