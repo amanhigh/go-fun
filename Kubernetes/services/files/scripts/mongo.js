@@ -14,7 +14,7 @@ db.createUser(
 db.dropUser("admin")
 
 //Show Users
-// db.getUsers()
+db.getUsers()
 
 //Replication Status
 rs.status();

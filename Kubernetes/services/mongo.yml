@@ -1,4 +1,5 @@
 # helm install mongo bitnami/mongodb -f mongo.yml
+# mongosh -u root -p root --host localhost  < /etc/files/scripts/mongo.js
 
 ## @param architecture MongoDB(&reg;) architecture (`standalone` or `replicaset`)
 architecture: replicaset
@@ -28,3 +29,16 @@ replicaSetName: rs0
 ##
 initdbScripts: {}
 replicaCount: 2
+
+## @param extraVolumeMounts Optionally specify extra list of additional volumeMounts for the MongoDB(&reg;) container(s)
+## Examples:
+extraVolumeMounts:
+  - name: files
+    mountPath: /etc/files
+    readOnly: true
+
+## @param extraVolumes Optionally specify extra list of additional volumes to the MongoDB(&reg;) statefulset
+extraVolumes:
+  - name: files
+    hostPath:
+      path: /etc/files
