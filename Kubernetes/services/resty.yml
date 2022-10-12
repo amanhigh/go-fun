@@ -25,15 +25,14 @@ probe:
 #TODO: Configure DNS Resolver and test https://minikube.sigs.k8s.io/docs/handbook/addons/ingress-dns/
 ingress:
   host: resty.local
-
 # replicas: 2
 # podDisruptionBudgetEnabled: false
 
 # command: sleep infinity
 
 #Debug Side Car: https://github.com/digitalocean/doks-debug
-sidecar:
-  repository: digitalocean/doks-debug
-  tag: latest
-  shell: "/bin/bash"
-  command: "sleep infinity"
+#sidecar:
+#  repository: digitalocean/doks-debug
+#  tag: latest
+#  shell: "/bin/bash"
+#  command: "sleep infinity"
