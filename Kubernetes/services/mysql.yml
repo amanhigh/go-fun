@@ -1,0 +1,10 @@
+# helm install mysql bitnami/mysql -f mysql.yml
+# helm install mysql-admin bitnami/phpmyadmin (Login: mysql-primary, root/root)
+# helm delete mysql mysql-admin
+auth:
+  rootPassword: root
+  database: compute
+  username: aman
+  password: aman
+  replicationPassword: copy
+architecture: replication
