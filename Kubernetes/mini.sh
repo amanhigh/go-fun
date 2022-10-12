@@ -16,6 +16,9 @@ minikube  -p minikube start --memory=3096 --cpus=3 --cache-images=true --mount-s
 echo -en "\033[1;32m Minikube Dashboard & Addons \033[0m \n";
 minikube -p minikube dashboard --url=true &
 minikube addons enable metrics-server;
+minikube addons enable ingress;
+#Test: nslookup resty.local $(minikube ip)
+minikube addons enable ingress-dns;
 
 ./istio/istio.sh;
 
