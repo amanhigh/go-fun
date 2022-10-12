@@ -48,12 +48,18 @@ do
         ;;
 
     PROXY)
+        echo -en "\033[1;32m Nginx \033[0m \n"
+        helm $CMD nginx bitnami/nginx -f nginx.yml
+
+        echo -en "\033[1;33m http://localhost:8081/ \033[0m \n"
+        echo -en "\033[1;33m Refer Server Blocks for More Help.. \033[0m \n"
+        
         echo -en "\033[1;32m Resty \033[0m \n"
         helm $CMD resty onechart/onechart -f resty.yml > /dev/null
 
-        echo -en "\033[1;33m Commander: http://localhost:8090/ \033[0m \n"
-        echo -en "\033[1;33m Commander: http://localhost:8090/example \033[0m \n"
-        echo -en "\033[1;33m Commander: http://localhost:8090/ndtv \033[0m \n"
+        echo -en "\033[1;33m http://localhost:8090/ \033[0m \n"
+        echo -en "\033[1;33m http://localhost:8090/example \033[0m \n"
+        echo -en "\033[1;33m http://localhost:8090/ndtv \033[0m \n"
 
         ;;
     CRON)

@@ -1,0 +1,114 @@
+## @param extraVolumeMounts Optionally specify extra list of additional volumeMounts for the MongoDB(&reg;) container(s)
+## Examples:
+extraVolumeMounts:
+  - name: certs
+    mountPath: /etc/ssl/certs/self/
+
+## @param extraVolumes Optionally specify extra list of additional volumes to the MongoDB(&reg;) statefulset
+extraVolumes:
+  - name: certs
+    hostPath:
+      path: /etc/files/certs
+#diagnosticMode:
+#  enabled: true
+
+serverBlock: |-
+  server {
+    listen       8081;
+    server_name  localhost;
+
+  ################### ROOT ###################
+        location / {
+            root   /opt/bitnami/nginx/html;
+            index  index.html index.htm;
+            }
+
+            #error_page  404              /404.html;
+
+
+            # redirect server error pages to the static page /50x.html
+            #
+            error_page   500 502 503 504  /50x.html;
+            location = /50x.html {
+            root   /opt/bitnami/nginx/html;
+        }
+
+  ################### DEFAULT ###################
+          location /health {
+              default_type application/json;
+              return 200 '"Healthy"';
+          }
+          location /notfound {
+              default_type application/json;
+              return 404 '"Not Found"';
+          }
+
+          location @backup {
+              default_type application/json;
+              return 200 '"Backup Worked"';
+          }
+  ################### FALLBACK ###################
+          #Tries notfound and fallbacks to backup.
+          location /fallback {
+                error_page 404 = @backup;
+                proxy_pass http://localhost:8081/notfound;
+                proxy_intercept_errors on;
+          }
+
+          #Tries and health which works with no fallback.
+          location /healthy_fallback {
+              error_page 404 = @backup;
+              proxy_pass http://localhost:8081/health;
+              proxy_intercept_errors on;
+          }
+  ################### PROXY ###################
+          #Eg. http://docker:8081/pass, http://docker:8081/pass/api/v1/employees
+          location  /pass {
+            rewrite /pass/(.*) /$1  break;
+            proxy_pass http://dummy.restapiexample.com/;
+            proxy_redirect     off;
+          }
+  }
+
+  server {
+    listen       8082;
+    server_name  localhost;
+
+    location / {
+        proxy_pass https://www.nseindia.com/;
+        #proxy_set_header X-Custom-Header $host;
+        #proxy_set_header "User-Agent" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:72.0) Gecko/20100101 Firefox/72.0";
+    }
+  }
+
+  server {
+    listen       8083;
+    server_name  http://reqres.in;
+
+    location / {
+        proxy_pass https://reqres.in/;
+        #proxy_set_header X-Custom-Header $host;
+        #proxy_set_header "User-Agent" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:72.0) Gecko/20100101 Firefox/72.0";
+      }
+  }
+
+  server {
+    #curl http://localhost:8084/api/users?page=2 (Docker Login)
+    listen       8084;
+    server_name  localhost;
+
+    location / {
+        #Redirect Http to Https
+        proxy_pass https://localhost;
+      }
+
+  }
+
+  server {
+      listen 8085;
+      server_name stats;
+
+      location /stats {
+          stub_status;
+      }
+  }
