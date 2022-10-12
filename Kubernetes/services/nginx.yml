@@ -13,6 +13,15 @@ extraVolumes:
 #  enabled: true
 
 serverBlock: |-
+  upstream backend {
+    ip_hash; #Hash Based on Source IP
+    #hash $remote_addr; # More Distributed Hash based On Source Ip
+
+    #Load Balancing with Passive Health Checks.
+    server 127.0.0.1;
+    server 0.0.0.0;
+  }
+
   server {
     listen       8081;
     server_name  localhost;
@@ -81,27 +90,42 @@ serverBlock: |-
     }
   }
 
+  #Proxy Http-> Https using proxy_ssl_server_name on;
   server {
     listen       8083;
-    server_name  http://reqres.in;
+    server_name  localhost;
 
     location / {
-        proxy_pass https://reqres.in/;
+        proxy_ssl_server_name on;
+        proxy_pass https://reqres.in;
         #proxy_set_header X-Custom-Header $host;
         #proxy_set_header "User-Agent" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:72.0) Gecko/20100101 Firefox/72.0";
       }
   }
 
+  #Redirect Http to Https, Locally
   server {
-    #curl http://localhost:8084/api/users?page=2 (Docker Login)
+    #curl http://localhost:8084/api/users?page=2
     listen       8084;
     server_name  localhost;
 
     location / {
-        #Redirect Http to Https
         proxy_pass https://localhost;
       }
+  }
 
+  server {
+    #curl -k https://localhost:8443/api/users?page=2 (PF: 443->8443)
+    listen       443 ssl;
+    server_name  localhost;
+    #openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./nginx-selfsigned.key -out ./nginx-selfsigned.crt
+    ssl_certificate /etc/ssl/certs/self/selfsigned.crt;
+    ssl_certificate_key /etc/ssl/certs/self/selfsigned.key;
+
+    location / {
+        proxy_ssl_server_name on;
+        proxy_pass https://reqres.in;
+      }
   }
 
   #Named Server: Needs /etc/hosts entry for stats->localhost

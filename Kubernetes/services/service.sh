@@ -49,7 +49,7 @@ do
 
     PROXY)
         echo -en "\033[1;32m Nginx \033[0m \n"
-        helm $CMD nginx bitnami/nginx -f nginx.yml
+        helm $CMD nginx bitnami/nginx -f nginx.yml > /dev/null
 
         echo -en "\033[1;33m http://localhost:8081/ \033[0m \n"
         echo -en "\033[1;33m Refer Server Blocks for More Help.. \033[0m \n"
