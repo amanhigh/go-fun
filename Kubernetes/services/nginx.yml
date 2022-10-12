@@ -104,8 +104,12 @@ serverBlock: |-
 
   }
 
+  #Named Server: Needs /etc/hosts entry for stats->localhost
+  #Two Server Blocks on same Port 8081
+  #Works: curl localhost:8081/health, stats:8081, localhost:8081
+  #Doesn't Work:curl stats:8081/health
   server {
-      listen 8085;
+      listen 8081;
       server_name stats;
 
       location /stats {
