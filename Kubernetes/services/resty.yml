@@ -1,3 +1,4 @@
+#OneChart: https://github.com/gimlet-io/onechart/tree/master/charts/onechart/tests
 image:
   repository: openresty/openresty
   tag: latest
@@ -9,7 +10,26 @@ volumes:
     path: /etc/nginx/conf.d/
     hostPath:
       path: /etc/files/resty/
+
+#Readiness Probe
+probe:
+  enabled: true
+  path: "/"
+  settings:
+    initialDelaySeconds: 3
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+    failureThreshold: 3
+
 # replicas: 2
 # podDisruptionBudgetEnabled: false
 
-# command: sleep 1000
+# command: sleep infinity
+
+#Debug Side Car: https://github.com/digitalocean/doks-debug
+sidecar:
+  repository: digitalocean/doks-debug
+  tag: latest
+  shell: "/bin/bash"
+  command: "sleep infinity"

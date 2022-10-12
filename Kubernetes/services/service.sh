@@ -1,10 +1,13 @@
 # Vars
 CMD="install"
 
+# Prompt
+answers=`gum choose MYSQL MONGO REDIS PROXY CRON --limit 5`
+
 # Flags
-while getopts 'ur' OPTION; do
+while getopts 'du' OPTION; do
   case "$OPTION" in
-    r)
+    d)
         echo -en "\033[1;32m Clearing all Helms \033[0m \n"
         helm delete $(helm list --short)
         ;;
@@ -18,9 +21,6 @@ while getopts 'ur' OPTION; do
       ;;
   esac
 done
-
-# Prompt
-answers=`gum choose MYSQL MONGO REDIS PROXY --limit 5`
 
 for SVC in $answers
 do
@@ -55,6 +55,11 @@ do
         echo -en "\033[1;33m Commander: http://localhost:8090/example \033[0m \n"
         echo -en "\033[1;33m Commander: http://localhost:8090/ndtv \033[0m \n"
 
+        ;;
+    CRON)
+        # TODO: Fix Cron
+        helm $CMD cron onechart/onechart -f cron.yml > /dev/null
+        echo -en "\033[1;33m Check Logs for Output \033[0m \n"
         ;;
 
     *)
