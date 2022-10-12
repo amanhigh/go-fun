@@ -2,7 +2,7 @@
 CMD="install"
 
 # Prompt
-answers=`gum choose MYSQL MONGO REDIS PROXY CRON --limit 5`
+answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON --limit 5`
 
 # Flags
 while getopts 'du' OPTION; do
@@ -61,6 +61,11 @@ do
         echo -en "\033[1;33m http://localhost:8090/example \033[0m \n"
         echo -en "\033[1;33m http://localhost:8090/ndtv \033[0m \n"
 
+        ;;
+    LOADER)
+        helm $CMD vegeta onechart/onechart -f vegeta.yml > /dev/null
+        echo -en "\033[1;33m Check Logs for Output \033[0m \n"
+        echo -en "\033[1;33m echo 'GET http://nginx' | vegeta attack | vegeta report \033[0m \n"
         ;;
     CRON)
         # TODO: Fix Cron
