@@ -1,12 +1,32 @@
-image:
-  repository: travix/tinyproxy
-  tag: latest
+# https://github.com/stakater-charts/application
+##########################################################
+# Name of the application.
+##########################################################
+applicationName: "tiny"
 
-containerPort: 8888
+##########################################################
+# Deployment
+##########################################################
+deployment:
+  # Image of the app container
+  image:
+    repository: travix/tinyproxy
+    tag: latest
 
-#TODO: Fix Config Mount
-volumes:
-  - name: config
-    path: /etc/tiny/
-    hostPath:
-      path: /etc/files/tinyproxy/
+  # replicas: 1
+
+  ports:
+    - containerPort: 8888
+      name: http
+      protocol: TCP
+
+  readinessProbe:
+    enabled: false
+  livenessProbe:
+    enabled: false
+
+# Service Account to use by pods
+rbac:
+  serviceAccount:
+    enabled: true
+    name: "tiny"
