@@ -30,6 +30,9 @@ ingress:
 
 # command: sleep infinity
 
+# vars:
+#   REDIS_HOSTS: "redis-master"
+
 #Debug Side Car: https://github.com/digitalocean/doks-debug
 #sidecar:
 #  repository: digitalocean/doks-debug
