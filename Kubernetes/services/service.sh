@@ -60,6 +60,11 @@ do
         echo -en "\033[1;33m http://localhost:8090/ \033[0m \n"
         echo -en "\033[1;33m http://localhost:8090/example \033[0m \n"
         echo -en "\033[1;33m http://localhost:8090/ndtv \033[0m \n"
+        
+        echo -en "\033[1;32m TinyProxy \033[0m \n"
+        helm $CMD tinyproxy onechart/onechart -f tinyproxy.yml > /dev/null
+
+        echo -en "\033[1;33m curl -x localhost:8888 tinyproxy.stats \033[0m \n"
 
         ;;
     LOADER)

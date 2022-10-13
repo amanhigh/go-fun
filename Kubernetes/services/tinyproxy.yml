@@ -1,0 +1,12 @@
+image:
+  repository: travix/tinyproxy
+  tag: latest
+
+containerPort: 8888
+
+#TODO: Fix Config Mount
+volumes:
+  - name: config
+    path: /etc/tiny/
+    hostPath:
+      path: /etc/files/tinyproxy/
