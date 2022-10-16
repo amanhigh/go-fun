@@ -1,0 +1,5 @@
+# Should OPA use TLS or not.
+useHttps: false
+
+# Port to which the opa pod will bind itself,
+port: 8181

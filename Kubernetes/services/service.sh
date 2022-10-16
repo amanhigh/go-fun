@@ -1,5 +1,7 @@
 # helm repo add onechart https://chart.onechart.dev
 # helm repo add stakater https://stakater.github.io/stakater-charts
+# helm repo add opa https://open-policy-agent.github.io/kube-mgmt/charts
+
 
 # helm repo update
 
@@ -7,7 +9,7 @@
 CMD="install"
 
 # Prompt
-answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT --limit 5`
+answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT OPA --limit 5`
 
 # Flags
 while getopts 'du' OPTION; do
@@ -89,6 +91,12 @@ do
         # TODO: Fix Cron
         helm $CMD cron onechart/onechart -f cron.yml > /dev/null
         echo -en "\033[1;33m Check Logs for Output \033[0m \n"
+        ;;
+
+    OPA)
+        # TODO: Fix Cron
+        helm $CMD opa opa/opa-kube-mgmt -f opa.yml > /dev/null
+        echo -en "\033[1;33m http://localhost:8181/ \033[0m \n"
         ;;
 
     VAULT)
