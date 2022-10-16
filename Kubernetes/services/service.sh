@@ -94,7 +94,7 @@ do
         # helm repo add hashicorp https://helm.releases.hashicorp.com
         helm $CMD vault hashicorp/vault -f vault.yml > /dev/null
         echo -en "\033[1;33m vault status \033[0m \n"
-        echo -en "\033[1;33m vault status \033[0m \n"
+        echo -en "\033[1;33m /demo/vault.sh \033[0m \n"
         ;;
 
     *)

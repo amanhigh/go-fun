@@ -5,11 +5,11 @@ server:
     devRootToken: "root-token"
 
   volumeMounts:
-    - name: files
-      mountPath: /etc/files
+    - name: demo
+      mountPath: /demo
       readOnly: true
 
   volumes:
-    - name: files
+    - name: demo
       hostPath:
-        path: /etc/files
+        path: /etc/files/vault
