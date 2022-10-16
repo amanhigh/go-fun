@@ -1,12 +1,13 @@
 # helm repo add onechart https://chart.onechart.dev
 # helm repo add stakater https://stakater.github.io/stakater-charts
+
 # helm repo update
 
 # Vars
 CMD="install"
 
 # Prompt
-answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN --limit 5`
+answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT --limit 5`
 
 # Flags
 while getopts 'du' OPTION; do
@@ -87,6 +88,13 @@ do
         # TODO: Fix Cron
         helm $CMD cron onechart/onechart -f cron.yml > /dev/null
         echo -en "\033[1;33m Check Logs for Output \033[0m \n"
+        ;;
+
+    VAULT)
+        # helm repo add hashicorp https://helm.releases.hashicorp.com
+        helm $CMD vault hashicorp/vault -f vault.yml > /dev/null
+        echo -en "\033[1;33m vault status \033[0m \n"
+        echo -en "\033[1;33m vault status \033[0m \n"
         ;;
 
     *)
