@@ -40,6 +40,7 @@ do
     MONGO)
         helm $CMD mongo bitnami/mongodb -f mongo.yml > /dev/null
         echo -en "\033[1;33m mongosh -u root -p root --host localhost  < /etc/files/scripts/mongo.js \033[0m \n"
+        echo -en "\033[1;33m Svc Endpoint: mongo-mongodb:27017 (Standalone Mode Only) \033[0m \n"
         ;;
 
     REDIS)
