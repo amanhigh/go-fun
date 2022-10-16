@@ -1,4 +1,6 @@
 PORT=8091
+answers=`gum choose INGRESS ISTIO --limit 5`
+
 #Use minikube config set vm-driver virtualbox/docker
 minikube -p minikube delete;
 
@@ -16,11 +18,25 @@ minikube  -p minikube start --memory=3096 --cpus=3 --cache-images=true --mount-s
 echo -en "\033[1;32m Minikube Dashboard & Addons \033[0m \n";
 minikube -p minikube dashboard --url=true &
 minikube addons enable metrics-server;
-minikube addons enable ingress;
-#Test: nslookup resty.local $(minikube ip)
-minikube addons enable ingress-dns;
+for SVC in $answers
+do
+    echo -en "\033[1;32m \n $SVC \033[0m \n"
+    case $SVC in
+    INGRESS)
+        #Test: nslookup resty.local $(minikube ip)
+        minikube addons enable ingress;
+        minikube addons enable ingress-dns;
+        ;;
 
-./istio/istio.sh;
+    ISTIO)
+        ./istio/istio.sh;
+        ;;
+
+    *)
+        echo -en "\033[1;34m Addon Not Supported: $SVC \033[0m \n"
+        ;;
+    esac
+done
 
 echo -en "\033[1;32m Minikube Setup \033[0m \n";
 echo -en "\033[1;33m Run 'minikube tunnel' for Emulating ELB\033[0m \n";
