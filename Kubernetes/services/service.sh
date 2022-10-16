@@ -1,3 +1,7 @@
+# helm repo add onechart https://chart.onechart.dev
+# helm repo add stakater https://stakater.github.io/stakater-charts
+# helm repo update
+
 # Vars
 CMD="install"
 
