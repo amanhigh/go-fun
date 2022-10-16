@@ -1,0 +1,6 @@
+image:
+  repository: docker.io/kennethreitz/httpbin
+  tag: latest
+
+containerPort: 80
+svcPort: 8810

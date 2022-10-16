@@ -6,7 +6,7 @@
 CMD="install"
 
 # Prompt
-answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON --limit 5`
+answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN --limit 5`
 
 # Flags
 while getopts 'du' OPTION; do
@@ -69,13 +69,20 @@ do
         helm $CMD tinyproxy stakater/application -f tinyproxy.yml > /dev/null
 
         echo -en "\033[1;33m curl -x localhost:8888 tinyproxy.stats \033[0m \n"
-
         ;;
+
     LOADER)
         helm $CMD vegeta onechart/onechart -f vegeta.yml > /dev/null
         echo -en "\033[1;33m Check Logs for Output \033[0m \n"
         echo -en "\033[1;33m echo 'GET http://nginx' | vegeta attack | vegeta report \033[0m \n"
         ;;
+
+    HTTPBIN)
+        helm $CMD httpbin onechart/onechart -f httpbin.yml > /dev/null
+        echo -en "\033[1;33m Swagger: http://localhost:8810 \033[0m \n"
+        echo -en "\033[1;33m http://localhost:8810/anything \033[0m \n"
+        ;;
+
     CRON)
         # TODO: Fix Cron
         helm $CMD cron onechart/onechart -f cron.yml > /dev/null
