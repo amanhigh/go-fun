@@ -7,7 +7,7 @@
 CMD="install"
 
 # Prompt
-answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER --limit 5`
+answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK --limit 5`
 
 # Flags
 while getopts 'du' OPTION; do
@@ -129,6 +129,11 @@ do
 
     ZOOKEEPER)
         helm $CMD zookeeper bitnami/zookeeper -f zookeeper.yml > /dev/null
+        echo -en "\033[1;33m /demo/demo.sh \033[0m \n"
+        ;;
+    
+    ELK)
+        helm $CMD logstash bitnami/logstash -f logstash.yml > /dev/null
         echo -en "\033[1;33m /demo/demo.sh \033[0m \n"
         ;;
     
