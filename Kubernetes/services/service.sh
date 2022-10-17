@@ -7,7 +7,7 @@
 CMD="install"
 
 # Prompt
-answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL --limit 5`
+answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP --limit 5`
 
 # Flags
 while getopts 'du' OPTION; do
@@ -113,6 +113,12 @@ do
     CONSUL)
         # helm repo add hashicorp https://helm.releases.hashicorp.com
         helm $CMD consul hashicorp/consul -f consul.yml > /dev/null
+        echo -en "\033[1;33m http://localhost:8500/ \033[0m \n"
+        ;;
+    
+    LDAP)
+        helm $CMD ldap onechart/onechart -f ldap.yml > /dev/null
+        helm $CMD ldap-admin onechart/onechart -f ldap-admin.yml > /dev/null
         echo -en "\033[1;33m http://localhost:8500/ \033[0m \n"
         ;;
 
