@@ -129,7 +129,7 @@ do
 
     ZOOKEEPER)
         helm $CMD zookeeper bitnami/zookeeper -f zookeeper.yml > /dev/null
-        echo -en "\033[1;33m TODO Fix Image \033[0m \n"
+        echo -en "\033[1;33m /demo/demo.sh \033[0m \n"
         ;;
     
     LDAP)
