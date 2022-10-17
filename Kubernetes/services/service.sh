@@ -117,9 +117,8 @@ do
         ;;
 
     ETCD)
-        #TODO: Fix but password not working
         helm $CMD etcd bitnami/etcd -f etcd.yml > /dev/null
-        echo -en "\033[1;33m TODO \033[0m \n"
+        echo -en "\033[1;33m ./demo/demo.sh \033[0m \n"
         ;;
 
     SONAR)
