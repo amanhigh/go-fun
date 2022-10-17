@@ -1,7 +1,5 @@
 # helm repo add onechart https://chart.onechart.dev
 # helm repo add stakater https://stakater.github.io/stakater-charts
-# helm repo add opa https://open-policy-agent.github.io/kube-mgmt/charts
-
 
 # helm repo update
 
@@ -9,7 +7,7 @@
 CMD="install"
 
 # Prompt
-answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT OPA --limit 5`
+answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL --limit 5`
 
 # Flags
 while getopts 'du' OPTION; do
@@ -94,6 +92,7 @@ do
         ;;
 
     OPA)
+        # helm repo add opa https://open-policy-agent.github.io/kube-mgmt/charts
         helm $CMD opa opa/opa-kube-mgmt -f opa.yml > /dev/null
         helm $CMD opa-demo onechart/onechart -f opa-demo.yml > /dev/null
         
@@ -109,6 +108,12 @@ do
         helm $CMD vault hashicorp/vault -f vault.yml > /dev/null
         echo -en "\033[1;33m vault status \033[0m \n"
         echo -en "\033[1;33m /demo/vault.sh \033[0m \n"
+        ;;
+
+    CONSUL)
+        # helm repo add hashicorp https://helm.releases.hashicorp.com
+        helm $CMD consul hashicorp/consul -f consul.yml > /dev/null
+        echo -en "\033[1;33m http://localhost:8020/ \033[0m \n"
         ;;
 
     *)
