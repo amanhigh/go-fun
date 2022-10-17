@@ -3,3 +3,11 @@ useHttps: false
 
 # Port to which the opa pod will bind itself,
 port: 8181
+
+#TODO: Load policies using Kube-Mgmnt
+authz:
+  # Disable if you don't want authorization.
+  # Mostly useful for debugging.
+  enabled: false
+# mgmt:
+# enabled: true

@@ -96,6 +96,7 @@ do
     OPA)
         # TODO: Fix Cron
         helm $CMD opa opa/opa-kube-mgmt -f opa.yml > /dev/null
+        helm $CMD opa-demo onechart/onechart -f opa-demo.yml > /dev/null
         echo -en "\033[1;33m http://localhost:8181/ \033[0m \n"
         ;;
 
