@@ -7,7 +7,7 @@
 CMD="install"
 
 # Prompt
-answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR --limit 5`
+answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER --limit 5`
 
 # Flags
 while getopts 'du' OPTION; do
@@ -123,8 +123,13 @@ do
         ;;
 
     SONAR)
-        #TODO: Fix image issue
         helm $CMD sonar bitnami/sonarqube -f sonar.yml > /dev/null
+        echo -en "\033[1;33m http://localhost:9000/ \033[0m \n"
+        echo -en "\033[1;33m Login: aman/aman (Need 5GB Mem) \033[0m \n"
+        ;;
+
+    ZOOKEEPER)
+        helm $CMD zookeeper bitnami/zookeeper -f zookeeper.yml > /dev/null
         echo -en "\033[1;33m TODO Fix Image \033[0m \n"
         ;;
     
