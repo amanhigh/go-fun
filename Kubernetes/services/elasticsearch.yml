@@ -1,0 +1,3 @@
+global:
+  kibanaEnabled: true
+# replicaCount: 1

@@ -134,6 +134,8 @@ do
     
     ELK)
         helm $CMD logstash bitnami/logstash -f logstash.yml > /dev/null
+        helm $CMD elasticsearch bitnami/elasticsearch -f elasticsearch.yml > /dev/null
+        # helm $CMD kibana bitnami/kibana -f kibana.yml > /dev/null
         echo -en "\033[1;33m /demo/demo.sh \033[0m \n"
         ;;
     
