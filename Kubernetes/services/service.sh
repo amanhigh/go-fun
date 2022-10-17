@@ -7,7 +7,7 @@
 CMD="install"
 
 # Prompt
-answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK --limit 5`
+answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK GRAFANA --limit 5`
 
 # Flags
 while getopts 'du' OPTION; do
@@ -142,6 +142,12 @@ do
         helm $CMD elasticsearch bitnami/elasticsearch -f elasticsearch.yml > /dev/null
         # helm $CMD kibana bitnami/kibana -f kibana.yml > /dev/null
         echo -en "\033[1;33m /demo/demo.sh \033[0m \n"
+        ;;
+
+    GRAFANA)
+        # helm repo add grafana https://grafana.github.io/helm-charts
+        helm $CMD grafana grafana/grafana -f grafana.yml > /dev/null
+        echo -en "\033[1;33m http://localhost:3000/login \033[0m \n"
         ;;
     
     LDAP)
