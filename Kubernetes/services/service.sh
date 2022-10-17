@@ -7,7 +7,7 @@
 CMD="install"
 
 # Prompt
-answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD --limit 5`
+answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR --limit 5`
 
 # Flags
 while getopts 'du' OPTION; do
@@ -119,7 +119,13 @@ do
     ETCD)
         #TODO: Fix but password not working
         helm $CMD etcd bitnami/etcd -f etcd.yml > /dev/null
-        echo -en "\033[1;33m http://localhost:8500/ \033[0m \n"
+        echo -en "\033[1;33m TODO \033[0m \n"
+        ;;
+
+    SONAR)
+        #TODO: Fix image issue
+        helm $CMD sonar bitnami/sonarqube -f sonar.yml > /dev/null
+        echo -en "\033[1;33m TODO Fix Image \033[0m \n"
         ;;
     
     LDAP)
