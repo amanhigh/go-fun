@@ -67,6 +67,11 @@ do
         echo -en "\033[1;33m http://localhost:8090/example \033[0m \n"
         echo -en "\033[1;33m http://localhost:8090/ndtv \033[0m \n"
         
+         echo -en "\033[1;32m Squid \033[0m \n"
+        helm $CMD squid onechart/onechart -f squid.yml > /dev/null
+        echo -en "\033[1;33m ALLOW: curl -x localhost:3128 www.google.com \033[0m \n"
+        echo -en "\033[1;33m DENY: curl -x localhost:3128 www.fb.com \033[0m \n"
+
         echo -en "\033[1;32m TinyProxy \033[0m \n"
         helm $CMD tinyproxy stakater/application -f tinyproxy.yml > /dev/null
 
