@@ -138,6 +138,7 @@ do
         ;;
     
     ELK)
+        #TODO: Complete Compose Setup
         helm $CMD logstash bitnami/logstash -f logstash.yml > /dev/null
         helm $CMD elasticsearch bitnami/elasticsearch -f elasticsearch.yml > /dev/null
         # helm $CMD kibana bitnami/kibana -f kibana.yml > /dev/null
@@ -145,6 +146,7 @@ do
         ;;
 
     GRAFANA)
+        #TODO: Link to a Data Store
         # helm repo add grafana https://grafana.github.io/helm-charts
         helm $CMD grafana grafana/grafana -f grafana.yml > /dev/null
         echo -en "\033[1;33m http://localhost:3000/login \033[0m \n"
