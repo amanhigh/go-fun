@@ -27,5 +27,26 @@ curl --user david:password localhost:5000/finance/salary/bob
 curl --user david:password localhost:5000/finance/salary/charlie
 curl --user david:password localhost:5000/finance/salary/david
 
+#-------------------------------------------------
+echo -en "\033[1;32m OPA Eval (Http API): True \033[0m \n"
+curl -X POST 'http://opa-opa-kube-mgmt:8181/v1/data/httpapi/authz/allow' \
+--data '{
+  "input": {
+    "user": "alice",
+    "path": ["finance", "salary", "alice"],
+    "method": "GET"
+  }
+}'
+
+echo -en "\033[1;32m \nIs Manager Check: True \033[0m \n"
+curl -X POST 'http://opa-opa-kube-mgmt:8181/v1/data/httpapi/authz/is_manager' \
+--data '{
+  "input": {
+    "user": "bob"
+  }
+}'
+
+echo ""
+
 #Cleanup
 curl -s -X DELETE opa-opa-kube-mgmt:8181/v1/policies/example-hr > /dev/null
