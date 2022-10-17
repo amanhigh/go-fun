@@ -1,0 +1,66 @@
+{
+  "role": {
+    "image-reader": [
+      {
+        "resourceType": "image",
+        "action": "read"
+      }
+    ],
+    "image-writer": [
+      {
+        "resourceType": "image",
+        "action": "update"
+      },
+      {
+        "resourceType": "image",
+        "action": "write"
+      }
+    ],
+    "image-admin": [
+      {
+        "resourceType": "image",
+        "action": "delete"
+      }
+    ]
+  },
+  "role_mapping": {
+    "gujrat": [
+      {
+        "role": "image-reader",
+        "principle": "bob"
+      },
+      {
+        "role": "image-admin",
+        "principle": "ali.*",
+        "scope": "foo-.*"
+      }
+    ],
+    "bengal": [
+      {
+        "role": "image-reader",
+        "principle": "laxmi",
+        "scope" : "puja"
+      }
+    ]
+  },
+  "role_group": {
+    "sysadmin": [
+      "webdev",
+      "webdev",
+      "hr"
+    ],
+    "image-writer": [
+      "image-reader"
+    ],
+    "image-admin": [
+      "image-writer",
+      "image-reader"
+    ]
+  },
+  "resource_tree": {
+    "surat": [
+      "gujrat",
+      "india"
+    ]
+  }
+}
