@@ -113,7 +113,7 @@ do
     CONSUL)
         # helm repo add hashicorp https://helm.releases.hashicorp.com
         helm $CMD consul hashicorp/consul -f consul.yml > /dev/null
-        echo -en "\033[1;33m http://localhost:8020/ \033[0m \n"
+        echo -en "\033[1;33m http://localhost:8500/ \033[0m \n"
         ;;
 
     *)

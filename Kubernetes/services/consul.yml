@@ -1,5 +1,2 @@
-ui:
-  service:
-    port:
-      # HTTP port.
-      http: 8020
+server:
+  affinity: null
