@@ -119,7 +119,9 @@ do
     LDAP)
         helm $CMD ldap onechart/onechart -f ldap.yml > /dev/null
         helm $CMD ldap-admin onechart/onechart -f ldap-admin.yml > /dev/null
-        echo -en "\033[1;33m http://localhost:8500/ \033[0m \n"
+        echo -en "\033[1;33m UI: http://localhost:8030/ \033[0m \n"
+        echo -en "\033[1;33m CMD: ldapsearch -H ldap://localhost:3891 -xLL -D 'cn=admin,dc=example,dc=com' -b 'dc=example,dc=com' -W '(cn=admin)' \033[0m \n"
+        echo -en "\033[1;33m Admin Login: Username:cn=admin,dc=example,dc=com Password: admin \033[0m \n"
         ;;
 
     *)

@@ -7,7 +7,8 @@ svcPort: 389
 
 vars:
   LDAP_TLS: "false"
-  LDAP_ADMIN_PASSWORD: "password"
+  #Admin Login: Username:cn=admin,dc=example,dc=com Password: admin
+  LDAP_ADMIN_PASSWORD: "admin"
   LDAP_ORGANISATION: "Example"
   LDAP_DOMAIN: "example.com"
   LDAP_BASE_DN: "dc=example,dc=com"
