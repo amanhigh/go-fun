@@ -7,7 +7,7 @@
 CMD="install"
 
 # Prompt
-answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK GRAFANA WEBSHELL --limit 5`
+answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK GRAFANA WEBSHELL --limit 5`
 
 # Flags
 while getopts 'du' OPTION; do
@@ -94,6 +94,11 @@ do
         # TODO: Fix Cron
         helm $CMD cron onechart/onechart -f cron.yml > /dev/null
         echo -en "\033[1;33m Check Logs for Output \033[0m \n"
+        ;;
+   
+    APP)
+        helm $CMD app onechart/onechart -f app.yml > /dev/null
+        echo -en "\033[1;33m http://localhost:7080/metrics\n http://localhost:7080/person/all \033[0m \n"
         ;;
 
     OPA)
