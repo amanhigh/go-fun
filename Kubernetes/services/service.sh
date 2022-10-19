@@ -133,17 +133,16 @@ function process()
             echo -en "\033[1;33m /demo/demo.sh \033[0m \n"
             ;;
 
-        GRAFANA)
-            #TODO: Link to a Data Store
-            # helm repo add grafana https://grafana.github.io/helm-charts
-            helm $CMD grafana grafana/grafana -f grafana.yml > /dev/null
-            echo -en "\033[1;33m http://localhost:3000/login \033[0m \n"
-            ;;
-
-        PROMETHEUS)
+        MONITOR)
             #helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
             helm $CMD prometheus prometheus-community/prometheus -f prometheus.yml > /dev/null
             echo -en "\033[1;33m Prometheus Server: http://localhost:9090/ \033[0m \n"
+
+             # helm repo add grafana https://grafana.github.io/helm-charts
+            helm $CMD grafana grafana/grafana -f grafana.yml > /dev/null
+            echo -en "\033[1;33m http://localhost:3000/login (aman/aman) \033[0m \n"
+            echo -en "\033[1;33m Datasource: http://localhost:3000/datasources/new \033[0m \n"
+            echo -en "\033[1;33m Add Datasource Prometheus: http://prometheus-server \033[0m \n"
             ;;
         
         LDAP)
@@ -189,7 +188,7 @@ while getopts 'dusi' OPTION; do
         ;;
     s)
         # Prompt
-        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK GRAFANA PROMETHEUS WEBSHELL --limit 5`
+        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK MONITOR WEBSHELL --limit 5`
         echo $answers > $ANS_FILE    
         echo -en "\033[1;32m Service Set \033[0m \n"
         echo -en "\033[1;33m $answers \033[0m \n"
