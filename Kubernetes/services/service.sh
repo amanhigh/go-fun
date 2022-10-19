@@ -139,6 +139,12 @@ function process()
             helm $CMD grafana grafana/grafana -f grafana.yml > /dev/null
             echo -en "\033[1;33m http://localhost:3000/login \033[0m \n"
             ;;
+
+        PROMETHEUS)
+            #helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+            helm $CMD prometheus prometheus-community/prometheus -f prometheus.yml > /dev/null
+            echo -en "\033[1;33m Prometheus Server: http://localhost:9090/ \033[0m \n"
+            ;;
         
         LDAP)
             helm $CMD ldap onechart/onechart -f ldap.yml > /dev/null
@@ -183,7 +189,7 @@ while getopts 'dusi' OPTION; do
         ;;
     s)
         # Prompt
-        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK GRAFANA WEBSHELL --limit 5`
+        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK GRAFANA PROMETHEUS WEBSHELL --limit 5`
         echo $answers > $ANS_FILE    
         echo -en "\033[1;32m Service Set \033[0m \n"
         echo -en "\033[1;33m $answers \033[0m \n"
