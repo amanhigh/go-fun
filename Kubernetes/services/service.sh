@@ -7,7 +7,7 @@
 CMD="install"
 
 # Prompt
-answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK GRAFANA --limit 5`
+answers=`gum choose MYSQL MONGO REDIS PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK GRAFANA WEBSHELL --limit 5`
 
 # Flags
 while getopts 'du' OPTION; do
@@ -158,6 +158,15 @@ do
         echo -en "\033[1;33m UI: http://localhost:8030/ \033[0m \n"
         echo -en "\033[1;33m CMD: ldapsearch -H ldap://localhost:3891 -xLL -D 'cn=admin,dc=example,dc=com' -b 'dc=example,dc=com' -W '(cn=admin)' \033[0m \n"
         echo -en "\033[1;33m Admin Login: Username:cn=admin,dc=example,dc=com Password: admin \033[0m \n"
+        ;;
+    WEBSHELL)
+        helm $CMD sshwifty onechart/onechart -f sshwifty.yml  > /dev/null
+        helm $CMD webssh onechart/onechart -f webssh.yml > /dev/null
+        #TODO: Fix Config
+        helm $CMD webssh2 onechart/onechart -f webssh2.yml > /dev/null
+        echo -en "\033[1;33m Sshwifty: http://localhost:8080/ \033[0m \n"
+        echo -en "\033[1;33m Webssh: http://localhost:8182/ \033[0m \n"
+        echo -en "\033[1;33m Webssh: http://localhost:2222/ \033[0m \n"
         ;;
 
     *)

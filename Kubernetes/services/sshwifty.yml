@@ -1,0 +1,6 @@
+image:
+  repository: niruix/sshwifty
+  tag: latest
+
+containerPort: 8182
+svcPort: 8182
