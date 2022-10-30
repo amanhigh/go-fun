@@ -2,6 +2,7 @@
 # helm repo add stakater https://stakater.github.io/stakater-charts
 
 # helm repo update
+# sudo kubefwd svc
 
 # Vars
 CMD="install"
