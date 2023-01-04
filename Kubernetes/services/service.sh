@@ -153,6 +153,13 @@ function process()
             echo -en "\033[1;33m CMD: ldapsearch -H ldap://localhost:3891 -xLL -D 'cn=admin,dc=example,dc=com' -b 'dc=example,dc=com' -W '(cn=admin)' \033[0m \n"
             echo -en "\033[1;33m Admin Login: Username:cn=admin,dc=example,dc=com Password: admin \033[0m \n"
             ;;
+        MYSQL-OP)
+            #helm repo add bitpoke https://helm-charts.bitpoke.io
+            helm $CMD mysql-operator bitpoke/mysql-operator #> /dev/null
+            kubectl apply -f https://raw.githubusercontent.com/bitpoke/mysql-operator/master/examples/example-cluster-secret.yaml
+            kubectl apply -f https://raw.githubusercontent.com/bitpoke/mysql-operator/master/examples/example-cluster.yaml
+            echo -en "\033[1;33m Mysql Clusters: kubectl get mysql \033[0m \n"
+            ;;
         WEBSHELL)
             helm $CMD sshwifty onechart/onechart -f sshwifty.yml  > /dev/null
             helm $CMD webssh onechart/onechart -f webssh.yml > /dev/null
@@ -177,6 +184,8 @@ while getopts 'dusi' OPTION; do
     d)
         echo -en "\033[1;32m Clearing all Helms \033[0m \n"
         helm delete $(helm list --short)
+        #Delete CRD's
+        kubectl get crd --all-namespaces -oname | xargs kubectl delete
         ;;
     i)
         echo -en "\033[1;32m Helm: Install \033[0m \n"
@@ -189,7 +198,7 @@ while getopts 'dusi' OPTION; do
         ;;
     s)
         # Prompt
-        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK MONITOR WEBSHELL --limit 5`
+        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK MONITOR WEBSHELL MYSQL-OP --limit 5`
         echo $answers > $ANS_FILE    
         echo -en "\033[1;32m Service Set \033[0m \n"
         echo -en "\033[1;33m $answers \033[0m \n"
