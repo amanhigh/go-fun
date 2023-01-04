@@ -1,0 +1,18 @@
+auth:
+  rbac:
+    rootPassword: root
+
+replicaCount: 1
+
+## @param extraVolumeMounts Optionally specify extra list of additional volumeMounts for the MongoDB(&reg;) container(s)
+## Examples:
+extraVolumeMounts:
+  - name: demo
+    mountPath: /demo
+    readOnly: true
+
+## @param extraVolumes Optionally specify extra list of additional volumes to the MongoDB(&reg;) statefulset
+extraVolumes:
+  - name: demo
+    hostPath:
+      path: /etc/files/etcd

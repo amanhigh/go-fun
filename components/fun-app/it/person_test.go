@@ -14,7 +14,7 @@ import (
 var _ = Describe("Person Integration Test", func() {
 	var (
 		// serviceUrl = "http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy" //K8 endpoint or do PF on 8080 using K9S
-		serviceUrl = "http://localhost:8080"
+		serviceUrl = "http://localhost:8085"
 		request    server2.PersonRequest
 
 		name   = "Amanpreet Singh"

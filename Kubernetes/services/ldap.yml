@@ -1,0 +1,16 @@
+image:
+  repository: osixia/openldap
+  tag: latest
+
+containerPort: 389
+svcPort: 389
+
+vars:
+  LDAP_TLS: "false"
+  #Admin Login: Username:cn=admin,dc=example,dc=com Password: admin
+  LDAP_ADMIN_PASSWORD: "admin"
+  LDAP_ORGANISATION: "Example"
+  LDAP_DOMAIN: "example.com"
+  LDAP_BASE_DN: "dc=example,dc=com"
+  LDAP_PORT: "389"
+  LDAPS_PORT: "639"

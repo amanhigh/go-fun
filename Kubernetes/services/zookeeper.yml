@@ -1,0 +1,33 @@
+replicaCount: 2
+auth:
+  client:
+    ## @param auth.client.enabled Enable ZooKeeper client-server authentication. It uses SASL/Digest-MD5
+    ##
+    enabled: false
+    ## @param auth.client.clientUser User that will use ZooKeeper clients to auth
+    ##
+    clientUser: "aman"
+    ## @param auth.client.clientPassword Password that will use ZooKeeper clients to auth
+    ##
+    clientPassword: "aman"
+    ## @param auth.client.serverUsers Comma, semicolon or whitespace separated list of user to be created
+    ## Specify them as a string, for example: "user1,user2,admin"
+    ##
+    serverUsers: ""
+    ## @param auth.client.serverPasswords Comma, semicolon or whitespace separated list of passwords to assign to users when created
+    ## Specify them as a string, for example: "pass4user1, pass4user2, pass4admin"
+    ##
+    serverPasswords: ""
+
+## @param extraVolumeMounts Optionally specify extra list of additional volumeMounts for the MongoDB(&reg;) container(s)
+## Examples:
+extraVolumeMounts:
+  - name: zk
+    mountPath: /demo
+    readOnly: true
+
+## @param extraVolumes Optionally specify extra list of additional volumes to the MongoDB(&reg;) statefulset
+extraVolumes:
+  - name: zk
+    hostPath:
+      path: /etc/files/zk

@@ -1,5 +1,5 @@
 echo -en "\033[1;32m Configuring Istio: Primary \033[0m \n"
-minikube profile minikube
+# TODO: Setup Istio and Addons via Helm
 # https://istio.io/v1.1/docs/setup/kubernetes/additional-setup/config-profiles/
 istioctl install -y --set profile=default > /dev/null
 

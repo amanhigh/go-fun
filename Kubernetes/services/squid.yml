@@ -1,0 +1,12 @@
+image:
+  repository: sameersbn/squid
+  tag: latest
+
+containerPort: 3128
+svcPort: 3128
+
+volumes:
+  - name: default-conf
+    path: /etc/squid
+    hostPath:
+      path: /etc/files/squid/

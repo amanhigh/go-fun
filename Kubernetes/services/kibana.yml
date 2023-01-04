@@ -1,0 +1,13 @@
+replicaCount: 1
+
+elasticsearch:
+  ## @param elasticsearch.hosts List of elasticsearch hosts to connect to.
+  ## e.g:
+  ## hosts:
+  ##   - elasticsearch-1
+  ##   - elasticsearch-2
+  ##
+  hosts: []
+  ## @param elasticsearch.port Elasticsearch port
+  ##
+  port: ""

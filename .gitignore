@@ -37,3 +37,6 @@ dist/
 
 # Helm
 *.tgz
+
+# Ignore DevSpace cache and log folder
+.devspace/

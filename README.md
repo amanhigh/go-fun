@@ -49,16 +49,29 @@ By default it runs without any dependencies with in memory [sqlite3](https://git
 
 
 ### K8/Istio Run
-- Setup <br/>
+- Setup: <br/>
 `helm repo add go-fun https://amanhigh.github.io/go-fun` <br/>
-`helm install fun-app go-fun/fun-app`
-
+`helm install -n fun-app fun-app go-fun/fun-app` <br/>
 Open http://localhost:9000/metrics (Minikube: Run "minikube tunnel")
+
     
-- Cleanup <br/>
- `helm delete fun-app`
+- Cleanup: <br/>
+ `helm -n fun-app delete fun-app`
 
 <br/> ![](common/images/fun-app/helm.gif)
+
+### Development Container
+ *After Helm Setup*, run Development Remote Container.
+ It is configured to Auto Reload Code Changes
+
+* Start:<br/>
+    Run `devspace -n fun-app dev` <br/>
+    Open http://localhost:8080/metrics
+
+* Cleanup: `devspace -n fun-app purge`
+
+<br/> ![](common/images/fun-app/devcode.gif)
+
 
 
 ## TODO

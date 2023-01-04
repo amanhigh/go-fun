@@ -22,7 +22,11 @@
                 "showReuseMessage": true,
                 "clear": true
             },
-            "problemMatcher": []
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
             "label": "cover",

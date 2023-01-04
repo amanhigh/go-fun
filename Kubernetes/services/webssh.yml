@@ -1,0 +1,6 @@
+image:
+  repository: amanfdk/webssh
+  tag: 1.5.2
+
+containerPort: 8080
+svcPort: 8080

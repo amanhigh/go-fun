@@ -1,0 +1,6 @@
+image:
+  repository: billchurch/webssh2
+  tag: latest
+
+containerPort: 2222
+svcPort: 2222

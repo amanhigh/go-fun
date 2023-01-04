@@ -1,0 +1,8 @@
+image:
+  repository: rediscommander/redis-commander
+  tag: latest
+
+containerPort: 8081
+
+vars:
+  REDIS_HOSTS: "redis-master"
