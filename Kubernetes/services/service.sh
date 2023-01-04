@@ -155,9 +155,9 @@ function process()
             ;;
         MYSQL-OP)
             #helm repo add bitpoke https://helm-charts.bitpoke.io
-            helm $CMD mysql-operator bitpoke/mysql-operator #> /dev/null
-            kubectl apply -f https://raw.githubusercontent.com/bitpoke/mysql-operator/master/examples/example-cluster-secret.yaml
-            kubectl apply -f https://raw.githubusercontent.com/bitpoke/mysql-operator/master/examples/example-cluster.yaml
+            helm $CMD mysql-operator bitpoke/mysql-operator > /dev/null
+            kubectl apply -f ./files/bitspoke/secret.yml
+            kubectl apply -f ./files/bitspoke/cluster.yml
             echo -en "\033[1;33m Mysql Clusters: kubectl get mysql \033[0m \n"
             ;;
         WEBSHELL)
@@ -171,6 +171,7 @@ function process()
             ;;
 
         *)
+            #TODO: Add Locust
             echo -en "\033[1;34m Service Not Supported: $SVC \033[0m \n"
             ;;
         esac
@@ -185,7 +186,7 @@ while getopts 'dusi' OPTION; do
         echo -en "\033[1;32m Clearing all Helms \033[0m \n"
         helm delete $(helm list --short)
         #Delete CRD's
-        kubectl get crd --all-namespaces -oname | xargs kubectl delete
+        kubectl get crd --all-namespaces -oname | xargs kubectl delete > /dev/null
         ;;
     i)
         echo -en "\033[1;32m Helm: Install \033[0m \n"
