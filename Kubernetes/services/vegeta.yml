@@ -1,0 +1,12 @@
+image:
+  repository: peterevans/vegeta
+  tag: latest
+
+# replicas: 2
+command: sleep 100000
+
+sidecar:
+  repository: digitalocean/doks-debug
+  tag: latest
+  shell: "/bin/bash"
+  command: "sleep infinity"

@@ -1,0 +1,15 @@
+server:
+  dev:
+    enabled: true
+    # Set VAULT_DEV_ROOT_TOKEN_ID value
+    devRootToken: "root-token"
+
+  volumeMounts:
+    - name: demo
+      mountPath: /demo
+      readOnly: true
+
+  volumes:
+    - name: demo
+      hostPath:
+        path: /etc/files/vault

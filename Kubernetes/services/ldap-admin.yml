@@ -1,0 +1,10 @@
+image:
+  repository: osixia/phpldapadmin
+  tag: latest
+
+containerPort: 80
+svcPort: 8030
+
+vars:
+  PHPLDAPADMIN_LDAP_HOSTS: "ldap"
+  PHPLDAPADMIN_HTTPS: false

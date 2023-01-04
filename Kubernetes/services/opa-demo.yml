@@ -1,0 +1,16 @@
+image:
+  repository: openpolicyagent/demo-restful-api
+  tag: latest
+
+containerPort: 5000
+svcPort: 5000
+
+vars:
+  OPA_ADDR: http://opa-opa-kube-mgmt:8181
+  POLICY_PATH: /v1/data/httpapi/authz
+
+volumes:
+  - name: default-conf
+    path: /demo
+    hostPath:
+      path: /etc/files/opa/

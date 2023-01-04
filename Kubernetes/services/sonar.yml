@@ -1,0 +1,15 @@
+sonarqubeUsername: aman
+sonarqubePassword: aman
+
+## @param extraVolumeMounts Optionally specify extra list of additional volumeMounts for the MongoDB(&reg;) container(s)
+## Examples:
+extraVolumeMounts:
+  - name: files
+    mountPath: /files
+    readOnly: true
+
+## @param extraVolumes Optionally specify extra list of additional volumes to the MongoDB(&reg;) statefulset
+extraVolumes:
+  - name: files
+    hostPath:
+      path: /etc/files/

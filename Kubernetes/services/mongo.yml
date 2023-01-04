@@ -1,0 +1,44 @@
+# helm install mongo bitnami/mongodb -f mongo.yml
+# mongosh -u root -p root --host localhost  < /etc/files/scripts/mongo.js
+
+## @param architecture MongoDB(&reg;) architecture (`standalone` or `replicaset`)
+architecture: replicaset
+auth:
+  rootPassword: root
+  ## MongoDB(&reg;) custom users and databases
+  ## ref: https://github.com/bitnami/containers/tree/main/bitnami/mongodb#creating-a-user-and-database-on-first-run
+  ## @param auth.usernames List of custom users to be created during the initialization
+  ## @param auth.passwords List of passwords for the custom users set at `auth.usernames`
+  ## @param auth.databases List of custom databases to be created during the initialization
+  ##
+  usernames: [aman]
+  passwords: [aman]
+  databases: [compute]
+
+## @param replicaSetName Name of the replica set (only when `architecture=replicaset`)
+## Ignored when mongodb.architecture=standalone
+##
+replicaSetName: rs0
+## @param initdbScripts Dictionary of initdb scripts
+## Specify dictionary of scripts to be run at first boot
+## Example:
+## initdbScripts:
+##   my_init_script.sh: |
+##      #!/bin/bash
+##      echo "Do something."
+##
+initdbScripts: {}
+replicaCount: 2
+
+## @param extraVolumeMounts Optionally specify extra list of additional volumeMounts for the MongoDB(&reg;) container(s)
+## Examples:
+extraVolumeMounts:
+  - name: files
+    mountPath: /etc/files
+    readOnly: true
+
+## @param extraVolumes Optionally specify extra list of additional volumes to the MongoDB(&reg;) statefulset
+extraVolumes:
+  - name: files
+    hostPath:
+      path: /etc/files

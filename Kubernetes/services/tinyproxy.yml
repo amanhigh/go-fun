@@ -1,0 +1,32 @@
+# https://github.com/stakater-charts/application
+##########################################################
+# Name of the application.
+##########################################################
+applicationName: "tiny"
+
+##########################################################
+# Deployment
+##########################################################
+deployment:
+  # Image of the app container
+  image:
+    repository: travix/tinyproxy
+    tag: latest
+
+  # replicas: 1
+
+  ports:
+    - containerPort: 8888
+      name: http
+      protocol: TCP
+
+  readinessProbe:
+    enabled: false
+  livenessProbe:
+    enabled: false
+
+# Service Account to use by pods
+rbac:
+  serviceAccount:
+    enabled: true
+    name: "tiny"

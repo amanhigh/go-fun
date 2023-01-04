@@ -1,0 +1,142 @@
+## @param extraVolumeMounts Optionally specify extra list of additional volumeMounts for the MongoDB(&reg;) container(s)
+## Examples:
+extraVolumeMounts:
+  - name: certs
+    mountPath: /etc/ssl/certs/self/
+
+## @param extraVolumes Optionally specify extra list of additional volumes to the MongoDB(&reg;) statefulset
+extraVolumes:
+  - name: certs
+    hostPath:
+      path: /etc/files/certs
+#diagnosticMode:
+#  enabled: true
+
+serverBlock: |-
+  upstream backend {
+    ip_hash; #Hash Based on Source IP
+    #hash $remote_addr; # More Distributed Hash based On Source Ip
+
+    #Load Balancing with Passive Health Checks.
+    server 127.0.0.1;
+    server 0.0.0.0;
+  }
+
+  server {
+    listen       8081;
+    server_name  localhost;
+
+  ################### ROOT ###################
+        location / {
+            root   /opt/bitnami/nginx/html;
+            index  index.html index.htm;
+            }
+
+            #error_page  404              /404.html;
+
+
+            # redirect server error pages to the static page /50x.html
+            #
+            error_page   500 502 503 504  /50x.html;
+            location = /50x.html {
+            root   /opt/bitnami/nginx/html;
+        }
+
+  ################### DEFAULT ###################
+          location /health {
+              default_type application/json;
+              return 200 '"Healthy"';
+          }
+          location /notfound {
+              default_type application/json;
+              return 404 '"Not Found"';
+          }
+
+          location @backup {
+              default_type application/json;
+              return 200 '"Backup Worked"';
+          }
+  ################### FALLBACK ###################
+          #Tries notfound and fallbacks to backup.
+          location /fallback {
+                error_page 404 = @backup;
+                proxy_pass http://localhost:8081/notfound;
+                proxy_intercept_errors on;
+          }
+
+          #Tries and health which works with no fallback.
+          location /healthy_fallback {
+              error_page 404 = @backup;
+              proxy_pass http://localhost:8081/health;
+              proxy_intercept_errors on;
+          }
+  ################### PROXY ###################
+          #Eg. http://docker:8081/pass, http://docker:8081/pass/api/v1/employees
+          location  /pass {
+            rewrite /pass/(.*) /$1  break;
+            proxy_pass http://dummy.restapiexample.com/;
+            proxy_redirect     off;
+          }
+  }
+
+  server {
+    listen       8082;
+    server_name  localhost;
+
+    location / {
+        proxy_pass https://www.nseindia.com/;
+        #proxy_set_header X-Custom-Header $host;
+        #proxy_set_header "User-Agent" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:72.0) Gecko/20100101 Firefox/72.0";
+    }
+  }
+
+  #Proxy Http-> Https using proxy_ssl_server_name on;
+  server {
+    listen       8083;
+    server_name  localhost;
+
+    location / {
+        proxy_ssl_server_name on;
+        proxy_pass https://reqres.in;
+        #proxy_set_header X-Custom-Header $host;
+        #proxy_set_header "User-Agent" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:72.0) Gecko/20100101 Firefox/72.0";
+      }
+  }
+
+  #Redirect Http to Https, Locally
+  server {
+    #curl http://localhost:8084/api/users?page=2
+    listen       8084;
+    server_name  localhost;
+
+    location / {
+        proxy_pass https://localhost;
+      }
+  }
+
+  server {
+    #curl -k https://localhost:8443/api/users?page=2 (PF: 443->8443)
+    listen       443 ssl;
+    server_name  localhost;
+    #openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./nginx-selfsigned.key -out ./nginx-selfsigned.crt
+    ssl_certificate /etc/ssl/certs/self/selfsigned.crt;
+    ssl_certificate_key /etc/ssl/certs/self/selfsigned.key;
+
+    location / {
+        proxy_ssl_server_name on;
+        proxy_pass https://reqres.in;
+      }
+  }
+
+  #Named Server: Needs /etc/hosts entry for stats->localhost
+  #Two Server Blocks on same Port 8081
+  #Works: curl localhost:8081/health, stats:8081, localhost:8081
+  #Doesn't Work:curl stats:8081/health
+  server {
+      listen 8081;
+      server_name stats;
+
+      location /stats {
+          stub_status;
+      }
+  }
