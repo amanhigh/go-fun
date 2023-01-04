@@ -155,10 +155,10 @@ function process()
             ;;
         MYSQL-OP)
             #helm repo add bitpoke https://helm-charts.bitpoke.io
-            helm $CMD mysql-operator bitpoke/mysql-operator > /dev/null
+            helm $CMD mysql-operator bitpoke/mysql-operator -f bitspoke.yml > /dev/null
             kubectl apply -f ./files/bitspoke/secret.yml
             kubectl apply -f ./files/bitspoke/cluster.yml
-            echo -en "\033[1;33m Mysql Clusters: kubectl get mysql \033[0m \n"
+            echo -en "\033[1;33m Mysql Clusters: kubectl get mysql; kubectl describe mysql mysql-operator \033[0m \n"
             ;;
         WEBSHELL)
             helm $CMD sshwifty onechart/onechart -f sshwifty.yml  > /dev/null
