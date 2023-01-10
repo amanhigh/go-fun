@@ -94,6 +94,7 @@ Flags (Multiple flags can be passed together)
 * Set (s) - Allows you set Service Reciepe.
 * Install (i) - Installs Helms
 * Delete (d) - Deletes & Clears all Helms
+* Reset (r) - Clear all Resources in Current Namespace & Helms
 
 Eg.
 * Set & Install - `./go-fun/Kubernetes/services/services.sh -si`
