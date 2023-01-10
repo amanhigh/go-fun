@@ -186,10 +186,12 @@ while getopts 'dusri' OPTION; do
     r)
         NS=$(kubectl get sa -o=jsonpath='{.items[0]..metadata.namespace}')
         echo -en "\033[1;32m Restting Namespace: $NS \033[0m \n"
-        helm delete $(helm list --short)
         #Delete CRD's
         kubectl get crd --all-namespaces -oname | xargs kubectl delete > /dev/null
-        kubectl delete --all all --namespace=$NS 
+        #Delete Resources
+        kubectl delete --all all --namespace=$NS
+        #Helm Clear
+        helm delete $(helm list --short)
         ;;
     d)
         echo -en "\033[1;32m Clearing all Helms \033[0m \n"
