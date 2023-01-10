@@ -83,6 +83,8 @@ Script and Multiselect can be used to enable Istio, Ingress Gateway etc.
 * Setup - `./go-fun/Kubernetes/mini.sh`
 * Teardown - `./go-fun/Kubernetes/clean.sh`
 
+<br/> ![](common/images/fun-app/minikube.gif)
+
 ### Services
 Package has multiple service which can be setup on top of Minikube. This helps in easy setup of complex dependencies like Mysql Cluster, Mongo, Prometheus, Sonar and many more ...
 
@@ -97,6 +99,9 @@ Eg.
 * Set & Install - `./go-fun/Kubernetes/services/services.sh -si`
 * Destroy & Install - `./go-fun/Kubernetes/services/services.sh -di` </br>
 (Needs Set to be already done)
+
+<br/> ![](common/images/fun-app/k8-service.gif)
+
 
 ## TODO
 - Message Queue
