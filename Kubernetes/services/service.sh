@@ -158,7 +158,8 @@ function process()
             helm $CMD mysql-operator bitpoke/mysql-operator -f bitspoke.yml > /dev/null
             kubectl apply -f ./files/bitspoke/secret.yml
             kubectl apply -f ./files/bitspoke/cluster.yml
-            echo -en "\033[1;33m Mysql Clusters: kubectl get mysql; kubectl describe mysql mysql-operator \033[0m \n"
+            echo -en "\033[1;33m Mysql Info: kubectl get mysql; kubectl describe mysql mysql-operator; \033[0m \n"
+            echo -en "\033[1;33m Mysql Clear: kubectl delete mysql mysql-operator; \033[0m \n"
             ;;
         WEBSHELL)
             helm $CMD sshwifty onechart/onechart -f sshwifty.yml  > /dev/null
@@ -180,13 +181,19 @@ function process()
 
 
 # Flags
-while getopts 'dusi' OPTION; do
+while getopts 'dusri' OPTION; do
   case "$OPTION" in
-    d)
-        echo -en "\033[1;32m Clearing all Helms \033[0m \n"
+    r)
+        NS=$(kubectl get sa -o=jsonpath='{.items[0]..metadata.namespace}')
+        echo -en "\033[1;32m Restting Namespace: $NS \033[0m \n"
         helm delete $(helm list --short)
         #Delete CRD's
         kubectl get crd --all-namespaces -oname | xargs kubectl delete > /dev/null
+        kubectl delete --all all --namespace=$NS 
+        ;;
+    d)
+        echo -en "\033[1;32m Clearing all Helms \033[0m \n"
+        helm delete $(helm list --short)
         ;;
     i)
         echo -en "\033[1;32m Helm: Install \033[0m \n"
@@ -209,7 +216,8 @@ while getopts 'dusi' OPTION; do
         echo -en "\033[1;33m [-s] Set \033[0m \n"
         echo -en "\033[1;33m [-i] Install \033[0m \n"
         echo -en "\033[1;33m [-u] Upgrade \033[0m \n"
-        echo -en "\033[1;33m [-d] delete \033[0m \n"
+        echo -en "\033[1;33m [-d] Delete \033[0m \n"
+        echo -en "\033[1;33m [-r] Reset \033[0m \n"
         exit 1
         ;;
   esac
