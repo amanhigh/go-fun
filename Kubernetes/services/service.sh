@@ -160,6 +160,7 @@ function process()
             kubectl apply -f ./files/bitspoke/cluster.yml
             echo -en "\033[1;33m Mysql Info: kubectl get mysql; kubectl describe mysql mysql-operator; \033[0m \n"
             echo -en "\033[1;33m Mysql Clear: kubectl delete mysql mysql-operator; \033[0m \n"
+            echo -en "\033[1;33m Credential: root/root, aman/aman \033[0m \n"
             ;;
         WEBSHELL)
             helm $CMD sshwifty onechart/onechart -f sshwifty.yml  > /dev/null
