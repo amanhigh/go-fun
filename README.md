@@ -72,7 +72,31 @@ Open http://localhost:9000/metrics (Minikube: Run "minikube tunnel")
 
 <br/> ![](common/images/fun-app/devcode.gif)
 
+## Kubernetes
+To ease development and easy setup of dependencies we use Kubernetes. Also [K9S](https://github.com/derailed/k9s) provides easy interface to manage containers, see logs etc. [Helms](https://github.com/helm/helm) are used to setup various services which application can depend on.
 
+### Minikube
+To setup kubernetes there are multiple options available like minikube, kind, k89, k3s etc. In this project we are using [minikube](https://minikube.sigs.k8s.io/docs/).
+
+
+Script and Multiselect can be used to enable Istio, Ingress Gateway etc.
+* Setup - `./go-fun/Kubernetes/mini.sh`
+* Teardown - `./go-fun/Kubernetes/clean.sh`
+
+### Services
+Package has multiple service which can be setup on top of Minikube. This helps in easy setup of complex dependencies like Mysql Cluster, Mongo, Prometheus, Sonar and many more ...
+
+Service Script allows you multiple flags to set, create and teardown the setup.
+
+Flags (Multiple flags can be passed together)
+* Set (s) - Allows you set Service Reciepe.
+* Install (i) - Installs Helms
+* Delete (d) - Deletes & Clears all Helms
+
+Eg.
+* Set & Install - `./go-fun/Kubernetes/services/services.sh -si`
+* Destroy & Install - `./go-fun/Kubernetes/services/services.sh -di` </br>
+(Needs Set to be already done)
 
 ## TODO
 - Message Queue
