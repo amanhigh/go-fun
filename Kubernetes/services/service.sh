@@ -2,7 +2,7 @@
 # helm repo add stakater https://stakater.github.io/stakater-charts
 
 # helm repo update
-# sudo kubefwd svc
+# sudo kubefwd svc | awk '{ if($2 ~ /Port-Forward/) {print $0" URL: http://"$4"/"} else {print}}'
 
 # Vars
 CMD="install"
