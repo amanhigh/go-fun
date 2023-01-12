@@ -158,9 +158,10 @@ function process()
             helm $CMD mysql-operator bitpoke/mysql-operator -f bitspoke.yml > /dev/null
             kubectl apply -f ./files/bitspoke/secret.yml
             kubectl apply -f ./files/bitspoke/cluster.yml
+            helm $CMD mysql-admin bitnami/phpmyadmin > /dev/null
             echo -en "\033[1;33m Mysql Info: kubectl get mysql; kubectl describe mysql mysql-operator; \033[0m \n"
             echo -en "\033[1;33m Mysql Clear: kubectl delete mysql mysql-operator; \033[0m \n"
-            echo -en "\033[1;33m Credential: root/root, aman/aman \033[0m \n"
+            echo -en "\033[1;33m Login: root/root, aman/aman [Host: mysql] \033[0m \n"
             ;;
         WEBSHELL)
             helm $CMD sshwifty onechart/onechart -f sshwifty.yml  > /dev/null
@@ -187,12 +188,12 @@ while getopts 'dusri' OPTION; do
     r)
         NS=$(kubectl get sa -o=jsonpath='{.items[0]..metadata.namespace}')
         echo -en "\033[1;32m Restting Namespace: $NS \033[0m \n"
+        #Helm Clear
+        helm delete $(helm list --short)
         #Delete CRD's
         kubectl get crd --all-namespaces -oname | xargs kubectl delete > /dev/null
         #Delete Resources
         kubectl delete --all all --namespace=$NS
-        #Helm Clear
-        helm delete $(helm list --short)
         ;;
     d)
         echo -en "\033[1;32m Clearing all Helms \033[0m \n"
