@@ -81,7 +81,9 @@ Open http://localhost:9000/metrics (Minikube: Run "minikube tunnel")
     Run `devspace -n fun-app dev` <br/>
     Open http://localhost:8080/metrics
 
-* Cleanup: `devspace -n fun-app purge`
+* Cleanup: `devspace -n fun-app purge` <br/>
+
+* Load Test (From Vegeta Container):  `echo 'GET http://app:8080/person/all' | vegeta attack | vegeta report`
 
 <br/> ![](common/images/fun-app/devcode.gif)
 
