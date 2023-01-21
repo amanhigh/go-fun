@@ -49,14 +49,27 @@ By default it runs without any dependencies with in memory [sqlite3](https://git
 
 
 ### K8/Istio Run
-- Setup: <br/>
-`helm repo add go-fun https://amanhigh.github.io/go-fun` <br/>
-`helm install -n fun-app fun-app go-fun/fun-app` <br/>
-Open http://localhost:9000/metrics (Minikube: Run "minikube tunnel")
+Need to have running K8/Istio Setup. Refer [Kubernetes](#Kubernetes) below.
+
+* Via Github
+    * Setup <br/>
+    `helm repo add go-fun https://amanhigh.github.io/go-fun` <br/>
+    `helm install -n fun-app fun-app go-fun/fun-app` <br/>
+
+    * Cleanup: <br/>
+    `helm -n fun-app delete fun-app`
+
+* Via Local
+    * Setup <br/>
+    `go-fun/components/fun-app/charts/setup.sh`
+    
+    * Clean <br/>
+    `go-fun/components/fun-app/charts/clean.sh`
+
 
     
-- Cleanup: <br/>
- `helm -n fun-app delete fun-app`
+Open http://localhost:9000/metrics (Minikube: Run "minikube tunnel")
+
 
 <br/> ![](common/images/fun-app/helm.gif)
 
