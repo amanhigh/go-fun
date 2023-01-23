@@ -85,6 +85,8 @@ Open http://localhost:9000/metrics (Minikube: Run "minikube tunnel")
 
 * Load Test (From Vegeta Container):  `echo 'GET http://app:8080/person/all' | vegeta attack | vegeta report`
 
+* Override Vars:  `devspace list vars --var DB="mysql-primary",RATE_LIMIT=-1`
+
 <br/> ![](common/images/fun-app/devcode.gif)
 
 ### Log Analyzer
