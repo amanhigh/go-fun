@@ -87,6 +87,29 @@ Open http://localhost:9000/metrics (Minikube: Run "minikube tunnel")
 
 <br/> ![](common/images/fun-app/devcode.gif)
 
+### Log Analyzer
+Monitor Logs via [GoAccess](https://github.com/allinurl/goaccess)
+
+`goaccess head.log --log-format='%^ %d - %t | %s | %~%^ | %~%h | %r' --date-format='%Y/%m/%d' --time-format '%H:%M:%S'`
+
+**Custom Log Monitoring**
+- Identify [Date and Time Format](https://www.freebsd.org/cgi/man.cgi?query=strftime&sektion=3)). Eg. `date '+%Y/%m/%d - %H:%M:%S'` for 2023/01/23 - 14:38:2
+- Identify [Log Format](https://goaccess.io/man#custom-log). Eg. 
+- Define Date/Time Format, For Log Format start with initial fields and progress further for easy debug.
+
+
+**Useful Fields**
+- Mandatory Fields: %d (Date), %h (Host), %r/%m %U (Request)
+- Skip: Ignore (%^) , Skip Space (%~)
+- DateTime: (%x/--datetime-format) OR Time (%t/--date-format) + Date (%d/--time-format)
+- Host: IP (%h) OR Virtual Host (%v)
+- Request: Full With Quotes (%r) or Method (%m), URL (%U), Query (%q), PROTOCOL (%H),
+- Response: Status Code (%s), Size (%b)
+- Latency: MicroSecond (%D), MilliSecond.MicroSecond (%T), MilliSecond With Decimal (%L)
+- User Info: User-Agent (%u), Referer (%R)
+
+TODO: Add GIF
+
 ## Kubernetes
 To ease development and easy setup of dependencies we use Kubernetes. Also [K9S](https://github.com/derailed/k9s) provides easy interface to manage containers, see logs etc. [Helms](https://github.com/helm/helm) are used to setup various services which application can depend on.
 

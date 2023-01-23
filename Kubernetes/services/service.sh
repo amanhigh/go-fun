@@ -83,6 +83,7 @@ function process()
         APP)
             helm $CMD app onechart/onechart -f app.yml > /dev/null
             echo -en "\033[1;33m http://localhost:7080/metrics\n http://localhost:7080/person/all \033[0m \n"
+            echo -en "\033[1;33m echo 'GET http://app:9001/person/all' | vegeta attack | vegeta report \033[0m \n"
             ;;
 
         OPA)
