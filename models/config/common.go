@@ -39,8 +39,8 @@ type Db struct {
 	MaxIdle         int    `env:"DB_MAX_IDLE"  envDefault:"2"`
 	MaxOpen         int    `env:"DB_MAX_OPEN"  envDefault:"10"`
 	AutoMigrate     bool   `env:"DB_AUTO_MIGRATE"  envDefault:"true"`
-	//Log level: 4 (Info), 3 (Warn)
-	LogLevel logger.LogLevel `env:"DB_LOG_LEVEL"  envDefault:"4"`
+	//Log level: 4 (Info), 3 (Warn), 2 (Error)
+	LogLevel logger.LogLevel `env:"DB_LOG_LEVEL"  envDefault:"2"`
 }
 
 type HttpClientConfig struct {
