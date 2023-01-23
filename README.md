@@ -90,12 +90,16 @@ Open http://localhost:9000/metrics (Minikube: Run "minikube tunnel")
 ### Log Analyzer
 Monitor Logs via [GoAccess](https://github.com/allinurl/goaccess)
 
-` goaccess --log-format='%^ %d - %t | %s | %~%D | %b | %~%h | %^ |%m %U' --date-format='%Y/%m/%d' --time-format '%H:%M:%S'`
+* Terminal Access: `go run main.go | goaccess --log-format='%^ %d - %t | %s | %~%D | %b | %~%h | %^ | %m %U' --date-format='%Y/%m/%d' --time-format '%H:%M:%S'`
+* Web Access: Add Flags to Above Command `-o report.html --real-time-html`. Open report.html in Browser and it should auto refresh.
+
+
 
 **Custom Log Monitoring**
 - Identify [Date and Time Format](https://www.freebsd.org/cgi/man.cgi?query=strftime&sektion=3)). Eg. `date '+%Y/%m/%d - %H:%M:%S'` for 2023/01/23 - 14:38:2
 - Identify [Log Format](https://goaccess.io/man#custom-log). Eg. 
 - Define Date/Time Format, For Log Format start with initial fields and progress further for easy debug.
+- Debug Mode: `-l debug.log`
 
 
 **Useful Fields**
