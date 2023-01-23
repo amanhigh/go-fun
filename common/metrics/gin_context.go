@@ -26,7 +26,7 @@ var GinRequestIdFormatter = func(param gin.LogFormatterParams) string {
 		// Truncate in a golang < 1.8 safe way
 		param.Latency = param.Latency - param.Latency%time.Second
 	}
-	return fmt.Sprintf("[GIN] %v | %3d | %5d | %d | %15s | %s |%s ",
+	return fmt.Sprintf("[GIN] %v | %3d | %5d | %d | %15s | %s | %s ",
 		param.TimeStamp.Format("2006/01/02 - 15:04:05"),
 		param.StatusCode,
 		param.Latency.Microseconds(),
