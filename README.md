@@ -83,9 +83,12 @@ Open http://localhost:9000/metrics (Minikube: Run "minikube tunnel")
 
 * Cleanup: `devspace -n fun-app purge` <br/>
 
+* Override Vars:  `devspace list vars --var DB="mysql-primary",RATE_LIMIT=-1`
+
 * Load Test (From Vegeta Container):  `echo 'GET http://app:8080/person/all' | vegeta attack | vegeta report`
 
-* Override Vars:  `devspace list vars --var DB="mysql-primary",RATE_LIMIT=-1`
+* Log Analyzer: ``kubectl logs `kubectl get pods -o name | grep app | head  -1` --since=1m -f | goaccess --log-format='%^ %d - %t | %s | %~%D | %b | %~%h | %^ | %m %U' --date-format='%Y/%m/%d' --time-format '%H:%M:%S'``
+
 
 <br/> ![](common/images/fun-app/devcode.gif)
 
@@ -95,14 +98,11 @@ Monitor Logs via [GoAccess](https://github.com/allinurl/goaccess)
 * Terminal Access: `go run main.go | goaccess --log-format='%^ %d - %t | %s | %~%D | %b | %~%h | %^ | %m %U' --date-format='%Y/%m/%d' --time-format '%H:%M:%S'`
 * Web Access: Add Flags to Above Command `-o report.html --real-time-html`. Open report.html in Browser and it should auto refresh.
 
-
-
 **Custom Log Monitoring**
 - Identify [Date and Time Format](https://www.freebsd.org/cgi/man.cgi?query=strftime&sektion=3)). Eg. `date '+%Y/%m/%d - %H:%M:%S'` for 2023/01/23 - 14:38:2
 - Identify [Log Format](https://goaccess.io/man#custom-log). Eg. 
 - Define Date/Time Format, For Log Format start with initial fields and progress further for easy debug.
 - Debug Mode: `-l debug.log`
-
 
 **Useful Fields**
 - Mandatory Fields: %d (Date), %h (Host), %r/%m %U (Request)
