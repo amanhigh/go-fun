@@ -64,8 +64,8 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	/* Middleware */
 	engine.Use(gin.Recovery(), metrics2.RequestId, gin.LoggerWithFormatter(metrics2.GinRequestIdFormatter))
 
-	/* Enable Rate Limit if Redis Host is supplied */
-	if self.config.RateLimit.RedisHost != "" {
+	/* Enable Rate Limit if Limit is above 0 */
+	if self.config.RateLimit.PerMinuteLimit > 0 {
 		// Create a Redis client
 		client := redis.NewClient(&redis.Options{
 			Addr:     self.config.RateLimit.RedisHost,
@@ -76,7 +76,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 		// Limit the engine's (Global) or group's (API Level) requests to
 		// 100 requests per client per minute.
 		engine.Use(ginbump.RateLimit(client, speedbump.PerMinuteHasher{}, self.config.RateLimit.PerMinuteLimit))
-		log.WithFields(log.Fields{"RateLimit": self.config.RateLimit.PerMinuteLimit}).Info("Rate Limit Enabled")
+		log.WithFields(log.Fields{"Redis": self.config.RateLimit.RedisHost, "RateLimit": self.config.RateLimit.PerMinuteLimit}).Info("Rate Limit Enabled")
 	}
 
 	/* Injections */

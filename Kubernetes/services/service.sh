@@ -2,7 +2,7 @@
 # helm repo add stakater https://stakater.github.io/stakater-charts
 
 # helm repo update
-# sudo kubefwd svc
+# sudo kubefwd svc | awk '{ if($2 ~ /Port-Forward/) {print $0" URL: http://"$4"/"} else {print}}'
 
 # Vars
 CMD="install"
@@ -83,6 +83,7 @@ function process()
         APP)
             helm $CMD app onechart/onechart -f app.yml > /dev/null
             echo -en "\033[1;33m http://localhost:7080/metrics\n http://localhost:7080/person/all \033[0m \n"
+            echo -en "\033[1;33m echo 'GET http://app:9001/person/all' | vegeta attack | vegeta report \033[0m \n"
             ;;
 
         OPA)
@@ -153,6 +154,16 @@ function process()
             echo -en "\033[1;33m CMD: ldapsearch -H ldap://localhost:3891 -xLL -D 'cn=admin,dc=example,dc=com' -b 'dc=example,dc=com' -W '(cn=admin)' \033[0m \n"
             echo -en "\033[1;33m Admin Login: Username:cn=admin,dc=example,dc=com Password: admin \033[0m \n"
             ;;
+        MYSQL-OP)
+            #helm repo add bitpoke https://helm-charts.bitpoke.io
+            helm $CMD mysql-operator bitpoke/mysql-operator -f bitspoke.yml > /dev/null
+            kubectl apply -f ./files/bitspoke/secret.yml
+            kubectl apply -f ./files/bitspoke/cluster.yml
+            helm $CMD mysql-admin bitnami/phpmyadmin > /dev/null
+            echo -en "\033[1;33m Mysql Info: kubectl get mysql; kubectl describe mysql mysql-operator; \033[0m \n"
+            echo -en "\033[1;33m Mysql Clear: kubectl delete mysql mysql-operator; \033[0m \n"
+            echo -en "\033[1;33m Login: root/root, aman/aman [Host: mysql] \033[0m \n"
+            ;;
         WEBSHELL)
             helm $CMD sshwifty onechart/onechart -f sshwifty.yml  > /dev/null
             helm $CMD webssh onechart/onechart -f webssh.yml > /dev/null
@@ -164,6 +175,7 @@ function process()
             ;;
 
         *)
+            #TODO: Add Locust
             echo -en "\033[1;34m Service Not Supported: $SVC \033[0m \n"
             ;;
         esac
@@ -172,8 +184,18 @@ function process()
 
 
 # Flags
-while getopts 'dusi' OPTION; do
+while getopts 'dusri' OPTION; do
   case "$OPTION" in
+    r)
+        NS=$(kubectl get sa -o=jsonpath='{.items[0]..metadata.namespace}')
+        echo -en "\033[1;32m Restting Namespace: $NS \033[0m \n"
+        #Helm Clear
+        helm delete $(helm list --short)
+        #Delete CRD's
+        kubectl get crd --all-namespaces -oname | xargs kubectl delete > /dev/null
+        #Delete Resources
+        kubectl delete --all all --namespace=$NS
+        ;;
     d)
         echo -en "\033[1;32m Clearing all Helms \033[0m \n"
         helm delete $(helm list --short)
@@ -189,7 +211,7 @@ while getopts 'dusi' OPTION; do
         ;;
     s)
         # Prompt
-        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK MONITOR WEBSHELL --limit 5`
+        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK MONITOR WEBSHELL MYSQL-OP --limit 5`
         echo $answers > $ANS_FILE    
         echo -en "\033[1;32m Service Set \033[0m \n"
         echo -en "\033[1;33m $answers \033[0m \n"
@@ -199,7 +221,8 @@ while getopts 'dusi' OPTION; do
         echo -en "\033[1;33m [-s] Set \033[0m \n"
         echo -en "\033[1;33m [-i] Install \033[0m \n"
         echo -en "\033[1;33m [-u] Upgrade \033[0m \n"
-        echo -en "\033[1;33m [-d] delete \033[0m \n"
+        echo -en "\033[1;33m [-d] Delete \033[0m \n"
+        echo -en "\033[1;33m [-r] Reset \033[0m \n"
         exit 1
         ;;
   esac

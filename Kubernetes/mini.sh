@@ -6,6 +6,7 @@ minikube -p minikube delete;
 
 echo -en "\033[1;32m Creating Minikube Cluster \033[0m \n"
 FILE_PATH=`readlink -f ./services/files`
+#Additional Flags: --kubernetes-version v1.23.0
 minikube  -p minikube start --memory=3096 --cpus=3 --cache-images=true --mount-string="$FILE_PATH:/etc/files" --mount --host-only-cidr='24.1.1.100/24';
 # TODO: Fix on WSL
 # --extra-config="apiserver.enable-swagger-ui=true";
@@ -63,7 +64,7 @@ kubectl proxy --port=$PORT;
 
 ## Kubectl
 # Port Forward (Local Port 9090 to Container Port 8080) - kubectl port-forward `kubectl get pods -o name | grep fun-app | head  -1` 9090:8080
-# Logs - kubectl logs `kubectl get pods -o name | grep fun-app | head  -1` -f
+# Logs - kubectl logs `kubectl get pods -o name | grep fun-app | head  -1` --since=1m -f
 # Login - kubectl -it exec `kubectl get pods -o name | grep fun-app | head  -1` bash
 # Delete All - kubectl delete all --all
 

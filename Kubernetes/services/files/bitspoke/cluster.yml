@@ -1,0 +1,39 @@
+# https://github.com/bitpoke/mysql-operator/blob/master/examples/example-cluster.yaml
+apiVersion: mysql.presslabs.org/v1alpha1
+kind: MysqlCluster
+metadata:
+  name: mysql-cluster
+spec:
+  replicas: 2
+  secretName: mysql-root-password
+
+  ## For setting custom docker image or specifying mysql version
+  ## the image field has priority over mysqlVersion.
+  # image: percona:5.7
+  # mysqlVersion: "5.7"
+
+  ## Configs that will be added to my.cnf for cluster
+  mysqlConf:
+  #   innodb-buffer-size: 128M
+
+  ## Specify service objectives
+  ## If thoses SLO are not fulfilled by cluster node then that node is
+  ## removed from scheme
+  # targetSLO:
+  #   maxSlaveLatency: 10s
+
+  ## You can use custom volume for /tmp partition if needed.
+  ## Is disabled by default
+  # tmpfsSize: 1Gi
+
+  ## Set cluster in read only
+  # readOnly: false
+
+  ## Add metrics exporter extra arguments
+  # metricsExporterExtraArgs:
+  #   - --collect.info_schema.userstats
+  #   - --collect.perf_schema.file_events
+
+  # Add additional SQL commands to run during init of mysql
+  # initFileExtraSQL:
+  #   - "CREATE USER test@localhost"

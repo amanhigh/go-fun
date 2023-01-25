@@ -33,14 +33,20 @@ var _ = Describe("Person Integration Test", func() {
 	})
 
 	Context("Create", func() {
+		BeforeEach(func() {
+			_, err := clients2.TestHttpClient.DoPost(serviceUrl+"/person", request, nil)
+			Expect(err).To(BeNil())
+		})
 
-		Context("Success", func() {
-			AfterEach(func() {
-				_, err := clients2.TestHttpClient.DoPost(serviceUrl+"/person", request, nil)
+		It("should create person", func() {
+		})
+
+		Context("Get", func() {
+			It("should get all people", func() {
+				var persons []db2.Person
+				_, err := clients2.TestHttpClient.DoGet(serviceUrl+fmt.Sprintf("/person/all"), &persons)
 				Expect(err).To(BeNil())
-			})
-
-			It("should register person", func() {
+				Expect(len(persons)).To(BeNumerically(">=", 1))
 			})
 		})
 
@@ -49,17 +55,6 @@ var _ = Describe("Person Integration Test", func() {
 			_, err := clients2.TestHttpClient.DoPost(serviceUrl+"/person", request, nil)
 			Expect(err).To(Not(BeNil()))
 		})
-	})
-
-	Context("Get", func() {
-
-		It("should get all people", func() {
-			var persons []db2.Person
-			_, err := clients2.TestHttpClient.DoGet(serviceUrl+fmt.Sprintf("/person/all"), &persons)
-			Expect(err).To(BeNil())
-			Expect(len(persons)).To(BeNumerically(">=", 1))
-		})
-
 	})
 
 	It("should serve metrics", func() {

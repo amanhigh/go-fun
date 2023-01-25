@@ -1,0 +1,44 @@
+# https://artifacthub.io/packages/helm/bitpoke/mysql-operator
+# Declare variables to be passed into your templates.
+replicaCount: 1
+
+podDisruptionBudget:
+  enabled: false
+  maxUnavailable: 1
+
+# Install a ServiceMonitor for monitoring the operator
+serviceMonitor:
+  # enabled should be set to true to enable prometheus-operator discovery of this service
+  enabled: false
+  # the Service port.name where prometheus metrics are exposed
+  servicePortName: prometheus
+  # the Service port.port where metrics are exposed
+  servicePort: 9125
+  # interval is the interval at which metrics should be scraped
+  # interval: 30s
+  # scrapeTimeout is the timeout after which the scrape is ended
+  # scrapeTimeout: 10s
+  # additionalLabels is the set of additional labels to add to the ServiceMonitor
+  additionalLabels: {}
+  jobLabel: ""
+  targetLabels: []
+  podTargetLabels: []
+  metricRelabelings: []
+
+# The operator will install a ServiceMonitor if you have prometheus-operator installed.
+mysqlClustersGlobalServiceMonitor:
+  enabled: false
+  ## Additional labels for the serviceMonitor. Useful if you have multiple prometheus operators running to select only specific ServiceMonitors
+  # additionalLabels:
+  #   prometheus: prom-internal
+  interval: 10s
+  scrapeTimeout: 3s
+  # jobLabel:
+  # targetLabels:
+  # podTargetLabels:
+  namespaceSelector:
+    any: true
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: mysql.presslabs.org
+      app.kubernetes.io/name: mysql
