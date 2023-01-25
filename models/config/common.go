@@ -18,7 +18,7 @@ type Server struct {
 type RateLimit struct {
 	// Skip Redis Host to Disable Rate Limiting
 	RedisHost      string `env:"REDIS_RATE_LIMIT"`
-	PerMinuteLimit int64  `env:"PER_MIN_LIMIT" envDefault:"50"`
+	PerMinuteLimit int64  `env:"PER_MIN_LIMIT" envDefault:"-1"`
 }
 
 func (self *Server) GetUrl(uri string) string {
