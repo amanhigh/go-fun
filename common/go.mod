@@ -7,7 +7,6 @@ require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/amanhigh/go-fun/models v1.0.0
 	github.com/arl/statsviz v0.5.1
-	github.com/bndr/gojenkins v1.1.0
 	github.com/fatih/color v1.14.1
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-sql-driver/mysql v1.7.0
