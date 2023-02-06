@@ -8,8 +8,15 @@
 
 ## Release Management ##
 # Tag: [Create -> git tag v1.0.3 ] [Delete -> git push --delete origin v1.0.2]  (Format v.<Major>.<Minor>.<Patch>)
-# Optional overriding Tag - Previous Version/Last: `export GORELEASER_PREVIOUS_TAG=v1.0.1` and Release Version/Latest: `export GORELEASER_CURRENT_TAG=v1.0.2`
 # Publish Release: (**From Master**) goreleaser release --clean
+
+# Optional overriding Tag - Previous Version/Last: `export GORELEASER_PREVIOUS_TAG=v1.0.1` and Release Version/Latest: `export GORELEASER_CURRENT_TAG=v1.0.2`
+# Ensure Proper Github Token: env | grep GITHUB_TOKEN or Create with Repo Scope: https://github.com/settings/tokens/new
+# Release Updated at
+## Releases - https://github.com/amanhigh/go-fun/releases
+## Tags - https://github.com/amanhigh/go-fun/tags
+## Docker - https://hub.docker.com/repository/docker/amanfdk/fun-app/tags
+
 before:
   hooks:
     # You may remove this if you don't use go modules.
