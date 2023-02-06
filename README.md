@@ -8,11 +8,13 @@
 # Go Fun
 Experiments & Fun  with Go Lang and its Frameworks. Also includes tools like docker, k8, istio, observability, and perf.
 
-## Build
+## Build & Release Management
 Use goreleaser for build test. [Install](https://goreleaser.com/install/) if not already installed
 
-goreleaser build --snapshot --rm-dist
-goreleaser release --snapshot --skip-publish --rm-dist
+* Build Only - `goreleaser build --snapshot --rm-dist`
+* Prepare Release - `goreleaser release --snapshot --skip-publish --rm-dist`
+* Publish Release (**From Master**) - `goreleaser release`.
+* Optional overriding latest Tag - `export GORELEASER_CURRENT_TAG=v1.0.1`
 
 ## Testing
 Testing is handled via [Ginkgo](https://github.com/onsi/ginkgo). To run all unit tests excluding ones require external setup.
