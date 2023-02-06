@@ -1,10 +1,15 @@
 # Make sure to check the documentation at https://goreleaser.com
 # Variables available - https://goreleaser.com/customization/templates/
+
+## Local Building ##
 # goreleaser check
-# goreleaser build --snapshot --rm-dist
-# goreleaser release --snapshot --skip-publish --rm-dist
-# Tag: Create -> git tag v1.0.3; Delete - > git push --delete origin v1.0.2 (Format v.<Major>.<Minor>.<Patch>)
-# goreleaser release --rm-dist (Publish)
+# Build Only: goreleaser build --snapshot --clean
+# Prepare Release: goreleaser release --snapshot --skip-publish --clean
+
+## Release Management ##
+# Tag: [Create -> git tag v1.0.3 ] [Delete -> git push --delete origin v1.0.2]  (Format v.<Major>.<Minor>.<Patch>)
+# Optional overriding Tag - Previous Version/Last: `export GORELEASER_PREVIOUS_TAG=v1.0.1` and Release Version/Latest: `export GORELEASER_CURRENT_TAG=v1.0.2`
+# Publish Release: (**From Master**) goreleaser release --clean
 before:
   hooks:
     # You may remove this if you don't use go modules.
