@@ -2,7 +2,6 @@ package crawler
 
 import (
 	"fmt"
-	helper2 "github.com/amanhigh/go-fun/common/helper"
 	"github.com/fatih/color"
 
 	"errors"
@@ -25,5 +24,5 @@ func (self *GameInfo) GoodBad() (err error) {
 }
 
 func (self *GameInfo) ToUrl() []string {
-	return []string{self.Link, helper2.YoutubeSearch(self.Name + " Review")}
+	return []string{self.Link, YoutubeSearch(self.Name + " Review")}
 }
