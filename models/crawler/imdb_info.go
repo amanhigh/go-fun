@@ -3,7 +3,7 @@ package crawler
 import (
 	"errors"
 	"fmt"
-	helper2 "github.com/amanhigh/go-fun/common/helper"
+
 	"github.com/fatih/color"
 )
 
@@ -34,17 +34,17 @@ func (self *ImdbInfo) GoodBad() error {
 }
 
 func (self *ImdbInfo) ToUrl() []string {
-	return []string{self.Link, helper2.YoutubeSearch(self.Name + " Trailer"), self.getDownloadLink()}
+	return []string{self.Link, YoutubeSearch(self.Name + " Trailer"), self.getDownloadLink()}
 }
 
 func (self *ImdbInfo) getDownloadLink() string {
 	switch self.Language {
 	case "en":
-		return helper2.YtsSearch(self.Name)
+		return YtsSearch(self.Name)
 	case "hi":
-		return helper2.TSearch(self.Name)
+		return TSearch(self.Name)
 	default:
-		return helper2.YoutubeSearch(self.Name + " Full Movie")
+		return YoutubeSearch(self.Name + " Full Movie")
 	}
 
 }
