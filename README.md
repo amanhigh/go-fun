@@ -28,6 +28,14 @@ Sample Funapp which is rest based app with various tools and tests required as s
 
 By default it runs without any dependencies with in memory [sqlite3](https://github.com/mattn/go-sqlite3) database which can be configured via ENV Variables.
 
+## Module Release
+This is multi module project. Each module has its own go mod file. Modules can be managed using [semver](https://semver.org/) tags. Eg. v1.0.0
+
+* See existing tags. `git tag | grep common`
+* Tag New Release. `git tag common/v1.0.0`
+* Remove Release involves deleting Tag.
+* Link Module to new Release using `go mod tidy` or `go get -u github.com/amanhigh/go-fun/models`
+* Sync Modules using `go work sync` in go.work directory. This is automatically done before builds.
 
 ------
 ### Direct Run
