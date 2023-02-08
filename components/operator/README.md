@@ -1,14 +1,29 @@
-# operator
-// TODO(user): Add simple overview of use/purpose
+# Memcached Operatior
 
 ## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+This is a Trial K8 Controller Project to learn about it. Tutorial Followed can be found [here](https://sdk.operatorframework.io/docs/building-operators/golang/tutorial/). For Operatior Golang has been used which gives most flexibility.
 
-## Getting Started
-You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
+## Setup
+
+Steps followed
+* Init -  Domain is used for group CRD and Repo is used for Golang Module Management (go.mod generation).\
+`operator-sdk init --domain aman.com --repo github.com/amanhigh/go-fun/components/operator`
+* Controller - `operator-sdk create api --group cache --version v1alpha1 --kind Memcached --resource --controller`
+* Models - Made Model Modification and run for autogeneration `make generate`
+* Manifests - Generate Manifests (cache.aman.com_memcacheds.yaml,role.yml) `make manifests`
+* Controller - Implemented Controller Using [Source](https://github.com/operator-framework/operator-sdk/blob/latest/testdata/go/v3/memcached-operator/controllers/memcached_controller.go). `make manifests` to update Roles.
+* Docker - Updated Docker Base Image & [File](Kubernetes/memcached-operator/Dockerfile). Fixed Image Name in Make File. Run `make docker-build docker-push`. Docker Push is optional to push to external Repository. `docker images` shows image now.
+
+## Deployment
+You’ll need a Kubernetes cluster which can be local (kind/minikube) or remote. <br/>
 **Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
-### Running on the cluster
+Project can be run in following ways
+
+### Outside Cluster
+Run `make install run` to run without cluster.
+
+### On cluster
 1. Install Instances of Custom Resources:
 
 ```sh
@@ -18,13 +33,13 @@ kubectl apply -f config/samples/
 2. Build and push your image to the location specified by `IMG`:
 	
 ```sh
-make docker-build docker-push IMG=<some-registry>/operator:tag
+make docker-build docker-push IMG=<some-registry>/memcached-operator:tag
 ```
 	
 3. Deploy the controller to the cluster with the image specified by `IMG`:
 
 ```sh
-make deploy IMG=<some-registry>/operator:tag
+make deploy IMG=<some-registry>/memcached-operator:tag
 ```
 
 ### Uninstall CRDs
