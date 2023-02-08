@@ -22,7 +22,9 @@ Steps followed
 * **Manifests** - Generate Manifests CRD (cache.aman.com_memcacheds.yaml), RBAC(role.yml).\
  `make manifests`
 
-* Docker - Updated Docker Base Image & [File](Kubernetes/memcached-operator/Dockerfile). Fixed Image Name in Make File. Run `make docker-build docker-push`. Docker Push is optional to push to external Repository. `docker images` shows image now.
+* **Docker** - Updated Docker Base Image & [File](./Dockerfile). Fixed Image Name (amanfdk/operator) in Make File.\
+`make docker-build docker-push`\
+`docker images`
 
 ## Deployment
 You’ll need a Kubernetes cluster which can be local (kind/minikube) or remote. <br/>
