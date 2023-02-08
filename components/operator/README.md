@@ -3,7 +3,10 @@
 ## Description
 This is a Trial K8 Controller Project to learn about it. Tutorial Followed can be found [here](https://sdk.operatorframework.io/docs/building-operators/golang/tutorial/). For Operatior Golang has been used which gives most flexibility.
 
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
+This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
+
+It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
+which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster. More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
 
 ## Setup
 
@@ -51,9 +54,3 @@ You’ll need a Kubernetes cluster which can be local (kind/minikube) or remote.
 #### --Cleanup--
 1. Remove Cluster:  `kubectl delete -f config/samples/cache_v1alpha1_memcached.yaml`
 2. Remove Operator and CRD's: `make undeploy`
-
-### How it works
-This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
-
-It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
-which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster 
