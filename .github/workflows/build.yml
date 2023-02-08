@@ -41,8 +41,7 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release --snapshot --skip-publish --rm-dist
-        env:
+          args: release --snapshot --skip-publish --clean
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report Coverage
