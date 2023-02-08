@@ -3,5 +3,8 @@ go 1.19
 use (
 	./common
 	./components
+	./components/fun-app
+	./components/kohan
+	./components/learn
 	./models
 )
