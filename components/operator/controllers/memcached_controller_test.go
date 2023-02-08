@@ -32,9 +32,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cachev1alpha1 "github.com/amanhigh/go-fun/components/operator/api/v1alpha1"
+	"github.com/amanhigh/go-fun/models"
 )
 
-var _ = Describe("Memcached controller", func() {
+// TODO: Include in Go Releaser
+var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 	Context("Memcached controller test", func() {
 
 		const MemcachedName = "test-memcached"
