@@ -8,7 +8,8 @@ This is a Trial K8 Controller Project to learn about it. Tutorial Followed can b
 Steps followed
 * Init -  Domain is used for group CRD and Repo is used for Golang Module Management (go.mod generation).\
 `operator-sdk init --domain aman.com --repo github.com/amanhigh/go-fun/components/operator`
-* Controller - `operator-sdk create api --group cache --version v1alpha1 --kind Memcached --resource --controller`
+* Controller - Generate Controller and Types. Type/API will be *MemCached* with Version *v1alpha1* available under group *cache.aman.com*. Generated Go Files are under ./api, ./controllers and  ./config has yaml files
+`operator-sdk create api --group cache --version v1alpha1 --kind Memcached --resource --controller`
 * Models - Made Model Modification and run for autogeneration `make generate`
 * Manifests - Generate Manifests (cache.aman.com_memcacheds.yaml,role.yml) `make manifests`
 * Controller - Implemented Controller Using [Source](https://github.com/operator-framework/operator-sdk/blob/latest/testdata/go/v3/memcached-operator/controllers/memcached_controller.go). `make manifests` to update Roles.
