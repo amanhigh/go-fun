@@ -28,12 +28,14 @@ Sample Funapp which is rest based app with various tools and tests required as s
 
 By default it runs without any dependencies with in memory [sqlite3](https://github.com/mattn/go-sqlite3) database which can be configured via ENV Variables.
 
-## Module Release
+## Module Management
 This is multi module project. Each module has its own go mod file. Modules can be managed using [semver](https://semver.org/) tags. Eg. v1.0.0
 
 * See existing tags. `git tag | grep common`
-* Tag New Release. `git tag common/v1.0.0`
-* Remove Release involves deleting Tag.
+* Tag New Release. `git tag common/v1.0.0` followed by `git push --tags`
+* Remove Release involves deleting Tag with `git push --delete origin common/v1.0.0`
+
+* New Module run `go mod init github.com/amanhigh/go-fun/components/fun-app` and to work using `go work use ./components/fun-app`
 * Link Module to new Release using `go mod tidy` or `go get -u github.com/amanhigh/go-fun/models`
 * Sync Modules using `go work sync` in go.work directory. This is automatically done before builds.
 
@@ -146,7 +148,7 @@ Flags (Multiple flags can be passed together)
 * Set (s) - Allows you set Service Reciepe.
 * Install (i) - Installs Helms
 * Delete (d) - Deletes & Clears all Helms
-* Reset (r) - Clear all Resources in Current Namespace & Helms
+* Reset (r) - Clear all Resources in Current Namespace & Helms
 
 Eg.
 * Set & Install - `./go-fun/Kubernetes/services/services.sh -si`
