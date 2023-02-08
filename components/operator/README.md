@@ -16,7 +16,7 @@ Steps followed
 * **Image Plugin** - Helps to control Docker File. Command Guides Creation of Docker file with image, command, user specifications.  This Generates [Controller](https://github.com/operator-framework/operator-sdk/blob/latest/testdata/go/v3/memcached-operator/controllers/memcached_controller.go), Type Specs and its Test. \
 `operator-sdk create api --group cache --version v1alpha1 --kind Memcached --plugins="deploy-image/v1-alpha" --image=memcached:1.4.36-alpine --image-container-command="memcached,-m=64,modern,-v" --run-as-user="1001"`
 
-* **Models** - Made Model Modification (ContainerPort addition) and do autogeneration.\
+* **Models** - Made Model Modification (ContainerPort addition) and do autogeneration. Updated [Spec](config/samples/cache_v1alpha1_memcached.yaml) to include *containerPort: 8443*\
 `make generate`
 
 * **Manifests** - Generate Manifests CRD (cache.aman.com_memcacheds.yaml), RBAC(role.yml).\
