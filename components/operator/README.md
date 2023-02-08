@@ -27,49 +27,26 @@ Steps followed
 `docker images`
 
 ## Deployment
-You’ll need a Kubernetes cluster which can be local (kind/minikube) or remote. <br/>
-**Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
-
 Project can be run in following ways
 
 ### Outside Cluster
 Run `make install run` to run without cluster.
 
 ### On cluster
-1. Install Instances of Custom Resources:
+You’ll need a Kubernetes cluster which can be local (kind/minikube) or remote. 
 
-```sh
-kubectl apply -f config/samples/
-```
+**Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
-2. Build and push your image to the location specified by `IMG`:
-	
-```sh
-make docker-build docker-push IMG=<some-registry>/memcached-operator:tag
-```
-	
-3. Deploy the controller to the cluster with the image specified by `IMG`:
+#### --Setup--
+1. Deploy Operator: Operator is deployed in *operator-system* Namespace.\
+`make deploy`
 
-```sh
-make deploy IMG=<some-registry>/memcached-operator:tag
-```
+2. Install Instances (Current Namespace) of Custom Resources:\
+`kubectl apply -f config/samples/`
 
-### Uninstall CRDs
-To delete the CRDs from the cluster:
-
-```sh
-make uninstall
-```
-
-### Undeploy controller
-UnDeploy the controller to the cluster:
-
-```sh
-make undeploy
-```
-
-## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
+#### --Cleanup--
+1. To delete the CRDs from the cluster:  `make uninstall`
+2. UnDeploy the controller to the cluster: `make undeploy`
 
 ### How it works
 This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
