@@ -3,6 +3,8 @@
 ## Description
 This is a Trial K8 Controller Project to learn about it. Tutorial Followed can be found [here](https://sdk.operatorframework.io/docs/building-operators/golang/tutorial/). For Operatior Golang has been used which gives most flexibility.
 
+More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
+
 ## Setup
 
 Steps followed
@@ -16,15 +18,17 @@ Steps followed
 * **Image Plugin** - Helps to control Docker File. Command Guides Creation of Docker file with image, command, user specifications.  This Generates [Controller](https://github.com/operator-framework/operator-sdk/blob/latest/testdata/go/v3/memcached-operator/controllers/memcached_controller.go), Type Specs and its Test. \
 `operator-sdk create api --group cache --version v1alpha1 --kind Memcached --plugins="deploy-image/v1-alpha" --image=memcached:1.4.36-alpine --image-container-command="memcached,-m=64,modern,-v" --run-as-user="1001"`
 
-* **Models** - Made Model Modification (ContainerPort addition) and do autogeneration. Updated [Spec](config/samples/cache_v1alpha1_memcached.yaml) to include *containerPort: 8443*\
+* **Models** - Made Model Modification (ContainerPort addition) and do autogeneration. Updated Test and [Spec](config/samples/cache_v1alpha1_memcached.yaml) to include *containerPort: 8443*\
 `make generate`
 
-* **Manifests** - Generate Manifests CRD (cache.aman.com_memcacheds.yaml), RBAC(role.yml).\
+* **Manifests** - Generate Manifests CRD (cache.aman.com_memcacheds.yaml), RBAC(role.yml).If you are editing the API definitions, generate the manifests such as CRs or CRDs using.\
  `make manifests`
 
 * **Docker** - Updated Docker Base Image & [File](./Dockerfile). Fixed Image Name (amanfdk/operator) in Make File.\
 `make docker-build docker-push`\
 `docker images`
+
+**NOTE:** Run `make --help` for more information on all potential `make` targets
 
 ## Deployment
 Project can be run in following ways
@@ -53,46 +57,3 @@ This project aims to follow the Kubernetes [Operator pattern](https://kubernetes
 
 It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
 which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster 
-
-### Test It Out
-1. Install the CRDs into the cluster:
-
-```sh
-make install
-```
-
-2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
-
-```sh
-make run
-```
-
-**NOTE:** You can also run this in one step by running: `make install run`
-
-### Modifying the API definitions
-If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
-
-```sh
-make manifests
-```
-
-**NOTE:** Run `make --help` for more information on all potential `make` targets
-
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
-
-## License
-
-Copyright 2023.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
