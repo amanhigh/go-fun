@@ -13,14 +13,15 @@ Steps followed
 * **Controller** - Generate Controller and Types. Type/API will be *MemCached* with Version *v1alpha1* available under group *cache.aman.com*. Generated Go Files are under ./api, ./controllers and  ./config has yaml files.\
 `operator-sdk create api --group cache --version v1alpha1 --kind Memcached --resource --controller`
 
-* **Image Plugin** - Helps to control Docker File. Command Guides Creation of Docker file with image, command, user specifications.  This Generates Controller, Type Specs and its Test. \
+* **Image Plugin** - Helps to control Docker File. Command Guides Creation of Docker file with image, command, user specifications.  This Generates [Controller](https://github.com/operator-framework/operator-sdk/blob/latest/testdata/go/v3/memcached-operator/controllers/memcached_controller.go), Type Specs and its Test. \
 `operator-sdk create api --group cache --version v1alpha1 --kind Memcached --plugins="deploy-image/v1-alpha" --image=memcached:1.4.36-alpine --image-container-command="memcached,-m=64,modern,-v" --run-as-user="1001"`
 
 * **Models** - Made Model Modification (ContainerPort addition) and do autogeneration.\
 `make generate`
 
-* Manifests - Generate Manifests (cache.aman.com_memcacheds.yaml,role.yml) `make manifests`
-* Controller - Implemented Controller Using [Source](https://github.com/operator-framework/operator-sdk/blob/latest/testdata/go/v3/memcached-operator/controllers/memcached_controller.go). `make manifests` to update Roles.
+* **Manifests** - Generate Manifests CRD (cache.aman.com_memcacheds.yaml), RBAC(role.yml).\
+ `make manifests`
+
 * Docker - Updated Docker Base Image & [File](Kubernetes/memcached-operator/Dockerfile). Fixed Image Name in Make File. Run `make docker-build docker-push`. Docker Push is optional to push to external Repository. `docker images` shows image now.
 
 ## Deployment
