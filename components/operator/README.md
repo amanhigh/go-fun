@@ -42,11 +42,11 @@ You’ll need a Kubernetes cluster which can be local (kind/minikube) or remote.
 `make deploy`
 
 2. Install Instances (Current Namespace) of Custom Resources:\
-`kubectl apply -f config/samples/`
+`kubectl apply -f config/samples/cache_v1alpha1_memcached.yaml`
 
 #### --Cleanup--
-1. To delete the CRDs from the cluster:  `make uninstall`
-2. UnDeploy the controller to the cluster: `make undeploy`
+1. Remove Cluster:  `kubectl delete -f config/samples/cache_v1alpha1_memcached.yaml`
+2. Remove Operator and CRD's: `make undeploy`
 
 ### How it works
 This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
