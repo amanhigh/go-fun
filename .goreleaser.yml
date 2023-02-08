@@ -24,8 +24,11 @@ before:
     # you may remove this if you don't need go generate
     #- go generate ./...
 
+    # Operator Tests
+    - make -C ./components/operator/ test
     # Unit Tests
     - ginkgo -r '--label-filter=!setup' -cover .
+
     # Helm Package
     - helm dependency build ./components/fun-app/charts/
     - helm package ./components/fun-app/charts/ -d ./components/fun-app/charts
