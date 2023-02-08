@@ -3,6 +3,7 @@ module github.com/amanhigh/go-fun/components/operator
 go 1.19
 
 require (
+	github.com/amanhigh/go-fun/models v1.0.0
 	github.com/onsi/ginkgo/v2 v2.8.0
 	github.com/onsi/gomega v1.26.0
 	k8s.io/api v0.25.0
