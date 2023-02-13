@@ -1,5 +1,5 @@
 PORT=8091
-answers=`gum choose MINIKUBE INGRESS ISTIO --limit 5`
+answers=`gum choose MINIKUBE ISTIO INGRESS --limit 5`
 
 #Use minikube config set vm-driver virtualbox/docker
 minikube -p minikube delete;
