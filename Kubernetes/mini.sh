@@ -18,7 +18,11 @@ do
 
     BACKUP)
         # TODO: Handle None Tags
-        minikube image ls | grep docker.io | grep -v none > $MINI_BKP_FILE
+        minikube image ls | grep docker.io | grep -v none > /tmp/mini-bkp
+        # Append Image list to Master List
+        sort /tmp/mini-bkp $MINI_BKP_FILE | uniq > $MINI_BKP_FILE
+        echo "Image Count: `wc -l mini-bkp.txt`";
+
         for IMG in `cat $MINI_BKP_FILE`
         do 
             echo "\033[1;33m Caching Image: $IMG \033[0m \n"
