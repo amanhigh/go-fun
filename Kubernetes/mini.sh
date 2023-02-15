@@ -1,8 +1,5 @@
 PORT=8091
-answers=`gum choose MINIKUBE INGRESS ISTIO --limit 5`
-
-#Use minikube config set vm-driver virtualbox/docker
-minikube -p minikube delete;
+answers=`gum choose MINIKUBE INGRESS ISTIO BACKUP RESTORE --limit 5`
 
 for SVC in $answers
 do
@@ -18,7 +15,26 @@ do
         ./istio/istio.sh;
         ;;
 
+    BACKUP)
+        minikube image ls | grep docker.io | grep -v none > ~/Downloads/mini-bkp.txt
+        for IMG in `cat ~/Downloads/mini-bkp.txt`
+        do 
+            echo Backing Up $IMG
+            PATH="${IMG%:*}"
+            mkdir -p ~/.minikube/cache/images/amd64/$PATH
+            minikube image save --daemon $IMG
+            
+        done
+        ;;
+
+    RESTORE)
+        ./istio/istio.sh;
+        ;;
+
     MINIKUBE)
+        #Use minikube config set vm-driver virtualbox/docker
+        minikube -p minikube delete;
+
         echo -en "\033[1;32m Creating Minikube Cluster \033[0m \n"
         FILE_PATH=`readlink -f ./services/files`
         
@@ -80,3 +96,8 @@ kubectl proxy --port=$PORT;
 # https://minikube.sigs.k8s.io/docs/handbook/pushing/
 # Load Image from Host - minikube image load amanfdk/controller
 # Minikube Docker ENV Connect - eval $(minikube docker-env)
+
+## Minikube Images (Cache: ~/.minikube/cache)
+# Image List - minikube image ls
+# Cache Save - minikube image save docker.io/bitnami/mysql:8.0.32-debian-11-r0 --daemon
+# Cache Load - minikube image load docker.io/bitnami/mysql:8.0.32-debian-11-r0 --daemon
