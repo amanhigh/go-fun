@@ -1,9 +1,10 @@
 PORT=8091
+MINI_BKP_FILE=~/Downloads/mini-bkp.txt
 answers=`gum choose MINIKUBE INGRESS ISTIO BACKUP RESTORE --limit 5`
 
 for SVC in $answers
 do
-    echo -en "\033[1;32m \n $SVC \033[0m \n"
+    echo "\033[1;32m \n $SVC \033[0m \n"
     case $SVC in
     INGRESS)
         #Test: nslookup resty.local $(minikube ip)
@@ -16,26 +17,32 @@ do
         ;;
 
     BACKUP)
-        minikube image ls | grep docker.io | grep -v none > ~/Downloads/mini-bkp.txt
-        for IMG in `cat ~/Downloads/mini-bkp.txt`
+        # TODO: Handle None Tags
+        minikube image ls | grep docker.io | grep -v none > $MINI_BKP_FILE
+        for IMG in `cat $MINI_BKP_FILE`
         do 
-            echo Backing Up $IMG
-            PATH="${IMG%:*}"
-            mkdir -p ~/.minikube/cache/images/amd64/$PATH
+            echo "\033[1;33m Caching Image: $IMG \033[0m \n"
+            CPATH="${IMG%:*}";
+            mkdir -p ~/.minikube/cache/images/amd64/$CPATH;
             minikube image save --daemon $IMG
-            
         done
+        exit 0
         ;;
 
     RESTORE)
-        ./istio/istio.sh;
+        for IMG in `cat $MINI_BKP_FILE`
+        do 
+            echo "\033[1;33m Loading Image: $IMG \033[0m \n"
+            minikube image load --daemon $IMG
+        done
+        exit 0
         ;;
 
     MINIKUBE)
         #Use minikube config set vm-driver virtualbox/docker
         minikube -p minikube delete;
 
-        echo -en "\033[1;32m Creating Minikube Cluster \033[0m \n"
+        echo "\033[1;32m Creating Minikube Cluster \033[0m \n"
         FILE_PATH=`readlink -f ./services/files`
         
         #Additional Flags: --kubernetes-version v1.23.0
@@ -49,23 +56,23 @@ do
         # --extra-config="apiserver.service-account-signing-key-file=/var/lib/minikube/certs/sa.key";
         # minikube -p minikube ssh 'sudo cat /var/lib/minikube/certs/sa.pub'
 
-        echo -en "\033[1;32m Minikube Dashboard & Addons \033[0m \n";
+        echo "\033[1;32m Minikube Dashboard & Addons \033[0m \n";
         minikube -p minikube dashboard --url=true &
         minikube addons enable metrics-server;
         ;;
 
     *)
-        echo -en "\033[1;34m Addon Not Supported: $SVC \033[0m \n"
+        echo "\033[1;34m Addon Not Supported: $SVC \033[0m \n"
         ;;
     esac
 done
 
-echo -en "\033[1;32m Minikube Setup \033[0m \n";
-echo -en "\033[1;33m Run 'minikube tunnel' for Emulating ELB\033[0m \n";
-echo -en "\033[1;33m Dashboard: http://localhost:$PORT/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/# \033[0m \n";
-echo -en "\033[1;33m Swagger: http://localhost:$PORT/swagger-ui \033[0m \n";
-echo -en "\033[1;33m K9S:  k9s --context minikube \033[0m \n";
-echo -en "\033[1;33m Context: `kubectl config current-context;`\033[0m \n";
+echo "\033[1;32m Minikube Setup \033[0m \n";
+echo "\033[1;33m Run 'minikube tunnel' for Emulating ELB\033[0m \n";
+echo "\033[1;33m Dashboard: http://localhost:$PORT/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/# \033[0m \n";
+echo "\033[1;33m Swagger: http://localhost:$PORT/swagger-ui \033[0m \n";
+echo "\033[1;33m K9S:  k9s --context minikube \033[0m \n";
+echo "\033[1;33m Context: `kubectl config current-context;`\033[0m \n";
 kubectl proxy --port=$PORT;
 
 
