@@ -21,7 +21,7 @@ do
         minikube image ls | grep docker.io | grep -v none > /tmp/mini-bkp
         # Append Image list to Master List
         sort /tmp/mini-bkp $MINI_BKP_FILE | uniq > $MINI_BKP_FILE
-        echo "Image Count: `wc -l mini-bkp.txt`";
+        echo "Image Count: `wc -l $MINI_BKP_FILE`";
 
         for IMG in `cat $MINI_BKP_FILE`
         do 
