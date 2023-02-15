@@ -20,11 +20,14 @@ do
     BACKUP)
         # TODO: Handle None Tags
         [[ ! -f $MINI_BKP_FILE ]] && touch $MINI_BKP_FILE
-        minikube image ls | grep -v registry.k8s.io | grep -v none > $MINI_CURRENT_BKP_FILE
-        cp $MINI_BKP_FILE /tmp/mini-bkp-old
+        minikube image ls | grep -v registry.k8s.io | grep -v none | tee $MINI_CURRENT_BKP_FILE
+        echo "\033[1;33m Backup Count: `wc -l $MINI_CURRENT_BKP_FILE` \033[0m \n"
+
+        
         # Append Image list to Master List
+        cp $MINI_BKP_FILE /tmp/mini-bkp-old
         sort $MINI_CURRENT_BKP_FILE /tmp/mini-bkp-old | uniq | tee $MINI_BKP_FILE
-        echo "Image Count: `wc -l $MINI_BKP_FILE`";
+        echo "\033[1;33m Image Count: `wc -l $MINI_BKP_FILE` \033[0m \n"
 
         for IMG in `cat $MINI_CURRENT_BKP_FILE`
         do 
