@@ -1,7 +1,8 @@
 PORT=8091
 MINI_BKP_FILE=~/Downloads/mini-bkp.txt
 MINI_CURRENT_BKP_FILE=/tmp/mini-bkp
-answers=`gum choose MINIKUBE INGRESS ISTIO BACKUP RESTORE --limit 5`
+input=$1
+answers=${input:-`gum choose MINIKUBE INGRESS ISTIO BACKUP RESTORE CLEAN --limit 5`}
 
 for SVC in $answers
 do
@@ -15,6 +16,12 @@ do
 
     ISTIO)
         ./istio/istio.sh;
+        ;;
+    CLEAN)
+        echo "\033[1;32m Deleting Minikube Clusters \033[0m \n"
+        minikube -p minikube delete;
+        minikube -p secondary delete
+        exit 0
         ;;
 
     BACKUP)
@@ -84,7 +91,6 @@ echo "\033[1;33m Swagger: http://localhost:$PORT/swagger-ui \033[0m \n";
 echo "\033[1;33m K9S:  k9s --context minikube \033[0m \n";
 echo "\033[1;33m Context: `kubectl config current-context;`\033[0m \n";
 kubectl proxy --port=$PORT;
-
 
 ## k9s
 # k9s --readonly , -n <namespace>, -l <loglevel>
