@@ -135,7 +135,7 @@ To setup kubernetes there are multiple options available like minikube, kind, k8
 
 Script and Multiselect can be used to enable Istio, Ingress Gateway etc.
 * Setup - `./go-fun/Kubernetes/mini.zsh`
-* Teardown - `./go-fun/Kubernetes/clean.zsh`
+* Teardown - `./go-fun/Kubernetes/mini.zsh CLEAN`
 
 <br/> ![](common/images/fun-app/minikube.gif)
 
