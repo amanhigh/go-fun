@@ -1,5 +1,6 @@
 PORT=8091
 MINI_BKP_FILE=~/Downloads/mini-bkp.txt
+MINI_CURRENT_BKP_FILE=/tmp/mini-bkp
 answers=`gum choose MINIKUBE INGRESS ISTIO BACKUP RESTORE --limit 5`
 
 for SVC in $answers
@@ -19,13 +20,13 @@ do
     BACKUP)
         # TODO: Handle None Tags
         [[ ! -f $MINI_BKP_FILE ]] && touch $MINI_BKP_FILE
-        minikube image ls | grep docker.io | grep -v none > /tmp/mini-bkp
+        minikube image ls | grep -v registry.k8s.io | grep -v none > $MINI_CURRENT_BKP_FILE
         cp $MINI_BKP_FILE /tmp/mini-bkp-old
         # Append Image list to Master List
-        sort /tmp/mini-bkp /tmp/mini-bkp-old | uniq | tee $MINI_BKP_FILE
+        sort $MINI_CURRENT_BKP_FILE /tmp/mini-bkp-old | uniq | tee $MINI_BKP_FILE
         echo "Image Count: `wc -l $MINI_BKP_FILE`";
 
-        for IMG in `cat $MINI_BKP_FILE`
+        for IMG in `cat $MINI_CURRENT_BKP_FILE`
         do 
             echo "\033[1;33m Caching Image: $IMG \033[0m \n"
             CPATH="${IMG%:*}";
