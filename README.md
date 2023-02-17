@@ -134,8 +134,8 @@ To setup kubernetes there are multiple options available like minikube, kind, k8
 
 
 Script and Multiselect can be used to enable Istio, Ingress Gateway etc.
-* Setup - `./go-fun/Kubernetes/mini.sh`
-* Teardown - `./go-fun/Kubernetes/clean.sh`
+* Setup - `./go-fun/Kubernetes/mini.zsh`
+* Teardown - `./go-fun/Kubernetes/mini.zsh CLEAN`
 
 <br/> ![](common/images/fun-app/minikube.gif)
 
@@ -151,8 +151,8 @@ Flags (Multiple flags can be passed together)
 * Reset (r) - Clear all Resources in Current Namespace & Helms
 
 Eg.
-* Set & Install - `./go-fun/Kubernetes/services/services.sh -si`
-* Destroy & Install - `./go-fun/Kubernetes/services/services.sh -di` </br>
+* Set & Install - `./go-fun/Kubernetes/services/services.zsh -si`
+* Destroy & Install - `./go-fun/Kubernetes/services/services.zsh -di` </br>
 (Needs Set to be already done)
 
 <br/> ![](common/images/fun-app/k8-service.gif)

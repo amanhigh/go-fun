@@ -9,19 +9,21 @@ It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controlle
 which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster. More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
 
 ## Setup
+[Cheatsheet](https://sdk.operatorframework.io/docs/overview/cheat-sheet/)\
+[Layout](https://sdk.operatorframework.io/docs/overview/project-layout/)
 
 Steps followed
 * **Init** -  Domain is used for group CRD and Repo is used for Golang Module Management (go.mod generation). Add Generated Module to Go Work File.\
 `operator-sdk init --domain aman.com --repo github.com/amanhigh/go-fun/components/operator`\
 `go work use ./components/operator/`
 
-* **Controller** - Generate Controller and Types. Type/API will be *MemCached* with Version *v1alpha1* available under group *cache.aman.com*. Generated Go Files are under ./api, ./controllers and  ./config has yaml files.\
+* **Controller** - Generate Controller and Types. Type/[API](https://book.kubebuilder.io/cronjob-tutorial/new-api.html) will be *MemCached* with Version *v1alpha1* available under group *cache.aman.com*. Generated Go Files are under ./api, ./controllers and  ./config has yaml files.\
 `operator-sdk create api --group cache --version v1alpha1 --kind Memcached --resource --controller`
 
 * **Image Plugin** - Helps to control Docker File. Command Guides Creation of Docker file with image, command, user specifications.  This Generates [Controller](https://github.com/operator-framework/operator-sdk/blob/latest/testdata/go/v3/memcached-operator/controllers/memcached_controller.go), Type Specs and its Test. \
 `operator-sdk create api --group cache --version v1alpha1 --kind Memcached --plugins="deploy-image/v1-alpha" --image=memcached:1.4.36-alpine --image-container-command="memcached,-m=64,modern,-v" --run-as-user="1001"`
 
-* **Models** - Made Model Modification (ContainerPort addition) and do autogeneration. Updated Test and [Spec](config/samples/cache_v1alpha1_memcached.yaml) to include *containerPort: 8443*\
+* **Models** - Made Model Modification (ContainerPort addition) and do [autogeneration](https://book.kubebuilder.io/cronjob-tutorial/other-api-files.html). Updated Test and [Spec](config/samples/cache_v1alpha1_memcached.yaml) to include *containerPort: 8443*\
 `make generate`
 
 * **Manifests** - Generate Manifests CRD (cache.aman.com_memcacheds.yaml), RBAC(role.yml).If you are editing the API definitions, generate the manifests such as CRs or CRDs using.\
@@ -54,3 +56,19 @@ You’ll need a Kubernetes cluster which can be local (kind/minikube) or remote.
 #### --Cleanup--
 1. Remove Cluster:  `kubectl delete -f config/samples/cache_v1alpha1_memcached.yaml`
 2. Remove Operator and CRD's: `make undeploy`
+
+## Resources
+### Naming Convetions
+* API Group: <group>.<domain> eg. cache.aman.com
+* Resource: GroupVersionKind [GVK](https://book.kubebuilder.io/cronjob-tutorial/gvks.html). Eg.
+```
+    apiVersion: cache.aman.com/v1alpha1
+    kind: Memcached
+```
+* Spec: Golang Counterpart of Resource. Eg. `v1aplha1/Memcached`
+    * Fields: Fields in Spec should follow CamelCase. Can also be ommited when empty. Eg. ``json:"containerPort,omitempty"``
+
+### Markers
+Markers are Golang Comments/Tags which hint Kubebuilder Generator.
+* Kind: Type is a Kind `//+kubebuilder:object:root=true`
+* Group: Tags Go Package to hold & Generaet Kind Objects `+kubebuilder:object:generate=true`
