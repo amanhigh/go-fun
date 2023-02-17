@@ -2,7 +2,7 @@ PORT=8091
 MINI_BKP_FILE=~/Downloads/mini-bkp.txt
 MINI_CURRENT_BKP_FILE=/tmp/mini-bkp
 input=$1
-answers=${input:-`gum choose MINIKUBE INGRESS ISTIO BACKUP RESTORE CLEAN --limit 5`}
+answers=${input:-`gum choose MINIKUBE ISTIO INGRESS BACKUP RESTORE CLEAN --limit 5`}
 
 for SVC in $answers
 do
