@@ -39,6 +39,9 @@ Steps followed
 ## Deployment
 Project can be run in following ways
 
+### Testing
+Run `make test` to run tests. This will interally run generate and manifest targets as well.
+
 ### Outside Cluster
 Run `make install run` to run without cluster.
 
