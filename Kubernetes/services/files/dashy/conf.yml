@@ -6,11 +6,6 @@ pageInfo:
       path: https://github.com/Lissy93/dashy
     - title: Documentation
       path: https://dashy.to/docs
-appConfig:
-  theme: lissy
-  layout: auto
-  iconSize: medium
-  language: en
 sections:
   - name: Dashy
     icon: fas fa-rocket
@@ -90,3 +85,9 @@ sections:
       cols: 1
       collapsed: false
       hideForGuests: false
+appConfig:
+  theme: lissy
+  layout: auto
+  iconSize: medium
+  language: en
+  statusCheckInterval: 20
