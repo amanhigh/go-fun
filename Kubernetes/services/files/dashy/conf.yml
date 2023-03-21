@@ -53,7 +53,6 @@ sections:
         description: Google Music
         icon: favicon
         url: https://music.youtube.com/watch?v=p4MYzp_kxwE&list=RDATdXiX
-        target: newtab
         hotkey: 1
         statusCheck: true
         tags: [music]
@@ -61,7 +60,6 @@ sections:
         description: Pandora Playlist
         icon: favicon
         url: https://www.youtube.com/playlist?list=PL4FF2F5F7EF7ED26D
-        target: newtab
         tags: [music]
         hotkey: 2
     widgets:
@@ -78,6 +76,29 @@ sections:
       - type: iframe
         options:
           url: https://fiatleak.com/
+  - name: MarketPlace
+    icon: mdi-shopping
+    items:
+      - title: Quickr
+        description: Quickr Sale
+        icon: favicon
+        url: https://www.quikr.com/MyQuikr?action=activeads
+        tags: [sell]
+      - title: Olx
+        description: Olx Sale
+        icon: favicon
+        url: https://www.olx.in/nf/chat
+        tags: [sell]
+      - title: Amazon
+        description: Amazon Buy
+        icon: favicon
+        url: https://www.amazon.in/hz/wishlist/genericItemsPage/3Q70DY9DUYY1Q?type=wishlist&filter=all&sort=default&viewType=list
+        tags: [buy]
+      - title: Flipkart
+        description: Flipkart Buy
+        icon: favicon
+        url: https://www.flipkart.com/wishlist?link=home_wishlist
+        tags: [buy]
 
     displayData:
       sortBy: most-used
