@@ -17,7 +17,7 @@ Steps followed
 `operator-sdk init --domain aman.com --repo github.com/amanhigh/go-fun/components/operator`\
 `go work use ./components/operator/`
 
-* **Controller** - Generate Controller and Types. Type/[API](https://book.kubebuilder.io/cronjob-tutorial/new-api.html) will be *MemCached* with Version *v1alpha1* available under group *cache.aman.com*. Generated Go Files are under ./api, ./controllers and  ./config has yaml files.\
+* **Controller** - Generate [Controller](https://book.kubebuilder.io/cronjob-tutorial/controller-overview.html) and Types. Type/[API](https://book.kubebuilder.io/cronjob-tutorial/new-api.html) will be *MemCached* with Version *v1alpha1* available under group *cache.aman.com*. Generated Go Files are under ./api, ./controllers and  ./config has yaml files.\
 `operator-sdk create api --group cache --version v1alpha1 --kind Memcached --resource --controller`
 
 * **Image Plugin** - Helps to control Docker File. Command Guides Creation of Docker file with image, command, user specifications.  This Generates [Controller](https://github.com/operator-framework/operator-sdk/blob/latest/testdata/go/v3/memcached-operator/controllers/memcached_controller.go), Type Specs and its Test. \
@@ -29,7 +29,7 @@ Steps followed
 * **Manifests** - Generate Manifests CRD (cache.aman.com_memcacheds.yaml), RBAC(role.yml).If you are editing the API definitions, generate the manifests such as CRs or CRDs using.\
  `make manifests`
 
-* **Docker** - Updated Docker Base Image & [File](./Dockerfile). Fixed Image Name (amanfdk/operator) in Make File.\
+* **Docker** - Updated Docker Base Image & [File](Dockerfile). Fixed Image Name (amanfdk/operator) in Make File.\
 `make docker-build docker-push`\
 `docker images`
 
@@ -72,3 +72,6 @@ You’ll need a Kubernetes cluster which can be local (kind/minikube) or remote.
 Markers are Golang Comments/Tags which hint Kubebuilder Generator.
 * Kind: Type is a Kind `//+kubebuilder:object:root=true`
 * Group: Tags Go Package to hold & Generaet Kind Objects `+kubebuilder:object:generate=true`
+* [RBAC](https://book.kubebuilder.io/reference/markers/rbac.html): Generates [ClusterRole](config/rbac/role.yaml) for Controller & its Perms. `
+    * CRD: `//+kubebuilder:rbac:groups=cache.aman.com,resources=memcacheds,verbs=get;list;watch;create;update;patch;delete`
+    * Default Resources: `//+kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch`
