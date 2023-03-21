@@ -21,7 +21,7 @@ sections:
         url: https://live.dashy.to/
         target: newtab
       - title: Docs
-        description: Configuring & Usage Documentation
+        description: Refer Icons, Widgets, Keyboard Shortcuts, Pages
         provider: Dashy.to
         icon: far fa-book
         url: https://dashy.to/docs
