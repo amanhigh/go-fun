@@ -2,10 +2,11 @@ image:
   repository: lissy93/dashy
   tag: latest
 
-containerPort: 8099
+containerPort: 80
 svcPort: 4000
-# volumes:
-#   - name: default-conf
-#     path: /app/public/conf.yml
-#     hostPath:
-#       path: /etc/files/dashy/
+
+volumes:
+  - name: dashy-conf
+    path: /app/public/conf.yml
+    hostPath:
+      path: /etc/files/dashy/conf.yml
