@@ -122,6 +122,95 @@ sections:
         icon: favicon
         url: https://www.marketwatch.com/
         tags: [news]
+  - name: Investment
+    icon: mdi-currency-usd
+    items:
+      - title: Kuvera
+        description: Mutual Funds
+        icon: favicon
+        url: https://kuvera.in/
+        tags: [invest, india]
+      - title: Vested
+        description: Stocks, ETF's US
+        icon: favicon
+        url: https://app.vestedfinance.com/login
+        tags: [invest, us]
+      - title: Ibjarates
+        description: Indian Bullian Association Rates
+        icon: favicon
+        url: https://ibjarates.com/
+        tags: [invest, india]
+  - name: Career
+    icon: mdi-account-hard-hat
+    items:
+      - title: LinkedIn
+        description: Contacts, Corporate News
+        icon: favicon
+        url: https://www.linkedin.com/feed/
+        tags: [job, news, social]
+      - title: Layoffs
+        description: Layoff Tracker
+        icon: favicon
+        url: https://layoffs.fyi/
+        tags: [job]
+  - name: Trips
+    icon: mdi-train-car
+    items:
+      - title: ClearTrip
+        description: Flight Booking
+        icon: favicon
+        url: https://www.cleartrip.com/
+        tags: [flight, hotel]
+      - title: MakeMyTrip
+        description: Flight, Hotel Booking
+        icon: favicon
+        url: https://www.makemytrip.com/flights/
+        tags: [flight, hotel, train, visa]
+      - title: BookMyForex
+        description: Foreign Exchange Currency
+        icon: favicon
+        url: https://www.bookmyforex.com/fullratecard/
+        tags: [forex]
+      - title: TTExchange
+        description: Foreign Exchange Currency
+        icon: favicon
+        url: https://ttexchange.com/
+        tags: [forex]
+      - title: BBikers
+        description: Bangalore Bikers
+        icon: favicon
+        url: https://www.bengalurubikers.com/forum/
+        tags: [biker, roadtrip]
+      - title: FlightAlerts
+        description: Google Flight Alerts
+        icon: favicon
+        url: https://www.google.com/travel/flights/saves?hl=pa&gl=in&authuser=0&curr=INR
+        tags: [flight, alert]
+      - title: Goibibo
+        description: Flight, Hotel Booking
+        icon: favicon
+        url: https://www.goibibo.com/hotels/
+        tags: [flight, hotel, train]
+      - title: SkyScanner
+        description: Flight Booking
+        icon: favicon
+        url: https://www.skyscanner.co.in/flights
+        tags: [flight]
+      - title: Trivago
+        description: Hotel Booking
+        icon: favicon
+        url: https://www.trivago.in/
+        tags: [hotel]
+      - title: Wsfx
+        description: Foreign Exchange Currency
+        icon: favicon
+        url: https://www.wsfx.in/
+        tags: [forex]
+      - title: VfsGlobal
+        description: Visa Services (https://visa.vfsglobal.com/ind/en/fra/contact-us)
+        icon: favicon
+        url: https://visa.vfsglobal.com/ind/en/fra/
+        tags: [visa]
 
     displayData:
       sortBy: most-used
