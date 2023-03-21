@@ -29,7 +29,8 @@ Steps followed
 * **Manifests** - Generate Manifests CRD (cache.aman.com_memcacheds.yaml), RBAC(role.yml).If you are editing the API definitions, generate the manifests such as CRs or CRDs using.\
  `make manifests`
 
-* **Docker** - Updated Docker Base Image & [File](Dockerfile). Fixed Image Name (amanfdk/operator) in Make File.\
+* **Docker** - Updated Docker Base Image or any other Changes in [DockerFile](./Dockerfile). Fix Image Name `IMG ?= amanfdk/operator:latest` in [MakeFile](./Makefile).\
+\
 `make docker-build docker-push`\
 `docker images`
 
@@ -37,6 +38,9 @@ Steps followed
 
 ## Deployment
 Project can be run in following ways
+
+### Testing
+Run `make test` to run tests. This will interally run generate and manifest targets as well.
 
 ### Outside Cluster
 Run `make install run` to run without cluster.
