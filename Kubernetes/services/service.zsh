@@ -8,7 +8,7 @@
 CMD="install"
 ANS_FILE=/tmp/k8-svc.txt
 
-function process()
+process()
 {
 
     for SVC in `cat $ANS_FILE`
