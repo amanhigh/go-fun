@@ -20,10 +20,6 @@ sections:
         icon: https://i.ibb.co/qWWpD0v/astro-dab-128.png
         url: https://live.dashy.to/
         target: newtab
-      - title: GitHub
-        description: Source Code, Issues and Pull Requests
-        url: https://github.com/lissy93/dashy
-        icon: favicon
       - title: Docs
         description: Configuring & Usage Documentation
         provider: Dashy.to
@@ -37,10 +33,14 @@ sections:
         description: See full list of configuration options
         url: https://github.com/Lissy93/dashy/blob/master/docs/configuring.md
         icon: fas fa-wrench
-      - title: Icons
+      - title: Icons-Awesome
         description: Supported Icons
         url: https://fontawesome.com/search?q=git&o=r
         icon: fab fa-font-awesome
+      - title: Icons-Material
+        description: Supported Icons
+        url: https://pictogrammers.com/library/mdi/
+        icon: mdi-material-design
       - title: Support
         description: Get help with Dashy, raise a bug, or get in contact
         url: https://github.com/Lissy93/dashy/blob/master/.github/SUPPORT.md
@@ -51,12 +51,41 @@ sections:
       cols: 1
       collapsed: false
       hideForGuests: false
-  - name: Coding
+  - name: Entertainment
     icon: git
+    items:
+      - title: Music
+        description: Google Music
+        icon: favicon
+        url: https://music.youtube.com/watch?v=p4MYzp_kxwE&list=RDATdXiX
+        target: newtab
+        hotkey: 1
+        statusCheck: true
+        statusCheckInterval: 20
+      - title: Pandora
+        description: Pandora Playlist
+        icon: favicon
+        url: https://www.youtube.com/playlist?list=PL4FF2F5F7EF7ED26D
+        target: newtab
+        hotkey: 2
+    widgets:
+      - type: clock
+        options:
+          timeZone: Asia/Kolkata
+          format: en-GB
+          hideDate: false
+      - type: joke
+        options:
+          safeMode: false
+          language: en
+          category: Programming
+      - type: iframe
+        options:
+          url: https://fiatleak.com/
+
     displayData:
       sortBy: most-used
       rows: 1
       cols: 1
       collapsed: false
       hideForGuests: false
-    items: []
