@@ -79,6 +79,11 @@ process()
             helm $CMD cron onechart/onechart -f cron.yml > /dev/null
             echo "\033[1;33m Check Logs for Output \033[0m \n"
             ;;
+
+        DASHY)
+            helm $CMD dashy onechart/onechart -f dashy.yml > /dev/null
+            echo "\033[1;33m TODO \033[0m \n"
+            ;;
     
         APP)
             helm $CMD app onechart/onechart -f app.yml > /dev/null
@@ -211,7 +216,7 @@ while getopts 'dusri' OPTION; do
         ;;
     s)
         # Prompt
-        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK MONITOR WEBSHELL MYSQL-OP --limit 5`
+        answers=`gum choose DASHY MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK MONITOR WEBSHELL MYSQL-OP --limit 5`
         echo $answers > $ANS_FILE    
         echo "\033[1;32m Service Set \033[0m \n"
         echo "\033[1;33m $answers \033[0m \n"
