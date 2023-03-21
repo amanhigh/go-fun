@@ -7,45 +7,6 @@ pageInfo:
     - title: Documentation
       path: https://dashy.to/docs
 sections:
-  - name: Dashy
-    icon: fas fa-rocket
-    items:
-      - title: Dashy Live
-        description: Development a project management links for Dashy
-        icon: https://i.ibb.co/qWWpD0v/astro-dab-128.png
-        url: https://live.dashy.to/
-        target: newtab
-      - title: Docs
-        description: Refer Icons, Widgets, Keyboard Shortcuts, Pages
-        provider: Dashy.to
-        icon: far fa-book
-        url: https://dashy.to/docs
-      - title: Showcase
-        description: See how others are using Dashy
-        url: https://github.com/Lissy93/dashy/blob/master/docs/showcase.md
-        icon: far fa-grin-hearts
-      - title: Config Guide
-        description: See full list of configuration options
-        url: https://github.com/Lissy93/dashy/blob/master/docs/configuring.md
-        icon: fas fa-wrench
-      - title: Icons-Awesome
-        description: Supported Icons
-        url: https://fontawesome.com/search?q=git&o=r
-        icon: fab fa-font-awesome
-      - title: Icons-Material
-        description: Supported Icons
-        url: https://pictogrammers.com/library/mdi/
-        icon: mdi-material-design
-      - title: Support
-        description: Get help with Dashy, raise a bug, or get in contact
-        url: https://github.com/Lissy93/dashy/blob/master/.github/SUPPORT.md
-        icon: far fa-hands-helping
-    displayData:
-      sortBy: default
-      rows: 1
-      cols: 1
-      collapsed: false
-      hideForGuests: false
   - name: Entertainment
     icon: mdi-palette
     items:
@@ -73,9 +34,6 @@ sections:
           safeMode: false
           language: en
           category: Programming
-      - type: iframe
-        options:
-          url: https://fiatleak.com/
   - name: MarketPlace
     icon: mdi-shopping
     items:
@@ -99,6 +57,16 @@ sections:
         icon: favicon
         url: https://www.flipkart.com/wishlist?link=home_wishlist
         tags: [buy]
+      - title: Vegetables
+        description: Bigbasket Fruit and Vegetables
+        icon: favicon
+        url: https://www.bigbasket.com/pc/fruits-vegetables/fresh-vegetables/?nc=nb#!page=2
+        tags: [buy, grocery]
+      - title: Rashn
+        description: Rashan Pani
+        icon: favicon
+        url: https://www.bigbasket.com/shopping-list/amanlist/
+        tags: [buy, grocery]
   - name: Finance
     icon: mdi-currency-usd
     items:
@@ -106,12 +74,12 @@ sections:
         description: India Fundamental Analysis
         icon: favicon
         url: https://www.tickertape.in/screener/equity
-        tags: [fundamental]
+        tags: [fundamental, india]
       - title: EtfDb
         description: ETF Info
         icon: favicon
         url: https://etfdb.com/etf/GCC/#etf-ticker-profile
-        tags: [fundamental]
+        tags: [fundamental, us]
       - title: SbiRates
         description: SBI Rate Sheet
         icon: favicon
@@ -121,7 +89,32 @@ sections:
         description: Finance News
         icon: favicon
         url: https://www.marketwatch.com/
-        tags: [news]
+        tags: [news, us]
+      - title: TradingEconomics
+        description: Macro Indicators
+        icon: favicon
+        url: https://tradingeconomics.com/india/indicators
+        tags: [fundamental, macro]
+      - title: MoneyControl
+        description: Mutual Fund Performance
+        icon: favicon
+        url: https://www.moneycontrol.com/mutual-funds/performance-tracker/returns/index-fundsetfs.html
+        tags: [india]
+      - title: LynAlden
+        description: Astute Macro Tracker
+        icon: favicon
+        url: https://www.lynalden.com/
+        tags: [reading, macro]
+  - name: Finance-Secondary
+    icon: mdi-currency-usd
+    items:
+      - title: Nifty-PE
+        description: Nifty PE Analysis
+        icon: favicon
+        url: https://nifty-pe-ratio.com/
+        tags: [fundamental, macro, india]
+    displayData:
+      collapsed: true
   - name: Investment
     icon: mdi-currency-usd
     items:
@@ -140,19 +133,11 @@ sections:
         icon: favicon
         url: https://ibjarates.com/
         tags: [invest, india]
-  - name: Career
-    icon: mdi-account-hard-hat
-    items:
-      - title: LinkedIn
-        description: Contacts, Corporate News
+      - title: Splitwise
+        description: Tracking Friendly Udhar
         icon: favicon
-        url: https://www.linkedin.com/feed/
-        tags: [job, news, social]
-      - title: Layoffs
-        description: Layoff Tracker
-        icon: favicon
-        url: https://layoffs.fyi/
-        tags: [job]
+        url: https://secure.splitwise.com/#/dashboard
+        tags: [loan]
   - name: Trips
     icon: mdi-train-car
     items:
@@ -218,6 +203,63 @@ sections:
       cols: 1
       collapsed: false
       hideForGuests: false
+  - name: Career
+    icon: mdi-account-hard-hat
+    items:
+      - title: LinkedIn
+        description: Contacts, Corporate News
+        icon: favicon
+        url: https://www.linkedin.com/feed/
+        tags: [job, news, social]
+      - title: Layoffs
+        description: Layoff Tracker
+        icon: favicon
+        url: https://layoffs.fyi/
+        tags: [job]
+  - name: Dashy
+    icon: fas fa-rocket
+    items:
+      - title: Dashy Live
+        description: Development a project management links for Dashy
+        icon: https://i.ibb.co/qWWpD0v/astro-dab-128.png
+        url: https://live.dashy.to/
+        target: newtab
+      - title: Docs
+        description: Refer Icons, Widgets, Keyboard Shortcuts, Pages
+        provider: Dashy.to
+        icon: far fa-book
+        url: https://dashy.to/docs
+      - title: Showcase
+        description: See how others are using Dashy
+        url: https://github.com/Lissy93/dashy/blob/master/docs/showcase.md
+        icon: far fa-grin-hearts
+      - title: Config Guide
+        description: See full list of configuration options
+        url: https://github.com/Lissy93/dashy/blob/master/docs/configuring.md
+        icon: fas fa-wrench
+      - title: Icons-Awesome
+        description: Supported Icons
+        url: https://fontawesome.com/search?q=git&o=r
+        icon: fab fa-font-awesome
+      - title: Icons-Material
+        description: Supported Icons
+        url: https://pictogrammers.com/library/mdi/
+        icon: mdi-material-design
+      - title: Support
+        description: Get help with Dashy, raise a bug, or get in contact
+        url: https://github.com/Lissy93/dashy/blob/master/.github/SUPPORT.md
+        icon: far fa-hands-helping
+    widgets:
+      - type: iframe
+        options:
+          url: https://fiatleak.com/
+    displayData:
+      sortBy: default
+      rows: 1
+      cols: 1
+      collapsed: false
+      hideForGuests: false
+
 appConfig:
   theme: lissy
   layout: auto
