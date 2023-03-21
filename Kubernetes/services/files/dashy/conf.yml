@@ -99,6 +99,29 @@ sections:
         icon: favicon
         url: https://www.flipkart.com/wishlist?link=home_wishlist
         tags: [buy]
+  - name: Finance
+    icon: mdi-currency-usd
+    items:
+      - title: TickerTape
+        description: India Fundamental Analysis
+        icon: favicon
+        url: https://www.tickertape.in/screener/equity
+        tags: [fundamental]
+      - title: EtfDb
+        description: ETF Info
+        icon: favicon
+        url: https://etfdb.com/etf/GCC/#etf-ticker-profile
+        tags: [fundamental]
+      - title: SbiRates
+        description: SBI Rate Sheet
+        icon: favicon
+        url: https://www.sbi.co.in/documents/16012/1400784/FOREX_CARD_RATES.pdf
+        tags: [forex]
+      - title: MarketWatch
+        description: Finance News
+        icon: favicon
+        url: https://www.marketwatch.com/
+        tags: [news]
 
     displayData:
       sortBy: most-used
