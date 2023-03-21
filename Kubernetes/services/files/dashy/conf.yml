@@ -216,6 +216,21 @@ sections:
         icon: favicon
         url: https://layoffs.fyi/
         tags: [job]
+  - name: Docker
+    icon: mdi-ship-wheel
+    items:
+      - title: MysqlAdmin
+        description: PHP MyAdmin Login - root/root@mysql-primary
+        icon: favicon
+        url: http://mysql-admin-phpmyadmin
+        target: workspace
+        statusCheck: true
+      - title: FunApp
+        description: FunApp Metrics
+        icon: favicon
+        url: http://app:9001/metrics
+        target: workspace
+        statusCheck: true
   - name: Dashy
     icon: fas fa-rocket
     items:
