@@ -52,7 +52,7 @@ sections:
       collapsed: false
       hideForGuests: false
   - name: Entertainment
-    icon: git
+    icon: mdi-palette
     items:
       - title: Music
         description: Google Music
@@ -61,12 +61,13 @@ sections:
         target: newtab
         hotkey: 1
         statusCheck: true
-        statusCheckInterval: 20
+        tags: [music]
       - title: Pandora
         description: Pandora Playlist
         icon: favicon
         url: https://www.youtube.com/playlist?list=PL4FF2F5F7EF7ED26D
         target: newtab
+        tags: [music]
         hotkey: 2
     widgets:
       - type: clock
