@@ -117,8 +117,10 @@ process()
         TRAEFIK)
             # helm repo add traefik https://traefik.github.io/charts
             helm $CMD traefik traefik/traefik -f traefik.yml > /dev/null
+            kubectl apply -f ./files/traefik/ingress.yml
             echo "\033[1;33m Dashboard: http://localhost:9000/dashboard/#/ \033[0m \n"
             echo "\033[1;33m HealthCheck: http://localhost:9000/ping \033[0m \n"
+            echo "\033[1;33m Ingress: http://localhost:8000/mysqladmin \033[0m \n"
             ;;
 
         CONSUL)
