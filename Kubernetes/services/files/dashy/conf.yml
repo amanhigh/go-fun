@@ -93,6 +93,7 @@ sections:
       - title: TradingEconomics
         description: Macro Indicators
         icon: favicon
+        target: workspace
         url: https://tradingeconomics.com/india/indicators
         tags: [fundamental, macro]
       - title: MoneyControl
@@ -102,6 +103,7 @@ sections:
         tags: [india]
       - title: LynAlden
         description: Astute Macro Tracker
+        target: workspace
         icon: favicon
         url: https://www.lynalden.com/
         tags: [reading, macro]
@@ -116,7 +118,7 @@ sections:
     displayData:
       collapsed: true
   - name: Investment
-    icon: mdi-currency-usd
+    icon: mdi-cash-multiple
     items:
       - title: Kuvera
         description: Mutual Funds
