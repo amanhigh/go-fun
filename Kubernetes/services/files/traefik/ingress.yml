@@ -17,13 +17,6 @@ spec:
                 name: mysql-admin-phpmyadmin
                 port:
                   number: 80
-          - path: /app
-            pathType: Prefix
-            backend:
-              service:
-                name: app
-                port:
-                  number: 9001
           - path: /dashy
             pathType: Prefix
             backend:
@@ -31,15 +24,3 @@ spec:
                 name: dashy
                 port:
                   number: 4000
-
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: stripprefix
-spec:
-  stripPrefix:
-    prefixes:
-      - /mysqladmin
-      - /app
-      - /dashy
