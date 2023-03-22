@@ -133,7 +133,7 @@ To ease development and easy setup of dependencies we use Kubernetes. Also [K9S]
 To setup kubernetes there are multiple options available like minikube, kind, k89, k3s etc. In this project we are using [minikube](https://minikube.sigs.k8s.io/docs/).
 
 
-Script and Multiselect can be used to enable Istio, Ingress Gateway etc.
+Script and Multiselect can be used to enable Istio, Backup, Restore etc.
 * Setup - `./go-fun/Kubernetes/mini.zsh`
 * Teardown - `./go-fun/Kubernetes/mini.zsh CLEAN`
 
