@@ -109,6 +109,11 @@ process()
             echo "\033[1;33m vault status \033[0m \n"
             echo "\033[1;33m /demo/vault.sh \033[0m \n"
             ;;
+        PORTAINER)
+            # helm repo add portainer https://portainer.github.io/k8s/
+            helm $CMD portainer portainer/portainer --set service.type=ClusterIP > /dev/null
+            echo "\033[1;33m http://localhost:9000/ \033[0m \n"
+            ;;
         TRAEFIK)
             # helm repo add traefik https://traefik.github.io/charts
             helm $CMD traefik traefik/traefik -f traefik.yml > /dev/null
@@ -222,7 +227,7 @@ while getopts 'dusri' OPTION; do
         ;;
     s)
         # Prompt
-        answers=`gum choose DASHY TRAEFIK MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR ZOOKEEPER ELK MONITOR WEBSHELL MYSQL-OP --limit 5`
+        answers=`gum choose DASHY TRAEFIK MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR PORTAINER ZOOKEEPER ELK MONITOR WEBSHELL MYSQL-OP --limit 5`
         echo $answers > $ANS_FILE    
         echo "\033[1;32m Service Set \033[0m \n"
         echo "\033[1;33m $answers \033[0m \n"
