@@ -50,6 +50,7 @@ process()
             echo "\033[1;33m http://localhost:8090/ \033[0m \n"
             echo "\033[1;33m http://localhost:8090/example \033[0m \n"
             echo "\033[1;33m http://localhost:8090/ndtv \033[0m \n"
+            echo "\033[1;33m Ingress (Traefik): http://localhost:8000/app/ndtv \033[0m \n"
             
             echo "\033[1;32m Squid \033[0m \n"
             helm $CMD squid onechart/onechart -f squid.yml > /dev/null

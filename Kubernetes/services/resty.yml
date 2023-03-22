@@ -22,9 +22,12 @@ probe:
     successThreshold: 1
     timeoutSeconds: 1
     failureThreshold: 3
-#TODO: Configure DNS Resolver and test https://minikube.sigs.k8s.io/docs/handbook/addons/ingress-dns/
 ingress:
-  host: resty.local
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: default-stripprefix@kubernetescrd
+  path: /app
+  # host: docker
 # replicas: 2
 # podDisruptionBudgetEnabled: false
 
