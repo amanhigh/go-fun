@@ -83,7 +83,7 @@ process()
 
         DASHY)
             helm $CMD dashy onechart/onechart -f dashy.yml > /dev/null
-            echo "\033[1;33m http://localhost:8099/home/ \033[0m \n"
+            echo "\033[1;33m http://dashy.docker/ \033[0m \n"
             ;;
     
         APP)
@@ -236,6 +236,7 @@ while getopts 'dusrib' OPTION; do
         process
         ;;
     b)
+        # 127.0.0.1        docker httpbin.docker dashy.docker
         echo "\033[1;32m Bootstraping \033[0m \n"
         
         process "DASHY TRAEFIK"
