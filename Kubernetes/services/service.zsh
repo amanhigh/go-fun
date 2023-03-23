@@ -226,8 +226,8 @@ while getopts 'dusri' OPTION; do
         ;;
     u)
         echo "\033[1;32m Helm: Upgrade \033[0m \n"
-        process
         CMD="upgrade"
+        process
         ;;
     s)
         # Prompt
