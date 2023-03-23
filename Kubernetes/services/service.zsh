@@ -121,9 +121,6 @@ process()
             kubectl apply -f ./files/traefik/middleware.yml
             # kubectl apply -f ./files/traefik/ingress.yml
 
-            sleep 20
-            kubectl port-forward deployment/traefik 9000:9000 > /dev/null &
-            kubectl port-forward deployment/traefik 8000:8000 > /dev/null &
             echo "\033[1;33m Dashboard: http://localhost:9000/dashboard/#/ \033[0m \n"
             echo "\033[1;33m HealthCheck: http://localhost:9000/ping \033[0m \n"
             echo "\033[1;33m Ingress: http://localhost:8000/mysqladmin \033[0m \n"
@@ -236,10 +233,15 @@ while getopts 'dusrib' OPTION; do
         process
         ;;
     b)
-        # 127.0.0.1        docker httpbin.docker dashy.docker
-        echo "\033[1;32m Bootstraping \033[0m \n"
+        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker
+        echo "\033[1;32m Bootstraping Base Services \033[0m \n"
         
         process "DASHY TRAEFIK"
+        
+        echo "\033[1;32m Attempting Traefik Portforward \033[0m \n";
+        kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik --timeout=1m
+        kubectl port-forward deployment/traefik 9000:9000 > /dev/null &
+        kubectl port-forward deployment/traefik 8000:8000 > /dev/null &
         ;;
     s)
         # Prompt
