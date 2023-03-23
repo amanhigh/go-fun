@@ -8,5 +8,5 @@ svcPort: 8810
 ingress:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web
-    traefik.ingress.kubernetes.io/router.middlewares: default-stripprefixregex@kubernetescrd
-  path: /httpbin
+  path: /
+  host: httpbin.docker
