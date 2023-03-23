@@ -119,6 +119,10 @@ process()
             helm $CMD traefik traefik/traefik -f traefik.yml > /dev/null
             kubectl apply -f ./files/traefik/middleware.yml
             # kubectl apply -f ./files/traefik/ingress.yml
+
+            sleep 20
+            kubectl port-forward deployment/traefik 9000:9000 > /dev/null &
+            kubectl port-forward deployment/traefik 8000:8000 > /dev/null &
             echo "\033[1;33m Dashboard: http://localhost:9000/dashboard/#/ \033[0m \n"
             echo "\033[1;33m HealthCheck: http://localhost:9000/ping \033[0m \n"
             echo "\033[1;33m Ingress: http://localhost:8000/mysqladmin \033[0m \n"
