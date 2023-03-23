@@ -48,9 +48,9 @@ process()
             echo "\033[1;32m Resty \033[0m \n"
             helm $CMD resty onechart/onechart -f resty.yml > /dev/null
 
-            echo "\033[1;33m http://localhost:8000/resty/ \033[0m \n"
-            echo "\033[1;33m http://localhost:8000/resty/example \033[0m \n"
-            echo "\033[1;33m http://localhost:8000/resty/ndtv \033[0m \n"
+            echo "\033[1;33m http://resty.docker/ \033[0m \n"
+            echo "\033[1;33m http://resty.docker/example \033[0m \n"
+            echo "\033[1;33m http://resty.docker/ndtv \033[0m \n"
             
             echo "\033[1;32m Squid \033[0m \n"
             helm $CMD squid onechart/onechart -f squid.yml > /dev/null
@@ -88,7 +88,7 @@ process()
     
         APP)
             helm $CMD app onechart/onechart -f app.yml > /dev/null
-            echo "\033[1;33m http://localhost:8000/app/metrics\n http://localhost:8000/app/person/all \033[0m \n"
+            echo "\033[1;33m http://app.docker/app/metrics\n http://app.docker/app/person/all \033[0m \n"
             echo "\033[1;33m echo 'GET http://app:9001/person/all' | vegeta attack | vegeta report \033[0m \n"
             ;;
 
@@ -233,7 +233,7 @@ while getopts 'dusrib' OPTION; do
         process
         ;;
     b)
-        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker
+        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker
         echo "\033[1;32m Bootstraping Base Services \033[0m \n"
         
         process "TRAEFIK DASHY"
