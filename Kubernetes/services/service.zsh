@@ -236,7 +236,7 @@ while getopts 'dusrib' OPTION; do
         # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker
         echo "\033[1;32m Bootstraping Base Services \033[0m \n"
         
-        process "DASHY TRAEFIK"
+        process "TRAEFIK DASHY"
         
         echo "\033[1;32m Attempting Traefik Portforward \033[0m \n";
         kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik --timeout=1m

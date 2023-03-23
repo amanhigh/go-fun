@@ -67,9 +67,10 @@ do
         # --extra-config="apiserver.service-account-signing-key-file=/var/lib/minikube/certs/sa.key";
         # minikube -p minikube ssh 'sudo cat /var/lib/minikube/certs/sa.pub'
 
-        echo "\033[1;32m Minikube Dashboard & Addons \033[0m \n";
-        minikube -p minikube dashboard --url=true &
-        minikube addons enable metrics-server;
+        # echo "\033[1;32m Minikube Dashboard & Addons \033[0m \n";
+        # minikube -p minikube dashboard --url=true > /dev/null &
+        # minikube addons enable metrics-server;
+
         ;;
 
     *)
@@ -84,7 +85,18 @@ echo "\033[1;33m Dashboard: http://localhost:$PORT/api/v1/namespaces/kubernetes-
 echo "\033[1;33m Swagger: http://localhost:$PORT/swagger-ui \033[0m \n";
 echo "\033[1;33m K9S:  k9s --context minikube \033[0m \n";
 echo "\033[1;33m Context: `kubectl config current-context;`\033[0m \n";
-kubectl proxy --port=$PORT;
+# kubectl proxy --port=$PORT;
+
+echo "\033[1;34m Waiting for Minikube to be Ready \033[0m \n";
+sleep 20
+kubectl wait --for=condition=Ready pod -l k8s-app=kube-dns -n kube-system
+
+cd ./services
+./service.zsh -b
+cd -
+
+echo "\033[1;34m Please enter password for Port 80 Forward \033[0m \n";
+sudo kubectl port-forward deployment/traefik 80:8000
 
 ## k9s
 # k9s --readonly , -n <namespace>, -l <loglevel>
