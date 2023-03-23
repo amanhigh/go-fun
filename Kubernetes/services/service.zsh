@@ -19,7 +19,7 @@ process()
         MYSQL)
             helm $CMD mysql bitnami/mysql -f mysql.yml > /dev/null
             helm $CMD mysql-admin bitnami/phpmyadmin > /dev/null
-            echo "\033[1;33m Login: mysql-primary, root/root \033[0m \n"
+            echo "\033[1;33m http://mysqladmin.docker/ Login: mysql-primary, root/root \033[0m \n"
             ;;
 
         MONGO)

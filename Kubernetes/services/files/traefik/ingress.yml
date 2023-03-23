@@ -25,3 +25,24 @@ spec:
                 name: dashy
                 port:
                   number: 4000
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mysqladmin-ingress
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+
+spec:
+  rules:
+    - host: mysqladmin.docker
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mysql-admin-phpmyadmin
+                port:
+                  number: 80
