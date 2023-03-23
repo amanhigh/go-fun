@@ -224,15 +224,12 @@ sections:
       - title: MysqlAdmin
         description: PHP MyAdmin Login - root/root@mysql-primary
         icon: favicon
-        statusCheckUrl: http://mysql-admin-phpmyadmin
-        url: http://localhost:8000/mysqladmin
-        target: workspace
+        url: http://mysqladmin.docker/
         statusCheck: true
       - title: FunApp
         description: FunApp Metrics
         icon: favicon
-        statusCheckUrl: http://app:9001/metrics
-        url: http://localhost:8000/app/metrics
+        url: http://app.docker/app/metrics
         target: workspace
         statusCheck: true
   - name: Dashy
