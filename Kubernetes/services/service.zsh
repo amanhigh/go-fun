@@ -208,7 +208,7 @@ process()
 
 
 # Flags
-while getopts 'dusri' OPTION; do
+while getopts 'dusrib' OPTION; do
   case "$OPTION" in
     r)
         NS=$(kubectl get sa -o=jsonpath='{.items[0]..metadata.namespace}')
@@ -234,9 +234,14 @@ while getopts 'dusri' OPTION; do
         CMD="upgrade"
         process
         ;;
+    b)
+        echo "\033[1;32m Bootstraping \033[0m \n"
+        answers="DASHY TRAEFIK"
+        process
+        ;;
     s)
         # Prompt
-        answers=`gum choose DASHY TRAEFIK MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR PORTAINER ZOOKEEPER ELK MONITOR WEBSHELL MYSQL-OP --limit 5`
+        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR PORTAINER ZOOKEEPER ELK MONITOR WEBSHELL MYSQL-OP --limit 5`
         echo $answers > $ANS_FILE    
         echo "\033[1;32m Service Set \033[0m \n"
         echo "\033[1;33m $answers \033[0m \n"
