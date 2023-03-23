@@ -10,8 +10,9 @@ ANS_FILE=/tmp/k8-svc.txt
 
 process()
 {
+    SVC_LIST=${1:-`cat $ANS_FILE`}
 
-    for SVC in `cat $ANS_FILE`
+    for SVC in $SVC_LIST
     do
         echo "\033[1;32m \n $SVC \033[0m \n"
         case $SVC in
@@ -236,8 +237,8 @@ while getopts 'dusrib' OPTION; do
         ;;
     b)
         echo "\033[1;32m Bootstraping \033[0m \n"
-        answers="DASHY TRAEFIK"
-        process
+        
+        process "DASHY TRAEFIK"
         ;;
     s)
         # Prompt
