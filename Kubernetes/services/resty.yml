@@ -25,8 +25,8 @@ probe:
 ingress:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web
-    traefik.ingress.kubernetes.io/router.middlewares: default-stripprefix@kubernetescrd
-  path: /app
+    traefik.ingress.kubernetes.io/router.middlewares: default-stripprefixregex@kubernetescrd
+  path: /resty
   # host: docker
 # replicas: 2
 # podDisruptionBudgetEnabled: false
