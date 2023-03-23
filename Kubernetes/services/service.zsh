@@ -70,8 +70,8 @@ process()
 
         HTTPBIN)
             helm $CMD httpbin onechart/onechart -f httpbin.yml > /dev/null
-            echo "\033[1;33m Swagger: http://localhost:8810 \033[0m \n"
-            echo "\033[1;33m http://localhost:8810/anything \033[0m \n"
+            echo "\033[1;33m Swagger: http://httpbin.docker \033[0m \n"
+            echo "\033[1;33m http://httpbin.docker/anything \033[0m \n"
             ;;
 
         CRON)
@@ -126,6 +126,7 @@ process()
             echo "\033[1;33m Dashboard: http://localhost:9000/dashboard/#/ \033[0m \n"
             echo "\033[1;33m HealthCheck: http://localhost:9000/ping \033[0m \n"
             echo "\033[1;33m Ingress: http://localhost:8000/mysqladmin \033[0m \n"
+            echo "\033[1;33m PortForward(80): sudo kubectl port-forward deployment/traefik 80:8000 > /dev/null &\033[0m \n"
             ;;
 
         CONSUL)
