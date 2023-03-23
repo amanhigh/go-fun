@@ -1,0 +1,11 @@
+# https://artifacthub.io/packages/helm/bitnami/phpmyadmin
+
+## Ingress configuration
+##
+ingress:
+  ## @param ingress.enabled Set to true to enable ingress record generation
+  ##
+  enabled: true
+  hostname: mysqladmin.docker
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web

@@ -18,7 +18,7 @@ process()
         case $SVC in
         MYSQL)
             helm $CMD mysql bitnami/mysql -f mysql.yml > /dev/null
-            helm $CMD mysql-admin bitnami/phpmyadmin > /dev/null
+            helm $CMD mysql-admin bitnami/phpmyadmin -f phpmyadmin.yml > /dev/null
             echo "\033[1;33m http://mysqladmin.docker/ Login: mysql-primary, root/root \033[0m \n"
             ;;
 
@@ -233,7 +233,7 @@ while getopts 'dusrib' OPTION; do
         process
         ;;
     b)
-        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker
+        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker mysqladmin.docker redisadmin.docker
         echo "\033[1;32m Bootstraping Base Services \033[0m \n"
         
         process "TRAEFIK DASHY"
