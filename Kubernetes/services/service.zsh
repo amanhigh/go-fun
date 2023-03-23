@@ -218,7 +218,8 @@ while getopts 'dusri' OPTION; do
         ;;
     d)
         echo "\033[1;32m Clearing all Helms \033[0m \n"
-        helm delete $(helm list --short)
+        #Exclude Permanent Helms
+        helm delete $(helm list --short | grep -v "traefik\|dashy")
         ;;
     i)
         echo "\033[1;32m Helm: Install \033[0m \n"
