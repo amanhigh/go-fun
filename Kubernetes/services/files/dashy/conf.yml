@@ -225,12 +225,16 @@ sections:
         description: PHP MyAdmin Login - root/root@mysql-primary
         icon: favicon
         url: http://mysqladmin.docker/
-        statusCheck: true
       - title: FunApp
         description: FunApp Metrics
         icon: favicon
         url: http://app.docker/app/metrics
         target: workspace
+        statusCheck: true
+      - title: RedisAdmin
+        description: Redis Admin (No Login Required)
+        icon: favicon
+        url: http://redisadmin.docker/
         statusCheck: true
   - name: Dashy
     icon: fas fa-rocket

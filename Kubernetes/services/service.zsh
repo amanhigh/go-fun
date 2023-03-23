@@ -35,7 +35,7 @@ process()
             echo "\033[1;33m redis-cli -c incr mycounter \033[0m \n"
             echo "\033[1;33m redis-cli -c set mypasswd lol \033[0m \n"
             echo "\033[1;33m redis-cli -c get mypasswd \033[0m \n"
-            echo "\033[1;33m Commander: http://localhost:8081/ \033[0m \n"
+            echo "\033[1;33m Commander: http://redisadmin.docker/ \033[0m \n"
             ;;
 
         PROXY)
