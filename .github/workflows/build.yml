@@ -25,7 +25,11 @@ jobs:
           export GOPATH=~/go
           export PATH=$PATH:$GOPATH/bin
           go env         
-          go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo@latest
+          go get github.com/onsi/ginkgo/v2
+          go get github.com/onsi/ginkgo/v2/ginkgo/generators
+          go get github.com/onsi/ginkgo/v2/ginkgo/internal
+          go get github.com/onsi/ginkgo/v2/ginkgo/labels
+          go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo
 
       - name: Install Helm
         uses: azure/setup-helm@v3
