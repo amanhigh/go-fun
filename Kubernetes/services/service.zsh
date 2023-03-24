@@ -130,7 +130,7 @@ process()
         CONSUL)
             # helm repo add hashicorp https://helm.releases.hashicorp.com
             helm $CMD consul hashicorp/consul -f consul.yml > /dev/null
-            echo "\033[1;33m http://localhost:8500/ \033[0m \n"
+            echo "\033[1;33m http://consul.docker/ \033[0m \n"
             ;;
 
         ETCD)
@@ -233,7 +233,7 @@ while getopts 'dusrib' OPTION; do
         process
         ;;
     b)
-        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker mysqladmin.docker redisadmin.docker prometheus.docker grafana.docker ldapadmin.docker webssh.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker
+        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker mysqladmin.docker redisadmin.docker prometheus.docker grafana.docker ldapadmin.docker webssh.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker consul.docker opa.docker sonar.docker
         echo "\033[1;32m Bootstraping Base Services \033[0m \n"
         
         process "TRAEFIK DASHY"

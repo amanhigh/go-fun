@@ -260,6 +260,11 @@ sections:
         icon: favicon
         url: http://nginx.docker/
         statusCheck: true
+      - title: Consul
+        description: Consul Nosql DB
+        icon: favicon
+        url: http://consul.docker/
+        statusCheck: true
   - name: Dashy
     icon: fas fa-rocket
     items:
