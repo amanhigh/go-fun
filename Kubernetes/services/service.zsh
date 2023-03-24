@@ -191,9 +191,9 @@ process()
             helm $CMD webssh onechart/onechart -f webssh.yml > /dev/null
             #TODO: Fix Config
             helm $CMD webssh2 onechart/onechart -f webssh2.yml > /dev/null
-            echo "\033[1;33m Sshwifty: http://localhost:8080/ \033[0m \n"
-            echo "\033[1;33m Webssh: http://localhost:8182/ \033[0m \n"
-            echo "\033[1;33m Webssh: http://localhost:2222/ \033[0m \n"
+            echo "\033[1;33m Sshwifty: http://sshwifty.docker/ \033[0m \n"
+            echo "\033[1;33m Webssh: http://webssh.docker/ \033[0m \n"
+            echo "\033[1;33m Webssh: http://webssh2.docker/ \033[0m \n"
             ;;
 
         *)
@@ -233,7 +233,7 @@ while getopts 'dusrib' OPTION; do
         process
         ;;
     b)
-        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker mysqladmin.docker redisadmin.docker prometheus.docker grafana.docker
+        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker mysqladmin.docker redisadmin.docker prometheus.docker grafana.docker ldapadmin.docker webssh.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker
         echo "\033[1;32m Bootstraping Base Services \033[0m \n"
         
         process "TRAEFIK DASHY"

@@ -4,3 +4,8 @@ image:
 
 containerPort: 8182
 svcPort: 8182
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  path: /
+  host: sshwifty.docker
