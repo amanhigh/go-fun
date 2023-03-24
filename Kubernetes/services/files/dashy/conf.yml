@@ -250,6 +250,11 @@ sections:
         icon: favicon
         url: http://ldapadmin.docker/
         statusCheck: true
+      - title: Nginx
+        description: Nginx Proxy
+        icon: favicon
+        url: http://nginx.docker/
+        statusCheck: true
   - name: Dashy
     icon: fas fa-rocket
     items:

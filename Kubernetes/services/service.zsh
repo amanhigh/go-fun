@@ -42,7 +42,7 @@ process()
             echo "\033[1;32m Nginx \033[0m \n"
             helm $CMD nginx bitnami/nginx -f nginx.yml > /dev/null
 
-            echo "\033[1;33m http://localhost:8081/ \033[0m \n"
+            echo "\033[1;33m http://nginx.docker/ \033[0m \n"
             echo "\033[1;33m Refer Server Blocks for More Help.. \033[0m \n"
             
             echo "\033[1;32m Resty \033[0m \n"
