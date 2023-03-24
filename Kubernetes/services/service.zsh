@@ -97,11 +97,11 @@ process()
             helm $CMD opa opa/opa-kube-mgmt -f opa.yml > /dev/null
             helm $CMD opa-demo onechart/onechart -f opa-demo.yml > /dev/null
             
-            echo "\033[1;33m http://localhost:8181/ \033[0m \n"
+            echo "\033[1;33m curl --user david:password http://opa.docker/finance/salary/david \033[0m \n"
 
-            echo "\033[1;33m Demo: ./demo/hr.sh \033[0m \n"
-            echo "\033[1;33m Demo: ./demo/authz.sh \033[0m \n"
-            echo "\033[1;33m Localhost: ./demo/docker.sh \033[0m \n"
+            echo "\033[1;33m Demo (opa-demo): /demo/hr.sh \033[0m \n"
+            echo "\033[1;33m Demo (opa-demo): /demo/authz.sh \033[0m \n"
+            echo "\033[1;33m Docker (Localhost): ./demo/docker.sh \033[0m \n"
             ;;
 
         VAULT)
