@@ -131,6 +131,7 @@ To ease development and easy setup of dependencies we use Kubernetes. Also [K9S]
 
 ### Minikube
 To setup kubernetes there are multiple options available like minikube, kind, k89, k3s etc. In this project we are using [minikube](https://minikube.sigs.k8s.io/docs/).
+This will also setup [traifik](https://github.com/traefik/traefik) ingress for easy access. User needs to give sudo for port 80 forward.
 
 
 Script and Multiselect can be used to enable Istio, Backup, Restore etc.
@@ -147,8 +148,9 @@ Service Script allows you multiple flags to set, create and teardown the setup.
 Flags (Multiple flags can be passed together)
 * Set (s) - Allows you set Service Reciepe.
 * Install (i) - Installs Helms
-* Delete (d) - Deletes & Clears all Helms
+* Delete (d) - Deletes & Clears all Helms (Excludes Traefik and Dashy)
 * Reset (r) - Clear all Resources in Current Namespace & Helms
+* Reset (b) - Bootstraps Traefik and Dashy
 
 Eg.
 * Set & Install - `./go-fun/Kubernetes/services/services.zsh -si`
