@@ -231,6 +231,11 @@ sections:
         url: http://app.docker/app/metrics
         target: workspace
         statusCheck: true
+      - title: Portainer
+        description: Easy Container Mangement
+        icon: favicon
+        url: http://portainer.docker/
+        statusCheck: true
       - title: RedisAdmin
         description: Redis Admin (No Login Required)
         icon: favicon

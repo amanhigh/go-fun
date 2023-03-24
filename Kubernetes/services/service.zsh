@@ -112,8 +112,8 @@ process()
             ;;
         PORTAINER)
             # helm repo add portainer https://portainer.github.io/k8s/
-            helm $CMD portainer portainer/portainer --set service.type=ClusterIP > /dev/null
-            echo "\033[1;33m http://localhost:9000/ \033[0m \n"
+            helm $CMD portainer portainer/portainer -f portainer.yml
+            echo "\033[1;33m http://portainer.docker/ \033[0m \n"
             ;;
         TRAEFIK)
             # helm repo add traefik https://traefik.github.io/charts

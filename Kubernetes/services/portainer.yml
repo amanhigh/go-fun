@@ -1,0 +1,8 @@
+ingress:
+  enabled: true
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  hosts:
+    - host: portainer.docker
+      paths:
+        - path: /
