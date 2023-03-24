@@ -245,6 +245,10 @@ sections:
         description: "Grafana Charting <br/> Login: aman/aman <br/> Add Datasource Prometheus: http://prometheus-server"
         icon: favicon
         url: http://grafana.docker/login
+      - title: LdapAdmin
+        description: "Ldap Explorer, Admin Login: Username:cn=admin,dc=example,dc=com Password: admin"
+        icon: favicon
+        url: http://ldapadmin.docker/
         statusCheck: true
   - name: Dashy
     icon: fas fa-rocket

@@ -8,3 +8,9 @@ svcPort: 8030
 vars:
   PHPLDAPADMIN_LDAP_HOSTS: "ldap"
   PHPLDAPADMIN_HTTPS: false
+
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  path: /
+  host: ldapadmin.docker
