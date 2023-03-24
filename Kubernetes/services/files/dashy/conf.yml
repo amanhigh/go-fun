@@ -1,0 +1,322 @@
+pageInfo:
+  title: Aman's Dashboard
+  description: World at your fingertips.
+  navLinks:
+    - title: GitHub
+      path: https://github.com/Lissy93/dashy
+    - title: Documentation
+      path: https://dashy.to/docs
+sections:
+  - name: Entertainment
+    icon: mdi-palette
+    items:
+      - title: Music
+        description: Google Music
+        icon: favicon
+        url: https://music.youtube.com/watch?v=p4MYzp_kxwE&list=RDATdXiX
+        hotkey: 1
+        statusCheck: true
+        tags: [music]
+      - title: Pandora
+        description: Pandora Playlist
+        icon: favicon
+        url: https://www.youtube.com/playlist?list=PL4FF2F5F7EF7ED26D
+        tags: [music]
+        hotkey: 2
+    widgets:
+      - type: clock
+        options:
+          timeZone: Asia/Kolkata
+          format: en-GB
+          hideDate: false
+      - type: joke
+        options:
+          safeMode: false
+          language: en
+          category: Programming
+  - name: MarketPlace
+    icon: mdi-shopping
+    items:
+      - title: Quickr
+        description: Quickr Sale
+        icon: favicon
+        url: https://www.quikr.com/MyQuikr?action=activeads
+        tags: [sell]
+      - title: Olx
+        description: Olx Sale
+        icon: favicon
+        url: https://www.olx.in/nf/chat
+        tags: [sell]
+      - title: Amazon
+        description: Amazon Buy
+        icon: favicon
+        url: https://www.amazon.in/hz/wishlist/genericItemsPage/3Q70DY9DUYY1Q?type=wishlist&filter=all&sort=default&viewType=list
+        tags: [buy]
+      - title: Flipkart
+        description: Flipkart Buy
+        icon: favicon
+        url: https://www.flipkart.com/wishlist?link=home_wishlist
+        tags: [buy]
+      - title: Vegetables
+        description: Bigbasket Fruit and Vegetables
+        icon: favicon
+        url: https://www.bigbasket.com/pc/fruits-vegetables/fresh-vegetables/?nc=nb#!page=2
+        tags: [buy, grocery]
+      - title: Rashn
+        description: Rashan Pani
+        icon: favicon
+        url: https://www.bigbasket.com/shopping-list/amanlist/
+        tags: [buy, grocery]
+  - name: Finance
+    icon: mdi-currency-usd
+    items:
+      - title: TickerTape
+        description: India Fundamental Analysis
+        icon: favicon
+        url: https://www.tickertape.in/screener/equity
+        tags: [fundamental, india]
+      - title: EtfDb
+        description: ETF Info
+        icon: favicon
+        url: https://etfdb.com/etf/GCC/#etf-ticker-profile
+        tags: [fundamental, us]
+      - title: SbiRates
+        description: SBI Rate Sheet
+        icon: favicon
+        url: https://www.sbi.co.in/documents/16012/1400784/FOREX_CARD_RATES.pdf
+        tags: [forex]
+      - title: MarketWatch
+        description: Finance News
+        icon: favicon
+        url: https://www.marketwatch.com/
+        tags: [news, us]
+      - title: TradingEconomics
+        description: Macro Indicators
+        icon: favicon
+        target: workspace
+        url: https://tradingeconomics.com/india/indicators
+        tags: [fundamental, macro]
+      - title: MoneyControl
+        description: Mutual Fund Performance
+        icon: favicon
+        url: https://www.moneycontrol.com/mutual-funds/performance-tracker/returns/index-fundsetfs.html
+        tags: [india]
+      - title: LynAlden
+        description: Astute Macro Tracker
+        target: workspace
+        icon: favicon
+        url: https://www.lynalden.com/
+        tags: [reading, macro]
+  - name: Finance-Secondary
+    icon: mdi-currency-usd
+    items:
+      - title: Nifty-PE
+        description: Nifty PE Analysis
+        icon: favicon
+        url: https://nifty-pe-ratio.com/
+        tags: [fundamental, macro, india]
+    displayData:
+      collapsed: true
+  - name: Investment
+    icon: mdi-cash-multiple
+    items:
+      - title: Kuvera
+        description: Mutual Funds
+        icon: favicon
+        url: https://kuvera.in/
+        tags: [invest, india]
+      - title: Vested
+        description: Stocks, ETF's US
+        icon: favicon
+        url: https://app.vestedfinance.com/login
+        tags: [invest, us]
+      - title: Ibjarates
+        description: Indian Bullian Association Rates
+        icon: favicon
+        url: https://ibjarates.com/
+        tags: [invest, india]
+      - title: Splitwise
+        description: Tracking Friendly Udhar
+        icon: favicon
+        url: https://secure.splitwise.com/#/dashboard
+        tags: [loan]
+  - name: Trips
+    icon: mdi-train-car
+    items:
+      - title: ClearTrip
+        description: Flight Booking
+        icon: favicon
+        url: https://www.cleartrip.com/
+        tags: [flight, hotel]
+      - title: MakeMyTrip
+        description: Flight, Hotel Booking
+        icon: favicon
+        url: https://www.makemytrip.com/flights/
+        tags: [flight, hotel, train, visa]
+      - title: BookMyForex
+        description: Foreign Exchange Currency
+        icon: favicon
+        url: https://www.bookmyforex.com/fullratecard/
+        tags: [forex]
+      - title: TTExchange
+        description: Foreign Exchange Currency
+        icon: favicon
+        url: https://ttexchange.com/
+        tags: [forex]
+      - title: BBikers
+        description: Bangalore Bikers
+        icon: favicon
+        url: https://www.bengalurubikers.com/forum/
+        tags: [biker, roadtrip]
+      - title: FlightAlerts
+        description: Google Flight Alerts
+        icon: favicon
+        url: https://www.google.com/travel/flights/saves?hl=pa&gl=in&authuser=0&curr=INR
+        tags: [flight, alert]
+      - title: Goibibo
+        description: Flight, Hotel Booking
+        icon: favicon
+        url: https://www.goibibo.com/hotels/
+        tags: [flight, hotel, train]
+      - title: SkyScanner
+        description: Flight Booking
+        icon: favicon
+        url: https://www.skyscanner.co.in/flights
+        tags: [flight]
+      - title: Trivago
+        description: Hotel Booking
+        icon: favicon
+        url: https://www.trivago.in/
+        tags: [hotel]
+      - title: Wsfx
+        description: Foreign Exchange Currency
+        icon: favicon
+        url: https://www.wsfx.in/
+        tags: [forex]
+      - title: VfsGlobal
+        description: Visa Services (https://visa.vfsglobal.com/ind/en/fra/contact-us)
+        icon: favicon
+        url: https://visa.vfsglobal.com/ind/en/fra/
+        tags: [visa]
+
+    displayData:
+      sortBy: most-used
+      rows: 1
+      cols: 1
+      collapsed: false
+      hideForGuests: false
+  - name: Career
+    icon: mdi-account-hard-hat
+    items:
+      - title: LinkedIn
+        description: Contacts, Corporate News
+        icon: favicon
+        url: https://www.linkedin.com/feed/
+        tags: [job, news, social]
+      - title: Layoffs
+        description: Layoff Tracker
+        icon: favicon
+        url: https://layoffs.fyi/
+        tags: [job]
+  - name: Docker
+    icon: mdi-ship-wheel
+    items:
+      - title: MysqlAdmin
+        description: PHP MyAdmin Login - root/root@mysql-primary
+        icon: favicon
+        url: http://mysqladmin.docker/
+      - title: FunApp
+        description: FunApp Metrics
+        icon: favicon
+        url: http://app.docker/app/metrics
+        target: workspace
+        statusCheck: true
+      - title: Portainer
+        description: Easy Container Mangement
+        icon: favicon
+        url: http://portainer.docker/
+        statusCheck: true
+      - title: RedisAdmin
+        description: Redis Admin (No Login Required)
+        icon: favicon
+        url: http://redisadmin.docker/
+        statusCheck: true
+      - title: Prometheus
+        description: Prometheus TSDB
+        icon: favicon
+        url: http://prometheus.docker/
+        statusCheck: true
+      - title: Grafana
+        description: "Grafana Charting <br/> Login: aman/aman <br/> Add Datasource Prometheus: http://prometheus-server"
+        icon: favicon
+        url: http://grafana.docker/login
+      - title: LdapAdmin
+        description: "Ldap Explorer, Admin Login: Username:cn=admin,dc=example,dc=com Password: admin"
+        icon: favicon
+        url: http://ldapadmin.docker/
+        statusCheck: true
+      - title: Nginx
+        description: Nginx Proxy
+        icon: favicon
+        url: http://nginx.docker/
+        statusCheck: true
+      - title: Consul
+        description: Consul Nosql DB
+        icon: favicon
+        url: http://consul.docker/
+        statusCheck: true
+      - title: Sonar
+        description: "Static Code Analyser, Login: aman/aman (Need 5GB Mem)"
+        icon: favicon
+        url: http://sonar.docker/
+        statusCheck: true
+  - name: Dashy
+    icon: fas fa-rocket
+    items:
+      - title: Dashy Live
+        description: Development a project management links for Dashy
+        icon: https://i.ibb.co/qWWpD0v/astro-dab-128.png
+        url: https://live.dashy.to/
+        target: newtab
+      - title: Docs
+        description: Refer Icons, Widgets, Keyboard Shortcuts, Pages
+        provider: Dashy.to
+        icon: far fa-book
+        url: https://dashy.to/docs
+      - title: Showcase
+        description: See how others are using Dashy
+        url: https://github.com/Lissy93/dashy/blob/master/docs/showcase.md
+        icon: far fa-grin-hearts
+      - title: Config Guide
+        description: See full list of configuration options
+        url: https://github.com/Lissy93/dashy/blob/master/docs/configuring.md
+        icon: fas fa-wrench
+      - title: Icons-Awesome
+        description: Supported Icons
+        url: https://fontawesome.com/search?q=git&o=r
+        icon: fab fa-font-awesome
+      - title: Icons-Material
+        description: Supported Icons
+        url: https://pictogrammers.com/library/mdi/
+        icon: mdi-material-design
+      - title: Support
+        description: Get help with Dashy, raise a bug, or get in contact
+        url: https://github.com/Lissy93/dashy/blob/master/.github/SUPPORT.md
+        icon: far fa-hands-helping
+    widgets:
+      - type: iframe
+        options:
+          url: https://fiatleak.com/
+    displayData:
+      sortBy: default
+      rows: 1
+      cols: 1
+      collapsed: false
+      hideForGuests: false
+
+appConfig:
+  theme: lissy
+  layout: auto
+  iconSize: medium
+  language: en
+  statusCheckInterval: 20

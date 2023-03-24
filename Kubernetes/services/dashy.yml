@@ -1,0 +1,18 @@
+image:
+  repository: lissy93/dashy
+  tag: latest
+
+containerPort: 80
+svcPort: 4000
+
+volumes:
+  - name: dashy-conf
+    path: /app/public/conf.yml
+    hostPath:
+      path: /etc/files/dashy/conf.yml
+
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  path: /
+  host: dashy.docker

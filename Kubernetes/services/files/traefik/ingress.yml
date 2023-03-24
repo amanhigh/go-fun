@@ -1,0 +1,48 @@
+# https://doc.traefik.io/traefik/routing/providers/kubernetes-ingress/
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: the-ingress
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: default-stripprefix@kubernetescrd
+
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /mysqladmin
+            pathType: Prefix
+            backend:
+              service:
+                name: mysql-admin-phpmyadmin
+                port:
+                  number: 80
+          - path: /dashy
+            pathType: Prefix
+            backend:
+              service:
+                name: dashy
+                port:
+                  number: 4000
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mysqladmin-ingress
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+
+spec:
+  rules:
+    - host: mysqladmin.docker
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mysql-admin-phpmyadmin
+                port:
+                  number: 80

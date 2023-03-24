@@ -4,3 +4,9 @@ image:
 
 containerPort: 80
 svcPort: 8810
+
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  path: /
+  host: httpbin.docker

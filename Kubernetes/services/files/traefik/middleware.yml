@@ -1,0 +1,21 @@
+# https://doc.traefik.io/traefik/middlewares/http/overview/
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: stripprefix
+spec:
+  stripPrefix:
+    prefixes:
+      - /mysqladmin
+      - /app
+      - /dashy
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: stripprefixregex
+spec:
+  stripPrefixRegex:
+    regex:
+      - "/[a-z0-9]+"

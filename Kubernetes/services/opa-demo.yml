@@ -14,3 +14,13 @@ volumes:
     path: /demo
     hostPath:
       path: /etc/files/opa/
+
+## Ingress configuration
+##
+ingress:
+  ## @param ingress.enabled Set to true to enable ingress record generation
+  ##
+  enabled: true
+  host: opa.docker
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web

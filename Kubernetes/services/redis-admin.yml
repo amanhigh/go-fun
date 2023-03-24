@@ -6,3 +6,9 @@ containerPort: 8081
 
 vars:
   REDIS_HOSTS: "redis-master"
+
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  path: /
+  host: redisadmin.docker

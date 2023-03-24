@@ -1,6 +1,6 @@
 module github.com/amanhigh/go-fun/components/learn
 
-go 1.19
+go 1.20
 
 require (
 	github.com/andygrunwald/go-jira v1.16.0

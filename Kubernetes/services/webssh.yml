@@ -4,3 +4,8 @@ image:
 
 containerPort: 8080
 svcPort: 8080
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  path: /
+  host: webssh.docker

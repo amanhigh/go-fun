@@ -4,3 +4,8 @@ image:
 
 containerPort: 2222
 svcPort: 2222
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  path: /
+  host: webssh2.docker

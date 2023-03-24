@@ -15,3 +15,10 @@ vars:
   DB_URL: "aman:aman@tcp(mysql-primary:3306)/compute?charset=utf8&parseTime=True&loc=Local"
   DB_LOG_LEVEL: "4"
   HTTP_REQUEST_TIMEOUT: "2s"
+
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: default-stripprefixregex@kubernetescrd
+  path: /
+  host: app.docker
