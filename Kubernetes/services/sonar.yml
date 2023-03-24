@@ -13,3 +13,13 @@ extraVolumes:
   - name: files
     hostPath:
       path: /etc/files/
+
+## Ingress configuration
+##
+ingress:
+  ## @param ingress.enabled Set to true to enable ingress record generation
+  ##
+  enabled: true
+  hostname: sonar.docker
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web

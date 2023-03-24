@@ -265,6 +265,11 @@ sections:
         icon: favicon
         url: http://consul.docker/
         statusCheck: true
+      - title: Sonar
+        description: "Static Code Analyser, Login: aman/aman (Need 5GB Mem)"
+        icon: favicon
+        url: http://sonar.docker/
+        statusCheck: true
   - name: Dashy
     icon: fas fa-rocket
     items:

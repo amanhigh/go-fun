@@ -140,7 +140,7 @@ process()
 
         SONAR)
             helm $CMD sonar bitnami/sonarqube -f sonar.yml > /dev/null
-            echo "\033[1;33m http://localhost:9000/ \033[0m \n"
+            echo "\033[1;33m http://sonar.docker/ \033[0m \n"
             echo "\033[1;33m Login: aman/aman (Need 5GB Mem) \033[0m \n"
             ;;
 
