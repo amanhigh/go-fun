@@ -1,2 +1,12 @@
 adminUser: aman
 adminPassword: aman
+## Ingress configuration
+##
+ingress:
+  ## @param ingress.enabled Set to true to enable ingress record generation
+  ##
+  enabled: true
+  hosts:
+    - grafana.docker
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web

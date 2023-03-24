@@ -160,12 +160,12 @@ process()
         MONITOR)
             #helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
             helm $CMD prometheus prometheus-community/prometheus -f prometheus.yml > /dev/null
-            echo "\033[1;33m Prometheus Server: http://localhost:9090/ \033[0m \n"
+            echo "\033[1;33m Prometheus Server: http://prometheus.docker/ \033[0m \n"
 
              # helm repo add grafana https://grafana.github.io/helm-charts
             helm $CMD grafana grafana/grafana -f grafana.yml > /dev/null
-            echo "\033[1;33m http://localhost:3000/login (aman/aman) \033[0m \n"
-            echo "\033[1;33m Datasource: http://localhost:3000/datasources/new \033[0m \n"
+            echo "\033[1;33m http://grafana.docker/login (aman/aman) \033[0m \n"
+            echo "\033[1;33m Datasource: http://grafana.docker/datasources/new \033[0m \n"
             echo "\033[1;33m Add Datasource Prometheus: http://prometheus-server \033[0m \n"
             ;;
         
@@ -233,7 +233,7 @@ while getopts 'dusrib' OPTION; do
         process
         ;;
     b)
-        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker mysqladmin.docker redisadmin.docker
+        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker mysqladmin.docker redisadmin.docker prometheus.docker grafana.docker
         echo "\033[1;32m Bootstraping Base Services \033[0m \n"
         
         process "TRAEFIK DASHY"

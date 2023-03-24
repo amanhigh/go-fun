@@ -7,3 +7,11 @@ nodeExporter:
   ## If false, node-exporter will not be installed
   ##
   enabled: true
+
+server:
+  ingress:
+    enabled: true
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: web
+    hosts:
+      - prometheus.docker

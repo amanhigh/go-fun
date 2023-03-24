@@ -236,6 +236,16 @@ sections:
         icon: favicon
         url: http://redisadmin.docker/
         statusCheck: true
+      - title: Prometheus
+        description: Prometheus TSDB
+        icon: favicon
+        url: http://prometheus.docker/
+        statusCheck: true
+      - title: Grafana
+        description: "Grafana Charting <br/> Login: aman/aman <br/> Add Datasource Prometheus: http://prometheus-server"
+        icon: favicon
+        url: http://grafana.docker/login
+        statusCheck: true
   - name: Dashy
     icon: fas fa-rocket
     items:
