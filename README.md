@@ -2,6 +2,8 @@
 [![codecov](https://codecov.io/gh/amanhigh/go-fun/branch/master/graph/badge.svg)](https://codecov.io/gh/amanhigh/go-fun)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/amanhigh/go-fun)](https://github.com/amanhigh/go-fun/releases)
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/amanhigh/go-fun)
+[![GitHub issues](https://img.shields.io/github/issues/amanhigh/go-fun)](https://github.com/amanhigh/go-fun/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/amanhigh/go-fun)](https://github.com/amanhigh/go-fun/pulls)
 [![Go Report Card](https://goreportcard.com/badge/github.com/amanhigh/go-fun)](https://goreportcard.com/report/github.com/amanhigh/go-fun)
 
 
