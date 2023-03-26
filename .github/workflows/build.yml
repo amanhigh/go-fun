@@ -22,9 +22,6 @@ jobs:
       - name: Install deps
         working-directory: ./common
         run: |
-          export GOPATH=~/go
-          export PATH=$PATH:$GOPATH/bin
-          go env         
           go install github.com/onsi/ginkgo/v2/ginkgo
 
       - name: Install Helm
