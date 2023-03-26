@@ -3,9 +3,7 @@ pageInfo:
   description: World at your fingertips.
   navLinks:
     - title: GitHub
-      path: https://github.com/Lissy93/dashy
-    - title: Documentation
-      path: https://dashy.to/docs
+      path: https://github.com/amanhigh/go-fun
 sections:
   - name: Entertainment
     icon: mdi-palette
