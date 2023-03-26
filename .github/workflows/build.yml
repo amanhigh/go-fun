@@ -17,19 +17,12 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: 1.20
+          go-version: "1.20"
 
       - name: Install deps
         working-directory: ./common
         run: |
-          export GOPATH=~/go
-          export PATH=$PATH:$GOPATH/bin
-          go env         
-          go get github.com/onsi/ginkgo/v2
-          go get github.com/onsi/ginkgo/v2/ginkgo/generators
-          go get github.com/onsi/ginkgo/v2/ginkgo/internal
-          go get github.com/onsi/ginkgo/v2/ginkgo/labels
-          go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo
+          go install github.com/onsi/ginkgo/v2/ginkgo
 
       - name: Install Helm
         uses: azure/setup-helm@v3

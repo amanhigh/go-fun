@@ -434,3 +434,20 @@ func (r *MemcachedReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&appsv1.Deployment{}).
 		Complete(r)
 }
+
+/**
+Reconcile Result
+---------
+In the context of Kubernetes controllers, the Reconcile function typically returns a value of type ctrl.Result. This value represents the result of the reconciliation process, and can have the following possible values:
+
+ctrl.Result{}: Indicates that the reconciliation was successful, and that no further action is required at this time.
+
+ctrl.Result{Requeue: true}: Indicates that the reconciliation was not successful, and that the controller should attempt to reconcile the resource again after a short delay (usually a few seconds). This is useful when the controller is waiting for some external resource to become available before proceeding with the reconciliation.
+
+ctrl.Result{RequeueAfter: time.Second * 30}: Indicates that the reconciliation was not successful, and that the controller should attempt to reconcile the resource again after a specified delay (in this case, 30 seconds). This is useful when the controller is waiting for some long-running process to complete before proceeding with the reconciliation.
+
+ctrl.Result{RequeueAfter: -1}: Indicates that the reconciliation was not successful, and that the controller should attempt to reconcile the resource again as soon as possible (i.e., without any delay). This is useful when the controller needs to retry the reconciliation immediately, without waiting for any external events.
+
+Overall, the ctrl.Result type provides a flexible way for controllers to communicate the results of their reconciliation process to the Kubernetes API server. By using different combinations of Requeue and RequeueAfter values, controllers can implement a wide variety of reconciliation strategies, depending on the specific requirements of the resource being managed.
+
+**/
