@@ -38,6 +38,7 @@ This is multi module project. Each module has its own go mod file. Modules can b
 * New Module run `go mod init github.com/amanhigh/go-fun/components/fun-app` and to work using `go work use ./components/fun-app`
 * Link Module to new Release using `go mod tidy` or `go get -u github.com/amanhigh/go-fun/models`
 * Sync Modules using `go work sync` in go.work directory. This is automatically done before builds.
+* Recursive Depdency Update `find . -name "go.mod" -execdir sh -c 'go get -u && go mod tidy';`. Run it in ProjectBase Dir
 
 ------
 ### Direct Run
