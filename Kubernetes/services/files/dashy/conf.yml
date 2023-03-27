@@ -219,6 +219,10 @@ sections:
   - name: Docker
     icon: mdi-ship-wheel
     items:
+      - title: Traefik
+        description: Traefix Ingress Manager
+        icon: favicon
+        url: http://localhost:9000/dashboard/#/
       - title: MysqlAdmin
         description: PHP MyAdmin Login - root/root@mysql-primary
         icon: favicon
