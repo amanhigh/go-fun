@@ -106,14 +106,15 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 			It("should be successful", func() {
 				Eventually(func() error {
-					found := &cachev1alpha1.Memcached{}
-					return k8sClient.Get(ctx, typeNamespaceName, found)
+					memcached = &cachev1alpha1.Memcached{}
+					return k8sClient.Get(ctx, typeNamespaceName, memcached)
 				}, time.Minute, time.Second).Should(Succeed())
 			})
 
 			Context("Reconcile", func() {
 				var (
 					memcachedReconciler *MemcachedReconciler
+					deployment          *appsv1.Deployment
 				)
 
 				BeforeEach(func() {
@@ -145,9 +146,10 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 				It("should succeed for create deployment", func() {
 					By("Checking if Deployment was successfully created in the reconciliation")
 					Eventually(func() error {
-						found := &appsv1.Deployment{}
-						return k8sClient.Get(ctx, typeNamespaceName, found)
+						deployment = &appsv1.Deployment{}
+						return k8sClient.Get(ctx, typeNamespaceName, deployment)
 					}, time.Minute, time.Second).Should(Succeed())
+					Expect(*deployment.Spec.Replicas).To(Equal(size))
 				})
 
 				It("should update Memcached Condition Status", func() {
@@ -163,6 +165,37 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 						}
 						return nil
 					}, time.Minute, time.Second).Should(Succeed())
+				})
+
+				Context("Resize", func() {
+					var (
+						newSize = int32(2)
+					)
+					BeforeEach(func() {
+						//Refresh Object
+						err = k8sClient.Get(ctx, typeNamespaceName, memcached)
+						Expect(err).To(BeNil())
+
+						// Update Memcached CR to have size of 2
+						memcached.Spec.Size = newSize
+						err = k8sClient.Update(ctx, memcached)
+						Expect(err).To(Not(HaveOccurred()))
+
+						By("Reconciling Resize")
+						_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
+							NamespacedName: typeNamespaceName,
+						})
+						Expect(err).To(Not(HaveOccurred()))
+					})
+
+					It("should update deployment replicas when spec size changes", func() {
+						// Wait for Deployment to be updated with 2 replicas
+						Eventually(func() int32 {
+							err = k8sClient.Get(ctx, typeNamespaceName, deployment)
+							Expect(err).To(BeNil())
+							return *deployment.Spec.Replicas
+						}, time.Minute, time.Second).Should(Equal(newSize))
+					})
 				})
 			})
 		})
