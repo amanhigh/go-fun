@@ -26,7 +26,6 @@ import (
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -37,22 +36,24 @@ import (
 
 // TODO: Include in Go Releaser
 var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
-	Context("Memcached controller test", func() {
+	Context("Memcached controller test", Ordered, func() {
 
 		const MemcachedName = "test-memcached"
 
-		ctx := context.Background()
+		var (
+			ctx = context.Background()
 
-		namespace := &corev1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      MemcachedName,
-				Namespace: MemcachedName,
-			},
-		}
+			namespace = &corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      MemcachedName,
+					Namespace: MemcachedName,
+				},
+			}
+			typeNamespaceName = types.NamespacedName{Name: MemcachedName, Namespace: MemcachedName}
+			err               error
+		)
 
-		typeNamespaceName := types.NamespacedName{Name: MemcachedName, Namespace: MemcachedName}
-
-		BeforeEach(func() {
+		BeforeAll(func() {
 			By("Creating the Namespace to perform the tests")
 			err := k8sClient.Create(ctx, namespace)
 			Expect(err).To(Not(HaveOccurred()))
@@ -62,7 +63,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			Expect(err).To(Not(HaveOccurred()))
 		})
 
-		AfterEach(func() {
+		AfterAll(func() {
 			// TODO(user): Attention if you improve this code by adding other context test you MUST
 			// be aware of the current delete namespace limitations. More info: https://book.kubebuilder.io/reference/envtest.html#testing-considerations
 			By("Deleting the Namespace to perform the tests")
@@ -72,63 +73,79 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			_ = os.Unsetenv("MEMCACHED_IMAGE")
 		})
 
-		It("should successfully reconcile a custom resource for Memcached", func() {
-			By("Creating the custom resource for the Kind Memcached")
-			memcached := &cachev1alpha1.Memcached{}
-			err := k8sClient.Get(ctx, typeNamespaceName, memcached)
-			if err != nil && errors.IsNotFound(err) {
+		Context("Create Kind MemCached", func() {
+			var (
+				memcached *cachev1alpha1.Memcached
+				size      = int32(1)
+			)
+
+			BeforeEach(func() {
 				// Let's mock our custom resource at the same way that we would
 				// apply on the cluster the manifest under config/samples
-				memcached := &cachev1alpha1.Memcached{
+				memcached = &cachev1alpha1.Memcached{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      MemcachedName,
 						Namespace: namespace.Name,
 					},
 					Spec: cachev1alpha1.MemcachedSpec{
-						Size: 1,
+						Size: size,
 					},
 				}
 
 				err = k8sClient.Create(ctx, memcached)
 				Expect(err).To(Not(HaveOccurred()))
-			}
 
-			By("Checking if the custom resource was successfully created")
-			Eventually(func() error {
-				found := &cachev1alpha1.Memcached{}
-				return k8sClient.Get(ctx, typeNamespaceName, found)
-			}, time.Minute, time.Second).Should(Succeed())
-
-			By("Reconciling the custom resource created")
-			memcachedReconciler := &MemcachedReconciler{
-				Client: k8sClient,
-				Scheme: k8sClient.Scheme(),
-			}
-
-			_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: typeNamespaceName,
 			})
-			Expect(err).To(Not(HaveOccurred()))
 
-			By("Checking if Deployment was successfully created in the reconciliation")
-			Eventually(func() error {
-				found := &appsv1.Deployment{}
-				return k8sClient.Get(ctx, typeNamespaceName, found)
-			}, time.Minute, time.Second).Should(Succeed())
+			AfterEach(func() {
+				//Clean Memcached Object on Way Back.
+				err = k8sClient.Delete(ctx, memcached)
+				Expect(err).To(Not(HaveOccurred()))
+			})
 
-			By("Checking the latest Status Condition added to the Memcached instance")
-			Eventually(func() error {
-				if memcached.Status.Conditions != nil && len(memcached.Status.Conditions) != 0 {
-					latestStatusCondition := memcached.Status.Conditions[len(memcached.Status.Conditions)-1]
-					expectedLatestStatusCondition := metav1.Condition{Type: typeAvailableMemcached,
-						Status: metav1.ConditionTrue, Reason: "Reconciling",
-						Message: fmt.Sprintf("Deployment for custom resource (%s) with %d replicas created successfully", memcached.Name, memcached.Spec.Size)}
-					if latestStatusCondition != expectedLatestStatusCondition {
-						return fmt.Errorf("The latest status condition added to the memcached instance is not as expected")
+			It("should be successful", func() {
+				Eventually(func() error {
+					found := &cachev1alpha1.Memcached{}
+					return k8sClient.Get(ctx, typeNamespaceName, found)
+				}, time.Minute, time.Second).Should(Succeed())
+			})
+
+			Context("Reconcile", func() {
+				BeforeEach(func() {
+					By("Reconciling the custom resource created")
+					memcachedReconciler := &MemcachedReconciler{
+						Client: k8sClient,
+						Scheme: k8sClient.Scheme(),
 					}
-				}
-				return nil
-			}, time.Minute, time.Second).Should(Succeed())
+
+					_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
+						NamespacedName: typeNamespaceName,
+					})
+					Expect(err).To(Not(HaveOccurred()))
+				})
+
+				It("should succeed", func() {
+					By("Checking if Deployment was successfully created in the reconciliation")
+					Eventually(func() error {
+						found := &appsv1.Deployment{}
+						return k8sClient.Get(ctx, typeNamespaceName, found)
+					}, time.Minute, time.Second).Should(Succeed())
+
+					By("Checking the latest Status Condition added to the Memcached instance")
+					Eventually(func() error {
+						if memcached.Status.Conditions != nil && len(memcached.Status.Conditions) != 0 {
+							latestStatusCondition := memcached.Status.Conditions[len(memcached.Status.Conditions)-1]
+							expectedLatestStatusCondition := metav1.Condition{Type: typeAvailableMemcached,
+								Status: metav1.ConditionTrue, Reason: "Reconciling",
+								Message: fmt.Sprintf("Deployment for custom resource (%s) with %d replicas created successfully", memcached.Name, memcached.Spec.Size)}
+							if latestStatusCondition != expectedLatestStatusCondition {
+								return fmt.Errorf("The latest status condition added to the memcached instance is not as expected")
+							}
+						}
+						return nil
+					}, time.Minute, time.Second).Should(Succeed())
+				})
+			})
 		})
 	})
 })
