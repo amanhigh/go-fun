@@ -123,6 +123,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 						Scheme:   k8sClient.Scheme(),
 						Recorder: record.NewFakeRecorder(10),
 					}
+					deployment = &appsv1.Deployment{}
 
 					By("Reconciling Creation")
 					_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
@@ -146,7 +147,6 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 				It("should succeed for create deployment", func() {
 					By("Checking if Deployment was successfully created in the reconciliation")
 					Eventually(func() error {
-						deployment = &appsv1.Deployment{}
 						return k8sClient.Get(ctx, typeNamespaceName, deployment)
 					}, time.Minute, time.Second).Should(Succeed())
 					Expect(*deployment.Spec.Replicas).To(Equal(size))
