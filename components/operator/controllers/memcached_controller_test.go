@@ -28,6 +28,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cachev1alpha1 "github.com/amanhigh/go-fun/components/operator/api/v1alpha1"
@@ -64,6 +65,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 		})
 
 		AfterAll(func() {
+			/* Don't Delete Namespace till end due to envtest limitations. */
 			// TODO(user): Attention if you improve this code by adding other context test you MUST
 			// be aware of the current delete namespace limitations. More info: https://book.kubebuilder.io/reference/envtest.html#testing-considerations
 			By("Deleting the Namespace to perform the tests")
@@ -116,8 +118,9 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 				BeforeEach(func() {
 					memcachedReconciler = &MemcachedReconciler{
-						Client: k8sClient,
-						Scheme: k8sClient.Scheme(),
+						Client:   k8sClient,
+						Scheme:   k8sClient.Scheme(),
+						Recorder: record.NewFakeRecorder(10),
 					}
 
 					By("Reconciling Creation")
