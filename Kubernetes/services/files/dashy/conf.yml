@@ -21,6 +21,11 @@ sections:
         url: https://www.youtube.com/playlist?list=PL4FF2F5F7EF7ED26D
         tags: [music]
         hotkey: 2
+      - title: News
+        description: General News
+        icon: favicon
+        url: https://www.ndtv.com/
+        tags: [news]
     widgets:
       - type: clock
         options:
@@ -313,7 +318,7 @@ sections:
       sortBy: default
       rows: 1
       cols: 1
-      collapsed: false
+      collapsed: true
       hideForGuests: false
 
 appConfig:
