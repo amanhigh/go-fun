@@ -98,9 +98,8 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			})
 
 			AfterEach(func() {
-				//Clean Memcached Object on Way Back.
-				err = k8sClient.Delete(ctx, memcached)
-				Expect(err).To(Not(HaveOccurred()))
+				//Clean Memcached Object if left
+				_ = k8sClient.Delete(ctx, memcached)
 			})
 
 			It("should be successful", func() {
@@ -111,27 +110,44 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			})
 
 			Context("Reconcile", func() {
+				var (
+					memcachedReconciler *MemcachedReconciler
+				)
+
 				BeforeEach(func() {
-					By("Reconciling the custom resource created")
-					memcachedReconciler := &MemcachedReconciler{
+					memcachedReconciler = &MemcachedReconciler{
 						Client: k8sClient,
 						Scheme: k8sClient.Scheme(),
 					}
 
+					By("Reconciling Creation")
 					_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
 						NamespacedName: typeNamespaceName,
 					})
 					Expect(err).To(Not(HaveOccurred()))
 				})
 
-				It("should succeed", func() {
+				AfterEach(func() {
+					//Clean Memcached Object on Way Back.
+					err = k8sClient.Delete(ctx, memcached)
+					Expect(err).To(Not(HaveOccurred()))
+
+					By("Reconciling Deletion")
+					_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
+						NamespacedName: typeNamespaceName,
+					})
+					Expect(err).To(Not(HaveOccurred()))
+				})
+
+				It("should succeed for create deployment", func() {
 					By("Checking if Deployment was successfully created in the reconciliation")
 					Eventually(func() error {
 						found := &appsv1.Deployment{}
 						return k8sClient.Get(ctx, typeNamespaceName, found)
 					}, time.Minute, time.Second).Should(Succeed())
+				})
 
-					By("Checking the latest Status Condition added to the Memcached instance")
+				It("should update Memcached Condition Status", func() {
 					Eventually(func() error {
 						if memcached.Status.Conditions != nil && len(memcached.Status.Conditions) != 0 {
 							latestStatusCondition := memcached.Status.Conditions[len(memcached.Status.Conditions)-1]
