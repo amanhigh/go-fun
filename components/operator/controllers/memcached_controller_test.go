@@ -58,6 +58,18 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			err               error
 		)
 
+		var (
+
+			/**
+				Checks if running on actual cluster as
+				env test can't emulate all functions.
+			**/
+			isCluster = func() bool {
+				_, err := os.LookupEnv("USE_EXISTING_CLUSTER")
+				return err
+			}
+		)
+
 		BeforeAll(func() {
 			By("Creating the Namespace to perform the tests")
 			err := k8sClient.Create(ctx, namespace)
@@ -152,10 +164,12 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 					})
 					Expect(err).To(Not(HaveOccurred()))
 
-					By("Verifying Deployment is Deleted")
-					Eventually(func() error {
-						return k8sClient.Get(ctx, typeNamespaceName, deployment)
-					}, waitTime, waitStep).ShouldNot(Succeed())
+					if isCluster() {
+						By("Verifying Deployment is Deleted")
+						Eventually(func() error {
+							return k8sClient.Get(ctx, typeNamespaceName, deployment)
+						}, waitTime, waitStep).ShouldNot(Succeed())
+					}
 				})
 
 				It("should succeed for create deployment", func() {
@@ -265,4 +279,5 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			})
 		})
 	})
+
 })

@@ -40,7 +40,12 @@ Steps followed
 Project can be run in following ways
 
 ### Testing
-Run `make test` to run tests. This will interally run generate and manifest targets as well.
+* Without Cluster - `make test` (*This will interally run generate and manifest targets as well.*)
+* With Cluster - `export USE_EXISTING_CLUSTER=true && ginkgo .` <br/>
+[Requires Running Minikube Cluster with Context Set. Test should be run from Test Suit Directory] <br/>
+This Includes extra tests which can't run on envtest as it simulates limited K8 Functions.
+
+
 
 ### Outside Cluster
 Run `make install run` to run without cluster.
