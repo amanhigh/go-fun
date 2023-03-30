@@ -42,7 +42,9 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 		const MemcachedName = "test-memcached"
 
 		var (
-			ctx = context.Background()
+			ctx      = context.Background()
+			waitTime = time.Minute
+			waitStep = time.Second
 
 			imageName = "example.com/image:test"
 
@@ -153,13 +155,13 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 					By("Verifying Deployment is Deleted")
 					Eventually(func() error {
 						return k8sClient.Get(ctx, typeNamespaceName, deployment)
-					}, time.Minute, time.Second).ShouldNot(Succeed())
+					}, waitTime, waitStep).ShouldNot(Succeed())
 				})
 
 				It("should succeed for create deployment", func() {
 					Eventually(func() error {
 						return k8sClient.Get(ctx, typeNamespaceName, deployment)
-					}, time.Minute, time.Second).Should(Succeed())
+					}, waitTime, waitStep).Should(Succeed())
 
 					By("Verifiying Deployment Spec")
 					Expect(*deployment.Spec.Replicas).To(Equal(size))
@@ -190,7 +192,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 							}
 						}
 						return nil
-					}, time.Minute, time.Second).Should(Succeed())
+					}, waitTime, waitStep).Should(Succeed())
 				})
 
 				Context("Scale Up", func() {
@@ -213,7 +215,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 								NamespacedName: typeNamespaceName,
 							})
 							return err
-						}, time.Minute, time.Second).ShouldNot(HaveOccurred())
+						}, waitTime, waitStep).ShouldNot(HaveOccurred())
 					})
 
 					It("should update deployment replicas when spec size changes", func() {
@@ -222,7 +224,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 							err = k8sClient.Get(ctx, typeNamespaceName, deployment)
 							Expect(err).To(BeNil())
 							return *deployment.Spec.Replicas
-						}, time.Minute, time.Second).Should(Equal(newSize))
+						}, waitTime, waitStep).Should(Equal(newSize))
 					})
 
 					Context("ScaleDown", func() {
@@ -245,7 +247,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 									NamespacedName: typeNamespaceName,
 								})
 								return err
-							}, time.Minute, time.Second).ShouldNot(HaveOccurred())
+							}, waitTime, waitStep).ShouldNot(HaveOccurred())
 						})
 
 						It("should update deployment replicas when spec size decreases", func() {
