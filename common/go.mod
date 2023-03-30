@@ -9,6 +9,7 @@ require (
 	github.com/arl/statsviz v0.5.1
 	github.com/fatih/color v1.15.0
 	github.com/gin-gonic/gin v1.9.0
+	github.com/go-resty/resty/v2 v2.7.0
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/google/uuid v1.3.0
 	github.com/onsi/ginkgo/v2 v2.9.2

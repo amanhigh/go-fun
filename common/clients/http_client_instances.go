@@ -1,8 +1,10 @@
 package clients
 
 import (
-	config2 "github.com/amanhigh/go-fun/models/config"
 	"time"
+
+	config2 "github.com/amanhigh/go-fun/models/config"
+	"github.com/go-resty/resty/v2"
 )
 
 const (
@@ -23,11 +25,4 @@ var (
 	}
 )
 
-var TestHttpClient = NewHttpClient(config2.HttpClientConfig{
-	DialTimeout:            time.Millisecond * 200,
-	RequestTimeout:         time.Second,
-	IdleConnectionTimeout:  time.Second * 5,
-	KeepAlive:              true,
-	Compression:            false,
-	IdleConnectionsPerHost: 5,
-})
+var TestHttpClient = resty.New().SetHeader("Content-Type", "application/json")
