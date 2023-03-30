@@ -2,10 +2,11 @@ package util
 
 import (
 	"fmt"
-	clients2 "github.com/amanhigh/go-fun/common/clients"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/go-resty/resty/v2"
 
 	"github.com/PuerkitoBio/goquery"
 	log "github.com/sirupsen/logrus"
@@ -18,9 +19,9 @@ type Page struct {
 	Document *goquery.Document
 }
 
-func NewPageUsingClient(rawUrl string, client clients2.HttpClientInterface) (page *Page) {
+func NewPageUsingClient(rawUrl string, client *resty.Client) (page *Page) {
 	response := ""
-	if _, err := client.DoGet(rawUrl, &response); err == nil {
+	if _, err := client.R().SetResult(&response).Get(rawUrl); err == nil {
 		if root, err := html.Parse(strings.NewReader(response)); err == nil {
 			doc := goquery.NewDocumentFromNode(root)
 			doc.Url, _ = url.Parse(rawUrl)

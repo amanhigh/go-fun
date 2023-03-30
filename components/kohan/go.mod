@@ -7,6 +7,7 @@ require (
 	github.com/amanhigh/go-fun/common v1.0.1
 	github.com/amanhigh/go-fun/models v1.0.0
 	github.com/fatih/color v1.15.0
+	github.com/go-resty/resty/v2 v2.7.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	github.com/wesovilabs/koazee v0.0.5

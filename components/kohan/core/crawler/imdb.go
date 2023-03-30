@@ -2,19 +2,21 @@ package crawler
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/PuerkitoBio/goquery"
 	clients2 "github.com/amanhigh/go-fun/common/clients"
 	util2 "github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/crawler"
 	"github.com/fatih/color"
-	"strings"
+	"github.com/go-resty/resty/v2"
 )
 
 type ImdbCrawler struct {
 	cutoff   int
 	language string
 	topUrl   string
-	client   clients2.HttpClientInterface
+	client   *resty.Client
 }
 
 func NewImdbCrawler(year int, language string, cutoff int, cookies string) Crawler {
@@ -23,10 +25,8 @@ func NewImdbCrawler(year int, language string, cutoff int, cookies string) Crawl
 	if util2.IsDebugMode() {
 		fmt.Println("IMDB Cookie: ", cookies)
 	}
-	//Clone Config and enable Compression
-	imdbHttpConfig := clients2.DefaultHttpClientConfig
-	imdbHttpConfig.Compression = true
-	client := clients2.NewHttpClientWithCookies("https://www.imdb.com", util2.ParseCookies(cookies), imdbHttpConfig)
+	//TODO: enable Compression
+	client := clients2.NewHttpClientWithCookies("https://www.imdb.com", util2.ParseCookies(cookies), clients2.DefaultHttpClient)
 	return &ImdbCrawler{
 		cutoff:   cutoff,
 		language: language,
