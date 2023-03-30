@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cachev1alpha1 "github.com/amanhigh/go-fun/components/operator/api/v1alpha1"
@@ -133,6 +134,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 				var (
 					memcachedReconciler *MemcachedReconciler
 					deployment          *appsv1.Deployment
+					mgr                 ctrl.Manager
 				)
 
 				BeforeEach(func() {
@@ -142,6 +144,12 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 						Recorder: record.NewFakeRecorder(10),
 					}
 					deployment = &appsv1.Deployment{}
+
+					mgr, err = ctrl.NewManager(cfg, ctrl.Options{
+						Scheme:             k8sClient.Scheme(),
+						MetricsBindAddress: "0",
+					})
+					Expect(err).NotTo(HaveOccurred())
 				})
 
 				It("should not create deployment without Image ENV Variable", func() {
@@ -161,6 +169,11 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 					})
 					Expect(err).ShouldNot(HaveOccurred())
 
+				})
+
+				It("should setup", func() {
+					err = memcachedReconciler.SetupWithManager(mgr)
+					Expect(err).ShouldNot(HaveOccurred())
 				})
 
 				Context("Reconcile Create", func() {
