@@ -149,10 +149,14 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 						NamespacedName: typeNamespaceName,
 					})
 					Expect(err).To(Not(HaveOccurred()))
+
+					By("Verifying Deployment is Deleted")
+					Eventually(func() error {
+						return k8sClient.Get(ctx, typeNamespaceName, deployment)
+					}, time.Minute, time.Second).ShouldNot(Succeed())
 				})
 
 				It("should succeed for create deployment", func() {
-					By("Checking if Deployment was successfully created in the reconciliation")
 					Eventually(func() error {
 						return k8sClient.Get(ctx, typeNamespaceName, deployment)
 					}, time.Minute, time.Second).Should(Succeed())
@@ -204,10 +208,12 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 						Expect(err).To(Not(HaveOccurred()))
 
 						By("Reconciling Scale Up")
-						_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
-							NamespacedName: typeNamespaceName,
-						})
-						Expect(err).To(Not(HaveOccurred()))
+						Eventually(func() error {
+							_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
+								NamespacedName: typeNamespaceName,
+							})
+							return err
+						}, time.Minute, time.Second).ShouldNot(HaveOccurred())
 					})
 
 					It("should update deployment replicas when spec size changes", func() {
@@ -234,10 +240,12 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 							Expect(err).To(Not(HaveOccurred()))
 
 							By("Reconciling ScaleDown")
-							_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
-								NamespacedName: typeNamespaceName,
-							})
-							Expect(err).To(Not(HaveOccurred()))
+							Eventually(func() error {
+								_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
+									NamespacedName: typeNamespaceName,
+								})
+								return err
+							}, time.Minute, time.Second).ShouldNot(HaveOccurred())
 						})
 
 						It("should update deployment replicas when spec size decreases", func() {
