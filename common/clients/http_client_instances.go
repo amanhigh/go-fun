@@ -1,6 +1,7 @@
 package clients
 
 import (
+	"net/http"
 	"time"
 
 	config2 "github.com/amanhigh/go-fun/models/config"
@@ -24,5 +25,12 @@ var (
 		Compression:            false,
 	}
 )
+
+var DefaultHttpClient = resty.New().SetTimeout(REQUEST_TIMEOUT).SetTransport(&http.Transport{
+	IdleConnTimeout:    IDLE_TIMEOUT,
+	MaxIdleConns:       IDLE_CONNECTIONS,
+	DisableKeepAlives:  false,
+	DisableCompression: true,
+})
 
 var TestHttpClient = resty.New().SetHeader("Content-Type", "application/json")
