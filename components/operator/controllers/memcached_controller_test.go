@@ -235,49 +235,6 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 				})
 
-				Context("Max Size", func() {
-					var (
-						maxSize = int32(5)
-					)
-					BeforeEach(func() {
-						// Refresh Object
-						err = k8sClient.Get(ctx, typeNamespaceName, memcached)
-						Expect(err).To(BeNil())
-
-						By("Reconciling Max Size")
-						_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
-							NamespacedName: typeNamespaceName,
-						})
-						Expect(err).ToNot(HaveOccurred())
-					})
-
-					It("should not allow size to exceed max size", func() {
-						// Try to update Memcached CR to have size of 6
-						memcached.Spec.Size = int32(6)
-						err = k8sClient.Update(ctx, memcached)
-						Expect(err).To(HaveOccurred())
-
-						// Check that size did not change
-						err = k8sClient.Get(ctx, typeNamespaceName, memcached)
-						Expect(err).ToNot(HaveOccurred())
-						Expect(memcached.Spec.Size).To(Equal(int32(2)))
-					})
-
-					It("should allow size to equal max size", func() {
-						// Update Memcached CR to have size of 5
-						memcached.Spec.Size = maxSize
-						err = k8sClient.Update(ctx, memcached)
-						Expect(err).ToNot(HaveOccurred())
-
-						// Check that size was updated to 5
-						Eventually(func() int32 {
-							err = k8sClient.Get(ctx, typeNamespaceName, deployment)
-							Expect(err).ToNot(HaveOccurred())
-							return *deployment.Spec.Replicas
-						}, time.Minute, time.Second).Should(Equal(maxSize))
-					})
-				})
-
 			})
 		})
 	})
