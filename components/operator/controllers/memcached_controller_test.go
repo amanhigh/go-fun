@@ -144,16 +144,24 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 					deployment = &appsv1.Deployment{}
 				})
 
-				// FIt("should not create deployment without Image ENV Variable", func() {
-				// 	By("Reconciling Creation without Image")
-				// 	_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
-				// 		NamespacedName: typeNamespaceName,
-				// 	})
-				// 	Expect(err).Should(HaveOccurred())
-				// 	Expect(err.Error()).Should(ContainSubstring("Unable to find MEMCACHED_IMAGE"))
+				It("should not create deployment without Image ENV Variable", func() {
+					By("Reconciling Creation without Image")
+					_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
+						NamespacedName: typeNamespaceName,
+					})
+					Expect(err).Should(HaveOccurred())
+					Expect(err.Error()).Should(ContainSubstring("Unable to find MEMCACHED_IMAGE"))
 
-				// 	Expect(k8sClient.Get(ctx, typeNamespaceName, deployment)).Should(HaveOccurred())
-				// })
+					Expect(k8sClient.Get(ctx, typeNamespaceName, deployment)).Should(HaveOccurred())
+
+					By("Reconcile Delete for Errored Object Without Image")
+					Expect(k8sClient.Delete(ctx, memcached)).To(BeNil())
+					_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
+						NamespacedName: typeNamespaceName,
+					})
+					Expect(err).ShouldNot(HaveOccurred())
+
+				})
 
 				Context("Reconcile Create", func() {
 					BeforeEach(func() {
