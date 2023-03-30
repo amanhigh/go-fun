@@ -72,8 +72,9 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 		BeforeAll(func() {
 			By("Creating the Namespace to perform the tests")
-			err := k8sClient.Create(ctx, namespace)
-			Expect(err).To(Not(HaveOccurred()))
+			Eventually(func() error {
+				return k8sClient.Create(ctx, namespace)
+			}, waitTime, waitStep).ShouldNot(HaveOccurred())
 
 			By("Setting the Image ENV VAR which stores the Operand image")
 			err = os.Setenv("MEMCACHED_IMAGE", imageName)
