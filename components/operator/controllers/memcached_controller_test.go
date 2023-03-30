@@ -44,6 +44,8 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 		var (
 			ctx = context.Background()
 
+			imageName = "example.com/image:test"
+
 			namespace = &corev1.Namespace{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      MemcachedName,
@@ -60,7 +62,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			By("Setting the Image ENV VAR which stores the Operand image")
-			err = os.Setenv("MEMCACHED_IMAGE", "example.com/image:test")
+			err = os.Setenv("MEMCACHED_IMAGE", imageName)
 			Expect(err).To(Not(HaveOccurred()))
 		})
 
@@ -154,7 +156,22 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 					Eventually(func() error {
 						return k8sClient.Get(ctx, typeNamespaceName, deployment)
 					}, time.Minute, time.Second).Should(Succeed())
+
+					By("Verifiying Deployment Spec")
 					Expect(*deployment.Spec.Replicas).To(Equal(size))
+					Expect(deployment.Spec.Template.Labels).To(Equal(labelsForMemcached(memcached.Name)))
+					Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(Equal(imageName))
+					Expect(*deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsNonRoot).To(BeTrue())
+
+					// Check if the Memcached object is set as the owner of the Deployment object
+					Expect(deployment.ObjectMeta.OwnerReferences).To(ContainElement(metav1.OwnerReference{
+						APIVersion:         "cache.aman.com/v1alpha1",
+						Kind:               "Memcached",
+						Name:               memcached.Name,
+						UID:                memcached.UID,
+						Controller:         &[]bool{true}[0],
+						BlockOwnerDeletion: &[]bool{true}[0],
+					}))
 				})
 
 				It("should update Memcached Condition Status", func() {
