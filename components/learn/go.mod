@@ -18,7 +18,7 @@ require (
 	github.com/go-zookeeper/zk v1.0.3
 	github.com/golang/mock v1.6.0
 	github.com/hashicorp/consul/api v1.18.0
-	github.com/hashicorp/vault v1.12.2
+	github.com/hashicorp/vault v1.12.5
 	github.com/hashicorp/vault/api v1.8.3
 	github.com/olivere/elastic v6.2.37+incompatible
 	github.com/onsi/ginkgo/v2 v2.9.2
@@ -68,6 +68,7 @@ require (
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/fortytw2/leaktest v1.3.0 // indirect
+	github.com/frankban/quicktest v1.14.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
@@ -95,7 +96,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.1 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/mlock v0.1.2 // indirect
-	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.6 // indirect
+	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.7 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.2 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
