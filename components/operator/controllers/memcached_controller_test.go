@@ -37,27 +37,45 @@ import (
 
 // TODO: Include in Go Releaser
 var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
+
+	const MemcachedName = "test-memcached"
+
+	var (
+		ctx      = context.Background()
+		waitTime = time.Minute
+		waitStep = time.Second
+
+		imageName = "example.com/image:test"
+
+		namespace = &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      MemcachedName,
+				Namespace: MemcachedName,
+			},
+		}
+
+		memcached *cachev1alpha1.Memcached
+		size      = int32(1)
+
+		typeNamespaceName = types.NamespacedName{Name: MemcachedName, Namespace: MemcachedName}
+		err               error
+	)
+
+	BeforeEach(func() {
+		// Let's mock our custom resource at the same way that we would
+		// apply on the cluster the manifest under config/samples
+		memcached = &cachev1alpha1.Memcached{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      MemcachedName,
+				Namespace: namespace.Name,
+			},
+			Spec: cachev1alpha1.MemcachedSpec{
+				Size: size,
+			},
+		}
+	})
+
 	Context("Memcached controller test", Ordered, func() {
-
-		const MemcachedName = "test-memcached"
-
-		var (
-			ctx      = context.Background()
-			waitTime = time.Minute
-			waitStep = time.Second
-
-			imageName = "example.com/image:test"
-
-			namespace = &corev1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      MemcachedName,
-					Namespace: MemcachedName,
-				},
-			}
-			typeNamespaceName = types.NamespacedName{Name: MemcachedName, Namespace: MemcachedName}
-			err               error
-		)
-
 		var (
 
 			/**
@@ -93,24 +111,8 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 		})
 
 		Context("Create Kind MemCached", func() {
-			var (
-				memcached *cachev1alpha1.Memcached
-				size      = int32(1)
-			)
 
 			BeforeEach(func() {
-				// Let's mock our custom resource at the same way that we would
-				// apply on the cluster the manifest under config/samples
-				memcached = &cachev1alpha1.Memcached{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      MemcachedName,
-						Namespace: namespace.Name,
-					},
-					Spec: cachev1alpha1.MemcachedSpec{
-						Size: size,
-					},
-				}
-
 				err = k8sClient.Create(ctx, memcached)
 				Expect(err).To(Not(HaveOccurred()))
 
@@ -279,6 +281,12 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 			})
 		})
+	})
+
+	It("Should fail to create without namespace", func() {
+		// Attempt to create the Memcached controller
+		err := k8sClient.Create(ctx, memcached)
+		Expect(err).Should(HaveOccurred())
 	})
 
 })
