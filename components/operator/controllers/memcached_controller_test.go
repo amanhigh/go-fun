@@ -94,9 +94,6 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 				return k8sClient.Create(ctx, namespace)
 			}, waitTime, waitStep).ShouldNot(HaveOccurred())
 
-			By("Setting the Image ENV VAR which stores the Operand image")
-			err = os.Setenv("MEMCACHED_IMAGE", imageName)
-			Expect(err).To(Not(HaveOccurred()))
 		})
 
 		AfterAll(func() {
@@ -105,9 +102,6 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			// be aware of the current delete namespace limitations. More info: https://book.kubebuilder.io/reference/envtest.html#testing-considerations
 			By("Deleting the Namespace to perform the tests")
 			_ = k8sClient.Delete(ctx, namespace)
-
-			By("Removing the Image ENV VAR which stores the Operand image")
-			_ = os.Unsetenv("MEMCACHED_IMAGE")
 		})
 
 		Context("Create Kind MemCached", func() {
@@ -148,117 +142,106 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 						Recorder: record.NewFakeRecorder(10),
 					}
 					deployment = &appsv1.Deployment{}
-
-					By("Reconciling Creation")
-					_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
-						NamespacedName: typeNamespaceName,
-					})
-					Expect(err).To(Not(HaveOccurred()))
 				})
 
-				AfterEach(func() {
-					//Clean Memcached Object on Way Back.
-					err = k8sClient.Delete(ctx, memcached)
-					Expect(err).To(Not(HaveOccurred()))
+				// FIt("should not create deployment without Image ENV Variable", func() {
+				// 	By("Reconciling Creation without Image")
+				// 	_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
+				// 		NamespacedName: typeNamespaceName,
+				// 	})
+				// 	Expect(err).Should(HaveOccurred())
+				// 	Expect(err.Error()).Should(ContainSubstring("Unable to find MEMCACHED_IMAGE"))
 
-					By("Reconciling Deletion")
-					_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
-						NamespacedName: typeNamespaceName,
-					})
-					Expect(err).To(Not(HaveOccurred()))
+				// 	Expect(k8sClient.Get(ctx, typeNamespaceName, deployment)).Should(HaveOccurred())
+				// })
 
-					if isCluster() {
-						By("Verifying Deployment is Deleted")
-						Eventually(func() error {
-							return k8sClient.Get(ctx, typeNamespaceName, deployment)
-						}, waitTime, waitStep).ShouldNot(Succeed())
-					}
-				})
-
-				It("should succeed for create deployment", func() {
-					Eventually(func() error {
-						return k8sClient.Get(ctx, typeNamespaceName, deployment)
-					}, waitTime, waitStep).Should(Succeed())
-
-					By("Verifiying Deployment Spec")
-					Expect(*deployment.Spec.Replicas).To(Equal(size))
-					Expect(deployment.Spec.Template.Labels).To(Equal(labelsForMemcached(memcached.Name)))
-					Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(Equal(imageName))
-					Expect(*deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsNonRoot).To(BeTrue())
-
-					// Check if the Memcached object is set as the owner of the Deployment object
-					Expect(deployment.ObjectMeta.OwnerReferences).To(ContainElement(metav1.OwnerReference{
-						APIVersion:         "cache.aman.com/v1alpha1",
-						Kind:               "Memcached",
-						Name:               memcached.Name,
-						UID:                memcached.UID,
-						Controller:         &[]bool{true}[0],
-						BlockOwnerDeletion: &[]bool{true}[0],
-					}))
-				})
-
-				It("should update Memcached Condition Status", func() {
-					Eventually(func() error {
-						if memcached.Status.Conditions != nil && len(memcached.Status.Conditions) != 0 {
-							latestStatusCondition := memcached.Status.Conditions[len(memcached.Status.Conditions)-1]
-							expectedLatestStatusCondition := metav1.Condition{Type: typeAvailableMemcached,
-								Status: metav1.ConditionTrue, Reason: "Reconciling",
-								Message: fmt.Sprintf("Deployment for custom resource (%s) with %d replicas created successfully", memcached.Name, memcached.Spec.Size)}
-							if latestStatusCondition != expectedLatestStatusCondition {
-								return fmt.Errorf("The latest status condition added to the memcached instance is not as expected")
-							}
-						}
-						return nil
-					}, waitTime, waitStep).Should(Succeed())
-				})
-
-				Context("Scale Up", func() {
-					var (
-						newSize = int32(2)
-					)
+				Context("Reconcile Create", func() {
 					BeforeEach(func() {
-						//Refresh Object
-						err = k8sClient.Get(ctx, typeNamespaceName, memcached)
-						Expect(err).To(BeNil())
-
-						// Update Memcached CR to have size of 2
-						memcached.Spec.Size = newSize
-						err = k8sClient.Update(ctx, memcached)
+						By("Setting the Image ENV VAR which stores the Operand image")
+						err = os.Setenv("MEMCACHED_IMAGE", imageName)
 						Expect(err).To(Not(HaveOccurred()))
 
-						By("Reconciling Scale Up")
+						By("Reconciling Creation")
+						_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
+							NamespacedName: typeNamespaceName,
+						})
+						Expect(err).To(Not(HaveOccurred()))
+					})
+
+					AfterEach(func() {
+						//Clean Memcached Object on Way Back.
+						err = k8sClient.Delete(ctx, memcached)
+						Expect(err).To(Not(HaveOccurred()))
+
+						By("Reconciling Deletion")
+						_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
+							NamespacedName: typeNamespaceName,
+						})
+						Expect(err).To(Not(HaveOccurred()))
+
+						if isCluster() {
+							By("Verifying Deployment is Deleted")
+							Eventually(func() error {
+								return k8sClient.Get(ctx, typeNamespaceName, deployment)
+							}, waitTime, waitStep).ShouldNot(Succeed())
+						}
+
+						By("Removing the Image ENV VAR which stores the Operand image")
+						_ = os.Unsetenv("MEMCACHED_IMAGE")
+					})
+
+					It("should succeed for create deployment", func() {
 						Eventually(func() error {
-							_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
-								NamespacedName: typeNamespaceName,
-							})
-							return err
-						}, waitTime, waitStep).ShouldNot(HaveOccurred())
+							return k8sClient.Get(ctx, typeNamespaceName, deployment)
+						}, waitTime, waitStep).Should(Succeed())
+
+						By("Verifiying Deployment Spec")
+						Expect(*deployment.Spec.Replicas).To(Equal(size))
+						Expect(deployment.Spec.Template.Labels).To(Equal(labelsForMemcached(memcached.Name)))
+						Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(Equal(imageName))
+						Expect(*deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsNonRoot).To(BeTrue())
+
+						// Check if the Memcached object is set as the owner of the Deployment object
+						Expect(deployment.ObjectMeta.OwnerReferences).To(ContainElement(metav1.OwnerReference{
+							APIVersion:         "cache.aman.com/v1alpha1",
+							Kind:               "Memcached",
+							Name:               memcached.Name,
+							UID:                memcached.UID,
+							Controller:         &[]bool{true}[0],
+							BlockOwnerDeletion: &[]bool{true}[0],
+						}))
 					})
 
-					It("should update deployment replicas when spec size changes", func() {
-						// Wait for Deployment to be updated with 2 replicas
-						Eventually(func() int32 {
-							err = k8sClient.Get(ctx, typeNamespaceName, deployment)
-							Expect(err).To(BeNil())
-							return *deployment.Spec.Replicas
-						}, waitTime, waitStep).Should(Equal(newSize))
+					It("should update Memcached Condition Status", func() {
+						Eventually(func() error {
+							if memcached.Status.Conditions != nil && len(memcached.Status.Conditions) != 0 {
+								latestStatusCondition := memcached.Status.Conditions[len(memcached.Status.Conditions)-1]
+								expectedLatestStatusCondition := metav1.Condition{Type: typeAvailableMemcached,
+									Status: metav1.ConditionTrue, Reason: "Reconciling",
+									Message: fmt.Sprintf("Deployment for custom resource (%s) with %d replicas created successfully", memcached.Name, memcached.Spec.Size)}
+								if latestStatusCondition != expectedLatestStatusCondition {
+									return fmt.Errorf("The latest status condition added to the memcached instance is not as expected")
+								}
+							}
+							return nil
+						}, waitTime, waitStep).Should(Succeed())
 					})
 
-					Context("ScaleDown", func() {
+					Context("Scale Up", func() {
+						var (
+							newSize = int32(2)
+						)
 						BeforeEach(func() {
-							//Reduce Cluster Size
-							newSize = int32(1)
-
 							//Refresh Object
 							err = k8sClient.Get(ctx, typeNamespaceName, memcached)
 							Expect(err).To(BeNil())
 
-							// Update Memcached CR to have size of 1
+							// Update Memcached CR to have size of 2
 							memcached.Spec.Size = newSize
 							err = k8sClient.Update(ctx, memcached)
 							Expect(err).To(Not(HaveOccurred()))
 
-							By("Reconciling ScaleDown")
+							By("Reconciling Scale Up")
 							Eventually(func() error {
 								_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
 									NamespacedName: typeNamespaceName,
@@ -267,20 +250,54 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 							}, waitTime, waitStep).ShouldNot(HaveOccurred())
 						})
 
-						It("should update deployment replicas when spec size decreases", func() {
-							// Wait for Deployment to be scaled down
+						It("should update deployment replicas when spec size changes", func() {
+							// Wait for Deployment to be updated with 2 replicas
 							Eventually(func() int32 {
 								err = k8sClient.Get(ctx, typeNamespaceName, deployment)
 								Expect(err).To(BeNil())
 								return *deployment.Spec.Replicas
-							}, time.Minute, time.Second).Should(Equal(newSize))
+							}, waitTime, waitStep).Should(Equal(newSize))
 						})
+
+						Context("ScaleDown", func() {
+							BeforeEach(func() {
+								//Reduce Cluster Size
+								newSize = int32(1)
+
+								//Refresh Object
+								err = k8sClient.Get(ctx, typeNamespaceName, memcached)
+								Expect(err).To(BeNil())
+
+								// Update Memcached CR to have size of 1
+								memcached.Spec.Size = newSize
+								err = k8sClient.Update(ctx, memcached)
+								Expect(err).To(Not(HaveOccurred()))
+
+								By("Reconciling ScaleDown")
+								Eventually(func() error {
+									_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
+										NamespacedName: typeNamespaceName,
+									})
+									return err
+								}, waitTime, waitStep).ShouldNot(HaveOccurred())
+							})
+
+							It("should update deployment replicas when spec size decreases", func() {
+								// Wait for Deployment to be scaled down
+								Eventually(func() int32 {
+									err = k8sClient.Get(ctx, typeNamespaceName, deployment)
+									Expect(err).To(BeNil())
+									return *deployment.Spec.Replicas
+								}, time.Minute, time.Second).Should(Equal(newSize))
+							})
+						})
+
 					})
 
 				})
-
 			})
 		})
+
 	})
 
 	It("Should fail to create without namespace", func() {
