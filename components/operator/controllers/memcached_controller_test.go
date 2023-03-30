@@ -105,10 +105,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			})
 
 			It("should be successful", func() {
-				Eventually(func() error {
-					memcached = &cachev1alpha1.Memcached{}
-					return k8sClient.Get(ctx, typeNamespaceName, memcached)
-				}, time.Minute, time.Second).Should(Succeed())
+				Expect(k8sClient.Get(ctx, typeNamespaceName, memcached)).Should(Succeed())
 			})
 
 			It("should respect Max Size", func() {
