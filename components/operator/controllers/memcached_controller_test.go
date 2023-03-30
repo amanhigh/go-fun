@@ -169,6 +169,12 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 					})
 					Expect(err).ShouldNot(HaveOccurred())
 
+					By("Reconcile In Abscense of Memcached Object shoud Do Nothing")
+					_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
+						NamespacedName: typeNamespaceName,
+					})
+					Expect(err).ShouldNot(HaveOccurred())
+
 				})
 
 				It("should setup", func() {
