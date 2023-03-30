@@ -167,7 +167,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 					}, time.Minute, time.Second).Should(Succeed())
 				})
 
-				Context("Resize", func() {
+				Context("Scale Up", func() {
 					var (
 						newSize = int32(2)
 					)
@@ -181,7 +181,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 						err = k8sClient.Update(ctx, memcached)
 						Expect(err).To(Not(HaveOccurred()))
 
-						By("Reconciling Resize")
+						By("Reconciling Scale Up")
 						_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
 							NamespacedName: typeNamespaceName,
 						})
@@ -196,6 +196,38 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 							return *deployment.Spec.Replicas
 						}, time.Minute, time.Second).Should(Equal(newSize))
 					})
+
+					Context("ScaleDown", func() {
+						BeforeEach(func() {
+							//Reduce Cluster Size
+							newSize = int32(1)
+
+							//Refresh Object
+							err = k8sClient.Get(ctx, typeNamespaceName, memcached)
+							Expect(err).To(BeNil())
+
+							// Update Memcached CR to have size of 1
+							memcached.Spec.Size = newSize
+							err = k8sClient.Update(ctx, memcached)
+							Expect(err).To(Not(HaveOccurred()))
+
+							By("Reconciling ScaleDown")
+							_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
+								NamespacedName: typeNamespaceName,
+							})
+							Expect(err).To(Not(HaveOccurred()))
+						})
+
+						It("should update deployment replicas when spec size decreases", func() {
+							// Wait for Deployment to be scaled down
+							Eventually(func() int32 {
+								err = k8sClient.Get(ctx, typeNamespaceName, deployment)
+								Expect(err).To(BeNil())
+								return *deployment.Spec.Replicas
+							}, time.Minute, time.Second).Should(Equal(newSize))
+						})
+					})
+
 				})
 			})
 		})
