@@ -7,7 +7,7 @@ paths:
     post:
       summary: Create a new person
       description: Creates a new person with the given name, age, and gender
-      operationId: createPet
+      operationId: createPerson
       requestBody:
         required: true
         content:
@@ -49,7 +49,7 @@ paths:
     get:
       summary: Get a person by name
       description: Returns the person with the given name
-      operationId: getPet
+      operationId: getPerson
       parameters:
         - name: name
           in: path
@@ -75,7 +75,7 @@ paths:
     delete:
       summary: Delete a person by name
       description: Deletes the person with the given name
-      operationId: deletePet
+      operationId: deletePerson
       parameters:
         - name: name
           in: path
