@@ -3,7 +3,7 @@ package it_test
 import (
 	"fmt"
 
-	clients2 "github.com/amanhigh/go-fun/common/clients"
+	. "github.com/amanhigh/go-fun/common/clients"
 	db2 "github.com/amanhigh/go-fun/models/fun-app/db"
 	server2 "github.com/amanhigh/go-fun/models/fun-app/server"
 
@@ -34,8 +34,12 @@ var _ = Describe("Person Integration Test", func() {
 
 	Context("Create", func() {
 		BeforeEach(func() {
-			_, err := clients2.TestHttpClient.DoPost(serviceUrl+"/person", request, nil)
+			resp, err := TestHttpClient.R().
+				SetBody(request).
+				Post(serviceUrl + "/person")
+
 			Expect(err).To(BeNil())
+			Expect(resp.StatusCode()).To(Equal(200))
 		})
 
 		It("should create person", func() {
@@ -44,21 +48,32 @@ var _ = Describe("Person Integration Test", func() {
 		Context("Get", func() {
 			It("should get all people", func() {
 				var persons []db2.Person
-				_, err := clients2.TestHttpClient.DoGet(serviceUrl+fmt.Sprintf("/person/all"), &persons)
+				resp, err := TestHttpClient.R().
+					SetResult(&persons).
+					Get(serviceUrl + fmt.Sprintf("/person/all"))
+
 				Expect(err).To(BeNil())
+				Expect(resp.StatusCode()).To(Equal(200))
 				Expect(len(persons)).To(BeNumerically(">=", 1))
 			})
 		})
 
 		It("should fail for bad request", func() {
 			request.Name = ""
-			_, err := clients2.TestHttpClient.DoPost(serviceUrl+"/person", request, nil)
-			Expect(err).To(Not(BeNil()))
+			resp, err := TestHttpClient.R().
+				SetBody(request).
+				Post(serviceUrl + "/person")
+
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(400))
 		})
 	})
 
 	It("should serve metrics", func() {
-		_, err := clients2.TestHttpClient.DoGet(serviceUrl+"/metrics", nil)
+		resp, err := TestHttpClient.R().
+			Get(serviceUrl + "/metrics")
+
 		Expect(err).To(BeNil())
+		Expect(resp.StatusCode()).To(Equal(200))
 	})
 })

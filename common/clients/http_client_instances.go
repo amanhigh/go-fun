@@ -1,8 +1,13 @@
 package clients
 
 import (
-	config2 "github.com/amanhigh/go-fun/models/config"
+	"net/http"
+	"net/http/cookiejar"
+	"net/url"
 	"time"
+
+	"github.com/go-resty/resty/v2"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -12,22 +17,21 @@ const (
 	IDLE_CONNECTIONS = 64
 )
 
-var (
-	DefaultHttpClientConfig = config2.HttpClientConfig{
-		DialTimeout:            DIAL_TIMEOUT,
-		RequestTimeout:         REQUEST_TIMEOUT,
-		IdleConnectionTimeout:  IDLE_TIMEOUT,
-		IdleConnectionsPerHost: IDLE_CONNECTIONS,
-		KeepAlive:              true,
-		Compression:            false,
-	}
-)
-
-var TestHttpClient = NewHttpClient(config2.HttpClientConfig{
-	DialTimeout:            time.Millisecond * 200,
-	RequestTimeout:         time.Second,
-	IdleConnectionTimeout:  time.Second * 5,
-	KeepAlive:              true,
-	Compression:            false,
-	IdleConnectionsPerHost: 5,
+var DefaultHttpClient = resty.New().SetTimeout(REQUEST_TIMEOUT).SetTransport(&http.Transport{
+	IdleConnTimeout:    IDLE_TIMEOUT,
+	MaxIdleConns:       IDLE_CONNECTIONS,
+	DisableKeepAlives:  false,
+	DisableCompression: true,
 })
+
+var TestHttpClient = resty.New().SetHeader("Content-Type", "application/json")
+
+func NewHttpClientWithCookies(cookieUrl string, cookies []*http.Cookie, client *resty.Client) *resty.Client {
+	cookieJar, _ := cookiejar.New(nil)
+	if u, err := url.Parse(cookieUrl); err == nil {
+		cookieJar.SetCookies(u, cookies)
+	} else {
+		log.WithFields(log.Fields{"Error": err}).Error("Error Setting Cookies in HttpClient")
+	}
+	return client.SetCookieJar(cookieJar)
+}

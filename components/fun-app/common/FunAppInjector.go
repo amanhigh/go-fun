@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	clients2 "github.com/amanhigh/go-fun/common/clients"
 	metrics2 "github.com/amanhigh/go-fun/common/metrics"
 	util2 "github.com/amanhigh/go-fun/common/util"
 	handlers2 "github.com/amanhigh/go-fun/components/fun-app/handlers"
@@ -92,8 +91,6 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 		&inject.Object{Value: util2.NewGracefulShutdown()},
 
 		&inject.Object{Value: initDb(self.config.Db)},
-
-		&inject.Object{Value: clients2.NewHttpClient(self.config.Http)},
 
 		&inject.Object{Value: &manager2.PersonManager{}},
 
