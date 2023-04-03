@@ -34,7 +34,7 @@ do
         do 
             echo "\033[1;33m Caching Image: $IMG \033[0m \n"
             CPATH="${IMG%:*}";
-            mkdir -p ~/.minikube/cache/images/amd64/$CPATH;
+            mkdir -p ~/.minikube/cache/images/$(uname -m)/$CPATH;
             minikube image save --daemon $IMG
         done
         exit 0
