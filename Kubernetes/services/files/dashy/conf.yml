@@ -110,6 +110,23 @@ sections:
         icon: favicon
         url: https://www.lynalden.com/
         tags: [reading, macro]
+  - name: Productivity
+    icon: mdi-wrench-outline
+    items:
+      - title: ChatGPT
+        description: Begining of AI Revolution
+        icon: favicon
+        url: https://chat.openai.com/
+      - title: Pomadro
+        description: For the procrastaning lazy self.
+        icon: favicon
+        url: https://www.toptal.com/project-managers/tomato-timer
+    displayData:
+      sortBy: default
+      rows: 1
+      cols: 1
+      collapsed: false
+      hideForGuests: false
   - name: Coding
     icon: mdi-code-braces
     items:
