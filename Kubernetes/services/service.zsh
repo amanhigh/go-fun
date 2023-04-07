@@ -37,6 +37,12 @@ process()
             echo "\033[1;33m redis-cli -c get mypasswd \033[0m \n"
             echo "\033[1;33m Commander: http://redisadmin.docker/ \033[0m \n"
             ;;
+        ISTIO)
+            #helm repo add istio https://istio-release.storage.googleapis.com/charts
+            helm install istio-base istio/base -n istio-system --create-namespace
+            helm install istiod istio/istiod -n istio-system --wait
+            # helm install istio-ingress istio/gateway -n istio-system --wait
+            ;;
 
         PROXY)
             echo "\033[1;32m Nginx \033[0m \n"
@@ -245,7 +251,7 @@ while getopts 'dusrib' OPTION; do
         ;;
     s)
         # Prompt
-        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR PORTAINER ZOOKEEPER ELK MONITOR WEBSHELL MYSQL-OP --limit 5`
+        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR PORTAINER ZOOKEEPER ELK ISTIO MONITOR WEBSHELL MYSQL-OP --limit 5`
         echo $answers > $ANS_FILE    
         echo "\033[1;32m Service Set \033[0m \n"
         echo "\033[1;33m $answers \033[0m \n"
