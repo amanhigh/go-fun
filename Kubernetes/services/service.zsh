@@ -39,9 +39,12 @@ process()
             ;;
         ISTIO)
             #helm repo add istio https://istio-release.storage.googleapis.com/charts
-            helm install istio-base istio/base -n istio-system --create-namespace
-            helm install istiod istio/istiod -n istio-system --wait
+            helm install istio-base istio/base -n istio-system --create-namespace > /dev/null
+            helm install istiod istio/istiod -n istio-system > /dev/null
             # helm install istio-ingress istio/gateway -n istio-system --wait
+
+            echo "\033[1;32m Enabled Istio for Default Namespace \033[0m \n"
+            kubectl label namespace default istio-injection=enabled
             ;;
 
         PROXY)
@@ -219,6 +222,8 @@ while getopts 'dusrib' OPTION; do
         echo "\033[1;32m Restting Namespace: $NS \033[0m \n"
         #Helm Clear
         helm delete $(helm list --short)
+        #Istio Clear
+        helm delete -n istio-system $(helm list --short -n istio-system)
         #Delete CRD's
         kubectl get crd --all-namespaces -oname | xargs kubectl delete > /dev/null
         #Delete Resources
