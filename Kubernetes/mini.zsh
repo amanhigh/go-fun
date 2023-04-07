@@ -89,7 +89,7 @@ echo "\033[1;33m Context: `kubectl config current-context;`\033[0m \n";
 
 echo "\033[1;34m Waiting for Minikube to be Ready \033[0m \n";
 sleep 20
-kubectl wait --for=condition=Ready pod -l k8s-app=kube-dns -n kube-system
+kubectl wait --for=condition=Ready pod -l k8s-app=kube-dns -n kube-system --timeout=100s
 
 cd ./services
 ./service.zsh -b

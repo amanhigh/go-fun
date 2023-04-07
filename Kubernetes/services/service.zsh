@@ -225,7 +225,7 @@ while getopts 'dusrib' OPTION; do
         #Istio Clear
         helm delete -n istio-system $(helm list --short -n istio-system)
         #Delete CRD's
-        kubectl get crd --all-namespaces -oname | xargs kubectl delete > /dev/null
+        # kubectl get crd --all-namespaces -oname | xargs kubectl delete > /dev/null
         #Delete Resources
         kubectl delete --all all --namespace=$NS
         ;;
