@@ -40,11 +40,12 @@ process()
         ISTIO)
             #helm repo add istio https://istio-release.storage.googleapis.com/charts
             helm install istio-base istio/base -n istio-system --create-namespace > /dev/null
-            helm install istiod istio/istiod -n istio-system > /dev/null
+            helm install istiod istio/istiod -n istio-system -f istio.yml > /dev/null
             # helm install istio-ingress istio/gateway -n istio-system --wait
 
             echo "\033[1;32m Enabled Istio for Default Namespace \033[0m \n"
-            kubectl label namespace default istio-injection=enabled
+            # kubectl label namespace default istio-injection-
+            kubectl label namespace default istio-injection=enabled --overwrite
             ;;
 
         PROXY)
@@ -82,6 +83,7 @@ process()
             helm $CMD httpbin onechart/onechart -f httpbin.yml > /dev/null
             echo "\033[1;33m Swagger: http://httpbin.docker \033[0m \n"
             echo "\033[1;33m http://httpbin.docker/anything \033[0m \n"
+            echo "\033[1;33m curl http://httpbin:8810/headers \033[0m \n"
             ;;
 
         CRON)
