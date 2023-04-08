@@ -39,13 +39,17 @@ process()
             ;;
         ISTIO)
             #helm repo add istio https://istio-release.storage.googleapis.com/charts
-            helm install istio-base istio/base -n istio-system --create-namespace > /dev/null
-            helm install istiod istio/istiod -n istio-system -f istio.yml > /dev/null
+            helm $CMD istio-base istio/base -n istio-system --create-namespace > /dev/null
+            helm $CMD istiod istio/istiod -n istio-system -f istio.yml > /dev/null
             # helm install istio-ingress istio/gateway -n istio-system --wait
 
             echo "\033[1;32m Enabled Istio for Default Namespace \033[0m \n"
             # kubectl label namespace default istio-injection-
             kubectl label namespace default istio-injection=enabled --overwrite
+            ;;
+        I-ADDONS)
+            #helm repo add kiali https://kiali.org/helm-charts
+            helm $CMD kiali-operator kiali/kiali-operator -f kiali.yml
             ;;
 
         PROXY)
@@ -258,7 +262,7 @@ while getopts 'dusrib' OPTION; do
         ;;
     s)
         # Prompt
-        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR PORTAINER ZOOKEEPER ELK ISTIO MONITOR WEBSHELL MYSQL-OP --limit 5`
+        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR PORTAINER ZOOKEEPER ELK ISTIO I-ADDONS MONITOR WEBSHELL MYSQL-OP --limit 5`
         echo $answers > $ANS_FILE    
         echo "\033[1;32m Service Set \033[0m \n"
         echo "\033[1;33m $answers \033[0m \n"
