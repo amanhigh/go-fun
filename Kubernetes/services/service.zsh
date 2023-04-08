@@ -49,7 +49,10 @@ process()
             ;;
         I-ADDONS)
             #helm repo add kiali https://kiali.org/helm-charts
-            helm $CMD kiali-operator kiali/kiali-operator -f kiali.yml
+            helm $CMD kiali-operator kiali/kiali-operator -f kiali.yml > /dev/null
+            #Create Kiali CRD
+            kubectl apply -f ./files/istio/kiali-crd.yml
+            #TODO: Setup Ingress and Fix Prometheus
             ;;
 
         PROXY)
@@ -231,12 +234,16 @@ while getopts 'dusrib' OPTION; do
         #Istio Clear
         helm delete -n istio-system $(helm list --short -n istio-system)
         #Delete CRD's
+        #TODO: Link Reset and Delete
         # kubectl get crd --all-namespaces -oname | xargs kubectl delete > /dev/null
         #Delete Resources
         kubectl delete --all all --namespace=$NS
         ;;
     d)
         echo "\033[1;32m Clearing all Helms \033[0m \n"
+        #Clear CRD's (Needed before Helm Deletion)
+        kubectl delete kiali --all --all-namespaces > /dev/null
+        
         #Exclude Permanent Helms
         helm delete $(helm list --short | grep -v "traefik\|dashy")
         ;;
