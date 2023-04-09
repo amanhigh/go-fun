@@ -281,6 +281,10 @@ sections:
         description: "Grafana Charting <br/> Login: aman/aman <br/> Add Datasource Prometheus: http://prometheus-server"
         icon: favicon
         url: http://grafana.docker/login
+      - title: Kiali
+        description: "Service Graph <br/> Login: aman/aman <br/> Add Datasource Prometheus: http://prometheus-server"
+        icon: favicon
+        url: http://kiali.docker/kiali
       - title: LdapAdmin
         description: "Ldap Explorer, Admin Login: Username:cn=admin,dc=example,dc=com Password: admin"
         icon: favicon

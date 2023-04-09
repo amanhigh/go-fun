@@ -53,7 +53,7 @@ process()
             #Create Kiali CRD
             kubectl apply -f ./files/istio/kiali-crd.yml
             #TODO: Setup Ingress and Fix Prometheus
-            echo "\033[1;33m Kiali: http://kiali.docker/ \033[0m \n";
+            echo "\033[1;33m Kiali: http://kiali.docker/kiali \033[0m \n";
             ;;
 
         PROXY)
