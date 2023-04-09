@@ -281,8 +281,12 @@ sections:
         description: "Grafana Charting <br/> Login: aman/aman <br/> Add Datasource Prometheus: http://prometheus-server"
         icon: favicon
         url: http://grafana.docker/login
+      - title: Jager
+        description: "Distributed Tracing. Play with Spans, Contexts"
+        icon: favicon
+        url: http://jaeger.docker/
       - title: Kiali
-        description: "Service Graph <br/> Login: aman/aman <br/> Add Datasource Prometheus: http://prometheus-server"
+        description: "Service Graph and monitoring for Istio Enabled Apps"
         icon: favicon
         url: http://kiali.docker/kiali
       - title: LdapAdmin

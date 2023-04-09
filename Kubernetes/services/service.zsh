@@ -187,6 +187,11 @@ process()
             echo "\033[1;33m http://grafana.docker/login (aman/aman) \033[0m \n"
             echo "\033[1;33m Datasource: http://grafana.docker/datasources/new \033[0m \n"
             echo "\033[1;33m Add Datasource Prometheus: http://prometheus-server \033[0m \n"
+
+            #helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
+            helm $CMD jaeger jaegertracing/jaeger -f jaeger.yml
+            echo "\033[1;33m http://jaeger.docker/ \033[0m \n"
+
             ;;
         
         LDAP)
