@@ -1,3 +1,4 @@
+# https://kiali.io/docs/configuration/kialis.kiali.io/
 apiVersion: kiali.io/v1alpha1
 kind: Kiali
 metadata:
@@ -8,5 +9,15 @@ spec:
   deployment:
     accessible_namespaces:
       - "**"
+    ingress:
+      class_name: "traefik"
+      enabled: true
+      override_yaml:
+        metadata:
+          annotations:
+            traefik.ingress.kubernetes.io/router.entrypoints: web
+  server:
+    web_fqdn: "kiali.docker"
+
   auth:
     strategy: anonymous

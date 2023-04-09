@@ -53,6 +53,7 @@ process()
             #Create Kiali CRD
             kubectl apply -f ./files/istio/kiali-crd.yml
             #TODO: Setup Ingress and Fix Prometheus
+            echo "\033[1;33m Kiali: http://kiali.docker/ \033[0m \n";
             ;;
 
         PROXY)
@@ -257,7 +258,7 @@ while getopts 'dusrib' OPTION; do
         process
         ;;
     b)
-        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker mysqladmin.docker redisadmin.docker prometheus.docker grafana.docker ldapadmin.docker webssh.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker consul.docker opa.docker sonar.docker
+        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker mysqladmin.docker redisadmin.docker prometheus.docker grafana.docker kiali.docker ldapadmin.docker webssh.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker consul.docker opa.docker sonar.docker
         echo "\033[1;32m Bootstraping Base Services \033[0m \n"
         
         process "TRAEFIK DASHY"
