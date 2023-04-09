@@ -139,9 +139,9 @@ process()
             kubectl apply -f ./files/traefik/middleware.yml
             # kubectl apply -f ./files/traefik/ingress.yml
 
-            echo "\033[1;33m Dashboard: http://localhost:9000/dashboard/#/ \033[0m \n"
-            echo "\033[1;33m HealthCheck: http://localhost:9000/ping \033[0m \n"
-            echo "\033[1;33m Ingress: http://localhost:8000/mysqladmin \033[0m \n"
+            echo "\033[1;33m Dashboard: http://docker:9000/dashboard/#/ \033[0m \n"
+            echo "\033[1;33m HealthCheck: http://docker:9000/ping \033[0m \n"
+            echo "\033[1;33m Ingress: http://docker:8000/mysqladmin \033[0m \n"
             echo "\033[1;33m PortForward(80): sudo kubectl port-forward deployment/traefik 80:8000 > /dev/null &\033[0m \n"
             ;;
 
@@ -269,7 +269,7 @@ while getopts 'dusrib' OPTION; do
         process
         ;;
     b)
-        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker mysqladmin.docker redisadmin.docker prometheus.docker grafana.docker kiali.docker ldapadmin.docker webssh.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker consul.docker opa.docker sonar.docker
+        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker mysqladmin.docker redisadmin.docker prometheus.docker grafana.docker jaeger.docker kiali.docker ldapadmin.docker webssh.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker consul.docker opa.docker sonar.docker
         echo "\033[1;32m Bootstraping Base Services \033[0m \n"
 
         process "TRAEFIK DASHY $XTRA_BOOT"
