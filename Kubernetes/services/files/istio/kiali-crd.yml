@@ -21,3 +21,8 @@ spec:
 
   auth:
     strategy: anonymous
+
+  external_services:
+    prometheus:
+      # Prometheus service name is "prometheus-server" and is in the "default" namespace
+      url: "http://prometheus-server.default"

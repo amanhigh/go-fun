@@ -180,6 +180,7 @@ process()
             #helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
             helm $CMD prometheus prometheus-community/prometheus -f prometheus.yml > /dev/null
             echo "\033[1;33m Prometheus Server: http://prometheus.docker/ \033[0m \n"
+            echo "\033[1;33m Prometheus Query: http://prometheus.docker/api/v1/query \033[0m \n"
 
              # helm repo add grafana https://grafana.github.io/helm-charts
             helm $CMD grafana grafana/grafana -f grafana.yml > /dev/null
