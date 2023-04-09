@@ -2,12 +2,17 @@ PORT=8091
 MINI_BKP_FILE=~/Downloads/mini-bkp.txt
 MINI_CURRENT_BKP_FILE=/tmp/mini-bkp
 input=$1
-answers=${input:-`gum choose MINIKUBE BACKUP RESTORE CLEAN --limit 5`}
+answers=${input:-`gum choose MINIKUBE ISTIO BACKUP RESTORE CLEAN --limit 5`}
+XTRA_BOOT=""
 
 for SVC in $answers
 do
     echo "\033[1;32m \n $SVC \033[0m \n"
     case $SVC in
+    ISTIO)
+        XTRA_BOOT="ISTIO"
+        echo "\033[1;34m XTRA_BOOT Set for ISTIO \033[0m \n"
+        ;;
     CLEAN)
         echo "\033[1;32m Deleting Minikube Clusters \033[0m \n"
         minikube -p minikube delete;
@@ -84,11 +89,11 @@ echo "\033[1;33m Context: `kubectl config current-context;`\033[0m \n";
 # kubectl proxy --port=$PORT;
 
 echo "\033[1;34m Waiting for Minikube to be Ready \033[0m \n";
-sleep 20
-kubectl wait --for=condition=Ready pod -l k8s-app=kube-dns -n kube-system --timeout=100s
+sleep 30
+kubectl wait --for=condition=Ready pod -l k8s-app=kube-dns -n kube-system --timeout=60s
 
 cd ./services
-./service.zsh -b
+XTRA_BOOT=$XTRA_BOOT ./service.zsh -b
 cd -
 
 echo "\033[1;34m Please enter password for Port 80 Forward \033[0m \n";
