@@ -52,7 +52,6 @@ process()
             helm $CMD kiali-operator kiali/kiali-operator -f kiali.yml > /dev/null
             #Create Kiali CRD
             kubectl apply -f ./files/istio/kiali-crd.yml
-            #TODO: Setup Ingress and Fix Prometheus
             echo "\033[1;33m Kiali: http://kiali.docker/kiali \033[0m \n";
             ;;
 
@@ -229,6 +228,17 @@ process()
     done
 }
 
+delete()
+{
+    echo "\033[1;32m Clearing all Helms \033[0m \n"
+    #Clear CRD's (Needed before Helm Deletion)
+    kubectl delete kiali --all --all-namespaces 2> /dev/null
+    #TODO: Add Mysql CRD's
+        
+    #Exclude Permanent Helms
+    helm delete $(helm list --short | grep -v "traefik\|dashy") 2> /dev/null
+}
+
 
 # Flags
 while getopts 'dusrib' OPTION; do
@@ -236,23 +246,18 @@ while getopts 'dusrib' OPTION; do
     r)
         NS=$(kubectl get sa -o=jsonpath='{.items[0]..metadata.namespace}')
         echo "\033[1;32m Restting Namespace: $NS \033[0m \n"
-        #Helm Clear
+        #Delete Resources
+        kubectl delete --all all --namespace=$NS
+        #Process Normal Delete
+        delete
+        #Helm Clear Remaining
         helm delete $(helm list --short)
         #Istio Clear
         helm delete -n istio-system $(helm list --short -n istio-system)
-        #Delete CRD's
-        #TODO: Link Reset and Delete
-        # kubectl get crd --all-namespaces -oname | xargs kubectl delete > /dev/null
-        #Delete Resources
-        kubectl delete --all all --namespace=$NS
         ;;
     d)
-        echo "\033[1;32m Clearing all Helms \033[0m \n"
-        #Clear CRD's (Needed before Helm Deletion)
-        kubectl delete kiali --all --all-namespaces > /dev/null
-        
-        #Exclude Permanent Helms
-        helm delete $(helm list --short | grep -v "traefik\|dashy")
+        # Process Delete
+        delete
         ;;
     i)
         echo "\033[1;32m Helm: Install \033[0m \n"
