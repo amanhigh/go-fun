@@ -47,7 +47,7 @@ process()
             # kubectl label namespace default istio-injection-
             kubectl label namespace default istio-injection=enabled --overwrite
             ;;
-        I-ADDONS)
+        KIALI)
             #helm repo add kiali https://kiali.org/helm-charts
             helm $CMD kiali-operator kiali/kiali-operator -f kiali.yml > /dev/null
             #Create Kiali CRD
@@ -189,7 +189,7 @@ process()
             echo "\033[1;33m Add Datasource Prometheus: http://prometheus-server \033[0m \n"
 
             #helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
-            helm $CMD jaeger jaegertracing/jaeger -f jaeger.yml
+            helm $CMD jaeger jaegertracing/jaeger -f jaeger.yml > /dev/null
             echo "\033[1;33m http://jaeger.docker/ \033[0m \n"
 
             ;;
@@ -276,7 +276,7 @@ while getopts 'dusrib' OPTION; do
         ;;
     s)
         # Prompt
-        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR PORTAINER ZOOKEEPER ELK ISTIO I-ADDONS MONITOR WEBSHELL MYSQL-OP --limit 5`
+        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR PORTAINER ZOOKEEPER ELK ISTIO KIALI MONITOR WEBSHELL MYSQL-OP --limit 5`
         echo $answers > $ANS_FILE    
         echo "\033[1;32m Service Set \033[0m \n"
         echo "\033[1;33m $answers \033[0m \n"
