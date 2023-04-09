@@ -2,15 +2,12 @@ PORT=8091
 MINI_BKP_FILE=~/Downloads/mini-bkp.txt
 MINI_CURRENT_BKP_FILE=/tmp/mini-bkp
 input=$1
-answers=${input:-`gum choose MINIKUBE ISTIO BACKUP RESTORE CLEAN --limit 5`}
+answers=${input:-`gum choose MINIKUBE BACKUP RESTORE CLEAN --limit 5`}
 
 for SVC in $answers
 do
     echo "\033[1;32m \n $SVC \033[0m \n"
     case $SVC in
-    ISTIO)
-        ./istio/istio.sh;
-        ;;
     CLEAN)
         echo "\033[1;32m Deleting Minikube Clusters \033[0m \n"
         minikube -p minikube delete;
