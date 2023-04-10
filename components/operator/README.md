@@ -26,7 +26,7 @@ Steps followed
 * **Models** - Made Model Modification (ContainerPort addition) and do [autogeneration](https://book.kubebuilder.io/cronjob-tutorial/other-api-files.html). Updated Test and [Spec](config/samples/cache_v1alpha1_memcached.yaml) to include *containerPort: 8443*\
 `make generate`
 
-* **Manifests** - Generate Manifests CRD (cache.aman.com_memcacheds.yaml), RBAC(role.yml).If you are editing the API definitions, generate the manifests such as CRs or CRDs using.\
+* **Manifests** - Generate Manifests CRD [(cache.aman.com_memcacheds.yaml)](config/crd/bases/cache.aman.com_memcacheds.yaml), RBAC [(role.yaml)](config/rbac/role.yaml).If you are editing the API definitions, generate the manifests such as CRs or CRDs using.\
  `make manifests`
 
 * **Docker** - Updated Docker Base Image or any other Changes in [DockerFile](./Dockerfile). Fix Image Name `IMG ?= amanfdk/operator:latest` in [MakeFile](./Makefile).\
@@ -82,5 +82,5 @@ Markers are Golang Comments/Tags which hint Kubebuilder Generator.
 * Kind: Type is a Kind `//+kubebuilder:object:root=true`
 * Group: Tags Go Package to hold & Generaet Kind Objects `+kubebuilder:object:generate=true`
 * [RBAC](https://book.kubebuilder.io/reference/markers/rbac.html): Generates [ClusterRole](config/rbac/role.yaml) for Controller & its Perms. `
-    * CRD: `//+kubebuilder:rbac:groups=cache.aman.com,resources=memcacheds,verbs=get;list;watch;create;update;patch;delete`
+    * CRD: `//+kubebuilder:rbac:groups=cache.aman.com,resources=memcacheds,verbs=get;list;watch;create;update;patch;delete`. Permission can also be on subresource like `memcacheds/status, memcacheds/finalizers`
     * Default Resources: `//+kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch`
