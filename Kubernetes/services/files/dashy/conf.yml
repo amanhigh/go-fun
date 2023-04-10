@@ -110,16 +110,40 @@ sections:
         icon: favicon
         url: https://www.lynalden.com/
         tags: [reading, macro]
-  - name: Finance-Secondary
-    icon: mdi-currency-usd
+  - name: Productivity
+    icon: mdi-wrench-outline
     items:
-      - title: Nifty-PE
-        description: Nifty PE Analysis
+      - title: ChatGPT
+        description: Begining of AI Revolution
         icon: favicon
-        url: https://nifty-pe-ratio.com/
-        tags: [fundamental, macro, india]
+        url: https://chat.openai.com/
+      - title: Pomadro
+        description: For the procrastaning lazy self.
+        icon: favicon
+        url: https://www.toptal.com/project-managers/tomato-timer
     displayData:
-      collapsed: true
+      sortBy: default
+      rows: 1
+      cols: 1
+      collapsed: false
+      hideForGuests: false
+  - name: Coding
+    icon: mdi-code-braces
+    items:
+      - title: Draw
+        description: Easy Desgin and Whiteboarding
+        icon: favicon
+        url: https://excalidraw.com/
+      - title: ArtifactHub
+        description: Repository for Helm charts with Easy discovery.
+        icon: favicon
+        url: https://artifacthub.io/
+    displayData:
+      sortBy: default
+      rows: 1
+      cols: 1
+      collapsed: false
+      hideForGuests: false
   - name: Investment
     icon: mdi-cash-multiple
     items:
@@ -227,7 +251,7 @@ sections:
       - title: Traefik
         description: Traefix Ingress Manager
         icon: favicon
-        url: http://localhost:9000/dashboard/#/
+        url: http://docker:9000/dashboard/#/
       - title: MysqlAdmin
         description: PHP MyAdmin Login - root/root@mysql-primary
         icon: favicon
@@ -257,6 +281,14 @@ sections:
         description: "Grafana Charting <br/> Login: aman/aman <br/> Add Datasource Prometheus: http://prometheus-server"
         icon: favicon
         url: http://grafana.docker/login
+      - title: Jager
+        description: "Distributed Tracing. Play with Spans, Contexts"
+        icon: favicon
+        url: http://jaeger.docker/
+      - title: Kiali
+        description: "Service Graph and monitoring for Istio Enabled Apps"
+        icon: favicon
+        url: http://kiali.docker/kiali
       - title: LdapAdmin
         description: "Ldap Explorer, Admin Login: Username:cn=admin,dc=example,dc=com Password: admin"
         icon: favicon
@@ -277,6 +309,7 @@ sections:
         icon: favicon
         url: http://sonar.docker/
         statusCheck: true
+
   - name: Dashy
     icon: fas fa-rocket
     items:
@@ -284,7 +317,6 @@ sections:
         description: Development a project management links for Dashy
         icon: https://i.ibb.co/qWWpD0v/astro-dab-128.png
         url: https://live.dashy.to/
-        target: newtab
       - title: Docs
         description: Refer Icons, Widgets, Keyboard Shortcuts, Pages
         provider: Dashy.to
@@ -298,14 +330,14 @@ sections:
         description: See full list of configuration options
         url: https://github.com/Lissy93/dashy/blob/master/docs/configuring.md
         icon: fas fa-wrench
-      - title: Icons-Awesome
-        description: Supported Icons
-        url: https://fontawesome.com/search?q=git&o=r
-        icon: fab fa-font-awesome
       - title: Icons-Material
-        description: Supported Icons
+        description: Supported Icons. Format- mdi-<> eg. mdi-code-braces
         url: https://pictogrammers.com/library/mdi/
         icon: mdi-material-design
+      - title: Icons-Awesome
+        description: Supported Icons. Format- Category <> eg. fas fa-rocket
+        url: https://fontawesome.com/search?q=git&o=r
+        icon: fab fa-font-awesome
       - title: Support
         description: Get help with Dashy, raise a bug, or get in contact
         url: https://github.com/Lissy93/dashy/blob/master/.github/SUPPORT.md
@@ -320,6 +352,16 @@ sections:
       cols: 1
       collapsed: true
       hideForGuests: false
+  - name: Finance-Secondary
+    icon: mdi-currency-usd
+    items:
+      - title: Nifty-PE
+        description: Nifty PE Analysis
+        icon: favicon
+        url: https://nifty-pe-ratio.com/
+        tags: [fundamental, macro, india]
+    displayData:
+      collapsed: true
 
 appConfig:
   theme: lissy

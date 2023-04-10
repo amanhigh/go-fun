@@ -81,19 +81,21 @@ type MemcachedReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
+	var err error
 
 	// Fetch the Memcached instance
 	// The purpose is check if the Custom Resource for the Kind Memcached
 	// is applied on the cluster if not we return nil to stop the reconciliation
 	memcached := &cachev1alpha1.Memcached{}
-	err := r.Get(ctx, req.NamespacedName, memcached)
-	if err != nil {
+	if err = r.Get(ctx, req.NamespacedName, memcached); err != nil {
 		if apierrors.IsNotFound(err) {
 			// If the custom resource is not found then, it usually means that it was deleted or not created
 			// In this way, we will stop the reconciliation
+			/* Can Use: client.IgnoreNotFound(err) */
 			log.Info("memcached resource not found. Ignoring since object must be deleted")
 			return ctrl.Result{}, nil
 		}
+
 		// Error reading the object - requeue the request.
 		log.Error(err, "Failed to get memcached")
 		return ctrl.Result{}, err
@@ -431,6 +433,7 @@ func imageForMemcached() (string, error) {
 func (r *MemcachedReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cachev1alpha1.Memcached{}).
+		//Inform Reconciler when any change happens in Owned Resources inculding deletion.
 		Owns(&appsv1.Deployment{}).
 		Complete(r)
 }

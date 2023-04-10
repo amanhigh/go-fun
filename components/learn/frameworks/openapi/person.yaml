@@ -1,0 +1,109 @@
+openapi: 3.0.0
+info:
+  title: Person API
+  version: 1.0.0
+paths:
+  /persons:
+    post:
+      summary: Create a new person
+      description: Creates a new person with the given name, age, and gender
+      operationId: createPerson
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Person"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Person"
+    get:
+      summary: Get all persons
+      description: List all Persons, Paginated
+      operationId: getAllPersons
+      parameters:
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: Number of records to skip
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Max number of records to return
+      responses:
+        "200":
+          description: A list of persons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Person"
+  /persons/{name}:
+    get:
+      summary: Get a person by name
+      description: Returns the person with the given name
+      operationId: getPerson
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to retrieve
+          required: true
+          schema:
+            type: string
+        - name: user
+          in: header
+          description: Name of the person using it
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Person"
+        "404":
+          description: Not Found
+    delete:
+      summary: Delete a person by name
+      description: Deletes the person with the given name
+      operationId: deletePerson
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+components:
+  schemas:
+    Person:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the person
+        age:
+          type: integer
+          minimum: 0
+          maximum: 200
+          description: Age of the person
+        gender:
+          type: string
+          enum: [Male, Female]
+          description: Gender of the person
+      required:
+        - name
+        - age
+        - gender

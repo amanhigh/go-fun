@@ -37,6 +37,23 @@ process()
             echo "\033[1;33m redis-cli -c get mypasswd \033[0m \n"
             echo "\033[1;33m Commander: http://redisadmin.docker/ \033[0m \n"
             ;;
+        ISTIO)
+            #helm repo add istio https://istio-release.storage.googleapis.com/charts
+            helm $CMD istio-base istio/base -n istio-system --create-namespace > /dev/null
+            helm $CMD istiod istio/istiod -n istio-system -f istio.yml > /dev/null
+            # helm install istio-ingress istio/gateway -n istio-system --wait
+
+            echo "\033[1;32m Enabled Istio for Default Namespace \033[0m \n"
+            # kubectl label namespace default istio-injection-
+            kubectl label namespace default istio-injection=enabled --overwrite
+            ;;
+        KIALI)
+            #helm repo add kiali https://kiali.org/helm-charts
+            helm $CMD kiali-operator kiali/kiali-operator -f kiali.yml > /dev/null
+            #Create Kiali CRD
+            kubectl apply -f ./files/istio/kiali-crd.yml
+            echo "\033[1;33m Kiali: http://kiali.docker/kiali \033[0m \n";
+            ;;
 
         PROXY)
             echo "\033[1;32m Nginx \033[0m \n"
@@ -73,6 +90,7 @@ process()
             helm $CMD httpbin onechart/onechart -f httpbin.yml > /dev/null
             echo "\033[1;33m Swagger: http://httpbin.docker \033[0m \n"
             echo "\033[1;33m http://httpbin.docker/anything \033[0m \n"
+            echo "\033[1;33m curl http://httpbin:8810/headers \033[0m \n"
             ;;
 
         CRON)
@@ -121,9 +139,9 @@ process()
             kubectl apply -f ./files/traefik/middleware.yml
             # kubectl apply -f ./files/traefik/ingress.yml
 
-            echo "\033[1;33m Dashboard: http://localhost:9000/dashboard/#/ \033[0m \n"
-            echo "\033[1;33m HealthCheck: http://localhost:9000/ping \033[0m \n"
-            echo "\033[1;33m Ingress: http://localhost:8000/mysqladmin \033[0m \n"
+            echo "\033[1;33m Dashboard: http://docker:9000/dashboard/#/ \033[0m \n"
+            echo "\033[1;33m HealthCheck: http://docker:9000/ping \033[0m \n"
+            echo "\033[1;33m Ingress: http://docker:8000/mysqladmin \033[0m \n"
             echo "\033[1;33m PortForward(80): sudo kubectl port-forward deployment/traefik 80:8000 > /dev/null &\033[0m \n"
             ;;
 
@@ -161,12 +179,18 @@ process()
             #helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
             helm $CMD prometheus prometheus-community/prometheus -f prometheus.yml > /dev/null
             echo "\033[1;33m Prometheus Server: http://prometheus.docker/ \033[0m \n"
+            echo "\033[1;33m Prometheus Query: http://prometheus.docker/api/v1/query \033[0m \n"
 
              # helm repo add grafana https://grafana.github.io/helm-charts
             helm $CMD grafana grafana/grafana -f grafana.yml > /dev/null
             echo "\033[1;33m http://grafana.docker/login (aman/aman) \033[0m \n"
             echo "\033[1;33m Datasource: http://grafana.docker/datasources/new \033[0m \n"
             echo "\033[1;33m Add Datasource Prometheus: http://prometheus-server \033[0m \n"
+
+            #helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
+            helm $CMD jaeger jaegertracing/jaeger -f jaeger.yml > /dev/null
+            echo "\033[1;33m http://jaeger.docker/ \033[0m \n"
+
             ;;
         
         LDAP)
@@ -204,6 +228,17 @@ process()
     done
 }
 
+delete()
+{
+    echo "\033[1;32m Clearing all Helms \033[0m \n"
+    #Clear CRD's (Needed before Helm Deletion)
+    kubectl delete kiali --all --all-namespaces 2> /dev/null
+    #TODO: Add Mysql CRD's
+        
+    #Exclude Permanent Helms
+    helm delete $(helm list --short | grep -v "traefik\|dashy") 2> /dev/null
+}
+
 
 # Flags
 while getopts 'dusrib' OPTION; do
@@ -211,17 +246,18 @@ while getopts 'dusrib' OPTION; do
     r)
         NS=$(kubectl get sa -o=jsonpath='{.items[0]..metadata.namespace}')
         echo "\033[1;32m Restting Namespace: $NS \033[0m \n"
-        #Helm Clear
-        helm delete $(helm list --short)
-        #Delete CRD's
-        kubectl get crd --all-namespaces -oname | xargs kubectl delete > /dev/null
         #Delete Resources
         kubectl delete --all all --namespace=$NS
+        #Process Normal Delete
+        delete
+        #Helm Clear Remaining
+        helm delete $(helm list --short)
+        #Istio Clear
+        helm delete -n istio-system $(helm list --short -n istio-system)
         ;;
     d)
-        echo "\033[1;32m Clearing all Helms \033[0m \n"
-        #Exclude Permanent Helms
-        helm delete $(helm list --short | grep -v "traefik\|dashy")
+        # Process Delete
+        delete
         ;;
     i)
         echo "\033[1;32m Helm: Install \033[0m \n"
@@ -233,10 +269,10 @@ while getopts 'dusrib' OPTION; do
         process
         ;;
     b)
-        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker mysqladmin.docker redisadmin.docker prometheus.docker grafana.docker ldapadmin.docker webssh.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker consul.docker opa.docker sonar.docker
+        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker mysqladmin.docker redisadmin.docker prometheus.docker grafana.docker jaeger.docker kiali.docker ldapadmin.docker webssh.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker consul.docker opa.docker sonar.docker
         echo "\033[1;32m Bootstraping Base Services \033[0m \n"
-        
-        process "TRAEFIK DASHY"
+
+        process "TRAEFIK DASHY $XTRA_BOOT"
         
         echo "\033[1;32m Attempting Traefik Portforward \033[0m \n";
         kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik --timeout=1m
@@ -245,7 +281,7 @@ while getopts 'dusrib' OPTION; do
         ;;
     s)
         # Prompt
-        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR PORTAINER ZOOKEEPER ELK MONITOR WEBSHELL MYSQL-OP --limit 5`
+        answers=`gum choose MYSQL MONGO REDIS APP PROXY LOADER CRON HTTPBIN VAULT OPA CONSUL LDAP ETCD SONAR PORTAINER ZOOKEEPER ELK ISTIO KIALI MONITOR WEBSHELL MYSQL-OP --limit 5`
         echo $answers > $ANS_FILE    
         echo "\033[1;32m Service Set \033[0m \n"
         echo "\033[1;33m $answers \033[0m \n"

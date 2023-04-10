@@ -1,0 +1,49 @@
+# https://kiali.io/docs/configuration/kialis.kiali.io/
+apiVersion: kiali.io/v1alpha1
+kind: Kiali
+metadata:
+  namespace: istio-system
+  name: kiali
+spec:
+  istio_namespace: istio-system
+  deployment:
+    accessible_namespaces:
+      - "**"
+    ingress:
+      class_name: "traefik"
+      enabled: true
+      override_yaml:
+        metadata:
+          annotations:
+            traefik.ingress.kubernetes.io/router.entrypoints: web
+  server:
+    web_fqdn: "kiali.docker"
+
+  auth:
+    strategy: anonymous
+
+  external_services:
+    prometheus:
+      # Prometheus service name is "prometheus-server" and is in the "default" namespace
+      url: "http://prometheus-server.default"
+      health_check_url: "http://prometheus-server.default/-/healthy"
+    grafana:
+      enabled: true
+      # Grafana service name is "grafana" and is in the "default" namespace.
+      in_cluster_url: "http://grafana.default/"
+      # Public facing URL of Grafana
+      url: "http://grafan.docker/"
+      health_check_url: "http://grafana.default/api/health"
+      auth:
+        type: "basic"
+        username: "aman"
+        password: "aman"
+    tracing:
+      # Enabled by default. Kiali will anyway fallback to disabled if
+      # Jaeger is unreachable.
+      enabled: true
+      # Jaeger service name is "jaeger-query" and is in the "default" namespace.
+      use_grpc: true #Give GRPC endpoint below
+      in_cluster_url: "http://jaeger-query.default:16685/jaeger"
+      # Public facing URL of Jaeger
+      url: "http://jaeger.docker/"
