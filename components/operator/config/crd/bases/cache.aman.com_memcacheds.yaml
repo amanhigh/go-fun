@@ -36,11 +36,13 @@ spec:
             description: MemcachedSpec defines the desired state of Memcached
             properties:
               containerPort:
+                default: 8443
                 description: Port defines the port that will be used to init the container
                   with the image
                 format: int32
                 type: integer
               size:
+                default: 2
                 description: 'Size defines the number of Memcached instances The following
                   markers will use OpenAPI v3 schema to validate the value More info:
                   https://book.kubebuilder.io/reference/markers/crd-validation.html'
