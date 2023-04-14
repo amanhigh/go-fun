@@ -37,8 +37,9 @@ do
             CACHE_PATH="${IMG%/*}"
             IMAGE_ID="${IMG##*/}"
             IMAGE_CACHE_PATH="$HOME/.minikube/cache/images/`uname -m`/$CACHE_PATH"
-            IMAGE_CACHE_FILE="$IMAGE_CACHE_PATH/$(echo $IMAGE_ID | sed 's/[-:]/_/g')"
-            
+            IMAGE_CACHE_FILE="$IMAGE_CACHE_PATH/$(echo $IMAGE_ID | sed 's/[:]/_/g')"
+            echo $IMAGE_CACHE_FILE
+
             if [ -f $IMAGE_CACHE_FILE ]; then
                 echo "\033[1;34m Skipping IMAGE: $IMG -> $IMAGE_CACHE_FILE\033[0m \n"
             else
