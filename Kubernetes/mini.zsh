@@ -34,10 +34,18 @@ do
 
         for IMG in `cat $MINI_CURRENT_BKP_FILE`
         do 
-            echo "\033[1;33m Caching Image: $IMG \033[0m \n"
-            CPATH="${IMG%:*}";
-            mkdir -p ~/.minikube/cache/images/$(uname -m)/$CPATH;
-            minikube image save --daemon $IMG
+            CACHE_PATH="${IMG%/*}"
+            IMAGE_ID="${IMG##*/}"
+            IMAGE_CACHE_PATH="$HOME/.minikube/cache/images/`uname -m`/$CACHE_PATH"
+            IMAGE_CACHE_FILE="$IMAGE_CACHE_PATH/$(echo $IMAGE_ID | sed 's/[-:]/_/g')"
+            
+            if [ -f $IMAGE_CACHE_FILE ]; then
+                echo "\033[1;34m Skipping IMAGE: $IMG -> $IMAGE_CACHE_FILE\033[0m \n"
+            else
+                echo "\033[1;33m Caching IMAGE: $IMG \033[0m \n"
+                mkdir -p $IMAGE_CACHE_PATH
+                minikube image save --daemon $IMG
+            fi
         done
         exit 0
         ;;
