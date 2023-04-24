@@ -57,7 +57,6 @@ do
             echo "\033[1;33m Loading Image: $IMG \033[0m \n"
             minikube image load --daemon $IMG
         done
-        exit 0
         ;;
 
     MINIKUBE)
