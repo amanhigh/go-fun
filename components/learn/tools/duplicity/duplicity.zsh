@@ -1,11 +1,11 @@
 # Generate GPG Key: gpg --gen-key
 # List GPG Keys: gpg --list-key
 ###### Export: 
-#PublicKey: gpg --output public.pgp --armor --export <email>
-#PrivateKey: gpg --output private.pgp --armor --export-secret-key <email>
+#PublicKey: gpg --output public.pgp --armor --export <email/id>
+#PrivateKey: gpg --output private.pgp --armor --export-secret-key <email/id>
 ###### Delete: 
-#PrivateKey: gpg --delete-secret-key <email> (Need to be done First)
-#PublicKey: gpg --delete-key <email>
+#PrivateKey: gpg --delete-secret-key <email/id> (Need to be done First)
+#PublicKey: gpg --delete-key <email/id>
 ###### Importing: 
 # gpg --import <key_file>
 # Trust Key (Enter 5 for ultimiate) , q to exit: : gpg --edit-key <key_id> trust
@@ -13,6 +13,13 @@
 # Trigger FullBackup if older than 5 Months: duplicity --full-if-older-than 5M /source/path file:///destination/path
 # Force Full: duplicity full  /source/path file:///destination/path
 # Force Incremental: duplicity incremental  /source/path file:///destination/path
+# TimeFormate: s, m, h, D, W, M, or Y (indicating seconds, minutes, hours, days, weeks, months, or years respectively)
+####### Exclusions:
+# Dry Run Testing with Verbosity 7 (max 9): --dry-run -v7
+# Exclude Directory (** Represents Base): --exclude=**/Code
+# Exclude Cache Only Under Code: **/Code/*Cache*
+# Exclude Cache Recursively Under Code: **/Code/**Cache**
+# Exclude workspaceStorage Recursively anywhere under Base: **workspaceStorage**
 ####### Restoration:
 # Environment Variable PASSPHRASE can be Set to avoid any PROMPTS on DECRYPTION or Verification.
 # Set Environment Variable without Logging it to History. 
@@ -35,7 +42,6 @@ duplicity --full-if-older-than 10s ../jq $BACKUP_FILE --encrypt-key=$KEY_ID
 
 echo "\033[1;34m Modifying Source \033[0m \n";
 echo "Test" > ../jq/test.txt
-
 
 echo "\033[1;32m Incremental Backup \033[0m \n";
 duplicity ../jq $BACKUP_FILE --encrypt-key=$KEY_ID
