@@ -20,6 +20,7 @@
 # Exclude Cache Only Under Code: **/Code/*Cache*
 # Exclude Cache Recursively Under Code: **/Code/**Cache**
 # Exclude workspaceStorage Recursively anywhere under Base: **workspaceStorage**
+# Exclude Locks ignore case: ignorecase:**/**lock**
 ####### Restoration:
 # Environment Variable PASSPHRASE can be Set to avoid any PROMPTS on DECRYPTION or Verification.
 # Set Environment Variable without Logging it to History. 
