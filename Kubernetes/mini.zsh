@@ -23,21 +23,30 @@ do
     BACKUP)
         # TODO: Handle None Tags
         [[ ! -f $MINI_BKP_FILE ]] && touch $MINI_BKP_FILE
-        minikube image ls | grep -v registry.k8s.io | grep -v none | tee $MINI_CURRENT_BKP_FILE
-        echo "\033[1;33m Backup Count: `wc -l $MINI_CURRENT_BKP_FILE` \033[0m \n"
+        minikube image ls | grep -v none | tee $MINI_CURRENT_BKP_FILE
+        echo "\033[1;33m MinkubeImage Count: `wc -l $MINI_CURRENT_BKP_FILE` \033[0m \n"
 
         
         # Append Image list to Master List
         cp $MINI_BKP_FILE /tmp/mini-bkp-old
         sort $MINI_CURRENT_BKP_FILE /tmp/mini-bkp-old | uniq | tee $MINI_BKP_FILE
-        echo "\033[1;33m Image Count: `wc -l $MINI_BKP_FILE` \033[0m \n"
+        echo "\033[1;33m MasterList Count: `wc -l $MINI_BKP_FILE` \033[0m \n"
 
         for IMG in `cat $MINI_CURRENT_BKP_FILE`
         do 
-            echo "\033[1;33m Caching Image: $IMG \033[0m \n"
-            CPATH="${IMG%:*}";
-            mkdir -p ~/.minikube/cache/images/$(uname -m)/$CPATH;
-            minikube image save --daemon $IMG
+            CACHE_PATH="${IMG%/*}"
+            IMAGE_ID="${IMG##*/}"
+            IMAGE_CACHE_PATH="$HOME/.minikube/cache/images/`uname -m`/$CACHE_PATH"
+            IMAGE_CACHE_FILE="$IMAGE_CACHE_PATH/$(echo $IMAGE_ID | sed 's/[:]/_/g')"
+            echo $IMAGE_CACHE_FILE
+
+            if [ -f $IMAGE_CACHE_FILE ]; then
+                echo "\033[1;34m Skipping IMAGE: $IMG -> $IMAGE_CACHE_FILE\033[0m \n"
+            else
+                echo "\033[1;33m Caching IMAGE: $IMG \033[0m \n"
+                mkdir -p $IMAGE_CACHE_PATH
+                minikube image save --daemon $IMG
+            fi
         done
         exit 0
         ;;
@@ -48,7 +57,6 @@ do
             echo "\033[1;33m Loading Image: $IMG \033[0m \n"
             minikube image load --daemon $IMG
         done
-        exit 0
         ;;
 
     MINIKUBE)

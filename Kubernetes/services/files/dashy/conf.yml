@@ -369,3 +369,5 @@ appConfig:
   iconSize: medium
   language: en
   statusCheckInterval: 20
+  webSearch:
+    searchEngine: google

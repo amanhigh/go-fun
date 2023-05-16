@@ -34,10 +34,12 @@ type MemcachedSpec struct {
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=3
 	// +kubebuilder:validation:ExclusiveMaximum=false
+	// +kubebuilder:default=2
 	Size int32 `json:"size,omitempty"`
 
 	// Port defines the port that will be used to init the container with the image
 	// +operator-sdk:csv:customresourcedefinitions:type=spec
+	// +kubebuilder:default=8443
 	ContainerPort int32 `json:"containerPort,omitempty"`
 }
 

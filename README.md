@@ -162,6 +162,8 @@ Eg.
 
 <br/> ![](common/images/fun-app/k8-service.gif)
 
+## Useful Commands
+* NoRemote - `git config branch.<branch-name>.remote no_push` disables push for a branch to prevent accidental push.
 
 ## TODO
 - Message Queue

@@ -1,5 +1,6 @@
 # helm repo add onechart https://chart.onechart.dev
 # helm repo add stakater https://stakater.github.io/stakater-charts
+# helm repo add bitnami https://charts.bitnami.com/bitnami
 
 # helm repo update
 # sudo kubefwd svc | awk '{ if($2 ~ /Port-Forward/) {print $0" URL: http://"$4"/"} else {print}}'

@@ -46,7 +46,6 @@ Project can be run in following ways
 This Includes extra tests which can't run on envtest as it simulates limited K8 Functions.
 
 
-
 ### Outside Cluster
 Run `make install run` to run without cluster.
 
@@ -66,21 +65,3 @@ You’ll need a Kubernetes cluster which can be local (kind/minikube) or remote.
 1. Remove Cluster:  `kubectl delete -f config/samples/cache_v1alpha1_memcached.yaml`
 2. Remove Operator and CRD's: `make undeploy`
 
-## Resources
-### Naming Convetions
-* API Group: <group>.<domain> eg. cache.aman.com
-* Resource: GroupVersionKind [GVK](https://book.kubebuilder.io/cronjob-tutorial/gvks.html). Eg.
-```
-    apiVersion: cache.aman.com/v1alpha1
-    kind: Memcached
-```
-* Spec: Golang Counterpart of Resource. Eg. `v1aplha1/Memcached`
-    * Fields: Fields in Spec should follow CamelCase. Can also be ommited when empty. Eg. ``json:"containerPort,omitempty"``
-
-### Markers
-Markers are Golang Comments/Tags which hint Kubebuilder Generator.
-* Kind: Type is a Kind `//+kubebuilder:object:root=true`
-* Group: Tags Go Package to hold & Generaet Kind Objects `+kubebuilder:object:generate=true`
-* [RBAC](https://book.kubebuilder.io/reference/markers/rbac.html): Generates [ClusterRole](config/rbac/role.yaml) for Controller & its Perms. `
-    * CRD: `//+kubebuilder:rbac:groups=cache.aman.com,resources=memcacheds,verbs=get;list;watch;create;update;patch;delete`. Permission can also be on subresource like `memcacheds/status, memcacheds/finalizers`
-    * Default Resources: `//+kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch`
