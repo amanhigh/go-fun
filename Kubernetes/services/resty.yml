@@ -44,3 +44,9 @@ ingress:
 #  tag: latest
 #  shell: "/bin/bash"
 #  command: "sleep infinity"
+
+# Shared Debug Directory between Main and Sidecar Containers
+# volumes:
+#   - name: preet
+#     path: /aman
+#     size: 1Gi
