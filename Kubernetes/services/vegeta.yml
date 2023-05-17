@@ -6,7 +6,7 @@ image:
 command: sleep 100000
 
 sidecar:
-  repository: digitalocean/doks-debug
+  repository: busybox
   tag: latest
-  shell: "/bin/bash"
+  shell: "/bin/sh"
   command: "sleep infinity"
