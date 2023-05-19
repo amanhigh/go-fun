@@ -26,7 +26,8 @@
     - ### Without Cluster
         - Unit Test: `make test` (*This will internally run generate and manifest targets as well.*)
         - #### Outside Cluster
-            - Runs Cluster in Local: `make install run`
+            - Place Certificates: `cp tls.crt tls.key /tmp/k8s-webhook-server/serving-certs`
+            - Runs Cluster in Local: `MEMCACHED_IMAGE=memcached:1.4.36-alpine make install run`
             - Install CRD: Create Custom Resources in Current Namespace.
 - ## Setup
     [Cheatsheet](https://sdk.operatorframework.io/docs/overview/cheat-sheet/)  -  [Layout](https://sdk.operatorframework.io/docs/overview/project-layout/)  
@@ -62,5 +63,20 @@
         - Push: `make docker-build docker-push` | Verify: `docker images`
         - Minkube Reload:  Added New Make Target to Build and Reload.
             `minikube-push` (Ensure **imagePullPolicy:IfNotPresent** is Set)  
+    - ##### WebHook
+        - This step Generates Default ( Mutating ) and Validating [Webhooks](https://sdk.operatorframework.io/docs/building-operators/golang/webhook/).
+        - #### Generate
+            - Default and Validation Hooks
+                `operator-sdk create webhook --group cache --version v1alpha1 --kind Memcached --defaulting --programmatic-validation`  
+            - Adds `.SetupWebhookWithManager` in main.go, [Webhooks](./api/v1alpha1/memcached_webhook.go) are implemented and [registered](./config/default/webhookcainjection_patch.yaml).
+            - It Generates [CertConfig](./config/certmanager/certificate.yaml), to generate two self signed certificates.
+            - Webhook [Server](./config/default/manager_webhook_patch.yaml) will listen on part `9443` behind Webhook [Service](./config/webhook/service.yaml) `443`
+        - Uncomment WebHook & CertManager (Not Required in [OLM](https://github.com/operator-framework/operator-sdk/issues/6257)) in [Default](./config/default/kustomization.yaml), [CRD](./config/crd/kustomization.yaml), [Manifest](./config/manifests/kustomization.yaml) [Kuztomize](https://book.kubebuilder.io/cronjob-tutorial/running-webhook.html#deploy-webhooks) Files
+        - Deploy Cert [Manager](https://cert-manager.io/docs/installation/)
+            `kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.11.0/cert-manager.yaml`  
+        - Rebuild: Push: `make docker-build docker-push` | Verify: `docker images`
+        - Setup with Cluster
+            - Verify: `kubectl get validatingwebhookconfigurations`
+            - Apply CRD: Verify Webhook Logs in `Operator` Pod
 - ### Rough Notes
     Temporary Notes Section
