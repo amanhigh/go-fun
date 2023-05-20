@@ -127,7 +127,7 @@ docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
 
 .PHONY: minikube-push
-minikube-push: docker-build
+minikube-push: docker-build ##Build Docker Image and load to Minikube.
 	eval $$(minikube docker-env) && minikube image load ${IMG}
 	@echo "Ensure imagePullPolicy:IfNotPresent is Set"
 
@@ -170,6 +170,16 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 .PHONY: undeploy
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
+
+##@ Cert Manager
+.PHONY: deploy-cert
+deploy-cert: ##Install Cert Manager
+	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.11.0/cert-manager.yaml
+
+.PHONY: undeploy-cert
+undeploy-cert: ##Uninstall Cert Manager
+	kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.11.0/cert-manager.yaml
+
 
 ##@ Build Dependencies
 

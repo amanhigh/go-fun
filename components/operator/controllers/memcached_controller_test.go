@@ -57,6 +57,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 		memcached *cachev1alpha1.Memcached
 		size      = int32(1)
+		port      = int32(8443)
 
 		typeNamespaceName = types.NamespacedName{Name: MemcachedName, Namespace: MemcachedName}
 		err               error
@@ -71,7 +72,8 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 				Namespace: namespace.Name,
 			},
 			Spec: cachev1alpha1.MemcachedSpec{
-				Size: size,
+				Size:          size,
+				ContainerPort: port,
 			},
 		}
 	})
@@ -178,7 +180,12 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 				})
 
 				It("should setup", func() {
+					By("Manager")
 					err = memcachedReconciler.SetupWithManager(mgr)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					By("Webhook")
+					err = memcached.SetupWebhookWithManager(mgr)
 					Expect(err).ShouldNot(HaveOccurred())
 				})
 
@@ -325,6 +332,30 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			})
 		})
 
+	})
+
+	Context("Webhook", func() {
+		Context("Create Validate", func() {
+			It("should succeed", func() {
+				err = memcached.ValidateCreate()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("should fail", func() {
+				memcached.Spec.ContainerPort = 7000
+				err = memcached.ValidateCreate()
+				Expect(err).Should(HaveOccurred())
+				Expect(err.Error()).Should(ContainSubstring("8000"))
+			})
+		})
+
+		Context("Defaulting", func() {
+			It("should set positive size", func() {
+				memcached.Spec.Size = -1
+				memcached.Default()
+				Expect(memcached.Spec.Size).To(BeEquivalentTo(1))
+			})
+		})
 	})
 
 	It("Should fail to create without namespace", func() {

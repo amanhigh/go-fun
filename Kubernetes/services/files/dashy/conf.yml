@@ -117,6 +117,10 @@ sections:
         description: Begining of AI Revolution
         icon: favicon
         url: https://chat.openai.com/
+      - title: Phind
+        description: Code AI Search Engine
+        icon: favicon
+        url: https://www.phind.com/
       - title: Pomadro
         description: For the procrastaning lazy self.
         icon: favicon

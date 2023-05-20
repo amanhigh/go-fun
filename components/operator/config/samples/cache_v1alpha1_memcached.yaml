@@ -1,7 +1,7 @@
 apiVersion: cache.aman.com/v1alpha1
 kind: Memcached
 metadata:
-  name: memcached-sample
+  name: memcached
 spec:
   # TODO(user): edit the following value to ensure the number
   # of Pods/Instances your Operand must have on cluster
