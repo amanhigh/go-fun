@@ -8,27 +8,29 @@
     
     More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)  
 - ## Deployment
-    This section details various ways to Run Operator and Test with and Without Cluster.  
-    - ### With Cluster
-        You’ll need a Kubernetes cluster which can be local (kind/minikube) or remote.  
-        - #### Setup
-            - Deploy Operator: Operator is deployed in *operator-system* Namespace.
-                `make deploy`  
-            - Install CRD: Create Custom Resources in Current Namespace.
-                `kubectl apply -f config/samples/cache_v1alpha1_memcached.yaml`  
-        - #### Cleanup: Remove Operator and CRD's:
-            `kubectl delete -f config/samples/cache_v1alpha1_memcached.yaml`  
-            `make undeploy`  
-        - #### Integration Testing
-            - Envtest has some [Limitation](https://book.kubebuilder.io/reference/envtest.html#namespace-usage-limitation) which are not there when Test on Cluster
-            - Run in *Test Suit Directory*
-                `export USE_EXISTING_CLUSTER=true && ginkgo .`  
-    - ### Without Cluster
-        - Unit Test: `make test` (*This will internally run generate and manifest targets as well.*)
-        - #### Outside Cluster
-            - Place Certificates: `cp tls.crt tls.key /tmp/k8s-webhook-server/serving-certs`
-            - Runs Cluster in Local: `MEMCACHED_IMAGE=memcached:1.4.36-alpine make install run`
-            - Install CRD: Create Custom Resources in Current Namespace.
+  This section details various ways to Run Operator and Test with and Without Cluster.  
+	- ### With Cluster
+	  You’ll need a Kubernetes cluster which can be local (kind/minikube) or remote.  
+		- #### Setup
+			- Deploy Cert Manager required for Webhooks.
+			  `make deploy-cert`  
+			- Deploy Operator: Operator is deployed in *operator-system* Namespace.
+			  `make deploy`  
+			- Install CRD: Create Custom Resources in Current Namespace.
+			  `kubectl apply -f config/samples/cache_v1alpha1_memcached.yaml`  
+		- #### Cleanup: Remove Operator and CRD's:
+		  `kubectl delete -f config/samples/cache_v1alpha1_memcached.yaml`  
+		  `make undeploy undeploy-cert`  
+		- #### Integration Testing
+			- Envtest has some [Limitation](https://book.kubebuilder.io/reference/envtest.html#namespace-usage-limitation) which are not there when Test on Cluster
+			- Run in *Test Suit Directory*
+			  `export USE_EXISTING_CLUSTER=true && ginkgo .`  
+	- ### Without Cluster
+		- Unit Test: `make test` (*This will internally run generate and manifest targets as well.*)
+		- #### Outside Cluster
+			- Place Certificates: `cp tls.crt tls.key /tmp/k8s-webhook-server/serving-certs`
+			- Runs Cluster in Local: `MEMCACHED_IMAGE=memcached:1.4.36-alpine make install run`
+			- Install CRD: Create Custom Resources in Current Namespace.
 - ## Setup
     [Cheatsheet](https://sdk.operatorframework.io/docs/overview/cheat-sheet/)  -  [Layout](https://sdk.operatorframework.io/docs/overview/project-layout/)  
     - ### Init
