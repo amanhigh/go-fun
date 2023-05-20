@@ -37,9 +37,16 @@ ingress:
 # vars:
 #   REDIS_HOSTS: "redis-master"
 
-#Debug Side Car: https://github.com/digitalocean/doks-debug
+#Debug/Troubleshoot Side Car: https://github.com/nicolaka/netshoot
+#Lightweight: busybox (https://boxmatrix.info/wiki/BusyBox-Commands)
 #sidecar:
-#  repository: digitalocean/doks-debug
+#  repository: nicolaka/netshoot
 #  tag: latest
 #  shell: "/bin/bash"
 #  command: "sleep infinity"
+
+# Shared Debug Directory between Main and Sidecar Containers
+# volumes:
+#   - name: preet
+#     path: /aman
+#     size: 1Gi
