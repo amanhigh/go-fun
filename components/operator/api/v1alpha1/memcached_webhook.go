@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -32,10 +34,7 @@ func (r *Memcached) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
-//+kubebuilder:webhook:path=/mutate-cache-aman-com-v1alpha1-memcached,mutating=true,failurePolicy=fail,sideEffects=None,groups=cache.aman.com,resources=memcacheds,verbs=create;update,versions=v1alpha1,name=mmemcached.kb.io,admissionReviewVersions=v1
-
+// +kubebuilder:webhook:path=/mutate-cache-aman-com-v1alpha1-memcached,mutating=true,failurePolicy=fail,sideEffects=None,groups=cache.aman.com,resources=memcacheds,verbs=create;update,versions=v1alpha1,name=mmemcached.kb.io,admissionReviewVersions=v1
 var _ webhook.Defaulter = &Memcached{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
@@ -46,16 +45,19 @@ func (r *Memcached) Default() {
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-//+kubebuilder:webhook:path=/validate-cache-aman-com-v1alpha1-memcached,mutating=false,failurePolicy=fail,sideEffects=None,groups=cache.aman.com,resources=memcacheds,verbs=create;update,versions=v1alpha1,name=vmemcached.kb.io,admissionReviewVersions=v1
-
+// +kubebuilder:webhook:path=/validate-cache-aman-com-v1alpha1-memcached,mutating=false,failurePolicy=fail,sideEffects=None,groups=cache.aman.com,resources=memcacheds,verbs=create;update,versions=v1alpha1,name=vmemcached.kb.io,admissionReviewVersions=v1
 var _ webhook.Validator = &Memcached{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *Memcached) ValidateCreate() error {
-	memcachedlog.Info("validate create", "name", r.Name)
+func (r *Memcached) ValidateCreate() (err error) {
+	memcachedlog.Info("validate create", "name", r.Name, "port", r.Spec.ContainerPort)
 
-	// TODO(user): fill in your validation logic upon object creation.
-	return nil
+	//Verify Container Port is in Right Range
+	if r.Spec.ContainerPort < 8000 {
+		err = fmt.Errorf("Memcached Port %d should be between 8000 and 10000", r.Spec.ContainerPort)
+	}
+
+	return
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type

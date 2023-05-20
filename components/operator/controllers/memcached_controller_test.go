@@ -57,6 +57,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 		memcached *cachev1alpha1.Memcached
 		size      = int32(1)
+		port      = int32(8443)
 
 		typeNamespaceName = types.NamespacedName{Name: MemcachedName, Namespace: MemcachedName}
 		err               error
@@ -71,7 +72,8 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 				Namespace: namespace.Name,
 			},
 			Spec: cachev1alpha1.MemcachedSpec{
-				Size: size,
+				Size:          size,
+				ContainerPort: port,
 			},
 		}
 	})
@@ -333,9 +335,18 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 	})
 
 	Context("Webhook", func() {
-		It("should validate create", func() {
-			err := memcached.ValidateCreate()
-			Expect(err).To(BeNil())
+		Context("Create Validate", func() {
+			It("should succeed", func() {
+				err = memcached.ValidateCreate()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("should fail", func() {
+				memcached.Spec.ContainerPort = 7000
+				err = memcached.ValidateCreate()
+				Expect(err).Should(HaveOccurred())
+				Expect(err.Error()).Should(ContainSubstring("8000"))
+			})
 		})
 	})
 
