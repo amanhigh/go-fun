@@ -348,6 +348,14 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 				Expect(err.Error()).Should(ContainSubstring("8000"))
 			})
 		})
+
+		Context("Defaulting", func() {
+			It("should set positive size", func() {
+				memcached.Spec.Size = -1
+				memcached.Default()
+				Expect(memcached.Spec.Size).To(BeEquivalentTo(1))
+			})
+		})
 	})
 
 	It("Should fail to create without namespace", func() {

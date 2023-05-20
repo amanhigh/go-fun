@@ -39,9 +39,11 @@ var _ webhook.Defaulter = &Memcached{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *Memcached) Default() {
-	memcachedlog.Info("default", "name", r.Name)
-
-	// TODO(user): fill in your defaulting logic.
+	memcachedlog.Info("Defaulting", "name", r.Name, "size", r.Spec.Size)
+	if r.Spec.Size < 0 {
+		r.Spec.Size = 1
+		memcachedlog.Info("Detected Negative Size Defaulting to 1")
+	}
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
