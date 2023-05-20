@@ -178,7 +178,12 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 				})
 
 				It("should setup", func() {
+					By("Manager")
 					err = memcachedReconciler.SetupWithManager(mgr)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					By("Webhook")
+					err = memcached.SetupWebhookWithManager(mgr)
 					Expect(err).ShouldNot(HaveOccurred())
 				})
 
@@ -325,6 +330,13 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			})
 		})
 
+	})
+
+	Context("Webhook", func() {
+		It("should validate create", func() {
+			err := memcached.ValidateCreate()
+			Expect(err).To(BeNil())
+		})
 	})
 
 	It("Should fail to create without namespace", func() {
