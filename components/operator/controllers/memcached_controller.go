@@ -369,24 +369,30 @@ func (r *MemcachedReconciler) deploymentForMemcached(
 							Type: corev1.SeccompProfileTypeRuntimeDefault,
 						},
 					},
-					Containers: []corev1.Container{{
-						Image:           image,
-						Name:            "memcached",
-						ImagePullPolicy: corev1.PullIfNotPresent,
-						// Ensure restrictive context for the container
-						// More info: https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted
-						SecurityContext: &corev1.SecurityContext{
-							RunAsNonRoot:             &[]bool{true}[0],
-							RunAsUser:                &[]int64{1001}[0],
-							AllowPrivilegeEscalation: &[]bool{false}[0],
-							Capabilities: &corev1.Capabilities{
-								Drop: []corev1.Capability{
-									"ALL",
+					Containers: []corev1.Container{
+						{
+							Image:           image,
+							Name:            "memcached",
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							// Ensure restrictive context for the container
+							// More info: https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted
+							SecurityContext: &corev1.SecurityContext{
+								RunAsNonRoot:             &[]bool{true}[0],
+								RunAsUser:                &[]int64{1001}[0],
+								AllowPrivilegeEscalation: &[]bool{false}[0],
+								Capabilities: &corev1.Capabilities{
+									Drop: []corev1.Capability{
+										"ALL",
+									},
 								},
 							},
+							Command: []string{"memcached", "-m=64", "modern", "-v"},
+						}, {
+							Image:   "busybox",
+							Name:    "sidecar",
+							Command: []string{"sleep", "infinity"},
 						},
-						Command: []string{"memcached", "-m=64", "modern", "-v"},
-					}},
+					},
 				},
 			},
 		},

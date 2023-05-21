@@ -46,7 +46,8 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 		waitTime = time.Minute
 		waitStep = time.Second
 
-		imageName = "example.com/image:test"
+		imageName    = "example.com/image:test"
+		sidecarImage = "busybox"
 
 		namespace = &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
@@ -234,6 +235,11 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 						Expect(deployment.Spec.Template.Labels).To(Equal(labelsForMemcached(memcached.Name)))
 						Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(Equal(imageName))
 						Expect(*deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsNonRoot).To(BeTrue())
+
+						By("Verifying Sidecar")
+						Expect(deployment.Spec.Template.Spec.Containers[1].Name).To(Equal("sidecar"))
+						Expect(deployment.Spec.Template.Spec.Containers[1].Image).To(Equal(sidecarImage))
+						Expect(deployment.Spec.Template.Spec.Containers[1].Command).To(ContainElement("sleep"))
 
 						// Check if the Memcached object is set as the owner of the Deployment object
 						Expect(deployment.ObjectMeta.OwnerReferences).To(ContainElement(metav1.OwnerReference{
