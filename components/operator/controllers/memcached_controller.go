@@ -388,7 +388,7 @@ func (r *MemcachedReconciler) deploymentForMemcached(
 							},
 							Command: []string{"memcached", "-m=64", "modern", "-v"},
 						}, {
-							Image:   "busybox",
+							Image:   memcached.Spec.SidecarImage,
 							Name:    "sidecar",
 							Command: []string{"sleep", "infinity"},
 						},

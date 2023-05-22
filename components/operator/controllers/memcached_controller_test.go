@@ -47,7 +47,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 		waitStep = time.Second
 
 		imageName    = "example.com/image:test"
-		sidecarImage = "busybox"
+		sidecarImage = "nicolaka/netshoot"
 
 		namespace = &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
@@ -75,6 +75,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			Spec: cachev1beta1.MemcachedSpec{
 				Size:          size,
 				ContainerPort: port,
+				SidecarImage:  sidecarImage,
 			},
 		}
 	})
