@@ -30,7 +30,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	cachev1alpha1 "github.com/amanhigh/go-fun/components/operator/api/v1alpha1"
+	cachev1beta1 "github.com/amanhigh/go-fun/components/operator/api/v1beta1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -62,8 +62,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = cachev1alpha1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
+	Expect(cachev1beta1.AddToScheme(scheme.Scheme)).ShouldNot(HaveOccurred())
 
 	//+kubebuilder:scaffold:scheme
 
