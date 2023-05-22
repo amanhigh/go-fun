@@ -20,26 +20,49 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // MemcachedSpec defines the desired state of Memcached
 type MemcachedSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Important: Run "make generate" to regenerate code after modifying this file
 
-	// Foo is an example field of Memcached. Edit memcached_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Size defines the number of Memcached instances
+	// The following markers will use OpenAPI v3 schema to validate the value
+	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=3
+	// +kubebuilder:validation:ExclusiveMaximum=false
+	// +kubebuilder:default=2
+	Size int32 `json:"size,omitempty"`
+
+	// Port defines the port that will be used to init the container with the image
+	// +operator-sdk:csv:customresourcedefinitions:type=spec
+	// +kubebuilder:default=8443
+	ContainerPort int32 `json:"containerPort,omitempty"`
+
+	// Sidecare Defines Image that would be loaded as Sidecar.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec
+	// +kubebuilder:default="busybox"
+	// +kubebuilder:validation:Enum=busybox;nicolaka/netshoot
+	SidecarImage string `json:"sidecarImage,omitempty"`
 }
 
 // MemcachedStatus defines the observed state of Memcached
 type MemcachedStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Represents the observations of a Memcached's current state.
+	// Memcached.status.conditions.type are: "Available", "Progressing", and "Degraded"
+	// Memcached.status.conditions.status are one of True, False, Unknown.
+	// Memcached.status.conditions.reason the value should be a CamelCase string and producers of specific
+	// condition types may define expected values and meanings for this field, and whether the values
+	// are considered a guaranteed API.
+	// Memcached.status.conditions.Message is a human readable message indicating details about the transition.
+	// For further information see: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:storageversion
 
 // Memcached is the Schema for the memcacheds API
 type Memcached struct {
