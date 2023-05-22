@@ -388,9 +388,20 @@ func (r *MemcachedReconciler) deploymentForMemcached(
 							},
 							Command: []string{"memcached", "-m=64", "modern", "-v"},
 						}, {
-							Image:   memcached.Spec.SidecarImage,
-							Name:    "sidecar",
-							Command: []string{"sleep", "infinity"},
+							Image:           memcached.Spec.SidecarImage,
+							Name:            "sidecar",
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							Command:         []string{"sleep", "infinity"},
+							SecurityContext: &corev1.SecurityContext{
+								RunAsNonRoot:             &[]bool{true}[0],
+								RunAsUser:                &[]int64{1001}[0],
+								AllowPrivilegeEscalation: &[]bool{false}[0],
+								Capabilities: &corev1.Capabilities{
+									Drop: []corev1.Capability{
+										"ALL",
+									},
+								},
+							},
 						},
 					},
 				},
