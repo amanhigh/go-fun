@@ -11,14 +11,14 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-cache-aman-com-v1alpha1-memcached
+      path: /mutate-cache-aman-com-v1beta1-memcached
   failurePolicy: Fail
   name: mmemcached.kb.io
   rules:
   - apiGroups:
     - cache.aman.com
     apiVersions:
-    - v1alpha1
+    - v1beta1
     operations:
     - CREATE
     - UPDATE
@@ -38,14 +38,14 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-cache-aman-com-v1alpha1-memcached
+      path: /validate-cache-aman-com-v1beta1-memcached
   failurePolicy: Fail
   name: vmemcached.kb.io
   rules:
   - apiGroups:
     - cache.aman.com
     apiVersions:
-    - v1alpha1
+    - v1beta1
     operations:
     - CREATE
     - UPDATE
