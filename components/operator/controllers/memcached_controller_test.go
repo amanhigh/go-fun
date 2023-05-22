@@ -34,6 +34,7 @@ import (
 
 	cachev1alpha1 "github.com/amanhigh/go-fun/components/operator/api/v1alpha1"
 	cachev1beta1 "github.com/amanhigh/go-fun/components/operator/api/v1beta1"
+	"github.com/amanhigh/go-fun/components/operator/common"
 	"github.com/amanhigh/go-fun/models"
 )
 
@@ -48,7 +49,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 		waitStep = time.Second
 
 		imageName    = "example.com/image:test"
-		sidecarImage = "nicolaka/netshoot"
+		sidecarImage = common.SIDECAR_IMAGE_NAME
 
 		namespace = &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
