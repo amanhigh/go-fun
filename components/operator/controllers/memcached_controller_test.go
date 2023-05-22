@@ -32,6 +32,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	cachev1alpha1 "github.com/amanhigh/go-fun/components/operator/api/v1alpha1"
 	cachev1beta1 "github.com/amanhigh/go-fun/components/operator/api/v1beta1"
 	"github.com/amanhigh/go-fun/models"
 )
@@ -107,6 +108,19 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			// be aware of the current delete namespace limitations. More info: https://book.kubebuilder.io/reference/envtest.html#testing-considerations
 			By("Deleting the Namespace to perform the tests")
 			_ = k8sClient.Delete(ctx, namespace)
+		})
+
+		Context("Conversion", func() {
+			It("should support alphav1", func() {
+				memcachedAlpha1 := &cachev1alpha1.Memcached{
+					ObjectMeta: memcached.ObjectMeta,
+					Spec:       cachev1alpha1.MemcachedSpec{},
+				}
+
+				Expect(k8sClient.Create(ctx, memcachedAlpha1)).To(Not(HaveOccurred()))
+				Expect(k8sClient.Delete(ctx, memcachedAlpha1)).To(Not(HaveOccurred()))
+				// TODO: Implement Reconcile for Older Versions
+			})
 		})
 
 		Context("Create Kind MemCached", func() {
