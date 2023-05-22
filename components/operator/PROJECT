@@ -4,42 +4,46 @@
 # More info: https://book.kubebuilder.io/reference/project-config.html
 domain: aman.com
 layout:
-- go.kubebuilder.io/v3
+  - go.kubebuilder.io/v3
 plugins:
   deploy-image.go.kubebuilder.io/v1-alpha:
     resources:
-    - domain: aman.com
-      group: cache
-      kind: Memcached
-      options:
-        containerCommand: memcached,-m=64,modern,-v
-        image: memcached:1.4.36-alpine
-        runAsUser: "1001"
-      version: v1alpha1
+      - domain: aman.com
+        group: cache
+        kind: Memcached
+        options:
+          containerCommand: memcached,-m=64,modern,-v
+          image: memcached:1.4.36-alpine
+          runAsUser: "1001"
+        version: v1alpha1
   manifests.sdk.operatorframework.io/v2: {}
   scorecard.sdk.operatorframework.io/v2: {}
 projectName: operator
 repo: github.com/amanhigh/go-fun/components/operator
 resources:
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: aman.com
-  group: cache
-  kind: Memcached
-  path: github.com/amanhigh/go-fun/components/operator/api/v1alpha1
-  version: v1alpha1
-  webhooks:
-    defaulting: true
-    validation: true
-    webhookVersion: v1
-- api:
-    crdVersion: v1
-    namespaced: true
-  domain: aman.com
-  group: cache
-  kind: Memcached
-  path: github.com/amanhigh/go-fun/components/operator/api/v1beta1
-  version: v1beta1
+  - api:
+      crdVersion: v1
+      namespaced: true
+    controller: true
+    domain: aman.com
+    group: cache
+    kind: Memcached
+    path: github.com/amanhigh/go-fun/components/operator/api/v1alpha1
+    version: v1alpha1
+    webhooks:
+      defaulting: true
+      validation: true
+      webhookVersion: v1
+  - api:
+      crdVersion: v1
+      namespaced: true
+    domain: aman.com
+    group: cache
+    kind: Memcached
+    path: github.com/amanhigh/go-fun/components/operator/api/v1beta1
+    version: v1beta1
+    webhooks:
+      defaulting: true
+      validation: true
+      webhookVersion: v1
 version: "3"
