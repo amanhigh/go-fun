@@ -34,4 +34,12 @@ resources:
     defaulting: true
     validation: true
     webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: aman.com
+  group: cache
+  kind: Memcached
+  path: github.com/amanhigh/go-fun/components/operator/api/v1beta1
+  version: v1beta1
 version: "3"
