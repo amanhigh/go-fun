@@ -141,12 +141,23 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 				Expect(k8sClient.Get(ctx, typeNamespaceName, memcached)).Should(Succeed())
 			})
 
-			It("should respect Max Size", func() {
-				// Update Memcached CR to have size greater than Max.
-				memcached.Spec.Size = int32(5)
-				err = k8sClient.Update(ctx, memcached)
-				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("spec.size"))
+			Context("Validations", func() {
+				It("should respect Max Size", func() {
+					// Update Memcached CR to have size greater than Max.
+					memcached.Spec.Size = int32(5)
+					err = k8sClient.Update(ctx, memcached)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("spec.size"))
+				})
+
+				It("should check SidecarImage", func() {
+					// Update Memcached CR to have size greater than Max.
+					memcached.Spec.SidecarImage = "invalidImage"
+					err = k8sClient.Update(ctx, memcached)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("supported values"))
+				})
+
 			})
 
 			Context("Reconcile", func() {
