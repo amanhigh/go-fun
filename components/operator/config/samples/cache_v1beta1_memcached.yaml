@@ -1,0 +1,14 @@
+apiVersion: cache.aman.com/v1beta1
+kind: Memcached
+metadata:
+  labels:
+    app.kubernetes.io/name: memcached
+    app.kubernetes.io/instance: memcached-sample
+    app.kubernetes.io/part-of: operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: operator
+  name: memcached-sample
+spec:
+  size: 2
+  containerPort: 8443
+  sidecarImage: "busybox"

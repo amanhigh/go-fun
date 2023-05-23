@@ -33,6 +33,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cachev1alpha1 "github.com/amanhigh/go-fun/components/operator/api/v1alpha1"
+	cachev1beta1 "github.com/amanhigh/go-fun/components/operator/api/v1beta1"
+	"github.com/amanhigh/go-fun/components/operator/common"
 	"github.com/amanhigh/go-fun/models"
 )
 
@@ -46,7 +48,8 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 		waitTime = time.Minute
 		waitStep = time.Second
 
-		imageName = "example.com/image:test"
+		imageName    = "example.com/image:test"
+		sidecarImage = common.SIDECAR_IMAGE_NAME
 
 		namespace = &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
@@ -55,7 +58,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			},
 		}
 
-		memcached *cachev1alpha1.Memcached
+		memcached *cachev1beta1.Memcached
 		size      = int32(1)
 		port      = int32(8443)
 
@@ -66,14 +69,15 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 	BeforeEach(func() {
 		// Let's mock our custom resource at the same way that we would
 		// apply on the cluster the manifest under config/samples
-		memcached = &cachev1alpha1.Memcached{
+		memcached = &cachev1beta1.Memcached{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      MemcachedName,
 				Namespace: namespace.Name,
 			},
-			Spec: cachev1alpha1.MemcachedSpec{
+			Spec: cachev1beta1.MemcachedSpec{
 				Size:          size,
 				ContainerPort: port,
+				SidecarImage:  sidecarImage,
 			},
 		}
 	})
@@ -107,6 +111,19 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			_ = k8sClient.Delete(ctx, namespace)
 		})
 
+		Context("Conversion", func() {
+			It("should support alphav1", func() {
+				memcachedAlpha1 := &cachev1alpha1.Memcached{
+					ObjectMeta: memcached.ObjectMeta,
+					Spec:       cachev1alpha1.MemcachedSpec{},
+				}
+
+				Expect(k8sClient.Create(ctx, memcachedAlpha1)).To(Not(HaveOccurred()))
+				Expect(k8sClient.Delete(ctx, memcachedAlpha1)).To(Not(HaveOccurred()))
+				// TODO: Implement Reconcile for Older Versions
+			})
+		})
+
 		Context("Create Kind MemCached", func() {
 
 			BeforeEach(func() {
@@ -124,12 +141,23 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 				Expect(k8sClient.Get(ctx, typeNamespaceName, memcached)).Should(Succeed())
 			})
 
-			It("should respect Max Size", func() {
-				// Update Memcached CR to have size greater than Max.
-				memcached.Spec.Size = int32(5)
-				err = k8sClient.Update(ctx, memcached)
-				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("spec.size"))
+			Context("Validations", func() {
+				It("should respect Max Size", func() {
+					// Update Memcached CR to have size greater than Max.
+					memcached.Spec.Size = int32(5)
+					err = k8sClient.Update(ctx, memcached)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("spec.size"))
+				})
+
+				It("should check SidecarImage", func() {
+					// Update Memcached CR to have size greater than Max.
+					memcached.Spec.SidecarImage = "invalidImage"
+					err = k8sClient.Update(ctx, memcached)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("supported values"))
+				})
+
 			})
 
 			Context("Reconcile", func() {
@@ -235,9 +263,14 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 						Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(Equal(imageName))
 						Expect(*deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsNonRoot).To(BeTrue())
 
+						By("Verifying Sidecar")
+						Expect(deployment.Spec.Template.Spec.Containers[1].Name).To(Equal("sidecar"))
+						Expect(deployment.Spec.Template.Spec.Containers[1].Image).To(Equal(sidecarImage))
+						Expect(deployment.Spec.Template.Spec.Containers[1].Command).To(ContainElement("sleep"))
+
 						// Check if the Memcached object is set as the owner of the Deployment object
 						Expect(deployment.ObjectMeta.OwnerReferences).To(ContainElement(metav1.OwnerReference{
-							APIVersion:         "cache.aman.com/v1alpha1",
+							APIVersion:         "cache.aman.com/v1beta1",
 							Kind:               "Memcached",
 							Name:               memcached.Name,
 							UID:                memcached.UID,

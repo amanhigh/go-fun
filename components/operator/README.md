@@ -65,7 +65,7 @@
         - Push: `make docker-build docker-push` | Verify: `docker images`
         - Minkube Reload:  Added New Make Target to Build and Reload.
             `minikube-push` (Ensure **imagePullPolicy:IfNotPresent** is Set)  
-    - ##### WebHook
+    - #### WebHook
         - This step Generates Default ( Mutating ) and Validating [Webhooks](https://sdk.operatorframework.io/docs/building-operators/golang/webhook/).
         - #### Generate
             - Default and Validation Hooks
@@ -80,5 +80,26 @@
         - Setup with Cluster
             - Verify: `kubectl get validatingwebhookconfigurations`
             - Apply CRD: Verify Webhook Logs in `Operator` Pod
+  - #### CRD Update
+    - Introduce new [Version](https://vincenthou.medium.com/how-to-create-conversion-webhook-for-my-operator-with-operator-sdk-36f5ee0170de#aec0) of CRD `v1beta1` which will make `sidecarImage` configurable.
+    - New Version`v1beta1`
+      - `operator-sdk create api --group cache --version v1beta1 --kind Memcached`
+      - Generates new Sample Spec, New Package [v1beta1](api/v1beta1) with Empty Types
+      - Implemented Empty Spec and Type.
+      - Marked v1beta1 Storage Version `//+kubebuilder:storageversion`.
+      - Regenerate: `make generate manifests`
+      - Updated Controller, Test to newer Version.
+    - Webhook
+      - Regenerate Webhook including Conversion: `operator-sdk create webhook --group cache --version v1beta1 --kind Memcached --defaulting --programmatic-validation --conversion`
+      - Implemented New [Webhooks](api/v1beta1/memcached_webhook.go) and did Regenerate.
+      - Deleted old Webhook for v1alpha1 as Conversion Hooks runs before Others.
+    - Conversion
+      - Added [memcache_version.go](api/v1beta1/memcached_conversion.go) to v1beta1 to make it Hub Version.
+      - Added [memcache_version.go](api/v1alpha1/memcached_conversion.go) to v1alpha1 to Implement Conversion methods.
+      - Deploy Older Version
+        ```
+        kubectl apply -f config/samples/cache_v1alpha1_memcached.yaml
+        kubectl delete -f config/samples/cache_v1alpha1_memcached.yaml
+        ```
 - ### Rough Notes
     Temporary Notes Section

@@ -36,7 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	cachev1alpha1 "github.com/amanhigh/go-fun/components/operator/api/v1alpha1"
+	cachev1beta1 "github.com/amanhigh/go-fun/components/operator/api/v1beta1"
 )
 
 const memcachedFinalizer = "cache.aman.com/finalizer"
@@ -86,7 +86,7 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// Fetch the Memcached instance
 	// The purpose is check if the Custom Resource for the Kind Memcached
 	// is applied on the cluster if not we return nil to stop the reconciliation
-	memcached := &cachev1alpha1.Memcached{}
+	memcached := &cachev1beta1.Memcached{}
 	if err = r.Get(ctx, req.NamespacedName, memcached); err != nil {
 		if apierrors.IsNotFound(err) {
 			// If the custom resource is not found then, it usually means that it was deleted or not created
@@ -286,7 +286,7 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 }
 
 // finalizeMemcached will perform the required operations before delete the CR.
-func (r *MemcachedReconciler) doFinalizerOperationsForMemcached(cr *cachev1alpha1.Memcached) {
+func (r *MemcachedReconciler) doFinalizerOperationsForMemcached(cr *cachev1beta1.Memcached) {
 	// TODO(user): Add the cleanup steps that the operator
 	// needs to do before the CR can be deleted. Examples
 	// of finalizers include performing backups and deleting
@@ -307,7 +307,7 @@ func (r *MemcachedReconciler) doFinalizerOperationsForMemcached(cr *cachev1alpha
 
 // deploymentForMemcached returns a Memcached Deployment object
 func (r *MemcachedReconciler) deploymentForMemcached(
-	memcached *cachev1alpha1.Memcached) (*appsv1.Deployment, error) {
+	memcached *cachev1beta1.Memcached) (*appsv1.Deployment, error) {
 	ls := labelsForMemcached(memcached.Name)
 	replicas := memcached.Spec.Size
 
@@ -369,24 +369,41 @@ func (r *MemcachedReconciler) deploymentForMemcached(
 							Type: corev1.SeccompProfileTypeRuntimeDefault,
 						},
 					},
-					Containers: []corev1.Container{{
-						Image:           image,
-						Name:            "memcached",
-						ImagePullPolicy: corev1.PullIfNotPresent,
-						// Ensure restrictive context for the container
-						// More info: https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted
-						SecurityContext: &corev1.SecurityContext{
-							RunAsNonRoot:             &[]bool{true}[0],
-							RunAsUser:                &[]int64{1001}[0],
-							AllowPrivilegeEscalation: &[]bool{false}[0],
-							Capabilities: &corev1.Capabilities{
-								Drop: []corev1.Capability{
-									"ALL",
+					Containers: []corev1.Container{
+						{
+							Image:           image,
+							Name:            "memcached",
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							// Ensure restrictive context for the container
+							// More info: https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted
+							SecurityContext: &corev1.SecurityContext{
+								RunAsNonRoot:             &[]bool{true}[0],
+								RunAsUser:                &[]int64{1001}[0],
+								AllowPrivilegeEscalation: &[]bool{false}[0],
+								Capabilities: &corev1.Capabilities{
+									Drop: []corev1.Capability{
+										"ALL",
+									},
+								},
+							},
+							Command: []string{"memcached", "-m=64", "modern", "-v"},
+						}, {
+							Image:           memcached.Spec.SidecarImage,
+							Name:            "sidecar",
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							Command:         []string{"sleep", "infinity"},
+							SecurityContext: &corev1.SecurityContext{
+								RunAsNonRoot:             &[]bool{true}[0],
+								RunAsUser:                &[]int64{1001}[0],
+								AllowPrivilegeEscalation: &[]bool{false}[0],
+								Capabilities: &corev1.Capabilities{
+									Drop: []corev1.Capability{
+										"ALL",
+									},
 								},
 							},
 						},
-						Command: []string{"memcached", "-m=64", "modern", "-v"},
-					}},
+					},
 				},
 			},
 		},
@@ -432,7 +449,7 @@ func imageForMemcached() (string, error) {
 // desirable state on the cluster
 func (r *MemcachedReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&cachev1alpha1.Memcached{}).
+		For(&cachev1beta1.Memcached{}).
 		//Inform Reconciler when any change happens in Owned Resources inculding deletion.
 		Owns(&appsv1.Deployment{}).
 		Complete(r)

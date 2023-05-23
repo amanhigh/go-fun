@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1beta1
 
 import (
 	"fmt"
@@ -34,7 +34,8 @@ func (r *Memcached) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-// +kubebuilder:webhook:path=/mutate-cache-aman-com-v1alpha1-memcached,mutating=true,failurePolicy=fail,sideEffects=None,groups=cache.aman.com,resources=memcacheds,verbs=create;update,versions=v1alpha1,name=mmemcached.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/mutate-cache-aman-com-v1beta1-memcached,mutating=true,failurePolicy=fail,sideEffects=None,groups=cache.aman.com,resources=memcacheds,verbs=create;update,versions=v1beta1,name=mmemcached.kb.io,admissionReviewVersions=v1
+
 var _ webhook.Defaulter = &Memcached{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
@@ -47,7 +48,8 @@ func (r *Memcached) Default() {
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// +kubebuilder:webhook:path=/validate-cache-aman-com-v1alpha1-memcached,mutating=false,failurePolicy=fail,sideEffects=None,groups=cache.aman.com,resources=memcacheds,verbs=create;update,versions=v1alpha1,name=vmemcached.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/validate-cache-aman-com-v1beta1-memcached,mutating=false,failurePolicy=fail,sideEffects=None,groups=cache.aman.com,resources=memcacheds,verbs=create;update,versions=v1beta1,name=vmemcached.kb.io,admissionReviewVersions=v1
+
 var _ webhook.Validator = &Memcached{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
