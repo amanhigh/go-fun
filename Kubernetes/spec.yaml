@@ -56,6 +56,10 @@ spec:
               mountPath: /var/log/mysql
         - name: sidecar
           image: nicolaka/netshoot #busybox
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "apk update; apk add mysql-client"]
           command: ["sleep", "infinity"]
           volumeMounts:
             - name: mysql-logs
