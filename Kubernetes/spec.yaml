@@ -1,0 +1,70 @@
+# Spec File to Understand Various entities and play with Kubernetes.
+# apiVersion: v1
+# kind: Namespace
+# metadata:
+#   name: default
+
+# ---
+
+# apiVersion: v1
+# kind: ServiceAccount
+# metadata:
+#   name: aman-sa
+#   namespace: default
+
+# Mysql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+spec:
+  clusterIP: None
+  selector:
+    app: mysql
+  ports:
+    - name: mysql
+      protocol: TCP
+      port: 3306
+      targetPort: 3306
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-logs
+              mountPath: /var/log/mysql
+        - name: busybox-sidecar
+          image: busybox
+          command: ["sleep", "infinity"]
+          volumeMounts:
+            - name: mysql-logs
+              mountPath: /mysql-logs
+      volumes:
+        - name: mysql-logs
+          emptyDir: {}
+
+      securityContext:
+        fsGroup: 999
+---
+
