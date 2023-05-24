@@ -54,8 +54,8 @@ spec:
           volumeMounts:
             - name: mysql-logs
               mountPath: /var/log/mysql
-        - name: busybox-sidecar
-          image: busybox
+        - name: sidecar
+          image: nicolaka/netshoot #busybox
           command: ["sleep", "infinity"]
           volumeMounts:
             - name: mysql-logs
