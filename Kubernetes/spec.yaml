@@ -46,16 +46,22 @@ spec:
       shareProcessNamespace: true #ps -a, pkill mysqld
       containers:
         - name: mysql
-          image: mysql
+          image: bitnami/mysql:latest
           env:
             - name: MYSQL_ROOT_PASSWORD
               value: root
+            - name: MYSQL_DATABASE
+              value: compute
+            - name: MYSQL_USER
+              value: aman
+            - name: MYSQL_PASSWORD
+              value: aman
           ports:
             - containerPort: 3306
           volumeMounts:
             - name: mysql-logs
               mountPath: /var/log/mysql
-        - name: sidecar
+        - name: sidecar #mysql -uaman -p -h 127.0.0.1
           image: nicolaka/netshoot #busybox
           lifecycle:
             postStart:
