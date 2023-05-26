@@ -43,6 +43,7 @@ spec:
       labels:
         app: mysql
     spec:
+      shareProcessNamespace: true #ps -a, pkill mysqld
       containers:
         - name: mysql
           image: mysql
