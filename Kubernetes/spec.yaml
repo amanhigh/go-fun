@@ -67,7 +67,7 @@ spec:
             postStart:
               exec:
                 command: ["/bin/sh", "-c", "apk update; apk add mysql-client"]
-          command: ["sleep", "infinity"]
+          command: ["sleep", "infinity"] #sh -c 'if pgrep mysqld >/dev/null 2>&1; then echo "MySQL process is running"; else echo "MySQL process is not running"; fi'
           volumeMounts:
             - name: mysql-logs
               mountPath: /mysql-logs
