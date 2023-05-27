@@ -4,6 +4,8 @@ pageInfo:
   navLinks:
     - title: GitHub
       path: https://github.com/amanhigh/go-fun
+    - title: Sync
+      path: http://localhost:8384/#
 sections:
   - name: Entertainment
     icon: mdi-palette
