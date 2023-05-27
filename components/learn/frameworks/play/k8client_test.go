@@ -125,6 +125,33 @@ var _ = Describe("K8client", Label(models.GINKGO_SETUP), func() {
 					return *deployment.Spec.Replicas
 				}, waitTime).Should(Equal(size))
 			})
+
+			Context("Resize Deployment", func() {
+				var (
+					newSize = size + 1
+				)
+				BeforeEach(func() {
+					By("Resizing MySQL deployment...")
+					// Modify the deployment to set the replicas to 2
+					deployment.Spec.Replicas = &newSize
+
+					// Create the deployment with 2 replicas
+					_, err = deploymentsClient.Update(context.Background(), deployment, metav1.UpdateOptions{})
+
+					Expect(err).ShouldNot(HaveOccurred())
+				})
+
+				It("should work", func() {
+					// Wait for the deployment to reach the expected size
+					Eventually(func() int32 {
+						deployment, err := deploymentsClient.Get(context.Background(), deploymentName, metav1.GetOptions{})
+						Expect(err).ShouldNot(HaveOccurred())
+						return deployment.Status.Replicas
+					}, waitTime).Should(Equal(newSize))
+
+				})
+
+			})
 		})
 	})
 })
