@@ -28,8 +28,8 @@ for file in "$whisper_dir"/*.m4a; do
         whisper "$file" --output_format txt -o $whisper_dir --language en >/dev/null 2>/dev/null;
         
         #Append Note
-        echo "\n- VoiceNote: $time" >> $journal_path;
-        cat $whisper_output >> $journal_path
+        echo "\n- #voicenote $time" >> $journal_path;
+        sed '1s/^/\t- /; /\.$/{n;s/^/\t- /}' $whisper_output >> $journal_path
 
         #Remove Converted File
         rm $file $whisper_output

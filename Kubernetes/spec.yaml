@@ -1,0 +1,81 @@
+# Spec File to Understand Various entities and play with Kubernetes.
+# apiVersion: v1
+# kind: Namespace
+# metadata:
+#   name: default
+
+# ---
+
+# apiVersion: v1
+# kind: ServiceAccount
+# metadata:
+#   name: aman-sa
+#   namespace: default
+
+# Mysql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+spec:
+  clusterIP: None
+  selector:
+    app: mysql
+  ports:
+    - name: mysql
+      protocol: TCP
+      port: 3306
+      targetPort: 3306
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      shareProcessNamespace: true #ps -a, pkill mysqld
+      containers:
+        - name: mysql
+          image: bitnami/mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+            - name: MYSQL_DATABASE
+              value: compute
+            - name: MYSQL_USER
+              value: aman
+            - name: MYSQL_PASSWORD
+              value: aman
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-logs
+              mountPath: /var/log/mysql
+        - name: sidecar #mysql -uaman -p -h 127.0.0.1
+          image: nicolaka/netshoot #busybox
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "apk update; apk add mysql-client"]
+          command: ["sleep", "infinity"] #sh -c 'if pgrep mysqld >/dev/null 2>&1; then echo "MySQL process is running"; else echo "MySQL process is not running"; fi'
+          volumeMounts:
+            - name: mysql-logs
+              mountPath: /mysql-logs
+      volumes:
+        - name: mysql-logs
+          emptyDir: {}
+
+      securityContext:
+        fsGroup: 999
+---
+
