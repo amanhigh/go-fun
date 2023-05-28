@@ -1,3 +1,4 @@
+# https://artifacthub.io/packages/helm/jaegertracing/jaeger
 query:
   ingress:
     enabled: true
@@ -8,3 +9,4 @@ query:
       traefik.ingress.kubernetes.io/router.entrypoints: web
     hosts:
       - jaeger.docker
+nameOverride: "aman"

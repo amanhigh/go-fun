@@ -44,6 +44,6 @@ spec:
       enabled: true
       # Jaeger service name is "jaeger-query" and is in the "default" namespace.
       use_grpc: true #Give GRPC endpoint below
-      in_cluster_url: "http://jaeger-query.default:16685/jaeger"
+      in_cluster_url: "http://jaeger-aman-query.default:16685/jaeger"
       # Public facing URL of Jaeger
       url: "http://jaeger.docker/"
