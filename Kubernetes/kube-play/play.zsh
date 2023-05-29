@@ -39,6 +39,20 @@ case $REPLY in
         echo "\033[1;33m Kill DB from Sidecar \033[0m \n";
         kubectl exec -it $(kubectl get pods -l app=mysql -o jsonpath='{.items[0].metadata.name}') -c sidecar -- sh -c 'pkill mysqld'
         ;;
+    stateful.yml)
+        echo "\033[1;32m Deploying Nginx with Stateful Set \033[0m \n";
+        $SELECTED_CMD $REPLY
+        echo "\033[1;33m Show Stateful Sets \033[0m \n";
+        kubectl get statefulset -l app=nginx
+        echo "\033[1;33m Show Headless Service (No Cluster IP) \033[0m \n";
+        kubectl get service -l app=nginx
+        echo "\033[1;33m Show Pods \033[0m \n";
+        kubectl get pods -l app=nginx
+        echo "\033[1;33m Host Names \033[0m \n";
+        for i in 0 1 2; do kubectl exec "nginx-statefulset-$i" -- sh -c 'hostname'; done
+        echo "\033[1;33m Deploying Sidecar \033[0m \n";
+        #kubectl run -i --tty --image busybox:1.28 dns-test --restart=Never --rm
+        ;;
     *)
         echo "Invalid option selected."
         ;;
