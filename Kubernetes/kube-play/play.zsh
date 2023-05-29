@@ -48,10 +48,30 @@ case $REPLY in
         kubectl get service -l app=nginx
         echo "\033[1;33m Show Pods \033[0m \n";
         kubectl get pods -l app=nginx
+        echo "\033[1;33m Volume Claims \033[0m \n";
+        kubectl get pvc -l app=nginx
         echo "\033[1;33m Host Names \033[0m \n";
-        for i in 0 1 2; do kubectl exec "nginx-statefulset-$i" -- sh -c 'hostname'; done
+        for i in 0 1 2; do kubectl exec -c nginx "nginx-statefulset-$i" -- sh -c 'hostname'; done
         echo "\033[1;33m Deploying Sidecar \033[0m \n";
-        #kubectl run -i --tty --image busybox:1.28 dns-test --restart=Never --rm
+        #Debug Sidecar attach: kubectl run -i --tty --image busybox:1.28 debug --restart=Never --rm
+        # kubectl exec -it nginx-statefulset-0 -c sidecar -- sh -c 'nslookup nginx-statefulset-0'
+        echo "\033[1;33m Delete Pod \033[0m \n";
+        gum confirm "Delete Pods?" --timeout=5s --default="No" && kubectl delete pod -l app=nginx && sleep 20
+
+        echo "\033[1;33m Host Names (Same Post Delete) \033[0m \n";
+        for i in 0 1 2; do kubectl exec -c nginx "nginx-statefulset-$i" -- sh -c 'hostname'; done
+        
+        echo "\033[1;33m Scale from 3 to 5 \033[0m \n";
+        gum confirm "Scale Up?" --timeout=5s --default="No" && kubectl scale sts nginx-statefulset --replicas=5 && sleep 5
+        
+        echo "\033[1;33m Show Pods (Post Scaling Up) \033[0m \n";
+        kubectl get pods -l app=nginx
+
+        echo "\033[1;33m Scale from 5 to 2 \033[0m \n";
+        gum confirm "Scale Down?" --timeout=5s --default="No" && kubectl patch sts nginx-statefulset -p '{"spec":{"replicas":2}}' && sleep 15
+        
+        echo "\033[1;33m Show Pods (Post Scaling Down) \033[0m \n";
+        kubectl get pods -l app=nginx
         ;;
     *)
         echo "Invalid option selected."
