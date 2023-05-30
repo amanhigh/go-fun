@@ -17,9 +17,9 @@
 			- Deploy Operator: Operator is deployed in *operator-system* Namespace.
 			  `make deploy`  
 			- Install CRD: Create Custom Resources in Current Namespace.
-			  `kubectl apply -f config/samples/cache_v1alpha1_memcached.yaml`  
+			  `kubectl apply -f config/samples/cache_v1beta1_memcached.yaml`  
 		- #### Cleanup: Remove Operator and CRD's:
-		  `kubectl delete -f config/samples/cache_v1alpha1_memcached.yaml`  
+		  `kubectl delete -f config/samples/cache_v1beta1_memcached.yaml`  
 		  `make undeploy undeploy-cert`  
 		- #### Integration Testing
 			- Envtest has some [Limitation](https://book.kubebuilder.io/reference/envtest.html#namespace-usage-limitation) which are not there when Test on Cluster
