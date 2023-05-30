@@ -48,7 +48,7 @@ func (r *Memcached) Default() {
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-//+kubebuilder:webhook:path=/validate-cache-aman-com-v1beta1-memcached,mutating=false,failurePolicy=fail,sideEffects=None,groups=cache.aman.com,resources=memcacheds,verbs=create;update,versions=v1beta1,name=vmemcached.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/validate-cache-aman-com-v1beta1-memcached,mutating=false,failurePolicy=fail,sideEffects=None,groups=cache.aman.com,resources=memcacheds,verbs=create;update;delete,versions=v1beta1,name=vmemcached.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &Memcached{}
 
@@ -76,9 +76,10 @@ func (r *Memcached) ValidateUpdate(old runtime.Object) (err error) {
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *Memcached) ValidateDelete() error {
+func (r *Memcached) ValidateDelete() (err error) {
 	memcachedlog.Info("validate delete", "name", r.Name)
-
-	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	if r.Labels["type"] == "critical" {
+		err = fmt.Errorf("Cannot delete pod %s because it is marked critical", r.Name)
+	}
+	return
 }

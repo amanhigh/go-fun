@@ -399,6 +399,22 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			})
 		})
 
+		Context("Delete Validate", func() {
+			It("should succeed", func() {
+				err = memcached.ValidateDelete()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("should fail for wrong port", func() {
+				memcached.Labels = map[string]string{
+					"type": "critical",
+				}
+				err = memcached.ValidateDelete()
+				Expect(err).Should(HaveOccurred())
+				Expect(err.Error()).Should(ContainSubstring("critical"))
+			})
+		})
+
 		Context("Defaulting", func() {
 			It("should set positive size", func() {
 				memcached.Spec.Size = -1
