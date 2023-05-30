@@ -374,9 +374,26 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 				Expect(err).ShouldNot(HaveOccurred())
 			})
 
-			It("should fail", func() {
+			It("should fail for wrong port", func() {
 				memcached.Spec.ContainerPort = 7000
 				err = memcached.ValidateCreate()
+				Expect(err).Should(HaveOccurred())
+				Expect(err.Error()).Should(ContainSubstring("8000"))
+			})
+		})
+
+		Context("Update Validate", func() {
+			var (
+				oldMemcached = &cachev1alpha1.Memcached{}
+			)
+			It("should succeed", func() {
+				err = memcached.ValidateUpdate(oldMemcached)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("should fail for wrong port", func() {
+				memcached.Spec.ContainerPort = 7000
+				err = memcached.ValidateUpdate(oldMemcached)
 				Expect(err).Should(HaveOccurred())
 				Expect(err.Error()).Should(ContainSubstring("8000"))
 			})
