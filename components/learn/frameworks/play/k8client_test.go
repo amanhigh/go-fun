@@ -5,14 +5,18 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/amanhigh/go-fun/components/operator/api/v1beta1"
 	"github.com/amanhigh/go-fun/models"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	v1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
@@ -24,6 +28,7 @@ var _ = Describe("K8client", Label(models.GINKGO_SETUP), func() {
 		err        error
 		clientset  *kubernetes.Clientset
 		waitTime   = time.Second * 30
+		namespace  = "default"
 	)
 
 	Context("using Config", func() {
@@ -42,7 +47,6 @@ var _ = Describe("K8client", Label(models.GINKGO_SETUP), func() {
 		Context("Deployment Create", func() {
 			var (
 				size              = int32(1)
-				namespace         = "default"
 				deploymentName    = "mysql-deployment"
 				deploymentsClient v1.DeploymentInterface
 			)
@@ -105,7 +109,6 @@ var _ = Describe("K8client", Label(models.GINKGO_SETUP), func() {
 
 			BeforeEach(func() {
 				deploymentsClient = clientset.AppsV1().Deployments(namespace)
-
 				By("Creating MySQL deployment...")
 				_, err = deploymentsClient.Create(context.Background(), deployment, metav1.CreateOptions{})
 				Expect(err).ShouldNot(HaveOccurred())
@@ -152,6 +155,24 @@ var _ = Describe("K8client", Label(models.GINKGO_SETUP), func() {
 				})
 
 			})
+		})
+	})
+
+	FContext("using KubeConfig", func() {
+		var (
+			r client.Client
+			// name      = " memcached-sample"
+			// memcached = &v1beta1.Memcached{}
+		)
+		BeforeEach(func() {
+			config := config.GetConfigOrDie()
+			v1beta1.AddToScheme(scheme.Scheme)
+			r, err = client.New(config, client.Options{Scheme: scheme.Scheme})
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		It("should build", func() {
+			Expect(r).ShouldNot(BeNil())
 		})
 	})
 })
