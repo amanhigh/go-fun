@@ -123,6 +123,10 @@ sections:
         description: Code AI Search Engine
         icon: favicon
         url: https://www.phind.com/
+      - title: Bing
+        description: Bing Engine with GPT4
+        icon: favicon
+        url: https://www.bing.com/search?q=Bing+AI&showconv=1
       - title: Pomadro
         description: For the procrastaning lazy self.
         icon: favicon

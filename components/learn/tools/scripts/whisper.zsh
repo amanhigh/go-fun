@@ -25,7 +25,7 @@ for file in "$whisper_dir"/*.m4a; do
 
         #Convert Note
         echo "\033[1;32m JournalName: $journal_name Time: $time  \033[0m \n";
-        whisper "$file" --output_format txt -o $whisper_dir --language en >/dev/null 2>/dev/null;
+        whisper "$file" --output_format txt -o $whisper_dir --language en --model medium.en >/dev/null 2>/dev/null;
         
         #Append Note
         echo "\n- #voicenote $time" >> $journal_path;

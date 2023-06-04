@@ -24,6 +24,7 @@ var _ = Describe("K8client", Label(models.GINKGO_SETUP), func() {
 		err        error
 		clientset  *kubernetes.Clientset
 		waitTime   = time.Second * 30
+		namespace  = "default"
 	)
 
 	Context("using Config", func() {
@@ -42,7 +43,6 @@ var _ = Describe("K8client", Label(models.GINKGO_SETUP), func() {
 		Context("Deployment Create", func() {
 			var (
 				size              = int32(1)
-				namespace         = "default"
 				deploymentName    = "mysql-deployment"
 				deploymentsClient v1.DeploymentInterface
 			)
@@ -105,7 +105,6 @@ var _ = Describe("K8client", Label(models.GINKGO_SETUP), func() {
 
 			BeforeEach(func() {
 				deploymentsClient = clientset.AppsV1().Deployments(namespace)
-
 				By("Creating MySQL deployment...")
 				_, err = deploymentsClient.Create(context.Background(), deployment, metav1.CreateOptions{})
 				Expect(err).ShouldNot(HaveOccurred())
