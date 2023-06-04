@@ -161,8 +161,6 @@ var _ = Describe("K8client", Label(models.GINKGO_SETUP), func() {
 	FContext("using KubeConfig", func() {
 		var (
 			r client.Client
-			// name      = " memcached-sample"
-			// memcached = &v1beta1.Memcached{}
 		)
 		BeforeEach(func() {
 			config := config.GetConfigOrDie()
@@ -173,6 +171,25 @@ var _ = Describe("K8client", Label(models.GINKGO_SETUP), func() {
 
 		It("should build", func() {
 			Expect(r).ShouldNot(BeNil())
+		})
+		Context("Create", func() {
+			BeforeEach(func() {
+				//Create Memcached Here
+			})
+
+			AfterEach(func() {
+				//Delete Memcached here
+			})
+
+			It("should get Memcached", func() {
+				name := "memcached-sample"
+				memcached := &v1beta1.Memcached{}
+				err = r.Get(context.Background(), client.ObjectKey{
+					Namespace: namespace,
+					Name:      name,
+				}, memcached)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
 		})
 	})
 })
