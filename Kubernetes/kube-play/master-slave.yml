@@ -50,4 +50,41 @@ spec:
             name: mysql-config
         - name: mysql-logs
           emptyDir: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-slave-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-slave
+  template:
+    metadata:
+      labels:
+        app: mysql-slave
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:5.7
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+          ports:
+            - containerPort: 3306
+          securityContext:
+            runAsUser: 100
+          volumeMounts:
+            - name: mysql-slave-config
+              mountPath: /etc/mysql/mysql.conf.d/master.cnf
+              subPath: master.cnf
+            - name: mysql-slave-logs
+              mountPath: /var/log/mysql
+      volumes:
+        - name: mysql-slave-config
+          configMap:
+            name: mysql-config
+        - name: mysql-slave-logs
+          emptyDir: {}
 
