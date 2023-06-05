@@ -1,3 +1,20 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+  labels:
+    app: mysql
+spec:
+  clusterIP: None
+  selector:
+    app: mysql
+  ports:
+    - name: mysql
+      protocol: TCP
+      port: 3306
+      targetPort: 3306
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,6 +24,9 @@ data:
     [mysqld]
     server-id               = 1
     log_bin                 = /var/log/mysql/mysql-bin.log
+  slave.cnf: |
+    [mysqld]
+    server-id               = 2
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -78,7 +98,7 @@ spec:
           volumeMounts:
             - name: mysql-slave-config
               mountPath: /etc/mysql/mysql.conf.d/master.cnf
-              subPath: master.cnf
+              subPath: slave.cnf
             - name: mysql-slave-logs
               mountPath: /var/log/mysql
       volumes:
@@ -87,4 +107,3 @@ spec:
             name: mysql-config
         - name: mysql-slave-logs
           emptyDir: {}
-
