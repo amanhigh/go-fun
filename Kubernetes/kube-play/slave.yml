@@ -1,0 +1,82 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-slave-service
+  labels:
+    app: mysql-slave
+spec:
+  clusterIP: None
+  selector:
+    app: mysql-slave
+  ports:
+    - name: mysql-slave
+      protocol: TCP
+      port: 3306
+      targetPort: 3306
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-slave-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-slave
+  template:
+    metadata:
+      labels:
+        app: mysql-slave
+    spec:
+      shareProcessNamespace: true
+      containers:
+        - name: mysql
+          image: bitnami/mysql:latest
+          env:
+            - name: MYSQL_REPLICATION_MODE
+              value: slave
+            - name: MYSQL_REPLICATION_USER
+              value: aman
+            - name: MYSQL_REPLICATION_PASSWORD
+              value: aman
+            - name: MYSQL_MASTER_HOST
+              value: mysql-service
+          ports:
+            - containerPort: 3306
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          volumeMounts:
+            - name: mysql-slave-logs
+              mountPath: /var/log/mysql
+        - name: sidecar
+          image: nicolaka/netshoot #busybox
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "apk update; apk add mysql-client"]
+          command: ["sleep", "infinity"]
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          volumeMounts:
+            - name: mysql-slave-logs
+              mountPath: /mysql-logs
+      volumes:
+        - name: mysql-slave-logs
+          emptyDir: {}
+
+      securityContext:
+        fsGroup: 999
+---
+
