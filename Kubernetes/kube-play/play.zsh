@@ -51,6 +51,16 @@ case $REPLY in
         echo "\033[1;33m Slave Status (Seconds_Behind_Master,Last_IO_Error) \033[0m \n";
         kubectl exec -it $(kubectl get pods -l app=mysql-slave -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "SHOW SLAVE STATUS\G;"'
         ;;
+    master-slave.yml)
+        echo "\033[1;32m Master/Slave Cluster using Vanila Mysql \033[0m \n";
+        $SELECTED_CMD $REPLY
+        echo "\033[1;33m Show Databases \033[0m \n";
+        kubectl exec -it $(kubectl get pods -l app=mysql -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "show databases;"'
+        echo "\033[1;33m Master \033[0m \n";
+        kubectl exec -it $(kubectl get pods -l app=mysql -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "SHOW MASTER STATUS\G;"'
+        # echo "\033[1;33m Slave Status (Seconds_Behind_Master,Last_IO_Error) \033[0m \n";
+        # kubectl exec -it $(kubectl get pods -l app=mysql-slave -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "SHOW SLAVE STATUS\G;"'
+        ;;
     stateful.yml)
         echo "\033[1;32m Deploying Nginx with Stateful Set \033[0m \n";
         $SELECTED_CMD $REPLY
