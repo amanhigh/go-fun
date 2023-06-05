@@ -37,12 +37,16 @@ spec:
           env:
             - name: MYSQL_REPLICATION_MODE
               value: slave
+            - name: MYSQL_MASTER_ROOT_PASSWORD
+              value: root
             - name: MYSQL_REPLICATION_USER
-              value: aman
+              value: copy
             - name: MYSQL_REPLICATION_PASSWORD
-              value: aman
+              value: copy
             - name: MYSQL_MASTER_HOST
               value: mysql-service
+            - name: MYSQL_MASTER_PORT_NUMBER
+              value: "3306"
           ports:
             - containerPort: 3306
           resources:

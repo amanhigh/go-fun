@@ -57,6 +57,12 @@ spec:
               value: aman
             - name: MYSQL_PASSWORD
               value: aman
+            - name: MYSQL_REPLICATION_MODE
+              value: master
+            - name: MYSQL_REPLICATION_USER
+              value: copy
+            - name: MYSQL_REPLICATION_PASSWORD
+              value: copy
           ports:
             - containerPort: 3306
           resources:
