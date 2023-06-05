@@ -48,7 +48,7 @@ case $REPLY in
         kubectl get service -l app=mysql-slave
         echo "\033[1;33m Show Databases \033[0m \n";
         kubectl exec -it $(kubectl get pods -l app=mysql-slave -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "show databases;"'
-        echo "\033[1;33m Slave Status (Seconds_Behind_Master) \033[0m \n";
+        echo "\033[1;33m Slave Status (Seconds_Behind_Master,Last_IO_Error) \033[0m \n";
         kubectl exec -it $(kubectl get pods -l app=mysql-slave -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "SHOW SLAVE STATUS\G;"'
         ;;
     stateful.yml)
