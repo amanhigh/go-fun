@@ -10,10 +10,16 @@ APPLY_CMD="$KUBE_CMD apply -f"
 DELETE_CMD="$KUBE_CMD delete -f"
 SELECTED_CMD=$APPLY_CMD
 CREATE=0
+VERBOSE=0
 
 if [ "$2" = "-d" ]; then
   echo "\033[1;31m DELETING: $REPLY \033[0m \n";
   SELECTED_CMD=$DELETE_CMD
+elif [ "$2" = "-v" ]; then
+  echo "\033[1;33m Verbose Mode \033[0m"
+  VERBOSE=1
+else
+  $SELECTED_CMD
 fi
 
 case $REPLY in
@@ -44,22 +50,27 @@ case $REPLY in
     slave.yml)
         echo "\033[1;32m Deploying Mysql Slave pointing to mysql-service \033[0m \n";
         $SELECTED_CMD $REPLY
-        echo "\033[1;33m Show Services \033[0m \n";
-        kubectl get service -l app=mysql-slave
-        echo "\033[1;33m Show Databases \033[0m \n";
-        kubectl exec -it $(kubectl get pods -l app=mysql-slave -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "show databases;"'
-        echo "\033[1;33m Slave Status (Seconds_Behind_Master,Last_IO_Error) \033[0m \n";
-        kubectl exec -it $(kubectl get pods -l app=mysql-slave -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "SHOW SLAVE STATUS\G;"'
+        if [[ "$VERBOSE" = "1" ]]; then
+            echo "\033[1;33m Show Services \033[0m \n";
+            kubectl get service -l app=mysql-slave
+            echo "\033[1;33m Show Databases \033[0m \n";
+            kubectl exec -it $(kubectl get pods -l app=mysql-slave -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "show databases;"'
+            echo "\033[1;33m Slave Status (Seconds_Behind_Master,Last_IO_Error) \033[0m \n";
+            kubectl exec -it $(kubectl get pods -l app=mysql-slave -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "SHOW SLAVE STATUS\G;"'
+        fi
         ;;
     master-slave.yml)
         echo "\033[1;32m Master/Slave Cluster using Vanila Mysql \033[0m \n";
         $SELECTED_CMD $REPLY
-        echo "\033[1;33m Show Databases \033[0m \n";
-        kubectl exec -it $(kubectl get pods -l app=mysql -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "show databases;"'
-        echo "\033[1;33m Master \033[0m \n";
-        kubectl exec -it $(kubectl get pods -l app=mysql -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "SHOW MASTER STATUS\G;"'
-        echo "\033[1;33m Slave Status (Seconds_Behind_Master,Last_IO_Error) \033[0m \n";
-        kubectl exec -it $(kubectl get pods -l app=mysql-slave -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "SHOW SLAVE STATUS\G;"'
+        if [[ "$VERBOSE" = "1" ]]; then
+            echo "\033[1;33m Show Databases \033[0m \n";
+            kubectl exec -it $(kubectl get pods -l app=mysql -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "show databases;"'
+            echo "\033[1;33m Master \033[0m \n";
+            kubectl exec -it $(kubectl get pods -l app=mysql -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "SHOW MASTER STATUS\G;"'
+            echo "\033[1;33m Slave Status (Seconds_Behind_Master,Last_IO_Error) \033[0m \n";
+            kubectl exec -it $(kubectl get pods -l app=mysql-slave -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "stop slave;CHANGE MASTER TO MASTER_HOST ='mysql-service', MASTER_USER ='root', MASTER_PASSWORD ='root', MASTER_LOG_FILE = 'mysql-bin.000001', MASTER_LOG_POS = 0;start slave;"'
+            kubectl exec -it $(kubectl get pods -l app=mysql-slave -o jsonpath='{.items[0].metadata.name}') -c mysql -- /bin/sh -c 'mysql -h 127.0.0.1 -u root -proot -e "SHOW SLAVE STATUS\G;"'
+        fi
         ;;
     stateful.yml)
         echo "\033[1;32m Deploying Nginx with Stateful Set \033[0m \n";
