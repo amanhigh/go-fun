@@ -5,6 +5,13 @@ input=$1
 answers=${input:-`gum choose MINIKUBE ISTIO BACKUP RESTORE CLEAN --limit 5`}
 XTRA_BOOT=""
 
+mini_clean(){
+    echo "\033[1;32m Deleting Minikube Clusters \033[0m \n"
+    minikube -p minikube delete;
+    # sudo pkill -f "kubectl port-forward"
+    # minikube -p secondary delete
+}
+
 for SVC in $answers
 do
     echo "\033[1;32m \n $SVC \033[0m \n"
@@ -14,9 +21,7 @@ do
         echo "\033[1;34m XTRA_BOOT Set for ISTIO \033[0m \n"
         ;;
     CLEAN)
-        echo "\033[1;32m Deleting Minikube Clusters \033[0m \n"
-        minikube -p minikube delete;
-        minikube -p secondary delete
+        mini_clean
         exit 0
         ;;
 
@@ -61,7 +66,7 @@ do
 
     MINIKUBE)
         #Use minikube config set vm-driver virtualbox/docker
-        minikube -p minikube delete;
+        mini_clean
 
         echo "\033[1;32m Creating Minikube Cluster \033[0m \n"
         FILE_PATH=`readlink -f ./services/files`
@@ -105,7 +110,8 @@ XTRA_BOOT=$XTRA_BOOT ./service.zsh -b
 cd -
 
 echo "\033[1;34m Please enter password for Port 80 Forward \033[0m \n";
-sudo kubectl port-forward deployment/traefik 80:8000
+sudo -v
+sudo kubectl port-forward deployment/traefik 80:8000 > /dev/null &
 
 ## k9s
 # k9s --readonly , -n <namespace>, -l <loglevel>
