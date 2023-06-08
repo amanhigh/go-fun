@@ -276,9 +276,9 @@ while getopts 'dusrib' OPTION; do
         process "TRAEFIK DASHY $XTRA_BOOT"
         
         echo "\033[1;32m Attempting Traefik Portforward \033[0m \n";
-        kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik --timeout=1m
-        kubectl port-forward deployment/traefik 9000:9000 > /dev/null &
-        kubectl port-forward deployment/traefik 8000:8000 > /dev/null &
+        kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik --timeout=2m
+        # kubectl port-forward deployment/traefik 9000:9000 > /dev/null &
+        # kubectl port-forward deployment/traefik 8000:8000 > /dev/null &
         ;;
     s)
         # Prompt
