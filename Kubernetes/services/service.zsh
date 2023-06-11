@@ -270,7 +270,6 @@ while getopts 'dusrib' OPTION; do
         process
         ;;
     b)
-        # 127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker mysqladmin.docker redisadmin.docker prometheus.docker grafana.docker jaeger.docker kiali.docker ldapadmin.docker webssh.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker consul.docker opa.docker sonar.docker
         echo "\033[1;32m Bootstraping Base Services \033[0m \n"
 
         process "TRAEFIK DASHY $XTRA_BOOT"
