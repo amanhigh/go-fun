@@ -27,6 +27,9 @@ if [ $count -gt 2 ]; then
     echo "\033[1;32m Processing SNF Journal \033[0m \n";
     echo "\n- SNF Journal #trading-tome" >> $today
 
+    TICKER=""
+    PREVIOUS_TICKER=""
+
     # Iterate through the files and rename them
     for file in $files; do
         # Extract filename from the filepath
@@ -39,16 +42,22 @@ if [ $count -gt 2 ]; then
         YEAR=$(echo "$filename" | awk -F '[.-]' '{print $5}')
         MONTH=$(echo "$filename" | awk -F '[.-]' '{print $6}')
         DAY=$(echo "$filename" | awk -F '[.-]' '{print $7}')
-        
+
         #Organize eYear and Month Wise
         asset_path=$assets/$YEAR/$MONTH
         mkdir -p $asset_path
         asset=$asset_path/$filename
         
+        # Check if TICKER has changed from the previous iteration
+        if [ "$TICKER" != "$PREVIOUS_TICKER" ]; then
+            echo "\t- $TICKER #t.$TIMEFRAME #t.$TREND" >> $today
+            PREVIOUS_TICKER="$TICKER"
+        fi
+        
         echo "\033[1;33m Processing: $asset \033[0m \n";
 
         #Make Journal Entry and Move File
-        echo "\t- ![$filename](../assets/trading/$YEAR/$MONTH/$filename)" >> $today
+        echo "\t\t- ![$filename](../assets/trading/$YEAR/$MONTH/$filename)" >> $today
         mv "$file" "$asset"
     done
 fi
