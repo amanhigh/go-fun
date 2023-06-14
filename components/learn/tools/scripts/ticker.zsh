@@ -16,8 +16,6 @@ fi
 
 # Store clipboard content in a variable
 clipboard_content=$(xclip -selection clipboard -o)
-# Mark Processed to avoid reuse
-echo "Processed: $clipboard_content" | xclip -sel clip
 
 #TODO Check Clipboard Regex "POLYCAB.WDH.CTREND"
 
@@ -28,5 +26,9 @@ files=$(find "$directory_path" -maxdepth 1 -type f -cmin -25 -name '*SNAG*')
 for file in $files; do
   # Replace 'SNAG' with clipboard content (Ticker and Timeframe) in the file name
   new_name=$(echo $file | sed "s/SNAG/$clipboard_content/g")
+  echo "\033[1;32m Processing: $new_name \033[0m \n";
   mv "$file" "$new_name"
 done
+
+# Mark Processed to avoid reuse
+echo "Processed: $clipboard_content" | xclip -sel clip
