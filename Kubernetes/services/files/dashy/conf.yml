@@ -28,6 +28,16 @@ sections:
         icon: favicon
         url: https://www.ndtv.com/
         tags: [news]
+      - title: Imdb
+        description: Internet Movie Database
+        icon: favicon
+        url: https://www.imdb.com/
+        tags: [movies]
+      - title: GoodReads
+        description: Book Database
+        icon: favicon
+        url: https://www.goodreads.com/
+        tags: [books]
     widgets:
       - type: clock
         options:
