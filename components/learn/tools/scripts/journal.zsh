@@ -39,9 +39,10 @@ if [ $count -gt 2 ]; then
         TICKER=$(echo "$filename" | awk -F '[.-]' '{print $1}')
         TIMEFRAME=$(echo "$filename" | awk -F '[.-]' '{print $2}')
         TREND=$(echo "$filename" | awk -F '[.-]' '{print $3}')
-        YEAR=$(echo "$filename" | awk -F '[.-]' '{print $5}')
-        MONTH=$(echo "$filename" | awk -F '[.-]' '{print $6}')
-        DAY=$(echo "$filename" | awk -F '[.-]' '{print $7}')
+        TYPE=$(echo "$filename" | awk -F '[.-]' '{print $4}')
+        YEAR=$(echo "$filename" | awk -F '[.-]' '{print $6}')
+        MONTH=$(echo "$filename" | awk -F '[.-]' '{print $7}')
+        DAY=$(echo "$filename" | awk -F '[.-]' '{print $8}')
 
         #Organize eYear and Month Wise
         asset_path=$assets/$YEAR/$MONTH
@@ -50,7 +51,7 @@ if [ $count -gt 2 ]; then
         
         # Check if TICKER has changed from the previous iteration
         if [ "$TICKER" != "$PREVIOUS_TICKER" ]; then
-            echo "\t- $TICKER #t.$TIMEFRAME #t.$TREND" >> $today
+            echo "\t- $TICKER #t.$TIMEFRAME #t.$TREND #t.$TYPE" >> $today
             PREVIOUS_TICKER="$TICKER"
         fi
         
