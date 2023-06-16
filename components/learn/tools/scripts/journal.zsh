@@ -9,7 +9,7 @@ captures=$1
 brain=$2
 assets=$brain/assets/trading
 journal=$brain/journals
-today=$journal/`date +%Y_%m_%d.md`
+yesterday=$journal/`date -d yesterday +%Y_%m_%d.md`
 
 # Check if the directory exists
 if [ ! -d $captures ]; then
@@ -18,14 +18,14 @@ if [ ! -d $captures ]; then
 fi
 
 # Find files with Name trend
-files=$(find "$captures" -maxdepth 1 -type f -cmin -25 -name '*trend*')
+files=$(find "$captures" -maxdepth 1 -type f -name '*trend*')
 
 # Check the count of files
 count=$(echo "$files" | wc -l)
 
 if [ $count -gt 2 ]; then
     echo "\033[1;32m Processing SNF Journal \033[0m \n";
-    echo "\n- SNF Journal #trading-tome" >> $today
+    echo "\n- SNF Journal #trading-tome" >> $yesterday
 
     TICKER=""
     PREVIOUS_TICKER=""
@@ -44,21 +44,21 @@ if [ $count -gt 2 ]; then
         MONTH=$(echo "$filename" | awk -F '[.-]' '{print $7}')
         DAY=$(echo "$filename" | awk -F '[.-]' '{print $8}')
 
-        #Organize eYear and Month Wise
+        #Organize Year and Month Wise
         asset_path=$assets/$YEAR/$MONTH
         mkdir -p $asset_path
         asset=$asset_path/$filename
         
         # Check if TICKER has changed from the previous iteration
         if [ "$TICKER" != "$PREVIOUS_TICKER" ]; then
-            echo "\t- $TICKER #t.$TIMEFRAME #t.$TREND #t.$TYPE" >> $today
+            echo "\t- $TICKER #t.$TIMEFRAME #t.$TREND #t.$TYPE" >> $yesterday
             PREVIOUS_TICKER="$TICKER"
         fi
         
         echo "\033[1;33m Processing: $asset \033[0m \n";
 
         #Make Journal Entry and Move File
-        echo "\t\t- ![$filename](../assets/trading/$YEAR/$MONTH/$filename)" >> $today
+        echo "\t\t- ![$filename](../assets/trading/$YEAR/$MONTH/$filename)" >> $yesterday
         mv "$file" "$asset"
     done
 fi
