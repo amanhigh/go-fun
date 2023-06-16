@@ -1,0 +1,15 @@
+digraph G {
+    splines = "FALSE";
+    
+    /**
+     * Entities
+     */
+    Service [label = "Service";shape = "square";color = springgreen;];
+    
+    /**
+     * Relationships (Live Template: path)
+     */
+    UI -> Service [label = "API Call";];
+    Service -> DB [label = "Sql"; style = dotted;];
+    Report -> {UI Service};
+}
