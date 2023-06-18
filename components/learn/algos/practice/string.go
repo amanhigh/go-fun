@@ -1,6 +1,7 @@
 package practice
 
-/**
+/*
+*
 Replace space with %20 character as in encoding.
 */
 func ReplaceSpace(input string) string {
