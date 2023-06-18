@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("ReplaceSpace", func() {
+var _ = Describe("String Test", func() {
 	It("should encode to %20", func() {
 		result := practice.ReplaceSpace("Aman Preet Singh")
 		Expect(result).To(Not(BeNil()))
