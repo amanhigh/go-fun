@@ -12,4 +12,8 @@ var _ = Describe("ReplaceSpace", func() {
 		Expect(result).To(Not(BeNil()))
 		Expect(result).To(Equal("Aman%20Preet%20Singh"))
 	})
+
+	It("should reverse string", func() {
+		Expect(practice.ReverseString("Hello")).To(Equal("olleH"))
+	})
 })
