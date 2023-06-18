@@ -4,7 +4,8 @@ import (
 	"sort"
 )
 
-/**
+/*
+*
 Find smallest postive mising number in array.
 */
 func MissingNumbers(A []int) (missingNumber int) {
@@ -33,5 +34,25 @@ func MissingNumbers(A []int) (missingNumber int) {
 		}
 	}
 	missingNumber = missingNumber + 1
+	return
+}
+
+func TargetSum(input []int, target int) (i, j int) {
+
+	numMap := map[int]int{}
+
+	for i, v := range input {
+		balance := target - v
+		//Store Number with Index
+		numMap[v] = i
+
+		//Search Balance Required in Map
+		j, ok := numMap[balance]
+		if ok {
+			//Return Index of Current and Balance as result
+			return j, i
+		}
+	}
+
 	return
 }

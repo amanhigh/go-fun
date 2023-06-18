@@ -27,4 +27,11 @@ var _ = Describe("Number Test", func() {
 			Expect(4).To(Equal(practice.MissingNumbers([]int{1, 2, 3})))
 		})
 	})
+
+	It("should work for target sum", func() {
+		i, j := practice.TargetSum([]int{2, 7, 11, 15}, 9)
+		Expect(i).To(Equal(0))
+		Expect(j).To(Equal(1))
+
+	})
 })
