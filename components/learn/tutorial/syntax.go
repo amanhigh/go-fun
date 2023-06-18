@@ -48,15 +48,17 @@ func Syntax() {
 	c := make(chan int)
 	// Start a goroutine for the printNumbers function
 	go printNumbers(c)
+
 	// Receive values from the channel and print them
-	for i := 0; i < 2; i++ {
-		fmt.Println("Channel", <-c)
+	for v := range c {
+		fmt.Println("Channel", v)
 	}
 }
 
 func printNumbers(c chan int) {
-	for i := 1; i <= 5; i++ {
-		time.Sleep(1 * time.Second)
+	for i := 1; i <= 2; i++ {
+		time.Sleep(100 * time.Millisecond)
 		c <- i
 	}
+	close(c)
 }
