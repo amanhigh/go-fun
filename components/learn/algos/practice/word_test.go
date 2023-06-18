@@ -25,4 +25,7 @@ var _ = Describe("Word Test", func() {
 		})
 	})
 
+	It("should find common prefix", func() {
+		Expect(practice.CommonPrefix([]string{"flower", "flow", "flight"})).To(Equal("fl"))
+	})
 })
