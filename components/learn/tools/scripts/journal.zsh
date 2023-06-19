@@ -36,13 +36,18 @@ if [ $count -gt 2 ]; then
         filename=$(basename "$file")
 
         # Extract the parts from the filename using awk
-        TICKER=$(echo "$filename" | awk -F '[.-]' '{print $1}')
-        TIMEFRAME=$(echo "$filename" | awk -F '[.-]' '{print $2}')
-        TREND=$(echo "$filename" | awk -F '[.-]' '{print $3}')
-        TYPE=$(echo "$filename" | awk -F '[.-]' '{print $4}')
-        YEAR=$(echo "$filename" | awk -F '[.-]' '{print $6}')
-        MONTH=$(echo "$filename" | awk -F '[.-]' '{print $7}')
-        DAY=$(echo "$filename" | awk -F '[.-]' '{print $8}')
+        TAGS=$(echo "$filename" | awk -F '--' '{print $1}')
+        CHRONO=$(echo "$filename" | awk -F '--' '{print $2}')
+
+        TICKER=$(echo "$TAGS" | awk -F '[.]' '{print $1}')
+        TIMEFRAME=$(echo "$TAGS" | awk -F '[.]' '{print $2}')
+        TREND=$(echo "$TAGS" | awk -F '[.]' '{print $3}')
+        TYPE=$(echo "$TAGS" | awk -F '[.]' '{print $4}')
+        REASON=$(echo "$TAGS" | awk -F '[.]' '{print $5}')
+
+        YEAR=$(echo "$CHRONO" | awk -F '[-]' '{print $1}')
+        MONTH=$(echo "$CHRONO" | awk -F '[-]' '{print $2}')
+        DAY=$(echo "$CHRONO" | awk -F '[-]' '{print $3}')
 
         #Organize Year and Month Wise
         asset_path=$assets/$YEAR/$MONTH
@@ -51,7 +56,7 @@ if [ $count -gt 2 ]; then
         
         # Check if TICKER has changed from the previous iteration
         if [ "$TICKER" != "$PREVIOUS_TICKER" ]; then
-            echo "\t- | $TICKER | #t.$TIMEFRAME | #t.$TREND | #t.$TYPE |" >> $yesterday
+            echo "\t- | $TICKER | #t.$TIMEFRAME | #t.$TREND | #t.$TYPE |$( [ -n "$REASON" ] && echo " #r.$REASON" || echo "" )|" >> $yesterday
             PREVIOUS_TICKER="$TICKER"
         fi
         
