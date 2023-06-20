@@ -56,7 +56,7 @@ if [ $count -gt 2 ]; then
         
         # Check if TICKER has changed from the previous iteration
         if [ "$TICKER" != "$PREVIOUS_TICKER" ]; then
-            echo "\t- | $TICKER | #t.$TIMEFRAME | #t.$TREND | #t.$TYPE | #t.fail |$( [ -n "$REASON" ] && echo " #r.$REASON" || echo "" )|" >> $yesterday
+            echo "\t- | `$TICKER` | #t.$TIMEFRAME | #t.$TREND | #t.$TYPE | #t.fail |$( [ -n "$REASON" ] && echo " #r.$REASON" || echo "" )|" >> $yesterday
             PREVIOUS_TICKER="$TICKER"
         fi
         
