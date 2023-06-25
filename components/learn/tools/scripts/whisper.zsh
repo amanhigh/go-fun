@@ -31,8 +31,10 @@ for file in "$whisper_dir"/*.m4a; do
         echo "\n- #voicenote $time" >> $journal_path;
         sed '1s/^/\t- /; /\.$/{n;s/^/\t- /}' $whisper_output >> $journal_path
 
-        #Remove Converted File
-        rm $file $whisper_output
+        #Move Converted File
+        mv $file "$file.synced"
+        #Remove Output File
+        rm $whisper_output
     fi
 done
 
