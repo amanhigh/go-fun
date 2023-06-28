@@ -4,15 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"time"
+
 	util2 "github.com/amanhigh/go-fun/common/util"
-	model2 "github.com/amanhigh/go-fun/components/learn/frameworks/orm/model"
+	model2 "github.com/amanhigh/go-fun/components/learn/frameworks/database/orm/model"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
 	"gorm.io/plugin/dbresolver"
-	"os"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -40,7 +41,7 @@ type Feature struct {
 	Version int
 }
 
-//Default Name would be products
+// Default Name would be products
 func (p *Product) TableName() string {
 	return "MeraProduct"
 }
@@ -69,7 +70,7 @@ func (u *Feature) BeforeCreate(tx *gorm.DB) (err error) {
 	return
 }
 
-//Use Value instead of pointer for delete as no version update is required
+// Use Value instead of pointer for delete as no version update is required
 func (u Feature) BeforeDelete(tx *gorm.DB) (err error) {
 	//Log Feature
 	marshal, _ := json.Marshal(u)
