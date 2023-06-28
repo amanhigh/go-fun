@@ -154,6 +154,10 @@ sections:
         description: Easy Desgin and Whiteboarding
         icon: favicon
         url: https://excalidraw.com/
+      - title: Emoji Copy
+        description: Symbols and Emoji Repository
+        icon: favicon
+        url: https://www.emojicopy.com/
       - title: ArtifactHub
         description: Repository for Helm charts with Easy discovery.
         icon: favicon
