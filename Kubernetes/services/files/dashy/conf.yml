@@ -38,6 +38,11 @@ sections:
         icon: favicon
         url: https://www.goodreads.com/
         tags: [books]
+      - title: Element
+        description: Element Client for Matrix.
+        icon: favicon
+        url: https://app.element.io/#/home
+        tags: [chat]
     widgets:
       - type: clock
         options:
@@ -72,16 +77,6 @@ sections:
         icon: favicon
         url: https://www.flipkart.com/wishlist?link=home_wishlist
         tags: [buy]
-      - title: Vegetables
-        description: Bigbasket Fruit and Vegetables
-        icon: favicon
-        url: https://www.bigbasket.com/pc/fruits-vegetables/fresh-vegetables/?nc=nb#!page=2
-        tags: [buy, grocery]
-      - title: Rashn
-        description: Rashan Pani
-        icon: favicon
-        url: https://www.bigbasket.com/shopping-list/amanlist/
-        tags: [buy, grocery]
   - name: Finance
     icon: mdi-currency-usd
     items:
@@ -162,6 +157,10 @@ sections:
         description: Repository for Helm charts with Easy discovery.
         icon: favicon
         url: https://artifacthub.io/
+      - title: Programming.dev
+        description: Lemmy Instance for Programming.
+        icon: favicon
+        url: https://programming.dev/
     displayData:
       sortBy: default
       rows: 1
