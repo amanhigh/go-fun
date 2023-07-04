@@ -14,6 +14,6 @@ production: {
     style.stroke-dash: 3
   }
 
-  backend -- db
+  backend.cluster -- db.master
   frontend.cluster -> backend.dns
 }

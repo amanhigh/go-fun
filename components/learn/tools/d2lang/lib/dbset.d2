@@ -1,6 +1,6 @@
-db1: @master
-db2: @slave
-db3: @slave
+master: @master
+slave1: @slave
+slave2: @slave
 
-db2 -> db1: replication
-db3 -> db1: replication
+slave1 -> master: replication
+slave2 -> master: replication
