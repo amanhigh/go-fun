@@ -1,10 +1,19 @@
-frontend: @lib/vmset
-backend: @lib/vmset
-db: @lib/dbset
-elb: @lib/elb
-user: @lib/user
+direction: right
+production: @lib/cloud
 
-user -> frontend
-frontend -> elb
-elb -> backend
-backend -- db
+production: {
+  user: @lib/user
+
+  frontend: @lib/service
+  backend: @lib/service
+  db: @lib/dbset
+
+  user -> frontend.dns: {
+    style.stroke: crimson
+    style.stroke-width: 5
+    style.stroke-dash: 3
+  }
+
+  backend -- db
+  frontend.cluster -> backend.dns
+}

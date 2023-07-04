@@ -2,5 +2,5 @@ db1: @master
 db2: @slave
 db3: @slave
 
-db2 -> db1
-db3 -> db1
+db2 -> db1: replication
+db3 -> db1: replication
