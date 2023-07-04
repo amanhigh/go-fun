@@ -1,0 +1,61 @@
+# Layout
+direction: right
+
+# Shapes
+user: {
+  shape: person
+  tooltip: Access Done via Load Balancer
+}
+
+# Special Nodes
+explanation: |md
+  # Tutorial
+
+  * Features
+      * [Shapes](https://d2lang.com/tour/shapes#example)
+      * [Connectors](https://d2lang.com/tour/connections)
+          * [Heads](https://d2lang.com/tour/connections#arrowheads)
+      * [Containers](https://d2lang.com/tour/containers)
+  - Special
+      - [Code](https://d2lang.com/tour/text#code)
+      - [Tables](https://d2lang.com/tour/sql-tables)
+  ---
+    - Styling
+        - [Classes](https://d2lang.com/tour/classes)
+        - [Positions](https://d2lang.com/tour/positions)
+| {near: top-center}
+
+# Container
+Production: {
+  ui: Website {
+    icon: https://icons.terrastruct.com/dev/github.svg
+  }
+  svc: Service
+  db: Database {
+    master: {
+      link: https://github.com/mysql
+      shape: cylinder
+    }
+    replica: {
+      link: https://github.com/mysql
+      shape: cylinder
+    }
+    master <-> replica
+  }
+
+  # Properties
+  svc.shape: circle
+
+  # Connection
+
+  ui -> svc -- db
+
+  # Parent Reference
+  _.user -> ui: "Authorization" {
+    source-arrowhead.shape: diamond
+    style.stroke: green
+    style: {
+      filled: false
+    }
+  }
+}
