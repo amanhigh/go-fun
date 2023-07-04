@@ -1,1 +1,10 @@
-vmset: @lib/vmset
+frontend: @lib/vmset
+backend: @lib/vmset
+db: @lib/dbset
+elb: @lib/elb
+user: @lib/user
+
+user -> frontend
+frontend -> elb
+elb -> backend
+backend -- db
