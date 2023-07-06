@@ -1,18 +1,17 @@
 direction: right
 production: @lib/cloud
+...@lib/styles
 
 production: {
   user: @lib/user
+  user.class: med #Multiple [a;b]
 
   frontend: @lib/service
   backend: @lib/service
   db: @lib/dbset
 
-  user -> frontend.dns: {
-    style.stroke: crimson
-    style.stroke-width: 5
-    style.stroke-dash: 3
-  }
+  user -> frontend.dns: error
+  (user -> frontend.dns)[0].class: stk-dotted
 
   backend.cluster -- db.master
   frontend.cluster -> backend.dns
