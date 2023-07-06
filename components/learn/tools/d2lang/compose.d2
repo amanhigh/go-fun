@@ -10,9 +10,12 @@ production: {
   backend: @lib/service
   db: @lib/dbset
 
-  user -> frontend.dns: error
+  user -> frontend.dns
   (user -> frontend.dns)[0].class: stk-dotted
 
-  backend.cluster -- db.master
-  frontend.cluster -> backend.dns
+  backend.cluster -- db.master: DB Access
+  frontend.cluster -> backend.dns: API Access
+  
+  (frontend.cluster -> backend.dns)[0].class: smed
+  (backend.cluster -- db.master)[0].class: smed
 }
