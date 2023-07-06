@@ -4,18 +4,19 @@ production: @lib/cloud
 
 production: {
   user: @lib/user
-  user.class: med #Multiple [a;b]
 
   frontend: @lib/service
   backend: @lib/service
   db: @lib/dbset
 
   user -> frontend.dns
-  (user -> frontend.dns)[0].class: stk-dotted
 
   backend.cluster -- db.master: DB Access
   frontend.cluster -> backend.dns: API Access
   
+  #Styling Section
+  user.class: med #Multiple [a;b]
+  (user -> frontend.dns)[0].class: Test-dotted
   (frontend.cluster -> backend.dns)[0].class: smed
   (backend.cluster -- db.master)[0].class: smed
 }
