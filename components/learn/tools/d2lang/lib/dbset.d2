@@ -1,6 +1,10 @@
 master: @master
 slave1: @slave
 slave2: @slave
+backup: @backup
 
 slave1 -> master: replication
 slave2 -> master: replication
+slave2 -> backup: {
+  style.stroke-dash: 7
+}
