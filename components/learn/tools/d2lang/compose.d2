@@ -1,12 +1,12 @@
 direction: right
-production: @lib/cloud
+production: @lib/prod
 ...@lib/styles
 
 production: {
   user: @lib/user
 
   frontend: @lib/service
-  backend: @lib/service
+  backend: @lib/service-vm
   db: @lib/dbset
 
   user -> frontend.dns
