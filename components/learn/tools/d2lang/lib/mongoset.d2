@@ -1,0 +1,10 @@
+primary: @mongo
+S1: @mongo
+S2: @mongo
+backup: @backup
+
+S1 -> primary: replication
+S2 -> primary: replication
+S2 -> backup: "Backup" {
+  style.stroke-dash: 2
+}
