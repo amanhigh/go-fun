@@ -28,53 +28,43 @@ sections:
         icon: favicon
         url: https://www.ndtv.com/
         tags: [news]
-    widgets:
-      - type: clock
-        options:
-          timeZone: Asia/Kolkata
-          format: en-GB
-          hideDate: false
-      - type: joke
-        options:
-          safeMode: false
-          language: en
-          category: Programming
-  - name: MarketPlace
-    icon: mdi-shopping
+      - title: Imdb
+        description: Internet Movie Database
+        icon: favicon
+        url: https://www.imdb.com/
+        tags: [movies]
+      - title: GoodReads
+        description: Book Database
+        icon: favicon
+        url: https://www.goodreads.com/
+        tags: [books]
+      - title: Programming.dev
+        description: Lemmy Instance for Programming.
+        icon: favicon
+        url: https://programming.dev/
+      - title: Element
+        description: Element Client for Matrix.
+        icon: favicon
+        url: https://app.element.io/#/home
+        tags: [chat]
+  - name: Investment
+    icon: mdi-cash-multiple
     items:
-      - title: Quickr
-        description: Quickr Sale
+      - title: Kuvera
+        description: Mutual Funds
         icon: favicon
-        url: https://www.quikr.com/MyQuikr?action=activeads
-        tags: [sell]
-      - title: Olx
-        description: Olx Sale
+        url: https://kuvera.in/
+        tags: [invest, india]
+      - title: Vested
+        description: Stocks, ETF's US
         icon: favicon
-        url: https://www.olx.in/nf/chat
-        tags: [sell]
-      - title: Amazon
-        description: Amazon Buy
+        url: https://app.vestedfinance.com/login
+        tags: [invest, us]
+      - title: SbiRates
+        description: SBI Rate Sheet
         icon: favicon
-        url: https://www.amazon.in/hz/wishlist/genericItemsPage/3Q70DY9DUYY1Q?type=wishlist&filter=all&sort=default&viewType=list
-        tags: [buy]
-      - title: Flipkart
-        description: Flipkart Buy
-        icon: favicon
-        url: https://www.flipkart.com/wishlist?link=home_wishlist
-        tags: [buy]
-      - title: Vegetables
-        description: Bigbasket Fruit and Vegetables
-        icon: favicon
-        url: https://www.bigbasket.com/pc/fruits-vegetables/fresh-vegetables/?nc=nb#!page=2
-        tags: [buy, grocery]
-      - title: Rashn
-        description: Rashan Pani
-        icon: favicon
-        url: https://www.bigbasket.com/shopping-list/amanlist/
-        tags: [buy, grocery]
-  - name: Finance
-    icon: mdi-currency-usd
-    items:
+        url: https://www.sbi.co.in/documents/16012/1400784/FOREX_CARD_RATES.pdf
+        tags: [forex]
       - title: TickerTape
         description: India Fundamental Analysis
         icon: favicon
@@ -85,33 +75,11 @@ sections:
         icon: favicon
         url: https://etfdb.com/etf/GCC/#etf-ticker-profile
         tags: [fundamental, us]
-      - title: SbiRates
-        description: SBI Rate Sheet
+      - title: Ibjarates
+        description: Indian Bullian Association Rates
         icon: favicon
-        url: https://www.sbi.co.in/documents/16012/1400784/FOREX_CARD_RATES.pdf
-        tags: [forex]
-      - title: MarketWatch
-        description: Finance News
-        icon: favicon
-        url: https://www.marketwatch.com/
-        tags: [news, us]
-      - title: TradingEconomics
-        description: Macro Indicators
-        icon: favicon
-        target: workspace
-        url: https://tradingeconomics.com/india/indicators
-        tags: [fundamental, macro]
-      - title: MoneyControl
-        description: Mutual Fund Performance
-        icon: favicon
-        url: https://www.moneycontrol.com/mutual-funds/performance-tracker/returns/index-fundsetfs.html
-        tags: [india]
-      - title: LynAlden
-        description: Astute Macro Tracker
-        target: workspace
-        icon: favicon
-        url: https://www.lynalden.com/
-        tags: [reading, macro]
+        url: https://ibjarates.com/
+        tags: [invest, india]
   - name: Productivity
     icon: mdi-wrench-outline
     items:
@@ -144,6 +112,10 @@ sections:
         description: Easy Desgin and Whiteboarding
         icon: favicon
         url: https://excalidraw.com/
+      - title: Emoji Copy
+        description: Symbols and Emoji Repository
+        icon: favicon
+        url: https://www.emojicopy.com/
       - title: ArtifactHub
         description: Repository for Helm charts with Easy discovery.
         icon: favicon
@@ -154,29 +126,64 @@ sections:
       cols: 1
       collapsed: false
       hideForGuests: false
-  - name: Investment
-    icon: mdi-cash-multiple
+    widgets:
+      # - type: clock
+      #   options:
+      #     timeZone: Asia/Kolkata
+      #     format: en-GB
+      #     hideDate: false
+      - type: joke
+        options:
+          safeMode: false
+          language: en
+          category: Programming
+  - name: MarketPlace
+    icon: mdi-shopping
     items:
-      - title: Kuvera
-        description: Mutual Funds
+      - title: Quickr
+        description: Quickr Sale
         icon: favicon
-        url: https://kuvera.in/
-        tags: [invest, india]
-      - title: Vested
-        description: Stocks, ETF's US
+        url: https://www.quikr.com/MyQuikr?action=activeads
+        tags: [sell]
+      - title: Olx
+        description: Olx Sale
         icon: favicon
-        url: https://app.vestedfinance.com/login
-        tags: [invest, us]
-      - title: Ibjarates
-        description: Indian Bullian Association Rates
+        url: https://www.olx.in/nf/chat
+        tags: [sell]
+      - title: Amazon
+        description: Amazon Buy
         icon: favicon
-        url: https://ibjarates.com/
-        tags: [invest, india]
+        url: https://www.amazon.in/hz/wishlist/genericItemsPage/3Q70DY9DUYY1Q?type=wishlist&filter=all&sort=default&viewType=list
+        tags: [buy]
+      - title: Flipkart
+        description: Flipkart Buy
+        icon: favicon
+        url: https://www.flipkart.com/wishlist?link=home_wishlist
+        tags: [buy]
+  - name: Finance
+    icon: mdi-currency-usd
+    items:
       - title: Splitwise
         description: Tracking Friendly Udhar
         icon: favicon
         url: https://secure.splitwise.com/#/dashboard
         tags: [loan]
+      - title: MarketWatch
+        description: Finance News
+        icon: favicon
+        url: https://www.marketwatch.com/
+        tags: [news, us]
+      - title: TradingEconomics
+        description: Macro Indicators
+        icon: favicon
+        target: workspace
+        url: https://tradingeconomics.com/india/indicators
+        tags: [fundamental, macro]
+      - title: MoneyControl
+        description: Mutual Fund Performance
+        icon: favicon
+        url: https://www.moneycontrol.com/mutual-funds/performance-tracker/returns/index-fundsetfs.html
+        tags: [india]
   - name: Trips
     icon: mdi-train-car
     items:

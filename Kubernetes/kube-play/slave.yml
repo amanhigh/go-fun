@@ -1,30 +1,16 @@
-# apiVersion: v1
-# kind: Namespace
-# metadata:
-#   name: default
-
-# ---
-
-# apiVersion: v1
-# kind: ServiceAccount
-# metadata:
-#   name: aman-sa
-#   namespace: default
-
-# Mysql
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql-service
+  name: mysql-slave-service
   labels:
-    app: mysql
+    app: mysql-slave
 spec:
   clusterIP: None
   selector:
-    app: mysql
+    app: mysql-slave
   ports:
-    - name: mysql
+    - name: mysql-slave
       protocol: TCP
       port: 3306
       targetPort: 3306
@@ -33,36 +19,34 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql-deployment
+  name: mysql-slave-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mysql
+      app: mysql-slave
   template:
     metadata:
       labels:
-        app: mysql
+        app: mysql-slave
     spec:
       shareProcessNamespace: true
       containers:
         - name: mysql
           image: bitnami/mysql:latest
           env:
-            - name: MYSQL_ROOT_PASSWORD
-              value: root
-            - name: MYSQL_DATABASE
-              value: compute
-            - name: MYSQL_USER
-              value: aman
-            - name: MYSQL_PASSWORD
-              value: aman
             - name: MYSQL_REPLICATION_MODE
-              value: master
+              value: slave
+            - name: MYSQL_MASTER_ROOT_PASSWORD
+              value: root
             - name: MYSQL_REPLICATION_USER
               value: copy
             - name: MYSQL_REPLICATION_PASSWORD
               value: copy
+            - name: MYSQL_MASTER_HOST
+              value: mysql-service
+            - name: MYSQL_MASTER_PORT_NUMBER
+              value: "3306"
           ports:
             - containerPort: 3306
           resources:
@@ -73,7 +57,7 @@ spec:
               cpu: 250m
               memory: 256Mi
           volumeMounts:
-            - name: mysql-logs
+            - name: mysql-slave-logs
               mountPath: /var/log/mysql
         - name: sidecar
           image: nicolaka/netshoot #busybox
@@ -90,10 +74,10 @@ spec:
               cpu: 250m
               memory: 256Mi
           volumeMounts:
-            - name: mysql-logs
+            - name: mysql-slave-logs
               mountPath: /mysql-logs
       volumes:
-        - name: mysql-logs
+        - name: mysql-slave-logs
           emptyDir: {}
 
       securityContext:

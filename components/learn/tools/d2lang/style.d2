@@ -1,0 +1,72 @@
+direction: right
+
+# Root Styling
+style: {
+  fill: LightBlue
+  fill-pattern: lines
+  stroke: green
+  stroke-width: 3
+  stroke-dash: 7
+  double-border: true
+}
+
+# Opacity
+x -> y: opacity {
+  style: {
+    opacity: 0.4 # 0 to 1
+  }
+}
+x.style.opacity: 0.2
+y.style.opacity: 0.7
+
+# Color
+a: {
+  style.fill: yellow
+}
+
+b: {
+  style.fill: "#f4a261"
+  c: {
+    style.fill: transparent
+  }
+}
+
+a -> b: color {
+  style.stroke: green
+}
+
+# Patterns
+d: {
+  style.fill: skyblue
+  style.fill-pattern: grain # dots, lines, grain
+  style.border-radius: 20 # 0 to 20, high number pill eg. 999
+  style.double-border: true
+  style.underline: true #bold, underline, italic
+}
+
+e: {
+  style.fill: lime
+  style.stroke-dash: 5
+  style.multiple: true
+}
+
+d -> e: Pattern {
+  style.stroke-width: 8
+  style.stroke-dash: 6 # 0 to 10
+}
+
+# Rendering
+f: {
+  style.border-radius: 20 # 0 to 20, high number pill eg. 999
+  style.shadow: true
+}
+
+g: {
+    style.3d: true
+    style.font-size: 28
+    style.font-color: blue
+}
+
+f -> g: Rendering {
+  style.animated: true
+}

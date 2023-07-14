@@ -1,6 +1,7 @@
 package practice
 
-/**
+/*
+*
 Replace space with %20 character as in encoding.
 */
 func ReplaceSpace(input string) string {
@@ -30,4 +31,17 @@ func ReplaceSpace(input string) string {
 	}
 
 	return string(out)
+}
+
+func ReverseString(input string) string {
+	var chars = []rune(input)
+	var size = len(chars)
+
+	//Place i,j at first and last postion
+	//Keep Replacing Chars until the cross.
+	for i, j := 0, size-1; i < j; i, j = i+1, j-1 {
+		chars[i], chars[j] = chars[j], chars[i]
+	}
+
+	return string(chars)
 }

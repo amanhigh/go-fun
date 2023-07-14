@@ -1,0 +1,60 @@
+# Code: https://d2lang.com/tour/text#code
+code: |go
+  awsSession := From(c.Request.Context())
+  client := s3.New(awsSession)
+|
+
+
+#Tables: https://d2lang.com/tour/sql-tables
+mydb: {
+    objects: {
+        shape: sql_table
+        id: int {constraint: primary_key}
+        disk: int {constraint: foreign_key}
+
+        json: jsonb  {constraint: unique}
+        last_updated: timestamp with time zone
+    }
+
+    disks: {
+        shape: sql_table
+        id: int {constraint: primary_key}
+    }
+
+    objects.disk -> disks.id
+}
+
+# UML: https://d2lang.com/tour/uml-classes
+D2 Parser: {
+shape: class
+
+# Default visibility is + so no need to specify.
++reader: io.RuneReader
+readerPos: d2ast.Position
+
+# Private field.
+-lookahead: "[]rune"
+
+# Protected field.
+# We have to escape the # to prevent the line from being parsed as a comment.
+\#lookaheadPos: d2ast.Position
+
++peek(): (r rune, eof bool)
+rewind()
+commit()
+
+\#peekn(n int): (s string, eof bool)
+}
+
+"github.com/terrastruct/d2parser.git" -> D2 Parser
+
+# Sequence: https://d2lang.com/tour/sequence-diagrams
+Father-Son:{
+    shape: sequence_diagram
+    son -> father: Can I borrow your car?
+    memories: {
+        friend -> father: Never lend your car to anyone to whom you have given birth.
+        father."Starts Thinkking"
+        father -> father: internal debate ensues
+    }
+}
