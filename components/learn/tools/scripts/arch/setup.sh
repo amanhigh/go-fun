@@ -24,7 +24,7 @@ pacman -S --needed networkmanager wpa_supplicant wireless_tools netctl dialog
 pacman -S --needed amd-ucode nvidia
 
 ## Display ##
-pacman -S --needed xorg-server
+pacman -S --needed xorg-server plasma-meta kde-applications
 
 ## LVM ##
 # pacman -S --needed lvm2
@@ -32,7 +32,7 @@ pacman -S --needed xorg-server
 # mkinitcpio -p linux
 
 ## Essential ##
-pacman -S --needed vi git firefox tldr zsh
+pacman -S --needed vi git firefox tldr zsh btrfs-progs
 
 ## Configuration ##
 echo "\033[1;33m Setting Region Settings \033[0m \n";

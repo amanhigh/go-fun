@@ -32,8 +32,7 @@ ping archlinux.org
 timedatectl
 
 ################## Disk Setup #####################
-# Disk Info: fdisk -l ; lsblk ; findmnt ; df -l
-
+# Disk Info: fdisk -l ; lsblk (-f) ; findmnt ; df -hl
 ## Setup Partitions ##
 # fdisk /dev/sda
 # Layout: Boot:/mnt/efi (300MB+), Swap (500MB+), Root:/mnt, Home:/home, Others:
@@ -41,6 +40,16 @@ timedatectl
 # d - Delete Partition
 # p - Print Current Layout
 # t - Set Type (EF: UEFI, 8E: LVM)
+
+## Move/Resize Partition ##
+# Clone: partclone.btrfs -c -d -s /dev/sda2 -o cloned.img
+# Restore: partclone.btrfs -r -s cloned.img -o /dev/sdb1
+# Block Copy: partclone.btrfs -b -s /dev/sda2 -o /dev/sdb1
+# btrfstune -u /dev/sda2; lsblk -f; (Change UUID)
+# mount /dev/sdb1 /mnt (Target Mount)
+# btrfs filesystem resize max /mnt (Fix Size)
+# df -hl (Verify Size);arch-chroot /mnt; (Verify Files)
+# Regenarte FSTab with all Fresh Mounts
 
 # TODO: LVM Setup
 # TODO: Encryption
@@ -55,11 +64,11 @@ read -p "Enter Primary Partition Name: " primary
 read -p "Enter Home Partition Name: " home
 
 # Format EFI using FAT32
-mkfs.fat -F32 /dev/$efi
+mkfs.fat -F32 $efi -n BOOT
 
 # Format Primary and Home using btrfs
-mkfs.btrfs $primary
-mkfs.btrfs $home
+mkfs.btrfs $primary -L ROOT
+mkfs.btrfs $home -L HOME
 
 ## Mounts ##
 # findmnt or mount - Show all Mounts
