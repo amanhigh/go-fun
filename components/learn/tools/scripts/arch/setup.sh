@@ -21,10 +21,10 @@ pacman -S --needed networkmanager wpa_supplicant wireless_tools netctl dialog
 
 ## Drivers ##
 # pacman -S --needed virtualbox-guest-utils xf86-video-vmware
-pacman -S --needed amd-ucode nvidia
+pacman -S --needed --noconfirm amd-ucode nvidia
 
 ## Display ##
-pacman -S --needed xorg-server plasma-meta kde-applications
+pacman -S --needed --noconfirm xorg-server plasma-meta kde-applications
 
 ## LVM ##
 # pacman -S --needed lvm2
@@ -32,7 +32,7 @@ pacman -S --needed xorg-server plasma-meta kde-applications
 # mkinitcpio -p linux
 
 ## Essential ##
-pacman -S --needed vi git firefox tldr zsh btrfs-progs
+pacman -S --needed --noconfirm vi git tldr btrfs-progs
 
 ## Configuration ##
 echo "\033[1;33m Setting Region Settings \033[0m \n";
@@ -52,22 +52,24 @@ timedatectl
 systemctl enable NetworkManager
 systemctl enable systemd-timesyncd
 systemctl enable vboxservice
+systemctl enable sddm
 
 ## Users ##
 # https://wiki.archlinux.org/title/Users_and_groups
 #groups - Show Groups
 #usermod - Modifications
+#userdel -r <name>
 echo "\033[1;33m Set Root Password \033[0m \n";
 passwd
 
 echo "\033[1;33m Create User \033[0m \n";
-useradd -m --create-home -g users -G wheel aman -s 
+useradd -m -g users -G wheel aman
 passwd aman
 #Update /etc/sudoers list
 echo "\033[1;34m Uncomment %Wheel using visudo \033[0m \n";
 
 ## Grub ##
-pacman -S grub efibootmgr dosfstools os-prober mtools
+pacman -S --needed --noconfirm grub efibootmgr dosfstools os-prober mtools
 #Populates /mnt/grub and /mnt/efi/EFI Folders
 grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck
 cp /usr/share/locale/en\@quot/LC_MESSAGES/grub.mo /boot/grub/locale/en.mo
