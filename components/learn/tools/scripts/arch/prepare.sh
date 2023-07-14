@@ -2,8 +2,11 @@
 # Tutorials
 # - https://wiki.archlinux.org/title/Installation_guide
 # - https://www.youtube.com/watch?v=DPLnBPM4DhI
+# - https://www.learnlinux.tv/arch-linux-full-installation-guide/
 
 ################## Basics #####################
+# Ctrl+d to exit anywhere
+
 # Set Keyboard
 loadkeys dvorak
 
@@ -25,13 +28,11 @@ cat /sys/firmware/efi/fw_platform_size
 #Internet Check
 ping archlinux.org
 
-# Setup Timezone as Kolkata and Verify
-ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
-hwclock --systohc
+# Time Check
 timedatectl
 
 ################## Disk Setup #####################
-# Disk Info: fdisk -l ; lsblk ; findmnt
+# Disk Info: fdisk -l ; lsblk ; findmnt ; df -l
 
 ## Setup Partitions ##
 # fdisk /dev/sda
@@ -66,9 +67,9 @@ mkfs.btrfs $home
 
 echo "\033[1;32m Mounting Drives \033[0m \n";
 mount $primary /mnt
-mkdir -p /mnt/efi
+mkdir -p /mnt/boot/efi
 mkdir -p /mnt/home
-mount $efi /mnt/efi
+mount $efi /mnt/boot/efi
 mount $home /mnt/home
 
 echo "\033[1;33m Generate FsTab \033[0m \n";

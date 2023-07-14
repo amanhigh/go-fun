@@ -19,6 +19,13 @@ arch-chroot /mnt
 ## Network ##
 pacman -S --needed networkmanager wpa_supplicant wireless_tools netctl dialog
 
+## Drivers ##
+# pacman -S --needed virtualbox-guest-utils xf86-video-vmware
+pacman -S --needed amd-ucode nvidia
+
+## Display ##
+pacman -S --needed xorg-server
+
 ## LVM ##
 # pacman -S --needed lvm2
 # TODO: Add Hooks
@@ -30,7 +37,7 @@ pacman -S --needed vi git firefox tldr zsh
 ## Configuration ##
 echo "\033[1;33m Setting Region Settings \033[0m \n";
 echo "KEYMAP=dvorak" >> /etc/vconsole.conf
-echo "aman" >> /etc/hostname
+hostnamectl set-hostname aman
 
 echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 locale-gen
@@ -40,8 +47,11 @@ hwclock --systohc
 timedatectl
 
 ## Services ##
-# TODO: enable Important Services
+#systemctl start <svc>
+#systemctl status <svc>
 systemctl enable NetworkManager
+systemctl enable systemd-timesyncd
+systemctl enable vboxservice
 
 ## Users ##
 # https://wiki.archlinux.org/title/Users_and_groups
