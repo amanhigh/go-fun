@@ -48,8 +48,11 @@ timedatectl
 # btrfstune -u /dev/sda2; lsblk -f; (Change UUID)
 # mount /dev/sdb1 /mnt (Target Mount)
 # btrfs filesystem resize max /mnt (Fix Size)
-# df -hl (Verify Size);arch-chroot /mnt; (Verify Files)
-# Regenarte FSTab with all Fresh Mounts
+# arch-chroot /mnt (New Disk: Verify Size and Files)
+# Redo all fstab and grub Steps
+
+## btrfs ##
+# btrfs check /dev/sdb1 (Check Disk for Errors)
 
 # TODO: LVM Setup
 # TODO: Encryption
