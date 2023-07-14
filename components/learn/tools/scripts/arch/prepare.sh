@@ -1,4 +1,7 @@
 # Arch Linux Prepration Script
+# Tutorials
+# - https://wiki.archlinux.org/title/Installation_guide
+# - https://www.youtube.com/watch?v=DPLnBPM4DhI
 
 ################## Basics #####################
 # Set Keyboard
@@ -28,10 +31,9 @@ hwclock --systohc
 timedatectl
 
 ################## Disk Setup #####################
+# Disk Info: fdisk -l ; lsblk ; findmnt
 
-# fdisk -l See all Disks
-
-# Setup Partitions
+## Setup Partitions ##
 # fdisk /dev/sda
 # Layout: Boot:/mnt/efi (300MB+), Swap (500MB+), Root:/mnt, Home:/home, Others:
 # n - Create Partition, Size (+500M,+5G)
@@ -42,6 +44,9 @@ timedatectl
 # TODO: LVM Setup
 # TODO: Encryption
 
+# Enable Swap (If Required):  swapon /dev/sda2
+
+## Format ##
 
 # Input Partition Names
 read -p "Enter EFI Partition Name: " efi
@@ -55,12 +60,17 @@ mkfs.fat -F32 /dev/$efi
 mkfs.btrfs $primary
 mkfs.btrfs $home
 
+## Mounts ##
+# findmnt or mount - Show all Mounts
+# umount /mnt (-a All) (-R Recursive)
+
 echo "\033[1;32m Mounting Drives \033[0m \n";
 mount $primary /mnt
+mkdir -p /mnt/efi
+mkdir -p /mnt/home
 mount $efi /mnt/efi
 mount $home /mnt/home
 
-echo "\033[1;33m Setting Region Settings \033[0m \n";
-echo "KEYMAP=dvorak" >> /etc/vconsole.conf
-echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
-echo "arch" >> /etc/hostname
+echo "\033[1;33m Generate FsTab \033[0m \n";
+mkdir -p /mnt/etc
+genfstab -U /mnt >> /mnt/etc/fstab
