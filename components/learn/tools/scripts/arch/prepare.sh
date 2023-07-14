@@ -1,10 +1,47 @@
 # Arch Linux Prepration Script
 
+################## Basics #####################
+# Set Keyboard
+loadkeys dvorak
+
+echo "\033[1;34m UEFI Verify Value: 64 \033[0m \n";
+cat /sys/firmware/efi/fw_platform_size
+
+
+# Wifi - iwctl
+# device list
+# station wlan0 scan
+# station wlan0 connect <sid> -P <password>
+# station wlan0 show
+
+# Network Check
+# ip addr show (Check inet value)
+
+# TODO: DHCP Setup
+
+#Internet Check
+ping archlinux.org
+
+# Setup Timezone as Kolkata and Verify
+ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
+hwclock --systohc
+timedatectl
+
+################## Disk Setup #####################
+
+# fdisk -l See all Disks
+
 # Setup Partitions
-parted /dev/sda mklabel gpt
-parted /dev/sda mkpart primary fat32 1MiB 513MiB
-parted /dev/sda set 1 esp on
-parted /dev/sda mkpart primary ext4 513MiB 100%
+# fdisk /dev/sda
+# Layout: Boot:/mnt/efi (300MB+), Swap (500MB+), Root:/mnt, Home:/home, Others:
+# n - Create Partition, Size (+500M,+5G)
+# d - Delete Partition
+# p - Print Current Layout
+# t - Set Type (EF: UEFI, 8E: LVM)
+
+# TODO: LVM Setup
+# TODO: Encryption
+
 
 # Input Partition Names
 read -p "Enter EFI Partition Name: " efi
@@ -12,37 +49,18 @@ read -p "Enter Primary Partition Name: " primary
 read -p "Enter Home Partition Name: " home
 
 # Format EFI using FAT32
-mkfs.fat -F32 $efi
+mkfs.fat -F32 /dev/$efi
 
 # Format Primary and Home using btrfs
 mkfs.btrfs $primary
 mkfs.btrfs $home
 
-# Setup EFI and Primary Mount
+echo "\033[1;32m Mounting Drives \033[0m \n";
 mount $primary /mnt
-mount $efi /mnt/boot
-
-# Setup Home Mount
-mkdir /mnt/home
+mount $efi /mnt/efi
 mount $home /mnt/home
 
-# Setup Locale and Keyboard to Dvorak
+echo "\033[1;33m Setting Region Settings \033[0m \n";
 echo "KEYMAP=dvorak" >> /etc/vconsole.conf
 echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
-
-# Setup Hostname
 echo "arch" >> /etc/hostname
-
-# Setup Timezone as Kolkata
-ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
-hwclock --systohc
-
-# Setup Wifi
-read -p "Enter Wifi SSID: " ssid
-read -p "Enter Wifi Password: " password
-echo "ctrl_interface=/run/wpa_supplicant" >> /etc/wpa_supplicant/wpa_supplicant.conf
-echo "update_config=1" >> /etc/wpa_supplicant/wpa_supplicant.conf
-echo "network={" >> /etc/wpa_supplicant/wpa_supplicant.conf
-echo "  ssid=\"$ssid\"" >> /etc/wpa_supplicant/wpa_supplicant.conf
-echo "  psk=\"$password\"" >> /etc/wpa_supplicant/wpa_supplicant.conf
-echo "}" >> /etc/wpa_supplicant/wpa_supplicant.conf
