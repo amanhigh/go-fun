@@ -81,6 +81,9 @@ cat /mnt/etc/fstab
 # station wlan0 scan
 # station wlan0 connect <sid> -P <password>
 # station wlan0 show
+# Network Manager
+# nmtui
+# nmcli device list
 
 ## Setup Partitions ##
 # Disk Info: fdisk -l ; lsblk (-f) ; findmnt ; df -hl
