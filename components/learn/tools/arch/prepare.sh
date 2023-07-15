@@ -65,7 +65,7 @@ fi
 
 echo -en "\033[1;33m Creating Sub Partitions (Any Key to Continue) \033[0m \n";
 read
-mount -a $root /mnt
+mountpoint -q /mnt || mount $root /mnt
 # https://archive.kernel.org/oldwiki/btrfs.wiki.kernel.org/index.php/SysadminGuide.html#Managing_Snapshots
 btrfs sub cr /mnt/@
 btrfs sub cr /mnt/@home
@@ -75,7 +75,7 @@ btrfs sub cr /mnt/@snapshots
 echo -en "\033[1;33m Mounting Drives \033[0m \n";
 read
 # Mount ROOT Subvolume @
-umount /mnt
+mountpoint -q /mnt && umount /mnt
 mountpoint -q /mnt || mount -o subvol=@ $root /mnt
 
 # Create directory for each partitions and subvolumes:
@@ -83,7 +83,7 @@ mkdir -p /mnt/{etc,boot/efi,home,var/log}
 
 mountpoint -q /mnt/home || mount -o subvol=@home $root /mnt/home
 mountpoint -q /mnt/var/log || mount -o subvol=@log $root /mnt/var/log
-mount $boot /mnt/boot/efi
+mountpoint -q /mnt/boot/efi || mount $boot /mnt/boot/efi
 findmnt -R -M /mnt
 
 echo -en "\033[1;33m Generate Fstab \033[0m \n";
