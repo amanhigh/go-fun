@@ -3,7 +3,7 @@ echo -en "\033[1;33m Base Packages \033[0m \n";
 ## OS ##
 # Base Packages and Kernal (option linux-lts, linux-lts-headers)
 # base and linux are only bare minimum
-pacstrap /mnt base linux base-devel linux-headers #Add -i for Interactive
+pacstrap /mnt base linux base-devel linux-headers linux-firmware #Add -i for Interactive
 
 ## Enter Distro ##
 # Key Mismatch: pacman-key --populate; pacman -S archlinux-keyring;

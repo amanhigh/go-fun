@@ -22,9 +22,6 @@ pacman -S --needed --noconfirm vi git tldr btrfs-progs
 ## Grub ##
 pacman -S --needed --noconfirm grub efibootmgr dosfstools os-prober mtools
 
-## Yay ##
-git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -sic && cd .. && rm -rf yay
-
 ################## Configuration #####################
 ## Local, Layouts etc ##
 echo -en "\033[1;33m Performing Configuration \033[0m \n";
@@ -40,8 +37,8 @@ timedatectl
 ## Users ##
 echo -en "\033[1;33m User Management \033[0m \n";
 useradd -m -g users -G wheel aman
-usermod -p changeme root
-usermod -p changeme aman
+usermod -p `openssl passwd -1 chageme` root
+usermod -p `openssl passwd -1 chageme` aman
 
 sed -i '0,/^# %wheel ALL/s/^# //' /etc/sudoers
 ################## Grub Setup #####################
