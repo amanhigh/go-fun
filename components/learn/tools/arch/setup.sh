@@ -1,78 +1,36 @@
 ################## Package Install #####################
-
+echo -en "\033[1;33m Base Packages \033[0m \n";
 ## OS ##
 # Base Packages and Kernal (option linux-lts, linux-lts-headers)
 # base and linux are only bare minimum
-pacstrap -i /mnt base linux base-devel linux-headers
+pacstrap /mnt base linux base-devel linux-headers #Add -i for Interactive
 
 ## Enter Distro ##
 # Key Mismatch: pacman-key --populate; pacman -S archlinux-keyring;
 
+## Change Root ##
+ROOT_PATH=$(dirname $(cd .;pwd -P))
+echo -en "\033[1;33m Changing Root \033[0m \n";
+cp $ROOT_PATH/chroot.sh /mnt/root/setup.sh
 arch-chroot /mnt
 
-#### pacman
+
+
+
+################## Useful Command #####################
+## pacman ##
 # -S Install/Sync
 # -R Remove
 # -Q Query -Qe Explicit
 # -y Update
 
-## Network ##
-pacman -S --needed networkmanager wpa_supplicant wireless_tools netctl dialog
-
-## Drivers ##
-# pacman -S --needed virtualbox-guest-utils xf86-video-vmware
-pacman -S --needed --noconfirm amd-ucode nvidia
-
-## Display ##
-pacman -S --needed --noconfirm xorg-server plasma-meta kde-applications
-
-## LVM ##
-# pacman -S --needed lvm2
-# TODO: Add Hooks
-# mkinitcpio -p linux
-
-## Essential ##
-pacman -S --needed --noconfirm vi git tldr btrfs-progs
-
-## Configuration ##
-echo "\033[1;33m Setting Region Settings \033[0m \n";
-echo "KEYMAP=dvorak" >> /etc/vconsole.conf
-hostnamectl set-hostname aman
-
-echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
-locale-gen
-
-timedatectl set-timezone Asia/Kolkata
-hwclock --systohc
-timedatectl
-
 ## Services ##
-#systemctl start <svc>
-#systemctl status <svc>
-systemctl enable --now NetworkManager
-systemctl enable --now systemd-timesyncd
-systemctl enable --now vboxservice
-systemctl enable --now sddm
+# systemctl start <svc>
+# systemctl status <svc>
+# systemctl enable --now <svc> (Autostart)
 
 ## Users ##
 # https://wiki.archlinux.org/title/Users_and_groups
-#groups - Show Groups
-#usermod - Modifications
-#userdel -r <name>
-echo "\033[1;33m Set Root Password \033[0m \n";
-passwd
-
-echo "\033[1;33m Create User \033[0m \n";
-useradd -m -g users -G wheel aman
-passwd aman
-#Update /etc/sudoers list
-echo "\033[1;34m Uncomment %Wheel using visudo \033[0m \n";
-
-## Grub ##
-pacman -S --needed --noconfirm grub efibootmgr dosfstools os-prober mtools
-#Populates /mnt/grub and /mnt/efi/EFI Folders
-grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck
-cp /usr/share/locale/en\@quot/LC_MESSAGES/grub.mo /boot/grub/locale/en.mo
-# TODO: Crypto /etc/default/grub
-grub-mkconfig -o /boot/grub/grub.cfg
-# TODO: OS Prober
+# groups - Show Groups
+# usermod - Modifications (-s shell) (-p password) (-r remove)
+# lslogins - Show all user logins (<name> detailed info)
