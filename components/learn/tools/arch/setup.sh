@@ -12,6 +12,7 @@ pacstrap /mnt base linux base-devel linux-headers #Add -i for Interactive
 SCRIPT_PATH=$(cd .;pwd -P)
 echo -en "\033[1;33m Changing Root \033[0m \n";
 cp $SCRIPT_PATH/chroot.sh /mnt/root/setup.sh
+arch-chroot /mnt chmod 755 /root/setup.sh
 arch-chroot /mnt /root/setup.sh
 
 ## Exit Change Root ##

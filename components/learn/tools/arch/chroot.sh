@@ -2,7 +2,7 @@
 echo -en "\033[1;33m Driver Installation \033[0m \n";
 
 ## Network ##
-pacman -S --needed networkmanager wpa_supplicant wireless_tools netctl dialog
+pacman -S --needed --noconfirm networkmanager wpa_supplicant wireless_tools netctl dialog
 
 ## Drivers ##
 # pacman -S --needed virtualbox-guest-utils xf86-video-vmware
