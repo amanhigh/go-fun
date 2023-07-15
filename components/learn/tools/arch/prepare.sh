@@ -10,7 +10,7 @@
 ################## Basics #####################
 # Ctrl+d to exit anywhere
 # loadkeys dvorak
-
+echo -en "\033[1;33m Basic Chceks \033[0m \n";
 echo -en "\033[1;34m UEFI Verify Value: 64 \033[0m \n";
 cat /sys/firmware/efi/fw_platform_size
 
@@ -76,14 +76,14 @@ echo -en "\033[1;33m Mounting Drives \033[0m \n";
 read
 # Mount ROOT Subvolume @
 umount /mnt
-mount -a -o subvol=@ $root /mnt
+mountpoint -q /mnt || mount -o subvol=@ $root /mnt
 
 # Create directory for each partitions and subvolumes:
 mkdir -p /mnt/{etc,boot/efi,home,var/log}
 
-mount -a -o subvol=@home $root /mnt/home
-mount -a -o subvol=@log $root /mnt/var/log
-mount -a $boot /mnt/boot/efi
+mountpoint -q /mnt/home || mount -o subvol=@home $root /mnt/home
+mountpoint -q /mnt/var/log || mount -o subvol=@log $root /mnt/var/log
+mount $boot /mnt/boot/efi
 findmnt -R -M /mnt
 
 echo -en "\033[1;33m Generate Fstab \033[0m \n";
@@ -97,7 +97,7 @@ cat /mnt/etc/fstab
 # Restore: partclone.btrfs -r -s cloned.img -o /dev/sdb1
 # Block Copy: partclone.btrfs -b -s /dev/sda2 -o /dev/sdb1
 # btrfstune -u /dev/sda2; lsblk -f; (Change UUID)
-# mount -a /dev/sdb1 /mnt (Target Mount); -a Avoid Remount
+# mount /dev/sdb1 /mnt (Target Mount);
 # btrfs filesystem resize max /mnt (Fix Size)
 # arch-chroot /mnt (New Disk: Verify Size and Files)
 # Refresh fstab, grub-install --recheck and grub-mkconfig -o /boot/grub/grub.cfg
