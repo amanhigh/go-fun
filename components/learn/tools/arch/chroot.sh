@@ -1,15 +1,18 @@
 ################## CHROOT Installation #####################
 echo -en "\033[1;33m Driver Installation \033[0m \n";
 
+## Display ##
+read -p "Install Display (Y) ?: " confirm
+if [ "$confirm" == 'Y' ]; then
+    # pacman -S --needed virtualbox-guest-utils xf86-video-vmware
+    pacman -S --needed --noconfirm xorg-server plasma-meta kde-applications nvidia
+fi
+
 ## Network ##
 pacman -S --needed --noconfirm networkmanager wpa_supplicant wireless_tools netctl dialog
 
 ## Drivers ##
-# pacman -S --needed virtualbox-guest-utils xf86-video-vmware
-pacman -S --needed --noconfirm amd-ucode nvidia
-
-## Display ##
-pacman -S --needed --noconfirm xorg-server plasma-meta kde-applications
+pacman -S --needed --noconfirm amd-ucode
 
 ## LVM ##
 # pacman -S --needed lvm2

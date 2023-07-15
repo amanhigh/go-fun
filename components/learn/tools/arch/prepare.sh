@@ -58,11 +58,12 @@ mountpoint -q /mnt && umount /mnt
 mountpoint -q /mnt || mount -o subvol=@ $root /mnt
 
 # Create directory for each partitions and subvolumes:
-mkdir -p /mnt/{etc,boot/efi,home,var/log}
+mkdir -p /mnt/{etc,boot/efi,home,var/log,.snapshots}
 
 mountpoint -q /mnt/home || mount -o subvol=@home $root /mnt/home
 mountpoint -q /mnt/var/log || mount -o subvol=@log $root /mnt/var/log
 mountpoint -q /mnt/boot/efi || mount $boot /mnt/boot/efi
+mountpoint -q /mnt/.snapshots || mount -o subvol=@snapshots $root /mnt/.snapshots
 findmnt -R -M /mnt
 
 echo -en "\033[1;33m Generate Fstab \033[0m \n";
@@ -84,6 +85,7 @@ cat /mnt/etc/fstab
 # Network Manager
 # nmtui
 # nmcli device list
+# lsusb (-s -v)
 
 ## Setup Partitions ##
 # Disk Info: fdisk -l ; lsblk (-f) ; findmnt ; df -hl

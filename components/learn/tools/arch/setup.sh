@@ -16,6 +16,9 @@ arch-chroot /mnt chmod 755 /root/setup.sh
 arch-chroot /mnt /root/setup.sh
 
 ## Exit Change Root ##
+# Create Snapshot after Setup
+btrfs subvolume snapshot /mnt /mnt/.snapshots/base
+
 
 ################## Useful Command #####################
 ## pacman ##
