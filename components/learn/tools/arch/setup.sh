@@ -9,13 +9,12 @@ pacstrap /mnt base linux base-devel linux-headers #Add -i for Interactive
 # Key Mismatch: pacman-key --populate; pacman -S archlinux-keyring;
 
 ## Change Root ##
-ROOT_PATH=$(dirname $(cd .;pwd -P))
+SCRIPT_PATH=$(cd .;pwd -P)
 echo -en "\033[1;33m Changing Root \033[0m \n";
-cp $ROOT_PATH/chroot.sh /mnt/root/setup.sh
-arch-chroot /mnt
+cp $SCRIPT_PATH/chroot.sh /mnt/root/setup.sh
+arch-chroot /mnt /root/setup.sh
 
-
-
+## Exit Change Root ##
 
 ################## Useful Command #####################
 ## pacman ##
