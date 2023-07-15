@@ -42,14 +42,14 @@ timedatectl
 ## Format ##
 # Input Partition Names
 fdisk -l
-read -p "Enter Disk Name (/dev/sda): " disk
+read -p "Enter Disk Name (Eg. /dev/sda): " disk
 read -p "Formatting $disk. Confirm ?: " confirm
 
 boot=${disk}1
 root=${disk}2
 
 # Check if the disk value is not 'N'
-if [ "$disk" == 'Y' ]; then
+if [ "$confirm" == 'Y' ]; then
   # Format EFI using FAT32
   mkfs.fat -F32 $boot -n BOOT
   mkfs.btrfs $root -L ROOT
