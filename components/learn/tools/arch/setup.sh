@@ -24,6 +24,11 @@ arch-chroot /mnt /root/setup.sh
 # -Q Query -Qe Explicit
 # -y Update
 
+## Yay Install ##
+# yay <search>
+# yay -R <name>
+# https://github.com/Jguer/yay
+
 ## Services ##
 # systemctl start <svc>
 # systemctl status <svc>

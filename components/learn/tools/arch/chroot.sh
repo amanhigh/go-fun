@@ -34,21 +34,13 @@ timedatectl set-timezone Asia/Kolkata
 hwclock --systohc
 timedatectl
 
-## Services ##
-systemctl enable --now NetworkManager
-systemctl enable --now systemd-timesyncd
-systemctl enable --now vboxservice
-systemctl enable --now sddm
-
 ## Users ##
 echo -en "\033[1;33m User Management \033[0m \n";
 useradd -m -g users -G wheel aman
 usermod -p changeme root
 usermod -p changeme aman
 
-#TODO: Update /etc/sudoers list
-echo "\033[1;34m Uncomment %Wheel using visudo \033[0m \n";
-
+sed -i '0,/^# %wheel ALL/s/^# //' /etc/sudoers
 ################## Grub Setup #####################
 echo -en "\033[1;33m Grub Setup \033[0m \n";
 grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck
