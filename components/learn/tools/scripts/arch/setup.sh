@@ -49,10 +49,10 @@ timedatectl
 ## Services ##
 #systemctl start <svc>
 #systemctl status <svc>
-systemctl enable NetworkManager
-systemctl enable systemd-timesyncd
-systemctl enable vboxservice
-systemctl enable sddm
+systemctl enable --now NetworkManager
+systemctl enable --now systemd-timesyncd
+systemctl enable --now vboxservice
+systemctl enable --now sddm
 
 ## Users ##
 # https://wiki.archlinux.org/title/Users_and_groups
