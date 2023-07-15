@@ -65,7 +65,7 @@ fi
 
 echo -en "\033[1;33m Creating Sub Partitions (Any Key to Continue) \033[0m \n";
 read
-mount $root /mnt
+mount -a $root /mnt
 # https://archive.kernel.org/oldwiki/btrfs.wiki.kernel.org/index.php/SysadminGuide.html#Managing_Snapshots
 btrfs sub cr /mnt/@
 btrfs sub cr /mnt/@home
@@ -76,14 +76,14 @@ echo -en "\033[1;33m Mounting Drives \033[0m \n";
 read
 # Mount ROOT Subvolume @
 umount /mnt
-mount -o subvol=@ $root /mnt
+mount -a -o subvol=@ $root /mnt
 
 # Create directory for each partitions and subvolumes:
 mkdir -p /mnt/{etc,boot/efi,home,var/log}
 
-mount -o subvol=@home $root /mnt/home
-mount -o subvol=@log $root /mnt/var/log
-mount $boot /mnt/boot/efi
+mount -a -o subvol=@home $root /mnt/home
+mount -a -o subvol=@log $root /mnt/var/log
+mount -a $boot /mnt/boot/efi
 findmnt -R -M /mnt
 
 echo -en "\033[1;33m Generate Fstab \033[0m \n";
@@ -97,7 +97,7 @@ cat /mnt/etc/fstab
 # Restore: partclone.btrfs -r -s cloned.img -o /dev/sdb1
 # Block Copy: partclone.btrfs -b -s /dev/sda2 -o /dev/sdb1
 # btrfstune -u /dev/sda2; lsblk -f; (Change UUID)
-# mount /dev/sdb1 /mnt (Target Mount)
+# mount -a /dev/sdb1 /mnt (Target Mount); -a Avoid Remount
 # btrfs filesystem resize max /mnt (Fix Size)
 # arch-chroot /mnt (New Disk: Verify Size and Files)
 # Refresh fstab, grub-install --recheck and grub-mkconfig -o /boot/grub/grub.cfg
