@@ -5,7 +5,7 @@
 # - https://www.learnlinux.tv/arch-linux-full-installation-guide/
 # ------------------ RUN ------------------
 # - pacman -Sy git; git clone https://github.com/amanhigh/go-fun;
-# 
+# cd go-fun/components/learn/tools/arch; ./prepare.sh; ./setup.sh
 
 ################## Basics #####################
 # Ctrl+d to exit anywhere
@@ -22,7 +22,7 @@ cat /sys/firmware/efi/fw_platform_size
 
 ## Network Check ##
 # ip addr show (Check inet value)
-ping archlinux.org
+ping archlinux.org -c1
 # TODO: DHCP Setup
 
 # Time Check
@@ -44,6 +44,7 @@ timedatectl
 
 ## Format ##
 # Input Partition Names
+echo -en "\033[1;33m Disk Layout \033[0m \n";
 fdisk -l
 echo -en "\033[1;33m Disk Formatting \033[0m \n";
 read -p "Enter Disk Name (Eg. /dev/sda): " disk
@@ -62,7 +63,7 @@ else
     echo -en "\033[1;33m Skipping Disk Formatting \033[0m \n";
 fi
 
-echo -en "\033[1;33m Creating Sub Partitions \033[0m \n";
+echo -en "\033[1;33m Creating Sub Partitions (Any Key to Continue) \033[0m \n";
 read
 mount $root /mnt
 # https://archive.kernel.org/oldwiki/btrfs.wiki.kernel.org/index.php/SysadminGuide.html#Managing_Snapshots
@@ -87,7 +88,7 @@ findmnt -R -M /mnt
 
 echo -en "\033[1;33m Generate Fstab \033[0m \n";
 read
-genfstab -U /mnt >> /mnt/etc/fstab
+genfstab -U /mnt > /mnt/etc/fstab
 cat /mnt/etc/fstab
 
 ################## Useful Command #####################
