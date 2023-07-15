@@ -30,10 +30,6 @@ hostnamectl set-hostname aman
 echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 locale-gen
 
-timedatectl set-timezone Asia/Kolkata
-hwclock --systohc
-timedatectl
-
 ## Users ##
 echo -en "\033[1;33m User Management \033[0m \n";
 useradd -m -g users -G wheel aman
