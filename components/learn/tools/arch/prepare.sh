@@ -1,8 +1,4 @@
 # Arch Linux Prepration Script
-# Tutorials
-# - https://wiki.archlinux.org/title/Installation_guide
-# - https://www.youtube.com/watch?v=DPLnBPM4DhI
-# - https://www.learnlinux.tv/arch-linux-full-installation-guide/
 # ------------------ RUN ------------------
 # - pacman -Sy git; git clone https://github.com/amanhigh/go-fun;
 # cd go-fun/components/learn/tools/arch; ./prepare.sh; ./setup.sh
@@ -14,12 +10,6 @@ echo -en "\033[1;33m Basic Chceks \033[0m \n";
 echo -en "\033[1;34m UEFI Verify Value: 64 \033[0m \n";
 cat /sys/firmware/efi/fw_platform_size
 
-## Wifi - iwctl ##
-# device list
-# station wlan0 scan
-# station wlan0 connect <sid> -P <password>
-# station wlan0 show
-
 ## Network Check ##
 # ip addr show (Check inet value)
 ping archlinux.org -c1
@@ -29,18 +19,8 @@ ping archlinux.org -c1
 timedatectl
 
 ################## Disk Setup #####################
-# Disk Info: fdisk -l ; lsblk (-f) ; findmnt ; df -hl
-## Setup Partitions ##
-# fdisk /dev/sda
-# Layout: Boot:/mnt/efi (300MB+), Swap (500MB+), Root:/mnt, Home:/home, Others:
-# n - Create Partition, Size (+500M,+5G)
-# d - Delete Partition
-# p - Print Current Layout
-# t - Set Type (EF: UEFI, 8E: LVM)
-
 # TODO: LVM Setup
 # TODO: Encryption
-
 
 ## Format ##
 # Input Partition Names
@@ -66,7 +46,6 @@ fi
 echo -en "\033[1;33m Creating Sub Partitions (Any Key to Continue) \033[0m \n";
 read
 mountpoint -q /mnt || mount $root /mnt
-# https://archive.kernel.org/oldwiki/btrfs.wiki.kernel.org/index.php/SysadminGuide.html#Managing_Snapshots
 btrfs sub cr /mnt/@
 btrfs sub cr /mnt/@home
 btrfs sub cr /mnt/@log
@@ -92,6 +71,26 @@ genfstab -U /mnt > /mnt/etc/fstab
 cat /mnt/etc/fstab
 
 ################## Useful Command #####################
+# Tutorials
+# - https://wiki.archlinux.org/title/Installation_guide
+# - https://www.youtube.com/watch?v=DPLnBPM4DhI
+# - https://www.learnlinux.tv/arch-linux-full-installation-guide/
+
+## Wifi - iwctl ##
+# device list
+# station wlan0 scan
+# station wlan0 connect <sid> -P <password>
+# station wlan0 show
+
+## Setup Partitions ##
+# Disk Info: fdisk -l ; lsblk (-f) ; findmnt ; df -hl
+# fdisk /dev/sda
+# Layout: Boot:/mnt/efi (300MB+), Swap (500MB+), Root:/mnt, Home:/home, Others:
+# n - Create Partition, Size (+500M,+5G)
+# d - Delete Partition
+# p - Print Current Layout
+# t - Set Type (EF: UEFI, 8E: LVM)
+
 ## Move/Resize Partition ##
 # Clone: partclone.btrfs -c -d -s /dev/sda2 -o cloned.img
 # Restore: partclone.btrfs -r -s cloned.img -o /dev/sdb1
@@ -117,6 +116,7 @@ cat /mnt/etc/fstab
 # btrfs sub cr /mnt/mysub
 # btrfs sub del /mnt/mysub
 ## Snapshot ##
+# https://archive.kernel.org/oldwiki/btrfs.wiki.kernel.org/index.php/SysadminGuide.html#Managing_Snapshots
 # btrfs sub snap /mnt/mysub /mnt/mysub-backup
 # mount -o subvol=mysub-backup /dev/sda2 /mnt/restore/
 

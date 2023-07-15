@@ -41,9 +41,8 @@ systemctl enable --now vboxservice
 systemctl enable --now sddm
 
 ## Users ##
-echo "\033[1;33m Create User \033[0m \n";
+echo -en "\033[1;33m User Management \033[0m \n";
 useradd -m -g users -G wheel aman
-echo "\033[1;33m Setup Default Password \033[0m \n";
 usermod -p changeme root
 usermod -p changeme aman
 
@@ -51,6 +50,7 @@ usermod -p changeme aman
 echo "\033[1;34m Uncomment %Wheel using visudo \033[0m \n";
 
 ################## Grub Setup #####################
+echo -en "\033[1;33m Grub Setup \033[0m \n";
 grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck
 grub-mkconfig -o /boot/grub/grub.cfg
 
