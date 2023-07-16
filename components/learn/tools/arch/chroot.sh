@@ -12,7 +12,7 @@ fi
 pacman -S --needed --noconfirm networkmanager wpa_supplicant wireless_tools netctl dialog
 
 ## Drivers ##
-pacman -S --needed --noconfirm amd-ucode
+pacman -S --needed --noconfirm amd-ucode ntfs-3g
 
 ## LVM ##
 # pacman -S --needed lvm2

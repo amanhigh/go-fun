@@ -19,6 +19,7 @@ arch-chroot /mnt /root/setup.sh
 # Create Snapshot after Setup
 btrfs subvolume snapshot /mnt /mnt/.snapshots/base
 
+echo -en "\033[1;32m Installation Complete \033[0m"
 
 ################## Useful Command #####################
 ## pacman ##

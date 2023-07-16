@@ -84,8 +84,13 @@ cat /mnt/etc/fstab
 # station wlan0 show
 # Network Manager
 # nmtui
-# nmcli device list
+# nmcli device list wifi connect <ssid> password <password>
 # lsusb (-s -v)
+
+# iwd Auto Setup Wifi using <Sid> and <Password>
+# iwctl --passphrase <password> station wlan0 connect <ssid>
+# Ensure password is remembered on reboot
+
 
 ## Setup Partitions ##
 # Disk Info: fdisk -l ; lsblk (-f) ; findmnt ; df -hl
@@ -122,6 +127,6 @@ cat /mnt/etc/fstab
 # btrfs sub del /mnt/mysub
 ## Snapshot ##
 # https://archive.kernel.org/oldwiki/btrfs.wiki.kernel.org/index.php/SysadminGuide.html#Managing_Snapshots
-# btrfs sub snap /mnt/mysub /mnt/mysub-backup
+# btrfs sub snap -r /mnt/mysub /mnt/mysub-backup
 # mount -o subvol=mysub-backup /dev/sda2 /mnt/restore/
 
