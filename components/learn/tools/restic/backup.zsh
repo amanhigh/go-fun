@@ -4,7 +4,7 @@ export RESTIC_PASSWORD=aman
 
 # Init Repo
 # echo "\033[1;33m Init Repo (Once) \033[0m"
-# restic --repo $REPO -p $PASS_FILE init
+# restic init
 
 # Backup Files
 echo "\033[1;33m Backup Files \033[0m"
