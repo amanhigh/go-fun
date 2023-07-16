@@ -7,7 +7,7 @@ PASS_FILE=./pass.txt
 
 # Backup Files
 echo "\033[1;34m Backup Files \033[0m"
-restic --repo $REPO -p $PASS_FILE backup ../jq --tags base
+restic --repo $REPO -p $PASS_FILE --tag jq,origin backup ../jq 
 
 # Check Snapshot
 restic --repo $REPO -p $PASS_FILE snapshots
@@ -17,7 +17,10 @@ echo "\033[1;34m Modifying Source \033[0m"
 touch ../jq/new.txt
 
 # Backup Post Modification
-restic --repo $REPO -p $PASS_FILE backup ../jq
+restic --repo $REPO -p $PASS_FILE --tag new.txt backup ../jq
+
+echo "\033[1;33m Add Another Backup \033[0m"
+restic --repo $REPO -p $PASS_FILE --tag plantuml,origin backup ../plantuml
 
 echo "\033[1;34m Snapshots After Modification \033[0m"
 restic --repo $REPO -p $PASS_FILE snapshots
@@ -28,3 +31,6 @@ rm ../jq/new.txt
 echo "\033[1;33m Restoring to Last Snapshot \033[0m"
 read
 restic --repo $REPO -p $PASS_FILE restore latest --target ..
+
+echo "\033[1;33m Cleaning older Snapshots \033[0m"
+restic --repo $REPO -p $PASS_FILE forget --keep-last 3 --prune
