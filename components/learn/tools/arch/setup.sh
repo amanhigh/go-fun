@@ -44,3 +44,7 @@ echo -en "\033[1;32m Installation Complete \033[0m"
 # usermod - Modifications (-s shell) (-p password) (-r remove)
 # lslogins - Show all user logins (<name> detailed info)
 # faillock --user <name> (Reset Failed Attempts)
+
+## Localization ##
+# timedatectl set-timezone Asia/Kolkata
+# hostnamectl set-hostname aman

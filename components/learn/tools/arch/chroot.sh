@@ -29,9 +29,12 @@ pacman -S --needed --noconfirm grub efibootmgr os-prober
 ## Local, Layouts etc ##
 echo -en "\033[1;33m Performing Configuration \033[0m \n";
 echo "KEYMAP=dvorak" >> /etc/vconsole.conf
-hostnamectl set-hostname aman
+echo "aman" > /etc/hostname
 echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
 locale-gen
+hwclock --systohc
+timedatectl
 
 ## Users ##
 echo -en "\033[1;33m User Management \033[0m \n";
