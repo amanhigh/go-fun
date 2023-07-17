@@ -5,7 +5,8 @@ echo -en "\033[1;33m Driver Installation \033[0m \n";
 read -p "Install Display (Y) ?: " confirm
 if [ "$confirm" == 'Y' ]; then
     # pacman -S --needed virtualbox-guest-utils xf86-video-vmware
-    pacman -S --needed --noconfirm xorg-server plasma-meta kde-applications nvidia
+    # Minimal: plasma-desktop < plasma-meta < plasma | konsole < kde-applications-meta < kde-applications
+    pacman -S --needed --noconfirm nvidia xorg-server sddm plasma-desktop konsole;
 fi
 
 ## Network ##
@@ -34,7 +35,7 @@ echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
 locale-gen
 hwclock --systohc
-timedatectl
+echo "\033[1;34m Time Check: `date` \033[0m \n";
 
 ## Users ##
 echo -en "\033[1;33m User Management \033[0m \n";
