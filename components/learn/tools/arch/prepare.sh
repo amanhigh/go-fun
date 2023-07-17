@@ -1,6 +1,6 @@
 # Arch Linux Prepration Script
 # ------------------ RUN ------------------
-# - pacman -Sy git; git clone https://github.com/amanhigh/go-fun;
+# pacman -Sy git; git clone https://github.com/amanhigh/go-fun;
 # cd go-fun/components/learn/tools/arch; ./prepare.sh; ./setup.sh
 
 ################## Basics #####################
@@ -95,11 +95,12 @@ cat /mnt/etc/fstab
 ## Setup Partitions ##
 # Disk Info: fdisk -l ; lsblk (-f) ; findmnt ; df -hl
 # fdisk /dev/sda
+# Partition Table: GPT (g) or MBR (Backward Compaitable)
 # Layout: Boot:/mnt/efi (300MB+), Swap (500MB+), Root:/mnt, Home:/home, Others:
 # n - Create Partition, Size (+500M,+5G)
 # d - Delete Partition
 # p - Print Current Layout
-# t - Set Type (EF: UEFI, 8E: LVM)
+# t - Set Type (EF: UEFI, 8E: LVM) / GPT (1.EFI System)
 
 ## Move/Resize Partition ##
 # Clone: partclone.btrfs -c -d -s /dev/sda2 -o cloned.img
@@ -130,3 +131,13 @@ cat /mnt/etc/fstab
 # btrfs sub snap -r /mnt/mysub /mnt/mysub-backup
 # mount -o subvol=mysub-backup /dev/sda2 /mnt/restore/
 
+#### Encrypted External Disks #####
+# cryptsetup --type tcrypt --veracrypt open /dev/sda1 my_decrypted_volume
+# mkdir /mnt/my_decrypted_volume
+# mount /dev/mapper/my_decrypted_volume /mnt/my_decrypted_volume
+# cryptsetup -y -v --type luks2 luksFormat /dev/sda1
+# cryptsetup open /dev/sda1 my_decrypted_volume
+## Password Change
+# see key slots, max -8 i.e. max 8 passwords can be setup for each device
+# cryptsetup luksAddKey /dev/sda1 (Set New Password)
+# cryptsetup luksRemoveKey /dev/sda1 (Remove old Password)

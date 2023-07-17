@@ -9,7 +9,7 @@ if [ "$confirm" == 'Y' ]; then
 fi
 
 ## Network ##
-pacman -S --needed --noconfirm networkmanager wpa_supplicant wireless_tools netctl dialog
+pacman -S --needed --noconfirm networkmanager
 
 ## Drivers ##
 pacman -S --needed --noconfirm amd-ucode ntfs-3g
@@ -23,7 +23,7 @@ pacman -S --needed --noconfirm amd-ucode ntfs-3g
 pacman -S --needed --noconfirm vi git tldr btrfs-progs
 
 ## Grub ##
-pacman -S --needed --noconfirm grub efibootmgr dosfstools os-prober mtools
+pacman -S --needed --noconfirm grub efibootmgr os-prober
 
 ################## Configuration #####################
 ## Local, Layouts etc ##
@@ -36,8 +36,8 @@ locale-gen
 ## Users ##
 echo -en "\033[1;33m User Management \033[0m \n";
 useradd -m -g users -G wheel aman
-usermod -p `openssl passwd -1 chageme` root
-usermod -p `openssl passwd -1 chageme` aman
+usermod -p `openssl passwd -1 changeme` root
+usermod -p `openssl passwd -1 changeme` aman
 
 sed -i '0,/^# %wheel ALL/s/^# //' /etc/sudoers
 ################## Grub Setup #####################
