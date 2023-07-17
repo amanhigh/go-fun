@@ -32,20 +32,28 @@ read -p "Formatting $disk. Confirm (Y) ?: " confirm
 
 boot=${disk}1
 root=${disk}2
+croot=/dev/mapper/cryptroot
 
 # Check if the disk value is not 'N'
 if [ "$confirm" == 'Y' ]; then
   # Format EFI using FAT32
   mkfs.fat -F32 $boot -n BOOT
-  mkfs.btrfs $root -L ROOT
-  #swapon /dev/sda2
+
+  # Encrypt Root Partition
+  # --type luks2 has Limited Support in Grub
+  cryptSetup luksFormat $root
+  cryptsetup open $root cryptroot
+
+  #Normal Format on Crypt Root
+  mkfs.btrfs $croot -L ROOT
+  #swapon /dev/sda3
 else
     echo -en "\033[1;33m Skipping Disk Formatting \033[0m \n";
 fi
 
 echo -en "\033[1;33m Creating Sub Partitions (Any Key to Continue) \033[0m \n";
 read
-mountpoint -q /mnt || mount $root /mnt
+mountpoint -q /mnt || mount $croot /mnt
 btrfs sub cr /mnt/@
 btrfs sub cr /mnt/@home
 btrfs sub cr /mnt/@log
@@ -53,17 +61,18 @@ btrfs sub cr /mnt/@snapshots
 
 echo -en "\033[1;33m Mounting Drives \033[0m \n";
 read
-# Mount ROOT Subvolume @
+# Mount ROOT at Subvolume @
 mountpoint -q /mnt && umount /mnt
-mountpoint -q /mnt || mount -o subvol=@ $root /mnt
+mountpoint -q /mnt || mount -o subvol=@ $croot /mnt
 
 # Create directory for each partitions and subvolumes:
 mkdir -p /mnt/{etc,boot/efi,home,var/log,.snapshots}
 
-mountpoint -q /mnt/home || mount -o subvol=@home $root /mnt/home
-mountpoint -q /mnt/var/log || mount -o subvol=@log $root /mnt/var/log
+# TODO: -o defaults,noatime,discard,ssd,space_cache,subvol=
+mountpoint -q /mnt/home || mount -o subvol=@home $croot /mnt/home
+mountpoint -q /mnt/var/log || mount -o subvol=@log $croot /mnt/var/log
 mountpoint -q /mnt/boot/efi || mount $boot /mnt/boot/efi
-mountpoint -q /mnt/.snapshots || mount -o subvol=@snapshots $root /mnt/.snapshots
+mountpoint -q /mnt/.snapshots || mount -o subvol=@snapshots $croot /mnt/.snapshots
 findmnt -R -M /mnt
 
 echo -en "\033[1;33m Generate Fstab \033[0m \n";
@@ -76,6 +85,8 @@ cat /mnt/etc/fstab
 # - https://wiki.archlinux.org/title/Installation_guide
 # - https://www.youtube.com/watch?v=DPLnBPM4DhI
 # - https://www.learnlinux.tv/arch-linux-full-installation-guide/
+## Commands ##
+# Ttys - Ctrl + Alt + F1-F10
 
 ## Wifi - iwctl ##
 # device list
@@ -93,7 +104,7 @@ cat /mnt/etc/fstab
 
 
 ## Setup Partitions ##
-# Disk Info: fdisk -l ; lsblk (-f) ; findmnt ; df -hl
+# Disk Info: fdisk -l ; lsblk (-f) ; findmnt ; df -hl ; blkid
 # fdisk /dev/sda
 # Partition Table: GPT (g) or MBR (Backward Compaitable)
 # Layout: Boot:/mnt/efi (300MB+), Swap (500MB+), Root:/mnt, Home:/home, Others:

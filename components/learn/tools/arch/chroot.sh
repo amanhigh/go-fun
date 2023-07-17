@@ -17,8 +17,6 @@ pacman -S --needed --noconfirm amd-ucode ntfs-3g
 
 ## LVM ##
 # pacman -S --needed lvm2
-# TODO: Add Hooks
-# mkinitcpio -p linux
 
 ## Essential ##
 pacman -S --needed --noconfirm vi git tldr btrfs-progs
@@ -36,6 +34,7 @@ ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
 locale-gen
 hwclock --systohc
 echo "\033[1;34m Time Check: `date` \033[0m \n";
+# TODO: etchosts
 
 ## Users ##
 echo -en "\033[1;33m User Management \033[0m \n";
@@ -45,6 +44,10 @@ usermod -p `openssl passwd -1 changeme` aman
 
 sed -i '0,/^# %wheel ALL/s/^# //' /etc/sudoers
 ################## Grub Setup #####################
+echo "\033[1;33m mkinitcpio (Hooks) \033[0m \n";
+# TODO: Add Hooks
+# mkinitcpio -p linux
+
 echo -en "\033[1;33m Grub Setup \033[0m \n";
 grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck
 grub-mkconfig -o /boot/grub/grub.cfg
