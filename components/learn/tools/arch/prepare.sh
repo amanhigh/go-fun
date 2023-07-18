@@ -40,9 +40,10 @@ if [ "$confirm" == 'y' ]; then
 
   # Encrypt Root Partition
   # --type luks2 has Limited Support in Grub
+  echo "\033[1;33m Encryption \033[0m \n";
   read -p "Encrypt $root. Confirm (y/N) ?: " confirm
   if [ "$confirm" == 'y' ]; then
-    cryptSetup luksFormat $root
+    cryptsetup luksFormat $root
     cryptsetup open $root cryptroot
     root=/dev/mapper/cryptroot
   fi
@@ -150,11 +151,13 @@ cat /mnt/etc/fstab
 # mount -o subvol=mysub-backup /dev/sda2 /mnt/restore/
 
 #### Encrypted External Disks #####
+##LUKS
+# cryptsetup luksOpen /dev/sda1 cryptroot
+# cryptsetup luksClose cryptroot
+## Veracrypt
 # cryptsetup --type tcrypt --veracrypt open /dev/sda1 my_decrypted_volume
 # mkdir /mnt/my_decrypted_volume
 # mount /dev/mapper/my_decrypted_volume /mnt/my_decrypted_volume
-# cryptsetup -y -v --type luks2 luksFormat /dev/sda1
-# cryptsetup open /dev/sda1 my_decrypted_volume
 ## Password Change
 # see key slots, max -8 i.e. max 8 passwords can be setup for each device
 # cryptsetup luksAddKey /dev/sda1 (Set New Password)
