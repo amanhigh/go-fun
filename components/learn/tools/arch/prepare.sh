@@ -28,24 +28,27 @@ echo -en "\033[1;33m Disk Layout \033[0m \n";
 fdisk -l
 echo -en "\033[1;33m Disk Formatting \033[0m \n";
 read -p "Enter Disk Name (Eg. /dev/sda): " disk
-read -p "Formatting $disk. Confirm (Y) ?: " confirm
+read -p "Formatting $disk. Confirm (y/N) ?: " confirm
 
 boot=${disk}1
 root=${disk}2
-croot=/dev/mapper/cryptroot
 
 # Check if the disk value is not 'N'
-if [ "$confirm" == 'Y' ]; then
+if [ "$confirm" == 'y' ]; then
   # Format EFI using FAT32
   mkfs.fat -F32 $boot -n BOOT
 
   # Encrypt Root Partition
   # --type luks2 has Limited Support in Grub
-  cryptSetup luksFormat $root
-  cryptsetup open $root cryptroot
+  read -p "Encrypt $root. Confirm (y/N) ?: " confirm
+  if [ "$confirm" == 'y' ]; then
+    cryptSetup luksFormat $root
+    cryptsetup open $root cryptroot
+    root=/dev/mapper/cryptroot
+  fi
 
   #Normal Format on Crypt Root
-  mkfs.btrfs $croot -L ROOT
+  mkfs.btrfs $root -L ROOT
   #swapon /dev/sda3
 else
     echo -en "\033[1;33m Skipping Disk Formatting \033[0m \n";
@@ -53,7 +56,7 @@ fi
 
 echo -en "\033[1;33m Creating Sub Partitions (Any Key to Continue) \033[0m \n";
 read
-mountpoint -q /mnt || mount $croot /mnt
+mountpoint -q /mnt || mount $root /mnt
 btrfs sub cr /mnt/@
 btrfs sub cr /mnt/@home
 btrfs sub cr /mnt/@log
@@ -63,17 +66,21 @@ echo -en "\033[1;33m Mounting Drives \033[0m \n";
 read
 # Mount ROOT at Subvolume @
 mountpoint -q /mnt && umount /mnt
-mountpoint -q /mnt || mount -o subvol=@ $croot /mnt
+mountpoint -q /mnt || mount -o subvol=@ $root /mnt
 
 # Create directory for each partitions and subvolumes:
 mkdir -p /mnt/{etc,boot/efi,home,var/log,.snapshots}
 
-# TODO: -o defaults,noatime,discard,ssd,space_cache,subvol=
-mountpoint -q /mnt/home || mount -o subvol=@home $croot /mnt/home
-mountpoint -q /mnt/var/log || mount -o subvol=@log $croot /mnt/var/log
+# TODO: -o defaults,noatime,discard=async,ssd,space_cache,compress=zstd,subvol=
+mountpoint -q /mnt/home || mount -o subvol=@home $root /mnt/home
+mountpoint -q /mnt/var/log || mount -o subvol=@log $root /mnt/var/log
 mountpoint -q /mnt/boot/efi || mount $boot /mnt/boot/efi
-mountpoint -q /mnt/.snapshots || mount -o subvol=@snapshots $croot /mnt/.snapshots
+mountpoint -q /mnt/.snapshots || mount -o subvol=@snapshots $root /mnt/.snapshots
 findmnt -R -M /mnt
+
+# cryptsetup luksHeaderBackup /dev/device --header-backup-file /mnt/backup/file.img
+# Test Header cryptsetup -v --header /mnt/backup/file.img open /dev/device test
+# cryptsetup luksHeaderRestore /dev/device --header-backup-file ./mnt/backup/file.img
 
 echo -en "\033[1;33m Generate Fstab \033[0m \n";
 read
