@@ -2,8 +2,8 @@
 echo -en "\033[1;33m Driver Installation \033[0m \n";
 
 ## Display ##
-read -p "Install Display (Y) ?: " confirm
-if [ "$confirm" == 'Y' ]; then
+read -p "Install Display (y/N) ?: " confirm
+if [ "$confirm" == 'y' ]; then
     # pacman -S --needed virtualbox-guest-utils xf86-video-vmware
     # Minimal: plasma-desktop < plasma-meta < plasma | konsole < kde-applications-meta < kde-applications
     pacman -S --needed --noconfirm nvidia xorg-server sddm plasma-desktop konsole;
@@ -44,7 +44,7 @@ usermod -p `openssl passwd -1 changeme` aman
 
 sed -i '0,/^# %wheel ALL/s/^# //' /etc/sudoers
 ################## Encryption #####################
-echo "\033[1;33m Generating Encryption Config. Confirm (y/N) ?\033[0m \n";
+echo -en "\033[1;33m Generating Encryption Config. Confirm (y/N) ?\033[0m \n";
 read -p confirm
 if [ "$confirm" == 'y' ]; then
     ## Hooks and modules
@@ -62,6 +62,4 @@ grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck
 grub-mkconfig -o /boot/grub/grub.cfg
 
 #Populates /mnt/grub and /mnt/efi/EFI Folders
-# cp /usr/share/locale/en\@quot/LC_MESSAGES/grub.mo /boot/grub/locale/en.mo
-# TODO: Crypto /etc/default/grub
 # TODO: OS Prober
