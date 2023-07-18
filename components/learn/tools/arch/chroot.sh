@@ -33,7 +33,7 @@ echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
 locale-gen
 hwclock --systohc
-echo "\033[1;34m Time Check: `date` \033[0m \n";
+echo -en "\033[1;34m Time Check: `date` \033[0m \n";
 # TODO: etchosts
 
 ## Users ##
@@ -45,7 +45,7 @@ usermod -p `openssl passwd -1 changeme` aman
 sed -i '0,/^# %wheel ALL/s/^# //' /etc/sudoers
 ################## Encryption #####################
 echo -en "\033[1;33m Generating Encryption Config. Confirm (y/N) ?\033[0m \n";
-read -p confirm
+read confirm
 if [ "$confirm" == 'y' ]; then
     ## Hooks and modules
     sudo sed -i 's/^MODULES=()$/MODULES=(btrfs)/' /etc/mkinitcpio.conf
