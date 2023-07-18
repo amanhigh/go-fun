@@ -40,7 +40,7 @@ if [ "$confirm" == 'y' ]; then
 
   # Encrypt Root Partition
   # --type luks2 has Limited Support in Grub
-  echo "\033[1;33m Encryption \033[0m \n";
+  echo -en "\033[1;33m Encryption \033[0m \n";
   read -p "Encrypt $root. Confirm (y/N) ?: " confirm
   if [ "$confirm" == 'y' ]; then
     cryptsetup luksFormat $root

@@ -43,11 +43,20 @@ usermod -p `openssl passwd -1 changeme` root
 usermod -p `openssl passwd -1 changeme` aman
 
 sed -i '0,/^# %wheel ALL/s/^# //' /etc/sudoers
-################## Grub Setup #####################
-echo "\033[1;33m mkinitcpio (Hooks) \033[0m \n";
-# TODO: Add Hooks
-# mkinitcpio -p linux
+################## Encryption #####################
+echo "\033[1;33m Generating Encryption Config. Confirm (y/N) ?\033[0m \n";
+read -p confirm
+if [ "$confirm" == 'y' ]; then
+    ## Hooks and modules
+    sudo sed -i 's/^MODULES=()$/MODULES=(btrfs)/' /etc/mkinitcpio.conf
+    sed -i 's/^HOOKS=(.*)$/HOOKS=(base udev autodetect modconf kms keyboard consolefont block encrypt btrfs filesystems fsck)/' /etc/mkinitcpio.conf
+    mkinitcpio -p linux
 
+    ## Grub Config ##
+    sed -i '/^#.*GRUB_ENABLE_CRYPTODISK/s/^#//' /etc/default/grub
+    #sed -i '/^#.*GRUB_DISABLE_OS_PROBER/s/^#//' /etc/default/grub
+fi
+################## Grub Setup #####################
 echo -en "\033[1;33m Grub Setup \033[0m \n";
 grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck
 grub-mkconfig -o /boot/grub/grub.cfg
