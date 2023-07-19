@@ -43,7 +43,7 @@ if [ "$confirm" == 'y' ]; then
   echo -en "\033[1;33m Encryption \033[0m \n";
   read -p "Encrypt $root. Confirm (y/N) ?: " confirm
   if [ "$confirm" == 'y' ]; then
-    cryptsetup luksFormat $root
+    cryptsetup luksFormat --type luks1 $root
     cryptsetup open $root cryptroot
     root=/dev/mapper/cryptroot
   fi
