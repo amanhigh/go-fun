@@ -151,14 +151,19 @@ cat /mnt/etc/fstab
 # mount -o subvol=mysub-backup /dev/sda2 /mnt/restore/
 
 #### Encrypted External Disks #####
+# https://www.youtube.com/watch?v=co5V2YmFVEE
+# https://github.com/Szwendacz99/Arch-install-encrypted-btrfs
 ##LUKS
-# cryptsetup luksOpen /dev/sda1 cryptroot
+# cryptsetup luksOpen /dev/sda2 cryptroot
 # cryptsetup luksClose cryptroot
+# cryptsetup luksDum /dev/sda2
 ## Veracrypt
 # cryptsetup --type tcrypt --veracrypt open /dev/sda1 my_decrypted_volume
+## Mounting
 # mkdir /mnt/my_decrypted_volume
 # mount /dev/mapper/my_decrypted_volume /mnt/my_decrypted_volume
 ## Password Change
 # see key slots, max -8 i.e. max 8 passwords can be setup for each device
-# cryptsetup luksAddKey /dev/sda1 (Set New Password)
-# cryptsetup luksRemoveKey /dev/sda1 (Remove old Password)
+# cryptsetup luksChangeKey /dev/sda2
+# cryptsetup luksAddKey /dev/sda2 (Set New Password)
+# cryptsetup luksRemoveKey /dev/sda2 (Remove old Password)

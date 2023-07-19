@@ -54,6 +54,8 @@ if [ "$confirm" == 'y' ]; then
 
     ## Grub Config ##
     sed -i '/^#.*GRUB_ENABLE_CRYPTODISK/s/^#//' /etc/default/grub
+    ID=`blkid -s UUID -o value -t TYPE=crypto_LUKS`
+    sed -i "/^GRUB_CMDLINE_LINUX_DEFAULT.*/s/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet cryptdevice=UUID=$ID:cryptroot:allow-discards root=/dev/mapper/cryptroot\"/" /etc/default/grub
     #sed -i '/^#.*GRUB_DISABLE_OS_PROBER/s/^#//' /etc/default/grub
 fi
 ################## Grub Setup #####################

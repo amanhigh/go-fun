@@ -18,6 +18,7 @@ arch-chroot /mnt /root/setup.sh
 ## Exit Change Root ##
 # Create Snapshot after Setup
 btrfs subvolume snapshot /mnt /mnt/.snapshots/base
+#TODO: Header Backup
 
 echo -en "\033[1;32m Installation Complete \033[0m"
 
