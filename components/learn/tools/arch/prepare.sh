@@ -73,7 +73,7 @@ mountpoint -q /mnt || mount -o subvol=@ $root /mnt
 # Create directory for each partitions and subvolumes:
 mkdir -p /mnt/{root,etc,boot/efi,home,var/log,.snapshots}
 
-MOUNT_OPT=defaults,noatime,discard=async,ssd,space_cache,compress=zstd
+MOUNT_OPT="defaults,noatime,discard=async,ssd,space_cache,compress=zstd"
 mountpoint -q /mnt/home || mount -o $MOUNT_OPT,subvol=@home $root /mnt/home
 mountpoint -q /mnt/var/log || mount -o $MOUNT_OPT,subvol=@log $root /mnt/var/log
 mountpoint -q /mnt/.snapshots || mount -o $MOUNT_OPT,subvol=@snapshots $root /mnt/.snapshots
@@ -85,7 +85,7 @@ findmnt -R -M /mnt
 # cryptsetup luksHeaderRestore /dev/device --header-backup-file ./mnt/backup/file.img
 
 if [ "$encrypt" == 'y' ]; then
-  echo "\033[1;34m Generating Crypt File \033[0m \n";
+  echo -en "\033[1;34m Generating Crypt File \033[0m \n";
   dd bs=512 count=4 if=/dev/random of=/mnt/root/crypt.keyfile iflag=fullblock
   chmod 000 /mnt/root/crypt.keyfile
   cryptsetup -v luksAddKey ${disk}2 /mnt/root/crypt.keyfile
