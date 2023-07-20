@@ -127,7 +127,7 @@ cat /mnt/etc/fstab
 # p - Print Current Layout
 # t - Set Type (EF: UEFI, 8E: LVM) / GPT (1.EFI System)
 
-## Move/Resize Partition ##
+## Move/Resize/Backup/Restore Partition ##
 # Clone: partclone.btrfs -c -d -s /dev/sda2 -o cloned.img
 # Restore: partclone.btrfs -r -s cloned.img -o /dev/sdb1
 # Block Copy: partclone.btrfs -b -s /dev/sda2 -o /dev/sdb1

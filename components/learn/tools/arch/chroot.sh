@@ -6,7 +6,7 @@ read -p "Install Display (y/N) ?: " confirm
 if [ "$confirm" == 'y' ]; then
     # pacman -S --needed virtualbox-guest-utils xf86-video-vmware
     # Minimal: plasma-desktop < plasma-meta < plasma | konsole < kde-applications-meta < kde-applications
-    pacman -S --needed --noconfirm nvidia xorg-server sddm plasma-desktop konsole;
+    pacman -S --needed --noconfirm nvidia xorg-server sddm plasma-desktop konsole dolphin firefox;
 fi
 
 ## Network ##
@@ -19,7 +19,7 @@ pacman -S --needed --noconfirm amd-ucode ntfs-3g
 # pacman -S --needed lvm2
 
 ## Essential ##
-pacman -S --needed --noconfirm vi git tldr btrfs-progs
+pacman -S --needed --noconfirm vi git tldr btrfs-progs cronie
 
 ## Grub ##
 pacman -S --needed --noconfirm grub efibootmgr os-prober
