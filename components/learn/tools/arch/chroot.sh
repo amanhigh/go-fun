@@ -49,14 +49,16 @@ read confirm
 if [ "$confirm" == 'y' ]; then
     ## Hooks and modules
     sed -i 's/^MODULES=()$/MODULES=(btrfs)/' /etc/mkinitcpio.conf
+    sed -i 's/^FILES=()$/FILES=(/root/crypt.keyfile)/' /etc/mkinitcpio.conf
     sed -i 's/^HOOKS=(.*)$/HOOKS=(base udev autodetect modconf kms keyboard consolefont block encrypt btrfs filesystems fsck)/' /etc/mkinitcpio.conf
     mkinitcpio -p linux
+    chmod 600 /boot/initramfs-linux* #Secure embedded crypt.keyfile
 
     ## Grub Config ##
     sed -i '/^#.*GRUB_ENABLE_CRYPTODISK/s/^#//' /etc/default/grub
     # Set UUID of Encrypted Partition
     ID=`blkid -s UUID -o value -t TYPE=crypto_LUKS`
-    sed -i "s/GRUB_CMDLINE_LINUX_DEFAULT.*/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet cryptdevice=UUID=$ID:cryptroot:allow-discards root=\/dev\/mapper\/cryptroot\"/" /etc/default/grub
+    sed -i "s/GRUB_CMDLINE_LINUX_DEFAULT.*/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet cryptdevice=UUID=$ID:cryptroot:allow-discards root=\/dev\/mapper\/cryptroot cryptkey=rootfs:\/root\/crypt.keyfile\"/" /etc/default/grub
     #sed -i '/^#.*GRUB_DISABLE_OS_PROBER/s/^#//' /etc/default/grub
 fi
 ################## Grub Setup #####################
