@@ -46,6 +46,12 @@ if [ "$confirm" == 'y' ]; then
     cryptsetup luksFormat --type luks1 $root
     cryptsetup open $root cryptroot
     root=/dev/mapper/cryptroot
+
+    echo "\033[1;34m Generating Crypt File \033[0m \n";
+    dd bs=512 count=4 if=/dev/random of=/root/crypt.keyfile iflag=fullblock
+    chmod 000 /root/crypt.keyfile
+    cryptsetup -v luksAddKey $root /root/crypt.keyfile
+
   fi
 
   #Normal Format on Crypt Root
