@@ -72,11 +72,11 @@ mountpoint -q /mnt || mount -o subvol=@ $root /mnt
 # Create directory for each partitions and subvolumes:
 mkdir -p /mnt/{etc,boot/efi,home,var/log,.snapshots}
 
-# TODO: -o defaults,noatime,discard=async,ssd,space_cache,compress=zstd,subvol=
-mountpoint -q /mnt/home || mount -o subvol=@home $root /mnt/home
-mountpoint -q /mnt/var/log || mount -o subvol=@log $root /mnt/var/log
+MOUNT_OPT=defaults,noatime,discard=async,ssd,space_cache,compress=zstd
+mountpoint -q /mnt/home || mount -o $MOUNT_OPT,subvol=@home $root /mnt/home
+mountpoint -q /mnt/var/log || mount -o $MOUNT_OPT,subvol=@log $root /mnt/var/log
+mountpoint -q /mnt/.snapshots || mount -o $MOUNT_OPT,subvol=@snapshots $root /mnt/.snapshots
 mountpoint -q /mnt/boot/efi || mount $boot /mnt/boot/efi
-mountpoint -q /mnt/.snapshots || mount -o subvol=@snapshots $root /mnt/.snapshots
 findmnt -R -M /mnt
 
 # cryptsetup luksHeaderBackup /dev/device --header-backup-file /mnt/backup/file.img
