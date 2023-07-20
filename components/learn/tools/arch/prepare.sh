@@ -30,6 +30,11 @@ echo -en "\033[1;33m Disk Formatting \033[0m \n";
 read -p "Enter Disk Name (Eg. /dev/sda): " disk
 read -p "Formatting $disk. Confirm (y/N) ?: " confirm
 
+# Encrypt Root Partition
+# --type luks2 has Limited Support in Grub
+echo -en "\033[1;33m Encryption \033[0m \n";
+read -p "Encrypt $root. Confirm (y/N) ?: " encrypt
+
 boot=${disk}1
 root=${disk}2
 
@@ -37,21 +42,11 @@ root=${disk}2
 if [ "$confirm" == 'y' ]; then
   # Format EFI using FAT32
   mkfs.fat -F32 $boot -n BOOT
-
-  # Encrypt Root Partition
-  # --type luks2 has Limited Support in Grub
-  echo -en "\033[1;33m Encryption \033[0m \n";
-  read -p "Encrypt $root. Confirm (y/N) ?: " confirm
-  if [ "$confirm" == 'y' ]; then
+  
+  if [ "$encrypt" == 'y' ]; then
     cryptsetup luksFormat --type luks1 $root
     cryptsetup open $root cryptroot
     root=/dev/mapper/cryptroot
-
-    echo "\033[1;34m Generating Crypt File \033[0m \n";
-    dd bs=512 count=4 if=/dev/random of=/root/crypt.keyfile iflag=fullblock
-    chmod 000 /root/crypt.keyfile
-    cryptsetup -v luksAddKey $root /root/crypt.keyfile
-
   fi
 
   #Normal Format on Crypt Root
@@ -76,7 +71,7 @@ mountpoint -q /mnt && umount /mnt
 mountpoint -q /mnt || mount -o subvol=@ $root /mnt
 
 # Create directory for each partitions and subvolumes:
-mkdir -p /mnt/{etc,boot/efi,home,var/log,.snapshots}
+mkdir -p /mnt/{root,etc,boot/efi,home,var/log,.snapshots}
 
 MOUNT_OPT=defaults,noatime,discard=async,ssd,space_cache,compress=zstd
 mountpoint -q /mnt/home || mount -o $MOUNT_OPT,subvol=@home $root /mnt/home
@@ -88,6 +83,13 @@ findmnt -R -M /mnt
 # cryptsetup luksHeaderBackup /dev/device --header-backup-file /mnt/backup/file.img
 # Test Header cryptsetup -v --header /mnt/backup/file.img open /dev/device test
 # cryptsetup luksHeaderRestore /dev/device --header-backup-file ./mnt/backup/file.img
+
+if [ "$encrypt" == 'y' ]; then
+  echo "\033[1;34m Generating Crypt File \033[0m \n";
+  dd bs=512 count=4 if=/dev/random of=/mnt/root/crypt.keyfile iflag=fullblock
+  chmod 000 /mnt/root/crypt.keyfile
+  cryptsetup -v luksAddKey ${disk}2 /mnt/root/crypt.keyfile
+fi
 
 echo -en "\033[1;33m Generate Fstab \033[0m \n";
 read
