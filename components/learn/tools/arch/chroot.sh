@@ -49,7 +49,7 @@ read confirm
 if [ "$confirm" == 'y' ]; then
     ## Hooks and modules
     sed -i 's/^MODULES=()$/MODULES=(btrfs)/' /etc/mkinitcpio.conf
-    sed -i 's/^FILES=()$/FILES=(/root/crypt.keyfile)/' /etc/mkinitcpio.conf
+    sed -i 's/^FILES=()$/FILES=(\/root\/crypt.keyfile)/' /etc/mkinitcpio.conf
     sed -i 's/^HOOKS=(.*)$/HOOKS=(base udev autodetect modconf kms keyboard consolefont block encrypt btrfs filesystems fsck)/' /etc/mkinitcpio.conf
     mkinitcpio -p linux
     chmod 600 /boot/initramfs-linux* #Secure embedded crypt.keyfile
