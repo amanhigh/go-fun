@@ -151,16 +151,23 @@ cat /mnt/etc/fstab
 # btrfs check /dev/sdb1 (Check Disk for Errors)
 ## Subvolumes ##
 # btrfs sub li /mnt
-# btrfs sub cr /mnt/mysub
-# btrfs sub del /mnt/mysub
+# btrfs sub cr /mnt/@snapshots
+# btrfs sub del /mnt/@snapshots
+# btrfs su sh @home
+# Defaults
 # btrfs sub get-default /mnt
 # btrfs sub set-default 5 /mnt (Root Disk)
+# Backup Image
+# btrfs send /home/.snapshots/2/snapshot/ > home.img
+# btrfs recieve /restore/home < home.img
 
 #### Snapshot ####
 # https://archive.kernel.org/oldwiki/btrfs.wiki.kernel.org/index.php/SysadminGuide.html#Managing_Snapshots
-## Create Mount
-# btrfs sub snap -r /mnt/mysub /mnt/mysub-backup (-r Readonly) [Snapshot Create]
-# mount -o subvol=mysub-backup /dev/sda2 /mnt/restore/ [Temporary Mount]
+## Create
+# btrfs sub snap -r /mnt/@ /mnt/@snapshots/root-backup (-r Readonly) [Snapshot Create]
+## Restore
+# mount -o subvol=@snapshots/root-backup /dev/sda2 /mnt/root-readonly (Temp Mount)
+# Writable: Refer Snapper Restore
 ## Delete
 # btrfs sub del /.snapshots/base/
 # btrfs sub del --subvolid 271 / (Delete Root)
@@ -172,11 +179,12 @@ cat /mnt/etc/fstab
 # btrfs property set -ts /.snapshots/8/snapshot/ ro false (Writeable Snapshot)
 
 ############### Snapper ############
+# https://www.youtube.com/watch?v=sm_fuBeaOqE
 ## Explore Snapshots
 # mount -o subvolid=5 /mnt (Mount Top Disk, No Sub Volume)
 # cat /mnt/@snapshots/7/inf.xml
-## Restore Snapshot (Writable)
-# rm -rf /mnt/@ (Change Default SubVol before this)
+# Writable Restore
+# rm -rf /mnt/@ (Change Default SubVol Before: BTRFS:Defaults Section)
 # btrfs sub snap /mnt/@snapshots/7/snapshot /mnt/@
 
 #### Encrypted External Disks #####
@@ -185,7 +193,6 @@ cat /mnt/etc/fstab
 ##LUKS
 # cryptsetup luksOpen /dev/sda2 cryptroot
 # cryptsetup luksClose cryptroot
-# cryptsetup luksDum /dev/sda2
 ## Veracrypt
 # cryptsetup --type tcrypt --veracrypt open /dev/sda1 my_decrypted_volume
 ## Mounting
@@ -193,6 +200,7 @@ cat /mnt/etc/fstab
 # mount /dev/mapper/my_decrypted_volume /mnt/my_decrypted_volume
 ## Password Change
 # see key slots, max -8 i.e. max 8 passwords can be setup for each device
+# cryptsetup luksDump /dev/sda2
 # cryptsetup luksChangeKey /dev/sda2
 # cryptsetup luksAddKey /dev/sda2 (Set New Password)
 # cryptsetup luksRemoveKey /dev/sda2 (Remove old Password)
