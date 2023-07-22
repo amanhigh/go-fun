@@ -1,1 +1,0 @@
-# Post Install for Arch Linux
