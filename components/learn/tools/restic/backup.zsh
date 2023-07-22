@@ -30,18 +30,18 @@ rm ../jq/new.txt
 
 echo "\033[1;33m Restoring to Last Snapshot \033[0m"
 read
-restic restore latest --target ..
+restic restore latest --target .. #-t works for target
 
 echo "\033[1;33m Cleaning older Snapshots \033[0m"
 restic forget --keep-last 3 --prune
 
 
 ################# Useful Commands ############
-# restic check - Repo Health
+# Repo Health: restic check (--read-data Compares Checksum)
 # restic find "*.json"
-# restic -n backup - Dry Run
-# restic -r /srv/restic-repo-copy copy --from-repo /srv/restic-repo (External Backup)
-# restic backup /home/user/specific_file /home/user/specific_directory (Include List)
+# Dry Run: restic -n backup
+# External Backup: restic -r /srv/restic-repo-copy copy --from-repo /srv/restic-repo
+# Include List: restic backup /home/user/specific_file /home/user/specific_directory
 ## Browsing
 # restic ls latest - File List
 # restic diff 5093dca3 53486dfc (Using Snapshot ids)
@@ -52,6 +52,9 @@ restic forget --keep-last 3 --prune
 ## Key Management
 # restic key list
 # restic key passwd (change password)
+## Compress
+# --compression=max (auto,off)
+
 
 ################# Exclusions ############
 # --exclude-file ./exclusions OR --exclude="*.c" --exclude-file=excludes.txt --exclude-larger-than 2048
@@ -64,4 +67,4 @@ restic forget --keep-last 3 --prune
 # Exclude files that start with a specific string
 # echo "temp_*" >> ./exclusions
 # Exclude files that match a regular expression
-# echo "/home/user/[0-9]*" >> ./exclusionsre
+# echo "/home/user/[0-9]*" >> ./exclusions
