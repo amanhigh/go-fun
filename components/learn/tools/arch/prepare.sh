@@ -153,10 +153,31 @@ cat /mnt/etc/fstab
 # btrfs sub li /mnt
 # btrfs sub cr /mnt/mysub
 # btrfs sub del /mnt/mysub
-## Snapshot ##
+# btrfs sub get-default /mnt
+# btrfs sub set-default 5 /mnt (Root Disk)
+
+#### Snapshot ####
 # https://archive.kernel.org/oldwiki/btrfs.wiki.kernel.org/index.php/SysadminGuide.html#Managing_Snapshots
-# btrfs sub snap -r /mnt/mysub /mnt/mysub-backup
-# mount -o subvol=mysub-backup /dev/sda2 /mnt/restore/
+## Create Mount
+# btrfs sub snap -r /mnt/mysub /mnt/mysub-backup (-r Readonly) [Snapshot Create]
+# mount -o subvol=mysub-backup /dev/sda2 /mnt/restore/ [Temporary Mount]
+## Delete
+# btrfs sub del /.snapshots/base/
+# btrfs sub del --subvolid 271 / (Delete Root)
+# rm -rf /mnt/@ (Change Default SubVol before this)
+# btrfs filesystem du -s /.snapshots (Snapshot Size)
+## Properties
+# btrfs property list -ts /.snapshots/8/snapshot/
+# btrfs property get -ts /.snapshots/8/snapshot/ ro
+# btrfs property set -ts /.snapshots/8/snapshot/ ro false (Writeable Snapshot)
+
+############### Snapper ############
+## Explore Snapshots
+# mount -o subvolid=5 /mnt (Mount Top Disk, No Sub Volume)
+# cat /mnt/@snapshots/7/inf.xml
+## Restore Snapshot (Writable)
+# rm -rf /mnt/@ (Change Default SubVol before this)
+# btrfs sub snap /mnt/@snapshots/7/snapshot /mnt/@
 
 #### Encrypted External Disks #####
 # https://www.youtube.com/watch?v=co5V2YmFVEE

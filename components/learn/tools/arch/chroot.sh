@@ -19,7 +19,7 @@ pacman -S --needed --noconfirm amd-ucode ntfs-3g
 # pacman -S --needed lvm2
 
 ## Essential ##
-pacman -S --needed --noconfirm vi git tldr btrfs-progs cronie
+pacman -S --needed --noconfirm vim git tldr btrfs-progs cronie
 
 ## Grub ##
 pacman -S --needed --noconfirm grub efibootmgr os-prober
