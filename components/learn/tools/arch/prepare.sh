@@ -195,6 +195,7 @@ cat /mnt/etc/fstab
 # cryptsetup luksClose cryptroot
 ## Veracrypt
 # cryptsetup --type tcrypt --veracrypt open /dev/sda1 my_decrypted_volume
+# cryptsetup tcryptClose my_decrypted_volume
 ## Mounting
 # mkdir /mnt/my_decrypted_volume
 # mount /dev/mapper/my_decrypted_volume /mnt/my_decrypted_volume
