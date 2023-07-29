@@ -34,34 +34,34 @@ BACKUP_FILE=file://Backup
 RESTORE_PATH=Restore
 export PASSPHRASE=amanps
 
-echo "\033[1;32m Import Keys \033[0m \n";
+echo -e "\033[1;32m Import Keys \033[0m";
 gpg --import public.pgp
-gpg --import private.pgp
+# gpg --import private.pgp
 
-echo "\033[1;32m Full Backup \033[0m \n";
+echo -e "\033[1;32m Full Backup \033[0m";
 duplicity --full-if-older-than 10s ../jq $BACKUP_FILE --encrypt-key=$KEY_ID
 
-echo "\033[1;34m Modifying Source \033[0m \n";
+echo -e "\033[1;34m Modifying Source \033[0m";
 echo "Test" > ../jq/test.txt
 
-echo "\033[1;32m Incremental Backup \033[0m \n";
+echo -e "\033[1;32m Incremental Backup \033[0m";
 duplicity ../jq $BACKUP_FILE --encrypt-key=$KEY_ID
 
-echo "\033[1;32m Incremental Backup (No Change) \033[0m \n";
+echo -e "\033[1;32m Incremental Backup (No Change) \033[0m";
 duplicity ../jq $BACKUP_FILE --encrypt-key=$KEY_ID
 
-echo "\033[1;34m Removing Modifications \033[0m \n";
+echo -e "\033[1;34m Removing Modifications \033[0m";
 rm ../jq/test.txt
 
-echo "\033[1;32m List Files \033[0m \n";
+echo -e "\033[1;32m List Files \033[0m";
 duplicity list-current-files --encrypt-key=$KEY_ID $BACKUP_FILE
 
-echo "\033[1;32m Remove Older Backups \033[0m \n";
+echo -e "\033[1;32m Remove Older Backups \033[0m";
 duplicity remove-older-than 10s $BACKUP_FILE --force
  
-echo "\033[1;33m Restore Backup \033[0m \n";
+echo -e "\033[1;33m Restore Backup \033[0m";
 rm -rf $RESTORE_PATH
 duplicity restore --encrypt-key=$KEY_ID $BACKUP_FILE $RESTORE_PATH
 
-echo "\033[1;33m Verifying Backup \033[0m \n";
+echo -e "\033[1;33m Verifying Backup \033[0m";
 duplicity verify $BACKUP_FILE $RESTORE_PATH --compare-data --encrypt-key=$KEY_ID

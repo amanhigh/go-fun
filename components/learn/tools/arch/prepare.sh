@@ -157,9 +157,6 @@ cat /mnt/etc/fstab
 # Defaults
 # btrfs sub get-default /mnt
 # btrfs sub set-default 5 /mnt (Root Disk)
-# Backup Image
-# btrfs send /home/.snapshots/2/snapshot/ > home.img
-# btrfs recieve /restore/home < home.img
 
 #### Snapshot ####
 # https://archive.kernel.org/oldwiki/btrfs.wiki.kernel.org/index.php/SysadminGuide.html#Managing_Snapshots
@@ -168,6 +165,9 @@ cat /mnt/etc/fstab
 ## Restore
 # mount -o subvol=@snapshots/root-backup /dev/sda2 /mnt/root-readonly (Temp Mount)
 # Writable: Refer Snapper Restore
+## Backup Image ##
+# btrfs send /home/.snapshots/2/snapshot/ > home.img
+# btrfs recieve /restore/home < home.img
 ## Delete
 # btrfs sub del /.snapshots/base/
 # btrfs sub del --subvolid 271 / (Delete Root)
