@@ -21,7 +21,13 @@ mydb: {
     id: int {constraint: primary_key}
   }
 
-  objects.disk -> disks.id
+  objects.disk -> disks.id: {
+    source-arrowhead.label: 1
+    target-arrowhead: * {
+      shape: diamond
+      style.filled: true
+    }
+  }
 }
 
 # UML: https://d2lang.com/tour/uml-classes
