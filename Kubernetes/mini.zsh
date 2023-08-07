@@ -1,3 +1,4 @@
+#!/bin/zsh
 PORT=8091
 MINI_BKP_FILE=~/Downloads/mini-bkp.txt
 MINI_CURRENT_BKP_FILE=/tmp/mini-bkp

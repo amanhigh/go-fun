@@ -112,6 +112,10 @@ sections:
         description: Easy Desgin and Whiteboarding
         icon: favicon
         url: https://excalidraw.com/
+      - title: D2Lang
+        description: Strong Diagram by Coding Tool
+        icon: favicon
+        url: https://play.d2lang.com/
       - title: Emoji Copy
         description: Symbols and Emoji Repository
         icon: favicon

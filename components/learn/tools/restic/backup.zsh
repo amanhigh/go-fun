@@ -49,6 +49,8 @@ restic forget --keep-last 3 --prune
 ## Schedule Backup
 # /etc/systemd/system/backup.timer
 # systemctl enable restic-backup.timer
+## Snapshot Management
+# restic forget <snapshotid> (--prune to compress)
 ## Key Management
 # restic key list
 # restic key passwd (change password)
