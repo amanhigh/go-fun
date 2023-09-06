@@ -1,3 +1,4 @@
+# Theme: Default
 direction: right
 production: @lib/prod
 ...@lib/styles
@@ -13,9 +14,9 @@ production: {
 
   backend.cluster -- db.master: DB Access
   frontend.cluster -> backend.dns: API Access
-  
-  #Styling Section
-  user.class: med #Multiple [a;b]
+
+  # Styling Section
+  user.class: med # Multiple [a;b]
   (user -> frontend.dns)[0].class: Test-dotted
   (frontend.cluster -> backend.dns)[0].class: smed
   (backend.cluster -- db.master)[0].class: smed
