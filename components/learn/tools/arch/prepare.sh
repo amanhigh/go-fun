@@ -167,7 +167,7 @@ cat /mnt/etc/fstab
 # Writable: Refer Snapper Restore
 ## Backup Image ##
 # btrfs send /home/.snapshots/2/snapshot/ > home.img
-# btrfs recieve /restore/home < home.img
+# btrfs receive /restore/home < home.img
 ## Delete
 # btrfs sub del /.snapshots/base/
 # btrfs sub del --subvolid 271 / (Delete Root)
