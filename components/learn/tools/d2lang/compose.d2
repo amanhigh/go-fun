@@ -4,7 +4,7 @@ production: @lib/prod
 ...@lib/styles
 
 production: {
-  user: @lib/user
+  user
 
   frontend: @lib/service
   backend: @lib/service-vm
@@ -20,4 +20,8 @@ production: {
   (user -> frontend.dns)[0].class: Test-dotted
   (frontend.cluster -> backend.dns)[0].class: smed
   (backend.cluster -- db.master)[0].class: smed
+
+  # Globs
+  user*: @lib/user
+  (*.* -- db.master)[*].style.stroke: red
 }
