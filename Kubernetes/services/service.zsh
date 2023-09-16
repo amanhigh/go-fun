@@ -1,3 +1,4 @@
+#!/bin/zsh
 # helm repo add onechart https://chart.onechart.dev
 # helm repo add stakater https://stakater.github.io/stakater-charts
 # helm repo add bitnami https://charts.bitnami.com/bitnami
