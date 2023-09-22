@@ -1,4 +1,5 @@
 #OneChart: https://github.com/gimlet-io/onechart/tree/master/charts/onechart/tests
+# Values: https://github.com/gimlet-io/onechart/blob/master/charts/onechart/values.yaml
 image:
   repository: openresty/openresty
   tag: latest
@@ -31,6 +32,9 @@ ingress:
   # host: docker
 # replicas: 2
 # podDisruptionBudgetEnabled: false
+
+securityContext:
+  runAsUser: 100
 
 # command: sleep infinity
 
