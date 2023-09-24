@@ -14,7 +14,7 @@ process()
 {
     SVC_LIST=${1:-`cat $ANS_FILE`}
 
-    for SVC in $SVC_LIST
+    for SVC in $( echo "$SVC_LIST" )
     do
         echo "\033[1;32m \n $SVC \033[0m \n"
         case $SVC in
