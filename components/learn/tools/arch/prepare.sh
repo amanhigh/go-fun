@@ -52,17 +52,18 @@ if [ "$confirm" == 'y' ]; then
   #Normal Format on Crypt Root
   mkfs.btrfs $root -L ROOT
   #swapon /dev/sda3
-else
-    echo -en "\033[1;33m Skipping Disk Formatting \033[0m \n";
-fi
 
-echo -en "\033[1;33m Creating Sub Partitions (Any Key to Continue) \033[0m \n";
-read
-mountpoint -q /mnt || mount $root /mnt
-btrfs sub cr /mnt/@
-btrfs sub cr /mnt/@home
-btrfs sub cr /mnt/@log
-btrfs sub cr /mnt/@snapshots
+  # Subpartitions
+  echo -en "\033[1;33m Creating Sub Partitions (Any Key to Continue) \033[0m \n";
+  read
+  mountpoint -q /mnt || mount $root /mnt
+  btrfs sub cr /mnt/@
+  btrfs sub cr /mnt/@home
+  btrfs sub cr /mnt/@log
+  btrfs sub cr /mnt/@snapshots
+else
+    echo -en "\033[1;33m Skipping Disk Formatting and Subpartitions \033[0m \n";
+fi
 
 echo -en "\033[1;33m Mounting Drives \033[0m \n";
 read
@@ -167,7 +168,7 @@ cat /mnt/etc/fstab
 # Writable: Refer Snapper Restore
 ## Backup Image ##
 # btrfs send /home/.snapshots/2/snapshot/ > home.img
-# btrfs receive /restore/home < home.img
+# btrfs recieve /restore/home < home.img
 ## Delete
 # btrfs sub del /.snapshots/base/
 # btrfs sub del --subvolid 271 / (Delete Root)
