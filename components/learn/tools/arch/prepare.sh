@@ -146,6 +146,7 @@ cat /mnt/etc/fstab
 
 ## Mounts ##
 # findmnt or mount - Show all Mounts
+# mount (-a Fstab) - Mount all Partitions in /etc/fstab
 # umount /mnt (-a All) (-R Recursive)
 
 #### BTRFS ####
