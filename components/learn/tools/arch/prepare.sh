@@ -51,15 +51,6 @@ if [ "$confirm" == 'y' ]; then
     cryptsetup luksFormat --type luks1 $root
     cryptsetup open $root cryptroot
     root=/dev/mapper/cryptroot
-
-    # cryptsetup luksHeaderBackup /dev/device --header-backup-file /mnt/backup/file.img
-    # Test Header cryptsetup -v --header /mnt/backup/file.img open /dev/device test
-    # cryptsetup luksHeaderRestore /dev/device --header-backup-file ./mnt/backup/file.img
-
-    echo -en "\033[1;34m Generating Crypt File \033[0m \n";
-    dd bs=512 count=4 if=/dev/random of=/mnt/root/crypt.keyfile iflag=fullblock
-    chmod 000 /mnt/root/crypt.keyfile
-    cryptsetup -v luksAddKey ${disk}2 /mnt/root/crypt.keyfile
   fi
 
   #Normal Format on Crypt Root
@@ -96,6 +87,18 @@ mountpoint -q /mnt/var/log || mount -o $MOUNT_OPT,subvol=@log $root /mnt/var/log
 mountpoint -q /mnt/.snapshots || mount -o $MOUNT_OPT,subvol=@snapshots $root /mnt/.snapshots
 mountpoint -q /mnt/boot/efi || mount $boot /mnt/boot/efi
 findmnt -R -M /mnt
+
+# Crypt File
+if [ "$encrypt" == 'y' ] && [ ! -f /mnt/root/crypt.keyfile ]; then
+    # cryptsetup luksHeaderBackup /dev/device --header-backup-file /mnt/backup/file.img
+    # Test Header cryptsetup -v --header /mnt/backup/file.img open /dev/device test
+    # cryptsetup luksHeaderRestore /dev/device --header-backup-file ./mnt/backup/file.img
+
+    echo -en "\033[1;34m Generating Crypt File \033[0m \n";
+    dd bs=512 count=4 if=/dev/random of=/mnt/root/crypt.keyfile iflag=fullblock
+    chmod 000 /mnt/root/crypt.keyfile
+    cryptsetup -v luksAddKey ${disk}2 /mnt/root/crypt.keyfile
+fi
 
 echo -en "\033[1;33m Generate Fstab (y/N) ? \033[0m \n";
 read confirm
