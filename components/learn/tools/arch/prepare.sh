@@ -1,7 +1,20 @@
 # Arch Linux Prepration Script
 # ------------------ RUN ------------------
 # pacman -Sy git; git clone https://github.com/amanhigh/go-fun;
-# cd go-fun/components/learn/tools/arch; ./prepare.sh; ./setup.sh
+# cd go-fun/components/learn/tools/arch; ./prepare.sh /dev/sdx y; ./setup.sh
+
+if [ $# -ne 2 ]; then
+  # Input Partition Names
+  echo -en "\033[1;31m Usage:  $0 <Disk Name: /dev/sda> <Encrypt (y/N)> \033[0m \n";
+  echo -en "\033[1;33m Disk Layout \033[0m \n";
+  fdisk -l
+  exit 1
+fi
+
+disk=$1
+encrypt=$2
+
+echo -en "\033[1;32m Disk: $disk, Encrpt: $encrypt \033[0m \n";
 
 ################## Basics #####################
 # Ctrl+d to exit anywhere
@@ -23,30 +36,30 @@ timedatectl
 # TODO: Encryption
 
 ## Format ##
-# Input Partition Names
-echo -en "\033[1;33m Disk Layout \033[0m \n";
-fdisk -l
-echo -en "\033[1;33m Disk Formatting \033[0m \n";
-read -p "Enter Disk Name (Eg. /dev/sda): " disk
-read -p "Formatting $disk. Confirm (y/N) ?: " confirm
-
-# Encrypt Root Partition
-# --type luks2 has Limited Support in Grub
-echo -en "\033[1;33m Encryption \033[0m \n";
-read -p "Encrypt $root. Confirm (y/N) ?: " encrypt
-
 boot=${disk}1
 root=${disk}2
 
-# Check if the disk value is not 'N'
+echo -en "\033[1;33m Format $disk (y/N) ?\033[0m \n";
+read confirm
 if [ "$confirm" == 'y' ]; then
   # Format EFI using FAT32
   mkfs.fat -F32 $boot -n BOOT
   
   if [ "$encrypt" == 'y' ]; then
+    # Encrypt Root Partition
+    # --type luks2 has Limited Support in Grub
     cryptsetup luksFormat --type luks1 $root
     cryptsetup open $root cryptroot
     root=/dev/mapper/cryptroot
+
+    # cryptsetup luksHeaderBackup /dev/device --header-backup-file /mnt/backup/file.img
+    # Test Header cryptsetup -v --header /mnt/backup/file.img open /dev/device test
+    # cryptsetup luksHeaderRestore /dev/device --header-backup-file ./mnt/backup/file.img
+
+    echo -en "\033[1;34m Generating Crypt File \033[0m \n";
+    dd bs=512 count=4 if=/dev/random of=/mnt/root/crypt.keyfile iflag=fullblock
+    chmod 000 /mnt/root/crypt.keyfile
+    cryptsetup -v luksAddKey ${disk}2 /mnt/root/crypt.keyfile
   fi
 
   #Normal Format on Crypt Root
@@ -62,7 +75,10 @@ if [ "$confirm" == 'y' ]; then
   btrfs sub cr /mnt/@log
   btrfs sub cr /mnt/@snapshots
 else
-    echo -en "\033[1;33m Skipping Disk Formatting and Subpartitions \033[0m \n";
+    echo -en "\033[1;34m Skipping Disk Formatting \033[0m \n";
+    if [ "$encrypt" == 'y' ]; then
+      [ ! -e /dev/mapper/cryptroot ] && cryptsetup open $root cryptroot; root=/dev/mapper/cryptroot
+    fi
 fi
 
 echo -en "\033[1;33m Mounting Drives \033[0m \n";
@@ -81,21 +97,17 @@ mountpoint -q /mnt/.snapshots || mount -o $MOUNT_OPT,subvol=@snapshots $root /mn
 mountpoint -q /mnt/boot/efi || mount $boot /mnt/boot/efi
 findmnt -R -M /mnt
 
-# cryptsetup luksHeaderBackup /dev/device --header-backup-file /mnt/backup/file.img
-# Test Header cryptsetup -v --header /mnt/backup/file.img open /dev/device test
-# cryptsetup luksHeaderRestore /dev/device --header-backup-file ./mnt/backup/file.img
-
-if [ "$encrypt" == 'y' ]; then
-  echo -en "\033[1;34m Generating Crypt File \033[0m \n";
-  dd bs=512 count=4 if=/dev/random of=/mnt/root/crypt.keyfile iflag=fullblock
-  chmod 000 /mnt/root/crypt.keyfile
-  cryptsetup -v luksAddKey ${disk}2 /mnt/root/crypt.keyfile
+echo -en "\033[1;33m Generate Fstab (y/N) ? \033[0m \n";
+read confirm
+if [ "$confirm" == 'y' ]; then
+  cp /mnt/etc/fstab /mnt/etc/fstab.bkp || true
+  genfstab -U /mnt > /mnt/etc/fstab
+  cat /mnt/etc/fstab
+  echo -en "\033[1;34m Diff Backup:/mnt/etc/fstab.bkp \033[0m \n";
+  [ -e /mnt/etc/fstab.bkp ] && diff /mnt/etc/fstab /mnt/etc/fstab.bkp
+else
+  echo -en "\033[1;34m Skipping Fstab Generation \033[0m \n";
 fi
-
-echo -en "\033[1;33m Generate Fstab \033[0m \n";
-read
-genfstab -U /mnt > /mnt/etc/fstab
-cat /mnt/etc/fstab
 
 ################## Useful Command #####################
 # Tutorials
