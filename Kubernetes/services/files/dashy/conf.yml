@@ -124,6 +124,10 @@ sections:
         description: Symbols and Emoji Repository
         icon: favicon
         url: https://www.emojicopy.com/
+      - title: Pixabay
+        description: Free Stock Photos
+        icon: favicon
+        url: https://pixabay.com/
       - title: ArtifactHub
         description: Repository for Helm charts with Easy discovery.
         icon: favicon
