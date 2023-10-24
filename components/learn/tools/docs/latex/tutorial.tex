@@ -3,9 +3,10 @@
 % Package Imports
 \usepackage{amsmath}
 \usepackage{graphicx}
+\usepackage{subcaption}
 
 % Config
-\graphicspath{{./img/}}
+\graphicspath{{../img/}}
 
 % Preamble: Title Details
 \title{Latex Tutorial}
@@ -15,6 +16,7 @@
 \begin{document}
   \pagenumbering{arabic}
   \maketitle %Insert Title
+  \tableofcontents
   \newpage %Break Page
 
 \section{Introduction}
@@ -70,17 +72,78 @@ This formula $f(x) = x^2$ is an embedding.
   F(x) &= \int^a_b \frac{1}{3}x^3
 \end{align*}
 
+\newpage
+
 \subsection{Images}
 
 \paragraph{Single}
 
-\begin{figure}
+Figure \ref{fig:sailboat} shows a boat. %Refers Label
+
+\begin{figure}[h!]
   \includegraphics[width=\linewidth]{boat.jpg}
   \caption{Sail Boat.}
-  \label{fig:boat1}
+  \label{fig:sailboat} %Invisible Used for Reference
 \end{figure}
 
-Figure \ref{fig:boat1} shows a boat.
+\paragraph{Multiple}
+Figure \ref{fig:coffee} shows how to place image side by side.
 
+\subparagraph
+There are two images aligned next to each other, their widths are both set to 0.4, yet they fill up the whole space.
+You should always set this value to .1 less than you expect. If you want to align three images next to each other,
+you should consecutively add three subfigures, each with a % ... 0.2\linewidth ...
+
+\begin{figure}[h!]
+  \centering
+  \begin{subfigure}[b]{0.4\linewidth}
+    \includegraphics[width=\linewidth]{coffee.jpg}
+    \caption{Coffee.}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.4\linewidth}
+    \includegraphics[width=\linewidth]{coffee.jpg}
+    \caption{More coffee.}
+  \end{subfigure}
+  \caption{The same cup of coffee. Two times.}
+  \label{fig:coffee}
+\end{figure}
+
+\paragraph{Cluster}
+Figure \ref{fig:coffee3} shows how to place cluster of images.
+
+\subparagraph
+Notice images are Numbered Automatically.
+
+\begin{figure}[h!]
+  \centering
+  \begin{subfigure}[b]{0.2\linewidth}
+    \includegraphics[width=\linewidth]{coffee.jpg}
+     \caption{Coffee.}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.2\linewidth}
+    \includegraphics[width=\linewidth]{coffee.jpg}
+    \caption{More coffee.}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.2\linewidth}
+    \includegraphics[width=\linewidth]{coffee.jpg}
+    \caption{Tasty coffee.}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.5\linewidth}
+    \includegraphics[width=\linewidth]{coffee.jpg}
+    \caption{Too much coffee.}
+  \end{subfigure}
+  \caption{The same cup of coffee. Multiple times.}
+  \label{fig:coffee3}
+\end{figure}
+
+\subsection{Tables}
+\begin{table}
+  \caption{TBA table}
+\end{table}
+
+\begin{appendix}
+  \listoffigures
+  \listoftables
+\end{appendix}
 
 \end{document}
