@@ -4,6 +4,7 @@
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{subcaption}
+\usepackage{lipsum}
 
 % Config
 \graphicspath{{../img/}}
@@ -140,6 +141,34 @@ Notice images are Numbered Automatically.
 \begin{table}
   \caption{TBA table}
 \end{table}
+
+\subsection{Lists}
+Lists are easy to create:
+\paragraph{Bullets}
+\begin{itemize}
+  \item List entries start with the \verb|\item| command.
+  \item Individual entries are indicated with a black dot, a so-called bullet.
+  \item The text in the entries may be of any length.
+  \item Below is an example of Nested List.
+  \begin{itemize}
+    \item Sub List 1
+    \item \lipsum[1]
+    \item Sub List 3
+  \end{itemize}
+\end{itemize}
+
+\paragraph{Ordered}
+This is an example of Ordered Lists.
+
+\begin{enumerate}
+  \item Latex is much more powerful than Markdown.
+  \item It has lot more options as compared to markdown.
+  \item Markdown syntax is simple but also limited.
+  \begin{description}
+    \item[Note:] This allows me to add such sections.
+    \item[Tip!] Most of the complex Syntax is handled via IDE.
+  \end{description}
+\end{enumerate}
 
 \begin{appendix}
   \listoffigures
