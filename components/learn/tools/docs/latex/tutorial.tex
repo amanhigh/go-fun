@@ -5,6 +5,7 @@
 \usepackage{graphicx}
 \usepackage{subcaption}
 \usepackage{lipsum}
+\usepackage{hyperref}
 
 % Config
 \graphicspath{{../img/}}
@@ -22,6 +23,7 @@
 
 \section{Introduction}
 This is the introduction section.
+Tutorial being followed \href{http://www.latex-tutorial.com}{LaTeX-Tutorial}.
 
 \subsection{Subsection}
 This is a subsection.  
@@ -105,7 +107,7 @@ you should consecutively add three subfigures, each with a % ... 0.2\linewidth .
     \includegraphics[width=\linewidth]{coffee.jpg}
     \caption{More coffee.}
   \end{subfigure}
-  \caption{The same cup of coffee. Two times.}
+  \caption{Two Coffies}
   \label{fig:coffee}
 \end{figure}
 
@@ -133,18 +135,29 @@ Notice images are Numbered Automatically.
     \includegraphics[width=\linewidth]{coffee.jpg}
     \caption{Too much coffee.}
   \end{subfigure}
-  \caption{The same cup of coffee. Multiple times.}
+  \caption{Coffee Cluster}
   \label{fig:coffee3}
 \end{figure}
 
 \subsection{Tables}
-\begin{table}
-  \caption{TBA table}
+
+Generator - \href{https://tableconvert.com/latex-generator}{Table Generator}
+
+\begin{table}[!ht]
+  \centering
+  \caption{Latex Table}
+  \begin{tabular}{|l|l|}
+  \hline
+      \textbf{Heading 1} & \textbf{Heading 2} \\ \hline
+      Hello & World \\ \hline
+  \end{tabular}
+  \label{tab:latex}
 \end{table}
 
 \subsection{Lists}
 Lists are easy to create:
 \paragraph{Bullets}
+
 \begin{itemize}
   \item List entries start with the \verb|\item| command.
   \item Individual entries are indicated with a black dot, a so-called bullet.
