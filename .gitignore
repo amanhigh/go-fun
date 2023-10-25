@@ -65,3 +65,9 @@ latex/*.pdf
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
+
+# beamer
+*.nav
+*.pre
+*.snm
+*.vrb
