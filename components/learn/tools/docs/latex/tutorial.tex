@@ -40,7 +40,7 @@ This is a Sub Paragraph
 
 \section{Features}
 
-\subsection{Packages}
+\subsection{Math}
 
 \paragraph{Equations}
 Equations Package Example.
@@ -50,16 +50,14 @@ Equations Package Example.
 
 \paragraph{Embedding}
 
-...
 This formula $f(x) = x^2$ is an embedding.
-...
-
 
 \paragraph*{Double Line}
 
 \begin{equation*}
   1 + 2 = 3 
 \end{equation*}
+
 \begin{equation*}
   1 = 3 - 2
 \end{equation*}
@@ -67,6 +65,14 @@ This formula $f(x) = x^2$ is an embedding.
 \begin{align*}
   1 + 2 &= 3\\
   1 &= 3 - 2
+\end{align*}
+
+\paragraph{Fractions}
+
+\begin{align*}
+  f(x) &= x^2\\
+  g(x) &= \frac{1}{x}\\
+  F(x) &= \int^a_b \frac{1}{3}x^3
 \end{align*}
 
 Refering to Foot Note\footnote{\label{myfootnote}Tutorial footnote}.
@@ -92,35 +98,30 @@ Various Formattings are Available.
   \text{Right aligned}
 \end{align*}
 
-\subsection{Math}
+I'm referring to footnote again using \verb|\ref| \ref{myfootnote}.
 
-\paragraph{Fractions}
-
-\begin{align*}
-  f(x) &= x^2\\
-  g(x) &= \frac{1}{x}\\
-  F(x) &= \int^a_b \frac{1}{3}x^3
-\end{align*}
-
+\newpage
 \subsection{Images}
+
+\paragraph{Placement Specifiers} control \href{https://www.overleaf.com/learn/latex/Positioning_images_and_tables#The_figure_environment}{placement} of image and tables.
+\verb|h!| indicates to place image where it appears. Try `New Page' if it is not being honored.
 
 \paragraph{Single}
 
 Figure \ref{fig:sailboat} shows a boat. %Refers Label
 
-\begin{figure}[h!]
+\begin{figure}[h]
   \includegraphics[width=\linewidth]{boat.jpg}
   \caption{Sail Boat.}
   \label{fig:sailboat} %Invisible Used for Reference
 \end{figure}
 
+\newpage
 \paragraph{Multiple}
 Figure \ref{fig:coffee} shows how to place image side by side.
 
-\subparagraph
-There are two images aligned next to each other, their widths are both set to 0.4, yet they fill up the whole space.
-You should always set this value to .1 less than you expect. If you want to align three images next to each other,
-you should consecutively add three subfigures, each with a % ... 0.2\linewidth ...
+\subparagraph{Images aligned} next to each other, their widths are both set to \textbf{0.4}, yet they fill up the whole space.
+You should always set this value to .1 less than you expect.
 
 \begin{figure}[h!]
   \centering
@@ -136,12 +137,14 @@ you should consecutively add three subfigures, each with a % ... 0.2\linewidth .
   \label{fig:coffee}
 \end{figure}
 
+If you want to align three images next to each other,
+you should consecutively add three subfigures, each with a \verb|.2\linewidth|
+
+
 \paragraph{Cluster}
 Figure \ref{fig:coffee3} shows how to place cluster of images.
 
-\subparagraph
-Notice images are Numbered Automatically.
-I'm referring to footnote \ref{myfootnote}.
+\subparagraph{Notice} images are Numbered Automatically.
 
 \begin{figure}[h!]
   \centering
@@ -253,6 +256,38 @@ This is an example of Ordered Lists.
     \item[Tip!] Most of the complex Syntax is handled via IDE.
   \end{description}
 \end{enumerate}
+
+\section{Editor}
+\subsection{Hotkeys}
+\begin{itemize}
+  \item Use Insert Snippet to Access Surround Settings.
+  \item SyncTex from Cursor can be used to focus current PDF Location where edit is Happening.
+  \item Auto Complete is Triggered both on \verb|\|
+  \item Other Auto Completions have Sensible Prefixes. Example
+  \begin{itemize}
+    \item `B' for Begin Sections
+    \item `F' for Font Completions
+    \item `S' for Sections and Para's
+    \item `M' for Math.
+    \item `BT' for Tables
+  \end{itemize}
+\end{itemize}
+
+\subsection{Settings}
+\begin{itemize}
+  \item Settings allow you to enable SyncTex (Pdf Focus) on Generate.
+  \item Can add Custom Trigger Chars for Autocomplete.
+  \item Follow Cursor in Structure Section moves to correct heading is Structure.
+\end{itemize}
+
+\subsection{Tips}
+\begin{itemize}
+  \item Can use Side Bar to Get Structure and easy Navigate.
+  \item Collapsing Sections is possible.
+  \item \textbf{Word Count} can be used to do word check
+  \item Snippet View (Under) Structure helps insert Special/Math Symbols.
+\end{itemize}
+
 
 \begin{appendix}
   \listoffigures
