@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass{article}[a4paper,12pt]
 
 % Package Imports
 \usepackage{amsmath}
@@ -48,9 +48,11 @@ Equations Package Example.
 \end{equation}
 
 \paragraph{Embedding}
+
 ...
 This formula $f(x) = x^2$ is an embedding.
 ...
+
 
 \paragraph*{Double Line}
 
@@ -65,6 +67,20 @@ This formula $f(x) = x^2$ is an embedding.
   1 + 2 &= 3\\
   1 &= 3 - 2
 \end{align*}
+
+Refering to Foot Note\footnote{\label{myfootnote}Tutorial footnote}.
+
+\subsection{Formatting}
+
+Various Formattings are Available.
+\begin{enumerate}
+  \item \textbf{Bold}
+  \item \textit{Italics}
+  \item \underline{Underline}
+  \item \emph{Emphatic}
+  \item `Single Quote'
+  \item ``Double Quote''
+\end{enumerate}
 
 \subsection{Math}
 
@@ -116,6 +132,7 @@ Figure \ref{fig:coffee3} shows how to place cluster of images.
 
 \subparagraph
 Notice images are Numbered Automatically.
+I'm referring to footnote \ref{myfootnote}.
 
 \begin{figure}[h!]
   \centering
@@ -159,6 +176,7 @@ Lists are easy to create:
 \paragraph{Bullets}
 
 \begin{itemize}
+  \label{lst:bullet}
   \item List entries start with the \verb|\item| command.
   \item Individual entries are indicated with a black dot, a so-called bullet.
   \item The text in the entries may be of any length.
@@ -174,6 +192,7 @@ Lists are easy to create:
 This is an example of Ordered Lists.
 
 \begin{enumerate}
+  \label{lst:order}
   \item Latex is much more powerful than Markdown.
   \item It has lot more options as compared to markdown.
   \item Markdown syntax is simple but also limited.
