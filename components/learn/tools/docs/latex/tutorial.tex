@@ -73,6 +73,7 @@ Refering to Foot Note\footnote{\label{myfootnote}Tutorial footnote}.
 \subsection{Formatting}
 
 Various Formattings are Available.
+\paragraph{Basic} Formatting Options using Tags.
 \begin{enumerate}
   \item \textbf{Bold}
   \item \textit{Italics}
@@ -80,11 +81,20 @@ Various Formattings are Available.
   \item \emph{Emphatic}
   \item `Single Quote'
   \item ``Double Quote''
+  \item Special Chars, \verb|*`-$&|
 \end{enumerate}
+
+\paragraph{Alignment} Can be done using align block. 
+\verb|*| Indicates not to put number for that Section.
+\begin{align*}
+  \text{Left Align}\\
+  \text{Right aligned}
+\end{align*}
 
 \subsection{Math}
 
 \paragraph{Fractions}
+
 \begin{align*}
   f(x) &= x^2\\
   g(x) &= \frac{1}{x}\\
@@ -158,17 +168,35 @@ I'm referring to footnote \ref{myfootnote}.
 
 \subsection{Tables}
 
-Generator - \href{https://tableconvert.com/latex-generator}{Table Generator}
+\begin{align*}
+  \href{https://tableconvert.com/latex-generator}{Table Generator}\\
+  \href{https://latex-tutorial.com/tutorials/tables/}{Tutorial}
+\end{align*}
 
 \begin{table}[!ht]
   \centering
-  \caption{Latex Table}
+  \caption{Basic Table}
   \begin{tabular}{|l|l|}
   \hline
       \textbf{Heading 1} & \textbf{Heading 2} \\ \hline
       Hello & World \\ \hline
   \end{tabular}
-  \label{tab:latex}
+  \label{tab:basic}
+\end{table}
+
+\begin{table}[h!]
+  \begin{center}
+    \caption{Alighned Table}
+    \label{tab:alighned}
+    \begin{tabular}{l|c|r} % <-- Alignments: 1st column left, 2nd middle and 3rd right, with vertical lines in between
+      \textbf{Value 1} & \textbf{Value 2} & \textbf{Value 3}\\
+      $\alpha$ & $\beta$ & $\gamma$ \\
+      \hline
+      1 & 1110.1 & a\\
+      2 & 10.1 & b\\
+      3 & 23.113231 & c\\
+    \end{tabular}
+  \end{center}
 \end{table}
 
 \subsection{Lists}
