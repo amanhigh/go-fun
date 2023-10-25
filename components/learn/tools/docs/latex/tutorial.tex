@@ -1,11 +1,12 @@
 \documentclass{article}[a4paper,12pt]
 
 % Package Imports
-\usepackage{amsmath}
-\usepackage{graphicx}
+\usepackage{amsmath} % Equations
+\usepackage{graphicx} % Image Management
 \usepackage{subcaption}
-\usepackage{lipsum}
-\usepackage{hyperref}
+\usepackage{lipsum} % Random Text
+\usepackage{hyperref} % Hyper Links
+\usepackage{booktabs} % For prettier tables
 
 % Config
 \graphicspath{{../img/}}
@@ -101,8 +102,6 @@ Various Formattings are Available.
   F(x) &= \int^a_b \frac{1}{3}x^3
 \end{align*}
 
-\newpage
-
 \subsection{Images}
 
 \paragraph{Single}
@@ -168,12 +167,21 @@ I'm referring to footnote \ref{myfootnote}.
 
 \subsection{Tables}
 
+\paragraph{Useful} Resources
 \begin{align*}
   \href{https://tableconvert.com/latex-generator}{Table Generator}\\
+  \href{https://www.tablesgenerator.com/latex_tables}{Book Table Generator}\\
   \href{https://latex-tutorial.com/tutorials/tables/}{Tutorial}
 \end{align*}
 
-\begin{table}[!ht]
+\paragraph*{Packages} for Tables
+\begin{enumerate}
+  \item Prettify your tables using the booktabs package.
+  \item Make your tables span multiple pages with the longtable package
+  \item Display your tables in landscape using the rotating package  
+\end{enumerate}
+
+\begin{table}[!h]
   \centering
   \caption{Basic Table}
   \begin{tabular}{|l|l|}
@@ -197,6 +205,22 @@ I'm referring to footnote \ref{myfootnote}.
       3 & 23.113231 & c\\
     \end{tabular}
   \end{center}
+\end{table}
+
+\begin{table}[h!]
+  \centering
+  \caption{Book Table}
+  \label{tab:book}
+  \begin{tabular}{@{}lcr@{}} %<-- Left, Center, Right
+    \toprule % <-- Toprule here
+    \textbf{Value 1} & \textbf{Value 2} & \textbf{Value 3}\\
+    $\alpha$ & $\beta$ & $\gamma$ \\
+    \midrule % <-- Midrule here
+    1 & 1110.1 & a\\
+    2 & 10.1 & b\\
+    3 & 23.113231 & c\\
+    \bottomrule % <-- Bottomrule here
+  \end{tabular}
 \end{table}
 
 \subsection{Lists}
