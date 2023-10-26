@@ -73,6 +73,7 @@ Refering to Foot Note\footnote{\label{myfootnote}Tutorial footnote}.
 \subsection{Formatting}
 Various \hypertarget{sen:formatopts}{Formattings} are Available. There various options for \href{https://www.overleaf.com/learn/latex/Font_sizes%2C_families%2C_and_styles}{Styling}.
 
+\subsubsection{Styles}
 \paragraph{Basic} Formatting Options using Tags.
 \begin{enumerate}
   \item Styles
@@ -98,12 +99,64 @@ Various \hypertarget{sen:formatopts}{Formattings} are Available. There various o
   \end{enumerate}
 \end{enumerate}
 
-Document Set Stlyes (Point till end)
+\paragraph{Document} Set Stlyes (Point till end)
 \begin{enumerate}
   \item \verb|\sffamily| , Revert: \verb|\rmfamily|
   \item \verb|\texttt| 
 \end{enumerate}
 
+\subsubsection{Spacing} 
+Spacing can be \href{https://www.overleaf.com/learn/latex/Articles/How_to_change_paragraph_spacing_in_LaTeX}{changed} for a section or point onwards.
+
+\paragraph{Double spacing}
+\doublespacing
+\lipsum[1]
+
+\paragraph{Half spacing}
+\onehalfspacing
+\lipsum[1]
+
+\begin{spacing}{2.5}
+\paragraph{Spacing} `environment' allows changes for part of text.
+Spacing can be specified in environment.
+\begin{enumerate}
+  \item Number eg. 2.5
+  \item singlespace,doublespace,onehalfspace
+\end{enumerate}
+
+\lipsum[1]
+\end{spacing}
+
+\paragraph{Normal spacing}
+\lipsum[1]
+
+\subsubsection{Colors}
+Coloring can be \href{https://www.overleaf.com/learn/latex/Using_colours_in_LaTeX}{done} using \href{https://mirrors.sjtug.sjtu.edu.cn/ctan/macros/latex/contrib/xcolor/xcolor.pdf}{xcolor} package.
+
+\paragraph{Usage}
+\begin{enumerate}
+  \color{teal}
+  \item Changed color to teal inside begin block.
+  \item Done only for List Section.
+  \item Single \textcolor{Sepia}{word} color change.
+  \item Background Color change Eg. \colorbox{BurntOrange}{orange background}
+  \item \verb|\pagecolor{gray}| sets Page Color.
+\end{enumerate}
+
+{\color{RubineRed} \rule{\linewidth}{0.5mm}}
+Can also be used to draw colored rulers. 
+
+\definecolor{mypink2}{RGB}{219, 48, 122}
+\paragraph{Custom} colors can be defined and \textcolor{mypink2}{used}.
+
+\begin{minted}{tex}
+  \definecolor{mypink1}{rgb}{0.858, 0.188, 0.478}
+  \definecolor{mypink2}{RGB}{219, 48, 122}
+  \definecolor{mypink3}{cmyk}{0, 0.7808, 0.4429, 0.1412}
+  \definecolor{mygray}{gray}{0.6}
+\end{minted}
+
+\subsubsection{Alighnment}
 \paragraph{Alignment} Can be done using align block. 
 \verb|*| Indicates not to put number for that Section.
 
@@ -342,6 +395,7 @@ Tool of choice is \href{https://github.com/James-Yu/LaTeX-Workshop}{Latex Worksh
   \item Can add Custom Trigger Chars for Autocomplete.
   \item Follow Cursor in Structure Section moves to correct heading is Structure.
   \item Minted requires \verb|--shell-escape| follow Vscode \href{https://leportella.com/minted-vscode/}{Guide}.
+  \item Add \href{https://www.reddit.com/r/LaTeX/comments/pwkopy/subfile_autocompletion_in_vs_code/}{imported} packages to always show suggestions for commonly used.
 \end{itemize}
 
 \subsection{Tips}
@@ -353,6 +407,21 @@ Tool of choice is \href{https://github.com/James-Yu/LaTeX-Workshop}{Latex Worksh
   \item \href{https://github.com/James-Yu/LaTeX-Workshop/wiki/Compile#cleaning-generated-files}{Clean} Auxilary file removes Temp Files and Autoclean
   \item Customize `latex-workshop.shortcut' Shourtcuts for easy formatting.
 \end{itemize}
+
+\section{Layouts}
+Multiple Column can be \href{https://www.overleaf.com/learn/latex/Multiple_columns}{set}. This allows text to be split in column on same page.
+
+\paragraph{Two} Columns
+\begin{multicols}{2}
+  % Setting Divider
+  \setlength{\columnseprule}{1pt}
+  \def\columnseprulecolor{\color{blue}}
+
+  [
+  Using square brackets. Text can be made immune in Multicol environment.
+  ]
+  \lipsum[2]
+\end{multicols}
 
 \section{Organisation}
 Organisation for \href{https://www.overleaf.com/learn/latex/Management_in_a_large_project}{Project} can be done by dividing content into multiple files
