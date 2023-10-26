@@ -71,17 +71,37 @@ This formula $f(x) = x^2$ is an embedding.
 Refering to Foot Note\footnote{\label{myfootnote}Tutorial footnote}.
 
 \subsection{Formatting}
+Various \hypertarget{sen:formatopts}{Formattings} are Available. There various options for \href{https://www.overleaf.com/learn/latex/Font_sizes%2C_families%2C_and_styles}{Styling}.
 
-Various \hypertarget{sen:formatopts}{Formattings} are Available.
 \paragraph{Basic} Formatting Options using Tags.
 \begin{enumerate}
-  \item \textbf{Bold}
-  \item \textit{Italics}
-  \item \underline{Underline}
-  \item \emph{Emphatic}
+  \item Styles
+  \begin{enumerate}
+    \item \textbf{Bold}
+    \item \textit{Italics}
+    \item \underline{Underline}
+    \item \emph{Emphatic}
+    \item \textsl{slanted}
+    \item \textsc{small caps}
+    \item \textmd{medium}
+    \item \textup{upright}
+  \end{enumerate}
   \item `Single Quote'
   \item ``Double Quote''
   \item Special Chars, \verb|*`-$&|
+  \item Size
+  \begin{enumerate}
+    \item \small small or \tiny tiny
+    \item \normalsize normalsize
+    \item \large large or \Large Large
+    \item \huge huge or \Huge Huge
+  \end{enumerate}
+\end{enumerate}
+
+Document Set Stlyes (Point till end)
+\begin{enumerate}
+  \item \verb|\sffamily| , Revert: \verb|\rmfamily|
+  \item \verb|\texttt| 
 \end{enumerate}
 
 \paragraph{Alignment} Can be done using align block. 
@@ -358,6 +378,16 @@ There are issues with `Include,Input' when included files also have further comp
 \paragraph{Usage} \verb|\import{ }{ }|. The first parameter inside braces is the directory where the file is located, it can be relative to the current working directory or absolute. The second parameter is the name of the file to be imported
 
 \paragraph{Subimport} \verb|\subimport| that has the same syntax, but if used in one of the files that are imported in the main file, the path will be relative to that sub-file.
+
+\section{Package}
+LateX allows you to \href{https://www.overleaf.com/learn/latex/Writing_your_own_package}{write} your own package.
+
+Benifits Include
+\begin{enumerate}
+  \item Common Dependencies.
+  \item Common Config and Formatting.
+  \item Macros
+\end{enumerate}
 
 \import{./}{appendix.tex}
 \end{document}
