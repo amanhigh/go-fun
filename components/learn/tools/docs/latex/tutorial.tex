@@ -1,31 +1,6 @@
 \documentclass{report}[a4paper,12pt] %article,book,report
 
-% Package Imports
-\usepackage{amsmath} % Equations
-\usepackage{graphicx} % Image Management
-\usepackage{subcaption}
-\usepackage{lipsum} % Random Text
-\usepackage{hyperref} % Hyper Links
-\usepackage{booktabs} % For prettier tables
-\usepackage{minted} % Code Formatting
-\usepackage{enumitem} % Customize List Bullets
-
-% Config
-\graphicspath{{../../../../../common/images/stock/}}
-
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    filecolor=magenta,      
-    urlcolor=red,
-    pdftitle={Latex Tutorial},
-    pdfpagemode=FullScreen,
-    }
-
-% Preamble: Title Details
-\title{Latex Tutorial}
-\date{2023-10-25}
-\author{Amanpreet Singh}
+\input{header.tex}
 
 \begin{document}
   \pagenumbering{arabic}
@@ -40,6 +15,8 @@ This is the introduction section.
 \href{http://www.latex-tutorial.com}{LaTeX-Tutorial} is being followed.
 \href{https://www.overleaf.com/learn}{Overleaf} also has good guide.
 
+\paragraph*{Latex} allows you to typeset document quickly using smart markup language.
+There are many plugins (packages) available to enhance functionality.
 
 \subsection{Subsection}
 This is a subsection.  
@@ -323,6 +300,7 @@ Package `enumitem' helps customize it for Ordered List \ref{lst:order} as well.
 \inputminted{tex}{../../presentation/beamer/tutorial.tex} 
 
 \section{Editor}
+Tool of choice is \href{https://github.com/James-Yu/LaTeX-Workshop}{Latex Workshop} in Vscode.
 \subsection{Hotkeys}
 \begin{itemize}
   \item Use Insert Snippet to Access Surround Settings.
@@ -352,7 +330,8 @@ Package `enumitem' helps customize it for Ordered List \ref{lst:order} as well.
   \item Collapsing Sections is possible.
   \item \textbf{Word Count} can be used to do word check
   \item Snippet View (Under) Structure helps insert Special/Math Symbols.
-  \item Clean Auxilary file removes Temp Files.
+  \item \href{https://github.com/James-Yu/LaTeX-Workshop/wiki/Compile#cleaning-generated-files}{Clean} Auxilary file removes Temp Files and Autoclean
+  \item Customize `latex-workshop.shortcut' Shourtcuts for easy formatting.
 \end{itemize}
 
 
