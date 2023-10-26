@@ -54,6 +54,8 @@ dist/
 *.cb
 *.cb2
 .*.lb
+*.pygtex
+*.pygstyle
 
 ## Latex Output Files
 **/tools/**/*.pdf

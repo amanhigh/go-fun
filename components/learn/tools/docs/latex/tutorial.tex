@@ -7,6 +7,7 @@
 \usepackage{lipsum} % Random Text
 \usepackage{hyperref} % Hyper Links
 \usepackage{booktabs} % For prettier tables
+\usepackage{minted} % Code Formatting
 
 % Config
 \graphicspath{{../../../../../common/images/stock/}}
@@ -258,6 +259,29 @@ This is an example of Ordered Lists.
   \end{description}
 \end{enumerate}
 
+\section{Code}
+\paragraph{Minted} Packages allows to format and display Code.
+
+\begin{enumerate}
+  \item Code Snippet \ref{code:snippet} and File. \ref{code:file}
+  \item Code can also be given inline \verb|\mintinline{c}|fmt.Println("Hello")|| (Not Working)
+\end{enumerate}
+
+\subsubsection{Snippet}
+\begin{listing}[h]
+  \begin{minted}{Python}
+    def hello_world():
+    print("Hello floating World!")
+  \end{minted}
+  \caption{Code Snippet}
+  \label{code:snippet}
+\end{listing}
+
+\subsubsection{Beamer Latex}
+\label{code:file}
+\paragraph{Code} file example for Minted.
+\inputminted{tex}{../../presentation/beamer/tutorial.tex} 
+
 \section{Editor}
 \subsection{Hotkeys}
 \begin{itemize}
@@ -279,6 +303,7 @@ This is an example of Ordered Lists.
   \item Settings allow you to enable SyncTex (Pdf Focus) on Generate.
   \item Can add Custom Trigger Chars for Autocomplete.
   \item Follow Cursor in Structure Section moves to correct heading is Structure.
+  \item Minted requires \verb|--shell-escape| follow Vscode \href{https://leportella.com/minted-vscode/}{Guide}.
 \end{itemize}
 
 \subsection{Tips}
@@ -291,6 +316,7 @@ This is an example of Ordered Lists.
 \end{itemize}
 
 
+\section*{Appendix}
 \begin{appendix}
   \listoffigures
   \listoftables
