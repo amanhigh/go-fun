@@ -275,7 +275,7 @@ Package `enumitem' helps customize it for Ordered List \ref{lst:order} as well.
   \item[$\ast$] Asterisk
 \end{itemize}
 
-\chapter{Tools}
+\chapter{Advanced}
 \section{Code}
 \paragraph{Minted} Packages allows to format and display Code.
 
@@ -333,6 +333,24 @@ Tool of choice is \href{https://github.com/James-Yu/LaTeX-Workshop}{Latex Worksh
   \item \href{https://github.com/James-Yu/LaTeX-Workshop/wiki/Compile#cleaning-generated-files}{Clean} Auxilary file removes Temp Files and Autoclean
   \item Customize `latex-workshop.shortcut' Shourtcuts for easy formatting.
 \end{itemize}
+
+\section{Organisation}
+Organisation for \href{https://www.overleaf.com/learn/latex/Management_in_a_large_project}{Project} can be done by dividing content into multiple files
+and combining them in main file.
+
+\subsection{Input}
+\begin{enumerate}
+  \item `input' inserts the content where specified.
+  \item Should not create Preamble \verb|\documentclass, \begin{document}|
+  \item Nesting can be done by using input in files which are being inputted.
+\end{enumerate}
+
+\subsection{Include}
+\begin{enumerate}
+  \item `include' File must not have extension `.tex'
+  \item This can't be nested in file being included.
+  \item \verb|\includeonly| has comma separated list which limits compitalion speeding things up.
+\end{enumerate}
 
 \include{appendix.tex}
 \end{document}
