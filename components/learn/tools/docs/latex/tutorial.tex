@@ -1,6 +1,6 @@
 \documentclass{report}[a4paper,12pt] %article,book,report
 
-\input{header.tex}
+\usepackage{header}
 
 \begin{document}
   \pagenumbering{arabic}
@@ -352,5 +352,12 @@ and combining them in main file.
   \item \verb|\includeonly| has comma separated list which limits compitalion speeding things up.
 \end{enumerate}
 
-\include{appendix.tex}
+\subsection{Import}
+There are issues with `Include,Input' when included files also have further composition. Here `import' package helps in easy composition with nesting. 
+
+\paragraph{Usage} \verb|\import{ }{ }|. The first parameter inside braces is the directory where the file is located, it can be relative to the current working directory or absolute. The second parameter is the name of the file to be imported
+
+\paragraph{Subimport} \verb|\subimport| that has the same syntax, but if used in one of the files that are imported in the main file, the path will be relative to that sub-file.
+
+\import{./}{appendix.tex}
 \end{document}
