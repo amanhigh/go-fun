@@ -1,4 +1,4 @@
-\documentclass{article}[a4paper,12pt]
+\documentclass{report}[a4paper,12pt] %article,book,report
 
 % Package Imports
 \usepackage{amsmath} % Equations
@@ -13,6 +13,15 @@
 % Config
 \graphicspath{{../../../../../common/images/stock/}}
 
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=red,
+    pdftitle={Latex Tutorial},
+    pdfpagemode=FullScreen,
+    }
+
 % Preamble: Title Details
 \title{Latex Tutorial}
 \date{2023-10-25}
@@ -24,12 +33,17 @@
   \tableofcontents
   \newpage %Break Page
 
+%\part{One}
+\chapter{Basics} %book,report only
 \section{Introduction}
 This is the introduction section.
-Tutorial being followed \href{http://www.latex-tutorial.com}{LaTeX-Tutorial}.
+\href{http://www.latex-tutorial.com}{LaTeX-Tutorial} is being followed.
+\href{https://www.overleaf.com/learn}{Overleaf} also has good guide.
+
 
 \subsection{Subsection}
 This is a subsection.  
+Organisation of Content is done in this manner, \href{https://www.overleaf.com/learn/latex/Sections_and_chapters}{guide}.
 
 \subsubsection{Sub Subsection}
 This is a sub-subsection.
@@ -81,7 +95,7 @@ Refering to Foot Note\footnote{\label{myfootnote}Tutorial footnote}.
 
 \subsection{Formatting}
 
-Various Formattings are Available.
+Various \hypertarget{sen:formatopts}{Formattings} are Available.
 \paragraph{Basic} Formatting Options using Tags.
 \begin{enumerate}
   \item \textbf{Bold}
@@ -103,18 +117,33 @@ Various Formattings are Available.
 
 I'm referring to footnote again using \verb|\ref| \ref{myfootnote}.
 
+\subsection{References}
+There are many ways to reference. We use package `hyperref'.
+\begin{enumerate}
+  \item Direct URL \url{https://www.overleaf.com/learn/latex/Hyperlinks}
+  \item Hyper Link: \href{https://www.overleaf.com/learn/latex/Hyperlinks}{Hyperlink Guide}
+  \item Link to Sentence
+  \item File Link: \href{run:../../presentation/beamer/tutorial.tex}{Beamer Example}
+  \item Reference to a label \ref{lst:bullet}.
+  \item Page Reference: \pageref{fig:coffee}
+  \item Word or \hyperlink{sen:formatopts}{sentence} in your document.
+\end{enumerate}
+
 \newpage
 \subsection{Images}
 
 \paragraph{Placement Specifiers} control \href{https://www.overleaf.com/learn/latex/Positioning_images_and_tables#The_figure_environment}{placement} of image and tables.
 \verb|h!| indicates to place image where it appears. Try `New Page' if it is not being honored.
 
+Images can also be in multiple folders. \verb|\graphicspath{ {./images1/}{./images2/} }|.
+Size, rotation can be \href{https://www.overleaf.com/learn/latex/Inserting_Images}{tuned} as well.
+
 \paragraph{Single}
 
 Figure \ref{fig:sailboat} shows a boat. %Refers Label
 
 \begin{figure}[h]
-  \includegraphics[width=\linewidth]{boat.jpg}
+  \includegraphics[width=\linewidth,scale=1.5]{boat.jpg}
   \caption{Sail Boat.}
   \label{fig:sailboat} %Invisible Used for Reference
 \end{figure}
@@ -269,6 +298,7 @@ Package `enumitem' helps customize it for Ordered List \ref{lst:order} as well.
   \item[$\ast$] Asterisk
 \end{itemize}
 
+\chapter{Tools}
 \section{Code}
 \paragraph{Minted} Packages allows to format and display Code.
 
