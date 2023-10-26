@@ -8,6 +8,7 @@
 \usepackage{hyperref} % Hyper Links
 \usepackage{booktabs} % For prettier tables
 \usepackage{minted} % Code Formatting
+\usepackage{enumitem} % Customize List Bullets
 
 % Config
 \graphicspath{{../../../../../common/images/stock/}}
@@ -248,7 +249,7 @@ Lists are easy to create:
 \paragraph{Ordered}
 This is an example of Ordered Lists.
 
-\begin{enumerate}
+\begin{enumerate}[label=(\roman*)]
   \label{lst:order}
   \item Latex is much more powerful than Markdown.
   \item It has lot more options as compared to markdown.
@@ -258,6 +259,15 @@ This is an example of Ordered Lists.
     \item[Tip!] Most of the complex Syntax is handled via IDE.
   \end{description}
 \end{enumerate}
+
+\paragraph{Custom} bullet points can be set. Many \href{https://latex-tutorial.com/bullet-styles/}{Styles} are available.
+Package `enumitem' helps customize it for Ordered List \ref{lst:order} as well.
+\begin{itemize}
+  \label{lst:format}
+  \item[--] Dash
+  \item[$-$] Dash
+  \item[$\ast$] Asterisk
+\end{itemize}
 
 \section{Code}
 \paragraph{Minted} Packages allows to format and display Code.
