@@ -22,6 +22,7 @@ explanation: |md
         - [Positions](https://d2lang.com/tour/positions)
         - [Icons](https://icons.terrastruct.com/)
         - [Colors](https://www.w3.org/wiki/CSS/Properties/color/keywords)
+        - [Globs] (https://d2lang.com/tour/globs/#glob-connections)
 | {near: top-center}
 
 # Container
@@ -31,11 +32,10 @@ Production: {
   }
   svc: Service
   db: Database {
-    master: {
-      link: https://github.com/mysql
-      shape: cylinder
-    }
-    replica: {
+    master
+    replica
+
+    *: {
       link: https://github.com/mysql
       shape: cylinder
     }
@@ -57,4 +57,6 @@ Production: {
       filled: false
     }
   }
+  (* -> *)[*].style.stroke: red
+  (* -- *)[*].style.stroke: green
 }

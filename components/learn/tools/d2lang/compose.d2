@@ -1,22 +1,29 @@
+# Theme: Default
 direction: right
 production: @lib/prod
 ...@lib/styles
 
 production: {
-  user: @lib/user
-
+  # ####  Entities ########
+  user
   frontend: @lib/service
   backend: @lib/service-vm
   db: @lib/dbset
 
+  # ####  Relations ########
   user -> frontend.dns
-
   backend.cluster -- db.master: DB Access
   frontend.cluster -> backend.dns: API Access
-  
-  #Styling Section
-  user.class: med #Multiple [a;b]
-  (user -> frontend.dns)[0].class: Test-dotted
+
+  # ####  Styling ########
+  user.class: med # Multiple [a;b]
   (frontend.cluster -> backend.dns)[0].class: smed
-  (backend.cluster -- db.master)[0].class: smed
+
+  # Globs
+  user*: @lib/user
+  (user -> *.*)[*].class: stk-dotted
+  (*.* -- db.master)[*]: {
+    style.stroke: red
+    class: smed
+  }
 }

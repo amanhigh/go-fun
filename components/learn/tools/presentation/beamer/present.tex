@@ -1,0 +1,41 @@
+\documentclass{beamer}
+
+%Preamble
+\title{Latex Slides}
+\subtitle{Learning Beamer by Doing.}
+\author{Amanpreet Singh}
+\date{\today}
+
+% Styling
+\usetheme{CambridgeUS}
+\usecolortheme{crane}
+\usefonttheme{structuresmallcapsserif}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=red,
+    pdftitle={Latex Tutorial},
+    pdfpagemode=FullScreen,
+}
+
+%Config
+\graphicspath{{../../../../../common/images/stock/}}
+
+\begin{document}
+\maketitle
+
+\begin{frame}
+    \frametitle{Contents}
+    
+    \tableofcontents
+\end{frame}
+
+\begin{frame}
+    \frametitle{Images}
+    \section{Boat}
+    A Sail Boat ..
+    \includegraphics[width=0.8\linewidth]{boat.jpg}
+\end{frame}
+
+\end{document}

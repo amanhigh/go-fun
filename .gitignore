@@ -37,3 +37,39 @@ dist/
 
 # Ignore DevSpace cache and log folder
 .devspace/
+
+
+#### LATEX #####
+## https://github.com/github/gitignore/blob/main/TeX.gitignore
+## Core latex/pdflatex auxiliary files:
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+.*.lb
+*.pygtex
+*.pygstyle
+
+## Latex Output Files
+**/tools/**/*.pdf
+
+## Build tool auxiliary files:
+*.fdb_latexmk
+*.synctex
+*.synctex(busy)
+*.synctex.gz
+*.synctex.gz(busy)
+*.pdfsync
+
+# beamer
+*.nav
+*.pre
+*.snm
+*.vrb

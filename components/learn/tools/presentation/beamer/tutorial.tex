@@ -1,0 +1,178 @@
+\documentclass[12pt,[aspectratio=169]{beamer}
+
+%Preamble
+\title{Latex Slides}
+\subtitle{Learning Beamer by Doing.}
+\author{Amanpreet Singh}
+\pgfdeclareimage[height=0.5cm]{logo}{Aman}
+\logo{\pgfuseimage{logo}}
+\date[Conf 2023] % (optional)
+{Oct 25, 2023}
+\institute[DPS] % (optional)
+{
+  \inst{1}
+  Faculty of Physics\\
+  Dashmesh Public School
+  \and
+  \inst{2}
+  Faculty of Chemistry\\
+  BNMIT
+}
+
+% Styling
+\usetheme{CambridgeUS}
+\usecolortheme{crane}
+\usefonttheme{structuresmallcapsserif}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=red,
+    pdftitle={Latex Tutorial},
+    pdfpagemode=FullScreen,
+}
+\AtBeginSection{Section:} % Insert Text at every new (sub)Section.
+
+%Config
+\graphicspath{{../../../../../common/images/stock/}}
+
+\begin{document}
+\maketitle
+
+\begin{frame}
+\frametitle{Overview}
+This is first Slide created with Latex and Beamer.
+\break
+
+Beamer \href{https://latex-beamer.com/tutorials/beamer-themes/}{Tutorial} and  \href{https://www.overleaf.com/learn/latex/Beamer}{guide}.
+Advanced \href{https://texdoc.org/serve/beamer/0}{guide} from beamer.
+\end{frame}
+
+\begin{frame}
+    \frametitle{Contents}
+    
+    \tableofcontents
+\end{frame}
+
+\begin{frame}
+\frametitle{Themes}
+Beamer has many \textbf{Themes} which can be specified in preamble.
+Can add Logo \insertlogo \space anywhere.
+\break
+\section{Themes}
+\textbf{Theme Sources}
+\begin{itemize}
+    \item \href{https://deic.uab.cat/~iblanes/beamer_gallery/index_by_theme.html}{Theme Browser}
+    \item \href{https://hartwork.org/beamer-theme-matrix/}{Theme Matrix} (Theme and Color)
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Formatting}
+    \section{Formatting}
+    List Heading
+    \begin{itemize}
+        \item Content of this Slide.
+        \item In Bullet Point format.
+        \item It is very easy to Create.
+        \item Wait before Next Section.\pause
+    \end{itemize}
+
+    \begin{alert}{Warning}
+        Alert message !! Avoid shrink changes font size.
+    \end{alert}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Blocks}
+    \section{Blocks}
+    \begin{alertblock}{Warning}
+        Alert message in Alert Block !!
+    \end{alertblock}
+    
+    \begin{exampleblock}{Example}
+        Example message in Example Block ..
+    \end{exampleblock}
+    
+    \begin{block}{Remark}
+        Remark text
+    \end{block}
+
+\end{frame}
+
+\begin{frame}[label=images,shrink=5]
+    \frametitle{Images}
+    \section{Images}
+    A Sail Boat ..
+    \includegraphics[width=0.8\linewidth]{boat.jpg}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Two-column slide}
+    \section{Layouts}
+    \begin{columns}
+        \column{0.5\textwidth}
+        This is a text in first column.
+        $$E=mc^2$$
+        \begin{itemize}
+        \item First item
+        \item Second item
+        \end{itemize}
+        
+        \column{0.5\textwidth}
+        This text will be in the second column
+        and on a second thoughts, this is a nice looking
+        layout in some cases.
+        \includegraphics[width=0.8\linewidth]{boat.jpg}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Breaks}
+    \begin{itemize}
+        \item PageBreak
+        \item FrameBreak
+        \break
+        \item Penality
+        \item NoBreak
+        \nobreak
+        \item Avoid `allowframebreaks'
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Overlays}
+    \textbf{This line is bold on all three slides.}
+    \textbf<2>{This line is bold only on the second slide.}
+    \textbf<3>{This line is bold only on the third slide.}
+
+    Symbols: Goto \insertgotosymbol, Skip \insertskipsymbol, Return \insertreturnsymbol
+\end{frame}
+
+\begin{frame}
+    \frametitle{Transitions}
+    \only<1>{This line is inserted only on slide 1.}
+    \only<2>{This line is inserted only on slide 2.}
+
+    \onslide<1,3>{Onslide one and three.}
+    \uncover<1>{Uncover slide one.}
+
+    \onslide<2->{Onslide two onwards.}
+    \visible<2>{Visible slide two.}
+    \onslide*<3>{Onslide three.}
+
+    \only<1>{Initial text.}
+    \only<2>{Replaced by this on second slide.}
+    \only<3>{Replaced again by this on third slide.}
+
+    \begin{itemize}
+        \item<1-> Apple
+        \item<2-> Peach
+        \item<3-> Plum
+    \end{itemize}
+\end{frame}
+
+\end{document}

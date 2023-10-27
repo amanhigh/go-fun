@@ -1,3 +1,4 @@
+#!/bin/zsh
 # helm repo add onechart https://chart.onechart.dev
 # helm repo add stakater https://stakater.github.io/stakater-charts
 # helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -13,7 +14,7 @@ process()
 {
     SVC_LIST=${1:-`cat $ANS_FILE`}
 
-    for SVC in $SVC_LIST
+    for SVC in $( echo "$SVC_LIST" )
     do
         echo "\033[1;32m \n $SVC \033[0m \n"
         case $SVC in

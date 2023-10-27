@@ -1,3 +1,4 @@
+#!/bin/zsh
 PORT=8091
 MINI_BKP_FILE=~/Downloads/mini-bkp.txt
 MINI_CURRENT_BKP_FILE=/tmp/mini-bkp
@@ -111,7 +112,9 @@ cd -
 
 echo "\033[1;34m Please enter password for Port 80 Forward \033[0m \n";
 sudo -v
-sudo kubectl port-forward deployment/traefik 80:8000 > /dev/null &
+# Kill: screen -XS mini quit
+screen -S mini -dmL bash -c 'sudo kubectl port-forward deployment/traefik 80:8000'
+screen -ls
 
 ## k9s
 # k9s --readonly , -n <namespace>, -l <loglevel>

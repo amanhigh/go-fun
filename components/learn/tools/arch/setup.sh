@@ -1,23 +1,32 @@
 ################## Package Install #####################
-echo -en "\033[1;33m Base Packages \033[0m \n";
 ## OS ##
 # Base Packages and Kernal (option linux-lts, linux-lts-headers)
 # base and linux are only bare minimum
-pacstrap /mnt base linux base-devel linux-headers linux-firmware #Add -i for Interactive
+echo -en "\033[1;33m Setup Base Packages: Confirm (y/N) ?\033[0m \n";
+read base
+if [ "$base" == 'y' ]; then
+    pacstrap /mnt base linux base-devel linux-headers linux-firmware #Add -i for Interactive
+    else
+    echo -en "\033[1;34m Skipping Base \033[0m \n";
+fi
 
 ## Enter Distro ##
 # Key Mismatch: pacman-key --populate; pacman -S archlinux-keyring;
 
 ## Change Root ##
 SCRIPT_PATH=$(cd .;pwd -P)
-echo -en "\033[1;33m Changing Root \033[0m \n";
+echo -en "\033[1;32m Changing Root: $SCRIPT_PATH \033[0m \n";
 cp $SCRIPT_PATH/chroot.sh /mnt/root/setup.sh
 arch-chroot /mnt chmod 755 /root/setup.sh
 arch-chroot /mnt /root/setup.sh
 
 ## Exit Change Root ##
 # Create Snapshot after Setup
-btrfs subvolume snapshot /mnt /mnt/.snapshots/base
+if [ "$base" == 'y' ]; then
+    btrfs subvolume snapshot /mnt /mnt/.snapshots/base;
+else
+    echo -en "\033[1;34m Skipping Snapshot \033[0m \n";
+fi
 #TODO: Header Backup
 
 echo -en "\033[1;32m Installation Complete \033[0m"

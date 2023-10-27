@@ -99,6 +99,10 @@ sections:
         description: For the procrastaning lazy self.
         icon: favicon
         url: https://www.toptal.com/project-managers/tomato-timer
+      - title: Punjabi
+        description: Punjabi Easy Typing using English.
+        icon: favicon
+        url: https://www.easypunjabityping.com/
     displayData:
       sortBy: default
       rows: 1
@@ -112,10 +116,18 @@ sections:
         description: Easy Desgin and Whiteboarding
         icon: favicon
         url: https://excalidraw.com/
+      - title: D2Lang
+        description: Strong Diagram by Coding Tool
+        icon: favicon
+        url: https://play.d2lang.com/
       - title: Emoji Copy
         description: Symbols and Emoji Repository
         icon: favicon
         url: https://www.emojicopy.com/
+      - title: Pixabay
+        description: Free Stock Photos
+        icon: favicon
+        url: https://pixabay.com/
       - title: ArtifactHub
         description: Repository for Helm charts with Easy discovery.
         icon: favicon
