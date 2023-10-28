@@ -99,7 +99,7 @@ Various \hypertarget{sen:formatopts}{Formattings} are Available. There various o
     \item \textbf{Bold}
     \item \textit{Italics}
     \item \underline{Underline}
-    \item \emph{Emphatic}
+    \item \emph{Emphatic} (Prefer over Italics, differnt in environments)
     \item \textsl{slanted}
     \item \textsc{small caps}
     \item \textmd{medium}
@@ -450,6 +450,8 @@ Tool of choice is \href{https://github.com/James-Yu/LaTeX-Workshop}{Latex Worksh
 \section{Layouts}
 Multiple Column can be \href{https://www.overleaf.com/learn/latex/Multiple_columns}{set}. This allows text to be split in column on same page.
 
+
+
 \paragraph{Two} Columns
 \begin{multicols}{2}
   % Setting Divider
@@ -486,6 +488,33 @@ There are issues with `Include,Input' when included files also have further comp
 \paragraph{Usage} \verb|\import{ }{ }|. The first parameter inside braces is the directory where the file is located, it can be relative to the current working directory or absolute. The second parameter is the name of the file to be imported
 
 \paragraph{Subimport} \verb|\subimport| that has the same syntax, but if used in one of the files that are imported in the main file, the path will be relative to that sub-file.
+
+\section{Macros}
+\subsection{Snippets}
+\paragraph{New Commmand} allows you to build custom \href{https://www.physicsread.com/latex-newcommand/}{snippets} which are parameterized for reuse.
+
+\newcommand{\hb}[2]{Happy Birthday #1. Have a great #2 year celebration !!}
+
+We created new command \verb|\hb| with two paramater to wish Birthday.
+\begin{enumerate}
+  \item \hb{Aman}{21st}
+  \item \hb{Gyan}{35th}
+\end{enumerate}
+
+\subsection{Conditionals}
+\newcommand{\solution}[1][\empty]{\ifthenelse{\isempty{#1}}{There is no solution !!}{Solution: #1}}
+
+If/else blocks to print based on input. 
+\href{https://mirror.niser.ac.in/ctan/macros/latex/contrib/xifthen/xifthen.pdf}{xifthen} package enhances native conditionals for easy use.
+
+\begin{enumerate}
+  \item \solution{Result}
+  \item \solution (Not Working) %TODO: Fix
+  \item Empty: \ifthenelse{\isempty{}}{true}{false}
+  \item NotEmpty: \ifthenelse{\isempty{Test}}{true}{false}
+  \item EndsWith: \ifthenelse{\endswith{foo.}{.}}{true}{false}
+  \item NotEndsWith: \ifthenelse{\endswith{foo!}{.}}{true}{false}
+\end{enumerate}
 
 \section{Package}
 LateX allows you to \href{https://www.overleaf.com/learn/latex/Writing_your_own_package}{write} your own package.
