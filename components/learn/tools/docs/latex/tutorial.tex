@@ -31,24 +31,6 @@ This is a Paragraph.
 \subparagraph{Sub Para}
 This is a Sub Paragraph
 
-\section{Counters}
-\href{https://www.overleaf.com/learn/latex/Counters}{Counters} can be used to change numbering orders.
-
-\newcounter{somecounter}
-\setcounter{somecounter}{9}
-\begin{itemize}
-    \item \verb|\arabic{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as \arabic{somecounter} 
-    \item \verb|\roman{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \roman{somecounter}
-    \item \verb|\Roman{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \Roman{somecounter}
-    \item \verb|\alph{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \alph{somecounter}
-   \item \verb|\Alph{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \Alph{somecounter}
-    \item \verb|\fnsymbol{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \fnsymbol{somecounter}
-\end{itemize}
-
-\setcounter{subsection}{6}
-\subsection{Subsection}
-Counter has been Force changed to `2.7' from `2.1' here.
-
 \section{Features}
 
 \subsection{Math}
@@ -91,7 +73,7 @@ Refering to Foot Note\footnote{\label{myfootnote}Tutorial footnote}.
 \subsection{Formatting}
 Various \hypertarget{sen:formatopts}{Formattings} are Available. There various options for \href{https://www.overleaf.com/learn/latex/Font_sizes%2C_families%2C_and_styles}{Styling}.
 
-\subsubsection{Styles}
+\subsection{Styles}
 \paragraph{Basic} Formatting Options using Tags.
 \begin{enumerate}
   \item Styles
@@ -124,7 +106,7 @@ Various \hypertarget{sen:formatopts}{Formattings} are Available. There various o
   \item \verb|\texttt| 
 \end{enumerate}
 
-\subsubsection{Spacing} 
+\subsection{Spacing} 
 Spacing can be \href{https://www.overleaf.com/learn/latex/Articles/How_to_change_paragraph_spacing_in_LaTeX}{changed} for a section or point onwards.
 
 \paragraph{Double spacing}
@@ -150,7 +132,7 @@ Spacing can be specified in environment.
 \paragraph{Normal spacing}
 \lipsum[1]
 
-\subsubsection{Colors}
+\subsection{Colors}
 Coloring can be \href{https://www.overleaf.com/learn/latex/Using_colours_in_LaTeX}{done} using \href{https://mirrors.sjtug.sjtu.edu.cn/ctan/macros/latex/contrib/xcolor/xcolor.pdf}{xcolor} package.
 
 \paragraph{Usage}
@@ -176,7 +158,7 @@ Can also be used to draw colored rulers.
   \definecolor{mygray}{gray}{0.6}
 \end{minted}
 
-\subsubsection{Alighnment}
+\subsection{Alighnment}
 \paragraph{Alignment} Can be done using align block. 
 \verb|*| Indicates not to put number for that Section.
 
@@ -525,6 +507,24 @@ Benifits Include
   \item Common Config and Formatting.
   \item Macros
 \end{enumerate}
+
+\section{Counters}
+\href{https://www.overleaf.com/learn/latex/Counters}{Counters} can be used to change numbering orders.
+
+\newcounter{somecounter}
+\setcounter{somecounter}{9}
+\begin{itemize}
+    \item \verb|\arabic{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as \arabic{somecounter} 
+    \item \verb|\roman{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \roman{somecounter}
+    \item \verb|\Roman{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \Roman{somecounter}
+    \item \verb|\alph{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \alph{somecounter}
+   \item \verb|\Alph{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \Alph{somecounter}
+    \item \verb|\fnsymbol{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \fnsymbol{somecounter}
+\end{itemize}
+
+\setcounter{subsection}{6}
+\subsection{Subsection}
+Counter has been Force changed to `2.7' from `2.1' here.
 
 \import{./}{appendix.tex}
 \end{document}
