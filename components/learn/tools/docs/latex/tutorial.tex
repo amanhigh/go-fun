@@ -258,7 +258,7 @@ functionality and nothing else ..
 Images can also be in multiple folders. \verb|\graphicspath{ {./images1/}{./images2/} }|.
 Size, rotation can be \href{https://www.overleaf.com/learn/latex/Inserting_Images}{tuned} as well.
 
-\paragraph{Single}
+\subsubsection{Single}
 
 Figure \ref{fig:sailboat} shows a boat. %Refers Label
 
@@ -268,8 +268,7 @@ Figure \ref{fig:sailboat} shows a boat. %Refers Label
   \label{fig:sailboat} %Invisible Used for Reference
 \end{figure}
 
-\newpage
-\paragraph{Multiple}
+\subsubsection{Multiple}
 Figure \ref{fig:coffee} shows how to place image side by side.
 
 \subparagraph{Images aligned} next to each other, their widths are both set to \textbf{0.4}, yet they fill up the whole space.
@@ -293,7 +292,7 @@ If you want to align three images next to each other,
 you should consecutively add three subfigures, each with a \verb|.2\linewidth|
 
 
-\paragraph{Cluster}
+\subsubsection{Cluster}
 Figure \ref{fig:coffee3} shows how to place cluster of images.
 
 \subparagraph{Notice} images are Numbered Automatically.
@@ -319,6 +318,12 @@ Figure \ref{fig:coffee3} shows how to place cluster of images.
   \caption{Coffee Cluster}
   \label{fig:coffee3}
 \end{figure}
+
+\subsubsection{SVG}
+\href{https://www.ctan.org/pkg/svg}{svg} package along with \href{https://wiki.archlinux.org/title/Inkscape}{inkscape}
+can include svg graphic similar to normal graphics.
+
+\includesvg[width=0.5\linewidth]{happy}
 
 \subsection{Tables}
 
