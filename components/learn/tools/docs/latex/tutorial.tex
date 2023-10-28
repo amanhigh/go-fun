@@ -183,7 +183,7 @@ There are many ways to reference. We use package `hyperref'.
 
 \subsection{Highlights}
 \href{https://mirror.niser.ac.in/ctan/macros/latex/contrib/tcolorbox/tcolorbox.pdf}{tcolorbox} and awesomebox (xelatex only) allows you to create
-fance boxes.
+fance boxes. Import tcolor \href{https://tex.stackexchange.com/questions/238303/tcolorbox-incompatibe-with-color-package}{before} xcolor.
 
 \subsubsection{Basic}
 \begin{tcolorbox}
@@ -195,6 +195,59 @@ fance boxes.
   \tcblower
   Lower Text.
 \end{tcolorbox}
+
+\subsubsection{Define}
+\paragraph{tcolorbox} allows you to define own boxes and then use them.
+
+\newtcolorbox{info}[1]{colback=blue!5!white,
+colframe=blue!75!black,fonttitle=\bfseries,
+title={#1}}
+
+\begin{info}{Info Title}
+This is my own box of type info ..
+\end{info}
+
+\subsubsection{Commands}
+%textmarker style from colorbox doc
+\tcbset{textmarker/.style={%
+        enhanced,
+        parbox=false,boxrule=0mm,boxsep=0mm,arc=0mm,
+        outer arc=0mm,left=6mm,right=3mm,top=7pt,bottom=7pt,
+        toptitle=1mm,bottomtitle=1mm,oversize}}
+
+% define new colorboxes
+\newtcolorbox{hintBox}{textmarker,
+    borderline west={6pt}{0pt}{yellow},
+    colback=yellow!10!white}
+\newtcolorbox{importantBox}{textmarker,
+    borderline west={6pt}{0pt}{red},
+    colback=red!10!white}
+\newtcolorbox{noteBox}{textmarker,
+    borderline west={6pt}{0pt}{green},
+    colback=green!10!white}
+
+% define commands for easy access
+\newcommand{\note}[1]{\begin{noteBox} \textbf{Note:} #1 \end{noteBox}}
+\newcommand{\warning}[1]{\begin{hintBox} \textbf{Warning:} #1 \end{hintBox}}
+\newcommand{\important}[1]{\begin{importantBox} \textbf{Important:} #1 \end{importantBox}}
+
+\note{This is a Note ..}
+\warning{This is a warning ..}
+\important{This is an important info !!}
+
+\begin{noteBox}
+  This is a Note in environment
+\end{noteBox}
+
+\subsubsection{Alert Message}
+
+Simple package \href{https://www.ctan.org/pkg/alertmessage}{alertmessage} to give below
+functionality and nothing else ..
+
+\alertinfo{This is info.}
+\alertsuccess{Success message}
+\alertwarning{Warning Message}
+\alerterror{Error Message ..}
 
 \newpage
 \subsection{Images}
