@@ -364,7 +364,7 @@ Package `enumitem' helps customize it for Ordered List \ref{lst:order} as well.
 
 \chapter{Advanced}
 \section{Code}
-\paragraph{Minted} Packages allows to format and display Code.
+\paragraph{Minted} Packages allows to format and display Code. Detailed \href{https://mirror.niser.ac.in/ctan/macros/latex/contrib/minted/minted.pdf}{guide}.
 
 \begin{enumerate}
   \item Code Snippet \ref{code:snippet} and File. \ref{code:file}
@@ -373,7 +373,7 @@ Package `enumitem' helps customize it for Ordered List \ref{lst:order} as well.
 
 \subsubsection{Snippet}
 \begin{listing}[h]
-  \begin{minted}{Python}
+  \begin{minted}[linenos,bgcolor=lime]{Python}
     def hello_world():
     print("Hello floating World!")
   \end{minted}
@@ -432,7 +432,9 @@ Tool of choice is \href{https://github.com/James-Yu/LaTeX-Workshop}{Latex Worksh
 \section{Layouts}
 Multiple Column can be \href{https://www.overleaf.com/learn/latex/Multiple_columns}{set}. This allows text to be split in column on same page.
 
-
+\begin{tcolorbox}
+  \textbf{Tip}! You can use \verb|\onecolumn| and \verb|\twocolumn| to switch layouts.
+\end{tcolorbox}
 
 \paragraph{Two} Columns
 \begin{multicols}{2}
