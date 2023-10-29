@@ -1,5 +1,8 @@
 \documentclass[12pt,[aspectratio=169]{beamer}
 
+%Imports
+\usepackage{lipsum} % Random Text
+
 %Preamble
 \title{Latex Slides}
 \subtitle{Learning Beamer by Doing.}
@@ -44,13 +47,14 @@
 This is first Slide created with Latex and Beamer.
 \break
 
-Beamer \href{https://latex-beamer.com/tutorials/beamer-themes/}{Tutorial} and  \href{https://www.overleaf.com/learn/latex/Beamer}{guide}.
-Advanced \href{https://texdoc.org/serve/beamer/0}{guide} from beamer.
+\begin{description}
+    \item[Basic Guides] \href{https://latex-beamer.com/tutorials/beamer-themes/}{LatexBeamer} and  \href{https://www.overleaf.com/learn/latex/Beamer}{Overleaf}.
+    \item[Advanced Guides] \href{https://texdoc.org/serve/beamer/0}{Beamer Docs} and \href{https://www.overleaf.com/learn/latex/Beamer_Presentations\%3A_A_Tutorial_for_Beginners_(Part_1)\%E2\%80\%94Getting_Started}{Overleaf}
+\end{description}
 \end{frame}
 
 \begin{frame}
     \frametitle{Contents}
-    
     \tableofcontents
 \end{frame}
 
@@ -88,25 +92,37 @@ Can add Logo \insertlogo \space anywhere.
 \begin{frame}
     \frametitle{Blocks}
     \section{Blocks}
-    \begin{alertblock}{Warning}
-        Alert message in Alert Block !!
+    \begin{alertblock}{Alert Title}
+        Alert message in `alertblock' (Not alert) !!
     \end{alertblock}
     
-    \begin{exampleblock}{Example}
+    \begin{example}{Example Title}
         Example message in Example Block ..
-    \end{exampleblock}
+    \end{example}
     
-    \begin{block}{Remark}
+    \begin{block}{Remark Title}
         Remark text
     \end{block}
 
+    \begin{definition}[Definition Title]
+        definition Text
+    \end{definition}
+    
+    \begin{theorem}[Theorem Title]
+        Theorem Block
+    \end{theorem}
 \end{frame}
 
 \begin{frame}[label=images,shrink=5]
     \frametitle{Images}
     \section{Images}
     A Sail Boat ..
-    \includegraphics[width=0.8\linewidth]{boat.jpg}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\linewidth]{boat.jpg}
+        \caption{Main Pic}
+        \label{fig:main}
+    \end{figure}
 \end{frame}
 
 \begin{frame}
@@ -125,7 +141,12 @@ Can add Logo \insertlogo \space anywhere.
         This text will be in the second column
         and on a second thoughts, this is a nice looking
         layout in some cases.
-        \includegraphics[width=0.8\linewidth]{boat.jpg}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.8\linewidth]{boat.jpg}
+            \caption{Side Pic}
+            \label{fig:boat}
+        \end{figure}
     \end{columns}
 \end{frame}
 
