@@ -1,7 +1,11 @@
-\RequirePackage[l2tabu, orthodox]{nag}
 \documentclass{report}[a4paper,12pt] %article,book,report
 
-\usepackage{header}
+\usepackage{aman}[title=Aman]
+
+% Preamble: Title Details
+\title{Latex Tutorial}
+\author{Amanpreet Singh}
+\date{2023-10-25}
 
 \begin{document}
   \pagenumbering{arabic}
@@ -628,7 +632,12 @@ If/else blocks to print based on input.
 \section{Package}
 LateX allows you to \href{https://www.overleaf.com/learn/latex/Writing_your_own_package}{write} your own package.
 
-Benifits Include
+\begin{description}
+  \item[Provide Package] has name, description and release date.
+  \item[Use] `RequirePackage' instead of `UsePackage' as it can be called before `documentclass'.
+\end{description}
+
+\paragraph{Benifits Include}
 \begin{enumerate}
   \item Common Dependencies.
   \item Common Config and Formatting.

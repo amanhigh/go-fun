@@ -1,0 +1,39 @@
+% Custom Package
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{aman}[2014/08/24 Aman's Custom Package]
+
+% Package Imports
+\RequirePackage[l2tabu, orthodox]{nag} % Check Deprecated Packages (First Import)
+\RequirePackage[utf8]{inputenc} % It's 2022. UTF-8 input for TeX. 
+\RequirePackage{amsmath} % Equations
+\RequirePackage{xifthen} % Easy Conditions
+\RequirePackage{graphicx} % Image Management
+\RequirePackage[dvipsnames]{xcolor} % Enhanced Color (Load before tcolorbox)
+\RequirePackage[many]{tcolorbox} % Fancy Highlight Boxes
+\RequirePackage{alertmessage} % Simple Info, Warning, Notice boxes
+\RequirePackage{fontawesome5} % Great Icons
+% \RequirePackage{tikz}
+\RequirePackage{svg}
+\RequirePackage{csvsimple} % Tables using CSV
+\RequirePackage{subcaption}
+\RequirePackage{lipsum} % Random Text
+\RequirePackage[colorlinks]{hyperref} % Hyper Links
+\RequirePackage{booktabs} % For prettier tables
+\RequirePackage{minted} % Code Formatting
+\RequirePackage{enumitem} % Customize List Bullets
+\RequirePackage{import} % Easy Composition
+\RequirePackage{setspace} % Spacing changes
+\RequirePackage{multicol} % Multi Column
+
+% Config
+\graphicspath{{../../../../../common/images/stock/}}
+\svgpath{{svg/}{../../../../../common/images/stock/}}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=red,
+    pdftitle={Latex Tutorial},
+    pdfpagemode=FullScreen,
+    }
