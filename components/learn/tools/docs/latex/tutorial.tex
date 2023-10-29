@@ -249,6 +249,21 @@ functionality and nothing else ..
 \alertwarning{Warning Message}
 \alerterror{Error Message ..}
 
+\subsection{Icons}
+This is an example of youtube icon \faIcon{youtube}. This is powered by \href{https://www.ctan.org/pkg/fontawesome}{fontawesome}.
+Icon
+
+More \href{https://fontawesome.com/v5/search?o=r&m=free}{Icon} examples
+\begin{itemize}
+  \item Wallet: \faIcon{wallet}
+  \item Wifi: \faIcon{wifi}
+  \item Folder
+  \begin{itemize}
+    \item Regular Style: \faIcon[regular]{folder-open}
+    \item Solid Style: \faIcon[solid]{folder-open}
+  \end{itemize}
+\end{itemize}
+
 \newpage
 \subsection{Images}
 
@@ -341,6 +356,7 @@ can include svg graphic similar to normal graphics.
   \item Display your tables in landscape using the rotating package  
 \end{enumerate}
 
+\subsubsection{Basic}
 \begin{table}[!h]
   \centering
   \caption{Basic Table}
@@ -367,6 +383,8 @@ can include svg graphic similar to normal graphics.
   \end{center}
 \end{table}
 
+\newpage
+\subsubsection{Book Table}
 \begin{table}[h!]
   \centering
   \caption{Book Table}
@@ -383,6 +401,39 @@ can include svg graphic similar to normal graphics.
   \end{tabular}
 \end{table}
 
+\subsubsection{Csv Simple}
+\href{https://www.ctan.org/pkg/csvsimple}{CsvSimple} allows to quickly create tables from CSV.
+Refer \href{https://github.com/T-F-S/csvsimple/blob/master/doc/latex/csvsimple/csvsimple-example.tex}{examples}.
+
+\begin{table}[h!]
+    \centering
+    \caption{Auto Table}
+    \csvautotabular{data.csv}
+\end{table}
+
+\begin{table}[h!]
+  \centering
+  \caption{Headless}
+  \csvreader[tabular=|l|r|,
+  no head,
+  table head=\hline,
+  late after line=\\\hline]{data.csv}{}{\thecsvrow & \csvcoli}
+\end{table}
+
+\paragraph{Advanced} table shows selected colmuns with remapping.
+\begin{table}[h!]
+  \centering
+  \caption{Advanced}
+  \csvreader[tabular=|l|l|,
+  table head=\hline\multicolumn{2}{|c|}{\bfseries My telephone book}\\\hline
+             \bfseries Name & \bfseries Number\\\hline\hline,
+  late after line=\\\hline]%
+  {data.csv}{last name=\surname,first name=\givenname,telephone=\telephone}{%
+    \givenname\ \surname & \telephone
+}
+\end{table}
+
+\newpage
 \subsection{Lists}
 Lists are easy to \href{https://www.overleaf.com/learn/latex/Lists}{create}.
 
