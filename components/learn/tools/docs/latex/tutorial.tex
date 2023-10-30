@@ -79,7 +79,7 @@ Refering to Foot Note\footnote{\label{myfootnote}Tutorial footnote}.
 Various \hypertarget{sen:formatopts}{Formattings} are Available. There various options for \href{https://www.overleaf.com/learn/latex/Font_sizes%2C_families%2C_and_styles}{Styling}.
 
 \subsubsection{Styles}
-\paragraph{Basic} Formatting Options using Tags.
+\paragraph{Basic}
 \begin{enumerate}
   \item Styles
   \begin{enumerate}
@@ -92,18 +92,24 @@ Various \hypertarget{sen:formatopts}{Formattings} are Available. There various o
     \item \textmd{medium}
     \item \textup{upright}
   \end{enumerate}
+\end{enumerate}
+
+\paragraph{Size}
+\begin{enumerate}
+  \item \small small or \tiny tiny
+  \item \normalsize normalsize
+  \item \large large or \Large Large
+  \item \huge huge or \Huge Huge
+\end{enumerate}
+
+\subsubsection{Symbols}
+\begin{enumerate}
   \item `Single Quote'
   \item ``Double Quote''
   \item Special Chars, \verb|*`-$&|
   \item Space <\space>
   \item Newline \verb|\\|
-  \item Size
-  \begin{enumerate}
-    \item \small small or \tiny tiny
-    \item \normalsize normalsize
-    \item \large large or \Large Large
-    \item \huge huge or \Huge Huge
-  \end{enumerate}
+  \item New Parra `Leave one line Space'.
 \end{enumerate}
 
 \paragraph{Document} Set Stlyes (Point till end)
@@ -499,6 +505,7 @@ Package `enumitem' helps customize it for Ordered List \ref{lst:order} as well.
 \begin{enumerate}
   \item Code Snippet \ref{code:snippet} and File. \ref{code:file}
   \item Code can also be given inline \verb|\mintinline{c}|fmt.Println("Hello")|| (Not Working)
+  \item Supported Languages. \verb| pygmentize -L lexers|
 \end{enumerate}
 
 \subsubsection{Snippet}
@@ -553,10 +560,13 @@ Tool of choice is \href{https://github.com/James-Yu/LaTeX-Workshop}{Latex Worksh
 \begin{itemize}
   \item Can use Side Bar to Get Structure and easy Navigate.
   \item Collapsing Sections is possible.
+  \item \textbf{Outline `ctrl+shift+o' shows all Sections.}
+  \item Write one sentence in one line and then move to next line.
   \item \textbf{Word Count} can be used to do word check
   \item Snippet View (Under) Structure helps insert Special/Math Symbols.
   \item \href{https://github.com/James-Yu/LaTeX-Workshop/wiki/Compile#cleaning-generated-files}{Clean} Auxilary file removes Temp Files and Autoclean
   \item Customize `latex-workshop.shortcut' Shourtcuts for easy formatting.
+  \item Enable \href{https://github.com/James-Yu/LaTeX-Workshop/issues/912}{snippets} for Latex.
 \end{itemize}
 
 \section{Layouts}
@@ -597,11 +607,34 @@ and combining them in main file.
 \end{enumerate}
 
 \subsection{Import}
-There are issues with `Include,Input' when included files also have further composition. Here `import' package helps in easy composition with nesting. 
+There are issues with `Include,Input' when included files also have further composition. Here `import' \href{https://mirror.niser.ac.in/ctan/macros/latex/contrib/import/import.pdf}{package} helps in easy composition with nesting. 
 
 \paragraph{Usage} \verb|\import{ }{ }|. The first parameter inside braces is the directory where the file is located, it can be relative to the current working directory or absolute. The second parameter is the name of the file to be imported
 
 \paragraph{Subimport} \verb|\subimport| that has the same syntax, but if used in one of the files that are imported in the main file, the path will be relative to that sub-file.
+
+\subsection{Nesting Switch}
+Nesting can be switched when composing main file from parts.
+This can be done in part of document using Closure via curly braces.
+
+\subsubsection{Push Down}
+Sections can be converted to Subsection
+
+\begin{listing}[h]
+  \begin{minted}[linenos]{latex}
+    {
+      \let\section\subsection
+      \let\subsection\subsubsection
+      \import{../topic/trading}{intro}
+      \import{../topic/trading}{investor}
+    }
+  \end{minted}
+  \caption{Push Down Levels}
+  \label{code:pushdown}
+\end{listing}
+
+\subsubsection{Push Up}
+Can be done via renaming subsection to section and so on similar to Pushdown \ref{code:pushdown}.
 
 \section{Macros}
 \subsection{Snippets}
