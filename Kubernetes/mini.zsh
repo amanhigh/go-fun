@@ -73,16 +73,10 @@ do
         FILE_PATH=`readlink -f ./services/files`
         
         #Additional Flags: --kubernetes-version v1.23.0
-        minikube  -p minikube start --memory=3096 --cpus=3 --cache-images=true --mount-string="$FILE_PATH:/etc/files" --mount --host-only-cidr='24.1.1.100/24' --addons metrics-server;
+        minikube  -p minikube start --memory=3096 --cpus=3 \
+        --cache-images=true --mount-string="$FILE_PATH:/etc/files" --mount --host-only-cidr='24.1.1.100/24'\
+        --addons metrics-server;
         
-        # TODO: Fix on WSL
-        # --extra-config="apiserver.enable-swagger-ui=true";
-        # --extra-config="apiserver.service-account-api-audiences=api" \
-        # --extra-config="apiserver.service-account-issuer=api" \
-        # --extra-config="apiserver.service-account-key-file=/var/lib/minikube/certs/sa.pub" \
-        # --extra-config="apiserver.service-account-signing-key-file=/var/lib/minikube/certs/sa.key";
-        # minikube -p minikube ssh 'sudo cat /var/lib/minikube/certs/sa.pub'
-
         # echo "\033[1;32m Minikube Dashboard & Addons \033[0m \n";
         # minikube -p minikube dashboard --url=true > /dev/null &
 

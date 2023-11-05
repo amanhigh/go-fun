@@ -1,4 +1,4 @@
-[![Actions Status](https://github.com/amanhigh/go-fun/workflows/Build/badge.svg)](https://github.com/amanhigh/go-fun/actions)
+[![Actions Status](https://github.com/amanhigh/go-fun/actions/workflows/build.yml/badge.svg)](https://github.com/amanhigh/go-fun/actions?workflow=build)
 [![codecov](https://codecov.io/gh/amanhigh/go-fun/branch/master/graph/badge.svg)](https://codecov.io/gh/amanhigh/go-fun)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/amanhigh/go-fun)](https://github.com/amanhigh/go-fun/releases)
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/amanhigh/go-fun)
