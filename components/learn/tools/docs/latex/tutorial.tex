@@ -1,6 +1,11 @@
 \documentclass{report}[a4paper,12pt] %article,book,report
 
-\usepackage{header}
+\usepackage{aman}[title=Aman]
+
+% Preamble: Title Details
+\title{\huge Latex Tutorial \\ \normalsize Learning Latex by Doing}
+\author{Amanpreet Singh}
+\date{2023-10-25}
 
 \begin{document}
   \pagenumbering{arabic}
@@ -30,24 +35,6 @@ This is a Paragraph.
 
 \subparagraph{Sub Para}
 This is a Sub Paragraph
-
-\section{Counters}
-\href{https://www.overleaf.com/learn/latex/Counters}{Counters} can be used to change numbering orders.
-
-\newcounter{somecounter}
-\setcounter{somecounter}{9}
-\begin{itemize}
-    \item \verb|\arabic{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as \arabic{somecounter} 
-    \item \verb|\roman{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \roman{somecounter}
-    \item \verb|\Roman{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \Roman{somecounter}
-    \item \verb|\alph{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \alph{somecounter}
-   \item \verb|\Alph{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \Alph{somecounter}
-    \item \verb|\fnsymbol{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \fnsymbol{somecounter}
-\end{itemize}
-
-\setcounter{subsection}{6}
-\subsection{Subsection}
-Counter has been Force changed to `2.7' from `2.1' here.
 
 \section{Features}
 
@@ -92,30 +79,37 @@ Refering to Foot Note\footnote{\label{myfootnote}Tutorial footnote}.
 Various \hypertarget{sen:formatopts}{Formattings} are Available. There various options for \href{https://www.overleaf.com/learn/latex/Font_sizes%2C_families%2C_and_styles}{Styling}.
 
 \subsubsection{Styles}
-\paragraph{Basic} Formatting Options using Tags.
+\paragraph{Basic}
 \begin{enumerate}
   \item Styles
   \begin{enumerate}
     \item \textbf{Bold}
     \item \textit{Italics}
     \item \underline{Underline}
-    \item \emph{Emphatic}
+    \item \emph{Emphatic} (Prefer over Italics, differnt in environments)
     \item \textsl{slanted}
     \item \textsc{small caps}
     \item \textmd{medium}
     \item \textup{upright}
   \end{enumerate}
+\end{enumerate}
+
+\paragraph{Size}
+\begin{enumerate}
+  \item \small small or \tiny tiny
+  \item \normalsize normalsize
+  \item \large large or \Large Large
+  \item \huge huge or \Huge Huge
+\end{enumerate}
+
+\subsubsection{Symbols}
+\begin{enumerate}
   \item `Single Quote'
   \item ``Double Quote''
   \item Special Chars, \verb|*`-$&|
   \item Space <\space>
-  \item Size
-  \begin{enumerate}
-    \item \small small or \tiny tiny
-    \item \normalsize normalsize
-    \item \large large or \Large Large
-    \item \huge huge or \Huge Huge
-  \end{enumerate}
+  \item Newline \verb|\\|
+  \item New Parra `Leave one line Space'.
 \end{enumerate}
 
 \paragraph{Document} Set Stlyes (Point till end)
@@ -195,9 +189,94 @@ There are many ways to reference. We use package `hyperref'.
   \item Link to Sentence
   \item File Link: \href{run:../../presentation/beamer/tutorial.tex}{Beamer Example}
   \item Reference to a label \ref{lst:bullet}.
+  \item Autoref (hyperref) improves \autoref{lst:bullet} by adding type as well.
+  \item \href{https://ctan.org/pkg/cleveref}{CleverRef} Capitalize Reference \cref{lst:bullet} and batch \href{https://texblog.org/2013/05/06/cleveref-a-clever-way-to-reference-in-latex/}{features}.
   \item Page Reference: \pageref{fig:coffee}
   \item Word or \hyperlink{sen:formatopts}{sentence} in your document.
 \end{enumerate}
+
+\subsection{Highlights}
+\href{https://mirror.niser.ac.in/ctan/macros/latex/contrib/tcolorbox/tcolorbox.pdf}{tcolorbox} and awesomebox (xelatex only) allows you to create
+fance boxes. Import tcolor \href{https://tex.stackexchange.com/questions/238303/tcolorbox-incompatibe-with-color-package}{before} xcolor.
+
+\subsubsection{Basic}
+\begin{tcolorbox}
+  This is a \textbf{tcolorbox}.
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=blue!25!white,colframe=green!75!black,title=Box Heading]
+  Upper Text
+  \tcblower
+  Lower Text.
+\end{tcolorbox}
+
+\subsubsection{Define}
+\paragraph{tcolorbox} allows you to define own boxes and then use them.
+
+\newtcolorbox{info}[1]{colback=blue!5!white,
+colframe=blue!75!black,fonttitle=\bfseries,
+title={#1}}
+
+\begin{info}{Info Title}
+This is my own box of type info ..
+\end{info}
+
+\subsubsection{Commands}
+%textmarker style from colorbox doc
+\tcbset{textmarker/.style={%
+        enhanced,
+        parbox=false,boxrule=0mm,boxsep=0mm,arc=0mm,
+        outer arc=0mm,left=6mm,right=3mm,top=7pt,bottom=7pt,
+        toptitle=1mm,bottomtitle=1mm,oversize}}
+
+% define new colorboxes
+\newtcolorbox{hintBox}{textmarker,
+    borderline west={6pt}{0pt}{yellow},
+    colback=yellow!10!white}
+\newtcolorbox{importantBox}{textmarker,
+    borderline west={6pt}{0pt}{red},
+    colback=red!10!white}
+\newtcolorbox{noteBox}{textmarker,
+    borderline west={6pt}{0pt}{green},
+    colback=green!10!white}
+
+% define commands for easy access
+\newcommand{\note}[1]{\begin{noteBox} \textbf{Note:} #1 \end{noteBox}}
+\newcommand{\warning}[1]{\begin{hintBox} \textbf{Warning:} #1 \end{hintBox}}
+\newcommand{\important}[1]{\begin{importantBox} \textbf{Important:} #1 \end{importantBox}}
+
+\note{This is a Note ..}
+\warning{This is a warning ..}
+\important{This is an important info !!}
+
+\begin{noteBox}
+  This is a Note in environment
+\end{noteBox}
+
+\subsubsection{Alert Message}
+
+Simple package \href{https://www.ctan.org/pkg/alertmessage}{alertmessage} to give below
+functionality and nothing else ..
+
+\alertinfo{This is info.}
+\alertsuccess{Success message}
+\alertwarning{Warning Message}
+\alerterror{Error Message ..}
+
+\subsection{Icons}
+This is an example of youtube icon \faIcon{youtube}. This is powered by \href{https://www.ctan.org/pkg/fontawesome}{fontawesome}.
+Icon
+
+More \href{https://fontawesome.com/v5/search?o=r&m=free}{Icon} examples
+\begin{itemize}
+  \item Wallet: \faIcon{wallet}
+  \item Wifi: \faIcon{wifi}
+  \item Folder
+  \begin{itemize}
+    \item Regular Style: \faIcon[regular]{folder-open}
+    \item Solid Style: \faIcon[solid]{folder-open}
+  \end{itemize}
+\end{itemize}
 
 \newpage
 \subsection{Images}
@@ -208,7 +287,7 @@ There are many ways to reference. We use package `hyperref'.
 Images can also be in multiple folders. \verb|\graphicspath{ {./images1/}{./images2/} }|.
 Size, rotation can be \href{https://www.overleaf.com/learn/latex/Inserting_Images}{tuned} as well.
 
-\paragraph{Single}
+\subsubsection{Single}
 
 Figure \ref{fig:sailboat} shows a boat. %Refers Label
 
@@ -218,8 +297,7 @@ Figure \ref{fig:sailboat} shows a boat. %Refers Label
   \label{fig:sailboat} %Invisible Used for Reference
 \end{figure}
 
-\newpage
-\paragraph{Multiple}
+\subsubsection{Multiple}
 Figure \ref{fig:coffee} shows how to place image side by side.
 
 \subparagraph{Images aligned} next to each other, their widths are both set to \textbf{0.4}, yet they fill up the whole space.
@@ -243,7 +321,7 @@ If you want to align three images next to each other,
 you should consecutively add three subfigures, each with a \verb|.2\linewidth|
 
 
-\paragraph{Cluster}
+\subsubsection{Cluster}
 Figure \ref{fig:coffee3} shows how to place cluster of images.
 
 \subparagraph{Notice} images are Numbered Automatically.
@@ -270,6 +348,21 @@ Figure \ref{fig:coffee3} shows how to place cluster of images.
   \label{fig:coffee3}
 \end{figure}
 
+\subsubsection{SVG}
+\href{https://www.ctan.org/pkg/svg}{svg} package along with \href{https://wiki.archlinux.org/title/Inkscape}{inkscape}
+can include svg graphic similar to normal graphics.
+
+\includesvg[width=0.5\linewidth]{happy}
+
+\subsubsection{Wrapped Images}
+\begin{wrapfigure}{r}{0.5\linewidth}
+  \centering
+  \includegraphics[width=\linewidth]{boat.jpg}
+  \caption{"Wrapped Boat"}
+  \label{fig:wboat}
+\end{wrapfigure}
+\lipsum[1]
+
 \subsection{Tables}
 
 \paragraph{Useful} Resources
@@ -286,6 +379,7 @@ Figure \ref{fig:coffee3} shows how to place cluster of images.
   \item Display your tables in landscape using the rotating package  
 \end{enumerate}
 
+\subsubsection{Basic}
 \begin{table}[!h]
   \centering
   \caption{Basic Table}
@@ -312,6 +406,8 @@ Figure \ref{fig:coffee3} shows how to place cluster of images.
   \end{center}
 \end{table}
 
+\newpage
+\subsubsection{Book Table}
 \begin{table}[h!]
   \centering
   \caption{Book Table}
@@ -328,6 +424,39 @@ Figure \ref{fig:coffee3} shows how to place cluster of images.
   \end{tabular}
 \end{table}
 
+\subsubsection{Csv Simple}
+\href{https://www.ctan.org/pkg/csvsimple}{CsvSimple} allows to quickly create tables from CSV.
+Refer \href{https://github.com/T-F-S/csvsimple/blob/master/doc/latex/csvsimple/csvsimple-example.tex}{examples}.
+
+\begin{table}[h!]
+    \centering
+    \caption{Auto Table}
+    \csvautotabular{data.csv}
+\end{table}
+
+\begin{table}[h!]
+  \centering
+  \caption{Headless}
+  \csvreader[tabular=|l|r|,
+  no head,
+  table head=\hline,
+  late after line=\\\hline]{data.csv}{}{\thecsvrow & \csvcoli}
+\end{table}
+
+\paragraph{Advanced} table shows selected colmuns with remapping.
+\begin{table}[h!]
+  \centering
+  \caption{Advanced}
+  \csvreader[tabular=|l|l|,
+  table head=\hline\multicolumn{2}{|c|}{\bfseries My telephone book}\\\hline
+             \bfseries Name & \bfseries Number\\\hline\hline,
+  late after line=\\\hline]%
+  {data.csv}{last name=\surname,first name=\givenname,telephone=\telephone}{%
+    \givenname\ \surname & \telephone
+}
+\end{table}
+
+\newpage
 \subsection{Lists}
 Lists are easy to \href{https://www.overleaf.com/learn/latex/Lists}{create}.
 
@@ -382,16 +511,17 @@ Package `enumitem' helps customize it for Ordered List \ref{lst:order} as well.
 
 \chapter{Advanced}
 \section{Code}
-\paragraph{Minted} Packages allows to format and display Code.
+\paragraph{Minted} Packages allows to format and display Code. Detailed \href{https://mirror.niser.ac.in/ctan/macros/latex/contrib/minted/minted.pdf}{guide}.
 
 \begin{enumerate}
   \item Code Snippet \ref{code:snippet} and File. \ref{code:file}
   \item Code can also be given inline \verb|\mintinline{c}|fmt.Println("Hello")|| (Not Working)
+  \item Supported Languages. \verb| pygmentize -L lexers|
 \end{enumerate}
 
 \subsubsection{Snippet}
 \begin{listing}[h]
-  \begin{minted}{Python}
+  \begin{minted}[linenos,bgcolor=lime]{Python}
     def hello_world():
     print("Hello floating World!")
   \end{minted}
@@ -441,14 +571,21 @@ Tool of choice is \href{https://github.com/James-Yu/LaTeX-Workshop}{Latex Worksh
 \begin{itemize}
   \item Can use Side Bar to Get Structure and easy Navigate.
   \item Collapsing Sections is possible.
+  \item \textbf{Outline `ctrl+shift+o' shows all Sections.}
+  \item Write one sentence in one line and then move to next line.
   \item \textbf{Word Count} can be used to do word check
   \item Snippet View (Under) Structure helps insert Special/Math Symbols.
   \item \href{https://github.com/James-Yu/LaTeX-Workshop/wiki/Compile#cleaning-generated-files}{Clean} Auxilary file removes Temp Files and Autoclean
   \item Customize `latex-workshop.shortcut' Shourtcuts for easy formatting.
+  \item Enable \href{https://github.com/James-Yu/LaTeX-Workshop/issues/912}{snippets} for Latex.
 \end{itemize}
 
 \section{Layouts}
 Multiple Column can be \href{https://www.overleaf.com/learn/latex/Multiple_columns}{set}. This allows text to be split in column on same page.
+
+\begin{tcolorbox}
+  \textbf{Tip}! You can use \verb|\onecolumn| and \verb|\twocolumn| to switch layouts.
+\end{tcolorbox}
 
 \paragraph{Two} Columns
 \begin{multicols}{2}
@@ -481,21 +618,94 @@ and combining them in main file.
 \end{enumerate}
 
 \subsection{Import}
-There are issues with `Include,Input' when included files also have further composition. Here `import' package helps in easy composition with nesting. 
+There are issues with `Include,Input' when included files also have further composition. Here `import' \href{https://mirror.niser.ac.in/ctan/macros/latex/contrib/import/import.pdf}{package} helps in easy composition with nesting. 
 
 \paragraph{Usage} \verb|\import{ }{ }|. The first parameter inside braces is the directory where the file is located, it can be relative to the current working directory or absolute. The second parameter is the name of the file to be imported
 
 \paragraph{Subimport} \verb|\subimport| that has the same syntax, but if used in one of the files that are imported in the main file, the path will be relative to that sub-file.
 
+\subsection{Nesting Switch}
+Nesting can be switched when composing main file from parts.
+This can be done in part of document using Closure via curly braces.
+
+\subsubsection{Push Down}
+Sections can be converted to Subsection
+
+\begin{listing}[h]
+  \begin{minted}[linenos]{latex}
+    {
+      \let\section\subsection
+      \let\subsection\subsubsection
+      \import{../topic/trading}{intro}
+      \import{../topic/trading}{investor}
+    }
+  \end{minted}
+  \caption{Push Down Levels}
+  \label{code:pushdown}
+\end{listing}
+
+\subsubsection{Push Up}
+Can be done via \href{https://tex.stackexchange.com/questions/291771/is-it-possible-to-input-a-file-while-lowering-every-section-it-has-by-1-level}{renaming} subsection to section and so on similar to Pushdown \ref{code:pushdown}.
+
+\section{Macros}
+\subsection{Snippets}
+\paragraph{New Commmand} allows you to build custom \href{https://www.physicsread.com/latex-newcommand/}{snippets} which are parameterized for reuse.
+
+\newcommand{\hb}[2]{Happy Birthday #1. Have a great #2 year celebration !!}
+
+We created new command \verb|\hb| with two paramater to wish Birthday.
+\begin{enumerate}
+  \item \hb{Aman}{21st}
+  \item \hb{Gyan}{35th}
+\end{enumerate}
+
+\subsection{Conditionals}
+\newcommand{\solution}[1][\empty]{\ifthenelse{\isempty{#1}}{There is no solution !!}{Solution: #1}}
+
+If/else blocks to print based on input. 
+\href{https://mirror.niser.ac.in/ctan/macros/latex/contrib/xifthen/xifthen.pdf}{xifthen} package enhances native conditionals for easy use.
+
+\begin{enumerate}
+  \item \solution{Result}
+  \item \solution (Not Working) %TODO: Fix
+  \item Empty: \ifthenelse{\isempty{}}{true}{false}
+  \item NotEmpty: \ifthenelse{\isempty{Test}}{true}{false}
+  \item EndsWith: \ifthenelse{\endswith{foo.}{.}}{true}{false}
+  \item NotEndsWith: \ifthenelse{\endswith{foo!}{.}}{true}{false}
+\end{enumerate}
+
 \section{Package}
 LateX allows you to \href{https://www.overleaf.com/learn/latex/Writing_your_own_package}{write} your own package.
 
-Benifits Include
+\begin{description}
+  \item[Provide Package] has name, description and release date.
+  \item[Use] `RequirePackage' instead of `UsePackage' as it can be called before `documentclass'.
+\end{description}
+
+\paragraph{Benifits Include}
 \begin{enumerate}
   \item Common Dependencies.
   \item Common Config and Formatting.
   \item Macros
 \end{enumerate}
+
+\section{Counters}
+\href{https://www.overleaf.com/learn/latex/Counters}{Counters} can be used to change numbering orders.
+
+\newcounter{somecounter}
+\setcounter{somecounter}{9}
+\begin{itemize}
+    \item \verb|\arabic{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as \arabic{somecounter} 
+    \item \verb|\roman{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \roman{somecounter}
+    \item \verb|\Roman{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \Roman{somecounter}
+    \item \verb|\alph{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \alph{somecounter}
+   \item \verb|\Alph{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \Alph{somecounter}
+    \item \verb|\fnsymbol{somecounter}| typesets the \texttt{somecounter} value of  \thesomecounter{} as  \fnsymbol{somecounter}
+\end{itemize}
+
+\setcounter{subsection}{6}
+\subsection{Subsection}
+Counter has been Force changed to `2.7' from `2.1' here.
 
 \import{./}{appendix.tex}
 \end{document}

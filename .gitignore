@@ -73,3 +73,6 @@ dist/
 *.pre
 *.snm
 *.vrb
+
+# Inkscape
+svg-inkscape

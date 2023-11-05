@@ -33,7 +33,6 @@ timedatectl
 
 ################## Disk Setup #####################
 # TODO: LVM Setup
-# TODO: Encryption
 
 ## Format ##
 boot=${disk}1
