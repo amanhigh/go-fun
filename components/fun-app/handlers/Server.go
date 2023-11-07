@@ -60,7 +60,7 @@ func (self *FunServer) Start() (err error) {
 	case err = <-errChan:
 		log.Trace("Error while Starting Server", errChan)
 	case <-time.After(time.Second):
-		//No Error Occurred proceed after waiting.
+		//No Error Occurred, wait for Graceful Shutdown Signal.
 		self.Shutdown.Wait()
 
 		// The context is used to inform the server it has few seconds to finish
