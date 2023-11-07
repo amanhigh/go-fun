@@ -9,6 +9,10 @@ import (
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+
+	docs "github.com/amanhigh/go-fun/components/fun-app/docs"
+	swaggerFiles "github.com/swaggo/files"     // swagger embed files
+	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
 )
 
 type FunServer struct {
@@ -22,6 +26,7 @@ type FunServer struct {
 }
 
 func (self *FunServer) initRoutes() {
+	docs.SwaggerInfo.BasePath = "/"
 	//Routes
 	//TODO:Add Versioning
 	personGroup := self.GinEngine.Group("/person")
@@ -32,6 +37,11 @@ func (self *FunServer) initRoutes() {
 
 	adminGroup := self.GinEngine.Group("/admin")
 	adminGroup.GET("/stop", self.AdminHandler.Stop)
+
+	//Add Swagger
+	//swag init (in main.go dir) - https://github.com/swaggo/gin-swagger
+	//URL: http://localhost:8080/swagger/index.html
+	self.GinEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	//Pprof (Use: http://localhost:8080/debug/pprof/)
 	//go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile
