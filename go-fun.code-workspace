@@ -3,5 +3,14 @@
 		{
 			"path": "."
 		}
-	]
+	],
+	"extensions": {
+		"recommendations": [
+			"ryuta46.multi-command",
+			"james-yu.latex-workshop",
+			"golang.go",
+			"terrastruct.d2",
+			"gruntfuggly.todo-tree"
+		]
+	}
 }
