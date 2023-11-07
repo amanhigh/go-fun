@@ -18,6 +18,18 @@ type PersonHandler struct {
 	PersonCreateTime prometheus.Histogram            `inject:"m_person_create_time"`
 }
 
+// CreatePerson godoc
+//
+// @Summary Create a new person
+// @Description Create a new person with the provided data
+// @Tags Person
+// @Accept json
+// @Produce json
+// @Param request body server2.PersonRequest true "Person Request"
+// @Success 200 {object} server2.PersonRequest
+// @Failure 400 {string} string "Bad Request"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /person [post]
 func (self *PersonHandler) CreatePerson(c *gin.Context) {
 	/* Captures Create Person Latency */
 	timer := prometheus.NewTimer(self.PersonCreateTime)
@@ -56,6 +68,16 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 	}
 }
 
+// GetAllPerson godoc
+//
+// @Summary Get all persons
+// @Description Get all persons' details
+// @Tags Person
+// @Accept json
+// @Produce json
+// @Success 200 {array} db.Person
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /person/all [get]
 func (self *PersonHandler) GetAllPerson(c *gin.Context) {
 	if persons, err := self.Manager.GetAllPersons(c); err == nil {
 		self.PersonCounter.Add(float64(len(persons)))
@@ -65,6 +87,18 @@ func (self *PersonHandler) GetAllPerson(c *gin.Context) {
 	}
 }
 
+// DeletePersons godoc
+//
+// @Summary Delete persons by ID
+// @Description Delete persons by their ID
+// @Tags Person
+// @Accept json
+// @Produce json
+// @Param id path string true "Person ID"
+// @Success 200 {string} string "DELETED"
+// @Failure 404 {string} string "Not Found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /person/{id} [delete]
 func (self *PersonHandler) DeletePersons(c *gin.Context) {
 	if err := self.Manager.DeletePerson(c, c.Param("id")); err == nil {
 		c.JSON(http.StatusOK, "DELETED")
