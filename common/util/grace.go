@@ -13,6 +13,10 @@ type GracefullShutdown struct {
 	quit chan os.Signal
 }
 
+func NewGracefulShutdown() *GracefullShutdown {
+	return &GracefullShutdown{make(chan os.Signal, 1)}
+}
+
 /*
 Wait waits for an interrupt signal to gracefully shutdown the server.
 Application should wait on this function and start cleanup.
