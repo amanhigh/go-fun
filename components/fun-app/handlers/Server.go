@@ -38,8 +38,8 @@ func (self *FunServer) initRoutes() {
 	adminGroup := self.GinEngine.Group("/admin")
 	adminGroup.GET("/stop", self.AdminHandler.Stop)
 
-	//Add Swagger
-	//swag init (in main.go dir) - https://github.com/swaggo/gin-swagger
+	//Add Swagger - https://github.com/swaggo/gin-swagger
+	//Init/Update: swag i --parseDependency true  (in main.go dir)
 	//URL: http://localhost:8080/swagger/index.html
 	self.GinEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

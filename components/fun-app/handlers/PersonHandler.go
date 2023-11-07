@@ -37,6 +37,17 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 	}
 }
 
+// GetPerson godoc
+//
+//	@Summary		Get a person by ID
+//	@Description	Get a person's details by their ID
+//	@Tags			Person
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Person ID"
+//	@Success		200	{object}	db.Person
+//	@Failure		500	{string}	string	"Internal Server Error"
+//	@Router			/person/{id} [get]
 func (self *PersonHandler) GetPerson(c *gin.Context) {
 	if person, err := self.Manager.GetPerson(c, c.Param("id")); err == nil {
 		c.JSON(http.StatusOK, person)
