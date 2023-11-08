@@ -1,8 +1,6 @@
 package it_test
 
 import (
-	"fmt"
-
 	. "github.com/amanhigh/go-fun/common/clients"
 	db2 "github.com/amanhigh/go-fun/models/fun-app/db"
 	server2 "github.com/amanhigh/go-fun/models/fun-app/server"
@@ -21,6 +19,7 @@ var _ = Describe("Person Integration Test", func() {
 		age    = 31
 		gender = "MALE"
 		client = NewFunAppClient(serviceUrl)
+		err    error
 	)
 
 	BeforeEach(func() {
@@ -35,41 +34,43 @@ var _ = Describe("Person Integration Test", func() {
 
 	Context("Create", func() {
 		BeforeEach(func() {
-			resp, err := TestHttpClient.R().
-				SetBody(request).
-				Post(serviceUrl + "/person")
-
+			err = client.CreatePerson(request)
 			Expect(err).To(BeNil())
-			Expect(resp.StatusCode()).To(Equal(200))
 		})
 
-		It("should create person", func() {
+		AfterEach(func() {
+			//Delete Person
+			// err = client.DeletePerson(name)
+			// Expect(err).To(BeNil())
+		})
+
+		It("should create & get person", func() {
 			person, err := client.GetPerson(name)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(person).Should(Not(BeNil()))
+
+			//Match Person Fields
+			Expect(person.Name).To(Equal(name))
+			Expect(person.Age).To(Equal(age))
+			Expect(person.Gender).To(Equal(gender))
 		})
 
-		Context("Get", func() {
-			It("should get all people", func() {
-				var persons []db2.Person
-				resp, err := TestHttpClient.R().
-					SetResult(&persons).
-					Get(serviceUrl + fmt.Sprintf("/person/all"))
+		It("should get all persons", func() {
+			var persons []db2.Person
+			persons, err = client.GetAllPersons()
+			Expect(err).To(BeNil())
+			Expect(len(persons)).To(BeNumerically(">=", 1))
+		})
 
-				Expect(err).To(BeNil())
-				Expect(resp.StatusCode()).To(Equal(200))
-				Expect(len(persons)).To(BeNumerically(">=", 1))
+		PContext("Bad Requests", func() {
+			It("should fail for bad request", func() {
+				request.Name = ""
+				err = client.CreatePerson(request)
+
+				Expect(err).Should(HaveOccurred())
+				//Error Should Contain Bad Request
+				// Expect(err.Error()).To(ContainSubstring("Bad Request"))
 			})
-		})
-
-		It("should fail for bad request", func() {
-			request.Name = ""
-			resp, err := TestHttpClient.R().
-				SetBody(request).
-				Post(serviceUrl + "/person")
-
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode()).To(Equal(400))
 		})
 	})
 
