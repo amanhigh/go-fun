@@ -20,6 +20,7 @@ var _ = Describe("Person Integration Test", func() {
 		name   = "Amanpreet Singh"
 		age    = 31
 		gender = "MALE"
+		client = NewFunAppClient(serviceUrl)
 	)
 
 	BeforeEach(func() {
@@ -43,6 +44,9 @@ var _ = Describe("Person Integration Test", func() {
 		})
 
 		It("should create person", func() {
+			person, err := client.GetPerson(name)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(person).Should(Not(BeNil()))
 		})
 
 		Context("Get", func() {
