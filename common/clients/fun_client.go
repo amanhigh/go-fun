@@ -23,25 +23,26 @@ func NewFunAppClient(BASE_URL string) *FunClient {
 		client: client,
 	}
 }
-
-func (c *FunClient) GetPerson(name string) (person db.Person, err error) {
-	url := fmt.Sprintf("/person/%s", name)
-	_, err = c.client.R().SetResult(&person).Get(url)
-	return
-}
-
 func (c *FunClient) CreatePerson(person server.PersonRequest) (err error) {
 	response, err := c.client.R().SetBody(person).Post("/person")
 	err = helper.ResponseProcessor(response, err)
 	return
 }
+func (c *FunClient) GetPerson(name string) (person db.Person, err error) {
+	url := fmt.Sprintf("/person/%s", name)
+	response, err := c.client.R().SetResult(&person).Get(url)
+	err = helper.ResponseProcessor(response, err)
+	return
+}
 
 func (c *FunClient) GetAllPersons() (persons []db.Person, err error) {
-	_, err = c.client.R().SetResult(&persons).Get("/person/all")
+	response, err := c.client.R().SetResult(&persons).Get("/person/all")
+	err = helper.ResponseProcessor(response, err)
 	return
 }
 
 func (c *FunClient) DeletePerson(name string) (err error) {
-	_, err = c.client.R().Delete(fmt.Sprintf("/person/%s", name))
+	response, err := c.client.R().Delete(fmt.Sprintf("/person/%s", name))
+	err = helper.ResponseProcessor(response, err)
 	return
 }
