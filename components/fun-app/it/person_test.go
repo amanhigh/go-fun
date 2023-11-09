@@ -2,6 +2,7 @@ package it_test
 
 import (
 	. "github.com/amanhigh/go-fun/common/clients"
+	"github.com/amanhigh/go-fun/models/common"
 	db2 "github.com/amanhigh/go-fun/models/fun-app/db"
 	server2 "github.com/amanhigh/go-fun/models/fun-app/server"
 
@@ -63,14 +64,41 @@ var _ = Describe("Person Integration Test", func() {
 		})
 
 		Context("Bad Requests", func() {
-			It("should fail for bad request", func() {
-				request.Name = ""
+			AfterEach(func() {
 				err = client.CreatePerson(request)
 
 				Expect(err).Should(HaveOccurred())
-				//Error Should Contain Bad Request
-				// Expect(err.Error()).To(ContainSubstring("Bad Request"))
+				Expect(err).To(Equal(common.BadRequestErr))
 			})
+
+			It("should fail for missing Name", func() {
+				request.Name = ""
+			})
+
+			It("should fail for invalid Name", func() {
+				request.Name = "A*B"
+			})
+
+			It("should fail for missing Age", func() {
+				request.Age = 0
+			})
+
+			It("should fail for invalid Age", func() {
+				request.Age = -10
+			})
+
+			It("should fail for max Age", func() {
+				request.Age = 200
+			})
+
+			It("should fail for missing Gender", func() {
+				request.Gender = ""
+			})
+
+			It("should fail for invalid Gender", func() {
+				request.Gender = "OTHER"
+			})
+
 		})
 	})
 
