@@ -36,7 +36,8 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 	defer timer.ObserveDuration()
 
 	var request server2.PersonRequest
-	if err := c.Bind(&request); err == nil {
+	if err := c.ShouldBind(&request); err == nil {
+
 		self.CreateCounter.WithLabelValues(request.Gender).Inc()
 
 		if err := self.Manager.CreatePerson(c, request.Person); err == nil {
