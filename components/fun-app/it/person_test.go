@@ -62,7 +62,7 @@ var _ = Describe("Person Integration Test", func() {
 			Expect(len(persons)).To(BeNumerically(">=", 1))
 		})
 
-		PContext("Bad Requests", func() {
+		Context("Bad Requests", func() {
 			It("should fail for bad request", func() {
 				request.Name = ""
 				err = client.CreatePerson(request)

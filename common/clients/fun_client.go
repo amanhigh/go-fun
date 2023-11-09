@@ -4,6 +4,7 @@ package clients
 import (
 	"fmt"
 
+	"github.com/amanhigh/go-fun/common/helper"
 	"github.com/amanhigh/go-fun/models/fun-app/db"
 	"github.com/amanhigh/go-fun/models/fun-app/server"
 	"github.com/go-resty/resty/v2"
@@ -30,7 +31,8 @@ func (c *FunClient) GetPerson(name string) (person db.Person, err error) {
 }
 
 func (c *FunClient) CreatePerson(person server.PersonRequest) (err error) {
-	_, err = c.client.R().SetBody(person).Post("/person")
+	response, err := c.client.R().SetBody(person).Post("/person")
+	err = helper.ResponseProcessor(response, err)
 	return
 }
 
