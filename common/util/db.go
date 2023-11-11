@@ -19,7 +19,6 @@ func CreateDbConnection(config config2.Db) (db *gorm.DB, err error) {
 		/** Print SQL */
 		//db.LogMode(true)
 
-		//TODO:From Config
 		if sqlDb, err := db.DB(); err == nil {
 			sqlDb.SetMaxIdleConns(config.MaxIdle)
 			sqlDb.SetMaxOpenConns(config.MaxOpen)

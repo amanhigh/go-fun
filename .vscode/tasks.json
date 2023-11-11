@@ -29,12 +29,12 @@
             },
             "problemMatcher": [],
             "group": {
-                "kind": "build",
+                "kind": "build", // Vscode action.tasks.build: "ctrl+w c (Cover)"
                 "isDefault": true
             }
         },
         {
-            "label": "cover",
+            "label": "cover", //Vscode: go.test.file: "ctrl+shift+b" (Test)
             "type": "shell",
             "command": "go",
             "args": [

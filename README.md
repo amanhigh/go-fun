@@ -18,6 +18,7 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 			- Docker [Image](https://hub.docker.com/r/amanfdk/fun-app): `docker run amanfdk/fun-app`
 		- Testing
 			- Unit and Integration Testing is done via [Ginkgo](https://github.com/onsi/ginkgo).
+			- Install: `go install github.com/onsi/ginkgo/v2/ginkgo@latest`
 			- Run Tests: `ginkgo -r '--label-filter=!setup' .` (Excludes that require separate setup.)
 		- Performance Test
 			[Vegeta](https://github.com/tsenart/vegeta) is the tool of choice here. [Gum](https://github.com/charmbracelet/gum) helps in prompts.  

@@ -47,6 +47,7 @@ func (self *PersonManager) GetPerson(c context.Context, name string) (person db2
 func (self *PersonManager) DeletePerson(c context.Context, id string) (err error) {
 	var person = db2.Person{}
 
+	//TODO: Fix Delete.
 	/* Find Person in DB */
 	if err = self.Db.Find(&person, "person_id=?", id).Error; err == nil {
 

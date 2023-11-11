@@ -9,6 +9,10 @@ import (
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+
+	docs "github.com/amanhigh/go-fun/components/fun-app/docs"
+	swaggerFiles "github.com/swaggo/files"     // swagger embed files
+	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
 )
 
 type FunServer struct {
@@ -22,6 +26,7 @@ type FunServer struct {
 }
 
 func (self *FunServer) initRoutes() {
+	docs.SwaggerInfo.BasePath = "/"
 	//Routes
 	//TODO:Add Versioning
 	personGroup := self.GinEngine.Group("/person")
@@ -32,6 +37,11 @@ func (self *FunServer) initRoutes() {
 
 	adminGroup := self.GinEngine.Group("/admin")
 	adminGroup.GET("/stop", self.AdminHandler.Stop)
+
+	//Add Swagger - https://github.com/swaggo/gin-swagger
+	//Init/Update: swag i --parseDependency true  (in main.go dir)
+	//URL: http://localhost:8080/swagger/index.html
+	self.GinEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	//Pprof (Use: http://localhost:8080/debug/pprof/)
 	//go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile
@@ -60,7 +70,7 @@ func (self *FunServer) Start() (err error) {
 	case err = <-errChan:
 		log.Trace("Error while Starting Server", errChan)
 	case <-time.After(time.Second):
-		//No Error Occurred proceed after waiting.
+		//No Error Occurred, wait for Graceful Shutdown Signal.
 		self.Shutdown.Wait()
 
 		// The context is used to inform the server it has few seconds to finish
