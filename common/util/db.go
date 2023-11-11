@@ -1,8 +1,12 @@
 package util
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+
+	"github.com/amanhigh/go-fun/models"
+	"github.com/amanhigh/go-fun/models/common"
 	config2 "github.com/amanhigh/go-fun/models/config"
 	_ "github.com/go-sql-driver/mysql"
 	log "github.com/sirupsen/logrus"
@@ -37,5 +41,38 @@ func CreateTestDb() (db *gorm.DB, err error) {
 func CreateMysqlConnection(username, password, host, dbName string, port int) (db *sql.DB, err error) {
 	url := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", username, password, host, port, dbName)
 	db, err = sql.Open("mysql", url)
+	return
+}
+
+func GormErrorMapper(err error) common.HttpError {
+	if err == nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return common.ErrNotFound
+		default:
+			return common.NewServerError(err)
+		}
+	}
+	return nil
+
+}
+
+/*
+*
+
+	Transaction Handling
+*/
+func Tx(c context.Context) (tx *gorm.DB) {
+	if c != nil {
+		//Check If Context Has Tx
+		if value := c.Value(models.CONTEXT_TX); value != nil {
+			//Extract and Return
+			tx = value.(*gorm.DB)
+		} else {
+			log.Debug("Missing Transaction In Context")
+		}
+	} else {
+		log.Debug("Nil Context Passed")
+	}
 	return
 }
