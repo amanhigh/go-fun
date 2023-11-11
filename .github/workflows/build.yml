@@ -41,6 +41,7 @@ jobs:
           args: release --snapshot --skip-publish --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: v1.0.2
 
       - name: Report Coverage
         uses: codecov/codecov-action@v2
