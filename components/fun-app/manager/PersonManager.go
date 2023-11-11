@@ -19,8 +19,8 @@ type PersonManagerInterface interface {
 }
 
 type PersonManager struct {
-	Db  *gorm.DB       `inject:""`
-	Dao *dao.PersonDao `inject:""`
+	Db  *gorm.DB               `inject:""`
+	Dao dao.PersonDaoInterface `inject:""`
 }
 
 // CreatePerson creates a new person in the PersonManager.

@@ -15,6 +15,16 @@ import (
 
 const TX_TIMEOUT = 30 * time.Second
 
+type BaseDaoInterface interface {
+	FindById(c context.Context, id any, entity any) (err common.HttpError)
+	Find(c context.Context, query any, result any) (err common.HttpError)
+	Create(c context.Context, entity any, omit ...string) (err common.HttpError)
+	Update(c context.Context, entity any, omit ...string) (err common.HttpError)
+	DeleteById(c context.Context, id any, entity any) (err common.HttpError)
+	GetCount(c context.Context, entity any) (count int64, err common.HttpError)
+	UseOrCreateTx(c context.Context, run DbRun, readOnly ...bool) (err common.HttpError)
+}
+
 type BaseDao struct {
 	Db *gorm.DB `inject:""`
 }
