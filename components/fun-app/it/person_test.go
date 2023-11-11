@@ -35,7 +35,7 @@ var _ = Describe("Person Integration Test", func() {
 
 	Context("Create", func() {
 		BeforeEach(func() {
-			err = client.CreatePerson(request)
+			err = client.PersonService.CreatePerson(request)
 			Expect(err).To(BeNil())
 		})
 
@@ -46,7 +46,7 @@ var _ = Describe("Person Integration Test", func() {
 		})
 
 		It("should create & get person", func() {
-			person, err := client.GetPerson(name)
+			person, err := client.PersonService.GetPerson(name)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(person).Should(Not(BeNil()))
 
@@ -58,14 +58,14 @@ var _ = Describe("Person Integration Test", func() {
 
 		It("should get all persons", func() {
 			var persons []db2.Person
-			persons, err = client.GetAllPersons()
+			persons, err = client.PersonService.GetAllPersons()
 			Expect(err).To(BeNil())
 			Expect(len(persons)).To(BeNumerically(">=", 1))
 		})
 
 		Context("Bad Requests", func() {
 			AfterEach(func() {
-				err = client.CreatePerson(request)
+				err = client.PersonService.CreatePerson(request)
 
 				Expect(err).Should(HaveOccurred())
 				Expect(err).To(Equal(common.BadRequestErr))

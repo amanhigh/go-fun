@@ -11,11 +11,15 @@ import (
 )
 
 type FunClient struct {
-	client *resty.Client
-	person PersonService
+	PersonService *PersonService
 }
 
-type PersonService interface {
+type BaseService struct {
+	client *resty.Client
+}
+
+type PersonService struct {
+	BaseService
 }
 
 func NewFunAppClient(BASE_URL string) *FunClient {
@@ -23,29 +27,33 @@ func NewFunAppClient(BASE_URL string) *FunClient {
 	client := resty.New().SetBaseURL(BASE_URL)
 	client.SetHeader("Content-Type", "application/json")
 
+	// Init Base Service
+	baseService := BaseService{client: client}
+
 	return &FunClient{
-		client: client,
+		PersonService: &PersonService{BaseService: baseService},
 	}
 }
-func (c *FunClient) CreatePerson(person server.PersonRequest) (err error) {
+
+func (c *PersonService) CreatePerson(person server.PersonRequest) (err error) {
 	response, err := c.client.R().SetBody(person).Post("/person")
 	err = helper.ResponseProcessor(response, err)
 	return
 }
-func (c *FunClient) GetPerson(name string) (person db.Person, err error) {
+func (c *PersonService) GetPerson(name string) (person db.Person, err error) {
 	url := fmt.Sprintf("/person/%s", name)
 	response, err := c.client.R().SetResult(&person).Get(url)
 	err = helper.ResponseProcessor(response, err)
 	return
 }
 
-func (c *FunClient) GetAllPersons() (persons []db.Person, err error) {
+func (c *PersonService) GetAllPersons() (persons []db.Person, err error) {
 	response, err := c.client.R().SetResult(&persons).Get("/person/all")
 	err = helper.ResponseProcessor(response, err)
 	return
 }
 
-func (c *FunClient) DeletePerson(name string) (err error) {
+func (c *PersonService) DeletePerson(name string) (err error) {
 	response, err := c.client.R().Delete(fmt.Sprintf("/person/%s", name))
 	err = helper.ResponseProcessor(response, err)
 	return
