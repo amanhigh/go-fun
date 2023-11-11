@@ -4,7 +4,7 @@ package clients
 import (
 	"fmt"
 
-	"github.com/amanhigh/go-fun/common/helper"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun-app/db"
 	"github.com/amanhigh/go-fun/models/fun-app/server"
@@ -39,25 +39,25 @@ func NewFunAppClient(BASE_URL string) *FunClient {
 
 func (c *PersonService) CreatePerson(person server.PersonRequest) (id string, err common.HttpError) {
 	response, err1 := c.client.R().SetBody(person).SetResult(&id).Post(c.VERSION_URL + "/person")
-	err = helper.ResponseProcessor(response, err1)
+	err = util.ResponseProcessor(response, err1)
 	return
 }
 
 func (c *PersonService) GetPerson(name string) (person db.Person, err common.HttpError) {
 	url := fmt.Sprintf(c.VERSION_URL+"/person/%s", name)
 	response, err1 := c.client.R().SetResult(&person).Get(url)
-	err = helper.ResponseProcessor(response, err1)
+	err = util.ResponseProcessor(response, err1)
 	return
 }
 
 func (c *PersonService) GetAllPersons() (persons []db.Person, err common.HttpError) {
 	response, err1 := c.client.R().SetResult(&persons).Get(c.VERSION_URL + "/person/all")
-	err = helper.ResponseProcessor(response, err1)
+	err = util.ResponseProcessor(response, err1)
 	return
 }
 
 func (c *PersonService) DeletePerson(name string) (err common.HttpError) {
 	response, err1 := c.client.R().Delete(fmt.Sprintf(c.VERSION_URL+"/person/%s", name))
-	err = helper.ResponseProcessor(response, err1)
+	err = util.ResponseProcessor(response, err1)
 	return
 }
