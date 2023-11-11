@@ -26,7 +26,7 @@ type PersonHandler struct {
 // @Accept json
 // @Produce json
 // @Param request body server2.PersonRequest true "Person Request"
-// @Success 200 {object} server2.PersonRequest
+// @Success 200 {string} string "Id of created person"
 // @Failure 400 {string} string "Bad Request"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person [post]
@@ -40,8 +40,8 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 
 		self.CreateCounter.WithLabelValues(request.Gender).Inc()
 
-		if err := self.Manager.CreatePerson(c, request.Person); err == nil {
-			c.JSON(http.StatusOK, request)
+		if id, err := self.Manager.CreatePerson(c, request.Person); err == nil {
+			c.JSON(http.StatusOK, id)
 		} else {
 			c.JSON(http.StatusInternalServerError, err.Error())
 		}

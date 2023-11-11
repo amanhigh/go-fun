@@ -36,8 +36,8 @@ func NewFunAppClient(BASE_URL string) *FunClient {
 	}
 }
 
-func (c *PersonService) CreatePerson(person server.PersonRequest) (err error) {
-	response, err := c.client.R().SetBody(person).Post(c.VERSION_URL + "/person")
+func (c *PersonService) CreatePerson(person server.PersonRequest) (id string, err error) {
+	response, err := c.client.R().SetBody(person).SetResult(&id).Post(c.VERSION_URL + "/person")
 	err = helper.ResponseProcessor(response, err)
 	return
 }
