@@ -15,6 +15,8 @@ import (
 	"github.com/etcinit/speedbump/ginbump"
 	"github.com/facebookgo/inject"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -62,6 +64,10 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 
 	/* Middleware */
 	engine.Use(gin.Recovery(), metrics2.RequestId, gin.LoggerWithFormatter(metrics2.GinRequestIdFormatter))
+
+	/* Validators */
+	v, _ := binding.Validator.Engine().(*validator.Validate)
+	_ = v.RegisterValidation("name", NameValidator)
 
 	/* Enable Rate Limit if Limit is above 0 */
 	if self.config.RateLimit.PerMinuteLimit > 0 {
