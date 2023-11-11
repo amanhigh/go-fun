@@ -1,7 +1,6 @@
 package challenge_test
 
 import (
-	helper2 "github.com/amanhigh/go-fun/common/helper"
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/learn/algos/hackerrank/challenge"
 	. "github.com/onsi/ginkgo/v2"
@@ -33,7 +32,7 @@ var _ = Describe("MaxSubArray", func() {
 	AfterEach(func() {
 		n := util.ReadInt(inScan)
 		for i := 0; i < n; i++ {
-			_, ints := helper2.ReadCountInts(inScan)
+			_, ints := util.ReadCountInts(inScan)
 			expected := util.ReadInts(outScan, 4)
 			arraySum, segmentSum, start, end := challenge.MaxSubArray(ints)
 			Expect([]int{arraySum, segmentSum, start, end}).To(Equal(expected), fmt.Sprintf("Input: %v Expected: %v", ints, expected))
