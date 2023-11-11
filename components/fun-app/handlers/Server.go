@@ -32,7 +32,6 @@ func (self *FunServer) initRoutes() {
 	// Version Group
 	v1 := self.GinEngine.Group("/v1")
 
-	//TODO:Add Versioning
 	personGroup := v1.Group("/person")
 	personGroup.GET("/all", self.PersonHandler.GetAllPerson)
 	personGroup.GET("/:id", self.PersonHandler.GetPerson)

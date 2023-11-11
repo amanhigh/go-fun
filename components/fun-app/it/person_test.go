@@ -1,6 +1,8 @@
 package it_test
 
 import (
+	"strings"
+
 	. "github.com/amanhigh/go-fun/common/clients"
 	"github.com/amanhigh/go-fun/models/common"
 	db2 "github.com/amanhigh/go-fun/models/fun-app/db"
@@ -51,6 +53,7 @@ var _ = Describe("Person Integration Test", func() {
 			Expect(person).Should(Not(BeNil()))
 
 			//Match Person Fields
+			Expect(person.Id).ShouldNot(BeZero())
 			Expect(person.Name).To(Equal(name))
 			Expect(person.Age).To(Equal(age))
 			Expect(person.Gender).To(Equal(gender))
@@ -79,12 +82,12 @@ var _ = Describe("Person Integration Test", func() {
 				request.Name = "A*B"
 			})
 
-			It("should fail for missing Age", func() {
-				request.Age = 0
+			It("should fail for max Name", func() {
+				request.Name = strings.Repeat("A", 30)
 			})
 
-			It("should fail for invalid Age", func() {
-				request.Age = -10
+			It("should fail for minimum Age", func() {
+				request.Age = 0
 			})
 
 			It("should fail for max Age", func() {
@@ -98,23 +101,25 @@ var _ = Describe("Person Integration Test", func() {
 			It("should fail for invalid Gender", func() {
 				request.Gender = "OTHER"
 			})
-
 		})
 	})
 
-	It("should serve metrics", func() {
-		resp, err := TestHttpClient.R().
-			Get(serviceUrl + "/metrics")
+	Context("Admin", func() {
+		It("should serve metrics", func() {
+			resp, err := TestHttpClient.R().
+				Get(serviceUrl + "/metrics")
 
-		Expect(err).To(BeNil())
-		Expect(resp.StatusCode()).To(Equal(200))
+			Expect(err).To(BeNil())
+			Expect(resp.StatusCode()).To(Equal(200))
+		})
+
+		It("should serve swagger", func() {
+			resp, err := TestHttpClient.R().
+				Get(serviceUrl + "/swagger/index.html")
+
+			Expect(err).To(BeNil())
+			Expect(resp.StatusCode()).To(Equal(200))
+		})
 	})
 
-	It("should serve swagger", func() {
-		resp, err := TestHttpClient.R().
-			Get(serviceUrl + "/swagger/index.html")
-
-		Expect(err).To(BeNil())
-		Expect(resp.StatusCode()).To(Equal(200))
-	})
 })
