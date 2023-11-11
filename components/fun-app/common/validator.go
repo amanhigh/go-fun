@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const NAME_REGEX = `[0-9a-z-]+`
+const NAME_REGEX = `^[0-9a-zA-Z- ]+$`
 
 var nameMatcher, _ = regexp.Compile(NAME_REGEX)
 var matcherMap = map[string]*regexp.Regexp{
@@ -30,6 +30,8 @@ func NameValidator(fl validator.FieldLevel) (check bool) {
 		name := fl.Field().String()
 		//Apply Regex
 		check = matcher.MatchString(name)
+
+		log.WithFields(log.Fields{"Name": name, "Entity": entityName, "Check": check}).Debug("NameValidator")
 	} else {
 		log.WithFields(log.Fields{"MatcherName": entityName}).Error("NameValidator Error")
 	}
