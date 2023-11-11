@@ -63,11 +63,14 @@ var _ = Describe("Person Integration Test", func() {
 			Expect(person.Gender).To(Equal(gender))
 		})
 
-		It("should get all persons", func() {
-			var persons []db2.Person
-			persons, err = client.PersonService.GetAllPersons()
-			Expect(err).To(BeNil())
-			Expect(len(persons)).To(BeNumerically(">=", 1))
+		Context("Search", func() {
+			It("should get all persons", func() {
+				var persons []db2.Person
+				persons, err = client.PersonService.GetAllPersons()
+				Expect(err).To(BeNil())
+				Expect(len(persons)).To(BeNumerically(">=", 1))
+			})
+
 		})
 
 		Context("Bad Requests", func() {
@@ -120,10 +123,6 @@ var _ = Describe("Person Integration Test", func() {
 				Expect(err).Should(HaveOccurred())
 				Expect(err).To(Equal(common.ErrNotFound))
 				Expect(err.Code()).To(Equal(404))
-			})
-
-			It("should fail for get", func() {
-				_, err = client.PersonService.GetPerson(emptyId)
 			})
 
 			It("should fail for delete", func() {

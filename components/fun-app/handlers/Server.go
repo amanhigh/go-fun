@@ -33,7 +33,7 @@ func (self *FunServer) initRoutes() {
 	v1 := self.GinEngine.Group("/v1")
 
 	personGroup := v1.Group("/person")
-	personGroup.GET("/all", self.PersonHandler.GetAllPerson)
+	personGroup.GET("/", self.PersonHandler.ListPersons)
 	personGroup.GET("/:id", self.PersonHandler.GetPerson)
 	personGroup.POST("", self.PersonHandler.CreatePerson)
 	personGroup.DELETE(":id", self.PersonHandler.DeletePersons)

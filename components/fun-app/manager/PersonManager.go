@@ -8,19 +8,17 @@ import (
 	db2 "github.com/amanhigh/go-fun/models/fun-app/db"
 	"github.com/amanhigh/go-fun/models/fun-app/server"
 	log "github.com/sirupsen/logrus"
-	"gorm.io/gorm"
 )
 
 type PersonManagerInterface interface {
 	CreatePerson(c context.Context, person server.PersonRequest) (id string, err common.HttpError)
 	DeletePerson(c context.Context, id string) (err common.HttpError)
 
-	GetAllPersons(c context.Context) (persons []db2.Person, err error)
+	ListPersons(c context.Context) (persons []db2.Person, err common.HttpError)
 	GetPerson(c context.Context, id string) (person db2.Person, err common.HttpError)
 }
 
 type PersonManager struct {
-	Db  *gorm.DB               `inject:""`
 	Dao dao.PersonDaoInterface `inject:""`
 }
 
@@ -47,8 +45,11 @@ func (self *PersonManager) CreatePerson(c context.Context, person server.PersonR
 	return
 }
 
-func (self *PersonManager) GetAllPersons(c context.Context) (persons []db2.Person, err error) {
-	err = self.Db.Find(&persons).Error
+func (self *PersonManager) ListPersons(c context.Context) (persons []db2.Person, err common.HttpError) {
+	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
+		err = self.Dao.Find(c, nil, &persons)
+		return
+	})
 	return
 }
 

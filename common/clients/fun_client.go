@@ -51,7 +51,7 @@ func (c *PersonService) GetPerson(name string) (person db.Person, err common.Htt
 }
 
 func (c *PersonService) GetAllPersons() (persons []db.Person, err common.HttpError) {
-	response, err1 := c.client.R().SetResult(&persons).Get(c.VERSION_URL + "/person/all")
+	response, err1 := c.client.R().SetResult(&persons).Get(c.VERSION_URL + "/person")
 	err = util.ResponseProcessor(response, err1)
 	return
 }

@@ -74,7 +74,7 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 
 }
 
-// GetAllPerson godoc
+// ListPersons godoc
 //
 // @Summary Get all persons
 // @Description Get all persons' details
@@ -84,8 +84,8 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 // @Success 200 {array} db.Person
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person/all [get]
-func (self *PersonHandler) GetAllPerson(c *gin.Context) {
-	if persons, err := self.Manager.GetAllPersons(c); err == nil {
+func (self *PersonHandler) ListPersons(c *gin.Context) {
+	if persons, err := self.Manager.ListPersons(c); err == nil {
 		self.PersonCounter.Add(float64(len(persons)))
 		c.JSON(http.StatusOK, persons)
 	} else {
