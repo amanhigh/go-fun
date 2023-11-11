@@ -2,11 +2,23 @@ package metrics
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/arl/statsviz"
 	"github.com/gin-gonic/gin"
 )
+
+var ws http.HandlerFunc
+var index http.HandlerFunc
+
+func init() {
+	// Create statsviz server.
+	srv, _ := statsviz.NewServer()
+
+	ws = srv.Ws()
+	index = srv.Index()
+}
 
 /*
 *
@@ -27,8 +39,8 @@ Sets Up Heap, GC and Goroutine Metric Graphs
 */
 func StatvizMetrics(context *gin.Context) {
 	if context.Param("filepath") == "/ws" {
-		statsviz.Ws(context.Writer, context.Request)
+		ws(context.Writer, context.Request)
 		return
 	}
-	statsviz.IndexAtRoot("/debug/statsviz").ServeHTTP(context.Writer, context.Request)
+	index(context.Writer, context.Request)
 }

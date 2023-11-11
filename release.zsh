@@ -42,3 +42,12 @@ if [ "$confirm" = "y" ]; then
         git push --tags && echo "\033[1;32m Common Released $version \033[0m"
     fi
 fi
+
+# Release Components
+read "confirm?Bump Components (y/N)"
+if [ "$confirm" = "y" ]; then
+    echo "\033[1;34m Bumping Components \033[0m"
+    pushd ./components/fun-app
+        go get -u github.com/amanhigh/go-fun/common@$version
+    popd
+fi
