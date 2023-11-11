@@ -6,7 +6,6 @@ import (
 	manager2 "github.com/amanhigh/go-fun/components/fun-app/manager"
 	server2 "github.com/amanhigh/go-fun/models/fun-app/server"
 	"github.com/prometheus/client_golang/prometheus"
-	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -35,6 +34,7 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 	timer := prometheus.NewTimer(self.PersonCreateTime)
 	defer timer.ObserveDuration()
 
+	//Unmarshal the request
 	var request server2.PersonRequest
 	if err := c.ShouldBind(&request); err == nil {
 
@@ -43,7 +43,7 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 		if id, err := self.Manager.CreatePerson(c, request); err == nil {
 			c.JSON(http.StatusOK, id)
 		} else {
-			c.JSON(http.StatusInternalServerError, err.Error())
+			c.JSON(err.Code(), err)
 		}
 	} else {
 		c.JSON(http.StatusBadRequest, err)
@@ -68,7 +68,7 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 		if person, err := self.Manager.GetPerson(c, path.Id); err == nil {
 			c.JSON(http.StatusOK, person)
 		} else {
-			c.JSON(http.StatusInternalServerError, err.Error())
+			c.JSON(err.Code(), err)
 		}
 	}
 
@@ -109,10 +109,6 @@ func (self *PersonHandler) DeletePersons(c *gin.Context) {
 	if err := self.Manager.DeletePerson(c, c.Param("id")); err == nil {
 		c.JSON(http.StatusOK, "DELETED")
 	} else {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, err)
-		} else {
-			c.JSON(http.StatusInternalServerError, err.Error())
-		}
+		c.JSON(err.Code(), err)
 	}
 }

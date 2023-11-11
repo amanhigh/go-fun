@@ -131,7 +131,7 @@ var _ = Describe("Person Integration Test", func() {
 			})
 		})
 
-		PContext("Missing Id", func() {
+		Context("Missing Id", func() {
 			AfterEach(func() {
 				Expect(err).Should(HaveOccurred())
 				Expect(err).To(Equal(common.ErrNotFound))

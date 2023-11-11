@@ -12,8 +12,8 @@ import (
 )
 
 type PersonManagerInterface interface {
-	CreatePerson(c context.Context, person server.PersonRequest) (id string, err error)
-	DeletePerson(c context.Context, id string) (err error)
+	CreatePerson(c context.Context, person server.PersonRequest) (id string, err common.HttpError)
+	DeletePerson(c context.Context, id string) (err common.HttpError)
 
 	GetAllPersons(c context.Context) (persons []db2.Person, err error)
 	GetPerson(c context.Context, id string) (person db2.Person, err common.HttpError)
@@ -33,7 +33,7 @@ type PersonManager struct {
 // It returns two values:
 // - id: a string representing the ID of the newly created person.
 // - err: an error representing any error that occurred during the creation process.
-func (self *PersonManager) CreatePerson(c context.Context, person server.PersonRequest) (id string, err error) {
+func (self *PersonManager) CreatePerson(c context.Context, person server.PersonRequest) (id string, err common.HttpError) {
 	personFields := log.Fields{"Name": person.Person.Name, "Age": person.Person.Age, "Gender": person.Person.Gender}
 
 	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
@@ -59,7 +59,7 @@ func (self *PersonManager) GetPerson(c context.Context, id string) (person db2.P
 	return
 }
 
-func (self *PersonManager) DeletePerson(c context.Context, id string) (err error) {
+func (self *PersonManager) DeletePerson(c context.Context, id string) (err common.HttpError) {
 	var person db2.Person
 
 	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
