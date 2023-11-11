@@ -6,12 +6,13 @@ import (
 	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	"github.com/amanhigh/go-fun/models/common"
 	db2 "github.com/amanhigh/go-fun/models/fun-app/db"
+	"github.com/amanhigh/go-fun/models/fun-app/server"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type PersonManagerInterface interface {
-	CreatePerson(c context.Context, person db2.Person) (id string, err error)
+	CreatePerson(c context.Context, person server.PersonRequest) (id string, err error)
 	DeletePerson(c context.Context, id string) (err error)
 
 	GetAllPersons(c context.Context) (persons []db2.Person, err error)
@@ -32,15 +33,17 @@ type PersonManager struct {
 // It returns two values:
 // - id: a string representing the ID of the newly created person.
 // - err: an error representing any error that occurred during the creation process.
-func (self *PersonManager) CreatePerson(c context.Context, person db2.Person) (id string, err error) {
-	personFields := log.Fields{"Name": person.Name}
+func (self *PersonManager) CreatePerson(c context.Context, person server.PersonRequest) (id string, err error) {
+	personFields := log.Fields{"Name": person.Person.Name, "Age": person.Person.Age, "Gender": person.Person.Gender}
 
-	if err = self.Db.Create(&person).Error; err != nil {
-		log.WithContext(c).WithFields(personFields).WithField("Error", err).Error("Error Creating Person")
-	} else {
-		id = person.Id
-		log.WithContext(c).WithFields(personFields).Info("Person Created")
-	}
+	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
+		if err = self.Dao.Create(c, &person.Person); err == nil {
+			id = person.Id
+			log.WithContext(c).WithFields(personFields).Info("Person Created")
+		}
+		return
+	})
+
 	return
 }
 
