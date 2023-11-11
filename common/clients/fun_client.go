@@ -12,6 +12,10 @@ import (
 
 type FunClient struct {
 	client *resty.Client
+	person PersonService
+}
+
+type PersonService interface {
 }
 
 func NewFunAppClient(BASE_URL string) *FunClient {

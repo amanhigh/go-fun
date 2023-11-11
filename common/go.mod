@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/amanhigh/go-fun/models v1.0.0
+	github.com/amanhigh/go-fun/models v1.0.1
 	github.com/arl/statsviz v0.5.1
 	github.com/fatih/color v1.15.0
 	github.com/gin-gonic/gin v1.9.1
