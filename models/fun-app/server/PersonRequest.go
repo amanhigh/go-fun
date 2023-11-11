@@ -7,3 +7,7 @@ import (
 type PersonRequest struct {
 	db2.Person
 }
+
+type PersonPath struct {
+	Id string `uri:"id" binding:"required"`
+}

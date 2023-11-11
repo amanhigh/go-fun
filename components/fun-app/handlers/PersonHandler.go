@@ -62,11 +62,16 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 //	@Failure		500	{string}	string	"Internal Server Error"
 //	@Router			/person/{id} [get]
 func (self *PersonHandler) GetPerson(c *gin.Context) {
-	if person, err := self.Manager.GetPerson(c, c.Param("id")); err == nil {
-		c.JSON(http.StatusOK, person)
-	} else {
-		c.JSON(http.StatusInternalServerError, err.Error())
+	var path server2.PersonPath
+
+	if err := c.ShouldBindUri(&path); err == nil {
+		if person, err := self.Manager.GetPerson(c, path.Id); err == nil {
+			c.JSON(http.StatusOK, person)
+		} else {
+			c.JSON(http.StatusInternalServerError, err.Error())
+		}
 	}
+
 }
 
 // GetAllPerson godoc
