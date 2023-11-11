@@ -68,7 +68,7 @@ func (self *BaseDao) Update(c context.Context, entity any, omit ...string) (err 
 }
 
 func (self *BaseDao) DeleteById(c context.Context, id any, entity any) (err common.HttpError) {
-	if txErr := Tx(c).Delete(entity, id).Error; txErr != nil {
+	if txErr := Tx(c).Delete(entity, "id=?", id).Error; txErr != nil {
 		log.WithContext(c).WithFields(log.Fields{"Id": id, "Entity": entity, "Error": txErr}).
 			Error("Entity Delete Failed")
 		err = util.GormErrorMapper(txErr)

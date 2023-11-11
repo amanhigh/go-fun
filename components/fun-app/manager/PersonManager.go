@@ -15,7 +15,7 @@ type PersonManagerInterface interface {
 	DeletePerson(c context.Context, id string) (err error)
 
 	GetAllPersons(c context.Context) (persons []db2.Person, err error)
-	GetPerson(c context.Context, id string) (person db2.Person, err error)
+	GetPerson(c context.Context, id string) (person db2.Person, err common.HttpError)
 }
 
 type PersonManager struct {
@@ -49,7 +49,7 @@ func (self *PersonManager) GetAllPersons(c context.Context) (persons []db2.Perso
 	return
 }
 
-func (self *PersonManager) GetPerson(c context.Context, id string) (person db2.Person, err error) {
+func (self *PersonManager) GetPerson(c context.Context, id string) (person db2.Person, err common.HttpError) {
 	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
 		return self.Dao.FindById(c, id, &person)
 	})
@@ -59,11 +59,13 @@ func (self *PersonManager) GetPerson(c context.Context, id string) (person db2.P
 func (self *PersonManager) DeletePerson(c context.Context, id string) (err error) {
 	var person db2.Person
 
-	if person, err = self.GetPerson(c, id); err == nil {
-		/* Delete from DB */
-		if err == nil {
-			err = self.Db.Delete(&person).Error
+	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
+		if person, err = self.GetPerson(c, id); err == nil {
+			/* Delete from DB */
+			err = self.Dao.DeleteById(c, id, &person)
 		}
-	}
+		return
+	})
+
 	return
 }
