@@ -22,7 +22,7 @@ var _ = Describe("Person Integration Test", func() {
 		age    = 31
 		gender = "MALE"
 		client = NewFunAppClient(serviceUrl)
-		err    error
+		err    common.HttpError
 	)
 
 	BeforeEach(func() {
@@ -75,7 +75,8 @@ var _ = Describe("Person Integration Test", func() {
 				_, err = client.PersonService.CreatePerson(request)
 
 				Expect(err).Should(HaveOccurred())
-				Expect(err).To(Equal(common.BadRequestErr))
+				Expect(err).To(Equal(common.ErrBadRequest))
+				Expect(err.Code()).To(Equal(400))
 			})
 
 			It("should fail for missing Name", func() {
@@ -104,6 +105,44 @@ var _ = Describe("Person Integration Test", func() {
 
 			It("should fail for invalid Gender", func() {
 				request.Gender = "OTHER"
+			})
+		})
+	})
+
+	Context("Bad Requests", func() {
+		var (
+			emptyId   = ""
+			missingId = "aba313bf"
+		)
+
+		Context("Empty Id", func() {
+			AfterEach(func() {
+				Expect(err).Should(HaveOccurred())
+				Expect(err).To(Equal(common.ErrNotFound))
+				Expect(err.Code()).To(Equal(404))
+			})
+
+			It("should fail for get", func() {
+				_, err = client.PersonService.GetPerson(emptyId)
+			})
+
+			It("should fail for delete", func() {
+				err = client.PersonService.DeletePerson(emptyId)
+			})
+		})
+
+		PContext("Missing Id", func() {
+			AfterEach(func() {
+				Expect(err).Should(HaveOccurred())
+				Expect(err).To(Equal(common.ErrNotFound))
+			})
+
+			It("should fail for get", func() {
+				_, err = client.PersonService.GetPerson(missingId)
+			})
+
+			It("should fail for delete", func() {
+				err = client.PersonService.DeletePerson(missingId)
 			})
 		})
 	})
