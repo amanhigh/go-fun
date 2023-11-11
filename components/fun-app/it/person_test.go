@@ -47,17 +47,17 @@ var _ = Describe("Person Integration Test", func() {
 
 		AfterEach(func() {
 			//Delete Person
-			// err = client.DeletePerson(name)
-			// Expect(err).To(BeNil())
+			err = client.PersonService.DeletePerson(id)
+			Expect(err).To(BeNil())
 		})
 
 		It("should create & get person", func() {
-			person, err := client.PersonService.GetPerson(name)
+			person, err := client.PersonService.GetPerson(id)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(person).Should(Not(BeNil()))
 
 			//Match Person Fields
-			Expect(person.Id).ShouldNot(BeZero())
+			Expect(person.Id).To(Equal(id))
 			Expect(person.Name).To(Equal(name))
 			Expect(person.Age).To(Equal(age))
 			Expect(person.Gender).To(Equal(gender))

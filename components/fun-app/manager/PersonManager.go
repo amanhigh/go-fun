@@ -13,7 +13,7 @@ type PersonManagerInterface interface {
 	DeletePerson(c context.Context, id string) (err error)
 
 	GetAllPersons(c context.Context) (persons []db2.Person, err error)
-	GetPerson(c context.Context, name string) (person db2.Person, err error)
+	GetPerson(c context.Context, id string) (person db2.Person, err error)
 }
 
 type PersonManager struct {
@@ -46,23 +46,19 @@ func (self *PersonManager) GetAllPersons(c context.Context) (persons []db2.Perso
 	return
 }
 
-func (self *PersonManager) GetPerson(c context.Context, name string) (person db2.Person, err error) {
-	err = self.Db.First(&person, "name = ?", name).Error
+func (self *PersonManager) GetPerson(c context.Context, id string) (person db2.Person, err error) {
+	err = self.Db.First(&person, "id=?", id).Error
 	return
 }
 
 func (self *PersonManager) DeletePerson(c context.Context, id string) (err error) {
-	var person = db2.Person{}
+	var person db2.Person
 
-	//TODO: Fix Delete.
-	/* Find Person in DB */
-	if err = self.Db.Find(&person, "person_id=?", id).Error; err == nil {
-
+	if person, err = self.GetPerson(c, id); err == nil {
 		/* Delete from DB */
 		if err == nil {
 			err = self.Db.Delete(&person).Error
 		}
 	}
-
 	return
 }
