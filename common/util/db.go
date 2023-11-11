@@ -45,7 +45,7 @@ func CreateMysqlConnection(username, password, host, dbName string, port int) (d
 }
 
 func GormErrorMapper(err error) common.HttpError {
-	if err == nil {
+	if err != nil {
 		switch err {
 		case gorm.ErrRecordNotFound:
 			return common.ErrNotFound

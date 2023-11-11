@@ -3,6 +3,8 @@ package manager
 import (
 	"context"
 
+	"github.com/amanhigh/go-fun/components/fun-app/dao"
+	"github.com/amanhigh/go-fun/models/common"
 	db2 "github.com/amanhigh/go-fun/models/fun-app/db"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -17,7 +19,8 @@ type PersonManagerInterface interface {
 }
 
 type PersonManager struct {
-	Db *gorm.DB `inject:""`
+	Db  *gorm.DB       `inject:""`
+	Dao *dao.PersonDao `inject:""`
 }
 
 // CreatePerson creates a new person in the PersonManager.
@@ -47,7 +50,9 @@ func (self *PersonManager) GetAllPersons(c context.Context) (persons []db2.Perso
 }
 
 func (self *PersonManager) GetPerson(c context.Context, id string) (person db2.Person, err error) {
-	err = self.Db.First(&person, "id=?", id).Error
+	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
+		return self.Dao.FindById(c, id, &person)
+	})
 	return
 }
 
