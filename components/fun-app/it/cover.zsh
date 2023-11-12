@@ -37,6 +37,8 @@ case $action in
         echo "\033[1;32m Package Summary \033[0m"
         # Analyse Report and Print Coverage
         go tool covdata percent -i=$GOCOVERDIR
+
+        echo "\033[1;32m\n\n ******* Vscode: go.apply.coverprofile /tmp/gocover/profile ******** \033[0m"
         ;;
     "clean")
         echo "\033[1;31m Cleaning Coverage Files \033[0m"
