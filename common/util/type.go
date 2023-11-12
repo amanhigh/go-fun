@@ -3,11 +3,14 @@ package util
 import (
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"reflect"
 	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
+
+type CancelFunc func() (err error)
 
 func IsInt(value string) (err error) {
 	if _, err = strconv.Atoi(value); err != nil {
