@@ -64,7 +64,7 @@ var _ = Describe("Person Integration Test", func() {
 			Expect(person.Gender).To(Equal(gender))
 		})
 
-		FContext("Search", func() {
+		Context("Search", func() {
 			var (
 				offset = 0
 				limit  = 10

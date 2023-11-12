@@ -44,7 +44,11 @@ func CreateMysqlConnection(username, password, host, dbName string, port int) (d
 	return
 }
 
+// GormErrorMapper maps GORM database errors to common HTTP errors.
+//
+// It takes an error as a parameter and returns a common.HttpError.
 func GormErrorMapper(err error) common.HttpError {
+	//Doesn't Need State hence placed in Util.
 	if err != nil {
 		switch err {
 		case gorm.ErrRecordNotFound:

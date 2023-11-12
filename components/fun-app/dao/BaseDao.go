@@ -106,7 +106,8 @@ func (self *BaseDao) SetPagination(query *gorm.DB, offset, limit int) {
 }
 
 /*
-Transaction Handling
+Transaction Handling to use already created transaction or Init New.
+Needs State, hence placed in BaseDao (Not Util)
 */
 func (self *BaseDao) UseOrCreateTx(c context.Context, run DbRun, readOnly ...bool) (err common.HttpError) {
 	//Check if Context has Tx
