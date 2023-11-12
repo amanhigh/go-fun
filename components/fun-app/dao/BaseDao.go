@@ -41,15 +41,6 @@ func (self *BaseDao) FindById(c context.Context, id any, entity any) (err common
 	return
 }
 
-func (self *BaseDao) Find(c context.Context, query any, result any) (err common.HttpError) {
-	var txErr error
-	if txErr = Tx(c).Where(query).Find(result).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
-		log.WithContext(c).WithFields(log.Fields{"query": query, "Error": txErr}).Error("Error Fetching Entity")
-	}
-	err = util.GormErrorMapper(txErr)
-	return
-}
-
 func (self *BaseDao) FindPaginated(c context.Context, pageParams common.Pagination, result any) (count int64, err common.HttpError) {
 	var txErr error
 	if txErr = Tx(c).Offset(pageParams.Offset).Limit(pageParams.Limit).Find(result).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
