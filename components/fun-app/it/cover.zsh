@@ -9,7 +9,6 @@ if [ $# -eq 0 ]
 fi
 
 action=$1
-echo "\033[1;32m Performing: $action \033[0m"
 
 # Set Coverage Directory
 export GOCOVERDIR=/tmp/gocover
