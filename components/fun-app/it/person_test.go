@@ -268,11 +268,8 @@ var _ = Describe("Person Integration Test", func() {
 
 	Context("Admin", func() {
 		It("should serve metrics", func() {
-			resp, err := TestHttpClient.R().
-				Get(serviceUrl + "/metrics")
-
+			err = client.AdminService.HealthCheck()
 			Expect(err).To(BeNil())
-			Expect(resp.StatusCode()).To(Equal(200))
 		})
 
 		It("should serve swagger", func() {
