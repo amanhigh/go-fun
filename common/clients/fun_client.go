@@ -56,8 +56,7 @@ func (c *PersonService) GetPerson(name string) (person db.Person, err common.Htt
 }
 
 func (c *PersonService) ListPerson(personQuery server.PersonQuery) (personList server.PersonList, err common.HttpError) {
-	url := c.VERSION_URL + "/person?" + c.getPaginationParams(personQuery.Offset, personQuery.Limit)
-	response, err1 := c.client.R().SetResult(&personList).Get(url)
+	response, err1 := c.client.R().SetResult(&personList).Get(c.listPersonUrl(personQuery))
 	err = util.ResponseProcessor(response, err1)
 	return
 }
@@ -65,5 +64,22 @@ func (c *PersonService) ListPerson(personQuery server.PersonQuery) (personList s
 func (c *PersonService) DeletePerson(name string) (err common.HttpError) {
 	response, err1 := c.client.R().Delete(fmt.Sprintf(c.VERSION_URL+"/person/%s", name))
 	err = util.ResponseProcessor(response, err1)
+	return
+}
+
+// Build Url from personQuery
+func (c *PersonService) listPersonUrl(personQuery server.PersonQuery) (url string) {
+	url = c.VERSION_URL + "/person?"
+
+	//Add Pagination Params
+	url = url + c.getPaginationParams(personQuery.Offset, personQuery.Limit)
+
+	//Add Name and Gender if Provided
+	if personQuery.Name != "" {
+		url += "&name=" + personQuery.Name
+	}
+	if personQuery.Gender != "" {
+		url += "&gender=" + personQuery.Gender
+	}
 	return
 }

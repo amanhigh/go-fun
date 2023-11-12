@@ -109,23 +109,33 @@ var _ = Describe("Person Integration Test", func() {
 
 			Context("Bad Requests", func() {
 				AfterEach(func() {
+					_, err = client.PersonService.ListPerson(personQuery)
 					Expect(err).Should(HaveOccurred())
 					Expect(err).To(Equal(common.ErrBadRequest))
 				})
 
 				It("should fail for invalid Offset", func() {
 					personQuery.Offset = -1
-					_, err = client.PersonService.ListPerson(personQuery)
 				})
 
 				It("should fail for Lower Limit", func() {
 					personQuery.Limit = 0
-					_, err = client.PersonService.ListPerson(personQuery)
 				})
 
 				It("should fail for Max Limit", func() {
 					personQuery.Limit = 30
-					_, err = client.PersonService.ListPerson(personQuery)
+				})
+
+				It("should fail for invalid Name", func() {
+					personQuery.Name = "A*B"
+				})
+
+				It("should fail for max Name", func() {
+					personQuery.Name = strings.Repeat("A", 30)
+				})
+
+				It("should fail for invalid Gender", func() {
+					personQuery.Gender = "OTHER"
 				})
 			})
 		})

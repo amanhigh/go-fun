@@ -15,8 +15,8 @@ type PersonPath struct {
 
 type PersonQuery struct {
 	common.Pagination
-	Name   string `binding:"omitempty,min=1,max=25,name=person"`
-	Gender string `binding:"omitempty,eq=MALE|eq=FEMALE" enums:"MALE,FEMALE"`
+	Name   string `form:"name" binding:"omitempty,min=1,max=25,name=person"`
+	Gender string `form:"gender" binding:"omitempty,eq=MALE|eq=FEMALE"`
 }
 
 type PersonList struct {
