@@ -35,9 +35,10 @@ var _ = BeforeSuite(func() {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	//Health Check every 1 second until Healthy or 5 Second Timeout
+	timeout := time.After(10 * time.Second)
 	for {
 		select {
-		case <-time.After(5 * time.Second):
+		case <-timeout:
 			Fail("Unable to Start Funapp")
 		case <-time.NewTicker(time.Second).C:
 			color.HiBlue("FunApp: Health Check")
