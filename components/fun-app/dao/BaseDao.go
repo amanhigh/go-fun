@@ -18,6 +18,7 @@ const TX_TIMEOUT = 30 * time.Second
 type BaseDaoInterface interface {
 	FindById(c context.Context, id any, entity any) (err common.HttpError)
 	Find(c context.Context, query any, result any) (err common.HttpError)
+	FindPaginated(c context.Context, pageParams common.Pagination, result any) (count int64, err common.HttpError)
 	Create(c context.Context, entity any, omit ...string) (err common.HttpError)
 	Update(c context.Context, entity any, omit ...string) (err common.HttpError)
 	DeleteById(c context.Context, id any, entity any) (err common.HttpError)
@@ -46,6 +47,18 @@ func (self *BaseDao) Find(c context.Context, query any, result any) (err common.
 		log.WithContext(c).WithFields(log.Fields{"query": query, "Error": txErr}).Error("Error Fetching Entity")
 	}
 	err = util.GormErrorMapper(txErr)
+	return
+}
+
+func (self *BaseDao) FindPaginated(c context.Context, pageParams common.Pagination, result any) (count int64, err common.HttpError) {
+	var txErr error
+	if txErr = Tx(c).Offset(pageParams.Offset).Limit(pageParams.Limit).Find(result).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+		log.WithContext(c).WithFields(log.Fields{"paginationParams": pageParams, "TotalCount": count, "Error": txErr}).Error("Error Fetching Paginated Entity")
+		err = util.GormErrorMapper(txErr)
+	} else {
+		//Add count to Paginated Result
+		count, err = self.GetCount(c, result)
+	}
 	return
 }
 
@@ -78,12 +91,18 @@ func (self *BaseDao) DeleteById(c context.Context, id any, entity any) (err comm
 
 func (self *BaseDao) GetCount(c context.Context, entity any) (count int64, err common.HttpError) {
 	var txErr error
-	tx := Tx(c).Model(entity).Where(entity)
-	if txErr = tx.Count(&count).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
-		log.WithContext(c).WithFields(log.Fields{"Entity": entity, "Error": txErr}).Error("Error Fetching Entity")
+	if txErr = Tx(c).Model(entity).Count(&count).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+		log.WithContext(c).WithFields(log.Fields{"Entity": entity, "Error": txErr}).Error("Error Getting Entity Count")
 	}
 	err = util.GormErrorMapper(txErr)
 	return
+}
+
+func (self *BaseDao) SetPagination(query *gorm.DB, offset, limit int) {
+	query.Offset(offset)
+	if limit > 0 {
+		query.Limit(limit)
+	}
 }
 
 /*
