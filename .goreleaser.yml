@@ -28,6 +28,8 @@ before:
     - make -C ./components/operator/ test
     # Unit Tests
     - ginkgo -r '--label-filter=!setup' -cover .
+    # Integration Coverage
+    - ./components/fun-app/it/cover.zsh analyse
 
     # Helm Package
     - helm dependency build ./components/fun-app/charts/
