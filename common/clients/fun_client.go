@@ -14,6 +14,7 @@ import (
 
 type FunClient struct {
 	PersonService *PersonService
+	AdminService  *AdminService
 }
 
 type BaseService struct {
@@ -29,6 +30,22 @@ type PersonService struct {
 	BaseService
 }
 
+type AdminService struct {
+	BaseService
+}
+
+func (admin *AdminService) Stop() (err common.HttpError) {
+	response, err1 := admin.client.R().Get("/admin/stop")
+	err = util.ResponseProcessor(response, err1)
+	return
+}
+
+func (admin *AdminService) HealthCheck() (err common.HttpError) {
+	response, err1 := admin.client.R().Get("/metrics")
+	err = util.ResponseProcessor(response, err1)
+	return
+}
+
 func NewFunAppClient(BASE_URL string) *FunClient {
 	//TODO: Configuration of Http Timeouts
 	client := resty.New().SetBaseURL(BASE_URL)
@@ -39,6 +56,7 @@ func NewFunAppClient(BASE_URL string) *FunClient {
 
 	return &FunClient{
 		PersonService: &PersonService{BaseService: baseService},
+		AdminService:  &AdminService{BaseService: baseService},
 	}
 }
 

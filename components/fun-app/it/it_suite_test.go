@@ -14,14 +14,15 @@ import (
 	"testing"
 )
 
+const (
+	COVER_CMD = "./cover.zsh run"
+	BASE_URL  = "http://localhost:8085"
+)
+
 var (
 	err        error
 	cancelFunc util.CancelFunc
-)
-
-const (
-	COVER_CMD  = "./cover.zsh run"
-	HEALTH_URL = "http://localhost:8085/metrics"
+	client     = clients.NewFunAppClient(BASE_URL)
 )
 
 func TestIt(t *testing.T) {
@@ -40,7 +41,7 @@ var _ = BeforeSuite(func() {
 			Fail("Unable to Start Funapp")
 		case <-time.NewTicker(time.Second).C:
 			color.HiBlue("FunApp: Health Check")
-			if err = doHealthCheck(); err == nil {
+			if err = client.AdminService.HealthCheck(); err == nil {
 				return
 			}
 		}
@@ -48,12 +49,7 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	//Kill Live Command
-	err := cancelFunc()
+	//Send Stop Signal
+	err = client.AdminService.Stop()
 	Expect(err).ShouldNot(HaveOccurred())
 })
-
-func doHealthCheck() (err error) {
-	_, err = clients.TestHttpClient.R().Get(HEALTH_URL)
-	return
-}
