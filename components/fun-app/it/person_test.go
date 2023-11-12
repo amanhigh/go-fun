@@ -66,33 +66,42 @@ var _ = Describe("Person Integration Test", func() {
 
 		Context("Search", func() {
 			var (
-				offset = 0
-				limit  = 5
+				offset      = 0
+				limit       = 5
+				total       = 15
+				personQuery server.PersonQuery
 			)
 
 			BeforeEach(func() {
 				//Create 15 Persons
-				for i := 0; i < 15; i++ {
+				for i := 0; i < total; i++ {
 					request.Name = name + strconv.Itoa(i)
 					id, err = client.PersonService.CreatePerson(request)
 					Expect(id).Should(Not(BeEmpty()))
 					Expect(err).To(BeNil())
 				}
+				personQuery = server.PersonQuery{
+					Pagination: common.Pagination{
+						Offset: offset,
+						Limit:  limit,
+					},
+				}
 			})
 
 			It("should get all persons upto page Limit", func() {
 				var personList server.PersonList
-				personList, err = client.PersonService.ListPerson(common.Pagination{Offset: offset, Limit: limit})
+				personList, err = client.PersonService.ListPerson(personQuery)
 				Expect(err).To(BeNil())
 
 				//Person Count should be same as Page Limit
 				Expect(len(personList.Records)).To(Equal(limit))
-				Expect(personList.Total).To(Equal(int64(16)))
+				Expect(personList.Total).To(Equal(int64(total + 1)))
 			})
 
 			It("should fetch second Page", func() {
 				var personList server.PersonList
-				personList, err = client.PersonService.ListPerson(common.Pagination{Offset: limit, Limit: limit})
+				personQuery.Offset = limit
+				personList, err = client.PersonService.ListPerson(personQuery)
 
 				Expect(err).To(BeNil())
 				Expect(len(personList.Records)).To(Equal(limit))
@@ -105,15 +114,18 @@ var _ = Describe("Person Integration Test", func() {
 				})
 
 				It("should fail for invalid Offset", func() {
-					_, err = client.PersonService.ListPerson(common.Pagination{Offset: -1, Limit: limit})
+					personQuery.Offset = -1
+					_, err = client.PersonService.ListPerson(personQuery)
 				})
 
 				It("should fail for Lower Limit", func() {
-					_, err = client.PersonService.ListPerson(common.Pagination{Offset: offset, Limit: -1})
+					personQuery.Limit = 0
+					_, err = client.PersonService.ListPerson(personQuery)
 				})
 
 				It("should fail for Max Limit", func() {
-					_, err = client.PersonService.ListPerson(common.Pagination{Offset: offset, Limit: 30})
+					personQuery.Limit = 30
+					_, err = client.PersonService.ListPerson(personQuery)
 				})
 			})
 		})

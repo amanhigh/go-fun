@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
-	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun-app/server"
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -86,9 +85,9 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person/all [get]
 func (self *PersonHandler) ListPersons(c *gin.Context) {
-	var pageParams common.Pagination
-	if err := c.ShouldBindQuery(&pageParams); err == nil {
-		if personList, err := self.Manager.ListPersons(c, pageParams); err == nil {
+	var personQuery server.PersonQuery
+	if err := c.ShouldBindQuery(&personQuery); err == nil {
+		if personList, err := self.Manager.ListPersons(c, personQuery); err == nil {
 			self.PersonCounter.Add(float64(len(personList.Records)))
 			c.JSON(http.StatusOK, personList)
 		} else {

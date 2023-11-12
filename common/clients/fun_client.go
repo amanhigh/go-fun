@@ -55,8 +55,8 @@ func (c *PersonService) GetPerson(name string) (person db.Person, err common.Htt
 	return
 }
 
-func (c *PersonService) ListPerson(pageParams common.Pagination) (personList server.PersonList, err common.HttpError) {
-	url := c.VERSION_URL + "/person?" + c.getPaginationParams(pageParams.Offset, pageParams.Limit)
+func (c *PersonService) ListPerson(personQuery server.PersonQuery) (personList server.PersonList, err common.HttpError) {
+	url := c.VERSION_URL + "/person?" + c.getPaginationParams(personQuery.Offset, personQuery.Limit)
 	response, err1 := c.client.R().SetResult(&personList).Get(url)
 	err = util.ResponseProcessor(response, err1)
 	return
