@@ -37,7 +37,7 @@ func (self *PersonManager) CreatePerson(c context.Context, person server.PersonR
 	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
 		if err = self.Dao.Create(c, &person.Person); err == nil {
 			id = person.Id
-			log.WithContext(c).WithFields(personFields).Info("Person Created")
+			log.WithContext(c).WithField("Id", id).WithFields(personFields).Info("Person Created")
 		}
 		return
 	})

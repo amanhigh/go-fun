@@ -67,7 +67,7 @@ var _ = Describe("Person Integration Test", func() {
 		Context("Search", func() {
 			var (
 				offset = 0
-				limit  = 10
+				limit  = 5
 			)
 
 			BeforeEach(func() {
@@ -79,6 +79,7 @@ var _ = Describe("Person Integration Test", func() {
 					Expect(err).To(BeNil())
 				}
 			})
+
 			It("should get all persons upto page Limit", func() {
 				var personList server.PersonList
 				personList, err = client.PersonService.ListPerson(common.Pagination{Offset: offset, Limit: limit})
@@ -89,6 +90,32 @@ var _ = Describe("Person Integration Test", func() {
 				Expect(personList.Total).To(Equal(int64(16)))
 			})
 
+			It("should fetch second Page", func() {
+				var personList server.PersonList
+				personList, err = client.PersonService.ListPerson(common.Pagination{Offset: limit, Limit: limit})
+
+				Expect(err).To(BeNil())
+				Expect(len(personList.Records)).To(Equal(limit))
+			})
+
+			Context("Bad Requests", func() {
+				AfterEach(func() {
+					Expect(err).Should(HaveOccurred())
+					Expect(err).To(Equal(common.ErrBadRequest))
+				})
+
+				It("should fail for invalid Offset", func() {
+					_, err = client.PersonService.ListPerson(common.Pagination{Offset: -1, Limit: limit})
+				})
+
+				It("should fail for Lower Limit", func() {
+					_, err = client.PersonService.ListPerson(common.Pagination{Offset: offset, Limit: -1})
+				})
+
+				It("should fail for Max Limit", func() {
+					_, err = client.PersonService.ListPerson(common.Pagination{Offset: offset, Limit: 30})
+				})
+			})
 		})
 
 		Context("Bad Requests", func() {
