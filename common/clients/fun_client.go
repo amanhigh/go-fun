@@ -3,6 +3,7 @@ package clients
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
@@ -18,6 +19,10 @@ type FunClient struct {
 type BaseService struct {
 	client      *resty.Client
 	VERSION_URL string
+}
+
+func (self *BaseService) getPaginationParams(offset, limit int) (query string) {
+	return "offset=" + strconv.Itoa(offset) + "&limit=" + strconv.Itoa(limit)
 }
 
 type PersonService struct {
@@ -50,8 +55,9 @@ func (c *PersonService) GetPerson(name string) (person db.Person, err common.Htt
 	return
 }
 
-func (c *PersonService) GetAllPersons() (persons []db.Person, err common.HttpError) {
-	response, err1 := c.client.R().SetResult(&persons).Get(c.VERSION_URL + "/person")
+func (c *PersonService) ListPerson(pageParams common.Pagination) (personList server.PersonList, err common.HttpError) {
+	url := c.VERSION_URL + "/person?" + c.getPaginationParams(pageParams.Offset, pageParams.Limit)
+	response, err1 := c.client.R().SetResult(&personList).Get(url)
 	err = util.ResponseProcessor(response, err1)
 	return
 }

@@ -32,3 +32,13 @@ func (self *HttpErrorImpl) Code() int {
 func NewServerError(err error) HttpError {
 	return NewHttpError(err.Error(), 500)
 }
+
+type Pagination struct {
+	Offset int `form:"offset" binding:"min=0"`
+	Limit  int `form:"limit" binding:"required,min=1,max=10"`
+}
+
+type PaginatedResponse struct {
+	//Pagination - https://dev.to/pragativerma18/unlocking-the-power-of-api-pagination-best-practices-and-strategies-4b49
+	Total int64 `json:"total"`
+}

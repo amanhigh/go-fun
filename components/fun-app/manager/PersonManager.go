@@ -14,7 +14,7 @@ type PersonManagerInterface interface {
 	CreatePerson(c context.Context, person server.PersonRequest) (id string, err common.HttpError)
 	DeletePerson(c context.Context, id string) (err common.HttpError)
 
-	ListPersons(c context.Context) (persons []db2.Person, err common.HttpError)
+	ListPersons(c context.Context, pageParams common.Pagination) (response server.PersonList, err common.HttpError)
 	GetPerson(c context.Context, id string) (person db2.Person, err common.HttpError)
 }
 
@@ -45,9 +45,9 @@ func (self *PersonManager) CreatePerson(c context.Context, person server.PersonR
 	return
 }
 
-func (self *PersonManager) ListPersons(c context.Context) (persons []db2.Person, err common.HttpError) {
+func (self *PersonManager) ListPersons(c context.Context, pageParams common.Pagination) (response server.PersonList, err common.HttpError) {
 	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
-		err = self.Dao.Find(c, nil, &persons)
+		response.Total, err = self.Dao.FindPaginated(c, pageParams, &response.Records)
 		return
 	})
 	return

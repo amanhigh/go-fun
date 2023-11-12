@@ -1,12 +1,13 @@
 package it_test
 
 import (
+	"strconv"
 	"strings"
 
 	. "github.com/amanhigh/go-fun/common/clients"
 	"github.com/amanhigh/go-fun/models/common"
-	db2 "github.com/amanhigh/go-fun/models/fun-app/db"
-	server2 "github.com/amanhigh/go-fun/models/fun-app/server"
+	"github.com/amanhigh/go-fun/models/fun-app/db"
+	"github.com/amanhigh/go-fun/models/fun-app/server"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -16,7 +17,7 @@ var _ = Describe("Person Integration Test", func() {
 	var (
 		// serviceUrl = "http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy" //K8 endpoint or do PF on 8080 using K9S
 		serviceUrl = "http://localhost:8085"
-		request    server2.PersonRequest
+		request    server.PersonRequest
 
 		name   = "Amanpreet Singh"
 		age    = 31
@@ -26,8 +27,8 @@ var _ = Describe("Person Integration Test", func() {
 	)
 
 	BeforeEach(func() {
-		request = server2.PersonRequest{
-			Person: db2.Person{
+		request = server.PersonRequest{
+			Person: db.Person{
 				Name:   name,
 				Age:    age,
 				Gender: gender,
@@ -63,12 +64,29 @@ var _ = Describe("Person Integration Test", func() {
 			Expect(person.Gender).To(Equal(gender))
 		})
 
-		Context("Search", func() {
-			It("should get all persons", func() {
-				var persons []db2.Person
-				persons, err = client.PersonService.GetAllPersons()
+		FContext("Search", func() {
+			var (
+				offset = 0
+				limit  = 10
+			)
+
+			BeforeEach(func() {
+				//Create 15 Persons
+				for i := 0; i < 15; i++ {
+					request.Name = name + strconv.Itoa(i)
+					id, err = client.PersonService.CreatePerson(request)
+					Expect(id).Should(Not(BeEmpty()))
+					Expect(err).To(BeNil())
+				}
+			})
+			It("should get all persons upto page Limit", func() {
+				var personList server.PersonList
+				personList, err = client.PersonService.ListPerson(common.Pagination{Offset: offset, Limit: limit})
 				Expect(err).To(BeNil())
-				Expect(len(persons)).To(BeNumerically(">=", 1))
+
+				//Person Count should be same as Page Limit
+				Expect(len(personList.Records)).To(Equal(limit))
+				Expect(personList.Total).To(Equal(int64(16)))
 			})
 
 		})
