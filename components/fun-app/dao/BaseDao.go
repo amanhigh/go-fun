@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/amanhigh/go-fun/common/util"
 	. "github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
 	"github.com/amanhigh/go-fun/models/common"
@@ -17,7 +16,6 @@ const TX_TIMEOUT = 30 * time.Second
 
 type BaseDaoInterface interface {
 	FindById(c context.Context, id any, entity any) (err common.HttpError)
-	Find(c context.Context, query any, result any) (err common.HttpError)
 	FindPaginated(c context.Context, pageParams common.Pagination, result any) (count int64, err common.HttpError)
 	Create(c context.Context, entity any, omit ...string) (err common.HttpError)
 	Update(c context.Context, entity any, omit ...string) (err common.HttpError)
@@ -37,7 +35,7 @@ func (self *BaseDao) FindById(c context.Context, id any, entity any) (err common
 	if txErr = Tx(c).First(entity, "id=?", id).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		log.WithContext(c).WithFields(log.Fields{"Id": id, "Entity": entity, "Error": txErr}).Error("Error Fetching Entity")
 	}
-	err = util.GormErrorMapper(txErr)
+	err = GormErrorMapper(txErr)
 	return
 }
 
@@ -45,7 +43,7 @@ func (self *BaseDao) FindPaginated(c context.Context, pageParams common.Paginati
 	var txErr error
 	if txErr = Tx(c).Offset(pageParams.Offset).Limit(pageParams.Limit).Find(result).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		log.WithContext(c).WithFields(log.Fields{"paginationParams": pageParams, "TotalCount": count, "Error": txErr}).Error("Error Fetching Paginated Entity")
-		err = util.GormErrorMapper(txErr)
+		err = GormErrorMapper(txErr)
 	} else {
 		//Add count to Paginated Result
 		count, err = self.GetCount(c, result)
@@ -59,14 +57,14 @@ func (self *BaseDao) Create(c context.Context, entity any, omit ...string) (err 
 		log.WithContext(c).WithFields(log.Fields{"Entity": entity}).WithField("Err", txErr).Error("Entity Create Failed")
 	}
 	//Error Conversion
-	err = util.GormErrorMapper(txErr)
+	err = GormErrorMapper(txErr)
 	return
 }
 
 func (self *BaseDao) Update(c context.Context, entity any, omit ...string) (err common.HttpError) {
 	if txErr := Tx(c).Omit(omit...).Save(entity).Error; txErr != nil {
 		log.WithContext(c).WithFields(log.Fields{"Entity": entity, "Error": txErr}).Error("Entity Update Failed")
-		err = util.GormErrorMapper(txErr)
+		err = GormErrorMapper(txErr)
 	}
 	return
 }
@@ -75,7 +73,7 @@ func (self *BaseDao) DeleteById(c context.Context, id any, entity any) (err comm
 	if txErr := Tx(c).Delete(entity, "id=?", id).Error; txErr != nil {
 		log.WithContext(c).WithFields(log.Fields{"Id": id, "Entity": entity, "Error": txErr}).
 			Error("Entity Delete Failed")
-		err = util.GormErrorMapper(txErr)
+		err = GormErrorMapper(txErr)
 	}
 	return
 }
@@ -85,7 +83,7 @@ func (self *BaseDao) GetCount(c context.Context, entity any) (count int64, err c
 	if txErr = Tx(c).Model(entity).Count(&count).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		log.WithContext(c).WithFields(log.Fields{"Entity": entity, "Error": txErr}).Error("Error Getting Entity Count")
 	}
-	err = util.GormErrorMapper(txErr)
+	err = GormErrorMapper(txErr)
 	return
 }
 
