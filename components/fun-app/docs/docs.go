@@ -16,6 +16,47 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/person": {
+            "get": {
+                "description": "List Person and Optionally Search",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Person"
+                ],
+                "summary": "List Person and Search",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter persons by gender",
+                        "name": "gender",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter persons by age",
+                        "name": "age",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.PersonList"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create a new person with the provided data",
                 "consumes": [
@@ -41,47 +82,15 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Id of created person",
                         "schema": {
-                            "$ref": "#/definitions/server.PersonRequest"
+                            "type": "string"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
                             "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/person/all": {
-            "get": {
-                "description": "Get all persons' details",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Person"
-                ],
-                "summary": "Get all persons",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/db.Person"
-                            }
                         }
                     },
                     "500": {
@@ -184,7 +193,9 @@ const docTemplate = `{
             ],
             "properties": {
                 "age": {
-                    "type": "integer"
+                    "type": "integer",
+                    "maximum": 150,
+                    "minimum": 1
                 },
                 "gender": {
                     "type": "string",
@@ -193,8 +204,29 @@ const docTemplate = `{
                         "FEMALE"
                     ]
                 },
-                "name": {
+                "id": {
+                    "description": "Validations - https://gin-gonic.com/docs/examples/binding-and-validation/",
                     "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 25,
+                    "minLength": 1
+                }
+            }
+        },
+        "server.PersonList": {
+            "type": "object",
+            "properties": {
+                "records": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.Person"
+                    }
+                },
+                "total": {
+                    "description": "Pagination - https://dev.to/pragativerma18/unlocking-the-power-of-api-pagination-best-practices-and-strategies-4b49",
+                    "type": "integer"
                 }
             }
         },
@@ -207,7 +239,9 @@ const docTemplate = `{
             ],
             "properties": {
                 "age": {
-                    "type": "integer"
+                    "type": "integer",
+                    "maximum": 150,
+                    "minimum": 1
                 },
                 "gender": {
                     "type": "string",
@@ -216,8 +250,14 @@ const docTemplate = `{
                         "FEMALE"
                     ]
                 },
-                "name": {
+                "id": {
+                    "description": "Validations - https://gin-gonic.com/docs/examples/binding-and-validation/",
                     "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 25,
+                    "minLength": 1
                 }
             }
         }

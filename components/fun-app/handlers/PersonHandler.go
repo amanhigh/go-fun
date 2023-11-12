@@ -24,7 +24,7 @@ type PersonHandler struct {
 // @Tags Person
 // @Accept json
 // @Produce json
-// @Param request body server2.PersonRequest true "Person Request"
+// @Param request body server.PersonRequest true "Person Request"
 // @Success 200 {string} string "Id of created person"
 // @Failure 400 {string} string "Bad Request"
 // @Failure 500 {string} string "Internal Server Error"
@@ -52,15 +52,15 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 
 // GetPerson godoc
 //
-//	@Summary		Get a person by ID
-//	@Description	Get a person's details by their ID
-//	@Tags			Person
-//	@Accept			json
-//	@Produce		json
-//	@Param			id	path		string	true	"Person ID"
-//	@Success		200	{object}	db.Person
-//	@Failure		500	{string}	string	"Internal Server Error"
-//	@Router			/person/{id} [get]
+// @Summary Get a person by ID
+// @Description Get a person's details by their ID
+// @Tags Person
+// @Accept json
+// @Produce json
+// @Param id path string true "Person ID"
+// @Success 200 {object} db.Person
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /person/{id} [get]
 func (self *PersonHandler) GetPerson(c *gin.Context) {
 	var path server.PersonPath
 
@@ -76,14 +76,16 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 
 // ListPersons godoc
 //
-// @Summary Get all persons
-// @Description Get all persons' details
+// @Summary List Person and Search
+// @Description List Person and Optionally Search
 // @Tags Person
 // @Accept json
 // @Produce json
-// @Success 200 {array} db.Person
+// @Param gender query string false "Filter persons by gender"
+// @Param age query int false "Filter persons by age"
+// @Success 200 {object} server.PersonList
 // @Failure 500 {string} string "Internal Server Error"
-// @Router /person/all [get]
+// @Router /person [get]
 func (self *PersonHandler) ListPersons(c *gin.Context) {
 	var personQuery server.PersonQuery
 	if err := c.ShouldBindQuery(&personQuery); err == nil {
