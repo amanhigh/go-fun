@@ -28,7 +28,8 @@ func (self *PersonDao) ListPerson(c context.Context, personQuery server.PersonQu
 	//Add Query Params if Supplied
 	if personQuery.Name != "" {
 		txn = txn.Where("name like ?", "%"+personQuery.Name+"%")
-	} else if personQuery.Gender != "" {
+	}
+	if personQuery.Gender != "" {
 		txn = txn.Where("gender = ?", personQuery.Gender)
 	}
 
