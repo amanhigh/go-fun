@@ -12,7 +12,9 @@ action=$1
 echo "\033[1;32m Performing: $action \033[0m"
 
 # Set Coverage Directory
-export GOCOVERDIR=.
+export GOCOVERDIR=/tmp/gocover
+mkdir -p $GOCOVERDIR
+
 #Override Port to Avoid Collision with Default App
 export PORT=8085
 
@@ -21,9 +23,9 @@ case $action in
     "run")
         echo "\033[1;33m Running Fun App \033[0m"
         # Build FunApp With Coverage
-        go build -cover ..
+        go build -cover -o $GOCOVERDIR/fun-app ..
         # Start Fun App
-        ./fun-app
+        $GOCOVERDIR/fun-app
         ;;
     "analyse")
         echo "\033[1;32m Generating Cover Profile and Report \033[0m"
@@ -38,8 +40,7 @@ case $action in
         ;;
     "clean")
         echo "\033[1;31m Cleaning Coverage Files \033[0m"
-        rm $GOCOVERDIR/covcounters* $GOCOVERDIR/covmeta*
-        rm $GOCOVERDIR/profile $GOCOVERDIR/fun-app
+        rm -rf $GOCOVERDIR
         ;;
     *)
         echo "\033[1;31m Invalid Action \033[0m"
