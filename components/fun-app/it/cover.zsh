@@ -26,15 +26,15 @@ case $action in
         ./fun-app
         ;;
     "analyse")
-        echo "\033[1;32m Analyse Coverage Percent \033[0m"
-        # Analyse Report and Print Coverage
-        go tool covdata percent -i=$GOCOVERDIR
-
         echo "\033[1;32m Generating Cover Profile and Report \033[0m"
         # Generate Cover Profile
         go tool covdata textfmt -i=$GOCOVERDIR -o $GOCOVERDIR/profile
         # Analyse Cover Profile
         go tool cover -func=$GOCOVERDIR/profile
+
+        echo "\033[1;32m Package Summary \033[0m"
+        # Analyse Report and Print Coverage
+        go tool covdata percent -i=$GOCOVERDIR
         ;;
     "clean")
         echo "\033[1;31m Cleaning Coverage Files \033[0m"
