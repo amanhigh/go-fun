@@ -2,15 +2,16 @@ package core
 
 import (
 	"fmt"
-	tools2 "github.com/amanhigh/go-fun/common/tools"
-	util2 "github.com/amanhigh/go-fun/common/util"
-	config2 "github.com/amanhigh/go-fun/models/config"
-	"github.com/fatih/color"
 	"math"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+
+	tools2 "github.com/amanhigh/go-fun/common/tools"
+	util2 "github.com/amanhigh/go-fun/common/util"
+	config2 "github.com/amanhigh/go-fun/models/config"
+	"github.com/fatih/color"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -71,7 +72,6 @@ func VerifyStatus(cmd string, cluster string) {
 		color.Green("Checks Complete, Min Uptime (seconds): %v", minUptime)
 	}
 
-	//TODO:Move out of Debug Mode.
 	if util2.IsDebugMode() {
 		VerifyNetworkParameters(cluster)
 	}

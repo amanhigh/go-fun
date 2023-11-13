@@ -156,7 +156,7 @@ func switchProduct() {
 	dbRes = db.Clauses(dbresolver.Write).Where("code = ?", sourceCode).Find(&product)
 	fmt.Println("Manual Switch Read: Found (Source)", product.Code, len(product.Features), dbRes.Error)
 
-	//TODO: Force Switch Preload Doesn't Work.
+	//BUG: Force Switch Preload Doesn't Work.
 	//dbRes = db.Clauses(dbresolver.Write).Preload(clause.Associations, func(db *gorm.DB) *gorm.DB {
 	//	return db.Clauses(dbresolver.Write)
 	//}).Where("code = ?", sourceCode).Find(&product)
@@ -288,7 +288,7 @@ func queryProduct(db *gorm.DB) {
 	}
 
 	//Single Field Select
-	//TODO:Fix
+	//BUG:Fix Select Single Field
 	//var codes []string
 	//db.Not([]int64{5, 6, 10}).Find(products).Pluck("code", &codes)
 	//fmt.Printf("CODES: %+v\n", codes)
