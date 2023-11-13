@@ -26,10 +26,18 @@ case $action in
         ;;
     "load")
         echo "\033[1;33m Saving Traffic from 8085 to File \033[0m"
-        sudo gor --input-file=requests.gor --output-http="http://localhost:8080"
+        sudo gor --input-file requests_0.gor --output-http="http://localhost:8080" --stats --output-http-stats
         ;;
     *)
         echo "\033[1;31m Invalid Action \033[0m"
         ;;
 esac
 
+### Useful Flags ##
+## Rate Control 
+# Limit: --output-http=”http://localhost:8001|10%" // Limits rate to 10% of incoming traffic
+# SpeedUp: --output-http=”http://localhost:8001" // Replay faster than original traffic, effectively doubling the load on the system
+
+## Request Control
+# IncludeURL: --http-allow-url /api
+# Param (Tainting Request): --http-set-param PERF_TEST=true
