@@ -13,6 +13,7 @@ import (
 
 type PersonHandler struct {
 	Manager          manager.PersonManagerInterface `inject:""`
+	Tracer           opentracing.Tracer             `inject:""`
 	CreateCounter    *prometheus.CounterVec         `inject:"m_create_person"`
 	PersonCounter    prometheus.Gauge               `inject:"m_person_count"`
 	PersonCreateTime prometheus.Histogram           `inject:"m_person_create_time"`
@@ -65,9 +66,7 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 func (self *PersonHandler) GetPerson(c *gin.Context) {
 	var path fun.PersonPath
 
-	tracer := opentracing.GlobalTracer()
-
-	span := tracer.StartSpan("get-person")
+	span := self.Tracer.StartSpan("get-person")
 
 	if err := c.ShouldBindUri(&path); err == nil {
 		if person, err := self.Manager.GetPerson(c, path.Id); err == nil {

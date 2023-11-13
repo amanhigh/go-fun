@@ -28,7 +28,6 @@ import (
 	"gopkg.in/redis.v5"
 	"gorm.io/gorm"
 
-	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
 	"github.com/uber/jaeger-lib/metrics"
 
@@ -117,8 +116,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 		jaegercfg.Logger(jLogger),
 		jaegercfg.Metrics(jMetricsFactory),
 	)
-	// Set the singleton opentracing.Tracer with the Jaeger tracer.
-	opentracing.SetGlobalTracer(tracer)
+
 	// defer closer.Close()
 
 	/* Injections */
@@ -137,6 +135,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 
 		&inject.Object{Value: &manager2.PersonManager{}},
 		&inject.Object{Value: &dao.PersonDao{}},
+		&inject.Object{Value: tracer},
 
 		/* Metrics */
 		&inject.Object{Value: promauto.NewCounterVec(prometheus2.CounterOpts{
