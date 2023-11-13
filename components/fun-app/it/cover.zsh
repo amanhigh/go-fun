@@ -11,6 +11,9 @@ fi
 # TODO: Guide in Readme on How to get Coverage
 action=$1
 
+# Script Directory
+SCRIPT_DIR=`dirname $0`
+
 # Set Coverage Directory
 export GOCOVERDIR=/tmp/gocover
 mkdir -p $GOCOVERDIR
@@ -35,9 +38,9 @@ function analyse() {
 #Switch Case for run, analyse and clean
 case $action in
     "run")
-        echo "\033[1;33m Running Fun App (With Coverage) \033[0m"
+        echo "\033[1;33m Fun App (With Coverage): $SCRIPT_DIR/.. \033[0m"
         # Build FunApp With Coverage
-        go build -cover -o $GOCOVERDIR/fun-app ..
+        go build -cover -o $GOCOVERDIR/fun-app $SCRIPT_DIR/..
         # Start Fun App
         $GOCOVERDIR/fun-app
         # Analyse
