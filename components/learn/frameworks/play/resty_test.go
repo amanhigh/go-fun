@@ -17,7 +17,7 @@ type BinAnyResponse struct {
 	Method string `json:"method"`
 }
 
-var _ = Describe("Resty", func() {
+var _ = FDescribe("Resty", func() {
 
 	var (
 		client = resty.New()
@@ -40,13 +40,14 @@ var _ = Describe("Resty", func() {
 			MaxIdleConnsPerHost: 10,
 		}
 		client.SetTransport(&transport)
+		client.SetTimeout(2 * time.Second) //Request Timeout
 
 		//client.SetDebug(true)
 		//client.EnableTrace()
 		client.SetHeader("Content-Type", "application/json")
 		client.SetHeaderVerbatim("Foo", "bar")
 		client.SetTimeout(2 * time.Second)
-		client.SetHostURL("https://httpbin.org")
+		client.SetBaseURL("https://httpbin.org")
 
 		//Try 2 times at interval of one second, max time 5 Seconds
 		client.SetRetryCount(5).
