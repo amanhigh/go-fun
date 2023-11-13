@@ -3,6 +3,7 @@ package play_test
 import (
 	"context"
 	"database/sql"
+
 	util2 "github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
 	"github.com/go-redis/redis/v8"
@@ -84,7 +85,7 @@ var _ = Describe("Docker", Label(models.GINKGO_SETUP), func() {
 			)
 
 			BeforeEach(func() {
-				//TODO:Connect Network of Mysql and Redis
+				//FIXME:Connect Network of Mysql and Redis
 				redisR, err = pool.Run("bitnami/redis", "latest", []string{"ALLOW_EMPTY_PASSWORD=yes"})
 				Expect(err).To(BeNil())
 				err = pool.Retry(func() error {
