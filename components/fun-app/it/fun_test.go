@@ -12,6 +12,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+// Entr: http://eradman.com/entrproject/entr.1.html
+// -s (use Shell), -c (Clear), Space/Q to Run, Quit.
+// Watch Mode: find . | entr -s "ginkgo $PWD/components/fun-app/it | grep Pending"
 var _ = Describe("Person Integration Test", func() {
 	var (
 		// serviceUrl = "http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy" //K8 endpoint or do PF on 8080 using K9S
