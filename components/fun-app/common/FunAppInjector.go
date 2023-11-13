@@ -10,7 +10,7 @@ import (
 	handlers2 "github.com/amanhigh/go-fun/components/fun-app/handlers"
 	manager2 "github.com/amanhigh/go-fun/components/fun-app/manager"
 	config2 "github.com/amanhigh/go-fun/models/config"
-	db3 "github.com/amanhigh/go-fun/models/fun-app/db"
+	"github.com/amanhigh/go-fun/models/fun"
 	interfaces2 "github.com/amanhigh/go-fun/models/interfaces"
 	"github.com/etcinit/speedbump"
 	"github.com/etcinit/speedbump/ginbump"
@@ -142,7 +142,7 @@ func initDb(dbConfig config2.Db) (db *gorm.DB) {
 	if err == nil && dbConfig.AutoMigrate {
 		/** Gorm AutoMigrate Schema */
 		db.AutoMigrate(
-			&db3.Person{},
+			&fun.Person{},
 		)
 
 		/* GoMigrate*/

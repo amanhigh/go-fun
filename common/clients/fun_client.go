@@ -2,13 +2,14 @@
 package clients
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
-	"github.com/amanhigh/go-fun/models/fun-app/db"
-	"github.com/amanhigh/go-fun/models/fun-app/server"
+	"github.com/amanhigh/go-fun/models/config"
+	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -34,22 +35,20 @@ type AdminService struct {
 	BaseService
 }
 
-func (admin *AdminService) Stop() (err common.HttpError) {
-	response, err1 := admin.client.R().Get("/admin/stop")
+func (admin *AdminService) Stop(ctx context.Context) (err common.HttpError) {
+	response, err1 := admin.client.R().SetContext(ctx).Get("/admin/stop")
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
-func (admin *AdminService) HealthCheck() (err common.HttpError) {
-	response, err1 := admin.client.R().Get("/metrics")
+func (admin *AdminService) HealthCheck(ctx context.Context) (err common.HttpError) {
+	response, err1 := admin.client.R().SetContext(ctx).Get("/metrics")
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
-func NewFunAppClient(BASE_URL string) *FunClient {
-	//TODO: Configuration of Http Timeouts
-	client := resty.New().SetBaseURL(BASE_URL)
-	client.SetHeader("Content-Type", "application/json")
+func NewFunAppClient(baseUrl string, httpConfig config.HttpClientConfig) *FunClient {
+	client := util.NewRestyClient(baseUrl, httpConfig)
 
 	// Init Base Service
 	baseService := BaseService{client: client, VERSION_URL: "/v1"}
@@ -60,33 +59,39 @@ func NewFunAppClient(BASE_URL string) *FunClient {
 	}
 }
 
-func (c *PersonService) CreatePerson(person server.PersonRequest) (id string, err common.HttpError) {
-	response, err1 := c.client.R().SetBody(person).SetResult(&id).Post(c.VERSION_URL + "/person")
+func (c *PersonService) CreatePerson(ctx context.Context, person fun.PersonRequest) (id string, err common.HttpError) {
+	response, err1 := c.client.R().SetContext(ctx).SetBody(person).SetResult(&id).Post(c.VERSION_URL + "/person")
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
-func (c *PersonService) GetPerson(name string) (person db.Person, err common.HttpError) {
+func (c *PersonService) GetPerson(ctx context.Context, name string) (person fun.Person, err common.HttpError) {
 	url := fmt.Sprintf(c.VERSION_URL+"/person/%s", name)
-	response, err1 := c.client.R().SetResult(&person).Get(url)
+	response, err1 := c.client.R().SetContext(ctx).SetResult(&person).Get(url)
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
-func (c *PersonService) ListPerson(personQuery server.PersonQuery) (personList server.PersonList, err common.HttpError) {
-	response, err1 := c.client.R().SetResult(&personList).Get(c.listPersonUrl(personQuery))
+func (c *PersonService) ListPerson(ctx context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {
+	response, err1 := c.client.R().SetContext(ctx).SetResult(&personList).Get(c.listPersonUrl(personQuery))
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
-func (c *PersonService) DeletePerson(name string) (err common.HttpError) {
-	response, err1 := c.client.R().Delete(fmt.Sprintf(c.VERSION_URL+"/person/%s", name))
+func (c *PersonService) UpdatePerson(ctx context.Context, id string, person fun.PersonRequest) (err common.HttpError) {
+	response, err1 := c.client.R().SetContext(ctx).SetBody(person).Put(fmt.Sprintf(c.VERSION_URL+"/person/%s", id))
+	err = util.ResponseProcessor(response, err1)
+	return
+}
+
+func (c *PersonService) DeletePerson(ctx context.Context, name string) (err common.HttpError) {
+	response, err1 := c.client.R().SetContext(ctx).Delete(fmt.Sprintf(c.VERSION_URL+"/person/%s", name))
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
 // Build Url from personQuery
-func (c *PersonService) listPersonUrl(personQuery server.PersonQuery) (url string) {
+func (c *PersonService) listPersonUrl(personQuery fun.PersonQuery) (url string) {
 	url = c.VERSION_URL + "/person?"
 
 	//Add Pagination Params

@@ -15,7 +15,7 @@ action=$1
 SCRIPT_DIR=`dirname $0`
 
 # Set Coverage Directory
-export GOCOVERDIR=/tmp/gocover
+export GOCOVERDIR=$SCRIPT_DIR/cover
 mkdir -p $GOCOVERDIR
 
 #Override Port to Avoid Collision with Default App
@@ -32,7 +32,7 @@ function analyse() {
         # Analyse Report and Print Coverage
         go tool covdata percent -i=$GOCOVERDIR
 
-        echo "\033[1;32m\n\n ******* Vscode: go.apply.coverprofile /tmp/gocover/profile ******** \033[0m"
+        echo "\033[1;32m\n\n ******* Vscode: go.apply.coverprofile /it/cover/profile ******** \033[0m"
 }
 
 #Switch Case for run, analyse and clean

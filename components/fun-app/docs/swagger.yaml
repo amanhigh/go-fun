@@ -1,5 +1,5 @@
 definitions:
-  db.Person:
+  fun.Person:
     properties:
       age:
         maximum: 150
@@ -11,9 +11,9 @@ definitions:
         - FEMALE
         type: string
       id:
-        description: Validations - https://gin-gonic.com/docs/examples/binding-and-validation/
         type: string
       name:
+        description: Validations - https://gin-gonic.com/docs/examples/binding-and-validation/
         maxLength: 25
         minLength: 1
         type: string
@@ -22,17 +22,17 @@ definitions:
     - gender
     - name
     type: object
-  server.PersonList:
+  fun.PersonList:
     properties:
       records:
         items:
-          $ref: '#/definitions/db.Person'
+          $ref: '#/definitions/fun.Person'
         type: array
       total:
         description: Pagination - https://dev.to/pragativerma18/unlocking-the-power-of-api-pagination-best-practices-and-strategies-4b49
         type: integer
     type: object
-  server.PersonRequest:
+  fun.PersonRequest:
     properties:
       age:
         maximum: 150
@@ -43,10 +43,8 @@ definitions:
         - MALE
         - FEMALE
         type: string
-      id:
-        description: Validations - https://gin-gonic.com/docs/examples/binding-and-validation/
-        type: string
       name:
+        description: Validations - https://gin-gonic.com/docs/examples/binding-and-validation/
         maxLength: 25
         minLength: 1
         type: string
@@ -78,7 +76,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/server.PersonList'
+            $ref: '#/definitions/fun.PersonList'
         "500":
           description: Internal Server Error
           schema:
@@ -96,7 +94,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/server.PersonRequest'
+          $ref: '#/definitions/fun.PersonRequest'
       produces:
       - application/json
       responses:
@@ -160,12 +158,50 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/db.Person'
+            $ref: '#/definitions/fun.Person'
         "500":
           description: Internal Server Error
           schema:
             type: string
       summary: Get a person by ID
+      tags:
+      - Person
+    put:
+      consumes:
+      - application/json
+      description: Update a person's details
+      parameters:
+      - description: Person ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Person Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/fun.PersonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: UPDATED
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Update a person
       tags:
       - Person
 swagger: "2.0"

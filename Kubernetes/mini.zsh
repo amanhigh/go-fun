@@ -27,7 +27,6 @@ do
         ;;
 
     BACKUP)
-        # TODO: Handle None Tags
         [[ ! -f $MINI_BKP_FILE ]] && touch $MINI_BKP_FILE
         minikube image ls | grep -v none | tee $MINI_CURRENT_BKP_FILE
         echo "\033[1;33m MinkubeImage Count: `wc -l $MINI_CURRENT_BKP_FILE` \033[0m \n"

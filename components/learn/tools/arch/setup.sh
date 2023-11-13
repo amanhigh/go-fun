@@ -27,7 +27,7 @@ if [ "$base" == 'y' ]; then
 else
     echo -en "\033[1;34m Skipping Snapshot \033[0m \n";
 fi
-#TODO: Header Backup
+#FIXME: Header Backup
 
 echo -en "\033[1;32m Installation Complete \033[0m"
 

@@ -33,7 +33,7 @@ type Vault struct {
 type Db struct {
 	//aman:aman@tcp(mysql:3306)/compute?charset=utf8&parseTime=True&loc=Local
 	Url string `env:"DB_URL"`
-	//TODO: Add Migration Scripts Proper
+	//BUG: Add Migration Scripts Proper
 	//migration_source: /Users/amanpreet.singh/IdeaProjects/Go/go-fun/learn/frameworks/orm/db/go-migrate/migration
 	MigrationSource string `env:"DB_MIGRATION_SOURCE"`
 	MaxIdle         int    `env:"DB_MAX_IDLE"  envDefault:"2"`
@@ -41,6 +41,15 @@ type Db struct {
 	AutoMigrate     bool   `env:"DB_AUTO_MIGRATE"  envDefault:"true"`
 	//Log level: 4 (Info), 3 (Warn), 2 (Error)
 	LogLevel logger.LogLevel `env:"DB_LOG_LEVEL"  envDefault:"2"`
+}
+
+var DefaultHttpConfig = HttpClientConfig{
+	DialTimeout:            200 * time.Millisecond,
+	RequestTimeout:         2 * time.Second,
+	IdleConnectionTimeout:  30 * time.Second,
+	KeepAlive:              true,
+	Compression:            false,
+	IdleConnectionsPerHost: 20,
 }
 
 type HttpClientConfig struct {

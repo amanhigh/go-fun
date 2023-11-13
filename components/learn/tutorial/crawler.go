@@ -42,7 +42,7 @@ func StartCrawl(site string) (urlMap SafeMap) {
 // pages starting with url, to a maximum of depth.
 func Crawl(url string, depth int, fetcher Fetcher, urlMap SafeMap) {
 	//fmt.Println("Crawl Recived:", url, depth)
-	// TODO: Don't fetch the same URL twice.
+	// FIXME: Don't fetch the same URL twice.
 	// This implementation doesn't do either:
 	if depth <= 0 {
 		return

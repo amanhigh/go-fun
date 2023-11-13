@@ -38,7 +38,6 @@ if [ "$confirm" == 'y' ]; then
     locale-gen
     hwclock --systohc
     echo -en "\033[1;34m Time Check: `date` \033[0m \n";
-    # TODO: etchosts
 
     ## Users ##
     echo -en "\033[1;33m User Management \033[0m \n";
@@ -82,4 +81,4 @@ else
 fi
 
 #Populates /mnt/grub and /mnt/efi/EFI Folders
-# TODO: OS Prober
+# XXX: OS Prober
