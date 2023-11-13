@@ -7,6 +7,7 @@ import (
 
 	. "github.com/amanhigh/go-fun/common/clients"
 	"github.com/amanhigh/go-fun/models/common"
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/fun"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -25,7 +26,7 @@ var _ = Describe("Person Integration Test", func() {
 		name   = "Amanpreet Singh"
 		age    = 31
 		gender = "MALE"
-		client = NewFunAppClient(serviceUrl)
+		client = NewFunAppClient(serviceUrl, config.DefaultHttpConfig)
 		err    common.HttpError
 		ctx    = context.Background()
 	)

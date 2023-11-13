@@ -43,6 +43,15 @@ type Db struct {
 	LogLevel logger.LogLevel `env:"DB_LOG_LEVEL"  envDefault:"2"`
 }
 
+var DefaultHttpConfig = HttpClientConfig{
+	DialTimeout:            200 * time.Millisecond,
+	RequestTimeout:         2 * time.Second,
+	IdleConnectionTimeout:  30 * time.Second,
+	KeepAlive:              true,
+	Compression:            false,
+	IdleConnectionsPerHost: 20,
+}
+
 type HttpClientConfig struct {
 	/* Timeouts */
 	DialTimeout           time.Duration `env:"HTTP_DIAL_TIMEOUT" envDefault:"200ms"`

@@ -8,6 +8,7 @@ import (
 	"github.com/amanhigh/go-fun/common/clients"
 	"github.com/amanhigh/go-fun/components/fun-app/common"
 	"github.com/amanhigh/go-fun/models"
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/fatih/color"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -22,7 +23,7 @@ const (
 
 var (
 	err    error
-	client = clients.NewFunAppClient(BASE_URL)
+	client = clients.NewFunAppClient(BASE_URL, config.DefaultHttpConfig)
 	ctx    = context.Background()
 )
 

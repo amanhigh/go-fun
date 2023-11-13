@@ -8,6 +8,7 @@ import (
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/go-resty/resty/v2"
 )
@@ -46,10 +47,8 @@ func (admin *AdminService) HealthCheck(ctx context.Context) (err common.HttpErro
 	return
 }
 
-func NewFunAppClient(BASE_URL string) *FunClient {
-	//TODO: Configuration of Http Timeouts
-	client := resty.New().SetBaseURL(BASE_URL)
-	client.SetHeader("Content-Type", "application/json")
+func NewFunAppClient(baseUrl string, httpConfig config.HttpClientConfig) *FunClient {
+	client := util.NewRestyClient(baseUrl, httpConfig)
 
 	// Init Base Service
 	baseService := BaseService{client: client, VERSION_URL: "/v1"}
