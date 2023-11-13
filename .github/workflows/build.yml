@@ -48,11 +48,11 @@ jobs:
           test -f /tmp/gocover/profile && echo "File exists" || echo "File does not exist";
           ls /tmp;
           ls /tmp/gocover;
-          
+
       - name: Report Coverage
         uses: codecov/codecov-action@v3
         with:
-          files: ./coverprofile.out,/tmp/gocover/profile
+          files: ./coverprofile.out,./components/fun-app/it/cover/profile
           flags: unittests
           verbose: true
           name: codecov-go-fun
