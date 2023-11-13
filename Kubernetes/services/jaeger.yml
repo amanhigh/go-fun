@@ -1,5 +1,12 @@
 # https://artifacthub.io/packages/helm/jaegertracing/jaeger
-query:
+nameOverride: "aman"
+
+# https://www.jaegertracing.io/docs/1.29/getting-started/#all-in-one
+# https://github.com/jaegertracing/helm-charts/tree/main/charts/jaeger#all-in-one-in-memory-configuration
+provisionDataStore:
+  cassandra: false
+allInOne:
+  enabled: true
   ingress:
     enabled: true
     # For Kubernetes >= 1.18 you should specify the ingress-controller via the field ingressClassName
@@ -9,4 +16,11 @@ query:
       traefik.ingress.kubernetes.io/router.entrypoints: web
     hosts:
       - jaeger.docker
-nameOverride: "aman"
+storage:
+  type: none
+agent:
+  enabled: false
+collector:
+  enabled: false
+query:
+  enabled: false
