@@ -43,10 +43,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: v1.0.2
 
-      - name: Debug Step
-        run: |
-          ls ./components/fun-app/it/cover;
-
       - name: Report Coverage
         uses: codecov/codecov-action@v3
         with:
