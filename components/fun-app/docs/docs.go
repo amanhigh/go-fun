@@ -46,7 +46,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/server.PersonList"
+                            "$ref": "#/definitions/fun.PersonList"
                         }
                     },
                     "500": {
@@ -76,7 +76,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/server.PersonRequest"
+                            "$ref": "#/definitions/fun.PersonRequest"
                         }
                     }
                 ],
@@ -128,7 +128,64 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/db.Person"
+                            "$ref": "#/definitions/fun.Person"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update a person's details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Person"
+                ],
+                "summary": "Update a person",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Person ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Person Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fun.PersonRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "UPDATED",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "500": {
@@ -184,7 +241,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "db.Person": {
+        "fun.Person": {
             "type": "object",
             "required": [
                 "age",
@@ -205,23 +262,23 @@ const docTemplate = `{
                     ]
                 },
                 "id": {
-                    "description": "Validations - https://gin-gonic.com/docs/examples/binding-and-validation/",
                     "type": "string"
                 },
                 "name": {
+                    "description": "Validations - https://gin-gonic.com/docs/examples/binding-and-validation/",
                     "type": "string",
                     "maxLength": 25,
                     "minLength": 1
                 }
             }
         },
-        "server.PersonList": {
+        "fun.PersonList": {
             "type": "object",
             "properties": {
                 "records": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/db.Person"
+                        "$ref": "#/definitions/fun.Person"
                     }
                 },
                 "total": {
@@ -230,7 +287,7 @@ const docTemplate = `{
                 }
             }
         },
-        "server.PersonRequest": {
+        "fun.PersonRequest": {
             "type": "object",
             "required": [
                 "age",
@@ -250,11 +307,8 @@ const docTemplate = `{
                         "FEMALE"
                     ]
                 },
-                "id": {
-                    "description": "Validations - https://gin-gonic.com/docs/examples/binding-and-validation/",
-                    "type": "string"
-                },
                 "name": {
+                    "description": "Validations - https://gin-gonic.com/docs/examples/binding-and-validation/",
                     "type": "string",
                     "maxLength": 25,
                     "minLength": 1

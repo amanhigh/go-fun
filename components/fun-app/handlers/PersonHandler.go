@@ -58,7 +58,7 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Person ID"
-// @Success 200 {object} db.Person
+// @Success 200 {object} fun.Person
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person/{id} [get]
 func (self *PersonHandler) GetPerson(c *gin.Context) {
@@ -100,6 +100,20 @@ func (self *PersonHandler) ListPersons(c *gin.Context) {
 	}
 }
 
+// UpdatePerson godoc
+//
+// @Summary Update a person
+// @Description Update a person's details
+// @Tags Person
+// @Accept json
+// @Produce json
+// @Param id path string true "Person ID"
+// @Param request body fun.PersonRequest true "Person Request"
+// @Success 200 {string} string "UPDATED"
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "Not Found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /person/{id} [put]
 func (self *PersonHandler) UpdatePerson(c *gin.Context) {
 	//https://stackoverflow.com/a/37544666/173136
 
@@ -107,6 +121,7 @@ func (self *PersonHandler) UpdatePerson(c *gin.Context) {
 	var request fun.PersonRequest
 	if err := c.ShouldBind(&request); err == nil {
 		if err := self.Manager.UpdatePerson(c, c.Param("id"), request); err == nil {
+			//https://stackoverflow.com/a/827045/173136
 			c.JSON(http.StatusOK, "UPDATED")
 		} else {
 			c.JSON(err.Code(), err)
