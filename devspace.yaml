@@ -97,7 +97,7 @@ commands:
     command: "go run ./components/learn/experiment.go"
   fun-app:
     command: "go run ./components/fun-app/main.go"
-  fun-test: #TODO Install Ginkgo and Run Test
+  fun-test: #FIXME Install Ginkgo and Run Test
     command: "go test ./components/fun-app/it/"
   kohan:
     command: "go run ./components/kohan/main.go"

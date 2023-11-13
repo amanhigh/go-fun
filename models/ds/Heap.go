@@ -1,6 +1,7 @@
 package ds
 
-/**
+/*
+*
 Heap - https://www.youtube.com/watch?v=t0Cq6tVNRBA
 */
 type Heap struct {
@@ -33,7 +34,7 @@ func NewMaxHeap() Heap {
 	}
 }
 
-//0-Parent, 1-Left Child, 2-Right Child
+// 0-Parent, 1-Left Child, 2-Right Child
 func (self *Heap) getLeftChildIndex(i int) int {
 	return 2*i + 1
 }
@@ -115,7 +116,7 @@ func (self *Heap) heapifyDown() {
 	//Start from Root replacing node with smaller of left & right child
 	for i := 0; self.hasLeft(i); {
 		s := self.getLeftChildIndex(i)
-		//TODO:Right/left wrong w.r.t self.down fix post tests
+		//BUG:Right/left wrong w.r.t self.down fix post tests
 		if self.hasRight(i) && self.down(self.right(i), self.left(i)) {
 			s = self.getRightChildIndex(i)
 		}

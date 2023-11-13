@@ -157,7 +157,7 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			// the Kubernetes API to remove the custom resource.
 			r.doFinalizerOperationsForMemcached(memcached)
 
-			// TODO(user): If you add operations to the doFinalizerOperationsForMemcached method
+			// If you add operations to the doFinalizerOperationsForMemcached method
 			// then you need to ensure that all worked fine before deleting and updating the Downgrade status
 			// otherwise, you should requeue here.
 
@@ -287,7 +287,7 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 // finalizeMemcached will perform the required operations before delete the CR.
 func (r *MemcachedReconciler) doFinalizerOperationsForMemcached(cr *cachev1beta1.Memcached) {
-	// TODO(user): Add the cleanup steps that the operator
+	// Add the cleanup steps that the operator
 	// needs to do before the CR can be deleted. Examples
 	// of finalizers include performing backups and deleting
 	// resources that are not owned by this CR, like a PVC.
@@ -332,7 +332,7 @@ func (r *MemcachedReconciler) deploymentForMemcached(
 					Labels: ls,
 				},
 				Spec: corev1.PodSpec{
-					// TODO(user): Uncomment the following code to configure the nodeAffinity expression
+					// Uncomment the following code to configure the nodeAffinity expression
 					// according to the platforms which are supported by your solution. It is considered
 					// best practice to support multiple architectures. build your manager image using the
 					// makefile target docker-buildx. Also, you can use docker manifest inspect <image>

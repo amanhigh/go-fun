@@ -26,13 +26,12 @@ cat /sys/firmware/efi/fw_platform_size
 ## Network Check ##
 # ip addr show (Check inet value)
 ping archlinux.org -c1
-# TODO: DHCP Setup
 
 # Time Check
 timedatectl
 
 ################## Disk Setup #####################
-# TODO: LVM Setup
+# XXX: LVM Setup
 
 ## Format ##
 boot=${disk}1

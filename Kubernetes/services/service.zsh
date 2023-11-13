@@ -96,7 +96,7 @@ process()
             ;;
 
         CRON)
-            # TODO: Fix Cron
+            # FIXME: Cron
             helm $CMD cron onechart/onechart -f cron.yml > /dev/null
             echo "\033[1;33m Check Logs for Output \033[0m \n"
             ;;
@@ -170,7 +170,7 @@ process()
             ;;
         
         ELK)
-            #TODO: Complete Compose Setup
+            #FIXME: Complete Compose Setup
             helm $CMD logstash bitnami/logstash -f logstash.yml > /dev/null
             helm $CMD elasticsearch bitnami/elasticsearch -f elasticsearch.yml > /dev/null
             # helm $CMD kibana bitnami/kibana -f kibana.yml > /dev/null
@@ -215,7 +215,7 @@ process()
         WEBSHELL)
             helm $CMD sshwifty onechart/onechart -f sshwifty.yml  > /dev/null
             helm $CMD webssh onechart/onechart -f webssh.yml > /dev/null
-            #TODO: Fix Config
+            #FIXME: Fix Config for Web SSH
             helm $CMD webssh2 onechart/onechart -f webssh2.yml > /dev/null
             echo "\033[1;33m Sshwifty: http://sshwifty.docker/ \033[0m \n"
             echo "\033[1;33m Webssh: http://webssh.docker/ \033[0m \n"
@@ -235,7 +235,7 @@ delete()
     echo "\033[1;32m Clearing all Helms \033[0m \n"
     #Clear CRD's (Needed before Helm Deletion)
     kubectl delete kiali --all --all-namespaces 2> /dev/null
-    #TODO: Add Mysql CRD's
+    #HACK: Add Mysql CRD's
         
     #Exclude Permanent Helms
     helm delete $(helm list --short | grep -v "traefik\|dashy") 2> /dev/null

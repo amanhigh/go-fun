@@ -38,7 +38,7 @@ import (
 	"github.com/amanhigh/go-fun/models"
 )
 
-// TODO: Include in Go Releaser
+// FIXME: Include in Go Releaser
 var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 	const MemcachedName = "test-memcached"
@@ -105,7 +105,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 		AfterAll(func() {
 			/* Don't Delete Namespace till end due to envtest limitations. */
-			// TODO(user): Attention if you improve this code by adding other context test you MUST
+			// Attention if you improve this code by adding other context test you MUST
 			// be aware of the current delete namespace limitations. More info: https://book.kubebuilder.io/reference/envtest.html#testing-considerations
 			By("Deleting the Namespace to perform the tests")
 			_ = k8sClient.Delete(ctx, namespace)
@@ -120,7 +120,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 				Expect(k8sClient.Create(ctx, memcachedAlpha1)).To(Not(HaveOccurred()))
 				Expect(k8sClient.Delete(ctx, memcachedAlpha1)).To(Not(HaveOccurred()))
-				// TODO: Implement Reconcile for Older Versions
+				// XXX: Implement Reconcile for Older Versions
 			})
 		})
 

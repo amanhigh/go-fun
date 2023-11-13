@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-//TODO:Complete Migration from zoo.go
+// TODO:Complete Migration from zoo.go
 var _ = Describe("Zookeeper", Label(models.GINKGO_SETUP), func() {
 	var (
 		connection *zk.Conn

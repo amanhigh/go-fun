@@ -137,3 +137,9 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 				- Previous:  `export GORELEASER_PREVIOUS_TAG=v1.0.1`
 				- Current:  `export GORELEASER_CURRENT_TAG=v1.0.2`
 			- [Generate Token](https://github.com/settings/tokens/new) (Repo Scope) and load into env Variable. Eg. `env | grep GITHUB_TOKEN`
+	- ### HACK: Task Categorization in Readme TODO Tree Extension.
+		- `TODO` Long Planned Enhancement in Code
+		- `FIXME` Medium Sized fix or Unhandled Case.
+		- `HACK` Remove Hacky way to Do Things.
+		- `BUG` Small Bug which is observed but need Fix.
+		- `XXX` Someday Tasks which may or may not be Done.

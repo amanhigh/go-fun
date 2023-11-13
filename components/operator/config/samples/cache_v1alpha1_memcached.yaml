@@ -3,7 +3,7 @@ kind: Memcached
 metadata:
   name: memcached
 spec:
-  # TODO(user): edit the following value to ensure the number
+  # Edit the following value to ensure the number
   # of Pods/Instances your Operand must have on cluster
   size: 2
   containerPort: 8443
