@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
-	"github.com/amanhigh/go-fun/models/fun-app/server"
+	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +24,7 @@ type PersonHandler struct {
 // @Tags Person
 // @Accept json
 // @Produce json
-// @Param request body server.PersonRequest true "Person Request"
+// @Param request body fun.PersonRequest true "Person Request"
 // @Success 200 {string} string "Id of created person"
 // @Failure 400 {string} string "Bad Request"
 // @Failure 500 {string} string "Internal Server Error"
@@ -35,7 +35,7 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 	defer timer.ObserveDuration()
 
 	//Unmarshal the request
-	var request server.PersonRequest
+	var request fun.PersonRequest
 	if err := c.ShouldBind(&request); err == nil {
 
 		self.CreateCounter.WithLabelValues(request.Gender).Inc()
@@ -62,7 +62,7 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person/{id} [get]
 func (self *PersonHandler) GetPerson(c *gin.Context) {
-	var path server.PersonPath
+	var path fun.PersonPath
 
 	if err := c.ShouldBindUri(&path); err == nil {
 		if person, err := self.Manager.GetPerson(c, path.Id); err == nil {
@@ -83,11 +83,11 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 // @Produce json
 // @Param gender query string false "Filter persons by gender"
 // @Param age query int false "Filter persons by age"
-// @Success 200 {object} server.PersonList
+// @Success 200 {object} fun.PersonList
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person [get]
 func (self *PersonHandler) ListPersons(c *gin.Context) {
-	var personQuery server.PersonQuery
+	var personQuery fun.PersonQuery
 	if err := c.ShouldBindQuery(&personQuery); err == nil {
 		if personList, err := self.Manager.ListPersons(c, personQuery); err == nil {
 			self.PersonCounter.Add(float64(len(personList.Records)))
@@ -98,6 +98,11 @@ func (self *PersonHandler) ListPersons(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusBadRequest, err)
 	}
+}
+
+func (self *PersonHandler) UpdatePerson(c *gin.Context) {
+	//https://stackoverflow.com/a/37544666/173136
+
 }
 
 // DeletePersons godoc

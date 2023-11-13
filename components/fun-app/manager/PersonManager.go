@@ -5,17 +5,16 @@ import (
 
 	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	"github.com/amanhigh/go-fun/models/common"
-	db2 "github.com/amanhigh/go-fun/models/fun-app/db"
-	"github.com/amanhigh/go-fun/models/fun-app/server"
+	"github.com/amanhigh/go-fun/models/fun"
 	log "github.com/sirupsen/logrus"
 )
 
 type PersonManagerInterface interface {
-	CreatePerson(c context.Context, person server.PersonRequest) (id string, err common.HttpError)
+	CreatePerson(c context.Context, person fun.PersonRequest) (id string, err common.HttpError)
 	DeletePerson(c context.Context, id string) (err common.HttpError)
 
-	ListPersons(c context.Context, personQuery server.PersonQuery) (response server.PersonList, err common.HttpError)
-	GetPerson(c context.Context, id string) (person db2.Person, err common.HttpError)
+	ListPersons(c context.Context, personQuery fun.PersonQuery) (response fun.PersonList, err common.HttpError)
+	GetPerson(c context.Context, id string) (person fun.Person, err common.HttpError)
 }
 
 type PersonManager struct {
@@ -31,11 +30,17 @@ type PersonManager struct {
 // It returns two values:
 // - id: a string representing the ID of the newly created person.
 // - err: an error representing any error that occurred during the creation process.
-func (self *PersonManager) CreatePerson(c context.Context, person server.PersonRequest) (id string, err common.HttpError) {
-	personFields := log.Fields{"Name": person.Person.Name, "Age": person.Person.Age, "Gender": person.Person.Gender}
+func (self *PersonManager) CreatePerson(c context.Context, personRequest fun.PersonRequest) (id string, err common.HttpError) {
+	personFields := log.Fields{"Name": personRequest.Name, "Age": personRequest.Age, "Gender": personRequest.Gender}
+
+	/* Create Person */
+	var person fun.Person
+	person.Name = personRequest.Name
+	person.Age = personRequest.Age
+	person.Gender = personRequest.Gender
 
 	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
-		if err = self.Dao.Create(c, &person.Person); err == nil {
+		if err = self.Dao.Create(c, &person); err == nil {
 			id = person.Id
 			log.WithContext(c).WithField("Id", id).WithFields(personFields).Info("Person Created")
 		}
@@ -45,7 +50,7 @@ func (self *PersonManager) CreatePerson(c context.Context, person server.PersonR
 	return
 }
 
-func (self *PersonManager) ListPersons(c context.Context, personQuery server.PersonQuery) (response server.PersonList, err common.HttpError) {
+func (self *PersonManager) ListPersons(c context.Context, personQuery fun.PersonQuery) (response fun.PersonList, err common.HttpError) {
 	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
 		response, err = self.Dao.ListPerson(c, personQuery)
 		return
@@ -53,15 +58,23 @@ func (self *PersonManager) ListPersons(c context.Context, personQuery server.Per
 	return
 }
 
-func (self *PersonManager) GetPerson(c context.Context, id string) (person db2.Person, err common.HttpError) {
+func (self *PersonManager) GetPerson(c context.Context, id string) (person fun.Person, err common.HttpError) {
 	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
 		return self.Dao.FindById(c, id, &person)
 	})
 	return
 }
 
+func (self *PersonManager) UpdatePerson(c context.Context, person fun.PersonRequest) (err common.HttpError) {
+	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
+		err = self.Dao.Update(c, &person)
+		return
+	})
+	return
+}
+
 func (self *PersonManager) DeletePerson(c context.Context, id string) (err common.HttpError) {
-	var person db2.Person
+	var person fun.Person
 
 	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
 		if person, err = self.GetPerson(c, id); err == nil {

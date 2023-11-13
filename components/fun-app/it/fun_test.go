@@ -6,8 +6,7 @@ import (
 
 	. "github.com/amanhigh/go-fun/common/clients"
 	"github.com/amanhigh/go-fun/models/common"
-	"github.com/amanhigh/go-fun/models/fun-app/db"
-	"github.com/amanhigh/go-fun/models/fun-app/server"
+	"github.com/amanhigh/go-fun/models/fun"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -17,7 +16,7 @@ var _ = Describe("Person Integration Test", func() {
 	var (
 		// serviceUrl = "http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy" //K8 endpoint or do PF on 8080 using K9S
 		serviceUrl = "http://localhost:8085"
-		request    server.PersonRequest
+		request    fun.PersonRequest
 
 		name   = "Amanpreet Singh"
 		age    = 31
@@ -27,12 +26,10 @@ var _ = Describe("Person Integration Test", func() {
 	)
 
 	BeforeEach(func() {
-		request = server.PersonRequest{
-			Person: db.Person{
-				Name:   name,
-				Age:    age,
-				Gender: gender,
-			},
+		request = fun.PersonRequest{
+			Name:   name,
+			Age:    age,
+			Gender: gender,
 		}
 	})
 
@@ -69,7 +66,7 @@ var _ = Describe("Person Integration Test", func() {
 				offset      = 0
 				limit       = 5
 				total       = 15
-				personQuery server.PersonQuery
+				personQuery fun.PersonQuery
 				names       = []string{"Jane", "Sardar", "Rahul"}
 				genders     = []string{"FEMALE", "MALE", "MALE"}
 			)
@@ -84,7 +81,7 @@ var _ = Describe("Person Integration Test", func() {
 				}
 
 				//Init Person Query
-				personQuery = server.PersonQuery{
+				personQuery = fun.PersonQuery{
 					Pagination: common.Pagination{
 						Offset: offset,
 						Limit:  limit,
@@ -111,7 +108,7 @@ var _ = Describe("Person Integration Test", func() {
 			})
 
 			It("should get all persons upto page Limit", func() {
-				var personList server.PersonList
+				var personList fun.PersonList
 				personList, err = client.PersonService.ListPerson(personQuery)
 				Expect(err).To(BeNil())
 
@@ -121,7 +118,7 @@ var _ = Describe("Person Integration Test", func() {
 			})
 
 			It("should fetch second Page", func() {
-				var personList server.PersonList
+				var personList fun.PersonList
 				personQuery.Offset = limit
 				personList, err = client.PersonService.ListPerson(personQuery)
 
@@ -130,7 +127,7 @@ var _ = Describe("Person Integration Test", func() {
 			})
 
 			It("should search by Name", func() {
-				var personList server.PersonList
+				var personList fun.PersonList
 				personQuery.Name = names[0]
 				personList, err = client.PersonService.ListPerson(personQuery)
 
@@ -140,7 +137,7 @@ var _ = Describe("Person Integration Test", func() {
 			})
 
 			It("should search by Gender", func() {
-				var personList server.PersonList
+				var personList fun.PersonList
 				personQuery.Gender = genders[1]
 				personList, err = client.PersonService.ListPerson(personQuery)
 
@@ -150,7 +147,7 @@ var _ = Describe("Person Integration Test", func() {
 			})
 
 			It("should search by Name & Gender", func() {
-				var personList server.PersonList
+				var personList fun.PersonList
 				personQuery.Name = names[0]
 				personQuery.Gender = genders[1]
 				personList, err = client.PersonService.ListPerson(personQuery)

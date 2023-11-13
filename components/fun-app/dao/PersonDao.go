@@ -6,21 +6,21 @@ import (
 
 	. "github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
-	"github.com/amanhigh/go-fun/models/fun-app/server"
+	"github.com/amanhigh/go-fun/models/fun"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type PersonDaoInterface interface {
 	BaseDaoInterface
-	ListPerson(c context.Context, personQuery server.PersonQuery) (personList server.PersonList, err common.HttpError)
+	ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError)
 }
 
 type PersonDao struct {
 	BaseDao `inject:"inline"`
 }
 
-func (self *PersonDao) ListPerson(c context.Context, personQuery server.PersonQuery) (personList server.PersonList, err common.HttpError) {
+func (self *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {
 	var txErr error
 	//Add Pagination to Query
 	txn := Tx(c).Offset(personQuery.Offset).Limit(personQuery.Limit)
