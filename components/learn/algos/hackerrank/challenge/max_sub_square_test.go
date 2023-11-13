@@ -1,7 +1,6 @@
 package challenge_test
 
 import (
-	helper2 "github.com/amanhigh/go-fun/common/helper"
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/learn/algos/hackerrank/challenge"
 	. "github.com/onsi/ginkgo/v2"
@@ -70,6 +69,6 @@ var _ = Describe("MaxSubSquare", func() {
 func readInput(scanner *bufio.Scanner) (n, m int, matrix [][]int) {
 	n = util.ReadInt(scanner)
 	m = util.ReadInt(scanner)
-	matrix = helper2.ReadMatrix(scanner, n, m)
+	matrix = util.ReadMatrix(scanner, n, m)
 	return
 }

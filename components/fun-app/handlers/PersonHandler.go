@@ -3,19 +3,18 @@ package handlers
 import (
 	"net/http"
 
-	manager2 "github.com/amanhigh/go-fun/components/fun-app/manager"
-	server2 "github.com/amanhigh/go-fun/models/fun-app/server"
+	"github.com/amanhigh/go-fun/components/fun-app/manager"
+	"github.com/amanhigh/go-fun/models/fun-app/server"
 	"github.com/prometheus/client_golang/prometheus"
-	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
 
 type PersonHandler struct {
-	Manager          manager2.PersonManagerInterface `inject:""`
-	CreateCounter    *prometheus.CounterVec          `inject:"m_create_person"`
-	PersonCounter    prometheus.Gauge                `inject:"m_person_count"`
-	PersonCreateTime prometheus.Histogram            `inject:"m_person_create_time"`
+	Manager          manager.PersonManagerInterface `inject:""`
+	CreateCounter    *prometheus.CounterVec         `inject:"m_create_person"`
+	PersonCounter    prometheus.Gauge               `inject:"m_person_count"`
+	PersonCreateTime prometheus.Histogram           `inject:"m_person_create_time"`
 }
 
 // CreatePerson godoc
@@ -25,8 +24,8 @@ type PersonHandler struct {
 // @Tags Person
 // @Accept json
 // @Produce json
-// @Param request body server2.PersonRequest true "Person Request"
-// @Success 200 {object} server2.PersonRequest
+// @Param request body server.PersonRequest true "Person Request"
+// @Success 200 {string} string "Id of created person"
 // @Failure 400 {string} string "Bad Request"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person [post]
@@ -35,15 +34,16 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 	timer := prometheus.NewTimer(self.PersonCreateTime)
 	defer timer.ObserveDuration()
 
-	var request server2.PersonRequest
+	//Unmarshal the request
+	var request server.PersonRequest
 	if err := c.ShouldBind(&request); err == nil {
 
 		self.CreateCounter.WithLabelValues(request.Gender).Inc()
 
-		if err := self.Manager.CreatePerson(c, request.Person); err == nil {
-			c.JSON(http.StatusOK, request)
+		if id, err := self.Manager.CreatePerson(c, request); err == nil {
+			c.JSON(http.StatusOK, id)
 		} else {
-			c.JSON(http.StatusInternalServerError, err.Error())
+			c.JSON(err.Code(), err)
 		}
 	} else {
 		c.JSON(http.StatusBadRequest, err)
@@ -52,39 +52,51 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 
 // GetPerson godoc
 //
-//	@Summary		Get a person by ID
-//	@Description	Get a person's details by their ID
-//	@Tags			Person
-//	@Accept			json
-//	@Produce		json
-//	@Param			id	path		string	true	"Person ID"
-//	@Success		200	{object}	db.Person
-//	@Failure		500	{string}	string	"Internal Server Error"
-//	@Router			/person/{id} [get]
-func (self *PersonHandler) GetPerson(c *gin.Context) {
-	if person, err := self.Manager.GetPerson(c, c.Param("id")); err == nil {
-		c.JSON(http.StatusOK, person)
-	} else {
-		c.JSON(http.StatusInternalServerError, err.Error())
-	}
-}
-
-// GetAllPerson godoc
-//
-// @Summary Get all persons
-// @Description Get all persons' details
+// @Summary Get a person by ID
+// @Description Get a person's details by their ID
 // @Tags Person
 // @Accept json
 // @Produce json
-// @Success 200 {array} db.Person
+// @Param id path string true "Person ID"
+// @Success 200 {object} db.Person
 // @Failure 500 {string} string "Internal Server Error"
-// @Router /person/all [get]
-func (self *PersonHandler) GetAllPerson(c *gin.Context) {
-	if persons, err := self.Manager.GetAllPersons(c); err == nil {
-		self.PersonCounter.Add(float64(len(persons)))
-		c.JSON(http.StatusOK, persons)
+// @Router /person/{id} [get]
+func (self *PersonHandler) GetPerson(c *gin.Context) {
+	var path server.PersonPath
+
+	if err := c.ShouldBindUri(&path); err == nil {
+		if person, err := self.Manager.GetPerson(c, path.Id); err == nil {
+			c.JSON(http.StatusOK, person)
+		} else {
+			c.JSON(err.Code(), err)
+		}
+	}
+
+}
+
+// ListPersons godoc
+//
+// @Summary List Person and Search
+// @Description List Person and Optionally Search
+// @Tags Person
+// @Accept json
+// @Produce json
+// @Param gender query string false "Filter persons by gender"
+// @Param age query int false "Filter persons by age"
+// @Success 200 {object} server.PersonList
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /person [get]
+func (self *PersonHandler) ListPersons(c *gin.Context) {
+	var personQuery server.PersonQuery
+	if err := c.ShouldBindQuery(&personQuery); err == nil {
+		if personList, err := self.Manager.ListPersons(c, personQuery); err == nil {
+			self.PersonCounter.Add(float64(len(personList.Records)))
+			c.JSON(http.StatusOK, personList)
+		} else {
+			c.JSON(http.StatusInternalServerError, err.Error())
+		}
 	} else {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		c.JSON(http.StatusBadRequest, err)
 	}
 }
 
@@ -104,10 +116,6 @@ func (self *PersonHandler) DeletePersons(c *gin.Context) {
 	if err := self.Manager.DeletePerson(c, c.Param("id")); err == nil {
 		c.JSON(http.StatusOK, "DELETED")
 	} else {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, err)
-		} else {
-			c.JSON(http.StatusInternalServerError, err.Error())
-		}
+		c.JSON(err.Code(), err)
 	}
 }

@@ -2,7 +2,7 @@ package crawler
 
 import (
 	"github.com/PuerkitoBio/goquery"
-	helper2 "github.com/amanhigh/go-fun/common/helper"
+	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/common/util"
 	crawler2 "github.com/amanhigh/go-fun/models/crawler"
 	"github.com/fatih/color"
@@ -21,7 +21,7 @@ func (self *HubCrawler) GatherLinks(page *util.Page, ch chan crawler2.CrawlInfo)
 	hubs := page.Document.Find("a[href*='video.php']")
 	hubs.Each(func(i int, selection *goquery.Selection) {
 		if href, ok := selection.Attr(util.HREF); ok {
-			ch <- &crawler2.LinkInfo{helper2.GetAbsoluteLink(page, href)}
+			ch <- &crawler2.LinkInfo{tools.GetAbsoluteLink(page, href)}
 		}
 	})
 }
@@ -29,7 +29,7 @@ func (self *HubCrawler) GatherLinks(page *util.Page, ch chan crawler2.CrawlInfo)
 func (self *HubCrawler) NextPageLink(page *util.Page) (url string, ok bool) {
 	nextPage := page.Document.Find(".page_next > a:nth-child(1)")
 	if url, ok = nextPage.Attr(util.HREF); ok {
-		url = helper2.GetAbsoluteLink(page, url)
+		url = tools.GetAbsoluteLink(page, url)
 	}
 	return
 }

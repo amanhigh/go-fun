@@ -56,7 +56,7 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 			- ![Devcode](common/images/fun-app/devcode.gif)
 		- ### Perf Test
 			- Showcases how to do Performance Testing. Requires Load Test Container to be Setup. Refer `Tools > Kubernetes > Services` below.
-			- Load Test (From Vegeta Container):  `echo 'GET http://app:8080/person/all' | vegeta attack | vegeta report`
+			- Load Test (From Vegeta Container):  `echo 'GET http://app:8080/v1/person/all' | vegeta attack | vegeta report`
 			- Log Analyzer : `kubectl -n fun-app logs `kubectl get pods -n fun-app -o name | grep app | head  -1` --since=1m -f | goaccess --log-format='%^ %d - %t | %s | %~%D | %b | %~%h | %^ | %m %U' --date-format='%Y/%m/%d' --time-format '%H:%M:%S'`
 - ## Tools
 	- ## Kubernetes

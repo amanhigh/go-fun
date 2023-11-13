@@ -2,29 +2,53 @@ definitions:
   db.Person:
     properties:
       age:
+        maximum: 150
+        minimum: 1
         type: integer
       gender:
         enum:
         - MALE
         - FEMALE
         type: string
+      id:
+        description: Validations - https://gin-gonic.com/docs/examples/binding-and-validation/
+        type: string
       name:
+        maxLength: 25
+        minLength: 1
         type: string
     required:
     - age
     - gender
     - name
     type: object
+  server.PersonList:
+    properties:
+      records:
+        items:
+          $ref: '#/definitions/db.Person'
+        type: array
+      total:
+        description: Pagination - https://dev.to/pragativerma18/unlocking-the-power-of-api-pagination-best-practices-and-strategies-4b49
+        type: integer
+    type: object
   server.PersonRequest:
     properties:
       age:
+        maximum: 150
+        minimum: 1
         type: integer
       gender:
         enum:
         - MALE
         - FEMALE
         type: string
+      id:
+        description: Validations - https://gin-gonic.com/docs/examples/binding-and-validation/
+        type: string
       name:
+        maxLength: 25
+        minLength: 1
         type: string
     required:
     - age
@@ -35,6 +59,33 @@ info:
   contact: {}
 paths:
   /person:
+    get:
+      consumes:
+      - application/json
+      description: List Person and Optionally Search
+      parameters:
+      - description: Filter persons by gender
+        in: query
+        name: gender
+        type: string
+      - description: Filter persons by age
+        in: query
+        name: age
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.PersonList'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: List Person and Search
+      tags:
+      - Person
     post:
       consumes:
       - application/json
@@ -50,9 +101,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Id of created person
           schema:
-            $ref: '#/definitions/server.PersonRequest'
+            type: string
         "400":
           description: Bad Request
           schema:
@@ -115,27 +166,6 @@ paths:
           schema:
             type: string
       summary: Get a person by ID
-      tags:
-      - Person
-  /person/all:
-    get:
-      consumes:
-      - application/json
-      description: Get all persons' details
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/db.Person'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      summary: Get all persons
       tags:
       - Person
 swagger: "2.0"

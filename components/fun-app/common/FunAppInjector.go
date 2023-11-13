@@ -6,6 +6,7 @@ import (
 
 	metrics2 "github.com/amanhigh/go-fun/common/metrics"
 	util2 "github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	handlers2 "github.com/amanhigh/go-fun/components/fun-app/handlers"
 	manager2 "github.com/amanhigh/go-fun/components/fun-app/manager"
 	config2 "github.com/amanhigh/go-fun/models/config"
@@ -99,6 +100,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 		&inject.Object{Value: initDb(self.config.Db)},
 
 		&inject.Object{Value: &manager2.PersonManager{}},
+		&inject.Object{Value: &dao.PersonDao{}},
 
 		/* Metrics */
 		&inject.Object{Value: promauto.NewCounterVec(prometheus2.CounterOpts{

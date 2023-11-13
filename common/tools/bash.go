@@ -2,12 +2,14 @@ package tools
 
 import (
 	"fmt"
-	util2 "github.com/amanhigh/go-fun/common/util"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"strings"
 	"sync"
+	"syscall"
+
+	"github.com/amanhigh/go-fun/common/util"
+	"github.com/fatih/color"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -33,6 +35,29 @@ func RunAsyncCommand(heading string, cmd string, wg *sync.WaitGroup) {
 		}
 		wg.Done()
 	}()
+}
+
+// RunBackgroundCommand runs a background command and returns an error and a cancel function.
+//
+// The command parameter specifies the command to be executed.
+// The function returns an error if the command fails to start.
+// The cancel function can be used to kill the command and all of its child processes.
+func RunBackgroundCommand(command string) (cancel util.CancelFunc, err error) {
+	cmd := exec.Command("sh", "-c", command)
+	// Ensure any Child Process are Killed As Well.
+	// https://medium.com/@felixge/killing-a-child-process-and-all-of-its-children-in-go-54079af94773
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err = cmd.Start()
+
+	cancel = func() (err error) {
+		//Kill Command with Subprocess
+		err = syscall.Kill(-cmd.Process.Pid, syscall.SIGINT)
+		return
+	}
+	return
 }
 
 func RunCommandIgnoreError(cmd string) string {
@@ -66,7 +91,7 @@ func RunNotIf(cmd string, lambda func(output string)) bool {
 }
 
 func runCommand(cmd string) (string, error) {
-	if util2.IsDebugMode() {
+	if util.IsDebugMode() {
 		color.Magenta(cmd)
 	}
 	output, err := exec.Command("sh", "-c", cmd).Output()
@@ -75,7 +100,7 @@ func runCommand(cmd string) (string, error) {
 
 func LiveCommand(cmd string) {
 	command := exec.Command("sh", "-c", cmd)
-	if util2.IsDebugMode() {
+	if util.IsDebugMode() {
 		color.Magenta(cmd)
 	}
 	/* Connect Command Outputs */

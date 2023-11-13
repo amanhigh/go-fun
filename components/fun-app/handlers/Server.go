@@ -26,11 +26,14 @@ type FunServer struct {
 }
 
 func (self *FunServer) initRoutes() {
-	docs.SwaggerInfo.BasePath = "/"
+	docs.SwaggerInfo.BasePath = "/v1"
 	//Routes
-	//TODO:Add Versioning
-	personGroup := self.GinEngine.Group("/person")
-	personGroup.GET("/all", self.PersonHandler.GetAllPerson)
+
+	// Version Group
+	v1 := self.GinEngine.Group("/v1")
+
+	personGroup := v1.Group("/person")
+	personGroup.GET("/", self.PersonHandler.ListPersons)
 	personGroup.GET("/:id", self.PersonHandler.GetPerson)
 	personGroup.POST("", self.PersonHandler.CreatePerson)
 	personGroup.DELETE(":id", self.PersonHandler.DeletePersons)
@@ -46,8 +49,8 @@ func (self *FunServer) initRoutes() {
 	//Pprof (Use: http://localhost:8080/debug/pprof/)
 	//go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile
 	//go tool pprof -http=:8001 http://localhost:8080/debug/pprof/heap
-	//Load Test:  wrk2 http://localhost:8080/person/all/ -t 2 -c 100 -d 1m -R2000
-	//Vegeta: echo "GET http://localhost:9000/person/all" | vegeta attack -max-workers=2 -max-connections=100 -duration=1m -rate=2000/1s | tee results.bin | vegeta report
+	//Load Test:  wrk2 http://localhost:8080/v1/person/all/ -t 2 -c 100 -d 1m -R2000
+	//Vegeta: echo "GET http://localhost:9000/v1/person/all" | vegeta attack -max-workers=2 -max-connections=100 -duration=1m -rate=2000/1s | tee results.bin | vegeta report
 	//Vegeta Plot: vegeta plot results.bin > ~/Downloads/plot.html
 	pprof.Register(self.GinEngine)
 }

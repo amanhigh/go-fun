@@ -2,7 +2,7 @@ package crawler
 
 import (
 	"github.com/PuerkitoBio/goquery"
-	helper2 "github.com/amanhigh/go-fun/common/helper"
+	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/common/util"
 	crawler2 "github.com/amanhigh/go-fun/models/crawler"
 	"github.com/fatih/color"
@@ -22,7 +22,7 @@ func (self *GamespotCrawler) GatherLinks(page *util.Page, ch chan crawler2.Crawl
 	games.Each(func(i int, selection *goquery.Selection) {
 		info := crawler2.GameInfo{Name: selection.Text()}
 		if gameLink, ok := selection.Parent().Parent().Attr(util.HREF); ok {
-			info.Link = helper2.GetAbsoluteLink(page, gameLink)
+			info.Link = tools.GetAbsoluteLink(page, gameLink)
 		}
 		ch <- &info
 	})
@@ -31,7 +31,7 @@ func (self *GamespotCrawler) GatherLinks(page *util.Page, ch chan crawler2.Crawl
 func (self *GamespotCrawler) NextPageLink(page *util.Page) (url string, ok bool) {
 	nextPage := page.Document.Find("li.skip.next a")
 	if url, ok = nextPage.Attr(util.HREF); ok {
-		url = helper2.GetAbsoluteLink(page, url)
+		url = tools.GetAbsoluteLink(page, url)
 	}
 	return
 }
