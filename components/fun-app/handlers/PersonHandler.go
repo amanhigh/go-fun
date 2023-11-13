@@ -103,6 +103,17 @@ func (self *PersonHandler) ListPersons(c *gin.Context) {
 func (self *PersonHandler) UpdatePerson(c *gin.Context) {
 	//https://stackoverflow.com/a/37544666/173136
 
+	//Unmarshal the request
+	var request fun.PersonRequest
+	if err := c.ShouldBind(&request); err == nil {
+		if err := self.Manager.UpdatePerson(c, c.Param("id"), request); err == nil {
+			c.JSON(http.StatusOK, "UPDATED")
+		} else {
+			c.JSON(err.Code(), err)
+		}
+	} else {
+		c.JSON(http.StatusBadRequest, err)
+	}
 }
 
 // DeletePersons godoc

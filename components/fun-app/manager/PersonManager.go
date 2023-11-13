@@ -12,6 +12,7 @@ import (
 type PersonManagerInterface interface {
 	CreatePerson(c context.Context, person fun.PersonRequest) (id string, err common.HttpError)
 	DeletePerson(c context.Context, id string) (err common.HttpError)
+	UpdatePerson(c context.Context, id string, request fun.PersonRequest) (err common.HttpError)
 
 	ListPersons(c context.Context, personQuery fun.PersonQuery) (response fun.PersonList, err common.HttpError)
 	GetPerson(c context.Context, id string) (person fun.Person, err common.HttpError)
@@ -65,7 +66,14 @@ func (self *PersonManager) GetPerson(c context.Context, id string) (person fun.P
 	return
 }
 
-func (self *PersonManager) UpdatePerson(c context.Context, person fun.PersonRequest) (err common.HttpError) {
+func (self *PersonManager) UpdatePerson(c context.Context, id string, request fun.PersonRequest) (err common.HttpError) {
+	//Create Person
+	var person fun.Person
+	person.Id = id
+	person.Name = request.Name
+	person.Age = request.Age
+	person.Gender = request.Gender
+
 	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
 		err = self.Dao.Update(c, &person)
 		return
