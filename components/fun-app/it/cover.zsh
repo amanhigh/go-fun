@@ -8,6 +8,7 @@ if [ $# -eq 0 ]
     exit 1 
 fi
 
+# TODO: Guide in Readme on How to get Coverage
 action=$1
 
 # Set Coverage Directory
@@ -17,17 +18,8 @@ mkdir -p $GOCOVERDIR
 #Override Port to Avoid Collision with Default App
 export PORT=8085
 
-#Switch Case for run, analyse and clean
-case $action in
-    "run")
-        echo "\033[1;33m Running Fun App \033[0m"
-        # Build FunApp With Coverage
-        go build -cover -o $GOCOVERDIR/fun-app ..
-        # Start Fun App
-        $GOCOVERDIR/fun-app
-        ;;
-    "analyse")
-        echo "\033[1;32m Generating Cover Profile and Report \033[0m"
+function analyse() {
+    echo "\033[1;32m Generating Cover Profile and Report \033[0m"
         # Generate Cover Profile
         go tool covdata textfmt -i=$GOCOVERDIR -o $GOCOVERDIR/profile
         # Analyse Cover Profile
@@ -38,6 +30,21 @@ case $action in
         go tool covdata percent -i=$GOCOVERDIR
 
         echo "\033[1;32m\n\n ******* Vscode: go.apply.coverprofile /tmp/gocover/profile ******** \033[0m"
+}
+
+#Switch Case for run, analyse and clean
+case $action in
+    "run")
+        echo "\033[1;33m Running Fun App (With Coverage) \033[0m"
+        # Build FunApp With Coverage
+        go build -cover -o $GOCOVERDIR/fun-app ..
+        # Start Fun App
+        $GOCOVERDIR/fun-app
+        # Analyse
+        analyse
+        ;;
+    "analyse")
+        analyse
         ;;
     "clean")
         echo "\033[1;31m Cleaning Coverage Files \033[0m"
