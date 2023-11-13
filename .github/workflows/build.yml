@@ -43,6 +43,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: v1.0.2
 
+      - name: Debug Step
+        run: |
+          test -f /tmp/gocover/profile && echo "File exists" || echo "File does not exist";
+          ls /tmp;
+          ls /tmp/gocover;
+          
       - name: Report Coverage
         uses: codecov/codecov-action@v3
         with:
