@@ -1,6 +1,7 @@
 package it_test
 
 import (
+	"context"
 	"os"
 	"time"
 
@@ -22,6 +23,7 @@ const (
 var (
 	err    error
 	client = clients.NewFunAppClient(BASE_URL)
+	ctx    = context.Background()
 )
 
 func TestIt(t *testing.T) {
@@ -31,7 +33,7 @@ func TestIt(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	//Run FunApp If not already running
-	if err = client.AdminService.HealthCheck(); err == nil {
+	if err = client.AdminService.HealthCheck(ctx); err == nil {
 		color.HiGreen("FunApp: Running Already")
 	} else {
 		os.Setenv("PORT", "8085")
@@ -45,7 +47,7 @@ var _ = BeforeSuite(func() {
 				Fail("Unable to Start Funapp")
 			case <-time.NewTicker(time.Second).C:
 				color.HiBlue("FunApp: Health Check")
-				if err = client.AdminService.HealthCheck(); err == nil {
+				if err = client.AdminService.HealthCheck(ctx); err == nil {
 					return
 				}
 			}
@@ -55,6 +57,6 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterSuite(func() {
 	//Send Stop Signal
-	err = client.AdminService.Stop()
+	err = client.AdminService.Stop(ctx)
 	Expect(err).ShouldNot(HaveOccurred())
 })

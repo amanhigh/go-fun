@@ -156,7 +156,7 @@ var _ = Describe("Person Integration Test", func() {
 				for i := 0; i < total; i++ {
 					request.Name = names[i%3] + strconv.Itoa(i)
 					request.Gender = genders[i%3]
-					_, err = client.PersonService.CreatePerson(request)
+					_, err = client.PersonService.CreatePerson(ctx, request)
 					Expect(err).To(BeNil())
 				}
 
@@ -176,12 +176,12 @@ var _ = Describe("Person Integration Test", func() {
 					personQuery.Gender = genders[i]
 					personQuery.Limit = 10
 					personQuery.Offset = 0
-					personList, err := client.PersonService.ListPerson(personQuery)
+					personList, err := client.PersonService.ListPerson(ctx, personQuery)
 					Expect(err).To(BeNil())
 
 					//Delete all Records of Name
 					for _, person := range personList.Records {
-						err = client.PersonService.DeletePerson(person.Id)
+						err = client.PersonService.DeletePerson(ctx, person.Id)
 						Expect(err).To(BeNil())
 					}
 				}
@@ -189,7 +189,7 @@ var _ = Describe("Person Integration Test", func() {
 
 			It("should get all persons upto page Limit", func() {
 				var personList fun.PersonList
-				personList, err = client.PersonService.ListPerson(personQuery)
+				personList, err = client.PersonService.ListPerson(ctx, personQuery)
 				Expect(err).To(BeNil())
 
 				//Person Count should be same as Page Limit
@@ -200,7 +200,7 @@ var _ = Describe("Person Integration Test", func() {
 			It("should fetch second Page", func() {
 				var personList fun.PersonList
 				personQuery.Offset = limit
-				personList, err = client.PersonService.ListPerson(personQuery)
+				personList, err = client.PersonService.ListPerson(ctx, personQuery)
 
 				Expect(err).To(BeNil())
 				Expect(len(personList.Records)).To(Equal(limit))
@@ -209,7 +209,7 @@ var _ = Describe("Person Integration Test", func() {
 			It("should search by Name", func() {
 				var personList fun.PersonList
 				personQuery.Name = names[0]
-				personList, err = client.PersonService.ListPerson(personQuery)
+				personList, err = client.PersonService.ListPerson(ctx, personQuery)
 
 				Expect(err).To(BeNil())
 				Expect(len(personList.Records)).To(Equal(limit))
@@ -219,7 +219,7 @@ var _ = Describe("Person Integration Test", func() {
 			It("should search by Gender", func() {
 				var personList fun.PersonList
 				personQuery.Gender = genders[1]
-				personList, err = client.PersonService.ListPerson(personQuery)
+				personList, err = client.PersonService.ListPerson(ctx, personQuery)
 
 				Expect(err).To(BeNil())
 				Expect(len(personList.Records)).To(Equal(limit))
@@ -230,7 +230,7 @@ var _ = Describe("Person Integration Test", func() {
 				var personList fun.PersonList
 				personQuery.Name = names[0]
 				personQuery.Gender = genders[1]
-				personList, err = client.PersonService.ListPerson(personQuery)
+				personList, err = client.PersonService.ListPerson(ctx, personQuery)
 
 				Expect(err).To(BeNil())
 				Expect(len(personList.Records)).To(Equal(0))
