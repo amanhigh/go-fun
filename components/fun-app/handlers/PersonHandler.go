@@ -5,6 +5,7 @@ import (
 
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	"github.com/amanhigh/go-fun/models/fun"
+	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gin-gonic/gin"
@@ -64,6 +65,10 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 func (self *PersonHandler) GetPerson(c *gin.Context) {
 	var path fun.PersonPath
 
+	tracer := opentracing.GlobalTracer()
+
+	span := tracer.StartSpan("get-person")
+
 	if err := c.ShouldBindUri(&path); err == nil {
 		if person, err := self.Manager.GetPerson(c, path.Id); err == nil {
 			c.JSON(http.StatusOK, person)
@@ -71,6 +76,7 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 			c.JSON(err.Code(), err)
 		}
 	}
+	span.Finish()
 
 }
 
