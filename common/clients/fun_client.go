@@ -2,6 +2,7 @@
 package clients
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -33,14 +34,14 @@ type AdminService struct {
 	BaseService
 }
 
-func (admin *AdminService) Stop() (err common.HttpError) {
-	response, err1 := admin.client.R().Get("/admin/stop")
+func (admin *AdminService) Stop(c context.Context) (err common.HttpError) {
+	response, err1 := admin.client.R().SetContext(c).Get("/admin/stop")
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
-func (admin *AdminService) HealthCheck() (err common.HttpError) {
-	response, err1 := admin.client.R().Get("/metrics")
+func (admin *AdminService) HealthCheck(c context.Context) (err common.HttpError) {
+	response, err1 := admin.client.R().SetContext(c).Get("/metrics")
 	err = util.ResponseProcessor(response, err1)
 	return
 }
@@ -59,33 +60,33 @@ func NewFunAppClient(BASE_URL string) *FunClient {
 	}
 }
 
-func (c *PersonService) CreatePerson(person fun.PersonRequest) (id string, err common.HttpError) {
-	response, err1 := c.client.R().SetBody(person).SetResult(&id).Post(c.VERSION_URL + "/person")
+func (c *PersonService) CreatePerson(c context.Context, person fun.PersonRequest) (id string, err common.HttpError) {
+	response, err1 := c.client.R().SetContext(c).SetBody(person).SetResult(&id).Post(c.VERSION_URL + "/person")
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
-func (c *PersonService) GetPerson(name string) (person fun.Person, err common.HttpError) {
+func (c *PersonService) GetPerson(c context.Context, name string) (person fun.Person, err common.HttpError) {
 	url := fmt.Sprintf(c.VERSION_URL+"/person/%s", name)
-	response, err1 := c.client.R().SetResult(&person).Get(url)
+	response, err1 := c.client.R().SetContext(c).SetResult(&person).Get(url)
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
-func (c *PersonService) ListPerson(personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {
-	response, err1 := c.client.R().SetResult(&personList).Get(c.listPersonUrl(personQuery))
+func (c *PersonService) ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {
+	response, err1 := c.client.R().SetContext(c).SetResult(&personList).Get(c.listPersonUrl(personQuery))
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
-func (c *PersonService) UpdatePerson(id string, person fun.PersonRequest) (err common.HttpError) {
-	response, err1 := c.client.R().SetBody(person).Put(fmt.Sprintf(c.VERSION_URL+"/person/%s", id))
+func (c *PersonService) UpdatePerson(c context.Context, id string, person fun.PersonRequest) (err common.HttpError) {
+	response, err1 := c.client.R().SetContext(c).SetBody(person).Put(fmt.Sprintf(c.VERSION_URL+"/person/%s", id))
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
-func (c *PersonService) DeletePerson(name string) (err common.HttpError) {
-	response, err1 := c.client.R().Delete(fmt.Sprintf(c.VERSION_URL+"/person/%s", name))
+func (c *PersonService) DeletePerson(c context.Context, name string) (err common.HttpError) {
+	response, err1 := c.client.R().SetContext(c).Delete(fmt.Sprintf(c.VERSION_URL+"/person/%s", name))
 	err = util.ResponseProcessor(response, err1)
 	return
 }
