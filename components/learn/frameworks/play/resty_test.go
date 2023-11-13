@@ -17,7 +17,7 @@ type BinAnyResponse struct {
 	Method string `json:"method"`
 }
 
-var _ = FDescribe("Resty", func() {
+var _ = Describe("Resty", func() {
 
 	var (
 		client = resty.New()
