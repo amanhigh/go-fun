@@ -44,9 +44,9 @@ jobs:
           GORELEASER_CURRENT_TAG: v1.0.2
 
       - name: Report Coverage
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
-          file: ./coverprofile.out
+          files: ./coverprofile.out,/tmp/gocover/profile
           flags: unittests
           verbose: true
           name: codecov-go-fun
