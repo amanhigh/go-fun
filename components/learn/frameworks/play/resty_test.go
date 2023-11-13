@@ -1,13 +1,14 @@
 package play_test
 
 import (
-	db2 "github.com/amanhigh/go-fun/models/fun-app/db"
-	"github.com/go-resty/resty/v2"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/amanhigh/go-fun/models/fun"
+	"github.com/go-resty/resty/v2"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 type BinAnyResponse struct {
@@ -65,7 +66,7 @@ var _ = Describe("Resty", func() {
 
 	Context("Custom Request", func() {
 		var (
-			person      db2.Person
+			person      fun.PersonRequest
 			binResponse BinAnyResponse
 			headerKey   = "Myheader"
 			headerValue = "MyHeaderValue"
@@ -73,7 +74,7 @@ var _ = Describe("Resty", func() {
 
 		BeforeEach(func() {
 			binResponse = BinAnyResponse{}
-			person = db2.Person{
+			person = fun.PersonRequest{
 				Name:   "Aman",
 				Age:    18,
 				Gender: "Male",
