@@ -78,6 +78,12 @@ func (c *PersonService) ListPerson(personQuery fun.PersonQuery) (personList fun.
 	return
 }
 
+func (c *PersonService) UpdatePerson(id string, person fun.PersonRequest) (err common.HttpError) {
+	response, err1 := c.client.R().SetBody(person).Put(fmt.Sprintf(c.VERSION_URL+"/person/%s", id))
+	err = util.ResponseProcessor(response, err1)
+	return
+}
+
 func (c *PersonService) DeletePerson(name string) (err common.HttpError) {
 	response, err1 := c.client.R().Delete(fmt.Sprintf(c.VERSION_URL+"/person/%s", name))
 	err = util.ResponseProcessor(response, err1)

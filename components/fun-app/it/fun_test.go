@@ -64,6 +64,82 @@ var _ = Describe("Person Integration Test", func() {
 			Expect(person.Gender).To(Equal(gender))
 		})
 
+		Context("Update", func() {
+			var (
+				updateRequest fun.PersonRequest
+				updateId      string
+			)
+			BeforeEach(func() {
+				updateRequest = fun.PersonRequest{
+					Name:   "Jenny",
+					Age:    25,
+					Gender: "FEMALE",
+				}
+				updateId, err = client.PersonService.CreatePerson(request)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				err = client.PersonService.DeletePerson(updateId)
+				Expect(err).To(BeNil())
+			})
+
+			It("should update person", func() {
+				err := client.PersonService.UpdatePerson(updateId, updateRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				//Fetch Update Person
+				person, err := client.PersonService.GetPerson(updateId)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				//MatchFields
+				Expect(person.Id).To(Equal(updateId))
+				Expect(person.Name).To(Equal(updateRequest.Name))
+				Expect(person.Age).To(Equal(updateRequest.Age))
+				Expect(person.Gender).To(Equal(updateRequest.Gender))
+			})
+
+			Context("Bad Requests", func() {
+				AfterEach(func() {
+					err = client.PersonService.UpdatePerson(updateId, updateRequest)
+					Expect(err).Should(HaveOccurred())
+					Expect(err).To(Equal(common.ErrBadRequest))
+				})
+
+				It("should fail for missing Name", func() {
+					updateRequest.Name = ""
+				})
+
+				It("should fail for invalid Name", func() {
+					updateRequest.Name = "A*B"
+				})
+
+				It("should fail for max Name", func() {
+					updateRequest.Name = strings.Repeat("A", 30)
+				})
+
+				It("should fail for missing Age", func() {
+					updateRequest.Age = 0
+				})
+
+				It("should fail for invalid Age", func() {
+					updateRequest.Age = -1
+				})
+
+				It("should fail for max Age", func() {
+					updateRequest.Age = 200
+				})
+
+				It("should fail for missing Gender", func() {
+					updateRequest.Gender = ""
+				})
+
+				It("should fail for invalid Gender", func() {
+					updateRequest.Gender = "GENDER"
+				})
+			})
+		})
+
 		Context("Search", func() {
 			var (
 				offset      = 0
