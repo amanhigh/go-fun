@@ -45,9 +45,7 @@ jobs:
 
       - name: Debug Step
         run: |
-          test -f /tmp/gocover/profile && echo "File exists" || echo "File does not exist";
-          ls /tmp;
-          ls /tmp/gocover;
+          ls ./components/fun-app/it/cover;
 
       - name: Report Coverage
         uses: codecov/codecov-action@v3
