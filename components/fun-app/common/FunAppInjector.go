@@ -25,8 +25,10 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	prometheus2 "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
+	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
 	ginprometheus "github.com/zsais/go-gin-prometheus"
 	"gopkg.in/redis.v5"
 	"gorm.io/gorm"
@@ -55,9 +57,8 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	/* Gin Engine */
 	engine := gin.New()
 
-	//Auto Log RequestId
-	log.AddHook(&metrics.ContextLogHook{})
-	log.SetLevel(self.config.Server.LogLevel)
+	/* Configure Logger */
+	configureLogger(self.config.Server.LogLevel)
 
 	/* Access Metrics */
 	// TODO: Ingest to Prometheus and configure in helm
@@ -181,4 +182,19 @@ func initDb(dbConfig config2.Db) (db *gorm.DB) {
 		log.WithFields(log.Fields{"DbConfig": dbConfig, "Error": err}).Fatal("Failed To Setup DB")
 	}
 	return
+}
+
+func configureLogger(level log.Level) {
+	//Auto Log RequestId
+	log.AddHook(&metrics.ContextLogHook{})
+	log.SetLevel(level)
+
+	// Tracing
+	logrus.AddHook(otellogrus.NewHook(otellogrus.WithLevels(
+		logrus.PanicLevel,
+		logrus.FatalLevel,
+		logrus.ErrorLevel,
+		logrus.WarnLevel,
+		logrus.InfoLevel,
+	)))
 }
