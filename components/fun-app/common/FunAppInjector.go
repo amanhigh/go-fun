@@ -69,6 +69,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 
 	/* Middleware */
 	engine.Use(gin.Recovery(), metrics2.RequestId, gin.LoggerWithFormatter(metrics2.GinRequestIdFormatter))
+	// https://github.com/open-telemetry/opentelemetry-go-contrib/blob/main/instrumentation/github.com/gin-gonic/gin/otelgin/example/server.go
 	engine.Use(otelgin.Middleware(NAMESPACE + "-gin"))
 
 	/* Validators */

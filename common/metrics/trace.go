@@ -2,12 +2,24 @@ package metrics
 
 import (
 	"context"
+	"os"
+	"runtime"
 
 	"go.opentelemetry.io/otel"
-	stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+	"google.golang.org/grpc"
 )
+
+/*
+	Resources
+	Instruments - https://opentelemetry.io/ecosystem/registry/?language=go&component=instrumentation
+	Awesome Telemetry - https://github.com/magsther/awesome-opentelemetry
+	OTEL Go - https://opentelemetry.io/docs/instrumentation/go/getting-started/
+*/
 
 func InitStdoutTracerProvider() {
 	exporter, _ := stdout.New(stdout.WithPrettyPrint())
