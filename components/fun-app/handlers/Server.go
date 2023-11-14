@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/metrics"
 	util2 "github.com/amanhigh/go-fun/common/util"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
@@ -87,11 +88,15 @@ func (self *FunServer) Start() (err error) {
 func (self *FunServer) Stop() {
 	// The context is used to inform the server it has few seconds to finish
 	// the request it is currently handling
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := self.Server.Shutdown(ctx); err != nil {
 		log.Fatal("Server forced to shutdown: ", err)
 	}
+
+	//Stop Tracer
+	metrics.ShutdownTracerProvider(ctx)
 
 	log.Info("Server exiting")
 }

@@ -5,15 +5,16 @@ import (
 
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	"github.com/amanhigh/go-fun/models/fun"
-	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gin-gonic/gin"
 )
 
 type PersonHandler struct {
 	Manager          manager.PersonManagerInterface `inject:""`
-	Tracer           opentracing.Tracer             `inject:""`
+	Tracer           trace.Tracer                   `inject:""`
 	CreateCounter    *prometheus.CounterVec         `inject:"m_create_person"`
 	PersonCounter    prometheus.Gauge               `inject:"m_person_count"`
 	PersonCreateTime prometheus.Histogram           `inject:"m_person_create_time"`
@@ -66,7 +67,8 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 func (self *PersonHandler) GetPerson(c *gin.Context) {
 	var path fun.PersonPath
 
-	span := self.Tracer.StartSpan("get-person")
+	_, span := self.Tracer.Start(c, "GetPerson", trace.WithAttributes(attribute.String("id", path.Id)))
+	defer span.End()
 
 	if err := c.ShouldBindUri(&path); err == nil {
 		if person, err := self.Manager.GetPerson(c, path.Id); err == nil {
@@ -75,8 +77,6 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 			c.JSON(err.Code(), err)
 		}
 	}
-	span.Finish()
-
 }
 
 // ListPersons godoc
