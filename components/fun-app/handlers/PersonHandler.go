@@ -37,13 +37,16 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 	timer := prometheus.NewTimer(self.PersonCreateTime)
 	defer timer.ObserveDuration()
 
+	ctx, span := self.Tracer.Start(c.Request.Context(), "CreatePerson.Handler")
+	defer span.End()
+
 	//Unmarshal the request
 	var request fun.PersonRequest
 	if err := c.ShouldBind(&request); err == nil {
 
 		self.CreateCounter.WithLabelValues(request.Gender).Inc()
 
-		if id, err := self.Manager.CreatePerson(c, request); err == nil {
+		if id, err := self.Manager.CreatePerson(ctx, request); err == nil {
 			c.JSON(http.StatusOK, id)
 		} else {
 			c.JSON(err.Code(), err)

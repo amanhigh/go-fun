@@ -37,13 +37,16 @@ type PersonManager struct {
 func (self *PersonManager) CreatePerson(c context.Context, personRequest fun.PersonRequest) (id string, err common.HttpError) {
 	personFields := log.Fields{"Name": personRequest.Name, "Age": personRequest.Age, "Gender": personRequest.Gender}
 
+	ctx, span := self.Tracer.Start(c, "CreatePerson.Manager", trace.WithAttributes(attribute.String("Name", personRequest.Name)))
+	defer span.End()
+
 	/* Create Person */
 	var person fun.Person
 	person.Name = personRequest.Name
 	person.Age = personRequest.Age
 	person.Gender = personRequest.Gender
 
-	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
+	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
 		if err = self.Dao.Create(c, &person); err == nil {
 			id = person.Id
 			log.WithContext(c).WithField("Id", id).WithFields(personFields).Info("Person Created")
@@ -92,6 +95,7 @@ func (self *PersonManager) DeletePerson(c context.Context, id string) (err commo
 
 	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
 		if person, err = self.GetPerson(c, id); err == nil {
+			//FIXME: Span Event Add.
 			/* Delete from DB */
 			err = self.Dao.DeleteById(c, id, &person)
 		}
