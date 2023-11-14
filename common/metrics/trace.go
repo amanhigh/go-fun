@@ -23,6 +23,7 @@ import (
 	Instruments - https://opentelemetry.io/ecosystem/registry/?language=go&component=instrumentation
 	Awesome Telemetry - https://github.com/magsther/awesome-opentelemetry
 	OTEL Go - https://opentelemetry.io/docs/instrumentation/go/getting-started/
+	Guide - https://medium.com/@emafuma/start-using-opentelemetry-with-go-gin-web-framework-9bebca5abadc
 */
 
 func InitTracerProvider(ctx context.Context, name string, config config.Tracing) {
@@ -52,6 +53,7 @@ func InitStdoutTracerProvider() (err error) {
 	return
 }
 
+// https://observiq.com/blog/tracing-services-using-otel-and-jaeger
 func InitOtlpTracerProvider(ctx context.Context, name string, config config.Tracing) (err error) {
 	var conn *grpc.ClientConn
 	var exporter *otlptrace.Exporter
