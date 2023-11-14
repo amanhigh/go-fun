@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/amanhigh/go-fun/common/metrics"
 	metrics2 "github.com/amanhigh/go-fun/common/metrics"
 	util2 "github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/dao"
@@ -21,7 +22,6 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/opentracing/opentracing-go"
 	prometheus2 "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	log "github.com/sirupsen/logrus"
@@ -29,11 +29,8 @@ import (
 	"gopkg.in/redis.v5"
 	"gorm.io/gorm"
 
-	"github.com/uber/jaeger-client-go"
-	"github.com/uber/jaeger-lib/metrics"
-
-	jaegercfg "github.com/uber/jaeger-client-go/config"
-	jaegerlog "github.com/uber/jaeger-client-go/log"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.opentelemetry.io/otel"
 )
 
 const (
@@ -72,6 +69,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 
 	/* Middleware */
 	engine.Use(gin.Recovery(), metrics2.RequestId, gin.LoggerWithFormatter(metrics2.GinRequestIdFormatter))
+	engine.Use(otelgin.Middleware(NAMESPACE + "-gin"))
 
 	/* Validators */
 	v, _ := binding.Validator.Engine().(*validator.Validate)
@@ -93,7 +91,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	}
 
 	/* Tracing */
-	tracer := buildTracer()
+	metrics.InitStdoutTracerProvider()
 
 	// defer closer.Close()
 
@@ -113,7 +111,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 
 		&inject.Object{Value: &manager2.PersonManager{}},
 		&inject.Object{Value: &dao.PersonDao{}},
-		&inject.Object{Value: tracer},
+		&inject.Object{Value: otel.Tracer(NAMESPACE)},
 
 		/* Metrics */
 		&inject.Object{Value: promauto.NewCounterVec(prometheus2.CounterOpts{
@@ -177,33 +175,5 @@ func initDb(dbConfig config2.Db) (db *gorm.DB) {
 	if err != nil {
 		log.WithFields(log.Fields{"DbConfig": dbConfig, "Error": err}).Panic("Failed To Setup DB")
 	}
-	return
-}
-
-func buildTracer() (tracer opentracing.Tracer) {
-	// Sample configuration for testing. Use constant sampling to sample every trace
-	// and enable LogSpan to log every span via configured Logger.
-	cfg := jaegercfg.Configuration{
-		ServiceName: "fun-app",
-		Sampler: &jaegercfg.SamplerConfig{
-			Type:  jaeger.SamplerTypeConst,
-			Param: 1,
-		},
-		Reporter: &jaegercfg.ReporterConfig{
-			LogSpans: true,
-		},
-	}
-
-	// Example logger and metrics factory. Use github.com/uber/jaeger-client-go/log
-	// and github.com/uber/jaeger-lib/metrics respectively to bind to real logging and metrics
-	// frameworks.
-	jLogger := jaegerlog.StdLogger
-	jMetricsFactory := metrics.NullFactory
-
-	// Initialize tracer with a logger and a metrics factory
-	tracer, _, _ = cfg.NewTracer(
-		jaegercfg.Logger(jLogger),
-		jaegercfg.Metrics(jMetricsFactory),
-	)
 	return
 }
