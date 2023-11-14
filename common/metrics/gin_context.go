@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -15,7 +16,12 @@ import (
 RequestId Generator for Gin
 */
 func RequestId(c *gin.Context) {
-	c.Set(models2.XRequestID, uuid.New())
+	uuid := uuid.New()
+	c.Set(models2.XRequestID, uuid)
+
+	//Add UUID to Request Context as well
+	ctx := context.WithValue(c.Request.Context(), models2.XRequestID, uuid)
+	c.Request = c.Request.WithContext(ctx)
 	c.Next()
 }
 
