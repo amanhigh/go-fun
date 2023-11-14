@@ -25,7 +25,7 @@ func NewImdbCrawler(year int, language string, cutoff int, cookies string) Crawl
 	if util2.IsDebugMode() {
 		fmt.Println("IMDB Cookie: ", cookies)
 	}
-	//TODO: enable Compression
+	//BUG: enable Compression
 	client := clients2.NewHttpClientWithCookies("https://www.imdb.com", util2.ParseCookies(cookies), clients2.DefaultHttpClient)
 	return &ImdbCrawler{
 		cutoff:   cutoff,

@@ -1,9 +1,11 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
+	"github.com/amanhigh/go-fun/common/metrics"
 	metrics2 "github.com/amanhigh/go-fun/common/metrics"
 	util2 "github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/dao"
@@ -27,6 +29,9 @@ import (
 	ginprometheus "github.com/zsais/go-gin-prometheus"
 	"gopkg.in/redis.v5"
 	"gorm.io/gorm"
+
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.opentelemetry.io/otel"
 )
 
 const (
@@ -43,15 +48,15 @@ func NewFunAppInjector(config config2.FunAppConfig) interfaces2.ApplicationInjec
 }
 
 func (self *FunAppInjector) BuildApp() (app any, err error) {
-	server := &handlers2.FunServer{}
-	app = server
-
-	//Auto Log RequestId
-	log.AddHook(&metrics2.ContextLogHook{})
-	log.SetLevel(self.config.Server.LogLevel)
+	// Build App
+	app = &handlers2.FunServer{}
 
 	/* Gin Engine */
 	engine := gin.New()
+
+	//Auto Log RequestId
+	log.AddHook(&metrics.ContextLogHook{})
+	log.SetLevel(self.config.Server.LogLevel)
 
 	/* Access Metrics */
 	// TODO: Ingest to Prometheus and configure in helm
@@ -60,11 +65,13 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	prometheus.ReqCntURLLabelMappingFn = metrics2.AccessMetrics
 	prometheus.Use(engine)
 
-	// http://localhost:8080/debug/statsviz/
-	engine.GET("/debug/statsviz/*filepath", metrics2.StatvizMetrics)
+	/* Tracing */
+	metrics.InitTracerProvider(context.Background(), NAMESPACE, self.config.Tracing)
 
 	/* Middleware */
 	engine.Use(gin.Recovery(), metrics2.RequestId, gin.LoggerWithFormatter(metrics2.GinRequestIdFormatter))
+	// https://github.com/open-telemetry/opentelemetry-go-contrib/blob/main/instrumentation/github.com/gin-gonic/gin/otelgin/example/server.go
+	engine.Use(otelgin.Middleware(NAMESPACE + "-gin"))
 
 	/* Validators */
 	v, _ := binding.Validator.Engine().(*validator.Validate)
@@ -92,7 +99,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 			Addr:    fmt.Sprintf(":%v", self.config.Server.Port),
 			Handler: engine,
 		}},
-		&inject.Object{Value: server},
+		&inject.Object{Value: app},
 		&inject.Object{Value: &handlers2.PersonHandler{}},
 		&inject.Object{Value: &handlers2.AdminHandler{}},
 		&inject.Object{Value: util2.NewGracefulShutdown()},
@@ -101,6 +108,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 
 		&inject.Object{Value: &manager2.PersonManager{}},
 		&inject.Object{Value: &dao.PersonDao{}},
+		&inject.Object{Value: otel.Tracer(NAMESPACE)},
 
 		/* Metrics */
 		&inject.Object{Value: promauto.NewCounterVec(prometheus2.CounterOpts{
@@ -124,6 +132,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	)
 	if err == nil {
 		err = self.graph.Populate()
+		log.WithFields(log.Fields{"Port": self.config.Server.Port}).Info("Injection Complete")
 	}
 	return
 }
@@ -162,7 +171,7 @@ func initDb(dbConfig config2.Db) (db *gorm.DB) {
 	}
 
 	if err != nil {
-		log.WithFields(log.Fields{"DbConfig": dbConfig, "Error": err}).Panic("Failed To Setup DB")
+		log.WithFields(log.Fields{"DbConfig": dbConfig, "Error": err}).Fatal("Failed To Setup DB")
 	}
 	return
 }

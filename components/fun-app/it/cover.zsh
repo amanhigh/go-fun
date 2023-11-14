@@ -8,7 +8,7 @@ if [ $# -eq 0 ]
     exit 1 
 fi
 
-# TODO: Guide in Readme on How to get Coverage
+# HACK: Guide in Readme on How to get Coverage
 action=$1
 
 # Script Directory

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/metrics"
 	util2 "github.com/amanhigh/go-fun/common/util"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
@@ -47,6 +48,9 @@ func (self *FunServer) initRoutes() {
 	//URL: http://localhost:8080/swagger/index.html
 	self.GinEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	// http://localhost:8080/debug/statsviz/
+	self.GinEngine.GET("/debug/statsviz/*filepath", metrics.StatvizMetrics)
+
 	//Pprof (Use: http://localhost:8080/debug/pprof/)
 	//go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile
 	//go tool pprof -http=:8001 http://localhost:8080/debug/pprof/heap
@@ -77,16 +81,25 @@ func (self *FunServer) Start() (err error) {
 		//No Error Occurred, wait for Graceful Shutdown Signal.
 		self.Shutdown.Wait()
 
-		// The context is used to inform the server it has few seconds to finish
-		// the request it is currently handling
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		if err := self.Server.Shutdown(ctx); err != nil {
-			log.Fatal("Server forced to shutdown: ", err)
-		}
-
-		log.Info("Server exiting")
+		//Trigger Shutdown Routine
+		self.Stop()
 	}
 
 	return
+}
+
+func (self *FunServer) Stop() {
+	// The context is used to inform the server it has few seconds to finish
+	// the request it is currently handling
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := self.Server.Shutdown(ctx); err != nil {
+		log.Fatal("Server forced to shutdown: ", err)
+	}
+
+	//Stop Tracer
+	metrics.ShutdownTracerProvider(ctx)
+
+	log.Info("Server exiting")
 }

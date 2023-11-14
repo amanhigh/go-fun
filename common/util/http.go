@@ -37,6 +37,8 @@ func NewRestyClient(baseUrl string, httpConfig config.HttpClientConfig) (client 
 	//Default Header
 	client.SetHeader("Content-Type", "application/json")
 
+	//TODO: Integrate with OTEL
+
 	//Configure Http Config
 	client.SetTimeout(httpConfig.RequestTimeout)
 

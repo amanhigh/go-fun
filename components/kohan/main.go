@@ -5,5 +5,6 @@ import (
 )
 
 func main() {
+	// TODO: CLI Tests
 	command2.Execute()
 }

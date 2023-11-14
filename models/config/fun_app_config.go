@@ -5,4 +5,5 @@ type FunAppConfig struct {
 	RateLimit RateLimit
 	Db        Db
 	Http      HttpClientConfig
+	Tracing   Tracing
 }
