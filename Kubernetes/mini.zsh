@@ -72,6 +72,7 @@ do
         FILE_PATH=`readlink -f ./services/files`
         
         #Additional Flags: --kubernetes-version v1.23.0
+        #BUG: Metric Server Not Working K9s Pulse.
         minikube  -p minikube start --memory=5096 --cpus=3 \
         --cache-images=true --mount-string="$FILE_PATH:/etc/files" --mount --host-only-cidr='24.1.1.100/24'\
         --addons metrics-server;

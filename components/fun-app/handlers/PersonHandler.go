@@ -67,11 +67,11 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 func (self *PersonHandler) GetPerson(c *gin.Context) {
 	var path fun.PersonPath
 
-	_, span := self.Tracer.Start(c, "GetPerson", trace.WithAttributes(attribute.String("id", path.Id)))
+	ctx, span := self.Tracer.Start(c.Request.Context(), "GetPerson.Handler", trace.WithAttributes(attribute.String("id", path.Id)))
 	defer span.End()
 
 	if err := c.ShouldBindUri(&path); err == nil {
-		if person, err := self.Manager.GetPerson(c, path.Id); err == nil {
+		if person, err := self.Manager.GetPerson(ctx, path.Id); err == nil {
 			c.JSON(http.StatusOK, person)
 		} else {
 			c.JSON(err.Code(), err)

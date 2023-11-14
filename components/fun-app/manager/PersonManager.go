@@ -7,6 +7,8 @@ import (
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
 	log "github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type PersonManagerInterface interface {
@@ -19,7 +21,8 @@ type PersonManagerInterface interface {
 }
 
 type PersonManager struct {
-	Dao dao.PersonDaoInterface `inject:""`
+	Dao    dao.PersonDaoInterface `inject:""`
+	Tracer trace.Tracer           `inject:""`
 }
 
 // CreatePerson creates a new person in the PersonManager.
@@ -60,7 +63,10 @@ func (self *PersonManager) ListPersons(c context.Context, personQuery fun.Person
 }
 
 func (self *PersonManager) GetPerson(c context.Context, id string) (person fun.Person, err common.HttpError) {
-	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
+	ctx, span := self.Tracer.Start(c, "GetPerson.Manager", trace.WithAttributes(attribute.String("id", id)))
+	defer span.End()
+
+	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
 		return self.Dao.FindById(c, id, &person)
 	})
 	return
