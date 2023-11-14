@@ -13,6 +13,7 @@ import (
 	stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/sdk/trace"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"google.golang.org/grpc"
@@ -32,7 +33,7 @@ func InitTracerProvider(ctx context.Context, name string, config config.Tracing)
 	case "otlp":
 		err = InitOtlpTracerProvider(ctx, name, config)
 	case "console":
-		err = InitStdoutTracerProvider()
+		err = InitStdoutTracerProvider(config)
 	default:
 		//No Tracer (Defaults to Global Tracer)
 	}
@@ -42,11 +43,12 @@ func InitTracerProvider(ctx context.Context, name string, config config.Tracing)
 	}
 }
 
-func InitStdoutTracerProvider() (err error) {
-	exporter, err := stdout.New(stdout.WithPrettyPrint())
+func InitStdoutTracerProvider(config config.Tracing) (err error) {
+	var exporter *stdout.Exporter
+	exporter, err = stdout.New(stdout.WithPrettyPrint())
 	traceprovider := sdktrace.NewTracerProvider(
 		sdktrace.WithSampler(sdktrace.AlwaysSample()),
-		sdktrace.WithSyncer(exporter), //Stage Use only since its Sync.
+		getPublisher(config, exporter),
 	)
 	otel.SetTracerProvider(traceprovider)
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
@@ -57,18 +59,32 @@ func InitStdoutTracerProvider() (err error) {
 func InitOtlpTracerProvider(ctx context.Context, name string, config config.Tracing) (err error) {
 	var conn *grpc.ClientConn
 	var exporter *otlptrace.Exporter
+
 	if conn, err = grpc.DialContext(ctx, config.Endpoint, grpc.WithInsecure()); err == nil {
 		if exporter, err = otlptracegrpc.New(ctx, otlptracegrpc.WithInsecure(), otlptracegrpc.WithGRPCConn(conn)); err == nil {
 			traceprovider := sdktrace.NewTracerProvider(
 				sdktrace.WithSampler(sdktrace.AlwaysSample()),
 				sdktrace.WithResource(buildResource(name)),
-				sdktrace.WithBatcher(exporter), //Production Use, Exports on Flush or Shutdown.
+				getPublisher(config, exporter),
 			)
 			otel.SetTracerProvider(traceprovider)
 			otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 		}
 	}
 	return
+}
+
+func getPublisher(config config.Tracing, exporter sdktrace.SpanExporter) trace.TracerProviderOption {
+	var publisher sdktrace.TracerProviderOption
+	switch config.Publish {
+	case "sync":
+		//Stage Use only since its Sync.
+		publisher = sdktrace.WithSyncer(exporter)
+	case "batch":
+		//Production Use, Exports on Flush or Shutdown.
+		publisher = sdktrace.WithBatcher(exporter)
+	}
+	return publisher
 }
 
 func buildResource(name string) *resource.Resource {
