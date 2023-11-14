@@ -26,6 +26,7 @@ import (
 	prometheus2 "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	log "github.com/sirupsen/logrus"
+	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	ginprometheus "github.com/zsais/go-gin-prometheus"
 	"gopkg.in/redis.v5"
 	"gorm.io/gorm"
@@ -145,6 +146,12 @@ func initDb(dbConfig config2.Db) (db *gorm.DB) {
 		db, err = util2.CreateTestDb()
 	} else {
 		db, err = util2.CreateDbConnection(dbConfig)
+	}
+
+	/* Tracing */
+	if err == nil {
+		// https://github.com/uptrace/opentelemetry-go-extra/tree/main/otelgorm
+		err = db.Use(otelgorm.NewPlugin())
 	}
 
 	/* Migrate DB */

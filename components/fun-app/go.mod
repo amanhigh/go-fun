@@ -40,6 +40,8 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b // indirect
+	github.com/uptrace/opentelemetry-go-extra/otelgorm v0.2.3 // indirect
+	github.com/uptrace/opentelemetry-go-extra/otelsql v0.2.3 // indirect
 	go.opentelemetry.io/otel/metric v1.20.0 // indirect
 )
 
