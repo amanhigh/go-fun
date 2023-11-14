@@ -9,6 +9,8 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+// https://github.com/caarlos0/env
+
 type Server struct {
 	Host     string       `env:"HOST"`
 	Port     int          `env:"PORT" envDefault:"8080"`
@@ -41,6 +43,11 @@ type Db struct {
 	AutoMigrate     bool   `env:"DB_AUTO_MIGRATE"  envDefault:"true"`
 	//Log level: 4 (Info), 3 (Warn), 2 (Error)
 	LogLevel logger.LogLevel `env:"DB_LOG_LEVEL"  envDefault:"2"`
+}
+
+type Tracing struct {
+	Type     string `env:"TRACING_TYPE" envDefault:"noop"` // noop,console,oltp
+	Endpoint string `env:"TRACING_URL" envDefault:"docker:4317"`
 }
 
 var DefaultHttpConfig = HttpClientConfig{

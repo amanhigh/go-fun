@@ -5,8 +5,12 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/amanhigh/go-fun/models/config"
+	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -21,15 +25,59 @@ import (
 	OTEL Go - https://opentelemetry.io/docs/instrumentation/go/getting-started/
 */
 
-func InitStdoutTracerProvider() {
-	exporter, _ := stdout.New(stdout.WithPrettyPrint())
+func InitTracerProvider(ctx context.Context, name string, config config.Tracing) {
+	var err error
+	switch config.Type {
+	case "otlp":
+		err = InitOtlpTracerProvider(ctx, name, config)
+	case "console":
+		err = InitStdoutTracerProvider()
+	default:
+		//No Tracer (Defaults to Global Tracer)
+	}
+
+	if err != nil {
+		log.WithFields(log.Fields{"Error": err}).Fatal("Error Initializing Tracer Provider")
+	}
+}
+
+func InitStdoutTracerProvider() (err error) {
+	exporter, err := stdout.New(stdout.WithPrettyPrint())
 	traceprovider := sdktrace.NewTracerProvider(
 		sdktrace.WithSampler(sdktrace.AlwaysSample()),
 		sdktrace.WithSyncer(exporter), //Stage Use only since its Sync.
-		// sdktrace.WithBatcher(exporter), //Production Use, Exports on Flush or Shutdown.
 	)
 	otel.SetTracerProvider(traceprovider)
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+	return
+}
+
+func InitOtlpTracerProvider(ctx context.Context, name string, config config.Tracing) (err error) {
+	var conn *grpc.ClientConn
+	var exporter *otlptrace.Exporter
+	if conn, err = grpc.DialContext(ctx, config.Endpoint, grpc.WithInsecure()); err == nil {
+		if exporter, err = otlptracegrpc.New(ctx, otlptracegrpc.WithInsecure(), otlptracegrpc.WithGRPCConn(conn)); err == nil {
+			traceprovider := sdktrace.NewTracerProvider(
+				sdktrace.WithSampler(sdktrace.AlwaysSample()),
+				sdktrace.WithResource(buildResource(name)),
+				sdktrace.WithBatcher(exporter), //Production Use, Exports on Flush or Shutdown.
+			)
+			otel.SetTracerProvider(traceprovider)
+			otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+		}
+	}
+	return
+}
+
+func buildResource(name string) *resource.Resource {
+	hostname, _ := os.Hostname()
+	resources := resource.NewWithAttributes(
+		semconv.SchemaURL,
+		semconv.ServiceNameKey.String(name),
+		semconv.HostArchKey.String(runtime.GOARCH),
+		semconv.HostNameKey.String(hostname),
+	)
+	return resources
 }
 
 // ShutdownTracerProvider flushes any pending spans.
@@ -38,12 +86,14 @@ func InitStdoutTracerProvider() {
 // ctx - the context.Context used for shutdown.
 // It returns nothing.
 func ShutdownTracerProvider(ctx context.Context) {
-	traceProvider := otel.GetTracerProvider().(*sdktrace.TracerProvider)
-	traceProvider.Shutdown(ctx)
+	if traceProvider, ok := otel.GetTracerProvider().(*sdktrace.TracerProvider); ok {
+		traceProvider.Shutdown(ctx)
+	}
 }
 
 // FlushTraceProvider flushes any pending spans.
 func FlushTraceProvider(ctx context.Context) {
-	traceProvider := otel.GetTracerProvider().(*sdktrace.TracerProvider)
-	traceProvider.ForceFlush(ctx)
+	if traceProvider := otel.GetTracerProvider().(*sdktrace.TracerProvider); traceProvider != nil {
+		traceProvider.ForceFlush(ctx)
+	}
 }

@@ -48,6 +48,9 @@ func (self *FunServer) initRoutes() {
 	//URL: http://localhost:8080/swagger/index.html
 	self.GinEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	// http://localhost:8080/debug/statsviz/
+	self.GinEngine.GET("/debug/statsviz/*filepath", metrics.StatvizMetrics)
+
 	//Pprof (Use: http://localhost:8080/debug/pprof/)
 	//go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile
 	//go tool pprof -http=:8001 http://localhost:8080/debug/pprof/heap
