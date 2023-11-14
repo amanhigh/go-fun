@@ -46,7 +46,7 @@ type Db struct {
 }
 
 type Tracing struct {
-	Type     string `env:"TRACING_TYPE" envDefault:"noop"` // noop,console,oltp
+	Type     string `env:"TRACING_TYPE" envDefault:"noop"` // noop,console,otlp
 	Endpoint string `env:"TRACING_URL" envDefault:"docker:4317"`
 	Publish  string `env:"TRACING_PUBLISH" envDefault:"sync"` //sync, batch (production)
 }
