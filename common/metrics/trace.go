@@ -28,6 +28,7 @@ import (
 */
 
 func InitTracerProvider(ctx context.Context, name string, config config.Tracing) {
+	fields := log.Fields{"Name": name, "Type": config.Type, "Endpoint": config.Endpoint, "Publish": config.Publish}
 	var err error
 	switch config.Type {
 	case "otlp":
@@ -39,8 +40,9 @@ func InitTracerProvider(ctx context.Context, name string, config config.Tracing)
 	}
 
 	if err != nil {
-		log.WithFields(log.Fields{"Error": err}).Fatal("Error Initializing Tracer Provider")
+		log.WithFields(log.Fields{"Error": err}).WithFields(fields).Fatal("Error Initializing Tracer Provider")
 	}
+	log.WithFields(fields).Debug("Tracer Provider Initialized")
 }
 
 func InitStdoutTracerProvider(config config.Tracing) (err error) {
