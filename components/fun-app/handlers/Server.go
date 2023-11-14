@@ -77,16 +77,21 @@ func (self *FunServer) Start() (err error) {
 		//No Error Occurred, wait for Graceful Shutdown Signal.
 		self.Shutdown.Wait()
 
-		// The context is used to inform the server it has few seconds to finish
-		// the request it is currently handling
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		if err := self.Server.Shutdown(ctx); err != nil {
-			log.Fatal("Server forced to shutdown: ", err)
-		}
-
-		log.Info("Server exiting")
+		//Trigger Shutdown Routine
+		self.Stop()
 	}
 
 	return
+}
+
+func (self *FunServer) Stop() {
+	// The context is used to inform the server it has few seconds to finish
+	// the request it is currently handling
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := self.Server.Shutdown(ctx); err != nil {
+		log.Fatal("Server forced to shutdown: ", err)
+	}
+
+	log.Info("Server exiting")
 }
