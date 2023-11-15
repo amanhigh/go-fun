@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/amanhigh/go-fun/common/metrics"
+	"github.com/amanhigh/go-fun/common/telemetry"
 	util2 "github.com/amanhigh/go-fun/common/util"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
@@ -49,7 +49,7 @@ func (self *FunServer) initRoutes() {
 	self.GinEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// http://localhost:8080/debug/statsviz/
-	self.GinEngine.GET("/debug/statsviz/*filepath", metrics.StatvizMetrics)
+	self.GinEngine.GET("/debug/statsviz/*filepath", telemetry.StatvizMetrics)
 
 	//Pprof (Use: http://localhost:8080/debug/pprof/)
 	//go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile
@@ -99,7 +99,7 @@ func (self *FunServer) Stop() {
 	}
 
 	//Stop Tracer
-	metrics.ShutdownTracerProvider(ctx)
+	telemetry.ShutdownTracerProvider(ctx)
 
 	log.Info("Server exiting")
 }

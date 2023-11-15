@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/amanhigh/go-fun/common/metrics"
-	metrics2 "github.com/amanhigh/go-fun/common/metrics"
+	"github.com/amanhigh/go-fun/common/telemetry"
 	util2 "github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	handlers2 "github.com/amanhigh/go-fun/components/fun-app/handlers"
@@ -64,14 +63,14 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	// TODO: Ingest to Prometheus and configure in helm
 	//Visit http://localhost:8080/metrics
 	prometheus := ginprometheus.NewPrometheus("gin_access")
-	prometheus.ReqCntURLLabelMappingFn = metrics2.AccessMetrics
+	prometheus.ReqCntURLLabelMappingFn = telemetry.AccessMetrics
 	prometheus.Use(engine)
 
 	/* Tracing */
-	metrics.InitTracerProvider(context.Background(), NAMESPACE, self.config.Tracing)
+	telemetry.InitTracerProvider(context.Background(), NAMESPACE, self.config.Tracing)
 
 	/* Middleware */
-	engine.Use(gin.Recovery(), metrics2.RequestId, gin.LoggerWithFormatter(metrics2.GinRequestIdFormatter))
+	engine.Use(gin.Recovery(), telemetry.RequestId, gin.LoggerWithFormatter(telemetry.GinRequestIdFormatter))
 	// https://github.com/open-telemetry/opentelemetry-go-contrib/blob/main/instrumentation/github.com/gin-gonic/gin/otelgin/example/server.go
 	engine.Use(otelgin.Middleware(NAMESPACE + "-gin"))
 
@@ -186,7 +185,7 @@ func initDb(dbConfig config2.Db) (db *gorm.DB) {
 
 func configureLogger(level log.Level) {
 	//Auto Log RequestId
-	log.AddHook(&metrics.ContextLogHook{})
+	log.AddHook(&telemetry.ContextLogHook{})
 	log.SetLevel(level)
 
 	// Tracing
