@@ -15,7 +15,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/go-resty/resty/v2 v2.7.0
+	github.com/go-resty/resty/v2 v2.10.0
 	github.com/go-zookeeper/zk v1.0.3
 	github.com/golang/mock v1.6.0
 	github.com/hashicorp/consul/api v1.18.0

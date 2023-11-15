@@ -30,29 +30,23 @@ require (
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/chenzhuoyu/iasm v0.9.1 // indirect
-	github.com/dubonzi/otelresty v1.2.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.20.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/spec v0.20.9 // indirect
 	github.com/go-openapi/swag v0.22.4 // indirect
-	github.com/go-resty/resty/v2 v2.10.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b // indirect
-	github.com/uptrace/opentelemetry-go-extra/otelgorm v0.2.3 // indirect
-	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.2.3 // indirect
-	github.com/uptrace/opentelemetry-go-extra/otelsql v0.2.3 // indirect
-	github.com/uptrace/opentelemetry-go-extra/otelutil v0.2.3 // indirect
+	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	go.opentelemetry.io/otel/metric v1.20.0 // indirect
 )
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
-	github.com/arl/statsviz v0.6.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.10.2 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -76,8 +70,6 @@ require (
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/pprof v0.0.0-20230323073829-e72429f035bd // indirect
-	github.com/google/uuid v1.4.0 // indirect
-	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
