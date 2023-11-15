@@ -96,8 +96,12 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 // @Router /person [get]
 func (self *PersonHandler) ListPersons(c *gin.Context) {
 	var personQuery fun.PersonQuery
+
+	ctx, span := self.Tracer.Start(c.Request.Context(), "ListPersons.Handler")
+	defer span.End()
+
 	if err := c.ShouldBindQuery(&personQuery); err == nil {
-		if personList, err := self.Manager.ListPersons(c, personQuery); err == nil {
+		if personList, err := self.Manager.ListPersons(ctx, personQuery); err == nil {
 			self.PersonCounter.Add(float64(len(personList.Records)))
 			c.JSON(http.StatusOK, personList)
 		} else {
@@ -125,10 +129,13 @@ func (self *PersonHandler) ListPersons(c *gin.Context) {
 func (self *PersonHandler) UpdatePerson(c *gin.Context) {
 	//https://stackoverflow.com/a/37544666/173136
 
+	ctx, span := self.Tracer.Start(c.Request.Context(), "UpdatePerson.Handler")
+	defer span.End()
+
 	//Unmarshal the request
 	var request fun.PersonRequest
 	if err := c.ShouldBind(&request); err == nil {
-		if err := self.Manager.UpdatePerson(c, c.Param("id"), request); err == nil {
+		if err := self.Manager.UpdatePerson(ctx, c.Param("id"), request); err == nil {
 			//https://stackoverflow.com/a/827045/173136
 			c.JSON(http.StatusOK, "UPDATED")
 		} else {
@@ -152,7 +159,10 @@ func (self *PersonHandler) UpdatePerson(c *gin.Context) {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person/{id} [delete]
 func (self *PersonHandler) DeletePersons(c *gin.Context) {
-	if err := self.Manager.DeletePerson(c, c.Param("id")); err == nil {
+	ctx, span := self.Tracer.Start(c.Request.Context(), "DeletePersons.Handler")
+	defer span.End()
+
+	if err := self.Manager.DeletePerson(ctx, c.Param("id")); err == nil {
 		c.JSON(http.StatusOK, "DELETED")
 	} else {
 		c.JSON(err.Code(), err)
