@@ -92,6 +92,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 		&inject.Object{Value: otel.Tracer(NAMESPACE)},
 
 		/* Metrics */
+		//FIXME: Move to OTEL SDK
 		&inject.Object{Value: promauto.NewCounterVec(prometheus2.CounterOpts{
 			Namespace:   NAMESPACE,
 			Name:        "create_person",

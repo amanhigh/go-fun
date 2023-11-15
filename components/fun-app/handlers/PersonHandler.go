@@ -7,6 +7,7 @@ import (
 	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gin-gonic/gin"
@@ -48,7 +49,10 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 
 		if id, err := self.Manager.CreatePerson(ctx, request); err == nil {
 			c.JSON(http.StatusOK, id)
+			span.SetStatus(codes.Ok, "Person Created")
 		} else {
+			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
 			c.JSON(err.Code(), err)
 		}
 	} else {
