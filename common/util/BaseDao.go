@@ -1,11 +1,10 @@
-package dao
+package util
 
 import (
 	"context"
 	"errors"
 	"time"
 
-	. "github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
 	"github.com/amanhigh/go-fun/models/common"
 	log "github.com/sirupsen/logrus"

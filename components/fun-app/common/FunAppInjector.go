@@ -5,22 +5,20 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/amanhigh/go-fun/common/metrics"
-	metrics2 "github.com/amanhigh/go-fun/common/metrics"
-	util2 "github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/common/telemetry"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/dao"
-	handlers2 "github.com/amanhigh/go-fun/components/fun-app/handlers"
-	manager2 "github.com/amanhigh/go-fun/components/fun-app/manager"
-	config2 "github.com/amanhigh/go-fun/models/config"
+	"github.com/amanhigh/go-fun/components/fun-app/handlers"
+	"github.com/amanhigh/go-fun/components/fun-app/manager"
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/fun"
-	interfaces2 "github.com/amanhigh/go-fun/models/interfaces"
+	"github.com/amanhigh/go-fun/models/interfaces"
 	"github.com/etcinit/speedbump"
 	"github.com/etcinit/speedbump/ginbump"
 	"github.com/facebookgo/inject"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	prometheus2 "github.com/prometheus/client_golang/prometheus"
@@ -35,41 +33,36 @@ import (
 )
 
 const (
-	NAMESPACE = "fun_app"
+	NAMESPACE = "funapp"
 )
 
 type FunAppInjector struct {
 	graph  inject.Graph
-	config config2.FunAppConfig
+	config config.FunAppConfig
 }
 
-func NewFunAppInjector(config config2.FunAppConfig) interfaces2.ApplicationInjector {
-	return &FunAppInjector{inject.Graph{}, config}
+func NewFunAppInjector(cfg config.FunAppConfig) interfaces.ApplicationInjector {
+	return &FunAppInjector{inject.Graph{}, cfg}
 }
 
 func (self *FunAppInjector) BuildApp() (app any, err error) {
-	// Build App
-	app = &handlers2.FunServer{}
-
-	/* Gin Engine */
+	// Build App and Engin
+	app = &handlers.FunServer{}
 	engine := gin.New()
 
-	//Auto Log RequestId
-	log.AddHook(&metrics.ContextLogHook{})
-	log.SetLevel(self.config.Server.LogLevel)
+	/* Setup Telemetry */
+	telemetry.InitLogger(self.config.Server.LogLevel)
+	telemetry.InitTracerProvider(context.Background(), NAMESPACE, self.config.Tracing)
 
 	/* Access Metrics */
 	// TODO: Ingest to Prometheus and configure in helm
 	//Visit http://localhost:8080/metrics
 	prometheus := ginprometheus.NewPrometheus("gin_access")
-	prometheus.ReqCntURLLabelMappingFn = metrics2.AccessMetrics
+	prometheus.ReqCntURLLabelMappingFn = telemetry.AccessMetrics
 	prometheus.Use(engine)
 
-	/* Tracing */
-	metrics.InitTracerProvider(context.Background(), NAMESPACE, self.config.Tracing)
-
 	/* Middleware */
-	engine.Use(gin.Recovery(), metrics2.RequestId, gin.LoggerWithFormatter(metrics2.GinRequestIdFormatter))
+	engine.Use(gin.Recovery(), telemetry.RequestId, gin.LoggerWithFormatter(telemetry.GinRequestIdFormatter))
 	// https://github.com/open-telemetry/opentelemetry-go-contrib/blob/main/instrumentation/github.com/gin-gonic/gin/otelgin/example/server.go
 	engine.Use(otelgin.Middleware(NAMESPACE + "-gin"))
 
@@ -77,20 +70,8 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	v, _ := binding.Validator.Engine().(*validator.Validate)
 	_ = v.RegisterValidation("name", NameValidator)
 
-	/* Enable Rate Limit if Limit is above 0 */
-	if self.config.RateLimit.PerMinuteLimit > 0 {
-		// Create a Redis client
-		client := redis.NewClient(&redis.Options{
-			Addr:     self.config.RateLimit.RedisHost,
-			Password: "",
-			DB:       0,
-		})
-
-		// Limit the engine's (Global) or group's (API Level) requests to
-		// 100 requests per client per minute.
-		engine.Use(ginbump.RateLimit(client, speedbump.PerMinuteHasher{}, self.config.RateLimit.PerMinuteLimit))
-		log.WithFields(log.Fields{"Redis": self.config.RateLimit.RedisHost, "RateLimit": self.config.RateLimit.PerMinuteLimit}).Info("Rate Limit Enabled")
-	}
+	/* Setup Rate Limit if enabled */
+	setupRateLimit(self.config.RateLimit, engine)
 
 	/* Injections */
 	err = self.graph.Provide(
@@ -100,17 +81,18 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 			Handler: engine,
 		}},
 		&inject.Object{Value: app},
-		&inject.Object{Value: &handlers2.PersonHandler{}},
-		&inject.Object{Value: &handlers2.AdminHandler{}},
-		&inject.Object{Value: util2.NewGracefulShutdown()},
+		&inject.Object{Value: &handlers.PersonHandler{}},
+		&inject.Object{Value: &handlers.AdminHandler{}},
+		&inject.Object{Value: util.NewGracefulShutdown()},
 
 		&inject.Object{Value: initDb(self.config.Db)},
 
-		&inject.Object{Value: &manager2.PersonManager{}},
+		&inject.Object{Value: &manager.PersonManager{}},
 		&inject.Object{Value: &dao.PersonDao{}},
 		&inject.Object{Value: otel.Tracer(NAMESPACE)},
 
 		/* Metrics */
+		//FIXME: Move to OTEL SDK
 		&inject.Object{Value: promauto.NewCounterVec(prometheus2.CounterOpts{
 			Namespace:   NAMESPACE,
 			Name:        "create_person",
@@ -137,41 +119,33 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	return
 }
 
-func initDb(dbConfig config2.Db) (db *gorm.DB) {
-	var err error
+// setupRateLimit enables rate limiting if the limit is above 0.
+//
+// It takes in a config struct (config2.RateLimit) and a gin engine (*gin.Engine) as parameters.
+// There is no return type for this function.
+func setupRateLimit(cfg config.RateLimit, engine *gin.Engine) {
+	/* Enable Rate Limit if Limit is above 0 */
+	if cfg.PerMinuteLimit > 0 {
+		// Create a Redis client
+		client := redis.NewClient(&redis.Options{
+			Addr:     cfg.RedisHost,
+			Password: "",
+			DB:       0,
+		})
 
-	/* Create Test DB or connect to provided DB */
-	if dbConfig.Url == "" {
-		db, err = util2.CreateTestDb()
-	} else {
-		db, err = util2.CreateDbConnection(dbConfig)
+		// Limit the engine's (Global) or group's (API Level) requests to
+		// 100 requests per client per minute.
+		engine.Use(ginbump.RateLimit(client, speedbump.PerMinuteHasher{}, cfg.PerMinuteLimit))
+		log.WithFields(log.Fields{"Redis": cfg.RedisHost, "RateLimit": cfg.PerMinuteLimit}).Info("Rate Limit Enabled")
 	}
+}
 
-	/* Migrate DB */
-	if err == nil && dbConfig.AutoMigrate {
-		/** Gorm AutoMigrate Schema */
-		db.AutoMigrate(
-			&fun.Person{},
-		)
+func initDb(cfg config.Db) (db *gorm.DB) {
+	db = util.CreateDb(cfg)
 
-		/* GoMigrate*/
-		if dbConfig.MigrationSource != "" {
-			var m *migrate.Migrate
-			sourceURL := fmt.Sprintf("file://%v", dbConfig.MigrationSource)
-			dbUrl := fmt.Sprintf("mysql://%v", dbConfig.Url)
-			if m, err = migrate.New(sourceURL, dbUrl); err == nil {
-				if err = m.Up(); err == nil {
-					log.Info("Migration Complete")
-				} else if err == migrate.ErrNoChange {
-					//Ignore No Change
-					err = nil
-				}
-			}
-		}
-	}
-
-	if err != nil {
-		log.WithFields(log.Fields{"DbConfig": dbConfig, "Error": err}).Fatal("Failed To Setup DB")
-	}
+	/** Gorm AutoMigrate Schema */
+	db.AutoMigrate(
+		&fun.Person{},
+	)
 	return
 }

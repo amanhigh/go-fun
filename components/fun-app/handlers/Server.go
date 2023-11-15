@@ -5,11 +5,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/amanhigh/go-fun/common/metrics"
+	"github.com/amanhigh/go-fun/common/telemetry"
 	util2 "github.com/amanhigh/go-fun/common/util"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/trace"
 
 	docs "github.com/amanhigh/go-fun/components/fun-app/docs"
 	swaggerFiles "github.com/swaggo/files"     // swagger embed files
@@ -20,6 +21,7 @@ type FunServer struct {
 	GinEngine *gin.Engine              `inject:""`
 	Server    *http.Server             `inject:""`
 	Shutdown  *util2.GracefullShutdown `inject:""`
+	Tracer    trace.Tracer             `inject:""`
 
 	/* Handlers */
 	PersonHandler *PersonHandler `inject:""`
@@ -49,7 +51,7 @@ func (self *FunServer) initRoutes() {
 	self.GinEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// http://localhost:8080/debug/statsviz/
-	self.GinEngine.GET("/debug/statsviz/*filepath", metrics.StatvizMetrics)
+	self.GinEngine.GET("/debug/statsviz/*filepath", telemetry.StatvizMetrics)
 
 	//Pprof (Use: http://localhost:8080/debug/pprof/)
 	//go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile
@@ -60,7 +62,7 @@ func (self *FunServer) initRoutes() {
 	pprof.Register(self.GinEngine)
 }
 
-func (self *FunServer) Start() (err error) {
+func (self *FunServer) Start(c context.Context) (err error) {
 	self.initRoutes()
 
 	// Initializing the server in a goroutine so that
@@ -79,27 +81,30 @@ func (self *FunServer) Start() (err error) {
 		log.Trace("Error while Starting Server", errChan)
 	case <-time.After(time.Second):
 		//No Error Occurred, wait for Graceful Shutdown Signal.
-		self.Shutdown.Wait()
+		ctx := self.Shutdown.Wait()
 
 		//Trigger Shutdown Routine
-		self.Stop()
+		self.Stop(ctx)
 	}
 
 	return
 }
 
-func (self *FunServer) Stop() {
+func (self *FunServer) Stop(c context.Context) {
 	// The context is used to inform the server it has few seconds to finish
 	// the request it is currently handling
+	ctx, span := self.Tracer.Start(c, "Stop.Server")
+	defer span.End()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctxTimed, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := self.Server.Shutdown(ctx); err != nil {
-		log.Fatal("Server forced to shutdown: ", err)
+	if err := self.Server.Shutdown(ctxTimed); err != nil {
+		log.WithContext(ctx).Fatal("Forced Shutdown, Graceful Exit Failed: ", err)
 	}
 
 	//Stop Tracer
-	metrics.ShutdownTracerProvider(ctx)
+	span.AddEvent("Stopping Tracer")
+	telemetry.ShutdownTracerProvider(ctx)
 
-	log.Info("Server exiting")
+	log.WithContext(ctx).Info("Graceful Exit Successful")
 }

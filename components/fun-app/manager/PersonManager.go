@@ -7,6 +7,8 @@ import (
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
 	log "github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type PersonManagerInterface interface {
@@ -19,7 +21,8 @@ type PersonManagerInterface interface {
 }
 
 type PersonManager struct {
-	Dao dao.PersonDaoInterface `inject:""`
+	Dao    dao.PersonDaoInterface `inject:""`
+	Tracer trace.Tracer           `inject:""`
 }
 
 // CreatePerson creates a new person in the PersonManager.
@@ -34,13 +37,16 @@ type PersonManager struct {
 func (self *PersonManager) CreatePerson(c context.Context, personRequest fun.PersonRequest) (id string, err common.HttpError) {
 	personFields := log.Fields{"Name": personRequest.Name, "Age": personRequest.Age, "Gender": personRequest.Gender}
 
+	ctx, span := self.Tracer.Start(c, "CreatePerson.Manager")
+	defer span.End()
+
 	/* Create Person */
 	var person fun.Person
 	person.Name = personRequest.Name
 	person.Age = personRequest.Age
 	person.Gender = personRequest.Gender
 
-	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
+	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
 		if err = self.Dao.Create(c, &person); err == nil {
 			id = person.Id
 			log.WithContext(c).WithField("Id", id).WithFields(personFields).Info("Person Created")
@@ -52,7 +58,15 @@ func (self *PersonManager) CreatePerson(c context.Context, personRequest fun.Per
 }
 
 func (self *PersonManager) ListPersons(c context.Context, personQuery fun.PersonQuery) (response fun.PersonList, err common.HttpError) {
-	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
+	ctx, span := self.Tracer.Start(c, "ListPersons.Manager", trace.WithAttributes(
+		attribute.String("gender", personQuery.Gender),
+		attribute.String("name", personQuery.Name),
+		attribute.Int("offset", personQuery.Offset),
+		attribute.Int("limit", personQuery.Limit),
+	))
+	defer span.End()
+
+	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
 		response, err = self.Dao.ListPerson(c, personQuery)
 		return
 	})
@@ -60,7 +74,10 @@ func (self *PersonManager) ListPersons(c context.Context, personQuery fun.Person
 }
 
 func (self *PersonManager) GetPerson(c context.Context, id string) (person fun.Person, err common.HttpError) {
-	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
+	ctx, span := self.Tracer.Start(c, "GetPerson.Manager", trace.WithAttributes(attribute.String("id", id)))
+	defer span.End()
+
+	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
 		return self.Dao.FindById(c, id, &person)
 	})
 	return
@@ -74,7 +91,15 @@ func (self *PersonManager) UpdatePerson(c context.Context, id string, request fu
 	person.Age = request.Age
 	person.Gender = request.Gender
 
-	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
+	ctx, span := self.Tracer.Start(c, "UpdatePerson.Manager", trace.WithAttributes(
+		attribute.String("id", id),
+		attribute.String("Name", request.Name),
+		attribute.Int("Age", request.Age),
+		attribute.String("Gender", request.Gender),
+	))
+	defer span.End()
+
+	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
 		err = self.Dao.Update(c, &person)
 		return
 	})
@@ -83,9 +108,12 @@ func (self *PersonManager) UpdatePerson(c context.Context, id string, request fu
 
 func (self *PersonManager) DeletePerson(c context.Context, id string) (err common.HttpError) {
 	var person fun.Person
+	ctx, span := self.Tracer.Start(c, "DeletePerson.Manager", trace.WithAttributes(attribute.String("id", id)))
+	defer span.End()
 
-	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
+	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
 		if person, err = self.GetPerson(c, id); err == nil {
+			span.AddEvent("Person Found for Deletion", trace.WithAttributes(attribute.String("Name", person.Name))) //Adds message in log section of Span
 			/* Delete from DB */
 			err = self.Dao.DeleteById(c, id, &person)
 		}

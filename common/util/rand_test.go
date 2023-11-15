@@ -8,10 +8,6 @@ import (
 )
 
 var _ = Describe("Rand", func() {
-	BeforeEach(func() {
-		util.SeedRandom()
-	})
-
 	Describe("RandomInts", func() {
 		Context("when n is greater than 0", func() {
 			It("returns a slice of n random integers", func() {

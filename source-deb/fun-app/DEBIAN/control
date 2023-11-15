@@ -1,8 +1,0 @@
-Package: fun-app
-Version: 1.1553675016
-Section: amanhigh/fun
-Priority: standard
-Architecture: all
-Depends: logrotate
-Maintainer: Amanpreet Singh <coool.aman@gmail.com>
-Description: A Fun Filled App

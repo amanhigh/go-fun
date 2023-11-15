@@ -1,6 +1,8 @@
 package common
 
 import (
+	"context"
+
 	config3 "github.com/amanhigh/go-fun/models/config"
 	interfaces2 "github.com/amanhigh/go-fun/models/interfaces"
 	"github.com/caarlos0/env/v6"
@@ -19,7 +21,7 @@ func RunFunApp() {
 
 		/* Build App */
 		if app, err = injector.BuildApp(); err == nil {
-			err = app.(interfaces2.ServerInterface).Start()
+			err = app.(interfaces2.ServerInterface).Start(context.Background())
 		}
 	}
 

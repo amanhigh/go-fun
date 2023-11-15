@@ -1,13 +1,13 @@
-package metrics
+package telemetry
 
 import (
 	"context"
-	"os"
 	"runtime"
 
 	"github.com/amanhigh/go-fun/models/config"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
@@ -64,13 +64,16 @@ func InitOtlpTracerProvider(ctx context.Context, name string, config config.Trac
 
 	if conn, err = grpc.DialContext(ctx, config.Endpoint, grpc.WithInsecure()); err == nil {
 		if exporter, err = otlptracegrpc.New(ctx, otlptracegrpc.WithInsecure(), otlptracegrpc.WithGRPCConn(conn)); err == nil {
-			traceprovider := sdktrace.NewTracerProvider(
-				sdktrace.WithSampler(sdktrace.AlwaysSample()),
-				sdktrace.WithResource(buildResource(name)),
-				getPublisher(config, exporter),
-			)
-			otel.SetTracerProvider(traceprovider)
-			otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+			if resources, err := buildResource(name); err == nil {
+				traceprovider := sdktrace.NewTracerProvider(
+					//https://opentelemetry.io/docs/instrumentation/go/sampling/
+					sdktrace.WithSampler(sdktrace.AlwaysSample()),
+					sdktrace.WithResource(resources),
+					getPublisher(config, exporter),
+				)
+				otel.SetTracerProvider(traceprovider)
+				otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+			}
 		}
 	}
 	return
@@ -84,20 +87,26 @@ func getPublisher(config config.Tracing, exporter sdktrace.SpanExporter) trace.T
 		publisher = sdktrace.WithSyncer(exporter)
 	case "batch":
 		//Production Use, Exports on Flush or Shutdown.
+		//FIXME: Batch Prcosser in tests to speed up.
 		publisher = sdktrace.WithBatcher(exporter)
 	}
 	return publisher
 }
 
-func buildResource(name string) *resource.Resource {
-	hostname, _ := os.Hostname()
-	resources := resource.NewWithAttributes(
-		semconv.SchemaURL,
-		semconv.ServiceNameKey.String(name),
-		semconv.HostArchKey.String(runtime.GOARCH),
-		semconv.HostNameKey.String(hostname),
+// https://opentelemetry.io/docs/instrumentation/go/resources/
+func buildResource(name string) (resources *resource.Resource, err error) {
+	resources, err = resource.New(context.Background(),
+		resource.WithProcess(),   // This option configures a set of Detectors that discover process information
+		resource.WithOS(),        // This option configures a set of Detectors that discover OS information
+		resource.WithContainer(), // This option configures a set of Detectors that discover container information
+		resource.WithHost(),      // This option configures a set of Detectors that discover host information
+		resource.WithAttributes( // Or specify resource attributes directly
+			attribute.String("foo", "bar"),
+			semconv.ServiceNameKey.String(name),
+			semconv.HostArchKey.String(runtime.GOARCH),
+		),
 	)
-	return resources
+	return
 }
 
 // ShutdownTracerProvider flushes any pending spans.

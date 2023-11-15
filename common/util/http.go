@@ -6,6 +6,7 @@ import (
 
 	. "github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/config"
+	"github.com/dubonzi/otelresty"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -37,7 +38,8 @@ func NewRestyClient(baseUrl string, httpConfig config.HttpClientConfig) (client 
 	//Default Header
 	client.SetHeader("Content-Type", "application/json")
 
-	//TODO: Integrate with OTEL
+	//Tracing
+	otelresty.TraceClient(client, otelresty.WithTracerName("resty-sdk"))
 
 	//Configure Http Config
 	client.SetTimeout(httpConfig.RequestTimeout)

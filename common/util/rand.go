@@ -2,7 +2,6 @@ package util
 
 import (
 	"math/rand"
-	"time"
 )
 
 func RandomInts(n int, max int) (result []int) {
@@ -14,8 +13,4 @@ func RandomInts(n int, max int) (result []int) {
 
 func RandomInt(min int, max int) int {
 	return rand.Intn(max-min) + min
-}
-
-func SeedRandom() {
-	rand.Seed(time.Now().UnixNano())
 }
