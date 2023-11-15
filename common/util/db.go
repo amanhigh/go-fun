@@ -7,7 +7,7 @@ import (
 
 	"github.com/amanhigh/go-fun/models"
 	"github.com/amanhigh/go-fun/models/common"
-	config2 "github.com/amanhigh/go-fun/models/config"
+	"github.com/amanhigh/go-fun/models/config"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
 	log "github.com/sirupsen/logrus"
@@ -18,14 +18,14 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func CreateDb(dbConfig config2.Db) (db *gorm.DB) {
+func CreateDb(cfg config.Db) (db *gorm.DB) {
 	var err error
 
 	/* Create Test DB or connect to provided DB */
-	if dbConfig.Url == "" {
+	if cfg.Url == "" {
 		db, err = CreateTestDb()
 	} else {
-		db, err = CreateDbConnection(dbConfig)
+		db, err = CreateDbConnection(cfg)
 	}
 
 	/* Tracing */
@@ -35,14 +35,14 @@ func CreateDb(dbConfig config2.Db) (db *gorm.DB) {
 	}
 
 	/* Migrate DB */
-	if err == nil && dbConfig.AutoMigrate {
+	if err == nil && cfg.AutoMigrate {
 		/* GoMigrate if Source is Provided */
-		if dbConfig.MigrationSource != "" {
+		if cfg.MigrationSource != "" {
 			var m *migrate.Migrate
 
 			// Build Source and DB Url
-			sourceURL := fmt.Sprintf("file://%v", dbConfig.MigrationSource)
-			dbUrl := fmt.Sprintf("mysql://%v", dbConfig.Url)
+			sourceURL := fmt.Sprintf("file://%v", cfg.MigrationSource)
+			dbUrl := fmt.Sprintf("mysql://%v", cfg.Url)
 
 			// Run Go Migrate
 			if m, err = migrate.New(sourceURL, dbUrl); err == nil {
@@ -57,21 +57,21 @@ func CreateDb(dbConfig config2.Db) (db *gorm.DB) {
 	}
 
 	if err != nil {
-		log.WithFields(log.Fields{"DbConfig": dbConfig, "Error": err}).Fatal("Failed To Setup DB")
+		log.WithFields(log.Fields{"DbConfig": cfg, "Error": err}).Fatal("Failed To Setup DB")
 	}
 	return
 }
 
-func CreateDbConnection(config config2.Db) (db *gorm.DB, err error) {
-	log.WithFields(log.Fields{"DBConfig": config}).Info("Initing DB")
+func CreateDbConnection(cfg config.Db) (db *gorm.DB, err error) {
+	log.WithFields(log.Fields{"DBConfig": cfg}).Info("Initing DB")
 
-	if db, err = gorm.Open(mysql.Open(config.Url), &gorm.Config{Logger: logger.Default.LogMode(config.LogLevel)}); err == nil {
+	if db, err = gorm.Open(mysql.Open(cfg.Url), &gorm.Config{Logger: logger.Default.LogMode(cfg.LogLevel)}); err == nil {
 		/** Print SQL */
 		//db.LogMode(true)
 
 		if sqlDb, err := db.DB(); err == nil {
-			sqlDb.SetMaxIdleConns(config.MaxIdle)
-			sqlDb.SetMaxOpenConns(config.MaxOpen)
+			sqlDb.SetMaxIdleConns(cfg.MaxIdle)
+			sqlDb.SetMaxOpenConns(cfg.MaxOpen)
 		}
 	}
 	return

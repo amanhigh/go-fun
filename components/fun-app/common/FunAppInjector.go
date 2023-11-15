@@ -10,7 +10,7 @@ import (
 	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	"github.com/amanhigh/go-fun/components/fun-app/handlers"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
-	config2 "github.com/amanhigh/go-fun/models/config"
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/amanhigh/go-fun/models/interfaces"
 	"github.com/etcinit/speedbump"
@@ -38,11 +38,11 @@ const (
 
 type FunAppInjector struct {
 	graph  inject.Graph
-	config config2.FunAppConfig
+	config config.FunAppConfig
 }
 
-func NewFunAppInjector(config config2.FunAppConfig) interfaces.ApplicationInjector {
-	return &FunAppInjector{inject.Graph{}, config}
+func NewFunAppInjector(cfg config.FunAppConfig) interfaces.ApplicationInjector {
+	return &FunAppInjector{inject.Graph{}, cfg}
 }
 
 func (self *FunAppInjector) BuildApp() (app any, err error) {
@@ -70,20 +70,8 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	v, _ := binding.Validator.Engine().(*validator.Validate)
 	_ = v.RegisterValidation("name", NameValidator)
 
-	/* Enable Rate Limit if Limit is above 0 */
-	if self.config.RateLimit.PerMinuteLimit > 0 {
-		// Create a Redis client
-		client := redis.NewClient(&redis.Options{
-			Addr:     self.config.RateLimit.RedisHost,
-			Password: "",
-			DB:       0,
-		})
-
-		// Limit the engine's (Global) or group's (API Level) requests to
-		// 100 requests per client per minute.
-		engine.Use(ginbump.RateLimit(client, speedbump.PerMinuteHasher{}, self.config.RateLimit.PerMinuteLimit))
-		log.WithFields(log.Fields{"Redis": self.config.RateLimit.RedisHost, "RateLimit": self.config.RateLimit.PerMinuteLimit}).Info("Rate Limit Enabled")
-	}
+	/* Setup Rate Limit if enabled */
+	setupRateLimit(self.config.RateLimit, engine)
 
 	/* Injections */
 	err = self.graph.Provide(
@@ -130,8 +118,29 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	return
 }
 
-func initDb(config config2.Db) (db *gorm.DB) {
-	db = util.CreateDb(config)
+// setupRateLimit enables rate limiting if the limit is above 0.
+//
+// It takes in a config struct (config2.RateLimit) and a gin engine (*gin.Engine) as parameters.
+// There is no return type for this function.
+func setupRateLimit(cfg config.RateLimit, engine *gin.Engine) {
+	/* Enable Rate Limit if Limit is above 0 */
+	if cfg.PerMinuteLimit > 0 {
+		// Create a Redis client
+		client := redis.NewClient(&redis.Options{
+			Addr:     cfg.RedisHost,
+			Password: "",
+			DB:       0,
+		})
+
+		// Limit the engine's (Global) or group's (API Level) requests to
+		// 100 requests per client per minute.
+		engine.Use(ginbump.RateLimit(client, speedbump.PerMinuteHasher{}, cfg.PerMinuteLimit))
+		log.WithFields(log.Fields{"Redis": cfg.RedisHost, "RateLimit": cfg.PerMinuteLimit}).Info("Rate Limit Enabled")
+	}
+}
+
+func initDb(cfg config.Db) (db *gorm.DB) {
+	db = util.CreateDb(cfg)
 
 	/** Gorm AutoMigrate Schema */
 	db.AutoMigrate(
