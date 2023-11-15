@@ -14,8 +14,21 @@ import (
 )
 
 type FunClient struct {
-	PersonService *PersonService
-	AdminService  *AdminService
+	PersonService PersonServiceInterface
+	AdminService  AdminServiceInterface
+}
+
+type PersonServiceInterface interface {
+	GetPerson(ctx context.Context, name string) (person fun.Person, err common.HttpError)
+	CreatePerson(ctx context.Context, person fun.PersonRequest) (id string, err common.HttpError)
+	UpdatePerson(ctx context.Context, id string, person fun.PersonRequest) (err common.HttpError)
+	ListPerson(ctx context.Context, personQuery fun.PersonQuery) (response fun.PersonList, err common.HttpError)
+	DeletePerson(ctx context.Context, name string) (err common.HttpError)
+}
+
+type AdminServiceInterface interface {
+	Stop(ctx context.Context) (err common.HttpError)
+	HealthCheck(ctx context.Context) (err common.HttpError)
 }
 
 type BaseService struct {
