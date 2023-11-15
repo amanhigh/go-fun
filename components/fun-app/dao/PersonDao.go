@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/amanhigh/go-fun/common/util"
 	. "github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
@@ -12,7 +13,7 @@ import (
 )
 
 type PersonDaoInterface interface {
-	BaseDaoInterface
+	util.BaseDaoInterface
 	ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError)
 }
 
