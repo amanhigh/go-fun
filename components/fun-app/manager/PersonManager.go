@@ -37,7 +37,7 @@ type PersonManager struct {
 func (self *PersonManager) CreatePerson(c context.Context, personRequest fun.PersonRequest) (id string, err common.HttpError) {
 	personFields := log.Fields{"Name": personRequest.Name, "Age": personRequest.Age, "Gender": personRequest.Gender}
 
-	ctx, span := self.Tracer.Start(c, "CreatePerson.Manager", trace.WithAttributes(attribute.String("Name", personRequest.Name)))
+	ctx, span := self.Tracer.Start(c, "CreatePerson.Manager")
 	defer span.End()
 
 	/* Create Person */
@@ -58,7 +58,15 @@ func (self *PersonManager) CreatePerson(c context.Context, personRequest fun.Per
 }
 
 func (self *PersonManager) ListPersons(c context.Context, personQuery fun.PersonQuery) (response fun.PersonList, err common.HttpError) {
-	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
+	ctx, span := self.Tracer.Start(c, "ListPersons.Manager", trace.WithAttributes(
+		attribute.String("gender", personQuery.Gender),
+		attribute.String("name", personQuery.Name),
+		attribute.Int("offset", personQuery.Offset),
+		attribute.Int("limit", personQuery.Limit),
+	))
+	defer span.End()
+
+	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
 		response, err = self.Dao.ListPerson(c, personQuery)
 		return
 	})
@@ -83,7 +91,15 @@ func (self *PersonManager) UpdatePerson(c context.Context, id string, request fu
 	person.Age = request.Age
 	person.Gender = request.Gender
 
-	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
+	ctx, span := self.Tracer.Start(c, "UpdatePerson.Manager", trace.WithAttributes(
+		attribute.String("id", id),
+		attribute.String("Name", request.Name),
+		attribute.Int("Age", request.Age),
+		attribute.String("Gender", request.Gender),
+	))
+	defer span.End()
+
+	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
 		err = self.Dao.Update(c, &person)
 		return
 	})
@@ -92,10 +108,12 @@ func (self *PersonManager) UpdatePerson(c context.Context, id string, request fu
 
 func (self *PersonManager) DeletePerson(c context.Context, id string) (err common.HttpError) {
 	var person fun.Person
+	ctx, span := self.Tracer.Start(c, "DeletePerson.Manager", trace.WithAttributes(attribute.String("id", id)))
+	defer span.End()
 
-	err = self.Dao.UseOrCreateTx(c, func(c context.Context) (err common.HttpError) {
+	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
 		if person, err = self.GetPerson(c, id); err == nil {
-			//FIXME: Span Event Add.
+			span.AddEvent("Person Found for Deletion")
 			/* Delete from DB */
 			err = self.Dao.DeleteById(c, id, &person)
 		}
