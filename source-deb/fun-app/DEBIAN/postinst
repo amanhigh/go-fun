@@ -1,4 +1,0 @@
-#!/bin/bash
-
-echo "Creating Log Directory"
-mkdir -p /var/log/fun-app/
