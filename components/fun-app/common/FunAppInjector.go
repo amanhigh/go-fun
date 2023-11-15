@@ -6,13 +6,13 @@ import (
 	"net/http"
 
 	"github.com/amanhigh/go-fun/common/telemetry"
-	util2 "github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/dao"
-	handlers2 "github.com/amanhigh/go-fun/components/fun-app/handlers"
-	manager2 "github.com/amanhigh/go-fun/components/fun-app/manager"
+	"github.com/amanhigh/go-fun/components/fun-app/handlers"
+	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	config2 "github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/fun"
-	interfaces2 "github.com/amanhigh/go-fun/models/interfaces"
+	"github.com/amanhigh/go-fun/models/interfaces"
 	"github.com/etcinit/speedbump"
 	"github.com/etcinit/speedbump/ginbump"
 	"github.com/facebookgo/inject"
@@ -24,10 +24,8 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	prometheus2 "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
-	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
 	ginprometheus "github.com/zsais/go-gin-prometheus"
 	"gopkg.in/redis.v5"
 	"gorm.io/gorm"
@@ -45,19 +43,19 @@ type FunAppInjector struct {
 	config config2.FunAppConfig
 }
 
-func NewFunAppInjector(config config2.FunAppConfig) interfaces2.ApplicationInjector {
+func NewFunAppInjector(config config2.FunAppConfig) interfaces.ApplicationInjector {
 	return &FunAppInjector{inject.Graph{}, config}
 }
 
 func (self *FunAppInjector) BuildApp() (app any, err error) {
 	// Build App
-	app = &handlers2.FunServer{}
+	app = &handlers.FunServer{}
 
 	/* Gin Engine */
 	engine := gin.New()
 
 	/* Configure Logger */
-	configureLogger(self.config.Server.LogLevel)
+	telemetry.InitLogger(self.config.Server.LogLevel)
 
 	/* Access Metrics */
 	// TODO: Ingest to Prometheus and configure in helm
@@ -101,13 +99,13 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 			Handler: engine,
 		}},
 		&inject.Object{Value: app},
-		&inject.Object{Value: &handlers2.PersonHandler{}},
-		&inject.Object{Value: &handlers2.AdminHandler{}},
-		&inject.Object{Value: util2.NewGracefulShutdown()},
+		&inject.Object{Value: &handlers.PersonHandler{}},
+		&inject.Object{Value: &handlers.AdminHandler{}},
+		&inject.Object{Value: util.NewGracefulShutdown()},
 
 		&inject.Object{Value: initDb(self.config.Db)},
 
-		&inject.Object{Value: &manager2.PersonManager{}},
+		&inject.Object{Value: &manager.PersonManager{}},
 		&inject.Object{Value: &dao.PersonDao{}},
 		&inject.Object{Value: otel.Tracer(NAMESPACE)},
 
@@ -143,9 +141,9 @@ func initDb(dbConfig config2.Db) (db *gorm.DB) {
 
 	/* Create Test DB or connect to provided DB */
 	if dbConfig.Url == "" {
-		db, err = util2.CreateTestDb()
+		db, err = util.CreateTestDb()
 	} else {
-		db, err = util2.CreateDbConnection(dbConfig)
+		db, err = util.CreateDbConnection(dbConfig)
 	}
 
 	/* Tracing */
@@ -181,19 +179,4 @@ func initDb(dbConfig config2.Db) (db *gorm.DB) {
 		log.WithFields(log.Fields{"DbConfig": dbConfig, "Error": err}).Fatal("Failed To Setup DB")
 	}
 	return
-}
-
-func configureLogger(level log.Level) {
-	//Auto Log RequestId
-	log.AddHook(&telemetry.ContextLogHook{})
-	log.SetLevel(level)
-
-	// Tracing
-	logrus.AddHook(otellogrus.NewHook(otellogrus.WithLevels(
-		logrus.PanicLevel,
-		logrus.FatalLevel,
-		logrus.ErrorLevel,
-		logrus.WarnLevel,
-		logrus.InfoLevel,
-	)))
 }

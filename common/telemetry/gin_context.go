@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	models2 "github.com/amanhigh/go-fun/models"
+	"github.com/amanhigh/go-fun/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 )
 
 /*
@@ -17,10 +16,10 @@ RequestId Generator for Gin
 */
 func RequestId(c *gin.Context) {
 	uuid := uuid.New()
-	c.Set(models2.XRequestID, uuid)
+	c.Set(models.XRequestID, uuid)
 
 	//Add UUID to Request Context as well
-	ctx := context.WithValue(c.Request.Context(), models2.XRequestID, uuid)
+	ctx := context.WithValue(c.Request.Context(), models.XRequestID, uuid)
 	c.Request = c.Request.WithContext(ctx)
 	c.Next()
 }
@@ -38,29 +37,7 @@ var GinRequestIdFormatter = func(param gin.LogFormatterParams) string {
 		param.Latency.Microseconds(),
 		param.BodySize,
 		param.ClientIP,
-		param.Keys[models2.XRequestID],
+		param.Keys[models.XRequestID],
 		param.Method,
 	)
-}
-
-/*
-*
-Processes Context Passed to Logger else ignores.
-*/
-type ContextLogHook struct {
-}
-
-func (h *ContextLogHook) Levels() []log.Level {
-	return log.AllLevels
-}
-
-/*
-*
-Add RequestId from Context if Contexts is Present else ignore.
-*/
-func (h *ContextLogHook) Fire(e *log.Entry) error {
-	if e.Context != nil {
-		e.Data["RequestId"] = e.Context.Value(models2.XRequestID)
-	}
-	return nil
 }
