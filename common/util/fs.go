@@ -3,11 +3,11 @@ package util
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/fatih/color"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -56,10 +56,10 @@ func ReadFileMap(dirPath string, readEmpty bool) map[string][]string {
 func FindReplaceFile(filePath string, find string, replace string) (err error) {
 	var compile *regexp.Regexp
 	var fileBytes []byte
-	if fileBytes, err = ioutil.ReadFile(filePath); err == nil {
+	if fileBytes, err = os.ReadFile(filePath); err == nil {
 		if compile, err = regexp.Compile(find); err == nil {
 			replacedBytes := compile.ReplaceAll(fileBytes, []byte(replace))
-			ioutil.WriteFile(filePath, replacedBytes, DEFAULT_PERM)
+			os.WriteFile(filePath, replacedBytes, DEFAULT_PERM)
 		}
 	}
 	return
@@ -72,7 +72,7 @@ func PrintFile(title string, filepath string) {
 
 func ListFiles(dirPath string) []string {
 	var filePaths []string
-	if fileInfos, err := ioutil.ReadDir(dirPath); err == nil {
+	if fileInfos, err := os.ReadDir(dirPath); err == nil {
 		for _, info := range fileInfos {
 			filePath := fmt.Sprintf("%v/%v", dirPath, info.Name())
 			filePaths = append(filePaths, filePath)
@@ -84,10 +84,10 @@ func ListFiles(dirPath string) []string {
 }
 
 func ReplaceContent(path string, findRegex string, replace string) {
-	if bytes, err := ioutil.ReadFile(path); err == nil {
+	if bytes, err := os.ReadFile(path); err == nil {
 		if reg, err := regexp.Compile(findRegex); err == nil {
 			newContent := reg.ReplaceAll(bytes, []byte(replace))
-			ioutil.WriteFile(path, newContent, DEFAULT_PERM)
+			os.WriteFile(path, newContent, DEFAULT_PERM)
 		} else {
 			log.WithFields(log.Fields{"Error": err}).Error("Invalid Regex")
 		}
@@ -96,7 +96,8 @@ func ReplaceContent(path string, findRegex string, replace string) {
 	}
 }
 
-/**
+/*
+*
 Reads all Lines from a File.
 */
 func ReadAllLines(filePath string) (lines []string) {
@@ -113,7 +114,7 @@ func ReadAllLines(filePath string) (lines []string) {
 
 func WriteLines(filePath string, lines []string) error {
 	content := strings.Join(lines, "\n")
-	return ioutil.WriteFile(filePath, []byte(content), DEFAULT_PERM)
+	return os.WriteFile(filePath, []byte(content), DEFAULT_PERM)
 }
 
 func PathExists(path string) bool {
@@ -131,7 +132,7 @@ func RecreateDir(path string) {
 }
 
 func ClearDirectory(dirPath string) {
-	if fileInfos, err := ioutil.ReadDir(dirPath); err == nil {
+	if fileInfos, err := os.ReadDir(dirPath); err == nil {
 		for _, info := range fileInfos {
 			filePath := fmt.Sprintf("%v/%v", dirPath, info.Name())
 			os.Remove(filePath)
