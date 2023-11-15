@@ -35,7 +35,7 @@ import (
 )
 
 const (
-	NAMESPACE = "fun_app"
+	NAMESPACE = "funapp"
 )
 
 type FunAppInjector struct {
@@ -48,14 +48,13 @@ func NewFunAppInjector(config config2.FunAppConfig) interfaces.ApplicationInject
 }
 
 func (self *FunAppInjector) BuildApp() (app any, err error) {
-	// Build App
+	// Build App and Engin
 	app = &handlers.FunServer{}
-
-	/* Gin Engine */
 	engine := gin.New()
 
-	/* Configure Logger */
+	/* Setup Telemetry */
 	telemetry.InitLogger(self.config.Server.LogLevel)
+	telemetry.InitTracerProvider(context.Background(), NAMESPACE, self.config.Tracing)
 
 	/* Access Metrics */
 	// TODO: Ingest to Prometheus and configure in helm
@@ -63,9 +62,6 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	prometheus := ginprometheus.NewPrometheus("gin_access")
 	prometheus.ReqCntURLLabelMappingFn = telemetry.AccessMetrics
 	prometheus.Use(engine)
-
-	/* Tracing */
-	telemetry.InitTracerProvider(context.Background(), NAMESPACE, self.config.Tracing)
 
 	/* Middleware */
 	engine.Use(gin.Recovery(), telemetry.RequestId, gin.LoggerWithFormatter(telemetry.GinRequestIdFormatter))
