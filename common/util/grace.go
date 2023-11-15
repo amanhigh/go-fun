@@ -1,6 +1,7 @@
 package util
 
 import (
+	"context"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,10 +12,11 @@ import (
 /* Graceful Shutdown Handler to aid in Clean Exits.  */
 type GracefullShutdown struct {
 	quit chan os.Signal
+	ctx  context.Context
 }
 
 func NewGracefulShutdown() *GracefullShutdown {
-	return &GracefullShutdown{make(chan os.Signal, 1)}
+	return &GracefullShutdown{make(chan os.Signal, 1), context.Background()}
 }
 
 /*
@@ -25,18 +27,20 @@ kill (no param) default send syscall.SIGTERM
 kill -2 is syscall.SIGINT
 kill -9 is syscall.SIGKILL but can't be caught, so don't need to add it
 */
-func (self *GracefullShutdown) Wait() {
+func (self *GracefullShutdown) Wait() (c context.Context) {
 	signal.Notify(self.quit, syscall.SIGINT, syscall.SIGTERM)
 	sigQuit := <-self.quit
 	log.WithField("Signal", sigQuit).Info("Trying Graceful Shutting Signal")
+	return self.ctx
 }
 
 /*
 Initiates Graceful Shutdown from within
 the Application, without any Signal.
 */
-func (self *GracefullShutdown) Stop() {
+func (self *GracefullShutdown) Stop(c context.Context) {
 	log.Info("GracefulShutdown Stop Received")
+	self.ctx = c
 
 	go func() {
 		self.quit <- syscall.SIGINT

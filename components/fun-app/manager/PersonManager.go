@@ -113,7 +113,7 @@ func (self *PersonManager) DeletePerson(c context.Context, id string) (err commo
 
 	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
 		if person, err = self.GetPerson(c, id); err == nil {
-			span.AddEvent("Person Found for Deletion")
+			span.AddEvent("Person Found for Deletion", trace.WithAttributes(attribute.String("Name", person.Name))) //Adds message in log section of Span
 			/* Delete from DB */
 			err = self.Dao.DeleteById(c, id, &person)
 		}

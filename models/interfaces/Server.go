@@ -1,6 +1,8 @@
 package interfaces
 
+import "context"
+
 type ServerInterface interface {
-	Start() (err error)
-	Stop()
+	Start(c context.Context) (err error)
+	Stop(c context.Context)
 }
