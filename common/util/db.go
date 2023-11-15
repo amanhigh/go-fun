@@ -9,12 +9,58 @@ import (
 	"github.com/amanhigh/go-fun/models/common"
 	config2 "github.com/amanhigh/go-fun/models/config"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golang-migrate/migrate/v4"
 	log "github.com/sirupsen/logrus"
+	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
+
+func CreateDb(dbConfig config2.Db) (db *gorm.DB) {
+	var err error
+
+	/* Create Test DB or connect to provided DB */
+	if dbConfig.Url == "" {
+		db, err = CreateTestDb()
+	} else {
+		db, err = CreateDbConnection(dbConfig)
+	}
+
+	/* Tracing */
+	if err == nil {
+		// https://github.com/uptrace/opentelemetry-go-extra/tree/main/otelgorm
+		err = db.Use(otelgorm.NewPlugin())
+	}
+
+	/* Migrate DB */
+	if err == nil && dbConfig.AutoMigrate {
+		/* GoMigrate if Source is Provided */
+		if dbConfig.MigrationSource != "" {
+			var m *migrate.Migrate
+
+			// Build Source and DB Url
+			sourceURL := fmt.Sprintf("file://%v", dbConfig.MigrationSource)
+			dbUrl := fmt.Sprintf("mysql://%v", dbConfig.Url)
+
+			// Run Go Migrate
+			if m, err = migrate.New(sourceURL, dbUrl); err == nil {
+				if err = m.Up(); err == nil {
+					log.WithFields(log.Fields{"Source": sourceURL, "DB": dbUrl}).Info("Migration Complete")
+				} else if err == migrate.ErrNoChange {
+					//Ignore No Change
+					err = nil
+				}
+			}
+		}
+	}
+
+	if err != nil {
+		log.WithFields(log.Fields{"DbConfig": dbConfig, "Error": err}).Fatal("Failed To Setup DB")
+	}
+	return
+}
 
 func CreateDbConnection(config config2.Db) (db *gorm.DB, err error) {
 	log.WithFields(log.Fields{"DBConfig": config}).Info("Initing DB")

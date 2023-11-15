@@ -19,13 +19,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	prometheus2 "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	log "github.com/sirupsen/logrus"
-	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	ginprometheus "github.com/zsais/go-gin-prometheus"
 	"gopkg.in/redis.v5"
 	"gorm.io/gorm"
@@ -132,47 +130,12 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	return
 }
 
-func initDb(dbConfig config2.Db) (db *gorm.DB) {
-	var err error
+func initDb(config config2.Db) (db *gorm.DB) {
+	db = util.CreateDb(config)
 
-	/* Create Test DB or connect to provided DB */
-	if dbConfig.Url == "" {
-		db, err = util.CreateTestDb()
-	} else {
-		db, err = util.CreateDbConnection(dbConfig)
-	}
-
-	/* Tracing */
-	if err == nil {
-		// https://github.com/uptrace/opentelemetry-go-extra/tree/main/otelgorm
-		err = db.Use(otelgorm.NewPlugin())
-	}
-
-	/* Migrate DB */
-	if err == nil && dbConfig.AutoMigrate {
-		/** Gorm AutoMigrate Schema */
-		db.AutoMigrate(
-			&fun.Person{},
-		)
-
-		/* GoMigrate*/
-		if dbConfig.MigrationSource != "" {
-			var m *migrate.Migrate
-			sourceURL := fmt.Sprintf("file://%v", dbConfig.MigrationSource)
-			dbUrl := fmt.Sprintf("mysql://%v", dbConfig.Url)
-			if m, err = migrate.New(sourceURL, dbUrl); err == nil {
-				if err = m.Up(); err == nil {
-					log.Info("Migration Complete")
-				} else if err == migrate.ErrNoChange {
-					//Ignore No Change
-					err = nil
-				}
-			}
-		}
-	}
-
-	if err != nil {
-		log.WithFields(log.Fields{"DbConfig": dbConfig, "Error": err}).Fatal("Failed To Setup DB")
-	}
+	/** Gorm AutoMigrate Schema */
+	db.AutoMigrate(
+		&fun.Person{},
+	)
 	return
 }
