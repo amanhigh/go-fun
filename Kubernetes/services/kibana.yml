@@ -1,13 +1,14 @@
+# https://artifacthub.io/packages/helm/bitnami/kibana
+## @section Kibana parameters
 replicaCount: 1
 
+## @section Elasticsearch parameters
 elasticsearch:
-  ## @param elasticsearch.hosts List of elasticsearch hosts to connect to.
-  ## e.g:
-  ## hosts:
-  ##   - elasticsearch-1
-  ##   - elasticsearch-2
-  ##
-  hosts: []
-  ## @param elasticsearch.port Elasticsearch port
-  ##
-  port: ""
+  hosts: [elasticsearch]
+  port: "9200"
+
+ingress:
+  enabled: true
+  hostname: kibana.docker
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
