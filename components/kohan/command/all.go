@@ -1,7 +1,6 @@
 package command
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/amanhigh/go-fun/common/tools"
@@ -48,24 +47,9 @@ var syncCmd = &cobra.Command{
 	},
 }
 
-var investingCmd = &cobra.Command{
-	Use:   "investing fileDirectory",
-	Short: "Converts Historical Data Format",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		for _, file := range util.ListFiles(args[0]) {
-			fmt.Println(fmt.Sprintf("Processing: %v", file))
-			if err = core.ReformatInvestingFile(file); err != nil {
-				break
-			}
-		}
-		return
-	},
-}
-
 func init() {
 	printfCmd.Flags().StringVarP(&marker, "marker", "m", "#", "Marker in Template File")
 
 	RootCmd.AddCommand(allCmd)
-	allCmd.AddCommand(getVersionCmd, printfCmd, syncCmd, investingCmd)
+	allCmd.AddCommand(getVersionCmd, printfCmd, syncCmd)
 }
