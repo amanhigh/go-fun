@@ -2,9 +2,11 @@ package libraries
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/consul/api"
 )
 
+// HACK: Rewrite as Ginkgo
 func ConsulFun() {
 	// Get a new client
 	if client, err := api.NewClient(&api.Config{Address: "docker:8500"}); err == nil {
