@@ -7,6 +7,8 @@ var (
 	marker  string
 	tyype   string
 
+	time int
+
 	parallelism = -1
 	index       = -1
 	endIndex    = -1
