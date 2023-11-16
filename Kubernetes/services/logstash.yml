@@ -1,1 +1,62 @@
+# https://artifacthub.io/packages/helm/bitnami/logstash
+## @section Logstash parameters
+## @param configFileName Logstash configuration file name. It must match the name of the configuration file mounted as a configmap.
+##
+configFileName: logstash.conf
+## @param enableMonitoringAPI Whether to enable the Logstash Monitoring API or not  Kubernetes cluster domain
+##
+enableMonitoringAPI: true
+## @param monitoringAPIPort Logstash Monitoring API Port
+##
+monitoringAPIPort: 9600
+
+input: |-
+  # udp {
+  #   port => 1514
+  #   type => syslog
+  # }
+  # tcp {
+  #   port => 1514
+  #   type => syslog
+  # }
+  http { port => 8080 }
+## @param filter Filter Plugins configuration
+## ref: https://www.elastic.co/guide/en/logstash/current/filter-plugins.html
+## e.g:
+## filter: |-
+##   grok {
+##     match => { "message" => "%{COMBINEDAPACHELOG}" }
+##   }
+##   date {
+##     match => [ "timestamp" , "dd/MMM/yyyy:HH:mm:ss Z" ]
+##   }
+##
+filter: ""
+## @param output [string] Output Plugins configuration
+## ref: https://www.elastic.co/guide/en/logstash/current/output-plugins.html
+##
+output: |-
+  # elasticsearch {
+  #   hosts => ["${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}"]
+  #   manage_template => false
+  #   index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
+  # }
+  # gelf {
+  #   host => "${GRAYLOG_HOST}"
+  #   port => ${GRAYLOG_PORT}
+  # }
+  stdout {}
+## @param existingConfiguration Name of existing ConfigMap object with the Logstash configuration (`input`, `filter`, and `output` will be ignored).
+##
+existingConfiguration: ""
+## @param enableMultiplePipelines Allows user to use multiple pipelines
+## ref: https://www.elastic.co/guide/en/logstash/master/multiple-pipelines.html
+##
+enableMultiplePipelines: false
+## @param extraVolumes Array to add extra volumes (evaluated as a template)
+## extraVolumes:
+##   - name: myvolume
+##     configMap:
+##       name: myconfigmap
+##
 replicaCount: 1
