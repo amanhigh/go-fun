@@ -1,3 +1,4 @@
+# https://artifacthub.io/packages/helm/bitnami/elasticsearch
 ## @section Global parameters
 global:
   elasticsearch:
@@ -6,6 +7,16 @@ global:
       ports:
         restAPI: 9200
   kibanaEnabled: false
+
+## Ingress configuration
+##
+ingress:
+  ## @param ingress.enabled Set to true to enable ingress record generation
+  ##
+  enabled: true
+  hostname: elastic.docker
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
 
 ## @section Elasticsearch cluster Parameters
 clusterName: aman

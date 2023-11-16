@@ -4,6 +4,7 @@
 # helm repo add bitnami https://charts.bitnami.com/bitnami
 
 # helm repo update
+# Debug: find . | entr -s "helm template elasticsearch bitnami/elasticsearch -f elasticsearch.yml > debug.txt;./service.zsh -di"
 # sudo kubefwd svc | awk '{ if($2 ~ /Port-Forward/) {print $0" URL: http://"$4"/"} else {print}}'
 
 # Vars
@@ -171,10 +172,10 @@ process()
         
         ELK)
             #FIXME: Complete Compose Setup
-            helm $CMD logstash bitnami/logstash -f logstash.yml > /dev/null
+            # helm $CMD logstash bitnami/logstash -f logstash.yml > /dev/null
             helm $CMD elasticsearch bitnami/elasticsearch -f elasticsearch.yml > /dev/null
             # helm $CMD kibana bitnami/kibana -f kibana.yml > /dev/null
-            echo "\033[1;33m /demo/demo.sh \033[0m \n"
+            echo "\033[1;33m ElasticSearch: http://elastic.docker/_cluster/health?pretty \033[0m \n"
             ;;
 
         MONITOR)
