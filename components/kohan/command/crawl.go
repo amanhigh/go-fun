@@ -1,8 +1,8 @@
 package command
 
 import (
-	util2 "github.com/amanhigh/go-fun/common/util"
-	crawler2 "github.com/amanhigh/go-fun/components/kohan/core/crawler"
+	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/components/kohan/core/crawler"
 	"github.com/spf13/cobra"
 )
 
@@ -17,13 +17,13 @@ var imdbCmd = &cobra.Command{
 	Short: "Imdb Crawler",
 	Args:  cobra.ExactArgs(3),
 	PreRunE: func(cmd *cobra.Command, args []string) (err error) {
-		if year, err = util2.ParseInt(args[0]); err == nil {
-			util2.ValidateEnumArg(args[1], []string{"pa", "en", "hi"})
+		if year, err = util.ParseInt(args[0]); err == nil {
+			util.ValidateEnumArg(args[1], []string{"pa", "en", "hi"})
 		}
 		return
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		crawler2.NewCrawlerManager(crawler2.NewImdbCrawler(year, args[1], cutOff, args[2]), count, verbose).Crawl()
+		crawler.NewCrawlerManager(crawler.NewImdbCrawler(year, args[1], cutOff, args[2]), count, verbose).Crawl()
 	},
 }
 
@@ -32,7 +32,7 @@ var gameCmd = &cobra.Command{
 	Short: "Gamespot Crawler",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		crawler2.NewCrawlerManager(crawler2.NewGameSpotCrawler(args[0]), count, verbose).Crawl()
+		crawler.NewCrawlerManager(crawler.NewGameSpotCrawler(args[0]), count, verbose).Crawl()
 	},
 }
 
@@ -41,7 +41,7 @@ var hubCmd = &cobra.Command{
 	Short: "Hub Crawler",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		crawler2.NewCrawlerManager(crawler2.NewHubCrawler(args[0]), count, verbose).Crawl()
+		crawler.NewCrawlerManager(crawler.NewHubCrawler(args[0]), count, verbose).Crawl()
 	},
 }
 

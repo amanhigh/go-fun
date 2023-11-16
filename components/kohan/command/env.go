@@ -1,7 +1,7 @@
 package command
 
 import (
-	util2 "github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +15,7 @@ var debugCmd = &cobra.Command{
 	Use:   "debug",
 	Short: "Enables/Disables Debug",
 	Run: func(cmd *cobra.Command, args []string) {
-		util2.DebugControl(enable)
+		util.DebugControl(enable)
 	},
 }
 

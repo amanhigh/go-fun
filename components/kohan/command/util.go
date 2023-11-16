@@ -2,7 +2,8 @@ package command
 
 import (
 	"fmt"
-	tools2 "github.com/amanhigh/go-fun/common/tools"
+
+	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
@@ -26,8 +27,8 @@ var pprofCmd = &cobra.Command{
 		url := fmt.Sprintf("http://%v:%v/debug/pprof/profile", host, port)
 
 		color.Blue("Profiling: %v for %v Seconds", url, time)
-		tools2.RunCommandPrintError(fmt.Sprintf("go-torch -t %v -u %v && open torch.svg", time, url))
-		tools2.RunCommandPrintError(fmt.Sprintf("go tool pprof -svg -output pprof.svg --seconds=%v %v && open pprof.svg", time, url))
+		tools.RunCommandPrintError(fmt.Sprintf("go-torch -t %v -u %v && open torch.svg", time, url))
+		tools.RunCommandPrintError(fmt.Sprintf("go tool pprof -svg -output pprof.svg --seconds=%v %v && open pprof.svg", time, url))
 	},
 }
 

@@ -2,11 +2,12 @@ package command
 
 import (
 	"fmt"
-	tools2 "github.com/amanhigh/go-fun/common/tools"
-	util2 "github.com/amanhigh/go-fun/common/util"
-	config2 "github.com/amanhigh/go-fun/models/config"
+	"os"
+
+	"github.com/amanhigh/go-fun/common/tools"
+	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/fatih/color"
-	"io/ioutil"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
@@ -31,7 +32,7 @@ var dockerPsCmd = &cobra.Command{
 	Use:   "ps",
 	Short: "Process Monitor",
 	Run: func(cmd *cobra.Command, args []string) {
-		tools2.LiveCommand(fmt.Sprintf("watch -n1 '%v'", getComposeCmd("ps")))
+		tools.LiveCommand(fmt.Sprintf("watch -n1 '%v'", getComposeCmd("ps")))
 	},
 }
 
@@ -39,7 +40,7 @@ var dockerKillCmd = &cobra.Command{
 	Use:   "kill",
 	Short: "Force kill and Clear Volumes",
 	Run: func(cmd *cobra.Command, args []string) {
-		tools2.LiveCommand(getComposeCmd("rm -svf"))
+		tools.LiveCommand(getComposeCmd("rm -svf"))
 	},
 }
 
@@ -48,9 +49,9 @@ var dockerResetCmd = &cobra.Command{
 	Short: "Stop & Clean Containers, Start Fresh",
 	Run: func(cmd *cobra.Command, args []string) {
 		//Clean old Containers
-		tools2.PrintCommand("docker-clean stop")
+		tools.PrintCommand("docker-clean stop")
 
-		tools2.LiveCommand(getComposeCmd("up -d"))
+		tools.LiveCommand(getComposeCmd("up -d"))
 	},
 }
 
@@ -62,7 +63,7 @@ var dockerLogsCmd = &cobra.Command{
 		if len(args) > 0 {
 			action += " -f"
 		}
-		tools2.LiveCommand(getComposeCmd(action))
+		tools.LiveCommand(getComposeCmd(action))
 	},
 }
 
@@ -70,8 +71,8 @@ var dockerBuildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "Rebuild Docker Service without Cache",
 	Run: func(cmd *cobra.Command, args []string) {
-		tools2.LiveCommand(getComposeCmd("build --no-cache"))
-		tools2.LiveCommand(getComposeCmd("up -d --force-recreate"))
+		tools.LiveCommand(getComposeCmd("build --no-cache"))
+		tools.LiveCommand(getComposeCmd("up -d --force-recreate"))
 	},
 }
 
@@ -80,7 +81,7 @@ var dockerLoginCmd = &cobra.Command{
 	Short: "Login to Specified Docker Compose Container",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		tools2.LiveCommand(fmt.Sprintf("docker exec -it compose_%v_%v %v", args[0], args[1], shell))
+		tools.LiveCommand(fmt.Sprintf("docker exec -it compose_%v_%v %v", args[0], args[1], shell))
 	},
 }
 
@@ -89,7 +90,7 @@ var dockerRunCmd = &cobra.Command{
 	Short: "Run a command in Specified Docker Compose Container",
 	Args:  cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
-		tools2.LiveCommand(fmt.Sprintf("docker exec compose_%v_%v %v -c \"%v\"", args[0], args[1], shell, args[2]))
+		tools.LiveCommand(fmt.Sprintf("docker exec compose_%v_%v %v -c \"%v\"", args[0], args[1], shell, args[2]))
 	},
 }
 
@@ -97,8 +98,8 @@ var dockerStopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop Docker Compose",
 	Run: func(cmd *cobra.Command, args []string) {
-		tools2.LiveCommand("docker build")
-		tools2.LiveCommand(getComposeCmd("stop"))
+		tools.LiveCommand("docker build")
+		tools.LiveCommand(getComposeCmd("stop"))
 	},
 }
 
@@ -106,7 +107,7 @@ var dockerStartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start Docker Compose",
 	Run: func(cmd *cobra.Command, args []string) {
-		tools2.LiveCommand(getComposeCmd("up -d"))
+		tools.LiveCommand(getComposeCmd("up -d"))
 	},
 }
 
@@ -114,7 +115,7 @@ var dockerRestartCmd = &cobra.Command{
 	Use:   "restart",
 	Short: "Restart Services",
 	Run: func(cmd *cobra.Command, args []string) {
-		tools2.LiveCommand(getComposeCmd("restart"))
+		tools.LiveCommand(getComposeCmd("restart"))
 	},
 }
 
@@ -129,11 +130,11 @@ var dockerSetCmd = &cobra.Command{
 		}
 		fmt.Println(dockerPath, composeOpt)
 
-		bytes, _ := yaml.Marshal(config2.DockerConfig{
+		bytes, _ := yaml.Marshal(config.DockerConfig{
 			Path: dockerPath,
 		})
 		color.Green("Written Config: %v\n\n%v", DOCKER_CONFIG, string(bytes))
-		err = ioutil.WriteFile(DOCKER_CONFIG, bytes, util2.DEFAULT_PERM)
+		err = os.WriteFile(DOCKER_CONFIG, bytes, util.DEFAULT_PERM)
 		return
 	},
 }
@@ -161,8 +162,8 @@ func init() {
 }
 
 func getComposeCmd(action string) (cmd string) {
-	var dockerConfig config2.DockerConfig
-	bytes, _ := ioutil.ReadFile(DOCKER_CONFIG)
+	var dockerConfig config.DockerConfig
+	bytes, _ := os.ReadFile(DOCKER_CONFIG)
 	_ = yaml.Unmarshal(bytes, &dockerConfig)
 	cmd = fmt.Sprintf("docker-compose %v %v %v %v", dockerConfig.Path, action, dockerService, composeOpt)
 	return

@@ -3,12 +3,13 @@ package command
 import (
 	"errors"
 	"fmt"
-	tools2 "github.com/amanhigh/go-fun/common/tools"
-	util2 "github.com/amanhigh/go-fun/common/util"
-	core2 "github.com/amanhigh/go-fun/components/kohan/core"
-	config2 "github.com/amanhigh/go-fun/models/config"
-	"github.com/fatih/color"
 	"strings"
+
+	"github.com/amanhigh/go-fun/common/tools"
+	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/components/kohan/core"
+	"github.com/amanhigh/go-fun/models/config"
+	"github.com/fatih/color"
 
 	"github.com/spf13/cobra"
 )
@@ -32,7 +33,7 @@ var clusterSanityCmd = &cobra.Command{
 		command = args[2]
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		core2.ClusterSanity(pkgName, command, cluster)
+		core.ClusterSanity(pkgName, command, cluster)
 	},
 }
 
@@ -44,7 +45,7 @@ var clusterPsshCmd = &cobra.Command{
 		command = args[1]
 	},
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var selectedPssh tools2.Pssh
+		var selectedPssh tools.Pssh
 		if selectedPssh, err = getPsshFromType(tyype); err == nil {
 			selectedPssh.RunRange(command, cluster, parallelism, false, index, endIndex)
 		}
@@ -57,7 +58,7 @@ var clusterCssCmd = &cobra.Command{
 	Short: "Runs Cluster Ssh",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		tools2.ClusterSsh(args[0])
+		tools.ClusterSsh(args[0])
 		return
 	},
 }
@@ -67,11 +68,11 @@ var clusterIndexCmd = &cobra.Command{
 	Short: "Get Ip for Cluster & Index",
 	Args:  cobra.ExactArgs(2),
 	PreRunE: func(cmd *cobra.Command, args []string) (err error) {
-		index, err = util2.ParseInt(args[1])
+		index, err = util.ParseInt(args[1])
 		return
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(tools2.GetClusterHost(cluster, index))
+		fmt.Println(tools.GetClusterHost(cluster, index))
 	},
 }
 
@@ -80,7 +81,7 @@ var clusterRemoveCmd = &cobra.Command{
 	Short: "Removes Ips in Remove Cluster from Main Cluster",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		count := tools2.RemoveCluster(args[0], args[1])
+		count := tools.RemoveCluster(args[0], args[1])
 		color.Green("%v items removed from %v", count, args[0])
 	},
 }
@@ -91,7 +92,7 @@ var clusterMd5Cmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, cluster := range strings.Fields(args[1]) {
-			tools2.Md5Checker(args[0], cluster)
+			tools.Md5Checker(args[0], cluster)
 		}
 	},
 }
@@ -101,7 +102,7 @@ var clusterSearchCmd = &cobra.Command{
 	Short: "Searches for matching Clusters",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		clusters := tools2.SearchCluster(args[0])
+		clusters := tools.SearchCluster(args[0])
 		fmt.Println(strings.Join(clusters, "\n"))
 
 		c, i := 1, 1
@@ -109,11 +110,11 @@ var clusterSearchCmd = &cobra.Command{
 		case 1:
 			return
 		case 2:
-			c, err = util2.ParseInt(args[1])
+			c, err = util.ParseInt(args[1])
 
 		case 3:
-			if c, err = util2.ParseInt(args[1]); err == nil {
-				i, err = util2.ParseInt(args[2])
+			if c, err = util.ParseInt(args[1]); err == nil {
+				i, err = util.ParseInt(args[2])
 			}
 		}
 
@@ -121,10 +122,10 @@ var clusterSearchCmd = &cobra.Command{
 			/* If Index is Zero do Cluster ssh */
 			clusterName := clusters[c-1]
 			if i == 0 {
-				tools2.ClusterSsh(clusterName)
+				tools.ClusterSsh(clusterName)
 			} else {
-				ip := tools2.GetClusterHost(clusterName, i)
-				tools2.LiveCommand("ssh " + ip)
+				ip := tools.GetClusterHost(clusterName, i)
+				tools.LiveCommand("ssh " + ip)
 			}
 		}
 		return
@@ -133,7 +134,7 @@ var clusterSearchCmd = &cobra.Command{
 
 func init() {
 	clusterPsshCmd.Flags().StringVarP(&tyype, "type", "t", "f", "First alphabet of fast/display/slow")
-	clusterPsshCmd.Flags().IntVarP(&parallelism, "parallel", "p", config2.DEFAULT_PARALELISM, "Parallelism")
+	clusterPsshCmd.Flags().IntVarP(&parallelism, "parallel", "p", config.DEFAULT_PARALELISM, "Parallelism")
 	clusterPsshCmd.Flags().IntVarP(&index, "start", "s", -1, "Starting Index")
 	clusterPsshCmd.Flags().IntVarP(&endIndex, "end", "e", -1, "Ending Index")
 
@@ -142,14 +143,14 @@ func init() {
 		clusterRemoveCmd, clusterMd5Cmd, clusterSearchCmd, clusterCssCmd)
 }
 
-func getPsshFromType(psshType string) (selectedPssh tools2.Pssh, err error) {
+func getPsshFromType(psshType string) (selectedPssh tools.Pssh, err error) {
 	switch psshType {
 	case "f":
-		selectedPssh = tools2.FastPssh
+		selectedPssh = tools.FastPssh
 	case "s":
-		selectedPssh = tools2.SlowPssh
+		selectedPssh = tools.SlowPssh
 	case "d":
-		selectedPssh = tools2.DisplayPssh
+		selectedPssh = tools.DisplayPssh
 	default:
 		err = errors.New("Invalid Pssh Type: " + psshType)
 	}
