@@ -121,7 +121,7 @@
       "responses": [
         {
           "uuid": "666d2d23-5434-4f37-9732-6f7e85d24a01",
-          "body": "\"180e0671\"",
+          "body": "\"{{faker 'string.uuid'}}\"",
           "latency": 0,
           "statusCode": 200,
           "label": "",

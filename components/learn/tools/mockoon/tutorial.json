@@ -17,7 +17,7 @@
       "responses": [
         {
           "uuid": "29293fde-48a0-4e20-a58d-be20c3ddddb9",
-          "body": "{\n  \"name\": \"John Doe\",\n  \"age\": 18,\n  \"gender\": \"Male\",\n  \"grade\": 12,\n  \"phone\": \"555-123-4567\"\n}",
+          "body": "{\n  \"id\": \"{{faker 'string.uuid'}}\",\n  \"name\": \"John Doe\",\n  \"age\": 18,\n  \"gender\": \"Male\",\n  \"grade\": 12,\n  \"phone\": \"555-123-4567\"\n}",
           "latency": 0,
           "statusCode": 200,
           "label": "",
