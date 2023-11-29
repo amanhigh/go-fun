@@ -45,7 +45,25 @@
       "endpoint": "students/:name",
       "responses": [
         {
-          "uuid": "3de2041a-fcd8-4e52-9f11-2cd2161c8e89",
+          "uuid": "179f32d3-e8be-4290-b672-0199cafb82d4",
+          "body": "{\n  \"name\": \"{{urlParam 'name'}} {{faker 'name.lastName'}}\",\n  \"age\": \"{{faker 'number.int' min=7 max=18}}\",\n  \"gender\": \"{{oneOf (array 'Male' 'Female')}}\",\n  \"grade\": \"{{faker 'number.int' min=4 max=12}}\",\n  \"phone\": \"{{faker 'phone.number'}}\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id"
+        },
+        {
+          "uuid": "933e70ee-4b1e-431e-8a72-e6a84af24999",
           "body": "{\n  \"name\": \"Amanpreet Singh\",\n  \"age\": 14,\n  \"gender\": \"Male\",\n  \"grade\": 8,\n  \"phone\": \"92487923\"\n}",
           "latency": 0,
           "statusCode": 200,
@@ -68,24 +86,6 @@
           "disableTemplating": false,
           "fallbackTo404": false,
           "default": false,
-          "crudKey": "id"
-        },
-        {
-          "uuid": "179f32d3-e8be-4290-b672-0199cafb82d4",
-          "body": "{\n  \"name\": \"{{faker 'name.firstName'}} {{faker 'name.lastName'}}\",\n  \"age\": \"{{faker 'number.int' min=7 max=18}}\",\n  \"gender\": \"{{oneOf (array 'Male' 'Female')}}\",\n  \"grade\": \"{{faker 'number.int' min=4 max=12}}\",\n  \"phone\": \"{{faker 'phone.number'}}\"\n}",
-          "latency": 0,
-          "statusCode": 200,
-          "label": "",
-          "headers": [],
-          "bodyType": "INLINE",
-          "filePath": "",
-          "databucketID": "",
-          "sendFileAsBody": false,
-          "rules": [],
-          "rulesOperator": "OR",
-          "disableTemplating": false,
-          "fallbackTo404": false,
-          "default": true,
           "crudKey": "id"
         }
       ],
