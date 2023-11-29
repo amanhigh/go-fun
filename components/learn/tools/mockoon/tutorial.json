@@ -1,6 +1,6 @@
 {
   "uuid": "38214cdf-907b-47a3-a1b6-4a26bfbfb905",
-  "lastMigration": 29,
+  "lastMigration": 32,
   "name": "Mockoon Tutorial",
   "endpointPrefix": "",
   "latency": 0,
@@ -31,10 +31,10 @@
           "disableTemplating": false,
           "fallbackTo404": false,
           "default": true,
-          "crudKey": "id"
+          "crudKey": "id",
+          "callbacks": []
         }
       ],
-      "enabled": true,
       "responseMode": null
     },
     {
@@ -46,7 +46,7 @@
       "responses": [
         {
           "uuid": "179f32d3-e8be-4290-b672-0199cafb82d4",
-          "body": "{\n  \"name\": \"{{urlParam 'name'}} {{faker 'name.lastName'}}\",\n  \"age\": {{faker 'number.int' min=7 max=18}},\n  \"gender\": \"{{oneOf (array 'Male' 'Female')}}\",\n  \"grade\": {{faker 'number.int' min=4 max=12}},\n  \"phone\": \"{{faker 'phone.number'}}\"\n}",
+          "body": "{\n  \"id\": \"{{faker 'string.uuid'}}\",\n  \"name\": \"{{urlParam 'name'}} {{faker 'name.lastName'}}\",\n  \"age\": {{faker 'number.int' min=7 max=18}}, \n  \"gender\": \"{{oneOf (array 'Male' 'Female')}}\",\n  \"grade\": {{faker 'number.int' min=4 max=12}},\n  \"phone\": \"{{faker 'phone.number'}}\"\n}",
           "latency": 0,
           "statusCode": 200,
           "label": "",
@@ -60,7 +60,8 @@
           "disableTemplating": false,
           "fallbackTo404": false,
           "default": true,
-          "crudKey": "id"
+          "crudKey": "id",
+          "callbacks": []
         },
         {
           "uuid": "933e70ee-4b1e-431e-8a72-e6a84af24999",
@@ -86,10 +87,10 @@
           "disableTemplating": false,
           "fallbackTo404": false,
           "default": false,
-          "crudKey": "id"
+          "crudKey": "id",
+          "callbacks": []
         }
       ],
-      "enabled": true,
       "responseMode": null
     },
     {
@@ -115,10 +116,10 @@
           "disableTemplating": false,
           "fallbackTo404": false,
           "default": true,
-          "crudKey": "id"
+          "crudKey": "id",
+          "callbacks": []
         }
       ],
-      "enabled": true,
       "responseMode": null
     }
   ],
@@ -167,5 +168,6 @@
       "value": ""
     }
   ],
-  "data": []
+  "data": [],
+  "callbacks": []
 }
