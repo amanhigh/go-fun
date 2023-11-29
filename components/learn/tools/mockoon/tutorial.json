@@ -1,0 +1,138 @@
+{
+  "uuid": "38214cdf-907b-47a3-a1b6-4a26bfbfb905",
+  "lastMigration": 29,
+  "name": "Mockoon Tutorial",
+  "endpointPrefix": "",
+  "latency": 0,
+  "port": 3000,
+  "hostname": "",
+  "folders": [],
+  "routes": [
+    {
+      "uuid": "67200823-d1b5-4b0a-9f5b-9c53fd4c019c",
+      "type": "http",
+      "documentation": "Direct Match",
+      "method": "get",
+      "endpoint": "students/John",
+      "responses": [
+        {
+          "uuid": "29293fde-48a0-4e20-a58d-be20c3ddddb9",
+          "body": "{\n  \"name\": \"John Doe\",\n  \"age\": 18,\n  \"gender\": \"Male\",\n  \"grade\": 12,\n  \"phone\": \"555-123-4567\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id"
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "9d6bf1c9-2404-4472-bdcb-64f514c7abb8",
+      "type": "http",
+      "documentation": "Path Params with Rules & Template",
+      "method": "get",
+      "endpoint": "students/:name",
+      "responses": [
+        {
+          "uuid": "3de2041a-fcd8-4e52-9f11-2cd2161c8e89",
+          "body": "{\n  \"name\": \"Amanpreet Singh\",\n  \"age\": 14,\n  \"gender\": \"Male\",\n  \"grade\": 8,\n  \"phone\": \"92487923\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "params",
+              "modifier": "name",
+              "value": "aman",
+              "invert": false,
+              "operator": "equals"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id"
+        },
+        {
+          "uuid": "179f32d3-e8be-4290-b672-0199cafb82d4",
+          "body": "{\n  \"name\": \"{{faker 'name.firstName'}} {{faker 'name.lastName'}}\",\n  \"age\": \"{{faker 'number.int' min=7 max=18}}\",\n  \"gender\": \"{{oneOf (array 'Male' 'Female')}}\",\n  \"grade\": \"{{faker 'number.int' min=4 max=12}}\",\n  \"phone\": \"{{faker 'phone.number'}}\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id"
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    }
+  ],
+  "rootChildren": [
+    {
+      "type": "route",
+      "uuid": "67200823-d1b5-4b0a-9f5b-9c53fd4c019c"
+    },
+    {
+      "type": "route",
+      "uuid": "9d6bf1c9-2404-4472-bdcb-64f514c7abb8"
+    }
+  ],
+  "proxyMode": false,
+  "proxyHost": "",
+  "proxyRemovePrefix": false,
+  "tlsOptions": {
+    "enabled": false,
+    "type": "CERT",
+    "pfxPath": "",
+    "certPath": "",
+    "keyPath": "",
+    "caPath": "",
+    "passphrase": ""
+  },
+  "cors": true,
+  "headers": [
+    {
+      "key": "Content-Type",
+      "value": "application/json"
+    }
+  ],
+  "proxyReqHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "proxyResHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "data": []
+}
