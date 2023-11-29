@@ -4,7 +4,7 @@
   "name": "Demo API",
   "endpointPrefix": "",
   "latency": 0,
-  "port": 3000,
+  "port": 3001,
   "hostname": "",
   "folders": [],
   "routes": [
@@ -283,7 +283,7 @@
           "crudKey": "id"
         }
       ],
-      "enabled": true,
+      "enabled": false,
       "responseMode": null
     }
   ],
