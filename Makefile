@@ -1,6 +1,7 @@
 ### Help
 # Silent: -s
 # Paraller Jobs: -j2
+# Override Vars: make test-it COVER_DIR=./test
 
 ### Variables
 .DEFAULT_GOAL := help
