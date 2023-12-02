@@ -28,6 +28,11 @@ sections:
         icon: favicon
         url: https://www.ndtv.com/
         tags: [news]
+      - title: Noise
+        description: MyNoise
+        icon: favicon
+        url: https://mynoise.net/
+        tags: [music]
       - title: Imdb
         description: Internet Movie Database
         icon: favicon

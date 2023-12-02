@@ -1,9 +1,8 @@
 #!/bin/zsh
 # helm repo add onechart https://chart.onechart.dev
-# helm repo add stakater https://stakater.github.io/stakater-charts
-# helm repo add bitnami https://charts.bitnami.com/bitnami
 
 # helm repo update
+# Debug: find . | entr -s "helm template elasticsearch bitnami/elasticsearch -f elasticsearch.yml > debug.txt;./service.zsh -di"
 # sudo kubefwd svc | awk '{ if($2 ~ /Port-Forward/) {print $0" URL: http://"$4"/"} else {print}}'
 
 # Vars
@@ -40,7 +39,6 @@ process()
             echo "\033[1;33m Commander: http://redisadmin.docker/ \033[0m \n"
             ;;
         ISTIO)
-            #helm repo add istio https://istio-release.storage.googleapis.com/charts
             helm $CMD istio-base istio/base -n istio-system --create-namespace > /dev/null
             helm $CMD istiod istio/istiod -n istio-system -f istio.yml > /dev/null
             # helm install istio-ingress istio/gateway -n istio-system --wait
@@ -50,7 +48,6 @@ process()
             kubectl label namespace default istio-injection=enabled --overwrite
             ;;
         KIALI)
-            #helm repo add kiali https://kiali.org/helm-charts
             helm $CMD kiali-operator kiali/kiali-operator -f kiali.yml > /dev/null
             #Create Kiali CRD
             kubectl apply -f ./files/istio/kiali-crd.yml
@@ -113,7 +110,6 @@ process()
             ;;
 
         OPA)
-            # helm repo add opa https://open-policy-agent.github.io/kube-mgmt/charts
             helm $CMD opa opa/opa-kube-mgmt -f opa.yml > /dev/null
             helm $CMD opa-demo onechart/onechart -f opa-demo.yml > /dev/null
             
@@ -125,18 +121,15 @@ process()
             ;;
 
         VAULT)
-            # helm repo add hashicorp https://helm.releases.hashicorp.com
             helm $CMD vault hashicorp/vault -f vault.yml > /dev/null
             echo "\033[1;33m vault status \033[0m \n"
             echo "\033[1;33m /demo/vault.sh \033[0m \n"
             ;;
         PORTAINER)
-            # helm repo add portainer https://portainer.github.io/k8s/
             helm $CMD portainer portainer/portainer -f portainer.yml
             echo "\033[1;33m http://portainer.docker/ \033[0m \n"
             ;;
         TRAEFIK)
-            # helm repo add traefik https://traefik.github.io/charts
             helm $CMD traefik traefik/traefik -f traefik.yml > /dev/null
             kubectl apply -f ./files/traefik/middleware.yml
             # kubectl apply -f ./files/traefik/ingress.yml
@@ -148,7 +141,6 @@ process()
             ;;
 
         CONSUL)
-            # helm repo add hashicorp https://helm.releases.hashicorp.com
             helm $CMD consul hashicorp/consul -f consul.yml > /dev/null
             echo "\033[1;33m http://consul.docker/ \033[0m \n"
             ;;
@@ -171,25 +163,24 @@ process()
         
         ELK)
             #FIXME: Complete Compose Setup
-            helm $CMD logstash bitnami/logstash -f logstash.yml > /dev/null
+            # helm $CMD logstash bitnami/logstash -f logstash.yml > /dev/null
             helm $CMD elasticsearch bitnami/elasticsearch -f elasticsearch.yml > /dev/null
-            # helm $CMD kibana bitnami/kibana -f kibana.yml > /dev/null
-            echo "\033[1;33m /demo/demo.sh \033[0m \n"
+            helm $CMD kibana bitnami/kibana -f kibana.yml > /dev/null
+            # HACK: Add Hostnames to Readme
+            echo "\033[1;33m ElasticSearch: http://elastic.docker/_cluster/health?pretty \033[0m \n"
+            echo "\033[1;33m Kibana: http://kibana.docker \033[0m \n"
             ;;
 
         MONITOR)
-            #helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
             helm $CMD prometheus prometheus-community/prometheus -f prometheus.yml > /dev/null
             echo "\033[1;33m Prometheus Server: http://prometheus.docker/ \033[0m \n"
             echo "\033[1;33m Prometheus Query: http://prometheus.docker/api/v1/query \033[0m \n"
 
-             # helm repo add grafana https://grafana.github.io/helm-charts
             helm $CMD grafana grafana/grafana -f grafana.yml > /dev/null
             echo "\033[1;33m http://grafana.docker/login (aman/aman) \033[0m \n"
             echo "\033[1;33m Datasource: http://grafana.docker/datasources/new \033[0m \n"
             echo "\033[1;33m Add Datasource Prometheus: http://prometheus-server \033[0m \n"
 
-            #helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
             helm $CMD jaeger jaegertracing/jaeger -f jaeger.yml > /dev/null
             echo "\033[1;33m http://jaeger.docker/ \033[0m \n"
 
@@ -203,7 +194,6 @@ process()
             echo "\033[1;33m Admin Login: Username:cn=admin,dc=example,dc=com Password: admin \033[0m \n"
             ;;
         MYSQL-OP)
-            #helm repo add bitpoke https://helm-charts.bitpoke.io
             helm $CMD mysql-operator bitpoke/mysql-operator -f bitspoke.yml > /dev/null
             kubectl apply -f ./files/bitspoke/secret.yml
             kubectl apply -f ./files/bitspoke/cluster.yml

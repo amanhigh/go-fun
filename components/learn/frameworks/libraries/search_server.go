@@ -1,13 +1,14 @@
-package elasticsearch_gin
+package libraries
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/amanhigh/go-fun/models/learn/frameworks"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/amanhigh/go-fun/models/learn/frameworks"
 
 	"github.com/gin-gonic/gin"
 	"github.com/olivere/elastic"
@@ -30,6 +31,7 @@ var (
 	Query API - http://localhost:8080/search?query=aman&skip=1&top=2
 */
 
+// HACK: Rewrite as Ginkgo Test
 func StartSearchServer() {
 	var err error
 	// Create Elastic client and wait for Elasticsearch to be ready

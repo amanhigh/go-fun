@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/vault/helper/dhutil"
 )
 
+// HACK: Rewrite as Ginko Test
 func VaultFun() {
 	var err error
 

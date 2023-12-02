@@ -1,3 +1,52 @@
+# https://artifacthub.io/packages/helm/bitnami/elasticsearch
+## @section Global parameters
 global:
-  kibanaEnabled: true
-# replicaCount: 1
+  elasticsearch:
+    service:
+      name: elasticsearch
+      ports:
+        restAPI: 9200
+  kibanaEnabled: false
+
+ingress:
+  enabled: true
+  hostname: elastic.docker
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+
+## @section Elasticsearch cluster Parameters
+clusterName: aman
+## @param containerPorts.restAPI Elasticsearch REST API port
+## @param containerPorts.transport Elasticsearch Transport port
+containerPorts:
+  restAPI: 9200
+  transport: 9300
+
+## @section Data-only nodes parameters
+data:
+  ## @param data.replicaCount Number of data-only replicas to deploy
+  ##
+  replicaCount: 2
+
+  resources:
+    limits: {}
+    requests:
+      cpu: 25m
+      memory: 512Mi
+  ## Note: The recommended heapSize is half of the container's memory.
+  ## If omitted, it will be automatically set.
+  heapSize: 256m
+
+## @section Ingest-only nodes parameters
+ingest:
+  ## @param ingest.enabled Enable ingest nodes
+  ##
+  enabled: false
+  replicaCount: 2
+
+  resources:
+    limits: {}
+    requests:
+      cpu: 25m
+      memory: 256Mi
+  heapSize: 128m

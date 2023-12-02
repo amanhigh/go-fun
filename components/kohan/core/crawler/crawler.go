@@ -3,15 +3,15 @@ package crawler
 import (
 	"context"
 	"fmt"
-	util2 "github.com/amanhigh/go-fun/common/util"
-	"github.com/amanhigh/go-fun/models/crawler"
-	"github.com/fatih/color"
-	"github.com/wesovilabs/koazee"
-	"io/ioutil"
 	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
+
+	util2 "github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/models/crawler"
+	"github.com/fatih/color"
+	"github.com/wesovilabs/koazee"
 )
 
 const (
@@ -20,6 +20,7 @@ const (
 	BUFFER_SIZE   = 512
 )
 
+// HACK: Write Tests and Move to Common as Generic.
 type Crawler interface {
 	GatherLinks(page *util2.Page, ch chan crawler.CrawlInfo)
 	NextPageLink(page *util2.Page) (string, bool)
@@ -125,7 +126,8 @@ func (self *CrawlerManager) PrintSet(good CrawlSet, bad CrawlSet) {
 	}
 }
 
-/**
+/*
+*
 Print Info using interface and write extracted links to
 GOOD/BAD Files for Chrome Processing
 */
@@ -134,10 +136,10 @@ func (self *CrawlerManager) printWriteCrawledInfo(set CrawlSet, filePath string)
 	if self.verbose {
 		fmt.Println(urlDump)
 	}
-	ioutil.WriteFile(filePath, []byte(urlDump), util2.DEFAULT_PERM)
 }
 
-/**
+/*
+*
 Recursively Crawl Given Page moving to next if next link is available.
 Write all Movies of current page onto channel
 */

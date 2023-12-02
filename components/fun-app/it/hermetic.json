@@ -1,0 +1,332 @@
+{
+  "uuid": "d81d790e-cec6-44f7-8957-db14cabd1efc",
+  "lastMigration": 29,
+  "name": "FunApp Hermetic Server",
+  "endpointPrefix": "",
+  "latency": 0,
+  "port": 8085,
+  "hostname": "",
+  "folders": [],
+  "routes": [
+    {
+      "uuid": "df7876ed-425b-4209-9445-69e7f6e58e6b",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "",
+      "responses": [
+        {
+          "uuid": "e0e2f786-d78c-4cdb-92a8-c7b03d15fbca",
+          "body": "{}",
+          "latency": 0,
+          "statusCode": 404,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id"
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "3b4d0def-a02c-4b7a-be39-dd1864426c0e",
+      "type": "http",
+      "documentation": "Health Check & Metrics",
+      "method": "get",
+      "endpoint": "metrics",
+      "responses": [
+        {
+          "uuid": "2d6abd1c-cf87-4cde-a314-47e24313ccea",
+          "body": "# HELP funapp_person_count Person Count in Get Persons\n# TYPE funapp_person_count gauge\nfunapp_person_count 0\n# HELP funapp_person_create_time Time Taken to Create Person\n# TYPE funapp_person_create_time histogram\nfunapp_person_create_time_bucket{le=\"0.005\"} 0\nfunapp_person_create_time_bucket{le=\"0.01\"} 0\nfunapp_person_create_time_bucket{le=\"0.025\"} 0\nfunapp_person_create_time_bucket{le=\"0.05\"} 0\nfunapp_person_create_time_bucket{le=\"0.1\"} 0\nfunapp_person_create_time_bucket{le=\"0.25\"} 0\nfunapp_person_create_time_bucket{le=\"0.5\"} 0\nfunapp_person_create_time_bucket{le=\"1\"} 0\nfunapp_person_create_time_bucket{le=\"2.5\"} 0\nfunapp_person_create_time_bucket{le=\"5\"} 0\nfunapp_person_create_time_bucket{le=\"10\"} 0\nfunapp_person_create_time_bucket{le=\"+Inf\"} 0\nfunapp_person_create_time_sum 0\nfunapp_person_create_time_count 0\n# HELP gin_access_request_duration_seconds The HTTP request latencies in seconds.\n# TYPE gin_access_request_duration_seconds summary\ngin_access_request_duration_seconds_sum 0.00033554099999999996\ngin_access_request_duration_seconds_count 2\n# HELP gin_access_request_size_bytes The HTTP request sizes in bytes.\n# TYPE gin_access_request_size_bytes summary\ngin_access_request_size_bytes_sum 688\ngin_access_request_size_bytes_count 2\n# HELP gin_access_requests_total How many HTTP requests processed, partitioned by status code and HTTP method.\n# TYPE gin_access_requests_total counter\ngin_access_requests_total{code=\"404\",handler=\"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin.Middleware.func1\",host=\"localhost:8080\",method=\"GET\",url=\"/favicon.ico\"} 2\n# HELP gin_access_response_size_bytes The HTTP response sizes in bytes.\n# TYPE gin_access_response_size_bytes summary\ngin_access_response_size_bytes_sum -2\ngin_access_response_size_bytes_count 2\n# HELP go_gc_duration_seconds A summary of the pause duration of garbage collection cycles.\n# TYPE go_gc_duration_seconds summary\ngo_gc_duration_seconds{quantile=\"0\"} 1.9375e-05\ngo_gc_duration_seconds{quantile=\"0.25\"} 2.7583e-05\ngo_gc_duration_seconds{quantile=\"0.5\"} 0.000164209\ngo_gc_duration_seconds{quantile=\"0.75\"} 0.000313667\ngo_gc_duration_seconds{quantile=\"1\"} 0.000313667\ngo_gc_duration_seconds_sum 0.000524834\ngo_gc_duration_seconds_count 4\n# HELP go_goroutines Number of goroutines that currently exist.\n# TYPE go_goroutines gauge\ngo_goroutines 10\n# HELP go_info Information about the Go environment.\n# TYPE go_info gauge\ngo_info{version=\"go1.21.4\"} 1\n# HELP go_memstats_alloc_bytes Number of bytes allocated and still in use.\n# TYPE go_memstats_alloc_bytes gauge\ngo_memstats_alloc_bytes 1.3668464e+07\n# HELP go_memstats_alloc_bytes_total Total number of bytes allocated, even if freed.\n# TYPE go_memstats_alloc_bytes_total counter\ngo_memstats_alloc_bytes_total 1.6308328e+07\n# HELP go_memstats_buck_hash_sys_bytes Number of bytes used by the profiling bucket hash table.\n# TYPE go_memstats_buck_hash_sys_bytes gauge\ngo_memstats_buck_hash_sys_bytes 1.450629e+06\n# HELP go_memstats_frees_total Total number of frees.\n# TYPE go_memstats_frees_total counter\ngo_memstats_frees_total 27241\n# HELP go_memstats_gc_sys_bytes Number of bytes used for garbage collection system metadata.\n# TYPE go_memstats_gc_sys_bytes gauge\ngo_memstats_gc_sys_bytes 4.150184e+06\n# HELP go_memstats_heap_alloc_bytes Number of heap bytes allocated and still in use.\n# TYPE go_memstats_heap_alloc_bytes gauge\ngo_memstats_heap_alloc_bytes 1.3668464e+07\n# HELP go_memstats_heap_idle_bytes Number of heap bytes waiting to be used.\n# TYPE go_memstats_heap_idle_bytes gauge\ngo_memstats_heap_idle_bytes 4.595712e+06\n# HELP go_memstats_heap_inuse_bytes Number of heap bytes that are in use.\n# TYPE go_memstats_heap_inuse_bytes gauge\ngo_memstats_heap_inuse_bytes 1.5622144e+07\n# HELP go_memstats_heap_objects Number of allocated objects.\n# TYPE go_memstats_heap_objects gauge\ngo_memstats_heap_objects 14795\n# HELP go_memstats_heap_released_bytes Number of heap bytes released to OS.\n# TYPE go_memstats_heap_released_bytes gauge\ngo_memstats_heap_released_bytes 4.13696e+06\n# HELP go_memstats_heap_sys_bytes Number of heap bytes obtained from system.\n# TYPE go_memstats_heap_sys_bytes gauge\ngo_memstats_heap_sys_bytes 2.0217856e+07\n# HELP go_memstats_last_gc_time_seconds Number of seconds since 1970 of last garbage collection.\n# TYPE go_memstats_last_gc_time_seconds gauge\ngo_memstats_last_gc_time_seconds 1.701249591473887e+09\n# HELP go_memstats_lookups_total Total number of pointer lookups.\n# TYPE go_memstats_lookups_total counter\ngo_memstats_lookups_total 0\n# HELP go_memstats_mallocs_total Total number of mallocs.\n# TYPE go_memstats_mallocs_total counter\ngo_memstats_mallocs_total 42036\n# HELP go_memstats_mcache_inuse_bytes Number of bytes in use by mcache structures.\n# TYPE go_memstats_mcache_inuse_bytes gauge\ngo_memstats_mcache_inuse_bytes 12000\n# HELP go_memstats_mcache_sys_bytes Number of bytes used for mcache structures obtained from system.\n# TYPE go_memstats_mcache_sys_bytes gauge\ngo_memstats_mcache_sys_bytes 15600\n# HELP go_memstats_mspan_inuse_bytes Number of bytes in use by mspan structures.\n# TYPE go_memstats_mspan_inuse_bytes gauge\ngo_memstats_mspan_inuse_bytes 143472\n# HELP go_memstats_mspan_sys_bytes Number of bytes used for mspan structures obtained from system.\n# TYPE go_memstats_mspan_sys_bytes gauge\ngo_memstats_mspan_sys_bytes 146664\n# HELP go_memstats_next_gc_bytes Number of heap bytes when next garbage collection will take place.\n# TYPE go_memstats_next_gc_bytes gauge\ngo_memstats_next_gc_bytes 2.4399208e+07\n# HELP go_memstats_other_sys_bytes Number of bytes used for other system allocations.\n# TYPE go_memstats_other_sys_bytes gauge\ngo_memstats_other_sys_bytes 1.479939e+06\n# HELP go_memstats_stack_inuse_bytes Number of bytes in use by the stack allocator.\n# TYPE go_memstats_stack_inuse_bytes gauge\ngo_memstats_stack_inuse_bytes 753664\n# HELP go_memstats_stack_sys_bytes Number of bytes obtained from system for stack allocator.\n# TYPE go_memstats_stack_sys_bytes gauge\ngo_memstats_stack_sys_bytes 753664\n# HELP go_memstats_sys_bytes Number of bytes obtained from system.\n# TYPE go_memstats_sys_bytes gauge\ngo_memstats_sys_bytes 2.8214536e+07\n# HELP go_threads Number of OS threads created.\n# TYPE go_threads gauge\ngo_threads 13\n# HELP promhttp_metric_handler_requests_in_flight Current number of scrapes being served.\n# TYPE promhttp_metric_handler_requests_in_flight gauge\npromhttp_metric_handler_requests_in_flight 1\n# HELP promhttp_metric_handler_requests_total Total number of scrapes by HTTP status code.\n# TYPE promhttp_metric_handler_requests_total counter\npromhttp_metric_handler_requests_total{code=\"200\"} 3\npromhttp_metric_handler_requests_total{code=\"500\"} 0\npromhttp_metric_handler_requests_total{code=\"503\"} 0\n",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [
+            {
+              "key": "connection",
+              "value": "close"
+            },
+            {
+              "key": "content-type",
+              "value": "text/plain; version=0.0.4; charset=utf-8"
+            },
+            {
+              "key": "date",
+              "value": "Wed, 29 Nov 2023 09:21:11 GMT"
+            },
+            {
+              "key": "content-length",
+              "value": "6745"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id"
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "c8736dba-4046-4fc8-93a7-5e68441e585a",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "admin/stop",
+      "responses": [
+        {
+          "uuid": "0c6f2f3d-1d6e-4369-828f-66a14d1c346a",
+          "body": "\"Stop Started\"",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id"
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "1d22edff-c44d-4ad3-8fb4-4ab26711c54c",
+      "type": "http",
+      "documentation": "Create Person",
+      "method": "post",
+      "endpoint": "v1/person",
+      "responses": [
+        {
+          "uuid": "666d2d23-5434-4f37-9732-6f7e85d24a01",
+          "body": "\"{{faker 'string.uuid'}}\"",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id"
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "077ba54e-d15b-4e7b-81dd-0246123c9383",
+      "type": "http",
+      "documentation": "Get Person",
+      "method": "get",
+      "endpoint": "v1/person/:id",
+      "responses": [
+        {
+          "uuid": "17fbf32d-910a-42ec-b02a-50e4f39901d3",
+          "body": "{\"Name\":\"Amanpreet Singh\",\"Age\":31,\"Gender\":\"MALE\",\"Id\":\"{{urlParam 'id'}}\"}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [
+            {
+              "key": "content-length",
+              "value": "67"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id"
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "ac2d6e74-3ae1-4c24-8804-3f5cff9bda5e",
+      "type": "http",
+      "documentation": "Delete Person",
+      "method": "delete",
+      "endpoint": "v1/person/:id",
+      "responses": [
+        {
+          "uuid": "47237e8b-5750-4f6f-bf09-02d996559c21",
+          "body": "\"DELETED\"",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id"
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "c15e7641-eafc-44d0-9734-f8efdd7efb86",
+      "type": "http",
+      "documentation": "Swagger Home",
+      "method": "get",
+      "endpoint": "swagger/index.html",
+      "responses": [
+        {
+          "uuid": "0e66cbab-fd91-476b-b440-6b7cdca40b0e",
+          "body": "\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Swagger UI</title>\n  <link rel=\"stylesheet\" type=\"text/css\" href=\"./swagger-ui.css\" >\n  <link rel=\"icon\" type=\"image/png\" href=\"./favicon-32x32.png\" sizes=\"32x32\" />\n  <link rel=\"icon\" type=\"image/png\" href=\"./favicon-16x16.png\" sizes=\"16x16\" />\n  <style>\n    html\n    {\n        box-sizing: border-box;\n        overflow: -moz-scrollbars-vertical;\n        overflow-y: scroll;\n    }\n    *,\n    *:before,\n    *:after\n    {\n        box-sizing: inherit;\n    }\n\n    body {\n      margin:0;\n      background: #fafafa;\n    }\n  </style>\n</head>\n\n<body>\n\n<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" style=\"position:absolute;width:0;height:0\">\n  <defs>\n    <symbol viewBox=\"0 0 20 20\" id=\"unlocked\">\n          <path d=\"M15.8 8H14V5.6C14 2.703 12.665 1 10 1 7.334 1 6 2.703 6 5.6V6h2v-.801C8 3.754 8.797 3 10 3c1.203 0 2 .754 2 2.199V8H4c-.553 0-1 .646-1 1.199V17c0 .549.428 1.139.951 1.307l1.197.387C5.672 18.861 6.55 19 7.1 19h5.8c.549 0 1.428-.139 1.951-.307l1.196-.387c.524-.167.953-.757.953-1.306V9.199C17 8.646 16.352 8 15.8 8z\"></path>\n    </symbol>\n\n    <symbol viewBox=\"0 0 20 20\" id=\"locked\">\n      <path d=\"M15.8 8H14V5.6C14 2.703 12.665 1 10 1 7.334 1 6 2.703 6 5.6V8H4c-.553 0-1 .646-1 1.199V17c0 .549.428 1.139.951 1.307l1.197.387C5.672 18.861 6.55 19 7.1 19h5.8c.549 0 1.428-.139 1.951-.307l1.196-.387c.524-.167.953-.757.953-1.306V9.199C17 8.646 16.352 8 15.8 8zM12 8H8V5.199C8 3.754 8.797 3 10 3c1.203 0 2 .754 2 2.199V8z\"/>\n    </symbol>\n\n    <symbol viewBox=\"0 0 20 20\" id=\"close\">\n      <path d=\"M14.348 14.849c-.469.469-1.229.469-1.697 0L10 11.819l-2.651 3.029c-.469.469-1.229.469-1.697 0-.469-.469-.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-.469-.469-.469-1.228 0-1.697.469-.469 1.228-.469 1.697 0L10 8.183l2.651-3.031c.469-.469 1.228-.469 1.697 0 .469.469.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c.469.469.469 1.229 0 1.698z\"/>\n    </symbol>\n\n    <symbol viewBox=\"0 0 20 20\" id=\"large-arrow\">\n      <path d=\"M13.25 10L6.109 2.58c-.268-.27-.268-.707 0-.979.268-.27.701-.27.969 0l7.83 7.908c.268.271.268.709 0 .979l-7.83 7.908c-.268.271-.701.27-.969 0-.268-.269-.268-.707 0-.979L13.25 10z\"/>\n    </symbol>\n\n    <symbol viewBox=\"0 0 20 20\" id=\"large-arrow-down\">\n      <path d=\"M17.418 6.109c.272-.268.709-.268.979 0s.271.701 0 .969l-7.908 7.83c-.27.268-.707.268-.979 0l-7.908-7.83c-.27-.268-.27-.701 0-.969.271-.268.709-.268.979 0L10 13.25l7.418-7.141z\"/>\n    </symbol>\n\n\n    <symbol viewBox=\"0 0 24 24\" id=\"jump-to\">\n      <path d=\"M19 7v4H5.83l3.58-3.59L8 6l-6 6 6 6 1.41-1.41L5.83 13H21V7z\"/>\n    </symbol>\n\n    <symbol viewBox=\"0 0 24 24\" id=\"expand\">\n      <path d=\"M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z\"/>\n    </symbol>\n\n  </defs>\n</svg>\n\n<div id=\"swagger-ui\"></div>\n\n<script src=\"./swagger-ui-bundle.js\"> </script>\n<script src=\"./swagger-ui-standalone-preset.js\"> </script>\n<script>\nwindow.onload = function() {\n  \n  const ui = SwaggerUIBundle({\n    url: \"doc.json\",\n    dom_id: '#swagger-ui',\n    validatorUrl: null,\n    oauth2RedirectUrl: `${window.location.protocol}//${window.location.host}${window.location.pathname.split('/').slice(0, window.location.pathname.split('/').length - 1).join('/')}/oauth2-redirect.html`,\n    persistAuthorization:  false ,\n    presets: [\n      SwaggerUIBundle.presets.apis,\n      SwaggerUIStandalonePreset\n    ],\n    plugins: [\n      SwaggerUIBundle.plugins.DownloadUrl\n    ],\n\tlayout: \"StandaloneLayout\",\n    docExpansion: \"list\",\n\tdeepLinking:  true ,\n\tdefaultModelsExpandDepth:  1 \n  })\n\n  const defaultClientId = \"\";\n  if (defaultClientId) {\n    ui.initOAuth({\n      clientId: defaultClientId\n    })\n  }\n\n  window.ui = ui\n}\n</script>\n</body>\n\n</html>\n",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id"
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "8f108b96-cd6e-4f37-a5d9-6edc7887c04b",
+      "type": "http",
+      "documentation": "",
+      "method": "delete",
+      "endpoint": "v1/person/",
+      "responses": [
+        {
+          "uuid": "769d81d8-8835-4395-91d0-56d067517c3e",
+          "body": "404 page not found",
+          "latency": 0,
+          "statusCode": 404,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id"
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    }
+  ],
+  "rootChildren": [
+    {
+      "type": "route",
+      "uuid": "df7876ed-425b-4209-9445-69e7f6e58e6b"
+    },
+    {
+      "type": "route",
+      "uuid": "3b4d0def-a02c-4b7a-be39-dd1864426c0e"
+    },
+    {
+      "type": "route",
+      "uuid": "c8736dba-4046-4fc8-93a7-5e68441e585a"
+    },
+    {
+      "type": "route",
+      "uuid": "c15e7641-eafc-44d0-9734-f8efdd7efb86"
+    },
+    {
+      "type": "route",
+      "uuid": "1d22edff-c44d-4ad3-8fb4-4ab26711c54c"
+    },
+    {
+      "type": "route",
+      "uuid": "077ba54e-d15b-4e7b-81dd-0246123c9383"
+    },
+    {
+      "type": "route",
+      "uuid": "8f108b96-cd6e-4f37-a5d9-6edc7887c04b"
+    },
+    {
+      "type": "route",
+      "uuid": "ac2d6e74-3ae1-4c24-8804-3f5cff9bda5e"
+    }
+  ],
+  "proxyMode": true,
+  "proxyHost": "http://localhost:8080/",
+  "proxyRemovePrefix": false,
+  "tlsOptions": {
+    "enabled": false,
+    "type": "CERT",
+    "pfxPath": "",
+    "certPath": "",
+    "keyPath": "",
+    "caPath": "",
+    "passphrase": ""
+  },
+  "cors": true,
+  "headers": [
+    {
+      "key": "Content-Type",
+      "value": "application/json"
+    }
+  ],
+  "proxyReqHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "proxyResHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "data": []
+}

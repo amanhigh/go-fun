@@ -12,5 +12,10 @@
 			"terrastruct.d2",
 			"gruntfuggly.todo-tree"
 		]
+	},
+	"settings": {
+		"editor.quickSuggestions": {
+			"other": "off"
+		}
 	}
 }
