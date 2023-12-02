@@ -13,45 +13,35 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: CODE -> Checkout
+      - name: CHECKOUT
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: GO -> Setup
+      - name: INSTALL -> Go
         uses: actions/setup-go@v4
         with:
           go-version: "1.21"
 
-      - name: GO -> Dependencies
-        working-directory: ./common
-        run: |
-          go install github.com/onsi/ginkgo/v2/ginkgo
-
-      - name: HELM -> Install
+      - name: INSTALL -> Helm
         uses: azure/setup-helm@v3
         with:
           version: v3.10.0
 
-      - name: HELM -> Repo Setup
+      - name: SETUP -> Dependencies
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
+          make setup-tools
 
-      - name: GO -> Releaser
-        uses: goreleaser/goreleaser-action@v5
-        with:
-          distribution: goreleaser
-          version: latest
-          args: release --snapshot --skip-publish --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GORELEASER_CURRENT_TAG: v1.0.2
+      - name: SETUP -> Build
+        run: |
+          make all
 
       - name: COVERAGE -> Report
         uses: codecov/codecov-action@v3
         # FIXME: Second Coverage File not Working
         with:
-          files: ./coverprofile.out,./components/fun-app/it/cover/profile
+          files: ./coverprofile.out,./components/operator/cover.out,./components/fun-app/it/cover/profile
           flags: unittests
           verbose: true
           name: codecov-go-fun
