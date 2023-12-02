@@ -6,7 +6,9 @@
 .DEFAULT_GOAL := help
 BUILD_OPTS := CGO_ENABLED=1 GOOS=linux GOARCH=amd64
 COMPONENT_DIR := ./components
-COVER_DIR:= $(COMPONENT_DIR)/fun-app/it/cover
+
+COVER_DIR:= /tmp/cover
+PROFILE_FILE:= $(COVER_DIR)/profile.out
 
 FUN_IMAGE_TAG := amanfdk/fun-app
 
@@ -29,14 +31,16 @@ test-unit: ## Run unit tests
 cover-analyse: ## Analyse Integration Coverage Reports
 	@echo "Generating FunServer Cover Profile"
 	# Generate Cover Profile
-	go tool covdata textfmt -i=$(COVER_DIR) -o $(COVER_DIR)/profile
+	go tool covdata textfmt -i=$(COVER_DIR) -o $(PROFILE_FILE)
 	
 	# Analyse Cover Profile
-	go tool cover -func=$(COVER_DIR)/profile
+	go tool cover -func=$(PROFILE_FILE)
 
 	echo "\033[1;32m Package Summary \033[0m"
 	# Analyse Report and Print Coverage
 	go tool covdata percent -i=$(COVER_DIR)
+
+	printf "\033[1;32m\n\n ******* Vscode: go.apply.coverprofile $(PROFILE_FILE) ******** \033[0m"
 
 
 test-it: run-fun-cover test-unit cover-analyse ## Integration test coverage analyse

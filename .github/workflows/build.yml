@@ -39,7 +39,6 @@ jobs:
 
       - name: COVERAGE -> Report
         uses: codecov/codecov-action@v3
-        # FIXME: Second Coverage File not Working
         with:
           files: ./coverprofile.out,./components/operator/cover.out,./components/fun-app/it/cover/profile
           flags: unittests
