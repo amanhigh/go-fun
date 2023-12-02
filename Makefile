@@ -68,6 +68,7 @@ build: build-fun build-kohan ## Build all Binaries
 run-fun: build-fun ## Run Fun App
 	$(COMPONENT_DIR)/fun-app/fun
 
+# Guide - https://dustinspecker.com/posts/go-combined-unit-integration-code-coverage/
 run-fun-cover: build-fun-cover ## Run Fun App with Coverage
 	mkdir -p $(COVER_DIR)
 	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(COMPONENT_DIR)/fun-app/fun-cover > $(COMPONENT_DIR)/fun-app/funcover.log &
