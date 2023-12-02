@@ -3,10 +3,11 @@
 PORT=8091
 CPU=3
 MEMORY=3096
-XTRA_BOOT=""
+XTRA=""
 
 MINI_BKP_FILE=~/Downloads/mini-bkp.txt
 MINI_CURRENT_BKP_FILE=/tmp/mini-bkp
+
 #Current Directory where Make File is Present
 MAKE_FILE_DIR=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 SERVICE_FILES=$(MAKE_FILE_DIR)/services/files
@@ -46,12 +47,9 @@ dashboard: ## Minikube Dashboard
 	printf "\033[1;32m Minikube Dashboard & Addons \033[0m \n";
 	minikube -p minikube dashboard --port=$(PORT) --url=true > /dev/null 2>&1 &
 
-istio:
-	XTRA_BOOT="ISTIO"
-
 bootstrap: ## Bootstrap basic Services
 	cd $(MAKE_FILE_DIR)/services;\
-	XTRA_BOOT=$(XTRA_BOOT) ./service.zsh -b;\
+	XTRA_BOOT=$(XTRA) ./service.zsh -b;\
 
 ### Port Forwarding
 port-fwd:
@@ -71,12 +69,45 @@ proxy:
 	kubectl proxy --port=$(PORT);
 
 ### Backup and Restore
+backup:
+	# FIXME: Backup Flow
+	test -f $(MINI_BKP_FILE) || touch $(MINI_BKP_FILE)
+	minikube image ls | grep -v none | tee $(MINI_CURRENT_BKP_FILE)
+	printf "\033[1;33m MinkubeImage Count: `wc -l $(MINI_CURRENT_BKP_FILE)` \033[0m \n"
 
+	# Append Image list to Master List
+	cp $(MINI_BKP_FILE) /tmp/mini-bkp-old
+	sort $(MINI_CURRENT_BKP_FILE) /tmp/mini-bkp-old | uniq | tee $(MINI_BKP_FILE)
+	printf "\033[1;33m MasterList Count: `wc -l $(MINI_BKP_FILE)` \033[0m \n"
 
+	for IMG in $$(cat $(MINI_CURRENT_BKP_FILE)); do\
+		CACHE_PATH="$${IMG%/*}";\
+		IMAGE_ID="$${IMG##*/}";\
+		IMAGE_CACHE_PATH="$${HOME}/.minikube/cache/images/$$(uname -m)/$${CACHE_PATH}";\
+		IMAGE_CACHE_FILE="$${IMAGE_CACHE_PATH}/$$(echo $IMAGE_ID | sed 's/[:]/_/g')";\
+		echo $${IMAGE_CACHE_FILE};\
+
+		# if [ -f ${IMAGE_CACHE_FILE} ]; then
+		# 	printf "\033[1;34m Skipping IMAGE: ${IMG} -> ${IMAGE_CACHE_FILE}\033[0m \n"
+		# else
+		# 	printf "\033[1;33m Caching IMAGE: ${IMG} \033[0m \n"
+		# 	mkdir -p ${IMAGE_CACHE_PATH}
+		# 	minikube image save --daemon ${IMG}
+		# fi
+	done
+restore:
+	for IMG in $$(cat $(MINI_BKP_FILE)); do \
+		printf "\033[1;33m Loading Image: $${IMG} \033[0m \n"; \
+		minikube image load --daemon $${IMG}; \
+	done
 
 ### Workflow
+# HACK: Fixe Readme
+reset: stop start wait bootstrap port-fwd ## Reset Minikube
 
-reset: stop start wait bootstrap ## Reset Minikube
+.PHONY: istio
+istio: ## Reset Minikube with Istio
+	$(MAKE) XTRA=ISTIO reset
 
 
 ## k9s
