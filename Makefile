@@ -6,6 +6,7 @@
 .DEFAULT_GOAL := help
 BUILD_OPTS := CGO_ENABLED=1 GOOS=linux GOARCH=amd64
 COMPONENT_DIR := ./components
+COVER_DIR:= $(COMPONENT_DIR)/fun-app/it/cover
 
 FUN_IMAGE_TAG := amanfdk/fun-app
 
@@ -22,29 +23,54 @@ sync: ## Sync Go Modules
 test-operator: ## Run operator tests
 	make -C $(COMPONENT_DIR)/operator/ test
 
-test-fun-cover: ## Run Fun Server with Coverage
-	$(COMPONENT_DIR)/fun-app/it/cover.zsh run > /dev/null 2>&1 &
-
 test-unit: ## Run unit tests
 	ginkgo -r '--label-filter=!setup' -cover .
 
-test-clean:
-	$(COMPONENT_DIR)/fun-app/it/cover.zsh clean
+cover-analyse: ## Analyse Integration Coverage Reports
+	@echo "Generating FunServer Cover Profile"
+	# Generate Cover Profile
+	go tool covdata textfmt -i=$(COVER_DIR) -o $(COVER_DIR)/profile
+	
+	# Analyse Cover Profile
+	go tool cover -func=$(COVER_DIR)/profile
 
-test: test-operator test-fun-cover test-unit ## Run all tests
+	echo "\033[1;32m Package Summary \033[0m"
+	# Analyse Report and Print Coverage
+	go tool covdata percent -i=$(COVER_DIR)
+
+
+test-it: run-fun-cover test-unit cover-analyse ## Integration test coverage analyse
+
+test-clean:
+	@echo "Cleaning Coverage Reports"
+	rm -rf $(COVER_DIR)
+
+test: test-operator test-it ## Run all tests
 
 ### Builds
 build-fun: ## Build Fun App
 	$(BUILD_OPTS) go build -o $(COMPONENT_DIR)/fun-app/fun $(COMPONENT_DIR)/fun-app/main.go
+
+build-fun-cover: ## Build Fun App with Coverage
+	$(BUILD_OPTS) go build -cover -o $(COMPONENT_DIR)/fun-app/fun-cover $(COMPONENT_DIR)/fun-app/main.go
 
 build-kohan:
 	$(BUILD_OPTS) go build -o $(COMPONENT_DIR)/kohan/kohan $(COMPONENT_DIR)/kohan/main.go
 
 build-clean:
 	rm $(COMPONENT_DIR)/fun-app/fun
+	rm "$(COMPONENT_DIR)/fun-app/fun-cover"
 	rm $(COMPONENT_DIR)/kohan/kohan
 
 build: build-fun build-kohan ## Build all Binaries
+
+### Runs
+run-fun: build-fun ## Run Fun App
+	$(COMPONENT_DIR)/fun-app/fun
+
+run-fun-cover: build-fun-cover ## Run Fun App with Coverage
+	mkdir -p $(COVER_DIR)
+	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(COMPONENT_DIR)/fun-app/fun-cover > $(COMPONENT_DIR)/fun-app/funcover.log &
 
 ### Helm
 helm-add: ## Add Helm Repos
