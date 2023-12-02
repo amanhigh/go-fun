@@ -6,6 +6,8 @@
 BUILD_OPTS := CGO_ENABLED=1 GOOS=linux GOARCH=amd64
 COMPONENT_DIR := ./components
 
+FUN_IMAGE_TAG := amanfdk/fun-app
+
 .PHONY: sync test
 
 ### Basic
@@ -37,6 +39,10 @@ build-fun: ## Build Fun App
 build-kohan:
 	$(BUILD_OPTS) go build -o $(COMPONENT_DIR)/kohan/kohan $(COMPONENT_DIR)/kohan/main.go
 
+build-clean:
+	rm $(COMPONENT_DIR)/fun-app/fun
+	rm $(COMPONENT_DIR)/kohan/kohan
+
 build: build-fun build-kohan ## Build all Binaries
 
 ### Helm
@@ -66,10 +72,12 @@ helm-package: helm-build ## Package Helm Charts
 	helm package $(COMPONENT_DIR)/fun-app/charts/ -d $(COMPONENT_DIR)/fun-app/charts
 
 # Docker
-docker-fun:
-	docker build -t amanfdk/fun-app -f $(COMPONENT_DIR)/fun-app/Dockerfile .
+docker-fun: build-fun
+	docker build -t $(FUN_IMAGE_TAG) -f $(COMPONENT_DIR)/fun-app/Dockerfile $(COMPONENT_DIR)/fun-app
 
 docker-build: docker-fun ## Build Docker Images
 
 ### Workflows
 all: sync test build helm-package docker-build ## Run Complete Build Process
+
+clean: test-clean build-clean ## Clean up Residue
