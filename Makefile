@@ -3,9 +3,12 @@
 
 ### Variables
 .DEFAULT_GOAL := help
+BUILD_OPTS := CGO_ENABLED=1 GOOS=linux GOARCH=amd64
+COMPONENT_DIR := ./components
 
 .PHONY: sync test
 
+### Basic
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
@@ -14,15 +17,27 @@ sync: ## Sync Go Modules
 
 ### Testing
 test-operator: ## Run operator tests
-	make -C ./components/operator/ test
+	make -C $(COMPONENT_DIR)/operator/ test
 
-test-integration: ## Run integration tests
-	sh -c './components/fun-app/it/cover.zsh run > /dev/null 2>&1 &'
+test-fun-cover: ## Run Fun Server with Coverage
+	$(COMPONENT_DIR)/fun-app/it/cover.zsh run &
 
 test-unit: ## Run unit tests
 	ginkgo -r '--label-filter=!setup' -cover .
 
-test: test-operator test-unit ## Run all tests
+test-clean:
+	$(COMPONENT_DIR)/fun-app/it/cover.zsh clean
+
+test: test-operator test-fun-cover test-unit ## Run all tests
+
+### Builds
+build-fun: ## Build Fun App
+	$(BUILD_OPTS) go build -o $(COMPONENT_DIR)/fun-app/fun $(COMPONENT_DIR)/fun-app/main.go
+
+build-kohan:
+	$(BUILD_OPTS) go build -o $(COMPONENT_DIR)/kohan/kohan $(COMPONENT_DIR)/kohan/main.go
+
+build: build-fun build-kohan ## Build all Binaries
 
 ### Helm
 helm-add: ## Add Helm Repos
@@ -45,20 +60,16 @@ helm-update: ## Update Helm Repos
 	helm repo update
 
 helm-build: ## Build Helm Charts
-	helm dependency build ./components/fun-app/charts/
+	helm dependency build $(COMPONENT_DIR)/fun-app/charts/
 
 helm-package: helm-build ## Package Helm Charts
-	helm package ./components/fun-app/charts/ -d ./components/fun-app/charts
-
-### Builds
-build-fun:
-	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o ./components/fun-app/fun ./components/fun-app/main.go
-
-build-kohan:
-	go build -o ./components/kohan/kohan ./components/kohan/main.go
+	helm package $(COMPONENT_DIR)/fun-app/charts/ -d $(COMPONENT_DIR)/fun-app/charts
 
 # Docker
 docker-fun:
-	docker build -t amanfdk/fun-app -f ./components/fun-app/Dockerfile .
+	docker build -t amanfdk/fun-app -f $(COMPONENT_DIR)/fun-app/Dockerfile .
 
 docker-build: docker-fun ## Build Docker Images
+
+### Workflows
+all: sync test build helm-package docker-build ## Run Complete Build Process
