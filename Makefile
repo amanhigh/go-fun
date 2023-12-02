@@ -1,5 +1,6 @@
 ### Help
 # Silent: -s
+# Paraller Jobs: -j2
 
 ### Variables
 .DEFAULT_GOAL := help
@@ -22,7 +23,7 @@ test-operator: ## Run operator tests
 	make -C $(COMPONENT_DIR)/operator/ test
 
 test-fun-cover: ## Run Fun Server with Coverage
-	$(COMPONENT_DIR)/fun-app/it/cover.zsh run &
+	$(COMPONENT_DIR)/fun-app/it/cover.zsh run > /dev/null 2>&1 &
 
 test-unit: ## Run unit tests
 	ginkgo -r '--label-filter=!setup' -cover .
@@ -71,7 +72,20 @@ helm-build: ## Build Helm Charts
 helm-package: helm-build ## Package Helm Charts
 	helm package $(COMPONENT_DIR)/fun-app/charts/ -d $(COMPONENT_DIR)/fun-app/charts
 
-# Docker
+### Local Setup
+setup-hosts: ## Setup Hosts
+	DOCKER_HOSTS="127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker\
+	mysqladmin.docker redisadmin.docker prometheus.docker grafana.docker jaeger.docker kiali.docker\
+	ldapadmin.docker webssh.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker\
+	consul.docker opa.docker sonar.docker";\
+	echo $$DOCKER_HOSTS | sudo tee -a /etc/hosts
+
+setup-tools: ## Setup Tools	for Local Environment
+	go install github.com/onsi/ginkgo/v2/ginkgo
+
+setup: setup-hosts setup-tools ## Setup Local Environment
+
+### Docker
 docker-fun: build-fun
 	docker build -t $(FUN_IMAGE_TAG) -f $(COMPONENT_DIR)/fun-app/Dockerfile $(COMPONENT_DIR)/fun-app
 
