@@ -6,6 +6,7 @@
 .DEFAULT_GOAL := help
 BUILD_OPTS := CGO_ENABLED=1 GOOS=linux GOARCH=amd64
 COMPONENT_DIR := ./components
+FUN_DIR := $(COMPONENT_DIR)/fun-app
 
 COVER_DIR:= /tmp/cover
 PROFILE_FILE:= $(COVER_DIR)/profile.out
@@ -53,28 +54,28 @@ test: test-operator test-it ## Run all tests
 
 ### Builds
 build-fun: ## Build Fun App
-	$(BUILD_OPTS) go build -o $(COMPONENT_DIR)/fun-app/fun $(COMPONENT_DIR)/fun-app/main.go
+	$(BUILD_OPTS) go build -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
 
 build-fun-cover: ## Build Fun App with Coverage
-	$(BUILD_OPTS) go build -cover -o $(COMPONENT_DIR)/fun-app/fun $(COMPONENT_DIR)/fun-app/main.go
+	$(BUILD_OPTS) go build -cover -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
 
 build-kohan:
 	$(BUILD_OPTS) go build -o $(COMPONENT_DIR)/kohan/kohan $(COMPONENT_DIR)/kohan/main.go
 
 build-clean:
-	rm "$(COMPONENT_DIR)/fun-app/fun";
+	rm "$(FUN_DIR)/fun";
 	rm "$(COMPONENT_DIR)/kohan/kohan";
 
 build: build-fun build-kohan ## Build all Binaries
 
 ### Runs
 run-fun: build-fun ## Run Fun App
-	$(COMPONENT_DIR)/fun-app/fun
+	$(FUN_DIR)/fun
 
 # Guide - https://dustinspecker.com/posts/go-combined-unit-integration-code-coverage/
 run-fun-cover: build-fun-cover ## Run Fun App with Coverage
 	mkdir -p $(COVER_DIR)
-	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(COMPONENT_DIR)/fun-app/fun > $(COMPONENT_DIR)/fun-app/funcover.log &
+	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(FUN_DIR)/fun > $(FUN_DIR)/funcover.log &
 
 ### Helm
 helm-add: ## Add Helm Repos
@@ -97,10 +98,10 @@ helm-update: ## Update Helm Repos
 	helm repo update
 
 helm-build: ## Build Helm Charts
-	helm dependency build $(COMPONENT_DIR)/fun-app/charts/
+	helm dependency build $(FUN_DIR)/charts/
 
 helm-package: helm-build ## Package Helm Charts
-	helm package $(COMPONENT_DIR)/fun-app/charts/ -d $(COMPONENT_DIR)/fun-app/charts
+	helm package $(FUN_DIR)/charts/ -d $(FUN_DIR)/charts
 
 ### Local Setup
 setup-hosts: ## Setup Hosts
@@ -118,7 +119,7 @@ setup: setup-hosts setup-tools ## Setup Local Environment
 
 ### Docker
 docker-fun: build-fun
-	docker build -t $(FUN_IMAGE_TAG) -f $(COMPONENT_DIR)/fun-app/Dockerfile $(COMPONENT_DIR)/fun-app
+	docker build -t $(FUN_IMAGE_TAG) -f $(FUN_DIR)/Dockerfile $(FUN_DIR)
 
 docker-build: docker-fun ## Build Docker Images
 
