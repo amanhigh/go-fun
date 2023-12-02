@@ -58,9 +58,9 @@ build-kohan:
 	$(BUILD_OPTS) go build -o $(COMPONENT_DIR)/kohan/kohan $(COMPONENT_DIR)/kohan/main.go
 
 build-clean:
-	rm $(COMPONENT_DIR)/fun-app/fun
-	rm "$(COMPONENT_DIR)/fun-app/fun-cover"
-	rm $(COMPONENT_DIR)/kohan/kohan
+	rm "$(COMPONENT_DIR)/fun-app/fun";
+	rm "$(COMPONENT_DIR)/fun-app/fun-cover";
+	rm "$(COMPONENT_DIR)/kohan/kohan";
 
 build: build-fun build-kohan ## Build all Binaries
 
