@@ -56,14 +56,13 @@ build-fun: ## Build Fun App
 	$(BUILD_OPTS) go build -o $(COMPONENT_DIR)/fun-app/fun $(COMPONENT_DIR)/fun-app/main.go
 
 build-fun-cover: ## Build Fun App with Coverage
-	$(BUILD_OPTS) go build -cover -o $(COMPONENT_DIR)/fun-app/fun-cover $(COMPONENT_DIR)/fun-app/main.go
+	$(BUILD_OPTS) go build -cover -o $(COMPONENT_DIR)/fun-app/fun $(COMPONENT_DIR)/fun-app/main.go
 
 build-kohan:
 	$(BUILD_OPTS) go build -o $(COMPONENT_DIR)/kohan/kohan $(COMPONENT_DIR)/kohan/main.go
 
 build-clean:
 	rm "$(COMPONENT_DIR)/fun-app/fun";
-	rm "$(COMPONENT_DIR)/fun-app/fun-cover";
 	rm "$(COMPONENT_DIR)/kohan/kohan";
 
 build: build-fun build-kohan ## Build all Binaries
@@ -75,7 +74,7 @@ run-fun: build-fun ## Run Fun App
 # Guide - https://dustinspecker.com/posts/go-combined-unit-integration-code-coverage/
 run-fun-cover: build-fun-cover ## Run Fun App with Coverage
 	mkdir -p $(COVER_DIR)
-	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(COMPONENT_DIR)/fun-app/fun-cover > $(COMPONENT_DIR)/fun-app/funcover.log &
+	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(COMPONENT_DIR)/fun-app/fun > $(COMPONENT_DIR)/fun-app/funcover.log &
 
 ### Helm
 helm-add: ## Add Helm Repos
