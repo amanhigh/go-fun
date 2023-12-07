@@ -54,18 +54,13 @@ linters-settings:
       - "^os/exec.Cmd$"
       - "^reflect.StructField$"
       # public libs
-      - "^github.com/Shopify/sarama.Config$"
-      - "^github.com/Shopify/sarama.ProducerMessage$"
-      - "^github.com/mitchellh/mapstructure.DecoderConfig$"
       - "^github.com/prometheus/client_golang/.+Opts$"
       - "^github.com/spf13/cobra.Command$"
       - "^github.com/spf13/cobra.CompletionOptions$"
       - "^github.com/stretchr/testify/mock.Mock$"
       - "^github.com/testcontainers/testcontainers-go.+Request$"
       - "^github.com/testcontainers/testcontainers-go.FromDockerfile$"
-      - "^golang.org/x/tools/go/analysis.Analyzer$"
       - "^google.golang.org/protobuf/.+Options$"
-      - "^gopkg.in/yaml.v3.Node$"
 
   funlen:
     # Checks the number of lines in a function.
@@ -106,35 +101,13 @@ linters-settings:
     # `strconv.ParseInt`, `strconv.ParseUint`, `strconv.ParseFloat`.
     # Default: []
     ignored-functions:
-      - flag.Arg
-      - flag.Duration.*
       - flag.Float.*
       - flag.Int.*
-      - flag.Uint.*
       - os.Chmod
       - os.Mkdir.*
       - os.OpenFile
       - os.WriteFile
-      - prometheus.ExponentialBuckets.*
       - prometheus.LinearBuckets
-
-  gomodguard:
-    blocked:
-      # List of blocked modules.
-      # Default: []
-      modules:
-        - github.com/golang/protobuf:
-            recommendations:
-              - google.golang.org/protobuf
-            reason: "see https://developers.google.com/protocol-buffers/docs/reference/go/faq#modules"
-        - github.com/satori/go.uuid:
-            recommendations:
-              - github.com/google/uuid
-            reason: "satori's package is not maintained"
-        - github.com/gofrs/uuid:
-            recommendations:
-              - github.com/google/uuid
-            reason: "gofrs' package is not go module"
 
   govet:
     # Enable all analyzers.
@@ -219,7 +192,7 @@ linters:
     - goimports # in addition to fixing imports, goimports also formats your code in the same style as gofmt
     - gomnd # detects magic numbers
     - gomoddirectives # manages the use of 'replace', 'retract', and 'excludes' directives in go.mod
-    - gomodguard # allow and block lists linter for direct Go module dependencies. This is different from depguard where there are different block types for example version constraints and module recommendations
+    # - gomodguard # allow and block lists linter for direct Go module dependencies. This is different from depguard where there are different block types for example version constraints and module recommendations
     - goprintffuncname # checks that printf-like functions are named with f at the end
     - gosec # inspects source code for security problems
     - lll # reports long lines
