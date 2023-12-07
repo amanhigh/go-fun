@@ -1,6 +1,6 @@
 module github.com/amanhigh/go-fun/components/learn
 
-go 1.20
+go 1.21
 
 require (
 	github.com/amanhigh/go-fun/common v1.0.1
