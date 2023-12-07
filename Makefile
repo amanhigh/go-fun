@@ -1,4 +1,5 @@
 ### Help
+# Tutorial: https://makefiletutorial.com/
 # Silent: -s
 # Paraller Jobs: -j2
 # Override Vars: make test-it COVER_DIR=./test
@@ -25,6 +26,11 @@ sync: ## Sync Go Modules
 	go work sync
 
 ### Testing
+# https://golangci-lint.run/usage/quick-start/
+# FIXME: Use Configuration - https://golangci-lint.run/usage/configuration/
+lint: ## Lint the Code
+	go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} golangci-lint run {}/...
+
 test-operator: ## Run operator tests
 	make -C $(COMPONENT_DIR)/operator/ test
 
