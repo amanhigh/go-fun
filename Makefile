@@ -4,6 +4,7 @@
 # Paraller Jobs: -j2
 # Override Vars: make test-it COVER_DIR=./test
 # Call Target: $(MAKE) --no-print-directory XTRA=ISTIO bootstrap
+# Store Var: CUR_DIR := $(shell pwd) (Outside Target)
 
 ### Variables
 .DEFAULT_GOAL := help
