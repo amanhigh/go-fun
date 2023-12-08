@@ -70,7 +70,8 @@ type SomeStructWithTags struct {
 	StringMap    map[string]string `faker:"len=30"`
 	IntMap       map[int]int       `faker:"boundary_start=5, boundary_end=10"`
 
-	UniqueWord string `faker:"word,unique"`
+	UniqueWord    string `faker:"word,unique"`
+	PaymentMethod string `faker:"oneof: cc, paypal, check, money order"`
 
 	NestedStruct AStruct
 	//Struct Array Not Supported
