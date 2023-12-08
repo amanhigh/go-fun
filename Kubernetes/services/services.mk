@@ -3,6 +3,8 @@
 CMD=install
 ANS_FILE=/tmp/k8-svc.txt
 
+#TODO: Add Locust
+
 ### Basic
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -21,14 +23,77 @@ dashy: ## Dashy
 	-helm $(CMD) dashy onechart/onechart -f dashy.yml > /dev/null
 	@printf "\033[1;33m http://dashy.docker/ \033[0m \n"
 
-### Services
+### Http
 httpbin: ## Httpbin
 	-helm $(CMD) httpbin onechart/onechart -f httpbin.yml > /dev/null
 	@printf "\033[1;33m Swagger: http://httpbin.docker \033[0m \n"
 	@printf "\033[1;33m http://httpbin.docker/anything \033[0m \n"
 	@printf "\033[1;33m curl http://httpbin:8810/headers \033[0m \n"
 
+### Utility
+# FIXME: Cron needs sample jobs
 cron: ## Cron
 	-helm $(CMD) cron onechart/onechart -f rundeck.yml > /dev/null
 	@printf "\033[1;33m http://cron.docker \033[0m \n"
 	@printf "\033[1;33m http://cron.docker/health \033[0m \n"
+
+### Security
+opa: ## Open Policy Agent
+	-helm $(CMD) opa opa/opa-kube-mgmt -f opa.yml > /dev/null
+	-helm $(CMD) opa-demo onechart/onechart -f opa-demo.yml > /dev/null
+	@printf "\033[1;33m curl --user david:password http://opa.docker/finance/salary/david \033[0m \n"
+	@printf "\033[1;33m Demo (opa-demo): /demo/hr.sh \033[0m \n"
+	@printf "\033[1;33m Demo (opa-demo): /demo/authz.sh \033[0m \n"
+	@printf "\033[1;33m Docker (Localhost): ./demo/docker.sh \033[0m \n"
+
+vault: ## Hashicorp Vault
+	-helm $(CMD) vault hashicorp/vault -f vault.yml > /dev/null
+	@printf "\033[1;33m vault status \033[0m \n"
+	@printf "\033[1;33m /demo/vault.sh \033[0m \n"
+
+### Databases
+ mysql: ## MySQL
+	-helm $(CMD) mysql bitnami/mysql -f mysql.yml > /dev/null
+	-helm $(CMD) mysql-admin bitnami/phpmyadmin -f phpmyadmin.yml > /dev/null
+	@printf "\033[1;33m http://mysqladmin.docker/ Login: mysql-primary, root/root \033[0m \n"
+
+mongo: ## Mongo
+	-helm $(CMD) mongo bitnami/mongodb -f mongo.yml > /dev/null
+	@printf "\033[1;33m mongosh -u root -p root --host localhost  < /etc/files/scripts/mongo.js \033[0m \n"
+	@printf "\033[1;33m Svc Endpoint: mongo-mongodb:27017 (Standalone Mode Only) \033[0m \n"
+
+redis: ## Redis
+	-helm $(CMD) redis bitnami/redis -f redis.yml > /dev/null
+	-helm $(CMD) redis-admin onechart/onechart -f redis-admin.yml > /dev/null
+	@printf "\033[1;33m redis-cli -c incr mycounter \033[0m \n"
+	@printf "\033[1;33m redis-cli -c set mypasswd lol \033[0m \n"
+	@printf "\033[1;33m redis-cli -c get mypasswd \033[0m \n"
+	@printf "\033[1;33m Commander: http://redisadmin.docker/ \033[0m \n"
+
+ldap: ## LDAP Server
+	-helm $(CMD) ldap onechart/onechart -f ldap.yml > /dev/null
+	-helm $(CMD) ldap-admin onechart/onechart -f ldap-admin.yml > /dev/null
+	@printf "\033[1;33m CMD: ldapsearch -H ldap://localhost:3891 -xLL -D 'cn=admin,dc=example,dc=com' -b 'dc=example,dc=com' -W '(cn=admin)' \033[0m \n"
+	@printf "\033[1;33m UI: http://ldapadmin.docker/ \033[0m \n"
+	@printf "\033[1;33m Admin Login: Username:cn=admin,dc=example,dc=com Password: admin \033[0m \n"
+
+mysql-op: ## Mysql Operator
+	-helm $(CMD) mysql-operator bitpoke/mysql-operator -f bitspoke.yml > /dev/null
+	kubectl apply -f ./files/bitspoke/secret.yml
+	kubectl apply -f ./files/bitspoke/cluster.yml
+	-helm $(CMD) mysql-admin bitnami/phpmyadmin > /dev/null
+	@printf "\033[1;33m Mysql Info: kubectl get mysql; kubectl describe mysql mysql-operator; \033[0m \n"
+	@printf "\033[1;33m Mysql Clear: kubectl delete mysql mysql-operator; \033[0m \n"
+	@printf "\033[1;33m Login: root/root, aman/aman [Host: mysql] \033[0m \n"
+
+consul: ## Consul
+	-helm $(CMD) consul hashicorp/consul -f consul.yml > /dev/null
+	@printf "\033[1;33m http://consul.docker/ \033[0m \n"
+
+etcd: ## Etcd
+	-helm $(CMD) etcd bitnami/etcd -f etcd.yml > /dev/null
+	@printf "\033[1;33m ./demo/demo.sh \033[0m \n"
+
+zookeeper: ## Zookeeper
+	-helm $(CMD) zookeeper bitnami/zookeeper -f zookeeper.yml > /dev/null
+	@printf "\033[1;33m /demo/demo.sh \033[0m \n"
