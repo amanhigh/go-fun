@@ -110,6 +110,7 @@ mysql-admin:
 metabase:
 	-helm $(CMD) metabase onechart/onechart -f metabase.yml > /dev/null
 	@printf "\033[1;33m http://metabase.docker/ \033[0m \n"
+	@printf "\033[1;33m Login: email/aman \033[0m \n"
 
 mysql: metabase ## MySQL
 	-helm $(CMD) mysql bitnami/mysql -f mysql.yml > /dev/null
