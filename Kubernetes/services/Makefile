@@ -8,7 +8,7 @@ XTRA=""
 DOCKER_HOSTS=127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker \
 mysqladmin.docker redisadmin.docker cron.docker prometheus.docker grafana.docker jaeger.docker kiali.docker \
 ldapadmin.docker webssh.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker \
-consul.docker opa.docker sonar.docker
+consul.docker opa.docker sonar.docker metabase.docker
 
 ### Basic
 help: ## Show this help
@@ -81,6 +81,7 @@ helm-add: ## Add Helm Repos
 	helm repo add grafana https://grafana.github.io/helm-charts
 	helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
 	helm repo add bitpoke https://helm-charts.bitpoke.io
+	helm repo add pmint93 https://pmint93.github.io/helm-charts
 
 helm-update: ## Update Helm Repos
 	helm repo update

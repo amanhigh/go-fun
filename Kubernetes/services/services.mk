@@ -5,7 +5,7 @@ ANS_FILE=/tmp/k8-svc.txt
 
 #TODO: Add Locust
 # Bootstrap: helm show values bitnami/postgresql > postgres.yml
-# Debug: find . | entr -s "helm template elasticsearch bitnami/elasticsearch -f elasticsearch.yml > debug.txt;./service.zsh -di"
+# Debug: find . | entr -s "helm template elasticsearch bitnami/elasticsearch -f elasticsearch.yml > debug.txt;make setup"
 # sudo kubefwd svc | awk '{ if($2 ~ /Port-Forward/) {print $0" URL: http://"$4"/"} else {print}}'
 
 ### Basic
@@ -107,7 +107,11 @@ mysql-admin:
 	-helm $(CMD) mysql-admin bitnami/phpmyadmin -f phpmyadmin.yml > /dev/null
 	@printf "\033[1;33m http://mysqladmin.docker/\033[0m \n"
 
-mysql: mysql-admin ## MySQL
+metabase:
+	-helm $(CMD) metabase pmint93/metabase -f metabase.yml > /dev/null
+	@printf "\033[1;33m http://metabase.docker/ \033[0m \n"
+
+mysql: metabase ## MySQL
 	-helm $(CMD) mysql bitnami/mysql -f mysql.yml > /dev/null
 	@printf "\033[1;33m MySQL(3306) Login: mysql-primary, root/root \033[0m \n"
 

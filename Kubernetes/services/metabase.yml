@@ -1,0 +1,36 @@
+replicaCount: 1
+
+# Backend database
+database:
+  # Database type (h2 / mysql / postgres), default: h2
+  type: h2
+  ## Specify file to store H2 database.  You will also have to back this with a volume (cf. extraVolume and extraVolumeMounts)!
+  # file:
+  # encryptionKey: << YOUR ENCRYPTION KEY OR LEAVE BLANK AND USE EXISTING SECRET >>
+  ## Only need when you use mysql / postgres
+  # host:
+  # port:
+  # dbname:
+  # username:
+  # password:
+  ## Alternatively, use a connection URI for full configurability. Example for SSL enabled Postgres.
+  # connectionURI: postgres://<host>:<port>/<database>?user=<username>&password=<password>&ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory
+
+
+password:
+  # Changing Metabase password complexity:
+  # weak: no character constraints
+  # normal: at least 1 digit (default)
+  # strong: minimum 8 characters w/ 2 lowercase, 2 uppercase, 1 digit, and 1 special character
+  complexity: weak
+  length: 4
+
+ingress:
+  enabled: true
+  hosts:
+    - "metabase.docker"
+  path: /
+  pathType: Prefix
+  annotations:
+    - traefik.ingress.kubernetes.io/router.entrypoints: web
+ 
