@@ -94,8 +94,8 @@ process()
 
         CRON)
             # FIXME: Cron
-            helm $CMD cron onechart/onechart -f cron.yml > /dev/null
-            echo "\033[1;33m Check Logs for Output \033[0m \n"
+            helm $CMD cron onechart/onechart -f rundeck.yml > /dev/null
+            echo "\033[1;33m http://cron.docker \033[0m \n"
             ;;
 
         DASHY)

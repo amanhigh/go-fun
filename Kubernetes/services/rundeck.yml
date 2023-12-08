@@ -1,0 +1,21 @@
+#OneChart: https://github.com/gimlet-io/onechart/tree/master/charts/onechart/tests
+# Values: https://github.com/gimlet-io/onechart/blob/master/charts/onechart/values.yaml
+image:
+  repository: rundeck/rundeck
+  tag: 4.17.3
+
+containerPort: 4440
+svcPort: 4440
+
+# volumes:
+#   - name: data
+#     path: /home/rundeck/server/data
+#     hostPath:
+#       path: /etc/files/rundeck/
+
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: default-stripprefixregex@kubernetescrd
+  path: /
+  host: cron.docker

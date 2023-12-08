@@ -124,7 +124,7 @@ helm-package: helm-build ## Package Helm Charts
 ### Local Setup
 setup-hosts: ## Setup Hosts
 	DOCKER_HOSTS="127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker\
-	mysqladmin.docker redisadmin.docker prometheus.docker grafana.docker jaeger.docker kiali.docker\
+	mysqladmin.docker redisadmin.docker cron.docker prometheus.docker grafana.docker jaeger.docker kiali.docker\
 	ldapadmin.docker webssh.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker\
 	consul.docker opa.docker sonar.docker";\
 	echo $$DOCKER_HOSTS | sudo tee -a /etc/hosts

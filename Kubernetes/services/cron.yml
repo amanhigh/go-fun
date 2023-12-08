@@ -1,8 +1,0 @@
-# Cron
-image:
-  repository: debian
-  tag: stable-slim
-schedule: "*/1 * * * *" # Every Minute
-command: |
-  echo "hello";
-  date;
