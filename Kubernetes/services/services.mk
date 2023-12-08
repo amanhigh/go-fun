@@ -4,6 +4,7 @@ CMD=install
 ANS_FILE=/tmp/k8-svc.txt
 
 #TODO: Add Locust
+# Bootstrap: helm show values bitnami/postgresql > postgres.yml
 # Debug: find . | entr -s "helm template elasticsearch bitnami/elasticsearch -f elasticsearch.yml > debug.txt;./service.zsh -di"
 # sudo kubefwd svc | awk '{ if($2 ~ /Port-Forward/) {print $0" URL: http://"$4"/"} else {print}}'
 
@@ -65,8 +66,9 @@ proxy: ## Proxy Servers
 
 cron: ## Cron Server
 	-helm $(CMD) cron onechart/onechart -f rundeck.yml > /dev/null
-	@printf "\033[1;33m http://cron.docker \033[0m \n"
 	@printf "\033[1;33m http://cron.docker/health \033[0m \n"
+	@printf "\033[1;33m http://cron.docker \033[0m \n"
+	@printf "\033[1;33m Username/Password: admin/admin \033[0m \n"
 
 portainer: ## Portainer
 	-helm $(CMD) portainer portainer/portainer -f portainer.yml
@@ -101,10 +103,17 @@ webshell: ## Web Shell
 	@printf "\033[1;33m Webssh: http://webssh2.docker/ \033[0m \n"
 
 ### Databases
- mysql: ## MySQL
-	-helm $(CMD) mysql bitnami/mysql -f mysql.yml > /dev/null
+mysql-admin:
 	-helm $(CMD) mysql-admin bitnami/phpmyadmin -f phpmyadmin.yml > /dev/null
-	@printf "\033[1;33m http://mysqladmin.docker/ Login: mysql-primary, root/root \033[0m \n"
+	@printf "\033[1;33m http://mysqladmin.docker/\033[0m \n"
+
+mysql: mysql-admin ## MySQL
+	-helm $(CMD) mysql bitnami/mysql -f mysql.yml > /dev/null
+	@printf "\033[1;33m MySQL(3306) Login: mysql-primary, root/root \033[0m \n"
+
+postgres: mysql-admin ## PostgreSQL
+	-helm $(CMD) postgres bitnami/postgresql -f postgres.yml > /dev/null
+	@printf "\033[1;33m Postgres(5432) Login: postgres-primary, postgres/root \033[0m \n"
 
 mongo: ## Mongo
 	-helm $(CMD) mongo bitnami/mongodb -f mongo.yml > /dev/null
