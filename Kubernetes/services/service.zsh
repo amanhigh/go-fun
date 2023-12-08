@@ -96,6 +96,7 @@ process()
             # FIXME: Cron
             helm $CMD cron onechart/onechart -f rundeck.yml > /dev/null
             echo "\033[1;33m http://cron.docker \033[0m \n"
+            echo "\033[1;33m http://cron.docker/health \033[0m \n"
             ;;
 
         DASHY)
