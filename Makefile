@@ -99,25 +99,6 @@ run-fun-cover: build-fun-cover ## Run Fun App with Coverage
 	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(FUN_DIR)/fun > $(FUN_DIR)/funcover.log &
 
 ### Helm
-helm-add: ## Add Helm Repos
-	helm repo add onechart https://chart.onechart.dev
-	helm repo add stakater https://stakater.github.io/stakater-charts
-	helm repo add bitnami https://charts.bitnami.com/bitnami
-	helm repo add istio https://istio-release.storage.googleapis.com/charts
-	helm repo add kiali https://kiali.org/helm-charts
-	helm repo add opa https://open-policy-agent.github.io/kube-mgmt/charts
-	helm repo add hashicorp https://helm.releases.hashicorp.com
-	helm repo add portainer https://portainer.github.io/k8s/
-	helm repo add traefik https://traefik.github.io/charts
-	helm repo add hashicorp https://helm.releases.hashicorp.com
-	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-	helm repo add grafana https://grafana.github.io/helm-charts
-	helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
-	helm repo add bitpoke https://helm-charts.bitpoke.io
-
-helm-update: ## Update Helm Repos
-	helm repo update
-
 helm-build: ## Build Helm Charts
 	helm dependency build $(FUN_DIR)/charts/
 
@@ -125,18 +106,14 @@ helm-package: helm-build ## Package Helm Charts
 	helm package $(FUN_DIR)/charts/ -d $(FUN_DIR)/charts
 
 ### Local Setup
-setup-hosts: ## Setup Hosts
-	DOCKER_HOSTS="127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker\
-	mysqladmin.docker redisadmin.docker cron.docker prometheus.docker grafana.docker jaeger.docker kiali.docker\
-	ldapadmin.docker webssh.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker\
-	consul.docker opa.docker sonar.docker";\
-	echo $$DOCKER_HOSTS | sudo tee -a /etc/hosts
-
 setup-tools: ## Setup Tools	for Local Environment
 	go install github.com/onsi/ginkgo/v2/ginkgo
 
+setup-k8: ## Kubernetes Setup
+	$(MAKE) -C ./Kubernetes/services helm-add setup-hosts
+
 #HACK: Add Make to Readme
-setup: setup-hosts setup-tools ## Setup Local Environment
+setup: setup-tools setup-k8 ## Setup Local Environment
 
 ### Docker
 docker-fun: build-fun
