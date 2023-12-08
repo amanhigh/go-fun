@@ -59,7 +59,7 @@ bootstrap: ## Bootstrap
 
 select: ## Select Service
 	@$(MAKE) $(SERVICE_MAKE_OPTS)  | awk '{print $$1}' | grep -v "help\|make" | gum choose --limit 5 > $(ANS_FILE)
-	@$(MAKE) info --no-print-directory
+	@$(MAKE) --no-print-directory info setup
 
 info: ## Info
 	@printf "\033[1;32m Selected Services \033[0m \n"
