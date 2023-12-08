@@ -3,6 +3,7 @@
 ANS_FILE=/tmp/k8-svc.txt
 
 SERVICE_MAKE_OPTS=--no-print-directory -f ./services.mk
+XTRA=""
 
 ### Basic
 help: ## Show this help
@@ -47,8 +48,15 @@ setup: delete install ## Setup Selected Services
 update: ## Update Services
 	@$(MAKE) $(SERVICE_MAKE_OPTS) CMD=upgrade $$(cat $(ANS_FILE))
 
+port: ## Port Forward
+	kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik --timeout=2m;
+	@printf "\033[1;32m Attempting Traefik Portforward \033[0m \n";
+	kubectl port-forward deployment/traefik 9000:9000 > /dev/null &\
+	kubectl port-forward deployment/traefik 8000:8000 > /dev/null &\
+
 bootstrap: ## Bootstrap
-	@$(MAKE) $(SERVICE_MAKE_OPTS) traefik dashy
+	@$(MAKE) $(SERVICE_MAKE_OPTS) traefik dashy $(XTRA)
+	$(MAKE) port
 
 select: ## Select Service
 	@$(MAKE) $(SERVICE_MAKE_OPTS)  | awk '{print $$1}' | grep -v "help\|make" | gum choose --limit 5 > $(ANS_FILE)

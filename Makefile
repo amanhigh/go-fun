@@ -6,6 +6,7 @@
 # Call Target: $(MAKE) --no-print-directory XTRA=ISTIO bootstrap
 # Store Var: CUR_DIR := $(shell pwd) (Outside Target)
 # Continue Step or error: Start with `-`. Eg. -rm test.txt
+# Make In Directory: make -C /path/to/dir
 
 ### Variables
 .DEFAULT_GOAL := help
