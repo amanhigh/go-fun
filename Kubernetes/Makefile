@@ -2,7 +2,7 @@
 .DEFAULT_GOAL := help
 PORT=8091
 CPU=3
-MEMORY=3096
+MEMORY=4096
 XTRA=""
 
 MINI_BKP_FILE=~/Downloads/mini-bkp.txt
@@ -22,11 +22,9 @@ stop: ## Stop Minikube
 
 ### Lifecycle
 #Additional Flags: --kubernetes-version v1.23.0
-#BUG: Metric Server Not Working K9s Pulse.
 start: ## Start Minikube
-	minikube  -p minikube start --memory=$(MEMORY) --cpus=$(CPU) \
-	--cache-images=true --mount-string="$(SERVICE_FILES):/etc/files" --mount --host-only-cidr='24.1.1.100/24'\
-	--addons metrics-server;
+	minikube  -p minikube start --memory=$(MEMORY) --cpus=$(CPU) --addons=metrics-server \
+	--cache-images=true --mount-string="$(SERVICE_FILES):/etc/files" --mount --host-only-cidr='24.1.1.100/24';
 
 wait:
 	@printf "\033[1;34m Waiting for Minikube to be Ready \033[0m \n";
