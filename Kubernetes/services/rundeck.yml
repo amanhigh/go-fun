@@ -1,5 +1,3 @@
-#OneChart: https://github.com/gimlet-io/onechart/tree/master/charts/onechart/tests
-# Values: https://github.com/gimlet-io/onechart/blob/master/charts/onechart/values.yaml
 image:
   repository: rundeck/rundeck
   tag: 4.17.3
@@ -12,6 +10,22 @@ svcPort: 4440
 #     path: /home/rundeck/server/data
 #     hostPath:
 #       path: /etc/files/rundeck/
+
+probe:
+  enabled: true
+  path: "/health"
+  settings:
+    initialDelaySeconds: 3
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+    failureThreshold: 3
+
+resources:
+  limits:
+    cpu: "1000m"
+    memory: "2000Mi"
+
 
 ingress:
   annotations:
