@@ -87,15 +87,13 @@ helm-add: ## Add Helm Repos
 	helm repo add grafana https://grafana.github.io/helm-charts
 	helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
 	helm repo add bitpoke https://helm-charts.bitpoke.io
-	$(MAKE) helm-update
 
 helm-update: ## Update Helm Repos
 	helm repo update
 
-setup-hosts: ## Setup Hosts
-	# Escape spaces and remove quotes
-	echo "${escaped_hosts}"
+helm: helm-add helm-update ## Helm Setup
 
+hosts: ## Hosts Setup
 	@if ! grep -q "docker" /etc/hosts; then \
 		printf "\033[1;32m Adding Docker Hosts to /etc/hosts \033[0m \n"; \
 		echo "$(DOCKER_HOSTS)" | sudo tee -a /etc/hosts; \

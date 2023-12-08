@@ -110,7 +110,7 @@ setup-tools: ## Setup Tools	for Local Environment
 	go install github.com/onsi/ginkgo/v2/ginkgo
 
 setup-k8: ## Kubernetes Setup
-	$(MAKE) -C ./Kubernetes/services helm-add setup-hosts
+	$(MAKE) -C ./Kubernetes/services helm hosts
 
 #HACK: Add Make to Readme
 setup: setup-tools setup-k8 ## Setup Local Environment
