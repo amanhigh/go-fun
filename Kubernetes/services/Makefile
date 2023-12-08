@@ -22,9 +22,15 @@ delete: ## Delete deployed Helms
 	#Exclude Permanent Helms
 	helm delete $(helm list --short | grep -v "traefik\|dashy") 2> /dev/null
 
+install: ## Install Services
+	@$(MAKE) --no-print-directory -f ./services.mk $$(cat $(ANS_FILE))
+
+update: ## Update Services
+	@$(MAKE) --no-print-directory -f ./services.mk CMD=upgrade $$(cat $(ANS_FILE))
+
 select: ## Select Service
-	$(MAKE) -f ./services.mk | awk '{print $$1}' | grep -v "help\|make" | gum choose --limit 5 > $(ANS_FILE)
-	$(MAKE) info
+	@$(MAKE) --no-print-directory -f ./services.mk  | awk '{print $$1}' | grep -v "help\|make" | gum choose --limit 5 > $(ANS_FILE)
+	@$(MAKE) info --no-print-directory
 
 info: ## Info
 	@printf "\033[1;32m Selected Services \033[0m \n"

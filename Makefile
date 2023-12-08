@@ -3,7 +3,7 @@
 # Silent: -s
 # Paraller Jobs: -j2
 # Override Vars: make test-it COVER_DIR=./test
-# Call Target: $(MAKE) XTRA=ISTIO bootstrap
+# Call Target: $(MAKE) --no-print-directory XTRA=ISTIO bootstrap
 
 ### Variables
 .DEFAULT_GOAL := help
