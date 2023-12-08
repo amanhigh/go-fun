@@ -33,6 +33,14 @@ ingress:
 # replicas: 2
 # podDisruptionBudgetEnabled: false
 
+resources:
+  requests:
+    cpu: "200m"
+    memory: "200Mi"
+  limits:
+    cpu: "200m"
+    memory: "200Mi"
+
 securityContext:
   runAsUser: 100
 
