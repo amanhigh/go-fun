@@ -48,8 +48,7 @@ dashboard: ## Minikube Dashboard
 	minikube -p minikube dashboard --port=$(PORT) --url=true > /dev/null 2>&1 &
 
 bootstrap: ## Bootstrap basic Services
-	cd $(MAKE_FILE_DIR)/services;\
-	XTRA_BOOT=$(XTRA) ./service.zsh -b;\
+	@$(MAKE) -C ./services bootstrap
 
 ### Port Forwarding
 port-fwd:
@@ -107,7 +106,7 @@ reset: stop start wait bootstrap port-fwd ## Reset Minikube
 
 .PHONY: istio
 istio: ## Reset Minikube with Istio
-	$(MAKE) XTRA=ISTIO reset
+	$(MAKE) XTRA=istio reset
 
 
 ## k9s
