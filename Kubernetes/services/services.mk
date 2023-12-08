@@ -108,7 +108,7 @@ mysql-admin:
 	@printf "\033[1;33m http://mysqladmin.docker/\033[0m \n"
 
 metabase:
-	-helm $(CMD) metabase pmint93/metabase -f metabase.yml > /dev/null
+	-helm $(CMD) metabase onechart/onechart -f metabase.yml > /dev/null
 	@printf "\033[1;33m http://metabase.docker/ \033[0m \n"
 
 mysql: metabase ## MySQL

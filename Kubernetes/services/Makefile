@@ -81,7 +81,6 @@ helm-add: ## Add Helm Repos
 	helm repo add grafana https://grafana.github.io/helm-charts
 	helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
 	helm repo add bitpoke https://helm-charts.bitpoke.io
-	helm repo add pmint93 https://pmint93.github.io/helm-charts
 
 helm-update: ## Update Helm Repos
 	helm repo update

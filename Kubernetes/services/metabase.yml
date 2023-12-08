@@ -1,36 +1,40 @@
-replicaCount: 1
+# https://artifacthub.io/packages/helm/pmint93/metabase
+image:
+  repository: metabase/metabase
+  tag: latest
 
-# Backend database
-database:
-  # Database type (h2 / mysql / postgres), default: h2
-  type: h2
-  ## Specify file to store H2 database.  You will also have to back this with a volume (cf. extraVolume and extraVolumeMounts)!
-  # file:
-  # encryptionKey: << YOUR ENCRYPTION KEY OR LEAVE BLANK AND USE EXISTING SECRET >>
-  ## Only need when you use mysql / postgres
-  # host:
-  # port:
-  # dbname:
-  # username:
-  # password:
-  ## Alternatively, use a connection URI for full configurability. Example for SSL enabled Postgres.
-  # connectionURI: postgres://<host>:<port>/<database>?user=<username>&password=<password>&ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory
+containerPort: 3000
+svcPort: 3000
 
+volumes:
+  - name: database
+    path: /db
+    hostPath:
+      path: /etc/files/metabase
 
-password:
-  # Changing Metabase password complexity:
-  # weak: no character constraints
-  # normal: at least 1 digit (default)
-  # strong: minimum 8 characters w/ 2 lowercase, 2 uppercase, 1 digit, and 1 special character
-  complexity: weak
-  length: 4
+probe:
+  enabled: true
+  path: "/api/health"
+  settings:
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 2
+    failureThreshold: 3
+
+vars:
+  MB_DB_FILE: "/db/h2.db"
+  MB_DB_TYPE: "h2"
+  MB_PASSWORD_COMPLEXITY: "weak"
+  MB_PASSWORD_LENGTH: "4"
+
+resources:
+  limits:
+    cpu: "1000m"
+    memory: "2000Mi"
 
 ingress:
-  enabled: true
-  hosts:
-    - "metabase.docker"
-  path: /
-  pathType: Prefix
   annotations:
-    - traefik.ingress.kubernetes.io/router.entrypoints: web
- 
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  path: /
+  host: metabase.docker
