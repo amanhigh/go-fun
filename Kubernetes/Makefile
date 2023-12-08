@@ -55,12 +55,15 @@ port-fwd:
 	@printf "\033[1;34m Please enter password for Port 80 Forward \033[0m \n";
 	sudo -v
 	screen -S mini -dmL bash -c 'sudo kubectl port-forward deployment/traefik 80:8000'
+	@printf "\033[1;33m Traefik Dashboard: http://docker:9000/dashboard/#/ \033[0m \n"
+	screen -S traefik -dmL bash -c 'kubectl port-forward deployment/traefik 9000:9000'
 
 port-ls:
 	screen -ls
 
 port-kill:
 	screen -XS mini quit
+	screen -XS traefik quit
 
 port: port-kill port-fwd port-ls ## Port Forward for Minikube
 
