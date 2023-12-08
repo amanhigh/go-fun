@@ -58,10 +58,20 @@ test-clean:
 	@echo "Cleaning Coverage Reports"
 	rm -rf $(COVER_DIR)
 
+profile:
+	go tool pprof -http=:8001 http://localhost:8080/debug/pprof/heap &\
+	go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile;\
+	kill %1;
+
 test: test-operator test-it ## Run all tests
 
 ### Builds
-build-fun: ## Build Fun App
+swag-fun: ## Swagger Generate: Fun App (Init/Update)
+	cd $(FUN_DIR);\
+	swag i --parseDependency true;\
+	echo http://localhost:8080/swagger/index.html
+
+build-fun: swag-fun ## Build Fun App
 	$(BUILD_OPTS) go build -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
 
 build-fun-cover: ## Build Fun App with Coverage

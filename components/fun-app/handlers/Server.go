@@ -46,16 +46,15 @@ func (self *FunServer) initRoutes() {
 	adminGroup.GET("/stop", self.AdminHandler.Stop)
 
 	//Add Swagger - https://github.com/swaggo/gin-swagger
-	//Init/Update: swag i --parseDependency true  (in main.go dir)
-	//URL: http://localhost:8080/swagger/index.html
+	//make swag-fun
+
 	self.GinEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// http://localhost:8080/debug/statsviz/
 	self.GinEngine.GET("/debug/statsviz/*filepath", telemetry.StatvizMetrics)
 
 	//Pprof (Use: http://localhost:8080/debug/pprof/)
-	//go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile
-	//go tool pprof -http=:8001 http://localhost:8080/debug/pprof/heap
+	// make profile
 	//Load Test:  wrk2 http://localhost:8080/v1/person/all/ -t 2 -c 100 -d 1m -R2000
 	//Vegeta: echo "GET http://localhost:9000/v1/person/all" | vegeta attack -max-workers=2 -max-connections=100 -duration=1m -rate=2000/1s | tee results.bin | vegeta report
 	//Vegeta Plot: vegeta plot results.bin > ~/Downloads/plot.html
