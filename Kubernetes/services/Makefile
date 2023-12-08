@@ -37,10 +37,12 @@ delete: ## Delete deployed Helms
 	#HACK: Clear Kiali if istio enabled
 	#HACK: Add Mysql CRD's
 		
-	-helm delete $(helm list --short | grep -v "traefik\|dashy") 2> /dev/null
+	-helm delete $$(helm list --short | grep -v "traefik\|dashy") 2> /dev/null
 
 install: ## Install Services
 	@$(MAKE) $(SERVICE_MAKE_OPTS) $$(cat $(ANS_FILE))
+
+setup: delete install ## Setup Selected Services
 
 update: ## Update Services
 	@$(MAKE) $(SERVICE_MAKE_OPTS) CMD=upgrade $$(cat $(ANS_FILE))
