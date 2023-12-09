@@ -19,7 +19,7 @@ require (
 	github.com/go-zookeeper/zk v1.0.3
 	github.com/golang/mock v1.6.0
 	github.com/hashicorp/consul/api v1.18.0
-	github.com/hashicorp/vault v1.13.7
+	github.com/hashicorp/vault v1.13.10
 	github.com/hashicorp/vault/api v1.9.2
 	github.com/olivere/elastic v6.2.37+incompatible
 	github.com/onsi/ginkgo/v2 v2.9.2
