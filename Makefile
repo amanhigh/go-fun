@@ -72,7 +72,7 @@ test: test-operator test-it ## Run all tests
 swag-fun: ## Swagger Generate: Fun App (Init/Update)
 	cd $(FUN_DIR);\
 	swag i --parseDependency true;\
-	@echo http://localhost:8080/swagger/index.html
+	echo http://localhost:8080/swagger/index.html;
 
 build-fun: swag-fun ## Build Fun App
 	$(BUILD_OPTS) go build -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
@@ -108,6 +108,7 @@ helm-package: helm-build ## Package Helm Charts
 ### Local Setup
 setup-tools: ## Setup Tools	for Local Environment
 	go install github.com/onsi/ginkgo/v2/ginkgo
+	go install github.com/swaggo/swag/cmd/swag
 
 setup-k8: ## Kubernetes Setup
 	$(MAKE) -C ./Kubernetes/services helm hosts
@@ -123,5 +124,6 @@ docker-build: docker-fun ## Build Docker Images
 
 ### Workflows
 all: sync test build helm-package docker-build ## Run Complete Build Process
+	@printf "\033[1;32m\n\n ******* Complete BUILD Successful ********\n \033[0m"
 
 clean: test-clean build-clean ## Clean up Residue
