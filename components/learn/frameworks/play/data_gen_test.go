@@ -52,8 +52,8 @@ var _ = FDescribe("Data Generator", Label(models.GINKGO_SETUP), func() {
 		batchSize    =  1000
 
 		schoolCount  = multiplier * 3
-		teacherCount = multiplier * 5
-		studentCount = multiplier * 150
+		teacherCount = multiplier * 30
+		studentCount = multiplier * 1000
 
 		//Lists
 		schools  = make([]School, schoolCount)
