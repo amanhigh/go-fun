@@ -3,34 +3,36 @@ package play_test
 import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/bxcodec/faker/v3"
+	"github.com/caarlos0/env/v6"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"gorm.io/gorm"
 )
 
 type School struct {
-	gorm.Model
+	gorm.Model `faker:"-"`
 	Name string `faker:"name" gorm:"unique,not null"`
 	City string `faker:"oneof:London,Berlin" gorm:"not null"`
 }
 
 type Student struct {
-	gorm.Model
+	gorm.Model `faker:"-"`
 	Name     string `faker:"name" gorm:"not null"`
 	Birthday int64  `faker:"unix_time" gorm:"not null"`
 	Age      uint   `faker:"boundary_start=10,boundary_end=20"`
-	Rank     uint   `one_of:"1,2,3,4,5" gorm:"not null"`
-	School
+	Rank     uint   `faker:"oneof:1,2,3,4,5" gorm:"not null"`
+	// School
 }
 
 type Teacher struct {
-	gorm.Model
+	gorm.Model `faker:"-"`
 	Name    string  `faker:"name" gorm:"not null"`
-	Subject string  `one_of:"Maths,Physics,Chemistry,English,History"`
+	Subject string  `faker:"oneof:Maths,Physics,Chemistry,English,History"`
 	Phone   string  `faker:"phone_number"`
-	Salary  float64 `faker:"amount" gorm:"not null"`
-	School
+	Salary  int `faker:"boundary_start=20000,boundary_end=50000" gorm:"not null"`
+	// School
 }
 
 var _ = FDescribe("Data Generator", Label(models.GINKGO_SETUP), func() {
@@ -39,9 +41,10 @@ var _ = FDescribe("Data Generator", Label(models.GINKGO_SETUP), func() {
 		err error
 
 		//Counts
-		schoolCount  = 1
-		studentCount = 10
+		schoolCount  = 3
 		teacherCount = 5
+		studentCount = 50
+		batchSize    = 100
 
 		//Lists
 		schools  = make([]School, schoolCount)
@@ -79,8 +82,19 @@ var _ = FDescribe("Data Generator", Label(models.GINKGO_SETUP), func() {
 	})
 
 	Context("with db", func() {
+		var (
+			dbconfig = config.Db{}
+		)
 		BeforeEach(func() {
-			db, err = util.CreateTestDb()
+			//Fill Defaults
+			err = env.Parse(&dbconfig)
+			Expect(err).To(BeNil())
+
+			dbconfig.Url = "aman:aman@tcp(docker:3306)/compute?charset=utf8&parseTime=True&loc=Local"
+			// dbconfig.LogLevel = logger.Info
+
+
+			db, err = util.ConnectDb(dbconfig)
 			Expect(err).To(BeNil())
 		})
 
@@ -99,6 +113,37 @@ var _ = FDescribe("Data Generator", Label(models.GINKGO_SETUP), func() {
 				Expect(db.Migrator().HasTable(&School{})).To(BeTrue(), "School")
 				Expect(db.Migrator().HasTable(&Student{})).To(BeTrue(), "Student")
 				Expect(db.Migrator().HasTable(&Teacher{})).To(BeTrue(), "Teacher")
+			})
+
+			Context("Insert", func() {
+				var (
+					actualCount int64
+				)
+				BeforeEach(func() {
+					err = db.CreateInBatches(&schools, batchSize).Error
+					Expect(err).To(BeNil())
+
+					err = db.CreateInBatches(&teachers, batchSize).Error
+					Expect(err).To(BeNil())
+	
+					err = db.CreateInBatches(&students, batchSize).Error
+					Expect(err).To(BeNil())
+				})
+
+				It("should insert", func() {
+					// Verify Insertion Count in DB
+					err = db.Model(&School{}).Count(&actualCount).Error
+					Expect(err).To(BeNil())
+					Expect(actualCount).Should(BeNumerically(">=", schoolCount))
+
+					err = db.Model(&Student{}).Count(&actualCount).Error
+					Expect(err).To(BeNil())
+					Expect(actualCount).Should(BeNumerically(">=", studentCount))
+
+					err = db.Model(&Teacher{}).Count(&actualCount).Error
+					Expect(err).To(BeNil())
+					Expect(actualCount).Should(BeNumerically(">=", teacherCount))
+				})
 			})
 		})
 	})
