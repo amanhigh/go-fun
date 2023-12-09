@@ -21,7 +21,7 @@ import (
 type Product struct {
 	gorm.Model
 	Code       string `gorm:"size 5"`
-	Price      uint `gorm:not null`
+	Price      uint   `gorm:not null`
 	Version    int
 	IgnoreMe   string `gorm:"-"` // Ignore this field
 	Vertical   model2.Vertical
@@ -199,6 +199,7 @@ func TruncateTable(db *gorm.DB, tableName string) {
 
 func playProduct(db *gorm.DB) {
 	fmt.Println("***** Play Product ******")
+	//FIXME: Bulk Insert
 	createVertical(db)
 
 	// Create

@@ -2,5 +2,8 @@
     "go.lintFlags": [
         "--fast"
     ],
-    "go.lintTool": "golangci-lint"
+    "go.lintTool": "golangci-lint",
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "always"
+    }
 }
