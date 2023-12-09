@@ -1,6 +1,8 @@
 package play_test
 
 import (
+	"math/rand"
+
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
 	"github.com/amanhigh/go-fun/models/config"
@@ -13,26 +15,31 @@ import (
 
 type School struct {
 	gorm.Model `faker:"-"`
-	Name string `faker:"name" gorm:"unique,not null"`
-	City string `faker:"oneof:London,Berlin" gorm:"not null"`
+	Name       string `faker:"name" gorm:"not null,unique"`
+	City       string `faker:"oneof:London,Berlin" gorm:"not null"`
+}
+
+type SchoolBase struct {
+	School School
+	SchoolID uint `gorm:"not null"`
 }
 
 type Student struct {
 	gorm.Model `faker:"-"`
-	Name     string `faker:"name" gorm:"not null"`
-	Birthday int64  `faker:"unix_time" gorm:"not null"`
-	Age      uint   `faker:"boundary_start=10,boundary_end=20"`
-	Rank     uint   `faker:"oneof:1,2,3,4,5" gorm:"not null"`
-	// School
+	SchoolBase `faker:"-"`
+	Name       string `faker:"name" gorm:"not null"`
+	Birthday   int64  `faker:"unix_time" gorm:"not null"`
+	Age        uint   `faker:"boundary_start=10,boundary_end=20"`
+	Rank       uint   `faker:"oneof:1,2,3,4,5" gorm:"not null"`
 }
 
 type Teacher struct {
 	gorm.Model `faker:"-"`
-	Name    string  `faker:"name" gorm:"not null"`
-	Subject string  `faker:"oneof:Maths,Physics,Chemistry,English,History"`
-	Phone   string  `faker:"phone_number"`
-	Salary  int `faker:"boundary_start=20000,boundary_end=50000" gorm:"not null"`
-	// School
+	SchoolBase `faker:"-"`
+	Name       string `faker:"name" gorm:"not null"`
+	Subject    string `faker:"oneof:Maths,Physics,Chemistry,English,History"`
+	Phone      string `faker:"phone_number"`
+	Salary     int    `faker:"boundary_start=20000,boundary_end=50000" gorm:"not null"`
 }
 
 var _ = FDescribe("Data Generator", Label(models.GINKGO_SETUP), func() {
@@ -60,17 +67,17 @@ var _ = FDescribe("Data Generator", Label(models.GINKGO_SETUP), func() {
 			Expect(err).To(BeNil())
 		}
 
-		// Create Students
-		for i := 0; i < studentCount; i++ {
-			students[i] = Student{}
-			err = faker.FakeData(&students[i])
-			Expect(err).To(BeNil())
-		}
-
 		// Create Teachers
 		for i := 0; i < teacherCount; i++ {
 			teachers[i] = Teacher{}
 			err = faker.FakeData(&teachers[i])
+			Expect(err).To(BeNil())
+		}
+
+		// Create Students
+		for i := 0; i < studentCount; i++ {
+			students[i] = Student{}
+			err = faker.FakeData(&students[i])
 			Expect(err).To(BeNil())
 		}
 	})
@@ -93,7 +100,6 @@ var _ = FDescribe("Data Generator", Label(models.GINKGO_SETUP), func() {
 			dbconfig.Url = "aman:aman@tcp(docker:3306)/compute?charset=utf8&parseTime=True&loc=Local"
 			// dbconfig.LogLevel = logger.Info
 
-
 			db, err = util.ConnectDb(dbconfig)
 			Expect(err).To(BeNil())
 		})
@@ -105,6 +111,10 @@ var _ = FDescribe("Data Generator", Label(models.GINKGO_SETUP), func() {
 
 		Context("Migrate", func() {
 			BeforeEach(func() {
+				//Drop Existing Tables
+				err = db.Migrator().DropTable(&School{}, &Student{}, &Teacher{})
+				Expect(err).To(BeNil())
+
 				err = db.AutoMigrate(&School{}, &Student{}, &Teacher{})
 				Expect(err).To(BeNil())
 			})
@@ -123,9 +133,17 @@ var _ = FDescribe("Data Generator", Label(models.GINKGO_SETUP), func() {
 					err = db.CreateInBatches(&schools, batchSize).Error
 					Expect(err).To(BeNil())
 
+					//Assign School Ids
+					for teacher := range teachers {
+						teachers[teacher].SchoolID = schools[rand.Intn(schoolCount)].ID
+					}
+					for student := range students {
+						students[student].SchoolID = schools[rand.Intn(schoolCount)].ID
+					}
+
 					err = db.CreateInBatches(&teachers, batchSize).Error
 					Expect(err).To(BeNil())
-	
+
 					err = db.CreateInBatches(&students, batchSize).Error
 					Expect(err).To(BeNil())
 				})
@@ -134,15 +152,15 @@ var _ = FDescribe("Data Generator", Label(models.GINKGO_SETUP), func() {
 					// Verify Insertion Count in DB
 					err = db.Model(&School{}).Count(&actualCount).Error
 					Expect(err).To(BeNil())
-					Expect(actualCount).Should(BeNumerically(">=", schoolCount))
+					Expect(actualCount).Should(BeNumerically("==", schoolCount))
 
 					err = db.Model(&Student{}).Count(&actualCount).Error
 					Expect(err).To(BeNil())
-					Expect(actualCount).Should(BeNumerically(">=", studentCount))
+					Expect(actualCount).Should(BeNumerically("==", studentCount))
 
 					err = db.Model(&Teacher{}).Count(&actualCount).Error
 					Expect(err).To(BeNil())
-					Expect(actualCount).Should(BeNumerically(">=", teacherCount))
+					Expect(actualCount).Should(BeNumerically("==", teacherCount))
 				})
 			})
 		})
