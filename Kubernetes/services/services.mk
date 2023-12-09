@@ -116,7 +116,7 @@ mysql: metabase ## MySQL
 	-helm $(CMD) mysql bitnami/mysql -f mysql.yml > /dev/null
 	@printf "\033[1;33m MySQL(3306) Login: mysql-primary, root/root \033[0m \n"
 
-postgres: mysql-admin ## PostgreSQL
+postgres: metabase ## PostgreSQL
 	-helm $(CMD) postgres bitnami/postgresql -f postgres.yml > /dev/null
 	@printf "\033[1;33m Postgres(5432) Login: postgres-primary, postgres/root \033[0m \n"
 

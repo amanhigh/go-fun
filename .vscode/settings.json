@@ -8,5 +8,6 @@
     },
     "editor.quickSuggestions": {
         "other": "off"
-    }
+    },
+    "editor.formatOnSave": true
 }
