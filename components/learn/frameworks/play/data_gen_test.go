@@ -48,10 +48,12 @@ var _ = FDescribe("Data Generator", Label(models.GINKGO_SETUP), func() {
 		err error
 
 		//Counts
-		schoolCount  = 3
-		teacherCount = 5
-		studentCount = 50
-		batchSize    = 100
+		multiplier = 1
+		batchSize    =  1000
+
+		schoolCount  = multiplier * 3
+		teacherCount = multiplier * 5
+		studentCount = multiplier * 150
 
 		//Lists
 		schools  = make([]School, schoolCount)
