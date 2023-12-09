@@ -1,0 +1,33 @@
+- defaultTab: nodes
+  description: Sample Job to Learn Rundeck
+  executionEnabled: true
+  id: 9229c456-b16e-4a90-a5ae-fb273c60e3a1
+  loglevel: INFO
+  name: Tutorial
+  nodeFilterEditable: false
+  plugins:
+    ExecutionLifecycle: null
+  schedule:
+    month: '*'
+    time:
+      hour: '02'
+      minute: '00'
+      seconds: '0'
+    weekday:
+      day: '*'
+    year: '*'
+  scheduleEnabled: true
+  sequence:
+    commands:
+    - description: Local Script
+      script: |-
+        echo "Running $RD_JOB_ID"
+        pwd
+
+        echo "$RD_JOB_NAME - Directory Content"
+        ls
+    - description: Hit Http API
+      exec: curl -s https://reqres.in/api/users/2
+    keepgoing: false
+    strategy: node-first
+  uuid: 9229c456-b16e-4a90-a5ae-fb273c60e3a1

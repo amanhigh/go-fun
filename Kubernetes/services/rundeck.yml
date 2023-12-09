@@ -1,0 +1,40 @@
+# https://github.com/rundeck/docker-zoo
+image:
+  repository: rundeck/rundeck
+  tag: 4.17.3
+
+containerPort: 4440
+svcPort: 4440
+
+volumes:
+  - name: data
+    path: /home/rundeck/server/data
+    hostPath:
+      path: /etc/files/rundeck/data
+
+probe:
+  enabled: true
+  path: "/health"
+  settings:
+    initialDelaySeconds: 3
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+    failureThreshold: 3
+
+resources:
+  limits:
+    cpu: "1000m"
+    memory: "2000Mi"
+
+# https://docs.rundeck.com/docs/administration/configuration/docker.html#environment-variables
+vars:
+  RUNDECK_GRAILS_URL: http://cron.docker
+  RUNDECK_PREAUTH_ENABLED: false
+
+
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  path: /
+  host: cron.docker

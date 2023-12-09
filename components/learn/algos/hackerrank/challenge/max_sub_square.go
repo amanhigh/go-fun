@@ -4,14 +4,16 @@ import (
 	"math"
 )
 
-/**
+/*
+*
 cooridantes = top,left,bottom,right
 */
 func MaximumSumSubRectangle(input [][]int, n, m int) (coordinates []int, maxSum int) {
 	return MaximumSumSubRectangleSmart(input, n, m)
 }
 
-/**
+/*
+*
 n - Rows
 m - Columns
 O(nm^2)
@@ -33,13 +35,14 @@ func MaximumSumSubRectangleSmart(input [][]int, n, m int) (coordinates []int, ma
 				maxSum = sum
 				coordinates = []int{iStart, jStart, iEnd, jEnd}
 			}
-			//fmt.Println(iStart, jStart, iEnd, jEnd, columnSum, sum)
+			// fmt.Println(iStart, jStart, iEnd, jEnd, columnSum, sum)
 		}
 	}
 	return
 }
 
-/**
+/*
+*
 Vary top-left and bottom-right for all possible combinations and sum.
 O(n^4) or O(n^2m^2) incase fo rectangle
 */
@@ -55,7 +58,6 @@ func MaximumSumSubRectangleBruteForce(input [][]int, n, m int) (coordinates []in
 						coordinates = cords
 						maxSum = sum
 					}
-
 				}
 			}
 		}
@@ -63,18 +65,19 @@ func MaximumSumSubRectangleBruteForce(input [][]int, n, m int) (coordinates []in
 	return
 }
 
-/**
+/*
+*
 cooridantes = top,left,bottom,right
 O(n^2)
 */
 func SumSquare(input [][]int, coordinates []int) (sum int) {
-	//Top -> Bottom Row
+	// Top -> Bottom Row
 	for i := coordinates[0]; i <= coordinates[2]; i++ {
-		//Left -> Right Column
+		// Left -> Right Column
 		for j := coordinates[1]; j <= coordinates[3]; j++ {
 			sum += input[i][j]
 		}
 	}
-	//fmt.Println(coordinates, sum)
+	// fmt.Println(coordinates, sum)
 	return
 }

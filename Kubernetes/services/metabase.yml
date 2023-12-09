@@ -1,0 +1,40 @@
+# https://artifacthub.io/packages/helm/pmint93/metabase
+image:
+  repository: metabase/metabase
+  tag: latest
+
+containerPort: 3000
+svcPort: 3000
+
+volumes:
+  - name: database
+    path: /db
+    hostPath:
+      path: /etc/files/metabase
+
+probe:
+  enabled: true
+  path: "/api/health"
+  settings:
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 2
+    failureThreshold: 3
+
+vars:
+  MB_DB_FILE: "/db/h2.db"
+  MB_DB_TYPE: "h2"
+  MB_PASSWORD_COMPLEXITY: "weak"
+  MB_PASSWORD_LENGTH: "4"
+
+resources:
+  limits:
+    cpu: "500m"
+    memory: "1000Mi"
+
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  path: /
+  host: metabase.docker

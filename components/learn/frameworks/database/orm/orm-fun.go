@@ -18,10 +18,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Field Tags - https://gorm.io/docs/models.html#Fields-Tags
 type Product struct {
 	gorm.Model
-	Code       string `gorm:"size 5"`
-	Price      uint
+	Code       string `gorm:"size 5,unique"`
+	Price      uint   `gorm:not null`
 	Version    int
 	IgnoreMe   string `gorm:"-"` // Ignore this field
 	Vertical   model2.Vertical
@@ -107,9 +108,14 @@ func OrmFun() {
 	prepLogger()
 	db.AutoMigrate(&Product{}, &AuditLog{}) // Vertical not required Foreign Keys Auto Created
 
+	//Verify Tables Created
+	db.Migrator().HasTable(&Product{})
+	db.Migrator().HasTable(&AuditLog{})
+
 	playProduct(db)
 
 	//schemaAlterPlay(db)
+	// dropTables(db)
 	fmt.Println("******ORM Fun Finished*******")
 }
 
@@ -193,12 +199,18 @@ func schemaAlterPlay(db *gorm.DB) {
 	db.Migrator().DropColumn(&Product{}, "code")
 }
 
+func dropTables(db *gorm.DB) {
+	db.Migrator().DropTable(&Product{})
+	db.Migrator().DropTable(&AuditLog{})
+}
+
 func TruncateTable(db *gorm.DB, tableName string) {
 	db.Exec("truncate table " + tableName)
 }
 
 func playProduct(db *gorm.DB) {
 	fmt.Println("***** Play Product ******")
+	//FIXME: Bulk Insert
 	createVertical(db)
 
 	// Create

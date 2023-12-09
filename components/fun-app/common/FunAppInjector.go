@@ -42,6 +42,7 @@ type FunAppInjector struct {
 }
 
 func NewFunAppInjector(cfg config.FunAppConfig) interfaces.ApplicationInjector {
+
 	return &FunAppInjector{inject.Graph{}, cfg}
 }
 
@@ -141,7 +142,7 @@ func setupRateLimit(cfg config.RateLimit, engine *gin.Engine) {
 }
 
 func initDb(cfg config.Db) (db *gorm.DB) {
-	db = util.CreateDb(cfg)
+	db = util.MustCreateDb(cfg)
 
 	/** Gorm AutoMigrate Schema */
 	db.AutoMigrate(
