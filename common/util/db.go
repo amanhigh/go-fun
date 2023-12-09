@@ -18,14 +18,12 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func CreateDb(cfg config.Db) (db *gorm.DB) {
-	var err error
-
+func CreateDb(cfg config.Db) (db *gorm.DB, err error) {
 	/* Create Test DB or connect to provided DB */
 	if cfg.Url == "" {
 		db, err = CreateTestDb()
 	} else {
-		db, err = CreateDbConnection(cfg)
+		db, err = ConnectDb(cfg)
 	}
 
 	/* Tracing */
@@ -55,14 +53,18 @@ func CreateDb(cfg config.Db) (db *gorm.DB) {
 			}
 		}
 	}
-
-	if err != nil {
-		log.WithFields(log.Fields{"DbConfig": cfg, "Error": err}).Fatal("Failed To Setup DB")
-	}
 	return
 }
 
-func CreateDbConnection(cfg config.Db) (db *gorm.DB, err error) {
+func MustCreateDb(cfg config.Db) *gorm.DB {
+	db, err := CreateDb(cfg)
+	if err != nil {
+		log.WithFields(log.Fields{"DbConfig": cfg, "Error": err}).Fatal("Failed To Setup DB")
+	}
+	return db
+}
+
+func ConnectDb(cfg config.Db) (db *gorm.DB, err error) {
 	log.WithFields(log.Fields{"DBConfig": cfg}).Info("Initing DB")
 
 	if db, err = gorm.Open(mysql.Open(cfg.Url), &gorm.Config{Logger: logger.Default.LogMode(cfg.LogLevel)}); err == nil {
