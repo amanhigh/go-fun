@@ -48,7 +48,7 @@ cover-analyse: ## Analyse Integration Coverage Reports
 	# Analyse Cover Profile
 	go tool cover -func=$(PROFILE_FILE)
 
-	echo "\033[1;32m Package Summary \033[0m"
+	@printf "\033[1;32m Package Summary \033[0m"
 	# Analyse Report and Print Coverage
 	go tool covdata percent -i=$(COVER_DIR)
 
@@ -72,7 +72,7 @@ test: test-operator test-it ## Run all tests
 swag-fun: ## Swagger Generate: Fun App (Init/Update)
 	cd $(FUN_DIR);\
 	swag i --parseDependency true;\
-	echo http://localhost:8080/swagger/index.html
+	@echo http://localhost:8080/swagger/index.html
 
 build-fun: swag-fun ## Build Fun App
 	$(BUILD_OPTS) go build -o $(FUN_DIR)/fun $(FUN_DIR)/main.go

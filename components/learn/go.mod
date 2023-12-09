@@ -7,6 +7,7 @@ require (
 	github.com/amanhigh/go-fun/components/operator v0.0.0-20231105173700-27dd61fe1606
 	github.com/amanhigh/go-fun/models v1.0.0
 	github.com/bxcodec/faker/v3 v3.8.1
+	github.com/caarlos0/env/v6 v6.10.1
 	github.com/casbin/casbin/v2 v2.61.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/etcinit/speedbump v2.0.0+incompatible

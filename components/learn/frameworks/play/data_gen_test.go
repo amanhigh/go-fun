@@ -42,7 +42,7 @@ type Teacher struct {
 	Salary     int    `faker:"boundary_start=20000,boundary_end=50000" gorm:"not null"`
 }
 
-var _ = FDescribe("Data Generator", Label(models.GINKGO_SETUP), func() {
+var _ = Describe("Data Generator", Label(models.GINKGO_SETUP), func() {
 	var (
 		db  *gorm.DB
 		err error
