@@ -74,5 +74,14 @@ dist/
 *.snm
 *.vrb
 
+# glossary
+*.glg
+*.glo
+*.gls*
+*.ist
+*.acn
+*.acr
+*.alg
+
 # Inkscape
 svg-inkscape
