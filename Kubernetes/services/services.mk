@@ -114,11 +114,11 @@ metabase:
 
 mysql: metabase ## MySQL
 	-helm $(CMD) mysql bitnami/mysql -f mysql.yml > /dev/null
-	@printf "\033[1;33m MySQL(3306) Login: mysql-primary, root/root, aman/aman \033[0m \n"
+	@printf "\033[1;33m MySQL(3306) Login: mysql-primary/mysql-secondary, root/root, aman/aman \033[0m \n"
 
 postgres: metabase ## PostgreSQL
 	-helm $(CMD) postgres bitnami/postgresql -f postgres.yml > /dev/null
-	@printf "\033[1;33m Postgres(5432) Login: postgres-primary, postgres/root, aman/aman \033[0m \n"
+	@printf "\033[1;33m Postgres(5432) Login: pg-primary/pg-read, postgres/root, aman/aman \033[0m \n"
 
 mongo: ## Mongo
 	-helm $(CMD) mongo bitnami/mongodb -f mongo.yml > /dev/null
