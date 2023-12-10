@@ -1,4 +1,5 @@
 # https://artifacthub.io/packages/helm/pmint93/metabase
+# https://www.metabase.com/docs/latest/installation-and-operation/running-metabase-on-docker
 image:
   repository: metabase/metabase
   tag: latest
@@ -27,6 +28,12 @@ vars:
   MB_DB_TYPE: "h2"
   MB_PASSWORD_COMPLEXITY: "weak"
   MB_PASSWORD_LENGTH: "4"
+  # MB_DB_TYPE: "postgres"
+  # MB_DB_DBNAME: "compute"
+  # MB_DB_USER: "postgres"
+  # MB_DB_PASS: "root"
+  # MB_DB_HOST: "pg-primary"
+  # MB_DB_PORT: "5432"
 
 resources:
   limits:
