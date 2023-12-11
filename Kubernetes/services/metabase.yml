@@ -11,7 +11,7 @@ volumes:
   - name: database
     path: /db
     hostPath:
-      path: /etc/files/metabase
+      path: /tmp/mini/metabase
 
 probe:
   enabled: true
