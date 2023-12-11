@@ -27,8 +27,10 @@ prepare:
 	
 start: ## Start Minikube
 	minikube  -p minikube start --memory=$(MEMORY) --cpus=$(CPU) --addons=metrics-server \
-	--mount-string="$(SERVICE_FILES):/etc/files" --mount-string="/tmp/mini:/tmp/mini" --mount \
-	--cache-images=true  --host-only-cidr='24.1.1.100/24';
+	--mount-string="$(SERVICE_FILES):/etc/files" --mount --cache-images=true \
+	--host-only-cidr='24.1.1.100/24';
+
+	screen -S mini-mount -dmL bash -c 'minikube mount /tmp/mini:/tmp/mini'
 
 wait:
 	@printf "\033[1;34m Waiting for Minikube to be Ready \033[0m \n";
