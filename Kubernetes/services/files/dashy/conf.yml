@@ -121,10 +121,10 @@ sections:
         description: Easy Desgin and Whiteboarding
         icon: favicon
         url: https://excalidraw.com/
-      - title: D2Lang
-        description: Strong Diagram by Coding Tool
+      - title: Cheatsheet
+        description: Commands for various tools.
         icon: favicon
-        url: https://play.d2lang.com/
+        url: https://quickref.me/index.html
       - title: Emoji Copy
         description: Symbols and Emoji Repository
         icon: favicon
