@@ -30,7 +30,7 @@ start: ## Start Minikube
 	--mount-string="$(SERVICE_FILES):/etc/files" --mount --cache-images=true \
 	--host-only-cidr='24.1.1.100/24';
 
-	screen -S mini-mount -dmL bash -c 'minikube mount /tmp/mini:/tmp/mini'
+	screen -S mini-mount -dmL bash -c 'minikube mount /tmp/mini:/tmp/mini' -L ""
 
 wait:
 	@printf "\033[1;34m Waiting for Minikube to be Ready \033[0m \n";

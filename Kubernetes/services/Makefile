@@ -3,7 +3,7 @@
 ANS_FILE=/tmp/k8-svc.txt
 
 SERVICE_MAKE_OPTS=--no-print-directory -f ./services.mk
-XTRA=""
+XTRA="dashy"
 
 DOCKER_HOSTS=127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker \
 mysqladmin.docker redisadmin.docker cron.docker prometheus.docker grafana.docker jaeger.docker kiali.docker \
@@ -53,8 +53,9 @@ setup: delete install ## Setup Selected Services
 update: ## Update Services
 	@$(MAKE) $(SERVICE_MAKE_OPTS) CMD=upgrade $$(cat $(ANS_FILE))
 
+# BUG: Fix empty XTRA in Mac.
 bootstrap: ## Bootstrap
-	@$(MAKE) $(SERVICE_MAKE_OPTS) traefik dashy $(XTRA)
+	$(MAKE) $(SERVICE_MAKE_OPTS) traefik dashy $(XTRA)
 	kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik --timeout=2m;
 
 select: ## Select Service
