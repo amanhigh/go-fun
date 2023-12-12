@@ -11,7 +11,7 @@
 
 ### Variables
 .DEFAULT_GOAL := help
-BUILD_OPTS := CGO_ENABLED=1 GOOS=linux GOARCH=amd64
+BUILD_OPTS := CGO_ENABLED=1 GOARCH=amd64
 COMPONENT_DIR := ./components
 FUN_DIR := $(COMPONENT_DIR)/fun-app
 
