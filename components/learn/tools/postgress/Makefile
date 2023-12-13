@@ -13,6 +13,7 @@ PASS=root
 
 URL=postgresql://$(USER):$(PASS)@localhost
 PG=$(K8_CMD) -- psql $(URL)
+PGDB=$(K8_CMD) -- psql $(URL)/$(DBNAME)
 
 ### Basic
 help: ## Show this help
@@ -21,13 +22,29 @@ help: ## Show this help
 	printf "\033[1;32m FirstTime: prepare/all, OUT=/dev/stdout (Debug) \033[0m \n"
 
 ### Info
-show-db: ## Show available databases
+show-dblist: ## Show available databases
 	printf "\033[1;32m Available Databases \033[0m \n"
 	$(PG) -l;
 
+show-db: ## Show Current Database
+	printf "\033[1;32m Current Database \033[0m \n"
+	$(PGDB) -c '\c';
+
+show-schema: ## Show available schemas
+	printf "\033[1;32m Available Schemas \033[0m \n"
+	$(PGDB) -c '\dn'
+
 show-tables: ## Show available tables
 	printf "\033[1;32m Available Tables \033[0m \n"
-	$(PG) -c '\c $(DBNAME) \dt'
+	$(PGDB) -c '\dt'
+
+show-index: ## Show available indexes
+	printf "\033[1;32m Available Indexes \033[0m \n"
+	$(PGDB) -c '\di'
+
+show-sequence: ## Show available sequences
+	printf "\033[1;32m Available Sequences \033[0m \n"
+	$(PGDB) -c '\d'
 
 ### Create
 create-db: ## Create database
@@ -39,14 +56,10 @@ create-clone: ## Create cloned database
 
 seed: ## Seed database
 	printf "\033[1;32m Seeding Database: $(DBNAME) \033[0m \n"
-	$(K8_CMD) -- bash -c 'psql $(URL) -f /tmp/seed.sql'
+	$(K8_CMD) -- bash -c 'psql $(URL)/$(DBNAME) -f /tmp/seed.sql'
 
 ### Delete
-tear:
-	printf "\033[1;32m Running Teardown \033[0m \n"
-	$(K8_CMD) -- bash -c 'psql $(URL) -f /tmp/tear.sql'
-
-delete-db: tear ## Delete database
+delete-db: ## Delete database
 	printf "\033[1;32m Deleting Database: $(DBNAME) \033[0m \n"
 	-$(PG) -c 'drop database $(DBNAME);'
 
@@ -58,7 +71,6 @@ delete-clone: ## Delete cloned database
 prepare: ## Prepare Pod for Test Setup
 	printf "\033[1;32m Preparing Pod: $(POD_NAME) \033[0m \n"
 	kubectl cp seed.sql `basename $(POD_NAME)`:/tmp/
-	kubectl cp tear.sql `basename $(POD_NAME)`:/tmp/
 
 ### Exec
 exec: ## Connect to MySQL
@@ -67,7 +79,7 @@ ssh: ## SSH to MySQL
 	$(K8_CMD) bash
 
 ### Workflows
-info: show-db show-tables
+info: show-dblist show-db show-tables show-schema show-index show-sequence
 
 setup: create-db seed ## Setup Database
 
