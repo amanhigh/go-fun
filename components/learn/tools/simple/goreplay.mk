@@ -4,6 +4,7 @@ OUT := /dev/null
 
 CMD := sudo gor
 PORT := 8085
+REQUEST_FILE := requests
 
 ### Basic
 help: ## Show this help
@@ -20,22 +21,21 @@ replay: ## Replay Port $(PORT) to 8080
 
 save: ## Save Traffic to File
 	printf "\033[1;32m Saving Traffic from $(PORT) to File \033[0m \n"
-	$(CMD) --input-raw :$(PORT) --output-file=requests.gor
+	$(CMD) --input-raw :$(PORT) --output-file=$(REQUEST_FILE).gor
 
 load: ## Load Traffic from File
 	printf "\033[1;32m Loading Traffic from File to 8080 \033[0m \n"
-	$(CMD) --input-file requests_0.gor --output-http="http://localhost:8080" --stats --output-http-stats
+	$(CMD) --input-file $(REQUEST_FILE)_0.gor --output-http="http://localhost:8080" --stats --output-http-stats
 
 info: ## Info
 	printf "\033[1;32m Info \033[0m \n"
 	printf "\033[1;33m https://github.com/buger/goreplay/wiki/Getting-Started \033[0m \n"
+
+clean: ## Cleanup
+	sudo rm $(REQUEST_FILE)*
+
 ### Workflows
 prepare: ## Onetime Setup
-setup: ## Setup
-clean: ## Clean
-
-reset: clean setup info ## Reset
-all:prepare reset ## Run All Targets
 
 ### Useful Flags ##
 ## Rate Control 
