@@ -58,7 +58,7 @@ cover-analyse: ## Analyse Integration Coverage Reports
 	# Analyse Report and Print Coverage
 	go tool covdata percent -i=$(COVER_DIR)
 
-	printf "\033[1;32m\n\n ******* Vscode: go.apply.coverprofile $(PROFILE_FILE) ******** \033[0m"
+	printf "\033[1;33m\n\n ******* Vscode: go.apply.coverprofile $(PROFILE_FILE) ******** \033[0m"
 
 
 test-it: run-fun-cover test-unit cover-analyse ## Integration test coverage analyse

@@ -24,6 +24,7 @@ help: ## Show this help
 prepare:
 	printf "\033[1;32m Preparing for Minikube \033[0m \n"
 	mkdir -p /tmp/mini
+	chmod 777 /tmp/mini
 	
 start: ## Start Minikube
 	printf "\033[1;32m Starting Minikube \033[0m \n"

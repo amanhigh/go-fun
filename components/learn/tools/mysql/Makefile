@@ -44,7 +44,7 @@ seed: ## Seed database
 
 ### Delete
 delete-db: ## Delete database
-	@printf "\033[1;32m Deleting Database: $(DBNAME) \033[0m \n"
+	@printf "\033[1;31m Deleting Database: $(DBNAME) \033[0m \n"
 	@-$(MYSQL) -e 'drop database $(DBNAME);'
 
 delete-clone: ## Delete cloned database
@@ -71,9 +71,9 @@ ssh: ## SSH to MySQL
 	$(K8_CMD) bash
 
 ### Workflows
-info: show-db show-tables
+info: show-db show-tables ## Mysql Info
 
-infos: info show-process
+infos: info show-process ## Mysql Extended Info
 
 setup: create-db seed ## Setup Database
 

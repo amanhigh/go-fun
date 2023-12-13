@@ -60,11 +60,11 @@ seed: ## Seed database
 
 ### Delete
 delete-db: ## Delete database
-	printf "\033[1;32m Deleting Database: $(DBNAME) \033[0m \n"
+	printf "\033[1;31m Deleting Database: $(DBNAME) \033[0m \n"
 	-$(PG) -c 'drop database $(DBNAME);'
 
 delete-backup:
-	printf "\033[1;32m Deleting Backup Directory \033[0m \n"
+	printf "\033[1;31m Deleting Backup Directory \033[0m \n"
 	$(K8_CMD) -- bash -c 'rm -rf /tmp/backup'
 
 delete-clone: delete-backup ## Delete cloned database
@@ -92,9 +92,9 @@ ssh: ## SSH to MySQL
 	$(K8_CMD) bash
 
 ### Workflows
-info: show-db show-tables
+info: show-db show-tables ## Postgres Info
 
-infos: info show-dblist show-schema show-index show-sequence
+infos: info show-dblist show-schema show-index show-sequence ## Postgres Extended Info
 
 setup: create-db seed ## Setup Database
 
