@@ -67,10 +67,13 @@ restore: ## Restore Database
 
 clone:delete-clone backup create-clone restore ## Clone Database
 
+### Exec
+exec: ## Connect to MySQL
+	$(MYSQL)
+ssh: ## SSH to MySQL
+	$(K8_CMD) bash
+
 ### Workflows
 reset: clean setup info ## Reset Database
 
 all: reset clone ## All Targets
-
-exec: ## Connect to MySQL
-	$(MYSQL)
