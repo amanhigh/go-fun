@@ -63,14 +63,27 @@ delete-db: ## Delete database
 	printf "\033[1;32m Deleting Database: $(DBNAME) \033[0m \n"
 	-$(PG) -c 'drop database $(DBNAME);'
 
-delete-clone: ## Delete cloned database
+delete-backup:
+	printf "\033[1;32m Deleting Backup Directory \033[0m \n"
+	$(K8_CMD) -- bash -c 'rm -rf /tmp/backup'
+
+delete-clone: delete-backup ## Delete cloned database
 	$(MAKE) --no-print-directory DBNAME=$(RESTORE_DB_NAME) delete-db
- 
+
 ### Housekeeping
 # Passfile: https://tableplus.com/blog/2019/09/how-to-use-pgpass-in-postgresql.html
 prepare: ## Prepare Pod for Test Setup
 	printf "\033[1;32m Preparing Pod: $(POD_NAME) \033[0m \n"
 	kubectl cp seed.sql `basename $(POD_NAME)`:/tmp/
+
+backup: ## Backup Database
+	printf "\033[1;32m Backing up Database: $(DBNAME) \033[0m \n"
+	$(K8_CMD) -- bash -c 'pg_dump $(URL)/$(DBNAME) -v -Fd -j 2 -f /tmp/backup -Z4' > $(OUT)
+
+# https://www.youtube.com/playlist?list=PL73JD1WuNceTCuWnSzj4iq2GWAnk6j2eL
+restore: ## Restore Database
+	printf "\033[1;32m Restoring Database: $(RESTORE_DB_NAME) \033[0m \n"
+	$(K8_CMD) -- bash -c 'pg_restore -d $(URL)/$(RESTORE_DB_NAME) -v -Fd -j 2 /tmp/backup' > $(OUT)
 
 ### Exec
 exec: ## Connect to MySQL
@@ -79,12 +92,15 @@ ssh: ## SSH to MySQL
 	$(K8_CMD) bash
 
 ### Workflows
-info: show-dblist show-db show-tables show-schema show-index show-sequence
+info: show-db show-tables
+infos: info show-dblist show-schema show-index show-sequence
 
 setup: create-db seed ## Setup Database
 
 clean: delete-db## Clean up database
 
+clone: delete-clone backup create-clone restore ## Clone Database
+
 reset: clean setup info ## Reset Database
 
-all: prepare reset ## Run All Targets
+all: prepare reset infos ## Run All Targets

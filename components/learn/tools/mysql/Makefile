@@ -79,7 +79,7 @@ setup: create-db seed ## Setup Database
 
 clean: delete-db delete-clone ## Clean up database
 
-clone:delete-clone backup create-clone restore ## Clone Database
+clone: delete-clone backup create-clone restore ## Clone Database
 
 reset: clean setup info ## Reset Database
 
