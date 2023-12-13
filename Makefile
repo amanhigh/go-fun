@@ -140,7 +140,7 @@ build: build-fun build-kohan ## Build all Binaries
 
 #HACK: Add Make to Readme
 info:
-prepare: setup-tools setup-k8 # Setup Tools
+prepare: setup-tools setup-k8 # One Time Setup
 
 setup: sync test build helm-package docker-build # Build and Test
 clean: test-clean build-clean ## Clean up Residue
