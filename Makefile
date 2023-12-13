@@ -64,7 +64,7 @@ cover-analyse: ## Analyse Integration Coverage Reports
 test-it: run-fun-cover test-unit cover-analyse ## Integration test coverage analyse
 
 test-clean:
-	printf "\033[1;32m Cleaning Tests \n\033[0m"
+	printf "\033[1;31m Cleaning Tests \n\033[0m"
 	rm -rf $(COVER_DIR)
 
 profile: ## Run Profiling
@@ -93,7 +93,7 @@ build-kohan:
 	$(BUILD_OPTS) go build -o $(COMPONENT_DIR)/kohan/kohan $(COMPONENT_DIR)/kohan/main.go
 
 build-clean:
-	printf "\033[1;32m Cleaning Build \n\033[0m"
+	printf "\033[1;31m Cleaning Build \n\033[0m"
 	rm "$(FUN_DIR)/fun";
 	rm "$(COMPONENT_DIR)/kohan/kohan";
 
