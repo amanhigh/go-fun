@@ -2,6 +2,8 @@
 # helm install mysql bitnami/mysql -f mysql.yml
 # helm install mysql-admin bitnami/phpmyadmin (Login: mysql-primary, root/root)
 # helm delete mysql mysql-admin OR helm delete $(helm list --short)
+## @param fullnameOverride String to fully override common.names.fullname template
+fullnameOverride: "mysql"
 auth:
   rootPassword: root
   database: compute

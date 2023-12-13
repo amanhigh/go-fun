@@ -7,6 +7,10 @@
 \author{Amanpreet Singh}
 \date{2023-10-25}
 
+\makeglossaries
+\newacronym{gcd}{GCD}{Greatest Common Divisor}
+\newacronym{lcm}{LCM}{Least Common Multiple}
+
 \begin{document}
   \pagenumbering{arabic}
   \maketitle %Insert Title
@@ -182,7 +186,11 @@ Can also be used to draw colored rulers.
 I'm referring to footnote again using \verb|\ref| \ref{myfootnote}.
 
 \subsection{References}
-There are many ways to reference. We use package `hyperref'.
+There are many ways to reference content in Latex.
+
+\subsubsection{Links}
+We use package `hyperref'.
+
 \begin{enumerate}
   \item Direct URL \url{https://www.overleaf.com/learn/latex/Hyperlinks}
   \item Hyper Link: \href{https://www.overleaf.com/learn/latex/Hyperlinks}{Hyperlink Guide}
@@ -191,9 +199,29 @@ There are many ways to reference. We use package `hyperref'.
   \item Reference to a label \ref{lst:bullet}.
   \item Autoref (hyperref) improves \autoref{lst:bullet} by adding type as well.
   \item \href{https://ctan.org/pkg/cleveref}{CleverRef} Capitalize Reference \cref{lst:bullet} and batch \href{https://texblog.org/2013/05/06/cleveref-a-clever-way-to-reference-in-latex/}{features}.
+  \item \emph{nameref} allows you to display name. Eg. \nameref{sec:acronyms}
   \item Page Reference: \pageref{fig:coffee}
   \item Word or \hyperlink{sen:formatopts}{sentence} in your document.
 \end{enumerate}
+
+\subsubsection{Acronyms} \label{sec:acronyms}
+Acronyms refers to Terminology like `USA'.
+Acronym \href{https://ctan.org/pkg/acronym}{package} is popular, but it has some \href{https://tex.stackexchange.com/questions/29348/problem-using-package-acronym}{limitatins}.
+Hence we will use Glossaries \href{https://ctan.org/pkg/glossaries}{package} which can handle glossary and acronyms.
+This \href{https://www.overleaf.com/learn/latex/Glossaries}{guide} offers basics on it.
+First Define Acronyms and make section for Glossaries.
+
+\begin{enumerate}
+  \item \emph{acrlong} will show \acrlong{gcd}
+  \item \emph{acroshort} will show \acrshort{gcd}
+  \item \emph{gls} will show \gls{gcd}
+  \item \emph{Gls} will show \Gls{gcd}
+\end{enumerate}
+
+
+These can now be printed in its own section using \emph{printglossary}.
+
+\printglossary[type=\acronymtype]
 
 \subsection{Highlights}
 \href{https://mirror.niser.ac.in/ctan/macros/latex/contrib/tcolorbox/tcolorbox.pdf}{tcolorbox} and awesomebox (xelatex only) allows you to create
@@ -565,6 +593,7 @@ Tool of choice is \href{https://github.com/James-Yu/LaTeX-Workshop}{Latex Worksh
   \item Follow Cursor in Structure Section moves to correct heading is Structure.
   \item Minted requires \verb|--shell-escape| follow Vscode \href{https://leportella.com/minted-vscode/}{Guide}.
   \item Add \href{https://www.reddit.com/r/LaTeX/comments/pwkopy/subfile_autocompletion_in_vs_code/}{imported} packages to always show suggestions for commonly used.
+  \item Modify workshop \href{https://github.com/James-Yu/LaTeX-Workshop/issues/238}{recipies} to make acronyms \Ref{sec:acronyms} work.
 \end{itemize}
 
 \subsection{Tips}

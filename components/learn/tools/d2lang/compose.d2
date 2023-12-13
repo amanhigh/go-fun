@@ -20,8 +20,7 @@ production: {
   (frontend.cluster -> backend.dns)[0].class: smed
 
   # Globs
-  # HACK: vmset.d2 https://github.com/terrastruct/d2/issues/1749
-  user: @lib/user
+  user*: @lib/user
   (user -> *.*)[*].class: stk-dotted
   (*.* -- db.master)[*]: {
     style.stroke: red

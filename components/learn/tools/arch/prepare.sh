@@ -172,6 +172,9 @@ fi
 # Defaults
 # btrfs sub get-default /mnt
 # btrfs sub set-default 5 /mnt (Root Disk)
+# Repair
+# btrfs scrub start /
+# btrfs balance start /
 
 #### Snapshot ####
 # https://archive.kernel.org/oldwiki/btrfs.wiki.kernel.org/index.php/SysadminGuide.html#Managing_Snapshots

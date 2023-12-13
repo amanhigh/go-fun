@@ -1,0 +1,25 @@
+## @param fullnameOverride String to fully override common.names.fullname template
+fullnameOverride: "pg"
+
+# https://artifacthub.io/packages/helm/bitnami/postgresql
+auth:
+  postgresPassword: root
+  database: compute
+  username: aman
+  password: aman
+  replicationUserName: copy
+  replicationPassword: copy
+architecture: replication
+replicaCount: 2
+
+# https://github.com/bitnami/charts/issues/7901
+primary:
+  extendedConfiguration: |-
+    huge_pages = off
+  initdb:
+    args: "--set huge_pages=off"
+readReplicas:
+  extendedConfiguration: |-
+    huge_pages = off
+  initdb:
+    args: "--set huge_pages=off"

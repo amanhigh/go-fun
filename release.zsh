@@ -1,5 +1,7 @@
 #!/bin/zsh
 
+# HACK: Move to make
+
 if [ "$#" -lt 1 ]; then
     	echo "Usage: $0 <Version Eg. 1.1.0>"
         exit
