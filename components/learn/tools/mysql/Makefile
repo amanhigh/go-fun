@@ -65,7 +65,7 @@ prepare: ## Prepare Pod for Test Setup
 
 backup: ## Backup Database
 	@printf "\033[1;32m Backing up Database: $(DBNAME) \033[0m \n"
-	@$(K8_CMD) -- bash -c 'mysqldump --defaults-extra-file=$(CONFIG) $(DBNAME) > /tmp/backup.sql'
+	@$(K8_CMD) -- bash -c 'mysqldump --defaults-extra-file=$(CONFIG) $(DBNAME) --routines > /tmp/backup.sql'
 
 restore: ## Restore Database
 	@printf "\033[1;32m Restoring Database: $(RESTORE_DB_NAME) \033[0m \n"
