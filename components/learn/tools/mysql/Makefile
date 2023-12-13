@@ -83,4 +83,4 @@ clone: delete-clone backup create-clone restore ## Clone Database
 
 reset: clean setup info ## Reset Database
 
-all: prepare reset clone ## All Targets
+all: prepare reset clone infos ## All Targets

@@ -74,7 +74,7 @@ delete-clone: delete-backup ## Delete cloned database
 # Passfile: https://tableplus.com/blog/2019/09/how-to-use-pgpass-in-postgresql.html
 prepare: ## Prepare Pod for Test Setup
 	printf "\033[1;32m Preparing Pod: $(POD_NAME) \033[0m \n"
-	kubectl cp seed.sql `basename $(POD_NAME)`:/tmp/
+	kubectl cp ../mysql/seed.sql `basename $(POD_NAME)`:/tmp/
 
 backup: ## Backup Database
 	printf "\033[1;32m Backing up Database: $(DBNAME) \033[0m \n"
@@ -93,14 +93,15 @@ ssh: ## SSH to MySQL
 
 ### Workflows
 info: show-db show-tables
+
 infos: info show-dblist show-schema show-index show-sequence
 
 setup: create-db seed ## Setup Database
 
-clean: delete-db## Clean up database
+clean: delete-db delete-clone ## Clean up database
 
 clone: delete-clone backup create-clone restore ## Clone Database
 
 reset: clean setup info ## Reset Database
 
-all: prepare reset infos ## Run All Targets
+all: prepare reset clone infos ## Run All Targets
