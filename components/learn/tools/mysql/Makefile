@@ -30,9 +30,6 @@ show-process: ## Show MySQL process
 	@printf "\033[1;32m MySQL Process \033[0m \n"
 	@$(MYSQL) -e 'show processlist;'
 
-info: show-db show-tables
-infos: info show-process
-
 ### Create
 create-db: ## Create database
 	@printf "\033[1;32m Creating Database: $(DBNAME) \033[0m \n"
@@ -45,8 +42,6 @@ seed: ## Seed database
 	@printf "\033[1;32m Seeding Database: $(DBNAME) \033[0m \n"
 	@$(K8_CMD) -- bash -c 'mysql --defaults-extra-file=$(CONFIG) $(DBNAME) < /tmp/seed.sql'
 
-setup: create-db seed ## Setup Database
-
 ### Delete
 delete-db: ## Delete database
 	@printf "\033[1;32m Deleting Database: $(DBNAME) \033[0m \n"
@@ -55,8 +50,6 @@ delete-db: ## Delete database
 delete-clone: ## Delete cloned database
 	@$(MAKE) --no-print-directory DBNAME=$(RESTORE_DB_NAME) delete-db
  
-clean: delete-db delete-clone ## Clean up database
-
 ### Housekeeping
 prepare: ## Prepare Pod for Test Setup
 	@printf "\033[1;32m Preparing Pod: $(POD_NAME) \033[0m \n"
@@ -71,8 +64,6 @@ restore: ## Restore Database
 	@printf "\033[1;32m Restoring Database: $(RESTORE_DB_NAME) \033[0m \n"
 	@$(K8_CMD) -- bash -c 'mysql --defaults-extra-file=$(CONFIG) $(RESTORE_DB_NAME) < /tmp/backup.sql'
 
-clone:delete-clone backup create-clone restore ## Clone Database
-
 ### Exec
 exec: ## Connect to MySQL
 	$(MYSQL)
@@ -80,6 +71,16 @@ ssh: ## SSH to MySQL
 	$(K8_CMD) bash
 
 ### Workflows
+info: show-db show-tables
+
+infos: info show-process
+
+setup: create-db seed ## Setup Database
+
+clean: delete-db delete-clone ## Clean up database
+
+clone:delete-clone backup create-clone restore ## Clone Database
+
 reset: clean setup info ## Reset Database
 
 all: prepare reset clone ## All Targets

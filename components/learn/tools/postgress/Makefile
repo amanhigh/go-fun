@@ -27,8 +27,6 @@ show-tables: ## Show available tables
 	@printf "\033[1;32m Available Tables \033[0m \n"
 	@$(PG) -c '\c $(DBNAME) \dt'
 
-info: show-db show-tables
-
 ### Create
 create-db: ## Create database
 	@printf "\033[1;32m Creating Database: $(DBNAME) \033[0m \n"
@@ -41,8 +39,6 @@ seed: ## Seed database
 	@printf "\033[1;32m Seeding Database: $(DBNAME) \033[0m \n"
 	@$(K8_CMD) -- bash -c 'psql $(URL) -f /tmp/seed.sql'
 
-setup: create-db seed ## Setup Database
-
 ### Delete
 delete-db: ## Delete database
 	@printf "\033[1;32m Deleting Database: $(DBNAME) \033[0m \n"
@@ -51,8 +47,6 @@ delete-db: ## Delete database
 delete-clone: ## Delete cloned database
 	@$(MAKE) --no-print-directory DBNAME=$(RESTORE_DB_NAME) delete-db
  
-clean: delete-db delete-clone ## Clean up database
-
 ### Housekeeping
 # Passfile: https://tableplus.com/blog/2019/09/how-to-use-pgpass-in-postgresql.html
 prepare: ## Prepare Pod for Test Setup
@@ -64,3 +58,10 @@ exec: ## Connect to MySQL
 	$(PG)
 ssh: ## SSH to MySQL
 	$(K8_CMD) bash
+
+### Workflows
+info: show-db show-tables
+
+setup: create-db seed ## Setup Database
+
+clean: delete-db delete-clone ## Clean up database
