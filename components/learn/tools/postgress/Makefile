@@ -42,7 +42,11 @@ seed: ## Seed database
 	$(K8_CMD) -- bash -c 'psql $(URL) -f /tmp/seed.sql'
 
 ### Delete
-delete-db: ## Delete database
+tear:
+	printf "\033[1;32m Running Teardown \033[0m \n"
+	$(K8_CMD) -- bash -c 'psql $(URL) -f /tmp/tear.sql'
+
+delete-db: tear ## Delete database
 	printf "\033[1;32m Deleting Database: $(DBNAME) \033[0m \n"
 	-$(PG) -c 'drop database $(DBNAME);'
 
@@ -53,7 +57,8 @@ delete-clone: ## Delete cloned database
 # Passfile: https://tableplus.com/blog/2019/09/how-to-use-pgpass-in-postgresql.html
 prepare: ## Prepare Pod for Test Setup
 	printf "\033[1;32m Preparing Pod: $(POD_NAME) \033[0m \n"
-	kubectl cp ../mysql/seed.sql `basename $(POD_NAME)`:/tmp/
+	kubectl cp seed.sql `basename $(POD_NAME)`:/tmp/
+	kubectl cp tear.sql `basename $(POD_NAME)`:/tmp/
 
 ### Exec
 exec: ## Connect to MySQL
