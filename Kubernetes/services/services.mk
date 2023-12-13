@@ -20,7 +20,6 @@ traefik: ## Traefik
 	printf "\033[1;33m Dashboard: http://docker:9000/dashboard/#/ \033[0m \n"
 	printf "\033[1;33m HealthCheck: http://docker:9000/ping \033[0m \n"
 	printf "\033[1;33m Ingress: http://docker:8000/mysqladmin \033[0m \n"
-	printf "\033[1;33m PortForward(80): sudo kubectl port-forward deployment/traefik 80:8000 > /dev/null &\033[0m \n"
 
 dashy: ## Dashy
 	-helm $(CMD) dashy onechart/onechart -f dashy.yml > /dev/null
