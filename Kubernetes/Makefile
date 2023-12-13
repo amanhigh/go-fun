@@ -124,10 +124,10 @@ restore:
 	done
 
 ### Workflows
-info: info-mini
-infos: info info-extra
+info: info-mini ## Minikube Info
+infos: info info-extra ## Minikube Extended Info
 setup: start wait bootstrap port-fwd ## Setup Minikube
-clean: stop
+clean: stop ## Stop Minikube
 # HACK: Fixe Readme
 reset: clean setup info ## Rebuild Minikube
 all: prepare istio dashboard infos port ## Run All Targets
