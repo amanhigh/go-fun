@@ -1,5 +1,7 @@
 ### Variables
 .DEFAULT_GOAL := help
+OUT := /dev/null
+
 POD_LABEL=app.kubernetes.io/component=primary
 POD_NAME=$$(kubectl get pod --selector=$(POD_LABEL) -o name)
 K8_CMD=kubectl exec -it $(POD_NAME)
@@ -16,7 +18,7 @@ PG=$(K8_CMD) -- psql $(URL)
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 	printf "\033[1;33m Local Binary: -MYSQL=mysql \033[0m \n"
-	printf "\033[1;32m prepare/all Before Use \033[0m \n"
+	printf "\033[1;32m FirstTime: prepare/all, OUT=/dev/stdout (Debug) \033[0m \n"
 
 ### Info
 show-db: ## Show available databases
@@ -68,4 +70,4 @@ clean: delete-db## Clean up database
 
 reset: clean setup info ## Reset Database
 
-all: prepare reset ## All Targets
+all: prepare reset ## Run All Targets
