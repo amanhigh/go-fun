@@ -111,3 +111,7 @@ case $REPLY in
         echo "Invalid option selected."
         ;;
 esac
+
+
+## Help
+# Copy: kubectl cp seed.sql mysql-statefulset-0:/tmp/
