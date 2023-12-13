@@ -7,13 +7,15 @@ DBNAME=play
 RESTORE_DB_NAME=$(DBNAME)_restore
 USER=root
 PASSWORD=root
-MYSQL=$(K8_CMD) -- mysql -u $(USER) -p$(PASSWORD)
+CONFIG=/tmp/mysql.cnf
+MYSQL=$(K8_CMD) -- mysql --defaults-extra-file=$(CONFIG)
 MYSQLDB= $(MYSQL) $(DBNAME)
 
 ### Basic
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 	@printf "\033[1;33m Local Binary: -MYSQL=mysql \033[0m \n"
+	@printf "\033[1;32m prepare/all Before Use \033[0m \n"
 
 ### Info
 show-db: ## Show available databases
@@ -41,8 +43,7 @@ create-clone: ## Create cloned database
 
 seed: ## Seed database
 	@printf "\033[1;32m Seeding Database: $(DBNAME) \033[0m \n"
-	@kubectl cp seed.sql mysql-primary-0:/tmp
-	@$(K8_CMD) -- bash -c 'mysql -u $(USER) -p$(PASSWORD) $(DBNAME) < /tmp/seed.sql'
+	@$(K8_CMD) -- bash -c 'mysql --defaults-extra-file=$(CONFIG) $(DBNAME) < /tmp/seed.sql'
 
 setup: create-db seed ## Setup Database
 
@@ -57,13 +58,18 @@ delete-clone: ## Delete cloned database
 clean: delete-db delete-clone ## Clean up database
 
 ### Housekeeping
+prepare: ## Prepare Pod for Test Setup
+	@printf "\033[1;32m Preparing Pod: $(POD_NAME) \033[0m \n"
+	@kubectl cp seed.sql `basename $(POD_NAME)`:/tmp
+	@kubectl cp mysql.cnf `basename $(POD_NAME)`:/tmp
+
 backup: ## Backup Database
 	@printf "\033[1;32m Backing up Database: $(DBNAME) \033[0m \n"
-	@$(K8_CMD) -- bash -c 'mysqldump -u $(USER) -p$(PASSWORD) $(DBNAME) > /tmp/backup.sql'
+	@$(K8_CMD) -- bash -c 'mysqldump --defaults-extra-file=$(CONFIG) $(DBNAME) > /tmp/backup.sql'
 
 restore: ## Restore Database
 	@printf "\033[1;32m Restoring Database: $(RESTORE_DB_NAME) \033[0m \n"
-	@$(K8_CMD) -- bash -c 'mysql -u $(USER) -p$(PASSWORD) $(RESTORE_DB_NAME) < /tmp/backup.sql'
+	@$(K8_CMD) -- bash -c 'mysql --defaults-extra-file=$(CONFIG) $(RESTORE_DB_NAME) < /tmp/backup.sql'
 
 clone:delete-clone backup create-clone restore ## Clone Database
 
@@ -76,4 +82,4 @@ ssh: ## SSH to MySQL
 ### Workflows
 reset: clean setup info ## Reset Database
 
-all: reset clone ## All Targets
+all: prepare reset clone ## All Targets

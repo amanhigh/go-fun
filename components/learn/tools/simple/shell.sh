@@ -13,3 +13,6 @@ echo "Formatted date: $formatted_date"
 sleep 5 &
 echo "Bring Sleep to Foreground and Wait"
 wait
+
+# Extract Filename or last part
+basename pod/mysql-primary
