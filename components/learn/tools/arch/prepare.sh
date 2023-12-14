@@ -183,6 +183,11 @@ fi
 ## Restore
 # mount -o subvol=@snapshots/root-backup /dev/sda2 /mnt/root-readonly (Temp Mount)
 # Writable: Refer Snapper Restore
+## Snapshot Restore ##
+# Mount Mapper (/dev/mapper/cryptroot) to /all
+# Delete `/all/@`
+# btrfs sub snap /all/@snapshots/<latest>/snapshot /all/@
+# reboot
 ## Backup Image ##
 # btrfs send /home/.snapshots/2/snapshot/ > home.img
 # btrfs recieve /restore/home < home.img
