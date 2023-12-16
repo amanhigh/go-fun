@@ -47,8 +47,8 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 
 		self.CreateCounter.WithLabelValues(request.Gender).Inc()
 
-		if id, err := self.Manager.CreatePerson(ctx, request); err == nil {
-			c.JSON(http.StatusOK, id)
+		if person, err := self.Manager.CreatePerson(ctx, request); err == nil {
+			c.JSON(http.StatusOK, person)
 			span.SetStatus(codes.Ok, "Person Created")
 		} else {
 			span.SetStatus(codes.Error, err.Error())

@@ -1,3 +1,5 @@
+### Rest API - https://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api
+### Swagger Editor - https://editor.swagger.io/
 ### Person CRUD
 ### LIST
 GET http://localhost:8085/v1/person

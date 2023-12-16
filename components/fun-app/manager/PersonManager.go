@@ -12,11 +12,11 @@ import (
 )
 
 type PersonManagerInterface interface {
-	CreatePerson(c context.Context, person fun.PersonRequest) (id string, err common.HttpError)
+	CreatePerson(c context.Context, request fun.PersonRequest) (person fun.Person, err common.HttpError)
 	DeletePerson(c context.Context, id string) (err common.HttpError)
 	UpdatePerson(c context.Context, id string, request fun.PersonRequest) (err common.HttpError)
 
-	ListPersons(c context.Context, personQuery fun.PersonQuery) (response fun.PersonList, err common.HttpError)
+	ListPersons(c context.Context, query fun.PersonQuery) (response fun.PersonList, err common.HttpError)
 	GetPerson(c context.Context, id string) (person fun.Person, err common.HttpError)
 }
 
@@ -34,22 +34,20 @@ type PersonManager struct {
 // It returns two values:
 // - id: a string representing the ID of the newly created person.
 // - err: an error representing any error that occurred during the creation process.
-func (self *PersonManager) CreatePerson(c context.Context, personRequest fun.PersonRequest) (id string, err common.HttpError) {
-	personFields := log.Fields{"Name": personRequest.Name, "Age": personRequest.Age, "Gender": personRequest.Gender}
+func (self *PersonManager) CreatePerson(c context.Context, request fun.PersonRequest) (person fun.Person, err common.HttpError) {
+	personFields := log.Fields{"Name": request.Name, "Age": request.Age, "Gender": request.Gender}
 
 	ctx, span := self.Tracer.Start(c, "CreatePerson.Manager")
 	defer span.End()
 
 	/* Create Person */
-	var person fun.Person
-	person.Name = personRequest.Name
-	person.Age = personRequest.Age
-	person.Gender = personRequest.Gender
+	person.Name = request.Name
+	person.Age = request.Age
+	person.Gender = request.Gender
 
 	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
 		if err = self.Dao.Create(c, &person); err == nil {
-			id = person.Id
-			log.WithContext(c).WithField("Id", id).WithFields(personFields).Info("Person Created")
+			log.WithContext(c).WithField("Id", person.Id).WithFields(personFields).Info("Person Created")
 		}
 		return
 	})

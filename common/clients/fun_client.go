@@ -20,9 +20,9 @@ type FunClient struct {
 
 type PersonServiceInterface interface {
 	GetPerson(ctx context.Context, name string) (person fun.Person, err common.HttpError)
-	CreatePerson(ctx context.Context, person fun.PersonRequest) (id string, err common.HttpError)
+	CreatePerson(ctx context.Context, request fun.PersonRequest) (person fun.Person, err common.HttpError)
 	UpdatePerson(ctx context.Context, id string, person fun.PersonRequest) (err common.HttpError)
-	ListPerson(ctx context.Context, personQuery fun.PersonQuery) (response fun.PersonList, err common.HttpError)
+	ListPerson(ctx context.Context, query fun.PersonQuery) (personList fun.PersonList, err common.HttpError)
 	DeletePerson(ctx context.Context, name string) (err common.HttpError)
 }
 
@@ -72,8 +72,8 @@ func NewFunAppClient(baseUrl string, httpConfig config.HttpClientConfig) *FunCli
 	}
 }
 
-func (c *PersonService) CreatePerson(ctx context.Context, person fun.PersonRequest) (id string, err common.HttpError) {
-	response, err1 := c.client.R().SetContext(ctx).SetBody(person).SetResult(&id).Post(c.VERSION_URL + "/person")
+func (c *PersonService) CreatePerson(ctx context.Context, request fun.PersonRequest) (person fun.Person, err common.HttpError) {
+	response, err1 := c.client.R().SetContext(ctx).SetBody(request).SetResult(&person).Post(c.VERSION_URL + "/person")
 	err = util.ResponseProcessor(response, err1)
 	return
 }
