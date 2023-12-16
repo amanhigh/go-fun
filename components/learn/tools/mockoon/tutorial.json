@@ -150,6 +150,35 @@
         }
       ],
       "responseMode": null
+    },
+    {
+      "uuid": "e518e2fd-9af3-4b8b-83b1-ecbfa096dbe8",
+      "type": "crud",
+      "documentation": "CRUD Example",
+      "method": "",
+      "endpoint": "teacher",
+      "responses": [
+        {
+          "uuid": "cf937e6b-47d7-4741-8d2f-7a97ed9a79fe",
+          "body": "{}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "DATABUCKET",
+          "filePath": "",
+          "databucketID": "1v7i",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "tid",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null
     }
   ],
   "rootChildren": [
@@ -168,6 +197,10 @@
     {
       "type": "route",
       "uuid": "071954db-066a-434b-a865-6c2fa9624953"
+    },
+    {
+      "type": "route",
+      "uuid": "e518e2fd-9af3-4b8b-83b1-ecbfa096dbe8"
     }
   ],
   "proxyMode": false,
@@ -201,6 +234,14 @@
       "value": ""
     }
   ],
-  "data": [],
+  "data": [
+    {
+      "uuid": "10400117-8140-4054-934a-db3f26ff8be9",
+      "id": "1v7i",
+      "name": "Teacher",
+      "documentation": "Teacher Set",
+      "value": "[\n  {{#repeat 4}}\n    {\n      \"tid\": \"{{faker 'string.alpha'length=5 casing='upper'}}\",\n      \"name\": \"{{faker 'person.firstName'}} {{faker 'person.lastName'}}\",\n      \"age\": {{faker 'number.int' min=18 max=65}},\n      \"gender\": \"{{oneOf (array 'MALE' 'FEMALE')}}\",\n      \"isEmployed\": {{faker 'datatype.boolean'}},\n    \"salary\": {{faker 'number.int' mix=1000 max=10000}}\n    }\n  {{/repeat}}\n]"
+    }
+  ],
   "callbacks": []
 }
