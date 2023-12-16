@@ -49,13 +49,13 @@ type AdminService struct {
 }
 
 func (admin *AdminService) Stop(ctx context.Context) (err common.HttpError) {
-	response, err1 := admin.client.R().SetHeader("Content-Type", "text/plain").SetContext(ctx).Get("/admin/stop")
+	response, err1 := admin.client.R().SetContext(ctx).Get("/admin/stop")
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
 func (admin *AdminService) HealthCheck(ctx context.Context) (err common.HttpError) {
-	response, err1 := admin.client.R().SetHeader("Content-Type", "text/plain").SetContext(ctx).Get("/metrics")
+	response, err1 := admin.client.R().SetContext(ctx).Get("/metrics")
 	err = util.ResponseProcessor(response, err1)
 	return
 }
@@ -73,7 +73,8 @@ func NewFunAppClient(baseUrl string, httpConfig config.HttpClientConfig) *FunCli
 }
 
 func (c *PersonService) CreatePerson(ctx context.Context, request fun.PersonRequest) (person fun.Person, err common.HttpError) {
-	response, err1 := c.client.R().SetContext(ctx).SetBody(request).SetResult(&person).Post(c.VERSION_URL + "/person")
+	response, err1 := c.client.R().SetContext(ctx).SetHeader("Content-Type", "application/json").
+	SetBody(request).SetResult(&person).Post(c.VERSION_URL + "/person")
 	err = util.ResponseProcessor(response, err1)
 	return
 }

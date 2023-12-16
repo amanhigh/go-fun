@@ -351,8 +351,7 @@ var _ = Describe("Person Integration Test", func() {
 		})
 
 		It("should serve swagger", func() {
-			resp, err := TestHttpClient.R().SetHeader("Content-Type", "text/plain").
-				Get(serviceUrl + "/swagger/index.html")
+			resp, err := TestHttpClient.R().Get(serviceUrl + "/swagger/index.html")
 
 			Expect(err).To(BeNil())
 			Expect(resp.StatusCode()).To(Equal(200))
