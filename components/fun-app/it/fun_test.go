@@ -313,7 +313,7 @@ var _ = Describe("Person Integration Test", func() {
 	Context("Bad Requests", func() {
 		var (
 			emptyId   = ""
-			missingId = "aba313bf"
+			missingId = "missing-id"
 		)
 
 		Context("Empty Id", func() {
