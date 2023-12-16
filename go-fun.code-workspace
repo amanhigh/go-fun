@@ -10,7 +10,8 @@
 			"james-yu.latex-workshop",
 			"golang.go",
 			"terrastruct.d2",
-			"gruntfuggly.todo-tree"
+			"gruntfuggly.todo-tree",
+			"humao.rest-client"
 		]
 	},
 	"settings": {

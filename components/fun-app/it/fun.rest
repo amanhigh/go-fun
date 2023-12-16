@@ -1,0 +1,19 @@
+### Person CRUD
+### LIST
+GET http://localhost:8085/v1/person
+
+### Create
+POST http://localhost:8085/v1/person
+Content-Type: application/json
+
+{
+    "name": "Amanpreet Singh",
+    "age": 31,
+    "gender": "MALE"
+}
+
+### Get
+GET http://localhost:8085/v1/person/GCBOT
+
+### Delete
+DELETE http://localhost:8085/v1/person/amanpreet
