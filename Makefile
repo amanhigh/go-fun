@@ -2,12 +2,14 @@
 # Tutorial: https://makefiletutorial.com/
 # Silent: -s, Keepgoing -k, 
 # Paraller Jobs: -j2
+### Calls
 # Override Vars: make test-it COVER_DIR=./test
 # Call Target: $(MAKE) --no-print-directory XTRA=ISTIO bootstrap
-# Store Var: CUR_DIR := $(shell pwd) (Outside Target)
-# Dynamic Var: $(eval RESTORE_DB_NAME := $(DBNAME)_restore)
-# Continue Step or error: Start with `-`. Eg. -rm test.txt
 # Make In Directory: make -C /path/to/dir
+# Continue Step or error: Start with `-`. Eg. -rm test.txt
+### Variables
+# SHELL Var in Make: CUR_DIR := $(shell pwd) (Outside Target)
+# Make Var in SHELL: $(eval RESTORE_DB_NAME := $(DBNAME)_restore)
 
 ### Variables
 .DEFAULT_GOAL := help
