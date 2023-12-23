@@ -39,7 +39,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
-	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b // indirect
+	github.com/opencontainers/image-spec v1.1.0-rc5 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	go.opentelemetry.io/otel/metric v1.20.0 // indirect
 )
