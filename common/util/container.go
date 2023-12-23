@@ -51,7 +51,10 @@ func ZookeeperTestContainer(ctx context.Context) (zookeeperContainer testcontain
 	req := testcontainers.ContainerRequest{
 		Image:        "zookeeper:latest",
 		ExposedPorts: []string{"2181/tcp"},
-		WaitingFor:   wait.ForListeningPort("2181/tcp").WithStartupTimeout(WAIT_TIME),
+		WaitingFor: wait.ForAll(
+			wait.ForListeningPort("2181/tcp").WithStartupTimeout(WAIT_TIME),
+			wait.ForLog("Snapshot taken in").WithStartupTimeout(WAIT_TIME),
+		),
 	}
 	zookeeperContainer, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
