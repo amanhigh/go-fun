@@ -53,7 +53,7 @@ func ZookeeperTestContainer(ctx context.Context) (zookeeperContainer testcontain
 		ExposedPorts: []string{"2181/tcp"},
 		WaitingFor: wait.ForAll(
 			wait.ForListeningPort("2181/tcp").WithStartupTimeout(WAIT_TIME),
-			wait.ForLog("Snapshot taken in").WithStartupTimeout(WAIT_TIME),
+			wait.ForLog("ZooKeeper audit is disabled").WithStartupTimeout(WAIT_TIME),
 		),
 	}
 	zookeeperContainer, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{

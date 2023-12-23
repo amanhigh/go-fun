@@ -13,7 +13,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 )
 
-// TODO:Complete Migration from zoo.go
+// https://github.com/EladLeev/go-zookeeper-examples
 var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SLOW), func() {
 	var (
 		connection *zk.Conn
@@ -67,42 +67,57 @@ var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SLOW), func() {
 			Expect(string(readValue)).To(Equal(testValue))
 
 		})
+
+		It("should check Exists", func() {
+			exists, _, err := connection.Exists(testPath)
+			Expect(err).To(BeNil())
+			Expect(exists).To(BeTrue())
+		})
+
+		Context("Update", func() {
+			var (
+				updateValue = "Update Value"
+			)
+			BeforeEach(func() {
+				_, err = connection.Set(testPath, []byte(updateValue), -1)
+				Expect(err).To(BeNil())
+			})
+
+			It("should have Updated Value", func() {
+				readValue, _, err = connection.Get(testPath)
+				Expect(string(readValue)).To(Equal(updateValue))
+			})
+		})
+
+		Context("Watch", func() {
+			var (
+				watchValue = "Watch Value"
+			)
+
+			It("should get events", func() {
+				//Start Watching Path
+				data, _, evtChan, err := connection.GetW(testPath)
+				Expect(err).To(BeNil())
+				Expect(string(data)).To(Equal(testValue))
+
+				//Write to Path
+				go connection.Set(testPath, []byte(watchValue), -1)
+
+				Eventually(func() zk.EventType {
+					// BUG: Eventually doesnt' timeout if write is ommitted.
+					e := <-evtChan
+					data, _, evtChan, _ = connection.GetW(e.Path)
+					Expect(string(data)).To(Equal(watchValue))
+					return e.Type
+				}).Should(Equal(zk.EventNodeDataChanged))
+			})
+
+			It("should not get events without writes", func() {
+				_, _, evtChan, err := connection.GetW(testPath)
+				Expect(err).To(BeNil())
+
+				Eventually(evtChan).ShouldNot(Receive())
+			})
+		})
 	})
-
 })
-
-/*
-
-Not Working due to library disconnection unclear error no help
-
-	fmt.Println("Wating for Events")
-	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(3)
-	go pathWatcherSelect("/aman", c, &waitGroup)
-	waitGroup.Wait()
-
-func pathWatcher(path string, c *zk.Conn, wg *sync.WaitGroup) {
-	for o, _, cha, _ := c.GetW(path); ; wg.Done() {
-		o, _, cha, _ = c.GetW((<-cha).Path)
-		fmt.Println("Event Processed:", string(o))
-	}
-}
-
-func pathWatcherSelect(path string, c *zk.Conn, wg *sync.WaitGroup) {
-	o, _, cha, _ := c.GetW(path)
-	timeout := time.After(5 * time.Second)
-	for {
-		select {
-		case e := <-cha:
-			o, _, cha, _ = c.GetW(e.Path)
-			fmt.Println("Event Processed:", string(o))
-		case t := <-time.After(1 * time.Second):
-			fmt.Println("No Event Recived:", t)
-		case <-timeout:
-			fmt.Println("Timeout Out")
-		}
-		wg.Done()
-	}
-}
-
-*/
