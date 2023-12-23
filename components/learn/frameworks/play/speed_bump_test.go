@@ -1,24 +1,45 @@
 package play_test
 
 import (
+	"context"
+
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
 	"github.com/etcinit/speedbump"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/testcontainers/testcontainers-go"
 	"gopkg.in/redis.v5"
 )
 
 var _ = Describe("SpeedBump", Label(models.GINKGO_SETUP), func() {
 	var (
+		err            error
+		ctx            = context.Background()
+		hasher         = speedbump.PerSecondHasher{}
+		testIp         = "10.10.10.10"
+		redisContainer testcontainers.Container
+		client         *redis.Client
+	)
+
+	BeforeEach(func() {
+		redisContainer, err = util.RedisTestContainer(ctx)
+		Expect(err).To(BeNil())
+
+		endpoint, err := redisContainer.Endpoint(ctx, "")
+		Expect(err).To(BeNil())
+
 		// dman set redis
 		client = redis.NewClient(&redis.Options{
-			Addr:     "docker:6379",
+			Addr:     endpoint,
 			Password: "",
 			DB:       0,
 		})
-		hasher = speedbump.PerSecondHasher{}
-		testIp = "127.0.0.1"
-	)
+	})
+
+	AfterEach(func() {
+		Expect(redisContainer.Terminate(ctx)).To(BeNil())
+	})
 
 	It("should build", func() {
 		Expect(client).To(Not(BeNil()))
