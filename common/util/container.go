@@ -14,7 +14,7 @@ func RedisTestContainer(ctx context.Context) (redisContainer testcontainers.Cont
 	req := testcontainers.ContainerRequest{
 		Image:        "redis:latest",
 		ExposedPorts: []string{"6379/tcp"},
-		WaitingFor:   wait.ForLog("Ready to accept connections").WithStartupTimeout(WAIT_TIME),
+		WaitingFor:   wait.ForListeningPort("6379/tcp").WithStartupTimeout(WAIT_TIME),
 	}
 	redisContainer, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
