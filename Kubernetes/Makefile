@@ -25,6 +25,7 @@ prepare:
 	printf "\033[1;32m Preparing for Minikube \033[0m \n"
 	mkdir -p /tmp/mini
 	chmod 777 /tmp/mini
+	$(MAKE) -C ./services prepare > $(OUT)
 	
 start: ## Start Minikube
 	printf "\033[1;32m Starting Minikube \033[0m \n"

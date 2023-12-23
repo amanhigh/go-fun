@@ -16,3 +16,12 @@ wait
 
 # Extract Filename or last part
 basename pod/mysql-primary
+
+# https://www.cyberciti.biz/faq/bash-check-if-file-does-not-exist-linux-unix/
+# test -f /home/aman/test Exists
+# test ! -f /home/aman/test Not Exists
+# String
+# Empty: `test -z ""` (Zero Check)
+# Not Empty: `test -n "a"` (Non Zero)
+# Script
+# and `if [ "$encrypt" == 'y' ] && [ ! -f /mnt/root/crypt.keyfile ]; then`

@@ -1,24 +1,44 @@
 package play_test
 
 import (
+	"context"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
+	"github.com/fatih/color"
 	"github.com/go-zookeeper/zk"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/testcontainers/testcontainers-go"
 )
 
-// TODO:Complete Migration from zoo.go
-var _ = Describe("Zookeeper", Label(models.GINKGO_SETUP), func() {
+// https://github.com/EladLeev/go-zookeeper-examples
+var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SLOW), func() {
 	var (
 		connection *zk.Conn
+		ctx        = context.Background()
 		err        error
-		//dman set zookeeper
-		zkHost = "docker"
+
+		zkContainer testcontainers.Container
 	)
-	BeforeEach(func() {
-		connection, _, err = zk.Connect([]string{zkHost}, time.Second) //*10)
+	BeforeAll(func() {
+		//Create Zookeeper Test Container
+		zkContainer, err = util.ZookeeperTestContainer(ctx)
+		Expect(err).To(BeNil())
+
+		//Get Mapped Port
+		zkHost, err := zkContainer.Endpoint(ctx, "")
+		Expect(err).To(BeNil())
+		color.Green("Zookeeper Endpoint: %s", zkHost)
+
+		connection, _, err = zk.Connect([]string{zkHost}, time.Second)
+		Expect(err).To(BeNil())
+	})
+
+	AfterAll(func() {
+		color.Red("Zookeeper Shutting Down")
+		err = zkContainer.Terminate(ctx)
 		Expect(err).To(BeNil())
 	})
 
@@ -26,70 +46,78 @@ var _ = Describe("Zookeeper", Label(models.GINKGO_SETUP), func() {
 		Expect(connection).To(Not(BeNil()))
 	})
 
-	// Context("Write", func() {
-	// 	var (
-	// 		testPath  = "/testPath"
-	// 		testValue = "Test Value"
-	// 		readValue []byte
-	// 	)
-	// 	BeforeEach(func() {
-	// 		_, err = connection.Create(testPath, []byte(testValue), 0, zk.WorldACL(zk.PermAll))
-	// 		Expect(err).To(BeNil())
-	// 	})
+	Context("Write", func() {
+		var (
+			testPath  = "/testPath"
+			testValue = "Test Value"
+			readValue []byte
+		)
+		BeforeEach(func() {
+			_, err = connection.Create(testPath, []byte(testValue), 0, zk.WorldACL(zk.PermAll))
+			Expect(err).To(BeNil())
+		})
 
-	// 	It("should have Read Value", func() {
-	// 		readValue, _, err = connection.Get(testPath)
-	// 		Expect(string(readValue)).To(Equal(testValue))
+		AfterEach(func() {
+			err = connection.Delete(testPath, -1)
+			Expect(err).To(BeNil())
+		})
 
-	// 	})
+		It("should have Read Value", func() {
+			readValue, _, err = connection.Get(testPath)
+			Expect(string(readValue)).To(Equal(testValue))
 
-	// 	Context("Delete Value", func() {
-	// 		BeforeEach(func() {
-	// 			err = connection.Delete(testPath, -1)
-	// 			Expect(err).To(BeNil())
-	// 		})
+		})
 
-	// 		It("should have No Value", func() {
-	// 			readValue, _, err = connection.Get(testPath)
-	// 			Expect(string(readValue)).To(Equal(""))
-	// 		})
-	// 	})
-	// })
+		It("should check Exists", func() {
+			exists, _, err := connection.Exists(testPath)
+			Expect(err).To(BeNil())
+			Expect(exists).To(BeTrue())
+		})
 
+		Context("Update", func() {
+			var (
+				updateValue = "Update Value"
+			)
+			BeforeEach(func() {
+				_, err = connection.Set(testPath, []byte(updateValue), -1)
+				Expect(err).To(BeNil())
+			})
+
+			It("should have Updated Value", func() {
+				readValue, _, err = connection.Get(testPath)
+				Expect(string(readValue)).To(Equal(updateValue))
+			})
+		})
+
+		Context("Watch", func() {
+			var (
+				watchValue = "Watch Value"
+			)
+
+			It("should get events", func() {
+				//Start Watching Path
+				data, _, evtChan, err := connection.GetW(testPath)
+				Expect(err).To(BeNil())
+				Expect(string(data)).To(Equal(testValue))
+
+				//Write to Path
+				go connection.Set(testPath, []byte(watchValue), -1)
+
+				Eventually(func() zk.EventType {
+					// BUG: Eventually doesnt' timeout if write is ommitted.
+					e := <-evtChan
+					data, _, evtChan, _ = connection.GetW(e.Path)
+					Expect(string(data)).To(Equal(watchValue))
+					return e.Type
+				}).Should(Equal(zk.EventNodeDataChanged))
+			})
+
+			It("should not get events without writes", func() {
+				_, _, evtChan, err := connection.GetW(testPath)
+				Expect(err).To(BeNil())
+
+				Eventually(evtChan).ShouldNot(Receive())
+			})
+		})
+	})
 })
-
-/*
-
-Not Working due to library disconnection unclear error no help
-
-	fmt.Println("Wating for Events")
-	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(3)
-	go pathWatcherSelect("/aman", c, &waitGroup)
-	waitGroup.Wait()
-
-func pathWatcher(path string, c *zk.Conn, wg *sync.WaitGroup) {
-	for o, _, cha, _ := c.GetW(path); ; wg.Done() {
-		o, _, cha, _ = c.GetW((<-cha).Path)
-		fmt.Println("Event Processed:", string(o))
-	}
-}
-
-func pathWatcherSelect(path string, c *zk.Conn, wg *sync.WaitGroup) {
-	o, _, cha, _ := c.GetW(path)
-	timeout := time.After(5 * time.Second)
-	for {
-		select {
-		case e := <-cha:
-			o, _, cha, _ = c.GetW(e.Path)
-			fmt.Println("Event Processed:", string(o))
-		case t := <-time.After(1 * time.Second):
-			fmt.Println("No Event Recived:", t)
-		case <-timeout:
-			fmt.Println("Timeout Out")
-		}
-		wg.Done()
-	}
-}
-
-*/

@@ -1,6 +1,7 @@
 package play_test
 
 import (
+	"context"
 	"math/rand"
 
 	"github.com/amanhigh/go-fun/common/util"
@@ -8,8 +9,10 @@ import (
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/bxcodec/faker/v3"
 	"github.com/caarlos0/env/v6"
+	"github.com/fatih/color"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
 )
 
@@ -20,7 +23,7 @@ type School struct {
 }
 
 type SchoolBase struct {
-	School School
+	School   School
 	SchoolID uint `gorm:"not null"`
 }
 
@@ -42,14 +45,18 @@ type Teacher struct {
 	Salary     int    `faker:"boundary_start=20000,boundary_end=50000" gorm:"not null"`
 }
 
-var _ = Describe("Data Generator", Label(models.GINKGO_SETUP), func() {
+var _ = Describe("Data Generator", Label(models.GINKGO_SLOW), func() {
 	var (
 		db  *gorm.DB
+		ctx = context.Background()
 		err error
+
+		//Mysql Container
+		container testcontainers.Container
 
 		//Counts
 		multiplier = 1
-		batchSize    =  1000
+		batchSize  = 1000
 
 		schoolCount  = multiplier * 3
 		teacherCount = multiplier * 30
@@ -61,7 +68,8 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SETUP), func() {
 		teachers = make([]Teacher, teacherCount)
 	)
 
-	BeforeEach(func() {
+	BeforeEach(OncePerOrdered, func() {
+
 		// Create School
 		for i := 0; i < schoolCount; i++ {
 			schools[i] = School{}
@@ -90,19 +98,35 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SETUP), func() {
 		Expect(len(teachers)).To(Equal(teacherCount))
 	})
 
-	Context("with db", func() {
+	Context("with db", Ordered, func() {
 		var (
 			dbconfig = config.Db{}
 		)
-		BeforeEach(func() {
+
+		BeforeAll(func() {
+			//Create Mysql Container
+			container, err = util.MysqlTestContainer(ctx)
+			Expect(err).To(BeNil())
+
 			//Fill Defaults
 			err = env.Parse(&dbconfig)
 			Expect(err).To(BeNil())
 
-			dbconfig.Url = "aman:aman@tcp(docker:3306)/compute?charset=utf8&parseTime=True&loc=Local"
+			// url, err := container.Endpoint(ctx, "")
+			mysqlPort, err := container.MappedPort(ctx, "3306")
+			Expect(err).To(BeNil())
+
+			dbconfig.Url = util.BuildMysqlURL("aman", "aman", "localhost", "compute", mysqlPort.Port())
+			color.Green("Mysql Url: %s", dbconfig.Url)
 			// dbconfig.LogLevel = logger.Info
 
 			db, err = util.ConnectDb(dbconfig)
+			Expect(err).To(BeNil())
+		})
+
+		AfterAll(func() {
+			color.Red("Mysql Shutting Down")
+			err = container.Terminate(ctx)
 			Expect(err).To(BeNil())
 		})
 

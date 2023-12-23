@@ -2,12 +2,14 @@
 # Tutorial: https://makefiletutorial.com/
 # Silent: -s, Keepgoing -k, 
 # Paraller Jobs: -j2
+### Calls
 # Override Vars: make test-it COVER_DIR=./test
 # Call Target: $(MAKE) --no-print-directory XTRA=ISTIO bootstrap
-# Store Var: CUR_DIR := $(shell pwd) (Outside Target)
-# Dynamic Var: $(eval RESTORE_DB_NAME := $(DBNAME)_restore)
-# Continue Step or error: Start with `-`. Eg. -rm test.txt
 # Make In Directory: make -C /path/to/dir
+# Continue Step or error: Start with `-`. Eg. -rm test.txt
+### Variables
+# SHELL Var in Make: CUR_DIR := $(shell pwd) (Outside Target)
+# Make Var in SHELL: $(eval RESTORE_DB_NAME := $(DBNAME)_restore)
 
 ### Variables
 .DEFAULT_GOAL := help
@@ -44,7 +46,11 @@ test-operator: ## Run operator tests
 
 test-unit: ## Run unit tests
 	printf "\033[1;32m Running Unit Tests \n\033[0m"
-	ginkgo -r '--label-filter=!setup' -cover . > $(OUT)
+	ginkgo -r '--label-filter=!setup && !slow' -cover . > $(OUT)
+
+test-slow: ## Run slow tests
+	printf "\033[1;32m Running Slow Tests \n\033[0m"
+	ginkgo -r '--label-filter=slow' -cover . > $(OUT)
 
 cover-analyse: ## Analyse Integration Coverage Reports
 	printf "\033[1;32m Analysing Coverage Reports \n\033[0m"
@@ -58,7 +64,7 @@ cover-analyse: ## Analyse Integration Coverage Reports
 	# Analyse Report and Print Coverage
 	go tool covdata percent -i=$(COVER_DIR)
 
-	printf "\033[1;33m\n\n ******* Vscode: go.apply.coverprofile $(PROFILE_FILE) ******** \033[0m"
+	printf "\033[1;33m\n\n ******* Vscode: go.apply.coverprofile $(PROFILE_FILE) ******** \033[0m\n"
 
 
 test-it: run-fun-cover test-unit cover-analyse ## Integration test coverage analyse
@@ -146,5 +152,5 @@ setup: sync test build helm-package docker-build # Build and Test
 clean: test-clean build-clean ## Clean up Residue
 
 reset: setup info ## Build and Show Info
-all: prepare reset clean ## Run All Targets
+all: prepare reset test-slow clean ## Run All Targets
 	printf "\033[1;32m\n\n ******* Complete BUILD Successful ********\n \033[0m"

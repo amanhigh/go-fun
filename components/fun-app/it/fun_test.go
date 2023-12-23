@@ -41,26 +41,26 @@ var _ = Describe("Person Integration Test", func() {
 
 	Context("Create", func() {
 		var (
-			id string
+			createdPerson fun.Person
 		)
 		BeforeEach(func() {
-			id, err = client.PersonService.CreatePerson(ctx, request)
-			Expect(id).Should(Not(BeEmpty()))
+			createdPerson, err = client.PersonService.CreatePerson(ctx, request)
+			Expect(createdPerson.Id).Should(Not(BeEmpty()))
 			Expect(err).To(BeNil())
 		})
 		AfterEach(func() {
 			//Delete Person
-			err = client.PersonService.DeletePerson(ctx, id)
+			err = client.PersonService.DeletePerson(ctx, createdPerson.Id)
 			Expect(err).To(BeNil())
 		})
 
 		It("should create & get person", func() {
-			person, err := client.PersonService.GetPerson(ctx, id)
+			person, err := client.PersonService.GetPerson(ctx, createdPerson.Id)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(person).Should(Not(BeNil()))
 
 			//Match Person Fields
-			Expect(person.Id).To(Equal(id))
+			Expect(person.Id).To(Equal(createdPerson.Id))
 			Expect(person.Name).To(Equal(name))
 			Expect(person.Age).To(Equal(age))
 			Expect(person.Gender).To(Equal(gender))
@@ -69,7 +69,7 @@ var _ = Describe("Person Integration Test", func() {
 		Context("Update", func() {
 			var (
 				updateRequest fun.PersonRequest
-				updateId      string
+				updatedPerson fun.Person
 			)
 			BeforeEach(func() {
 				updateRequest = fun.PersonRequest{
@@ -77,25 +77,25 @@ var _ = Describe("Person Integration Test", func() {
 					Age:    25,
 					Gender: "FEMALE",
 				}
-				updateId, err = client.PersonService.CreatePerson(ctx, request)
+				updatedPerson, err = client.PersonService.CreatePerson(ctx, request)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
 
 			AfterEach(func() {
-				err = client.PersonService.DeletePerson(ctx, updateId)
+				err = client.PersonService.DeletePerson(ctx, updatedPerson.Id)
 				Expect(err).To(BeNil())
 			})
 
 			It("should update person", func() {
-				err := client.PersonService.UpdatePerson(ctx, updateId, updateRequest)
+				err := client.PersonService.UpdatePerson(ctx, updatedPerson.Id, updateRequest)
 				Expect(err).ShouldNot(HaveOccurred())
 
 				//Fetch Update Person
-				person, err := client.PersonService.GetPerson(ctx, updateId)
+				person, err := client.PersonService.GetPerson(ctx, updatedPerson.Id)
 				Expect(err).ShouldNot(HaveOccurred())
 
 				//MatchFields
-				Expect(person.Id).To(Equal(updateId))
+				Expect(person.Id).To(Equal(updatedPerson.Id))
 				Expect(person.Name).To(Equal(updateRequest.Name))
 				Expect(person.Age).To(Equal(updateRequest.Age))
 				Expect(person.Gender).To(Equal(updateRequest.Gender))
@@ -103,7 +103,7 @@ var _ = Describe("Person Integration Test", func() {
 
 			Context("Bad Requests", func() {
 				AfterEach(func() {
-					err = client.PersonService.UpdatePerson(ctx, updateId, updateRequest)
+					err = client.PersonService.UpdatePerson(ctx, updatedPerson.Id, updateRequest)
 					Expect(err).Should(HaveOccurred())
 					Expect(err).To(Equal(common.ErrBadRequest))
 				})
@@ -313,7 +313,7 @@ var _ = Describe("Person Integration Test", func() {
 	Context("Bad Requests", func() {
 		var (
 			emptyId   = ""
-			missingId = "aba313bf"
+			missingId = "missing-id"
 		)
 
 		Context("Empty Id", func() {
@@ -351,8 +351,7 @@ var _ = Describe("Person Integration Test", func() {
 		})
 
 		It("should serve swagger", func() {
-			resp, err := TestHttpClient.R().
-				Get(serviceUrl + "/swagger/index.html")
+			resp, err := TestHttpClient.R().Get(serviceUrl + "/swagger/index.html")
 
 			Expect(err).To(BeNil())
 			Expect(resp.StatusCode()).To(Equal(200))

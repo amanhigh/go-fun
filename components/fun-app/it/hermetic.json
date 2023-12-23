@@ -1,6 +1,6 @@
 {
   "uuid": "d81d790e-cec6-44f7-8957-db14cabd1efc",
-  "lastMigration": 29,
+  "lastMigration": 32,
   "name": "FunApp Hermetic Server",
   "endpointPrefix": "",
   "latency": 0,
@@ -31,10 +31,10 @@
           "disableTemplating": false,
           "fallbackTo404": false,
           "default": true,
-          "crudKey": "id"
+          "crudKey": "id",
+          "callbacks": []
         }
       ],
-      "enabled": true,
       "responseMode": null
     },
     {
@@ -77,10 +77,10 @@
           "disableTemplating": false,
           "fallbackTo404": false,
           "default": false,
-          "crudKey": "id"
+          "crudKey": "id",
+          "callbacks": []
         }
       ],
-      "enabled": true,
       "responseMode": null
     },
     {
@@ -106,102 +106,10 @@
           "disableTemplating": false,
           "fallbackTo404": false,
           "default": false,
-          "crudKey": "id"
+          "crudKey": "id",
+          "callbacks": []
         }
       ],
-      "enabled": true,
-      "responseMode": null
-    },
-    {
-      "uuid": "1d22edff-c44d-4ad3-8fb4-4ab26711c54c",
-      "type": "http",
-      "documentation": "Create Person",
-      "method": "post",
-      "endpoint": "v1/person",
-      "responses": [
-        {
-          "uuid": "666d2d23-5434-4f37-9732-6f7e85d24a01",
-          "body": "\"{{faker 'string.uuid'}}\"",
-          "latency": 0,
-          "statusCode": 200,
-          "label": "",
-          "headers": [],
-          "bodyType": "INLINE",
-          "filePath": "",
-          "databucketID": "",
-          "sendFileAsBody": false,
-          "rules": [],
-          "rulesOperator": "OR",
-          "disableTemplating": false,
-          "fallbackTo404": false,
-          "default": false,
-          "crudKey": "id"
-        }
-      ],
-      "enabled": true,
-      "responseMode": null
-    },
-    {
-      "uuid": "077ba54e-d15b-4e7b-81dd-0246123c9383",
-      "type": "http",
-      "documentation": "Get Person",
-      "method": "get",
-      "endpoint": "v1/person/:id",
-      "responses": [
-        {
-          "uuid": "17fbf32d-910a-42ec-b02a-50e4f39901d3",
-          "body": "{\"Name\":\"Amanpreet Singh\",\"Age\":31,\"Gender\":\"MALE\",\"Id\":\"{{urlParam 'id'}}\"}",
-          "latency": 0,
-          "statusCode": 200,
-          "label": "",
-          "headers": [
-            {
-              "key": "content-length",
-              "value": "67"
-            }
-          ],
-          "bodyType": "INLINE",
-          "filePath": "",
-          "databucketID": "",
-          "sendFileAsBody": false,
-          "rules": [],
-          "rulesOperator": "OR",
-          "disableTemplating": false,
-          "fallbackTo404": false,
-          "default": false,
-          "crudKey": "id"
-        }
-      ],
-      "enabled": true,
-      "responseMode": null
-    },
-    {
-      "uuid": "ac2d6e74-3ae1-4c24-8804-3f5cff9bda5e",
-      "type": "http",
-      "documentation": "Delete Person",
-      "method": "delete",
-      "endpoint": "v1/person/:id",
-      "responses": [
-        {
-          "uuid": "47237e8b-5750-4f6f-bf09-02d996559c21",
-          "body": "\"DELETED\"",
-          "latency": 0,
-          "statusCode": 200,
-          "label": "",
-          "headers": [],
-          "bodyType": "INLINE",
-          "filePath": "",
-          "databucketID": "",
-          "sendFileAsBody": false,
-          "rules": [],
-          "rulesOperator": "OR",
-          "disableTemplating": false,
-          "fallbackTo404": false,
-          "default": true,
-          "crudKey": "id"
-        }
-      ],
-      "enabled": true,
       "responseMode": null
     },
     {
@@ -227,26 +135,105 @@
           "disableTemplating": false,
           "fallbackTo404": false,
           "default": false,
-          "crudKey": "id"
+          "crudKey": "id",
+          "callbacks": []
         }
       ],
-      "enabled": true,
       "responseMode": null
     },
     {
-      "uuid": "8f108b96-cd6e-4f37-a5d9-6edc7887c04b",
-      "type": "http",
+      "uuid": "38fa7276-f1b3-4f3b-ada3-87642ea70951",
+      "type": "crud",
       "documentation": "",
-      "method": "delete",
-      "endpoint": "v1/person/",
+      "method": "",
+      "endpoint": "v1/person",
       "responses": [
         {
-          "uuid": "769d81d8-8835-4395-91d0-56d067517c3e",
-          "body": "404 page not found",
+          "uuid": "f7f7c1cd-7f0b-4f7d-949d-9a76685b888b",
+          "body": "{}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "DATABUCKET",
+          "filePath": "",
+          "databucketID": "sfma",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        },
+        {
+          "uuid": "a841beb5-6c79-49ed-8ec1-ef5d047ea462",
+          "body": "{}",
+          "latency": 0,
+          "statusCode": 400,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "body",
+              "modifier": "name",
+              "value": "",
+              "invert": false,
+              "operator": "equals"
+            },
+            {
+              "target": "body",
+              "modifier": "gender",
+              "value": "",
+              "invert": false,
+              "operator": "equals"
+            },
+            {
+              "target": "body",
+              "modifier": "age",
+              "value": "0",
+              "invert": false,
+              "operator": "equals"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null
+    },
+    {
+      "uuid": "b3b5c433-b3f6-4a4f-a1e5-ec810f061051",
+      "type": "http",
+      "documentation": "",
+      "method": "all",
+      "endpoint": "v1/person/missing-id",
+      "responses": [
+        {
+          "uuid": "c2c9355e-6eac-435f-ad9d-f47afb6d640d",
+          "body": "{}",
           "latency": 0,
           "statusCode": 404,
           "label": "",
-          "headers": [],
+          "headers": [
+            {
+              "key": "content-type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "content-length",
+              "value": "2"
+            }
+          ],
           "bodyType": "INLINE",
           "filePath": "",
           "databucketID": "",
@@ -256,10 +243,48 @@
           "disableTemplating": false,
           "fallbackTo404": false,
           "default": false,
-          "crudKey": "id"
+          "crudKey": "id",
+          "callbacks": []
         }
       ],
-      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "fbb34a88-5a1e-4c6f-9e7d-b54a8e682f9d",
+      "type": "http",
+      "documentation": "",
+      "method": "delete",
+      "endpoint": "v1/person/",
+      "responses": [
+        {
+          "uuid": "4c24b27a-0be8-4d95-a784-26d19cb43d07",
+          "body": "{}",
+          "latency": 0,
+          "statusCode": 404,
+          "label": "",
+          "headers": [
+            {
+              "key": "content-type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "content-length",
+              "value": "2"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
       "responseMode": null
     }
   ],
@@ -282,19 +307,15 @@
     },
     {
       "type": "route",
-      "uuid": "1d22edff-c44d-4ad3-8fb4-4ab26711c54c"
+      "uuid": "fbb34a88-5a1e-4c6f-9e7d-b54a8e682f9d"
     },
     {
       "type": "route",
-      "uuid": "077ba54e-d15b-4e7b-81dd-0246123c9383"
+      "uuid": "b3b5c433-b3f6-4a4f-a1e5-ec810f061051"
     },
     {
       "type": "route",
-      "uuid": "8f108b96-cd6e-4f37-a5d9-6edc7887c04b"
-    },
-    {
-      "type": "route",
-      "uuid": "ac2d6e74-3ae1-4c24-8804-3f5cff9bda5e"
+      "uuid": "38fa7276-f1b3-4f3b-ada3-87642ea70951"
     }
   ],
   "proxyMode": true,
@@ -328,5 +349,14 @@
       "value": ""
     }
   ],
-  "data": []
+  "data": [
+    {
+      "uuid": "f49378f0-8ba4-441f-9f2f-391fbd2ab79e",
+      "id": "sfma",
+      "name": "Person",
+      "documentation": "Person Bank",
+      "value": "[\n  {{#repeat 4}}\n    {\n      \"id\": \"{{faker 'string.alpha' length=5 casing='upper'}}\",\n      \"name\": \"{{faker 'person.firstName'}} {{faker 'person.lastName'}}\",\n      \"age\": {{faker 'number.int' min=18 max=65}},\n      \"gender\": \"{{oneOf (array 'MALE' 'FEMALE')}}\"\n    }\n  {{/repeat}}\n]"
+    }
+  ],
+  "callbacks": []
 }

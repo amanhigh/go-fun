@@ -3,8 +3,9 @@ package models
 const XRequestID = "X-Request-ID"
 
 // Ginkgo
-const GINKGO_INEGRATION_TEST = "it"
-const GINKGO_SETUP = "setup"
+const GINKGO_INEGRATION = "it"
+const GINKGO_SLOW = "slow"   //Slower Tests
+const GINKGO_SETUP = "setup" //Requires external Setup
 
 // DB
 const CONTEXT_TX = "contextTx"

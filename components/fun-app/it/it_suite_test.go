@@ -29,7 +29,7 @@ var (
 
 func TestIt(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "FunApp Suite", Label(models.GINKGO_INEGRATION_TEST))
+	RunSpecs(t, "FunApp Suite", Label(models.GINKGO_INEGRATION))
 }
 
 var _ = BeforeSuite(func() {

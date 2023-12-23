@@ -36,7 +36,7 @@ func NewRestyClient(baseUrl string, httpConfig config.HttpClientConfig) (client 
 	client = resty.New().SetBaseURL(baseUrl)
 
 	//Default Header
-	client.SetHeader("Content-Type", "application/json")
+	// client.SetHeader("Content-Type", "application/json")
 
 	//Tracing
 	otelresty.TraceClient(client, otelresty.WithTracerName("resty-sdk"))

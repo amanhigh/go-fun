@@ -121,6 +121,64 @@
         }
       ],
       "responseMode": null
+    },
+    {
+      "uuid": "071954db-066a-434b-a865-6c2fa9624953",
+      "type": "http",
+      "documentation": "Faker and Helper",
+      "method": "get",
+      "endpoint": "template",
+      "responses": [
+        {
+          "uuid": "c528372c-056f-43da-ab4d-6071ef82711f",
+          "body": "[\n  {{#repeat 2}}\n    {\n      \"id\": {{faker 'number.int' max=99999}},\n      \"name\": \"{{faker 'person.firstName'}} {{faker 'person.lastName'}}\",\n      \"email\": \"{{faker 'internet.email'}}\",\n      \"phone\": \"{{faker 'phone.number'}}\",\n      \"age\": {{faker 'number.int' min=18 max=65}},\n      \"gender\": \"{{oneOf (array 'MALE' 'FEMALE')}}\",\n      \"sex\": \"{{faker 'person.sex'}}\"\n      \"isEmployed\": {{faker 'datatype.boolean'}},\n      \"salary\": {{faker 'number.int' mix=1000 max=10000}},\n      \"startDate\": {{faker 'date.past'}},\n      \"day\": \"{{faker 'date.weekday'}}\",\n      \"agent\": \"{{faker 'internet.userAgent'}}\",\n      \"word\": \"{{faker 'word.verb'}}\"\n      \"address\": {\n        \"street\": \"{{faker 'location.streetAddress'}}\",\n        \"city\": \"{{faker 'location.city'}}\",\n        \"state\": \"{{faker 'location.state'}}\",\n        \"zip\": \"{{faker 'location.zipCode'}}\"\n      },\n       \"lorem\": \"{{faker 'lorem.sentence'}}\",\n       \"uuid\": \"{{faker 'string.uuid'}}\"\n       \"uuid-mini\": \"{{faker 'string.alpha'length=5 casing='upper'}}\"\n    }\n  {{/repeat}}\n],\n{\n  \"helper\": \"https://mockoon.com/docs/latest/templating/mockoon-helpers/\",\n  \"faker\": \"https://fakerjs.dev/api/\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null
+    },
+    {
+      "uuid": "e518e2fd-9af3-4b8b-83b1-ecbfa096dbe8",
+      "type": "crud",
+      "documentation": "CRUD Example",
+      "method": "",
+      "endpoint": "teacher",
+      "responses": [
+        {
+          "uuid": "cf937e6b-47d7-4741-8d2f-7a97ed9a79fe",
+          "body": "{}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "DATABUCKET",
+          "filePath": "",
+          "databucketID": "1v7i",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "tid",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null
     }
   ],
   "rootChildren": [
@@ -135,6 +193,14 @@
     {
       "type": "route",
       "uuid": "8c356d0f-3f1f-4833-b7fb-f7fc5c77e3db"
+    },
+    {
+      "type": "route",
+      "uuid": "071954db-066a-434b-a865-6c2fa9624953"
+    },
+    {
+      "type": "route",
+      "uuid": "e518e2fd-9af3-4b8b-83b1-ecbfa096dbe8"
     }
   ],
   "proxyMode": false,
@@ -168,6 +234,14 @@
       "value": ""
     }
   ],
-  "data": [],
+  "data": [
+    {
+      "uuid": "10400117-8140-4054-934a-db3f26ff8be9",
+      "id": "1v7i",
+      "name": "Teacher",
+      "documentation": "Teacher Set",
+      "value": "[\n  {{#repeat 4}}\n    {\n      \"tid\": \"{{faker 'string.alpha'length=5 casing='upper'}}\",\n      \"name\": \"{{faker 'person.firstName'}} {{faker 'person.lastName'}}\",\n      \"age\": {{faker 'number.int' min=18 max=65}},\n      \"gender\": \"{{oneOf (array 'MALE' 'FEMALE')}}\",\n      \"isEmployed\": {{faker 'datatype.boolean'}},\n    \"salary\": {{faker 'number.int' mix=1000 max=10000}}\n    }\n  {{/repeat}}\n]"
+    }
+  ],
   "callbacks": []
 }

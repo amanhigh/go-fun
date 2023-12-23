@@ -8,9 +8,9 @@ import (
 
 type PersonRequest struct {
 	// Validations - https://gin-gonic.com/docs/examples/binding-and-validation/
-	Name   string `gorm:"not null" binding:"required,min=1,max=25,name=person"`
-	Age    int    `gorm:"not null" binding:"required,min=1,max=150"`
-	Gender string `gorm:"not null" binding:"required,eq=MALE|eq=FEMALE" enums:"MALE,FEMALE"`
+	Name   string `json:"name" gorm:"not null" binding:"required,min=1,max=25,name=person"`
+	Age    int    `json:"age" gorm:"not null" binding:"required,min=1,max=150"`
+	Gender string `json:"gender" gorm:"not null" binding:"required,eq=MALE|eq=FEMALE" enums:"MALE,FEMALE"`
 }
 
 type PersonPath struct {
@@ -31,7 +31,7 @@ type PersonList struct {
 
 type Person struct {
 	PersonRequest
-	Id      string `gorm:"primaryKey"`
+	Id      string `gorm:"primaryKey" json:"id"`
 	Version int64  `gorm:"not null" json:"-" binding:"-"`
 }
 

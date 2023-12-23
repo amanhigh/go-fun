@@ -24,7 +24,7 @@ var DefaultHttpClient = resty.New().SetTimeout(REQUEST_TIMEOUT).SetTransport(&ht
 	DisableCompression: true,
 })
 
-var TestHttpClient = resty.New().SetHeader("Content-Type", "application/json")
+var TestHttpClient = resty.New()
 
 func NewHttpClientWithCookies(cookieUrl string, cookies []*http.Cookie, client *resty.Client) *resty.Client {
 	cookieJar, _ := cookiejar.New(nil)

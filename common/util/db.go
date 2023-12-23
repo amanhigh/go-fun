@@ -89,9 +89,13 @@ func CreateTestDb() (db *gorm.DB, err error) {
 }
 
 func CreateMysqlConnection(username, password, host, dbName string, port int) (db *sql.DB, err error) {
-	url := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", username, password, host, port, dbName)
+	url := BuildMysqlURL(username, password, host, dbName, port)
 	db, err = sql.Open("mysql", url)
 	return
+}
+
+func BuildMysqlURL(username, password, host, dbName string, port any) string {
+	return fmt.Sprintf("%s:%s@tcp(%s:%v)/%s?charset=utf8&parseTime=True&loc=Local", username, password, host, port, dbName)
 }
 
 // GormErrorMapper maps GORM database errors to common HTTP errors.

@@ -1,24 +1,49 @@
 package play_test
 
 import (
+	"context"
+
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
 	"github.com/etcinit/speedbump"
+	"github.com/fatih/color"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/testcontainers/testcontainers-go"
 	"gopkg.in/redis.v5"
 )
 
-var _ = Describe("SpeedBump", Label(models.GINKGO_SETUP), func() {
+var _ = Describe("SpeedBump", Ordered, Label(models.GINKGO_SLOW), func() {
 	var (
+		err       error
+		ctx       = context.Background()
+		hasher    = speedbump.PerSecondHasher{}
+		testIp    = "10.10.10.10"
+		container testcontainers.Container
+		client    *redis.Client
+	)
+
+	BeforeAll(func() {
+		container, err = util.RedisTestContainer(ctx)
+		Expect(err).To(BeNil())
+
+		endpoint, err := container.Endpoint(ctx, "")
+		Expect(err).To(BeNil())
+
+		color.Green("Redis Endpoint: %s", endpoint)
+
 		// dman set redis
 		client = redis.NewClient(&redis.Options{
-			Addr:     "docker:6379",
+			Addr:     endpoint,
 			Password: "",
 			DB:       0,
 		})
-		hasher = speedbump.PerSecondHasher{}
-		testIp = "127.0.0.1"
-	)
+	})
+
+	AfterAll(func() {
+		color.Red("Redis Shutting Down")
+		Expect(container.Terminate(ctx)).To(BeNil())
+	})
 
 	It("should build", func() {
 		Expect(client).To(Not(BeNil()))
