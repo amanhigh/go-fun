@@ -1,24 +1,44 @@
 package play_test
 
 import (
+	"context"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
+	"github.com/fatih/color"
 	"github.com/go-zookeeper/zk"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/testcontainers/testcontainers-go"
 )
 
 // TODO:Complete Migration from zoo.go
-var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SETUP), func() {
+var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SLOW), func() {
 	var (
 		connection *zk.Conn
+		ctx        = context.Background()
 		err        error
-		//dman set zookeeper
-		zkHost = "docker"
+
+		zkContainer testcontainers.Container
 	)
 	BeforeAll(func() {
+		//Create Zookeeper Test Container
+		zkContainer, err = util.ZookeeperTestContainer(ctx)
+		Expect(err).To(BeNil())
+
+		//Get Mapped Port
+		zkHost, err := zkContainer.Endpoint(ctx, "")
+		Expect(err).To(BeNil())
+		color.Green("Zookeeper Endpoint: %s", zkHost)
+
 		connection, _, err = zk.Connect([]string{zkHost}, time.Second)
+		Expect(err).To(BeNil())
+	})
+
+	AfterAll(func() {
+		color.Red("Zookeeper Shutting Down")
+		err = zkContainer.Terminate(ctx)
 		Expect(err).To(BeNil())
 	})
 

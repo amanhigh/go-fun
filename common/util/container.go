@@ -46,3 +46,16 @@ func MysqlTestContainer(ctx context.Context) (mysqlContainer testcontainers.Cont
 	})
 	return
 }
+
+func ZookeeperTestContainer(ctx context.Context) (zookeeperContainer testcontainers.Container, err error) {
+	req := testcontainers.ContainerRequest{
+		Image:        "zookeeper:latest",
+		ExposedPorts: []string{"2181/tcp"},
+		WaitingFor:   wait.ForListeningPort("2181/tcp").WithStartupTimeout(WAIT_TIME),
+	}
+	zookeeperContainer, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	return
+}
