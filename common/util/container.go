@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/docker/go-connections/nat"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
@@ -24,16 +25,20 @@ func RedisTestContainer(ctx context.Context) (redisContainer testcontainers.Cont
 }
 
 func MysqlTestContainer(ctx context.Context) (mysqlContainer testcontainers.Container, err error) {
+	port := "3306/tcp"
 	req := testcontainers.ContainerRequest{
-		Image:        "mysql:5.7",
-		ExposedPorts: []string{"3306/tcp"},
-		WaitingFor:   wait.ForLog("ready for connections").WithStartupTimeout(WAIT_TIME),
+		Image:        "mysql:latest",
+		ExposedPorts: []string{port},
 		Env: map[string]string{
 			"MYSQL_ROOT_PASSWORD": "root",
 			"MYSQL_DATABASE":      "compute",
 			"MYSQL_USER":          "aman",
 			"MYSQL_PASSWORD":      "aman",
 		},
+		WaitingFor: wait.ForAll(
+			wait.ForLog("ready for connections").WithStartupTimeout(WAIT_TIME*2),
+			wait.ForSQL(nat.Port(port), "mysql", func(host string, port nat.Port) string { return "aman:aman@tcp(" + host + ":" + port.Port() + ")/" }).WithStartupTimeout(WAIT_TIME*2),
+		),
 	}
 	mysqlContainer, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
