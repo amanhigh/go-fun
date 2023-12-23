@@ -13,7 +13,7 @@ import (
 	"gopkg.in/redis.v5"
 )
 
-var _ = Describe("SpeedBump", Ordered, Label(models.GINKGO_SETUP), func() {
+var _ = Describe("SpeedBump", Ordered, Label(models.GINKGO_SLOW), func() {
 	var (
 		err       error
 		ctx       = context.Background()

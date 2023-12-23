@@ -46,7 +46,11 @@ test-operator: ## Run operator tests
 
 test-unit: ## Run unit tests
 	printf "\033[1;32m Running Unit Tests \n\033[0m"
-	ginkgo -r '--label-filter=!setup' -cover . > $(OUT)
+	ginkgo -r '--label-filter=!setup && !slow' -cover . > $(OUT)
+
+test-slow: ## Run slow tests
+	printf "\033[1;32m Running Slow Tests \n\033[0m"
+	ginkgo -r '--label-filter=slow' -cover . > $(OUT)
 
 cover-analyse: ## Analyse Integration Coverage Reports
 	printf "\033[1;32m Analysing Coverage Reports \n\033[0m"
@@ -148,5 +152,5 @@ setup: sync test build helm-package docker-build # Build and Test
 clean: test-clean build-clean ## Clean up Residue
 
 reset: setup info ## Build and Show Info
-all: prepare reset clean ## Run All Targets
+all: prepare reset test-slow clean ## Run All Targets
 	printf "\033[1;32m\n\n ******* Complete BUILD Successful ********\n \033[0m"
