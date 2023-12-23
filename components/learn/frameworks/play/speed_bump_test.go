@@ -14,19 +14,19 @@ import (
 
 var _ = Describe("SpeedBump", Label(models.GINKGO_SETUP), func() {
 	var (
-		err            error
-		ctx            = context.Background()
-		hasher         = speedbump.PerSecondHasher{}
-		testIp         = "10.10.10.10"
-		redisContainer testcontainers.Container
-		client         *redis.Client
+		err       error
+		ctx       = context.Background()
+		hasher    = speedbump.PerSecondHasher{}
+		testIp    = "10.10.10.10"
+		container testcontainers.Container
+		client    *redis.Client
 	)
 
 	BeforeEach(func() {
-		redisContainer, err = util.RedisTestContainer(ctx)
+		container, err = util.RedisTestContainer(ctx)
 		Expect(err).To(BeNil())
 
-		endpoint, err := redisContainer.Endpoint(ctx, "")
+		endpoint, err := container.Endpoint(ctx, "")
 		Expect(err).To(BeNil())
 
 		// dman set redis
@@ -38,7 +38,7 @@ var _ = Describe("SpeedBump", Label(models.GINKGO_SETUP), func() {
 	})
 
 	AfterEach(func() {
-		Expect(redisContainer.Terminate(ctx)).To(BeNil())
+		Expect(container.Terminate(ctx)).To(BeNil())
 	})
 
 	It("should build", func() {
