@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/amanhigh/go-fun/models v1.0.1
+	github.com/amanhigh/go-fun/models v1.0.3
 	github.com/arl/statsviz v0.6.0
 	github.com/docker/go-connections v0.4.0
 	github.com/dubonzi/otelresty v1.2.0
@@ -30,9 +30,18 @@ require (
 	golang.org/x/net v0.19.0
 	google.golang.org/grpc v1.59.0
 	gorm.io/driver/mysql v1.5.2
-	gorm.io/driver/sqlite v1.5.4
 	gorm.io/gorm v1.25.5
 	gorm.io/plugin/dbresolver v1.4.7
+)
+
+require (
+	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/glebarez/go-sqlite v1.21.2 // indirect
+	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
+	modernc.org/libc v1.22.5 // indirect
+	modernc.org/mathutil v1.5.0 // indirect
+	modernc.org/memory v1.5.0 // indirect
+	modernc.org/sqlite v1.23.1 // indirect
 )
 
 require (
@@ -53,6 +62,7 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
+	github.com/glebarez/sqlite v1.10.0
 	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
@@ -79,7 +89,6 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-sqlite3 v1.14.18 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/moby/term v0.5.0 // indirect

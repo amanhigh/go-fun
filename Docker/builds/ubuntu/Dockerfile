@@ -1,6 +1,7 @@
 #This is a sample Image
+# HACK: Migrate to single Tutorial File
 FROM ubuntu
-MAINTAINER coool.aman@gmail.com
+MAINTAINER name@gmail.com
 
 RUN apt-get update
 RUN apt-get install -y nginx apache2 apache2-utils curl

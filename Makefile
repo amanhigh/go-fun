@@ -13,7 +13,7 @@
 
 ### Variables
 .DEFAULT_GOAL := help
-BUILD_OPTS := CGO_ENABLED=1 GOARCH=amd64
+BUILD_OPTS := CGO_ENABLED=0 GOARCH=amd64
 COMPONENT_DIR := ./components
 FUN_DIR := $(COMPONENT_DIR)/fun-app
 
@@ -103,6 +103,107 @@ build-clean:
 	rm "$(FUN_DIR)/fun";
 	rm "$(COMPONENT_DIR)/kohan/kohan";
 
+### Helpers
+confirm:
+	@if [[ -z "$(CI)" ]]; then \
+		REPLY="" ; \
+		read -p "⚠ Are you sure? [y/n] > " -r ; \
+		if [[ ! $$REPLY =~ ^[Yy]$$ ]]; then \
+			printf $(_ERROR) "KO" "Stopping" ; \
+			exit 1 ; \
+		else \
+			printf $(_TITLE) "OK" "Continuing" ; \
+			exit 0; \
+		fi \
+	fi
+_WARN := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"
+_TITLE := "\033[32m[%s]\033[0m %s\n" # Green text for "printf"
+_ERROR := "\033[31m[%s]\033[0m %s\n" # Red text for "printf"
+
+### Release
+release-models:
+	printf "\033[1;32m Release Models: $(VER) \n\033[0m";
+	@if $(MAKE) --no-print-directory confirm ; then \
+		git tag models/$(VER) ; \
+		git tag | grep models | tail -2 ;
+	fi
+
+	printf "\033[1;32m Pushing Tags \n\033[0m";
+	@if $(MAKE) --no-print-directory confirm ; then \
+		git push --tags && printf "\033[1;32m Models Released: $(VER) \n\033[0m" ; \
+	fi
+
+release-common:
+	printf "\033[1;32m Bump Models: $(VER) \n\033[0m";
+	@if $(MAKE) --no-print-directory confirm ; then \
+		pushd ./common ; \
+		go get -u github.com/amanhigh/go-fun/models@$(VER); \
+		git add go.* && git commit -m "Bumping Models: $(VER)"; \
+		popd; \
+	fi
+
+	printf "\033[1;32m Release Common: $(VER) \n\033[0m";
+	@if $(MAKE) --no-print-directory confirm ; then \
+		git tag common/$(VER) ; \
+		git tag | grep common | tail -2 ;
+	fi
+
+	printf "\033[1;32m Pushing Tags \n\033[0m";
+	@if $(MAKE) --no-print-directory confirm ; then \
+		git push --tags && printf "\033[1;32m Common Released: $(VER) \n\033[0m" ; \
+	fi
+
+release-fun:
+	printf "\033[1;32m Bump Common: $(VER) \n\033[0m";
+	@if $(MAKE) --no-print-directory confirm ; then \
+		pushd ./components/fun-app ; \
+		go get -u github.com/amanhigh/go-fun/common@$(VER); \
+		git add go.* && git commit -m "Bumping Common: $(VER)"; \
+		popd; \
+	fi
+
+	printf "\033[1;32m Release Fun: $(VER) \n\033[0m";
+	@if $(MAKE) --no-print-directory confirm ; then \
+		git tag $(VER) ; \
+		$(MAKE) info-release ; \
+	fi
+
+	printf "\033[1;32m Pushing Tags \n\033[0m";
+	@if $(MAKE) --no-print-directory confirm ; then \
+		git push --tags && printf "\033[1;32m Fun Released: $(VER) \n\033[0m" ; \
+	fi
+
+unrelease: ## Revoke Release of Golang Packages
+ifndef VER
+	$(error VER not set. Eg. v1.1.0)
+endif
+	printf "\033[1;31m Deleting Release: $(VER) \n\033[0m"
+	@if $(MAKE) --no-print-directory confirm ; then \
+		git tag -d models/$(VER) ; \
+		git push --delete origin models/$(VER); \
+		git tag -d common/$(VER) ; \
+		git push --delete origin common/$(VER); \
+		git tag -d $(VER) ; \
+		git push --delete origin $(VER); \
+	fi
+	$(MAKE) --no-print-directory info-release
+
+release: info-release ## Release Golang Packages
+ifndef VER
+	$(error VER not set. Eg. v1.1.0)
+endif
+	$(MAKE) --no-print-directory release-models;
+	$(MAKE) --no-print-directory release-common;
+	$(MAKE) --no-print-directory release-fun;
+
+### Info
+info-release:
+# HACK: Move printf using _WARN and _TITLE
+	printf "\033[1;32m Release Info \n\033[0m"
+	git tag | grep "models" | tail -2
+	git tag | grep "common" | tail -2
+	git tag | grep "v" | grep -v "/" | tail -2
+
 ### Runs
 run-fun: build-fun ## Run Fun App
 	printf "\033[1;32m Running Fun App \n\033[0m"
@@ -138,6 +239,14 @@ docker-fun: build-fun
 	printf "\033[1;32m Building FunApp Docker Image \033[0m"
 	docker build -t $(FUN_IMAGE_TAG) -f $(FUN_DIR)/Dockerfile $(FUN_DIR) > $(OUT)
 
+docker-fun-run: docker-fun
+	printf "\033[1;32m Running FunApp Docker Image \033[0m"
+	docker run -it amanfdk/fun-app
+
+docker-fun-exec:
+	printf "\033[1;32m Execing Into FunApp Docker Image \033[0m"
+	docker run -it --entrypoint /bin/sh amanfdk/fun-app
+
 docker-build: docker-fun ## Build Docker Images
 
 ### Workflows
@@ -145,7 +254,7 @@ test: test-operator test-it ## Run all tests
 build: build-fun build-kohan ## Build all Binaries
 
 #HACK: Add Make to Readme
-info:
+info: info-release ## Repo Information
 prepare: setup-tools setup-k8 # One Time Setup
 
 setup: sync test build helm-package docker-build # Build and Test
