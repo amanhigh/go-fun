@@ -123,33 +123,54 @@ _ERROR := "\033[31m[%s]\033[0m %s\n" # Red text for "printf"
 ### Release
 release-models:
 	printf "\033[1;32m Release Models: $(VER) \n\033[0m";
-	@if $(MAKE) confirm ; then \
+	@if $(MAKE) --no-print-directory confirm ; then \
 		git tag models/$(VER) ; \
-		git push --tags ; \
+		git tag | grep models | tail -2 ;
 	fi
 
 	printf "\033[1;32m Pushing Tags \n\033[0m";
-	@if $(MAKE) confirm ; then \
+	@if $(MAKE) --no-print-directory confirm ; then \
 		git push --tags && printf "\033[1;32m Models Released: $(VER) \n\033[0m" ; \
 	fi
 
 release-common:
 	printf "\033[1;32m Bump Models: $(VER) \n\033[0m";
-	@if $(MAKE) confirm ; then \
+	@if $(MAKE) --no-print-directory confirm ; then \
 		pushd ./common ; \
 		go get -u github.com/amanhigh/go-fun/models@$(VER); \
+		git add go.* && git commit -m "Bumping Models: $(VER)"; \
 		popd; \
 	fi
 
 	printf "\033[1;32m Release Common: $(VER) \n\033[0m";
-	@if $(MAKE) confirm ; then \
+	@if $(MAKE) --no-print-directory confirm ; then \
 		git tag common/$(VER) ; \
-		git push --tags ; \
+		git tag | grep common | tail -2 ;
 	fi
 
 	printf "\033[1;32m Pushing Tags \n\033[0m";
-	@if $(MAKE) confirm ; then \
+	@if $(MAKE) --no-print-directory confirm ; then \
 		git push --tags && printf "\033[1;32m Common Released: $(VER) \n\033[0m" ; \
+	fi
+
+release-fun:
+	printf "\033[1;32m Bump Common: $(VER) \n\033[0m";
+	@if $(MAKE) --no-print-directory confirm ; then \
+		pushd ./components/fun-app ; \
+		go get -u github.com/amanhigh/go-fun/common@$(VER); \
+		git add go.* && git commit -m "Bumping Common: $(VER)"; \
+		popd; \
+	fi
+
+	printf "\033[1;32m Release Fun: $(VER) \n\033[0m";
+	@if $(MAKE) --no-print-directory confirm ; then \
+		git tag $(VER) ; \
+		$(MAKE) info-release ; \
+	fi
+
+	printf "\033[1;32m Pushing Tags \n\033[0m";
+	@if $(MAKE) --no-print-directory confirm ; then \
+		git push --tags && printf "\033[1;32m Fun Released: $(VER) \n\033[0m" ; \
 	fi
 
 unrelease: ## Revoke Release of Golang Packages
@@ -157,23 +178,31 @@ ifndef VER
 	$(error VER not set. Eg. v1.1.0)
 endif
 	printf "\033[1;31m Deleting Release: $(VER) \n\033[0m"
-	@if $(MAKE) confirm ; then \
+	@if $(MAKE) --no-print-directory confirm ; then \
 		git tag -d models/$(VER) ; \
 		git push --delete origin models/$(VER); \
+		git tag -d common/$(VER) ; \
+		git push --delete origin common/$(VER); \
+		git tag -d $(VER) ; \
+		git push --delete origin $(VER); \
 	fi
-	$(MAKE) info-release
+	$(MAKE) --no-print-directory info-release
 
 release: info-release ## Release Golang Packages
 ifndef VER
 	$(error VER not set. Eg. v1.1.0)
 endif
-	$(MAKE) release-models;
+	$(MAKE) --no-print-directory release-models;
+	$(MAKE) --no-print-directory release-common;
+	$(MAKE) --no-print-directory release-fun;
 
 ### Info
 info-release:
+# HACK: Move printf using _WARN and _TITLE
 	printf "\033[1;32m Release Info \n\033[0m"
 	git tag | grep "models" | tail -2
 	git tag | grep "common" | tail -2
+	git tag | grep "v" | grep -v "/" | tail -2
 
 ### Runs
 run-fun: build-fun ## Run Fun App
