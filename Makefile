@@ -103,6 +103,59 @@ build-clean:
 	rm "$(FUN_DIR)/fun";
 	rm "$(COMPONENT_DIR)/kohan/kohan";
 
+### Helpers
+confirm:
+	@if [[ -z "$(CI)" ]]; then \
+		REPLY="" ; \
+		read -p "⚠ Are you sure? [y/n] > " -r ; \
+		if [[ ! $$REPLY =~ ^[Yy]$$ ]]; then \
+			printf $(_ERROR) "KO" "Stopping" ; \
+			exit 1 ; \
+		else \
+			printf $(_TITLE) "OK" "Continuing" ; \
+			exit 0; \
+		fi \
+	fi
+_WARN := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"
+_TITLE := "\033[32m[%s]\033[0m %s\n" # Green text for "printf"
+_ERROR := "\033[31m[%s]\033[0m %s\n" # Red text for "printf"
+
+### Release
+release-models:
+	printf "\033[1;32m Release Models: v$(VER) \n\033[0m";
+	@if $(MAKE) confirm ; then \
+		git tag models/v$(VER) ; \
+		git push --tags ; \
+	fi
+
+	printf "\033[1;32m Pushing Tags \n\033[0m";
+	@if $(MAKE) confirm ; then \
+		git push --tags && printf "\033[1;32m Models Released: v$(VER) \n\033[0m" ; \
+	fi
+
+unrelease: ## Revoke Release of Golang Packages
+ifndef VER
+	$(error VER not set. Eg. 1.1.0)
+endif
+	printf "\033[1;31m Deleting Release: v$(VER) \n\033[0m"
+	@if $(MAKE) confirm ; then \
+		git tag -d models/v$(VER) ; \
+		git push --delete origin models/v$(VER); \
+	fi
+	$(MAKE) info-release
+
+release: info-release ## Release Golang Packages
+ifndef VER
+	$(error VER not set. Eg. 1.1.0)
+endif
+	$(MAKE) release-models;
+
+### Info
+info-release:
+	printf "\033[1;32m Release Info \n\033[0m"
+	git tag | grep "models" | tail -2
+	git tag | grep "common" | tail -2
+
 ### Runs
 run-fun: build-fun ## Run Fun App
 	printf "\033[1;32m Running Fun App \n\033[0m"
@@ -139,9 +192,11 @@ docker-fun: build-fun
 	docker build -t $(FUN_IMAGE_TAG) -f $(FUN_DIR)/Dockerfile $(FUN_DIR) > $(OUT)
 
 docker-fun-run: docker-fun
+	printf "\033[1;32m Running FunApp Docker Image \033[0m"
 	docker run -it amanfdk/fun-app
 
 docker-fun-exec:
+	printf "\033[1;32m Execing Into FunApp Docker Image \033[0m"
 	docker run -it --entrypoint /bin/sh amanfdk/fun-app
 
 docker-build: docker-fun ## Build Docker Images
@@ -151,7 +206,7 @@ test: test-operator test-it ## Run all tests
 build: build-fun build-kohan ## Build all Binaries
 
 #HACK: Add Make to Readme
-info:
+info: info-release ## Repo Information
 prepare: setup-tools setup-k8 # One Time Setup
 
 setup: sync test build helm-package docker-build # Build and Test
