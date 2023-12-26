@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/amanhigh/go-fun/common v1.0.1
 	github.com/amanhigh/go-fun/components/operator v0.0.0-20231105173700-27dd61fe1606
-	github.com/amanhigh/go-fun/models v1.0.0
+	github.com/amanhigh/go-fun/models v1.0.3
 	github.com/bxcodec/faker/v3 v3.8.1
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/casbin/casbin/v2 v2.61.0
@@ -157,7 +157,6 @@ require (
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.45.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
-	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
