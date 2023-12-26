@@ -122,31 +122,50 @@ _ERROR := "\033[31m[%s]\033[0m %s\n" # Red text for "printf"
 
 ### Release
 release-models:
-	printf "\033[1;32m Release Models: v$(VER) \n\033[0m";
+	printf "\033[1;32m Release Models: $(VER) \n\033[0m";
 	@if $(MAKE) confirm ; then \
-		git tag models/v$(VER) ; \
+		git tag models/$(VER) ; \
 		git push --tags ; \
 	fi
 
 	printf "\033[1;32m Pushing Tags \n\033[0m";
 	@if $(MAKE) confirm ; then \
-		git push --tags && printf "\033[1;32m Models Released: v$(VER) \n\033[0m" ; \
+		git push --tags && printf "\033[1;32m Models Released: $(VER) \n\033[0m" ; \
+	fi
+
+release-common:
+	printf "\033[1;32m Bump Models: $(VER) \n\033[0m";
+	@if $(MAKE) confirm ; then \
+		pushd ./common ; \
+		go get -u github.com/amanhigh/go-fun/models@$(VER); \
+		popd; \
+	fi
+
+	printf "\033[1;32m Release Common: $(VER) \n\033[0m";
+	@if $(MAKE) confirm ; then \
+		git tag common/$(VER) ; \
+		git push --tags ; \
+	fi
+
+	printf "\033[1;32m Pushing Tags \n\033[0m";
+	@if $(MAKE) confirm ; then \
+		git push --tags && printf "\033[1;32m Common Released: $(VER) \n\033[0m" ; \
 	fi
 
 unrelease: ## Revoke Release of Golang Packages
 ifndef VER
-	$(error VER not set. Eg. 1.1.0)
+	$(error VER not set. Eg. v1.1.0)
 endif
-	printf "\033[1;31m Deleting Release: v$(VER) \n\033[0m"
+	printf "\033[1;31m Deleting Release: $(VER) \n\033[0m"
 	@if $(MAKE) confirm ; then \
-		git tag -d models/v$(VER) ; \
-		git push --delete origin models/v$(VER); \
+		git tag -d models/$(VER) ; \
+		git push --delete origin models/$(VER); \
 	fi
 	$(MAKE) info-release
 
 release: info-release ## Release Golang Packages
 ifndef VER
-	$(error VER not set. Eg. 1.1.0)
+	$(error VER not set. Eg. v1.1.0)
 endif
 	$(MAKE) release-models;
 
