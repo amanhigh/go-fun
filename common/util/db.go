@@ -8,12 +8,12 @@ import (
 	"github.com/amanhigh/go-fun/models"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/config"
+	"github.com/glebarez/sqlite"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"gorm.io/driver/mysql"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -80,6 +80,10 @@ func ConnectDb(cfg config.Db) (db *gorm.DB, err error) {
 	return
 }
 
+// CreateTestDb creates a test database.
+// Uses in memory Sqlite.
+// Faster CGO Implementation - https://github.com/go-gorm/sqlite
+// It returns a *gorm.DB and an error.
 func CreateTestDb() (db *gorm.DB, err error) {
 	//Use Log Level 4 for Debug, 3 for Warnings, 2 for Errors
 	//Can use /tmp/gorm.db for file base Db
