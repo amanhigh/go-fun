@@ -5,8 +5,8 @@ go 1.21
 toolchain go1.21.0
 
 require (
-	github.com/amanhigh/go-fun/common v1.0.1
-	github.com/amanhigh/go-fun/models v1.0.1
+	github.com/amanhigh/go-fun/common v1.0.3
+	github.com/amanhigh/go-fun/models v1.0.3
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/etcinit/speedbump v2.0.0+incompatible
 	github.com/facebookgo/inject v0.0.0-20180706035515-f23751cae28b
