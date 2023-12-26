@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/amanhigh/go-fun/models v1.0.1
+	github.com/amanhigh/go-fun/models v1.0.3
 	github.com/arl/statsviz v0.6.0
 	github.com/docker/go-connections v0.4.0
 	github.com/dubonzi/otelresty v1.2.0

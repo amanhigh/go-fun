@@ -13,6 +13,8 @@ github.com/PuerkitoBio/goquery v1.8.1 h1:uQxhNlArOIdbrH1tr0UXwdVFgDcZDrZVdcpygAc
 github.com/PuerkitoBio/goquery v1.8.1/go.mod h1:Q8ICL1kNUJ2sXGoAhPGUdYDJvgQgHzJsnnd3H7Ho5jQ=
 github.com/amanhigh/go-fun/models v1.0.1 h1:MCpJoR7nkN9UEUN6fdN62+LwhFabsI5NRpcmYjc5eak=
 github.com/amanhigh/go-fun/models v1.0.1/go.mod h1:6l/PCIp/TYvsddkYC84ndeldOCABOsXMpE6qccgYyaY=
+github.com/amanhigh/go-fun/models v1.0.3 h1:f7cU7Zo2vs/qVz0RJnLxeJQC1M//SngV6xhMqhaB+KA=
+github.com/amanhigh/go-fun/models v1.0.3/go.mod h1:8ePjuRb92OwV1eVOP4hfj3sdPHjCHqeFUyL6B8NzuPY=
 github.com/andybalholm/cascadia v1.3.1/go.mod h1:R4bJ1UQfqADjvDa4P6HZHLh/3OxWWEqc0Sk8XGwHqvA=
 github.com/andybalholm/cascadia v1.3.2 h1:3Xi6Dw5lHF15JtdcmAHD3i1+T8plmv7BQ/nsViSLyss=
 github.com/andybalholm/cascadia v1.3.2/go.mod h1:7gtRlve5FxPPgIgX36uWBX58OdBsSS6lUvCFb+h7KvU=
