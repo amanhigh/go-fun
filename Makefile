@@ -247,6 +247,7 @@ docker-fun-exec:
 	printf "\033[1;32m Execing Into FunApp Docker Image \033[0m"
 	docker run -it --entrypoint /bin/sh amanfdk/fun-app
 
+# TODO: Docker Publish
 docker-build: docker-fun ## Build Docker Images
 
 ### Workflows

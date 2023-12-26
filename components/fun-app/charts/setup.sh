@@ -1,3 +1,4 @@
+# FIXME: Migrate to Make File
 kubectl create ns fun-app
 echo -en "\033[1;32m Istio Enabled \033[0m \n"
 kubectl label namespace fun-app istio-injection=enabled
