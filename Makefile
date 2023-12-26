@@ -138,6 +138,12 @@ docker-fun: build-fun
 	printf "\033[1;32m Building FunApp Docker Image \033[0m"
 	docker build -t $(FUN_IMAGE_TAG) -f $(FUN_DIR)/Dockerfile $(FUN_DIR) > $(OUT)
 
+docker-fun-run: docker-fun
+	docker run -it amanfdk/fun-app
+
+docker-fun-exec:
+	docker run -it --entrypoint /bin/sh amanfdk/fun-app
+
 docker-build: docker-fun ## Build Docker Images
 
 ### Workflows

@@ -1,7 +1,7 @@
 #RUN: docker build -t fun . && docker run -it fun
 #This is a sample Image
 FROM alpine
-MAINTAINER coool.aman@gmail.com
+MAINTAINER name@gmail.com
 
 #Add Repo
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/v3.4/main' >> /etc/apk/repositories
