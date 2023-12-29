@@ -7,7 +7,7 @@ XTRA="dashy"
 
 DOCKER_HOSTS=127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker \
 mysqladmin.docker redisadmin.docker cron.docker prometheus.docker grafana.docker jaeger.docker kiali.docker \
-ldapadmin.docker webssh.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker \
+ldapadmin.docker webssh.docker elastic.docker kibana.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker \
 consul.docker opa.docker sonar.docker metabase.docker
 NS:=$(shell kubectl get sa -o=jsonpath='{.items[0]..metadata.namespace}')
 ANS_FILE:=/tmp/k8-svc.txt
