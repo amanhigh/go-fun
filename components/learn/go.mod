@@ -49,6 +49,8 @@ require (
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/cpuguy83/dockercfg v0.3.1 // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
+	github.com/elastic/elastic-transport-go/v8 v8.3.0 // indirect
+	github.com/elastic/go-elasticsearch/v8 v8.11.1 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/klauspost/compress v1.16.5 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
@@ -85,6 +87,7 @@ require (
 	github.com/docker/docker v24.0.7+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
+	github.com/elastic/go-elasticsearch v0.0.0
 	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
