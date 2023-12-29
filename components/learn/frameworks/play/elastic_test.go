@@ -35,7 +35,7 @@ var _ = Describe("Elastic", Label(models.GINKGO_SETUP), func() {
 		Expect(elasticClient).ToNot(BeNil())
 	})
 
-	FIt("should connect", func() {
+	It("should connect", func() {
 		info, err := elasticClient.Ping()
 		Expect(err).To(BeNil())
 		Expect(info).ToNot(BeNil())
@@ -82,10 +82,25 @@ var _ = Describe("Elastic", Label(models.GINKGO_SETUP), func() {
 				}
 			})
 
-			It("should exist", func() {
-				// exists, err := esapi.Exists(indexName, docs[0].ID)
-				// Expect(err).To(BeNil())
-				// Expect(exists).To(BeTrue())
+			AfterEach(func() {
+				// Delete documents
+				for _, doc := range docs {
+					_, err = esapi.DeleteRequest{
+						Index:      indexName,
+						DocumentID: doc.ID,
+					}.Do(ctx, elasticClient)
+					Expect(err).To(BeNil())
+				}
+			})
+
+			It("should get", func() {
+				// Get document
+				resp, err := esapi.GetRequest{
+					Index:      indexName,
+					DocumentID: docs[0].ID,
+				}.Do(ctx, elasticClient)
+				Expect(err).To(BeNil())
+				Expect(resp).ToNot(BeNil())
 			})
 
 		})
