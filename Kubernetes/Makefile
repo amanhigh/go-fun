@@ -22,13 +22,13 @@ help: ## Show this help
 ### Lifecycle
 #Additional Flags: --kubernetes-version v1.23.0
 prepare:
-	printf "\033[1;32m Preparing for Minikube \033[0m \n"
+	printf $(_TITLE) "Preparing" "Minikube"
 	mkdir -p /tmp/mini
 	chmod 777 /tmp/mini
 	$(MAKE) -C ./services prepare > $(OUT)
 	
 start: ## Start Minikube
-	printf "\033[1;32m Starting Minikube \033[0m \n"
+	printf $(_TITLE) "Starting" "Minikube"
 	minikube  -p minikube start --memory=$(MEMORY) --cpus=$(CPU) --addons=metrics-server \
 	--mount-string="$(SERVICE_FILES):/etc/files" --mount --cache-images=true \
 	--host-only-cidr='24.1.1.100/24' > $(OUT);
@@ -36,12 +36,12 @@ start: ## Start Minikube
 	screen -S mini-mount -dmL bash -c 'minikube mount /tmp/mini:/tmp/mini' -L ""
 
 wait:
-	printf "\033[1;34m Waiting for Minikube to be Ready \033[0m \n";
+	printf $(_INFO) "Waiting" "Minikube to be Ready"
 	sleep 30
 	kubectl wait --for=condition=Ready pod -l k8s-app=kube-dns -n kube-system --timeout=60s > $(OUT)
 
 stop: ## Stop Minikube
-	printf "\033[1;31m Deleting Minikube Clusters \033[0m \n"
+	printf $(_WARN) "Deleting" "Minikube Clusters"
 	minikube -p minikube delete > $(OUT)
 
 ## Info
