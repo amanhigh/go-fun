@@ -17,7 +17,7 @@ SERVICE_FILES=$(MAKE_FILE_DIR)/services/files
 ### Basic
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-	printf "\033[1;32m FirstTime: prepare/all, OUT=/dev/stdout (Debug) \033[0m \n"
+	printf $(_INFO) "FirstTime: prepare/all, OUT=/dev/stdout (Debug)"
 
 ### Lifecycle
 #Additional Flags: --kubernetes-version v1.23.0
@@ -46,25 +46,25 @@ stop: ## Stop Minikube
 
 ## Info
 info-mini: ## Minikube Info
-	printf "\033[1;32m Minikube Info \033[0m \n";
-	printf "\033[1;33m Context: `kubectl config current-context;`\033[0m \n";
-	printf "\033[1;34m Mounted: $(SERVICE_FILES) \033[0m \n"
-	printf "\033[1;33m Dashboard: http://docker:9000/dashboard/#/ \033[0m \n"
+	printf $(_TITLE) "Minikube Info" ""
+	printf $(_INFO) "Context" "`kubectl config current-context;`"
+	printf $(_DETAIL) "Mounted" "$(SERVICE_FILES)"
+	printf $(_INFO) "Dashboard" "http://docker:9000/dashboard/#/"
 
-info-extra: ## Minikube Info
-	printf "\033[1;32m Minikube Extra Info \033[0m \n";
-	printf "\033[1;33m Run 'minikube tunnel' for Emulating ELB\033[0m \n";
-	printf "\033[1;33m Dashboard: http://localhost:$(PORT)/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/# \033[0m \n";
-	printf "\033[1;33m Swagger: http://localhost:$(PORT)/swagger-ui \033[0m \n";
-	printf "\033[1;33m K9S:  k9s --context minikube \033[0m \n";
+info-extra: ## Minikube Extra Info
+	printf $(_TITLE) "Minikube Extra Info" ""
+	printf $(_INFO) "Emulating ELB" "Run 'minikube tunnel'"
+	printf $(_INFO) "Dashboard" "http://localhost:$(PORT)/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/#"
+	printf $(_INFO) "Swagger" "http://localhost:$(PORT)/swagger-ui"
+	printf $(_INFO) "K9S" "k9s --context minikube"
 
 ### Addons
 dashboard: ## Minikube Dashboard
-	printf "\033[1;32m Minikube Dashboard & Addons \033[0m \n";
+	printf $(_TITLE) "Minikube Dashboard & Addons" ""
 	minikube -p minikube dashboard --port=$(PORT) --url=true > /dev/null 2>&1 &
 
 bootstrap: ## Bootstrap basic Services
-	printf "\033[1;32m Bootstraping Services \033[0m \n";
+	printf $(_TITLE) "Bootstraping Services" ""
 	$(MAKE) -C ./services bootstrap > $(OUT)
 
 .PHONY: istio
@@ -73,17 +73,17 @@ istio: ## Reset Minikube with Istio
 
 ### Port Forwarding
 port-fwd:
-	printf "\033[1;34m Please enter password for Port 80 Forward \033[0m \n";
+	printf $(_INFO) "Please enter password for Port 80 Forward" ""
 	sudo -v
 	screen -S mini -dmL bash -c 'sudo kubectl port-forward deployment/traefik 80:8000'
 	screen -S traefik -dmL bash -c 'kubectl port-forward deployment/traefik 9000:9000'
 
 port-ls:
-	printf "\033[1;32m Listing Screens \033[0m \n"
+	printf $(_TITLE) "Listing Screens" ""
 	screen -ls
 
 port-kill:
-	printf "\033[1;32m Killing Port Forward \033[0m \n"
+	printf $(_WARN) "Killing Port Forward" ""
 	screen -XS mini quit
 	screen -XS traefik quit
 
@@ -97,12 +97,12 @@ backup:
 	# FIXME: Backup Flow
 	test -f $(MINI_BKP_FILE) || touch $(MINI_BKP_FILE)
 	minikube image ls | grep -v none | tee $(MINI_CURRENT_BKP_FILE)
-	printf "\033[1;33m MinkubeImage Count: `wc -l $(MINI_CURRENT_BKP_FILE)` \033[0m \n"
+	printf $(_INFO) "MinkubeImage Count:" "`wc -l $(MINI_CURRENT_BKP_FILE)`"
 
 	# Append Image list to Master List
 	cp $(MINI_BKP_FILE) /tmp/mini-bkp-old
 	sort $(MINI_CURRENT_BKP_FILE) /tmp/mini-bkp-old | uniq | tee $(MINI_BKP_FILE)
-	printf "\033[1;33m MasterList Count: `wc -l $(MINI_BKP_FILE)` \033[0m \n"
+	printf $(_INFO) "MasterList Count:" "`wc -l $(MINI_BKP_FILE)`"
 
 	for IMG in $$(cat $(MINI_CURRENT_BKP_FILE)); do\
 		CACHE_PATH="$${IMG%/*}";\
@@ -121,7 +121,7 @@ backup:
 	done
 restore:
 	for IMG in $$(cat $(MINI_BKP_FILE)); do \
-		printf "\033[1;33m Loading Image: $${IMG} \033[0m \n"; \
+		printf $(_INFO) "Loading Image:" "$${IMG}"; \
 		minikube image load --daemon $${IMG}; \
 	done
 
@@ -134,6 +134,11 @@ clean: stop ## Stop Minikube
 reset: clean setup info ## Rebuild Minikube
 all: prepare istio dashboard infos port ## Run All Targets
 
+### Formatting
+_INFO := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"
+_DETAIL := "\033[34m[%s]\033[0m %s\n"  # Blue text for "printf"
+_TITLE := "\033[32m[%s]\033[0m %s\n" # Green text for "printf"
+_WARN := "\033[31m[%s]\033[0m %s\n" # Red text for "printf"
 
 ## k9s
 # k9s --readonly , -n <namespace>, -l <loglevel>
