@@ -265,3 +265,4 @@ all: prepare reset test-slow clean ## Run All Targets
 _INFO := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"
 _TITLE := "\033[32m[%s]\033[0m %s\n" # Green text for "printf"
 _WARN := "\033[31m[%s]\033[0m %s\n" # Red text for "printf"
+_DETAIL := "\033[34m[%s]\033[0m %s\n"  # Blue text for "printf"
