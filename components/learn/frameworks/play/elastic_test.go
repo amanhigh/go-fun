@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
@@ -118,6 +119,22 @@ var _ = Describe("Elastic", Ordered, Label(models.GINKGO_SLOW), func() {
 				resp, err := esapi.GetRequest{
 					Index:      indexName,
 					DocumentID: docs[0].ID,
+				}.Do(ctx, elasticClient)
+				Expect(err).To(BeNil())
+				Expect(resp).ToNot(BeNil())
+			})
+
+			It("should search", func() {
+				// Search documents
+				resp, err := esapi.SearchRequest{
+					Index: []string{indexName},
+					Body: strings.NewReader(`{
+						"query": {
+							"match": {
+								"title": "aman"
+							}
+						}
+					}`),
 				}.Do(ctx, elasticClient)
 				Expect(err).To(BeNil())
 				Expect(resp).ToNot(BeNil())
