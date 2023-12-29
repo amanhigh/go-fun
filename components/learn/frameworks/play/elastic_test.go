@@ -7,7 +7,10 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-// https://www.elastic.co/guide/en/elasticsearch/client/go-api/current/getting-started-go.html
+/*
+ Guide - https://www.elastic.co/guide/en/elasticsearch/client/go-api/current/getting-started-go.html
+ Index - http://docker:9200/learn/_search?pretty
+*/
 
 var _ = Describe("Elastic", Label(models.GINKGO_SETUP), func() {
 	var (
@@ -29,19 +32,23 @@ var _ = Describe("Elastic", Label(models.GINKGO_SETUP), func() {
 		Expect(info).ToNot(BeNil())
 	})
 
-	Context("Document", func() {
+	Context("Index", func() {
 		var (
-		// indexName = "learn"
-		// typeName  = "learnType"
-		// docs      = []frameworks.DocumentRequest{
-		// 	{Title: "Aman", Content: "Preet"},
-		// 	{Title: "John", Content: "Doe"},
-		// }
+			indexName = "learn"
+			// typeName  = "learnType"
+			// docs      = []frameworks.DocumentRequest{
+			// 	{Title: "Aman", Content: "Preet"},
+			// 	{Title: "John", Content: "Doe"},
+			// }
 		// query = "aman"
 		// skip  = 1
 		// top   = 2
 		)
 		BeforeEach(func() {
+			//Create Index
+			_, err = elasticClient.Indices.Create(indexName)
+			Expect(err).To(BeNil())
+
 			// Insert documents in bulk
 			// bulk := elasticClient.Bulk().Index(indexName).Type(typeName)
 			// for _, d := range docs {
@@ -61,9 +68,9 @@ var _ = Describe("Elastic", Label(models.GINKGO_SETUP), func() {
 			//Delete Records
 		})
 
-		It("should search", func() {
-
+		It("should exist", func() {
+			_, err = elasticClient.Indices.Exists([]string{indexName})
+			Expect(err).To(BeNil())
 		})
-
 	})
 })
