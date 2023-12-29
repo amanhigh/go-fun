@@ -28,7 +28,7 @@ prepare:
 	$(MAKE) -C ./services prepare > $(OUT)
 	
 start: ## Start Minikube
-	printf $(_TITLE) "Starting" "Minikube"
+	printf $(_TITLE) "Starting" "Minikube: $(CPU) CPUs, $(MEMORY) MB Memory"
 	minikube  -p minikube start --memory=$(MEMORY) --cpus=$(CPU) --addons=metrics-server \
 	--mount-string="$(SERVICE_FILES):/etc/files" --mount --cache-images=true \
 	--host-only-cidr='24.1.1.100/24' > $(OUT);

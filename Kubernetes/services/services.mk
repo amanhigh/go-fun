@@ -168,6 +168,7 @@ elk: ## ElasticSearch Kibana Logstash
 	# helm $(CMD) logstash bitnami/logstash -f logstash.yml > /dev/null
 	-helm $(CMD) elasticsearch bitnami/elasticsearch -f elasticsearch.yml > /dev/null
 	-helm $(CMD) kibana bitnami/kibana -f kibana.yml > /dev/null
+	printf $(_TITLE) "ELK needs CPU: 4, Memory: 10Gig"
 	printf $(_INFO) "ElasticSearch" "http://elastic.docker/_cluster/health?pretty"
 	printf $(_INFO) "Kibana" "http://kibana.docker"
 
