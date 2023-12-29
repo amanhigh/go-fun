@@ -1,4 +1,4 @@
-# FIXME: Move to Make file
+# FIXME: #A Move to Make file
 OP=`echo "read write all" | tr ' ' '\n' | gum filter --prompt "Load Type: "`
 DURATION=`gum input --prompt "Duration: " --value=30s`
 export URL=http://localhost:9000

@@ -56,7 +56,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	telemetry.InitTracerProvider(context.Background(), NAMESPACE, self.config.Tracing)
 
 	/* Access Metrics */
-	// TODO: Ingest to Prometheus and configure in helm
+	// TODO: #C Ingest to Prometheus and configure in helm
 	//Visit http://localhost:8080/metrics
 	prometheus := ginprometheus.NewPrometheus("gin_access")
 	prometheus.ReqCntURLLabelMappingFn = telemetry.AccessMetrics

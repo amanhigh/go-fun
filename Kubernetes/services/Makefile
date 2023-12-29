@@ -38,7 +38,7 @@ clear-helm: ## Delete deployed Helms
 	printf "\033[1;31m Deleting Deployed Helms \033[0m \n"
 	#Clear CRD's (Needed before Helm Deletion)
 	#HACK: Clear Kiali if istio enabled
-	#HACK: Add Mysql CRD's
+	#HACK: #C Add Mysql CRD's
 		
 	-helm delete $$(helm list --short | grep -v "traefik\|dashy") > $(OUT)
 
@@ -107,6 +107,6 @@ infos: info ## Service Extended Info
 setup: clear-helm install ## Setup Configured Services
 #HACK: Clear Istio
 clean: clear-helm ## Stop Services
-# HACK: Fixe Readme
+# HACK: #B Fixe Readme
 reset: clean clear-helms clear-ns bootstrap info setup ## Rebuild 
 all: prepare reset update infos ## Run All Targets

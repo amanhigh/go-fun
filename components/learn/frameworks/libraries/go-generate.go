@@ -27,7 +27,7 @@ type ToDo struct {
 	List []entry
 }
 
-// HACK: Rewrite as Ginkgo Test.
+// HACK: #C GenerateFun as Ginkgo Test.
 func GenerateFun() {
 	printText()
 	printHtml()

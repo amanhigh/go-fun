@@ -1,5 +1,5 @@
 #This is a sample Image
-# HACK: Migrate to single Tutorial File
+# HACK: #A Migrate to single Tutorial File
 FROM ubuntu
 MAINTAINER name@gmail.com
 

@@ -16,7 +16,7 @@
 ## Releases - https://github.com/amanhigh/go-fun/releases
 ## Tags - https://github.com/amanhigh/go-fun/tags
 ## Docker - https://hub.docker.com/repository/docker/amanfdk/fun-app/tags
-# TODO: Remove after including release in Makefile
+# TODO: #A Remove after including release in Makefile
 before:
   hooks:
     # You may remove this if you don't use go modules.

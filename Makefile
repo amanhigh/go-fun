@@ -243,14 +243,13 @@ docker-fun-exec:
 	printf $(_TITLE) "Execing Into FunApp Docker Image"
 	docker run -it --entrypoint /bin/sh amanfdk/fun-app
 
-# TODO: Docker Publish
+# TODO: #B Docker Publish
 docker-build: docker-fun ## Build Docker Images
 
 ### Workflows
 test: test-operator test-it ## Run all tests
 build: build-fun build-kohan ## Build all Binaries
 
-#HACK: Add Make to Readme
 info: info-release ## Repo Information
 prepare: setup-tools setup-k8 # One Time Setup
 

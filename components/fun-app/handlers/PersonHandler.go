@@ -99,7 +99,7 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person [get]
 func (self *PersonHandler) ListPersons(c *gin.Context) {
-	//FIXME: Implement Sorting asc,dsc
+	//FIXME: #C Implement Sorting asc,dsc
 	var personQuery fun.PersonQuery
 
 	ctx, span := self.Tracer.Start(c.Request.Context(), "ListPersons.Handler")

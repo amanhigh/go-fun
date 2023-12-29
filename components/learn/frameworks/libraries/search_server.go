@@ -31,7 +31,7 @@ var (
 	Query API - http://localhost:8080/search?query=aman&skip=1&top=2
 */
 
-// HACK: Rewrite as Ginkgo Test
+// HACK: #B ElasticSearch as Ginkgo Test
 func StartSearchServer() {
 	var err error
 	// Create Elastic client and wait for Elasticsearch to be ready

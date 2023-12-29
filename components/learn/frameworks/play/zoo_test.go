@@ -104,7 +104,7 @@ var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SLOW), func() {
 				go connection.Set(testPath, []byte(watchValue), -1)
 
 				Eventually(func() zk.EventType {
-					// BUG: Eventually doesnt' timeout if write is ommitted.
+					// BUG: #C Eventually doesnt' timeout if write is ommitted.
 					e := <-evtChan
 					data, _, evtChan, _ = connection.GetW(e.Path)
 					Expect(string(data)).To(Equal(watchValue))
