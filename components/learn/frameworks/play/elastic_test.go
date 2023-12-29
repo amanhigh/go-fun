@@ -6,13 +6,16 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
 	"github.com/amanhigh/go-fun/models/learn/frameworks"
 	es "github.com/elastic/go-elasticsearch"
 	"github.com/elastic/go-elasticsearch/esapi"
+	"github.com/fatih/color"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/teris-io/shortid"
+	"github.com/testcontainers/testcontainers-go"
 )
 
 /*
@@ -21,18 +24,35 @@ import (
  Index - http://docker:9200/learn/_search?pretty
 */
 
-var _ = Describe("Elastic", Label(models.GINKGO_SETUP), func() {
+var _ = Describe("Elastic", Ordered, Label(models.GINKGO_SLOW), func() {
 	var (
 		elasticClient *es.Client
-		endpoint      = "http://docker:9200"
+		endpoint      = "docker:9200"
 		err           error
 		ctx           = context.Background()
+		esContainer   testcontainers.Container
 	)
 
-	BeforeEach(func() {
-		elasticClient, err = es.NewClient(es.Config{Addresses: []string{endpoint}})
+	BeforeAll(func() {
+		//Create Test Container
+		esContainer, err = util.ElasticSearchTestContainer(ctx)
+		Expect(err).To(BeNil())
+
+		//Get Mapped Port
+		endpoint, err = esContainer.Endpoint(ctx, "")
+		Expect(err).To(BeNil())
+		color.Green("Elastic Endpoint: %s", endpoint)
+
+		//Elastic Client
+		elasticClient, err = es.NewClient(es.Config{Addresses: []string{"http://" + endpoint}})
 		Expect(err).To(BeNil())
 		Expect(elasticClient).ToNot(BeNil())
+	})
+
+	AfterAll(func() {
+		color.Red("Elastic Shutting Down")
+		err = esContainer.Terminate(ctx)
+		Expect(err).To(BeNil())
 	})
 
 	It("should connect", func() {
