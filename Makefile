@@ -65,12 +65,12 @@ cover-analyse: ## Analyse Integration Coverage Reports
 	# Analyse Report and Print Coverage
 	go tool covdata percent -i=$(COVER_DIR)
 
-	printf $(_WARN) "Vscode: go.apply.coverprofile $(PROFILE_FILE)"
+	printf $(_INFO) "Vscode" "go.apply.coverprofile $(PROFILE_FILE)"
 
 test-it: run-fun-cover test-unit cover-analyse ## Integration test coverage analyse
 
 test-clean:
-	printf $(_ERROR) "Cleaning Tests"
+	printf $(_WARN) "Cleaning Tests"
 	rm -rf $(COVER_DIR)
 
 profile: ## Run Profiling
@@ -84,7 +84,7 @@ swag-fun: ## Swagger Generate: Fun App (Init/Update)
 	printf $(_TITLE) "Generating Swagger"
 	cd $(FUN_DIR);\
 	swag i --parseDependency true > $(OUT);\
-	printf $(_WARN) "http://localhost:8080/swagger/index.html";
+	printf $(_INFO) "http://localhost:8080/swagger/index.html";
 
 build-fun: swag-fun ## Build Fun App
 	printf $(_TITLE) "Building Fun App"
@@ -99,7 +99,7 @@ build-kohan:
 	$(BUILD_OPTS) go build -o $(COMPONENT_DIR)/kohan/kohan $(COMPONENT_DIR)/kohan/main.go
 
 build-clean:
-	printf $(_ERROR) "Cleaning Build"
+	printf $(_WARN) "Cleaning Build"
 	rm "$(FUN_DIR)/fun";
 	rm "$(COMPONENT_DIR)/kohan/kohan";
 
@@ -109,7 +109,7 @@ confirm:
 		REPLY="" ; \
 		read -p "⚠ Are you sure? [y/n] > " -r ; \
 		if [[ ! $$REPLY =~ ^[Yy]$$ ]]; then \
-			printf $(_ERROR) "KO" "Stopping" ; \
+			printf $(_WARN) "KO" "Stopping" ; \
 			exit 1 ; \
 		else \
 			printf $(_TITLE) "OK" "Continuing" ; \
@@ -174,7 +174,7 @@ unrelease: ## Revoke Release of Golang Packages
 ifndef VER
 	$(error VER not set. Eg. v1.1.0)
 endif
-	printf $(_ERROR) "Deleting Release: $(VER)"
+	printf $(_WARN) "Deleting" "Release: $(VER)"
 	@if $(MAKE) --no-print-directory confirm ; then \
 		git tag -d models/$(VER) ; \
 		git push --delete origin models/$(VER); \
@@ -195,7 +195,7 @@ endif
 
 ### Info
 info-release:
-	printf $(_WARN) "Release Info"
+	printf $(_INFO) "Release Info"
 	git tag | grep "models" | tail -2
 	git tag | grep "common" | tail -2
 	git tag | grep "v" | grep -v "/" | tail -2
@@ -261,7 +261,7 @@ all: prepare reset test-slow clean ## Run All Targets
 	printf $(_TITLE) "\n\n ******* Complete BUILD Successful ********\n"
 
 ### Formatting
-_WARN := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"
+_INFO := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"
 _TITLE := "\033[32m[%s]\033[0m %s\n" # Green text for "printf"
-_ERROR := "\033[31m[%s]\033[0m %s\n" # Red text for "printf"
+_WARN := "\033[31m[%s]\033[0m %s\n" # Red text for "printf"
 
