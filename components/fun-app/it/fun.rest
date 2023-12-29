@@ -3,10 +3,10 @@
 ### Swagger Editor - https://editor.swagger.io/
 ### Person CRUD
 ### LIST
-GET http://localhost:8085/v1/person
+GET http://localhost:8080/v1/person?limit=10
 
 ### Create
-POST http://localhost:8085/v1/person
+POST http://localhost:8080/v1/person
 Content-Type: application/json
 
 {
@@ -16,7 +16,7 @@ Content-Type: application/json
 }
 
 ### Get
-GET http://localhost:8085/v1/person/GCBOT
+GET http://localhost:8080/v1/person/GCBOT
 
 ### Delete
-DELETE http://localhost:8085/v1/person/amanpreet
+DELETE http://localhost:8080/v1/person/amanpreet
