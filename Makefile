@@ -61,11 +61,11 @@ cover-analyse: ## Analyse Integration Coverage Reports
 	# Analyse Cover Profile
 	go tool cover -func=$(PROFILE_FILE) > $(OUT)
 
-	printf $(_TITLE) "Package Summary"
+	printf $(_TITLE) "Package Summary";
 	# Analyse Report and Print Coverage
-	go tool covdata percent -i=$(COVER_DIR)
-
-	printf $(_INFO) "Vscode" "go.apply.coverprofile $(PROFILE_FILE)"
+	go tool covdata percent -i=$(COVER_DIR);
+	echo "";
+	printf $(_INFO) "Vscode" "go.apply.coverprofile $(PROFILE_FILE)";
 
 test-it: run-fun-cover test-unit cover-analyse ## Integration test coverage analyse
 
@@ -84,7 +84,7 @@ swag-fun: ## Swagger Generate: Fun App (Init/Update)
 	printf $(_TITLE) "Generating Swagger"
 	cd $(FUN_DIR);\
 	swag i --parseDependency true > $(OUT);\
-	printf $(_INFO) "http://localhost:8080/swagger/index.html";
+	printf $(_INFO) "Swagger" "http://localhost:8080/swagger/index.html";
 
 build-fun: swag-fun ## Build Fun App
 	printf $(_TITLE) "Building Fun App"
@@ -225,21 +225,22 @@ setup-tools: ## Setup Tools	for Local Environment
 	printf $(_TITLE) "Setting up Tools"
 	go install github.com/onsi/ginkgo/v2/ginkgo
 	go install github.com/swaggo/swag/cmd/swag
+
 setup-k8: ## Kubernetes Setup
-	printf "\033[1;32m Setting up Kubernetes \n\033[0m"
+	printf $(_TITLE) "Setting up Kubernetes"
 	$(MAKE) -C ./Kubernetes/services helm hosts
 
 ### Docker
 docker-fun: build-fun
-	printf "\033[1;32m Building FunApp Docker Image \033[0m"
+	printf $(_TITLE) "Building FunApp Docker Image"
 	docker build -t $(FUN_IMAGE_TAG) -f $(FUN_DIR)/Dockerfile $(FUN_DIR) > $(OUT)
 
 docker-fun-run: docker-fun
-	printf "\033[1;32m Running FunApp Docker Image \033[0m"
+	printf $(_TITLE) "Running FunApp Docker Image"
 	docker run -it amanfdk/fun-app
 
 docker-fun-exec:
-	printf "\033[1;32m Execing Into FunApp Docker Image \033[0m"
+	printf $(_TITLE) "Execing Into FunApp Docker Image"
 	docker run -it --entrypoint /bin/sh amanfdk/fun-app
 
 # TODO: Docker Publish
@@ -258,10 +259,9 @@ clean: test-clean build-clean ## Clean up Residue
 
 reset: setup info ## Build and Show Info
 all: prepare reset test-slow clean ## Run All Targets
-	printf $(_TITLE) "\n\n ******* Complete BUILD Successful ********\n"
+	printf $(_TITLE) "******* Complete BUILD Successful ********"
 
 ### Formatting
 _INFO := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"
 _TITLE := "\033[32m[%s]\033[0m %s\n" # Green text for "printf"
 _WARN := "\033[31m[%s]\033[0m %s\n" # Red text for "printf"
-
