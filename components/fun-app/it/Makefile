@@ -10,6 +10,7 @@ help: ## Show this help
 	printf $(_TITLE) "FirstTime: prepare/all, OUT=/dev/stdout (Debug) \n"
 
 ### Load Test
+# FIXME: Use Id's from Write Load Test.
 load-read: ## Read Load Test
 	printf $(_TITLE) "Read Load Test"
 	URL=$(URL) jq -ncM 'while(.<1000; .+1) | {method: "GET", url: "\(env.URL)/person/Aman-\(.)"}' | vegeta attack -format=json -duration=$(DURATION) | vegeta report
@@ -21,9 +22,10 @@ load-all: ## All Load Test
 load-write: ## Write Load Test
 	printf $(_TITLE) "Write Load Test"; \
 	URL=$(URL) jq -ncM --slurpfile a payload.json \
-	'while(true; .+1) as $$i | $$a | $$a[0].name="\($$a[0].name)-\($$i)" | {method: "POST", header: {"Content-Type": ["application/json"]}, url: "\(env.URL)/v1/person", body: .[0] | @base64}'
+	'while(true; .+1) as $$i | $$a | $$a[0].name="\($$a[0].name)-\($$i)" | {method: "POST", header: {"Content-Type": ["application/json"]}, url: "\(env.URL)/v1/person", body: .[0] | @base64}' \
+	| vegeta attack -lazy -format=json -duration=$(DURATION) | vegeta report
 
-load: load-read load-all load-write
+load: load-write load-all load-read ## Load Test
 
 ### Info
 info-load:
