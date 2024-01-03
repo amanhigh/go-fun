@@ -84,8 +84,8 @@ port-ls:
 
 port-kill:
 	printf $(_WARN) "Killing Port Forward" ""
-	screen -XS mini quit
-	screen -XS traefik quit
+	-screen -XS mini quit
+	-screen -XS traefik quit
 
 proxy:
 	kubectl proxy --port=$(PORT);
