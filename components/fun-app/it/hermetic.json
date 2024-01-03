@@ -159,7 +159,15 @@
           "filePath": "",
           "databucketID": "sfma",
           "sendFileAsBody": false,
-          "rules": [],
+          "rules": [
+            {
+              "target": "body",
+              "modifier": "",
+              "value": "",
+              "invert": false,
+              "operator": "equals"
+            }
+          ],
           "rulesOperator": "OR",
           "disableTemplating": false,
           "fallbackTo404": false,
@@ -182,16 +190,23 @@
             {
               "target": "body",
               "modifier": "name",
-              "value": "",
-              "invert": false,
-              "operator": "equals"
+              "value": "^[A-Za-z0-9 ]*$",
+              "invert": true,
+              "operator": "regex_i"
+            },
+            {
+              "target": "body",
+              "modifier": "name",
+              "value": "^.{0,30}$",
+              "invert": true,
+              "operator": "regex_i"
             },
             {
               "target": "body",
               "modifier": "gender",
-              "value": "",
-              "invert": false,
-              "operator": "equals"
+              "value": "(MALE|FEMALE)",
+              "invert": true,
+              "operator": "regex_i"
             },
             {
               "target": "body",
@@ -199,6 +214,13 @@
               "value": "0",
               "invert": false,
               "operator": "equals"
+            },
+            {
+              "target": "body",
+              "modifier": "age",
+              "value": "^-.*$",
+              "invert": false,
+              "operator": "regex_i"
             }
           ],
           "rulesOperator": "OR",
