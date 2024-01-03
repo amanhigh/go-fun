@@ -23,12 +23,13 @@ var _ = Describe("Person Integration Test", func() {
 		serviceUrl = "http://localhost:8085"
 		request    fun.PersonRequest
 
-		name   = "Amanpreet Singh"
-		age    = 31
-		gender = "MALE"
-		client = NewFunAppClient(serviceUrl, config.DefaultHttpConfig)
-		err    common.HttpError
-		ctx    = context.Background()
+		name    = "Amanpreet Singh"
+		maxName = strings.Repeat("A", 31)
+		age     = 31
+		gender  = "MALE"
+		client  = NewFunAppClient(serviceUrl, config.DefaultHttpConfig)
+		err     common.HttpError
+		ctx     = context.Background()
 	)
 
 	BeforeEach(func() {
@@ -117,7 +118,7 @@ var _ = Describe("Person Integration Test", func() {
 				})
 
 				It("should fail for max Name", func() {
-					updateRequest.Name = strings.Repeat("A", 30)
+					updateRequest.Name = maxName
 				})
 
 				It("should fail for missing Age", func() {
@@ -262,7 +263,7 @@ var _ = Describe("Person Integration Test", func() {
 				})
 
 				It("should fail for max Name", func() {
-					personQuery.Name = strings.Repeat("A", 30)
+					personQuery.Name = maxName
 				})
 
 				It("should fail for invalid Gender", func() {
@@ -289,7 +290,7 @@ var _ = Describe("Person Integration Test", func() {
 			})
 
 			It("should fail for max Name", func() {
-				request.Name = strings.Repeat("A", 30)
+				request.Name = maxName
 			})
 
 			It("should fail for minimum Age", func() {
