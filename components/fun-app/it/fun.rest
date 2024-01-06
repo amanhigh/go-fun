@@ -1,5 +1,6 @@
 # FIXME: #B Add Response Wrapper
 ### Rest API - https://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api
+### Rest Sample - https://github.com/cryptlex/rest-api-response-format
 ### Swagger Editor - https://editor.swagger.io/
 ### https://github.com/Huachao/vscode-restclient
 ### Person CRUD
@@ -8,6 +9,8 @@
 ### Variables
 @host=localhost
 @port=8085
+
+### List
 
 GET http://{{host}}:{{port}}/v1/person?limit=10
 
@@ -26,3 +29,4 @@ GET http://{{host}}:{{port}}/v1/person/GCBOT
 
 ### Delete
 DELETE http://{{host}}:{{port}}/v1/person/amanpreet
+
