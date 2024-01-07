@@ -17,9 +17,6 @@ dependencies:
     # This is Chart Version not App Version. https://artifacthub.io/packages/helm/bitnami/mysql
     version: "^9.3" # Any 9.3.x version, but not version 7 or 8
     repository: "@bitnami"
-  - name: phpmyadmin
-    version: "^10.3"
-    repository: "@bitnami"
   - name: redis
     version: "^17.3"
     repository: "@bitnami"
