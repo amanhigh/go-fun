@@ -32,9 +32,9 @@ clean-fun:
 info: info-fun ## Info on Fun Helm Installation
 infos: info ## Extended Info
 prepare: ## Onetime Setup
-setup: helm-build helm-fun ## Setup Fun via Helm
+setup: clean helm-fun ## Setup Fun via Helm
 clean: clean-fun ## Clean Fun Helm
-reset: clean setup info ## Reset Fun Helm
+reset: helm-build setup info ## Reset Fun Helm
 all:prepare reset ## Run All Targets
 
 ### Formatting

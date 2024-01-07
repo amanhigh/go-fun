@@ -15,5 +15,5 @@ Error Set:
 {{- end }}
 
 Other Components Setup
-- Mysql: Default Port 3306, DB: compute (aman/aman)
+- Mysql: mysql -u aman -paman -D compute (CLI Access)
 - Redis: redis-cli -h fun-app-redis-master (No Auth)
