@@ -25,6 +25,19 @@
 		"editor.codeActionsOnSave": {
 			"source.organizeImports": "always"
 		},
-		"editor.formatOnSave": true
+		"editor.formatOnSave": true,
+		"rest-client.environmentVariables": {
+			"$shared": {
+				"version": "v1",
+			},
+			"local": {
+				"host": "localhost",
+				"port": "8085",
+			},
+			"production": {
+				"host": "localhost",
+				"port": "8080"
+			}
+		}
 	}
 }

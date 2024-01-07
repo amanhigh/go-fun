@@ -4,19 +4,18 @@
 ### Pagination - https://dev.to/pragativerma18/unlocking-the-power-of-api-pagination-best-practices-and-strategies-4b49
 ### Swagger Editor - https://editor-next.swagger.io/
 ### https://github.com/Huachao/vscode-restclient
-### Person CRUD
-### LIST
+### Hotkeys
 
 ### Variables
-@host=localhost
-@port=8085
+# Environment Variables in workspace settings.
+@limit=10
 
 ### List
 
-GET http://{{host}}:{{port}}/v1/person?limit=10
+GET http://{{host}}:{{port}}/{{version}}/person?limit={{limit}}
 
 ### Create
-POST http://{{host}}:{{port}}/v1/person
+POST http://{{host}}:{{port}}/{{version}}/person
 Content-Type: application/json
 
 {
@@ -26,8 +25,8 @@ Content-Type: application/json
 }
 
 ### Get
-GET http://{{host}}:{{port}}/v1/person/GCBOT
+GET http://{{host}}:{{port}}/{{version}}/person/GCBOT
 
 ### Delete
-DELETE http://{{host}}:{{port}}/v1/person/amanpreet
+DELETE http://{{host}}:{{port}}/{{version}}/person/amanpreet
 
