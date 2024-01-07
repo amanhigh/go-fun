@@ -1,19 +1,21 @@
 # FIXME: #B Add Response Wrapper
 ### Rest API - https://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api
 ### Rest Sample - https://github.com/cryptlex/rest-api-response-format
-### Swagger Editor - https://editor.swagger.io/
+### Pagination - https://dev.to/pragativerma18/unlocking-the-power-of-api-pagination-best-practices-and-strategies-4b49
+### Swagger Editor - https://editor-next.swagger.io/
 ### https://github.com/Huachao/vscode-restclient
 ### Hotkeys
 
 ### Variables
 # Environment Variables in workspace settings.
-@limit=10
+@limit={{$randomInt 2 5}}
 
 ### List
 
 GET http://{{host}}:{{port}}/{{version}}/person?limit={{limit}}
 
 ### Create
+# @name createPerson
 POST http://{{host}}:{{port}}/{{version}}/person
 Content-Type: application/json
 
@@ -24,8 +26,10 @@ Content-Type: application/json
 }
 
 ### Get
-GET http://{{host}}:{{port}}/{{version}}/person/GCBOT
+@personId= {{createPerson.response.body.$.id}}
+GET http://{{host}}:{{port}}/{{version}}/person/{{personId}}
 
 ### Delete
-DELETE http://{{host}}:{{port}}/{{version}}/person/amanpreet
+# @prompt userId
+DELETE http://{{host}}:{{port}}/{{version}}/person/{{userId}}
 
