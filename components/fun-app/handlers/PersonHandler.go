@@ -2,10 +2,8 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
-	"github.com/amanhigh/go-fun/models"
 	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/attribute"
@@ -50,7 +48,7 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 		self.CreateCounter.WithLabelValues(request.Gender).Inc()
 
 		if person, err := self.Manager.CreatePerson(ctx, request); err == nil {
-			c.JSON(http.StatusCreated, person)
+			c.JSON(http.StatusOK, person)
 			span.SetStatus(codes.Ok, "Person Created")
 		} else {
 			span.SetStatus(codes.Error, err.Error())
@@ -108,9 +106,8 @@ func (self *PersonHandler) ListPersons(c *gin.Context) {
 	defer span.End()
 
 	if err := c.ShouldBindQuery(&personQuery); err == nil {
-		if personList, count, err := self.Manager.ListPersons(ctx, personQuery); err == nil {
-			self.PersonCounter.Add(float64(len(personList)))
-			c.Header(models.HEADER_TOTAL_COUNT, strconv.Itoa(int(count)))
+		if personList, err := self.Manager.ListPersons(ctx, personQuery); err == nil {
+			self.PersonCounter.Add(float64(len(personList.Records)))
 			c.JSON(http.StatusOK, personList)
 		} else {
 			c.JSON(http.StatusInternalServerError, err.Error())
@@ -171,7 +168,7 @@ func (self *PersonHandler) DeletePersons(c *gin.Context) {
 	defer span.End()
 
 	if err := self.Manager.DeletePerson(ctx, c.Param("id")); err == nil {
-		c.JSON(http.StatusNoContent, "DELETED")
+		c.JSON(http.StatusOK, "DELETED")
 	} else {
 		c.JSON(err.Code(), err)
 	}

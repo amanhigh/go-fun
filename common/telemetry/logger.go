@@ -24,7 +24,7 @@ Add RequestId from Context if Contexts is Present else ignore.
 */
 func (h *ContextLogHook) Fire(e *log.Entry) error {
 	if e.Context != nil {
-		e.Data["RequestId"] = e.Context.Value(models.HEADER_REQUESTID)
+		e.Data["RequestId"] = e.Context.Value(models.XRequestID)
 	}
 	return nil
 }

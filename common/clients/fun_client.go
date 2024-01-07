@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/amanhigh/go-fun/common/util"
-	"github.com/amanhigh/go-fun/models"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/fun"
@@ -23,7 +22,7 @@ type PersonServiceInterface interface {
 	GetPerson(ctx context.Context, name string) (person fun.Person, err common.HttpError)
 	CreatePerson(ctx context.Context, request fun.PersonRequest) (person fun.Person, err common.HttpError)
 	UpdatePerson(ctx context.Context, id string, person fun.PersonRequest) (err common.HttpError)
-	ListPerson(ctx context.Context, query fun.PersonQuery) (personList fun.PersonList, total int, err common.HttpError)
+	ListPerson(ctx context.Context, query fun.PersonQuery) (personList fun.PersonList, err common.HttpError)
 	DeletePerson(ctx context.Context, name string) (err common.HttpError)
 }
 
@@ -75,7 +74,7 @@ func NewFunAppClient(baseUrl string, httpConfig config.HttpClientConfig) *FunCli
 
 func (c *PersonService) CreatePerson(ctx context.Context, request fun.PersonRequest) (person fun.Person, err common.HttpError) {
 	response, err1 := c.client.R().SetContext(ctx).SetHeader("Content-Type", "application/json").
-		SetBody(request).SetResult(&person).Post(c.VERSION_URL + "/person")
+	SetBody(request).SetResult(&person).Post(c.VERSION_URL + "/person")
 	err = util.ResponseProcessor(response, err1)
 	return
 }
@@ -87,9 +86,8 @@ func (c *PersonService) GetPerson(ctx context.Context, name string) (person fun.
 	return
 }
 
-func (c *PersonService) ListPerson(ctx context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, total int, err common.HttpError) {
+func (c *PersonService) ListPerson(ctx context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {
 	response, err1 := c.client.R().SetContext(ctx).SetResult(&personList).Get(c.listPersonUrl(personQuery))
-	total, _ = strconv.Atoi(response.Header().Get(models.HEADER_TOTAL_COUNT))
 	err = util.ResponseProcessor(response, err1)
 	return
 }

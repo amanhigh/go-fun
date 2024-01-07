@@ -16,7 +16,7 @@ type PersonManagerInterface interface {
 	DeletePerson(c context.Context, id string) (err common.HttpError)
 	UpdatePerson(c context.Context, id string, request fun.PersonRequest) (err common.HttpError)
 
-	ListPersons(c context.Context, query fun.PersonQuery) (response fun.PersonList, count int64, err common.HttpError)
+	ListPersons(c context.Context, query fun.PersonQuery) (response fun.PersonList, err common.HttpError)
 	GetPerson(c context.Context, id string) (person fun.Person, err common.HttpError)
 }
 
@@ -55,7 +55,7 @@ func (self *PersonManager) CreatePerson(c context.Context, request fun.PersonReq
 	return
 }
 
-func (self *PersonManager) ListPersons(c context.Context, personQuery fun.PersonQuery) (response fun.PersonList, count int64, err common.HttpError) {
+func (self *PersonManager) ListPersons(c context.Context, personQuery fun.PersonQuery) (response fun.PersonList, err common.HttpError) {
 	ctx, span := self.Tracer.Start(c, "ListPersons.Manager", trace.WithAttributes(
 		attribute.String("gender", personQuery.Gender),
 		attribute.String("name", personQuery.Name),
@@ -65,7 +65,7 @@ func (self *PersonManager) ListPersons(c context.Context, personQuery fun.Person
 	defer span.End()
 
 	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
-		response, count, err = self.Dao.ListPerson(c, personQuery)
+		response, err = self.Dao.ListPerson(c, personQuery)
 		return
 	})
 	return

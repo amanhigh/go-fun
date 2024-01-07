@@ -14,14 +14,14 @@ import (
 
 type PersonDaoInterface interface {
 	util.BaseDaoInterface
-	ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, count int64, err common.HttpError)
+	ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError)
 }
 
 type PersonDao struct {
 	BaseDao `inject:"inline"`
 }
 
-func (self *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, count int64, err common.HttpError) {
+func (self *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {
 	var txErr error
 	//Add Pagination to Query
 	txn := Tx(c).Offset(personQuery.Offset).Limit(personQuery.Limit)
@@ -35,7 +35,7 @@ func (self *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery
 	}
 
 	//Execute Query to Get Records and Count
-	if txErr = txn.Find(&personList).Count(&count).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+	if txErr = txn.Find(&personList.Records).Count(&personList.Total).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		log.WithContext(c).WithFields(log.Fields{"Query": personQuery, "Error": txErr}).Error("Error Fetching Person List")
 		err = GormErrorMapper(txErr)
 	}

@@ -23,7 +23,11 @@ type PersonQuery struct {
 	Gender string `form:"gender" binding:"omitempty,eq=MALE|eq=FEMALE"`
 }
 
-type PersonList []Person
+type PersonList struct {
+	Records []Person `json:"records"`
+
+	common.PaginatedResponse
+}
 
 type Person struct {
 	PersonRequest
