@@ -16,6 +16,10 @@ helm-fun:
 	printf $(_TITLE) "Installing Fun App Helm Chart"
 	helm install fun-app . --set rateLimit.perMin=150
 
+package: helm-build ## Package Fun Helm Chart
+	printf $(_TITLE) "Packaging Fun App Helm Chart"
+	helm package . -d .
+
 #### Info
 info-fun:
 	printf $(_INFO) "Helm Fun App Info"
