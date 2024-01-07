@@ -154,7 +154,12 @@
           "latency": 0,
           "statusCode": 200,
           "label": "",
-          "headers": [],
+          "headers": [
+            {
+              "key": "Total-Count",
+              "value": " {{len (dataRaw 'Person') }}"
+            }
+          ],
           "bodyType": "DATABUCKET",
           "filePath": "",
           "databucketID": "sfma",
