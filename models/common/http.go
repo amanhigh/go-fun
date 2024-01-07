@@ -39,6 +39,5 @@ type Pagination struct {
 }
 
 type PaginatedResponse struct {
-	//Pagination - https://dev.to/pragativerma18/unlocking-the-power-of-api-pagination-best-practices-and-strategies-4b49
 	Total int64 `json:"total"`
 }
