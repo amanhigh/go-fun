@@ -16,10 +16,10 @@ RequestId Generator for Gin
 */
 func RequestId(c *gin.Context) {
 	uuid := uuid.New()
-	c.Set(models.XRequestID, uuid)
+	c.Set(models.HEADER_REQUESTID, uuid)
 
 	//Add UUID to Request Context as well
-	ctx := context.WithValue(c.Request.Context(), models.XRequestID, uuid)
+	ctx := context.WithValue(c.Request.Context(), models.HEADER_REQUESTID, uuid)
 	c.Request = c.Request.WithContext(ctx)
 	c.Next()
 }
@@ -37,7 +37,7 @@ var GinRequestIdFormatter = func(param gin.LogFormatterParams) string {
 		param.Latency.Microseconds(),
 		param.BodySize,
 		param.ClientIP,
-		param.Keys[models.XRequestID],
+		param.Keys[models.HEADER_REQUESTID],
 		param.Method,
 	)
 }

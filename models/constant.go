@@ -1,6 +1,8 @@
 package models
 
-const XRequestID = "X-Request-ID"
+// Headers
+const HEADER_REQUESTID = "X-Request-ID"
+const HEADER_TOTAL_COUNT = "Total-Count"
 
 // Ginkgo
 const GINKGO_INEGRATION = "it"

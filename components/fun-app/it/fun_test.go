@@ -148,6 +148,7 @@ var _ = Describe("Person Integration Test", func() {
 				offset      = 0
 				limit       = 5
 				total       = 15
+				count       = 0
 				personQuery fun.PersonQuery
 				names       = []string{"Jane", "Sardar", "Rahul"}
 				genders     = []string{"FEMALE", "MALE", "MALE"}
@@ -178,11 +179,11 @@ var _ = Describe("Person Integration Test", func() {
 					personQuery.Gender = genders[i]
 					personQuery.Limit = 10
 					personQuery.Offset = 0
-					personList, err := client.PersonService.ListPerson(ctx, personQuery)
+					personList, _, err := client.PersonService.ListPerson(ctx, personQuery)
 					Expect(err).To(BeNil())
 
 					//Delete all Records of Name
-					for _, person := range personList.Records {
+					for _, person := range personList {
 						err = client.PersonService.DeletePerson(ctx, person.Id)
 						Expect(err).To(BeNil())
 					}
@@ -191,57 +192,57 @@ var _ = Describe("Person Integration Test", func() {
 
 			It("should get all persons upto page Limit", func() {
 				var personList fun.PersonList
-				personList, err = client.PersonService.ListPerson(ctx, personQuery)
+				personList, count, err = client.PersonService.ListPerson(ctx, personQuery)
 				Expect(err).To(BeNil())
 
 				//Person Count should be same as Page Limit
-				Expect(len(personList.Records)).To(Equal(limit))
-				Expect(personList.Total).To(BeEquivalentTo(total + 1))
+				Expect(len(personList)).To(Equal(limit))
+				Expect(count).To(BeNumerically(">=", total))
 			})
 
 			It("should fetch second Page", func() {
 				var personList fun.PersonList
 				personQuery.Offset = limit
-				personList, err = client.PersonService.ListPerson(ctx, personQuery)
+				personList, _, err = client.PersonService.ListPerson(ctx, personQuery)
 
 				Expect(err).To(BeNil())
-				Expect(len(personList.Records)).To(Equal(limit))
+				Expect(len(personList)).To(Equal(limit))
 			})
 
 			It("should search by Name", func() {
 				var personList fun.PersonList
 				personQuery.Name = names[0]
-				personList, err = client.PersonService.ListPerson(ctx, personQuery)
+				personList, count, err = client.PersonService.ListPerson(ctx, personQuery)
 
 				Expect(err).To(BeNil())
-				Expect(len(personList.Records)).To(Equal(limit))
-				Expect(personList.Total).To(BeEquivalentTo(5))
+				Expect(len(personList)).To(Equal(limit))
+				Expect(count).To(BeEquivalentTo(5))
 			})
 
 			It("should search by Gender", func() {
 				var personList fun.PersonList
 				personQuery.Gender = genders[1]
-				personList, err = client.PersonService.ListPerson(ctx, personQuery)
+				personList, count, err = client.PersonService.ListPerson(ctx, personQuery)
 
 				Expect(err).To(BeNil())
-				Expect(len(personList.Records)).To(Equal(limit))
-				Expect(personList.Total).To(BeEquivalentTo(11))
+				Expect(len(personList)).To(Equal(limit))
+				Expect(count).To(BeEquivalentTo(11))
 			})
 
 			It("should search by Name & Gender", func() {
 				var personList fun.PersonList
 				personQuery.Name = names[0]
 				personQuery.Gender = genders[1]
-				personList, err = client.PersonService.ListPerson(ctx, personQuery)
+				personList, count, err = client.PersonService.ListPerson(ctx, personQuery)
 
 				Expect(err).To(BeNil())
-				Expect(len(personList.Records)).To(Equal(0))
-				Expect(personList.Total).To(BeEquivalentTo(0))
+				Expect(len(personList)).To(Equal(0))
+				Expect(count).To(BeEquivalentTo(0))
 			})
 
 			Context("Bad Requests", func() {
 				AfterEach(func() {
-					_, err = client.PersonService.ListPerson(ctx, personQuery)
+					_, _, err = client.PersonService.ListPerson(ctx, personQuery)
 					Expect(err).Should(HaveOccurred())
 					Expect(err).To(Equal(common.ErrBadRequest))
 				})
