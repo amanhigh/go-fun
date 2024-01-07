@@ -79,7 +79,7 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 
 	if err := c.ShouldBindUri(&path); err == nil {
 		if person, err := self.Manager.GetPerson(ctx, path.Id); err == nil {
-			c.JSON(http.StatusOK, person)
+			c.JSON(http.StatusCreated, person)
 		} else {
 			c.JSON(err.Code(), err)
 		}
@@ -168,7 +168,7 @@ func (self *PersonHandler) DeletePersons(c *gin.Context) {
 	defer span.End()
 
 	if err := self.Manager.DeletePerson(ctx, c.Param("id")); err == nil {
-		c.JSON(http.StatusOK, "DELETED")
+		c.JSON(http.StatusNoContent, "DELETED")
 	} else {
 		c.JSON(err.Code(), err)
 	}
