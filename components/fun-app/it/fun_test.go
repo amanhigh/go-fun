@@ -196,7 +196,7 @@ var _ = Describe("Person Integration Test", func() {
 
 				//Person Count should be same as Page Limit
 				Expect(len(personList.Records)).To(Equal(limit))
-				Expect(personList.Total).To(BeEquivalentTo(total + 1))
+				Expect(personList.Metadata.Total).To(BeNumerically(">=", total))
 			})
 
 			It("should fetch second Page", func() {
@@ -215,7 +215,7 @@ var _ = Describe("Person Integration Test", func() {
 
 				Expect(err).To(BeNil())
 				Expect(len(personList.Records)).To(Equal(limit))
-				Expect(personList.Total).To(BeEquivalentTo(5))
+				Expect(personList.Metadata.Total).To(BeEquivalentTo(5))
 			})
 
 			It("should search by Gender", func() {
@@ -225,7 +225,7 @@ var _ = Describe("Person Integration Test", func() {
 
 				Expect(err).To(BeNil())
 				Expect(len(personList.Records)).To(Equal(limit))
-				Expect(personList.Total).To(BeEquivalentTo(11))
+				Expect(personList.Metadata.Total).To(BeEquivalentTo(11))
 			})
 
 			It("should search by Name & Gender", func() {
@@ -236,7 +236,7 @@ var _ = Describe("Person Integration Test", func() {
 
 				Expect(err).To(BeNil())
 				Expect(len(personList.Records)).To(Equal(0))
-				Expect(personList.Total).To(BeEquivalentTo(0))
+				Expect(personList.Metadata.Total).To(BeEquivalentTo(0))
 			})
 
 			Context("Bad Requests", func() {

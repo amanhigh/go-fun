@@ -35,7 +35,7 @@ func (self *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery
 	}
 
 	//Execute Query to Get Records and Count
-	if txErr = txn.Find(&personList.Records).Count(&personList.Total).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+	if txErr = txn.Find(&personList.Records).Count(&personList.Metadata.Total).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		log.WithContext(c).WithFields(log.Fields{"Query": personQuery, "Error": txErr}).Error("Error Fetching Person List")
 		err = GormErrorMapper(txErr)
 	}
