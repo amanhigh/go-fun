@@ -1,3 +1,5 @@
+// go install go.uber.org/mock/mockgen@latest
+//
 //go:generate mockgen -package gotest -destination json_mock.go -source json.go
 package gotest
 
@@ -6,8 +8,8 @@ import (
 )
 
 type PersonEncoder interface {
-	encodePerson(p person) (jsonString string, err error)
-	decodePerson(encodedPerson string) (p person, err error)
+	EncodePerson(p person) (jsonString string, err error)
+	DecodePerson(encodedPerson string) (p person, err error)
 }
 
 type person struct {
