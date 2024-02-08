@@ -19,6 +19,7 @@ require (
 	github.com/hashicorp/consul/api v1.18.0
 	github.com/hashicorp/vault v1.13.12
 	github.com/hashicorp/vault/api v1.9.2
+	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/ginkgo/v2 v2.9.2
 	github.com/onsi/gomega v1.27.5
 	github.com/sirupsen/logrus v1.9.3
@@ -28,6 +29,7 @@ require (
 	github.com/thoas/go-funk v0.9.3
 	github.com/wesovilabs/koazee v0.0.5
 	github.com/xlab/treeprint v1.1.0
+	go.uber.org/mock v0.4.0
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea
 	golang.org/x/tour v0.1.0
 	gopkg.in/redis.v5 v5.2.9
@@ -54,7 +56,7 @@ require (
 	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
-	github.com/onsi/ginkgo v1.16.5 // indirect
+	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/shirou/gopsutil/v3 v3.23.11 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
@@ -63,6 +65,7 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/grpc v1.59.0 // indirect
+	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )
 
 require (

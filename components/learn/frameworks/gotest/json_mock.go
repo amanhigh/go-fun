@@ -39,10 +39,10 @@ func (m *MockPersonEncoder) EXPECT() *MockPersonEncoderMockRecorder {
 }
 
 // DecodePerson mocks base method.
-func (m *MockPersonEncoder) DecodePerson(encodedPerson string) (person, error) {
+func (m *MockPersonEncoder) DecodePerson(encodedPerson string) (Person, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DecodePerson", encodedPerson)
-	ret0, _ := ret[0].(person)
+	ret0, _ := ret[0].(Person)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -54,7 +54,7 @@ func (mr *MockPersonEncoderMockRecorder) DecodePerson(encodedPerson any) *gomock
 }
 
 // EncodePerson mocks base method.
-func (m *MockPersonEncoder) EncodePerson(p person) (string, error) {
+func (m *MockPersonEncoder) EncodePerson(p Person) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EncodePerson", p)
 	ret0, _ := ret[0].(string)

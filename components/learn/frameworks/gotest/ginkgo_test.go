@@ -2,14 +2,15 @@ package gotest
 
 import (
 	"fmt"
-	"github.com/golang/mock/gomock"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gmeasure"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"time"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gmeasure"
+	gomock "go.uber.org/mock/gomock"
 )
 
 var _ = Describe("Json Encode/Decode", func() {
@@ -17,11 +18,11 @@ var _ = Describe("Json Encode/Decode", func() {
 		name           = "Zoye"
 		age            = 44
 		number         = int64(88983333)
-		originalPerson person
+		originalPerson Person
 		personJson     string
 	)
 	BeforeEach(func() {
-		originalPerson = person{name, age, number}
+		originalPerson = Person{name, age, number}
 		personJson = fmt.Sprintf(`{"name":"%s","Age":%d,"MobileNumber":%d}`, name, age, number)
 	})
 	Context("Success", func() {
@@ -261,25 +262,25 @@ var _ = Describe("Json Encode/Decode", func() {
 				encodeCall *gomock.Call
 			)
 			BeforeEach(func() {
-				encodeCall = mockEncoder.EXPECT().encodePerson(gomock.Eq(per)).Return(personJson, nil)
+				encodeCall = mockEncoder.EXPECT().EncodePerson(gomock.Eq(per)).Return(personJson, nil)
 			})
 
 			It("should return mocked json", func() {
-				json, err := mockEncoder.encodePerson(per)
+				json, err := mockEncoder.EncodePerson(per)
 				Expect(err).To(BeNil())
 				Expect(json).To(Equal(personJson))
 			})
 
 			Context("Do", func() {
 				var (
-					copiedPerson person
+					copiedPerson Person
 				)
 				BeforeEach(func() {
-					encodeCall.DoAndReturn(func(per person) { copiedPerson = per }).Return(personJson, nil)
+					encodeCall.DoAndReturn(func(per Person) { copiedPerson = per }).Return(personJson, nil)
 				})
 
 				It("should Do Something", func() {
-					mockEncoder.encodePerson(per)
+					mockEncoder.EncodePerson(per)
 					Expect(copiedPerson).To(Equal(per))
 				})
 
@@ -290,20 +291,20 @@ var _ = Describe("Json Encode/Decode", func() {
 					decodeCall *gomock.Call
 				)
 				BeforeEach(func() {
-					decodeCall = mockEncoder.EXPECT().decodePerson(personJson).Return(per, nil)
+					decodeCall = mockEncoder.EXPECT().DecodePerson(personJson).Return(per, nil)
 					encodeCall.After(decodeCall)
 
 					//gomock.InOrder(
-					//	mockEncoder.EXPECT().decodePerson(personJson).Return(per, nil),
-					//	mockEncoder.EXPECT().encodePerson(gomock.Eq(per)).Return(personJson, nil),
+					//	mockEncoder.EXPECT().DecodePerson(personJson).Return(per, nil),
+					//	mockEncoder.EXPECT().EncodePerson(gomock.Eq(per)).Return(personJson, nil),
 					//)
 				})
 
 				It("should decode", func() {
-					decodedPerson, err := mockEncoder.decodePerson(personJson)
+					decodedPerson, err := mockEncoder.DecodePerson(personJson)
 					Expect(err).To(BeNil())
 					Expect(decodedPerson).To(Equal(per))
-					mockEncoder.encodePerson(per)
+					mockEncoder.EncodePerson(per)
 
 				})
 			})
