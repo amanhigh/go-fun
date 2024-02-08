@@ -128,7 +128,7 @@ restore:
 ### Workflows
 info: info-mini ## Minikube Info
 infos: info info-extra ## Minikube Extended Info
-setup: start wait bootstrap port-fwd ## Setup Minikube
+setup: start wait bootstrap port-fwd ## Start, Bootstrap, Port Forward
 clean: stop ## Stop Minikube
 # HACK:#B Fixe Readme
 reset: clean setup info ## Rebuild Minikube

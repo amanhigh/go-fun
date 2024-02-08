@@ -1,7 +1,6 @@
 ### Variables
 .DEFAULT_GOAL := help
 CMD=install
-ANS_FILE=/tmp/k8-svc.txt
 
 #TODO: Add Locust
 # Bootstrap: helm show values bitnami/postgresql > postgres.yml
