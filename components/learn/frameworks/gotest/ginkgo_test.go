@@ -317,7 +317,7 @@ var _ = Describe("Json Encode/Decode", func() {
 	})
 
 	//https://vektra.github.io/mockery/latest/examples/#simple-case
-	FContext("Mockery", func() {
+	Context("Mockery", func() {
 		var (
 			mockEncoder *MockEncoder
 		)
