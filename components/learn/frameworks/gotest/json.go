@@ -1,15 +1,15 @@
-//go:generate mockgen -package gotest -destination json_mock.go -source json.go
-//go:generate mockery --name PersonEncoder
+// mockgen -package gotest -destination json_mock.go -source json.go
 package gotest
 
 //Install
 //go install go.uber.org/mock/mockgen@latest
-//brew install mockery
+//brew install mockery, yay -S mockery-bin
 
 import (
 	"encoding/json"
 )
 
+//go:generate mockery --name PersonEncoder --inpackage --structname MockEncoder
 type PersonEncoder interface {
 	EncodePerson(p Person) (jsonString string, err error)
 	DecodePerson(encodedPerson string) (p Person, err error)
