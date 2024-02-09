@@ -1,28 +1,28 @@
 package gotest
 
 import (
+	"errors"
 	"fmt"
-	"github.com/golang/mock/gomock"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gmeasure"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"time"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gmeasure"
+	"github.com/stretchr/testify/mock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 var _ = Describe("Json Encode/Decode", func() {
 	var (
-		name           = "Zoye"
-		age            = 44
-		number         = int64(88983333)
-		originalPerson person
+		originalPerson Person
 		personJson     string
 	)
 	BeforeEach(func() {
-		originalPerson = person{name, age, number}
-		personJson = fmt.Sprintf(`{"name":"%s","Age":%d,"MobileNumber":%d}`, name, age, number)
+		originalPerson = Person{"Zoye", 44, 8983333}
+		personJson = fmt.Sprintf(`{"name":"%s","Age":%d,"MobileNumber":%d}`, originalPerson.Name, originalPerson.Age, originalPerson.MobileNumber)
 	})
 	Context("Success", func() {
 		It("should encode Properly", func() {
@@ -261,26 +261,26 @@ var _ = Describe("Json Encode/Decode", func() {
 				encodeCall *gomock.Call
 			)
 			BeforeEach(func() {
-				encodeCall = mockEncoder.EXPECT().encodePerson(gomock.Eq(per)).Return(personJson, nil)
+				encodeCall = mockEncoder.EXPECT().EncodePerson(gomock.Eq(originalPerson)).Return(personJson, nil)
 			})
 
 			It("should return mocked json", func() {
-				json, err := mockEncoder.encodePerson(per)
+				json, err := mockEncoder.EncodePerson(originalPerson)
 				Expect(err).To(BeNil())
 				Expect(json).To(Equal(personJson))
 			})
 
 			Context("Do", func() {
 				var (
-					copiedPerson person
+					copiedPerson Person
 				)
 				BeforeEach(func() {
-					encodeCall.DoAndReturn(func(per person) { copiedPerson = per }).Return(personJson, nil)
+					encodeCall.DoAndReturn(func(per Person) { copiedPerson = per }).Return(personJson, nil)
 				})
 
 				It("should Do Something", func() {
-					mockEncoder.encodePerson(per)
-					Expect(copiedPerson).To(Equal(per))
+					mockEncoder.EncodePerson(originalPerson)
+					Expect(copiedPerson).To(Equal(originalPerson))
 				})
 
 			})
@@ -290,27 +290,110 @@ var _ = Describe("Json Encode/Decode", func() {
 					decodeCall *gomock.Call
 				)
 				BeforeEach(func() {
-					decodeCall = mockEncoder.EXPECT().decodePerson(personJson).Return(per, nil)
+					decodeCall = mockEncoder.EXPECT().DecodePerson(personJson).Return(per, nil)
 					encodeCall.After(decodeCall)
 
 					//gomock.InOrder(
-					//	mockEncoder.EXPECT().decodePerson(personJson).Return(per, nil),
-					//	mockEncoder.EXPECT().encodePerson(gomock.Eq(per)).Return(personJson, nil),
+					//	mockEncoder.EXPECT().DecodePerson(personJson).Return(per, nil),
+					//	mockEncoder.EXPECT().EncodePerson(gomock.Eq(per)).Return(personJson, nil),
 					//)
 				})
 
 				It("should decode", func() {
-					decodedPerson, err := mockEncoder.decodePerson(personJson)
+					decodedPerson, err := mockEncoder.DecodePerson(personJson)
 					Expect(err).To(BeNil())
-					Expect(decodedPerson).To(Equal(per))
-					mockEncoder.encodePerson(per)
+					Expect(decodedPerson).To(Equal(originalPerson))
+					mockEncoder.EncodePerson(originalPerson)
 
 				})
 			})
+
+			// TODO: Custom Matcher https://medium.com/modanisa-engineering/writing-a-custom-matcher-for-testing-with-gomock-d3ef5f13db82
 		})
 
 		AfterEach(func() {
 			ctrl.Finish()
+		})
+	})
+
+	//https://vektra.github.io/mockery/latest/examples/#simple-case
+	Context("Mockery", func() {
+		var (
+			mockEncoder *MockEncoder
+		)
+		BeforeEach(func() {
+			mockEncoder = NewMockEncoder(GinkgoT())
+		})
+
+		It("should build", func() {
+			Expect(mockEncoder).To(Not(BeNil()))
+		})
+
+		It("should return mocked json", func() {
+			mockEncoder.EXPECT().EncodePerson(originalPerson).Return(personJson, nil).Once()
+
+			json, err := mockEncoder.EncodePerson(originalPerson)
+			Expect(err).To(BeNil())
+			Expect(json).To(Equal(personJson))
+		})
+
+		It("should mock in order", func() {
+			encodeCall := mockEncoder.EXPECT().EncodePerson(originalPerson).Return(personJson, nil).Once()
+			mockEncoder.EXPECT().DecodePerson(personJson).Return(originalPerson, nil).Times(1).NotBefore(encodeCall)
+
+			mockEncoder.EncodePerson(originalPerson)
+			mockEncoder.DecodePerson(personJson)
+		})
+		// https://pkg.go.dev/github.com/stretchr/testify/mock#pkg-index
+		Context("Match Field", func() {
+			It("should match given name", func() {
+				mockEncoder.EXPECT().EncodePerson(mock.MatchedBy(func(inputPerson Person) bool {
+					return inputPerson.Name == "Zoye"
+				})).Return(personJson, nil)
+
+				result, _ := mockEncoder.EncodePerson(originalPerson)
+				Expect(result).To(Equal(personJson))
+			})
+
+			It("should match age > 50", func() {
+				mockEncoder.EXPECT().EncodePerson(mock.AnythingOfType("Person")).RunAndReturn(func(inputPerson Person) (result string, err error) {
+					if inputPerson.Age > 50 {
+						return personJson, nil
+					}
+					return "", errors.New("Invalid Age")
+				})
+
+				_, err := mockEncoder.EncodePerson(originalPerson)
+				Expect(err).Should(HaveOccurred())
+
+				originalPerson.Age = 60
+				result, err := mockEncoder.EncodePerson(originalPerson)
+				Expect(err).To(BeNil())
+				Expect(result).To(Equal(personJson))
+			})
+		})
+
+		It("should do operation and return", func() {
+			var copiedPerson Person
+
+			mockEncoder.EXPECT().EncodePerson(mock.Anything).RunAndReturn(func(inputPerson Person) (result string, err error) {
+				copiedPerson = inputPerson
+				return "Aman", nil
+			})
+
+			result, _ := mockEncoder.EncodePerson(originalPerson)
+			Expect(copiedPerson).To(Equal(originalPerson))
+			Expect(result).To(Equal("Aman"))
+		})
+
+		It("should capture arguments", func() {
+			var name string
+			mockEncoder.EXPECT().EncodePerson(mock.AnythingOfType("Person")).Run(func(inputPerson Person) {
+				name = inputPerson.Name
+			}).Return("", nil)
+
+			mockEncoder.EncodePerson(originalPerson)
+			Expect(name).To(Equal(originalPerson.Name))
 		})
 	})
 })

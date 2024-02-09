@@ -62,3 +62,16 @@ func ZookeeperTestContainer(ctx context.Context) (zookeeperContainer testcontain
 	})
 	return
 }
+
+func ElasticSearchTestContainer(ctx context.Context) (elasticSearchContainer testcontainers.Container, err error) {
+	req := testcontainers.ContainerRequest{
+		Image:        "bitnami/elasticsearch:latest",
+		ExposedPorts: []string{"9200/tcp"},
+		WaitingFor:   wait.ForListeningPort("9200/tcp").WithStartupTimeout(WAIT_TIME),
+	}
+	elasticSearchContainer, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	return
+}

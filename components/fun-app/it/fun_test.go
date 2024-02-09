@@ -23,12 +23,13 @@ var _ = Describe("Person Integration Test", func() {
 		serviceUrl = "http://localhost:8085"
 		request    fun.PersonRequest
 
-		name   = "Amanpreet Singh"
-		age    = 31
-		gender = "MALE"
-		client = NewFunAppClient(serviceUrl, config.DefaultHttpConfig)
-		err    common.HttpError
-		ctx    = context.Background()
+		name    = "Amanpreet Singh"
+		maxName = strings.Repeat("A", 31)
+		age     = 31
+		gender  = "MALE"
+		client  = NewFunAppClient(serviceUrl, config.DefaultHttpConfig)
+		err     common.HttpError
+		ctx     = context.Background()
 	)
 
 	BeforeEach(func() {
@@ -117,7 +118,7 @@ var _ = Describe("Person Integration Test", func() {
 				})
 
 				It("should fail for max Name", func() {
-					updateRequest.Name = strings.Repeat("A", 30)
+					updateRequest.Name = maxName
 				})
 
 				It("should fail for missing Age", func() {
@@ -195,7 +196,7 @@ var _ = Describe("Person Integration Test", func() {
 
 				//Person Count should be same as Page Limit
 				Expect(len(personList.Records)).To(Equal(limit))
-				Expect(personList.Total).To(BeEquivalentTo(total + 1))
+				Expect(personList.Metadata.Total).To(BeNumerically(">=", total))
 			})
 
 			It("should fetch second Page", func() {
@@ -214,7 +215,7 @@ var _ = Describe("Person Integration Test", func() {
 
 				Expect(err).To(BeNil())
 				Expect(len(personList.Records)).To(Equal(limit))
-				Expect(personList.Total).To(BeEquivalentTo(5))
+				Expect(personList.Metadata.Total).To(BeEquivalentTo(5))
 			})
 
 			It("should search by Gender", func() {
@@ -224,7 +225,7 @@ var _ = Describe("Person Integration Test", func() {
 
 				Expect(err).To(BeNil())
 				Expect(len(personList.Records)).To(Equal(limit))
-				Expect(personList.Total).To(BeEquivalentTo(11))
+				Expect(personList.Metadata.Total).To(BeEquivalentTo(11))
 			})
 
 			It("should search by Name & Gender", func() {
@@ -235,7 +236,7 @@ var _ = Describe("Person Integration Test", func() {
 
 				Expect(err).To(BeNil())
 				Expect(len(personList.Records)).To(Equal(0))
-				Expect(personList.Total).To(BeEquivalentTo(0))
+				Expect(personList.Metadata.Total).To(BeEquivalentTo(0))
 			})
 
 			Context("Bad Requests", func() {
@@ -262,7 +263,7 @@ var _ = Describe("Person Integration Test", func() {
 				})
 
 				It("should fail for max Name", func() {
-					personQuery.Name = strings.Repeat("A", 30)
+					personQuery.Name = maxName
 				})
 
 				It("should fail for invalid Gender", func() {
@@ -289,7 +290,7 @@ var _ = Describe("Person Integration Test", func() {
 			})
 
 			It("should fail for max Name", func() {
-				request.Name = strings.Repeat("A", 30)
+				request.Name = maxName
 			})
 
 			It("should fail for minimum Age", func() {

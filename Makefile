@@ -13,6 +13,7 @@
 
 ### Variables
 .DEFAULT_GOAL := help
+
 BUILD_OPTS := CGO_ENABLED=0 GOARCH=amd64
 COMPONENT_DIR := ./components
 FUN_DIR := $(COMPONENT_DIR)/fun-app
@@ -28,7 +29,7 @@ OUT := /dev/null
 ### Basic
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-	@printf "\033[1;32m FirstTime: prepare/all, OUT=/dev/stdout (Debug) \033[0m \n"
+	printf $(_TITLE) "FirstTime: prepare/all, OUT=/dev/stdout (Debug)"
 
 sync: ## Sync Go Modules
 	go work sync
@@ -37,69 +38,68 @@ sync: ## Sync Go Modules
 # https://golangci-lint.run/usage/quick-start/
 # FIXME: Use Configuration - https://golangci-lint.run/usage/configuration/
 lint: ## Lint the Code
-	printf "\033[1;32m Running Linting \n\033[0m"
+	printf $(_TITLE) "Running Linting"
 	go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} golangci-lint run {}/...
 
 test-operator: ## Run operator tests
-	printf "\033[1;32m Running Operator Tests \n\033[0m"
+	printf $(_TITLE) "Running Operator Tests"
 	make -C $(COMPONENT_DIR)/operator/ test > $(OUT)
 
 test-unit: ## Run unit tests
-	printf "\033[1;32m Running Unit Tests \n\033[0m"
+	printf $(_TITLE) "Running Unit Tests"
 	ginkgo -r '--label-filter=!setup && !slow' -cover . > $(OUT)
 
 test-slow: ## Run slow tests
-	printf "\033[1;32m Running Slow Tests \n\033[0m"
+	printf $(_TITLE) "Running Slow Tests"
 	ginkgo -r '--label-filter=slow' -cover . > $(OUT)
 
 cover-analyse: ## Analyse Integration Coverage Reports
-	printf "\033[1;32m Analysing Coverage Reports \n\033[0m"
+	printf $(_TITLE) "Analysing Coverage Reports"
 	# Generate Cover Profile
 	go tool covdata textfmt -i=$(COVER_DIR) -o $(PROFILE_FILE)
 	
 	# Analyse Cover Profile
 	go tool cover -func=$(PROFILE_FILE) > $(OUT)
 
-	printf "\033[1;32m Package Summary \n\033[0m"
+	printf $(_TITLE) "Package Summary";
 	# Analyse Report and Print Coverage
-	go tool covdata percent -i=$(COVER_DIR)
-
-	printf "\033[1;33m\n\n ******* Vscode: go.apply.coverprofile $(PROFILE_FILE) ******** \033[0m\n"
-
+	go tool covdata percent -i=$(COVER_DIR);
+	echo "";
+	printf $(_INFO) "Vscode" "go.apply.coverprofile $(PROFILE_FILE)";
 
 test-it: run-fun-cover test-unit cover-analyse ## Integration test coverage analyse
 
 test-clean:
-	printf "\033[1;31m Cleaning Tests \n\033[0m"
+	printf $(_WARN) "Cleaning Tests"
 	rm -rf $(COVER_DIR)
 
 profile: ## Run Profiling
-	printf "\033[1;32m Running Profiling \n\033[0m"
+	printf $(_TITLE) "Running Profiling"
 	go tool pprof -http=:8001 http://localhost:8080/debug/pprof/heap &\
 	go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile;\
 	kill %1;
 
 ### Builds
 swag-fun: ## Swagger Generate: Fun App (Init/Update)
-	printf "\033[1;32m Generating Swagger \n\033[0m"
+	printf $(_TITLE) "Generating Swagger"
 	cd $(FUN_DIR);\
 	swag i --parseDependency true > $(OUT);\
-	printf "\033[1;33m http://localhost:8080/swagger/index.html \n\033[0m";
+	printf $(_INFO) "Swagger" "http://localhost:8080/swagger/index.html";
 
 build-fun: swag-fun ## Build Fun App
-	printf "\033[1;32m Building Fun App \n\033[0m"
+	printf $(_TITLE) "Building Fun App"
 	$(BUILD_OPTS) go build -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
 
 build-fun-cover: ## Build Fun App with Coverage
-	printf "\033[1;32m Building Fun App with Coverage \n\033[0m"
+	printf $(_TITLE) "Building Fun App with Coverage"
 	$(BUILD_OPTS) go build -cover -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
 
 build-kohan:
-	printf "\033[1;32m Building Kohan \n\033[0m"
+	printf $(_TITLE) "Building Kohan"
 	$(BUILD_OPTS) go build -o $(COMPONENT_DIR)/kohan/kohan $(COMPONENT_DIR)/kohan/main.go
 
 build-clean:
-	printf "\033[1;31m Cleaning Build \n\033[0m"
+	printf $(_WARN) "Cleaning Build"
 	rm "$(FUN_DIR)/fun";
 	rm "$(COMPONENT_DIR)/kohan/kohan";
 
@@ -109,32 +109,29 @@ confirm:
 		REPLY="" ; \
 		read -p "⚠ Are you sure? [y/n] > " -r ; \
 		if [[ ! $$REPLY =~ ^[Yy]$$ ]]; then \
-			printf $(_ERROR) "KO" "Stopping" ; \
+			printf $(_WARN) "KO" "Stopping" ; \
 			exit 1 ; \
 		else \
 			printf $(_TITLE) "OK" "Continuing" ; \
 			exit 0; \
 		fi \
 	fi
-_WARN := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"
-_TITLE := "\033[32m[%s]\033[0m %s\n" # Green text for "printf"
-_ERROR := "\033[31m[%s]\033[0m %s\n" # Red text for "printf"
 
 ### Release
 release-models:
-	printf "\033[1;32m Release Models: $(VER) \n\033[0m";
+	printf $(_TITLE) "Release Models: $(VER)"
 	@if $(MAKE) --no-print-directory confirm ; then \
 		git tag models/$(VER) ; \
 		git tag | grep models | tail -2 ;
 	fi
 
-	printf "\033[1;32m Pushing Tags \n\033[0m";
+	printf $(_TITLE) "Pushing Tags";
 	@if $(MAKE) --no-print-directory confirm ; then \
-		git push --tags && printf "\033[1;32m Models Released: $(VER) \n\033[0m" ; \
+		git push --tags && printf $(_TITLE) "Models Released: $(VER)" ; \
 	fi
 
 release-common:
-	printf "\033[1;32m Bump Models: $(VER) \n\033[0m";
+	printf $(_TITLE) "Bump Models: $(VER)";
 	@if $(MAKE) --no-print-directory confirm ; then \
 		pushd ./common ; \
 		go get -u github.com/amanhigh/go-fun/models@$(VER); \
@@ -142,19 +139,19 @@ release-common:
 		popd; \
 	fi
 
-	printf "\033[1;32m Release Common: $(VER) \n\033[0m";
+	printf $(_TITLE) "Release Common: $(VER)";
 	@if $(MAKE) --no-print-directory confirm ; then \
 		git tag common/$(VER) ; \
 		git tag | grep common | tail -2 ;
 	fi
 
-	printf "\033[1;32m Pushing Tags \n\033[0m";
+	printf $(_TITLE) "Pushing Tags";
 	@if $(MAKE) --no-print-directory confirm ; then \
-		git push --tags && printf "\033[1;32m Common Released: $(VER) \n\033[0m" ; \
+		git push --tags && printf $(_TITLE) "Common Released: $(VER)" ; \
 	fi
 
 release-fun:
-	printf "\033[1;32m Bump Common: $(VER) \n\033[0m";
+	printf $(_TITLE) "Bump Common: $(VER)";
 	@if $(MAKE) --no-print-directory confirm ; then \
 		pushd ./components/fun-app ; \
 		go get -u github.com/amanhigh/go-fun/common@$(VER); \
@@ -162,22 +159,22 @@ release-fun:
 		popd; \
 	fi
 
-	printf "\033[1;32m Release Fun: $(VER) \n\033[0m";
+	printf $(_TITLE) "Release Fun: $(VER)";
 	@if $(MAKE) --no-print-directory confirm ; then \
 		git tag $(VER) ; \
 		$(MAKE) info-release ; \
 	fi
 
-	printf "\033[1;32m Pushing Tags \n\033[0m";
+	printf $(_TITLE) "Pushing Tags";
 	@if $(MAKE) --no-print-directory confirm ; then \
-		git push --tags && printf "\033[1;32m Fun Released: $(VER) \n\033[0m" ; \
+		git push --tags && printf $(_TITLE) "Fun Released: $(VER)" ; \
 	fi
 
 unrelease: ## Revoke Release of Golang Packages
 ifndef VER
 	$(error VER not set. Eg. v1.1.0)
 endif
-	printf "\033[1;31m Deleting Release: $(VER) \n\033[0m"
+	printf $(_WARN) "Deleting" "Release: $(VER)"
 	@if $(MAKE) --no-print-directory confirm ; then \
 		git tag -d models/$(VER) ; \
 		git push --delete origin models/$(VER); \
@@ -198,62 +195,61 @@ endif
 
 ### Info
 info-release:
-# HACK: Move printf using _WARN and _TITLE
-	printf "\033[1;32m Release Info \n\033[0m"
+	printf $(_INFO) "Release Info"
 	git tag | grep "models" | tail -2
 	git tag | grep "common" | tail -2
 	git tag | grep "v" | grep -v "/" | tail -2
 
 ### Runs
 run-fun: build-fun ## Run Fun App
-	printf "\033[1;32m Running Fun App \n\033[0m"
+	printf $(_TITLE) "Running Fun App"
 	@$(FUN_DIR)/fun > $(OUT)
 
 # Guide - https://dustinspecker.com/posts/go-combined-unit-integration-code-coverage/
 run-fun-cover: build-fun-cover ## Run Fun App with Coverage
-	printf "\033[1;32m Running Fun App with Coverage \n\033[0m"
+	printf $(_TITLE) "Running Fun App with Coverage"
 	mkdir -p $(COVER_DIR)
 	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(FUN_DIR)/fun > $(OUT) 2>&1 &
 
 ### Helm
 helm-build: ## Build Helm Charts
-	printf "\033[1;32m Building Helm Charts \n\033[0m"
+	printf $(_TITLE) "Building Helm Charts"
 	helm dependency build $(FUN_DIR)/charts/ > $(OUT);
 
 helm-package: helm-build ## Package Helm Charts
-	printf "\033[1;32m Packaging Helm Charts \n\033[0m"
+	printf $(_TITLE) "Packaging Helm Charts"
 	helm package $(FUN_DIR)/charts/ -d $(FUN_DIR)/charts
 
 ### Local Setup
 setup-tools: ## Setup Tools	for Local Environment
-	printf "\033[1;32m Setting up Tools \n\033[0m"
+	printf $(_TITLE) "Setting up Tools"
 	go install github.com/onsi/ginkgo/v2/ginkgo
 	go install github.com/swaggo/swag/cmd/swag
 
 setup-k8: ## Kubernetes Setup
-	printf "\033[1;32m Setting up Kubernetes \n\033[0m"
+	printf $(_TITLE) "Setting up Kubernetes"
 	$(MAKE) -C ./Kubernetes/services helm hosts
 
 ### Docker
 docker-fun: build-fun
-	printf "\033[1;32m Building FunApp Docker Image \033[0m"
+	printf $(_TITLE) "Building FunApp Docker Image"
 	docker build -t $(FUN_IMAGE_TAG) -f $(FUN_DIR)/Dockerfile $(FUN_DIR) > $(OUT)
 
 docker-fun-run: docker-fun
-	printf "\033[1;32m Running FunApp Docker Image \033[0m"
+	printf $(_TITLE) "Running FunApp Docker Image"
 	docker run -it amanfdk/fun-app
 
 docker-fun-exec:
-	printf "\033[1;32m Execing Into FunApp Docker Image \033[0m"
+	printf $(_TITLE) "Execing Into FunApp Docker Image"
 	docker run -it --entrypoint /bin/sh amanfdk/fun-app
 
+# TODO: #B Docker Publish
 docker-build: docker-fun ## Build Docker Images
 
 ### Workflows
 test: test-operator test-it ## Run all tests
 build: build-fun build-kohan ## Build all Binaries
 
-#HACK: Add Make to Readme
 info: info-release ## Repo Information
 prepare: setup-tools setup-k8 # One Time Setup
 
@@ -262,4 +258,10 @@ clean: test-clean build-clean ## Clean up Residue
 
 reset: setup info ## Build and Show Info
 all: prepare reset test-slow clean ## Run All Targets
-	printf "\033[1;32m\n\n ******* Complete BUILD Successful ********\n \033[0m"
+	printf $(_TITLE) "******* Complete BUILD Successful ********"
+
+### Formatting
+_INFO := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"
+_TITLE := "\033[32m[%s]\033[0m %s\n" # Green text for "printf"
+_WARN := "\033[31m[%s]\033[0m %s\n" # Red text for "printf"
+_DETAIL := "\033[34m[%s]\033[0m %s\n"  # Blue text for "printf"

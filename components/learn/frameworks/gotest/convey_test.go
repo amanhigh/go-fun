@@ -3,9 +3,10 @@ package gotest
 import (
 	"bytes"
 	"fmt"
-	. "github.com/smartystreets/goconvey/convey"
 	"io"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestConvey(t *testing.T) {
@@ -14,7 +15,7 @@ func TestConvey(t *testing.T) {
 		age        = 44
 		number     = int64(88983333)
 		personJson = fmt.Sprintf(`{"name":"%s","Age":%d,"MobileNumber":%d}`, name, age, number)
-		person     = person{name, age, number}
+		person     = Person{name, age, number}
 	)
 
 	Convey("Json", t, func() {

@@ -2,7 +2,7 @@ package gotest
 
 import "testing"
 
-var per = person{"Zoye", 44, 8983333}
+var per = Person{"Zoye", 44, 8983333}
 
 func TestGoEncode(t *testing.T) {
 	_, err := encodePerson(per)

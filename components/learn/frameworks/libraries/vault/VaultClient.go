@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/vault/api"
 )
 
-// HACK: Move to Clients
+// HACK: #B Vault Move to Clients
 type VaultClientInterface interface {
 	GenerateKey(name, algo string, exportable bool) (secret *api.Secret, err error)
 	GetKey(name string) (secret *api.Secret, err error)

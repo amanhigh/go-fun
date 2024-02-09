@@ -24,9 +24,8 @@ type PersonQuery struct {
 }
 
 type PersonList struct {
-	Records []Person
-
-	common.PaginatedResponse
+	Records  []Person                 `json:"records"`
+	Metadata common.PaginatedResponse `json:"metadata"`
 }
 
 type Person struct {

@@ -35,7 +35,7 @@ type Vault struct {
 type Db struct {
 	//aman:aman@tcp(mysql:3306)/compute?charset=utf8&parseTime=True&loc=Local
 	Url string `env:"DB_URL"`
-	//BUG: Add Migration Scripts Proper
+	//BUG: #B Add Migration Scripts Proper
 	//migration_source: /Users/amanpreet.singh/IdeaProjects/Go/go-fun/learn/frameworks/orm/db/go-migrate/migration
 	MigrationSource string `env:"DB_MIGRATION_SOURCE"`
 	MaxIdle         int    `env:"DB_MAX_IDLE"  envDefault:"2"`

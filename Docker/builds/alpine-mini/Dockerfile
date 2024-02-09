@@ -3,6 +3,9 @@
 FROM alpine
 MAINTAINER name@gmail.com
 
+# Set Timezone
+ENV TZ=Asia/Kolkata
+
 #Add Repo
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/v3.4/main' >> /etc/apk/repositories
 

@@ -154,12 +154,25 @@
           "latency": 0,
           "statusCode": 200,
           "label": "",
-          "headers": [],
+          "headers": [
+            {
+              "key": "Total-Count",
+              "value": " {{len (dataRaw 'Person') }}"
+            }
+          ],
           "bodyType": "DATABUCKET",
           "filePath": "",
           "databucketID": "sfma",
           "sendFileAsBody": false,
-          "rules": [],
+          "rules": [
+            {
+              "target": "body",
+              "modifier": "",
+              "value": "",
+              "invert": false,
+              "operator": "equals"
+            }
+          ],
           "rulesOperator": "OR",
           "disableTemplating": false,
           "fallbackTo404": false,
@@ -182,16 +195,16 @@
             {
               "target": "body",
               "modifier": "name",
-              "value": "",
-              "invert": false,
-              "operator": "equals"
+              "value": "^[A-Za-z0-9 ]{1,30}$",
+              "invert": true,
+              "operator": "regex_i"
             },
             {
               "target": "body",
               "modifier": "gender",
-              "value": "",
-              "invert": false,
-              "operator": "equals"
+              "value": "(MALE|FEMALE)",
+              "invert": true,
+              "operator": "regex_i"
             },
             {
               "target": "body",
@@ -199,6 +212,13 @@
               "value": "0",
               "invert": false,
               "operator": "equals"
+            },
+            {
+              "target": "body",
+              "modifier": "age",
+              "value": "^-.*$",
+              "invert": false,
+              "operator": "regex_i"
             }
           ],
           "rulesOperator": "OR",
@@ -286,6 +306,40 @@
         }
       ],
       "responseMode": null
+    },
+    {
+      "uuid": "54e9c723-f4fb-4b99-8884-ee4414d4f7b2",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "v1/person",
+      "responses": [
+        {
+          "uuid": "a2cc88ad-f15b-41b1-80bb-9b47176308c6",
+          "body": "{\n  \"records\": [\n    {{#repeat (queryParam 'limit')}}\n        {{data 'Person' (concat @index '')}}\n    {{/repeat}}\n  ],\n  \"metadata\":{\n    \"total\": {{len (dataRaw 'Person')}}\n  }\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null
     }
   ],
   "rootChildren": [
@@ -312,6 +366,10 @@
     {
       "type": "route",
       "uuid": "b3b5c433-b3f6-4a4f-a1e5-ec810f061051"
+    },
+    {
+      "type": "route",
+      "uuid": "54e9c723-f4fb-4b99-8884-ee4414d4f7b2"
     },
     {
       "type": "route",

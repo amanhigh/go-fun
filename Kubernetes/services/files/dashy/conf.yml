@@ -75,6 +75,11 @@ sections:
         icon: favicon
         url: https://www.tickertape.in/screener/equity
         tags: [fundamental, india]
+      - title: ChartMill
+        description: USA Fundamental Analysis
+        icon: favicon
+        url: https://www.chartmill.com/
+        tags: [fundamental, us]
       - title: EtfDb
         description: ETF Info
         icon: favicon
