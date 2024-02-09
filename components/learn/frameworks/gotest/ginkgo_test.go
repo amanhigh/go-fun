@@ -344,10 +344,15 @@ var _ = Describe("Json Encode/Decode", func() {
 			mockEncoder.EncodePerson(originalPerson)
 			mockEncoder.DecodePerson(personJson)
 		})
-
+		// https://pkg.go.dev/github.com/stretchr/testify/mock#pkg-index
 		Context("Match Field", func() {
-			It("should match any name", func() {
+			It("should match given name", func() {
+				mockEncoder.EXPECT().EncodePerson(mock.MatchedBy(func(inputPerson Person) bool {
+					return inputPerson.Name == "Zoye"
+				})).Return(personJson, nil)
 
+				result, _ := mockEncoder.EncodePerson(originalPerson)
+				Expect(result).To(Equal(personJson))
 			})
 
 			It("should match age > 50", func() {
@@ -379,6 +384,16 @@ var _ = Describe("Json Encode/Decode", func() {
 			result, _ := mockEncoder.EncodePerson(originalPerson)
 			Expect(copiedPerson).To(Equal(originalPerson))
 			Expect(result).To(Equal("Aman"))
+		})
+
+		It("should capture arguments", func() {
+			var name string
+			mockEncoder.EXPECT().EncodePerson(mock.AnythingOfType("Person")).Run(func(inputPerson Person) {
+				name = inputPerson.Name
+			}).Return("", nil)
+
+			mockEncoder.EncodePerson(originalPerson)
+			Expect(name).To(Equal(originalPerson.Name))
 		})
 	})
 })
