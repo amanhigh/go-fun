@@ -1,7 +1,10 @@
 //go:generate mockgen -package gotest -destination json_mock.go -source json.go
+//go:generate mockery --name PersonEncoder
 package gotest
 
+//Install
 //go install go.uber.org/mock/mockgen@latest
+//brew install mockery
 
 import (
 	"encoding/json"
