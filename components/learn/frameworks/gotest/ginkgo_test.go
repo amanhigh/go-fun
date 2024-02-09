@@ -308,6 +308,8 @@ var _ = Describe("Json Encode/Decode", func() {
 
 				})
 			})
+
+			// TODO: Custom Matcher https://medium.com/modanisa-engineering/writing-a-custom-matcher-for-testing-with-gomock-d3ef5f13db82
 		})
 
 		AfterEach(func() {
