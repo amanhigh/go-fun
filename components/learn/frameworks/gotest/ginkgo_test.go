@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"github.com/amanhigh/go-fun/components/learn/frameworks/gotest/mocks"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gmeasure"
@@ -315,5 +316,20 @@ var _ = Describe("Json Encode/Decode", func() {
 		AfterEach(func() {
 			ctrl.Finish()
 		})
+	})
+
+	//https://vektra.github.io/mockery/latest/examples/#simple-case
+	FContext("Mockery", func() {
+		var (
+			mockEncoder *MockPersonEncoder
+		)
+		BeforeEach(func() {
+			mockEncoder = mocks.NewPersonEncoder(GinkgoT())
+		})
+
+		It("should build", func() {
+			Expect(mockEncoder).To(Not(BeNil()))
+		})
+
 	})
 })
