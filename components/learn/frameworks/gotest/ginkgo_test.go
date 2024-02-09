@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gmeasure"
+	"github.com/stretchr/testify/mock"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -315,7 +316,7 @@ var _ = Describe("Json Encode/Decode", func() {
 	})
 
 	//https://vektra.github.io/mockery/latest/examples/#simple-case
-	Context("Mockery", func() {
+	FContext("Mockery", func() {
 		var (
 			mockEncoder *MockEncoder
 		)
@@ -328,19 +329,54 @@ var _ = Describe("Json Encode/Decode", func() {
 		})
 
 		It("should return mocked json", func() {
-			mockEncoder.EXPECT().EncodePerson(originalPerson).Return(personJson, nil)
+			mockEncoder.EXPECT().EncodePerson(originalPerson).Return(personJson, nil).Once()
 
 			json, err := mockEncoder.EncodePerson(originalPerson)
 			Expect(err).To(BeNil())
 			Expect(json).To(Equal(personJson))
 		})
 
+		It("should mock in order", func() {
+			encodeCall := mockEncoder.EXPECT().EncodePerson(originalPerson).Return(personJson, nil).Maybe()
+			mockEncoder.EXPECT().DecodePerson(personJson).Return(originalPerson, nil).Times(1).NotBefore(encodeCall)
+
+			mockEncoder.DecodePerson(personJson)
+			mockEncoder.EncodePerson(originalPerson)
+		})
+
 		Context("Match Field", func() {
+
+			It("should match any age", func() {
+
+			})
+
+			It("should match any name", func() {
+
+			})
 
 			It("should match age", func() {
 			})
 
+			It("should fail on different age", func() {
+
+			})
+
+			It("should match on age > 50", func() {
+
+			})
 		})
 
+		It("should do operation and return", func() {
+			var copiedPerson Person
+
+			mockEncoder.EXPECT().EncodePerson(mock.Anything).RunAndReturn(func(inputPerson Person) (result string, err error) {
+				copiedPerson = inputPerson
+				return "Aman", nil
+			})
+
+			result, _ := mockEncoder.EncodePerson(originalPerson)
+			Expect(copiedPerson).To(Equal(originalPerson))
+			Expect(result).To(Equal("Aman"))
+		})
 	})
 })
