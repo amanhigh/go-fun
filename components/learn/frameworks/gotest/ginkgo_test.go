@@ -1,6 +1,7 @@
 package gotest
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -337,32 +338,33 @@ var _ = Describe("Json Encode/Decode", func() {
 		})
 
 		It("should mock in order", func() {
-			encodeCall := mockEncoder.EXPECT().EncodePerson(originalPerson).Return(personJson, nil).Maybe()
+			encodeCall := mockEncoder.EXPECT().EncodePerson(originalPerson).Return(personJson, nil).Once()
 			mockEncoder.EXPECT().DecodePerson(personJson).Return(originalPerson, nil).Times(1).NotBefore(encodeCall)
 
-			mockEncoder.DecodePerson(personJson)
 			mockEncoder.EncodePerson(originalPerson)
+			mockEncoder.DecodePerson(personJson)
 		})
 
 		Context("Match Field", func() {
-
-			It("should match any age", func() {
-
-			})
-
 			It("should match any name", func() {
 
 			})
 
-			It("should match age", func() {
-			})
+			It("should match age > 50", func() {
+				mockEncoder.EXPECT().EncodePerson(mock.AnythingOfType("Person")).RunAndReturn(func(inputPerson Person) (result string, err error) {
+					if inputPerson.Age > 50 {
+						return personJson, nil
+					}
+					return "", errors.New("Invalid Age")
+				})
 
-			It("should fail on different age", func() {
+				_, err := mockEncoder.EncodePerson(originalPerson)
+				Expect(err).Should(HaveOccurred())
 
-			})
-
-			It("should match on age > 50", func() {
-
+				originalPerson.Age = 60
+				result, err := mockEncoder.EncodePerson(originalPerson)
+				Expect(err).To(BeNil())
+				Expect(result).To(Equal(personJson))
 			})
 		})
 
