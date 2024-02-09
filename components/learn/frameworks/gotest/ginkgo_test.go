@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"github.com/amanhigh/go-fun/components/learn/frameworks/gotest/mocks"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gmeasure"
@@ -16,15 +15,12 @@ import (
 
 var _ = Describe("Json Encode/Decode", func() {
 	var (
-		name           = "Zoye"
-		age            = 44
-		number         = int64(88983333)
 		originalPerson Person
 		personJson     string
 	)
 	BeforeEach(func() {
-		originalPerson = Person{name, age, number}
-		personJson = fmt.Sprintf(`{"name":"%s","Age":%d,"MobileNumber":%d}`, name, age, number)
+		originalPerson = Person{"Zoye", 44, 8983333}
+		personJson = fmt.Sprintf(`{"name":"%s","Age":%d,"MobileNumber":%d}`, originalPerson.Name, originalPerson.Age, originalPerson.MobileNumber)
 	})
 	Context("Success", func() {
 		It("should encode Properly", func() {
@@ -263,11 +259,11 @@ var _ = Describe("Json Encode/Decode", func() {
 				encodeCall *gomock.Call
 			)
 			BeforeEach(func() {
-				encodeCall = mockEncoder.EXPECT().EncodePerson(gomock.Eq(per)).Return(personJson, nil)
+				encodeCall = mockEncoder.EXPECT().EncodePerson(gomock.Eq(originalPerson)).Return(personJson, nil)
 			})
 
 			It("should return mocked json", func() {
-				json, err := mockEncoder.EncodePerson(per)
+				json, err := mockEncoder.EncodePerson(originalPerson)
 				Expect(err).To(BeNil())
 				Expect(json).To(Equal(personJson))
 			})
@@ -281,8 +277,8 @@ var _ = Describe("Json Encode/Decode", func() {
 				})
 
 				It("should Do Something", func() {
-					mockEncoder.EncodePerson(per)
-					Expect(copiedPerson).To(Equal(per))
+					mockEncoder.EncodePerson(originalPerson)
+					Expect(copiedPerson).To(Equal(originalPerson))
 				})
 
 			})
@@ -304,8 +300,8 @@ var _ = Describe("Json Encode/Decode", func() {
 				It("should decode", func() {
 					decodedPerson, err := mockEncoder.DecodePerson(personJson)
 					Expect(err).To(BeNil())
-					Expect(decodedPerson).To(Equal(per))
-					mockEncoder.EncodePerson(per)
+					Expect(decodedPerson).To(Equal(originalPerson))
+					mockEncoder.EncodePerson(originalPerson)
 
 				})
 			})
@@ -319,16 +315,31 @@ var _ = Describe("Json Encode/Decode", func() {
 	})
 
 	//https://vektra.github.io/mockery/latest/examples/#simple-case
-	FContext("Mockery", func() {
+	Context("Mockery", func() {
 		var (
-			mockEncoder *MockPersonEncoder
+			mockEncoder *MockEncoder
 		)
 		BeforeEach(func() {
-			mockEncoder = mocks.NewPersonEncoder(GinkgoT())
+			mockEncoder = NewMockEncoder(GinkgoT())
 		})
 
 		It("should build", func() {
 			Expect(mockEncoder).To(Not(BeNil()))
+		})
+
+		It("should return mocked json", func() {
+			mockEncoder.EXPECT().EncodePerson(originalPerson).Return(personJson, nil)
+
+			json, err := mockEncoder.EncodePerson(originalPerson)
+			Expect(err).To(BeNil())
+			Expect(json).To(Equal(personJson))
+		})
+
+		Context("Match Field", func() {
+
+			It("should match age", func() {
+			})
+
 		})
 
 	})

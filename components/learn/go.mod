@@ -15,16 +15,15 @@ require (
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/go-resty/resty/v2 v2.10.0
 	github.com/go-zookeeper/zk v1.0.3
-	github.com/golang/mock v1.6.0
 	github.com/hashicorp/consul/api v1.18.0
 	github.com/hashicorp/vault v1.13.12
 	github.com/hashicorp/vault/api v1.9.2
-	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/ginkgo/v2 v2.9.2
 	github.com/onsi/gomega v1.27.5
 	github.com/sirupsen/logrus v1.9.3
 	github.com/slok/goresilience v0.2.0
 	github.com/smartystreets/goconvey v1.7.2
+	github.com/stretchr/testify v1.8.4
 	github.com/teris-io/shortid v0.0.0-20220617161101-71ec9f2aa569
 	github.com/thoas/go-funk v0.9.3
 	github.com/wesovilabs/koazee v0.0.5
@@ -56,16 +55,17 @@ require (
 	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
-	github.com/nxadm/tail v1.4.8 // indirect
+	github.com/onsi/ginkgo v1.16.5 // indirect
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/shirou/gopsutil/v3 v3.23.11 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/grpc v1.59.0 // indirect
-	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )
 
 require (
