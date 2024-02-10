@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
 	"github.com/amanhigh/go-fun/models/learn/frameworks"
+	"github.com/bxcodec/faker/v3"
 	es "github.com/elastic/go-elasticsearch"
 	"github.com/elastic/go-elasticsearch/esapi"
 	"github.com/fatih/color"
@@ -140,6 +142,44 @@ var _ = Describe("Elastic", Ordered, Label(models.GINKGO_SLOW), func() {
 				Expect(resp).ToNot(BeNil())
 			})
 
+		})
+	})
+
+	Context("Students", func() {
+		var (
+			students []Student
+		)
+
+		BeforeEach(func() {
+			//Generate 100 students
+			for i := 0; i < 100; i++ {
+				var s Student
+				Expect(faker.FakeData(&s)).NotTo(HaveOccurred())
+				s.CreatedAt = time.Now().UTC()
+				s.UpdatedAt = time.Now().UTC()
+				students = append(students, s)
+			}
+		})
+
+		It("generates and insert", func() {
+			for i, s := range students {
+				studentJSON, err := json.Marshal(s)
+				Expect(err).NotTo(HaveOccurred())
+
+				// Insert student into Elasticsearch
+				// http://docker:9200/students
+				// Kibana -> Analytics -> Discover -> Data View (Name:Students, Index Pattern: students, Timestamp: Created At.)
+				res, err := esapi.IndexRequest{
+					Index:      "students",
+					DocumentID: fmt.Sprintf("%d", i),
+					Body:       strings.NewReader(string(studentJSON)),
+					Refresh:    "true",
+				}.Do(ctx, elasticClient)
+
+				defer res.Body.Close()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res.IsError()).To(BeFalse())
+			}
 		})
 	})
 })
