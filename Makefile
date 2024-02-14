@@ -242,7 +242,7 @@ docker-fun-exec:
 docker-build: docker-fun ## Build Docker Images
 
 ### Workflows
-test: test-operator test-it ## Run all tests
+test: test-operator test-it ## Run all tests (Excludes test-slow)
 build: build-fun build-kohan ## Build all Binaries
 
 info: info-release ## Repo Information
@@ -251,8 +251,8 @@ prepare: setup-tools setup-k8 # One Time Setup
 setup: sync test build helm-package docker-build # Build and Test
 clean: test-clean build-clean ## Clean up Residue
 
-reset: setup info ## Build and Show Info
-all: prepare reset test-slow clean ## Run All Targets
+reset: setup info clean ## Build and Show Info
+all: prepare reset test-slow ## Run All Targets
 	printf $(_TITLE) "******* Complete BUILD Successful ********"
 
 ### Formatting

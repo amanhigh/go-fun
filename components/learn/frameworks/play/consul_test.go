@@ -12,7 +12,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 )
 
-var _ = FDescribe("Consul", Ordered, Label(models.GINKGO_SLOW), func() {
+var _ = Describe("Consul", Ordered, Label(models.GINKGO_SLOW), func() {
 
 	var (
 		client *api.Client
