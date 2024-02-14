@@ -36,7 +36,13 @@ package: helm-build ## Package Fun Helm Chart
 
 #### Info
 info-fun:
-	printf $(_INFO) "Helm Fun App Info"
+	printf $(_INFO) "Fun App Info"
+	printf $(_DETAIL) "minikube tunnel"
+	printf $(_DETAIL) "http://localhost:9090/metrics"
+
+info-fun-notes:
+	printf $(_INFO) "Fun App Notes"
+	helm get notes fun-app
 
 ### Clean
 clean-fun:
@@ -49,7 +55,7 @@ clean-ns:
 
 ### Workflows
 info: info-fun ## Info on Fun Helm Installation
-infos: info ## Extended Info
+infos: info info-fun-notes ## Extended Info
 prepare: helm-add ## Onetime Setup
 setup: helm-fun ## Setup Fun via Helm
 clean: clean-fun clean-ns ## Clean Fun Helm
