@@ -101,6 +101,7 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 func (self *PersonHandler) ListPersons(c *gin.Context) {
 	//FIXME: #C Implement Sorting asc,dsc
 	var personQuery fun.PersonQuery
+	personQuery.Order = "asc" //Default Sort Order
 
 	ctx, span := self.Tracer.Start(c.Request.Context(), "ListPersons.Handler")
 	defer span.End()
