@@ -22,7 +22,7 @@ import (
 
 func CreateDb(cfg config.Db) (db *gorm.DB, err error) {
 	/* Create Test DB or connect to provided DB */
-	if cfg.Url == "" {
+	if cfg.DbType == models.SQLITE {
 		db, err = CreateTestDb()
 	} else {
 		db, err = ConnectDb(cfg)
@@ -72,15 +72,14 @@ func ConnectDb(cfg config.Db) (db *gorm.DB, err error) {
 	var dialector gorm.Dialector
 
 	switch strings.ToLower(cfg.DbType) {
-	case "postgres":
+	case models.POSTGRES:
 		dialector = postgres.Open(cfg.Url)
-	case "mysql":
+	case models.MYSQL:
 		dialector = mysql.Open(cfg.Url)
 	default:
 		return nil, fmt.Errorf("unsupported db type: %s", cfg.DbType)
 	}
 
-	// FIXME: #C Support Postgress
 	if db, err = gorm.Open(dialector, &gorm.Config{Logger: logger.Default.LogMode(cfg.LogLevel)}); err == nil {
 		/** Print SQL */
 		//db.LogMode(true)

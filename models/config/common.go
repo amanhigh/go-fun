@@ -33,9 +33,8 @@ type Vault struct {
 }
 
 type Db struct {
-	DbType string `env:"DB_TYPE" envDefault:"mysql"` //mysql,postgres
-	//aman:aman@tcp(mysql:3306)/compute?charset=utf8&parseTime=True&loc=Local
-	Url string `env:"DB_URL"`
+	DbType string `env:"DB_TYPE" envDefault:"sqlite"` //mysql,postgres,sqlite
+	Url    string `env:"DB_URL" envDefault:"aman:aman@tcp(mysql:3306)/compute?charset=utf8&parseTime=True&loc=Local"`
 	//BUG: #B Add Migration Scripts Proper
 	//migration_source: /Users/amanpreet.singh/IdeaProjects/Go/go-fun/learn/frameworks/orm/db/go-migrate/migration
 	MigrationSource string `env:"DB_MIGRATION_SOURCE"`

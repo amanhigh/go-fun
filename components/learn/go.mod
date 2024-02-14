@@ -33,7 +33,7 @@ require (
 	golang.org/x/tour v0.1.0
 	gopkg.in/redis.v5 v5.2.9
 	gorm.io/driver/mysql v1.5.2
-	gorm.io/gorm v1.25.5
+	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
 	gorm.io/plugin/dbresolver v1.4.7
 	k8s.io/api v0.26.3
 	k8s.io/apimachinery v0.26.3
