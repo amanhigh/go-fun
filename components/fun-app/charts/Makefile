@@ -17,16 +17,15 @@ setup-fun:
 	helm install fun-app . --set rateLimit.perMin=150
 
 #### Helm
-helm-add:
+add:
 	helm repo add bitnami https://charts.bitnami.com/bitnami
 
-
-helm-build:
+update: ## Update Helm Dependencies
 	printf $(_TITLE) "Updating Helm Dependencies"
 	helm dependency update
 	helm dependency build
 
-package: helm-build ## Package Fun Helm Chart
+package: update ## Package Fun Helm Chart
 	printf $(_TITLE) "Packaging Fun App Helm Chart"
 	helm package . -d .
 
@@ -64,7 +63,7 @@ clean-vegeta:
 ### Workflows
 info: info-fun info-vegeta ## Info on Fun Helm Installation
 infos: info info-istio info-fun-notes ## Extended Info
-prepare: helm-add ## Onetime Setup
+prepare: add ## Onetime Setup
 setup: setup-fun setup-vegeta ## Setup Fun via Helm
 clean: clean-fun ## Clean Fun Helm
 reset: clean setup info ## Reset Fun Helm
