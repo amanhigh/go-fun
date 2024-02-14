@@ -93,10 +93,18 @@ sections:
   - name: Productivity
     icon: mdi-wrench-outline
     items:
+      - title: Copilot
+        description: Bing Copilot
+        icon: favicon
+        url: https://www.bing.com/chat
       - title: Pomadro
         description: For the procrastaning lazy self.
         icon: favicon
         url: https://www.toptal.com/project-managers/tomato-timer
+      - title: Punjabi
+        description: Punjabi Easy Typing using English.
+        icon: favicon
+        url: https://www.easypunjabityping.com/
       - title: ChatGPT
         description: Begining of AI Revolution
         icon: favicon
@@ -105,14 +113,6 @@ sections:
         description: Code AI Search Engine
         icon: favicon
         url: https://www.phind.com/
-      - title: Bing
-        description: Bing Engine with GPT4
-        icon: favicon
-        url: https://www.bing.com/search?q=Bing+AI&showconv=1
-      - title: Punjabi
-        description: Punjabi Easy Typing using English.
-        icon: favicon
-        url: https://www.easypunjabityping.com/
     displayData:
       sortBy: default
       rows: 1
