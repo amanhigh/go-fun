@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 type PersonHandler struct {
@@ -81,6 +82,8 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 		if person, err := self.Manager.GetPerson(ctx, path.Id); err == nil {
 			c.JSON(http.StatusCreated, person)
 		} else {
+			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
 			c.JSON(err.Code(), err)
 		}
 	}
@@ -99,7 +102,6 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person [get]
 func (self *PersonHandler) ListPersons(c *gin.Context) {
-	//FIXME: #C Implement Sorting asc,dsc
 	var personQuery fun.PersonQuery
 	personQuery.Order = "asc" //Default Sort Order
 
@@ -112,9 +114,11 @@ func (self *PersonHandler) ListPersons(c *gin.Context) {
 			c.JSON(http.StatusOK, personList)
 		} else {
 			c.JSON(http.StatusInternalServerError, err.Error())
+			log.WithFields(log.Fields{"Error": err}).Error("ListPersons: Server Error")
 		}
 	} else {
 		c.JSON(http.StatusBadRequest, err)
+		log.WithFields(log.Fields{"Error": err}).Error("ListPersons: Bad Request")
 	}
 }
 
@@ -146,9 +150,11 @@ func (self *PersonHandler) UpdatePerson(c *gin.Context) {
 			c.JSON(http.StatusOK, "UPDATED")
 		} else {
 			c.JSON(err.Code(), err)
+			log.WithFields(log.Fields{"Error": err}).Error("UpdatePerson: Server Error")
 		}
 	} else {
 		c.JSON(http.StatusBadRequest, err)
+		log.WithFields(log.Fields{"Error": err}).Error("UpdatePerson: Bad Request")
 	}
 }
 
@@ -172,5 +178,6 @@ func (self *PersonHandler) DeletePersons(c *gin.Context) {
 		c.JSON(http.StatusNoContent, "DELETED")
 	} else {
 		c.JSON(err.Code(), err)
+		log.WithFields(log.Fields{"Error": err}).Error("DeletePersons: Server Error")
 	}
 }
