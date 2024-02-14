@@ -20,7 +20,7 @@
 
 ### List
 
-GET http://{{host}}:{{port}}/{{version}}/person?limit={{limit}}
+GET http://{{host}}:{{port}}/{{version}}/person?limit={{limit}}&sort_by=name&order=asc
 
 ### Create
 # @name createPerson

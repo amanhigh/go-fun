@@ -239,6 +239,77 @@ var _ = Describe("Person Integration Test", func() {
 				Expect(personList.Metadata.Total).To(BeEquivalentTo(0))
 			})
 
+			FContext("Sort", func() {
+
+				It("should sort by Name in ascending order", func() {
+					var personList fun.PersonList
+					personQuery.SortBy = "name"
+					personQuery.Order = "asc"
+					personList, err = client.PersonService.ListPerson(ctx, personQuery)
+
+					Expect(err).To(BeNil())
+					Expect(len(personList.Records)).To(Equal(limit))
+					// Check if the records are sorted in ascending order by name
+					for i := 0; i < len(personList.Records)-1; i++ {
+						cur := personList.Records[i].Name
+						next := personList.Records[i+1].Name
+						Expect(cur <= next).To(BeTrue())
+					}
+				})
+
+				It("should sort by Name in descending order", func() {
+					var personList fun.PersonList
+					personQuery.SortBy = "name"
+					personQuery.Order = "desc"
+					personList, err = client.PersonService.ListPerson(ctx, personQuery)
+
+					Expect(err).To(BeNil())
+					Expect(len(personList.Records)).To(Equal(limit))
+
+					// Check if the records are sorted in descending order by name
+					for i := 0; i < len(personList.Records)-1; i++ {
+						cur := personList.Records[i].Name
+						next := personList.Records[i+1].Name
+						Expect(cur >= next).To(BeTrue())
+					}
+				})
+
+				It("should sort by Gender in ascending order", func() {
+					var personList fun.PersonList
+					personQuery.SortBy = "gender"
+					personQuery.Order = "asc"
+					personList, err = client.PersonService.ListPerson(ctx, personQuery)
+
+					Expect(err).To(BeNil())
+					Expect(len(personList.Records)).To(Equal(limit))
+
+					// Check if the records are sorted in ascending order by gender
+					for i := 0; i < len(personList.Records)-1; i++ {
+						cur := personList.Records[i].Gender
+						next := personList.Records[i+1].Gender
+						Expect(cur <= next).To(BeTrue())
+					}
+				})
+
+				It("should sort by Gender in descending order", func() {
+					var personList fun.PersonList
+					personQuery.SortBy = "gender"
+					personQuery.Order = "desc"
+					personList, err = client.PersonService.ListPerson(ctx, personQuery)
+
+					Expect(err).To(BeNil())
+					Expect(len(personList.Records)).To(Equal(limit))
+
+					// Check if the records are sorted in descending order by gender
+					for i := 0; i < len(personList.Records)-1; i++ {
+						cur := personList.Records[i].Gender
+						next := personList.Records[i+1].Gender
+						Expect(cur >= next).To(BeTrue())
+					}
+				})
+
+			})
+
 			Context("Bad Requests", func() {
 				AfterEach(func() {
 					_, err = client.PersonService.ListPerson(ctx, personQuery)
