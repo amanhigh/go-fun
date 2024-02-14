@@ -33,6 +33,7 @@ type Vault struct {
 }
 
 type Db struct {
+	DbType string `env:"DB_TYPE" envDefault:"mysql"` //mysql,postgres
 	//aman:aman@tcp(mysql:3306)/compute?charset=utf8&parseTime=True&loc=Local
 	Url string `env:"DB_URL"`
 	//BUG: #B Add Migration Scripts Proper

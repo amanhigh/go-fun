@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/amanhigh/go-fun/models"
 	"github.com/amanhigh/go-fun/models/common"
@@ -14,6 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -67,8 +69,19 @@ func MustCreateDb(cfg config.Db) *gorm.DB {
 func ConnectDb(cfg config.Db) (db *gorm.DB, err error) {
 	log.WithFields(log.Fields{"DBConfig": cfg}).Info("Initing DB")
 
+	var dialector gorm.Dialector
+
+	switch strings.ToLower(cfg.DbType) {
+	case "postgres":
+		dialector = postgres.Open(cfg.Url)
+	case "mysql":
+		dialector = mysql.Open(cfg.Url)
+	default:
+		return nil, fmt.Errorf("unsupported db type: %s", cfg.DbType)
+	}
+
 	// FIXME: #C Support Postgress
-	if db, err = gorm.Open(mysql.Open(cfg.Url), &gorm.Config{Logger: logger.Default.LogMode(cfg.LogLevel)}); err == nil {
+	if db, err = gorm.Open(dialector, &gorm.Config{Logger: logger.Default.LogMode(cfg.LogLevel)}); err == nil {
 		/** Print SQL */
 		//db.LogMode(true)
 
