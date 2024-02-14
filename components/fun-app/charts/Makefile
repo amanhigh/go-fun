@@ -10,24 +10,24 @@ help: ## Show this help
 ### Setup
 setup-vegeta:
 	printf $(_TITLE) "Running Vegeta Attack"
-	kubectl run vegeta --image="peterevans/vegeta" -- sh -c "sleep 10000"
+	kubectl run vegeta --image="peterevans/vegeta" -- sh -c "sleep 10000" > $(OUT)
 
 setup-fun:
 	printf $(_TITLE) "Installing Fun App Helm Chart"
-	helm install fun-app . --set rateLimit.perMin=150
+	helm install fun-app . --set rateLimit.perMin=150 > $(OUT)
 
 #### Helm
 add:
-	helm repo add bitnami https://charts.bitnami.com/bitnami
+	helm repo add bitnami https://charts.bitnami.com/bitnami > $(OUT)
 
 update: ## Update Helm Dependencies
 	printf $(_TITLE) "Updating Helm Dependencies"
-	helm dependency update
-	helm dependency build
+	helm dependency update > $(OUT)
+	helm dependency build > $(OUT)
 
 package: update ## Package Fun Helm Chart
 	printf $(_TITLE) "Packaging Fun App Helm Chart"
-	helm package . -d .
+	helm package . -d . > $(OUT)
 
 #### Info
 # BUG: Fix Fun App via Tunnel
@@ -53,21 +53,25 @@ info-istio:
 
 ### Clean
 clean-fun:
-	printf $(_TITLE) "Deleting Fun App Helm Chart"
-	-helm delete fun-app
+	printf $(_WARN) "Deleting Fun App Helm Chart"
+	-helm delete fun-app > $(OUT)
 
 clean-vegeta:
-	printf $(_TITLE) "Deleting Vegeta Attack"
-	-kubectl delete pod vegeta
+	printf $(_WARN) "Deleting Vegeta Attack"
+	-kubectl delete pod vegeta > $(OUT)
+
+clean-package:
+	printf $(_WARN) "Deleting Helm Package(s)"
+	-rm *.tgz > $(OUT)
 
 ### Workflows
 info: info-fun info-vegeta ## Info on Fun Helm Installation
 infos: info info-istio info-fun-notes ## Extended Info
 prepare: add ## Onetime Setup
 setup: setup-fun setup-vegeta ## Setup Fun via Helm
-clean: clean-fun ## Clean Fun Helm
+clean: clean-fun clean-package clean-vegeta ## Clean Fun Helm
 reset: clean setup info ## Reset Fun Helm
-all: prepare reset package ## Run All Targets
+all: prepare reset package clean ## Run All Targets
 
 ### Formatting
 _INFO := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"
