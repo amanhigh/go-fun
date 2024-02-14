@@ -52,16 +52,19 @@ var _ = FDescribe("Consul", Ordered, Label(models.GINKGO_SLOW), func() {
 
 	Context("Write and Read", func() {
 		var (
-			kv = client.KV()
+			kv *api.KV
 
 			//Data
 			key   = "aman/1"
 			value = []byte("2000")
-			p     = &api.KVPair{Key: key, Value: value}
+			p     = api.KVPair{Key: key, Value: value}
 		)
 
 		BeforeEach(func() {
-			_, err = kv.Put(p, nil)
+			// Get a handle to the KV API
+			kv = client.KV()
+
+			_, err = kv.Put(&p, nil)
 			Expect(err).To(BeNil())
 		})
 
