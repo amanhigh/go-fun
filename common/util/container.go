@@ -47,6 +47,20 @@ func MysqlTestContainer(ctx context.Context) (mysqlContainer testcontainers.Cont
 	return
 }
 
+func ConsulTestContainer(ctx context.Context) (consulContainer testcontainers.Container, err error) {
+	port := "8500/tcp"
+	req := testcontainers.ContainerRequest{
+		Image:        "hashicorp/consul:latest",
+		ExposedPorts: []string{port},
+		WaitingFor:   wait.ForListeningPort(nat.Port(port)).WithStartupTimeout(WAIT_TIME),
+	}
+	consulContainer, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	return
+}
+
 func ZookeeperTestContainer(ctx context.Context) (zookeeperContainer testcontainers.Container, err error) {
 	req := testcontainers.ContainerRequest{
 		Image:        "zookeeper:latest",
