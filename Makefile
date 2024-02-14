@@ -212,13 +212,8 @@ run-fun-cover: build-fun-cover ## Run Fun App with Coverage
 	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(FUN_DIR)/fun > $(OUT) 2>&1 &
 
 ### Helm
-helm-build: ## Build Helm Charts
-	printf $(_TITLE) "Building Helm Charts"
-	helm dependency build $(FUN_DIR)/charts/ > $(OUT);
-
-helm-package: helm-build ## Package Helm Charts
-	printf $(_TITLE) "Packaging Helm Charts"
-	helm package $(FUN_DIR)/charts/ -d $(FUN_DIR)/charts
+helm-package: ## Package Helm Charts
+	$(MAKE) -C $(FUN_DIR)/charts package
 
 ### Local Setup
 setup-tools: ## Setup Tools	for Local Environment

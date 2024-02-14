@@ -22,6 +22,7 @@ helm-add:
 
 
 helm-build:
+	printf $(_TITLE) "Updating Helm Dependencies"
 	helm dependency update
 	helm dependency build
 
