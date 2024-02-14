@@ -7,14 +7,28 @@ help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 	printf $(_TITLE) "FirstTime: prepare/all, OUT=/dev/stdout (Debug)"
 
+### Namespace
+create-ns:
+	printf $(_TITLE) "Creating Fun App Namespace"
+	kubectl create ns fun-app
+	kubectl label namespace fun-app istio-injection=enabled
+
+### Operations
+vegeta-attack:
+	printf $(_TITLE) "Running Vegeta Attack"
+	kubectl run vegeta -n fun-app --image="peterevans/vegeta" -- sh -c "sleep 10000"
+
 #### Helm
-helm-build:
-	helm dependency update
-	helm dependency build
+helm-add:
+	helm repo add bitnami https://charts.bitnami.com/bitnami
 
 helm-fun:
 	printf $(_TITLE) "Installing Fun App Helm Chart"
 	helm install fun-app . --set rateLimit.perMin=150
+
+helm-build:
+	helm dependency update
+	helm dependency build
 
 package: helm-build ## Package Fun Helm Chart
 	printf $(_TITLE) "Packaging Fun App Helm Chart"
@@ -26,16 +40,21 @@ info-fun:
 
 ### Clean
 clean-fun:
+	printf $(_TITLE) "Deleting Fun App Helm Chart"
 	-helm delete fun-app
+
+clean-ns:
+	printf $(_TITLE) "Deleting Fun App Namespace"
+	kubectl delete ns fun-app
 
 ### Workflows
 info: info-fun ## Info on Fun Helm Installation
 infos: info ## Extended Info
-prepare: ## Onetime Setup
-setup: clean helm-fun ## Setup Fun via Helm
-clean: clean-fun ## Clean Fun Helm
-reset: helm-build setup info ## Reset Fun Helm
-all:prepare reset ## Run All Targets
+prepare: helm-add ## Onetime Setup
+setup: helm-fun ## Setup Fun via Helm
+clean: clean-fun clean-ns ## Clean Fun Helm
+reset: clean setup info ## Reset Fun Helm
+all: prepare reset package ## Run All Targets
 
 ### Formatting
 _INFO := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"
