@@ -239,7 +239,7 @@ var _ = Describe("Person Integration Test", func() {
 				Expect(personList.Metadata.Total).To(BeEquivalentTo(0))
 			})
 
-			FContext("Sort", func() {
+			Context("Sort", func() {
 
 				It("should sort by Name in ascending order", func() {
 					var personList fun.PersonList
@@ -307,7 +307,6 @@ var _ = Describe("Person Integration Test", func() {
 						Expect(cur >= next).To(BeTrue())
 					}
 				})
-
 			})
 
 			Context("Bad Requests", func() {
@@ -315,6 +314,10 @@ var _ = Describe("Person Integration Test", func() {
 					_, err = client.PersonService.ListPerson(ctx, personQuery)
 					Expect(err).Should(HaveOccurred())
 					Expect(err).To(Equal(common.ErrBadRequest))
+
+					//Pollutes AfterEach Cleanup so Reset
+					personQuery.Order = ""
+					personQuery.SortBy = ""
 				})
 
 				It("should fail for invalid Offset", func() {
@@ -339,6 +342,15 @@ var _ = Describe("Person Integration Test", func() {
 
 				It("should fail for invalid Gender", func() {
 					personQuery.Gender = "OTHER"
+				})
+
+				It("should fail for invalid SortBy", func() {
+					personQuery.SortBy = "invalid"
+				})
+
+				It("should fail for invalid Order", func() {
+					personQuery.SortBy = "name"
+					personQuery.Order = "invalid"
 				})
 			})
 		})

@@ -39,7 +39,7 @@ type Pagination struct {
 }
 
 type Sort struct {
-	SortBy string `form:"sort_by" binding:"omitempty"`
+	SortBy string `form:"sort_by" binding:"omitempty,eq=name|eq=age|eq=gender"`
 	Order  string `form:"order" binding:"omitempty,eq=asc|eq=desc"`
 }
 

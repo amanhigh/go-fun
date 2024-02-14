@@ -96,8 +96,11 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 // @Tags Person
 // @Accept json
 // @Produce json
+// @Param name query string false "Filter persons by name"
 // @Param gender query string false "Filter persons by gender"
 // @Param age query int false "Filter persons by age"
+// @Param order query string false "Sort order" Enums(asc, desc)
+// @Param sort_by query string false "Sort by" Enums(name, gender, age)
 // @Success 200 {object} fun.PersonList
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person [get]
@@ -113,12 +116,12 @@ func (self *PersonHandler) ListPersons(c *gin.Context) {
 			self.PersonCounter.Add(float64(len(personList.Records)))
 			c.JSON(http.StatusOK, personList)
 		} else {
-			c.JSON(http.StatusInternalServerError, err.Error())
 			log.WithFields(log.Fields{"Error": err}).Error("ListPersons: Server Error")
+			c.JSON(http.StatusInternalServerError, err.Error())
 		}
 	} else {
-		c.JSON(http.StatusBadRequest, err)
 		log.WithFields(log.Fields{"Error": err}).Error("ListPersons: Bad Request")
+		c.JSON(http.StatusBadRequest, err)
 	}
 }
 
