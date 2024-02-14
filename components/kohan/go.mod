@@ -8,8 +8,8 @@ require (
 	github.com/amanhigh/go-fun/models v1.0.0
 	github.com/fatih/color v1.16.0
 	github.com/go-resty/resty/v2 v2.10.0
-	github.com/onsi/ginkgo/v2 v2.9.2
-	github.com/onsi/gomega v1.27.5
+	github.com/onsi/ginkgo/v2 v2.13.2
+	github.com/onsi/gomega v1.29.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.6.1
 	github.com/wesovilabs/koazee v0.0.5
