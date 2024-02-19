@@ -1,3 +1,9 @@
+# devspace -n fun-app dev
+# devspace run fun-app ( http://localhost:8080/metrics )
+# devspace -n fun-app purge
+# devspace list vars --var DB="mysql-primary",RATE_LIMIT=-1
+# devspace use namespace fun-app
+# devspace logs|enter|sync|ui|restart|print
 version: v2beta1
 name: go-fun
 
@@ -45,7 +51,8 @@ dev:
     # Search for the container that runs this image
     imageSelector: go-fun
     # Replace the container image with this dev-optimized image (allows to skip image building during development)
-    devImage: ghcr.io/loft-sh/devspace-containers/go:1.18-alpine
+    # https://github.com/loft-sh/devspace-containers
+    devImage: ghcr.io/loft-sh/devspace-containers/go:1.21-alpine
     # Start Fun App
     command: ["go", "run", "./components/fun-app/main.go"]
     env:
@@ -97,8 +104,10 @@ commands:
     command: "go run ./components/learn/experiment.go"
   fun-app:
     command: "go run ./components/fun-app/main.go"
-  fun-test: #FIXME #B Install Ginkgo and Run Test
-    command: "go test ./components/fun-app/it/"
+  ginkgo:
+    command: "go install github.com/onsi/ginkgo/v2/ginkgo"
+  fun-test:
+    command: "ginkgo ./components/fun-app/it"
   kohan:
     command: "go run ./components/kohan/main.go"
 # Define dependencies to other projects with a devspace.yaml

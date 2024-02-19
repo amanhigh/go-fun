@@ -31,6 +31,12 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Filter persons by name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "Filter persons by gender",
                         "name": "gender",
                         "in": "query"
@@ -39,6 +45,27 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Filter persons by age",
                         "name": "age",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort order",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "name",
+                            "gender",
+                            "age"
+                        ],
+                        "type": "string",
+                        "description": "Sort by",
+                        "name": "sort_by",
                         "in": "query"
                     }
                 ],
@@ -241,6 +268,14 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "common.PaginatedResponse": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "fun.Person": {
             "type": "object",
             "required": [
@@ -275,15 +310,14 @@ const docTemplate = `{
         "fun.PersonList": {
             "type": "object",
             "properties": {
+                "metadata": {
+                    "$ref": "#/definitions/common.PaginatedResponse"
+                },
                 "records": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/fun.Person"
                     }
-                },
-                "total": {
-                    "description": "Pagination - https://dev.to/pragativerma18/unlocking-the-power-of-api-pagination-best-practices-and-strategies-4b49",
-                    "type": "integer"
                 }
             }
         },

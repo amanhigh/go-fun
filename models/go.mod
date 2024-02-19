@@ -6,10 +6,10 @@ require (
 	github.com/cheekybits/genny v1.0.0
 	github.com/fatih/color v1.16.0
 	github.com/google/uuid v1.4.0
-	github.com/onsi/ginkgo/v2 v2.9.2
-	github.com/onsi/gomega v1.27.5
+	github.com/onsi/ginkgo/v2 v2.13.2
+	github.com/onsi/gomega v1.29.0
 	github.com/sirupsen/logrus v1.9.3
-	gorm.io/gorm v1.25.5
+	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
 )
 
 require (

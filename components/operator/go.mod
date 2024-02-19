@@ -4,8 +4,8 @@ go 1.21
 
 require (
 	github.com/amanhigh/go-fun/models v1.0.0
-	github.com/onsi/ginkgo/v2 v2.9.2
-	github.com/onsi/gomega v1.27.5
+	github.com/onsi/ginkgo/v2 v2.13.2
+	github.com/onsi/gomega v1.29.0
 	k8s.io/api v0.26.3
 	k8s.io/apimachinery v0.26.3
 	k8s.io/client-go v0.26.3

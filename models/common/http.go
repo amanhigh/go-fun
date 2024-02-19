@@ -38,6 +38,11 @@ type Pagination struct {
 	Limit  int `form:"limit" binding:"required,min=1,max=10"`
 }
 
+type Sort struct {
+	SortBy string `form:"sort_by" binding:"omitempty,eq=name|eq=age|eq=gender"`
+	Order  string `form:"order" binding:"omitempty,eq=asc|eq=desc"`
+}
+
 type PaginatedResponse struct {
 	Total int64 `json:"total"`
 }

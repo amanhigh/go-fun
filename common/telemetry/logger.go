@@ -31,6 +31,7 @@ func (h *ContextLogHook) Fire(e *log.Entry) error {
 
 func InitLogger(level log.Level) {
 	//Auto Log RequestId
+	//TODO: Move to Zap or Zerologger once they support Context and OTEL.
 	log.AddHook(&ContextLogHook{})
 	log.SetLevel(level)
 

@@ -9,3 +9,6 @@ const GINKGO_SETUP = "setup" //Requires external Setup
 
 // DB
 const CONTEXT_TX = "contextTx"
+const MYSQL = "mysql"
+const POSTGRES = "postgres"
+const SQLITE = "sqlite"

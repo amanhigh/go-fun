@@ -7,35 +7,71 @@ help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 	printf $(_TITLE) "FirstTime: prepare/all, OUT=/dev/stdout (Debug)"
 
-#### Helm
-helm-build:
-	helm dependency update
-	helm dependency build
+### Setup
+setup-vegeta:
+	printf $(_TITLE) "Running Vegeta Attack"
+	kubectl run vegeta --image="peterevans/vegeta" -- sh -c "sleep 10000" > $(OUT)
 
-helm-fun:
+setup-fun:
 	printf $(_TITLE) "Installing Fun App Helm Chart"
-	helm install fun-app . --set rateLimit.perMin=150
+	helm install fun-app . --set rateLimit.perMin=150 > $(OUT)
 
-package: helm-build ## Package Fun Helm Chart
+#### Helm
+add:
+	helm repo add bitnami https://charts.bitnami.com/bitnami > $(OUT)
+
+update: ## Update Helm Dependencies
+	printf $(_TITLE) "Updating Helm Dependencies"
+	helm dependency update > $(OUT)
+	helm dependency build > $(OUT)
+
+package: update ## Package Fun Helm Chart
 	printf $(_TITLE) "Packaging Fun App Helm Chart"
-	helm package . -d .
+	helm package . -d . > $(OUT)
 
 #### Info
+# BUG: Fix Fun App via Tunnel
 info-fun:
-	printf $(_INFO) "Helm Fun App Info"
+	printf $(_INFO) "Fun App Info"
+	printf $(_DETAIL) "minikube tunnel"
+	printf $(_DETAIL) "http://localhost:9090/metrics"
+
+info-fun-notes:
+	printf $(_INFO) "Fun App Notes"
+	helm get notes fun-app
+
+info-vegeta:
+	printf $(_INFO) "Vegeta Info"
+	printf $(_DETAIL) "Login Vegeta Pod"
+	printf $(_DETAIL) "HELM: echo 'GET http://fun-app:9090/person/all' | vegeta attack | vegeta report"
+	printf $(_DETAIL) "DEVSPACE: echo 'GET http://app:8080/person/all' | vegeta attack | vegeta report"
+
+info-istio:
+	printf $(_INFO) "Istio Info"
+	printf $(_DETAIL) "Grafana Import: /fun-app/it/dashboard.json"
+	printf $(_DETAIL) "Prometheus: : http://localhost:9090/graph?g0.expr=rate(fun_app_person_count%5B5m%5D)&g0.tab=0&g0.stacked=0&g0.show_exemplars=0&g0.range_input=5m&g1.expr=fun_app_person_create_time_bucket&g1.tab=0&g1.stacked=1&g1.show_exemplars=1&g1.range_input=1h&g2.expr=rate(fun_app_person_create_time_count%5B5m%5D)&g2.tab=0&g2.stacked=0&g2.show_exemplars=0&g2.range_input=1h"
 
 ### Clean
 clean-fun:
-	-helm delete fun-app
+	printf $(_WARN) "Deleting Fun App Helm Chart"
+	-helm delete fun-app > $(OUT)
+
+clean-vegeta:
+	printf $(_WARN) "Deleting Vegeta Attack"
+	-kubectl delete pod vegeta > $(OUT)
+
+clean-package:
+	printf $(_WARN) "Deleting Helm Package(s)"
+	-rm *.tgz > $(OUT)
 
 ### Workflows
-info: info-fun ## Info on Fun Helm Installation
-infos: info ## Extended Info
-prepare: ## Onetime Setup
-setup: clean helm-fun ## Setup Fun via Helm
-clean: clean-fun ## Clean Fun Helm
-reset: helm-build setup info ## Reset Fun Helm
-all:prepare reset ## Run All Targets
+info: info-fun info-vegeta ## Info on Fun Helm Installation
+infos: info info-istio info-fun-notes ## Extended Info
+prepare: add ## Onetime Setup
+setup: setup-fun setup-vegeta ## Setup Fun via Helm
+clean: clean-fun clean-package clean-vegeta ## Clean Fun Helm
+reset: clean setup info ## Reset Fun Helm
+all: prepare reset package clean ## Run All Targets
 
 ### Formatting
 _INFO := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"

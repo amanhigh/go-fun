@@ -8,8 +8,8 @@ require (
 	github.com/amanhigh/go-fun/models v1.0.0
 	github.com/fatih/color v1.16.0
 	github.com/go-resty/resty/v2 v2.10.0
-	github.com/onsi/ginkgo/v2 v2.9.2
-	github.com/onsi/gomega v1.27.5
+	github.com/onsi/ginkgo/v2 v2.13.2
+	github.com/onsi/gomega v1.29.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.6.1
 	github.com/wesovilabs/koazee v0.0.5
@@ -42,6 +42,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.5.2 // indirect
 	gorm.io/driver/sqlite v1.5.4 // indirect
-	gorm.io/gorm v1.25.5 // indirect
+	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde // indirect
 	gorm.io/plugin/dbresolver v1.4.7 // indirect
 )

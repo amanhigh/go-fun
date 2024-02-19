@@ -1,4 +1,9 @@
 definitions:
+  common.PaginatedResponse:
+    properties:
+      total:
+        type: integer
+    type: object
   fun.Person:
     properties:
       age:
@@ -24,13 +29,12 @@ definitions:
     type: object
   fun.PersonList:
     properties:
+      metadata:
+        $ref: '#/definitions/common.PaginatedResponse'
       records:
         items:
           $ref: '#/definitions/fun.Person'
         type: array
-      total:
-        description: Pagination - https://dev.to/pragativerma18/unlocking-the-power-of-api-pagination-best-practices-and-strategies-4b49
-        type: integer
     type: object
   fun.PersonRequest:
     properties:
@@ -62,6 +66,10 @@ paths:
       - application/json
       description: List Person and Optionally Search
       parameters:
+      - description: Filter persons by name
+        in: query
+        name: name
+        type: string
       - description: Filter persons by gender
         in: query
         name: gender
@@ -70,6 +78,21 @@ paths:
         in: query
         name: age
         type: integer
+      - description: Sort order
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - description: Sort by
+        enum:
+        - name
+        - gender
+        - age
+        in: query
+        name: sort_by
+        type: string
       produces:
       - application/json
       responses:

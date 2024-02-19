@@ -47,7 +47,7 @@ var _ = BeforeSuite(func() {
 			case <-timeout:
 				Fail("Unable to Start Funapp")
 			case <-time.NewTicker(time.Second).C:
-				color.HiBlue("FunApp: Health Check")
+				color.HiYellow("FunApp: Starting (Not Running)")
 				if err = client.AdminService.HealthCheck(ctx); err == nil {
 					return
 				}

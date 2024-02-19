@@ -15,8 +15,8 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/golang-migrate/migrate/v4 v4.16.2
 	github.com/google/uuid v1.4.0
-	github.com/onsi/ginkgo/v2 v2.9.2
-	github.com/onsi/gomega v1.27.5
+	github.com/onsi/ginkgo/v2 v2.13.2
+	github.com/onsi/gomega v1.29.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/testcontainers/testcontainers-go v0.27.0
 	github.com/thoas/go-funk v0.9.3
@@ -30,13 +30,17 @@ require (
 	golang.org/x/net v0.19.0
 	google.golang.org/grpc v1.59.0
 	gorm.io/driver/mysql v1.5.2
-	gorm.io/gorm v1.25.5
+	gorm.io/driver/postgres v1.5.6
+	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
 	gorm.io/plugin/dbresolver v1.4.7
 )
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
+	github.com/jackc/pgx/v5 v5.4.3 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	modernc.org/libc v1.22.5 // indirect
 	modernc.org/mathutil v1.5.0 // indirect

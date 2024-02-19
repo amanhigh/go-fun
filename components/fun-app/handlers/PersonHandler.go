@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 type PersonHandler struct {
@@ -81,6 +82,8 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 		if person, err := self.Manager.GetPerson(ctx, path.Id); err == nil {
 			c.JSON(http.StatusCreated, person)
 		} else {
+			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
 			c.JSON(err.Code(), err)
 		}
 	}
@@ -93,14 +96,17 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 // @Tags Person
 // @Accept json
 // @Produce json
+// @Param name query string false "Filter persons by name"
 // @Param gender query string false "Filter persons by gender"
 // @Param age query int false "Filter persons by age"
+// @Param order query string false "Sort order" Enums(asc, desc)
+// @Param sort_by query string false "Sort by" Enums(name, gender, age)
 // @Success 200 {object} fun.PersonList
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person [get]
 func (self *PersonHandler) ListPersons(c *gin.Context) {
-	//FIXME: #C Implement Sorting asc,dsc
 	var personQuery fun.PersonQuery
+	personQuery.Order = "asc" //Default Sort Order
 
 	ctx, span := self.Tracer.Start(c.Request.Context(), "ListPersons.Handler")
 	defer span.End()
@@ -110,9 +116,11 @@ func (self *PersonHandler) ListPersons(c *gin.Context) {
 			self.PersonCounter.Add(float64(len(personList.Records)))
 			c.JSON(http.StatusOK, personList)
 		} else {
+			log.WithFields(log.Fields{"Error": err}).Error("ListPersons: Server Error")
 			c.JSON(http.StatusInternalServerError, err.Error())
 		}
 	} else {
+		log.WithFields(log.Fields{"Error": err}).Error("ListPersons: Bad Request")
 		c.JSON(http.StatusBadRequest, err)
 	}
 }
@@ -145,9 +153,11 @@ func (self *PersonHandler) UpdatePerson(c *gin.Context) {
 			c.JSON(http.StatusOK, "UPDATED")
 		} else {
 			c.JSON(err.Code(), err)
+			log.WithFields(log.Fields{"Error": err}).Error("UpdatePerson: Server Error")
 		}
 	} else {
 		c.JSON(http.StatusBadRequest, err)
+		log.WithFields(log.Fields{"Error": err}).Error("UpdatePerson: Bad Request")
 	}
 }
 
@@ -171,5 +181,6 @@ func (self *PersonHandler) DeletePersons(c *gin.Context) {
 		c.JSON(http.StatusNoContent, "DELETED")
 	} else {
 		c.JSON(err.Code(), err)
+		log.WithFields(log.Fields{"Error": err}).Error("DeletePersons: Server Error")
 	}
 }

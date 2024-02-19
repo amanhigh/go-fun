@@ -15,6 +15,12 @@ RUN apk add --update bash curl ca-certificates
 #Clean installtion files
 RUN rm -rf /var/cache/apk/*
 
+#Environment Variables
+ENV var1=Tutorial var2=point
+
+EXPOSE 80
+WORKDIR /newTemp
+
 # Run as Custom User
 ARG user=aman
 ARG group=fun

@@ -116,6 +116,7 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SLOW), func() {
 			mysqlPort, err := container.MappedPort(ctx, "3306")
 			Expect(err).To(BeNil())
 
+			dbconfig.DbType = models.MYSQL
 			dbconfig.Url = util.BuildMysqlURL("aman", "aman", "localhost", "compute", mysqlPort.Port())
 			color.Green("Mysql Url: %s", dbconfig.Url)
 			// dbconfig.LogLevel = logger.Info

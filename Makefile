@@ -205,6 +205,10 @@ run-fun: build-fun ## Run Fun App
 	printf $(_TITLE) "Running Fun App"
 	@$(FUN_DIR)/fun > $(OUT)
 
+# make watch CMD=ls
+watch: ## Watch Command using entr
+	find . | entr -s "date +%M:%S; $(CMD)"
+
 # Guide - https://dustinspecker.com/posts/go-combined-unit-integration-code-coverage/
 run-fun-cover: build-fun-cover ## Run Fun App with Coverage
 	printf $(_TITLE) "Running Fun App with Coverage"
@@ -212,13 +216,8 @@ run-fun-cover: build-fun-cover ## Run Fun App with Coverage
 	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(FUN_DIR)/fun > $(OUT) 2>&1 &
 
 ### Helm
-helm-build: ## Build Helm Charts
-	printf $(_TITLE) "Building Helm Charts"
-	helm dependency build $(FUN_DIR)/charts/ > $(OUT);
-
-helm-package: helm-build ## Package Helm Charts
-	printf $(_TITLE) "Packaging Helm Charts"
-	helm package $(FUN_DIR)/charts/ -d $(FUN_DIR)/charts
+helm-package: ## Package Helm Charts
+	$(MAKE) -C $(FUN_DIR)/charts package
 
 ### Local Setup
 setup-tools: ## Setup Tools	for Local Environment
@@ -243,11 +242,32 @@ docker-fun-exec:
 	printf $(_TITLE) "Execing Into FunApp Docker Image"
 	docker run -it --entrypoint /bin/sh amanfdk/fun-app
 
+### Devspace
+space: space-purge ## Setup Devspace
+	printf $(_TITLE) "Starting Devspace"
+	devspace use namespace fun-app
+	devspace dev
+
+space-purge: ## Purge Devspace
+	printf $(_TITLE) "Purging Devspace"
+	-devspace purge > $(OUT)
+
+space-info: ## Info Devspace
+	printf $(_TITLE) "Info Devspace"
+	devspace list vars --var DB="mysql-primary",RATE_LIMIT=-1
+	printf $(_DETAIL) "http://localhost:8080/metrics"
+	printf $(_DETAIL) "Login: devspace enter"
+
+space-test: ## Gink Tests Devspace (Watch Mode)
+	printf $(_TITLE) "Devspace Tests"
+	devspace run ginkgo > $(OUT)
+	$(MAKE) watch CMD="devspace run fun-test"
+
 # TODO: #B Docker Publish
 docker-build: docker-fun ## Build Docker Images
 
 ### Workflows
-test: test-operator test-it ## Run all tests
+test: test-operator test-it ## Run all tests (Excludes test-slow)
 build: build-fun build-kohan ## Build all Binaries
 
 info: info-release ## Repo Information
@@ -256,8 +276,8 @@ prepare: setup-tools setup-k8 # One Time Setup
 setup: sync test build helm-package docker-build # Build and Test
 clean: test-clean build-clean ## Clean up Residue
 
-reset: setup info ## Build and Show Info
-all: prepare reset test-slow clean ## Run All Targets
+reset: setup info clean ## Build and Show Info
+all: prepare reset test-slow ## Run All Targets
 	printf $(_TITLE) "******* Complete BUILD Successful ********"
 
 ### Formatting

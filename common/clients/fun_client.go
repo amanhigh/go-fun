@@ -74,7 +74,7 @@ func NewFunAppClient(baseUrl string, httpConfig config.HttpClientConfig) *FunCli
 
 func (c *PersonService) CreatePerson(ctx context.Context, request fun.PersonRequest) (person fun.Person, err common.HttpError) {
 	response, err1 := c.client.R().SetContext(ctx).SetHeader("Content-Type", "application/json").
-	SetBody(request).SetResult(&person).Post(c.VERSION_URL + "/person")
+		SetBody(request).SetResult(&person).Post(c.VERSION_URL + "/person")
 	err = util.ResponseProcessor(response, err1)
 	return
 }
@@ -110,6 +110,12 @@ func (c *PersonService) listPersonUrl(personQuery fun.PersonQuery) (url string) 
 
 	//Add Pagination Params
 	url = url + c.getPaginationParams(personQuery.Offset, personQuery.Limit)
+
+	//Add Sort Params
+	if personQuery.SortBy != "" {
+		url += "&sort_by=" + personQuery.SortBy
+		url += "&order=" + personQuery.Order
+	}
 
 	//Add Name and Gender if Provided
 	if personQuery.Name != "" {
