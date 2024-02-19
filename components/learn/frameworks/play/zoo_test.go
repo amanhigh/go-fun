@@ -28,7 +28,7 @@ var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SLOW), func() {
 		Expect(err).To(BeNil())
 
 		//Get Mapped Port
-		zkHost, err := zkContainer.Endpoint(ctx, "")
+		zkHost, err := zkContainer.PortEndpoint(ctx, "2181/tcp", "")
 		Expect(err).To(BeNil())
 		color.Green("Zookeeper Endpoint: %s", zkHost)
 
@@ -104,12 +104,17 @@ var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SLOW), func() {
 				go connection.Set(testPath, []byte(watchValue), -1)
 
 				Eventually(func() zk.EventType {
-					// BUG: #C Eventually doesnt' timeout if write is ommitted.
-					e := <-evtChan
-					data, _, evtChan, _ = connection.GetW(e.Path)
-					Expect(string(data)).To(Equal(watchValue))
-					return e.Type
-				}).Should(Equal(zk.EventNodeDataChanged))
+					//Select ensures Eventually Go Routine doesn't get stuck.
+					//When No Write is done Refer Eventually Documentation as well.
+					select {
+					case e := <-evtChan:
+						data, _, evtChan, _ = connection.GetW(e.Path)
+						Expect(string(data)).To(Equal(watchValue))
+						return e.Type
+					case <-time.After(1 * time.Second): // Timeout if no event is received within 1 second
+						return zk.EventNotWatching
+					}
+				}, "2s").Should(Equal(zk.EventNodeDataChanged)) // Fail the test if no event is received within 2 seconds
 			})
 
 			It("should not get events without writes", func() {
