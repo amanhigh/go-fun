@@ -14,6 +14,8 @@ type VaultClientInterface interface {
 	RotateKey(name string) (secret *api.Secret, err error)
 }
 
+// https://github.com/hashicorp/vault-client-go
+// https://github.com/hashicorp/vault-examples
 type VaultClient struct {
 	client *api.Client
 }

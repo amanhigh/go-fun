@@ -107,6 +107,5 @@ infos: info ## Service Extended Info
 setup: clear-helm install ## Setup Configured Services
 #HACK: Clear Istio
 clean: clear-helm ## Stop Services
-# HACK: #B Fixe Readme
 reset: clean clear-helms clear-ns bootstrap info setup ## Rebuild 
 all: prepare reset update infos ## Run All Targets

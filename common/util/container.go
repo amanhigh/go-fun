@@ -61,6 +61,22 @@ func ConsulTestContainer(ctx context.Context) (consulContainer testcontainers.Co
 	return
 }
 
+func VaultTestContainer(ctx context.Context) (vaultContainer testcontainers.Container, err error) {
+	port := "8200/tcp"
+	req := testcontainers.ContainerRequest{
+		Image:        "hashicorp/vault:latest",
+		ExposedPorts: []string{port},
+		Env:          map[string]string{"VAULT_DEV_ROOT_TOKEN_ID": "root-token"},
+		Cmd:          []string{"server", "-dev", "-dev-listen-address=0.0.0.0:8200"},
+		WaitingFor:   wait.ForListeningPort(nat.Port(port)).WithStartupTimeout(WAIT_TIME),
+	}
+	vaultContainer, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	return
+}
+
 func ZookeeperTestContainer(ctx context.Context) (zookeeperContainer testcontainers.Container, err error) {
 	req := testcontainers.ContainerRequest{
 		Image:        "zookeeper:latest",
