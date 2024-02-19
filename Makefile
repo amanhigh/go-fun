@@ -205,6 +205,10 @@ run-fun: build-fun ## Run Fun App
 	printf $(_TITLE) "Running Fun App"
 	@$(FUN_DIR)/fun > $(OUT)
 
+# make watch CMD=ls
+watch: ## Watch Command using entr
+	find . | entr -s "date +%M:%S; $(CMD)"
+
 # Guide - https://dustinspecker.com/posts/go-combined-unit-integration-code-coverage/
 run-fun-cover: build-fun-cover ## Run Fun App with Coverage
 	printf $(_TITLE) "Running Fun App with Coverage"
@@ -239,19 +243,25 @@ docker-fun-exec:
 	docker run -it --entrypoint /bin/sh amanfdk/fun-app
 
 ### Devspace
-space: ## Setup Devspace
+space: space-purge ## Setup Devspace
 	printf $(_TITLE) "Starting Devspace"
 	devspace use namespace fun-app
-	-devspace dev
+	devspace dev
 
 space-purge: ## Purge Devspace
 	printf $(_TITLE) "Purging Devspace"
-	-devspace purge --force-purge
+	-devspace purge > $(OUT)
 
 space-info: ## Info Devspace
 	printf $(_TITLE) "Info Devspace"
 	devspace list vars --var DB="mysql-primary",RATE_LIMIT=-1
 	printf $(_DETAIL) "http://localhost:8080/metrics"
+	printf $(_DETAIL) "Login: devspace enter"
+
+space-test: ## Gink Tests Devspace (Watch Mode)
+	printf $(_TITLE) "Devspace Tests"
+	devspace run ginkgo > $(OUT)
+	$(MAKE) watch CMD="devspace run fun-test"
 
 # TODO: #B Docker Publish
 docker-build: docker-fun ## Build Docker Images

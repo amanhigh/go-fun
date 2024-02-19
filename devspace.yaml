@@ -104,8 +104,10 @@ commands:
     command: "go run ./components/learn/experiment.go"
   fun-app:
     command: "go run ./components/fun-app/main.go"
-  fun-test: #FIXME #B Install Ginkgo and Run Test
-    command: "go test ./components/fun-app/it/"
+  ginkgo:
+    command: "go install github.com/onsi/ginkgo/v2/ginkgo"
+  fun-test:
+    command: "ginkgo ./components/fun-app/it"
   kohan:
     command: "go run ./components/kohan/main.go"
 # Define dependencies to other projects with a devspace.yaml
