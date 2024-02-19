@@ -238,6 +238,21 @@ docker-fun-exec:
 	printf $(_TITLE) "Execing Into FunApp Docker Image"
 	docker run -it --entrypoint /bin/sh amanfdk/fun-app
 
+### Devspace
+space: ## Setup Devspace
+	printf $(_TITLE) "Starting Devspace"
+	devspace use namespace fun-app
+	-devspace dev
+
+space-purge: ## Purge Devspace
+	printf $(_TITLE) "Purging Devspace"
+	-devspace purge --force-purge
+
+space-info: ## Info Devspace
+	printf $(_TITLE) "Info Devspace"
+	devspace list vars --var DB="mysql-primary",RATE_LIMIT=-1
+	printf $(_DETAIL) "http://localhost:8080/metrics"
+
 # TODO: #B Docker Publish
 docker-build: docker-fun ## Build Docker Images
 
