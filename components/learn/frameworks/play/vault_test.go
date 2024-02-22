@@ -11,6 +11,7 @@ import (
 	"github.com/fatih/color"
 	vault "github.com/hashicorp/vault-client-go"
 	"github.com/hashicorp/vault-client-go/schema"
+	"github.com/hashicorp/vault/helper/dhutil"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/testcontainers/testcontainers-go"
@@ -183,6 +184,45 @@ var _ = FDescribe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 				decryptedPlainText, err := base64.StdEncoding.DecodeString(decryptedBaseData)
 				Expect(err).To(BeNil())
 				Expect(string(decryptedPlainText)).To(Equal(plainText))
+			})
+
+			Context("Export Encryption Key", func() {
+				var (
+					key    []byte
+					cipher []byte
+				)
+
+				BeforeEach(func() {
+					//Export Key
+					encryptionKey, err := client.Secrets.TransitExportKey(ctx, keyName, "encryption-key")
+					Expect(err).To(BeNil())
+					Expect(encryptionKey.Data["keys"]).To(HaveLen(1))
+					baseKey := encryptionKey.Data["keys"].(map[string]any)["1"].(string)
+					//Decode Base64 Key
+					key, err = base64.StdEncoding.DecodeString(baseKey)
+					Expect(err).To(BeNil())
+				})
+
+				Context("AES", func() {
+					var (
+						AAD    = []byte("additional authenticated data")
+						noonce []byte
+					)
+					BeforeEach(func() {
+						//Encrypt Data
+						cipher, noonce, err = dhutil.EncryptAES(key, []byte(plainText), AAD)
+						Expect(err).To(BeNil())
+						Expect(cipher).ToNot(BeNil())
+						Expect(noonce).ToNot(BeNil())
+					})
+
+					It("should decrypt data", func() {
+						decryptedText, err := dhutil.DecryptAES(key, cipher, noonce, AAD)
+						Expect(err).To(BeNil())
+						Expect(string(decryptedText)).To(Equal(plainText))
+					})
+
+				})
 			})
 		})
 	})
