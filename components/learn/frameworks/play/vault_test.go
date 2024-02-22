@@ -17,7 +17,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 )
 
-var _ = FDescribe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
+var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 
 	var (
 		client *vault.Client
