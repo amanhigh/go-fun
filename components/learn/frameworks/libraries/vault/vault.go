@@ -13,56 +13,8 @@ import (
 	"github.com/hashicorp/vault/helper/dhutil"
 )
 
-// HACK: #C Vault as Ginko Test
-func VaultFun() {
-	var err error
-
-	var client *api.Client
-	if client, err = api.NewClient(&api.Config{Address: "http://docker:8200"}); err == nil {
-		client.SetToken("root-token")
-		//err = secretReadWrite(client)
-		err = transitFun(client)
-
-	}
-
-	if err != nil {
-		fmt.Println("Error: ", err)
-	}
-
-}
-
 func transitFun(client *api.Client) (err error) {
-	//	Transit
-	var secret *api.Secret
-	//Create Key
-	secret, err = client.Logical().Write("transit/keys/aman", map[string]any{
-		"exportable": true,
-		//rsa-4096 - Asymmetric, aes256-gcm96 - Symmetric
-		"type": "aes256-gcm96",
-	})
 	if err == nil {
-		//List Keys
-		secret, _ = client.Logical().List("/transit/keys")
-		printSecret(secret)
-
-		//Read Key Info
-		secret, _ = client.Logical().Read("transit/keys/aman")
-		printSecret(secret)
-
-		//Edit key
-		_, err = client.Logical().Write("/transit/keys/aman/config", map[string]any{
-			"deletion_allowed":       true,
-			"allow_plaintext_backup": true,
-		})
-		fmt.Println(err)
-
-		//Rotate Key
-		_, err := client.Logical().Write("/transit/keys/aman/rotate", nil)
-		secret, _ = client.Logical().Read("transit/keys/aman")
-		fmt.Println("Rotated", err)
-		printSecret(secret)
-		latestVersion := secret.Data["latest_version"]
-
 		//Encrypt Data
 		baseData := base64.StdEncoding.EncodeToString([]byte("aman-secret"))
 		secret, err := client.Logical().Write("/transit/encrypt/aman", map[string]any{
@@ -84,12 +36,6 @@ func transitFun(client *api.Client) (err error) {
 		fmt.Println("Export Hmac", err)
 		printSecret(secret)
 
-		//Backup Key
-		secret, err = client.Logical().Read("/transit/backup/aman")
-		fmt.Println("Backup Key", err)
-		//backupKey := secret.Data["backup"].(string)
-		printSecret(secret)
-
 		//Encrypt-Decrypt Using Key
 		text := "aman"
 		AAD := []byte("additional authenticated data")
@@ -99,10 +45,6 @@ func transitFun(client *api.Client) (err error) {
 
 		//Decode using Key
 		fmt.Println("Vault Decryption:", cipher)
-
-		//Delete Key
-		_, err = client.Logical().Delete("transit/keys/aman")
-		fmt.Println("Delete", err)
 	}
 	return err
 }

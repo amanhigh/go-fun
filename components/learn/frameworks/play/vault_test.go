@@ -139,6 +139,12 @@ var _ = FDescribe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 			Expect(err).To(BeNil())
 			Expect(rotateKey.Data["latest_version"]).To(Equal(json.Number("2")))
 		})
+
+		It("should backup key", func() {
+			backupKey, err := client.Secrets.TransitBackUpKey(ctx, keyName)
+			Expect(err).To(BeNil())
+			Expect(backupKey.Data["backup"]).ToNot(BeNil())
+		})
 	})
 
 })
