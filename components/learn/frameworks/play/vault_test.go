@@ -61,7 +61,7 @@ var _ = FDescribe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 		var (
 			//Data
 			key   = "foo"
-			value = map[string]interface{}{"password": "abc123", "secret": "correct horse battery staple"}
+			value = map[string]any{"password": "abc123", "secret": "correct horse battery staple"}
 
 			// Vault path
 			path = "secret/data/myapp"
@@ -84,4 +84,50 @@ var _ = FDescribe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 			Expect(secret.Data.Data).To(Equal(value))
 		})
 	})
+
+	Context("Transit", func() {
+		var (
+			//Data
+			keyName = "aman-key"
+			//rsa-4096 - Asymmetric, aes256-gcm96 - Symmetric
+			keyType = "aes256-gcm96"
+
+			// Transit path
+			path = "transit"
+		)
+
+		BeforeEach(func() {
+			// Enable the transit secrets engine
+			_, err = client.System.MountsEnableSecretsEngine(ctx, path, schema.MountsEnableSecretsEngineRequest{
+				Type: "transit",
+			})
+			Expect(err).To(BeNil())
+
+			// Create Key
+			_, err = client.Secrets.TransitCreateKey(ctx, keyName, schema.TransitCreateKeyRequest{
+				Exportable: true,
+				Type:       keyType,
+			})
+			Expect(err).To(BeNil())
+
+			// Configure Key to allow deletion
+			_, err = client.Secrets.TransitConfigureKey(ctx, keyName, schema.TransitConfigureKeyRequest{
+				DeletionAllowed: true,
+			})
+			Expect(err).To(BeNil())
+		})
+
+		AfterEach(func() {
+			// Delete Key
+			_, err = client.Secrets.TransitDeleteKey(ctx, keyName)
+			Expect(err).To(BeNil())
+		})
+
+		It("should read key info", func() {
+			key, err := client.Secrets.TransitReadKey(ctx, keyName)
+			Expect(err).To(BeNil())
+			Expect(key.Data["type"]).To(Equal(keyType))
+		})
+	})
+
 })
