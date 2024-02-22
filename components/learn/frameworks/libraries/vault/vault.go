@@ -6,7 +6,6 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/vault/api"
@@ -15,15 +14,6 @@ import (
 
 func transitFun(client *api.Client) (err error) {
 	if err == nil {
-		//Encrypt Data
-		baseData := base64.StdEncoding.EncodeToString([]byte("aman-secret"))
-		secret, err := client.Logical().Write("/transit/encrypt/aman", map[string]any{
-			"plaintext": baseData,
-		})
-		fmt.Println("Encrypt", err)
-		printSecret(secret)
-		cipher := secret.Data["ciphertext"].(string)
-
 		//Export Key
 		secret, err = client.Logical().Read("/transit/export/encryption-key/aman/latest")
 		fmt.Println("Export Encryption", err)
@@ -31,7 +21,6 @@ func transitFun(client *api.Client) (err error) {
 
 		encryptionKey := keyMap[fmt.Sprintf("%v", latestVersion)].(string)
 		decodedEncryptionKey, err := base64.StdEncoding.DecodeString(encryptionKey)
-		printSecret(secret)
 
 		//Encrypt-Decrypt Using Key
 		text := "aman"
@@ -39,16 +28,8 @@ func transitFun(client *api.Client) (err error) {
 		generatedCipher, noonce, err := dhutil.EncryptAES([]byte(decodedEncryptionKey), []byte(text), AAD)
 		plaintext, err := dhutil.DecryptAES([]byte(decodedEncryptionKey), generatedCipher, noonce, AAD)
 		fmt.Println("Encrypt/Decrypt GCM:", string(generatedCipher), string(plaintext))
-
-		//Decode using Key
-		fmt.Println("Vault Decryption:", cipher)
 	}
 	return err
-}
-
-func printSecret(secret *api.Secret) {
-	bytes, _ := json.MarshalIndent(secret, "", "\t")
-	fmt.Println(string(bytes))
 }
 
 func secretReadWrite(client *api.Client) (err error) {

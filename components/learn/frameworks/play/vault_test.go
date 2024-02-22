@@ -2,6 +2,7 @@ package play_test
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"time"
 
@@ -151,6 +152,38 @@ var _ = FDescribe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 			Expect(err).To(BeNil())
 			Expect(exportKey.Data["keys"]).To(HaveLen(1))
 		})
-	})
 
+		Context("Encryption", func() {
+			var (
+				plainText  = "aman's-secret"
+				cipherText string
+			)
+
+			BeforeEach(func() {
+				//Base 64 Encode
+				baseData := base64.StdEncoding.EncodeToString([]byte(plainText))
+
+				//Encrypt Data
+				encryptedData, err := client.Secrets.TransitEncrypt(ctx, keyName, schema.TransitEncryptRequest{
+					Plaintext: baseData,
+				})
+				Expect(err).To(BeNil())
+				cipherText = encryptedData.Data["ciphertext"].(string)
+				Expect(cipherText).ToNot(BeNil())
+			})
+
+			It("should decrypt data via vault", func() {
+				decryptedData, err := client.Secrets.TransitDecrypt(ctx, keyName, schema.TransitDecryptRequest{
+					Ciphertext: cipherText,
+				})
+				Expect(err).To(BeNil())
+				decryptedBaseData := decryptedData.Data["plaintext"].(string)
+
+				//Decode Base64 Data
+				decryptedPlainText, err := base64.StdEncoding.DecodeString(decryptedBaseData)
+				Expect(err).To(BeNil())
+				Expect(string(decryptedPlainText)).To(Equal(plainText))
+			})
+		})
+	})
 })
