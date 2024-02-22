@@ -2,6 +2,7 @@ package play_test
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
@@ -131,6 +132,12 @@ var _ = FDescribe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 			keys, err := client.Secrets.TransitListKeys(ctx)
 			Expect(err).To(BeNil())
 			Expect(keys.Data.Keys).Should(ContainElement(keyName))
+		})
+
+		It("should rotate key", func() {
+			rotateKey, err := client.Secrets.TransitRotateKey(ctx, keyName, schema.TransitRotateKeyRequest{})
+			Expect(err).To(BeNil())
+			Expect(rotateKey.Data["latest_version"]).To(Equal(json.Number("2")))
 		})
 	})
 
