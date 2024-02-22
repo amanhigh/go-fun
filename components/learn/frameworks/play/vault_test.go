@@ -145,6 +145,12 @@ var _ = FDescribe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 			Expect(err).To(BeNil())
 			Expect(backupKey.Data["backup"]).ToNot(BeNil())
 		})
+
+		It("should export hmac key", func() {
+			exportKey, err := client.Secrets.TransitExportKey(ctx, keyName, "hmac-key")
+			Expect(err).To(BeNil())
+			Expect(exportKey.Data["keys"]).To(HaveLen(1))
+		})
 	})
 
 })

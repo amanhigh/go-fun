@@ -28,12 +28,9 @@ func transitFun(client *api.Client) (err error) {
 		secret, err = client.Logical().Read("/transit/export/encryption-key/aman/latest")
 		fmt.Println("Export Encryption", err)
 		keyMap := secret.Data["keys"].(map[string]any)
+
 		encryptionKey := keyMap[fmt.Sprintf("%v", latestVersion)].(string)
 		decodedEncryptionKey, err := base64.StdEncoding.DecodeString(encryptionKey)
-		printSecret(secret)
-
-		secret, err = client.Logical().Read("/transit/export/hmac-key/aman/latest")
-		fmt.Println("Export Hmac", err)
 		printSecret(secret)
 
 		//Encrypt-Decrypt Using Key
