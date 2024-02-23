@@ -2,9 +2,13 @@
 ### Rest API
 # https://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api
 # https://stackoverflow.blog/2020/03/02/best-practices-for-rest-api-design/
-#
+### Error Handling
+# https://www.baeldung.com/rest-api-error-handling-best-practices
+# https://www.rfc-editor.org/rfc/rfc7807
+# https://stackoverflow.com/questions/12806386/is-there-any-standard-for-json-api-response-format
 ### Rest Sample
 # https://github.com/cryptlex/rest-api-response-format
+# https://github.com/omniti-labs/jsend
 # https://docs.github.com/en/rest/teams/teams
 #
 ### Pagination
