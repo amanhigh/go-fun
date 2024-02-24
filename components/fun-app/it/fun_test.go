@@ -324,7 +324,8 @@ var _ = Describe("Person Integration Test", func() {
 				AfterEach(func() {
 					_, err = client.PersonService.ListPerson(ctx, personQuery)
 					Expect(err).Should(HaveOccurred())
-					Expect(err).To(Equal(common.ErrBadRequest))
+					Expect(err.Code()).To(Equal(http.StatusBadRequest))
+					Expect(err.Error()).To(ContainSubstring(expectedErr))
 
 					//Pollutes AfterEach Cleanup so Reset
 					personQuery.Order = ""
@@ -333,35 +334,43 @@ var _ = Describe("Person Integration Test", func() {
 
 				It("should fail for invalid Offset", func() {
 					personQuery.Offset = -1
+					expectedErr = "Offset"
 				})
 
 				It("should fail for Lower Limit", func() {
 					personQuery.Limit = 0
+					expectedErr = "required"
 				})
 
 				It("should fail for Max Limit", func() {
 					personQuery.Limit = 30
+					expectedErr = "Limit"
 				})
 
 				It("should fail for invalid Name", func() {
 					personQuery.Name = "A*B"
+					expectedErr = "Name"
 				})
 
 				It("should fail for max Name", func() {
 					personQuery.Name = maxName
+					expectedErr = "max"
 				})
 
 				It("should fail for invalid Gender", func() {
 					personQuery.Gender = "OTHER"
+					expectedErr = "FEMALE"
 				})
 
 				It("should fail for invalid SortBy", func() {
 					personQuery.SortBy = "invalid"
+					expectedErr = "SortBy"
 				})
 
 				It("should fail for invalid Order", func() {
 					personQuery.SortBy = "name"
 					personQuery.Order = "invalid"
+					expectedErr = "asc"
 				})
 			})
 		})

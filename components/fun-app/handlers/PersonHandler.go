@@ -123,6 +123,7 @@ func (self *PersonHandler) ListPersons(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, err.Error())
 		}
 	} else {
+		err = util.ProcessValidationError(err)
 		log.WithFields(log.Fields{"Error": err}).Error("ListPersons: Bad Request")
 		c.JSON(http.StatusBadRequest, err)
 	}
