@@ -99,9 +99,13 @@ func (c *PersonService) UpdatePerson(ctx context.Context, id string, person fun.
 }
 
 func (c *PersonService) DeletePerson(ctx context.Context, name string) (err common.HttpError) {
-	response, err1 := c.client.R().SetContext(ctx).Delete(fmt.Sprintf(c.VERSION_URL+"/person/%s", name))
+	response, err1 := c.request(ctx).Delete(fmt.Sprintf(c.VERSION_URL+"/person/%s", name))
 	err = util.ResponseProcessor(response, err1)
 	return
+}
+
+func (c *PersonService) request(ctx context.Context) *resty.Request {
+	return c.client.R().SetContext(ctx).SetError(common.HttpErrorImpl{})
 }
 
 // Build Url from personQuery
