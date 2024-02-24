@@ -1,9 +1,12 @@
 package util
 
 import (
+	"fmt"
 	"net/http"
 
+	"github.com/amanhigh/go-fun/models/common"
 	. "github.com/amanhigh/go-fun/models/common"
+	"github.com/go-playground/validator/v10"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -35,6 +38,18 @@ func ResponseProcessor(response *resty.Response, restyErr error) (err HttpError)
 		default:
 			err = nil
 		}
+	}
+	return
+}
+
+func ProcessValidationError(validationErr error) (err HttpError) {
+	if errs, ok := validationErr.(validator.ValidationErrors); ok {
+		for _, e := range errs {
+			err = common.NewHttpError(fmt.Sprintf("'%s' with Value '%v' Violates '%s (%s)'", e.Field(), e.Value(), e.Tag(), e.Param()), http.StatusBadRequest)
+			break
+		}
+	} else {
+		err = validationErr.(HttpError)
 	}
 	return
 }
