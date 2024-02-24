@@ -24,13 +24,14 @@ var _ = Describe("Person Integration Test", func() {
 		serviceUrl = "http://localhost:8085"
 		request    fun.PersonRequest
 
-		name    = "Amanpreet Singh"
-		maxName = strings.Repeat("A", 31)
-		age     = 31
-		gender  = "MALE"
-		client  = NewFunAppClient(serviceUrl, config.DefaultHttpConfig)
-		err     common.HttpError
-		ctx     = context.Background()
+		name        = "Amanpreet Singh"
+		maxName     = strings.Repeat("A", 31)
+		age         = 31
+		gender      = "MALE"
+		client      = NewFunAppClient(serviceUrl, config.DefaultHttpConfig)
+		err         common.HttpError
+		ctx         = context.Background()
+		expectedErr = "Bad Request"
 	)
 
 	BeforeEach(func() {
@@ -107,39 +108,48 @@ var _ = Describe("Person Integration Test", func() {
 				AfterEach(func() {
 					err = client.PersonService.UpdatePerson(ctx, updatedPerson.Id, updateRequest)
 					Expect(err).Should(HaveOccurred())
-					Expect(err).To(Equal(common.ErrBadRequest))
+					Expect(err.Error()).To(ContainSubstring(expectedErr))
+					Expect(err.Code()).To(Equal(http.StatusBadRequest))
 				})
 
 				It("should fail for missing Name", func() {
 					updateRequest.Name = ""
+					expectedErr = "required"
 				})
 
 				It("should fail for invalid Name", func() {
 					updateRequest.Name = "A*B"
+					expectedErr = "Name"
 				})
 
 				It("should fail for max Name", func() {
 					updateRequest.Name = maxName
+					expectedErr = "max"
 				})
 
 				It("should fail for missing Age", func() {
 					updateRequest.Age = 0
+					expectedErr = "Age"
 				})
 
 				It("should fail for invalid Age", func() {
 					updateRequest.Age = -1
+					expectedErr = "min"
 				})
 
 				It("should fail for max Age", func() {
 					updateRequest.Age = 200
+					expectedErr = "max"
 				})
 
 				It("should fail for missing Gender", func() {
 					updateRequest.Gender = ""
+					expectedErr = "required"
 				})
 
 				It("should fail for invalid Gender", func() {
 					updateRequest.Gender = "GENDER"
+					expectedErr = "FEMALE"
 				})
 			})
 		})
@@ -357,50 +367,47 @@ var _ = Describe("Person Integration Test", func() {
 		})
 
 		Context("Bad Requests", func() {
-			var (
-				expectedErrSubstring = "Bad Request"
-			)
 			AfterEach(func() {
 				_, err = client.PersonService.CreatePerson(ctx, request)
 
 				Expect(err).Should(HaveOccurred())
 				Expect(err.Code()).To(Equal(http.StatusBadRequest))
-				Expect(err.Error()).To(ContainSubstring(expectedErrSubstring))
+				Expect(err.Error()).To(ContainSubstring(expectedErr))
 			})
 
 			It("should fail for missing Name", func() {
 				request.Name = ""
-				expectedErrSubstring = "required"
+				expectedErr = "required"
 			})
 
 			It("should fail for invalid Name", func() {
 				request.Name = "A*B"
-				expectedErrSubstring = "Name"
+				expectedErr = "Name"
 			})
 
 			It("should fail for max Name", func() {
 				request.Name = maxName
-				expectedErrSubstring = "max"
+				expectedErr = "max"
 			})
 
 			It("should fail for minimum Age", func() {
 				request.Age = 0
-				expectedErrSubstring = "Age"
+				expectedErr = "Age"
 			})
 
 			It("should fail for max Age", func() {
 				request.Age = 200
-				expectedErrSubstring = "max"
+				expectedErr = "max"
 			})
 
 			It("should fail for missing Gender", func() {
 				request.Gender = ""
-				expectedErrSubstring = "Gender"
+				expectedErr = "Gender"
 			})
 
 			It("should fail for invalid Gender", func() {
 				request.Gender = "OTHER"
-				expectedErrSubstring = "FEMALE"
+				expectedErr = "FEMALE"
 			})
 		})
 	})

@@ -159,6 +159,7 @@ func (self *PersonHandler) UpdatePerson(c *gin.Context) {
 			log.WithFields(log.Fields{"Error": err}).Error("UpdatePerson: Server Error")
 		}
 	} else {
+		err = util.ProcessValidationError(err)
 		c.JSON(http.StatusBadRequest, err)
 		log.WithFields(log.Fields{"Error": err}).Error("UpdatePerson: Bad Request")
 	}
