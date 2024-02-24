@@ -413,17 +413,17 @@ var _ = Describe("Person Integration Test", func() {
 		})
 
 		Context("Missing Id", func() {
-			AfterEach(func() {
+			It("should fail for get", func() {
+				_, err = client.PersonService.GetPerson(ctx, missingId)
 				Expect(err).Should(HaveOccurred())
 				Expect(err).To(Equal(common.ErrNotFound))
 			})
 
-			It("should fail for get", func() {
-				_, err = client.PersonService.GetPerson(ctx, missingId)
-			})
-
 			It("should fail for delete", func() {
 				err = client.PersonService.DeletePerson(ctx, missingId)
+				Expect(err).Should(HaveOccurred())
+				Expect(err.Code()).To(Equal(404))
+				Expect(err.Error()).To(Equal("DeletePersons: Failed"))
 			})
 		})
 	})
