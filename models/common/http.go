@@ -15,6 +15,8 @@ type HttpError interface {
 type HttpErrorImpl struct {
 	Msg     string `json:"message"`
 	ErrCode int    `json:"code"`
+	//FIXME: Add Custom Error Codes.
+	//FIXME: Handle Validation Errors
 }
 
 func NewHttpError(msg string, code int) HttpError {
