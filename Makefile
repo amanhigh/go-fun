@@ -242,6 +242,10 @@ docker-fun-exec:
 	printf $(_TITLE) "Execing Into FunApp Docker Image"
 	docker run -it --entrypoint /bin/sh amanfdk/fun-app
 
+docker-fun-info:
+	printf $(_INFO) "FunApp DockerHub Tags"
+	curl -s "https://hub.docker.com/v2/repositories/amanfdk/fun-app/tags/?page_size=25&page=1&name&ordering" | jq -r '.results[]|.name' | head -3
+
 ### Devspace
 space: space-purge ## Setup Devspace
 	printf $(_TITLE) "Starting Devspace"
@@ -270,7 +274,7 @@ docker-build: docker-fun ## Build Docker Images
 test: test-operator test-it ## Run all tests (Excludes test-slow)
 build: build-fun build-kohan ## Build all Binaries
 
-info: info-release ## Repo Information
+info: info-release docker-fun-info ## Repo Information
 prepare: setup-tools setup-k8 # One Time Setup
 
 setup: sync test build helm-package docker-build # Build and Test
