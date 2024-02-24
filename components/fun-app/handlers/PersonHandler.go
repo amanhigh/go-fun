@@ -84,6 +84,7 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 		if person, err := self.Manager.GetPerson(ctx, path.Id); err == nil {
 			c.JSON(http.StatusCreated, person)
 		} else {
+			err = util.ProcessValidationError(err)
 			span.SetStatus(codes.Error, err.Error())
 			span.RecordError(err)
 			c.JSON(err.Code(), err)
