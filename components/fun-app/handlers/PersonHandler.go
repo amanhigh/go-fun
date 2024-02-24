@@ -5,7 +5,6 @@ import (
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
-	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/attribute"
@@ -185,8 +184,7 @@ func (self *PersonHandler) DeletePersons(c *gin.Context) {
 	if err := self.Manager.DeletePerson(ctx, c.Param("id")); err == nil {
 		c.JSON(http.StatusNoContent, "DELETED")
 	} else {
-		// Change to Custom Error to Test Error Unmarshalling in SDK
-		err = common.NewHttpError("DeletePersons: Failed", err.Code())
+		err = util.ProcessValidationError(err)
 		c.JSON(err.Code(), err)
 		log.WithFields(log.Fields{"Error": err}).Error("DeletePersons: Server Error")
 	}
