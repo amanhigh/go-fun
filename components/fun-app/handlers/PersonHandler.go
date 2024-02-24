@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
@@ -58,6 +59,7 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 			c.JSON(err.Code(), err)
 		}
 	} else {
+		err = util.ProcessValidationError(err)
 		c.JSON(http.StatusBadRequest, err)
 	}
 }

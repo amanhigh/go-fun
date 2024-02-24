@@ -2,6 +2,7 @@ package it_test
 
 import (
 	"context"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -356,40 +357,50 @@ var _ = Describe("Person Integration Test", func() {
 		})
 
 		Context("Bad Requests", func() {
+			var (
+				expectedErrSubstring = "Bad Request"
+			)
 			AfterEach(func() {
 				_, err = client.PersonService.CreatePerson(ctx, request)
 
 				Expect(err).Should(HaveOccurred())
-				Expect(err).To(Equal(common.ErrBadRequest))
-				Expect(err.Code()).To(Equal(400))
+				Expect(err.Code()).To(Equal(http.StatusBadRequest))
+				Expect(err.Error()).To(ContainSubstring(expectedErrSubstring))
 			})
 
 			It("should fail for missing Name", func() {
 				request.Name = ""
+				expectedErrSubstring = "required"
 			})
 
 			It("should fail for invalid Name", func() {
 				request.Name = "A*B"
+				expectedErrSubstring = "Name"
 			})
 
 			It("should fail for max Name", func() {
 				request.Name = maxName
+				expectedErrSubstring = "max"
 			})
 
 			It("should fail for minimum Age", func() {
 				request.Age = 0
+				expectedErrSubstring = "Age"
 			})
 
 			It("should fail for max Age", func() {
 				request.Age = 200
+				expectedErrSubstring = "max"
 			})
 
 			It("should fail for missing Gender", func() {
 				request.Gender = ""
+				expectedErrSubstring = "Gender"
 			})
 
 			It("should fail for invalid Gender", func() {
 				request.Gender = "OTHER"
+				expectedErrSubstring = "FEMALE"
 			})
 		})
 	})
