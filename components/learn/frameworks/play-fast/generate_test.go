@@ -1,4 +1,4 @@
-package play_test
+package play_fast
 
 import (
 	"bytes"
