@@ -53,6 +53,11 @@ var _ = Describe("Generate", func() {
 				expected = "import (encoding/json, io, )"
 			})
 
+			It("should work for With Template", func() {
+				goTemplate = "{{with .Type}}Type: {{.}}{{end}}"
+				expected = "Type: string"
+			})
+
 			Context("If template", func() {
 
 				BeforeEach(func() {
