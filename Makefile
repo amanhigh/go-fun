@@ -31,7 +31,7 @@ help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 	printf $(_TITLE) "FirstTime: prepare/all, OUT=/dev/stdout (Debug)"
 
-sync: ## Sync Go Modules
+sync:
 	go work sync
 
 ### Testing
@@ -41,11 +41,11 @@ lint: ## Lint the Code
 	printf $(_TITLE) "Running Linting"
 	go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} golangci-lint run {}/...
 
-test-operator: ## Run operator tests
+test-operator:
 	printf $(_TITLE) "Running Operator Tests"
 	make -C $(COMPONENT_DIR)/operator/ test > $(OUT)
 
-test-unit: ## Run unit tests
+test-unit:
 	printf $(_TITLE) "Running Unit Tests"
 	ginkgo -r '--label-filter=!setup && !slow' -cover . > $(OUT)
 
@@ -53,7 +53,7 @@ test-slow: ## Run slow tests
 	printf $(_TITLE) "Running Slow Tests"
 	ginkgo -r '--label-filter=slow' -cover . > $(OUT)
 
-cover-analyse: ## Analyse Integration Coverage Reports
+cover-analyse:
 	printf $(_TITLE) "Analysing Coverage Reports"
 	# Generate Cover Profile
 	go tool covdata textfmt -i=$(COVER_DIR) -o $(PROFILE_FILE)
@@ -67,30 +67,30 @@ cover-analyse: ## Analyse Integration Coverage Reports
 	echo "";
 	printf $(_INFO) "Vscode" "go.apply.coverprofile $(PROFILE_FILE)";
 
-test-it: run-fun-cover test-unit cover-analyse ## Integration test coverage analyse
+test-it: run-fun-cover test-unit cover-analyse
 
 test-clean:
 	printf $(_WARN) "Cleaning Tests"
 	rm -rf $(COVER_DIR)
 
 profile: ## Run Profiling
-	printf $(_TITLE) "Running Profiling"
+	printf $(_TITLE) "Running Profiling on Port 8080"
 	go tool pprof -http=:8001 http://localhost:8080/debug/pprof/heap &\
 	go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile;\
 	kill %1;
 
 ### Builds
-swag-fun: ## Swagger Generate: Fun App (Init/Update)
+swag-fun:
 	printf $(_TITLE) "Generating Swagger"
 	cd $(FUN_DIR);\
 	swag i --parseDependency true > $(OUT);\
 	printf $(_INFO) "Swagger" "http://localhost:8080/swagger/index.html";
 
-build-fun: swag-fun ## Build Fun App
+build-fun: swag-fun
 	printf $(_TITLE) "Building Fun App"
 	$(BUILD_OPTS) go build -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
 
-build-fun-cover: ## Build Fun App with Coverage
+build-fun-cover:
 	printf $(_TITLE) "Building Fun App with Coverage"
 	$(BUILD_OPTS) go build -cover -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
 
@@ -219,26 +219,26 @@ info-docker:
 	docker images | grep fun-app
 
 ### Runs
-run-fun: build-fun ## Run Fun App
+run: build-fun ## Run Fun App
 	printf $(_TITLE) "Running Fun App"
-	@$(FUN_DIR)/fun > $(OUT)
+	$(FUN_DIR)/fun > $(OUT)
 
 # make watch CMD=ls
-watch: ## Watch Command using entr
+watch: ## Watch (entr): `make watch CMD=ls`
 	find . | entr -s "date +%M:%S; $(CMD)"
 
 # Guide - https://dustinspecker.com/posts/go-combined-unit-integration-code-coverage/
-run-fun-cover: build-fun-cover ## Run Fun App with Coverage
+run-fun-cover: build-fun-cover
 	printf $(_TITLE) "Running Fun App with Coverage"
 	mkdir -p $(COVER_DIR)
 	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(FUN_DIR)/fun > $(OUT) 2>&1 &
 
 ### Helm
-helm-package: ## Package Helm Charts
+helm-package:
 	$(MAKE) -C $(FUN_DIR)/charts package
 
 ### Local Setup
-setup-tools: ## Setup Tools	for Local Environment
+setup-tools:
 	printf $(_TITLE) "Setting up Tools"
 	go install github.com/onsi/ginkgo/v2/ginkgo
 	go install github.com/swaggo/swag/cmd/swag
@@ -274,7 +274,7 @@ space-purge: ## Purge Devspace
 	printf $(_TITLE) "Purging Devspace"
 	-devspace purge > $(OUT)
 
-space-info: ## Info Devspace
+space-info:
 	printf $(_TITLE) "Info Devspace"
 	devspace list vars --var DB="mysql-primary",RATE_LIMIT=-1
 	printf $(_DETAIL) "http://localhost:8080/metrics"
@@ -292,13 +292,14 @@ test: test-operator test-it ## Run all tests (Excludes test-slow)
 build: build-fun build-kohan ## Build all Binaries
 
 info: info-release info-docker ## Repo Information
+infos: info space-info ## Repo Extended Information
 prepare: setup-tools setup-k8 # One Time Setup
 
 setup: sync test build helm-package docker-build # Build and Test
 clean: test-clean build-clean ## Clean up Residue
 
-reset: setup info clean ## Build and Show Info
-all: prepare docker-fun-clean reset test-slow ## Run All Targets
+reset: setup info clean ## Setup with Info and Clean
+all: prepare docker-fun-clean reset infos test-slow ## Run All Targets
 	printf $(_TITLE) "******* Complete BUILD Successful ********"
 
 ### Formatting
