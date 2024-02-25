@@ -2,6 +2,7 @@ package play_test
 
 import (
 	"bytes"
+	htemplate "html/template"
 	"text/template"
 
 	"github.com/amanhigh/go-fun/models/fun"
@@ -9,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("Generate", func() {
+var _ = Describe("Generate", func() {
 	var (
 		metadata   fun.Metadata
 		buffer     *bytes.Buffer
@@ -28,7 +29,7 @@ var _ = FDescribe("Generate", func() {
 
 	Context("Text Template", func() {
 		var (
-			tmpl = template.New("gen-test")
+			tmpl = template.New("gen-text")
 		)
 
 		Context("Parse", func() {
@@ -79,6 +80,27 @@ var _ = FDescribe("Generate", func() {
 			err = tmpl.ExecuteTemplate(buffer, "T", "<script>alert('you have been pwned')</script>")
 			Expect(err).To(BeNil())
 
+			Expect(buffer.String()).To(Equal(expected))
+		})
+	})
+
+	Context("Html Template", func() {
+		var (
+			htmpl = htemplate.New("gen-htmpl")
+		)
+
+		It("should not support injection", func() {
+			goTemplate = "{{define \"T\"}}Hello, {{.}}{{end}}"
+			//The < and > characters are replaced with &lt; and &gt; respectively,
+			// and the single quote ' is replaced with &#39;. This prevents the string from being interpreted as a script,
+			// thus avoiding code injection.
+			expected = "Hello, &lt;script&gt;alert(&#39;you have been pwned&#39;)&lt;/script&gt;"
+
+			tmpl, err := htmpl.Parse(goTemplate)
+			Expect(err).To(BeNil())
+
+			err = tmpl.ExecuteTemplate(buffer, "T", "<script>alert('you have been pwned')</script>")
+			Expect(err).To(BeNil())
 			Expect(buffer.String()).To(Equal(expected))
 		})
 	})
