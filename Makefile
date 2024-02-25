@@ -76,8 +76,11 @@ test-clean:
 
 profile: ## Run Profiling
 	printf $(_TITLE) "Running Profiling on Port 8080"
-	go tool pprof -http=:8001 http://localhost:8080/debug/pprof/heap &\
-	go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile;\
+	printf $(_DETAIL) "Profiling Heap"
+	go tool pprof -http=:8001 http://localhost:8080/debug/pprof/heap 2> $(OUT) &\
+	printf $(_DETAIL) "Profiling CPU"
+	go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile 2> $(OUT);\
+	printf $(_WARN) "Killing Profilers"
 	kill %1;
 
 ### Builds
