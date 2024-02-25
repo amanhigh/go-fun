@@ -20,7 +20,7 @@ type ToDo struct {
 	List []Entry
 }
 
-// Constants
+// Templates
 const TextTemplate = `
 //This is Aman's Generated File
 //Request you not to mess with it :)
@@ -44,3 +44,7 @@ func (obj {{ .Type }}) WriteTo(writer io.Writer) (int64, error) {
 	You Missed Supplying Type Variable
 {{end}}.
 `
+
+const InnerTemplate = "package {{ .PackageName.Name }}"
+
+const RangeTemplate = "import ({{range .Imports}} {{.}}, {{end}})"
