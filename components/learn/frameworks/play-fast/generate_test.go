@@ -3,6 +3,7 @@ package play_fast
 import (
 	"bytes"
 	htemplate "html/template"
+	"strings"
 	"text/template"
 
 	"github.com/amanhigh/go-fun/models/fun"
@@ -29,7 +30,7 @@ var _ = Describe("Generate", func() {
 
 	Context("Text Template", func() {
 		var (
-			tmpl = template.New("gen-text")
+			tmpl = template.New("gen-text").Funcs(template.FuncMap{"toLower": toLower})
 		)
 
 		Context("Parse", func() {
@@ -56,6 +57,12 @@ var _ = Describe("Generate", func() {
 			It("should work for With Template", func() {
 				goTemplate = "{{with .Type}}Type: {{.}}{{end}}"
 				expected = "Type: string"
+			})
+
+			It("should work with Functions", func() {
+				metadata.PackageName.Name = "COM.TEST.GEN"
+				goTemplate = "Package name is {{.PackageName.Name | toLower}}"
+				expected = "Package name is com.test.gen"
 			})
 
 			Context("If template", func() {
@@ -111,3 +118,7 @@ var _ = Describe("Generate", func() {
 	})
 
 })
+
+func toLower(s string) string {
+	return strings.ToLower(s)
+}
