@@ -9,13 +9,3 @@ type Metadata struct {
 	Imports     []string
 	Type        string
 }
-
-type Entry struct {
-	Name string
-	Done bool
-}
-
-type ToDo struct {
-	User string
-	List []Entry
-}
