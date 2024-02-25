@@ -12,11 +12,11 @@ help: ## Show this help
 ### Load Test
 # FIXME: Use Id's from Write Load Test.
 load-read: ## Read Load Test
-	printf $(_TITLE) "Read Load Test"
+	printf $(_TITLE) "Get Load Test"
 	URL=$(URL) jq -ncM 'while(.<1000; .+1) | {method: "GET", url: "\(env.URL)/person/Aman-\(.)"}' | vegeta attack -format=json -duration=$(DURATION) | vegeta report
 
-load-all: ## All Load Test
-	printf $(_TITLE) "All Load Test";
+load-list: ## List Load Test
+	printf $(_TITLE) "List Load Test";
 	echo "GET $(URL)/v1/person?limit=10" | vegeta attack -duration=$(DURATION) | vegeta report;
 
 load-write: ## Write Load Test
@@ -25,7 +25,7 @@ load-write: ## Write Load Test
 	'while(true; .+1) as $$i | $$a | $$a[0].name="\($$a[0].name)-\($$i)" | {method: "POST", header: {"Content-Type": ["application/json"]}, url: "\(env.URL)/v1/person", body: .[0] | @base64}' \
 	| vegeta attack -lazy -format=json -duration=$(DURATION) | vegeta report
 
-load: load-write load-all load-read ## Load Test
+load: load-write load-list load-read
 
 ### Info
 info-load:
@@ -37,9 +37,9 @@ info-load:
 info: info-load ## Info
 infos: info ## Extended Info
 prepare: ## Onetime Setup
-setup: load ## Setup
+setup: info load ## Load Test (All API's)
 clean: ## Clean
-reset: clean setup info ## Reset
+reset: clean setup ## Reset
 all:prepare reset ## Run All Targets
 
 ### Formatting
