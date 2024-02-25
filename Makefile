@@ -207,10 +207,16 @@ endif
 
 ### Info
 info-release:
-	printf $(_INFO) "Release Info"
+	printf $(_INFO) "Go Modules"
 	git tag | grep "models" | tail -2
 	git tag | grep "common" | tail -2
 	git tag | grep "v" | grep -v "/" | tail -2
+
+info-docker:
+	printf $(_INFO) "FunApp DockerHub: https://hub.docker.com/r/amanfdk/fun-app/tags"
+	curl -s "https://hub.docker.com/v2/repositories/$(FUN_IMAGE_TAG)/tags/?page_size=25&page=1&name&ordering" | jq -r '.results[]|.name' | head -3
+	printf $(_INFO) "Docker Images: $(FUN_IMAGE_TAG)"
+	docker images | grep fun-app
 
 ### Runs
 run-fun: build-fun ## Run Fun App
@@ -254,15 +260,9 @@ docker-fun-exec:
 	printf $(_TITLE) "Execing Into FunApp Docker Image"
 	docker run -it --entrypoint /bin/sh amanfdk/fun-app
 
-docker-fun-info:
-	printf $(_INFO) "FunApp DockerHub: https://hub.docker.com/r/amanfdk/fun-app/tags"
-	curl -s "https://hub.docker.com/v2/repositories/$(FUN_IMAGE_TAG)/tags/?page_size=25&page=1&name&ordering" | jq -r '.results[]|.name' | head -3
-	printf $(_DETAIL) "Docker Images: $(FUN_IMAGE_TAG)"
-	docker images | grep fun-app
-
 docker-fun-clean:
 	printf $(_WARN) "Deleting FunApp Docker Image"
-	docker rmi -f `docker images $(FUN_IMAGE_TAG)  -q`
+	docker rmi -f `docker images $(FUN_IMAGE_TAG)  -q` > $(OUT)
 
 ### Devspace
 space: space-purge ## Setup Devspace
@@ -291,7 +291,7 @@ docker-build: docker-fun ## Build Docker Images
 test: test-operator test-it ## Run all tests (Excludes test-slow)
 build: build-fun build-kohan ## Build all Binaries
 
-info: info-release docker-fun-info ## Repo Information
+info: info-release info-docker ## Repo Information
 prepare: setup-tools setup-k8 # One Time Setup
 
 setup: sync test build helm-package docker-build # Build and Test
