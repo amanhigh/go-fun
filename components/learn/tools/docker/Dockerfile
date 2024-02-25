@@ -1,5 +1,7 @@
-#RUN: docker build -t fun . && docker run -it fun
-#This is a sample Image
+# This is a sample Image
+#
+# docker buildx build -t fun .
+# docker run -it fun
 FROM alpine
 MAINTAINER name@gmail.com
 
