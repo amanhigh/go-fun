@@ -11,11 +11,10 @@ import (
 
 var _ = FDescribe("Generate", func() {
 	var (
-		metadata fun.Metadata
-		buffer   *bytes.Buffer
-		tmpl     = template.New("gen-test")
-		template string
-		expected string
+		metadata   fun.Metadata
+		buffer     *bytes.Buffer
+		goTemplate string
+		expected   string
 	)
 
 	BeforeEach(func() {
@@ -27,39 +26,60 @@ var _ = FDescribe("Generate", func() {
 		buffer = &bytes.Buffer{}
 	})
 
-	AfterEach(func() {
-		tmpl, err := tmpl.Parse(template)
-		Expect(err).To(BeNil())
+	Context("Text Template", func() {
+		var (
+			tmpl = template.New("gen-test")
+		)
 
-		err = tmpl.Execute(buffer, metadata)
-		Expect(err).To(BeNil())
+		Context("Parse", func() {
+			AfterEach(func() {
+				tmpl, err := tmpl.Parse(goTemplate)
+				Expect(err).To(BeNil())
 
-		Expect(buffer.String()).To(Equal(expected))
-	})
+				err = tmpl.Execute(buffer, metadata)
+				Expect(err).To(BeNil())
 
-	It("should have Inner Template", func() {
-		template = "package {{ .PackageName.Name }}"
-		expected = "package com.test.gen"
-	})
+				Expect(buffer.String()).To(Equal(expected))
+			})
 
-	It("should work for Range Template", func() {
-		template = "import ({{range .Imports}}{{.}}, {{end}})"
-		expected = "import (encoding/json, io, )"
-	})
+			It("should have Inner Template", func() {
+				goTemplate = "package {{ .PackageName.Name }}"
+				expected = "package com.test.gen"
+			})
 
-	Context("If template", func() {
+			It("should work for Range Template", func() {
+				goTemplate = "import ({{range .Imports}}{{.}}, {{end}})"
+				expected = "import (encoding/json, io, )"
+			})
 
-		BeforeEach(func() {
-			template = "->{{if .Type}} fmt.Println({{.Type}}) {{else}} You Missed Supplying Type Variable {{end}}<-"
+			Context("If template", func() {
+
+				BeforeEach(func() {
+					goTemplate = "->{{if .Type}} fmt.Println({{.Type}}) {{else}} You Missed Supplying Type Variable {{end}}<-"
+				})
+
+				It("should with Value", func() {
+					expected = "-> fmt.Println(string) <-"
+				})
+
+				It("should with No Value", func() {
+					metadata.Type = ""
+					expected = "-> You Missed Supplying Type Variable <-"
+				})
+			})
 		})
 
-		It("should with Value", func() {
-			expected = "-> fmt.Println(string) <-"
-		})
+		It("should support injection", func() {
+			goTemplate = "{{define \"T\"}}Hello, {{.}}{{end}}"
+			expected = "Hello, <script>alert('you have been pwned')</script>"
 
-		It("should with No Value", func() {
-			metadata.Type = ""
-			expected = "-> You Missed Supplying Type Variable <-"
+			tmpl, err := tmpl.Parse(goTemplate)
+			Expect(err).To(BeNil())
+
+			err = tmpl.ExecuteTemplate(buffer, "T", "<script>alert('you have been pwned')</script>")
+			Expect(err).To(BeNil())
+
+			Expect(buffer.String()).To(Equal(expected))
 		})
 	})
 
