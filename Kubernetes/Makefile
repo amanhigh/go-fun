@@ -64,7 +64,7 @@ dashboard: ## Minikube Dashboard
 	printf $(_TITLE) "Minikube Dashboard & Addons" ""
 	minikube -p minikube dashboard --port=$(PORT) --url=true > /dev/null 2>&1 &
 
-bootstrap: ## Bootstrap basic Services
+bootstrap:
 	printf $(_TITLE) "Bootstraping Services" ""
 	$(MAKE) -C ./services bootstrap > $(OUT)
 
