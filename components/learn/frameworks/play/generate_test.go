@@ -46,4 +46,21 @@ var _ = FDescribe("Generate", func() {
 		template = "import ({{range .Imports}}{{.}}, {{end}})"
 		expected = "import (encoding/json, io, )"
 	})
+
+	Context("If template", func() {
+
+		BeforeEach(func() {
+			template = "->{{if .Type}} fmt.Println({{.Type}}) {{else}} You Missed Supplying Type Variable {{end}}<-"
+		})
+
+		It("should with Value", func() {
+			expected = "-> fmt.Println(string) <-"
+		})
+
+		It("should with No Value", func() {
+			metadata.Type = ""
+			expected = "-> You Missed Supplying Type Variable <-"
+		})
+	})
+
 })

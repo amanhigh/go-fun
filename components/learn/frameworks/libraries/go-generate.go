@@ -7,70 +7,10 @@ import (
 	"text/template"
 )
 
-type Inner struct {
-	Name string
-}
-
-type Metadata struct {
-	PackageName Inner
-	Imports     []string
-	Type        string
-}
-
-type entry struct {
-	Name string
-	Done bool
-}
-
-type ToDo struct {
-	User string
-	List []entry
-}
-
 // HACK: #C GenerateFun as Ginkgo Test.
 func GenerateFun() {
-	printText()
 	printHtml()
 	codeInjection()
-}
-
-/* Text Template */
-func printText() {
-	tmpl := template.New("jsonTemplate")
-	if tmpl, err := tmpl.Parse(textTemplate()); err == nil {
-		_ = tmpl.Execute(os.Stdout, Metadata{
-			PackageName: Inner{Name: "com.test.gen"},
-			Type:        "string",
-			Imports: []string{"encoding/json",
-				"io"}})
-	}
-}
-
-func textTemplate() string {
-	return `//This is Aman's Generated File
-//Request you not to mess with it :)
-
-package {{ .PackageName.Name }}
-
-import ({{range .Imports}}
-{{.}}{{end}}
-)
-
-{{if .Type}}
-
-func (obj {{ .Type }}) WriteTo(writer io.Writer) (int64, error) {
-	data, err := json.Marshal(&obj)
-	if err != nil {
-		return 0, err
-	}
-	length, err := writer.Write(data)
-	return int64(length), err
-}
-
-{{ else }}
-	You Missed Supplying Type Variable
-{{end}}.
-`
 }
 
 /* HTML Template */
