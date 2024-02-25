@@ -44,7 +44,3 @@ func (obj {{ .Type }}) WriteTo(writer io.Writer) (int64, error) {
 	You Missed Supplying Type Variable
 {{end}}.
 `
-
-const InnerTemplate = "package {{ .PackageName.Name }}"
-
-const RangeTemplate = "import ({{range .Imports}} {{.}}, {{end}})"
