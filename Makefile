@@ -170,6 +170,14 @@ release-fun:
 		git push --tags && printf $(_TITLE) "Fun Released: $(VER)" ; \
 	fi
 
+release-docker: docker-build ## Release Docker Images
+ifndef VER
+	$(error VER not set. Eg. v1.1.0)
+endif
+	printf $(_INFO) "Release Docker Images: $(VER)"
+	docker tag amanfdk/fun-app:latest amanfdk/fun-app:$(VER)
+
+
 unrelease: ## Revoke Release of Golang Packages
 ifndef VER
 	$(error VER not set. Eg. v1.1.0)
@@ -243,8 +251,14 @@ docker-fun-exec:
 	docker run -it --entrypoint /bin/sh amanfdk/fun-app
 
 docker-fun-info:
-	printf $(_INFO) "FunApp DockerHub Tags"
-	curl -s "https://hub.docker.com/v2/repositories/amanfdk/fun-app/tags/?page_size=25&page=1&name&ordering" | jq -r '.results[]|.name' | head -3
+	printf $(_INFO) "FunApp DockerHub: amanfdk/fun-app"
+	curl -s "https://hub.docker.com/v2/repositories/$(FUN_IMAGE_TAG)/tags/?page_size=25&page=1&name&ordering" | jq -r '.results[]|.name' | head -3
+	printf $(_DETAIL) "Docker Images"
+	docker images | grep fun-app
+
+docker-fun-clean:
+	printf $(_WARN) "Deleting FunApp Docker Image"
+	docker rmi -f `docker images $(FUN_IMAGE_TAG)  -q`
 
 ### Devspace
 space: space-purge ## Setup Devspace
@@ -281,7 +295,7 @@ setup: sync test build helm-package docker-build # Build and Test
 clean: test-clean build-clean ## Clean up Residue
 
 reset: setup info clean ## Build and Show Info
-all: prepare reset test-slow ## Run All Targets
+all: prepare docker-fun-clean reset test-slow ## Run All Targets
 	printf $(_TITLE) "******* Complete BUILD Successful ********"
 
 ### Formatting
