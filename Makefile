@@ -32,6 +32,7 @@ help: ## Show this help
 	printf $(_TITLE) "FirstTime: prepare/all, OUT=/dev/stdout (Debug)"
 
 sync:
+	printf $(_TITLE) "Go Module Syncing"
 	go work sync
 
 ### Testing
@@ -225,6 +226,7 @@ run: build-fun ## Run Fun App
 
 # make watch CMD=ls
 watch: ## Watch (entr): `make watch CMD=ls`
+	printf $(_TITLE) "Watch (entr): $(CMD)"
 	find . | entr -s "date +%M:%S; $(CMD)"
 
 # Guide - https://dustinspecker.com/posts/go-combined-unit-integration-code-coverage/
