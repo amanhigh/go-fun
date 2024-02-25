@@ -174,9 +174,13 @@ release-docker: docker-build ## Release Docker Images
 ifndef VER
 	$(error VER not set. Eg. v1.1.0)
 endif
-	printf $(_INFO) "Release Docker Images: $(VER)"
+	printf $(_TITLE) "Release Docker Images: $(VER)"
+	printf $(_DETAIL) "Docker Tag"
 	docker tag amanfdk/fun-app:latest amanfdk/fun-app:$(VER)
 
+	printf $(_DETAIL) "Docker Push"
+	docker push amanfdk/fun-app:latest
+	docker push amanfdk/fun-app:$(VER)
 
 unrelease: ## Revoke Release of Golang Packages
 ifndef VER
@@ -251,9 +255,9 @@ docker-fun-exec:
 	docker run -it --entrypoint /bin/sh amanfdk/fun-app
 
 docker-fun-info:
-	printf $(_INFO) "FunApp DockerHub: amanfdk/fun-app"
+	printf $(_INFO) "FunApp DockerHub: https://hub.docker.com/r/amanfdk/fun-app/tags"
 	curl -s "https://hub.docker.com/v2/repositories/$(FUN_IMAGE_TAG)/tags/?page_size=25&page=1&name&ordering" | jq -r '.results[]|.name' | head -3
-	printf $(_DETAIL) "Docker Images"
+	printf $(_DETAIL) "Docker Images: $(FUN_IMAGE_TAG)"
 	docker images | grep fun-app
 
 docker-fun-clean:
@@ -281,7 +285,6 @@ space-test: ## Gink Tests Devspace (Watch Mode)
 	devspace run ginkgo > $(OUT)
 	$(MAKE) watch CMD="devspace run fun-test"
 
-# TODO: #B Docker Publish
 docker-build: docker-fun ## Build Docker Images
 
 ### Workflows
