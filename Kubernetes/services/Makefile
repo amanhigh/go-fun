@@ -38,7 +38,7 @@ clear-helm: ## Delete deployed Helms
 	printf "\033[1;31m Deleting Deployed Helms \033[0m \n"
 	#Clear CRD's (Needed before Helm Deletion)
 	#HACK: Clear Kiali if istio enabled
-	#HACK: #C Add Mysql CRD's
+	#HACK: Add Mysql CRD's
 		
 	-helm delete $$(helm list --short | grep -v "traefik\|dashy") > $(OUT)
 
