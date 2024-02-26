@@ -38,7 +38,7 @@ jobs:
         run: |
           make helm-package
 
-      - name: Run chart-releaser
+      - name: SETUP -> Publish
         uses: helm/chart-releaser-action@v1.6.0
         with:
           charts_dir: components/fun-app
