@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/amanhigh/go-fun/models"
 	"github.com/docker/go-connections/nat"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -55,6 +56,22 @@ func ConsulTestContainer(ctx context.Context) (consulContainer testcontainers.Co
 		WaitingFor:   wait.ForListeningPort(nat.Port(port)).WithStartupTimeout(WAIT_TIME),
 	}
 	consulContainer, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	return
+}
+
+func VaultTestContainer(ctx context.Context) (vaultContainer testcontainers.Container, err error) {
+	port := "8200/tcp"
+	req := testcontainers.ContainerRequest{
+		Image:        "hashicorp/vault:latest",
+		ExposedPorts: []string{port},
+		Env:          map[string]string{"VAULT_DEV_ROOT_TOKEN_ID": models.VAULT_ROOT_TOKEN},
+		Cmd:          []string{"server", "-dev", "-dev-listen-address=0.0.0.0:8200"},
+		WaitingFor:   wait.ForListeningPort(nat.Port(port)).WithStartupTimeout(WAIT_TIME),
+	}
+	vaultContainer, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
 	})

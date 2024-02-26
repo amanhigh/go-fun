@@ -46,13 +46,13 @@ stop: ## Stop Minikube
 	minikube -p minikube delete > $(OUT)
 
 ## Info
-info-mini: ## Minikube Info
+info-mini:
 	printf $(_TITLE) "Minikube Info" ""
 	printf $(_INFO) "Context" "`kubectl config current-context;`"
 	printf $(_DETAIL) "Mounted" "$(SERVICE_FILES)"
 	printf $(_INFO) "Dashboard" "http://docker:9000/dashboard/#/"
 
-info-extra: ## Minikube Extra Info
+info-extra:
 	printf $(_TITLE) "Minikube Extra Info" ""
 	printf $(_INFO) "Emulating ELB" "Run 'minikube tunnel'"
 	printf $(_INFO) "Dashboard" "http://localhost:$(PORT)/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/#"
@@ -64,7 +64,7 @@ dashboard: ## Minikube Dashboard
 	printf $(_TITLE) "Minikube Dashboard & Addons" ""
 	minikube -p minikube dashboard --port=$(PORT) --url=true > /dev/null 2>&1 &
 
-bootstrap: ## Bootstrap basic Services
+bootstrap:
 	printf $(_TITLE) "Bootstraping Services" ""
 	$(MAKE) -C ./services bootstrap > $(OUT)
 
@@ -129,9 +129,9 @@ restore:
 ### Workflows
 info: info-mini ## Minikube Info
 infos: info info-extra ## Minikube Extended Info
-setup: start wait bootstrap port-fwd ## Start, Bootstrap, Port Forward
+setup: start wait bootstrap port-fwd ## Start, Bootstrap, Port Forward Minikube
 clean: stop ## Stop Minikube
-# HACK:#B Fixe Readme
+# HACK:#B Fix Readme
 reset: clean setup info ## Rebuild Minikube
 all: prepare istio dashboard infos port ## Run All Targets
 

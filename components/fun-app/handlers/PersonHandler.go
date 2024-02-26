@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/prometheus/client_golang/prometheus"
@@ -57,6 +58,7 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 			c.JSON(err.Code(), err)
 		}
 	} else {
+		err = util.ProcessValidationError(err)
 		c.JSON(http.StatusBadRequest, err)
 	}
 }
@@ -82,6 +84,7 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 		if person, err := self.Manager.GetPerson(ctx, path.Id); err == nil {
 			c.JSON(http.StatusCreated, person)
 		} else {
+			err = util.ProcessValidationError(err)
 			span.SetStatus(codes.Error, err.Error())
 			span.RecordError(err)
 			c.JSON(err.Code(), err)
@@ -120,6 +123,7 @@ func (self *PersonHandler) ListPersons(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, err.Error())
 		}
 	} else {
+		err = util.ProcessValidationError(err)
 		log.WithFields(log.Fields{"Error": err}).Error("ListPersons: Bad Request")
 		c.JSON(http.StatusBadRequest, err)
 	}
@@ -156,6 +160,7 @@ func (self *PersonHandler) UpdatePerson(c *gin.Context) {
 			log.WithFields(log.Fields{"Error": err}).Error("UpdatePerson: Server Error")
 		}
 	} else {
+		err = util.ProcessValidationError(err)
 		c.JSON(http.StatusBadRequest, err)
 		log.WithFields(log.Fields{"Error": err}).Error("UpdatePerson: Bad Request")
 	}
@@ -180,6 +185,7 @@ func (self *PersonHandler) DeletePersons(c *gin.Context) {
 	if err := self.Manager.DeletePerson(ctx, c.Param("id")); err == nil {
 		c.JSON(http.StatusNoContent, "DELETED")
 	} else {
+		err = util.ProcessValidationError(err)
 		c.JSON(err.Code(), err)
 		log.WithFields(log.Fields{"Error": err}).Error("DeletePersons: Server Error")
 	}

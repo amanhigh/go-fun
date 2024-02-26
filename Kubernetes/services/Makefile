@@ -34,40 +34,40 @@ clear-helms:
 	printf "\033[1;31m Deleting Permanent Helms \033[0m \n"
 	-helm delete $$(helm list --short) > $(OUT)
 
-clear-helm: ## Delete deployed Helms
+clear-helm:
 	printf "\033[1;31m Deleting Deployed Helms \033[0m \n"
 	#Clear CRD's (Needed before Helm Deletion)
 	#HACK: Clear Kiali if istio enabled
-	#HACK: #C Add Mysql CRD's
+	#HACK: Add Mysql CRD's
 		
 	-helm delete $$(helm list --short | grep -v "traefik\|dashy") > $(OUT)
 
 ### Management
-install: ## Install Services
+install:
 	printf "\033[1;32m Installing Services \033[0m \n"
 	$(MAKE) $(SERVICE_MAKE_OPTS) $(ANS)
 
-update: ## Update Services
+update: ## Update Services via Helm
 	printf "\033[1;32m Updating Services \033[0m \n"
 	$(MAKE) $(SERVICE_MAKE_OPTS) CMD=upgrade $(ANS)
 
 # BUG: Fix empty XTRA in Mac.
-bootstrap: ## Bootstrap
+bootstrap:
 	$(MAKE) $(SERVICE_MAKE_OPTS) traefik dashy $(XTRA)
 	kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik --timeout=2m; > $(OUT)
 
-select: ## Select Service
+select: ## Select/Configure Service
 	printf "\033[1;32m Select Services \033[0m \n"
 	$(MAKE) $(SERVICE_MAKE_OPTS)  | awk '{print $$1}' | grep -v "help\|make" | gum choose --limit 5 > $(ANS_FILE)
 	$(MAKE) --no-print-directory info setup
 
 ### Info
-info-svc: ## Info
+info-svc:
 	printf "\033[1;32m Selected Services \033[0m \n"
 	echo $(ANS)
 
 ### Prepare
-helm-add: ## Add Helm Repos
+helm-add:
 	printf "\033[1;32m Adding Helm Repos \033[0m \n"
 	helm repo add onechart https://chart.onechart.dev
 	helm repo add stakater https://stakater.github.io/stakater-charts
@@ -84,12 +84,12 @@ helm-add: ## Add Helm Repos
 	helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
 	helm repo add bitpoke https://helm-charts.bitpoke.io
 
-helm-update: ## Update Helm Repos
+helm-update:
 	printf "\033[1;32m Updating Helm Repos \033[0m \n"
 	helm repo update > $(OUT)
 
 
-hosts: ## Hosts Setup
+hosts:
 	if ! grep -q "docker" /etc/hosts; then \
 		printf "\033[1;32m Adding Docker Hosts to /etc/hosts \033[0m \n"; \
 		echo "$(DOCKER_HOSTS)" | sudo tee -a /etc/hosts; \
@@ -98,7 +98,7 @@ hosts: ## Hosts Setup
 		sudo sed -i 's/.*docker/$(subst $(eval) ,\ ,$(DOCKER_HOSTS))/g' /etc/hosts; \
 	fi
 
-helm: helm-add helm-update ## Helm Setup
+helm: helm-add helm-update
 
 ### Workflows
 prepare: helm hosts ## One Time Setup
@@ -107,6 +107,5 @@ infos: info ## Service Extended Info
 setup: clear-helm install ## Setup Configured Services
 #HACK: Clear Istio
 clean: clear-helm ## Stop Services
-# HACK: #B Fixe Readme
-reset: clean clear-helms clear-ns bootstrap info setup ## Rebuild 
+reset: clean clear-helms clear-ns bootstrap info setup ## Resetup Services 
 all: prepare reset update infos ## Run All Targets

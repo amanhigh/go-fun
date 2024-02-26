@@ -36,8 +36,21 @@ type BaseService struct {
 	VERSION_URL string
 }
 
+// Takes offset and limit as parameters and returns a query string.
 func (self *BaseService) getPaginationParams(offset, limit int) (query string) {
 	return "offset=" + strconv.Itoa(offset) + "&limit=" + strconv.Itoa(limit)
+}
+
+/*
+Builds Base Request for REST Interaction.
+
+@param ctx - Context
+
+Return type(s):
+- *resty.Request
+*/
+func (c *BaseService) request(ctx context.Context) *resty.Request {
+	return c.client.R().SetContext(ctx).SetError(common.HttpErrorImpl{})
 }
 
 type PersonService struct {
@@ -73,7 +86,7 @@ func NewFunAppClient(baseUrl string, httpConfig config.HttpClientConfig) *FunCli
 }
 
 func (c *PersonService) CreatePerson(ctx context.Context, request fun.PersonRequest) (person fun.Person, err common.HttpError) {
-	response, err1 := c.client.R().SetContext(ctx).SetHeader("Content-Type", "application/json").
+	response, err1 := c.request(ctx).SetHeader("Content-Type", "application/json").
 		SetBody(request).SetResult(&person).Post(c.VERSION_URL + "/person")
 	err = util.ResponseProcessor(response, err1)
 	return
@@ -81,25 +94,25 @@ func (c *PersonService) CreatePerson(ctx context.Context, request fun.PersonRequ
 
 func (c *PersonService) GetPerson(ctx context.Context, name string) (person fun.Person, err common.HttpError) {
 	url := fmt.Sprintf(c.VERSION_URL+"/person/%s", name)
-	response, err1 := c.client.R().SetContext(ctx).SetResult(&person).Get(url)
+	response, err1 := c.request(ctx).SetResult(&person).Get(url)
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
 func (c *PersonService) ListPerson(ctx context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {
-	response, err1 := c.client.R().SetContext(ctx).SetResult(&personList).Get(c.listPersonUrl(personQuery))
+	response, err1 := c.request(ctx).SetResult(&personList).Get(c.listPersonUrl(personQuery))
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
 func (c *PersonService) UpdatePerson(ctx context.Context, id string, person fun.PersonRequest) (err common.HttpError) {
-	response, err1 := c.client.R().SetContext(ctx).SetBody(person).Put(fmt.Sprintf(c.VERSION_URL+"/person/%s", id))
+	response, err1 := c.request(ctx).SetBody(person).Put(fmt.Sprintf(c.VERSION_URL+"/person/%s", id))
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
 func (c *PersonService) DeletePerson(ctx context.Context, name string) (err common.HttpError) {
-	response, err1 := c.client.R().SetContext(ctx).Delete(fmt.Sprintf(c.VERSION_URL+"/person/%s", name))
+	response, err1 := c.request(ctx).Delete(fmt.Sprintf(c.VERSION_URL+"/person/%s", name))
 	err = util.ResponseProcessor(response, err1)
 	return
 }
