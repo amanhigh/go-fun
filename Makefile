@@ -224,8 +224,12 @@ info-docker:
 
 ### Runs
 run: build-fun ## Run Fun App
-	printf $(_TITLE) "Running Fun App"
+	printf $(_TITLE) "Running: Fun App"
 	$(FUN_DIR)/fun > $(OUT)
+
+load: ## Load Test Fun App
+	printf $(_TITLE) "Load Test: Fun App"
+	make -C $(FUN_DIR)/it all > $(OUT)
 
 # make watch CMD=ls
 watch: ## Watch (entr): `make watch CMD=ls`
