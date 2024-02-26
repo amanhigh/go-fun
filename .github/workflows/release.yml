@@ -1,3 +1,5 @@
+# Job: https://github.com/amanhigh/go-fun/actions/workflows/release.yml
+# Release: https://github.com/amanhigh/go-fun/tags
 name: Chart Release
 
 on:
