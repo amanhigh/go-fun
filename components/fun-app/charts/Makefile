@@ -16,16 +16,20 @@ setup-fun:
 	printf $(_TITLE) "Installing Fun App Helm Chart"
 	helm install fun-app . --set rateLimit.perMin=150 > $(OUT)
 
+setup-analyse:
+	printf $(_TITLE) "Analyse Log: GoAccess"
+	kubectl -n fun-app logs `kubectl get pods -n fun-app -o name | grep app | head  -1` --since=1m -f | goaccess --log-format='%^ %d - %t | %s | %~%D | %b | %~%h | %^ | %m %U' --date-format='%Y/%m/%d' --time-format '%H:%M:%S'
+
 #### Helm
 add:
 	helm repo add bitnami https://charts.bitnami.com/bitnami > $(OUT)
 
-update: ## Update Helm Dependencies
+update:
 	printf $(_TITLE) "Updating Helm Dependencies"
 	helm dependency update > $(OUT)
 	helm dependency build > $(OUT)
 
-package: update ## Package Fun Helm Chart
+package: update ## Package Helm Chart
 	printf $(_TITLE) "Packaging Fun App Helm Chart"
 	helm package . -d . > $(OUT)
 
@@ -65,12 +69,13 @@ clean-package:
 	-rm *.tgz > $(OUT)
 
 ### Workflows
-info: info-fun info-vegeta ## Info on Fun Helm Installation
-infos: info info-istio info-fun-notes ## Extended Info
+info: info-fun info-vegeta ## Helm Installation Info
+infos: info info-istio info-fun-notes ## Helm Extended Info
 prepare: add ## Onetime Setup
-setup: setup-fun setup-vegeta ## Setup Fun via Helm
-clean: clean-fun clean-package clean-vegeta ## Clean Fun Helm
-reset: clean setup info ## Reset Fun Helm
+setup: setup-fun setup-vegeta ## Install Helm (Fun & Vegeta)
+clean: clean-fun clean-package clean-vegeta ## Clean Helm
+analyse: setup-analyse ## Analyse Log
+reset: clean setup info ## Clean & Setup Helm
 all: prepare reset package clean ## Run All Targets
 
 ### Formatting
