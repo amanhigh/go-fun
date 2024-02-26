@@ -231,6 +231,10 @@ load: ## Load Test Fun App
 	printf $(_TITLE) "Load Test: Fun App"
 	make -C $(FUN_DIR)/it all > $(OUT)
 
+analyse: ## Analyse Fun App Logs
+	printf $(_TITLE) "Analyse Log: GoAccess"
+	$(MAKE) OUT=/dev/stdout run 2> /dev/null | grep GIN | goaccess --log-format='%^ %d - %t | %s | %~%D | %b | %~%h | %^ | %m %U' --date-format='%Y/%m/%d' --time-format '%H:%M:%S'
+
 # make watch CMD=ls
 watch: ## Watch (entr): `make watch CMD=ls`
 	printf $(_TITLE) "Watch (entr): $(CMD)"
