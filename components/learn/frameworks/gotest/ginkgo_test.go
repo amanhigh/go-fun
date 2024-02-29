@@ -297,7 +297,7 @@ var _ = Describe("Json Encode/Decode", func() {
 					decodeCall *gomock.Call
 				)
 				BeforeEach(func() {
-					decodeCall = mockEncoder.EXPECT().DecodePerson(personJson).Return(per, nil)
+					decodeCall = mockEncoder.EXPECT().DecodePerson(personJson).Return(person, nil)
 					encodeCall.After(decodeCall)
 
 					//gomock.InOrder(
