@@ -60,6 +60,12 @@ var _ = Describe("Json Encode/Decode", func() {
 			Expect(err).To(BeNil())
 			Expect(jsonString).To(Not(Equal(personJson)))
 		})
+
+		It("should fail for negative age", func() {
+			originalPerson.Age = -44
+			_, err := personEncoder.EncodePerson(originalPerson)
+			Expect(err).ToNot(BeNil())
+		})
 	})
 
 	Context("Encode", func() {

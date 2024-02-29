@@ -7,6 +7,7 @@ package gotest
 
 import (
 	"encoding/json"
+	"errors"
 )
 
 //go:generate mockery --name PersonEncoder --inpackage --structname MockEncoder
@@ -30,6 +31,11 @@ func (p *PersonEncoderImpl) DecodePerson(encodedPerson string) (person Person, e
 
 func (p *PersonEncoderImpl) EncodePerson(person Person) (jsonString string, err error) {
 	var jsonBytes []byte
+
+	if person.Age < 0 {
+		err = errors.New("Invalid Age")
+		return
+	}
 	jsonBytes, err = json.Marshal(person)
 	jsonString = string(jsonBytes)
 	return
