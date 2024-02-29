@@ -19,20 +19,27 @@ var _ = Describe("Json Encode/Decode", func() {
 	var (
 		originalPerson Person
 		personJson     string
+		personEncoder  PersonEncoder
 	)
 	BeforeEach(func() {
 		originalPerson = Person{"Zoye", 44, 8983333}
 		personJson = fmt.Sprintf(`{"name":"%s","Age":%d,"MobileNumber":%d}`, originalPerson.Name, originalPerson.Age, originalPerson.MobileNumber)
+		personEncoder = &PersonEncoderImpl{}
 	})
+
+	It("should build", func() {
+		Expect(personEncoder).To(Not(BeNil()))
+	})
+
 	Context("Success", func() {
 		It("should encode Properly", func() {
-			jsonString, err := encodePerson(originalPerson)
+			jsonString, err := personEncoder.EncodePerson(originalPerson)
 			Expect(err).To(BeNil())
 			Expect(jsonString).To(Equal(personJson))
 		})
 
 		It("should decode Properly", func() {
-			decodedPerson, err := decodePerson(personJson)
+			decodedPerson, err := personEncoder.DecodePerson(personJson)
 			Expect(err).To(BeNil())
 			Expect(decodedPerson).To(Equal(originalPerson))
 		})
@@ -44,12 +51,12 @@ var _ = Describe("Json Encode/Decode", func() {
 		})
 
 		It("should throw error on invalid json", func() {
-			_, err := decodePerson("abcd")
+			_, err := personEncoder.DecodePerson("abcd")
 			Expect(err).To(Not(BeNil()))
 		})
 
 		It("should not match original person", func() {
-			jsonString, err := encodePerson(originalPerson)
+			jsonString, err := personEncoder.EncodePerson(originalPerson)
 			Expect(err).To(BeNil())
 			Expect(jsonString).To(Not(Equal(personJson)))
 		})
@@ -68,7 +75,7 @@ var _ = Describe("Json Encode/Decode", func() {
 
 		JustAfterEach(func() {
 			//Creation
-			jsonString, err = encodePerson(originalPerson)
+			jsonString, err = personEncoder.EncodePerson(originalPerson)
 		})
 
 		Context("Success", func() {
@@ -103,7 +110,7 @@ var _ = Describe("Json Encode/Decode", func() {
 		AddReportEntry(experiment.Name, experiment)
 
 		experiment.SampleDuration(action, func(_ int) {
-			output, _ := encodePerson(originalPerson)
+			output, _ := personEncoder.EncodePerson(originalPerson)
 			Expect(output).To(Equal(personJson))
 		}, gmeasure.SamplingConfig{N: 1000})
 		AddReportEntry(action, experiment.GetStats(action))
