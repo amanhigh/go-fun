@@ -12,14 +12,16 @@ var personEncoder PersonEncoder = &PersonEncoderImpl{}
 
 func TestEncode(t *testing.T) {
 	result, err := personEncoder.EncodePerson(person)
-	assert.NoError(t, err)
-	assert.Equal(t, personJson, result)
+	if assert.NoError(t, err) {
+		assert.Equal(t, personJson, result)
+	}
 }
 
 func TestDecode(t *testing.T) {
 	decodedPerson, err := personEncoder.DecodePerson(personJson)
-	assert.NoError(t, err)
-	assert.Equal(t, person, decodedPerson)
+	if assert.NoError(t, err) {
+		assert.Equal(t, person, decodedPerson)
+	}
 }
 
 func BenchmarkEncode(b *testing.B) {
