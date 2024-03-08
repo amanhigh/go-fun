@@ -55,7 +55,7 @@ var _ = Describe("Script", func() {
 	It("should get last line", func() {
 		line, err := script.File(filePath).Last(1).String()
 		Expect(err).To(BeNil())
-		Expect(line).Should(ContainSubstring("2. Level 2 Item 3b"))
+		Expect(line).Should(ContainSubstring("3. Level 1 Item 3"))
 	})
 
 	It("should get column", func() {
@@ -86,7 +86,7 @@ var _ = Describe("Script", func() {
 	It("should join lines", func() {
 		joined, err := script.File(filePath).First(3).Join().String()
 		Expect(err).To(BeNil())
-		Expect(joined).Should(Equal("# Sample Markdown File  ## Headers\n"))
+		Expect(joined).Should(Equal("# Sample Markdown File Markdown Play ## Headers\n"))
 	})
 
 	It("should filter with custom function", func() {
