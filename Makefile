@@ -290,7 +290,7 @@ docker-fun-exec:
 
 docker-fun-clean:
 	printf $(_WARN) "Deleting FunApp Docker Image"
-	docker rmi -f `docker images $(FUN_IMAGE_TAG)  -q` > $(OUT)
+	-docker rmi -f `docker images $(FUN_IMAGE_TAG)  -q` > $(OUT)
 
 ### Devspace
 space: space-purge ## Setup Devspace
