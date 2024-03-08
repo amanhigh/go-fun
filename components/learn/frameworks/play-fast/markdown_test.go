@@ -2,7 +2,6 @@ package play_fast
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"strings"
 
@@ -154,7 +153,6 @@ var _ = FDescribe("Markdown", func() {
 							case *ast.ListItem:
 								if entering { // Only process the node when entering, not when exiting.
 									txt := string(n.Text(data))
-									fmt.Println("--->", txt)
 									if strings.HasPrefix(txt, "Level 1 Item 2") {
 										subList = n
 									}
@@ -167,8 +165,15 @@ var _ = FDescribe("Markdown", func() {
 					It("should exist", func() {
 						Expect(subList).ShouldNot(BeNil())
 						Expect(subList).Should(BeAssignableToTypeOf(&ast.ListItem{}))
-						Expect(string(subList.Text(data))).Should(HavePrefix("Level 1 Item 2"))
+						Expect(string(subList.FirstChild().Text(data))).Should(Equal("Level 1 Item 2"))
 						Expect(subList.ChildCount()).Should(Equal(2))
+					})
+
+					It("should have child Level 2 Item 2a", func() {
+						subChild := subList.FirstChild()
+						//FIXME: Add Sub Item Text Check
+						Expect(subChild.ChildCount()).Should(Equal(1))
+						Expect(subChild.FirstChild().Kind()).Should(Equal(ast.KindText))
 					})
 				})
 			})
