@@ -54,20 +54,43 @@ var _ = FDescribe("Markdown", func() {
 			Expect(root.ChildCount()).Should(BeNumerically(">", 10))
 		})
 
-		It("should get first node", func() {
-			node := root.FirstChild()
-			Expect(node).ShouldNot(BeNil())
-			Expect(node).To(BeAssignableToTypeOf(&ast.Heading{}))
-			Expect(node.Type()).Should(Equal(ast.NodeType(1)))
-			Expect(node.Text(data)).Should(Equal([]byte(headingText)))
+		Context("First Node", func() {
+			var (
+				node ast.Node
+			)
 
-			Expect(node.Parent()).Should(Equal(root))
-			Expect(node.NextSibling()).ShouldNot(BeNil())
-			Expect(node.HasChildren()).Should(BeTrue())
-			Expect(node.ChildCount()).Should(Equal(1))
+			BeforeEach(func() {
+				node = root.FirstChild()
+			})
 
-			_, exists := node.Attribute([]byte("id"))
-			Expect(exists).Should(BeFalse())
+			It("should be read", func() {
+				Expect(node).ShouldNot(BeNil())
+				Expect(node).To(BeAssignableToTypeOf(&ast.Heading{}))
+				Expect(node.Type()).Should(Equal(ast.NodeType(1)))
+				Expect(node.Text(data)).Should(Equal([]byte(headingText)))
+
+				Expect(node.Parent()).Should(Equal(root))
+				Expect(node.NextSibling()).ShouldNot(BeNil())
+				Expect(node.HasChildren()).Should(BeTrue())
+				Expect(node.ChildCount()).Should(Equal(1))
+
+				_, exists := node.Attribute([]byte("id"))
+				Expect(exists).Should(BeFalse())
+			})
+
+			It("should have text", func() {
+				text := node.FirstChild()
+
+				Expect(text).ShouldNot(BeNil())
+				Expect(text).To(BeAssignableToTypeOf(&ast.Text{}))
+				Expect(text.Type()).Should(Equal(ast.NodeType(2)))
+				Expect(text.Text(data)).Should(Equal([]byte(headingText)))
+
+				Expect(text.Parent()).Should(Equal(node))
+				Expect(text.NextSibling()).Should(BeNil())
+				Expect(text.HasChildren()).Should(BeFalse())
+				Expect(text.ChildCount()).Should(Equal(0))
+			})
 		})
 
 		It("should perform walk", func() {
