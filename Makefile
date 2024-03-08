@@ -37,9 +37,15 @@ sync:
 
 # https://golangci-lint.run/usage/quick-start/
 # FIXME: Use Configuration - https://golangci-lint.run/usage/configuration/
-lint: ## Lint the Code
-	printf $(_TITLE) "Running Linting"
+lint-ci:
+	printf $(_TITLE) "LINT: Golang CLI"
 	go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} golangci-lint run {}/...
+
+lint-dead:
+	printf $(_TITLE) "LINT: DeadCode"
+	go work edit -json | jq -r '.Use[].DiskPath' | grep -v "common\|models" | xargs -I{} deadcode {}/...
+
+lint: lint-ci lint-dead ## Lint the Code
 
 ### Testing
 test-operator:
@@ -110,6 +116,11 @@ build-clean:
 install-kohan:
 	printf $(_TITLE) "Installing Kohan"
 	$(BUILD_OPTS) go install $(COMPONENT_DIR)/kohan/main.go
+
+# go clean -i golang.org/x/tools/cmd/deadcode
+install-deadcode:
+	printf $(_TITLE) "Installing DeadCode"
+	go install golang.org/x/tools/cmd/deadcode@latest
 
 ### Helpers
 confirm:
@@ -310,7 +321,7 @@ build: build-fun build-kohan ## Build all Binaries
 
 info: info-release info-docker ## Repo Information
 infos: info space-info ## Repo Extended Information
-prepare: setup-tools setup-k8 # One Time Setup
+prepare: setup-tools setup-k8 install-deadcode # One Time Setup
 
 setup: sync test build helm-package docker-build # Build and Test
 install: install-kohan # Install Kohan CLI
