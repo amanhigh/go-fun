@@ -11,7 +11,7 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
-var _ = FDescribe("Markdown", func() {
+var _ = Describe("Markdown", func() {
 
 	var (
 		filePath = "./res/play.md"
