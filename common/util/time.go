@@ -21,7 +21,8 @@ func TimeAfter(duration time.Duration) time.Time {
 	return time.Now().Add(duration)
 }
 
-/**
+/*
+*
 Using Day & Hour String Compute Date & Time
 "24 4:05AM" "<Day> <Time>"
 */
@@ -32,4 +33,12 @@ func DaysHour(input string) (computedTime time.Time) {
 	parsedHourMin, _ := time.Parse(time.Kitchen, timeString)
 	year, month, _ := time.Now().Date()
 	return time.Date(year, month, day, parsedHourMin.Hour(), parsedHourMin.Minute(), 0, 0, time.UTC)
+}
+
+func RunWithTicker(secondsWait int, callback func()) {
+	ticker := time.NewTicker(time.Duration(secondsWait) * time.Second)
+	defer ticker.Stop()
+	for range ticker.C {
+		callback()
+	}
 }

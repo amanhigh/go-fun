@@ -1,8 +1,33 @@
 package tools
 
-import "github.com/bitfield/script"
+import (
+	"strconv"
+
+	"github.com/bitfield/script"
+)
 
 func Screenshot() (err error) {
 	_, err = script.Exec("spectacle -mbn").String()
+	return
+}
+
+func CheckInternetConnection() bool {
+	_, err := script.Exec("ping -c 1 www.money9.com").String()
+	return err == nil
+}
+
+func IsOSIdle(thresholdSeconds int) (ok bool, err error) {
+	var idleTimeMilliseconds int
+	if idleTimeMilliseconds, err = IdleTimeOS(); err == nil {
+		ok = idleTimeMilliseconds*1000 < thresholdSeconds
+	}
+	return
+}
+
+func IdleTimeOS() (idleTimeMilliseconds int, err error) {
+	var idleTime string
+	if idleTime, err = script.Exec("xprintidle").String(); err == nil {
+		idleTimeMilliseconds, err = strconv.Atoi(idleTime)
+	}
 	return
 }

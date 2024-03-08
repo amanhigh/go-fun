@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/common/tools"
+	"github.com/bitfield/script"
+	"github.com/fatih/color"
 )
 
 const TICKER_LENGTH = 15
@@ -46,4 +48,19 @@ func RecordTicker(ticker string) (err error) {
 	}
 
 	return
+}
+
+func MonitorInternetConnection() {
+	if tools.CheckInternetConnection() {
+		color.Green("Internet Status: %v", true)
+	} else {
+		color.Red("Detected Internet Outage: %v", time.Now())
+		restartNetworkManager()
+		//Extra Wait for Network Manager
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func restartNetworkManager() {
+	script.Exec("systemctl restart NetworkManager").Wait()
 }
