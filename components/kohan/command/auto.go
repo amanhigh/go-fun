@@ -1,6 +1,8 @@
 package command
 
 import (
+	"fmt"
+
 	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/spf13/cobra"
 )
@@ -14,17 +16,18 @@ var autoCmd = &cobra.Command{
 	},
 }
 
-var winIsFoucsedCmd = &cobra.Command{
-	Use:   "is-focused [Title]",
-	Short: "Checks if Window is Focused",
+var runOrFocusCmd = &cobra.Command{
+	Use:   "run-or-focus [Title]",
+	Short: "Focus Window or Start Program",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		_, err = tools.IsWindowFocused(args[0])
+		err = tools.RunOrFocus(args[0])
+		fmt.Println("-->>", err)
 		return
 	},
 }
 
 func init() {
-	autoCmd.AddCommand(winIsFoucsedCmd)
+	autoCmd.AddCommand(runOrFocusCmd)
 	RootCmd.AddCommand(autoCmd)
 }

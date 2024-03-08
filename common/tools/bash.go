@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/amanhigh/go-fun/common/util"
+	"github.com/bitfield/script"
 	"github.com/fatih/color"
 
 	log "github.com/sirupsen/logrus"
@@ -88,6 +89,11 @@ func RunNotIf(cmd string, lambda func(output string)) bool {
 		return true
 	}
 	return false
+}
+
+func RunProcess(cmd string) (output string, err error) {
+	output, err = script.Exec(fmt.Sprintf("sh -c '%v'", cmd)).String()
+	return
 }
 
 func runCommand(cmd string) (string, error) {
