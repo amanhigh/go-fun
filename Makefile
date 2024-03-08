@@ -115,7 +115,7 @@ build-clean:
 ### Install
 install-kohan:
 	printf $(_TITLE) "Installing Kohan"
-	$(BUILD_OPTS) go install $(COMPONENT_DIR)/kohan/main.go
+	$(BUILD_OPTS) go install $(COMPONENT_DIR)/kohan
 
 # go clean -i golang.org/x/tools/cmd/deadcode
 install-deadcode:
