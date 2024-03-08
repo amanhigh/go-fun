@@ -3,19 +3,17 @@ module github.com/amanhigh/go-fun/components/kohan
 go 1.21
 
 require (
-	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/amanhigh/go-fun/common v1.0.1
 	github.com/amanhigh/go-fun/models v1.0.0
 	github.com/fatih/color v1.16.0
-	github.com/go-resty/resty/v2 v2.10.0
 	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.29.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.6.1
-	github.com/wesovilabs/koazee v0.0.5
 )
 
 require (
+	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
