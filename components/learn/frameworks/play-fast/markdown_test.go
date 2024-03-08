@@ -54,6 +54,23 @@ var _ = FDescribe("Markdown", func() {
 			Expect(root.ChildCount()).Should(BeNumerically(">", 10))
 		})
 
+		It("should perform walk", func() {
+			ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
+				// fmt.Println("\n Debug ----> ", string(node.Text(data)), entering, reflect.TypeOf(node))
+				Expect(node).ShouldNot(BeNil())
+				Expect(entering).Should(BeTrue())
+				// Wait for First Node of Type Heading.
+				switch n := node.(type) {
+				case *ast.Heading:
+					Expect(n).To(BeAssignableToTypeOf(&ast.Heading{}))
+					Expect(node.Type()).Should(Equal(ast.NodeType(1)))
+					Expect(node.Text(data)).Should(Equal([]byte(headingText)))
+					return ast.WalkStop, nil
+				}
+				return ast.WalkContinue, nil
+			})
+		})
+
 		Context("First Node", func() {
 			var (
 				node ast.Node
@@ -93,21 +110,34 @@ var _ = FDescribe("Markdown", func() {
 			})
 		})
 
-		It("should perform walk", func() {
-			ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
-				// fmt.Println("\n Debug ----> ", string(node.Text(data)), entering, reflect.TypeOf(node))
-				Expect(node).ShouldNot(BeNil())
-				Expect(entering).Should(BeTrue())
-				// Wait for First Node of Type Heading.
-				switch n := node.(type) {
-				case *ast.Heading:
-					Expect(n).To(BeAssignableToTypeOf(&ast.Heading{}))
-					Expect(node.Type()).Should(Equal(ast.NodeType(1)))
-					Expect(node.Text(data)).Should(Equal([]byte(headingText)))
-					return ast.WalkStop, nil
-				}
-				return ast.WalkContinue, nil
+		Context("List", func() {
+			var (
+				list *ast.List
+			)
+
+			Context("Ordered", func() {
+				BeforeEach(func() {
+					ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
+						switch n := node.(type) {
+						case *ast.List:
+							if n.IsOrdered() {
+								list = n
+								return ast.WalkStop, nil
+							}
+						}
+						return ast.WalkContinue, nil
+					})
+				})
+
+				It("should exist", func() {
+					Expect(list).ShouldNot(BeNil())
+					Expect(list.IsOrdered()).Should(BeTrue())
+					Expect(list.ChildCount()).Should(Equal(3))
+					Expect(list.FirstChild().Text(data)).Should(Equal([]byte("Level 1 Item 1")))
+					Expect(list.LastChild().Text(data)).Should(Equal([]byte("Level 1 Item 3")))
+				})
 			})
+
 		})
 	})
 })

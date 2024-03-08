@@ -24,7 +24,7 @@ Markdown Play
 
 1. Level 1 Item 1
 2. Level 1 Item 2
+   1. Level 2 Item 2a
+      1. Level 3 Item 2a1
+   2. Level 2 Item 2b
 3. Level 1 Item 3
-   1. Level 2 Item 3a
-      1. Level 3 Item 3a1
-   2. Level 2 Item 3b
