@@ -42,9 +42,35 @@ var _ = FDescribe("Markdown", func() {
 
 	Context("Traverse", func() {
 		var (
-			rootText = "Sample Markdown File"
+			headingText = "Sample Markdown File"
 		)
-		It("should read first node", func() {
+
+		It("should start with root", func() {
+			Expect(root).ShouldNot(BeNil())
+			Expect(root).To(BeAssignableToTypeOf(&ast.Document{}))
+			Expect(root.Type()).Should(Equal(ast.NodeType(3)))
+			Expect(root.Text(data)).ShouldNot(BeNil())
+			Expect(root.HasChildren()).Should(BeTrue())
+			Expect(root.ChildCount()).Should(BeNumerically(">", 10))
+		})
+
+		It("should get first node", func() {
+			node := root.FirstChild()
+			Expect(node).ShouldNot(BeNil())
+			Expect(node).To(BeAssignableToTypeOf(&ast.Heading{}))
+			Expect(node.Type()).Should(Equal(ast.NodeType(1)))
+			Expect(node.Text(data)).Should(Equal([]byte(headingText)))
+
+			Expect(node.Parent()).Should(Equal(root))
+			Expect(node.NextSibling()).ShouldNot(BeNil())
+			Expect(node.HasChildren()).Should(BeTrue())
+			Expect(node.ChildCount()).Should(Equal(1))
+
+			_, exists := node.Attribute([]byte("id"))
+			Expect(exists).Should(BeFalse())
+		})
+
+		It("should perform walk", func() {
 			ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
 				// fmt.Println("\n Debug ----> ", string(node.Text(data)), entering, reflect.TypeOf(node))
 				Expect(node).ShouldNot(BeNil())
@@ -54,7 +80,7 @@ var _ = FDescribe("Markdown", func() {
 				case *ast.Heading:
 					Expect(n).To(BeAssignableToTypeOf(&ast.Heading{}))
 					Expect(node.Type()).Should(Equal(ast.NodeType(1)))
-					Expect(node.Text(data)).Should(Equal([]byte(rootText)))
+					Expect(node.Text(data)).Should(Equal([]byte(headingText)))
 					return ast.WalkStop, nil
 				}
 				return ast.WalkContinue, nil
