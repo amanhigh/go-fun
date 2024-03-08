@@ -2,7 +2,9 @@ package play_fast
 
 import (
 	"bytes"
+	"fmt"
 	"os"
+	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -48,7 +50,7 @@ var _ = FDescribe("Markdown", func() {
 		It("should start with root", func() {
 			Expect(root).ShouldNot(BeNil())
 			Expect(root).To(BeAssignableToTypeOf(&ast.Document{}))
-			Expect(root.Type()).Should(Equal(ast.NodeType(3)))
+			Expect(root.Kind()).Should(Equal(ast.KindDocument))
 			Expect(root.Text(data)).ShouldNot(BeNil())
 			Expect(root.HasChildren()).Should(BeTrue())
 			Expect(root.ChildCount()).Should(BeNumerically(">", 10))
@@ -63,7 +65,7 @@ var _ = FDescribe("Markdown", func() {
 				switch n := node.(type) {
 				case *ast.Heading:
 					Expect(n).To(BeAssignableToTypeOf(&ast.Heading{}))
-					Expect(node.Type()).Should(Equal(ast.NodeType(1)))
+					Expect(node.Kind()).Should(Equal(ast.KindHeading))
 					Expect(node.Text(data)).Should(Equal([]byte(headingText)))
 					return ast.WalkStop, nil
 				}
@@ -83,7 +85,7 @@ var _ = FDescribe("Markdown", func() {
 			It("should be read", func() {
 				Expect(node).ShouldNot(BeNil())
 				Expect(node).To(BeAssignableToTypeOf(&ast.Heading{}))
-				Expect(node.Type()).Should(Equal(ast.NodeType(1)))
+				Expect(node.Kind()).Should(Equal(ast.KindHeading))
 				Expect(node.Text(data)).Should(Equal([]byte(headingText)))
 
 				Expect(node.Parent()).Should(Equal(root))
@@ -100,7 +102,7 @@ var _ = FDescribe("Markdown", func() {
 
 				Expect(text).ShouldNot(BeNil())
 				Expect(text).To(BeAssignableToTypeOf(&ast.Text{}))
-				Expect(text.Type()).Should(Equal(ast.NodeType(2)))
+				Expect(text.Kind()).Should(Equal(ast.KindText))
 				Expect(text.Text(data)).Should(Equal([]byte(headingText)))
 
 				Expect(text.Parent()).Should(Equal(node))
@@ -133,8 +135,41 @@ var _ = FDescribe("Markdown", func() {
 					Expect(list).ShouldNot(BeNil())
 					Expect(list.IsOrdered()).Should(BeTrue())
 					Expect(list.ChildCount()).Should(Equal(3))
+
+					// Sub List
+					Expect(list.FirstChild().Kind()).Should(Equal(ast.KindListItem))
+					Expect(list.FirstChild()).Should(BeAssignableToTypeOf(&ast.ListItem{}))
 					Expect(list.FirstChild().Text(data)).Should(Equal([]byte("Level 1 Item 1")))
 					Expect(list.LastChild().Text(data)).Should(Equal([]byte("Level 1 Item 3")))
+				})
+
+				Context("Sub Lists", func() {
+					var (
+						subList *ast.ListItem
+					)
+
+					BeforeEach(func() {
+						ast.Walk(list, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
+							switch n := node.(type) {
+							case *ast.ListItem:
+								if entering { // Only process the node when entering, not when exiting.
+									txt := string(n.Text(data))
+									fmt.Println("--->", txt)
+									if strings.HasPrefix(txt, "Level 1 Item 2") {
+										subList = n
+									}
+								}
+							}
+							return ast.WalkContinue, nil
+						})
+					})
+
+					It("should exist", func() {
+						Expect(subList).ShouldNot(BeNil())
+						Expect(subList).Should(BeAssignableToTypeOf(&ast.ListItem{}))
+						Expect(string(subList.Text(data))).Should(HavePrefix("Level 1 Item 2"))
+						Expect(subList.ChildCount()).Should(Equal(2))
+					})
 				})
 			})
 
