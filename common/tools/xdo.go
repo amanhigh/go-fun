@@ -37,7 +37,14 @@ func FocusWindow(title string) (err error) {
 	var windowID string
 	if windowID, err = FindWindow(title); err == nil {
 		err = ActivateWindow(windowID)
+	} else {
+		Notify("Window Not Found", title)
 	}
+	return
+}
+
+func FocusWindowByTitle(title string) (err error) {
+	_, err = script.Exec(fmt.Sprintf("xdotool search --name '%v' windowactivate", title)).String()
 	return
 }
 
@@ -54,4 +61,14 @@ func FindWindow(class string) (windowId string, err error) {
 func GetActiveWindow() (windowName string, err error) {
 	windowName, err = script.Exec("xdotool getactivewindow getwindowname").String()
 	return
+}
+
+func SendKey(keys string) error {
+	_, err := script.Exec(fmt.Sprintf("xdotool key --clearmodifiers %v", keys)).String()
+	return err
+}
+
+func SendInput(input string) error {
+	_, err := script.Exec(fmt.Sprintf("xdotool type \"%v\"", input)).String()
+	return err
 }
