@@ -14,7 +14,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-/* Vip add frontend port to vip */
 var clusterCmd = &cobra.Command{
 	Use:   "cluster",
 	Short: "Cluster Based Commands",
