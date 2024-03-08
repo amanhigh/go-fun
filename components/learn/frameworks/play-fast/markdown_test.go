@@ -11,7 +11,7 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
-var _ = Describe("Markdown", func() {
+var _ = FDescribe("Markdown", func() {
 
 	var (
 		filePath = "./res/play.md"
@@ -46,17 +46,16 @@ var _ = Describe("Markdown", func() {
 		)
 		It("should read first node", func() {
 			ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
-				// fmt.Println("\nName", string(node.Text(data)), entering)
-				if entering {
-					Expect(node).ShouldNot(BeNil())
-					switch n := node.(type) {
-					case *ast.Heading:
-						if n.Level == 1 {
-							Expect(node.Text(data)).Should(Equal([]byte(rootText)))
-							Expect(node.Type()).Should(Equal(ast.NodeType(1)))
-							return ast.WalkStop, nil
-						}
-					}
+				// fmt.Println("\n Debug ----> ", string(node.Text(data)), entering, reflect.TypeOf(node))
+				Expect(node).ShouldNot(BeNil())
+				Expect(entering).Should(BeTrue())
+				// Wait for First Node of Type Heading.
+				switch n := node.(type) {
+				case *ast.Heading:
+					Expect(n).To(BeAssignableToTypeOf(&ast.Heading{}))
+					Expect(node.Type()).Should(Equal(ast.NodeType(1)))
+					Expect(node.Text(data)).Should(Equal([]byte(rootText)))
+					return ast.WalkStop, nil
 				}
 				return ast.WalkContinue, nil
 			})
