@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/common/telemetry"
-	util2 "github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -18,10 +18,10 @@ import (
 )
 
 type FunServer struct {
-	GinEngine *gin.Engine              `inject:""`
-	Server    *http.Server             `inject:""`
-	Shutdown  *util2.GracefullShutdown `inject:""`
-	Tracer    trace.Tracer             `inject:""`
+	GinEngine *gin.Engine             `inject:""`
+	Server    *http.Server            `inject:""`
+	Shutdown  *util.GracefullShutdown `inject:""`
+	Tracer    trace.Tracer            `inject:""`
 
 	/* Handlers */
 	PersonHandler *PersonHandler `inject:""`

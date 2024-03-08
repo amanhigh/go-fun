@@ -2,7 +2,7 @@ package tools
 
 import (
 	"fmt"
-	util2 "github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/fatih/color"
 	"strings"
 )
@@ -16,7 +16,7 @@ const (
 )
 
 func Jcurl(url string, pipe string) (output string) {
-	if util2.IsDebugMode() {
+	if util.IsDebugMode() {
 		color.Magenta(url)
 	}
 
@@ -50,7 +50,7 @@ func Curl(url string, method string, params string, pipe string) (output string)
 func ContentPiperSplit(content string, pipe string) []string {
 	output := ContentPiper(content, pipe)
 	lines := strings.Split(output, "\n")
-	return util2.FilterEmptyLines(lines)
+	return util.FilterEmptyLines(lines)
 }
 
 func ContentPiper(content string, pipe string) string {

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
-	util2 "github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/common/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"gorm.io/driver/mysql"
@@ -20,7 +20,7 @@ var _ = Describe("DbResolver", func() {
 		pingTable  = "test"
 		err        error
 		connErr    = net.InvalidAddrError("Test")
-		policy     *util2.FallBackPolicy
+		policy     *util.FallBackPolicy
 		db         *sql.DB
 		gormDB     *gorm.DB
 		mock       sqlmock.Sqlmock
@@ -38,7 +38,7 @@ var _ = Describe("DbResolver", func() {
 		}), &gorm.Config{})
 		Expect(err).To(BeNil())
 
-		policy = util2.NewFallBackPolicy(gormDB, interval, pingTable)
+		policy = util.NewFallBackPolicy(gormDB, interval, pingTable)
 	})
 
 	AfterEach(func() {
@@ -51,7 +51,7 @@ var _ = Describe("DbResolver", func() {
 
 	Context("Default Pool", func() {
 		It("should be PRIMARY", func() {
-			Expect(policy.GetPool()).To(Equal(util2.POOL_PRIMARY))
+			Expect(policy.GetPool()).To(Equal(util.POOL_PRIMARY))
 		})
 
 		Context("On Valid Error", func() {
@@ -61,7 +61,7 @@ var _ = Describe("DbResolver", func() {
 			})
 
 			It("should be FALLBACK", func() {
-				Consistently(policy.GetPool).Should(Equal(util2.POOL_FALLBACK))
+				Consistently(policy.GetPool).Should(Equal(util.POOL_FALLBACK))
 			})
 
 			Context("Post Recover", func() {
@@ -70,14 +70,14 @@ var _ = Describe("DbResolver", func() {
 				})
 
 				It("should be PRIMARY", func() {
-					Eventually(policy.GetPool).Should(Equal(util2.POOL_PRIMARY))
+					Eventually(policy.GetPool).Should(Equal(util.POOL_PRIMARY))
 				})
 			})
 		})
 
 		Context("Should Remain Primary", func() {
 			AfterEach(func() {
-				Consistently(policy.GetPool).Should(Equal(util2.POOL_PRIMARY))
+				Consistently(policy.GetPool).Should(Equal(util.POOL_PRIMARY))
 			})
 
 			It("on nil error", func() {

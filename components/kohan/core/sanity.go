@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	tools2 "github.com/amanhigh/go-fun/common/tools"
-	util2 "github.com/amanhigh/go-fun/common/util"
-	config2 "github.com/amanhigh/go-fun/models/config"
+	"github.com/amanhigh/go-fun/common/tools"
+	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/fatih/color"
 
 	log "github.com/sirupsen/logrus"
@@ -22,7 +22,7 @@ var SECOND_REGEX, _ = regexp.Compile("(\\d+) seconds")
 const MIN_SECOND = 4
 
 func ClusterSanity(pkgName string, cmd string, clusterKeyword string) {
-	clusters := tools2.SearchCluster(clusterKeyword)
+	clusters := tools.SearchCluster(clusterKeyword)
 	for _, cluster := range clusters {
 		color.Yellow("Processing: " + cluster)
 		if cmd != "" {
@@ -36,7 +36,7 @@ func VersionCheck(pkgNameCsv string, cluster string) {
 	packageList := strings.Split(pkgNameCsv, ",")
 
 	cmd := fmt.Sprintf("dpkg -l | grep '%v'", strings.Join(packageList, `\|`))
-	tools2.FastPssh.Run(cmd, cluster, config2.DEFAULT_PARALELISM, true)
+	tools.FastPssh.Run(cmd, cluster, config.DEFAULT_PARALELISM, true)
 
 	versionCountMap := computeVersionCountMap()
 	for pkgVersion, count := range versionCountMap {
@@ -50,19 +50,19 @@ func VersionCheck(pkgNameCsv string, cluster string) {
 func VerifyStatus(cmd string, cluster string) {
 	color.Blue("Running Sanity on Cluster: " + cluster)
 
-	tools2.NORMAL_PSSH.Run(cmd, cluster, 200, true)
-	os.Chdir(config2.OUTPUT_PATH)
+	tools.NORMAL_PSSH.Run(cmd, cluster, 200, true)
+	os.Chdir(config.OUTPUT_PATH)
 
-	tools2.PrintCommand("cat * | awk '{print $1,$2,$3}' | sort | uniq -c | sort -r")
+	tools.PrintCommand("cat * | awk '{print $1,$2,$3}' | sort | uniq -c | sort -r")
 
-	tools2.RunIf("find  . -type f -empty | cut -c3-", func(output string) {
+	tools.RunIf("find  . -type f -empty | cut -c3-", func(output string) {
 		if len(output) > 0 {
 			color.Red(fmt.Sprintf("Empty Files Found:\n%v", output))
-			tools2.WriteClusterFile("empty", output)
+			tools.WriteClusterFile("empty", output)
 		}
 	})
 
-	contentMap := util2.ReadFileMap(config2.OUTPUT_PATH, true)
+	contentMap := util.ReadFileMap(config.OUTPUT_PATH, true)
 	performBadStateChecks(contentMap)
 
 	minUptime := getMinUptime(contentMap)
@@ -72,14 +72,14 @@ func VerifyStatus(cmd string, cluster string) {
 		color.Green("Checks Complete, Min Uptime (seconds): %v", minUptime)
 	}
 
-	if util2.IsDebugMode() {
+	if util.IsDebugMode() {
 		VerifyNetworkParameters(cluster)
 	}
 }
 
 func VerifyNetworkParameters(cluster string) {
 	color.Yellow("\nVerifying Network Parameters. Cluster: " + cluster)
-	tools2.Md5Checker("sudo sysctl -a | grep net | grep -v rss_key | grep -v nf_log", cluster)
+	tools.Md5Checker("sudo sysctl -a | grep net | grep -v rss_key | grep -v nf_log", cluster)
 }
 
 /* Helpers */
@@ -88,7 +88,7 @@ func performBadStateChecks(contentMap map[string][]string) {
 		if keyWordLines, keyWordIps := extractKeywordLines(contentMap, check); len(keyWordLines) > 0 {
 			color.Blue("Check Failed: " + check)
 			color.Red(strings.Join(keyWordLines, "\n"))
-			tools2.WriteClusterFile(check, strings.Join(keyWordIps, "\n"))
+			tools.WriteClusterFile(check, strings.Join(keyWordIps, "\n"))
 		}
 	}
 }
@@ -125,7 +125,7 @@ func extractKeywordLines(contentMap map[string][]string, keyWord string) ([]stri
 
 func computeVersionCountMap() map[string]int {
 	versionCountMap := map[string]int{}
-	lines := util2.ReadAllFiles(config2.OUTPUT_PATH)
+	lines := util.ReadAllFiles(config.OUTPUT_PATH)
 	for _, line := range lines {
 		fields := strings.Fields(line)
 		pkgName := fields[1]

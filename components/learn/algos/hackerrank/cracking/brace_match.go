@@ -1,11 +1,11 @@
 package cracking
 
 import (
-	ds2 "github.com/amanhigh/go-fun/models/ds"
+	"github.com/amanhigh/go-fun/models/ds"
 )
 
 func MatchBrace(input string) (match bool) {
-	stack := ds2.NewStack()
+	stack := ds.NewStack()
 	for _, c := range input {
 		switch c {
 		case '(':

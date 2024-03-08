@@ -1,22 +1,23 @@
 package learn_test
 
 import (
-	learn2 "github.com/amanhigh/go-fun/models/learn"
+	"time"
+
+	"github.com/amanhigh/go-fun/models/learn"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"time"
 )
 
 var _ = Describe("SafeRead", func() {
 	var (
-		safe     learn2.SafeReadWrite
+		safe     learn.SafeReadWrite
 		start    = 1
 		len      = 2
 		timeUnit = 10 * time.Millisecond
 	)
 
 	BeforeEach(func() {
-		safe = learn2.SafeReadWrite{start, make(chan int, len)}
+		safe = learn.SafeReadWrite{start, make(chan int, len)}
 	})
 
 	It("should build", func() {

@@ -3,12 +3,12 @@ package handlers
 import (
 	"net/http"
 
-	util2 "github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/gin-gonic/gin"
 )
 
 type AdminHandler struct {
-	Shutdown *util2.GracefullShutdown `inject:""`
+	Shutdown *util.GracefullShutdown `inject:""`
 }
 
 /*

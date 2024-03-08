@@ -3,6 +3,8 @@ package play_fast_test
 import (
 	"context"
 	"errors"
+	"time"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/slok/goresilience"
@@ -11,7 +13,6 @@ import (
 	errors2 "github.com/slok/goresilience/errors"
 	"github.com/slok/goresilience/retry"
 	"github.com/slok/goresilience/timeout"
-	"time"
 )
 
 var _ = Describe("GoResiliance", func() {
