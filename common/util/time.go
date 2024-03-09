@@ -34,11 +34,3 @@ func DaysHour(input string) (computedTime time.Time) {
 	year, month, _ := time.Now().Date()
 	return time.Date(year, month, day, parsedHourMin.Hour(), parsedHourMin.Minute(), 0, 0, time.UTC)
 }
-
-func RunWithTicker(secondsWait int, callback func()) {
-	ticker := time.NewTicker(time.Duration(secondsWait) * time.Second)
-	defer ticker.Stop()
-	for range ticker.C {
-		callback()
-	}
-}

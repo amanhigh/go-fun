@@ -38,12 +38,12 @@ func RunAsyncCommand(heading string, cmd string, wg *sync.WaitGroup) {
 	}()
 }
 
-// RunBackgroundCommand runs a background command and returns an error and a cancel function.
+// RunBackgroundProcess runs a background command and returns an error and a cancel function.
 //
 // The command parameter specifies the command to be executed.
 // The function returns an error if the command fails to start.
 // The cancel function can be used to kill the command and all of its child processes.
-func RunBackgroundCommand(command string) (cancel util.CancelFunc, err error) {
+func RunBackgroundProcess(command string) (cancel util.CancelFunc, err error) {
 	cmd := exec.Command("sh", "-c", command)
 	// Ensure any Child Process are Killed As Well.
 	// https://medium.com/@felixge/killing-a-child-process-and-all-of-its-children-in-go-54079af94773
