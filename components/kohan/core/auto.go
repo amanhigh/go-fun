@@ -31,8 +31,11 @@ func OpenTicker(ticker string) (err error) {
 		if err = tools.FocusWindowByTitle("TradingView"); err == nil {
 			// Focus Input Box
 			if err = tools.SendKey("ctrl+asciitilde"); err == nil {
-				// Paste the Ticker & Bang to Open
-				err = tools.SendInput(ticker + "!")
+				// Paste the Ticker
+				_ = tools.SendKey("Shift+Insert")
+				time.Sleep(50 * time.Millisecond)
+				// Bang to Open
+				err = tools.SendInput("!")
 			}
 		}
 	}
@@ -127,18 +130,18 @@ func MonitorClipboard(ctx context.Context, capturePath string) {
 			continue
 		}
 
-		color.Green("Detected (W,D,T): %s || %s || %s", windowName, desktop, ticker)
+		color.Blue("Detected (W,D,T): %s || %s || %s", windowName, desktop, ticker)
 		if matcher.MatchString(ticker) {
 			color.Green("Recording Ticker: %s", ticker)
 			if err = RecordTicker(ticker); err != nil {
 				color.Red("Open Ticker Failed: %v", err)
 			}
 		} else {
-			color.Yellow("Ticker Match Failed: %s", ticker)
-
 			if strings.Contains(windowName, "trading-tome") {
 				color.Green("Opening Ticker: %s", ticker)
 				OpenTicker(ticker)
+			} else {
+				color.Yellow("No Ticker or Window Match: %s || %s", windowName, ticker)
 			}
 		}
 	}
