@@ -32,7 +32,7 @@ var runOrFocusCmd = &cobra.Command{
 var monitorCmd = &cobra.Command{
 	Use:   "monitor [IdleCmd] [ClipPath]",
 	Short: "System Monitoring",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()

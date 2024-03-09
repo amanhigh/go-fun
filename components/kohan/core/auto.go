@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"errors"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -16,8 +17,9 @@ import (
 )
 
 const (
-	TICKER_LENGTH = 15
-	TICKER_REGEX  = "^[A-Za-z0-9_]+(\\.[A-Za-z-]+){3,}$"
+	TICKER_LENGTH  = 15
+	TICKER_REGEX   = "^[A-Za-z0-9_]+(\\.[A-Za-z-]+){3,}$"
+	SCREENSHOT_AGE = 30 * time.Minute
 )
 
 var (
@@ -128,7 +130,9 @@ func MonitorClipboard(ctx context.Context, capturePath string) {
 		color.Blue("Detected (W,D,T): %s || %s || %s", windowName, desktop, ticker)
 		if matcher.MatchString(ticker) {
 			color.Green("Recording Ticker: %s", ticker)
-			if err = RecordTicker(ticker); err != nil {
+			if err = RecordTicker(ticker); err == nil {
+				LabelJournal(capturePath, ticker)
+			} else {
 				color.Red("Open Ticker Failed: %v", err)
 			}
 		} else {
@@ -141,6 +145,28 @@ func MonitorClipboard(ctx context.Context, capturePath string) {
 		}
 	}
 	color.Yellow("Stopping Clipboard Monitor")
+}
+
+func LabelJournal(path string, ticker string) {
+	files, _ := script.FindFiles(path).Slice()
+
+	for _, file := range files {
+		color.Blue("Checking: %s", file)
+
+		if strings.Contains(file, "Screenshot") {
+			// Check Age of Files
+			info, _ := os.Stat(file)
+			diff := time.Now().Sub(info.ModTime())
+			color.Blue("File Age: %s %v", file, diff)
+
+			// Age Within Threshold, Perform Rename
+			if diff < SCREENSHOT_AGE*2 {
+				newName := strings.ReplaceAll(file, "Screenshot", ticker)
+				color.Yellow("Renaming: %s", newName)
+				os.Rename(file, newName)
+			}
+		}
+	}
 }
 
 func restartNetworkManager() {
