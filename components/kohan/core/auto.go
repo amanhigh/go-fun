@@ -52,11 +52,7 @@ func RecordTicker(ticker string) (err error) {
 }
 
 func MonitorInternetConnection(waitSeconds int) {
-	util.RunWithTicker(waitSeconds, func(exit bool) {
-		if exit {
-			color.Red("Exiting Internet Monitoring: %v", time.Now())
-			return
-		}
+	util.ScheduleJob(waitSeconds, func(_ bool) {
 		if tools.CheckInternetConnection() {
 			color.Green("Internet UP: %v", time.Now())
 		} else {
@@ -72,7 +68,7 @@ func MonitorIdle(runCmd string, waitSeconds int, idleSeconds int) {
 	var cancel util.CancelFunc
 
 	// Start the monitoring
-	util.RunWithTicker(waitSeconds, func(exit bool) {
+	util.ScheduleJob(waitSeconds, func(exit bool) {
 		//Handle Graceful Shutdown
 		if exit && cancel != nil {
 			cancel()

@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func RunWithTicker(secondsWait int, callback func(exit bool)) {
+func ScheduleJob(secondsWait int, callback func(exit bool)) {
 	//Ticker Based on Wait Time
 	ticker := time.NewTicker(time.Duration(secondsWait) * time.Second)
 	defer ticker.Stop()
@@ -22,7 +22,7 @@ func RunWithTicker(secondsWait int, callback func(exit bool)) {
 			callback(false)
 		case <-sigChan:
 			callback(true)
-			break
+			return
 		}
 	}
 }
