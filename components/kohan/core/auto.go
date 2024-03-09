@@ -77,6 +77,7 @@ func MonitorIdle(runCmd string, wait, idle time.Duration) {
 		//Handle Graceful Shutdown
 		if exit && cancel != nil {
 			cancel()
+			color.Yellow("Idle Job Graceful Shutdown: %v", time.Now())
 			return
 		}
 

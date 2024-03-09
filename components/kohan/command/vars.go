@@ -17,8 +17,8 @@ var (
 	count       = -1
 
 	//Auto
-	wait = 5 * time.Second
-	idle = 60 * time.Second
+	wait = time.Minute
+	idle = 5 * time.Minute
 
 	enable  = false
 	verbose = false
