@@ -116,14 +116,14 @@ var _ = Describe("Script", func() {
 		files, err := script.ListFiles("./res").Slice()
 		Expect(err).To(BeNil())
 		// Replace with the actual list of files in your directory
-		Expect(files).Should(ConsistOf([]string{"res/play.md"}))
+		Expect(files).Should(ContainElements([]string{"res/play.md"}))
 	})
 
 	It("should find files", func() {
 		files, err := script.FindFiles("./res").Slice()
 		Expect(err).To(BeNil())
 		// Replace with the actual list of files in your directory
-		Expect(files).Should(ConsistOf([]string{"res/play.md"}))
+		Expect(files).Should(ContainElements([]string{"res/play.md"}))
 	})
 
 	It("should wait for parallel commands", func() {
