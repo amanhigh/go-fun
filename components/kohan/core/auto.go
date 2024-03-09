@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/common/tools"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/bitfield/script"
 	"github.com/fatih/color"
 )
@@ -50,15 +51,51 @@ func RecordTicker(ticker string) (err error) {
 	return
 }
 
-func MonitorInternetConnection() {
-	if tools.CheckInternetConnection() {
-		color.Green("Internet Status: %v", true)
-	} else {
-		color.Red("Detected Internet Outage: %v", time.Now())
-		restartNetworkManager()
-		//Extra Wait for Network Manager
-		time.Sleep(5 * time.Second)
-	}
+func MonitorInternetConnection(waitSeconds int) {
+	util.RunWithTicker(waitSeconds, func(exit bool) {
+		if exit {
+			color.Red("Exiting Internet Monitoring: %v", time.Now())
+			return
+		}
+		if tools.CheckInternetConnection() {
+			color.Green("Internet UP: %v", time.Now())
+		} else {
+			color.Red("Internet Outage: %v", time.Now())
+			restartNetworkManager()
+			//Extra Wait for Network Manager
+			time.Sleep(5 * time.Second)
+		}
+	})
+}
+
+func MonitorIdle(runCmd string, waitSeconds int, idleSeconds int) {
+	var cancel util.CancelFunc
+
+	// Start the monitoring
+	util.RunWithTicker(waitSeconds, func(exit bool) {
+		//Handle Graceful Shutdown
+		if exit && cancel != nil {
+			cancel()
+			return
+		}
+
+		if ok, err := tools.IsOSIdle(idleSeconds); err != nil {
+			color.Red("Error Monitoring: %v", err)
+			return
+		} else if ok && cancel == nil {
+			// Start Heavy Program when OS is Idle
+			if cancel, err = tools.RunBackgroundProcess(runCmd); err != nil {
+				color.Red("Start Program Failed: %v", err)
+				return
+			}
+			color.Green("Heavy Program Started: %v", time.Now())
+		} else if !ok && cancel != nil {
+			// OS Not idle so Stop Program
+			cancel()
+			cancel = nil
+			color.Red("Heavy Program Stopped: %v", time.Now())
+		}
+	})
 }
 
 func restartNetworkManager() {
