@@ -2,6 +2,7 @@ package tools
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/bitfield/script"
 )
@@ -19,7 +20,7 @@ func CheckInternetConnection() bool {
 func IsOSIdle(thresholdSeconds int) (ok bool, err error) {
 	var idleTimeMilliseconds int
 	if idleTimeMilliseconds, err = IdleTimeOS(); err == nil {
-		ok = idleTimeMilliseconds*1000 < thresholdSeconds
+		ok = idleTimeMilliseconds/1000 > thresholdSeconds
 	}
 	return
 }
@@ -27,7 +28,8 @@ func IsOSIdle(thresholdSeconds int) (ok bool, err error) {
 func IdleTimeOS() (idleTimeMilliseconds int, err error) {
 	var idleTime string
 	if idleTime, err = script.Exec("xprintidle").String(); err == nil {
-		idleTimeMilliseconds, err = strconv.Atoi(idleTime)
+		idleTimeMilliseconds, err = strconv.Atoi(strings.Trim(idleTime, "\n"))
 	}
+	// color.Blue("Idle Time: %d", idleTimeMilliseconds)
 	return
 }
