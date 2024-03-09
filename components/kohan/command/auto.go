@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/tools"
@@ -29,12 +30,17 @@ var runOrFocusCmd = &cobra.Command{
 }
 
 var monitorCmd = &cobra.Command{
-	Use:   "monitor [IdleCmd]",
+	Use:   "monitor [IdleCmd] [ClipPath]",
 	Short: "System Monitoring",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
 		color.Green("Monitoring System: Wait -> %v, Idle -> %v, Now -> %v", wait, idle, time.Now())
-		core.MonitorSystem(args[0], wait, idle)
+		go core.MonitorIdle(args[0], wait, idle)
+		go core.MonitorClipboard(ctx, args[1])
+		core.MonitorInternetConnection(wait)
 		return
 	},
 }
