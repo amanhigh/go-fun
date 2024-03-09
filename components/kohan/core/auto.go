@@ -51,6 +51,11 @@ func RecordTicker(ticker string) (err error) {
 	return
 }
 
+func MonitorSystem(runCmd string, wait, idle time.Duration) {
+	go MonitorIdle(runCmd, int(idle.Seconds()), int(idle.Seconds()))
+	MonitorInternetConnection(int(wait.Seconds()))
+}
+
 func MonitorInternetConnection(waitSeconds int) {
 	util.ScheduleJob(waitSeconds, func(_ bool) {
 		if tools.CheckInternetConnection() {

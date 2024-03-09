@@ -1,9 +1,11 @@
 package command
 
 import (
-	"fmt"
+	"time"
 
 	"github.com/amanhigh/go-fun/common/tools"
+	"github.com/amanhigh/go-fun/components/kohan/core"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -22,12 +24,28 @@ var runOrFocusCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		err = tools.RunOrFocus(args[0])
-		fmt.Println("-->>", err)
+		return
+	},
+}
+
+var monitorCmd = &cobra.Command{
+	Use:   "monitor [IdleCmd]",
+	Short: "System Monitoring",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		color.Green("Monitoring System: Wait -> %v, Idle -> %v, Now -> %v", wait, idle, time.Now())
+		core.MonitorSystem(args[0], wait, idle)
 		return
 	},
 }
 
 func init() {
+	//Flags
+	monitorCmd.Flags().DurationVarP(&wait, "wait", "w", wait, "Monitoring Wait Interval")
+	monitorCmd.Flags().DurationVarP(&idle, "idle", "i", idle, "Idle Time")
+
+	//Commands
 	autoCmd.AddCommand(runOrFocusCmd)
+	autoCmd.AddCommand(monitorCmd)
 	RootCmd.AddCommand(autoCmd)
 }
