@@ -2,13 +2,14 @@ package play_fast_test
 
 import (
 	"context"
+	"io/ioutil"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"golang.design/x/clipboard"
 )
 
-var _ = FDescribe("Clipboard", func() {
+var _ = Describe("Clipboard", func() {
 	var (
 		err      error
 		testData = "CopyThis!!"
@@ -23,7 +24,7 @@ var _ = FDescribe("Clipboard", func() {
 		Expect(err).To(BeNil())
 	})
 
-	Context("Paste", func() {
+	Context("Text Copy", func() {
 		var ch <-chan struct{}
 		BeforeEach(func() {
 			ch = clipboard.Write(clipboard.FmtText, []byte(testData))
@@ -37,6 +38,29 @@ var _ = FDescribe("Clipboard", func() {
 		It("should signal overwrite", func() {
 			// Overwrite Clipboard
 			clipboard.Write(clipboard.FmtText, []byte("Overwrite"))
+			Eventually(ch, 1).Should(Receive())
+		})
+	})
+
+	Context("Image Copy", func() {
+		var ch <-chan struct{}
+		var imgData []byte
+
+		BeforeEach(func() {
+			imgData, err = ioutil.ReadFile("./res/flower.jpg")
+			Expect(err).To(BeNil())
+			ch = clipboard.Write(clipboard.FmtImage, imgData)
+		})
+
+		It("should be pasted", func() {
+			pastedImageData := clipboard.Read(clipboard.FmtImage)
+			Expect(pastedImageData).To(Equal(imgData))
+			// os.WriteFile("./res/test.jpg", imgData, 0644)
+		})
+
+		It("should signal overwrite", func() {
+			// Overwrite Clipboard with a different image
+			clipboard.Write(clipboard.FmtImage, []byte("newImage"))
 			Eventually(ch, 1).Should(Receive())
 		})
 	})
