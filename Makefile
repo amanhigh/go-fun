@@ -105,7 +105,7 @@ build-fun-cover:
 
 build-kohan:
 	printf $(_TITLE) "Building Kohan"
-	$(BUILD_OPTS) go build -o $(COMPONENT_DIR)/kohan/kohan $(COMPONENT_DIR)/kohan/main.go
+	$(BUILD_OPTS) CGO_ENABLED=1 go build -o $(COMPONENT_DIR)/kohan/kohan $(COMPONENT_DIR)/kohan/main.go
 
 build-clean:
 	printf $(_WARN) "Cleaning Build"
@@ -115,7 +115,7 @@ build-clean:
 ### Install
 install-kohan:
 	printf $(_TITLE) "Installing Kohan"
-	$(BUILD_OPTS) go install $(COMPONENT_DIR)/kohan
+	$(BUILD_OPTS) CGO_ENABLED=1 go install $(COMPONENT_DIR)/kohan
 
 # go clean -i golang.org/x/tools/cmd/deadcode
 install-deadcode:
