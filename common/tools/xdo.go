@@ -60,6 +60,13 @@ func FindWindow(class string) (windowId string, err error) {
 
 func GetActiveWindow() (windowName string, err error) {
 	windowName, err = script.Exec("xdotool getactivewindow getwindowname").String()
+	windowName = strings.TrimSpace(windowName)
+	return
+}
+
+func GetDesktop() (number string, err error) {
+	number, err = script.Exec("xdotool get_desktop").String()
+	number = strings.TrimSpace(number)
 	return
 }
 

@@ -1,16 +1,28 @@
 package core
 
 import (
+	"context"
+	"errors"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/bitfield/script"
 	"github.com/fatih/color"
+	"golang.design/x/clipboard"
 )
 
-const TICKER_LENGTH = 15
+const (
+	TICKER_LENGTH = 15
+	TICKER_REGEX  = "^[A-Za-z0-9_]+(\\.[A-Za-z-]+){3,}$"
+)
+
+var (
+	matcher = regexp.MustCompile(TICKER_REGEX)
+)
 
 func OpenTicker(ticker string) (err error) {
 	// Check if the length of the ticker is less than 15
@@ -98,6 +110,39 @@ func MonitorIdle(runCmd string, wait, idle time.Duration) {
 			color.Red("Heavy Program Stopped: %v", time.Now())
 		}
 	})
+}
+
+func MonitorClipboard(ctx context.Context, capturePath string) {
+	color.Green("Monitoring Clipboard")
+	ch := clipboard.Watch(ctx, clipboard.FmtText)
+	for clipText := range ch {
+		ticker := string(clipText)
+
+		// Read OS Environment
+		windowName, err := tools.GetActiveWindow()
+		desktop, err1 := tools.GetDesktop()
+		err = errors.Join(err, err1)
+		if err != nil {
+			color.Red("Active Window/Desktop Detect Failed: %v", err)
+			continue
+		}
+
+		color.Green("Detected (W,D,T): %s || %s || %s", windowName, desktop, ticker)
+		if matcher.MatchString(ticker) {
+			color.Green("Recording Ticker: %s", ticker)
+			if err = RecordTicker(ticker); err != nil {
+				color.Red("Open Ticker Failed: %v", err)
+			}
+		} else {
+			color.Yellow("Ticker Match Failed: %s", ticker)
+
+			if strings.Contains(windowName, "trading-tome") {
+				color.Green("Opening Ticker: %s", ticker)
+				OpenTicker(ticker)
+			}
+		}
+	}
+	color.Yellow("Stopping Clipboard Monitor")
 }
 
 func restartNetworkManager() {
