@@ -7,9 +7,9 @@ import (
 	"time"
 )
 
-func ScheduleJob(secondsWait int, callback func(exit bool)) {
+func ScheduleJob(wait time.Duration, callback func(exit bool)) {
 	//Ticker Based on Wait Time
-	ticker := time.NewTicker(time.Duration(secondsWait) * time.Second)
+	ticker := time.NewTicker(wait)
 	defer ticker.Stop()
 
 	// Create a channel to listen for Graceful Shutdown

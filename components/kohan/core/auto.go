@@ -52,12 +52,12 @@ func RecordTicker(ticker string) (err error) {
 }
 
 func MonitorSystem(runCmd string, wait, idle time.Duration) {
-	go MonitorIdle(runCmd, int(idle.Seconds()), int(idle.Seconds()))
-	MonitorInternetConnection(int(wait.Seconds()))
+	go MonitorIdle(runCmd, idle, wait)
+	MonitorInternetConnection(wait)
 }
 
-func MonitorInternetConnection(waitSeconds int) {
-	util.ScheduleJob(waitSeconds, func(_ bool) {
+func MonitorInternetConnection(wait time.Duration) {
+	util.ScheduleJob(wait, func(_ bool) {
 		if tools.CheckInternetConnection() {
 			color.Green("Internet UP: %v", time.Now())
 		} else {
@@ -69,18 +69,18 @@ func MonitorInternetConnection(waitSeconds int) {
 	})
 }
 
-func MonitorIdle(runCmd string, waitSeconds int, idleSeconds int) {
+func MonitorIdle(runCmd string, wait, idle time.Duration) {
 	var cancel util.CancelFunc
 
 	// Start the monitoring
-	util.ScheduleJob(waitSeconds, func(exit bool) {
+	util.ScheduleJob(wait, func(exit bool) {
 		//Handle Graceful Shutdown
 		if exit && cancel != nil {
 			cancel()
 			return
 		}
 
-		if ok, err := tools.IsOSIdle(idleSeconds); err != nil {
+		if ok, err := tools.IsOSIdle(idle); err != nil {
 			color.Red("Error Monitoring: %v", err)
 			return
 		} else if ok && cancel == nil {
