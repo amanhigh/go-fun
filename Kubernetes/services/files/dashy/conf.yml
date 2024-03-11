@@ -414,3 +414,7 @@ appConfig:
   statusCheckInterval: 20
   webSearch:
     searchEngine: google
+
+pages:
+- name: Secondary
+  path: 'secondary.yml'

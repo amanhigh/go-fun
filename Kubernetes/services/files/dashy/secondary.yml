@@ -1,0 +1,13 @@
+pageInfo:
+  title: Secondary Dashboard
+  description: Slighty Less Important Stuff.
+sections:
+  - name: Entertainment
+    icon: mdi-palette
+    items:
+      - title: Music
+        description: Google Music
+        icon: favicon
+        url: https://music.youtube.com/watch?v=p4MYzp_kxwE&list=RDATdXiX
+        statusCheck: true
+        tags: [music]
