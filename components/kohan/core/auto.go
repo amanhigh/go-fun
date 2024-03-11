@@ -119,23 +119,24 @@ func MonitorClipboard(ctx context.Context, capturePath string) {
 		ticker := string(clipText)
 
 		// Read OS Environment
-		windowName, err := tools.GetActiveWindow()
-		desktop, err1 := tools.GetDesktop()
-		err = errors.Join(err, err1)
-		if err != nil {
-			color.Red("Active Window/Desktop Detect Failed: %v", err)
-			continue
-		}
-
-		color.Blue("Detected (W,D,T): %s || %s || %s", windowName, desktop, ticker)
 		if matcher.MatchString(ticker) {
 			color.Green("Recording Ticker: %s", ticker)
-			if err = RecordTicker(ticker); err == nil {
+			if err := RecordTicker(ticker); err == nil {
 				LabelJournal(capturePath, ticker)
 			} else {
 				color.Red("Open Ticker Failed: %v", err)
 			}
 		} else {
+			// BUG: Fix ActiveWindow and Add check for Label Journal as well.
+			windowName, err := tools.GetActiveWindow()
+			desktop, err1 := tools.GetDesktop()
+			err = errors.Join(err, err1)
+			if err != nil {
+				color.Red("Active Window/Desktop Detect Failed: %v , Ticker: %s", err, ticker)
+				continue
+			}
+
+			color.Blue("Detected (W,D,T): %s || %s || %s", windowName, desktop, ticker)
 			if strings.Contains(windowName, "trading-tome") {
 				color.Green("Opening Ticker: %s", ticker)
 				OpenTicker(ticker)
