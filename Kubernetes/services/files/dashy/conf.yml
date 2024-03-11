@@ -105,6 +105,7 @@ sections:
       - title: Punjabi
         description: Punjabi Easy Typing using English.
         icon: favicon
+        hotkey: 7
         url: https://www.easypunjabityping.com/
       - title: ChatGPT
         description: Begining of AI Revolution
@@ -131,6 +132,7 @@ sections:
       - title: Cheatsheet
         description: Commands for various tools.
         icon: favicon
+        hotkey: 9
         url: https://quickref.me/index.html
       - title: Emoji Copy
         description: Symbols and Emoji Repository
@@ -407,9 +409,9 @@ sections:
       collapsed: true
 
 appConfig:
-  theme: lissy
+  theme: one-dark
   layout: auto
-  iconSize: medium
+  iconSize: small
   language: en
   statusCheckInterval: 20
   webSearch:
