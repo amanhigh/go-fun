@@ -14,7 +14,6 @@ sections:
         description: Google Music
         icon: favicon
         url: https://music.youtube.com/watch?v=p4MYzp_kxwE&list=RDATdXiX
-        hotkey: 1
         statusCheck: true
         tags: [music]
       - title: Pandora
@@ -22,7 +21,6 @@ sections:
         icon: favicon
         url: https://www.youtube.com/playlist?list=PL4FF2F5F7EF7ED26D
         tags: [music]
-        hotkey: 2
       - title: News
         description: General News
         icon: favicon
@@ -33,6 +31,7 @@ sections:
         icon: favicon
         url: https://mynoise.net/
         tags: [music]
+        hotkey: 3
       - title: Imdb
         description: Internet Movie Database
         icon: favicon
@@ -73,6 +72,7 @@ sections:
       - title: TickerTape
         description: India Fundamental Analysis
         icon: favicon
+        hotkey: 4
         url: https://www.tickertape.in/screener/equity
         tags: [fundamental, india]
       - title: ChartMill
@@ -96,6 +96,7 @@ sections:
       - title: Copilot
         description: Bing Copilot
         icon: favicon
+        hotkey: 1
         url: https://www.bing.com/chat
       - title: Pomadro
         description: For the procrastaning lazy self.
@@ -125,6 +126,7 @@ sections:
       - title: Draw
         description: Easy Desgin and Whiteboarding
         icon: favicon
+        hotkey: 2
         url: https://excalidraw.com/
       - title: Cheatsheet
         description: Commands for various tools.
@@ -133,10 +135,12 @@ sections:
       - title: Emoji Copy
         description: Symbols and Emoji Repository
         icon: favicon
+        hotkey: 5
         url: https://www.emojicopy.com/
       - title: Pixabay
         description: Free Stock Photos
         icon: favicon
+        hotkey: 6
         url: https://pixabay.com/
       - title: ArtifactHub
         description: Repository for Helm charts with Easy discovery.
