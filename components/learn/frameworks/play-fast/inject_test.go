@@ -5,13 +5,20 @@ import (
 	"github.com/facebookgo/inject"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"go.uber.org/fx"
 )
 
-var _ = FDescribe("Inject", func() {
+var _ = Describe("Inject", func() {
 	var (
 		myApp     learn.MyApplication
 		component learn.MyComponent
 		err       error
+
+		//Names
+		redisName       = "RedisClient"
+		dbName          = "DatabaseClient"
+		appDBName       = "AppDatabaseClient"
+		customRedisName = "MyRedisClient"
 	)
 	BeforeEach(func() {
 		myApp = learn.MyApplication{}
@@ -24,11 +31,7 @@ var _ = FDescribe("Inject", func() {
 	*/
 	Context("Facebook Inject", func() {
 		var (
-			graph           inject.Graph
-			redisName       = "RedisClient"
-			dbName          = "DatabaseClient"
-			appDBName       = "AppDatabaseClient"
-			customRedisName = "MyRedisClient"
+			graph inject.Graph
 		)
 
 		BeforeEach(func() {
@@ -54,6 +57,7 @@ var _ = FDescribe("Inject", func() {
 			Expect(myApp.AppDB.Name).To(Equal(appDBName))
 
 			Expect(myApp.Container.Db).To(Not(BeNil()), "Inject Nested Fields")
+			Expect(myApp.Container.Db.Name).To(Equal(dbName))
 			Expect(myApp.Container.Redis).To(Not(BeNil()))
 			Expect(myApp.Container.Redis.Name).To(Equal(redisName))
 
@@ -78,6 +82,47 @@ var _ = FDescribe("Inject", func() {
 			Expect(component.Db.Name).To(Equal(dbName), "Inject Graph Component")
 			Expect(component.Redis.Name, "").To(Equal(customRedisName), "Leave out Cutom Component")
 
+		})
+	})
+
+	Context("Uber Fx", func() {
+		var uberApp *learn.MyApplication
+		BeforeEach(func() {
+			app := fx.New(
+				fx.Provide(
+					func() *learn.RedisClient {
+						return learn.NewRedisClient(redisName)
+					},
+					func() *learn.DatabaseClient {
+						return learn.NewDatabaseClient(dbName)
+					},
+					fx.Annotate(func() *learn.DatabaseClient {
+						return learn.NewDatabaseClient(appDBName)
+					}, fx.ResultTags(`name:"appdb"`)),
+					learn.NewMyComponent,
+					fx.Annotate(
+						learn.NewMyApplication,
+						fx.ParamTags(`name:""`, `name:"appdb"`),
+					),
+				),
+				fx.Populate(&uberApp),
+			)
+
+			Expect(app.Err()).ShouldNot(HaveOccurred())
+		})
+
+		It("should build App", func() {
+			Expect(uberApp).ShouldNot(BeNil())
+
+			Expect(uberApp.AppDB).To(Not(BeNil()), "Inject Fields")
+			Expect(uberApp.AppDB.Name).To(Equal(appDBName))
+
+			Expect(uberApp.Container.Db).To(Not(BeNil()), "Inject Nested Fields")
+			Expect(uberApp.Container.Db.Name).To(Equal(dbName))
+			Expect(uberApp.Container.Redis).To(Not(BeNil()))
+			Expect(uberApp.Container.Redis.Name).To(Equal(redisName))
+
+			Expect(uberApp.NonInjectedField).To(Equal(""), "Leave Non Tagged Field")
 		})
 	})
 

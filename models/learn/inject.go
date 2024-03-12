@@ -1,5 +1,6 @@
 package learn
 
+// FIXME: Override Type with MockRedis in DI Graph.
 type RedisClient struct {
 	Name string
 }
