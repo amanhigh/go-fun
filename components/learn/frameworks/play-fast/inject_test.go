@@ -27,7 +27,7 @@ var _ = Describe("Inject", func() {
 			graph           inject.Graph
 			redisName       = "RedisClient"
 			dbName          = "DatabaseClient"
-			anonName        = "AnonDatabaseClient"
+			appDBName       = "AppDatabaseClient"
 			customRedisName = "MyRedisClient"
 		)
 
@@ -39,7 +39,7 @@ var _ = Describe("Inject", func() {
 			err = graph.Provide(
 				&inject.Object{Value: &learn.RedisClient{redisName}},
 				&inject.Object{Value: &learn.DatabaseClient{dbName}},
-				&inject.Object{Value: &learn.DatabaseClient{anonName}, Name: "anon"},
+				&inject.Object{Value: &learn.DatabaseClient{appDBName}, Name: "appdb"},
 				&inject.Object{Value: &myApp},
 			)
 			Expect(err).To(BeNil())
@@ -50,8 +50,8 @@ var _ = Describe("Inject", func() {
 			err = graph.Populate()
 			Expect(err).To(BeNil())
 
-			Expect(myApp.Anon).To(Not(BeNil()), "Inject Fields")
-			Expect(myApp.Anon.Name).To(Equal(anonName))
+			Expect(myApp.AppDB).To(Not(BeNil()), "Inject Fields")
+			Expect(myApp.AppDB.Name).To(Equal(appDBName))
 
 			Expect(myApp.Container.Db).To(Not(BeNil()), "Inject Nested Fields")
 			Expect(myApp.Container.Redis).To(Not(BeNil()))

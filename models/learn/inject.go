@@ -15,6 +15,6 @@ type MyComponent struct {
 
 type MyApplication struct {
 	Container        *MyComponent    `inject:"private"`
-	Anon             *DatabaseClient `inject:"anon"`
+	AppDB            *DatabaseClient `inject:"appdb"`
 	NonInjectedField string
 }
