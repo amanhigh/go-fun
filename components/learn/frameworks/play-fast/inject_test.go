@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Inject", func() {
+var _ = FDescribe("Inject", func() {
 	var (
 		myApp     learn.MyApplication
 		component learn.MyComponent
@@ -37,9 +37,9 @@ var _ = Describe("Inject", func() {
 
 			// Provide Components & Build App (myApp)
 			err = graph.Provide(
-				&inject.Object{Value: &learn.RedisClient{redisName}},
-				&inject.Object{Value: &learn.DatabaseClient{dbName}},
-				&inject.Object{Value: &learn.DatabaseClient{appDBName}, Name: "appdb"},
+				&inject.Object{Value: learn.NewRedisClient(redisName)},
+				&inject.Object{Value: learn.NewDatabaseClient(dbName)},
+				&inject.Object{Value: learn.NewDatabaseClient(appDBName), Name: "appdb"},
 				&inject.Object{Value: &myApp},
 			)
 			Expect(err).To(BeNil())
