@@ -15,11 +15,12 @@ type MyComponent struct {
 }
 
 type MyApplication struct {
-	Container        *MyComponent    `inject:"private"`
-	AppDB            *DatabaseClient `inject:"appdb"`
+	Container        *MyComponent    `inject:"private" container:"type"`
+	AppDB            *DatabaseClient `inject:"appdb" container:"name"`
 	NonInjectedField string
 }
 
+// HACK: Add Interfaces
 func NewRedisClient(name string) *RedisClient {
 	return &RedisClient{Name: name}
 }

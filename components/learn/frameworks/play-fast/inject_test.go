@@ -3,6 +3,7 @@ package play_fast
 import (
 	"github.com/amanhigh/go-fun/models/learn"
 	"github.com/facebookgo/inject"
+	"github.com/golobby/container/v3"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"go.uber.org/fx"
@@ -85,9 +86,11 @@ var _ = Describe("Inject", func() {
 		})
 	})
 
+	// https://uber-go.github.io/fx/get-started/
 	Context("Uber Fx", func() {
 		var uberApp *learn.MyApplication
 		BeforeEach(func() {
+			// FIXME: Add Base Module and Inherit
 			app := fx.New(
 				fx.Provide(
 					func() *learn.RedisClient {
@@ -126,4 +129,54 @@ var _ = Describe("Inject", func() {
 		})
 	})
 
+	// https://github.com/golobby/container
+	FContext("Golobby Container", func() {
+		var c = container.New()
+
+		BeforeEach(func() {
+			container.MustSingleton(c, func() *learn.RedisClient {
+				return learn.NewRedisClient(redisName)
+			})
+			container.MustSingleton(c, func() *learn.DatabaseClient {
+				return learn.NewDatabaseClient(dbName)
+			})
+			container.MustNamedSingleton(c, "AppDB", func() *learn.DatabaseClient {
+				return learn.NewDatabaseClient(appDBName)
+			})
+			container.MustSingleton(c, learn.NewMyComponent)
+
+			//Build App
+			err = c.Fill(&myApp)
+			Expect(err).To(BeNil())
+		})
+
+		It("should build App", func() {
+			Expect(myApp).ShouldNot(BeNil())
+
+			Expect(myApp.AppDB).To(Not(BeNil()), "Inject Fields")
+			Expect(myApp.AppDB.Name).To(Equal(appDBName))
+
+			Expect(myApp.Container.Db).To(Not(BeNil()), "Inject Nested Fields")
+			Expect(myApp.Container.Db.Name).To(Equal(dbName))
+			Expect(myApp.Container.Redis).To(Not(BeNil()))
+			Expect(myApp.Container.Redis.Name).To(Equal(redisName))
+
+			Expect(myApp.NonInjectedField).To(Equal(""), "Leave Non Tagged Field")
+		})
+
+		It("should resolve", func() {
+			var r *learn.RedisClient
+			err = c.Resolve(&r)
+			Expect(err).To(BeNil())
+
+			Expect(r.Name).To(Equal(redisName))
+		})
+
+		It("should call", func() {
+			err = c.Call(func(r *learn.RedisClient) {
+				Expect(r.Name).To(Equal(redisName))
+			})
+			Expect(err).To(BeNil())
+		})
+	})
 })
