@@ -130,8 +130,11 @@ var _ = Describe("Inject", func() {
 	})
 
 	// https://github.com/golobby/container
-	FContext("Golobby Container", func() {
-		var c = container.New()
+	Context("Golobby Container", func() {
+		var (
+			c = container.New()
+			r *learn.RedisClient
+		)
 
 		BeforeEach(func() {
 			container.MustSingleton(c, func() *learn.RedisClient {
@@ -165,7 +168,6 @@ var _ = Describe("Inject", func() {
 		})
 
 		It("should resolve", func() {
-			var r *learn.RedisClient
 			err = c.Resolve(&r)
 			Expect(err).To(BeNil())
 
@@ -177,6 +179,16 @@ var _ = Describe("Inject", func() {
 				Expect(r.Name).To(Equal(redisName))
 			})
 			Expect(err).To(BeNil())
+		})
+
+		It("should override", func() {
+			container.MustSingleton(c, func() *learn.RedisClient {
+				return learn.NewRedisClient(customRedisName)
+			})
+			err = c.Resolve(&r)
+			Expect(err).To(BeNil())
+
+			Expect(r.Name).To(Equal(customRedisName))
 		})
 	})
 })
