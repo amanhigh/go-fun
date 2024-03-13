@@ -1,6 +1,8 @@
 package play_fast
 
 import (
+	"errors"
+
 	"github.com/amanhigh/go-fun/models/learn"
 	"github.com/facebookgo/inject"
 	"github.com/golobby/container/v3"
@@ -9,17 +11,18 @@ import (
 	"go.uber.org/fx"
 )
 
-var _ = Describe("Inject", func() {
+var _ = FDescribe("Inject", func() {
 	var (
 		myApp     learn.MyApplication
 		component learn.MyComponent
+		redis     learn.Redis
 		err       error
 
 		//Names
-		redisName       = "RedisClient"
-		dbName          = "DatabaseClient"
-		appDBName       = "AppDatabaseClient"
-		customRedisName = "MyRedisClient"
+		redisName     = "RedisClient"
+		dbName        = "DatabaseClient"
+		appDBName     = "AppDatabaseClient"
+		mockRedisName = "IAmMockRedis"
 	)
 	BeforeEach(func() {
 		myApp = learn.MyApplication{}
@@ -68,7 +71,7 @@ var _ = Describe("Inject", func() {
 
 		It("should build Component", func() {
 			// Build Redis Client directly
-			component.Redis = &learn.RedisClient{Name: customRedisName}
+			component.Redis = &learn.RedisClient{Name: mockRedisName}
 
 			err = graph.Provide(
 				&inject.Object{Value: &component},
@@ -81,17 +84,22 @@ var _ = Describe("Inject", func() {
 			Expect(component.Db).To(Not(BeNil()), "Inject Fields")
 			Expect(component.Redis).To(Not(BeNil()))
 			Expect(component.Db.GetDatabaseName()).To(Equal(dbName), "Inject Graph Component")
-			Expect(component.Redis.GetRedisName(), "").To(Equal(customRedisName), "Leave out Cutom Component")
+			Expect(component.Redis.GetRedisName(), "").To(Equal(mockRedisName), "Leave out Custom Component")
 
 		})
 	})
 
 	// https://uber-go.github.io/fx/get-started/
 	Context("Uber Fx", func() {
-		var uberApp *learn.MyApplication
+		var (
+			//Only Accepts Pointer to Pointer
+			uberApp = &myApp
+			module  fx.Option
+			app     *fx.App
+		)
 		BeforeEach(func() {
-			// FIXME: Add Base Module and Inherit
-			app := fx.New(
+			// Create Module
+			module = fx.Module("inject",
 				fx.Provide(
 					func() learn.Redis {
 						return learn.NewRedisClient(redisName)
@@ -111,6 +119,11 @@ var _ = Describe("Inject", func() {
 						fx.ParamTags(`name:""`, `name:"appdb"`),
 					),
 				),
+			)
+
+			//Use Module and Generate App
+			app = fx.New(
+				module,
 				fx.Populate(&uberApp),
 			)
 
@@ -135,8 +148,7 @@ var _ = Describe("Inject", func() {
 	// https://github.com/golobby/container
 	Context("Golobby Container", func() {
 		var (
-			c     = container.New()
-			redis learn.Redis
+			c = container.New()
 		)
 
 		BeforeEach(func() {
@@ -186,12 +198,19 @@ var _ = Describe("Inject", func() {
 
 		It("should override", func() {
 			container.MustSingleton(c, func() learn.Redis {
-				return learn.NewRedisClient(customRedisName)
+				return learn.NewRedisClient(mockRedisName)
 			})
 			err = c.Resolve(&redis)
 			Expect(err).To(BeNil())
 
-			Expect(redis.GetRedisName()).To(Equal(customRedisName))
+			Expect(redis.GetRedisName()).To(Equal(mockRedisName))
+		})
+
+		It("should pass error", func() {
+			err = c.Singleton(func() (learn.Redis, error) {
+				return nil, errors.New("oops")
+			})
+			Expect(err).Should(HaveOccurred())
 		})
 	})
 })

@@ -37,7 +37,6 @@ type MyApplication struct {
 	NonInjectedField string
 }
 
-// HACK: Add Interfaces
 func NewRedisClient(name string) *RedisClient {
 	return &RedisClient{Name: name}
 }
