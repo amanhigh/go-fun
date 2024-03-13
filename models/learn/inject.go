@@ -9,7 +9,6 @@ type Database interface {
 	GetDatabaseName() string
 }
 
-// FIXME: Override Type with MockRedis in DI Graph.
 type RedisClient struct {
 	Name string
 }
@@ -26,14 +25,14 @@ func (d *DatabaseClient) GetDatabaseName() string {
 	return d.Name
 }
 
-type MyComponent struct {
+type InjectComponent struct {
 	Db    Database `inject:""`
 	Redis Redis    `inject:""`
 }
 
-type MyApplication struct {
-	Container        *MyComponent `inject:"private" container:"type"`
-	AppDB            Database     `inject:"appdb" container:"name"`
+type InjectApp struct {
+	Component        *InjectComponent `inject:"private" container:"type"`
+	AppDB            Database         `inject:"appdb" container:"name"`
 	NonInjectedField string
 }
 
@@ -45,10 +44,10 @@ func NewDatabaseClient(name string) *DatabaseClient {
 	return &DatabaseClient{Name: name}
 }
 
-func NewMyComponent(db Database, redis Redis) *MyComponent {
-	return &MyComponent{Db: db, Redis: redis}
+func NewInjectComponent(db Database, redis Redis) *InjectComponent {
+	return &InjectComponent{Db: db, Redis: redis}
 }
 
-func NewMyApplication(component *MyComponent, appDB Database) *MyApplication {
-	return &MyApplication{Container: component, AppDB: appDB}
+func NewInjectApp(component *InjectComponent, appDB Database) *InjectApp {
+	return &InjectApp{Component: component, AppDB: appDB}
 }
