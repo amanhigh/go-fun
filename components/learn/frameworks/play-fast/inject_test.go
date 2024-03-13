@@ -55,12 +55,12 @@ var _ = Describe("Inject", func() {
 			Expect(err).To(BeNil())
 
 			Expect(myApp.AppDB).To(Not(BeNil()), "Inject Fields")
-			Expect(myApp.AppDB.Name).To(Equal(appDBName))
+			Expect(myApp.AppDB.GetDatabaseName()).To(Equal(appDBName))
 
 			Expect(myApp.Container.Db).To(Not(BeNil()), "Inject Nested Fields")
-			Expect(myApp.Container.Db.Name).To(Equal(dbName))
+			Expect(myApp.Container.Db.GetDatabaseName()).To(Equal(dbName))
 			Expect(myApp.Container.Redis).To(Not(BeNil()))
-			Expect(myApp.Container.Redis.Name).To(Equal(redisName))
+			Expect(myApp.Container.Redis.GetRedisName()).To(Equal(redisName))
 
 			Expect(myApp.NonInjectedField).To(Equal(""), "Leave Non Tagged Field")
 
@@ -80,8 +80,8 @@ var _ = Describe("Inject", func() {
 
 			Expect(component.Db).To(Not(BeNil()), "Inject Fields")
 			Expect(component.Redis).To(Not(BeNil()))
-			Expect(component.Db.Name).To(Equal(dbName), "Inject Graph Component")
-			Expect(component.Redis.Name, "").To(Equal(customRedisName), "Leave out Cutom Component")
+			Expect(component.Db.GetDatabaseName()).To(Equal(dbName), "Inject Graph Component")
+			Expect(component.Redis.GetRedisName(), "").To(Equal(customRedisName), "Leave out Cutom Component")
 
 		})
 	})
@@ -93,15 +93,18 @@ var _ = Describe("Inject", func() {
 			// FIXME: Add Base Module and Inherit
 			app := fx.New(
 				fx.Provide(
-					func() *learn.RedisClient {
+					func() learn.Redis {
 						return learn.NewRedisClient(redisName)
 					},
-					func() *learn.DatabaseClient {
+					func() learn.Database {
 						return learn.NewDatabaseClient(dbName)
 					},
 					fx.Annotate(func() *learn.DatabaseClient {
 						return learn.NewDatabaseClient(appDBName)
-					}, fx.ResultTags(`name:"appdb"`)),
+					},
+						fx.ResultTags(`name:"appdb"`),
+						fx.As(new(learn.Database)),
+					),
 					learn.NewMyComponent,
 					fx.Annotate(
 						learn.NewMyApplication,
@@ -118,12 +121,12 @@ var _ = Describe("Inject", func() {
 			Expect(uberApp).ShouldNot(BeNil())
 
 			Expect(uberApp.AppDB).To(Not(BeNil()), "Inject Fields")
-			Expect(uberApp.AppDB.Name).To(Equal(appDBName))
+			Expect(uberApp.AppDB.GetDatabaseName()).To(Equal(appDBName))
 
 			Expect(uberApp.Container.Db).To(Not(BeNil()), "Inject Nested Fields")
-			Expect(uberApp.Container.Db.Name).To(Equal(dbName))
+			Expect(uberApp.Container.Db.GetDatabaseName()).To(Equal(dbName))
 			Expect(uberApp.Container.Redis).To(Not(BeNil()))
-			Expect(uberApp.Container.Redis.Name).To(Equal(redisName))
+			Expect(uberApp.Container.Redis.GetRedisName()).To(Equal(redisName))
 
 			Expect(uberApp.NonInjectedField).To(Equal(""), "Leave Non Tagged Field")
 		})
@@ -132,18 +135,18 @@ var _ = Describe("Inject", func() {
 	// https://github.com/golobby/container
 	Context("Golobby Container", func() {
 		var (
-			c = container.New()
-			r *learn.RedisClient
+			c     = container.New()
+			redis learn.Redis
 		)
 
 		BeforeEach(func() {
-			container.MustSingleton(c, func() *learn.RedisClient {
+			container.MustSingleton(c, func() learn.Redis {
 				return learn.NewRedisClient(redisName)
 			})
-			container.MustSingleton(c, func() *learn.DatabaseClient {
+			container.MustSingleton(c, func() learn.Database {
 				return learn.NewDatabaseClient(dbName)
 			})
-			container.MustNamedSingleton(c, "AppDB", func() *learn.DatabaseClient {
+			container.MustNamedSingleton(c, "AppDB", func() learn.Database {
 				return learn.NewDatabaseClient(appDBName)
 			})
 			container.MustSingleton(c, learn.NewMyComponent)
@@ -157,38 +160,38 @@ var _ = Describe("Inject", func() {
 			Expect(myApp).ShouldNot(BeNil())
 
 			Expect(myApp.AppDB).To(Not(BeNil()), "Inject Fields")
-			Expect(myApp.AppDB.Name).To(Equal(appDBName))
+			Expect(myApp.AppDB.GetDatabaseName()).To(Equal(appDBName))
 
 			Expect(myApp.Container.Db).To(Not(BeNil()), "Inject Nested Fields")
-			Expect(myApp.Container.Db.Name).To(Equal(dbName))
+			Expect(myApp.Container.Db.GetDatabaseName()).To(Equal(dbName))
 			Expect(myApp.Container.Redis).To(Not(BeNil()))
-			Expect(myApp.Container.Redis.Name).To(Equal(redisName))
+			Expect(myApp.Container.Redis.GetRedisName()).To(Equal(redisName))
 
 			Expect(myApp.NonInjectedField).To(Equal(""), "Leave Non Tagged Field")
 		})
 
 		It("should resolve", func() {
-			err = c.Resolve(&r)
+			err = c.Resolve(&redis)
 			Expect(err).To(BeNil())
 
-			Expect(r.Name).To(Equal(redisName))
+			Expect(redis.GetRedisName()).To(Equal(redisName))
 		})
 
 		It("should call", func() {
-			err = c.Call(func(r *learn.RedisClient) {
-				Expect(r.Name).To(Equal(redisName))
+			err = c.Call(func(r learn.Redis) {
+				Expect(r.GetRedisName()).To(Equal(redisName))
 			})
 			Expect(err).To(BeNil())
 		})
 
 		It("should override", func() {
-			container.MustSingleton(c, func() *learn.RedisClient {
+			container.MustSingleton(c, func() learn.Redis {
 				return learn.NewRedisClient(customRedisName)
 			})
-			err = c.Resolve(&r)
+			err = c.Resolve(&redis)
 			Expect(err).To(BeNil())
 
-			Expect(r.Name).To(Equal(customRedisName))
+			Expect(redis.GetRedisName()).To(Equal(customRedisName))
 		})
 	})
 })

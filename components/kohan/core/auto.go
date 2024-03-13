@@ -171,5 +171,5 @@ func LabelJournal(path string, ticker string) {
 }
 
 func restartNetworkManager() {
-	script.Exec("systemctl restart NetworkManager").Wait()
+	script.Exec("sudo systemctl restart NetworkManager").Wait()
 }
