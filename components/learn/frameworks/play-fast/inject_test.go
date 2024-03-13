@@ -237,5 +237,15 @@ var _ = Describe("Inject", func() {
 			})
 			Expect(err).Should(HaveOccurred())
 		})
+
+		It("should overwrite Existing Field", func() {
+			var comp *learn.InjectComponent
+			comp = &learn.InjectComponent{
+				Redis: learn.NewRedisClient("randomRedisClient"),
+			}
+			err = c.Resolve(&comp)
+			Expect(err).To(BeNil())
+			Expect(comp.Redis.GetRedisName()).To(Equal(redisName))
+		})
 	})
 })
