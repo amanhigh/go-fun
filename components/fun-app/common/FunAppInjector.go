@@ -72,49 +72,11 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 		return otel.Tracer(NAMESPACE)
 	})
 
-	//Handlers
-	container.MustSingleton(self.di, func() *handlers.PersonHandler {
-		return &handlers.PersonHandler{}
-	})
-	container.MustSingleton(self.di, func() *handlers.AdminHandler {
-		return &handlers.AdminHandler{}
-	})
+	container.MustSingleton(self.di, dao.NewPersonDao)
+	container.MustSingleton(self.di, handlers.NewAdminHandler)
 
-	container.MustSingleton(self.di, func() *manager.PersonManager {
-		return &manager.PersonManager{}
-	})
-	container.MustSingleton(self.di, func() *dao.PersonDao {
-		return &dao.PersonDao{}
-	})
-
-	// 	/* Metrics */
-	// 	//FIXME: Move to OTEL SDK
-	container.MustNamedSingleton(self.di, "CreateCounter", func() *prometheus.CounterVec {
-		return promauto.NewCounterVec(prometheus.CounterOpts{
-			Namespace:   NAMESPACE,
-			Name:        "create_person",
-			Help:        "Counts Person Create API",
-			ConstLabels: nil,
-		}, []string{"gender"})
-	})
-
-	container.MustNamedSingleton(self.di, "PersonCounter", func() prometheus.Gauge {
-		return promauto.NewGauge(prometheus.GaugeOpts{
-			Namespace:   NAMESPACE,
-			Name:        "person_count",
-			Help:        "Person Count in Get Persons",
-			ConstLabels: nil,
-		})
-	})
-
-	container.MustNamedSingleton(self.di, "PersonCreateTime", func() prometheus.Histogram {
-		return promauto.NewHistogram(prometheus.HistogramOpts{
-			Namespace:   NAMESPACE,
-			Name:        "person_create_time",
-			Help:        "Time Taken to Create Person",
-			ConstLabels: nil,
-		})
-	})
+	registerMetrics(self.di)
+	registerHandlers(self.di)
 
 	err = self.di.Fill(app)
 	if err == nil {
@@ -183,4 +145,47 @@ func newDb(config config.FunAppConfig) (db *gorm.DB, err error) {
 		&fun.Person{},
 	)
 	return
+}
+
+func registerMetrics(di container.Container) {
+	// 	/* Metrics */
+	// 	//FIXME: Move to OTEL SDK
+	container.MustNamedSingleton(di, "CreateCounter", func() *prometheus.CounterVec {
+		return promauto.NewCounterVec(prometheus.CounterOpts{
+			Namespace:   NAMESPACE,
+			Name:        "create_person",
+			Help:        "Counts Person Create API",
+			ConstLabels: nil,
+		}, []string{"gender"})
+	})
+
+	container.MustNamedSingleton(di, "PersonCounter", func() prometheus.Gauge {
+		return promauto.NewGauge(prometheus.GaugeOpts{
+			Namespace:   NAMESPACE,
+			Name:        "person_count",
+			Help:        "Person Count in Get Persons",
+			ConstLabels: nil,
+		})
+	})
+
+	container.MustNamedSingleton(di, "PersonCreateTime", func() prometheus.Histogram {
+		return promauto.NewHistogram(prometheus.HistogramOpts{
+			Namespace:   NAMESPACE,
+			Name:        "person_create_time",
+			Help:        "Time Taken to Create Person",
+			ConstLabels: nil,
+		})
+	})
+}
+
+func registerHandlers(di container.Container) {
+
+	container.MustSingleton(di, manager.NewPersonManager)
+
+	container.MustSingleton(di, func() (handler *handlers.PersonHandler, err error) {
+		handler = &handlers.PersonHandler{}
+
+		err = di.Fill(handler)
+		return
+	})
 }
