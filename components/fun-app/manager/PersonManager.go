@@ -21,8 +21,12 @@ type PersonManagerInterface interface {
 }
 
 type PersonManager struct {
-	Dao    dao.PersonDaoInterface `container:"type"`
-	Tracer trace.Tracer           `container:"type"`
+	Dao    dao.PersonDaoInterface
+	Tracer trace.Tracer
+}
+
+func NewPersonManager(dao dao.PersonDaoInterface, tracer trace.Tracer) PersonManagerInterface {
+	return &PersonManager{Dao: dao, Tracer: tracer}
 }
 
 // CreatePerson creates a new person in the PersonManager.
