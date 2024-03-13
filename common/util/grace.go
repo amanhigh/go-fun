@@ -9,13 +9,18 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type Shutdown interface {
+	Wait() context.Context
+	Stop(c context.Context)
+}
+
 /* Graceful Shutdown Handler to aid in Clean Exits.  */
 type GracefullShutdown struct {
 	quit chan os.Signal
 	ctx  context.Context
 }
 
-func NewGracefulShutdown() *GracefullShutdown {
+func NewGracefulShutdown() Shutdown {
 	return &GracefullShutdown{make(chan os.Signal, 1), context.Background()}
 }
 

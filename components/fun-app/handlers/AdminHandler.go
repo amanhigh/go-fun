@@ -8,10 +8,10 @@ import (
 )
 
 type AdminHandler struct {
-	Shutdown *util.GracefullShutdown
+	Shutdown util.Shutdown
 }
 
-func NewAdminHandler(shutdown *util.GracefullShutdown) *AdminHandler {
+func NewAdminHandler(shutdown util.Shutdown) *AdminHandler {
 	return &AdminHandler{shutdown}
 }
 

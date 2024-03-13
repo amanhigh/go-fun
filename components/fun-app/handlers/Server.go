@@ -18,10 +18,10 @@ import (
 )
 
 type FunServer struct {
-	GinEngine *gin.Engine             `container:"type"`
-	Server    *http.Server            `container:"type"`
-	Shutdown  *util.GracefullShutdown `container:"type"`
-	Tracer    trace.Tracer            `container:"type"`
+	GinEngine *gin.Engine   `container:"type"`
+	Server    *http.Server  `container:"type"`
+	Shutdown  util.Shutdown `container:"type"`
+	Tracer    trace.Tracer  `container:"type"`
 
 	/* Handlers */
 	PersonHandler *PersonHandler `container:"type"`
