@@ -11,7 +11,7 @@ import (
 	"go.uber.org/fx"
 )
 
-var _ = FDescribe("Inject", func() {
+var _ = Describe("Inject", func() {
 	var (
 		myApp     learn.MyApplication
 		component learn.MyComponent
@@ -142,6 +142,31 @@ var _ = FDescribe("Inject", func() {
 			Expect(uberApp.Container.Redis.GetRedisName()).To(Equal(redisName))
 
 			Expect(uberApp.NonInjectedField).To(Equal(""), "Leave Non Tagged Field")
+		})
+
+		It("should resolve", func() {
+			err = fx.New(
+				module,
+				fx.Populate(&redis),
+			).Err()
+
+			Expect(err).To(BeNil())
+			Expect(redis.GetRedisName()).To(Equal(redisName))
+		})
+
+		It("should override", func() {
+			err = fx.New(
+				module,
+				fx.Decorate(
+					func() learn.Redis {
+						return learn.NewRedisClient(mockRedisName)
+					},
+				),
+				fx.Populate(&redis),
+			).Err()
+
+			Expect(err).To(BeNil())
+			Expect(redis.GetRedisName()).To(Equal(mockRedisName))
 		})
 	})
 
