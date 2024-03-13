@@ -24,7 +24,7 @@ type BaseDaoInterface interface {
 }
 
 type BaseDao struct {
-	Db *gorm.DB `inject:""`
+	Db *gorm.DB `container:"type"`
 }
 
 type DbRun func(c context.Context) (err common.HttpError)

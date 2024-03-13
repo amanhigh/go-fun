@@ -8,7 +8,7 @@ import (
 )
 
 type AdminHandler struct {
-	Shutdown *util.GracefullShutdown `inject:""`
+	Shutdown *util.GracefullShutdown `container:"type"`
 }
 
 /*

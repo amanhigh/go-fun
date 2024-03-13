@@ -16,8 +16,8 @@ import (
 )
 
 type PersonHandler struct {
-	Manager          manager.PersonManagerInterface `inject:""`
-	Tracer           trace.Tracer                   `inject:""`
+	Manager          manager.PersonManagerInterface `container:"type"`
+	Tracer           trace.Tracer                   `container:"type"`
 	CreateCounter    *prometheus.CounterVec         `inject:"m_create_person"`
 	PersonCounter    prometheus.Gauge               `inject:"m_person_count"`
 	PersonCreateTime prometheus.Histogram           `inject:"m_person_create_time"`
