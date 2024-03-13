@@ -22,8 +22,8 @@ type PersonDao struct {
 	BaseDao
 }
 
-func NewPersonDao(db *gorm.DB) PersonDaoInterface {
-	return &PersonDao{BaseDao: util.NewBaseDao(db)}
+func NewPersonDao(baseDao util.BaseDao) PersonDaoInterface {
+	return &PersonDao{BaseDao: baseDao}
 }
 
 func (self *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {

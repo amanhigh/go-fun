@@ -72,6 +72,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 		return otel.Tracer(NAMESPACE)
 	})
 
+	container.MustSingleton(self.di, util.NewBaseDao)
 	container.MustSingleton(self.di, dao.NewPersonDao)
 	container.MustSingleton(self.di, handlers.NewAdminHandler)
 
