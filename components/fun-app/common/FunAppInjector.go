@@ -47,9 +47,6 @@ func NewFunAppInjector(cfg config.FunAppConfig) interfaces.ApplicationInjector {
 }
 
 func (self *FunAppInjector) BuildApp() (app any, err error) {
-	// Build App and Engin
-	app = &handlers.FunServer{}
-
 	/* Setup Telemetry */
 	telemetry.InitLogger(self.config.Server.LogLevel)
 	telemetry.InitTracerProvider(context.Background(), NAMESPACE, self.config.Tracing)
@@ -59,6 +56,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	_ = v.RegisterValidation("name", NameValidator)
 
 	/* Injections */
+	// Build Libraries
 	container.MustSingleton(self.di, func() config.FunAppConfig {
 		return self.config
 	})
@@ -71,14 +69,17 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	container.MustSingleton(self.di, func() trace.Tracer {
 		return otel.Tracer(NAMESPACE)
 	})
+	registerMetrics(self.di)
 
+	//Build Components
 	container.MustSingleton(self.di, util.NewBaseDao)
 	container.MustSingleton(self.di, dao.NewPersonDao)
-	container.MustSingleton(self.di, handlers.NewAdminHandler)
+	container.MustSingleton(self.di, manager.NewPersonManager)
 
-	registerMetrics(self.di)
 	registerHandlers(self.di)
 
+	// Build App
+	app = &handlers.FunServer{}
 	err = self.di.Fill(app)
 	if err == nil {
 		log.WithFields(log.Fields{"Port": self.config.Server.Port}).Info("Injection Complete")
@@ -180,9 +181,7 @@ func registerMetrics(di container.Container) {
 }
 
 func registerHandlers(di container.Container) {
-
-	container.MustSingleton(di, manager.NewPersonManager)
-
+	container.MustSingleton(di, handlers.NewAdminHandler)
 	container.MustSingleton(di, func() (handler *handlers.PersonHandler, err error) {
 		handler = &handlers.PersonHandler{}
 
