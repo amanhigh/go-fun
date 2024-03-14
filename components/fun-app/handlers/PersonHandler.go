@@ -16,11 +16,11 @@ import (
 )
 
 type PersonHandler struct {
-	Manager          manager.PersonManagerInterface `inject:""`
-	Tracer           trace.Tracer                   `inject:""`
-	CreateCounter    *prometheus.CounterVec         `inject:"m_create_person"`
-	PersonCounter    prometheus.Gauge               `inject:"m_person_count"`
-	PersonCreateTime prometheus.Histogram           `inject:"m_person_create_time"`
+	Manager          manager.PersonManagerInterface `container:"type"`
+	Tracer           trace.Tracer                   `container:"type"`
+	CreateCounter    *prometheus.CounterVec         `container:"name"`
+	PersonCounter    prometheus.Gauge               `container:"name"`
+	PersonCreateTime prometheus.Histogram           `container:"name"`
 }
 
 // CreatePerson godoc

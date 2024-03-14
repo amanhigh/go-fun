@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	util2 "github.com/amanhigh/go-fun/common/util"
-	model2 "github.com/amanhigh/go-fun/components/learn/frameworks/database/orm/model"
+	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/database/orm/model"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -25,7 +25,7 @@ type Product struct {
 	Price      uint   `gorm:not null`
 	Version    int
 	IgnoreMe   string `gorm:"-"` // Ignore this field
-	Vertical   model2.Vertical
+	Vertical   model.Vertical
 	VerticalID uint      //Must be vertical_id in DB or won't work automatically.
 	Features   []Feature `gorm:"many2many:product_features;"`
 }
@@ -103,7 +103,7 @@ func OrmFun() {
 	//Can be Run Standalone for testing switch.
 	//switchProduct()
 
-	db, _ := util2.CreateTestDb()
+	db, _ := util.CreateTestDb()
 
 	prepLogger()
 	db.AutoMigrate(&Product{}, &AuditLog{}) // Vertical not required Foreign Keys Auto Created
@@ -139,7 +139,7 @@ func switchProduct() {
 	db.AutoMigrate(&Product{})
 
 	/* Write Source Products */
-	vertical := model2.Vertical{
+	vertical := model.Vertical{
 		Name:     "Test",
 		MyColumn: "Hello",
 	}
@@ -325,17 +325,17 @@ func queryProduct(db *gorm.DB) {
 }
 
 func createVertical(db *gorm.DB) {
-	vertical := &model2.Vertical{}
+	vertical := &model.Vertical{}
 	db.FirstOrCreate(&vertical)
 	count := new(int64)
-	db.Model(&model2.Vertical{}).Count(count)
+	db.Model(&model.Vertical{}).Count(count)
 	fmt.Println("Vertical Count:", *count)
 
 	fmt.Println("\n\nVertical Json WRITE")
 	vertical.WriteTo(os.Stdout)
 	fmt.Println("\nVertical Json WRITE\n\n")
 
-	result := db.Model(&model2.Vertical{Name: "Not Present"})
+	result := db.Model(&model.Vertical{Name: "Not Present"})
 	fmt.Println("FOUND Value:", errors.Is(result.Error, gorm.ErrRecordNotFound))
 
 	//if dbc := db.First(vertical, "name=?", "Shirts"); dbc.Error == nil {

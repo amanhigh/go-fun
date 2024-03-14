@@ -1,4 +1,4 @@
-package play_fast_test
+package play_fast
 
 import (
 	"github.com/go-playground/validator/v10"

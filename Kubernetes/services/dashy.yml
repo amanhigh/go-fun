@@ -10,6 +10,10 @@ volumes:
     path: /app/public/conf.yml
     hostPath:
       path: /etc/files/dashy/conf.yml
+  - name: dashy-conf-secondary
+    path: /app/public/secondary.yml
+    hostPath:
+      path: /etc/files/dashy/secondary.yml
 
 ingress:
   annotations:

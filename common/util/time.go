@@ -21,7 +21,8 @@ func TimeAfter(duration time.Duration) time.Time {
 	return time.Now().Add(duration)
 }
 
-/**
+/*
+*
 Using Day & Hour String Compute Date & Time
 "24 4:05AM" "<Day> <Time>"
 */

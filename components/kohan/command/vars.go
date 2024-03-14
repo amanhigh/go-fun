@@ -1,5 +1,7 @@
 package command
 
+import "time"
+
 var (
 	cluster string
 	pkgName string
@@ -7,14 +9,16 @@ var (
 	marker  string
 	tyype   string
 
-	time int
-
 	parallelism = -1
 	index       = -1
 	endIndex    = -1
 	year        = -1
 	cutOff      = -1
 	count       = -1
+
+	//Auto
+	wait = time.Minute
+	idle = 5 * time.Minute
 
 	enable  = false
 	verbose = false

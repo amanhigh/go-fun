@@ -70,6 +70,7 @@ info-svc:
 helm-add:
 	printf "\033[1;32m Adding Helm Repos \033[0m \n"
 	helm repo add onechart https://chart.onechart.dev
+	helm repo add go-fun https://amanhigh.github.io/go-fun
 	helm repo add stakater https://stakater.github.io/stakater-charts
 	helm repo add bitnami https://charts.bitnami.com/bitnami
 	helm repo add istio https://istio-release.storage.googleapis.com/charts

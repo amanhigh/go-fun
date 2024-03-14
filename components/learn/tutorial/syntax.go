@@ -45,7 +45,7 @@ func Syntax() {
 	}
 
 	/* Channels */
-	c := make(chan int)
+	c := make(chan int) // ch <-chan int (Recive only Channel)
 	// Start a goroutine for the printNumbers function
 	go printNumbers(c)
 

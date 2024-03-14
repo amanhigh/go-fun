@@ -35,13 +35,19 @@ sync:
 	printf $(_TITLE) "Go Module Syncing"
 	go work sync
 
-### Testing
 # https://golangci-lint.run/usage/quick-start/
 # FIXME: Use Configuration - https://golangci-lint.run/usage/configuration/
-lint: ## Lint the Code
-	printf $(_TITLE) "Running Linting"
-	go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} golangci-lint run {}/...
+lint-ci:
+	printf $(_TITLE) "LINT: Golang CLI"
+	-go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} golangci-lint run {}/...
 
+lint-dead:
+	printf $(_TITLE) "LINT: DeadCode"
+	go work edit -json | jq -r '.Use[].DiskPath' | grep -v "common\|models" | xargs -I{} deadcode {}/...
+
+lint: lint-ci lint-dead ## Lint the Code
+
+### Testing
 test-operator:
 	printf $(_TITLE) "Running Operator Tests"
 	make -C $(COMPONENT_DIR)/operator/ test > $(OUT)
@@ -69,7 +75,6 @@ cover-analyse:
 	printf $(_INFO) "Vscode" "go.apply.coverprofile $(PROFILE_FILE)";
 
 test-it: run-fun-cover test-unit cover-analyse
-
 test-clean:
 	printf $(_WARN) "Cleaning Tests"
 	rm -rf $(COVER_DIR)
@@ -100,12 +105,22 @@ build-fun-cover:
 
 build-kohan:
 	printf $(_TITLE) "Building Kohan"
-	$(BUILD_OPTS) go build -o $(COMPONENT_DIR)/kohan/kohan $(COMPONENT_DIR)/kohan/main.go
+	$(BUILD_OPTS) CGO_ENABLED=1 go build -o $(COMPONENT_DIR)/kohan/kohan $(COMPONENT_DIR)/kohan/main.go
 
 build-clean:
 	printf $(_WARN) "Cleaning Build"
 	rm "$(FUN_DIR)/fun";
 	rm "$(COMPONENT_DIR)/kohan/kohan";
+
+### Install
+install-kohan:
+	printf $(_TITLE) "Installing Kohan"
+	$(BUILD_OPTS) CGO_ENABLED=1 go install $(COMPONENT_DIR)/kohan
+
+# go clean -i golang.org/x/tools/cmd/deadcode
+install-deadcode:
+	printf $(_TITLE) "Installing DeadCode"
+	go install golang.org/x/tools/cmd/deadcode@latest
 
 ### Helpers
 confirm:
@@ -275,7 +290,7 @@ docker-fun-exec:
 
 docker-fun-clean:
 	printf $(_WARN) "Deleting FunApp Docker Image"
-	docker rmi -f `docker images $(FUN_IMAGE_TAG)  -q` > $(OUT)
+	-docker rmi -f `docker images $(FUN_IMAGE_TAG)  -q` > $(OUT)
 
 ### Devspace
 space: space-purge ## Setup Devspace
@@ -306,13 +321,14 @@ build: build-fun build-kohan ## Build all Binaries
 
 info: info-release info-docker ## Repo Information
 infos: info space-info ## Repo Extended Information
-prepare: setup-tools setup-k8 # One Time Setup
+prepare: setup-tools setup-k8 install-deadcode # One Time Setup
 
 setup: sync test build helm-package docker-build # Build and Test
+install: install-kohan # Install Kohan CLI
 clean: test-clean build-clean ## Clean up Residue
 
 reset: setup info clean ## Setup with Info and Clean
-all: prepare docker-fun-clean reset infos test-slow ## Run All Targets
+all: prepare docker-fun-clean install reset infos test-slow ## Run All Targets
 	printf $(_TITLE) "******* Complete BUILD Successful ********"
 
 ### Formatting

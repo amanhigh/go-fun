@@ -2,8 +2,8 @@ package tools
 
 import (
 	"fmt"
-	util2 "github.com/amanhigh/go-fun/common/util"
-	config2 "github.com/amanhigh/go-fun/models/config"
+	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/fatih/color"
 	"github.com/thoas/go-funk"
 	"io/ioutil"
@@ -12,10 +12,10 @@ import (
 	"strings"
 )
 
-var FastPssh = Pssh{20, config2.OUTPUT_PATH, config2.ERROR_PATH, false}
-var NORMAL_PSSH = Pssh{30, config2.OUTPUT_PATH, config2.ERROR_PATH, false}
-var DisplayPssh = Pssh{10, config2.OUTPUT_PATH, config2.ERROR_PATH, true}
-var SlowPssh = Pssh{240, config2.OUTPUT_PATH, config2.ERROR_PATH, false}
+var FastPssh = Pssh{20, config.OUTPUT_PATH, config.ERROR_PATH, false}
+var NORMAL_PSSH = Pssh{30, config.OUTPUT_PATH, config.ERROR_PATH, false}
+var DisplayPssh = Pssh{10, config.OUTPUT_PATH, config.ERROR_PATH, true}
+var SlowPssh = Pssh{240, config.OUTPUT_PATH, config.ERROR_PATH, false}
 
 type Pssh struct {
 	Timeout       int
@@ -28,7 +28,7 @@ func (self *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput
 	clearOutputPaths()
 
 	psshCmd := fmt.Sprintf(`script %v pssh -h %v -t %v -o %v -e %v %v -p %v '%v'`,
-		config2.CONSOLE_FILE, getClusterFile(cluster), self.Timeout, self.outputPath, self.errorPath, self.getDisplayFlag(), parallelism, cmd)
+		config.CONSOLE_FILE, getClusterFile(cluster), self.Timeout, self.outputPath, self.errorPath, self.getDisplayFlag(), parallelism, cmd)
 	if disableOutput {
 		RunCommandPrintError(psshCmd)
 	} else {
@@ -55,23 +55,23 @@ func (self *Pssh) RunRange(cmd string, cluster string, parallelism int, disableO
 }
 
 func clearOutputPaths() {
-	util2.ClearDirectory(config2.OUTPUT_PATH)
-	util2.ClearDirectory(config2.ERROR_PATH)
+	util.ClearDirectory(config.OUTPUT_PATH)
+	util.ClearDirectory(config.ERROR_PATH)
 }
 
 func ExtractSubCluster(clusterName string, subClusterName string, start int, end int) {
-	ips := util2.ReadAllLines(getClusterFile(clusterName))
+	ips := util.ReadAllLines(getClusterFile(clusterName))
 	WriteClusterFile(subClusterName, strings.Join(ips[start:end], "\n"))
 }
 
 func WriteClusterFile(clusterName string, content string) {
 	filePath := getClusterFile(clusterName)
-	ioutil.WriteFile(filePath, []byte(content), util2.DEFAULT_PERM)
+	ioutil.WriteFile(filePath, []byte(content), util.DEFAULT_PERM)
 }
 
 func ReadClusterFile(clusterName string) []string {
 	filePath := getClusterFile(clusterName)
-	return util2.ReadAllLines(filePath)
+	return util.ReadAllLines(filePath)
 }
 
 func RemoveCluster(mainClusterName string, removeClusterName string) int {
@@ -93,10 +93,10 @@ func GetClusterHost(clusterName string, index int) string {
 }
 
 func SearchCluster(keyword string) (clusters []string) {
-	color.Blue("Searching: " + config2.CLUSTER_PATH)
-	files, _ := filepath.Glob(fmt.Sprintf("%v/*%v*", config2.CLUSTER_PATH, keyword))
+	color.Blue("Searching: " + config.CLUSTER_PATH)
+	files, _ := filepath.Glob(fmt.Sprintf("%v/*%v*", config.CLUSTER_PATH, keyword))
 	for _, name := range files {
-		fileName := strings.Replace(name, config2.CLUSTER_PATH+"/", "", 1)
+		fileName := strings.Replace(name, config.CLUSTER_PATH+"/", "", 1)
 		cluster := strings.TrimRight(fileName, ".txt")
 		clusters = append(clusters, cluster)
 	}
@@ -106,16 +106,16 @@ func SearchCluster(keyword string) (clusters []string) {
 func Md5Checker(cmd string, cluster string) {
 	/* Run Command to get Ip Wise output */
 	FastPssh.Run(cmd, cluster, 200, true)
-	files := util2.ReadFileMap(config2.OUTPUT_PATH, true)
+	files := util.ReadFileMap(config.OUTPUT_PATH, true)
 
 	/* Compute Md5 and store as list with count */
-	hashMap := map[string]*util2.Md5Info{}
-	var sortList []*util2.Md5Info
+	hashMap := map[string]*util.Md5Info{}
+	var sortList []*util.Md5Info
 
 	for path, content := range files {
-		md5Hash := util2.GetMD5Hash(strings.Join(content, "\n"))
+		md5Hash := util.GetMD5Hash(strings.Join(content, "\n"))
 		if _, ok := hashMap[md5Hash]; !ok {
-			info := &util2.Md5Info{FileList: []string{}, Hash: md5Hash}
+			info := &util.Md5Info{FileList: []string{}, Hash: md5Hash}
 			hashMap[md5Hash] = info
 			sortList = append(sortList, info)
 		}
@@ -141,9 +141,9 @@ func Md5Checker(cmd string, cluster string) {
 			current := sortList[i]
 			currentFile := current.FileList[0]
 			color.Cyan("Diffing Top with Current: %v (%v) vs %v (%v)", firstFile, first.Hash, currentFile, current.Hash)
-			if util2.IsDebugMode() {
-				util2.PrintFile(firstFile, firstFile)
-				util2.PrintFile(currentFile, currentFile)
+			if util.IsDebugMode() {
+				util.PrintFile(firstFile, firstFile)
+				util.PrintFile(currentFile, currentFile)
 			}
 			fmt.Println(RunCommandIgnoreError(fmt.Sprintf("colordiff %v %v", firstFile, currentFile)))
 		}
@@ -153,11 +153,11 @@ func Md5Checker(cmd string, cluster string) {
 }
 
 func SearchContent(regex string) string {
-	return RunCommandIgnoreError(fmt.Sprintf("grep -inrR '%v' %v", regex, config2.OUTPUT_PATH))
+	return RunCommandIgnoreError(fmt.Sprintf("grep -inrR '%v' %v", regex, config.OUTPUT_PATH))
 }
 
 func getClusterFile(name string) string {
-	return fmt.Sprintf("%v/%v.txt", config2.CLUSTER_PATH, name)
+	return fmt.Sprintf("%v/%v.txt", config.CLUSTER_PATH, name)
 }
 
 func (self *Pssh) getDisplayFlag() string {

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/common/telemetry"
-	util2 "github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -18,14 +18,14 @@ import (
 )
 
 type FunServer struct {
-	GinEngine *gin.Engine              `inject:""`
-	Server    *http.Server             `inject:""`
-	Shutdown  *util2.GracefullShutdown `inject:""`
-	Tracer    trace.Tracer             `inject:""`
+	GinEngine *gin.Engine   `container:"type"`
+	Server    *http.Server  `container:"type"`
+	Shutdown  util.Shutdown `container:"type"`
+	Tracer    trace.Tracer  `container:"type"`
 
 	/* Handlers */
-	PersonHandler *PersonHandler `inject:""`
-	AdminHandler  *AdminHandler  `inject:""`
+	PersonHandler *PersonHandler `container:"type"`
+	AdminHandler  *AdminHandler  `container:"type"`
 }
 
 func (self *FunServer) initRoutes() {

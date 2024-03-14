@@ -19,7 +19,11 @@ type PersonDaoInterface interface {
 }
 
 type PersonDao struct {
-	BaseDao `inject:"inline"`
+	BaseDao
+}
+
+func NewPersonDao(baseDao util.BaseDao) PersonDaoInterface {
+	return &PersonDao{BaseDao: baseDao}
 }
 
 func (self *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {

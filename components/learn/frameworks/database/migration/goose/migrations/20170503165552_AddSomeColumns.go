@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	model2 "github.com/amanhigh/go-fun/components/learn/frameworks/database/orm/model"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/database/orm/model"
 )
 
 // Up is executed when this migration is applied
@@ -16,7 +16,7 @@ func Up_20170503165552(txn *sql.Tx) {
 func migrateData() {
 	db := orm.DB
 	defer db.Close()
-	verticals := new([]model2.Vertical)
+	verticals := new([]model.Vertical)
 	db.Find(verticals)
 	for _, vertical := range *verticals {
 		vertical.MyColumn = "My" + vertical.Name
