@@ -15,7 +15,7 @@ import (
 var _ = Describe("Markdown", func() {
 
 	var (
-		filePath = "./res/play.md"
+		filePath = "../res/play.md"
 		data     []byte
 		err      error
 		root     ast.Node
