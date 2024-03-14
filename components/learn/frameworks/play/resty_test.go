@@ -14,7 +14,7 @@ import (
 type BinAnyResponse struct {
 	Headers map[string]string `json:"headers"`
 	//Data db.Person `json:"data"`
-	Method string `json:"method"`
+	Method string `json:"verb"`
 }
 
 var _ = Describe("Resty", func() {
@@ -45,9 +45,9 @@ var _ = Describe("Resty", func() {
 		//client.SetDebug(true)
 		//client.EnableTrace()
 		client.SetHeader("Content-Type", "application/json")
-		client.SetHeaderVerbatim("Foo", "bar")
+		client.SetHeaderVerbatim("foo", "bar")
 		client.SetTimeout(2 * time.Second)
-		client.SetBaseURL("https://httpbin.org")
+		client.SetBaseURL("https://httpbin.dmuth.org") //https://httpbin.org,https://httpbin.dev
 
 		//Try 2 times at interval of one second, max time 5 Seconds
 		client.SetRetryCount(5).
@@ -69,7 +69,7 @@ var _ = Describe("Resty", func() {
 		var (
 			person      fun.PersonRequest
 			binResponse BinAnyResponse
-			headerKey   = "Myheader"
+			headerKey   = "myheader"
 			headerValue = "MyHeaderValue"
 		)
 
@@ -94,7 +94,7 @@ var _ = Describe("Resty", func() {
 			Expect(binResponse.Method).To(Equal(http.MethodPost))
 			Expect(len(binResponse.Headers)).To(BeNumerically(">", 2))
 			Expect(binResponse.Headers).To(HaveKeyWithValue(headerKey, headerValue))
-			Expect(binResponse.Headers).To(HaveKeyWithValue("Foo", "bar"), "Having Global Headers")
+			Expect(binResponse.Headers).To(HaveKeyWithValue("foo", "bar"), "Having Global Headers")
 		})
 	})
 
