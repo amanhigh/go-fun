@@ -1,15 +1,16 @@
-package play_fast_test
+package play
 
 import (
 	"context"
 	"io/ioutil"
 
+	"github.com/amanhigh/go-fun/models"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"golang.design/x/clipboard"
 )
 
-var _ = Describe("Clipboard", func() {
+var _ = Describe("Clipboard", Label(models.GINKGO_SLOW), func() {
 	var (
 		err      error
 		testData = "CopyThis!!"
