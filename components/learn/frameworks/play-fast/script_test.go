@@ -13,7 +13,8 @@ import (
 var _ = Describe("Script", func() {
 
 	var (
-		filePath = "../res/play.md"
+		resDir   = "../res"
+		filePath = resDir + "/play.md"
 	)
 
 	It("should read file", func() {
@@ -80,7 +81,7 @@ var _ = Describe("Script", func() {
 		dir, err := script.Echo(filePath).Dirname().String()
 		Expect(err).To(BeNil())
 		// Replace with the actual directory of your file
-		Expect(dir).Should(Equal("./res\n"))
+		Expect(dir).Should(Equal("../res\n"))
 	})
 
 	It("should join lines", func() {
@@ -101,7 +102,7 @@ var _ = Describe("Script", func() {
 	})
 
 	It("should concatenate files", func() {
-		contents, err := script.ListFiles("./res").Concat().String()
+		contents, err := script.ListFiles(resDir).Concat().String()
 		Expect(err).To(BeNil())
 		Expect(contents).Should(ContainSubstring("Sample Markdown"))
 	})
@@ -113,17 +114,17 @@ var _ = Describe("Script", func() {
 	})
 
 	It("should list files", func() {
-		files, err := script.ListFiles("./res").Slice()
+		files, err := script.ListFiles(resDir).Slice()
 		Expect(err).To(BeNil())
 		// Replace with the actual list of files in your directory
-		Expect(files).Should(ContainElements([]string{"res/play.md"}))
+		Expect(files).Should(ContainElements([]string{"../res/play.md"}))
 	})
 
 	It("should find files", func() {
-		files, err := script.FindFiles("./res").Slice()
+		files, err := script.FindFiles(resDir).Slice()
 		Expect(err).To(BeNil())
 		// Replace with the actual list of files in your directory
-		Expect(files).Should(ContainElements([]string{"res/play.md"}))
+		Expect(files).Should(ContainElements([]string{"../res/play.md"}))
 	})
 
 	It("should wait for parallel commands", func() {
