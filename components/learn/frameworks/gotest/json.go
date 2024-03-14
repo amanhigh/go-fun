@@ -7,12 +7,13 @@ package gotest
 
 import (
 	"encoding/json"
+	"errors"
 )
 
 //go:generate mockery --name PersonEncoder --inpackage --structname MockEncoder
 type PersonEncoder interface {
-	EncodePerson(p Person) (jsonString string, err error)
-	DecodePerson(encodedPerson string) (p Person, err error)
+	EncodePerson(person Person) (jsonString string, err error)
+	DecodePerson(encodedPerson string) (person Person, err error)
 }
 
 type Person struct {
@@ -21,14 +22,21 @@ type Person struct {
 	MobileNumber int64
 }
 
-func decodePerson(encodedPerson string) (p Person, err error) {
-	err = json.Unmarshal([]byte(encodedPerson), &p)
+type PersonEncoderImpl struct{}
+
+func (p *PersonEncoderImpl) DecodePerson(encodedPerson string) (person Person, err error) {
+	err = json.Unmarshal([]byte(encodedPerson), &person)
 	return
 }
 
-func encodePerson(p Person) (jsonString string, err error) {
+func (p *PersonEncoderImpl) EncodePerson(person Person) (jsonString string, err error) {
 	var jsonBytes []byte
-	jsonBytes, err = json.Marshal(p)
+
+	if person.Age < 0 {
+		err = errors.New("Invalid Age")
+		return
+	}
+	jsonBytes, err = json.Marshal(person)
 	jsonString = string(jsonBytes)
 	return
 }

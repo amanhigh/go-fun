@@ -11,22 +11,23 @@ import (
 
 func TestConvey(t *testing.T) {
 	var (
-		name       = "Zoye"
-		age        = 44
-		number     = int64(88983333)
-		personJson = fmt.Sprintf(`{"name":"%s","Age":%d,"MobileNumber":%d}`, name, age, number)
-		person     = Person{name, age, number}
+		name          = "Zoye"
+		age           = 44
+		number        = int64(88983333)
+		personJson    = fmt.Sprintf(`{"name":"%s","Age":%d,"MobileNumber":%d}`, name, age, number)
+		person        = Person{name, age, number}
+		personEncoder = &PersonEncoderImpl{}
 	)
 
 	Convey("Json", t, func() {
 		Convey("encode", func() {
-			jsonString, err := encodePerson(person)
+			jsonString, err := personEncoder.EncodePerson(person)
 			So(err, ShouldBeNil)
 			So(jsonString, ShouldEqual, personJson)
 		})
 
 		Convey("decode", func() {
-			decodedPerson, err := decodePerson(personJson)
+			decodedPerson, err := personEncoder.DecodePerson(personJson)
 			So(err, ShouldBeNil)
 			So(decodedPerson, ShouldResemble, person)
 		})
