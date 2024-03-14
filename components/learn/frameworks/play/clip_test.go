@@ -2,7 +2,7 @@ package play
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 
 	"github.com/amanhigh/go-fun/models"
 	. "github.com/onsi/ginkgo/v2"
@@ -48,7 +48,7 @@ var _ = Describe("Clipboard", Label(models.GINKGO_SLOW), func() {
 		var imgData []byte
 
 		BeforeEach(func() {
-			imgData, err = ioutil.ReadFile("./res/flower.jpg")
+			imgData, err = os.ReadFile("../res/flower.jpg")
 			Expect(err).To(BeNil())
 			ch = clipboard.Write(clipboard.FmtImage, imgData)
 		})
@@ -56,7 +56,7 @@ var _ = Describe("Clipboard", Label(models.GINKGO_SLOW), func() {
 		It("should be pasted", func() {
 			pastedImageData := clipboard.Read(clipboard.FmtImage)
 			Expect(pastedImageData).To(Equal(imgData))
-			// os.WriteFile("./res/test.jpg", imgData, 0644)
+			// os.WriteFile("../res/test.jpg", imgData, 0644)
 		})
 
 		It("should signal overwrite", func() {

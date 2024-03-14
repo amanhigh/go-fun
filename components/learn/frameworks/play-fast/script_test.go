@@ -13,7 +13,7 @@ import (
 var _ = Describe("Script", func() {
 
 	var (
-		filePath = "./res/play.md"
+		filePath = "../res/play.md"
 	)
 
 	It("should read file", func() {
