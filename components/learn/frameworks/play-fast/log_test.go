@@ -1,9 +1,11 @@
 package play_fast
 
 import (
+	"bytes"
 	"os"
 
 	"github.com/amanhigh/go-fun/common/util"
+	"github.com/fatih/color"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/rs/zerolog"
@@ -16,7 +18,7 @@ import (
 
 // https://www.sentinelone.com/blog/log-formatting-best-practices-readable/
 
-var _ = FDescribe("Logging", func() {
+var _ = Describe("Logging", func() {
 	var (
 		log_file  = "/tmp/log_test"
 		file      *os.File
@@ -189,6 +191,8 @@ var _ = FDescribe("Logging", func() {
 		})
 	})
 
+	// https://github.com/rs/zerolog?tab=readme-ov-file#multiple-log-output
+	// https://github.com/rs/zerolog?tab=readme-ov-file#global-settings
 	Context("ZeroLog", func() {
 		var (
 			logger zerolog.Logger
@@ -196,13 +200,25 @@ var _ = FDescribe("Logging", func() {
 		)
 
 		It("should build", func() {
-			logger = zerolog.New(os.Stdout)
+			logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
 			Expect(logger).To(Not(BeNil()))
 		})
 
 		Context("StdOut", func() {
 			BeforeEach(func() {
-				logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
+				// https://github.com/rs/zerolog?tab=readme-ov-file#create-logger-instance-to-manage-different-outputs
+				output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "2006-01-02 15:04:05"}
+				output.FormatFieldName = func(i any) string {
+					return color.YellowString("%s -> ", i)
+				}
+				output.FormatFieldValue = func(i any) string {
+					return color.BlueString("%s", i)
+				}
+				output.FormatMessage = func(i any) string {
+					white := color.New(color.FgWhite, color.Bold)
+					return white.Sprintf(" | %s | ", i)
+				}
+				logger = zerolog.New(output).With().Timestamp().Logger()
 			})
 
 			It("should write log", func() {
@@ -210,13 +226,15 @@ var _ = FDescribe("Logging", func() {
 			})
 
 			It("should print fields", func() {
-				logger.Info().
+				subLogger := logger.With().
 					Str("Logger", name).
 					Str("Field1", field1).
 					Str("Field2", field2).
-					Msg(msgStdout)
+					Logger()
+				subLogger.Info().Msg(msgStdout)
 			})
 		})
+
 		Context("File", func() {
 			BeforeEach(func() {
 				file, err = util.OpenOrCreateFile(log_file)
@@ -243,6 +261,43 @@ var _ = FDescribe("Logging", func() {
 				Expect(lines[0]).To(ContainSubstring(msgFile))
 				Expect(lines[0]).To(ContainSubstring(`"level":"info"`))
 			})
+
+			It("should log context values", func() {
+				// HACK: How to Print Request Id from Context.
+				// Create a child logger for concurrency safety
+				child := logger.With().Logger()
+
+				child.UpdateContext(func(c zerolog.Context) zerolog.Context {
+					return c.Str("Child", name)
+				})
+				child.Info().Msg(msgFile)
+				lines := util.ReadAllLines(log_file)
+				Expect(len(lines)).To(Equal(1))
+				Expect(lines[0]).To(ContainSubstring(msgFile))
+				Expect(lines[0]).To(ContainSubstring(`"Child":"` + name))
+			})
+
+			It("should sample logs", func() {
+				// https://github.com/rs/zerolog?tab=readme-ov-file#log-sampling
+				sampled := logger.Sample(&zerolog.BasicSampler{N: 10})
+				sampled.Info().Msg("will be logged every 10 messages")
+			})
 		})
+
+		It("should have test logger", func() {
+			var buf bytes.Buffer
+			logger := zerolog.New(&buf)
+
+			logger.Info().Msg(msgFile)
+
+			logOutput := buf.String()
+			Expect(logOutput).To(ContainSubstring(msgFile))
+			Expect(logOutput).To(ContainSubstring(`"level":"info"`))
+
+			buf.Reset()
+
+			Expect(buf.String()).To(Equal(""))
+		})
+
 	})
 })
