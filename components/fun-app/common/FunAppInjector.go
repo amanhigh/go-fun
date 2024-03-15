@@ -48,7 +48,7 @@ func NewFunAppInjector(cfg config.FunAppConfig) interfaces.ApplicationInjector {
 
 func (self *FunAppInjector) BuildApp() (app any, err error) {
 	/* Setup Telemetry */
-	telemetry.InitLogger(self.config.Server.LogLevel)
+	telemetry.InitLogrus(self.config.Server.LogLevel)
 	telemetry.InitTracerProvider(context.Background(), NAMESPACE, self.config.Tracing)
 
 	/* Validators */
