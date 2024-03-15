@@ -2,14 +2,15 @@ package tools
 
 import (
 	"fmt"
-	"github.com/amanhigh/go-fun/common/util"
-	"github.com/amanhigh/go-fun/models/config"
-	"github.com/fatih/color"
-	"github.com/thoas/go-funk"
 	"io/ioutil"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/models/config"
+	"github.com/fatih/color"
+	"github.com/samber/lo"
 )
 
 var FastPssh = Pssh{20, config.OUTPUT_PATH, config.ERROR_PATH, false}
@@ -77,8 +78,7 @@ func ReadClusterFile(clusterName string) []string {
 func RemoveCluster(mainClusterName string, removeClusterName string) int {
 	mainSet := ReadClusterFile(mainClusterName)
 	removeSet := ReadClusterFile(removeClusterName)
-	diff, _ := funk.Difference(mainSet, removeSet)
-	finalSet := diff.([]string)
+	finalSet := lo.Without(mainSet, removeSet...)
 	WriteClusterFile(mainClusterName, strings.Join(finalSet, "\n"))
 	return len(mainSet) - len(finalSet)
 }

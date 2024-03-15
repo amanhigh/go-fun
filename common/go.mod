@@ -18,9 +18,9 @@ require (
 	github.com/google/uuid v1.4.0
 	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.29.0
+	github.com/samber/lo v1.39.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/testcontainers/testcontainers-go v0.27.0
-	github.com/thoas/go-funk v0.9.3
 	github.com/uptrace/opentelemetry-go-extra/otelgorm v0.2.3
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.2.3
 	go.opentelemetry.io/otel v1.20.0
