@@ -1,6 +1,7 @@
 package play_fast_test
 
 import (
+	"fmt"
 	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -123,6 +124,66 @@ var _ = FDescribe("Streams", func() {
 			Expect(len(groupedByGender["female"])).To(Equal(4))
 		})
 
+		Context("AgeMap (Associate)", func() {
+			var ageMap map[int]Person
+			BeforeEach(func() {
+				ageMap = lo.Associate(people, func(person Person) (key int, value Person) {
+					return person.Age, person
+				})
+			})
+
+			It("should build AgeMap (Associate)", func() {
+				Expect(len(ageMap)).To(Equal(6)) // Unique ages
+			})
+
+			It("should extract keys (ages)", func() {
+				ages := lo.Keys(ageMap)
+				Expect(len(ages)).To(Equal(6))
+				Expect(ages[0]).ShouldNot(Equal(0))
+			})
+
+			It("should extract values (persons)", func() {
+				persons := lo.Values(ageMap)
+				Expect(len(persons)).To(Equal(6))
+				Expect(persons[0].Name).ShouldNot(BeEmpty())
+			})
+
+			It("should invert", func() {
+				invertedMap := lo.Invert(ageMap)
+				Expect(len(invertedMap)).To(Equal(6))
+			})
+
+			It("should map to slice (Age_Name)", func() {
+				ageNames := lo.MapToSlice(ageMap, func(age int, person Person) string { return fmt.Sprintf("%d_%s", age, person.Name) })
+				Expect(len(ageNames)).To(Equal(6))
+				Expect(ageNames[0]).Should(ContainSubstring("_"))
+			})
+
+			It("should pick by keys (age > 30)", func() {
+				// Define the keys you want to pick
+				keys := []int{32, 35}
+
+				olderPeople := lo.PickByKeys(ageMap, keys)
+				Expect(len(olderPeople)).To(Equal(2))
+			})
+		})
+
+		It("should drop and drop right", func() {
+			droppedPeople := lo.Drop(people, 2)
+			Expect(len(droppedPeople)).To(Equal(5))
+
+			droppedRightPeople := lo.DropRight(people, 2)
+			Expect(len(droppedRightPeople)).To(Equal(5))
+		})
+
+		It("should reject (odd age)", func() {
+			evenAgePeople := lo.Reject(people, func(person Person, index int) bool {
+				return person.Age%2 != 0
+			})
+
+			Expect(len(evenAgePeople)).To(Equal(2)) // People with even ages
+		})
+
 		Context("Map Age", func() {
 			var ages []int
 			BeforeEach(func() {
@@ -149,6 +210,16 @@ var _ = FDescribe("Streams", func() {
 				Expect(len(reversedAges)).To(Equal(7))
 				Expect(reversedAges[0]).To(Equal(15))
 				Expect(reversedAges[len(reversedAges)-1]).To(Equal(32))
+			})
+
+			It("should chunk", func() {
+				chunks := lo.Chunk(ages, 3)
+				Expect(len(chunks)).To(Equal(3))
+			})
+
+			It("should count by (age < 30)", func() {
+				count := lo.CountBy(ages, func(age int) bool { return age < 30 })
+				Expect(count).To(Equal(4)) // Number of people with age < 30
 			})
 		})
 
