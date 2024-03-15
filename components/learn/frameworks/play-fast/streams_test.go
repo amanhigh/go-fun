@@ -1,4 +1,4 @@
-package play_fast_test
+package play_fast
 
 import (
 	"fmt"
@@ -213,6 +213,49 @@ var _ = FDescribe("Streams", func() {
 				Expect(lo.Contains(ages, 32)).To(BeTrue())
 				Expect(lo.Contains(ages, 100)).To(BeFalse())
 			})
+
+			It("should check Contains", func() {
+				Expect(lo.Contains(ages, 35)).To(BeTrue())
+			})
+
+			It("should check ContainsBy (Age 35)", func() {
+				Expect(lo.ContainsBy(people, func(person Person) bool { return person.Age == 35 })).To(BeTrue())
+			})
+
+			It("should check Every", func() {
+				Expect(lo.Every(ages, []int{32, 17})).To(BeTrue())
+			})
+
+			It("should check EveryBy (Age > 0)", func() {
+				Expect(lo.EveryBy(ages, func(age int) bool { return age > 0 })).To(BeTrue())
+			})
+
+			It("should check Some", func() {
+				Expect(lo.Some(ages, []int{13})).To(BeTrue())
+			})
+
+			It("should check SomeBy (Age between 20 and 30)", func() {
+				Expect(lo.SomeBy(ages, func(age int) bool { return age >= 20 && age <= 30 })).To(BeTrue())
+			})
+
+			It("should check None (Age > 100)", func() {
+				Expect(lo.None(ages, []int{101})).To(BeTrue())
+			})
+
+			It("should check IndexOf", func() {
+				Expect(lo.IndexOf(ages, 35)).To(Equal(3)) // Assuming the ages are in the same order as defined
+			})
+
+			It("should check FindOrElse", func() {
+				foundPerson := lo.FindOrElse(people, Person{Name: "Default Person"}, func(person Person) bool { return person.Name == "Nonexistent Person" })
+				Expect(foundPerson.Name).To(Equal("Default Person"))
+			})
+
+		})
+		It("should Find Person", func() {
+			foundPerson, ok := lo.Find(people, func(person Person) bool { return person.Name == "Jane Doe" })
+			Expect(ok).To(BeTrue())
+			Expect(foundPerson.Name).To(Equal("Jane Doe"))
 		})
 
 		It("should shuffle", func() {
