@@ -25,7 +25,6 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/teris-io/shortid v0.0.0-20220617161101-71ec9f2aa569
 	github.com/thoas/go-funk v0.9.3
-	github.com/wesovilabs/koazee v0.0.5
 	github.com/xlab/treeprint v1.1.0
 	go.uber.org/mock v0.4.0
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea
