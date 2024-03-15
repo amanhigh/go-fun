@@ -1,13 +1,15 @@
 package play_fast_test
 
 import (
+	"strings"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
 	"github.com/wesovilabs/koazee"
 	"github.com/wesovilabs/koazee/stream"
-	"strings"
 )
 
 type Person struct {
@@ -16,7 +18,7 @@ type Person struct {
 	Age  int
 }
 
-var _ = Describe("Streams", func() {
+var _ = FDescribe("Streams", func() {
 	var (
 		people []Person
 	)
@@ -80,7 +82,81 @@ var _ = Describe("Streams", func() {
 			Expect(ageList).To(HaveLen(6))
 			Expect(ageList).To(ContainElements(13, 15, 32, 17, 20, 35))
 		})
+	})
 
+	Context("Lodash", func() {
+		It("should filter", func() {
+			females := lo.Filter(people, func(person Person, index int) bool {
+				return !person.Male
+			})
+
+			Expect(len(females)).To(Equal(4))
+			lo.ForEach(females, func(person Person, index int) {
+				Expect(person.Male).To(BeFalse())
+			})
+		})
+
+		It("should do unique", func() {
+			uniqueNames := lo.Uniq(lo.Map(people, func(person Person, index int) string { return person.Name }))
+
+			Expect(len(uniqueNames)).To(Equal(6))
+			Expect(uniqueNames).To(ContainElements("John Smith", "Jane Doe"))
+		})
+
+		It("should sum age (reduce)", func() {
+			totalAge := lo.Reduce(people, func(total int, person Person, index int) int {
+				return total + person.Age
+			}, 0)
+
+			Expect(totalAge).To(Equal(167)) // Sum of ages
+		})
+
+		It("should group by gender", func() {
+			groupedByGender := lo.GroupBy(people, func(person Person) string {
+				if person.Male {
+					return "male"
+				}
+				return "female"
+			})
+
+			Expect(len(groupedByGender["male"])).To(Equal(3))
+			Expect(len(groupedByGender["female"])).To(Equal(4))
+		})
+
+		Context("Map Age", func() {
+			var ages []int
+			BeforeEach(func() {
+				ages = lo.Map(people, func(person Person, index int) int { return person.Age })
+			})
+
+			It("should work", func() {
+				Expect(len(ages)).To(Equal(7))
+				Expect(ages).To(ContainElements(32, 17, 20, 35, 35, 13, 15))
+			})
+
+			It("should find Max", func() {
+				maxAge := lo.Max(ages)
+				Expect(maxAge).To(Equal(35))
+			})
+
+			It("should find Min", func() {
+				minAge := lo.Min(ages)
+				Expect(minAge).To(Equal(13))
+			})
+
+			It("should reverse", func() {
+				reversedAges := lo.Reverse(ages)
+				Expect(len(reversedAges)).To(Equal(7))
+				Expect(reversedAges[0]).To(Equal(15))
+				Expect(reversedAges[len(reversedAges)-1]).To(Equal(32))
+			})
+		})
+
+		It("should shuffle", func() {
+			shuffledPeople := lo.Shuffle(people)
+
+			Expect(len(shuffledPeople)).To(Equal(7))
+		})
 	})
 
 })

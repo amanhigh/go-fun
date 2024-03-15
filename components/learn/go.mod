@@ -157,6 +157,7 @@ require (
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/rotisserie/eris v0.5.4
 	github.com/ryanuber/go-glob v1.0.0 // indirect
+	github.com/samber/lo v1.39.0
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/testcontainers/testcontainers-go v0.27.0
