@@ -155,6 +155,7 @@ require (
 	github.com/prometheus/common v0.45.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/rotisserie/eris v0.5.4
+	github.com/rs/zerolog v1.32.0
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/samber/lo v1.39.0
 	github.com/smartystreets/assertions v1.2.0 // indirect

@@ -6,6 +6,7 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/rs/zerolog"
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
 	"go.uber.org/zap"
@@ -23,12 +24,12 @@ var _ = FDescribe("Logging", func() {
 		msgStdout = "I am Testing Logging on Stdout"
 		field1    = "I am Param1"
 		field2    = "I am Param2"
+		err       error
 	)
 	Context("Logrus", func() {
 		var (
 			logger *logrus.Logger
-			err    error
-			rus    = "logrus"
+			name   = "logrus"
 		)
 
 		It("should build", func() {
@@ -47,12 +48,12 @@ var _ = FDescribe("Logging", func() {
 			})
 
 			It("should write log", func() {
-				logger.WithField("Logger", rus).Info(msgStdout)
+				logger.WithField("Logger", name).Info(msgStdout)
 			})
 
 			It("should print fields", func() {
 				fields := logrus.Fields{
-					"Logger": rus,
+					"Logger": name,
 					"Field1": field1,
 					"Field2": field2,
 				}
@@ -106,8 +107,7 @@ var _ = FDescribe("Logging", func() {
 	Context("Zap", func() {
 		var (
 			logger *zap.Logger
-			err    error
-			zapStr = "zap"
+			name   = "zap"
 		)
 
 		It("should build", func() {
@@ -128,12 +128,12 @@ var _ = FDescribe("Logging", func() {
 			})
 
 			It("should write log", func() {
-				logger.Info(msgStdout, zap.String("Logger", zapStr))
+				logger.Info(msgStdout, zap.String("Logger", name))
 			})
 
 			It("should print fields", func() {
 				fields := zap.Fields(
-					zap.String("Logger", zapStr),
+					zap.String("Logger", name),
 					zap.String("Field1", field1),
 					zap.String("Field2", field2),
 				)
@@ -189,4 +189,60 @@ var _ = FDescribe("Logging", func() {
 		})
 	})
 
+	Context("ZeroLog", func() {
+		var (
+			logger zerolog.Logger
+			name   = "zerolog"
+		)
+
+		It("should build", func() {
+			logger = zerolog.New(os.Stdout)
+			Expect(logger).To(Not(BeNil()))
+		})
+
+		Context("StdOut", func() {
+			BeforeEach(func() {
+				logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
+			})
+
+			It("should write log", func() {
+				logger.Info().Str("Logger", name).Msg(msgStdout)
+			})
+
+			It("should print fields", func() {
+				logger.Info().
+					Str("Logger", name).
+					Str("Field1", field1).
+					Str("Field2", field2).
+					Msg(msgStdout)
+			})
+		})
+		Context("File", func() {
+			BeforeEach(func() {
+				file, err = util.OpenOrCreateFile(log_file)
+				Expect(err).To(BeNil())
+				logger = zerolog.New(file).With().Timestamp().Logger()
+			})
+
+			AfterEach(func() {
+				err = os.Remove(log_file)
+				Expect(err).To(BeNil())
+			})
+
+			It("should write log", func() {
+				logger.Info().Str("Logger", name).Msg(msgFile)
+				lines := util.ReadAllLines(log_file)
+				Expect(len(lines)).To(Equal(1))
+				Expect(lines[0]).To(ContainSubstring(msgFile))
+			})
+
+			It("should write json log", func() {
+				logger.Info().Str("Logger", name).Msg(msgFile)
+				lines := util.ReadAllLines(log_file)
+				Expect(len(lines)).To(Equal(1))
+				Expect(lines[0]).To(ContainSubstring(msgFile))
+				Expect(lines[0]).To(ContainSubstring(`"level":"info"`))
+			})
+		})
+	})
 })
