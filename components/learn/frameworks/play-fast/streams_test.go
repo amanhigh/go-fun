@@ -221,6 +221,35 @@ var _ = FDescribe("Streams", func() {
 				count := lo.CountBy(ages, func(age int) bool { return age < 30 })
 				Expect(count).To(Equal(4)) // Number of people with age < 30
 			})
+
+			It("should sum", func() {
+				sum := lo.Sum(ages)
+				Expect(sum).To(Equal(167)) // Sum of ages
+			})
+
+			It("should convert slice to channel and back", func() {
+				ageChan := lo.SliceToChannel(2, ages)
+				agesBack := lo.ChannelToSlice(ageChan)
+
+				Expect(len(agesBack)).To(Equal(7))
+				Expect(agesBack).To(ContainElements(32, 17, 20, 35, 35, 13, 15))
+			})
+
+			It("should buffer (read from channel)", func() {
+				ageChan := lo.SliceToChannel(1, ages)
+				bufferedAges, length, _, ok := lo.Buffer(ageChan, 3)
+
+				Expect(ok).To(BeTrue())
+				Expect(length).To(Equal(3))
+				for _, age := range bufferedAges {
+					Expect(age).To(BeElementOf(ages))
+				}
+			})
+
+			It("should contain", func() {
+				Expect(lo.Contains(ages, 32)).To(BeTrue())
+				Expect(lo.Contains(ages, 100)).To(BeFalse())
+			})
 		})
 
 		It("should shuffle", func() {
