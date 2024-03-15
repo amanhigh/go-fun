@@ -15,7 +15,7 @@ type Person struct {
 	Age  int
 }
 
-var _ = FDescribe("Streams", func() {
+var _ = Describe("Streams", func() {
 	var (
 		people []Person
 	)
@@ -252,6 +252,49 @@ var _ = FDescribe("Streams", func() {
 			})
 
 		})
+
+		Context("Conditions", func() {
+			ages := []int{32, 17, 20, 35, 35, 13, 15}
+
+			It("should check Without", func() {
+				Expect(lo.Without(ages, 32, 17)).To(Equal([]int{20, 35, 35, 13, 15}))
+			})
+
+			It("should check WithoutEmpty", func() {
+				Expect(lo.WithoutEmpty([]string{"John", "", "Jane"})).To(Equal([]string{"John", "Jane"}))
+			})
+
+			It("should check Nth", func() {
+				Expect(lo.Nth(ages, 2)).To(Equal(20)) // Zero-indexed
+			})
+
+			It("should check Ternary", func() {
+				Expect(lo.Ternary(true, "yes", "no")).To(Equal("yes"))
+				Expect(lo.Ternary(false, "yes", "no")).To(Equal("no"))
+			})
+
+			It("should check lo.If and lo.ElseIf", func() {
+				result := lo.If(len(ages) > 0, "PositiveAge").ElseIf(len(ages) == 0, "ZeroAge").Else("unknown")
+				Expect(result).To(Equal("PositiveAge"))
+			})
+
+			It("should check lo.IsNil", func() {
+				Expect(lo.IsNil(nil)).To(BeTrue())
+				Expect(lo.IsNil(ages)).To(BeFalse())
+			})
+
+			It("should check lo.Empty", func() {
+				Expect(lo.Empty[int]()).To(Equal(0))
+				Expect(lo.Empty[string]()).To(Equal(""))
+			})
+
+			It("should validate", func() {
+				slice := []string{"a"}
+				err := lo.Validate(len(slice) == 0, "Slice should be empty but contains %v", slice)
+				Expect(err).Should(HaveOccurred())
+			})
+		})
+
 		It("should Find Person", func() {
 			foundPerson, ok := lo.Find(people, func(person Person) bool { return person.Name == "Jane Doe" })
 			Expect(ok).To(BeTrue())
