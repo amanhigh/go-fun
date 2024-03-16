@@ -2,8 +2,6 @@ package util
 
 import (
 	"bufio"
-
-	"fmt"
 )
 
 func ReadCountInts(scanner *bufio.Scanner) (n int, ints []int) {
@@ -22,7 +20,6 @@ func ReadMatrix(scanner *bufio.Scanner, n, m int) (matrix [][]int) {
 
 func ReadMatrixWithDimensions(scanner *bufio.Scanner) (matrix [][]int, n, m int) {
 	ints := ReadInts(scanner, 2)
-	fmt.Println(ints)
 	n = ints[0]
 	m = ints[1]
 	matrix = ReadMatrix(scanner, n, m)

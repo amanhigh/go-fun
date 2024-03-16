@@ -9,7 +9,7 @@ import (
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/config"
-	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
 )
 
@@ -33,14 +33,14 @@ func (self *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput
 	if disableOutput {
 		RunCommandPrintError(psshCmd)
 	} else {
-		color.White(fmt.Sprintf("Running Parallel SSH. Cluster: %v Parallelism:%v", cluster, parallelism))
+		log.Info().Str("Cluster", cluster).Int("Parallelism", parallelism).Str("CMD", psshCmd).Msg("Running Parallel SSH")
 		LiveCommand(psshCmd)
 	}
 
 	RunIf(fmt.Sprintf("grep FAILURE %v", getClusterFile("console")), func(output string) {
 		PrintCommand(fmt.Sprintf("grep SUCCESS %v | awk '{print $4}' > %v", getClusterFile("console"), getClusterFile("pass")))
 		PrintCommand(fmt.Sprintf("grep FAILURE %v | awk '{print $4}' > %v", getClusterFile("console"), getClusterFile("fail")))
-		color.Yellow("Failed Hosts:")
+		log.Warn().Str("Cluster", cluster).Msg("Failed Hosts:")
 		PrintCommand(fmt.Sprintf("cat %v", getClusterFile("fail")))
 	})
 }
@@ -93,7 +93,7 @@ func GetClusterHost(clusterName string, index int) string {
 }
 
 func SearchCluster(keyword string) (clusters []string) {
-	color.Blue("Searching: " + config.CLUSTER_PATH)
+	log.Info().Str("Path", config.CLUSTER_PATH).Msg("Searching")
 	files, _ := filepath.Glob(fmt.Sprintf("%v/*%v*", config.CLUSTER_PATH, keyword))
 	for _, name := range files {
 		fileName := strings.Replace(name, config.CLUSTER_PATH+"/", "", 1)
@@ -124,14 +124,14 @@ func Md5Checker(cmd string, cluster string) {
 
 	/* If more than one Md5 Sums Found */
 	if len(sortList) > 1 {
-		color.Red("Multiple MD5 Detected, Cluster Non Homogenous: %v", cluster)
+		log.Warn().Str("Cluster", cluster).Str("CMD", cmd).Msg("Multiple MD5 Detected")
 
 		/* Sort Md5 List by Count */
 		sort.Slice(sortList, func(i, j int) bool {
 			return sortList[i].Count > sortList[j].Count
 		})
 		for _, value := range sortList {
-			color.Blue("%v %v", value.Hash, value.Count)
+			log.Warn().Str("Cluster", cluster).Str("Hash", value.Hash).Int("Count", value.Count).Msg("MD5 Result")
 		}
 
 		/* Perform Diff on first file of top two md5's */
@@ -140,7 +140,7 @@ func Md5Checker(cmd string, cluster string) {
 		for i := 1; i < len(sortList); i++ {
 			current := sortList[i]
 			currentFile := current.FileList[0]
-			color.Cyan("Diffing Top with Current: %v (%v) vs %v (%v)", firstFile, first.Hash, currentFile, current.Hash)
+			log.Info().Str("First", firstFile).Str("FirstHash", first.Hash).Str("Current", currentFile).Str("CurrentHash", current.Hash).Msg("Diffing")
 			if util.IsDebugMode() {
 				util.PrintFile(firstFile, firstFile)
 				util.PrintFile(currentFile, currentFile)
@@ -148,7 +148,7 @@ func Md5Checker(cmd string, cluster string) {
 			fmt.Println(RunCommandIgnoreError(fmt.Sprintf("colordiff %v %v", firstFile, currentFile)))
 		}
 	} else {
-		color.Green(fmt.Sprintf("Single Md5 Found, Cluster Homogenous: %v Hash:%v Count:%v", cluster, sortList[0].Hash, sortList[0].Count))
+		log.Info().Str("Cluster", cluster).Str("Hash", sortList[0].Hash).Str("Count", fmt.Sprint(sortList[0].Count)).Msg("Cluster Homogenous")
 	}
 }
 

@@ -12,6 +12,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/rs/zerolog/log"
 )
 
 /* Server */
@@ -20,8 +21,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	if result, e := json.Marshal(p); e == nil {
 		fmt.Fprint(w, string(result))
 	} else {
-		// TODO: #B Remove fmt.Println from Codebase
-		fmt.Println("Error:", e)
+		log.Error().Err(e).Msg("Root Handler")
 	}
 }
 
@@ -78,7 +78,7 @@ func fireSSERequest(request *http.Request, ctx context.Context) (eventChannel ch
 		/* Open a Reader on Response Body */
 		go liveRequestLoop(response, eventChannel, ctx)
 	} else {
-		fmt.Printf("Http Request Failed:%+v\n", err)
+		log.Error().Err(err).Msg("Http SSE Request")
 	}
 
 	return
@@ -95,7 +95,7 @@ func liveRequestLoop(response *http.Response, eventChannel chan SseEvent, ctx co
 		select {
 		case <-ctx.Done():
 			close(eventChannel)
-			fmt.Println("Context Signal Recieved Exiting")
+			log.Debug().Msg("Context Signal Recieved Exiting")
 			return
 		default:
 			/* Read Lines Upto Delimiter */
@@ -109,13 +109,13 @@ func liveRequestLoop(response *http.Response, eventChannel chan SseEvent, ctx co
 
 				/* Exit once Stream Closes */
 				if err == io.EOF {
-					fmt.Println("Stream Reading Finished")
+					log.Debug().Msg("Stream Closed")
 					close(eventChannel)
 					break
 				}
 
 			} else {
-				fmt.Printf("Error Reading Line:%+v\n", err)
+				log.Error().Err(err).Msg("Read Line Error")
 			}
 		}
 	}
