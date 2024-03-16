@@ -131,7 +131,6 @@ info: info-mini ## Minikube Info
 infos: info info-extra ## Minikube Extended Info
 setup: start wait bootstrap port-fwd ## Start, Bootstrap, Port Forward Minikube
 clean: stop ## Stop Minikube
-# HACK:#B Fix Readme
 reset: clean setup info ## Rebuild Minikube
 all: prepare istio dashboard infos port ## Run All Targets
 
