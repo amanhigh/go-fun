@@ -6,12 +6,15 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/common/clients"
+	"github.com/amanhigh/go-fun/common/telemetry"
 	"github.com/amanhigh/go-fun/components/fun-app/common"
 	"github.com/amanhigh/go-fun/models"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/fatih/color"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"testing"
 )
@@ -33,9 +36,12 @@ func TestIt(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
+	// Init Logger
+	telemetry.InitLogger(zerolog.InfoLevel)
+
 	//Run FunApp If not already running
 	if err = client.AdminService.HealthCheck(ctx); err == nil {
-		color.HiGreen("FunApp: Running Already")
+		log.Info().Str("Port", os.Getenv("PORT")).Msg("FunApp: Running Already")
 	} else {
 		os.Setenv("PORT", "8085")
 		go common.RunFunApp()

@@ -5,10 +5,10 @@ import (
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
-	"github.com/fatih/color"
 	"github.com/hashicorp/consul/api"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/rs/zerolog/log"
 	"github.com/testcontainers/testcontainers-go"
 )
 
@@ -30,7 +30,7 @@ var _ = Describe("Consul", Ordered, Label(models.GINKGO_SLOW), func() {
 		// Get Mapped Port
 		consulHost, err := consulContainer.PortEndpoint(ctx, "8500/tcp", "")
 		Expect(err).To(BeNil())
-		color.Green("Consul Endpoint: %s", consulHost)
+		log.Info().Str("Host", consulHost).Msg("Consul Endpoint")
 
 		// Get a new client
 		client, err = api.NewClient(&api.Config{Address: consulHost})
@@ -38,7 +38,7 @@ var _ = Describe("Consul", Ordered, Label(models.GINKGO_SLOW), func() {
 	})
 
 	AfterAll(func() {
-		color.Red("Consul Shutting Down")
+		log.Warn().Msg("Consul Shutting Down")
 		err = consulContainer.Terminate(ctx)
 		Expect(err).To(BeNil())
 	})
