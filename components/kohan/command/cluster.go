@@ -9,7 +9,7 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/amanhigh/go-fun/models/config"
-	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
 
 	"github.com/spf13/cobra"
 )
@@ -81,7 +81,7 @@ var clusterRemoveCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		count := tools.RemoveCluster(args[0], args[1])
-		color.Green("%v items removed from %v", count, args[0])
+		log.Info().Int("Removed", count).Str("Total", args[0]).Msg("Remove Cluster Ips")
 	},
 }
 

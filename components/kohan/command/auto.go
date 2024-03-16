@@ -6,7 +6,7 @@ import (
 
 	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/components/kohan/core"
-	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -37,7 +37,7 @@ var monitorCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		color.Green("Monitoring System: Wait -> %v, Idle -> %v, Now -> %v", wait, idle, time.Now())
+		log.Info().Dur("Wait", wait).Dur("Idle", idle).Time("Time", time.Now()).Msg("Monitoring System")
 		go core.MonitorIdle(args[0], wait, idle)
 		go core.MonitorClipboard(ctx, args[1])
 		core.MonitorInternetConnection(wait)

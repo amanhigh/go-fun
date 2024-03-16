@@ -1,10 +1,8 @@
 package command
 
 import (
-	"os"
-
 	"github.com/amanhigh/go-fun/models/config"
-	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
 
 	"github.com/spf13/cobra"
 )
@@ -19,7 +17,6 @@ func init() {
 
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		color.Red(err.Error())
-		os.Exit(1)
+		log.Fatal().Err(err).Msg("Battle Lost")
 	}
 }

@@ -11,9 +11,7 @@ import (
 	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/config"
-	"github.com/fatih/color"
-
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 var checks = []string{"down", "inactive", "not"}
@@ -24,7 +22,7 @@ const MIN_SECOND = 4
 func ClusterSanity(pkgName string, cmd string, clusterKeyword string) {
 	clusters := tools.SearchCluster(clusterKeyword)
 	for _, cluster := range clusters {
-		color.Yellow("Processing: " + cluster)
+		log.Info().Str("Cluster", cluster).Msg("Sanity Check")
 		if cmd != "" {
 			VerifyStatus(cmd, cluster)
 		}
@@ -40,15 +38,15 @@ func VersionCheck(pkgNameCsv string, cluster string) {
 
 	versionCountMap := computeVersionCountMap()
 	for pkgVersion, count := range versionCountMap {
-		color.Green("%v : %v", pkgVersion, count)
+		log.Info().Str("Package", pkgVersion).Int("Count", count).Msg("Version Check")
 	}
 	if len(versionCountMap) != 1 {
-		color.Red("Multiple Versions Found on %v", cluster)
+		log.Warn().Str("Cluster", cluster).Msg("Multiple Versions Found")
 	}
 }
 
 func VerifyStatus(cmd string, cluster string) {
-	color.Blue("Running Sanity on Cluster: " + cluster)
+	log.Info().Str("Command", cmd).Str("Cluster", cluster).Msg("Sanity Check")
 
 	tools.NORMAL_PSSH.Run(cmd, cluster, 200, true)
 	os.Chdir(config.OUTPUT_PATH)
@@ -57,7 +55,7 @@ func VerifyStatus(cmd string, cluster string) {
 
 	tools.RunIf("find  . -type f -empty | cut -c3-", func(output string) {
 		if len(output) > 0 {
-			color.Red(fmt.Sprintf("Empty Files Found:\n%v", output))
+			log.Warn().Str("Cluster", cluster).Str("Output", output).Msg("Empty Files Found")
 			tools.WriteClusterFile("empty", output)
 		}
 	})
@@ -67,9 +65,9 @@ func VerifyStatus(cmd string, cluster string) {
 
 	minUptime := getMinUptime(contentMap)
 	if minUptime < MIN_SECOND {
-		color.Red("Probable Restart Detected. Second: %v", minUptime)
+		log.Warn().Str("Cluster", cluster).Int("Uptime", minUptime).Int("Threshold", MIN_SECOND).Msg("Probable Restart Detected")
 	} else {
-		color.Green("Checks Complete, Min Uptime (seconds): %v", minUptime)
+		log.Info().Str("Cluster", cluster).Int("Uptime", minUptime).Msg("Checks Complete")
 	}
 
 	if util.IsDebugMode() {
@@ -78,7 +76,7 @@ func VerifyStatus(cmd string, cluster string) {
 }
 
 func VerifyNetworkParameters(cluster string) {
-	color.Yellow("\nVerifying Network Parameters. Cluster: " + cluster)
+	log.Info().Str("Cluster", cluster).Msg("Verifying Network Parameters")
 	tools.Md5Checker("sudo sysctl -a | grep net | grep -v rss_key | grep -v nf_log", cluster)
 }
 
@@ -86,8 +84,7 @@ func VerifyNetworkParameters(cluster string) {
 func performBadStateChecks(contentMap map[string][]string) {
 	for _, check := range checks {
 		if keyWordLines, keyWordIps := extractKeywordLines(contentMap, check); len(keyWordLines) > 0 {
-			color.Blue("Check Failed: " + check)
-			color.Red(strings.Join(keyWordLines, "\n"))
+			log.Warn().Str("Check", check).Strs("Ips", keyWordIps).Strs("Lines", keyWordLines).Msg("Check Failed")
 			tools.WriteClusterFile(check, strings.Join(keyWordIps, "\n"))
 		}
 	}
@@ -103,7 +100,7 @@ func getMinUptime(contentMap map[string][]string) int {
 					minFound = second
 				}
 			} else {
-				log.WithFields(log.Fields{"Error": err}).Error("Error Parsing Second")
+				log.Error().Str("Line", line).Err(err).Msg("Error Parsing Second")
 			}
 		}
 	}

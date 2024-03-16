@@ -12,7 +12,7 @@ import (
 	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/bitfield/script"
-	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
 	"golang.design/x/clipboard"
 )
 
@@ -71,9 +71,9 @@ func RecordTicker(ticker string) (err error) {
 func MonitorInternetConnection(wait time.Duration) {
 	util.ScheduleJob(wait, func(_ bool) {
 		if tools.CheckInternetConnection() {
-			color.Green("Internet UP: %v", time.Now())
+			log.Info().Msg("Internet UP")
 		} else {
-			color.Red("Internet Outage: %v", time.Now())
+			log.Warn().Msg("Internet DOWN")
 			restartNetworkManager()
 			//Extra Wait for Network Manager
 			time.Sleep(5 * time.Second)
@@ -89,42 +89,42 @@ func MonitorIdle(runCmd string, wait, idle time.Duration) {
 		//Handle Graceful Shutdown
 		if exit && cancel != nil {
 			cancel()
-			color.Yellow("Idle Job Graceful Shutdown: %v", time.Now())
+			log.Info().Msg("Heavy Program Graceful Shutdown")
 			return
 		}
 
 		if ok, err := tools.IsOSIdle(idle); err != nil {
-			color.Red("Error Monitoring: %v", err)
+			log.Error().Err(err).Msg("Idle Check failed")
 			return
 		} else if ok && cancel == nil {
 			// Start Heavy Program when OS is Idle
 			if cancel, err = tools.RunBackgroundProcess(runCmd); err != nil {
-				color.Red("Start Program Failed: %v", err)
+				log.Error().Str("Cmd", runCmd).Err(err).Msg("Start Program Failed")
 				return
 			}
-			color.Green("Heavy Program Started: %v", time.Now())
+			log.Info().Msg("Heavy Program Started")
 		} else if !ok && cancel != nil {
 			// OS Not idle so Stop Program
 			cancel()
 			cancel = nil
-			color.Red("Heavy Program Stopped: %v", time.Now())
+			log.Warn().Msg("Heavy Program Stopped")
 		}
 	})
 }
 
 func MonitorClipboard(ctx context.Context, capturePath string) {
-	color.Green("Monitoring Clipboard")
+	log.Info().Msg("Monitoring Clipboard")
 	ch := clipboard.Watch(ctx, clipboard.FmtText)
 	for clipText := range ch {
 		ticker := string(clipText)
 
 		// Read OS Environment
 		if matcher.MatchString(ticker) {
-			color.Green("Recording Ticker: %s", ticker)
+			log.Info().Str("Ticker", ticker).Msg("Recording Ticker")
 			if err := RecordTicker(ticker); err == nil {
 				LabelJournal(capturePath, ticker)
 			} else {
-				color.Red("Open Ticker Failed: %v", err)
+				log.Error().Str("Ticker", ticker).Err(err).Msg("Open Ticker Failed")
 			}
 		} else {
 			// BUG: Fix ActiveWindow and Add check for Label Journal as well.
@@ -132,38 +132,39 @@ func MonitorClipboard(ctx context.Context, capturePath string) {
 			desktop, err1 := tools.GetDesktop()
 			err = errors.Join(err, err1)
 			if err != nil {
-				color.Red("Active Window/Desktop Detect Failed: %v , Ticker: %s", err, ticker)
+				log.Error().Str("Ticker", ticker).Err(err).Msg("Active Window/Desktop Detect Failed")
 				continue
 			}
+			subLogger := log.With().Str("Ticker", ticker).Str("Window", windowName).Str("Desktop", desktop).Logger()
 
-			color.Blue("Detected (W,D,T): %s || %s || %s", windowName, desktop, ticker)
+			subLogger.Debug().Msg("Window Match")
 			if strings.Contains(windowName, "trading-tome") {
-				color.Green("Opening Ticker: %s", ticker)
+				subLogger.Debug().Msg("Open Ticker")
 				OpenTicker(ticker)
 			} else {
-				color.Yellow("No Ticker or Window Match: %s || %s", windowName, ticker)
+				subLogger.Warn().Msg("No Ticker or Window Match")
 			}
 		}
 	}
-	color.Yellow("Stopping Clipboard Monitor")
+	log.Info().Msg("Clipboard Monitor Stopped")
 }
 
 func LabelJournal(path string, ticker string) {
 	files, _ := script.FindFiles(path).Slice()
 
 	for _, file := range files {
-		color.Blue("Checking: %s", file)
+		log.Debug().Str("File", file).Msg("Checking File")
 
 		if strings.Contains(file, "Screenshot") {
 			// Check Age of Files
 			info, _ := os.Stat(file)
 			diff := time.Now().Sub(info.ModTime())
-			color.Blue("File Age: %s %v", file, diff)
+			log.Debug().Dur("Age", diff).Msg("File Age")
 
 			// Age Within Threshold, Perform Rename
 			if diff < SCREENSHOT_AGE*2 {
 				newName := strings.ReplaceAll(file, "Screenshot", ticker)
-				color.Yellow("Renaming: %s", newName)
+				log.Info().Str("Old", file).Str("New", newName).Msg("Rename File")
 				os.Rename(file, newName)
 			}
 		}
