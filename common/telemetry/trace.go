@@ -5,7 +5,7 @@ import (
 	"runtime"
 
 	"github.com/amanhigh/go-fun/models/config"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -28,7 +28,8 @@ import (
 */
 
 func InitTracerProvider(ctx context.Context, name string, config config.Tracing) {
-	fields := log.Fields{"Name": name, "Type": config.Type, "Endpoint": config.Endpoint, "Publish": config.Publish}
+	subLogger := log.With().Str("Name", name).Str("Type", config.Type).Str("Endpoint", config.Endpoint).Str("Publish", config.Publish).Logger()
+
 	var err error
 	switch config.Type {
 	case "otlp":
@@ -40,9 +41,9 @@ func InitTracerProvider(ctx context.Context, name string, config config.Tracing)
 	}
 
 	if err != nil {
-		log.WithFields(log.Fields{"Error": err}).WithFields(fields).Fatal("Error Initializing Tracer Provider")
+		subLogger.Err(err).Msg("Error Initializing Tracer Provider")
 	}
-	log.WithFields(fields).Debug("Tracer Provider Initialized")
+	subLogger.Debug().Msg("Tracer Provider Initialized")
 }
 
 func InitStdoutTracerProvider(config config.Tracing) (err error) {

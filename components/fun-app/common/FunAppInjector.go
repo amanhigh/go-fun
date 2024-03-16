@@ -23,7 +23,7 @@ import (
 	"github.com/golobby/container/v3"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	ginprometheus "github.com/zsais/go-gin-prometheus"
 	"gopkg.in/redis.v5"
 	"gorm.io/gorm"
@@ -48,7 +48,6 @@ func NewFunAppInjector(cfg config.FunAppConfig) interfaces.ApplicationInjector {
 
 func (self *FunAppInjector) BuildApp() (app any, err error) {
 	/* Setup Telemetry */
-	telemetry.InitLogrus(log.InfoLevel)
 	telemetry.InitLogger(self.config.Server.LogLevel)
 	telemetry.InitTracerProvider(context.Background(), NAMESPACE, self.config.Tracing)
 
@@ -83,7 +82,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	app = &handlers.FunServer{}
 	err = self.di.Fill(app)
 	if err == nil {
-		log.WithFields(log.Fields{"Port": self.config.Server.Port}).Info("Injection Complete")
+		log.Info().Int("Port", self.config.Server.Port).Msg("Injection Complete")
 	}
 	return
 }
@@ -126,7 +125,7 @@ func setupRateLimit(cfg config.RateLimit, engine *gin.Engine) {
 		// Limit the engine's (Global) or group's (API Level) requests to
 		// 100 requests per client per minute.
 		engine.Use(ginbump.RateLimit(client, speedbump.PerMinuteHasher{}, cfg.PerMinuteLimit))
-		log.WithFields(log.Fields{"Redis": cfg.RedisHost, "RateLimit": cfg.PerMinuteLimit}).Info("Rate Limit Enabled")
+		log.Info().Str("Redis", cfg.RedisHost).Int64("RateLimit", cfg.PerMinuteLimit).Msg("Rate Limit Enabled")
 	}
 }
 

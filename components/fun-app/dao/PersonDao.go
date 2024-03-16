@@ -9,7 +9,7 @@ import (
 	. "github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
 
@@ -46,7 +46,7 @@ func (self *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery
 
 	//Execute Query to Get Records and Count
 	if txErr = txn.Find(&personList.Records).Count(&personList.Metadata.Total).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
-		log.WithContext(c).WithFields(log.Fields{"Query": personQuery, "Error": txErr}).Error("Error Fetching Person List")
+		log.Error().Any("Query", personQuery).Err(txErr).Msg("Error Fetching Person List")
 		err = GormErrorMapper(txErr)
 	}
 

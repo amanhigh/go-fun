@@ -6,7 +6,7 @@ import (
 	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -39,7 +39,7 @@ func NewPersonManager(dao dao.PersonDaoInterface, tracer trace.Tracer) PersonMan
 // - id: a string representing the ID of the newly created person.
 // - err: an error representing any error that occurred during the creation process.
 func (self *PersonManager) CreatePerson(c context.Context, request fun.PersonRequest) (person fun.Person, err common.HttpError) {
-	personFields := log.Fields{"Name": request.Name, "Age": request.Age, "Gender": request.Gender}
+	subLogger := log.With().Str("Name", request.Name).Int("Age", request.Age).Str("Gender", request.Gender).Logger()
 
 	ctx, span := self.Tracer.Start(c, "CreatePerson.Manager")
 	defer span.End()
@@ -51,7 +51,8 @@ func (self *PersonManager) CreatePerson(c context.Context, request fun.PersonReq
 
 	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
 		if err = self.Dao.Create(c, &person); err == nil {
-			log.WithContext(c).WithField("Id", person.Id).WithFields(personFields).Info("Person Created")
+			// HACK: Verify Jaegor Trace
+			subLogger.Info().Ctx(c).Str("Id", person.Id).Msg("Person Created")
 		}
 		return
 	})
