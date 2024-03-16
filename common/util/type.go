@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 type CancelFunc func() (err error)
@@ -41,7 +41,7 @@ func ParseFloat(value string) (result float64) {
 	floatVal := strings.TrimSpace(value)
 	if floatVal != "" {
 		if result, err = strconv.ParseFloat(floatVal, 64); err != nil {
-			log.WithFields(log.Fields{"Value": value, "Error": err}).Error("Error Parsing Float value")
+			log.Error().Str("Value", value).Err(err).Msg("Error Parsing Float value")
 		}
 	}
 

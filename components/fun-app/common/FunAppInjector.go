@@ -23,7 +23,6 @@ import (
 	"github.com/golobby/container/v3"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/rs/zerolog"
 	log "github.com/sirupsen/logrus"
 	ginprometheus "github.com/zsais/go-gin-prometheus"
 	"gopkg.in/redis.v5"
@@ -49,8 +48,8 @@ func NewFunAppInjector(cfg config.FunAppConfig) interfaces.ApplicationInjector {
 
 func (self *FunAppInjector) BuildApp() (app any, err error) {
 	/* Setup Telemetry */
-	telemetry.InitLogrus(self.config.Server.LogLevel)
-	telemetry.InitLogger(zerolog.InfoLevel)
+	telemetry.InitLogrus(log.InfoLevel)
+	telemetry.InitLogger(self.config.Server.LogLevel)
 	telemetry.InitTracerProvider(context.Background(), NAMESPACE, self.config.Tracing)
 
 	/* Validators */

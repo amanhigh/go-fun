@@ -8,7 +8,6 @@ require (
 	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.29.0
 	github.com/rs/zerolog v1.32.0
-	github.com/sirupsen/logrus v1.9.3
 	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
 )
 

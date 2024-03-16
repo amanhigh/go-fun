@@ -12,7 +12,7 @@ import (
 	"github.com/glebarez/sqlite"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -47,7 +47,7 @@ func CreateDb(cfg config.Db) (db *gorm.DB, err error) {
 			// Run Go Migrate
 			if m, err = migrate.New(sourceURL, dbUrl); err == nil {
 				if err = m.Up(); err == nil {
-					log.WithFields(log.Fields{"Source": sourceURL, "DB": dbUrl}).Info("Migration Complete")
+					log.Info().Str("Source", sourceURL).Str("DB", dbUrl).Msg("Migration Complete")
 				} else if err == migrate.ErrNoChange {
 					//Ignore No Change
 					err = nil
@@ -61,13 +61,13 @@ func CreateDb(cfg config.Db) (db *gorm.DB, err error) {
 func MustCreateDb(cfg config.Db) *gorm.DB {
 	db, err := CreateDb(cfg)
 	if err != nil {
-		log.WithFields(log.Fields{"DbConfig": cfg, "Error": err}).Fatal("Failed To Setup DB")
+		log.Error().Any("DbConfig", cfg).Err(err).Msg("Failed To Setup DB")
 	}
 	return db
 }
 
 func ConnectDb(cfg config.Db) (db *gorm.DB, err error) {
-	log.WithFields(log.Fields{"DBConfig": cfg}).Info("Initing DB")
+	log.Info().Str("DBType", cfg.DbType).Str("Url", cfg.Url).Msg("Connecting to DB")
 
 	var dialector gorm.Dialector
 
@@ -143,10 +143,10 @@ func Tx(c context.Context) (tx *gorm.DB) {
 			//Extract and Return
 			tx = value.(*gorm.DB)
 		} else {
-			log.Debug("Missing Transaction In Context")
+			log.Debug().Msg("Missing Transaction In Context")
 		}
 	} else {
-		log.Debug("Nil Context Passed")
+		log.Debug().Msg("Nil Context Passed")
 	}
 	return
 }
