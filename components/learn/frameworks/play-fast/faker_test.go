@@ -141,9 +141,6 @@ var _ = Describe("Faker", func() {
 			Expect(data.Email).To(Not(BeNil()))
 			Expect(data.Date).To(Not(BeNil()))
 			Expect(data.Date).To(Not(BeNil()))
-
-			// bytes, _ := json.MarshalIndent(data, "", "	")
-			// fmt.Println(string(bytes))
 		})
 
 		It("should generate nested data", func() {

@@ -57,7 +57,6 @@ var _ = Describe("Markdown", func() {
 
 		It("should perform walk", func() {
 			ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
-				// fmt.Println("\n Debug ----> ", string(node.Text(data)), entering, reflect.TypeOf(node))
 				Expect(node).ShouldNot(BeNil())
 				Expect(entering).Should(BeTrue())
 				// Wait for First Node of Type Heading.

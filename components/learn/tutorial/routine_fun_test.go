@@ -1,13 +1,13 @@
 package tutorial_test
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
 	"github.com/amanhigh/go-fun/components/learn/tutorial"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/tour/tree"
 )
 
@@ -42,7 +42,6 @@ var _ = Describe("RoutineFun", func() {
 			mapV.Range(func(key, value any) bool {
 				stringValue := value.(string)
 				Expect(stringValue).To(Not(BeNil()))
-				// fmt.Printf("Key:%v Value:%v\n", key, strings.Split(stringValue, ","))
 				// Indicate to continue iteration
 				return true
 			})
@@ -74,7 +73,7 @@ var _ = Describe("RoutineFun", func() {
 			go fibonacci(cap(c), c)
 			for i = range c {
 				// For loop can detect closed channel and stop
-				// fmt.Println(i)
+				log.Debug().Int("Value", i).Msg("Fibonacci")
 			}
 			Expect(i).To(Equal(34))
 			Eventually(c).Should(BeClosed())
@@ -163,10 +162,14 @@ func (c *SafeCounter) Value(key string) int {
 
 /* Channels */
 
-/**
+/*
+*
+
 	Sum and send result only channel
 	so its threadsafe.
-**/
+
+*
+*/
 func sumOnChannel(a []int, c chan int) {
 	sum := 0
 	for _, x := range a {
@@ -196,10 +199,10 @@ func fibonacciMultiChannel(c, quit chan int) {
 			close(c) //Close Result Channel
 			return
 		case <-time.After(2 * time.Second):
-			fmt.Println("Operation Timeout. Operation won't wait more  than 2 Seconds.")
+			log.Info().Msg("Operation Timeout. Operation won't wait more  than 2 Seconds.")
 			return
 		case <-overallTimeout:
-			fmt.Println("It has been more than a minute since loop started. Returning")
+			log.Info().Msg("It has been more than a minute since loop started. Returning")
 			return
 		default:
 			// Run when no other case is ready
@@ -242,7 +245,7 @@ func Same(t1, t2 *tree.Tree) bool {
 	/* Read Channels and Match Values (Consumer) */
 	for y := range c1 {
 		z := <-c2
-		// fmt.Printf("Y:%v Z:%v\n", y, z)
+		log.Debug().Int("Y", y).Int("Z", z).Msg("Channel Read")
 		if y != z {
 			return false
 		}

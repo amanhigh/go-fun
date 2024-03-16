@@ -2,9 +2,8 @@
 package generate
 
 import (
-	"fmt"
-
 	"github.com/cheekybits/genny/generic"
+	"github.com/rs/zerolog/log"
 )
 
 /* Use generic.Type to Compile */
@@ -17,6 +16,6 @@ type KeyTypeValueTypeMap struct {
 
 func (self *KeyTypeValueTypeMap) PrintType() {
 	for key, value := range self.typedMap {
-		fmt.Printf("Key:%v Value: %v\n", key, value)
+		log.Info().Any("Key", key).Any("Value", value).Msg("Map")
 	}
 }

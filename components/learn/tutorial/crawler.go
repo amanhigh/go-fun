@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 type Fetcher interface {
@@ -41,7 +41,7 @@ func StartCrawl(site string) (urlMap SafeMap) {
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
 func Crawl(url string, depth int, fetcher Fetcher, urlMap SafeMap) {
-	//fmt.Println("Crawl Recived:", url, depth)
+	log.Debug().Str("Url", url).Int("Depth", depth).Msg("CRAWL_RECIVED")
 	// XXX: Don't fetch the same URL twice.
 	// This implementation doesn't do either:
 	if depth <= 0 {
@@ -49,16 +49,16 @@ func Crawl(url string, depth int, fetcher Fetcher, urlMap SafeMap) {
 	}
 	body, urls, err := fetcher.Fetch(url)
 	if err != nil {
-		log.WithFields(log.Fields{"Error": err}).Debug("Fetch Fail")
+		log.Debug().Err(err).Msg("Fetch Fail")
 		return
 	}
 
-	log.WithFields(log.Fields{"Url": url, "Title": body}).Debug("URL_HIT")
+	log.Debug().Str("Url", url).Str("Title", body).Msg("URL_HIT")
 
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(len(urls))
 	for _, url := range urls {
-		//fmt.Println("Submitting To Crawler:", url, depth - 1)
+		log.Debug().Str("Url", url).Int("Depth", depth-1).Msg("CRAWL_SUBMIT")
 		go func(u string) {
 			defer waitGroup.Done()
 			if !urlMap.Contains(u) {

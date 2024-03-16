@@ -43,7 +43,6 @@ var _ = Describe("Treeprint", func() {
 		It("should print", func() {
 			output := tree.String()
 			Expect(output).To(ContainSubstring("2"))
-			// fmt.Println(tree.String())
 		})
 	})
 
