@@ -6,10 +6,9 @@ require (
 	github.com/amanhigh/go-fun/common v1.0.1
 	github.com/amanhigh/go-fun/models v1.0.0
 	github.com/bitfield/script v0.22.0
-	github.com/fatih/color v1.16.0
 	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.29.0
-	github.com/sirupsen/logrus v1.9.3
+	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.6.1
 	golang.design/x/clipboard v0.7.0
 )
@@ -17,6 +16,7 @@ require (
 require (
 	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
+	github.com/fatih/color v1.16.0 // indirect
 	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
@@ -31,6 +31,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-sqlite3 v1.14.18 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/thoas/go-funk v0.9.3 // indirect
