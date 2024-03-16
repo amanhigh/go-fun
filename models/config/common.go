@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm/logger"
 )
 
 // https://github.com/caarlos0/env
 
 type Server struct {
-	Host     string       `env:"HOST"`
-	Port     int          `env:"PORT" envDefault:"8080"`
-	LogLevel logrus.Level `env:"LOG_LEVEL" envDefault:"info"`
+	Host     string        `env:"HOST"`
+	Port     int           `env:"PORT" envDefault:"8080"`
+	LogLevel zerolog.Level `env:"LOG_LEVEL" envDefault:"info"`
 }
 
 type RateLimit struct {
