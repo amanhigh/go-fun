@@ -8,7 +8,9 @@ import (
 	"github.com/fatih/color"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/pkgerrors"
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
 	"go.uber.org/zap"
@@ -281,6 +283,17 @@ var _ = Describe("Logging", func() {
 				// https://github.com/rs/zerolog?tab=readme-ov-file#log-sampling
 				sampled := logger.Sample(&zerolog.BasicSampler{N: 10})
 				sampled.Info().Msg("will be logged every 10 messages")
+			})
+
+			It("should print stacktrace", func() {
+				zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+				err := errors.New("test error")
+				logger.Error().Stack().Err(err).Msg(msgFile)
+				lines := util.ReadAllLines(log_file)
+				Expect(len(lines)).To(Equal(1))
+				Expect(lines[0]).To(ContainSubstring(msgFile))
+				Expect(lines[0]).To(ContainSubstring(`"level":"error"`))
+				Expect(lines[0]).To(ContainSubstring(`"stack":`))
 			})
 		})
 
