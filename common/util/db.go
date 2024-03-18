@@ -143,7 +143,7 @@ func Tx(c context.Context) (tx *gorm.DB) {
 			//Extract and Return
 			tx = value.(*gorm.DB)
 		} else {
-			log.Debug().Msg("Missing Transaction In Context")
+			log.Trace().Msg("Missing Transaction In Context")
 		}
 	} else {
 		log.Debug().Msg("Nil Context Passed")
