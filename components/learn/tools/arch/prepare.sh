@@ -175,6 +175,11 @@ fi
 # Repair
 # btrfs scrub start /
 # btrfs balance start /
+# Clean
+# https://www.techrepublic.com/article/how-to-rebalance-your-btrfs-filesystem-on-your-linux-data-center-servers/
+# btrfs fi df /
+# btrfs fi usage -h /
+# sudo btrfs balance start / (Btrfs Assistant)
 
 #### Snapshot ####
 # https://archive.kernel.org/oldwiki/btrfs.wiki.kernel.org/index.php/SysadminGuide.html#Managing_Snapshots
