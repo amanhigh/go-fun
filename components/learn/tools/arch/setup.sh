@@ -43,6 +43,12 @@ echo -en "\033[1;32m Installation Complete \033[0m"
 # yay -R <name>
 # https://github.com/Jguer/yay
 
+## Key Management ##
+# sudo rm -r /etc/pacman.d/gnupg
+# sudo pacman-key --init
+# sudo pacman-key --populate archlinux
+# sudo pacman -Sy archlinux-keyring
+
 ## Services ##
 # systemctl start <svc>
 # systemctl status <svc>
