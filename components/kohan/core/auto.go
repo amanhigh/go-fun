@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"errors"
 	"os"
 	"regexp"
 	"strconv"
@@ -30,7 +29,7 @@ func OpenTicker(ticker string) (err error) {
 	// Check if the length of the ticker is less than 15
 	if len(ticker) < TICKER_LENGTH {
 		// Focus on the window named "TradingView"
-		if err = tools.FocusWindowByTitle("TradingView"); err == nil {
+		if err = tools.FocusWindow("TradingView"); err == nil {
 			// Focus Input Box
 			if err = tools.SendKey("ctrl+asciitilde"); err == nil {
 				// Paste the Ticker
@@ -46,10 +45,10 @@ func OpenTicker(ticker string) (err error) {
 
 func RecordTicker(ticker string) (err error) {
 	// Bring Focus Back Lost due to Modal Box
-	if err = tools.FocusWindowByTitle("TradingView"); err == nil {
+	if err = tools.FocusWindow("TradingView"); err == nil {
 		// loop from max to 1
 		for i := 4; i > 0; i-- {
-			// emulate number key press with xdotool
+			// emulate number key press
 			if err = tools.SendKey(strconv.Itoa(i)); err == nil {
 				// Wait
 				time.Sleep(1 * time.Second)
@@ -129,13 +128,11 @@ func MonitorClipboard(ctx context.Context, capturePath string) {
 		} else {
 			// BUG: Fix ActiveWindow and Add check for Label Journal as well.
 			windowName, err := tools.GetActiveWindow()
-			desktop, err1 := tools.GetDesktop()
-			err = errors.Join(err, err1)
 			if err != nil {
 				log.Error().Str("Ticker", ticker).Err(err).Msg("Active Window/Desktop Detect Failed")
 				continue
 			}
-			subLogger := log.With().Str("Ticker", ticker).Str("Window", windowName).Str("Desktop", desktop).Logger()
+			subLogger := log.With().Str("Ticker", ticker).Str("Window", windowName).Logger()
 
 			subLogger.Debug().Msg("Window Match")
 			if strings.Contains(windowName, "trading-tome") {
