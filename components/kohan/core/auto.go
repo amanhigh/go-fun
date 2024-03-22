@@ -32,9 +32,9 @@ func OpenTicker(ticker string) (err error) {
 		// Focus on the window named "TradingView"
 		if err = tools.FocusWindow("TradingView"); err == nil {
 			// Focus Input Box
-			if err = tools.SendKey("ctrl+asciitilde"); err == nil {
+			if err = tools.SendKey("-M Ctrl asciitilde"); err == nil {
 				// Paste the Ticker
-				_ = tools.SendKey("Shift+Insert")
+				_ = tools.SendKey("-M Shift Insert")
 				time.Sleep(50 * time.Millisecond)
 				// Bang to Open
 				err = tools.SendInput("!")
@@ -50,7 +50,7 @@ func RecordTicker(ticker string) (err error) {
 		// loop from max to 1
 		for i := 4; i > 0; i-- {
 			// emulate number key press
-			if err = tools.SendKey(strconv.Itoa(i)); err == nil {
+			if err = tools.SendKey("-k " + strconv.Itoa(i)); err == nil {
 				// Wait
 				time.Sleep(1 * time.Second)
 
