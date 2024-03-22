@@ -3,30 +3,37 @@ package tools
 import (
 	"fmt"
 	"strings"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func IsWindowFocused(title string) (ok bool, err error) {
-	var windowName string
-	windowName, err = GetActiveWindow()
+	var windowTitle string
+	windowTitle, err = GetActiveWindow()
 	if err != nil {
 		return
 	}
 
 	// Check if the active window name contains the title case insensitive
-	ok = strings.Contains(strings.ToLower(windowName), strings.ToLower(title))
+	ok = strings.Contains(strings.ToLower(windowTitle), strings.ToLower(title))
 
 	if ok {
-		Notify("Found", windowName)
+		Notify(zerolog.InfoLevel, title+" Found", windowTitle)
 	} else {
-		Notify("Not Found", windowName)
+		Notify(zerolog.WarnLevel, title+" Not Found", windowTitle)
 	}
 
 	return
 }
 
 func RunOrFocus(title string) (err error) {
-	if err = FocusWindow(title); err != nil {
-		_, err = RunProcess(title)
+	if err = FocusWindow(title); err == nil {
+		var ok bool
+		if ok, err = IsWindowFocused(title); err == nil && !ok {
+			log.Info().Str("Window", title).Msg("Starting Process")
+			_, err = RunProcess(strings.ToLower(title))
+		}
 	}
 	return
 }

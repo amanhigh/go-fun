@@ -11,6 +11,7 @@ import (
 	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/bitfield/script"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.design/x/clipboard"
 )
@@ -61,7 +62,7 @@ func RecordTicker(ticker string) (err error) {
 		}
 
 		// send desktop notification
-		tools.Notify("SCREENSHOTTED....", ticker)
+		tools.Notify(zerolog.InfoLevel, "SCREENSHOTTED....", ticker)
 	}
 
 	return
