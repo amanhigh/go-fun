@@ -3,9 +3,11 @@ package tools
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/bitfield/script"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 type HyperlandWindow struct {
@@ -22,6 +24,10 @@ type HyperlandWindow struct {
 	Fullscreen bool   `json:"fullscreen"`
 }
 
+var (
+	isSubMapActive = false
+)
+
 func GetActiveWindowV1() (window HyperlandWindow, err error) {
 	var result string
 	if result, err = script.Exec("hyprctl activewindow -j").String(); err == nil {
@@ -34,6 +40,34 @@ func GetActiveWindowV1() (window HyperlandWindow, err error) {
 func HyperDispatch(cmd string) (err error) {
 	cmd = fmt.Sprintf("hyprctl dispatch %v", cmd)
 	_, err = script.Exec(cmd).String()
+	return
+}
+
+// ActivateSubmap is a Go function to activate a submap based on the window title.
+//
+// It takes two parameters: submap (string) and windowTitle (string) and returns an error.
+func ActivateSubmap(submap, windowTitle string) (err error) {
+	var window HyperlandWindow
+	window, err = GetActiveWindowV1()
+	if err != nil {
+		return
+	}
+	windowMatch := strings.Contains(window.Title, windowTitle)
+
+	if !isSubMapActive && windowMatch {
+		log.Info().Str("Window", window.Title).Err(err).Msg("Enable Submap")
+		NotifyV1(zerolog.InfoLevel, fmt.Sprintf("Submap Applied: %v", submap))
+		isSubMapActive = true
+		err = HyperDispatch("submap aman")
+	}
+
+	if isSubMapActive && !windowMatch {
+		log.Debug().Str("Window", window.Title).Err(err).Msg("Disable Submap")
+		NotifyV1(zerolog.InfoLevel, fmt.Sprintf("Submap Disabled: %v", submap))
+		err = HyperDispatch("submap reset")
+		isSubMapActive = false
+	}
+
 	return
 }
 
