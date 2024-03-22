@@ -6,11 +6,10 @@ import (
 	"strings"
 
 	"github.com/bitfield/script"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
-type HyperlandWindow struct {
+type HyperWindow struct {
 	Mapped    bool `json:"mapped"`
 	Workspace struct {
 		ID   int    `json:"id"`
@@ -28,7 +27,7 @@ var (
 	isSubMapActive = false
 )
 
-func GetActiveWindowV1() (window HyperlandWindow, err error) {
+func GetHyperWindow() (window HyperWindow, err error) {
 	var result string
 	if result, err = script.Exec("hyprctl activewindow -j").String(); err == nil {
 		err = json.Unmarshal([]byte(result), &window)
@@ -47,8 +46,8 @@ func HyperDispatch(cmd string) (err error) {
 //
 // It takes two parameters: submap (string) and windowTitle (string) and returns an error.
 func ActivateSubmap(submap, windowTitle string) (err error) {
-	var window HyperlandWindow
-	window, err = GetActiveWindowV1()
+	var window HyperWindow
+	window, err = GetHyperWindow()
 	if err != nil {
 		return
 	}
@@ -66,10 +65,5 @@ func ActivateSubmap(submap, windowTitle string) (err error) {
 		isSubMapActive = false
 	}
 
-	return
-}
-
-func NotifyV1(level zerolog.Level, message string) (err error) {
-	_, err = script.Exec(fmt.Sprintf(`hyprctl notify -1 5000 "rgb(00ff00)" "fontsize:25 %v"`, message)).String()
 	return
 }
