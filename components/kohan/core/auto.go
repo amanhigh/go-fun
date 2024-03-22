@@ -149,6 +149,16 @@ func MonitorClipboard(ctx context.Context, capturePath string) {
 	log.Info().Msg("Clipboard Monitor Stopped")
 }
 
+func MonitorSubmap() {
+	wait := time.Second
+	util.ScheduleJob(wait, func(_ bool) {
+		err := tools.ActivateSubmap("swiftkeys", "SwiftKeys")
+		if err != nil {
+			log.Error().Err(err).Msg("Activate Submap Failed")
+		}
+	})
+}
+
 func LabelJournal(path string, ticker string) {
 	files, _ := script.FindFiles(path).Slice()
 

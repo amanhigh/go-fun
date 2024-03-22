@@ -56,14 +56,12 @@ func ActivateSubmap(submap, windowTitle string) (err error) {
 
 	if !isSubMapActive && windowMatch {
 		log.Info().Str("Window", window.Title).Err(err).Msg("Enable Submap")
-		NotifyV1(zerolog.InfoLevel, fmt.Sprintf("Submap Applied: %v", submap))
 		isSubMapActive = true
-		err = HyperDispatch("submap aman")
+		err = HyperDispatch("submap " + submap)
 	}
 
 	if isSubMapActive && !windowMatch {
-		log.Debug().Str("Window", window.Title).Err(err).Msg("Disable Submap")
-		NotifyV1(zerolog.InfoLevel, fmt.Sprintf("Submap Disabled: %v", submap))
+		log.Info().Str("Window", window.Title).Err(err).Msg("Disable Submap")
 		err = HyperDispatch("submap reset")
 		isSubMapActive = false
 	}

@@ -40,6 +40,7 @@ var monitorCmd = &cobra.Command{
 		log.Info().Dur("Wait", wait).Dur("Idle", idle).Time("Time", time.Now()).Msg("Monitoring System")
 		go core.MonitorIdle(args[0], wait, idle)
 		go core.MonitorClipboard(ctx, args[1])
+		go core.MonitorSubmap()
 		core.MonitorInternetConnection(wait)
 		return
 	},
