@@ -166,7 +166,7 @@ func labelJournal(path string, ticker string) {
 			modTime := info.ModTime()
 			newName := fmt.Sprintf("%s__%s.png", ticker, modTime.Format("20060102__150405"))
 
-			// Generate New Path 4_20240321_193916.png
+			// Generate New Path POWERINDIA.mwd.trend.rejected.nca_20240321_193916.png
 			newPath := filepath.Join(path, newName)
 
 			log.Info().Str("Old", file).Str("New", newPath).Msg("Rename File")
