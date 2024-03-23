@@ -118,7 +118,8 @@ func ProcessTicker(ticker string, capturePath string) {
 	if matcher.MatchString(ticker) {
 		log.Info().Str("Ticker", ticker).Msg("Recording Ticker")
 		if err := RecordTicker(ticker); err == nil {
-			LabelJournal(capturePath, ticker)
+			time.Sleep(time.Second)
+			labelJournal(capturePath, ticker)
 		} else {
 			log.Error().Str("Ticker", ticker).Err(err).Msg("Open Ticker Failed")
 		}
@@ -150,31 +151,26 @@ func MonitorSubmap() {
 	})
 }
 
-func LabelJournal(path string, ticker string) {
+func labelJournal(path string, ticker string) {
 	files, _ := script.FindFiles(path).Slice()
 
 	for _, file := range files {
-		log.Debug().Str("File", file).Msg("Checking File")
+		// Check Age of Files
+		info, _ := os.Stat(file)
+		diff := time.Now().Sub(info.ModTime())
+		log.Debug().Str("File", file).Dur("Age", diff).Msg("File Age")
 
-		if strings.Contains(file, "Screenshot") {
-			// Check Age of Files
-			info, _ := os.Stat(file)
-			diff := time.Now().Sub(info.ModTime())
-			log.Debug().Dur("Age", diff).Msg("File Age")
+		// Age Within Threshold, Perform Rename
+		if diff < SCREENSHOT_AGE*2 {
+			// Read File Time
+			modTime := info.ModTime()
+			newName := fmt.Sprintf("%s__%s.png", ticker, modTime.Format("20060102__150405"))
 
-			// Age Within Threshold, Perform Rename
-			if diff < SCREENSHOT_AGE*2 {
-				// Read File Time
-				modTime := info.ModTime()
-				newName := fmt.Sprintf("%s__%s.png", ticker, modTime.Format("20060102__150405"))
+			// Generate New Path 4_20240321_193916.png
+			newPath := filepath.Join(path, newName)
 
-				// Generate New Path POWERINDIA.mwd.trend.rejected.nca_20240321_193916.png
-				dir := filepath.Dir(path)
-				newPath := filepath.Join(dir, newName)
-
-				log.Info().Str("Old", file).Str("New", newPath).Msg("Rename File")
-				os.Rename(file, newPath)
-			}
+			log.Info().Str("Old", file).Str("New", newPath).Msg("Rename File")
+			os.Rename(file, newPath)
 		}
 	}
 }
