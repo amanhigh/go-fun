@@ -20,6 +20,7 @@ var clusterCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		cluster = args[0]
+		setLogLevel()
 	},
 }
 
