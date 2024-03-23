@@ -44,6 +44,12 @@ func OpenTicker(ticker string) (err error) {
 	return
 }
 
+func MonitorClipboard(path string) (err error) {
+	// BUG: Filter Images - https://github.com/bugaevc/wl-clipboard/issues/124
+	err = script.Exec(fmt.Sprintf("wl-paste -w zsh -c 'kohan auto ticker $(wl-paste) %s'" + path)).Error()
+	return
+}
+
 func RecordTicker(ticker string) (err error) {
 	// Bring Focus Back Lost due to Modal Box
 	if err = tools.FocusWindow("TradingView"); err == nil {
