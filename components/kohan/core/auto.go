@@ -80,37 +80,6 @@ func MonitorInternetConnection(wait time.Duration) {
 	})
 }
 
-func MonitorIdle(runCmd string, wait, idle time.Duration) {
-	var cancel util.CancelFunc
-
-	// Start the monitoring
-	util.ScheduleJob(wait, func(exit bool) {
-		//Handle Graceful Shutdown
-		if exit && cancel != nil {
-			cancel()
-			log.Info().Msg("Heavy Program Graceful Shutdown")
-			return
-		}
-
-		if ok, err := tools.IsOSIdle(idle); err != nil {
-			log.Error().Err(err).Msg("Idle Check failed")
-			return
-		} else if ok && cancel == nil {
-			// Start Heavy Program when OS is Idle
-			if cancel, err = tools.RunBackgroundProcess(runCmd); err != nil {
-				log.Error().Str("Cmd", runCmd).Err(err).Msg("Start Program Failed")
-				return
-			}
-			log.Info().Msg("Heavy Program Started")
-		} else if !ok && cancel != nil {
-			// OS Not idle so Stop Program
-			cancel()
-			cancel = nil
-			log.Warn().Msg("Heavy Program Stopped")
-		}
-	})
-}
-
 func MonitorClipboard() (cancel util.CancelFunc, err error) {
 	log.Info().Msg("MonitorClipboard: Started")
 	cmd := "wl-paste -w zsh -c 'kohan auto open-ticker $(wl-paste)'"

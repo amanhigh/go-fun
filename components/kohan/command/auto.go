@@ -1,8 +1,6 @@
 package command
 
 import (
-	"time"
-
 	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
@@ -31,14 +29,13 @@ var runOrFocusCmd = &cobra.Command{
 }
 
 var monitorCmd = &cobra.Command{
-	Use:   "monitor [IdleCmd] [CapturePath]",
+	Use:   "monitor[CapturePath]",
 	Short: "System Monitoring",
-	Args:  cobra.ExactArgs(2),
+	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		log.Info().Dur("Wait", wait).Dur("Idle", idle).Time("Time", time.Now()).Msg("Monitoring System")
+		log.Info().Dur("Wait", wait).Msg("Monitoring Systems")
 		var cancel util.CancelFunc
-		server := core.NewMonitorServer(args[1])
-		go core.MonitorIdle(args[0], wait, idle)
+		server := core.NewMonitorServer(args[0])
 		go server.Start(9010)
 		go core.MonitorSubmap()
 		if cancel, err = core.MonitorClipboard(); err == nil {
@@ -64,7 +61,6 @@ var openTickerCmd = &cobra.Command{
 func init() {
 	//Flags
 	monitorCmd.Flags().DurationVarP(&wait, "wait", "w", wait, "Monitoring Wait Interval")
-	monitorCmd.Flags().DurationVarP(&idle, "idle", "i", idle, "Idle Time")
 
 	//Commands
 	autoCmd.AddCommand(runOrFocusCmd)
