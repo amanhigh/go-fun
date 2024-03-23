@@ -34,20 +34,12 @@ var monitorCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		log.Info().Dur("Wait", wait).Dur("Idle", idle).Time("Time", time.Now()).Msg("Monitoring System")
+		server := core.NewMonitorServer(args[1])
 		go core.MonitorIdle(args[0], wait, idle)
-		go core.MonitorClipboard(args[1])
+		go server.Start(3005)
 		go core.MonitorSubmap()
 		core.MonitorInternetConnection(wait)
 		return
-	},
-}
-
-var processTicker = &cobra.Command{
-	Use:   "ticker [Ticker] [CapturePath]",
-	Short: "Process Ticker",
-	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
-		core.ProcessTicker(args[0], args[1])
 	},
 }
 
@@ -59,6 +51,5 @@ func init() {
 	//Commands
 	autoCmd.AddCommand(runOrFocusCmd)
 	autoCmd.AddCommand(monitorCmd)
-	autoCmd.AddCommand(processTicker)
 	RootCmd.AddCommand(autoCmd)
 }

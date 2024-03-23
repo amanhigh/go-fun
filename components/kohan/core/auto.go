@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/tools"
@@ -18,12 +16,7 @@ import (
 
 const (
 	TICKER_LENGTH  = 15
-	TICKER_REGEX   = "^[A-Za-z0-9_]+(\\.[A-Za-z-]+){3,}$"
 	SCREENSHOT_AGE = 30 * time.Minute
-)
-
-var (
-	matcher = regexp.MustCompile(TICKER_REGEX)
 )
 
 func OpenTicker(ticker string) (err error) {
@@ -41,12 +34,6 @@ func OpenTicker(ticker string) (err error) {
 			}
 		}
 	}
-	return
-}
-
-func MonitorClipboard(path string) (err error) {
-	// BUG: Filter Images - https://github.com/bugaevc/wl-clipboard/issues/124
-	err = script.Exec(fmt.Sprintf("wl-paste -w zsh -c 'kohan auto ticker $(wl-paste) %s'" + path)).Error()
 	return
 }
 
@@ -70,7 +57,7 @@ func RecordTicker(ticker string) (err error) {
 		}
 
 		// send desktop notification
-		tools.Notify(zerolog.InfoLevel, "SCREENSHOTTED....", ticker)
+		tools.Notify(zerolog.InfoLevel, "Recorded", ticker)
 	}
 
 	return
@@ -120,30 +107,19 @@ func MonitorIdle(runCmd string, wait, idle time.Duration) {
 	})
 }
 
-func ProcessTicker(ticker string, capturePath string) {
-	if matcher.MatchString(ticker) {
-		log.Info().Str("Ticker", ticker).Msg("Recording Ticker")
-		if err := RecordTicker(ticker); err == nil {
-			time.Sleep(time.Second)
-			labelJournal(capturePath, ticker)
-		} else {
-			log.Error().Str("Ticker", ticker).Err(err).Msg("Open Ticker Failed")
-		}
-	} else {
-		windowName, err := tools.GetActiveWindow()
-		if err != nil {
-			log.Error().Str("Ticker", ticker).Err(err).Msg("Active Window/Desktop Detect Failed")
-			return
-		}
-		subLogger := log.With().Str("Ticker", ticker).Str("Window", windowName).Logger()
+func ProcessTicker(ticker string) {
+	// BUG: Connect to Clipboard
+	ok, err := tools.IsWindowFocused("trading-tome")
+	if err != nil {
+		log.Error().Err(err).Msg("OpenTicker: IsWindowFocused Failed")
+		return
+	}
 
-		subLogger.Debug().Msg("Window Match")
-		if strings.Contains(windowName, "trading-tome") {
-			subLogger.Debug().Msg("Open Ticker")
-			OpenTicker(ticker)
-		} else {
-			subLogger.Warn().Msg("No Ticker or Window Match")
-		}
+	if ok {
+		OpenTicker(ticker)
+		log.Info().Str("Ticker", ticker).Msg("OpenTicker: Window Focused")
+	} else {
+		log.Debug().Str("Ticker", ticker).Msg("OpenTicker: Window Not Focused")
 	}
 }
 
