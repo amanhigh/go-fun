@@ -4,26 +4,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
 func IsWindowFocused(title string) (ok bool, err error) {
 	var windowTitle string
-	windowTitle, err = GetActiveWindow()
-	if err != nil {
-		return
+	if windowTitle, err = GetActiveWindow(); err == nil {
+		// Check if the active window name contains the title case insensitive
+		ok = strings.Contains(strings.ToLower(windowTitle), strings.ToLower(title))
 	}
-
-	// Check if the active window name contains the title case insensitive
-	ok = strings.Contains(strings.ToLower(windowTitle), strings.ToLower(title))
-
-	if ok {
-		Notify(zerolog.InfoLevel, title+" Found", windowTitle)
-	} else {
-		Notify(zerolog.WarnLevel, title+" Not Found", windowTitle)
-	}
-
 	return
 }
 

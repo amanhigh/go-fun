@@ -26,11 +26,9 @@ func OpenTicker(ticker string) (err error) {
 			if err = tools.SendKey("-M Ctrl b"); err == nil {
 				// Copy Ticker
 				if err = tools.ClipCopy(ticker); err == nil {
-					// Paste the Ticker
-					time.Sleep(3 * time.Second)
 					if err = tools.SendKey("-M Ctrl v"); err == nil {
-						time.Sleep(500 * time.Millisecond)
-						// Code (xox) to Open
+						time.Sleep(50 * time.Millisecond)
+						// Bang ! to Open
 						err = tools.SendInput("xox")
 					}
 				}
@@ -113,7 +111,14 @@ func MonitorIdle(runCmd string, wait, idle time.Duration) {
 	})
 }
 
-func ProcessTicker(ticker string) {
+func MonitorClipboard() (cancel util.CancelFunc, err error) {
+	log.Info().Msg("MonitorClipboard: Started")
+	cmd := "wl-paste -w zsh -c 'kohan auto open-ticker $(wl-paste)'"
+	cancel, err = tools.RunBackgroundProcess(cmd)
+	return
+}
+
+func TryOpenTicker(ticker string) {
 	// BUG: Connect to Clipboard
 	ok, err := tools.IsWindowFocused("trading-tome")
 	if err != nil {
@@ -123,9 +128,9 @@ func ProcessTicker(ticker string) {
 
 	if ok {
 		OpenTicker(ticker)
-		log.Info().Str("Ticker", ticker).Msg("OpenTicker: Window Focused")
+		log.Info().Str("Ticker", ticker).Msg("OpenTicker: Trading Tome Active")
 	} else {
-		log.Debug().Str("Ticker", ticker).Msg("OpenTicker: Window Not Focused")
+		log.Debug().Str("Ticker", ticker).Msg("OpenTicker: Trading Tome Not Focused")
 	}
 }
 

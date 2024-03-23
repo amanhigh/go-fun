@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/common/tools"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -35,11 +36,27 @@ var monitorCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		log.Info().Dur("Wait", wait).Dur("Idle", idle).Time("Time", time.Now()).Msg("Monitoring System")
+		var cancel util.CancelFunc
 		server := core.NewMonitorServer(args[1])
 		go core.MonitorIdle(args[0], wait, idle)
 		go server.Start(9010)
 		go core.MonitorSubmap()
-		core.MonitorInternetConnection(wait)
+		if cancel, err = core.MonitorClipboard(); err == nil {
+			defer cancel()
+			core.MonitorInternetConnection(wait)
+		} else {
+			log.Error().Err(err).Msg("MonitorClipboard Failed")
+		}
+		return
+	},
+}
+
+var openTickerCmd = &cobra.Command{
+	Use:   "open-ticker [Ticker]",
+	Short: "Opens Ticker",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		core.TryOpenTicker(args[0])
 		return
 	},
 }
@@ -52,5 +69,6 @@ func init() {
 	//Commands
 	autoCmd.AddCommand(runOrFocusCmd)
 	autoCmd.AddCommand(monitorCmd)
+	autoCmd.AddCommand(openTickerCmd)
 	RootCmd.AddCommand(autoCmd)
 }
