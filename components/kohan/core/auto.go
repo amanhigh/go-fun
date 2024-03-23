@@ -20,14 +20,20 @@ func OpenTicker(ticker string) (err error) {
 	// Check if the length of the ticker is less than 15
 	if len(ticker) < TICKER_LENGTH {
 		// Focus on the window named "TradingView"
-		if err = tools.FocusWindow("TradingView"); err == nil {
+		log.Debug().Str("Ticker", ticker).Msg("OpenTicker")
+		if err = tools.FocusWindow("brave-browser"); err == nil {
 			// Focus Input Box
-			if err = tools.SendKey("-M Ctrl asciitilde"); err == nil {
-				// Paste the Ticker
-				_ = tools.SendKey("-M Shift Insert")
-				time.Sleep(50 * time.Millisecond)
-				// Bang to Open
-				err = tools.SendInput("!")
+			if err = tools.SendKey("-M Ctrl b"); err == nil {
+				// Copy Ticker
+				if err = tools.ClipCopy(ticker); err == nil {
+					// Paste the Ticker
+					time.Sleep(3 * time.Second)
+					if err = tools.SendKey("-M Ctrl v"); err == nil {
+						time.Sleep(500 * time.Millisecond)
+						// Code (xox) to Open
+						err = tools.SendInput("xox")
+					}
+				}
 			}
 		}
 	}
