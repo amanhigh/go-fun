@@ -9,7 +9,7 @@ import (
 )
 
 func Screenshot() (err error) {
-	_, err = script.Exec("spectacle -mbn").String()
+	err = script.Exec("hyprshot -c -s -m output").Error()
 	return
 }
 
