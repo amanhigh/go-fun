@@ -3,7 +3,6 @@ package core
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -36,8 +35,6 @@ func (s *MonitorServer) Start(port int) (err error) {
 func (s *MonitorServer) HandleRecordTicker(ctx *gin.Context) {
 	ticker := ctx.Param("ticker")
 	if err := RecordTicker(ticker); err == nil {
-		time.Sleep(time.Second)
-		labelJournal(s.capturePath, ticker)
 		ctx.JSON(http.StatusOK, "Success")
 
 	} else {

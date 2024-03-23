@@ -2,8 +2,6 @@ package core
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
@@ -15,8 +13,7 @@ import (
 )
 
 const (
-	TICKER_LENGTH  = 15
-	SCREENSHOT_AGE = 30 * time.Minute
+	TICKER_LENGTH = 15
 )
 
 func OpenTicker(ticker string) (err error) {
@@ -45,12 +42,15 @@ func RecordTicker(ticker string) (err error) {
 		for i := 4; i > 0; i-- {
 			// emulate number key press
 			if err = tools.SendKey("-k " + strconv.Itoa(i)); err == nil {
-				log.Debug().Str("Ticker", ticker).Int("Count", i).Msg("Attempting Screenshot")
+				// File Name POWERINDIA.mwd.trend.rejected.nca_20240321_193916.png
+				name := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format("20060102__150405"))
+				log.Debug().Str("Ticker", ticker).Str("Name", name).Int("Count", i).Msg("Attempting Screenshot")
+
 				// Wait
 				time.Sleep(1 * time.Second)
 
 				// Take Screenshot
-				if err = tools.Screenshot(); err != nil {
+				if err = tools.NamedScreenshot(name); err != nil {
 					return
 				}
 			}
@@ -131,30 +131,6 @@ func MonitorSubmap() {
 			log.Error().Err(err).Msg("Activate Submap Failed")
 		}
 	})
-}
-
-func labelJournal(path string, ticker string) {
-	files, _ := script.FindFiles(path).Slice()
-
-	for _, file := range files {
-		// Check Age of Files
-		info, _ := os.Stat(file)
-		diff := time.Now().Sub(info.ModTime())
-		log.Debug().Str("File", file).Dur("Age", diff).Msg("File Age")
-
-		// Age Within Threshold, Perform Rename
-		if diff < SCREENSHOT_AGE*2 {
-			// Read File Time
-			modTime := info.ModTime()
-			newName := fmt.Sprintf("%s__%s.png", ticker, modTime.Format("20060102__150405"))
-
-			// Generate New Path POWERINDIA.mwd.trend.rejected.nca_20240321_193916.png
-			newPath := filepath.Join(path, newName)
-
-			log.Info().Str("Old", file).Str("New", newPath).Msg("Rename File")
-			os.Rename(file, newPath)
-		}
-	}
 }
 
 func restartNetworkManager() {

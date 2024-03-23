@@ -37,7 +37,7 @@ var monitorCmd = &cobra.Command{
 		log.Info().Dur("Wait", wait).Dur("Idle", idle).Time("Time", time.Now()).Msg("Monitoring System")
 		server := core.NewMonitorServer(args[1])
 		go core.MonitorIdle(args[0], wait, idle)
-		go server.Start(3005)
+		go server.Start(9010)
 		go core.MonitorSubmap()
 		core.MonitorInternetConnection(wait)
 		return
