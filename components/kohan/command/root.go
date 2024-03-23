@@ -1,7 +1,6 @@
 package command
 
 import (
-	"github.com/amanhigh/go-fun/common/telemetry"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -10,13 +9,19 @@ import (
 )
 
 var (
-	RootCmd = &cobra.Command{}
+	RootCmd = &cobra.Command{
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			if config.KOHAN_DEBUG {
+				zerolog.SetGlobalLevel(zerolog.DebugLevel)
+			} else {
+				zerolog.SetGlobalLevel(zerolog.InfoLevel)
+			}
+		},
+	}
 )
 
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&config.KOHAN_DEBUG, "debug", "d", config.KOHAN_DEBUG, "Enable Debug")
-	// BUG: Link to debug flag
-	telemetry.InitLogger(zerolog.InfoLevel)
 }
 
 func Execute() {

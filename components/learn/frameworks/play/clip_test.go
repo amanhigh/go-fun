@@ -27,6 +27,7 @@ var _ = Describe("Clipboard", Label(models.GINKGO_SLOW), func() {
 
 	Context("Text Copy", func() {
 		var ch <-chan struct{}
+		// TODO: Clipboard Wayland https://github.com/golang-design/clipboard/issues/6
 		BeforeEach(func() {
 			ch = clipboard.Write(clipboard.FmtText, []byte(testData))
 		})
