@@ -1,7 +1,6 @@
 package command
 
 import (
-	"context"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/tools"
@@ -30,19 +29,25 @@ var runOrFocusCmd = &cobra.Command{
 }
 
 var monitorCmd = &cobra.Command{
-	Use:   "monitor [IdleCmd] [ClipPath]",
+	Use:   "monitor [IdleCmd]",
 	Short: "System Monitoring",
-	Args:  cobra.ExactArgs(2),
+	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
 		log.Info().Dur("Wait", wait).Dur("Idle", idle).Time("Time", time.Now()).Msg("Monitoring System")
 		go core.MonitorIdle(args[0], wait, idle)
-		go core.MonitorClipboard(ctx, args[1])
+		// go core.MonitorClipboard(ctx, args[1])
 		go core.MonitorSubmap()
 		core.MonitorInternetConnection(wait)
 		return
+	},
+}
+
+var processTicker = &cobra.Command{
+	Use:   "ticker [Ticker] [CapturePath]",
+	Short: "Process Ticker",
+	Args:  cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		core.ProcessTicker(args[0], args[1])
 	},
 }
 
@@ -54,5 +59,6 @@ func init() {
 	//Commands
 	autoCmd.AddCommand(runOrFocusCmd)
 	autoCmd.AddCommand(monitorCmd)
+	autoCmd.AddCommand(processTicker)
 	RootCmd.AddCommand(autoCmd)
 }

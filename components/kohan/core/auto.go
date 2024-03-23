@@ -1,8 +1,9 @@
 package core
 
 import (
-	"context"
+	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -13,7 +14,6 @@ import (
 	"github.com/bitfield/script"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"golang.design/x/clipboard"
 )
 
 const (
@@ -47,10 +47,12 @@ func OpenTicker(ticker string) (err error) {
 func RecordTicker(ticker string) (err error) {
 	// Bring Focus Back Lost due to Modal Box
 	if err = tools.FocusWindow("TradingView"); err == nil {
+		log.Info().Str("Ticker", ticker).Msg("Recording Ticker")
 		// loop from max to 1
 		for i := 4; i > 0; i-- {
 			// emulate number key press
 			if err = tools.SendKey("-k " + strconv.Itoa(i)); err == nil {
+				log.Debug().Str("Ticker", ticker).Int("Count", i).Msg("Attempting Screenshot")
 				// Wait
 				time.Sleep(1 * time.Second)
 
@@ -112,39 +114,30 @@ func MonitorIdle(runCmd string, wait, idle time.Duration) {
 	})
 }
 
-func MonitorClipboard(ctx context.Context, capturePath string) {
-	log.Info().Msg("Monitoring Clipboard")
-	ch := clipboard.Watch(ctx, clipboard.FmtText)
-	for clipText := range ch {
-		ticker := string(clipText)
-
-		// Read OS Environment
-		if matcher.MatchString(ticker) {
-			log.Info().Str("Ticker", ticker).Msg("Recording Ticker")
-			if err := RecordTicker(ticker); err == nil {
-				LabelJournal(capturePath, ticker)
-			} else {
-				log.Error().Str("Ticker", ticker).Err(err).Msg("Open Ticker Failed")
-			}
+func ProcessTicker(ticker string, capturePath string) {
+	if matcher.MatchString(ticker) {
+		log.Info().Str("Ticker", ticker).Msg("Recording Ticker")
+		if err := RecordTicker(ticker); err == nil {
+			LabelJournal(capturePath, ticker)
 		} else {
-			// BUG: Fix ActiveWindow and Add check for Label Journal as well.
-			windowName, err := tools.GetActiveWindow()
-			if err != nil {
-				log.Error().Str("Ticker", ticker).Err(err).Msg("Active Window/Desktop Detect Failed")
-				continue
-			}
-			subLogger := log.With().Str("Ticker", ticker).Str("Window", windowName).Logger()
+			log.Error().Str("Ticker", ticker).Err(err).Msg("Open Ticker Failed")
+		}
+	} else {
+		windowName, err := tools.GetActiveWindow()
+		if err != nil {
+			log.Error().Str("Ticker", ticker).Err(err).Msg("Active Window/Desktop Detect Failed")
+			return
+		}
+		subLogger := log.With().Str("Ticker", ticker).Str("Window", windowName).Logger()
 
-			subLogger.Debug().Msg("Window Match")
-			if strings.Contains(windowName, "trading-tome") {
-				subLogger.Debug().Msg("Open Ticker")
-				OpenTicker(ticker)
-			} else {
-				subLogger.Warn().Msg("No Ticker or Window Match")
-			}
+		subLogger.Debug().Msg("Window Match")
+		if strings.Contains(windowName, "trading-tome") {
+			subLogger.Debug().Msg("Open Ticker")
+			OpenTicker(ticker)
+		} else {
+			subLogger.Warn().Msg("No Ticker or Window Match")
 		}
 	}
-	log.Info().Msg("Clipboard Monitor Stopped")
 }
 
 func MonitorSubmap() {
@@ -171,9 +164,16 @@ func LabelJournal(path string, ticker string) {
 
 			// Age Within Threshold, Perform Rename
 			if diff < SCREENSHOT_AGE*2 {
-				newName := strings.ReplaceAll(file, "Screenshot", ticker)
-				log.Info().Str("Old", file).Str("New", newName).Msg("Rename File")
-				os.Rename(file, newName)
+				// Read File Time
+				modTime := info.ModTime()
+				newName := fmt.Sprintf("%s__%s.png", ticker, modTime.Format("20060102__150405"))
+
+				// Generate New Path POWERINDIA.mwd.trend.rejected.nca_20240321_193916.png
+				dir := filepath.Dir(path)
+				newPath := filepath.Join(dir, newName)
+
+				log.Info().Str("Old", file).Str("New", newPath).Msg("Rename File")
+				os.Rename(file, newPath)
 			}
 		}
 	}
