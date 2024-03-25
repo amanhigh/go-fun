@@ -29,7 +29,7 @@ var runOrFocusCmd = &cobra.Command{
 }
 
 var monitorCmd = &cobra.Command{
-	Use:   "monitor[CapturePath]",
+	Use:   "monitor [CapturePath]",
 	Short: "System Monitoring",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
