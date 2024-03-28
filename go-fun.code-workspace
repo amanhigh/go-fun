@@ -12,7 +12,8 @@
 			"terrastruct.d2",
 			"gruntfuggly.todo-tree",
 			"humao.rest-client",
-			"cweijan.vscode-mysql-client2"
+			"cweijan.vscode-mysql-client2",
+			"hoovercj.vscode-dimmer"
 		]
 	},
 	"settings": {
@@ -39,6 +40,8 @@
 				"host": "localhost",
 				"port": "8080"
 			}
-		}
+		},
+		"dimmer.enabled": true,
+		"dimmer.context": 5
 	}
 }
