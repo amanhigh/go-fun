@@ -22,7 +22,7 @@ const (
 func OpenTicker(ticker string) (err error) {
 	// Focus on the window named "TradingView"
 	log.Debug().Str("Ticker", ticker).Msg("OpenTicker")
-	if err = tools.FocusWindow("brave-browser"); err == nil {
+	if err = tools.FocusWindow("TradingView"); err == nil {
 		// Focus Input Box
 		if err = tools.SendKey("-M Ctrl b"); err == nil {
 			// Copy Ticker

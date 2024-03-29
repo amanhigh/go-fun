@@ -32,6 +32,11 @@ func FocusWindow(title string) (err error) {
 	return
 }
 
+func FocusWorkspace(id int) (err error) {
+	err = HyperDispatch(fmt.Sprintf("workspace %v", id))
+	return
+}
+
 func GetActiveWindow() (title string, err error) {
 	var window HyperWindow
 	window, err = GetHyperWindow()
