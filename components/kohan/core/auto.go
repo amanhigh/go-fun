@@ -80,12 +80,6 @@ func MonitorInternetConnection(wait time.Duration) {
 }
 
 func TryOpenTicker(ticker string) {
-	// Check if the length of the ticker is less than 15
-	if len(ticker) > TICKER_LENGTH {
-		log.Debug().Str("Ticker", ticker).Msg("OpenTicker: Ticker Length > 15")
-		return
-	}
-
 	window, err := tools.GetHyperWindow()
 	if err == nil && window.Class == LOGSEQ_CLASS && window.Monitor == SIDE_MONITOR && window.Workspace.Name == MAIL_WORKSPACE {
 		OpenTicker(ticker)
