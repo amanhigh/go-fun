@@ -80,18 +80,6 @@ func MonitorInternetConnection(wait time.Duration) {
 	})
 }
 
-func MonitorClipboard() (cancel util.CancelFunc, err error) {
-	log.Info().Msg("MonitorClipboard: Started")
-	// BUG: Double Call going to open-ticker, watch issue ?
-	cmd := "wl-paste -w zsh -c 'kohan auto open-ticker $(wl-paste)'"
-	if util.IsDebugMode() {
-		cmd = "wl-paste -w zsh -c 'kohan auto open-ticker $(wl-paste) -d'"
-	}
-	log.Debug().Str("Cmd", cmd).Msg("MonitorClipboard: Watch Command")
-	cancel, err = tools.RunBackgroundProcess(cmd)
-	return
-}
-
 func TryOpenTicker(ticker string) {
 	// Check if the length of the ticker is less than 15
 	if len(ticker) > TICKER_LENGTH {

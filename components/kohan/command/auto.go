@@ -2,7 +2,6 @@ package command
 
 import (
 	"github.com/amanhigh/go-fun/common/tools"
-	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -34,16 +33,10 @@ var monitorCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		log.Info().Dur("Wait", wait).Msg("Monitoring Systems")
-		var cancel util.CancelFunc
 		server := core.NewMonitorServer(args[0])
 		go server.Start(9010)
 		go core.MonitorSubmap()
-		if cancel, err = core.MonitorClipboard(); err == nil {
-			defer cancel()
-			core.MonitorInternetConnection(wait)
-		} else {
-			log.Error().Err(err).Msg("MonitorClipboard Failed")
-		}
+		core.MonitorInternetConnection(wait)
 		return
 	},
 }
