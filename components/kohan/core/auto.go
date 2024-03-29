@@ -13,24 +13,24 @@ import (
 )
 
 const (
-	TICKER_LENGTH = 15
+	TICKER_LENGTH  = 15
+	SIDE_MONITOR   = 1
+	MAIL_WORKSPACE = "2"
+	LOGSEQ_CLASS   = "Logseq"
 )
 
 func OpenTicker(ticker string) (err error) {
-	// Check if the length of the ticker is less than 15
-	if len(ticker) < TICKER_LENGTH {
-		// Focus on the window named "TradingView"
-		log.Debug().Str("Ticker", ticker).Msg("OpenTicker")
-		if err = tools.FocusWindow("brave-browser"); err == nil {
-			// Focus Input Box
-			if err = tools.SendKey("-M Ctrl b"); err == nil {
-				// Copy Ticker
-				if err = tools.ClipCopy(ticker); err == nil {
-					if err = tools.SendKey("-M Ctrl v"); err == nil {
-						time.Sleep(50 * time.Millisecond)
-						// Bang ! to Open
-						err = tools.SendInput("xox")
-					}
+	// Focus on the window named "TradingView"
+	log.Debug().Str("Ticker", ticker).Msg("OpenTicker")
+	if err = tools.FocusWindow("brave-browser"); err == nil {
+		// Focus Input Box
+		if err = tools.SendKey("-M Ctrl b"); err == nil {
+			// Copy Ticker
+			if err = tools.ClipCopy(ticker); err == nil {
+				if err = tools.SendKey("-M Ctrl v"); err == nil {
+					time.Sleep(50 * time.Millisecond)
+					// Bang ! to Open
+					err = tools.SendInput("xox")
 				}
 			}
 		}
@@ -88,18 +88,22 @@ func MonitorClipboard() (cancel util.CancelFunc, err error) {
 }
 
 func TryOpenTicker(ticker string) {
-	// BUG: Connect to Clipboard
-	ok, err := tools.IsWindowFocused("trading-tome")
-	if err != nil {
-		log.Error().Err(err).Msg("OpenTicker: IsWindowFocused Failed")
+	// Check if the length of the ticker is less than 15
+	if len(ticker) > TICKER_LENGTH {
+		log.Debug().Str("Ticker", ticker).Msg("OpenTicker: Ticker Length > 15")
 		return
 	}
 
-	if ok {
+	window, err := tools.GetHyperWindow()
+	if err == nil && window.Class == LOGSEQ_CLASS && window.Monitor == SIDE_MONITOR || window.Workspace.Name == MAIL_WORKSPACE && err == nil {
 		OpenTicker(ticker)
 		log.Info().Str("Ticker", ticker).Msg("OpenTicker: Trading Tome Active")
 	} else {
-		log.Debug().Str("Ticker", ticker).Msg("OpenTicker: Trading Tome Not Focused")
+		if err != nil {
+			log.Error().Err(err).Msg("OpenTicker: GetHyperWindow Failed")
+			return
+		}
+		log.Debug().Str("Ticker", ticker).Str("Class", window.Class).Str("Window", window.Title).Int("Monitor", window.Monitor).Str("Workspace", window.Workspace.Name).Msg("OpenTicker: Trading Tome Not Active")
 	}
 }
 
