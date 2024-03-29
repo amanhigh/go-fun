@@ -28,7 +28,7 @@ func RunOrFocus(title string) (err error) {
 }
 
 func FocusWindow(title string) (err error) {
-	err = HyperDispatch(fmt.Sprintf("focuswindow %v", title))
+	err = HyperDispatch(fmt.Sprintf("focuswindow title:%v", title))
 	return
 }
 

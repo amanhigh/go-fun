@@ -55,6 +55,7 @@ func RunBackgroundProcess(command string) (cancel util.CancelFunc, err error) {
 	cancel = func() (err error) {
 		//Kill Command with Subprocess
 		err = syscall.Kill(-cmd.Process.Pid, syscall.SIGINT)
+		log.Debug().Str("CMD", command).Int("PID", cmd.Process.Pid).Msg("Killing Background Process")
 		return
 	}
 	return
