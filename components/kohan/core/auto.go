@@ -25,13 +25,12 @@ func OpenTicker(ticker string) (err error) {
 	if err = tools.FocusWindow("TradingView"); err == nil {
 		// Focus Input Box
 		if err = tools.SendKey("-M Ctrl b"); err == nil {
-			// Copy Ticker
-			if err = tools.ClipCopy(ticker); err == nil {
-				if err = tools.SendKey("-M Ctrl v"); err == nil {
-					time.Sleep(50 * time.Millisecond)
-					// Bang ! to Open
-					err = tools.SendInput("xox")
-				}
+			// HACK: Copy Ticker once Clipboard Library is Fixed
+			// Copy runs into doom loop with wl-paste Watch
+			if err = tools.SendKey("-M Ctrl v"); err == nil {
+				time.Sleep(50 * time.Millisecond)
+				// Bang ! to Open
+				err = tools.SendInput("xox")
 			}
 		}
 	}
@@ -88,7 +87,7 @@ func TryOpenTicker(ticker string) {
 	}
 
 	window, err := tools.GetHyperWindow()
-	if err == nil && window.Class == LOGSEQ_CLASS && window.Monitor == SIDE_MONITOR || window.Workspace.Name == MAIL_WORKSPACE && err == nil {
+	if err == nil && window.Class == LOGSEQ_CLASS && window.Monitor == SIDE_MONITOR && window.Workspace.Name == MAIL_WORKSPACE {
 		OpenTicker(ticker)
 		log.Info().Str("Ticker", ticker).Msg("OpenTicker: Trading Tome Active")
 	} else {
