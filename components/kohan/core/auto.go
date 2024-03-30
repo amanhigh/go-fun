@@ -22,6 +22,7 @@ const (
 func OpenTicker(ticker string) (err error) {
 	// Focus on the window named "TradingView"
 	log.Debug().Str("Ticker", ticker).Msg("OpenTicker")
+
 	if err = tools.FocusWindow("TradingView"); err == nil {
 		// Focus Input Box
 		if err = tools.SendKey("-M Ctrl b"); err == nil {
@@ -31,6 +32,8 @@ func OpenTicker(ticker string) (err error) {
 				time.Sleep(50 * time.Millisecond)
 				// Bang ! to Open
 				err = tools.SendInput("xox")
+				// Return Focus Back
+				tools.FocusLastWindow()
 			}
 		}
 	}
@@ -83,13 +86,13 @@ func TryOpenTicker(ticker string) {
 	window, err := tools.GetHyperWindow()
 	if err == nil && window.Class == LOGSEQ_CLASS && window.Monitor == SIDE_MONITOR && window.Workspace.Name == MAIL_WORKSPACE {
 		OpenTicker(ticker)
-		log.Info().Str("Ticker", ticker).Msg("OpenTicker: Trading Tome Active")
+		log.Info().Str("Ticker", ticker).Msg("Opening Ticker")
 	} else {
 		if err != nil {
 			log.Error().Err(err).Msg("OpenTicker: GetHyperWindow Failed")
 			return
 		}
-		log.Debug().Str("Ticker", ticker).Str("Class", window.Class).Int("Monitor", window.Monitor).Str("Workspace", window.Workspace.Name).Str("Window", window.Title).Msg("OpenTicker: Trading Tome Not Active")
+		log.Debug().Str("Ticker", ticker).Str("Class", window.Class).Int("Monitor", window.Monitor).Str("Workspace", window.Workspace.Name).Str("Window", window.Title).Msg("OpenTicker: Logseq Not Active")
 	}
 }
 
