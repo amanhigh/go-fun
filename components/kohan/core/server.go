@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
@@ -22,6 +23,7 @@ func NewMonitorServer(capturePath string) (server *MonitorServer) {
 
 	// Register Routes
 	server.mux.GET("/v1/ticker/:ticker/record", server.HandleRecordTicker)
+	server.mux.GET("/v1/clip/", server.HandleReadClip)
 
 	return
 }
@@ -29,6 +31,16 @@ func NewMonitorServer(capturePath string) (server *MonitorServer) {
 func (s *MonitorServer) Start(port int) (err error) {
 	log.Info().Int("port", port).Msg("Starting Monitor Server")
 	err = s.mux.Run(fmt.Sprintf(":%d", port))
+	return
+}
+
+func (s *MonitorServer) HandleReadClip(ctx *gin.Context) {
+	text, err := tools.ClipPaste()
+	if err == nil {
+		ctx.JSON(http.StatusOK, text)
+	} else {
+		ctx.JSON(http.StatusInternalServerError, err.Error())
+	}
 	return
 }
 
