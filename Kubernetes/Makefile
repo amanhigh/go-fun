@@ -50,7 +50,7 @@ info-mini:
 	printf $(_TITLE) "Minikube Info" ""
 	printf $(_INFO) "Context" "`kubectl config current-context;`"
 	printf $(_DETAIL) "Mounted" "$(SERVICE_FILES)"
-	printf $(_INFO) "Dashboard" "http://docker:9000/dashboard/#/"
+	printf $(_INFO) "Traefik" "http://docker:9000/dashboard/#/"
 
 info-extra:
 	printf $(_TITLE) "Minikube Extra Info" ""
