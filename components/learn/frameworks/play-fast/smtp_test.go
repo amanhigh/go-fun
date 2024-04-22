@@ -26,7 +26,7 @@ var _ = Describe("Smtp", func() {
 	It("should mail", func() {
 		err := smtp.SendMail(server, auth, from, []string{to}, composeMimeMail(to, from, subject, body))
 		//HACK: Error Non Nil as Plan Expired
-		Expect(err).Should(HaveOccurred())
+		Expect(err).ShouldNot(HaveOccurred())
 	})
 
 })
