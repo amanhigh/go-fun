@@ -15,6 +15,7 @@ disk=$1
 encrypt=$2
 
 echo -en "\033[1;32m Disk: $disk, Encrpt: $encrypt \033[0m \n";
+parted $disk print
 
 ################## Basics #####################
 # Ctrl+d to exit anywhere
@@ -36,6 +37,20 @@ timedatectl
 ## Format ##
 boot=${disk}1
 root=${disk}2
+
+echo -en "\033[1;33m Partition $disk (y/N) ?\033[0m \n";
+read confirm
+if [ "$confirm" == 'y' ]; then
+  # Partition
+  echo -en "\033[1;34m Partitioning $disk \033[0m \n";
+  parted $disk mklabel gpt
+  parted $disk mkpart primary fat32 1MiB 501MiB
+  parted $disk set 1 esp on
+  parted $disk mkpart primary btrfs 501MiB 100%
+  parted $disk print
+else
+  echo -en "\033[1;34m Skipping Disk Partitioning \033[0m \n";
+fi
 
 echo -en "\033[1;33m Format $disk (y/N) ?\033[0m \n";
 read confirm
@@ -135,13 +150,24 @@ fi
 
 ## Setup Partitions ##
 # Disk Info: fdisk -l ; lsblk (-f) ; findmnt ; df -hl ; blkid
+
 # fdisk /dev/sda
 # Partition Table: GPT (g) or MBR (Backward Compaitable)
 # Layout: Boot:/mnt/efi (300MB+), Swap (500MB+), Root:/mnt, Home:/home, Others:
 # n - Create Partition, Size (+500M,+5G)
 # d - Delete Partition
 # p - Print Current Layout
+# w - Write Configuration
 # t - Set Type (EF: UEFI, 8E: LVM) / GPT (1.EFI System)
+
+# parted /dev/sda
+# Partion Table: mklabel gpt, mklabel msdos
+# mkpart primary fat32 1MiB 300MiB
+# set 1 boot on
+# mkpart primary btrfs 300MiB 100%
+# print - Print Partions
+# rm 1 - Delete Partiton One
+
 
 ## Move/Resize/Backup/Restore Partition ##
 # Clone: partclone.btrfs -c -d -s /dev/sda2 -o cloned.img
