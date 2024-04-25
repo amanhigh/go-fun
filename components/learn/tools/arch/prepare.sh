@@ -14,7 +14,7 @@ fi
 disk=$1
 encrypt=$2
 
-echo -en "\033[1;32m Disk: $disk, Encrpt: $encrypt \033[0m \n";
+echo -en "\033[1;32m Disk: $disk, Encrypt: $encrypt \033[0m \n";
 parted $disk print
 
 ################## Basics #####################
@@ -103,6 +103,7 @@ findmnt -R -M /mnt
 
 # Crypt File
 if [ "$encrypt" == 'y' ] && [ ! -f /mnt/root/crypt.keyfile ]; then
+    #FIXME: #C Header Backup
     # cryptsetup luksHeaderBackup /dev/device --header-backup-file /mnt/backup/file.img
     # Test Header cryptsetup -v --header /mnt/backup/file.img open /dev/device test
     # cryptsetup luksHeaderRestore /dev/device --header-backup-file ./mnt/backup/file.img
