@@ -44,9 +44,9 @@ if [ "$confirm" == 'y' ]; then
   # Partition
   echo -en "\033[1;34m Partitioning $disk \033[0m \n";
   parted $disk mklabel gpt
-  parted $disk mkpart primary fat32 1MiB 501MiB
+  parted $disk mkpart primary fat32 1MiB 301MiB
   parted $disk set 1 esp on
-  parted $disk mkpart primary btrfs 501MiB 100%
+  parted $disk mkpart primary btrfs 301MiB 100%
   parted $disk print
 else
   echo -en "\033[1;34m Skipping Disk Partitioning \033[0m \n";
