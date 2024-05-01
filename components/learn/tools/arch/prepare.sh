@@ -7,7 +7,7 @@ if [ $# -ne 2 ]; then
   # Input Partition Names
   echo -en "\033[1;31m Usage:  $0 <Disk Name: /dev/sda> <Encrypt (y/N)> \033[0m \n";
   echo -en "\033[1;33m Disk Layout \033[0m \n";
-  fdisk -l
+  parted -l
   exit 1
 fi
 
@@ -164,10 +164,11 @@ fi
 # parted /dev/sda
 # Partion Table: mklabel gpt, mklabel msdos
 # mkpart primary fat32 1MiB 300MiB
-# set 1 boot on
+# set 1 boot on, set 1 esp on
 # mkpart primary btrfs 300MiB 100%
 # print - Print Partions
 # rm 1 - Delete Partiton One
+# quit - save and exit
 
 
 ## Move/Resize/Backup/Restore Partition ##
