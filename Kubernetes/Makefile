@@ -3,7 +3,7 @@
 OUT := /dev/null
 
 PORT=8091
-CPU=3
+CPU=4
 MEMORY=4096
 XTRA=""
 
