@@ -62,3 +62,8 @@ securityContext:
 #   - name: preet
 #     path: /aman
 #     size: 1Gi
+# Persistent Value
+# - name: webui
+#   path: /app/backend/data
+#   size: 1Gi
+#   storageClass: standard
