@@ -73,6 +73,10 @@ portainer: ## Portainer
 	-helm $(CMD) portainer portainer/portainer -f portainer.yml
 	printf $(_INFO) "Portainer" "http://portainer.docker/"
 
+webui: ## Open Web UI
+	-helm $(CMD) webui onechart/onechart -f webui.yml > /dev/null
+	printf $(_INFO) "WebUI" "http://webui.docker/"
+
 ### Security
 opa: ## Open Policy Agent
 	-helm $(CMD) opa opa/opa-kube-mgmt -f opa.yml > /dev/null

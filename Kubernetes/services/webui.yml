@@ -1,0 +1,24 @@
+image:
+  repository: ghcr.io/open-webui/open-webui
+  tag: main
+
+containerPort: 8080 
+svcPort: 3000
+
+# volumes:
+#   - name: webui
+#     path: /app/backend/data
+#     size: 1Gi
+#     storageClass: standard
+
+env:
+  - name: OLLAMA_BASE_URL
+    value: "http://host.minikube.internal:11434"
+
+resources:
+  requests:
+    cpu: "500m"
+    memory: "500Mi"
+  limits:
+    cpu: "2000m"
+    memory: "2000Mi"
