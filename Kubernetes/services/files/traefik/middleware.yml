@@ -1,4 +1,4 @@
-# https://doc.traefik.io/traefik/middlewares/http/overview/
+# https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/#kind-middleware
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:

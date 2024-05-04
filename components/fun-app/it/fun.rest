@@ -49,6 +49,6 @@ POST http://localhost:11434/api/generate
 Content-Type: application/json
 
 {
-  "model": "deepseek-coder",
+  "model": "llama3",
   "prompt":"Generate Sample Golang Code"
 }'
