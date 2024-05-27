@@ -77,6 +77,10 @@ webui: ## Open Web UI
 	-helm $(CMD) webui onechart/onechart -f webui.yml > /dev/null
 	printf $(_INFO) "WebUI" "http://webui.docker/"
 
+pdf: ## Open Stirling PDF
+	-helm $(CMD) pdf onechart/onechart -f pdf.yml > /dev/null
+	printf $(_INFO) "PDF" "http://pdf.docker/"
+
 ### Security
 opa: ## Open Policy Agent
 	-helm $(CMD) opa opa/opa-kube-mgmt -f opa.yml > /dev/null

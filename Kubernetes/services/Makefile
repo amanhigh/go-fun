@@ -5,7 +5,7 @@ OUT := /dev/null
 SERVICE_MAKE_OPTS=--no-print-directory -f ./services.mk
 XTRA="dashy"
 
-DOCKER_HOSTS=127.0.0.1 docker httpbin.docker dashy.docker resty.docker webui.docker app.docker \
+DOCKER_HOSTS=127.0.0.1 docker httpbin.docker dashy.docker resty.docker webui.docker pdf.docker app.docker \
 mysqladmin.docker redisadmin.docker cron.docker prometheus.docker grafana.docker jaeger.docker kiali.docker \
 ldapadmin.docker webssh.docker elastic.docker kibana.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker \
 consul.docker opa.docker sonar.docker metabase.docker
