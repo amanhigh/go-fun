@@ -11,6 +11,14 @@ volumes:
     hostPath:
       path: /etc/files/dashy
 
+resources:
+  requests:
+    cpu: "1000m"
+    memory: "1000Mi"
+  limits:
+    cpu: "2000m"
+    memory: "2000Mi"
+
 ingress:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web
