@@ -17,3 +17,8 @@ func CheckInternetConnection() bool {
 	_, err := script.Exec("ping -c 1 www.money9.com").String()
 	return err == nil
 }
+
+func PromptText(text string) (result string, err error) {
+	result, err = script.Echo(text).Exec("zenity --editable --text-info").String()
+	return
+}

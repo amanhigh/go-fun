@@ -46,7 +46,7 @@ func (s *MonitorServer) HandleReadClip(ctx *gin.Context) {
 
 func (s *MonitorServer) HandleRecordTicker(ctx *gin.Context) {
 	ticker := ctx.Param("ticker")
-	if err := RecordTicker(ticker); err == nil {
+	if err := RecordTicker(ticker, s.capturePath); err == nil {
 		ctx.JSON(http.StatusOK, "Success")
 
 	} else {
