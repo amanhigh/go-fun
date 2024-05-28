@@ -324,7 +324,7 @@ infos: info space-info ## Repo Extended Information
 prepare: setup-tools setup-k8 install-deadcode # One Time Setup
 
 setup: sync test build helm-package docker-build # Build and Test
-install: install-kohan # Install Kohan CLI
+install: install-kohan ## Install Kohan CLI
 clean: test-clean build-clean ## Clean up Residue
 
 reset: setup info clean ## Setup with Info and Clean
