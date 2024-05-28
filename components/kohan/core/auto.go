@@ -2,7 +2,9 @@ package core
 
 import (
 	"fmt"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/tools"
@@ -17,6 +19,19 @@ const (
 	SIDE_MONITOR   = 1
 	MAIL_WORKSPACE = "2"
 	LOGSEQ_CLASS   = "Logseq"
+	TRADE_INFO     = `
+Trends
+HTF - Up
+MTF - Up
+TTF - Up
+
+Plan: Longs @ TTF DZ
+
+Obstacles:
+-
+
+Support:
+-`
 )
 
 func OpenTicker(ticker string) (err error) {
@@ -40,7 +55,8 @@ func OpenTicker(ticker string) (err error) {
 	return
 }
 
-func RecordTicker(ticker string) (err error) {
+func RecordTicker(ticker, path string) (err error) {
+	var tradeInfo string
 	// Bring Focus Back Lost due to Modal Box
 	if err = tools.FocusWindow("TradingView"); err == nil {
 		log.Info().Str("Ticker", ticker).Msg("Recording Ticker")
@@ -62,7 +78,20 @@ func RecordTicker(ticker string) (err error) {
 			}
 		}
 
-		// send desktop notification
+		// Read Trade Info for Set Trades
+		if strings.Contains(ticker, ".set") {
+			infoFile := fmt.Sprintf("%s/%s.txt", path, ticker)
+			if tradeInfo, err = tools.PromptText(TRADE_INFO); err == nil {
+				os.WriteFile(infoFile, []byte(tradeInfo), util.DEFAULT_PERM)
+				// send desktop notification
+
+				// FIXME: Trigger Checks Snapshot.
+
+			} else {
+				log.Error().Str("Ticker", ticker).Err(err).Msg("Read TradeInfo Failed")
+			}
+		}
+
 		tools.Notify(zerolog.InfoLevel, "Recorded", ticker)
 	}
 
