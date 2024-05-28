@@ -18,6 +18,7 @@ const (
 	TICKER_LENGTH  = 15
 	SIDE_MONITOR   = 1
 	MAIL_WORKSPACE = "2"
+	DATE_FORMAT    = "20060102__150405"
 	LOGSEQ_CLASS   = "Logseq"
 	TRADE_INFO     = `
 Trends
@@ -65,7 +66,7 @@ func RecordTicker(ticker, path string) (err error) {
 			// emulate number key press
 			if err = tools.SendKey("-k " + strconv.Itoa(i)); err == nil {
 				// File Name POWERINDIA.mwd.trend.rejected.nca_20240321_193916.png
-				name := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format("20060102__150405"))
+				name := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format(DATE_FORMAT))
 				log.Debug().Str("Ticker", ticker).Str("Name", name).Int("Count", i).Msg("Attempting Screenshot")
 
 				// Wait
@@ -80,12 +81,13 @@ func RecordTicker(ticker, path string) (err error) {
 
 		// Read Trade Info for Set Trades
 		if strings.Contains(ticker, ".set") {
-			infoFile := fmt.Sprintf("%s/%s.txt", path, ticker)
-			checkFile := fmt.Sprintf("%s.png", ticker)
+			// Generate File name so it is ordered in Journal
+			infoFile := fmt.Sprintf("%s/%s__%s.txt", path, ticker, time.Now().Format(DATE_FORMAT))
 			if tradeInfo, err = tools.PromptText(TRADE_INFO); err == nil {
 				os.WriteFile(infoFile, []byte(tradeInfo), util.DEFAULT_PERM)
 
 				// Record Check Screenshot
+				checkFile := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format(DATE_FORMAT))
 				err = tools.NamedRegionScreenshot(checkFile)
 
 			} else {
