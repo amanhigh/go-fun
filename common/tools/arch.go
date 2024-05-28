@@ -13,6 +13,11 @@ func NamedScreenshot(name string) (err error) {
 	return
 }
 
+func NamedRegionScreenshot(name string) (err error) {
+	err = script.Exec("hyprshot -s -m region -f" + name).Error()
+	return
+}
+
 func CheckInternetConnection() bool {
 	_, err := script.Exec("ping -c 1 www.money9.com").String()
 	return err == nil

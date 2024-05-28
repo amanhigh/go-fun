@@ -81,17 +81,19 @@ func RecordTicker(ticker, path string) (err error) {
 		// Read Trade Info for Set Trades
 		if strings.Contains(ticker, ".set") {
 			infoFile := fmt.Sprintf("%s/%s.txt", path, ticker)
+			checkFile := fmt.Sprintf("%s.png", ticker)
 			if tradeInfo, err = tools.PromptText(TRADE_INFO); err == nil {
 				os.WriteFile(infoFile, []byte(tradeInfo), util.DEFAULT_PERM)
-				// send desktop notification
 
-				// FIXME: Trigger Checks Snapshot.
+				// Record Check Screenshot
+				err = tools.NamedRegionScreenshot(checkFile)
 
 			} else {
 				log.Error().Str("Ticker", ticker).Err(err).Msg("Read TradeInfo Failed")
 			}
 		}
 
+		// send desktop notification
 		tools.Notify(zerolog.InfoLevel, "Recorded", ticker)
 	}
 
