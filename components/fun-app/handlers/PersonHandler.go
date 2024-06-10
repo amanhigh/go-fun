@@ -129,6 +129,34 @@ func (self *PersonHandler) ListPersons(c *gin.Context) {
 	}
 }
 
+// ListPersonAudit godoc
+//
+// @Summary List Person Audit
+// @Description List Person Audit by ID
+// @Tags Person
+// @Accept json
+// @Produce json
+// @Param id path string true "Person ID"
+// @Success 200 {object} []fun.PersonAudit
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /person/{id}/audit [get]
+func (self *PersonHandler) ListPersonAudit(c *gin.Context) {
+	var path fun.PersonPath
+
+	ctx, span := self.Tracer.Start(c.Request.Context(), "ListPersonAudit.Handler", trace.WithAttributes(attribute.String("id", path.Id)))
+	defer span.End()
+
+	if err := c.ShouldBindUri(&path); err == nil {
+		if auditList, err := self.Manager.ListPersonAudit(ctx, path.Id); err == nil {
+			c.JSON(http.StatusOK, auditList)
+		} else {
+			err = util.ProcessValidationError(err)
+			log.Err(err).Int("status", err.Code()).Msg("ListPersonAudit: Server Error")
+			c.JSON(err.Code(), err)
+		}
+	}
+}
+
 // UpdatePerson godoc
 //
 // @Summary Update a person

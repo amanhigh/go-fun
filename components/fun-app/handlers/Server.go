@@ -37,6 +37,7 @@ func (self *FunServer) initRoutes() {
 
 	personGroup := v1.Group("/person")
 	personGroup.GET("/", self.PersonHandler.ListPersons)
+	personGroup.GET("/:id/audit", self.PersonHandler.ListPersonAudit)
 	personGroup.GET("/:id", self.PersonHandler.GetPerson)
 	personGroup.PUT("/:id", self.PersonHandler.UpdatePerson)
 	personGroup.POST("", self.PersonHandler.CreatePerson)
