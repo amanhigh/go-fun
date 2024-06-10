@@ -1,6 +1,8 @@
 package fun
 
 import (
+	"time"
+
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -39,4 +41,12 @@ type Person struct {
 func (p *Person) BeforeCreate(tx *gorm.DB) (err error) {
 	p.Id = uuid.NewString()[:8]
 	return
+}
+
+type PersonAudit struct {
+	AuditID uint `gorm:"primaryKey"`
+	Person
+	Operation string    `gorm:"not null"`
+	CreatedBy string    `gorm:"not null"`
+	CreatedAt time.Time `gorm:"not null"`
 }

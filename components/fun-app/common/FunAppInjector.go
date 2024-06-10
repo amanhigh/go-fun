@@ -145,6 +145,7 @@ func newDb(config config.FunAppConfig) (db *gorm.DB, err error) {
 	/** Gorm AutoMigrate Schema */
 	err = db.AutoMigrate(
 		&fun.Person{},
+		&fun.PersonAudit{},
 	)
 	return
 }
