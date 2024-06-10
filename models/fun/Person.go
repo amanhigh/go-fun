@@ -82,7 +82,7 @@ func (p *Person) AfterDelete(tx *gorm.DB) (err error) {
 // No embedding to decopule Audit and Person
 // Also causes issue during save with save loops
 type PersonAudit struct {
-	Id     string `gorm:"primaryKey" json:"id"`
+	Id     string `gorm:"not null"`
 	Name   string `gorm:"not null"`
 	Age    int    `gorm:"not null"`
 	Gender string `gorm:"not null"`
