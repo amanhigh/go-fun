@@ -5,7 +5,7 @@ OUT := /dev/null
 SERVICE_MAKE_OPTS=--no-print-directory -f ./services.mk
 XTRA="dashy"
 
-DOCKER_HOSTS=127.0.0.1 docker httpbin.docker dashy.docker resty.docker webui.docker pdf.docker app.docker \
+DOCKER_HOSTS=127.0.0.1 docker httpbin.docker dashy.docker resty.docker webui.docker pdf.docker paperless.docker app.docker \
 mysqladmin.docker redisadmin.docker cron.docker prometheus.docker grafana.docker jaeger.docker kiali.docker \
 ldapadmin.docker webssh.docker elastic.docker kibana.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker \
 consul.docker opa.docker sonar.docker metabase.docker
@@ -84,6 +84,7 @@ helm-add:
 	helm repo add grafana https://grafana.github.io/helm-charts
 	helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
 	helm repo add bitpoke https://helm-charts.bitpoke.io
+	helm repo add gabe565 https://charts.gabe565.com
 
 helm-update:
 	printf "\033[1;32m Updating Helm Repos \033[0m \n"

@@ -81,6 +81,10 @@ pdf: ## Open Stirling PDF
 	-helm $(CMD) pdf onechart/onechart -f pdf.yml > /dev/null
 	printf $(_INFO) "PDF" "http://pdf.docker/"
 
+paperless: ## Paperless NGX
+	-helm $(CMD) paperless gabe565/paperless-ngx -f paperless.yml > /dev/null
+	printf $(_INFO) "Paperless" "http://paperless.docker/"
+
 ### Security
 opa: ## Open Policy Agent
 	-helm $(CMD) opa opa/opa-kube-mgmt -f opa.yml > /dev/null
