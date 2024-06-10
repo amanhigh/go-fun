@@ -23,6 +23,7 @@ type PersonServiceInterface interface {
 	CreatePerson(ctx context.Context, request fun.PersonRequest) (person fun.Person, err common.HttpError)
 	UpdatePerson(ctx context.Context, id string, person fun.PersonRequest) (err common.HttpError)
 	ListPerson(ctx context.Context, query fun.PersonQuery) (personList fun.PersonList, err common.HttpError)
+	ListPersonAudit(ctx context.Context, id string) (personAuditList []fun.PersonAudit, err common.HttpError)
 	DeletePerson(ctx context.Context, name string) (err common.HttpError)
 }
 
@@ -101,6 +102,12 @@ func (c *PersonService) GetPerson(ctx context.Context, name string) (person fun.
 
 func (c *PersonService) ListPerson(ctx context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {
 	response, err1 := c.request(ctx).SetResult(&personList).Get(c.listPersonUrl(personQuery))
+	err = util.ResponseProcessor(response, err1)
+	return
+}
+
+func (c *PersonService) ListPersonAudit(ctx context.Context, id string) (personAuditList []fun.PersonAudit, err common.HttpError) {
+	response, err1 := c.request(ctx).SetResult(&personAuditList).Get(fmt.Sprintf(c.VERSION_URL+"/person/%s/audit", id))
 	err = util.ResponseProcessor(response, err1)
 	return
 }

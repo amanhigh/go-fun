@@ -34,8 +34,7 @@ type PersonList struct {
 // TODO: #B PersonAudit Table via Code or Triggers
 type Person struct {
 	PersonRequest
-	Id      string `gorm:"primaryKey" json:"id"`
-	Version int64  `gorm:"not null" json:"-" binding:"-"`
+	Id string `gorm:"primaryKey" json:"id"`
 }
 
 func (p *Person) BeforeCreate(tx *gorm.DB) (err error) {
@@ -43,9 +42,53 @@ func (p *Person) BeforeCreate(tx *gorm.DB) (err error) {
 	return
 }
 
+// Audit Hooks
+func CreatePersonAudit(p Person) (audit PersonAudit) {
+	audit.Id = p.Id
+	audit.Name = p.Name
+	audit.Age = p.Age
+	audit.Gender = p.Gender
+
+	return
+}
+
+func (p *Person) AfterCreate(tx *gorm.DB) (err error) {
+	audit := CreatePersonAudit(*p)
+	audit.Operation = "CREATE"
+	audit.CreatedBy = "AMAN"
+	audit.CreatedAt = time.Now()
+
+	return tx.Create(&audit).Error
+}
+
+func (p *Person) AfterUpdate(tx *gorm.DB) (err error) {
+	audit := CreatePersonAudit(*p)
+	audit.Operation = "UPDATE"
+	audit.CreatedBy = "AMAN"
+	audit.CreatedAt = time.Now()
+
+	return tx.Create(&audit).Error
+}
+
+func (p *Person) AfterDelete(tx *gorm.DB) (err error) {
+	audit := CreatePersonAudit(*p)
+	audit.Operation = "DELETE"
+	audit.CreatedBy = "AMAN"
+	audit.CreatedAt = time.Now()
+
+	return tx.Create(&audit).Error
+}
+
+// No embedding to decopule Audit and Person
+// Also causes issue during save with save loops
 type PersonAudit struct {
-	AuditID uint `gorm:"primaryKey"`
-	Person
+	Id     string `gorm:"primaryKey" json:"id"`
+	Name   string `gorm:"not null"`
+	Age    int    `gorm:"not null"`
+	Gender string `gorm:"not null"`
+
+	// Audit Fields
+	AuditID   uint      `gorm:"primaryKey"`
 	Operation string    `gorm:"not null"`
 	CreatedBy string    `gorm:"not null"`
 	CreatedAt time.Time `gorm:"not null"`
