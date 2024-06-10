@@ -31,7 +31,6 @@ type PersonList struct {
 	Metadata common.PaginatedResponse `json:"metadata"`
 }
 
-// TODO: #B PersonAudit Table via Code or Triggers
 type Person struct {
 	PersonRequest
 	Id string `gorm:"primaryKey" json:"id"`
