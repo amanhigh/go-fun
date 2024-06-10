@@ -18,6 +18,7 @@ type PersonManagerInterface interface {
 
 	ListPersons(c context.Context, query fun.PersonQuery) (response fun.PersonList, err common.HttpError)
 	GetPerson(c context.Context, id string) (person fun.Person, err common.HttpError)
+	ListPersonAudit(c context.Context, id string) (response []fun.PersonAudit, err common.HttpError)
 }
 
 type PersonManager struct {
@@ -71,6 +72,17 @@ func (self *PersonManager) ListPersons(c context.Context, personQuery fun.Person
 
 	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
 		response, err = self.Dao.ListPerson(c, personQuery)
+		return
+	})
+	return
+}
+
+func (self *PersonManager) ListPersonAudit(c context.Context, id string) (response []fun.PersonAudit, err common.HttpError) {
+	ctx, span := self.Tracer.Start(c, "GetPersonAudit.Manager", trace.WithAttributes(attribute.String("id", id)))
+	defer span.End()
+
+	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err1 common.HttpError) {
+		response, err1 = self.Dao.ListPersonAudit(c, id)
 		return
 	})
 	return
