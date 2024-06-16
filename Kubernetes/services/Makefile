@@ -106,8 +106,8 @@ helm: helm-add helm-update
 prepare: helm hosts ## One Time Setup
 info: info-svc ## Service Info
 infos: info ## Service Extended Info
-setup: clear-helm install ## Setup Configured Services
+setup: clear-helm install ## Clean and Resetup Configured Services
 #HACK: Clear Istio
 clean: clear-helm ## Stop Services
-reset: clean clear-helms clear-ns bootstrap info setup ## Resetup Services 
+reset: clean clear-helms clear-ns bootstrap info setup ## Clean & Resetup All Services 
 all: prepare reset update infos ## Run All Targets
