@@ -11,9 +11,9 @@ volumes:
     size: 1Gi
     storageClass: standard
 
-env:
-  - name: OLLAMA_BASE_URL
-    value: "http://host.minikube.internal:11434"
+vars:
+  OLLAMA_BASE_URL: "http://host.minikube.internal:11434"
+  WEBUI_AUTH: "false"
 
 resources:
   requests:
