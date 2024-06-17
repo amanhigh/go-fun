@@ -16,70 +16,69 @@ ingress:
   # -- Enable and configure ingress settings for the chart under this key.
   # @default -- See [values.yaml](./values.yaml)
   main:
-    enabled: false
+    enabled: true
     annotations:
-      nginx.ingress.kubernetes.io/proxy-body-size: 64m
-    # hosts:
-    #   - host: chart-example.local
-    #     paths:
-    #       - path: /
-    # tls:
-    #   - secretName: chart-example.local
-    #     hosts:
-    #       - chart-example.local
+      traefik.ingress.kubernetes.io/router.entrypoints: web
+    hosts:
+      - host: paperless.docker
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
 
 persistence:
   # -- Configure data volume settings for the chart under this key.
   # @default -- See [values.yaml](./values.yaml)
   data:
-    enabled: false
+    enabled: true
     retain: true
     mountPath: /usr/src/paperless/data
-    # storageClass: ""
-    # accessMode: ReadWriteOnce
-    # size: 1Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 1Gi
   # -- Configure media volume settings for the chart under this key.
   # @default -- See [values.yaml](./values.yaml)
   media:
-    enabled: false
+    enabled: true
     retain: true
     mountPath: /usr/src/paperless/media
-    # storageClass: ""
-    # accessMode: ReadWriteOnce
-    # size: 8Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 1Gi
   # -- Configure export volume settings for the chart under this key.
   # @default -- See [values.yaml](./values.yaml)
   export:
     enabled: true
     retain: true
     mountPath: /usr/src/paperless/export
-    # storageClass: ""
-    # accessMode: ReadWriteOnce
-    # size: 1Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 500Mi
   # -- Configure consume volume settings for the chart under this key.
   # @default -- See [values.yaml](./values.yaml)
   consume:
     enabled: true
     retain: true
     mountPath: /usr/src/paperless/consume
-    # storageClass: ""
-    # accessMode: ReadWriteOnce
-    # size: 4Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 500Mi
 
 # -- Enable and configure postgresql database subchart under this key.
 #    If enabled, the app's db envs will be set for you.
 #    [[ref]](https://github.com/bitnami/charts/tree/main/bitnami/postgresql)
 # @default -- See [values.yaml](./values.yaml)
 postgresql:
-  enabled: false
+  enabled: true
   auth:
     database: paperless
-    postgresPassword: changeme
+    postgresPassword: aman
   primary:
     persistence:
-      enabled: false
-      # storageClass: ""
-      # size: 8Gi
+      enabled: true
+      storageClass: ""
+      accessMode: ReadWriteOnce
+      size: 1Gi
 
 # -- Enable and configure redis subchart under this key.
 #    If enabled, the app's Redis env will be set for you.
@@ -95,6 +94,9 @@ redis:
     # existingSecretPasswordKey: redis-password
   master:
     persistence:
-      enabled: false
+      enabled: true
+      storageClass: ""
+      accessMode: ReadWriteOnce
+      size: 500Mi
   replica:
     replicaCount: 0
