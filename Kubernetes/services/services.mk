@@ -85,6 +85,11 @@ paperless: postgres redis ## Paperless NGX
 	-helm $(CMD) paperless gabe565/paperless-ngx -f paperless.yml > /dev/null
 	printf $(_INFO) "Paperless" "http://paperless.docker/"
 
+# BUG: Fix Ingress 
+clarity: ## API Clarity
+	-helm $(CMD) apiclarity apiclarity/apiclarity -f clarity.yml > /dev/null
+	printf $(_INFO) "API Clarity" "http://clarity.docker/"
+
 ### Security
 opa: ## Open Policy Agent
 	-helm $(CMD) opa opa/opa-kube-mgmt -f opa.yml > /dev/null
