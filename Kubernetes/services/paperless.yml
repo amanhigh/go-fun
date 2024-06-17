@@ -10,6 +10,12 @@
 env:
   # -- Set the container timezone
   TZ: UTC
+  PAPERLESS_DBHOST: pg-primary
+  PAPERLESS_DBUSER: aman
+  PAPERLESS_DBPASS: aman
+  PAPERLESS_DBNAME: compute
+  PAPERLESS_REDIS: redis://redis-master:6379
+  PAPERLESS_AUTH: false
   # PAPERLESS_SECRET_KEY: ""
 
 ingress:
@@ -69,34 +75,11 @@ persistence:
 #    [[ref]](https://github.com/bitnami/charts/tree/main/bitnami/postgresql)
 # @default -- See [values.yaml](./values.yaml)
 postgresql:
-  enabled: true
-  auth:
-    database: paperless
-    postgresPassword: aman
-  primary:
-    persistence:
-      enabled: true
-      storageClass: ""
-      accessMode: ReadWriteOnce
-      size: 1Gi
+  enabled: false
 
 # -- Enable and configure redis subchart under this key.
 #    If enabled, the app's Redis env will be set for you.
 #    [[ref]](https://github.com/bitnami/charts/tree/main/bitnami/redis)
 # @default -- See [values.yaml](./values.yaml)
 redis:
-  enabled: true
-  auth:
-    enabled: true
-    # Use an existing secret for redis auth. Do this if you're using Argo to manage your instance or otherwise using helm template under the hood
-    #     The secret name can vary, but the password key must be redis-password.
-    # existingSecret: paperless-redis
-    # existingSecretPasswordKey: redis-password
-  master:
-    persistence:
-      enabled: true
-      storageClass: ""
-      accessMode: ReadWriteOnce
-      size: 500Mi
-  replica:
-    replicaCount: 0
+  enabled: false

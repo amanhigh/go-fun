@@ -81,7 +81,7 @@ pdf: ## Open Stirling PDF
 	-helm $(CMD) pdf onechart/onechart -f pdf.yml > /dev/null
 	printf $(_INFO) "PDF" "http://pdf.docker/"
 
-paperless: ## Paperless NGX
+paperless: postgres redis ## Paperless NGX
 	-helm $(CMD) paperless gabe565/paperless-ngx -f paperless.yml > /dev/null
 	printf $(_INFO) "Paperless" "http://paperless.docker/"
 
