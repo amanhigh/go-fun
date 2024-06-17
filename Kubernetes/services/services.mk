@@ -118,6 +118,7 @@ mysql-admin:
 	-helm $(CMD) mysql-admin bitnami/phpmyadmin -f phpmyadmin.yml > /dev/null
 	printf $(_INFO) "URL" "http://mysqladmin.docker/"
 
+# BUG: Metabase doesn't start on h2, move pg with snapshot volume ?
 metabase:
 	-helm $(CMD) metabase onechart/onechart -f metabase.yml > /dev/null
 	printf $(_INFO) "URL" "http://metabase.docker/"
