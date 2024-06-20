@@ -17,7 +17,7 @@ func (self *Queue) Enqueue(i int) {
 }
 
 func (self *Queue) Dequeue() (i int) {
-	//BUG:Move exit.IsEmpty to transfer post tests
+	//BUG: Move exit.IsEmpty to transfer post tests
 	if self.exit.IsEmpty() {
 		self.transfer()
 	}

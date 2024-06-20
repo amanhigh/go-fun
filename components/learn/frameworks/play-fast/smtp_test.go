@@ -14,7 +14,7 @@ var _ = Describe("Smtp", func() {
 	//sendemail -f from@gmail.com -t to@gmail.com -u "Bash Subject" -s smtp.mailtrap.io:2525 -m "I am Body" -v -o message-charset=$CHARSET -o username=bc705c85d0f7dc -o password=4dd5c28282e88a
 	//https://mailtrap.io/
 	var (
-		//HACK:Move to Github Secrets and Rotate
+		//HACK: #B Move to Github Secrets and Rotate
 		auth    = smtp.CRAMMD5Auth("bc705c85d0f7dc", "4dd5c28282e88a")
 		server  = "smtp.mailtrap.io:2525"
 		from    = "from@gmail.com"

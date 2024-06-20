@@ -10,7 +10,7 @@ help: ## Show this help
 	printf $(_TITLE) "FirstTime: prepare/all, OUT=/dev/stdout (Debug) \n"
 
 ### Load Test
-# FIXME: Use Id's from Write Load Test.
+# FIXME: #B Use Id's from Write Load Test.
 load-read: ## Read Load Test
 	printf $(_TITLE) "Get Load Test"
 	URL=$(URL) jq -ncM 'while(.<1000; .+1) | {method: "GET", url: "\(env.URL)/person/Aman-\(.)"}' | vegeta attack -format=json -duration=$(DURATION) | vegeta report

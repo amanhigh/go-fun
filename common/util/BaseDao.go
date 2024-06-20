@@ -58,7 +58,7 @@ func (self *BaseDao) FindPaginated(c context.Context, pageParams common.Paginati
 func (self *BaseDao) Create(c context.Context, entity any, omit ...string) (err common.HttpError) {
 	var txErr error
 	if txErr = Tx(c).Omit(omit...).Create(entity).Error; txErr != nil {
-		// HACK: Verify Jaegar Tracing for SQL Statements
+		// HACK: #B Verify Jaegar Tracing for SQL Statements
 		log.Ctx(c).Error().Any("Entity", entity).Err(txErr).Msg("Entity Create Failed")
 	}
 	//Error Conversion

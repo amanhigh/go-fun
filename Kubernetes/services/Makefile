@@ -53,7 +53,7 @@ update: ## Update Services via Helm
 
 # BUG: Fix empty XTRA in Mac.
 bootstrap:
-	$(MAKE) $(SERVICE_MAKE_OPTS) traefik dashy $(XTRA)
+	$(MAKE) $(SERVICE_MAKE_OPTS) traefik dashy webui $(XTRA)
 	kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik --timeout=2m; > $(OUT)
 
 select: ## Select/Configure Service
@@ -108,7 +108,7 @@ prepare: helm hosts ## One Time Setup
 info: info-svc ## Service Info
 infos: info ## Service Extended Info
 setup: clear-helm install ## Clean and Resetup Configured Services
-#HACK: Clear Istio
+#HACK: #C Clear Istio
 clean: clear-helm ## Stop Services
 reset: clean clear-helms clear-ns bootstrap info setup ## Clean & Resetup All Services 
 all: prepare reset update infos ## Run All Targets

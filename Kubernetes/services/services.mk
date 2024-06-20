@@ -2,7 +2,7 @@
 .DEFAULT_GOAL := help
 CMD=install
 
-#TODO: Add Locust
+#TODO: #C Add Locust
 # Bootstrap: helm show values bitnami/postgresql > postgres.yml
 # Debug: find . | entr -s "helm template elasticsearch bitnami/elasticsearch -f elasticsearch.yml > debug.txt;make setup"
 # sudo kubefwd svc | awk '{ if($2 ~ /Port-Forward/) {print $0" URL: http://"$4"/"} else {print}}'
@@ -85,7 +85,7 @@ paperless: postgres redis ## Paperless NGX
 	-helm $(CMD) paperless gabe565/paperless-ngx -f paperless.yml > /dev/null
 	printf $(_INFO) "Paperless" "http://paperless.docker/"
 
-# BUG: Fix Ingress 
+# BUG: #A Fix Ingress 
 clarity: ## API Clarity
 	-helm $(CMD) apiclarity apiclarity/apiclarity -f clarity.yml > /dev/null
 	printf $(_INFO) "API Clarity" "http://clarity.docker/"
@@ -123,7 +123,7 @@ mysql-admin:
 	-helm $(CMD) mysql-admin bitnami/phpmyadmin -f phpmyadmin.yml > /dev/null
 	printf $(_INFO) "URL" "http://mysqladmin.docker/"
 
-# BUG: Metabase doesn't start on h2, move pg with snapshot volume ?
+# BUG: #B Metabase doesn't start on h2, move pg with snapshot volume ?
 metabase:
 	-helm $(CMD) metabase onechart/onechart -f metabase.yml > /dev/null
 	printf $(_INFO) "URL" "http://metabase.docker/"
@@ -181,7 +181,7 @@ zookeeper: ## Zookeeper
 
 ### Telemetry
 elk: ## ElasticSearch Kibana Logstash
-	#FIXME: Logstash in ELK
+	#FIXME: #B Logstash in ELK
 	# helm $(CMD) logstash bitnami/logstash -f logstash.yml > /dev/null
 	-helm $(CMD) elasticsearch bitnami/elasticsearch -f elasticsearch.yml > /dev/null
 	-helm $(CMD) kibana bitnami/kibana -f kibana.yml > /dev/null

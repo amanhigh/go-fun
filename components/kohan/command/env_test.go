@@ -26,7 +26,7 @@ var _ = Describe("Environment Command", func() {
 		})
 
 		It("should enable debug mode", func() {
-			// FIXME: Flags Should Work
+			// FIXME: #B Flags Should Work
 			Expect(debugCmd.Execute()).Should(Succeed())
 			// Expect(actual.String()).To(ContainSubstring("Enabling Debug Mode"))
 		})

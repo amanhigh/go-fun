@@ -265,7 +265,7 @@ var _ = Describe("Logging", func() {
 			})
 
 			It("should log context values", func() {
-				// HACK: How to Print Request Id from Context.
+				// HACK: #A How to Print Request Id from Context.
 				// Create a child logger for concurrency safety
 				child := logger.With().Logger()
 
