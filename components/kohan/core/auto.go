@@ -73,7 +73,7 @@ func RecordTicker(ticker, path string) (err error) {
 				time.Sleep(1 * time.Second)
 
 				// Take Screenshot
-				if err = tools.NamedScreenshot(name); err != nil {
+				if err = tools.NamedScreenshot(path, name); err != nil {
 					return
 				}
 			}

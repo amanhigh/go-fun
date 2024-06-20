@@ -8,8 +8,8 @@ func Screenshot() (err error) {
 	err = script.Exec("hyprshot -c -s -m output").Error()
 	return
 }
-func NamedScreenshot(name string) (err error) {
-	err = script.Exec("hyprshot -c -s -m output -f" + name).Error()
+func NamedScreenshot(dir, name string) (err error) {
+	err = script.Exec("hyprshot -c -s -m output -o " + dir + " -f" + name).Error()
 	return
 }
 
