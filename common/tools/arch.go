@@ -9,7 +9,7 @@ func Screenshot() (err error) {
 	return
 }
 func NamedScreenshot(dir, name string) (err error) {
-	err = script.Exec("hyprshot -c -s -m output -o " + dir + " -f" + name).Error()
+	err = script.Exec("hyprshot -m active -s -m output -o " + dir + " -f" + name).Error()
 	return
 }
 
