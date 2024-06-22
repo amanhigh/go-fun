@@ -22,7 +22,7 @@ var _ = Describe("Environment Command", func() {
 			debugCmd.SetOut(actual)
 			debugCmd.SetErr(actual)
 
-			RootCmd.SetArgs([]string{"env", "debug"})
+			RootCmd.SetArgs([]string{"env", "debug", "true"})
 		})
 
 		It("should enable debug mode", func() {

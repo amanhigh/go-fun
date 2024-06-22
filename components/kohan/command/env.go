@@ -13,16 +13,17 @@ var envCmd = &cobra.Command{
 
 var debugCmd = &cobra.Command{
 	Use:   "debug",
-	Short: "Enables/Disables Debug",
-	Run: func(cmd *cobra.Command, args []string) {
+	Short: "Enables/Disables Debug <true/false>",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var enable bool
+		enable, err = util.ParseBool(args[0])
 		util.DebugControl(enable)
+		return
 	},
 }
 
 func init() {
-	debugCmd.Flags().BoolVarP(&enable, "enable", "e", false, "Enables Debug Mode")
-	debugCmd.MarkPersistentFlagRequired("enable")
-
 	envCmd.AddCommand(debugCmd)
 	RootCmd.AddCommand(envCmd)
 }
