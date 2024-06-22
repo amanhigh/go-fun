@@ -29,3 +29,4 @@ fi
 ### Help
 # CREATE DATABASE metabase;
 # GRANT ALL PRIVILEGES ON DATABASE metabase TO aman WITH GRANT OPTION;
+# GRANT ALL ON SCHEMA public TO aman; (Need to Connect to Right DB eg. metabase)
