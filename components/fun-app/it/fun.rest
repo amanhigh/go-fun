@@ -24,7 +24,7 @@
 
 ### List 
 
-GET http://{{host}}:{{port}}/{{version}}/person?limit={{limit}}&sort_by=name&order=asc
+GET http://{{host}}:{{port}}/{{version}}/person?offset=0&limit={{limit}}&sort_by=name&order=asc
 
 ### Audit
 
