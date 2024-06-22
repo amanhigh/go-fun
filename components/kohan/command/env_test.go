@@ -3,33 +3,25 @@ package command
 import (
 	"bytes"
 
-	"github.com/amanhigh/go-fun/common/telemetry"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Environment Command", Ordered, func() {
+var _ = Describe("Environment Command", func() {
 	var (
-		actual    = new(bytes.Buffer)
-		logActual = new(bytes.Buffer)
+		actual = new(bytes.Buffer)
 	)
 
-	BeforeAll(func() {
-		telemetry.InitTestLogger(logActual)
-	})
-
 	BeforeEach(func() {
+		// https://nayaktapan37.medium.com/testing-cobra-commands-in-golang-ca1fe4ad6657
 		actual.Reset()
+		RootCmd.SetOut(actual)
+		RootCmd.SetErr(actual)
+
 		logActual.Reset()
 	})
 
 	Context("Debug", func() {
-		BeforeEach(func() {
-			// https://nayaktapan37.medium.com/testing-cobra-commands-in-golang-ca1fe4ad6657
-			debugCmd.SetOut(actual)
-			debugCmd.SetErr(actual)
-		})
-
 		It("should enable", func() {
 			RootCmd.SetArgs([]string{"env", "debug", "true"})
 			Expect(debugCmd.Execute()).Should(Succeed())
@@ -44,9 +36,8 @@ var _ = Describe("Environment Command", Ordered, func() {
 
 		It("should error on no args", func() {
 			RootCmd.SetArgs([]string{"env", "debug"})
-			err := debugCmd.Execute()
-			Expect(err).ShouldNot(Succeed())
-			Expect(err.Error()).To(ContainSubstring("accepts 1 arg"))
+			Expect(debugCmd.Execute()).ShouldNot(Succeed())
+			Expect(actual).To(ContainSubstring("accepts 1 arg"))
 		})
 
 		It("should error on invalid args", func() {
