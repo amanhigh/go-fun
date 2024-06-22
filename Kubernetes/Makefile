@@ -103,7 +103,7 @@ backup:
 	printf $(_INFO) "Minikube Saving Images" "`wc -l $(MINI_BKP_DIR)/current_image_list.txt | awk '{print $$1}'`"
 	# Save images as tar files in the backup directory only if they do not already exist
 	for IMG in $$(cat $(MINI_BKP_DIR)/current_image_list.txt); do \
-		FILENAME=$$(echo $$IMG | tr ':/' '__').tar; \
+		FILENAME=$$(echo $$IMG | sed 's/\//+/g').tar; \
 		if [ ! -f $(MINI_BKP_DIR)/$$FILENAME ]; then \
 			minikube image save $$IMG $(MINI_BKP_DIR)/$$FILENAME; \
 			printf $(_DETAIL) "Saved:  $$IMG" "$$FILENAME"; \
@@ -113,11 +113,22 @@ backup:
 	done
 
 restore:
-	printf $(_TITLE) "Restore Minikube Images"
-	for IMG in $$(cat $(MINI_BKP_FILE)); do \
-		printf $(_INFO) "Loading Image:" "$${IMG}"; \
-		minikube image load --daemon $${IMG}; \
+	printf $(_TITLE) "Restore Minikube Images" "$(MINI_BKP_DIR)"
+
+	# Generate a list of currently loaded images in Minikube
+	minikube image ls | grep -v none > $(MINI_BKP_DIR)/loaded_image_list.txt
+
+	# Load images from tar files in the backup directory only if they are not already loaded
+	for FILE in $(MINI_BKP_DIR)/*.tar; do \
+		IMG=$$(basename $$FILE .tar | sed 's/+/\//g'); \
+		if grep -q -e "^$$IMG$$" $(MINI_BKP_DIR)/loaded_image_list.txt; then \
+			printf $(_WARN) "Skipped: $$IMG" "$$FILE"; \
+		else \
+			minikube image load $$FILE; \
+			printf $(_DETAIL) "Loaded: $$IMG" "$$FILE"; \
+		fi \
 	done
+
 
 ### Workflows
 info: info-mini ## Minikube Info
