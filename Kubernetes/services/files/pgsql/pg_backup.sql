@@ -119,6 +119,61 @@ ALTER SCHEMA public OWNER TO aman;
 --
 
 --
+-- Database "metabase" dump
+--
+
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 16.3
+-- Dumped by pg_dump version 16.3
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: metabase; Type: DATABASE; Schema: -; Owner: postgres
+--
+
+CREATE DATABASE metabase WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE_PROVIDER = libc LOCALE = 'en_US.UTF-8';
+
+
+ALTER DATABASE metabase OWNER TO postgres;
+
+\connect metabase
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: DATABASE metabase; Type: ACL; Schema: -; Owner: postgres
+--
+
+GRANT ALL ON DATABASE metabase TO aman WITH GRANT OPTION;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+--
 -- Database "postgres" dump
 --
 

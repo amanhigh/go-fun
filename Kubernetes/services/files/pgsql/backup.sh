@@ -25,3 +25,7 @@ if [ $? -eq 0 ]; then
 else
     echo "Backup failed."
 fi
+
+### Help
+# CREATE DATABASE metabase;
+# GRANT ALL PRIVILEGES ON DATABASE metabase TO aman WITH GRANT OPTION;
