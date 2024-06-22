@@ -4295,6 +4295,7 @@ COPY public.cloud_migration (id, external_id, upload_url, state, progress, creat
 
 COPY public.collection (id, name, description, archived, location, personal_owner_id, slug, namespace, authority_level, entity_id, created_at, type, is_sample) FROM stdin;
 1	Examples	\N	f	/	\N	examples	\N	\N	53YGAg4EE6MC76nxx-f5f	2024-06-22 08:19:17.839482+00	\N	t
+2	Amanpreet Singh's Personal Collection	\N	f	/	1	amanpreet_singh_s_personal_collection	\N	\N	pIx3LpuPxJeV0_U93fwEP	2024-06-22 08:25:41.424253+00	\N	f
 \.
 
 
@@ -4327,6 +4328,7 @@ COPY public.connection_impersonations (id, db_id, group_id, attribute) FROM stdi
 --
 
 COPY public.core_session (id, user_id, created_at, anti_csrf_token) FROM stdin;
+aff0e644-0b3a-4483-8134-897f53e96131	1	2024-06-22 08:25:50.578832+00	\N
 \.
 
 
@@ -4336,6 +4338,7 @@ COPY public.core_session (id, user_id, created_at, anti_csrf_token) FROM stdin;
 
 COPY public.core_user (id, email, first_name, last_name, password, password_salt, date_joined, last_login, is_superuser, is_active, reset_token, reset_triggered, is_qbnewb, login_attributes, updated_at, sso_source, locale, is_datasetnewb, settings, type, entity_id) FROM stdin;
 13371338	internal@metabase.com	Metabase	Internal	$2a$10$fp5n6.DSzeuV8xMGYQWaPO6D6N1Dm0M4jD6oePE2xq2wnNskl.YEO	de2c4024-e5fa-45f2-84af-7d44aed9e1d6	2024-06-22 08:19:16.518337+00	\N	f	f	\N	\N	t	\N	\N	\N	\N	t	\N	internal	\N
+1	aman@punjab.com	Amanpreet	Singh	$2a$10$1r0mAnpyhZ0Z6bsE2tjplO2ID.Gwy2ny5VGQgGIHCR5X9RS.BEmby	7eadc72d-d34e-4373-8e5c-a17ab4fa5590	2024-06-22 08:25:03.366674+00	2024-06-22 08:25:50.587559+00	t	t	\N	\N	t	\N	2024-06-22 08:25:50.587559+00	\N	\N	t	{"last-acknowledged-version":"v0.50.6"}	personal	Tq8fPkfolnfdHphriI_Ct
 \.
 
 
@@ -4384,6 +4387,11 @@ COPY public.data_permissions (id, group_id, perm_type, db_id, schema_name, table
 3	1	perms/download-results	1	\N	\N	one-million-rows
 4	1	perms/manage-table-metadata	1	\N	\N	no
 5	1	perms/manage-database	1	\N	\N	no
+7	1	perms/create-queries	2	\N	\N	query-builder-and-native
+8	1	perms/view-data	2	\N	\N	unrestricted
+9	1	perms/download-results	2	\N	\N	one-million-rows
+10	1	perms/manage-table-metadata	2	\N	\N	no
+11	1	perms/manage-database	2	\N	\N	no
 \.
 
 
@@ -4792,6 +4800,7 @@ COPY public.label (id, name, slug, icon) FROM stdin;
 --
 
 COPY public.login_history (id, "timestamp", user_id, session_id, device_id, device_description, ip_address) FROM stdin;
+1	2024-06-22 08:25:50.592174+00	1	aff0e644-0b3a-4483-8134-897f53e96131	6c36effc-c064-4105-9e01-65cb68b6abc2	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36	127.0.0.1
 \.
 
 
@@ -4801,6 +4810,7 @@ COPY public.login_history (id, "timestamp", user_id, session_id, device_id, devi
 
 COPY public.metabase_database (id, created_at, updated_at, name, description, details, engine, is_sample, is_full_sync, points_of_interest, caveats, metadata_sync_schedule, cache_field_values_schedule, timezone, is_on_demand, auto_run_queries, refingerprint, cache_ttl, initial_sync_status, creator_id, settings, dbms_version, is_audit, uploads_enabled, uploads_schema_name, uploads_table_prefix) FROM stdin;
 1	2024-06-22 08:19:17.839482+00	2024-06-22 08:23:40.924338+00	Sample Database	Some example data for you to play around with.	{"db":"file:/plugins/sample-database.db;USER=GUEST;PASSWORD=guest"}	h2	t	t	You can find all sorts of different joinable tables ranging from products to people to reviews here.	You probably don't want to use this for your business-critical analyses, but hey, it's your world, we're just living in it.	0 26 * * * ? *	0 0 17 * * ? *	GMT	f	t	\N	\N	complete	\N	\N	{"flavor":"H2","version":"2.1.214 (2022-06-13)","semantic-version":[2,1]}	f	f	\N	\N
+2	2024-06-22 08:25:35.534063+00	2024-06-22 08:25:37.013467+00	pgsql	\N	{"ssl":false,"password":"aman","port":5432,"advanced-options":false,"schema-filters-type":"all","dbname":"compute","host":"pg-primary","tunnel-enabled":false,"user":"aman"}	postgres	f	t	\N	\N	0 48 * * * ? *	0 0 2 * * ? *	GMT	f	t	\N	\N	complete	1	\N	{"flavor":"PostgreSQL","version":"16.3","semantic-version":[16,3]}	f	f	\N	\N
 \.
 
 
@@ -5016,6 +5026,8 @@ COPY public.permissions_group (id, name, entity_id) FROM stdin;
 
 COPY public.permissions_group_membership (id, user_id, group_id, is_group_manager) FROM stdin;
 1	13371338	1	f
+2	1	1	f
+3	1	2	f
 \.
 
 
@@ -5095,6 +5107,8 @@ MetabaseScheduler	metabase.task.truncate-audit-tables.trigger	DEFAULT	0 0 */12 *
 MetabaseScheduler	metabase.task.follow-up-emails.trigger	DEFAULT	0 0 12 * * ? *	GMT
 MetabaseScheduler	metabase.task.creator-sentiment-emails.trigger	DEFAULT	0 0 2 ? * 7	GMT
 MetabaseScheduler	metabase.task.task-history-cleanup.trigger	DEFAULT	0 0 0 * * ? *	GMT
+MetabaseScheduler	metabase.task.sync-and-analyze.trigger.2	DEFAULT	0 48 * * * ? *	GMT
+MetabaseScheduler	metabase.task.update-field-values.trigger.2	DEFAULT	0 0 2 * * ? *	GMT
 \.
 
 
@@ -5153,7 +5167,7 @@ COPY public.qrtz_paused_trigger_grps (sched_name, trigger_group) FROM stdin;
 --
 
 COPY public.qrtz_scheduler_state (sched_name, instance_name, last_checkin_time, checkin_interval) FROM stdin;
-MetabaseScheduler	metabase-d7fc79fd8-jl55m1719044626413	1719044657081	7500
+MetabaseScheduler	metabase-d7fc79fd8-jl55m1719044626413	1719044754590	7500
 \.
 
 
@@ -5185,6 +5199,8 @@ MetabaseScheduler	metabase.task.truncate-audit-tables.trigger	DEFAULT	metabase.t
 MetabaseScheduler	metabase.task.follow-up-emails.trigger	DEFAULT	metabase.task.follow-up-emails.job	DEFAULT	\N	1719057600000	-1	5	WAITING	CRON	1719044626000	0	\N	0	\\x
 MetabaseScheduler	metabase.task.creator-sentiment-emails.trigger	DEFAULT	metabase.task.creator-sentiment-emails.job	DEFAULT	\N	1719626400000	-1	5	WAITING	CRON	1719044627000	0	\N	0	\\x
 MetabaseScheduler	metabase.task.task-history-cleanup.trigger	DEFAULT	metabase.task.task-history-cleanup.job	DEFAULT	\N	1719100800000	-1	5	WAITING	CRON	1719044627000	0	\N	0	\\x
+MetabaseScheduler	metabase.task.sync-and-analyze.trigger.2	DEFAULT	metabase.task.sync-and-analyze.job	DEFAULT	sync-and-analyze Database 2	1719046080000	-1	5	WAITING	CRON	1719044736000	0	\N	2	\\xaced0005737200156f72672e71756172747a2e4a6f62446174614d61709fb083e8bfa9b0cb020000787200266f72672e71756172747a2e7574696c732e537472696e674b65794469727479466c61674d61708208e8c3fbc55d280200015a0013616c6c6f77735472616e7369656e74446174617872001d6f72672e71756172747a2e7574696c732e4469727479466c61674d617013e62ead28760ace0200025a000564697274794c00036d617074000f4c6a6176612f7574696c2f4d61703b787000737200116a6176612e7574696c2e486173684d61700507dac1c31660d103000246000a6c6f6164466163746f724900097468726573686f6c6478703f4000000000000c7708000000100000000174000564622d6964737200116a6176612e6c616e672e496e746567657212e2a0a4f781873802000149000576616c7565787200106a6176612e6c616e672e4e756d62657286ac951d0b94e08b0200007870000000027800
+MetabaseScheduler	metabase.task.update-field-values.trigger.2	DEFAULT	metabase.task.update-field-values.job	DEFAULT	update-field-values Database 2	1719108000000	-1	5	WAITING	CRON	1719044736000	0	\N	2	\\xaced0005737200156f72672e71756172747a2e4a6f62446174614d61709fb083e8bfa9b0cb020000787200266f72672e71756172747a2e7574696c732e537472696e674b65794469727479466c61674d61708208e8c3fbc55d280200015a0013616c6c6f77735472616e7369656e74446174617872001d6f72672e71756172747a2e7574696c732e4469727479466c61674d617013e62ead28760ace0200025a000564697274794c00036d617074000f4c6a6176612f7574696c2f4d61703b787000737200116a6176612e7574696c2e486173684d61700507dac1c31660d103000246000a6c6f6164466163746f724900097468726573686f6c6478703f4000000000000c7708000000100000000174000564622d6964737200116a6176612e6c616e672e496e746567657212e2a0a4f781873802000149000576616c7565787200106a6176612e6c616e672e4e756d62657286ac951d0b94e08b0200007870000000027800
 \.
 
 
@@ -5370,7 +5386,13 @@ redirect-all-requests-to-https	false
 site-url	http://metabase.docker
 analytics-uuid	0d7804dd-92e8-405d-ac43-6529cc382835
 instance-creation	2024-06-22T08:19:16.518337Z
-settings-last-updated	2024-06-22 08:24:10.023953+00
+site-name	Autonomy
+admin-email	aman@punjab.com
+site-locale	en
+anon-tracking-enabled	true
+site-uuid	aec085ee-a8cb-49a8-b344-823b98a83fee
+setup-license-active-at-setup	false
+settings-last-updated	2024-06-22 08:25:38.0763+00
 \.
 
 
@@ -5419,6 +5441,22 @@ COPY public.task_history (id, task, db_id, started_at, ended_at, duration, task_
 31	delete-expired-advanced-field-values	1	2024-06-22 08:23:41.939511+00	2024-06-22 08:23:42.83032+00	890	{"deleted":0}	success
 32	update-field-values	1	2024-06-22 08:23:42.885359+00	2024-06-22 08:23:46.280981+00	3395	{"errors":0,"created":13,"updated":0,"deleted":0}	success
 30	field values scanning	1	2024-06-22 08:23:41.930125+00	2024-06-22 08:23:46.321681+00	4391	\N	success
+34	sync-dbms-version	2	2024-06-22 08:25:36.534036+00	2024-06-22 08:25:36.634247+00	100	{"flavor":"PostgreSQL","version":"16.3","semantic-version":[16,3]}	success
+35	sync-timezone	2	2024-06-22 08:25:36.639417+00	2024-06-22 08:25:36.729058+00	89	{"timezone-id":"GMT"}	success
+36	sync-tables	2	2024-06-22 08:25:36.733305+00	2024-06-22 08:25:36.741251+00	7	{"updated-tables":0,"total-tables":0}	success
+37	sync-fields	2	2024-06-22 08:25:36.815573+00	2024-06-22 08:25:36.821049+00	5	{"total-fields":0,"updated-fields":0}	success
+38	sync-fks	2	2024-06-22 08:25:36.824981+00	2024-06-22 08:25:36.830761+00	5	{"total-fks":0,"updated-fks":0,"total-failed":0}	success
+39	sync-indexes	2	2024-06-22 08:25:36.839805+00	2024-06-22 08:25:36.849368+00	9	{"total-indexes":0,"added-indexes":0,"removed-indexes":0}	success
+40	sync-metabase-metadata	2	2024-06-22 08:25:36.915504+00	2024-06-22 08:25:36.920104+00	4	{}	success
+41	sync-table-privileges	2	2024-06-22 08:25:36.92749+00	2024-06-22 08:25:36.944337+00	16	{"total-table-privileges":0}	success
+33	sync	2	2024-06-22 08:25:36.527011+00	2024-06-22 08:25:36.948213+00	421	\N	success
+43	fingerprint-fields	2	2024-06-22 08:25:37.028802+00	2024-06-22 08:25:37.034489+00	5	{"no-data-fingerprints":0,"failed-fingerprints":0,"updated-fingerprints":0,"fingerprints-attempted":0}	success
+44	classify-fields	2	2024-06-22 08:25:37.038553+00	2024-06-22 08:25:37.042276+00	3	{"fields-classified":0,"fields-failed":0}	success
+45	classify-tables	2	2024-06-22 08:25:37.11694+00	2024-06-22 08:25:37.120488+00	3	{"total-tables":0,"tables-classified":0}	success
+42	analyze	2	2024-06-22 08:25:37.024963+00	2024-06-22 08:25:37.124389+00	99	\N	success
+47	delete-expired-advanced-field-values	2	2024-06-22 08:25:37.133955+00	2024-06-22 08:25:37.139986+00	6	{"deleted":0}	success
+48	update-field-values	2	2024-06-22 08:25:37.145657+00	2024-06-22 08:25:37.150888+00	5	\N	success
+46	field values scanning	2	2024-06-22 08:25:37.129909+00	2024-06-22 08:25:37.218814+00	88	\N	success
 \.
 
 
@@ -5528,7 +5566,7 @@ SELECT pg_catalog.setval('public.collection_bookmark_id_seq', 1, false);
 -- Name: collection_id_seq; Type: SEQUENCE SET; Schema: public; Owner: aman
 --
 
-SELECT pg_catalog.setval('public.collection_id_seq', 1, true);
+SELECT pg_catalog.setval('public.collection_id_seq', 2, true);
 
 
 --
@@ -5549,7 +5587,7 @@ SELECT pg_catalog.setval('public.connection_impersonations_id_seq', 1, false);
 -- Name: core_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: aman
 --
 
-SELECT pg_catalog.setval('public.core_user_id_seq', 1, false);
+SELECT pg_catalog.setval('public.core_user_id_seq', 1, true);
 
 
 --
@@ -5584,7 +5622,7 @@ SELECT pg_catalog.setval('public.dashboardcard_series_id_seq', 1, false);
 -- Name: data_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: aman
 --
 
-SELECT pg_catalog.setval('public.data_permissions_id_seq', 5, true);
+SELECT pg_catalog.setval('public.data_permissions_id_seq', 11, true);
 
 
 --
@@ -5626,14 +5664,14 @@ SELECT pg_catalog.setval('public.label_id_seq', 1, false);
 -- Name: login_history_id_seq; Type: SEQUENCE SET; Schema: public; Owner: aman
 --
 
-SELECT pg_catalog.setval('public.login_history_id_seq', 1, false);
+SELECT pg_catalog.setval('public.login_history_id_seq', 1, true);
 
 
 --
 -- Name: metabase_database_id_seq; Type: SEQUENCE SET; Schema: public; Owner: aman
 --
 
-SELECT pg_catalog.setval('public.metabase_database_id_seq', 1, true);
+SELECT pg_catalog.setval('public.metabase_database_id_seq', 2, true);
 
 
 --
@@ -5710,7 +5748,7 @@ SELECT pg_catalog.setval('public.permissions_group_id_seq', 2, true);
 -- Name: permissions_group_membership_id_seq; Type: SEQUENCE SET; Schema: public; Owner: aman
 --
 
-SELECT pg_catalog.setval('public.permissions_group_membership_id_seq', 1, true);
+SELECT pg_catalog.setval('public.permissions_group_membership_id_seq', 3, true);
 
 
 --
@@ -5836,7 +5874,7 @@ SELECT pg_catalog.setval('public.segment_id_seq', 1, false);
 -- Name: task_history_id_seq; Type: SEQUENCE SET; Schema: public; Owner: aman
 --
 
-SELECT pg_catalog.setval('public.task_history_id_seq', 32, true);
+SELECT pg_catalog.setval('public.task_history_id_seq', 48, true);
 
 
 --
