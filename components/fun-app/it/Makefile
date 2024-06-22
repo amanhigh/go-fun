@@ -12,11 +12,19 @@ help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 	printf $(_TITLE) "FirstTime: prepare/all, OUT=/dev/stdout (Debug) \n"
 
+### Clean
+clean-file:
+	printf $(_TITLE) "Cleaning File"
+	-rm $(ID_FILE)
+	-rm $(RESULT_FILE)
+
 ### Load Test
 # FIXME: #B Use Id's from Write Load Test.
 load-read: ## Read Load Test
 	printf $(_TITLE) "Get Load Test"
-	URL=$(URL) jq -ncM 'while(.<1000; .+1) | {method: "GET", url: "\(env.URL)/person/Aman-\(.)"}' | vegeta attack -format=json -duration=$(DURATION) | vegeta report
+	# URL=$(URL) jq -ncM 'while(.<1000; .+1) | {method: "GET", url: "\(env.URL)/v1/person/Aman-\(.)"}' | vegeta attack -format=json -duration=$(DURATION) | vegeta report
+	URL=$(URL) jq -R -ncM --arg url "$$URL" 'inputs as $$id | {method: "GET", url: "\(env.URL)/v1/person/\($$id)"}' < $(ID_FILE) \
+	| vegeta attack -format=json -duration=$(DURATION) | vegeta report
 
 load-list: ## List Load Test
 	printf $(_TITLE) "List Load Test";
@@ -28,10 +36,9 @@ load-write: ## Write Load Test
 	'while(true; .+1) as $$i | $$a | $$a[0].name="\($$a[0].name)-\($$i)" | {method: "POST", header: {"Content-Type": ["application/json"]}, url: "\(env.URL)/v1/person", body: .[0] | @base64}' \
 	| vegeta attack -lazy -format=json -duration=$(DURATION) -output=$(RESULT_FILE)
 	printf $(_DETAIL) "Extracting Id's"
-	vegeta encode results.bin | jq -r '.body | @base64d | fromjson | .id' > $(ID_FILE)
+	vegeta encode $(RESULT_FILE) | jq -r '.body | @base64d | fromjson | .id' > $(ID_FILE)
 	printf $(_DETAIL) "Test Result"
 	vegeta report $(RESULT_FILE)
-	rm $(RESULT_FILE)
 
 load: load-write load-list load-read
 
@@ -46,8 +53,8 @@ info: info-load ## Info
 infos: info ## Extended Info
 prepare: ## Onetime Setup
 setup: info load ## Load Test (All API's)
-clean: ## Clean
-reset: clean setup ## Reset
+clean: clean-file ## Clean
+reset: setup clean ## Reset
 all:prepare reset ## Run All Targets
 
 ### Formatting
