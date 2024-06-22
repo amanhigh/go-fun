@@ -4,6 +4,9 @@ OUT := /dev/null
 URL := http://localhost:8080
 DURATION := 5s
 
+RESULT_FILE := result.bin
+ID_FILE := id.txt
+
 ### Basic
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -23,7 +26,12 @@ load-write: ## Write Load Test
 	printf $(_TITLE) "Write Load Test"; \
 	URL=$(URL) jq -ncM --slurpfile a payload.json \
 	'while(true; .+1) as $$i | $$a | $$a[0].name="\($$a[0].name)-\($$i)" | {method: "POST", header: {"Content-Type": ["application/json"]}, url: "\(env.URL)/v1/person", body: .[0] | @base64}' \
-	| vegeta attack -lazy -format=json -duration=$(DURATION) | vegeta report
+	| vegeta attack -lazy -format=json -duration=$(DURATION) -output=$(RESULT_FILE)
+	printf $(_DETAIL) "Extracting Id's"
+	vegeta encode results.bin | jq -r '.body | @base64d | fromjson | .id' > $(ID_FILE)
+	printf $(_DETAIL) "Test Result"
+	vegeta report $(RESULT_FILE)
+	rm $(RESULT_FILE)
 
 load: load-write load-list load-read
 
