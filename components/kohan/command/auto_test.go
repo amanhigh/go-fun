@@ -3,11 +3,12 @@ package command
 import (
 	"bytes"
 
+	"github.com/amanhigh/go-fun/models"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Auto", func() {
+var _ = Describe("Auto", Label(models.GINKGO_SETUP), func() {
 	var (
 		actual = new(bytes.Buffer)
 	)
