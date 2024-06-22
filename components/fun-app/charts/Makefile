@@ -29,13 +29,13 @@ update:
 	helm dependency update > $(OUT)
 	helm dependency build > $(OUT)
 
-# BUG: Introduce Helm Version.
+# BUG: #C Introduce Helm Version.
 package: update ## Package Helm Chart
 	printf $(_TITLE) "Packaging Fun App Helm Chart"
 	helm package . -d . > $(OUT)
 
 #### Info
-# BUG: Fix Fun App via Tunnel
+# BUG: #C Fix Fun App via Tunnel
 info-fun:
 	printf $(_INFO) "Fun App Info"
 	printf $(_DETAIL) "minikube tunnel"

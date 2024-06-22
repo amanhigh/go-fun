@@ -1,0 +1,88 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from our common library chart. You can check the default values/options here:
+# https://github.com/bjw-s/helm-charts/blob/a081de5/charts/library/common/values.yaml
+#
+
+# -- Environment variables [[ref]](https://docs.paperless-ngx.com/configuration/)
+# @default -- See [values.yaml](./values.yaml)
+env:
+  # -- Set the container timezone
+  TZ: UTC
+  PAPERLESS_DBHOST: pg-primary
+  PAPERLESS_DBUSER: aman
+  PAPERLESS_DBPASS: aman
+  PAPERLESS_DBNAME: compute
+  PAPERLESS_REDIS: redis://redis-master:6379
+  PAPERLESS_DISABLE_REGULAR_LOGIN: true
+  PAPERLESS_AUTO_LOGIN_USERNAME: aman  # Auto login as admin
+  PAPERLESS_ADMIN_USER: aman
+  PAPERLESS_ADMIN_PASSWORD: aman
+  # PAPERLESS_SECRET_KEY: ""
+
+ingress:
+  # -- Enable and configure ingress settings for the chart under this key.
+  # @default -- See [values.yaml](./values.yaml)
+  main:
+    enabled: true
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: web
+    hosts:
+      - host: paperless.docker
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+
+persistence:
+  # -- Configure data volume settings for the chart under this key.
+  # @default -- See [values.yaml](./values.yaml)
+  data:
+    enabled: true
+    retain: true
+    mountPath: /usr/src/paperless/data
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 1Gi
+  # -- Configure media volume settings for the chart under this key.
+  # @default -- See [values.yaml](./values.yaml)
+  media:
+    enabled: true
+    retain: true
+    mountPath: /usr/src/paperless/media
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 1Gi
+  # -- Configure export volume settings for the chart under this key.
+  # @default -- See [values.yaml](./values.yaml)
+  export:
+    enabled: true
+    retain: true
+    mountPath: /usr/src/paperless/export
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 500Mi
+  # -- Configure consume volume settings for the chart under this key.
+  # @default -- See [values.yaml](./values.yaml)
+  consume:
+    enabled: true
+    retain: true
+    mountPath: /usr/src/paperless/consume
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 500Mi
+
+# -- Enable and configure postgresql database subchart under this key.
+#    If enabled, the app's db envs will be set for you.
+#    [[ref]](https://github.com/bitnami/charts/tree/main/bitnami/postgresql)
+# @default -- See [values.yaml](./values.yaml)
+postgresql:
+  enabled: false
+
+# -- Enable and configure redis subchart under this key.
+#    If enabled, the app's Redis env will be set for you.
+#    [[ref]](https://github.com/bitnami/charts/tree/main/bitnami/redis)
+# @default -- See [values.yaml](./values.yaml)
+redis:
+  enabled: false

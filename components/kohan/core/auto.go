@@ -1,10 +1,8 @@
 package core
 
 import (
-	"context"
-	"errors"
+	"fmt"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -12,57 +10,93 @@ import (
 	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/bitfield/script"
-	"github.com/fatih/color"
-	"golang.design/x/clipboard"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 const (
 	TICKER_LENGTH  = 15
-	TICKER_REGEX   = "^[A-Za-z0-9_]+(\\.[A-Za-z-]+){3,}$"
-	SCREENSHOT_AGE = 30 * time.Minute
-)
+	SIDE_MONITOR   = 1
+	MAIL_WORKSPACE = "2"
+	DATE_FORMAT    = "20060102__150405"
+	LOGSEQ_CLASS   = "Logseq"
+	TRADE_INFO     = `
+Trends
+HTF - Up
+MTF - Up
+TTF - Up
 
-var (
-	matcher = regexp.MustCompile(TICKER_REGEX)
+Plan: Longs @ TTF DZ
+
+Obstacles:
+-
+
+Support:
+-`
 )
 
 func OpenTicker(ticker string) (err error) {
-	// Check if the length of the ticker is less than 15
-	if len(ticker) < TICKER_LENGTH {
-		// Focus on the window named "TradingView"
-		if err = tools.FocusWindowByTitle("TradingView"); err == nil {
-			// Focus Input Box
-			if err = tools.SendKey("ctrl+asciitilde"); err == nil {
-				// Paste the Ticker
-				_ = tools.SendKey("Shift+Insert")
+	// Focus on the window named "TradingView"
+	log.Debug().Str("Ticker", ticker).Msg("OpenTicker")
+
+	if err = tools.FocusWindow("TradingView"); err == nil {
+		// Focus Input Box
+		if err = tools.SendKey("-M Ctrl b"); err == nil {
+			// HACK: Copy Ticker once Clipboard Library is Fixed
+			// Copy runs into doom loop with wl-paste Watch
+			if err = tools.SendKey("-M Ctrl v"); err == nil {
 				time.Sleep(50 * time.Millisecond)
-				// Bang to Open
-				err = tools.SendInput("!")
+				// Bang ! to Open
+				err = tools.SendInput("xox")
+				// Return Focus Back
+				tools.FocusLastWindow()
 			}
 		}
 	}
 	return
 }
 
-func RecordTicker(ticker string) (err error) {
+func RecordTicker(ticker, path string) (err error) {
+	var tradeInfo string
 	// Bring Focus Back Lost due to Modal Box
-	if err = tools.FocusWindowByTitle("TradingView"); err == nil {
+	if err = tools.FocusWindow("TradingView"); err == nil {
+		log.Info().Str("Ticker", ticker).Msg("Recording Ticker")
 		// loop from max to 1
 		for i := 4; i > 0; i-- {
-			// emulate number key press with xdotool
-			if err = tools.SendKey(strconv.Itoa(i)); err == nil {
+			// emulate number key press
+			if err = tools.SendKey("-k " + strconv.Itoa(i)); err == nil {
+				// File Name POWERINDIA.mwd.trend.rejected.nca_20240321_193916.png
+				name := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format(DATE_FORMAT))
+				log.Debug().Str("Ticker", ticker).Str("Name", name).Int("Count", i).Msg("Attempting Screenshot")
+
 				// Wait
 				time.Sleep(1 * time.Second)
 
 				// Take Screenshot
-				if err = tools.Screenshot(); err != nil {
+				if err = tools.NamedScreenshot(path, name); err != nil {
 					return
 				}
 			}
 		}
 
+		// Read Trade Info for Set Trades
+		if strings.Contains(ticker, ".set") {
+			// Generate File name so it is ordered in Journal
+			infoFile := fmt.Sprintf("%s/%s__%s.txt", path, ticker, time.Now().Format(DATE_FORMAT))
+			if tradeInfo, err = tools.PromptText(TRADE_INFO); err == nil {
+				os.WriteFile(infoFile, []byte(tradeInfo), util.DEFAULT_PERM)
+
+				// Record Check Screenshot
+				checkFile := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format(DATE_FORMAT))
+				err = tools.NamedRegionScreenshot(checkFile)
+
+			} else {
+				log.Error().Str("Ticker", ticker).Err(err).Msg("Read TradeInfo Failed")
+			}
+		}
+
 		// send desktop notification
-		tools.Notify("SCREENSHOTTED....", ticker)
+		tools.Notify(zerolog.InfoLevel, "Recorded", ticker)
 	}
 
 	return
@@ -71,9 +105,9 @@ func RecordTicker(ticker string) (err error) {
 func MonitorInternetConnection(wait time.Duration) {
 	util.ScheduleJob(wait, func(_ bool) {
 		if tools.CheckInternetConnection() {
-			color.Green("Internet UP: %v", time.Now())
+			log.Info().Msg("Internet UP")
 		} else {
-			color.Red("Internet Outage: %v", time.Now())
+			log.Warn().Msg("Internet DOWN")
 			restartNetworkManager()
 			//Extra Wait for Network Manager
 			time.Sleep(5 * time.Second)
@@ -81,93 +115,28 @@ func MonitorInternetConnection(wait time.Duration) {
 	})
 }
 
-func MonitorIdle(runCmd string, wait, idle time.Duration) {
-	var cancel util.CancelFunc
-
-	// Start the monitoring
-	util.ScheduleJob(wait, func(exit bool) {
-		//Handle Graceful Shutdown
-		if exit && cancel != nil {
-			cancel()
-			color.Yellow("Idle Job Graceful Shutdown: %v", time.Now())
+func TryOpenTicker(ticker string) {
+	window, err := tools.GetHyperWindow()
+	if err == nil && window.Class == LOGSEQ_CLASS && window.Monitor == SIDE_MONITOR && window.Workspace.Name == MAIL_WORKSPACE {
+		OpenTicker(ticker)
+		log.Info().Str("Ticker", ticker).Msg("Opening Ticker")
+	} else {
+		if err != nil {
+			log.Error().Err(err).Msg("OpenTicker: GetHyperWindow Failed")
 			return
 		}
+		log.Debug().Str("Ticker", ticker).Str("Class", window.Class).Int("Monitor", window.Monitor).Str("Workspace", window.Workspace.Name).Str("Window", window.Title).Msg("OpenTicker: Logseq Not Active")
+	}
+}
 
-		if ok, err := tools.IsOSIdle(idle); err != nil {
-			color.Red("Error Monitoring: %v", err)
-			return
-		} else if ok && cancel == nil {
-			// Start Heavy Program when OS is Idle
-			if cancel, err = tools.RunBackgroundProcess(runCmd); err != nil {
-				color.Red("Start Program Failed: %v", err)
-				return
-			}
-			color.Green("Heavy Program Started: %v", time.Now())
-		} else if !ok && cancel != nil {
-			// OS Not idle so Stop Program
-			cancel()
-			cancel = nil
-			color.Red("Heavy Program Stopped: %v", time.Now())
+func MonitorSubmap() {
+	wait := time.Second
+	util.ScheduleJob(wait, func(_ bool) {
+		err := tools.ActivateSubmap("swiftkeys", "SwiftKeys")
+		if err != nil {
+			log.Error().Err(err).Msg("Activate Submap Failed")
 		}
 	})
-}
-
-func MonitorClipboard(ctx context.Context, capturePath string) {
-	color.Green("Monitoring Clipboard")
-	ch := clipboard.Watch(ctx, clipboard.FmtText)
-	for clipText := range ch {
-		ticker := string(clipText)
-
-		// Read OS Environment
-		if matcher.MatchString(ticker) {
-			color.Green("Recording Ticker: %s", ticker)
-			if err := RecordTicker(ticker); err == nil {
-				LabelJournal(capturePath, ticker)
-			} else {
-				color.Red("Open Ticker Failed: %v", err)
-			}
-		} else {
-			// BUG: Fix ActiveWindow and Add check for Label Journal as well.
-			windowName, err := tools.GetActiveWindow()
-			desktop, err1 := tools.GetDesktop()
-			err = errors.Join(err, err1)
-			if err != nil {
-				color.Red("Active Window/Desktop Detect Failed: %v , Ticker: %s", err, ticker)
-				continue
-			}
-
-			color.Blue("Detected (W,D,T): %s || %s || %s", windowName, desktop, ticker)
-			if strings.Contains(windowName, "trading-tome") {
-				color.Green("Opening Ticker: %s", ticker)
-				OpenTicker(ticker)
-			} else {
-				color.Yellow("No Ticker or Window Match: %s || %s", windowName, ticker)
-			}
-		}
-	}
-	color.Yellow("Stopping Clipboard Monitor")
-}
-
-func LabelJournal(path string, ticker string) {
-	files, _ := script.FindFiles(path).Slice()
-
-	for _, file := range files {
-		color.Blue("Checking: %s", file)
-
-		if strings.Contains(file, "Screenshot") {
-			// Check Age of Files
-			info, _ := os.Stat(file)
-			diff := time.Now().Sub(info.ModTime())
-			color.Blue("File Age: %s %v", file, diff)
-
-			// Age Within Threshold, Perform Rename
-			if diff < SCREENSHOT_AGE*2 {
-				newName := strings.ReplaceAll(file, "Screenshot", ticker)
-				color.Yellow("Renaming: %s", newName)
-				os.Rename(file, newName)
-			}
-		}
-	}
 }
 
 func restartNetworkManager() {

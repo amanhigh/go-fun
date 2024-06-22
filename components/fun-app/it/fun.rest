@@ -19,11 +19,16 @@
 
 ### Variables
 # Environment Variables in workspace settings.
+# Switch ENV - Ctrl + OPT + E
 @limit={{$randomInt 2 5}}
 
-### List
+### List 
 
-GET http://{{host}}:{{port}}/{{version}}/person?limit={{limit}}&sort_by=name&order=asc
+GET http://{{host}}:{{port}}/{{version}}/person?offset=0&limit={{limit}}&sort_by=name&order=asc
+
+### Audit
+
+GET http://{{host}}:{{port}}/{{version}}/person/1/audit
 
 ### Create
 # @name createPerson
@@ -49,6 +54,6 @@ POST http://localhost:11434/api/generate
 Content-Type: application/json
 
 {
-  "model": "deepseek-coder",
+  "model": "llama3",
   "prompt":"Generate Sample Golang Code"
 }'

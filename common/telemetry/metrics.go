@@ -1,7 +1,6 @@
 package telemetry
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -29,7 +28,6 @@ func AccessMetrics(c *gin.Context) (matchedPath string) {
 	for _, p := range c.Params {
 		matchedPath = strings.Replace(matchedPath, p.Value, ":"+p.Key, 1)
 	}
-	fmt.Println(matchedPath)
 	return
 }
 

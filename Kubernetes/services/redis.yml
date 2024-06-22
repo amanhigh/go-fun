@@ -1,4 +1,4 @@
-# FIXME: Try snapshots and AOF.
+# FIXME: #C Try snapshots and AOF.
 auth:
   enabled: false
   password: ""

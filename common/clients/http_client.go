@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -31,7 +31,7 @@ func NewHttpClientWithCookies(cookieUrl string, cookies []*http.Cookie, client *
 	if u, err := url.Parse(cookieUrl); err == nil {
 		cookieJar.SetCookies(u, cookies)
 	} else {
-		log.WithFields(log.Fields{"Error": err}).Error("Error Setting Cookies in HttpClient")
+		log.Error().Err(err).Msg("Error Setting Cookies in HttpClient")
 	}
 	return client.SetCookieJar(cookieJar)
 }

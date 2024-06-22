@@ -11,15 +11,14 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/bitfield/script"
 	"github.com/fatih/color"
-
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 func RunCommandPrintError(cmd string) string {
 	if output, err := runCommand(cmd); err == nil {
 		return output
 	} else {
-		log.WithFields(log.Fields{"CMD": cmd, "Error": err}).Error("Error Running Command")
+		log.Error().Str("CMD", cmd).Err(err).Msg("Error Running Command")
 		return ""
 	}
 }
@@ -56,6 +55,7 @@ func RunBackgroundProcess(command string) (cancel util.CancelFunc, err error) {
 	cancel = func() (err error) {
 		//Kill Command with Subprocess
 		err = syscall.Kill(-cmd.Process.Pid, syscall.SIGINT)
+		log.Debug().Str("CMD", command).Int("PID", cmd.Process.Pid).Msg("Killing Background Process")
 		return
 	}
 	return
@@ -69,7 +69,7 @@ func RunCommandIgnoreError(cmd string) string {
 func PrintCommand(cmd string) {
 	if output, err := runCommand(cmd); err != nil {
 		color.White(output)
-		color.Red(fmt.Sprintf("Error Executing: %v\n CMD:%v\n", err, cmd))
+		log.Error().Str("CMD", cmd).Err(err).Msg("Error Running Command")
 	} else {
 		color.White(output)
 	}
@@ -98,7 +98,7 @@ func RunProcess(cmd string) (output string, err error) {
 
 func runCommand(cmd string) (string, error) {
 	if util.IsDebugMode() {
-		color.Magenta(cmd)
+		log.Debug().Str("CMD", cmd).Msg("Running Command")
 	}
 	output, err := exec.Command("sh", "-c", cmd).Output()
 	return strings.TrimSpace(string(output)), err
@@ -107,7 +107,7 @@ func runCommand(cmd string) (string, error) {
 func LiveCommand(cmd string) {
 	command := exec.Command("sh", "-c", cmd)
 	if util.IsDebugMode() {
-		color.Magenta(cmd)
+		log.Debug().Str("CMD", cmd).Msg("Running Command")
 	}
 	/* Connect Command Outputs */
 	command.Stdin = os.Stdin

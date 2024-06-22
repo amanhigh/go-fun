@@ -9,7 +9,7 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/trace"
 
 	docs "github.com/amanhigh/go-fun/components/fun-app/docs"
@@ -37,6 +37,7 @@ func (self *FunServer) initRoutes() {
 
 	personGroup := v1.Group("/person")
 	personGroup.GET("/", self.PersonHandler.ListPersons)
+	personGroup.GET("/:id/audit", self.PersonHandler.ListPersonAudit)
 	personGroup.GET("/:id", self.PersonHandler.GetPerson)
 	personGroup.PUT("/:id", self.PersonHandler.UpdatePerson)
 	personGroup.POST("", self.PersonHandler.CreatePerson)
@@ -77,7 +78,7 @@ func (self *FunServer) Start(c context.Context) (err error) {
 	//Read Error From GoRoutine or proceed in one second
 	select {
 	case err = <-errChan:
-		log.Trace("Error while Starting Server", errChan)
+		log.Trace().Err(err).Msg("Failed To Start Server")
 	case <-time.After(time.Second):
 		//No Error Occurred, wait for Graceful Shutdown Signal.
 		ctx := self.Shutdown.Wait()
@@ -98,12 +99,12 @@ func (self *FunServer) Stop(c context.Context) {
 	ctxTimed, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := self.Server.Shutdown(ctxTimed); err != nil {
-		log.WithContext(ctx).Fatal("Forced Shutdown, Graceful Exit Failed: ", err)
+		log.Fatal().Ctx(ctx).Err(err).Msg("Forced Shutdown, Graceful Exit Failed: ")
 	}
 
 	//Stop Tracer
 	span.AddEvent("Stopping Tracer")
 	telemetry.ShutdownTracerProvider(ctx)
 
-	log.WithContext(ctx).Info("Graceful Exit Successful")
+	log.Info().Ctx(ctx).Msg("Bye...")
 }

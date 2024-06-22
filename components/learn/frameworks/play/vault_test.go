@@ -8,12 +8,12 @@ import (
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
-	"github.com/fatih/color"
 	vault "github.com/hashicorp/vault-client-go"
 	"github.com/hashicorp/vault-client-go/schema"
 	"github.com/hashicorp/vault/helper/dhutil"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/rs/zerolog/log"
 	"github.com/testcontainers/testcontainers-go"
 )
 
@@ -36,7 +36,7 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 		vaultHost, err := vaultContainer.PortEndpoint(ctx, "8200/tcp", "")
 		vaultHost = "http://" + vaultHost
 		Expect(err).To(BeNil())
-		color.Green("Vault Endpoint: %s", vaultHost)
+		log.Info().Str("Host", vaultHost).Msg("Vault Endpoint")
 
 		// Get a new client
 		client, err = vault.New(vault.WithAddress(vaultHost), vault.WithRequestTimeout(30*time.Second))
@@ -54,7 +54,7 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 	})
 
 	AfterAll(func() {
-		color.Red("Vault Shutting Down")
+		log.Warn().Msg("Vault Shutting Down")
 		err = vaultContainer.Terminate(ctx)
 		Expect(err).To(BeNil())
 	})

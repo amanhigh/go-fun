@@ -13,6 +13,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/rs/zerolog/log"
 )
 
 var global, second_global = 5, 10
@@ -140,11 +141,6 @@ var _ = Describe("GoTour", func() {
 				})
 			})
 		})
-
-		// fmt.Printf("Variables Type: %T Value: %v\n", r, r)
-		// fmt.Printf("Variables Type: %T Value: %v\n", i, i)
-		// fmt.Printf("Variables Type: %T Value: %v\n", g, g)
-
 	})
 
 	Context("Pointers", func() {
@@ -239,30 +235,30 @@ var _ = Describe("GoTour", func() {
 		It("should tell os", func() {
 			switch os := runtime.GOOS; os {
 			case "darwin":
-				fmt.Println("OS X.")
+				log.Info().Msg("OS X.")
 			//fallthrough //implicit break if fallthrough not added
 			case "linux":
-				fmt.Println("Linux.")
+				log.Info().Msg("Linux.")
 			default:
 				// freebsd, openbsd,
 				// plan9, windows...
-				fmt.Printf("%s.", os)
+				log.Info().Str("OS", os).Msg("")
 			}
 		})
 
 		It("should tell weekend", func() {
 			/** Emulates long if/else chains */
-			fmt.Print("When's Saturday? ")
+			log.Info().Msg("When's Saturday?")
 			today := time.Now().Weekday()
 			switch time.Saturday {
 			case today + 0:
-				fmt.Println("Today.")
+				log.Info().Msg("Today.")
 			case today + 1:
-				fmt.Println("Tomorrow.")
+				log.Info().Msg("Tomorrow.")
 			case today + 2:
-				fmt.Println("In two days.")
+				log.Info().Msg("In two days.")
 			default:
-				fmt.Println("Too far away.")
+				log.Info().Msg("Too far away.")
 			}
 
 		})
@@ -390,7 +386,6 @@ var _ = Describe("GoTour", func() {
 			defer func() {
 				/** Recovers whatever value is put in Panic */
 				if r := recover(); r != nil {
-					// fmt.Println(r)
 					Expect(r).To(Not(BeNil()))
 				}
 			}()
@@ -480,12 +475,16 @@ func lamdbaCompute(convert_function convert, x int) (result int) {
 	return
 }
 
-/**
+/*
+*
+
 	Adds or Subtracts number passed to it
 	from sum which starts from Zero.
 
 	State is preserved for Sum due to closure
-**/
+
+*
+*/
 func adder() func(int) int {
 	sum := 0
 	return func(x int) int {
@@ -508,7 +507,6 @@ func fibonacciLambda() func() int {
 /* Collections */
 func WordCount(input string) map[string]int {
 	countMap := make(map[string]int)
-	fmt.Println(countMap)
 	fields := strings.Fields(input)
 	/** Ranges where i is optional can use _,v */
 	for _, f := range fields {

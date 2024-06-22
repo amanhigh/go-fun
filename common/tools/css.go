@@ -2,12 +2,13 @@ package tools
 
 import (
 	"fmt"
-	"github.com/fatih/color"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 func ClusterSsh(clusterName string) {
-	color.Green("Clustering onto " + clusterName)
+	log.Info().Str("Cluster", clusterName).Msg("Clustering")
 	ips := ReadClusterFile(clusterName)
 	LiveCommand(fmt.Sprintf("cssh %s", strings.Join(ips, " ")))
 }

@@ -30,7 +30,7 @@ jobs:
 
       - name: SETUP -> Build
         run: |
-          make reset
+          make reset OUT=/dev/stdout
 
       - name: COVERAGE -> Report
         uses: codecov/codecov-action@v3

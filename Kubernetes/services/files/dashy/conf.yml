@@ -297,6 +297,10 @@ sections:
         description: Traefix Ingress Manager
         icon: favicon
         url: http://docker:9000/dashboard/#/
+      - title: PDF
+        description: PDF Editor
+        icon: favicon
+        url: http://pdf.docker/
       - title: MysqlAdmin
         description: PHP MyAdmin Login - root/root@mysql-primary
         icon: favicon

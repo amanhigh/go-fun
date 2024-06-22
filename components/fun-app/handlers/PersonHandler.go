@@ -7,12 +7,12 @@ import (
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 )
 
 type PersonHandler struct {
@@ -119,13 +119,41 @@ func (self *PersonHandler) ListPersons(c *gin.Context) {
 			self.PersonCounter.Add(float64(len(personList.Records)))
 			c.JSON(http.StatusOK, personList)
 		} else {
-			log.WithFields(log.Fields{"Error": err}).Error("ListPersons: Server Error")
+			log.Error().Err(err).Msg("ListPersons: Server Error")
 			c.JSON(http.StatusInternalServerError, err.Error())
 		}
 	} else {
 		err = util.ProcessValidationError(err)
-		log.WithFields(log.Fields{"Error": err}).Error("ListPersons: Bad Request")
+		log.Error().Err(err).Msg("ListPersons: Bad Request")
 		c.JSON(http.StatusBadRequest, err)
+	}
+}
+
+// ListPersonAudit godoc
+//
+// @Summary List Person Audit
+// @Description List Person Audit by ID
+// @Tags Person
+// @Accept json
+// @Produce json
+// @Param id path string true "Person ID"
+// @Success 200 {object} []fun.PersonAudit
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /person/{id}/audit [get]
+func (self *PersonHandler) ListPersonAudit(c *gin.Context) {
+	var path fun.PersonPath
+
+	ctx, span := self.Tracer.Start(c.Request.Context(), "ListPersonAudit.Handler", trace.WithAttributes(attribute.String("id", path.Id)))
+	defer span.End()
+
+	if err := c.ShouldBindUri(&path); err == nil {
+		if auditList, err := self.Manager.ListPersonAudit(ctx, path.Id); err == nil {
+			c.JSON(http.StatusOK, auditList)
+		} else {
+			err = util.ProcessValidationError(err)
+			log.Err(err).Int("status", err.Code()).Msg("ListPersonAudit: Server Error")
+			c.JSON(err.Code(), err)
+		}
 	}
 }
 
@@ -156,13 +184,13 @@ func (self *PersonHandler) UpdatePerson(c *gin.Context) {
 			//https://stackoverflow.com/a/827045/173136
 			c.JSON(http.StatusOK, "UPDATED")
 		} else {
+			log.Err(err).Int("status", err.Code()).Msg("UpdatePerson: Server Error")
 			c.JSON(err.Code(), err)
-			log.WithFields(log.Fields{"Error": err}).Error("UpdatePerson: Server Error")
 		}
 	} else {
 		err = util.ProcessValidationError(err)
+		log.Err(err).Int("status", http.StatusBadRequest).Msg("UpdatePerson: Bad Request")
 		c.JSON(http.StatusBadRequest, err)
-		log.WithFields(log.Fields{"Error": err}).Error("UpdatePerson: Bad Request")
 	}
 }
 
@@ -186,7 +214,7 @@ func (self *PersonHandler) DeletePersons(c *gin.Context) {
 		c.JSON(http.StatusNoContent, "DELETED")
 	} else {
 		err = util.ProcessValidationError(err)
+		log.Err(err).Int("status", err.Code()).Msg("DeletePersons: Server Error")
 		c.JSON(err.Code(), err)
-		log.WithFields(log.Fields{"Error": err}).Error("DeletePersons: Server Error")
 	}
 }

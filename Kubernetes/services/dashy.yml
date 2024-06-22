@@ -2,18 +2,22 @@ image:
   repository: lissy93/dashy
   tag: latest
 
-containerPort: 80
+containerPort: 8080
 svcPort: 4000
 
 volumes:
-  - name: dashy-conf
-    path: /app/public/conf.yml
+  - name: dashy-data
+    path: /app/user-data
     hostPath:
-      path: /etc/files/dashy/conf.yml
-  - name: dashy-conf-secondary
-    path: /app/public/secondary.yml
-    hostPath:
-      path: /etc/files/dashy/secondary.yml
+      path: /etc/files/dashy
+
+resources:
+  requests:
+    cpu: "1000m"
+    memory: "1000Mi"
+  limits:
+    cpu: "2000m"
+    memory: "2000Mi"
 
 ingress:
   annotations:

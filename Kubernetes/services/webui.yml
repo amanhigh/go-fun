@@ -1,0 +1,30 @@
+image:
+  repository: ghcr.io/open-webui/open-webui
+  tag: main
+
+containerPort: 8080 
+svcPort: 3000
+
+volumes:
+  - name: webui
+    path: /app/backend/data
+    size: 1Gi
+    storageClass: standard
+
+vars:
+  OLLAMA_BASE_URL: "http://host.minikube.internal:11434"
+  WEBUI_AUTH: "false"
+
+resources:
+  requests:
+    cpu: "500m"
+    memory: "500Mi"
+  limits:
+    cpu: "2000m"
+    memory: "2000Mi"
+
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  path: /
+  host: webui.docker

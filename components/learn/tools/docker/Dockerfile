@@ -2,6 +2,9 @@
 #
 # docker buildx build -t fun .
 # docker run -it fun
+# docker stats
+# docker system prune
+# docker run --rm -p 9200:9200 bitnami/elasticsearch:latest
 FROM alpine
 MAINTAINER name@gmail.com
 

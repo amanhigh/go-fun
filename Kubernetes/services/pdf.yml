@@ -1,0 +1,34 @@
+image:
+  repository: frooodle/s-pdf
+  tag: latest
+
+containerPort: 8080 
+svcPort: 3000
+
+# volumes:
+#   - name: webui
+#     path: /app/backend/data
+#     size: 1Gi
+#     storageClass: standard
+
+env:
+  - name: DOCKER_ENABLE_SECURITY
+    value: false
+  - name: INSTALL_BOOK_AND_ADVANCED_HTML_OPS
+    value: false
+  - name: LANGS
+    value: en_GB
+
+resources:
+  requests:
+    cpu: "500m"
+    memory: "500Mi"
+  limits:
+    cpu: "1000m"
+    memory: "1000Mi"
+
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  path: /
+  host: pdf.docker

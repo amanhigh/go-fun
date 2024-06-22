@@ -3,10 +3,11 @@ package util
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 func PromptInput(promptText string) string {

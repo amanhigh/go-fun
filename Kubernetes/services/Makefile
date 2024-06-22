@@ -4,11 +4,12 @@ OUT := /dev/null
 
 SERVICE_MAKE_OPTS=--no-print-directory -f ./services.mk
 XTRA="dashy"
+BOOTABLE = traefik\|dashy\|webui
 
-DOCKER_HOSTS=127.0.0.1 docker httpbin.docker dashy.docker resty.docker app.docker \
+DOCKER_HOSTS=127.0.0.1 docker httpbin.docker dashy.docker resty.docker webui.docker pdf.docker paperless.docker app.docker \
 mysqladmin.docker redisadmin.docker cron.docker prometheus.docker grafana.docker jaeger.docker kiali.docker \
 ldapadmin.docker webssh.docker elastic.docker kibana.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker \
-consul.docker opa.docker sonar.docker metabase.docker
+consul.docker opa.docker sonar.docker metabase.docker clarity.docker
 NS:=$(shell kubectl get sa -o=jsonpath='{.items[0]..metadata.namespace}')
 ANS_FILE:=/tmp/k8-svc.txt
 ANS:=$(shell cat $(ANS_FILE))
@@ -40,7 +41,7 @@ clear-helm:
 	#HACK: Clear Kiali if istio enabled
 	#HACK: Add Mysql CRD's
 		
-	-helm delete $$(helm list --short | grep -v "traefik\|dashy") > $(OUT)
+	-helm delete $$(helm list --short | grep -v "$(BOOTABLE)") > $(OUT)
 
 ### Management
 install:
@@ -53,7 +54,7 @@ update: ## Update Services via Helm
 
 # BUG: Fix empty XTRA in Mac.
 bootstrap:
-	$(MAKE) $(SERVICE_MAKE_OPTS) traefik dashy $(XTRA)
+	$(MAKE) $(SERVICE_MAKE_OPTS) $(subst \|, ,$(BOOTABLE)) $(XTRA)
 	kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik --timeout=2m; > $(OUT)
 
 select: ## Select/Configure Service
@@ -84,6 +85,8 @@ helm-add:
 	helm repo add grafana https://grafana.github.io/helm-charts
 	helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
 	helm repo add bitpoke https://helm-charts.bitpoke.io
+	helm repo add gabe565 https://charts.gabe565.com
+	helm repo add apiclarity https://openclarity.github.io/apiclarity
 
 helm-update:
 	printf "\033[1;32m Updating Helm Repos \033[0m \n"
@@ -105,8 +108,8 @@ helm: helm-add helm-update
 prepare: helm hosts ## One Time Setup
 info: info-svc ## Service Info
 infos: info ## Service Extended Info
-setup: clear-helm install ## Setup Configured Services
-#HACK: Clear Istio
+setup: clear-helm install ## Clean and Resetup Configured Services
+#HACK: #C Clear Istio
 clean: clear-helm ## Stop Services
-reset: clean clear-helms clear-ns bootstrap info setup ## Resetup Services 
+reset: clean clear-helms clear-ns bootstrap info setup ## Clean & Resetup All Services 
 all: prepare reset update infos ## Run All Targets

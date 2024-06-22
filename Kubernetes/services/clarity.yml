@@ -1,0 +1,118 @@
+### HELP
+# https://github.com/openclarity/apiclarity/blob/master/charts/apiclarity/values.yaml
+#######################################################################################
+## Global Values
+
+global:
+  ## Database password
+  ##
+  databasePassword: apiclarity
+
+## End of Global Values
+#######################################################################################
+
+#######################################################################################
+## APIClarity Postgres Values
+
+apiclarity-postgresql:
+  enabled: true
+
+  auth:
+    existingSecret: apiclarity-postgresql-secret
+    database: apiclarity
+
+  ## Enable security context
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+
+# End of APIClarity Postgres Values
+#######################################################################################
+
+#######################################################################################
+## APIClarity Traffic Source Values
+
+trafficSource:
+  global:
+    ## Proxy configuration for the traffic source post install jobs
+    httpsProxy: ""
+    httpProxy: ""
+
+  envoyWasm:
+    ## Enable Envoy wasm traffic source
+    ##
+    enabled: false
+
+    ## Enable Istio verification in a Pre-Install Job
+    ##
+    enableIstioVerify: true
+
+    ## Enable APIClarity WASM filter in the following namespaces
+    ##
+    namespaces:
+      - default
+
+  tap:
+    ## Enable Tap traffic source
+    ##
+    enabled: false
+
+    ## Enable APIClarity Tap in the following namespaces
+    ##
+    namespaces:
+      - default
+
+    ## APIClarity Tap logging level (debug, info, warning, error, fatal, panic)
+    ##
+    logLevel: "warning"
+
+    ## Docker Image values.
+    docker:
+      imageTag: "v0.14.5"
+      imagePullPolicy: Always
+
+  kong:
+    ## Enable Kong traffic source
+    ##
+    enabled: false
+
+    ## Carry out post-install patching of kong container to install plugin
+    patch: true
+
+    ## Specify the name of the proxy container in Kong gateway to patch
+    ##
+    containerName: "proxy"
+    ## Specify the name of the Kong gateway deployment to patch
+    ##
+    deploymentName: ""
+    ## Specify the namespace of the Kong gateway deployment to patch
+    ##
+    deploymentNamespace: ""
+    ## Specify the name of the ingress resource to patch
+    ##
+    ingressName: ""
+    ## Specify the namespace of the ingress resource to patch
+    ##
+    ingressNamespace: ""
+
+  tyk:
+    ## Enable Tyk traffic source
+    ##
+    enabled: false
+
+    ## Enable Tyk verification in a Pre-Install Job
+    ##
+    enableTykVerify: true
+    ## Specify the name of the proxy container in Tyk gateway to patch
+    ##
+    containerName: "proxy"
+    ## Specify the name of the Tyk gateway deployment to patch
+    ##
+    deploymentName: ""
+    ## Specify the namespace of the Tyk gateway deployment to patch
+    ##
+    deploymentNamespace: ""
+
+# End of APIClarity Traffic Source Values
+#######################################################################################

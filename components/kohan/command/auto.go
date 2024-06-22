@@ -1,12 +1,9 @@
 package command
 
 import (
-	"context"
-	"time"
-
 	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/components/kohan/core"
-	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +13,7 @@ var autoCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		cluster = args[0]
+		setLogLevel()
 	},
 }
 
@@ -30,17 +28,25 @@ var runOrFocusCmd = &cobra.Command{
 }
 
 var monitorCmd = &cobra.Command{
-	Use:   "monitor [IdleCmd] [ClipPath]",
+	Use:   "monitor [CapturePath]",
 	Short: "System Monitoring",
-	Args:  cobra.ExactArgs(2),
+	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		color.Green("Monitoring System: Wait -> %v, Idle -> %v, Now -> %v", wait, idle, time.Now())
-		go core.MonitorIdle(args[0], wait, idle)
-		go core.MonitorClipboard(ctx, args[1])
+		log.Info().Dur("Wait", wait).Str("Screenshots", args[0]).Msg("Monitoring Systems")
+		server := core.NewMonitorServer(args[0])
+		go server.Start(9010)
+		go core.MonitorSubmap()
 		core.MonitorInternetConnection(wait)
+		return
+	},
+}
+
+var openTickerCmd = &cobra.Command{
+	Use:   "open-ticker [Ticker]",
+	Short: "Opens Ticker",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		core.TryOpenTicker(args[0])
 		return
 	},
 }
@@ -48,10 +54,10 @@ var monitorCmd = &cobra.Command{
 func init() {
 	//Flags
 	monitorCmd.Flags().DurationVarP(&wait, "wait", "w", wait, "Monitoring Wait Interval")
-	monitorCmd.Flags().DurationVarP(&idle, "idle", "i", idle, "Idle Time")
 
 	//Commands
 	autoCmd.AddCommand(runOrFocusCmd)
 	autoCmd.AddCommand(monitorCmd)
+	autoCmd.AddCommand(openTickerCmd)
 	RootCmd.AddCommand(autoCmd)
 }

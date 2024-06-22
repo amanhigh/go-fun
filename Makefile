@@ -36,7 +36,7 @@ sync:
 	go work sync
 
 # https://golangci-lint.run/usage/quick-start/
-# FIXME: Use Configuration - https://golangci-lint.run/usage/configuration/
+# FIXME: #C Use Configuration - https://golangci-lint.run/usage/configuration/
 lint-ci:
 	printf $(_TITLE) "LINT: Golang CLI"
 	-go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} golangci-lint run {}/...
@@ -74,10 +74,16 @@ cover-analyse:
 	echo "";
 	printf $(_INFO) "Vscode" "go.apply.coverprofile $(PROFILE_FILE)";
 
+test-focus:
+	printf $(_TITLE) "Running Focus Tests"
+	ginkgo --focus "should create & get person" $(FUN_DIR)/it
+
 test-it: run-fun-cover test-unit cover-analyse
 test-clean:
 	printf $(_WARN) "Cleaning Tests"
 	rm -rf $(COVER_DIR)
+
+verify: test-focus ## Verify Basic Fun App Flow
 
 profile: ## Run Profiling
 	printf $(_TITLE) "Running Profiling on Port 8080"
@@ -324,7 +330,7 @@ infos: info space-info ## Repo Extended Information
 prepare: setup-tools setup-k8 install-deadcode # One Time Setup
 
 setup: sync test build helm-package docker-build # Build and Test
-install: install-kohan # Install Kohan CLI
+install: install-kohan ## Install Kohan CLI
 clean: test-clean build-clean ## Clean up Residue
 
 reset: setup info clean ## Setup with Info and Clean

@@ -14,9 +14,9 @@ import (
 	"github.com/bxcodec/faker/v3"
 	es "github.com/elastic/go-elasticsearch"
 	"github.com/elastic/go-elasticsearch/esapi"
-	"github.com/fatih/color"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/rs/zerolog/log"
 	"github.com/teris-io/shortid"
 	"github.com/testcontainers/testcontainers-go"
 )
@@ -42,9 +42,9 @@ var _ = Describe("Elastic", Ordered, Label(models.GINKGO_SLOW), func() {
 		Expect(err).To(BeNil())
 
 		//Get Mapped Port
-		endpoint, err = esContainer.Endpoint(ctx, "")
+		endpoint, err = esContainer.PortEndpoint(ctx, "9200/tcp", "")
 		Expect(err).To(BeNil())
-		color.Green("Elastic Endpoint: %s", endpoint)
+		log.Info().Str("Host", endpoint).Msg("Elastic Endpoint")
 
 		//Elastic Client
 		elasticClient, err = es.NewClient(es.Config{Addresses: []string{"http://" + endpoint}})
@@ -53,7 +53,7 @@ var _ = Describe("Elastic", Ordered, Label(models.GINKGO_SLOW), func() {
 	})
 
 	AfterAll(func() {
-		color.Red("Elastic Shutting Down")
+		log.Warn().Msg("Elastic Shutting Down")
 		err = esContainer.Terminate(ctx)
 		Expect(err).To(BeNil())
 	})

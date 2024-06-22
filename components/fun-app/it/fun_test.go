@@ -45,6 +45,7 @@ var _ = Describe("Person Integration Test", func() {
 	Context("Create", func() {
 		var (
 			createdPerson fun.Person
+			auditUser     = "AMAN"
 		)
 		BeforeEach(func() {
 			createdPerson, err = client.PersonService.CreatePerson(ctx, request)
@@ -55,6 +56,11 @@ var _ = Describe("Person Integration Test", func() {
 			//Delete Person
 			err = client.PersonService.DeletePerson(ctx, createdPerson.Id)
 			Expect(err).To(BeNil())
+
+			//Delete Audit
+			auditList, err := client.PersonService.ListPersonAudit(ctx, createdPerson.Id)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(len(auditList)).To(Equal(2))
 		})
 
 		It("should create & get person", func() {
@@ -67,6 +73,24 @@ var _ = Describe("Person Integration Test", func() {
 			Expect(person.Name).To(Equal(name))
 			Expect(person.Age).To(Equal(age))
 			Expect(person.Gender).To(Equal(gender))
+		})
+
+		It("should generate Audit", func() {
+			//List Audit
+			auditList, err := client.PersonService.ListPersonAudit(ctx, createdPerson.Id)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			//Check Audit
+			Expect(len(auditList)).To(Equal(1))
+			audit := auditList[0]
+			Expect(audit.Id).To(Equal(createdPerson.Id))
+			Expect(audit.Name).To(Equal(name))
+			Expect(audit.Age).To(Equal(age))
+			Expect(audit.Gender).To(Equal(gender))
+
+			Expect(audit.Operation).To(Equal("CREATE"))
+			Expect(audit.CreatedBy).To(Equal(auditUser))
+			Expect(audit.CreatedAt).Should(Not(BeNil()))
 		})
 
 		Context("Update", func() {
@@ -89,19 +113,41 @@ var _ = Describe("Person Integration Test", func() {
 				Expect(err).To(BeNil())
 			})
 
-			It("should update person", func() {
-				err := client.PersonService.UpdatePerson(ctx, updatedPerson.Id, updateRequest)
-				Expect(err).ShouldNot(HaveOccurred())
+			Context("Success", func() {
+				BeforeEach(func() {
+					err := client.PersonService.UpdatePerson(ctx, updatedPerson.Id, updateRequest)
+					Expect(err).ShouldNot(HaveOccurred())
+				})
 
-				//Fetch Update Person
-				person, err := client.PersonService.GetPerson(ctx, updatedPerson.Id)
-				Expect(err).ShouldNot(HaveOccurred())
+				It("should update person", func() {
+					//Fetch Update Person
+					person, err := client.PersonService.GetPerson(ctx, updatedPerson.Id)
+					Expect(err).ShouldNot(HaveOccurred())
 
-				//MatchFields
-				Expect(person.Id).To(Equal(updatedPerson.Id))
-				Expect(person.Name).To(Equal(updateRequest.Name))
-				Expect(person.Age).To(Equal(updateRequest.Age))
-				Expect(person.Gender).To(Equal(updateRequest.Gender))
+					//MatchFields
+					Expect(person.Id).To(Equal(updatedPerson.Id))
+					Expect(person.Name).To(Equal(updateRequest.Name))
+					Expect(person.Age).To(Equal(updateRequest.Age))
+					Expect(person.Gender).To(Equal(updateRequest.Gender))
+				})
+
+				It("should generate Audit", func() {
+					//List Audit
+					auditList, err := client.PersonService.ListPersonAudit(ctx, updatedPerson.Id)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					//Check Audit
+					Expect(len(auditList)).To(Equal(2))
+					audit := auditList[1]
+					Expect(audit.Id).To(Equal(updatedPerson.Id))
+					Expect(audit.Name).To(Equal(updateRequest.Name))
+					Expect(audit.Age).To(Equal(updateRequest.Age))
+					Expect(audit.Gender).To(Equal(updateRequest.Gender))
+
+					Expect(audit.Operation).To(Equal("UPDATE"))
+					Expect(audit.CreatedBy).To(Equal(auditUser))
+					Expect(audit.CreatedAt).Should(Not(BeNil()))
+				})
 			})
 
 			Context("Bad Requests", func() {
@@ -151,6 +197,7 @@ var _ = Describe("Person Integration Test", func() {
 					updateRequest.Gender = "GENDER"
 					expectedErr = "FEMALE"
 				})
+
 			})
 		})
 

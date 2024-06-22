@@ -6,9 +6,9 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
 	"github.com/etcinit/speedbump"
-	"github.com/fatih/color"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/rs/zerolog/log"
 	"github.com/testcontainers/testcontainers-go"
 	"gopkg.in/redis.v5"
 )
@@ -30,7 +30,7 @@ var _ = Describe("SpeedBump", Ordered, Label(models.GINKGO_SLOW), func() {
 		endpoint, err := container.Endpoint(ctx, "")
 		Expect(err).To(BeNil())
 
-		color.Green("Redis Endpoint: %s", endpoint)
+		log.Info().Str("Host", endpoint).Msg("Redis Endpoint")
 
 		// dman set redis
 		client = redis.NewClient(&redis.Options{
@@ -41,7 +41,7 @@ var _ = Describe("SpeedBump", Ordered, Label(models.GINKGO_SLOW), func() {
 	})
 
 	AfterAll(func() {
-		color.Red("Redis Shutting Down")
+		log.Warn().Msg("Redis Shutting Down")
 		Expect(container.Terminate(ctx)).To(BeNil())
 	})
 

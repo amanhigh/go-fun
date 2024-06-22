@@ -18,7 +18,6 @@ var (
 
 	//Auto
 	wait = time.Minute
-	idle = 5 * time.Minute
 
 	enable  = false
 	verbose = false

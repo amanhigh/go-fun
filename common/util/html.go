@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/rs/zerolog/log"
 
 	"github.com/PuerkitoBio/goquery"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/html"
 )
 
@@ -28,10 +28,10 @@ func NewPageUsingClient(rawUrl string, client *resty.Client) (page *Page) {
 			page = &Page{}
 			page.Document = doc
 		} else {
-			log.WithFields(log.Fields{"Error": err}).Error("Error Parsing Response")
+			log.Error().Err(err).Msg("Error Parsing Response")
 		}
 	} else {
-		log.WithFields(log.Fields{"URL": rawUrl, "Error": err}).Error("Error Querying URL")
+		log.Error().Str("URL", rawUrl).Err(err).Msg("Error Querying URL")
 	}
 	return
 }
@@ -40,7 +40,7 @@ func NewPage(url string) *Page {
 	if doc, err := goquery.NewDocument(url); err == nil {
 		return &Page{Document: doc}
 	} else {
-		log.WithFields(log.Fields{"Error": err}).Fatal("Unable to Create Page")
+		log.Fatal().Err(err).Msg("Unable to Create Page")
 		return nil
 	}
 }

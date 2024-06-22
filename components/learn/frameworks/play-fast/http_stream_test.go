@@ -12,6 +12,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/rs/zerolog/log"
 )
 
 /* Server */
@@ -20,7 +21,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	if result, e := json.Marshal(p); e == nil {
 		fmt.Fprint(w, string(result))
 	} else {
-		fmt.Println("Error:", e)
+		log.Error().Err(e).Msg("Root Handler")
 	}
 }
 
@@ -61,8 +62,8 @@ var (
 )
 
 /*
-	Fires Given Request treating it as SSE Request & Provides a channel to listen for SSE Events.
-	Context can be used to cancel listening to events before server closes stream.
+Fires Given Request treating it as SSE Request & Provides a channel to listen for SSE Events.
+Context can be used to cancel listening to events before server closes stream.
 */
 func fireSSERequest(request *http.Request, ctx context.Context) (eventChannel chan SseEvent, err error) {
 	/* Add Header to accept streaming events */
@@ -77,15 +78,15 @@ func fireSSERequest(request *http.Request, ctx context.Context) (eventChannel ch
 		/* Open a Reader on Response Body */
 		go liveRequestLoop(response, eventChannel, ctx)
 	} else {
-		fmt.Printf("Http Request Failed:%+v\n", err)
+		log.Error().Err(err).Msg("Http SSE Request")
 	}
 
 	return
 }
 
 /*
-	Given a response reads it and provides updates SSE Event updates on  channel provided to it.
-	Context can be used to cancel listening to events before server closes stream.
+Given a response reads it and provides updates SSE Event updates on  channel provided to it.
+Context can be used to cancel listening to events before server closes stream.
 */
 func liveRequestLoop(response *http.Response, eventChannel chan SseEvent, ctx context.Context) {
 	defer response.Body.Close()
@@ -94,7 +95,7 @@ func liveRequestLoop(response *http.Response, eventChannel chan SseEvent, ctx co
 		select {
 		case <-ctx.Done():
 			close(eventChannel)
-			fmt.Println("Context Signal Recieved Exiting")
+			log.Debug().Msg("Context Signal Recieved Exiting")
 			return
 		default:
 			/* Read Lines Upto Delimiter */
@@ -108,13 +109,13 @@ func liveRequestLoop(response *http.Response, eventChannel chan SseEvent, ctx co
 
 				/* Exit once Stream Closes */
 				if err == io.EOF {
-					fmt.Println("Stream Reading Finished")
+					log.Debug().Msg("Stream Closed")
 					close(eventChannel)
 					break
 				}
 
 			} else {
-				fmt.Printf("Error Reading Line:%+v\n", err)
+				log.Error().Err(err).Msg("Read Line Error")
 			}
 		}
 	}

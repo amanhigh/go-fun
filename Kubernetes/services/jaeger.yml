@@ -17,7 +17,7 @@ allInOne:
     hosts:
       - jaeger.docker
 storage:
-  type: none
+  type: memory
 agent:
   enabled: false
 collector:

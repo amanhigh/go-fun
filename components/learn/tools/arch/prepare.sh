@@ -7,14 +7,15 @@ if [ $# -ne 2 ]; then
   # Input Partition Names
   echo -en "\033[1;31m Usage:  $0 <Disk Name: /dev/sda> <Encrypt (y/N)> \033[0m \n";
   echo -en "\033[1;33m Disk Layout \033[0m \n";
-  fdisk -l
+  parted -l
   exit 1
 fi
 
 disk=$1
 encrypt=$2
 
-echo -en "\033[1;32m Disk: $disk, Encrpt: $encrypt \033[0m \n";
+echo -en "\033[1;32m Disk: $disk, Encrypt: $encrypt \033[0m \n";
+parted $disk print
 
 ################## Basics #####################
 # Ctrl+d to exit anywhere
@@ -36,6 +37,20 @@ timedatectl
 ## Format ##
 boot=${disk}1
 root=${disk}2
+
+echo -en "\033[1;33m Partition $disk (y/N) ?\033[0m \n";
+read confirm
+if [ "$confirm" == 'y' ]; then
+  # Partition
+  echo -en "\033[1;34m Partitioning $disk \033[0m \n";
+  parted $disk mklabel gpt
+  parted $disk mkpart primary fat32 1MiB 301MiB
+  parted $disk set 1 esp on
+  parted $disk mkpart primary btrfs 301MiB 100%
+  parted $disk print
+else
+  echo -en "\033[1;34m Skipping Disk Partitioning \033[0m \n";
+fi
 
 echo -en "\033[1;33m Format $disk (y/N) ?\033[0m \n";
 read confirm
@@ -88,6 +103,7 @@ findmnt -R -M /mnt
 
 # Crypt File
 if [ "$encrypt" == 'y' ] && [ ! -f /mnt/root/crypt.keyfile ]; then
+    #FIXME: #C Header Backup
     # cryptsetup luksHeaderBackup /dev/device --header-backup-file /mnt/backup/file.img
     # Test Header cryptsetup -v --header /mnt/backup/file.img open /dev/device test
     # cryptsetup luksHeaderRestore /dev/device --header-backup-file ./mnt/backup/file.img
@@ -135,13 +151,25 @@ fi
 
 ## Setup Partitions ##
 # Disk Info: fdisk -l ; lsblk (-f) ; findmnt ; df -hl ; blkid
+
 # fdisk /dev/sda
 # Partition Table: GPT (g) or MBR (Backward Compaitable)
 # Layout: Boot:/mnt/efi (300MB+), Swap (500MB+), Root:/mnt, Home:/home, Others:
 # n - Create Partition, Size (+500M,+5G)
 # d - Delete Partition
 # p - Print Current Layout
+# w - Write Configuration
 # t - Set Type (EF: UEFI, 8E: LVM) / GPT (1.EFI System)
+
+# parted /dev/sda
+# Partion Table: mklabel gpt, mklabel msdos
+# mkpart primary fat32 1MiB 300MiB
+# set 1 boot on, set 1 esp on
+# mkpart primary btrfs 300MiB 100%
+# print - Print Partions
+# rm 1 - Delete Partiton One
+# quit - save and exit
+
 
 ## Move/Resize/Backup/Restore Partition ##
 # Clone: partclone.btrfs -c -d -s /dev/sda2 -o cloned.img
@@ -175,6 +203,11 @@ fi
 # Repair
 # btrfs scrub start /
 # btrfs balance start /
+# Clean
+# https://www.techrepublic.com/article/how-to-rebalance-your-btrfs-filesystem-on-your-linux-data-center-servers/
+# btrfs fi df /
+# btrfs fi usage -h /
+# sudo btrfs balance start / (Btrfs Assistant)
 
 #### Snapshot ####
 # https://archive.kernel.org/oldwiki/btrfs.wiki.kernel.org/index.php/SysadminGuide.html#Managing_Snapshots

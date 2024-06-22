@@ -1,15 +1,20 @@
 package tools
 
 import (
-	"strconv"
-	"strings"
-	"time"
-
 	"github.com/bitfield/script"
 )
 
 func Screenshot() (err error) {
-	_, err = script.Exec("spectacle -mbn").String()
+	err = script.Exec("hyprshot -c -s -m output").Error()
+	return
+}
+func NamedScreenshot(dir, name string) (err error) {
+	err = script.Exec("hyprshot -m active -s -m output -o " + dir + " -f" + name).Error()
+	return
+}
+
+func NamedRegionScreenshot(name string) (err error) {
+	err = script.Exec("hyprshot -s -m region -f" + name).Error()
 	return
 }
 
@@ -18,19 +23,7 @@ func CheckInternetConnection() bool {
 	return err == nil
 }
 
-func IsOSIdle(threshold time.Duration) (ok bool, err error) {
-	var idleTimeMilliseconds int
-	if idleTimeMilliseconds, err = IdleTimeOS(); err == nil {
-		ok = int64(idleTimeMilliseconds) > threshold.Milliseconds()
-	}
-	return
-}
-
-func IdleTimeOS() (idleTimeMilliseconds int, err error) {
-	var idleTime string
-	if idleTime, err = script.Exec("xprintidle").String(); err == nil {
-		idleTimeMilliseconds, err = strconv.Atoi(strings.Trim(idleTime, "\n"))
-	}
-	// color.Blue("Idle Time (ms): %d", idleTimeMilliseconds)
+func PromptText(text string) (result string, err error) {
+	result, err = script.Echo(text).Exec("zenity --editable --text-info").String()
 	return
 }

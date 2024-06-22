@@ -5,7 +5,7 @@ import (
 	"regexp"
 
 	"github.com/go-playground/validator/v10"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 const NAME_REGEX = `^[0-9a-zA-Z- ]+$`
@@ -31,9 +31,9 @@ func NameValidator(fl validator.FieldLevel) (check bool) {
 		//Apply Regex
 		check = matcher.MatchString(name)
 
-		log.WithFields(log.Fields{"Name": name, "Entity": entityName, "Check": check}).Debug("NameValidator")
+		log.Debug().Str("Entity", entityName).Str("Name", name).Bool("Check", check).Msg("NameValidator Error")
 	} else {
-		log.WithFields(log.Fields{"MatcherName": entityName}).Error("NameValidator Error")
+		log.Error().Str("MatcherName", entityName).Msg("NameValidator Error")
 	}
 	return
 }

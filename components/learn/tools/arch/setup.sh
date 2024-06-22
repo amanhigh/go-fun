@@ -27,7 +27,6 @@ if [ "$base" == 'y' ]; then
 else
     echo -en "\033[1;34m Skipping Snapshot \033[0m \n";
 fi
-#FIXME: #C Header Backup
 
 echo -en "\033[1;32m Installation Complete \033[0m"
 
@@ -42,6 +41,12 @@ echo -en "\033[1;32m Installation Complete \033[0m"
 # yay <search>
 # yay -R <name>
 # https://github.com/Jguer/yay
+
+## Key Management ##
+# sudo rm -r /etc/pacman.d/gnupg
+# sudo pacman-key --init
+# sudo pacman-key --populate archlinux
+# sudo pacman -Sy archlinux-keyring
 
 ## Services ##
 # systemctl start <svc>

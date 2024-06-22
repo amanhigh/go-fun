@@ -9,13 +9,14 @@ import (
 	. "github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
 
 type PersonDaoInterface interface {
 	util.BaseDaoInterface
 	ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError)
+	ListPersonAudit(c context.Context, id string) (personAuditList []fun.PersonAudit, err common.HttpError)
 }
 
 type PersonDao struct {
@@ -46,7 +47,21 @@ func (self *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery
 
 	//Execute Query to Get Records and Count
 	if txErr = txn.Find(&personList.Records).Count(&personList.Metadata.Total).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
-		log.WithContext(c).WithFields(log.Fields{"Query": personQuery, "Error": txErr}).Error("Error Fetching Person List")
+		log.Error().Any("Query", personQuery).Err(txErr).Msg("Error Fetching Person List")
+		err = GormErrorMapper(txErr)
+	}
+
+	return
+}
+
+func (self *PersonDao) ListPersonAudit(c context.Context, id string) (personAuditList []fun.PersonAudit, err common.HttpError) {
+	var txErr error
+	var audit = fun.PersonAudit{}
+	audit.Id = id
+
+	//Fetch Person Audit Records
+	if txErr = Tx(c).Where(audit).Find(&personAuditList).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+		log.Error().Str("Id", id).Err(txErr).Msg("Error Fetching Person Audit List")
 		err = GormErrorMapper(txErr)
 	}
 

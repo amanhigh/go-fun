@@ -4,18 +4,18 @@ import (
 	"os"
 
 	"github.com/amanhigh/go-fun/models/config"
-	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
 )
 
 func DebugControl(flag bool) {
 	if flag {
-		color.Cyan("Enabling Debug Mode")
+		log.Info().Msg("Enabling Debug Mode")
 		os.WriteFile(config.DEBUG_FILE, []byte{}, DEFAULT_PERM)
 	} else {
-		color.Red("Disabling Debug Mode")
+		log.Info().Msg("Disabling Debug Mode")
 		os.Remove(config.DEBUG_FILE)
 	}
-	color.Yellow("Debug Mode: %v", IsDebugMode())
+	log.Info().Bool("State", IsDebugMode()).Msg("Debug Mode")
 }
 
 func IsDebugMode() bool {

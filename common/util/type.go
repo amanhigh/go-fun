@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 type CancelFunc func() (err error)
@@ -22,6 +22,13 @@ func IsInt(value string) (err error) {
 func ParseInt(value string) (i int, err error) {
 	if i, err = strconv.Atoi(value); err != nil {
 		err = errors.New(fmt.Sprintf("%v is not a Valid Integer", value))
+	}
+	return
+}
+
+func ParseBool(value string) (b bool, err error) {
+	if b, err = strconv.ParseBool(value); err != nil {
+		err = errors.New(fmt.Sprintf("%v is not a Valid Boolean", value))
 	}
 	return
 }
@@ -41,7 +48,7 @@ func ParseFloat(value string) (result float64) {
 	floatVal := strings.TrimSpace(value)
 	if floatVal != "" {
 		if result, err = strconv.ParseFloat(floatVal, 64); err != nil {
-			log.WithFields(log.Fields{"Value": value, "Error": err}).Error("Error Parsing Float value")
+			log.Error().Str("Value", value).Err(err).Msg("Error Parsing Float value")
 		}
 	}
 

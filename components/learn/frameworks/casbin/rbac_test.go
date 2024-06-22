@@ -1,7 +1,6 @@
 package casbin
 
 import (
-	"fmt"
 	"github.com/casbin/casbin/v2"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -13,8 +12,6 @@ var _ = Describe("Rbac", func() {
 	)
 
 	It("should build", func() {
-		fmt.Println(">>ERROR<<", err)
-
 		Expect(e).To(Not(BeNil()))
 		Expect(err).To(BeNil())
 	})

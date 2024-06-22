@@ -14,8 +14,6 @@ import (
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
 	"gorm.io/plugin/dbresolver"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // Field Tags - https://gorm.io/docs/models.html#Fields-Tags
@@ -96,16 +94,12 @@ func (p *Product) AfterFind(_ *gorm.DB) (err error) {
 	return nil
 }
 
-/** Extra Json Logger */
-var jsonLogger = &log.Logger{Out: os.Stdout, Formatter: new(log.JSONFormatter), Level: log.InfoLevel}
-
 func OrmFun() {
 	//Can be Run Standalone for testing switch.
 	//switchProduct()
 
 	db, _ := util.CreateTestDb()
 
-	prepLogger()
 	db.AutoMigrate(&Product{}, &AuditLog{}) // Vertical not required Foreign Keys Auto Created
 
 	//Verify Tables Created
@@ -183,16 +177,6 @@ func switchProduct() {
 	})
 	fmt.Println("Transaction Read: Found (Source)", product.Code, len(product.Features), err)
 
-}
-
-func prepLogger() {
-	// Log as JSON instead of the default ASCII formatter.
-	//log.SetFormatter(&log.JSONFormatter{})
-	// Output to stdout instead of the default stderr
-	// Can be any io.Writer, see below for File example
-	log.SetOutput(os.Stdout)
-	// Only log the warning severity or above.
-	log.SetLevel(log.InfoLevel)
 }
 
 func schemaAlterPlay(db *gorm.DB) {
@@ -283,14 +267,6 @@ func queryProduct(db *gorm.DB) {
 
 	// Preload with Where Clause
 	db.Preload("Vertical").First(product, "code = ?", "L1212")
-
-	fields := log.Fields{
-		"Vertical ID:":  product.VerticalID,
-		"Vertical Name": product.Vertical.Name,
-		"Ignore Me":     product.IgnoreMe,
-	}
-	log.WithFields(fields).Info("Product Details")
-	jsonLogger.WithFields(fields).Info("Product Details")
 
 	//Query all Non Deleted Products
 	products := new([]Product)

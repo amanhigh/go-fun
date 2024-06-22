@@ -2,14 +2,12 @@ package migrations
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/amanhigh/go-fun/components/learn/frameworks/database/orm/model"
 )
 
 // Up is executed when this migration is applied
 func Up_20170503165552(txn *sql.Tx) {
-	fmt.Printf("%+v\n", txn)
 	txn.Exec("ALTER TABLE aman.verticals ADD my_column VARCHAR(255);")
 	migrateData()
 }

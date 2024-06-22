@@ -23,7 +23,7 @@ import (
 	"github.com/golobby/container/v3"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	ginprometheus "github.com/zsais/go-gin-prometheus"
 	"gopkg.in/redis.v5"
 	"gorm.io/gorm"
@@ -82,7 +82,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	app = &handlers.FunServer{}
 	err = self.di.Fill(app)
 	if err == nil {
-		log.WithFields(log.Fields{"Port": self.config.Server.Port}).Info("Injection Complete")
+		log.Info().Int("Port", self.config.Server.Port).Msg("Injection Complete")
 	}
 	return
 }
@@ -125,13 +125,13 @@ func setupRateLimit(cfg config.RateLimit, engine *gin.Engine) {
 		// Limit the engine's (Global) or group's (API Level) requests to
 		// 100 requests per client per minute.
 		engine.Use(ginbump.RateLimit(client, speedbump.PerMinuteHasher{}, cfg.PerMinuteLimit))
-		log.WithFields(log.Fields{"Redis": cfg.RedisHost, "RateLimit": cfg.PerMinuteLimit}).Info("Rate Limit Enabled")
+		log.Info().Str("Redis", cfg.RedisHost).Int64("RateLimit", cfg.PerMinuteLimit).Msg("Rate Limit Enabled")
 	}
 }
 
 func newPrometheus(engine *gin.Engine) (prometheus *ginprometheus.Prometheus) {
 	/* Access Metrics */
-	// TODO: #C Ingest to Prometheus and configure in helm
+	// TODO: #B Ingest to Prometheus and configure in helm
 	//Visit http://localhost:8080/metrics
 	prometheus = ginprometheus.NewPrometheus("gin_access")
 	prometheus.ReqCntURLLabelMappingFn = telemetry.AccessMetrics
@@ -145,13 +145,14 @@ func newDb(config config.FunAppConfig) (db *gorm.DB, err error) {
 	/** Gorm AutoMigrate Schema */
 	err = db.AutoMigrate(
 		&fun.Person{},
+		&fun.PersonAudit{},
 	)
 	return
 }
 
 func registerMetrics(di container.Container) {
 	// 	/* Metrics */
-	// 	//FIXME: Move to OTEL SDK
+	// 	//FIXME: #C Move to OTEL SDK
 	container.MustNamedSingleton(di, "CreateCounter", func() *prometheus.CounterVec {
 		return promauto.NewCounterVec(prometheus.CounterOpts{
 			Namespace:   NAMESPACE,

@@ -6,10 +6,10 @@ import (
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
-	"github.com/fatih/color"
 	"github.com/go-zookeeper/zk"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/rs/zerolog/log"
 	"github.com/testcontainers/testcontainers-go"
 )
 
@@ -30,14 +30,14 @@ var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SLOW), func() {
 		//Get Mapped Port
 		zkHost, err := zkContainer.PortEndpoint(ctx, "2181/tcp", "")
 		Expect(err).To(BeNil())
-		color.Green("Zookeeper Endpoint: %s", zkHost)
+		log.Info().Str("Host", zkHost).Msg("Zookeeper Endpoint")
 
 		connection, _, err = zk.Connect([]string{zkHost}, time.Second)
 		Expect(err).To(BeNil())
 	})
 
 	AfterAll(func() {
-		color.Red("Zookeeper Shutting Down")
+		log.Warn().Msg("Zookeeper Shutting Down")
 		err = zkContainer.Terminate(ctx)
 		Expect(err).To(BeNil())
 	})

@@ -7,9 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/fatih/color"
-
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 const DEFAULT_PERM = os.FileMode(0644)     //Owner RW,Group R,Other R
@@ -27,10 +25,10 @@ func AppendFile(path string, content string) {
 	if f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0600); err == nil {
 		defer f.Close()
 		if _, err = f.WriteString(content); err != nil {
-			log.WithFields(log.Fields{"File": path, "Error": err}).Error("Error Appending Content to File")
+			log.Error().Str("File", path).Err(err).Msg("Error Appending Content to File")
 		}
 	} else {
-		log.WithFields(log.Fields{"Error": err}).Error("Error Opening File for Append")
+		log.Error().Str("File", path).Err(err).Msg("Error Opening File for Append")
 	}
 }
 
@@ -66,7 +64,7 @@ func FindReplaceFile(filePath string, find string, replace string) (err error) {
 }
 
 func PrintFile(title string, filepath string) {
-	color.Cyan(title)
+	log.Info().Str("File", filepath).Msg("File Contents")
 	fmt.Println(strings.Join(ReadAllLines(filepath), "\n"))
 }
 
@@ -78,7 +76,7 @@ func ListFiles(dirPath string) []string {
 			filePaths = append(filePaths, filePath)
 		}
 	} else {
-		log.WithFields(log.Fields{"Directory": dirPath, "Error": err}).Error("Error Reading Directory")
+		log.Error().Str("Directory", dirPath).Err(err).Msg("Error Reading Directory")
 	}
 	return filePaths
 }
@@ -89,10 +87,10 @@ func ReplaceContent(path string, findRegex string, replace string) {
 			newContent := reg.ReplaceAll(bytes, []byte(replace))
 			os.WriteFile(path, newContent, DEFAULT_PERM)
 		} else {
-			log.WithFields(log.Fields{"Error": err}).Error("Invalid Regex")
+			log.Error().Str("Regex", findRegex).Err(err).Msg("Invalid Regex")
 		}
 	} else {
-		log.WithFields(log.Fields{"Error": err}).Error("Missing File")
+		log.Error().Str("File", path).Err(err).Msg("Error Reading File")
 	}
 }
 
@@ -107,7 +105,7 @@ func ReadAllLines(filePath string) (lines []string) {
 			lines = append(lines, scanner.Text())
 		}
 	} else {
-		log.WithFields(log.Fields{"Error": err}).Error("Error Reading File")
+		log.Error().Str("File", filePath).Err(err).Msg("Error Reading File")
 	}
 	return
 }

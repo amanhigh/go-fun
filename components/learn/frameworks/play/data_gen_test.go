@@ -9,9 +9,9 @@ import (
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/bxcodec/faker/v3"
 	"github.com/caarlos0/env/v6"
-	"github.com/fatih/color"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/rs/zerolog/log"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
 )
@@ -118,7 +118,7 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SLOW), func() {
 
 			dbconfig.DbType = models.MYSQL
 			dbconfig.Url = util.BuildMysqlURL("aman", "aman", "localhost", "compute", mysqlPort.Port())
-			color.Green("Mysql Url: %s", dbconfig.Url)
+			log.Info().Str("URL", dbconfig.Url).Msg("Mysql Endpoint")
 			// dbconfig.LogLevel = logger.Info
 
 			db, err = util.ConnectDb(dbconfig)
@@ -126,7 +126,7 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SLOW), func() {
 		})
 
 		AfterAll(func() {
-			color.Red("Mysql Shutting Down")
+			log.Warn().Msg("Mysql Shutting Down")
 			err = container.Terminate(ctx)
 			Expect(err).To(BeNil())
 		})

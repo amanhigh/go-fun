@@ -3,12 +3,11 @@
 OUT := /dev/null
 
 PORT=8091
-CPU=3
+CPU=4
 MEMORY=4096
 XTRA=""
 
-MINI_BKP_FILE=~/Downloads/mini-bkp.txt
-MINI_CURRENT_BKP_FILE=/tmp/mini-bkp
+MINI_BKP_DIR=~/Downloads/minibkp
 
 #Current Directory where Make File is Present
 MAKE_FILE_DIR=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -50,7 +49,7 @@ info-mini:
 	printf $(_TITLE) "Minikube Info" ""
 	printf $(_INFO) "Context" "`kubectl config current-context;`"
 	printf $(_DETAIL) "Mounted" "$(SERVICE_FILES)"
-	printf $(_INFO) "Dashboard" "http://docker:9000/dashboard/#/"
+	printf $(_INFO) "Traefik" "http://docker:9000/dashboard/#/"
 
 info-extra:
 	printf $(_TITLE) "Minikube Extra Info" ""
@@ -95,43 +94,47 @@ port: port-kill port-fwd port-ls ## Port Forward for Minikube
 
 ### Backup and Restore
 backup:
-	# FIXME: Backup Flow
-	test -f $(MINI_BKP_FILE) || touch $(MINI_BKP_FILE)
-	minikube image ls | grep -v none | tee $(MINI_CURRENT_BKP_FILE)
-	printf $(_INFO) "MinkubeImage Count:" "`wc -l $(MINI_CURRENT_BKP_FILE)`"
+	printf $(_TITLE) "Backup Minikube Images" "$(MINI_BKP_DIR)"
+	
+	# Create the backup directory if it doesn't exist
+	mkdir -p $(MINI_BKP_DIR)
+	minikube image ls | grep -v none > $(MINI_BKP_DIR)/current_image_list.txt
 
-	# Append Image list to Master List
-	cp $(MINI_BKP_FILE) /tmp/mini-bkp-old
-	sort $(MINI_CURRENT_BKP_FILE) /tmp/mini-bkp-old | uniq | tee $(MINI_BKP_FILE)
-	printf $(_INFO) "MasterList Count:" "`wc -l $(MINI_BKP_FILE)`"
-
-	for IMG in $$(cat $(MINI_CURRENT_BKP_FILE)); do\
-		CACHE_PATH="$${IMG%/*}";\
-		IMAGE_ID="$${IMG##*/}";\
-		IMAGE_CACHE_PATH="$${HOME}/.minikube/cache/images/$$(uname -m)/$${CACHE_PATH}";\
-		IMAGE_CACHE_FILE="$${IMAGE_CACHE_PATH}/$$(echo $IMAGE_ID | sed 's/[:]/_/g')";\
-		echo $${IMAGE_CACHE_FILE};\
-
-		# if [ -f ${IMAGE_CACHE_FILE} ]; then
-		# 	printf "\033[1;34m Skipping IMAGE: ${IMG} -> ${IMAGE_CACHE_FILE}\033[0m \n"
-		# else
-		#	printf "\033[1;33m Caching IMAGE: ${IMG} \033[0m \n"
-		# 	mkdir -p ${IMAGE_CACHE_PATH}
-		# 	minikube image save --daemon ${IMG}
-		# fi
+	printf $(_INFO) "Minikube Saving Images" "`wc -l $(MINrI_BKP_DIR)/current_image_list.txt | awk '{print $$1}'`"
+	# Save images as tar files in the backup directory only if they do not already exist
+	for IMG in $$(cat $(MINI_BKP_DIR)/current_image_list.txt); do \
+		FILENAME=$$(echo $$IMG | sed 's/\//+/g').tar; \
+		if [ ! -f $(MINI_BKP_DIR)/$$FILENAME ]; then \
+			minikube image save $$IMG $(MINI_BKP_DIR)/$$FILENAME; \
+			printf $(_DETAIL) "Saved:  $$IMG" "$$FILENAME"; \
+		else \
+			printf $(_WARN) "Skipped: $$IMG", "$$FILENAME"; \
+		fi \
 	done
+
 restore:
-	for IMG in $$(cat $(MINI_BKP_FILE)); do \
-		printf $(_INFO) "Loading Image:" "$${IMG}"; \
-		minikube image load --daemon $${IMG}; \
+	printf $(_TITLE) "Restore Minikube Images" "$(MINI_BKP_DIR)"
+
+	# Generate a list of currently loaded images in Minikube
+	minikube image ls | grep -v none > $(MINI_BKP_DIR)/loaded_image_list.txt
+
+	# Load images from tar files in the backup directory only if they are not already loaded
+	for FILE in $(MINI_BKP_DIR)/*.tar; do \
+		IMG=$$(basename $$FILE .tar | sed 's/+/\//g'); \
+		if grep -q -e "^$$IMG$$" $(MINI_BKP_DIR)/loaded_image_list.txt; then \
+			printf $(_WARN) "Skipped: $$IMG" "$$FILE"; \
+		else \
+			minikube image load $$FILE; \
+			printf $(_DETAIL) "Loaded: $$IMG" "$$FILE"; \
+		fi \
 	done
+
 
 ### Workflows
 info: info-mini ## Minikube Info
 infos: info info-extra ## Minikube Extended Info
 setup: start wait bootstrap port-fwd ## Start, Bootstrap, Port Forward Minikube
 clean: stop ## Stop Minikube
-# HACK:#B Fix Readme
 reset: clean setup info ## Rebuild Minikube
 all: prepare istio dashboard infos port ## Run All Targets
 
