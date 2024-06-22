@@ -140,6 +140,10 @@ mysql: metabase ## MySQL
 postgres: metabase ## PostgreSQL
 	-helm $(CMD) postgres bitnami/postgresql -f postgres.yml > $(OUT)
 	printf $(_INFO) "Postgres(5432) Login" "pg-primary/pg-read, postgres/root, aman/aman"
+	printf $(_DETAIL) "Restoring Backup (Wait PgSQL)" 
+	kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=postgresql --timeout=2m;
+	$(SCRIPT_DIR)/files/pgsql/restore.sh > $(OUT) 2>&1
+	printf $(_DETAIL) "Restortion Complete"
 
 mongo: ## Mongo
 	-helm $(CMD) mongo bitnami/mongodb -f mongo.yml > $(OUT)
