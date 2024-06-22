@@ -74,10 +74,16 @@ cover-analyse:
 	echo "";
 	printf $(_INFO) "Vscode" "go.apply.coverprofile $(PROFILE_FILE)";
 
+test-focus:
+	printf $(_TITLE) "Running Focus Tests"
+	ginkgo --focus "should create & get person" $(FUN_DIR)/it
+
 test-it: run-fun-cover test-unit cover-analyse
 test-clean:
 	printf $(_WARN) "Cleaning Tests"
 	rm -rf $(COVER_DIR)
+
+verify: test-focus ## Verify Basic Fun App Flow
 
 profile: ## Run Profiling
 	printf $(_TITLE) "Running Profiling on Port 8080"

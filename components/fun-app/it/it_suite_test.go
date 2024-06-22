@@ -20,7 +20,9 @@ import (
 
 const (
 	COVER_CMD = "./cover.zsh run"
-	BASE_URL  = "http://localhost:8085"
+	TEST_PORT = "8085"
+	// HACK: Make Base URL configurable
+	BASE_URL = "http://localhost:" + TEST_PORT
 )
 
 var (
@@ -42,7 +44,7 @@ var _ = BeforeSuite(func() {
 	if err = client.AdminService.HealthCheck(ctx); err == nil {
 		log.Info().Str("Port", os.Getenv("PORT")).Msg("FunApp: Running Already")
 	} else {
-		os.Setenv("PORT", "8085")
+		os.Setenv("PORT", TEST_PORT)
 		go common.RunFunApp()
 
 		//Health Check every 1 second until Healthy or 5 Second Timeout
