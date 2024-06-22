@@ -26,6 +26,13 @@ func ParseInt(value string) (i int, err error) {
 	return
 }
 
+func ParseBool(value string) (b bool, err error) {
+	if b, err = strconv.ParseBool(value); err != nil {
+		err = errors.New(fmt.Sprintf("%v is not a Valid Boolean", value))
+	}
+	return
+}
+
 func ReverseArray(input any) {
 	n := reflect.ValueOf(input).Len()
 	swap := reflect.Swapper(input)

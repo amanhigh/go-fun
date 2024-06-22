@@ -100,7 +100,7 @@ backup:
 	mkdir -p $(MINI_BKP_DIR)
 	minikube image ls | grep -v none > $(MINI_BKP_DIR)/current_image_list.txt
 
-	printf $(_INFO) "Minikube Saving Images" "`wc -l $(MINI_BKP_DIR)/current_image_list.txt | awk '{print $$1}'`"
+	printf $(_INFO) "Minikube Saving Images" "`wc -l $(MINrI_BKP_DIR)/current_image_list.txt | awk '{print $$1}'`"
 	# Save images as tar files in the backup directory only if they do not already exist
 	for IMG in $$(cat $(MINI_BKP_DIR)/current_image_list.txt); do \
 		FILENAME=$$(echo $$IMG | sed 's/\//+/g').tar; \
