@@ -4,6 +4,7 @@ OUT := /dev/null
 
 SERVICE_MAKE_OPTS=--no-print-directory -f ./services.mk
 XTRA="dashy"
+BOOTABLE = traefik\|dashy\|webui
 
 DOCKER_HOSTS=127.0.0.1 docker httpbin.docker dashy.docker resty.docker webui.docker pdf.docker paperless.docker app.docker \
 mysqladmin.docker redisadmin.docker cron.docker prometheus.docker grafana.docker jaeger.docker kiali.docker \
@@ -40,7 +41,7 @@ clear-helm:
 	#HACK: Clear Kiali if istio enabled
 	#HACK: Add Mysql CRD's
 		
-	-helm delete $$(helm list --short | grep -v "traefik\|dashy") > $(OUT)
+	-helm delete $$(helm list --short | grep -v "$(BOOTABLE)") > $(OUT)
 
 ### Management
 install:
@@ -53,7 +54,7 @@ update: ## Update Services via Helm
 
 # BUG: Fix empty XTRA in Mac.
 bootstrap:
-	$(MAKE) $(SERVICE_MAKE_OPTS) traefik dashy webui $(XTRA)
+	$(MAKE) $(SERVICE_MAKE_OPTS) $(subst \|, ,$(BOOTABLE)) $(XTRA)
 	kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik --timeout=2m; > $(OUT)
 
 select: ## Select/Configure Service
