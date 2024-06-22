@@ -22,7 +22,6 @@ clean-file:
 	-rm $(RESULT_FILE)
 
 ### Load Test
-# FIXME: #B Use Id's from Write Load Test.
 load-read: ## Read Load Test
 	printf $(_TITLE) "Get Load Test"
 	URL=$(URL) jq -R -ncM --arg url "$$URL" 'inputs as $$id | {method: "GET", url: "\(env.URL)/person/\($$id)"}' < $(ID_FILE) \
