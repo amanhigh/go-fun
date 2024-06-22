@@ -7,12 +7,6 @@ image:
 containerPort: 3000
 svcPort: 3000
 
-volumes:
-  - name: database
-    path: /db
-    hostPath:
-      path: /tmp/mini/metabase
-
 probe:
   enabled: true
   path: "/api/health"
@@ -24,16 +18,16 @@ probe:
     failureThreshold: 3
 
 vars:
-  MB_DB_FILE: "/db/h2.db"
-  MB_DB_TYPE: "h2"
+  # MB_DB_FILE: "/db/h2.db"
+  # MB_DB_TYPE: "h2"
   MB_PASSWORD_COMPLEXITY: "weak"
   MB_PASSWORD_LENGTH: "4"
-  # MB_DB_TYPE: "postgres"
-  # MB_DB_DBNAME: "compute"
-  # MB_DB_USER: "postgres"
-  # MB_DB_PASS: "root"
-  # MB_DB_HOST: "pg-primary"
-  # MB_DB_PORT: "5432"
+  MB_DB_TYPE: "postgres"
+  MB_DB_DBNAME: "metabase"
+  MB_DB_USER: "aman"
+  MB_DB_PASS: "aman"
+  MB_DB_HOST: "pg-primary"
+  MB_DB_PORT: "5432"
 
 resources:
   limits:
