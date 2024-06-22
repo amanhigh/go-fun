@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"bytes"
 	"os"
 
 	"github.com/amanhigh/go-fun/models"
@@ -71,6 +72,10 @@ func InitLogger(level zerolog.Level) {
 
 	// Add the OTEL Trace Hook
 	log.Hook(NewZeroOtelHook())
+}
+
+func InitTestLogger(buffer *bytes.Buffer) {
+	log.Logger = zerolog.New(buffer).With().Timestamp().Logger()
 }
 
 // ZeroOtelHook is a Zerolog hook that adds logs to the active span as events.
