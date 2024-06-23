@@ -10,10 +10,6 @@ spec:
       version: v1
   template:
     metadata:
-      annotations: #Annotations indicating prometheus to collect metrics
-        prometheus.io/scrape: 'true'
-        prometheus.io/path: '/metrics'
-        prometheus.io/port: '8080'
       labels:
         app: fun-app #Name of App
         version: v1 #Version of this Deployment

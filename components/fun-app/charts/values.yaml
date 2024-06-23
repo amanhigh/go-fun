@@ -3,6 +3,10 @@
 service:
   port: 9090
   dbUrl: "aman:aman@tcp(fun-app-mysql-primary:3306)/compute?charset=utf8&parseTime=True&loc=Local"
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "9090"
   # requestTimeout: 2s
   # idle_connectionTimeout: 60s
 
