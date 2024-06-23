@@ -261,3 +261,6 @@ fi
 # cryptsetup luksChangeKey /dev/sda2
 # cryptsetup luksAddKey /dev/sda2 (Set New Password)
 # cryptsetup luksRemoveKey /dev/sda2 (Remove old Password)
+## Bootable Disk
+# sudo /usr/bin/dd bs=4M if=./archlinux-2023.09.01-x86_64.iso of=/dev/sde conv=fsync oflag=direct status=progress
+
