@@ -48,8 +48,10 @@ info-fun-notes:
 info-vegeta:
 	printf $(_INFO) "Vegeta Info"
 	printf $(_DETAIL) "Login Vegeta Pod"
-	printf $(_DETAIL) "HELM: echo 'GET http://fun-app:9090/person/all' | vegeta attack | vegeta report"
-	printf $(_DETAIL) "DEVSPACE: echo 'GET http://app:8080/person/all' | vegeta attack | vegeta report"
+	printf $(_DETAIL) "HELM" "echo 'GET http://fun-app:9090/v1/person/all' | vegeta attack | vegeta report"
+	printf $(_DETAIL) "DEVSPACE" "echo 'GET http://app:8080/v1/person/all' | vegeta attack | vegeta report"
+	printf $(_DETAIL) "LOAD(MAKE)" "Portforward 8080: http://localhost:8080/metrics and fun-app/it Make"
+	printf $(_DETAIL) "PROMETHEUS" "http://prometheus.docker/graph?g0.expr=funapp_create_person&g0.tab=0&g0.display_mode=stacked&g0.show_exemplars=0&g0.range_input=15m"
 
 info-istio:
 	printf $(_INFO) "Istio Info"

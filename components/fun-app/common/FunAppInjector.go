@@ -131,7 +131,6 @@ func setupRateLimit(cfg config.RateLimit, engine *gin.Engine) {
 
 func newPrometheus(engine *gin.Engine) (prometheus *ginprometheus.Prometheus) {
 	/* Access Metrics */
-	// TODO: #B Ingest to Prometheus and configure in helm
 	//Visit http://localhost:8080/metrics
 	prometheus = ginprometheus.NewPrometheus("gin_access")
 	prometheus.ReqCntURLLabelMappingFn = telemetry.AccessMetrics

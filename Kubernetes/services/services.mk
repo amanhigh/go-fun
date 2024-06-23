@@ -200,6 +200,7 @@ monitor: ## Prometheus, Grafana and Jaeger
 	-helm $(CMD) prometheus prometheus-community/prometheus -f prometheus.yml > $(OUT)
 	printf $(_INFO) "Prometheus Server" "http://prometheus.docker/"
 	printf $(_INFO) "Prometheus Query" "http://prometheus.docker/api/v1/query"
+	printf $(_INFO) "Prometheus Scraping" "http://prometheus.docker/targets?search=fun-app"
 
 	-helm $(CMD) grafana grafana/grafana -f grafana.yml > $(OUT)
 	printf $(_INFO) "Grafana Login" "http://grafana.docker/login (aman/aman)"
