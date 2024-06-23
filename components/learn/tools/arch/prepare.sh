@@ -263,4 +263,11 @@ fi
 # cryptsetup luksRemoveKey /dev/sda2 (Remove old Password)
 ## Bootable Disk
 # sudo /usr/bin/dd bs=4M if=./archlinux-2023.09.01-x86_64.iso of=/dev/sde conv=fsync oflag=direct status=progress
-
+## Journalctl
+# View logs from the current boot: journalctl -b (-u sshd Unit)
+# View logs from a specific boot: journalctl -b -1
+# View kernel logs: journalctl -k (-f follow, -n 10 lines)
+# Filter priority (3 error) logs: journalctl -p crit (or -p 2)
+# Timebased Filtering: journalctl --since "1 day ago" --until "2024-06-23"
+# JSON output: journalctl -o json (verbose, short)
+# Vacuum : journalctl --vacuum-time=2weeks (--vacuum-size=100M)
