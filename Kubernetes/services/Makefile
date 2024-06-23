@@ -3,8 +3,8 @@
 OUT := /dev/null
 
 SERVICE_MAKE_OPTS=--no-print-directory -f ./services.mk
-XTRA="dashy"
-BOOTABLE = traefik\|dashy\|webui
+XTRA=""
+BOOTABLE = traefik\|webui
 
 DOCKER_HOSTS=127.0.0.1 docker httpbin.docker dashy.docker resty.docker webui.docker pdf.docker paperless.docker app.docker \
 mysqladmin.docker redisadmin.docker cron.docker prometheus.docker grafana.docker jaeger.docker kiali.docker \
