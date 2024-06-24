@@ -1,6 +1,6 @@
+include ../../../common/tools/base.mk
+
 ### Variables
-.DEFAULT_GOAL := help
-OUT := /dev/null
 URL := http://localhost:8080/v1
 DURATION := 5s
 
@@ -9,11 +9,6 @@ ID_FILE := id.txt
 
 BATCH_SIZE := 10
 TOTAL_RECORDS := 500
-
-### Basic
-help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-	printf $(_TITLE) "FirstTime: prepare/all, OUT=/dev/stdout (Debug) \n"
 
 ### Clean
 clean-file:
@@ -61,9 +56,3 @@ setup: info load ## Load Test (All API's)
 clean: clean-file ## Clean
 reset: setup clean ## Reset
 all:prepare reset ## Run All Targets
-
-### Formatting
-_INFO := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"
-_DETAIL := "\033[34m[%s]\033[0m %s\n"  # Blue text for "printf"
-_TITLE := "\033[32m[%s]\033[0m %s\n" # Green text for "printf"
-_WARN := "\033[31m[%s]\033[0m %s\n" # Red text for "printf"

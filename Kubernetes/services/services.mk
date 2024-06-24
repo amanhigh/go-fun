@@ -1,7 +1,6 @@
-### Variables
-.DEFAULT_GOAL := help
-OUT := /dev/null
+include ../../common/tools/base.mk
 
+### Variables
 CMD=install
 SCRIPT_DIR=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
@@ -9,10 +8,6 @@ SCRIPT_DIR=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 # Bootstrap: helm show values bitnami/postgresql > postgres.yml
 # Debug: find . | entr -s "helm template elasticsearch bitnami/elasticsearch -f elasticsearch.yml > debug.txt;make setup"
 # sudo kubefwd svc | awk '{ if($2 ~ /Port-Forward/) {print $0" URL: http://"$4"/"} else {print}}'
-
-### Basic
-help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 ### Bootstrap
 traefik: ## Traefik
@@ -223,9 +218,3 @@ kiali: ## Kiali Dashboard
 	#Create Kiali CRD
 	kubectl apply -f ./files/istio/kiali-crd.yml
 	printf $(_INFO) "Kiali" "http://kiali.docker/kiali"
-
-### Formatting
-_INFO := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"
-_DETAIL := "\033[34m[%s]\033[0m %s\n"  # Blue text for "printf"
-_TITLE := "\033[32m[%s]\033[0m %s\n" # Green text for "printf"
-_WARN := "\033[31m[%s]\033[0m %s\n" # Red text for "printf"
