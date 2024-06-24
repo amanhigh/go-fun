@@ -21,7 +21,7 @@ func RequestId(c *gin.Context) {
 	c.Set(models.XRequestID, uuid)
 
 	// Logger with RequestId
-	idLogger := log.With().Str(models.XRequestID, uuid.String()).Logger()
+	idLogger := log.With().Str("RequestId", uuid.String()).Logger()
 
 	//Add UUID & Logger to Request Context as well
 	ctx := context.WithValue(c.Request.Context(), models.XRequestID, uuid)

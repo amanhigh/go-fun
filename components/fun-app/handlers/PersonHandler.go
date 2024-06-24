@@ -7,7 +7,7 @@ import (
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -119,12 +119,12 @@ func (self *PersonHandler) ListPersons(c *gin.Context) {
 			self.PersonCounter.Add(float64(len(personList.Records)))
 			c.JSON(http.StatusOK, personList)
 		} else {
-			log.Error().Err(err).Msg("ListPersons: Server Error")
+			zerolog.Ctx(ctx).Error().Err(err).Msg("ListPersons: Server Error")
 			c.JSON(http.StatusInternalServerError, err.Error())
 		}
 	} else {
 		err = util.ProcessValidationError(err)
-		log.Error().Err(err).Msg("ListPersons: Bad Request")
+		zerolog.Ctx(ctx).Error().Err(err).Msg("ListPersons: Bad Request")
 		c.JSON(http.StatusBadRequest, err)
 	}
 }
@@ -151,7 +151,7 @@ func (self *PersonHandler) ListPersonAudit(c *gin.Context) {
 			c.JSON(http.StatusOK, auditList)
 		} else {
 			err = util.ProcessValidationError(err)
-			log.Err(err).Int("status", err.Code()).Msg("ListPersonAudit: Server Error")
+			zerolog.Ctx(ctx).Err(err).Int("status", err.Code()).Msg("ListPersonAudit: Server Error")
 			c.JSON(err.Code(), err)
 		}
 	}
@@ -184,12 +184,12 @@ func (self *PersonHandler) UpdatePerson(c *gin.Context) {
 			//https://stackoverflow.com/a/827045/173136
 			c.JSON(http.StatusOK, "UPDATED")
 		} else {
-			log.Err(err).Int("status", err.Code()).Msg("UpdatePerson: Server Error")
+			zerolog.Ctx(ctx).Err(err).Int("status", err.Code()).Msg("UpdatePerson: Server Error")
 			c.JSON(err.Code(), err)
 		}
 	} else {
 		err = util.ProcessValidationError(err)
-		log.Err(err).Int("status", http.StatusBadRequest).Msg("UpdatePerson: Bad Request")
+		zerolog.Ctx(ctx).Err(err).Int("status", http.StatusBadRequest).Msg("UpdatePerson: Bad Request")
 		c.JSON(http.StatusBadRequest, err)
 	}
 }
@@ -214,7 +214,7 @@ func (self *PersonHandler) DeletePersons(c *gin.Context) {
 		c.JSON(http.StatusNoContent, "DELETED")
 	} else {
 		err = util.ProcessValidationError(err)
-		log.Err(err).Int("status", err.Code()).Msg("DeletePersons: Server Error")
+		zerolog.Ctx(ctx).Err(err).Int("status", err.Code()).Msg("DeletePersons: Server Error")
 		c.JSON(err.Code(), err)
 	}
 }
