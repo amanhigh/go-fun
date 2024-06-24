@@ -4,11 +4,8 @@ import (
 	"bytes"
 	"os"
 
-	"github.com/amanhigh/go-fun/models"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/sirupsen/logrus"
-	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -18,44 +15,6 @@ const (
 	logSeverityKey = attribute.Key("log.severity")
 	logMessageKey  = attribute.Key("log.message")
 )
-
-/*
-*
-Processes Context Passed to Logger else ignores.
-*/
-type ContextLogHook struct {
-}
-
-func (h *ContextLogHook) Levels() []logrus.Level {
-	return logrus.AllLevels
-}
-
-/*
-*
-Add RequestId from Context if Contexts is Present else ignore.
-*/
-func (h *ContextLogHook) Fire(e *logrus.Entry) error {
-	if e.Context != nil {
-		e.Data["RequestId"] = e.Context.Value(models.XRequestID)
-	}
-	return nil
-}
-
-func InitLogrus(level logrus.Level) {
-	//Auto Log RequestId
-	//TODO: Move to Zap or Zerologger once they support Context and OTEL.
-	logrus.AddHook(&ContextLogHook{})
-	logrus.SetLevel(level)
-
-	// Tracing
-	logrus.AddHook(otellogrus.NewHook(otellogrus.WithLevels(
-		logrus.PanicLevel,
-		logrus.FatalLevel,
-		logrus.ErrorLevel,
-		logrus.WarnLevel,
-		logrus.InfoLevel,
-	)))
-}
 
 // InitLogger initializes the logger with the specified level.
 // It takes a parameter level of type zerolog.Level.
