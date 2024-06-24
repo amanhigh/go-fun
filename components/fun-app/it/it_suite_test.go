@@ -26,9 +26,10 @@ const (
 )
 
 var (
-	err    error
-	client = clients.NewFunAppClient(BASE_URL, config.DefaultHttpConfig)
-	ctx    = context.Background()
+	err     error
+	client  = clients.NewFunAppClient(BASE_URL, config.DefaultHttpConfig)
+	spawned = true
+	ctx     = context.Background()
 )
 
 func TestIt(t *testing.T) {
@@ -43,6 +44,7 @@ var _ = BeforeSuite(func() {
 	//Run FunApp If not already running
 	if err = client.AdminService.HealthCheck(ctx); err == nil {
 		log.Info().Str("Port", os.Getenv("PORT")).Msg("FunApp: Running Already")
+		spawned = false
 	} else {
 		os.Setenv("PORT", TEST_PORT)
 		go common.RunFunApp()
@@ -64,7 +66,9 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	//Send Stop Signal
-	err = client.AdminService.Stop(ctx)
-	Expect(err).ShouldNot(HaveOccurred())
+	//Send Stop Signal if Spawned
+	if spawned {
+		err = client.AdminService.Stop(ctx)
+		Expect(err).ShouldNot(HaveOccurred())
+	}
 })
