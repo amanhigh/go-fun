@@ -38,13 +38,18 @@ var GinRequestIdFormatter = func(param gin.LogFormatterParams) string {
 		// Truncate in a golang < 1.8 safe way
 		param.Latency = param.Latency - param.Latency%time.Second
 	}
-	return fmt.Sprintf("[GIN] %v | %3d | %5d | %d | %15s | %s | %s ",
-		param.TimeStamp.Format("2006/01/02 - 15:04:05"),
-		param.StatusCode,
-		param.Latency.Microseconds(),
-		param.BodySize,
+
+	return fmt.Sprintf("[GIN] %s - - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\" \"%s\" \"%d\"\n",
 		param.ClientIP,
-		param.Keys[models.XRequestID],
+		param.TimeStamp.Format("02/Jan/2006:15:04:05 -0700"),
 		param.Method,
+		param.Path,
+		param.Request.Proto,
+		param.StatusCode,
+		param.BodySize,
+		param.Request.Referer(),
+		param.Request.UserAgent(),
+		param.Keys[models.XRequestID],
+		param.Latency.Microseconds(),
 	)
 }
