@@ -4,7 +4,9 @@ OUT := /dev/null
 
 ### Basic
 help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@$(foreach mk, $(sort $(MAKEFILE_LIST)), \
+		grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(mk) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'; \
+	)
 	printf $(_TITLE) "FirstTime: prepare/all, OUT=/dev/stdout (Debug) "
 
 ### Formatting
