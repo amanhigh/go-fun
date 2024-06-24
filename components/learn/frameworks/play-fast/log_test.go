@@ -317,6 +317,11 @@ var _ = Describe("Logging", func() {
 				Expect(logOutput).To(ContainSubstring(requestIDKey))
 				Expect(logOutput).To(ContainSubstring(testRequestID))
 			})
+
+			It("should not be nil without creation", func() {
+				logger := zerolog.Ctx(context.Background())
+				Expect(logger).ShouldNot(BeNil())
+			})
 		})
 
 		It("should have test logger", func() {
