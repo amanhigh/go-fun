@@ -79,6 +79,7 @@ test-clean:
 	rm -rf $(COVER_DIR)
 
 verify: test-focus ## Verify Basic Fun App Flow
+	printf $(_INFO) "mk watch CMD='make verify'"
 
 profile: ## Run Profiling
 	printf $(_TITLE) "Running Profiling on Port 8080"
