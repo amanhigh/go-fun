@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 )
 
 type Shutdown interface {
@@ -35,7 +35,7 @@ kill -9 is syscall.SIGKILL but can't be caught, so don't need to add it
 func (self *GracefullShutdown) Wait() (c context.Context) {
 	signal.Notify(self.quit, syscall.SIGINT, syscall.SIGTERM)
 	sigQuit := <-self.quit
-	log.Info().Any("Signal", sigQuit).Msg("Trying Graceful Shutting Signal")
+	zerolog.Ctx(self.ctx).Info().Any("Signal", sigQuit).Msg("Trying Graceful Shutting Signal")
 	return self.ctx
 }
 
@@ -44,7 +44,7 @@ Initiates Graceful Shutdown from within
 the Application, without any Signal.
 */
 func (self *GracefullShutdown) Stop(c context.Context) {
-	log.Info().Msg("GracefulShutdown Stop Received")
+	zerolog.Ctx(c).Info().Msg("GracefulShutdown Stop Received")
 	self.ctx = c
 
 	go func() {
