@@ -86,6 +86,7 @@ paperless: postgres redis ## Paperless NGX
 # BUG: #A Fix Ingress 
 clarity: ## API Clarity
 	-helm $(CMD) apiclarity apiclarity/apiclarity -f clarity.yml > $(OUT)
+	-kubectl apply -f ./files/clarity/ingress.yml > $(OUT)
 	printf $(_INFO) "API Clarity" "http://clarity.docker/"
 
 ### Security
