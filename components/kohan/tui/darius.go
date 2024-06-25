@@ -2,6 +2,7 @@ package tui
 
 import (
 	"os/exec"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -18,7 +19,7 @@ type Darius struct {
 }
 
 func NewApp() *Darius {
-	services := []string{"MySQL", "Postgres", "Redis"}
+	services := []string{"MySQL", "Postgres", "Redis", "Mongo"}
 	app := &Darius{
 		tviewApp:    tview.NewApplication(),
 		allServices: services,
@@ -107,6 +108,23 @@ func (a *Darius) Run() error {
 			if a.tviewApp.GetFocus() == a.availableServicesList {
 				a.toggleServiceSelection(a.availableServicesList.GetCurrentItem(), "", "", 0)
 				return nil
+			} else if a.tviewApp.GetFocus() == a.filterInput {
+				filterText := strings.ToLower(a.filterInput.GetText()) // Step 1: Get and lowercase the filter text
+				for i := 0; i < a.availableServicesList.GetItemCount(); i++ {
+					itemName, _ := a.availableServicesList.GetItemText(i)
+					itemNameLower := strings.ToLower(itemName)       // Lowercase the item name for case-insensitive comparison
+					if strings.Contains(itemNameLower, filterText) { // Step 3: Check if the item name contains the filter text
+						a.toggleServiceSelection(i, "", "", 0) // Step 4: Toggle the selection
+					}
+				}
+				return nil
+			}
+		case tcell.KeyEscape:
+			if a.tviewApp.GetFocus() == a.filterInput {
+				a.filterInput.SetText("")                    // Clear the filter input field
+				a.filterAvailableServices("")                // Reset the available services list
+				a.tviewApp.SetFocus(a.availableServicesList) // Set focus back to the available services list
+				return nil                                   // Prevent further handling of the Escape key
 			}
 		case tcell.KeyRune:
 			switch event.Rune() {
