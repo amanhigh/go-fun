@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -16,7 +17,8 @@ const (
 	CommandClean        = "clean"
 	FilterLabel         = "Filter: "
 	CommandPrefix       = "Running: make "
-	serviceFetchCommand = "make -C /home/aman/Projects/go-fun/Kubernetes/services/ -f ./services.mk"
+	ServiceFetchCommand = "make -C /home/aman/Projects/go-fun/Kubernetes/services/ -f ./services.mk"
+	ServiceFilePath     = "/tmp/k8-svc.txt"
 )
 
 type Darius struct {
@@ -31,23 +33,23 @@ type Darius struct {
 }
 
 func NewApp() *Darius {
-	services := []string{"MySQL", "Postgres", "Redis", "Mongo"}
 	darius := &Darius{
 		app:              tview.NewApplication(),
-		allServices:      services,
 		selectedServices: make(map[string]bool),
 	}
-	darius.init()
+	if err := darius.init(); err != nil {
+		panic(err)
+	}
 	return darius
 }
 
-func (d *Darius) init() {
-	var err error
-	d.allServices, err = d.fetchAndFilterServices()
+func (d *Darius) init() error {
+	services, err := d.fetchAndFilterServices()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
+	d.allServices = services
+
 	d.availableServices = d.createServiceList("Available Services", d.allServices, d.toggleServiceSelection)
 	d.contextView = d.createTextView("Context", true)
 	d.commandView = d.createTextView("Command", true)
@@ -57,7 +59,74 @@ func (d *Darius) init() {
 
 	d.setupLayout()
 	d.setupKeyBindings()
+
+	if err := d.loadSelectedServices(); err != nil {
+		return err
+	}
 	d.updateContext()
+
+	return nil
+}
+
+func (d *Darius) fetchAndFilterServices() ([]string, error) {
+	cmd := exec.Command("bash", "-c", ServiceFetchCommand)
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	// Remove ANSI escape codes
+	ansiEscape := regexp.MustCompile(`\x1b\[[0-9;]*m`)
+	cleanedOutput := ansiEscape.ReplaceAllString(string(output), "")
+
+	// Process the output to remove "help" and "make"
+	lines := strings.Split(cleanedOutput, "\n")
+	var services []string
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "help") || strings.HasPrefix(line, "make") {
+			continue
+		}
+		// Extract the service name (the first word before the spaces)
+		service := strings.Fields(line)[0]
+		services = append(services, service)
+	}
+	return services, nil
+}
+
+func (d *Darius) saveSelectedServices() error {
+	file, err := os.Create(ServiceFilePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := bufio.NewWriter(file)
+	for service := range d.selectedServices {
+		_, err := writer.WriteString(service + "\n")
+		if err != nil {
+			return err
+		}
+	}
+	return writer.Flush()
+}
+
+func (d *Darius) loadSelectedServices() error {
+	file, err := os.Open(ServiceFilePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil // No file to load
+		}
+		return err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		service := scanner.Text()
+		d.selectedServices[service] = true
+	}
+	return scanner.Err()
 }
 
 func (d *Darius) createServiceList(title string, items []string, selectedFunc func(int, string, string, rune)) *tview.List {
@@ -165,6 +234,11 @@ func (d *Darius) toggleServiceSelection(index int, main, secondary string, short
 		d.selectedServices[service] = true
 	}
 	d.updateContext()
+
+	// Save the selected services to file
+	if err := d.saveSelectedServices(); err != nil {
+		d.runOutputView.SetText(fmt.Sprintf("Error saving selected services: %s", err))
+	}
 }
 
 func (d *Darius) updateContext() {
@@ -196,32 +270,6 @@ func (d *Darius) executeCommand(command string) {
 	} else {
 		d.runOutputView.SetText(string(output))
 	}
-}
-
-func (d *Darius) fetchAndFilterServices() ([]string, error) {
-	cmd := exec.Command("bash", "-c", serviceFetchCommand)
-	output, err := cmd.Output()
-	if err != nil {
-		return nil, err
-	}
-
-	// Remove ANSI escape codes
-	ansiEscape := regexp.MustCompile(`\x1b\[[0-9;]*m`)
-	cleanedOutput := ansiEscape.ReplaceAllString(string(output), "")
-
-	// Process the output to remove "help" and "make"
-	lines := strings.Split(cleanedOutput, "\n")
-	var services []string
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "help") || strings.HasPrefix(line, "make") {
-			continue
-		}
-		// Extract the service name (the first word before the spaces)
-		service := strings.Fields(line)[0]
-		services = append(services, service)
-	}
-	return services, nil
 }
 
 func (d *Darius) Run() error {
