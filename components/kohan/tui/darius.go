@@ -15,12 +15,12 @@ func NewApp() *Darius {
 	app := &Darius{
 		tviewApp: tview.NewApplication(),
 	}
-	app.initializeLists(services)
+	app.init(services)
 	return app
 }
 
-func (a *Darius) initializeLists(services []string) {
-	a.availableServicesList = a.createList("Available Services", services, a.toggleServiceSelection)
+func (a *Darius) init(services []string) {
+	a.availableServicesList = a.createList("Available Services", services, a.updateContext)
 	a.selectedServicesList = a.createList("Selected Services", nil, nil)
 }
 
@@ -39,7 +39,7 @@ func (a *Darius) createList(title string, items []string, selectedFunc func(int,
 	return list
 }
 
-func (a *Darius) toggleServiceSelection(index int, main string, secondary string, shortcut rune) {
+func (a *Darius) updateContext(index int, main string, secondary string, shortcut rune) {
 	selectedIndex := a.findItemIndex(a.selectedServicesList, main)
 	if selectedIndex == -1 {
 		a.selectedServicesList.AddItem(main, "", 0, nil)
@@ -48,13 +48,14 @@ func (a *Darius) toggleServiceSelection(index int, main string, secondary string
 	}
 }
 
-func (a *Darius) findItemIndex(list *tview.List, text string) int {
-	for i := 0; i < list.GetItemCount(); i++ {
-		if mainText, _ := list.GetItemText(i); mainText == text {
-			return i
-		}
+func (a *Darius) findItemIndex(list *tview.List, text string) (index int) {
+	indexs := list.FindItems(text, "", false, false)
+	if len(indexs) > 0 {
+		index = indexs[0]
+	} else {
+		index = -1
 	}
-	return -1
+	return
 }
 
 func (a *Darius) Run() error {
