@@ -8,7 +8,6 @@ import (
 
 	. "github.com/amanhigh/go-fun/common/clients"
 	"github.com/amanhigh/go-fun/models/common"
-	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/fun"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -20,15 +19,12 @@ import (
 // Watch Mode: find `git rev-parse --show-toplevel` | entr -s "date +%M:%S;ginkgo $PWD | grep Pending"
 var _ = Describe("Person Integration Test", func() {
 	var (
-		// serviceUrl = "http://localhost:8091/api/v1/namespaces/fun-app/services/fun-app:9000/proxy" //K8 endpoint or do PF on 8080 using K9S
-		serviceUrl = "http://localhost:8085"
-		request    fun.PersonRequest
+		request fun.PersonRequest
 
 		name        = "Amanpreet Singh"
 		maxName     = strings.Repeat("A", 31)
 		age         = 31
 		gender      = "MALE"
-		client      = NewFunAppClient(serviceUrl, config.DefaultHttpConfig)
 		err         common.HttpError
 		ctx         = context.Background()
 		expectedErr = "Bad Request"
@@ -49,8 +45,8 @@ var _ = Describe("Person Integration Test", func() {
 		)
 		BeforeEach(func() {
 			createdPerson, err = client.PersonService.CreatePerson(ctx, request)
-			Expect(createdPerson.Id).Should(Not(BeEmpty()))
 			Expect(err).To(BeNil())
+			Expect(createdPerson.Id).Should(Not(BeEmpty()))
 		})
 		AfterEach(func() {
 			//Delete Person
