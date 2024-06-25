@@ -2,7 +2,9 @@ package tui
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -10,10 +12,11 @@ import (
 )
 
 const (
-	CommandSetup  = "setup"
-	CommandClean  = "clean"
-	FilterLabel   = "Filter: "
-	CommandPrefix = "Running: make "
+	CommandSetup        = "setup"
+	CommandClean        = "clean"
+	FilterLabel         = "Filter: "
+	CommandPrefix       = "Running: make "
+	serviceFetchCommand = "make -C /home/aman/Projects/go-fun/Kubernetes/services/ -f ./services.mk"
 )
 
 type Darius struct {
@@ -39,6 +42,12 @@ func NewApp() *Darius {
 }
 
 func (d *Darius) init() {
+	var err error
+	d.allServices, err = d.fetchAndFilterServices()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 	d.availableServices = d.createServiceList("Available Services", d.allServices, d.toggleServiceSelection)
 	d.contextView = d.createTextView("Context", true)
 	d.commandView = d.createTextView("Command", true)
@@ -187,6 +196,32 @@ func (d *Darius) executeCommand(command string) {
 	} else {
 		d.runOutputView.SetText(string(output))
 	}
+}
+
+func (d *Darius) fetchAndFilterServices() ([]string, error) {
+	cmd := exec.Command("bash", "-c", serviceFetchCommand)
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	// Remove ANSI escape codes
+	ansiEscape := regexp.MustCompile(`\x1b\[[0-9;]*m`)
+	cleanedOutput := ansiEscape.ReplaceAllString(string(output), "")
+
+	// Process the output to remove "help" and "make"
+	lines := strings.Split(cleanedOutput, "\n")
+	var services []string
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "help") || strings.HasPrefix(line, "make") {
+			continue
+		}
+		// Extract the service name (the first word before the spaces)
+		service := strings.Fields(line)[0]
+		services = append(services, service)
+	}
+	return services, nil
 }
 
 func (d *Darius) Run() error {
