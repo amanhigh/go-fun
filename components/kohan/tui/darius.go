@@ -21,6 +21,15 @@ const (
 	ServiceFilePath     = "/tmp/k8-svc.txt"
 )
 
+/*
+	TODO: Darius Improvements
+	- Vim Like Keys
+	- Config Files
+	- Minikube Control
+	- Funapp Verification and Load Test.
+	- New Tabs
+*/
+
 type Darius struct {
 	app               *tview.Application
 	availableServices *tview.List
