@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"os/exec"
 	"strings"
 
@@ -16,13 +17,15 @@ type Darius struct {
 	runView               *tview.TextView
 	filterInput           *tview.InputField
 	allServices           []string
+	selectedServices      map[string]bool // Map to track selected services
 }
 
 func NewApp() *Darius {
 	services := []string{"MySQL", "Postgres", "Redis", "Mongo"}
 	app := &Darius{
-		tviewApp:    tview.NewApplication(),
-		allServices: services,
+		tviewApp:         tview.NewApplication(),
+		allServices:      services,
+		selectedServices: make(map[string]bool), // Initialize the map
 	}
 	app.init()
 	return app
@@ -42,6 +45,7 @@ func (a *Darius) init() {
 	a.commandView.SetDynamicColors(true)
 	a.commandView.SetTitle("Command")
 	a.commandView.SetBorder(true)
+	a.commandView.SetText("Select a service & perform operation to see the command to run.")
 
 	a.runView = tview.NewTextView()
 	a.runView.SetDynamicColors(true)
@@ -99,8 +103,6 @@ func (a *Darius) Run() error {
 		AddItem(leftSide, 0, 1, true).
 		AddItem(rightSide, 0, 1, false)
 
-	a.commandView.SetText("Select a service & perform operation to see the command to run.")
-
 	// Set up key bindings
 	a.tviewApp.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
@@ -109,22 +111,22 @@ func (a *Darius) Run() error {
 				a.toggleServiceSelection(a.availableServicesList.GetCurrentItem(), "", "", 0)
 				return nil
 			} else if a.tviewApp.GetFocus() == a.filterInput {
-				filterText := strings.ToLower(a.filterInput.GetText()) // Step 1: Get and lowercase the filter text
+				filterText := strings.ToLower(a.filterInput.GetText())
 				for i := 0; i < a.availableServicesList.GetItemCount(); i++ {
 					itemName, _ := a.availableServicesList.GetItemText(i)
-					itemNameLower := strings.ToLower(itemName)       // Lowercase the item name for case-insensitive comparison
-					if strings.Contains(itemNameLower, filterText) { // Step 3: Check if the item name contains the filter text
-						a.toggleServiceSelection(i, "", "", 0) // Step 4: Toggle the selection
+					itemNameLower := strings.ToLower(itemName)
+					if strings.Contains(itemNameLower, filterText) {
+						a.toggleServiceSelection(i, "", "", 0)
 					}
 				}
 				return nil
 			}
 		case tcell.KeyEscape:
 			if a.tviewApp.GetFocus() == a.filterInput {
-				a.filterInput.SetText("")                    // Clear the filter input field
-				a.filterAvailableServices("")                // Reset the available services list
-				a.tviewApp.SetFocus(a.availableServicesList) // Set focus back to the available services list
-				return nil                                   // Prevent further handling of the Escape key
+				a.filterInput.SetText("")
+				a.filterAvailableServices("")
+				a.tviewApp.SetFocus(a.availableServicesList)
+				return nil
 			}
 		case tcell.KeyRune:
 			switch event.Rune() {
@@ -150,4 +152,34 @@ func (a *Darius) Run() error {
 	a.updateContext()
 
 	return a.tviewApp.SetRoot(mainFlex, true).Run()
+}
+
+func (a *Darius) toggleServiceSelection(index int, main string, secondary string, shortcut rune) {
+	item, _ := a.availableServicesList.GetItemText(index)
+	if a.selectedServices[item] {
+		delete(a.selectedServices, item)
+	} else {
+		a.selectedServices[item] = true
+	}
+	a.updateContext()
+}
+
+func (a *Darius) updateContext() {
+	a.contextView.Clear()
+	fmt.Fprintf(a.contextView, "Selected Services:\n")
+	for service := range a.selectedServices {
+		fmt.Fprintf(a.contextView, "- %s\n", service)
+	}
+	fmt.Fprintf(a.contextView, "\nOperations:\n")
+	fmt.Fprintf(a.contextView, "I - Install (make setup)\n")
+	fmt.Fprintf(a.contextView, "C - Clean (make clean)\n")
+}
+
+func (a *Darius) filterAvailableServices(filter string) {
+	a.availableServicesList.Clear()
+	for _, service := range a.allServices {
+		if strings.Contains(strings.ToLower(service), strings.ToLower(filter)) {
+			a.availableServicesList.AddItem(service, "", 0, nil)
+		}
+	}
 }
