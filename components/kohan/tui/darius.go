@@ -90,13 +90,15 @@ func (a *Darius) Run() error {
 		AddItem(a.availableServicesList, 0, 1, true)
 
 	rightSide := tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(a.contextView, 0, 1, false).
-		AddItem(a.commandView, 1, 0, false).
-		AddItem(a.runView, 0, 2, false)
+		AddItem(a.contextView, 0, 2, false).
+		AddItem(a.commandView, 0, 1, false).
+		AddItem(a.runView, 0, 4, false)
 
 	mainFlex := tview.NewFlex().
 		AddItem(leftSide, 0, 1, true).
 		AddItem(rightSide, 0, 1, false)
+
+	a.commandView.SetText("Select a service & perform operation to see the command to run.")
 
 	// Set up key bindings
 	a.tviewApp.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -115,6 +117,8 @@ func (a *Darius) Run() error {
 			case '/':
 				a.tviewApp.SetFocus(a.filterInput)
 				return nil // Prevent '/' from being typed in the filter bar
+			case 'q', 'Q':
+				a.tviewApp.Stop()
 			}
 		}
 		return event
