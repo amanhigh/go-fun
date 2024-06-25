@@ -1,32 +1,65 @@
 package tui
 
 import (
+	"os/exec"
+
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
 type Darius struct {
 	tviewApp              *tview.Application
 	availableServicesList *tview.List
-	selectedServicesList  *tview.List
+	contextView           *tview.TextView
+	commandView           *tview.TextView
+	runView               *tview.TextView
+	filterInput           *tview.InputField
+	allServices           []string
 }
 
 func NewApp() *Darius {
 	services := []string{"MySQL", "Postgres", "Redis"}
 	app := &Darius{
-		tviewApp: tview.NewApplication(),
+		tviewApp:    tview.NewApplication(),
+		allServices: services,
 	}
-	app.init(services)
+	app.init()
 	return app
 }
 
-func (a *Darius) init(services []string) {
-	a.availableServicesList = a.createList("Available Services", services, a.updateContext)
-	a.selectedServicesList = a.createList("Selected Services", nil, nil)
+func (a *Darius) init() {
+	a.availableServicesList = a.createList("Available Services", a.allServices, a.toggleServiceSelection)
+
+	a.contextView = tview.NewTextView()
+	a.contextView.SetDynamicColors(true)
+	a.contextView.SetRegions(true)
+	a.contextView.SetWrap(true)
+	a.contextView.SetTitle("Context")
+	a.contextView.SetBorder(true)
+
+	a.commandView = tview.NewTextView()
+	a.commandView.SetDynamicColors(true)
+	a.commandView.SetTitle("Command")
+	a.commandView.SetBorder(true)
+
+	a.runView = tview.NewTextView()
+	a.runView.SetDynamicColors(true)
+	a.runView.SetRegions(true)
+	a.runView.SetWrap(true)
+	a.runView.SetTitle("Run")
+	a.runView.SetBorder(true)
+
+	a.filterInput = tview.NewInputField().
+		SetLabel("Filter: ").
+		SetChangedFunc(func(text string) {
+			a.filterAvailableServices(text)
+		})
 }
 
 func (a *Darius) createList(title string, items []string, selectedFunc func(int, string, string, rune)) *tview.List {
 	list := tview.NewList()
-	list.SetBorder(true).SetTitle(title)
+	list.SetBorder(true)
+	list.SetTitle(title)
 
 	for _, item := range items {
 		list.AddItem(item, "", 0, nil)
@@ -39,29 +72,60 @@ func (a *Darius) createList(title string, items []string, selectedFunc func(int,
 	return list
 }
 
-func (a *Darius) updateContext(index int, main string, secondary string, shortcut rune) {
-	selectedIndex := a.findItemIndex(a.selectedServicesList, main)
-	if selectedIndex == -1 {
-		a.selectedServicesList.AddItem(main, "", 0, nil)
+func (a *Darius) executeCommand(command string) {
+	a.commandView.SetText("Running: make " + command)
+	cmd := exec.Command("make", command)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		a.runView.SetText("Error: " + err.Error() + "\n" + string(output))
 	} else {
-		a.selectedServicesList.RemoveItem(selectedIndex)
+		a.runView.SetText(string(output))
 	}
-}
-
-func (a *Darius) findItemIndex(list *tview.List, text string) (index int) {
-	indexs := list.FindItems(text, "", false, false)
-	if len(indexs) > 0 {
-		index = indexs[0]
-	} else {
-		index = -1
-	}
-	return
 }
 
 func (a *Darius) Run() error {
-	flex := tview.NewFlex().
-		AddItem(a.availableServicesList, 0, 1, true).
-		AddItem(a.selectedServicesList, 0, 1, false)
+	// Create the layout
+	leftSide := tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(a.filterInput, 1, 0, false).
+		AddItem(a.availableServicesList, 0, 1, true)
 
-	return a.tviewApp.SetRoot(flex, true).Run()
+	rightSide := tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(a.contextView, 0, 1, false).
+		AddItem(a.commandView, 1, 0, false).
+		AddItem(a.runView, 0, 2, false)
+
+	mainFlex := tview.NewFlex().
+		AddItem(leftSide, 0, 1, true).
+		AddItem(rightSide, 0, 1, false)
+
+	// Set up key bindings
+	a.tviewApp.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyEnter:
+			if a.tviewApp.GetFocus() == a.availableServicesList {
+				a.toggleServiceSelection(a.availableServicesList.GetCurrentItem(), "", "", 0)
+				return nil
+			}
+		case tcell.KeyRune:
+			switch event.Rune() {
+			case 'i', 'I':
+				a.executeCommand("setup")
+			case 'c', 'C':
+				a.executeCommand("clean")
+			case '/':
+				a.tviewApp.SetFocus(a.filterInput)
+				return nil // Prevent '/' from being typed in the filter bar
+			}
+		}
+		return event
+	})
+
+	// Set the title
+	mainFlex.SetTitle("Helm Manager")
+	mainFlex.SetBorder(true)
+
+	// Update context initially
+	a.updateContext()
+
+	return a.tviewApp.SetRoot(mainFlex, true).Run()
 }
