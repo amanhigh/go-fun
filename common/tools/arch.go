@@ -13,8 +13,8 @@ func NamedScreenshot(dir, name string) (err error) {
 	return
 }
 
-func NamedRegionScreenshot(name string) (err error) {
-	err = script.Exec("hyprshot -s -m region -f" + name).Error()
+func NamedRegionScreenshot(dir, name string) (err error) {
+	err = script.Exec("hyprshot -s -m region -o " + dir + " -f" + name).Error()
 	return
 }
 
