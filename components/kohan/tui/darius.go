@@ -13,11 +13,11 @@ import (
 )
 
 const (
-	CommandSetup        = "setup"
-	CommandClean        = "clean"
 	FilterLabel         = "Filter: "
 	CommandPrefix       = "Running: make "
 	ServiceFetchCommand = "make -C /home/aman/Projects/go-fun/Kubernetes/services/ -f ./services.mk"
+	CommandSetup        = "setup"
+	CommandClean        = "clean"
 	ServiceFilePath     = "/tmp/k8-svc.txt"
 )
 
@@ -25,6 +25,7 @@ const (
 	TODO: Darius Improvements
 	- Vim Like Keys
 	- Config Files
+	- Clean Selected Services
 	- Minikube Control
 	- Funapp Verification and Load Test.
 	- New Tabs
@@ -271,8 +272,11 @@ func (d *Darius) filterServices(filter string) {
 }
 
 func (d *Darius) executeCommand(command string) {
-	d.commandView.SetText(CommandPrefix + command)
-	cmd := exec.Command("make", command)
+	cmdString := fmt.Sprintf("make -C /home/aman/Projects/go-fun/Kubernetes/services %s", command)
+	d.commandView.SetText(cmdString)
+
+	// Split the command and its arguments
+	cmd := exec.Command("make", "-C", "/home/aman/Projects/go-fun/Kubernetes/services", command)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		d.runOutputView.SetText(fmt.Sprintf("Error: %s\n%s", err, string(output)))
