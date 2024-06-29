@@ -38,7 +38,7 @@ func (ui *UIManager) SetupLayout() {
 	ui.mainFlex.AddItem(rightPane, 0, 1, false)
 	ui.mainFlex.SetTitle("Helm Manager").SetBorder(true)
 	ui.app.SetRoot(ui.mainFlex, true)
-	ui.updateContext()
+	ui.UpdateContext()
 }
 
 func createList(title string, items []string) *tview.List {
@@ -56,7 +56,13 @@ func createTextView(title string) *tview.TextView {
 	return tv
 }
 
-func (ui *UIManager) updateContext() {
+func (ui *UIManager) ToggleServiceSelection() {
+	index := ui.svcList.GetCurrentItem()
+	mainText, _ := ui.svcList.GetItemText(index)
+	ui.svcManager.ToggleServiceSelection(mainText)
+}
+
+func (ui *UIManager) UpdateContext() {
 	helpText := "Help:\n" +
 		"- Use Arrow keys to navigate\n" +
 		"- Enter to select\n" +
