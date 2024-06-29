@@ -24,11 +24,6 @@ func (h *HotkeyManager) SetupHotkeys() {
 func (h *HotkeyManager) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {
 
 	switch event.Key() {
-	case tcell.KeyEnter:
-		if h.app.GetFocus() == h.uiManager.svcList {
-			h.uiManager.ToggleServiceSelection()
-			h.uiManager.UpdateContext()
-		}
 	case tcell.KeyRune:
 		switch event.Rune() {
 		case 'q', 'Q':
@@ -43,7 +38,10 @@ func (h *HotkeyManager) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {
 			h.uiManager.app.SetFocus(h.uiManager.filterInput)
 			return nil // Prevent slash character from being added to the input field
 		case ' ':
-			if h.app.GetFocus() == h.uiManager.filterInput {
+			if h.app.GetFocus() == h.uiManager.svcList {
+				h.uiManager.ToggleServiceSelection()
+				h.uiManager.UpdateContext()
+			} else if h.app.GetFocus() == h.uiManager.filterInput {
 				h.uiManager.ToggleFilteredServices()
 				return nil
 			}
