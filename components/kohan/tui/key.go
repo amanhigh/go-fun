@@ -6,20 +6,23 @@ import (
 )
 
 type HotkeyManager struct {
-	uiManager *UIManager // Dependency on UIManager
+	app       *tview.Application
+	uiManager *UIManager
 }
 
-func NewHotkeyManager(uiManager *UIManager) *HotkeyManager {
+func NewHotkeyManager(app *tview.Application, uiManager *UIManager) *HotkeyManager {
 	return &HotkeyManager{
+		app:       app,
 		uiManager: uiManager,
 	}
 }
 
-func (h *HotkeyManager) SetupHotkeys(app *tview.Application) {
-	app.SetInputCapture(h.handleHotkeys)
+func (h *HotkeyManager) SetupHotkeys() {
+	h.app.SetInputCapture(h.handleHotkeys)
 }
 
 func (h *HotkeyManager) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {
+
 	switch event.Key() {
 	case tcell.KeyEnter:
 		h.uiManager.ToggleServiceSelection()
