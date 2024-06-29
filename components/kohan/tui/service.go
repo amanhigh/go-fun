@@ -94,12 +94,10 @@ func (sm *ServiceManager) ClearSelectedServices() {
 }
 
 func fetchServices() []string {
-	cmd := exec.Command("make", "-C", "/home/aman/Projects/go-fun/Kubernetes/services", "-f", "services.mk")
-	output, err := cmd.CombinedOutput()
+	lines, err := executeMakeCommand("/home/aman/Projects/go-fun/Kubernetes/services", "services.mk", "help")
 	if err != nil {
 		return []string{"Error fetching services"} // Fallback or error handling
 	}
-	lines := strings.Split(string(output), "\n")
 	var services []string
 	ansiRegex := regexp.MustCompile(`\x1b\[[0-9;]*m`)
 	for _, line := range lines {
@@ -115,4 +113,14 @@ func fetchServices() []string {
 		}
 	}
 	return services
+}
+
+func executeMakeCommand(dirPath, file, target string) ([]string, error) {
+	cmd := exec.Command("make", "-s", "-C", dirPath, "-f", file, target)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	return strings.Split(string(output), "\n"), nil
 }
