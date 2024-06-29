@@ -19,6 +19,8 @@ const (
 	CommandSetup        = "setup"
 	CommandClean        = "clean"
 	ServiceFilePath     = "/tmp/k8-svc.txt"
+	MinikubeStop        = "clean"
+	MinikubeReset       = "reset"
 )
 
 /*
@@ -40,6 +42,9 @@ type Darius struct {
 	filterInput       *tview.InputField
 	allServices       []string
 	selectedServices  map[string]bool
+	mainFlex          *tview.Flex
+	minikubeModal     *tview.Modal
+	isMinikubeVisible bool
 }
 
 func NewApp() *Darius {
@@ -175,12 +180,29 @@ func (d *Darius) setupLayout() {
 		AddItem(d.commandView, 0, 1, false).
 		AddItem(d.runOutputView, 0, 4, false)
 
-	mainLayout := tview.NewFlex().
+	d.mainFlex = tview.NewFlex().
 		AddItem(leftPane, 0, 1, true).
 		AddItem(rightPane, 0, 1, false)
 
-	mainLayout.SetTitle("Helm Manager").SetBorder(true)
-	d.app.SetRoot(mainLayout, true)
+	d.mainFlex.SetTitle("Helm Manager").SetBorder(true)
+
+	d.minikubeModal = tview.NewModal().
+		SetText("Minikube Operations").
+		AddButtons([]string{"Start", "Stop", "Reset", "Cancel"}).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			switch buttonLabel {
+			case "Stop":
+				d.hideMinikubePanel()
+				d.executeCommand(MinikubeStop)
+			case "Reset":
+				d.hideMinikubePanel()
+				d.executeCommand(MinikubeReset)
+			case "Cancel":
+				d.hideMinikubePanel()
+			}
+		})
+
+	d.app.SetRoot(d.mainFlex, true)
 }
 
 func (d *Darius) setupKeyBindings() {
@@ -219,6 +241,8 @@ func (d *Darius) handleRuneKey(r rune) {
 		d.executeCommand(CommandSetup)
 	case 'c', 'C':
 		d.executeCommand(CommandClean)
+	case 'm':
+		d.showMinikubePanel()
 	case '/':
 		d.app.SetFocus(d.filterInput)
 	case 'q', 'Q':
@@ -271,8 +295,24 @@ func (d *Darius) filterServices(filter string) {
 	}
 }
 
+func (d *Darius) showMinikubePanel() {
+	if !d.isMinikubeVisible {
+		d.isMinikubeVisible = true
+		d.mainFlex.GetItem(0).(*tview.Flex).AddItem(d.minikubeModal, 0, 1, true)
+	}
+	d.app.SetFocus(d.minikubeModal)
+}
+
+func (d *Darius) hideMinikubePanel() {
+	if d.isMinikubeVisible {
+		d.isMinikubeVisible = false
+		d.mainFlex.GetItem(0).(*tview.Flex).RemoveItem(d.minikubeModal)
+	}
+	d.app.SetFocus(d.availableServices)
+}
+
 func (d *Darius) executeCommand(command string) {
-	cmdString := fmt.Sprintf("make -C /home/aman/Projects/go-fun/Kubernetes/services %s", command)
+	cmdString := fmt.Sprintf("make -C /home/aman/Projects/go-fun/Kubernetes %s", command)
 	d.commandView.SetText(cmdString)
 
 	// Split the command and its arguments
