@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/amanhigh/go-fun/common/util"
@@ -15,7 +17,7 @@ type ServiceManager struct {
 
 func NewServiceManager(services []string) (sm *ServiceManager) {
 	sm = &ServiceManager{
-		allServices:      services,
+		allServices:      fetchServices(),
 		selectedServices: []string{},
 		serviceFilePath:  "/tmp/k8-svc.txt",
 	}
@@ -84,4 +86,33 @@ func (sm *ServiceManager) saveSelectedServices() {
 
 func (sm *ServiceManager) loadSelectedServices() {
 	sm.selectedServices = util.ReadAllLines(sm.serviceFilePath)
+}
+
+func (sm *ServiceManager) ClearSelectedServices() {
+	sm.selectedServices = []string{}
+	sm.saveSelectedServices()
+}
+
+func fetchServices() []string {
+	cmd := exec.Command("make", "-C", "/home/aman/Projects/go-fun/Kubernetes/services", "-f", "services.mk")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return []string{"Error fetching services"} // Fallback or error handling
+	}
+	lines := strings.Split(string(output), "\n")
+	var services []string
+	ansiRegex := regexp.MustCompile(`\x1b\[[0-9;]*m`)
+	for _, line := range lines {
+		if strings.Contains(line, "make: Leaving directory") {
+			break
+		}
+		if trimmed := strings.TrimLeft(line, " \t"); len(trimmed) > 0 && !strings.HasPrefix(trimmed, "make") && !strings.HasPrefix(trimmed, "[") {
+			fields := strings.Fields(trimmed)
+			if len(fields) > 0 {
+				service := ansiRegex.ReplaceAllString(fields[0], "")
+				services = append(services, service)
+			}
+		}
+	}
+	return services
 }
