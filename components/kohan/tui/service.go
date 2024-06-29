@@ -101,16 +101,14 @@ func fetchServices() []string {
 	var services []string
 	ansiRegex := regexp.MustCompile(`\x1b\[[0-9;]*m`)
 	for _, line := range lines {
-		if strings.Contains(line, "make: Leaving directory") {
-			break
+		// Skip empty lines and lines starting with "make" or "make:" as they are not services
+		if line == "" || strings.HasPrefix(line, "make") {
+			continue
 		}
-		if trimmed := strings.TrimLeft(line, " \t"); len(trimmed) > 0 && !strings.HasPrefix(trimmed, "make") && !strings.HasPrefix(trimmed, "[") {
-			fields := strings.Fields(trimmed)
-			if len(fields) > 0 {
-				service := ansiRegex.ReplaceAllString(fields[0], "")
-				services = append(services, service)
-			}
-		}
+
+		fields := strings.Fields(line)
+		service := ansiRegex.ReplaceAllString(fields[0], "")
+		services = append(services, service)
 	}
 	return services
 }
