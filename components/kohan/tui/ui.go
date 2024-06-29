@@ -15,6 +15,7 @@ type UIManager struct {
 	svcList     *tview.List
 	contextView *tview.TextView
 	commandView *tview.TextView
+	filterInput *tview.InputField
 }
 
 func NewUIManager(app *tview.Application, svcManager *ServiceManager) *UIManager {
@@ -23,6 +24,7 @@ func NewUIManager(app *tview.Application, svcManager *ServiceManager) *UIManager
 		mainFlex:    tview.NewFlex(),
 		contextView: createTextView("Context"),
 		commandView: createTextView("Command"),
+		filterInput: tview.NewInputField(),
 		svcManager:  svcManager,
 		svcList:     createList("Services", svcManager.GetAllServices()),
 	}
@@ -30,7 +32,8 @@ func NewUIManager(app *tview.Application, svcManager *ServiceManager) *UIManager
 
 func (ui *UIManager) SetupLayout() {
 	leftPane := tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(ui.svcList, 0, 1, true)
+		AddItem(ui.svcList, 0, 1, true).
+		AddItem(ui.filterInput, 1, 0, false)
 	rightPane := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(ui.contextView, 0, 1, false).
 		AddItem(ui.commandView, 0, 1, false)
@@ -39,6 +42,7 @@ func (ui *UIManager) SetupLayout() {
 	ui.mainFlex.SetTitle("Helm Manager").SetBorder(true)
 	ui.app.SetRoot(ui.mainFlex, true)
 	ui.UpdateContext()
+	ui.setupFilterInput()
 }
 
 func createList(title string, items []string) *tview.List {
@@ -81,4 +85,30 @@ func (ui *UIManager) ShowHelp() {
 		"- ? to show this help\n" +
 		"- Esc to exit\n\n"
 	ui.contextView.SetText(helpText)
+}
+
+func (ui *UIManager) UpdateServicesList(filter string) {
+	ui.svcManager.FilterServices(filter)
+	services := ui.svcManager.GetFilteredServices()
+	ui.svcList.Clear()
+	for _, service := range services {
+		ui.svcList.AddItem(service, "", 0, nil)
+	}
+}
+
+func (ui *UIManager) ToggleFilteredServices() {
+	ui.svcManager.ToggleFilteredServices()
+	ui.UpdateContext()
+}
+
+func (ui *UIManager) setupFilterInput() {
+	ui.filterInput.SetLabel("Filter: ")
+	ui.filterInput.SetChangedFunc(func(text string) {
+		ui.UpdateServicesList(text)
+	})
+}
+
+func (ui *UIManager) clearFilterInput() {
+	ui.filterInput.SetText("")
+	ui.UpdateServicesList("")
 }
