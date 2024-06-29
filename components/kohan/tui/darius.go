@@ -15,10 +15,8 @@ import (
 */
 
 type DariusV1 struct {
-	app              *tview.Application
-	allServices      []string
-	selectedServices map[string]bool
-	uiManager        *UIManager
+	app       *tview.Application
+	uiManager *UIManager
 }
 
 func NewDarius() *DariusV1 {
@@ -26,10 +24,8 @@ func NewDarius() *DariusV1 {
 	services := []string{"Mysql", "Redis", "Mongo"}
 	svcManager := NewServiceManager(services)
 	return &DariusV1{
-		app:              app,
-		allServices:      services,
-		selectedServices: make(map[string]bool),
-		uiManager:        NewUIManager(app, svcManager),
+		app:       app,
+		uiManager: NewUIManager(app, svcManager),
 	}
 }
 
