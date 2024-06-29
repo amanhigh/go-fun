@@ -35,6 +35,10 @@ func (h *HotkeyManager) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {
 			h.app.Stop() // Quit the application
 		case '?':
 			h.uiManager.ShowHelp() // Display help information
+		case 'c':
+			h.uiManager.svcManager.ClearSelectedServices()
+			h.uiManager.UpdateContext()
+			return nil
 		case '/':
 			h.uiManager.app.SetFocus(h.uiManager.filterInput)
 			return nil // Prevent slash character from being added to the input field
