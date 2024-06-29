@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/rivo/tview"
@@ -90,4 +91,15 @@ func (d *Darius) setupLayout() {
 		})
 
 	d.app.SetRoot(d.mainFlex, true)
+}
+
+func (d *Darius) updateContext() {
+	d.contextView.Clear()
+	fmt.Fprintln(d.contextView, "Selected Services:")
+	for service := range d.selectedServices {
+		fmt.Fprintf(d.contextView, "- %s\n", service)
+	}
+	fmt.Fprintln(d.contextView, "\nOperations:")
+	fmt.Fprintln(d.contextView, "I - Install (make setup)")
+	fmt.Fprintln(d.contextView, "C - Clean (make clean)")
 }
