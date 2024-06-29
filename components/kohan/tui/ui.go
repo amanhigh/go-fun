@@ -5,20 +5,23 @@ import (
 )
 
 type UIManager struct {
-	app         *tview.Application
+	app        *tview.Application
+	svcManager *ServiceManager
+
+	// UI Elements
 	mainFlex    *tview.Flex
 	svcList     *tview.List
 	contextView *tview.TextView
 	commandView *tview.TextView
 }
 
-func NewUIManager(app *tview.Application, services []string) *UIManager {
+func NewUIManager(app *tview.Application, svcManager *ServiceManager) *UIManager {
 	return &UIManager{
 		app:         app,
 		mainFlex:    tview.NewFlex(),
 		contextView: createTextView("Context"),
 		commandView: createTextView("Command"),
-		svcList:     createList("Services", services),
+		svcList:     createList("Services", svcManager.GetAllServices()),
 	}
 }
 

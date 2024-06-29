@@ -24,11 +24,12 @@ type DariusV1 struct {
 func NewDarius() *DariusV1 {
 	app := tview.NewApplication()
 	services := []string{"Mysql", "Redis", "Mongo"}
+	svcManager := NewServiceManager(services)
 	return &DariusV1{
 		app:              app,
 		allServices:      services,
 		selectedServices: make(map[string]bool),
-		uiManager:        NewUIManager(app, services),
+		uiManager:        NewUIManager(app, svcManager),
 	}
 }
 
