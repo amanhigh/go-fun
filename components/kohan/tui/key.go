@@ -25,8 +25,17 @@ func (h *HotkeyManager) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {
 
 	switch event.Key() {
 	case tcell.KeyEnter:
-		h.uiManager.ToggleServiceSelection()
-		h.uiManager.UpdateContext()
+		if h.app.GetFocus() == h.uiManager.svcList {
+			h.uiManager.ToggleServiceSelection()
+			h.uiManager.UpdateContext()
+		}
+	case tcell.KeyRune:
+		switch event.Rune() {
+		case 'q', 'Q':
+			h.app.Stop() // Quit the application
+		case '?':
+			h.uiManager.ShowHelp() // Display help information
+		}
 	}
 	return event
 }

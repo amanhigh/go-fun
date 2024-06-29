@@ -63,10 +63,6 @@ func (ui *UIManager) ToggleServiceSelection() {
 }
 
 func (ui *UIManager) UpdateContext() {
-	helpText := "Help:\n" +
-		"- Use Arrow keys to navigate\n" +
-		"- Enter to select\n" +
-		"- Esc to exit\n\n"
 	selectedServices := "Selected Services:\n"
 	for _, service := range ui.svcManager.GetSelectedServices() {
 		selectedServices += fmt.Sprintf("- %s\n", service)
@@ -74,5 +70,15 @@ func (ui *UIManager) UpdateContext() {
 	if len(ui.svcManager.GetSelectedServices()) == 0 {
 		selectedServices += "(None)"
 	}
-	ui.contextView.SetText(fmt.Sprintf("%s%s", helpText, selectedServices))
+	ui.contextView.SetText(selectedServices)
+}
+
+func (ui *UIManager) ShowHelp() {
+	helpText := "Help:\n" +
+		"- Use Arrow keys to navigate\n" +
+		"- Enter to select\n" +
+		"- Q to quit\n" +
+		"- ? to show this help\n" +
+		"- Esc to exit\n\n"
+	ui.contextView.SetText(helpText)
 }
