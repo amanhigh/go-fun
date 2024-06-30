@@ -39,8 +39,8 @@ func newServiceManager(cfg config.DariusConfig) (serviceManager *ServiceManager)
 		makeDir:             cfg.MakeDir,
 		selectedServicePath: cfg.SelectedServiceFile,
 	}
-	serviceManager.loadSelectedServices()
 	serviceManager.loadAvailableServices()
+	serviceManager.loadSelectedServices()
 	return
 }
 

@@ -88,7 +88,7 @@ func (sm *ServiceManager) loadAvailableServices() {
 	var services []string
 	lines, err := executeMakeCommand(sm.getServiceMakeDir(), "services.mk", "help")
 	if err != nil {
-		services = []string{"Error fetching services"} // Fallback or error handling
+		services = []string{"dummy"} // Fallback or error handling
 	}
 	ansiRegex := regexp.MustCompile(`\x1b\[[0-9;]*m`)
 	for _, line := range lines {
