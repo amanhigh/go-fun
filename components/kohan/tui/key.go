@@ -25,12 +25,13 @@ func (h *HotkeyManager) SetupHotkeys() {
 }
 
 func (h *HotkeyManager) setupHotkeyConfig() {
-	h.hotkeys = map[rune]Hotkey{
-		'q': {Key: 'q', Description: "Quit the application", Handler: func() { h.app.Stop() }},
-		'?': {Key: '?', Description: "Display help information", Handler: func() { h.uiManager.ShowHelp(h.GenerateHelpText()) }},
-		'c': {Key: 'c', Description: "Clear selected services", Handler: func() { h.uiManager.svcManager.ClearSelectedServices(); h.uiManager.UpdateContext() }},
-		'/': {Key: '/', Description: "Focus on filter input", Handler: func() { h.uiManager.app.SetFocus(h.uiManager.filterInput) }},
-		' ': {Key: ' ', Description: "Toggle service selection or filtered services", Handler: func() {
+	h.hotkeys = make(map[rune]Hotkey)
+	hotkeys := []Hotkey{
+		{Key: 'q', Description: "Quit the application", Handler: func() { h.app.Stop() }},
+		{Key: '?', Description: "Display help information", Handler: func() { h.uiManager.ShowHelp(h.GenerateHelpText()) }},
+		{Key: 'c', Description: "Clear selected services", Handler: func() { h.uiManager.svcManager.ClearSelectedServices(); h.uiManager.UpdateContext() }},
+		{Key: '/', Description: "Focus on filter input", Handler: func() { h.uiManager.app.SetFocus(h.uiManager.filterInput) }},
+		{Key: ' ', Description: "Toggle service selection or filtered services", Handler: func() {
 			if h.app.GetFocus() == h.uiManager.svcList {
 				h.uiManager.ToggleServiceSelection()
 				h.uiManager.UpdateContext()
@@ -38,6 +39,21 @@ func (h *HotkeyManager) setupHotkeyConfig() {
 				h.uiManager.ToggleFilteredServices()
 			}
 		}},
+		{Key: 's', Description: "Setup services", Handler: func() {
+			err := h.uiManager.svcManager.SetupServices()
+			if err != nil {
+				h.uiManager.ShowError(err)
+			}
+		}},
+		{Key: 'C', Description: "Clean services", Handler: func() {
+			err := h.uiManager.svcManager.CleanServices()
+			if err != nil {
+				h.uiManager.ShowError(err)
+			}
+		}},
+	}
+	for _, hotkey := range hotkeys {
+		h.hotkeys[hotkey.Key] = hotkey
 	}
 }
 

@@ -69,6 +69,10 @@ func (ui *UIManager) ShowHelp(helpText string) {
 	ui.contextView.SetText(helpText)
 }
 
+func (ui *UIManager) ShowError(err error) {
+	ui.commandView.SetText(err.Error())
+}
+
 func (ui *UIManager) UpdateServicesList(filter string) {
 	ui.svcManager.FilterServices(filter)
 	services := ui.svcManager.GetFilteredServices()

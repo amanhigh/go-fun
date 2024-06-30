@@ -112,3 +112,18 @@ func executeMakeCommand(dirPath, file, target string) ([]string, error) {
 
 	return strings.Split(string(output), "\n"), nil
 }
+func (sm *ServiceManager) CleanServices() error {
+	_, err := executeMakeCommand(sm.serviceFilePath, "Makefile", "clean")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (sm *ServiceManager) SetupServices() error {
+	_, err := executeMakeCommand(sm.serviceFilePath, "Makefile", "setup")
+	if err != nil {
+		return err
+	}
+	return nil
+}
