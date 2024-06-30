@@ -11,7 +11,8 @@ var dariusCmd = &cobra.Command{
 	Short: "Kohan Commander TUI",
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		config := config.DariusConfig{
-			MakeFileDir: "/home/aman/Projects/go-fun/Kubernetes/services",
+			MakeFileDir:         makeFileDir,
+			SelectedServiceFile: tmpServiceFile,
 		}
 		darius, berr := tui.NewDariusInjector(config).BuildApp()
 		if berr != nil {
@@ -25,4 +26,8 @@ var dariusCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(dariusCmd)
+
+	//Flags
+	dariusCmd.Flags().StringVarP(&makeFileDir, "makedir", "", makeFileDir, "Makefile Directory")
+	dariusCmd.Flags().StringVarP(&tmpServiceFile, "tmpsvc", "", tmpServiceFile, "Temp Service File")
 }

@@ -83,8 +83,8 @@ func (sm *ServiceManager) ClearSelectedServices() {
 	sm.saveSelectedServices()
 }
 
-func fetchServices() []string {
-	lines, err := executeMakeCommand("/home/aman/Projects/go-fun/Kubernetes/services", "services.mk", "help")
+func fetchServices(makeDir string) []string {
+	lines, err := executeMakeCommand(makeDir+"/services", "services.mk", "help")
 	if err != nil {
 		return []string{"Error fetching services"} // Fallback or error handling
 	}

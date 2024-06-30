@@ -21,4 +21,8 @@ var (
 
 	enable  = false
 	verbose = false
+
+	// Darius
+	makeFileDir    = "/home/aman/Projects/go-fun/Kubernetes/"
+	tmpServiceFile = "/tmp/k8-svc.txt"
 )

@@ -32,11 +32,11 @@ func (self *DariusInjector) BuildApp() (darius *DariusV1, err error) {
 	return
 }
 
-func newServiceManager() (serviceManager *ServiceManager) {
+func newServiceManager(cfg config.DariusConfig) (serviceManager *ServiceManager) {
 	serviceManager = &ServiceManager{
-		allServices:      fetchServices(),
+		allServices:      fetchServices(cfg.MakeFileDir),
 		selectedServices: []string{},
-		serviceFilePath:  "/tmp/k8-svc.txt",
+		serviceFilePath:  cfg.SelectedServiceFile,
 	}
 	serviceManager.loadSelectedServices()
 	return
