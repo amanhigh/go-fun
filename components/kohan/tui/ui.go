@@ -65,13 +65,7 @@ func (ui *UIManager) UpdateContext() {
 	ui.contextView.SetText(selectedServices)
 }
 
-func (ui *UIManager) ShowHelp() {
-	helpText := "Help:\n" +
-		"- Use Arrow keys to navigate\n" +
-		"- Enter to select\n" +
-		"- Q to quit\n" +
-		"- ? to show this help\n" +
-		"- Esc to exit\n\n"
+func (ui *UIManager) ShowHelp(helpText string) {
 	ui.contextView.SetText(helpText)
 }
 
