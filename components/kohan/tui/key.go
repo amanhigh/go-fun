@@ -14,9 +14,10 @@ type Hotkey struct {
 }
 
 type HotkeyManager struct {
-	app       *tview.Application
-	uiManager *UIManager
-	hotkeys   map[rune]Hotkey
+	app            *tview.Application
+	uiManager      *UIManager
+	serviceManager *ServiceManager
+	hotkeys        map[rune]Hotkey
 }
 
 func (h *HotkeyManager) SetupHotkeys() {
@@ -29,7 +30,7 @@ func (h *HotkeyManager) setupHotkeyConfig() {
 	hotkeys := []Hotkey{
 		{Key: 'q', Description: "Quit the application", Handler: func() { h.app.Stop() }},
 		{Key: '?', Description: "Display help information", Handler: func() { h.uiManager.ShowHelp(h.GenerateHelpText()) }},
-		{Key: 'c', Description: "Clear selected services", Handler: func() { h.uiManager.svcManager.ClearSelectedServices(); h.uiManager.UpdateContext() }},
+		{Key: 'c', Description: "Clear selected services", Handler: func() { h.serviceManager.ClearSelectedServices(); h.uiManager.UpdateContext() }},
 		{Key: '/', Description: "Focus on filter input", Handler: func() { h.uiManager.app.SetFocus(h.uiManager.filterInput) }},
 		{Key: ' ', Description: "Toggle service selection or filtered services", Handler: func() {
 			if h.app.GetFocus() == h.uiManager.svcList {
@@ -40,15 +41,19 @@ func (h *HotkeyManager) setupHotkeyConfig() {
 			}
 		}},
 		{Key: 's', Description: "Setup services", Handler: func() {
-			err := h.uiManager.svcManager.SetupServices()
+			output, err := h.serviceManager.SetupServices()
 			if err != nil {
 				h.uiManager.ShowError(err)
+			} else {
+				h.uiManager.ShowOutput(output)
 			}
 		}},
 		{Key: 'C', Description: "Clean services", Handler: func() {
-			err := h.uiManager.svcManager.CleanServices()
+			output, err := h.serviceManager.CleanServices()
 			if err != nil {
 				h.uiManager.ShowError(err)
+			} else {
+				h.uiManager.ShowOutput(output)
 			}
 		}},
 	}

@@ -117,18 +117,19 @@ func executeMakeCommand(dirPath, file, target string) ([]string, error) {
 
 	return strings.Split(string(output), "\n"), nil
 }
-func (sm *ServiceManager) CleanServices() error {
-	_, err := executeMakeCommand(sm.getServiceMakeDir(), "Makefile", "clean")
+
+func (sm *ServiceManager) CleanServices() (string, error) {
+	output, err := executeMakeCommand(sm.getServiceMakeDir(), "Makefile", "clean")
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return strings.Join(output, "\n"), nil
 }
 
-func (sm *ServiceManager) SetupServices() error {
-	_, err := executeMakeCommand(sm.getServiceMakeDir(), "Makefile", "setup")
+func (sm *ServiceManager) SetupServices() (string, error) {
+	output, err := executeMakeCommand(sm.getServiceMakeDir(), "Makefile", "setup")
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return strings.Join(output, "\n"), nil
 }

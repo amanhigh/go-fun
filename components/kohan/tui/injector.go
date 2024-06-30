@@ -56,9 +56,10 @@ func newUIManager(app *tview.Application, svcManager *ServiceManager) *UIManager
 	}
 }
 
-func newHotkeyManager(app *tview.Application, uiManager *UIManager) *HotkeyManager {
+func newHotkeyManager(app *tview.Application, uiManager *UIManager, serviceManager *ServiceManager) *HotkeyManager {
 	return &HotkeyManager{
-		app:       app,
-		uiManager: uiManager,
+		app:            app,
+		uiManager:      uiManager,
+		serviceManager: serviceManager,
 	}
 }

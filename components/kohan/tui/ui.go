@@ -65,12 +65,12 @@ func (ui *UIManager) UpdateContext() {
 	ui.contextView.SetText(selectedServices)
 }
 
-func (ui *UIManager) ShowHelp(helpText string) {
-	ui.contextView.SetText(helpText)
+func (ui *UIManager) ShowError(err error) {
+	ui.ShowOutput(err.Error())
 }
 
-func (ui *UIManager) ShowError(err error) {
-	ui.commandView.SetText(err.Error())
+func (ui *UIManager) ShowOutput(output string) {
+	ui.commandView.SetText(output)
 }
 
 func (ui *UIManager) UpdateServicesList(filter string) {
