@@ -29,7 +29,7 @@ func (h *HotkeyManager) setupHotkeyConfig() {
 	h.hotkeys = make(map[rune]Hotkey)
 	hotkeys := []Hotkey{
 		{Key: 'q', Description: "Quit the application", Handler: func() { h.app.Stop() }},
-		{Key: '?', Description: "Display help information", Handler: func() { h.uiManager.ShowHelp(h.GenerateHelpText()) }},
+		{Key: '?', Description: "Display help information", Handler: func() { h.uiManager.ShowOutput(h.GenerateHelpText()) }},
 		{Key: 'c', Description: "Clear selected services", Handler: func() { h.serviceManager.ClearSelectedServices(); h.uiManager.UpdateContext() }},
 		{Key: '/', Description: "Focus on filter input", Handler: func() { h.uiManager.app.SetFocus(h.uiManager.filterInput) }},
 		{Key: ' ', Description: "Toggle service selection or filtered services", Handler: func() {

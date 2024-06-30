@@ -92,16 +92,27 @@ func (sm *ServiceManager) loadAvailableServices() {
 	}
 	ansiRegex := regexp.MustCompile(`\x1b\[[0-9;]*m`)
 	for _, line := range lines {
-		// Skip empty lines and lines starting with "make" or "make:" as they are not services
-		if line == "" || strings.HasPrefix(line, "make") {
+		if line == "" {
 			continue
 		}
-
 		fields := strings.Fields(line)
 		service := ansiRegex.ReplaceAllString(fields[0], "")
-		services = append(services, service)
+		if !startsWithExcludedName(service) {
+			services = append(services, service)
+		}
 	}
 	sm.allServices = services
+}
+
+var excludedNames = []string{"make", "help", "[First"}
+
+func startsWithExcludedName(line string) bool {
+	for _, name := range excludedNames {
+		if strings.HasPrefix(line, name) {
+			return true
+		}
+	}
+	return false
 }
 
 func (sm *ServiceManager) getServiceMakeDir() string {
