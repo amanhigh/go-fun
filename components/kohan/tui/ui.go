@@ -18,18 +18,6 @@ type UIManager struct {
 	filterInput *tview.InputField
 }
 
-func NewUIManager(app *tview.Application, svcManager *ServiceManager) *UIManager {
-	return &UIManager{
-		app:         app,
-		mainFlex:    tview.NewFlex(),
-		contextView: createTextView("Context"),
-		commandView: createTextView("Command"),
-		filterInput: tview.NewInputField(),
-		svcManager:  svcManager,
-		svcList:     createList("Services", svcManager.GetAllServices()),
-	}
-}
-
 func (ui *UIManager) SetupLayout() {
 	leftPane := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(ui.svcList, 0, 1, true).

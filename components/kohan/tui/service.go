@@ -15,16 +15,6 @@ type ServiceManager struct {
 	serviceFilePath  string
 }
 
-func NewServiceManager(services []string) (sm *ServiceManager) {
-	sm = &ServiceManager{
-		allServices:      fetchServices(),
-		selectedServices: []string{},
-		serviceFilePath:  "/tmp/k8-svc.txt",
-	}
-	sm.loadSelectedServices()
-	return
-}
-
 func (sm *ServiceManager) GetAllServices() []string {
 	return sm.allServices
 }

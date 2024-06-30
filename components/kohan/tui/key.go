@@ -10,13 +10,6 @@ type HotkeyManager struct {
 	uiManager *UIManager
 }
 
-func NewHotkeyManager(app *tview.Application, uiManager *UIManager) *HotkeyManager {
-	return &HotkeyManager{
-		app:       app,
-		uiManager: uiManager,
-	}
-}
-
 func (h *HotkeyManager) SetupHotkeys() {
 	h.app.SetInputCapture(h.handleHotkeys)
 }

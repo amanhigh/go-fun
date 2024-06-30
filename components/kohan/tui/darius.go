@@ -15,21 +15,9 @@ import (
 */
 
 type DariusV1 struct {
-	app       *tview.Application
-	uiManager *UIManager
-	hotkeys   *HotkeyManager
-}
-
-func NewDarius() *DariusV1 {
-	app := tview.NewApplication()
-	services := []string{"Mysql", "Redis", "Mongo"}
-	svcManager := NewServiceManager(services)
-	uiManager := NewUIManager(app, svcManager)
-	return &DariusV1{
-		app:       app,
-		uiManager: uiManager,
-		hotkeys:   NewHotkeyManager(app, uiManager),
-	}
+	app       *tview.Application `container:"type"`
+	uiManager *UIManager         `container:"type"`
+	hotkeys   *HotkeyManager     `container:"type"`
 }
 
 func (d *DariusV1) Run() error {
