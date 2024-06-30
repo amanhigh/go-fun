@@ -111,8 +111,9 @@ build-kohan:
 
 build-clean:
 	printf $(_WARN) "Cleaning Build"
-	rm "$(FUN_DIR)/fun";
-	rm "$(COMPONENT_DIR)/kohan/kohan";
+	-rm "$(FUN_DIR)/fun";
+	-rm "$(COMPONENT_DIR)/kohan/kohan";
+	-make -C $(COMPONENT_DIR)/operator/ clean > $(OUT)
 
 ### Install
 install-kohan:
