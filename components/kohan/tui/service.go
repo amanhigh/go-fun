@@ -144,3 +144,11 @@ func (sm *ServiceManager) SetupServices() (string, error) {
 	}
 	return strings.Join(output, "\n"), nil
 }
+
+func (sm *ServiceManager) UpdateServices() (string, error) {
+	output, err := executeMakeCommand(sm.getServiceMakeDir(), "Makefile", "update")
+	if err != nil {
+		return "", err
+	}
+	return strings.Join(output, "\n"), nil
+}

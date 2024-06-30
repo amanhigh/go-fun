@@ -56,6 +56,14 @@ func (h *HotkeyManager) setupHotkeyConfig() {
 				h.uiManager.ShowOutput(output)
 			}
 		}},
+		{Key: 'u', Description: "Update services", Handler: func() {
+			output, err := h.serviceManager.UpdateServices()
+			if err != nil {
+				h.uiManager.ShowError(err)
+			} else {
+				h.uiManager.ShowOutput(output)
+			}
+		}},
 	}
 	for _, hotkey := range hotkeys {
 		h.hotkeys[hotkey.Key] = hotkey
@@ -74,7 +82,7 @@ func (h *HotkeyManager) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {
 
 	switch event.Key() {
 	case tcell.KeyRune:
-		if hotkey, exists := h.hotkeys[event.Rune()]; exists {
+		if hotkey, exists := h.hotkeys[event.Rune()]; exists && h.app.GetFocus() != h.uiManager.filterInput {
 			hotkey.Handler()
 			return nil
 		}
