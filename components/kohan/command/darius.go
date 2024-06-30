@@ -11,7 +11,7 @@ var dariusCmd = &cobra.Command{
 	Short: "Kohan Commander TUI",
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		config := config.DariusConfig{
-			MakeFileDir:         makeFileDir,
+			MakeDir:             makeFileDir,
 			SelectedServiceFile: tmpServiceFile,
 		}
 		darius, berr := tui.NewDariusInjector(config).BuildApp()

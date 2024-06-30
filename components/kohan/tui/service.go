@@ -9,10 +9,11 @@ import (
 )
 
 type ServiceManager struct {
-	allServices      []string
-	selectedServices []string
-	filteredServices []string
-	serviceFilePath  string
+	allServices         []string
+	selectedServices    []string
+	filteredServices    []string
+	makeDir             string
+	selectedServicePath string
 }
 
 func (sm *ServiceManager) GetAllServices() []string {
@@ -71,11 +72,11 @@ func (sm *ServiceManager) ToggleFilteredServices() {
 }
 
 func (sm *ServiceManager) saveSelectedServices() {
-	util.WriteLines(sm.serviceFilePath, sm.selectedServices)
+	util.WriteLines(sm.selectedServicePath, sm.selectedServices)
 }
 
 func (sm *ServiceManager) loadSelectedServices() {
-	sm.selectedServices = util.ReadAllLines(sm.serviceFilePath)
+	sm.selectedServices = util.ReadAllLines(sm.selectedServicePath)
 }
 
 func (sm *ServiceManager) ClearSelectedServices() {
@@ -83,12 +84,12 @@ func (sm *ServiceManager) ClearSelectedServices() {
 	sm.saveSelectedServices()
 }
 
-func fetchServices(makeDir string) []string {
-	lines, err := executeMakeCommand(makeDir+"/services", "services.mk", "help")
-	if err != nil {
-		return []string{"Error fetching services"} // Fallback or error handling
-	}
+func (sm *ServiceManager) loadAvailableServices() {
 	var services []string
+	lines, err := executeMakeCommand(sm.getServiceMakeDir(), "services.mk", "help")
+	if err != nil {
+		services = []string{"Error fetching services"} // Fallback or error handling
+	}
 	ansiRegex := regexp.MustCompile(`\x1b\[[0-9;]*m`)
 	for _, line := range lines {
 		// Skip empty lines and lines starting with "make" or "make:" as they are not services
@@ -100,7 +101,11 @@ func fetchServices(makeDir string) []string {
 		service := ansiRegex.ReplaceAllString(fields[0], "")
 		services = append(services, service)
 	}
-	return services
+	sm.allServices = services
+}
+
+func (sm *ServiceManager) getServiceMakeDir() string {
+	return sm.makeDir + "/services"
 }
 
 func executeMakeCommand(dirPath, file, target string) ([]string, error) {
@@ -113,7 +118,7 @@ func executeMakeCommand(dirPath, file, target string) ([]string, error) {
 	return strings.Split(string(output), "\n"), nil
 }
 func (sm *ServiceManager) CleanServices() error {
-	_, err := executeMakeCommand(sm.serviceFilePath, "Makefile", "clean")
+	_, err := executeMakeCommand(sm.getServiceMakeDir(), "Makefile", "clean")
 	if err != nil {
 		return err
 	}
@@ -121,7 +126,7 @@ func (sm *ServiceManager) CleanServices() error {
 }
 
 func (sm *ServiceManager) SetupServices() error {
-	_, err := executeMakeCommand(sm.serviceFilePath, "Makefile", "setup")
+	_, err := executeMakeCommand(sm.getServiceMakeDir(), "Makefile", "setup")
 	if err != nil {
 		return err
 	}

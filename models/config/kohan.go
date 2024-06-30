@@ -13,6 +13,6 @@ const DEBUG_FILE = "/tmp/kohandebug"
 var KOHAN_DEBUG = false
 
 type DariusConfig struct {
-	MakeFileDir         string
+	MakeDir             string
 	SelectedServiceFile string
 }

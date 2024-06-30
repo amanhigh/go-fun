@@ -34,11 +34,13 @@ func (self *DariusInjector) BuildApp() (darius *DariusV1, err error) {
 
 func newServiceManager(cfg config.DariusConfig) (serviceManager *ServiceManager) {
 	serviceManager = &ServiceManager{
-		allServices:      fetchServices(cfg.MakeFileDir),
-		selectedServices: []string{},
-		serviceFilePath:  cfg.SelectedServiceFile,
+		allServices:         []string{},
+		selectedServices:    []string{},
+		makeDir:             cfg.MakeDir,
+		selectedServicePath: cfg.SelectedServiceFile,
 	}
 	serviceManager.loadSelectedServices()
+	serviceManager.loadAvailableServices()
 	return
 }
 
