@@ -132,17 +132,19 @@ func setupRateLimit(cfg config.RateLimit, engine *gin.Engine) {
 	}
 }
 
-func setupPrometheus() (err error) {
-	var exporter *prometheus.Exporter
-	/* Setup Prometheus */
-	exporter, err = prometheus.New()
+func setupPrometheus() {
+	exporter, err := prometheus.New()
 	if err != nil {
-		meterProvider := metric_sdk.NewMeterProvider(metric_sdk.WithReader(exporter))
-		otel.SetMeterProvider(meterProvider)
+		log.Fatal().Err(err).Msg("Prometheus Exporter Failed")
 	}
-	return
+
+	provider := metric_sdk.NewMeterProvider(
+		metric_sdk.WithReader(exporter),
+	)
+	otel.SetMeterProvider(provider)
 }
 
+func newPrometheus(engine *gin.Engine) (prometheus *ginprometheus.Prometheus) {
 	/* Access Metrics */
 	//Visit http://localhost:8080/metrics
 	prometheus = ginprometheus.NewPrometheus("gin_access")
