@@ -37,6 +37,7 @@ timedatectl
 ## Format ##
 boot=${disk}1
 root=${disk}2
+orig_root=${disk}2
 
 echo -en "\033[1;33m Partition $disk (y/N) ?\033[0m \n";
 read confirm
@@ -103,15 +104,14 @@ findmnt -R -M /mnt
 
 # Crypt File
 if [ "$encrypt" == 'y' ] && [ ! -f /mnt/root/crypt.keyfile ]; then
-    #FIXME: #C Header Backup
-    # cryptsetup luksHeaderBackup /dev/device --header-backup-file /mnt/backup/file.img
-    # Test Header cryptsetup -v --header /mnt/backup/file.img open /dev/device test
-    # cryptsetup luksHeaderRestore /dev/device --header-backup-file ./mnt/backup/file.img
-
     echo -en "\033[1;34m Generating Crypt File \033[0m \n";
     dd bs=512 count=4 if=/dev/random of=/mnt/root/crypt.keyfile iflag=fullblock
     chmod 000 /mnt/root/crypt.keyfile
-    cryptsetup -v luksAddKey ${disk}2 /mnt/root/crypt.keyfile
+    cryptsetup -v luksAddKey ${orig_root} /mnt/root/crypt.keyfile
+    
+    cryptsetup luksHeaderBackup ${orig_root} --header-backup-file /mnt/root/lukshdr.img
+    echo -en "\033[1;34m Testing the LUKS header backup \033[0m \n";
+    cryptsetup -v --header /mnt/backup/lukshdr.img open ${orig_root} test
 fi
 
 echo -en "\033[1;33m Generate Fstab (y/N) ? \033[0m \n";
@@ -184,6 +184,11 @@ fi
 ## Ram Filesystem ##
 # tmpfs - Stays in Swap
 # mount -t ramfs -o size=2g ram_bkp /backup
+
+## LUKS Headers ##
+# cryptsetup luksHeaderBackup /dev/device --header-backup-file /mnt/backup/file.img
+# cryptsetup -v --header /mnt/backup/file.img open /dev/device test
+# cryptsetup luksHeaderRestore /dev/device --header-backup-file ./mnt/backup/file.img
 
 ## Mounts ##
 # findmnt or mount - Show all Mounts
