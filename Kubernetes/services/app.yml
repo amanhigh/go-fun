@@ -4,6 +4,7 @@ image:
 
 containerPort: 7080
 svcPort: 9001
+loadbalancerEnabled: true
 
 #Readiness Probe
 probe:

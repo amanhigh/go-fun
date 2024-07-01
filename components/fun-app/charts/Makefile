@@ -30,11 +30,12 @@ package: update ## Package Helm Chart
 	helm package . -d . > $(OUT)
 
 #### Info
-# BUG: #C Fix Fun App via Tunnel
 info-fun:
 	printf $(_INFO) "Fun App Info"
 	printf $(_DETAIL) "minikube tunnel"
-	printf $(_DETAIL) "http://localhost:9090/metrics"
+	printf $(_DETAIL) "kubectl get svc app"
+	printf $(_DETAIL) "http://<external_ip>:9001/metrics"
+	printf $(_DETAIL) "http://app.docker/app/metrics"
 
 info-fun-notes:
 	printf $(_INFO) "Fun App Notes"

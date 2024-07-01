@@ -8,7 +8,6 @@ import (
 	TODO: Darius Improvements
 	- Vim Like Keys
 	- Config Files
-	- Clean Selected Services
 	- Minikube Control
 	- Funapp Verification and Load Test.
 	- New Tabs
