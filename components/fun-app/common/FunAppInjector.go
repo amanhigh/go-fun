@@ -21,10 +21,12 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/golobby/container/v3"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/rs/zerolog/log"
 	ginprometheus "github.com/zsais/go-gin-prometheus"
+	"go.opentelemetry.io/otel/exporters/prometheus"
+	"go.opentelemetry.io/otel/metric"
+	metric_sdk "go.opentelemetry.io/otel/sdk/metric"
+
 	"gopkg.in/redis.v5"
 	"gorm.io/gorm"
 
@@ -50,6 +52,7 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 	/* Setup Telemetry */
 	telemetry.InitLogger(self.config.Server.LogLevel)
 	telemetry.InitTracerProvider(context.Background(), NAMESPACE, self.config.Tracing)
+	setupPrometheus()
 
 	/* Validators */
 	v, _ := binding.Validator.Engine().(*validator.Validate)
@@ -129,7 +132,17 @@ func setupRateLimit(cfg config.RateLimit, engine *gin.Engine) {
 	}
 }
 
-func newPrometheus(engine *gin.Engine) (prometheus *ginprometheus.Prometheus) {
+func setupPrometheus() (err error) {
+	var exporter *prometheus.Exporter
+	/* Setup Prometheus */
+	exporter, err = prometheus.New()
+	if err != nil {
+		meterProvider := metric_sdk.NewMeterProvider(metric_sdk.WithReader(exporter))
+		otel.SetMeterProvider(meterProvider)
+	}
+	return
+}
+
 	/* Access Metrics */
 	//Visit http://localhost:8080/metrics
 	prometheus = ginprometheus.NewPrometheus("gin_access")
@@ -150,33 +163,27 @@ func newDb(config config.FunAppConfig) (db *gorm.DB, err error) {
 }
 
 func registerMetrics(di container.Container) {
-	// 	/* Metrics */
-	// 	//FIXME: #C Move to OTEL SDK
-	container.MustNamedSingleton(di, "CreateCounter", func() *prometheus.CounterVec {
-		return promauto.NewCounterVec(prometheus.CounterOpts{
-			Namespace:   NAMESPACE,
-			Name:        "create_person",
-			Help:        "Counts Person Create API",
-			ConstLabels: nil,
-		}, []string{"gender"})
+	meter := otel.GetMeterProvider().Meter(NAMESPACE)
+
+	container.MustNamedSingleton(di, "CreateCounter", func() metric.Int64Counter {
+		counter, _ := meter.Int64Counter("create_person",
+			metric.WithDescription("Counts Person Create API"),
+		)
+		return counter
 	})
 
-	container.MustNamedSingleton(di, "PersonCounter", func() prometheus.Gauge {
-		return promauto.NewGauge(prometheus.GaugeOpts{
-			Namespace:   NAMESPACE,
-			Name:        "person_count",
-			Help:        "Person Count in Get Persons",
-			ConstLabels: nil,
-		})
+	container.MustNamedSingleton(di, "PersonCounter", func() metric.Int64UpDownCounter {
+		counter, _ := meter.Int64UpDownCounter("person_count",
+			metric.WithDescription("Person Count in Get Persons"),
+		)
+		return counter
 	})
 
-	container.MustNamedSingleton(di, "PersonCreateTime", func() prometheus.Histogram {
-		return promauto.NewHistogram(prometheus.HistogramOpts{
-			Namespace:   NAMESPACE,
-			Name:        "person_create_time",
-			Help:        "Time Taken to Create Person",
-			ConstLabels: nil,
-		})
+	container.MustNamedSingleton(di, "PersonCreateTime", func() metric.Float64Histogram {
+		histogram, _ := meter.Float64Histogram("person_create_time",
+			metric.WithDescription("Time Taken to Create Person"),
+		)
+		return histogram
 	})
 }
 

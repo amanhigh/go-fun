@@ -2,14 +2,15 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	"github.com/amanhigh/go-fun/models/fun"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gin-gonic/gin"
@@ -18,9 +19,9 @@ import (
 type PersonHandler struct {
 	Manager          manager.PersonManagerInterface `container:"type"`
 	Tracer           trace.Tracer                   `container:"type"`
-	CreateCounter    *prometheus.CounterVec         `container:"name"`
-	PersonCounter    prometheus.Gauge               `container:"name"`
-	PersonCreateTime prometheus.Histogram           `container:"name"`
+	CreateCounter    metric.Int64Counter            `container:"name"`
+	PersonCounter    metric.Int64UpDownCounter      `container:"name"`
+	PersonCreateTime metric.Float64Histogram        `container:"name"`
 }
 
 // CreatePerson godoc
@@ -37,8 +38,10 @@ type PersonHandler struct {
 // @Router /person [post]
 func (self *PersonHandler) CreatePerson(c *gin.Context) {
 	/* Captures Create Person Latency */
-	timer := prometheus.NewTimer(self.PersonCreateTime)
-	defer timer.ObserveDuration()
+	startTime := time.Now()
+	defer func() {
+		self.PersonCreateTime.Record(c.Request.Context(), time.Since(startTime).Seconds())
+	}()
 
 	ctx, span := self.Tracer.Start(c.Request.Context(), "CreatePerson.Handler")
 	defer span.End()
@@ -47,7 +50,7 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 	var request fun.PersonRequest
 	if err := c.ShouldBind(&request); err == nil {
 
-		self.CreateCounter.WithLabelValues(request.Gender).Inc()
+		self.CreateCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("gender", request.Gender)))
 
 		if person, err := self.Manager.CreatePerson(ctx, request); err == nil {
 			c.JSON(http.StatusOK, person)
@@ -116,7 +119,8 @@ func (self *PersonHandler) ListPersons(c *gin.Context) {
 
 	if err := c.ShouldBindQuery(&personQuery); err == nil {
 		if personList, err := self.Manager.ListPersons(ctx, personQuery); err == nil {
-			self.PersonCounter.Add(float64(len(personList.Records)))
+			count := int64(len(personList.Records))
+			self.PersonCounter.Add(ctx, count)
 			c.JSON(http.StatusOK, personList)
 		} else {
 			zerolog.Ctx(ctx).Error().Err(err).Msg("ListPersons: Server Error")
