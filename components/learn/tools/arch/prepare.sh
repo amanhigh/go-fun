@@ -107,11 +107,10 @@ if [ "$encrypt" == 'y' ] && [ ! -f /mnt/root/crypt.keyfile ]; then
     echo -en "\033[1;34m Generating Crypt File \033[0m \n";
     dd bs=512 count=4 if=/dev/random of=/mnt/root/crypt.keyfile iflag=fullblock
     chmod 000 /mnt/root/crypt.keyfile
-    cryptsetup -v luksAddKey ${orig_root} /mnt/root/crypt.keyfile
+    cryptsetup luksAddKey ${orig_root} /mnt/root/crypt.keyfile
     
+    echo -en "\033[1;34m LUKS header backup \033[0m \n";
     cryptsetup luksHeaderBackup ${orig_root} --header-backup-file /mnt/root/lukshdr.img
-    echo -en "\033[1;34m Testing the LUKS header backup \033[0m \n";
-    cryptsetup -v --header /mnt/backup/lukshdr.img open ${orig_root} test
 fi
 
 echo -en "\033[1;33m Generate Fstab (y/N) ? \033[0m \n";
@@ -260,6 +259,7 @@ fi
 ## Mounting
 # mkdir /mnt/my_decrypted_volume
 # mount /dev/mapper/my_decrypted_volume /mnt/my_decrypted_volume
+# mkdir -p /mnt/arch; mount -t virtiofs arch /mnt/arch (QEMU FS)
 ## Password Change
 # see key slots, max -8 i.e. max 8 passwords can be setup for each device
 # cryptsetup luksDump /dev/sda2
