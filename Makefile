@@ -210,6 +210,8 @@ ifndef VER
 endif
 	printf $(_TITLE) "Release Helm Charts: $(VER)"
 	$(MAKE) helm-package VERSION=$(VER)
+	git add $(FUN_DIR)/charts/Chart.yaml
+	git commit -m "Helm Released: $(VER)"
 
 
 unrelease: ## Revoke Release of Golang Packages
