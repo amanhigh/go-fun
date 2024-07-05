@@ -92,25 +92,6 @@ func schemaAlterPlay(db *gorm.DB) {
 	db.Migrator().DropColumn(&Product{}, "code")
 }
 
-func playProduct(db *gorm.DB) {
-	fmt.Println("***** Play Product ******")
-	productUpdates(db, product)
-}
-
-func productUpdates(db *gorm.DB, product *Product) {
-	// Update without Callbacks
-	db.Model(&product).UpdateColumn("code", "No Callback")
-	//Single Field Update
-	db.Model(&product).Update("Price", 1500)
-	//Struct Update
-	product.Code = "MyCode"
-	db.Model(&product).Updates(product)
-
-	manyToManyUpdate(db, product)
-
-	fmt.Println("Product Updated")
-}
-
 func manyToManyUpdate(db *gorm.DB, product *Product) {
 	fmt.Println("Before M2M Update: ", len(product.Features), product.Features[0].Name)
 

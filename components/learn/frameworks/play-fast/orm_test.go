@@ -186,6 +186,41 @@ var _ = FDescribe("Orm", func() {
 					})
 				})
 
+				Context("Update Product", func() {
+					It("should update without callbacks", func() {
+						err := db.Model(&product).UpdateColumn("code", "No Callback").Error
+						Expect(err).To(BeNil())
+
+						var updatedProduct frameworks.Product
+						err = db.First(&updatedProduct, product.ID).Error
+						Expect(err).To(BeNil())
+						Expect(updatedProduct.Code).To(Equal("No Callback"))
+						Expect(updatedProduct.Version).To(Equal(2)) // Version should not change
+					})
+
+					It("should update single field", func() {
+						err := db.Model(&product).Update("Price", 1500).Error
+						Expect(err).To(BeNil())
+
+						var updatedProduct frameworks.Product
+						err = db.First(&updatedProduct, product.ID).Error
+						Expect(err).To(BeNil())
+						Expect(updatedProduct.Price).To(Equal(uint(1500)))
+						Expect(updatedProduct.Version).To(Equal(2)) // Version should increment
+					})
+
+					It("should update struct", func() {
+						product.Code = "MyCode"
+						err := db.Model(&product).Updates(product).Error
+						Expect(err).To(BeNil())
+
+						var updatedProduct frameworks.Product
+						err = db.First(&updatedProduct, product.ID).Error
+						Expect(err).To(BeNil())
+						Expect(updatedProduct.Code).To(Equal("MyCode"))
+						Expect(updatedProduct.Version).To(Equal(2)) // Version should increment
+					})
+				})
 			})
 
 		})
