@@ -212,6 +212,7 @@ endif
 	$(MAKE) helm-package VERSION=$(VER)
 	git add $(FUN_DIR)/charts/Chart.yaml
 	git commit -m "Helm Released: $(VER)"
+	printf $(_INFO) "Release: https://github.com/amanhigh/go-fun/actions/workflows/release.yml"
 
 
 unrelease: ## Revoke Release of Golang Packages
