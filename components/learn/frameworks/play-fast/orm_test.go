@@ -95,7 +95,7 @@ var _ = FDescribe("Orm", func() {
 				})
 
 				AfterEach(func() {
-					db.Exec("TRUNCATE TABLE products")
+					db.Delete(&product)
 					db.Exec("TRUNCATE TABLE features")
 					db.Exec("TRUNCATE TABLE product_features")
 				})
@@ -107,6 +107,40 @@ var _ = FDescribe("Orm", func() {
 					Expect(foundProduct.Code).To(Equal("L1212"))
 					Expect(foundProduct.Price).To(Equal(uint(1000)))
 					Expect(foundProduct.Features).To(HaveLen(2))
+				})
+
+				It("should query product with code", func() {
+					var queriedProduct frameworks.Product
+					err := db.Preload("Vertical").First(&queriedProduct, "code = ?", product.Code).Error
+					Expect(err).To(BeNil())
+					Expect(queriedProduct.Vertical.Name).To(Equal(vertical.Name))
+				})
+
+				It("should query all non deleted products", func() {
+					//Query all Non Deleted Products
+					var products []frameworks.Product
+					err := db.Unscoped().Where("code = ?", product.Code).Find(&products).Error
+					Expect(err).To(BeNil())
+					Expect(products).To(HaveLen(1))
+
+				})
+
+				It("should query id range", func() {
+					//Query id range
+					var products []frameworks.Product
+					err := db.Where([]int64{5, 6, 10}).Limit(3).Limit(-1).Find(&products).Error
+					Expect(err).To(BeNil())
+					Expect(products).To(HaveLen(3))
+				})
+
+				It("should query multiple columns", func() {
+					var multiSelectProducts []frameworks.Product
+					err := db.Select("code", "price").Find(&multiSelectProducts).Error
+					Expect(err).To(BeNil())
+					Expect(multiSelectProducts).To(HaveLen(1))
+					Expect(multiSelectProducts[0].Code).To(Equal(product.Code))
+					Expect(multiSelectProducts[0].Price).To(Equal(product.Price))
+					Expect(multiSelectProducts[0].VerticalID).To(Equal(uint(0))) // Not queried
 				})
 
 			})

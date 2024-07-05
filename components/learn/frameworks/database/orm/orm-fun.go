@@ -18,8 +18,6 @@ func OrmFun() {
 	//Can be Run Standalone for testing switch.
 	//switchProduct()
 
-	db, _ := util.CreateTestDb(logger.Info)
-
 	playProduct(db)
 
 	//schemaAlterPlay(db)
@@ -104,18 +102,8 @@ func playProduct(db *gorm.DB) {
 	queryProduct(db)
 
 	productUpdates(db, product)
-
-	productBackup(db)
-
-	// Delete - delete product
-	db.Delete(&product)
 }
 
-func productBackup(db *gorm.DB) {
-	var count int64
-	db.Model(&AuditLog{}).Count(&count)
-	fmt.Println("Audit Logs: ", count)
-}
 func productUpdates(db *gorm.DB, product *Product) {
 	// Update without Callbacks
 	db.Model(&product).UpdateColumn("code", "No Callback")
@@ -157,27 +145,11 @@ func manyToManyUpdate(db *gorm.DB, product *Product) {
 }
 
 func queryProduct(db *gorm.DB) {
-	//Query all Non Deleted Products
-	products := new([]Product)
-	db.Unscoped().Where("code = ?", "L1212").Find(products)
-	for _, product := range *products {
-		fmt.Println("Deleted/Undeleted Product Found: ", product.ID)
-	}
-
 	//Single Field Select
 	//BUG:Fix Select Single Field
 	//var codes []string
 	//db.Not([]int64{5, 6, 10}).Find(products).Pluck("code", &codes)
 	//fmt.Printf("CODES: %+v\n", codes)
-
-	//Multi Field Select
-	var multiSelectProducts []Product
-	db.Select("code", "price").Find(&multiSelectProducts)
-	fmt.Println("Multi Field Select")
-	for _, p := range multiSelectProducts {
-		//Vertical Id is not queried
-		fmt.Println(p.Code, p.Price, p.VerticalID)
-	}
 
 	//Search Id Range
 	db.Unscoped().Where([]int64{5, 6, 10}).Limit(3).Limit(-1).Find(products)
