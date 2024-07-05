@@ -1,13 +1,11 @@
 package orm
 
 import (
-	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/database/orm/model"
+	"github.com/amanhigh/go-fun/models/learn/frameworks"
 	. "github.com/amanhigh/go-fun/models/learn/frameworks"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -21,12 +19,6 @@ func OrmFun() {
 	//switchProduct()
 
 	db, _ := util.CreateTestDb(logger.Info)
-
-	db.AutoMigrate(&Product{}, &AuditLog{}) // Vertical not required Foreign Keys Auto Created
-
-	//Verify Tables Created
-	db.Migrator().HasTable(&Product{})
-	db.Migrator().HasTable(&AuditLog{})
 
 	playProduct(db)
 
@@ -55,7 +47,7 @@ func switchProduct() {
 	db.AutoMigrate(&Product{})
 
 	/* Write Source Products */
-	vertical := model.Vertical{
+	vertical := frameworks.Vertical{
 		Name:     "Test",
 		MyColumn: "Hello",
 	}
@@ -105,20 +97,9 @@ func schemaAlterPlay(db *gorm.DB) {
 	db.Migrator().DropColumn(&Product{}, "code")
 }
 
-func dropTables(db *gorm.DB) {
-	db.Migrator().DropTable(&Product{})
-	db.Migrator().DropTable(&AuditLog{})
-}
-
-func TruncateTable(db *gorm.DB, tableName string) {
-	db.Exec("truncate table " + tableName)
-}
-
 func playProduct(db *gorm.DB) {
 	fmt.Println("***** Play Product ******")
 	//FIXME: Bulk Insert
-	createVertical(db)
-
 	// Create
 	features := []Feature{
 		{Name: "Strong", Version: 1},
@@ -220,27 +201,4 @@ func queryProduct(db *gorm.DB) {
 	db.Order("code desc,price asc").Where(&Product{Price: 2000}).Where(&Product{Code: "L1212"}).Last(product) //And
 	db.Where(&Product{Price: 2000}).Or(&Product{Code: "L1212"}).Last(product)                                 //Or
 	fmt.Println("Query By Struct, ID:", product.ID)
-}
-
-func createVertical(db *gorm.DB) {
-	vertical := &model.Vertical{}
-	db.FirstOrCreate(&vertical)
-	count := new(int64)
-	db.Model(&model.Vertical{}).Count(count)
-	fmt.Println("Vertical Count:", *count)
-
-	fmt.Println("\n\nVertical Json WRITE")
-	vertical.WriteTo(os.Stdout)
-	fmt.Println("\nVertical Json WRITE\n\n")
-
-	result := db.Model(&model.Vertical{Name: "Not Present"})
-	fmt.Println("FOUND Value:", errors.Is(result.Error, gorm.ErrRecordNotFound))
-
-	//if dbc := db.First(vertical, "name=?", "Shirts"); dbc.Error == nil {
-	//	fmt.Println("Vertical Exists", dbc.Value.(*Vertical).Name)
-	//} else {
-	//	fmt.Println("Error Fetching Vertical:", dbc.Error)
-	//	db.Create(&Vertical{})
-	//	fmt.Println("New Vertical Created")
-	//}
 }
