@@ -28,7 +28,6 @@ var _ = FDescribe("Orm", func() {
 		BeforeEach(func() {
 			err := db.AutoMigrate(&frameworks.Product{}, &frameworks.AuditLog{})
 			Expect(err).To(BeNil())
-			db.Commit()
 		})
 
 		AfterEach(func() {
@@ -41,6 +40,7 @@ var _ = FDescribe("Orm", func() {
 			// Verify Tables Created
 			Expect(db.Migrator().HasTable(&frameworks.Product{})).To(BeTrue())
 			Expect(db.Migrator().HasTable(&frameworks.AuditLog{})).To(BeTrue())
+			Expect(db.Migrator().HasTable(&frameworks.Vertical{})).To(BeTrue())
 		})
 
 		It("should have no records", func() {
@@ -59,9 +59,8 @@ var _ = FDescribe("Orm", func() {
 					Name:     "Test",
 					MyColumn: "Hello",
 				}
-				err := db.FirstOrCreate(&vertical)
+				err := db.FirstOrCreate(&vertical).Error
 				Expect(err).To(BeNil())
-				db.Commit()
 			})
 
 			AfterEach(func() {
@@ -77,8 +76,8 @@ var _ = FDescribe("Orm", func() {
 			})
 
 			It("should not find invalid vertical", func() {
-				err := db.Model(&frameworks.Vertical{Name: "Invalid"}).Error
-				Expect(err).To(BeNil())
+				var vertical frameworks.Vertical
+				err := db.Where(&frameworks.Vertical{Name: "Invalid"}).First(&vertical).Error
 				Expect(err).To(Equal(gorm.ErrRecordNotFound))
 			})
 		})
