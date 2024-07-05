@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/learn/frameworks"
 	. "github.com/amanhigh/go-fun/models/learn/frameworks"
 	"gorm.io/driver/mysql"
@@ -97,7 +96,6 @@ func schemaAlterPlay(db *gorm.DB) {
 
 func playProduct(db *gorm.DB) {
 	fmt.Println("***** Play Product ******")
-	//FIXME: Bulk Insert
 	// Create
 	queryProduct(db)
 
@@ -145,16 +143,6 @@ func manyToManyUpdate(db *gorm.DB, product *Product) {
 }
 
 func queryProduct(db *gorm.DB) {
-	//Single Field Select
-	//BUG:Fix Select Single Field
-	//var codes []string
-	//db.Not([]int64{5, 6, 10}).Find(products).Pluck("code", &codes)
-	//fmt.Printf("CODES: %+v\n", codes)
-
-	//Search Id Range
-	db.Unscoped().Where([]int64{5, 6, 10}).Limit(3).Limit(-1).Find(products)
-	fmt.Println("Id Range Search Count: ", len(*products))
-
 	//Struct Query
 	db.Order("code desc,price asc").Where(&Product{Price: 2000}).Where(&Product{Code: "L1212"}).Last(product) //And
 	db.Where(&Product{Price: 2000}).Or(&Product{Code: "L1212"}).Last(product)                                 //Or

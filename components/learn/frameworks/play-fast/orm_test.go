@@ -16,7 +16,7 @@ var _ = FDescribe("Orm", func() {
 	)
 
 	BeforeEach(func() {
-		db, _ = util.CreateTestDb(logger.Info)
+		db, _ = util.CreateTestDb(logger.Error)
 	})
 
 	It("should connect", func() {
@@ -125,14 +125,6 @@ var _ = FDescribe("Orm", func() {
 
 				})
 
-				It("should query id range", func() {
-					//Query id range
-					var products []frameworks.Product
-					err := db.Where([]int64{5, 6, 10}).Limit(3).Limit(-1).Find(&products).Error
-					Expect(err).To(BeNil())
-					Expect(products).To(HaveLen(3))
-				})
-
 				It("should query multiple columns", func() {
 					var multiSelectProducts []frameworks.Product
 					err := db.Select("code", "price").Find(&multiSelectProducts).Error
@@ -141,6 +133,56 @@ var _ = FDescribe("Orm", func() {
 					Expect(multiSelectProducts[0].Code).To(Equal(product.Code))
 					Expect(multiSelectProducts[0].Price).To(Equal(product.Price))
 					Expect(multiSelectProducts[0].VerticalID).To(Equal(uint(0))) // Not queried
+				})
+
+				It("should pluck product codes", func() {
+					var codes []string
+					err := db.Model(&frameworks.Product{}).Pluck("code", &codes).Error
+					Expect(err).To(BeNil())
+					Expect(codes).To(HaveLen(1))
+					Expect(codes[0]).To(Equal(product.Code))
+				})
+
+				Context("Bulk Products", func() {
+					var products = []frameworks.Product{
+						{Code: "L1212", Price: 1000, VerticalID: vertical.ID, Version: 1},
+						{Code: "L1213", Price: 2000, VerticalID: vertical.ID, Version: 1},
+						{Code: "L1214", Price: 3000, VerticalID: vertical.ID, Version: 1},
+					}
+					BeforeEach(func() {
+						// Create multiple products for testing
+						for _, product := range products {
+							err := db.Create(&product).Error
+							Expect(err).To(BeNil())
+						}
+					})
+					AfterEach(func() {
+						// Clean up the created products
+						for _, product := range products {
+							db.Delete(&product)
+						}
+					})
+
+					It("should order query results", func() {
+						var queriedProduct frameworks.Product
+						err := db.Order("code desc, price asc").Last(&queriedProduct).Error
+						Expect(err).To(BeNil())
+						Expect(queriedProduct.Code).To(Equal(products[2].Code))
+					})
+
+					It("should query id range", func() {
+						var products []frameworks.Product
+						err := db.Where([]int64{1, 6, 10}).Limit(3).Limit(-1).Find(&products).Error
+						Expect(err).To(BeNil())
+						Expect(products).To(HaveLen(1))
+					})
+
+					It("should query by struct with OR condition", func() {
+						var queriedProduct frameworks.Product
+						err := db.Where(&frameworks.Product{Price: 2000}).Or(&frameworks.Product{Code: "Invalid"}).Last(&queriedProduct).Error
+						Expect(err).To(BeNil())
+						Expect(queriedProduct.Code).To(Equal(products[1].Code))
+					})
 				})
 
 			})
