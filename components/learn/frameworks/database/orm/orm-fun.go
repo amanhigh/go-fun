@@ -17,8 +17,6 @@ func OrmFun() {
 	//Can be Run Standalone for testing switch.
 	//switchProduct()
 
-	playProduct(db)
-
 	//schemaAlterPlay(db)
 	// dropTables(db)
 	fmt.Println("******ORM Fun Finished*******")
@@ -96,9 +94,6 @@ func schemaAlterPlay(db *gorm.DB) {
 
 func playProduct(db *gorm.DB) {
 	fmt.Println("***** Play Product ******")
-	// Create
-	queryProduct(db)
-
 	productUpdates(db, product)
 }
 
@@ -140,11 +135,4 @@ func manyToManyUpdate(db *gorm.DB, product *Product) {
 
 	//Reloaded Product displays saved and newly created Features
 	fmt.Println("Reloaded M2M Update (should have 3 features: 1 old, 2 replaced)", len(reloadedProduct.Features), reloadedProduct.Features[0].Name)
-}
-
-func queryProduct(db *gorm.DB) {
-	//Struct Query
-	db.Order("code desc,price asc").Where(&Product{Price: 2000}).Where(&Product{Code: "L1212"}).Last(product) //And
-	db.Where(&Product{Price: 2000}).Or(&Product{Code: "L1212"}).Last(product)                                 //Or
-	fmt.Println("Query By Struct, ID:", product.ID)
 }

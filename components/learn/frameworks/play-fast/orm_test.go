@@ -95,7 +95,8 @@ var _ = FDescribe("Orm", func() {
 				})
 
 				AfterEach(func() {
-					db.Delete(&product)
+					err := db.Delete(&product).Error
+					Expect(err).To(BeNil())
 					db.Exec("TRUNCATE TABLE features")
 					db.Exec("TRUNCATE TABLE product_features")
 				})
