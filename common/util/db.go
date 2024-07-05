@@ -23,7 +23,7 @@ import (
 func CreateDb(cfg config.Db) (db *gorm.DB, err error) {
 	/* Create Test DB or connect to provided DB */
 	if cfg.DbType == models.SQLITE {
-		db, err = CreateTestDb()
+		db, err = CreateTestDb(cfg.LogLevel)
 	} else {
 		db, err = ConnectDb(cfg)
 	}
@@ -96,11 +96,10 @@ func ConnectDb(cfg config.Db) (db *gorm.DB, err error) {
 // Uses in memory Sqlite.
 // Faster CGO Implementation - https://github.com/go-gorm/sqlite
 // It returns a *gorm.DB and an error.
-func CreateTestDb() (db *gorm.DB, err error) {
+func CreateTestDb(level logger.LogLevel) (db *gorm.DB, err error) {
 	//Use Log Level 4 for Debug, 3 for Warnings, 2 for Errors
 	//Can use /tmp/gorm.db for file base Db
-	//BUG: Connect Log Level to Config
-	db, err = gorm.Open(sqlite.Open("file:memdb1?mode=memory&cache=shared"), &gorm.Config{Logger: logger.Default.LogMode(logger.Error)})
+	db, err = gorm.Open(sqlite.Open("file:memdb1?mode=memory&cache=shared"), &gorm.Config{Logger: logger.Default.LogMode(level)})
 	return
 }
 
