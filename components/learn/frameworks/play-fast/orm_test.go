@@ -80,6 +80,37 @@ var _ = FDescribe("Orm", func() {
 				err := db.Where(&frameworks.Vertical{Name: "Invalid"}).First(&vertical).Error
 				Expect(err).To(Equal(gorm.ErrRecordNotFound))
 			})
+
+			Context("Create Product", func() {
+				var product frameworks.Product
+
+				BeforeEach(func() {
+					features := []frameworks.Feature{
+						{Name: "Strong", Version: 1},
+						{Name: "Light", Version: 1},
+					}
+					product = frameworks.Product{Code: "L1212", Price: 1000, VerticalID: vertical.ID, Features: features, Version: 1}
+					err := db.Create(&product).Error
+					Expect(err).To(BeNil())
+				})
+
+				AfterEach(func() {
+					db.Exec("TRUNCATE TABLE products")
+					db.Exec("TRUNCATE TABLE features")
+					db.Exec("TRUNCATE TABLE product_features")
+				})
+
+				It("should create product with features", func() {
+					var foundProduct = new(frameworks.Product)
+					err := db.Preload("Features").First(&foundProduct, product.ID).Error
+					Expect(err).To(BeNil())
+					Expect(foundProduct.Code).To(Equal("L1212"))
+					Expect(foundProduct.Price).To(Equal(uint(1000)))
+					Expect(foundProduct.Features).To(HaveLen(2))
+				})
+
+			})
+
 		})
 	})
 })

@@ -101,13 +101,6 @@ func playProduct(db *gorm.DB) {
 	fmt.Println("***** Play Product ******")
 	//FIXME: Bulk Insert
 	// Create
-	features := []Feature{
-		{Name: "Strong", Version: 1},
-		{Name: "Light", Version: 1},
-	}
-	product := &Product{Code: "L1212", Price: 1000, VerticalID: 1, Features: features, Version: 1}
-	db.Create(product)
-
 	queryProduct(db)
 
 	productUpdates(db, product)
@@ -164,13 +157,6 @@ func manyToManyUpdate(db *gorm.DB, product *Product) {
 }
 
 func queryProduct(db *gorm.DB) {
-	// First Query
-	product := new(Product)
-	db.First(product, 1)
-
-	// Preload with Where Clause
-	db.Preload("Vertical").First(product, "code = ?", "L1212")
-
 	//Query all Non Deleted Products
 	products := new([]Product)
 	db.Unscoped().Where("code = ?", "L1212").Find(products)
