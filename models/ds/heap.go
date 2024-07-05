@@ -116,7 +116,6 @@ func (self *Heap) heapifyDown() {
 	//Start from Root replacing node with smaller of left & right child
 	for i := 0; self.hasLeft(i); {
 		s := self.getLeftChildIndex(i)
-		//BUG:Right/left wrong w.r.t self.down fix post tests
 		if self.hasRight(i) && self.down(self.right(i), self.left(i)) {
 			s = self.getRightChildIndex(i)
 		}
