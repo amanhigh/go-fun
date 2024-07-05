@@ -1,9 +1,10 @@
 ## Coding Task Instructions
-Read Guidelines and Task Details Section If you Understand the Instructions and describe the Task and Ask User for Project Code Files. Give any Output as Per Guidelines After Receiving the Code Files only.
+Read Guidelines and Task Details Section. 
 
 ### Guidelines
-- Suggest Changes in all Files Shared with you.
-- Only Share Modified Code and avoid sharing Unchanged Existing Code.
-- Give Full Implementation never leave implementation to User.
+- Ask 3 Clarifying Questions to help you make Better Decisions before Coding based on Task Details.
+- Retain Current Styling and Structure of Code for Changes and New Files.
+
 
 ### Task Details
+ 

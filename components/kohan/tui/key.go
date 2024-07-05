@@ -82,8 +82,13 @@ func (h *HotkeyManager) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {
 
 	switch event.Key() {
 	case tcell.KeyRune:
-		if hotkey, exists := h.hotkeys[event.Rune()]; exists && h.app.GetFocus() != h.uiManager.filterInput {
-			hotkey.Handler()
+		if hotkey, exists := h.hotkeys[event.Rune()]; exists {
+			// Only handle hotkeys if we are not in filter input except Space.
+			if h.app.GetFocus() != h.uiManager.filterInput && event.Rune() == ' ' {
+				hotkey.Handler()
+			} else {
+				hotkey.Handler()
+			}
 			return nil
 		}
 	case tcell.KeyEsc:
