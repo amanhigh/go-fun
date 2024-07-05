@@ -10,17 +10,13 @@ spec:
       version: v1
   template:
     metadata:
-      annotations: #Annotations indicating prometheus to collect metrics
-        prometheus.io/scrape: 'true'
-        prometheus.io/path: '/metrics'
-        prometheus.io/port: '8080'
       labels:
         app: fun-app #Name of App
         version: v1 #Version of this Deployment
     spec:
       serviceAccountName: fun-app
       containers:
-        - image: amanfdk/fun-app #Image to be used
+        - image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           imagePullPolicy: IfNotPresent
           # command: ["sh","-c","sleep 10000"]
           name: fun-app

@@ -37,6 +37,7 @@ timedatectl
 ## Format ##
 boot=${disk}1
 root=${disk}2
+orig_root=${disk}2
 
 echo -en "\033[1;33m Partition $disk (y/N) ?\033[0m \n";
 read confirm
@@ -103,15 +104,13 @@ findmnt -R -M /mnt
 
 # Crypt File
 if [ "$encrypt" == 'y' ] && [ ! -f /mnt/root/crypt.keyfile ]; then
-    #FIXME: #C Header Backup
-    # cryptsetup luksHeaderBackup /dev/device --header-backup-file /mnt/backup/file.img
-    # Test Header cryptsetup -v --header /mnt/backup/file.img open /dev/device test
-    # cryptsetup luksHeaderRestore /dev/device --header-backup-file ./mnt/backup/file.img
-
     echo -en "\033[1;34m Generating Crypt File \033[0m \n";
     dd bs=512 count=4 if=/dev/random of=/mnt/root/crypt.keyfile iflag=fullblock
     chmod 000 /mnt/root/crypt.keyfile
-    cryptsetup -v luksAddKey ${disk}2 /mnt/root/crypt.keyfile
+    cryptsetup luksAddKey ${orig_root} /mnt/root/crypt.keyfile
+    
+    echo -en "\033[1;34m LUKS header backup \033[0m \n";
+    cryptsetup luksHeaderBackup ${orig_root} --header-backup-file /mnt/root/lukshdr.img
 fi
 
 echo -en "\033[1;33m Generate Fstab (y/N) ? \033[0m \n";
@@ -185,6 +184,11 @@ fi
 # tmpfs - Stays in Swap
 # mount -t ramfs -o size=2g ram_bkp /backup
 
+## LUKS Headers ##
+# cryptsetup luksHeaderBackup /dev/device --header-backup-file /mnt/backup/file.img
+# cryptsetup -v --header /mnt/backup/file.img open /dev/device test
+# cryptsetup luksHeaderRestore /dev/device --header-backup-file ./mnt/backup/file.img
+
 ## Mounts ##
 # findmnt or mount - Show all Mounts
 # mount (-a Fstab) - Mount all Partitions in /etc/fstab
@@ -255,9 +259,20 @@ fi
 ## Mounting
 # mkdir /mnt/my_decrypted_volume
 # mount /dev/mapper/my_decrypted_volume /mnt/my_decrypted_volume
+# mkdir -p /mnt/arch; mount -t virtiofs arch /mnt/arch (QEMU FS)
 ## Password Change
 # see key slots, max -8 i.e. max 8 passwords can be setup for each device
 # cryptsetup luksDump /dev/sda2
 # cryptsetup luksChangeKey /dev/sda2
 # cryptsetup luksAddKey /dev/sda2 (Set New Password)
 # cryptsetup luksRemoveKey /dev/sda2 (Remove old Password)
+## Bootable Disk
+# sudo /usr/bin/dd bs=4M if=./archlinux-2023.09.01-x86_64.iso of=/dev/sde conv=fsync oflag=direct status=progress
+## Journalctl
+# View logs from the current boot: journalctl -b (-u sshd Unit)
+# View logs from a specific boot: journalctl -b -1
+# View kernel logs: journalctl -k (-f follow, -n 10 lines)
+# Filter priority (3 error) logs: journalctl -p crit (or -p 2)
+# Timebased Filtering: journalctl --since "1 day ago" --until "2024-06-23"
+# JSON output: journalctl -o json (verbose, short)
+# Vacuum : journalctl --vacuum-time=2weeks (--vacuum-size=100M)

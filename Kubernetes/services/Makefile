@@ -1,10 +1,9 @@
-### Variables
-.DEFAULT_GOAL := help
-OUT := /dev/null
+include ../../common/tools/base.mk
 
+### Variables
 SERVICE_MAKE_OPTS=--no-print-directory -f ./services.mk
-XTRA="dashy"
-BOOTABLE = traefik\|dashy\|webui
+XTRA=""
+BOOTABLE = traefik\|webui
 
 DOCKER_HOSTS=127.0.0.1 docker httpbin.docker dashy.docker resty.docker webui.docker pdf.docker paperless.docker app.docker \
 mysqladmin.docker redisadmin.docker cron.docker prometheus.docker grafana.docker jaeger.docker kiali.docker \
@@ -13,10 +12,6 @@ consul.docker opa.docker sonar.docker metabase.docker clarity.docker
 NS:=$(shell kubectl get sa -o=jsonpath='{.items[0]..metadata.namespace}')
 ANS_FILE:=/tmp/k8-svc.txt
 ANS:=$(shell cat $(ANS_FILE))
-
-### Basic
-help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 ### Cleanup
 clear-kiali:

@@ -9,7 +9,7 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/trace"
 
 	docs "github.com/amanhigh/go-fun/components/fun-app/docs"
@@ -78,7 +78,7 @@ func (self *FunServer) Start(c context.Context) (err error) {
 	//Read Error From GoRoutine or proceed in one second
 	select {
 	case err = <-errChan:
-		log.Trace().Err(err).Msg("Failed To Start Server")
+		zerolog.Ctx(c).Trace().Err(err).Msg("Failed To Start Server")
 	case <-time.After(time.Second):
 		//No Error Occurred, wait for Graceful Shutdown Signal.
 		ctx := self.Shutdown.Wait()
@@ -99,12 +99,12 @@ func (self *FunServer) Stop(c context.Context) {
 	ctxTimed, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := self.Server.Shutdown(ctxTimed); err != nil {
-		log.Fatal().Ctx(ctx).Err(err).Msg("Forced Shutdown, Graceful Exit Failed: ")
+		zerolog.Ctx(c).Fatal().Ctx(ctx).Err(err).Msg("Forced Shutdown, Graceful Exit Failed: ")
 	}
 
 	//Stop Tracer
 	span.AddEvent("Stopping Tracer")
 	telemetry.ShutdownTracerProvider(ctx)
 
-	log.Info().Ctx(ctx).Msg("Bye...")
+	zerolog.Ctx(c).Info().Ctx(ctx).Msg("Bye...")
 }

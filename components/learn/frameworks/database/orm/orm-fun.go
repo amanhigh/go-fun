@@ -98,7 +98,7 @@ func OrmFun() {
 	//Can be Run Standalone for testing switch.
 	//switchProduct()
 
-	db, _ := util.CreateTestDb()
+	db, _ := util.CreateTestDb(logger.Info)
 
 	db.AutoMigrate(&Product{}, &AuditLog{}) // Vertical not required Foreign Keys Auto Created
 

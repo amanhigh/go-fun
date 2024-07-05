@@ -20,10 +20,8 @@ require (
 	github.com/onsi/gomega v1.29.0
 	github.com/rs/zerolog v1.32.0
 	github.com/samber/lo v1.39.0
-	github.com/sirupsen/logrus v1.9.3
 	github.com/testcontainers/testcontainers-go v0.27.0
 	github.com/uptrace/opentelemetry-go-extra/otelgorm v0.2.3
-	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.2.3
 	go.opentelemetry.io/otel v1.20.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.20.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.20.0
@@ -46,6 +44,7 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgx/v5 v5.4.3 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	modernc.org/libc v1.22.5 // indirect
 	modernc.org/mathutil v1.5.0 // indirect
 	modernc.org/memory v1.5.0 // indirect
@@ -117,7 +116,6 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/uptrace/opentelemetry-go-extra/otelsql v0.2.3 // indirect
-	github.com/uptrace/opentelemetry-go-extra/otelutil v0.2.3 // indirect
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	go.opentelemetry.io/otel/metric v1.20.0 // indirect
 	go.opentelemetry.io/otel/trace v1.20.0
@@ -127,7 +125,7 @@ require (
 	golang.org/x/crypto v0.16.0 // indirect
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea // indirect
 	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.16.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d // indirect

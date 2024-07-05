@@ -13,7 +13,8 @@
 			"gruntfuggly.todo-tree",
 			"humao.rest-client",
 			"cweijan.vscode-mysql-client2",
-			"hoovercj.vscode-dimmer"
+			"hoovercj.vscode-dimmer",
+			"yuichinakamura.code-to-clipboard"
 		]
 	},
 	"settings": {

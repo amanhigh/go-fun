@@ -1,7 +1,6 @@
-### Variables
-.DEFAULT_GOAL := help
-OUT := /dev/null
+include ../common/tools/base.mk
 
+### Variables
 PORT=8091
 CPU=4
 MEMORY=4096
@@ -12,12 +11,6 @@ MINI_BKP_DIR=~/Downloads/minibkp
 #Current Directory where Make File is Present
 MAKE_FILE_DIR=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 SERVICE_FILES=$(MAKE_FILE_DIR)/services/files
-
-### Basic
-help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-	printf $(_INFO) "FirstTime: prepare/all, OUT=/dev/stdout (Debug)"
-	printf $(_INFO) "Resources: CPU=4 MEMORY=10000"
 
 ### Lifecycle
 #Additional Flags: --kubernetes-version v1.23.0
@@ -137,12 +130,6 @@ setup: start wait bootstrap port-fwd ## Start, Bootstrap, Port Forward Minikube
 clean: stop ## Stop Minikube
 reset: clean setup info ## Rebuild Minikube
 all: prepare istio dashboard infos port ## Run All Targets
-
-### Formatting
-_INFO := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"
-_DETAIL := "\033[34m[%s]\033[0m %s\n"  # Blue text for "printf"
-_TITLE := "\033[32m[%s]\033[0m %s\n" # Green text for "printf"
-_WARN := "\033[31m[%s]\033[0m %s\n" # Red text for "printf"
 
 ## k9s
 # k9s --readonly , -n <namespace>, -l <loglevel>

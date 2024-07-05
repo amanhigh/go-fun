@@ -1,11 +1,7 @@
-### Variables
-.DEFAULT_GOAL := help
-OUT := /dev/null
+include ../../../common/tools/base.mk
 
-### Basic
-help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-	printf $(_TITLE) "FirstTime: prepare/all, OUT=/dev/stdout (Debug)"
+### Variables
+VERSION ?= $(shell grep '^version:' Chart.yaml | sed 's/^version: //')
 
 ### Setup
 setup-vegeta:
@@ -30,16 +26,18 @@ update:
 	helm dependency build > $(OUT)
 
 # BUG: #C Introduce Helm Version.
-package: update ## Package Helm Chart
-	printf $(_TITLE) "Packaging Fun App Helm Chart"
+package: update ## Package Helm Chart (VERSION=1.0.1)
+	printf $(_TITLE) "Packaging Fun App ($(VERSION)) Helm Chart";
+	sed -i'' -e 's/^version:.*/version: $(VERSION)/' Chart.yaml;
 	helm package . -d . > $(OUT)
 
 #### Info
-# BUG: #C Fix Fun App via Tunnel
 info-fun:
 	printf $(_INFO) "Fun App Info"
 	printf $(_DETAIL) "minikube tunnel"
-	printf $(_DETAIL) "http://localhost:9090/metrics"
+	printf $(_DETAIL) "kubectl get svc app"
+	printf $(_DETAIL) "http://<external_ip>:9001/metrics"
+	printf $(_DETAIL) "http://app.docker/app/metrics"
 
 info-fun-notes:
 	printf $(_INFO) "Fun App Notes"
@@ -48,8 +46,10 @@ info-fun-notes:
 info-vegeta:
 	printf $(_INFO) "Vegeta Info"
 	printf $(_DETAIL) "Login Vegeta Pod"
-	printf $(_DETAIL) "HELM: echo 'GET http://fun-app:9090/person/all' | vegeta attack | vegeta report"
-	printf $(_DETAIL) "DEVSPACE: echo 'GET http://app:8080/person/all' | vegeta attack | vegeta report"
+	printf $(_DETAIL) "HELM" "echo 'GET http://fun-app:9090/v1/person/all' | vegeta attack | vegeta report"
+	printf $(_DETAIL) "DEVSPACE" "echo 'GET http://app:8080/v1/person/all' | vegeta attack | vegeta report"
+	printf $(_DETAIL) "LOAD(MAKE)" "Portforward 8080: http://localhost:8080/metrics and fun-app/it Make"
+	printf $(_DETAIL) "PROMETHEUS" "http://prometheus.docker/graph?g0.expr=funapp_create_person&g0.tab=0&g0.display_mode=stacked&g0.show_exemplars=0&g0.range_input=15m"
 
 info-istio:
 	printf $(_INFO) "Istio Info"
@@ -78,12 +78,6 @@ clean: clean-fun clean-package clean-vegeta ## Clean Helm
 analyse: setup-analyse ## Analyse Log
 reset: clean setup info ## Clean & Setup Helm
 all: prepare reset package clean ## Run All Targets
-
-### Formatting
-_INFO := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"
-_DETAIL := "\033[34m[%s]\033[0m %s\n"  # Blue text for "printf"
-_TITLE := "\033[32m[%s]\033[0m %s\n" # Green text for "printf"
-_WARN := "\033[31m[%s]\033[0m %s\n" # Red text for "printf"
 
 ### Helpful Commands
 # helm init fun-app - Bootstrap Charts

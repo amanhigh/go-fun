@@ -88,7 +88,7 @@ func RecordTicker(ticker, path string) (err error) {
 
 				// Record Check Screenshot
 				checkFile := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format(DATE_FORMAT))
-				err = tools.NamedRegionScreenshot(checkFile)
+				err = tools.NamedRegionScreenshot(path, checkFile)
 
 			} else {
 				log.Error().Str("Ticker", ticker).Err(err).Msg("Read TradeInfo Failed")

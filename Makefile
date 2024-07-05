@@ -11,9 +11,9 @@
 # SHELL Var in Make: CUR_DIR := $(shell pwd) (Outside Target)
 # Make Var in SHELL: $(eval RESTORE_DB_NAME := $(DBNAME)_restore)
 
-### Variables
-.DEFAULT_GOAL := help
+include ./common/tools/base.mk
 
+### Variables
 BUILD_OPTS := CGO_ENABLED=0 GOARCH=amd64
 COMPONENT_DIR := ./components
 FUN_DIR := $(COMPONENT_DIR)/fun-app
@@ -22,15 +22,10 @@ COVER_DIR:= /tmp/cover
 PROFILE_FILE:= $(COVER_DIR)/profile.out
 
 FUN_IMAGE_TAG := amanfdk/fun-app
-OUT := /dev/null
 
 .PHONY: sync test
 
 ### Basic
-help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-	printf $(_TITLE) "FirstTime: prepare/all, OUT=/dev/stdout (Debug)"
-
 sync:
 	printf $(_TITLE) "Go Module Syncing"
 	go work sync
@@ -76,7 +71,7 @@ cover-analyse:
 
 test-focus:
 	printf $(_TITLE) "Running Focus Tests"
-	ginkgo --focus "should create & get person" $(FUN_DIR)/it
+	ginkgo --focus "should create & get person" $(FUN_DIR)/it > $(OUT)
 
 test-it: run-fun-cover test-unit cover-analyse
 test-clean:
@@ -84,6 +79,7 @@ test-clean:
 	rm -rf $(COVER_DIR)
 
 verify: test-focus ## Verify Basic Fun App Flow
+	printf $(_INFO) "mk watch CMD='make verify'"
 
 profile: ## Run Profiling
 	printf $(_TITLE) "Running Profiling on Port 8080"
@@ -115,8 +111,9 @@ build-kohan:
 
 build-clean:
 	printf $(_WARN) "Cleaning Build"
-	rm "$(FUN_DIR)/fun";
-	rm "$(COMPONENT_DIR)/kohan/kohan";
+	-rm "$(FUN_DIR)/fun";
+	-rm "$(COMPONENT_DIR)/kohan/kohan";
+	-make -C $(COMPONENT_DIR)/operator/ clean > $(OUT)
 
 ### Install
 install-kohan:
@@ -206,6 +203,16 @@ endif
 	printf $(_DETAIL) "Docker Push"
 	docker push amanfdk/fun-app:latest
 	docker push amanfdk/fun-app:$(VER)
+
+release-helm: ## Release Helm Charts
+ifndef VER
+	$(error VER not set. Eg. 1.1.0)
+endif
+	printf $(_TITLE) "Release Helm Charts: $(VER)"
+	$(MAKE) helm-package VERSION=$(VER)
+	git add $(FUN_DIR)/charts/Chart.yaml
+	git commit -m "Helm Released: $(VER)"
+
 
 unrelease: ## Revoke Release of Golang Packages
 ifndef VER
@@ -336,9 +343,3 @@ clean: test-clean build-clean ## Clean up Residue
 reset: setup info clean ## Setup with Info and Clean
 all: prepare docker-fun-clean install reset infos test-slow ## Run All Targets
 	printf $(_TITLE) "******* Complete BUILD Successful ********"
-
-### Formatting
-_INFO := "\033[33m[%s]\033[0m %s\n"  # Yellow text for "printf"
-_TITLE := "\033[32m[%s]\033[0m %s\n" # Green text for "printf"
-_WARN := "\033[31m[%s]\033[0m %s\n" # Red text for "printf"
-_DETAIL := "\033[34m[%s]\033[0m %s\n"  # Blue text for "printf"

@@ -2,6 +2,7 @@ package play_fast
 
 import (
 	"bytes"
+	"context"
 	"os"
 
 	"github.com/amanhigh/go-fun/common/util"
@@ -265,7 +266,6 @@ var _ = Describe("Logging", func() {
 			})
 
 			It("should log context values", func() {
-				// HACK: #A How to Print Request Id from Context.
 				// Create a child logger for concurrency safety
 				child := logger.With().Logger()
 
@@ -297,6 +297,33 @@ var _ = Describe("Logging", func() {
 			})
 		})
 
+		Context("Context Logger", func() {
+			const requestIDKey = "RequestId"
+			const testRequestID = "test-id"
+
+			It("should have RequestId", func() {
+				var buf bytes.Buffer
+				logger := zerolog.New(&buf).With().Str(requestIDKey, testRequestID).Logger()
+
+				// Creating a context with the logger
+				ctx := logger.WithContext(context.Background())
+
+				// Retrieve logger from context and log a message
+				zerolog.Ctx(ctx).Info().Msg("Context Test")
+
+				logOutput := buf.String()
+
+				// Check that the log output contains the request ID and the message
+				Expect(logOutput).To(ContainSubstring(requestIDKey))
+				Expect(logOutput).To(ContainSubstring(testRequestID))
+			})
+
+			It("should not be nil without creation", func() {
+				logger := zerolog.Ctx(context.Background())
+				Expect(logger).ShouldNot(BeNil())
+			})
+		})
+
 		It("should have test logger", func() {
 			var buf bytes.Buffer
 			logger := zerolog.New(&buf)
@@ -311,6 +338,5 @@ var _ = Describe("Logging", func() {
 
 			Expect(buf.String()).To(Equal(""))
 		})
-
 	})
 })

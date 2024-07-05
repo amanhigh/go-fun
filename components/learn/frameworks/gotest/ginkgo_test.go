@@ -15,6 +15,19 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
+type personHasName struct{}
+
+// Matches checks if the given interface{} is of type Person and has a non-empty Name field.
+func (m *personHasName) Matches(x interface{}) bool {
+	p, ok := x.(Person)
+	return ok && p.Name != ""
+}
+
+// String returns a description of the matcher.
+func (m *personHasName) String() string {
+	return "is a person with a non-empty name"
+}
+
 var _ = Describe("Json Encode/Decode", func() {
 	var (
 		originalPerson Person
@@ -320,8 +333,24 @@ var _ = Describe("Json Encode/Decode", func() {
 
 				})
 			})
+		})
 
-			// TODO: #B Custom Matcher https://medium.com/modanisa-engineering/writing-a-custom-matcher-for-testing-with-gomock-d3ef5f13db82
+		Context("Custom Matcher", func() {
+			It("should match person with non-empty name", func() {
+				mockEncoder.EXPECT().EncodePerson(&personHasName{}).Return(personJson, nil)
+
+				result, err := mockEncoder.EncodePerson(Person{Name: "Zoye", Age: 44, MobileNumber: 8983333})
+				Expect(err).To(BeNil())
+				Expect(result).To(Equal(personJson))
+			})
+
+			It("should not match person with empty name", func() {
+				mockEncoder.EXPECT().EncodePerson(gomock.AssignableToTypeOf(Person{})).Return(personJson, nil)
+				mockEncoder.EXPECT().EncodePerson(&personHasName{}).Return(personJson, errors.New("Empty Name")).Times(0)
+
+				_, err := mockEncoder.EncodePerson(Person{Name: "", Age: 44, MobileNumber: 8983333})
+				Expect(err).ShouldNot(HaveOccurred())
+			})
 		})
 
 		AfterEach(func() {

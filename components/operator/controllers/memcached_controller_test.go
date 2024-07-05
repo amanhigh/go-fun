@@ -38,7 +38,6 @@ import (
 	"github.com/amanhigh/go-fun/models"
 )
 
-// FIXME: Include in Go Releaser
 var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 	const MemcachedName = "test-memcached"

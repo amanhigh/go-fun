@@ -6,7 +6,7 @@ import (
 	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -40,7 +40,7 @@ func NewPersonManager(dao dao.PersonDaoInterface, tracer trace.Tracer) PersonMan
 // - id: a string representing the ID of the newly created person.
 // - err: an error representing any error that occurred during the creation process.
 func (self *PersonManager) CreatePerson(c context.Context, request fun.PersonRequest) (person fun.Person, err common.HttpError) {
-	subLogger := log.With().Str("Name", request.Name).Int("Age", request.Age).Str("Gender", request.Gender).Logger()
+	subLogger := zerolog.Ctx(c).With().Str("Name", request.Name).Int("Age", request.Age).Str("Gender", request.Gender).Logger()
 
 	ctx, span := self.Tracer.Start(c, "CreatePerson.Manager")
 	defer span.End()

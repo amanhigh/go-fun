@@ -4,6 +4,10 @@ metadata:
   name: fun-app
   labels:
     app: fun-app
+  annotations:
+    {{- with .Values.service.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   ports:
   - name: http
