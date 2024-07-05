@@ -204,6 +204,14 @@ endif
 	docker push amanfdk/fun-app:latest
 	docker push amanfdk/fun-app:$(VER)
 
+release-helm: ## Release Helm Charts
+ifndef VER
+	$(error VER not set. Eg. 1.1.0)
+endif
+	printf $(_TITLE) "Release Helm Charts: $(VER)"
+	$(MAKE) helm-package VERSION=$(VER)
+
+
 unrelease: ## Revoke Release of Golang Packages
 ifndef VER
 	$(error VER not set. Eg. v1.1.0)
