@@ -1,6 +1,7 @@
 include ../../../common/tools/base.mk
 
 ### Variables
+VERSION ?= $(shell grep '^version:' Chart.yaml | sed 's/^version: //')
 
 ### Setup
 setup-vegeta:
@@ -25,8 +26,9 @@ update:
 	helm dependency build > $(OUT)
 
 # BUG: #C Introduce Helm Version.
-package: update ## Package Helm Chart
-	printf $(_TITLE) "Packaging Fun App Helm Chart"
+package: update ## Package Helm Chart (VERSION=1.0.1)
+	printf $(_TITLE) "Packaging Fun App ($(VERSION)) Helm Chart";
+	sed -i'' -e 's/^version:.*/version: $(VERSION)/' Chart.yaml;
 	helm package . -d . > $(OUT)
 
 #### Info
