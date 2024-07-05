@@ -8,39 +8,69 @@ import (
 )
 
 var _ = Describe("Heap", func() {
-	Context("MinHeap", func() {
+	Context("Min", func() {
 		var minHeap ds.Heap
 
 		BeforeEach(func() {
 			minHeap = ds.NewMinHeap()
 		})
 
-		It("should build a min heap", func() {
-			minHeap.Add(5)
-			minHeap.Add(3)
-			minHeap.Add(8)
-			minHeap.Add(1)
-			minHeap.Add(4)
+		Context("Peek", func() {
+			It("should peek the smallest element", func() {
+				minHeap.Add(5)
+				minHeap.Add(3)
+				minHeap.Add(8)
+				minHeap.Add(1)
+				minHeap.Add(4)
 
-			Expect(minHeap.Peek()).To(Equal(1))
+				Expect(minHeap.Peek()).To(Equal(1))
+			})
+		})
+
+		Context("Poll", func() {
+			It("should poll the smallest element", func() {
+				minHeap.Add(5)
+				minHeap.Add(3)
+				minHeap.Add(8)
+				minHeap.Add(1)
+				minHeap.Add(4)
+
+				Expect(minHeap.Poll()).To(Equal(1))
+				Expect(minHeap.Peek()).To(Equal(3))
+			})
 		})
 	})
 
-	Context("MaxHeap", func() {
+	Context("Max", func() {
 		var maxHeap ds.Heap
 
 		BeforeEach(func() {
 			maxHeap = ds.NewMaxHeap()
 		})
 
-		It("should build a max heap", func() {
-			maxHeap.Add(5)
-			maxHeap.Add(3)
-			maxHeap.Add(8)
-			maxHeap.Add(1)
-			maxHeap.Add(4)
+		Context("Peek", func() {
+			It("should peek the largest element", func() {
+				maxHeap.Add(5)
+				maxHeap.Add(3)
+				maxHeap.Add(8)
+				maxHeap.Add(1)
+				maxHeap.Add(4)
 
-			Expect(maxHeap.Peek()).To(Equal(8))
+				Expect(maxHeap.Peek()).To(Equal(8))
+			})
+		})
+
+		Context("Poll", func() {
+			It("should poll the largest element", func() {
+				maxHeap.Add(5)
+				maxHeap.Add(3)
+				maxHeap.Add(8)
+				maxHeap.Add(1)
+				maxHeap.Add(4)
+
+				Expect(maxHeap.Poll()).To(Equal(8))
+				Expect(maxHeap.Peek()).To(Equal(5))
+			})
 		})
 	})
 })
