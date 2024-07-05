@@ -3,7 +3,6 @@ package frameworks
 import (
 	"encoding/json"
 
-	"github.com/amanhigh/go-fun/components/learn/frameworks/database/orm/model"
 	"gorm.io/gorm"
 )
 
@@ -14,7 +13,7 @@ type Product struct {
 	Price      uint   `gorm:not null`
 	Version    int
 	IgnoreMe   string `gorm:"-"` // Ignore this field
-	Vertical   model.Vertical
+	Vertical   Vertical
 	VerticalID uint      //Must be vertical_id in DB or won't work automatically.
 	Features   []Feature `gorm:"many2many:product_features;"`
 }
@@ -29,6 +28,12 @@ type Feature struct {
 	gorm.Model
 	Name    string
 	Version int
+}
+
+type Vertical struct {
+	gorm.Model
+	Name     string `gorm:"unique;default:'Shirts'"`
+	MyColumn string
 }
 
 // Default Name would be products
