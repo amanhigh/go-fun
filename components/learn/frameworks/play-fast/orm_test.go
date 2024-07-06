@@ -54,6 +54,18 @@ var _ = FDescribe("Orm", func() {
 			Expect(count).To(Equal(int64(0)))
 		})
 
+		It("should drop the 'code' column from the Product table", func() {
+			// Ensure column exists initially
+			Expect(db.Migrator().HasColumn(&frameworks.Product{}, "code")).To(BeTrue())
+
+			// Perform the column drop
+			err := db.Migrator().DropColumn(&frameworks.Product{}, "code")
+			Expect(err).ToNot(HaveOccurred())
+
+			// Verify the column no longer exists
+			Expect(db.Migrator().HasColumn(&frameworks.Product{}, "code")).To(BeFalse())
+		})
+
 		Context("Create Vertical", func() {
 			var vertical frameworks.Vertical
 
