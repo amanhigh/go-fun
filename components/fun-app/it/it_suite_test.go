@@ -20,14 +20,13 @@ import (
 
 const (
 	COVER_CMD        = "./cover.zsh run"
-	TEST_PORT        = "8085"
-	DEFAULT_BASE_URL = "http://localhost:"
+	DEFAULT_BASE_URL = "http://localhost:8085"
+	PORT             = "8085"
 )
 
 var (
 	err        error
 	spawned    = true
-	port       = os.Getenv("PORT")
 	baseUrl    = os.Getenv("URL")
 	ctx        = context.Background()
 	client     *clients.FunClient
@@ -43,24 +42,21 @@ var _ = BeforeSuite(func() {
 	// Init Logger
 	telemetry.InitLogger(zerolog.InfoLevel)
 
-	// Check if Port is Set
-	if os.Getenv("PORT") == "" {
-		port = TEST_PORT
-	}
-
 	if baseUrl == "" {
 		baseUrl = DEFAULT_BASE_URL
 	}
 
-	serviceUrl = baseUrl + port
+	serviceUrl = baseUrl
 	client = clients.NewFunAppClient(serviceUrl, config.DefaultHttpConfig)
+	logger := log.With().Str("URL", serviceUrl).Logger()
 
 	//Run FunApp If not already running
 	if err = client.AdminService.HealthCheck(ctx); err == nil {
-		log.Info().Str("URL", serviceUrl).Str("Port", port).Msg("FunApp: Running Already")
+		logger.Info().Msg("FunApp: Already Running")
 		spawned = false
 	} else {
-		os.Setenv("PORT", port)
+		logger.Info().Str("Port", PORT).Msg("FunApp: Starting (Not Running)")
+		os.Setenv("PORT", PORT)
 		go common.RunFunApp()
 
 		//Health Check every 1 second until Healthy or 5 Second Timeout
@@ -70,7 +66,7 @@ var _ = BeforeSuite(func() {
 			case <-timeout:
 				Fail("Unable to Start Funapp")
 			case <-time.NewTicker(time.Second).C:
-				log.Warn().Str("Port", port).Msg("FunApp: Starting (Not Running)")
+				logger.Warn().Msg("FunApp: Starting (Not Running)")
 				if err = client.AdminService.HealthCheck(ctx); err == nil {
 					return
 				}
