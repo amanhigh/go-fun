@@ -4,6 +4,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
 
 	"github.com/amanhigh/go-fun/common/util"
@@ -95,10 +96,25 @@ var _ = FDescribe("Orm", func() {
 				})
 
 				AfterEach(func() {
-					err := db.Delete(&product).Error
+					// Reload from DB
+					var reloadedProduct frameworks.Product
+					err := db.Preload(clause.Associations).First(&reloadedProduct, product.ID).Error
 					Expect(err).To(BeNil())
-					db.Exec("TRUNCATE TABLE features")
-					db.Exec("TRUNCATE TABLE product_features")
+
+					err = db.Delete(&product).Error
+					Expect(err).To(BeNil())
+
+					// Existing Associations need to be deleted manually
+					for _, feature := range reloadedProduct.Features {
+						err = db.Delete(&feature).Error
+						Expect(err).To(BeNil())
+					}
+
+					// Verify Feature Count
+					var featureCount int64
+					err = db.Model(&frameworks.Feature{}).Count(&featureCount).Error
+					Expect(err).To(BeNil())
+					Expect(featureCount).To(Equal(int64(0)))
 				})
 
 				It("should create product with features", func() {
@@ -221,6 +237,7 @@ var _ = FDescribe("Orm", func() {
 						Expect(updatedProduct.Version).To(Equal(2)) // Version should increment
 					})
 				})
+
 			})
 
 		})
