@@ -66,10 +66,6 @@ var _ = FDescribe("Orm", func() {
 				Expect(err).To(BeNil())
 			})
 
-			AfterEach(func() {
-				db.Exec("truncate table verticals")
-			})
-
 			It("should have create vertical", func() {
 				vertical := frameworks.Vertical{}
 				err := db.First(&vertical).Error
@@ -98,19 +94,18 @@ var _ = FDescribe("Orm", func() {
 				})
 
 				AfterEach(func() {
-					// Reload from DB
-					var reloadedProduct frameworks.Product
-					err := db.Preload(clause.Associations).First(&reloadedProduct, product.ID).Error
-					Expect(err).To(BeNil())
-
-					err = db.Delete(&product).Error
+					err := db.Delete(&product).Error
 					Expect(err).To(BeNil())
 
 					// Existing Associations need to be deleted manually
-					for _, feature := range reloadedProduct.Features {
-						err = db.Delete(&feature).Error
-						Expect(err).To(BeNil())
-					}
+					err = db.Exec("DELETE FROM features").Error
+					Expect(err).To(BeNil())
+
+					// Debug Features
+					var features []frameworks.Feature
+					err = db.Find(&features).Error
+					Expect(err).To(BeNil())
+					Expect(features).To(HaveLen(0))
 
 					// Verify Feature Count
 					var featureCount int64
@@ -240,7 +235,7 @@ var _ = FDescribe("Orm", func() {
 					})
 				})
 
-				FContext("Many to Many Update", func() {
+				Context("Many to Many Update", func() {
 					var newFeatures = []frameworks.Feature{
 						{Name: "abc", Version: 1},
 						{Name: "xyz", Version: 1},
@@ -257,7 +252,7 @@ var _ = FDescribe("Orm", func() {
 					AfterEach(func() {
 						// Delete new features
 						for _, feature := range newFeatures {
-							db.Delete(&frameworks.Feature{Name: feature.Name})
+							db.Where(frameworks.Feature{Name: feature.Name}).Delete(&feature)
 						}
 					})
 
