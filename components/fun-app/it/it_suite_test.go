@@ -19,16 +19,16 @@ import (
 )
 
 const (
-	COVER_CMD = "./cover.zsh run"
-	TEST_PORT = "8085"
-	// HACK: Make Base URL configurable
-	BASE_URL = "http://localhost:"
+	COVER_CMD        = "./cover.zsh run"
+	TEST_PORT        = "8085"
+	DEFAULT_BASE_URL = "http://localhost:"
 )
 
 var (
 	err        error
 	spawned    = true
 	port       = os.Getenv("PORT")
+	baseUrl    = os.Getenv("URL")
 	ctx        = context.Background()
 	client     *clients.FunClient
 	serviceUrl string
@@ -48,12 +48,16 @@ var _ = BeforeSuite(func() {
 		port = TEST_PORT
 	}
 
-	serviceUrl = BASE_URL + port
+	if baseUrl == "" {
+		baseUrl = DEFAULT_BASE_URL
+	}
+
+	serviceUrl = baseUrl + port
 	client = clients.NewFunAppClient(serviceUrl, config.DefaultHttpConfig)
 
 	//Run FunApp If not already running
 	if err = client.AdminService.HealthCheck(ctx); err == nil {
-		log.Info().Str("Port", port).Msg("FunApp: Running Already")
+		log.Info().Str("URL", serviceUrl).Str("Port", port).Msg("FunApp: Running Already")
 		spawned = false
 	} else {
 		os.Setenv("PORT", port)
