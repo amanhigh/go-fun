@@ -33,6 +33,8 @@ var _ = FDescribe("Orm", func() {
 
 		AfterEach(func() {
 			db.Migrator().DropTable(&frameworks.Product{})
+			db.Migrator().DropTable(&frameworks.Vertical{})
+			db.Migrator().DropTable(&frameworks.Feature{})
 			err := db.Migrator().DropTable(&frameworks.AuditLog{})
 			Expect(err).To(BeNil())
 		})
@@ -235,6 +237,64 @@ var _ = FDescribe("Orm", func() {
 						Expect(err).To(BeNil())
 						Expect(updatedProduct.Code).To(Equal("MyCode"))
 						Expect(updatedProduct.Version).To(Equal(2)) // Version should increment
+					})
+				})
+
+				FContext("Many to Many Update", func() {
+					var newFeatures = []frameworks.Feature{
+						{Name: "abc", Version: 1},
+						{Name: "xyz", Version: 1},
+					}
+
+					BeforeEach(func() {
+						// Verify Current Features
+						var initialFeatureCount int64
+						err := db.Model(&frameworks.Feature{}).Count(&initialFeatureCount).Error
+						Expect(err).To(BeNil())
+						Expect(product.Features).To(HaveLen(int(initialFeatureCount)))
+					})
+
+					AfterEach(func() {
+						// Delete new features
+						for _, feature := range newFeatures {
+							db.Delete(&frameworks.Feature{Name: feature.Name})
+						}
+					})
+
+					It("should delete 1 old, add 2 new", func() {
+						db.Delete(&product.Features[0])
+
+						// Add new associations
+						product.Features = newFeatures
+
+						// Perform Update
+						err := db.Save(&product).Error
+						Expect(err).To(BeNil())
+
+						// Reload from DB
+						var reloadedProduct frameworks.Product
+						err = db.Preload(clause.Associations).First(&reloadedProduct, product.ID).Error
+						Expect(err).To(BeNil())
+
+						// // Check the updated features
+						Expect(reloadedProduct.Features).To(HaveLen(3)) // 1 old + 2 new
+						featureNames := []string{reloadedProduct.Features[0].Name, reloadedProduct.Features[1].Name, reloadedProduct.Features[2].Name}
+						Expect(featureNames).To(ContainElements("Light", "abc", "xyz"))
+					})
+
+					It("should do association replacement", func() {
+						err := db.Model(&product).Association("Features").Replace(newFeatures)
+						Expect(err).To(BeNil())
+
+						// Reload from DB
+						var reloadedProduct frameworks.Product
+						err = db.Preload("Features").First(&reloadedProduct, product.ID).Error
+						Expect(err).To(BeNil())
+
+						// Check that there are no features
+						Expect(reloadedProduct.Features).To(HaveLen(2))
+						Expect(reloadedProduct.Features[0].Name).To(Equal("abc"))
+						Expect(reloadedProduct.Features[1].Name).To(Equal("xyz"))
 					})
 				})
 

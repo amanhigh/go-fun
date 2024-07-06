@@ -91,29 +91,3 @@ func switchProduct() {
 func schemaAlterPlay(db *gorm.DB) {
 	db.Migrator().DropColumn(&Product{}, "code")
 }
-
-func manyToManyUpdate(db *gorm.DB, product *Product) {
-	fmt.Println("Before M2M Update: ", len(product.Features), product.Features[0].Name)
-
-	//Existing Association needs to be deleted manually
-	db.Delete(&product.Features[0])
-
-	//New Associations can be added and Saved. Will not touch existing associations
-	product.Features = []Feature{
-		{Name: "abc", Version: 1},
-		{Name: "xyz", Version: 1},
-	}
-
-	//Perform Update
-	db.Save(product)
-
-	//Only Displays New Features not the ones saved in DB's
-	fmt.Println("Post M2M Update: ", len(product.Features), product.Features[0].Name)
-
-	//Reload from Db
-	reloadedProduct := Product{}
-	db.Preload(clause.Associations).First(&reloadedProduct, product.ID)
-
-	//Reloaded Product displays saved and newly created Features
-	fmt.Println("Reloaded M2M Update (should have 3 features: 1 old, 2 replaced)", len(reloadedProduct.Features), reloadedProduct.Features[0].Name)
-}
