@@ -11,7 +11,7 @@ import (
 	"github.com/amanhigh/go-fun/models/learn/frameworks"
 )
 
-var _ = FDescribe("Orm", func() {
+var _ = Describe("Orm", func() {
 	var (
 		db *gorm.DB
 	)
