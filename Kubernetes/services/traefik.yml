@@ -16,3 +16,16 @@ autoscaling:
   enabled: false
 #   minReplicas: 1
 #   maxReplicas: 10
+
+additionalArguments:
+  - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+  - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+  - "--certificatesresolvers.letsencrypt.acme.email=aman@punjab.com"
+  - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
+
+persistence:
+  enabled: true
+  name: data
+  accessMode: ReadWriteOnce
+  size: 128Mi
+  path: /data
