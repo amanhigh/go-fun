@@ -20,7 +20,15 @@ clear-kiali:
 
 clear-istio:
 	printf "\033[1;31m Clearing Istio \033[0m \n"
-	helm delete -n istio-system $(helm list --short -n istio-system)
+	# Remove Istio components
+	-helm delete -n istio-system $(shell helm list -n istio-system -q) > $(OUT)
+	# Remove the istio-system namespace
+	-kubectl delete namespace istio-system --grace-period=0 --force > $(OUT)
+	# Remove Istio injection label from default namespace
+	-kubectl label namespace default istio-injection- > $(OUT)
+	# Wait for resources to be fully removed
+	kubectl wait --for=delete namespace/istio-system --timeout=60s > $(OUT) || true
+	printf "\033[1;32m Istio cleanup completed \033[0m \n"
 
 clear-ns:
 	printf "\033[1;31m Resetting Namespace: $(NS) \033[0m \n"
