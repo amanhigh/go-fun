@@ -15,20 +15,24 @@ ANS:=$(shell cat $(ANS_FILE))
 
 ### Cleanup
 clear-kiali:
-	printf "\033[1;31m Clearing Kiali \033[0m \n"
-	kubectl delete kiali --all --all-namespaces 2> /dev/null
+	@if [ "$(call istio_installed)" = "true" ]; then \
+		printf "\033[1;31m Clearing Kiali \033[0m \n"; \
+		kubectl delete kiali --all --all-namespaces 2> /dev/null || true; \
+	else \
+		printf "\033[1;33m Kiali not installed, skipping cleanup \033[0m \n"; \
+	fi
 
 clear-istio:
-	printf "\033[1;31m Clearing Istio \033[0m \n"
-	# Remove Istio components
-	-helm delete -n istio-system $(shell helm list -n istio-system -q) > $(OUT)
-	# Remove the istio-system namespace
-	-kubectl delete namespace istio-system --grace-period=0 --force > $(OUT)
-	# Remove Istio injection label from default namespace
-	-kubectl label namespace default istio-injection- > $(OUT)
-	# Wait for resources to be fully removed
-	kubectl wait --for=delete namespace/istio-system --timeout=60s > $(OUT) || true
-	printf "\033[1;32m Istio cleanup completed \033[0m \n"
+	@if [ "$(call istio_installed)" = "true" ]; then \
+		printf "\033[1;31m Clearing Istio \033[0m \n"; \
+		helm delete -n istio-system $$(helm list -n istio-system -q) > $(OUT) 2>&1 || true; \
+		kubectl delete namespace istio-system --grace-period=0 --force > $(OUT) 2>&1 || true; \
+		kubectl label namespace default istio-injection- > $(OUT) 2>&1 || true; \
+		kubectl wait --for=delete namespace/istio-system --timeout=60s > $(OUT) 2>&1 || true; \
+		printf "\033[1;32m Istio cleanup completed \033[0m \n"; \
+	else \
+		printf "\033[1;33m Istio not installed, skipping cleanup \033[0m \n"; \
+	fi
 
 clear-ns:
 	printf "\033[1;31m Resetting Namespace: $(NS) \033[0m \n"
@@ -41,7 +45,6 @@ clear-helms:
 clear-helm:
 	printf "\033[1;31m Deleting Deployed Helms \033[0m \n"
 	#Clear CRD's (Needed before Helm Deletion)
-	#HACK: #B Clear Kiali if istio enabled
 	#HACK: Add Mysql CRD's
 		
 	-helm delete $$(helm list --short | grep -v "$(BOOTABLE)") > $(OUT)
@@ -111,7 +114,11 @@ prepare: helm hosts ## One Time Setup
 info: info-svc ## Service Info
 infos: info ## Service Extended Info
 setup: clear-helm install ## Clean and Resetup Configured Services
-#HACK: #C Clear Istio
 clean: clear-helm ## Stop Services
-reset: clean clear-helms clear-ns bootstrap info setup ## Clean & Resetup All Services 
+reset: clean clear-istio clear-kiali clear-ns bootstrap info setup ## Clean & Resetup All Services 
 all: prepare reset update infos ## Run All Targets
+
+# Function to check if Istio is installed
+define istio_installed
+$(shell kubectl get namespace istio-system >/dev/null 2>&1 && echo "true" || echo "false")
+endef
