@@ -30,7 +30,7 @@ func (self *Server) GetUrl(uri string) string {
 type Vault struct {
 	Server `yaml:",inline"`
 	Token  string `yaml:"token"`
-
+}
 
 type Db struct {
 	DbType string `env:"DB_TYPE" envDefault:"sqlite"` //mysql,postgres,sqlite

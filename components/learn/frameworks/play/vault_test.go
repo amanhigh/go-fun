@@ -72,26 +72,32 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 			key   = "foo"
 			value = map[string]any{"password": "abc123", "secret": "correct horse battery staple"}
 
-			// Vault path
-			path = "secret/data/myapp"
+			// Vault paths
+			mountPath = "secret"
+			dataPath  = "myapp"
 		)
 
 		BeforeEach(func() {
-			_, err = client.Secrets.KvV2Write(ctx, key, schema.KvV2WriteRequest{Data: value}, vault.WithMountPath(path))
+			_, err = client.Secrets.KvV2Write(ctx, dataPath+"/"+key, schema.KvV2WriteRequest{Data: value}, vault.WithMountPath(mountPath))
 			Expect(err).To(BeNil())
-
 		})
 
 		AfterEach(func() {
-			_, err = client.Secrets.KvV2Delete(ctx, key, vault.WithMountPath(path))
+			_, err = client.Secrets.KvV2Delete(ctx, dataPath+"/"+key, vault.WithMountPath(mountPath))
 			Expect(err).To(BeNil())
 		})
 
-		// FIXME: #B Add list client.Logical().List("/secret/kv")
 		It("should give correct Value on Read", func() {
-			secret, err := client.Secrets.KvV2Read(ctx, key, vault.WithMountPath(path))
+			secret, err := client.Secrets.KvV2Read(ctx, dataPath+"/"+key, vault.WithMountPath(mountPath))
 			Expect(err).To(BeNil())
 			Expect(secret.Data.Data).To(Equal(value))
+		})
+
+		It("should list secrets", func() {
+
+			secrets, err := client.Secrets.KvV2List(ctx, dataPath, vault.WithMountPath(mountPath))
+			Expect(err).To(BeNil())
+			Expect(secrets.Data.Keys).To(ContainElement(key))
 		})
 	})
 
