@@ -10,21 +10,18 @@ ports:
     exposedPort: 9000
     protocol: TCP
 
+# TODO: Fix Cert Mounting
+volumes:
+  - name: certs
+    hostPath:
+      path: /etc/files/certs
+      type: Directory
+    mountPath: /etc/certs
+    readOnly: true
+
 ## Create HorizontalPodAutoscaler object.
 ##
 autoscaling:
   enabled: false
 #   minReplicas: 1
 #   maxReplicas: 10
-
-additionalArguments:
-  - "--entrypoints.websecure.http.tls.certresolver=default"
-  - "--entrypoints.websecure.http.tls.domains[0].main=*.docker"
-  - "--certificatesresolvers.default.selfsigned=true"
-
-persistence:
-  enabled: true
-  name: data
-  accessMode: ReadWriteOnce
-  size: 128Mi
-  path: /data
