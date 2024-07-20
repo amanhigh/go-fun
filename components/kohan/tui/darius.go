@@ -7,10 +7,8 @@ import (
 /*
 	TODO: #A Darius Improvements
 	- Vim Like Keys
-	- Config Files
 	- Minikube Control
 	- Funapp Verification and Load Test.
-	- New Tabs
 */
 
 type DariusV1 struct {
