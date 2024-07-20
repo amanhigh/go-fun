@@ -9,7 +9,7 @@ XTRA=""
 MINI_BKP_DIR=~/Downloads/minibkp
 
 #Current Directory where Make File is Present
-MAKE_FILE_DIR=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+MAKE_FILE_DIR=$(shell pwd)
 SERVICE_FILES=$(MAKE_FILE_DIR)/services/files
 
 ### Lifecycle
