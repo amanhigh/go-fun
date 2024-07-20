@@ -66,9 +66,10 @@ istio: ## Reset Minikube with Istio
 
 ### Port Forwarding
 port-fwd:
-	printf $(_INFO) "Please enter password for Port 80 Forward" ""
+	printf $(_INFO) "Please enter password for Port 80 and 443 Forward" ""
 	sudo -v
-	screen -S mini -dmL bash -c 'sudo kubectl port-forward deployment/traefik 80:8000'
+	screen -S mini-http -dmL bash -c 'sudo kubectl port-forward deployment/traefik 80:8000'
+	screen -S mini-https -dmL bash -c 'sudo kubectl port-forward deployment/traefik 443:8443'
 	screen -S traefik -dmL bash -c 'kubectl port-forward deployment/traefik 9000:9000'
 
 port-ls:
@@ -77,7 +78,8 @@ port-ls:
 
 port-kill:
 	printf $(_WARN) "Killing Port Forward" ""
-	-screen -XS mini quit
+	-screen -XS mini-http quit
+	-screen -XS mini-https quit
 	-screen -XS traefik quit
 
 proxy:

@@ -18,10 +18,9 @@ autoscaling:
 #   maxReplicas: 10
 
 additionalArguments:
-  - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
-  - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-  - "--certificatesresolvers.letsencrypt.acme.email=aman@punjab.com"
-  - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
+  - "--entrypoints.websecure.http.tls.certresolver=default"
+  - "--entrypoints.websecure.http.tls.domains[0].main=*.docker"
+  - "--certificatesresolvers.default.selfsigned=true"
 
 persistence:
   enabled: true
