@@ -52,7 +52,6 @@ func (self *PersonManager) CreatePerson(c context.Context, request fun.PersonReq
 
 	err = self.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
 		if err = self.Dao.Create(c, &person); err == nil {
-			// HACK: Verify Jaegor Trace
 			subLogger.Info().Ctx(c).Str("Id", person.Id).Msg("Person Created")
 		}
 		return

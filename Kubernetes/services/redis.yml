@@ -1,4 +1,5 @@
 # FIXME: Try snapshots and AOF.
+# redis-cli config set save "300 100 60 10" , redis-cli config get save
 auth:
   enabled: false
   password: ""
