@@ -4,7 +4,7 @@ include ../../common/tools/base.mk
 CMD=install
 SCRIPT_DIR=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
-#TODO: #C Add Locust
+#TODO: #B Add Locust
 # Bootstrap: helm show values bitnami/postgresql > postgres.yml
 # Debug: find . | entr -s "helm template elasticsearch bitnami/elasticsearch -f elasticsearch.yml > debug.txt;make setup"
 # sudo kubefwd svc | awk '{ if($2 ~ /Port-Forward/) {print $0" URL: http://"$4"/"} else {print}}'
@@ -111,7 +111,6 @@ webshell: ## Web Shell
 	-helm $(CMD) sshwifty onechart/onechart -f sshwifty.yml  > $(OUT)
 	-helm $(CMD) webssh onechart/onechart -f webssh.yml > $(OUT)
 	-helm $(CMD) webssh2 onechart/onechart -f webssh2.yml > $(OUT)
-	# FIXME: Fix Config for Web SSH
 	printf $(_INFO) "Sshwifty" "http://sshwifty.docker/"
 	printf $(_INFO) "Webssh" "http://webssh.docker/"
 	printf $(_INFO) "Webssh" "http://webssh2.docker/"

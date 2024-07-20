@@ -25,7 +25,6 @@ func InitLogger(level zerolog.Level) {
 	zerolog.SetGlobalLevel(level)
 
 	// Formatter
-	// HACK: Add Environment Support to Switch Dev vs Prod
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "2006-01-02 15:04:05"}
 	log.Logger = zerolog.New(output).With().Timestamp().Logger()
 

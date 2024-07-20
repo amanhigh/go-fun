@@ -87,7 +87,7 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 			Expect(err).To(BeNil())
 		})
 
-		// FIXME: Add list client.Logical().List("/secret/kv")
+		// FIXME: #B Add list client.Logical().List("/secret/kv")
 		It("should give correct Value on Read", func() {
 			secret, err := client.Secrets.KvV2Read(ctx, key, vault.WithMountPath(path))
 			Expect(err).To(BeNil())

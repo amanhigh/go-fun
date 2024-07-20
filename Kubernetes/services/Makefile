@@ -33,7 +33,7 @@ clear-helms:
 clear-helm:
 	printf "\033[1;31m Deleting Deployed Helms \033[0m \n"
 	#Clear CRD's (Needed before Helm Deletion)
-	#HACK: Clear Kiali if istio enabled
+	#HACK: #B Clear Kiali if istio enabled
 	#HACK: Add Mysql CRD's
 		
 	-helm delete $$(helm list --short | grep -v "$(BOOTABLE)") > $(OUT)
