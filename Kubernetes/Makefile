@@ -4,7 +4,6 @@ include ../common/tools/base.mk
 PORT=8091
 CPU=4
 MEMORY=4096
-XTRA=""
 
 MINI_BKP_DIR=~/Downloads/minibkp
 

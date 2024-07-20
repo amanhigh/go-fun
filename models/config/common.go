@@ -30,13 +30,11 @@ func (self *Server) GetUrl(uri string) string {
 type Vault struct {
 	Server `yaml:",inline"`
 	Token  string `yaml:"token"`
-}
+
 
 type Db struct {
 	DbType string `env:"DB_TYPE" envDefault:"sqlite"` //mysql,postgres,sqlite
 	Url    string `env:"DB_URL" envDefault:"aman:aman@tcp(mysql:3306)/compute?charset=utf8&parseTime=True&loc=Local"`
-	//BUG: Add Migration Scripts Proper
-	//migration_source: /Users/amanpreet.singh/IdeaProjects/Go/go-fun/learn/frameworks/orm/db/go-migrate/migration
 	MigrationSource string `env:"DB_MIGRATION_SOURCE"`
 	MaxIdle         int    `env:"DB_MAX_IDLE"  envDefault:"2"`
 	MaxOpen         int    `env:"DB_MAX_OPEN"  envDefault:"10"`

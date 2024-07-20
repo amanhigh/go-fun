@@ -47,7 +47,6 @@ update: ## Update Services via Helm
 	printf "\033[1;32m Updating Services \033[0m \n"
 	$(MAKE) $(SERVICE_MAKE_OPTS) CMD=upgrade $(ANS)
 
-# BUG: Fix empty XTRA in Mac.
 bootstrap:
 	$(MAKE) $(SERVICE_MAKE_OPTS) $(subst \|, ,$(BOOTABLE)) $(XTRA)
 	kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik --timeout=2m; > $(OUT)
