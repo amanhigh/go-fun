@@ -17,22 +17,19 @@ func (self *Queue) Enqueue(i int) {
 }
 
 func (self *Queue) Dequeue() (i int) {
-	//BUG: Move exit.IsEmpty to transfer post tests
-	if self.exit.IsEmpty() {
-		self.transfer()
-	}
+	self.transfer()
 	return self.exit.Pop()
 }
 
 func (self *Queue) transfer() {
-	for !self.entry.IsEmpty() {
-		self.exit.Push(self.entry.Pop())
+	if self.exit.IsEmpty() {
+		for !self.entry.IsEmpty() {
+			self.exit.Push(self.entry.Pop())
+		}
 	}
 }
 
 func (self *Queue) Peek() (i int) {
-	if self.exit.IsEmpty() {
-		self.transfer()
-	}
+	self.transfer()
 	return self.exit.Peek()
 }

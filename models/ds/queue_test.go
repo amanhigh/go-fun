@@ -7,7 +7,7 @@ import (
 	"github.com/amanhigh/go-fun/models/ds"
 )
 
-var _ = FDescribe("Queue", func() {
+var _ = Describe("Queue", func() {
 	var queue ds.Queue
 
 	BeforeEach(func() {
@@ -28,6 +28,7 @@ var _ = FDescribe("Queue", func() {
 		AfterEach(func() {
 			Expect(queue.Dequeue()).To(Equal(2))
 			Expect(queue.Dequeue()).To(Equal(3))
+			Expect(queue.Dequeue()).To(Equal(-1))
 		})
 
 		It("should peek at the front element without removing it", func() {
@@ -52,5 +53,24 @@ var _ = FDescribe("Queue", func() {
 		Expect(queue.Peek()).To(Equal(2))
 		Expect(queue.Dequeue()).To(Equal(2))
 		Expect(queue.Dequeue()).To(Equal(3))
+	})
+
+	It("should correctly handle dequeue when exit stack is empty", func() {
+		queue.Enqueue(1)
+		queue.Enqueue(2)
+		queue.Enqueue(3)
+	
+		// Dequeue all elements, which should empty both stacks
+		Expect(queue.Dequeue()).To(Equal(1))
+		Expect(queue.Dequeue()).To(Equal(2))
+		Expect(queue.Dequeue()).To(Equal(3))
+	
+		// Enqueue new elements
+		queue.Enqueue(4)
+		queue.Enqueue(5)
+	
+		// This dequeue should trigger the transfer from entry to exit stack
+		Expect(queue.Dequeue()).To(Equal(4))
+		Expect(queue.Dequeue()).To(Equal(5))
 	})
 })
