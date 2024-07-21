@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -31,6 +32,7 @@ func (ui *UIManager) SetupLayout() {
 	ui.app.SetRoot(ui.mainFlex, true)
 	ui.UpdateContext()
 	ui.setupFilterInput()
+	ui.setupCustomKeys()
 }
 
 func createList(title string, items []string) *tview.List {
@@ -45,6 +47,7 @@ func createList(title string, items []string) *tview.List {
 func createTextView(title string) *tview.TextView {
 	tv := tview.NewTextView()
 	tv.SetBorder(true).SetTitle(title)
+
 	return tv
 }
 
@@ -101,3 +104,17 @@ func (ui *UIManager) clearFilterInput() {
 	ui.UpdateServicesList("")
 }
 
+func (ui *UIManager) setupCustomKeys() {
+	ui.svcList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyRune:
+			switch event.Rune() {
+			case 'h':
+				return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
+			case 't':
+				return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
+			}
+		}
+		return event
+	})
+}
