@@ -3,7 +3,6 @@ include ../../common/tools/base.mk
 ### Variables
 CMD=install
 SCRIPT_DIR=$(shell pwd)
-$(info $(SCRIPT_DIR))
 
 # Bootstrap: helm show values bitnami/postgresql > postgres.yml
 # Debug: find . | entr -s "helm template elasticsearch bitnami/elasticsearch -f elasticsearch.yml > debug.txt;make setup"
