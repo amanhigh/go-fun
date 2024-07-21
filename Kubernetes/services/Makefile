@@ -8,7 +8,7 @@ BOOTABLE = traefik\|webui
 DOCKER_HOSTS=127.0.0.1 docker httpbin.docker dashy.docker resty.docker webui.docker pdf.docker paperless.docker app.docker \
 mysqladmin.docker redisadmin.docker cron.docker prometheus.docker grafana.docker jaeger.docker kiali.docker \
 ldapadmin.docker webssh.docker elastic.docker kibana.docker webssh2.docker sshwifty.docker nginx.docker portainer.docker \
-consul.docker opa.docker sonar.docker metabase.docker clarity.docker
+consul.docker opa.docker sonar.docker metabase.docker clarity.docker locust.docker
 NS:=$(shell kubectl get sa -o=jsonpath='{.items[0]..metadata.namespace}')
 ANS_FILE:=/tmp/k8-svc.txt
 ANS:=$(shell cat $(ANS_FILE))
@@ -92,6 +92,7 @@ helm-add:
 	helm repo add bitpoke https://helm-charts.bitpoke.io
 	helm repo add gabe565 https://charts.gabe565.com
 	helm repo add apiclarity https://openclarity.github.io/apiclarity
+	helm repo add deliveryhero https://charts.deliveryhero.io/
 
 helm-update:
 	printf $(_TITLE) "Helm" "Updating"

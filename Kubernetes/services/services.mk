@@ -34,6 +34,12 @@ loader: ## Stress Testing
 	printf $(_INFO) "Check Logs for Output"
 	printf $(_INFO) "Vegeta" "echo 'GET http://nginx' | vegeta attack | vegeta report"
 
+locust: ## Load Testing with Locust
+	-helm $(CMD) locust deliveryhero/locust -f locust.yml > $(OUT)
+	printf $(_INFO) "Locust Web UI" "http://locust.docker/"
+	printf $(_INFO) "Usage" "Configure locust.yml with your test scenarios"
+	printf $(_INFO) "Run Tests" "Visit the Locust Web UI to start and monitor load tests"
+
 app: ## Fun Application
 	-helm $(CMD) app onechart/onechart -f app.yml > $(OUT)
 	printf $(_INFO) "App Metrics" "http://app.docker/app/metrics"
