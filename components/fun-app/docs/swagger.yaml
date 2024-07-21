@@ -141,7 +141,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: Id of created person
           schema:
             type: string
