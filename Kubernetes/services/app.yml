@@ -17,6 +17,7 @@ vars:
   DB_URL: "postgres://aman:aman@docker:5432/compute?sslmode=disable"
   DB_LOG_LEVEL: "3" # 4 is Debug
   HTTP_REQUEST_TIMEOUT: "2s"
+  TRACING_PUBLISH: "batch"
 
 ingress:
   annotations:
@@ -24,3 +25,10 @@ ingress:
     traefik.ingress.kubernetes.io/router.middlewares: default-stripprefixregex@kubernetescrd
   path: /
   host: app.docker
+resources:
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
