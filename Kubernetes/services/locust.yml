@@ -1,0 +1,12 @@
+#  https://github.com/deliveryhero/helm-charts/blob/master/stable/locust/values.yaml
+
+ingress:
+  enabled: true
+  className: "traefik"
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  hosts:
+    - host: locust.docker      
+      path: /
+      pathType: Prefix
+  tls: []
