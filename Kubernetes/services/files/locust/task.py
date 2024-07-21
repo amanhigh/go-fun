@@ -54,6 +54,19 @@ class FunAppUser(HttpUser):
             "limit": limit
         }
         self.client.get(f"/{API_VERSION}/person", params=params)
+    
+    @task(3)
+    def get_person_audit(self):
+        if self.created_person_ids:
+            person_id = random.choice(self.created_person_ids)
+            with self.client.get(f"/{API_VERSION}/person/{person_id}/audit", catch_response=True) as response:
+                if response.status_code != 200:
+                    error_msg = f"Failed to get audit for person {person_id}. Status code: {response.status_code}, Response: {response.text}"
+                    logging.error(error_msg)
+                    response.failure(error_msg)
+        else:
+            # If no persons have been created yet, create one
+            self.create_person()
 
     @task(2)
     def update_person(self):
