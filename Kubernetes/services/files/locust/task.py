@@ -54,6 +54,24 @@ class FunAppUser(HttpUser):
             "limit": limit
         }
         self.client.get(f"/{API_VERSION}/person", params=params)
+
+    @task(2)
+    def update_person(self):
+        if self.created_person_ids:
+            person_id = random.choice(self.created_person_ids)
+            payload = {
+                "name": f"Updated Person {random.randint(1000, 9999)}",
+                "age": random.randint(18, 80),
+                "gender": random.choice(["MALE", "FEMALE"])
+            }
+            with self.client.put(f"/{API_VERSION}/person/{person_id}", json=payload, catch_response=True) as response:
+                if response.status_code != 200:
+                    error_msg = f"Failed to update person {person_id}. Status code: {response.status_code}, Response: {response.text}"
+                    logging.error(error_msg)
+                    response.failure(error_msg)
+        else:
+            # If no persons have been created yet, create one
+            self.create_person()
     
     @task(1)
     def delete_person(self):
@@ -69,3 +87,5 @@ class FunAppUser(HttpUser):
         else:
             # If no persons have been created yet, create one
             self.create_person()
+    
+    
