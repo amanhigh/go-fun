@@ -16,7 +16,7 @@ class FunAppUser(HttpUser):
     def get_metrics(self):
         self.client.get("/metrics")
 
-    @task(2)
+    @task(3)
     def create_person(self):
         payload = {
             "name": f"User {random.randint(1, 1000)}",
@@ -37,7 +37,7 @@ class FunAppUser(HttpUser):
                 logging.error(error_msg)
                 response.failure(error_msg)
 
-    @task(3)
+    @task(5)
     def get_person(self):
         if self.created_person_ids:
             person_id = random.choice(self.created_person_ids)
@@ -54,3 +54,18 @@ class FunAppUser(HttpUser):
             "limit": limit
         }
         self.client.get(f"/{API_VERSION}/person", params=params)
+    
+    @task(1)
+    def delete_person(self):
+        if self.created_person_ids:
+            person_id = random.choice(self.created_person_ids)
+            with self.client.delete(f"/{API_VERSION}/person/{person_id}", catch_response=True) as response:
+                if response.status_code == 204:
+                    self.created_person_ids.remove(person_id)
+                else:
+                    error_msg = f"Failed to delete person {person_id}. Status code: {response.status_code}, Response: {response.text}"
+                    logging.error(error_msg)
+                    response.failure(error_msg)
+        else:
+            # If no persons have been created yet, create one
+            self.create_person()
