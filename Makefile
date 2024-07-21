@@ -82,11 +82,12 @@ verify: test-focus ## Verify Basic Fun App Flow
 	printf $(_INFO) "mk watch CMD='make verify'"
 
 profile: ## Run Profiling
-	printf $(_TITLE) "Running Profiling on Port 8080"
+	$(eval ENDPOINT ?= http://localhost:8080)
+	printf $(_TITLE) "ENDPOINT=$(ENDPOINT)"
 	printf $(_DETAIL) "Profiling Heap"
-	go tool pprof -http=:8001 http://localhost:8080/debug/pprof/heap 2> $(OUT) &\
+	go tool pprof -http=:8001 $(ENDPOINT)/debug/pprof/heap 2> $(OUT) &\
 	printf $(_DETAIL) "Profiling CPU"
-	go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile 2> $(OUT);\
+	go tool pprof -http=:8000 --seconds=30 $(ENDPOINT)/debug/pprof/profile 2> $(OUT);\
 	printf $(_WARN) "Killing Profilers"
 	kill %1;
 
