@@ -27,7 +27,7 @@ readReplicas:
 primary:
   resources:
     limits:
-      cpu: 500m
+      cpu: 2
       memory: 512Mi
     requests:
       cpu: 250m
