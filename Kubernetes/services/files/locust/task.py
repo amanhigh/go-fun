@@ -2,6 +2,7 @@ from locust import HttpUser, task, between
 import random
 import json
 import logging
+import string
 
 API_VERSION = "v1"
 
@@ -100,5 +101,20 @@ class FunAppUser(HttpUser):
         else:
             # If no persons have been created yet, create one
             self.create_person()
-    
-    
+
+    @task(3)
+    def list_persons_with_sorting(self):
+        sort_by = random.choice(["name", "gender", "age"])
+        order = random.choice(["asc", "desc"])
+        limit = random.randint(2, 5)
+        params = {
+            "offset": 0,
+            "limit": limit,
+            "sort_by": sort_by,
+            "order": order
+        }
+        with self.client.get(f"/{API_VERSION}/person", params=params, catch_response=True) as response:
+            if response.status_code != 200:
+                error_msg = f"Failed to list persons with sorting. Status code: {response.status_code}, Response: {response.text}"
+                logging.error(error_msg)
+                response.failure(error_msg)
