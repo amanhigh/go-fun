@@ -83,7 +83,7 @@ verify: test-focus ## Verify Basic Fun App Flow
 
 profile: ## Run Profiling
 	$(eval ENDPOINT ?= http://localhost:8080)
-	printf $(_TITLE) "ENDPOINT=$(ENDPOINT)"
+	printf $(_TITLE) "ENDPOINT=$(ENDPOINT) | http://app.docker/app"
 	printf $(_DETAIL) "Profiling Heap"
 	go tool pprof -http=:8001 $(ENDPOINT)/debug/pprof/heap 2> $(OUT) &\
 	printf $(_DETAIL) "Profiling CPU"

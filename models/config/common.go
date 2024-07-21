@@ -33,8 +33,8 @@ type Vault struct {
 }
 
 type Db struct {
-	DbType string `env:"DB_TYPE" envDefault:"sqlite"` //mysql,postgres,sqlite
-	Url    string `env:"DB_URL" envDefault:"aman:aman@tcp(mysql:3306)/compute?charset=utf8&parseTime=True&loc=Local"`
+	DbType          string `env:"DB_TYPE" envDefault:"sqlite"` //mysql,postgres,sqlite
+	Url             string `env:"DB_URL" envDefault:"aman:aman@tcp(mysql:3306)/compute?charset=utf8&parseTime=True&loc=Local"`
 	MigrationSource string `env:"DB_MIGRATION_SOURCE"`
 	MaxIdle         int    `env:"DB_MAX_IDLE"  envDefault:"2"`
 	MaxOpen         int    `env:"DB_MAX_OPEN"  envDefault:"10"`
@@ -46,7 +46,7 @@ type Db struct {
 type Tracing struct {
 	Type     string `env:"TRACING_TYPE" envDefault:"noop"` // noop,console,otlp
 	Endpoint string `env:"TRACING_URL" envDefault:"docker:4317"`
-	Publish  string `env:"TRACING_PUBLISH" envDefault:"sync"` //sync, batch (production)
+	Publish  string `env:"TRACING_PUBLISH" envDefault:"batch"` //sync, batch (production)
 }
 
 var DefaultHttpConfig = HttpClientConfig{
