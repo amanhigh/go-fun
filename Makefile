@@ -194,7 +194,7 @@ release-fun:
 
 release-docker: docker-build ## Release Docker Images
 ifndef VER
-	$(error VER not set. Eg. v1.1.0)
+	$(error VER not set. Use VER=v1.0.5 )
 endif
 	printf $(_TITLE) "Release Docker Images: $(VER)"
 	printf $(_DETAIL) "Docker Tag"
@@ -291,19 +291,19 @@ setup-k8: ## Kubernetes Setup
 
 ### Docker
 docker-fun: build-fun
-	printf $(_TITLE) "Building FunApp Docker Image"
+	printf $(_TITLE) "Docker" "Building FunApp"
 	docker buildx build -t $(FUN_IMAGE_TAG) -f $(FUN_DIR)/Dockerfile $(FUN_DIR) 2> $(OUT)
 
 docker-fun-run: docker-fun
-	printf $(_TITLE) "Running FunApp Docker Image"
+	printf $(_TITLE) "Docker" "Running FunApp"
 	docker run -it amanfdk/fun-app
 
 docker-fun-exec:
-	printf $(_TITLE) "Execing Into FunApp Docker Image"
+	printf $(_TITLE) "Docker" "Execing Into FunApp"
 	docker run -it --entrypoint /bin/sh amanfdk/fun-app
 
 docker-fun-clean:
-	printf $(_WARN) "Deleting FunApp Docker Image"
+	printf $(_WARN) "Docker" "Deleting FunApp"
 	-docker rmi -f `docker images $(FUN_IMAGE_TAG)  -q` > $(OUT)
 
 ### Devspace
@@ -328,6 +328,7 @@ space-test: ## Gink Tests Devspace (Watch Mode)
 	$(MAKE) watch CMD="devspace run fun-test"
 
 docker-build: docker-fun ## Build Docker Images
+	printf $(_INFO) "Docker Hub" "https://hub.docker.com/r/amanfdk/fun-app/tags"
 
 ### Workflows
 test: test-operator test-it ## Run all tests (Excludes test-slow)
