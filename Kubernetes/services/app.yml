@@ -14,7 +14,7 @@ probe:
 vars:
   PORT: 7080
   DB_TYPE: "sqlite" # postgres
-  DB_URL: "postgres://aman:aman@docker:5432/compute?sslmode=disable"
+  DB_URL: "postgres://aman:aman@pg-primary:5432/compute?sslmode=disable"
   DB_LOG_LEVEL: "3" # 4 is Debug
   HTTP_REQUEST_TIMEOUT: "2s"
   TRACING_PUBLISH: "batch"
