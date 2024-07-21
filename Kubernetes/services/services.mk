@@ -138,7 +138,7 @@ mysql: metabase ## MySQL
 	-helm $(CMD) mysql bitnami/mysql -f mysql.yml > $(OUT)
 	printf $(_INFO) "MySQL(3306) Login" "mysql-primary/mysql-secondary, root/root, aman/aman"
 
-postgres: metabase ## PostgreSQL
+postgres: ## PostgreSQL
 	-helm $(CMD) postgres bitnami/postgresql -f postgres.yml > $(OUT)
 	printf $(_INFO) "Postgres(5432) Login" "pg-primary/pg-read, postgres/root, aman/aman"
 	printf $(_DETAIL) "Restoring Backup (Wait PgSQL)" 
