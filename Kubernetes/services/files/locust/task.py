@@ -1,6 +1,7 @@
 from locust import HttpUser, task, between
 import random
 import json
+import logging
 
 API_VERSION = "v1"
 
@@ -22,11 +23,19 @@ class FunAppUser(HttpUser):
             "age": random.randint(18, 80),
             "gender": random.choice(["MALE", "FEMALE"])
         }
-        response = self.client.post(f"/{API_VERSION}/person", json=payload)
-        if response.status_code == 201:  # Assuming 201 Created status code
-            person_id = response.json().get('id')
-            if person_id:
-                self.created_person_ids.append(person_id)
+        with self.client.post(f"/{API_VERSION}/person", json=payload, catch_response=True) as response:
+            if response.status_code == 201:
+                person_id = response.json().get('id')
+                if person_id:
+                    self.created_person_ids.append(person_id)
+                else:
+                    error_msg = f"Person created but no ID found in response. Response: {response.text}"
+                    logging.error(error_msg)
+                    response.failure(error_msg)
+            else:
+                error_msg = f"Failed to create person. Status code: {response.status_code}, Response: {response.text}"
+                logging.error(error_msg)
+                response.failure(error_msg)
 
     @task(3)
     def get_person(self):
