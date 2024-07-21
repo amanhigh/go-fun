@@ -18,7 +18,7 @@ class FunAppUser(HttpUser):
         self.client.get("/metrics")
 
     @task(3)
-    @tag('basic')
+    @tag('write')
     def create_person(self):
         payload = self._generate_person_payload()
         with self.client.post(f"/{API_VERSION}/person", json=payload, catch_response=True) as response:
@@ -30,7 +30,7 @@ class FunAppUser(HttpUser):
                     logging.error(f"Person created but no ID found in response. Response: {response.text}")
 
     @task(5)
-    @tag('basic')
+    @tag('read')
     def get_person(self):
         if self.person_ids:
             person_id = random.choice(self.person_ids)
@@ -40,7 +40,7 @@ class FunAppUser(HttpUser):
             self.create_person()
             
     @task(4)
-    @tag('basic')
+    @tag('read')
     def list_persons(self):
         params = {
             "offset": random.randint(1, 50),
@@ -63,7 +63,7 @@ class FunAppUser(HttpUser):
             self.create_person()
 
     @task(2)
-    @tag('basic')
+    @tag('write')
     def update_person(self):
         if self.person_ids:
             person_id = random.choice(self.person_ids)
@@ -75,7 +75,7 @@ class FunAppUser(HttpUser):
             self.create_person()
     
     @task(1)
-    @tag('basic')
+    @tag('write')
     def delete_person(self):
         if self.person_ids:
             person_id = random.choice(self.person_ids)

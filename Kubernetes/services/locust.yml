@@ -5,7 +5,7 @@ loadtest:
   locust_locustfile: task.py
   locust_locustfile_configmap: locust-task
   locust_host: http://app:9001
-  tags: "basic search"
+  tags: "read search write"
   excludeTags: "telemetry"
 
 ingress:
