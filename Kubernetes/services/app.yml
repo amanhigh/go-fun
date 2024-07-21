@@ -13,7 +13,8 @@ probe:
 
 vars:
   PORT: 7080
-  DB_URL: "aman:aman@tcp(mysql-primary:3306)/compute?charset=utf8&parseTime=True&loc=Local"
+  DB_TYPE: "sqlite" # postgres
+  DB_URL: "postgres://aman:aman@docker:5432/compute?sslmode=disable"
   DB_LOG_LEVEL: "3" # 4 is Debug
   HTTP_REQUEST_TIMEOUT: "2s"
 
