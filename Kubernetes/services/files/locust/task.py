@@ -13,10 +13,12 @@ class FunAppUser(HttpUser):
 
     # Task with Weight 1 which is Least Frequent, Higher the number, more frequent the task
     @task(1)
+    @tag('telemetry')
     def get_metrics(self):
         self.client.get("/metrics")
 
     @task(3)
+    @tag('basic')
     def create_person(self):
         payload = self._generate_person_payload()
         with self.client.post(f"/{API_VERSION}/person", json=payload, catch_response=True) as response:
@@ -28,6 +30,7 @@ class FunAppUser(HttpUser):
                     logging.error(f"Person created but no ID found in response. Response: {response.text}")
 
     @task(5)
+    @tag('basic')
     def get_person(self):
         if self.person_ids:
             person_id = random.choice(self.person_ids)
@@ -37,6 +40,7 @@ class FunAppUser(HttpUser):
             self.create_person()
             
     @task(4)
+    @tag('basic')
     def list_persons(self):
         params = {
             "offset": random.randint(1, 50),
@@ -45,6 +49,7 @@ class FunAppUser(HttpUser):
         self.client.get(f"/{API_VERSION}/person", params=params)
     
     @task(3)
+    @tag('search')
     def get_person_audit(self):
         if self.person_ids:
             person_id = random.choice(self.person_ids)
@@ -58,6 +63,7 @@ class FunAppUser(HttpUser):
             self.create_person()
 
     @task(2)
+    @tag('basic')
     def update_person(self):
         if self.person_ids:
             person_id = random.choice(self.person_ids)
@@ -69,6 +75,7 @@ class FunAppUser(HttpUser):
             self.create_person()
     
     @task(1)
+    @tag('basic')
     def delete_person(self):
         if self.person_ids:
             person_id = random.choice(self.person_ids)
@@ -84,6 +91,7 @@ class FunAppUser(HttpUser):
             self.create_person()
 
     @task(3)
+    @tag('search')
     def list_persons_with_sorting(self):
         sort_by = random.choice(["name", "gender", "age"])
         order = random.choice(["asc", "desc"])
@@ -100,6 +108,7 @@ class FunAppUser(HttpUser):
                 response.failure(error_msg)
 
     @task(3)
+    @tag('search')
     def list_persons_with_filtering(self):
         params = self._get_filter_params()
         with self.client.get(f"/{API_VERSION}/person", params=params, catch_response=True) as response:
