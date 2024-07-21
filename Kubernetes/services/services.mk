@@ -2,7 +2,8 @@ include ../../common/tools/base.mk
 
 ### Variables
 CMD=install
-SCRIPT_DIR=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+SCRIPT_DIR=$(shell pwd)
+$(info $(SCRIPT_DIR))
 
 #TODO: #B Add Locust
 # Bootstrap: helm show values bitnami/postgresql > postgres.yml
@@ -35,9 +36,10 @@ loader: ## Stress Testing
 	printf $(_INFO) "Vegeta" "echo 'GET http://nginx' | vegeta attack | vegeta report"
 
 locust: ## Load Testing with Locust
+	kubectl create configmap locust-task --from-file=$(SCRIPT_DIR)/files/locust/task.py -o yaml --dry-run=client | kubectl apply -f -
 	-helm $(CMD) locust deliveryhero/locust -f locust.yml > $(OUT)
 	printf $(_INFO) "Locust Web UI" "http://locust.docker/"
-	printf $(_INFO) "Usage" "Configure locust.yml with your test scenarios"
+	printf $(_INFO) "Usage" "Configure task.py in $(SCRIPT_DIR)/files/locust/ with your test scenarios"
 	printf $(_INFO) "Run Tests" "Visit the Locust Web UI to start and monitor load tests"
 
 app: ## Fun Application

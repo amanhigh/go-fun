@@ -1,5 +1,10 @@
 #  https://github.com/deliveryhero/helm-charts/blob/master/stable/locust/values.yaml
 
+loadtest:
+  name: locust-loadtest
+  locust_locustfile: task.py
+  locust_locustfile_configmap: locust-task
+
 ingress:
   enabled: true
   className: "traefik"
@@ -9,4 +14,4 @@ ingress:
     - host: locust.docker      
       path: /
       pathType: Prefix
-  tls: []
+  
