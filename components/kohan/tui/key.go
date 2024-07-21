@@ -35,7 +35,6 @@ func (h *HotkeyManager) setupHotkeyConfig() {
 		{Key: ' ', Description: "Toggle service selection or filtered services", Handler: func() {
 			if h.app.GetFocus() == h.uiManager.svcList {
 				h.uiManager.ToggleServiceSelection()
-				h.uiManager.UpdateContext()
 			} else if h.app.GetFocus() == h.uiManager.filterInput {
 				h.uiManager.ToggleFilteredServices()
 			}

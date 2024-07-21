@@ -49,9 +49,12 @@ func createTextView(title string) *tview.TextView {
 }
 
 func (ui *UIManager) ToggleServiceSelection() {
-	index := ui.svcList.GetCurrentItem()
-	mainText, _ := ui.svcList.GetItemText(index)
-	ui.svcManager.ToggleServiceSelection(mainText)
+	if ui.svcList.GetItemCount() > 0 {
+		index := ui.svcList.GetCurrentItem()
+		name, _ := ui.svcList.GetItemText(index)
+		ui.svcManager.ToggleServiceSelection(name)
+		ui.UpdateContext()
+	}
 }
 
 func (ui *UIManager) UpdateContext() {
@@ -93,8 +96,8 @@ func (ui *UIManager) setupFilterInput() {
 		ui.UpdateServicesList(text)
 	})
 }
-
 func (ui *UIManager) clearFilterInput() {
 	ui.filterInput.SetText("")
 	ui.UpdateServicesList("")
 }
+
