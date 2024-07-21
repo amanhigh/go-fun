@@ -5,7 +5,6 @@ CMD=install
 SCRIPT_DIR=$(shell pwd)
 $(info $(SCRIPT_DIR))
 
-#TODO: #B Add Locust
 # Bootstrap: helm show values bitnami/postgresql > postgres.yml
 # Debug: find . | entr -s "helm template elasticsearch bitnami/elasticsearch -f elasticsearch.yml > debug.txt;make setup"
 # sudo kubefwd svc | awk '{ if($2 ~ /Port-Forward/) {print $0" URL: http://"$4"/"} else {print}}'

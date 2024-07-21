@@ -8,9 +8,8 @@ API_VERSION = "v1"
 
 # https://docs.locust.io/en/stable/writing-a-locustfile.html
 class FunAppUser(HttpUser):
-    # Wait time between tasks in seconds
     wait_time = between(1, 5)
-    created_person_ids = []
+    person_ids = []
 
     # Task with Weight 1 which is Least Frequent, Higher the number, more frequent the task
     @task(1)
@@ -19,29 +18,19 @@ class FunAppUser(HttpUser):
 
     @task(3)
     def create_person(self):
-        payload = {
-            "name": f"User {random.randint(1, 1000)}",
-            "age": random.randint(18, 80),
-            "gender": random.choice(["MALE", "FEMALE"])
-        }
+        payload = self._generate_person_payload()
         with self.client.post(f"/{API_VERSION}/person", json=payload, catch_response=True) as response:
-            if response.status_code == 201:
+            if self._handle_response(response, "create") == 201:
                 person_id = response.json().get('id')
                 if person_id:
-                    self.created_person_ids.append(person_id)
+                    self.person_ids.append(person_id)
                 else:
-                    error_msg = f"Person created but no ID found in response. Response: {response.text}"
-                    logging.error(error_msg)
-                    response.failure(error_msg)
-            else:
-                error_msg = f"Failed to create person. Status code: {response.status_code}, Response: {response.text}"
-                logging.error(error_msg)
-                response.failure(error_msg)
+                    logging.error(f"Person created but no ID found in response. Response: {response.text}")
 
     @task(5)
     def get_person(self):
-        if self.created_person_ids:
-            person_id = random.choice(self.created_person_ids)
+        if self.person_ids:
+            person_id = random.choice(self.person_ids)
             self.client.get(f"/{API_VERSION}/person/{person_id}")
         else:
             # If no persons have been created yet, create one
@@ -49,17 +38,16 @@ class FunAppUser(HttpUser):
             
     @task(4)
     def list_persons(self):
-        limit = random.randint(2, 5)
         params = {
-            "offset": 0,
-            "limit": limit
+            "offset": random.randint(1, 50),
+            "limit": random.randint(2, 5)
         }
         self.client.get(f"/{API_VERSION}/person", params=params)
     
     @task(3)
     def get_person_audit(self):
-        if self.created_person_ids:
-            person_id = random.choice(self.created_person_ids)
+        if self.person_ids:
+            person_id = random.choice(self.person_ids)
             with self.client.get(f"/{API_VERSION}/person/{person_id}/audit", catch_response=True) as response:
                 if response.status_code != 200:
                     error_msg = f"Failed to get audit for person {person_id}. Status code: {response.status_code}, Response: {response.text}"
@@ -71,29 +59,22 @@ class FunAppUser(HttpUser):
 
     @task(2)
     def update_person(self):
-        if self.created_person_ids:
-            person_id = random.choice(self.created_person_ids)
-            payload = {
-                "name": f"Updated Person {random.randint(1000, 9999)}",
-                "age": random.randint(18, 80),
-                "gender": random.choice(["MALE", "FEMALE"])
-            }
+        if self.person_ids:
+            person_id = random.choice(self.person_ids)
+            payload = self._generate_person_payload()
+            payload["name"] = f"Updated {payload['name']}"
             with self.client.put(f"/{API_VERSION}/person/{person_id}", json=payload, catch_response=True) as response:
-                if response.status_code != 200:
-                    error_msg = f"Failed to update person {person_id}. Status code: {response.status_code}, Response: {response.text}"
-                    logging.error(error_msg)
-                    response.failure(error_msg)
+                self._handle_response(response, "update", person_id)
         else:
-            # If no persons have been created yet, create one
             self.create_person()
     
     @task(1)
     def delete_person(self):
-        if self.created_person_ids:
-            person_id = random.choice(self.created_person_ids)
+        if self.person_ids:
+            person_id = random.choice(self.person_ids)
             with self.client.delete(f"/{API_VERSION}/person/{person_id}", catch_response=True) as response:
                 if response.status_code == 204:
-                    self.created_person_ids.remove(person_id)
+                    self.person_ids.remove(person_id)
                 else:
                     error_msg = f"Failed to delete person {person_id}. Status code: {response.status_code}, Response: {response.text}"
                     logging.error(error_msg)
@@ -106,10 +87,9 @@ class FunAppUser(HttpUser):
     def list_persons_with_sorting(self):
         sort_by = random.choice(["name", "gender", "age"])
         order = random.choice(["asc", "desc"])
-        limit = random.randint(2, 5)
         params = {
-            "offset": 0,
-            "limit": limit,
+            "offset": random.randint(1, 50),
+            "limit": random.randint(2, 5),
             "sort_by": sort_by,
             "order": order
         }
@@ -121,25 +101,48 @@ class FunAppUser(HttpUser):
 
     @task(3)
     def list_persons_with_filtering(self):
-        # Randomly choose which filter to apply
+        params = self._get_filter_params()
+        with self.client.get(f"/{API_VERSION}/person", params=params, catch_response=True) as response:
+            self._handle_response(response, "list with filtering")
+
+### Helpers
+    def _handle_response(self, response, action, person_id=None):
+        if response.status_code not in [200, 201, 204]:
+            error_msg = f"Failed to {action} person{' ' + str(person_id) if person_id else ''}. Status code: {response.status_code}, Response: {response.text}"
+            logging.error(error_msg)
+            response.failure(error_msg)
+        return response.status_code
+
+    def _get_filter_params(self):
         filter_type = random.choice(["name", "gender", "age"])
-        
         params = {
             "offset": 0,
             "limit": random.randint(2, 5)
         }
-
         if filter_type == "name":
-            # Generate a name similar to how we create users
-            name = f"User {random.randint(1, 1000)}"
-            params["name"] = name
+            params["name"] = self._generate_username()
         elif filter_type == "gender":
-            params["gender"] = random.choice(["MALE", "FEMALE"])
+            params["gender"] = self._generate_gender()
         else:  # age
-            params["age"] = random.randint(18, 80)
+            params["age"] = self._generate_age()
+        return params
 
-        with self.client.get(f"/{API_VERSION}/person", params=params, catch_response=True) as response:
-            if response.status_code != 200:            
-                error_msg = f"Failed to list persons with filtering. Status code: {response.status_code}, Response: {response.text}"
-                logging.error(error_msg)
-                response.failure(error_msg)
+    @staticmethod
+    def _generate_username():
+        return f"User {random.randint(1, 1000)}"
+
+    @staticmethod
+    def _generate_age():
+        return random.randint(18, 80)
+
+    @staticmethod
+    def _generate_gender():
+        return random.choice(["MALE", "FEMALE"])
+
+    @staticmethod
+    def _generate_person_payload():
+        return {
+            "name": FunAppUser._generate_username(),
+            "age": FunAppUser._generate_age(),
+            "gender": FunAppUser._generate_gender()
+        }
