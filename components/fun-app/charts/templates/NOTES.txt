@@ -1,6 +1,7 @@
 Run 'minikube tunnel' to expose ELB endpoints.
 
 Metrics: http://localhost:9090/metrics
+Swagger: http://localhost:9090/swagger/index.html
 
 {{- if .Values.rateLimit }}
 Current Rate Limit: {{ .Values.rateLimit.perMin }}

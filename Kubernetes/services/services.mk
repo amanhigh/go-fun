@@ -46,6 +46,7 @@ app: ## Fun Application
 	-helm $(CMD) app onechart/onechart -f app.yml > $(OUT)
 	printf $(_INFO) "App Metrics" "http://app.docker/app/metrics"
 	printf $(_INFO) "App All" "http://app.docker/app/person/all"
+	printf $(_INFO) "Swagger" "http://app.docker/app/swagger/index.html"
 	printf $(_INFO) "Vegeta" "echo 'GET http://app:9001/person/all' | vegeta attack | vegeta report"
 
 proxy: ## Proxy Servers
