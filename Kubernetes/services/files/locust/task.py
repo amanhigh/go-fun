@@ -118,3 +118,28 @@ class FunAppUser(HttpUser):
                 error_msg = f"Failed to list persons with sorting. Status code: {response.status_code}, Response: {response.text}"
                 logging.error(error_msg)
                 response.failure(error_msg)
+
+    @task(3)
+    def list_persons_with_filtering(self):
+        # Randomly choose which filter to apply
+        filter_type = random.choice(["name", "gender", "age"])
+        
+        params = {
+            "offset": 0,
+            "limit": random.randint(2, 5)
+        }
+
+        if filter_type == "name":
+            # Generate a name similar to how we create users
+            name = f"User {random.randint(1, 1000)}"
+            params["name"] = name
+        elif filter_type == "gender":
+            params["gender"] = random.choice(["MALE", "FEMALE"])
+        else:  # age
+            params["age"] = random.randint(18, 80)
+
+        with self.client.get(f"/{API_VERSION}/person", params=params, catch_response=True) as response:
+            if response.status_code != 200:            
+                error_msg = f"Failed to list persons with filtering. Status code: {response.status_code}, Response: {response.text}"
+                logging.error(error_msg)
+                response.failure(error_msg)
