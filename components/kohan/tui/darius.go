@@ -6,7 +6,6 @@ import (
 
 /*
 	TODO: #A Darius Improvements
-	- Vim Like Keys
 	- Minikube Control
 	- Funapp Verification and Load Test.
 */
