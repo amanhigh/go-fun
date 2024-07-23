@@ -33,7 +33,13 @@ output: |-
   }
   stdout { codec => rubydebug }
 
-
+service:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+    - name: beats
+      port: 5044
 
 ## @param filter Filter Plugins configuration
 ## ref: https://www.elastic.co/guide/en/logstash/current/filter-plugins.html

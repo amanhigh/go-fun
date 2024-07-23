@@ -93,6 +93,7 @@ helm-add:
 	helm repo add gabe565 https://charts.gabe565.com
 	helm repo add apiclarity https://openclarity.github.io/apiclarity
 	helm repo add deliveryhero https://charts.deliveryhero.io/
+	helm repo add elastic https://helm.elastic.co
 
 helm-update:
 	printf $(_TITLE) "Helm" "Updating"
