@@ -11,9 +11,16 @@ import (
 
 // https://github.com/caarlos0/env
 
+var DefaultLogConfig = Log{
+	LogLevel: zerolog.InfoLevel,
+}
+
 type Server struct {
-	Host     string        `env:"HOST"`
-	Port     int           `env:"PORT" envDefault:"8080"`
+	Host string `env:"HOST"`
+	Port int    `env:"PORT" envDefault:"8080"`
+}
+
+type Log struct {
 	LogLevel zerolog.Level `env:"LOG_LEVEL" envDefault:"info"`
 }
 

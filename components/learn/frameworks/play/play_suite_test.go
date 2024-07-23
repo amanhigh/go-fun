@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/amanhigh/go-fun/common/telemetry"
+	"github.com/amanhigh/go-fun/models/config"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/rs/zerolog"
 )
 
 func TestPlay(t *testing.T) {
@@ -15,5 +15,5 @@ func TestPlay(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	telemetry.InitLogger(zerolog.InfoLevel)
+	telemetry.InitLogger(config.DefaultLogConfig)
 })

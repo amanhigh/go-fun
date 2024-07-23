@@ -15,7 +15,7 @@ var (
 
 func init() {
 	//BUG: #C Connect logger to Debug in Root Cmd
-	telemetry.InitLogger(zerolog.InfoLevel)
+	telemetry.InitLogger(config.DefaultLogConfig)
 	RootCmd.PersistentFlags().BoolVarP(&config.KOHAN_DEBUG, "debug", "d", config.KOHAN_DEBUG, "Enable Debug")
 }
 

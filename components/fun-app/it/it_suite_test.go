@@ -12,7 +12,6 @@ import (
 	"github.com/amanhigh/go-fun/models/config"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"testing"
@@ -39,7 +38,7 @@ func TestIt(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	// Init Logger
-	telemetry.InitLogger(zerolog.InfoLevel)
+	telemetry.InitLogger(config.DefaultLogConfig)
 
 	baseUrl := os.Getenv("URL")
 	if baseUrl == "" {

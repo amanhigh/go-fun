@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/attribute"
@@ -20,9 +21,9 @@ const (
 // It takes a parameter level of type zerolog.Level.
 //
 // level - zerolog.DebugLevel (Verbose) to zerolog.ErrorLevel (Limited), or zerolog.FatalLevel (Critical)
-func InitLogger(level zerolog.Level) {
+func InitLogger(config config.Log) {
 	// Level
-	zerolog.SetGlobalLevel(level)
+	zerolog.SetGlobalLevel(config.LogLevel)
 
 	// Formatter
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "2006-01-02 15:04:05"}
