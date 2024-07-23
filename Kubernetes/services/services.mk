@@ -196,6 +196,7 @@ elk: ## ElasticSearch Kibana Logstash
 	printf $(_INFO) "ElasticSearch" "http://elastic.docker/_cluster/health?pretty"
 	printf $(_INFO) "ES Master" "http://docker:9200"
 	printf $(_INFO) "Kibana" "http://kibana.docker"
+	printf $(_INFO) "FileBeat" "Daemonset Mode"
 
 monitor: ## Prometheus, Grafana and Jaeger
 	-helm $(CMD) prometheus prometheus-community/prometheus -f prometheus.yml > $(OUT)
