@@ -189,9 +189,9 @@ zookeeper: ## Zookeeper
 ### Telemetry
 elk: ## ElasticSearch Kibana Logstash
 	#FIXME: #C Logstash in ELK
-	# helm $(CMD) logstash bitnami/logstash -f logstash.yml > $(OUT)
-	-helm $(CMD) elasticsearch bitnami/elasticsearch -f elasticsearch.yml > $(OUT)
-	-helm $(CMD) kibana bitnami/kibana -f kibana.yml > $(OUT)
+	helm $(CMD) logstash bitnami/logstash -f logstash.yml > $(OUT)
+	helm $(CMD) elasticsearch bitnami/elasticsearch -f elasticsearch.yml > $(OUT)
+	helm $(CMD) kibana bitnami/kibana -f kibana.yml > $(OUT)
 	printf $(_TITLE) "ELK needs CPU: 4, Memory: 10Gig"
 	printf $(_INFO) "ElasticSearch" "http://elastic.docker/_cluster/health?pretty"
 	printf $(_INFO) "ES Master" "http://docker:9200"

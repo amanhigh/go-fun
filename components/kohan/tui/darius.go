@@ -4,12 +4,6 @@ import (
 	"github.com/rivo/tview"
 )
 
-/*
-	TODO: #A Darius Improvements
-	- Minikube Control
-	- Funapp Verification and Load Test.
-*/
-
 type DariusV1 struct {
 	app       *tview.Application `container:"type"`
 	uiManager *UIManager         `container:"type"`
