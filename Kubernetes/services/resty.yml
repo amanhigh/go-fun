@@ -32,6 +32,8 @@ ingress:
   # host: docker
 # replicas: 2
 # podDisruptionBudgetEnabled: false
+# podAnnotations:
+  # co.elastic.logs/enabled: "true"
 
 resources:
   requests:

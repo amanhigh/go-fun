@@ -18,6 +18,7 @@ vars:
   DB_LOG_LEVEL: "3" # 4 is Debug
   HTTP_REQUEST_TIMEOUT: "2s"
   TRACING_PUBLISH: "batch"
+  LOG_FORMATTER: json
 
 ingress:
   annotations:
