@@ -20,8 +20,8 @@ import (
 
 const (
 	COVER_CMD        = "./cover.zsh run"
-	PORT             = "8085"
-	DEFAULT_BASE_URL = "http://localhost:" + PORT
+	DEFAULT_PORT     = "8085"
+	DEFAULT_BASE_URL = "http://localhost:" + DEFAULT_PORT
 )
 
 var (
@@ -41,8 +41,11 @@ var _ = BeforeSuite(func() {
 	// Init Logger
 	telemetry.InitLogger(zerolog.InfoLevel)
 
-	if "" == os.Getenv("URL") {
+	baseUrl := os.Getenv("URL")
+	if baseUrl == "" {
 		serviceUrl = DEFAULT_BASE_URL
+	} else {
+		serviceUrl = baseUrl
 	}
 
 	client = clients.NewFunAppClient(serviceUrl, config.DefaultHttpConfig)
@@ -54,7 +57,7 @@ var _ = BeforeSuite(func() {
 		spawned = false
 	} else {
 		logger.Info().Msg("FunApp: Starting (Not Running)")
-		os.Setenv("PORT", PORT)
+		os.Setenv("PORT", DEFAULT_PORT)
 		go common.RunFunApp()
 
 		//Health Check every 1 second until Healthy or 5 Second Timeout
