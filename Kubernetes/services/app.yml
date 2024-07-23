@@ -33,3 +33,9 @@ resources:
   limits:
     cpu: "500m"
     memory: "512Mi"
+  
+podAnnotations:
+  co.elastic.logs/enabled: "true"
+  co.elastic.logs/json.keys_under_root: "true"
+  co.elastic.logs/json.add_error_key: "true"
+  co.elastic.logs/json.message_key: "message"
