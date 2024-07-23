@@ -10,9 +10,14 @@ import (
 )
 
 // https://github.com/caarlos0/env
+const (
+	LOG_FORMATTER_JSON   = "json"
+	LOG_FORMATTER_PRETTY = "pretty"
+)
 
 var DefaultLogConfig = Log{
-	LogLevel: zerolog.InfoLevel,
+	LogLevel:  zerolog.InfoLevel,
+	Formatter: LOG_FORMATTER_PRETTY,
 }
 
 type Server struct {
@@ -21,7 +26,8 @@ type Server struct {
 }
 
 type Log struct {
-	LogLevel zerolog.Level `env:"LOG_LEVEL" envDefault:"info"`
+	LogLevel  zerolog.Level `env:"LOG_LEVEL" envDefault:"info"`
+	Formatter string        `env:"LOG_FORMATTER" envDefault:"pretty"` //json,pretty
 }
 
 type RateLimit struct {
