@@ -20,14 +20,13 @@ import (
 
 const (
 	COVER_CMD        = "./cover.zsh run"
-	DEFAULT_BASE_URL = "http://localhost:8085"
 	PORT             = "8085"
+	DEFAULT_BASE_URL = "http://localhost:" + PORT
 )
 
 var (
 	err        error
 	spawned    = true
-	baseUrl    = os.Getenv("URL")
 	ctx        = context.Background()
 	client     *clients.FunClient
 	serviceUrl string
@@ -42,11 +41,10 @@ var _ = BeforeSuite(func() {
 	// Init Logger
 	telemetry.InitLogger(zerolog.InfoLevel)
 
-	if baseUrl == "" {
-		baseUrl = DEFAULT_BASE_URL
+	if "" == os.Getenv("URL") {
+		serviceUrl = DEFAULT_BASE_URL
 	}
 
-	serviceUrl = baseUrl
 	client = clients.NewFunAppClient(serviceUrl, config.DefaultHttpConfig)
 	logger := log.With().Str("URL", serviceUrl).Logger()
 
@@ -55,7 +53,7 @@ var _ = BeforeSuite(func() {
 		logger.Info().Msg("FunApp: Already Running")
 		spawned = false
 	} else {
-		logger.Info().Str("Port", PORT).Msg("FunApp: Starting (Not Running)")
+		logger.Info().Msg("FunApp: Starting (Not Running)")
 		os.Setenv("PORT", PORT)
 		go common.RunFunApp()
 
