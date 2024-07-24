@@ -34,6 +34,8 @@ ingress:
 # podDisruptionBudgetEnabled: false
 # podAnnotations:
   # co.elastic.logs/enabled: "true"
+podLabels:
+  vector.dev/include: "true"
 
 resources:
   requests:

@@ -1,4 +1,5 @@
 # https://github.com/vectordotdev/helm-charts/blob/develop/charts/vector/values.yaml
+# https://vector.dev/docs/setup/installation/platforms/kubernetes/#filtering
 role: "Agent"
 
 customConfig:
@@ -9,6 +10,7 @@ customConfig:
   sources:
     kubernetes_logs:
       type: kubernetes_logs
+      extra_label_selector: "vector.dev/include=true"
   sinks:
     logstash_output:
       type: http
