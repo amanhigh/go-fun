@@ -187,16 +187,16 @@ zookeeper: ## Zookeeper
 	printf $(_INFO) "Demo" "/demo/demo.sh"
 
 ### Telemetry
-elk: ## ElasticSearch Kibana Logstash
+elk: ## ElasticSearch Kibana Logstash Vector
 	helm $(CMD) logstash bitnami/logstash -f logstash.yml > $(OUT)
 	helm $(CMD) elasticsearch bitnami/elasticsearch -f elasticsearch.yml > $(OUT)
 	helm $(CMD) kibana bitnami/kibana -f kibana.yml > $(OUT)
-	helm $(CMD) filebeat elastic/filebeat -f filebeat.yml > $(OUT)
+	helm $(CMD) vector vector/vector -f vector.yml > $(OUT)
 	printf $(_TITLE) "ELK needs CPU: 4, Memory: 10Gig"
 	printf $(_INFO) "ElasticSearch" "http://elastic.docker/_cluster/health?pretty"
 	printf $(_INFO) "ES Master" "http://docker:9200"
 	printf $(_INFO) "Kibana" "http://kibana.docker"
-	printf $(_INFO) "FileBeat" "Daemonset Mode"
+	printf $(_INFO) "Vector" "Daemonset Mode"
 
 monitor: ## Prometheus, Grafana and Jaeger
 	-helm $(CMD) prometheus prometheus-community/prometheus -f prometheus.yml > $(OUT)

@@ -94,6 +94,7 @@ helm-add:
 	helm repo add apiclarity https://openclarity.github.io/apiclarity
 	helm repo add deliveryhero https://charts.deliveryhero.io/
 	helm repo add elastic https://helm.elastic.co
+	helm repo add vector https://helm.vector.dev
 
 helm-update:
 	printf $(_TITLE) "Helm" "Updating"
