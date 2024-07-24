@@ -28,7 +28,7 @@ func (ui *UIManager) SetupLayout() {
 		AddItem(ui.commandView, 0, 1, false)
 	ui.mainFlex.AddItem(leftPane, 0, 1, true)
 	ui.mainFlex.AddItem(rightPane, 0, 1, false)
-	ui.mainFlex.SetTitle("Helm Manager").SetBorder(true)
+	ui.mainFlex.SetTitle("Helm Manager").SetBorder(true).SetBorderColor(tcell.ColorBlue)
 	ui.app.SetRoot(ui.mainFlex, true)
 	ui.UpdateContext()
 	ui.setupFilterInput()
@@ -37,7 +37,7 @@ func (ui *UIManager) SetupLayout() {
 
 func createList(title string, items []string) *tview.List {
 	list := tview.NewList()
-	list.SetBorder(true).SetTitle(title)
+	list.SetBorder(true).SetTitle(title).SetBorderColor(tcell.ColorGreen)
 	for _, item := range items {
 		list.AddItem(item, "", 0, nil)
 	}
@@ -46,7 +46,7 @@ func createList(title string, items []string) *tview.List {
 
 func createTextView(title string) *tview.TextView {
 	tv := tview.NewTextView()
-	tv.SetBorder(true).SetTitle(title)
+	tv.SetBorder(true).SetTitle(title).SetBorderColor(tcell.ColorYellow)
 
 	return tv
 }
