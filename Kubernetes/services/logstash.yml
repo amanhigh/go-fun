@@ -31,7 +31,7 @@ output: |-
     hosts => ["elasticsearch:9200"]
     index => "logstash-%{+YYYY.MM.dd}"
   }
-  stdout { codec => rubydebug }
+  # stdout { codec => rubydebug }
 
 service:
   type: ClusterIP
@@ -56,3 +56,11 @@ filter: ""
 ## @param output [string] Output Plugins configuration
 ## ref: https://www.elastic.co/guide/en/logstash/current/output-plugins.html
 ##
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 1Gi
