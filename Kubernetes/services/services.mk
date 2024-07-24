@@ -40,7 +40,7 @@ locust: ## Load Testing with Locust
 	printf $(_INFO) "Usage" "Configure task.py in $(SCRIPT_DIR)/files/locust/ with your test scenarios"
 	printf $(_INFO) "Run Tests" "Visit the Locust Web UI to start and monitor load tests"
 
-app: ## Fun Application
+app: locust ## Fun Application
 	-helm $(CMD) app onechart/onechart -f app.yml > $(OUT)
 	printf $(_INFO) "App Metrics" "http://app.docker/app/metrics"
 	printf $(_INFO) "App All" "http://app.docker/app/person/all"
@@ -196,7 +196,7 @@ elk: ## ElasticSearch Kibana Logstash Vector
 	printf $(_INFO) "ElasticSearch" "http://elastic.docker/_cluster/health?pretty"
 	printf $(_INFO) "ES Master" "http://docker:9200"
 	printf $(_INFO) "Kibana" "http://kibana.docker"
-	printf $(_INFO) "Vector" "Daemonset Mode"
+	printf $(_INFO) "Vector" "http://docker:8686"
 
 monitor: ## Prometheus, Grafana and Jaeger
 	-helm $(CMD) prometheus prometheus-community/prometheus -f prometheus.yml > $(OUT)
