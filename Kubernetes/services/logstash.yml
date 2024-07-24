@@ -8,11 +8,12 @@ replicaCount: 1
 # ES Verify: curl -X GET "http://docker:9200/logstash-*/_search?q=message:test%20log&pretty"
 # Kibana: Discover > New Data View > Index log* to See Logs
 input: |-
-  http { 
-    port => 8080 
+  http {
+    port => 8080
   }
-  beats {
+  http {
     port => 5044
+    codec => json
   }
   # Uncomment these if you need syslog input
   # udp {
@@ -29,7 +30,6 @@ output: |-
   elasticsearch {
     hosts => ["elasticsearch:9200"]
     index => "logstash-%{+YYYY.MM.dd}"
-    manage_template => false
   }
   stdout { codec => rubydebug }
 
@@ -38,7 +38,7 @@ service:
   ports:
     - name: http
       port: 8080
-    - name: beats
+    - name: vector
       port: 5044
 
 ## @param filter Filter Plugins configuration

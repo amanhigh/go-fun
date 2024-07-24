@@ -13,7 +13,7 @@ customConfig:
     logstash_output:
       type: http
       inputs: [kubernetes_logs]
-      uri: http://logstash:8080
+      uri: http://logstash:5044
       encoding:
         codec: json
     console:
