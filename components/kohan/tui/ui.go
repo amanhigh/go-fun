@@ -20,12 +20,8 @@ type UIManager struct {
 }
 
 func (ui *UIManager) SetupLayout() {
-	leftPane := tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(ui.svcList, 0, 1, true).
-		AddItem(ui.filterInput, 1, 0, false)
-	rightPane := tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(ui.contextView, 0, 1, false).
-		AddItem(ui.commandView, 0, 1, false)
+	leftPane := ui.createLeftPane()
+	rightPane := ui.createRightPane()
 	ui.mainFlex.AddItem(leftPane, 0, 1, true)
 	ui.mainFlex.AddItem(rightPane, 0, 1, false)
 	ui.mainFlex.SetTitle("Helm Manager").SetBorder(true).SetBorderColor(tcell.ColorBlue)
@@ -33,6 +29,20 @@ func (ui *UIManager) SetupLayout() {
 	ui.UpdateContext()
 	ui.setupFilterInput()
 	ui.setupCustomKeys()
+}
+
+func (ui *UIManager) createLeftPane() *tview.Flex {
+	leftPane := tview.NewFlex().SetDirection(tview.FlexRow)
+	leftPane.AddItem(ui.svcList, 0, 1, true)
+	leftPane.AddItem(ui.filterInput, 1, 0, false)
+	return leftPane
+}
+
+func (ui *UIManager) createRightPane() *tview.Flex {
+	rightPane := tview.NewFlex().SetDirection(tview.FlexRow)
+	rightPane.AddItem(ui.contextView, 0, 1, false)
+	rightPane.AddItem(ui.commandView, 0, 1, false)
+	return rightPane
 }
 
 func createList(title string, items []string) *tview.List {
