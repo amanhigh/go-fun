@@ -53,6 +53,12 @@ securityContext:
 # vars:
 #   REDIS_HOSTS: "redis-master"
 
+# Create Secrets manually and mount as ENV Variables
+# kubectl create secret generic my-secret --from-env-file=/home/aman/.env
+# existingSecrets:
+  # - name: my-secret
+    # optional: false
+
 ## Debug/Troubleshoot ##
 # Side Car: https://github.com/nicolaka/netshoot
 # Lightweight: busybox (https://boxmatrix.info/wiki/BusyBox-Commands)
