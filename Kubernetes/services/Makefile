@@ -2,8 +2,8 @@ include ../../common/tools/base.mk
 
 ### Variables
 SERVICE_MAKE_OPTS=--no-print-directory -f ./services.mk
-XTRA=""
 BOOTABLE = traefik\|webui
+XTRA="webui" # Should not be empty
 
 DOCKER_HOSTS=127.0.0.1 docker httpbin.docker dashy.docker resty.docker webui.docker pdf.docker paperless.docker app.docker \
 mysqladmin.docker redisadmin.docker cron.docker prometheus.docker grafana.docker jaeger.docker kiali.docker \
