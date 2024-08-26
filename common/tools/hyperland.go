@@ -20,7 +20,7 @@ type HyperWindow struct {
 	Title      string `json:"title"`
 	Pid        int    `json:"pid"`
 	Xwayland   bool   `json:"xwayland"`
-	Fullscreen bool   `json:"fullscreen"`
+	Fullscreen int    `json:"fullscreen"`
 }
 
 var (
