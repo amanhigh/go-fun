@@ -69,7 +69,7 @@ proxy: ## Proxy Servers
 	printf $(_INFO) "curl localhost:8888 tinyproxy.stats"
 
 cron: ## Cron Server
-	-helm $(CMD) cron onechart/onechart -f rundeck.yml > $(OUT)
+	helm $(CMD) cron onechart/onechart -f rundeck.yml --set volumes[1].hostPath.path=$(AUTO_DIR) > $(OUT)
 	printf $(_INFO) "Health" "http://cron.docker/health"
 	printf $(_INFO) "Cron" "http://cron.docker"
 	printf $(_INFO) "Credentials" "Username/Password: admin/admin"
