@@ -430,5 +430,54 @@ var _ = Describe("Logging", func() {
 				Expect(logOutput).To(ContainSubstring(testRequestID))
 			})
 		})
+
+		Context("Group Logging", func() {
+			var (
+				logger *slog.Logger
+				buf    bytes.Buffer
+			)
+
+			BeforeEach(func() {
+				buf.Reset()
+				logger = slog.New(slog.NewJSONHandler(&buf, nil))
+			})
+
+			It("should log basic group", func() {
+				logger.Info("User action",
+					slog.Group("user",
+						slog.String("id", "123"),
+						slog.String("name", "John Doe"),
+					),
+				)
+
+				logOutput := buf.String()
+				Expect(logOutput).To(ContainSubstring(`"user":{"id":"123","name":"John Doe"}`))
+			})
+
+			It("should log nested groups", func() {
+				logger.Info("Complex data",
+					slog.Group("outer",
+						slog.String("key1", "value1"),
+						slog.Group("inner",
+							slog.Int("number", 42),
+							slog.Bool("flag", true),
+						),
+					),
+				)
+
+				logOutput := buf.String()
+				Expect(logOutput).To(ContainSubstring(`"outer":{"key1":"value1","inner":{"number":42,"flag":true}}`))
+			})
+
+			It("should omit empty groups", func() {
+				logger.Info("Empty group test",
+					slog.Group("empty"),
+				)
+
+				logOutput := buf.String()
+				Expect(logOutput).To(ContainSubstring(`"msg":"Empty group test"`))
+				Expect(logOutput).NotTo(ContainSubstring(`"empty"`))
+			})
+		})
 	})
 })
