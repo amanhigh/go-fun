@@ -19,13 +19,14 @@ var _ = FDescribe("Cache", func() {
 			testKey        = "testKey"
 			testValue      = "testValue"
 			nonExistentKey = "nonExistentKey"
+			cacheSize      = 10
 		)
 
 		BeforeEach(func() {
 			cache, err = ristretto.NewCache(&ristretto.Config{
-				NumCounters: 20,       // number of keys to track frequency of (10M).
-				MaxCost:     10 << 20, // maximum cost of cache (10 MB).
-				BufferItems: 64,       // number of keys per Get buffer.
+				NumCounters: cacheSize * 10, // No. of counters (10x of MaxCost)
+				MaxCost:     cacheSize,      // Maximum number of entries (Can be in any unit eg. MB)
+				BufferItems: 64,             // number of keys per Get buffer.
 			})
 		})
 
@@ -62,7 +63,7 @@ var _ = FDescribe("Cache", func() {
 
 			It("should evict items when cache is full", func() {
 				By("Filling the cache")
-				for i := 0; i < 20; i++ {
+				for i := 0; i < cacheSize; i++ {
 					key := fmt.Sprintf("key%d", i)
 					success := cache.Set(key, i, 1)
 					Expect(success).To(BeTrue())
@@ -74,7 +75,7 @@ var _ = FDescribe("Cache", func() {
 
 				By("Checking if some items were evicted")
 				evictedCount := 0
-				for i := 0; i < 20; i++ {
+				for i := 0; i < cacheSize; i++ {
 					key := fmt.Sprintf("key%d", i)
 					_, found := cache.Get(key)
 					if !found {
