@@ -28,7 +28,10 @@ type ContextHandler struct {
 	slog.Handler
 }
 
-const requestIDKey = "RequestId"
+const (
+	requestIDKey  = "RequestId"
+	testRequestID = "test-id"
+)
 
 func (h ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 	if requestID, ok := ctx.Value(requestIDKey).(string); ok {
@@ -314,8 +317,6 @@ var _ = Describe("Logging", func() {
 		})
 
 		Context("Context Logger", func() {
-			const requestIDKey = "RequestId"
-			const testRequestID = "test-id"
 
 			It("should have RequestId", func() {
 				var buf bytes.Buffer
@@ -356,7 +357,7 @@ var _ = Describe("Logging", func() {
 		})
 	})
 
-	FContext("SLog", func() {
+	Context("SLog", func() {
 		var (
 			logger *slog.Logger
 			name   = "slog"
@@ -426,8 +427,6 @@ var _ = Describe("Logging", func() {
 		})
 
 		Context("Context Logger", func() {
-			const requestIDKey = "RequestId"
-			const testRequestID = "test-id"
 
 			It("should log context values automatically", func() {
 				var buf bytes.Buffer
