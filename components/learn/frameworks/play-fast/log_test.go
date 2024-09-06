@@ -3,7 +3,9 @@ package play_fast
 import (
 	"bytes"
 	"context"
+	"log/slog"
 	"os"
+	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/fatih/color"
@@ -337,6 +339,96 @@ var _ = Describe("Logging", func() {
 			buf.Reset()
 
 			Expect(buf.String()).To(Equal(""))
+		})
+	})
+
+	FContext("SLog", func() {
+		var (
+			logger *slog.Logger
+			name   = "slog"
+		)
+
+		BeforeEach(func() {
+			// Setup logger with Custom Time Formatter
+			opts := &slog.HandlerOptions{
+				ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+					if a.Key == slog.TimeKey {
+						if t, ok := a.Value.Any().(time.Time); ok {
+							return slog.String(slog.TimeKey, t.Format("2006-01-02 15:04:05"))
+						}
+					}
+					return a
+				},
+			}
+			logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
+		})
+
+		It("should build", func() {
+			Expect(logger).To(Not(BeNil()))
+		})
+
+		It("should write log", func() {
+			logger.Info(msgStdout, "Logger", name)
+		})
+
+		It("should print fields", func() {
+			logger.Info(msgStdout,
+				"Logger", name,
+				"Field1", field1,
+				"Field2", field2,
+			)
+		})
+
+		Context("File", func() {
+			var file *os.File
+
+			BeforeEach(func() {
+				var err error
+				file, err = util.OpenOrCreateFile(log_file)
+				Expect(err).To(BeNil())
+
+				logger = slog.New(slog.NewJSONHandler(file, nil))
+			})
+
+			AfterEach(func() {
+				err := os.Remove(log_file)
+				Expect(err).To(BeNil())
+			})
+
+			It("should write log", func() {
+				logger.Info(msgFile, "Logger", name)
+				lines := util.ReadAllLines(log_file)
+				Expect(len(lines)).To(Equal(1))
+				Expect(lines[0]).To(ContainSubstring(msgFile))
+			})
+
+			It("should write json log", func() {
+				logger.Info(msgFile, "Logger", name)
+				lines := util.ReadAllLines(log_file)
+				Expect(len(lines)).To(Equal(1))
+				Expect(lines[0]).To(ContainSubstring(msgFile))
+				Expect(lines[0]).To(ContainSubstring(`"level":"INFO"`))
+			})
+		})
+
+		Context("Context Logger", func() {
+			const requestIDKey = "RequestId"
+			const testRequestID = "test-id"
+
+			It("should log context values", func() {
+				var buf bytes.Buffer
+				logger := slog.New(slog.NewJSONHandler(&buf, nil))
+
+				ctx := context.WithValue(context.Background(), requestIDKey, testRequestID)
+
+				logger.InfoContext(ctx, "Context Test",
+					slog.String(requestIDKey, ctx.Value(requestIDKey).(string)),
+				)
+
+				logOutput := buf.String()
+				Expect(logOutput).To(ContainSubstring(requestIDKey))
+				Expect(logOutput).To(ContainSubstring(testRequestID))
+			})
 		})
 	})
 })
