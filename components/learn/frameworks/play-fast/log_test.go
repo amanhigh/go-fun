@@ -23,6 +23,20 @@ import (
 
 // https://www.sentinelone.com/blog/log-formatting-best-practices-readable/
 
+// Custom ContextHandler
+type ContextHandler struct {
+	slog.Handler
+}
+
+const requestIDKey = "RequestId"
+
+func (h ContextHandler) Handle(ctx context.Context, r slog.Record) error {
+	if requestID, ok := ctx.Value(requestIDKey).(string); ok {
+		r.AddAttrs(slog.String(requestIDKey, requestID))
+	}
+	return h.Handler.Handle(ctx, r)
+}
+
 var _ = Describe("Logging", func() {
 	var (
 		log_file  = "/tmp/log_test"
@@ -415,15 +429,16 @@ var _ = Describe("Logging", func() {
 			const requestIDKey = "RequestId"
 			const testRequestID = "test-id"
 
-			It("should log context values", func() {
+			It("should log context values automatically", func() {
 				var buf bytes.Buffer
-				logger := slog.New(slog.NewJSONHandler(&buf, nil))
+				baseHandler := slog.NewJSONHandler(&buf, nil)
+				contextHandler := ContextHandler{Handler: baseHandler}
+				logger := slog.New(contextHandler)
 
 				ctx := context.WithValue(context.Background(), requestIDKey, testRequestID)
 
-				logger.InfoContext(ctx, "Context Test",
-					slog.String(requestIDKey, ctx.Value(requestIDKey).(string)),
-				)
+				// Now we don't need to explicitly add the RequestId to the log
+				logger.InfoContext(ctx, "Context Test")
 
 				logOutput := buf.String()
 				Expect(logOutput).To(ContainSubstring(requestIDKey))
