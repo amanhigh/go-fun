@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("Cache", func() {
+var _ = Describe("Cache", func() {
 	Context("Ristretto", func() {
 		var (
 			cache *ristretto.Cache
@@ -19,7 +19,7 @@ var _ = FDescribe("Cache", func() {
 			testKey        = "testKey"
 			testValue      = "testValue"
 			nonExistentKey = "nonExistentKey"
-			cacheSize      = 10
+			cacheSize      = 100
 		)
 
 		BeforeEach(func() {
@@ -84,7 +84,7 @@ var _ = FDescribe("Cache", func() {
 				}
 
 				Expect(evictedCount).To(BeNumerically(">", 0))
-				Expect(evictedCount).To(BeNumerically("<=", 10))
+				Expect(evictedCount).To(BeNumerically("<=", cacheSize))
 			})
 		})
 	})
