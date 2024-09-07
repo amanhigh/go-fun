@@ -1,0 +1,154 @@
+import os
+import requests
+import json
+import csv
+from datetime import datetime
+
+# Constants
+TICKERS = ['AMZN', 'SIVR']
+DOWNLOADS_DIR = '~/Downloads/Tickers'
+BASE_URL = 'https://www.alphavantage.co/query'
+API_KEY_ENV_VAR = 'VANTAGE_API_KEY'
+TAX_YEAR = 2023
+SBI_USD_RATES_URL = 'https://raw.githubusercontent.com/sahilgupta/sbi-fx-ratekeeper/main/csv_files/SBI_REFERENCE_RATES_USD.csv'
+
+def get_api_key():
+    api_key = os.getenv(API_KEY_ENV_VAR)
+    if not api_key:
+        raise ValueError(f"API key not found. Please set the '{API_KEY_ENV_VAR}' environment variable.")
+    return api_key
+
+def create_download_directory(dir_path):
+    expanded_path = os.path.expanduser(dir_path)
+    os.makedirs(expanded_path, exist_ok=True)
+    print(f"Directory created/verified: {expanded_path}")
+    return expanded_path
+
+def check_file_exists(file_path):
+    if os.path.exists(file_path):
+        mod_time = os.path.getmtime(file_path)
+        mod_date = datetime.fromtimestamp(mod_time).strftime('%Y-%m-%d')
+        return True, mod_date
+    return False, None
+
+def download_ticker_data(ticker, api_key):
+    params = {'function': 'TIME_SERIES_DAILY', 'symbol': ticker, 'outputsize': 'full', 'apikey': api_key}
+    response = requests.get(BASE_URL, params=params)
+    return response.json()
+
+def save_ticker_data(data, file_path):
+    with open(file_path, 'w') as f:
+        json.dump(data, f)
+
+def download_tickers(tickers, downloads_dir, api_key):
+    for ticker in tickers:
+        file_path = os.path.join(downloads_dir, f'{ticker}.json')
+        file_exists, mod_date = check_file_exists(file_path)
+        
+        if file_exists:
+            print(f'Data for {ticker} already exists (last modified: {mod_date}). Skipping download.')
+        else:
+            data = download_ticker_data(ticker, api_key)
+            save_ticker_data(data, file_path)
+            print(f'Data for {ticker} downloaded and saved to {file_path}')
+
+def download_sbi_usd_rates(downloads_dir):
+    file_path = os.path.join(downloads_dir, 'SBI_REFERENCE_RATES_USD.csv')
+    file_exists, mod_date = check_file_exists(file_path)
+    
+    if file_exists:
+        print(f'SBI USD rates data already exists (last modified: {mod_date}). Skipping download.')
+    else:
+        response = requests.get(SBI_USD_RATES_URL)
+        with open(file_path, 'wb') as f:
+            f.write(response.content)
+        print(f'SBI USD rates data downloaded and saved to {file_path}')
+
+def find_ticker_data(ticker, downloads_dir, year):
+    file_path = os.path.join(downloads_dir, f'{ticker}.json')
+    with open(file_path, 'r') as f:
+        data = json.load(f)
+    
+    time_series = data['Time Series (Daily)']
+    highest_close = 0
+    highest_date = None
+    year_end_close = None
+    year_end_date = f"{year}-12-31"
+    
+    for date, values in time_series.items():
+        if date.startswith(str(year)):
+            close_price = float(values['4. close'])
+            if close_price > highest_close:
+                highest_close = close_price
+                highest_date = date
+            if date == year_end_date:
+                year_end_close = close_price
+    
+    if year_end_close is None:
+        last_trading_day = max(date for date in time_series.keys() if date.startswith(str(year)))
+        year_end_close = float(time_series[last_trading_day]['4. close'])
+        year_end_date = last_trading_day
+
+    return highest_date, highest_close, year_end_date, year_end_close
+
+def find_sbi_usd_rate(downloads_dir, date):
+    file_path = os.path.join(downloads_dir, 'SBI_REFERENCE_RATES_USD.csv')
+    with open(file_path, 'r') as f:
+        csv_reader = csv.DictReader(f)
+        for row in csv_reader:
+            if row['DATE'].split()[0] == date:
+                return float(row['TT BUY'])
+    return None
+
+def process_tickers(tickers, downloads_dir, year):
+    table_data = []
+    for ticker in tickers:
+        highest_date, highest_close, year_end_date, year_end_close = find_ticker_data(ticker, downloads_dir, year)
+        if highest_date:
+            highest_usd_rate = find_sbi_usd_rate(downloads_dir, highest_date)
+            year_end_usd_rate = find_sbi_usd_rate(downloads_dir, year_end_date)
+            table_data.append([
+                ticker,
+                highest_date,
+                f"${highest_close:.2f}",
+                f"₹{highest_close * highest_usd_rate:.2f}" if highest_usd_rate else "N/A",
+                year_end_date,
+                f"${year_end_close:.2f}",
+                f"₹{year_end_close * year_end_usd_rate:.2f}" if year_end_usd_rate else "N/A"
+            ])
+        else:
+            table_data.append([ticker, "No data", "No data", "No data", "No data", "No data", "No data"])
+    return table_data
+
+def print_table(data):
+    headers = ["Ticker", "Peak Date", "Peak Price (USD)", "Peak Price (INR)", "Year-End Date", "Year-End Price (USD)", "Year-End Price (INR)"]
+    col_widths = [max(len(str(row[i])) for row in data + [headers]) for i in range(len(headers))]
+    
+    header_row = " | ".join(f"{headers[i]:<{col_widths[i]}}" for i in range(len(headers)))
+    print(header_row)
+    print("-" * len(header_row))
+    
+    for row in data:
+        print(" | ".join(f"{str(row[i]):<{col_widths[i]}}" for i in range(len(row))))
+
+def main():
+    print("Tickers:", TICKERS)
+    print(f"Tax Year: {TAX_YEAR}")
+
+    api_key = get_api_key()
+    print("API key loaded successfully")
+
+    downloads_dir = create_download_directory(DOWNLOADS_DIR)
+
+    download_tickers(TICKERS, downloads_dir, api_key)
+    download_sbi_usd_rates(downloads_dir)
+
+    table_data = process_tickers(TICKERS, downloads_dir, TAX_YEAR)
+
+    print("\nTicker Data:")
+    print_table(table_data)
+
+    print("\nAll data processed successfully")
+
+if __name__ == "__main__":
+    main()
