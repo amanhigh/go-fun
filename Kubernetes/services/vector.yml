@@ -1,0 +1,41 @@
+# https://github.com/vectordotdev/helm-charts/blob/develop/charts/vector/values.yaml
+# https://vector.dev/docs/setup/installation/platforms/kubernetes/#filtering
+role: "Agent"
+
+customConfig:
+  data_dir: /vector-data-dir
+  api:
+    enabled: true
+    address: 0.0.0.0:8686
+  sources:
+    kubernetes_logs:
+      type: kubernetes_logs
+      extra_label_selector: "vector.dev/include=true"
+  sinks:
+    logstash_output:
+      type: http
+      inputs: [kubernetes_logs]
+      uri: http://logstash:5044
+      encoding:
+        codec: json
+    console:
+      type: console
+      inputs: [kubernetes_logs]
+      encoding:
+        codec: json
+
+# Exclude Self from Log Collection
+podAnnotations:
+  vector.dev/exclude: "true"
+
+# Set the log level
+logLevel: "info"
+
+# Reduce resource requests for Minikube
+resources:
+  requests:
+    cpu: 100m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 128Mi

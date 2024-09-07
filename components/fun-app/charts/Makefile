@@ -25,7 +25,6 @@ update:
 	helm dependency update > $(OUT)
 	helm dependency build > $(OUT)
 
-# BUG: #C Introduce Helm Version.
 package: update ## Package Helm Chart (VERSION=1.0.1)
 	printf $(_TITLE) "Packaging Fun App ($(VERSION)) Helm Chart";
 	sed -i'' -e 's/^version:.*/version: $(VERSION)/' Chart.yaml;

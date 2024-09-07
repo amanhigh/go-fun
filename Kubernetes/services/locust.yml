@@ -1,0 +1,38 @@
+#  https://github.com/deliveryhero/helm-charts/blob/master/stable/locust/values.yaml
+
+loadtest:
+  name: locust-loadtest
+  locust_locustfile: task.py
+  locust_locustfile_configmap: locust-task
+  locust_host: http://app:9001
+  tags: "read search write"
+  excludeTags: "telemetry"
+
+ingress:
+  enabled: true
+  className: "traefik"
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  hosts:
+    - host: locust.docker      
+      path: /
+      pathType: Prefix
+  
+master:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 256Mi
+    requests:
+      cpu: 250m
+      memory: 128Mi
+
+worker:
+  replicas: 2
+  resources:
+    limits:
+      cpu: 500m
+      memory: 256Mi
+    requests:
+      cpu: 250m
+      memory: 128Mi

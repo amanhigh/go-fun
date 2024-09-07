@@ -10,6 +10,15 @@ ports:
     exposedPort: 9000
     protocol: TCP
 
+# TODO: Fix Cert Mounting
+volumes:
+  - name: certs
+    hostPath:
+      path: /etc/files/certs
+      type: Directory
+    mountPath: /etc/certs
+    readOnly: true
+
 ## Create HorizontalPodAutoscaler object.
 ##
 autoscaling:

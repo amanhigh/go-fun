@@ -45,6 +45,17 @@ Content-Type: application/json
 @personId= {{createPerson.response.body.$.id}}
 GET http://{{host}}:{{port}}/{{version}}/person/{{personId}}
 
+### Update
+@personId= {{createPerson.response.body.$.id}}
+PUT http://{{host}}:{{port}}/{{version}}/person/{{personId}}
+Content-Type: application/json
+
+{
+    "name": "Amanpreet Singh",
+    "age": 33,
+    "gender": "MALE"
+}
+
 ### Delete
 # @prompt userId
 DELETE http://{{host}}:{{port}}/{{version}}/person/{{userId}}

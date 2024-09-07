@@ -2,9 +2,8 @@ include ../../common/tools/base.mk
 
 ### Variables
 CMD=install
-SCRIPT_DIR=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+SCRIPT_DIR=$(shell pwd)
 
-#TODO: #C Add Locust
 # Bootstrap: helm show values bitnami/postgresql > postgres.yml
 # Debug: find . | entr -s "helm template elasticsearch bitnami/elasticsearch -f elasticsearch.yml > debug.txt;make setup"
 # sudo kubefwd svc | awk '{ if($2 ~ /Port-Forward/) {print $0" URL: http://"$4"/"} else {print}}'
@@ -34,10 +33,18 @@ loader: ## Stress Testing
 	printf $(_INFO) "Check Logs for Output"
 	printf $(_INFO) "Vegeta" "echo 'GET http://nginx' | vegeta attack | vegeta report"
 
-app: ## Fun Application
+locust: ## Load Testing with Locust
+	kubectl create configmap locust-task --from-file=$(SCRIPT_DIR)/files/locust/task.py -o yaml --dry-run=client | kubectl apply -f -
+	-helm $(CMD) locust deliveryhero/locust -f locust.yml > $(OUT)
+	printf $(_INFO) "Locust Web UI" "http://locust.docker/"
+	printf $(_INFO) "Usage" "Configure task.py in $(SCRIPT_DIR)/files/locust/ with your test scenarios"
+	printf $(_INFO) "Run Tests" "Visit the Locust Web UI to start and monitor load tests"
+
+app: locust ## Fun Application
 	-helm $(CMD) app onechart/onechart -f app.yml > $(OUT)
 	printf $(_INFO) "App Metrics" "http://app.docker/app/metrics"
 	printf $(_INFO) "App All" "http://app.docker/app/person/all"
+	printf $(_INFO) "Swagger" "http://app.docker/app/swagger/index.html"
 	printf $(_INFO) "Vegeta" "echo 'GET http://app:9001/person/all' | vegeta attack | vegeta report"
 
 proxy: ## Proxy Servers
@@ -62,7 +69,7 @@ proxy: ## Proxy Servers
 	printf $(_INFO) "curl localhost:8888 tinyproxy.stats"
 
 cron: ## Cron Server
-	-helm $(CMD) cron onechart/onechart -f rundeck.yml > $(OUT)
+	helm $(CMD) cron onechart/onechart -f rundeck.yml --set volumes[1].hostPath.path=$(AUTO_DIR) > $(OUT)
 	printf $(_INFO) "Health" "http://cron.docker/health"
 	printf $(_INFO) "Cron" "http://cron.docker"
 	printf $(_INFO) "Credentials" "Username/Password: admin/admin"
@@ -111,7 +118,6 @@ webshell: ## Web Shell
 	-helm $(CMD) sshwifty onechart/onechart -f sshwifty.yml  > $(OUT)
 	-helm $(CMD) webssh onechart/onechart -f webssh.yml > $(OUT)
 	-helm $(CMD) webssh2 onechart/onechart -f webssh2.yml > $(OUT)
-	# FIXME: Fix Config for Web SSH
 	printf $(_INFO) "Sshwifty" "http://sshwifty.docker/"
 	printf $(_INFO) "Webssh" "http://webssh.docker/"
 	printf $(_INFO) "Webssh" "http://webssh2.docker/"
@@ -131,7 +137,7 @@ mysql: metabase ## MySQL
 	-helm $(CMD) mysql bitnami/mysql -f mysql.yml > $(OUT)
 	printf $(_INFO) "MySQL(3306) Login" "mysql-primary/mysql-secondary, root/root, aman/aman"
 
-postgres: metabase ## PostgreSQL
+postgres: ## PostgreSQL
 	-helm $(CMD) postgres bitnami/postgresql -f postgres.yml > $(OUT)
 	printf $(_INFO) "Postgres(5432) Login" "pg-primary/pg-read, postgres/root, aman/aman"
 	printf $(_DETAIL) "Restoring Backup (Wait PgSQL)" 
@@ -181,15 +187,16 @@ zookeeper: ## Zookeeper
 	printf $(_INFO) "Demo" "/demo/demo.sh"
 
 ### Telemetry
-elk: ## ElasticSearch Kibana Logstash
-	#FIXME: #C Logstash in ELK
-	# helm $(CMD) logstash bitnami/logstash -f logstash.yml > $(OUT)
-	-helm $(CMD) elasticsearch bitnami/elasticsearch -f elasticsearch.yml > $(OUT)
-	-helm $(CMD) kibana bitnami/kibana -f kibana.yml > $(OUT)
+elk: ## ElasticSearch Kibana Logstash Vector
+	helm $(CMD) logstash bitnami/logstash -f logstash.yml > $(OUT)
+	helm $(CMD) elasticsearch bitnami/elasticsearch -f elasticsearch.yml > $(OUT)
+	helm $(CMD) kibana bitnami/kibana -f kibana.yml > $(OUT)
+	helm $(CMD) vector vector/vector -f vector.yml > $(OUT)
 	printf $(_TITLE) "ELK needs CPU: 4, Memory: 10Gig"
 	printf $(_INFO) "ElasticSearch" "http://elastic.docker/_cluster/health?pretty"
 	printf $(_INFO) "ES Master" "http://docker:9200"
 	printf $(_INFO) "Kibana" "http://kibana.docker"
+	printf $(_INFO) "Vector" "http://docker:8686"
 
 monitor: ## Prometheus, Grafana and Jaeger
 	-helm $(CMD) prometheus prometheus-community/prometheus -f prometheus.yml > $(OUT)

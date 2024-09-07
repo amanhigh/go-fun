@@ -1,6 +1,14 @@
-# FIXME: Try snapshots and AOF.
+# redis-cli config set save "300 100 60 10" , redis-cli config get save
 auth:
   enabled: false
   password: ""
 replica:
   replicaCount: 1
+
+master:
+  extraFlags:
+    - "--save 300 100 60 10"
+  config: |
+    # Enable AOF persistence
+    appendonly yes
+    appendfsync everysec

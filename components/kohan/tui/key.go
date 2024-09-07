@@ -35,7 +35,6 @@ func (h *HotkeyManager) setupHotkeyConfig() {
 		{Key: ' ', Description: "Toggle service selection or filtered services", Handler: func() {
 			if h.app.GetFocus() == h.uiManager.svcList {
 				h.uiManager.ToggleServiceSelection()
-				h.uiManager.UpdateContext()
 			} else if h.app.GetFocus() == h.uiManager.filterInput {
 				h.uiManager.ToggleFilteredServices()
 			}
@@ -64,6 +63,10 @@ func (h *HotkeyManager) setupHotkeyConfig() {
 				h.uiManager.ShowOutput(output)
 			}
 		}},
+		{Key: 'f', Description: "Clear filter", Handler: func() {
+			h.uiManager.clearFilterInput()
+			h.uiManager.app.SetFocus(h.uiManager.svcList)
+		}},
 	}
 	for _, hotkey := range hotkeys {
 		h.hotkeys[hotkey.Key] = hotkey
@@ -78,23 +81,26 @@ func (h *HotkeyManager) GenerateHelpText() string {
 	helpText += "\n"
 	return helpText
 }
-func (h *HotkeyManager) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {
 
+func (h *HotkeyManager) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyRune:
 		if hotkey, exists := h.hotkeys[event.Rune()]; exists {
-			// Only handle hotkeys if we are not in filter input except Space.
-			if h.app.GetFocus() != h.uiManager.filterInput && event.Rune() == ' ' {
+			// Handle space key specially
+			if event.Rune() == ' ' {
 				hotkey.Handler()
-			} else {
-				hotkey.Handler()
+				return nil
 			}
-			return nil
+			// For other hotkeys, only handle if not in filter input
+			if h.app.GetFocus() != h.uiManager.filterInput {
+				hotkey.Handler()
+				return nil
+			}
 		}
 	case tcell.KeyEsc:
 		if h.app.GetFocus() == h.uiManager.filterInput {
 			h.uiManager.app.SetFocus(h.uiManager.svcList)
-			h.uiManager.clearFilterInput()
+			return nil
 		}
 	}
 

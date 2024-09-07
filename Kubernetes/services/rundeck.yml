@@ -11,6 +11,10 @@ volumes:
     path: /home/rundeck/server/data
     hostPath:
       path: /etc/files/rundeck/data
+  - name: scripts
+    path: /home/rundeck/scripts
+    hostPath:
+      path: /tmp
 
 probe:
   enabled: true

@@ -23,3 +23,21 @@ readReplicas:
     huge_pages = off
   initdb:
     args: "--set huge_pages=off"
+
+primary:
+  resources:
+    limits:
+      cpu: 2
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+readReplicas:
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi

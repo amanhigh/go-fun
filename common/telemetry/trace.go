@@ -88,7 +88,6 @@ func getPublisher(config config.Tracing, exporter sdktrace.SpanExporter) trace.T
 		publisher = sdktrace.WithSyncer(exporter)
 	case "batch":
 		//Production Use, Exports on Flush or Shutdown.
-		//FIXME: Batch Prcosser in tests to speed up.
 		publisher = sdktrace.WithBatcher(exporter)
 	}
 	return publisher

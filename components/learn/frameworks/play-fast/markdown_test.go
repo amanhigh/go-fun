@@ -3,7 +3,6 @@ package play_fast
 import (
 	"bytes"
 	"os"
-	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -141,38 +140,86 @@ var _ = Describe("Markdown", func() {
 					Expect(list.LastChild().Text(data)).Should(Equal([]byte("Level 1 Item 3")))
 				})
 
-				Context("Sub Lists", func() {
+				Context("Sub Lists (Under Level 1 Item 2)", func() {
+					// Assuming subList is the list item for "Level 1 Item 2"
+					/*
+						list (top-level ordered list)
+						├── ListItem ("Level 1 Item 1")
+						├── ListItem ("Level 1 Item 2") <-- NextSibling of FirstChild
+						│   ├── TextBlock ("Level 1 Item 2")
+						│   └── List <-- LastChild, this is our level2List
+						│       ├── ListItem ("Level 2 Item 2a")
+						│       └── ListItem ("Level 2 Item 2b")
+						└── ListItem ("Level 1 Item 3")
+					*/
+
 					var (
-						subList *ast.ListItem
+						level2List *ast.List
 					)
 
 					BeforeEach(func() {
-						ast.Walk(list, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
-							switch n := node.(type) {
-							case *ast.ListItem:
-								if entering { // Only process the node when entering, not when exiting.
-									txt := string(n.Text(data))
-									if strings.HasPrefix(txt, "Level 1 Item 2") {
-										subList = n
+						ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
+							if entering { // Only process the node when entering, not when exiting.
+								if list, ok := node.(*ast.List); ok && list.Parent() != nil {
+									if textBlock, ok := list.Parent().FirstChild().(*ast.TextBlock); ok {
+										if string(textBlock.Text(data)) == "Level 1 Item 2" {
+											level2List = list
+											return ast.WalkStop, nil
+										}
 									}
 								}
 							}
 							return ast.WalkContinue, nil
 						})
+						Expect(level2List).ShouldNot(BeNil())
 					})
 
-					It("should exist", func() {
-						Expect(subList).ShouldNot(BeNil())
-						Expect(subList).Should(BeAssignableToTypeOf(&ast.ListItem{}))
-						Expect(string(subList.FirstChild().Text(data))).Should(Equal("Level 1 Item 2"))
-						Expect(subList.ChildCount()).Should(Equal(2))
+					It("should have correct number of Level 2 items", func() {
+						Expect(level2List.ChildCount()).Should(Equal(2))
 					})
 
-					It("should have child Level 2 Item 2a", func() {
-						subChild := subList.FirstChild()
-						//FIXME: Add Sub Item Text Check
-						Expect(subChild.ChildCount()).Should(Equal(1))
-						Expect(subChild.FirstChild().Kind()).Should(Equal(ast.KindText))
+					Context("Level 2 Item 2a", func() {
+						var level2Item2a *ast.ListItem
+
+						BeforeEach(func() {
+							level2Item2a = level2List.FirstChild().(*ast.ListItem)
+						})
+
+						It("should have correct content", func() {
+							content := level2Item2a.FirstChild()
+							Expect(content.Kind()).Should(Equal(ast.KindTextBlock))
+							Expect(string(content.Text(data))).Should(Equal("Level 2 Item 2a"))
+						})
+
+						It("should have two children (content and nested list)", func() {
+							Expect(level2Item2a.ChildCount()).Should(Equal(2))
+						})
+
+						Context("Level 3 List under Item 2a", func() {
+							var level3List *ast.List
+
+							BeforeEach(func() {
+								level3List = level2Item2a.LastChild().(*ast.List)
+							})
+
+							It("should have one item", func() {
+								Expect(level3List.ChildCount()).Should(Equal(1))
+							})
+
+							It("should have correct content for Level 3 Item 2a1", func() {
+								level3Item := level3List.FirstChild().(*ast.ListItem)
+								content := level3Item.FirstChild()
+								Expect(content.Kind()).Should(Equal(ast.KindTextBlock))
+								Expect(string(content.Text(data))).Should(Equal("Level 3 Item 2a1"))
+							})
+						})
+					})
+
+					It("should have correct content for Level 2 Item 2b", func() {
+						level2Item2b := level2List.LastChild().(*ast.ListItem)
+						content := level2Item2b.FirstChild()
+						Expect(content.Kind()).Should(Equal(ast.KindTextBlock))
+						Expect(string(content.Text(data))).Should(Equal("Level 2 Item 2b"))
 					})
 				})
 			})

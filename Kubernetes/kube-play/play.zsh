@@ -37,7 +37,6 @@ case $REPLY in
         $SELECTED_CMD $REPLY
         echo "\033[1;33m Show Services \033[0m \n";
         kubectl get service -l app=mysql
-        #TODO Run in Sidecar
         echo "\033[1;33m Mysql Health Check from Sidecar \033[0m \n";
         kubectl exec -it $(kubectl get pods -l app=mysql -o jsonpath='{.items[0].metadata.name}') -c sidecar -- sh -c 'if pgrep mysqld >/dev/null 2>&1; then echo "MySQL process is running"; else echo "MySQL process is not running"; fi'
         echo "\033[1;33m Show Databases \033[0m \n";

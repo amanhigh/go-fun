@@ -15,13 +15,14 @@ require (
 	github.com/golobby/container/v3 v3.3.2
 	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.29.0
-	github.com/prometheus/client_golang v1.19.1
 	github.com/rs/zerolog v1.32.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/swag v1.16.2
 	github.com/zsais/go-gin-prometheus v0.1.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.46.0
 	go.opentelemetry.io/otel v1.27.0
+	go.opentelemetry.io/otel/metric v1.27.0
+	go.opentelemetry.io/otel/sdk/metric v1.27.0
 	go.opentelemetry.io/otel/trace v1.27.0
 	gopkg.in/redis.v5 v5.2.9
 	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
@@ -63,7 +64,6 @@ require (
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/moby/term v0.5.0 // indirect
@@ -73,6 +73,7 @@ require (
 	github.com/opencontainers/runc v1.1.6 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
+	github.com/prometheus/client_golang v1.19.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/shirou/gopsutil/v3 v3.23.11 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
@@ -88,9 +89,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.20.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.20.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.20.0 // indirect
-	go.opentelemetry.io/otel/metric v1.27.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.27.0 // indirect
-	go.opentelemetry.io/otel/sdk/metric v1.27.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea // indirect
 	golang.org/x/mod v0.14.0 // indirect

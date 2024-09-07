@@ -4,12 +4,11 @@ include ../common/tools/base.mk
 PORT=8091
 CPU=4
 MEMORY=4096
-XTRA=""
 
 MINI_BKP_DIR=~/Downloads/minibkp
 
 #Current Directory where Make File is Present
-MAKE_FILE_DIR=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+MAKE_FILE_DIR=$(shell pwd)
 SERVICE_FILES=$(MAKE_FILE_DIR)/services/files
 
 ### Lifecycle
@@ -66,9 +65,10 @@ istio: ## Reset Minikube with Istio
 
 ### Port Forwarding
 port-fwd:
-	printf $(_INFO) "Please enter password for Port 80 Forward" ""
+	printf $(_INFO) "Please enter password for Port 80 and 443 Forward" ""
 	sudo -v
-	screen -S mini -dmL bash -c 'sudo kubectl port-forward deployment/traefik 80:8000'
+	screen -S http -dmL bash -c 'sudo kubectl port-forward deployment/traefik 80:8000'
+	screen -S secure -dmL bash -c 'sudo kubectl port-forward deployment/traefik 443:8443'
 	screen -S traefik -dmL bash -c 'kubectl port-forward deployment/traefik 9000:9000'
 
 port-ls:
@@ -77,7 +77,8 @@ port-ls:
 
 port-kill:
 	printf $(_WARN) "Killing Port Forward" ""
-	-screen -XS mini quit
+	-screen -XS http quit
+	-screen -XS secure quit
 	-screen -XS traefik quit
 
 proxy:

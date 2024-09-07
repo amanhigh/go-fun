@@ -3,7 +3,9 @@ package play_fast
 import (
 	"bytes"
 	"context"
+	"log/slog"
 	"os"
+	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/fatih/color"
@@ -20,6 +22,23 @@ import (
 )
 
 // https://www.sentinelone.com/blog/log-formatting-best-practices-readable/
+
+// Custom ContextHandler
+type ContextHandler struct {
+	slog.Handler
+}
+
+const (
+	requestIDKey  = "RequestId"
+	testRequestID = "test-id"
+)
+
+func (h ContextHandler) Handle(ctx context.Context, r slog.Record) error {
+	if requestID, ok := ctx.Value(requestIDKey).(string); ok {
+		r.AddAttrs(slog.String(requestIDKey, requestID))
+	}
+	return h.Handler.Handle(ctx, r)
+}
 
 var _ = Describe("Logging", func() {
 	var (
@@ -298,8 +317,6 @@ var _ = Describe("Logging", func() {
 		})
 
 		Context("Context Logger", func() {
-			const requestIDKey = "RequestId"
-			const testRequestID = "test-id"
 
 			It("should have RequestId", func() {
 				var buf bytes.Buffer
@@ -337,6 +354,144 @@ var _ = Describe("Logging", func() {
 			buf.Reset()
 
 			Expect(buf.String()).To(Equal(""))
+		})
+	})
+
+	Context("SLog", func() {
+		var (
+			logger *slog.Logger
+			name   = "slog"
+		)
+
+		BeforeEach(func() {
+			// Setup logger with Custom Time Formatter
+			opts := &slog.HandlerOptions{
+				ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+					if a.Key == slog.TimeKey {
+						if t, ok := a.Value.Any().(time.Time); ok {
+							return slog.String(slog.TimeKey, t.Format("2006-01-02 15:04:05"))
+						}
+					}
+					return a
+				},
+			}
+			logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
+		})
+
+		It("should build", func() {
+			Expect(logger).To(Not(BeNil()))
+		})
+
+		It("should write log", func() {
+			logger.Info(msgStdout, "Logger", name)
+		})
+
+		It("should print fields", func() {
+			logger.Info(msgStdout,
+				"Logger", name,
+				"Field1", field1,
+				"Field2", field2,
+			)
+		})
+
+		Context("File", func() {
+			var file *os.File
+
+			BeforeEach(func() {
+				var err error
+				file, err = util.OpenOrCreateFile(log_file)
+				Expect(err).To(BeNil())
+
+				logger = slog.New(slog.NewJSONHandler(file, nil))
+			})
+
+			AfterEach(func() {
+				err := os.Remove(log_file)
+				Expect(err).To(BeNil())
+			})
+
+			It("should write log", func() {
+				logger.Info(msgFile, "Logger", name)
+				lines := util.ReadAllLines(log_file)
+				Expect(len(lines)).To(Equal(1))
+				Expect(lines[0]).To(ContainSubstring(msgFile))
+			})
+
+			It("should write json log", func() {
+				logger.Info(msgFile, "Logger", name)
+				lines := util.ReadAllLines(log_file)
+				Expect(len(lines)).To(Equal(1))
+				Expect(lines[0]).To(ContainSubstring(msgFile))
+				Expect(lines[0]).To(ContainSubstring(`"level":"INFO"`))
+			})
+		})
+
+		Context("Context Logger", func() {
+
+			It("should log context values automatically", func() {
+				var buf bytes.Buffer
+				baseHandler := slog.NewJSONHandler(&buf, nil)
+				contextHandler := ContextHandler{Handler: baseHandler}
+				logger := slog.New(contextHandler)
+
+				ctx := context.WithValue(context.Background(), requestIDKey, testRequestID)
+
+				// Now we don't need to explicitly add the RequestId to the log
+				logger.InfoContext(ctx, "Context Test")
+
+				logOutput := buf.String()
+				Expect(logOutput).To(ContainSubstring(requestIDKey))
+				Expect(logOutput).To(ContainSubstring(testRequestID))
+			})
+		})
+
+		Context("Group Logging", func() {
+			var (
+				logger *slog.Logger
+				buf    bytes.Buffer
+			)
+
+			BeforeEach(func() {
+				buf.Reset()
+				logger = slog.New(slog.NewJSONHandler(&buf, nil))
+			})
+
+			It("should log basic group", func() {
+				logger.Info("User action",
+					slog.Group("user",
+						slog.String("id", "123"),
+						slog.String("name", "John Doe"),
+					),
+				)
+
+				logOutput := buf.String()
+				Expect(logOutput).To(ContainSubstring(`"user":{"id":"123","name":"John Doe"}`))
+			})
+
+			It("should log nested groups", func() {
+				logger.Info("Complex data",
+					slog.Group("outer",
+						slog.String("key1", "value1"),
+						slog.Group("inner",
+							slog.Int("number", 42),
+							slog.Bool("flag", true),
+						),
+					),
+				)
+
+				logOutput := buf.String()
+				Expect(logOutput).To(ContainSubstring(`"outer":{"key1":"value1","inner":{"number":42,"flag":true}}`))
+			})
+
+			It("should omit empty groups", func() {
+				logger.Info("Empty group test",
+					slog.Group("empty"),
+				)
+
+				logOutput := buf.String()
+				Expect(logOutput).To(ContainSubstring(`"msg":"Empty group test"`))
+				Expect(logOutput).NotTo(ContainSubstring(`"empty"`))
+			})
 		})
 	})
 })

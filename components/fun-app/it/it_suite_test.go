@@ -12,23 +12,20 @@ import (
 	"github.com/amanhigh/go-fun/models/config"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"testing"
 )
 
 const (
-	COVER_CMD = "./cover.zsh run"
-	TEST_PORT = "8085"
-	// HACK: Make Base URL configurable
-	BASE_URL = "http://localhost:"
+	COVER_CMD        = "./cover.zsh run"
+	DEFAULT_PORT     = "8085"
+	DEFAULT_BASE_URL = "http://localhost:" + DEFAULT_PORT
 )
 
 var (
 	err        error
 	spawned    = true
-	port       = os.Getenv("PORT")
 	ctx        = context.Background()
 	client     *clients.FunClient
 	serviceUrl string
@@ -41,22 +38,25 @@ func TestIt(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	// Init Logger
-	telemetry.InitLogger(zerolog.InfoLevel)
+	telemetry.InitLogger(config.DefaultLogConfig)
 
-	// Check if Port is Set
-	if os.Getenv("PORT") == "" {
-		port = TEST_PORT
+	baseUrl := os.Getenv("URL")
+	if baseUrl == "" {
+		serviceUrl = DEFAULT_BASE_URL
+	} else {
+		serviceUrl = baseUrl
 	}
 
-	serviceUrl = BASE_URL + port
 	client = clients.NewFunAppClient(serviceUrl, config.DefaultHttpConfig)
+	logger := log.With().Str("URL", serviceUrl).Logger()
 
 	//Run FunApp If not already running
 	if err = client.AdminService.HealthCheck(ctx); err == nil {
-		log.Info().Str("Port", port).Msg("FunApp: Running Already")
+		logger.Info().Msg("FunApp: Already Running")
 		spawned = false
 	} else {
-		os.Setenv("PORT", port)
+		logger.Info().Msg("FunApp: Starting (Not Running)")
+		os.Setenv("PORT", DEFAULT_PORT)
 		go common.RunFunApp()
 
 		//Health Check every 1 second until Healthy or 5 Second Timeout
@@ -66,7 +66,7 @@ var _ = BeforeSuite(func() {
 			case <-timeout:
 				Fail("Unable to Start Funapp")
 			case <-time.NewTicker(time.Second).C:
-				log.Warn().Str("Port", port).Msg("FunApp: Starting (Not Running)")
+				logger.Warn().Msg("FunApp: Starting (Not Running)")
 				if err = client.AdminService.HealthCheck(ctx); err == nil {
 					return
 				}

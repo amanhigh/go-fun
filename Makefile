@@ -31,7 +31,7 @@ sync:
 	go work sync
 
 # https://golangci-lint.run/usage/quick-start/
-# FIXME: #C Use Configuration - https://golangci-lint.run/usage/configuration/
+# FIXME: Use Configuration - https://golangci-lint.run/usage/configuration/
 lint-ci:
 	printf $(_TITLE) "LINT: Golang CLI"
 	-go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} golangci-lint run {}/...
@@ -82,11 +82,12 @@ verify: test-focus ## Verify Basic Fun App Flow
 	printf $(_INFO) "mk watch CMD='make verify'"
 
 profile: ## Run Profiling
-	printf $(_TITLE) "Running Profiling on Port 8080"
+	$(eval ENDPOINT ?= http://localhost:8080)
+	printf $(_TITLE) "ENDPOINT=$(ENDPOINT) | http://app.docker/app"
 	printf $(_DETAIL) "Profiling Heap"
-	go tool pprof -http=:8001 http://localhost:8080/debug/pprof/heap 2> $(OUT) &\
+	go tool pprof -http=:8001 $(ENDPOINT)/debug/pprof/heap 2> $(OUT) &\
 	printf $(_DETAIL) "Profiling CPU"
-	go tool pprof -http=:8000 --seconds=30 http://localhost:8080/debug/pprof/profile 2> $(OUT);\
+	go tool pprof -http=:8000 --seconds=30 $(ENDPOINT)/debug/pprof/profile 2> $(OUT);\
 	printf $(_WARN) "Killing Profilers"
 	kill %1;
 
@@ -194,7 +195,7 @@ release-fun:
 
 release-docker: docker-build ## Release Docker Images
 ifndef VER
-	$(error VER not set. Eg. v1.1.0)
+	$(error VER not set. Use VER=v1.0.5 )
 endif
 	printf $(_TITLE) "Release Docker Images: $(VER)"
 	printf $(_DETAIL) "Docker Tag"
@@ -212,6 +213,7 @@ endif
 	$(MAKE) helm-package VERSION=$(VER)
 	git add $(FUN_DIR)/charts/Chart.yaml
 	git commit -m "Helm Released: $(VER)"
+	printf $(_INFO) "Release: https://github.com/amanhigh/go-fun/actions/workflows/release.yml"
 
 
 unrelease: ## Revoke Release of Golang Packages
@@ -290,19 +292,19 @@ setup-k8: ## Kubernetes Setup
 
 ### Docker
 docker-fun: build-fun
-	printf $(_TITLE) "Building FunApp Docker Image"
+	printf $(_TITLE) "Docker" "Building FunApp"
 	docker buildx build -t $(FUN_IMAGE_TAG) -f $(FUN_DIR)/Dockerfile $(FUN_DIR) 2> $(OUT)
 
 docker-fun-run: docker-fun
-	printf $(_TITLE) "Running FunApp Docker Image"
+	printf $(_TITLE) "Docker" "Running FunApp"
 	docker run -it amanfdk/fun-app
 
 docker-fun-exec:
-	printf $(_TITLE) "Execing Into FunApp Docker Image"
+	printf $(_TITLE) "Docker" "Execing Into FunApp"
 	docker run -it --entrypoint /bin/sh amanfdk/fun-app
 
 docker-fun-clean:
-	printf $(_WARN) "Deleting FunApp Docker Image"
+	printf $(_WARN) "Docker" "Deleting FunApp"
 	-docker rmi -f `docker images $(FUN_IMAGE_TAG)  -q` > $(OUT)
 
 ### Devspace
@@ -327,6 +329,7 @@ space-test: ## Gink Tests Devspace (Watch Mode)
 	$(MAKE) watch CMD="devspace run fun-test"
 
 docker-build: docker-fun ## Build Docker Images
+	printf $(_INFO) "Docker Hub" "https://hub.docker.com/r/amanfdk/fun-app/tags"
 
 ### Workflows
 test: test-operator test-it ## Run all tests (Excludes test-slow)
@@ -334,7 +337,7 @@ build: build-fun build-kohan ## Build all Binaries
 
 info: info-release info-docker ## Repo Information
 infos: info space-info ## Repo Extended Information
-prepare: setup-tools setup-k8 install-deadcode # One Time Setup
+prepare: setup-tools setup-k8 install-deadcode ## One Time Setup
 
 setup: sync test build helm-package docker-build # Build and Test
 install: install-kohan ## Install Kohan CLI

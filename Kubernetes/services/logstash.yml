@@ -1,16 +1,21 @@
-# https://artifacthub.io/packages/helm/bitnami/logstash
-## @section Logstash parameters
+# https://github.com/bitnami/charts/blob/main/bitnami/logstash/values.yaml
 ## @param configFileName Logstash configuration file name. It must match the name of the configuration file mounted as a configmap.
 ##
 configFileName: logstash.conf
-## @param enableMonitoringAPI Whether to enable the Logstash Monitoring API or not  Kubernetes cluster domain
-##
-enableMonitoringAPI: true
-## @param monitoringAPIPort Logstash Monitoring API Port
-##
-monitoringAPIPort: 9600
+replicaCount: 1
 
+# Push: curl -X POST -H "Content-Type: application/json" -d '{"message":"test log"}' http://docker:8080
+# ES Verify: curl -X GET "http://docker:9200/logstash-*/_search?q=message:test%20log&pretty"
+# Kibana: Discover > New Data View > Index log* to See Logs
 input: |-
+  http {
+    port => 8080
+  }
+  http {
+    port => 5044
+    codec => json
+  }
+  # Uncomment these if you need syslog input
   # udp {
   #   port => 1514
   #   type => syslog
@@ -19,7 +24,23 @@ input: |-
   #   port => 1514
   #   type => syslog
   # }
-  http { port => 8080 }
+
+
+output: |-
+  elasticsearch {
+    hosts => ["elasticsearch:9200"]
+    index => "logstash-%{+YYYY.MM.dd}"
+  }
+  # stdout { codec => rubydebug }
+
+service:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+    - name: vector
+      port: 5044
+
 ## @param filter Filter Plugins configuration
 ## ref: https://www.elastic.co/guide/en/logstash/current/filter-plugins.html
 ## e.g:
@@ -35,28 +56,11 @@ filter: ""
 ## @param output [string] Output Plugins configuration
 ## ref: https://www.elastic.co/guide/en/logstash/current/output-plugins.html
 ##
-output: |-
-  # elasticsearch {
-  #   hosts => ["${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}"]
-  #   manage_template => false
-  #   index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
-  # }
-  # gelf {
-  #   host => "${GRAYLOG_HOST}"
-  #   port => ${GRAYLOG_PORT}
-  # }
-  stdout {}
-## @param existingConfiguration Name of existing ConfigMap object with the Logstash configuration (`input`, `filter`, and `output` will be ignored).
-##
-existingConfiguration: ""
-## @param enableMultiplePipelines Allows user to use multiple pipelines
-## ref: https://www.elastic.co/guide/en/logstash/master/multiple-pipelines.html
-##
-enableMultiplePipelines: false
-## @param extraVolumes Array to add extra volumes (evaluated as a template)
-## extraVolumes:
-##   - name: myvolume
-##     configMap:
-##       name: myconfigmap
-##
-replicaCount: 1
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 1Gi

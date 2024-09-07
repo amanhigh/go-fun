@@ -32,6 +32,10 @@ ingress:
   # host: docker
 # replicas: 2
 # podDisruptionBudgetEnabled: false
+# podAnnotations:
+  # co.elastic.logs/enabled: "true"
+podLabels:
+  vector.dev/include: "true"
 
 resources:
   requests:
@@ -48,6 +52,12 @@ securityContext:
 
 # vars:
 #   REDIS_HOSTS: "redis-master"
+
+# Create Secrets manually and mount as ENV Variables
+# kubectl create secret generic my-secret --from-env-file=/home/aman/.env
+# existingSecrets:
+  # - name: my-secret
+    # optional: false
 
 ## Debug/Troubleshoot ##
 # Side Car: https://github.com/nicolaka/netshoot
