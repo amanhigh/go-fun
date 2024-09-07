@@ -89,7 +89,11 @@ def find_ticker_data(ticker, downloads_dir, year):
         year_end_close = float(time_series[last_trading_day]['4. close'])
         year_end_date = last_trading_day
 
-    return highest_date, highest_close, year_end_date, year_end_close
+    # Get TTBR for peak and year-end dates
+    peak_ttbr = find_sbi_usd_rate(downloads_dir, highest_date)
+    year_end_ttbr = find_sbi_usd_rate(downloads_dir, year_end_date)
+
+    return highest_date, highest_close, year_end_date, year_end_close, peak_ttbr, year_end_ttbr
 
 def find_sbi_usd_rate(downloads_dir, date):
     file_path = os.path.join(downloads_dir, 'SBI_REFERENCE_RATES_USD.csv')
@@ -103,25 +107,25 @@ def find_sbi_usd_rate(downloads_dir, date):
 def process_tickers(tickers, downloads_dir, year):
     table_data = []
     for ticker in tickers:
-        highest_date, highest_close, year_end_date, year_end_close = find_ticker_data(ticker, downloads_dir, year)
+        highest_date, highest_close, year_end_date, year_end_close, peak_ttbr, year_end_ttbr = find_ticker_data(ticker, downloads_dir, year)
         if highest_date:
-            highest_usd_rate = find_sbi_usd_rate(downloads_dir, highest_date)
-            year_end_usd_rate = find_sbi_usd_rate(downloads_dir, year_end_date)
             table_data.append([
                 ticker,
                 highest_date,
                 f"${highest_close:.2f}",
-                f"₹{highest_close * highest_usd_rate:.2f}" if highest_usd_rate else "N/A",
                 year_end_date,
                 f"${year_end_close:.2f}",
-                f"₹{year_end_close * year_end_usd_rate:.2f}" if year_end_usd_rate else "N/A"
+                f"₹{peak_ttbr:.2f}" if peak_ttbr else "N/A",
+                f"₹{year_end_ttbr:.2f}" if year_end_ttbr else "N/A",
+                f"₹{highest_close * peak_ttbr:.2f}" if peak_ttbr else "N/A",
+                f"₹{year_end_close * year_end_ttbr:.2f}" if year_end_ttbr else "N/A"
             ])
         else:
-            table_data.append([ticker, "No data", "No data", "No data", "No data", "No data", "No data"])
+            table_data.append([ticker, "No data", "No data", "No data", "No data", "No data", "No data", "No data", "No data"])
     return table_data
 
 def print_table(data):
-    headers = ["Ticker", "Peak Date", "Peak Price (USD)", "Peak Price (INR)", "Year-End Date", "Year-End Price (USD)", "Year-End Price (INR)"]
+    headers = ["Ticker", "Peak Date", "Peak Price (USD)", "Year-End Date", "Year-End Price (USD)", "TTBR (Peak)", "TTBR (Year-End)", "Peak Price (INR)", "Year-End Price (INR)"]
     col_widths = [max(len(str(row[i])) for row in data + [headers]) for i in range(len(headers))]
     
     header_row = " | ".join(f"{headers[i]:<{col_widths[i]}}" for i in range(len(headers)))
