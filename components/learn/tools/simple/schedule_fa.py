@@ -1,3 +1,79 @@
+"""
+Stock Price Analyzer for Scheduled Foreign Assets (Indian ITR)
+
+Description:
+This script analyzes stock prices for specified foreign assets (Schedule FA) 
+and calculates their values in Indian Rupees (INR) using SBI's TT Buy rates. 
+It provides peak and year-end prices for a given tax year, aiding in Indian 
+Income Tax Return (ITR) preparation.
+
+Features:
+- Downloads stock data from Alpha Vantage API
+- Uses SBI Reference Rates for USD-INR conversion
+- Calculates peak and year-end prices for specified stocks
+- Converts USD prices to INR using relevant exchange rates
+- Displays results in a formatted table
+- Caches downloaded data to avoid unnecessary API calls
+- Uses TT Buy rate for currency conversion
+
+Requirements:
+- Python 3.6+
+- Required packages: requests, json, csv, datetime
+
+Setup:
+1. Install required packages:
+   pip install requests
+
+2. Set up an environment variable for your Alpha Vantage API key:
+   export VANTAGE_API_KEY='your_api_key_here'
+
+Configuration:
+Edit the following constants in the script as needed:
+- TICKERS: List of stock tickers to analyze
+- DOWNLOADS_DIR: Directory to store downloaded data
+- TAX_YEAR: The year for which to perform the analysis
+
+Usage:
+Run the script from the command line:
+python schedule_fa.py
+
+Output:
+The script displays a table with the following information for each ticker:
+- Ticker symbol
+- Peak date and price (USD)
+- Year-end date and price (USD)
+- TT Buy Rate for peak and year-end dates
+- Peak and year-end prices converted to INR
+
+Example Output:
+python schedule_fa.py
+Tickers: ['AMZN', 'SIVR']
+Tax Year: 2023
+API key loaded successfully
+Directory created/verified: ~/Downloads/Tickers
+Data for AMZN already exists (last modified: 2024-09-07). Skipping download.
+Data for SIVR already exists (last modified: 2024-09-07). Skipping download.
+SBI USD rates data already exists (last modified: 2024-09-07). Skipping download.
+
+Ticker Data:
+Ticker | Peak Date  | Peak Price (USD) | Year-End Date | Year-End Price (USD) | TTBR (Peak) | TTBR (Year-End) | Peak Price (INR) | Year-End Price (INR)
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+AMZN   | 2023-12-18 | $154.07          | 2023-12-29    | $151.94              | ₹82.57      | ₹82.76          | ₹12721.56        | ₹12574.55           
+SIVR   | 2023-05-04 | $25.00           | 2023-12-29    | $22.77               | ₹81.27      | ₹82.76          | ₹2031.75         | ₹1884.45
+
+Troubleshooting:
+- "API key not found" error: Ensure the VANTAGE_API_KEY environment variable is set.
+- "File not found" errors: Check if the DOWNLOADS_DIR path is correct and accessible.
+
+Disclaimer:
+This is a helper script intended for informational purposes only. The author 
+assumes no legal or financial responsibility for the usage of this script. 
+Users should consult their Chartered Accountant (CA) for validation and 
+professional advice regarding their tax filings and financial matters. The 
+information provided by this script should not be considered as financial 
+or legal advice.
+"""
+
 import os
 import requests
 import json
