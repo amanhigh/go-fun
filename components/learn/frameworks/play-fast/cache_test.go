@@ -149,13 +149,12 @@ var _ = FDescribe("Cache", func() {
 			})
 		})
 
-		Context("Concurrent Operations", func() {
+		Context("Advanced Behavior", func() {
 			It("should handle concurrent reads and writes", func() {
 				const (
 					numGoroutines = 100
 					numOperations = 1000
 				)
-
 				var wg sync.WaitGroup
 				wg.Add(numGoroutines)
 
@@ -165,7 +164,6 @@ var _ = FDescribe("Cache", func() {
 						for j := 0; j < numOperations; j++ {
 							key := fmt.Sprintf("key%d-%d", id, j)
 							value := fmt.Sprintf("value%d-%d", id, j)
-
 							// Randomly choose between Set and Get operations
 							if j%2 == 0 {
 								cache.Set(key, value, 1)
@@ -190,9 +188,7 @@ var _ = FDescribe("Cache", func() {
 				Expect(found).To(BeTrue())
 				Expect(value).To(Equal(testValue))
 			})
-		})
 
-		Context("Advanced Behavior", func() {
 			It("should verify that the OnEvict function is invoked for evicted items", func() {
 				evictedItems := []interface{}{}
 
