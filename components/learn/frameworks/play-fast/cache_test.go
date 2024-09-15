@@ -27,9 +27,11 @@ var _ = FDescribe("Cache", func() {
 
 		BeforeEach(func() {
 			cache, err = ristretto.NewCache(&ristretto.Config{
-				NumCounters: cacheSize * 10, // No. of counters (10x of MaxCost)
-				MaxCost:     cacheSize,      // Maximum number of entries (Can be in any unit eg. MB)
-				BufferItems: 64,             // number of keys per Get buffer.
+				NumCounters:        cacheSize * 10, // No. of counters (10x of MaxCost)
+				MaxCost:            cacheSize,      // Maximum number of entries (Can be in any unit eg. MB)
+				BufferItems:        64,             // number of keys per Get buffer.
+				Metrics:            true,
+				IgnoreInternalCost: true,
 			})
 		})
 
@@ -229,6 +231,45 @@ var _ = FDescribe("Cache", func() {
 					Expect(key).To(BeNumerically(">=", uint64(0)))
 					Expect(key).To(BeNumerically("<", uint64(cacheSize+numExtraItems)))
 				}
+			})
+
+			It("should properly handle cost-based eviction", func() {
+				By("Adding items with various costs")
+				cache.Set("key1", "value1", 20)
+				cache.Set("key2", "value2", 30)
+				cache.Set("key3", "value3", 25)
+				cache.Set("key4", "value4", 15)
+				cache.Wait()
+
+				By("Verifying all items are present")
+				for i := 1; i <= 4; i++ {
+					key := fmt.Sprintf("key%d", i)
+					_, found := cache.Get(key)
+					Expect(found).To(BeTrue(), fmt.Sprintf("Expected %s to be in the cache", key))
+				}
+
+				By("Adding an item that exceeds the remaining cost")
+				cache.Set("key5", "value5", 50)
+				cache.Wait()
+
+				By("Verifying that some items were evicted and some remain")
+				evictedCount := 0
+				remainingCount := 0
+				for i := 1; i <= 5; i++ {
+					key := fmt.Sprintf("key%d", i)
+					_, found := cache.Get(key)
+					if found {
+						remainingCount++
+					} else {
+						evictedCount++
+					}
+				}
+				Expect(evictedCount).To(BeNumerically(">", 0), "Expected some items to be evicted")
+				Expect(remainingCount).To(BeNumerically(">", 0), "Expected some items to remain in the cache")
+
+				By("Verifying the total cost does not exceed the maximum")
+				metrics := cache.Metrics
+				Expect(metrics.CostAdded()-metrics.CostEvicted()).To(BeNumerically("<=", cacheSize), "Expected total cost to not exceed maxCost")
 			})
 		})
 	})
