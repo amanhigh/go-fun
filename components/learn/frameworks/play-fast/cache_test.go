@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Cache", func() {
+var _ = FDescribe("Cache", func() {
 	Context("Ristretto", func() {
 		var (
 			cache *ristretto.Cache
@@ -18,6 +18,7 @@ var _ = Describe("Cache", func() {
 		const (
 			testKey        = "testKey"
 			testValue      = "testValue"
+			updatedValue   = "updatedValue"
 			nonExistentKey = "nonExistentKey"
 			cacheSize      = 100
 		)
@@ -53,6 +54,18 @@ var _ = Describe("Cache", func() {
 				Expect(found).To(BeTrue())
 				Expect(value).To(Equal(testValue))
 			})
+
+			It("should update an existing key", func() {
+				By("Updating the existing key")
+				success := cache.Set(testKey, updatedValue, 1)
+				Expect(success).To(BeTrue())
+				cache.Wait()
+
+				By("Verifying the updated value")
+				value, found := cache.Get(testKey)
+				Expect(found).To(BeTrue())
+				Expect(value).To(Equal(updatedValue))
+			})
 		})
 
 		Context("Cache Behavior", func() {
@@ -85,6 +98,26 @@ var _ = Describe("Cache", func() {
 
 				Expect(evictedCount).To(BeNumerically(">", 0))
 				Expect(evictedCount).To(BeNumerically("<=", cacheSize))
+			})
+
+			It("should clear all items from the cache", func() {
+				By("Adding items to the cache")
+				for i := 0; i < 10; i++ {
+					key := fmt.Sprintf("key%d", i)
+					success := cache.Set(key, i, 1)
+					Expect(success).To(BeTrue())
+				}
+				cache.Wait()
+
+				By("Clearing the cache")
+				cache.Clear()
+
+				By("Verifying all items are removed")
+				for i := 0; i < 10; i++ {
+					key := fmt.Sprintf("key%d", i)
+					_, found := cache.Get(key)
+					Expect(found).To(BeFalse())
+				}
 			})
 		})
 	})
