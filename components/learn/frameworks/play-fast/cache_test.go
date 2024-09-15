@@ -30,8 +30,8 @@ var _ = FDescribe("Cache", func() {
 				NumCounters:        cacheSize * 10, // No. of counters (10x of MaxCost)
 				MaxCost:            cacheSize,      // Maximum number of entries (Can be in any unit eg. MB)
 				BufferItems:        64,             // number of keys per Get buffer.
-				Metrics:            true,
-				IgnoreInternalCost: true,
+				Metrics:            true,           // Enable metrics collection
+				IgnoreInternalCost: true,           // Ignore internal cost calculation (Non Byte Costs)
 			})
 		})
 
@@ -196,9 +196,10 @@ var _ = FDescribe("Cache", func() {
 
 				// Create a new cache with an OnEvict function
 				cacheWithEvict, err := ristretto.NewCache(&ristretto.Config{
-					NumCounters: cacheSize * 10,
-					MaxCost:     int64(cacheSize),
-					BufferItems: 64,
+					NumCounters:        cacheSize * 10,
+					MaxCost:            int64(cacheSize),
+					BufferItems:        64,
+					IgnoreInternalCost: true,
 					OnEvict: func(item *ristretto.Item) {
 						evictedItems = append(evictedItems, item.Key)
 					},
@@ -264,8 +265,8 @@ var _ = FDescribe("Cache", func() {
 						evictedCount++
 					}
 				}
-				Expect(evictedCount).To(BeNumerically(">", 0), "Expected some items to be evicted")
-				Expect(remainingCount).To(BeNumerically(">", 0), "Expected some items to remain in the cache")
+				Expect(evictedCount).To(BeNumerically(">", 0), "Expected atleast one item to be evicted")
+				Expect(remainingCount).To(BeNumerically(">", 1), "Expected more than one item to remain in the cache")
 
 				By("Verifying the total cost does not exceed the maximum")
 				metrics := cache.Metrics
@@ -273,5 +274,4 @@ var _ = FDescribe("Cache", func() {
 			})
 		})
 	})
-
 })
