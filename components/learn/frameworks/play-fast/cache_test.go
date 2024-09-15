@@ -191,5 +191,50 @@ var _ = FDescribe("Cache", func() {
 				Expect(value).To(Equal(testValue))
 			})
 		})
+
+		Context("Advanced Behavior", func() {
+			It("should verify that the OnEvict function is invoked for evicted items", func() {
+				evictedItems := []interface{}{}
+
+				// Create a new cache with an OnEvict function
+				cacheWithEvict, err := ristretto.NewCache(&ristretto.Config{
+					NumCounters: cacheSize * 10,
+					MaxCost:     int64(cacheSize),
+					BufferItems: 64,
+					OnEvict: func(item *ristretto.Item) {
+						evictedItems = append(evictedItems, item.Key)
+					},
+				})
+				Expect(err).To(BeNil())
+
+				By("Filling the cache to its maximum capacity")
+				for i := uint64(0); i < uint64(cacheSize); i++ {
+					success := cacheWithEvict.Set(i, fmt.Sprintf("value%d", i), 1)
+					Expect(success).To(BeTrue())
+				}
+				cacheWithEvict.Wait()
+
+				By("Adding multiple items to trigger evictions")
+				numExtraItems := 5
+				for i := uint64(cacheSize); i < uint64(cacheSize+numExtraItems); i++ {
+					success := cacheWithEvict.Set(i, fmt.Sprintf("value%d", i), 1)
+					Expect(success).To(BeTrue())
+				}
+				cacheWithEvict.Wait()
+
+				By("Verifying the eviction callback")
+				Expect(evictedItems).ToNot(BeEmpty())
+				Expect(len(evictedItems)).To(BeNumerically(">=", numExtraItems))
+
+				By("Checking that evicted items are within the expected range")
+				for _, item := range evictedItems {
+					key, ok := item.(uint64)
+					Expect(ok).To(BeTrue(), "Evicted item key should be of type uint64")
+					Expect(key).To(BeNumerically(">=", uint64(0)))
+					Expect(key).To(BeNumerically("<", uint64(cacheSize+numExtraItems)))
+				}
+			})
+		})
 	})
+
 })
