@@ -2,6 +2,7 @@ package play_fast
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -148,6 +149,29 @@ var _ = FDescribe("Cache", func() {
 					_, found := cache.Get(key)
 					Expect(found).To(BeFalse())
 				}
+			})
+
+			It("should maintain valid cache metrics", func() {
+				By("Performing cache hits")
+				hitCount := itemsToAdd / 2
+				for i := 0; i < hitCount; i++ {
+					_, found := cache.Get(fmt.Sprintf("key%d", i))
+					Expect(found).To(BeTrue(), fmt.Sprintf("Expected key%d to be found", i))
+				}
+
+				By("Performing cache misses")
+				missCount := itemsToAdd / 4
+				for i := itemsToAdd; i < itemsToAdd+missCount; i++ {
+					_, found := cache.Get(fmt.Sprintf("key%d", i))
+					Expect(found).To(BeFalse(), fmt.Sprintf("Expected key%d to not be found", i))
+				}
+
+				By("Verifying final metrics")
+				metrics := cache.Metrics
+				Expect(metrics.Hits()).To(Equal(uint64(hitCount)), "Hit count should match")
+				Expect(metrics.Misses()).To(Equal(uint64(missCount)), "Miss count should match")
+				Expect(metrics.KeysAdded()).To(Equal(uint64(itemsToAdd)), "Keys added should match itemsToAdd")
+				Expect(metrics.CostAdded()).To(Equal(uint64(itemsToAdd)), "Cost added should match itemsToAdd")
 			})
 		})
 
@@ -298,6 +322,31 @@ var _ = FDescribe("Cache", func() {
 				value, found := cache.Get("zeroCostKey")
 				Expect(found).To(BeTrue(), "Zero cost item should be in the cache")
 				Expect(value).To(Equal("zeroCostValue"), "Zero cost item should have the correct value")
+			})
+
+			It("should handle attempts to set malformed values", func() {
+				malformedValue := struct {
+					Data string
+				}{
+					Data: strings.Repeat("A", 1<<20), // 1MB of data
+				}
+				success := cache.Set("malformedKey", malformedValue, 1)
+				Expect(success).To(BeTrue(), "Setting a large value should succeed")
+				cache.Wait()
+
+				value, found := cache.Get("malformedKey")
+				Expect(found).To(BeTrue(), "Malformed value should be in the cache")
+				Expect(value).To(Equal(malformedValue), "Retrieved value should match the set value")
+			})
+
+			It("should reject items with extremely large costs", func() {
+				success := cache.Set("largeCostKey", "largeCostValue", 1<<30) // 1GB cost
+				Expect(success).To(BeTrue(), "Setting a large cost item should succeed")
+
+				cache.Wait()
+
+				_, found := cache.Get("largeCostKey")
+				Expect(found).To(BeFalse(), "Large cost item should not be in the cache")
 			})
 		})
 	})
