@@ -273,5 +273,32 @@ var _ = FDescribe("Cache", func() {
 				Expect(metrics.CostAdded()-metrics.CostEvicted()).To(BeNumerically("<=", cacheSize), "Expected total cost to not exceed maxCost")
 			})
 		})
+
+		Context("Negative Scenarios", func() {
+			It("should handle attempts to set items with negative costs", func() {
+				By("Attempting to set an item with a negative cost")
+				success := cache.Set("negativeKey", "negativeValue", -1)
+				Expect(success).To(BeTrue(), "Setting an item with negative cost should succeed")
+
+				cache.Wait()
+
+				By("Verifying that the item is in the cache")
+				value, found := cache.Get("negativeKey")
+				Expect(found).To(BeTrue(), "Negative cost item should be in the cache")
+				Expect(value).To(Equal("negativeValue"), "Negative cost item should have the correct value")
+			})
+
+			It("should handle zero cost items correctly", func() {
+				By("Setting an item with zero cost")
+				success := cache.Set("zeroCostKey", "zeroCostValue", 0)
+				Expect(success).To(BeTrue(), "Setting an item with zero cost should succeed")
+				cache.Wait()
+
+				By("Verifying the zero cost item can be retrieved")
+				value, found := cache.Get("zeroCostKey")
+				Expect(found).To(BeTrue(), "Zero cost item should be in the cache")
+				Expect(value).To(Equal("zeroCostValue"), "Zero cost item should have the correct value")
+			})
+		})
 	})
 })
