@@ -2,6 +2,8 @@ package play_fast
 
 import (
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/dgraph-io/ristretto"
 	. "github.com/onsi/ginkgo/v2"
@@ -71,6 +73,28 @@ var _ = FDescribe("Cache", func() {
 				_, found := cache.Get(nonExistentKey)
 				Expect(found).To(BeFalse())
 			})
+
+			It("should respect TTL for items", func() {
+				ttlKey := "ttlKey"
+				ttlValue := "ttlValue"
+				ttlDuration := 100 * time.Millisecond
+
+				By("Setting a key with TTL")
+				success := cache.SetWithTTL(ttlKey, ttlValue, 1, ttlDuration)
+				Expect(success).To(BeTrue())
+				cache.Wait()
+
+				By("Verifying the key exists immediately")
+				value, found := cache.Get(ttlKey)
+				Expect(found).To(BeTrue())
+				Expect(value).To(Equal(ttlValue))
+
+				By("Verifying the key is eventually removed")
+				Eventually(func() bool {
+					_, found := cache.Get(ttlKey)
+					return found
+				}, "200ms", "10ms").Should(BeFalse())
+			})
 		})
 
 		Context("Cache Bulk Operations", func() {
@@ -122,6 +146,49 @@ var _ = FDescribe("Cache", func() {
 					_, found := cache.Get(key)
 					Expect(found).To(BeFalse())
 				}
+			})
+		})
+
+		Context("Concurrent Operations", func() {
+			It("should handle concurrent reads and writes", func() {
+				const (
+					numGoroutines = 100
+					numOperations = 1000
+				)
+
+				var wg sync.WaitGroup
+				wg.Add(numGoroutines)
+
+				for i := 0; i < numGoroutines; i++ {
+					go func(id int) {
+						defer wg.Done()
+						for j := 0; j < numOperations; j++ {
+							key := fmt.Sprintf("key%d-%d", id, j)
+							value := fmt.Sprintf("value%d-%d", id, j)
+
+							// Randomly choose between Set and Get operations
+							if j%2 == 0 {
+								cache.Set(key, value, 1)
+							} else {
+								cache.Get(key)
+							}
+						}
+					}(i)
+				}
+
+				wg.Wait()
+				cache.Wait()
+
+				By("Verifying the cache is still functional after concurrent operations")
+				testKey := "concurrentTestKey"
+				testValue := "concurrentTestValue"
+				success := cache.Set(testKey, testValue, 1)
+				Expect(success).To(BeTrue())
+				cache.Wait()
+
+				value, found := cache.Get(testKey)
+				Expect(found).To(BeTrue())
+				Expect(value).To(Equal(testValue))
 			})
 		})
 	})
