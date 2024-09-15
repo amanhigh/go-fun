@@ -66,17 +66,29 @@ var _ = FDescribe("Cache", func() {
 				Expect(found).To(BeTrue())
 				Expect(value).To(Equal(updatedValue))
 			})
-		})
 
-		Context("Cache Behavior", func() {
 			It("should handle cache miss", func() {
 				_, found := cache.Get(nonExistentKey)
 				Expect(found).To(BeFalse())
 			})
+		})
+
+		Context("Cache Bulk Operations", func() {
+			const itemsToAdd = 50
+
+			BeforeEach(func() {
+				By("Adding multiple items to the cache")
+				for i := 0; i < itemsToAdd; i++ {
+					key := fmt.Sprintf("key%d", i)
+					success := cache.Set(key, i, 1)
+					Expect(success).To(BeTrue())
+				}
+				cache.Wait()
+			})
 
 			It("should evict items when cache is full", func() {
-				By("Filling the cache")
-				for i := 0; i < cacheSize; i++ {
+				By("Filling the cache to its maximum capacity")
+				for i := itemsToAdd; i < cacheSize; i++ {
 					key := fmt.Sprintf("key%d", i)
 					success := cache.Set(key, i, 1)
 					Expect(success).To(BeTrue())
@@ -101,19 +113,11 @@ var _ = FDescribe("Cache", func() {
 			})
 
 			It("should clear all items from the cache", func() {
-				By("Adding items to the cache")
-				for i := 0; i < 10; i++ {
-					key := fmt.Sprintf("key%d", i)
-					success := cache.Set(key, i, 1)
-					Expect(success).To(BeTrue())
-				}
-				cache.Wait()
-
 				By("Clearing the cache")
 				cache.Clear()
 
 				By("Verifying all items are removed")
-				for i := 0; i < 10; i++ {
+				for i := 0; i < itemsToAdd; i++ {
 					key := fmt.Sprintf("key%d", i)
 					_, found := cache.Get(key)
 					Expect(found).To(BeFalse())
