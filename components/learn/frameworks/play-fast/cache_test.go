@@ -9,9 +9,12 @@ import (
 	"github.com/dgraph-io/ristretto"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gmeasure"
 )
 
 var _ = FDescribe("Cache", func() {
+
+	// TODO: Bigcache, Freecache
 	Context("Ristretto", func() {
 		var (
 			cache *ristretto.Cache
@@ -349,5 +352,95 @@ var _ = FDescribe("Cache", func() {
 				Expect(found).To(BeFalse(), "Large cost item should not be in the cache")
 			})
 		})
+
+		Context("Performance Benchmarks", FlakeAttempts(3), func() {
+			var benchCache *ristretto.Cache
+			const numOperations = 10000
+
+			BeforeEach(func() {
+				var err error
+				benchCache, err = ristretto.NewCache(&ristretto.Config{
+					NumCounters: 1e5,     // number of keys to track frequency of (100K).
+					MaxCost:     1 << 23, // maximum cost of cache (8MB).
+					BufferItems: 64,      // number of keys per Get buffer.
+				})
+				Expect(err).To(BeNil())
+			})
+
+			It("should perform set operations efficiently", func() {
+				experiment := gmeasure.NewExperiment("Set Operations")
+				AddReportEntry(experiment.Name, experiment)
+
+				experiment.SampleDuration("set with consistency", func(_ int) {
+					key := fmt.Sprintf("key-%d", GinkgoRandomSeed())
+					success := benchCache.Set(key, "value", 1)
+					Expect(success).To(BeTrue())
+					benchCache.Wait()
+				}, gmeasure.SamplingConfig{N: numOperations})
+
+				experiment.SampleDuration("set without consistency", func(_ int) {
+					key := fmt.Sprintf("key-%d", GinkgoRandomSeed())
+					success := benchCache.Set(key, "value", 1)
+					Expect(success).To(BeTrue())
+				}, gmeasure.SamplingConfig{N: numOperations})
+
+				AddReportEntry("Set Operations Stats", experiment.GetStats("set with consistency"))
+				AddReportEntry("Set Operations Stats", experiment.GetStats("set without consistency"))
+
+				Expect(experiment.GetStats("set with consistency").DurationFor(gmeasure.StatMedian)).To(BeNumerically("<", 3*time.Microsecond), "Median set with consistency should be less than 3µs")
+				Expect(experiment.GetStats("set without consistency").DurationFor(gmeasure.StatMedian)).To(BeNumerically("<", 1*time.Microsecond), "Median set without consistency should be less than 1µs")
+
+				Expect(experiment.GetStats("set with consistency").DurationFor(gmeasure.StatMax)).To(BeNumerically("<", 200*time.Microsecond), "Max set with consistency should be less than 200µs")
+				Expect(experiment.GetStats("set without consistency").DurationFor(gmeasure.StatMax)).To(BeNumerically("<", 20*time.Microsecond), "Max set without consistency should be less than 20µs")
+			})
+
+			It("should perform get operations efficiently", func() {
+				experiment := gmeasure.NewExperiment("Get Operations")
+				AddReportEntry(experiment.Name, experiment)
+
+				// Populate cache first
+				for i := 0; i < numOperations; i++ {
+					key := fmt.Sprintf("key-%d", i)
+					success := benchCache.Set(key, fmt.Sprintf("value-%d", i), 1)
+					Expect(success).To(BeTrue())
+				}
+				benchCache.Wait()
+
+				experiment.SampleDuration("get", func(_ int) {
+					key := fmt.Sprintf("key-%d", GinkgoRandomSeed()%numOperations)
+					_, found := benchCache.Get(key)
+					Expect(found).To(BeTrue())
+				}, gmeasure.SamplingConfig{N: numOperations})
+
+				AddReportEntry("Get Operations Stats", experiment.GetStats("get"))
+
+				Expect(experiment.GetStats("get").DurationFor(gmeasure.StatMedian)).To(BeNumerically("<", 1*time.Microsecond), "Median get should be less than 1µs")
+				Expect(experiment.GetStats("get").DurationFor(gmeasure.StatMax)).To(BeNumerically("<", 20*time.Microsecond), "Max get should be less than 20µs")
+			})
+
+			It("should perform delete operations efficiently", func() {
+				experiment := gmeasure.NewExperiment("Delete Operations")
+				AddReportEntry(experiment.Name, experiment)
+
+				// Populate cache first
+				for i := 0; i < numOperations; i++ {
+					key := fmt.Sprintf("key-%d", i)
+					success := benchCache.Set(key, fmt.Sprintf("value-%d", i), 1)
+					Expect(success).To(BeTrue())
+				}
+				benchCache.Wait()
+
+				experiment.SampleDuration("delete", func(_ int) {
+					key := fmt.Sprintf("key-%d", GinkgoRandomSeed()%numOperations)
+					benchCache.Del(key)
+				}, gmeasure.SamplingConfig{N: numOperations})
+
+				AddReportEntry("Delete Operations Stats", experiment.GetStats("delete"))
+
+				Expect(experiment.GetStats("delete").DurationFor(gmeasure.StatMedian)).To(BeNumerically("<", 1*time.Microsecond), "Median delete should be less than 1µs")
+				Expect(experiment.GetStats("delete").DurationFor(gmeasure.StatMax)).To(BeNumerically("<", 40*time.Microsecond), "Max delete should be less than 40µs")
+			})
+		})
+
 	})
 })
