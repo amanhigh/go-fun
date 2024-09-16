@@ -12,7 +12,7 @@ import (
 	"github.com/onsi/gomega/gmeasure"
 )
 
-var _ = FDescribe("Cache", func() {
+var _ = Describe("Cache", func() {
 
 	// TODO: Bigcache, Freecache
 	Context("Ristretto", func() {
