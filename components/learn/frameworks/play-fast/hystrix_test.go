@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/failsafe-go/failsafe-go"
+	"github.com/failsafe-go/failsafe-go/circuitbreaker"
 	"github.com/failsafe-go/failsafe-go/retrypolicy"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -29,7 +30,7 @@ var _ = FDescribe("Hystrix", func() {
 	}
 
 	Describe("Failsafe", func() {
-		Describe("RetryPolicy", func() {
+		Context("RetryPolicy", func() {
 			var retryBuilder retrypolicy.RetryPolicyBuilder[string]
 
 			BeforeEach(func() {
@@ -208,5 +209,33 @@ var _ = FDescribe("Hystrix", func() {
 			})
 		})
 
+		Context("CircuitBreaker", func() {
+			var breakerBuilder circuitbreaker.CircuitBreakerBuilder[string]
+
+			BeforeEach(func() {
+				breakerBuilder = circuitbreaker.Builder[string]()
+			})
+
+			It("should build", func() {
+				breaker := breakerBuilder.Build()
+				Expect(breaker).NotTo(BeNil())
+			})
+
+			It("should keep the circuit breaker closed for successful executions", func() {
+				breaker := breakerBuilder.Build()
+
+				successfulFunction := func() (string, error) {
+					return "success", nil
+				}
+
+				for i := 0; i < 10; i++ {
+					result, err := failsafe.Get(successfulFunction, breaker)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result).To(Equal("success"))
+				}
+
+				Expect(breaker.State()).To(Equal(circuitbreaker.ClosedState))
+			})
+		})
 	})
 })
