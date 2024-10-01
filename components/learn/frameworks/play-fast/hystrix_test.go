@@ -236,6 +236,36 @@ var _ = FDescribe("Hystrix", func() {
 
 				Expect(breaker.State()).To(Equal(circuitbreaker.ClosedState))
 			})
+
+			It("should open the circuit before reaching the failure threshold", func() {
+				breaker := breakerBuilder.
+					WithFailureThreshold(maxRetries).
+					WithDelay(10 * time.Millisecond). // Add a short delay before closing the circuit
+					Build()
+
+				failingFunction := func() (string, error) {
+					return "", errors.New("error")
+				}
+
+				// Execute the failing function up to one before failure threshold
+				for i := 0; i < maxRetries-1; i++ {
+					_, err := failsafe.Get(failingFunction, breaker)
+					Expect(err).To(HaveOccurred())
+					Expect(breaker.State()).To(Equal(circuitbreaker.ClosedState))
+				}
+
+				// The next execution should open the circuit
+				_, err := failsafe.Get(failingFunction, breaker)
+				By("At threshold")
+				Expect(err).To(HaveOccurred())
+				Expect(breaker.State()).To(Equal(circuitbreaker.OpenState))
+
+				// Subsequent executions should immediately return ErrOpen
+				_, err = failsafe.Get(failingFunction, breaker)
+				By("After threshold")
+				Expect(err).To(MatchError(circuitbreaker.ErrOpen))
+				Expect(breaker.State()).To(Equal(circuitbreaker.OpenState))
+			})
 		})
 	})
 })
