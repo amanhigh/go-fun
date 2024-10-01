@@ -11,17 +11,33 @@ import (
 )
 
 var _ = FDescribe("Hystrix", func() {
+	const (
+		initialDelayMs = 10
+		jitterMs       = 5
+		maxRetries     = 3
+		allowedRetries = 20
+	)
+
+	// Helper function to create an always failing function
+	createAlwaysFailingFunction := func(startTimes []time.Time) func() (string, error) {
+		attempts := 0
+		return func() (string, error) {
+			startTimes[attempts] = time.Now()
+			attempts++
+			return "", errors.New("persistent error")
+		}
+	}
+
 	Describe("Failsafe", func() {
 		Describe("RetryPolicy", func() {
-			var retryPolicy retrypolicy.RetryPolicy[string]
+			var retryBuilder retrypolicy.RetryPolicyBuilder[string]
+
 			BeforeEach(func() {
-				retryPolicy = retrypolicy.Builder[string]().
-					WithDelay(time.Millisecond * 10).
-					WithMaxRetries(3).
-					Build()
+				retryBuilder = retrypolicy.Builder[string]()
 			})
 
 			It("should build", func() {
+				retryPolicy := retryBuilder.Build()
 				Expect(retryPolicy).NotTo(BeNil())
 			})
 
@@ -29,25 +45,32 @@ var _ = FDescribe("Hystrix", func() {
 				attempts := 0
 				failingFunction := func() (string, error) {
 					attempts++
-					if attempts <= 3 {
+					if attempts <= maxRetries {
 						return "", errors.New("temporary error")
 					}
 					return "success", nil
 				}
 
+				retryPolicy := retryBuilder.
+					WithDelay(time.Duration(initialDelayMs) * time.Millisecond).
+					WithMaxRetries(maxRetries).
+					Build()
+
 				result, err := failsafe.Get(failingFunction, retryPolicy)
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(result).To(Equal("success"))
-				Expect(attempts).To(Equal(4)) // 1 initial attempt + 3 retries
+				Expect(attempts).To(Equal(maxRetries + 1)) // 1 initial attempt + maxRetries
 			})
 
 			It("should fail after exhausting all retry attempts", func() {
-				attempts := 0
-				alwaysFailingFunction := func() (string, error) {
-					attempts++
-					return "", errors.New("persistent error")
-				}
+				startTimes := make([]time.Time, maxRetries+1)
+				alwaysFailingFunction := createAlwaysFailingFunction(startTimes)
+
+				retryPolicy := retryBuilder.
+					WithDelay(time.Duration(initialDelayMs) * time.Millisecond).
+					WithMaxRetries(maxRetries).
+					Build()
 
 				result, err := failsafe.Get(alwaysFailingFunction, retryPolicy)
 
@@ -55,17 +78,13 @@ var _ = FDescribe("Hystrix", func() {
 				Expect(err.Error()).To(ContainSubstring("retries exceeded"))
 				Expect(err.Error()).To(ContainSubstring("persistent error"))
 				Expect(result).To(BeEmpty())
-				Expect(attempts).To(Equal(4)) // 1 initial attempt + 3 retries
+				Expect(len(startTimes)).To(Equal(maxRetries + 1)) // 1 initial attempt + maxRetries
 			})
 
-			It("should use exponential backoff for retries", func() {
-				initialDelay := time.Millisecond
-				maxDelay := time.Millisecond * 8
-				allowedExponentialBackoff := 3
-
-				retryPolicy := retrypolicy.Builder[string]().
-					WithBackoff(initialDelay, maxDelay).
-					WithMaxRetries(allowedExponentialBackoff).
+			It("should use exponential backoff", func() {
+				retryPolicy := retryBuilder.
+					WithBackoff(time.Millisecond, time.Millisecond*8).
+					WithMaxRetries(maxRetries).
 					Build()
 
 				expectedDelays := []time.Duration{
@@ -74,20 +93,15 @@ var _ = FDescribe("Hystrix", func() {
 					time.Millisecond * 4,
 				}
 
-				attempts := 0
-				startTimes := make([]time.Time, allowedExponentialBackoff+1)
-				alwaysFailingFunction := func() (string, error) {
-					startTimes[attempts] = time.Now()
-					attempts++
-					return "", errors.New("persistent error")
-				}
+				startTimes := make([]time.Time, maxRetries+1)
+				alwaysFailingFunction := createAlwaysFailingFunction(startTimes)
 
 				_, err := failsafe.Get(alwaysFailingFunction, retryPolicy)
 
 				Expect(err).To(HaveOccurred())
-				Expect(attempts).To(Equal(allowedExponentialBackoff + 1)) // 1 initial attempt + 3 retries
+				Expect(len(startTimes)).To(Equal(maxRetries + 1)) // 1 initial attempt + maxRetries
 
-				for i := 1; i <= allowedExponentialBackoff; i++ {
+				for i := 1; i <= maxRetries; i++ {
 					delay := startTimes[i].Sub(startTimes[i-1])
 					expected := expectedDelays[i-1]
 					Expect(delay).To(BeNumerically("~", expected, time.Millisecond/2))
@@ -99,9 +113,9 @@ var _ = FDescribe("Hystrix", func() {
 				jitter := time.Millisecond * 5
 				allowedRetries := 10
 
-				retryPolicy := retrypolicy.Builder[string]().
-					WithDelay(initialDelay).
-					WithJitter(jitter).
+				retryPolicy := retryBuilder.
+					WithDelay(time.Duration(initialDelayMs) * time.Millisecond).
+					WithJitter(time.Duration(jitterMs) * time.Millisecond).
 					WithMaxRetries(allowedRetries).
 					Build()
 
