@@ -143,6 +143,70 @@ var _ = FDescribe("Hystrix", func() {
 				// Expect at least 80% of delays to be within the jitter range
 				Expect(float64(delaysWithinRange) / float64(allowedRetries)).To(BeNumerically(">=", 0.8))
 			})
+
+			It("should trigger OnRetry event listener", func() {
+				attempts := 0
+				retryCount := 0
+
+				failingFunction := func() (string, error) {
+					attempts++
+					if attempts <= maxRetries {
+						return "", errors.New("temporary error")
+					}
+					return "success", nil
+				}
+
+				retryPolicy := retryBuilder.
+					WithMaxRetries(maxRetries).
+					OnRetry(func(e failsafe.ExecutionEvent[string]) {
+						retryCount++
+						Expect(e.Retries()).To(Equal(retryCount))
+						Expect(e.LastResult()).To(BeEmpty())
+						Expect(e.LastError()).To(MatchError("temporary error"))
+					}).
+					Build()
+
+				result, err := failsafe.Get(failingFunction, retryPolicy)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(result).To(Equal("success"))
+				Expect(attempts).To(Equal(maxRetries + 1)) // 1 initial attempt + maxRetries
+				Expect(retryCount).To(Equal(maxRetries))
+			})
+
+			It("should handle specific errors", func() {
+				attempts := 0
+
+				// Define custom error types
+				type RetryableError struct{ error }
+				type NonRetryableError struct{ error }
+
+				failingFunction := func() (string, error) {
+					attempts++
+					switch attempts {
+					case 1, 2:
+						return "", RetryableError{errors.New("retryable error")}
+					case 3:
+						return "", NonRetryableError{errors.New("non-retryable error")}
+					default:
+						return "success", nil
+					}
+				}
+
+				retryPolicy := retryBuilder.
+					WithMaxRetries(maxRetries).
+					HandleErrorTypes(RetryableError{}).
+					Build()
+
+				result, err := failsafe.Get(failingFunction, retryPolicy)
+
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(BeAssignableToTypeOf(NonRetryableError{}))
+				Expect(err.Error()).To(ContainSubstring("non-retryable error"))
+				Expect(result).To(BeEmpty())
+				Expect(attempts).To(Equal(3)) // 1 initial attempt + 2 retries
+			})
 		})
+
 	})
 })
