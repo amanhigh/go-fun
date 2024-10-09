@@ -20,13 +20,21 @@ var _ = FDescribe("Hystrix", func() {
 	)
 
 	// Helper function to create an always failing function
-	createAlwaysFailingFunction := func(startTimes []time.Time) func() (string, error) {
+	failFuncWithTimes := func(startTimes []time.Time) func() (string, error) {
 		attempts := 0
 		return func() (string, error) {
 			startTimes[attempts] = time.Now()
 			attempts++
 			return "", errors.New("persistent error")
 		}
+	}
+
+	successfulFunction := func() (string, error) {
+		return "success", nil
+	}
+
+	failingFunction := func() (string, error) {
+		return "", errors.New("persistent error")
 	}
 
 	Describe("Failsafe", func() {
@@ -66,7 +74,7 @@ var _ = FDescribe("Hystrix", func() {
 
 			It("should fail after exhausting all retry attempts", func() {
 				startTimes := make([]time.Time, maxRetries+1)
-				alwaysFailingFunction := createAlwaysFailingFunction(startTimes)
+				alwaysFailingFunction := failFuncWithTimes(startTimes)
 
 				retryPolicy := retryBuilder.
 					WithDelay(time.Duration(initialDelayMs) * time.Millisecond).
@@ -95,7 +103,7 @@ var _ = FDescribe("Hystrix", func() {
 				}
 
 				startTimes := make([]time.Time, maxRetries+1)
-				alwaysFailingFunction := createAlwaysFailingFunction(startTimes)
+				alwaysFailingFunction := failFuncWithTimes(startTimes)
 
 				_, err := failsafe.Get(alwaysFailingFunction, retryPolicy)
 
@@ -224,10 +232,6 @@ var _ = FDescribe("Hystrix", func() {
 			It("should keep the circuit breaker closed for successful executions", func() {
 				breaker := breakerBuilder.Build()
 
-				successfulFunction := func() (string, error) {
-					return "success", nil
-				}
-
 				for i := 0; i < 10; i++ {
 					result, err := failsafe.Get(successfulFunction, breaker)
 					Expect(err).NotTo(HaveOccurred())
@@ -242,10 +246,6 @@ var _ = FDescribe("Hystrix", func() {
 					WithFailureThreshold(maxRetries).
 					WithDelay(10 * time.Millisecond). // Add a short delay before closing the circuit
 					Build()
-
-				failingFunction := func() (string, error) {
-					return "", errors.New("error")
-				}
 
 				// Execute the failing function up to one before failure threshold
 				for i := 0; i < maxRetries-1; i++ {
@@ -275,14 +275,6 @@ var _ = FDescribe("Hystrix", func() {
 					WithSuccessThreshold(successThreshold).
 					WithDelay(delay).
 					Build()
-
-				failingFunction := func() (string, error) {
-					return "", errors.New("error")
-				}
-
-				successfulFunction := func() (string, error) {
-					return "success", nil
-				}
 
 				// Open the circuit
 				_, err := failsafe.Get(failingFunction, breaker)
