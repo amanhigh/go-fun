@@ -266,6 +266,57 @@ var _ = FDescribe("Hystrix", func() {
 				Expect(err).To(MatchError(circuitbreaker.ErrOpen))
 				Expect(breaker.State()).To(Equal(circuitbreaker.OpenState))
 			})
+
+			It("should close the circuit after reaching the success threshold", func() {
+				successThreshold := uint(3)
+				delay := 50 * time.Millisecond
+				breaker := breakerBuilder.
+					WithFailureThreshold(1).
+					WithSuccessThreshold(successThreshold).
+					WithDelay(delay).
+					Build()
+
+				failingFunction := func() (string, error) {
+					return "", errors.New("error")
+				}
+
+				successfulFunction := func() (string, error) {
+					return "success", nil
+				}
+
+				// Open the circuit
+				_, err := failsafe.Get(failingFunction, breaker)
+				Expect(err).To(HaveOccurred())
+				Expect(breaker.State()).To(Equal(circuitbreaker.OpenState))
+
+				// Wait for the remaining delay
+				for breaker.RemainingDelay() > 0 {
+					time.Sleep(10 * time.Millisecond)
+				}
+
+				// Execute successful functions up to success threshold
+				for i := uint(0); i < successThreshold; i++ {
+					result, err := failsafe.Get(successfulFunction, breaker)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result).To(Equal("success"))
+
+					if i == 0 {
+						Expect(breaker.State()).To(Equal(circuitbreaker.HalfOpenState), "Should transition to half-open on first success")
+					} else if i < successThreshold-1 {
+						Expect(breaker.State()).To(Equal(circuitbreaker.HalfOpenState), "Should remain half-open until threshold is met")
+					} else {
+						Expect(breaker.State()).To(Equal(circuitbreaker.ClosedState), "Should close after meeting success threshold")
+					}
+				}
+
+				// Verify that subsequent calls succeed and keep the circuit closed
+				for i := 0; i < 3; i++ {
+					result, err := failsafe.Get(successfulFunction, breaker)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result).To(Equal("success"))
+					Expect(breaker.State()).To(Equal(circuitbreaker.ClosedState), "Should remain closed for subsequent successful calls")
+				}
+			})
 		})
 	})
 })
