@@ -1,16 +1,48 @@
 package play_fast_test
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"sync"
 	"time"
 
 	"github.com/failsafe-go/failsafe-go"
+	"github.com/failsafe-go/failsafe-go/cachepolicy"
 	"github.com/failsafe-go/failsafe-go/circuitbreaker"
 	"github.com/failsafe-go/failsafe-go/hedgepolicy"
 	"github.com/failsafe-go/failsafe-go/retrypolicy"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+// SimpleCache is a basic in-memory cache implementation
+type SimpleCache[R any] struct {
+	data map[string]R
+	mu   sync.RWMutex
+}
+
+// NewSimpleCache creates a new SimpleCache
+func NewSimpleCache[R any]() *SimpleCache[R] {
+	return &SimpleCache[R]{
+		data: make(map[string]R),
+	}
+}
+
+// Get retrieves a value from the cache
+func (c *SimpleCache[R]) Get(key string) (R, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	value, ok := c.data[key]
+	return value, ok
+}
+
+// Set stores a value in the cache
+func (c *SimpleCache[R]) Set(key string, value R) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.data[key] = value
+}
 
 var _ = FDescribe("Hystrix", func() {
 	const (
@@ -373,7 +405,112 @@ var _ = FDescribe("Hystrix", func() {
 				}
 				Expect(fastestTime).To(BeNumerically("<", time.Millisecond*100)) // The fastest should be less than the initial slow attempt
 			})
-		})
 
+			Context("Cache", func() {
+				It("should return previously cached results", func() {
+					// Create a SimpleCache instance
+					cache := NewSimpleCache[string]()
+
+					// Create a cache policy
+					cachePolicy := cachepolicy.Builder[string](cache).
+						WithKey("simpleCache").
+						Build()
+
+					executionCount := 0
+					testFunction := func() (string, error) {
+						executionCount++
+						return fmt.Sprintf("result-%d", executionCount), nil
+					}
+
+					// First execution
+					result1, err := failsafe.Get(testFunction, cachePolicy)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result1).To(Equal("result-1"))
+					Expect(executionCount).To(Equal(1))
+
+					// Second execution (should return cached result)
+					result2, err := failsafe.Get(testFunction, cachePolicy)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result2).To(Equal("result-1")) // Should be the same as the first result
+					Expect(executionCount).To(Equal(1))   // Should not have incremented
+
+					// Third execution with a different key
+					ctx := context.WithValue(context.Background(), cachepolicy.CacheKey, "newKey")
+					result3, err := failsafe.NewExecutor[string](cachePolicy).
+						WithContext(ctx).
+						Get(testFunction)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result3).To(Equal("result-2")) // Should be a new result
+					Expect(executionCount).To(Equal(2))   // Should have incremented
+
+					// Fourth execution with the original key
+					result4, err := failsafe.Get(testFunction, cachePolicy)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result4).To(Equal("result-1")) // Should still be the first result
+					Expect(executionCount).To(Equal(2))   // Should not have incremented
+				})
+
+				It("should only cache results that meet specified conditions", func() {
+					cache := NewSimpleCache[int]()
+
+					// Create a cache policy that only caches even numbers
+					cachePolicy := cachepolicy.Builder[int](cache).
+						WithKey("conditionalCache").
+						CacheIf(func(result int, err error) bool {
+							return err == nil && result%2 == 0
+						}).
+						Build()
+
+					executionCount := 0
+					testFunction := func() (int, error) {
+						executionCount++
+						return executionCount, nil
+					}
+
+					// First execution (odd result, should not be cached)
+					result1, err := failsafe.Get(testFunction, cachePolicy)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result1).To(Equal(1))
+					Expect(executionCount).To(Equal(1))
+
+					// Second execution (even result, should be cached)
+					result2, err := failsafe.Get(testFunction, cachePolicy)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result2).To(Equal(2))
+					Expect(executionCount).To(Equal(2))
+
+					// Third execution (should return cached even result)
+					result3, err := failsafe.Get(testFunction, cachePolicy)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result3).To(Equal(2))        // Should be the same as the second result
+					Expect(executionCount).To(Equal(2)) // Should not have incremented
+
+					// Execution with a different key
+					ctx := context.WithValue(context.Background(), cachepolicy.CacheKey, "newKey")
+					result4, err := failsafe.NewExecutor[int](cachePolicy).
+						WithContext(ctx).
+						Get(testFunction)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result4).To(Equal(3))        // New execution, odd result, not cached
+					Expect(executionCount).To(Equal(3)) // Should have incremented
+
+					// Another execution with the new key
+					result5, err := failsafe.NewExecutor[int](cachePolicy).
+						WithContext(ctx).
+						Get(testFunction)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result5).To(Equal(4)) // Even result, should be cached for the new key
+					Expect(executionCount).To(Equal(4))
+
+					// Final execution with the new key (should return cached even result)
+					result6, err := failsafe.NewExecutor[int](cachePolicy).
+						WithContext(ctx).
+						Get(testFunction)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result6).To(Equal(4))        // Should be the cached even result for the new key
+					Expect(executionCount).To(Equal(4)) // Should not have incremented
+				})
+			})
+		})
 	})
 })
