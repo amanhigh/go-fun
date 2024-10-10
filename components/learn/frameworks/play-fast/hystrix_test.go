@@ -6,6 +6,7 @@ import (
 
 	"github.com/failsafe-go/failsafe-go"
 	"github.com/failsafe-go/failsafe-go/circuitbreaker"
+	"github.com/failsafe-go/failsafe-go/hedgepolicy"
 	"github.com/failsafe-go/failsafe-go/retrypolicy"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -310,5 +311,69 @@ var _ = FDescribe("Hystrix", func() {
 				}
 			})
 		})
+
+		Context("HedgePolicy", func() {
+			var (
+				hedgeDelay  = 50 * time.Millisecond
+				hedgePolicy hedgepolicy.HedgePolicy[string]
+			)
+
+			BeforeEach(func() {
+				hedgePolicy = hedgepolicy.BuilderWithDelay[string](hedgeDelay).
+					WithMaxHedges(2).
+					Build()
+			})
+
+			It("should not trigger hedge if execution completes before delay", func() {
+				attempts := 0
+				failingFunction := func() (string, error) {
+					attempts++
+					// Simulate quick execution that completes before hedge delay
+					time.Sleep(time.Millisecond * 10) // Less than hedgeDelay
+					return "success", nil
+				}
+
+				result, err := failsafe.Get(failingFunction, hedgePolicy)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(result).To(Equal("success"))
+				Expect(attempts).To(Equal(1)) // Only one attempt should have been made
+			})
+
+			It("should retry if latency exceeds the threshold", func() {
+				attempts := 0
+				executionTimes := make([]time.Duration, 0)
+
+				// Define a function that simulates high latency
+				highLatencyFunction := func() (string, error) {
+					start := time.Now()
+					attempts++
+					if attempts == 1 {
+						time.Sleep(time.Millisecond * 100) // Simulating high latency for first attempt
+					} else {
+						time.Sleep(time.Millisecond * 10) // Subsequent attempts are faster
+					}
+					executionTimes = append(executionTimes, time.Since(start))
+					return "success", nil
+				}
+
+				// Run with hedge policy
+				result, err := failsafe.Get(highLatencyFunction, hedgePolicy)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(result).To(Equal("success"))
+				Expect(attempts).To(BeNumerically(">", 1))  // Should be more than one attempt
+				Expect(attempts).To(BeNumerically("<=", 3)) // But not more than 3 (1 initial + 2 hedges)
+
+				// Check if the fastest execution time is returned
+				fastestTime := executionTimes[0]
+				for _, t := range executionTimes[1:] {
+					if t < fastestTime {
+						fastestTime = t
+					}
+				}
+				Expect(fastestTime).To(BeNumerically("<", time.Millisecond*100)) // The fastest should be less than the initial slow attempt
+			})
+		})
+
 	})
 })
