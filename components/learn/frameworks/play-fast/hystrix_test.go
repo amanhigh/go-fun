@@ -10,6 +10,7 @@ import (
 	"github.com/failsafe-go/failsafe-go"
 	"github.com/failsafe-go/failsafe-go/cachepolicy"
 	"github.com/failsafe-go/failsafe-go/circuitbreaker"
+	"github.com/failsafe-go/failsafe-go/fallback"
 	"github.com/failsafe-go/failsafe-go/hedgepolicy"
 	"github.com/failsafe-go/failsafe-go/retrypolicy"
 	"github.com/failsafe-go/failsafe-go/timeout"
@@ -45,7 +46,7 @@ func (c *SimpleCache[R]) Set(key string, value R) {
 	c.data[key] = value
 }
 
-var _ = FDescribe("Hystrix", func() {
+var _ = Describe("Hystrix", func() {
 	const (
 		initialDelayMs = 10
 		jitterMs       = 5
@@ -588,6 +589,45 @@ var _ = FDescribe("Hystrix", func() {
 
 				Expect(err).To(MatchError(timeout.ErrExceeded))
 				Expect(attempts).To(Equal(4)) // 1 initial + 3 retries
+			})
+		})
+
+		Context("Fallback", func() {
+			var (
+				backupResult string
+			)
+
+			BeforeEach(func() {
+				backupResult = "backup result"
+			})
+
+			It("should return fallback result when execution fails", func() {
+				fallbackPolicy := fallback.WithResult(backupResult)
+				result, err := failsafe.Get(failingFunction, fallbackPolicy)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(result).To(Equal(backupResult))
+			})
+
+			It("should return fallback error when execution fails", func() {
+				fallbackError := errors.New("fallback error")
+				fallbackPolicy := fallback.WithError[string](fallbackError)
+
+				result, err := failsafe.Get(failingFunction, fallbackPolicy)
+
+				Expect(err).To(MatchError(fallbackError))
+				Expect(result).To(BeEmpty())
+			})
+
+			It("should compute fallback result when execution fails", func() {
+				fallbackPolicy := fallback.WithFunc[string](func(e failsafe.Execution[string]) (string, error) {
+					return backupResult, nil
+				})
+
+				result, err := failsafe.Get(failingFunction, fallbackPolicy)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(result).To(Equal(backupResult))
 			})
 		})
 	})
