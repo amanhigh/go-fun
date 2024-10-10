@@ -7,6 +7,8 @@ and calculates their values in Indian Rupees (INR) using SBI's TT Buy rates.
 It provides peak and year-end prices for a given tax year, aiding in Indian 
 Income Tax Return (ITR) preparation.
 
+https://zerodha.com/z-connect/varsity/how-is-the-income-from-foreign-equity-shares-taxed-and-disclosed-in-the-itr-form
+
 Features:
 - Downloads stock data from Alpha Vantage API
 - Uses SBI Reference Rates for USD-INR conversion
