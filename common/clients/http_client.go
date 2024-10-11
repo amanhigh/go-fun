@@ -9,6 +9,8 @@ import (
 
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/dubonzi/otelresty"
+	"github.com/failsafe-go/failsafe-go/failsafehttp"
+	"github.com/failsafe-go/failsafe-go/retrypolicy"
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog/log"
 )
@@ -43,14 +45,20 @@ func NewRestyClient(baseUrl string, httpConfig config.HttpClientConfig) (client 
 
 	//Default Header
 	// client.SetHeader("Content-Type", "application/json")
-
 	//Tracing
 	otelresty.TraceClient(client, otelresty.WithTracerName("resty-sdk"))
 
 	//Configure Http Config
 	client.SetTimeout(httpConfig.RequestTimeout)
 
-	transport := http.Transport{
+	// Set the transport using the new transport builder
+	client.SetTransport(buildNewTransport(httpConfig))
+
+	return
+}
+
+func buildNewTransport(httpConfig config.HttpClientConfig) http.RoundTripper {
+	transport := &http.Transport{
 		DisableCompression: !httpConfig.Compression,
 		DisableKeepAlives:  !httpConfig.KeepAlive,
 		DialContext: (&net.Dialer{
@@ -59,6 +67,19 @@ func NewRestyClient(baseUrl string, httpConfig config.HttpClientConfig) (client 
 		IdleConnTimeout:     httpConfig.IdleConnectionTimeout, // Idle Timeout Before Closing Keepalive Connection
 		MaxIdleConnsPerHost: httpConfig.IdleConnectionsPerHost,
 	}
-	client.SetTransport(&transport)
-	return
+
+	if httpConfig.Retries > 0 {
+		retryPolicy := buildRetryPolicy(httpConfig.Retries)
+		return failsafehttp.NewRoundTripper(transport, retryPolicy)
+	}
+
+	return transport
+}
+
+func buildRetryPolicy(retries int) retrypolicy.RetryPolicy[*http.Response] {
+	return failsafehttp.RetryPolicyBuilder().
+		WithDelay(time.Second).
+		WithJitterFactor(0.1). //Avoid Thundering Hurd
+		WithMaxRetries(retries).
+		Build()
 }

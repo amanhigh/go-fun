@@ -82,6 +82,9 @@ type HttpClientConfig struct {
 	Compression bool `env:"HTTP_COMPRESSION" envDefault:"false"`
 
 	IdleConnectionsPerHost int `env:"HTTP_IDLE_CONN_PER_HOST" envDefault:"20"`
+
+	/* Retry Settings */
+	Retries int `env:"HTTP_RETRIES" envDefault:"0"`
 }
 
 type ZoneMap map[string]Server
