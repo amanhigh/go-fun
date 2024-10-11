@@ -76,6 +76,7 @@ func buildNewTransport(httpConfig config.HttpClientConfig) http.RoundTripper {
 }
 
 func buildRetryPolicy(config config.RetryConfig) retrypolicy.RetryPolicy[*http.Response] {
+	// TODO: Implement Metrics
 	return failsafehttp.RetryPolicyBuilder().
 		WithDelay(config.Delay).
 		WithJitterFactor(config.JitterFactor).
