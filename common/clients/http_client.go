@@ -9,6 +9,7 @@ import (
 
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/dubonzi/otelresty"
+	"github.com/failsafe-go/failsafe-go/circuitbreaker"
 	"github.com/failsafe-go/failsafe-go/failsafehttp"
 	"github.com/failsafe-go/failsafe-go/retrypolicy"
 	"github.com/go-resty/resty/v2"
@@ -68,12 +69,14 @@ func buildNewTransport(httpConfig config.HttpClientConfig) http.RoundTripper {
 		MaxIdleConnsPerHost: httpConfig.IdleConnectionsPerHost,
 	}
 
+	circuitBreaker := buildCircuitBreaker()
+
 	if httpConfig.Retries > 0 {
 		retryPolicy := buildRetryPolicy(httpConfig.Retries)
-		return failsafehttp.NewRoundTripper(transport, retryPolicy)
+		return failsafehttp.NewRoundTripper(transport, retryPolicy, circuitBreaker)
 	}
 
-	return transport
+	return failsafehttp.NewRoundTripper(transport, circuitBreaker)
 }
 
 func buildRetryPolicy(retries int) retrypolicy.RetryPolicy[*http.Response] {
@@ -81,5 +84,21 @@ func buildRetryPolicy(retries int) retrypolicy.RetryPolicy[*http.Response] {
 		WithDelay(time.Second).
 		WithJitterFactor(0.1). //Avoid Thundering Hurd
 		WithMaxRetries(retries).
+		Build()
+}
+
+/*
+*
+When the number of recent execution failures exceed a configured threshold, the breaker is opened
+and further executions will fail with circuitbreaker.ErrOpen.
+After a delay, the breaker is half-opened and trial executions are allowed which determine
+whether the breaker should be closed or opened again. If the trial executions meet a
+success threshold, the breaker is closed again and executions will proceed as normal, otherwise it’s re-opened.
+*/
+func buildCircuitBreaker() circuitbreaker.CircuitBreaker[*http.Response] {
+	return circuitbreaker.Builder[*http.Response]().
+		WithFailureThreshold(5).
+		WithDelay(time.Second * 10).
+		WithSuccessThreshold(3).
 		Build()
 }
