@@ -69,21 +69,17 @@ func buildNewTransport(httpConfig config.HttpClientConfig) http.RoundTripper {
 		MaxIdleConnsPerHost: httpConfig.IdleConnectionsPerHost,
 	}
 
-	circuitBreaker := buildCircuitBreaker()
+	retryPolicy := buildRetryPolicy(httpConfig.Failsafe.Retry)
+	circuitBreaker := buildCircuitBreaker(httpConfig.Failsafe.Breaker)
 
-	if httpConfig.Retries > 0 {
-		retryPolicy := buildRetryPolicy(httpConfig.Retries)
-		return failsafehttp.NewRoundTripper(transport, retryPolicy, circuitBreaker)
-	}
-
-	return failsafehttp.NewRoundTripper(transport, circuitBreaker)
+	return failsafehttp.NewRoundTripper(transport, retryPolicy, circuitBreaker)
 }
 
-func buildRetryPolicy(retries int) retrypolicy.RetryPolicy[*http.Response] {
+func buildRetryPolicy(config config.RetryConfig) retrypolicy.RetryPolicy[*http.Response] {
 	return failsafehttp.RetryPolicyBuilder().
-		WithDelay(time.Second).
-		WithJitterFactor(0.1). //Avoid Thundering Hurd
-		WithMaxRetries(retries).
+		WithDelay(config.Delay).
+		WithJitterFactor(config.JitterFactor).
+		WithMaxRetries(config.MaxRetries).
 		Build()
 }
 
@@ -95,10 +91,10 @@ After a delay, the breaker is half-opened and trial executions are allowed which
 whether the breaker should be closed or opened again. If the trial executions meet a
 success threshold, the breaker is closed again and executions will proceed as normal, otherwise it’s re-opened.
 */
-func buildCircuitBreaker() circuitbreaker.CircuitBreaker[*http.Response] {
+func buildCircuitBreaker(config config.BreakerConfig) circuitbreaker.CircuitBreaker[*http.Response] {
 	return circuitbreaker.Builder[*http.Response]().
-		WithFailureThreshold(5).
-		WithDelay(time.Second * 10).
-		WithSuccessThreshold(3).
+		WithFailureThreshold(config.FailureThreshold).
+		WithDelay(config.Delay).
+		WithSuccessThreshold(config.SuccessThreshold).
 		Build()
 }

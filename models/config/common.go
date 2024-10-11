@@ -62,15 +62,6 @@ type Tracing struct {
 	Publish  string `env:"TRACING_PUBLISH" envDefault:"batch"` //sync, batch (production)
 }
 
-var DefaultHttpConfig = HttpClientConfig{
-	DialTimeout:            200 * time.Millisecond,
-	RequestTimeout:         2 * time.Second,
-	IdleConnectionTimeout:  30 * time.Second,
-	KeepAlive:              true,
-	Compression:            false,
-	IdleConnectionsPerHost: 20,
-}
-
 type HttpClientConfig struct {
 	/* Timeouts */
 	DialTimeout           time.Duration `env:"HTTP_DIAL_TIMEOUT" envDefault:"200ms"`
@@ -83,8 +74,45 @@ type HttpClientConfig struct {
 
 	IdleConnectionsPerHost int `env:"HTTP_IDLE_CONN_PER_HOST" envDefault:"20"`
 
-	/* Retry Settings */
-	Retries int `env:"HTTP_RETRIES" envDefault:"0"`
+	Failsafe FailsafeConfig
+}
+
+type FailsafeConfig struct {
+	Retry   RetryConfig
+	Breaker BreakerConfig
+}
+
+type RetryConfig struct {
+	MaxRetries   int           `env:"HTTP_RETRY_MAX" envDefault:"3"`
+	Delay        time.Duration `env:"HTTP_RETRY_DELAY" envDefault:"1s"`
+	JitterFactor float32       `env:"HTTP_RETRY_JITTER" envDefault:"0.1"`
+}
+
+type BreakerConfig struct {
+	Delay            time.Duration `env:"HTTP_BREAKER_DELAY" envDefault:"10s"`
+	FailureThreshold uint          `env:"HTTP_BREAKER_FAILURE_THRESHOLD" envDefault:"5"`
+	SuccessThreshold uint          `env:"HTTP_BREAKER_SUCCESS_THRESHOLD" envDefault:"3"`
+}
+
+var DefaultHttpConfig = HttpClientConfig{
+	DialTimeout:            200 * time.Millisecond,
+	RequestTimeout:         2 * time.Second,
+	IdleConnectionTimeout:  30 * time.Second,
+	KeepAlive:              true,
+	Compression:            false,
+	IdleConnectionsPerHost: 20,
+	Failsafe: FailsafeConfig{
+		Retry: RetryConfig{
+			MaxRetries:   3,
+			Delay:        time.Second,
+			JitterFactor: 0.1,
+		},
+		Breaker: BreakerConfig{
+			FailureThreshold: 5,
+			Delay:            10 * time.Second,
+			SuccessThreshold: 3,
+		},
+	},
 }
 
 type ZoneMap map[string]Server
