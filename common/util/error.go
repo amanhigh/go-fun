@@ -35,6 +35,11 @@ func ResponseProcessor(response *resty.Response, restyErr error) (err HttpError)
 			err = ErrNotAuthorized
 		case http.StatusForbidden:
 			err = ErrNotAuthenticated
+		case http.StatusConflict:
+			err = ErrEntityExists
+		case http.StatusInternalServerError:
+			// FIXME: Error From Response
+			err = ErrInternalServerError
 		default:
 			err = nil
 		}
