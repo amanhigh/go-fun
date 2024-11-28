@@ -2,18 +2,25 @@ package tutorial
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
+
+type PersonInterface interface {
+	Name() string
+	Age() int
+}
 
 type Person struct {
 	Name string
 	Age  int
+	mu   sync.Mutex
 }
 
 func Syntax() {
 	/* Vars */
-	var arr = [3]int{1, 2, 3}
-	var mapv = map[string]int{}
+	var arr = [3]int{1, 2, 3}   //make([]int, 3)
+	var mapv = map[string]int{} //make(map[string]int)
 	fmt.Println("Array", "Map", arr, mapv)
 
 	/* Struct */
@@ -38,7 +45,7 @@ func Syntax() {
 		fmt.Println("ILoop", i)
 	}
 
-	numbers := []int{2, 4}
+	numbers := arr[1:]
 
 	for index, value := range numbers {
 		fmt.Printf("RangeLoop: Index: %d, Value: %d\n", index, value)
@@ -56,9 +63,10 @@ func Syntax() {
 }
 
 func printNumbers(c chan int) {
+	defer close(c)
+
 	for i := 1; i <= 2; i++ {
 		time.Sleep(100 * time.Millisecond)
 		c <- i
 	}
-	close(c)
 }
