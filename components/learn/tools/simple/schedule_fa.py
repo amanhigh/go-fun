@@ -1,5 +1,5 @@
 """
-Stock Price Analyzer for Scheduled Foreign Assets (Indian ITR)
+Stock Price Analyzer for Schedule Foreign Assets (FA) in Indian ITR.
 
 Description:
 This script analyzes stock prices for specified foreign assets (Schedule FA) 
