@@ -331,6 +331,12 @@ space-test: ## Gink Tests Devspace (Watch Mode)
 docker-build: docker-fun ## Build Docker Images
 	printf $(_INFO) "Docker Hub" "https://hub.docker.com/r/amanfdk/fun-app/tags"
 
+## Misc
+.PHONY: pack
+pack: ## Repomix Packing
+	@printf $(_TITLE) "Pack" "Repository"
+	@repomix --style markdown .
+
 ### Workflows
 test: test-operator test-it ## Run all tests (Excludes test-slow)
 build: build-fun build-kohan ## Build all Binaries
