@@ -20,7 +20,7 @@ docs/
 Kubernetes/
 
 # Components
-# components/learn
+components/learn
 components/fun-app
 components/kohan
 components/operator

@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-	// TODO: CLI Tests
+	// XXX: CLI Tests
 	command.Execute()
 }

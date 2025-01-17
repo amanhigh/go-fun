@@ -31,7 +31,6 @@ sync:
 	go work sync
 
 # https://golangci-lint.run/usage/quick-start/
-# FIXME: Use Configuration - https://golangci-lint.run/usage/configuration/
 lint-ci:
 	printf $(_TITLE) "LINT: Golang CLI"
 	-go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} golangci-lint run {}/...

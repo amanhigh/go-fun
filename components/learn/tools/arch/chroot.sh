@@ -81,4 +81,3 @@ else
 fi
 
 #Populates /mnt/grub and /mnt/efi/EFI Folders
-# XXX: OS Prober
