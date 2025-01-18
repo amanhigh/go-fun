@@ -21,8 +21,8 @@ Kubernetes/
 
 # Components
 components/learn
-components/fun-app
-components/kohan
+# components/fun-app
+# components/kohan
 components/operator
 
 components/learn/tools/
