@@ -45,7 +45,7 @@ clear-helms:
 clear-helm:
 	printf $(_WARN) "Deleting" "Deployed Helms"
 	#Clear CRD's (Needed before Helm Deletion)
-	#HACK: Add Mysql CRD's
+	#XXX: Add Mysql CRD's
 		
 	-helm delete $$(helm list --short | grep -v "$(BOOTABLE)") > $(OUT)
 

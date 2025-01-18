@@ -6,6 +6,7 @@ import (
 	"github.com/rivo/tview"
 )
 
+// FIXME: Upgrade to Kohan Injector ?
 type DariusInjector struct {
 	di     container.Container
 	config config.DariusConfig
