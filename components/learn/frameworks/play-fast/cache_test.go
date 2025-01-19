@@ -14,7 +14,7 @@ import (
 
 var _ = Describe("Cache", func() {
 
-	// TODO: Bigcache, Freecache
+	// XXX: Bigcache, Freecache
 	Context("Ristretto", func() {
 		var (
 			cache *ristretto.Cache
