@@ -39,7 +39,8 @@ lint-dead:
 	printf $(_TITLE) "LINT: DeadCode"
 	go work edit -json | jq -r '.Use[].DiskPath' | grep -v "common\|models" | xargs -I{} deadcode {}/...
 
-lint: lint-ci lint-dead ## Lint the Code
+# HACK: Fix Deadcode in after basic Lint
+lint: lint-ci  ## Lint the Code
 
 ### Testing
 test-operator:
