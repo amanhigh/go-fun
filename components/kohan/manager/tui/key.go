@@ -19,7 +19,7 @@ type Hotkey struct {
 }
 
 type HotkeyManagerImpl struct {
-	// FIXME: Completely Remove App Depenency ?
+	// XXX: Completely Remove App Depenency ?
 	app            *tview.Application
 	uiManager      UIManager
 	serviceManager ServiceManager

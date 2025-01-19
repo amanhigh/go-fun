@@ -102,13 +102,13 @@ swag-fun:
 	swag i --parseDependency true > $(OUT);\
 	printf $(_INFO) "Swagger" "http://localhost:8080/swagger/index.html";
 
-build-fun: swag-fun
+build-fun:
 	printf $(_TITLE) "Building Fun App"
 	$(BUILD_OPTS) go build -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
 
 build-fun-cover:
 	printf $(_TITLE) "Building Fun App with Coverage"
-	# FIXME: #C Create Bin Directory for binaries and exclude in .gitignore
+	# FIXME: #A Create Bin Directory for binaries and exclude in .gitignore
 	$(BUILD_OPTS) go build -cover -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
 
 build-kohan:
@@ -350,7 +350,7 @@ info: info-release info-docker ## Repo Information
 infos: info space-info ## Repo Extended Information
 prepare: setup-tools setup-k8 install-deadcode ## One Time Setup
 
-setup: sync test build helm-package docker-build # Build and Test
+setup: sync test swag-fun build helm-package docker-build # Build and Test
 install: install-kohan ## Install Kohan CLI
 clean: test-clean build-clean ## Clean up Residue
 

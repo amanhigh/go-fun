@@ -22,7 +22,7 @@ type SBIClientImpl struct {
 	client  *resty.Client
 }
 
-// BUG: Accept Base URL in Constructor.
+// BUG: #C Accept Base URL in Constructor.
 func NewSBIClient(client *resty.Client) SBIClient {
 	return &SBIClientImpl{
 		baseUrl: "https://raw.githubusercontent.com/sahilgupta/sbi-fx-ratekeeper/main/csv_files/SBI_REFERENCE_RATES_USD.csv",
@@ -40,7 +40,7 @@ func (s *SBIClientImpl) FetchExchangeRates(ctx context.Context) (rates fa.Exchan
 	}
 
 	// Parse CSV
-	// FIXME: Break into Private Method and Custom Errors for Parsing
+	// FIXME: #B Break into Private Method and Custom Errors for Parsing
 	reader := csv.NewReader(strings.NewReader(string(response.Body())))
 	// Skip header
 	if _, err1 := reader.Read(); err1 != nil {

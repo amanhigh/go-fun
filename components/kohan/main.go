@@ -7,6 +7,6 @@ import (
 func main() {
 	// TASK: CLI Tests
 
-	// FIXME: Add Dependency Injection using KohanInjector same as FunAppInject
+	// TODO: Add Dependency Injection using KohanInjector same as FunAppInject
 	command.Execute()
 }

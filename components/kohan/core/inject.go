@@ -27,6 +27,8 @@ func (self *KohanInjector) BuildApp() (darius *tui.DariusV1, err error) {
 	container.MustSingleton(self.di, provideUIManager)
 	container.MustSingleton(self.di, provideHotkeyManager)
 
+	// FIXME: #B Add Providers for fa Package
+
 	// Build App
 	darius = &tui.DariusV1{}
 	err = self.di.Fill(darius)
