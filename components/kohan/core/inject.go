@@ -24,9 +24,9 @@ func (self *DariusInjector) BuildApp() (darius *tui.DariusV1, err error) {
 
 	container.MustSingleton(self.di, tview.NewApplication)
 
-	container.MustSingleton(self.di, newServiceManager)
-	container.MustSingleton(self.di, newUIManager)
-	container.MustSingleton(self.di, newHotkeyManager)
+	container.MustSingleton(self.di, provideServiceManager)
+	container.MustSingleton(self.di, provideUIManager)
+	container.MustSingleton(self.di, provideHotkeyManager)
 
 	// Build App
 	darius = &tui.DariusV1{}
@@ -34,26 +34,14 @@ func (self *DariusInjector) BuildApp() (darius *tui.DariusV1, err error) {
 	return
 }
 
-func newServiceManager(cfg config.DariusConfig) (serviceManager *tui.ServiceManager) {
+func provideServiceManager(cfg config.DariusConfig) (serviceManager *tui.ServiceManager) {
 	return tui.NewServiceManager(cfg.MakeDir, cfg.SelectedServiceFile)
 }
 
-func newUIManager(app *tview.Application, svcManager *tui.ServiceManager) *tui.UIManager {
-	return &tui.UIManager{
-		app:         app,
-		mainFlex:    tview.NewFlex(),
-		contextView: createTextView("Context"),
-		commandView: createTextView("Command"),
-		filterInput: tview.NewInputField(),
-		svcManager:  svcManager,
-		svcList:     createList("Services", svcManager.GetAllServices()),
-	}
+func provideUIManager(app *tview.Application, svcManager tui.ServiceManagerInterface) *tui.UIManager {
+	return tui.NewUIManager(app, svcManager)
 }
 
-func newHotkeyManager(app *tview.Application, uiManager *tui.UIManager, serviceManager *tui.ServiceManager) *tui.HotkeyManager {
-	return &tui.HotkeyManager{
-		app:            app,
-		uiManager:      uiManager,
-		serviceManager: serviceManager,
-	}
+func provideHotkeyManager(app *tview.Application, uiManager tui.UIManagerInterface, serviceManager tui.ServiceManagerInterface) *tui.HotkeyManager {
+	return tui.NewHotkeyManager(app, uiManager, serviceManager)
 }

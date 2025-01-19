@@ -25,7 +25,7 @@ type HotkeyManager struct {
 	hotkeys        map[rune]Hotkey
 }
 
-func NewHotkeyManager(app *tview.Application, uiManager UIManagerInterface, serviceManager ServiceManagerInterface) HotkeyManagerInterface {
+func NewHotkeyManager(app *tview.Application, uiManager UIManagerInterface, serviceManager ServiceManagerInterface) *HotkeyManager {
 	return &HotkeyManager{
 		app:            app,
 		uiManager:      uiManager,

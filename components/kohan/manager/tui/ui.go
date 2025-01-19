@@ -30,7 +30,7 @@ type UIManager struct {
 	filterInput *tview.InputField
 }
 
-func NewUIManager(app *tview.Application, svcManager ServiceManagerInterface) UIManagerInterface {
+func NewUIManager(app *tview.Application, svcManager ServiceManagerInterface) *UIManager {
 	ui := &UIManager{
 		app:         app,
 		svcManager:  svcManager,
