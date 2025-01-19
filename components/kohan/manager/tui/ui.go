@@ -7,9 +7,20 @@ import (
 	"github.com/rivo/tview"
 )
 
+type UIManagerInterface interface {
+	SetupLayout()
+	ToggleServiceSelection()
+	UpdateServicesList(filter string)
+	ToggleFilteredServices()
+	UpdateContext()
+	ShowOutput(output string)
+	ShowError(err error)
+	clearFilterInput()
+}
+
 type UIManager struct {
 	app        *tview.Application
-	svcManager *ServiceManager
+	svcManager ServiceManagerInterface
 
 	// UI Elements
 	mainFlex    *tview.Flex
@@ -17,6 +28,19 @@ type UIManager struct {
 	contextView *tview.TextView
 	commandView *tview.TextView
 	filterInput *tview.InputField
+}
+
+func NewUIManager(app *tview.Application, svcManager ServiceManagerInterface) UIManagerInterface {
+	ui := &UIManager{
+		app:         app,
+		svcManager:  svcManager,
+		mainFlex:    tview.NewFlex(),
+		contextView: createTextView("Context"),
+		commandView: createTextView("Command"),
+		filterInput: tview.NewInputField(),
+		svcList:     createList("Services", svcManager.GetAllServices()),
+	}
+	return ui
 }
 
 func (ui *UIManager) SetupLayout() {

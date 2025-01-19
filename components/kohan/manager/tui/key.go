@@ -7,6 +7,11 @@ import (
 	"github.com/rivo/tview"
 )
 
+type HotkeyManagerInterface interface {
+	SetupHotkeys()
+	GenerateHelpText() string
+}
+
 type Hotkey struct {
 	Key         rune
 	Description string
@@ -15,9 +20,17 @@ type Hotkey struct {
 
 type HotkeyManager struct {
 	app            *tview.Application
-	uiManager      *UIManager
-	serviceManager *ServiceManager
+	uiManager      UIManagerInterface
+	serviceManager ServiceManagerInterface
 	hotkeys        map[rune]Hotkey
+}
+
+func NewHotkeyManager(app *tview.Application, uiManager UIManagerInterface, serviceManager ServiceManagerInterface) HotkeyManagerInterface {
+	return &HotkeyManager{
+		app:            app,
+		uiManager:      uiManager,
+		serviceManager: serviceManager,
+	}
 }
 
 func (h *HotkeyManager) SetupHotkeys() {
