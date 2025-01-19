@@ -8,23 +8,55 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 )
 
-// FIXME: #A Add Interface & Constructor Update Tests and inject.go
+// ServiceManager provides management capabilities for Kubernetes services including
+// selection, filtering and operations like setup, clean and update
 type ServiceManager interface {
-	// Service Management
+	// Service Management Operations
+
+	// GetAllServices returns all available services discovered from the makefiles
 	GetAllServices() []string
+
+	// GetSelectedServices returns currently selected services for operations
 	GetSelectedServices() []string
+
+	// IsServiceSelected checks if given service is currently selected
+	// Returns true if service is selected, false otherwise
 	IsServiceSelected(service string) bool
+
+	// ToggleServiceSelection toggles selection state of given service
+	// If service is selected, it will be unselected and vice versa
+	// Selected services are persisted to configured file path
 	ToggleServiceSelection(service string)
+
+	// ClearSelectedServices removes all services from selection
+	// and persists empty selection to file
 	ClearSelectedServices()
 
 	// Service Operations
+
+	// SetupServices runs setup make target on currently selected services
+	// Returns output of make command and any error encountered
 	SetupServices() (string, error)
+
+	// CleanServices runs clean make target on currently selected services
+	// Returns output of make command and any error encountered
 	CleanServices() (string, error)
+
+	// UpdateServices runs update make target on currently selected services
+	// Returns output of make command and any error encountered
 	UpdateServices() (string, error)
 
 	// Filter Operations
+
+	// FilterServices filters available services based on given keyword
+	// Services containing keyword (case-insensitive) are added to filtered list
 	FilterServices(keyword string)
+
+	// GetFilteredServices returns services matching current filter
 	GetFilteredServices() []string
+
+	// ToggleFilteredServices toggles selection state of all filtered services
+	// This affects all services currently in filtered list
 	ToggleFilteredServices()
 }
 
