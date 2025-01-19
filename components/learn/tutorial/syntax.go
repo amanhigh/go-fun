@@ -17,6 +17,12 @@ type Person struct {
 	mu   sync.Mutex
 }
 
+func (p *Person) GetName() string {
+	defer p.mu.Unlock()
+	p.mu.Lock()
+	return p.Name
+}
+
 func Syntax() {
 	/* Vars */
 	var arr = [3]int{1, 2, 3}   //make([]int, 3)
