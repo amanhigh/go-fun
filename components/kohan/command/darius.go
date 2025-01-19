@@ -14,7 +14,8 @@ var dariusCmd = &cobra.Command{
 			MakeDir:             makeFileDir,
 			SelectedServiceFile: tmpServiceFile,
 		}
-		darius, berr := core.NewDariusInjector(config).BuildApp()
+		// FIXME: Upgrade to Kohan Injector by including Commands.
+		darius, berr := core.NewKohanInjector(config).BuildApp()
 		if berr != nil {
 			err = berr
 		} else {

@@ -7,17 +7,16 @@ import (
 	"github.com/rivo/tview"
 )
 
-// FIXME: Upgrade to Kohan Injector ?
-type DariusInjector struct {
+type KohanInjector struct {
 	di     container.Container
 	config config.DariusConfig
 }
 
-func NewDariusInjector(cfg config.DariusConfig) (di *DariusInjector) {
-	return &DariusInjector{container.New(), cfg}
+func NewKohanInjector(cfg config.DariusConfig) (di *KohanInjector) {
+	return &KohanInjector{container.New(), cfg}
 }
 
-func (self *DariusInjector) BuildApp() (darius *tui.DariusV1, err error) {
+func (self *KohanInjector) BuildApp() (darius *tui.DariusV1, err error) {
 	container.MustSingleton(self.di, func() config.DariusConfig {
 		return self.config
 	})
