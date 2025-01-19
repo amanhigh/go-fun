@@ -10,7 +10,7 @@ ports:
     exposedPort: 9000
     protocol: TCP
 
-# XXX: Fix Cert Mounting
+# TASK: Fix Cert Mounting
 volumes:
   - name: certs
     hostPath:

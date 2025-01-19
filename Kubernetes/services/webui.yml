@@ -15,7 +15,7 @@ vars:
   OLLAMA_BASE_URL: "http://host.minikube.internal:11434"
   WEBUI_AUTH: "false"
   OPENAI_API_BASE_URLS: "https://api.together.xyz/v1;https://openrouter.ai/api/v1;"
-  # XXX: only one Key Working (Last)
+  # TASK: only one Key Working (Last)
   OPENAI_API_KEYS: "${TOGETHERAI_API_KEY};${OPENROUTER_API_KEY};"
 
 resources:

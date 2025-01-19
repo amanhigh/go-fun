@@ -19,7 +19,7 @@ apiclarity:
   # Send APIClarity notifications to this backend
   # notificationURLPrefix: example.local:8888/
 
-  # XXX: Capture Not Working - https://github.com/openclarity/apiclarity/issues/366
+  # TASK: Capture Not Working - https://github.com/openclarity/apiclarity/issues/366
   tls:
     enabled: false
     # Secret that contains server tls key and cert

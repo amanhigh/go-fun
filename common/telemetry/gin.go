@@ -39,7 +39,7 @@ var GinRequestIdFormatter = func(param gin.LogFormatterParams) string {
 		param.Latency = param.Latency - param.Latency%time.Second
 	}
 
-	// XXX: Implement CLF Field Authentication $remote_user: - if no authentication is used.
+	// TASK: Implement CLF Field Authentication $remote_user: - if no authentication is used.
 	return fmt.Sprintf("[GIN] %s - - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\" \"%s\" \"%d\"\n",
 		param.ClientIP,
 		param.TimeStamp.Format("02/Jan/2006:15:04:05 -0700"),

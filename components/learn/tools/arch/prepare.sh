@@ -32,7 +32,7 @@ ping archlinux.org -c1
 timedatectl
 
 ################## Disk Setup #####################
-# XXX: LVM Setup
+# TASK: LVM Setup
 
 ## Format ##
 boot=${disk}1
