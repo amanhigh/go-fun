@@ -59,16 +59,16 @@ var _ = Describe("Queue", func() {
 		queue.Enqueue(1)
 		queue.Enqueue(2)
 		queue.Enqueue(3)
-	
+
 		// Dequeue all elements, which should empty both stacks
 		Expect(queue.Dequeue()).To(Equal(1))
 		Expect(queue.Dequeue()).To(Equal(2))
 		Expect(queue.Dequeue()).To(Equal(3))
-	
+
 		// Enqueue new elements
 		queue.Enqueue(4)
 		queue.Enqueue(5)
-	
+
 		// This dequeue should trigger the transfer from entry to exit stack
 		Expect(queue.Dequeue()).To(Equal(4))
 		Expect(queue.Dequeue()).To(Equal(5))

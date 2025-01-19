@@ -4,7 +4,8 @@ import "fmt"
 
 var dpMem = map[string]int{}
 
-/**
+/*
+*
 Find number of ways to split money, with given denominations.
 Keep track of Selected Coins and print when valid solution is found.
 
@@ -43,7 +44,8 @@ func Split(money int, denominations []int, selectedCoins []int) (p int) {
 
 var coinTable []int
 
-/**
+/*
+*
 Dynamic Programming Based
 Find number of ways to split money, with given denominations.
 

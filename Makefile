@@ -44,7 +44,7 @@ lint: lint-ci  ## Lint the Code
 
 format: ## Format Go code with goimports
 	printf $(_TITLE) "Format" "Go Code"
-	find . -name '*.go' -not -path './vendor/*' | xargs goimports -w
+	goimports -w .
 
 ### Testing
 test-operator:
@@ -344,7 +344,7 @@ pack: ## Repomix Packing
 
 ### Workflows
 test: test-operator test-it ## Run all tests (Excludes test-slow)
-build: build-fun build-kohan ## Build all Binaries
+build: format build-fun build-kohan ## Build all Binaries
 
 info: info-release info-docker ## Repo Information
 infos: info space-info ## Repo Extended Information

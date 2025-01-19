@@ -9,7 +9,8 @@ func LeftRotate(input []int, rotationCount int) (rotatedArray []int) {
 	return
 }
 
-/**
+/*
+*
 Find nth Fibonacci number.
 */
 var mem []int
@@ -32,7 +33,8 @@ func FibonacciRecursive(n int) (result int) {
 	return
 }
 
-/**
+/*
+*
 1) Any number xor'd with itself will give zero.
 2) Any number xor'd with zero will give the number.
 3) We are told there is an odd number of numbers in the array and they are all pairs of the same number, apart from one.
@@ -51,7 +53,8 @@ func FindLonely(ints []int) int {
 	return lonelyInt
 }
 
-/**
+/*
+*
 Complete the function kangaroo which takes starting location and speed of both kangaroos as input,
 and return or appropriately.
 
