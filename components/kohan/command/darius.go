@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/amanhigh/go-fun/components/kohan/tui"
+	"github.com/amanhigh/go-fun/components/kohan/manager/tui"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/spf13/cobra"
 )
