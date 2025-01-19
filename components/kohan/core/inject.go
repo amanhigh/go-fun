@@ -35,15 +35,7 @@ func (self *DariusInjector) BuildApp() (darius *tui.DariusV1, err error) {
 }
 
 func newServiceManager(cfg config.DariusConfig) (serviceManager *tui.ServiceManager) {
-	serviceManager = &tui.ServiceManager{
-		allServices:         []string{},
-		selectedServices:    []string{},
-		makeDir:             cfg.MakeDir,
-		selectedServicePath: cfg.SelectedServiceFile,
-	}
-	serviceManager.loadAvailableServices()
-	serviceManager.loadSelectedServices()
-	return
+	return tui.NewServiceManager(cfg.MakeDir, cfg.SelectedServiceFile)
 }
 
 func newUIManager(app *tview.Application, svcManager *tui.ServiceManager) *tui.UIManager {

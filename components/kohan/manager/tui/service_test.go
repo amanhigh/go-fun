@@ -1,24 +1,19 @@
 package tui
 
 import (
-	"github.com/amanhigh/go-fun/models/config"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("ServiceManager", func() {
 	var (
-		makeDir    = "/make"
-		svcPath    = "/selected.txt"
-		svcMgr     *ServiceManager
-		testConfig = config.DariusConfig{
-			MakeDir:             makeDir,
-			SelectedServiceFile: svcPath,
-		}
+		makeDir = "/make"
+		svcPath = "/selected.txt"
+		svcMgr  *ServiceManager
 	)
 
 	BeforeEach(func() {
-		svcMgr = NewServiceManager(testConfig)
+		svcMgr = NewServiceManager(makeDir, svcPath)
 	})
 
 	It("should build", func() {
