@@ -16,6 +16,12 @@ type UIManager interface {
 	ShowOutput(output string)
 	ShowError(err error)
 	clearFilterInput()
+
+	// Focus Management Methods
+	FocusServiceList()     // Focus the service list component
+	FocusFilterInput()     // Focus the filter input component
+	IsFocusOnFilter() bool // Check if filter input has focus
+	IsFocusOnList() bool   // Check if service list has focus
 }
 
 type UIManagerImpl struct {
@@ -151,4 +157,20 @@ func (ui *UIManagerImpl) setupCustomKeys() {
 		}
 		return event
 	})
+}
+
+func (ui *UIManagerImpl) FocusServiceList() {
+	ui.app.SetFocus(ui.svcList)
+}
+
+func (ui *UIManagerImpl) FocusFilterInput() {
+	ui.app.SetFocus(ui.filterInput)
+}
+
+func (ui *UIManagerImpl) IsFocusOnFilter() bool {
+	return ui.app.GetFocus() == ui.filterInput
+}
+
+func (ui *UIManagerImpl) IsFocusOnList() bool {
+	return ui.app.GetFocus() == ui.svcList
 }
