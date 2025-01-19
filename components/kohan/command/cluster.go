@@ -7,7 +7,6 @@ import (
 
 	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/common/util"
-	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/rs/zerolog/log"
 
@@ -21,19 +20,6 @@ var clusterCmd = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		cluster = args[0]
 		setLogLevel()
-	},
-}
-
-var clusterSanityCmd = &cobra.Command{
-	Use:   "sanity [Cluster] [Package(Direct/Regex)] [Sanity Cmd]",
-	Short: "Checks Sanity of Cluster",
-	Args:  cobra.ExactArgs(3),
-	PreRun: func(cmd *cobra.Command, args []string) {
-		pkgName = args[1]
-		command = args[2]
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		core.ClusterSanity(pkgName, command, cluster)
 	},
 }
 
@@ -139,7 +125,7 @@ func init() {
 	clusterPsshCmd.Flags().IntVarP(&endIndex, "end", "e", -1, "Ending Index")
 
 	RootCmd.AddCommand(clusterCmd)
-	clusterCmd.AddCommand(clusterSanityCmd, clusterPsshCmd, clusterIndexCmd,
+	clusterCmd.AddCommand(clusterPsshCmd, clusterIndexCmd,
 		clusterRemoveCmd, clusterMd5Cmd, clusterSearchCmd, clusterCssCmd)
 }
 
