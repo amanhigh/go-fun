@@ -1,32 +1,25 @@
 package tui
 
 import (
-	"github.com/amanhigh/go-fun/models/config"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("ServiceManager", func() {
 	var (
-		makeDir    = "/make"
-		svcPath    = "/selected.txt"
-		svcMgr     *ServiceManager
-		testConfig = config.DariusConfig{
-			MakeDir:             makeDir,
-			SelectedServiceFile: svcPath,
-		}
+		makeDir = "/make"
+		svcPath = "/selected.txt"
+		svcMgr  *ServiceManagerImpl
 	)
 
 	BeforeEach(func() {
-		svcMgr = newServiceManager(testConfig)
+		svcMgr = NewServiceManager(makeDir, svcPath)
 	})
 
 	It("should build", func() {
 		Expect(svcMgr).To(Not(BeNil()))
-		Expect(svcMgr.makeDir).To(Equal(makeDir))
-		Expect(svcMgr.selectedServicePath).To(Equal(svcPath))
-		Expect(svcMgr.allServices).Should(ContainElement("dummy"))
-		Expect(svcMgr.selectedServices).To(BeEmpty())
+		Expect(svcMgr.GetAllServices()).Should(ContainElement("dummy"))
+		Expect(svcMgr.GetSelectedServices()).To(BeEmpty())
 	})
 
 	Context("Services Basics", func() {

@@ -38,7 +38,7 @@ func ResponseProcessor(response *resty.Response, restyErr error) (err HttpError)
 		case http.StatusConflict:
 			err = ErrEntityExists
 		case http.StatusInternalServerError:
-			// FIXME: Error From Response
+			// TASK: Error From Response
 			err = ErrInternalServerError
 		default:
 			err = nil

@@ -42,7 +42,7 @@ func OpenTicker(ticker string) (err error) {
 	if err = tools.FocusWindow("TradingView"); err == nil {
 		// Focus Input Box
 		if err = tools.SendKey("-M Ctrl b -m Ctrl"); err == nil {
-			// HACK: Copy Ticker once Clipboard Library is Fixed
+			// TASK: Copy Ticker once Clipboard Library is Fixed
 			// Copy runs into doom loop with wl-paste Watch
 			if err = tools.SendKey("-M Ctrl v -m Ctrl"); err == nil {
 				time.Sleep(50 * time.Millisecond)

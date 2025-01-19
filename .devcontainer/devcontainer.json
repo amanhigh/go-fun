@@ -1,0 +1,25 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/go
+{
+	"name": "GoFun",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/go:1-1.23-bookworm",
+	"features": {
+		"ghcr.io/guiyomh/features/golangci-lint:0": {},
+		"ghcr.io/jungaretti/features/make:1": {}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"Continue.continue",
+				"golang.go",
+				"YuichiNakamura.code-to-clipboard",
+				"RooVeterinaryInc.roo-cline",
+				"Gruntfuggly.todo-tree",
+				"hoovercj.vscode-dimmer"
+			]
+		}
+	}
+	// TODO: Used Docker File Based to make extensible.
+	// TODO: Add other features like deadcode etc matching prepare.
+}

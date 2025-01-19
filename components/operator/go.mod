@@ -1,6 +1,6 @@
 module github.com/amanhigh/go-fun/components/operator
 
-go 1.21
+go 1.23
 
 require (
 	github.com/amanhigh/go-fun/models v1.0.0

@@ -1,6 +1,6 @@
 module github.com/amanhigh/go-fun/models
 
-go 1.21
+go 1.23
 
 require (
 	github.com/cheekybits/genny v1.0.0

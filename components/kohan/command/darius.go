@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/amanhigh/go-fun/components/kohan/tui"
+	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/spf13/cobra"
 )
@@ -14,7 +14,8 @@ var dariusCmd = &cobra.Command{
 			MakeDir:             makeFileDir,
 			SelectedServiceFile: tmpServiceFile,
 		}
-		darius, berr := tui.NewDariusInjector(config).BuildApp()
+		// FIXME: Upgrade to Kohan Injector by including Commands.
+		darius, berr := core.NewKohanInjector(config).BuildApp()
 		if berr != nil {
 			err = berr
 		} else {

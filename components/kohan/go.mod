@@ -1,6 +1,6 @@
 module github.com/amanhigh/go-fun/components/kohan
 
-go 1.21
+go 1.23
 
 require (
 	github.com/amanhigh/go-fun/common v1.0.1
@@ -8,6 +8,7 @@ require (
 	github.com/bitfield/script v0.22.0
 	github.com/gdamore/tcell/v2 v2.7.1
 	github.com/gin-gonic/gin v1.9.1
+	github.com/go-resty/resty/v2 v2.10.0
 	github.com/golobby/container/v3 v3.3.2
 	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.29.0

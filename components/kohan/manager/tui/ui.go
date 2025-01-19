@@ -7,9 +7,26 @@ import (
 	"github.com/rivo/tview"
 )
 
-type UIManager struct {
+type UIManager interface {
+	SetupLayout()
+	ToggleServiceSelection()
+	UpdateServicesList(filter string)
+	ToggleFilteredServices()
+	UpdateContext()
+	ShowOutput(output string)
+	ShowError(err error)
+	clearFilterInput()
+
+	// Focus Management Methods
+	FocusServiceList()     // Focus the service list component
+	FocusFilterInput()     // Focus the filter input component
+	IsFocusOnFilter() bool // Check if filter input has focus
+	IsFocusOnList() bool   // Check if service list has focus
+}
+
+type UIManagerImpl struct {
 	app        *tview.Application
-	svcManager *ServiceManager
+	svcManager ServiceManager
 
 	// UI Elements
 	mainFlex    *tview.Flex
@@ -19,7 +36,20 @@ type UIManager struct {
 	filterInput *tview.InputField
 }
 
-func (ui *UIManager) SetupLayout() {
+func NewUIManager(app *tview.Application, svcManager ServiceManager) *UIManagerImpl {
+	ui := &UIManagerImpl{
+		app:         app,
+		svcManager:  svcManager,
+		mainFlex:    tview.NewFlex(),
+		contextView: createTextView("Context"),
+		commandView: createTextView("Command"),
+		filterInput: tview.NewInputField(),
+		svcList:     createList("Services", svcManager.GetAllServices()),
+	}
+	return ui
+}
+
+func (ui *UIManagerImpl) SetupLayout() {
 	leftPane := ui.createLeftPane()
 	rightPane := ui.createRightPane()
 	ui.mainFlex.AddItem(leftPane, 0, 1, true)
@@ -31,14 +61,14 @@ func (ui *UIManager) SetupLayout() {
 	ui.setupCustomKeys()
 }
 
-func (ui *UIManager) createLeftPane() *tview.Flex {
+func (ui *UIManagerImpl) createLeftPane() *tview.Flex {
 	leftPane := tview.NewFlex().SetDirection(tview.FlexRow)
 	leftPane.AddItem(ui.svcList, 0, 1, true)
 	leftPane.AddItem(ui.filterInput, 1, 0, false)
 	return leftPane
 }
 
-func (ui *UIManager) createRightPane() *tview.Flex {
+func (ui *UIManagerImpl) createRightPane() *tview.Flex {
 	rightPane := tview.NewFlex().SetDirection(tview.FlexRow)
 	rightPane.AddItem(ui.contextView, 0, 1, false)
 	rightPane.AddItem(ui.commandView, 0, 1, false)
@@ -61,7 +91,7 @@ func createTextView(title string) *tview.TextView {
 	return tv
 }
 
-func (ui *UIManager) ToggleServiceSelection() {
+func (ui *UIManagerImpl) ToggleServiceSelection() {
 	if ui.svcList.GetItemCount() > 0 {
 		index := ui.svcList.GetCurrentItem()
 		name, _ := ui.svcList.GetItemText(index)
@@ -70,7 +100,7 @@ func (ui *UIManager) ToggleServiceSelection() {
 	}
 }
 
-func (ui *UIManager) UpdateContext() {
+func (ui *UIManagerImpl) UpdateContext() {
 	selectedServices := "Selected Services:\n"
 	for _, service := range ui.svcManager.GetSelectedServices() {
 		selectedServices += fmt.Sprintf("- %s\n", service)
@@ -81,15 +111,15 @@ func (ui *UIManager) UpdateContext() {
 	ui.contextView.SetText(selectedServices)
 }
 
-func (ui *UIManager) ShowError(err error) {
+func (ui *UIManagerImpl) ShowError(err error) {
 	ui.ShowOutput(err.Error())
 }
 
-func (ui *UIManager) ShowOutput(output string) {
+func (ui *UIManagerImpl) ShowOutput(output string) {
 	ui.commandView.SetText(output)
 }
 
-func (ui *UIManager) UpdateServicesList(filter string) {
+func (ui *UIManagerImpl) UpdateServicesList(filter string) {
 	ui.svcManager.FilterServices(filter)
 	services := ui.svcManager.GetFilteredServices()
 	ui.svcList.Clear()
@@ -98,23 +128,23 @@ func (ui *UIManager) UpdateServicesList(filter string) {
 	}
 }
 
-func (ui *UIManager) ToggleFilteredServices() {
+func (ui *UIManagerImpl) ToggleFilteredServices() {
 	ui.svcManager.ToggleFilteredServices()
 	ui.UpdateContext()
 }
 
-func (ui *UIManager) setupFilterInput() {
+func (ui *UIManagerImpl) setupFilterInput() {
 	ui.filterInput.SetLabel("Filter: ")
 	ui.filterInput.SetChangedFunc(func(text string) {
 		ui.UpdateServicesList(text)
 	})
 }
-func (ui *UIManager) clearFilterInput() {
+func (ui *UIManagerImpl) clearFilterInput() {
 	ui.filterInput.SetText("")
 	ui.UpdateServicesList("")
 }
 
-func (ui *UIManager) setupCustomKeys() {
+func (ui *UIManagerImpl) setupCustomKeys() {
 	ui.svcList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyRune:
@@ -127,4 +157,20 @@ func (ui *UIManager) setupCustomKeys() {
 		}
 		return event
 	})
+}
+
+func (ui *UIManagerImpl) FocusServiceList() {
+	ui.app.SetFocus(ui.svcList)
+}
+
+func (ui *UIManagerImpl) FocusFilterInput() {
+	ui.app.SetFocus(ui.filterInput)
+}
+
+func (ui *UIManagerImpl) IsFocusOnFilter() bool {
+	return ui.app.GetFocus() == ui.filterInput
+}
+
+func (ui *UIManagerImpl) IsFocusOnList() bool {
+	return ui.app.GetFocus() == ui.svcList
 }

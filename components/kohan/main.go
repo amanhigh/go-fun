@@ -5,6 +5,8 @@ import (
 )
 
 func main() {
-	// TODO: CLI Tests
+	// TASK: CLI Tests
+
+	// TODO: Add Dependency Injection using KohanInjector same as FunAppInject
 	command.Execute()
 }

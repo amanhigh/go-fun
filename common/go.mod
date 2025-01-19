@@ -1,6 +1,6 @@
 module github.com/amanhigh/go-fun/common
 
-go 1.21
+go 1.23
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
@@ -10,6 +10,7 @@ require (
 	github.com/bitfield/script v0.22.0
 	github.com/docker/go-connections v0.4.0
 	github.com/dubonzi/otelresty v1.2.0
+	github.com/failsafe-go/failsafe-go v0.6.8
 	github.com/fatih/color v1.16.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-resty/resty/v2 v2.10.0
@@ -36,6 +37,7 @@ require (
 )
 
 require (
+	github.com/bits-and-blooms/bitset v1.13.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
 	github.com/itchyny/gojq v0.12.12 // indirect
@@ -44,7 +46,6 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgx/v5 v5.4.3 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	modernc.org/libc v1.22.5 // indirect

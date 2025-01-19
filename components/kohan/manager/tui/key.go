@@ -7,35 +7,49 @@ import (
 	"github.com/rivo/tview"
 )
 
+type HotkeyManager interface {
+	SetupHotkeys()
+	GenerateHelpText() string
+}
+
 type Hotkey struct {
 	Key         rune
 	Description string
 	Handler     func()
 }
 
-type HotkeyManager struct {
+type HotkeyManagerImpl struct {
+	// XXX: Completely Remove App Depenency ?
 	app            *tview.Application
-	uiManager      *UIManager
-	serviceManager *ServiceManager
+	uiManager      UIManager
+	serviceManager ServiceManager
 	hotkeys        map[rune]Hotkey
 }
 
-func (h *HotkeyManager) SetupHotkeys() {
+func NewHotkeyManager(app *tview.Application, uiManager UIManager, serviceManager ServiceManager) *HotkeyManagerImpl {
+	return &HotkeyManagerImpl{
+		app:            app,
+		uiManager:      uiManager,
+		serviceManager: serviceManager,
+	}
+}
+
+func (h *HotkeyManagerImpl) SetupHotkeys() {
 	h.app.SetInputCapture(h.handleHotkeys)
 	h.setupHotkeyConfig()
 }
 
-func (h *HotkeyManager) setupHotkeyConfig() {
+func (h *HotkeyManagerImpl) setupHotkeyConfig() {
 	h.hotkeys = make(map[rune]Hotkey)
 	hotkeys := []Hotkey{
 		{Key: 'q', Description: "Quit the application", Handler: func() { h.app.Stop() }},
 		{Key: '?', Description: "Display help information", Handler: func() { h.uiManager.ShowOutput(h.GenerateHelpText()) }},
 		{Key: 'c', Description: "Clear selected services", Handler: func() { h.serviceManager.ClearSelectedServices(); h.uiManager.UpdateContext() }},
-		{Key: '/', Description: "Focus on filter input", Handler: func() { h.uiManager.app.SetFocus(h.uiManager.filterInput) }},
+		{Key: '/', Description: "Focus on filter input", Handler: func() { h.uiManager.FocusFilterInput() }},
 		{Key: ' ', Description: "Toggle service selection or filtered services", Handler: func() {
-			if h.app.GetFocus() == h.uiManager.svcList {
+			if h.uiManager.IsFocusOnList() {
 				h.uiManager.ToggleServiceSelection()
-			} else if h.app.GetFocus() == h.uiManager.filterInput {
+			} else if h.uiManager.IsFocusOnFilter() {
 				h.uiManager.ToggleFilteredServices()
 			}
 		}},
@@ -65,7 +79,7 @@ func (h *HotkeyManager) setupHotkeyConfig() {
 		}},
 		{Key: 'f', Description: "Clear filter", Handler: func() {
 			h.uiManager.clearFilterInput()
-			h.uiManager.app.SetFocus(h.uiManager.svcList)
+			h.uiManager.FocusServiceList()
 		}},
 	}
 	for _, hotkey := range hotkeys {
@@ -73,7 +87,7 @@ func (h *HotkeyManager) setupHotkeyConfig() {
 	}
 }
 
-func (h *HotkeyManager) GenerateHelpText() string {
+func (h *HotkeyManagerImpl) GenerateHelpText() string {
 	helpText := "Help:\n"
 	for _, hotkey := range h.hotkeys {
 		helpText += fmt.Sprintf("- %c: %s\n", hotkey.Key, hotkey.Description)
@@ -82,7 +96,7 @@ func (h *HotkeyManager) GenerateHelpText() string {
 	return helpText
 }
 
-func (h *HotkeyManager) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {
+func (h *HotkeyManagerImpl) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyRune:
 		if hotkey, exists := h.hotkeys[event.Rune()]; exists {
@@ -92,14 +106,14 @@ func (h *HotkeyManager) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {
 				return nil
 			}
 			// For other hotkeys, only handle if not in filter input
-			if h.app.GetFocus() != h.uiManager.filterInput {
+			if !h.uiManager.IsFocusOnFilter() {
 				hotkey.Handler()
 				return nil
 			}
 		}
 	case tcell.KeyEsc:
-		if h.app.GetFocus() == h.uiManager.filterInput {
-			h.uiManager.app.SetFocus(h.uiManager.svcList)
+		if h.uiManager.IsFocusOnFilter() {
+			h.uiManager.FocusServiceList()
 			return nil
 		}
 	}

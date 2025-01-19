@@ -83,7 +83,7 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 	ctx, span := self.Tracer.Start(c.Request.Context(), "GetPerson.Handler", trace.WithAttributes(attribute.String("id", path.Id)))
 	defer span.End()
 
-	// FIXME: Unwrap Request Helper
+	// FIXME: #A Unwrap Request Helper
 	if err := c.ShouldBindUri(&path); err == nil {
 		if person, err := self.Manager.GetPerson(ctx, path.Id); err == nil {
 			c.JSON(http.StatusOK, person)

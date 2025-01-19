@@ -30,7 +30,8 @@ func Add(node *Node, query string) {
 	return
 }
 
-/**
+/*
+*
 For each find partial operation, print the number of contact names starting with partial on a new line.
 
 add hack

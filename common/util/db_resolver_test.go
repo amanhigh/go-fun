@@ -4,14 +4,15 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net"
+	"time"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/amanhigh/go-fun/common/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"net"
-	"time"
 )
 
 var _ = Describe("DbResolver", func() {

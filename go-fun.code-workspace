@@ -18,9 +18,6 @@
 		]
 	},
 	"settings": {
-		"editor.quickSuggestions": {
-			"other": "off"
-		},
 		"go.lintFlags": [
 			"--fast"
 		],

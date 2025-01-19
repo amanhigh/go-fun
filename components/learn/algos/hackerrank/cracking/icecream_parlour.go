@@ -15,7 +15,8 @@ func ToIcecreams(prices []int) (icecreams []IceCream) {
 	return
 }
 
-/**
+/*
+*
 Given the value of and the of each flavor for trips to the Ice Cream Parlor,
 help Sunny and Johnny choose two distinct flavors such that they spend their entire pool of money during each visit
 

@@ -4,20 +4,23 @@ import (
 	"math"
 )
 
-/**
-	We define subsequence as any subset of an array. We define a subarray as a contiguous subsequence in an array.
+/*
+*
 
-	Given an array, find the maximum possible sum among:
-    * all nonempty subarrays.
-    * all nonempty subsequences.
+		We define subsequence as any subset of an array. We define a subarray as a contiguous subsequence in an array.
 
-	https://www.hackerrank.com/challenges/maxsubarray/problem
+		Given an array, find the maximum possible sum among:
+	    * all nonempty subarrays.
+	    * all nonempty subsequences.
+
+		https://www.hackerrank.com/challenges/maxsubarray/problem
 */
 func MaxSubArray(input []int) (arraySum, segmentSum, start, end int) {
 	return KadensAlgorithm(input)
 }
 
-/**
+/*
+*
 https://www.youtube.com/watch?v=86CQq3pKSUw
 */
 func KadensAlgorithm(input []int) (contigousSum, nonContigousSum, start, end int) {
@@ -78,7 +81,8 @@ func KadensAlgorithm(input []int) (contigousSum, nonContigousSum, start, end int
 	return
 }
 
-/**
+/*
+*
 Brute Force O(n^2)
 */
 func MaxSubArrayBruteForce(input []int) (contigousSum, nonContigousSum, start, end int) {
