@@ -100,7 +100,6 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 			- Latency: MicroSecond (%D), MilliSecond.MicroSecond (%T), MilliSecond With Decimal (%L)
 			- User Info: User-Agent (%u), Referrer (%R)
 				
-				TODO: Add GIF  
 		- **Custom Log Monitoring**
 			- Custom Logs require configuring various flags.
 			- Identify [Date and Time Format](https://www.freebsd.org/cgi/man.cgi?query=strftime&sektion=3).
