@@ -17,6 +17,7 @@ include ./common/tools/base.mk
 BUILD_OPTS := CGO_ENABLED=0 GOARCH=amd64
 COMPONENT_DIR := ./components
 FUN_DIR := $(COMPONENT_DIR)/fun-app
+BIN_DIR := bin
 
 COVER_DIR:= /tmp/cover
 PROFILE_FILE:= $(COVER_DIR)/profile.out
@@ -104,21 +105,22 @@ swag-fun:
 
 build-fun:
 	printf $(_TITLE) "Building Fun App"
-	$(BUILD_OPTS) go build -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
+	mkdir -p $(BIN_DIR)
+	$(BUILD_OPTS) go build -o $(BIN_DIR)/fun $(FUN_DIR)/main.go
 
 build-fun-cover:
 	printf $(_TITLE) "Building Fun App with Coverage"
-	# FIXME: #A Create Bin Directory for binaries and exclude in .gitignore
-	$(BUILD_OPTS) go build -cover -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
+	mkdir -p $(BIN_DIR)
+	$(BUILD_OPTS) go build -cover -o $(BIN_DIR)/fun $(FUN_DIR)/main.go
 
 build-kohan:
 	printf $(_TITLE) "Building Kohan"
-	$(BUILD_OPTS) CGO_ENABLED=1 go build -o $(COMPONENT_DIR)/kohan/kohan $(COMPONENT_DIR)/kohan/main.go
+	mkdir -p $(BIN_DIR)
+	$(BUILD_OPTS) CGO_ENABLED=1 go build -o $(BIN_DIR)/kohan $(COMPONENT_DIR)/kohan/main.go
 
 build-clean:
 	printf $(_WARN) "Cleaning Build"
-	-rm "$(FUN_DIR)/fun";
-	-rm "$(COMPONENT_DIR)/kohan/kohan";
+	-rm -rf $(BIN_DIR)
 	-make -C $(COMPONENT_DIR)/operator/ clean > $(OUT)
 
 ### Install
@@ -260,7 +262,7 @@ info-docker:
 ### Runs
 run: build-fun ## Run Fun App
 	printf $(_TITLE) "Running: Fun App"
-	$(FUN_DIR)/fun > $(OUT)
+	$(BIN_DIR)/fun > $(OUT)
 
 load: ## Load Test Fun App
 	printf $(_TITLE) "Load Test: Fun App"
@@ -279,7 +281,7 @@ watch: ## Watch (entr): `make watch CMD=ls`
 run-fun-cover: build-fun-cover
 	printf $(_TITLE) "Running Fun App with Coverage"
 	mkdir -p $(COVER_DIR)
-	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(FUN_DIR)/fun > $(OUT) 2>&1 &
+	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(BIN_DIR)/fun > $(OUT) 2>&1 &
 
 ### Helm
 helm-package:
@@ -290,6 +292,7 @@ setup-tools:
 	printf $(_TITLE) "Setting up Tools"
 	go install github.com/onsi/ginkgo/v2/ginkgo
 	go install github.com/swaggo/swag/cmd/swag
+	go install golang.org/x/tools/cmd/goimports@latest
 
 setup-k8: ## Kubernetes Setup
 	printf $(_TITLE) "Setting up Kubernetes"
