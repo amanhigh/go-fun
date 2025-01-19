@@ -9,7 +9,7 @@ var _ = Describe("ServiceManager", func() {
 	var (
 		makeDir = "/make"
 		svcPath = "/selected.txt"
-		svcMgr  *ServiceManager
+		svcMgr  *ServiceManagerImpl
 	)
 
 	BeforeEach(func() {

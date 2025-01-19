@@ -9,7 +9,7 @@ import (
 )
 
 // FIXME: #A Add Interface & Constructor Update Tests and inject.go
-type ServiceManagerInterface interface {
+type ServiceManager interface {
 	// Service Management
 	GetAllServices() []string
 	GetSelectedServices() []string
@@ -28,8 +28,8 @@ type ServiceManagerInterface interface {
 	ToggleFilteredServices()
 }
 
-func NewServiceManager(makeDir, serviceFile string) *ServiceManager {
-	manager := &ServiceManager{
+func NewServiceManager(makeDir, serviceFile string) *ServiceManagerImpl {
+	manager := &ServiceManagerImpl{
 		allServices:         []string{},
 		selectedServices:    []string{},
 		makeDir:             makeDir,
@@ -40,7 +40,7 @@ func NewServiceManager(makeDir, serviceFile string) *ServiceManager {
 	return manager
 }
 
-type ServiceManager struct {
+type ServiceManagerImpl struct {
 	allServices         []string
 	selectedServices    []string
 	filteredServices    []string
@@ -48,15 +48,15 @@ type ServiceManager struct {
 	selectedServicePath string
 }
 
-func (sm *ServiceManager) GetAllServices() []string {
+func (sm *ServiceManagerImpl) GetAllServices() []string {
 	return sm.allServices
 }
 
-func (sm *ServiceManager) GetSelectedServices() []string {
+func (sm *ServiceManagerImpl) GetSelectedServices() []string {
 	return sm.selectedServices
 }
 
-func (sm *ServiceManager) IsServiceSelected(service string) bool {
+func (sm *ServiceManagerImpl) IsServiceSelected(service string) bool {
 	for _, s := range sm.selectedServices {
 		if s == service {
 			return true
@@ -65,7 +65,7 @@ func (sm *ServiceManager) IsServiceSelected(service string) bool {
 	return false
 }
 
-func (sm *ServiceManager) ToggleServiceSelection(service string) {
+func (sm *ServiceManagerImpl) ToggleServiceSelection(service string) {
 	if sm.IsServiceSelected(service) {
 		sm.removeService(service)
 	} else {
@@ -74,7 +74,7 @@ func (sm *ServiceManager) ToggleServiceSelection(service string) {
 	sm.saveSelectedServices()
 }
 
-func (sm *ServiceManager) removeService(service string) {
+func (sm *ServiceManagerImpl) removeService(service string) {
 	for i, s := range sm.selectedServices {
 		if s == service {
 			sm.selectedServices = append(sm.selectedServices[:i], sm.selectedServices[i+1:]...)
@@ -83,7 +83,7 @@ func (sm *ServiceManager) removeService(service string) {
 	}
 }
 
-func (sm *ServiceManager) FilterServices(keyword string) {
+func (sm *ServiceManagerImpl) FilterServices(keyword string) {
 	sm.filteredServices = []string{}
 	lowerKeyword := strings.ToLower(keyword)
 	for _, service := range sm.allServices {
@@ -93,30 +93,30 @@ func (sm *ServiceManager) FilterServices(keyword string) {
 	}
 }
 
-func (sm *ServiceManager) GetFilteredServices() []string {
+func (sm *ServiceManagerImpl) GetFilteredServices() []string {
 	return sm.filteredServices
 }
 
-func (sm *ServiceManager) ToggleFilteredServices() {
+func (sm *ServiceManagerImpl) ToggleFilteredServices() {
 	for _, service := range sm.filteredServices {
 		sm.ToggleServiceSelection(service)
 	}
 }
 
-func (sm *ServiceManager) saveSelectedServices() {
+func (sm *ServiceManagerImpl) saveSelectedServices() {
 	util.WriteLines(sm.selectedServicePath, sm.selectedServices)
 }
 
-func (sm *ServiceManager) loadSelectedServices() {
+func (sm *ServiceManagerImpl) loadSelectedServices() {
 	sm.selectedServices = util.ReadAllLines(sm.selectedServicePath)
 }
 
-func (sm *ServiceManager) ClearSelectedServices() {
+func (sm *ServiceManagerImpl) ClearSelectedServices() {
 	sm.selectedServices = []string{}
 	sm.saveSelectedServices()
 }
 
-func (sm *ServiceManager) loadAvailableServices() {
+func (sm *ServiceManagerImpl) loadAvailableServices() {
 	var services []string
 	lines, err := executeMakeCommand(sm.getServiceMakeDir(), "services.mk", "help")
 	if err != nil {
@@ -147,7 +147,7 @@ func startsWithExcludedName(line string) bool {
 	return false
 }
 
-func (sm *ServiceManager) getServiceMakeDir() string {
+func (sm *ServiceManagerImpl) getServiceMakeDir() string {
 	return sm.makeDir + "/services"
 }
 
@@ -161,7 +161,7 @@ func executeMakeCommand(dirPath, file, target string) ([]string, error) {
 	return strings.Split(string(output), "\n"), nil
 }
 
-func (sm *ServiceManager) CleanServices() (string, error) {
+func (sm *ServiceManagerImpl) CleanServices() (string, error) {
 	output, err := executeMakeCommand(sm.getServiceMakeDir(), "Makefile", "clean")
 	if err != nil {
 		return "", err
@@ -169,7 +169,7 @@ func (sm *ServiceManager) CleanServices() (string, error) {
 	return strings.Join(output, "\n"), nil
 }
 
-func (sm *ServiceManager) SetupServices() (string, error) {
+func (sm *ServiceManagerImpl) SetupServices() (string, error) {
 	output, err := executeMakeCommand(sm.getServiceMakeDir(), "Makefile", "setup")
 	if err != nil {
 		return "", err
@@ -177,7 +177,7 @@ func (sm *ServiceManager) SetupServices() (string, error) {
 	return strings.Join(output, "\n"), nil
 }
 
-func (sm *ServiceManager) UpdateServices() (string, error) {
+func (sm *ServiceManagerImpl) UpdateServices() (string, error) {
 	output, err := executeMakeCommand(sm.getServiceMakeDir(), "Makefile", "update")
 	if err != nil {
 		return "", err

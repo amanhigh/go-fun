@@ -34,14 +34,14 @@ func (self *DariusInjector) BuildApp() (darius *tui.DariusV1, err error) {
 	return
 }
 
-func provideServiceManager(cfg config.DariusConfig) (serviceManager *tui.ServiceManager) {
+func provideServiceManager(cfg config.DariusConfig) (serviceManager *tui.ServiceManagerImpl) {
 	return tui.NewServiceManager(cfg.MakeDir, cfg.SelectedServiceFile)
 }
 
-func provideUIManager(app *tview.Application, svcManager tui.ServiceManagerInterface) *tui.UIManager {
+func provideUIManager(app *tview.Application, svcManager tui.ServiceManager) *tui.UIManagerImpl {
 	return tui.NewUIManager(app, svcManager)
 }
 
-func provideHotkeyManager(app *tview.Application, uiManager tui.UIManagerInterface, serviceManager tui.ServiceManagerInterface) *tui.HotkeyManager {
+func provideHotkeyManager(app *tview.Application, uiManager tui.UIManager, serviceManager tui.ServiceManager) *tui.HotkeyManagerImpl {
 	return tui.NewHotkeyManager(app, uiManager, serviceManager)
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/rivo/tview"
 )
 
-type HotkeyManagerInterface interface {
+type HotkeyManager interface {
 	SetupHotkeys()
 	GenerateHelpText() string
 }
@@ -18,27 +18,27 @@ type Hotkey struct {
 	Handler     func()
 }
 
-type HotkeyManager struct {
+type HotkeyManagerImpl struct {
 	app            *tview.Application
-	uiManager      UIManagerInterface
-	serviceManager ServiceManagerInterface
+	uiManager      UIManager
+	serviceManager ServiceManager
 	hotkeys        map[rune]Hotkey
 }
 
-func NewHotkeyManager(app *tview.Application, uiManager UIManagerInterface, serviceManager ServiceManagerInterface) *HotkeyManager {
-	return &HotkeyManager{
+func NewHotkeyManager(app *tview.Application, uiManager UIManager, serviceManager ServiceManager) *HotkeyManagerImpl {
+	return &HotkeyManagerImpl{
 		app:            app,
 		uiManager:      uiManager,
 		serviceManager: serviceManager,
 	}
 }
 
-func (h *HotkeyManager) SetupHotkeys() {
+func (h *HotkeyManagerImpl) SetupHotkeys() {
 	h.app.SetInputCapture(h.handleHotkeys)
 	h.setupHotkeyConfig()
 }
 
-func (h *HotkeyManager) setupHotkeyConfig() {
+func (h *HotkeyManagerImpl) setupHotkeyConfig() {
 	h.hotkeys = make(map[rune]Hotkey)
 	hotkeys := []Hotkey{
 		{Key: 'q', Description: "Quit the application", Handler: func() { h.app.Stop() }},
@@ -86,7 +86,7 @@ func (h *HotkeyManager) setupHotkeyConfig() {
 	}
 }
 
-func (h *HotkeyManager) GenerateHelpText() string {
+func (h *HotkeyManagerImpl) GenerateHelpText() string {
 	helpText := "Help:\n"
 	for _, hotkey := range h.hotkeys {
 		helpText += fmt.Sprintf("- %c: %s\n", hotkey.Key, hotkey.Description)
@@ -95,7 +95,7 @@ func (h *HotkeyManager) GenerateHelpText() string {
 	return helpText
 }
 
-func (h *HotkeyManager) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {
+func (h *HotkeyManagerImpl) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyRune:
 		if hotkey, exists := h.hotkeys[event.Rune()]; exists {

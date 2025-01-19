@@ -8,17 +8,17 @@ import (
 
 var _ = Describe("HotkeyManager", func() {
 	var (
-		hotkeyMgr *HotkeyManager
+		hotkeyMgr *HotkeyManagerImpl
 		app       *tview.Application
-		uiMgr     *UIManager
-		svcMgr    *ServiceManager
+		uiMgr     *UIManagerImpl
+		svcMgr    *ServiceManagerImpl
 	)
 
 	BeforeEach(func() {
 		app = tview.NewApplication()
-		uiMgr = &UIManager{app: app}
-		svcMgr = &ServiceManager{}
-		hotkeyMgr = &HotkeyManager{
+		uiMgr = &UIManagerImpl{app: app}
+		svcMgr = &ServiceManagerImpl{}
+		hotkeyMgr = &HotkeyManagerImpl{
 			app:            app,
 			uiManager:      uiMgr,
 			serviceManager: svcMgr,
