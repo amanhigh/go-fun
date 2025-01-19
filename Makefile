@@ -32,15 +32,19 @@ sync:
 
 # https://golangci-lint.run/usage/quick-start/
 lint-ci:
-	printf $(_TITLE) "LINT: Golang CLI"
+	printf $(_TITLE) "LINT" "Golang CLI"
 	-go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} golangci-lint run {}/...
 
 lint-dead:
-	printf $(_TITLE) "LINT: DeadCode"
+	printf $(_TITLE) "LINT" "DeadCode"
 	go work edit -json | jq -r '.Use[].DiskPath' | grep -v "common\|models" | xargs -I{} deadcode {}/...
 
 # HACK: Fix Deadcode in after basic Lint
 lint: lint-ci  ## Lint the Code
+
+format: ## Format Go code with goimports
+	printf $(_TITLE) "Format" "Go Code"
+	find . -name '*.go' -not -path './vendor/*' | xargs goimports -w
 
 ### Testing
 test-operator:
