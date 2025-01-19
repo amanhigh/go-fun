@@ -7,5 +7,19 @@
 	"features": {
 		"ghcr.io/guiyomh/features/golangci-lint:0": {},
 		"ghcr.io/jungaretti/features/make:1": {}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"Continue.continue",
+				"golang.go",
+				"YuichiNakamura.code-to-clipboard",
+				"RooVeterinaryInc.roo-cline",
+				"Gruntfuggly.todo-tree",
+				"hoovercj.vscode-dimmer"
+			]
+		}
 	}
+	// TODO: Used Docker File Based to make extensible.
+	// TODO: Add other features like deadcode etc matching prepare.
 }

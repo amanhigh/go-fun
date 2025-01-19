@@ -104,7 +104,7 @@ build-fun: swag-fun
 
 build-fun-cover:
 	printf $(_TITLE) "Building Fun App with Coverage"
-	// FIXME: #C Create Bin Directory for binaries and exclude in .gitignore
+	# FIXME: #C Create Bin Directory for binaries and exclude in .gitignore
 	$(BUILD_OPTS) go build -cover -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
 
 build-kohan:
