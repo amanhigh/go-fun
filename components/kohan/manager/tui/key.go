@@ -44,11 +44,11 @@ func (h *HotkeyManagerImpl) setupHotkeyConfig() {
 		{Key: 'q', Description: "Quit the application", Handler: func() { h.app.Stop() }},
 		{Key: '?', Description: "Display help information", Handler: func() { h.uiManager.ShowOutput(h.GenerateHelpText()) }},
 		{Key: 'c', Description: "Clear selected services", Handler: func() { h.serviceManager.ClearSelectedServices(); h.uiManager.UpdateContext() }},
-		{Key: '/', Description: "Focus on filter input", Handler: func() { h.uiManager.app.SetFocus(h.uiManager.filterInput) }},
+		{Key: '/', Description: "Focus on filter input", Handler: func() { h.uiManager.FocusFilterInput() }},
 		{Key: ' ', Description: "Toggle service selection or filtered services", Handler: func() {
-			if h.app.GetFocus() == h.uiManager.svcList {
+			if h.uiManager.IsFocusOnList() {
 				h.uiManager.ToggleServiceSelection()
-			} else if h.app.GetFocus() == h.uiManager.filterInput {
+			} else if h.uiManager.IsFocusOnFilter() {
 				h.uiManager.ToggleFilteredServices()
 			}
 		}},
@@ -78,7 +78,7 @@ func (h *HotkeyManagerImpl) setupHotkeyConfig() {
 		}},
 		{Key: 'f', Description: "Clear filter", Handler: func() {
 			h.uiManager.clearFilterInput()
-			h.uiManager.app.SetFocus(h.uiManager.svcList)
+			h.uiManager.FocusServiceList()
 		}},
 	}
 	for _, hotkey := range hotkeys {
@@ -105,14 +105,14 @@ func (h *HotkeyManagerImpl) handleHotkeys(event *tcell.EventKey) *tcell.EventKey
 				return nil
 			}
 			// For other hotkeys, only handle if not in filter input
-			if h.app.GetFocus() != h.uiManager.filterInput {
+			if !h.uiManager.IsFocusOnFilter() {
 				hotkey.Handler()
 				return nil
 			}
 		}
 	case tcell.KeyEsc:
-		if h.app.GetFocus() == h.uiManager.filterInput {
-			h.uiManager.app.SetFocus(h.uiManager.svcList)
+		if h.uiManager.IsFocusOnFilter() {
+			h.uiManager.FocusServiceList()
 			return nil
 		}
 	}
