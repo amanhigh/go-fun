@@ -32,9 +32,13 @@ func (s *SBIManagerImpl) FetchAndParseExchangeRates(ctx context.Context) (rates 
 
 	// Parse CSV content
 	reader := csv.NewReader(strings.NewReader(csvContent))
+	return readRates(reader)
+}
+
+func readRates(reader *csv.Reader) (rates fa.ExchangeRates, err common.HttpError) {
 	// Skip header
 	if _, err1 := reader.Read(); err1 != nil {
-		err = common.NewHttpError(err1.Error(), 500)
+		err = common.NewServerError(err1)
 		return
 	}
 
@@ -45,7 +49,7 @@ func (s *SBIManagerImpl) FetchAndParseExchangeRates(ctx context.Context) (rates 
 			break
 		}
 		if err1 != nil {
-			err = common.NewHttpError(err1.Error(), 500)
+			err = common.NewServerError(err1)
 			return
 		}
 

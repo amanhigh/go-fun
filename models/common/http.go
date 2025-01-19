@@ -34,7 +34,7 @@ func (self *HttpErrorImpl) Code() int {
 }
 
 func NewServerError(err error) HttpError {
-	return NewHttpError(err.Error(), 500)
+	return NewHttpError(err.Error(), http.StatusInternalServerError)
 }
 
 type Pagination struct {
