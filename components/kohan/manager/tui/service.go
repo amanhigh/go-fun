@@ -8,6 +8,7 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 )
 
+// FIXME: #A Add Interface & Constructor Update Tests and inject.go
 type ServiceManager struct {
 	allServices         []string
 	selectedServices    []string
