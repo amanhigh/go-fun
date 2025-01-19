@@ -344,7 +344,7 @@ pack: ## Repomix Packing
 
 ### Workflows
 test: test-operator test-it ## Run all tests (Excludes test-slow)
-build: format build-fun build-kohan ## Build all Binaries
+build: format lint build-fun build-kohan ## Build all Binaries
 
 info: info-release info-docker ## Repo Information
 infos: info space-info ## Repo Extended Information
