@@ -6,9 +6,41 @@ import (
 	"strings"
 
 	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/models/config"
 )
 
 // FIXME: #A Add Interface & Constructor Update Tests and inject.go
+type ServiceManagerInterface interface {
+	// Service Management
+	GetAllServices() []string
+	GetSelectedServices() []string
+	IsServiceSelected(service string) bool
+	ToggleServiceSelection(service string)
+	ClearSelectedServices()
+
+	// Service Operations
+	SetupServices() (string, error)
+	CleanServices() (string, error)
+	UpdateServices() (string, error)
+
+	// Filter Operations
+	FilterServices(keyword string)
+	GetFilteredServices() []string
+	ToggleFilteredServices()
+}
+
+func NewServiceManager(config config.DariusConfig) *ServiceManager {
+	manager := &ServiceManager{
+		allServices:         []string{},
+		selectedServices:    []string{},
+		makeDir:             config.MakeDir,
+		selectedServicePath: config.SelectedServiceFile,
+	}
+	manager.loadAvailableServices()
+	manager.loadSelectedServices()
+	return manager
+}
+
 type ServiceManager struct {
 	allServices         []string
 	selectedServices    []string

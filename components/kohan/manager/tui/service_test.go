@@ -18,15 +18,13 @@ var _ = Describe("ServiceManager", func() {
 	)
 
 	BeforeEach(func() {
-		svcMgr = newServiceManager(testConfig)
+		svcMgr = NewServiceManager(testConfig)
 	})
 
 	It("should build", func() {
 		Expect(svcMgr).To(Not(BeNil()))
-		Expect(svcMgr.makeDir).To(Equal(makeDir))
-		Expect(svcMgr.selectedServicePath).To(Equal(svcPath))
-		Expect(svcMgr.allServices).Should(ContainElement("dummy"))
-		Expect(svcMgr.selectedServices).To(BeEmpty())
+		Expect(svcMgr.GetAllServices()).Should(ContainElement("dummy"))
+		Expect(svcMgr.GetSelectedServices()).To(BeEmpty())
 	})
 
 	Context("Services Basics", func() {
