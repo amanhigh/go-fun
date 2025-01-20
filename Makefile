@@ -301,7 +301,9 @@ setup-k8: ## Kubernetes Setup
 ### Docker
 docker-fun: build-fun
 	printf $(_TITLE) "Docker" "Building FunApp"
+	cp $(BIN_DIR)/fun $(FUN_DIR)/fun
 	docker buildx build -t $(FUN_IMAGE_TAG) -f $(FUN_DIR)/Dockerfile $(FUN_DIR) 2> $(OUT)
+	rm $(FUN_DIR)/fun
 
 docker-fun-run: docker-fun
 	printf $(_TITLE) "Docker" "Running FunApp"
