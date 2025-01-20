@@ -81,8 +81,8 @@ import requests
 import json
 import csv
 from datetime import datetime
-// TODO: #A Migrate Completely
-// TODO: Create Readme on how to use FA.
+# TODO: #A Migrate Completely
+# TODO: Create Readme on how to use FA.
 # Constants
 TICKERS = ['AMZN', 'SIVR']
 DOWNLOADS_DIR = '~/Downloads/Tickers'
@@ -131,6 +131,7 @@ def download_tickers(tickers, downloads_dir, api_key):
             save_ticker_data(data, file_path)
             print(f'Data for {ticker} downloaded and saved to {file_path}')
 
+// FIXME: #B Download SBI USD Rates
 def download_sbi_usd_rates(downloads_dir):
     file_path = os.path.join(downloads_dir, 'SBI_REFERENCE_RATES_USD.csv')
     file_exists, mod_date = check_file_exists(file_path)
@@ -174,6 +175,7 @@ def find_ticker_data(ticker, downloads_dir, year):
 
     return highest_date, highest_close, year_end_date, year_end_close, peak_ttbr, year_end_ttbr
 
+#  FIXME: Migrate to SBI Manager
 def find_sbi_usd_rate(downloads_dir, date):
     file_path = os.path.join(downloads_dir, 'SBI_REFERENCE_RATES_USD.csv')
     with open(file_path, 'r') as f:

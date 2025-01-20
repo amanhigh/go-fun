@@ -10,6 +10,7 @@ import (
 )
 
 type AlphaClient interface {
+	// FIXME: #A TickerManager to use this and implement download_ticker
 	FetchDailyPrices(ctx context.Context, ticker string) (fa.StockData, common.HttpError)
 }
 
@@ -20,6 +21,7 @@ type AlphaClientImpl struct {
 }
 
 func NewAlphaClient(client *resty.Client, apiKey string) *AlphaClientImpl {
+	// BUG: #A BaseUrl should be configurable
 	return &AlphaClientImpl{
 		baseUrl: "https://www.alphavantage.co/query",
 		apiKey:  apiKey,

@@ -10,6 +10,7 @@ type DariusV1 struct {
 	hotkeys   *HotkeyManagerImpl `container:"type"`
 }
 
+// BUG: #C Move to Core
 func (d *DariusV1) Run() error {
 	d.uiManager.SetupLayout()
 	d.hotkeys.SetupHotkeys()
