@@ -21,6 +21,4 @@
 			]
 		}
 	}
-	// TODO: Used Docker File Based to make extensible.
-	// TODO: Add other features like deadcode etc matching prepare.
 }
