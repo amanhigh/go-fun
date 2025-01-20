@@ -2,11 +2,11 @@ package main
 
 import (
 	"github.com/amanhigh/go-fun/components/kohan/command"
+	"github.com/amanhigh/go-fun/components/kohan/core"
 )
 
 func main() {
-	// TASK: CLI Tests
+	core.SetupKohanInjector()
 
-	// TODO: Add Dependency Injection using KohanInjector same as FunAppInject
 	command.Execute()
 }

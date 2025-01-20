@@ -7,32 +7,45 @@ import (
 	"github.com/rivo/tview"
 )
 
+// Interface and implementation in same file
+type KohanInterface interface {
+	GetDariusApp(cfg config.DariusConfig) (*tui.DariusV1, error)
+}
+
+// Private singleton instance
+var globalInjector *KohanInjector
+
 type KohanInjector struct {
-	di     container.Container
-	config config.DariusConfig
+	di container.Container
 }
 
-func NewKohanInjector(cfg config.DariusConfig) (di *KohanInjector) {
-	return &KohanInjector{container.New(), cfg}
+func SetupKohanInjector() {
+	globalInjector = &KohanInjector{
+		di: container.New(),
+	}
 }
 
-func (self *KohanInjector) BuildApp() (darius *tui.DariusV1, err error) {
+// Public singleton access - returns interface only
+func GetKohanInterface() KohanInterface {
+	return globalInjector
+}
+
+func (self *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*tui.DariusV1, error) {
+	// Register config for this specific build
 	container.MustSingleton(self.di, func() config.DariusConfig {
-		return self.config
+		return cfg
 	})
 
+	// Register other dependencies
 	container.MustSingleton(self.di, tview.NewApplication)
-
 	container.MustSingleton(self.di, provideServiceManager)
 	container.MustSingleton(self.di, provideUIManager)
 	container.MustSingleton(self.di, provideHotkeyManager)
 
-	// FIXME: #B Add Providers for fa Package
-
-	// Build App
-	darius = &tui.DariusV1{}
-	err = self.di.Fill(darius)
-	return
+	// Build app
+	app := &tui.DariusV1{}
+	err := self.di.Fill(app)
+	return app, err
 }
 
 func provideServiceManager(cfg config.DariusConfig) (serviceManager *tui.ServiceManagerImpl) {
