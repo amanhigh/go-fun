@@ -11,7 +11,7 @@ import (
 
 // Interface and implementation in same file
 type KohanInterface interface {
-	GetDariusApp(cfg config.DariusConfig) (*tui.DariusV1, error)
+	GetDariusApp(cfg config.DariusConfig) (*DariusV1, error)
 }
 
 // Private singleton instance
@@ -42,7 +42,7 @@ func GetKohanInterface() KohanInterface {
 	return globalInjector
 }
 
-func (self *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*tui.DariusV1, error) {
+func (self *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error) {
 	// Register config for this specific build
 	container.MustSingleton(self.di, func() config.DariusConfig {
 		return cfg
@@ -58,7 +58,7 @@ func (self *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*tui.DariusV1,
 	container.MustSingleton(self.di, self.provideSBIClient)
 
 	// Build app
-	app := &tui.DariusV1{}
+	app := &DariusV1{}
 	err := self.di.Fill(app)
 	return app, err
 }
