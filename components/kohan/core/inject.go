@@ -1,8 +1,10 @@
 package core
 
 import (
+	"github.com/amanhigh/go-fun/components/kohan/clients"
 	"github.com/amanhigh/go-fun/components/kohan/manager/tui"
 	"github.com/amanhigh/go-fun/models/config"
+	"github.com/go-resty/resty/v2"
 	"github.com/golobby/container/v3"
 	"github.com/rivo/tview"
 )
@@ -16,13 +18,23 @@ type KohanInterface interface {
 var globalInjector *KohanInjector
 
 type KohanInjector struct {
-	di container.Container
+	di     container.Container
+	config config.KohanConfig
 }
 
-func SetupKohanInjector() {
+func SetupKohanInjector(config config.KohanConfig) {
 	globalInjector = &KohanInjector{
-		di: container.New(),
+		di:     container.New(),
+		config: config,
 	}
+}
+
+func (self *KohanInjector) provideAlphaClient(client *resty.Client) clients.AlphaClient {
+	return clients.NewAlphaClient(client, self.config.FA.AlphaBaseURL, self.config.FA.AlphaAPIKey)
+}
+
+func (self *KohanInjector) provideSBIClient(client *resty.Client) clients.SBIClient {
+	return clients.NewSBIClient(client, self.config.FA.SBIBaseURL)
 }
 
 // Public singleton access - returns interface only
