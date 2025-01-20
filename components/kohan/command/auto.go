@@ -33,7 +33,7 @@ var monitorCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		log.Info().Dur("Wait", wait).Str("Screenshots", args[0]).Msg("Monitoring Systems")
-		// FIXME: Move to Injector once Created
+		// XXX: Move to Injector once Created
 		server := core.NewMonitorServer(args[0])
 		go server.Start(9010)
 		core.MonitorSubmap()
