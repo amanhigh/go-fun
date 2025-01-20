@@ -102,9 +102,18 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: test
-test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
+# User specific test binaries path
+TEST_ASSET_DIR=/tmp/envtest
 
+test: setup-envtest manifests generate fmt vet ## Run tests.
+	KUBEBUILDER_ASSETS=$(TEST_ASSET_DIR)/k8s/$(ENVTEST_K8S_VERSION)-linux-amd64 go test ./... -coverprofile cover.out
+
+# Setup envtest assets in user directory
+setup-envtest: envtest
+	mkdir -p $(TEST_ASSET_DIR)
+	$(ENVTEST) use --bin-dir $(TEST_ASSET_DIR) $(ENVTEST_K8S_VERSION)
+
+.PHONY: clean
 clean: ## Clean up
 	rm -rf $(LOCALBIN)
 

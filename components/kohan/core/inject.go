@@ -54,6 +54,9 @@ func (self *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*tui.DariusV1,
 	container.MustSingleton(self.di, provideUIManager)
 	container.MustSingleton(self.di, provideHotkeyManager)
 
+	container.MustSingleton(self.di, self.provideAlphaClient)
+	container.MustSingleton(self.di, self.provideSBIClient)
+
 	// Build app
 	app := &tui.DariusV1{}
 	err := self.di.Fill(app)
