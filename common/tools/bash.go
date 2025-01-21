@@ -115,6 +115,18 @@ func LiveCommand(cmd string) {
 	command.Stderr = os.Stderr
 
 	/* Start Command Wait for Finish */
-	command.Start()
-	command.Wait()
+	if err := command.Start(); err != nil {
+		log.Warn().
+			Str("CMD", cmd).
+			Err(err).
+			Msg("Failed to start command")
+		return
+	}
+
+	if err := command.Wait(); err != nil {
+		log.Warn().
+			Str("CMD", cmd).
+			Err(err).
+			Msg("Command execution failed")
+	}
 }

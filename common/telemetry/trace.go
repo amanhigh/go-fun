@@ -116,13 +116,17 @@ func buildResource(name string) (resources *resource.Resource, err error) {
 // It returns nothing.
 func ShutdownTracerProvider(ctx context.Context) {
 	if traceProvider, ok := otel.GetTracerProvider().(*sdktrace.TracerProvider); ok {
-		traceProvider.Shutdown(ctx)
+		if err := traceProvider.Shutdown(ctx); err != nil {
+			log.Warn().Err(err).Msg("Error shutting down trace provider")
+		}
 	}
 }
 
 // FlushTraceProvider flushes any pending spans.
 func FlushTraceProvider(ctx context.Context) {
 	if traceProvider := otel.GetTracerProvider().(*sdktrace.TracerProvider); traceProvider != nil {
-		traceProvider.ForceFlush(ctx)
+		if err := traceProvider.ForceFlush(ctx); err != nil {
+			log.Warn().Err(err).Msg("Error flushing trace provider")
+		}
 	}
 }

@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 // Scanner must be split on words
@@ -29,7 +31,12 @@ func ReadStrings(scanner *bufio.Scanner, n int) []string {
 
 func ReadInt(scanner *bufio.Scanner) (n int) {
 	scanner.Scan()
-	fmt.Sscanf(scanner.Text(), "%d", &n)
+	if _, err := fmt.Sscanf(scanner.Text(), "%d", &n); err != nil {
+		log.Warn().
+			Str("Input", scanner.Text()).
+			Err(err).
+			Msg("Failed to parse integer")
+	}
 	return
 }
 

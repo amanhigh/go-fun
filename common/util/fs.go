@@ -85,7 +85,9 @@ func ReplaceContent(path string, findRegex string, replace string) {
 	if bytes, err := os.ReadFile(path); err == nil {
 		if reg, err := regexp.Compile(findRegex); err == nil {
 			newContent := reg.ReplaceAll(bytes, []byte(replace))
-			os.WriteFile(path, newContent, DEFAULT_PERM)
+			if err := os.WriteFile(path, newContent, DEFAULT_PERM); err != nil {
+				log.Error().Str("File", path).Err(err).Msg("Error Writing File")
+			}
 		} else {
 			log.Error().Str("Regex", findRegex).Err(err).Msg("Invalid Regex")
 		}
