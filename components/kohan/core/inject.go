@@ -71,6 +71,6 @@ func provideUIManager(app *tview.Application, svcManager tui.ServiceManager) *tu
 	return tui.NewUIManager(app, svcManager)
 }
 
-func provideHotkeyManager(app *tview.Application, uiManager tui.UIManager, serviceManager tui.ServiceManager) *tui.HotkeyManagerImpl {
-	return tui.NewHotkeyManager(app, uiManager, serviceManager)
+func provideHotkeyManager(uiManager tui.UIManager, serviceManager tui.ServiceManager) *tui.HotkeyManagerImpl {
+	return tui.NewHotkeyManager(uiManager, serviceManager)
 }

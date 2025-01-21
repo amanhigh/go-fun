@@ -22,6 +22,10 @@ type UIManager interface {
 	FocusFilterInput()     // Focus the filter input component
 	IsFocusOnFilter() bool // Check if filter input has focus
 	IsFocusOnList() bool   // Check if service list has focus
+
+	// New methods for hotkey management
+	SetGlobalInputCapture(capture func(*tcell.EventKey) *tcell.EventKey)
+	StopApplication()
 }
 
 type UIManagerImpl struct {
@@ -173,4 +177,12 @@ func (ui *UIManagerImpl) IsFocusOnFilter() bool {
 
 func (ui *UIManagerImpl) IsFocusOnList() bool {
 	return ui.app.GetFocus() == ui.svcList
+}
+
+func (ui *UIManagerImpl) SetGlobalInputCapture(capture func(*tcell.EventKey) *tcell.EventKey) {
+	ui.app.SetInputCapture(capture)
+}
+
+func (ui *UIManagerImpl) StopApplication() {
+	ui.app.Stop()
 }
