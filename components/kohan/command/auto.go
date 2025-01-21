@@ -35,6 +35,7 @@ var monitorCmd = &cobra.Command{
 		log.Info().Dur("Wait", wait).Str("Screenshots", args[0]).Msg("Monitoring Systems")
 		// XXX: Move to Injector once Created
 		server := core.NewMonitorServer(args[0])
+		core.MonitorInternetConnection(wait)
 		go server.Start(9010)
 		core.MonitorSubmap()
 		return
