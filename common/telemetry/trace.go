@@ -17,6 +17,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 /*
@@ -60,11 +61,11 @@ func InitStdoutTracerProvider(config config.Tracing) (err error) {
 
 // https://observiq.com/blog/tracing-services-using-otel-and-jaeger
 func InitOtlpTracerProvider(ctx context.Context, name string, config config.Tracing) (err error) {
-	var conn *grpc.ClientConn
 	var exporter *otlptrace.Exporter
 
-	if conn, err = grpc.DialContext(ctx, config.Endpoint, grpc.WithInsecure()); err == nil {
-		if exporter, err = otlptracegrpc.New(ctx, otlptracegrpc.WithInsecure(), otlptracegrpc.WithGRPCConn(conn)); err == nil {
+	client, err := grpc.NewClient(config.Endpoint, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err == nil {
+		if exporter, err = otlptracegrpc.New(ctx, otlptracegrpc.WithInsecure(), otlptracegrpc.WithGRPCConn(client)); err == nil {
 			if resources, err := buildResource(name); err == nil {
 				traceprovider := sdktrace.NewTracerProvider(
 					//https://opentelemetry.io/docs/instrumentation/go/sampling/

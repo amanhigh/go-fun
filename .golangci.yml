@@ -30,7 +30,7 @@ linters:
     # High Priority - Code Correctness & Bugs
     - errcheck      # critical error checking
     - govet        # suspicious constructs
-    # - staticcheck  # advanced static analysis
+    - staticcheck  # advanced static analysis
     - gosimple     # code simplification
     - typecheck    # type checking
     

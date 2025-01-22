@@ -2,7 +2,7 @@ package tools
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/rs/zerolog/log"
@@ -11,7 +11,7 @@ import (
 const TEMP_CURL_FILE = "/tmp/curl.json"
 
 func WriteTempCurl(data string) {
-	if err := ioutil.WriteFile(TEMP_CURL_FILE, []byte(data), util.DEFAULT_PERM); err != nil {
+	if err := os.WriteFile(TEMP_CURL_FILE, []byte(data), util.DEFAULT_PERM); err != nil {
 		log.Error().Err(err).Str("Path", TEMP_CURL_FILE).Msg("Failed to write temp curl file")
 	}
 }
