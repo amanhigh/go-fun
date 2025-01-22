@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/rs/zerolog/log"
@@ -145,10 +146,8 @@ var _ = Describe("HttpStream", func() {
 	BeforeEach(func() {
 		http.HandleFunc("/", handleRoot)
 		http.HandleFunc("/stream", stream)
-		go func() {
-			err = http.ListenAndServe(":7080", nil)
-			Expect(err).To(BeNil())
-		}()
+		srv := util.NewTestServer(fmt.Sprintf(":%d", port))
+		go srv.ListenAndServe() //nolint:errcheck
 	})
 
 	It("should stream events", func() {

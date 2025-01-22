@@ -2,7 +2,21 @@ package util
 
 import (
 	"bufio"
+	"net/http"
+
+	"github.com/amanhigh/go-fun/models/config"
 )
+
+// Helper to create server with timeouts from DefaultHttpConfig
+func NewTestServer(addr string) *http.Server {
+	return &http.Server{
+		Addr:              addr,
+		ReadTimeout:       config.DefaultHttpConfig.ReadTimeout,
+		WriteTimeout:      config.DefaultHttpConfig.WriteTimeout,
+		IdleTimeout:       config.DefaultHttpConfig.IdleTimeout,
+		ReadHeaderTimeout: config.DefaultHttpConfig.ReadHeaderTimeout,
+	}
+}
 
 func ReadCountInts(scanner *bufio.Scanner) (n int, ints []int) {
 	n = ReadInt(scanner)

@@ -26,7 +26,7 @@ linters-settings:
 linters:
   disable-all: true
   enable:
-    # FIXME: #A Strengthen linters and fix issues.
+    # TODO: #A Strengthen linters and fix issues.
     # High Priority - Code Correctness & Bugs
     - errcheck      # critical error checking
     # - govet        # suspicious constructs
