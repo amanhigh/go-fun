@@ -35,7 +35,7 @@ var monitorCmd = &cobra.Command{
 		log.Info().Dur("Wait", wait).Str("Screenshots", args[0]).Msg("Monitoring Systems")
 		// XXX: Move to Injector once Created
 		server := core.NewMonitorServer(args[0])
-		core.MonitorInternetConnection(wait)
+		go core.MonitorInternetConnection(wait)
 		go func() {
 			if err := server.Start(9010); err != nil {
 				log.Error().Err(err).Msg("Failed to start monitor server")

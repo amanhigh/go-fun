@@ -115,7 +115,7 @@ func (self *BaseDao) UseOrCreateTx(c context.Context, run DbRun, readOnly ...boo
 			defer cancel()
 		}
 		// Avoid Creating New Transaction for Readonly (Use DB)
-		err = run(context.WithValue(c, models.CONTEXT_TX, self.Db.WithContext(ctx)))
+		err = run(context.WithValue(c, models.ContextTx, self.Db.WithContext(ctx)))
 	} else {
 		// Create Transaction With Timeout
 		ctx, cancel := context.WithTimeout(c, TX_TIMEOUT)
@@ -126,7 +126,7 @@ func (self *BaseDao) UseOrCreateTx(c context.Context, run DbRun, readOnly ...boo
 		// Error Returned after running completes in Transaction.
 		// Inject Transaction in Context
 		txErr := self.Db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-			return run(context.WithValue(c, models.CONTEXT_TX, tx))
+			return run(context.WithValue(c, models.ContextTx, tx))
 		})
 
 		/* Morph Transaction Error to Http Error */

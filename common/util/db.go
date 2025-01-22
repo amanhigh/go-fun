@@ -136,7 +136,7 @@ func GormErrorMapper(err error) common.HttpError {
 func Tx(c context.Context) (tx *gorm.DB) {
 	if c != nil {
 		//Check If Context Has Tx
-		if value := c.Value(models.CONTEXT_TX); value != nil {
+		if value := c.Value(models.ContextTx); value != nil {
 			//Extract and Return
 			if tx, ok := value.(*gorm.DB); ok {
 				return tx

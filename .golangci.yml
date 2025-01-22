@@ -62,5 +62,8 @@ issues:
       linters:
         - bodyclose   # ignore response body closes in tests
         - noctx      # ignore missing context in tests
+    - path: "common/clients/http_client.go"
+      linters:
+        - bodyclose   # ignore response body closes in tests
   exclude-dirs:
     - "^components/learn"

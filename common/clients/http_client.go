@@ -58,7 +58,6 @@ func NewRestyClient(baseUrl string, httpConfig config.HttpClientConfig) (client 
 	return
 }
 
-// nolint:bodyclose
 func buildNewTransport(httpConfig config.HttpClientConfig) http.RoundTripper {
 	transport := &http.Transport{
 		DisableCompression: !httpConfig.Compression,
@@ -76,7 +75,6 @@ func buildNewTransport(httpConfig config.HttpClientConfig) http.RoundTripper {
 	return failsafehttp.NewRoundTripper(transport, retryPolicy, circuitBreaker)
 }
 
-// nolint:bodyclose
 func buildRetryPolicy(config config.RetryConfig) retrypolicy.RetryPolicy[*http.Response] {
 	// TASK: Implement Metrics
 	return failsafehttp.RetryPolicyBuilder().
@@ -94,7 +92,6 @@ After a delay, the breaker is half-opened and trial executions are allowed which
 whether the breaker should be closed or opened again. If the trial executions meet a
 success threshold, the breaker is closed again and executions will proceed as normal, otherwise it’s re-opened.
 */
-// nolint:bodyclose
 func buildCircuitBreaker(config config.BreakerConfig) circuitbreaker.CircuitBreaker[*http.Response] {
 	return circuitbreaker.Builder[*http.Response]().
 		WithFailureThreshold(config.FailureThreshold).

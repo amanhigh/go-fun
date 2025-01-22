@@ -35,30 +35,34 @@ func Encrypt(key, text string) (encryptedText string, err error) {
 	return
 }
 
-func Decrypt(key, text string) (decryptedText string, err error) {
-	var textBytes []byte
+func Decrypt(key, text string) (string, error) {
 	keyBytes := []byte(key)
 
-	/* Decode Base64 to get back Encrpted Text */
-	if textBytes, err = base64.URLEncoding.DecodeString(text); err == nil {
-		/* Create New Cipher */
-		if block, err := aes.NewCipher(keyBytes); err == nil {
-			/* Check Minimum Cipher Text Length */
-			if len(textBytes) > aes.BlockSize {
-				/* Extract Block of Text to be Encrypted */
-				textRight := textBytes[:aes.BlockSize]
-				textBytes = textBytes[aes.BlockSize:]
-
-				/* Decrypt Aes */
-				cfb := cipher.NewCFBDecrypter(block, textRight)
-				cfb.XORKeyStream(textBytes, textBytes)
-
-				/* Convert Decrypted Bytes to String */
-				decryptedText = string(textBytes)
-			} else {
-				err = CIPHER_TOO_SHORT
-			}
-		}
+	// Decode Base64 to get back encrypted text
+	textBytes, err := base64.URLEncoding.DecodeString(text)
+	if err != nil {
+		return "", err
 	}
-	return
+
+	// Check minimum cipher text length
+	if len(textBytes) < aes.BlockSize {
+		return "", CIPHER_TOO_SHORT
+	}
+
+	// Create new cipher
+	block, err := aes.NewCipher(keyBytes)
+	if err != nil {
+		return "", err
+	}
+
+	// Extract block of text to be encrypted
+	textRight := textBytes[:aes.BlockSize]
+	textBytes = textBytes[aes.BlockSize:]
+
+	// Decrypt AES
+	cfb := cipher.NewCFBDecrypter(block, textRight)
+	cfb.XORKeyStream(textBytes, textBytes)
+
+	// Convert decrypted bytes to string
+	return string(textBytes), nil
 }
