@@ -184,7 +184,7 @@ var _ = Describe("Json Encode/Decode", func() {
 			)
 
 			BeforeEach(func() {
-				c = make(chan string, 0)
+				c = make(chan string)
 			})
 
 			Context("With Close", func() {
