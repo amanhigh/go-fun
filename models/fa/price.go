@@ -30,3 +30,6 @@ type Rate struct {
 	TTBuy  float64 `json:"TT BUY"`
 	TTSell float64 `json:"TT SELL"`
 }
+
+// File name constant for SBI Rate CSV
+const SBI_RATES_FILENAME = "SBI_REFERENCE_RATES_USD.csv"

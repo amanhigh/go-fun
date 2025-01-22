@@ -3,8 +3,8 @@ package manager
 import (
 	"context"
 	"encoding/csv"
-	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -17,7 +17,7 @@ import (
 
 type SBIManager interface {
 	FetchAndParseExchangeRates(ctx context.Context) (fa.ExchangeRates, common.HttpError)
-	SaveRates(ctx context.Context) common.HttpError
+	DownloadRates(ctx context.Context) common.HttpError
 }
 
 type SBIManagerImpl struct {
@@ -45,30 +45,23 @@ func (s *SBIManagerImpl) FetchAndParseExchangeRates(ctx context.Context) (rates 
 
 // SaveRates fetches the latest exchange rates and saves them to a CSV file
 // in the configured download directory. Returns an error if any step fails.
-func (s *SBIManagerImpl) SaveRates(ctx context.Context) (err common.HttpError) {
-	var rates fa.ExchangeRates
-	if rates, err = s.FetchAndParseExchangeRates(ctx); err == nil {
-		err = s.saveRatesToFile(rates)
-	}
-	return
-}
-
-func (s *SBIManagerImpl) saveRatesToFile(rates fa.ExchangeRates) (err common.HttpError) {
-	// BUG: Make file name constant.
-	filePath := filepath.Join(s.downloadDir, "SBI_REFERENCE_RATES_USD.csv")
-
-	// Create CSV content
-	var content []string
-	content = append(content, "DATE,TT BUY,TT SELL")
-	for _, rate := range rates.Rates {
-		line := fmt.Sprintf("%s,%.2f,%.2f", rate.Date, rate.TTBuy, rate.TTSell)
-		content = append(content, line)
+func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpError) {
+	var csvContent string
+	if csvContent, err = s.client.FetchExchangeRates(ctx); err != nil {
+		return
 	}
 
-	// Write file
-	if writeErr := util.WriteLines(filePath, content); writeErr != nil {
-		err = common.NewServerError(writeErr)
+	// Ensure directory exists
+	if err1 := os.MkdirAll(s.downloadDir, os.ModePerm); err1 != nil {
+		return common.NewServerError(err1)
 	}
+
+	// Write to file
+	filePath := filepath.Join(s.downloadDir, fa.SBI_RATES_FILENAME)
+	if err1 := os.WriteFile(filePath, []byte(csvContent), util.DEFAULT_PERM); err1 != nil {
+		return common.NewServerError(err1)
+	}
+
 	return
 }
 
