@@ -1,7 +1,6 @@
 package util
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -14,21 +13,21 @@ type CancelFunc func() (err error)
 
 func IsInt(value string) (err error) {
 	if _, err = strconv.Atoi(value); err != nil {
-		err = errors.New(fmt.Sprintf("%v is not a Valid Integer", value))
+		err = fmt.Errorf("%v is not a Valid Integer", value)
 	}
 	return
 }
 
 func ParseInt(value string) (i int, err error) {
 	if i, err = strconv.Atoi(value); err != nil {
-		err = errors.New(fmt.Sprintf("%v is not a Valid Integer", value))
+		err = fmt.Errorf("%v is not a Valid Integer", value)
 	}
 	return
 }
 
 func ParseBool(value string) (b bool, err error) {
 	if b, err = strconv.ParseBool(value); err != nil {
-		err = errors.New(fmt.Sprintf("%v is not a Valid Boolean", value))
+		err = fmt.Errorf("%v is not a Valid Boolean", value)
 	}
 	return
 }

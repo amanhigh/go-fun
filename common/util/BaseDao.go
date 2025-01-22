@@ -124,10 +124,8 @@ func (self *BaseDao) UseOrCreateTx(c context.Context, run DbRun, readOnly ...boo
 		}
 
 		// Error Returned after running completes in Transaction.
-		var txErr error
-
 		// Inject Transaction in Context
-		txErr = self.Db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		txErr := self.Db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 			return run(context.WithValue(c, models.CONTEXT_TX, tx))
 		})
 

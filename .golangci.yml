@@ -31,7 +31,7 @@ linters:
     - errcheck      # critical error checking
     - govet        # suspicious constructs
     # - staticcheck  # advanced static analysis
-    # - gosimple     # code simplification
+    - gosimple     # code simplification
     - typecheck    # type checking
     
     # Safety & Resources
