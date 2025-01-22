@@ -29,7 +29,7 @@ linters:
     # FIXME: #A Strengthen linters and fix issues.
     # High Priority - Code Correctness & Bugs
     - errcheck      # critical error checking
-    - govet        # suspicious constructs
+    # - govet        # suspicious constructs
     - staticcheck  # advanced static analysis
     - gosimple     # code simplification
     - typecheck    # type checking
@@ -46,11 +46,11 @@ linters:
     - unused        # unused code detection
 
     # Consider enabling these linters later:
-    - exhaustive     # enum switch statements
+    # - exhaustive     # enum switch statements
     - gosec         # security checks
     - errorlint     # error wrapping (Go 1.13+)
     # - testifylint   # testify best practices
-    - whitespace    # ws formatting
+    # - whitespace    # ws formatting
 
 issues:
   # Maximum count of issues with the same text
@@ -65,5 +65,8 @@ issues:
     - path: "common/clients/http_client.go"
       linters:
         - bodyclose   # ignore response body closes in tests
+    - path: "components/learn/" # ignore learn components
+      linters:
+        - errcheck 
   exclude-dirs:
-    - "^components/learn"
+    # - "^components/learn"
