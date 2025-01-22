@@ -20,10 +20,10 @@ import (
 var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 
 	var (
-		client *vault.Client
-		ctx    = context.Background()
-		err    error
-
+		client         *vault.Client
+		ctx            = context.Background()
+		err            error
+		vaultHost      string
 		vaultContainer testcontainers.Container
 	)
 
@@ -33,7 +33,7 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 		Expect(err).To(BeNil())
 
 		// Get Mapped Port
-		vaultHost, err := vaultContainer.PortEndpoint(ctx, "8200/tcp", "")
+		vaultHost, err = vaultContainer.PortEndpoint(ctx, "8200/tcp", "")
 		vaultHost = "http://" + vaultHost
 		Expect(err).To(BeNil())
 		log.Info().Str("Host", vaultHost).Msg("Vault Endpoint")

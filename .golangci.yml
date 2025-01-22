@@ -29,7 +29,7 @@ linters:
     # TODO: #A Strengthen linters and fix issues.
     # High Priority - Code Correctness & Bugs
     - errcheck      # critical error checking
-    # - govet        # suspicious constructs
+    - govet        # suspicious constructs
     - staticcheck  # advanced static analysis
     - gosimple     # code simplification
     - typecheck    # type checking
@@ -67,6 +67,9 @@ issues:
         - bodyclose   # ignore response body closes in tests
     - path: "components/learn/" # ignore learn components
       linters:
-        - errcheck 
+        - errcheck
+        - govet
   exclude-dirs:
     # - "^components/learn"
+  exclude-files:
+    # - "components/learn/frameworks/play-fast/hystrix_test.go"

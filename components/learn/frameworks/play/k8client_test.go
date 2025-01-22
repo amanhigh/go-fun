@@ -14,6 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	v1 "k8s.io/client-go/kubernetes/typed/apps/v1"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 )
@@ -25,11 +26,12 @@ var _ = Describe("K8client", Label(models.GINKGO_SETUP), func() {
 		clientset  *kubernetes.Clientset
 		waitTime   = time.Second * 30
 		namespace  = "default"
+		config     *rest.Config
 	)
 
 	Context("using Config", func() {
 		BeforeEach(func() {
-			config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+			config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			clientset, err = kubernetes.NewForConfig(config)
@@ -119,7 +121,7 @@ var _ = Describe("K8client", Label(models.GINKGO_SETUP), func() {
 
 			It("should have correct status", func() {
 				Eventually(func() (size int32) {
-					deployment, err := deploymentsClient.Get(context.Background(), deploymentName, metav1.GetOptions{})
+					_, err = deploymentsClient.Get(context.Background(), deploymentName, metav1.GetOptions{})
 					Expect(err).ShouldNot(HaveOccurred())
 					return *deployment.Spec.Replicas
 				}, waitTime).Should(Equal(size))
