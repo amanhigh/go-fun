@@ -1,16 +1,19 @@
 package util
 
 import (
-	"math/rand"
+	"crypto/rand"
+	"math/big"
 )
 
 func RandomInts(n int, max int) (result []int) {
 	for i := 0; i < n; i++ {
-		result = append(result, rand.Intn(max))
+		num, _ := rand.Int(rand.Reader, big.NewInt(int64(max)))
+		result = append(result, int(num.Int64()))
 	}
 	return
 }
 
 func RandomInt(min int, max int) int {
-	return rand.Intn(max-min) + min
+	num, _ := rand.Int(rand.Reader, big.NewInt(int64(max-min)))
+	return int(num.Int64()) + min
 }
