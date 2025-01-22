@@ -2,7 +2,6 @@ package play_test
 
 import (
 	"context"
-	"math/rand"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
@@ -162,10 +161,10 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SLOW), func() {
 
 					//Assign School Ids
 					for teacher := range teachers {
-						teachers[teacher].SchoolID = schools[rand.Intn(schoolCount)].ID
+						teachers[teacher].SchoolID = schools[util.RandomInt(0, schoolCount-1)].ID
 					}
 					for student := range students {
-						students[student].SchoolID = schools[rand.Intn(schoolCount)].ID
+						students[student].SchoolID = schools[util.RandomInt(0, schoolCount-1)].ID
 					}
 
 					err = db.CreateInBatches(&teachers, batchSize).Error
