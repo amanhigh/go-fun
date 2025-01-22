@@ -35,7 +35,7 @@ linters:
     - typecheck    # type checking
     
     # Safety & Resources
-    # - bodyclose      # ensure http response closed
+    - bodyclose      # ensure http response closed
     - nilerr        # nil error returns
     - sqlclosecheck # ensure sql resources closed
     - noctx        # enforce context usage

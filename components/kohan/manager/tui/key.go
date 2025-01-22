@@ -93,7 +93,7 @@ func (h *HotkeyManagerImpl) GenerateHelpText() string {
 }
 
 func (h *HotkeyManagerImpl) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {
-	switch event.Key() {
+	switch event.Key() { //nolint:exhaustive
 	case tcell.KeyRune:
 		if hotkey, exists := h.hotkeys[event.Rune()]; exists {
 			// Handle space key specially

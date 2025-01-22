@@ -200,10 +200,7 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		// Define a new deployment
 		dep, depErr := r.deploymentForMemcached(memcached)
 		if depErr != nil {
-			return ctrl.Result{}, depErr
-		}
-		if depErr != nil {
-			log.Error(err, "Failed to define new Deployment resource for Memcached")
+			log.Error(depErr, "Failed to define new Deployment resource for Memcached")
 
 			// The following implementation will update the status
 			meta.SetStatusCondition(&memcached.Status.Conditions, metav1.Condition{Type: typeAvailableMemcached,
