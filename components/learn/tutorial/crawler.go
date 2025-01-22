@@ -67,8 +67,6 @@ func Crawl(url string, depth int, fetcher Fetcher, urlMap SafeMap) {
 		}(url)
 	}
 	waitGroup.Wait()
-
-	return
 }
 
 // fakeFetcher is Fetcher that returns canned results.
