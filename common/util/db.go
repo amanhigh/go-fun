@@ -3,6 +3,7 @@ package util
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -48,7 +49,7 @@ func CreateDb(cfg config.Db) (db *gorm.DB, err error) {
 			if m, err = migrate.New(sourceURL, dbUrl); err == nil {
 				if err = m.Up(); err == nil {
 					log.Info().Str("Source", sourceURL).Str("DB", dbUrl).Msg("Migration Complete")
-				} else if err == migrate.ErrNoChange {
+				} else if errors.Is(err, migrate.ErrNoChange) {
 					//Ignore No Change
 					err = nil
 				}
@@ -118,16 +119,13 @@ func BuildMysqlURL(username, password, host, dbName string, port any) string {
 // It takes an error as a parameter and returns a common.HttpError.
 func GormErrorMapper(err error) common.HttpError {
 	//Doesn't Need State hence placed in Util.
-	if err != nil {
-		switch err {
-		case gorm.ErrRecordNotFound:
-			return common.ErrNotFound
-		default:
-			return common.NewServerError(err)
-		}
+	if err == nil {
+		return nil
 	}
-	return nil
-
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return common.ErrNotFound
+	}
+	return common.NewServerError(err)
 }
 
 /*

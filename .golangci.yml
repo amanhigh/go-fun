@@ -48,9 +48,9 @@ linters:
     # Consider enabling these linters later:
     # - exhaustive     # enum switch statements
     # - gosec         # security checks
-    # - errorlint     # error wrapping (Go 1.13+)
+    - errorlint     # error wrapping (Go 1.13+)
     # - testifylint   # testify best practices
-    # - whitespace    # ws formatting
+    - whitespace    # ws formatting
 
 issues:
   # Maximum count of issues with the same text

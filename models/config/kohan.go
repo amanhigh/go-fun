@@ -41,7 +41,7 @@ type FAConfig struct {
 
 func NewKohanConfig() (config KohanConfig, err error) {
 	if err = env.Parse(&config); err != nil {
-		err = fmt.Errorf("error parsing kohan config: %v", err)
+		err = fmt.Errorf("error parsing kohan config: %w", err)
 	}
 	return
 }

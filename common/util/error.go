@@ -1,6 +1,7 @@
 package util
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -49,13 +50,15 @@ func ResponseProcessor(response *resty.Response, restyErr error) (err HttpError)
 }
 
 func ProcessValidationError(validationErr error) (err HttpError) {
-	if errs, ok := validationErr.(validator.ValidationErrors); ok {
+	var errs validator.ValidationErrors
+	if errors.As(validationErr, &errs) {
 		for _, e := range errs {
 			err = common.NewHttpError(fmt.Sprintf("'%s' with Value '%v' Violates '%s (%s)'", e.Field(), e.Value(), e.Tag(), e.Param()), http.StatusBadRequest)
 			break
 		}
 	} else {
-		if httpErr, ok := validationErr.(HttpError); ok {
+		var httpErr HttpError
+		if errors.As(validationErr, &httpErr) {
 			return httpErr
 		}
 		log.Warn().

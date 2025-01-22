@@ -1,6 +1,7 @@
 package util
 
 import (
+	"errors"
 	"net"
 	"time"
 
@@ -84,9 +85,8 @@ Report any DB Errors which will be used to fallback if applicable
 This ignores any nil or non relevant errors.
 */
 func (self *FallBackPolicy) ReportError(err error) {
-	_, isNetErr := err.(net.Error)
-	//Only Act on Network Errors
-	if isNetErr {
+	var netErr net.Error
+	if errors.As(err, &netErr) {
 		self.errChan <- err
 	}
 }
