@@ -85,9 +85,9 @@ func ListFiles(dirPath string) []string {
 
 func ReplaceContent(path string, findRegex string, replace string) {
 	if bytes, err := os.ReadFile(path); err == nil {
-		if reg, err := regexp.Compile(findRegex); err == nil {
+		if reg, regexErr := regexp.Compile(findRegex); regexErr == nil {
 			newContent := reg.ReplaceAll(bytes, []byte(replace))
-			if err := os.WriteFile(path, newContent, DEFAULT_PERM); err != nil {
+			if writeErr := os.WriteFile(path, newContent, DEFAULT_PERM); writeErr != nil {
 				log.Error().Str("File", path).Err(err).Msg("Error Writing File")
 			}
 		} else {

@@ -22,7 +22,7 @@ type Page struct {
 func NewPageUsingClient(rawUrl string, client *resty.Client) (page *Page) {
 	response := ""
 	if _, err := client.R().SetResult(&response).Get(rawUrl); err == nil {
-		if root, err := html.Parse(strings.NewReader(response)); err == nil {
+		if root, parseErr := html.Parse(strings.NewReader(response)); parseErr == nil {
 			doc := goquery.NewDocumentFromNode(root)
 			doc.Url, _ = url.Parse(rawUrl)
 			page = &Page{}
