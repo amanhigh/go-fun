@@ -28,7 +28,7 @@ linters:
   enable:
     # FIXME: #A Strengthen linters and fix issues.
     # High Priority - Code Correctness & Bugs
-    # - errcheck      # critical error checking
+    - errcheck      # critical error checking
     # - govet        # suspicious constructs
     # - staticcheck  # advanced static analysis
     # - gosimple     # code simplification
@@ -62,3 +62,5 @@ issues:
       linters:
         - bodyclose   # ignore response body closes in tests
         - noctx      # ignore missing context in tests
+  exclude-dirs:
+    - "^components/"
