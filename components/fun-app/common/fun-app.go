@@ -21,7 +21,7 @@ func RunFunApp() {
 
 		/* Build App */
 		if app, err = injector.BuildApp(); err == nil {
-			err = app.(interfaces.ServerInterface).Start(context.Background())
+			err = app.(interfaces.ServerInterface).Start(context.Background()) //nolint:errcheck // error is handled via panic
 		}
 	}
 

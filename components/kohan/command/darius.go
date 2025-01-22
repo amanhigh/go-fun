@@ -19,7 +19,6 @@ var dariusCmd = &cobra.Command{
 			return err
 		}
 		return darius.Run()
-		return
 	},
 }
 

@@ -63,4 +63,4 @@ issues:
         - bodyclose   # ignore response body closes in tests
         - noctx      # ignore missing context in tests
   exclude-dirs:
-    - "^components/"
+    - "^components/learn"

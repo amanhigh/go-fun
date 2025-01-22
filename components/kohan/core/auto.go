@@ -39,7 +39,6 @@ Support:
 func OpenTicker(ticker string) (err error) {
 	// Focus on the window named "TradingView"
 	log.Debug().Str("Ticker", ticker).Msg("OpenTicker")
-
 	if err = tools.FocusWindow("TradingView"); err == nil {
 		// Focus Input Box
 		if err = tools.SendKey("-M Ctrl b -m Ctrl"); err == nil {
@@ -50,7 +49,9 @@ func OpenTicker(ticker string) (err error) {
 				// Bang ! to Open
 				err = tools.SendInput("xox")
 				// Return Focus Back
-				tools.FocusLastWindow()
+				if focusErr := tools.FocusLastWindow(); focusErr != nil {
+					log.Error().Err(focusErr).Msg("Failed to return focus")
+				}
 			}
 		}
 	}
@@ -85,7 +86,10 @@ func RecordTicker(ticker, path string) (err error) {
 			// Generate File name so it is ordered in Journal
 			infoFile := fmt.Sprintf("%s/%s__%s.txt", path, ticker, time.Now().Format(DATE_FORMAT))
 			if tradeInfo, err = tools.PromptText(TRADE_INFO); err == nil {
-				os.WriteFile(infoFile, []byte(tradeInfo), util.DEFAULT_PERM)
+				if err = os.WriteFile(infoFile, []byte(tradeInfo), util.DEFAULT_PERM); err != nil {
+					log.Error().Str("Ticker", ticker).Err(err).Msg("Failed to write trade info")
+					return
+				}
 
 				// Record Check Screenshot
 				checkFile := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format(DATE_FORMAT))
@@ -97,7 +101,9 @@ func RecordTicker(ticker, path string) (err error) {
 		}
 
 		// send desktop notification
-		tools.Notify(zerolog.InfoLevel, "Recorded", ticker)
+		if err = tools.Notify(zerolog.InfoLevel, "Recorded", ticker); err != nil {
+			log.Error().Err(err).Msg("Failed to send notification")
+		}
 	}
 
 	return
@@ -119,8 +125,11 @@ func MonitorInternetConnection(wait time.Duration) {
 func TryOpenTicker(ticker string) {
 	window, err := tools.GetHyperWindow()
 	if err == nil && window.Class == LOGSEQ_CLASS && window.Monitor == SIDE_MONITOR && window.Workspace.Name == MAIL_WORKSPACE {
-		OpenTicker(ticker)
-		log.Info().Str("Ticker", ticker).Msg("Opening Ticker")
+		if openErr := OpenTicker(ticker); openErr != nil {
+			log.Error().Err(err).Str("Ticker", ticker).Msg("Failed to open ticker")
+		} else {
+			log.Info().Str("Ticker", ticker).Msg("Opening Ticker")
+		}
 	} else {
 		if err != nil {
 			log.Error().Err(err).Msg("OpenTicker: GetHyperWindow Failed")
