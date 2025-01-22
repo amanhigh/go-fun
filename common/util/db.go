@@ -140,7 +140,13 @@ func Tx(c context.Context) (tx *gorm.DB) {
 		//Check If Context Has Tx
 		if value := c.Value(models.CONTEXT_TX); value != nil {
 			//Extract and Return
-			tx = value.(*gorm.DB)
+			if tx, ok := value.(*gorm.DB); ok {
+				return tx
+			} else {
+				log.Warn().
+					Str("ActualType", fmt.Sprintf("%T", value)).
+					Msg("Invalid type in context. Expected *gorm.DB")
+			}
 		} else {
 			log.Trace().Msg("Missing Transaction In Context")
 		}

@@ -8,6 +8,7 @@ import (
 	. "github.com/amanhigh/go-fun/models/common"
 	"github.com/go-playground/validator/v10"
 	"github.com/go-resty/resty/v2"
+	"github.com/rs/zerolog/log"
 )
 
 // ResponseProcessor processes the resty response and error to generate an HttpError.
@@ -54,7 +55,13 @@ func ProcessValidationError(validationErr error) (err HttpError) {
 			break
 		}
 	} else {
-		err = validationErr.(HttpError)
+		if httpErr, ok := validationErr.(HttpError); ok {
+			return httpErr
+		}
+		log.Warn().
+			Str("ActualType", fmt.Sprintf("%T", validationErr)).
+			Msg("Failed to convert validation error to HttpError")
+		return common.NewHttpError("Invalid validation error format", http.StatusInternalServerError)
 	}
 	return
 }

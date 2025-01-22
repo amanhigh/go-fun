@@ -67,7 +67,9 @@ func ExtractSubCluster(clusterName string, subClusterName string, start int, end
 
 func WriteClusterFile(clusterName string, content string) {
 	filePath := getClusterFile(clusterName)
-	ioutil.WriteFile(filePath, []byte(content), util.DEFAULT_PERM)
+	if err := ioutil.WriteFile(filePath, []byte(content), util.DEFAULT_PERM); err != nil {
+		log.Error().Err(err).Str("Cluster", clusterName).Str("Path", filePath).Msg("Failed to write cluster file")
+	}
 }
 
 func ReadClusterFile(clusterName string) []string {

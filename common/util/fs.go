@@ -57,7 +57,9 @@ func FindReplaceFile(filePath string, find string, replace string) (err error) {
 	if fileBytes, err = os.ReadFile(filePath); err == nil {
 		if compile, err = regexp.Compile(find); err == nil {
 			replacedBytes := compile.ReplaceAll(fileBytes, []byte(replace))
-			os.WriteFile(filePath, replacedBytes, DEFAULT_PERM)
+			if err := os.WriteFile(filePath, replacedBytes, DEFAULT_PERM); err != nil {
+				log.Error().Str("File", filePath).Err(err).Msg("Error writing replaced content")
+			}
 		}
 	}
 	return
@@ -128,7 +130,9 @@ func PathExists(path string) bool {
 
 func RecreateDir(path string) {
 	os.RemoveAll(path)
-	os.MkdirAll(path, DIR_DEFAULT_PERM)
+	if err := os.MkdirAll(path, DIR_DEFAULT_PERM); err != nil {
+		log.Error().Str("Path", path).Err(err).Msg("Error re-creating directory")
+	}
 }
 
 func ClearDirectory(dirPath string) {

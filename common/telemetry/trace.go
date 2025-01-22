@@ -124,9 +124,11 @@ func ShutdownTracerProvider(ctx context.Context) {
 
 // FlushTraceProvider flushes any pending spans.
 func FlushTraceProvider(ctx context.Context) {
-	if traceProvider := otel.GetTracerProvider().(*sdktrace.TracerProvider); traceProvider != nil {
+	if traceProvider, ok := otel.GetTracerProvider().(*sdktrace.TracerProvider); ok {
 		if err := traceProvider.ForceFlush(ctx); err != nil {
 			log.Warn().Err(err).Msg("Error flushing trace provider")
 		}
+	} else {
+		log.Warn().Msg("Failed to get trace provider - incorrect type")
 	}
 }
