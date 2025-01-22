@@ -11,6 +11,8 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html"
+
+	"github.com/amanhigh/go-fun/models/config"
 )
 
 const HREF = "href"
@@ -37,12 +39,22 @@ func NewPageUsingClient(rawUrl string, client *resty.Client) (page *Page) {
 }
 
 func NewPage(url string) *Page {
-	if doc, err := goquery.NewDocument(url); err == nil {
-		return &Page{Document: doc}
-	} else {
-		log.Fatal().Err(err).Msg("Unable to Create Page")
+	client := resty.New().
+		SetTimeout(config.DefaultHttpConfig.RequestTimeout)
+
+	response, err := client.R().Get(url)
+	if err != nil {
+		log.Fatal().Str("URL", url).Err(err).Msg("Unable to create page")
 		return nil
 	}
+
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(response.String()))
+	if err != nil {
+		log.Fatal().Str("URL", url).Err(err).Msg("Unable to parse page")
+		return nil
+	}
+
+	return &Page{Document: doc}
 }
 
 func (self *Page) ParseAnchor(anchor *goquery.Selection) (text string, link string) {
