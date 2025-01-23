@@ -21,6 +21,15 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
       
+      - name: INSTALL -> X11 Libs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libx11-dev \
+            libxcb1-dev \
+            libxau-dev \
+            libxdmcp-dev
+      
       - name: INSTALL -> Go
         uses: actions/setup-go@v4
         with:
