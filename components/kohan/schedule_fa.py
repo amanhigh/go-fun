@@ -120,7 +120,7 @@ def save_ticker_data(data, file_path):
     with open(file_path, 'w') as f:
         json.dump(data, f)
 
-# // FIXME: #B Migrate to Ticker Manager as DownloadTicker
+# // Moved
 def download_tickers(tickers, downloads_dir, api_key):
     for ticker in tickers:
         file_path = os.path.join(downloads_dir, f'{ticker}.json')
@@ -146,7 +146,7 @@ def download_sbi_usd_rates(downloads_dir):
             f.write(response.content)
         print(f'SBI USD rates data downloaded and saved to {file_path}')
 
-# // FIXME: #B Migrate to Ticker Manager as AnalyseTicker
+# // Moved
 def find_ticker_data(ticker, downloads_dir, year):
     file_path = os.path.join(downloads_dir, f'{ticker}.json')
     with open(file_path, 'r') as f:
@@ -173,12 +173,13 @@ def find_ticker_data(ticker, downloads_dir, year):
         year_end_date = last_trading_day
 
     # Get TTBR for peak and year-end dates
+    // FIXME: Perform Conversion.
     peak_ttbr = find_sbi_usd_rate(downloads_dir, highest_date)
     year_end_ttbr = find_sbi_usd_rate(downloads_dir, year_end_date)
 
     return highest_date, highest_close, year_end_date, year_end_close, peak_ttbr, year_end_ttbr
 
-#  FIXME: #A Migrate to SBI Manager
+#  Moved
 def find_sbi_usd_rate(downloads_dir, date):
     file_path = os.path.join(downloads_dir, 'SBI_REFERENCE_RATES_USD.csv')
     with open(file_path, 'r') as f:

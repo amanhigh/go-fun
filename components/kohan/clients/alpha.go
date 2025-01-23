@@ -10,7 +10,6 @@ import (
 )
 
 type AlphaClient interface {
-	// FIXME: #B TickerManager to use this and implement download_ticker
 	FetchDailyPrices(ctx context.Context, ticker string) (fa.StockData, common.HttpError)
 }
 
