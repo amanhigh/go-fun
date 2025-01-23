@@ -119,7 +119,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 				Expect(k8sClient.Create(ctx, memcachedAlpha1)).To(Not(HaveOccurred()))
 				Expect(k8sClient.Delete(ctx, memcachedAlpha1)).To(Not(HaveOccurred()))
-				// XXX: Implement Reconcile for Older Versions
+				// TASK: Implement Reconcile for Older Versions
 			})
 		})
 

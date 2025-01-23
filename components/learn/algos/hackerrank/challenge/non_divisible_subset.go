@@ -1,6 +1,7 @@
 package challenge
 
-/**
+/*
+*
 https://www.hackerrank.com/challenges/non-divisible-subset/problem
 https://www.geeksforgeeks.org/subset-no-pair-sum-divisible-k/
 C(n,r) - http://www.mathwords.com/c/combination_formula.htm

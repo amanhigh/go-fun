@@ -85,4 +85,8 @@ dist/
 
 # Inkscape
 svg-inkscape
+
+# AI
 .aider*
+Plan.md
+repomix-output.md

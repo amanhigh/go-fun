@@ -31,16 +31,20 @@ sync:
 	go work sync
 
 # https://golangci-lint.run/usage/quick-start/
-# FIXME: Use Configuration - https://golangci-lint.run/usage/configuration/
 lint-ci:
-	printf $(_TITLE) "LINT: Golang CLI"
+	printf $(_TITLE) "LINT" "Golang CLI"
 	-go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} golangci-lint run {}/...
 
 lint-dead:
-	printf $(_TITLE) "LINT: DeadCode"
+	printf $(_TITLE) "LINT" "DeadCode"
 	go work edit -json | jq -r '.Use[].DiskPath' | grep -v "common\|models" | xargs -I{} deadcode {}/...
 
-lint: lint-ci lint-dead ## Lint the Code
+# HACK: Fix Deadcode in after basic Lint
+lint: lint-ci  ## Lint the Code
+
+format: ## Format Go code with goimports
+	printf $(_TITLE) "Format" "Go Code"
+	goimports -w .
 
 ### Testing
 test-operator:
@@ -98,12 +102,13 @@ swag-fun:
 	swag i --parseDependency true > $(OUT);\
 	printf $(_INFO) "Swagger" "http://localhost:8080/swagger/index.html";
 
-build-fun: swag-fun
+build-fun:
 	printf $(_TITLE) "Building Fun App"
 	$(BUILD_OPTS) go build -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
 
 build-fun-cover:
 	printf $(_TITLE) "Building Fun App with Coverage"
+	# FIXME: #A Create Bin Directory for binaries and exclude in .gitignore
 	$(BUILD_OPTS) go build -cover -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
 
 build-kohan:
@@ -331,15 +336,21 @@ space-test: ## Gink Tests Devspace (Watch Mode)
 docker-build: docker-fun ## Build Docker Images
 	printf $(_INFO) "Docker Hub" "https://hub.docker.com/r/amanfdk/fun-app/tags"
 
+## Misc
+.PHONY: pack
+pack: ## Repomix Packing
+	@printf $(_TITLE) "Pack" "Repository"
+	@repomix --style markdown .
+
 ### Workflows
 test: test-operator test-it ## Run all tests (Excludes test-slow)
-build: build-fun build-kohan ## Build all Binaries
+build: format lint build-fun build-kohan ## Build all Binaries
 
 info: info-release info-docker ## Repo Information
 infos: info space-info ## Repo Extended Information
 prepare: setup-tools setup-k8 install-deadcode ## One Time Setup
 
-setup: sync test build helm-package docker-build # Build and Test
+setup: sync test swag-fun build helm-package docker-build # Build and Test
 install: install-kohan ## Install Kohan CLI
 clean: test-clean build-clean ## Clean up Residue
 

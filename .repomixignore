@@ -1,0 +1,28 @@
+# Add patterns to ignore here, one per line
+# Example:
+# *.log
+# tmp/
+
+# File Types
+*.sum
+*.mod
+
+# Files
+.golangci.yml
+devspace.yaml
+LICENSE
+Makefile
+hermetic.json
+dashboard.json
+
+# Dirs
+docs/
+Kubernetes/
+
+# Components
+components/learn
+# components/fun-app
+# components/kohan
+components/operator
+
+components/learn/tools/

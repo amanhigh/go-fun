@@ -37,10 +37,10 @@ var _ = Describe("DaisyChain", func() {
 })
 
 /*
-	Build Daisy Chain of Size n.
-	Return Left Most & Rightmost Node
+Build Daisy Chain of Size n.
+Return Left Most & Rightmost Node
 
-	Channel is unbuffered that it will block read until write happens
+Channel is unbuffered that it will block read until write happens
 */
 func buildDaisyChain(n int) (leftmost chan int, current chan int) {
 	/** Start which 1 Channel Chain, Hence left==current */
@@ -64,10 +64,13 @@ func buildDaisyChain(n int) (leftmost chan int, current chan int) {
 	return leftmost, current
 }
 
-/**
-	Read from Right Node, add 1
-	write to Left Node.
- **/
+/*
+*
+
+		Read from Right Node, add 1
+		write to Left Node.
+	 *
+*/
 func whisper(left, right chan int) {
 	left <- (1 + <-right)
 }

@@ -1,6 +1,7 @@
 package cracking
 
-/**
+/*
+*
 Visited all -1 before start
 n-rows
 m-columns

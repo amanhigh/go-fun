@@ -2,7 +2,8 @@ package cracking
 
 var stairMem = map[int]int{}
 
-/**
+/*
+*
 Davis has a number of staircases in his house and he likes to climb each staircase 1, 2, or 3 steps at a time.
 Being a very precocious child, he wonders how many ways there are to reach the top of the staircase.
 

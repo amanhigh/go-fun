@@ -75,7 +75,7 @@ func (admin *AdminService) HealthCheck(ctx context.Context) (err common.HttpErro
 }
 
 func NewFunAppClient(baseUrl string, httpConfig config.HttpClientConfig) *FunClient {
-	client := util.NewRestyClient(baseUrl, httpConfig)
+	client := NewRestyClient(baseUrl, httpConfig)
 
 	// Init Base Service
 	baseService := BaseService{client: client, VERSION_URL: "/v1"}

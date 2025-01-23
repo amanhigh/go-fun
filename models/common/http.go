@@ -1,10 +1,14 @@
 package common
 
+import "net/http"
+
 // Standard Http Errors
-var ErrBadRequest = NewHttpError("BadRequest", 400)
-var ErrNotFound = NewHttpError("NotFound", 404)
-var ErrNotAuthorized = NewHttpError("NotAuthorized", 401)
-var ErrNotAuthenticated = NewHttpError("NotAuthenticated", 403)
+var ErrBadRequest = NewHttpError("BadRequest", http.StatusBadRequest)
+var ErrNotFound = NewHttpError("NotFound", http.StatusNotFound)
+var ErrNotAuthorized = NewHttpError("NotAuthorized", http.StatusUnauthorized)
+var ErrNotAuthenticated = NewHttpError("NotAuthenticated", http.StatusForbidden)
+var ErrEntityExists = NewHttpError("EntityExists", http.StatusConflict)
+var ErrInternalServerError = NewHttpError("InternalServerError", http.StatusInternalServerError)
 
 /* Error Reperesenting Http Error and Status Code  */
 type HttpError interface {

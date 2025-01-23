@@ -1,15 +1,16 @@
 package sort
 
-/**
+/*
+*
 The steps are:
 
-    Pick an element, called a pivot, from the array.
-    1. Partitioning: reorder the array so that all elements with values less than the pivot come before the pivot,
-	while all elements with values greater than the pivot come after it (equal values can go either way).
-	After this partitioning, the pivot is in its final position. This is called the partition operation.
+	    Pick an element, called a pivot, from the array.
+	    1. Partitioning: reorder the array so that all elements with values less than the pivot come before the pivot,
+		while all elements with values greater than the pivot come after it (equal values can go either way).
+		After this partitioning, the pivot is in its final position. This is called the partition operation.
 
-	2.Recursively apply the above steps to the sub-array of elements with smaller values and
-	separately to the sub-array of elements with greater values.
+		2.Recursively apply the above steps to the sub-array of elements with smaller values and
+		separately to the sub-array of elements with greater values.
 
 Time: nlog(n), n^2 (worst), Space: log(n)
 http://bigocheatsheet.com/
@@ -26,7 +27,8 @@ func QuickSort(input []int, start int, end int) {
 	}
 }
 
-/**
+/*
+*
 Ensure everything less than pivot is moved left of Partition Index (pIndex)
 Post this everything on left of pivot is less than pivot and right is greater than pivot
 */

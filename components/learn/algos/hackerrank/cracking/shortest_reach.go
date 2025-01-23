@@ -8,7 +8,8 @@ type GraphNode struct {
 
 const EDGE_WEIGHT = 6
 
-/**
+/*
+*
 Perform Travel computing distances
 */
 func Travel(start *GraphNode) {
@@ -30,7 +31,8 @@ func linkNodes(nodeMap map[int]*GraphNode, u int, v int) {
 	nodeMap[v].Nodes = append(nodeMap[v].Nodes, nodeMap[u])
 }
 
-/**
+/*
+*
 Generate N Nodes starting from 1 to N.
 */
 func generateNodes(n int) (nodeMap map[int]*GraphNode) {
