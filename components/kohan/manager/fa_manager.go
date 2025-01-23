@@ -1,0 +1,63 @@
+package manager
+
+import (
+	"context"
+	"time"
+
+	"github.com/amanhigh/go-fun/models/fa"
+)
+
+type FAManager interface {
+	ProcessTickers(ctx context.Context, tickers []string, year int) ([]fa.FATickerAnalysis, error)
+}
+
+type FAManagerImpl struct {
+	tickerManager TickerManager
+	sbiManager    SBIManager
+}
+
+func NewFAManager(tickerManager TickerManager, sbiManager SBIManager) *FAManagerImpl {
+	return &FAManagerImpl{
+		tickerManager: tickerManager,
+		sbiManager:    sbiManager,
+	}
+}
+
+func (f *FAManagerImpl) ProcessTickers(ctx context.Context, tickers []string, year int) ([]fa.FATickerAnalysis, error) {
+	var results []fa.FATickerAnalysis
+
+	for _, ticker := range tickers {
+		// Get USD Analysis
+		analysis, err := f.tickerManager.AnalyzeTicker(ctx, ticker, year)
+		if err != nil {
+			return nil, err
+		}
+
+		// Get TT Rates
+		peakDate, _ := time.Parse("2006-01-02", analysis.PeakDate)
+		yearEndDate, _ := time.Parse("2006-01-02", analysis.YearEndDate)
+
+		peakRate, err := f.sbiManager.GetTTBuyRate(peakDate)
+		if err != nil {
+			return nil, err
+		}
+
+		yearEndRate, err := f.sbiManager.GetTTBuyRate(yearEndDate)
+		if err != nil {
+			return nil, err
+		}
+
+		// Create FATickerAnalysis
+		faAnalysis := fa.FATickerAnalysis{
+			TickerAnalysis:  analysis,
+			PeakTTRate:      peakRate,
+			YearEndTTRate:   yearEndRate,
+			PeakPriceINR:    analysis.PeakPrice * peakRate,
+			YearEndPriceINR: analysis.YearEndPrice * yearEndRate,
+		}
+
+		results = append(results, faAnalysis)
+	}
+
+	return results, nil
+}

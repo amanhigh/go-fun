@@ -42,5 +42,14 @@ type TickerAnalysis struct {
 	YearEndPrice float64 `json:"year_end_price"`
 }
 
+// FATickerAnalysis extends TickerAnalysis with TT rate conversions
+type FATickerAnalysis struct {
+	TickerAnalysis          // Embed base USD analysis
+	PeakTTRate      float64 `json:"peak_tt_rate"`
+	YearEndTTRate   float64 `json:"year_end_tt_rate"`
+	PeakPriceINR    float64 `json:"peak_price_inr"`
+	YearEndPriceINR float64 `json:"year_end_price_inr"`
+}
+
 // File name constant for SBI Rate CSV
 const SBI_RATES_FILENAME = "SBI_REFERENCE_RATES_USD.csv"
