@@ -19,6 +19,21 @@ linters-settings:
     enable-all: true
     disable:
       - fieldalignment # too strict
+  funlen:
+    lines: 50      # max function length
+    statements: 40  # max statements per function
+    
+  lll:
+    line-length: 500  # max line length
+    
+  # Complexity Control
+  gocyclo:
+    min-complexity: 15  # cyclomatic complexity limit
+    
+  cyclop:
+    max-complexity: 15
+    max-cognitive-complexity: 25
+    package-average: 10.0
 
   errcheck:
     check-type-assertions: true
@@ -52,6 +67,12 @@ linters:
     # - testifylint   # testify best practices
     # - whitespace    # ws formatting
 
+    # Complexity
+    - gocyclo      # Cyclomatic complexity
+    - cyclop       # Package complexity and maintainability
+    - funlen       # Function length control
+    - lll          # Line length control
+
 issues:
   # Maximum count of issues with the same text
   max-same-issues: 50
@@ -73,3 +94,6 @@ issues:
     # - "^components/learn"
   exclude-files:
     # - "components/learn/frameworks/play-fast/hystrix_test.go"
+
+output:
+  sort-results: true
