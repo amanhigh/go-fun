@@ -35,7 +35,7 @@ Support:
 -`
 )
 
-// TODO: Extract AutoManager
+// FIXME: #C Extract AutoManager
 func OpenTicker(ticker string) (err error) {
 	// Focus on the window named "TradingView"
 	log.Debug().Str("Ticker", ticker).Msg("OpenTicker")
