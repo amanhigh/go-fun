@@ -97,12 +97,6 @@ profile: ## Run Profiling
 	kill %1;
 
 ### Builds
-swag-fun:
-	printf $(_TITLE) "Generating Swagger"
-	cd $(FUN_DIR);\
-	swag i --parseDependency true > $(OUT);\
-	printf $(_INFO) "Swagger" "http://localhost:8080/swagger/index.html";
-
 build-fun:
 	printf $(_TITLE) "Building Fun App"
 	mkdir -p $(BIN_DIR)
@@ -348,10 +342,19 @@ pack: ## Repomix Packing
 	@printf $(_TITLE) "Pack" "Repository"
 	@repomix --style markdown .
 
+## Generate
+generate-swagger:
+	printf $(_TITLE) "Generate" "Swagger"
+	cd $(FUN_DIR);\
+	swag i --parseDependency true > $(OUT);\
+	printf $(_INFO) "Swagger" "http://localhost:8080/swagger/index.html";
+
 # Generate mocks across all modules
-generate:
+generate-mocks:
 	@printf $(_INFO) "Generate" "Mocks"
 	@find . -name "go.mod" -execdir go generate ./... \;
+
+generate: generate-mocks generate-swagger ## Generate Files
 
 ### Workflows
 test: test-operator test-it ## Run all tests (Excludes test-slow)
@@ -361,7 +364,7 @@ info: info-release info-docker ## Repo Information
 infos: info space-info ## Repo Extended Information
 prepare: setup-tools setup-k8 install-deadcode ## One Time Setup
 
-setup: sync test swag-fun build helm-package docker-build # Build and Test
+setup: sync test generate build helm-package docker-build # Build and Test
 install: install-kohan ## Install Kohan CLI
 clean: test-clean build-clean ## Clean up Residue
 
