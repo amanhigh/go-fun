@@ -10,7 +10,7 @@ import (
 type Product struct {
 	gorm.Model
 	Code       string `gorm:"size 5,unique"`
-	Price      uint   `gorm:not null`
+	Price      uint   `gorm:"not null"`
 	Version    int
 	IgnoreMe   string `gorm:"-"` // Ignore this field
 	Vertical   Vertical

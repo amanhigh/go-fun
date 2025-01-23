@@ -176,9 +176,9 @@ var _ = Describe("Elastic", Ordered, Label(models.GINKGO_SLOW), func() {
 					Refresh:    "true",
 				}.Do(ctx, elasticClient)
 
-				defer res.Body.Close()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(res.IsError()).To(BeFalse())
+				res.Body.Close()
 			}
 		})
 	})

@@ -1,10 +1,11 @@
 package tutorial_test
 
 import (
+	"crypto/rand"
 	"fmt"
 	"io"
 	"math"
-	"math/rand"
+	"math/big"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -294,8 +295,10 @@ var _ = Describe("GoTour", func() {
 		})
 
 		It("should generate random", func() {
-			rand.Seed(time.Now().UnixNano())
-			Expect(rand.Intn(10)).To(Not(BeNil()))
+			num, err := rand.Int(rand.Reader, big.NewInt(10))
+			Expect(err).To(BeNil())
+			Expect(int(num.Int64())).To(BeNumerically(">=", 0))
+			Expect(int(num.Int64())).To(BeNumerically("<", 10))
 		})
 
 	})

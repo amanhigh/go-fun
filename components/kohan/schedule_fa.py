@@ -81,7 +81,7 @@ import requests
 import json
 import csv
 from datetime import datetime
-
+# FIXME: #C Create Readme on how to use FA.
 # Constants
 TICKERS = ['AMZN', 'SIVR']
 DOWNLOADS_DIR = '~/Downloads/Tickers'
@@ -90,6 +90,7 @@ API_KEY_ENV_VAR = 'VANTAGE_API_KEY'
 TAX_YEAR = 2023
 SBI_USD_RATES_URL = 'https://raw.githubusercontent.com/sahilgupta/sbi-fx-ratekeeper/main/csv_files/SBI_REFERENCE_RATES_USD.csv'
 
+# Moved
 def get_api_key():
     api_key = os.getenv(API_KEY_ENV_VAR)
     if not api_key:
@@ -118,6 +119,7 @@ def save_ticker_data(data, file_path):
     with open(file_path, 'w') as f:
         json.dump(data, f)
 
+# // Moved
 def download_tickers(tickers, downloads_dir, api_key):
     for ticker in tickers:
         file_path = os.path.join(downloads_dir, f'{ticker}.json')
@@ -130,6 +132,7 @@ def download_tickers(tickers, downloads_dir, api_key):
             save_ticker_data(data, file_path)
             print(f'Data for {ticker} downloaded and saved to {file_path}')
 
+# Moved
 def download_sbi_usd_rates(downloads_dir):
     file_path = os.path.join(downloads_dir, 'SBI_REFERENCE_RATES_USD.csv')
     file_exists, mod_date = check_file_exists(file_path)
@@ -142,6 +145,7 @@ def download_sbi_usd_rates(downloads_dir):
             f.write(response.content)
         print(f'SBI USD rates data downloaded and saved to {file_path}')
 
+# // Moved
 def find_ticker_data(ticker, downloads_dir, year):
     file_path = os.path.join(downloads_dir, f'{ticker}.json')
     with open(file_path, 'r') as f:
@@ -168,11 +172,13 @@ def find_ticker_data(ticker, downloads_dir, year):
         year_end_date = last_trading_day
 
     # Get TTBR for peak and year-end dates
+    // FIXME: #B Perform Conversion.
     peak_ttbr = find_sbi_usd_rate(downloads_dir, highest_date)
     year_end_ttbr = find_sbi_usd_rate(downloads_dir, year_end_date)
 
     return highest_date, highest_close, year_end_date, year_end_close, peak_ttbr, year_end_ttbr
 
+#  Moved
 def find_sbi_usd_rate(downloads_dir, date):
     file_path = os.path.join(downloads_dir, 'SBI_REFERENCE_RATES_USD.csv')
     with open(file_path, 'r') as f:
@@ -182,6 +188,7 @@ def find_sbi_usd_rate(downloads_dir, date):
                 return float(row['TT BUY'])
     return None
 
+# // FIXME: #A Migrate to FAManager as TickerAnalysis (using TBB Conversion.)
 def process_tickers(tickers, downloads_dir, year):
     table_data = []
     for ticker in tickers:
@@ -202,6 +209,7 @@ def process_tickers(tickers, downloads_dir, year):
             table_data.append([ticker, "No data", "No data", "No data", "No data", "No data", "No data", "No data", "No data"])
     return table_data
 
+# // FIXME: #B Add as a Command in Kohan to Accept Ticker and Print Details
 def print_table(data):
     headers = ["Ticker", "Peak Date", "Peak Price (USD)", "Year-End Date", "Year-End Price (USD)", "TTBR (Peak)", "TTBR (Year-End)", "Peak Price (INR)", "Year-End Price (INR)"]
     col_widths = [max(len(str(row[i])) for row in data + [headers]) for i in range(len(headers))]

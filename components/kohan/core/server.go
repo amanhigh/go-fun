@@ -41,14 +41,12 @@ func (s *MonitorServer) HandleReadClip(ctx *gin.Context) {
 	} else {
 		ctx.JSON(http.StatusInternalServerError, err.Error())
 	}
-	return
 }
 
 func (s *MonitorServer) HandleRecordTicker(ctx *gin.Context) {
 	ticker := ctx.Param("ticker")
 	if err := RecordTicker(ticker, s.capturePath); err == nil {
 		ctx.JSON(http.StatusOK, "Success")
-
 	} else {
 		log.Error().Str("Ticker", ticker).Err(err).Msg("Record Ticker Failed")
 		ctx.JSON(http.StatusInternalServerError, err.Error())

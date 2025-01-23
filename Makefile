@@ -17,6 +17,7 @@ include ./common/tools/base.mk
 BUILD_OPTS := CGO_ENABLED=0 GOARCH=amd64
 COMPONENT_DIR := ./components
 FUN_DIR := $(COMPONENT_DIR)/fun-app
+BIN_DIR := bin
 
 COVER_DIR:= /tmp/cover
 PROFILE_FILE:= $(COVER_DIR)/profile.out
@@ -33,7 +34,7 @@ sync:
 # https://golangci-lint.run/usage/quick-start/
 lint-ci:
 	printf $(_TITLE) "LINT" "Golang CLI"
-	-go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} golangci-lint run {}/...
+	go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} golangci-lint run {}/...
 
 lint-dead:
 	printf $(_TITLE) "LINT" "DeadCode"
@@ -96,29 +97,24 @@ profile: ## Run Profiling
 	kill %1;
 
 ### Builds
-swag-fun:
-	printf $(_TITLE) "Generating Swagger"
-	cd $(FUN_DIR);\
-	swag i --parseDependency true > $(OUT);\
-	printf $(_INFO) "Swagger" "http://localhost:8080/swagger/index.html";
-
 build-fun:
 	printf $(_TITLE) "Building Fun App"
-	$(BUILD_OPTS) go build -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
+	mkdir -p $(BIN_DIR)
+	$(BUILD_OPTS) go build -o $(BIN_DIR)/fun $(FUN_DIR)/main.go
 
 build-fun-cover:
 	printf $(_TITLE) "Building Fun App with Coverage"
-	# FIXME: #A Create Bin Directory for binaries and exclude in .gitignore
-	$(BUILD_OPTS) go build -cover -o $(FUN_DIR)/fun $(FUN_DIR)/main.go
+	mkdir -p $(BIN_DIR)
+	$(BUILD_OPTS) go build -cover -o $(BIN_DIR)/fun $(FUN_DIR)/main.go
 
 build-kohan:
 	printf $(_TITLE) "Building Kohan"
-	$(BUILD_OPTS) CGO_ENABLED=1 go build -o $(COMPONENT_DIR)/kohan/kohan $(COMPONENT_DIR)/kohan/main.go
+	mkdir -p $(BIN_DIR)
+	$(BUILD_OPTS) CGO_ENABLED=1 go build -o $(BIN_DIR)/kohan $(COMPONENT_DIR)/kohan/main.go
 
 build-clean:
 	printf $(_WARN) "Cleaning Build"
-	-rm "$(FUN_DIR)/fun";
-	-rm "$(COMPONENT_DIR)/kohan/kohan";
+	-rm -rf $(BIN_DIR)
 	-make -C $(COMPONENT_DIR)/operator/ clean > $(OUT)
 
 ### Install
@@ -260,7 +256,7 @@ info-docker:
 ### Runs
 run: build-fun ## Run Fun App
 	printf $(_TITLE) "Running: Fun App"
-	$(FUN_DIR)/fun > $(OUT)
+	$(BIN_DIR)/fun > $(OUT)
 
 load: ## Load Test Fun App
 	printf $(_TITLE) "Load Test: Fun App"
@@ -279,7 +275,7 @@ watch: ## Watch (entr): `make watch CMD=ls`
 run-fun-cover: build-fun-cover
 	printf $(_TITLE) "Running Fun App with Coverage"
 	mkdir -p $(COVER_DIR)
-	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(FUN_DIR)/fun > $(OUT) 2>&1 &
+	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(BIN_DIR)/fun > $(OUT) 2>&1 &
 
 ### Helm
 helm-package:
@@ -289,7 +285,10 @@ helm-package:
 setup-tools:
 	printf $(_TITLE) "Setting up Tools"
 	go install github.com/onsi/ginkgo/v2/ginkgo
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	go install github.com/swaggo/swag/cmd/swag
+	go install golang.org/x/tools/cmd/goimports@latest
+	go install github.com/vektra/mockery/v2@v2.51.1
 
 setup-k8: ## Kubernetes Setup
 	printf $(_TITLE) "Setting up Kubernetes"
@@ -298,7 +297,9 @@ setup-k8: ## Kubernetes Setup
 ### Docker
 docker-fun: build-fun
 	printf $(_TITLE) "Docker" "Building FunApp"
+	cp $(BIN_DIR)/fun $(FUN_DIR)/fun
 	docker buildx build -t $(FUN_IMAGE_TAG) -f $(FUN_DIR)/Dockerfile $(FUN_DIR) 2> $(OUT)
+	rm $(FUN_DIR)/fun
 
 docker-fun-run: docker-fun
 	printf $(_TITLE) "Docker" "Running FunApp"
@@ -337,10 +338,24 @@ docker-build: docker-fun ## Build Docker Images
 	printf $(_INFO) "Docker Hub" "https://hub.docker.com/r/amanfdk/fun-app/tags"
 
 ## Misc
-.PHONY: pack
+.PHONY: pack generate
 pack: ## Repomix Packing
 	@printf $(_TITLE) "Pack" "Repository"
 	@repomix --style markdown .
+
+## Generate
+generate-swagger:
+	printf $(_TITLE) "Generate" "Swagger"
+	cd $(FUN_DIR);\
+	swag i --parseDependency true > $(OUT);\
+	printf $(_INFO) "Swagger" "http://localhost:8080/swagger/index.html";
+
+# Generate mocks across all modules
+generate-mocks:
+	@printf $(_TITLE) "Generate" "Mocks"
+	@find . -name "go.mod" -execdir go generate ./... \;
+
+generate: generate-mocks generate-swagger ## Generate Files
 
 ### Workflows
 test: test-operator test-it ## Run all tests (Excludes test-slow)
@@ -350,7 +365,7 @@ info: info-release info-docker ## Repo Information
 infos: info space-info ## Repo Extended Information
 prepare: setup-tools setup-k8 install-deadcode ## One Time Setup
 
-setup: sync test swag-fun build helm-package docker-build # Build and Test
+setup: sync test generate build helm-package docker-build # Build and Test
 install: install-kohan ## Install Kohan CLI
 clean: test-clean build-clean ## Clean up Residue
 

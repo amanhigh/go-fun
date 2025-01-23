@@ -18,15 +18,10 @@ var _ = Describe("HotkeyManager", func() {
 		app = tview.NewApplication()
 		uiMgr = &UIManagerImpl{app: app}
 		svcMgr = &ServiceManagerImpl{}
-		hotkeyMgr = &HotkeyManagerImpl{
-			app:            app,
-			uiManager:      uiMgr,
-			serviceManager: svcMgr,
-		}
+		hotkeyMgr = NewHotkeyManager(uiMgr, svcMgr)
 	})
 	It("should build", func() {
 		Expect(hotkeyMgr).NotTo(BeNil())
-		Expect(hotkeyMgr.app).To(Equal(app))
 		Expect(hotkeyMgr.uiManager).To(Equal(uiMgr))
 		Expect(hotkeyMgr.serviceManager).To(Equal(svcMgr))
 	})

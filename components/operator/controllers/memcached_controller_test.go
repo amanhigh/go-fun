@@ -280,7 +280,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 					It("should update Memcached Condition Status", func() {
 						Eventually(func() error {
-							if memcached.Status.Conditions != nil && len(memcached.Status.Conditions) != 0 {
+							if len(memcached.Status.Conditions) != 0 {
 								latestStatusCondition := memcached.Status.Conditions[len(memcached.Status.Conditions)-1]
 								expectedLatestStatusCondition := metav1.Condition{Type: typeAvailableMemcached,
 									Status: metav1.ConditionTrue, Reason: "Reconciling",

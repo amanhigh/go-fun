@@ -1,5 +1,6 @@
 package util
 
+//nolint:gosec
 import (
 	"crypto/md5"
 	"encoding/hex"
@@ -17,6 +18,7 @@ func (self *Md5Info) Add(path string) {
 }
 
 func GetMD5Hash(text string) string {
+	//nolint:gosec
 	hasher := md5.New()
 	hasher.Write([]byte(text))
 	return hex.EncodeToString(hasher.Sum(nil))

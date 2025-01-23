@@ -3,6 +3,8 @@ package util
 import (
 	"fmt"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 /* Layouts */
@@ -29,7 +31,12 @@ Using Day & Hour String Compute Date & Time
 func DaysHour(input string) (computedTime time.Time) {
 	var day int
 	var timeString string
-	fmt.Sscanf(input, "%d %s", &day, &timeString)
+	if _, err := fmt.Sscanf(input, "%d %s", &day, &timeString); err != nil {
+		log.Warn().
+			Str("Input", input).
+			Err(err).
+			Msg("Failed to parse day and time")
+	}
 	parsedHourMin, _ := time.Parse(time.Kitchen, timeString)
 	year, month, _ := time.Now().Date()
 	return time.Date(year, month, day, parsedHourMin.Hour(), parsedHourMin.Minute(), 0, 0, time.UTC)

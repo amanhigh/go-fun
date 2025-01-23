@@ -2,8 +2,9 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/go
 {
 	"name": "GoFun",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/go:1-1.23-bookworm",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "app",
+	"workspaceFolder": "/workspace",
 	"features": {
 		"ghcr.io/guiyomh/features/golangci-lint:0": {},
 		"ghcr.io/jungaretti/features/make:1": {}
@@ -20,6 +21,3 @@
 			]
 		}
 	}
-	// TODO: Used Docker File Based to make extensible.
-	// TODO: Add other features like deadcode etc matching prepare.
-}

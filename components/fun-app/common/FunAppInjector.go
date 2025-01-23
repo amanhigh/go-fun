@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/amanhigh/go-fun/common/telemetry"
 	"github.com/amanhigh/go-fun/common/util"
@@ -92,8 +93,9 @@ func (self *FunAppInjector) BuildApp() (app any, err error) {
 
 func newHttpServer(config config.FunAppConfig, engine *gin.Engine) (server *http.Server) {
 	server = &http.Server{
-		Addr:    fmt.Sprintf(":%v", config.Server.Port),
-		Handler: engine,
+		Addr:              fmt.Sprintf(":%v", config.Server.Port),
+		Handler:           engine,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 	return
 }

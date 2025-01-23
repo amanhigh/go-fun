@@ -3,7 +3,7 @@ package gotest
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"time"
@@ -184,7 +184,7 @@ var _ = Describe("Json Encode/Decode", func() {
 			)
 
 			BeforeEach(func() {
-				c = make(chan string, 0)
+				c = make(chan string)
 			})
 
 			Context("With Close", func() {
@@ -252,7 +252,7 @@ var _ = Describe("Json Encode/Decode", func() {
 				//verify response
 				Expect(err).To(BeNil())
 				Expect(response.StatusCode).To(Equal(http.StatusOK))
-				actualResponse, err := ioutil.ReadAll(response.Body)
+				actualResponse, err := io.ReadAll(response.Body)
 				Expect(err).To(BeNil())
 				Expect(actualResponse).To(BeEquivalentTo(expectedResponse))
 

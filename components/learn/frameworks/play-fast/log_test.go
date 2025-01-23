@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/fatih/color"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -29,13 +30,13 @@ type ContextHandler struct {
 }
 
 const (
-	requestIDKey  = "RequestId"
-	testRequestID = "test-id"
+	requestIDKey  common.ContextKey = "RequestId"
+	testRequestID string            = "test-id"
 )
 
 func (h ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 	if requestID, ok := ctx.Value(requestIDKey).(string); ok {
-		r.AddAttrs(slog.String(requestIDKey, requestID))
+		r.AddAttrs(slog.String(string(requestIDKey), requestID))
 	}
 	return h.Handler.Handle(ctx, r)
 }
@@ -320,7 +321,7 @@ var _ = Describe("Logging", func() {
 
 			It("should have RequestId", func() {
 				var buf bytes.Buffer
-				logger := zerolog.New(&buf).With().Str(requestIDKey, testRequestID).Logger()
+				logger := zerolog.New(&buf).With().Str(string(requestIDKey), testRequestID).Logger()
 
 				// Creating a context with the logger
 				ctx := logger.WithContext(context.Background())
@@ -331,7 +332,7 @@ var _ = Describe("Logging", func() {
 				logOutput := buf.String()
 
 				// Check that the log output contains the request ID and the message
-				Expect(logOutput).To(ContainSubstring(requestIDKey))
+				Expect(logOutput).To(ContainSubstring(string(requestIDKey)))
 				Expect(logOutput).To(ContainSubstring(testRequestID))
 			})
 
@@ -440,7 +441,7 @@ var _ = Describe("Logging", func() {
 				logger.InfoContext(ctx, "Context Test")
 
 				logOutput := buf.String()
-				Expect(logOutput).To(ContainSubstring(requestIDKey))
+				Expect(logOutput).To(ContainSubstring(string(requestIDKey)))
 				Expect(logOutput).To(ContainSubstring(testRequestID))
 			})
 		})

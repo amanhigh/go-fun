@@ -2,11 +2,18 @@ package main
 
 import (
 	"github.com/amanhigh/go-fun/components/kohan/command"
+	"github.com/amanhigh/go-fun/components/kohan/core"
+	"github.com/amanhigh/go-fun/models/config"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
-	// TASK: CLI Tests
+	cfg, err := config.NewKohanConfig()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to initialize Kohan config")
+		return
+	}
 
-	// TODO: Add Dependency Injection using KohanInjector same as FunAppInject
+	core.SetupKohanInjector(cfg)
 	command.Execute()
 }

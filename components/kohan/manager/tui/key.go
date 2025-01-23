@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 )
 
 type HotkeyManager interface {
@@ -19,30 +18,27 @@ type Hotkey struct {
 }
 
 type HotkeyManagerImpl struct {
-	// XXX: Completely Remove App Depenency ?
-	app            *tview.Application
 	uiManager      UIManager
 	serviceManager ServiceManager
 	hotkeys        map[rune]Hotkey
 }
 
-func NewHotkeyManager(app *tview.Application, uiManager UIManager, serviceManager ServiceManager) *HotkeyManagerImpl {
+func NewHotkeyManager(uiManager UIManager, serviceManager ServiceManager) *HotkeyManagerImpl {
 	return &HotkeyManagerImpl{
-		app:            app,
 		uiManager:      uiManager,
 		serviceManager: serviceManager,
 	}
 }
 
 func (h *HotkeyManagerImpl) SetupHotkeys() {
-	h.app.SetInputCapture(h.handleHotkeys)
+	h.uiManager.SetGlobalInputCapture(h.handleHotkeys)
 	h.setupHotkeyConfig()
 }
 
 func (h *HotkeyManagerImpl) setupHotkeyConfig() {
 	h.hotkeys = make(map[rune]Hotkey)
 	hotkeys := []Hotkey{
-		{Key: 'q', Description: "Quit the application", Handler: func() { h.app.Stop() }},
+		{Key: 'q', Description: "Quit the application", Handler: func() { h.uiManager.StopApplication() }},
 		{Key: '?', Description: "Display help information", Handler: func() { h.uiManager.ShowOutput(h.GenerateHelpText()) }},
 		{Key: 'c', Description: "Clear selected services", Handler: func() { h.serviceManager.ClearSelectedServices(); h.uiManager.UpdateContext() }},
 		{Key: '/', Description: "Focus on filter input", Handler: func() { h.uiManager.FocusFilterInput() }},
@@ -97,7 +93,7 @@ func (h *HotkeyManagerImpl) GenerateHelpText() string {
 }
 
 func (h *HotkeyManagerImpl) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {
-	switch event.Key() {
+	switch event.Key() { //nolint:exhaustive
 	case tcell.KeyRune:
 		if hotkey, exists := h.hotkeys[event.Rune()]; exists {
 			// Handle space key specially

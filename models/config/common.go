@@ -67,6 +67,10 @@ type HttpClientConfig struct {
 	DialTimeout           time.Duration `env:"HTTP_DIAL_TIMEOUT" envDefault:"200ms"`
 	RequestTimeout        time.Duration `env:"HTTP_REQUEST_TIMEOUT" envDefault:"2s"`
 	IdleConnectionTimeout time.Duration `env:"HTTP_IDLE_CONNECTION_TIMEOUT" envDefault:"30s"`
+	ReadTimeout           time.Duration `env:"HTTP_READ_TIMEOUT" envDefault:"1s"`
+	WriteTimeout          time.Duration `env:"HTTP_WRITE_TIMEOUT" envDefault:"1s"`
+	IdleTimeout           time.Duration `env:"HTTP_IDLE_TIMEOUT" envDefault:"30s"`
+	ReadHeaderTimeout     time.Duration `env:"HTTP_READ_HEADER_TIMEOUT" envDefault:"2s"`
 
 	/* Flags */
 	KeepAlive   bool `env:"HTTP_KEEP_ALIVE" envDefault:"true"`
@@ -98,6 +102,10 @@ var DefaultHttpConfig = HttpClientConfig{
 	DialTimeout:            200 * time.Millisecond,
 	RequestTimeout:         2 * time.Second,
 	IdleConnectionTimeout:  30 * time.Second,
+	ReadTimeout:            1 * time.Second,
+	WriteTimeout:           1 * time.Second,
+	IdleTimeout:            30 * time.Second,
+	ReadHeaderTimeout:      2 * time.Second,
 	KeepAlive:              true,
 	Compression:            false,
 	IdleConnectionsPerHost: 20,

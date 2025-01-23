@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/amanhigh/go-fun/common/util"
+	"github.com/rs/zerolog/log"
 )
 
 // ServiceManager provides management capabilities for Kubernetes services including
@@ -60,6 +61,7 @@ type ServiceManager interface {
 	ToggleFilteredServices()
 }
 
+// BUG: #C Move to Repository Layer ?
 func NewServiceManager(makeDir, serviceFile string) *ServiceManagerImpl {
 	manager := &ServiceManagerImpl{
 		allServices:         []string{},
@@ -103,7 +105,9 @@ func (sm *ServiceManagerImpl) ToggleServiceSelection(service string) {
 	} else {
 		sm.selectedServices = append(sm.selectedServices, service)
 	}
-	sm.saveSelectedServices()
+	if err := sm.saveSelectedServices(); err != nil {
+		log.Error().Err(err).Msg("Failed to save selected services")
+	}
 }
 
 func (sm *ServiceManagerImpl) removeService(service string) {
@@ -135,8 +139,8 @@ func (sm *ServiceManagerImpl) ToggleFilteredServices() {
 	}
 }
 
-func (sm *ServiceManagerImpl) saveSelectedServices() {
-	util.WriteLines(sm.selectedServicePath, sm.selectedServices)
+func (sm *ServiceManagerImpl) saveSelectedServices() error {
+	return util.WriteLines(sm.selectedServicePath, sm.selectedServices)
 }
 
 func (sm *ServiceManagerImpl) loadSelectedServices() {
@@ -145,7 +149,9 @@ func (sm *ServiceManagerImpl) loadSelectedServices() {
 
 func (sm *ServiceManagerImpl) ClearSelectedServices() {
 	sm.selectedServices = []string{}
-	sm.saveSelectedServices()
+	if err := sm.saveSelectedServices(); err != nil {
+		log.Error().Err(err).Msg("Failed to clear selected services")
+	}
 }
 
 func (sm *ServiceManagerImpl) loadAvailableServices() {

@@ -30,3 +30,17 @@ type Rate struct {
 	TTBuy  float64 `json:"TT BUY"`
 	TTSell float64 `json:"TT SELL"`
 }
+
+// TickerAnalysis represents analyzed ticker data for a given year
+type TickerAnalysis struct {
+	// Peak price information
+	PeakDate  string  `json:"peak_date"`
+	PeakPrice float64 `json:"peak_price"`
+
+	// Year end price information
+	YearEndDate  string  `json:"year_end_date"`
+	YearEndPrice float64 `json:"year_end_price"`
+}
+
+// File name constant for SBI Rate CSV
+const SBI_RATES_FILENAME = "SBI_REFERENCE_RATES_USD.csv"

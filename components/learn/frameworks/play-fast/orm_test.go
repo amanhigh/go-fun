@@ -177,14 +177,16 @@ var _ = Describe("Orm", func() {
 					}
 					BeforeEach(func() {
 						// Create multiple products for testing
-						for _, product := range products {
+						for _, p := range products {
+							product := p // Create local copy
 							err := db.Create(&product).Error
 							Expect(err).To(BeNil())
 						}
 					})
 					AfterEach(func() {
 						// Clean up the created products
-						for _, product := range products {
+						for _, p := range products {
+							product := p // Create local copy
 							db.Delete(&product)
 						}
 					})
@@ -263,7 +265,8 @@ var _ = Describe("Orm", func() {
 
 					AfterEach(func() {
 						// Delete new features
-						for _, feature := range newFeatures {
+						for _, f := range newFeatures {
+							feature := f // Create local copy
 							db.Where(frameworks.Feature{Name: feature.Name}).Delete(&feature)
 						}
 					})

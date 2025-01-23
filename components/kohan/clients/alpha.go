@@ -19,9 +19,9 @@ type AlphaClientImpl struct {
 	client  *resty.Client
 }
 
-func NewAlphaClient(client *resty.Client, apiKey string) AlphaClient {
+func NewAlphaClient(client *resty.Client, baseURL string, apiKey string) *AlphaClientImpl {
 	return &AlphaClientImpl{
-		baseUrl: "https://www.alphavantage.co/query",
+		baseUrl: baseURL,
 		apiKey:  apiKey,
 		client:  client,
 	}

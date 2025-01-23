@@ -15,10 +15,10 @@ import (
 var _ = Describe("Consul", Ordered, Label(models.GINKGO_SLOW), func() {
 
 	var (
-		client *api.Client
-		ctx    = context.Background()
-		err    error
-
+		client          *api.Client
+		ctx             = context.Background()
+		err             error
+		consulHost      string
 		consulContainer testcontainers.Container
 	)
 
@@ -28,7 +28,7 @@ var _ = Describe("Consul", Ordered, Label(models.GINKGO_SLOW), func() {
 		Expect(err).To(BeNil())
 
 		// Get Mapped Port
-		consulHost, err := consulContainer.PortEndpoint(ctx, "8500/tcp", "")
+		consulHost, err = consulContainer.PortEndpoint(ctx, "8500/tcp", "")
 		Expect(err).To(BeNil())
 		log.Info().Str("Host", consulHost).Msg("Consul Endpoint")
 

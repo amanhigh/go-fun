@@ -26,8 +26,6 @@ func Add(node *Node, query string) {
 		/* Traverse to existing or newly created node */
 		Add(cNode, query[1:])
 	}
-
-	return
 }
 
 /*

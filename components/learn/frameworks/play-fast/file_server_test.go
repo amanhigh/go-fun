@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/go-resty/resty/v2"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -22,7 +23,9 @@ var _ = Describe("File Server", func() {
 		err      error
 	)
 	BeforeEach(func() {
-		go http.ListenAndServe(fmt.Sprintf(":%v", port), fs)
+		srv := util.NewTestServer(fmt.Sprintf(":%v", port))
+		srv.Handler = fs
+		go srv.ListenAndServe() //nolint:errcheck
 	})
 
 	It("should run", func() {

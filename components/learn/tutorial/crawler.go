@@ -34,13 +34,13 @@ func (m *SafeMap) Contains(url string) (ok bool) {
 func StartCrawl(site string) (urlMap SafeMap) {
 	/** Seed UrlMap With Top Url */
 	urlMap = SafeMap{m: map[string]bool{site: true}}
-	Crawl(site, 4, fetcher, urlMap)
+	Crawl(site, 4, fetcher, &urlMap)
 	return
 }
 
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func Crawl(url string, depth int, fetcher Fetcher, urlMap SafeMap) {
+func Crawl(url string, depth int, fetcher Fetcher, urlMap *SafeMap) {
 	log.Debug().Str("Url", url).Int("Depth", depth).Msg("CRAWL_RECIVED")
 	// This implementation doesn't do either:
 	if depth <= 0 {
@@ -67,8 +67,6 @@ func Crawl(url string, depth int, fetcher Fetcher, urlMap SafeMap) {
 		}(url)
 	}
 	waitGroup.Wait()
-
-	return
 }
 
 // fakeFetcher is Fetcher that returns canned results.

@@ -49,7 +49,6 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 	//Unmarshal the request
 	var request fun.PersonRequest
 	if err := c.ShouldBind(&request); err == nil {
-
 		self.CreateCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("gender", request.Gender)))
 
 		if person, err := self.Manager.CreatePerson(ctx, request); err == nil {
@@ -83,8 +82,7 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 	ctx, span := self.Tracer.Start(c.Request.Context(), "GetPerson.Handler", trace.WithAttributes(attribute.String("id", path.Id)))
 	defer span.End()
 
-	// FIXME: #A Unwrap Request Helper
-	if err := c.ShouldBindUri(&path); err == nil {
+	util.UnwrapRequest(c, nil, &path, nil, func(c *gin.Context) {
 		if person, err := self.Manager.GetPerson(ctx, path.Id); err == nil {
 			c.JSON(http.StatusOK, person)
 		} else {
@@ -93,7 +91,7 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 			span.RecordError(err)
 			c.JSON(err.Code(), err)
 		}
-	}
+	})
 }
 
 // ListPersons godoc

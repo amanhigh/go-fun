@@ -239,8 +239,7 @@ var _ = Describe("Inject", func() {
 		})
 
 		It("should overwrite Existing Field", func() {
-			var comp *learn.InjectComponent
-			comp = &learn.InjectComponent{
+			comp := &learn.InjectComponent{
 				Redis: learn.NewRedisClient("randomRedisClient"),
 			}
 			err = c.Resolve(&comp)

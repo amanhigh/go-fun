@@ -10,7 +10,9 @@ import (
 func DebugControl(flag bool) {
 	if flag {
 		log.Info().Msg("Enabling Debug Mode")
-		os.WriteFile(config.DEBUG_FILE, []byte{}, DEFAULT_PERM)
+		if err := os.WriteFile(config.DEBUG_FILE, []byte{}, DEFAULT_PERM); err != nil {
+			log.Error().Err(err).Str("Path", config.DEBUG_FILE).Msg("Failed to enable debug mode")
+		}
 	} else {
 		log.Info().Msg("Disabling Debug Mode")
 		os.Remove(config.DEBUG_FILE)

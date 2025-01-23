@@ -3,6 +3,7 @@ module github.com/amanhigh/go-fun/models
 go 1.23
 
 require (
+	github.com/caarlos0/env/v6 v6.10.1
 	github.com/cheekybits/genny v1.0.0
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.13.2
