@@ -194,11 +194,11 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	// Check if the deployment already exists, if not create a new one
-	found := &appsv1.Deployment{}
-	err = r.Get(ctx, types.NamespacedName{Name: memcached.Name, Namespace: memcached.Namespace}, found)
+	dep := &appsv1.Deployment{}
+	err = r.Get(ctx, types.NamespacedName{Name: memcached.Name, Namespace: memcached.Namespace}, dep)
 	if err != nil && apierrors.IsNotFound(err) {
 		// Define a new deployment
-		dep, err := r.deploymentForMemcached(memcached)
+		dep, err = r.deploymentForMemcached(memcached)
 		if err != nil {
 			log.Error(err, "Failed to define new Deployment resource for Memcached")
 
@@ -238,11 +238,11 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// Therefore, the following code will ensure the Deployment size is the same as defined
 	// via the Size spec of the Custom Resource which we are reconciling.
 	size := memcached.Spec.Size
-	if *found.Spec.Replicas != size {
-		found.Spec.Replicas = &size
-		if err = r.Update(ctx, found); err != nil {
+	if *dep.Spec.Replicas != size {
+		dep.Spec.Replicas = &size
+		if err = r.Update(ctx, dep); err != nil {
 			log.Error(err, "Failed to update Deployment",
-				"Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
+				"Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
 
 			// Re-fetch the memcached Custom Resource before update the status
 			// so that we have the latest state of the resource on the cluster and we will avoid
