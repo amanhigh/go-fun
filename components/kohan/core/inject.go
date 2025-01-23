@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/amanhigh/go-fun/components/kohan/clients"
+	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/tui"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/go-resty/resty/v2"
@@ -37,6 +38,10 @@ func (self *KohanInjector) provideSBIClient(client *resty.Client) clients.SBICli
 	return clients.NewSBIClient(client, self.config.FA.SBIBaseURL)
 }
 
+func (self *KohanInjector) provideTickerManager(client clients.AlphaClient) *manager.TickerManagerImpl {
+	return manager.NewTickerManager(client, self.config.FA.DownloadsDir)
+}
+
 // Public singleton access - returns interface only
 func GetKohanInterface() KohanInterface {
 	return globalInjector
@@ -56,6 +61,7 @@ func (self *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, err
 
 	container.MustSingleton(self.di, self.provideAlphaClient)
 	container.MustSingleton(self.di, self.provideSBIClient)
+	container.MustSingleton(self.di, self.provideTickerManager)
 
 	// Build app
 	app := &DariusV1{}
