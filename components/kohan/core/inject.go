@@ -8,11 +8,14 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/golobby/container/v3"
 	"github.com/rivo/tview"
+	"github.com/rs/zerolog/log"
 )
 
 // Interface and implementation in same file
 type KohanInterface interface {
 	GetDariusApp(cfg config.DariusConfig) (*DariusV1, error)
+	// Add new method
+	GetFAManager() manager.FAManager
 }
 
 // Private singleton instance
@@ -49,6 +52,15 @@ func (self *KohanInjector) provideFAManager(tickerManager manager.TickerManager,
 // Public singleton access - returns interface only
 func GetKohanInterface() KohanInterface {
 	return globalInjector
+}
+
+func (self *KohanInjector) GetFAManager() manager.FAManager {
+	var faManager manager.FAManager
+	err := self.di.Resolve(&faManager)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to get FAManager")
+	}
+	return faManager
 }
 
 func (self *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error) {
