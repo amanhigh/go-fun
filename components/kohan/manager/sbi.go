@@ -3,8 +3,6 @@ package manager
 import (
 	"context"
 	"encoding/csv"
-	"errors"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,6 +15,33 @@ import (
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fa"
 )
+
+func (s *SBIManagerImpl) readCSVRecords(filePath string) ([][]string, common.HttpError) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, common.NewServerError(err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+
+	// Validate header
+	header, err := reader.Read()
+	if err != nil {
+		return nil, common.NewServerError(err)
+	}
+	if len(header) < 3 || header[0] != "DATE" || header[1] != "TT BUY" || header[2] != "TT SELL" {
+		return nil, common.NewHttpError("invalid CSV header format", http.StatusInternalServerError)
+	}
+
+	// Read remaining records
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, common.NewServerError(err)
+	}
+
+	return records, nil
+}
 
 type SBIManager interface {
 	DownloadRates(ctx context.Context) common.HttpError
@@ -46,37 +71,20 @@ func (s *SBIManagerImpl) GetTTBuyRate(date time.Time) (rate float64, err common.
 		return 0, common.NewHttpError("SBI rates file not found", http.StatusNotFound)
 	}
 
-	// Read and parse CSV file
-	file, err1 := os.Open(filePath)
-	if err1 != nil {
-		return 0, common.NewServerError(err1)
+	// Read and validate CSV records
+	records, err := s.readCSVRecords(filePath)
+	if err != nil {
+		return 0, err
 	}
-	defer file.Close()
 
 	// Format date in required format (YYYY-MM-DD)
 	dateStr := date.Format("2006-01-02")
 
-	// Read CSV and find matching rate
-	reader := csv.NewReader(file)
-	// Skip header
-	_, err1 = reader.Read()
-	if err1 != nil {
-		return 0, common.NewServerError(err1)
-	}
-
 	// Search for matching date
-	for {
-		record, err1 := reader.Read()
-		if errors.Is(err1, io.EOF) {
-			break
-		}
-		if err1 != nil {
-			return 0, common.NewServerError(err1)
-		}
-
+	for _, record := range records {
 		// Check if date matches (taking first part before space as done in Python)
 		if strings.Split(record[0], " ")[0] == dateStr {
-			rate, err1 = strconv.ParseFloat(record[1], 64)
+			rate, err1 := strconv.ParseFloat(record[1], 64)
 			if err1 != nil {
 				return 0, common.NewServerError(err1)
 			}

@@ -20,7 +20,7 @@ linters-settings:
     disable:
       - fieldalignment # too strict
   funlen:
-    lines: 50      # max function length
+    lines: 70      # max function length
     statements: 40  # max statements per function
     
   lll:
