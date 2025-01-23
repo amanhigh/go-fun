@@ -1,3 +1,4 @@
-
 # https://vektra.github.io/mockery/latest/configuration/#parameter-descriptions
 with-expecter: true
+inpackage: true    
+filename: "{{.InterfaceName}}_mock.go"

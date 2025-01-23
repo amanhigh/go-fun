@@ -10,7 +10,8 @@ ENV PATH=${PATH}:${GOBIN}
 
 # Install additional Go tools
 RUN go install github.com/remyoudompheng/go-misc/deadcode@latest && \
-    go install golang.org/x/tools/cmd/goimports@latest
+    go install golang.org/x/tools/cmd/goimports@latest && \
+    go install github.com/vektra/mockery/v2@v2.51.1
 
 # Install X11 dependencies for clipboard support
 RUN apt-get update && \

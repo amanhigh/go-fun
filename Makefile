@@ -293,6 +293,7 @@ setup-tools:
 	go install github.com/onsi/ginkgo/v2/ginkgo
 	go install github.com/swaggo/swag/cmd/swag
 	go install golang.org/x/tools/cmd/goimports@latest
+	go install github.com/vektra/mockery/v2@v2.51.1
 
 setup-k8: ## Kubernetes Setup
 	printf $(_TITLE) "Setting up Kubernetes"
@@ -342,10 +343,15 @@ docker-build: docker-fun ## Build Docker Images
 	printf $(_INFO) "Docker Hub" "https://hub.docker.com/r/amanfdk/fun-app/tags"
 
 ## Misc
-.PHONY: pack
+.PHONY: pack generate
 pack: ## Repomix Packing
 	@printf $(_TITLE) "Pack" "Repository"
 	@repomix --style markdown .
+
+# Generate mocks across all modules
+generate:
+	@printf $(_INFO) "Generate" "Mocks"
+	@find . -name "go.mod" -execdir go generate ./... \;
 
 ### Workflows
 test: test-operator test-it ## Run all tests (Excludes test-slow)
