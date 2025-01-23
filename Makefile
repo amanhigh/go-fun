@@ -351,7 +351,7 @@ generate-swagger:
 
 # Generate mocks across all modules
 generate-mocks:
-	@printf $(_INFO) "Generate" "Mocks"
+	@printf $(_TITLE) "Generate" "Mocks"
 	@find . -name "go.mod" -execdir go generate ./... \;
 
 generate: generate-mocks generate-swagger ## Generate Files
