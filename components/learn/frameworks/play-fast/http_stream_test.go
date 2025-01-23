@@ -91,11 +91,12 @@ Context can be used to cancel listening to events before server closes stream.
 */
 func liveRequestLoop(response *http.Response, eventChannel chan SseEvent, ctx context.Context) {
 	defer response.Body.Close()
+	defer close(eventChannel)
+
 	br := bufio.NewReader(response.Body)
 	for {
 		select {
 		case <-ctx.Done():
-			close(eventChannel)
 			log.Debug().Msg("Context Signal Recieved Exiting")
 			return
 		default:
@@ -111,12 +112,12 @@ func liveRequestLoop(response *http.Response, eventChannel chan SseEvent, ctx co
 				/* Exit once Stream Closes */
 				if err == io.EOF {
 					log.Debug().Msg("Stream Closed")
-					close(eventChannel)
-					break
+					return
 				}
 
 			} else {
 				log.Error().Err(err).Msg("Read Line Error")
+				return
 			}
 		}
 	}
@@ -136,6 +137,7 @@ func buildEvent(readBytes []byte) SseEvent {
 
 var _ = Describe("HttpStream", func() {
 	var (
+		srv          *http.Server
 		port         = 7080
 		url          = fmt.Sprintf("http://localhost:%d/stream", port)
 		err          error
@@ -146,8 +148,14 @@ var _ = Describe("HttpStream", func() {
 	BeforeEach(func() {
 		http.HandleFunc("/", handleRoot)
 		http.HandleFunc("/stream", stream)
-		srv := util.NewTestServer(fmt.Sprintf(":%d", port))
+		srv = util.NewTestServer(fmt.Sprintf(":%d", port))
 		go srv.ListenAndServe() //nolint:errcheck
+	})
+
+	AfterEach(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		srv.Shutdown(ctx)
 	})
 
 	It("should stream events", func() {
