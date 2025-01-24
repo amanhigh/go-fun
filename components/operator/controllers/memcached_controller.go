@@ -54,6 +54,9 @@ type MemcachedReconciler struct {
 	client.Client
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
+	
+	reconcileHelper ReconciliationHelper
+	deployHelper    DeploymentHelper
 }
 
 // The following markers are used to generate the rules permissions (RBAC) on config/rbac using controller-gen
@@ -448,6 +451,10 @@ func imageForMemcached() (string, error) {
 // Note that the Deployment will be also watched in order to ensure its
 // desirable state on the cluster
 func (r *MemcachedReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// Initialize helpers
+	r.reconcileHelper = NewReconciliationHelper(r)
+	r.deployHelper = NewDeploymentHelper(r)
+	
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cachev1beta1.Memcached{}).
 		//Inform Reconciler when any change happens in Owned Resources inculding deletion.
