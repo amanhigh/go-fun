@@ -14,10 +14,10 @@ import (
 )
 
 /*
-	ReconciliationHelper provides core reconciliation operations
+ReconciliationHelper provides core reconciliation operations for the Memcached controller.
 
-for the Memcached controller. It handles fetching instances,
-status management and finalizer operations.
+It implements the core reconciliation loop which aims to move the current state of
+the cluster closer to the desired state. The reconciliation must be idempotent.
 */
 type ReconciliationHelper interface {
 	FetchMemcachedInstance(ctx context.Context, req ctrl.Request) (*cachev1beta1.Memcached, error)
@@ -37,12 +37,17 @@ func NewReconciliationHelper(statusHelper StatusHelper, controller *MemcachedRec
 	}
 }
 
+// FetchMemcachedInstance retrieves the Memcached instance from the cluster
+// If the resource is not found, it means it was deleted or not created
+// in which case we stop the reconciliation
 func (r *reconciliationHelperImpl) FetchMemcachedInstance(ctx context.Context, req ctrl.Request) (*cachev1beta1.Memcached, error) {
 	log := log.FromContext(ctx)
 	memcached := &cachev1beta1.Memcached{}
 
 	if err := r.controller.Get(ctx, req.NamespacedName, memcached); err != nil {
 		if apierrors.IsNotFound(err) {
+			// If the custom resource is not found then, it usually means that it was deleted or not created
+			// In this way, we will stop the reconciliation
 			log.Info("memcached resource not found. Ignoring since object must be deleted")
 			return nil, nil
 		}
@@ -52,14 +57,23 @@ func (r *reconciliationHelperImpl) FetchMemcachedInstance(ctx context.Context, r
 	return memcached, nil
 }
 
+// HandleFinalizers manages finalizer operations for the Memcached resource
+// Finalizers allow controllers to implement cleanup tasks before an object is deleted
+// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/
 func (r *reconciliationHelperImpl) HandleFinalizers(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
-	// Check if object is being deleted
+	// Check if the Memcached instance is marked to be deleted, which is
+	// indicated by the deletion timestamp being set.
 	if memcached.GetDeletionTimestamp() != nil {
 		if controllerutil.ContainsFinalizer(memcached, memcachedFinalizer) {
-			// Begin finalizer operations
 			log.Info("Performing Finalizer Operations for Memcached before delete CR")
+
+			// Note: It is not recommended to use finalizers with the purpose of delete resources which are
+			// created and managed in the reconciliation. These ones, such as the Deployment created on this reconcile,
+			// are defined as dependent of the custom resource. See that we use the method ctrl.SetControllerReference.
+			// to set the ownerRef which means that the Deployment will be deleted by the Kubernetes API.
+			// More info: https://kubernetes.io/docs/tasks/administer-cluster/use-cascading-deletion/
 
 			// Update status to indicate deletion
 			if err := r.statusHelper.UpdateDegradedStatus(ctx, memcached,
@@ -87,6 +101,7 @@ func (r *reconciliationHelperImpl) HandleFinalizers(ctx context.Context, memcach
 	}
 
 	// Add finalizer if it doesn't exist
+	// This will ensure our cleanup operations are performed when the resource is deleted
 	if !controllerutil.ContainsFinalizer(memcached, memcachedFinalizer) {
 		log.Info("Adding Finalizer for Memcached")
 		if ok := controllerutil.AddFinalizer(memcached, memcachedFinalizer); !ok {
@@ -103,6 +118,12 @@ func (r *reconciliationHelperImpl) HandleFinalizers(ctx context.Context, memcach
 	return ctrl.Result{}, nil
 }
 
+// ReconcileDeployment ensures the deployment exists and matches the desired state
+// It handles creation and updates of the deployment based on the Memcached spec
+// The reconciliation process implements the following cases:
+// - Create Deployment if it doesn't exist
+// - Update Deployment if replicas don't match
+// - Update status based on reconciliation results
 func (r *reconciliationHelperImpl) ReconcileDeployment(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
@@ -129,6 +150,8 @@ func (r *reconciliationHelperImpl) ReconcileDeployment(ctx context.Context, memc
 	}
 
 	// Update if size doesn't match
+	// The CRD API is defining that the Memcached type, have a MemcachedSpec.Size field
+	// to set the quantity of Deployment instances is the desired state on the cluster.
 	size := memcached.Spec.Size
 	if *dep.Spec.Replicas != size {
 		dep.Spec.Replicas = &size

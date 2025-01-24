@@ -1,19 +1,3 @@
-/*
-Copyright 2023.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package controllers
 
 import (
@@ -29,6 +13,7 @@ import (
 	cachev1beta1 "github.com/amanhigh/go-fun/components/operator/api/v1beta1"
 )
 
+// Constants used for defining the state and finalizers of the Memcached resource
 const memcachedFinalizer = "cache.aman.com/finalizer"
 
 // Definitions to manage status conditions
@@ -40,11 +25,13 @@ const (
 )
 
 // MemcachedReconciler reconciles a Memcached object
+// This is the primary controller struct that handles the reconciliation of Memcached resources
 type MemcachedReconciler struct {
 	client.Client
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
 
+	// Helper interfaces for modular functionality
 	statusHelper    StatusHelper
 	reconcileHelper ReconciliationHelper
 	deployHelper    DeploymentHelper
@@ -69,6 +56,7 @@ type MemcachedReconciler struct {
 // responsible for synchronizing resources until the desired state is reached on the cluster.
 // Breaking this recommendation goes against the design principles of controller-runtime.
 // and may lead to unforeseen consequences such as resources becoming stuck and requiring manual intervention.
+//
 // For further info:
 // - About Operator Pattern: https://kubernetes.io/docs/concepts/extend-kubernetes/operator/
 // - About Controllers: https://kubernetes.io/docs/concepts/architecture/controller/
@@ -77,23 +65,23 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	log := log.FromContext(ctx)
 	log.Info("Reconciling Memcached")
 
-	// Fetch Instance
+	// Fetch Instance - If not found, it means the Custom Resource was deleted
 	memcached, err := r.reconcileHelper.FetchMemcachedInstance(ctx, req)
 	if memcached == nil || err != nil {
 		return ctrl.Result{}, err
 	}
 
-	// Initialize Status
+	// Initialize Status - Sets up initial conditions if none exist
 	if err := r.statusHelper.InitializeStatus(ctx, memcached); err != nil {
 		return ctrl.Result{}, err
 	}
 
-	// Handle Finalizers
+	// Handle Finalizers - Ensures cleanup operations occur before deletion
 	if result, err := r.reconcileHelper.HandleFinalizers(ctx, memcached); err != nil || result.Requeue {
 		return result, err
 	}
 
-	// Reconcile Deployment
+	// Reconcile Deployment - Creates or updates the deployment to match desired state
 	return r.reconcileHelper.ReconcileDeployment(ctx, memcached)
 }
 
@@ -108,24 +96,34 @@ func (r *MemcachedReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cachev1beta1.Memcached{}).
-		//Inform Reconciler when any change happens in Owned Resources including deletion.
+		// Inform Reconciler when any change happens in Owned Resources including deletion
 		Owns(&appsv1.Deployment{}).
 		Complete(r)
 }
 
-/**
-Reconcile Result
----------
-In the context of Kubernetes controllers, the Reconcile function typically returns a value of type ctrl.Result. This value represents the result of the reconciliation process, and can have the following possible values:
+/*
+Reconcile Result Types
+---------------------
+The Reconcile function returns ctrl.Result to communicate the outcome of reconciliation:
 
-ctrl.Result{}: Indicates that the reconciliation was successful, and that no further action is required at this time.
+1. ctrl.Result{}:
+   - Indicates successful reconciliation
+   - No further action needed
 
-ctrl.Result{Requeue: true}: Indicates that the reconciliation was not successful, and that the controller should attempt to reconcile the resource again after a short delay (usually a few seconds). This is useful when the controller is waiting for some external resource to become available before proceeding with the reconciliation.
+2. ctrl.Result{Requeue: true}:
+   - Indicates reconciliation should be retried after a short delay
+   - Useful when waiting for external resources
+   - Default retry occurs after a few seconds
 
-ctrl.Result{RequeueAfter: time.Second * 30}: Indicates that the reconciliation was not successful, and that the controller should attempt to reconcile the resource again after a specified delay (in this case, 30 seconds). This is useful when the controller is waiting for some long-running process to complete before proceeding with the reconciliation.
+3. ctrl.Result{RequeueAfter: time.Second * 30}:
+   - Schedules next reconciliation after specified duration
+   - Useful for periodic checks or waiting for long operations
+   - Example: Checking deployment status after 30 seconds
 
-ctrl.Result{RequeueAfter: -1}: Indicates that the reconciliation was not successful, and that the controller should attempt to reconcile the resource again as soon as possible (i.e., without any delay). This is useful when the controller needs to retry the reconciliation immediately, without waiting for any external events.
+4. ctrl.Result{RequeueAfter: -1}:
+   - Triggers immediate reconciliation
+   - Useful when immediate retry is needed without delay
 
-Overall, the ctrl.Result type provides a flexible way for controllers to communicate the results of their reconciliation process to the Kubernetes API server. By using different combinations of Requeue and RequeueAfter values, controllers can implement a wide variety of reconciliation strategies, depending on the specific requirements of the resource being managed.
-
-**/
+The ctrl.Result pattern enables flexible reconciliation strategies based on the
+resource's needs and state.
+*/
