@@ -264,7 +264,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 						By("Verifiying Deployment Spec")
 						Expect(*deployment.Spec.Replicas).To(Equal(size))
-						Expect(deployment.Spec.Template.Labels).To(Equal(labelsForMemcached(memcached.Name)))
+						Expect(deployment.Spec.Template.Labels).To(Equal(memcachedReconciler.deployHelper.GetLabels(memcached.Name, imageName)))
 						Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(Equal(imageName))
 						Expect(*deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsNonRoot).To(BeTrue())
 
@@ -436,14 +436,3 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 	})
 
 })
-
-// Add this helper function to your test file
-func labelsForMemcached(name string) map[string]string {
-	return map[string]string{
-		"app.kubernetes.io/name":       "Memcached",
-		"app.kubernetes.io/instance":   name,
-		"app.kubernetes.io/version":    "latest", // For test we can use latest
-		"app.kubernetes.io/part-of":    "operator",
-		"app.kubernetes.io/created-by": "controller-manager",
-	}
-}

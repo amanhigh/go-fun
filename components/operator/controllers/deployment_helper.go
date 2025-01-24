@@ -27,6 +27,7 @@ type DeploymentHelper interface {
 	GenerateDeploymentSpec(memcached *cachev1beta1.Memcached) (*appsv1.DeploymentSpec, error)
 	GeneratePodSpec(memcached *cachev1beta1.Memcached, image string) (*corev1.PodSpec, error)
 	GenerateSecurityContext() *corev1.SecurityContext
+	GetLabels(name string, image string) map[string]string
 }
 
 type deploymentHelperImpl struct {
@@ -94,7 +95,7 @@ func (d *deploymentHelperImpl) GenerateDeploymentSpec(memcached *cachev1beta1.Me
 	if err != nil {
 		return nil, err
 	}
-	ls := d.getLabels(memcached.Name, image)
+	ls := d.GetLabels(memcached.Name, image)
 
 	// Generate pod spec
 	podSpec, err := d.GeneratePodSpec(memcached, image)
@@ -165,12 +166,12 @@ func (d *deploymentHelperImpl) getMemcachedImage() (string, error) {
 	return image, nil
 }
 
-func (d *deploymentHelperImpl) getLabels(name string, image string) map[string]string {
+func (d *deploymentHelperImpl) GetLabels(name string, image string) map[string]string {
 	imageTag := "latest"
 	if image != "" {
-		imageParts := strings.Split(image, ":")
-		if len(imageParts) > 1 {
-			imageTag = imageParts[1]
+		parts := strings.Split(image, ":")
+		if len(parts) > 1 {
+			imageTag = parts[1]
 		}
 	}
 
