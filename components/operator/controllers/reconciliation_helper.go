@@ -105,6 +105,13 @@ func (r *reconciliationHelperImpl) HandleFinalizers(ctx context.Context, memcach
 
 func (r *reconciliationHelperImpl) ReconcileDeployment(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
+
+	// Skip deployment logic if resource is being deleted
+	if memcached.GetDeletionTimestamp() != nil {
+		log.Info("Resource is being deleted, skipping deployment reconciliation")
+		return ctrl.Result{}, nil
+	}
+
 	dep := &appsv1.Deployment{}
 
 	// Check if deployment exists
@@ -114,7 +121,8 @@ func (r *reconciliationHelperImpl) ReconcileDeployment(ctx context.Context, memc
 	}, dep)
 
 	if err != nil && apierrors.IsNotFound(err) {
-		return r.controller.deployHelper.CreateNewDeployment(ctx, memcached)
+		// Attempt creation with validation
+		return r.controller.deployHelper.ValidateAndCreateDeployment(ctx, memcached)
 	} else if err != nil {
 		log.Error(err, "Failed to get Deployment")
 		return ctrl.Result{}, err

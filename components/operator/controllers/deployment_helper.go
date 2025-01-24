@@ -22,6 +22,7 @@ for the Memcached controller including creation, updates and
 security configuration.
 */
 type DeploymentHelper interface {
+	ValidateAndCreateDeployment(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error)
 	CreateNewDeployment(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error)
 	GenerateDeploymentSpec(memcached *cachev1beta1.Memcached) (*appsv1.DeploymentSpec, error)
 	GeneratePodSpec(memcached *cachev1beta1.Memcached, image string) (*corev1.PodSpec, error)
@@ -36,6 +37,19 @@ func NewDeploymentHelper(controller *MemcachedReconciler) DeploymentHelper {
 	return &deploymentHelperImpl{
 		controller: controller,
 	}
+}
+
+func (d *deploymentHelperImpl) ValidateAndCreateDeployment(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error) {
+	log := log.FromContext(ctx)
+
+	// Check image availability first - let error propagate up
+	if _, err := d.getMemcachedImage(); err != nil {
+		log.Error(err, "Failed to get Memcached image")
+		return ctrl.Result{}, err
+	}
+
+	// Now proceed with regular deployment
+	return d.CreateNewDeployment(ctx, memcached)
 }
 
 func (d *deploymentHelperImpl) CreateNewDeployment(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error) {
