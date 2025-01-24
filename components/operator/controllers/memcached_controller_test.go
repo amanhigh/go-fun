@@ -172,6 +172,12 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 						Scheme:   k8sClient.Scheme(),
 						Recorder: record.NewFakeRecorder(10),
 					}
+
+					// Initialize helpers
+					memcachedReconciler.statusHelper = NewStatusHelper(memcachedReconciler)
+					memcachedReconciler.reconcileHelper = NewReconciliationHelper(memcachedReconciler.statusHelper, memcachedReconciler)
+					memcachedReconciler.deployHelper = NewDeploymentHelper(memcachedReconciler)
+
 					deployment = &appsv1.Deployment{}
 
 					mgr, err = ctrl.NewManager(cfg, ctrl.Options{
@@ -430,3 +436,14 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 	})
 
 })
+
+// Add this helper function to your test file
+func labelsForMemcached(name string) map[string]string {
+	return map[string]string{
+		"app.kubernetes.io/name":       "Memcached",
+		"app.kubernetes.io/instance":   name,
+		"app.kubernetes.io/version":    "latest", // For test we can use latest
+		"app.kubernetes.io/part-of":    "operator",
+		"app.kubernetes.io/created-by": "controller-manager",
+	}
+}
