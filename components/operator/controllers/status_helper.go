@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	cachev1beta1 "github.com/example/memcached-operator/api/v1beta1"
+	cachev1beta1 "github.com/amanhigh/go-fun/components/operator/api/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -17,7 +17,7 @@ type StatusHelper interface {
 }
 
 type statusHelperImpl struct {
-	controller Controller
+	controller *MemcachedReconciler
 }
 
 func NewStatusHelper(controller *MemcachedReconciler) StatusHelper {

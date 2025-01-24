@@ -21,18 +21,19 @@ status management and finalizer operations.
 */
 type ReconciliationHelper interface {
 	FetchMemcachedInstance(ctx context.Context, req ctrl.Request) (*cachev1beta1.Memcached, error)
-	InitializeStatus(ctx context.Context, memcached *cachev1beta1.Memcached) error
 	HandleFinalizers(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error)
 	ReconcileDeployment(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error)
 }
 
 type reconciliationHelperImpl struct {
-	controller *MemcachedReconciler
+	controller   *MemcachedReconciler
+	statusHelper StatusHelper
 }
 
-func NewReconciliationHelper(controller *MemcachedReconciler) ReconciliationHelper {
+func NewReconciliationHelper(statusHelper StatusHelper, controller *MemcachedReconciler) ReconciliationHelper {
 	return &reconciliationHelperImpl{
-		controller: controller,
+		controller:   controller,
+		statusHelper: statusHelper,
 	}
 }
 
@@ -61,7 +62,7 @@ func (r *reconciliationHelperImpl) HandleFinalizers(ctx context.Context, memcach
 			log.Info("Performing Finalizer Operations for Memcached before delete CR")
 
 			// Update status to indicate deletion
-			if err := r.controller.statusHelper.UpdateDegradedStatus(ctx, memcached,
+			if err := r.statusHelper.UpdateDegradedStatus(ctx, memcached,
 				fmt.Sprintf("Performing finalizer operations for the custom resource: %s", memcached.Name)); err != nil {
 				return ctrl.Result{}, err
 			}
@@ -132,7 +133,7 @@ func (r *reconciliationHelperImpl) ReconcileDeployment(ctx context.Context, memc
 	}
 
 	// Update success status
-	if err := r.controller.statusHelper.UpdateSuccessStatus(ctx, memcached, size); err != nil {
+	if err := r.statusHelper.UpdateSuccessStatus(ctx, memcached, size); err != nil {
 		return ctrl.Result{}, err
 	}
 

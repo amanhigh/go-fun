@@ -54,7 +54,8 @@ type MemcachedReconciler struct {
 	client.Client
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
-	
+
+	statusHelper    StatusHelper
 	reconcileHelper ReconciliationHelper
 	deployHelper    DeploymentHelper
 }
@@ -451,10 +452,11 @@ func imageForMemcached() (string, error) {
 // Note that the Deployment will be also watched in order to ensure its
 // desirable state on the cluster
 func (r *MemcachedReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	// Initialize helpers
-	r.reconcileHelper = NewReconciliationHelper(r)
+	// Initialize all helpers
+	r.statusHelper = NewStatusHelper(r)
+	r.reconcileHelper = NewReconciliationHelper(r.statusHelper, r)
 	r.deployHelper = NewDeploymentHelper(r)
-	
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cachev1beta1.Memcached{}).
 		//Inform Reconciler when any change happens in Owned Resources inculding deletion.
