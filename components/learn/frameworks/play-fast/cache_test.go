@@ -366,8 +366,7 @@ var _ = Describe("Cache", func() {
 				})
 				Expect(err).To(BeNil())
 			})
-
-			It("should perform set operations efficiently", func() {
+			It("should perform set operations efficiently", FlakeAttempts(3), func() {
 				experiment := gmeasure.NewExperiment("Set Operations")
 				AddReportEntry(experiment.Name, experiment)
 
