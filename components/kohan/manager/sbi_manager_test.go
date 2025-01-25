@@ -57,7 +57,22 @@ var _ = Describe("SBIManager", func() {
 			Expect(string(content)).To(Equal(testCSV))
 		})
 
-		// FIXME: #B Should not downolad Rates if exists
+		It("should skip download if file already exists", func() {
+			// Create test file first
+			err := os.WriteFile(filepath.Join(testDir, tax.SBI_RATES_FILENAME), []byte(testCSV), util.DEFAULT_PERM)
+			Expect(err).To(BeNil())
+
+			// Expect no client calls since file exists
+			// mockClient.EXPECT().FetchExchangeRates(ctx) should not be called
+
+			err = sbiManager.DownloadRates(ctx)
+			Expect(err).To(BeNil())
+
+			// Verify file content remains unchanged
+			content, err := os.ReadFile(filepath.Join(testDir, tax.SBI_RATES_FILENAME))
+			Expect(err).To(BeNil())
+			Expect(string(content)).To(Equal(testCSV))
+		})
 
 		It("should handle client error", func() {
 			expectedErr := common.NewHttpError("Failed to fetch exchange rates", http.StatusInternalServerError)
