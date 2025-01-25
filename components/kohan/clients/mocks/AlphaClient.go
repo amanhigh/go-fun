@@ -26,22 +26,22 @@ func (_m *AlphaClient) EXPECT() *AlphaClient_Expecter {
 }
 
 // FetchDailyPrices provides a mock function with given fields: ctx, ticker
-func (_m *AlphaClient) FetchDailyPrices(ctx context.Context, ticker string) (tax.StockData, common.HttpError) {
+func (_m *AlphaClient) FetchDailyPrices(ctx context.Context, ticker string) (tax.VantageStockData, common.HttpError) {
 	ret := _m.Called(ctx, ticker)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FetchDailyPrices")
 	}
 
-	var r0 tax.StockData
+	var r0 tax.VantageStockData
 	var r1 common.HttpError
-	if rf, ok := ret.Get(0).(func(context.Context, string) (tax.StockData, common.HttpError)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (tax.VantageStockData, common.HttpError)); ok {
 		return rf(ctx, ticker)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) tax.StockData); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) tax.VantageStockData); ok {
 		r0 = rf(ctx, ticker)
 	} else {
-		r0 = ret.Get(0).(tax.StockData)
+		r0 = ret.Get(0).(tax.VantageStockData)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) common.HttpError); ok {
@@ -74,12 +74,12 @@ func (_c *AlphaClient_FetchDailyPrices_Call) Run(run func(ctx context.Context, t
 	return _c
 }
 
-func (_c *AlphaClient_FetchDailyPrices_Call) Return(_a0 tax.StockData, _a1 common.HttpError) *AlphaClient_FetchDailyPrices_Call {
+func (_c *AlphaClient_FetchDailyPrices_Call) Return(_a0 tax.VantageStockData, _a1 common.HttpError) *AlphaClient_FetchDailyPrices_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *AlphaClient_FetchDailyPrices_Call) RunAndReturn(run func(context.Context, string) (tax.StockData, common.HttpError)) *AlphaClient_FetchDailyPrices_Call {
+func (_c *AlphaClient_FetchDailyPrices_Call) RunAndReturn(run func(context.Context, string) (tax.VantageStockData, common.HttpError)) *AlphaClient_FetchDailyPrices_Call {
 	_c.Call.Return(run)
 	return _c
 }

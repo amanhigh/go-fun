@@ -29,7 +29,7 @@ type TickerManager interface {
 type TickerManagerImpl struct {
 	client    clients.AlphaClient
 	downloads string
-	cache     map[string]tax.StockData
+	cache     map[string]tax.VantageStockData
 	cacheLock sync.RWMutex
 }
 
@@ -56,7 +56,7 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 	}
 
 	// Fetch data using AlphaClient
-	var data tax.StockData
+	var data tax.VantageStockData
 	if data, err = t.client.FetchDailyPrices(ctx, ticker); err != nil {
 		return err
 	}
@@ -129,7 +129,7 @@ func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date ti
 	return 0, common.NewHttpError("No price data found", http.StatusNotFound)
 }
 
-func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (data tax.StockData, err common.HttpError) {
+func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (data tax.VantageStockData, err common.HttpError) {
 	// Try cache first
 	t.cacheLock.RLock()
 	data, exists := t.cache[ticker]
@@ -152,8 +152,8 @@ func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (d
 	return
 }
 
-func (t *TickerManagerImpl) readTickerData(ticker string) (tax.StockData, common.HttpError) {
-	var stockData tax.StockData
+func (t *TickerManagerImpl) readTickerData(ticker string) (tax.VantageStockData, common.HttpError) {
+	var stockData tax.VantageStockData
 
 	filePath := filepath.Join(t.downloads, fmt.Sprintf("%s.json", ticker))
 	data, readErr := os.ReadFile(filePath)

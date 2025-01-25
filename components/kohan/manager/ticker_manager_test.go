@@ -40,7 +40,7 @@ var _ = Describe("TickerManager", func() {
 	Context("DownloadTicker", func() {
 		It("should download and save ticker data successfully", func() {
 			// Mock return data
-			stockData := tax.StockData{
+			stockData := tax.VantageStockData{
 				MetaData: tax.MetaData{Symbol: "TEST"},
 			}
 			mockClient.EXPECT().FetchDailyPrices(ctx, stockData.MetaData.Symbol).Return(stockData, nil)
