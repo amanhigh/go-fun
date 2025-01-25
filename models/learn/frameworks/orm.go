@@ -53,26 +53,26 @@ func (p *Product) TableName() string {
 // -> AfterSave/Update
 // commit or rollback transaction
 
-func (u *Product) BeforeCreate(tx *gorm.DB) (err error) {
+func (p *Product) BeforeCreate(tx *gorm.DB) (err error) {
 	//Log Product
-	marshal, _ := json.Marshal(u)
-	u.Version += 1
+	marshal, _ := json.Marshal(p)
+	p.Version++
 	tx.Create(&AuditLog{Operation: "Create", Log: string(marshal)})
 	return
 }
 
-func (u *Product) BeforeUpdate(tx *gorm.DB) (err error) {
+func (p *Product) BeforeUpdate(tx *gorm.DB) (err error) {
 	//Log Product
-	marshal, _ := json.Marshal(u)
-	u.Version += 1
+	marshal, _ := json.Marshal(p)
+	p.Version++
 	tx.Create(&AuditLog{Operation: "Update", Log: string(marshal)})
 	return
 }
 
-func (u *Feature) BeforeCreate(tx *gorm.DB) (err error) {
+func (f *Feature) BeforeCreate(tx *gorm.DB) (err error) {
 	//Log Feature
-	marshal, _ := json.Marshal(u)
-	u.Version += 1
+	marshal, _ := json.Marshal(f)
+	f.Version++
 	tx.Create(&AuditLog{Operation: "Create", Log: string(marshal)})
 	return
 }

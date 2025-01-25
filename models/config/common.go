@@ -13,6 +13,19 @@ import (
 const (
 	LOG_FORMATTER_JSON   = "json"
 	LOG_FORMATTER_PRETTY = "pretty"
+
+	// HTTP Configuration Constants
+	DefaultDialTimeout            = 200 * time.Millisecond
+	DefaultRequestTimeout         = 2 * time.Second
+	DefaultIdleConnectionTimeout  = 30 * time.Second
+	DefaultIdleTimeout            = 30 * time.Second
+	DefaultReadHeaderTimeout      = 2 * time.Second
+	DefaultIdleConnectionsPerHost = 20
+	DefaultMaxRetries             = 3
+	DefaultJitterFactor           = 0.1
+	DefaultFailureThreshold       = 5
+	DefaultBreakerDelay           = 10 * time.Second
+	DefaultSuccessThreshold       = 3
 )
 
 var DefaultLogConfig = Log{
@@ -99,26 +112,26 @@ type BreakerConfig struct {
 }
 
 var DefaultHttpConfig = HttpClientConfig{
-	DialTimeout:            200 * time.Millisecond,
-	RequestTimeout:         2 * time.Second,
-	IdleConnectionTimeout:  30 * time.Second,
+	DialTimeout:            DefaultDialTimeout,
+	RequestTimeout:         DefaultRequestTimeout,
+	IdleConnectionTimeout:  DefaultIdleConnectionTimeout,
 	ReadTimeout:            1 * time.Second,
 	WriteTimeout:           1 * time.Second,
-	IdleTimeout:            30 * time.Second,
-	ReadHeaderTimeout:      2 * time.Second,
+	IdleTimeout:            DefaultIdleTimeout,
+	ReadHeaderTimeout:      DefaultReadHeaderTimeout,
 	KeepAlive:              true,
 	Compression:            false,
-	IdleConnectionsPerHost: 20,
+	IdleConnectionsPerHost: DefaultIdleConnectionsPerHost,
 	Failsafe: FailsafeConfig{
 		Retry: RetryConfig{
-			MaxRetries:   3,
+			MaxRetries:   DefaultMaxRetries,
 			Delay:        time.Second,
-			JitterFactor: 0.1,
+			JitterFactor: DefaultJitterFactor,
 		},
 		Breaker: BreakerConfig{
-			FailureThreshold: 5,
-			Delay:            10 * time.Second,
-			SuccessThreshold: 3,
+			FailureThreshold: DefaultFailureThreshold,
+			Delay:            DefaultBreakerDelay,
+			SuccessThreshold: DefaultSuccessThreshold,
 		},
 	},
 }
@@ -128,7 +141,6 @@ type ZoneMap map[string]Server
 func (s ZoneMap) GetUrl(zone, uri string) (url string, err error) {
 	if server, ok := s[zone]; ok {
 		return server.GetUrl(uri), nil
-	} else {
-		return "", errors.New("INVALID_ZONE: " + zone)
 	}
+	return "", errors.New("INVALID_ZONE: " + zone)
 }
