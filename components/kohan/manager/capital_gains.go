@@ -100,7 +100,7 @@ func (c *CapitalGainsManagerImpl) analyzeTickerPositions(ctx context.Context, ti
 		// Track first buy
 		if firstBuyDate.IsZero() && t.QuantitySold > 0 {
 			firstBuyDate = acquiredDate
-			price, err := c.tickerManager.GetPriceOnDate(ctx, ticker, acquiredDate)
+			price, err := c.tickerManager.GetPrice(ctx, ticker, acquiredDate)
 			if err != nil {
 				return analysis, fmt.Errorf("failed to get price for first buy: %w", err)
 			}
@@ -115,7 +115,7 @@ func (c *CapitalGainsManagerImpl) analyzeTickerPositions(ctx context.Context, ti
 		// Track peak position
 		if currentPosition > maxPosition {
 			maxPosition = currentPosition
-			price, err := c.tickerManager.GetPriceOnDate(ctx, ticker, acquiredDate)
+			price, err := c.tickerManager.GetPrice(ctx, ticker, acquiredDate)
 			if err != nil {
 				return analysis, fmt.Errorf("failed to get price for peak: %w", err)
 			}
@@ -131,7 +131,7 @@ func (c *CapitalGainsManagerImpl) analyzeTickerPositions(ctx context.Context, ti
 	// Get year end position if any holdings exist
 	if currentPosition > 0 {
 		yearEndDate := time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
-		price, err := c.tickerManager.GetPriceOnDate(ctx, ticker, yearEndDate)
+		price, err := c.tickerManager.GetPrice(ctx, ticker, yearEndDate)
 		if err != nil {
 			return analysis, fmt.Errorf("failed to get year end price: %w", err)
 		}

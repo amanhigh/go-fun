@@ -22,10 +22,8 @@ import (
 //go:generate mockery --name TickerManager
 type TickerManager interface {
 	DownloadTicker(ctx context.Context, ticker string) (err common.HttpError)
-	// BUG: Rename yearly analysis
-	AnalyzeTicker(ctx context.Context, ticker string, year int) (analysis tax.TickerAnalysis, err common.HttpError)
-	// BUG: Rename GetPrice
-	GetPriceOnDate(ctx context.Context, ticker string, date time.Time) (float64, error)
+	ValueTicker(ctx context.Context, ticker string, year int) (valuation tax.BaseValuation, err common.HttpError)
+	GetPrice(ctx context.Context, ticker string, date time.Time) (float64, error)
 }
 
 type TickerManagerImpl struct {
@@ -76,10 +74,10 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 	return nil
 }
 
-func (t *TickerManagerImpl) AnalyzeTicker(ctx context.Context, ticker string, year int) (analysis tax.TickerAnalysis, err common.HttpError) {
+func (t *TickerManagerImpl) ValueTicker(ctx context.Context, ticker string, year int) (valuation tax.BaseValuation, err common.HttpError) {
 	stockData, err := t.readTickerData(ticker)
 	if err != nil {
-		return analysis, err
+		return valuation, err
 	}
 
 	yearStr := strconv.Itoa(year)
@@ -88,7 +86,7 @@ func (t *TickerManagerImpl) AnalyzeTicker(ctx context.Context, ticker string, ye
 	return t.analyzeTimeSeries(stockData.TimeSeries, ticker, yearStr, yearEndDate), nil
 }
 
-func (t *TickerManagerImpl) GetPriceOnDate(ctx context.Context, ticker string, date time.Time) (float64, error) {
+func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date time.Time) (float64, error) {
 	// Get cached/loaded data
 	data, err := t.getTickerData(ctx, ticker)
 	if err != nil {
@@ -171,7 +169,7 @@ func (t *TickerManagerImpl) readTickerData(ticker string) (tax.StockData, common
 	return stockData, nil
 }
 
-func (t *TickerManagerImpl) analyzeTimeSeries(timeSeries map[string]tax.DayPrice, ticker, yearStr, yearEndDate string) tax.TickerAnalysis {
+func (t *TickerManagerImpl) analyzeTimeSeries(timeSeries map[string]tax.DayPrice, ticker, yearStr, yearEndDate string) tax.BaseValuation {
 	var highestClose float64
 	var highestDate string
 	var yearEndClose float64
@@ -203,7 +201,7 @@ func (t *TickerManagerImpl) analyzeTimeSeries(timeSeries map[string]tax.DayPrice
 		}
 	}
 
-	return tax.TickerAnalysis{
+	return tax.BaseValuation{
 		Ticker:       ticker,
 		PeakDate:     highestDate,
 		PeakPrice:    highestClose,

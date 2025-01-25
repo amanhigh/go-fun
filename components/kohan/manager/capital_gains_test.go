@@ -113,7 +113,7 @@ ADI,2,2024-01-04,182.08,2024-01-19,194.56,389.12,364.16,24.96`
 
 			// Setup mock to return error
 			mockTickerManager.EXPECT().
-				GetPriceOnDate(ctx, "ADI", parseDateMust(adiFirstBuyDate)).
+				GetPrice(ctx, "ADI", parseDateMust(adiFirstBuyDate)).
 				Return(0.0, fmt.Errorf("price fetch error"))
 
 			result, err := cgManager.ProcessTransactions(ctx, year)
@@ -127,17 +127,17 @@ ADI,2,2024-01-04,182.08,2024-01-19,194.56,389.12,364.16,24.96`
 func setupADIPriceMocks(ctx context.Context, mockTicker *mocks.TickerManager) {
 	// First buy date
 	mockTicker.EXPECT().
-		GetPriceOnDate(ctx, "ADI", parseDateMust("2024-01-04")).
+		GetPrice(ctx, "ADI", parseDateMust("2024-01-04")).
 		Return(182.08, nil)
 
 	// Sell/Peak date
 	mockTicker.EXPECT().
-		GetPriceOnDate(ctx, "ADI", parseDateMust("2024-01-19")).
+		GetPrice(ctx, "ADI", parseDateMust("2024-01-19")).
 		Return(194.56, nil)
 
 	// Year end
 	mockTicker.EXPECT().
-		GetPriceOnDate(ctx, "ADI", parseDateMust("2024-12-31")).
+		GetPrice(ctx, "ADI", parseDateMust("2024-12-31")).
 		Return(190.00, nil)
 }
 

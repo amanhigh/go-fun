@@ -42,12 +42,12 @@ func runFAAnalyze(cmd *cobra.Command, args []string) error {
 	tickers := parseTickers(args[0])
 
 	faManager := core.GetKohanInterface().GetFAManager()
-	analysis, err := faManager.ProcessTickers(context.Background(), tickers, year)
+	analysis, err := faManager.ValueTickers(context.Background(), tickers, year)
 	if err != nil {
 		return err
 	}
 
-	printFAAnalysis(analysis)
+	printValuations(analysis)
 	return nil
 }
 
@@ -55,7 +55,7 @@ func parseTickers(tickerString string) []string {
 	return strings.Split(tickerString, ",")
 }
 
-func printFAAnalysis(analysis []tax.TickerInfo) {
+func printValuations(valuations []tax.Valuation) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	defer w.Flush()
 
@@ -63,16 +63,16 @@ func printFAAnalysis(analysis []tax.TickerInfo) {
 	fmt.Fprintln(w, "Ticker\tPeak Date\tPeak Price (USD)\tYear-End Date\tYear-End Price (USD)\tTTBR (Peak)\tTTBR (Year-End)\tPeak Price (INR)\tYear-End Price (INR)")
 
 	// Print Data
-	for _, a := range analysis {
+	for _, v := range valuations {
 		fmt.Fprintf(w, "%s\t%s\t$%.2f\t%s\t$%.2f\t₹%.2f\t₹%.2f\t₹%.2f\t₹%.2f\n",
-			a.TickerAnalysis.Ticker,
-			a.TickerAnalysis.PeakDate,
-			a.PeakPrice,
-			a.TickerAnalysis.YearEndDate,
-			a.YearEndPrice,
-			a.PeakTTRate,
-			a.YearEndTTRate,
-			a.PeakPriceINR,
-			a.YearEndPriceINR)
+			v.BaseValuation.Ticker,
+			v.BaseValuation.PeakDate,
+			v.PeakPrice,
+			v.BaseValuation.YearEndDate,
+			v.YearEndPrice,
+			v.PeakTTRate,
+			v.YearEndTTRate,
+			v.PeakPriceINR,
+			v.YearEndPriceINR)
 	}
 }

@@ -27,66 +27,6 @@ func (_m *TickerManager) EXPECT() *TickerManager_Expecter {
 	return &TickerManager_Expecter{mock: &_m.Mock}
 }
 
-// AnalyzeTicker provides a mock function with given fields: ctx, ticker, year
-func (_m *TickerManager) AnalyzeTicker(ctx context.Context, ticker string, year int) (tax.TickerAnalysis, common.HttpError) {
-	ret := _m.Called(ctx, ticker, year)
-
-	if len(ret) == 0 {
-		panic("no return value specified for AnalyzeTicker")
-	}
-
-	var r0 tax.TickerAnalysis
-	var r1 common.HttpError
-	if rf, ok := ret.Get(0).(func(context.Context, string, int) (tax.TickerAnalysis, common.HttpError)); ok {
-		return rf(ctx, ticker, year)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, int) tax.TickerAnalysis); ok {
-		r0 = rf(ctx, ticker, year)
-	} else {
-		r0 = ret.Get(0).(tax.TickerAnalysis)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, int) common.HttpError); ok {
-		r1 = rf(ctx, ticker, year)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(common.HttpError)
-		}
-	}
-
-	return r0, r1
-}
-
-// TickerManager_AnalyzeTicker_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AnalyzeTicker'
-type TickerManager_AnalyzeTicker_Call struct {
-	*mock.Call
-}
-
-// AnalyzeTicker is a helper method to define mock.On call
-//   - ctx context.Context
-//   - ticker string
-//   - year int
-func (_e *TickerManager_Expecter) AnalyzeTicker(ctx interface{}, ticker interface{}, year interface{}) *TickerManager_AnalyzeTicker_Call {
-	return &TickerManager_AnalyzeTicker_Call{Call: _e.mock.On("AnalyzeTicker", ctx, ticker, year)}
-}
-
-func (_c *TickerManager_AnalyzeTicker_Call) Run(run func(ctx context.Context, ticker string, year int)) *TickerManager_AnalyzeTicker_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(int))
-	})
-	return _c
-}
-
-func (_c *TickerManager_AnalyzeTicker_Call) Return(analysis tax.TickerAnalysis, err common.HttpError) *TickerManager_AnalyzeTicker_Call {
-	_c.Call.Return(analysis, err)
-	return _c
-}
-
-func (_c *TickerManager_AnalyzeTicker_Call) RunAndReturn(run func(context.Context, string, int) (tax.TickerAnalysis, common.HttpError)) *TickerManager_AnalyzeTicker_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // DownloadTicker provides a mock function with given fields: ctx, ticker
 func (_m *TickerManager) DownloadTicker(ctx context.Context, ticker string) common.HttpError {
 	ret := _m.Called(ctx, ticker)
@@ -136,12 +76,12 @@ func (_c *TickerManager_DownloadTicker_Call) RunAndReturn(run func(context.Conte
 	return _c
 }
 
-// GetPriceOnDate provides a mock function with given fields: ctx, ticker, date
-func (_m *TickerManager) GetPriceOnDate(ctx context.Context, ticker string, date time.Time) (float64, error) {
+// GetPrice provides a mock function with given fields: ctx, ticker, date
+func (_m *TickerManager) GetPrice(ctx context.Context, ticker string, date time.Time) (float64, error) {
 	ret := _m.Called(ctx, ticker, date)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetPriceOnDate")
+		panic("no return value specified for GetPrice")
 	}
 
 	var r0 float64
@@ -164,32 +104,92 @@ func (_m *TickerManager) GetPriceOnDate(ctx context.Context, ticker string, date
 	return r0, r1
 }
 
-// TickerManager_GetPriceOnDate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPriceOnDate'
-type TickerManager_GetPriceOnDate_Call struct {
+// TickerManager_GetPrice_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPrice'
+type TickerManager_GetPrice_Call struct {
 	*mock.Call
 }
 
-// GetPriceOnDate is a helper method to define mock.On call
+// GetPrice is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ticker string
 //   - date time.Time
-func (_e *TickerManager_Expecter) GetPriceOnDate(ctx interface{}, ticker interface{}, date interface{}) *TickerManager_GetPriceOnDate_Call {
-	return &TickerManager_GetPriceOnDate_Call{Call: _e.mock.On("GetPriceOnDate", ctx, ticker, date)}
+func (_e *TickerManager_Expecter) GetPrice(ctx interface{}, ticker interface{}, date interface{}) *TickerManager_GetPrice_Call {
+	return &TickerManager_GetPrice_Call{Call: _e.mock.On("GetPrice", ctx, ticker, date)}
 }
 
-func (_c *TickerManager_GetPriceOnDate_Call) Run(run func(ctx context.Context, ticker string, date time.Time)) *TickerManager_GetPriceOnDate_Call {
+func (_c *TickerManager_GetPrice_Call) Run(run func(ctx context.Context, ticker string, date time.Time)) *TickerManager_GetPrice_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string), args[2].(time.Time))
 	})
 	return _c
 }
 
-func (_c *TickerManager_GetPriceOnDate_Call) Return(_a0 float64, _a1 error) *TickerManager_GetPriceOnDate_Call {
+func (_c *TickerManager_GetPrice_Call) Return(_a0 float64, _a1 error) *TickerManager_GetPrice_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *TickerManager_GetPriceOnDate_Call) RunAndReturn(run func(context.Context, string, time.Time) (float64, error)) *TickerManager_GetPriceOnDate_Call {
+func (_c *TickerManager_GetPrice_Call) RunAndReturn(run func(context.Context, string, time.Time) (float64, error)) *TickerManager_GetPrice_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ValueTicker provides a mock function with given fields: ctx, ticker, year
+func (_m *TickerManager) ValueTicker(ctx context.Context, ticker string, year int) (tax.BaseValuation, common.HttpError) {
+	ret := _m.Called(ctx, ticker, year)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ValueTicker")
+	}
+
+	var r0 tax.BaseValuation
+	var r1 common.HttpError
+	if rf, ok := ret.Get(0).(func(context.Context, string, int) (tax.BaseValuation, common.HttpError)); ok {
+		return rf(ctx, ticker, year)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, int) tax.BaseValuation); ok {
+		r0 = rf(ctx, ticker, year)
+	} else {
+		r0 = ret.Get(0).(tax.BaseValuation)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, int) common.HttpError); ok {
+		r1 = rf(ctx, ticker, year)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(common.HttpError)
+		}
+	}
+
+	return r0, r1
+}
+
+// TickerManager_ValueTicker_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ValueTicker'
+type TickerManager_ValueTicker_Call struct {
+	*mock.Call
+}
+
+// ValueTicker is a helper method to define mock.On call
+//   - ctx context.Context
+//   - ticker string
+//   - year int
+func (_e *TickerManager_Expecter) ValueTicker(ctx interface{}, ticker interface{}, year interface{}) *TickerManager_ValueTicker_Call {
+	return &TickerManager_ValueTicker_Call{Call: _e.mock.On("ValueTicker", ctx, ticker, year)}
+}
+
+func (_c *TickerManager_ValueTicker_Call) Run(run func(ctx context.Context, ticker string, year int)) *TickerManager_ValueTicker_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(int))
+	})
+	return _c
+}
+
+func (_c *TickerManager_ValueTicker_Call) Return(valuation tax.BaseValuation, err common.HttpError) *TickerManager_ValueTicker_Call {
+	_c.Call.Return(valuation, err)
+	return _c
+}
+
+func (_c *TickerManager_ValueTicker_Call) RunAndReturn(run func(context.Context, string, int) (tax.BaseValuation, common.HttpError)) *TickerManager_ValueTicker_Call {
 	_c.Call.Return(run)
 	return _c
 }

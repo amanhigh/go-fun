@@ -35,4 +35,3 @@ type Rate struct {
 const SBI_RATES_FILENAME = "SBI_REFERENCE_RATES_USD.csv"
 
 // BUG: #C Add Constant for other Files
-// BUG: #A Rename Package to Tax

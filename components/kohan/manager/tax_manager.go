@@ -8,7 +8,7 @@ import (
 )
 
 type TaxManager interface {
-	ProcessTickers(ctx context.Context, tickers []string, year int) ([]tax.TickerInfo, error)
+	ValueTickers(ctx context.Context, tickers []string, year int) ([]tax.Valuation, error)
 }
 
 type TaxManagerImpl struct {
@@ -23,11 +23,11 @@ func NewTaxManager(tickerManager TickerManager, sbiManager SBIManager) *TaxManag
 	}
 }
 
-func (f *TaxManagerImpl) ProcessTickers(ctx context.Context, tickers []string, year int) ([]tax.TickerInfo, error) {
-	var results []tax.TickerInfo
+func (f *TaxManagerImpl) ValueTickers(ctx context.Context, tickers []string, year int) ([]tax.Valuation, error) {
+	var results []tax.Valuation
 	for _, ticker := range tickers {
 		// Get USD Analysis
-		analysis, err := f.tickerManager.AnalyzeTicker(ctx, ticker, year)
+		analysis, err := f.tickerManager.ValueTicker(ctx, ticker, year)
 		if err != nil {
 			return nil, err
 		}
@@ -47,16 +47,15 @@ func (f *TaxManagerImpl) ProcessTickers(ctx context.Context, tickers []string, y
 			return nil, err
 		}
 
-		// Create FATickerAnalysis
-		faAnalysis := tax.TickerInfo{
-			TickerAnalysis:  analysis,
+		valuation := tax.Valuation{
+			BaseValuation:   analysis,
 			PeakTTRate:      peakRate,
 			YearEndTTRate:   yearEndRate,
 			PeakPriceINR:    analysis.PeakPrice * peakRate,
 			YearEndPriceINR: analysis.YearEndPrice * yearEndRate,
 		}
 
-		results = append(results, faAnalysis)
+		results = append(results, valuation)
 	}
 
 	return results, nil
