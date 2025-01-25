@@ -76,8 +76,14 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	// Handle Finalizers - Ensures cleanup operations occur before deletion
-	if result, err := r.reconcileHelper.HandleFinalizers(ctx, memcached); err != nil || result.Requeue {
+	// Check if Resource is being deleted
+	if memcached.GetDeletionTimestamp() != nil {
+		log.Info("Resource is being deleted, performing finalizer operations")
+		return r.reconcileHelper.ExecuteFinalizer(ctx, memcached)
+	}
+
+	// Add Finalizer if it doesn't exist
+	if result, err := r.reconcileHelper.AddFinalizer(ctx, memcached); err != nil {
 		return result, err
 	}
 
@@ -91,8 +97,8 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 func (r *MemcachedReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// Initialize all helpers
 	r.statusHelper = NewStatusHelper(r)
-	r.reconcileHelper = NewReconciliationHelper(r.statusHelper, r)
 	r.deployHelper = NewDeploymentHelper(r)
+	r.reconcileHelper = NewReconciliationHelper(r.statusHelper, r.deployHelper, r)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cachev1beta1.Memcached{}).

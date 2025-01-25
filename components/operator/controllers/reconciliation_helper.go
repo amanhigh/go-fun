@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	cachev1beta1 "github.com/amanhigh/go-fun/components/operator/api/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -21,19 +22,22 @@ the cluster closer to the desired state. The reconciliation must be idempotent.
 */
 type ReconciliationHelper interface {
 	FetchMemcachedInstance(ctx context.Context, req ctrl.Request) (*cachev1beta1.Memcached, error)
-	HandleFinalizers(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error)
 	ReconcileDeployment(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error)
+	ExecuteFinalizer(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error)
+	AddFinalizer(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error)
 }
 
 type reconciliationHelperImpl struct {
 	controller   *MemcachedReconciler
 	statusHelper StatusHelper
+	deployHelper DeploymentHelper // Add new field
 }
 
-func NewReconciliationHelper(statusHelper StatusHelper, controller *MemcachedReconciler) ReconciliationHelper {
+func NewReconciliationHelper(statusHelper StatusHelper, deployHelper DeploymentHelper, controller *MemcachedReconciler) ReconciliationHelper {
 	return &reconciliationHelperImpl{
 		controller:   controller,
 		statusHelper: statusHelper,
+		deployHelper: deployHelper,
 	}
 }
 
@@ -57,23 +61,9 @@ func (r *reconciliationHelperImpl) FetchMemcachedInstance(ctx context.Context, r
 	return memcached, nil
 }
 
-// HandleFinalizers manages finalizer operations for the Memcached resource
-// Finalizers allow controllers to implement cleanup tasks before an object is deleted
-// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/
-func (r *reconciliationHelperImpl) HandleFinalizers(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error) {
-	// Check if the Memcached instance is marked to be deleted, which is
-	// indicated by the deletion timestamp being set.
-	if memcached.GetDeletionTimestamp() != nil {
-		return r.handleDeletionFinalizer(ctx, memcached)
-	}
-
-	// Add finalizer if it doesn't exist
-	return r.handleAdditionFinalizer(ctx, memcached)
-}
-
-// handleDeletionFinalizer performs finalizer operations when resource is being deleted
+// ExecuteFinalizer performs finalizer operations when resource is being deleted
 // It updates status, records events, and removes the finalizer
-func (r *reconciliationHelperImpl) handleDeletionFinalizer(
+func (r *reconciliationHelperImpl) ExecuteFinalizer(
 	ctx context.Context,
 	memcached *cachev1beta1.Memcached,
 ) (ctrl.Result, error) {
@@ -115,9 +105,9 @@ func (r *reconciliationHelperImpl) handleDeletionFinalizer(
 	return ctrl.Result{}, nil
 }
 
-// handleAdditionFinalizer adds finalizer if it doesn't exist
+// AddFinalizer adds finalizer if it doesn't exist
 // This ensures cleanup operations are performed when the resource is deleted
-func (r *reconciliationHelperImpl) handleAdditionFinalizer(
+func (r *reconciliationHelperImpl) AddFinalizer(
 	ctx context.Context,
 	memcached *cachev1beta1.Memcached,
 ) (ctrl.Result, error) {
@@ -147,26 +137,19 @@ func (r *reconciliationHelperImpl) handleAdditionFinalizer(
 // - Update Deployment if replicas don't match
 // - Update status based on reconciliation results
 func (r *reconciliationHelperImpl) ReconcileDeployment(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error) {
-	if shouldSkip := r.shouldSkipReconciliation(ctx, memcached); shouldSkip {
-		return ctrl.Result{}, nil
+	dep := &appsv1.Deployment{}
+	// Handle deployment creation and capture result
+	createResult, err := r.handleDeploymentCreation(ctx, memcached, dep)
+	if err != nil {
+		return createResult, err
 	}
 
-	dep := &appsv1.Deployment{}
-	if result, err := r.handleDeploymentCreation(ctx, memcached, dep); err != nil {
-		return result, err
+	// If creation requires requeue, return immediately
+	if createResult.Requeue || createResult.RequeueAfter > 0 {
+		return createResult, nil
 	}
 
 	return r.handleDeploymentUpdate(ctx, memcached, dep)
-}
-
-// shouldSkipReconciliation checks if reconciliation should be skipped
-// Returns true if the resource is being deleted
-func (r *reconciliationHelperImpl) shouldSkipReconciliation(ctx context.Context, memcached *cachev1beta1.Memcached) bool {
-	if memcached.GetDeletionTimestamp() != nil {
-		log.FromContext(ctx).Info("Resource is being deleted, skipping deployment reconciliation")
-		return true
-	}
-	return false
 }
 
 // handleDeploymentCreation handles deployment existence check and creation
@@ -185,8 +168,12 @@ func (r *reconciliationHelperImpl) handleDeploymentCreation(
 	}, dep)
 
 	if err != nil && apierrors.IsNotFound(err) {
-		// Attempt creation with validation
-		return r.controller.deployHelper.ValidateAndCreateDeployment(ctx, memcached)
+		result, err := r.deployHelper.ValidateAndCreateDeployment(ctx, memcached)
+		if err != nil {
+			return result, err
+		}
+		// Requeue for deployment creation
+		return ctrl.Result{RequeueAfter: time.Minute}, nil
 	} else if err != nil {
 		log.Error(err, "Failed to get Deployment")
 		return ctrl.Result{}, err
@@ -203,6 +190,12 @@ func (r *reconciliationHelperImpl) handleDeploymentUpdate(
 ) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 	size := memcached.Spec.Size
+
+	// Guard against nil deployment or replicas
+	if dep == nil || dep.Spec.Replicas == nil {
+		log.Info("Deployment not yet initialized, requeueing")
+		return ctrl.Result{Requeue: true}, nil
+	}
 
 	// Update if size doesn't match
 	if *dep.Spec.Replicas != size {
