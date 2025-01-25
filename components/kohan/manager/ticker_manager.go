@@ -20,7 +20,9 @@ import (
 //go:generate mockery --name TickerManager
 type TickerManager interface {
 	DownloadTicker(ctx context.Context, ticker string) (err common.HttpError)
+	// BUG: Rename yearly analysis
 	AnalyzeTicker(ctx context.Context, ticker string, year int) (analysis fa.TickerAnalysis, err common.HttpError)
+	// BUG: Rename GetPrice
 	GetPriceOnDate(ctx context.Context, ticker string, date time.Time) (float64, error)
 }
 
@@ -52,19 +54,19 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 	}
 
 	// Fetch data using AlphaClient
-	var data interface{}
+	var data fa.StockData
 	if data, err = t.client.FetchDailyPrices(ctx, ticker); err != nil {
 		return err
 	}
 
 	// Save data to file
-	if jsonData, err1 := json.Marshal(data); err1 == nil {
-		if err1 = os.WriteFile(filePath, jsonData, util.DEFAULT_PERM); err1 != nil {
-			return common.NewServerError(err1)
+	if jsonData, marshalErr := json.Marshal(data); marshalErr == nil {
+		if marshalErr = os.WriteFile(filePath, jsonData, util.DEFAULT_PERM); marshalErr != nil {
+			return common.NewServerError(marshalErr)
 		}
 		log.Info().Str("Ticker", ticker).Str("Path", filePath).Msg("Ticker data downloaded and saved")
 	} else {
-		return common.NewServerError(err1)
+		return common.NewServerError(marshalErr)
 	}
 
 	return nil

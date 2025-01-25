@@ -13,6 +13,10 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+const (
+	adiFirstBuyDate = "2024-01-04"
+)
+
 var _ = Describe("CapitalGainsManager", func() {
 	var (
 		ctx           context.Context
