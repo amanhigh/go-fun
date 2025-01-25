@@ -24,10 +24,10 @@ type DariusConfig struct {
 }
 
 type KohanConfig struct {
-	FA FAConfig
+	Tax TaxConfig
 }
 
-type FAConfig struct {
+type TaxConfig struct {
 	// SBI Configuration
 	SBIBaseURL string `env:"SBI_BASE_URL" envDefault:"https://raw.githubusercontent.com/sahilgupta/sbi-fx-ratekeeper/main/csv_files/SBI_REFERENCE_RATES_USD.csv"`
 

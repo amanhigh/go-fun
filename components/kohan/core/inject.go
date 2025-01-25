@@ -34,15 +34,15 @@ func SetupKohanInjector(config config.KohanConfig) {
 }
 
 func (ki *KohanInjector) provideAlphaClient(client *resty.Client) clients.AlphaClient {
-	return clients.NewAlphaClient(client, ki.config.FA.AlphaBaseURL, ki.config.FA.AlphaAPIKey)
+	return clients.NewAlphaClient(client, ki.config.Tax.AlphaBaseURL, ki.config.Tax.AlphaAPIKey)
 }
 
 func (ki *KohanInjector) provideSBIClient(client *resty.Client) clients.SBIClient {
-	return clients.NewSBIClient(client, ki.config.FA.SBIBaseURL)
+	return clients.NewSBIClient(client, ki.config.Tax.SBIBaseURL)
 }
 
 func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) *manager.TickerManagerImpl {
-	return manager.NewTickerManager(client, ki.config.FA.DownloadsDir)
+	return manager.NewTickerManager(client, ki.config.Tax.DownloadsDir)
 }
 
 func (ki *KohanInjector) provideFAManager(tickerManager manager.TickerManager, sbiManager manager.SBIManager) manager.TaxManager {
@@ -52,8 +52,8 @@ func (ki *KohanInjector) provideFAManager(tickerManager manager.TickerManager, s
 func (ki *KohanInjector) provideDividendManager(sbiManager manager.SBIManager) manager.DividendManager {
 	return manager.NewDividendManager(
 		sbiManager,
-		ki.config.FA.DownloadsDir,
-		ki.config.FA.DividendFile,
+		ki.config.Tax.DownloadsDir,
+		ki.config.Tax.DividendFile,
 	)
 }
 
