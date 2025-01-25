@@ -49,6 +49,14 @@ func (ki *KohanInjector) provideFAManager(tickerManager manager.TickerManager, s
 	return manager.NewFAManager(tickerManager, sbiManager)
 }
 
+func (ki *KohanInjector) provideDividendManager(sbiManager manager.SBIManager) manager.DividendManager {
+	return manager.NewDividendManager(
+		sbiManager,
+		ki.config.FA.DownloadsDir,
+		ki.config.FA.DividendFile,
+	)
+}
+
 // Public singleton access - returns interface only
 func GetKohanInterface() KohanInterface {
 	return globalInjector
