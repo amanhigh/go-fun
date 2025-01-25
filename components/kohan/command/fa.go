@@ -65,7 +65,7 @@ func printFAAnalysis(analysis []fa.FATickerAnalysis) {
 	// Print Data
 	for _, a := range analysis {
 		fmt.Fprintf(w, "%s\t%s\t$%.2f\t%s\t$%.2f\t₹%.2f\t₹%.2f\t₹%.2f\t₹%.2f\n",
-			"TBD", // TODO: Add ticker symbol access
+			a.TickerAnalysis.Ticker,
 			a.TickerAnalysis.PeakDate,
 			a.PeakPrice,
 			a.TickerAnalysis.YearEndDate,

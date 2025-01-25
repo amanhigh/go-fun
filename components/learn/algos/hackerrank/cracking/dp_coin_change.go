@@ -84,7 +84,6 @@ func SplitDp(money int, denominations []int) (p int) {
 			/* In summary this pass each coin passes over all monetary values */
 			//fmt.Println("Progrses:", coin, coinTable, j-coin,coinTable[j-coin])
 		}
-
 	}
 	return coinTable[money]
 }

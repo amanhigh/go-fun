@@ -16,33 +16,6 @@ import (
 	"github.com/amanhigh/go-fun/models/fa"
 )
 
-func (s *SBIManagerImpl) readCSVRecords(filePath string) ([][]string, common.HttpError) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, common.NewServerError(err)
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-
-	// Validate header
-	header, err := reader.Read()
-	if err != nil {
-		return nil, common.NewServerError(err)
-	}
-	if len(header) < 3 || header[0] != "DATE" || header[1] != "TT BUY" || header[2] != "TT SELL" {
-		return nil, common.NewHttpError("invalid CSV header format", http.StatusInternalServerError)
-	}
-
-	// Read remaining records
-	records, err := reader.ReadAll()
-	if err != nil {
-		return nil, common.NewServerError(err)
-	}
-
-	return records, nil
-}
-
 type SBIManager interface {
 	DownloadRates(ctx context.Context) common.HttpError
 	GetTTBuyRate(date time.Time) (float64, common.HttpError)
@@ -72,6 +45,7 @@ func (s *SBIManagerImpl) GetTTBuyRate(date time.Time) (rate float64, err common.
 	}
 
 	// Read and validate CSV records
+	// FIXME: #B Cache Inmemory once Loaded.
 	records, err := s.readCSVRecords(filePath)
 	if err != nil {
 		return 0, err
@@ -113,4 +87,31 @@ func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpErro
 	}
 
 	return
+}
+
+func (s *SBIManagerImpl) readCSVRecords(filePath string) ([][]string, common.HttpError) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, common.NewServerError(err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+
+	// Validate header
+	header, err := reader.Read()
+	if err != nil {
+		return nil, common.NewServerError(err)
+	}
+	if len(header) < 3 || header[0] != "DATE" || header[1] != "TT BUY" || header[2] != "TT SELL" {
+		return nil, common.NewHttpError("invalid CSV header format", http.StatusInternalServerError)
+	}
+
+	// Read remaining records
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, common.NewServerError(err)
+	}
+
+	return records, nil
 }

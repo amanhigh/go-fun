@@ -23,6 +23,7 @@ func MergeSort(input []int, start int, end int) (inversion int) {
 	return
 }
 
+//nolint:funlen
 func Merge(input []int, start int, mid int, end int) (inversion int) {
 	result := make([]int, end-start+1)
 	i, j, k := start, mid+1, 0

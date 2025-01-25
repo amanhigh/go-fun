@@ -19,34 +19,39 @@ import (
 // - restyErr: an error
 // Return type(s):
 // - err: an HttpError
-func ResponseProcessor(response *resty.Response, restyErr error) (err HttpError) {
-	var ok bool
+func handleStatusCode(statusCode int) HttpError {
+	switch statusCode {
+	case http.StatusBadRequest:
+		return ErrBadRequest
+	case http.StatusNotFound:
+		return ErrNotFound
+	case http.StatusUnauthorized:
+		return ErrNotAuthorized
+	case http.StatusForbidden:
+		return ErrNotAuthenticated
+	case http.StatusConflict:
+		return ErrEntityExists
+	case http.StatusInternalServerError:
+		return ErrInternalServerError
+	default:
+		return nil
+	}
+}
+
+func ResponseProcessor(response *resty.Response, restyErr error) HttpError {
 	if restyErr != nil {
 		//Rest Client Error hence No Respones
-		err = NewServerError(restyErr)
-	} else if err, ok = response.Error().(HttpError); ok && err.Code() > 0 {
-		//If Error is Http Error & has Data, Use directly.
-	} else {
-		//Incase we have No Error Honor Status Codes of Http
-		switch response.StatusCode() {
-		case http.StatusBadRequest:
-			err = ErrBadRequest
-		case http.StatusNotFound:
-			err = ErrNotFound
-		case http.StatusUnauthorized:
-			err = ErrNotAuthorized
-		case http.StatusForbidden:
-			err = ErrNotAuthenticated
-		case http.StatusConflict:
-			err = ErrEntityExists
-		case http.StatusInternalServerError:
-			// TASK: Error From Response
-			err = ErrInternalServerError
-		default:
-			err = nil
-		}
+		return NewServerError(restyErr)
 	}
-	return
+
+	//If Error is Http Error & has Data, Use directly.
+	if err, ok := response.Error().(HttpError); ok && err.Code() > 0 {
+		return err
+	}
+
+	// TASK: Error From Response
+	//Incase we have No Error Honor Status Codes of Http
+	return handleStatusCode(response.StatusCode())
 }
 
 func ProcessValidationError(validationErr error) (err HttpError) {

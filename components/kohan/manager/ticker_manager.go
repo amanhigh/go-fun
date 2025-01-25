@@ -17,6 +17,7 @@ import (
 )
 
 type TickerManager interface {
+	// FIXME: #B Create Tests
 	DownloadTicker(ctx context.Context, ticker string) (err common.HttpError)
 	AnalyzeTicker(ctx context.Context, ticker string, year int) (analysis fa.TickerAnalysis, err common.HttpError)
 }
@@ -68,54 +69,59 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 }
 
 func (t *TickerManagerImpl) AnalyzeTicker(ctx context.Context, ticker string, year int) (analysis fa.TickerAnalysis, err common.HttpError) {
-	// Read ticker file
-	filePath := filepath.Join(t.downloads, fmt.Sprintf("%s.json", ticker))
-	data, readErr := os.ReadFile(filePath)
-	if readErr != nil {
-		return analysis, common.NewServerError(readErr)
+	stockData, err := t.readTickerData(ticker)
+	if err != nil {
+		return analysis, err
 	}
 
-	// Parse stock data
-	var stockData fa.StockData
-	parseErr := json.Unmarshal(data, &stockData)
-	if parseErr != nil {
-		return analysis, common.NewServerError(parseErr)
-	}
-
-	// Initialize variables for analysis
 	yearStr := strconv.Itoa(year)
 	yearEndDate := fmt.Sprintf("%s-12-31", yearStr)
 
+	return t.analyzeTimeSeries(stockData.TimeSeries, ticker, yearStr, yearEndDate), nil
+}
+
+func (t *TickerManagerImpl) readTickerData(ticker string) (fa.StockData, common.HttpError) {
+	var stockData fa.StockData
+
+	filePath := filepath.Join(t.downloads, fmt.Sprintf("%s.json", ticker))
+	data, readErr := os.ReadFile(filePath)
+	if readErr != nil {
+		return stockData, common.NewServerError(readErr)
+	}
+
+	parseErr := json.Unmarshal(data, &stockData)
+	if parseErr != nil {
+		return stockData, common.NewServerError(parseErr)
+	}
+
+	return stockData, nil
+}
+
+func (t *TickerManagerImpl) analyzeTimeSeries(timeSeries map[string]fa.DayPrice, ticker, yearStr, yearEndDate string) fa.TickerAnalysis {
 	var highestClose float64
 	var highestDate string
 	var yearEndClose float64
 	var lastTradingDay string
 
-	// Analyze time series data
-	for date, values := range stockData.TimeSeries {
-		// Only process dates for requested year
+	for date, values := range timeSeries {
 		if !strings.HasPrefix(date, yearStr) {
 			continue
 		}
-
 		// Parse close price
 		closePrice, parseErr := strconv.ParseFloat(values.Close, 64)
 		if parseErr != nil {
 			continue
 		}
-
 		// Track highest close
 		if closePrice > highestClose {
 			highestClose = closePrice
 			highestDate = date
 		}
-
 		// Track year end close
 		if date == yearEndDate {
 			yearEndClose = closePrice
 			lastTradingDay = date
 		}
-
 		// Keep track of last trading day
 		if lastTradingDay == "" || date > lastTradingDay {
 			lastTradingDay = date
@@ -123,13 +129,11 @@ func (t *TickerManagerImpl) AnalyzeTicker(ctx context.Context, ticker string, ye
 		}
 	}
 
-	// Prepare analysis result
-	analysis = fa.TickerAnalysis{
+	return fa.TickerAnalysis{
+		Ticker:       ticker,
 		PeakDate:     highestDate,
 		PeakPrice:    highestClose,
 		YearEndDate:  lastTradingDay,
 		YearEndPrice: yearEndClose,
 	}
-
-	return analysis, nil
 }

@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -44,6 +45,10 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 )
 
+const (
+	defaultWebhookPort = 9443
+)
+
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
@@ -52,29 +57,38 @@ func init() {
 	//+kubebuilder:scaffold:scheme
 }
 
-func main() {
-	var metricsAddr string
-	var enableLeaderElection bool
-	var probeAddr string
-	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
-	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
+type operatorConfig struct {
+	metricsAddr          string
+	enableLeaderElection bool
+	probeAddr            string
+	zapOptions           zap.Options
+}
+
+func setupFlags() *operatorConfig {
+	config := &operatorConfig{}
+	flag.StringVar(&config.metricsAddr, "metrics-bind-address", ":8080",
+		"The address the metric endpoint binds to.")
+	flag.StringVar(&config.probeAddr, "health-probe-bind-address", ":8081",
+		"The address the probe endpoint binds to.")
+	flag.BoolVar(&config.enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
-	opts := zap.Options{
-		Development: true,
-	}
-	opts.BindFlags(flag.CommandLine)
+
+	config.zapOptions = zap.Options{Development: true}
+	config.zapOptions.BindFlags(flag.CommandLine)
 	flag.Parse()
+	return config
+}
 
-	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+func setupManager(config *operatorConfig) (ctrl.Manager, error) {
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&config.zapOptions)))
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	return ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
-		MetricsBindAddress:     metricsAddr,
-		Port:                   9443,
-		HealthProbeBindAddress: probeAddr,
-		LeaderElection:         enableLeaderElection,
+		MetricsBindAddress:     config.metricsAddr,
+		Port:                   defaultWebhookPort,
+		HealthProbeBindAddress: config.probeAddr,
+		LeaderElection:         config.enableLeaderElection,
 		LeaderElectionID:       "4d2136bc.aman.com",
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
 		// when the Manager ends. This requires the binary to immediately end when the
@@ -88,36 +102,65 @@ func main() {
 		// after the manager stops then its usage might be unsafe.
 		// LeaderElectionReleaseOnCancel: true,
 	})
+}
+
+func setupControllers(mgr ctrl.Manager) error {
+	// Setup the Memcached controller
+	if err := (&controllers.MemcachedReconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("memcached-controller"),
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create controller: %w", err)
+	}
+
+	// Setup the Memcached webhook
+	if err := (&cachev1beta1.Memcached{}).SetupWebhookWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create webhook: %w", err)
+	}
+
+	//+kubebuilder:scaffold:builder
+	return nil
+}
+
+func setupHealthChecks(mgr ctrl.Manager) error {
+	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+		return fmt.Errorf("unable to set up health check: %w", err)
+	}
+	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+		return fmt.Errorf("unable to set up ready check: %w", err)
+	}
+	return nil
+}
+
+func startManager(mgr ctrl.Manager) error {
+	setupLog.Info("starting manager")
+	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+		return fmt.Errorf("problem running manager: %w", err)
+	}
+	return nil
+}
+
+func main() {
+	config := setupFlags()
+
+	mgr, err := setupManager(config)
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
 
-	if err = (&controllers.MemcachedReconciler{
-		Client:   mgr.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("memcached-controller"),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Memcached")
-		os.Exit(1)
-	}
-	if err = (&cachev1beta1.Memcached{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "Memcached")
-		os.Exit(1)
-	}
-	//+kubebuilder:scaffold:builder
-
-	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up health check")
-		os.Exit(1)
-	}
-	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up ready check")
+	if err := setupControllers(mgr); err != nil {
+		setupLog.Error(err, "unable to setup controllers")
 		os.Exit(1)
 	}
 
-	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+	if err := setupHealthChecks(mgr); err != nil {
+		setupLog.Error(err, "unable to setup health checks")
+		os.Exit(1)
+	}
+
+	if err := startManager(mgr); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}

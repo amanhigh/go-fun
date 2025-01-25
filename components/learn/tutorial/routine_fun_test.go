@@ -208,7 +208,6 @@ func fibonacciMultiChannel(c, quit chan int) {
 			// Run when no other case is ready
 			time.Sleep(5 * time.Millisecond)
 		}
-
 	}
 }
 

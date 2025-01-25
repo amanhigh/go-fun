@@ -35,22 +35,22 @@ policy := util.NewFallBackPolicy(db, time.Second * 2,"verticals")
 	},"ping"))
 */
 type FallBackPolicy struct {
-	//Current Pool which should be Used
+	// Current Pool which should be Used
 	currentPool int
-	//DB to do ping checks with ping resolver configured
+	// DB to do ping checks with ping resolver configured
 	db *gorm.DB
-	//Channel to Report Errors
+	// Channel to Report Errors
 	errChan chan error
-	//Interval retry to revert to original Config
+	// Interval retry to revert to original Config
 	ticker *time.Ticker
-	//TableName to get count as a PingCheck on DB
+	// TableName to get count as a PingCheck on DB
 	pingTable string
 }
 
 const (
-	PING          = "ping" //DBResolver Which Represents Primary for Reads
-	POOL_PRIMARY  = 0      //PoolIndex Which Represents Primary
-	POOL_FALLBACK = 1      //PoolIndex Which Represents Fallback
+	PING          = "ping" // DBResolver Which Represents Primary for Reads
+	POOL_PRIMARY  = 0      // PoolIndex Which Represents Primary
+	POOL_FALLBACK = 1      // PoolIndex Which Represents Fallback
 )
 
 /*
@@ -59,11 +59,11 @@ DB with read,write and ping (primary for reads) resolver configured.
 RetryInterval at which restore to primary would be tried.
 PingTable Name used to ping db with count query to check connectivity.
 */
-func NewFallBackPolicy(Db *gorm.DB, retryInterval time.Duration, pingTable string) *FallBackPolicy {
+func NewFallBackPolicy(db *gorm.DB, retryInterval time.Duration, pingTable string) *FallBackPolicy {
 	return &FallBackPolicy{
 		currentPool: POOL_PRIMARY,
 		errChan:     make(chan error, 5),
-		db:          Db,
+		db:          db,
 		ticker:      time.NewTicker(retryInterval),
 		pingTable:   pingTable,
 	}
@@ -73,8 +73,8 @@ func NewFallBackPolicy(Db *gorm.DB, retryInterval time.Duration, pingTable strin
 *
 Resolve Function Implementation for dbResolver.
 */
-func (self *FallBackPolicy) Resolve(connPools []gorm.ConnPool) gorm.ConnPool {
-	x := self.GetPool()
+func (fb *FallBackPolicy) Resolve(connPools []gorm.ConnPool) gorm.ConnPool {
+	x := fb.GetPool()
 	log.Trace().Int("Pool Count", len(connPools)).Int("Current Pool", x).Msg("Pool Info")
 	return connPools[x]
 }
@@ -84,10 +84,10 @@ func (self *FallBackPolicy) Resolve(connPools []gorm.ConnPool) gorm.ConnPool {
 Report any DB Errors which will be used to fallback if applicable
 This ignores any nil or non relevant errors.
 */
-func (self *FallBackPolicy) ReportError(err error) {
+func (fb *FallBackPolicy) ReportError(err error) {
 	var netErr net.Error
 	if errors.As(err, &netErr) {
-		self.errChan <- err
+		fb.errChan <- err
 	}
 }
 
@@ -97,32 +97,32 @@ Returns Current Pool that should be getting Traffic.
 On Error switches to fallback and reverts post
 successful Ping
 */
-func (self *FallBackPolicy) GetPool() (poolIndex int) {
+func (fb *FallBackPolicy) GetPool() (poolIndex int) {
 	select {
-	case err, ok := <-self.errChan:
+	case err, ok := <-fb.errChan:
 		//Process if errorChannel Open we are on Primary Pool
-		if ok && self.currentPool == POOL_PRIMARY {
+		if ok && fb.currentPool == POOL_PRIMARY {
 			log.Error().Err(err).Msg("Falling Back to Master for Reads")
-			self.currentPool = POOL_FALLBACK
+			fb.currentPool = POOL_FALLBACK
 		}
 		//Serve Updated Pool
-		poolIndex = self.currentPool
+		poolIndex = fb.currentPool
 
-	case <-self.ticker.C:
+	case <-fb.ticker.C:
 		//At each Retry Interval, If we have switched to Fallback
-		if self.currentPool == POOL_FALLBACK {
+		if fb.currentPool == POOL_FALLBACK {
 			//Try to Ping Slave if it is up
-			if err := self.Ping(); err == nil {
-				self.currentPool = POOL_PRIMARY
-				log.Info().Int("Pool", self.currentPool).Msg("Slave Up reverting config for Reads.")
+			if err := fb.Ping(); err == nil {
+				fb.currentPool = POOL_PRIMARY
+				log.Info().Int("Pool", fb.currentPool).Msg("Slave Up reverting config for Reads.")
 			} else {
-				log.Warn().Int("Pool", self.currentPool).Err(err).Msg("Pinged Slave still not up. Reads continue on master")
+				log.Warn().Int("Pool", fb.currentPool).Err(err).Msg("Pinged Slave still not up. Reads continue on master")
 			}
-			poolIndex = self.currentPool
+			poolIndex = fb.currentPool
 		}
 	default:
 		//Serve Current Pool
-		poolIndex = self.currentPool
+		poolIndex = fb.currentPool
 	}
 	return
 }
@@ -133,8 +133,8 @@ Triest to do a Count * on configured Ping Table to check connectivity.
 Uses Ping Resolver as Read Resolver is switched by our Fallback Policy and is point
 to master.
 */
-func (self *FallBackPolicy) Ping() (err error) {
+func (fb *FallBackPolicy) Ping() (err error) {
 	c := int64(0)
-	err = self.db.Clauses(dbresolver.Use(PING)).Table(self.pingTable).Count(&c).Error
+	err = fb.db.Clauses(dbresolver.Use(PING)).Table(fb.pingTable).Count(&c).Error
 	return
 }

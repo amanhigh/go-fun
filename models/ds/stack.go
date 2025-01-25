@@ -10,31 +10,31 @@ func NewStack() Stack {
 	}
 }
 
-func (self *Stack) Push(value int) {
-	self.data = append(self.data, value)
+func (s *Stack) Push(value int) {
+	s.data = append(s.data, value)
 }
 
-func (self *Stack) Pop() (value int) {
-	count := len(self.data)
+func (s *Stack) Pop() (value int) {
+	count := len(s.data)
 	if count > 0 {
-		value = self.data[count-1]
-		self.data = self.data[:count-1]
+		value = s.data[count-1]
+		s.data = s.data[:count-1]
 	} else {
 		value = -1
 	}
 	return
 }
 
-func (self *Stack) Peek() (value int) {
-	count := len(self.data)
+func (s *Stack) Peek() (value int) {
+	count := len(s.data)
 	if count > 0 {
-		value = self.data[count-1]
+		value = s.data[count-1]
 	} else {
 		value = -1
 	}
 	return
 }
 
-func (self *Stack) IsEmpty() bool {
-	return len(self.data) == 0
+func (s *Stack) IsEmpty() bool {
+	return len(s.data) == 0
 }

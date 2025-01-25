@@ -24,18 +24,27 @@ func (p *Person) GetName() string {
 }
 
 func Syntax() {
-	/* Vars */
+	demonstrateVariables()
+	demonstrateStruct()
+	demonstrateConditionals()
+	demonstrateLoops()
+	demonstrateChannels()
+}
+
+func demonstrateVariables() {
 	var arr = [3]int{1, 2, 3}   //make([]int, 3)
 	var mapv = map[string]int{} //make(map[string]int)
 	fmt.Println("Array", "Map", arr, mapv)
+}
 
-	/* Struct */
+func demonstrateStruct() {
 	fmt.Println(Person{
 		Name: "Aman",
 		Age:  27,
 	})
+}
 
-	/* Conditionals */
+func demonstrateConditionals() {
 	x := 75
 	if x > 50 {
 		fmt.Println("x is greater than 50")
@@ -44,21 +53,24 @@ func Syntax() {
 	} else {
 		fmt.Println("x is equal to 50")
 	}
+}
 
-	/* Loop */
+func demonstrateLoops() {
 	count := 2
 	for i := 0; i < count; i++ {
 		fmt.Println("ILoop", i)
 	}
 
+	arr := [3]int{1, 2, 3}
 	numbers := arr[1:]
-
 	for index, value := range numbers {
 		fmt.Printf("RangeLoop: Index: %d, Value: %d\n", index, value)
 	}
+}
 
-	/* Channels */
-	c := make(chan int) // ch <-chan int (Recive only Channel)
+func demonstrateChannels() {
+	// ch <-chan int (Recive only Channel)
+	c := make(chan int)
 	// Start a goroutine for the printNumbers function
 	go printNumbers(c)
 

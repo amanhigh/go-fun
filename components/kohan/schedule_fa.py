@@ -172,7 +172,6 @@ def find_ticker_data(ticker, downloads_dir, year):
         year_end_date = last_trading_day
 
     # Get TTBR for peak and year-end dates
-    // FIXME: #B Perform Conversion.
     peak_ttbr = find_sbi_usd_rate(downloads_dir, highest_date)
     year_end_ttbr = find_sbi_usd_rate(downloads_dir, year_end_date)
 
@@ -188,7 +187,7 @@ def find_sbi_usd_rate(downloads_dir, date):
                 return float(row['TT BUY'])
     return None
 
-# // FIXME: #A Migrate to FAManager as TickerAnalysis (using TBB Conversion.)
+# // Moved
 def process_tickers(tickers, downloads_dir, year):
     table_data = []
     for ticker in tickers:
@@ -209,7 +208,7 @@ def process_tickers(tickers, downloads_dir, year):
             table_data.append([ticker, "No data", "No data", "No data", "No data", "No data", "No data", "No data", "No data"])
     return table_data
 
-# // FIXME: #B Add as a Command in Kohan to Accept Ticker and Print Details
+# // Moved
 def print_table(data):
     headers = ["Ticker", "Peak Date", "Peak Price (USD)", "Year-End Date", "Year-End Price (USD)", "TTBR (Peak)", "TTBR (Year-End)", "Peak Price (INR)", "Year-End Price (INR)"]
     col_widths = [max(len(str(row[i])) for row in data + [headers]) for i in range(len(headers))]
@@ -222,6 +221,7 @@ def print_table(data):
         print(" | ".join(f"{str(row[i]):<{col_widths[i]}}" for i in range(len(row))))
 
 def main():
+    # // TODO: Clean file after Testing new Cmd.
     print("Tickers:", TICKERS)
     print(f"Tax Year: {TAX_YEAR}")
 

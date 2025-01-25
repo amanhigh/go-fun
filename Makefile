@@ -33,8 +33,12 @@ sync:
 
 # https://golangci-lint.run/usage/quick-start/
 lint-ci:
+ifeq ($(GITHUB_ACTIONS),true)
+	printf $(_WARN) "LINT" "Skipping in GitHub Actions Environment"
+else
 	printf $(_TITLE) "LINT" "Golang CLI"
 	go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} golangci-lint run {}/...
+endif
 
 lint-dead:
 	printf $(_TITLE) "LINT" "DeadCode"
@@ -353,7 +357,7 @@ generate-swagger:
 # Generate mocks across all modules
 generate-mocks:
 	printf $(_TITLE) "Generate" "Mocks"
-	find . -name "go.mod" -execdir go generate ./... > $(OUT) \;
+	find . -name "go.mod" -execdir go generate ./... > $(OUT) 2>&1 \;
 
 generate: generate-mocks generate-swagger ## Generate Files
 

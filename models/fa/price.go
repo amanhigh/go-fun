@@ -33,6 +33,7 @@ type Rate struct {
 
 // TickerAnalysis represents analyzed ticker data for a given year
 type TickerAnalysis struct {
+	Ticker string `json:"ticker"`
 	// Peak price information
 	PeakDate  string  `json:"peak_date"`
 	PeakPrice float64 `json:"peak_price"`

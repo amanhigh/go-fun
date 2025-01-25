@@ -13,7 +13,7 @@ var personEncoder PersonEncoder = &PersonEncoderImpl{}
 func TestEncode(t *testing.T) {
 	result, err := personEncoder.EncodePerson(person)
 	if assert.NoError(t, err) {
-		assert.Equal(t, personJson, result)
+		assert.JSONEq(t, personJson, result)
 	}
 }
 

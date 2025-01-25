@@ -33,12 +33,12 @@ type AdminServiceInterface interface {
 }
 
 type BaseService struct {
-	client      *resty.Client
-	VERSION_URL string
+	client     *resty.Client
+	VersionUrl string
 }
 
 // Takes offset and limit as parameters and returns a query string.
-func (self *BaseService) getPaginationParams(offset, limit int) (query string) {
+func (bs *BaseService) getPaginationParams(offset, limit int) (query string) {
 	return "offset=" + strconv.Itoa(offset) + "&limit=" + strconv.Itoa(limit)
 }
 
@@ -50,8 +50,8 @@ Builds Base Request for REST Interaction.
 Return type(s):
 - *resty.Request
 */
-func (c *BaseService) request(ctx context.Context) *resty.Request {
-	return c.client.R().SetContext(ctx).SetError(common.HttpErrorImpl{})
+func (bs *BaseService) request(ctx context.Context) *resty.Request {
+	return bs.client.R().SetContext(ctx).SetError(common.HttpErrorImpl{})
 }
 
 type PersonService struct {
@@ -62,14 +62,14 @@ type AdminService struct {
 	BaseService
 }
 
-func (admin *AdminService) Stop(ctx context.Context) (err common.HttpError) {
-	response, err1 := admin.client.R().SetContext(ctx).Get("/admin/stop")
+func (as *AdminService) Stop(ctx context.Context) (err common.HttpError) {
+	response, err1 := as.client.R().SetContext(ctx).Get("/admin/stop")
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
-func (admin *AdminService) HealthCheck(ctx context.Context) (err common.HttpError) {
-	response, err1 := admin.client.R().SetContext(ctx).Get("/metrics")
+func (as *AdminService) HealthCheck(ctx context.Context) (err common.HttpError) {
+	response, err1 := as.client.R().SetContext(ctx).Get("/metrics")
 	err = util.ResponseProcessor(response, err1)
 	return
 }
@@ -78,7 +78,7 @@ func NewFunAppClient(baseUrl string, httpConfig config.HttpClientConfig) *FunCli
 	client := NewRestyClient(baseUrl, httpConfig)
 
 	// Init Base Service
-	baseService := BaseService{client: client, VERSION_URL: "/v1"}
+	baseService := BaseService{client: client, VersionUrl: "/v1"}
 
 	return &FunClient{
 		PersonService: &PersonService{BaseService: baseService},
@@ -88,13 +88,13 @@ func NewFunAppClient(baseUrl string, httpConfig config.HttpClientConfig) *FunCli
 
 func (c *PersonService) CreatePerson(ctx context.Context, request fun.PersonRequest) (person fun.Person, err common.HttpError) {
 	response, err1 := c.request(ctx).SetHeader("Content-Type", "application/json").
-		SetBody(request).SetResult(&person).Post(c.VERSION_URL + "/person")
+		SetBody(request).SetResult(&person).Post(c.VersionUrl + "/person")
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
 func (c *PersonService) GetPerson(ctx context.Context, name string) (person fun.Person, err common.HttpError) {
-	url := fmt.Sprintf(c.VERSION_URL+"/person/%s", name)
+	url := fmt.Sprintf(c.VersionUrl+"/person/%s", name)
 	response, err1 := c.request(ctx).SetResult(&person).Get(url)
 	err = util.ResponseProcessor(response, err1)
 	return
@@ -107,29 +107,29 @@ func (c *PersonService) ListPerson(ctx context.Context, personQuery fun.PersonQu
 }
 
 func (c *PersonService) ListPersonAudit(ctx context.Context, id string) (personAuditList []fun.PersonAudit, err common.HttpError) {
-	response, err1 := c.request(ctx).SetResult(&personAuditList).Get(fmt.Sprintf(c.VERSION_URL+"/person/%s/audit", id))
+	response, err1 := c.request(ctx).SetResult(&personAuditList).Get(fmt.Sprintf(c.VersionUrl+"/person/%s/audit", id))
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
 func (c *PersonService) UpdatePerson(ctx context.Context, id string, person fun.PersonRequest) (err common.HttpError) {
-	response, err1 := c.request(ctx).SetBody(person).Put(fmt.Sprintf(c.VERSION_URL+"/person/%s", id))
+	response, err1 := c.request(ctx).SetBody(person).Put(fmt.Sprintf(c.VersionUrl+"/person/%s", id))
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
 func (c *PersonService) DeletePerson(ctx context.Context, name string) (err common.HttpError) {
-	response, err1 := c.request(ctx).Delete(fmt.Sprintf(c.VERSION_URL+"/person/%s", name))
+	response, err1 := c.request(ctx).Delete(fmt.Sprintf(c.VersionUrl+"/person/%s", name))
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
 // Build Url from personQuery
 func (c *PersonService) listPersonUrl(personQuery fun.PersonQuery) (url string) {
-	url = c.VERSION_URL + "/person?"
+	url = c.VersionUrl + "/person?"
 
 	//Add Pagination Params
-	url = url + c.getPaginationParams(personQuery.Offset, personQuery.Limit)
+	url += c.getPaginationParams(personQuery.Offset, personQuery.Limit)
 
 	//Add Sort Params
 	if personQuery.SortBy != "" {

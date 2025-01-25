@@ -61,58 +61,80 @@ func (r *reconciliationHelperImpl) FetchMemcachedInstance(ctx context.Context, r
 // Finalizers allow controllers to implement cleanup tasks before an object is deleted
 // More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/
 func (r *reconciliationHelperImpl) HandleFinalizers(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
-
 	// Check if the Memcached instance is marked to be deleted, which is
 	// indicated by the deletion timestamp being set.
 	if memcached.GetDeletionTimestamp() != nil {
-		if controllerutil.ContainsFinalizer(memcached, memcachedFinalizer) {
-			log.Info("Performing Finalizer Operations for Memcached before delete CR")
-
-			// Note: It is not recommended to use finalizers with the purpose of delete resources which are
-			// created and managed in the reconciliation. These ones, such as the Deployment created on this reconcile,
-			// are defined as dependent of the custom resource. See that we use the method ctrl.SetControllerReference.
-			// to set the ownerRef which means that the Deployment will be deleted by the Kubernetes API.
-			// More info: https://kubernetes.io/docs/tasks/administer-cluster/use-cascading-deletion/
-
-			// Update status to indicate deletion
-			if err := r.statusHelper.UpdateDegradedStatus(ctx, memcached,
-				fmt.Sprintf("Performing finalizer operations for the custom resource: %s", memcached.Name)); err != nil {
-				return ctrl.Result{}, err
-			}
-
-			// Record event for deletion
-			r.controller.Recorder.Event(memcached, "Warning", "Deleting",
-				fmt.Sprintf("Custom Resource %s is being deleted from the namespace %s",
-					memcached.Name, memcached.Namespace))
-
-			// Remove finalizer
-			if ok := controllerutil.RemoveFinalizer(memcached, memcachedFinalizer); !ok {
-				log.Error(nil, "Failed to remove finalizer")
-				return ctrl.Result{Requeue: true}, nil
-			}
-
-			if err := r.controller.Update(ctx, memcached); err != nil {
-				log.Error(err, "Failed to remove finalizer")
-				return ctrl.Result{}, err
-			}
-		}
-		return ctrl.Result{}, nil
+		return r.handleDeletionFinalizer(ctx, memcached)
 	}
 
 	// Add finalizer if it doesn't exist
-	// This will ensure our cleanup operations are performed when the resource is deleted
-	if !controllerutil.ContainsFinalizer(memcached, memcachedFinalizer) {
-		log.Info("Adding Finalizer for Memcached")
-		if ok := controllerutil.AddFinalizer(memcached, memcachedFinalizer); !ok {
-			log.Error(nil, "Failed to add finalizer")
-			return ctrl.Result{Requeue: true}, nil
-		}
+	return r.handleAdditionFinalizer(ctx, memcached)
+}
 
-		if err := r.controller.Update(ctx, memcached); err != nil {
-			log.Error(err, "Failed to update CR to add finalizer")
-			return ctrl.Result{}, err
-		}
+// handleDeletionFinalizer performs finalizer operations when resource is being deleted
+// It updates status, records events, and removes the finalizer
+func (r *reconciliationHelperImpl) handleDeletionFinalizer(
+	ctx context.Context,
+	memcached *cachev1beta1.Memcached,
+) (ctrl.Result, error) {
+	log := log.FromContext(ctx)
+	if !controllerutil.ContainsFinalizer(memcached, memcachedFinalizer) {
+		return ctrl.Result{}, nil
+	}
+
+	log.Info("Performing Finalizer Operations for Memcached before delete CR")
+
+	// Note: It is not recommended to use finalizers with the purpose of delete resources which are
+	// created and managed in the reconciliation. These ones, such as the Deployment created on this reconcile,
+	// are defined as dependent of the custom resource. See that we use the method ctrl.SetControllerReference.
+	// to set the ownerRef which means that the Deployment will be deleted by the Kubernetes API.
+	// More info: https://kubernetes.io/docs/tasks/administer-cluster/use-cascading-deletion/
+
+	// Update status to indicate deletion
+	if err := r.statusHelper.UpdateDegradedStatus(ctx, memcached,
+		fmt.Sprintf("Performing finalizer operations for the custom resource: %s", memcached.Name)); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Record event for deletion
+	r.controller.Recorder.Event(memcached, "Warning", "Deleting",
+		fmt.Sprintf("Custom Resource %s is being deleted from the namespace %s",
+			memcached.Name, memcached.Namespace))
+
+	// Remove finalizer
+	if ok := controllerutil.RemoveFinalizer(memcached, memcachedFinalizer); !ok {
+		log.Error(nil, "Failed to remove finalizer")
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	if err := r.controller.Update(ctx, memcached); err != nil {
+		log.Error(err, "Failed to remove finalizer")
+		return ctrl.Result{}, err
+	}
+
+	return ctrl.Result{}, nil
+}
+
+// handleAdditionFinalizer adds finalizer if it doesn't exist
+// This ensures cleanup operations are performed when the resource is deleted
+func (r *reconciliationHelperImpl) handleAdditionFinalizer(
+	ctx context.Context,
+	memcached *cachev1beta1.Memcached,
+) (ctrl.Result, error) {
+	log := log.FromContext(ctx)
+	if controllerutil.ContainsFinalizer(memcached, memcachedFinalizer) {
+		return ctrl.Result{}, nil
+	}
+
+	log.Info("Adding Finalizer for Memcached")
+	if ok := controllerutil.AddFinalizer(memcached, memcachedFinalizer); !ok {
+		log.Error(nil, "Failed to add finalizer")
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	if err := r.controller.Update(ctx, memcached); err != nil {
+		log.Error(err, "Failed to update CR to add finalizer")
+		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
@@ -125,15 +147,36 @@ func (r *reconciliationHelperImpl) HandleFinalizers(ctx context.Context, memcach
 // - Update Deployment if replicas don't match
 // - Update status based on reconciliation results
 func (r *reconciliationHelperImpl) ReconcileDeployment(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
-
-	// Skip deployment logic if resource is being deleted
-	if memcached.GetDeletionTimestamp() != nil {
-		log.Info("Resource is being deleted, skipping deployment reconciliation")
+	if shouldSkip := r.shouldSkipReconciliation(ctx, memcached); shouldSkip {
 		return ctrl.Result{}, nil
 	}
 
 	dep := &appsv1.Deployment{}
+	if result, err := r.handleDeploymentCreation(ctx, memcached, dep); err != nil {
+		return result, err
+	}
+
+	return r.handleDeploymentUpdate(ctx, memcached, dep)
+}
+
+// shouldSkipReconciliation checks if reconciliation should be skipped
+// Returns true if the resource is being deleted
+func (r *reconciliationHelperImpl) shouldSkipReconciliation(ctx context.Context, memcached *cachev1beta1.Memcached) bool {
+	if memcached.GetDeletionTimestamp() != nil {
+		log.FromContext(ctx).Info("Resource is being deleted, skipping deployment reconciliation")
+		return true
+	}
+	return false
+}
+
+// handleDeploymentCreation handles deployment existence check and creation
+// Returns ctrl.Result and error if deployment needs to be created or if there's an error
+func (r *reconciliationHelperImpl) handleDeploymentCreation(
+	ctx context.Context,
+	memcached *cachev1beta1.Memcached,
+	dep *appsv1.Deployment,
+) (ctrl.Result, error) {
+	log := log.FromContext(ctx)
 
 	// Check if deployment exists
 	err := r.controller.Get(ctx, types.NamespacedName{
@@ -149,10 +192,19 @@ func (r *reconciliationHelperImpl) ReconcileDeployment(ctx context.Context, memc
 		return ctrl.Result{}, err
 	}
 
-	// Update if size doesn't match
-	// The CRD API is defining that the Memcached type, have a MemcachedSpec.Size field
-	// to set the quantity of Deployment instances is the desired state on the cluster.
+	return ctrl.Result{}, nil
+}
+
+// handleDeploymentUpdate handles deployment update and status management
+func (r *reconciliationHelperImpl) handleDeploymentUpdate(
+	ctx context.Context,
+	memcached *cachev1beta1.Memcached,
+	dep *appsv1.Deployment,
+) (ctrl.Result, error) {
+	log := log.FromContext(ctx)
 	size := memcached.Spec.Size
+
+	// Update if size doesn't match
 	if *dep.Spec.Replicas != size {
 		dep.Spec.Replicas = &size
 		if err := r.controller.Update(ctx, dep); err != nil {

@@ -25,6 +25,8 @@ func NewFAManager(tickerManager TickerManager, sbiManager SBIManager) *FAManager
 
 func (f *FAManagerImpl) ProcessTickers(ctx context.Context, tickers []string, year int) ([]fa.FATickerAnalysis, error) {
 	var results []fa.FATickerAnalysis
+	// TODO: #A Build Capital  Manager
+	// TODO: #B Build Dividend  Manager
 
 	for _, ticker := range tickers {
 		// Get USD Analysis

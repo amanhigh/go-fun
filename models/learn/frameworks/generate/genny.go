@@ -14,8 +14,8 @@ type KeyTypeValueTypeMap struct {
 	typedMap map[KeyType]ValueType
 }
 
-func (self *KeyTypeValueTypeMap) PrintType() {
-	for key, value := range self.typedMap {
+func (t *KeyTypeValueTypeMap) PrintType() {
+	for key, value := range t.typedMap {
 		log.Info().Any("Key", key).Any("Value", value).Msg("Map")
 	}
 }

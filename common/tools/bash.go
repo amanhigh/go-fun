@@ -15,12 +15,12 @@ import (
 )
 
 func RunCommandPrintError(cmd string) string {
-	if output, err := runCommand(cmd); err == nil {
+	output, err := runCommand(cmd)
+	if err == nil {
 		return output
-	} else {
-		log.Error().Str("CMD", cmd).Err(err).Msg("Error Running Command")
-		return ""
 	}
+	log.Error().Str("CMD", cmd).Err(err).Msg("Error Running Command")
+	return ""
 }
 
 func RunAsyncCommand(heading string, cmd string, wg *sync.WaitGroup) {

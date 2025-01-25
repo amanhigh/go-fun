@@ -37,18 +37,27 @@ func (h *HotkeyManagerImpl) SetupHotkeys() {
 
 func (h *HotkeyManagerImpl) setupHotkeyConfig() {
 	h.hotkeys = make(map[rune]Hotkey)
+	h.setupNavigationHotkeys()
+	h.setupServiceManagementHotkeys()
+	h.setupSelectionHotkeys()
+}
+
+func (h *HotkeyManagerImpl) setupNavigationHotkeys() {
 	hotkeys := []Hotkey{
 		{Key: 'q', Description: "Quit the application", Handler: func() { h.uiManager.StopApplication() }},
 		{Key: '?', Description: "Display help information", Handler: func() { h.uiManager.ShowOutput(h.GenerateHelpText()) }},
-		{Key: 'c', Description: "Clear selected services", Handler: func() { h.serviceManager.ClearSelectedServices(); h.uiManager.UpdateContext() }},
 		{Key: '/', Description: "Focus on filter input", Handler: func() { h.uiManager.FocusFilterInput() }},
-		{Key: ' ', Description: "Toggle service selection or filtered services", Handler: func() {
-			if h.uiManager.IsFocusOnList() {
-				h.uiManager.ToggleServiceSelection()
-			} else if h.uiManager.IsFocusOnFilter() {
-				h.uiManager.ToggleFilteredServices()
-			}
+		{Key: 'f', Description: "Clear filter", Handler: func() {
+			h.uiManager.clearFilterInput()
+			h.uiManager.FocusServiceList()
 		}},
+	}
+	h.registerHotkeys(hotkeys)
+}
+
+func (h *HotkeyManagerImpl) setupServiceManagementHotkeys() {
+	hotkeys := []Hotkey{
+		{Key: 'c', Description: "Clear selected services", Handler: func() { h.serviceManager.ClearSelectedServices(); h.uiManager.UpdateContext() }},
 		{Key: 's', Description: "Setup services", Handler: func() {
 			output, err := h.serviceManager.SetupServices()
 			if err != nil {
@@ -73,11 +82,24 @@ func (h *HotkeyManagerImpl) setupHotkeyConfig() {
 				h.uiManager.ShowOutput(output)
 			}
 		}},
-		{Key: 'f', Description: "Clear filter", Handler: func() {
-			h.uiManager.clearFilterInput()
-			h.uiManager.FocusServiceList()
+	}
+	h.registerHotkeys(hotkeys)
+}
+
+func (h *HotkeyManagerImpl) setupSelectionHotkeys() {
+	hotkeys := []Hotkey{
+		{Key: ' ', Description: "Toggle service selection or filtered services", Handler: func() {
+			if h.uiManager.IsFocusOnList() {
+				h.uiManager.ToggleServiceSelection()
+			} else if h.uiManager.IsFocusOnFilter() {
+				h.uiManager.ToggleFilteredServices()
+			}
 		}},
 	}
+	h.registerHotkeys(hotkeys)
+}
+
+func (h *HotkeyManagerImpl) registerHotkeys(hotkeys []Hotkey) {
 	for _, hotkey := range hotkeys {
 		h.hotkeys[hotkey.Key] = hotkey
 	}

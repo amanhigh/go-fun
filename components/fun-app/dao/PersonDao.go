@@ -27,7 +27,7 @@ func NewPersonDao(baseDao util.BaseDao) PersonDaoInterface {
 	return &PersonDao{BaseDao: baseDao}
 }
 
-func (self *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {
+func (pd *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {
 	var txErr error
 	//Add Pagination to Query
 	txn := Tx(c).Offset(personQuery.Offset).Limit(personQuery.Limit)
@@ -54,7 +54,7 @@ func (self *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery
 	return
 }
 
-func (self *PersonDao) ListPersonAudit(c context.Context, id string) (personAuditList []fun.PersonAudit, err common.HttpError) {
+func (pd *PersonDao) ListPersonAudit(c context.Context, id string) (personAuditList []fun.PersonAudit, err common.HttpError) {
 	var txErr error
 	var audit = fun.PersonAudit{}
 	audit.Id = id

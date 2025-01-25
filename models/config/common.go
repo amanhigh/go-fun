@@ -36,8 +36,8 @@ type RateLimit struct {
 	PerMinuteLimit int64  `env:"PER_MIN_LIMIT" envDefault:"-1"`
 }
 
-func (self *Server) GetUrl(uri string) string {
-	return fmt.Sprintf("http://%v:%v%v", self.Host, self.Port, uri)
+func (s *Server) GetUrl(uri string) string {
+	return fmt.Sprintf("http://%v:%v%v", s.Host, s.Port, uri)
 }
 
 type Vault struct {
@@ -125,8 +125,8 @@ var DefaultHttpConfig = HttpClientConfig{
 
 type ZoneMap map[string]Server
 
-func (self ZoneMap) GetUrl(zone, uri string) (url string, err error) {
-	if server, ok := self[zone]; ok {
+func (s ZoneMap) GetUrl(zone, uri string) (url string, err error) {
+	if server, ok := s[zone]; ok {
 		return server.GetUrl(uri), nil
 	} else {
 		return "", errors.New("INVALID_ZONE: " + zone)

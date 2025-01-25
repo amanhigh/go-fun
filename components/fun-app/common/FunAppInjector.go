@@ -49,44 +49,65 @@ func NewFunAppInjector(cfg config.FunAppConfig) interfaces.ApplicationInjector {
 	return &FunAppInjector{container.New(), cfg}
 }
 
-func (self *FunAppInjector) BuildApp() (app any, err error) {
-	/* Setup Telemetry */
-	telemetry.InitLogger(self.config.Log)
-	telemetry.InitTracerProvider(context.Background(), NAMESPACE, self.config.Tracing)
-	setupPrometheus()
+func (fi *FunAppInjector) BuildApp() (app any, err error) {
+	fi.setupTelemetry()
+	fi.registerValidators()
+	fi.setupDependencies()
+	app, err = fi.buildApplication()
+	return
+}
 
-	/* Validators */
+func (fi *FunAppInjector) setupTelemetry() {
+	telemetry.InitLogger(fi.config.Log)
+	telemetry.InitTracerProvider(context.Background(), NAMESPACE, fi.config.Tracing)
+	setupPrometheus()
+}
+
+func (fi *FunAppInjector) registerValidators() {
 	v, _ := binding.Validator.Engine().(*validator.Validate)
 	_ = v.RegisterValidation("name", NameValidator)
+}
 
-	/* Injections */
-	// Build Libraries
-	container.MustSingleton(self.di, func() config.FunAppConfig {
-		return self.config
+func (fi *FunAppInjector) setupDependencies() {
+	fi.registerCoreDependencies()
+	fi.registerMetrics()
+	fi.registerComponents()
+	fi.registerHandlers()
+}
+
+func (fi *FunAppInjector) registerCoreDependencies() {
+	container.MustSingleton(fi.di, func() config.FunAppConfig {
+		return fi.config
 	})
-	container.MustSingleton(self.di, newGin)
-	container.MustSingleton(self.di, newPrometheus)
-	container.MustSingleton(self.di, newHttpServer)
-	container.MustSingleton(self.di, util.NewGracefulShutdown)
-	container.MustSingleton(self.di, newDb)
-
-	container.MustSingleton(self.di, func() trace.Tracer {
+	container.MustSingleton(fi.di, newGin)
+	container.MustSingleton(fi.di, newPrometheus)
+	container.MustSingleton(fi.di, newHttpServer)
+	container.MustSingleton(fi.di, util.NewGracefulShutdown)
+	container.MustSingleton(fi.di, newDb)
+	container.MustSingleton(fi.di, func() trace.Tracer {
 		return otel.Tracer(NAMESPACE)
 	})
-	registerMetrics(self.di)
+}
 
-	//Build Components
-	container.MustSingleton(self.di, util.NewBaseDao)
-	container.MustSingleton(self.di, dao.NewPersonDao)
-	container.MustSingleton(self.di, manager.NewPersonManager)
+func (fi *FunAppInjector) registerMetrics() {
+	registerMetrics(fi.di)
+}
 
-	registerHandlers(self.di)
+func (fi *FunAppInjector) registerComponents() {
+	container.MustSingleton(fi.di, util.NewBaseDao)
+	container.MustSingleton(fi.di, dao.NewPersonDao)
+	container.MustSingleton(fi.di, manager.NewPersonManager)
+}
 
-	// Build App
+func (fi *FunAppInjector) registerHandlers() {
+	registerHandlers(fi.di)
+}
+
+func (fi *FunAppInjector) buildApplication() (app any, err error) {
 	app = &handlers.FunServer{}
-	err = self.di.Fill(app)
+	err = fi.di.Fill(app)
 	if err == nil {
-		log.Info().Int("Port", self.config.Server.Port).Msg("Injection Complete")
+		log.Info().Int("Port", fi.config.Server.Port).Msg("Injection Complete")
 	}
 	return
 }
@@ -104,7 +125,7 @@ func newGin(config config.FunAppConfig) (engine *gin.Engine) {
 	engine = gin.New()
 
 	/* Middleware */
-	engine.Use(gin.Recovery(), telemetry.RequestId, gin.LoggerWithFormatter(telemetry.GinRequestIdFormatter))
+	engine.Use(gin.Recovery(), telemetry.RequestID, gin.LoggerWithFormatter(telemetry.GinRequestIdFormatter))
 	// https://github.com/open-telemetry/opentelemetry-go-contrib/blob/main/instrumentation/github.com/gin-gonic/gin/otelgin/example/server.go
 	engine.Use(otelgin.Middleware(NAMESPACE + "-gin"))
 

@@ -33,7 +33,7 @@ func NewBaseDao(db *gorm.DB) BaseDao {
 
 type DbRun func(c context.Context) (err common.HttpError)
 
-func (self *BaseDao) FindById(c context.Context, id any, entity any) (err common.HttpError) {
+func (b *BaseDao) FindById(c context.Context, id, entity any) (err common.HttpError) {
 	var txErr error
 	if txErr = Tx(c).First(entity, "id=?", id).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		log.Ctx(c).Error().Any("Id", id).Any("Entity", entity).Err(txErr).Msg("Error Fetching Entity")
@@ -42,30 +42,30 @@ func (self *BaseDao) FindById(c context.Context, id any, entity any) (err common
 	return
 }
 
-func (self *BaseDao) FindPaginated(c context.Context, pageParams common.Pagination, result any) (count int64, err common.HttpError) {
+func (b *BaseDao) FindPaginated(c context.Context, pageParams common.Pagination, result any) (count int64, err common.HttpError) {
 	var txErr error
 	if txErr = Tx(c).Offset(pageParams.Offset).Limit(pageParams.Limit).Find(result).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		log.Ctx(c).Error().Any("paginationParams", pageParams).Int64("TotalCount", count).
 			Err(txErr).Msg("Error Fetching Paginated Entity")
 		err = GormErrorMapper(txErr)
 	} else {
-		//Add count to Paginated Result
-		count, err = self.GetCount(c, result)
+		// Add count to Paginated Result
+		count, err = b.GetCount(c, result)
 	}
 	return
 }
 
-func (self *BaseDao) Create(c context.Context, entity any, omit ...string) (err common.HttpError) {
+func (b *BaseDao) Create(c context.Context, entity any, omit ...string) (err common.HttpError) {
 	var txErr error
 	if txErr = Tx(c).Omit(omit...).Create(entity).Error; txErr != nil {
 		log.Ctx(c).Error().Any("Entity", entity).Err(txErr).Msg("Entity Create Failed")
 	}
-	//Error Conversion
+	// Error Conversion
 	err = GormErrorMapper(txErr)
 	return
 }
 
-func (self *BaseDao) Update(c context.Context, entity any, omit ...string) (err common.HttpError) {
+func (b *BaseDao) Update(c context.Context, entity any, omit ...string) (err common.HttpError) {
 	if txErr := Tx(c).Omit(omit...).Save(entity).Error; txErr != nil {
 		log.Ctx(c).Error().
 			Any("Entity", entity).Err(txErr).Msg("Entity Update Failed")
@@ -74,7 +74,7 @@ func (self *BaseDao) Update(c context.Context, entity any, omit ...string) (err 
 	return
 }
 
-func (self *BaseDao) DeleteById(c context.Context, id any, entity any) (err common.HttpError) {
+func (b *BaseDao) DeleteById(c context.Context, id, entity any) (err common.HttpError) {
 	if txErr := Tx(c).Delete(entity, "id=?", id).Error; txErr != nil {
 		log.Ctx(c).Error().
 			Any("Id", id).Any("Entity", entity).Err(txErr).Msg("Entity Delete Failed")
@@ -83,7 +83,7 @@ func (self *BaseDao) DeleteById(c context.Context, id any, entity any) (err comm
 	return
 }
 
-func (self *BaseDao) GetCount(c context.Context, entity any) (count int64, err common.HttpError) {
+func (b *BaseDao) GetCount(c context.Context, entity any) (count int64, err common.HttpError) {
 	var txErr error
 	if txErr = Tx(c).Model(entity).Count(&count).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		log.Ctx(c).Error().Any("Entity", entity).Err(txErr).Msg("Error Getting Entity Count")
@@ -92,7 +92,7 @@ func (self *BaseDao) GetCount(c context.Context, entity any) (count int64, err c
 	return
 }
 
-func (self *BaseDao) SetPagination(query *gorm.DB, offset, limit int) {
+func (b *BaseDao) SetPagination(query *gorm.DB, offset, limit int) {
 	query.Offset(offset)
 	if limit > 0 {
 		query.Limit(limit)
@@ -103,20 +103,21 @@ func (self *BaseDao) SetPagination(query *gorm.DB, offset, limit int) {
 Transaction Handling to use already created transaction or Init New.
 Needs State, hence placed in BaseDao (Not Util)
 */
-func (self *BaseDao) UseOrCreateTx(c context.Context, run DbRun, readOnly ...bool) (err common.HttpError) {
-	//Check if Context has Tx
-	if Tx(c) != nil {
-		//First Preference to use existing tx if supplied
+func (b *BaseDao) UseOrCreateTx(c context.Context, run DbRun, readOnly ...bool) (err common.HttpError) {
+	// Check if Context has Tx
+	switch {
+	case Tx(c) != nil:
+		// First Preference to use existing tx if supplied
 		err = run(c)
-	} else if len(readOnly) > 0 && readOnly[0] {
+	case len(readOnly) > 0 && readOnly[0]:
 		// Set Timeout on DB
 		ctx, cancel := context.WithTimeout(c, TX_TIMEOUT)
 		if cancel != nil {
 			defer cancel()
 		}
 		// Avoid Creating New Transaction for Readonly (Use DB)
-		err = run(context.WithValue(c, models.ContextTx, self.Db.WithContext(ctx)))
-	} else {
+		err = run(context.WithValue(c, models.ContextTx, b.Db.WithContext(ctx)))
+	default:
 		// Create Transaction With Timeout
 		ctx, cancel := context.WithTimeout(c, TX_TIMEOUT)
 		if cancel != nil {
@@ -125,13 +126,13 @@ func (self *BaseDao) UseOrCreateTx(c context.Context, run DbRun, readOnly ...boo
 
 		// Error Returned after running completes in Transaction.
 		// Inject Transaction in Context
-		txErr := self.Db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		txErr := b.Db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 			return run(context.WithValue(c, models.ContextTx, tx))
 		})
 
-		/* Morph Transaction Error to Http Error */
+		// Morph Transaction Error to Http Error
 		if ok := errors.As(txErr, &err); txErr != nil && !ok {
-			//This Should Not Happen.
+			// This Should Not Happen.
 			err = common.NewServerError(txErr)
 		}
 	}

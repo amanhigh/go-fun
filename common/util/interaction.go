@@ -39,7 +39,6 @@ func DisplayMenu(msg string, options []string) (int, string) {
 	input := PromptInput("Please Select an Option.")
 	if selection, err := strconv.Atoi(input); err == nil {
 		return selection, options[selection-1]
-	} else {
-		return -1, "INVALID"
 	}
+	return -1, "INVALID"
 }

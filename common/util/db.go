@@ -11,6 +11,8 @@ import (
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/glebarez/sqlite"
+
+	// mysql driver required for database/sql
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/rs/zerolog/log"
@@ -50,7 +52,7 @@ func CreateDb(cfg config.Db) (db *gorm.DB, err error) {
 				if err = m.Up(); err == nil {
 					log.Info().Str("Source", sourceURL).Str("DB", dbUrl).Msg("Migration Complete")
 				} else if errors.Is(err, migrate.ErrNoChange) {
-					//Ignore No Change
+					// Ignore No Change
 					err = nil
 				}
 			}
@@ -83,7 +85,7 @@ func ConnectDb(cfg config.Db) (db *gorm.DB, err error) {
 
 	if db, err = gorm.Open(dialector, &gorm.Config{Logger: logger.Default.LogMode(cfg.LogLevel)}); err == nil {
 		/** Print SQL */
-		//db.LogMode(true)
+		// db.LogMode(true)
 
 		if sqlDb, err := db.DB(); err == nil {
 			sqlDb.SetMaxIdleConns(cfg.MaxIdle)
@@ -98,8 +100,8 @@ func ConnectDb(cfg config.Db) (db *gorm.DB, err error) {
 // Faster CGO Implementation - https://github.com/go-gorm/sqlite
 // It returns a *gorm.DB and an error.
 func CreateTestDb(level logger.LogLevel) (db *gorm.DB, err error) {
-	//Use Log Level 4 for Debug, 3 for Warnings, 2 for Errors
-	//Can use /tmp/gorm.db for file base Db
+	// Use Log Level 4 for Debug, 3 for Warnings, 2 for Errors
+	// Can use /tmp/gorm.db for file base Db
 	db, err = gorm.Open(sqlite.Open("file:memdb1?mode=memory&cache=shared"), &gorm.Config{Logger: logger.Default.LogMode(level)})
 	return
 }
@@ -118,7 +120,7 @@ func BuildMysqlURL(username, password, host, dbName string, port any) string {
 //
 // It takes an error as a parameter and returns a common.HttpError.
 func GormErrorMapper(err error) common.HttpError {
-	//Doesn't Need State hence placed in Util.
+	// Doesn't Need State hence placed in Util.
 	if err == nil {
 		return nil
 	}
@@ -135,16 +137,15 @@ func GormErrorMapper(err error) common.HttpError {
 */
 func Tx(c context.Context) (tx *gorm.DB) {
 	if c != nil {
-		//Check If Context Has Tx
+		// Check If Context Has Tx
 		if value := c.Value(models.ContextTx); value != nil {
-			//Extract and Return
+			// Extract and Return
 			if tx, ok := value.(*gorm.DB); ok {
 				return tx
-			} else {
-				log.Warn().
-					Str("ActualType", fmt.Sprintf("%T", value)).
-					Msg("Invalid type in context. Expected *gorm.DB")
 			}
+			log.Warn().
+				Str("ActualType", fmt.Sprintf("%T", value)).
+				Msg("Invalid type in context. Expected *gorm.DB")
 		} else {
 			log.Trace().Msg("Missing Transaction In Context")
 		}

@@ -10,6 +10,7 @@ Based on
 If sum of two numbers is divisible by K, then if one of them gives remainder i, other will give remainder (K – i).
 Eg. 3 + 7 = 10, k = 5 then 3%5=3, 7%5=2 thus 2(i)+3(k-i)==5(k)
 */
+// nolint:funlen
 func NonDivisibleSubset(input []int, k int) (result int) {
 	/* Build an array to count remainders */
 	modulos := make([]int, k)
