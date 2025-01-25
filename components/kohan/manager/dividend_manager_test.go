@@ -25,12 +25,12 @@ var (
 )
 
 func timeFromStr(date string) time.Time {
-	t, _ := time.Parse("2006-01-02", date)
+	t, _ := time.Parse(common.DateOnly, date)
 	return t
 }
 
 var _ = Describe("DividendManager", func() {
-	// TODO: Not Working Test
+	// TODO: #A Not Working Test
 	BeforeEach(func() {
 		var err error
 		mockSBIManager = mocks.NewSBIManager(GinkgoT())

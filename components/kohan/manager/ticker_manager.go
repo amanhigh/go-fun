@@ -94,8 +94,7 @@ func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date ti
 	}
 
 	// Format date for lookup
-	// BUG: #C Use Date Constant in Models
-	dateStr := date.Format("2006-01-02")
+	dateStr := date.Format(common.DateOnly)
 
 	// Try exact date match first
 	if dayPrice, exists := data.TimeSeries[dateStr]; exists {

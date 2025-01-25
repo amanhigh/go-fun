@@ -44,8 +44,7 @@ func (s *SBIManagerImpl) GetTTBuyRate(date time.Time) (rate float64, err common.
 		return 0, err
 	}
 
-	// BUG: Declare constant for date format in models
-	dateStr := date.Format("2006-01-02")
+	dateStr := date.Format(common.DateOnly)
 	if rate, exists := s.rateCache[dateStr]; exists {
 		return rate, nil
 	}

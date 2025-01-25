@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 )
 
@@ -33,9 +34,8 @@ func (f *TaxManagerImpl) ValueTickers(ctx context.Context, tickers []string, yea
 		}
 
 		// Get TT Rates
-		// BUG: Use Date Constants
-		peakDate, _ := time.Parse("2006-01-02", analysis.PeakDate)
-		yearEndDate, _ := time.Parse("2006-01-02", analysis.YearEndDate)
+		peakDate, _ := time.Parse(common.DateOnly, analysis.PeakDate)
+		yearEndDate, _ := time.Parse(common.DateOnly, analysis.YearEndDate)
 
 		peakRate, err := f.sbiManager.GetTTBuyRate(peakDate)
 		if err != nil {

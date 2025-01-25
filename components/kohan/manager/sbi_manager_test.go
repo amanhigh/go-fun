@@ -89,7 +89,7 @@ var _ = Describe("SBIManager", func() {
 
 		BeforeEach(func() {
 			var err error
-			testDate, err = time.Parse("2006-01-02", "2024-01-23")
+			testDate, err = time.Parse(common.DateOnly, "2024-01-23")
 			Expect(err).To(BeNil())
 		})
 
@@ -121,7 +121,7 @@ var _ = Describe("SBIManager", func() {
 
 		PIt("should handle invalid CSV file", func() {
 			// FIXME: Test is failing after moving to gocsv
-			
+
 			// Create invalid CSV file
 			writeErr := os.WriteFile(filepath.Join(testDir, tax.SBI_RATES_FILENAME), []byte("invalid,csv"), util.DEFAULT_PERM)
 			Expect(writeErr).To(BeNil())

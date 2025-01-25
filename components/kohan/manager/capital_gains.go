@@ -8,6 +8,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 	gocsv "github.com/gocarina/gocsv"
 )
@@ -89,7 +90,7 @@ func (c *CapitalGainsManagerImpl) analyzeTickerPositions(ctx context.Context, ti
 
 	for _, t := range transactions {
 		// Parse dates
-		acquiredDate, err := time.Parse("2006-01-02", t.DateAcquired)
+		acquiredDate, err := time.Parse(common.DateOnly, t.DateAcquired)
 		if err != nil {
 			return analysis, fmt.Errorf("invalid date format: %w", err)
 		}

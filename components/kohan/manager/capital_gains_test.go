@@ -9,6 +9,7 @@ import (
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
+	"github.com/amanhigh/go-fun/models/common"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -18,7 +19,7 @@ const (
 )
 
 var _ = PDescribe("CapitalGainsManager", func() {
-	// TODO: Not Working Test
+	// TODO: #B Not Working Test
 	var (
 		ctx               context.Context
 		mockTickerManager *mocks.TickerManager
@@ -146,7 +147,7 @@ func setupSNPSPriceMocks(ctx context.Context, mockTicker *mocks.TickerManager) {
 }
 
 func parseDateMust(date string) time.Time {
-	t, err := time.Parse("2006-01-02", date)
+	t, err := time.Parse(common.DateOnly, date)
 	if err != nil {
 		panic(err)
 	}

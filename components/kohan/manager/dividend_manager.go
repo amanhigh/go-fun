@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 	"github.com/gocarina/gocsv"
 )
@@ -45,8 +46,7 @@ func (d *DividendManagerImpl) GetDividends(ctx context.Context) ([]tax.Dividend,
 	// Process each dividend row
 	var transactions []tax.Dividend
 	for _, row := range rows {
-		// BUG: Use Date Constants
-		date, err := time.Parse("2006-01-02", row.DividendDate)
+		date, err := time.Parse(common.DateOnly, row.DividendDate)
 		if err != nil {
 			return nil, err
 		}
