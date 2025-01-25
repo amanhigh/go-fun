@@ -1,10 +1,9 @@
 package tax
 
-// BUG: #A Use CSV Tag
 type SbiRate struct {
-	Date   string  `json:"DATE"`
-	TTBuy  float64 `json:"TT BUY"`
-	TTSell float64 `json:"TT SELL"`
+	Date   string  `csv:"DATE"`
+	TTBuy  float64 `csv:"TT BUY"`
+	TTSell float64 `csv:"TT SELL"`
 }
 
 // File name constant for SBI Rate CSV

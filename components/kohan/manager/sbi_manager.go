@@ -2,7 +2,7 @@ package manager
 
 import (
 	"context"
-	"encoding/csv"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,6 +14,7 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/clients"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
+	"github.com/gocarina/gocsv"
 )
 
 //go:generate mockery --name SBIManager
@@ -118,22 +119,15 @@ func (s *SBIManagerImpl) readCSVRecords(filePath string) ([][]string, common.Htt
 	}
 	defer file.Close()
 
-	// FIXME: #A Use Gocsv for parsing use SbiRate in Models
-	reader := csv.NewReader(file)
-
-	// Validate header
-	header, err := reader.Read()
-	if err != nil {
+	var rates []tax.SbiRate
+	if err := gocsv.Unmarshal(file, &rates); err != nil {
 		return nil, common.NewServerError(err)
 	}
-	if len(header) < 3 || header[0] != "DATE" || header[1] != "TT BUY" || header[2] != "TT SELL" {
-		return nil, common.NewHttpError("invalid CSV header format", http.StatusInternalServerError)
-	}
 
-	// Read remaining records
-	records, err := reader.ReadAll()
-	if err != nil {
-		return nil, common.NewServerError(err)
+	// Convert to string slice format for existing code
+	var records [][]string
+	for _, rate := range rates {
+		records = append(records, []string{rate.Date, fmt.Sprintf("%.2f", rate.TTBuy), fmt.Sprintf("%.2f", rate.TTSell)})
 	}
 
 	return records, nil
