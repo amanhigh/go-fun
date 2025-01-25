@@ -81,7 +81,7 @@ import requests
 import json
 import csv
 from datetime import datetime
-# FIXME: #C Create Readme on how to use FA.
+# TODO: Create Readme on how to use FA.
 # Constants
 TICKERS = ['AMZN', 'SIVR']
 DOWNLOADS_DIR = '~/Downloads/Tickers'

@@ -61,7 +61,7 @@ type ServiceManager interface {
 	ToggleFilteredServices()
 }
 
-// BUG: #C Move to Repository Layer ?
+// TODO: Move to Repository Layer ?
 func NewServiceManager(makeDir, serviceFile string) *ServiceManagerImpl {
 	manager := &ServiceManagerImpl{
 		allServices:         []string{},

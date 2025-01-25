@@ -57,7 +57,7 @@ var _ = Describe("SBIManager", func() {
 			Expect(string(content)).To(Equal(testCSV))
 		})
 
-		// FIXME: Should not downolad Rates if exists
+		// FIXME: #B Should not downolad Rates if exists
 
 		It("should handle client error", func() {
 			expectedErr := common.NewHttpError("Failed to fetch exchange rates", http.StatusInternalServerError)

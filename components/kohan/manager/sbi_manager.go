@@ -52,7 +52,7 @@ func (s *SBIManagerImpl) GetTTBuyRate(date time.Time) (rate float64, err common.
 }
 
 func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpError) {
-	// BUG: Skip dowloading if file already exists
+	// BUG: #B Skip dowloading if file already exists
 	var csvContent string
 	if csvContent, err = s.client.FetchExchangeRates(ctx); err != nil {
 		return
@@ -118,7 +118,7 @@ func (s *SBIManagerImpl) readCSVRecords(filePath string) ([][]string, common.Htt
 	}
 	defer file.Close()
 
-	// FIXME: Use Gocsv for parsing
+	// FIXME: #A Use Gocsv for parsing
 	reader := csv.NewReader(file)
 
 	// Validate header

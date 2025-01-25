@@ -96,7 +96,7 @@ func (t *TickerManagerImpl) GetPriceOnDate(ctx context.Context, ticker string, d
 	}
 
 	// Format date for lookup
-	// BUG: Use Date Constant in Models
+	// BUG: #C Use Date Constant in Models
 	dateStr := date.Format("2006-01-02")
 
 	// Try exact date match first
