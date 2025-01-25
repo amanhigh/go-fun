@@ -136,5 +136,26 @@ var _ = Describe("SBIManager", func() {
 			Expect(err).NotTo(BeNil())
 			Expect(err.Code()).To(Equal(http.StatusInternalServerError))
 		})
+
+		It("should cache rates after first call", func() {
+			// Create test file
+			err := os.WriteFile(filepath.Join(testDir, fa.SBI_RATES_FILENAME), []byte(testCSV), util.DEFAULT_PERM)
+			Expect(err).To(BeNil())
+
+			// First call should load cache
+			rate1, err := sbiManager.GetTTBuyRate(testDate)
+			Expect(err).To(BeNil())
+			Expect(rate1).To(Equal(82.50))
+
+			// Second call should use cache
+			rate2, err := sbiManager.GetTTBuyRate(testDate)
+			Expect(err).To(BeNil())
+			Expect(rate2).To(Equal(82.50))
+
+			// Verify cache miss
+			missingDate := testDate.AddDate(0, 0, -1)
+			_, err = sbiManager.GetTTBuyRate(missingDate)
+			Expect(err).To(Equal(common.ErrNotFound))
+		})
 	})
 })

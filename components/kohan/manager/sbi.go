@@ -24,48 +24,28 @@ type SBIManager interface {
 type SBIManagerImpl struct {
 	client      clients.SBIClient
 	downloadDir string
+	rateCache   map[string]float64
 }
 
 func NewSBIManager(client clients.SBIClient, downloadDir string) *SBIManagerImpl {
 	return &SBIManagerImpl{
 		client:      client,
 		downloadDir: downloadDir,
+		rateCache:   make(map[string]float64),
 	}
 }
 
 // SaveRates fetches the latest exchange rates and saves them to a CSV file
 // in the configured download directory. Returns an error if any step fails.
 func (s *SBIManagerImpl) GetTTBuyRate(date time.Time) (rate float64, err common.HttpError) {
-	// Read CSV file from download directory
-	filePath := filepath.Join(s.downloadDir, fa.SBI_RATES_FILENAME)
-
-	// Check if file exists
-	if _, err1 := os.Stat(filePath); err1 != nil {
-		return 0, common.NewHttpError("SBI rates file not found", http.StatusNotFound)
-	}
-
-	// Read and validate CSV records
-	// FIXME: #B Cache Inmemory once Loaded.
-	records, err := s.readCSVRecords(filePath)
-	if err != nil {
+	if err = s.loadRatesIfNeeded(); err != nil {
 		return 0, err
 	}
 
-	// Format date in required format (YYYY-MM-DD)
 	dateStr := date.Format("2006-01-02")
-
-	// Search for matching date
-	for _, record := range records {
-		// Check if date matches (taking first part before space as done in Python)
-		if strings.Split(record[0], " ")[0] == dateStr {
-			rate, err1 := strconv.ParseFloat(record[1], 64)
-			if err1 != nil {
-				return 0, common.NewServerError(err1)
-			}
-			return rate, nil
-		}
+	if rate, exists := s.rateCache[dateStr]; exists {
+		return rate, nil
 	}
-
 	return 0, common.ErrNotFound
 }
 
@@ -87,6 +67,44 @@ func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpErro
 	}
 
 	return
+}
+
+func (s *SBIManagerImpl) parseCSVToRateMap(records [][]string) (map[string]float64, common.HttpError) {
+	rateMap := make(map[string]float64)
+	for _, record := range records {
+		// Parse date and rate
+		dateStr := strings.Split(record[0], " ")[0] // Get date part only
+		rate, err := strconv.ParseFloat(record[1], 64)
+		if err != nil {
+			return nil, common.NewServerError(err)
+		}
+		rateMap[dateStr] = rate
+	}
+	return rateMap, nil
+}
+
+func (s *SBIManagerImpl) loadRatesIfNeeded() common.HttpError {
+	if len(s.rateCache) > 0 {
+		return nil
+	}
+
+	filePath := filepath.Join(s.downloadDir, fa.SBI_RATES_FILENAME)
+	if _, err := os.Stat(filePath); err != nil {
+		return common.NewHttpError("SBI rates file not found", http.StatusNotFound)
+	}
+
+	records, err := s.readCSVRecords(filePath)
+	if err != nil {
+		return err
+	}
+
+	rateMap, err := s.parseCSVToRateMap(records)
+	if err != nil {
+		return err
+	}
+
+	s.rateCache = rateMap
+	return nil
 }
 
 func (s *SBIManagerImpl) readCSVRecords(filePath string) ([][]string, common.HttpError) {
