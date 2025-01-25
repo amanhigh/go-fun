@@ -22,7 +22,7 @@ func OpenOrCreateFile(path string) (*os.File, error) {
 	return os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, DEFAULT_PERM)
 }
 
-func AppendFile(path string, content string) {
+func AppendFile(path, content string) {
 	if f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, APPEND_PERM); err == nil {
 		defer f.Close()
 		if _, err = f.WriteString(content); err != nil {
@@ -52,7 +52,7 @@ func ReadFileMap(dirPath string, readEmpty bool) map[string][]string {
 	return contents
 }
 
-func FindReplaceFile(filePath string, find string, replace string) (err error) {
+func FindReplaceFile(filePath, find, replace string) (err error) {
 	var compile *regexp.Regexp
 	var fileBytes []byte
 	if fileBytes, err = os.ReadFile(filePath); err == nil {

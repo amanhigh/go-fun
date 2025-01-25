@@ -5,7 +5,7 @@ import (
 	"math/big"
 )
 
-func RandomInts(n int, max int) (result []int) {
+func RandomInts(n, max int) (result []int) {
 	for i := 0; i < n; i++ {
 		num, _ := rand.Int(rand.Reader, big.NewInt(int64(max)))
 		result = append(result, int(num.Int64()))
@@ -13,7 +13,7 @@ func RandomInts(n int, max int) (result []int) {
 	return
 }
 
-func RandomInt(min int, max int) int {
+func RandomInt(min, max int) int {
 	num, _ := rand.Int(rand.Reader, big.NewInt(int64(max-min)))
 	return int(num.Int64()) + min
 }

@@ -40,7 +40,7 @@ func handleStatusCode(statusCode int) HttpError {
 
 func ResponseProcessor(response *resty.Response, restyErr error) HttpError {
 	if restyErr != nil {
-		//Rest Client Error hence No Respones
+		// Rest Client Error hence No Respones
 		return NewServerError(restyErr)
 	}
 

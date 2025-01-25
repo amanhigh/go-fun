@@ -23,7 +23,7 @@ func RunCommandPrintError(cmd string) string {
 	return ""
 }
 
-func RunAsyncCommand(heading string, cmd string, wg *sync.WaitGroup) {
+func RunAsyncCommand(heading, cmd string, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		output, err := runCommand(cmd)

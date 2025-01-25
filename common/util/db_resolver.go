@@ -100,18 +100,18 @@ successful Ping
 func (fb *FallBackPolicy) GetPool() (poolIndex int) {
 	select {
 	case err, ok := <-fb.errChan:
-		//Process if errorChannel Open we are on Primary Pool
+		// Process if errorChannel Open we are on Primary Pool
 		if ok && fb.currentPool == POOL_PRIMARY {
 			log.Error().Err(err).Msg("Falling Back to Master for Reads")
 			fb.currentPool = POOL_FALLBACK
 		}
-		//Serve Updated Pool
+		// Serve Updated Pool
 		poolIndex = fb.currentPool
 
 	case <-fb.ticker.C:
-		//At each Retry Interval, If we have switched to Fallback
+		// At each Retry Interval, If we have switched to Fallback
 		if fb.currentPool == POOL_FALLBACK {
-			//Try to Ping Slave if it is up
+			// Try to Ping Slave if it is up
 			if err := fb.Ping(); err == nil {
 				fb.currentPool = POOL_PRIMARY
 				log.Info().Int("Pool", fb.currentPool).Msg("Slave Up reverting config for Reads.")

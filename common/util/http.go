@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func UnwrapRequest(c *gin.Context, requestParam any, pathParam any, queryParam any, callback func(c *gin.Context)) {
+func UnwrapRequest(c *gin.Context, requestParam, pathParam, queryParam any, callback func(c *gin.Context)) {
 	var err error
 	if requestParam != nil {
 		err = c.ShouldBindBodyWith(requestParam, binding.JSON)

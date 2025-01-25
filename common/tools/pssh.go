@@ -29,7 +29,7 @@ type Pssh struct {
 	displayOutput bool
 }
 
-func (p *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput bool) {
+func (p *Pssh) Run(cmd, cluster string, parallelism int, disableOutput bool) {
 	clearOutputPaths()
 
 	psshCmd := fmt.Sprintf(`script %v pssh -h %v -t %v -o %v -e %v %v -p %v '%v'`,
@@ -49,7 +49,7 @@ func (p *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput bo
 	})
 }
 
-func (p *Pssh) RunRange(cmd string, cluster string, parallelism int, disableOutput bool, start int, end int) {
+func (p *Pssh) RunRange(cmd, cluster string, parallelism int, disableOutput bool, start, end int) {
 	if start != -1 && end != -1 {
 		subClusterName := cluster + "m"
 		ExtractSubCluster(cluster, subClusterName, start-1, end)
@@ -64,12 +64,12 @@ func clearOutputPaths() {
 	util.ClearDirectory(config.ERROR_PATH)
 }
 
-func ExtractSubCluster(clusterName string, subClusterName string, start int, end int) {
+func ExtractSubCluster(clusterName, subClusterName string, start, end int) {
 	ips := util.ReadAllLines(getClusterFile(clusterName))
 	WriteClusterFile(subClusterName, strings.Join(ips[start:end], "\n"))
 }
 
-func WriteClusterFile(clusterName string, content string) {
+func WriteClusterFile(clusterName, content string) {
 	filePath := getClusterFile(clusterName)
 	if err := os.WriteFile(filePath, []byte(content), util.DEFAULT_PERM); err != nil {
 		log.Error().Err(err).Str("Cluster", clusterName).Str("Path", filePath).Msg("Failed to write cluster file")
