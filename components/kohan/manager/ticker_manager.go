@@ -15,7 +15,7 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/clients"
 	"github.com/amanhigh/go-fun/models/common"
-	tax "github.com/amanhigh/go-fun/models/tax"
+	"github.com/amanhigh/go-fun/models/tax"
 	"github.com/rs/zerolog/log"
 )
 
@@ -203,7 +203,7 @@ func (t *TickerManagerImpl) analyzeTimeSeries(timeSeries map[string]tax.DayPrice
 		}
 	}
 
-	return fa.TickerAnalysis{
+	return tax.TickerAnalysis{
 		Ticker:       ticker,
 		PeakDate:     highestDate,
 		PeakPrice:    highestClose,

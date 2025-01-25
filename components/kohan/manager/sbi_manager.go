@@ -64,7 +64,7 @@ func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpErro
 	}
 
 	// Write to file
-	filePath := filepath.Join(s.downloadDir, fa.SBI_RATES_FILENAME)
+	filePath := filepath.Join(s.downloadDir, tax.SBI_RATES_FILENAME)
 	if err1 := os.WriteFile(filePath, []byte(csvContent), util.DEFAULT_PERM); err1 != nil {
 		return common.NewServerError(err1)
 	}
@@ -92,7 +92,7 @@ func (s *SBIManagerImpl) loadRatesIfNeeded() common.HttpError {
 	}
 
 	// BUG: Private method to check file presence
-	filePath := filepath.Join(s.downloadDir, fa.SBI_RATES_FILENAME)
+	filePath := filepath.Join(s.downloadDir, tax.SBI_RATES_FILENAME)
 	if _, err := os.Stat(filePath); err != nil {
 		return common.NewHttpError("SBI rates file not found", http.StatusNotFound)
 	}

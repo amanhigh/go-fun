@@ -7,9 +7,9 @@ import (
 
 	common "github.com/amanhigh/go-fun/models/common"
 
-	fa "github.com/amanhigh/go-fun/models/fa"
-
 	mock "github.com/stretchr/testify/mock"
+
+	tax "github.com/amanhigh/go-fun/models/tax"
 
 	time "time"
 )
@@ -28,22 +28,22 @@ func (_m *TickerManager) EXPECT() *TickerManager_Expecter {
 }
 
 // AnalyzeTicker provides a mock function with given fields: ctx, ticker, year
-func (_m *TickerManager) AnalyzeTicker(ctx context.Context, ticker string, year int) (fa.TickerAnalysis, common.HttpError) {
+func (_m *TickerManager) AnalyzeTicker(ctx context.Context, ticker string, year int) (tax.TickerAnalysis, common.HttpError) {
 	ret := _m.Called(ctx, ticker, year)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AnalyzeTicker")
 	}
 
-	var r0 fa.TickerAnalysis
+	var r0 tax.TickerAnalysis
 	var r1 common.HttpError
-	if rf, ok := ret.Get(0).(func(context.Context, string, int) (fa.TickerAnalysis, common.HttpError)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, int) (tax.TickerAnalysis, common.HttpError)); ok {
 		return rf(ctx, ticker, year)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, int) fa.TickerAnalysis); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, int) tax.TickerAnalysis); ok {
 		r0 = rf(ctx, ticker, year)
 	} else {
-		r0 = ret.Get(0).(fa.TickerAnalysis)
+		r0 = ret.Get(0).(tax.TickerAnalysis)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, int) common.HttpError); ok {
@@ -77,12 +77,12 @@ func (_c *TickerManager_AnalyzeTicker_Call) Run(run func(ctx context.Context, ti
 	return _c
 }
 
-func (_c *TickerManager_AnalyzeTicker_Call) Return(analysis fa.TickerAnalysis, err common.HttpError) *TickerManager_AnalyzeTicker_Call {
+func (_c *TickerManager_AnalyzeTicker_Call) Return(analysis tax.TickerAnalysis, err common.HttpError) *TickerManager_AnalyzeTicker_Call {
 	_c.Call.Return(analysis, err)
 	return _c
 }
 
-func (_c *TickerManager_AnalyzeTicker_Call) RunAndReturn(run func(context.Context, string, int) (fa.TickerAnalysis, common.HttpError)) *TickerManager_AnalyzeTicker_Call {
+func (_c *TickerManager_AnalyzeTicker_Call) RunAndReturn(run func(context.Context, string, int) (tax.TickerAnalysis, common.HttpError)) *TickerManager_AnalyzeTicker_Call {
 	_c.Call.Return(run)
 	return _c
 }

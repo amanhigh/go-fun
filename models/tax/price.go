@@ -1,4 +1,4 @@
-package fa
+package tax
 
 // AlphaVantage response models
 type StockData struct {

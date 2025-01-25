@@ -1,4 +1,4 @@
-package fa
+package tax
 
 // TickerAnalysis represents analyzed ticker data for a given year
 type TickerAnalysis struct {

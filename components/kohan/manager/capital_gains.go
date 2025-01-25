@@ -13,7 +13,7 @@ import (
 )
 
 type CapitalGainsManager interface {
-	ProcessTransactions(ctx context.Context, year int) (map[string]fa.PositionAnalysis, error)
+	ProcessTransactions(ctx context.Context, year int) (map[string]tax.PositionAnalysis, error)
 }
 
 type CapitalGainsManagerImpl struct {
@@ -34,7 +34,7 @@ func NewCapitalGainsManager(
 	}
 }
 
-func (c *CapitalGainsManagerImpl) ProcessTransactions(ctx context.Context, year int) (map[string]fa.PositionAnalysis, error) {
+func (c *CapitalGainsManagerImpl) ProcessTransactions(ctx context.Context, year int) (map[string]tax.PositionAnalysis, error) {
 	// TODO: Document Sample Formats for all CSV Files
 	// Open and read CSV file
 	filePath := filepath.Join(c.downloadDir, c.statementFile)
@@ -45,19 +45,19 @@ func (c *CapitalGainsManagerImpl) ProcessTransactions(ctx context.Context, year 
 	defer file.Close()
 
 	// Parse CSV
-	var transactions []fa.Transaction
+	var transactions []tax.Transaction
 	if err := gocsv.Unmarshal(file, &transactions); err != nil {
 		return nil, fmt.Errorf("failed to parse broker statement: %w", err)
 	}
 
 	// Group by ticker
-	tickerTransactions := make(map[string][]fa.Transaction)
+	tickerTransactions := make(map[string][]tax.Transaction)
 	for _, t := range transactions {
 		tickerTransactions[t.Security] = append(tickerTransactions[t.Security], t)
 	}
 
 	// Process each ticker
-	result := make(map[string]fa.PositionAnalysis)
+	result := make(map[string]tax.PositionAnalysis)
 	for ticker, trades := range tickerTransactions {
 		analysis, err := c.analyzeTickerPositions(ctx, ticker, trades, year)
 		if err != nil {
@@ -69,9 +69,9 @@ func (c *CapitalGainsManagerImpl) ProcessTransactions(ctx context.Context, year 
 	return result, nil
 }
 
-func (c *CapitalGainsManagerImpl) analyzeTickerPositions(ctx context.Context, ticker string, transactions []fa.Transaction, year int) (fa.PositionAnalysis, error) {
+func (c *CapitalGainsManagerImpl) analyzeTickerPositions(ctx context.Context, ticker string, transactions []tax.Transaction, year int) (tax.PositionAnalysis, error) {
 	// Initialize analysis
-	analysis := fa.PositionAnalysis{
+	analysis := tax.PositionAnalysis{
 		Ticker: ticker,
 	}
 
@@ -104,7 +104,7 @@ func (c *CapitalGainsManagerImpl) analyzeTickerPositions(ctx context.Context, ti
 			if err != nil {
 				return analysis, fmt.Errorf("failed to get price for first buy: %w", err)
 			}
-			analysis.FirstPosition = fa.Position{
+			analysis.FirstPosition = tax.Position{
 				Date:     acquiredDate,
 				Quantity: t.QuantitySold,
 				USDPrice: price,
@@ -119,7 +119,7 @@ func (c *CapitalGainsManagerImpl) analyzeTickerPositions(ctx context.Context, ti
 			if err != nil {
 				return analysis, fmt.Errorf("failed to get price for peak: %w", err)
 			}
-			analysis.PeakPosition = fa.Position{
+			analysis.PeakPosition = tax.Position{
 				Date:     acquiredDate,
 				Quantity: currentPosition,
 				USDPrice: price,
@@ -135,7 +135,7 @@ func (c *CapitalGainsManagerImpl) analyzeTickerPositions(ctx context.Context, ti
 		if err != nil {
 			return analysis, fmt.Errorf("failed to get year end price: %w", err)
 		}
-		analysis.YearEndPosition = fa.Position{
+		analysis.YearEndPosition = tax.Position{
 			Date:     yearEndDate,
 			Quantity: currentPosition,
 			USDPrice: price,

@@ -1,4 +1,4 @@
-package fa
+package tax
 
 // DividendRow represents raw CSV data from broker statement
 type DividendRow struct {

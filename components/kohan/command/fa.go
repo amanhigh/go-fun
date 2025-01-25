@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/amanhigh/go-fun/components/kohan/core"
-	"github.com/amanhigh/go-fun/models/fa"
+	"github.com/amanhigh/go-fun/models/tax"
 )
 
 var (
@@ -55,7 +55,7 @@ func parseTickers(tickerString string) []string {
 	return strings.Split(tickerString, ",")
 }
 
-func printFAAnalysis(analysis []fa.TickerInfo) {
+func printFAAnalysis(analysis []tax.TickerInfo) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	defer w.Flush()
 

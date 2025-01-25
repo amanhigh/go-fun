@@ -8,7 +8,7 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/clients/mocks"
 	manager "github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/models/common"
-	"github.com/amanhigh/go-fun/models/fa"
+	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -40,8 +40,8 @@ var _ = Describe("TickerManager", func() {
 	Context("DownloadTicker", func() {
 		It("should download and save ticker data successfully", func() {
 			// Mock return data
-			stockData := fa.StockData{
-				MetaData: fa.MetaData{Symbol: "TEST"},
+			stockData := tax.StockData{
+				MetaData: tax.MetaData{Symbol: "TEST"},
 			}
 			mockClient.EXPECT().FetchDailyPrices(ctx, stockData.MetaData.Symbol).Return(stockData, nil)
 

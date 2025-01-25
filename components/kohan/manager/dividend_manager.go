@@ -11,7 +11,7 @@ import (
 )
 
 type DividendManager interface {
-	GetDividendTransactions(ctx context.Context) ([]fa.DividendTransaction, error)
+	GetDividendTransactions(ctx context.Context) ([]tax.DividendTransaction, error)
 }
 
 type DividendManagerImpl struct {
@@ -28,7 +28,7 @@ func NewDividendManager(sbiManager SBIManager, downloadsDir, dividendFile string
 	}
 }
 
-func (d *DividendManagerImpl) GetDividendTransactions(ctx context.Context) ([]fa.DividendTransaction, error) {
+func (d *DividendManagerImpl) GetDividendTransactions(ctx context.Context) ([]tax.DividendTransaction, error) {
 	// Open CSV file
 	file, err := os.Open(filepath.Join(d.downloadsDir, d.dividendFile))
 	if err != nil {
@@ -37,13 +37,13 @@ func (d *DividendManagerImpl) GetDividendTransactions(ctx context.Context) ([]fa
 	defer file.Close()
 
 	// Parse CSV rows
-	var rows []fa.DividendRow
+	var rows []tax.DividendRow
 	if err := gocsv.UnmarshalFile(file, &rows); err != nil {
 		return nil, err
 	}
 
 	// Process each dividend row
-	var transactions []fa.DividendTransaction
+	var transactions []tax.DividendTransaction
 	for _, row := range rows {
 		// BUG: Use Date Constants
 		date, err := time.Parse("2006-01-02", row.DividendDate)
@@ -58,7 +58,7 @@ func (d *DividendManagerImpl) GetDividendTransactions(ctx context.Context) ([]fa
 		}
 
 		// Create transaction with INR conversions
-		transaction := fa.DividendTransaction{
+		transaction := tax.DividendTransaction{
 			DividendRow:    row,
 			USDINRRate:     ttRate,
 			NetDividendINR: row.NetDividend * ttRate,
