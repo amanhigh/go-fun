@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
@@ -29,6 +30,8 @@ type TickerManager interface {
 type TickerManagerImpl struct {
 	client    clients.AlphaClient
 	downloads string
+	cache     map[string]fa.StockData
+	cacheLock sync.RWMutex
 }
 
 func NewTickerManager(client clients.AlphaClient, downloads string) *TickerManagerImpl {
@@ -98,6 +101,29 @@ func (t *TickerManagerImpl) GetPriceOnDate(ctx context.Context, ticker string, d
 
 	// Default to peak price for other dates
 	return analysis.PeakPrice, nil
+}
+
+func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (data fa.StockData, err common.HttpError) {
+	// Try cache first
+	t.cacheLock.RLock()
+	data, exists := t.cache[ticker]
+	t.cacheLock.RUnlock()
+	
+	if exists {
+		log.Debug().Str("Ticker", ticker).Msg("Cache Hit")
+		return data, nil
+	}
+
+	// Cache miss - load from file
+	data, err = t.readTickerData(ticker)
+	if err == nil {
+		t.cacheLock.Lock()
+		t.cache[ticker] = data
+		t.cacheLock.Unlock()
+		log.Debug().Str("Ticker", ticker).Msg("Added to Cache")
+	}
+	
+	return
 }
 
 func (t *TickerManagerImpl) readTickerData(ticker string) (fa.StockData, common.HttpError) {
