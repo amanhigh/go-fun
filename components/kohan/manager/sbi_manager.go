@@ -13,7 +13,7 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/clients"
 	"github.com/amanhigh/go-fun/models/common"
-	"github.com/amanhigh/go-fun/models/fa"
+	"github.com/amanhigh/go-fun/models/tax"
 )
 
 //go:generate mockery --name SBIManager

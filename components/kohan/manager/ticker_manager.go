@@ -15,7 +15,7 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/clients"
 	"github.com/amanhigh/go-fun/models/common"
-	"github.com/amanhigh/go-fun/models/fa"
+	tax "github.com/amanhigh/go-fun/models/tax"
 	"github.com/rs/zerolog/log"
 )
 
@@ -23,7 +23,7 @@ import (
 type TickerManager interface {
 	DownloadTicker(ctx context.Context, ticker string) (err common.HttpError)
 	// BUG: Rename yearly analysis
-	AnalyzeTicker(ctx context.Context, ticker string, year int) (analysis fa.TickerAnalysis, err common.HttpError)
+	AnalyzeTicker(ctx context.Context, ticker string, year int) (analysis tax.TickerAnalysis, err common.HttpError)
 	// BUG: Rename GetPrice
 	GetPriceOnDate(ctx context.Context, ticker string, date time.Time) (float64, error)
 }
@@ -31,7 +31,7 @@ type TickerManager interface {
 type TickerManagerImpl struct {
 	client    clients.AlphaClient
 	downloads string
-	cache     map[string]fa.StockData
+	cache     map[string]tax.StockData
 	cacheLock sync.RWMutex
 }
 
@@ -58,7 +58,7 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 	}
 
 	// Fetch data using AlphaClient
-	var data fa.StockData
+	var data tax.StockData
 	if data, err = t.client.FetchDailyPrices(ctx, ticker); err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 	return nil
 }
 
-func (t *TickerManagerImpl) AnalyzeTicker(ctx context.Context, ticker string, year int) (analysis fa.TickerAnalysis, err common.HttpError) {
+func (t *TickerManagerImpl) AnalyzeTicker(ctx context.Context, ticker string, year int) (analysis tax.TickerAnalysis, err common.HttpError) {
 	stockData, err := t.readTickerData(ticker)
 	if err != nil {
 		return analysis, err
@@ -131,7 +131,7 @@ func (t *TickerManagerImpl) GetPriceOnDate(ctx context.Context, ticker string, d
 	return 0, common.NewHttpError("No price data found", http.StatusNotFound)
 }
 
-func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (data fa.StockData, err common.HttpError) {
+func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (data tax.StockData, err common.HttpError) {
 	// Try cache first
 	t.cacheLock.RLock()
 	data, exists := t.cache[ticker]
@@ -154,8 +154,8 @@ func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (d
 	return
 }
 
-func (t *TickerManagerImpl) readTickerData(ticker string) (fa.StockData, common.HttpError) {
-	var stockData fa.StockData
+func (t *TickerManagerImpl) readTickerData(ticker string) (tax.StockData, common.HttpError) {
+	var stockData tax.StockData
 
 	filePath := filepath.Join(t.downloads, fmt.Sprintf("%s.json", ticker))
 	data, readErr := os.ReadFile(filePath)
@@ -171,7 +171,7 @@ func (t *TickerManagerImpl) readTickerData(ticker string) (fa.StockData, common.
 	return stockData, nil
 }
 
-func (t *TickerManagerImpl) analyzeTimeSeries(timeSeries map[string]fa.DayPrice, ticker, yearStr, yearEndDate string) fa.TickerAnalysis {
+func (t *TickerManagerImpl) analyzeTimeSeries(timeSeries map[string]tax.DayPrice, ticker, yearStr, yearEndDate string) tax.TickerAnalysis {
 	var highestClose float64
 	var highestDate string
 	var yearEndClose float64

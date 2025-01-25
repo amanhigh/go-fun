@@ -8,7 +8,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/amanhigh/go-fun/models/fa"
+	"github.com/amanhigh/go-fun/models/tax"
 	gocsv "github.com/gocarina/gocsv"
 )
 

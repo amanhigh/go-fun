@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/amanhigh/go-fun/models/fa"
+	"github.com/amanhigh/go-fun/models/tax"
 )
 
 type TaxManager interface {
