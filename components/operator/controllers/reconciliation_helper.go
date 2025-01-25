@@ -22,8 +22,9 @@ the cluster closer to the desired state. The reconciliation must be idempotent.
 */
 type ReconciliationHelper interface {
 	FetchMemcachedInstance(ctx context.Context, req ctrl.Request) (*cachev1beta1.Memcached, error)
-	HandleFinalizers(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error)
 	ReconcileDeployment(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error)
+	ExecuteFinalizer(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error)
+	AddFinalizer(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error)
 }
 
 type reconciliationHelperImpl struct {
@@ -60,23 +61,9 @@ func (r *reconciliationHelperImpl) FetchMemcachedInstance(ctx context.Context, r
 	return memcached, nil
 }
 
-// HandleFinalizers manages finalizer operations for the Memcached resource
-// Finalizers allow controllers to implement cleanup tasks before an object is deleted
-// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/
-func (r *reconciliationHelperImpl) HandleFinalizers(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error) {
-	// Check if the Memcached instance is marked to be deleted, which is
-	// indicated by the deletion timestamp being set.
-	if memcached.GetDeletionTimestamp() != nil {
-		return r.handleDeletionFinalizer(ctx, memcached)
-	}
-
-	// Add finalizer if it doesn't exist
-	return r.handleAdditionFinalizer(ctx, memcached)
-}
-
-// handleDeletionFinalizer performs finalizer operations when resource is being deleted
+// ExecuteFinalizer performs finalizer operations when resource is being deleted
 // It updates status, records events, and removes the finalizer
-func (r *reconciliationHelperImpl) handleDeletionFinalizer(
+func (r *reconciliationHelperImpl) ExecuteFinalizer(
 	ctx context.Context,
 	memcached *cachev1beta1.Memcached,
 ) (ctrl.Result, error) {
@@ -118,9 +105,9 @@ func (r *reconciliationHelperImpl) handleDeletionFinalizer(
 	return ctrl.Result{}, nil
 }
 
-// handleAdditionFinalizer adds finalizer if it doesn't exist
+// AddFinalizer adds finalizer if it doesn't exist
 // This ensures cleanup operations are performed when the resource is deleted
-func (r *reconciliationHelperImpl) handleAdditionFinalizer(
+func (r *reconciliationHelperImpl) AddFinalizer(
 	ctx context.Context,
 	memcached *cachev1beta1.Memcached,
 ) (ctrl.Result, error) {
