@@ -13,7 +13,7 @@ import (
 )
 
 type CapitalGainsManager interface {
-	ProcessTransactions(ctx context.Context, year int) (map[string]tax.PositionAnalysis, error)
+	AnalysePositions(ctx context.Context, year int) (map[string]tax.PositionAnalysis, error)
 }
 
 type CapitalGainsManagerImpl struct {
@@ -34,7 +34,7 @@ func NewCapitalGainsManager(
 	}
 }
 
-func (c *CapitalGainsManagerImpl) ProcessTransactions(ctx context.Context, year int) (map[string]tax.PositionAnalysis, error) {
+func (c *CapitalGainsManagerImpl) AnalysePositions(ctx context.Context, year int) (map[string]tax.PositionAnalysis, error) {
 	// TODO: Document Sample Formats for all CSV Files
 	// Open and read CSV file
 	filePath := filepath.Join(c.downloadDir, c.statementFile)
@@ -79,7 +79,7 @@ func (c *CapitalGainsManagerImpl) analyzeTickerPositions(ctx context.Context, ti
 	var currentPosition float64
 	var maxPosition float64
 	var firstBuyDate time.Time
-	// BUG: #C Track max Position Date
+	// BUG: Track max Position Date
 	// var maxPositionDate time.Time
 
 	// Process transactions chronologically

@@ -67,7 +67,7 @@ SNPS,1,2024-02-21,531.03,2024-02-22,589.44,589.44,531.03,58.41`
 		})
 
 		It("should process all tickers correctly", func() {
-			result, err := cgManager.ProcessTransactions(ctx, year)
+			result, err := cgManager.AnalysePositions(ctx, year)
 			Expect(err).NotTo(HaveOccurred())
 
 			// Verify ADI Analysis
@@ -86,7 +86,7 @@ SNPS,1,2024-02-21,531.03,2024-02-22,589.44,589.44,531.03,58.41`
 
 	Context("Error Cases", func() {
 		It("should handle missing file", func() {
-			result, err := cgManager.ProcessTransactions(ctx, year)
+			result, err := cgManager.AnalysePositions(ctx, year)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("failed to open broker statement"))
 			Expect(result).To(BeNil())
@@ -98,7 +98,7 @@ SNPS,1,2024-02-21,531.03,2024-02-22,589.44,589.44,531.03,58.41`
 			err := os.WriteFile(filepath.Join(testDir, statementFile), []byte(testData), 0644)
 			Expect(err).NotTo(HaveOccurred())
 
-			result, err := cgManager.ProcessTransactions(ctx, year)
+			result, err := cgManager.AnalysePositions(ctx, year)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("failed to parse broker statement"))
 			Expect(result).To(BeNil())
@@ -116,7 +116,7 @@ ADI,2,2024-01-04,182.08,2024-01-19,194.56,389.12,364.16,24.96`
 				GetPrice(ctx, "ADI", parseDateMust(adiFirstBuyDate)).
 				Return(0.0, fmt.Errorf("price fetch error"))
 
-			result, err := cgManager.ProcessTransactions(ctx, year)
+			result, err := cgManager.AnalysePositions(ctx, year)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("failed to get price"))
 			Expect(result).To(BeNil())

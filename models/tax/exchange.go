@@ -1,6 +1,6 @@
 package tax
 
-// BUG: Use CSV Tag
+// BUG: #A Use CSV Tag
 type SbiRate struct {
 	Date   string  `json:"DATE"`
 	TTBuy  float64 `json:"TT BUY"`
