@@ -43,6 +43,7 @@ func (s *SBIManagerImpl) GetTTBuyRate(date time.Time) (rate float64, err common.
 		return 0, err
 	}
 
+	// BUG: Declare constant for date format in models
 	dateStr := date.Format("2006-01-02")
 	if rate, exists := s.rateCache[dateStr]; exists {
 		return rate, nil
@@ -51,6 +52,7 @@ func (s *SBIManagerImpl) GetTTBuyRate(date time.Time) (rate float64, err common.
 }
 
 func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpError) {
+	// BUG: Skip dowloading if file already exists
 	var csvContent string
 	if csvContent, err = s.client.FetchExchangeRates(ctx); err != nil {
 		return
@@ -89,6 +91,7 @@ func (s *SBIManagerImpl) loadRatesIfNeeded() common.HttpError {
 		return nil
 	}
 
+	// BUG: Private method to check file presence
 	filePath := filepath.Join(s.downloadDir, fa.SBI_RATES_FILENAME)
 	if _, err := os.Stat(filePath); err != nil {
 		return common.NewHttpError("SBI rates file not found", http.StatusNotFound)
@@ -115,6 +118,7 @@ func (s *SBIManagerImpl) readCSVRecords(filePath string) ([][]string, common.Htt
 	}
 	defer file.Close()
 
+	// FIXME: Use Gocsv for parsing
 	reader := csv.NewReader(file)
 
 	// Validate header
