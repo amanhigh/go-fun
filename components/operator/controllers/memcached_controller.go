@@ -76,9 +76,10 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	// Handle Finalizers - Ensures cleanup operations occur before deletion
-	if result, err := r.reconcileHelper.HandleFinalizers(ctx, memcached); err != nil || result.Requeue {
-		return result, err
+	// Check if Resource is being deleted
+	if memcached.GetDeletionTimestamp() != nil {
+		log.Info("Resource is being deleted, performing finalizer operations")
+		return r.reconcileHelper.HandleFinalizers(ctx, memcached)
 	}
 
 	// Reconcile Deployment - Creates or updates the deployment to match desired state

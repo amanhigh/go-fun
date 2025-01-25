@@ -149,26 +149,12 @@ func (r *reconciliationHelperImpl) handleAdditionFinalizer(
 // - Update Deployment if replicas don't match
 // - Update status based on reconciliation results
 func (r *reconciliationHelperImpl) ReconcileDeployment(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error) {
-	if shouldSkip := r.shouldSkipReconciliation(ctx, memcached); shouldSkip {
-		return ctrl.Result{}, nil
-	}
-
 	dep := &appsv1.Deployment{}
 	if result, err := r.handleDeploymentCreation(ctx, memcached, dep); err != nil {
 		return result, err
 	}
 
 	return r.handleDeploymentUpdate(ctx, memcached, dep)
-}
-
-// shouldSkipReconciliation checks if reconciliation should be skipped
-// Returns true if the resource is being deleted
-func (r *reconciliationHelperImpl) shouldSkipReconciliation(ctx context.Context, memcached *cachev1beta1.Memcached) bool {
-	if memcached.GetDeletionTimestamp() != nil {
-		log.FromContext(ctx).Info("Resource is being deleted, skipping deployment reconciliation")
-		return true
-	}
-	return false
 }
 
 // handleDeploymentCreation handles deployment existence check and creation
