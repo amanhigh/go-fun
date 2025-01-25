@@ -1,0 +1,149 @@
+package manager_test
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
+	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+)
+
+var _ = Describe("CapitalGainsManager", func() {
+	var (
+		ctx           context.Context
+		mockTicker    *mocks.TickerManager
+		cgManager     manager.CapitalGainsManager
+		testDir       string
+		statementFile string
+		year          = 2024
+	)
+
+	BeforeEach(func() {
+		ctx = context.Background()
+		mockTicker = mocks.NewTickerManager(GinkgoT())
+
+		var err error
+		testDir, err = os.MkdirTemp("", "capital-gains-test-*")
+		Expect(err).NotTo(HaveOccurred())
+
+		statementFile = "broker_statement.csv"
+		cgManager = manager.NewCapitalGainsManager(mockTicker, testDir, statementFile)
+	})
+
+	AfterEach(func() {
+		os.RemoveAll(testDir)
+	})
+
+	Context("Success Cases", func() {
+		const (
+			adiFirstBuyDate  = "2024-01-04"
+			adiSellDate      = "2024-01-19"
+			snpsFirstBuyDate = "2024-02-21"
+			snpsSellDate     = "2024-02-22"
+		)
+
+		BeforeEach(func() {
+			// Create test CSV
+			testData := `Security,Quantity Sold,Date Acquired,Buying Price (USD),Date Sold,Selling Price (USD),Proceeds (USD),Cost Basis (USD),Gains/Losses (USD)
+ADI,2,2024-01-04,182.08,2024-01-19,194.56,389.12,364.16,24.96
+SNPS,1,2024-02-21,531.03,2024-02-22,589.44,589.44,531.03,58.41`
+			err := os.WriteFile(filepath.Join(testDir, statementFile), []byte(testData), 0644)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Setup price mocks for ADI
+			setupADIPriceMocks(ctx, mockTicker)
+			// Setup price mocks for SNPS
+			setupSNPSPriceMocks(ctx, mockTicker)
+		})
+
+		It("should process all tickers correctly", func() {
+			result, err := cgManager.ProcessBrokerStatement(ctx, year)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Verify ADI Analysis
+			adiAnalysis := result["ADI"]
+			Expect(adiAnalysis.FirstPosition.Quantity).To(Equal(2.0))
+			Expect(adiAnalysis.FirstPosition.USDPrice).To(Equal(182.08))
+			Expect(adiAnalysis.PeakPosition.USDPrice).To(Equal(194.56))
+
+			// Verify SNPS Analysis
+			snpsAnalysis := result["SNPS"]
+			Expect(snpsAnalysis.FirstPosition.Quantity).To(Equal(1.0))
+			Expect(snpsAnalysis.FirstPosition.USDPrice).To(Equal(531.03))
+			Expect(snpsAnalysis.PeakPosition.USDPrice).To(Equal(589.44))
+		})
+	})
+
+	Context("Error Cases", func() {
+		It("should handle missing file", func() {
+			result, err := cgManager.ProcessBrokerStatement(ctx, year)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("failed to open broker statement"))
+			Expect(result).To(BeNil())
+		})
+
+		It("should handle malformed CSV", func() {
+			// Write invalid CSV
+			testData := "Invalid,CSV,Format\nWithout,Proper,Headers"
+			err := os.WriteFile(filepath.Join(testDir, statementFile), []byte(testData), 0644)
+			Expect(err).NotTo(HaveOccurred())
+
+			result, err := cgManager.ProcessBrokerStatement(ctx, year)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("failed to parse broker statement"))
+			Expect(result).To(BeNil())
+		})
+
+		It("should handle price fetch errors", func() {
+			// Write valid CSV
+			testData := `Security,Quantity Sold,Date Acquired,Buying Price (USD),Date Sold,Selling Price (USD),Proceeds (USD),Cost Basis (USD),Gains/Losses (USD)
+ADI,2,2024-01-04,182.08,2024-01-19,194.56,389.12,364.16,24.96`
+			err := os.WriteFile(filepath.Join(testDir, statementFile), []byte(testData), 0644)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Setup mock to return error
+			mockTicker.EXPECT().
+				GetPriceOnDate(ctx, "ADI", parseDateMust(adiFirstBuyDate)).
+				Return(0.0, fmt.Errorf("price fetch error"))
+
+			result, err := cgManager.ProcessBrokerStatement(ctx, year)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("failed to get price"))
+			Expect(result).To(BeNil())
+		})
+	})
+})
+
+func setupADIPriceMocks(ctx context.Context, mockTicker *mocks.TickerManager) {
+	// First buy date
+	mockTicker.EXPECT().
+		GetPriceOnDate(ctx, "ADI", parseDateMust("2024-01-04")).
+		Return(182.08, nil)
+
+	// Sell/Peak date
+	mockTicker.EXPECT().
+		GetPriceOnDate(ctx, "ADI", parseDateMust("2024-01-19")).
+		Return(194.56, nil)
+
+	// Year end
+	mockTicker.EXPECT().
+		GetPriceOnDate(ctx, "ADI", parseDateMust("2024-12-31")).
+		Return(190.00, nil)
+}
+
+func setupSNPSPriceMocks(ctx context.Context, mockTicker *mocks.TickerManager) {
+	// Similar mock setup for SNPS dates
+}
+
+func parseDateMust(date string) time.Time {
+	t, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}

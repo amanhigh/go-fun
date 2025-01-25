@@ -17,6 +17,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+//go:generate mockery --name TickerManager
 type TickerManager interface {
 	DownloadTicker(ctx context.Context, ticker string) (err common.HttpError)
 	AnalyzeTicker(ctx context.Context, ticker string, year int) (analysis fa.TickerAnalysis, err common.HttpError)
