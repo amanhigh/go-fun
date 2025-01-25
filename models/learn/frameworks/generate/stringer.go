@@ -1,6 +1,6 @@
 package generate
 
-//go:generate stringer -type=Pill
+// go:generate stringer -type=Pill
 
 type Pill int
 

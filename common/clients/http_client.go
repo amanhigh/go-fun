@@ -41,15 +41,15 @@ func NewHttpClientWithCookies(cookieUrl string, cookies []*http.Cookie, client *
 }
 
 func NewRestyClient(baseUrl string, httpConfig config.HttpClientConfig) (client *resty.Client) {
-	//Init Client
+	// Init Client
 	client = resty.New().SetBaseURL(baseUrl)
 
-	//Default Header
+	// Default Header
 	// client.SetHeader("Content-Type", "application/json")
-	//Tracing
+	// Tracing
 	otelresty.TraceClient(client, otelresty.WithTracerName("resty-sdk"))
 
-	//Configure Http Config
+	// Configure Http Config
 	client.SetTimeout(httpConfig.RequestTimeout)
 
 	// Set the transport using the new transport builder

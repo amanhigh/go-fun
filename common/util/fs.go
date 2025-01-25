@@ -10,9 +10,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const DEFAULT_PERM = os.FileMode(0644)     //Owner RW,Group R,Other R
-const DIR_DEFAULT_PERM = os.FileMode(0755) //Owner RWX,Group RX,Other RX
-const APPEND_PERM = os.FileMode(0600)      //Owner RW,Group None,Other None
+const DEFAULT_PERM = os.FileMode(0644)     // Owner RW,Group R,Other R
+const DIR_DEFAULT_PERM = os.FileMode(0755) // Owner RWX,Group RX,Other RX
+const APPEND_PERM = os.FileMode(0600)      // Owner RW,Group None,Other None
 /*
 	Helpfull File Related Cheatsheet
 	https://www.devdungeon.com/content/working-files-go#read_quick
@@ -66,7 +66,7 @@ func FindReplaceFile(filePath, find, replace string) (err error) {
 	return
 }
 
-func PrintFile(title string, filepath string) {
+func PrintFile(title, filepath string) {
 	log.Info().Str("File", filepath).Msg("File Contents")
 	fmt.Println(strings.Join(ReadAllLines(filepath), "\n"))
 }
@@ -84,7 +84,7 @@ func ListFiles(dirPath string) []string {
 	return filePaths
 }
 
-func ReplaceContent(path string, findRegex string, replace string) {
+func ReplaceContent(path, findRegex, replace string) {
 	if bytes, err := os.ReadFile(path); err == nil {
 		if reg, regexErr := regexp.Compile(findRegex); regexErr == nil {
 			newContent := reg.ReplaceAll(bytes, []byte(replace))

@@ -121,7 +121,7 @@ func (fb *FallBackPolicy) GetPool() (poolIndex int) {
 			poolIndex = fb.currentPool
 		}
 	default:
-		//Serve Current Pool
+		// Serve Current Pool
 		poolIndex = fb.currentPool
 	}
 	return
