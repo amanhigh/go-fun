@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/clients"
@@ -19,6 +20,7 @@ import (
 type TickerManager interface {
 	DownloadTicker(ctx context.Context, ticker string) (err common.HttpError)
 	AnalyzeTicker(ctx context.Context, ticker string, year int) (analysis fa.TickerAnalysis, err common.HttpError)
+	GetPriceOnDate(ctx context.Context, ticker string, date time.Time) (float64, error)
 }
 
 type TickerManagerImpl struct {
@@ -77,6 +79,22 @@ func (t *TickerManagerImpl) AnalyzeTicker(ctx context.Context, ticker string, ye
 	yearEndDate := fmt.Sprintf("%s-12-31", yearStr)
 
 	return t.analyzeTimeSeries(stockData.TimeSeries, ticker, yearStr, yearEndDate), nil
+}
+
+func (t *TickerManagerImpl) GetPriceOnDate(ctx context.Context, ticker string, date time.Time) (float64, error) {
+	analysis, err := t.AnalyzeTicker(ctx, ticker, date.Year())
+	if err != nil {
+		return 0, err
+	}
+
+	// Check if date matches year-end date
+	dateStr := date.Format("2006-01-02")
+	if dateStr == analysis.YearEndDate {
+		return analysis.YearEndPrice, nil
+	}
+
+	// Default to peak price for other dates
+	return analysis.PeakPrice, nil
 }
 
 func (t *TickerManagerImpl) readTickerData(ticker string) (fa.StockData, common.HttpError) {
