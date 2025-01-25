@@ -16,6 +16,7 @@ import (
 	"github.com/amanhigh/go-fun/models/fa"
 )
 
+//go:generate mockery --name SBIManager
 type SBIManager interface {
 	DownloadRates(ctx context.Context) common.HttpError
 	GetTTBuyRate(date time.Time) (float64, common.HttpError)
