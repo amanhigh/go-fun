@@ -1,7 +1,7 @@
 package tax
 
-// DividendRow represents raw CSV data from broker statement
-type DividendRow struct {
+// DividendBase represents raw CSV data from broker statement
+type DividendBase struct {
 	Security         string  `csv:"Security"`
 	DividendDate     string  `csv:"Dividend Date"`
 	DividendPerShare float64 `csv:"Dividend Per Share (USD)"`
@@ -10,9 +10,9 @@ type DividendRow struct {
 	NetDividend      float64 `csv:"Net Dividend (USD)"`
 }
 
-// DividendTransaction represents processed dividend data with INR conversions
-type DividendTransaction struct {
-	DividendRow            // Embed input fields
+// Dividend represents processed dividend data with INR conversions
+type Dividend struct {
+	DividendBase           // Embed input fields
 	USDINRRate     float64 // TT Buy rate for conversion
 	NetDividendINR float64 // Net amount in INR
 	DividendTaxINR float64 // Tax amount in INR

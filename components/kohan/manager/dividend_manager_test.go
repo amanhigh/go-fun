@@ -58,7 +58,7 @@ var _ = Describe("DividendManager", func() {
 		})
 
 		It("should process dividends correctly", func() {
-			transactions, err := dividendManager.GetDividendTransactions(ctx)
+			transactions, err := dividendManager.GetDividends(ctx)
 			Expect(err).To(BeNil())
 			Expect(transactions).To(HaveLen(2))
 
@@ -88,7 +88,7 @@ var _ = Describe("DividendManager", func() {
 
 	Context("Error Handling", func() {
 		It("should handle missing file", func() {
-			transactions, err := dividendManager.GetDividendTransactions(ctx)
+			transactions, err := dividendManager.GetDividends(ctx)
 			Expect(err).To(HaveOccurred())
 			Expect(transactions).To(BeNil())
 		})
@@ -98,7 +98,7 @@ var _ = Describe("DividendManager", func() {
 				[]byte("invalid,csv"), util.DEFAULT_PERM)
 			Expect(err).To(BeNil())
 
-			transactions, err := dividendManager.GetDividendTransactions(ctx)
+			transactions, err := dividendManager.GetDividends(ctx)
 			Expect(err).To(HaveOccurred())
 			Expect(transactions).To(BeNil())
 		})
@@ -112,7 +112,7 @@ var _ = Describe("DividendManager", func() {
 				GetTTBuyRate(timeFromStr("2023-06-26")).
 				Return(0.0, common.ErrNotFound)
 
-			transactions, err := dividendManager.GetDividendTransactions(ctx)
+			transactions, err := dividendManager.GetDividends(ctx)
 			Expect(err).To(Equal(common.ErrNotFound))
 			Expect(transactions).To(BeNil())
 		})
