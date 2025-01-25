@@ -18,25 +18,26 @@ const (
 )
 
 var _ = Describe("CapitalGainsManager", func() {
+	// TODO: Not Working Test
 	var (
-		ctx           context.Context
-		mockTicker    *mocks.TickerManager
-		cgManager     manager.CapitalGainsManager
-		testDir       string
-		statementFile string
-		year          = 2024
+		ctx               context.Context
+		mockTickerManager *mocks.TickerManager
+		cgManager         manager.CapitalGainsManager
+		testDir           string
+		statementFile     string
+		year              = 2024
 	)
 
 	BeforeEach(func() {
 		ctx = context.Background()
-		mockTicker = mocks.NewTickerManager(GinkgoT())
+		mockTickerManager = mocks.NewTickerManager(GinkgoT())
 
 		var err error
 		testDir, err = os.MkdirTemp("", "capital-gains-test-*")
 		Expect(err).NotTo(HaveOccurred())
 
 		statementFile = "broker_statement.csv"
-		cgManager = manager.NewCapitalGainsManager(mockTicker, testDir, statementFile)
+		cgManager = manager.NewCapitalGainsManager(mockTickerManager, testDir, statementFile)
 	})
 
 	AfterEach(func() {
@@ -60,13 +61,13 @@ SNPS,1,2024-02-21,531.03,2024-02-22,589.44,589.44,531.03,58.41`
 			Expect(err).NotTo(HaveOccurred())
 
 			// Setup price mocks for ADI
-			setupADIPriceMocks(ctx, mockTicker)
+			setupADIPriceMocks(ctx, mockTickerManager)
 			// Setup price mocks for SNPS
-			setupSNPSPriceMocks(ctx, mockTicker)
+			setupSNPSPriceMocks(ctx, mockTickerManager)
 		})
 
 		It("should process all tickers correctly", func() {
-			result, err := cgManager.ProcessBrokerStatement(ctx, year)
+			result, err := cgManager.ProcessTransactions(ctx, year)
 			Expect(err).NotTo(HaveOccurred())
 
 			// Verify ADI Analysis
@@ -85,7 +86,7 @@ SNPS,1,2024-02-21,531.03,2024-02-22,589.44,589.44,531.03,58.41`
 
 	Context("Error Cases", func() {
 		It("should handle missing file", func() {
-			result, err := cgManager.ProcessBrokerStatement(ctx, year)
+			result, err := cgManager.ProcessTransactions(ctx, year)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("failed to open broker statement"))
 			Expect(result).To(BeNil())
@@ -97,7 +98,7 @@ SNPS,1,2024-02-21,531.03,2024-02-22,589.44,589.44,531.03,58.41`
 			err := os.WriteFile(filepath.Join(testDir, statementFile), []byte(testData), 0644)
 			Expect(err).NotTo(HaveOccurred())
 
-			result, err := cgManager.ProcessBrokerStatement(ctx, year)
+			result, err := cgManager.ProcessTransactions(ctx, year)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("failed to parse broker statement"))
 			Expect(result).To(BeNil())
@@ -111,11 +112,11 @@ ADI,2,2024-01-04,182.08,2024-01-19,194.56,389.12,364.16,24.96`
 			Expect(err).NotTo(HaveOccurred())
 
 			// Setup mock to return error
-			mockTicker.EXPECT().
+			mockTickerManager.EXPECT().
 				GetPriceOnDate(ctx, "ADI", parseDateMust(adiFirstBuyDate)).
 				Return(0.0, fmt.Errorf("price fetch error"))
 
-			result, err := cgManager.ProcessBrokerStatement(ctx, year)
+			result, err := cgManager.ProcessTransactions(ctx, year)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("failed to get price"))
 			Expect(result).To(BeNil())

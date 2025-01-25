@@ -15,7 +15,7 @@ import (
 type KohanInterface interface {
 	GetDariusApp(cfg config.DariusConfig) (*DariusV1, error)
 	// Add new method
-	GetFAManager() manager.FAManager
+	GetFAManager() manager.TaxManager
 }
 
 // Private singleton instance
@@ -45,8 +45,8 @@ func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) *manag
 	return manager.NewTickerManager(client, ki.config.FA.DownloadsDir)
 }
 
-func (ki *KohanInjector) provideFAManager(tickerManager manager.TickerManager, sbiManager manager.SBIManager) manager.FAManager {
-	return manager.NewFAManager(tickerManager, sbiManager)
+func (ki *KohanInjector) provideFAManager(tickerManager manager.TickerManager, sbiManager manager.SBIManager) manager.TaxManager {
+	return manager.NewTaxManager(tickerManager, sbiManager)
 }
 
 func (ki *KohanInjector) provideDividendManager(sbiManager manager.SBIManager) manager.DividendManager {
@@ -62,8 +62,8 @@ func GetKohanInterface() KohanInterface {
 	return globalInjector
 }
 
-func (ki *KohanInjector) GetFAManager() manager.FAManager {
-	var faManager manager.FAManager
+func (ki *KohanInjector) GetFAManager() manager.TaxManager {
+	var faManager manager.TaxManager
 	err := ki.di.Resolve(&faManager)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to get FAManager")

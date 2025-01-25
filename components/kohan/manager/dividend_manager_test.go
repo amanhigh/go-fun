@@ -30,6 +30,7 @@ func timeFromStr(date string) time.Time {
 }
 
 var _ = Describe("DividendManager", func() {
+	// TODO: Not Working Test
 	BeforeEach(func() {
 		var err error
 		mockSBIManager = mocks.NewSBIManager(GinkgoT())

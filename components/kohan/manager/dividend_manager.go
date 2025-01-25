@@ -20,7 +20,7 @@ type DividendManagerImpl struct {
 	dividendFile string
 }
 
-func NewDividendManager(sbiManager SBIManager, downloadsDir string, dividendFile string) DividendManager {
+func NewDividendManager(sbiManager SBIManager, downloadsDir, dividendFile string) DividendManager {
 	return &DividendManagerImpl{
 		sbiManager:   sbiManager,
 		downloadsDir: downloadsDir,
@@ -45,6 +45,7 @@ func (d *DividendManagerImpl) GetDividendTransactions(ctx context.Context) ([]fa
 	// Process each dividend row
 	var transactions []fa.DividendTransaction
 	for _, row := range rows {
+		// BUG: Use Date Constants
 		date, err := time.Parse("2006-01-02", row.DividendDate)
 		if err != nil {
 			return nil, err
@@ -65,6 +66,8 @@ func (d *DividendManagerImpl) GetDividendTransactions(ctx context.Context) ([]fa
 		}
 		transactions = append(transactions, transaction)
 	}
+
+	// TODO: Cache Transactions in Memory ?
 
 	return transactions, nil
 }

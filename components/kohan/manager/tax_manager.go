@@ -7,27 +7,24 @@ import (
 	"github.com/amanhigh/go-fun/models/fa"
 )
 
-type FAManager interface {
+type TaxManager interface {
 	ProcessTickers(ctx context.Context, tickers []string, year int) ([]fa.TickerInfo, error)
 }
 
-type FAManagerImpl struct {
+type TaxManagerImpl struct {
 	tickerManager TickerManager
 	sbiManager    SBIManager
 }
 
-func NewFAManager(tickerManager TickerManager, sbiManager SBIManager) *FAManagerImpl {
-	return &FAManagerImpl{
+func NewTaxManager(tickerManager TickerManager, sbiManager SBIManager) *TaxManagerImpl {
+	return &TaxManagerImpl{
 		tickerManager: tickerManager,
 		sbiManager:    sbiManager,
 	}
 }
 
-func (f *FAManagerImpl) ProcessTickers(ctx context.Context, tickers []string, year int) ([]fa.TickerInfo, error) {
+func (f *TaxManagerImpl) ProcessTickers(ctx context.Context, tickers []string, year int) ([]fa.TickerInfo, error) {
 	var results []fa.TickerInfo
-	// TODO: #A Build Capital  Manager
-	// TODO: #B Build Dividend  Manager
-
 	for _, ticker := range tickers {
 		// Get USD Analysis
 		analysis, err := f.tickerManager.AnalyzeTicker(ctx, ticker, year)
@@ -36,6 +33,7 @@ func (f *FAManagerImpl) ProcessTickers(ctx context.Context, tickers []string, ye
 		}
 
 		// Get TT Rates
+		// BUG: Use Date Constants
 		peakDate, _ := time.Parse("2006-01-02", analysis.PeakDate)
 		yearEndDate, _ := time.Parse("2006-01-02", analysis.YearEndDate)
 

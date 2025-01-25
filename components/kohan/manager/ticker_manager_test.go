@@ -54,4 +54,6 @@ var _ = Describe("TickerManager", func() {
 			Expect(err).To(BeNil())
 		})
 	})
+
+	// FIXME: Add Test for Remaining Functions.
 })

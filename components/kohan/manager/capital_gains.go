@@ -13,7 +13,7 @@ import (
 )
 
 type CapitalGainsManager interface {
-	ProcessBrokerStatement(ctx context.Context, year int) (map[string]fa.PositionAnalysis, error)
+	ProcessTransactions(ctx context.Context, year int) (map[string]fa.PositionAnalysis, error)
 }
 
 type CapitalGainsManagerImpl struct {
@@ -34,7 +34,8 @@ func NewCapitalGainsManager(
 	}
 }
 
-func (c *CapitalGainsManagerImpl) ProcessBrokerStatement(ctx context.Context, year int) (map[string]fa.PositionAnalysis, error) {
+func (c *CapitalGainsManagerImpl) ProcessTransactions(ctx context.Context, year int) (map[string]fa.PositionAnalysis, error) {
+	// TODO: Document Sample Formats for all CSV Files
 	// Open and read CSV file
 	filePath := filepath.Join(c.downloadDir, c.statementFile)
 	file, err := os.Open(filePath)
@@ -143,19 +144,4 @@ func (c *CapitalGainsManagerImpl) analyzeTickerPositions(ctx context.Context, ti
 	}
 
 	return analysis, nil
-}
-
-func (c *CapitalGainsManagerImpl) GetPriceOnDate(ctx context.Context, ticker string, date time.Time) (float64, error) {
-	// Use ticker manager to get price for the given date
-	analysis, err := c.tickerManager.AnalyzeTicker(ctx, ticker, date.Year())
-	if err != nil {
-		return 0, err
-	}
-
-	// Use appropriate price based on date
-	dateStr := date.Format("2006-01-02")
-	if dateStr == analysis.YearEndDate {
-		return analysis.YearEndPrice, nil
-	}
-	return analysis.PeakPrice, nil // Simplified for now
 }
