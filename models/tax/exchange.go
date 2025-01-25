@@ -1,11 +1,7 @@
 package tax
 
-// SBI response models
-type ExchangeRates struct {
-	Rates []Rate
-}
-
-type Rate struct {
+// BUG: Use CSV Tag
+type SbiRate struct {
 	Date   string  `json:"DATE"`
 	TTBuy  float64 `json:"TT BUY"`
 	TTSell float64 `json:"TT SELL"`

@@ -118,7 +118,7 @@ func (s *SBIManagerImpl) readCSVRecords(filePath string) ([][]string, common.Htt
 	}
 	defer file.Close()
 
-	// FIXME: #A Use Gocsv for parsing
+	// FIXME: #A Use Gocsv for parsing use SbiRate in Models
 	reader := csv.NewReader(file)
 
 	// Validate header
