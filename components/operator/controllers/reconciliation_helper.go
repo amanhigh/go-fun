@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	cachev1beta1 "github.com/amanhigh/go-fun/components/operator/api/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -150,8 +151,15 @@ func (r *reconciliationHelperImpl) handleAdditionFinalizer(
 // - Update status based on reconciliation results
 func (r *reconciliationHelperImpl) ReconcileDeployment(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error) {
 	dep := &appsv1.Deployment{}
-	if result, err := r.handleDeploymentCreation(ctx, memcached, dep); err != nil {
-		return result, err
+	// Handle deployment creation and capture result
+	createResult, err := r.handleDeploymentCreation(ctx, memcached, dep)
+	if err != nil {
+		return createResult, err
+	}
+
+	// If creation requires requeue, return immediately
+	if createResult.Requeue || createResult.RequeueAfter > 0 {
+		return createResult, nil
 	}
 
 	return r.handleDeploymentUpdate(ctx, memcached, dep)
@@ -173,8 +181,12 @@ func (r *reconciliationHelperImpl) handleDeploymentCreation(
 	}, dep)
 
 	if err != nil && apierrors.IsNotFound(err) {
-		// Use local deployHelper instead of controller.deployHelper
-		return r.deployHelper.ValidateAndCreateDeployment(ctx, memcached)
+		result, err := r.deployHelper.ValidateAndCreateDeployment(ctx, memcached)
+		if err != nil {
+			return result, err
+		}
+		// Requeue for deployment creation
+		return ctrl.Result{RequeueAfter: time.Minute}, nil
 	} else if err != nil {
 		log.Error(err, "Failed to get Deployment")
 		return ctrl.Result{}, err
