@@ -8,7 +8,7 @@ import (
 )
 
 type FAManager interface {
-	ProcessTickers(ctx context.Context, tickers []string, year int) ([]fa.FATickerAnalysis, error)
+	ProcessTickers(ctx context.Context, tickers []string, year int) ([]fa.TickerInfo, error)
 }
 
 type FAManagerImpl struct {
@@ -23,8 +23,8 @@ func NewFAManager(tickerManager TickerManager, sbiManager SBIManager) *FAManager
 	}
 }
 
-func (f *FAManagerImpl) ProcessTickers(ctx context.Context, tickers []string, year int) ([]fa.FATickerAnalysis, error) {
-	var results []fa.FATickerAnalysis
+func (f *FAManagerImpl) ProcessTickers(ctx context.Context, tickers []string, year int) ([]fa.TickerInfo, error) {
+	var results []fa.TickerInfo
 	// TODO: #A Build Capital  Manager
 	// TODO: #B Build Dividend  Manager
 
@@ -50,7 +50,7 @@ func (f *FAManagerImpl) ProcessTickers(ctx context.Context, tickers []string, ye
 		}
 
 		// Create FATickerAnalysis
-		faAnalysis := fa.FATickerAnalysis{
+		faAnalysis := fa.TickerInfo{
 			TickerAnalysis:  analysis,
 			PeakTTRate:      peakRate,
 			YearEndTTRate:   yearEndRate,

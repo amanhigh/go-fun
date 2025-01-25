@@ -55,7 +55,7 @@ func parseTickers(tickerString string) []string {
 	return strings.Split(tickerString, ",")
 }
 
-func printFAAnalysis(analysis []fa.FATickerAnalysis) {
+func printFAAnalysis(analysis []fa.TickerInfo) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	defer w.Flush()
 

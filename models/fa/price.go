@@ -43,8 +43,8 @@ type TickerAnalysis struct {
 	YearEndPrice float64 `json:"year_end_price"`
 }
 
-// FATickerAnalysis extends TickerAnalysis with TT rate conversions
-type FATickerAnalysis struct {
+// TickerInfo extends TickerAnalysis with TT rate conversions
+type TickerInfo struct {
 	TickerAnalysis          // Embed base USD analysis
 	PeakTTRate      float64 `json:"peak_tt_rate"`
 	YearEndTTRate   float64 `json:"year_end_tt_rate"`

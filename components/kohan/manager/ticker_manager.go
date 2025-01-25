@@ -17,7 +17,6 @@ import (
 )
 
 type TickerManager interface {
-	// FIXME: #B Create Tests
 	DownloadTicker(ctx context.Context, ticker string) (err common.HttpError)
 	AnalyzeTicker(ctx context.Context, ticker string, year int) (analysis fa.TickerAnalysis, err common.HttpError)
 }
