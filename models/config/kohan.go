@@ -36,7 +36,8 @@ type FAConfig struct {
 	AlphaAPIKey  string `env:"ALPHA_API_KEY"` // required, no default
 
 	// File System Configuration
-	DownloadsDir string `env:"FA_DOWNLOADS_DIR" envDefault:"~/Downloads/Tickers"`
+	DownloadsDir        string `env:"FA_DOWNLOADS_DIR" envDefault:"~/Downloads/Tickers"`
+	BrokerStatementFile string `env:"FA_BROKER_STATEMENT" envDefault:"broker_statement.csv"`
 }
 
 func NewKohanConfig() (config KohanConfig, err error) {
