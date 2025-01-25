@@ -28,12 +28,14 @@ type ReconciliationHelper interface {
 type reconciliationHelperImpl struct {
 	controller   *MemcachedReconciler
 	statusHelper StatusHelper
+	deployHelper DeploymentHelper // Add new field
 }
 
-func NewReconciliationHelper(statusHelper StatusHelper, controller *MemcachedReconciler) ReconciliationHelper {
+func NewReconciliationHelper(statusHelper StatusHelper, deployHelper DeploymentHelper, controller *MemcachedReconciler) ReconciliationHelper {
 	return &reconciliationHelperImpl{
 		controller:   controller,
 		statusHelper: statusHelper,
+		deployHelper: deployHelper,
 	}
 }
 
@@ -185,8 +187,8 @@ func (r *reconciliationHelperImpl) handleDeploymentCreation(
 	}, dep)
 
 	if err != nil && apierrors.IsNotFound(err) {
-		// Attempt creation with validation
-		return r.controller.deployHelper.ValidateAndCreateDeployment(ctx, memcached)
+		// Use local deployHelper instead of controller.deployHelper
+		return r.deployHelper.ValidateAndCreateDeployment(ctx, memcached)
 	} else if err != nil {
 		log.Error(err, "Failed to get Deployment")
 		return ctrl.Result{}, err

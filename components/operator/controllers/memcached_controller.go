@@ -91,8 +91,8 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 func (r *MemcachedReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// Initialize all helpers
 	r.statusHelper = NewStatusHelper(r)
-	r.reconcileHelper = NewReconciliationHelper(r.statusHelper, r)
 	r.deployHelper = NewDeploymentHelper(r)
+	r.reconcileHelper = NewReconciliationHelper(r.statusHelper, r.deployHelper, r)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cachev1beta1.Memcached{}).

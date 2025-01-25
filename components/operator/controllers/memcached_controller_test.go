@@ -175,8 +175,8 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 					// Initialize helpers
 					memcachedReconciler.statusHelper = NewStatusHelper(memcachedReconciler)
-					memcachedReconciler.reconcileHelper = NewReconciliationHelper(memcachedReconciler.statusHelper, memcachedReconciler)
 					memcachedReconciler.deployHelper = NewDeploymentHelper(memcachedReconciler)
+					memcachedReconciler.reconcileHelper = NewReconciliationHelper(memcachedReconciler.statusHelper, memcachedReconciler.deployHelper, memcachedReconciler)
 
 					deployment = &appsv1.Deployment{}
 
