@@ -22,44 +22,44 @@ func NewMedianFinder() MedianFinder {
 	}
 }
 
-func (self *MedianFinder) getSmallerHeap() *ds.Heap {
-	if self.lowers.Size() <= self.uppers.Size() {
-		return self.lowers
+func (mf *MedianFinder) getSmallerHeap() *ds.Heap {
+	if mf.lowers.Size() <= mf.uppers.Size() {
+		return mf.lowers
 	} else {
-		return self.uppers
+		return mf.uppers
 	}
 }
 
-func (self *MedianFinder) getBiggerHeap() *ds.Heap {
-	if self.lowers.Size() > self.uppers.Size() {
-		return self.lowers
+func (mf *MedianFinder) getBiggerHeap() *ds.Heap {
+	if mf.lowers.Size() > mf.uppers.Size() {
+		return mf.lowers
 	} else {
-		return self.uppers
+		return mf.uppers
 	}
 }
 
-func (self *MedianFinder) Add(i int) {
+func (mf *MedianFinder) Add(i int) {
 	/* If First Half is Empty or Number is less than max of first half */
-	if self.lowers.Size() == 0 || i < self.lowers.Peek() {
-		self.lowers.Add(i)
+	if mf.lowers.Size() == 0 || i < mf.lowers.Peek() {
+		mf.lowers.Add(i)
 	} else {
-		self.uppers.Add(i)
+		mf.uppers.Add(i)
 	}
-	self.rebalance()
+	mf.rebalance()
 }
 
-func (self *MedianFinder) rebalance() {
-	bigger := self.getBiggerHeap()
-	smaller := self.getSmallerHeap()
+func (mf *MedianFinder) rebalance() {
+	bigger := mf.getBiggerHeap()
+	smaller := mf.getSmallerHeap()
 	if bigger.Size()-smaller.Size() > 1 {
 		smaller.Add(bigger.Poll())
 	}
-	//fmt.Println(self.lowers, self.uppers)
+	//fmt.Println(mf.lowers, mf.uppers)
 }
 
-func (self *MedianFinder) GetMedian() (result float64) {
-	bigger := self.getBiggerHeap()
-	smaller := self.getSmallerHeap()
+func (mf *MedianFinder) GetMedian() (result float64) {
+	bigger := mf.getBiggerHeap()
+	smaller := mf.getSmallerHeap()
 	if bigger.Size() == smaller.Size() {
 		return float64(smaller.Peek()+bigger.Peek()) / 2
 	} else {

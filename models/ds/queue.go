@@ -12,24 +12,24 @@ func NewQueue() Queue {
 	}
 }
 
-func (self *Queue) Enqueue(i int) {
-	self.entry.Push(i)
+func (q *Queue) Enqueue(i int) {
+	q.entry.Push(i)
 }
 
-func (self *Queue) Dequeue() (i int) {
-	self.transfer()
-	return self.exit.Pop()
+func (q *Queue) Dequeue() (i int) {
+	q.transfer()
+	return q.exit.Pop()
 }
 
-func (self *Queue) transfer() {
-	if self.exit.IsEmpty() {
-		for !self.entry.IsEmpty() {
-			self.exit.Push(self.entry.Pop())
+func (q *Queue) transfer() {
+	if q.exit.IsEmpty() {
+		for !q.entry.IsEmpty() {
+			q.exit.Push(q.entry.Pop())
 		}
 	}
 }
 
-func (self *Queue) Peek() (i int) {
-	self.transfer()
-	return self.exit.Peek()
+func (q *Queue) Peek() (i int) {
+	q.transfer()
+	return q.exit.Peek()
 }

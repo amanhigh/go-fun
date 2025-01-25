@@ -13,6 +13,10 @@ import (
 	"github.com/samber/lo"
 )
 
+const (
+	defaultTimeout = 200
+)
+
 var FastPssh = Pssh{20, config.OUTPUT_PATH, config.ERROR_PATH, false}
 var NORMAL_PSSH = Pssh{30, config.OUTPUT_PATH, config.ERROR_PATH, false}
 var DisplayPssh = Pssh{10, config.OUTPUT_PATH, config.ERROR_PATH, true}
@@ -25,11 +29,11 @@ type Pssh struct {
 	displayOutput bool
 }
 
-func (self *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput bool) {
+func (p *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput bool) {
 	clearOutputPaths()
 
 	psshCmd := fmt.Sprintf(`script %v pssh -h %v -t %v -o %v -e %v %v -p %v '%v'`,
-		config.CONSOLE_FILE, getClusterFile(cluster), self.Timeout, self.outputPath, self.errorPath, self.getDisplayFlag(), parallelism, cmd)
+		config.CONSOLE_FILE, getClusterFile(cluster), p.Timeout, p.outputPath, p.errorPath, p.getDisplayFlag(), parallelism, cmd)
 	if disableOutput {
 		RunCommandPrintError(psshCmd)
 	} else {
@@ -45,13 +49,13 @@ func (self *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput
 	})
 }
 
-func (self *Pssh) RunRange(cmd string, cluster string, parallelism int, disableOutput bool, start int, end int) {
+func (p *Pssh) RunRange(cmd string, cluster string, parallelism int, disableOutput bool, start int, end int) {
 	if start != -1 && end != -1 {
 		subClusterName := cluster + "m"
 		ExtractSubCluster(cluster, subClusterName, start-1, end)
-		self.Run(cmd, subClusterName, parallelism, disableOutput)
+		p.Run(cmd, subClusterName, parallelism, disableOutput)
 	} else {
-		self.Run(cmd, cluster, parallelism, disableOutput)
+		p.Run(cmd, cluster, parallelism, disableOutput)
 	}
 }
 
@@ -87,11 +91,10 @@ func RemoveCluster(mainClusterName string, removeClusterName string) int {
 
 func GetClusterHost(clusterName string, index int) string {
 	ips := ReadClusterFile(clusterName)
-	if index <= len(ips) {
-		return ips[index-1]
-	} else {
+	if index > len(ips) {
 		return "INVALID"
 	}
+	return ips[index-1]
 }
 
 func SearchCluster(keyword string) (clusters []string) {
@@ -107,10 +110,18 @@ func SearchCluster(keyword string) (clusters []string) {
 
 func Md5Checker(cmd string, cluster string) {
 	/* Run Command to get Ip Wise output */
-	FastPssh.Run(cmd, cluster, 200, true)
-	files := util.ReadFileMap(config.OUTPUT_PATH, true)
+	files := runMd5Command(cmd, cluster)
+	hashMap, sortList := computeMd5Hashes(files)
+	analyzeMd5Results(cmd, cluster, hashMap, sortList)
+}
 
-	/* Compute Md5 and store as list with count */
+func runMd5Command(cmd string, cluster string) map[string][]string {
+	FastPssh.Run(cmd, cluster, defaultTimeout, true)
+	return util.ReadFileMap(config.OUTPUT_PATH, true)
+}
+
+/* Compute Md5 and store as list with count */
+func computeMd5Hashes(files map[string][]string) (map[string]*util.Md5Info, []*util.Md5Info) {
 	hashMap := map[string]*util.Md5Info{}
 	var sortList []*util.Md5Info
 
@@ -123,34 +134,42 @@ func Md5Checker(cmd string, cluster string) {
 		}
 		hashMap[md5Hash].Add(path)
 	}
+	return hashMap, sortList
+}
 
-	/* If more than one Md5 Sums Found */
+func analyzeMd5Results(cmd string, cluster string, hashMap map[string]*util.Md5Info, sortList []*util.Md5Info) {
 	if len(sortList) > 1 {
-		log.Warn().Str("Cluster", cluster).Str("CMD", cmd).Msg("Multiple MD5 Detected")
-
-		/* Sort Md5 List by Count */
-		sort.Slice(sortList, func(i, j int) bool {
-			return sortList[i].Count > sortList[j].Count
-		})
-		for _, value := range sortList {
-			log.Warn().Str("Cluster", cluster).Str("Hash", value.Hash).Int("Count", value.Count).Msg("MD5 Result")
-		}
-
-		/* Perform Diff on first file of top two md5's */
-		first := sortList[0]
-		firstFile := first.FileList[0]
-		for i := 1; i < len(sortList); i++ {
-			current := sortList[i]
-			currentFile := current.FileList[0]
-			log.Info().Str("First", firstFile).Str("FirstHash", first.Hash).Str("Current", currentFile).Str("CurrentHash", current.Hash).Msg("Diffing")
-			if util.IsDebugMode() {
-				util.PrintFile(firstFile, firstFile)
-				util.PrintFile(currentFile, currentFile)
-			}
-			fmt.Println(RunCommandIgnoreError(fmt.Sprintf("colordiff %v %v", firstFile, currentFile)))
-		}
+		logMultipleMd5(cmd, cluster, sortList)
+		compareMd5Results(cluster, sortList)
 	} else {
 		log.Info().Str("Cluster", cluster).Str("Hash", sortList[0].Hash).Str("Count", fmt.Sprint(sortList[0].Count)).Msg("Cluster Homogenous")
+	}
+}
+
+func logMultipleMd5(cmd string, cluster string, sortList []*util.Md5Info) {
+	log.Warn().Str("Cluster", cluster).Str("CMD", cmd).Msg("Multiple MD5 Detected")
+
+	/* Sort Md5 List by Count */
+	sort.Slice(sortList, func(i, j int) bool {
+		return sortList[i].Count > sortList[j].Count
+	})
+	for _, value := range sortList {
+		log.Warn().Str("Cluster", cluster).Str("Hash", value.Hash).Int("Count", value.Count).Msg("MD5 Result")
+	}
+}
+
+func compareMd5Results(cluster string, sortList []*util.Md5Info) {
+	first := sortList[0]
+	firstFile := first.FileList[0]
+	for i := 1; i < len(sortList); i++ {
+		current := sortList[i]
+		currentFile := current.FileList[0]
+		log.Info().Str("First", firstFile).Str("FirstHash", first.Hash).Str("Current", currentFile).Str("CurrentHash", current.Hash).Msg("Diffing")
+		if util.IsDebugMode() {
+			util.PrintFile(firstFile, firstFile)
+			util.PrintFile(currentFile, currentFile)
+		}
+		fmt.Println(RunCommandIgnoreError(fmt.Sprintf("colordiff %v %v", firstFile, currentFile)))
 	}
 }
 
@@ -162,10 +181,9 @@ func getClusterFile(name string) string {
 	return fmt.Sprintf("%v/%v.txt", config.CLUSTER_PATH, name)
 }
 
-func (self *Pssh) getDisplayFlag() string {
-	if self.displayOutput {
-		return "-P"
-	} else {
+func (p *Pssh) getDisplayFlag() string {
+	if !p.displayOutput {
 		return ""
 	}
+	return "-P"
 }

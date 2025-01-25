@@ -4,6 +4,8 @@ import (
 	"bufio"
 )
 
+const DIMENSION_COUNT = 2 // Number of values needed for matrix dimensions (n, m)
+
 func ReadCountInts(scanner *bufio.Scanner) (n int, ints []int) {
 	n = ReadInt(scanner)
 	ints = ReadInts(scanner, n)
@@ -19,7 +21,7 @@ func ReadMatrix(scanner *bufio.Scanner, n, m int) (matrix [][]int) {
 }
 
 func ReadMatrixWithDimensions(scanner *bufio.Scanner) (matrix [][]int, n, m int) {
-	ints := ReadInts(scanner, 2)
+	ints := ReadInts(scanner, DIMENSION_COUNT)
 	n = ints[0]
 	m = ints[1]
 	matrix = ReadMatrix(scanner, n, m)

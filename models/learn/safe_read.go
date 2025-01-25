@@ -9,29 +9,29 @@ type SafeReadWrite struct {
 	Intc chan int
 }
 
-func (self *SafeReadWrite) Write(i int) {
-	self.Intc <- i
+func (s *SafeReadWrite) Write(i int) {
+	s.Intc <- i
 }
 
-func (self *SafeReadWrite) Close() {
-	close(self.Intc)
+func (s *SafeReadWrite) Close() {
+	close(s.Intc)
 }
 
-func (self *SafeReadWrite) Read() (val int) {
+func (s *SafeReadWrite) Read() (val int) {
 	select {
-	case v, ok := <-self.Intc:
+	case v, ok := <-s.Intc:
 		//If Channel is Not Closed Update I
 		if ok {
 			//Update New Value in Cache
-			self.I = v
+			s.I = v
 		}
 		//Serve Updated I
-		val = self.I
+		val = s.I
 	default:
 		//Runs if no other event is ready run
 		time.Sleep(100 * time.Millisecond)
 		//Serve Cached I
-		val = self.I
+		val = s.I
 	}
 	return
 }

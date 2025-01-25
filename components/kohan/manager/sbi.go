@@ -3,8 +3,6 @@ package manager
 import (
 	"context"
 	"encoding/csv"
-	"errors"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -19,7 +17,6 @@ import (
 )
 
 type SBIManager interface {
-	FetchAndParseExchangeRates(ctx context.Context) (fa.ExchangeRates, common.HttpError)
 	DownloadRates(ctx context.Context) common.HttpError
 	GetTTBuyRate(date time.Time) (float64, common.HttpError)
 }
@@ -36,17 +33,6 @@ func NewSBIManager(client clients.SBIClient, downloadDir string) *SBIManagerImpl
 	}
 }
 
-func (s *SBIManagerImpl) FetchAndParseExchangeRates(ctx context.Context) (rates fa.ExchangeRates, err common.HttpError) {
-	var csvContent string
-	if csvContent, err = s.client.FetchExchangeRates(ctx); err != nil {
-		return
-	}
-
-	// Parse CSV content
-	reader := csv.NewReader(strings.NewReader(csvContent))
-	return readRates(reader)
-}
-
 // SaveRates fetches the latest exchange rates and saves them to a CSV file
 // in the configured download directory. Returns an error if any step fails.
 func (s *SBIManagerImpl) GetTTBuyRate(date time.Time) (rate float64, err common.HttpError) {
@@ -58,37 +44,21 @@ func (s *SBIManagerImpl) GetTTBuyRate(date time.Time) (rate float64, err common.
 		return 0, common.NewHttpError("SBI rates file not found", http.StatusNotFound)
 	}
 
-	// Read and parse CSV file
-	file, err1 := os.Open(filePath)
-	if err1 != nil {
-		return 0, common.NewServerError(err1)
+	// Read and validate CSV records
+	// FIXME: #B Cache Inmemory once Loaded.
+	records, err := s.readCSVRecords(filePath)
+	if err != nil {
+		return 0, err
 	}
-	defer file.Close()
 
 	// Format date in required format (YYYY-MM-DD)
 	dateStr := date.Format("2006-01-02")
 
-	// Read CSV and find matching rate
-	reader := csv.NewReader(file)
-	// Skip header
-	_, err1 = reader.Read()
-	if err1 != nil {
-		return 0, common.NewServerError(err1)
-	}
-
 	// Search for matching date
-	for {
-		record, err1 := reader.Read()
-		if errors.Is(err1, io.EOF) {
-			break
-		}
-		if err1 != nil {
-			return 0, common.NewServerError(err1)
-		}
-
+	for _, record := range records {
 		// Check if date matches (taking first part before space as done in Python)
 		if strings.Split(record[0], " ")[0] == dateStr {
-			rate, err1 = strconv.ParseFloat(record[1], 64)
+			rate, err1 := strconv.ParseFloat(record[1], 64)
 			if err1 != nil {
 				return 0, common.NewServerError(err1)
 			}
@@ -119,32 +89,29 @@ func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpErro
 	return
 }
 
-func readRates(reader *csv.Reader) (rates fa.ExchangeRates, err common.HttpError) {
-	// Skip header
-	if _, err1 := reader.Read(); err1 != nil {
-		err = common.NewServerError(err1)
-		return
+func (s *SBIManagerImpl) readCSVRecords(filePath string) ([][]string, common.HttpError) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, common.NewServerError(err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+
+	// Validate header
+	header, err := reader.Read()
+	if err != nil {
+		return nil, common.NewServerError(err)
+	}
+	if len(header) < 3 || header[0] != "DATE" || header[1] != "TT BUY" || header[2] != "TT SELL" {
+		return nil, common.NewHttpError("invalid CSV header format", http.StatusInternalServerError)
 	}
 
-	// Read rates
-	for {
-		record, err1 := reader.Read()
-		if err1 == io.EOF {
-			break
-		}
-		if err1 != nil {
-			err = common.NewServerError(err1)
-			return
-		}
-
-		ttBuy, _ := strconv.ParseFloat(record[1], 64)
-		ttSell, _ := strconv.ParseFloat(record[2], 64)
-
-		rates.Rates = append(rates.Rates, fa.Rate{
-			Date:   record[0],
-			TTBuy:  ttBuy,
-			TTSell: ttSell,
-		})
+	// Read remaining records
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, common.NewServerError(err)
 	}
-	return
+
+	return records, nil
 }

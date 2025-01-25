@@ -29,7 +29,6 @@ func MissingNumbers(A []int) (missingNumber int) {
 		} else if v == missingNumber+1 {
 			missingNumber = missingNumber + 1
 		} else {
-
 			break
 		}
 	}
@@ -38,7 +37,6 @@ func MissingNumbers(A []int) (missingNumber int) {
 }
 
 func TargetSum(input []int, target int) (i, j int) {
-
 	numMap := map[int]int{}
 
 	for i, v := range input {

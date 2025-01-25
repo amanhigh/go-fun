@@ -9,8 +9,8 @@ const (
 
 // Ginkgo
 const GINKGO_INEGRATION = "it"
-const GINKGO_SLOW = "slow"   //Slower Tests
-const GINKGO_SETUP = "setup" //Requires external Setup
+const GINKGO_SLOW = "slow"   // Slower Tests
+const GINKGO_SETUP = "setup" // Requires external Setup
 const VAULT_ROOT_TOKEN = "root-token"
 
 // DB

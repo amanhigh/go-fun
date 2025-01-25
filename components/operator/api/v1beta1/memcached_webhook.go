@@ -34,6 +34,7 @@ func (r *Memcached) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
+//nolint:lll
 //+kubebuilder:webhook:path=/mutate-cache-aman-com-v1beta1-memcached,mutating=true,failurePolicy=fail,sideEffects=None,groups=cache.aman.com,resources=memcacheds,verbs=create;update,versions=v1beta1,name=mmemcached.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &Memcached{}
@@ -48,6 +49,7 @@ func (r *Memcached) Default() {
 }
 
 // Change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
+// nolint:lll
 //+kubebuilder:webhook:path=/validate-cache-aman-com-v1beta1-memcached,mutating=false,failurePolicy=fail,sideEffects=None,groups=cache.aman.com,resources=memcacheds,verbs=create;update;delete,versions=v1beta1,name=vmemcached.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &Memcached{}

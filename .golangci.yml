@@ -19,14 +19,72 @@ linters-settings:
     enable-all: true
     disable:
       - fieldalignment # too strict
+  mnd:
+      # Exclude some common acceptable numbers
+      ignored-numbers: [0,1]
+      ignored-functions: ["make"]
+
+  funlen:
+    lines: 40      # max function length
+    statements: 20  # max statements per function
+    
+  lll:
+    line-length: 200  # max line length
+    
+  # Complexity Control
+  gocyclo:
+    min-complexity: 10  # cyclomatic complexity limit
+    
+  cyclop:
+    max-complexity: 10
+    package-average: 8
 
   errcheck:
     check-type-assertions: true
 
+  # https://go-critic.com/overview
+  gocritic:
+    enabled-checks:
+      - paramTypeCombine    # Combines same-type params
+
+  # https://revive.run/docs#default-configuration
+  revive:
+    # enable-all-rules: true
+    rules:
+      # - name: var-naming
+      # - name: dot-imports
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: if-return
+      - name: increment-decrement
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      # - name: unused-parameter
+      - name: unreachable-code
+      # - name: redefines-builtin-id  
+      - name: argument-limit
+        arguments: [6]      # Max parameters
+      - name: function-result-limit
+        arguments: [3]      # Max return values
+
+# https://golangci-lint.run/usage/linters/#funlen
 linters:
   disable-all: true
   enable:
-    # TODO: #A Strengthen linters and fix issues.
+    # TODO: #C Strengthen linters and fix issues.
     # High Priority - Code Correctness & Bugs
     - errcheck      # critical error checking
     - govet        # suspicious constructs
@@ -39,22 +97,31 @@ linters:
     - nilerr        # nil error returns
     - sqlclosecheck # ensure sql resources closed
     - noctx        # enforce context usage
+    - mnd           # Magic numbers detector
     
     # Code Style Essentials
     - goimports     # import sorting + gofmt
-    # - revive        # general style (golint replacement)
+    - revive        # general style (golint replacement)
+    - gocritic      
     - unused        # unused code detection
 
     # Consider enabling these linters later:
-    # - exhaustive     # enum switch statements
+    - exhaustive     # enum switch statements
     - gosec         # security checks
     - errorlint     # error wrapping (Go 1.13+)
-    # - testifylint   # testify best practices
-    # - whitespace    # ws formatting
+    - testifylint   # testify best practices
+    - whitespace    # ws formatting
+
+    # Complexity
+    - gocyclo      # Cyclomatic complexity
+    - cyclop       # Package complexity and maintainability
+    - funlen       # Function length control
+    - lll          # Line length control
 
 issues:
   # Maximum count of issues with the same text
-  max-same-issues: 50
+  max-issues-per-linter: 15  # limit errors per linter
+  max-same-issues: 3         # limit duplicate errors
 
   # Excluding specific rules for test files
   exclude-rules:
@@ -70,6 +137,10 @@ issues:
         - errcheck
         - govet
   exclude-dirs:
-    # - "^components/learn"
+    - "^components/"
+    - "^models/"
   exclude-files:
     # - "components/learn/frameworks/play-fast/hystrix_test.go"
+
+output:
+  sort-results: true

@@ -13,9 +13,9 @@ import (
 
 /*
 *
-RequestId Generator for Gin
+RequestID Generator for Gin
 */
-func RequestId(c *gin.Context) {
+func RequestID(c *gin.Context) {
 	// Generate UUID
 	uuid := uuid.New()
 	c.Set(string(models.XRequestID), uuid)
@@ -23,7 +23,7 @@ func RequestId(c *gin.Context) {
 	// Logger with RequestId
 	idLogger := log.With().Str("RequestId", uuid.String()).Logger()
 
-	//Add UUID & Logger to Request Context as well
+	// Add UUID & Logger to Request Context as well
 	ctx := context.WithValue(c.Request.Context(), models.XRequestID, uuid.String())
 	ctx = idLogger.WithContext(ctx)
 	c.Request = c.Request.WithContext(ctx)
@@ -36,7 +36,7 @@ func RequestId(c *gin.Context) {
 var GinRequestIdFormatter = func(param gin.LogFormatterParams) string {
 	if param.Latency > time.Minute {
 		// Truncate in a golang < 1.8 safe way
-		param.Latency = param.Latency - param.Latency%time.Second
+		param.Latency -= param.Latency % time.Second
 	}
 
 	// TASK: Implement CLF Field Authentication $remote_user: - if no authentication is used.

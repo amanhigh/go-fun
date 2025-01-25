@@ -12,9 +12,9 @@ type Md5Info struct {
 	Count    int
 }
 
-func (self *Md5Info) Add(path string) {
-	self.FileList = append(self.FileList, path)
-	self.Count++
+func (m *Md5Info) Add(path string) {
+	m.FileList = append(m.FileList, path)
+	m.Count++
 }
 
 func GetMD5Hash(text string) string {

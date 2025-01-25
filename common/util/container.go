@@ -10,7 +10,10 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-const WAIT_TIME = time.Minute
+const (
+	WAIT_TIME          = time.Minute
+	waitTimeMultiplier = 2
+)
 
 func RedisTestContainer(ctx context.Context) (redisContainer testcontainers.Container, err error) {
 	req := testcontainers.ContainerRequest{
@@ -37,8 +40,8 @@ func MysqlTestContainer(ctx context.Context) (mysqlContainer testcontainers.Cont
 			"MYSQL_PASSWORD":      "aman",
 		},
 		WaitingFor: wait.ForAll(
-			wait.ForLog("ready for connections").WithStartupTimeout(WAIT_TIME*2),
-			wait.ForSQL(nat.Port(port), "mysql", func(host string, port nat.Port) string { return "aman:aman@tcp(" + host + ":" + port.Port() + ")/" }).WithStartupTimeout(WAIT_TIME*2),
+			wait.ForLog("ready for connections").WithStartupTimeout(WAIT_TIME*waitTimeMultiplier),
+			wait.ForSQL(nat.Port(port), "mysql", func(host string, port nat.Port) string { return "aman:aman@tcp(" + host + ":" + port.Port() + ")/" }).WithStartupTimeout(WAIT_TIME*waitTimeMultiplier),
 		),
 	}
 	mysqlContainer, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{

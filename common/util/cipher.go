@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	CIPHER_TOO_SHORT = errors.New("ciphertext too short")
+	ErrCipherTooShort = errors.New("ciphertext too short")
 )
 
 func Encrypt(key, text string) (encryptedText string, err error) {
@@ -46,7 +46,7 @@ func Decrypt(key, text string) (string, error) {
 
 	// Check minimum cipher text length
 	if len(textBytes) < aes.BlockSize {
-		return "", CIPHER_TOO_SHORT
+		return "", ErrCipherTooShort
 	}
 
 	// Create new cipher

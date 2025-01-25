@@ -23,36 +23,28 @@ func MaxSubArray(input []int) (arraySum, segmentSum, start, end int) {
 *
 https://www.youtube.com/watch?v=86CQq3pKSUw
 */
-func KadensAlgorithm(input []int) (contigousSum, nonContigousSum, start, end int) {
-	contigousSum, nonContigousSum = input[0], 0
-	sum := 0
+func calculateContiguousSum(input []int) (sum, start, end int) {
+	sum = input[0]
+	currentSum := 0
 
 	for i, value := range input {
 		/*
-			#Mistake 2 Check this Commit
-			Didn't correctly find nonContigous Sum
-			Include only positives values and handle all negative values case
-			at end.
+			If current sum plus current value is less than current value,
+			we should start a new subarray from this point
 		*/
-		if value > 0 {
-			nonContigousSum += value
-		}
-
-		if sum+value < value {
+		if currentSum+value < value {
 			/* To Handle decrementing array -1,-2,-3,-4 */
-			if sum < value {
+			if currentSum < value {
 				/* Mark start only if current value is greater than previous sum */
 				start = i
 			}
-
-			/* Max Subarray starts here, drop previous max subarray */
-			sum = value
+			currentSum = value
 		} else {
 			/*
 				This element is part of max subarray hence previous max
 				subarray plus this element
 			*/
-			sum += value
+			currentSum += value
 		}
 
 		/*
@@ -60,12 +52,27 @@ func KadensAlgorithm(input []int) (contigousSum, nonContigousSum, start, end int
 			as its not max sum at this index, its max sum
 			till now over any index.
 		*/
-		if contigousSum < sum {
-			contigousSum = sum
+		if sum < currentSum {
+			sum = currentSum
 			end = i
 		}
-		//fmt.Println("Trace:", i, sum, contigousSum)
 	}
+	return
+}
+
+func calculateNonContiguousSum(input []int) int {
+	sum := 0
+	for _, value := range input {
+		if value > 0 {
+			sum += value
+		}
+	}
+	return sum
+}
+
+func KadensAlgorithm(input []int) (contigousSum, nonContigousSum, start, end int) {
+	contigousSum, start, end = calculateContiguousSum(input)
+	nonContigousSum = calculateNonContiguousSum(input)
 
 	/*
 		#Mistake 2 Fix
@@ -77,7 +84,6 @@ func KadensAlgorithm(input []int) (contigousSum, nonContigousSum, start, end int
 	if contigousSum < 0 {
 		nonContigousSum = contigousSum
 	}
-
 	return
 }
 

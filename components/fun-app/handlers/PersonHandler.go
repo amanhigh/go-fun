@@ -36,22 +36,22 @@ type PersonHandler struct {
 // @Failure 400 {string} string "Bad Request"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person [post]
-func (self *PersonHandler) CreatePerson(c *gin.Context) {
+func (ph *PersonHandler) CreatePerson(c *gin.Context) {
 	/* Captures Create Person Latency */
 	startTime := time.Now()
 	defer func() {
-		self.PersonCreateTime.Record(c.Request.Context(), time.Since(startTime).Seconds())
+		ph.PersonCreateTime.Record(c.Request.Context(), time.Since(startTime).Seconds())
 	}()
 
-	ctx, span := self.Tracer.Start(c.Request.Context(), "CreatePerson.Handler")
+	ctx, span := ph.Tracer.Start(c.Request.Context(), "CreatePerson.Handler")
 	defer span.End()
 
 	//Unmarshal the request
 	var request fun.PersonRequest
 	if err := c.ShouldBind(&request); err == nil {
-		self.CreateCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("gender", request.Gender)))
+		ph.CreateCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("gender", request.Gender)))
 
-		if person, err := self.Manager.CreatePerson(ctx, request); err == nil {
+		if person, err := ph.Manager.CreatePerson(ctx, request); err == nil {
 			c.JSON(http.StatusCreated, person)
 			span.SetStatus(codes.Ok, "Person Created")
 		} else {
@@ -76,14 +76,14 @@ func (self *PersonHandler) CreatePerson(c *gin.Context) {
 // @Success 200 {object} fun.Person
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person/{id} [get]
-func (self *PersonHandler) GetPerson(c *gin.Context) {
+func (ph *PersonHandler) GetPerson(c *gin.Context) {
 	var path fun.PersonPath
 
-	ctx, span := self.Tracer.Start(c.Request.Context(), "GetPerson.Handler", trace.WithAttributes(attribute.String("id", path.Id)))
+	ctx, span := ph.Tracer.Start(c.Request.Context(), "GetPerson.Handler", trace.WithAttributes(attribute.String("id", path.Id)))
 	defer span.End()
 
 	util.UnwrapRequest(c, nil, &path, nil, func(c *gin.Context) {
-		if person, err := self.Manager.GetPerson(ctx, path.Id); err == nil {
+		if person, err := ph.Manager.GetPerson(ctx, path.Id); err == nil {
 			c.JSON(http.StatusOK, person)
 		} else {
 			err = util.ProcessValidationError(err)
@@ -109,17 +109,17 @@ func (self *PersonHandler) GetPerson(c *gin.Context) {
 // @Success 200 {object} fun.PersonList
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person [get]
-func (self *PersonHandler) ListPersons(c *gin.Context) {
+func (ph *PersonHandler) ListPersons(c *gin.Context) {
 	var personQuery fun.PersonQuery
 	personQuery.Order = "asc" //Default Sort Order
 
-	ctx, span := self.Tracer.Start(c.Request.Context(), "ListPersons.Handler")
+	ctx, span := ph.Tracer.Start(c.Request.Context(), "ListPersons.Handler")
 	defer span.End()
 
 	if err := c.ShouldBindQuery(&personQuery); err == nil {
-		if personList, err := self.Manager.ListPersons(ctx, personQuery); err == nil {
+		if personList, err := ph.Manager.ListPersons(ctx, personQuery); err == nil {
 			count := int64(len(personList.Records))
-			self.PersonCounter.Add(ctx, count)
+			ph.PersonCounter.Add(ctx, count)
 			c.JSON(http.StatusOK, personList)
 		} else {
 			zerolog.Ctx(ctx).Error().Err(err).Msg("ListPersons: Server Error")
@@ -143,14 +143,14 @@ func (self *PersonHandler) ListPersons(c *gin.Context) {
 // @Success 200 {object} []fun.PersonAudit
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person/{id}/audit [get]
-func (self *PersonHandler) ListPersonAudit(c *gin.Context) {
+func (ph *PersonHandler) ListPersonAudit(c *gin.Context) {
 	var path fun.PersonPath
 
-	ctx, span := self.Tracer.Start(c.Request.Context(), "ListPersonAudit.Handler", trace.WithAttributes(attribute.String("id", path.Id)))
+	ctx, span := ph.Tracer.Start(c.Request.Context(), "ListPersonAudit.Handler", trace.WithAttributes(attribute.String("id", path.Id)))
 	defer span.End()
 
 	if err := c.ShouldBindUri(&path); err == nil {
-		if auditList, err := self.Manager.ListPersonAudit(ctx, path.Id); err == nil {
+		if auditList, err := ph.Manager.ListPersonAudit(ctx, path.Id); err == nil {
 			c.JSON(http.StatusOK, auditList)
 		} else {
 			err = util.ProcessValidationError(err)
@@ -174,16 +174,16 @@ func (self *PersonHandler) ListPersonAudit(c *gin.Context) {
 // @Failure 404 {string} string "Not Found"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person/{id} [put]
-func (self *PersonHandler) UpdatePerson(c *gin.Context) {
+func (ph *PersonHandler) UpdatePerson(c *gin.Context) {
 	//https://stackoverflow.com/a/37544666/173136
 
-	ctx, span := self.Tracer.Start(c.Request.Context(), "UpdatePerson.Handler")
+	ctx, span := ph.Tracer.Start(c.Request.Context(), "UpdatePerson.Handler")
 	defer span.End()
 
 	//Unmarshal the request
 	var request fun.PersonRequest
 	if err := c.ShouldBind(&request); err == nil {
-		if err := self.Manager.UpdatePerson(ctx, c.Param("id"), request); err == nil {
+		if err := ph.Manager.UpdatePerson(ctx, c.Param("id"), request); err == nil {
 			//https://stackoverflow.com/a/827045/173136
 			c.JSON(http.StatusOK, "UPDATED")
 		} else {
@@ -209,11 +209,11 @@ func (self *PersonHandler) UpdatePerson(c *gin.Context) {
 // @Failure 404 {string} string "Not Found"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person/{id} [delete]
-func (self *PersonHandler) DeletePersons(c *gin.Context) {
-	ctx, span := self.Tracer.Start(c.Request.Context(), "DeletePersons.Handler")
+func (ph *PersonHandler) DeletePersons(c *gin.Context) {
+	ctx, span := ph.Tracer.Start(c.Request.Context(), "DeletePersons.Handler")
 	defer span.End()
 
-	if err := self.Manager.DeletePerson(ctx, c.Param("id")); err == nil {
+	if err := ph.Manager.DeletePerson(ctx, c.Param("id")); err == nil {
 		c.JSON(http.StatusNoContent, "DELETED")
 	} else {
 		err = util.ProcessValidationError(err)

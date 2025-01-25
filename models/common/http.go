@@ -25,12 +25,12 @@ func NewHttpError(msg string, code int) HttpError {
 	return &HttpErrorImpl{Msg: msg, ErrCode: code}
 }
 
-func (self *HttpErrorImpl) Error() string {
-	return self.Msg
+func (e *HttpErrorImpl) Error() string {
+	return e.Msg
 }
 
-func (self *HttpErrorImpl) Code() int {
-	return self.ErrCode
+func (e *HttpErrorImpl) Code() int {
+	return e.ErrCode
 }
 
 func NewServerError(err error) HttpError {

@@ -33,6 +33,7 @@ type Rate struct {
 
 // TickerAnalysis represents analyzed ticker data for a given year
 type TickerAnalysis struct {
+	Ticker string `json:"ticker"`
 	// Peak price information
 	PeakDate  string  `json:"peak_date"`
 	PeakPrice float64 `json:"peak_price"`
@@ -40,6 +41,15 @@ type TickerAnalysis struct {
 	// Year end price information
 	YearEndDate  string  `json:"year_end_date"`
 	YearEndPrice float64 `json:"year_end_price"`
+}
+
+// FATickerAnalysis extends TickerAnalysis with TT rate conversions
+type FATickerAnalysis struct {
+	TickerAnalysis          // Embed base USD analysis
+	PeakTTRate      float64 `json:"peak_tt_rate"`
+	YearEndTTRate   float64 `json:"year_end_tt_rate"`
+	PeakPriceINR    float64 `json:"peak_price_inr"`
+	YearEndPriceINR float64 `json:"year_end_price_inr"`
 }
 
 // File name constant for SBI Rate CSV

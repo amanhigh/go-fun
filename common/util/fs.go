@@ -12,6 +12,7 @@ import (
 
 const DEFAULT_PERM = os.FileMode(0644)     //Owner RW,Group R,Other R
 const DIR_DEFAULT_PERM = os.FileMode(0755) //Owner RWX,Group RX,Other RX
+const APPEND_PERM = os.FileMode(0600)      //Owner RW,Group None,Other None
 /*
 	Helpfull File Related Cheatsheet
 	https://www.devdungeon.com/content/working-files-go#read_quick
@@ -22,7 +23,7 @@ func OpenOrCreateFile(path string) (*os.File, error) {
 }
 
 func AppendFile(path string, content string) {
-	if f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0600); err == nil {
+	if f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, APPEND_PERM); err == nil {
 		defer f.Close()
 		if _, err = f.WriteString(content); err != nil {
 			log.Error().Str("File", path).Err(err).Msg("Error Appending Content to File")

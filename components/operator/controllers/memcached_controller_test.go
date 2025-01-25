@@ -172,6 +172,12 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 						Scheme:   k8sClient.Scheme(),
 						Recorder: record.NewFakeRecorder(10),
 					}
+
+					// Initialize helpers
+					memcachedReconciler.statusHelper = NewStatusHelper(memcachedReconciler)
+					memcachedReconciler.deployHelper = NewDeploymentHelper(memcachedReconciler)
+					memcachedReconciler.reconcileHelper = NewReconciliationHelper(memcachedReconciler.statusHelper, memcachedReconciler.deployHelper, memcachedReconciler)
+
 					deployment = &appsv1.Deployment{}
 
 					mgr, err = ctrl.NewManager(cfg, ctrl.Options{
@@ -258,7 +264,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 						By("Verifiying Deployment Spec")
 						Expect(*deployment.Spec.Replicas).To(Equal(size))
-						Expect(deployment.Spec.Template.Labels).To(Equal(labelsForMemcached(memcached.Name)))
+						Expect(deployment.Spec.Template.Labels).To(Equal(memcachedReconciler.deployHelper.GetLabels(memcached.Name, imageName)))
 						Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(Equal(imageName))
 						Expect(*deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsNonRoot).To(BeTrue())
 

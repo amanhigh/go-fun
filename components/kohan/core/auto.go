@@ -59,53 +59,53 @@ func OpenTicker(ticker string) (err error) {
 }
 
 func RecordTicker(ticker, path string) (err error) {
-	var tradeInfo string
-	// Bring Focus Back Lost due to Modal Box
 	if err = tools.FocusWindow("TradingView"); err == nil {
 		log.Info().Str("Ticker", ticker).Msg("Recording Ticker")
-		// loop from max to 1
-		for i := 4; i > 0; i-- {
-			// emulate number key press
-			if err = tools.SendKey("-k " + strconv.Itoa(i)); err == nil {
-				// File Name POWERINDIA.mwd.trend.rejected.nca_20240321_193916.png
-				name := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format(DATE_FORMAT))
-				log.Debug().Str("Ticker", ticker).Str("Name", name).Int("Count", i).Msg("Attempting Screenshot")
-
-				// Wait
-				time.Sleep(1 * time.Second)
-
-				// Take Screenshot
-				if err = tools.NamedScreenshot(path, name); err != nil {
-					return
-				}
-			}
+		err = takeScreenshots(ticker, path)
+		if err == nil && strings.Contains(ticker, ".set") {
+			err = recordTradeInfo(ticker, path)
 		}
+		sendNotification(ticker)
+	}
+	return
+}
 
-		// Read Trade Info for Set Trades
-		if strings.Contains(ticker, ".set") {
-			// Generate File name so it is ordered in Journal
-			infoFile := fmt.Sprintf("%s/%s__%s.txt", path, ticker, time.Now().Format(DATE_FORMAT))
-			if tradeInfo, err = tools.PromptText(TRADE_INFO); err == nil {
-				if err = os.WriteFile(infoFile, []byte(tradeInfo), util.DEFAULT_PERM); err != nil {
-					log.Error().Str("Ticker", ticker).Err(err).Msg("Failed to write trade info")
-					return
-				}
-
-				// Record Check Screenshot
-				checkFile := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format(DATE_FORMAT))
-				_ = tools.NamedRegionScreenshot(path, checkFile)
-			} else {
-				log.Error().Str("Ticker", ticker).Err(err).Msg("Read TradeInfo Failed")
+func takeScreenshots(ticker, path string) (err error) {
+	for i := 4; i > 0; i-- {
+		if err = tools.SendKey("-k " + strconv.Itoa(i)); err == nil {
+			name := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format(DATE_FORMAT))
+			log.Debug().Str("Ticker", ticker).Str("Name", name).Int("Count", i).Msg("Attempting Screenshot")
+			time.Sleep(1 * time.Second)
+			if err = tools.NamedScreenshot(path, name); err != nil {
+				return
 			}
-		}
-
-		// send desktop notification
-		if err = tools.Notify(zerolog.InfoLevel, "Recorded", ticker); err != nil {
-			log.Error().Err(err).Msg("Failed to send notification")
 		}
 	}
-
 	return
+}
+
+func recordTradeInfo(ticker, path string) (err error) {
+	var tradeInfo string
+	infoFile := fmt.Sprintf("%s/%s__%s.txt", path, ticker, time.Now().Format(DATE_FORMAT))
+	if tradeInfo, err = tools.PromptText(TRADE_INFO); err == nil {
+		if err = os.WriteFile(infoFile, []byte(tradeInfo), util.DEFAULT_PERM); err != nil {
+			log.Error().Str("Ticker", ticker).Err(err).Msg("Failed to write trade info")
+			return
+		}
+
+		// Record Check Screenshot
+		checkFile := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format(DATE_FORMAT))
+		_ = tools.NamedRegionScreenshot(path, checkFile)
+	} else {
+		log.Error().Str("Ticker", ticker).Err(err).Msg("Read TradeInfo Failed")
+	}
+	return
+}
+
+func sendNotification(ticker string) {
+	if err := tools.Notify(zerolog.InfoLevel, "Recorded", ticker); err != nil {
+		log.Error().Err(err).Msg("Failed to send notification")
+	}
 }
 
 func MonitorInternetConnection(wait time.Duration) {

@@ -47,7 +47,6 @@ func stream(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprint(w, "data: Streaming Finished :)\n\n")
-
 }
 
 /* Client */
@@ -102,7 +101,6 @@ func liveRequestLoop(response *http.Response, eventChannel chan SseEvent, ctx co
 		default:
 			/* Read Lines Upto Delimiter */
 			if readBytes, err := br.ReadBytes(lineDelim); err == nil || err == io.EOF {
-
 				/* Skip Lines without Content */
 				if len(readBytes) < 2 {
 					continue
@@ -114,7 +112,6 @@ func liveRequestLoop(response *http.Response, eventChannel chan SseEvent, ctx co
 					log.Debug().Msg("Stream Closed")
 					return
 				}
-
 			} else {
 				log.Error().Err(err).Msg("Read Line Error")
 				return

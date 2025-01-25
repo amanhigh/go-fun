@@ -38,7 +38,7 @@ func InitTracerProvider(ctx context.Context, name string, config config.Tracing)
 	case "console":
 		err = InitStdoutTracerProvider(config)
 	default:
-		//No Tracer (Defaults to Global Tracer)
+		// No Tracer (Defaults to Global Tracer)
 	}
 
 	if err != nil {
@@ -85,10 +85,10 @@ func getPublisher(config config.Tracing, exporter sdktrace.SpanExporter) trace.T
 	var publisher sdktrace.TracerProviderOption
 	switch config.Publish {
 	case "sync":
-		//Stage Use only since its Sync.
+		// Stage Use only since its Sync.
 		publisher = sdktrace.WithSyncer(exporter)
 	case "batch":
-		//Production Use, Exports on Flush or Shutdown.
+		// Production Use, Exports on Flush or Shutdown.
 		publisher = sdktrace.WithBatcher(exporter)
 	}
 	return publisher

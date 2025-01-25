@@ -57,11 +57,11 @@ func NewPage(url string) *Page {
 	return &Page{Document: doc}
 }
 
-func (self *Page) ParseAnchor(anchor *goquery.Selection) (text string, link string) {
+func (p *Page) ParseAnchor(anchor *goquery.Selection) (text string, link string) {
 	var ok bool
 	text = anchor.Text()
 	if link, ok = anchor.Attr(HREF); ok {
-		link = fmt.Sprintf("https://%v%v", self.Document.Url.Host, link)
+		link = fmt.Sprintf("https://%v%v", p.Document.Url.Host, link)
 	}
 	return
 }
