@@ -192,6 +192,12 @@ func (r *reconciliationHelperImpl) handleDeploymentUpdate(
 	log := log.FromContext(ctx)
 	size := memcached.Spec.Size
 
+	// Guard against nil deployment or replicas
+	if dep == nil || dep.Spec.Replicas == nil {
+		log.Info("Deployment not yet initialized, requeueing")
+		return ctrl.Result{Requeue: true}, nil
+	}
+
 	// Update if size doesn't match
 	if *dep.Spec.Replicas != size {
 		dep.Spec.Replicas = &size
