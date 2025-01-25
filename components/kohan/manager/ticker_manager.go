@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -88,19 +89,46 @@ func (t *TickerManagerImpl) AnalyzeTicker(ctx context.Context, ticker string, ye
 }
 
 func (t *TickerManagerImpl) GetPriceOnDate(ctx context.Context, ticker string, date time.Time) (float64, error) {
-	analysis, err := t.AnalyzeTicker(ctx, ticker, date.Year())
+	// Get cached/loaded data
+	data, err := t.getTickerData(ctx, ticker)
 	if err != nil {
 		return 0, err
 	}
 
-	// Check if date matches year-end date
+	// Format date for lookup
+	// BUG: Use Date Constant in Models
 	dateStr := date.Format("2006-01-02")
-	if dateStr == analysis.YearEndDate {
-		return analysis.YearEndPrice, nil
+
+	// Try exact date match first
+	if dayPrice, exists := data.TimeSeries[dateStr]; exists {
+		if price, err := strconv.ParseFloat(dayPrice.Close, 64); err == nil {
+			return price, nil
+		}
 	}
 
-	// Default to peak price for other dates
-	return analysis.PeakPrice, nil
+	// Find closest previous date if exact not found
+	var closestDate string
+	for tsDate := range data.TimeSeries {
+		if tsDate <= dateStr && (closestDate == "" || tsDate > closestDate) {
+			closestDate = tsDate
+		}
+	}
+
+	if closestDate != "" {
+		if dayPrice, exists := data.TimeSeries[closestDate]; exists {
+			if price, err := strconv.ParseFloat(dayPrice.Close, 64); err == nil {
+				log.Debug().
+					Str("Ticker", ticker).
+					Str("RequestedDate", dateStr).
+					Str("ClosestDate", closestDate).
+					Float64("Price", price).
+					Msg("Using closest previous date price")
+				return price, nil
+			}
+		}
+	}
+
+	return 0, common.NewHttpError("No price data found", http.StatusNotFound)
 }
 
 func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (data fa.StockData, err common.HttpError) {
@@ -108,7 +136,7 @@ func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (d
 	t.cacheLock.RLock()
 	data, exists := t.cache[ticker]
 	t.cacheLock.RUnlock()
-	
+
 	if exists {
 		log.Debug().Str("Ticker", ticker).Msg("Cache Hit")
 		return data, nil
@@ -122,7 +150,7 @@ func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (d
 		t.cacheLock.Unlock()
 		log.Debug().Str("Ticker", ticker).Msg("Added to Cache")
 	}
-	
+
 	return
 }
 
