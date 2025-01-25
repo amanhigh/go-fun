@@ -14,7 +14,7 @@ type Product struct {
 	Version    int
 	IgnoreMe   string `gorm:"-"` // Ignore this field
 	Vertical   Vertical
-	VerticalID uint      //Must be vertical_id in DB or won't work automatically.
+	VerticalID uint      // Must be vertical_id in DB or won't work automatically.
 	Features   []Feature `gorm:"many2many:product_features;"`
 }
 
@@ -54,7 +54,7 @@ func (p *Product) TableName() string {
 // commit or rollback transaction
 
 func (p *Product) BeforeCreate(tx *gorm.DB) (err error) {
-	//Log Product
+	// Log Product
 	marshal, _ := json.Marshal(p)
 	p.Version++
 	tx.Create(&AuditLog{Operation: "Create", Log: string(marshal)})
@@ -62,7 +62,7 @@ func (p *Product) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 func (p *Product) BeforeUpdate(tx *gorm.DB) (err error) {
-	//Log Product
+	// Log Product
 	marshal, _ := json.Marshal(p)
 	p.Version++
 	tx.Create(&AuditLog{Operation: "Update", Log: string(marshal)})
@@ -70,7 +70,7 @@ func (p *Product) BeforeUpdate(tx *gorm.DB) (err error) {
 }
 
 func (f *Feature) BeforeCreate(tx *gorm.DB) (err error) {
-	//Log Feature
+	// Log Feature
 	marshal, _ := json.Marshal(f)
 	f.Version++
 	tx.Create(&AuditLog{Operation: "Create", Log: string(marshal)})
@@ -78,9 +78,9 @@ func (f *Feature) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 // Use Value instead of pointer for delete as no version update is required
-func (u Feature) BeforeDelete(tx *gorm.DB) (err error) {
-	//Log Feature
-	marshal, _ := json.Marshal(u)
+func (f Feature) BeforeDelete(tx *gorm.DB) (err error) {
+	// Log Feature
+	marshal, _ := json.Marshal(f)
 	tx.Create(&AuditLog{Operation: "Delete", Log: string(marshal)})
 	return
 }
