@@ -8,14 +8,11 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/golobby/container/v3"
 	"github.com/rivo/tview"
-	"github.com/rs/zerolog/log"
 )
 
 // Interface and implementation in same file
 type KohanInterface interface {
 	GetDariusApp(cfg config.DariusConfig) (*DariusV1, error)
-	// Add new method
-	GetFAManager() manager.TaxManager
 }
 
 // Private singleton instance
@@ -45,10 +42,6 @@ func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) *manag
 	return manager.NewTickerManager(client, ki.config.Tax.DownloadsDir)
 }
 
-func (ki *KohanInjector) provideFAManager(tickerManager manager.TickerManager, sbiManager manager.SBIManager) manager.TaxManager {
-	return manager.NewTaxManager(tickerManager, sbiManager)
-}
-
 func (ki *KohanInjector) provideDividendManager(sbiManager manager.SBIManager) manager.DividendManager {
 	return manager.NewDividendManager(
 		sbiManager,
@@ -60,15 +53,6 @@ func (ki *KohanInjector) provideDividendManager(sbiManager manager.SBIManager) m
 // Public singleton access - returns interface only
 func GetKohanInterface() KohanInterface {
 	return globalInjector
-}
-
-func (ki *KohanInjector) GetFAManager() manager.TaxManager {
-	var faManager manager.TaxManager
-	err := ki.di.Resolve(&faManager)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to get FAManager")
-	}
-	return faManager
 }
 
 func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error) {
@@ -86,7 +70,6 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 	container.MustSingleton(ki.di, ki.provideAlphaClient)
 	container.MustSingleton(ki.di, ki.provideSBIClient)
 	container.MustSingleton(ki.di, ki.provideTickerManager)
-	container.MustSingleton(ki.di, ki.provideFAManager)
 
 	// Build app
 	app := &DariusV1{}
