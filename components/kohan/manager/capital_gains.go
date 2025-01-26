@@ -113,9 +113,21 @@ func (c *CapitalGainsManagerImpl) analyzeTickerPositions(ctx context.Context, ti
 			}
 		}
 
-		// Track peak position
+		// Track peak position with date
 		if currentPosition > maxPosition {
 			maxPosition = currentPosition
+			price, err := c.tickerManager.GetPrice(ctx, ticker, acquiredDate)
+			if err != nil {
+				return analysis, fmt.Errorf("failed to get price for peak: %w", err)
+			}
+			analysis.PeakPosition = tax.Position{
+				Date:     acquiredDate,
+				Quantity: currentPosition,
+				USDPrice: price,
+				USDValue: price * currentPosition,
+			}
+		} else if currentPosition == maxPosition && acquiredDate.After(analysis.PeakPosition.Date) {
+			// If we have the same position value but later date, update peak position
 			price, err := c.tickerManager.GetPrice(ctx, ticker, acquiredDate)
 			if err != nil {
 				return analysis, fmt.Errorf("failed to get price for peak: %w", err)
