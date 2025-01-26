@@ -136,6 +136,11 @@ func (s *SBIManagerImpl) readCSVRecords(filePath string) ([][]string, common.Htt
 		return nil, common.NewServerError(err)
 	}
 
+	// Validate using model's IsValid method
+	if len(rates) == 0 || !rates[0].IsValid() {
+		return nil, common.NewHttpError("invalid CSV header format", http.StatusInternalServerError)
+	}
+
 	// Convert to string slice format for existing code
 	var records [][]string
 	for _, rate := range rates {

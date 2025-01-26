@@ -134,9 +134,7 @@ var _ = Describe("SBIManager", func() {
 			Expect(err).To(Equal(common.ErrNotFound))
 		})
 
-		PIt("should handle invalid CSV file", func() {
-			// FIXME: #A Test is failing after moving to gocsv
-
+		It("should handle invalid CSV file", func() {
 			// Create invalid CSV file
 			writeErr := os.WriteFile(filepath.Join(testDir, tax.SBI_RATES_FILENAME), []byte("invalid,csv"), util.DEFAULT_PERM)
 			Expect(writeErr).To(BeNil())
