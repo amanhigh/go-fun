@@ -282,6 +282,11 @@ var _ = Describe("Json Encode/Decode", func() {
 			ctrl = gomock.NewController(GinkgoT())
 			mockEncoder = NewMockPersonEncoder(ctrl)
 		})
+
+		AfterEach(func() {
+			ctrl.Finish()
+		})
+
 		Context("Mock", func() {
 			var (
 				encodeCall *gomock.Call
@@ -333,6 +338,22 @@ var _ = Describe("Json Encode/Decode", func() {
 
 				})
 			})
+
+			Context("Times", func() {
+				It("should runs 3 times", func() {
+					mockEncoder.EXPECT().EncodePerson(gomock.Eq(originalPerson)).Return(personJson, nil).Times(2)
+					// Initial Expect + 2 in Times
+					mockEncoder.EncodePerson(originalPerson)
+					mockEncoder.EncodePerson(originalPerson)
+					mockEncoder.EncodePerson(originalPerson)
+				})
+
+				It("should support zero times", func() {
+					mockEncoder.EncodePerson(originalPerson)
+					zeroPerson := Person{Name: "", Age: 0, MobileNumber: 0}
+					mockEncoder.EXPECT().EncodePerson(gomock.Eq(zeroPerson)).Return(personJson, nil).Times(0)
+				})
+			})
 		})
 
 		Context("Custom Matcher", func() {
@@ -365,6 +386,10 @@ var _ = Describe("Json Encode/Decode", func() {
 		)
 		BeforeEach(func() {
 			mockEncoder = NewMockEncoder(GinkgoT())
+		})
+
+		AfterEach(func() {
+			mockEncoder.AssertExpectations(GinkgoT())
 		})
 
 		It("should build", func() {
@@ -412,6 +437,20 @@ var _ = Describe("Json Encode/Decode", func() {
 				result, err := mockEncoder.EncodePerson(originalPerson)
 				Expect(err).To(BeNil())
 				Expect(result).To(Equal(personJson))
+			})
+		})
+
+		Context("Times", func() {
+			It("should run 3 times", func() {
+				mockEncoder.EXPECT().EncodePerson(mock.AnythingOfType("Person")).Return(personJson, nil).Times(3)
+				mockEncoder.EncodePerson(originalPerson)
+				mockEncoder.EncodePerson(originalPerson)
+				mockEncoder.EncodePerson(originalPerson)
+			})
+
+			It("should support zero times", func() {
+				// TASK: Doesn't Suport Times 0, https://github.com/stretchr/testify/issues/566
+				Expect(mockEncoder.AssertNotCalled(GinkgoT(), "EncodePerson")).To(BeTrue())
 			})
 		})
 
