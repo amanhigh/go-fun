@@ -22,7 +22,7 @@ import (
 //go:generate mockery --name TickerManager
 type TickerManager interface {
 	DownloadTicker(ctx context.Context, ticker string) (err common.HttpError)
-	ValueTicker(ctx context.Context, ticker string, year int) (valuation tax.BaseValuation, err common.HttpError)
+	FindPeakPrice(ctx context.Context, ticker string, year int) (tax.PeakPrice, common.HttpError)
 	GetPrice(ctx context.Context, ticker string, date time.Time) (float64, common.HttpError)
 }
 
@@ -75,16 +75,14 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 	return nil
 }
 
-func (t *TickerManagerImpl) ValueTicker(ctx context.Context, ticker string, year int) (valuation tax.BaseValuation, err common.HttpError) {
+func (t *TickerManagerImpl) FindPeakPrice(ctx context.Context, ticker string, year int) (peakPrice tax.PeakPrice, err common.HttpError) {
 	stockData, err := t.readTickerData(ticker)
 	if err != nil {
-		return valuation, err
+		return peakPrice, err
 	}
 
 	yearStr := strconv.Itoa(year)
-	yearEndDate := fmt.Sprintf("%s-12-31", yearStr)
-
-	return t.analyzeTimeSeries(stockData.TimeSeries, ticker, yearStr, yearEndDate), nil
+	return t.analyzeTimeSeries(stockData.TimeSeries, ticker, yearStr), nil
 }
 
 func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date time.Time) (float64, common.HttpError) {
@@ -169,11 +167,9 @@ func (t *TickerManagerImpl) readTickerData(ticker string) (tax.VantageStockData,
 	return stockData, nil
 }
 
-func (t *TickerManagerImpl) analyzeTimeSeries(timeSeries map[string]tax.DayPrice, ticker, yearStr, yearEndDate string) tax.BaseValuation {
+func (t *TickerManagerImpl) analyzeTimeSeries(timeSeries map[string]tax.DayPrice, ticker, yearStr string) tax.PeakPrice {
 	var highestClose float64
 	var highestDate string
-	var yearEndClose float64
-	var lastTradingDay string
 
 	for date, values := range timeSeries {
 		if !strings.HasPrefix(date, yearStr) {
@@ -189,23 +185,11 @@ func (t *TickerManagerImpl) analyzeTimeSeries(timeSeries map[string]tax.DayPrice
 			highestClose = closePrice
 			highestDate = date
 		}
-		// Track year end close
-		if date == yearEndDate {
-			yearEndClose = closePrice
-			lastTradingDay = date
-		}
-		// Keep track of last trading day
-		if lastTradingDay == "" || date > lastTradingDay {
-			lastTradingDay = date
-			yearEndClose = closePrice
-		}
 	}
 
-	return tax.BaseValuation{
-		Ticker:       ticker,
-		PeakDate:     highestDate,
-		PeakPrice:    highestClose,
-		YearEndDate:  lastTradingDay,
-		YearEndPrice: yearEndClose,
+	return tax.PeakPrice{
+		Ticker: ticker,
+		Date:   highestDate,
+		Price:  highestClose,
 	}
 }

@@ -101,7 +101,7 @@ var _ = Describe("TickerManager", func() {
 		})
 	})
 
-	Context("ValueTicker", func() {
+	Context("FindPeakPrice", func() {
 		var (
 			ticker    = "TEST"
 			year      = 2024
@@ -127,19 +127,17 @@ var _ = Describe("TickerManager", func() {
 		})
 
 		It("should correctly analyze yearly data", func() {
-			valuation, err := tickerManager.ValueTicker(ctx, ticker, year)
+			peakPrice, err := tickerManager.FindPeakPrice(ctx, ticker, year)
 			Expect(err).To(BeNil())
 
-			Expect(valuation.Ticker).To(Equal(ticker))
-			Expect(valuation.PeakDate).To(Equal("2024-03-15"))
-			Expect(valuation.PeakPrice).To(Equal(150.00))
-			Expect(valuation.YearEndDate).To(Equal("2024-12-31"))
-			Expect(valuation.YearEndPrice).To(Equal(130.00))
+			Expect(peakPrice.Ticker).To(Equal(ticker))
+			Expect(peakPrice.Date).To(Equal("2024-03-15"))
+			Expect(peakPrice.Price).To(Equal(150.00))
 		})
 
 		It("should handle missing data", func() {
 			// Test with non-existent ticker
-			_, err := tickerManager.ValueTicker(ctx, "INVALID", year)
+			_, err := tickerManager.FindPeakPrice(ctx, "INVALID", year)
 			Expect(err).To(Not(BeNil()))
 		})
 	})
