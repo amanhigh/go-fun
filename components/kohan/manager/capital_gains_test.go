@@ -2,7 +2,7 @@ package manager_test
 
 import (
 	"context"
-	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -117,7 +117,7 @@ ADI,2,2024-01-04,182.08,2024-01-19,194.56,389.12,364.16,24.96`
 			// Setup mock to return error
 			mockTickerManager.EXPECT().
 				GetPrice(ctx, "ADI", parseDateMust(adiFirstBuyDate)).
-				Return(0.0, fmt.Errorf("price fetch error"))
+				Return(0.0, common.NewHttpError("price fetch error", http.StatusInternalServerError))
 
 			result, err := cgManager.AnalysePositions(ctx, year)
 			Expect(err).To(HaveOccurred())

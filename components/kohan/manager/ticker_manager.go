@@ -23,7 +23,7 @@ import (
 type TickerManager interface {
 	DownloadTicker(ctx context.Context, ticker string) (err common.HttpError)
 	ValueTicker(ctx context.Context, ticker string, year int) (valuation tax.BaseValuation, err common.HttpError)
-	GetPrice(ctx context.Context, ticker string, date time.Time) (float64, error)
+	GetPrice(ctx context.Context, ticker string, date time.Time) (float64, common.HttpError)
 }
 
 type TickerManagerImpl struct {
@@ -37,6 +37,7 @@ func NewTickerManager(client clients.AlphaClient, downloads string) *TickerManag
 	return &TickerManagerImpl{
 		client:    client,
 		downloads: downloads,
+		cache:     make(map[string]tax.VantageStockData),
 	}
 }
 
@@ -86,7 +87,7 @@ func (t *TickerManagerImpl) ValueTicker(ctx context.Context, ticker string, year
 	return t.analyzeTimeSeries(stockData.TimeSeries, ticker, yearStr, yearEndDate), nil
 }
 
-func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date time.Time) (float64, error) {
+func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date time.Time) (float64, common.HttpError) {
 	// Get cached/loaded data
 	data, err := t.getTickerData(ctx, ticker)
 	if err != nil {

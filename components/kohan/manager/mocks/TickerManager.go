@@ -77,7 +77,7 @@ func (_c *TickerManager_DownloadTicker_Call) RunAndReturn(run func(context.Conte
 }
 
 // GetPrice provides a mock function with given fields: ctx, ticker, date
-func (_m *TickerManager) GetPrice(ctx context.Context, ticker string, date time.Time) (float64, error) {
+func (_m *TickerManager) GetPrice(ctx context.Context, ticker string, date time.Time) (float64, common.HttpError) {
 	ret := _m.Called(ctx, ticker, date)
 
 	if len(ret) == 0 {
@@ -85,8 +85,8 @@ func (_m *TickerManager) GetPrice(ctx context.Context, ticker string, date time.
 	}
 
 	var r0 float64
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, time.Time) (float64, error)); ok {
+	var r1 common.HttpError
+	if rf, ok := ret.Get(0).(func(context.Context, string, time.Time) (float64, common.HttpError)); ok {
 		return rf(ctx, ticker, date)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string, time.Time) float64); ok {
@@ -95,10 +95,12 @@ func (_m *TickerManager) GetPrice(ctx context.Context, ticker string, date time.
 		r0 = ret.Get(0).(float64)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, time.Time) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, string, time.Time) common.HttpError); ok {
 		r1 = rf(ctx, ticker, date)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(common.HttpError)
+		}
 	}
 
 	return r0, r1
@@ -124,12 +126,12 @@ func (_c *TickerManager_GetPrice_Call) Run(run func(ctx context.Context, ticker 
 	return _c
 }
 
-func (_c *TickerManager_GetPrice_Call) Return(_a0 float64, _a1 error) *TickerManager_GetPrice_Call {
+func (_c *TickerManager_GetPrice_Call) Return(_a0 float64, _a1 common.HttpError) *TickerManager_GetPrice_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *TickerManager_GetPrice_Call) RunAndReturn(run func(context.Context, string, time.Time) (float64, error)) *TickerManager_GetPrice_Call {
+func (_c *TickerManager_GetPrice_Call) RunAndReturn(run func(context.Context, string, time.Time) (float64, common.HttpError)) *TickerManager_GetPrice_Call {
 	_c.Call.Return(run)
 	return _c
 }
