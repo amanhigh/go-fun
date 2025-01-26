@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/clients/mocks"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/models/common"
@@ -36,6 +37,7 @@ var _ = Describe("TickerManager", func() {
 	})
 
 	AfterEach(func() {
+		mockClient.AssertExpectations(GinkgoT())
 		os.RemoveAll(testDir)
 	})
 
@@ -77,30 +79,14 @@ var _ = Describe("TickerManager", func() {
 		})
 
 		It("should skip download if file exists", func() {
-			// Create file with original data
-			originalData := stockData
-			data, err := json.Marshal(originalData)
+			data, err := json.Marshal(stockData)
 			Expect(err).To(BeNil())
-			err = os.WriteFile(filePath, data, 0644)
+			err = os.WriteFile(filePath, data, util.APPEND_PERM)
 			Expect(err).To(BeNil())
 
-			// Mock API response with different data
-			stockData.TimeSeries["2024-01-23"] = tax.DayPrice{Close: "999.00"}
-			mockClient.EXPECT().
-				FetchDailyPrices(ctx, ticker).
-				Return(stockData, nil)
-
-			// Call download
+			// Call download without Mock Expectations
 			err = tickerManager.DownloadTicker(ctx, ticker)
 			Expect(err).To(BeNil())
-
-			// Verify file still contains original data
-			var savedData tax.VantageStockData
-			fileContent, err := os.ReadFile(filePath)
-			Expect(err).To(BeNil())
-			err = json.Unmarshal(fileContent, &savedData)
-			Expect(err).To(BeNil())
-			Expect(savedData).To(Equal(originalData))
 		})
 
 		It("should handle API errors", func() {
