@@ -12,6 +12,7 @@ import (
 )
 
 type ValuationManager interface {
+	// TODO: Build Broker Repository
 	AnalyzeValuation(ctx context.Context, trades []tax.Trade, year int) (tax.Valuation, error)
 }
 
@@ -29,6 +30,8 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 	if len(trades) == 0 {
 		return tax.Valuation{}, common.NewHttpError("no trades provided", http.StatusBadRequest)
 	}
+
+	// BUG: Validate Multiple Tickers
 
 	// Initialize analysis
 	analysis := tax.Valuation{
