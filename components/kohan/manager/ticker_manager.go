@@ -103,6 +103,15 @@ func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date ti
 	}
 
 	// Find closest previous date if exact not found
+	price, err := t.findClosestPreviousPrice(ticker, data, dateStr)
+	if err == nil {
+		return price, nil
+	}
+
+	return 0, common.NewHttpError("No price data found", http.StatusNotFound)
+}
+
+func (t *TickerManagerImpl) findClosestPreviousPrice(ticker string, data tax.VantageStockData, dateStr string) (float64, common.HttpError) {
 	var closestDate string
 	for tsDate := range data.TimeSeries {
 		if tsDate <= dateStr && (closestDate == "" || tsDate > closestDate) {
@@ -123,7 +132,6 @@ func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date ti
 			}
 		}
 	}
-
 	return 0, common.NewHttpError("No price data found", http.StatusNotFound)
 }
 
