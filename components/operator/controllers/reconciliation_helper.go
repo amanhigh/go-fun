@@ -197,6 +197,7 @@ func (r *reconciliationHelperImpl) handleDeploymentUpdate(
 		return ctrl.Result{Requeue: true}, nil
 	}
 
+	// TASK: Do Full Spec Reconcilation
 	// Update if size doesn't match
 	if *dep.Spec.Replicas != size {
 		dep.Spec.Replicas = &size

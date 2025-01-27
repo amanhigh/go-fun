@@ -33,15 +33,17 @@ var monitorCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		log.Info().Dur("Wait", wait).Str("Screenshots", args[0]).Msg("Monitoring Systems")
-		// XXX: Move to Injector once Created
-		server := core.NewMonitorServer(args[0])
-		go core.MonitorInternetConnection(wait)
+
+		autoManager := core.GetKohanInterface().GetAutoManager(wait, args[0])
+		server := core.NewMonitorServer(args[0], autoManager)
+
+		go autoManager.MonitorInternetConnection(cmd.Context())
 		go func() {
 			if err := server.Start(9010); err != nil {
 				log.Error().Err(err).Msg("Failed to start monitor server")
 			}
 		}()
-		core.MonitorSubmap()
+		autoManager.MonitorSubmap(cmd.Context())
 		return
 	},
 }
@@ -51,7 +53,8 @@ var openTickerCmd = &cobra.Command{
 	Short: "Opens Ticker",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		core.TryOpenTicker(args[0])
+		autoManager := core.GetKohanInterface().GetAutoManager(wait, "")
+		autoManager.TryOpenTicker(cmd.Context(), args[0])
 		return
 	},
 }

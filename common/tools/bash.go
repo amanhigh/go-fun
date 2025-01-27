@@ -23,7 +23,7 @@ func RunCommandPrintError(cmd string) string {
 	return ""
 }
 
-func RunAsyncCommand(heading string, cmd string, wg *sync.WaitGroup) {
+func RunAsyncCommand(heading, cmd string, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		output, err := runCommand(cmd)
@@ -53,7 +53,7 @@ func RunBackgroundProcess(command string) (cancel util.CancelFunc, err error) {
 	err = cmd.Start()
 
 	cancel = func() (err error) {
-		//Kill Command with Subprocess
+		// Kill Command with Subprocess
 		err = syscall.Kill(-cmd.Process.Pid, syscall.SIGINT)
 		log.Debug().Str("CMD", command).Int("PID", cmd.Process.Pid).Msg("Killing Background Process")
 		return

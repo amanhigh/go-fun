@@ -29,7 +29,7 @@ type Pssh struct {
 	displayOutput bool
 }
 
-func (p *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput bool) {
+func (p *Pssh) Run(cmd, cluster string, parallelism int, disableOutput bool) {
 	clearOutputPaths()
 
 	psshCmd := fmt.Sprintf(`script %v pssh -h %v -t %v -o %v -e %v %v -p %v '%v'`,
@@ -49,7 +49,7 @@ func (p *Pssh) Run(cmd string, cluster string, parallelism int, disableOutput bo
 	})
 }
 
-func (p *Pssh) RunRange(cmd string, cluster string, parallelism int, disableOutput bool, start int, end int) {
+func (p *Pssh) RunRange(cmd, cluster string, parallelism int, disableOutput bool, start, end int) {
 	if start != -1 && end != -1 {
 		subClusterName := cluster + "m"
 		ExtractSubCluster(cluster, subClusterName, start-1, end)
@@ -64,12 +64,12 @@ func clearOutputPaths() {
 	util.ClearDirectory(config.ERROR_PATH)
 }
 
-func ExtractSubCluster(clusterName string, subClusterName string, start int, end int) {
+func ExtractSubCluster(clusterName, subClusterName string, start, end int) {
 	ips := util.ReadAllLines(getClusterFile(clusterName))
 	WriteClusterFile(subClusterName, strings.Join(ips[start:end], "\n"))
 }
 
-func WriteClusterFile(clusterName string, content string) {
+func WriteClusterFile(clusterName, content string) {
 	filePath := getClusterFile(clusterName)
 	if err := os.WriteFile(filePath, []byte(content), util.DEFAULT_PERM); err != nil {
 		log.Error().Err(err).Str("Cluster", clusterName).Str("Path", filePath).Msg("Failed to write cluster file")
@@ -81,7 +81,7 @@ func ReadClusterFile(clusterName string) []string {
 	return util.ReadAllLines(filePath)
 }
 
-func RemoveCluster(mainClusterName string, removeClusterName string) int {
+func RemoveCluster(mainClusterName, removeClusterName string) int {
 	mainSet := ReadClusterFile(mainClusterName)
 	removeSet := ReadClusterFile(removeClusterName)
 	finalSet := lo.Without(mainSet, removeSet...)
@@ -108,14 +108,14 @@ func SearchCluster(keyword string) (clusters []string) {
 	return
 }
 
-func Md5Checker(cmd string, cluster string) {
+func Md5Checker(cmd, cluster string) {
 	/* Run Command to get Ip Wise output */
 	files := runMd5Command(cmd, cluster)
 	hashMap, sortList := computeMd5Hashes(files)
 	analyzeMd5Results(cmd, cluster, hashMap, sortList)
 }
 
-func runMd5Command(cmd string, cluster string) map[string][]string {
+func runMd5Command(cmd, cluster string) map[string][]string {
 	FastPssh.Run(cmd, cluster, defaultTimeout, true)
 	return util.ReadFileMap(config.OUTPUT_PATH, true)
 }
@@ -137,7 +137,7 @@ func computeMd5Hashes(files map[string][]string) (map[string]*util.Md5Info, []*u
 	return hashMap, sortList
 }
 
-func analyzeMd5Results(cmd string, cluster string, hashMap map[string]*util.Md5Info, sortList []*util.Md5Info) {
+func analyzeMd5Results(cmd, cluster string, hashMap map[string]*util.Md5Info, sortList []*util.Md5Info) {
 	if len(sortList) > 1 {
 		logMultipleMd5(cmd, cluster, sortList)
 		compareMd5Results(cluster, sortList)
@@ -146,7 +146,7 @@ func analyzeMd5Results(cmd string, cluster string, hashMap map[string]*util.Md5I
 	}
 }
 
-func logMultipleMd5(cmd string, cluster string, sortList []*util.Md5Info) {
+func logMultipleMd5(cmd, cluster string, sortList []*util.Md5Info) {
 	log.Warn().Str("Cluster", cluster).Str("CMD", cmd).Msg("Multiple MD5 Detected")
 
 	/* Sort Md5 List by Count */

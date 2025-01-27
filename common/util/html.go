@@ -57,7 +57,7 @@ func NewPage(url string) *Page {
 	return &Page{Document: doc}
 }
 
-func (p *Page) ParseAnchor(anchor *goquery.Selection) (text string, link string) {
+func (p *Page) ParseAnchor(anchor *goquery.Selection) (text, link string) {
 	var ok bool
 	text = anchor.Text()
 	if link, ok = anchor.Attr(HREF); ok {

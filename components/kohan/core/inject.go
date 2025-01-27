@@ -1,21 +1,23 @@
 package core
 
 import (
+	"time"
+
 	"github.com/amanhigh/go-fun/components/kohan/clients"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/tui"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/go-resty/resty/v2"
+
 	"github.com/golobby/container/v3"
 	"github.com/rivo/tview"
-	"github.com/rs/zerolog/log"
 )
 
 // Interface and implementation in same file
 type KohanInterface interface {
 	GetDariusApp(cfg config.DariusConfig) (*DariusV1, error)
 	// Add new method
-	GetFAManager() manager.FAManager
+	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
 }
 
 // Private singleton instance
@@ -34,19 +36,23 @@ func SetupKohanInjector(config config.KohanConfig) {
 }
 
 func (ki *KohanInjector) provideAlphaClient(client *resty.Client) clients.AlphaClient {
-	return clients.NewAlphaClient(client, ki.config.FA.AlphaBaseURL, ki.config.FA.AlphaAPIKey)
+	return clients.NewAlphaClient(client, ki.config.Tax.AlphaBaseURL, ki.config.Tax.AlphaAPIKey)
 }
 
 func (ki *KohanInjector) provideSBIClient(client *resty.Client) clients.SBIClient {
-	return clients.NewSBIClient(client, ki.config.FA.SBIBaseURL)
+	return clients.NewSBIClient(client, ki.config.Tax.SBIBaseURL)
 }
 
 func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) *manager.TickerManagerImpl {
-	return manager.NewTickerManager(client, ki.config.FA.DownloadsDir)
+	return manager.NewTickerManager(client, ki.config.Tax.DownloadsDir)
 }
 
-func (ki *KohanInjector) provideFAManager(tickerManager manager.TickerManager, sbiManager manager.SBIManager) manager.FAManager {
-	return manager.NewFAManager(tickerManager, sbiManager)
+func (ki *KohanInjector) provideDividendManager(sbiManager manager.SBIManager) manager.DividendManager {
+	return manager.NewDividendManager(
+		sbiManager,
+		ki.config.Tax.DownloadsDir,
+		ki.config.Tax.DividendFile,
+	)
 }
 
 // Public singleton access - returns interface only
@@ -54,13 +60,9 @@ func GetKohanInterface() KohanInterface {
 	return globalInjector
 }
 
-func (ki *KohanInjector) GetFAManager() manager.FAManager {
-	var faManager manager.FAManager
-	err := ki.di.Resolve(&faManager)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to get FAManager")
-	}
-	return faManager
+func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface {
+	// HACK: Move to Provider Based Build ?
+	return manager.NewAutoManager(wait, capturePath)
 }
 
 func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error) {
@@ -78,7 +80,6 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 	container.MustSingleton(ki.di, ki.provideAlphaClient)
 	container.MustSingleton(ki.di, ki.provideSBIClient)
 	container.MustSingleton(ki.di, ki.provideTickerManager)
-	container.MustSingleton(ki.di, ki.provideFAManager)
 
 	// Build app
 	app := &DariusV1{}

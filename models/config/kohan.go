@@ -24,10 +24,10 @@ type DariusConfig struct {
 }
 
 type KohanConfig struct {
-	FA FAConfig
+	Tax TaxConfig
 }
 
-type FAConfig struct {
+type TaxConfig struct {
 	// SBI Configuration
 	SBIBaseURL string `env:"SBI_BASE_URL" envDefault:"https://raw.githubusercontent.com/sahilgupta/sbi-fx-ratekeeper/main/csv_files/SBI_REFERENCE_RATES_USD.csv"`
 
@@ -36,7 +36,9 @@ type FAConfig struct {
 	AlphaAPIKey  string `env:"ALPHA_API_KEY"` // required, no default
 
 	// File System Configuration
-	DownloadsDir string `env:"FA_DOWNLOADS_DIR" envDefault:"~/Downloads/Tickers"`
+	DownloadsDir        string `env:"FA_DOWNLOADS_DIR" envDefault:"~/Downloads/Tickers"`
+	BrokerStatementFile string `env:"FA_BROKER_STATEMENT" envDefault:"broker_statement.csv"`
+	DividendFile        string `env:"FA_DIVIDEND_FILE" envDefault:"dividends.csv"`
 }
 
 func NewKohanConfig() (config KohanConfig, err error) {

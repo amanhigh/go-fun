@@ -1,6 +1,6 @@
 package common
 
-//Custom Name Validator for alphanum and _,-
+// Custom Name Validator for alphanum and _,-
 import (
 	"regexp"
 

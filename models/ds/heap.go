@@ -106,27 +106,26 @@ func (h *Heap) Peek() (value int) {
 }
 
 func (h *Heap) heapifyUp() {
-	//Start from bottom till root, swapping until parent is out of order w.r.t child
+	// Start from bottom till root, swapping until parent is out of order w.r.t child
 	for i := h.Size() - 1; h.hasParent(i) && h.up(h.parent(i), h.data[i]); i = h.getParentIndex(i) {
 		h.swap(h.getParentIndex(i), i)
 	}
 }
 
 func (h *Heap) heapifyDown() {
-	//Start from Root replacing node with smaller of left & right child
+	// Start from Root replacing node with smaller of left & right child
 	for i := 0; h.hasLeft(i); {
 		s := h.getLeftChildIndex(i)
 		if h.hasRight(i) && h.down(h.right(i), h.left(i)) {
 			s = h.getRightChildIndex(i)
 		}
 
-		//Current Node less than small child heap is ordered
+		// Current Node less than small child heap is ordered
 		if h.down(h.data[i], h.data[s]) {
 			break
-		} else {
-			h.swap(i, s)
-			//Traverse towards smaller child to check further child heap
-			i = s
 		}
+		h.swap(i, s)
+		// Traverse towards smaller child to check further child heap
+		i = s
 	}
 }

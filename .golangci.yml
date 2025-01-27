@@ -21,7 +21,7 @@ linters-settings:
       - fieldalignment # too strict
   mnd:
       # Exclude some common acceptable numbers
-      ignored-numbers: [0,1]
+      ignored-numbers: [0,1,2]
       ignored-functions: ["make"]
 
   funlen:
@@ -138,7 +138,6 @@ issues:
         - govet
   exclude-dirs:
     - "^components/"
-    - "^models/"
   exclude-files:
     # - "components/learn/frameworks/play-fast/hystrix_test.go"
 

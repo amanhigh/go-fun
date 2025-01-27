@@ -10,9 +10,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const DEFAULT_PERM = os.FileMode(0644)     //Owner RW,Group R,Other R
-const DIR_DEFAULT_PERM = os.FileMode(0755) //Owner RWX,Group RX,Other RX
-const APPEND_PERM = os.FileMode(0600)      //Owner RW,Group None,Other None
+const DEFAULT_PERM = os.FileMode(0644)     // Owner RW,Group R,Other R
+const DIR_DEFAULT_PERM = os.FileMode(0755) // Owner RWX,Group RX,Other RX
+const APPEND_PERM = os.FileMode(0600)      // Owner RW,Group None,Other None
 /*
 	Helpfull File Related Cheatsheet
 	https://www.devdungeon.com/content/working-files-go#read_quick
@@ -22,7 +22,7 @@ func OpenOrCreateFile(path string) (*os.File, error) {
 	return os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, DEFAULT_PERM)
 }
 
-func AppendFile(path string, content string) {
+func AppendFile(path, content string) {
 	if f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, APPEND_PERM); err == nil {
 		defer f.Close()
 		if _, err = f.WriteString(content); err != nil {
@@ -52,7 +52,7 @@ func ReadFileMap(dirPath string, readEmpty bool) map[string][]string {
 	return contents
 }
 
-func FindReplaceFile(filePath string, find string, replace string) (err error) {
+func FindReplaceFile(filePath, find, replace string) (err error) {
 	var compile *regexp.Regexp
 	var fileBytes []byte
 	if fileBytes, err = os.ReadFile(filePath); err == nil {
@@ -66,7 +66,7 @@ func FindReplaceFile(filePath string, find string, replace string) (err error) {
 	return
 }
 
-func PrintFile(title string, filepath string) {
+func PrintFile(title, filepath string) {
 	log.Info().Str("File", filepath).Msg("File Contents")
 	fmt.Println(strings.Join(ReadAllLines(filepath), "\n"))
 }
@@ -84,7 +84,7 @@ func ListFiles(dirPath string) []string {
 	return filePaths
 }
 
-func ReplaceContent(path string, findRegex string, replace string) {
+func ReplaceContent(path, findRegex, replace string) {
 	if bytes, err := os.ReadFile(path); err == nil {
 		if reg, regexErr := regexp.Compile(findRegex); regexErr == nil {
 			newContent := reg.ReplaceAll(bytes, []byte(replace))

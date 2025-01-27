@@ -5,12 +5,12 @@ import (
 	"strings"
 )
 
-func ReplaceRegEx(content string, search string, replace string) string {
+func ReplaceRegEx(content, search, replace string) string {
 	matcher := regexp.MustCompile(search)
 	return matcher.ReplaceAllString(content, replace)
 }
 
-func GoGrep(input string, pattern string) (output string) {
+func GoGrep(input, pattern string) (output string) {
 	compile := regexp.MustCompile(pattern)
 	lines := strings.Split(input, "\n")
 	for _, line := range lines {

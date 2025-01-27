@@ -34,7 +34,7 @@ var _ = Describe("SafeRead", func() {
 		)
 		BeforeEach(func() {
 			go func() {
-				//Wait Sometime and send Channel Write
+				// Wait Sometime and send Channel Write
 				time.Sleep(4 * timeUnit)
 				safe.Write(writeValue)
 			}()
@@ -58,7 +58,7 @@ var _ = Describe("SafeRead", func() {
 
 			It("should not update", func() {
 				Eventually(safe.Intc).Should(BeClosed())
-				//Should Return Old Value as Channel Close will reject Updates
+				// Should Return Old Value as Channel Close will reject Updates
 				Expect(safe.Read()).To(Equal(start))
 			})
 		})

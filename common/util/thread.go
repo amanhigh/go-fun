@@ -8,7 +8,7 @@ import (
 )
 
 func ScheduleJob(wait time.Duration, callback func(exit bool)) {
-	//Ticker Based on Wait Time
+	// Ticker Based on Wait Time
 	ticker := time.NewTicker(wait)
 	defer ticker.Stop()
 

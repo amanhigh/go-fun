@@ -1,7 +1,7 @@
-//Switch to Admin Schema
+// Switch to Admin Schema
 use admin;
 
-//Create Admin:
+// Create Admin:
 db.createUser(
     {
         user: "admin",
@@ -10,13 +10,13 @@ db.createUser(
     }
 );
 
-//Drop User
+// Drop User
 db.dropUser("admin")
 
-//Show Users
+// Show Users
 db.getUsers()
 
-//Replication Status
+// Replication Status
 rs.status();
 
  //Initiate Replicas

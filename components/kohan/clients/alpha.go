@@ -5,12 +5,13 @@ import (
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
-	"github.com/amanhigh/go-fun/models/fa"
+	tax "github.com/amanhigh/go-fun/models/tax"
 	"github.com/go-resty/resty/v2"
 )
 
+//go:generate mockery --name AlphaClient
 type AlphaClient interface {
-	FetchDailyPrices(ctx context.Context, ticker string) (fa.StockData, common.HttpError)
+	FetchDailyPrices(ctx context.Context, ticker string) (tax.VantageStockData, common.HttpError)
 }
 
 type AlphaClientImpl struct {
@@ -27,7 +28,7 @@ func NewAlphaClient(client *resty.Client, baseURL string, apiKey string) *AlphaC
 	}
 }
 
-func (a *AlphaClientImpl) FetchDailyPrices(ctx context.Context, ticker string) (stockData fa.StockData, err common.HttpError) {
+func (a *AlphaClientImpl) FetchDailyPrices(ctx context.Context, ticker string) (stockData tax.VantageStockData, err common.HttpError) {
 	response, resErr := a.client.R().
 		SetContext(ctx).
 		SetQueryParams(map[string]string{

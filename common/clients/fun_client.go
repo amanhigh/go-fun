@@ -128,16 +128,16 @@ func (c *PersonService) DeletePerson(ctx context.Context, name string) (err comm
 func (c *PersonService) listPersonUrl(personQuery fun.PersonQuery) (url string) {
 	url = c.VersionUrl + "/person?"
 
-	//Add Pagination Params
+	// Add Pagination Params
 	url += c.getPaginationParams(personQuery.Offset, personQuery.Limit)
 
-	//Add Sort Params
+	// Add Sort Params
 	if personQuery.SortBy != "" {
 		url += "&sort_by=" + personQuery.SortBy
 		url += "&order=" + personQuery.Order
 	}
 
-	//Add Name and Gender if Provided
+	// Add Name and Gender if Provided
 	if personQuery.Name != "" {
 		url += "&name=" + personQuery.Name
 	}
