@@ -159,17 +159,17 @@ var _ = Describe("Json Encode/Decode", func() {
 			type FoodSrce string
 
 			Ω(FoodSrce(pizza)).ShouldNot(Equal(pizza))       // will fail
-			Ω(FoodSrce(pizza)).Should(BeEquivalentTo(pizza)) //will pass
+			Ω(FoodSrce(pizza)).Should(BeEquivalentTo(pizza)) // will pass
 		})
 
 		It("should match collection", func() {
-			//Array
+			// Array
 			Ω([]string{"Foo", "FooBar"}).Should(ConsistOf("FooBar", "Foo"))
 			Ω([]string{"Foo", "FooBar"}).Should(ConsistOf(ContainSubstring("Bar"), "Foo"))
 			Ω([]string{"Foo", "FooBar"}).Should(ConsistOf(ContainSubstring("Foo"), ContainSubstring("Foo")))
 			Ω([]string{"Foo", "FooBar"}).Should(ConsistOf([]string{"FooBar", "Foo"}))
 
-			//Map
+			// Map
 			Ω(map[string]string{"Foo": "Bar", "BazFoo": "Duck"}).Should(HaveKey(MatchRegexp(`.+Foo$`)))
 			Ω(map[string]int{"Foo": 3, "BazFoo": 4}).Should(HaveKeyWithValue(MatchRegexp(`.+Foo$`), BeNumerically(">", 3)))
 		})
@@ -249,7 +249,7 @@ var _ = Describe("Json Encode/Decode", func() {
 			)
 
 			AfterEach(func() {
-				//verify response
+				// verify response
 				Expect(err).To(BeNil())
 				Expect(response.StatusCode).To(Equal(http.StatusOK))
 				actualResponse, err := io.ReadAll(response.Body)
@@ -324,7 +324,7 @@ var _ = Describe("Json Encode/Decode", func() {
 					decodeCall = mockEncoder.EXPECT().DecodePerson(personJson).Return(person, nil)
 					encodeCall.After(decodeCall)
 
-					//gomock.InOrder(
+					// gomock.InOrder(
 					//	mockEncoder.EXPECT().DecodePerson(personJson).Return(per, nil),
 					//	mockEncoder.EXPECT().EncodePerson(gomock.Eq(per)).Return(personJson, nil),
 					//)

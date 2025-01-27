@@ -37,16 +37,16 @@ var _ = Describe("Elastic", Ordered, Label(models.GINKGO_SLOW), func() {
 	)
 
 	BeforeAll(func() {
-		//Create Test Container
+		// Create Test Container
 		esContainer, err = util.ElasticSearchTestContainer(ctx)
 		Expect(err).To(BeNil())
 
-		//Get Mapped Port
+		// Get Mapped Port
 		endpoint, err = esContainer.PortEndpoint(ctx, "9200/tcp", "")
 		Expect(err).To(BeNil())
 		log.Info().Str("Host", endpoint).Msg("Elastic Endpoint")
 
-		//Elastic Client
+		// Elastic Client
 		elasticClient, err = es.NewClient(es.Config{Addresses: []string{"http://" + endpoint}})
 		Expect(err).To(BeNil())
 		Expect(elasticClient).ToNot(BeNil())
@@ -73,7 +73,7 @@ var _ = Describe("Elastic", Ordered, Label(models.GINKGO_SLOW), func() {
 		// top   = 2
 		)
 		BeforeEach(func() {
-			//Create Index
+			// Create Index
 			_, err = elasticClient.Indices.Create(indexName)
 			Expect(err).To(BeNil())
 		})
@@ -151,7 +151,7 @@ var _ = Describe("Elastic", Ordered, Label(models.GINKGO_SLOW), func() {
 		)
 
 		BeforeEach(func() {
-			//Generate 100 students
+			// Generate 100 students
 			for i := 0; i < 100; i++ {
 				var s Student
 				Expect(faker.FakeData(&s)).NotTo(HaveOccurred())

@@ -20,7 +20,7 @@ func IsPrimeSmart(n int) bool {
 	}
 
 	// Handles cases from 4 to 25 (except primes like 5,7,11)
-	//all cases hit this condition
+	// all cases hit this condition
 	if n%2 == 0 || n%3 == 0 {
 		return false
 	}

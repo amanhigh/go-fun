@@ -211,7 +211,7 @@ var _ = Describe("GoTour", func() {
 		It("can be map", func() {
 			hashMap := map[string]int{"One": 1, "Two": 2}
 			v2, ok := hashMap["Two"]
-			Expect(ok).To(BeTrue()) //Ok Holds if element is present or not.
+			Expect(ok).To(BeTrue()) // Ok Holds if element is present or not.
 			Expect(v2).To(Equal(2))
 		})
 
@@ -237,7 +237,7 @@ var _ = Describe("GoTour", func() {
 			switch os := runtime.GOOS; os {
 			case "darwin":
 				log.Info().Msg("OS X.")
-			//fallthrough //implicit break if fallthrough not added
+			// fallthrough //implicit break if fallthrough not added
 			case "linux":
 				log.Info().Msg("Linux.")
 			default:
@@ -276,7 +276,7 @@ var _ = Describe("GoTour", func() {
 		)
 
 		It("should work", func() {
-			//Small is 2 and Big is 1^100
+			// Small is 2 and Big is 1^100
 			Expect(needInt(Small)).To(Equal(21))
 			Expect(needFloat(Small)).To(Equal(float64(0.2)))
 			Expect(needFloat(Big)).To(BeNumerically(">", (float64(1.26765))))
@@ -349,14 +349,14 @@ var _ = Describe("GoTour", func() {
 			// Start with New Adders with Zero State
 			pos, neg := adder(), adder()
 
-			//Run Closures in opposite directions
-			//with varied speeds
+			// Run Closures in opposite directions
+			// with varied speeds
 			for i := 0; i < 10; i++ {
 				pos(i)
 				neg(-2 * i)
 			}
 
-			//Match State stored in closure
+			// Match State stored in closure
 			Expect(pos(0)).To(Equal(45))
 			Expect(neg(0)).To(Equal(-90))
 		})
@@ -374,7 +374,7 @@ var _ = Describe("GoTour", func() {
 
 		It("should change message", func() {
 			message := "Captured Argument"
-			//Arguments Captured but will be executed at end.
+			// Arguments Captured but will be executed at end.
 			defer Expect(message).To(Equal("Captured Argument"))
 			message = "Now Changed"
 			Expect(message).To(Equal("Now Changed"))
@@ -514,7 +514,7 @@ func WordCount(input string) map[string]int {
 	fields := strings.Fields(input)
 	/** Ranges where i is optional can use _,v */
 	for _, f := range fields {
-		countMap[f] += 1 //No NPE :), No Init Required because entry value is primitive
+		countMap[f] += 1 // No NPE :), No Init Required because entry value is primitive
 	}
 	return countMap
 }

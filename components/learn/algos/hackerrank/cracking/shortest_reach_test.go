@@ -23,11 +23,11 @@ var _ = Describe("ShortestReach", func() {
 		BeforeEach(func() {
 			// Create Graph
 			nodeMap = generateNodes(4)
-			//Link Nodes
+			// Link Nodes
 			linkNodes(nodeMap, 1, 2)
 			linkNodes(nodeMap, 1, 3)
 
-			//Set Start Node with Distance Set to Zero
+			// Set Start Node with Distance Set to Zero
 			startNode = nodeMap[1]
 		})
 
@@ -50,10 +50,10 @@ var _ = Describe("ShortestReach", func() {
 		BeforeEach(func() {
 			// Create Graph
 			nodeMap = generateNodes(3)
-			//Link Nodes
+			// Link Nodes
 			linkNodes(nodeMap, 2, 3)
 
-			//Set Start Node with Distance Set to Zero
+			// Set Start Node with Distance Set to Zero
 			startNode = nodeMap[2]
 		})
 

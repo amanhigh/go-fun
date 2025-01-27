@@ -75,7 +75,7 @@ type SomeStructWithTags struct {
 
 	NestedStruct AStruct
 	// Struct Array Not Supported
-	//NestedStructs []AStruct `faker:"boundary_start=0, boundary_end=4"`
+	// NestedStructs []AStruct `faker:"boundary_start=0, boundary_end=4"`
 }
 
 // AStruct ...

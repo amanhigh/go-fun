@@ -19,7 +19,7 @@ var _ = Describe("Jwt", func() {
 	)
 
 	BeforeEach(func() {
-		//Generate RSA Key Pair
+		// Generate RSA Key Pair
 		privateKey, err = rsa.GenerateKey(rand.Reader, 2048)
 		publicKey = privateKey.Public()
 		Expect(err).To(BeNil())
@@ -41,10 +41,10 @@ var _ = Describe("Jwt", func() {
 		)
 
 		BeforeEach(func() {
-			//Marshal to Private Key To PEM Format
+			// Marshal to Private Key To PEM Format
 			privatePem = MarshalPrivateKey(privateKey)
 
-			//Marshal to Public Key PEM Format
+			// Marshal to Public Key PEM Format
 			publicPem = MarshalPublicKey(publicKey)
 		})
 
@@ -54,14 +54,14 @@ var _ = Describe("Jwt", func() {
 		})
 
 		It("should unmarshal Private Key", func() {
-			//Unmarshal Private Key Pem
+			// Unmarshal Private Key Pem
 			unmarshalPrivate, err = UnmarshalRSAPrivateKey(string(privatePem))
 			Expect(err).To(BeNil())
 			Expect(unmarshalPrivate).To(Equal(privateKey))
 		})
 
 		It("should unmarshal Public Key", func() {
-			//Unmarshal Private Key Pem
+			// Unmarshal Private Key Pem
 			unmarshalPublic, err = UnmarshalRSAPublicKey(string(publicPem))
 			Expect(err).To(BeNil())
 			Expect(unmarshalPublic).To(Equal(publicKey))
@@ -85,7 +85,7 @@ var _ = Describe("Jwt", func() {
 		})
 
 		It("should parse", func() {
-			//Parse Token
+			// Parse Token
 			parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (i any, err error) {
 				return publicKey, nil
 			})
