@@ -16,7 +16,7 @@ func (r SbiRate) IsValid() bool {
 	return r.Date != "" && r.TTBuy != 0 && r.TTSell != 0
 }
 
-// BUG: Remove Filename Changed to File Path
+// BUG: #B Remove Filename Changed to File Path
 // File name constant for SBI Rate CSV
 const SBI_RATES_FILENAME = "SBI_REFERENCE_RATES_USD.csv"
 

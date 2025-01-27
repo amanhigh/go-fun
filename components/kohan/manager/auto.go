@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	// BUG: Ticker Length Not Being Used ?
+	// HACK: Ticker Length Not Being Used ?
 	TICKER_LENGTH  = 15
 	SIDE_MONITOR   = 1
 	MAIL_WORKSPACE = "2"

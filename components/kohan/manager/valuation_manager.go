@@ -11,7 +11,6 @@ import (
 )
 
 type ValuationManager interface {
-	// TODO: Build Broker Repository
 	AnalyzeValuation(ctx context.Context, trades []tax.Trade, year int) (tax.Valuation, common.HttpError)
 }
 

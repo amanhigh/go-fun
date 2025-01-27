@@ -26,7 +26,7 @@ type SBIManager interface {
 
 type SBIManagerImpl struct {
 	client clients.SBIClient
-	// BUG: Change to File Path done in provider
+	// BUG: #B Change to File Path done in provider
 	downloadDir string
 	rateCache   map[string]float64
 }
@@ -35,7 +35,7 @@ func NewSBIManager(client clients.SBIClient, downloadDir string) *SBIManagerImpl
 	return &SBIManagerImpl{
 		client:      client,
 		downloadDir: downloadDir,
-		// FIXME: Link to Exchange Repo Clean Logic and Test Retain Caching Logic.
+		// FIXME: #A Link to Exchange Repo Clean Logic and Test Retain Caching Logic.
 		rateCache: make(map[string]float64),
 	}
 }
@@ -106,7 +106,7 @@ func (s *SBIManagerImpl) loadRatesIfNeeded() common.HttpError {
 		return nil
 	}
 
-	// BUG: Private method to check file presence
+	// BUG: #B Use File Path directly injected via constructor update Test.
 	filePath := filepath.Join(s.downloadDir, tax.SBI_RATES_FILENAME)
 	if _, err := os.Stat(filePath); err != nil {
 		return common.NewHttpError("SBI rates file not found", http.StatusNotFound)
@@ -134,7 +134,7 @@ func (s *SBIManagerImpl) readCSVRecords(filePath string) ([][]string, common.Htt
 	defer file.Close()
 
 	var rates []tax.SbiRate
-	// TODO: Move to BaseCSVRepository
+	// FIXME: #A Cleanup moved to BaseCSVRepository
 	if err := gocsv.Unmarshal(file, &rates); err != nil {
 		return nil, common.NewServerError(err)
 	}
