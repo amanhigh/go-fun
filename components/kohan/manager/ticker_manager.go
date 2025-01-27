@@ -75,7 +75,7 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 	return nil
 }
 
-func (t *TickerManagerImpl) FindPeakPrice(ctx context.Context, ticker string, year int) (peakPrice tax.PeakPrice, err common.HttpError) {
+func (t *TickerManagerImpl) FindPeakPrice(_ context.Context, ticker string, year int) (peakPrice tax.PeakPrice, err common.HttpError) {
 	stockData, err := t.readTickerData(ticker)
 	if err != nil {
 		return peakPrice, err
@@ -135,7 +135,7 @@ func (t *TickerManagerImpl) findClosestPreviousPrice(ticker string, data tax.Van
 	return 0, common.NewHttpError("No price data found", http.StatusNotFound)
 }
 
-func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (data tax.VantageStockData, err common.HttpError) {
+func (t *TickerManagerImpl) getTickerData(_ context.Context, ticker string) (data tax.VantageStockData, err common.HttpError) {
 	// Try cache first
 	t.cacheLock.RLock()
 	data, exists := t.cache[ticker]

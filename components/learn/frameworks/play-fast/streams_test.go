@@ -41,7 +41,7 @@ var _ = Describe("Streams", func() {
 
 		It("should map", func() {
 			personMap := funk.ToMap(people, "Name")
-			ageList := funk.Map(personMap, func(name string, person Person) (age int) { return person.Age })
+			ageList := funk.Map(personMap, func(_ string, person Person) (age int) { return person.Age })
 
 			Expect(ageList).To(HaveLen(6))
 			Expect(ageList).To(ContainElements(13, 15, 32, 17, 20, 35))
@@ -50,18 +50,18 @@ var _ = Describe("Streams", func() {
 
 	Context("Lodash", func() {
 		It("should filter", func() {
-			females := lo.Filter(people, func(person Person, index int) bool {
+			females := lo.Filter(people, func(person Person, _ int) bool {
 				return !person.Male
 			})
 
 			Expect(len(females)).To(Equal(4))
-			lo.ForEach(females, func(person Person, index int) {
+			lo.ForEach(females, func(person Person, _ int) {
 				Expect(person.Male).To(BeFalse())
 			})
 		})
 
 		It("should do unique", func() {
-			uniqueNames := lo.Uniq(lo.Map(people, func(person Person, index int) string { return person.Name }))
+			uniqueNames := lo.Uniq(lo.Map(people, func(person Person, _ int) string { return person.Name }))
 
 			Expect(len(uniqueNames)).To(Equal(6))
 			Expect(uniqueNames).To(ContainElements("John Smith", "Jane Doe"))

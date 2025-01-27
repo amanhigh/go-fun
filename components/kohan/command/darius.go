@@ -9,7 +9,7 @@ import (
 var dariusCmd = &cobra.Command{
 	Use:   "darius",
 	Short: "Kohan Commander TUI",
-	RunE: func(cmd *cobra.Command, args []string) (err error) {
+	RunE: func(_ *cobra.Command, _ []string) (err error) {
 		config := config.DariusConfig{
 			MakeDir:             makeFileDir,
 			SelectedServiceFile: tmpServiceFile,

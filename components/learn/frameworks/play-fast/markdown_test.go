@@ -116,7 +116,7 @@ var _ = Describe("Markdown", func() {
 
 			Context("Ordered", func() {
 				BeforeEach(func() {
-					ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
+					ast.Walk(root, func(node ast.Node, _ bool) (ast.WalkStatus, error) {
 						switch n := node.(type) {
 						case *ast.List:
 							if n.IsOrdered() {

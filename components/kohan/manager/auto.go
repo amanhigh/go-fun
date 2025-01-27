@@ -57,7 +57,7 @@ func NewAutoManager(wait time.Duration, capturePath string) AutoManagerInterface
 }
 
 // Copy existing implementations preserving comments but as methods
-func (a *AutoManagerImpl) RecordTicker(ctx context.Context, ticker, path string) (err error) {
+func (a *AutoManagerImpl) RecordTicker(_ context.Context, ticker, path string) (err error) {
 	if err = tools.FocusWindow("TradingView"); err == nil {
 		log.Info().Str("Ticker", ticker).Msg("Recording Ticker")
 		err = a.takeScreenshots(ticker, path)
@@ -107,7 +107,7 @@ func (a *AutoManagerImpl) sendNotification(ticker string) {
 	}
 }
 
-func (a *AutoManagerImpl) MonitorInternetConnection(ctx context.Context) {
+func (a *AutoManagerImpl) MonitorInternetConnection(_ context.Context) {
 	util.ScheduleJob(a.wait, func(_ bool) {
 		if tools.CheckInternetConnection() {
 			log.Info().Msg("Internet UP")
@@ -120,7 +120,7 @@ func (a *AutoManagerImpl) MonitorInternetConnection(ctx context.Context) {
 	})
 }
 
-func (a *AutoManagerImpl) TryOpenTicker(ctx context.Context, ticker string) {
+func (a *AutoManagerImpl) TryOpenTicker(_ context.Context, ticker string) {
 	window, err := tools.GetHyperWindow()
 	if err == nil && window.Class == LOGSEQ_CLASS && window.Monitor == SIDE_MONITOR && window.Workspace.Name == MAIL_WORKSPACE {
 		if openErr := a.openTicker(ticker); openErr != nil {
@@ -159,7 +159,7 @@ func (a *AutoManagerImpl) openTicker(ticker string) (err error) {
 	return
 }
 
-func (a *AutoManagerImpl) MonitorSubmap(ctx context.Context) {
+func (a *AutoManagerImpl) MonitorSubmap(_ context.Context) {
 	wait := time.Second
 	util.ScheduleJob(wait, func(_ bool) {
 		err := tools.ActivateSubmap("swiftkeys", "SwiftKeys")

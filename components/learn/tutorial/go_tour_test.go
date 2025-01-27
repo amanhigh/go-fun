@@ -323,7 +323,7 @@ var _ = Describe("GoTour", func() {
 			sum := 0
 			count := 10
 			for i := 0; i < count; i++ {
-				sum += 1
+				sum++
 			}
 			Expect(sum).To(Equal(count))
 		})
@@ -514,7 +514,7 @@ func WordCount(input string) map[string]int {
 	fields := strings.Fields(input)
 	/** Ranges where i is optional can use _,v */
 	for _, f := range fields {
-		countMap[f] += 1 // No NPE :), No Init Required because entry value is primitive
+		countMap[f]++ // No NPE :), No Init Required because entry value is primitive
 	}
 	return countMap
 }

@@ -86,7 +86,7 @@ var _ = Describe("Jwt", func() {
 
 		It("should parse", func() {
 			// Parse Token
-			parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (i any, err error) {
+			parsedToken, err := jwt.Parse(token, func(_ *jwt.Token) (i any, err error) {
 				return publicKey, nil
 			})
 			Expect(err).To(BeNil())
