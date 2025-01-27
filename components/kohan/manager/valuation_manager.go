@@ -30,33 +30,44 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 		return tax.Valuation{}, common.NewHttpError("no trades provided", http.StatusBadRequest)
 	}
 
-	// Validate all trades are for same ticker
-	for _, t := range trades {
-		if t.Symbol != trades[0].Symbol {
-			return tax.Valuation{}, common.NewHttpError("multiple tickers found in trades", http.StatusBadRequest)
-		}
+	if err := v.validateTrades(trades); err != nil {
+		return tax.Valuation{}, err
 	}
 
-	// Initialize analysis
+	analysis, currentPosition := v.processTradesAndUpdateAnalysis(trades)
+	analysis, err := v.updateYearEndPosition(ctx, analysis, currentPosition, year)
+	if err != nil {
+		return analysis, err
+	}
+
+	return analysis, nil
+}
+
+func (v *ValuationManagerImpl) validateTrades(trades []tax.Trade) common.HttpError {
+	for _, t := range trades {
+		if t.Symbol != trades[0].Symbol {
+			return common.NewHttpError("multiple tickers found in trades", http.StatusBadRequest)
+		}
+	}
+	return nil
+}
+
+func (v *ValuationManagerImpl) processTradesAndUpdateAnalysis(trades []tax.Trade) (tax.Valuation, float64) {
 	analysis := tax.Valuation{
 		Ticker: trades[0].Symbol,
 	}
 
-	// Track running position
 	var currentPosition float64
 	var maxPosition float64
 	var firstBuyDate time.Time
 
-	// Process trades chronologically
 	for _, t := range trades {
-		// Update position based on trade type
 		if t.Type == "BUY" {
 			currentPosition += t.Quantity
 		} else {
 			currentPosition -= t.Quantity
 		}
 
-		// Track first buy
 		if firstBuyDate.IsZero() && t.Type == "BUY" {
 			if parsedTime, err := t.GetDate(); err == nil {
 				firstBuyDate = parsedTime
@@ -68,33 +79,33 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 			}
 		}
 
-		// Track peak position
-		// HACK: Handle Case of Peak TT Rate with changed Position
 		if currentPosition > maxPosition {
 			maxPosition = currentPosition
 			if parsedTime, err := t.GetDate(); err == nil {
 				analysis.PeakPosition = tax.Position{
 					Date:     parsedTime,
-					Quantity: currentPosition,
+					Quantity: maxPosition,
 					USDPrice: t.USDPrice,
 				}
 			}
 		}
 	}
 
-	// Get year end position if any holdings exist
+	return analysis, currentPosition
+}
+
+func (v *ValuationManagerImpl) updateYearEndPosition(ctx context.Context, analysis tax.Valuation, currentPosition float64, year int) (tax.Valuation, common.HttpError) {
 	if currentPosition > 0 {
 		yearEndDate := time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
-		if price, err := v.tickerManager.GetPrice(ctx, trades[0].Symbol, yearEndDate); err == nil {
-			analysis.YearEndPosition = tax.Position{
-				Date:     yearEndDate,
-				Quantity: currentPosition,
-				USDPrice: price,
-			}
-		} else {
+		price, err := v.tickerManager.GetPrice(ctx, analysis.Ticker, yearEndDate)
+		if err != nil {
 			return analysis, common.NewHttpError("failed to get year end price", http.StatusInternalServerError)
 		}
+		analysis.YearEndPosition = tax.Position{
+			Date:     yearEndDate,
+			Quantity: currentPosition,
+			USDPrice: price,
+		}
 	}
-
 	return analysis, nil
 }
