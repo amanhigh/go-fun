@@ -58,7 +58,7 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 
 		// Track first buy
 		if firstBuyDate.IsZero() && t.Type == "BUY" {
-			if parsedTime, err := time.Parse(time.DateOnly, t.Date); err == nil {
+			if parsedTime, err := t.GetDate(); err == nil {
 				firstBuyDate = parsedTime
 				analysis.FirstPosition = tax.Position{
 					Date:     parsedTime,
@@ -72,7 +72,7 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 		// HACK: Handle Case of Peak TT Rate with changed Position
 		if currentPosition > maxPosition {
 			maxPosition = currentPosition
-			if parsedTime, err := time.Parse(time.DateOnly, t.Date); err == nil {
+			if parsedTime, err := t.GetDate(); err == nil {
 				analysis.PeakPosition = tax.Position{
 					Date:     parsedTime,
 					Quantity: currentPosition,

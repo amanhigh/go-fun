@@ -9,7 +9,7 @@ type Symbolic interface {
 // Broker statement trade model
 type Trade struct {
 	Symbol     string  // Stock symbol (e.g. MPC)
-	Date       string  // Trade date
+	date       string  // Trade date
 	Type       string  // BUY/SELL
 	Quantity   float64 // Number of shares
 	USDPrice   float64 // Price per share in USD
@@ -17,14 +17,23 @@ type Trade struct {
 	Commission float64 // Trade commission
 }
 
-func NewTrade(symbol string, date string, tradeType string, quantity, price float64) Trade {
+func NewTrade(symbol, date, tradeType string, quantity, price float64) Trade {
 	return Trade{
 		Symbol:   symbol,
-		Date:     date,
+		date:     date,
 		Type:     tradeType,
 		Quantity: quantity,
 		USDPrice: price,
 	}
+}
+
+// Add GetSymbol method to Trade struct
+func (t Trade) GetSymbol() string {
+	return t.Symbol
+}
+
+func (t Trade) GetDate() (time.Time, error) {
+	return time.Parse(time.DateOnly, t.date)
 }
 
 // Position represents a snapshot of holdings at a point in time
@@ -44,9 +53,4 @@ type Valuation struct {
 	FirstPosition   Position
 	PeakPosition    Position
 	YearEndPosition Position
-}
-
-// Add GetSymbol method to Trade struct
-func (t Trade) GetSymbol() string {
-	return t.Symbol
 }
