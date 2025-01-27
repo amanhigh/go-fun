@@ -138,3 +138,84 @@ var _ = Describe("ValuationManager", func() {
 		})
 	})
 })
+
+Context("Complex Position Building", func() {
+    Context("Averaging Down Position", func() {
+        var trades []tax.Trade
+
+        BeforeEach(func() {
+            trades = []tax.Trade{
+                tax.NewTrade(ticker, parseDate("2024-01-15"), "BUY", 5, 100),   // $500
+                tax.NewTrade(ticker, parseDate("2024-02-15"), "BUY", 10, 80),   // $800  - Buying dip
+                tax.NewTrade(ticker, parseDate("2024-03-15"), "BUY", 5, 90),    // $450  - Recovery buy
+            }
+            
+
+            mockTickerManager.EXPECT().
+                GetPrice(ctx, ticker, yearEndDate).
+                Return(yearEndPrice, nil)
+        })
+
+        It("should track averaged position correctly", func() {
+            valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
+            Expect(err).To(BeNil())
+
+            // First position from initial buy
+            Expect(valuation.FirstPosition.Date).To(Equal(trades[0].Date))
+            Expect(valuation.FirstPosition.Quantity).To(Equal(5.0))
+            Expect(valuation.FirstPosition.USDPrice).To(Equal(100.0))
+            Expect(valuation.FirstPosition.USDValue).To(Equal(500.0))
+
+            // Peak position at final state
+            Expect(valuation.PeakPosition.Date).To(Equal(trades[2].Date))
+            Expect(valuation.PeakPosition.Quantity).To(Equal(20.0))     // Total shares: 5 + 10 + 5
+            Expect(valuation.PeakPosition.USDPrice).To(Equal(90.0))     // Last trade price
+            Expect(valuation.PeakPosition.USDValue).To(Equal(1800.0))   // 20 * 90
+
+            // Year end position
+            Expect(valuation.YearEndPosition.Date).To(Equal(yearEndDate))
+            Expect(valuation.YearEndPosition.Quantity).To(Equal(20.0))
+            Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
+            Expect(valuation.YearEndPosition.USDValue).To(Equal(20.0 * yearEndPrice))
+        })
+    })
+})
+
+Context("Position Reduction", func() {
+    Context("Partial Position Selling", func() {
+        var trades []tax.Trade
+
+        BeforeEach(func() {
+            trades = []tax.Trade{
+                tax.NewTrade(ticker, parseDate("2024-01-15"), "BUY", 10, 100),    // Initial 10 shares
+                tax.NewTrade(ticker, parseDate("2024-02-15"), "SELL", 3, 110),    // Sell 3 shares
+                tax.NewTrade(ticker, parseDate("2024-03-15"), "SELL", 4, 120),    // Sell 4 shares
+            }
+
+            mockTickerManager.EXPECT().
+                GetPrice(ctx, ticker, yearEndDate).
+                Return(yearEndPrice, nil)
+        })
+
+        It("should track partial sells correctly", func() {
+            valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
+            Expect(err).To(BeNil())
+
+            // First position from initial buy
+            Expect(valuation.FirstPosition.Date).To(Equal(trades[0].Date))
+            Expect(valuation.FirstPosition.Quantity).To(Equal(10.0))
+            Expect(valuation.FirstPosition.USDPrice).To(Equal(100.0))
+            Expect(valuation.FirstPosition.USDValue).To(Equal(1000.0))
+
+            // Peak position should be initial position
+            Expect(valuation.PeakPosition).To(Equal(valuation.FirstPosition))
+
+            // Year end position (3 shares remaining)
+            Expect(valuation.YearEndPosition.Date).To(Equal(yearEndDate))
+            Expect(valuation.YearEndPosition.Quantity).To(Equal(3.0))    // 10 - 3 - 4 shares
+            Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
+            Expect(valuation.YearEndPosition.USDValue).To(Equal(3.0 * yearEndPrice))
+        })
+    })
+})
+
