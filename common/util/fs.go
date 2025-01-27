@@ -66,7 +66,7 @@ func FindReplaceFile(filePath, find, replace string) (err error) {
 	return
 }
 
-func PrintFile(title, filepath string) {
+func PrintFile(_, filepath string) {
 	log.Info().Str("File", filepath).Msg("File Contents")
 	fmt.Println(strings.Join(ReadAllLines(filepath), "\n"))
 }
