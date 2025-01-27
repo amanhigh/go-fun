@@ -10,7 +10,7 @@ import (
 	"errors"
 )
 
-// go:generate mockery --name PersonEncoder --inpackage --structname MockEncoder
+//go:generate mockery --name PersonEncoder --inpackage --structname MockEncoder
 type PersonEncoder interface {
 	EncodePerson(person Person) (jsonString string, err error)
 	DecodePerson(encodedPerson string) (person Person, err error)

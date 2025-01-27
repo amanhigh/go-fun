@@ -2,6 +2,10 @@ package tax
 
 import "time"
 
+type Symbolic interface {
+	GetSymbol() string
+}
+
 // Broker statement trade model
 type Trade struct {
 	Symbol     string    // Stock symbol (e.g. MPC)
@@ -40,4 +44,9 @@ type Valuation struct {
 	FirstPosition   Position
 	PeakPosition    Position
 	YearEndPosition Position
+}
+
+// Add GetSymbol method to Trade struct
+func (t Trade) GetSymbol() string {
+	return t.Symbol
 }
