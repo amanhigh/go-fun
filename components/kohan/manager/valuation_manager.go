@@ -31,7 +31,12 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 		return tax.Valuation{}, common.NewHttpError("no trades provided", http.StatusBadRequest)
 	}
 
-	// BUG: Validate Multiple Tickers
+	// Validate all trades are for same ticker
+	for _, t := range trades {
+		if t.Symbol != trades[0].Symbol {
+			return tax.Valuation{}, common.NewHttpError("multiple tickers found in trades", http.StatusBadRequest)
+		}
+	}
 
 	// Initialize analysis
 	analysis := tax.Valuation{
@@ -63,6 +68,7 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 		}
 
 		// Track peak position
+		// HACK: Handle Case of Peak TT Rate with changed Position
 		if currentPosition > maxPosition {
 			maxPosition = currentPosition
 			analysis.PeakPosition = tax.Position{
