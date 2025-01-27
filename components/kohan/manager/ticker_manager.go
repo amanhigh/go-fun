@@ -93,7 +93,7 @@ func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date ti
 	}
 
 	// Format date for lookup
-	dateStr := date.Format(common.DateOnly)
+	dateStr := date.Format(time.DateOnly)
 
 	// Try exact date match first
 	if dayPrice, exists := data.TimeSeries[dateStr]; exists {

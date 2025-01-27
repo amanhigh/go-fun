@@ -52,7 +52,7 @@ func (s *SBIManagerImpl) GetTTBuyRate(date time.Time) (rate float64, err common.
 		return 0, err
 	}
 
-	dateStr := date.Format(common.DateOnly)
+	dateStr := date.Format(time.DateOnly)
 	if rate, exists := s.rateCache[dateStr]; exists {
 		return rate, nil
 	}

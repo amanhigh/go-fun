@@ -25,7 +25,7 @@ var (
 )
 
 func timeFromStr(date string) time.Time {
-	t, _ := time.Parse(common.DateOnly, date)
+	t, _ := time.Parse(time.DateOnly, date)
 	return t
 }
 

@@ -104,7 +104,7 @@ var _ = Describe("SBIManager", func() {
 
 		BeforeEach(func() {
 			var err error
-			testDate, err = time.Parse(common.DateOnly, "2024-01-23")
+			testDate, err = time.Parse(time.DateOnly, "2024-01-23")
 			Expect(err).To(BeNil())
 		})
 
