@@ -58,7 +58,7 @@ var _ webhook.Validator = &Memcached{}
 func (r *Memcached) ValidateCreate() (err error) {
 	memcachedlog.Info("validate create", "name", r.Name, "port", r.Spec.ContainerPort)
 
-	//Verify Container Port is in Right Range
+	// Verify Container Port is in Right Range
 	if r.Spec.ContainerPort < 8000 {
 		err = fmt.Errorf("Memcached Port %d should be between 8000 and 10000", r.Spec.ContainerPort)
 	}
@@ -67,10 +67,10 @@ func (r *Memcached) ValidateCreate() (err error) {
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *Memcached) ValidateUpdate(old runtime.Object) (err error) {
+func (r *Memcached) ValidateUpdate(_ runtime.Object) (err error) {
 	memcachedlog.Info("validate update", "name", r.Name, "port", r.Spec.ContainerPort)
 
-	//Verify Container Port is in Right Range
+	// Verify Container Port is in Right Range
 	if r.Spec.ContainerPort < 8000 {
 		err = fmt.Errorf("Memcached Port %d should be between 8000 and 10000", r.Spec.ContainerPort)
 	}

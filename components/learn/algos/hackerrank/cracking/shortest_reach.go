@@ -26,7 +26,7 @@ func Travel(start *GraphNode) {
 }
 
 /* Helpers */
-func linkNodes(nodeMap map[int]*GraphNode, u int, v int) {
+func linkNodes(nodeMap map[int]*GraphNode, u, v int) {
 	nodeMap[u].Nodes = append(nodeMap[u].Nodes, nodeMap[v])
 	nodeMap[v].Nodes = append(nodeMap[v].Nodes, nodeMap[u])
 }

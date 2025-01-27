@@ -50,10 +50,10 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SLOW), func() {
 		ctx = context.Background()
 		err error
 
-		//Mysql Container
+		// Mysql Container
 		container testcontainers.Container
 
-		//Counts
+		// Counts
 		multiplier = 1
 		batchSize  = 1000
 
@@ -61,7 +61,7 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SLOW), func() {
 		teacherCount = multiplier * 30
 		studentCount = multiplier * 1000
 
-		//Lists
+		// Lists
 		schools  = make([]School, schoolCount)
 		students = make([]Student, studentCount)
 		teachers = make([]Teacher, teacherCount)
@@ -103,11 +103,11 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SLOW), func() {
 		)
 
 		BeforeAll(func() {
-			//Create Mysql Container
+			// Create Mysql Container
 			container, err = util.MysqlTestContainer(ctx)
 			Expect(err).To(BeNil())
 
-			//Fill Defaults
+			// Fill Defaults
 			err = env.Parse(&dbconfig)
 			Expect(err).To(BeNil())
 
@@ -137,7 +137,7 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SLOW), func() {
 
 		Context("Migrate", func() {
 			BeforeEach(func() {
-				//Drop Existing Tables
+				// Drop Existing Tables
 				err = db.Migrator().DropTable(&School{}, &Student{}, &Teacher{})
 				Expect(err).To(BeNil())
 
@@ -159,7 +159,7 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SLOW), func() {
 					err = db.CreateInBatches(&schools, batchSize).Error
 					Expect(err).To(BeNil())
 
-					//Assign School Ids
+					// Assign School Ids
 					for teacher := range teachers {
 						teachers[teacher].SchoolID = schools[util.RandomInt(0, schoolCount-1)].ID
 					}

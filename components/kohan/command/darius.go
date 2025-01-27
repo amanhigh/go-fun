@@ -9,7 +9,7 @@ import (
 var dariusCmd = &cobra.Command{
 	Use:   "darius",
 	Short: "Kohan Commander TUI",
-	RunE: func(cmd *cobra.Command, args []string) (err error) {
+	RunE: func(_ *cobra.Command, _ []string) (err error) {
 		config := config.DariusConfig{
 			MakeDir:             makeFileDir,
 			SelectedServiceFile: tmpServiceFile,
@@ -25,7 +25,7 @@ var dariusCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(dariusCmd)
 
-	//Flags
+	// Flags
 	dariusCmd.Flags().StringVarP(&makeFileDir, "makedir", "", makeFileDir, "Makefile Directory")
 	dariusCmd.Flags().StringVarP(&tmpServiceFile, "tmpsvc", "", tmpServiceFile, "Temp Service File")
 }

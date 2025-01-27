@@ -49,11 +49,11 @@ var _ = Describe("Person Integration Test", func() {
 			Expect(createdPerson.Id).Should(Not(BeEmpty()))
 		})
 		AfterEach(func() {
-			//Delete Person
+			// Delete Person
 			err = client.PersonService.DeletePerson(ctx, createdPerson.Id)
 			Expect(err).To(BeNil())
 
-			//Delete Audit
+			// Delete Audit
 			auditList, listErr := client.PersonService.ListPersonAudit(ctx, createdPerson.Id)
 			Expect(listErr).ShouldNot(HaveOccurred())
 			Expect(len(auditList)).To(Equal(2))
@@ -64,7 +64,7 @@ var _ = Describe("Person Integration Test", func() {
 			Expect(getErr).ShouldNot(HaveOccurred())
 			Expect(person).Should(Not(BeNil()))
 
-			//Match Person Fields
+			// Match Person Fields
 			Expect(person.Id).To(Equal(createdPerson.Id))
 			Expect(person.Name).To(Equal(name))
 			Expect(person.Age).To(Equal(age))
@@ -72,11 +72,11 @@ var _ = Describe("Person Integration Test", func() {
 		})
 
 		It("should generate Audit", func() {
-			//List Audit
+			// List Audit
 			auditList, auditErr := client.PersonService.ListPersonAudit(ctx, createdPerson.Id)
 			Expect(auditErr).ShouldNot(HaveOccurred())
 
-			//Check Audit
+			// Check Audit
 			Expect(len(auditList)).To(Equal(1))
 			audit := auditList[0]
 			Expect(audit.Id).To(Equal(createdPerson.Id))
@@ -116,11 +116,11 @@ var _ = Describe("Person Integration Test", func() {
 				})
 
 				It("should update person", func() {
-					//Fetch Update Person
+					// Fetch Update Person
 					person, getErr := client.PersonService.GetPerson(ctx, updatedPerson.Id)
 					Expect(getErr).ShouldNot(HaveOccurred())
 
-					//MatchFields
+					// MatchFields
 					Expect(person.Id).To(Equal(updatedPerson.Id))
 					Expect(person.Name).To(Equal(updateRequest.Name))
 					Expect(person.Age).To(Equal(updateRequest.Age))
@@ -128,11 +128,11 @@ var _ = Describe("Person Integration Test", func() {
 				})
 
 				It("should generate Audit", func() {
-					//List Audit
+					// List Audit
 					auditList, auditErr := client.PersonService.ListPersonAudit(ctx, updatedPerson.Id)
 					Expect(auditErr).ShouldNot(HaveOccurred())
 
-					//Check Audit
+					// Check Audit
 					Expect(len(auditList)).To(Equal(2))
 					audit := auditList[1]
 					Expect(audit.Id).To(Equal(updatedPerson.Id))
@@ -208,7 +208,7 @@ var _ = Describe("Person Integration Test", func() {
 			)
 
 			BeforeEach(func() {
-				//Create 15 Persons
+				// Create 15 Persons
 				for i := 0; i < total; i++ {
 					request.Name = names[i%3] + strconv.Itoa(i)
 					request.Gender = genders[i%3]
@@ -216,7 +216,7 @@ var _ = Describe("Person Integration Test", func() {
 					Expect(err).To(BeNil())
 				}
 
-				//Init Person Query
+				// Init Person Query
 				personQuery = fun.PersonQuery{
 					Pagination: common.Pagination{
 						Offset: offset,
@@ -226,7 +226,7 @@ var _ = Describe("Person Integration Test", func() {
 			})
 
 			AfterEach(func() {
-				//Find Record By Names and Delete using UUID
+				// Find Record By Names and Delete using UUID
 				for i, name := range names {
 					personQuery.Name = name
 					personQuery.Gender = genders[i]
@@ -235,7 +235,7 @@ var _ = Describe("Person Integration Test", func() {
 					personList, listErr := client.PersonService.ListPerson(ctx, personQuery)
 					Expect(listErr).To(BeNil())
 
-					//Delete all Records of Name
+					// Delete all Records of Name
 					for _, person := range personList.Records {
 						err = client.PersonService.DeletePerson(ctx, person.Id)
 						Expect(err).To(BeNil())
@@ -248,7 +248,7 @@ var _ = Describe("Person Integration Test", func() {
 				personList, err = client.PersonService.ListPerson(ctx, personQuery)
 				Expect(err).To(BeNil())
 
-				//Person Count should be same as Page Limit
+				// Person Count should be same as Page Limit
 				Expect(len(personList.Records)).To(Equal(limit))
 				Expect(personList.Metadata.Total).To(BeNumerically(">=", total))
 			})
@@ -370,7 +370,7 @@ var _ = Describe("Person Integration Test", func() {
 					Expect(err.Code()).To(Equal(http.StatusBadRequest))
 					Expect(err.Error()).To(ContainSubstring(expectedErr))
 
-					//Pollutes AfterEach Cleanup so Reset
+					// Pollutes AfterEach Cleanup so Reset
 					personQuery.Order = ""
 					personQuery.SortBy = ""
 				})

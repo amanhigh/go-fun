@@ -10,7 +10,7 @@ import (
 
 const NAME_REGEX = `^[0-9a-zA-Z- ]+$`
 
-var nameMatcher, _ = regexp.Compile(NAME_REGEX)
+var nameMatcher = regexp.MustCompile(NAME_REGEX)
 var matcherMap = map[string]*regexp.Regexp{
 	"person": nameMatcher,
 }
@@ -25,10 +25,10 @@ func NameValidator(fl validator.FieldLevel) (check bool) {
 	/* Extract Entity Name */
 	entityName := fl.Param()
 
-	//Finding Corresponding Matcher
+	// Finding Corresponding Matcher
 	if matcher, ok := matcherMap[entityName]; ok {
 		name := fl.Field().String()
-		//Apply Regex
+		// Apply Regex
 		check = matcher.MatchString(name)
 
 		log.Debug().Str("Entity", entityName).Str("Name", name).Bool("Check", check).Msg("NameValidator Error")

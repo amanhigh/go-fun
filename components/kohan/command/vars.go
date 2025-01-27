@@ -11,7 +11,7 @@ var (
 	index       = -1
 	endIndex    = -1
 
-	//Auto
+	// Auto
 	wait = time.Minute
 
 	// Darius

@@ -103,7 +103,7 @@ var _ = Describe("Generate", func() {
 
 		It("should not support injection", func() {
 			goTemplate = "{{define \"T\"}}Hello, {{.}}{{end}}"
-			//The < and > characters are replaced with &lt; and &gt; respectively,
+			// The < and > characters are replaced with &lt; and &gt; respectively,
 			// and the single quote ' is replaced with &#39;. This prevents the string from being interpreted as a script,
 			// thus avoiding code injection.
 			expected = "Hello, &lt;script&gt;alert(&#39;you have been pwned&#39;)&lt;/script&gt;"

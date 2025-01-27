@@ -150,8 +150,7 @@ func (ui *UIManagerImpl) clearFilterInput() {
 
 func (ui *UIManagerImpl) setupCustomKeys() {
 	ui.svcList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() { //nolint:exhaustive
-		case tcell.KeyRune:
+		if event.Key() == tcell.KeyRune {
 			switch event.Rune() {
 			case 'h':
 				return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)

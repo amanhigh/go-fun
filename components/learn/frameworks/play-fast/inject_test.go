@@ -18,7 +18,7 @@ var _ = Describe("Inject", func() {
 		redis     learn.Redis
 		err       error
 
-		//Names
+		// Names
 		redisName     = "RedisClient"
 		dbName        = "DatabaseClient"
 		appDBName     = "AppDatabaseClient"
@@ -39,7 +39,7 @@ var _ = Describe("Inject", func() {
 		)
 
 		BeforeEach(func() {
-			//Create Fresh Graph
+			// Create Fresh Graph
 			graph = inject.Graph{}
 
 			// Provide Components & Build App (myApp)
@@ -92,7 +92,7 @@ var _ = Describe("Inject", func() {
 	// https://uber-go.github.io/fx/get-started/
 	Context("Uber Fx", func() {
 		var (
-			//Only Accepts Pointer to Pointer
+			// Only Accepts Pointer to Pointer
 			uberApp = &app
 			module  fx.Option
 			app     *fx.App
@@ -121,7 +121,7 @@ var _ = Describe("Inject", func() {
 				),
 			)
 
-			//Use Module and Generate App
+			// Use Module and Generate App
 			app = fx.New(
 				module,
 				fx.Populate(&uberApp),
@@ -188,7 +188,7 @@ var _ = Describe("Inject", func() {
 			})
 			container.MustSingleton(c, learn.NewInjectComponent)
 
-			//Build App
+			// Build App
 			err = c.Fill(&app)
 			Expect(err).To(BeNil())
 		})

@@ -169,7 +169,7 @@ func setupPrometheus() {
 
 func newPrometheus(engine *gin.Engine) (prometheus *ginprometheus.Prometheus) {
 	/* Access Metrics */
-	//Visit http://localhost:8080/metrics
+	// Visit http://localhost:8080/metrics
 	prometheus = ginprometheus.NewPrometheus("gin_access")
 	prometheus.ReqCntURLLabelMappingFn = telemetry.AccessMetrics
 	prometheus.Use(engine)

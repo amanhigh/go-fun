@@ -13,7 +13,7 @@ import (
 
 type BinAnyResponse struct {
 	Headers map[string]string `json:"headers"`
-	//Data db.Person `json:"data"`
+	// Data db.Person `json:"data"`
 	Method string `json:"verb"`
 }
 
@@ -29,27 +29,27 @@ var _ = Describe("Resty", func() {
 		err = nil
 		resp = nil
 
-		//Custom Transport
+		// Custom Transport
 		transport := http.Transport{
 			DisableCompression: false,
 			DisableKeepAlives:  false,
 			DialContext: (&net.Dialer{
 				Timeout: time.Second, // Connect Timeout
 			}).DialContext,
-			IdleConnTimeout:     time.Minute, //Idle Timeout Before Closing Keepalive Connection
+			IdleConnTimeout:     time.Minute, // Idle Timeout Before Closing Keepalive Connection
 			MaxIdleConnsPerHost: 10,
 		}
 		client.SetTransport(&transport)
-		client.SetTimeout(2 * time.Second) //Request Timeout
+		client.SetTimeout(2 * time.Second) // Request Timeout
 
-		//client.SetDebug(true)
-		//client.EnableTrace()
+		// client.SetDebug(true)
+		// client.EnableTrace()
 		client.SetHeader("Content-Type", "application/json")
 		client.SetHeaderVerbatim("foo", "bar")
 		client.SetTimeout(2 * time.Second)
 		client.SetBaseURL("https://httpbin.dmuth.org") //https://httpbin.org,https://httpbin.dev
 
-		//Try 2 times at interval of one second, max time 5 Seconds
+		// Try 2 times at interval of one second, max time 5 Seconds
 		client.SetRetryCount(5).
 			SetRetryWaitTime(300 * time.Millisecond).
 			SetRetryMaxWaitTime(3 * time.Second)

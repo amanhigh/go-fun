@@ -36,7 +36,7 @@ type Person struct {
 	Id string `gorm:"primaryKey" json:"id"`
 }
 
-func (p *Person) BeforeCreate(tx *gorm.DB) (err error) {
+func (p *Person) BeforeCreate(_ *gorm.DB) (err error) {
 	p.Id = uuid.NewString()[:8]
 	return
 }

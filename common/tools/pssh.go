@@ -41,7 +41,7 @@ func (p *Pssh) Run(cmd, cluster string, parallelism int, disableOutput bool) {
 		LiveCommand(psshCmd)
 	}
 
-	RunIf(fmt.Sprintf("grep FAILURE %v", getClusterFile("console")), func(output string) {
+	RunIf(fmt.Sprintf("grep FAILURE %v", getClusterFile("console")), func(_ string) {
 		PrintCommand(fmt.Sprintf("grep SUCCESS %v | awk '{print $4}' > %v", getClusterFile("console"), getClusterFile("pass")))
 		PrintCommand(fmt.Sprintf("grep FAILURE %v | awk '{print $4}' > %v", getClusterFile("console"), getClusterFile("fail")))
 		log.Warn().Str("Cluster", cluster).Msg("Failed Hosts:")
@@ -137,7 +137,7 @@ func computeMd5Hashes(files map[string][]string) (map[string]*util.Md5Info, []*u
 	return hashMap, sortList
 }
 
-func analyzeMd5Results(cmd, cluster string, hashMap map[string]*util.Md5Info, sortList []*util.Md5Info) {
+func analyzeMd5Results(cmd, cluster string, _ map[string]*util.Md5Info, sortList []*util.Md5Info) {
 	if len(sortList) > 1 {
 		logMultipleMd5(cmd, cluster, sortList)
 		compareMd5Results(cluster, sortList)
@@ -158,7 +158,7 @@ func logMultipleMd5(cmd, cluster string, sortList []*util.Md5Info) {
 	}
 }
 
-func compareMd5Results(cluster string, sortList []*util.Md5Info) {
+func compareMd5Results(_ string, sortList []*util.Md5Info) {
 	first := sortList[0]
 	firstFile := first.FileList[0]
 	for i := 1; i < len(sortList); i++ {

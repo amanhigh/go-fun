@@ -29,7 +29,7 @@ func NewDividendManager(sbiManager SBIManager, downloadsDir, dividendFile string
 	}
 }
 
-func (d *DividendManagerImpl) GetDividends(ctx context.Context) ([]tax.Dividend, error) {
+func (d *DividendManagerImpl) GetDividends(_ context.Context) ([]tax.Dividend, error) {
 	// Open CSV file
 	file, err := os.Open(filepath.Join(d.downloadsDir, d.dividendFile))
 	if err != nil {

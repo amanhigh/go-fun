@@ -32,8 +32,8 @@ func Syntax() {
 }
 
 func demonstrateVariables() {
-	var arr = [3]int{1, 2, 3}   //make([]int, 3)
-	var mapv = map[string]int{} //make(map[string]int)
+	var arr = [3]int{1, 2, 3}   // make([]int, 3)
+	var mapv = map[string]int{} // make(map[string]int)
 	fmt.Println("Array", "Map", arr, mapv)
 }
 
@@ -46,11 +46,12 @@ func demonstrateStruct() {
 
 func demonstrateConditionals() {
 	x := 75
-	if x > 50 {
+	switch {
+	case x > 50:
 		fmt.Println("x is greater than 50")
-	} else if x < 50 {
+	case x < 50:
 		fmt.Println("x is less than 50")
-	} else {
+	default:
 		fmt.Println("x is equal to 50")
 	}
 }

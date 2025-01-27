@@ -75,9 +75,8 @@ var _ = Describe("GoResiliance", func() {
 				if count < RETRY {
 					count++
 					return errors.New("First Call Failed")
-				} else {
-					return nil
 				}
+				return nil
 			})
 			Expect(err).To(BeNil())
 			Expect(count).To(Equal(RETRY))
@@ -122,9 +121,8 @@ var _ = Describe("GoResiliance", func() {
 				if count < CIRCUIT_OPEN {
 					count++
 					return errors.New("Call Failed")
-				} else {
-					return nil
 				}
+				return nil
 			})
 			Expect(err).To(Equal(errors2.ErrCircuitOpen))
 			Expect(count).To(Equal(CIRCUIT_OPEN))

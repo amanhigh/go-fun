@@ -10,7 +10,7 @@ func FingerPrint(input string) (result []int) {
 	return
 }
 
-func AnagramDiff(f1 []int, f2 []int) (diff int) {
+func AnagramDiff(f1, f2 []int) (diff int) {
 	for i, p1 := range f1 {
 		p2 := f2[i]
 		diff += int(math.Abs(float64(p2 - p1)))

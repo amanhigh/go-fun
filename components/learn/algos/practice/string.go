@@ -23,7 +23,7 @@ func ReplaceSpace(input string) string {
 			out[i] = '%'
 			out[i+1] = '2'
 			out[i+2] = '0'
-			i = i + 3
+			i += 3
 		} else {
 			out[i] = rune(c)
 			i++
@@ -37,8 +37,8 @@ func ReverseString(input string) string {
 	var chars = []rune(input)
 	var size = len(chars)
 
-	//Place i,j at first and last postion
-	//Keep Replacing Chars until the cross.
+	// Place i,j at first and last postion
+	// Keep Replacing Chars until the cross.
 	for i, j := 0, size-1; i < j; i, j = i+1, j-1 {
 		chars[i], chars[j] = chars[j], chars[i]
 	}

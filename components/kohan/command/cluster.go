@@ -17,7 +17,7 @@ var clusterCmd = &cobra.Command{
 	Use:   "cluster",
 	Short: "Cluster Based Commands",
 	Args:  cobra.ExactArgs(1),
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRun: func(_ *cobra.Command, args []string) {
 		cluster = args[0]
 		setLogLevel()
 	},
@@ -27,10 +27,10 @@ var clusterPsshCmd = &cobra.Command{
 	Use:   "pssh [Cluster] [Cmd]",
 	Short: "Runs Parallel Ssh on Cluster",
 	Args:  cobra.ExactArgs(2),
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(_ *cobra.Command, args []string) {
 		command = args[1]
 	},
-	RunE: func(cmd *cobra.Command, args []string) (err error) {
+	RunE: func(_ *cobra.Command, _ []string) (err error) {
 		var selectedPssh tools.Pssh
 		if selectedPssh, err = getPsshFromType(tyype); err == nil {
 			selectedPssh.RunRange(command, cluster, parallelism, false, index, endIndex)
@@ -43,7 +43,7 @@ var clusterCssCmd = &cobra.Command{
 	Use:   "css [Cluster]",
 	Short: "Runs Cluster Ssh",
 	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) (err error) {
+	RunE: func(_ *cobra.Command, args []string) (err error) {
 		tools.ClusterSsh(args[0])
 		return
 	},
@@ -53,11 +53,11 @@ var clusterIndexCmd = &cobra.Command{
 	Use:   "index [Cluster] [index]",
 	Short: "Get Ip for Cluster & Index",
 	Args:  cobra.ExactArgs(2),
-	PreRunE: func(cmd *cobra.Command, args []string) (err error) {
+	PreRunE: func(_ *cobra.Command, args []string) (err error) {
 		index, err = util.ParseInt(args[1])
 		return
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		fmt.Println(tools.GetClusterHost(cluster, index))
 	},
 }
@@ -66,7 +66,7 @@ var clusterRemoveCmd = &cobra.Command{
 	Use:   "remove [Main Cluster] [Remove Cluster]",
 	Short: "Removes Ips in Remove Cluster from Main Cluster",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		count := tools.RemoveCluster(args[0], args[1])
 		log.Info().Int("Removed", count).Str("Total", args[0]).Msg("Remove Cluster Ips")
 	},
@@ -76,7 +76,7 @@ var clusterMd5Cmd = &cobra.Command{
 	Use:   "md5 [cmd] [cluster(s) Space Separated]",
 	Short: "Md5 Verification and Diff",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		for _, cluster := range strings.Fields(args[1]) {
 			tools.Md5Checker(args[0], cluster)
 		}
@@ -87,7 +87,7 @@ var clusterSearchCmd = &cobra.Command{
 	Use:   "search [keyword] [Opt:Cluster Index] [Opt:Ip Index]",
 	Short: "Searches for matching Clusters",
 	Args:  cobra.MinimumNArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) (err error) {
+	RunE: func(_ *cobra.Command, args []string) (err error) {
 		clusters := tools.SearchCluster(args[0])
 		fmt.Println(strings.Join(clusters, "\n"))
 

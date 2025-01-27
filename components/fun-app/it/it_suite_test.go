@@ -50,7 +50,7 @@ var _ = BeforeSuite(func() {
 	client = clients.NewFunAppClient(serviceUrl, config.DefaultHttpConfig)
 	logger := log.With().Str("URL", serviceUrl).Logger()
 
-	//Run FunApp If not already running
+	// Run FunApp If not already running
 	if err = client.AdminService.HealthCheck(ctx); err == nil {
 		logger.Info().Msg("FunApp: Already Running")
 		spawned = false
@@ -59,7 +59,7 @@ var _ = BeforeSuite(func() {
 		os.Setenv("PORT", DEFAULT_PORT)
 		go common.RunFunApp()
 
-		//Health Check every 1 second until Healthy or 5 Second Timeout
+		// Health Check every 1 second until Healthy or 5 Second Timeout
 		timeout := time.After(10 * time.Second)
 		for {
 			select {
@@ -76,7 +76,7 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	//Send Stop Signal if Spawned
+	// Send Stop Signal if Spawned
 	if spawned {
 		err = client.AdminService.Stop(ctx)
 		Expect(err).ShouldNot(HaveOccurred())

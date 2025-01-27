@@ -42,7 +42,7 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 		client, err = vault.New(vault.WithAddress(vaultHost), vault.WithRequestTimeout(30*time.Second))
 		Expect(err).To(BeNil())
 
-		//Authenticate
+		// Authenticate
 		err = client.SetToken(models.VAULT_ROOT_TOKEN)
 		Expect(err).To(BeNil())
 
@@ -68,7 +68,7 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 
 	Context("Secrets", func() {
 		var (
-			//Data
+			// Data
 			key   = "foo"
 			value = map[string]any{"password": "abc123", "secret": "correct horse battery staple"}
 
@@ -103,9 +103,9 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 
 	Context("Transit", func() {
 		var (
-			//Data
+			// Data
 			keyName = "aman-key"
-			//rsa-4096 - Asymmetric, aes256-gcm96 - Symmetric
+			// rsa-4096 - Asymmetric, aes256-gcm96 - Symmetric
 			keyType = "aes256-gcm96"
 		)
 
@@ -168,10 +168,10 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 			)
 
 			BeforeEach(func() {
-				//Base 64 Encode
+				// Base 64 Encode
 				baseData := base64.StdEncoding.EncodeToString([]byte(plainText))
 
-				//Encrypt Data
+				// Encrypt Data
 				encryptedData, err := client.Secrets.TransitEncrypt(ctx, keyName, schema.TransitEncryptRequest{
 					Plaintext: baseData,
 				})
@@ -187,7 +187,7 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 				Expect(err).To(BeNil())
 				decryptedBaseData := decryptedData.Data["plaintext"].(string)
 
-				//Decode Base64 Data
+				// Decode Base64 Data
 				decryptedPlainText, err := base64.StdEncoding.DecodeString(decryptedBaseData)
 				Expect(err).To(BeNil())
 				Expect(string(decryptedPlainText)).To(Equal(plainText))
@@ -205,7 +205,7 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 					Expect(err).To(BeNil())
 					Expect(encryptionKey.Data["keys"]).To(HaveLen(1))
 					baseKey := encryptionKey.Data["keys"].(map[string]any)["1"].(string)
-					//Decode Base64 Key
+					// Decode Base64 Key
 					key, err = base64.StdEncoding.DecodeString(baseKey)
 					Expect(err).To(BeNil())
 				})
@@ -216,7 +216,7 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 						noonce []byte
 					)
 					BeforeEach(func() {
-						//Encrypt Data
+						// Encrypt Data
 						cipher, noonce, err = dhutil.EncryptAES(key, []byte(plainText), AAD)
 						Expect(err).To(BeNil())
 						Expect(cipher).ToNot(BeNil())

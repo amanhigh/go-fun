@@ -72,7 +72,7 @@ linters-settings:
       - name: errorf
       - name: empty-block
       - name: superfluous-else
-      # - name: unused-parameter
+      - name: unused-parameter
       - name: unreachable-code
       # - name: redefines-builtin-id  
       - name: argument-limit
@@ -97,11 +97,11 @@ linters:
     - nilerr        # nil error returns
     - sqlclosecheck # ensure sql resources closed
     - noctx        # enforce context usage
-    - mnd           # Magic numbers detector
+    # - mnd           # Magic numbers detector
     
     # Code Style Essentials
     - goimports     # import sorting + gofmt
-    - revive        # general style (golint replacement)
+    # - revive        # general style (golint replacement)
     - gocritic      
     - unused        # unused code detection
 
@@ -137,7 +137,7 @@ issues:
         - errcheck
         - govet
   exclude-dirs:
-    - "^components/"
+    # - "^components/"
   exclude-files:
     # - "components/learn/frameworks/play-fast/hystrix_test.go"
 

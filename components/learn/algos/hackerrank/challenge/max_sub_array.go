@@ -109,7 +109,7 @@ func MaxSubArrayBruteForce(input []int) (contigousSum, nonContigousSum, start, e
 				end = j
 				contigousSum = sum
 			}
-			//fmt.Println(i, j, input[i:j+1], sum, contigousSum)
+			// fmt.Println(i, j, input[i:j+1], sum, contigousSum)
 		}
 
 		/*

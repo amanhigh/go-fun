@@ -17,7 +17,7 @@ import (
 )
 
 /* Server */
-func handleRoot(w http.ResponseWriter, r *http.Request) {
+func handleRoot(w http.ResponseWriter, _ *http.Request) {
 	p := map[string]string{"aman": "Preet"}
 	if result, e := json.Marshal(p); e == nil {
 		fmt.Fprint(w, string(result))
@@ -26,14 +26,14 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func stream(w http.ResponseWriter, r *http.Request) {
+func stream(w http.ResponseWriter, _ *http.Request) {
 	// Set the headers related to event streaming.
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 
 	// Listen to the closing of the http connection via the CloseNotifier
-	//notify := w.(http.CloseNotifier).CloseNotify()
+	// notify := w.(http.CloseNotifier).CloseNotify()
 
 	if f, ok := w.(http.Flusher); !ok {
 		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
@@ -52,8 +52,8 @@ func stream(w http.ResponseWriter, r *http.Request) {
 /* Client */
 // Event is a go representation of an http server-sent event
 type SseEvent struct {
-	Type string //SSE Type - event/data
-	Data string //Actual Data
+	Type string // SSE Type - event/data
+	Data string // Actual Data
 }
 
 var (
@@ -65,7 +65,7 @@ var (
 Fires Given Request treating it as SSE Request & Provides a channel to listen for SSE Events.
 Context can be used to cancel listening to events before server closes stream.
 */
-func fireSSERequest(request *http.Request, ctx context.Context) (eventChannel chan SseEvent, err error) {
+func fireSSERequest(ctx context.Context, request *http.Request) (eventChannel chan SseEvent, err error) {
 	/* Add Header to accept streaming events */
 	request.Header.Set("Accept", "text/event-stream")
 
@@ -76,7 +76,7 @@ func fireSSERequest(request *http.Request, ctx context.Context) (eventChannel ch
 	/* Fire Request */
 	if response, err = http.DefaultClient.Do(request); err == nil {
 		/* Open a Reader on Response Body */
-		go liveRequestLoop(response, eventChannel, ctx)
+		go liveRequestLoop(ctx, response, eventChannel)
 	} else {
 		log.Error().Err(err).Msg("Http SSE Request")
 	}
@@ -88,7 +88,7 @@ func fireSSERequest(request *http.Request, ctx context.Context) (eventChannel ch
 Given a response reads it and provides updates SSE Event updates on  channel provided to it.
 Context can be used to cancel listening to events before server closes stream.
 */
-func liveRequestLoop(response *http.Response, eventChannel chan SseEvent, ctx context.Context) {
+func liveRequestLoop(ctx context.Context, response *http.Response, eventChannel chan SseEvent) {
 	defer response.Body.Close()
 	defer close(eventChannel)
 
@@ -161,7 +161,7 @@ var _ = Describe("HttpStream", func() {
 		Expect(err).To(BeNil())
 
 		/* Execute Request and get handle to Event Channel */
-		eventChannel, err = fireSSERequest(request, context.Background())
+		eventChannel, err = fireSSERequest(context.Background(), request)
 		Expect(err).To(BeNil())
 
 		/* Listen to event channel for SSE Events */

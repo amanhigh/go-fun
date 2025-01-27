@@ -11,7 +11,7 @@ var autoCmd = &cobra.Command{
 	Use:   "auto",
 	Short: "Automation Related Commands",
 	Args:  cobra.ExactArgs(1),
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRun: func(_ *cobra.Command, args []string) {
 		cluster = args[0]
 		setLogLevel()
 	},
@@ -21,7 +21,7 @@ var runOrFocusCmd = &cobra.Command{
 	Use:   "run-or-focus [Title]",
 	Short: "Focus Window or Start Program",
 	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) (err error) {
+	RunE: func(_ *cobra.Command, args []string) (err error) {
 		err = tools.RunOrFocus(args[0])
 		return
 	},
@@ -60,10 +60,10 @@ var openTickerCmd = &cobra.Command{
 }
 
 func init() {
-	//Flags
+	// Flags
 	monitorCmd.Flags().DurationVarP(&wait, "wait", "w", wait, "Monitoring Wait Interval")
 
-	//Commands
+	// Commands
 	autoCmd.AddCommand(runOrFocusCmd)
 	autoCmd.AddCommand(monitorCmd)
 	autoCmd.AddCommand(openTickerCmd)

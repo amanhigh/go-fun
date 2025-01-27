@@ -13,7 +13,7 @@ func RunFunApp() {
 	var config config.FunAppConfig
 	/* Read Config */
 	if err = env.Parse(&config); err == nil {
-		//go gometrics.Log(gometrics.DefaultRegistry, 5*time.Second, log.StandardLogger())
+		// go gometrics.Log(gometrics.DefaultRegistry, 5*time.Second, log.StandardLogger())
 
 		/* Build Injector */
 		injector := NewFunAppInjector(config)

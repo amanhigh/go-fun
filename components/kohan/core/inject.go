@@ -47,14 +47,6 @@ func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) *manag
 	return manager.NewTickerManager(client, ki.config.Tax.DownloadsDir)
 }
 
-func (ki *KohanInjector) provideDividendManager(sbiManager manager.SBIManager) manager.DividendManager {
-	return manager.NewDividendManager(
-		sbiManager,
-		ki.config.Tax.DownloadsDir,
-		ki.config.Tax.DividendFile,
-	)
-}
-
 // Public singleton access - returns interface only
 func GetKohanInterface() KohanInterface {
 	return globalInjector
