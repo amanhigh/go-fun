@@ -93,7 +93,7 @@ var _ = Describe("Json Encode/Decode", func() {
 		})
 
 		JustAfterEach(func() {
-			//Creation
+			// Creation
 			jsonString, err = personEncoder.EncodePerson(originalPerson)
 		})
 
@@ -107,7 +107,7 @@ var _ = Describe("Json Encode/Decode", func() {
 		})
 
 		Context("Fail", func() {
-			//Assertions
+			// Assertions
 			AfterEach(func() {
 				Expect(jsonString).To(Not(Equal(personJson)))
 			})

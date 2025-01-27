@@ -15,8 +15,8 @@ The steps are:
 Time: nlog(n), n^2 (worst), Space: log(n)
 http://bigocheatsheet.com/
 */
-func QuickSort(input []int, start int, end int) {
-	//fmt.Println("Quick", start, end, input[start:end+1])
+func QuickSort(input []int, start, end int) {
+	// fmt.Println("Quick", start, end, input[start:end+1])
 	/* Sort only if more than one element in Segment */
 	if start < end {
 		/* Split Problem */
@@ -32,7 +32,7 @@ func QuickSort(input []int, start int, end int) {
 Ensure everything less than pivot is moved left of Partition Index (pIndex)
 Post this everything on left of pivot is less than pivot and right is greater than pivot
 */
-func Partition(input []int, start int, end int) (pIndex int) {
+func Partition(input []int, start, end int) (pIndex int) {
 	pivot := input[end]
 	pIndex = start
 
@@ -44,7 +44,7 @@ func Partition(input []int, start int, end int) (pIndex int) {
 		}
 	}
 
-	//fmt.Println("Partition", start, pIndex, end, input[start:end+1])
+	// fmt.Println("Partition", start, pIndex, end, input[start:end+1])
 	/* Place Pivot at end of partition
 	(No increment of pIndex unlike in Loop as its last placement)
 	*/

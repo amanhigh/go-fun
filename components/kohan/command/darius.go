@@ -25,7 +25,7 @@ var dariusCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(dariusCmd)
 
-	//Flags
+	// Flags
 	dariusCmd.Flags().StringVarP(&makeFileDir, "makedir", "", makeFileDir, "Makefile Directory")
 	dariusCmd.Flags().StringVarP(&tmpServiceFile, "tmpsvc", "", tmpServiceFile, "Temp Service File")
 }

@@ -10,7 +10,7 @@ import (
 
 const NAME_REGEX = `^[0-9a-zA-Z- ]+$`
 
-var nameMatcher, _ = regexp.Compile(NAME_REGEX)
+var nameMatcher = regexp.MustCompile(NAME_REGEX)
 var matcherMap = map[string]*regexp.Regexp{
 	"person": nameMatcher,
 }

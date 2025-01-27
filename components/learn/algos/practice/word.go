@@ -18,7 +18,7 @@ import (
 func AnagramGroups(words []string) map[string][]string {
 	anagramMap := map[string][]string{}
 	for _, word := range words {
-		fingerPrint := strings.Replace(fmt.Sprint(fingerPrint(word)), " ", "", -1)
+		fingerPrint := strings.ReplaceAll(fmt.Sprint(fingerPrint(word)), " ", "")
 		anagramMap[fingerPrint] = append(anagramMap[fingerPrint], word)
 	}
 	return anagramMap

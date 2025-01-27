@@ -12,7 +12,7 @@ Keep track of Selected Coins and print when valid solution is found.
 Returns number of ways
 Eg. 	fmt.Println(Split(4, []int{1,2,3}, []int{})) is 4
 */
-func Split(money int, denominations []int, selectedCoins []int) (p int) {
+func Split(money int, denominations, selectedCoins []int) (p int) {
 	/* All amount was used hence one possible solution */
 	if money == 0 {
 		p = 1

@@ -23,7 +23,7 @@ func ReplaceSpace(input string) string {
 			out[i] = '%'
 			out[i+1] = '2'
 			out[i+2] = '0'
-			i = i + 3
+			i += 3
 		} else {
 			out[i] = rune(c)
 			i++

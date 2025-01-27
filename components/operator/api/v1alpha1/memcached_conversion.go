@@ -17,7 +17,7 @@ func (mc *Memcached) ConvertTo(dstRaw conversion.Hub) error {
 	}
 	dst.Spec.Size = mc.Spec.Size
 	dst.Spec.ContainerPort = mc.Spec.ContainerPort
-	//Assume Default Sidecar Image.
+	// Assume Default Sidecar Image.
 	dst.Spec.SidecarImage = common.SIDECAR_IMAGE_NAME
 	dst.ObjectMeta = mc.ObjectMeta
 	return nil

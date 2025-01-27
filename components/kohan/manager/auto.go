@@ -114,7 +114,7 @@ func (a *AutoManagerImpl) MonitorInternetConnection(ctx context.Context) {
 		} else {
 			log.Warn().Msg("Internet DOWN")
 			a.restartNetworkManager()
-			//Extra Wait for Network Manager
+			// Extra Wait for Network Manager
 			time.Sleep(5 * time.Second)
 		}
 	})

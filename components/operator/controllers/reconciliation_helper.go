@@ -168,8 +168,9 @@ func (r *reconciliationHelperImpl) handleDeploymentCreation(
 	}, dep)
 
 	if err != nil && apierrors.IsNotFound(err) {
-		result, createErr := r.deployHelper.ValidateAndCreateDeployment(ctx, memcached)
-		if createErr != nil {
+		var result ctrl.Result
+		result, err = r.deployHelper.ValidateAndCreateDeployment(ctx, memcached)
+		if err != nil {
 			return result, err
 		}
 		// Requeue for deployment creation

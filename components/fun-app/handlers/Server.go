@@ -30,7 +30,7 @@ type FunServer struct {
 
 func (fs *FunServer) initRoutes() {
 	docs.SwaggerInfo.BasePath = "/v1"
-	//Routes
+	// Routes
 
 	// Version Group
 	v1 := fs.GinEngine.Group("/v1")
@@ -46,17 +46,17 @@ func (fs *FunServer) initRoutes() {
 	adminGroup := fs.GinEngine.Group("/admin")
 	adminGroup.GET("/stop", fs.AdminHandler.Stop)
 
-	//Add Swagger - https://github.com/swaggo/gin-swagger
-	//make swag-fun
+	// Add Swagger - https://github.com/swaggo/gin-swagger
+	// make swag-fun
 
 	fs.GinEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// http://localhost:8080/debug/statsviz/
 	fs.GinEngine.GET("/debug/statsviz/*filepath", telemetry.StatvizMetrics)
 
-	//Pprof (Use: http://localhost:8080/debug/pprof/)
+	// Pprof (Use: http://localhost:8080/debug/pprof/)
 	// make profile
-	//Load Test:  wrk2 http://localhost:8080/v1/person/all/ -t 2 -c 100 -d 1m -R2000
+	// Load Test:  wrk2 http://localhost:8080/v1/person/all/ -t 2 -c 100 -d 1m -R2000
 	//Vegeta: echo "GET http://localhost:9000/v1/person/all" | vegeta attack -max-workers=2 -max-connections=100 -duration=1m -rate=2000/1s | tee results.bin | vegeta report
 	//Vegeta Plot: vegeta plot results.bin > ~/Downloads/plot.html
 	pprof.Register(fs.GinEngine)
@@ -75,7 +75,7 @@ func (fs *FunServer) Start(c context.Context) (err error) {
 		}
 	}(errChan)
 
-	//Read Error From GoRoutine or proceed in one second
+	// Read Error From GoRoutine or proceed in one second
 	select {
 	case err = <-errChan:
 		zerolog.Ctx(c).Trace().Err(err).Msg("Failed To Start Server")

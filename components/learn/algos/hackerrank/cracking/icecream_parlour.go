@@ -22,7 +22,7 @@ help Sunny and Johnny choose two distinct flavors such that they spend their ent
 
 https://www.hackerrank.com/challenges/ctci-ice-cream-parlor/problem
 */
-func FindIcecreams(icecreams []IceCream, money int) (values []int, indices []int) {
+func FindIcecreams(icecreams []IceCream, money int) (values, indices []int) {
 	/* Sort Icecreams on price */
 	sort.Slice(icecreams, func(i, j int) bool {
 		return icecreams[i].price < icecreams[j].price

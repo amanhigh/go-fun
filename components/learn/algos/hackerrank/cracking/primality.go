@@ -29,7 +29,7 @@ func IsPrimeSmart(n int) bool {
 		All primes are of the form 6k+-1
 		https://www.youtube.com/watch?v=AaNUzEHiDpI
 	*/
-	for i := 5; i*i <= n; i = i + 6 {
+	for i := 5; i*i <= n; i += 6 {
 		sixKMinus1 := i
 		sixKPlus1 := sixKMinus1 + 2
 		//fmt.Println("N=", n, "K=", i/6+1, sixKMinus1, sixKPlus1)

@@ -158,7 +158,7 @@ var _ = Describe("GoTour", func() {
 
 		It("should overwrite", func() {
 			p := &j                 // point to j
-			*p = *p / 37            // divide j through the pointer
+			*p /= 37                // divide j through the pointer
 			Expect(j).To(Equal(73)) // see the new value of j
 		})
 
@@ -455,7 +455,7 @@ func sqrt(x int) (float64, error) {
 	z := float64(1)
 	z = 1.0
 	for i := 0; i < 10; i++ {
-		z = z - ((math.Pow(z, 2) - fX) / (2 * z))
+		z -= ((math.Pow(z, 2) - fX) / (2 * z))
 	}
 	return z, nil
 }

@@ -45,7 +45,7 @@ func TestConvey(t *testing.T) {
 		})
 	})
 
-	//Assertions - https://github.com/smartystreets/goconvey/blob/master/examples/assertion_examples_test.go
+	// Assertions - https://github.com/smartystreets/goconvey/blob/master/examples/assertion_examples_test.go
 	Convey("Interesting Assertions", t, func() {
 		So(1, ShouldAlmostEqual, 1.000000000000001)
 		So([]int{1, 2, 3}, ShouldContain, 2)

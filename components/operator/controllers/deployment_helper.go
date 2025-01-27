@@ -166,7 +166,7 @@ func (d *deploymentHelperImpl) getMemcachedImage() (string, error) {
 	return image, nil
 }
 
-func (d *deploymentHelperImpl) GetLabels(name string, image string) map[string]string {
+func (d *deploymentHelperImpl) GetLabels(name, image string) map[string]string {
 	imageTag := "latest"
 	if image != "" {
 		parts := strings.Split(image, ":")

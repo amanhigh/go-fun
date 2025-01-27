@@ -60,10 +60,10 @@ var openTickerCmd = &cobra.Command{
 }
 
 func init() {
-	//Flags
+	// Flags
 	monitorCmd.Flags().DurationVarP(&wait, "wait", "w", wait, "Monitoring Wait Interval")
 
-	//Commands
+	// Commands
 	autoCmd.AddCommand(runOrFocusCmd)
 	autoCmd.AddCommand(monitorCmd)
 	autoCmd.AddCommand(openTickerCmd)

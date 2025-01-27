@@ -132,7 +132,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 			})
 
 			AfterEach(func() {
-				//Clean Memcached Object if left
+				// Clean Memcached Object if left
 				_ = k8sClient.Delete(ctx, memcached)
 			})
 
@@ -236,7 +236,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 					})
 
 					AfterEach(func() {
-						//Clean Memcached Object on Way Back.
+						// Clean Memcached Object on Way Back.
 						err = k8sClient.Delete(ctx, memcached)
 						Expect(err).To(Not(HaveOccurred()))
 
@@ -304,7 +304,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 							newSize = int32(2)
 						)
 						BeforeEach(func() {
-							//Refresh Object
+							// Refresh Object
 							err = k8sClient.Get(ctx, typeNamespaceName, memcached)
 							Expect(err).To(BeNil())
 
@@ -333,10 +333,10 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 						Context("ScaleDown", func() {
 							BeforeEach(func() {
-								//Reduce Cluster Size
+								// Reduce Cluster Size
 								newSize = int32(1)
 
-								//Refresh Object
+								// Refresh Object
 								err = k8sClient.Get(ctx, typeNamespaceName, memcached)
 								Expect(err).To(BeNil())
 

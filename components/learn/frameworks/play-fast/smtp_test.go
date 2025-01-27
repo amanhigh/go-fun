@@ -30,7 +30,7 @@ var _ = Describe("Smtp", func() {
 
 })
 
-func composeMimeMail(to string, from string, subject string, body string) []byte {
+func composeMimeMail(to, from, subject, body string) []byte {
 	header := make(map[string]string)
 	header["From"] = from
 	header["To"] = to

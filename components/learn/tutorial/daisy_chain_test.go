@@ -42,7 +42,7 @@ Return Left Most & Rightmost Node
 
 Channel is unbuffered that it will block read until write happens
 */
-func buildDaisyChain(n int) (leftmost chan int, current chan int) {
+func buildDaisyChain(n int) (leftmost, current chan int) {
 	/** Start which 1 Channel Chain, Hence left==current */
 	leftmost = make(chan int)
 	left := leftmost
