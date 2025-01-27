@@ -15,6 +15,28 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	// BUG: Ticker Length Not Being Used ?
+	TICKER_LENGTH  = 15
+	SIDE_MONITOR   = 1
+	MAIL_WORKSPACE = "2"
+	DATE_FORMAT    = "20060102__150405"
+	LOGSEQ_CLASS   = "Logseq"
+	TRADE_INFO     = `
+Trends
+HTF - Up
+MTF - Up
+TTF - Up
+
+Plan: Longs @ TTF DZ
+
+Obstacles:
+-
+
+Support:
+-`
+)
+
 type AutoManagerInterface interface {
 	RecordTicker(ctx context.Context, ticker, path string) error
 	TryOpenTicker(ctx context.Context, ticker string)
@@ -50,7 +72,7 @@ func (a *AutoManagerImpl) RecordTicker(ctx context.Context, ticker, path string)
 func (a *AutoManagerImpl) takeScreenshots(ticker, path string) (err error) {
 	for i := 4; i > 0; i-- {
 		if err = tools.SendKey("-k " + strconv.Itoa(i)); err == nil {
-			name := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format("20060102__150405"))
+			name := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format(DATE_FORMAT))
 			log.Debug().Str("Ticker", ticker).Str("Name", name).Int("Count", i).Msg("Attempting Screenshot")
 			time.Sleep(1 * time.Second)
 			if err = tools.NamedScreenshot(path, name); err != nil {
@@ -63,27 +85,15 @@ func (a *AutoManagerImpl) takeScreenshots(ticker, path string) (err error) {
 
 func (a *AutoManagerImpl) recordTradeInfo(ticker, path string) (err error) {
 	var tradeInfo string
-	infoFile := fmt.Sprintf("%s/%s__%s.txt", path, ticker, time.Now().Format("20060102__150405"))
-	if tradeInfo, err = tools.PromptText(`
-Trends
-HTF - Up
-MTF - Up
-TTF - Up
-
-Plan: Longs @ TTF DZ
-
-Obstacles:
--
-
-Support:
--`); err == nil {
+	infoFile := fmt.Sprintf("%s/%s__%s.txt", path, ticker, time.Now().Format(DATE_FORMAT))
+	if tradeInfo, err = tools.PromptText(TRADE_INFO); err == nil {
 		if err = os.WriteFile(infoFile, []byte(tradeInfo), util.DEFAULT_PERM); err != nil {
 			log.Error().Str("Ticker", ticker).Err(err).Msg("Failed to write trade info")
 			return
 		}
 
 		// Record Check Screenshot
-		checkFile := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format("20060102__150405"))
+		checkFile := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format(DATE_FORMAT))
 		_ = tools.NamedRegionScreenshot(path, checkFile)
 	} else {
 		log.Error().Str("Ticker", ticker).Err(err).Msg("Read TradeInfo Failed")
@@ -112,7 +122,7 @@ func (a *AutoManagerImpl) MonitorInternetConnection(ctx context.Context) {
 
 func (a *AutoManagerImpl) TryOpenTicker(ctx context.Context, ticker string) {
 	window, err := tools.GetHyperWindow()
-	if err == nil && window.Class == "Logseq" && window.Monitor == 1 && window.Workspace.Name == "2" {
+	if err == nil && window.Class == LOGSEQ_CLASS && window.Monitor == SIDE_MONITOR && window.Workspace.Name == MAIL_WORKSPACE {
 		if openErr := a.openTicker(ticker); openErr != nil {
 			log.Error().Err(err).Str("Ticker", ticker).Msg("Failed to open ticker")
 		} else {
