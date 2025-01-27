@@ -35,7 +35,8 @@ func NewSBIManager(client clients.SBIClient, downloadDir string) *SBIManagerImpl
 	return &SBIManagerImpl{
 		client:      client,
 		downloadDir: downloadDir,
-		rateCache:   make(map[string]float64),
+		// FIXME: Link to Exchange Repo Clean Logic and Test Retain Caching Logic.
+		rateCache: make(map[string]float64),
 	}
 }
 
