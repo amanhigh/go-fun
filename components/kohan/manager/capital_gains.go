@@ -14,7 +14,7 @@ import (
 )
 
 type CapitalGainsManager interface {
-	AnalysePositions(ctx context.Context, year int) (map[string]tax.PositionAnalysis, error)
+	AnalysePositions(ctx context.Context, year int) (map[string]tax.Valuation, error)
 }
 
 type CapitalGainsManagerImpl struct {
@@ -35,7 +35,7 @@ func NewCapitalGainsManager(
 	}
 }
 
-func (c *CapitalGainsManagerImpl) AnalysePositions(ctx context.Context, year int) (map[string]tax.PositionAnalysis, error) {
+func (c *CapitalGainsManagerImpl) AnalysePositions(ctx context.Context, year int) (map[string]tax.Valuation, error) {
 	// TODO: Document Sample Formats for all CSV Files
 	// Open and read CSV file
 	filePath := filepath.Join(c.downloadDir, c.statementFile)
@@ -46,19 +46,19 @@ func (c *CapitalGainsManagerImpl) AnalysePositions(ctx context.Context, year int
 	defer file.Close()
 
 	// Parse CSV
-	var transactions []tax.Transaction
+	var transactions []tax.Trade
 	if err := gocsv.Unmarshal(file, &transactions); err != nil {
 		return nil, fmt.Errorf("failed to parse broker statement: %w", err)
 	}
 
 	// Group by ticker
-	tickerTransactions := make(map[string][]tax.Transaction)
+	tickerTransactions := make(map[string][]tax.Trade)
 	for _, t := range transactions {
 		tickerTransactions[t.Security] = append(tickerTransactions[t.Security], t)
 	}
 
 	// Process each ticker
-	result := make(map[string]tax.PositionAnalysis)
+	result := make(map[string]tax.Valuation)
 	for ticker, trades := range tickerTransactions {
 		analysis, err := c.analyzeTickerPositions(ctx, ticker, trades, year)
 		if err != nil {
@@ -70,9 +70,9 @@ func (c *CapitalGainsManagerImpl) AnalysePositions(ctx context.Context, year int
 	return result, nil
 }
 
-func (c *CapitalGainsManagerImpl) analyzeTickerPositions(ctx context.Context, ticker string, transactions []tax.Transaction, year int) (tax.PositionAnalysis, error) {
+func (c *CapitalGainsManagerImpl) analyzeTickerPositions(ctx context.Context, ticker string, transactions []tax.Trade, year int) (tax.Valuation, error) {
 	// Initialize analysis
-	analysis := tax.PositionAnalysis{
+	analysis := tax.Valuation{
 		Ticker: ticker,
 	}
 

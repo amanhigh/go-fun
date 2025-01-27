@@ -3,7 +3,7 @@ package tax
 import "time"
 
 // Broker statement transaction model
-type Transaction struct {
+type Trade struct {
 	Security     string  `csv:"Security"`
 	QuantitySold float64 `csv:"Quantity Sold"`
 	DateAcquired string  `csv:"Date Acquired"`
@@ -23,8 +23,8 @@ type Position struct {
 	USDValue float64
 }
 
-// PositionAnalysis tracks key positions for a ticker
-type PositionAnalysis struct {
+// Valuation tracks key positions for a ticker
+type Valuation struct {
 	Ticker          string
 	FirstPosition   Position
 	PeakPosition    Position
