@@ -1,11 +1,14 @@
 package core
 
 import (
+	"time"
+
 	"github.com/amanhigh/go-fun/components/kohan/clients"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/tui"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/go-resty/resty/v2"
+
 	"github.com/golobby/container/v3"
 	"github.com/rivo/tview"
 )
@@ -13,6 +16,8 @@ import (
 // Interface and implementation in same file
 type KohanInterface interface {
 	GetDariusApp(cfg config.DariusConfig) (*DariusV1, error)
+	// Add new method
+	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
 }
 
 // Private singleton instance
@@ -53,6 +58,11 @@ func (ki *KohanInjector) provideDividendManager(sbiManager manager.SBIManager) m
 // Public singleton access - returns interface only
 func GetKohanInterface() KohanInterface {
 	return globalInjector
+}
+
+func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface {
+	// HACK: Move to Provider Based Build ?
+	return manager.NewAutoManager(wait, capturePath)
 }
 
 func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error) {
