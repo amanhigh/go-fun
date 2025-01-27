@@ -39,6 +39,7 @@ type TaxConfig struct {
 	DownloadsDir        string `env:"FA_DOWNLOADS_DIR" envDefault:"~/Downloads/Tickers"`
 	BrokerStatementFile string `env:"FA_BROKER_STATEMENT" envDefault:"broker_statement.csv"`
 	DividendFile        string `env:"FA_DIVIDEND_FILE" envDefault:"dividends.csv"`
+	SBIFilePath         string `env:"SBI_FILE_PATH" envDefault:"sbi_rates.csv"`
 }
 
 func NewKohanConfig() (config KohanConfig, err error) {

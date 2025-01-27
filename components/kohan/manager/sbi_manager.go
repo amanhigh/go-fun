@@ -25,7 +25,8 @@ type SBIManager interface {
 }
 
 type SBIManagerImpl struct {
-	client      clients.SBIClient
+	client clients.SBIClient
+	// BUG: Change to File Path done in provider
 	downloadDir string
 	rateCache   map[string]float64
 }
