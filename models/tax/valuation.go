@@ -8,16 +8,16 @@ type Symbolic interface {
 
 // Broker statement trade model
 type Trade struct {
-	Symbol     string    // Stock symbol (e.g. MPC)
-	Date       time.Time // Trade date
-	Type       string    // BUY/SELL
-	Quantity   float64   // Number of shares
-	USDPrice   float64   // Price per share in USD
-	USDValue   float64   // Value in USD
-	Commission float64   // Trade commission
+	Symbol     string  // Stock symbol (e.g. MPC)
+	Date       string  // Trade date
+	Type       string  // BUY/SELL
+	Quantity   float64 // Number of shares
+	USDPrice   float64 // Price per share in USD
+	USDValue   float64 // Value in USD
+	Commission float64 // Trade commission
 }
 
-func NewTrade(symbol string, date time.Time, tradeType string, quantity, price float64) Trade {
+func NewTrade(symbol string, date string, tradeType string, quantity, price float64) Trade {
 	return Trade{
 		Symbol:   symbol,
 		Date:     date,

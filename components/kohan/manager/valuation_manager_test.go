@@ -31,22 +31,13 @@ var _ = Describe("ValuationManager", func() {
 		valuationManager = manager.NewValuationManager(mockTickerManager)
 	})
 
-	// Helper function to parse date string to time.Time
-	var parseDate = func(date string) time.Time {
-		t, err := time.Parse(common.DateOnly, date)
-		if err != nil {
-			panic(err)
-		}
-		return t
-	}
-
 	Context("Basic Position Tracking", func() {
 		Context("Single Buy and Hold", func() {
 			var trades []tax.Trade
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
-					tax.NewTrade(ticker, parseDate("2024-01-15"), "BUY", 10, 100),
+					tax.NewTrade(ticker, "2024-01-15", "BUY", 10, 100),
 				}
 
 				mockTickerManager.EXPECT().
@@ -78,8 +69,8 @@ var _ = Describe("ValuationManager", func() {
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
-					tax.NewTrade(ticker, parseDate("2024-01-15"), "BUY", 10, 100),
-					tax.NewTrade(ticker, parseDate("2024-02-15"), "SELL", 10, 120),
+					tax.NewTrade(ticker, "2024-01-15", "BUY", 10, 100),
+					tax.NewTrade(ticker, "2024-02-15", "SELL", 10, 120),
 				}
 			})
 
@@ -107,9 +98,9 @@ var _ = Describe("ValuationManager", func() {
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
-					tax.NewTrade(ticker, parseDate("2024-01-15"), "BUY", 5, 100),
-					tax.NewTrade(ticker, parseDate("2024-02-15"), "BUY", 5, 110),
-					tax.NewTrade(ticker, parseDate("2024-03-15"), "BUY", 5, 120),
+					tax.NewTrade(ticker, "2024-01-15", "BUY", 5, 100),
+					tax.NewTrade(ticker, "2024-02-15", "BUY", 5, 110),
+					tax.NewTrade(ticker, "2024-03-15", "BUY", 5, 120),
 				}
 
 				mockTickerManager.EXPECT().
@@ -143,9 +134,9 @@ var _ = Describe("ValuationManager", func() {
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
-					tax.NewTrade(ticker, parseDate("2024-01-15"), "BUY", 5, 100), // $500
-					tax.NewTrade(ticker, parseDate("2024-02-15"), "BUY", 10, 80), // $800  - Buying dip
-					tax.NewTrade(ticker, parseDate("2024-03-15"), "BUY", 5, 90),  // $450  - Recovery buy
+					tax.NewTrade(ticker, "2024-01-15", "BUY", 5, 100), // $500
+					tax.NewTrade(ticker, "2024-02-15", "BUY", 10, 80), // $800  - Buying dip
+					tax.NewTrade(ticker, "2024-03-15", "BUY", 5, 90),  // $450  - Recovery buy
 				}
 
 				mockTickerManager.EXPECT().
@@ -184,8 +175,8 @@ var _ = Describe("ValuationManager", func() {
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
-					tax.NewTrade(ticker, parseDate("2024-01-15"), "BUY", 5, 100),
-					tax.NewTrade(ticker, parseDate("2024-12-31"), "BUY", 5, 120), // Year end trade
+					tax.NewTrade(ticker, "2024-01-15", "BUY", 5, 100),
+					tax.NewTrade(ticker, "2024-12-31", "BUY", 5, 120), // Year end trade
 				}
 
 				mockTickerManager.EXPECT().
@@ -220,11 +211,11 @@ var _ = Describe("ValuationManager", func() {
 			BeforeEach(func() {
 				// HACK: Multiple Peaks with Same Value (Take Second higher TBBR Rate) or Throw Error.
 				trades = []tax.Trade{
-					tax.NewTrade(ticker, parseDate("2024-01-15"), "BUY", 10, 100),  // Initial 10
-					tax.NewTrade(ticker, parseDate("2024-02-15"), "BUY", 5, 110),   // Peak 1: 15 shares
-					tax.NewTrade(ticker, parseDate("2024-03-15"), "SELL", 8, 120),  // Down to 7
-					tax.NewTrade(ticker, parseDate("2024-04-15"), "BUY", 10, 115),  // Peak 2: 17 shares
-					tax.NewTrade(ticker, parseDate("2024-05-15"), "SELL", 12, 125), // Down to 5
+					tax.NewTrade(ticker, "2024-01-15", "BUY", 10, 100),  // Initial 10
+					tax.NewTrade(ticker, "2024-02-15", "BUY", 5, 110),   // Peak 1: 15 shares
+					tax.NewTrade(ticker, "2024-03-15", "SELL", 8, 120),  // Down to 7
+					tax.NewTrade(ticker, "2024-04-15", "BUY", 10, 115),  // Peak 2: 17 shares
+					tax.NewTrade(ticker, "2024-05-15", "SELL", 12, 125), // Down to 5
 				}
 
 				mockTickerManager.EXPECT().
@@ -260,9 +251,9 @@ var _ = Describe("ValuationManager", func() {
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
-					tax.NewTrade(ticker, parseDate("2024-01-15"), "BUY", 10, 100), // Initial 10 shares
-					tax.NewTrade(ticker, parseDate("2024-02-15"), "SELL", 3, 110), // Sell 3 shares
-					tax.NewTrade(ticker, parseDate("2024-03-15"), "SELL", 4, 120), // Sell 4 shares
+					tax.NewTrade(ticker, "2024-01-15", "BUY", 10, 100), // Initial 10 shares
+					tax.NewTrade(ticker, "2024-02-15", "SELL", 3, 110), // Sell 3 shares
+					tax.NewTrade(ticker, "2024-03-15", "SELL", 4, 120), // Sell 4 shares
 				}
 
 				mockTickerManager.EXPECT().
@@ -307,8 +298,8 @@ var _ = Describe("ValuationManager", func() {
 
 				BeforeEach(func() {
 					trades = []tax.Trade{
-						tax.NewTrade(ticker, parseDate("2024-01-15"), "BUY", 10, 100),
-						tax.NewTrade("MSFT", parseDate("2024-02-15"), "BUY", 5, 200), // Different ticker
+						tax.NewTrade(ticker, "2024-01-15", "BUY", 10, 100),
+						tax.NewTrade("MSFT", "2024-02-15", "BUY", 5, 200), // Different ticker
 					}
 				})
 
@@ -325,7 +316,7 @@ var _ = Describe("ValuationManager", func() {
 
 				BeforeEach(func() {
 					trades = []tax.Trade{
-						tax.NewTrade(ticker, parseDate("2024-01-15"), "BUY", 10, 100),
+						tax.NewTrade(ticker, "2024-01-15", "BUY", 10, 100),
 					}
 
 					mockTickerManager.EXPECT().
