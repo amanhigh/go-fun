@@ -7,23 +7,23 @@ import (
 	"github.com/amanhigh/go-fun/models/tax"
 )
 
-// ExchangeManager handles currency exchange rate processing
-type ExchangeManager interface {
+// TaxValuationManager handles currency exchange rate processing
+type TaxValuationManager interface {
 	ProcessValuations(ctx context.Context, valuations []tax.Valuation) ([]tax.TaxValuation, common.HttpError)
 }
 
-type ExchangeManagerImpl struct {
+type TaxValuationManagerImpl struct {
 	sbiManager SBIManager
 }
 
-// NewExchangeManager creates a new instance of ExchangeManager
-func NewExchangeManager(sbiManager SBIManager) *ExchangeManagerImpl {
-	return &ExchangeManagerImpl{
+// NewTaxValuationManager creates a new instance of TaxValuationManager
+func NewTaxValuationManager(sbiManager SBIManager) *TaxValuationManagerImpl {
+	return &TaxValuationManagerImpl{
 		sbiManager: sbiManager,
 	}
 }
 
-func (e *ExchangeManagerImpl) ProcessValuations(ctx context.Context, valuations []tax.Valuation) ([]tax.TaxValuation, common.HttpError) {
+func (e *TaxValuationManagerImpl) ProcessValuations(ctx context.Context, valuations []tax.Valuation) ([]tax.TaxValuation, common.HttpError) {
 	var taxValuations []tax.TaxValuation
 
 	for _, valuation := range valuations {
@@ -50,7 +50,7 @@ func (e *ExchangeManagerImpl) ProcessValuations(ctx context.Context, valuations 
 }
 
 // processPosition converts a Position to TaxPosition by fetching and applying exchange rate
-func (e *ExchangeManagerImpl) processPosition(ctx context.Context, taxPosition *tax.TaxPosition, position tax.Position) common.HttpError {
+func (e *TaxValuationManagerImpl) processPosition(ctx context.Context, taxPosition *tax.TaxPosition, position tax.Position) common.HttpError {
 	// Copy base position
 	taxPosition.Position = position
 

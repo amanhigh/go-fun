@@ -12,16 +12,16 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("ExchangeManager", func() {
+var _ = Describe("Tax Valuation Manager", func() {
 	var (
-		mockSBIManager  *mocks.SBIManager
-		exchangeManager manager.ExchangeManager
-		ctx             = context.Background()
+		mockSBIManager      *mocks.SBIManager
+		taxValuationManager manager.TaxValuationManager
+		ctx                 = context.Background()
 	)
 
 	BeforeEach(func() {
 		mockSBIManager = mocks.NewSBIManager(GinkgoT())
-		exchangeManager = manager.NewExchangeManager(mockSBIManager)
+		taxValuationManager = manager.NewTaxValuationManager(mockSBIManager)
 	})
 
 	Context("Single Valuation", func() {
@@ -80,7 +80,7 @@ var _ = Describe("ExchangeManager", func() {
 			})
 
 			It("should process valuation successfully", func() {
-				taxValuation, err = exchangeManager.ProcessValuations(ctx, []tax.Valuation{valuation})
+				taxValuation, err = taxValuationManager.ProcessValuations(ctx, []tax.Valuation{valuation})
 				Expect(err).To(BeNil())
 				Expect(taxValuation).To(HaveLen(1))
 
@@ -122,7 +122,7 @@ var _ = Describe("ExchangeManager", func() {
 			})
 
 			It("should handle empty position", func() {
-				taxValuation, err = exchangeManager.ProcessValuations(ctx, []tax.Valuation{valuation})
+				taxValuation, err = taxValuationManager.ProcessValuations(ctx, []tax.Valuation{valuation})
 				Expect(err).To(BeNil())
 				Expect(taxValuation).To(HaveLen(1))
 
@@ -157,7 +157,7 @@ var _ = Describe("ExchangeManager", func() {
 				GetTTBuyRate(valuation.FirstPosition.Date).
 				Return(0.0, common.ErrNotFound)
 
-			_, err = exchangeManager.ProcessValuations(ctx, []tax.Valuation{valuation})
+			_, err = taxValuationManager.ProcessValuations(ctx, []tax.Valuation{valuation})
 			Expect(err).To(Equal(common.ErrNotFound))
 		})
 	})
@@ -198,7 +198,7 @@ var _ = Describe("ExchangeManager", func() {
 		})
 
 		It("should process multiple valuations", func() {
-			taxValuations, err := exchangeManager.ProcessValuations(ctx, valuations)
+			taxValuations, err := taxValuationManager.ProcessValuations(ctx, valuations)
 			Expect(err).To(BeNil())
 			Expect(taxValuations).To(HaveLen(2))
 
