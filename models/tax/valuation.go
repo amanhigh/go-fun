@@ -9,8 +9,21 @@ type Trade struct {
 	Type       string    // BUY/SELL
 	Quantity   float64   // Number of shares
 	USDPrice   float64   // Price per share in USD
-	USDValue   float64   // Total value (Quantity * Price)
 	Commission float64   // Trade commission
+}
+
+func NewTrade(symbol string, date time.Time, tradeType string, quantity, price float64) Trade {
+	return Trade{
+		Symbol:   symbol,
+		Date:     date,
+		Type:     tradeType,
+		Quantity: quantity,
+		USDPrice: price,
+	}
+}
+
+func (t *Trade) Value() float64 {
+	return t.Quantity * t.USDPrice
 }
 
 // Position represents a snapshot of holdings at a point in time
