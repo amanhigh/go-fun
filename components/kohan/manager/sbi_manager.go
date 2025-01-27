@@ -132,6 +132,7 @@ func (s *SBIManagerImpl) readCSVRecords(filePath string) ([][]string, common.Htt
 	defer file.Close()
 
 	var rates []tax.SbiRate
+	// TODO: Move to BaseCSVRepository
 	if err := gocsv.Unmarshal(file, &rates); err != nil {
 		return nil, common.NewServerError(err)
 	}

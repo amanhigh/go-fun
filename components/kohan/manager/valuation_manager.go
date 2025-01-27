@@ -69,7 +69,7 @@ func (v *ValuationManagerImpl) processTradesAndUpdateAnalysis(trades []tax.Trade
 		}
 
 		if firstBuyDate.IsZero() && t.Type == "BUY" {
-			if parsedTime, err := t.GetDate(); err == nil {
+			if parsedTime, err := t.ParseDate(); err == nil {
 				firstBuyDate = parsedTime
 				analysis.FirstPosition = tax.Position{
 					Date:     parsedTime,
@@ -81,7 +81,7 @@ func (v *ValuationManagerImpl) processTradesAndUpdateAnalysis(trades []tax.Trade
 
 		if currentPosition > maxPosition {
 			maxPosition = currentPosition
-			if parsedTime, err := t.GetDate(); err == nil {
+			if parsedTime, err := t.ParseDate(); err == nil {
 				analysis.PeakPosition = tax.Position{
 					Date:     parsedTime,
 					Quantity: maxPosition,

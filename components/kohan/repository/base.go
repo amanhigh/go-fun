@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"net/http"
 	"os"
 
 	"github.com/amanhigh/go-fun/models/common"
@@ -39,6 +40,17 @@ func (b *BaseCSVRepositoryImpl[T]) GetAllRecords(ctx context.Context) (records [
 		return nil, common.NewServerError(parseErr)
 	}
 
+	if len(records) == 0 {
+		return nil, common.NewHttpError("empty CSV file", http.StatusBadRequest)
+	}
+
+	// Update type assertion to use CSVRecord
+	if record, ok := any(records[0]).(tax.CSVRecord); ok {
+		if !record.IsValid() {
+			return nil, common.NewHttpError("invalid CSV format", http.StatusBadRequest)
+		}
+	}
+
 	return records, nil
 }
 
@@ -53,7 +65,7 @@ func (b *BaseCSVRepositoryImpl[T]) GetUniqueTickers(ctx context.Context) (ticker
 	tickerMap := make(map[string]bool)
 	for _, record := range records {
 		// Use type assertion to get Symbol field
-		if ticker, ok := any(record).(tax.Symbolic); ok {
+		if ticker, ok := any(record).(tax.CSVRecord); ok {
 			tickerMap[ticker.GetSymbol()] = true
 		}
 	}
@@ -75,7 +87,7 @@ func (b *BaseCSVRepositoryImpl[T]) GetRecordsForTicker(ctx context.Context, tick
 
 	// Filter by ticker
 	for _, record := range records {
-		if t, ok := any(record).(tax.Symbolic); ok && t.GetSymbol() == ticker {
+		if t, ok := any(record).(tax.CSVRecord); ok && t.GetSymbol() == ticker {
 			filtered = append(filtered, record)
 		}
 	}

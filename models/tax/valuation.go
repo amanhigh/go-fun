@@ -2,25 +2,27 @@ package tax
 
 import "time"
 
-type Symbolic interface {
-	GetSymbol() string
+// Replace Symbolic interface with CSVRecord
+type CSVRecord interface {
+	GetSymbol() string // For ticker related functions
+	IsValid() bool     // For CSV validation
 }
 
 // Broker statement trade model
 type Trade struct {
-    Symbol     string  `csv:"Symbol"`      
-    date       string  `csv:"Date"`        
-    Type       string  `csv:"Type"`
-    Quantity   float64 `csv:"Quantity"`
-    USDPrice   float64 `csv:"Price"`       
-    USDValue   float64 `csv:"Value"`         
-    Commission float64 `csv:"Commission"`
+	Symbol     string  `csv:"Symbol"`
+	Date       string  `csv:"Date"`
+	Type       string  `csv:"Type"`
+	Quantity   float64 `csv:"Quantity"`
+	USDPrice   float64 `csv:"Price"`
+	USDValue   float64 `csv:"Value"`
+	Commission float64 `csv:"Commission"`
 }
 
 func NewTrade(symbol, date, tradeType string, quantity, price float64) Trade {
 	return Trade{
 		Symbol:   symbol,
-		date:     date,
+		Date:     date,
 		Type:     tradeType,
 		Quantity: quantity,
 		USDPrice: price,
@@ -32,8 +34,14 @@ func (t Trade) GetSymbol() string {
 	return t.Symbol
 }
 
-func (t Trade) GetDate() (time.Time, error) {
-	return time.Parse(time.DateOnly, t.date)
+// Add IsValid implementation
+func (t Trade) IsValid() bool {
+	return t.Symbol != "" && t.Date != "" && t.Type != "" &&
+		(t.Type == "BUY" || t.Type == "SELL")
+}
+
+func (t Trade) ParseDate() (time.Time, error) {
+	return time.Parse(time.DateOnly, t.Date)
 }
 
 // Position represents a snapshot of holdings at a point in time
