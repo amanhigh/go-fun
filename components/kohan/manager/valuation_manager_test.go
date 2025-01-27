@@ -2,6 +2,7 @@ package manager_test
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
@@ -212,6 +213,45 @@ var _ = Describe("ValuationManager", func() {
 				Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
 			})
 		})
+
+		Context("Multiple Position Peaks", func() {
+			var trades []tax.Trade
+
+			BeforeEach(func() {
+				// HACK: Multiple Peaks with Same Value (Take Second higher TBBR Rate) or Throw Error.
+				trades = []tax.Trade{
+					tax.NewTrade(ticker, parseDate("2024-01-15"), "BUY", 10, 100),  // Initial 10
+					tax.NewTrade(ticker, parseDate("2024-02-15"), "BUY", 5, 110),   // Peak 1: 15 shares
+					tax.NewTrade(ticker, parseDate("2024-03-15"), "SELL", 8, 120),  // Down to 7
+					tax.NewTrade(ticker, parseDate("2024-04-15"), "BUY", 10, 115),  // Peak 2: 17 shares
+					tax.NewTrade(ticker, parseDate("2024-05-15"), "SELL", 12, 125), // Down to 5
+				}
+
+				mockTickerManager.EXPECT().
+					GetPrice(ctx, ticker, yearEndDate).
+					Return(yearEndPrice, nil)
+			})
+
+			It("should identify highest peak through multiple cycles", func() {
+				valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
+				Expect(err).To(BeNil())
+
+				// First position
+				Expect(valuation.FirstPosition.Date).To(Equal(trades[0].Date))
+				Expect(valuation.FirstPosition.Quantity).To(Equal(10.0))
+				Expect(valuation.FirstPosition.USDPrice).To(Equal(100.0))
+
+				// Peak should be second peak with 17 shares
+				Expect(valuation.PeakPosition.Date).To(Equal(trades[3].Date))
+				Expect(valuation.PeakPosition.Quantity).To(Equal(17.0))  // 7 + 10 shares
+				Expect(valuation.PeakPosition.USDPrice).To(Equal(115.0)) // Price at peak
+
+				// Year end position shows final holdings
+				Expect(valuation.YearEndPosition.Date).To(Equal(yearEndDate))
+				Expect(valuation.YearEndPosition.Quantity).To(Equal(5.0)) // Final position after all trades
+				Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
+			})
+		})
 	})
 
 	Context("Position Reduction", func() {
@@ -258,6 +298,7 @@ var _ = Describe("ValuationManager", func() {
 					_, err := valuationManager.AnalyzeValuation(ctx, trades, year)
 					Expect(err).To(Not(BeNil()))
 					Expect(err.Error()).To(ContainSubstring("no trades provided"))
+					Expect(err.Code()).To(Equal(http.StatusBadRequest))
 				})
 			})
 
@@ -275,6 +316,7 @@ var _ = Describe("ValuationManager", func() {
 					_, err := valuationManager.AnalyzeValuation(ctx, trades, year)
 					Expect(err).To(Not(BeNil()))
 					Expect(err.Error()).To(ContainSubstring("multiple tickers found"))
+					Expect(err.Code()).To(Equal(http.StatusBadRequest))
 				})
 			})
 
@@ -295,6 +337,7 @@ var _ = Describe("ValuationManager", func() {
 					_, err := valuationManager.AnalyzeValuation(ctx, trades, year)
 					Expect(err).To(Not(BeNil()))
 					Expect(err.Error()).To(ContainSubstring("failed to get year end price"))
+					Expect(err.Code()).To(Equal(http.StatusInternalServerError))
 				})
 			})
 		})

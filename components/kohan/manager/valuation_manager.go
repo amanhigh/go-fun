@@ -2,7 +2,6 @@ package manager
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"net/http"
@@ -13,7 +12,7 @@ import (
 
 type ValuationManager interface {
 	// TODO: Build Broker Repository
-	AnalyzeValuation(ctx context.Context, trades []tax.Trade, year int) (tax.Valuation, error)
+	AnalyzeValuation(ctx context.Context, trades []tax.Trade, year int) (tax.Valuation, common.HttpError)
 }
 
 type ValuationManagerImpl struct {
@@ -26,7 +25,7 @@ func NewValuationManager(tickerManager TickerManager) ValuationManager {
 	}
 }
 
-func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []tax.Trade, year int) (tax.Valuation, error) {
+func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
 	if len(trades) == 0 {
 		return tax.Valuation{}, common.NewHttpError("no trades provided", http.StatusBadRequest)
 	}
@@ -89,7 +88,7 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 				USDPrice: price,
 			}
 		} else {
-			return analysis, fmt.Errorf("failed to get year end price: %w", err)
+			return analysis, common.NewHttpError("failed to get year end price", http.StatusInternalServerError)
 		}
 	}
 
