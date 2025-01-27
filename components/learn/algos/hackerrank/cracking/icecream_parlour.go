@@ -3,7 +3,7 @@ package cracking
 import "sort"
 
 type IceCream struct {
-	index int //holds orignal index of icecream, so its not lost in sort.1
+	index int // holds orignal index of icecream, so its not lost in sort.1
 	price int
 }
 

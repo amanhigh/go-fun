@@ -112,7 +112,7 @@ var _ = Describe("Json Encode/Decode", func() {
 				Expect(jsonString).To(Not(Equal(personJson)))
 			})
 
-			//Configuration
+			// Configuration
 			It("with changed age", func() {
 				originalPerson.Age = 88
 			})
@@ -143,7 +143,7 @@ var _ = Describe("Json Encode/Decode", func() {
 		)
 
 		It("should match", func() {
-			//Symbol Equivalent to Expect
+			// Symbol Equivalent to Expect
 			Ω(err).ShouldNot(HaveOccurred())
 		})
 
@@ -158,7 +158,7 @@ var _ = Describe("Json Encode/Decode", func() {
 			pizza := "Cheeseboard Pizza"
 			type FoodSrce string
 
-			Ω(FoodSrce(pizza)).ShouldNot(Equal(pizza))       //will fail
+			Ω(FoodSrce(pizza)).ShouldNot(Equal(pizza))       // will fail
 			Ω(FoodSrce(pizza)).Should(BeEquivalentTo(pizza)) //will pass
 		})
 

@@ -54,7 +54,7 @@ func (mf *MedianFinder) rebalance() {
 	if bigger.Size()-smaller.Size() > 1 {
 		smaller.Add(bigger.Poll())
 	}
-	//fmt.Println(mf.lowers, mf.uppers)
+	// fmt.Println(mf.lowers, mf.uppers)
 }
 
 func (mf *MedianFinder) GetMedian() (result float64) {

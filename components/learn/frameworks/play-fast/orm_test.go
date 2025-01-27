@@ -143,7 +143,7 @@ var _ = Describe("Orm", func() {
 				})
 
 				It("should query all non deleted products", func() {
-					//Query all Non Deleted Products
+					// Query all Non Deleted Products
 					var products []frameworks.Product
 					err := db.Unscoped().Where("code = ?", product.Code).Find(&products).Error
 					Expect(err).To(BeNil())

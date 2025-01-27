@@ -34,11 +34,11 @@ func CommonPrefix(words []string) (prefix string) {
 
 	// Iterate through the rest of the words
 	for _, word := range words[1:] {
-		//Continue till Prefix doesn't disappear or word list ends
+		// Continue till Prefix doesn't disappear or word list ends
 		for len(prefix) > 0 {
-			//Slice Word is larger than prefix and Try a Match
+			// Slice Word is larger than prefix and Try a Match
 			if len(word) >= len(prefix) && word[:len(prefix)] == prefix {
-				//Move to Next Word on Match
+				// Move to Next Word on Match
 				break
 			}
 

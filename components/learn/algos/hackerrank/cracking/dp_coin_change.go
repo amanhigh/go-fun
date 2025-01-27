@@ -16,7 +16,7 @@ func Split(money int, denominations, selectedCoins []int) (p int) {
 	/* All amount was used hence one possible solution */
 	if money == 0 {
 		p = 1
-		//fmt.Println("Selection: ", selectedCoins)
+		// fmt.Println("Selection: ", selectedCoins)
 		/* If Money Remains and also valid coins to select recurse */
 	} else if money > 0 && len(denominations) > 0 {
 		/* Choose First Coin */
@@ -82,7 +82,7 @@ func SplitDp(money int, denominations []int) (p int) {
 			*/
 			coinTable[j] += coinTable[j-coin]
 			/* In summary this pass each coin passes over all monetary values */
-			//fmt.Println("Progrses:", coin, coinTable, j-coin,coinTable[j-coin])
+			// fmt.Println("Progrses:", coin, coinTable, j-coin, coinTable[j-coin])
 		}
 	}
 	return coinTable[money]

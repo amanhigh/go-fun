@@ -76,7 +76,7 @@ var _ = Describe("GoTour", func() {
 
 			It("should cast valid string", func() {
 				/** Empty Interface */
-				casted_var, ok := genric_var.(string) //Type Casting
+				casted_var, ok := genric_var.(string) // Type Casting
 				Expect(ok).To(BeTrue())
 				Expect(casted_var).To(Equal(string_var))
 			})
@@ -182,13 +182,13 @@ var _ = Describe("GoTour", func() {
 
 			// Len of slice is count of elements that have been sliced
 			Expect(len(slice)).To(Equal(3))
-			//The capacity of a slice is the number of elements in the underlying array, counting from the first element in the slice.
+			// The capacity of a slice is the number of elements in the underlying array, counting from the first element in the slice.
 			Expect(cap(slice)).To(Equal(5))
 		})
 
 		It("can be two dimensional", func() {
 			/** Two Dimensional */
-			var twod [5][5]uint8 //Array 5x5
+			var twod [5][5]uint8 // Array 5x5
 			twod[1][1] = 5
 			Expect(twod[1][1]).To(Equal(uint8(5)))
 			Expect(twod[3][4]).To(Equal(uint8(0)))

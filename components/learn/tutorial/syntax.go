@@ -32,7 +32,7 @@ func Syntax() {
 }
 
 func demonstrateVariables() {
-	var arr = [3]int{1, 2, 3}   //make([]int, 3)
+	var arr = [3]int{1, 2, 3}   // make([]int, 3)
 	var mapv = map[string]int{} //make(map[string]int)
 	fmt.Println("Array", "Map", arr, mapv)
 }

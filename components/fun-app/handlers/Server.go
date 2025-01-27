@@ -57,8 +57,8 @@ func (fs *FunServer) initRoutes() {
 	// Pprof (Use: http://localhost:8080/debug/pprof/)
 	// make profile
 	// Load Test:  wrk2 http://localhost:8080/v1/person/all/ -t 2 -c 100 -d 1m -R2000
-	//Vegeta: echo "GET http://localhost:9000/v1/person/all" | vegeta attack -max-workers=2 -max-connections=100 -duration=1m -rate=2000/1s | tee results.bin | vegeta report
-	//Vegeta Plot: vegeta plot results.bin > ~/Downloads/plot.html
+	// Vegeta: echo "GET http://localhost:9000/v1/person/all" | vegeta attack -max-workers=2 -max-connections=100 -duration=1m -rate=2000/1s | tee results.bin | vegeta report
+	// Vegeta Plot: vegeta plot results.bin > ~/Downloads/plot.html
 	pprof.Register(fs.GinEngine)
 }
 
@@ -80,10 +80,10 @@ func (fs *FunServer) Start(c context.Context) (err error) {
 	case err = <-errChan:
 		zerolog.Ctx(c).Trace().Err(err).Msg("Failed To Start Server")
 	case <-time.After(time.Second):
-		//No Error Occurred, wait for Graceful Shutdown Signal.
+		// No Error Occurred, wait for Graceful Shutdown Signal.
 		ctx := fs.Shutdown.Wait()
 
-		//Trigger Shutdown Routine
+		// Trigger Shutdown Routine
 		fs.Stop(ctx)
 	}
 
@@ -102,7 +102,7 @@ func (fs *FunServer) Stop(c context.Context) {
 		zerolog.Ctx(c).Fatal().Ctx(ctx).Err(err).Msg("Forced Shutdown, Graceful Exit Failed: ")
 	}
 
-	//Stop Tracer
+	// Stop Tracer
 	span.AddEvent("Stopping Tracer")
 	telemetry.ShutdownTracerProvider(ctx)
 

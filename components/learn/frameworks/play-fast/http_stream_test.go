@@ -52,8 +52,8 @@ func stream(w http.ResponseWriter, r *http.Request) {
 /* Client */
 // Event is a go representation of an http server-sent event
 type SseEvent struct {
-	Type string //SSE Type - event/data
-	Data string //Actual Data
+	Type string // SSE Type - event/data
+	Data string // Actual Data
 }
 
 var (
