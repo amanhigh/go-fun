@@ -51,8 +51,8 @@ func (ki *KohanInjector) provideSBIManager(client clients.SBIClient) manager.SBI
 	return manager.NewSBIManager(client, ki.config.Tax.SBIFilePath)
 }
 
-func (ki *KohanInjector) provideExchangeManager(sbiManager manager.SBIManager) manager.ExchangeManager {
-	return manager.NewExchangeManager(sbiManager)
+func (ki *KohanInjector) provideTaxValutaionManager(sbiManager manager.SBIManager) manager.TaxValuationManager {
+	return manager.NewTaxValuationManager(sbiManager)
 }
 
 // Public singleton access - returns interface only
@@ -81,7 +81,7 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 	container.MustSingleton(ki.di, ki.provideSBIClient)
 	container.MustSingleton(ki.di, ki.provideTickerManager)
 	container.MustSingleton(ki.di, ki.provideSBIManager)
-	container.MustSingleton(ki.di, ki.provideExchangeManager)
+	container.MustSingleton(ki.di, ki.provideTaxValutaionManager)
 
 	// Build app
 	app := &DariusV1{}
