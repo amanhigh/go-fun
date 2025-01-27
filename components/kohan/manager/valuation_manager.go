@@ -56,7 +56,6 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 				Date:     t.Date,
 				Quantity: t.Quantity,
 				USDPrice: t.USDPrice,
-				USDValue: t.USDValue,
 			}
 		}
 
@@ -67,7 +66,6 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 				Date:     t.Date,
 				Quantity: currentPosition,
 				USDPrice: t.USDPrice,
-				USDValue: currentPosition * t.USDPrice,
 			}
 		}
 	}
@@ -80,7 +78,6 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 				Date:     yearEndDate,
 				Quantity: currentPosition,
 				USDPrice: price,
-				USDValue: price * currentPosition,
 			}
 		} else {
 			return analysis, fmt.Errorf("failed to get year end price: %w", err)
