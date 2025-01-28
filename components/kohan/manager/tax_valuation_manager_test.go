@@ -89,19 +89,19 @@ var _ = Describe("Tax Valuation Manager", func() {
 
 				// Verify first position
 				Expect(result.FirstPosition.TTDate).To(Equal(firstDate))
-				Expect(result.FirstPosition.TTBuyRate).To(Equal(firstRate))
+				Expect(result.FirstPosition.TTRate).To(Equal(firstRate))
 				Expect(result.FirstPosition.USDValue()).To(Equal(valuation.FirstPosition.USDValue()))
 				Expect(result.FirstPosition.INRValue()).To(Equal(valuation.FirstPosition.USDValue() * firstRate))
 
 				// Verify peak position
 				Expect(result.PeakPosition.TTDate).To(Equal(peakDate))
-				Expect(result.PeakPosition.TTBuyRate).To(Equal(peakRate))
+				Expect(result.PeakPosition.TTRate).To(Equal(peakRate))
 				Expect(result.PeakPosition.USDValue()).To(Equal(valuation.PeakPosition.USDValue()))
 				Expect(result.PeakPosition.INRValue()).To(Equal(valuation.PeakPosition.USDValue() * peakRate))
 
 				// Verify year end position
 				Expect(result.YearEndPosition.TTDate).To(Equal(yearEndDate))
-				Expect(result.YearEndPosition.TTBuyRate).To(Equal(yearEndRate))
+				Expect(result.YearEndPosition.TTRate).To(Equal(yearEndRate))
 				Expect(result.YearEndPosition.USDValue()).To(Equal(valuation.YearEndPosition.USDValue()))
 				Expect(result.YearEndPosition.INRValue()).To(Equal(valuation.YearEndPosition.USDValue() * yearEndRate))
 			})
@@ -207,8 +207,8 @@ var _ = Describe("Tax Valuation Manager", func() {
 			Expect(taxValuations[1].Ticker).To(Equal("MSFT"))
 
 			// Verify rate applied correctly to both
-			Expect(taxValuations[0].FirstPosition.TTBuyRate).To(Equal(rate))
-			Expect(taxValuations[1].FirstPosition.TTBuyRate).To(Equal(rate))
+			Expect(taxValuations[0].FirstPosition.TTRate).To(Equal(rate))
+			Expect(taxValuations[1].FirstPosition.TTRate).To(Equal(rate))
 		})
 	})
 })

@@ -28,12 +28,13 @@ func (c *CapitalGainManagerImpl) ProcessTaxGains(ctx context.Context, gains []ta
 		taxGain.Gains = gain
 
 		// Parse sell date for exchange rate lookup
-		if taxGain.TTDate, err = gain.ParseSellDate(); err != nil {
-			return nil, err
+		var parseErr error
+		if taxGain.TTDate, parseErr = gain.ParseSellDate(); parseErr != nil {
+			return nil, common.NewHttpError(parseErr.Error(), 500)
 		}
 
 		// Get exchange rate for sell date
-		if taxGain.TTBuyRate, err = c.sbiManager.GetTTBuyRate(taxGain.TTDate); err != nil {
+		if taxGain.TTRate, err = c.sbiManager.GetTTBuyRate(taxGain.TTDate); err != nil {
 			return nil, err
 		}
 

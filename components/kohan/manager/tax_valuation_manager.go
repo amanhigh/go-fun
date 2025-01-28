@@ -69,7 +69,7 @@ func (e *TaxValuationManagerImpl) processPosition(ctx context.Context, taxPositi
 	}
 
 	// Set exchange rate for the position
-	taxPosition.TTBuyRate = rate
+	taxPosition.TTRate = rate
 
 	return nil
 }

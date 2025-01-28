@@ -65,14 +65,14 @@ type Valuation struct {
 
 // TaxPosition extends Position with exchange rate details
 type TaxPosition struct {
-	Position            // Embed original position
-	TTDate    time.Time // Date for which exchange rate is applied
-	TTBuyRate float64   // TT Buy rate used for conversion
+	Position           // Embed original position
+	TTDate   time.Time // Date for which exchange rate is applied
+	TTRate   float64   // TT Buy rate used for conversion
 }
 
 // INRValue calculates INR value using embedded position's USD value
 func (t *TaxPosition) INRValue() float64 {
-	return t.USDValue() * t.TTBuyRate
+	return t.USDValue() * t.TTRate
 }
 
 // TaxValuation mirrors Valuation structure with tax positions

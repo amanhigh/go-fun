@@ -30,12 +30,12 @@ func (g Gains) ParseSellDate() (time.Time, error) {
 
 // TaxGains adds exchange rate details to basic gains
 type TaxGains struct {
-	Gains               // Embed original gains
-	TTDate    time.Time // Sell date for exchange rate
-	TTBuyRate float64   // Exchange rate on sell date
+	Gains            // Embed original gains
+	TTDate time.Time // Sell date for exchange rate
+	TTRate float64   // Exchange rate on sell date
 }
 
 // INRValue computes the PNL value in INR
 func (t *TaxGains) INRValue() float64 {
-	return t.PNL * t.TTBuyRate
+	return t.PNL * t.TTRate
 }
