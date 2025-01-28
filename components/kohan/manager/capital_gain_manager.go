@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
@@ -30,7 +31,7 @@ func (c *CapitalGainManagerImpl) ProcessTaxGains(ctx context.Context, gains []ta
 		// Parse sell date for exchange rate lookup
 		var parseErr error
 		if taxGain.TTDate, parseErr = gain.ParseSellDate(); parseErr != nil {
-			return nil, common.NewHttpError(parseErr.Error(), 500)
+			return nil, common.NewHttpError(parseErr.Error(), http.StatusBadRequest)
 		}
 
 		// Get exchange rate for sell date
