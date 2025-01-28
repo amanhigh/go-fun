@@ -9,7 +9,7 @@ import (
 
 // TaxValuationManager handles currency exchange rate processing
 type TaxValuationManager interface {
-	ProcessValuations(ctx context.Context, valuations []tax.Valuation) ([]tax.TaxValuation, common.HttpError)
+	ProcessValuations(ctx context.Context, valuations []tax.Valuation) ([]tax.INRValutaion, common.HttpError)
 }
 
 type TaxValuationManagerImpl struct {
@@ -23,12 +23,12 @@ func NewTaxValuationManager(sbiManager SBIManager) *TaxValuationManagerImpl {
 	}
 }
 
-func (e *TaxValuationManagerImpl) ProcessValuations(ctx context.Context, valuations []tax.Valuation) ([]tax.TaxValuation, common.HttpError) {
-	var taxValuations []tax.TaxValuation
+func (e *TaxValuationManagerImpl) ProcessValuations(ctx context.Context, valuations []tax.Valuation) ([]tax.INRValutaion, common.HttpError) {
+	var taxValuations []tax.INRValutaion
 
 	for _, valuation := range valuations {
 		// Create base tax valuation
-		taxValuation := tax.TaxValuation{
+		taxValuation := tax.INRValutaion{
 			Ticker: valuation.Ticker,
 		}
 
@@ -50,7 +50,7 @@ func (e *TaxValuationManagerImpl) ProcessValuations(ctx context.Context, valuati
 }
 
 // processPosition converts a Position to TaxPosition by fetching and applying exchange rate
-func (e *TaxValuationManagerImpl) processPosition(ctx context.Context, taxPosition *tax.TaxPosition, position tax.Position) common.HttpError {
+func (e *TaxValuationManagerImpl) processPosition(ctx context.Context, taxPosition *tax.INRPosition, position tax.Position) common.HttpError {
 	// Copy base position
 	taxPosition.Position = position
 

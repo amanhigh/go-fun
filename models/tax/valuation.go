@@ -63,22 +63,22 @@ type Valuation struct {
 	YearEndPosition Position
 }
 
-// TaxPosition extends Position with exchange rate details
-type TaxPosition struct {
+// INRPosition extends Position with exchange rate details
+type INRPosition struct {
 	Position           // Embed original position
 	TTDate   time.Time // Date for which exchange rate is applied
 	TTRate   float64   // TT Buy rate used for conversion
 }
 
 // INRValue calculates INR value using embedded position's USD value
-func (t *TaxPosition) INRValue() float64 {
+func (t *INRPosition) INRValue() float64 {
 	return t.USDValue() * t.TTRate
 }
 
-// TaxValuation mirrors Valuation structure with tax positions
-type TaxValuation struct {
+// INRValutaion mirrors Valuation structure with tax positions
+type INRValutaion struct {
 	Ticker          string
-	FirstPosition   TaxPosition // First position with exchange rate details
-	PeakPosition    TaxPosition // Peak position with exchange rate details
-	YearEndPosition TaxPosition // Year end position with exchange rate details
+	FirstPosition   INRPosition // First position with exchange rate details
+	PeakPosition    INRPosition // Peak position with exchange rate details
+	YearEndPosition INRPosition // Year end position with exchange rate details
 }

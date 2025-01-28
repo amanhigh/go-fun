@@ -9,7 +9,7 @@ import (
 )
 
 type CapitalGainManager interface {
-	ProcessTaxGains(ctx context.Context, gains []tax.Gains) ([]tax.TaxGains, common.HttpError)
+	ProcessTaxGains(ctx context.Context, gains []tax.Gains) ([]tax.INRGains, common.HttpError)
 }
 
 type CapitalGainManagerImpl struct {
@@ -22,9 +22,9 @@ func NewCapitalGainManager(sbiManager SBIManager) *CapitalGainManagerImpl {
 	}
 }
 
-func (c *CapitalGainManagerImpl) ProcessTaxGains(ctx context.Context, gains []tax.Gains) (taxGains []tax.TaxGains, err common.HttpError) {
+func (c *CapitalGainManagerImpl) ProcessTaxGains(_ context.Context, gains []tax.Gains) (taxGains []tax.INRGains, err common.HttpError) {
 	for _, gain := range gains {
-		var taxGain tax.TaxGains
+		var taxGain tax.INRGains
 		// Copy base gains
 		taxGain.Gains = gain
 

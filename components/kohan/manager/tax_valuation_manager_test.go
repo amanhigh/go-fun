@@ -27,7 +27,7 @@ var _ = Describe("Tax Valuation Manager", func() {
 	Context("Single Valuation", func() {
 		var (
 			valuation    tax.Valuation
-			taxValuation []tax.TaxValuation
+			taxValuation []tax.INRValutaion
 			err          common.HttpError
 
 			// Test data
