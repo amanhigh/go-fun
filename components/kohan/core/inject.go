@@ -61,7 +61,7 @@ func (ki *KohanInjector) provideExchangeManager(sbiManager manager.SBIManager) m
 	return manager.NewExchangeManager(sbiManager)
 }
 
-func (ki *KohanInjector) provideTaxValutaionManager(exchangeManager manager.ExchangeManager) manager.TaxValuationManager {
+func (ki *KohanInjector) provideTaxValuationManager(exchangeManager manager.ExchangeManager) manager.TaxValuationManager {
 	return manager.NewTaxValuationManager(exchangeManager)
 }
 
@@ -83,19 +83,22 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 
 	// Register other dependencies
 	container.MustSingleton(ki.di, tview.NewApplication)
+
+	// Client
+	container.MustSingleton(ki.di, ki.provideAlphaClient)
+	container.MustSingleton(ki.di, ki.provideSBIClient)
+
+	// Repo
+	container.MustSingleton(ki.di, ki.provideExchangeRepository)
+
+	// Manager
 	container.MustSingleton(ki.di, provideServiceManager)
 	container.MustSingleton(ki.di, provideUIManager)
 	container.MustSingleton(ki.di, provideHotkeyManager)
-
-	container.MustSingleton(ki.di, ki.provideAlphaClient)
-	container.MustSingleton(ki.di, ki.provideSBIClient)
 	container.MustSingleton(ki.di, ki.provideTickerManager)
-	container.MustSingleton(ki.di, ki.provideExchangeRepository)
-	container.MustSingleton(ki.di, func(client clients.SBIClient, exchangeRepo repository.ExchangeRepository) manager.SBIManager {
-		return ki.provideSBIManager(client, exchangeRepo)
-	})
 	container.MustSingleton(ki.di, ki.provideExchangeManager)
-	container.MustSingleton(ki.di, ki.provideTaxValutaionManager)
+	container.MustSingleton(ki.di, ki.provideTaxValuationManager)
+	container.MustSingleton(ki.di, ki.provideSBIManager)
 
 	// Build app
 	app := &DariusV1{}
