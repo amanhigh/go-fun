@@ -2,26 +2,22 @@ package manager
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/clients"
+	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
-	"github.com/gocarina/gocsv"
 	"github.com/rs/zerolog/log"
 )
 
 //go:generate mockery --name SBIManager
 type SBIManager interface {
 	DownloadRates(ctx context.Context) common.HttpError
-	GetTTBuyRate(date time.Time) (float64, common.HttpError)
+	GetTTBuyRate(ctx context.Context, date time.Time) (float64, common.HttpError)
 }
 
 type SBIManagerImpl struct {
@@ -45,9 +41,9 @@ func (s *SBIManagerImpl) ratesFileExists() bool {
 	return err == nil
 }
 
-func (s *SBIManagerImpl) GetTTBuyRate(date time.Time) (rate float64, err common.HttpError) {
+func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, date time.Time) (rate float64, err common.HttpError) {
 	// Get rates for date using repository
-	rates, err := s.exchangeRepo.GetRecordsForDate(context.TODO(), date)
+	rates, err := s.exchangeRepo.GetAllRecords(ctx, date)
 	if err != nil {
 		return 0, err
 	}
