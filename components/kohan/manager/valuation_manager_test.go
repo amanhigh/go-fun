@@ -15,9 +15,10 @@ import (
 
 var _ = Describe("ValuationManager", func() {
 	var (
-		ctx               = context.Background()
-		mockTickerManager *mocks.TickerManager
-		valuationManager  manager.ValuationManager
+		ctx                = context.Background()
+		mockTickerManager  *mocks.TickerManager
+		mockAccountManager *mocks.AccountManager
+		valuationManager   manager.ValuationManager
 
 		// Common variables
 		ticker       = "AAPL"
@@ -28,7 +29,7 @@ var _ = Describe("ValuationManager", func() {
 
 	BeforeEach(func() {
 		mockTickerManager = mocks.NewTickerManager(GinkgoT())
-		valuationManager = manager.NewValuationManager(mockTickerManager)
+		valuationManager = manager.NewValuationManager(mockTickerManager, mockAccountManager)
 	})
 	Context("Fresh Start", func() {
 		Context("Basic Position Tracking", func() {

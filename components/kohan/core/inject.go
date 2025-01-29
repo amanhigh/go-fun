@@ -61,7 +61,15 @@ func (ki *KohanInjector) provideExchangeManager(sbiManager manager.SBIManager) m
 	return manager.NewExchangeManager(sbiManager)
 }
 
-func (ki *KohanInjector) provideTaxValuationManager(exchangeManager manager.ExchangeManager) manager.TaxValuationManager {
+func (ki *KohanInjector) provideAccountRepository() repository.AccountRepository {
+	return repository.NewAccountRepository(ki.config.Tax.AccountFilePath)
+}
+
+func (ki *KohanInjector) provideAccountManager(accountRepo repository.AccountRepository) manager.AccountManager {
+	return manager.NewAccountManager(accountRepo)
+}
+
+func (ki *KohanInjector) provideTaxValuationManager(exchangeManager manager.ExchangeManager, accountManager manager.AccountManager) manager.TaxValuationManager {
 	return manager.NewTaxValuationManager(exchangeManager)
 }
 
@@ -90,12 +98,14 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 
 	// Repo
 	container.MustSingleton(ki.di, ki.provideExchangeRepository)
+	container.MustSingleton(ki.di, ki.provideAccountRepository)
 
 	// Manager
 	container.MustSingleton(ki.di, provideServiceManager)
 	container.MustSingleton(ki.di, provideUIManager)
 	container.MustSingleton(ki.di, provideHotkeyManager)
 	container.MustSingleton(ki.di, ki.provideTickerManager)
+	container.MustSingleton(ki.di, ki.provideAccountManager)
 	container.MustSingleton(ki.di, ki.provideExchangeManager)
 	container.MustSingleton(ki.di, ki.provideTaxValuationManager)
 	container.MustSingleton(ki.di, ki.provideSBIManager)
