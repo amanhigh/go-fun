@@ -71,6 +71,16 @@ type INRValutaion struct {
 	YearEndPosition INRPosition // Year end position with exchange rate details
 }
 
+// Helper to create tax valuation from base valuation
+func NewINRValuation(valuation Valuation) INRValutaion {
+	return INRValutaion{
+		Ticker:          valuation.Ticker,
+		FirstPosition:   INRPosition{Position: valuation.FirstPosition},
+		PeakPosition:    INRPosition{Position: valuation.PeakPosition},
+		YearEndPosition: INRPosition{Position: valuation.YearEndPosition},
+	}
+}
+
 // INRPosition extends Position with exchange rate details
 type INRPosition struct {
 	Position           // Embed original position

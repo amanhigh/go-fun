@@ -51,8 +51,12 @@ func (ki *KohanInjector) provideSBIManager(client clients.SBIClient) manager.SBI
 	return manager.NewSBIManager(client, ki.config.Tax.SBIFilePath)
 }
 
-func (ki *KohanInjector) provideTaxValutaionManager(sbiManager manager.SBIManager) manager.TaxValuationManager {
-	return manager.NewTaxValuationManager(sbiManager)
+func (ki *KohanInjector) provideExchangeManager(sbiManager manager.SBIManager) manager.ExchangeManager {
+	return manager.NewExchangeManager(sbiManager)
+}
+
+func (ki *KohanInjector) provideTaxValutaionManager(exchangeManager manager.ExchangeManager) manager.TaxValuationManager {
+	return manager.NewTaxValuationManager(exchangeManager)
 }
 
 // Public singleton access - returns interface only
