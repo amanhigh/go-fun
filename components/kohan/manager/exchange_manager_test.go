@@ -129,5 +129,75 @@ var _ = Describe("ExchangeManager", func() {
 			err := exchangeMgr.Exchange(ctx, nil)
 			Expect(err).To(BeNil())
 		})
+
+		Context("When closest date is used", func() {
+			var (
+				requestedDate = time.Date(2024, 1, 24, 0, 0, 0, 0, time.UTC)
+				closestDate   = time.Date(2024, 1, 23, 0, 0, 0, 0, time.UTC)
+				expectedRate  = 82.50
+				exchangeables []tax.Exchangeable
+				position      tax.INRPosition
+			)
+
+			BeforeEach(func() {
+				// Setup test position
+				position = tax.INRPosition{
+					Position: tax.Position{
+						Date:     requestedDate,
+						Quantity: 100,
+						USDPrice: 150,
+					},
+				}
+				exchangeables = []tax.Exchangeable{&position}
+
+				// Mock SBI manager to return ClosestDateError
+				mockSBI.EXPECT().
+					GetTTBuyRate(ctx, requestedDate).
+					Return(expectedRate, tax.NewClosestDateError(requestedDate, closestDate))
+			})
+
+			It("should set closest date and rate", func() {
+				err := exchangeMgr.Exchange(ctx, exchangeables)
+
+				Expect(err).To(BeNil())
+				Expect(position.TTRate).To(Equal(expectedRate))
+				Expect(position.TTDate).To(Equal(closestDate)) // Verify closest date was set
+
+				// Verify TTDate is different from requested date
+				Expect(position.TTDate).ToNot(Equal(requestedDate))
+			})
+		})
+
+		Context("When exact date is found", func() {
+			var (
+				requestedDate = time.Date(2024, 1, 23, 0, 0, 0, 0, time.UTC)
+				expectedRate  = 82.50
+				exchangeables []tax.Exchangeable
+				position      tax.INRPosition
+			)
+
+			BeforeEach(func() {
+				position = tax.INRPosition{
+					Position: tax.Position{
+						Date:     requestedDate,
+						Quantity: 100,
+						USDPrice: 150,
+					},
+				}
+				exchangeables = []tax.Exchangeable{&position}
+
+				mockSBI.EXPECT().
+					GetTTBuyRate(ctx, requestedDate).
+					Return(expectedRate, nil)
+			})
+
+			It("should set exact date and rate", func() {
+				err := exchangeMgr.Exchange(ctx, exchangeables)
+
+				Expect(err).To(BeNil())
+				Expect(position.TTRate).To(Equal(expectedRate))
+				Expect(position.TTDate).To(Equal(requestedDate)) // Verify requested date was set
+			})
+		})
 	})
 })
