@@ -78,4 +78,50 @@ var _ = Describe("CapitalGainManager", func() {
 			Expect(err).To(Equal(common.ErrNotFound))
 		})
 	})
+
+	Context("Multiple Gains", func() {
+		var (
+			gains []tax.Gains
+		)
+
+		BeforeEach(func() {
+			gains = []tax.Gains{
+				{
+					Symbol:   "AAPL",
+					SellDate: "2024-01-15",
+					PNL:      1000.00,
+				},
+				{
+					Symbol:   "MSFT",
+					SellDate: "2024-01-16",
+					PNL:      2000.00,
+				},
+			}
+
+			// Verify that exchangeables passed contain correct gain amounts
+			mockExchangeManager.EXPECT().
+				Exchange(ctx, mock.AnythingOfType("[]tax.Exchangeable")).
+				Run(func(_ context.Context, exchangeables []tax.Exchangeable) {
+					Expect(exchangeables).To(HaveLen(2))
+					Expect(exchangeables[0].GetUSDAmount()).To(Equal(1000.00))
+					Expect(exchangeables[1].GetUSDAmount()).To(Equal(2000.00))
+				}).
+				Return(nil)
+		})
+
+		It("should process multiple gains correctly", func() {
+			taxGains, err := gainManager.ProcessTaxGains(ctx, gains)
+
+			Expect(err).To(BeNil())
+			Expect(taxGains).To(HaveLen(2))
+
+			// Verify first gain
+			Expect(taxGains[0].Gains.Symbol).To(Equal("AAPL"))
+			Expect(taxGains[0].Gains.PNL).To(Equal(1000.00))
+
+			// Verify second gain
+			Expect(taxGains[1].Gains.Symbol).To(Equal("MSFT"))
+			Expect(taxGains[1].Gains.PNL).To(Equal(2000.00))
+		})
+	})
 })
