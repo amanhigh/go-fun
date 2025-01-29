@@ -45,7 +45,7 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 	}
 
 	// Process trades with starting position
-	analysis, currentPosition := v.trackPositions(startPosition, trades)
+	currentPosition := v.trackPositions(&analysis, startPosition, trades)
 
 	// Update year-end position if there are remaining holdings
 	if currentPosition > 0 {
@@ -95,7 +95,7 @@ func (v *ValuationManagerImpl) getStartingPosition(ctx context.Context, ticker s
 	return
 }
 
-func (v *ValuationManagerImpl) trackPositions(startPosition tax.Position, trades []tax.Trade) (analysis tax.Valuation, currentPosition float64) {
+func (v *ValuationManagerImpl) trackPositions(analysis *tax.Valuation, startPosition tax.Position, trades []tax.Trade) (currentPosition float64) {
 	currentPosition = startPosition.Quantity
 	maxPosition := currentPosition
 

@@ -29,9 +29,17 @@ var _ = Describe("ValuationManager", func() {
 
 	BeforeEach(func() {
 		mockTickerManager = mocks.NewTickerManager(GinkgoT())
+		mockAccountManager = mocks.NewAccountManager(GinkgoT())
 		valuationManager = manager.NewValuationManager(mockTickerManager, mockAccountManager)
 	})
 	Context("Fresh Start", func() {
+		BeforeEach(func() {
+			// All tests under Fresh Start expect no last year position
+			mockAccountManager.EXPECT().
+				GetRecord(ctx, ticker).
+				Return(tax.Account{}, common.ErrNotFound)
+		})
+
 		Context("Basic Position Tracking", func() {
 			Context("Single Buy and Hold", func() {
 				var trades []tax.Trade
@@ -293,56 +301,61 @@ var _ = Describe("ValuationManager", func() {
 					Expect(valuation.YearEndPosition.USDValue()).To(Equal(3.0 * yearEndPrice))
 				})
 			})
+		})
 
-			Context("Error Cases", func() {
-				Context("Empty Trades", func() {
-					It("should return error for empty trades", func() {
-						trades := []tax.Trade{}
-						_, err := valuationManager.AnalyzeValuation(ctx, trades, year)
-						Expect(err).To(Not(BeNil()))
-						Expect(err.Error()).To(ContainSubstring("no trades provided"))
-						Expect(err.Code()).To(Equal(http.StatusBadRequest))
-					})
-				})
+	})
 
-				Context("Multiple Ticker Trades", func() {
-					var trades []tax.Trade
+	Context("Error Cases", func() {
+		Context("Empty Trades", func() {
+			It("should return error for empty trades", func() {
+				trades := []tax.Trade{}
+				_, err := valuationManager.AnalyzeValuation(ctx, trades, year)
+				Expect(err).To(Not(BeNil()))
+				Expect(err.Error()).To(ContainSubstring("no trades provided"))
+				Expect(err.Code()).To(Equal(http.StatusBadRequest))
+			})
+		})
 
-					BeforeEach(func() {
-						trades = []tax.Trade{
-							tax.NewTrade(ticker, "2024-01-15", "BUY", 10, 100),
-							tax.NewTrade("MSFT", "2024-02-15", "BUY", 5, 200), // Different ticker
-						}
-					})
+		Context("Multiple Ticker Trades", func() {
+			var trades []tax.Trade
 
-					It("should return error for mixed ticker trades", func() {
-						_, err := valuationManager.AnalyzeValuation(ctx, trades, year)
-						Expect(err).To(Not(BeNil()))
-						Expect(err.Error()).To(ContainSubstring("multiple tickers found"))
-						Expect(err.Code()).To(Equal(http.StatusBadRequest))
-					})
-				})
+			BeforeEach(func() {
+				trades = []tax.Trade{
+					tax.NewTrade(ticker, "2024-01-15", "BUY", 10, 100),
+					tax.NewTrade("MSFT", "2024-02-15", "BUY", 5, 200), // Different ticker
+				}
+			})
 
-				Context("Year End Price Error", func() {
-					var trades []tax.Trade
+			It("should return error for mixed ticker trades", func() {
+				_, err := valuationManager.AnalyzeValuation(ctx, trades, year)
+				Expect(err).To(Not(BeNil()))
+				Expect(err.Error()).To(ContainSubstring("multiple tickers found"))
+				Expect(err.Code()).To(Equal(http.StatusBadRequest))
+			})
+		})
 
-					BeforeEach(func() {
-						trades = []tax.Trade{
-							tax.NewTrade(ticker, "2024-01-15", "BUY", 10, 100),
-						}
+		Context("Year End Price Error", func() {
+			var trades []tax.Trade
 
-						mockTickerManager.EXPECT().
-							GetPrice(ctx, ticker, yearEndDate).
-							Return(0.0, common.ErrNotFound)
-					})
+			BeforeEach(func() {
+				trades = []tax.Trade{
+					tax.NewTrade(ticker, "2024-01-15", "BUY", 10, 100),
+				}
 
-					It("should handle ticker price fetch error", func() {
-						_, err := valuationManager.AnalyzeValuation(ctx, trades, year)
-						Expect(err).To(Not(BeNil()))
-						Expect(err.Error()).To(ContainSubstring("failed to get year end price"))
-						Expect(err.Code()).To(Equal(http.StatusInternalServerError))
-					})
-				})
+				mockTickerManager.EXPECT().
+					GetPrice(ctx, ticker, yearEndDate).
+					Return(0.0, common.ErrNotFound)
+
+				mockAccountManager.EXPECT().
+					GetRecord(ctx, ticker).
+					Return(tax.Account{}, common.ErrNotFound)
+			})
+
+			It("should handle ticker price fetch error", func() {
+				_, err := valuationManager.AnalyzeValuation(ctx, trades, year)
+				Expect(err).To(Not(BeNil()))
+				Expect(err.Error()).To(ContainSubstring("failed to get year end price"))
+				Expect(err.Code()).To(Equal(http.StatusInternalServerError))
 			})
 		})
 	})
