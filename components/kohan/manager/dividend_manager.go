@@ -22,7 +22,7 @@ func NewDividendManager(exchangeManager ExchangeManager) *DividendManagerImpl {
 }
 
 func (d *DividendManagerImpl) ProcessDividends(ctx context.Context, dividends []tax.Dividend) (inrDividends []tax.INRDividend, err common.HttpError) {
-	exchangeables := make([]tax.Exchangeable, len(dividends))
+	exchangeables := make([]tax.Exchangeable, 0, len(dividends))
 	for _, dividend := range dividends {
 		var inrDividend tax.INRDividend
 		inrDividend.Dividend = dividend
