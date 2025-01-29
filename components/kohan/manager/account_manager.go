@@ -10,6 +10,7 @@ import (
 	"github.com/amanhigh/go-fun/models/tax"
 )
 
+//go:generate mockery --name AccountManager
 type AccountManager interface {
 	GetRecord(ctx context.Context, symbol string) (tax.Account, common.HttpError)
 }
