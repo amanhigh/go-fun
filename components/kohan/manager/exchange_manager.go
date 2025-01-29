@@ -5,6 +5,7 @@ import (
 
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
+	"github.com/rs/zerolog/log"
 )
 
 //go:generate mockery --name ExchangeManager
@@ -24,17 +25,30 @@ func NewExchangeManager(sbiManager SBIManager) ExchangeManager {
 
 func (e *ExchangeManagerImpl) Exchange(ctx context.Context, exchangeables []tax.Exchangeable) common.HttpError {
 	for _, exchangeable := range exchangeables {
-		date := exchangeable.GetDate()
+		requestedDate := exchangeable.GetDate()
+		rate, err := e.sbiManager.GetTTBuyRate(ctx, requestedDate)
 
-		// Get exchange rate for date
-		rate, err := e.sbiManager.GetTTBuyRate(ctx, date)
+		// Return early for non-closest-date errors
 		if err != nil {
-			return err
+			if _, ok := err.(tax.ClosestDateError); !ok {
+				return err
+			}
 		}
 
-		// Set exchange rate and date
-		exchangeable.SetTTRate(rate)
-		exchangeable.SetTTDate(date)
+		// Handle closest date scenario
+		if closestErr, ok := err.(tax.ClosestDateError); ok {
+			log.Ctx(ctx).Warn().
+				Time("RequestedDate", requestedDate).
+				Time("ClosestDate", closestErr.GetClosestDate()).
+				Msg("Using closest available exchange rate")
+
+			exchangeable.SetTTRate(rate)
+			exchangeable.SetTTDate(closestErr.GetClosestDate())
+		} else {
+			// Exact date found
+			exchangeable.SetTTRate(rate)
+			exchangeable.SetTTDate(requestedDate)
+		}
 	}
 	return nil
 }
