@@ -85,6 +85,7 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 	container.MustSingleton(ki.di, ki.provideSBIClient)
 	container.MustSingleton(ki.di, ki.provideTickerManager)
 	container.MustSingleton(ki.di, ki.provideSBIManager)
+	container.MustSingleton(ki.di, ki.provideExchangeManager)
 	container.MustSingleton(ki.di, ki.provideTaxValutaionManager)
 
 	// Build app
