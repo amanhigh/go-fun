@@ -34,7 +34,7 @@ func NewSBIManager(client clients.SBIClient, filePath string, exchangeRepo repos
 
 func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, date time.Time) (rate float64, err common.HttpError) {
 	// Get rates for date using repository
-	rates, err := s.exchangeRepo.GetAllRecords(ctx, date)
+	rates, err := s.exchangeRepo.GetAllRecords(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -43,6 +43,7 @@ func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, date time.Time) (rate
 		return 0, common.ErrNotFound
 	}
 
+	// BUG: Fix Using array search or use Rates Key as Ticker
 	return rates[0].TTBuy, nil
 }
 
