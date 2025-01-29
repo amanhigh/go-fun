@@ -3,7 +3,6 @@ package manager
 import (
 	"context"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
@@ -44,28 +43,48 @@ func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, requestedDate time.Ti
 		return 0, common.ErrNotFound
 	}
 
-	// Try exact date match first
-	dateStr := requestedDate.Format(time.DateOnly)
-	for _, rate := range rates {
-		if strings.Split(rate.Date, " ")[0] == dateStr {
-			return rate.TTBuy, nil
-		}
+	// Try exact match first
+	if rate, found := s.findExactRate(rates, requestedDate); found {
+		return rate, nil
 	}
 
-	// Find closest previous date
-	var closestDate string
-	var closestRate float64
+	// Find closest previous rate
+	return s.findClosestRate(rates, requestedDate)
+}
+
+// findExactRate attempts to find exact date match
+func (s *SBIManagerImpl) findExactRate(rates []tax.SbiRate, requestedDate time.Time) (rate float64, found bool) {
+	dateStr := requestedDate.Format(time.DateOnly)
 	for _, rate := range rates {
-		rateDate := strings.Split(rate.Date, " ")[0]
-		if rateDate <= dateStr && (closestDate == "" || rateDate > closestDate) {
+		rateDate, err := rate.ParseDate()
+		if err == nil && rateDate.Format(time.DateOnly) == dateStr {
+			return rate.TTBuy, true
+		}
+	}
+	return 0, false
+}
+
+// findClosestRate finds closest previous rate and returns with ClosestDateError
+func (s *SBIManagerImpl) findClosestRate(rates []tax.SbiRate, requestedDate time.Time) (float64, common.HttpError) {
+	dateStr := requestedDate.Format(time.DateOnly)
+	var closestDate time.Time
+	var closestRate float64
+
+	for _, rate := range rates {
+		rateDate, err := rate.ParseDate()
+		if err != nil {
+			continue
+		}
+
+		rateDateStr := rateDate.Format(time.DateOnly)
+		if rateDateStr <= dateStr && (closestDate.IsZero() || rateDate.After(closestDate)) {
 			closestDate = rateDate
 			closestRate = rate.TTBuy
 		}
 	}
 
-	if closestDate != "" {
-		parsedClosest, _ := time.Parse(time.DateOnly, closestDate)
-		return closestRate, tax.NewClosestDateError(requestedDate, parsedClosest)
+	if !closestDate.IsZero() {
+		return closestRate, tax.NewClosestDateError(requestedDate, closestDate)
 	}
 
 	return 0, common.ErrNotFound

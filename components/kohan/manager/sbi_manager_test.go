@@ -113,8 +113,8 @@ var _ = Describe("SBIManager", func() {
 			mockExchange.EXPECT().
 				GetAllRecords(ctx).
 				Return([]tax.SbiRate{
-					{Date: "2024-01-23 Wednesday", TTBuy: expectedRate, TTSell: 83.50},
-					{Date: "2024-01-22 Tuesday", TTBuy: 82.25, TTSell: 83.25},
+					{Date: "2024-01-23 09:00", TTBuy: expectedRate, TTSell: 83.50},
+					{Date: "2024-01-22 09:00", TTBuy: 82.25, TTSell: 83.25},
 				}, nil)
 		})
 
@@ -128,6 +128,8 @@ var _ = Describe("SBIManager", func() {
 			Expect(closestErr.Code()).To(Equal(http.StatusOK))
 			Expect(closestErr.GetRequestedDate()).To(Equal(requestedDate))
 			Expect(closestErr.GetClosestDate()).To(Equal(closestDate))
+			Expect(closestErr.Error()).To(ContainSubstring("exact rate not found for 2024-01-24"))
+			Expect(closestErr.Error()).To(ContainSubstring("using closest available date 2024-01-23"))
 		})
 	})
 })
