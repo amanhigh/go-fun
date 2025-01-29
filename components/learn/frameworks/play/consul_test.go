@@ -54,7 +54,7 @@ var _ = Describe("Consul", Ordered, Label(models.GINKGO_SLOW), func() {
 		var (
 			kv *api.KV
 
-			//Data
+			// Data
 			key   = "aman/1"
 			value = []byte("2000")
 			p     = api.KVPair{Key: key, Value: value}

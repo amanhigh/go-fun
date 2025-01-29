@@ -23,11 +23,11 @@ var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SLOW), func() {
 		zkContainer testcontainers.Container
 	)
 	BeforeAll(func() {
-		//Create Zookeeper Test Container
+		// Create Zookeeper Test Container
 		zkContainer, err = util.ZookeeperTestContainer(ctx)
 		Expect(err).To(BeNil())
 
-		//Get Mapped Port
+		// Get Mapped Port
 		zkHost, err := zkContainer.PortEndpoint(ctx, "2181/tcp", "")
 		Expect(err).To(BeNil())
 		log.Info().Str("Host", zkHost).Msg("Zookeeper Endpoint")
@@ -95,17 +95,17 @@ var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SLOW), func() {
 			)
 
 			It("should get events", func() {
-				//Start Watching Path
+				// Start Watching Path
 				data, _, evtChan, err := connection.GetW(testPath)
 				Expect(err).To(BeNil())
 				Expect(string(data)).To(Equal(testValue))
 
-				//Write to Path
+				// Write to Path
 				go connection.Set(testPath, []byte(watchValue), -1)
 
 				Eventually(func() zk.EventType {
-					//Select ensures Eventually Go Routine doesn't get stuck.
-					//When No Write is done Refer Eventually Documentation as well.
+					// Select ensures Eventually Go Routine doesn't get stuck.
+					// When No Write is done Refer Eventually Documentation as well.
 					select {
 					case e := <-evtChan:
 						data, _, evtChan, _ = connection.GetW(e.Path)

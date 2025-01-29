@@ -49,7 +49,7 @@ var _ = Describe("K8client", Label(models.GINKGO_SETUP), func() {
 				deploymentsClient v1.DeploymentInterface
 			)
 
-			//Spec Vars
+			// Spec Vars
 			var (
 				// Define Selector
 				selector = &metav1.LabelSelector{
@@ -58,14 +58,14 @@ var _ = Describe("K8client", Label(models.GINKGO_SETUP), func() {
 					},
 				}
 
-				//Object Meta
+				// Object Meta
 				objectMeta = metav1.ObjectMeta{
 					Labels: map[string]string{
 						"app": "mysql",
 					},
 				}
 
-				//Pod Spec
+				// Pod Spec
 				podspec = corev1.PodSpec{
 					Containers: []corev1.Container{
 						{

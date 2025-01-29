@@ -29,16 +29,16 @@ var _ = Describe("RoutineFun", func() {
 			// Safe Map is thread safe
 			mapV := sync.Map{}
 
-			//Add Values
+			// Add Values
 			mapV.Store("Aman", "Singh")
 			mapV.Store("Foo", "Bar")
 
-			//Read Values
+			// Read Values
 			val, ok := mapV.Load("Aman")
 			Expect(ok).To(BeTrue())
 			Expect(val).To(Equal("Singh"))
 
-			//Iterate over values
+			// Iterate over values
 			mapV.Range(func(key, value any) bool {
 				stringValue := value.(string)
 				Expect(stringValue).To(Not(BeNil()))
@@ -89,12 +89,12 @@ var _ = Describe("RoutineFun", func() {
 
 			/** Consumer */
 			for i := 0; i < 10; i++ {
-				<-c //Read Result so next fibonacci can be computed
+				<-c // Read Result so next fibonacci can be computed
 			}
 
 			Expect(<-c).To(Equal(55))
 
-			quit <- 0 //Ask Producter to quit after reading required results.
+			quit <- 0 // Ask Producter to quit after reading required results.
 			Eventually(c).Should(BeClosed())
 		})
 
@@ -113,13 +113,13 @@ var _ = Describe("RoutineFun", func() {
 				/* Can Mark Routine start inside if routine count is not known */
 				// wg.Add(1)
 
-				//Business Logic Goes Here
+				// Business Logic Goes Here
 
-				wg.Done() //Mark Job Done
+				wg.Done() // Mark Job Done
 			}()
 			go func() {
-				//Business Logic Goes Here
-				wg.Done() //Mark Job Done
+				// Business Logic Goes Here
+				wg.Done() // Mark Job Done
 			}()
 
 			wg.Wait() // Wait For Both Go Rouines are Done.
@@ -148,7 +148,7 @@ type SafeCounter struct {
 func (c *SafeCounter) Inc(key string) {
 	c.mux.Lock()
 	// Lock so only one goroutine at a time can access the map c.v.
-	c.v[key]++ //Notice we are not using c.Value which will do deadlock
+	c.v[key]++ // Notice we are not using c.Value which will do deadlock
 	c.mux.Unlock()
 }
 
@@ -193,10 +193,10 @@ func fibonacciMultiChannel(c, quit chan int) {
 	overallTimeout := time.After(1 * time.Minute)
 	for {
 		select {
-		case c <- x: //Write Fib to Result Channel
+		case c <- x: // Write Fib to Result Channel
 			x, y = y, x+y // Compute Fib
 		case <-quit:
-			close(c) //Close Result Channel
+			close(c) // Close Result Channel
 			return
 		case <-time.After(2 * time.Second):
 			log.Info().Msg("Operation Timeout. Operation won't wait more  than 2 Seconds.")
@@ -227,7 +227,7 @@ func Walk(t *tree.Tree, ch chan int) {
 // Same determines whether the trees
 // t1 and t2 contain the same values.
 func Same(t1, t2 *tree.Tree) bool {
-	//Channels to load Tree Node Values
+	// Channels to load Tree Node Values
 	c1 := make(chan int, 5)
 	c2 := make(chan int, 2)
 
@@ -250,6 +250,6 @@ func Same(t1, t2 *tree.Tree) bool {
 		}
 	}
 
-	//All Values matched mark full tree matched
+	// All Values matched mark full tree matched
 	return true
 }

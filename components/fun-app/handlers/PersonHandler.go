@@ -46,7 +46,7 @@ func (ph *PersonHandler) CreatePerson(c *gin.Context) {
 	ctx, span := ph.Tracer.Start(c.Request.Context(), "CreatePerson.Handler")
 	defer span.End()
 
-	//Unmarshal the request
+	// Unmarshal the request
 	var request fun.PersonRequest
 	if err := c.ShouldBind(&request); err == nil {
 		ph.CreateCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("gender", request.Gender)))
@@ -111,7 +111,7 @@ func (ph *PersonHandler) GetPerson(c *gin.Context) {
 // @Router /person [get]
 func (ph *PersonHandler) ListPersons(c *gin.Context) {
 	var personQuery fun.PersonQuery
-	personQuery.Order = "asc" //Default Sort Order
+	personQuery.Order = "asc" // Default Sort Order
 
 	ctx, span := ph.Tracer.Start(c.Request.Context(), "ListPersons.Handler")
 	defer span.End()
@@ -180,7 +180,7 @@ func (ph *PersonHandler) UpdatePerson(c *gin.Context) {
 	ctx, span := ph.Tracer.Start(c.Request.Context(), "UpdatePerson.Handler")
 	defer span.End()
 
-	//Unmarshal the request
+	// Unmarshal the request
 	var request fun.PersonRequest
 	if err := c.ShouldBind(&request); err == nil {
 		if err := ph.Manager.UpdatePerson(ctx, c.Param("id"), request); err == nil {

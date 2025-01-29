@@ -8,7 +8,7 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-// go:generate mockery --name SBIClient
+//go:generate mockery --name SBIClient
 type SBIClient interface {
 	FetchExchangeRates(ctx context.Context) (string, common.HttpError)
 }

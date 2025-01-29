@@ -4,7 +4,8 @@ func LeftRotate(input []int, rotationCount int) (rotatedArray []int) {
 	if len(input) >= rotationCount {
 		suffix := input[:rotationCount]
 		remaining := input[rotationCount:]
-		rotatedArray = append(remaining, suffix...)
+		rotatedArray = append(rotatedArray, remaining...)
+		rotatedArray = append(rotatedArray, suffix...)
 	}
 	return
 }
@@ -22,11 +23,12 @@ func Fibonacci(n int) int {
 
 func FibonacciRecursive(n int) (result int) {
 	memFib := mem[n]
-	if n == 0 || n == 1 {
+	switch {
+	case n == 0 || n == 1:
 		result = n
-	} else if memFib != 0 {
+	case memFib != 0:
 		result = memFib
-	} else {
+	default:
 		result = FibonacciRecursive(n-1) + FibonacciRecursive(n-2)
 		mem[n] = result
 	}
@@ -73,11 +75,10 @@ func KangarooMeet(ints []int) bool {
 	/* If both have same speed must start at same position */
 	if speedDifference == 0 {
 		return x1 == x2
-	} else {
-		/*
-			If there is speed difference v1 should have higher speed because x1 <= x2.
-			Initial lead should be able to cover in s steps only if lead%speedDiff==0
-		*/
-		return v1 >= v2 && initialLead%speedDifference == 0
 	}
+	/*
+		If there is speed difference v1 should have higher speed because x1 <= x2.
+		Initial lead should be able to cover in s steps only if lead%speedDiff==0
+	*/
+	return v1 >= v2 && initialLead%speedDifference == 0
 }

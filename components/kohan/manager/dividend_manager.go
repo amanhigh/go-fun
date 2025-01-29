@@ -2,72 +2,35 @@ package manager
 
 import (
 	"context"
-	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
-	"github.com/gocarina/gocsv"
 )
 
 type DividendManager interface {
-	GetDividends(ctx context.Context) ([]tax.Dividend, error)
+	ProcessDividends(ctx context.Context, dividends []tax.Dividend) ([]tax.INRDividend, common.HttpError)
 }
 
 type DividendManagerImpl struct {
-	sbiManager   SBIManager
-	downloadsDir string
-	dividendFile string
+	exchangeManager ExchangeManager
 }
 
-func NewDividendManager(sbiManager SBIManager, downloadsDir, dividendFile string) DividendManager {
+func NewDividendManager(exchangeManager ExchangeManager) *DividendManagerImpl {
 	return &DividendManagerImpl{
-		sbiManager:   sbiManager,
-		downloadsDir: downloadsDir,
-		dividendFile: dividendFile,
+		exchangeManager: exchangeManager,
 	}
 }
 
-func (d *DividendManagerImpl) GetDividends(ctx context.Context) ([]tax.Dividend, error) {
-	// Open CSV file
-	file, err := os.Open(filepath.Join(d.downloadsDir, d.dividendFile))
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
+func (d *DividendManagerImpl) ProcessDividends(ctx context.Context, dividends []tax.Dividend) (inrDividends []tax.INRDividend, err common.HttpError) {
+	exchangeables := make([]tax.Exchangeable, 0, len(dividends))
+	for _, dividend := range dividends {
+		var inrDividend tax.INRDividend
+		inrDividend.Dividend = dividend
 
-	// Parse CSV rows
-	var rows []tax.DividendBase
-	if err := gocsv.UnmarshalFile(file, &rows); err != nil {
-		return nil, err
+		inrDividends = append(inrDividends, inrDividend)
+		exchangeables = append(exchangeables, &inrDividend)
 	}
 
-	// Process each dividend row
-	var transactions []tax.Dividend
-	for _, row := range rows {
-		date, err := time.Parse(common.DateOnly, row.DividendDate)
-		if err != nil {
-			return nil, err
-		}
-
-		// Get TT rate for dividend date
-		ttRate, err := d.sbiManager.GetTTBuyRate(date)
-		if err != nil {
-			return nil, err
-		}
-
-		// Create transaction with INR conversions
-		transaction := tax.Dividend{
-			DividendBase:   row,
-			USDINRRate:     ttRate,
-			NetDividendINR: row.NetDividend * ttRate,
-			DividendTaxINR: row.DividendTax * ttRate,
-		}
-		transactions = append(transactions, transaction)
-	}
-
-	// TODO: Cache Transactions in Memory ?
-
-	return transactions, nil
+	err = d.exchangeManager.Exchange(ctx, exchangeables)
+	return
 }

@@ -74,8 +74,8 @@ type SomeStructWithTags struct {
 	PaymentMethod string `faker:"oneof: cc, paypal, check, money order"`
 
 	NestedStruct AStruct
-	//Struct Array Not Supported
-	//NestedStructs []AStruct `faker:"boundary_start=0, boundary_end=4"`
+	// Struct Array Not Supported
+	// NestedStructs []AStruct `faker:"boundary_start=0, boundary_end=4"`
 }
 
 // AStruct ...

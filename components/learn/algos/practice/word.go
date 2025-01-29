@@ -18,7 +18,7 @@ import (
 func AnagramGroups(words []string) map[string][]string {
 	anagramMap := map[string][]string{}
 	for _, word := range words {
-		fingerPrint := strings.Replace(fmt.Sprint(fingerPrint(word)), " ", "", -1)
+		fingerPrint := strings.ReplaceAll(fmt.Sprint(fingerPrint(word)), " ", "")
 		anagramMap[fingerPrint] = append(anagramMap[fingerPrint], word)
 	}
 	return anagramMap
@@ -34,11 +34,11 @@ func CommonPrefix(words []string) (prefix string) {
 
 	// Iterate through the rest of the words
 	for _, word := range words[1:] {
-		//Continue till Prefix doesn't disappear or word list ends
+		// Continue till Prefix doesn't disappear or word list ends
 		for len(prefix) > 0 {
-			//Slice Word is larger than prefix and Try a Match
+			// Slice Word is larger than prefix and Try a Match
 			if len(word) >= len(prefix) && word[:len(prefix)] == prefix {
-				//Move to Next Word on Match
+				// Move to Next Word on Match
 				break
 			}
 

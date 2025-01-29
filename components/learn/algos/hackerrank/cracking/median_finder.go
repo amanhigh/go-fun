@@ -25,17 +25,15 @@ func NewMedianFinder() MedianFinder {
 func (mf *MedianFinder) getSmallerHeap() *ds.Heap {
 	if mf.lowers.Size() <= mf.uppers.Size() {
 		return mf.lowers
-	} else {
-		return mf.uppers
 	}
+	return mf.uppers
 }
 
 func (mf *MedianFinder) getBiggerHeap() *ds.Heap {
 	if mf.lowers.Size() > mf.uppers.Size() {
 		return mf.lowers
-	} else {
-		return mf.uppers
 	}
+	return mf.uppers
 }
 
 func (mf *MedianFinder) Add(i int) {
@@ -54,7 +52,7 @@ func (mf *MedianFinder) rebalance() {
 	if bigger.Size()-smaller.Size() > 1 {
 		smaller.Add(bigger.Poll())
 	}
-	//fmt.Println(mf.lowers, mf.uppers)
+	// fmt.Println(mf.lowers, mf.uppers)
 }
 
 func (mf *MedianFinder) GetMedian() (result float64) {
@@ -62,7 +60,6 @@ func (mf *MedianFinder) GetMedian() (result float64) {
 	smaller := mf.getSmallerHeap()
 	if bigger.Size() == smaller.Size() {
 		return float64(smaller.Peek()+bigger.Peek()) / 2
-	} else {
-		return float64(bigger.Peek())
 	}
+	return float64(bigger.Peek())
 }

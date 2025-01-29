@@ -8,9 +8,9 @@ import (
 *
 Find smallest postive mising number in array.
 */
-func MissingNumbers(A []int) (missingNumber int) {
+func MissingNumbers(a []int) (missingNumber int) {
 	var positiveNumbers []int
-	for _, v := range A {
+	for _, v := range a {
 		if v > 0 {
 			positiveNumbers = append(positiveNumbers, v)
 		}
@@ -24,15 +24,16 @@ func MissingNumbers(A []int) (missingNumber int) {
 
 	missingNumber = 1
 	for _, v := range positiveNumbers {
-		if missingNumber == v {
+		switch {
+		case missingNumber == v:
 			continue
-		} else if v == missingNumber+1 {
-			missingNumber = missingNumber + 1
-		} else {
+		case v == missingNumber+1:
+			missingNumber++
+		default:
 			break
 		}
 	}
-	missingNumber = missingNumber + 1
+	missingNumber++
 	return
 }
 
@@ -41,13 +42,13 @@ func TargetSum(input []int, target int) (i, j int) {
 
 	for i, v := range input {
 		balance := target - v
-		//Store Number with Index
+		// Store Number with Index
 		numMap[v] = i
 
-		//Search Balance Required in Map
+		// Search Balance Required in Map
 		j, ok := numMap[balance]
 		if ok {
-			//Return Index of Current and Balance as result
+			// Return Index of Current and Balance as result
 			return j, i
 		}
 	}

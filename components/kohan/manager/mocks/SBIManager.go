@@ -73,9 +73,9 @@ func (_c *SBIManager_DownloadRates_Call) RunAndReturn(run func(context.Context) 
 	return _c
 }
 
-// GetTTBuyRate provides a mock function with given fields: date
-func (_m *SBIManager) GetTTBuyRate(date time.Time) (float64, common.HttpError) {
-	ret := _m.Called(date)
+// GetTTBuyRate provides a mock function with given fields: ctx, date
+func (_m *SBIManager) GetTTBuyRate(ctx context.Context, date time.Time) (float64, common.HttpError) {
+	ret := _m.Called(ctx, date)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTTBuyRate")
@@ -83,17 +83,17 @@ func (_m *SBIManager) GetTTBuyRate(date time.Time) (float64, common.HttpError) {
 
 	var r0 float64
 	var r1 common.HttpError
-	if rf, ok := ret.Get(0).(func(time.Time) (float64, common.HttpError)); ok {
-		return rf(date)
+	if rf, ok := ret.Get(0).(func(context.Context, time.Time) (float64, common.HttpError)); ok {
+		return rf(ctx, date)
 	}
-	if rf, ok := ret.Get(0).(func(time.Time) float64); ok {
-		r0 = rf(date)
+	if rf, ok := ret.Get(0).(func(context.Context, time.Time) float64); ok {
+		r0 = rf(ctx, date)
 	} else {
 		r0 = ret.Get(0).(float64)
 	}
 
-	if rf, ok := ret.Get(1).(func(time.Time) common.HttpError); ok {
-		r1 = rf(date)
+	if rf, ok := ret.Get(1).(func(context.Context, time.Time) common.HttpError); ok {
+		r1 = rf(ctx, date)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(common.HttpError)
@@ -109,14 +109,15 @@ type SBIManager_GetTTBuyRate_Call struct {
 }
 
 // GetTTBuyRate is a helper method to define mock.On call
+//   - ctx context.Context
 //   - date time.Time
-func (_e *SBIManager_Expecter) GetTTBuyRate(date interface{}) *SBIManager_GetTTBuyRate_Call {
-	return &SBIManager_GetTTBuyRate_Call{Call: _e.mock.On("GetTTBuyRate", date)}
+func (_e *SBIManager_Expecter) GetTTBuyRate(ctx interface{}, date interface{}) *SBIManager_GetTTBuyRate_Call {
+	return &SBIManager_GetTTBuyRate_Call{Call: _e.mock.On("GetTTBuyRate", ctx, date)}
 }
 
-func (_c *SBIManager_GetTTBuyRate_Call) Run(run func(date time.Time)) *SBIManager_GetTTBuyRate_Call {
+func (_c *SBIManager_GetTTBuyRate_Call) Run(run func(ctx context.Context, date time.Time)) *SBIManager_GetTTBuyRate_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(time.Time))
+		run(args[0].(context.Context), args[1].(time.Time))
 	})
 	return _c
 }
@@ -126,7 +127,7 @@ func (_c *SBIManager_GetTTBuyRate_Call) Return(_a0 float64, _a1 common.HttpError
 	return _c
 }
 
-func (_c *SBIManager_GetTTBuyRate_Call) RunAndReturn(run func(time.Time) (float64, common.HttpError)) *SBIManager_GetTTBuyRate_Call {
+func (_c *SBIManager_GetTTBuyRate_Call) RunAndReturn(run func(context.Context, time.Time) (float64, common.HttpError)) *SBIManager_GetTTBuyRate_Call {
 	_c.Call.Return(run)
 	return _c
 }

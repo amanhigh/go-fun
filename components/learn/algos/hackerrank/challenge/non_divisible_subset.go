@@ -29,8 +29,8 @@ func NonDivisibleSubset(input []int, k int) (result int) {
 	} else {
 		result = modulos[0]
 	}
-	//fmt.Println(result)
-	//fmt.Println(k, modulos)
+	// fmt.Println(result)
+	// fmt.Println(k, modulos)
 
 	/*
 		Handling even values of k.
@@ -50,7 +50,7 @@ func NonDivisibleSubset(input []int, k int) (result int) {
 		} else {
 			result += modulos[i]
 		}
-		//fmt.Println(modulos[i], modulos[k-i], result)
+		// fmt.Println(modulos[i], modulos[k-i], result)
 	}
 
 	return

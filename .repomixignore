@@ -14,14 +14,16 @@ LICENSE
 Makefile
 hermetic.json
 dashboard.json
+README.md
 
 # Dirs
 docs/
 Kubernetes/
+mocks
 
 # Components
 components/learn
-# components/fun-app
+components/fun-app
 # components/kohan
 components/operator
 

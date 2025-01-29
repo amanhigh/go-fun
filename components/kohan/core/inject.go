@@ -6,6 +6,7 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/clients"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/tui"
+	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/go-resty/resty/v2"
 
@@ -47,12 +48,29 @@ func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) *manag
 	return manager.NewTickerManager(client, ki.config.Tax.DownloadsDir)
 }
 
-func (ki *KohanInjector) provideDividendManager(sbiManager manager.SBIManager) manager.DividendManager {
-	return manager.NewDividendManager(
-		sbiManager,
-		ki.config.Tax.DownloadsDir,
-		ki.config.Tax.DividendFile,
-	)
+func (ki *KohanInjector) provideExchangeRepository() repository.ExchangeRepository {
+	// BUG: #B Fix File Path joining Download Dir.
+	return repository.NewExchangeRepository(ki.config.Tax.SBIFilePath)
+}
+
+func (ki *KohanInjector) provideSBIManager(client clients.SBIClient, exchangeRepo repository.ExchangeRepository) manager.SBIManager {
+	return manager.NewSBIManager(client, ki.config.Tax.SBIFilePath, exchangeRepo)
+}
+
+func (ki *KohanInjector) provideExchangeManager(sbiManager manager.SBIManager) manager.ExchangeManager {
+	return manager.NewExchangeManager(sbiManager)
+}
+
+func (ki *KohanInjector) provideAccountRepository() repository.AccountRepository {
+	return repository.NewAccountRepository(ki.config.Tax.AccountFilePath)
+}
+
+func (ki *KohanInjector) provideAccountManager(accountRepo repository.AccountRepository) manager.AccountManager {
+	return manager.NewAccountManager(accountRepo)
+}
+
+func (ki *KohanInjector) provideTaxValuationManager(exchangeManager manager.ExchangeManager, accountManager manager.AccountManager) manager.TaxValuationManager {
+	return manager.NewTaxValuationManager(exchangeManager)
 }
 
 // Public singleton access - returns interface only
@@ -73,13 +91,24 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 
 	// Register other dependencies
 	container.MustSingleton(ki.di, tview.NewApplication)
+
+	// Client
+	container.MustSingleton(ki.di, ki.provideAlphaClient)
+	container.MustSingleton(ki.di, ki.provideSBIClient)
+
+	// Repo
+	container.MustSingleton(ki.di, ki.provideExchangeRepository)
+	container.MustSingleton(ki.di, ki.provideAccountRepository)
+
+	// Manager
 	container.MustSingleton(ki.di, provideServiceManager)
 	container.MustSingleton(ki.di, provideUIManager)
 	container.MustSingleton(ki.di, provideHotkeyManager)
-
-	container.MustSingleton(ki.di, ki.provideAlphaClient)
-	container.MustSingleton(ki.di, ki.provideSBIClient)
 	container.MustSingleton(ki.di, ki.provideTickerManager)
+	container.MustSingleton(ki.di, ki.provideAccountManager)
+	container.MustSingleton(ki.di, ki.provideExchangeManager)
+	container.MustSingleton(ki.di, ki.provideTaxValuationManager)
+	container.MustSingleton(ki.di, ki.provideSBIManager)
 
 	// Build app
 	app := &DariusV1{}

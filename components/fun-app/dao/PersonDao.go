@@ -29,10 +29,10 @@ func NewPersonDao(baseDao util.BaseDao) PersonDaoInterface {
 
 func (pd *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {
 	var txErr error
-	//Add Pagination to Query
+	// Add Pagination to Query
 	txn := Tx(c).Offset(personQuery.Offset).Limit(personQuery.Limit)
 
-	//Add Query Params if Supplied
+	// Add Query Params if Supplied
 	if personQuery.Name != "" {
 		txn = txn.Where("name like ?", "%"+personQuery.Name+"%")
 	}
@@ -45,7 +45,7 @@ func (pd *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) 
 		txn = txn.Order(fmt.Sprintf("%s %s", personQuery.SortBy, personQuery.Order))
 	}
 
-	//Execute Query to Get Records and Count
+	// Execute Query to Get Records and Count
 	if txErr = txn.Find(&personList.Records).Count(&personList.Metadata.Total).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		zerolog.Ctx(c).Error().Any("Query", personQuery).Err(txErr).Msg("Error Fetching Person List")
 		err = GormErrorMapper(txErr)
@@ -59,7 +59,7 @@ func (pd *PersonDao) ListPersonAudit(c context.Context, id string) (personAuditL
 	var audit = fun.PersonAudit{}
 	audit.Id = id
 
-	//Fetch Person Audit Records
+	// Fetch Person Audit Records
 	if txErr = Tx(c).Where(audit).Find(&personAuditList).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		zerolog.Ctx(c).Error().Str("Id", id).Err(txErr).Msg("Error Fetching Person Audit List")
 		err = GormErrorMapper(txErr)

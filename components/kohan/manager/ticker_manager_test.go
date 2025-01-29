@@ -122,7 +122,7 @@ var _ = Describe("TickerManager", func() {
 			// Save test data to file
 			filePath := filepath.Join(testDir, ticker+".json")
 			data, _ := json.Marshal(stockData)
-			err := os.WriteFile(filePath, data, 0644)
+			err := os.WriteFile(filePath, data, 0600)
 			Expect(err).To(BeNil())
 		})
 
@@ -161,7 +161,7 @@ var _ = Describe("TickerManager", func() {
 			// Save test data
 			filePath := filepath.Join(testDir, ticker+".json")
 			data, _ := json.Marshal(stockData)
-			err := os.WriteFile(filePath, data, 0644)
+			err := os.WriteFile(filePath, data, 0600)
 			Expect(err).To(BeNil())
 		})
 
@@ -192,7 +192,7 @@ var _ = Describe("TickerManager", func() {
 			stockData.TimeSeries["2024-01-15"] = tax.DayPrice{Close: "999.00"}
 			data, _ := json.Marshal(stockData)
 			filePath := filepath.Join(testDir, ticker+".json")
-			writeErr := os.WriteFile(filePath, data, 0644)
+			writeErr := os.WriteFile(filePath, data, 0600)
 			Expect(writeErr).To(BeNil())
 
 			// Second request - should use cache

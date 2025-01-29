@@ -10,7 +10,7 @@ package sort
 
 		Produces Stable Sort, Space O(n), Time nlog(n)
 */
-func MergeSort(input []int, start int, end int) (inversion int) {
+func MergeSort(input []int, start, end int) (inversion int) {
 	/* End If we have Single Element Left */
 	if start < end {
 		/* Break Problem */
@@ -24,7 +24,7 @@ func MergeSort(input []int, start int, end int) (inversion int) {
 }
 
 // nolint:funlen
-func Merge(input []int, start int, mid int, end int) (inversion int) {
+func Merge(input []int, start, mid, end int) (inversion int) {
 	result := make([]int, end-start+1)
 	i, j, k := start, mid+1, 0
 
@@ -66,7 +66,7 @@ func Merge(input []int, start int, mid int, end int) (inversion int) {
 		k++
 	}
 
-	//fmt.Println("Range:", start, mid, end, input[start:end+1], input[start:mid+1], input[mid+1:end+1], result, inversion)
+	// fmt.Println("Range:", start, mid, end, input[start:end+1], input[start:mid+1], input[mid+1:end+1], result, inversion)
 	copy(input[start:end+1], result)
 	return
 }

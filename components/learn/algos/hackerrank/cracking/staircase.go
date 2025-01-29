@@ -26,12 +26,12 @@ func Staircase(n int, steps, taken []int) (result int) {
 			}
 			stairMem[n] = result
 		}
-		//result += Staircase(n, steps[1:], taken)
+		// result += Staircase(n, steps[1:], taken)
 	} else if n == 0 {
 		/* N becomes exactly zero is a valid combination count as result */
 		result = 1
 		/* Print Steps just to visualize */
-		//fmt.Println(taken)
+		// fmt.Println(taken)
 	}
 	/* If n is negative it was invalid solution don't count it ,hence result zero */
 	return

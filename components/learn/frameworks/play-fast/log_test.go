@@ -367,7 +367,7 @@ var _ = Describe("Logging", func() {
 		BeforeEach(func() {
 			// Setup logger with Custom Time Formatter
 			opts := &slog.HandlerOptions{
-				ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+				ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
 					if a.Key == slog.TimeKey {
 						if t, ok := a.Value.Any().(time.Time); ok {
 							return slog.String(slog.TimeKey, t.Format("2006-01-02 15:04:05"))

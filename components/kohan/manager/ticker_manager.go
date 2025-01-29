@@ -75,7 +75,7 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 	return nil
 }
 
-func (t *TickerManagerImpl) FindPeakPrice(ctx context.Context, ticker string, year int) (peakPrice tax.PeakPrice, err common.HttpError) {
+func (t *TickerManagerImpl) FindPeakPrice(_ context.Context, ticker string, year int) (peakPrice tax.PeakPrice, err common.HttpError) {
 	stockData, err := t.readTickerData(ticker)
 	if err != nil {
 		return peakPrice, err
@@ -93,7 +93,7 @@ func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date ti
 	}
 
 	// Format date for lookup
-	dateStr := date.Format(common.DateOnly)
+	dateStr := date.Format(time.DateOnly)
 
 	// Try exact date match first
 	if dayPrice, exists := data.TimeSeries[dateStr]; exists {
@@ -103,6 +103,15 @@ func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date ti
 	}
 
 	// Find closest previous date if exact not found
+	price, err := t.findClosestPreviousPrice(ticker, data, dateStr)
+	if err == nil {
+		return price, nil
+	}
+
+	return 0, common.NewHttpError("No price data found", http.StatusNotFound)
+}
+
+func (t *TickerManagerImpl) findClosestPreviousPrice(ticker string, data tax.VantageStockData, dateStr string) (float64, common.HttpError) {
 	var closestDate string
 	for tsDate := range data.TimeSeries {
 		if tsDate <= dateStr && (closestDate == "" || tsDate > closestDate) {
@@ -123,11 +132,10 @@ func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date ti
 			}
 		}
 	}
-
 	return 0, common.NewHttpError("No price data found", http.StatusNotFound)
 }
 
-func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (data tax.VantageStockData, err common.HttpError) {
+func (t *TickerManagerImpl) getTickerData(_ context.Context, ticker string) (data tax.VantageStockData, err common.HttpError) {
 	// Try cache first
 	t.cacheLock.RLock()
 	data, exists := t.cache[ticker]

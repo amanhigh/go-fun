@@ -76,7 +76,7 @@ var _ = Describe("GoTour", func() {
 
 			It("should cast valid string", func() {
 				/** Empty Interface */
-				casted_var, ok := genric_var.(string) //Type Casting
+				casted_var, ok := genric_var.(string) // Type Casting
 				Expect(ok).To(BeTrue())
 				Expect(casted_var).To(Equal(string_var))
 			})
@@ -158,7 +158,7 @@ var _ = Describe("GoTour", func() {
 
 		It("should overwrite", func() {
 			p := &j                 // point to j
-			*p = *p / 37            // divide j through the pointer
+			*p /= 37                // divide j through the pointer
 			Expect(j).To(Equal(73)) // see the new value of j
 		})
 
@@ -182,13 +182,13 @@ var _ = Describe("GoTour", func() {
 
 			// Len of slice is count of elements that have been sliced
 			Expect(len(slice)).To(Equal(3))
-			//The capacity of a slice is the number of elements in the underlying array, counting from the first element in the slice.
+			// The capacity of a slice is the number of elements in the underlying array, counting from the first element in the slice.
 			Expect(cap(slice)).To(Equal(5))
 		})
 
 		It("can be two dimensional", func() {
 			/** Two Dimensional */
-			var twod [5][5]uint8 //Array 5x5
+			var twod [5][5]uint8 // Array 5x5
 			twod[1][1] = 5
 			Expect(twod[1][1]).To(Equal(uint8(5)))
 			Expect(twod[3][4]).To(Equal(uint8(0)))
@@ -211,7 +211,7 @@ var _ = Describe("GoTour", func() {
 		It("can be map", func() {
 			hashMap := map[string]int{"One": 1, "Two": 2}
 			v2, ok := hashMap["Two"]
-			Expect(ok).To(BeTrue()) //Ok Holds if element is present or not.
+			Expect(ok).To(BeTrue()) // Ok Holds if element is present or not.
 			Expect(v2).To(Equal(2))
 		})
 
@@ -237,7 +237,7 @@ var _ = Describe("GoTour", func() {
 			switch os := runtime.GOOS; os {
 			case "darwin":
 				log.Info().Msg("OS X.")
-			//fallthrough //implicit break if fallthrough not added
+			// fallthrough //implicit break if fallthrough not added
 			case "linux":
 				log.Info().Msg("Linux.")
 			default:
@@ -276,7 +276,7 @@ var _ = Describe("GoTour", func() {
 		)
 
 		It("should work", func() {
-			//Small is 2 and Big is 1^100
+			// Small is 2 and Big is 1^100
 			Expect(needInt(Small)).To(Equal(21))
 			Expect(needFloat(Small)).To(Equal(float64(0.2)))
 			Expect(needFloat(Big)).To(BeNumerically(">", (float64(1.26765))))
@@ -323,7 +323,7 @@ var _ = Describe("GoTour", func() {
 			sum := 0
 			count := 10
 			for i := 0; i < count; i++ {
-				sum += 1
+				sum++
 			}
 			Expect(sum).To(Equal(count))
 		})
@@ -349,14 +349,14 @@ var _ = Describe("GoTour", func() {
 			// Start with New Adders with Zero State
 			pos, neg := adder(), adder()
 
-			//Run Closures in opposite directions
-			//with varied speeds
+			// Run Closures in opposite directions
+			// with varied speeds
 			for i := 0; i < 10; i++ {
 				pos(i)
 				neg(-2 * i)
 			}
 
-			//Match State stored in closure
+			// Match State stored in closure
 			Expect(pos(0)).To(Equal(45))
 			Expect(neg(0)).To(Equal(-90))
 		})
@@ -374,7 +374,7 @@ var _ = Describe("GoTour", func() {
 
 		It("should change message", func() {
 			message := "Captured Argument"
-			//Arguments Captured but will be executed at end.
+			// Arguments Captured but will be executed at end.
 			defer Expect(message).To(Equal("Captured Argument"))
 			message = "Now Changed"
 			Expect(message).To(Equal("Now Changed"))
@@ -455,7 +455,7 @@ func sqrt(x int) (float64, error) {
 	z := float64(1)
 	z = 1.0
 	for i := 0; i < 10; i++ {
-		z = z - ((math.Pow(z, 2) - fX) / (2 * z))
+		z -= ((math.Pow(z, 2) - fX) / (2 * z))
 	}
 	return z, nil
 }
@@ -514,7 +514,7 @@ func WordCount(input string) map[string]int {
 	fields := strings.Fields(input)
 	/** Ranges where i is optional can use _,v */
 	for _, f := range fields {
-		countMap[f] += 1 //No NPE :), No Init Required because entry value is primitive
+		countMap[f]++ // No NPE :), No Init Required because entry value is primitive
 	}
 	return countMap
 }
