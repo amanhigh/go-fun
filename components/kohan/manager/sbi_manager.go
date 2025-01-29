@@ -54,6 +54,7 @@ func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, requestedDate time.Ti
 
 // findExactRate attempts to find exact date match
 func (s *SBIManagerImpl) findExactRate(rates []tax.SbiRate, requestedDate time.Time) (rate float64, found bool) {
+	// FIXME: #C Use exchangeRepo.GetRecordsForTicker which is now Date.
 	dateStr := requestedDate.Format(time.DateOnly)
 	for _, rate := range rates {
 		rateDate, err := rate.ParseDate()
