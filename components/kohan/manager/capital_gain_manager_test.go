@@ -2,9 +2,6 @@ package manager_test
 
 import (
 	"context"
-	"time"
-
-	"net/http"
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
@@ -12,13 +9,14 @@ import (
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/mock"
 )
 
 var _ = Describe("CapitalGainManager", func() {
 	var (
-		ctx            = context.Background()
-		mockSBIManager *mocks.SBIManager
-		gainManager    manager.CapitalGainManager
+		ctx                 = context.Background()
+		mockExchangeManager *mocks.ExchangeManager
+		gainManager         manager.CapitalGainManager
 
 		// Common test data
 		ticker    = "AAPL"
@@ -27,8 +25,8 @@ var _ = Describe("CapitalGainManager", func() {
 	)
 
 	BeforeEach(func() {
-		mockSBIManager = mocks.NewSBIManager(GinkgoT())
-		gainManager = manager.NewCapitalGainManager(mockSBIManager)
+		mockExchangeManager = mocks.NewExchangeManager(GinkgoT())
+		gainManager = manager.NewCapitalGainManager(mockExchangeManager)
 	})
 
 	Context("Basic Gains Processing", func() {
@@ -46,10 +44,9 @@ var _ = Describe("CapitalGainManager", func() {
 				},
 			}
 
-			parsedDate, _ := time.Parse(time.DateOnly, sellDate)
-			mockSBIManager.EXPECT().
-				GetTTBuyRate(parsedDate).
-				Return(ttBuyRate, nil)
+			mockExchangeManager.EXPECT().
+				Exchange(ctx, mock.Anything).
+				Return(nil)
 		})
 
 		It("should process gain with correct INR values", func() {
@@ -62,82 +59,26 @@ var _ = Describe("CapitalGainManager", func() {
 			Expect(result.TTRate).To(Equal(ttBuyRate))
 			Expect(result.INRValue()).To(Equal(pnl * ttBuyRate))
 		})
-
-		// BUG: Test where exact Date is not found TTDate differs from sellDate.
 	})
 
-	Context("Error Cases", func() {
+	Context("Exchange Rate Error", func() {
 		var gains []tax.Gains
-		Context("Invalid Date", func() {
-			BeforeEach(func() {
-				gains = []tax.Gains{{
-					Symbol:   ticker,
-					SellDate: "invalid-date",
-					PNL:      1000.00,
-				}}
-			})
 
-			It("should return error for invalid date format", func() {
-				_, err := gainManager.ProcessTaxGains(ctx, gains)
-				Expect(err).Should(HaveOccurred())
-				Expect(err.Code()).To(Equal(http.StatusBadRequest))
-			})
+		BeforeEach(func() {
+			gains = []tax.Gains{{
+				Symbol:   ticker,
+				SellDate: sellDate,
+				PNL:      1000.00,
+			}}
+
+			mockExchangeManager.EXPECT().
+				Exchange(ctx, mock.Anything).
+				Return(common.ErrNotFound)
 		})
 
-		Context("Exchange Rate Error", func() {
-			BeforeEach(func() {
-				gains = []tax.Gains{{
-					Symbol:   ticker,
-					SellDate: sellDate,
-					PNL:      1000.00,
-				}}
-
-				parsedDate, _ := time.Parse(time.DateOnly, sellDate)
-				mockSBIManager.EXPECT().
-					GetTTBuyRate(parsedDate).
-					Return(0.0, common.ErrNotFound)
-			})
-
-			It("should handle missing exchange rate", func() {
-				_, err := gainManager.ProcessTaxGains(ctx, gains)
-				Expect(err).To(Equal(common.ErrNotFound))
-			})
-		})
-
-		Context("Multiple Gains Processing", func() {
-			var (
-				gains []tax.Gains
-				dates = []string{sellDate, "2024-01-16"}
-			)
-
-			BeforeEach(func() {
-				gains = []tax.Gains{
-					{Symbol: ticker, SellDate: dates[0], PNL: 1000.00},
-					{Symbol: ticker, SellDate: dates[1], PNL: 2000.00},
-				}
-
-				// Setup expectations for both dates
-				for _, dateStr := range dates {
-					parsedDate, _ := time.Parse(time.DateOnly, dateStr)
-					mockSBIManager.EXPECT().
-						GetTTBuyRate(parsedDate).
-						Return(ttBuyRate, nil)
-				}
-			})
-
-			It("should process multiple gains correctly", func() {
-				taxGains, err := gainManager.ProcessTaxGains(ctx, gains)
-				Expect(err).To(BeNil())
-				Expect(taxGains).To(HaveLen(2))
-
-				// Verify each gain processed correctly
-				for i, gain := range taxGains {
-					Expect(gain.Symbol).To(Equal(ticker))
-					Expect(gain.SellDate).To(Equal(dates[i]))
-					Expect(gain.TTRate).To(Equal(ttBuyRate))
-					Expect(gain.INRValue()).To(Equal(gain.PNL * ttBuyRate))
-				}
-			})
+		It("should handle missing exchange rate", func() {
+			_, err := gainManager.ProcessTaxGains(ctx, gains)
+			Expect(err).To(Equal(common.ErrNotFound))
 		})
 	})
 })

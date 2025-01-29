@@ -35,6 +35,24 @@ type INRGains struct {
 	TTRate float64   // Exchange rate on sell date
 }
 
+// Implement Exchangeable interface
+func (g *INRGains) GetDate() (date time.Time) {
+	date, _ = g.Gains.ParseSellDate()
+	return
+}
+
+func (g *INRGains) GetUSDAmount() float64 {
+	return g.PNL
+}
+
+func (g *INRGains) SetTTRate(rate float64) {
+	g.TTRate = rate
+}
+
+func (g *INRGains) SetTTDate(date time.Time) {
+	g.TTDate = date
+}
+
 // INRValue computes the PNL value in INR
 func (t *INRGains) INRValue() float64 {
 	return t.PNL * t.TTRate
