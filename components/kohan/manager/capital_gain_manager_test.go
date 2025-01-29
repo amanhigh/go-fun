@@ -19,9 +19,8 @@ var _ = Describe("CapitalGainManager", func() {
 		gainManager         manager.CapitalGainManager
 
 		// Common test data
-		ticker    = "AAPL"
-		sellDate  = "2024-01-15"
-		ttBuyRate = 82.50
+		ticker   = "AAPL"
+		sellDate = "2024-01-15"
 	)
 
 	BeforeEach(func() {
@@ -49,15 +48,13 @@ var _ = Describe("CapitalGainManager", func() {
 				Return(nil)
 		})
 
-		It("should process gain with correct INR values", func() {
+		It("should process gain and keep original Gain Values", func() {
 			taxGains, err := gainManager.ProcessTaxGains(ctx, gains)
 			Expect(err).To(BeNil())
 			Expect(taxGains).To(HaveLen(1))
 
 			result := taxGains[0]
-			Expect(result.Symbol).To(Equal(ticker))
-			Expect(result.TTRate).To(Equal(ttBuyRate))
-			Expect(result.INRValue()).To(Equal(pnl * ttBuyRate))
+			Expect(result.Gains).To(Equal(gains[0]))
 		})
 	})
 

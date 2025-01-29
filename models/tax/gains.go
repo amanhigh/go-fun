@@ -54,6 +54,6 @@ func (g *INRGains) SetTTDate(date time.Time) {
 }
 
 // INRValue computes the PNL value in INR
-func (t *INRGains) INRValue() float64 {
-	return t.PNL * t.TTRate
+func (g *INRGains) INRValue() float64 {
+	return g.PNL * g.TTRate
 }
