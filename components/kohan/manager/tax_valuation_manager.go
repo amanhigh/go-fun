@@ -32,15 +32,9 @@ func (v *TaxValuationManagerImpl) ProcessValuations(ctx context.Context, valuati
 
 		// Collect all positions that need exchange rates
 		var positions []tax.Exchangeable
-		if valuation.FirstPosition.Quantity > 0 {
-			positions = append(positions, &taxValuation.FirstPosition)
-		}
-		if valuation.PeakPosition.Quantity > 0 {
-			positions = append(positions, &taxValuation.PeakPosition)
-		}
-		if valuation.YearEndPosition.Quantity > 0 {
-			positions = append(positions, &taxValuation.YearEndPosition)
-		}
+		positions = append(positions, &taxValuation.FirstPosition)
+		positions = append(positions, &taxValuation.PeakPosition)
+		positions = append(positions, &taxValuation.YearEndPosition)
 
 		// Process exchange rates for all positions
 		if err := v.exchangeManager.Exchange(ctx, positions); err != nil {
