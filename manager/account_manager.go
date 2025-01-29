@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
+	repository "github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
-	repository "github.com/amanhigh/go-fun/components/kohan/repository"
 )
 
 type AccountManager interface {
@@ -15,12 +15,12 @@ type AccountManager interface {
 }
 
 type AccountManagerImpl struct {
-	repository  repository.AccountRepository
+	repository repository.AccountRepository
 }
 
 func NewAccountManager(repo repository.AccountRepository) AccountManager {
 	return &AccountManagerImpl{
-		repository: repository,
+		repository: repo,
 	}
 }
 
