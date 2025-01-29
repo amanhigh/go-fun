@@ -44,7 +44,7 @@ var _ = Describe("ExchangeManager", func() {
 			exchangeables = []tax.Exchangeable{&position}
 
 			mockSBI.EXPECT().
-				GetTTBuyRate(testDate).
+				GetTTBuyRate(ctx, testDate).
 				Return(82.0, nil)
 		})
 
@@ -81,7 +81,7 @@ var _ = Describe("ExchangeManager", func() {
 			for i := range positions {
 				exchangeables[i] = &positions[i]
 				mockSBI.EXPECT().
-					GetTTBuyRate(dates[i]).
+					GetTTBuyRate(ctx, dates[i]).
 					Return(82.0+float64(i), nil)
 			}
 		})
@@ -118,7 +118,7 @@ var _ = Describe("ExchangeManager", func() {
 
 		It("should handle missing exchange rate", func() {
 			mockSBI.EXPECT().
-				GetTTBuyRate(testDate).
+				GetTTBuyRate(ctx, testDate).
 				Return(0.0, common.ErrNotFound)
 
 			err := exchangeMgr.Exchange(ctx, exchangeables)

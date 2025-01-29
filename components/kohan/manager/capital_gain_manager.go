@@ -2,7 +2,6 @@ package manager
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
@@ -13,33 +12,25 @@ type CapitalGainManager interface {
 }
 
 type CapitalGainManagerImpl struct {
-	sbiManager SBIManager
+	exchangeManager ExchangeManager
 }
 
-func NewCapitalGainManager(sbiManager SBIManager) *CapitalGainManagerImpl {
+func NewCapitalGainManager(exchangeManager ExchangeManager) *CapitalGainManagerImpl {
 	return &CapitalGainManagerImpl{
-		sbiManager: sbiManager,
+		exchangeManager: exchangeManager,
 	}
 }
 
 func (c *CapitalGainManagerImpl) ProcessTaxGains(ctx context.Context, gains []tax.Gains) (taxGains []tax.INRGains, err common.HttpError) {
+	exchangeableGains := make([]tax.Exchangeable, len(taxGains))
 	for _, gain := range gains {
 		var taxGain tax.INRGains
 		// Copy base gains
 		taxGain.Gains = gain
 
-		// Parse sell date for exchange rate lookup
-		var parseErr error
-		if taxGain.TTDate, parseErr = gain.ParseSellDate(); parseErr != nil {
-			return nil, common.NewHttpError(parseErr.Error(), http.StatusBadRequest)
-		}
-
-		// Get exchange rate for sell date
-		if taxGain.TTRate, err = c.sbiManager.GetTTBuyRate(ctx, taxGain.TTDate); err != nil {
-			return nil, err
-		}
-
 		taxGains = append(taxGains, taxGain)
+		exchangeableGains = append(exchangeableGains, &taxGain)
 	}
+	err = c.exchangeManager.Exchange(ctx, exchangeableGains)
 	return
 }
