@@ -22,7 +22,7 @@ func NewCapitalGainManager(sbiManager SBIManager) *CapitalGainManagerImpl {
 	}
 }
 
-func (c *CapitalGainManagerImpl) ProcessTaxGains(_ context.Context, gains []tax.Gains) (taxGains []tax.INRGains, err common.HttpError) {
+func (c *CapitalGainManagerImpl) ProcessTaxGains(ctx context.Context, gains []tax.Gains) (taxGains []tax.INRGains, err common.HttpError) {
 	for _, gain := range gains {
 		var taxGain tax.INRGains
 		// Copy base gains
@@ -35,7 +35,7 @@ func (c *CapitalGainManagerImpl) ProcessTaxGains(_ context.Context, gains []tax.
 		}
 
 		// Get exchange rate for sell date
-		if taxGain.TTRate, err = c.sbiManager.GetTTBuyRate(taxGain.TTDate); err != nil {
+		if taxGain.TTRate, err = c.sbiManager.GetTTBuyRate(ctx, taxGain.TTDate); err != nil {
 			return nil, err
 		}
 

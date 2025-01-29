@@ -27,7 +27,7 @@ func (e *ExchangeManagerImpl) Exchange(ctx context.Context, exchangeables []tax.
 		date := exchangeable.GetDate()
 
 		// Get exchange rate for date
-		rate, err := e.sbiManager.GetTTBuyRate(date)
+		rate, err := e.sbiManager.GetTTBuyRate(ctx, date)
 		if err != nil {
 			return err
 		}
