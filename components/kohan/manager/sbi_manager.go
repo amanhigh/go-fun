@@ -25,18 +25,16 @@ type SBIManager interface {
 }
 
 type SBIManagerImpl struct {
-	client clients.SBIClient
-	// BUG: #B Change to File Path done in provider
-	downloadDir string
-	rateCache   map[string]float64
+	client       clients.SBIClient
+	filePath     string
+	exchangeRepo repository.ExchangeRepository
 }
 
-func NewSBIManager(client clients.SBIClient, downloadDir string) *SBIManagerImpl {
+func NewSBIManager(client clients.SBIClient, filePath string, exchangeRepo repository.ExchangeRepository) *SBIManagerImpl {
 	return &SBIManagerImpl{
-		client:      client,
-		downloadDir: downloadDir,
-		// FIXME: #A Link to Exchange Repo Clean Logic and Test Retain Caching Logic.
-		rateCache: make(map[string]float64),
+		client:       client,
+		filePath:     filePath,
+		exchangeRepo: exchangeRepo,
 	}
 }
 
@@ -47,24 +45,25 @@ func (s *SBIManagerImpl) ratesFileExists() bool {
 	return err == nil
 }
 
-// SaveRates fetches the latest exchange rates and saves them to a CSV file
-// in the configured download directory. Returns an error if any step fails.
 func (s *SBIManagerImpl) GetTTBuyRate(date time.Time) (rate float64, err common.HttpError) {
-	if err = s.loadRatesIfNeeded(); err != nil {
+	// Get rates for date using repository
+	rates, err := s.exchangeRepo.GetRecordsForDate(context.TODO(), date)
+	if err != nil {
 		return 0, err
 	}
 
-	dateStr := date.Format(time.DateOnly)
-	if rate, exists := s.rateCache[dateStr]; exists {
-		return rate, nil
+	if len(rates) == 0 {
+		return 0, common.ErrNotFound
 	}
-	return 0, common.ErrNotFound
+
+	return rates[0].TTBuy, nil
 }
 
 func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpError) {
 	// Skip if file exists
-	if s.ratesFileExists() {
-		log.Info().Str("Path", s.downloadDir).Msg("SBI rates file already exists, skipping download")
+	filePath := filepath.Join(s.filePath, tax.SBI_RATES_FILENAME)
+	if _, err := os.Stat(filePath); err == nil {
+		log.Info().Str("Path", s.filePath).Msg("SBI rates file already exists, skipping download")
 		return nil
 	}
 
@@ -74,81 +73,14 @@ func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpErro
 	}
 
 	// Ensure directory exists
-	if err1 := os.MkdirAll(s.downloadDir, os.ModePerm); err1 != nil {
+	if err1 := os.MkdirAll(s.filePath, os.ModePerm); err1 != nil {
 		return common.NewServerError(err1)
 	}
 
 	// Write to file
-	filePath := filepath.Join(s.downloadDir, tax.SBI_RATES_FILENAME)
 	if err1 := os.WriteFile(filePath, []byte(csvContent), util.DEFAULT_PERM); err1 != nil {
 		return common.NewServerError(err1)
 	}
 
 	return
-}
-
-func (s *SBIManagerImpl) parseCSVToRateMap(records [][]string) (map[string]float64, common.HttpError) {
-	rateMap := make(map[string]float64)
-	for _, record := range records {
-		// Parse date and rate
-		dateStr := strings.Split(record[0], " ")[0] // Get date part only
-		rate, err := strconv.ParseFloat(record[1], 64)
-		if err != nil {
-			return nil, common.NewServerError(err)
-		}
-		rateMap[dateStr] = rate
-	}
-	return rateMap, nil
-}
-
-func (s *SBIManagerImpl) loadRatesIfNeeded() common.HttpError {
-	if len(s.rateCache) > 0 {
-		return nil
-	}
-
-	// BUG: #B Use File Path directly injected via constructor update Test.
-	filePath := filepath.Join(s.downloadDir, tax.SBI_RATES_FILENAME)
-	if _, err := os.Stat(filePath); err != nil {
-		return common.NewHttpError("SBI rates file not found", http.StatusNotFound)
-	}
-
-	records, err := s.readCSVRecords(filePath)
-	if err != nil {
-		return err
-	}
-
-	rateMap, err := s.parseCSVToRateMap(records)
-	if err != nil {
-		return err
-	}
-
-	s.rateCache = rateMap
-	return nil
-}
-
-func (s *SBIManagerImpl) readCSVRecords(filePath string) ([][]string, common.HttpError) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, common.NewServerError(err)
-	}
-	defer file.Close()
-
-	var rates []tax.SbiRate
-	// FIXME: #A Cleanup moved to BaseCSVRepository
-	if err := gocsv.Unmarshal(file, &rates); err != nil {
-		return nil, common.NewServerError(err)
-	}
-
-	// Validate using model's IsValid method
-	if len(rates) == 0 || !rates[0].IsValid() {
-		return nil, common.NewHttpError("invalid CSV header format", http.StatusInternalServerError)
-	}
-
-	// Convert to string slice format for existing code
-	var records [][]string
-	for _, rate := range rates {
-		records = append(records, []string{rate.Date, fmt.Sprintf("%.2f", rate.TTBuy), fmt.Sprintf("%.2f", rate.TTSell)})
-	}
-
-	return records, nil
 }

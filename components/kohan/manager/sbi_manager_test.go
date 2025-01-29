@@ -10,6 +10,7 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/clients/mocks"
 	manager "github.com/amanhigh/go-fun/components/kohan/manager"
+	repoMock "github.com/amanhigh/go-fun/components/kohan/repository/mocks"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
@@ -23,21 +24,23 @@ const testCSV = `DATE,TT BUY,TT SELL
 
 var _ = Describe("SBIManager", func() {
 	var (
-		mockClient *mocks.SBIClient
-		sbiManager *manager.SBIManagerImpl
-		testDir    string
-		ctx        = context.Background()
-		err        common.HttpError
+		mockClient   *mocks.SBIClient
+		mockExchange *repoMock.ExchangeRepository
+		sbiManager   *manager.SBIManagerImpl
+		testDir      string
+		ctx          = context.Background()
 	)
 
 	BeforeEach(func() {
 		mockClient = mocks.NewSBIClient(GinkgoT())
+		mockExchange = repoMock.NewExchangeRepository(GinkgoT())
 
 		var err error
 		testDir, err = os.MkdirTemp("", "sbi-test-*")
 		Expect(err).NotTo(HaveOccurred())
 
-		sbiManager = manager.NewSBIManager(mockClient, testDir)
+		filePath := filepath.Join(testDir, tax.SBI_RATES_FILENAME)
+		sbiManager = manager.NewSBIManager(mockClient, filePath, mockExchange)
 	})
 
 	AfterEach(func() {
@@ -48,7 +51,7 @@ var _ = Describe("SBIManager", func() {
 		It("should download and save rates successfully", func() {
 			mockClient.EXPECT().FetchExchangeRates(ctx).Return(testCSV, nil)
 
-			err = sbiManager.DownloadRates(ctx)
+			err := sbiManager.DownloadRates(ctx)
 			Expect(err).To(BeNil())
 
 			// Verify file content
@@ -78,18 +81,18 @@ var _ = Describe("SBIManager", func() {
 			expectedErr := common.NewHttpError("Failed to fetch exchange rates", http.StatusInternalServerError)
 			mockClient.EXPECT().FetchExchangeRates(ctx).Return("", expectedErr)
 
-			err = sbiManager.DownloadRates(ctx)
+			err := sbiManager.DownloadRates(ctx)
 			Expect(err).To(Equal(expectedErr))
 		})
 
 		It("should create directory if not exists", func() {
 			// Create nested test directory
 			nestedDir := filepath.Join(testDir, "nested", "dir")
-			sbiManager = manager.NewSBIManager(mockClient, nestedDir)
+			sbiManager = manager.NewSBIManager(mockClient, nestedDir, mockExchange)
 
 			mockClient.EXPECT().FetchExchangeRates(ctx).Return(testCSV, nil)
 
-			err = sbiManager.DownloadRates(ctx)
+			err := sbiManager.DownloadRates(ctx)
 			Expect(err).To(BeNil())
 
 			// Verify directory was created with file
@@ -100,79 +103,17 @@ var _ = Describe("SBIManager", func() {
 	})
 
 	Context("GetTTBuyRate", func() {
-		var testDate time.Time
+		It("should get rate for date using repository", func() {
+			testDate := time.Date(2024, 1, 23, 0, 0, 0, 0, time.UTC)
+			expectedRate := 82.50
 
-		BeforeEach(func() {
-			var err error
-			testDate, err = time.Parse(time.DateOnly, "2024-01-23")
-			Expect(err).To(BeNil())
-		})
-
-		It("should return error when file not found", func() {
-			_, err = sbiManager.GetTTBuyRate(testDate)
-			Expect(err.Error()).To(Equal("SBI rates file not found"))
-			Expect(err.Code()).To(Equal(http.StatusNotFound))
-		})
-
-		It("should return rate for matching date", func() {
-			// Create test file
-			err := os.WriteFile(filepath.Join(testDir, tax.SBI_RATES_FILENAME), []byte(testCSV), util.DEFAULT_PERM)
-			Expect(err).To(BeNil())
+			mockExchange.EXPECT().
+				GetRecordsForDate(ctx, testDate).
+				Return([]tax.SbiRate{{TTBuy: expectedRate}}, nil)
 
 			rate, err := sbiManager.GetTTBuyRate(testDate)
 			Expect(err).To(BeNil())
-			Expect(rate).To(Equal(82.50))
-		})
-
-		It("should return not found for missing date", func() {
-			// Create test file
-			err := os.WriteFile(filepath.Join(testDir, tax.SBI_RATES_FILENAME), []byte(testCSV), util.DEFAULT_PERM)
-			Expect(err).To(BeNil())
-
-			missingDate := testDate.AddDate(0, 0, -1)
-			_, err = sbiManager.GetTTBuyRate(missingDate)
-			Expect(err).To(Equal(common.ErrNotFound))
-		})
-
-		It("should handle invalid CSV file", func() {
-			// Create invalid CSV file
-			writeErr := os.WriteFile(filepath.Join(testDir, tax.SBI_RATES_FILENAME), []byte("invalid,csv"), util.DEFAULT_PERM)
-			Expect(writeErr).To(BeNil())
-
-			_, err = sbiManager.GetTTBuyRate(testDate)
-			Expect(err).NotTo(BeNil())
-			Expect(err.Code()).To(Equal(http.StatusInternalServerError))
-		})
-
-		It("should handle empty file", func() {
-			// Create empty file
-			writeErr := os.WriteFile(filepath.Join(testDir, tax.SBI_RATES_FILENAME), []byte(""), util.DEFAULT_PERM)
-			Expect(writeErr).To(BeNil())
-
-			_, err = sbiManager.GetTTBuyRate(testDate)
-			Expect(err).NotTo(BeNil())
-			Expect(err.Code()).To(Equal(http.StatusInternalServerError))
-		})
-
-		It("should cache rates after first call", func() {
-			// Create test file
-			err := os.WriteFile(filepath.Join(testDir, tax.SBI_RATES_FILENAME), []byte(testCSV), util.DEFAULT_PERM)
-			Expect(err).To(BeNil())
-
-			// First call should load cache
-			rate1, err := sbiManager.GetTTBuyRate(testDate)
-			Expect(err).To(BeNil())
-			Expect(rate1).To(Equal(82.50))
-
-			// Second call should use cache
-			rate2, err := sbiManager.GetTTBuyRate(testDate)
-			Expect(err).To(BeNil())
-			Expect(rate2).To(Equal(82.50))
-
-			// Verify cache miss
-			missingDate := testDate.AddDate(0, 0, -1)
-			_, err = sbiManager.GetTTBuyRate(missingDate)
-			Expect(err).To(Equal(common.ErrNotFound))
+			Expect(rate).To(Equal(expectedRate))
 		})
 	})
 })

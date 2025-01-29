@@ -20,8 +20,9 @@ func (r SbiRate) IsValid() bool {
 // File name constant for SBI Rate CSV
 const SBI_RATES_FILENAME = "SBI_REFERENCE_RATES_USD.csv"
 
+// BUG: Change To Key?
 func (r SbiRate) GetSymbol() string {
-	return "INR" // Return INR as symbol for exchange rates
+	return r.Date
 }
 
 // ParseDate implementation for SbiRate
