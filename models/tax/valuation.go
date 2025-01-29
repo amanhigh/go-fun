@@ -63,6 +63,14 @@ type Valuation struct {
 	YearEndPosition Position
 }
 
+// INRValutaion mirrors Valuation structure with tax positions
+type INRValutaion struct {
+	Ticker          string
+	FirstPosition   INRPosition // First position with exchange rate details
+	PeakPosition    INRPosition // Peak position with exchange rate details
+	YearEndPosition INRPosition // Year end position with exchange rate details
+}
+
 // INRPosition extends Position with exchange rate details
 type INRPosition struct {
 	Position           // Embed original position
@@ -75,10 +83,19 @@ func (t *INRPosition) INRValue() float64 {
 	return t.USDValue() * t.TTRate
 }
 
-// INRValutaion mirrors Valuation structure with tax positions
-type INRValutaion struct {
-	Ticker          string
-	FirstPosition   INRPosition // First position with exchange rate details
-	PeakPosition    INRPosition // Peak position with exchange rate details
-	YearEndPosition INRPosition // Year end position with exchange rate details
+// Implement Exchangeable interface for INRPosition
+func (t *INRPosition) GetDate() time.Time {
+	return t.Position.Date
+}
+
+func (t *INRPosition) GetUSDAmount() float64 {
+	return t.USDValue()
+}
+
+func (t *INRPosition) SetTTRate(rate float64) {
+	t.TTRate = rate
+}
+
+func (t *INRPosition) SetTTDate(date time.Time) {
+	t.TTDate = date
 }
