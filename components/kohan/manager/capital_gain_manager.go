@@ -9,6 +9,7 @@ import (
 
 type CapitalGainManager interface {
 	ProcessTaxGains(ctx context.Context, gains []tax.Gains) ([]tax.INRGains, common.HttpError)
+	// TODO: Expose GetAllGains ?
 }
 
 type CapitalGainManagerImpl struct {
