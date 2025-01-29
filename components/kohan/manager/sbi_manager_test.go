@@ -101,4 +101,33 @@ var _ = Describe("SBIManager", func() {
 			Expect(rate).To(Equal(expectedRate))
 		})
 	})
+
+	Context("When exact date not found", func() {
+		var (
+			requestedDate = time.Date(2024, 1, 24, 0, 0, 0, 0, time.UTC)
+			closestDate   = time.Date(2024, 1, 23, 0, 0, 0, 0, time.UTC)
+			expectedRate  = 82.50
+		)
+
+		BeforeEach(func() {
+			mockExchange.EXPECT().
+				GetAllRecords(ctx).
+				Return([]tax.SbiRate{
+					{Date: "2024-01-23 Wednesday", TTBuy: expectedRate, TTSell: 83.50},
+					{Date: "2024-01-22 Tuesday", TTBuy: 82.25, TTSell: 83.25},
+				}, nil)
+		})
+
+		It("should return closest previous date with ClosestDateError", func() {
+			rate, err := sbiManager.GetTTBuyRate(ctx, requestedDate)
+			Expect(rate).To(Equal(expectedRate))
+
+			// Verify ClosestDateError details
+			closestErr, ok := err.(tax.ClosestDateError)
+			Expect(ok).To(BeTrue())
+			Expect(closestErr.Code()).To(Equal(http.StatusOK))
+			Expect(closestErr.GetRequestedDate()).To(Equal(requestedDate))
+			Expect(closestErr.GetClosestDate()).To(Equal(closestDate))
+		})
+	})
 })

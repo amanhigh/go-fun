@@ -3,12 +3,14 @@ package manager
 import (
 	"context"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/clients"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/common"
+	"github.com/amanhigh/go-fun/models/tax"
 	"github.com/rs/zerolog/log"
 )
 
@@ -32,8 +34,7 @@ func NewSBIManager(client clients.SBIClient, filePath string, exchangeRepo repos
 	}
 }
 
-func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, date time.Time) (rate float64, err common.HttpError) {
-	// Get rates for date using repository
+func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, requestedDate time.Time) (rate float64, err common.HttpError) {
 	rates, err := s.exchangeRepo.GetAllRecords(ctx)
 	if err != nil {
 		return 0, err
@@ -43,8 +44,31 @@ func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, date time.Time) (rate
 		return 0, common.ErrNotFound
 	}
 
-	// BUG: Fix Using array search or use Rates Key as Ticker
-	return rates[0].TTBuy, nil
+	// Try exact date match first
+	dateStr := requestedDate.Format(time.DateOnly)
+	for _, rate := range rates {
+		if strings.Split(rate.Date, " ")[0] == dateStr {
+			return rate.TTBuy, nil
+		}
+	}
+
+	// Find closest previous date
+	var closestDate string
+	var closestRate float64
+	for _, rate := range rates {
+		rateDate := strings.Split(rate.Date, " ")[0]
+		if rateDate <= dateStr && (closestDate == "" || rateDate > closestDate) {
+			closestDate = rateDate
+			closestRate = rate.TTBuy
+		}
+	}
+
+	if closestDate != "" {
+		parsedClosest, _ := time.Parse(time.DateOnly, closestDate)
+		return closestRate, tax.NewClosestDateError(requestedDate, parsedClosest)
+	}
+
+	return 0, common.ErrNotFound
 }
 
 func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpError) {
