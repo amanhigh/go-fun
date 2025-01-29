@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
@@ -19,41 +20,32 @@ type BaseCSVRepository[T any] interface {
 
 type BaseCSVRepositoryImpl[T any] struct {
 	filePath string
+	records  []T          // Cache for records
+	cache    sync.RWMutex // Lock for thread-safe access
 }
 
 func NewBaseCSVRepository[T any](filePath string) *BaseCSVRepositoryImpl[T] {
 	return &BaseCSVRepositoryImpl[T]{
 		filePath: filePath,
+		records:  []T{},
 	}
 }
 
 func (b *BaseCSVRepositoryImpl[T]) GetAllRecords(ctx context.Context) (records []T, err common.HttpError) {
-	file, openErr := os.Open(b.filePath)
-	if openErr != nil {
-		log.Ctx(ctx).Error().Err(openErr).Str("path", b.filePath).Msg("Failed to open CSV file")
-		return nil, common.NewServerError(openErr)
-	}
-	defer file.Close()
-
-	if parseErr := gocsv.UnmarshalFile(file, &records); parseErr != nil {
-		log.Ctx(ctx).Error().Err(parseErr).Msg("Failed to parse CSV")
-		return nil, common.NewServerError(parseErr)
-	}
-
-	if len(records) == 0 {
-		return nil, common.NewHttpError("empty CSV file", http.StatusBadRequest)
-	}
-
-	// Update type assertion to use CSVRecord
-	if record, ok := any(records[0]).(tax.CSVRecord); ok {
-		if !record.IsValid() {
-			return nil, common.NewHttpError("invalid CSV format", http.StatusBadRequest)
+	// Load records if needed
+	if len(b.records) == 0 {
+		if err = b.loadRecords(ctx); err != nil {
+			return nil, err
 		}
 	}
 
+	// Read Lock for accessing cache
+	b.cache.RLock()
+	records = b.records
+	b.cache.RUnlock()
+
 	return records, nil
 }
-
 func (b *BaseCSVRepositoryImpl[T]) GetUniqueTickers(ctx context.Context) (tickers []string, err common.HttpError) {
 	// Get all records
 	records, err := b.GetAllRecords(ctx)
@@ -93,4 +85,49 @@ func (b *BaseCSVRepositoryImpl[T]) GetRecordsForTicker(ctx context.Context, tick
 	}
 
 	return filtered, nil
+}
+
+func (b *BaseCSVRepositoryImpl[T]) loadRecords(ctx context.Context) (err common.HttpError) {
+	// Lock for loading
+	b.cache.Lock()
+	defer b.cache.Unlock()
+
+	// Double check after lock
+	if len(b.records) > 0 {
+		return nil
+	}
+
+	records, err := b.readCSVFile(ctx)
+	if err != nil {
+		return err
+	}
+	b.records = records
+	return nil
+}
+
+func (b *BaseCSVRepositoryImpl[T]) readCSVFile(ctx context.Context) (records []T, err common.HttpError) {
+	file, openErr := os.Open(b.filePath)
+	if openErr != nil {
+		log.Ctx(ctx).Error().Err(openErr).Str("path", b.filePath).Msg("Failed to open CSV file")
+		return nil, common.NewServerError(openErr)
+	}
+	defer file.Close()
+
+	if parseErr := gocsv.UnmarshalFile(file, &records); parseErr != nil {
+		log.Ctx(ctx).Error().Err(parseErr).Msg("Failed to parse CSV")
+		return nil, common.NewServerError(parseErr)
+	}
+
+	if len(records) == 0 {
+		return nil, common.NewHttpError("empty CSV file", http.StatusBadRequest)
+	}
+
+	// Update type assertion to use CSVRecord
+	if record, ok := any(records[0]).(tax.CSVRecord); ok {
+		if !record.IsValid() {
+			return nil, common.NewHttpError("invalid CSV format", http.StatusBadRequest)
+		}
+	}
+
+	return records, nil
 }
