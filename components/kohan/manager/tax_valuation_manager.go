@@ -23,26 +23,22 @@ func NewTaxValuationManager(exchangeManager ExchangeManager) TaxValuationManager
 	}
 }
 
-func (v *TaxValuationManagerImpl) ProcessValuations(ctx context.Context, valuations []tax.Valuation) ([]tax.INRValutaion, common.HttpError) {
-	var result []tax.INRValutaion
+func (v *TaxValuationManagerImpl) ProcessValuations(ctx context.Context, valuations []tax.Valuation) (inrValuations []tax.INRValutaion, err common.HttpError) {
+	exchangeAbles := make([]tax.Exchangeable, 0, len(valuations))
 
 	for _, valuation := range valuations {
 		// Create tax valuation with positions
-		taxValuation := tax.NewINRValuation(valuation)
+		inrValuation := tax.NewINRValuation(valuation)
 
 		// Collect all positions that need exchange rates
-		var positions []tax.Exchangeable
-		positions = append(positions, &taxValuation.FirstPosition)
-		positions = append(positions, &taxValuation.PeakPosition)
-		positions = append(positions, &taxValuation.YearEndPosition)
+		exchangeAbles = append(exchangeAbles, &inrValuation.FirstPosition)
+		exchangeAbles = append(exchangeAbles, &inrValuation.PeakPosition)
+		exchangeAbles = append(exchangeAbles, &inrValuation.YearEndPosition)
 
-		// Process exchange rates for all positions
-		if err := v.exchangeManager.Exchange(ctx, positions); err != nil {
-			return nil, err
-		}
-
-		result = append(result, taxValuation)
+		inrValuations = append(inrValuations, inrValuation)
 	}
 
-	return result, nil
+	err = v.exchangeManager.Exchange(ctx, exchangeAbles)
+
+	return
 }

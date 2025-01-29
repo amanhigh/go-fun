@@ -112,8 +112,12 @@ var _ = Describe("TaxValuationManager", func() {
 			}
 
 			mockExchange.EXPECT().
-				Exchange(ctx, mock.Anything).
-				Times(2).
+				Exchange(ctx, mock.AnythingOfType("[]tax.Exchangeable")).
+				Run(func(_ context.Context, exchangeables []tax.Exchangeable) {
+					Expect(exchangeables).To(HaveLen(2 * 3))
+					Expect(exchangeables[0].GetUSDAmount()).To(Equal(15000.00))
+					Expect(exchangeables[3].GetUSDAmount()).To(Equal(10000.00))
+				}).
 				Return(nil)
 		})
 
