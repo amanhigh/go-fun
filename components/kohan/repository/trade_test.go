@@ -4,9 +4,11 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
+	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -20,6 +22,7 @@ var _ = Describe("TradeRepository", func() {
 	var (
 		tradeRepo repository.TradeRepository
 		testDir   string
+		tradeFile string
 		ctx       = context.Background()
 		err       error
 	)
@@ -30,7 +33,7 @@ var _ = Describe("TradeRepository", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		// Create test file
-		tradeFile := filepath.Join(testDir, "trades.csv")
+		tradeFile = filepath.Join(testDir, "trades.csv")
 		err = os.WriteFile(tradeFile, []byte(testCSV), util.DEFAULT_PERM)
 		Expect(err).To(BeNil())
 
@@ -98,6 +101,52 @@ var _ = Describe("TradeRepository", func() {
 			trades, err := emptyRepo.GetAllRecords(ctx)
 			Expect(err).To(Not(BeNil()))
 			Expect(trades).To(BeNil())
+		})
+
+	})
+
+	Context("Caching Behavior", func() {
+		It("should cache records after first load", func() {
+			// First call loads from file
+			records1, err := tradeRepo.GetAllRecords(ctx)
+			Expect(err).To(BeNil())
+			Expect(len(records1)).To(BeNumerically(">", 0))
+
+			// Modify file to invalid content
+			writeErr := os.WriteFile(tradeFile, []byte("invalid,csv"), util.DEFAULT_PERM)
+			Expect(writeErr).To(BeNil())
+
+			// Second call should return cached data
+			records2, err := tradeRepo.GetAllRecords(ctx)
+			Expect(err).To(BeNil())
+			Expect(records2).To(Equal(records1))
+		})
+
+		It("should handle concurrent access safely", func() {
+			var wg sync.WaitGroup
+			var results [][]tax.Trade
+			var mutex sync.Mutex
+
+			// Multiple goroutines accessing records
+			for i := 0; i < 10; i++ {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					records, err := tradeRepo.GetAllRecords(ctx)
+					Expect(err).To(BeNil())
+
+					mutex.Lock()
+					results = append(results, records)
+					mutex.Unlock()
+				}()
+			}
+			wg.Wait()
+
+			// Verify all calls returned same data
+			Expect(len(results)).To(Equal(10))
+			for i := 1; i < len(results); i++ {
+				Expect(results[i]).To(Equal(results[0]))
+			}
 		})
 	})
 })
