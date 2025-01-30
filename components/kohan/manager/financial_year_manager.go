@@ -8,20 +8,19 @@ import (
 	"github.com/amanhigh/go-fun/models/tax"
 )
 
-type FinancialYearManager interface {
-	FilterRecordsByFY(ctx context.Context, records []tax.CSVRecord, year int) ([]tax.CSVRecord, common.HttpError)
+type FinancialYearManager[T tax.CSVRecord] interface {
+	FilterRecordsByFY(ctx context.Context, records []T, year int) ([]T, common.HttpError)
 }
 
-type FinancialYearManagerImpl struct{}
+type FinancialYearManagerImpl[T tax.CSVRecord] struct{}
 
-func NewFinancialYearManager() FinancialYearManager {
-	return &FinancialYearManagerImpl{}
+func NewFinancialYearManager[T tax.CSVRecord]() FinancialYearManager[T] {
+	return &FinancialYearManagerImpl[T]{}
 }
 
-func (f *FinancialYearManagerImpl) FilterRecordsByFY(ctx context.Context, records []tax.CSVRecord, year int) ([]tax.CSVRecord, common.HttpError) {
-	var filtered []tax.CSVRecord
+func (f *FinancialYearManagerImpl[T]) FilterRecordsByFY(ctx context.Context, records []T, year int) ([]T, common.HttpError) {
+	var filtered []T
 
-	// Financial year start and end
 	fyStart := time.Date(year, 4, 1, 0, 0, 0, 0, time.UTC)
 	fyEnd := time.Date(year+1, 3, 31, 23, 59, 59, 0, time.UTC)
 
