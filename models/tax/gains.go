@@ -62,8 +62,8 @@ func (g *INRGains) INRValue() float64 {
 
 // TaxSummary contains all processed tax records
 type TaxSummary struct {
-    INRGains []INRGains // Processed capital gains in INR
-    // Future fields will be added as needed:
-    // INRDividends []INRDividend
-    // INRPositions []INRPosition
+	INRGains []INRGains // Processed capital gains in INR
+	// Future fields will be added as needed:
+	// INRDividends []INRDividend
+	// INRPositions []INRPosition
 }

@@ -9,17 +9,34 @@ import (
 
 type CapitalGainManager interface {
 	ProcessTaxGains(ctx context.Context, gains []tax.Gains) ([]tax.INRGains, common.HttpError)
-	// FIXME: #A Expose GetAllGains and Ingrate wit Tax Manager ?
+    GetGainsForYear(ctx context.Context, year int) ([]tax.Gains, common.HttpError)
 }
 
 type CapitalGainManagerImpl struct {
 	exchangeManager ExchangeManager
+    gainsRepository repository.GainsRepository
+    financialYearManager FinancialYearManager
 }
 
-func NewCapitalGainManager(exchangeManager ExchangeManager) *CapitalGainManagerImpl {
-	return &CapitalGainManagerImpl{
-		exchangeManager: exchangeManager,
-	}
+func NewCapitalGainManager(exchangeManager ExchangeManager,
+    gainsRepository repository.GainsRepository,
+    financialYearManager FinancialYearManager) *CapitalGainManagerImpl {
+    return &CapitalGainManagerImpl{
+        exchangeManager: exchangeManager,
+        gainsRepository: gainsRepository,
+        financialYearManager: financialYearManager,
+    }
+}
+
+func (c *CapitalGainManagerImpl) GetGainsForYear(ctx context.Context, year int) ([]tax.Gains, common.HttpError) {
+    // Get all records from repository
+    records, err := c.gainsRepository.GetAllRecords(ctx)
+    if err != nil {
+        return nil, err
+    }
+    
+    // Filter by financial year
+    return c.financialYearManager.FilterRecordsByFY(ctx, records, year)
 }
 
 func (c *CapitalGainManagerImpl) ProcessTaxGains(ctx context.Context, gains []tax.Gains) (taxGains []tax.INRGains, err common.HttpError) {
