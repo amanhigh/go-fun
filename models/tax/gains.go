@@ -59,3 +59,11 @@ func (g *INRGains) SetTTDate(date time.Time) {
 func (g *INRGains) INRValue() float64 {
 	return g.PNL * g.TTRate
 }
+
+// TaxSummary contains all processed tax records
+type TaxSummary struct {
+    INRGains []INRGains // Processed capital gains in INR
+    // Future fields will be added as needed:
+    // INRDividends []INRDividend
+    // INRPositions []INRPosition
+}

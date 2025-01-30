@@ -45,6 +45,7 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 	}
 
 	// Process trades with starting position
+	// HACK: Simplify this Class
 	currentPosition := v.trackPositions(&analysis, startPosition, trades)
 
 	// Update year-end position if there are remaining holdings
