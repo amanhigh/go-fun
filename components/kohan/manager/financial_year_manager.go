@@ -8,6 +8,7 @@ import (
 	"github.com/amanhigh/go-fun/models/tax"
 )
 
+//go:generate mockery --name FinancialYearManager
 type FinancialYearManager[T tax.CSVRecord] interface {
 	FilterRecordsByFY(ctx context.Context, records []T, year int) ([]T, common.HttpError)
 }

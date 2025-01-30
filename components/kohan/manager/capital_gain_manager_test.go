@@ -5,6 +5,7 @@ import (
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
+	mockRepo "github.com/amanhigh/go-fun/components/kohan/repository/mocks"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
@@ -16,6 +17,8 @@ var _ = Describe("CapitalGainManager", func() {
 	var (
 		ctx                 = context.Background()
 		mockExchangeManager *mocks.ExchangeManager
+		mockFYManager       *mocks.FinancialYearManager[tax.Gains]
+		mockGainsRepo       *mockRepo.GainsRepository
 		gainManager         manager.CapitalGainManager
 
 		// Common test data
@@ -25,7 +28,9 @@ var _ = Describe("CapitalGainManager", func() {
 
 	BeforeEach(func() {
 		mockExchangeManager = mocks.NewExchangeManager(GinkgoT())
-		gainManager = manager.NewCapitalGainManager(mockExchangeManager)
+		mockFYManager = mocks.NewFinancialYearManager[tax.Gains](GinkgoT())
+		mockGainsRepo = mockRepo.NewGainsRepository(GinkgoT())
+		gainManager = manager.NewCapitalGainManager(mockExchangeManager, mockGainsRepo, mockFYManager)
 	})
 
 	Context("Basic Gains Processing", func() {
@@ -122,6 +127,80 @@ var _ = Describe("CapitalGainManager", func() {
 			// Verify second gain
 			Expect(taxGains[1].Gains.Symbol).To(Equal("MSFT"))
 			Expect(taxGains[1].Gains.PNL).To(Equal(2000.00))
+		})
+	})
+
+	// BUG: Put Upper Methods in Function Context
+	Context("GetGainsForYear", func() {
+		var (
+			testYear = 2024
+			// BUG: Create Constructor
+			allGains = []tax.Gains{
+				{
+					Symbol:   "AAPL",
+					SellDate: "2024-04-15",
+					PNL:      1000.00,
+				},
+				{
+					Symbol:   "GOOGL",
+					SellDate: "2024-05-20",
+					PNL:      2000.00,
+				},
+			}
+			filteredGains = []tax.Gains{allGains[0]} // Assume only first gain matches FY
+		)
+
+		Context("when successful", func() {
+			BeforeEach(func() {
+				// Setup repository mock to return test gains
+				mockGainsRepo.EXPECT().
+					GetAllRecords(ctx).
+					Return(allGains, nil)
+
+				// Setup FY manager to filter gains
+				mockFYManager.EXPECT().
+					FilterRecordsByFY(ctx, allGains, testYear).
+					Return(filteredGains, nil)
+			})
+
+			It("should return filtered gains for the year", func() {
+				gains, err := gainManager.GetGainsForYear(ctx, testYear)
+
+				Expect(err).To(BeNil())
+				Expect(gains).To(Equal(filteredGains))
+			})
+		})
+
+		Context("when repository fails", func() {
+			BeforeEach(func() {
+				mockGainsRepo.EXPECT().
+					GetAllRecords(ctx).
+					Return(nil, common.ErrInternalServerError)
+			})
+
+			It("should return repository error", func() {
+				_, err := gainManager.GetGainsForYear(ctx, testYear)
+
+				Expect(err).To(Equal(common.ErrInternalServerError))
+			})
+		})
+
+		Context("when filtering fails", func() {
+			BeforeEach(func() {
+				mockGainsRepo.EXPECT().
+					GetAllRecords(ctx).
+					Return(allGains, nil)
+
+				mockFYManager.EXPECT().
+					FilterRecordsByFY(ctx, allGains, testYear).
+					Return(nil, common.ErrInternalServerError)
+			})
+
+			It("should return filtering error", func() {
+				_, err := gainManager.GetGainsForYear(ctx, testYear)
+
+				Expect(err).To(Equal(common.ErrInternalServerError))
+			})
 		})
 	})
 })
