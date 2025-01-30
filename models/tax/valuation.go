@@ -6,6 +6,7 @@ import "time"
 type CSVRecord interface {
 	GetSymbol() string // For ticker related functions
 	IsValid() bool     // For CSV validation
+	GetDate() (date time.Time, err error)
 }
 
 // Broker statement trade model

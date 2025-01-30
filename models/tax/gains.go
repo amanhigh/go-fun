@@ -21,6 +21,11 @@ func (g Gains) IsValid() bool {
 	return g.Symbol != "" && g.BuyDate != "" && g.SellDate != ""
 }
 
+func (g Gains) GetDate() (date time.Time, err error) {
+	date, err = g.ParseSellDate()
+	return
+}
+
 func (g Gains) ParseBuyDate() (time.Time, error) {
 	return time.Parse(time.DateOnly, g.BuyDate)
 }

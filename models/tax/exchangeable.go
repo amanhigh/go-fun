@@ -4,6 +4,7 @@ import "time"
 
 // Exchangeable represents any entity that needs USD to INR exchange rate conversion
 type Exchangeable interface {
+	// BUG: Include CSV Record ?
 	// GetDate returns the original transaction date for exchange lookup
 	GetDate() time.Time
 
