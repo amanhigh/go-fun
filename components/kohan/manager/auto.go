@@ -148,7 +148,7 @@ func (a *AutoManagerImpl) openTicker(ticker string) (err error) {
 			if err = tools.SendKey("-M Ctrl v -m Ctrl"); err == nil {
 				time.Sleep(50 * time.Millisecond)
 				// Bang ! to Open
-				err = tools.SendInput("xox")
+				err = tools.SendInput("xox ")
 				// Return Focus Back
 				if focusErr := tools.FocusLastWindow(); focusErr != nil {
 					log.Error().Err(focusErr).Msg("Failed to return focus")
