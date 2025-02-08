@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -144,7 +145,9 @@ func (sm *ServiceManagerImpl) saveSelectedServices() error {
 }
 
 func (sm *ServiceManagerImpl) loadSelectedServices() {
-	sm.selectedServices = util.ReadAllLines(sm.selectedServicePath)
+	if _, err := os.Stat(sm.selectedServicePath); os.IsNotExist(err) {
+		sm.selectedServices = util.ReadAllLines(sm.selectedServicePath)
+	}
 }
 
 func (sm *ServiceManagerImpl) ClearSelectedServices() {

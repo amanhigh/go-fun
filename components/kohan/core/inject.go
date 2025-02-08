@@ -93,6 +93,7 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 	container.MustSingleton(ki.di, tview.NewApplication)
 
 	// Client
+	container.MustSingleton(ki.di, resty.New)
 	container.MustSingleton(ki.di, ki.provideAlphaClient)
 	container.MustSingleton(ki.di, ki.provideSBIClient)
 
@@ -106,9 +107,9 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 	container.MustSingleton(ki.di, provideHotkeyManager)
 	container.MustSingleton(ki.di, ki.provideTickerManager)
 	container.MustSingleton(ki.di, ki.provideAccountManager)
+	container.MustSingleton(ki.di, ki.provideSBIManager)
 	container.MustSingleton(ki.di, ki.provideExchangeManager)
 	container.MustSingleton(ki.di, ki.provideTaxValuationManager)
-	container.MustSingleton(ki.di, ki.provideSBIManager)
 
 	// Build app
 	app := &DariusV1{}
@@ -116,14 +117,14 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 	return app, err
 }
 
-func provideServiceManager(cfg config.DariusConfig) (serviceManager *tui.ServiceManagerImpl) {
+func provideServiceManager(cfg config.DariusConfig) (serviceManager tui.ServiceManager) {
 	return tui.NewServiceManager(cfg.MakeDir, cfg.SelectedServiceFile)
 }
 
-func provideUIManager(app *tview.Application, svcManager tui.ServiceManager) *tui.UIManagerImpl {
+func provideUIManager(app *tview.Application, svcManager tui.ServiceManager) tui.UIManager {
 	return tui.NewUIManager(app, svcManager)
 }
 
-func provideHotkeyManager(uiManager tui.UIManager, serviceManager tui.ServiceManager) *tui.HotkeyManagerImpl {
+func provideHotkeyManager(uiManager tui.UIManager, serviceManager tui.ServiceManager) tui.HotkeyManager {
 	return tui.NewHotkeyManager(uiManager, serviceManager)
 }
