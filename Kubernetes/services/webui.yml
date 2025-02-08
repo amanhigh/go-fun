@@ -11,6 +11,7 @@ volumes:
     size: 1Gi
     storageClass: standard
 
+# https://docs.openwebui.com/getting-started/env-configuration
 vars:
   OLLAMA_BASE_URL: "http://host.minikube.internal:11434"
   WEBUI_AUTH: "false"
