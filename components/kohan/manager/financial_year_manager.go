@@ -26,11 +26,10 @@ func (f *FinancialYearManagerImpl[T]) FilterRecordsByFY(ctx context.Context, rec
 	fyEnd := time.Date(year+1, 3, 31, 23, 59, 59, 0, time.UTC)
 
 	for _, record := range records {
-		if date, err := record.GetDate(); err == nil {
-			if (date.Equal(fyStart) || date.After(fyStart)) &&
-				(date.Equal(fyEnd) || date.Before(fyEnd)) {
-				filtered = append(filtered, record)
-			}
+		date := record.GetDate()
+		if (date.Equal(fyStart) || date.After(fyStart)) &&
+			(date.Equal(fyEnd) || date.Before(fyEnd)) {
+			filtered = append(filtered, record)
 		}
 	}
 	return filtered, nil

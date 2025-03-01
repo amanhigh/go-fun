@@ -11,7 +11,7 @@ type Interest struct {
 }
 
 // CSVRecord interface implementation
-func (i Interest) GetSymbol() string {
+func (i Interest) GetKey() string {
 	return i.Symbol
 }
 
@@ -19,8 +19,9 @@ func (i Interest) IsValid() bool {
 	return i.Symbol != "" && i.Date != "" && i.Amount != 0
 }
 
-func (i Interest) GetDate() (time.Time, error) {
-	return time.Parse(time.DateOnly, i.Date)
+func (i Interest) GetDate() time.Time {
+	date, _ := time.Parse(time.DateOnly, i.Date)
+	return date
 }
 
 // INRInterest adds exchange rate details to basic interest

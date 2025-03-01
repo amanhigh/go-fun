@@ -59,7 +59,7 @@ var _ = Describe("ValuationManager", func() {
 					Expect(err).To(BeNil())
 
 					// First position
-					date, _ := trades[0].ParseDate()
+					date := trades[0].GetDate()
 					Expect(valuation.FirstPosition.Date).To(Equal(date))
 					Expect(valuation.FirstPosition.Quantity).To(Equal(trades[0].Quantity))
 					Expect(valuation.FirstPosition.USDPrice).To(Equal(trades[0].USDPrice))
@@ -89,7 +89,7 @@ var _ = Describe("ValuationManager", func() {
 					Expect(err).To(BeNil())
 
 					// First position from buy
-					date, _ := trades[0].ParseDate()
+					date := trades[0].GetDate()
 					Expect(valuation.FirstPosition.Date).To(Equal(date))
 					Expect(valuation.FirstPosition.Quantity).To(Equal(trades[0].Quantity))
 					Expect(valuation.FirstPosition.USDPrice).To(Equal(trades[0].USDPrice))
@@ -124,13 +124,13 @@ var _ = Describe("ValuationManager", func() {
 					Expect(err).To(BeNil())
 
 					// First position from first buy
-					date, _ := trades[0].ParseDate()
+					date := trades[0].GetDate()
 					Expect(valuation.FirstPosition.Date).To(Equal(date))
 					Expect(valuation.FirstPosition.Quantity).To(Equal(trades[0].Quantity))
 					Expect(valuation.FirstPosition.USDPrice).To(Equal(trades[0].USDPrice))
 
 					// Peak position after all buys
-					date, _ = trades[2].ParseDate()
+					date = trades[2].GetDate()
 					Expect(valuation.PeakPosition.Date).To(Equal(date))
 					Expect(valuation.PeakPosition.Quantity).To(Equal(15.0))
 					Expect(valuation.PeakPosition.USDPrice).To(Equal(trades[2].USDPrice))
@@ -162,14 +162,14 @@ var _ = Describe("ValuationManager", func() {
 					Expect(err).To(BeNil())
 
 					// First position from initial buy
-					date, _ := trades[0].ParseDate()
+					date := trades[0].GetDate()
 					Expect(valuation.FirstPosition.Date).To(Equal(date))
 					Expect(valuation.FirstPosition.Quantity).To(Equal(5.0))
 					Expect(valuation.FirstPosition.USDPrice).To(Equal(100.0))
 					Expect(valuation.FirstPosition.USDValue()).To(Equal(500.0))
 
 					// Peak position at final state
-					date, _ = trades[2].ParseDate()
+					date = trades[2].GetDate()
 					Expect(valuation.PeakPosition.Date).To(Equal(date))
 					Expect(valuation.PeakPosition.Quantity).To(Equal(20.0))     // Total shares: 5 + 10 + 5
 					Expect(valuation.PeakPosition.USDPrice).To(Equal(90.0))     // Last trade price
@@ -204,13 +204,13 @@ var _ = Describe("ValuationManager", func() {
 					Expect(err).To(BeNil())
 
 					// First position from initial buy
-					date, _ := trades[0].ParseDate()
+					date := trades[0].GetDate()
 					Expect(valuation.FirstPosition.Date).To(Equal(date))
 					Expect(valuation.FirstPosition.Quantity).To(Equal(5.0))
 					Expect(valuation.FirstPosition.USDPrice).To(Equal(100.0))
 
 					// Peak position should be final position
-					date, _ = trades[1].ParseDate()
+					date = trades[1].GetDate()
 					Expect(valuation.PeakPosition.Date).To(Equal(date))
 					Expect(valuation.PeakPosition.Quantity).To(Equal(10.0))
 					Expect(valuation.PeakPosition.USDPrice).To(Equal(120.0))
@@ -245,13 +245,13 @@ var _ = Describe("ValuationManager", func() {
 					Expect(err).To(BeNil())
 
 					// First position
-					date, _ := trades[0].ParseDate()
+					date := trades[0].GetDate()
 					Expect(valuation.FirstPosition.Date).To(Equal(date))
 					Expect(valuation.FirstPosition.Quantity).To(Equal(10.0))
 					Expect(valuation.FirstPosition.USDPrice).To(Equal(100.0))
 
 					// Peak should be second peak with 17 shares
-					date, _ = trades[3].ParseDate()
+					date = trades[3].GetDate()
 					Expect(valuation.PeakPosition.Date).To(Equal(date))
 					Expect(valuation.PeakPosition.Quantity).To(Equal(17.0))  // 7 + 10 shares
 					Expect(valuation.PeakPosition.USDPrice).To(Equal(115.0)) // Price at peak
@@ -285,7 +285,7 @@ var _ = Describe("ValuationManager", func() {
 					Expect(err).To(BeNil())
 
 					// First position from initial buy
-					date, _ := trades[0].ParseDate()
+					date := trades[0].GetDate()
 					Expect(valuation.FirstPosition.Date).To(Equal(date))
 					Expect(valuation.FirstPosition.Quantity).To(Equal(10.0))
 					Expect(valuation.FirstPosition.USDPrice).To(Equal(100.0))

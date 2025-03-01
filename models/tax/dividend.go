@@ -10,7 +10,7 @@ type Dividend struct {
 	Net    float64 `csv:"Net"`
 }
 
-func (d Dividend) GetSymbol() string {
+func (d Dividend) GetKey() string {
 	return d.Symbol
 }
 
@@ -18,8 +18,9 @@ func (d Dividend) IsValid() bool {
 	return d.Symbol != "" && d.Date != "" && d.Amount != 0
 }
 
-func (d Dividend) ParseDate() (time.Time, error) {
-	return time.Parse(time.DateOnly, d.Date)
+func (d Dividend) GetDate() time.Time {
+	date, _ := time.Parse(time.DateOnly, d.Date)
+	return date
 }
 
 // INRDividend adds exchange rate details to basic dividend
@@ -31,9 +32,8 @@ type INRDividend struct {
 
 // Implement Exchangeable interface
 func (d *INRDividend) GetDate() time.Time {
-	// Use original dividend date
-	date, _ := d.ParseDate()
-	return date
+	// Use embedded dividend's GetDate
+	return d.Dividend.GetDate()
 }
 
 func (d *INRDividend) GetUSDAmount() float64 {

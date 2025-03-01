@@ -1,26 +1,29 @@
 package tax
 
-import "time"
+import (
+	"time"
 
-// Exchangeable represents any entity that needs USD to INR exchange rate conversion
+	"github.com/amanhigh/go-fun/models/common"
+)
+
+// Base interface for all CSV records
+type CSVRecord interface {
+	GetKey() string // For key-based lookups (symbol/date)
+	// FIXME: Should we Return error to caller?
+	GetDate() time.Time // For date-based operations
+	IsValid() bool      // Validate record fields
+}
+
+// Exchangeable now extends CSVRecord
 type Exchangeable interface {
-	// BUG: Include CSV Record ?
-	// GetDate returns the original transaction date for exchange lookup
-	GetDate() time.Time
-
-	// GetUSDAmount returns the USD amount to be converted
+	CSVRecord
 	GetUSDAmount() float64
-
-	// SetTTRate stores the exchange rate used for conversion
 	SetTTRate(float64)
-
-	// SetTTDate stores the date for which exchange rate was used
 	SetTTDate(time.Time)
 }
 
-// Replace Symbolic interface with CSVRecord
-type CSVRecord interface {
-	GetSymbol() string // For ticker related functions
-	IsValid() bool     // For CSV validation
-	GetDate() (date time.Time, err error)
+type ClosestDateError interface {
+	common.HttpError
+	GetClosestDate() time.Time
+	GetRequestedDate() time.Time
 }

@@ -13,7 +13,7 @@ type Gains struct {
 	Type       string  `csv:"Type"`
 }
 
-func (g Gains) GetSymbol() string {
+func (g Gains) GetKey() string {
 	return g.Symbol
 }
 
@@ -21,9 +21,9 @@ func (g Gains) IsValid() bool {
 	return g.Symbol != "" && g.BuyDate != "" && g.SellDate != ""
 }
 
-func (g Gains) GetDate() (date time.Time, err error) {
-	date, err = g.ParseSellDate()
-	return
+func (g Gains) GetDate() time.Time {
+	date, _ := time.Parse(time.DateOnly, g.SellDate)
+	return date
 }
 
 func (g Gains) ParseBuyDate() (time.Time, error) {
