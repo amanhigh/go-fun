@@ -17,3 +17,10 @@ type Exchangeable interface {
 	// SetTTDate stores the date for which exchange rate was used
 	SetTTDate(time.Time)
 }
+
+// Replace Symbolic interface with CSVRecord
+type CSVRecord interface {
+	GetSymbol() string // For ticker related functions
+	IsValid() bool     // For CSV validation
+	GetDate() (date time.Time, err error)
+}

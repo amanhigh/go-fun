@@ -2,13 +2,6 @@ package tax
 
 import "time"
 
-// Replace Symbolic interface with CSVRecord
-type CSVRecord interface {
-	GetSymbol() string // For ticker related functions
-	IsValid() bool     // For CSV validation
-	GetDate() (date time.Time, err error)
-}
-
 // Broker statement trade model
 type Trade struct {
 	Symbol     string  `csv:"Symbol"`
