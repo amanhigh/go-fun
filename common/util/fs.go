@@ -144,3 +144,11 @@ func ClearDirectory(dirPath string) {
 		}
 	}
 }
+
+func Copy(src, dest string) error {
+	input, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(dest, input, DEFAULT_PERM)
+}
