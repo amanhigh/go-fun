@@ -38,7 +38,7 @@ var _ = Describe("DividendManager", func() {
 
 		BeforeEach(func() {
 			dividends = []tax.Dividend{
-				tax.Dividend{
+				{
 					Symbol: ticker,
 					Date:   date,
 					Amount: amount,
@@ -71,7 +71,7 @@ var _ = Describe("DividendManager", func() {
 		var dividends []tax.Dividend
 
 		BeforeEach(func() {
-			dividends = []tax.Dividend{tax.Dividend{
+			dividends = []tax.Dividend{{
 				Symbol: ticker,
 				Date:   date,
 				Amount: amount,

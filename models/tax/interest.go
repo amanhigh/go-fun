@@ -19,7 +19,7 @@ func (i Interest) IsValid() bool {
 	return i.Symbol != "" && i.Date != "" && i.Amount != 0
 }
 
-func (i Interest) ParseDate() (time.Time, error) {
+func (i Interest) GetDate() (time.Time, error) {
 	return time.Parse(time.DateOnly, i.Date)
 }
 
@@ -32,7 +32,7 @@ type INRInterest struct {
 
 // Implement Exchangeable interface
 func (i *INRInterest) GetDate() time.Time {
-	date, _ := i.ParseDate()
+	date, _ := time.Parse(time.DateOnly, i.Date)
 	return date
 }
 
