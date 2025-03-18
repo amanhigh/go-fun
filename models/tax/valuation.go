@@ -2,12 +2,6 @@ package tax
 
 import "time"
 
-// Replace Symbolic interface with CSVRecord
-type CSVRecord interface {
-	GetSymbol() string // For ticker related functions
-	IsValid() bool     // For CSV validation
-}
-
 // Broker statement trade model
 type Trade struct {
 	Symbol     string  `csv:"Symbol"`
@@ -29,19 +23,18 @@ func NewTrade(symbol, date, tradeType string, quantity, price float64) Trade {
 	}
 }
 
-// Add GetSymbol method to Trade struct
-func (t Trade) GetSymbol() string {
+func (t Trade) GetKey() string {
 	return t.Symbol
 }
 
-// Add IsValid implementation
+func (t Trade) GetDate() time.Time {
+	date, _ := time.Parse(time.DateOnly, t.Date)
+	return date
+}
+
 func (t Trade) IsValid() bool {
 	return t.Symbol != "" && t.Date != "" && t.Type != "" &&
 		(t.Type == "BUY" || t.Type == "SELL")
-}
-
-func (t Trade) ParseDate() (time.Time, error) {
-	return time.Parse(time.DateOnly, t.Date)
 }
 
 // Position represents a snapshot of holdings at a point in time
@@ -82,6 +75,7 @@ func NewINRValuation(valuation Valuation) INRValutaion {
 }
 
 // INRPosition extends Position with exchange rate details
+// INRPosition is not a CSV Record but Implements Exchangeable Interface.
 type INRPosition struct {
 	Position           // Embed original position
 	TTDate   time.Time // Date for which exchange rate is applied
@@ -89,6 +83,7 @@ type INRPosition struct {
 }
 
 // INRValue calculates INR value using embedded position's USD value
+// BUG: Should INRValue be part of Interface or remove if unused.
 func (t *INRPosition) INRValue() float64 {
 	return t.USDValue() * t.TTRate
 }
@@ -96,6 +91,11 @@ func (t *INRPosition) INRValue() float64 {
 // Implement Exchangeable interface for INRPosition
 func (t *INRPosition) GetDate() time.Time {
 	return t.Position.Date
+}
+
+func (t *INRPosition) GetKey() string {
+	// This mostly won't be used is to Satisfy CSV Record.
+	return t.Position.Date.Format(time.DateOnly)
 }
 
 func (t *INRPosition) GetUSDAmount() float64 {
@@ -108,4 +108,8 @@ func (t *INRPosition) SetTTRate(rate float64) {
 
 func (t *INRPosition) SetTTDate(date time.Time) {
 	t.TTDate = date
+}
+
+func (t *INRPosition) IsValid() bool {
+	return !t.Position.Date.IsZero() && t.TTRate > 0
 }

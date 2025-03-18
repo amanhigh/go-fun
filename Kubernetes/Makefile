@@ -55,8 +55,12 @@ dashboard: ## Minikube Dashboard
 	printf $(_TITLE) "Minikube Dashboard & Addons" ""
 	minikube -p minikube dashboard --port=$(PORT) --url=true > /dev/null 2>&1 &
 
-bootstrap:
-	printf $(_TITLE) "Bootstraping Services" ""
+secret:
+	printf $(_TITLE) "Bootstraping" "Secrets"
+	kubectl create secret generic secret-keys --from-env-file=${SECRET_ENV} > $(OUT)
+
+bootstrap: secret
+	printf $(_TITLE) "Bootstraping" "Services"
 	$(MAKE) -C ./services bootstrap > $(OUT)
 
 .PHONY: istio

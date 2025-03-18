@@ -56,9 +56,9 @@ func (b *BaseCSVRepositoryImpl[T]) GetUniqueTickers(ctx context.Context) (ticker
 	// Use map to track unique tickers
 	tickerMap := make(map[string]bool)
 	for _, record := range records {
-		// Use type assertion to get Symbol field
+		// Use type assertion to get Key field
 		if ticker, ok := any(record).(tax.CSVRecord); ok {
-			tickerMap[ticker.GetSymbol()] = true
+			tickerMap[ticker.GetKey()] = true
 		}
 	}
 
@@ -79,7 +79,7 @@ func (b *BaseCSVRepositoryImpl[T]) GetRecordsForTicker(ctx context.Context, tick
 
 	// Filter by ticker
 	for _, record := range records {
-		if t, ok := any(record).(tax.CSVRecord); ok && t.GetSymbol() == ticker {
+		if t, ok := any(record).(tax.CSVRecord); ok && t.GetKey() == ticker {
 			filtered = append(filtered, record)
 		}
 	}

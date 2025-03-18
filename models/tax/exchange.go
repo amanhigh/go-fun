@@ -22,14 +22,12 @@ func (r SbiRate) IsValid() bool {
 // 2020-01-04 09:00,https://github.com/sahilgupta/sbi_forex_rates/blob/main/pdf_files/2020/1/2020-01-04.pdf,0.00,0.00,71.29,72.34,70.70,72.55,70.40,72.70
 const SBI_RATES_FILENAME = "SBI_REFERENCE_RATES_USD.csv"
 
-// BUG: Change To Key?
-func (r SbiRate) GetSymbol() string {
+func (r SbiRate) GetKey() string {
 	return r.Date
 }
 
-// ParseDate implementation for SbiRate
-func (r SbiRate) ParseDate() (time.Time, error) {
-	// Parse only date part as file has dates in format "2020-01-04 09:00"
+func (r SbiRate) GetDate() time.Time {
 	datePart := strings.Split(r.Date, " ")[0]
-	return time.Parse(time.DateOnly, datePart)
+	t, _ := time.Parse(time.DateOnly, datePart)
+	return t
 }

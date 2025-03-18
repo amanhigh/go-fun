@@ -6,9 +6,9 @@ import (
 )
 
 type DariusV1 struct {
-	app       *tview.Application     `container:"type"`
-	uiManager *tui.UIManagerImpl     `container:"type"`
-	hotkeys   *tui.HotkeyManagerImpl `container:"type"`
+	app       *tview.Application `container:"type"`
+	uiManager tui.UIManager      `container:"type"`
+	hotkeys   tui.HotkeyManager  `container:"type"`
 }
 
 func (d *DariusV1) Run() error {

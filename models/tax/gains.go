@@ -13,12 +13,17 @@ type Gains struct {
 	Type       string  `csv:"Type"`
 }
 
-func (g Gains) GetSymbol() string {
+func (g Gains) GetKey() string {
 	return g.Symbol
 }
 
 func (g Gains) IsValid() bool {
 	return g.Symbol != "" && g.BuyDate != "" && g.SellDate != ""
+}
+
+func (g Gains) GetDate() time.Time {
+	date, _ := time.Parse(time.DateOnly, g.SellDate)
+	return date
 }
 
 func (g Gains) ParseBuyDate() (time.Time, error) {
@@ -58,4 +63,12 @@ func (g *INRGains) SetTTDate(date time.Time) {
 // INRValue computes the PNL value in INR
 func (g *INRGains) INRValue() float64 {
 	return g.PNL * g.TTRate
+}
+
+// TaxSummary contains all processed tax records
+type TaxSummary struct {
+	INRGains []INRGains // Processed capital gains in INR
+	// Future fields will be added as needed:
+	// INRDividends []INRDividend
+	// INRPositions []INRPosition
 }

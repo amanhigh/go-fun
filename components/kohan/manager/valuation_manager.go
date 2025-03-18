@@ -45,6 +45,7 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 	}
 
 	// Process trades with starting position
+	// HACK: Simplify this Class
 	currentPosition := v.trackPositions(&analysis, startPosition, trades)
 
 	// Update year-end position if there are remaining holdings
@@ -105,30 +106,29 @@ func (v *ValuationManagerImpl) trackPositions(analysis *tax.Valuation, startPosi
 
 	// Process all trades
 	for _, t := range trades {
-		if parsedTime, err := t.ParseDate(); err == nil {
-			if t.Type == "BUY" {
-				currentPosition += t.Quantity
-			} else {
-				currentPosition -= t.Quantity
-			}
+		tradeDate := t.GetDate()
+		if t.Type == "BUY" {
+			currentPosition += t.Quantity
+		} else {
+			currentPosition -= t.Quantity
+		}
 
-			// Update first position if starting from zero
-			if startPosition.Quantity == 0 && t.Type == "BUY" && analysis.FirstPosition.Quantity == 0 {
-				analysis.FirstPosition = tax.Position{
-					Date:     parsedTime,
-					Quantity: t.Quantity,
-					USDPrice: t.USDPrice,
-				}
+		// Update first position if starting from zero
+		if startPosition.Quantity == 0 && t.Type == "BUY" && analysis.FirstPosition.Quantity == 0 {
+			analysis.FirstPosition = tax.Position{
+				Date:     tradeDate,
+				Quantity: t.Quantity,
+				USDPrice: t.USDPrice,
 			}
+		}
 
-			// Track peak position
-			if currentPosition > maxPosition {
-				maxPosition = currentPosition
-				analysis.PeakPosition = tax.Position{
-					Date:     parsedTime,
-					Quantity: maxPosition,
-					USDPrice: t.USDPrice,
-				}
+		// Track peak position
+		if currentPosition > maxPosition {
+			maxPosition = currentPosition
+			analysis.PeakPosition = tax.Position{
+				Date:     tradeDate,
+				Quantity: maxPosition,
+				USDPrice: t.USDPrice,
 			}
 		}
 	}

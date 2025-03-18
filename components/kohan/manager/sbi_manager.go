@@ -57,8 +57,8 @@ func (s *SBIManagerImpl) findExactRate(rates []tax.SbiRate, requestedDate time.T
 	// FIXME: #C Use exchangeRepo.GetRecordsForTicker which is now Date.
 	dateStr := requestedDate.Format(time.DateOnly)
 	for _, rate := range rates {
-		rateDate, err := rate.ParseDate()
-		if err == nil && rateDate.Format(time.DateOnly) == dateStr {
+		rateDate := rate.GetDate()
+		if rateDate.Format(time.DateOnly) == dateStr {
 			return rate.TTBuy, true
 		}
 	}
@@ -72,11 +72,7 @@ func (s *SBIManagerImpl) findClosestRate(rates []tax.SbiRate, requestedDate time
 	var closestRate float64
 
 	for _, rate := range rates {
-		rateDate, err := rate.ParseDate()
-		if err != nil {
-			continue
-		}
-
+		rateDate := rate.GetDate()
 		rateDateStr := rateDate.Format(time.DateOnly)
 		if rateDateStr <= dateStr && (closestDate.IsZero() || rateDate.After(closestDate)) {
 			closestDate = rateDate
