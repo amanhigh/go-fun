@@ -8,7 +8,7 @@ import (
 )
 
 type TaxManager interface {
-	GetTaxSummary(ctx context.Context, year int) (tax.TaxSummary, common.HttpError)
+	GetTaxSummary(ctx context.Context, year int) (tax.Summary, common.HttpError)
 }
 
 type TaxManagerImpl struct {
@@ -21,7 +21,7 @@ func NewTaxManager(capitalGainManager CapitalGainManager) TaxManager {
 	}
 }
 
-func (t *TaxManagerImpl) GetTaxSummary(ctx context.Context, year int) (summary tax.TaxSummary, err common.HttpError) {
+func (t *TaxManagerImpl) GetTaxSummary(ctx context.Context, year int) (summary tax.Summary, err common.HttpError) {
 	// Get and process gains for the year
 	gains, err := t.capitalGainManager.GetGainsForYear(ctx, year)
 	if err != nil {

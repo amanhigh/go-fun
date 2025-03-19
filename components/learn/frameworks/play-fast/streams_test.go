@@ -68,7 +68,7 @@ var _ = Describe("Streams", func() {
 		})
 
 		It("should sum age (reduce)", func() {
-			totalAge := lo.Reduce(people, func(total int, person Person, index int) int {
+			totalAge := lo.Reduce(people, func(total int, person Person, _ int) int {
 				return total + person.Age
 			}, 0)
 
@@ -140,7 +140,7 @@ var _ = Describe("Streams", func() {
 		})
 
 		It("should reject (odd age)", func() {
-			evenAgePeople := lo.Reject(people, func(person Person, index int) bool {
+			evenAgePeople := lo.Reject(people, func(person Person, _ int) bool {
 				return person.Age%2 != 0
 			})
 
@@ -150,7 +150,7 @@ var _ = Describe("Streams", func() {
 		Context("Map Age", func() {
 			var ages []int
 			BeforeEach(func() {
-				ages = lo.Map(people, func(person Person, index int) int { return person.Age })
+				ages = lo.Map(people, func(person Person, _ int) int { return person.Age })
 			})
 
 			It("should work", func() {

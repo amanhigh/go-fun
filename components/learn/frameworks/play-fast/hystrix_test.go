@@ -620,7 +620,7 @@ var _ = Describe("Hystrix", func() {
 			})
 
 			It("should compute fallback result when execution fails", func() {
-				fallbackPolicy := fallback.WithFunc[string](func(e failsafe.Execution[string]) (string, error) {
+				fallbackPolicy := fallback.WithFunc[string](func(_ failsafe.Execution[string]) (string, error) {
 					return backupResult, nil
 				})
 

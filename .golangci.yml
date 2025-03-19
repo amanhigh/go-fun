@@ -101,7 +101,7 @@ linters:
     
     # Code Style Essentials
     - goimports     # import sorting + gofmt
-    # - revive        # general style (golint replacement)
+    - revive        # general style (golint replacement)
     - gocritic      
     - unused        # unused code detection
 

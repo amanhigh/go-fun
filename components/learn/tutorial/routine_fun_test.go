@@ -39,7 +39,7 @@ var _ = Describe("RoutineFun", func() {
 			Expect(val).To(Equal("Singh"))
 
 			// Iterate over values
-			mapV.Range(func(key, value any) bool {
+			mapV.Range(func(_, value any) bool {
 				stringValue := value.(string)
 				Expect(stringValue).To(Not(BeNil()))
 				// Indicate to continue iteration

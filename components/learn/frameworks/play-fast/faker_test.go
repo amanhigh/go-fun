@@ -107,14 +107,14 @@ type Sample struct {
 
 // CustomGenerator ...
 func CustomGenerator() {
-	_ = faker.AddProvider("customIdFaker", func(v reflect.Value) (any, error) {
+	_ = faker.AddProvider("customIdFaker", func(_ reflect.Value) (any, error) {
 		return int64(43), nil
 	})
-	_ = faker.AddProvider("danger", func(v reflect.Value) (any, error) {
+	_ = faker.AddProvider("danger", func(_ reflect.Value) (any, error) {
 		return "danger-ranger", nil
 	})
 
-	_ = faker.AddProvider("gondoruwo", func(v reflect.Value) (any, error) {
+	_ = faker.AddProvider("gondoruwo", func(_ reflect.Value) (any, error) {
 		obj := Gondoruwo{
 			Name:       "Power",
 			Locatadata: 324,

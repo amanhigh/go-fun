@@ -35,15 +35,16 @@ func stream(w http.ResponseWriter, _ *http.Request) {
 	// Listen to the closing of the http connection via the CloseNotifier
 	// notify := w.(http.CloseNotifier).CloseNotify()
 
-	if f, ok := w.(http.Flusher); !ok {
+	f, ok := w.(http.Flusher)
+	if !ok {
 		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
 		return
-	} else {
-		for i := 0; i < 10; i++ {
-			fmt.Fprintf(w, "data: Streaming - %v\n\n", i)
-			f.Flush()
-			time.Sleep(time.Second)
-		}
+	}
+
+	for i := 0; i < 10; i++ {
+		fmt.Fprintf(w, "data: Streaming - %v\n\n", i)
+		f.Flush()
+		time.Sleep(time.Second)
 	}
 
 	fmt.Fprint(w, "data: Streaming Finished :)\n\n")
