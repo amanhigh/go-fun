@@ -74,7 +74,7 @@ linters-settings:
       - name: superfluous-else
       - name: unused-parameter
       - name: unreachable-code
-      # - name: redefines-builtin-id  
+      - name: redefines-builtin-id  
       - name: argument-limit
         arguments: [6]      # Max parameters
       - name: function-result-limit

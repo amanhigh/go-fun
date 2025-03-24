@@ -10,7 +10,7 @@ import (
 )
 
 var _ = Describe("Sort Tests", func() {
-	const count, max = 10, 10
+	const count, upperBound = 10, 10
 	var (
 		original []int
 		input    []int
@@ -18,7 +18,7 @@ var _ = Describe("Sort Tests", func() {
 	)
 
 	BeforeEach(func() {
-		original = util.RandomInts(count, max)
+		original = util.RandomInts(count, upperBound)
 
 		/* Make Copies to avoid changing original */
 		input = make([]int, count)

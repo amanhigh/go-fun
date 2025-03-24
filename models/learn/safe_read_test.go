@@ -10,14 +10,14 @@ import (
 
 var _ = Describe("SafeRead", func() {
 	var (
-		safe     learn.SafeReadWrite
-		start    = 1
-		len      = 2
-		timeUnit = 10 * time.Millisecond
+		safe       learn.SafeReadWrite
+		start      = 1
+		bufferSize = 2
+		timeUnit   = 10 * time.Millisecond
 	)
 
 	BeforeEach(func() {
-		safe = learn.SafeReadWrite{start, make(chan int, len)}
+		safe = learn.SafeReadWrite{start, make(chan int, bufferSize)}
 	})
 
 	It("should build", func() {
