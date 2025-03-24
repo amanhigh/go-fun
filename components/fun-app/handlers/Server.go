@@ -96,7 +96,7 @@ func (fs *FunServer) Stop(c context.Context) {
 	ctx, span := fs.Tracer.Start(c, "Stop.Server")
 	defer span.End()
 
-	ctxTimed, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctxTimed, cancel := context.WithTimeout(context.Background(), 10*time.Second) //nolint:mnd // Standard server shutdown timeout
 	defer cancel()
 	if err := fs.Server.Shutdown(ctxTimed); err != nil {
 		zerolog.Ctx(c).Fatal().Ctx(ctx).Err(err).Msg("Forced Shutdown, Graceful Exit Failed: ")

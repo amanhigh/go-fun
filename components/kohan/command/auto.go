@@ -7,6 +7,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	MonitorServerPort = 9010
+)
+
 var autoCmd = &cobra.Command{
 	Use:   "auto",
 	Short: "Automation Related Commands",
@@ -39,7 +43,7 @@ var monitorCmd = &cobra.Command{
 
 		go autoManager.MonitorInternetConnection(cmd.Context())
 		go func() {
-			if err := server.Start(9010); err != nil {
+			if err := server.Start(MonitorServerPort); err != nil {
 				log.Error().Err(err).Msg("Failed to start monitor server")
 			}
 		}()

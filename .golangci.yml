@@ -97,7 +97,7 @@ linters:
     - nilerr        # nil error returns
     - sqlclosecheck # ensure sql resources closed
     - noctx        # enforce context usage
-    # - mnd           # Magic numbers detector
+    - mnd           # Magic numbers detector
     
     # Code Style Essentials
     - goimports     # import sorting + gofmt
@@ -136,6 +136,7 @@ issues:
       linters:
         - errcheck
         - govet
+        - mnd
   exclude-dirs:
     # - "^components/"
   exclude-files:

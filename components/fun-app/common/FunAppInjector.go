@@ -118,7 +118,7 @@ func newHttpServer(config config.FunAppConfig, engine *gin.Engine) (server *http
 	server = &http.Server{
 		Addr:              fmt.Sprintf(":%v", config.Server.Port),
 		Handler:           engine,
-		ReadHeaderTimeout: 10 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second, //nolint:mnd // Standard HTTP timeout value
 	}
 	return
 }

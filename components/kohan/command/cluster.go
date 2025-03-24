@@ -13,6 +13,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	MAX_CLUSTER_ARGS = 3
+)
+
 var clusterCmd = &cobra.Command{
 	Use:   "cluster",
 	Short: "Cluster Based Commands",
@@ -98,7 +102,7 @@ var clusterSearchCmd = &cobra.Command{
 		case 2:
 			c, err = util.ParseInt(args[1])
 
-		case 3:
+		case MAX_CLUSTER_ARGS:
 			if c, err = util.ParseInt(args[1]); err == nil {
 				i, err = util.ParseInt(args[2])
 			}
