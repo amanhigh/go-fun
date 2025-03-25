@@ -52,7 +52,7 @@ linters-settings:
     # enable-all-rules: true
     rules:
       # - name: var-naming
-      # - name: dot-imports
+      - name: dot-imports
       - name: blank-imports
       - name: context-as-argument
       - name: context-keys-type
@@ -129,6 +129,10 @@ issues:
       linters:
         - bodyclose   # ignore response body closes in tests
         - noctx      # ignore missing context in tests
+    - path: "_test\\.go"
+      linters:
+        - revive
+      text: "^dot-imports:"
     - path: "common/clients/http_client.go"
       linters:
         - bodyclose   # ignore response body closes in tests

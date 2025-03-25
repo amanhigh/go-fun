@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/amanhigh/go-fun/models/common"
-	. "github.com/amanhigh/go-fun/models/common"
 	"github.com/go-playground/validator/v10"
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog/log"
@@ -19,33 +18,33 @@ import (
 // - restyErr: an error
 // Return type(s):
 // - err: an HttpError
-func handleStatusCode(statusCode int) HttpError {
+func handleStatusCode(statusCode int) common.HttpError {
 	switch statusCode {
 	case http.StatusBadRequest:
-		return ErrBadRequest
+		return common.ErrBadRequest
 	case http.StatusNotFound:
-		return ErrNotFound
+		return common.ErrNotFound
 	case http.StatusUnauthorized:
-		return ErrNotAuthorized
+		return common.ErrNotAuthorized
 	case http.StatusForbidden:
-		return ErrNotAuthenticated
+		return common.ErrNotAuthenticated
 	case http.StatusConflict:
-		return ErrEntityExists
+		return common.ErrEntityExists
 	case http.StatusInternalServerError:
-		return ErrInternalServerError
+		return common.ErrInternalServerError
 	default:
 		return nil
 	}
 }
 
-func ResponseProcessor(response *resty.Response, restyErr error) HttpError {
+func ResponseProcessor(response *resty.Response, restyErr error) common.HttpError {
 	if restyErr != nil {
 		// Rest Client Error hence No Respones
-		return NewServerError(restyErr)
+		return common.NewServerError(restyErr)
 	}
 
 	// If Error is Http Error & has Data, Use directly.
-	if err, ok := response.Error().(HttpError); ok && err.Code() > 0 {
+	if err, ok := response.Error().(common.HttpError); ok && err.Code() > 0 {
 		return err
 	}
 
@@ -54,7 +53,7 @@ func ResponseProcessor(response *resty.Response, restyErr error) HttpError {
 	return handleStatusCode(response.StatusCode())
 }
 
-func ProcessValidationError(validationErr error) (err HttpError) {
+func ProcessValidationError(validationErr error) (err common.HttpError) {
 	var errs validator.ValidationErrors
 	if errors.As(validationErr, &errs) {
 		for _, e := range errs {
@@ -62,7 +61,7 @@ func ProcessValidationError(validationErr error) (err HttpError) {
 			break
 		}
 	} else {
-		var httpErr HttpError
+		var httpErr common.HttpError
 		if errors.As(validationErr, &httpErr) {
 			return httpErr
 		}
