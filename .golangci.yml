@@ -42,6 +42,12 @@ linters-settings:
   errcheck:
     check-type-assertions: true
 
+  wrapcheck:
+    ignoreSigs:
+      - ^fmt\.Errorf$  # Already formatted errors
+      - ^time\.Parse$  # Simple parsing errors
+      - ^errors\.New$  # Basic error creation
+
   # https://go-critic.com/overview
   gocritic:
     enabled-checks:
@@ -94,6 +100,7 @@ linters:
     - gosimple     # code simplification
     - typecheck    # type checking
     - gosec        # security checks
+    # - wrapcheck    # error wrapping validation
     
     # Safety & Resources
     - bodyclose      # ensure http response closed
@@ -132,6 +139,7 @@ issues:
       linters:
         - bodyclose   # ignore response body closes in tests
         - noctx      # ignore missing context in tests
+        - wrapcheck
     - path: "_test\\.go"
       linters:
         - revive
@@ -144,6 +152,7 @@ issues:
         - errcheck
         - govet
         - mnd
+        - wrapcheck
   exclude-dirs:
     # - "^components/"
   exclude-files:
