@@ -46,6 +46,8 @@ linters-settings:
   gocritic:
     enabled-checks:
       - paramTypeCombine    # Combines same-type params
+      - appendCombine     # Merge redundant `append` calls
+      - sloppyReassign    # Detect redundant variable reassignments
 
   # https://revive.run/docs#default-configuration
   revive:
@@ -91,6 +93,7 @@ linters:
     - staticcheck  # advanced static analysis
     - gosimple     # code simplification
     - typecheck    # type checking
+    - gosec        # security checks
     
     # Safety & Resources
     - bodyclose      # ensure http response closed

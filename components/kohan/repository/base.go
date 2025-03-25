@@ -34,7 +34,7 @@ func NewBaseCSVRepository[T any](filePath string) *BaseCSVRepositoryImpl[T] {
 func (b *BaseCSVRepositoryImpl[T]) GetAllRecords(ctx context.Context) (records []T, err common.HttpError) {
 	// Load records if needed
 	if len(b.records) == 0 {
-		if err = b.loadRecords(ctx); err != nil {
+		if err := b.loadRecords(ctx); err != nil {
 			return nil, err
 		}
 	}
