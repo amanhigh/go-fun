@@ -25,10 +25,10 @@ var _ = Describe("SpeedBump", Ordered, Label(models.GINKGO_SLOW), func() {
 
 	BeforeAll(func() {
 		container, err = util.RedisTestContainer(ctx)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 
 		endpoint, err := container.Endpoint(ctx, "")
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 
 		log.Info().Str("Host", endpoint).Msg("Redis Endpoint")
 
@@ -42,7 +42,7 @@ var _ = Describe("SpeedBump", Ordered, Label(models.GINKGO_SLOW), func() {
 
 	AfterAll(func() {
 		log.Warn().Msg("Redis Shutting Down")
-		Expect(container.Terminate(ctx)).To(BeNil())
+		Expect(container.Terminate(ctx)).To(Succeed())
 	})
 
 	It("should build", func() {
@@ -62,13 +62,13 @@ var _ = Describe("SpeedBump", Ordered, Label(models.GINKGO_SLOW), func() {
 		// First 5 Request not limited
 		for i := 0; i < 5; i++ {
 			success, err := limiter.Attempt(testIp) // TestIp can be combined with api to do api level rate limiting.
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(success).To(BeTrue())
 		}
 		// Next 5 Request are limited
 		for i := 0; i < 5; i++ {
 			success, err := limiter.Attempt(testIp)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(success).To(BeFalse())
 		}
 	})

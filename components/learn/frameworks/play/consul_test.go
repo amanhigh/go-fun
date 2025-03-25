@@ -25,31 +25,30 @@ var _ = Describe("Consul", Ordered, Label(models.GINKGO_SLOW), func() {
 	BeforeAll(func() {
 		// Create Consul Test Container
 		consulContainer, err = util.ConsulTestContainer(ctx)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 
 		// Get Mapped Port
 		consulHost, err = consulContainer.PortEndpoint(ctx, "8500/tcp", "")
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 		log.Info().Str("Host", consulHost).Msg("Consul Endpoint")
 
 		// Get a new client
 		client, err = api.NewClient(&api.Config{Address: consulHost})
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	AfterAll(func() {
 		log.Warn().Msg("Consul Shutting Down")
 		err = consulContainer.Terminate(ctx)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	It("should connect", func() {
 		Expect(client).To(Not(BeNil()))
 
 		_, err = client.Agent().Self()
-		Expect(err).To(BeNil(), "Failed to connect to Consul")
+		Expect(err).ToNot(HaveOccurred(), "Failed to connect to Consul")
 	})
-
 	Context("Write and Read", func() {
 		var (
 			kv *api.KV
@@ -65,17 +64,16 @@ var _ = Describe("Consul", Ordered, Label(models.GINKGO_SLOW), func() {
 			kv = client.KV()
 
 			_, err = kv.Put(&p, nil)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
-
 		AfterEach(func() {
-			_, err = kv.Delete(key, nil)
-			Expect(err).To(BeNil())
-		})
 
+			_, err = kv.Delete(key, nil)
+			Expect(err).ToNot(HaveOccurred())
+		})
 		It("should have Read Value", func() {
 			readKV, _, err := kv.Get(key, nil)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(readKV.Value).To(Equal(value))
 		})
 	})

@@ -66,27 +66,27 @@ var _ = Describe("TickerManager", func() {
 
 			// Test download
 			err = tickerManager.DownloadTicker(ctx, ticker)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			// Verify file exists and content
 			fileContent, err := os.ReadFile(filePath)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			var savedData tax.VantageStockData
 			err = json.Unmarshal(fileContent, &savedData)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(savedData).To(Equal(stockData))
 		})
 
 		It("should skip download if file exists", func() {
 			data, err := json.Marshal(stockData)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			err = os.WriteFile(filePath, data, util.APPEND_PERM)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			// Call download without Mock Expectations
 			err = tickerManager.DownloadTicker(ctx, ticker)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should handle API errors", func() {
@@ -123,12 +123,12 @@ var _ = Describe("TickerManager", func() {
 			filePath := filepath.Join(testDir, ticker+".json")
 			data, _ := json.Marshal(stockData)
 			err := os.WriteFile(filePath, data, 0600)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should correctly analyze yearly data", func() {
 			peakPrice, err := tickerManager.FindPeakPrice(ctx, ticker, year)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			Expect(peakPrice.Ticker).To(Equal(ticker))
 			Expect(peakPrice.Date).To(Equal("2024-03-15"))
@@ -138,7 +138,7 @@ var _ = Describe("TickerManager", func() {
 		It("should handle missing data", func() {
 			// Test with non-existent ticker
 			_, err := tickerManager.FindPeakPrice(ctx, "INVALID", year)
-			Expect(err).To(Not(BeNil()))
+			Expect(err).To(HaveOccurred())
 		})
 	})
 
@@ -162,13 +162,13 @@ var _ = Describe("TickerManager", func() {
 			filePath := filepath.Join(testDir, ticker+".json")
 			data, _ := json.Marshal(stockData)
 			err := os.WriteFile(filePath, data, 0600)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should return exact date price", func() {
 			date := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
 			price, err := tickerManager.GetPrice(ctx, ticker, date)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(price).To(Equal(100.00))
 		})
 
@@ -176,7 +176,7 @@ var _ = Describe("TickerManager", func() {
 			// Request price for Jan 18 (not in data)
 			date := time.Date(2024, 1, 18, 0, 0, 0, 0, time.UTC)
 			price, err := tickerManager.GetPrice(ctx, ticker, date)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			// Should return Jan 17 price
 			Expect(price).To(Equal(102.00))
 		})
@@ -186,25 +186,25 @@ var _ = Describe("TickerManager", func() {
 
 			// First request - loads from file
 			price1, err := tickerManager.GetPrice(ctx, ticker, date)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			// Modify file to verify cache is used
 			stockData.TimeSeries["2024-01-15"] = tax.DayPrice{Close: "999.00"}
 			data, _ := json.Marshal(stockData)
 			filePath := filepath.Join(testDir, ticker+".json")
 			writeErr := os.WriteFile(filePath, data, 0600)
-			Expect(writeErr).To(BeNil())
+			Expect(writeErr).ToNot(HaveOccurred())
 
 			// Second request - should use cache
 			price2, err := tickerManager.GetPrice(ctx, ticker, date)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(price2).To(Equal(price1)) // Should return cached value
 		})
 
 		It("should handle missing data errors", func() {
 			date := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
 			_, err := tickerManager.GetPrice(ctx, ticker, date)
-			Expect(err).To(Not(BeNil()))
+			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("No price data found"))
 			Expect(err.Code()).To(Equal(http.StatusNotFound))
 		})

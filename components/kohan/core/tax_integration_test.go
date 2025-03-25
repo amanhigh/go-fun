@@ -18,7 +18,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 	BeforeEach(func() {
 		tempDir = GinkgoT().TempDir()
 		err := setupTestFiles(tempDir)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 
 		config = kohan.KohanConfig{
 			Tax: kohan.TaxConfig{

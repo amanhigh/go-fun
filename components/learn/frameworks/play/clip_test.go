@@ -22,7 +22,7 @@ var _ = Describe("Clipboard", Label(models.GINKGO_SLOW), func() {
 	})
 
 	It("should build", func() {
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	Context("Text Copy", func() {
@@ -50,7 +50,7 @@ var _ = Describe("Clipboard", Label(models.GINKGO_SLOW), func() {
 
 		BeforeEach(func() {
 			imgData, err = os.ReadFile("../res/flower.jpg")
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			ch = clipboard.Write(clipboard.FmtImage, imgData)
 		})
 

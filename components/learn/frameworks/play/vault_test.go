@@ -30,42 +30,41 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 	BeforeAll(func() {
 		// Create Vault Test Container
 		vaultContainer, err = util.VaultTestContainer(ctx)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 
 		// Get Mapped Port
 		vaultHost, err = vaultContainer.PortEndpoint(ctx, "8200/tcp", "")
 		vaultHost = "http://" + vaultHost
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 		log.Info().Str("Host", vaultHost).Msg("Vault Endpoint")
 
 		// Get a new client
 		client, err = vault.New(vault.WithAddress(vaultHost), vault.WithRequestTimeout(30*time.Second))
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 
 		// Authenticate
 		err = client.SetToken(models.VAULT_ROOT_TOKEN)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 
 		// Enable the transit secrets engine
 		_, err = client.System.MountsEnableSecretsEngine(ctx, "transit", schema.MountsEnableSecretsEngineRequest{
 			Type: "transit",
 		})
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	AfterAll(func() {
 		log.Warn().Msg("Vault Shutting Down")
 		err = vaultContainer.Terminate(ctx)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	It("should connect", func() {
 		Expect(client).To(Not(BeNil()))
 
 		_, err = client.System.ReadHealthStatus(ctx)
-		Expect(err).To(BeNil(), "Failed to connect to Vault")
+		Expect(err).ToNot(HaveOccurred(), "Failed to connect to Vault")
 	})
-
 	Context("Secrets", func() {
 		var (
 			// Data
@@ -79,24 +78,24 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 
 		BeforeEach(func() {
 			_, err = client.Secrets.KvV2Write(ctx, dataPath+"/"+key, schema.KvV2WriteRequest{Data: value}, vault.WithMountPath(mountPath))
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		AfterEach(func() {
 			_, err = client.Secrets.KvV2Delete(ctx, dataPath+"/"+key, vault.WithMountPath(mountPath))
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should give correct Value on Read", func() {
 			secret, err := client.Secrets.KvV2Read(ctx, dataPath+"/"+key, vault.WithMountPath(mountPath))
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(secret.Data.Data).To(Equal(value))
 		})
 
 		It("should list secrets", func() {
 
 			secrets, err := client.Secrets.KvV2List(ctx, dataPath, vault.WithMountPath(mountPath))
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(secrets.Data.Keys).To(ContainElement(key))
 		})
 	})
@@ -115,49 +114,49 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 				Exportable: true,
 				Type:       keyType,
 			})
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			// Configure Key (Edit)
 			_, err = client.Secrets.TransitConfigureKey(ctx, keyName, schema.TransitConfigureKeyRequest{
 				DeletionAllowed:      true,
 				AllowPlaintextBackup: true,
 			})
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		AfterEach(func() {
 			// Delete Key
 			_, err = client.Secrets.TransitDeleteKey(ctx, keyName)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should read key info", func() {
 			key, err := client.Secrets.TransitReadKey(ctx, keyName)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(key.Data["type"]).To(Equal(keyType))
 		})
 
 		It("should list keys", func() {
 			keys, err := client.Secrets.TransitListKeys(ctx)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(keys.Data.Keys).Should(ContainElement(keyName))
 		})
 
 		It("should rotate key", func() {
 			rotateKey, err := client.Secrets.TransitRotateKey(ctx, keyName, schema.TransitRotateKeyRequest{})
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(rotateKey.Data["latest_version"]).To(Equal(json.Number("2")))
 		})
 
 		It("should backup key", func() {
 			backupKey, err := client.Secrets.TransitBackUpKey(ctx, keyName)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(backupKey.Data["backup"]).ToNot(BeNil())
 		})
 
 		It("should export hmac key", func() {
 			exportKey, err := client.Secrets.TransitExportKey(ctx, keyName, "hmac-key")
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(exportKey.Data["keys"]).To(HaveLen(1))
 		})
 
@@ -175,7 +174,7 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 				encryptedData, err := client.Secrets.TransitEncrypt(ctx, keyName, schema.TransitEncryptRequest{
 					Plaintext: baseData,
 				})
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				cipherText = encryptedData.Data["ciphertext"].(string)
 				Expect(cipherText).ToNot(BeNil())
 			})
@@ -184,12 +183,12 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 				decryptedData, err := client.Secrets.TransitDecrypt(ctx, keyName, schema.TransitDecryptRequest{
 					Ciphertext: cipherText,
 				})
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				decryptedBaseData := decryptedData.Data["plaintext"].(string)
 
 				// Decode Base64 Data
 				decryptedPlainText, err := base64.StdEncoding.DecodeString(decryptedBaseData)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				Expect(string(decryptedPlainText)).To(Equal(plainText))
 			})
 
@@ -202,12 +201,12 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 				BeforeEach(func() {
 					//Export Key
 					encryptionKey, err := client.Secrets.TransitExportKey(ctx, keyName, "encryption-key")
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 					Expect(encryptionKey.Data["keys"]).To(HaveLen(1))
 					baseKey := encryptionKey.Data["keys"].(map[string]any)["1"].(string)
 					// Decode Base64 Key
 					key, err = base64.StdEncoding.DecodeString(baseKey)
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 				})
 
 				Context("AES", func() {
@@ -218,14 +217,14 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 					BeforeEach(func() {
 						// Encrypt Data
 						cipher, noonce, err = dhutil.EncryptAES(key, []byte(plainText), AAD)
-						Expect(err).To(BeNil())
+						Expect(err).ToNot(HaveOccurred())
 						Expect(cipher).ToNot(BeNil())
 						Expect(noonce).ToNot(BeNil())
 					})
 
 					It("should decrypt data", func() {
 						decryptedText, err := dhutil.DecryptAES(key, cipher, noonce, AAD)
-						Expect(err).To(BeNil())
+						Expect(err).ToNot(HaveOccurred())
 						Expect(string(decryptedText)).To(Equal(plainText))
 					})
 

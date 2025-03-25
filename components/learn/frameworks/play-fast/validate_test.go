@@ -31,19 +31,19 @@ var _ = Describe("Validate", func() {
 				param := fl.Param()
 				return fl.Field().String() == "Aman" && param == "preet"
 			})
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should pass", func() {
-			Expect(validate.Struct(ValidateTestStruct{Name: "Aman"})).To(BeNil())
+			Expect(validate.Struct(ValidateTestStruct{Name: "Aman"})).To(Succeed())
 		})
 
 		It("should fail", func() {
-			Expect(validate.Struct(ValidateTestStruct{Name: "Xyz"})).To(Not(BeNil()))
+			Expect(validate.Struct(ValidateTestStruct{Name: "Xyz"})).ToNot(Succeed())
 		})
 
 		It("should be case sensitive", func() {
-			Expect(validate.Struct(ValidateTestStruct{Name: "aman"})).To(Not(BeNil()))
+			Expect(validate.Struct(ValidateTestStruct{Name: "aman"})).ToNot(Succeed())
 		})
 
 	})

@@ -159,11 +159,11 @@ var _ = Describe("HttpStream", func() {
 	It("should stream events", func() {
 		/* Build a Get Request */
 		request, err = http.NewRequest("GET", url, nil)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 
 		/* Execute Request and get handle to Event Channel */
 		eventChannel, err = fireSSERequest(context.Background(), request)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 
 		/* Listen to event channel for SSE Events */
 		Eventually(eventChannel, 100*time.Millisecond).Should(Receive())

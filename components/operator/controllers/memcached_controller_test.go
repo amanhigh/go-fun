@@ -198,7 +198,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 					Expect(k8sClient.Get(ctx, typeNamespaceName, deployment)).Should(HaveOccurred())
 
 					By("Reconcile Delete for Errored Object Without Image")
-					Expect(k8sClient.Delete(ctx, memcached)).To(BeNil())
+					Expect(k8sClient.Delete(ctx, memcached)).To(Succeed())
 					_, err = memcachedReconciler.Reconcile(ctx, reconcile.Request{
 						NamespacedName: typeNamespaceName,
 					})
@@ -306,7 +306,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 						BeforeEach(func() {
 							// Refresh Object
 							err = k8sClient.Get(ctx, typeNamespaceName, memcached)
-							Expect(err).To(BeNil())
+							Expect(err).ToNot(HaveOccurred())
 
 							// Update Memcached CR to have size of 2
 							memcached.Spec.Size = newSize
@@ -326,7 +326,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 							// Wait for Deployment to be updated with 2 replicas
 							Eventually(func() int32 {
 								err = k8sClient.Get(ctx, typeNamespaceName, deployment)
-								Expect(err).To(BeNil())
+								Expect(err).ToNot(HaveOccurred())
 								return *deployment.Spec.Replicas
 							}, waitTime, waitStep).Should(Equal(newSize))
 						})
@@ -338,7 +338,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 
 								// Refresh Object
 								err = k8sClient.Get(ctx, typeNamespaceName, memcached)
-								Expect(err).To(BeNil())
+								Expect(err).ToNot(HaveOccurred())
 
 								// Update Memcached CR to have size of 1
 								memcached.Spec.Size = newSize
@@ -358,7 +358,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 								// Wait for Deployment to be scaled down
 								Eventually(func() int32 {
 									err = k8sClient.Get(ctx, typeNamespaceName, deployment)
-									Expect(err).To(BeNil())
+									Expect(err).ToNot(HaveOccurred())
 									return *deployment.Spec.Replicas
 								}, time.Minute, time.Second).Should(Equal(newSize))
 							})

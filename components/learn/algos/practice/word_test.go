@@ -12,7 +12,7 @@ var _ = Describe("Word Test", func() {
 		It("should identify anagrams", func() {
 			words := []string{"dcbac", "bacdc"}
 			for _, anagrams := range practice.AnagramGroups(words) {
-				Expect(len(anagrams)).To(Equal(2))
+				Expect(anagrams).To(HaveLen(2))
 				Expect(anagrams).To(Equal(words))
 			}
 		})
@@ -20,7 +20,7 @@ var _ = Describe("Word Test", func() {
 		It("should ignore non anagrams", func() {
 			words := []string{"bacdc", "dcbad"}
 			for _, anagrams := range practice.AnagramGroups(words) {
-				Expect(len(anagrams)).To(Equal(1))
+				Expect(anagrams).To(HaveLen(1))
 			}
 		})
 	})

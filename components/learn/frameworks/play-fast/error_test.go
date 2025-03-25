@@ -24,7 +24,7 @@ var _ = Describe("Error", func() {
 	})
 
 	It("should be created", func() {
-		Expect(err).ToNot(BeNil())
+		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(Equal("error:0"))
 	})
 
@@ -32,7 +32,7 @@ var _ = Describe("Error", func() {
 		err2 := fmt.Errorf("error:%d", 1)
 		err = errors.Join(err, nil, err2)
 
-		Expect(err).ToNot(BeNil())
+		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).Should(Equal("error:0\nerror:1"))
 	})
 
@@ -42,12 +42,12 @@ var _ = Describe("Error", func() {
 		})
 
 		It("should be created", func() {
-			Expect(err).ToNot(BeNil())
+			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).Should(Equal("error:1 error:0"))
 		})
 
 		It("should have cause", func() {
-			Expect(err).ToNot(BeNil())
+			Expect(err).To(HaveOccurred())
 			Expect(errors.Unwrap(err)).Should(MatchError("error:0"))
 		})
 	})
@@ -58,7 +58,7 @@ var _ = Describe("Error", func() {
 		})
 
 		It("should be created", func() {
-			Expect(err).ToNot(BeNil())
+			Expect(err).To(HaveOccurred())
 			Expect(err).Should(MatchError("error:1: error:0"))
 		})
 
@@ -73,7 +73,7 @@ var _ = Describe("Error", func() {
 			})
 
 			It("should work", func() {
-				Expect(err).ToNot(BeNil())
+				Expect(err).To(HaveOccurred())
 				Expect(err).Should(MatchError("error:0"))
 			})
 		})
@@ -86,10 +86,9 @@ var _ = Describe("Error", func() {
 		})
 
 		It("should be created", func() {
-			Expect(err).ToNot(BeNil())
+			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).Should(Equal("error:1: error:0"))
 		})
-
 		It("should print stacktrace", func() {
 			trace := fmt.Sprintf("%+v", err)
 			Expect(eris.ToString(err, true)).Should(Equal(trace))

@@ -15,7 +15,7 @@ var _ = Describe("Rand", func() {
 				upperBound := 10
 				result := util.RandomInts(n, upperBound)
 
-				Expect(len(result)).To(Equal(n))
+				Expect(result).To(HaveLen(n))
 				for _, r := range result {
 					Expect(r).To(BeNumerically("<", upperBound))
 				}

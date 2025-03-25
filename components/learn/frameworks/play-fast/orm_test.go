@@ -26,17 +26,18 @@ var _ = Describe("Orm", func() {
 	})
 
 	Context("Create Table", func() {
+		var err error
 		BeforeEach(func() {
-			err := db.AutoMigrate(&frameworks.Product{}, &frameworks.AuditLog{})
-			Expect(err).To(BeNil())
+			err = db.AutoMigrate(&frameworks.Product{}, &frameworks.AuditLog{})
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		AfterEach(func() {
 			db.Migrator().DropTable(&frameworks.Product{})
 			db.Migrator().DropTable(&frameworks.Vertical{})
 			db.Migrator().DropTable(&frameworks.Feature{})
-			err := db.Migrator().DropTable(&frameworks.AuditLog{})
-			Expect(err).To(BeNil())
+			err = db.Migrator().DropTable(&frameworks.AuditLog{})
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should create Tables", func() {
@@ -49,8 +50,8 @@ var _ = Describe("Orm", func() {
 		It("should have no records", func() {
 			// Verify Tables Created
 			var count int64
-			err := db.Model(&frameworks.Product{}).Count(&count).Error
-			Expect(err).To(BeNil())
+			err = db.Model(&frameworks.Product{}).Count(&count).Error
+			Expect(err).ToNot(HaveOccurred())
 			Expect(count).To(Equal(int64(0)))
 		})
 
@@ -59,7 +60,7 @@ var _ = Describe("Orm", func() {
 			Expect(db.Migrator().HasColumn(&frameworks.Product{}, "code")).To(BeTrue())
 
 			// Perform the column drop
-			err := db.Migrator().DropColumn(&frameworks.Product{}, "code")
+			err = db.Migrator().DropColumn(&frameworks.Product{}, "code")
 			Expect(err).ToNot(HaveOccurred())
 
 			// Verify the column no longer exists
@@ -75,13 +76,13 @@ var _ = Describe("Orm", func() {
 					MyColumn: "Hello",
 				}
 				err := db.FirstOrCreate(&vertical).Error
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("should have create vertical", func() {
 				vertical := frameworks.Vertical{}
-				err := db.First(&vertical).Error
-				Expect(err).To(BeNil())
+				err = db.First(&vertical).Error
+				Expect(err).ToNot(HaveOccurred())
 				Expect(vertical.Name).To(Equal("Test"))
 				Expect(vertical.MyColumn).To(Equal("Hello"))
 			})
@@ -101,35 +102,34 @@ var _ = Describe("Orm", func() {
 						{Name: "Light", Version: 1},
 					}
 					product = frameworks.Product{Code: "L1212", Price: 1000, VerticalID: vertical.ID, Features: features, Version: 1}
-					err := db.Create(&product).Error
-					Expect(err).To(BeNil())
+					Expect(db.Create(&product).Error).ToNot(HaveOccurred())
 				})
 
 				AfterEach(func() {
 					err := db.Delete(&product).Error
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 
 					// Existing Associations need to be deleted manually
 					err = db.Exec("DELETE FROM features").Error
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 
 					// Debug Features
 					var features []frameworks.Feature
 					err = db.Find(&features).Error
-					Expect(err).To(BeNil())
-					Expect(features).To(HaveLen(0))
+					Expect(err).ToNot(HaveOccurred())
+					Expect(features).To(BeEmpty())
 
 					// Verify Feature Count
 					var featureCount int64
 					err = db.Model(&frameworks.Feature{}).Count(&featureCount).Error
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 					Expect(featureCount).To(Equal(int64(0)))
 				})
 
 				It("should create product with features", func() {
 					var foundProduct = new(frameworks.Product)
 					err := db.Preload("Features").First(&foundProduct, product.ID).Error
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 					Expect(foundProduct.Code).To(Equal("L1212"))
 					Expect(foundProduct.Price).To(Equal(uint(1000)))
 					Expect(foundProduct.Features).To(HaveLen(2))
@@ -138,7 +138,7 @@ var _ = Describe("Orm", func() {
 				It("should query product with code", func() {
 					var queriedProduct frameworks.Product
 					err := db.Preload("Vertical").First(&queriedProduct, "code = ?", product.Code).Error
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 					Expect(queriedProduct.Vertical.Name).To(Equal(vertical.Name))
 				})
 
@@ -146,7 +146,7 @@ var _ = Describe("Orm", func() {
 					// Query all Non Deleted Products
 					var products []frameworks.Product
 					err := db.Unscoped().Where("code = ?", product.Code).Find(&products).Error
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 					Expect(products).To(HaveLen(1))
 
 				})
@@ -154,7 +154,7 @@ var _ = Describe("Orm", func() {
 				It("should query multiple columns", func() {
 					var multiSelectProducts []frameworks.Product
 					err := db.Select("code", "price").Find(&multiSelectProducts).Error
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 					Expect(multiSelectProducts).To(HaveLen(1))
 					Expect(multiSelectProducts[0].Code).To(Equal(product.Code))
 					Expect(multiSelectProducts[0].Price).To(Equal(product.Price))
@@ -164,7 +164,7 @@ var _ = Describe("Orm", func() {
 				It("should pluck product codes", func() {
 					var codes []string
 					err := db.Model(&frameworks.Product{}).Pluck("code", &codes).Error
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 					Expect(codes).To(HaveLen(1))
 					Expect(codes[0]).To(Equal(product.Code))
 				})
@@ -180,7 +180,7 @@ var _ = Describe("Orm", func() {
 						for _, p := range products {
 							product := p // Create local copy
 							err := db.Create(&product).Error
-							Expect(err).To(BeNil())
+							Expect(err).ToNot(HaveOccurred())
 						}
 					})
 					AfterEach(func() {
@@ -194,21 +194,21 @@ var _ = Describe("Orm", func() {
 					It("should order query results", func() {
 						var queriedProduct frameworks.Product
 						err := db.Order("code desc, price asc").Last(&queriedProduct).Error
-						Expect(err).To(BeNil())
+						Expect(err).ToNot(HaveOccurred())
 						Expect(queriedProduct.Code).To(Equal(products[2].Code))
 					})
 
 					It("should query id range", func() {
 						var products []frameworks.Product
 						err := db.Where([]int64{1, 6, 10}).Limit(3).Limit(-1).Find(&products).Error
-						Expect(err).To(BeNil())
+						Expect(err).ToNot(HaveOccurred())
 						Expect(products).To(HaveLen(1))
 					})
 
 					It("should query by struct with OR condition", func() {
 						var queriedProduct frameworks.Product
 						err := db.Where(&frameworks.Product{Price: 2000}).Or(&frameworks.Product{Code: "Invalid"}).Last(&queriedProduct).Error
-						Expect(err).To(BeNil())
+						Expect(err).ToNot(HaveOccurred())
 						Expect(queriedProduct.Code).To(Equal(products[1].Code))
 					})
 				})
@@ -216,22 +216,22 @@ var _ = Describe("Orm", func() {
 				Context("Update Product", func() {
 					It("should update without callbacks", func() {
 						err := db.Model(&product).UpdateColumn("code", "No Callback").Error
-						Expect(err).To(BeNil())
+						Expect(err).ToNot(HaveOccurred())
 
 						var updatedProduct frameworks.Product
 						err = db.First(&updatedProduct, product.ID).Error
-						Expect(err).To(BeNil())
+						Expect(err).ToNot(HaveOccurred())
 						Expect(updatedProduct.Code).To(Equal("No Callback"))
 						Expect(updatedProduct.Version).To(Equal(2)) // Version should not change
 					})
 
 					It("should update single field", func() {
 						err := db.Model(&product).Update("Price", 1500).Error
-						Expect(err).To(BeNil())
+						Expect(err).ToNot(HaveOccurred())
 
 						var updatedProduct frameworks.Product
 						err = db.First(&updatedProduct, product.ID).Error
-						Expect(err).To(BeNil())
+						Expect(err).ToNot(HaveOccurred())
 						Expect(updatedProduct.Price).To(Equal(uint(1500)))
 						Expect(updatedProduct.Version).To(Equal(2)) // Version should increment
 					})
@@ -239,11 +239,11 @@ var _ = Describe("Orm", func() {
 					It("should update struct", func() {
 						product.Code = "MyCode"
 						err := db.Model(&product).Updates(product).Error
-						Expect(err).To(BeNil())
+						Expect(err).ToNot(HaveOccurred())
 
 						var updatedProduct frameworks.Product
 						err = db.First(&updatedProduct, product.ID).Error
-						Expect(err).To(BeNil())
+						Expect(err).ToNot(HaveOccurred())
 						Expect(updatedProduct.Code).To(Equal("MyCode"))
 						Expect(updatedProduct.Version).To(Equal(2)) // Version should increment
 					})
@@ -259,7 +259,7 @@ var _ = Describe("Orm", func() {
 						// Verify Current Features
 						var initialFeatureCount int64
 						err := db.Model(&frameworks.Feature{}).Count(&initialFeatureCount).Error
-						Expect(err).To(BeNil())
+						Expect(err).ToNot(HaveOccurred())
 						Expect(product.Features).To(HaveLen(int(initialFeatureCount)))
 					})
 
@@ -276,17 +276,13 @@ var _ = Describe("Orm", func() {
 
 						// Add new associations
 						product.Features = newFeatures
-
-						// Perform Update
-						err := db.Save(&product).Error
-						Expect(err).To(BeNil())
+						Expect(db.Save(&product).Error).ToNot(HaveOccurred())
 
 						// Reload from DB
 						var reloadedProduct frameworks.Product
-						err = db.Preload(clause.Associations).First(&reloadedProduct, product.ID).Error
-						Expect(err).To(BeNil())
+						err := db.Preload(clause.Associations).First(&reloadedProduct, product.ID).Error
+						Expect(err).ToNot(HaveOccurred())
 
-						// // Check the updated features
 						Expect(reloadedProduct.Features).To(HaveLen(3)) // 1 old + 2 new
 						featureNames := []string{reloadedProduct.Features[0].Name, reloadedProduct.Features[1].Name, reloadedProduct.Features[2].Name}
 						Expect(featureNames).To(ContainElements("Light", "abc", "xyz"))
@@ -294,12 +290,12 @@ var _ = Describe("Orm", func() {
 
 					It("should do association replacement", func() {
 						err := db.Model(&product).Association("Features").Replace(newFeatures)
-						Expect(err).To(BeNil())
+						Expect(err).ToNot(HaveOccurred())
 
 						// Reload from DB
 						var reloadedProduct frameworks.Product
 						err = db.Preload("Features").First(&reloadedProduct, product.ID).Error
-						Expect(err).To(BeNil())
+						Expect(err).ToNot(HaveOccurred())
 
 						// Check that there are no features
 						Expect(reloadedProduct.Features).To(HaveLen(2))

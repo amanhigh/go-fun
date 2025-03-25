@@ -54,7 +54,7 @@ var _ = Describe("Streams", func() {
 				return !person.Male
 			})
 
-			Expect(len(females)).To(Equal(4))
+			Expect(females).To(HaveLen(4))
 			lo.ForEach(females, func(person Person, _ int) {
 				Expect(person.Male).To(BeFalse())
 			})
@@ -63,7 +63,7 @@ var _ = Describe("Streams", func() {
 		It("should do unique", func() {
 			uniqueNames := lo.Uniq(lo.Map(people, func(person Person, _ int) string { return person.Name }))
 
-			Expect(len(uniqueNames)).To(Equal(6))
+			Expect(uniqueNames).To(HaveLen(6))
 			Expect(uniqueNames).To(ContainElements("John Smith", "Jane Doe"))
 		})
 
@@ -83,10 +83,10 @@ var _ = Describe("Streams", func() {
 				return "female"
 			})
 
-			Expect(len(groupedByGender["male"])).To(Equal(3))
-			Expect(len(groupedByGender["female"])).To(Equal(4))
-		})
+			Expect(groupedByGender["male"]).To(HaveLen(3))
 
+			Expect(groupedByGender["female"]).To(HaveLen(4))
+		})
 		Context("AgeMap (Associate)", func() {
 			var ageMap map[int]Person
 			BeforeEach(func() {
@@ -96,29 +96,28 @@ var _ = Describe("Streams", func() {
 			})
 
 			It("should build AgeMap (Associate)", func() {
-				Expect(len(ageMap)).To(Equal(6)) // Unique ages
+				Expect(ageMap).To(HaveLen(6)) // Unique ages
 			})
-
 			It("should extract keys (ages)", func() {
 				ages := lo.Keys(ageMap)
-				Expect(len(ages)).To(Equal(6))
+				Expect(ages).To(HaveLen(6))
 				Expect(ages[0]).ShouldNot(Equal(0))
 			})
 
 			It("should extract values (persons)", func() {
 				persons := lo.Values(ageMap)
-				Expect(len(persons)).To(Equal(6))
+				Expect(persons).To(HaveLen(6))
 				Expect(persons[0].Name).ShouldNot(BeEmpty())
 			})
 
 			It("should invert", func() {
 				invertedMap := lo.Invert(ageMap)
-				Expect(len(invertedMap)).To(Equal(6))
+				Expect(invertedMap).To(HaveLen(6))
 			})
 
 			It("should map to slice (Age_Name)", func() {
 				ageNames := lo.MapToSlice(ageMap, func(age int, person Person) string { return fmt.Sprintf("%d_%s", age, person.Name) })
-				Expect(len(ageNames)).To(Equal(6))
+				Expect(ageNames).To(HaveLen(6))
 				Expect(ageNames[0]).Should(ContainSubstring("_"))
 			})
 
@@ -127,16 +126,16 @@ var _ = Describe("Streams", func() {
 				keys := []int{32, 35}
 
 				olderPeople := lo.PickByKeys(ageMap, keys)
-				Expect(len(olderPeople)).To(Equal(2))
+				Expect(olderPeople).To(HaveLen(2))
 			})
 		})
 
 		It("should drop and drop right", func() {
 			droppedPeople := lo.Drop(people, 2)
-			Expect(len(droppedPeople)).To(Equal(5))
+			Expect(droppedPeople).To(HaveLen(5))
 
 			droppedRightPeople := lo.DropRight(people, 2)
-			Expect(len(droppedRightPeople)).To(Equal(5))
+			Expect(droppedRightPeople).To(HaveLen(5))
 		})
 
 		It("should reject (odd age)", func() {
@@ -144,7 +143,7 @@ var _ = Describe("Streams", func() {
 				return person.Age%2 != 0
 			})
 
-			Expect(len(evenAgePeople)).To(Equal(2)) // People with even ages
+			Expect(evenAgePeople).To(HaveLen(2)) // People with even ages
 		})
 
 		Context("Map Age", func() {
@@ -154,7 +153,7 @@ var _ = Describe("Streams", func() {
 			})
 
 			It("should work", func() {
-				Expect(len(ages)).To(Equal(7))
+				Expect(ages).To(HaveLen(7))
 				Expect(ages).To(ContainElements(32, 17, 20, 35, 35, 13, 15))
 			})
 
@@ -170,14 +169,14 @@ var _ = Describe("Streams", func() {
 
 			It("should reverse", func() {
 				reversedAges := lo.Reverse(ages)
-				Expect(len(reversedAges)).To(Equal(7))
+				Expect(reversedAges).To(HaveLen(7))
 				Expect(reversedAges[0]).To(Equal(15))
 				Expect(reversedAges[len(reversedAges)-1]).To(Equal(32))
 			})
 
 			It("should chunk", func() {
 				chunks := lo.Chunk(ages, 3)
-				Expect(len(chunks)).To(Equal(3))
+				Expect(chunks).To(HaveLen(3))
 			})
 
 			It("should count by (age < 30)", func() {
@@ -194,7 +193,7 @@ var _ = Describe("Streams", func() {
 				ageChan := lo.SliceToChannel(2, ages)
 				agesBack := lo.ChannelToSlice(ageChan)
 
-				Expect(len(agesBack)).To(Equal(7))
+				Expect(agesBack).To(HaveLen(7))
 				Expect(agesBack).To(ContainElements(32, 17, 20, 35, 35, 13, 15))
 			})
 
@@ -304,7 +303,7 @@ var _ = Describe("Streams", func() {
 		It("should shuffle", func() {
 			shuffledPeople := lo.Shuffle(people)
 
-			Expect(len(shuffledPeople)).To(Equal(7))
+			Expect(shuffledPeople).To(HaveLen(7))
 		})
 	})
 

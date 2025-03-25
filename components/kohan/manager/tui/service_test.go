@@ -54,11 +54,11 @@ var _ = Describe("ServiceManager", func() {
 
 			svcMgr.ToggleServiceSelection("service2")
 			Expect(svcMgr.IsServiceSelected("service2")).To(BeTrue())
-			Expect(len(svcMgr.GetSelectedServices())).To(Equal(2))
+			Expect(svcMgr.GetSelectedServices()).To(HaveLen(2))
 
 			svcMgr.ToggleServiceSelection("service1")
 			Expect(svcMgr.IsServiceSelected("service1")).To(BeFalse())
-			Expect(len(svcMgr.GetSelectedServices())).To(Equal(1))
+			Expect(svcMgr.GetSelectedServices()).To(HaveLen(1))
 		})
 
 		It("should clear selected services", func() {

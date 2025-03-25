@@ -134,9 +134,8 @@ var _ = Describe("Faker", func() {
 
 		BeforeEach(func() {
 			err = faker.FakeData(&data)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
-
 		It("should generate data", func() {
 			Expect(data.Email).To(Not(BeNil()))
 			Expect(data.Date).To(Not(BeNil()))
@@ -151,12 +150,12 @@ var _ = Describe("Faker", func() {
 
 	Context("Custom", func() {
 		var data = Sample{}
+
 		BeforeEach(func() {
 			CustomGenerator()
 			err = faker.FakeData(&data)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
-
 		It("should generate", func() {
 			Expect(data.ID).To(Equal(int64(43)))
 			Expect(data.Danger).To(Equal("danger-ranger"))

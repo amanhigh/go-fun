@@ -108,12 +108,14 @@ linters:
     - sqlclosecheck # ensure sql resources closed
     - noctx        # enforce context usage
     - mnd           # Magic numbers detector
+    # - unconvert    # type conversion
     
     # Code Style Essentials
     - goimports     # import sorting + gofmt
     - revive        # general style (golint replacement)
     - gocritic      
     - unused        # unused code detection
+    # - nolintlint    # nolint linter
 
     # Consider enabling these linters later:
     - exhaustive     # enum switch statements
@@ -121,6 +123,10 @@ linters:
     - errorlint     # error wrapping (Go 1.13+)
     - testifylint   # testify best practices
     - whitespace    # ws formatting
+    - ginkgolinter  # ginkgo best practices
+    # - interfacebloat # interface bloat
+    # - dupl           # duplicate code detection
+    # - ireturn        # interface return
 
     # Complexity
     - gocyclo      # Cyclomatic complexity

@@ -122,7 +122,7 @@ var _ = Describe("Hystrix", func() {
 				Expect(err.Error()).To(ContainSubstring("retries exceeded"))
 				Expect(err.Error()).To(ContainSubstring("persistent error"))
 				Expect(result).To(BeEmpty())
-				Expect(len(startTimes)).To(Equal(maxRetries + 1)) // 1 initial attempt + maxRetries
+				Expect(startTimes).To(HaveLen(maxRetries + 1)) // 1 initial attempt + maxRetries
 			})
 
 			It("should use exponential backoff", func() {
@@ -143,7 +143,7 @@ var _ = Describe("Hystrix", func() {
 				_, err := failsafe.Get(alwaysFailingFunction, retryPolicy)
 
 				Expect(err).To(HaveOccurred())
-				Expect(len(startTimes)).To(Equal(maxRetries + 1)) // 1 initial attempt + maxRetries
+				Expect(startTimes).To(HaveLen(maxRetries + 1)) // 1 initial attempt + maxRetries
 
 				for i := 1; i <= maxRetries; i++ {
 					delay := startTimes[i].Sub(startTimes[i-1])

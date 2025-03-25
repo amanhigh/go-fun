@@ -61,7 +61,7 @@ var _ = Describe("Resty", func() {
 
 	It("should do get", func() {
 		resp, err = client.R().SetQueryParam("foo", "bar").Get("/status/200")
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 		Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 	})
 
@@ -89,7 +89,7 @@ var _ = Describe("Resty", func() {
 				SetResult(&binResponse).
 				Post("/anything")
 
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 			Expect(binResponse.Method).To(Equal(http.MethodPost))
 			Expect(len(binResponse.Headers)).To(BeNumerically(">", 2))

@@ -88,7 +88,7 @@ var _ = Describe("GoTour", func() {
 
 			It("should fail string convert", func() {
 				i, err := strconv.Atoi("XX")
-				Expect(err).To(Not(BeNil()))
+				Expect(err).To(HaveOccurred())
 				Expect(i).To(Equal(0))
 			})
 		})
@@ -181,9 +181,9 @@ var _ = Describe("GoTour", func() {
 			Expect(slice).To(Equal([]int{3, 5, 7}))
 
 			// Len of slice is count of elements that have been sliced
-			Expect(len(slice)).To(Equal(3))
+			Expect(slice).To(HaveLen(3))
 			// The capacity of a slice is the number of elements in the underlying array, counting from the first element in the slice.
-			Expect(cap(slice)).To(Equal(5))
+			Expect(slice).To(HaveCap(5))
 		})
 
 		It("can be two dimensional", func() {
@@ -193,8 +193,8 @@ var _ = Describe("GoTour", func() {
 			Expect(twod[1][1]).To(Equal(uint8(5)))
 			Expect(twod[3][4]).To(Equal(uint8(0)))
 
-			Expect(len(twod)).To(Equal(5))
-			Expect(cap(twod)).To(Equal(5))
+			Expect(twod).To(HaveLen(5))
+			Expect(twod).To(HaveCap(5))
 		})
 
 		It("can hold struct", func() {
@@ -204,8 +204,8 @@ var _ = Describe("GoTour", func() {
 				b bool
 			}{{2, true}, {3, false}}
 
-			Expect(len(structSlice)).To(Equal(2))
-			Expect(cap(structSlice)).To(Equal(2))
+			Expect(structSlice).To(HaveLen(2))
+			Expect(structSlice).To(HaveCap(2))
 		})
 
 		It("can be map", func() {
@@ -217,12 +217,12 @@ var _ = Describe("GoTour", func() {
 
 		It("can be built via make and new", func() {
 			make_slice := make([]int, 50, 100)
-			Expect(len(make_slice)).To(Equal(50))
-			Expect(cap(make_slice)).To(Equal(100))
+			Expect(make_slice).To(HaveLen(50))
+			Expect(make_slice).To(HaveCap(100))
 
 			new_slice := new([100]int)[0:50]
-			Expect(len(new_slice)).To(Equal(50))
-			Expect(cap(new_slice)).To(Equal(100))
+			Expect(new_slice).To(HaveLen(50))
+			Expect(new_slice).To(HaveCap(100))
 		})
 
 		It("should count words", func() {
@@ -285,19 +285,19 @@ var _ = Describe("GoTour", func() {
 		It("should compute sqrt", func() {
 			input := 8
 			result, err := sqrt(input)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(result).To(Equal(math.Sqrt((float64(input)))))
 		})
 
 		It("should not compute negative sqrt", func() {
 			input := -2
 			_, err := sqrt(input)
-			Expect(err).To(Not(BeNil()))
+			Expect(err).To(HaveOccurred())
 		})
 
 		It("should generate random", func() {
 			num, err := rand.Int(rand.Reader, big.NewInt(10))
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(int(num.Int64())).To(BeNumerically(">=", 0))
 			Expect(int(num.Int64())).To(BeNumerically("<", 10))
 		})
