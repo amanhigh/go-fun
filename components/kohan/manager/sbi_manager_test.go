@@ -52,28 +52,28 @@ var _ = Describe("SBIManager", func() {
 			mockClient.EXPECT().FetchExchangeRates(ctx).Return(testCSV, nil)
 
 			err := sbiManager.DownloadRates(ctx)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			// Verify file content
 			content, readErr := os.ReadFile(filepath.Join(testDir, tax.SBI_RATES_FILENAME))
-			Expect(readErr).To(BeNil())
+			Expect(readErr).ToNot(HaveOccurred())
 			Expect(string(content)).To(Equal(testCSV))
 		})
 
 		It("should skip download if file already exists", func() {
 			// Create test file first
 			err := os.WriteFile(filepath.Join(testDir, tax.SBI_RATES_FILENAME), []byte(testCSV), util.DEFAULT_PERM)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			// Expect no client calls since file exists
 			// mockClient.EXPECT().FetchExchangeRates(ctx) should not be called
 
 			err = sbiManager.DownloadRates(ctx)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			// Verify file content remains unchanged
 			content, readErr := os.ReadFile(filepath.Join(testDir, tax.SBI_RATES_FILENAME))
-			Expect(readErr).To(BeNil())
+			Expect(readErr).ToNot(HaveOccurred())
 			Expect(string(content)).To(Equal(testCSV))
 		})
 
@@ -97,7 +97,7 @@ var _ = Describe("SBIManager", func() {
 			}, nil)
 
 			rate, err := sbiManager.GetTTBuyRate(ctx, testDate)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(rate).To(Equal(expectedRate))
 		})
 	})

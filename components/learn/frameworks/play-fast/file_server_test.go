@@ -30,7 +30,7 @@ var _ = Describe("File Server", func() {
 
 	It("should run", func() {
 		response, err = resty.New().R().Get(url)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 		Expect(response.StatusCode()).To(Equal(http.StatusOK))
 		Expect(response.String()).To(Not(BeNil()))
 	})

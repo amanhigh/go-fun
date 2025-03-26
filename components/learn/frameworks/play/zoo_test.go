@@ -25,21 +25,21 @@ var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SLOW), func() {
 	BeforeAll(func() {
 		// Create Zookeeper Test Container
 		zkContainer, err = util.ZookeeperTestContainer(ctx)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 
 		// Get Mapped Port
 		zkHost, err := zkContainer.PortEndpoint(ctx, "2181/tcp", "")
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 		log.Info().Str("Host", zkHost).Msg("Zookeeper Endpoint")
 
 		connection, _, err = zk.Connect([]string{zkHost}, time.Second)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	AfterAll(func() {
 		log.Warn().Msg("Zookeeper Shutting Down")
 		err = zkContainer.Terminate(ctx)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	It("should connect", func() {
@@ -54,12 +54,12 @@ var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SLOW), func() {
 		)
 		BeforeEach(func() {
 			_, err = connection.Create(testPath, []byte(testValue), 0, zk.WorldACL(zk.PermAll))
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		AfterEach(func() {
 			err = connection.Delete(testPath, -1)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should have Read Value", func() {
@@ -70,7 +70,7 @@ var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SLOW), func() {
 
 		It("should check Exists", func() {
 			exists, _, err := connection.Exists(testPath)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(exists).To(BeTrue())
 		})
 
@@ -80,7 +80,7 @@ var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SLOW), func() {
 			)
 			BeforeEach(func() {
 				_, err = connection.Set(testPath, []byte(updateValue), -1)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("should have Updated Value", func() {
@@ -97,7 +97,7 @@ var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SLOW), func() {
 			It("should get events", func() {
 				// Start Watching Path
 				data, _, evtChan, err := connection.GetW(testPath)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				Expect(string(data)).To(Equal(testValue))
 
 				// Write to Path
@@ -119,7 +119,7 @@ var _ = Describe("Zookeeper", Ordered, Label(models.GINKGO_SLOW), func() {
 
 			It("should not get events without writes", func() {
 				_, _, evtChan, err := connection.GetW(testPath)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 
 				Eventually(evtChan).ShouldNot(Receive())
 			})

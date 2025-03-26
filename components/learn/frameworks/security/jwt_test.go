@@ -22,7 +22,7 @@ var _ = Describe("Jwt", func() {
 		// Generate RSA Key Pair
 		privateKey, err = rsa.GenerateKey(rand.Reader, 2048)
 		publicKey = privateKey.Public()
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	It("should generate Private Key", func() {
@@ -56,14 +56,14 @@ var _ = Describe("Jwt", func() {
 		It("should unmarshal Private Key", func() {
 			// Unmarshal Private Key Pem
 			unmarshalPrivate, err = UnmarshalRSAPrivateKey(string(privatePem))
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(unmarshalPrivate).To(Equal(privateKey))
 		})
 
 		It("should unmarshal Public Key", func() {
 			// Unmarshal Private Key Pem
 			unmarshalPublic, err = UnmarshalRSAPublicKey(string(publicPem))
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(unmarshalPublic).To(Equal(publicKey))
 		})
 	})
@@ -75,7 +75,7 @@ var _ = Describe("Jwt", func() {
 		BeforeEach(func() {
 			// 	//Generate Token String
 			token, err = GenerateToken(privateKey)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 		})
 
@@ -89,7 +89,7 @@ var _ = Describe("Jwt", func() {
 			parsedToken, err := jwt.Parse(token, func(_ *jwt.Token) (i any, err error) {
 				return publicKey, nil
 			})
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(parsedToken).To(Not(BeNil()))
 
 			By("Claims")
@@ -97,7 +97,7 @@ var _ = Describe("Jwt", func() {
 			claims := parsedToken.Claims.(jwt.MapClaims)
 			Expect(claims).To(HaveKeyWithValue("purpose", "jwtfun"))
 			Expect(claims).To(HaveKeyWithValue("iss", "aman"))
-			Expect(claims.Valid()).To(BeNil())
+			Expect(claims.Valid()).To(Succeed())
 		})
 	})
 

@@ -62,8 +62,9 @@ func (h *ZeroOtelHook) Run(e *zerolog.Event, level zerolog.Level, msg string) {
 
 	// Add events to the span
 	attrs := make([]attribute.KeyValue, 0, 2)
-	attrs = append(attrs, logSeverityKey.String(level.String()))
-	attrs = append(attrs, logMessageKey.String(msg))
+	attrs = append(attrs,
+		logSeverityKey.String(level.String()),
+		logMessageKey.String(msg))
 
 	span.AddEvent("log", trace.WithAttributes(attrs...))
 

@@ -55,7 +55,7 @@ var _ = Describe("InterestManager", func() {
 		It("should process interest correctly", func() {
 			inrInterests, err := interestManager.ProcessInterests(ctx, interests)
 
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(inrInterests).To(HaveLen(1))
 
 			result := inrInterests[0]
@@ -123,7 +123,7 @@ var _ = Describe("InterestManager", func() {
 		It("should process multiple interests correctly", func() {
 			inrInterests, err := interestManager.ProcessInterests(ctx, interests)
 
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(inrInterests).To(HaveLen(2))
 
 			// Verify first interest

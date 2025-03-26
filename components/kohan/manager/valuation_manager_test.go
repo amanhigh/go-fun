@@ -56,7 +56,7 @@ var _ = Describe("ValuationManager", func() {
 
 				It("should compute correct positions", func() {
 					valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 
 					// First position
 					date := trades[0].GetDate()
@@ -86,7 +86,7 @@ var _ = Describe("ValuationManager", func() {
 
 				It("should compute positions with zero year-end", func() {
 					valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 
 					// First position from buy
 					date := trades[0].GetDate()
@@ -121,7 +121,7 @@ var _ = Describe("ValuationManager", func() {
 
 				It("should track increasing position correctly", func() {
 					valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 
 					// First position from first buy
 					date := trades[0].GetDate()
@@ -159,7 +159,7 @@ var _ = Describe("ValuationManager", func() {
 
 				It("should track averaged position correctly", func() {
 					valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 
 					// First position from initial buy
 					date := trades[0].GetDate()
@@ -201,7 +201,7 @@ var _ = Describe("ValuationManager", func() {
 
 				It("should handle year end trades correctly", func() {
 					valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 
 					// First position from initial buy
 					date := trades[0].GetDate()
@@ -242,7 +242,7 @@ var _ = Describe("ValuationManager", func() {
 
 				It("should identify highest peak through multiple cycles", func() {
 					valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 
 					// First position
 					date := trades[0].GetDate()
@@ -282,7 +282,7 @@ var _ = Describe("ValuationManager", func() {
 
 				It("should track partial sells correctly", func() {
 					valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 
 					// First position from initial buy
 					date := trades[0].GetDate()
@@ -310,7 +310,7 @@ var _ = Describe("ValuationManager", func() {
 			It("should return error for empty trades", func() {
 				trades := []tax.Trade{}
 				_, err := valuationManager.AnalyzeValuation(ctx, trades, year)
-				Expect(err).To(Not(BeNil()))
+				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("no trades provided"))
 				Expect(err.Code()).To(Equal(http.StatusBadRequest))
 			})
@@ -328,7 +328,7 @@ var _ = Describe("ValuationManager", func() {
 
 			It("should return error for mixed ticker trades", func() {
 				_, err := valuationManager.AnalyzeValuation(ctx, trades, year)
-				Expect(err).To(Not(BeNil()))
+				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("multiple tickers found"))
 				Expect(err.Code()).To(Equal(http.StatusBadRequest))
 			})
@@ -353,7 +353,7 @@ var _ = Describe("ValuationManager", func() {
 
 			It("should handle ticker price fetch error", func() {
 				_, err := valuationManager.AnalyzeValuation(ctx, trades, year)
-				Expect(err).To(Not(BeNil()))
+				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("failed to get year end price"))
 				Expect(err.Code()).To(Equal(http.StatusInternalServerError))
 			})

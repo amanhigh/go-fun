@@ -42,17 +42,25 @@ linters-settings:
   errcheck:
     check-type-assertions: true
 
+  wrapcheck:
+    ignoreSigs:
+      - ^fmt\.Errorf$  # Already formatted errors
+      - ^time\.Parse$  # Simple parsing errors
+      - ^errors\.New$  # Basic error creation
+
   # https://go-critic.com/overview
   gocritic:
     enabled-checks:
       - paramTypeCombine    # Combines same-type params
+      - appendCombine     # Merge redundant `append` calls
+      - sloppyReassign    # Detect redundant variable reassignments
 
   # https://revive.run/docs#default-configuration
   revive:
     # enable-all-rules: true
     rules:
       # - name: var-naming
-      # - name: dot-imports
+      - name: dot-imports
       - name: blank-imports
       - name: context-as-argument
       - name: context-keys-type
@@ -74,7 +82,7 @@ linters-settings:
       - name: superfluous-else
       - name: unused-parameter
       - name: unreachable-code
-      # - name: redefines-builtin-id  
+      - name: redefines-builtin-id  
       - name: argument-limit
         arguments: [6]      # Max parameters
       - name: function-result-limit
@@ -91,19 +99,23 @@ linters:
     - staticcheck  # advanced static analysis
     - gosimple     # code simplification
     - typecheck    # type checking
+    - gosec        # security checks
+    # - wrapcheck    # error wrapping validation
     
     # Safety & Resources
     - bodyclose      # ensure http response closed
     - nilerr        # nil error returns
     - sqlclosecheck # ensure sql resources closed
     - noctx        # enforce context usage
-    # - mnd           # Magic numbers detector
+    - mnd           # Magic numbers detector
+    # - unconvert    # type conversion
     
     # Code Style Essentials
     - goimports     # import sorting + gofmt
-    # - revive        # general style (golint replacement)
+    - revive        # general style (golint replacement)
     - gocritic      
     - unused        # unused code detection
+    # - nolintlint    # nolint linter
 
     # Consider enabling these linters later:
     - exhaustive     # enum switch statements
@@ -111,6 +123,10 @@ linters:
     - errorlint     # error wrapping (Go 1.13+)
     - testifylint   # testify best practices
     - whitespace    # ws formatting
+    - ginkgolinter  # ginkgo best practices
+    # - interfacebloat # interface bloat
+    # - dupl           # duplicate code detection
+    # - ireturn        # interface return
 
     # Complexity
     - gocyclo      # Cyclomatic complexity
@@ -129,6 +145,11 @@ issues:
       linters:
         - bodyclose   # ignore response body closes in tests
         - noctx      # ignore missing context in tests
+        - wrapcheck
+    - path: "_test\\.go"
+      linters:
+        - revive
+      text: "^dot-imports:"
     - path: "common/clients/http_client.go"
       linters:
         - bodyclose   # ignore response body closes in tests
@@ -136,6 +157,8 @@ issues:
       linters:
         - errcheck
         - govet
+        - mnd
+        - wrapcheck
   exclude-dirs:
     # - "^components/"
   exclude-files:

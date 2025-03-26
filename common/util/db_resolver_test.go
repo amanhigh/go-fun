@@ -30,14 +30,14 @@ var _ = Describe("DbResolver", func() {
 	BeforeEach(func() {
 		/* Mock DB */
 		db, mock, err = sqlmock.New()
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 
 		/* Gorm With Gorm DB */
 		gormDB, err = gorm.Open(mysql.New(mysql.Config{
 			Conn:                      db,
 			SkipInitializeWithVersion: true,
 		}), &gorm.Config{})
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 
 		policy = util.NewFallBackPolicy(gormDB, interval, pingTable)
 	})

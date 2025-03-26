@@ -17,12 +17,14 @@ import (
 
 const (
 	// HACK: Ticker Length Not Being Used ?
-	TICKER_LENGTH  = 15
-	SIDE_MONITOR   = 1
-	MAIL_WORKSPACE = "2"
-	DATE_FORMAT    = "20060102__150405"
-	LOGSEQ_CLASS   = "Logseq"
-	TRADE_INFO     = `
+	TICKER_LENGTH         = 15
+	SIDE_MONITOR          = 1
+	MAIL_WORKSPACE        = "2"
+	DATE_FORMAT           = "20060102__150405"
+	LOGSEQ_CLASS          = "Logseq"
+	NETWORK_RESTART_DELAY = 5 * time.Second
+	UI_INTERACTION_DELAY  = 50 * time.Millisecond
+	TRADE_INFO            = `
 Trends
 HTF - Up
 MTF - Up
@@ -115,7 +117,7 @@ func (a *AutoManagerImpl) MonitorInternetConnection(_ context.Context) {
 			log.Warn().Msg("Internet DOWN")
 			a.restartNetworkManager()
 			// Extra Wait for Network Manager
-			time.Sleep(5 * time.Second)
+			time.Sleep(NETWORK_RESTART_DELAY)
 		}
 	})
 }
@@ -146,7 +148,7 @@ func (a *AutoManagerImpl) openTicker(ticker string) (err error) {
 			// TASK: Copy Ticker once Clipboard Library is Fixed
 			// Copy runs into doom loop with wl-paste Watch
 			if err = tools.SendKey("-M Ctrl v -m Ctrl"); err == nil {
-				time.Sleep(50 * time.Millisecond)
+				time.Sleep(UI_INTERACTION_DELAY)
 				// Bang ! to Open
 				err = tools.SendInput("xox ")
 				// Return Focus Back

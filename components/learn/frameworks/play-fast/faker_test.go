@@ -107,14 +107,14 @@ type Sample struct {
 
 // CustomGenerator ...
 func CustomGenerator() {
-	_ = faker.AddProvider("customIdFaker", func(v reflect.Value) (any, error) {
+	_ = faker.AddProvider("customIdFaker", func(_ reflect.Value) (any, error) {
 		return int64(43), nil
 	})
-	_ = faker.AddProvider("danger", func(v reflect.Value) (any, error) {
+	_ = faker.AddProvider("danger", func(_ reflect.Value) (any, error) {
 		return "danger-ranger", nil
 	})
 
-	_ = faker.AddProvider("gondoruwo", func(v reflect.Value) (any, error) {
+	_ = faker.AddProvider("gondoruwo", func(_ reflect.Value) (any, error) {
 		obj := Gondoruwo{
 			Name:       "Power",
 			Locatadata: 324,
@@ -134,9 +134,8 @@ var _ = Describe("Faker", func() {
 
 		BeforeEach(func() {
 			err = faker.FakeData(&data)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
-
 		It("should generate data", func() {
 			Expect(data.Email).To(Not(BeNil()))
 			Expect(data.Date).To(Not(BeNil()))
@@ -151,12 +150,12 @@ var _ = Describe("Faker", func() {
 
 	Context("Custom", func() {
 		var data = Sample{}
+
 		BeforeEach(func() {
 			CustomGenerator()
 			err = faker.FakeData(&data)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
-
 		It("should generate", func() {
 			Expect(data.ID).To(Equal(int64(43)))
 			Expect(data.Danger).To(Equal("danger-ranger"))

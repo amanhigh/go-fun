@@ -90,19 +90,19 @@ var _ = Describe("Logging", func() {
 		Context("File", func() {
 			BeforeEach(func() {
 				file, err = util.OpenOrCreateFile(log_file)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				logger.Out = file
 			})
 
 			AfterEach(func() {
 				err = os.Remove(log_file)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("should write log", func() {
 				logger.Info(msgFile)
 				lines := util.ReadAllLines(log_file)
-				Expect(len(lines)).To(Equal(1))
+				Expect(lines).To(HaveLen(1))
 				Expect(lines[0]).To(ContainSubstring(msgFile))
 			})
 
@@ -110,7 +110,7 @@ var _ = Describe("Logging", func() {
 				logger.SetFormatter(&logrus.JSONFormatter{})
 				logger.Info(msgFile)
 				lines := util.ReadAllLines(log_file)
-				Expect(len(lines)).To(Equal(1))
+				Expect(lines).To(HaveLen(1))
 				Expect(lines[0]).To(ContainSubstring(msgFile))
 				Expect(lines[0]).To(ContainSubstring(`"level":"info"`))
 			})
@@ -120,7 +120,7 @@ var _ = Describe("Logging", func() {
 			logger, hook := test.NewNullLogger()
 			logger.Info(msgFile)
 
-			Expect(len(hook.AllEntries())).To(Equal(1))
+			Expect(hook.AllEntries()).To(HaveLen(1))
 			Expect(hook.LastEntry().Message).To(Equal(msgFile))
 			Expect(hook.LastEntry().Level).To(Equal(logrus.InfoLevel))
 			hook.Reset()
@@ -137,7 +137,7 @@ var _ = Describe("Logging", func() {
 
 		It("should build", func() {
 			logger, err = zap.NewProduction()
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(logger).To(Not(BeNil()))
 		})
 
@@ -149,7 +149,7 @@ var _ = Describe("Logging", func() {
 				config.EncoderConfig.ConsoleSeparator = " | "
 
 				logger, err = config.Build()
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("should write log", func() {
@@ -170,7 +170,7 @@ var _ = Describe("Logging", func() {
 		Context("File", func() {
 			BeforeEach(func() {
 				file, err = util.OpenOrCreateFile(log_file)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				logger = zap.New(zapcore.NewCore(
 					zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 					zapcore.AddSync(file),
@@ -180,20 +180,19 @@ var _ = Describe("Logging", func() {
 
 			AfterEach(func() {
 				err = os.Remove(log_file)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 			})
-
 			It("should write log", func() {
 				logger.Info(msgFile)
 				lines := util.ReadAllLines(log_file)
-				Expect(len(lines)).To(Equal(1))
+				Expect(lines).To(HaveLen(1))
 				Expect(lines[0]).To(ContainSubstring(msgFile))
 			})
 
 			It("should write json log", func() {
 				logger.Info(msgFile)
 				lines := util.ReadAllLines(log_file)
-				Expect(len(lines)).To(Equal(1))
+				Expect(lines).To(HaveLen(1))
 				Expect(lines[0]).To(ContainSubstring(msgFile))
 				Expect(lines[0]).To(ContainSubstring(`"level":"info"`))
 			})
@@ -205,12 +204,12 @@ var _ = Describe("Logging", func() {
 
 			logger.Info(msgFile)
 
-			Expect(len(recorded.All())).To(Equal(1))
+			Expect(recorded.All()).To(HaveLen(1))
 			Expect(recorded.All()[0].Message).To(Equal(msgFile))
 			Expect(recorded.All()[0].Level).To(Equal(zap.InfoLevel))
 			recorded.TakeAll()
 
-			Expect(len(recorded.All())).To(BeZero())
+			Expect(recorded.All()).To(BeEmpty())
 		})
 	})
 
@@ -261,26 +260,25 @@ var _ = Describe("Logging", func() {
 		Context("File", func() {
 			BeforeEach(func() {
 				file, err = util.OpenOrCreateFile(log_file)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				logger = zerolog.New(file).With().Timestamp().Logger()
 			})
 
 			AfterEach(func() {
 				err = os.Remove(log_file)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 			})
-
 			It("should write log", func() {
 				logger.Info().Str("Logger", name).Msg(msgFile)
 				lines := util.ReadAllLines(log_file)
-				Expect(len(lines)).To(Equal(1))
+				Expect(lines).To(HaveLen(1))
 				Expect(lines[0]).To(ContainSubstring(msgFile))
 			})
 
 			It("should write json log", func() {
 				logger.Info().Str("Logger", name).Msg(msgFile)
 				lines := util.ReadAllLines(log_file)
-				Expect(len(lines)).To(Equal(1))
+				Expect(lines).To(HaveLen(1))
 				Expect(lines[0]).To(ContainSubstring(msgFile))
 				Expect(lines[0]).To(ContainSubstring(`"level":"info"`))
 			})
@@ -294,7 +292,7 @@ var _ = Describe("Logging", func() {
 				})
 				child.Info().Msg(msgFile)
 				lines := util.ReadAllLines(log_file)
-				Expect(len(lines)).To(Equal(1))
+				Expect(lines).To(HaveLen(1))
 				Expect(lines[0]).To(ContainSubstring(msgFile))
 				Expect(lines[0]).To(ContainSubstring(`"Child":"` + name))
 			})
@@ -310,7 +308,7 @@ var _ = Describe("Logging", func() {
 				err := errors.New("test error")
 				logger.Error().Stack().Err(err).Msg(msgFile)
 				lines := util.ReadAllLines(log_file)
-				Expect(len(lines)).To(Equal(1))
+				Expect(lines).To(HaveLen(1))
 				Expect(lines[0]).To(ContainSubstring(msgFile))
 				Expect(lines[0]).To(ContainSubstring(`"level":"error"`))
 				Expect(lines[0]).To(ContainSubstring(`"stack":`))
@@ -401,27 +399,26 @@ var _ = Describe("Logging", func() {
 			BeforeEach(func() {
 				var err error
 				file, err = util.OpenOrCreateFile(log_file)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 
 				logger = slog.New(slog.NewJSONHandler(file, nil))
 			})
 
 			AfterEach(func() {
 				err := os.Remove(log_file)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 			})
-
 			It("should write log", func() {
 				logger.Info(msgFile, "Logger", name)
 				lines := util.ReadAllLines(log_file)
-				Expect(len(lines)).To(Equal(1))
+				Expect(lines).To(HaveLen(1))
 				Expect(lines[0]).To(ContainSubstring(msgFile))
 			})
 
 			It("should write json log", func() {
 				logger.Info(msgFile, "Logger", name)
 				lines := util.ReadAllLines(log_file)
-				Expect(len(lines)).To(Equal(1))
+				Expect(lines).To(HaveLen(1))
 				Expect(lines[0]).To(ContainSubstring(msgFile))
 				Expect(lines[0]).To(ContainSubstring(`"level":"INFO"`))
 			})

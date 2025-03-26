@@ -55,7 +55,7 @@ var _ = Describe("CapitalGainManager", func() {
 
 		It("should process gain and keep original Gain Values", func() {
 			taxGains, err := gainManager.ProcessTaxGains(ctx, gains)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(taxGains).To(HaveLen(1))
 
 			result := taxGains[0]
@@ -117,7 +117,7 @@ var _ = Describe("CapitalGainManager", func() {
 		It("should process multiple gains correctly", func() {
 			taxGains, err := gainManager.ProcessTaxGains(ctx, gains)
 
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(taxGains).To(HaveLen(2))
 
 			// Verify first gain
@@ -166,7 +166,7 @@ var _ = Describe("CapitalGainManager", func() {
 			It("should return filtered gains for the year", func() {
 				gains, err := gainManager.GetGainsForYear(ctx, testYear)
 
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				Expect(gains).To(Equal(filteredGains))
 			})
 		})

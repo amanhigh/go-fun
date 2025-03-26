@@ -40,7 +40,7 @@ var _ = Describe("Cache", func() {
 		})
 
 		It("should build", func() {
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(cache).To(Not(BeNil()))
 		})
 
@@ -231,7 +231,7 @@ var _ = Describe("Cache", func() {
 						evictedItems = append(evictedItems, item.Key)
 					},
 				})
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 
 				By("Filling the cache to its maximum capacity")
 				for i := uint64(0); i < uint64(cacheSize); i++ {
@@ -364,7 +364,7 @@ var _ = Describe("Cache", func() {
 					MaxCost:     1 << 23, // maximum cost of cache (8MB).
 					BufferItems: 64,      // number of keys per Get buffer.
 				})
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 			})
 			It("should perform set operations efficiently", FlakeAttempts(3), func() {
 				experiment := gmeasure.NewExperiment("Set Operations")

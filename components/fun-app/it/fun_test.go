@@ -45,18 +45,18 @@ var _ = Describe("Person Integration Test", func() {
 		)
 		BeforeEach(func() {
 			createdPerson, err = client.PersonService.CreatePerson(ctx, request)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(createdPerson.Id).Should(Not(BeEmpty()))
 		})
 		AfterEach(func() {
 			// Delete Person
 			err = client.PersonService.DeletePerson(ctx, createdPerson.Id)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			// Delete Audit
 			auditList, listErr := client.PersonService.ListPersonAudit(ctx, createdPerson.Id)
 			Expect(listErr).ShouldNot(HaveOccurred())
-			Expect(len(auditList)).To(Equal(2))
+			Expect(auditList).To(HaveLen(2))
 		})
 
 		It("should create & get person", func() {
@@ -77,7 +77,7 @@ var _ = Describe("Person Integration Test", func() {
 			Expect(auditErr).ShouldNot(HaveOccurred())
 
 			// Check Audit
-			Expect(len(auditList)).To(Equal(1))
+			Expect(auditList).To(HaveLen(1))
 			audit := auditList[0]
 			Expect(audit.Id).To(Equal(createdPerson.Id))
 			Expect(audit.Name).To(Equal(name))
@@ -106,7 +106,7 @@ var _ = Describe("Person Integration Test", func() {
 
 			AfterEach(func() {
 				err = client.PersonService.DeletePerson(ctx, updatedPerson.Id)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 			})
 
 			Context("Success", func() {
@@ -133,7 +133,7 @@ var _ = Describe("Person Integration Test", func() {
 					Expect(auditErr).ShouldNot(HaveOccurred())
 
 					// Check Audit
-					Expect(len(auditList)).To(Equal(2))
+					Expect(auditList).To(HaveLen(2))
 					audit := auditList[1]
 					Expect(audit.Id).To(Equal(updatedPerson.Id))
 					Expect(audit.Name).To(Equal(updateRequest.Name))
@@ -213,7 +213,7 @@ var _ = Describe("Person Integration Test", func() {
 					request.Name = names[i%3] + strconv.Itoa(i)
 					request.Gender = genders[i%3]
 					_, err = client.PersonService.CreatePerson(ctx, request)
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 				}
 
 				// Init Person Query
@@ -233,12 +233,12 @@ var _ = Describe("Person Integration Test", func() {
 					personQuery.Limit = 10
 					personQuery.Offset = 0
 					personList, listErr := client.PersonService.ListPerson(ctx, personQuery)
-					Expect(listErr).To(BeNil())
+					Expect(listErr).ToNot(HaveOccurred())
 
 					// Delete all Records of Name
 					for _, person := range personList.Records {
 						err = client.PersonService.DeletePerson(ctx, person.Id)
-						Expect(err).To(BeNil())
+						Expect(err).ToNot(HaveOccurred())
 					}
 				}
 			})
@@ -246,10 +246,10 @@ var _ = Describe("Person Integration Test", func() {
 			It("should get all persons upto page Limit", func() {
 				var personList fun.PersonList
 				personList, err = client.PersonService.ListPerson(ctx, personQuery)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 
 				// Person Count should be same as Page Limit
-				Expect(len(personList.Records)).To(Equal(limit))
+				Expect(personList.Records).To(HaveLen(limit))
 				Expect(personList.Metadata.Total).To(BeNumerically(">=", total))
 			})
 
@@ -258,8 +258,8 @@ var _ = Describe("Person Integration Test", func() {
 				personQuery.Offset = limit
 				personList, err = client.PersonService.ListPerson(ctx, personQuery)
 
-				Expect(err).To(BeNil())
-				Expect(len(personList.Records)).To(Equal(limit))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(personList.Records).To(HaveLen(limit))
 			})
 
 			It("should search by Name", func() {
@@ -267,8 +267,8 @@ var _ = Describe("Person Integration Test", func() {
 				personQuery.Name = names[0]
 				personList, err = client.PersonService.ListPerson(ctx, personQuery)
 
-				Expect(err).To(BeNil())
-				Expect(len(personList.Records)).To(Equal(limit))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(personList.Records).To(HaveLen(limit))
 				Expect(personList.Metadata.Total).To(BeEquivalentTo(5))
 			})
 
@@ -277,8 +277,8 @@ var _ = Describe("Person Integration Test", func() {
 				personQuery.Gender = genders[1]
 				personList, err = client.PersonService.ListPerson(ctx, personQuery)
 
-				Expect(err).To(BeNil())
-				Expect(len(personList.Records)).To(Equal(limit))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(personList.Records).To(HaveLen(limit))
 				Expect(personList.Metadata.Total).To(BeEquivalentTo(11))
 			})
 
@@ -288,8 +288,8 @@ var _ = Describe("Person Integration Test", func() {
 				personQuery.Gender = genders[1]
 				personList, err = client.PersonService.ListPerson(ctx, personQuery)
 
-				Expect(err).To(BeNil())
-				Expect(len(personList.Records)).To(Equal(0))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(personList.Records).To(BeEmpty())
 				Expect(personList.Metadata.Total).To(BeEquivalentTo(0))
 			})
 
@@ -301,8 +301,8 @@ var _ = Describe("Person Integration Test", func() {
 					personQuery.Order = "asc"
 					personList, err = client.PersonService.ListPerson(ctx, personQuery)
 
-					Expect(err).To(BeNil())
-					Expect(len(personList.Records)).To(Equal(limit))
+					Expect(err).ToNot(HaveOccurred())
+					Expect(personList.Records).To(HaveLen(limit))
 					// Check if the records are sorted in ascending order by name
 					for i := 0; i < len(personList.Records)-1; i++ {
 						cur := personList.Records[i].Name
@@ -317,8 +317,8 @@ var _ = Describe("Person Integration Test", func() {
 					personQuery.Order = "desc"
 					personList, err = client.PersonService.ListPerson(ctx, personQuery)
 
-					Expect(err).To(BeNil())
-					Expect(len(personList.Records)).To(Equal(limit))
+					Expect(err).ToNot(HaveOccurred())
+					Expect(personList.Records).To(HaveLen(limit))
 
 					// Check if the records are sorted in descending order by name
 					for i := 0; i < len(personList.Records)-1; i++ {
@@ -334,8 +334,8 @@ var _ = Describe("Person Integration Test", func() {
 					personQuery.Order = "asc"
 					personList, err = client.PersonService.ListPerson(ctx, personQuery)
 
-					Expect(err).To(BeNil())
-					Expect(len(personList.Records)).To(Equal(limit))
+					Expect(err).ToNot(HaveOccurred())
+					Expect(personList.Records).To(HaveLen(limit))
 
 					// Check if the records are sorted in ascending order by gender
 					for i := 0; i < len(personList.Records)-1; i++ {
@@ -351,8 +351,8 @@ var _ = Describe("Person Integration Test", func() {
 					personQuery.Order = "desc"
 					personList, err = client.PersonService.ListPerson(ctx, personQuery)
 
-					Expect(err).To(BeNil())
-					Expect(len(personList.Records)).To(Equal(limit))
+					Expect(err).ToNot(HaveOccurred())
+					Expect(personList.Records).To(HaveLen(limit))
 
 					// Check if the records are sorted in descending order by gender
 					for i := 0; i < len(personList.Records)-1; i++ {
@@ -501,13 +501,13 @@ var _ = Describe("Person Integration Test", func() {
 	Context("Admin", func() {
 		It("should serve metrics", func() {
 			err = client.AdminService.HealthCheck(ctx)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should serve swagger", func() {
 			resp, err := DefaultHttpClient.R().Get(serviceUrl + "/swagger/index.html")
 
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(200))
 		})
 	})

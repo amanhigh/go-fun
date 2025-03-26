@@ -51,7 +51,7 @@ var _ = Describe("ExchangeManager", func() {
 		It("should process single position exchange", func() {
 			err := exchangeMgr.Exchange(ctx, exchangeables)
 
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(position.TTRate).To(Equal(82.0))
 			Expect(position.TTDate).To(Equal(testDate))
 		})
@@ -89,7 +89,7 @@ var _ = Describe("ExchangeManager", func() {
 		It("should process multiple position exchanges", func() {
 			err := exchangeMgr.Exchange(ctx, exchangeables)
 
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			for i, position := range positions {
 				Expect(position.TTRate).To(Equal(82.0 + float64(i)))
 				Expect(position.TTDate).To(Equal(dates[i]))
@@ -127,7 +127,7 @@ var _ = Describe("ExchangeManager", func() {
 
 		It("should handle empty exchangeables list", func() {
 			err := exchangeMgr.Exchange(ctx, nil)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		Context("When closest date is used", func() {
@@ -159,7 +159,7 @@ var _ = Describe("ExchangeManager", func() {
 			It("should set closest date and rate", func() {
 				err := exchangeMgr.Exchange(ctx, exchangeables)
 
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				Expect(position.TTRate).To(Equal(expectedRate))
 				Expect(position.TTDate).To(Equal(closestDate)) // Verify closest date was set
 
@@ -194,7 +194,7 @@ var _ = Describe("ExchangeManager", func() {
 			It("should set exact date and rate", func() {
 				err := exchangeMgr.Exchange(ctx, exchangeables)
 
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				Expect(position.TTRate).To(Equal(expectedRate))
 				Expect(position.TTDate).To(Equal(requestedDate)) // Verify requested date was set
 			})

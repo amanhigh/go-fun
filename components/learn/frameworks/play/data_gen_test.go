@@ -73,30 +73,30 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SLOW), func() {
 		for i := 0; i < schoolCount; i++ {
 			schools[i] = School{}
 			err = faker.FakeData(&schools[i])
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		}
 
 		// Create Teachers
 		for i := 0; i < teacherCount; i++ {
 			teachers[i] = Teacher{}
 			err = faker.FakeData(&teachers[i])
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		}
 
 		// Create Students
 		for i := 0; i < studentCount; i++ {
 			students[i] = Student{}
 			err = faker.FakeData(&students[i])
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		}
 	})
 
 	It("should create required fake data", func() {
-		Expect(len(schools)).To(Equal(schoolCount))
-		Expect(len(students)).To(Equal(studentCount))
-		Expect(len(teachers)).To(Equal(teacherCount))
-	})
 
+		Expect(schools).To(HaveLen(schoolCount))
+		Expect(students).To(HaveLen(studentCount))
+		Expect(teachers).To(HaveLen(teacherCount))
+	})
 	Context("with db", Ordered, func() {
 		var (
 			dbconfig = config.Db{}
@@ -105,15 +105,15 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SLOW), func() {
 		BeforeAll(func() {
 			// Create Mysql Container
 			container, err = util.MysqlTestContainer(ctx)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			// Fill Defaults
 			err = env.Parse(&dbconfig)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			// url, err := container.Endpoint(ctx, "")
 			mysqlPort, err := container.MappedPort(ctx, "3306")
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			dbconfig.DbType = models.MYSQL
 			dbconfig.Url = util.BuildMysqlURL("aman", "aman", "localhost", "compute", mysqlPort.Port())
@@ -121,28 +121,26 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SLOW), func() {
 			// dbconfig.LogLevel = logger.Info
 
 			db, err = util.ConnectDb(dbconfig)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
-
 		AfterAll(func() {
 			log.Warn().Msg("Mysql Shutting Down")
 			err = container.Terminate(ctx)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should connect", func() {
 			Expect(db).To(Not(BeNil()))
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
-
 		Context("Migrate", func() {
 			BeforeEach(func() {
 				// Drop Existing Tables
 				err = db.Migrator().DropTable(&School{}, &Student{}, &Teacher{})
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 
 				err = db.AutoMigrate(&School{}, &Student{}, &Teacher{})
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("should migrate", func() {
@@ -157,7 +155,7 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SLOW), func() {
 				)
 				BeforeEach(func() {
 					err = db.CreateInBatches(&schools, batchSize).Error
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 
 					// Assign School Ids
 					for teacher := range teachers {
@@ -168,24 +166,22 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SLOW), func() {
 					}
 
 					err = db.CreateInBatches(&teachers, batchSize).Error
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 
 					err = db.CreateInBatches(&students, batchSize).Error
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 				})
-
 				It("should insert", func() {
 					// Verify Insertion Count in DB
 					err = db.Model(&School{}).Count(&actualCount).Error
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 					Expect(actualCount).Should(BeNumerically("==", schoolCount))
 
 					err = db.Model(&Student{}).Count(&actualCount).Error
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 					Expect(actualCount).Should(BeNumerically("==", studentCount))
-
 					err = db.Model(&Teacher{}).Count(&actualCount).Error
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 					Expect(actualCount).Should(BeNumerically("==", teacherCount))
 				})
 			})

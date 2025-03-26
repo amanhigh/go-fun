@@ -39,28 +39,28 @@ var _ = Describe("Elastic", Ordered, Label(models.GINKGO_SLOW), func() {
 	BeforeAll(func() {
 		// Create Test Container
 		esContainer, err = util.ElasticSearchTestContainer(ctx)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 
 		// Get Mapped Port
 		endpoint, err = esContainer.PortEndpoint(ctx, "9200/tcp", "")
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 		log.Info().Str("Host", endpoint).Msg("Elastic Endpoint")
 
 		// Elastic Client
 		elasticClient, err = es.NewClient(es.Config{Addresses: []string{"http://" + endpoint}})
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 		Expect(elasticClient).ToNot(BeNil())
 	})
 
 	AfterAll(func() {
 		log.Warn().Msg("Elastic Shutting Down")
 		err = esContainer.Terminate(ctx)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	It("should connect", func() {
 		info, err := elasticClient.Ping()
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 		Expect(info).ToNot(BeNil())
 	})
 
@@ -75,12 +75,12 @@ var _ = Describe("Elastic", Ordered, Label(models.GINKGO_SLOW), func() {
 		BeforeEach(func() {
 			// Create Index
 			_, err = elasticClient.Indices.Create(indexName)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should exist", func() {
 			_, err = elasticClient.Indices.Exists([]string{indexName})
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		Context("Document", func() {
@@ -101,7 +101,7 @@ var _ = Describe("Elastic", Ordered, Label(models.GINKGO_SLOW), func() {
 						DocumentID: doc.ID,
 						Body:       bytes.NewReader(payload),
 					}.Do(ctx, elasticClient)
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 				}
 			})
 
@@ -112,7 +112,7 @@ var _ = Describe("Elastic", Ordered, Label(models.GINKGO_SLOW), func() {
 						Index:      indexName,
 						DocumentID: doc.ID,
 					}.Do(ctx, elasticClient)
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 				}
 			})
 
@@ -122,7 +122,7 @@ var _ = Describe("Elastic", Ordered, Label(models.GINKGO_SLOW), func() {
 					Index:      indexName,
 					DocumentID: docs[0].ID,
 				}.Do(ctx, elasticClient)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				Expect(resp).ToNot(BeNil())
 			})
 
@@ -138,7 +138,7 @@ var _ = Describe("Elastic", Ordered, Label(models.GINKGO_SLOW), func() {
 						}
 					}`),
 				}.Do(ctx, elasticClient)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				Expect(resp).ToNot(BeNil())
 			})
 

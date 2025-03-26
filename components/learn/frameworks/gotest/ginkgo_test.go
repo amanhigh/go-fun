@@ -47,13 +47,13 @@ var _ = Describe("Json Encode/Decode", func() {
 	Context("Success", func() {
 		It("should encode Properly", func() {
 			jsonString, err := personEncoder.EncodePerson(originalPerson)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(jsonString).To(Equal(personJson))
 		})
 
 		It("should decode Properly", func() {
 			decodedPerson, err := personEncoder.DecodePerson(personJson)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(decodedPerson).To(Equal(originalPerson))
 		})
 	})
@@ -65,19 +65,19 @@ var _ = Describe("Json Encode/Decode", func() {
 
 		It("should throw error on invalid json", func() {
 			_, err := personEncoder.DecodePerson("abcd")
-			Expect(err).To(Not(BeNil()))
+			Expect(err).To(HaveOccurred())
 		})
 
 		It("should not match original person", func() {
 			jsonString, err := personEncoder.EncodePerson(originalPerson)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(jsonString).To(Not(Equal(personJson)))
 		})
 
 		It("should fail for negative age", func() {
 			originalPerson.Age = -44
 			_, err := personEncoder.EncodePerson(originalPerson)
-			Expect(err).ToNot(BeNil())
+			Expect(err).To(HaveOccurred())
 		})
 	})
 
@@ -88,7 +88,7 @@ var _ = Describe("Json Encode/Decode", func() {
 		)
 
 		AfterEach(func() {
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 		})
 
@@ -250,10 +250,10 @@ var _ = Describe("Json Encode/Decode", func() {
 
 			AfterEach(func() {
 				// verify response
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				Expect(response.StatusCode).To(Equal(http.StatusOK))
 				actualResponse, err := io.ReadAll(response.Body)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				Expect(actualResponse).To(BeEquivalentTo(expectedResponse))
 
 				server.Close()
@@ -297,7 +297,7 @@ var _ = Describe("Json Encode/Decode", func() {
 
 			It("should return mocked json", func() {
 				json, err := mockEncoder.EncodePerson(originalPerson)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				Expect(json).To(Equal(personJson))
 			})
 
@@ -332,7 +332,7 @@ var _ = Describe("Json Encode/Decode", func() {
 
 				It("should decode", func() {
 					decodedPerson, err := mockEncoder.DecodePerson(personJson)
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 					Expect(decodedPerson).To(Equal(originalPerson))
 					mockEncoder.EncodePerson(originalPerson)
 
@@ -361,7 +361,7 @@ var _ = Describe("Json Encode/Decode", func() {
 				mockEncoder.EXPECT().EncodePerson(&personHasName{}).Return(personJson, nil)
 
 				result, err := mockEncoder.EncodePerson(Person{Name: "Zoye", Age: 44, MobileNumber: 8983333})
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				Expect(result).To(Equal(personJson))
 			})
 
@@ -400,7 +400,7 @@ var _ = Describe("Json Encode/Decode", func() {
 			mockEncoder.EXPECT().EncodePerson(originalPerson).Return(personJson, nil).Once()
 
 			json, err := mockEncoder.EncodePerson(originalPerson)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(json).To(Equal(personJson))
 		})
 
@@ -435,7 +435,7 @@ var _ = Describe("Json Encode/Decode", func() {
 
 				originalPerson.Age = 60
 				result, err := mockEncoder.EncodePerson(originalPerson)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				Expect(result).To(Equal(personJson))
 			})
 		})

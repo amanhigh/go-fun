@@ -35,7 +35,7 @@ var _ = Describe("TradeRepository", func() {
 		// Create test file
 		tradeFile = filepath.Join(testDir, "trades.csv")
 		err = os.WriteFile(tradeFile, []byte(testCSV), util.DEFAULT_PERM)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 
 		tradeRepo = repository.NewTradeRepository(tradeFile)
 	})
@@ -47,7 +47,7 @@ var _ = Describe("TradeRepository", func() {
 	Context("Success Cases", func() {
 		It("should read all trades", func() {
 			trades, err := tradeRepo.GetAllRecords(ctx)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(trades).To(HaveLen(3))
 
 			// Verify first trade
@@ -62,13 +62,13 @@ var _ = Describe("TradeRepository", func() {
 
 		It("should get unique tickers", func() {
 			tickers, err := tradeRepo.GetUniqueTickers(ctx)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(tickers).To(ConsistOf("AAPL", "GOOGL"))
 		})
 
 		It("should filter by ticker", func() {
 			trades, err := tradeRepo.GetRecordsForTicker(ctx, "AAPL")
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(trades).To(HaveLen(2))
 			Expect(trades[0].Symbol).To(Equal("AAPL"))
 			Expect(trades[1].Symbol).To(Equal("AAPL"))
@@ -79,27 +79,27 @@ var _ = Describe("TradeRepository", func() {
 		It("should handle missing file", func() {
 			invalidRepo := repository.NewTradeRepository("invalid.csv")
 			_, err := invalidRepo.GetAllRecords(ctx)
-			Expect(err).To(Not(BeNil()))
+			Expect(err).To(HaveOccurred())
 		})
 
 		It("should handle malformed CSV", func() {
 			malformedFile := filepath.Join(testDir, "malformed.csv")
 			err := os.WriteFile(malformedFile, []byte("invalid,csv"), util.DEFAULT_PERM)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			invalidRepo := repository.NewTradeRepository(malformedFile)
 			_, err = invalidRepo.GetAllRecords(ctx)
-			Expect(err).To(Not(BeNil()))
+			Expect(err).To(HaveOccurred())
 		})
 
 		It("should handle empty file", func() {
 			emptyFile := filepath.Join(testDir, "empty.csv")
 			err := os.WriteFile(emptyFile, []byte(""), util.DEFAULT_PERM)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			emptyRepo := repository.NewTradeRepository(emptyFile)
 			trades, err := emptyRepo.GetAllRecords(ctx)
-			Expect(err).To(Not(BeNil()))
+			Expect(err).To(HaveOccurred())
 			Expect(trades).To(BeNil())
 		})
 
@@ -109,16 +109,16 @@ var _ = Describe("TradeRepository", func() {
 		It("should cache records after first load", func() {
 			// First call loads from file
 			records1, err := tradeRepo.GetAllRecords(ctx)
-			Expect(err).To(BeNil())
-			Expect(len(records1)).To(BeNumerically(">", 0))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(records1).ToNot(BeEmpty())
 
 			// Modify file to invalid content
 			writeErr := os.WriteFile(tradeFile, []byte("invalid,csv"), util.DEFAULT_PERM)
-			Expect(writeErr).To(BeNil())
+			Expect(writeErr).ToNot(HaveOccurred())
 
 			// Second call should return cached data
 			records2, err := tradeRepo.GetAllRecords(ctx)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(records2).To(Equal(records1))
 		})
 
@@ -133,7 +133,7 @@ var _ = Describe("TradeRepository", func() {
 				go func() {
 					defer wg.Done()
 					records, err := tradeRepo.GetAllRecords(ctx)
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 
 					mutex.Lock()
 					results = append(results, records)
@@ -143,7 +143,7 @@ var _ = Describe("TradeRepository", func() {
 			wg.Wait()
 
 			// Verify all calls returned same data
-			Expect(len(results)).To(Equal(10))
+			Expect(results).To(HaveLen(10))
 			for i := 1; i < len(results); i++ {
 				Expect(results[i]).To(Equal(results[0]))
 			}

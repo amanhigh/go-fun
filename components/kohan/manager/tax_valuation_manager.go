@@ -31,9 +31,10 @@ func (v *TaxValuationManagerImpl) ProcessValuations(ctx context.Context, valuati
 		inrValuation := tax.NewINRValuation(valuation)
 
 		// Collect all positions that need exchange rates
-		exchangeAbles = append(exchangeAbles, &inrValuation.FirstPosition)
-		exchangeAbles = append(exchangeAbles, &inrValuation.PeakPosition)
-		exchangeAbles = append(exchangeAbles, &inrValuation.YearEndPosition)
+		exchangeAbles = append(exchangeAbles,
+			&inrValuation.FirstPosition,
+			&inrValuation.PeakPosition,
+			&inrValuation.YearEndPosition)
 
 		inrValuations = append(inrValuations, inrValuation)
 	}

@@ -43,7 +43,7 @@ var _ = Describe("AccountManager", func() {
 
 			It("returns account details", func() {
 				account, err := accountManager.GetRecord(ctx, testAccount.Symbol)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				Expect(account).To(Equal(testAccount))
 			})
 		})
@@ -70,7 +70,7 @@ var _ = Describe("AccountManager", func() {
 
 			It("returns bad request error", func() {
 				_, err := accountManager.GetRecord(ctx, testAccount.Symbol)
-				Expect(err).To(Not(BeNil()))
+				Expect(err).To(HaveOccurred())
 				Expect(err.Code()).To(Equal(http.StatusBadRequest))
 				Expect(err.Error()).To(ContainSubstring("multiple accounts found"))
 			})

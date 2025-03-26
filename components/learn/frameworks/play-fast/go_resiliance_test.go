@@ -39,7 +39,7 @@ var _ = Describe("GoResiliance", func() {
 			err := cmd.Run(context.TODO(), func(_ context.Context) error {
 				return nil
 			})
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should timeout", func() {
@@ -47,7 +47,7 @@ var _ = Describe("GoResiliance", func() {
 				time.Sleep(TIMEOUT * 2)
 				return nil
 			})
-			Expect(err).To(Not(BeNil()))
+			Expect(err).To(HaveOccurred())
 		})
 
 	})
@@ -66,7 +66,7 @@ var _ = Describe("GoResiliance", func() {
 			err := cmd.Run(context.TODO(), func(_ context.Context) error {
 				return nil
 			})
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should run twice", func() {
@@ -78,7 +78,7 @@ var _ = Describe("GoResiliance", func() {
 				}
 				return nil
 			})
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(count).To(Equal(RETRY))
 		})
 
@@ -88,7 +88,7 @@ var _ = Describe("GoResiliance", func() {
 				count++
 				return errors.New("Call Failed")
 			})
-			Expect(err).To(Not(BeNil()))
+			Expect(err).To(HaveOccurred())
 			Expect(count).To(Equal(RETRY + 1))
 		})
 

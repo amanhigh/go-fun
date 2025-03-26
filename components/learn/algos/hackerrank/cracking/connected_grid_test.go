@@ -24,7 +24,7 @@ var _ = Describe("ConnectedGrid", func() {
 	)
 	It("should find correct regions", func() {
 
-		max := cracking.FindRegion(cells, size, n, m)
-		Expect(max).To(Equal(5))
+		maxSize := cracking.FindRegion(cells, size, n, m)
+		Expect(maxSize).To(Equal(5))
 	})
 })

@@ -69,7 +69,7 @@ func (ki *KohanInjector) provideAccountManager(accountRepo repository.AccountRep
 	return manager.NewAccountManager(accountRepo)
 }
 
-func (ki *KohanInjector) provideTaxValuationManager(exchangeManager manager.ExchangeManager, accountManager manager.AccountManager) manager.TaxValuationManager {
+func (ki *KohanInjector) provideTaxValuationManager(exchangeManager manager.ExchangeManager) manager.TaxValuationManager {
 	return manager.NewTaxValuationManager(exchangeManager)
 }
 

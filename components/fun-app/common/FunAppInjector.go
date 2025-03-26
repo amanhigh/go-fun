@@ -19,6 +19,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+
+	// Blank import for mysql driver registration
 	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/golobby/container/v3"
@@ -116,7 +118,7 @@ func newHttpServer(config config.FunAppConfig, engine *gin.Engine) (server *http
 	server = &http.Server{
 		Addr:              fmt.Sprintf(":%v", config.Server.Port),
 		Handler:           engine,
-		ReadHeaderTimeout: 10 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second, //nolint:mnd // Standard HTTP timeout value
 	}
 	return
 }

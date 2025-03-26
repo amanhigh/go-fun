@@ -61,7 +61,7 @@ var _ = Describe("TaxValuationManager", func() {
 				Return(nil)
 
 			result, err := valuationManager.ProcessValuations(ctx, []tax.Valuation{valuation})
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(result).To(HaveLen(1))
 
 			taxVal := result[0]
@@ -124,7 +124,7 @@ var _ = Describe("TaxValuationManager", func() {
 		It("should process multiple valuations", func() {
 			result, err := valuationManager.ProcessValuations(ctx, valuations)
 
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(result).To(HaveLen(2))
 			Expect(result[0].Ticker).To(Equal("AAPL"))
 			Expect(result[1].Ticker).To(Equal("MSFT"))

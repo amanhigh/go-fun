@@ -55,7 +55,7 @@ var _ = Describe("DividendManager", func() {
 		It("should process dividend correctly", func() {
 			inrDividends, err := dividendManager.ProcessDividends(ctx, dividends)
 
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(inrDividends).To(HaveLen(1))
 
 			result := inrDividends[0]
@@ -127,7 +127,7 @@ var _ = Describe("DividendManager", func() {
 		It("should process multiple dividends correctly", func() {
 			inrDividends, err := dividendManager.ProcessDividends(ctx, dividends)
 
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(inrDividends).To(HaveLen(2))
 
 			// Verify first dividend

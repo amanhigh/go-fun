@@ -49,13 +49,13 @@ var _ = Describe("Inject", func() {
 				&inject.Object{Value: learn.NewDatabaseClient(appDBName), Name: "appdb"},
 				&inject.Object{Value: &app},
 			)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should build App", func() {
 			// Initiate Populate
 			err = graph.Populate()
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			Expect(app.AppDB).To(Not(BeNil()), "Inject Fields")
 			Expect(app.AppDB.GetDatabaseName()).To(Equal(appDBName))
@@ -76,10 +76,10 @@ var _ = Describe("Inject", func() {
 			err = graph.Provide(
 				&inject.Object{Value: &component},
 			)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			err = graph.Populate()
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			Expect(component.Db).To(Not(BeNil()), "Inject Fields")
 			Expect(component.Redis).To(Not(BeNil()))
@@ -150,7 +150,7 @@ var _ = Describe("Inject", func() {
 				fx.Populate(&redis),
 			).Err()
 
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(redis.GetRedisName()).To(Equal(redisName))
 		})
 
@@ -165,7 +165,7 @@ var _ = Describe("Inject", func() {
 				fx.Populate(&redis),
 			).Err()
 
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(redis.GetRedisName()).To(Equal(mockRedisName))
 		})
 	})
@@ -190,7 +190,7 @@ var _ = Describe("Inject", func() {
 
 			// Build App
 			err = c.Fill(&app)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should build App", func() {
@@ -209,7 +209,7 @@ var _ = Describe("Inject", func() {
 
 		It("should resolve", func() {
 			err = c.Resolve(&redis)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			Expect(redis.GetRedisName()).To(Equal(redisName))
 		})
@@ -218,7 +218,7 @@ var _ = Describe("Inject", func() {
 			err = c.Call(func(r learn.Redis) {
 				Expect(r.GetRedisName()).To(Equal(redisName))
 			})
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should override", func() {
@@ -226,7 +226,7 @@ var _ = Describe("Inject", func() {
 				return learn.NewRedisClient(mockRedisName)
 			})
 			err = c.Resolve(&redis)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			Expect(redis.GetRedisName()).To(Equal(mockRedisName))
 		})
@@ -243,7 +243,7 @@ var _ = Describe("Inject", func() {
 				Redis: learn.NewRedisClient("randomRedisClient"),
 			}
 			err = c.Resolve(&comp)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(comp.Redis.GetRedisName()).To(Equal(redisName))
 		})
 	})

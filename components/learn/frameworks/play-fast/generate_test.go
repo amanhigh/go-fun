@@ -36,10 +36,10 @@ var _ = Describe("Generate", func() {
 		Context("Parse", func() {
 			AfterEach(func() {
 				tmpl, err := tmpl.Parse(goTemplate)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 
 				err = tmpl.Execute(buffer, metadata)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 
 				Expect(buffer.String()).To(Equal(expected))
 			})
@@ -87,10 +87,10 @@ var _ = Describe("Generate", func() {
 			expected = "Hello, <script>alert('you have been pwned')</script>"
 
 			tmpl, err := tmpl.Parse(goTemplate)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			err = tmpl.ExecuteTemplate(buffer, "T", "<script>alert('you have been pwned')</script>")
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			Expect(buffer.String()).To(Equal(expected))
 		})
@@ -109,10 +109,10 @@ var _ = Describe("Generate", func() {
 			expected = "Hello, &lt;script&gt;alert(&#39;you have been pwned&#39;)&lt;/script&gt;"
 
 			tmpl, err := htmpl.Parse(goTemplate)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			err = tmpl.ExecuteTemplate(buffer, "T", "<script>alert('you have been pwned')</script>")
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(buffer.String()).To(Equal(expected))
 		})
 	})
