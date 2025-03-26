@@ -158,8 +158,8 @@ var _ = Describe("Json Encode/Decode", func() {
 			pizza := "Cheeseboard Pizza"
 			type FoodSrce string
 
-			Ω(FoodSrce(pizza)).ShouldNot(BeEquivalentTo(pizza)) // will fail
-			Ω(FoodSrce(pizza)).Should(BeEquivalentTo(pizza))    // will pass
+			Ω(FoodSrce(pizza)).ShouldNot(Equal(pizza))       // will fail
+			Ω(FoodSrce(pizza)).Should(BeEquivalentTo(pizza)) // will pass
 		})
 
 		It("should match collection", func() {

@@ -42,8 +42,8 @@ var _ = Describe("SafeRead", func() {
 
 		It("should update safely", func() {
 			Expect(safe.Read()).To(Equal(start))
-			Eventually(safe.Read()).Should(Equal(writeValue))
-			Eventually(safe.Intc).Should(Not(BeClosed()))
+			Eventually(safe.Read).Should(Equal(writeValue))
+			Eventually(safe.Intc).ShouldNot(BeClosed())
 		})
 
 		Context("post close", func() {
