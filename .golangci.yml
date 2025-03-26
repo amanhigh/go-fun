@@ -115,7 +115,7 @@ linters:
     - revive        # general style (golint replacement)
     - gocritic      
     - unused        # unused code detection
-    # - nolintlint    # nolint linter
+    - nolintlint    # nolint linter
 
     # Consider enabling these linters later:
     - exhaustive     # enum switch statements

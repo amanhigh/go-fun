@@ -9,7 +9,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-// nolint:funlen
+//nolint:funlen
 func TestConvey(t *testing.T) {
 	var (
 		name          = "Zoye"
