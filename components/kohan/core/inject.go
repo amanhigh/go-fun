@@ -1,6 +1,7 @@
 package core
 
 import (
+	"path/filepath"
 	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/clients"
@@ -8,6 +9,7 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/manager/tui"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/config"
+	taxmodels "github.com/amanhigh/go-fun/models/tax"
 	"github.com/go-resty/resty/v2"
 
 	"github.com/golobby/container/v3"
@@ -19,6 +21,7 @@ type KohanInterface interface {
 	GetDariusApp(cfg config.DariusConfig) (*DariusV1, error)
 	// Add new method
 	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
+	GetTaxManager() (manager.TaxManager, error) // Added method
 }
 
 // Private singleton instance
@@ -73,6 +76,27 @@ func (ki *KohanInjector) provideTaxValuationManager(exchangeManager manager.Exch
 	return manager.NewTaxValuationManager(exchangeManager)
 }
 
+func (ki *KohanInjector) provideGainsRepository() repository.GainsRepository {
+	gainsFilePath := filepath.Join(ki.config.Tax.DownloadsDir, "gains.csv")
+	return repository.NewGainsRepository(gainsFilePath)
+}
+
+func (ki *KohanInjector) provideFinancialYearManagerGains() manager.FinancialYearManager[taxmodels.Gains] {
+	return manager.NewFinancialYearManager[taxmodels.Gains]()
+}
+
+func (ki *KohanInjector) provideCapitalGainManager(
+	exchangeMgr manager.ExchangeManager,
+	gainsRepo repository.GainsRepository,
+	fyMgr manager.FinancialYearManager[taxmodels.Gains],
+) manager.CapitalGainManager {
+	return manager.NewCapitalGainManager(exchangeMgr, gainsRepo, fyMgr)
+}
+
+func (ki *KohanInjector) provideTaxManager(gainMgr manager.CapitalGainManager) manager.TaxManager {
+	return manager.NewTaxManager(gainMgr)
+}
+
 // Public singleton access - returns interface only
 func GetKohanInterface() KohanInterface {
 	return globalInjector
@@ -81,6 +105,30 @@ func GetKohanInterface() KohanInterface {
 func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface {
 	// HACK: Move to Provider Based Build ?
 	return manager.NewAutoManager(wait, capturePath)
+}
+
+func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
+	// Ensure all dependencies for TaxManager are registered
+	container.MustSingleton(ki.di, resty.New)
+	container.MustSingleton(ki.di, ki.provideSBIClient)
+
+	// Register Repositories
+	container.MustSingleton(ki.di, ki.provideExchangeRepository)
+	container.MustSingleton(ki.di, ki.provideGainsRepository)
+
+	// Register Managers (dependencies of TaxManager)
+	container.MustSingleton(ki.di, ki.provideSBIManager)
+	container.MustSingleton(ki.di, ki.provideExchangeManager)
+	container.MustSingleton(ki.di, ki.provideFinancialYearManagerGains)
+	container.MustSingleton(ki.di, ki.provideCapitalGainManager)
+
+	// Register TaxManager itself
+	container.MustSingleton(ki.di, ki.provideTaxManager)
+
+	// Resolve and return TaxManager
+	var taxManager manager.TaxManager
+	err := ki.di.Resolve(&taxManager)
+	return taxManager, err
 }
 
 func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error) {
