@@ -41,6 +41,7 @@ type TaxConfig struct {
 	DividendFile        string `env:"FA_DIVIDEND_FILE" envDefault:"dividends.csv"`
 	SBIFilePath         string `env:"SBI_FILE_PATH" envDefault:"sbi_rates.csv"`
 	AccountFilePath     string `env:"ACCOUNT_FILE_PATH" envDefault:"accounts.csv"`
+	GainsFilePath       string `env:"GAINS_FILE_PATH" envDefault:"gains.csv"`
 }
 
 func NewKohanConfig() (config KohanConfig, err error) {

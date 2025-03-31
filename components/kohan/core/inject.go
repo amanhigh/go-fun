@@ -1,7 +1,6 @@
 package core
 
 import (
-	"path/filepath"
 	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/clients"
@@ -77,8 +76,7 @@ func (ki *KohanInjector) provideTaxValuationManager(exchangeManager manager.Exch
 }
 
 func (ki *KohanInjector) provideGainsRepository() repository.GainsRepository {
-	gainsFilePath := filepath.Join(ki.config.Tax.DownloadsDir, "gains.csv")
-	return repository.NewGainsRepository(gainsFilePath)
+	return repository.NewGainsRepository(ki.config.Tax.GainsFilePath)
 }
 
 func (ki *KohanInjector) provideFinancialYearManagerGains() manager.FinancialYearManager[taxmodels.Gains] {
