@@ -15,7 +15,7 @@ import (
 
 		https://www.hackerrank.com/challenges/maxsubarray/problem
 */
-// nolint: revive
+//nolint:revive
 func MaxSubArray(input []int) (arraySum, segmentSum, start, end int) {
 	return KadensAlgorithm(input)
 }
@@ -71,7 +71,7 @@ func calculateNonContiguousSum(input []int) int {
 	return sum
 }
 
-// nolint: revive
+//nolint:revive
 func KadensAlgorithm(input []int) (contigousSum, nonContigousSum, start, end int) {
 	contigousSum, start, end = calculateContiguousSum(input)
 	nonContigousSum = calculateNonContiguousSum(input)
@@ -93,7 +93,7 @@ func KadensAlgorithm(input []int) (contigousSum, nonContigousSum, start, end int
 *
 Brute Force O(n^2)
 */
-// nolint: revive
+//nolint:revive
 func MaxSubArrayBruteForce(input []int) (contigousSum, nonContigousSum, start, end int) {
 	/*
 		Mistake #1 as array can have negative numbers

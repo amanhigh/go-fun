@@ -41,15 +41,19 @@ func (c *CapitalGainManagerImpl) GetGainsForYear(ctx context.Context, year int) 
 }
 
 func (c *CapitalGainManagerImpl) ProcessTaxGains(ctx context.Context, gains []tax.Gains) (taxGains []tax.INRGains, err common.HttpError) {
-	exchangeableGains := make([]tax.Exchangeable, len(taxGains))
-	for _, gain := range gains {
-		var taxGain tax.INRGains
-		// Copy base gains
-		taxGain.Gains = gain
+	// Initialize taxGains slice and a slice for exchangeable items
+	taxGains = make([]tax.INRGains, len(gains))
+	exchangeableGains := make([]tax.Exchangeable, len(gains))
 
-		taxGains = append(taxGains, taxGain)
-		exchangeableGains = append(exchangeableGains, &taxGain)
+	for i, gain := range gains {
+		// Populate taxGains slice with base gains
+		taxGains[i].Gains = gain
+		// Create slice of pointers to elements in taxGains for the exchange manager
+		exchangeableGains[i] = &taxGains[i]
 	}
+
+	// Exchange rates will modify the structs in taxGains via the pointers in exchangeableGains
 	err = c.exchangeManager.Exchange(ctx, exchangeableGains)
+
 	return
 }

@@ -247,7 +247,7 @@ var _ = Describe("GoTour", func() {
 			}
 		})
 
-		// nolint:exhaustive
+		//nolint:exhaustive
 		It("should tell weekend", func() {
 			/** Emulates long if/else chains */
 			log.Info().Msg("When's Saturday?")

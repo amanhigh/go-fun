@@ -25,7 +25,7 @@ var _ = Describe("File Server", func() {
 	BeforeEach(func() {
 		srv := util.NewTestServer(fmt.Sprintf(":%v", port))
 		srv.Handler = fs
-		go srv.ListenAndServe() //nolint:errcheck
+		go srv.ListenAndServe()
 	})
 
 	It("should run", func() {

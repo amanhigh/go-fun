@@ -147,7 +147,7 @@ var _ = Describe("HttpStream", func() {
 		http.HandleFunc("/", handleRoot)
 		http.HandleFunc("/stream", stream)
 		srv = util.NewTestServer(fmt.Sprintf(":%d", port))
-		go srv.ListenAndServe() //nolint:errcheck
+		go srv.ListenAndServe()
 	})
 
 	AfterEach(func() {
