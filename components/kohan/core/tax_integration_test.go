@@ -16,36 +16,17 @@ import (
 
 var _ = Describe("Tax Integration", Label("it"), func() {
 	var (
-		ctx context.Context
-
-		// Config
-		kohanConfig config.KohanConfig
-
-		// Injector Interface
-		injectorInterface core.KohanInterface
-
-		// Manager under test (obtained via injector)
+		ctx        context.Context
 		taxManager manager.TaxManager
-
-		// Test Year
-		testYear = 2024
+		testYear   = 2023
 	)
 
 	BeforeEach(func() {
 		ctx = context.Background()
-		testDataBasePath := filepath.Join("..", "testdata", "tax") // Changed from ../../testdata/tax to ../testdata/tax
-
-		fmt.Println("Test Data Base Path:", testDataBasePath)
-		// List Files
-		fmt.Println("Listing files in test data directory:")
-		files, err1 := filepath.Glob(filepath.Join(testDataBasePath, "*"))
-		Expect(err1).ToNot(HaveOccurred())
-		for _, file := range files {
-			fmt.Println("File:", file)
-		}
+		testDataBasePath := filepath.Join("..", "testdata", "tax")
 
 		// Configure KohanConfig with TaxConfig pointing to test data files
-		kohanConfig = config.KohanConfig{
+		kohanConfig := config.KohanConfig{
 			Tax: config.TaxConfig{
 				// DownloadsDir is separate, points to base testdata path for this test
 				DownloadsDir: testDataBasePath,
@@ -61,11 +42,10 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 
 		// Setup the global injector with test configuration
 		core.SetupKohanInjector(kohanConfig)
-		injectorInterface = core.GetKohanInterface()
 
 		// Retrieve the TaxManager instance
 		var err error
-		taxManager, err = injectorInterface.GetTaxManager()
+		taxManager, err = core.GetKohanInterface().GetTaxManager()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(taxManager).ToNot(BeNil())
 	})
@@ -73,9 +53,13 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 	Context("Tax Summary Calculation", func() {
 		It("should calculate tax summary correctly for the given year", func() {
 			summary, err := taxManager.GetTaxSummary(ctx, testYear)
-
 			Expect(err).ToNot(HaveOccurred())
 			Expect(summary).ToNot(BeNil())
+
+			// Debug output
+			fmt.Printf("Tax Summary: %+v\n", summary)
+			fmt.Printf("INRGains: %+v\n", summary.INRGains)
+
 			Expect(summary.INRGains).To(HaveLen(1))
 
 			gain := summary.INRGains[0]

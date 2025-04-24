@@ -147,6 +147,7 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 	container.MustSingleton(ki.di, ki.provideAccountRepository)
 
 	// Manager
+	// FIXME: Remove Duplicate Container Registration
 	container.MustSingleton(ki.di, provideServiceManager)
 	container.MustSingleton(ki.di, provideUIManager)
 	container.MustSingleton(ki.di, provideHotkeyManager)
