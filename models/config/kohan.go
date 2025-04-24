@@ -36,12 +36,14 @@ type TaxConfig struct {
 	AlphaAPIKey  string `env:"ALPHA_API_KEY"` // required, no default
 
 	// File System Configuration
+	// DownloadsDir stores downloaded ticker data, separate from tax input files.
 	DownloadsDir        string `env:"FA_DOWNLOADS_DIR" envDefault:"~/Downloads/Tickers"`
-	BrokerStatementFile string `env:"FA_BROKER_STATEMENT" envDefault:"broker_statement.csv"`
-	DividendFile        string `env:"FA_DIVIDEND_FILE" envDefault:"dividends.csv"`
-	SBIFilePath         string `env:"SBI_FILE_PATH" envDefault:"sbi_rates.csv"`
-	AccountFilePath     string `env:"ACCOUNT_FILE_PATH" envDefault:"accounts.csv"`
-	GainsFilePath       string `env:"GAINS_FILE_PATH" envDefault:"gains.csv"`
+	BrokerStatementPath string `env:"FA_BROKER_STATEMENT_PATH"`
+	DividendFilePath    string `env:"FA_DIVIDEND_FILE_PATH"`
+	SBIFilePath         string `env:"SBI_FILE_PATH"`
+	AccountFilePath     string `env:"ACCOUNT_FILE_PATH"`
+	GainsFilePath       string `env:"GAINS_FILE_PATH"`
+	InterestFilePath    string `env:"INTEREST_FILE_PATH"`
 }
 
 func NewKohanConfig() (config KohanConfig, err error) {

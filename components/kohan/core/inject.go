@@ -51,7 +51,6 @@ func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) *manag
 }
 
 func (ki *KohanInjector) provideExchangeRepository() repository.ExchangeRepository {
-	// BUG: #B Fix File Path joining Download Dir.
 	return repository.NewExchangeRepository(ki.config.Tax.SBIFilePath)
 }
 

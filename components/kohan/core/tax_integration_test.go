@@ -2,6 +2,7 @@ package core_test
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"time"
 
@@ -32,14 +33,29 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 
 	BeforeEach(func() {
 		ctx = context.Background()
-		testDataBasePath := filepath.Join("..", "..", "testdata", "tax")
+		testDataBasePath := filepath.Join("..", "testdata", "tax") // Changed from ../../testdata/tax to ../testdata/tax
+
+		fmt.Println("Test Data Base Path:", testDataBasePath)
+		// List Files
+		fmt.Println("Listing files in test data directory:")
+		files, err1 := filepath.Glob(filepath.Join(testDataBasePath, "*"))
+		Expect(err1).ToNot(HaveOccurred())
+		for _, file := range files {
+			fmt.Println("File:", file)
+		}
 
 		// Configure KohanConfig with TaxConfig pointing to test data files
 		kohanConfig = config.KohanConfig{
 			Tax: config.TaxConfig{
-				DownloadsDir:    testDataBasePath,
-				SBIFilePath:     filepath.Join(testDataBasePath, tax.SBI_RATES_FILENAME),
-				AccountFilePath: filepath.Join(testDataBasePath, "accounts.csv"),
+				// DownloadsDir is separate, points to base testdata path for this test
+				DownloadsDir: testDataBasePath,
+				// File Paths using constants and joined with base path
+				BrokerStatementPath: filepath.Join(testDataBasePath, tax.TRADES_FILENAME),
+				DividendFilePath:    filepath.Join(testDataBasePath, tax.DIVIDENDS_FILENAME),
+				SBIFilePath:         filepath.Join(testDataBasePath, tax.SBI_RATES_FILENAME),
+				AccountFilePath:     filepath.Join(testDataBasePath, tax.ACCOUNTS_FILENAME),
+				GainsFilePath:       filepath.Join(testDataBasePath, tax.GAINS_FILENAME),
+				InterestFilePath:    filepath.Join(testDataBasePath, tax.INTEREST_FILENAME),
 			},
 		}
 
