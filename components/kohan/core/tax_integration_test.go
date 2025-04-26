@@ -50,8 +50,18 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		Expect(taxManager).ToNot(BeNil())
 	})
 
-	Context("Tax Summary Calculation", func() {
-		It("should calculate tax summary correctly for the given year", func() {
+	// NEW CONTEXT: Basic check
+	Context("Basic Summary Retrieval", func() {
+		It("should retrieve the tax summary without errors", func() {
+			summary, err := taxManager.GetTaxSummary(ctx, testYear)
+
+			Expect(err).ToNot(HaveOccurred()) // Verify no error during retrieval
+			Expect(summary).ToNot(BeNil())    // Verify the summary object itself is not nil
+		})
+	})
+
+	Context("Capital Gains Calculation (INRGains)", func() {
+		It("should calculate capital gains correctly for the given year", func() {
 			summary, err := taxManager.GetTaxSummary(ctx, testYear)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(summary).ToNot(BeNil())
@@ -74,4 +84,25 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(gain.TTDate.Format(time.DateOnly)).To(Equal("2024-01-17"))
 		})
 	})
+
+	// FUTURE CONTEXT: Placeholder for Dividends
+	/*
+		Context("Dividend Calculation (INRDividends)", func() {
+		    // ... tests for dividends ...
+		})
+	*/
+
+	// FUTURE CONTEXT: Placeholder for Interest
+	/*
+		Context("Interest Calculation (INRInterest)", func() {
+		    // ... tests for interest ...
+		})
+	*/
+
+	// FUTURE CONTEXT: Placeholder for Valuations
+	/*
+		Context("Valuation Calculation (INRValuation)", func() {
+		    // ... tests for valuations ...
+		})
+	*/
 })
