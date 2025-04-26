@@ -26,7 +26,7 @@ func Encrypt(key, text string) (encryptedText string, err error) {
 		iv := ciphertext[:aes.BlockSize]
 		if _, err := io.ReadFull(rand.Reader, iv); err == nil {
 			cfb := cipher.NewCFBEncrypter(block, iv)
-			cfb.XORKeyStream(ciphertext[aes.BlockSize:], []byte(textBytes))
+			cfb.XORKeyStream(ciphertext[aes.BlockSize:], textBytes)
 
 			/* Do Base64 Encoding on Encrypted Text */
 			encryptedText = base64.URLEncoding.EncodeToString(ciphertext)

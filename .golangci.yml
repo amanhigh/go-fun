@@ -108,7 +108,7 @@ linters:
     - sqlclosecheck # ensure sql resources closed
     - noctx        # enforce context usage
     - mnd           # Magic numbers detector
-    # - unconvert    # type conversion
+    - unconvert    # type conversion
     
     # Code Style Essentials
     - goimports     # import sorting + gofmt
