@@ -2,7 +2,6 @@ package core_test
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 	"time"
 
@@ -65,23 +64,29 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			summary, err := taxManager.GetTaxSummary(ctx, testYear)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(summary).ToNot(BeNil())
+			Expect(summary.INRGains).To(HaveLen(2)) // Expecting AAPL (STCG) and MSFT (LTCG)
 
-			// Debug output
-			fmt.Printf("Tax Summary: %+v\n", summary)
-			fmt.Printf("INRGains: %+v\n", summary.INRGains)
+			// --- Assertions for AAPL (Expected at index 0 after sort) ---
+			aaplGain := summary.INRGains[0]
+			Expect(aaplGain.Symbol).To(Equal("AAPL"))
+			Expect(aaplGain.PNL).To(BeNumerically("~", 1000.00))
+			Expect(aaplGain.Type).To(Equal("STCG")) // Holding < 730 days
+			Expect(aaplGain.BuyDate).To(Equal("2024-01-15"))
+			Expect(aaplGain.SellDate).To(Equal("2024-01-17"))
+			Expect(aaplGain.TTRate).To(BeNumerically("~", 82.90)) // Rate for Jan 17
+			Expect(aaplGain.INRValue()).To(BeNumerically("~", 1000.00*82.90))
+			Expect(aaplGain.TTDate.Format(time.DateOnly)).To(Equal("2024-01-17"))
 
-			Expect(summary.INRGains).To(HaveLen(1))
-
-			gain := summary.INRGains[0]
-			Expect(gain.Symbol).To(Equal("AAPL"))
-			Expect(gain.PNL).To(BeNumerically("~", 1000.00))
-			Expect(gain.Type).To(Equal("STCG"))
-			Expect(gain.BuyDate).To(Equal("2024-01-15"))
-			Expect(gain.SellDate).To(Equal("2024-01-17"))
-
-			Expect(gain.TTRate).To(BeNumerically("~", 82.90))
-			Expect(gain.INRValue()).To(BeNumerically("~", 1000.00*82.90))
-			Expect(gain.TTDate.Format(time.DateOnly)).To(Equal("2024-01-17"))
+			// --- Assertions for MSFT (Expected at index 1 after sort) ---
+			msftGain := summary.INRGains[1]
+			Expect(msftGain.Symbol).To(Equal("MSFT"))
+			Expect(msftGain.PNL).To(BeNumerically("~", 500.00))
+			Expect(msftGain.Type).To(Equal("LTCG")) // Holding > 730 days
+			Expect(msftGain.BuyDate).To(Equal("2022-01-10"))
+			Expect(msftGain.SellDate).To(Equal("2024-02-15"))
+			Expect(msftGain.TTRate).To(BeNumerically("~", 83.00)) // Rate for Feb 15 (from test data)
+			Expect(msftGain.INRValue()).To(BeNumerically("~", 500.00*83.00))
+			Expect(msftGain.TTDate.Format(time.DateOnly)).To(Equal("2024-02-15"))
 		})
 	})
 
