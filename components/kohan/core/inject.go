@@ -90,8 +90,12 @@ func (ki *KohanInjector) provideCapitalGainManager(
 	return manager.NewCapitalGainManager(exchangeMgr, gainsRepo, fyMgr)
 }
 
-func (ki *KohanInjector) provideTaxManager(gainMgr manager.CapitalGainManager) manager.TaxManager {
-	return manager.NewTaxManager(gainMgr)
+func (ki *KohanInjector) provideTaxManager(
+	gainMgr manager.CapitalGainManager, // Existing parameter (interface)
+	dividendManager manager.DividendManager, // Added parameter (interface)
+) manager.TaxManager { // Return TaxManager interface
+	// Call the updated constructor with both dependencies
+	return manager.NewTaxManager(gainMgr, dividendManager)
 }
 
 // Public singleton access - returns interface only

@@ -8,6 +8,7 @@ import (
 )
 
 type DividendManager interface {
+	// FIXME: Add GetDividendsForYear method Similar to CapitalGainManager (Fix tax_manager.go integration)
 	ProcessDividends(ctx context.Context, dividends []tax.Dividend) ([]tax.INRDividend, common.HttpError)
 }
 

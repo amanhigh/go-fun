@@ -13,11 +13,13 @@ type TaxManager interface {
 
 type TaxManagerImpl struct {
 	capitalGainManager CapitalGainManager
+	dividendManager    DividendManager // Added field
 }
 
-func NewTaxManager(capitalGainManager CapitalGainManager) TaxManager {
+func NewTaxManager(capitalGainManager CapitalGainManager, dividendManager DividendManager) TaxManager {
 	return &TaxManagerImpl{
 		capitalGainManager: capitalGainManager,
+		dividendManager:    dividendManager, // Added assignment
 	}
 }
 
@@ -36,5 +38,13 @@ func (t *TaxManagerImpl) GetTaxSummary(ctx context.Context, year int) (summary t
 
 	// Build summary
 	summary.INRGains = inrGains
+
+	// Process Dividends (Added)
+	summary.INRDividends, err = t.dividendManager.ProcessDividends(ctx, year)
+	if err != nil {
+		// Log error? Fail on first error.
+		return summary, fmt.Errorf("failed to process dividends: %w", err)
+	}
+
 	return summary, nil
 }
