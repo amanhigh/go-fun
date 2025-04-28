@@ -114,12 +114,12 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			janDividend := summary.INRDividends[0]
 			Expect(janDividend.Symbol).To(Equal("AAPL"))
 			Expect(janDividend.Date).To(Equal("2024-01-15"))
-			Expect(janDividend.Amount).To(Equal(100.00))
-			Expect(janDividend.Tax).To(Equal(15.00))
-			Expect(janDividend.Net).To(Equal(85.00))
+			Expect(janDividend.Amount).To(Equal(115.00))
+			Expect(janDividend.Tax).To(Equal(17.25))
+			Expect(janDividend.Net).To(Equal(97.75))
 			Expect(janDividend.TTRate).To(Equal(82.50)) // Rate for Jan 15 from sbi_rates.csv
 			Expect(janDividend.TTDate.Format(time.DateOnly)).To(Equal("2024-01-15"))
-			Expect(janDividend.INRValue()).To(Equal(8250.00)) // 100.00 * 82.50
+			Expect(janDividend.INRValue()).To(Equal(9487.50)) // 115.00 * 82.50
 
 			// --- Assertions for Feb 20 Dividend (MSFT) - Key Details ---
 			febDividend := summary.INRDividends[1]
