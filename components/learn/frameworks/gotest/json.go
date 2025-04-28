@@ -33,7 +33,7 @@ func (p *PersonEncoderImpl) EncodePerson(person Person) (jsonString string, err 
 	var jsonBytes []byte
 
 	if person.Age < 0 {
-		err = errors.New("Invalid Age")
+		err = errors.New("invalid age")
 		return
 	}
 	jsonBytes, err = json.Marshal(person)
