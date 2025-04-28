@@ -3,9 +3,9 @@ package manager
 import (
 	"context"
 
+	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
-	"github.com/amanhigh/go-fun/components/kohan/repository" // Ensure repository import exists
 )
 
 type DividendManager interface {
@@ -26,7 +26,7 @@ type DividendManagerImpl struct {
 func NewDividendManager(
 	exchangeManager ExchangeManager,
 	financialYearManager FinancialYearManager[tax.Dividend], // Added
-	dividendRepository repository.DividendRepository,      // Added
+	dividendRepository repository.DividendRepository, // Added
 ) *DividendManagerImpl {
 	return &DividendManagerImpl{
 		exchangeManager:      exchangeManager,
