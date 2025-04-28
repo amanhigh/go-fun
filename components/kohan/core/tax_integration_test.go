@@ -3,6 +3,7 @@ package core_test
 import (
 	"context"
 	"path/filepath"
+	"sort" // Add import
 	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/core"
@@ -91,11 +92,52 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 	})
 
 	// FUTURE CONTEXT: Placeholder for Dividends
-	/*
-		Context("Dividend Calculation (INRDividends)", func() {
-		    // ... tests for dividends ...
+	Context("Dividend Calculation (INRDividends)", func() {
+		It("should calculate dividends correctly for multiple symbols, filtering by financial year", func() {
+			// Retrieve the summary for the test year (FY 2023-24)
+			summary, err := taxManager.GetTaxSummary(ctx, testYear)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(summary).ToNot(BeNil())
+			Expect(summary.INRDividends).ToNot(BeNil()) // Ensure the slice itself is not nil
+
+			// --- Assertions for Dividends (FY 2023-24: 2023-04-01 to 2024-03-31) ---
+			// Based on testdata: AAPL Jan 15, MSFT Feb 20 (added), AAPL Mar 15 fall in this FY.
+			// AAPL Apr 15 should be filtered out.
+			Expect(summary.INRDividends).To(HaveLen(3)) // Expecting 3 dividends after filtering
+
+			// Sort results by date to ensure consistent order for assertions
+			sort.Slice(summary.INRDividends, func(i, j int) bool {
+				return summary.INRDividends[i].GetDate().Before(summary.INRDividends[j].GetDate())
+			})
+
+			// --- Assertions for Jan 15 Dividend (AAPL) - Full Detail ---
+			janDividend := summary.INRDividends[0]
+			Expect(janDividend.Symbol).To(Equal("AAPL"))
+			Expect(janDividend.Date).To(Equal("2024-01-15"))
+			Expect(janDividend.Amount).To(Equal(100.00))
+			Expect(janDividend.Tax).To(Equal(15.00))
+			Expect(janDividend.Net).To(Equal(85.00))
+			Expect(janDividend.TTRate).To(Equal(82.50)) // Rate for Jan 15 from sbi_rates.csv
+			Expect(janDividend.TTDate.Format(time.DateOnly)).To(Equal("2024-01-15"))
+			Expect(janDividend.INRValue()).To(Equal(8250.00)) // 100.00 * 82.50
+
+			// --- Assertions for Feb 20 Dividend (MSFT) - Key Details ---
+			febDividend := summary.INRDividends[1]
+			Expect(febDividend.Symbol).To(Equal("MSFT"))
+			Expect(febDividend.Amount).To(Equal(50.00)) // Check Amount for MSFT
+			Expect(febDividend.TTRate).To(Equal(83.05)) // Assumed rate for Feb 20
+			Expect(febDividend.TTDate.Format(time.DateOnly)).To(Equal("2024-02-20"))
+			Expect(febDividend.INRValue()).To(Equal(4152.50)) // 50.00 * 83.05
+
+			// --- Assertions for Mar 15 Dividend (AAPL) - Key Details ---
+			marDividend := summary.INRDividends[2]
+			Expect(marDividend.Symbol).To(Equal("AAPL"))
+			Expect(marDividend.Amount).To(Equal(100.00)) // Check Amount for AAPL Mar
+			Expect(marDividend.TTRate).To(Equal(83.10))  // Rate for Mar 15 from sbi_rates.csv
+			Expect(marDividend.TTDate.Format(time.DateOnly)).To(Equal("2024-03-15"))
+			Expect(marDividend.INRValue()).To(Equal(8310.00)) // 100.00 * 83.10
 		})
-	*/
+	})
 
 	// FUTURE CONTEXT: Placeholder for Interest
 	/*
