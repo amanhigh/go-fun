@@ -90,12 +90,12 @@ func (t *INRPosition) INRValue() float64 {
 
 // Implement Exchangeable interface for INRPosition
 func (t *INRPosition) GetDate() time.Time {
-	return t.Position.Date
+	return t.Date
 }
 
 func (t *INRPosition) GetKey() string {
 	// This mostly won't be used is to Satisfy CSV Record.
-	return t.Position.Date.Format(time.DateOnly)
+	return t.Date.Format(time.DateOnly)
 }
 
 func (t *INRPosition) GetUSDAmount() float64 {
@@ -111,5 +111,5 @@ func (t *INRPosition) SetTTDate(date time.Time) {
 }
 
 func (t *INRPosition) IsValid() bool {
-	return !t.Position.Date.IsZero() && t.TTRate > 0
+	return !t.Date.IsZero() && t.TTRate > 0
 }

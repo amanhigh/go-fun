@@ -44,7 +44,7 @@ type INRGains struct {
 
 // Implement Exchangeable interface
 func (g *INRGains) GetDate() (date time.Time) {
-	date, _ = g.Gains.ParseSellDate()
+	date, _ = g.ParseSellDate()
 	return
 }
 

@@ -134,6 +134,9 @@ func (h *HotkeyManagerImpl) handleHotkeys(event *tcell.EventKey) *tcell.EventKey
 			h.uiManager.FocusServiceList()
 			return nil
 		}
+	default:
+		// Handle other keys by returning the event
+		return event
 	}
 
 	return event

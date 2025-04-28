@@ -193,7 +193,7 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 						NamespacedName: typeNamespaceName,
 					})
 					Expect(err).Should(HaveOccurred())
-					Expect(err.Error()).Should(ContainSubstring("Unable to find MEMCACHED_IMAGE"))
+					Expect(err.Error()).Should(ContainSubstring("unable to find MEMCACHED_IMAGE environment variable with the image"))
 
 					Expect(k8sClient.Get(ctx, typeNamespaceName, deployment)).Should(HaveOccurred())
 
