@@ -5,33 +5,57 @@ import (
 
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
+	"github.com/amanhigh/go-fun/components/kohan/repository" // Ensure repository import exists
 )
 
 type DividendManager interface {
-	// FIXME: Add GetDividendsForYear method Similar to CapitalGainManager (Fix tax_manager.go integration)
+	// Retrieves all Dividend records for the specified financial year.
+	// The year parameter represents the starting year of the financial year (e.g., 2023 for FY 2023-24).
+	GetDividendsForYear(ctx context.Context, year int) ([]tax.Dividend, common.HttpError) // Added method signature
+
+	// Processes a list of Dividend records, adding INR values based on exchange rates.
 	ProcessDividends(ctx context.Context, dividends []tax.Dividend) ([]tax.INRDividend, common.HttpError)
 }
 
 type DividendManagerImpl struct {
-	exchangeManager ExchangeManager
+	exchangeManager      ExchangeManager
+	financialYearManager FinancialYearManager[tax.Dividend] // Added
+	dividendRepository   repository.DividendRepository      // Added
 }
 
-func NewDividendManager(exchangeManager ExchangeManager) *DividendManagerImpl {
+func NewDividendManager(
+	exchangeManager ExchangeManager,
+	financialYearManager FinancialYearManager[tax.Dividend], // Added
+	dividendRepository repository.DividendRepository,      // Added
+) *DividendManagerImpl {
 	return &DividendManagerImpl{
-		exchangeManager: exchangeManager,
+		exchangeManager:      exchangeManager,
+		financialYearManager: financialYearManager, // Added
+		dividendRepository:   dividendRepository,   // Added
 	}
 }
 
 func (d *DividendManagerImpl) ProcessDividends(ctx context.Context, dividends []tax.Dividend) (inrDividends []tax.INRDividend, err common.HttpError) {
 	exchangeables := make([]tax.Exchangeable, 0, len(dividends))
-	for _, dividend := range dividends {
-		var inrDividend tax.INRDividend
-		inrDividend.Dividend = dividend
+	inrDividends = make([]tax.INRDividend, len(dividends)) // Pre-allocate slice
 
-		inrDividends = append(inrDividends, inrDividend)
-		exchangeables = append(exchangeables, &inrDividend)
+	for i, dividend := range dividends {
+		inrDividends[i].Dividend = dividend
+		exchangeables = append(exchangeables, &inrDividends[i]) // Add pointer to element in pre-allocated slice
 	}
 
 	err = d.exchangeManager.Exchange(ctx, exchangeables)
 	return
+}
+
+// GetDividendsForYear implementation added
+func (d *DividendManagerImpl) GetDividendsForYear(ctx context.Context, year int) ([]tax.Dividend, common.HttpError) {
+	// Get all records from repository
+	records, err := d.dividendRepository.GetAllRecords(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter by financial year
+	return d.financialYearManager.FilterRecordsByFY(ctx, records, year)
 }

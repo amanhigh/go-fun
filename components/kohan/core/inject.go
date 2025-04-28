@@ -90,6 +90,14 @@ func (ki *KohanInjector) provideCapitalGainManager(
 	return manager.NewCapitalGainManager(exchangeMgr, gainsRepo, fyMgr)
 }
 
+func (ki *KohanInjector) provideFinancialYearManagerDividends() manager.FinancialYearManager[taxmodels.Dividend] {
+	return manager.NewFinancialYearManager[taxmodels.Dividend]()
+}
+
+func (ki *KohanInjector) provideDividendRepository() repository.DividendRepository {
+	return repository.NewDividendRepository(ki.config.Tax.DividendFilePath)
+}
+
 func (ki *KohanInjector) provideTaxManager(
 	gainMgr manager.CapitalGainManager, // Existing parameter (interface)
 	dividendManager manager.DividendManager, // Added parameter (interface)
@@ -116,14 +124,17 @@ func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
 	// Register Repositories
 	container.MustSingleton(ki.di, ki.provideExchangeRepository)
 	container.MustSingleton(ki.di, ki.provideGainsRepository)
+	container.MustSingleton(ki.di, ki.provideDividendRepository) // Added registration
 
 	// Register Managers (dependencies of TaxManager)
 	container.MustSingleton(ki.di, ki.provideSBIManager)
 	container.MustSingleton(ki.di, ki.provideExchangeManager)
 	container.MustSingleton(ki.di, ki.provideFinancialYearManagerGains)
+	container.MustSingleton(ki.di, ki.provideFinancialYearManagerDividends) // Added registration
 	container.MustSingleton(ki.di, ki.provideCapitalGainManager)
 
 	// Register TaxManager itself
+	container.MustSingleton(ki.di, ki.provideDividendManager) // Ensure this uses the updated provider
 	container.MustSingleton(ki.di, ki.provideTaxManager)
 
 	// Resolve and return TaxManager
@@ -149,6 +160,7 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 	// Repo
 	container.MustSingleton(ki.di, ki.provideExchangeRepository)
 	container.MustSingleton(ki.di, ki.provideAccountRepository)
+	container.MustSingleton(ki.di, ki.provideDividendRepository) // Added or ensure exists
 
 	// Manager
 	// FIXME: Remove Duplicate Container Registration
@@ -160,11 +172,23 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 	container.MustSingleton(ki.di, ki.provideSBIManager)
 	container.MustSingleton(ki.di, ki.provideExchangeManager)
 	container.MustSingleton(ki.di, ki.provideTaxValuationManager)
+	container.MustSingleton(ki.di, ki.provideFinancialYearManagerDividends) // Added or ensure exists
+	container.MustSingleton(ki.di, ki.provideDividendManager)               // Ensure this uses the updated provider
 
 	// Build app
 	app := &DariusV1{}
 	err := ki.di.Fill(app)
 	return app, err
+}
+
+// Update provider for DividendManager
+func (ki *KohanInjector) provideDividendManager(
+	exchangeMgr manager.ExchangeManager,
+	fyMgr manager.FinancialYearManager[taxmodels.Dividend], // Added parameter
+	dividendRepo repository.DividendRepository, // Added parameter
+) manager.DividendManager {
+	// Call updated constructor
+	return manager.NewDividendManager(exchangeMgr, fyMgr, dividendRepo)
 }
 
 func provideServiceManager(cfg config.DariusConfig) (serviceManager tui.ServiceManager) {
