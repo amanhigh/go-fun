@@ -19,19 +19,19 @@ type DividendManager interface {
 
 type DividendManagerImpl struct {
 	exchangeManager      ExchangeManager
-	financialYearManager FinancialYearManager[tax.Dividend] // Added
-	dividendRepository   repository.DividendRepository      // Added
+	financialYearManager FinancialYearManager[tax.Dividend]
+	dividendRepository   repository.DividendRepository
 }
 
 func NewDividendManager(
 	exchangeManager ExchangeManager,
-	financialYearManager FinancialYearManager[tax.Dividend], // Added
-	dividendRepository repository.DividendRepository, // Added
+	financialYearManager FinancialYearManager[tax.Dividend],
+	dividendRepository repository.DividendRepository,
 ) *DividendManagerImpl {
 	return &DividendManagerImpl{
 		exchangeManager:      exchangeManager,
-		financialYearManager: financialYearManager, // Added
-		dividendRepository:   dividendRepository,   // Added
+		financialYearManager: financialYearManager,
+		dividendRepository:   dividendRepository,
 	}
 }
 

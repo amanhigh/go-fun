@@ -5,6 +5,7 @@ import (
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
+	mockrepo "github.com/amanhigh/go-fun/components/kohan/repository/mocks"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
@@ -14,9 +15,11 @@ import (
 
 var _ = Describe("DividendManager", func() {
 	var (
-		ctx                 = context.Background()
-		mockExchangeManager *mocks.ExchangeManager
-		dividendManager     manager.DividendManager
+		ctx                      = context.Background()
+		mockExchangeManager      *mocks.ExchangeManager
+		mockFinancialYearManager *mocks.FinancialYearManager[tax.Dividend]
+		mockDividendRepository   *mockrepo.DividendRepository
+		dividendManager          manager.DividendManager
 
 		// Common test data
 		ticker   = "AAPL"
@@ -28,7 +31,9 @@ var _ = Describe("DividendManager", func() {
 
 	BeforeEach(func() {
 		mockExchangeManager = mocks.NewExchangeManager(GinkgoT())
-		dividendManager = manager.NewDividendManager(mockExchangeManager)
+		mockFinancialYearManager = mocks.NewFinancialYearManager[tax.Dividend](GinkgoT())
+		mockDividendRepository = mockrepo.NewDividendRepository(GinkgoT())
+		dividendManager = manager.NewDividendManager(mockExchangeManager, mockFinancialYearManager, mockDividendRepository)
 	})
 
 	Context("Basic Dividend Processing", func() {

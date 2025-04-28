@@ -39,11 +39,17 @@ func (t *TaxManagerImpl) GetTaxSummary(ctx context.Context, year int) (summary t
 	// Build summary
 	summary.INRGains = inrGains
 
+	// Get Dividends for the year (Added)
+	dividends, httpErr := t.dividendManager.GetDividendsForYear(ctx, year)
+	if httpErr != nil {
+		return summary, httpErr // Return HttpError directly
+	}
+
 	// Process Dividends (Added)
-	summary.INRDividends, err = t.dividendManager.ProcessDividends(ctx, year)
-	if err != nil {
+	summary.INRDividends, httpErr = t.dividendManager.ProcessDividends(ctx, dividends) // Pass fetched dividends
+	if httpErr != nil {
 		// Log error? Fail on first error.
-		return summary, fmt.Errorf("failed to process dividends: %w", err)
+		return summary, httpErr // Return HttpError directly
 	}
 
 	return summary, nil

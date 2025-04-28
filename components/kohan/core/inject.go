@@ -144,6 +144,15 @@ func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
 }
 
 func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error) {
+	ki.registerDariusDependencies(cfg)
+
+	// Build app
+	app := &DariusV1{}
+	err := ki.di.Fill(app)
+	return app, err
+}
+
+func (ki *KohanInjector) registerDariusDependencies(cfg config.DariusConfig) {
 	// Register config for this specific build
 	container.MustSingleton(ki.di, func() config.DariusConfig {
 		return cfg
@@ -174,11 +183,6 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 	container.MustSingleton(ki.di, ki.provideTaxValuationManager)
 	container.MustSingleton(ki.di, ki.provideFinancialYearManagerDividends) // Added or ensure exists
 	container.MustSingleton(ki.di, ki.provideDividendManager)               // Ensure this uses the updated provider
-
-	// Build app
-	app := &DariusV1{}
-	err := ki.di.Fill(app)
-	return app, err
 }
 
 // Update provider for DividendManager
