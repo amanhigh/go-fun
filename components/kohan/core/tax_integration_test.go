@@ -10,12 +10,19 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/tax"
+	"github.com/amanhigh/go-fun/components/kohan/core"
+	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/models/config"
+	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Tax Integration", Label("it"), func() {
 	var (
+		ctx        context.Context
+		taxManager manager.TaxManager
+		testYear   = 2023
 		ctx        context.Context
 		taxManager manager.TaxManager
 		testYear   = 2023
