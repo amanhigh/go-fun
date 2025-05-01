@@ -7,6 +7,7 @@ import (
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
+	repoMocks "github.com/amanhigh/go-fun/components/kohan/repository/mocks"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
@@ -15,10 +16,11 @@ import (
 
 var _ = Describe("ValuationManager", func() {
 	var (
-		ctx                = context.Background()
-		mockTickerManager  *mocks.TickerManager
-		mockAccountManager *mocks.AccountManager
-		valuationManager   manager.ValuationManager
+		ctx                 = context.Background()
+		mockTickerManager   *mocks.TickerManager
+		mockAccountManager  *mocks.AccountManager
+		mockTradeRepository *repoMocks.TradeRepository
+		valuationManager    manager.ValuationManager
 
 		// Common variables
 		ticker       = "AAPL"
@@ -30,7 +32,8 @@ var _ = Describe("ValuationManager", func() {
 	BeforeEach(func() {
 		mockTickerManager = mocks.NewTickerManager(GinkgoT())
 		mockAccountManager = mocks.NewAccountManager(GinkgoT())
-		valuationManager = manager.NewValuationManager(mockTickerManager, mockAccountManager)
+		mockTradeRepository = repoMocks.NewTradeRepository(GinkgoT())
+		valuationManager = manager.NewValuationManager(mockTickerManager, mockAccountManager, mockTradeRepository)
 	})
 	Context("Fresh Start", func() {
 		BeforeEach(func() {

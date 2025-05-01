@@ -4,26 +4,83 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
+	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
+	"github.com/samber/lo"
 )
 
 type ValuationManager interface {
 	AnalyzeValuation(ctx context.Context, trades []tax.Trade, year int) (tax.Valuation, common.HttpError)
+	// GetYearlyValuationsUSD calculates the base USD Valuation (First, Peak, YearEnd)
+	// for all relevant tickers based on trade history up to the end of the specified calendar year.
+	GetYearlyValuationsUSD(ctx context.Context, year int) ([]tax.Valuation, common.HttpError)
 }
 
 type ValuationManagerImpl struct {
-	tickerManager  TickerManager
-	accountManager AccountManager
+	tickerManager   TickerManager
+	accountManager  AccountManager
+	tradeRepository repository.TradeRepository
 }
 
-func NewValuationManager(tickerManager TickerManager, accountManager AccountManager) ValuationManager {
+func NewValuationManager(
+	tickerManager TickerManager,
+	accountManager AccountManager,
+	tradeRepository repository.TradeRepository,
+) ValuationManager {
 	return &ValuationManagerImpl{
-		tickerManager:  tickerManager,
-		accountManager: accountManager,
+		tickerManager:   tickerManager,
+		accountManager:  accountManager,
+		tradeRepository: tradeRepository,
 	}
+}
+
+func (v *ValuationManagerImpl) GetYearlyValuationsUSD(ctx context.Context, year int) (valuations []tax.Valuation, err common.HttpError) {
+	allTrades, repoErr := v.tradeRepository.GetAllRecords(ctx)
+	if repoErr != nil {
+		if os.IsNotExist(repoErr) || (repoErr.Code() == http.StatusBadRequest && strings.Contains(repoErr.Error(), "empty CSV file")) {
+			return []tax.Valuation{}, nil // Treat as no trades
+		}
+		return nil, repoErr // Return other errors
+	}
+
+	if len(allTrades) == 0 {
+		return []tax.Valuation{}, nil // No trades found
+	}
+
+	// Group trades directly by Ticker Symbol
+	tradesByTicker := lo.GroupBy(allTrades, func(trade tax.Trade) string {
+		return trade.Symbol
+	})
+
+	valuations = make([]tax.Valuation, 0, len(tradesByTicker))
+
+	// Iterate through the grouped map (ticker -> list of trades)
+	for _, tickerTrades := range tradesByTicker {
+		// Defensive check (shouldn't happen with GroupBy unless input had empty symbols?)
+		if len(tickerTrades) == 0 {
+			continue
+		}
+
+		// Sort the trades for this specific ticker chronologically
+		lo.SortBy(tickerTrades, func(t tax.Trade) time.Time {
+			return t.GetDate()
+		})
+
+		// Call the *existing* AnalyzeValuation method for this ticker's sorted trades
+		valuation, analyzeErr := v.AnalyzeValuation(ctx, tickerTrades, year)
+		if analyzeErr != nil {
+			// Fail fast: return immediately upon the first analysis error
+			return nil, analyzeErr
+		}
+		valuations = append(valuations, valuation)
+	}
+
+	return valuations, nil // Return aggregated results if all analyses succeeded
 }
 
 func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
