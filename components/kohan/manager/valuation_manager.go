@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"os"
-	"strings"
+	"slices"
 	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/repository"
@@ -42,14 +41,11 @@ func NewValuationManager(
 func (v *ValuationManagerImpl) GetYearlyValuationsUSD(ctx context.Context, year int) (valuations []tax.Valuation, err common.HttpError) {
 	allTrades, repoErr := v.tradeRepository.GetAllRecords(ctx)
 	if repoErr != nil {
-		if os.IsNotExist(repoErr) || (repoErr.Code() == http.StatusBadRequest && strings.Contains(repoErr.Error(), "empty CSV file")) {
-			return []tax.Valuation{}, nil // Treat as no trades
-		}
 		return nil, repoErr // Return other errors
 	}
 
 	if len(allTrades) == 0 {
-		return []tax.Valuation{}, nil // No trades found
+		return []tax.Valuation{}, common.NewHttpError("no trades found", http.StatusNotFound)
 	}
 
 	// Group trades directly by Ticker Symbol
@@ -61,14 +57,14 @@ func (v *ValuationManagerImpl) GetYearlyValuationsUSD(ctx context.Context, year 
 
 	// Iterate through the grouped map (ticker -> list of trades)
 	for _, tickerTrades := range tradesByTicker {
-		// Defensive check (shouldn't happen with GroupBy unless input had empty symbols?)
-		if len(tickerTrades) == 0 {
-			continue
-		}
-
 		// Sort the trades for this specific ticker chronologically
-		lo.SortBy(tickerTrades, func(t tax.Trade) time.Time {
-			return t.GetDate()
+		slices.SortFunc(tickerTrades, func(a, b tax.Trade) int {
+			if a.GetDate().Before(b.GetDate()) {
+				return -1
+			} else if a.GetDate().After(b.GetDate()) {
+				return 1
+			}
+			return 0
 		})
 
 		// Call the *existing* AnalyzeValuation method for this ticker's sorted trades
