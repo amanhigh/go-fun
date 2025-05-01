@@ -11,23 +11,26 @@ type TaxManager interface {
 	GetTaxSummary(ctx context.Context, year int) (tax.Summary, common.HttpError)
 }
 
-// Struct updated with InterestManager
+// Struct updated with TaxValuationManager
 type TaxManagerImpl struct {
-	capitalGainManager CapitalGainManager
-	dividendManager    DividendManager
-	interestManager    InterestManager // Added field
+	capitalGainManager  CapitalGainManager
+	dividendManager     DividendManager
+	interestManager     InterestManager
+	taxValuationManager TaxValuationManager // Added field
 }
 
-// Constructor updated to accept InterestManager
+// Constructor updated to accept TaxValuationManager
 func NewTaxManager(
 	capitalGainManager CapitalGainManager,
 	dividendManager DividendManager,
-	interestManager InterestManager, // Added parameter
+	interestManager InterestManager,
+	taxValuationManager TaxValuationManager, // Added parameter
 ) TaxManager {
 	return &TaxManagerImpl{
-		capitalGainManager: capitalGainManager,
-		dividendManager:    dividendManager,
-		interestManager:    interestManager, // Assign new dependency
+		capitalGainManager:  capitalGainManager,
+		dividendManager:     dividendManager,
+		interestManager:     interestManager,
+		taxValuationManager: taxValuationManager, // Assign new dependency
 	}
 }
 
