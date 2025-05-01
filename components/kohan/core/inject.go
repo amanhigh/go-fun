@@ -9,7 +9,6 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/config"
 	taxmodels "github.com/amanhigh/go-fun/models/tax"
-	taxmodels "github.com/amanhigh/go-fun/models/tax"
 	"github.com/go-resty/resty/v2"
 
 	"github.com/golobby/container/v3"
@@ -21,7 +20,6 @@ type KohanInterface interface {
 	GetDariusApp(cfg config.DariusConfig) (*DariusV1, error)
 	// Add new method
 	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
-	GetTaxManager() (manager.TaxManager, error) // Added method
 	GetTaxManager() (manager.TaxManager, error) // Added method
 }
 
