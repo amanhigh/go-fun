@@ -21,9 +21,8 @@ func (g Gains) IsValid() bool {
 	return g.Symbol != "" && g.BuyDate != "" && g.SellDate != ""
 }
 
-func (g Gains) GetDate() time.Time {
-	date, _ := time.Parse(time.DateOnly, g.SellDate)
-	return date
+func (g Gains) GetDate() (time.Time, error) {
+	return time.Parse(time.DateOnly, g.SellDate)
 }
 
 func (g Gains) ParseBuyDate() (time.Time, error) {
@@ -43,9 +42,11 @@ type INRGains struct {
 }
 
 // Implement Exchangeable interface
-func (g *INRGains) GetDate() (date time.Time) {
-	date, _ = g.ParseSellDate()
-	return
+func (g *INRGains) GetDate() (time.Time, error) {
+	if g.SellDate == "" {
+		return time.Time{}, NewInvalidDateError("sell date is empty")
+	}
+	return g.ParseSellDate()
 }
 
 func (g *INRGains) GetUSDAmount() float64 {

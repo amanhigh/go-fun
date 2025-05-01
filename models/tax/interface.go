@@ -10,8 +10,8 @@ import (
 type CSVRecord interface {
 	GetKey() string // For key-based lookups (symbol/date)
 	// FIXME: Should we Return error to caller?
-	GetDate() time.Time // For date-based operations
-	IsValid() bool      // Validate record fields
+	GetDate() (time.Time, error) // For date-based operations
+	IsValid() bool               // Validate record fields
 }
 
 // Exchangeable now extends CSVRecord

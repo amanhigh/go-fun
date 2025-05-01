@@ -40,7 +40,7 @@ func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, requestedDate time.Ti
 	}
 
 	if len(rates) == 0 {
-		return 0, common.ErrNotFound
+		return 0, tax.NewRateNotFoundError(requestedDate)
 	}
 
 	// Try exact match first
@@ -84,7 +84,7 @@ func (s *SBIManagerImpl) findClosestRate(rates []tax.SbiRate, requestedDate time
 		return closestRate, tax.NewClosestDateError(requestedDate, closestDate)
 	}
 
-	return 0, common.ErrNotFound
+	return 0, tax.NewRateNotFoundError(requestedDate)
 }
 
 func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpError) {

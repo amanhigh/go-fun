@@ -6,9 +6,19 @@ import (
 	"time"
 )
 
+type RateNotFoundError interface {
+	error
+	Code() int
+	GetRequestedDate() time.Time
+}
+
 type closestDateError struct {
 	requestedDate time.Time
 	closestDate   time.Time
+}
+
+type rateNotFoundError struct {
+	requestedDate time.Time
 }
 
 func NewClosestDateError(requested, closest time.Time) ClosestDateError {
@@ -18,10 +28,21 @@ func NewClosestDateError(requested, closest time.Time) ClosestDateError {
 	}
 }
 
+func NewRateNotFoundError(requested time.Time) RateNotFoundError {
+	return &rateNotFoundError{
+		requestedDate: requested,
+	}
+}
+
 func (e *closestDateError) Error() string {
 	return fmt.Sprintf("exact rate not found for %v, using closest available date %v",
 		e.requestedDate.Format(time.DateOnly),
 		e.closestDate.Format(time.DateOnly))
+}
+
+func (e *rateNotFoundError) Error() string {
+	return fmt.Sprintf("no exchange rate found for date %v",
+		e.requestedDate.Format(time.DateOnly))
 }
 
 func (e *closestDateError) Code() int {
@@ -29,10 +50,18 @@ func (e *closestDateError) Code() int {
 	return http.StatusOK
 }
 
+func (e *rateNotFoundError) Code() int {
+	return http.StatusNotFound
+}
+
 func (e *closestDateError) GetClosestDate() time.Time {
 	return e.closestDate
 }
 
 func (e *closestDateError) GetRequestedDate() time.Time {
+	return e.requestedDate
+}
+
+func (e *rateNotFoundError) GetRequestedDate() time.Time {
 	return e.requestedDate
 }

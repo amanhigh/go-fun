@@ -160,11 +160,11 @@ func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) 
 func (ki *KohanInjector) registerBaseDependencies() {
 	// First register the REST client
 	container.MustSingleton(ki.di, resty.New)
-	
+
 	// Then register clients that depend on REST client
 	var client *resty.Client
 	container.MustResolve(ki.di, &client)
-	
+
 	container.MustSingleton(ki.di, func() clients.AlphaClient {
 		return ki.provideAlphaClient(client)
 	})
