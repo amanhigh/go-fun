@@ -1,6 +1,9 @@
 package tax
 
-import "time"
+import (
+	"math"
+	"time"
+)
 
 type Interest struct {
 	Symbol string  `csv:"Symbol"`
@@ -51,5 +54,5 @@ func (i *INRInterest) SetTTDate(date time.Time) {
 
 // Helper method for INR calculations
 func (i *INRInterest) INRValue() float64 {
-	return i.Amount * i.TTRate
+	return math.Round(i.Amount*i.TTRate*100) / 100
 }

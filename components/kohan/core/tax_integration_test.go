@@ -139,12 +139,41 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		})
 	})
 
-	// FUTURE CONTEXT: Placeholder for Interest
-	/*
-		Context("Interest Calculation (INRInterest)", func() {
-		    // ... tests for interest ...
+	Context("Interest Calculation (INRInterest)", func() {
+		It("should calculate interest correctly, filtering by financial year", func() {
+			// Retrieve the summary for the test year (FY 2023-24)
+			summary, err := taxManager.GetTaxSummary(ctx, testYear)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(summary).ToNot(BeNil())
+			Expect(summary.INRInterest).ToNot(BeNil()) // Ensure the slice itself is not nil
+
+			// --- Assertions for Interest (FY 2023-24: 2023-04-01 to 2024-03-31) ---
+			// Based on assumed testdata: MSFT Dec 31, AAPL Jan 10 fall in this FY.
+			// AAPL May 10 should be filtered out.
+			Expect(summary.INRInterest).To(HaveLen(2)) // Expecting 2 interest records after filtering
+
+			// --- Assertions for Dec 31 Interest (MSFT) - Full Detail ---
+			decInterest := summary.INRInterest[0]
+			Expect(decInterest.Symbol).To(Equal("MSFT"))
+			Expect(decInterest.Date).To(Equal("2023-12-31"))
+			Expect(decInterest.Amount).To(Equal(20.00))
+			Expect(decInterest.Tax).To(Equal(4.00))
+			Expect(decInterest.Net).To(Equal(16.00))
+			Expect(decInterest.TTRate).To(Equal(82.00)) // Assumed rate for Dec 31
+			Expect(decInterest.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
+			Expect(decInterest.INRValue()).To(Equal(1640.00)) // 20.00 * 82.00
+
+			// --- Assertions for Jan 10 Interest (AAPL) - Key Details ---
+			janInterest := summary.INRInterest[1]
+			Expect(janInterest.Symbol).To(Equal("AAPL"))
+			Expect(janInterest.Amount).To(Equal(5.50))  // Check Amount for AAPL
+			Expect(janInterest.TTRate).To(Equal(82.40)) // Assumed rate for Jan 10
+			Expect(janInterest.TTDate.Format(time.DateOnly)).To(Equal("2024-01-10"))
+			Expect(janInterest.Tax).To(Equal(1.10))
+			Expect(janInterest.Net).To(Equal(4.40))
+			Expect(janInterest.INRValue()).To(Equal(453.20)) // 5.50 * 82.40
 		})
-	*/
+	})
 
 	// FUTURE CONTEXT: Placeholder for Valuations
 	/*
