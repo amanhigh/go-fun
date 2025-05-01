@@ -54,5 +54,5 @@ func (i *INRInterest) SetTTDate(date time.Time) {
 
 // Helper method for INR calculations
 func (i *INRInterest) INRValue() float64 {
-	return math.Round(i.Amount*i.TTRate*100) / 100
+	return math.Round(i.Amount*i.TTRate*ROUNDING_FACTOR_2_DECIMALS) / ROUNDING_FACTOR_2_DECIMALS
 }

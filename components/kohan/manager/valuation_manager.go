@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 	"time"
@@ -106,7 +107,7 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 		yearEndDate := time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
 		price, err := v.tickerManager.GetPrice(ctx, analysis.Ticker, yearEndDate)
 		if err != nil {
-			return analysis, common.NewHttpError("failed to get year end price", http.StatusInternalServerError)
+			return analysis, common.NewServerError(fmt.Errorf("failed to get year end price: %w", err))
 		}
 
 		analysis.YearEndPosition = tax.Position{

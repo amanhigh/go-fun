@@ -2,6 +2,7 @@ package manager_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -23,7 +24,7 @@ var _ = Describe("ValuationManager", func() {
 		valuationManager    manager.ValuationManager
 
 		// Common variables
-		ticker       = "AAPL"
+		AAPL         = "AAPL"
 		year         = 2024
 		yearEndDate  = time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
 		yearEndPrice = 150.00
@@ -42,7 +43,7 @@ var _ = Describe("ValuationManager", func() {
 			BeforeEach(func() {
 				// All tests under Fresh Start expect no last year position
 				mockAccountManager.EXPECT().
-					GetRecord(ctx, ticker).
+					GetRecord(ctx, AAPL).
 					Return(tax.Account{}, common.ErrNotFound)
 			})
 
@@ -52,11 +53,11 @@ var _ = Describe("ValuationManager", func() {
 
 					BeforeEach(func() {
 						trades = []tax.Trade{
-							tax.NewTrade(ticker, "2024-01-15", "BUY", 10, 100),
+							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
 						}
 
 						mockTickerManager.EXPECT().
-							GetPrice(ctx, ticker, yearEndDate).
+							GetPrice(ctx, AAPL, yearEndDate).
 							Return(yearEndPrice, nil)
 					})
 
@@ -85,8 +86,8 @@ var _ = Describe("ValuationManager", func() {
 
 					BeforeEach(func() {
 						trades = []tax.Trade{
-							tax.NewTrade(ticker, "2024-01-15", "BUY", 10, 100),
-							tax.NewTrade(ticker, "2024-02-15", "SELL", 10, 120),
+							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
+							tax.NewTrade(AAPL, "2024-02-15", "SELL", 10, 120),
 						}
 					})
 
@@ -115,13 +116,13 @@ var _ = Describe("ValuationManager", func() {
 
 					BeforeEach(func() {
 						trades = []tax.Trade{
-							tax.NewTrade(ticker, "2024-01-15", "BUY", 5, 100),
-							tax.NewTrade(ticker, "2024-02-15", "BUY", 5, 110),
-							tax.NewTrade(ticker, "2024-03-15", "BUY", 5, 120),
+							tax.NewTrade(AAPL, "2024-01-15", "BUY", 5, 100),
+							tax.NewTrade(AAPL, "2024-02-15", "BUY", 5, 110),
+							tax.NewTrade(AAPL, "2024-03-15", "BUY", 5, 120),
 						}
 
 						mockTickerManager.EXPECT().
-							GetPrice(ctx, ticker, yearEndDate).
+							GetPrice(ctx, AAPL, yearEndDate).
 							Return(yearEndPrice, nil)
 					})
 
@@ -153,13 +154,13 @@ var _ = Describe("ValuationManager", func() {
 
 					BeforeEach(func() {
 						trades = []tax.Trade{
-							tax.NewTrade(ticker, "2024-01-15", "BUY", 5, 100), // $500
-							tax.NewTrade(ticker, "2024-02-15", "BUY", 10, 80), // $800  - Buying dip
-							tax.NewTrade(ticker, "2024-03-15", "BUY", 5, 90),  // $450  - Recovery buy
+							tax.NewTrade(AAPL, "2024-01-15", "BUY", 5, 100), // $500
+							tax.NewTrade(AAPL, "2024-02-15", "BUY", 10, 80), // $800  - Buying dip
+							tax.NewTrade(AAPL, "2024-03-15", "BUY", 5, 90),  // $450  - Recovery buy
 						}
 
 						mockTickerManager.EXPECT().
-							GetPrice(ctx, ticker, yearEndDate).
+							GetPrice(ctx, AAPL, yearEndDate).
 							Return(yearEndPrice, nil)
 					})
 
@@ -196,12 +197,12 @@ var _ = Describe("ValuationManager", func() {
 
 					BeforeEach(func() {
 						trades = []tax.Trade{
-							tax.NewTrade(ticker, "2024-01-15", "BUY", 5, 100),
-							tax.NewTrade(ticker, "2024-12-31", "BUY", 5, 120), // Year end trade
+							tax.NewTrade(AAPL, "2024-01-15", "BUY", 5, 100),
+							tax.NewTrade(AAPL, "2024-12-31", "BUY", 5, 120), // Year end trade
 						}
 
 						mockTickerManager.EXPECT().
-							GetPrice(ctx, ticker, yearEndDate).
+							GetPrice(ctx, AAPL, yearEndDate).
 							Return(yearEndPrice, nil)
 					})
 
@@ -234,15 +235,15 @@ var _ = Describe("ValuationManager", func() {
 					BeforeEach(func() {
 						// HACK: Multiple Peaks with Same Value (Take Second higher TBBR Rate) or Throw Error.
 						trades = []tax.Trade{
-							tax.NewTrade(ticker, "2024-01-15", "BUY", 10, 100),  // Initial 10
-							tax.NewTrade(ticker, "2024-02-15", "BUY", 5, 110),   // Peak 1: 15 shares
-							tax.NewTrade(ticker, "2024-03-15", "SELL", 8, 120),  // Down to 7
-							tax.NewTrade(ticker, "2024-04-15", "BUY", 10, 115),  // Peak 2: 17 shares
-							tax.NewTrade(ticker, "2024-05-15", "SELL", 12, 125), // Down to 5
+							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),  // Initial 10
+							tax.NewTrade(AAPL, "2024-02-15", "BUY", 5, 110),   // Peak 1: 15 shares
+							tax.NewTrade(AAPL, "2024-03-15", "SELL", 8, 120),  // Down to 7
+							tax.NewTrade(AAPL, "2024-04-15", "BUY", 10, 115),  // Peak 2: 17 shares
+							tax.NewTrade(AAPL, "2024-05-15", "SELL", 12, 125), // Down to 5
 						}
 
 						mockTickerManager.EXPECT().
-							GetPrice(ctx, ticker, yearEndDate).
+							GetPrice(ctx, AAPL, yearEndDate).
 							Return(yearEndPrice, nil)
 					})
 
@@ -276,13 +277,13 @@ var _ = Describe("ValuationManager", func() {
 
 					BeforeEach(func() {
 						trades = []tax.Trade{
-							tax.NewTrade(ticker, "2024-01-15", "BUY", 10, 100), // Initial 10 shares
-							tax.NewTrade(ticker, "2024-02-15", "SELL", 3, 110), // Sell 3 shares
-							tax.NewTrade(ticker, "2024-03-15", "SELL", 4, 120), // Sell 4 shares
+							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100), // Initial 10 shares
+							tax.NewTrade(AAPL, "2024-02-15", "SELL", 3, 110), // Sell 3 shares
+							tax.NewTrade(AAPL, "2024-03-15", "SELL", 4, 120), // Sell 4 shares
 						}
 
 						mockTickerManager.EXPECT().
-							GetPrice(ctx, ticker, yearEndDate).
+							GetPrice(ctx, AAPL, yearEndDate).
 							Return(yearEndPrice, nil)
 					})
 
@@ -327,7 +328,7 @@ var _ = Describe("ValuationManager", func() {
 
 				BeforeEach(func() {
 					trades = []tax.Trade{
-						tax.NewTrade(ticker, "2024-01-15", "BUY", 10, 100),
+						tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
 						tax.NewTrade("MSFT", "2024-02-15", "BUY", 5, 200), // Different ticker
 					}
 				})
@@ -345,15 +346,15 @@ var _ = Describe("ValuationManager", func() {
 
 				BeforeEach(func() {
 					trades = []tax.Trade{
-						tax.NewTrade(ticker, "2024-01-15", "BUY", 10, 100),
+						tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
 					}
 
 					mockTickerManager.EXPECT().
-						GetPrice(ctx, ticker, yearEndDate).
+						GetPrice(ctx, AAPL, yearEndDate).
 						Return(0.0, common.ErrNotFound)
 
 					mockAccountManager.EXPECT().
-						GetRecord(ctx, ticker).
+						GetRecord(ctx, AAPL).
 						Return(tax.Account{}, common.ErrNotFound)
 				})
 
@@ -367,4 +368,105 @@ var _ = Describe("ValuationManager", func() {
 		})
 	})
 
+	Context("GetYearlyValuationsUSD", func() {
+		var (
+			// Define sample trades for multiple tickers
+			tradeAAPL1 = tax.NewTrade(AAPL, "2024-01-10", "BUY", 10, 100)   // Date: 2024-01-10
+			tradeAAPL2 = tax.NewTrade(AAPL, "2024-05-15", "SELL", 5, 120)   // Date: 2024-05-15
+			tradeMSFT1 = tax.NewTrade("MSFT", "2024-02-20", "BUY", 20, 200) // Date: 2024-02-20
+			allTrades  []tax.Trade
+		)
+
+		BeforeEach(func() {
+			// Reset trades for each test
+			allTrades = []tax.Trade{tradeAAPL1, tradeAAPL2, tradeMSFT1}
+		})
+
+		It("should process multiple tickers successfully", func() {
+			// Mock Repo: GetAllRecords returns combined trades
+			mockTradeRepository.EXPECT().GetAllRecords(ctx).Return(allTrades, nil).Once()
+
+			// Mock dependencies needed by AnalyzeValuation for AAPL
+			mockAccountManager.EXPECT().GetRecord(ctx, AAPL).Return(tax.Account{}, common.ErrNotFound).Once() // Fresh start for AAPL
+			mockTickerManager.EXPECT().GetPrice(ctx, AAPL, yearEndDate).Return(150.0, nil).Once()             // AAPL year end price
+
+			// Mock dependencies needed by AnalyzeValuation for MSFT
+			mockAccountManager.EXPECT().GetRecord(ctx, "MSFT").Return(tax.Account{Quantity: 10, MarketValue: 1800}, nil).Once() // Start MSFT with 10 shares @ 180
+			mockTickerManager.EXPECT().GetPrice(ctx, "MSFT", yearEndDate).Return(210.0, nil).Once()                             // MSFT year end price
+
+			// Call the target method
+			valuations, err := valuationManager.GetYearlyValuationsUSD(ctx, year)
+
+			// Assertions
+			Expect(err).ToNot(HaveOccurred())
+			Expect(valuations).To(HaveLen(2))
+
+			// Find results
+			var aaplVal = valuations[0]
+			var msftVal = valuations[1]
+
+			// Assert AAPL Valuation (based on AnalyzeValuation logic)
+			Expect(aaplVal.Ticker).To(Equal(AAPL))
+			Expect(aaplVal.FirstPosition.Quantity).To(Equal(10.0))                 // From tradeAAPL1
+			Expect(aaplVal.FirstPosition.Date).To(Equal(tradeAAPL1.GetDate()))     // Date of first buy
+			Expect(aaplVal.PeakPosition.Quantity).To(Equal(10.0))                  // Peak was initial buy
+			Expect(aaplVal.PeakPosition.Date).To(Equal(tradeAAPL1.GetDate()))      // Date peak reached
+			Expect(aaplVal.YearEndPosition.Quantity).To(BeNumerically("~", 5.0))   // 10 - 5
+			Expect(aaplVal.YearEndPosition.Date).To(Equal(yearEndDate))            // Dec 31st
+			Expect(aaplVal.YearEndPosition.USDPrice).To(BeNumerically("~", 150.0)) // Mocked year end price
+
+			// Assert MSFT Valuation (based on AnalyzeValuation logic)
+			Expect(msftVal.Ticker).To(Equal("MSFT"))
+			Expect(msftVal.FirstPosition.Quantity).To(Equal(10.0))                                        // From starting position
+			Expect(msftVal.FirstPosition.Date).To(Equal(time.Date(year-1, 12, 31, 0, 0, 0, 0, time.UTC))) // Date of start pos
+			Expect(msftVal.PeakPosition.Quantity).To(Equal(30.0))                                         // 10 start + 20 buy
+			Expect(msftVal.PeakPosition.Date).To(Equal(tradeMSFT1.GetDate()))                             // Date peak reached
+			Expect(msftVal.YearEndPosition.Quantity).To(BeNumerically("~", 30.0))                         // Final quantity
+			Expect(msftVal.YearEndPosition.Date).To(Equal(yearEndDate))                                   // Dec 31st
+			Expect(msftVal.YearEndPosition.USDPrice).To(BeNumerically("~", 210.0))                        // Mocked year end price
+		})
+
+		It("should return empty slice if no trades found", func() {
+			// Mock Repo: GetAllRecords returns empty list
+			mockTradeRepository.EXPECT().GetAllRecords(ctx).Return([]tax.Trade{}, nil).Once()
+
+			valuations, err := valuationManager.GetYearlyValuationsUSD(ctx, year)
+
+			Expect(err).To(HaveOccurred())
+			Expect(err.Code()).To(Equal(http.StatusNotFound))
+			Expect(valuations).To(BeEmpty())
+		})
+
+		It("should return error from GetAllRecords", func() {
+			// Mock Repo: GetAllRecords returns a generic error
+			expectedErr := common.NewServerError(errors.New("repo failed"))
+			mockTradeRepository.EXPECT().GetAllRecords(ctx).Return(nil, expectedErr).Once()
+
+			_, err := valuationManager.GetYearlyValuationsUSD(ctx, year)
+
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(Equal(expectedErr))
+		})
+
+		It("should fail fast if AnalyzeValuation returns error for one ticker", func() {
+			// Mock Repo: GetAllRecords returns trades for two tickers
+			mockTradeRepository.EXPECT().GetAllRecords(ctx).Return(allTrades, nil).Once()
+
+			// Mock dependencies for AAPL (enough to trigger AnalyzeValuation)
+			mockAccountManager.EXPECT().GetRecord(ctx, AAPL).Return(tax.Account{}, common.ErrNotFound).Once()
+			// Make TickerManager fail for AAPL
+			expectedErr := common.NewServerError(errors.New("price fetch failed"))
+			mockTickerManager.EXPECT().GetPrice(ctx, AAPL, yearEndDate).Return(0.0, expectedErr).Once()
+
+			// We don't expect mocks for MSFT because it should fail fast on AAPL
+
+			_, err := valuationManager.GetYearlyValuationsUSD(ctx, year)
+
+			// Assertions
+			Expect(err).To(HaveOccurred())
+			// Check if the error is the one returned by GetPrice (or wrapped by AnalyzeValuation)
+			Expect(err.Error()).To(ContainSubstring("failed to get year end price: price fetch failed"))
+			Expect(err.Code()).To(Equal(http.StatusInternalServerError)) // As wrapped by AnalyzeValuation
+		})
+	})
 })
