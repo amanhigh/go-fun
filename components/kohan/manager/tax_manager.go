@@ -11,15 +11,23 @@ type TaxManager interface {
 	GetTaxSummary(ctx context.Context, year int) (tax.Summary, common.HttpError)
 }
 
+// Struct updated with InterestManager
 type TaxManagerImpl struct {
 	capitalGainManager CapitalGainManager
-	dividendManager    DividendManager // Added field
+	dividendManager    DividendManager
+	interestManager    InterestManager // Added field
 }
 
-func NewTaxManager(capitalGainManager CapitalGainManager, dividendManager DividendManager) TaxManager {
+// Constructor updated to accept InterestManager
+func NewTaxManager(
+	capitalGainManager CapitalGainManager,
+	dividendManager DividendManager,
+	interestManager InterestManager, // Added parameter
+) TaxManager {
 	return &TaxManagerImpl{
 		capitalGainManager: capitalGainManager,
-		dividendManager:    dividendManager, // Added assignment
+		dividendManager:    dividendManager,
+		interestManager:    interestManager, // Assign new dependency
 	}
 }
 
@@ -31,26 +39,33 @@ func (t *TaxManagerImpl) GetTaxSummary(ctx context.Context, year int) (summary t
 	}
 
 	// Process gains to INR
-	inrGains, err := t.capitalGainManager.ProcessTaxGains(ctx, gains)
+	summary.INRGains, err = t.capitalGainManager.ProcessTaxGains(ctx, gains)
 	if err != nil {
 		return summary, err
 	}
 
-	// Build summary
-	summary.INRGains = inrGains
-
-	// Get Dividends for the year (Added)
-	dividends, httpErr := t.dividendManager.GetDividendsForYear(ctx, year)
-	if httpErr != nil {
-		return summary, httpErr // Return HttpError directly
+	// Get and process dividends for the year
+	dividends, err := t.dividendManager.GetDividendsForYear(ctx, year)
+	if err != nil {
+		return summary, err
+	}
+	summary.INRDividends, err = t.dividendManager.ProcessDividends(ctx, dividends)
+	if err != nil {
+		return summary, err
 	}
 
-	// Process Dividends (Added)
-	summary.INRDividends, httpErr = t.dividendManager.ProcessDividends(ctx, dividends) // Pass fetched dividends
-	if httpErr != nil {
-		// Log error? Fail on first error.
-		return summary, httpErr // Return HttpError directly
+	// Get and process interest for the specific year (NEW SECTION)
+	interests, err := t.interestManager.GetInterestForYear(ctx, year)
+	if err != nil {
+		return summary, err
 	}
+	summary.INRInterest, err = t.interestManager.ProcessInterest(ctx, interests)
+	if err != nil {
+		return summary, err
+	}
+
+	// Assign other processed data (Valuation etc. if they exist) to summary here...
+	// summary.INRPositions = ...
 
 	return summary, nil
 }
