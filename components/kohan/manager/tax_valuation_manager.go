@@ -9,17 +9,25 @@ import (
 
 // TaxValuationManager handles currency exchange rate processing
 type TaxValuationManager interface {
+	// Processes a list of Valuation records, adding INR values based on exchange rates.
 	ProcessValuations(ctx context.Context, valuations []tax.Valuation) ([]tax.INRValutaion, common.HttpError)
+
+	// GetYearlyValuationsUSD calculates the base USD Valuation (First, Peak, YearEnd)
+	// for all relevant tickers based on trade history up to the end of the specified calendar year.
+	GetYearlyValuationsUSD(ctx context.Context, year int) ([]tax.Valuation, common.HttpError) // Added method signature
 }
 
+// Implementation struct updated with ValuationManager
 type TaxValuationManagerImpl struct {
-	exchangeManager ExchangeManager
+	exchangeManager  ExchangeManager
+	valuationManager ValuationManager
 }
 
 // NewTaxValuationManager creates a new instance of TaxValuationManager
-func NewTaxValuationManager(exchangeManager ExchangeManager) TaxValuationManager {
+func NewTaxValuationManager(exchangeManager ExchangeManager, valuationManager ValuationManager) TaxValuationManager {
 	return &TaxValuationManagerImpl{
-		exchangeManager: exchangeManager,
+		exchangeManager:  exchangeManager,
+		valuationManager: valuationManager,
 	}
 }
 
@@ -42,4 +50,9 @@ func (v *TaxValuationManagerImpl) ProcessValuations(ctx context.Context, valuati
 	err = v.exchangeManager.Exchange(ctx, exchangeAbles)
 
 	return
+}
+
+// GetYearlyValuationsUSD passes the call through to the underlying ValuationManager.
+func (v *TaxValuationManagerImpl) GetYearlyValuationsUSD(ctx context.Context, year int) ([]tax.Valuation, common.HttpError) {
+	return v.valuationManager.GetYearlyValuationsUSD(ctx, year)
 }

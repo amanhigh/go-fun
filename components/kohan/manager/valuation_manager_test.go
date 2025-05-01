@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
@@ -401,7 +402,11 @@ var _ = Describe("ValuationManager", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(valuations).To(HaveLen(2))
 
-			// Find results
+			// Sort valuations by ticker to ensure consistent order
+			sort.Slice(valuations, func(i, j int) bool {
+				return valuations[i].Ticker < valuations[j].Ticker
+			})
+
 			var aaplVal = valuations[0]
 			var msftVal = valuations[1]
 
