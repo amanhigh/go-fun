@@ -70,3 +70,12 @@ func (g *INRGains) SetTTDate(date time.Time) {
 func (g *INRGains) INRValue() float64 {
 	return g.PNL * g.TTRate
 }
+
+// NewGains creates a new Gains object.
+func NewGains(symbol, sellDate string, pnl float64) Gains {
+	return Gains{
+		Symbol:   symbol,
+		SellDate: sellDate,
+		PNL:      pnl,
+	}
+}

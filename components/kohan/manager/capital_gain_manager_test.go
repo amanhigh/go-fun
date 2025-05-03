@@ -136,18 +136,9 @@ var _ = Describe("CapitalGainManager", func() {
 	Context("GetGainsForYear", func() {
 		var (
 			testYear = 2024
-			// AI!  Create Constructor in Models Dir and Use
 			allGains = []tax.Gains{
-				{
-					Symbol:   "AAPL",
-					SellDate: "2024-04-15",
-					PNL:      1000.00,
-				},
-				{
-					Symbol:   "GOOGL",
-					SellDate: "2024-05-20",
-					PNL:      2000.00,
-				},
+				tax.NewGains("AAPL", "2024-04-15", 1000.00),
+				tax.NewGains("GOOGL", "2024-05-20", 2000.00),
 			}
 			filteredGains = []tax.Gains{allGains[0]} // Assume only first gain matches FY
 		)
