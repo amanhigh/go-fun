@@ -25,7 +25,7 @@ var _ = Describe("CapitalGainManager", func() {
 		ticker   = "AAPL"
 		sellDate = "2024-01-15"
 	)
-	// FIXME: Add unit tests for edge date conditions (e.g., buy/sell on April 1st, March 31st) for financial year boundaries.
+	// FIXME: #B Add unit tests for edge date conditions (e.g., buy/sell on April 1st, March 31st) for financial year boundaries.
 	// FIXME: Enhance unit tests to verify correct processing and aggregation details when multiple valid gains exist within the same financial year.
 
 	BeforeEach(func() {
@@ -132,11 +132,11 @@ var _ = Describe("CapitalGainManager", func() {
 		})
 	})
 
-	// BUG: Put Upper Methods in Function Context
+	// BUG: #C Put Upper Methods in Function Context
 	Context("GetGainsForYear", func() {
 		var (
 			testYear = 2024
-			// BUG: Create Constructor
+			// AI!  Create Constructor in Models Dir and Use
 			allGains = []tax.Gains{
 				{
 					Symbol:   "AAPL",
