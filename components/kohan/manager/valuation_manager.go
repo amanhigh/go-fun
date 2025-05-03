@@ -66,17 +66,41 @@ func (v *ValuationManagerImpl) GetYearlyValuationsUSD(ctx context.Context, year 
 		tickerTrades := tradesByTicker[ticker]
 
 		// Sort the trades for this specific ticker chronologically
-		slices.SortFunc(tickerTrades, func(a, b tax.Trade) int {
-			if a.GetDate().Before(b.GetDate()) {
+		// Define a temporary struct to hold trade and its parsed date
+		type tradeWithDate struct {
+			Trade tax.Trade
+			Date  time.Time
+		}
+
+		// Parse dates and create a slice of tradeWithDate
+		tradesWithDates := make([]tradeWithDate, len(tickerTrades))
+		for i, trade := range tickerTrades {
+			tradeDate, dateErr := trade.GetDate()
+			if dateErr != nil {
+				// Return error if date parsing fails
+				return nil, common.NewServerError(fmt.Errorf("failed to parse trade date for ticker %s: %w", ticker, dateErr))
+			}
+			tradesWithDates[i] = tradeWithDate{Trade: trade, Date: tradeDate}
+		}
+
+		// Sort the trades chronologically using the parsed dates
+		slices.SortFunc(tradesWithDates, func(a, b tradeWithDate) int {
+			if a.Date.Before(b.Date) {
 				return -1
-			} else if a.GetDate().After(b.GetDate()) {
+			} else if a.Date.After(b.Date) {
 				return 1
 			}
 			return 0
 		})
 
+		// Extract the sorted trades back into tickerTrades
+		sortedTickerTrades := make([]tax.Trade, len(tradesWithDates))
+		for i, twd := range tradesWithDates {
+			sortedTickerTrades[i] = twd.Trade
+		}
+
 		// Call the *existing* AnalyzeValuation method for this ticker's sorted trades
-		valuation, analyzeErr := v.AnalyzeValuation(ctx, tickerTrades, year)
+		valuation, analyzeErr := v.AnalyzeValuation(ctx, sortedTickerTrades, year)
 		if analyzeErr != nil {
 			// Fail fast: return immediately upon the first analysis error
 			return nil, analyzeErr
@@ -106,8 +130,10 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 	}
 
 	// Process trades with starting position
-	// HACK: Simplify this Class
-	currentPosition := v.trackPositions(&analysis, startPosition, trades)
+	currentPosition, trackErr := v.trackPositions(&analysis, startPosition, trades)
+	if trackErr != nil {
+		return analysis, trackErr
+	}
 
 	// Update year-end position if there are remaining holdings
 	if currentPosition > 0 {
@@ -157,7 +183,7 @@ func (v *ValuationManagerImpl) getStartingPosition(ctx context.Context, ticker s
 	return
 }
 
-func (v *ValuationManagerImpl) trackPositions(analysis *tax.Valuation, startPosition tax.Position, trades []tax.Trade) (currentPosition float64) {
+func (v *ValuationManagerImpl) trackPositions(analysis *tax.Valuation, startPosition tax.Position, trades []tax.Trade) (currentPosition float64, err common.HttpError) {
 	currentPosition = startPosition.Quantity
 	maxPosition := currentPosition
 
@@ -167,7 +193,11 @@ func (v *ValuationManagerImpl) trackPositions(analysis *tax.Valuation, startPosi
 
 	// Process all trades
 	for _, t := range trades {
-		tradeDate := t.GetDate()
+		tradeDate, dateErr := t.GetDate()
+		if dateErr != nil {
+			return currentPosition, common.NewServerError(fmt.Errorf("failed to parse trade date during position tracking: %w", dateErr))
+		}
+
 		if t.Type == "BUY" {
 			currentPosition += t.Quantity
 		} else {
@@ -193,5 +223,5 @@ func (v *ValuationManagerImpl) trackPositions(analysis *tax.Valuation, startPosi
 			}
 		}
 	}
-	return
+	return currentPosition, nil
 }

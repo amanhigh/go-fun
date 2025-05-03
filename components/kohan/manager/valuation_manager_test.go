@@ -438,12 +438,12 @@ var _ = Describe("ValuationManager", func() {
 			Expect(msftVal.FirstPosition.Quantity).To(Equal(10.0))                                        // From starting position
 			Expect(msftVal.FirstPosition.Date).To(Equal(time.Date(year-1, 12, 31, 0, 0, 0, 0, time.UTC))) // Date of start pos
 			Expect(msftVal.PeakPosition.Quantity).To(Equal(30.0))                                         // 10 start + 20 buy
-			msftPeakDate, getDateErr := tradeMSFT1.GetDate() // Use getDateErr here too
+			msftPeakDate, getDateErr := tradeMSFT1.GetDate()                                              // Use getDateErr here too
 			Expect(getDateErr).NotTo(HaveOccurred())
-			Expect(msftVal.PeakPosition.Date).To(Equal(msftPeakDate))                                     // Date peak reached
-			Expect(msftVal.YearEndPosition.Quantity).To(BeNumerically("~", 30.0))                         // Final quantity
-			Expect(msftVal.YearEndPosition.Date).To(Equal(yearEndDate))                                   // Dec 31st
-			Expect(msftVal.YearEndPosition.USDPrice).To(BeNumerically("~", 210.0))                        // Mocked year end price
+			Expect(msftVal.PeakPosition.Date).To(Equal(msftPeakDate))              // Date peak reached
+			Expect(msftVal.YearEndPosition.Quantity).To(BeNumerically("~", 30.0))  // Final quantity
+			Expect(msftVal.YearEndPosition.Date).To(Equal(yearEndDate))            // Dec 31st
+			Expect(msftVal.YearEndPosition.USDPrice).To(BeNumerically("~", 210.0)) // Mocked year end price
 		})
 
 		It("should return empty slice if no trades found", func() {
