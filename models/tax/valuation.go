@@ -91,7 +91,7 @@ type INRPosition struct {
 }
 
 // INRValue calculates INR value using embedded position's USD value
-// BUG: Should INRValue be part of Interface or remove if unused.
+// BUG: #A Should INRValue be part of Interface or remove if unused.
 func (t *INRPosition) INRValue() float64 {
 	return t.USDValue() * t.TTRate
 }
