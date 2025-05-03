@@ -65,50 +65,70 @@ func (v *ValuationManagerImpl) GetYearlyValuationsUSD(ctx context.Context, year 
 	for _, ticker := range tickers {
 		tickerTrades := tradesByTicker[ticker]
 
-		// Sort the trades for this specific ticker chronologically
-		// Define a temporary struct to hold trade and its parsed date
-		type tradeWithDate struct {
-			Trade tax.Trade
-			Date  time.Time
+		// Sort trades chronologically
+		sortedTickerTrades, sortErr := v.sortTradesChronologically(tickerTrades)
+		if sortErr != nil {
+			return nil, sortErr // Return error if sorting fails
 		}
 
-		// Parse dates and create a slice of tradeWithDate
-		tradesWithDates := make([]tradeWithDate, len(tickerTrades))
-		for i, trade := range tickerTrades {
-			tradeDate, dateErr := trade.GetDate()
-			if dateErr != nil {
-				// Return error if date parsing fails
-				return nil, dateErr
-			}
-			tradesWithDates[i] = tradeWithDate{Trade: trade, Date: tradeDate}
-		}
-
-		// Sort the trades chronologically using the parsed dates
-		slices.SortFunc(tradesWithDates, func(a, b tradeWithDate) int {
-			if a.Date.Before(b.Date) {
-				return -1
-			} else if a.Date.After(b.Date) {
-				return 1
-			}
-			return 0
-		})
-
-		// Extract the sorted trades back into tickerTrades
-		sortedTickerTrades := make([]tax.Trade, len(tradesWithDates))
-		for i, twd := range tradesWithDates {
-			sortedTickerTrades[i] = twd.Trade
-		}
-
-		// Call the *existing* AnalyzeValuation method for this ticker's sorted trades
-		valuation, analyzeErr := v.AnalyzeValuation(ctx, sortedTickerTrades, year)
-		if analyzeErr != nil {
+		// Process trades for the current ticker
+		valuation, processErr := v.processTickerTrades(ctx, ticker, sortedTickerTrades, year)
+		if processErr != nil {
 			// Fail fast: return immediately upon the first analysis error
-			return nil, analyzeErr
+			return nil, processErr
 		}
 		valuations = append(valuations, valuation)
 	}
 
 	return valuations, nil // Return aggregated results if all analyses succeeded
+}
+
+// sortTradesChronologically sorts a slice of trades by date.
+func (v *ValuationManagerImpl) sortTradesChronologically(trades []tax.Trade) ([]tax.Trade, common.HttpError) {
+	// Define a temporary struct to hold trade and its parsed date
+	type tradeWithDate struct {
+		Trade tax.Trade
+		Date  time.Time
+	}
+
+	// Parse dates and create a slice of tradeWithDate
+	tradesWithDates := make([]tradeWithDate, len(trades))
+	for i, trade := range trades {
+		tradeDate, dateErr := trade.GetDate()
+		if dateErr != nil {
+			// Return error if date parsing fails
+			return nil, dateErr
+		}
+		tradesWithDates[i] = tradeWithDate{Trade: trade, Date: tradeDate}
+	}
+
+	// Sort the trades chronologically using the parsed dates
+	slices.SortFunc(tradesWithDates, func(a, b tradeWithDate) int {
+		if a.Date.Before(b.Date) {
+			return -1
+		} else if a.Date.After(b.Date) {
+			return 1
+		}
+		return 0
+	})
+
+	// Extract the sorted trades back into a new slice
+	sortedTrades := make([]tax.Trade, len(tradesWithDates))
+	for i, twd := range tradesWithDates {
+		sortedTrades[i] = twd.Trade
+	}
+
+	return sortedTrades, nil
+}
+
+// processTickerTrades analyzes the valuation for a single ticker's sorted trades.
+func (v *ValuationManagerImpl) processTickerTrades(ctx context.Context, ticker string, sortedTrades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
+	// Call the *existing* AnalyzeValuation method for this ticker's sorted trades
+	valuation, analyzeErr := v.AnalyzeValuation(ctx, sortedTrades, year)
+	if analyzeErr != nil {
+		return tax.Valuation{}, analyzeErr
+	}
+	return valuation, nil
 }
 
 func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
