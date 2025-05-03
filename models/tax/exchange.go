@@ -1,8 +1,11 @@
 package tax
 
 import (
+	"fmt"
 	"strings"
 	"time"
+
+	"github.com/amanhigh/go-fun/models/common"
 )
 
 type SbiRate struct {
@@ -20,7 +23,11 @@ func (r SbiRate) GetKey() string {
 	return r.Date
 }
 
-func (r SbiRate) GetDate() (time.Time, error) {
+func (r SbiRate) GetDate() (time.Time, common.HttpError) {
 	datePart := strings.Split(r.Date, " ")[0]
-	return time.Parse(time.DateOnly, datePart)
+	t, err := time.Parse(time.DateOnly, datePart)
+	if err != nil {
+		return time.Time{}, NewInvalidDateError(fmt.Sprintf("failed to parse date '%s': %v", r.Date, err))
+	}
+	return t, nil
 }

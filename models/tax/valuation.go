@@ -1,6 +1,11 @@
 package tax
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+	"github.com/amanhigh/go-fun/models/common"
+)
 
 // Broker statement trade model
 type Trade struct {
@@ -27,8 +32,12 @@ func (t Trade) GetKey() string {
 	return t.Symbol
 }
 
-func (t Trade) GetDate() (time.Time, error) {
-	return time.Parse(time.DateOnly, t.Date)
+func (t Trade) GetDate() (time.Time, common.HttpError) {
+	parsedTime, err := time.Parse(time.DateOnly, t.Date)
+	if err != nil {
+		return time.Time{}, NewInvalidDateError(fmt.Sprintf("failed to parse date '%s': %v", t.Date, err))
+	}
+	return parsedTime, nil
 }
 
 func (t Trade) IsValid() bool {
@@ -88,7 +97,7 @@ func (t *INRPosition) INRValue() float64 {
 }
 
 // Implement Exchangeable interface for INRPosition
-func (t *INRPosition) GetDate() (time.Time, error) {
+func (t *INRPosition) GetDate() (time.Time, common.HttpError) {
 	// Check if the embedded Position Date is zero
 	if t.Date.IsZero() {
 		// Return an error indicating an invalid date

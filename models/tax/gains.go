@@ -1,6 +1,11 @@
 package tax
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+	"github.com/amanhigh/go-fun/models/common"
+)
 
 // FIXME: #A Create Test Data for Integration Test for all CSV Models
 type Gains struct {
@@ -21,8 +26,12 @@ func (g Gains) IsValid() bool {
 	return g.Symbol != "" && g.BuyDate != "" && g.SellDate != ""
 }
 
-func (g Gains) GetDate() (time.Time, error) {
-	return time.Parse(time.DateOnly, g.SellDate)
+func (g Gains) GetDate() (time.Time, common.HttpError) {
+	t, err := time.Parse(time.DateOnly, g.SellDate)
+	if err != nil {
+		return time.Time{}, NewInvalidDateError(fmt.Sprintf("failed to parse sell date '%s': %v", g.SellDate, err))
+	}
+	return t, nil
 }
 
 func (g Gains) ParseBuyDate() (time.Time, error) {
@@ -42,11 +51,9 @@ type INRGains struct {
 }
 
 // Implement Exchangeable interface
-func (g *INRGains) GetDate() (time.Time, error) {
-	if g.SellDate == "" {
-		return time.Time{}, NewInvalidDateError("sell date is empty")
-	}
-	return g.ParseSellDate()
+func (g *INRGains) GetDate() (time.Time, common.HttpError) {
+	// Call the embedded Gains's GetDate method to avoid infinite recursion
+	return g.Gains.GetDate()
 }
 
 func (g *INRGains) GetUSDAmount() float64 {

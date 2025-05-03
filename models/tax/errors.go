@@ -4,16 +4,22 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/amanhigh/go-fun/models/common"
 )
 
+type ClosestDateError interface {
+	common.HttpError
+	GetClosestDate() time.Time
+	GetRequestedDate() time.Time
+}
+
 type InvalidDateError interface {
-	error
-	Code() int
+	common.HttpError
 }
 
 type RateNotFoundError interface {
-	error
-	Code() int
+	common.HttpError
 	GetRequestedDate() time.Time
 }
 

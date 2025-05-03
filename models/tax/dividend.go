@@ -1,6 +1,11 @@
 package tax
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+	"github.com/amanhigh/go-fun/models/common"
+)
 
 type Dividend struct {
 	Symbol string  `csv:"Symbol"`
@@ -18,8 +23,12 @@ func (d Dividend) IsValid() bool {
 	return d.Symbol != "" && d.Date != "" && d.Amount != 0
 }
 
-func (d Dividend) GetDate() (time.Time, error) {
-	return time.Parse(time.DateOnly, d.Date)
+func (d Dividend) GetDate() (time.Time, common.HttpError) {
+	t, err := time.Parse(time.DateOnly, d.Date)
+	if err != nil {
+		return time.Time{}, NewInvalidDateError(fmt.Sprintf("failed to parse date '%s': %v", d.Date, err))
+	}
+	return t, nil
 }
 
 // INRDividend adds exchange rate details to basic dividend
@@ -30,7 +39,7 @@ type INRDividend struct {
 }
 
 // Implement Exchangeable interface
-func (d *INRDividend) GetDate() (time.Time, error) {
+func (d *INRDividend) GetDate() (time.Time, common.HttpError) {
 	// Use embedded dividend's GetDate
 	return d.Dividend.GetDate()
 }

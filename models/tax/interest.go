@@ -1,8 +1,11 @@
 package tax
 
 import (
+	"fmt"
 	"math"
 	"time"
+
+	"github.com/amanhigh/go-fun/models/common"
 )
 
 type Interest struct {
@@ -22,8 +25,12 @@ func (i Interest) IsValid() bool {
 	return i.Symbol != "" && i.Date != "" && i.Amount != 0
 }
 
-func (i Interest) GetDate() (time.Time, error) {
-	return time.Parse(time.DateOnly, i.Date)
+func (i Interest) GetDate() (time.Time, common.HttpError) {
+	t, err := time.Parse(time.DateOnly, i.Date)
+	if err != nil {
+		return time.Time{}, NewInvalidDateError(fmt.Sprintf("failed to parse date '%s': %v", i.Date, err))
+	}
+	return t, nil
 }
 
 // INRInterest adds exchange rate details to basic interest
@@ -34,7 +41,7 @@ type INRInterest struct {
 }
 
 // Implement Exchangeable interface
-func (i *INRInterest) GetDate() (time.Time, error) {
+func (i *INRInterest) GetDate() (time.Time, common.HttpError) {
 	// Use embedded interest's GetDate
 	return i.Interest.GetDate()
 }
