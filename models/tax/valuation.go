@@ -27,9 +27,8 @@ func (t Trade) GetKey() string {
 	return t.Symbol
 }
 
-func (t Trade) GetDate() time.Time {
-	date, _ := time.Parse(time.DateOnly, t.Date)
-	return date
+func (t Trade) GetDate() (time.Time, error) {
+	return time.Parse(time.DateOnly, t.Date)
 }
 
 func (t Trade) IsValid() bool {
