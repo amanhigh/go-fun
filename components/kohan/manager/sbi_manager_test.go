@@ -110,12 +110,8 @@ var _ = Describe("SBIManager", func() {
 		)
 
 		BeforeEach(func() {
-			mockExchange.EXPECT().
-				GetAllRecords(ctx).
-				Return([]tax.SbiRate{
-					{Date: "2024-01-23 09:00", TTBuy: expectedRate, TTSell: 83.50},
-					{Date: "2024-01-22 09:00", TTBuy: 82.25, TTSell: 83.25},
-				}, nil)
+			// First mock the exact date lookup to return nothing
+			mockExchange.EXPECT().GetRecordsForTicker(ctx, "2024-01-24").Return([]tax.SbiRate{}, nil)
 		})
 
 		It("should return closest previous date with ClosestDateError", func() {

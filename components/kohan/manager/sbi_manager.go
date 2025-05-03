@@ -61,17 +61,15 @@ func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, requestedDate time.Ti
 }
 
 // findExactRate attempts to find exact date match
-func (s *SBIManagerImpl) findExactRate(rates []tax.SbiRate, requestedDate time.Time) (rate float64, err common.HttpError) {
-	// FIXME: #C Use exchangeRepo.GetRecordsForTicker which is now Date.
+func (s *SBIManagerImpl) findExactRate(_ []tax.SbiRate, requestedDate time.Time) (rate float64, err common.HttpError) {
+	// Use repository's direct lookup by date
 	dateStr := requestedDate.Format(time.DateOnly)
-	for _, rate := range rates {
-		rateDate, dateErr := rate.GetDate()
-		if dateErr != nil {
-			return 0, dateErr
-		}
-		if rateDate.Format(time.DateOnly) == dateStr {
-			return rate.TTBuy, nil
-		}
+	rateRecords, repoErr := s.exchangeRepo.GetRecordsForTicker(context.Background(), dateStr)
+	if repoErr != nil {
+		return 0, common.NewServerError(repoErr)
+	}
+	if len(rateRecords) > 0 {
+		return rateRecords[0].TTBuy, nil
 	}
 	return 0, tax.NewRateNotFoundError(requestedDate)
 }
