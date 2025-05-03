@@ -7,7 +7,6 @@ import (
 	"github.com/amanhigh/go-fun/models/common"
 )
 
-// FIXME: #A Create Test Data for Integration Test for all CSV Models
 type Gains struct {
 	Symbol     string  `csv:"Symbol"`
 	BuyDate    string  `csv:"BuyDate"`
@@ -42,7 +41,6 @@ func (g Gains) ParseSellDate() (time.Time, error) {
 	return time.Parse(time.DateOnly, g.SellDate)
 }
 
-// FIXME: #A Create TaxSummary model and Wire up TaxManager.
 // INRGains adds exchange rate details to basic gains
 type INRGains struct {
 	Gains            // Embed original gains
