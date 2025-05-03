@@ -5,6 +5,7 @@ import (
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
+	repomock "github.com/amanhigh/go-fun/components/kohan/repository/mocks"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
@@ -14,9 +15,11 @@ import (
 
 var _ = Describe("InterestManager", func() {
 	var (
-		ctx             = context.Background()
-		mockExchange    *mocks.ExchangeManager
-		interestManager manager.InterestManager
+		ctx                  = context.Background()
+		mockExchange         *mocks.ExchangeManager
+		mockFinancialYearMgr *mocks.FinancialYearManager[tax.Interest]
+		mockInterestRepo     *repomock.InterestRepository
+		interestManager      manager.InterestManager
 
 		// Common test data
 		ticker   = "AAPL"
@@ -28,7 +31,13 @@ var _ = Describe("InterestManager", func() {
 
 	BeforeEach(func() {
 		mockExchange = mocks.NewExchangeManager(GinkgoT())
-		interestManager = manager.NewInterestManager(mockExchange)
+		mockFinancialYearMgr = mocks.NewFinancialYearManager[tax.Interest](GinkgoT())
+		mockInterestRepo = repomock.NewInterestRepository(GinkgoT())
+		interestManager = manager.NewInterestManager(
+			mockExchange,
+			mockFinancialYearMgr,
+			mockInterestRepo,
+		)
 	})
 
 	Context("Basic Interest Processing", func() {
@@ -53,7 +62,7 @@ var _ = Describe("InterestManager", func() {
 		})
 
 		It("should process interest correctly", func() {
-			inrInterests, err := interestManager.ProcessInterests(ctx, interests)
+			inrInterests, err := interestManager.ProcessInterest(ctx, interests)
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(inrInterests).To(HaveLen(1))
@@ -81,7 +90,7 @@ var _ = Describe("InterestManager", func() {
 		})
 
 		It("should handle missing exchange rate", func() {
-			_, err := interestManager.ProcessInterests(ctx, interests)
+			_, err := interestManager.ProcessInterest(ctx, interests)
 			Expect(err).To(Equal(common.ErrNotFound))
 		})
 	})
@@ -121,7 +130,7 @@ var _ = Describe("InterestManager", func() {
 		})
 
 		It("should process multiple interests correctly", func() {
-			inrInterests, err := interestManager.ProcessInterests(ctx, interests)
+			inrInterests, err := interestManager.ProcessInterest(ctx, interests)
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(inrInterests).To(HaveLen(2))

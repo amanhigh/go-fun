@@ -1,104 +1,20 @@
-# This code is licensed under the terms of the MIT license https://opensource.org/license/mit
-# Copyright (c) 2021 Marat Reymers
-
-## Golden config for golangci-lint v1.55.2
-#
 # This is the best config for golangci-lint based on my experience and opinion.
 # It is very strict, but not extremely strict.
 # Feel free to adapt and change it for your needs.
 # Source: https://gist.github.com/maratori/47a4d00457a92aa426dbd48a18776322
 
-# Essential linters configuration focused on catching bugs and maintainability
-# Removed deprecated linters and simplified configuration to essential checks
-
-run:
-  timeout: 3m
-
-linters-settings:
-  govet:
-    enable-all: true
-    disable:
-      - fieldalignment # too strict
-  mnd:
-      # Exclude some common acceptable numbers
-      ignored-numbers: [0,1,2]
-      ignored-functions: ["make"]
-
-  funlen:
-    lines: 40      # max function length
-    statements: 20  # max statements per function
-    
-  lll:
-    line-length: 200  # max line length
-    
-  # Complexity Control
-  gocyclo:
-    min-complexity: 10  # cyclomatic complexity limit
-    
-  cyclop:
-    max-complexity: 10
-    package-average: 8
-
-  errcheck:
-    check-type-assertions: true
-
-  wrapcheck:
-    ignoreSigs:
-      - ^fmt\.Errorf$  # Already formatted errors
-      - ^time\.Parse$  # Simple parsing errors
-      - ^errors\.New$  # Basic error creation
-
-  # https://go-critic.com/overview
-  gocritic:
-    enabled-checks:
-      - paramTypeCombine    # Combines same-type params
-      - appendCombine     # Merge redundant `append` calls
-      - sloppyReassign    # Detect redundant variable reassignments
-
-  # https://revive.run/docs#default-configuration
-  revive:
-    # enable-all-rules: true
-    rules:
-      # - name: var-naming
-      - name: dot-imports
-      - name: blank-imports
-      - name: context-as-argument
-      - name: context-keys-type
-      - name: error-return
-      - name: error-strings
-      - name: error-naming
-      - name: exported
-      - name: if-return
-      - name: increment-decrement
-      - name: var-declaration
-      - name: package-comments
-      - name: range
-      - name: receiver-naming
-      - name: time-naming
-      - name: unexported-return
-      - name: indent-error-flow
-      - name: errorf
-      - name: empty-block
-      - name: superfluous-else
-      - name: unused-parameter
-      - name: unreachable-code
-      - name: redefines-builtin-id  
-      - name: argument-limit
-        arguments: [6]      # Max parameters
-      - name: function-result-limit
-        arguments: [3]      # Max return values
-
+version: "2"
 # https://golangci-lint.run/usage/linters/#funlen
 linters:
-  disable-all: true
+  default: none
   enable:
     # TODO: #C Strengthen linters and fix issues.
     # High Priority - Code Correctness & Bugs
     - errcheck      # critical error checking
     - govet        # suspicious constructs
     - staticcheck  # advanced static analysis
-    - gosimple     # code simplification
-    - typecheck    # type checking
+    # - gosimple     # code simplification
+    # - typecheck    # type checking
     - gosec        # security checks
     # - wrapcheck    # error wrapping validation
     
@@ -108,10 +24,10 @@ linters:
     - sqlclosecheck # ensure sql resources closed
     - noctx        # enforce context usage
     - mnd           # Magic numbers detector
-    # - unconvert    # type conversion
+    - unconvert    # type conversion
     
     # Code Style Essentials
-    - goimports     # import sorting + gofmt
+    # - goimports     # import sorting + gofmt
     - revive        # general style (golint replacement)
     - gocritic      
     - unused        # unused code detection
@@ -133,36 +49,118 @@ linters:
     - cyclop       # Package complexity and maintainability
     - funlen       # Function length control
     - lll          # Line length control
+  settings:
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment # too strict
+    mnd:
+        # Exclude some common acceptable numbers
+        ignored-numbers: ["0","1","2"]
+        ignored-functions: ["make"]
 
+    funlen:
+      lines: 40      # max function length
+      statements: 20  # max statements per function
+      
+    lll:
+      line-length: 200  # max line length
+      
+    # Complexity Control
+    gocyclo:
+      min-complexity: 10  # cyclomatic complexity limit
+      
+    cyclop:
+      max-complexity: 10
+      package-average: 8
+
+    errcheck:
+      check-type-assertions: true
+
+    wrapcheck:
+      ignoreSigs:
+        - ^fmt\.Errorf$  # Already formatted errors
+        - ^time\.Parse$  # Simple parsing errors
+        - ^errors\.New$  # Basic error creation
+
+    # https://go-critic.com/overview
+    gocritic:
+      enabled-checks:
+        - paramTypeCombine    # Combines same-type params
+        - appendCombine     # Merge redundant `append` calls
+        - sloppyReassign    # Detect redundant variable reassignments
+
+    # https://revive.run/docs#default-configuration
+    revive:
+      # enable-all-rules: true
+      rules:
+        # - name: var-naming
+        - name: dot-imports
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: exported
+        - name: if-return
+        - name: increment-decrement
+        - name: var-declaration
+        - name: package-comments
+        - name: range
+        - name: receiver-naming
+        - name: time-naming
+        - name: unexported-return
+        - name: indent-error-flow
+        - name: errorf
+        - name: empty-block
+        - name: superfluous-else
+        - name: unused-parameter
+        - name: unreachable-code
+        - name: redefines-builtin-id  
+        - name: argument-limit
+          arguments: [6]      # Max parameters
+        - name: function-result-limit
+          arguments: [3]      # Max return values
+  exclusions:
+    generated: lax
+    # TODO: Renable this.
+    warn-unused: false
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - bodyclose
+          - noctx
+          - wrapcheck
+        path: _test\.go
+      - linters:
+          - revive
+        path: _test\.go
+        text: '^dot-imports:'
+      - linters:
+          - bodyclose
+        path: common/clients/http_client.go
+      - linters:
+          - errcheck
+          - govet
+          - mnd
+          - wrapcheck
+        path: components/learn/
+    paths:
 issues:
-  # Maximum count of issues with the same text
-  max-issues-per-linter: 15  # limit errors per linter
-  max-same-issues: 3         # limit duplicate errors
-
-  # Excluding specific rules for test files
-  exclude-rules:
-    - path: "_test\\.go"
-      linters:
-        - bodyclose   # ignore response body closes in tests
-        - noctx      # ignore missing context in tests
-        - wrapcheck
-    - path: "_test\\.go"
-      linters:
-        - revive
-      text: "^dot-imports:"
-    - path: "common/clients/http_client.go"
-      linters:
-        - bodyclose   # ignore response body closes in tests
-    - path: "components/learn/" # ignore learn components
-      linters:
-        - errcheck
-        - govet
-        - mnd
-        - wrapcheck
-  exclude-dirs:
-    # - "^components/"
-  exclude-files:
-    # - "components/learn/frameworks/play-fast/hystrix_test.go"
-
+  max-issues-per-linter: 15
+  max-same-issues: 3
+formatters:
+  enable:
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
 output:
-  sort-results: true
+  sort-order:
+    - linter
+    - severity    

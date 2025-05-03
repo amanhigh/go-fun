@@ -8,10 +8,9 @@ import (
 
 // Base interface for all CSV records
 type CSVRecord interface {
-	GetKey() string // For key-based lookups (symbol/date)
-	// FIXME: Should we Return error to caller?
-	GetDate() time.Time // For date-based operations
-	IsValid() bool      // Validate record fields
+	GetKey() string                         // For key-based lookups (symbol/date)
+	GetDate() (time.Time, common.HttpError) // For date-based operations, returns error if parsing fails
+	IsValid() bool                          // Validate record fields
 }
 
 // Exchangeable now extends CSVRecord
@@ -20,10 +19,4 @@ type Exchangeable interface {
 	GetUSDAmount() float64
 	SetTTRate(float64)
 	SetTTDate(time.Time)
-}
-
-type ClosestDateError interface {
-	common.HttpError
-	GetClosestDate() time.Time
-	GetRequestedDate() time.Time
 }

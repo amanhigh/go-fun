@@ -13,7 +13,6 @@ import (
 	stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
-	"go.opentelemetry.io/otel/sdk/trace"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"google.golang.org/grpc"
@@ -81,7 +80,7 @@ func InitOtlpTracerProvider(ctx context.Context, name string, config config.Trac
 	return
 }
 
-func getPublisher(config config.Tracing, exporter sdktrace.SpanExporter) trace.TracerProviderOption {
+func getPublisher(config config.Tracing, exporter sdktrace.SpanExporter) sdktrace.TracerProviderOption {
 	var publisher sdktrace.TracerProviderOption
 	switch config.Publish {
 	case "sync":

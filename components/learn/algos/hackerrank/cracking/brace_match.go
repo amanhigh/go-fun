@@ -16,11 +16,11 @@ func MatchBrace(input string) (match bool) {
 			stack.Push(int(c))
 			match = true // Don't Break loop in Push
 		case ')':
-			match = '(' == stack.Pop()
+			match = stack.Pop() == '('
 		case '}':
-			match = '{' == stack.Pop()
+			match = stack.Pop() == '{'
 		case ']':
-			match = '[' == stack.Pop()
+			match = stack.Pop() == '['
 		}
 
 		// Break even if one mismatch is found

@@ -85,7 +85,7 @@ func (r *Memcached) ValidateUpdate(_ runtime.Object) (err error) {
 func (r *Memcached) ValidateDelete() (err error) {
 	memcachedlog.Info("validate delete", "name", r.Name)
 	if r.Labels["type"] == "critical" {
-		err = fmt.Errorf("Cannot delete pod %s because it is marked critical", r.Name)
+		err = fmt.Errorf("cannot delete pod %s because it is marked critical", r.Name)
 	}
 	return
 }

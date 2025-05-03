@@ -1,6 +1,11 @@
 package tax
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+	"github.com/amanhigh/go-fun/models/common"
+)
 
 // Broker statement trade model
 type Trade struct {
@@ -27,9 +32,12 @@ func (t Trade) GetKey() string {
 	return t.Symbol
 }
 
-func (t Trade) GetDate() time.Time {
-	date, _ := time.Parse(time.DateOnly, t.Date)
-	return date
+func (t Trade) GetDate() (time.Time, common.HttpError) {
+	parsedTime, err := time.Parse(time.DateOnly, t.Date)
+	if err != nil {
+		return time.Time{}, NewInvalidDateError(fmt.Sprintf("failed to parse date '%s': %v", t.Date, err))
+	}
+	return parsedTime, nil
 }
 
 func (t Trade) IsValid() bool {
@@ -89,13 +97,18 @@ func (t *INRPosition) INRValue() float64 {
 }
 
 // Implement Exchangeable interface for INRPosition
-func (t *INRPosition) GetDate() time.Time {
-	return t.Position.Date
+func (t *INRPosition) GetDate() (time.Time, common.HttpError) {
+	// Check if the embedded Position Date is zero
+	if t.Date.IsZero() {
+		// Return an error indicating an invalid date
+		return time.Time{}, NewInvalidDateError("position date is zero")
+	}
+	return t.Date, nil
 }
 
 func (t *INRPosition) GetKey() string {
 	// This mostly won't be used is to Satisfy CSV Record.
-	return t.Position.Date.Format(time.DateOnly)
+	return t.Date.Format(time.DateOnly)
 }
 
 func (t *INRPosition) GetUSDAmount() float64 {
@@ -111,5 +124,5 @@ func (t *INRPosition) SetTTDate(date time.Time) {
 }
 
 func (t *INRPosition) IsValid() bool {
-	return !t.Position.Date.IsZero() && t.TTRate > 0
+	return !t.Date.IsZero() && t.TTRate > 0
 }

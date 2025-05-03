@@ -25,7 +25,7 @@ func ReplaceSpace(input string) string {
 			out[i+2] = '0'
 			i += 3
 		} else {
-			out[i] = rune(c)
+			out[i] = c
 			i++
 		}
 	}

@@ -34,35 +34,46 @@ func NewSBIManager(client clients.SBIClient, filePath string, exchangeRepo repos
 }
 
 func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, requestedDate time.Time) (rate float64, err common.HttpError) {
-	rates, err := s.exchangeRepo.GetAllRecords(ctx)
-	if err != nil {
-		return 0, err
+	rates, repoErr := s.exchangeRepo.GetAllRecords(ctx)
+	if repoErr != nil {
+		return 0, common.NewServerError(repoErr)
 	}
 
 	if len(rates) == 0 {
-		return 0, common.ErrNotFound
+		return 0, tax.NewRateNotFoundError(requestedDate)
 	}
 
 	// Try exact match first
-	if rate, found := s.findExactRate(rates, requestedDate); found {
+	rate, err = s.findExactRate(rates, requestedDate)
+	if err == nil {
 		return rate, nil
 	}
 
-	// Find closest previous rate
-	return s.findClosestRate(rates, requestedDate)
+	// If the error is RateNotFoundError, try finding the closest rate.
+	// Otherwise, return the error (e.g., ServerError from date parsing).
+	if _, ok := err.(tax.RateNotFoundError); ok {
+		// Find closest previous rate
+		return s.findClosestRate(rates, requestedDate)
+	}
+
+	// Return the error if it's not a RateNotFoundError
+	return 0, err
 }
 
 // findExactRate attempts to find exact date match
-func (s *SBIManagerImpl) findExactRate(rates []tax.SbiRate, requestedDate time.Time) (rate float64, found bool) {
+func (s *SBIManagerImpl) findExactRate(rates []tax.SbiRate, requestedDate time.Time) (rate float64, err common.HttpError) {
 	// FIXME: #C Use exchangeRepo.GetRecordsForTicker which is now Date.
 	dateStr := requestedDate.Format(time.DateOnly)
 	for _, rate := range rates {
-		rateDate := rate.GetDate()
+		rateDate, dateErr := rate.GetDate()
+		if dateErr != nil {
+			return 0, dateErr
+		}
 		if rateDate.Format(time.DateOnly) == dateStr {
-			return rate.TTBuy, true
+			return rate.TTBuy, nil
 		}
 	}
-	return 0, false
+	return 0, tax.NewRateNotFoundError(requestedDate)
 }
 
 // findClosestRate finds closest previous rate and returns with ClosestDateError
@@ -72,7 +83,10 @@ func (s *SBIManagerImpl) findClosestRate(rates []tax.SbiRate, requestedDate time
 	var closestRate float64
 
 	for _, rate := range rates {
-		rateDate := rate.GetDate()
+		rateDate, dateErr := rate.GetDate()
+		if dateErr != nil {
+			return 0, dateErr
+		}
 		rateDateStr := rateDate.Format(time.DateOnly)
 		if rateDateStr <= dateStr && (closestDate.IsZero() || rateDate.After(closestDate)) {
 			closestDate = rateDate
@@ -84,7 +98,7 @@ func (s *SBIManagerImpl) findClosestRate(rates []tax.SbiRate, requestedDate time
 		return closestRate, tax.NewClosestDateError(requestedDate, closestDate)
 	}
 
-	return 0, common.ErrNotFound
+	return 0, tax.NewRateNotFoundError(requestedDate)
 }
 
 func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpError) {
@@ -95,8 +109,9 @@ func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpErro
 	}
 
 	var csvContent string
-	if csvContent, err = s.client.FetchExchangeRates(ctx); err != nil {
-		return
+	var fetchErr error // Rename error variable to avoid shadowing
+	if csvContent, fetchErr = s.client.FetchExchangeRates(ctx); fetchErr != nil {
+		return common.NewServerError(fetchErr) // Wrap the standard error
 	}
 
 	// Write to file
@@ -104,5 +119,5 @@ func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpErro
 		return common.NewServerError(err1)
 	}
 
-	return
+	return nil
 }

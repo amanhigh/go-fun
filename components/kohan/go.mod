@@ -15,6 +15,7 @@ require (
 	github.com/onsi/gomega v1.29.0
 	github.com/rivo/tview v0.0.0-20240622152042-c38c796625fb
 	github.com/rs/zerolog v1.32.0
+	github.com/samber/lo v1.39.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.9.0
 )
@@ -67,6 +68,7 @@ require (
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	golang.org/x/arch v0.6.0 // indirect
 	golang.org/x/crypto v0.24.0 // indirect
+	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea // indirect
 	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/term v0.21.0 // indirect

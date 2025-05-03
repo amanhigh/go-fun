@@ -11,4 +11,7 @@ const (
 	ACCOUNTS_FILENAME  = "accounts.csv"
 	GAINS_FILENAME     = "gains.csv"
 	INTEREST_FILENAME  = "interest.csv"
+
+	// Rounding factor for 2 decimal places
+	ROUNDING_FACTOR_2_DECIMALS = 100.0
 )

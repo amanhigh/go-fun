@@ -1,6 +1,11 @@
 package tax
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+	"github.com/amanhigh/go-fun/models/common"
+)
 
 // FIXME: #A Create Test Data for Integration Test for all CSV Models
 type Gains struct {
@@ -21,9 +26,12 @@ func (g Gains) IsValid() bool {
 	return g.Symbol != "" && g.BuyDate != "" && g.SellDate != ""
 }
 
-func (g Gains) GetDate() time.Time {
-	date, _ := time.Parse(time.DateOnly, g.SellDate)
-	return date
+func (g Gains) GetDate() (time.Time, common.HttpError) {
+	t, err := time.Parse(time.DateOnly, g.SellDate)
+	if err != nil {
+		return time.Time{}, NewInvalidDateError(fmt.Sprintf("failed to parse sell date '%s': %v", g.SellDate, err))
+	}
+	return t, nil
 }
 
 func (g Gains) ParseBuyDate() (time.Time, error) {
@@ -43,9 +51,9 @@ type INRGains struct {
 }
 
 // Implement Exchangeable interface
-func (g *INRGains) GetDate() (date time.Time) {
-	date, _ = g.Gains.ParseSellDate()
-	return
+func (g *INRGains) GetDate() (time.Time, common.HttpError) {
+	// Call the embedded Gains's GetDate method to avoid infinite recursion
+	return g.Gains.GetDate()
 }
 
 func (g *INRGains) GetUSDAmount() float64 {
@@ -63,12 +71,4 @@ func (g *INRGains) SetTTDate(date time.Time) {
 // INRValue computes the PNL value in INR
 func (g *INRGains) INRValue() float64 {
 	return g.PNL * g.TTRate
-}
-
-// Summary contains all processed tax records
-type Summary struct {
-	INRGains []INRGains // Processed capital gains in INR
-	// Future fields will be added as needed:
-	// INRDividends []INRDividend
-	// INRPositions []INRPosition
 }

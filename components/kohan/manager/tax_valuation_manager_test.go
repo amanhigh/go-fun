@@ -16,15 +16,18 @@ import (
 
 var _ = Describe("TaxValuationManager", func() {
 	var (
-		ctx              context.Context
-		mockExchange     *mocks.ExchangeManager
-		valuationManager manager.TaxValuationManager
+		ctx                  context.Context
+		mockExchange         *mocks.ExchangeManager
+		mockValuationManager *mocks.ValuationManager
+		valuationManager     manager.TaxValuationManager
 	)
 
 	BeforeEach(func() {
 		ctx = context.Background()
 		mockExchange = mocks.NewExchangeManager(GinkgoT())
-		valuationManager = manager.NewTaxValuationManager(mockExchange)
+		mockValuationManager = mocks.NewValuationManager(GinkgoT())
+		// Pass the new mock to the constructor
+		valuationManager = manager.NewTaxValuationManager(mockExchange, mockValuationManager)
 	})
 
 	Context("Position Processing", func() {

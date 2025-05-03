@@ -70,8 +70,20 @@ func (ki *KohanInjector) provideAccountManager(accountRepo repository.AccountRep
 	return manager.NewAccountManager(accountRepo)
 }
 
-func (ki *KohanInjector) provideTaxValuationManager(exchangeManager manager.ExchangeManager) manager.TaxValuationManager {
-	return manager.NewTaxValuationManager(exchangeManager)
+// Add this new provider function
+func (ki *KohanInjector) provideValuationManager(
+	tickerManager manager.TickerManager,
+	accountManager manager.AccountManager,
+	tradeRepository repository.TradeRepository,
+) manager.ValuationManager {
+	return manager.NewValuationManager(tickerManager, accountManager, tradeRepository)
+}
+
+func (ki *KohanInjector) provideTaxValuationManager(
+	exchangeManager manager.ExchangeManager,
+	valuationManager manager.ValuationManager, // Added parameter
+) manager.TaxValuationManager {
+	return manager.NewTaxValuationManager(exchangeManager, valuationManager) // Pass new dependency
 }
 
 func (ki *KohanInjector) provideGainsRepository() repository.GainsRepository {
@@ -82,6 +94,11 @@ func (ki *KohanInjector) provideFinancialYearManagerGains() manager.FinancialYea
 	return manager.NewFinancialYearManager[taxmodels.Gains]()
 }
 
+// Add new provider for FinancialYearManager[tax.Interest]
+func (ki *KohanInjector) provideFinancialYearManagerInterest() manager.FinancialYearManager[taxmodels.Interest] {
+	return manager.NewFinancialYearManager[taxmodels.Interest]()
+}
+
 func (ki *KohanInjector) provideCapitalGainManager(
 	exchangeMgr manager.ExchangeManager,
 	gainsRepo repository.GainsRepository,
@@ -90,8 +107,44 @@ func (ki *KohanInjector) provideCapitalGainManager(
 	return manager.NewCapitalGainManager(exchangeMgr, gainsRepo, fyMgr)
 }
 
-func (ki *KohanInjector) provideTaxManager(gainMgr manager.CapitalGainManager) manager.TaxManager {
-	return manager.NewTaxManager(gainMgr)
+// Add/Update provider for InterestManager
+func (ki *KohanInjector) provideInterestManager(
+	exchangeMgr manager.ExchangeManager,
+	fyMgr manager.FinancialYearManager[taxmodels.Interest], // Added parameter
+	interestRepo repository.InterestRepository, // Added parameter
+) manager.InterestManager {
+	// Call updated constructor
+	return manager.NewInterestManager(exchangeMgr, fyMgr, interestRepo)
+}
+
+func (ki *KohanInjector) provideFinancialYearManagerDividends() manager.FinancialYearManager[taxmodels.Dividend] {
+	return manager.NewFinancialYearManager[taxmodels.Dividend]()
+}
+
+func (ki *KohanInjector) provideDividendRepository() repository.DividendRepository {
+	return repository.NewDividendRepository(ki.config.Tax.DividendFilePath)
+}
+
+// Add new provider for InterestRepository (Adjust config path if needed)
+func (ki *KohanInjector) provideInterestRepository() repository.InterestRepository {
+	// Ensure ki.config.Tax.InterestFilePath is the correct config field
+	return repository.NewInterestRepository(ki.config.Tax.InterestFilePath)
+}
+
+// Add new provider function
+func (ki *KohanInjector) provideTradeRepository() repository.TradeRepository {
+	// Ensure ki.config.Tax.BrokerStatementPath is the correct config field
+	return repository.NewTradeRepository(ki.config.Tax.BrokerStatementPath)
+}
+
+// Update provider for TaxManager to accept TaxValuationManager
+func (ki *KohanInjector) provideTaxManager(
+	gainMgr manager.CapitalGainManager,
+	dividendManager manager.DividendManager,
+	interestManager manager.InterestManager,
+	taxValuationManager manager.TaxValuationManager, // Added parameter
+) manager.TaxManager {
+	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager) // Pass new dependency
 }
 
 // Public singleton access - returns interface only
@@ -104,23 +157,72 @@ func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) 
 	return manager.NewAutoManager(wait, capturePath)
 }
 
-func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
-	// Ensure all dependencies for TaxManager are registered
+func (ki *KohanInjector) registerBaseDependencies() {
+	// First register the REST client
 	container.MustSingleton(ki.di, resty.New)
-	container.MustSingleton(ki.di, ki.provideSBIClient)
 
-	// Register Repositories
+	// Then register clients that depend on REST client
+	var client *resty.Client
+	container.MustResolve(ki.di, &client)
+
+	container.MustSingleton(ki.di, func() clients.AlphaClient {
+		return ki.provideAlphaClient(client)
+	})
+	container.MustSingleton(ki.di, func() clients.SBIClient {
+		return ki.provideSBIClient(client)
+	})
+}
+
+func (ki *KohanInjector) registerRepositories() {
 	container.MustSingleton(ki.di, ki.provideExchangeRepository)
 	container.MustSingleton(ki.di, ki.provideGainsRepository)
+	container.MustSingleton(ki.di, ki.provideDividendRepository)
+	container.MustSingleton(ki.di, ki.provideInterestRepository)
+	container.MustSingleton(ki.di, ki.provideAccountRepository)
+	container.MustSingleton(ki.di, ki.provideTradeRepository)
+}
 
-	// Register Managers (dependencies of TaxManager)
+func (ki *KohanInjector) registerCoreManagers() {
+	// First register managers that don't have dependencies
 	container.MustSingleton(ki.di, ki.provideSBIManager)
 	container.MustSingleton(ki.di, ki.provideExchangeManager)
-	container.MustSingleton(ki.di, ki.provideFinancialYearManagerGains)
-	container.MustSingleton(ki.di, ki.provideCapitalGainManager)
+	container.MustSingleton(ki.di, ki.provideAccountManager)
 
-	// Register TaxManager itself
+	// Then register TickerManager with resolved AlphaClient
+	var alphaClient clients.AlphaClient
+	container.MustResolve(ki.di, &alphaClient)
+	container.MustSingleton(ki.di, func() manager.TickerManager {
+		return ki.provideTickerManager(alphaClient)
+	})
+
+	// Finally register managers that depend on TickerManager
+	container.MustSingleton(ki.di, ki.provideValuationManager)
+	container.MustSingleton(ki.di, ki.provideTaxValuationManager)
+}
+
+func (ki *KohanInjector) registerFinancialYearManagers() {
+	container.MustSingleton(ki.di, ki.provideFinancialYearManagerGains)
+	container.MustSingleton(ki.di, ki.provideFinancialYearManagerDividends)
+	container.MustSingleton(ki.di, ki.provideFinancialYearManagerInterest)
+}
+
+func (ki *KohanInjector) registerTaxComponents() {
+	container.MustSingleton(ki.di, ki.provideCapitalGainManager)
+	container.MustSingleton(ki.di, ki.provideDividendManager)
+	container.MustSingleton(ki.di, ki.provideInterestManager)
 	container.MustSingleton(ki.di, ki.provideTaxManager)
+}
+
+func (ki *KohanInjector) registerTaxDependencies() {
+	ki.registerBaseDependencies()
+	ki.registerRepositories()
+	ki.registerCoreManagers()
+	ki.registerFinancialYearManagers()
+	ki.registerTaxComponents()
+}
+
+func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
+	ki.registerTaxDependencies()
 
 	// Resolve and return TaxManager
 	var taxManager manager.TaxManager
@@ -129,6 +231,21 @@ func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
 }
 
 func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error) {
+	ki.registerDariusDependencies(cfg)
+
+	// Build app
+	app := &DariusV1{}
+	err := ki.di.Fill(app)
+	return app, err
+}
+
+func (ki *KohanInjector) registerDariusDependencies(cfg config.DariusConfig) {
+	ki.registerDariusConfig(cfg)
+	ki.registerDariusClientsAndRepos()
+	ki.registerDariusManagers()
+}
+
+func (ki *KohanInjector) registerDariusConfig(cfg config.DariusConfig) {
 	// Register config for this specific build
 	container.MustSingleton(ki.di, func() config.DariusConfig {
 		return cfg
@@ -136,7 +253,9 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 
 	// Register other dependencies
 	container.MustSingleton(ki.di, tview.NewApplication)
+}
 
+func (ki *KohanInjector) registerDariusClientsAndRepos() {
 	// Client
 	container.MustSingleton(ki.di, resty.New)
 	container.MustSingleton(ki.di, ki.provideAlphaClient)
@@ -145,8 +264,13 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 	// Repo
 	container.MustSingleton(ki.di, ki.provideExchangeRepository)
 	container.MustSingleton(ki.di, ki.provideAccountRepository)
+	container.MustSingleton(ki.di, ki.provideDividendRepository)
+	container.MustSingleton(ki.di, ki.provideInterestRepository)
+}
 
+func (ki *KohanInjector) registerDariusManagers() {
 	// Manager
+	// FIXME: Remove Duplicate Container Registration
 	// FIXME: Remove Duplicate Container Registration
 	container.MustSingleton(ki.di, provideServiceManager)
 	container.MustSingleton(ki.di, provideUIManager)
@@ -156,11 +280,24 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 	container.MustSingleton(ki.di, ki.provideSBIManager)
 	container.MustSingleton(ki.di, ki.provideExchangeManager)
 	container.MustSingleton(ki.di, ki.provideTaxValuationManager)
+	container.MustSingleton(ki.di, ki.provideFinancialYearManagerGains) // Ensure this exists
+	container.MustSingleton(ki.di, ki.provideFinancialYearManagerDividends)
+	container.MustSingleton(ki.di, ki.provideFinancialYearManagerInterest) // Added or ensure exists
+	container.MustSingleton(ki.di, ki.provideCapitalGainManager)           // Ensure this exists
+	container.MustSingleton(ki.di, ki.provideDividendManager)
+	container.MustSingleton(ki.di, ki.provideInterestManager) // Ensure this uses the updated provider
+	// Ensure TaxManager registration (if used) uses the updated provider
+	// container.MustSingleton(ki.di, ki.provideTaxManager)
+}
 
-	// Build app
-	app := &DariusV1{}
-	err := ki.di.Fill(app)
-	return app, err
+// Update provider for DividendManager
+func (ki *KohanInjector) provideDividendManager(
+	exchangeMgr manager.ExchangeManager,
+	fyMgr manager.FinancialYearManager[taxmodels.Dividend], // Added parameter
+	dividendRepo repository.DividendRepository, // Added parameter
+) manager.DividendManager {
+	// Call updated constructor
+	return manager.NewDividendManager(exchangeMgr, fyMgr, dividendRepo)
 }
 
 func provideServiceManager(cfg config.DariusConfig) (serviceManager tui.ServiceManager) {

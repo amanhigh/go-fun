@@ -36,7 +36,7 @@ var _ = Describe("GoTour", func() {
 		})
 
 		It("should have locals", func() {
-			var local string = "localvariable"
+			var local = "localvariable"
 			shortHand := "Shorthand Variable"
 
 			Expect(local).To(Not(BeNil()))
@@ -455,7 +455,7 @@ func sqrt(x int) (float64, error) {
 	z := float64(1)
 	z = 1.0
 	for i := 0; i < 10; i++ {
-		z -= ((math.Pow(z, 2) - fX) / (2 * z))
+		z -= (((z * z) - fX) / (2 * z))
 	}
 	return z, nil
 }
