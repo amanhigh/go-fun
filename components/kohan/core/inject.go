@@ -153,7 +153,6 @@ func GetKohanInterface() KohanInterface {
 }
 
 func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface {
-	// HACK: Move to Provider Based Build ?
 	return manager.NewAutoManager(wait, capturePath)
 }
 
@@ -270,7 +269,6 @@ func (ki *KohanInjector) registerDariusClientsAndRepos() {
 
 func (ki *KohanInjector) registerDariusManagers() {
 	// Manager
-	// FIXME: Remove Duplicate Container Registration
 	// FIXME: Remove Duplicate Container Registration
 	container.MustSingleton(ki.di, provideServiceManager)
 	container.MustSingleton(ki.di, provideUIManager)
