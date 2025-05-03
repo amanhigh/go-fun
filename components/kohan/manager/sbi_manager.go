@@ -78,8 +78,7 @@ func (s *SBIManagerImpl) findClosestRate(rates []tax.SbiRate, requestedDate time
 	for _, rate := range rates {
 		rateDate, dateErr := rate.GetDate()
 		if dateErr != nil {
-			// Wrap the standard error in a common.HttpError
-			return 0, common.NewHttpError(dateErr.Error(), 500)
+			return 0, dateErr
 		}
 		rateDateStr := rateDate.Format(time.DateOnly)
 		if rateDateStr <= dateStr && (closestDate.IsZero() || rateDate.After(closestDate)) {

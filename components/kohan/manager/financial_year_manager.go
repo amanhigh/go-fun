@@ -28,7 +28,7 @@ func (f *FinancialYearManagerImpl[T]) FilterRecordsByFY(_ context.Context, recor
 	for _, record := range records {
 		date, err := record.GetDate()
 		if err != nil {
-			return nil, common.NewServerError(err) // Wrap the standard error
+			return nil, err
 		}
 		if (date.Equal(fyStart) || date.After(fyStart)) &&
 			(date.Equal(fyEnd) || date.Before(fyEnd)) {

@@ -27,7 +27,7 @@ func (e *ExchangeManagerImpl) Exchange(ctx context.Context, exchangeables []tax.
 	for _, exchangeable := range exchangeables {
 		requestedDate, dateErr := exchangeable.GetDate()
 		if dateErr != nil {
-			return common.NewServerError(dateErr) // Wrap the standard error
+			return dateErr
 		}
 
 		rate, err := e.sbiManager.GetTTBuyRate(ctx, requestedDate)

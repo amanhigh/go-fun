@@ -78,7 +78,7 @@ func (v *ValuationManagerImpl) GetYearlyValuationsUSD(ctx context.Context, year 
 			tradeDate, dateErr := trade.GetDate()
 			if dateErr != nil {
 				// Return error if date parsing fails
-				return nil, common.NewServerError(fmt.Errorf("failed to parse trade date for ticker %s: %w", ticker, dateErr))
+				return nil, dateErr
 			}
 			tradesWithDates[i] = tradeWithDate{Trade: trade, Date: tradeDate}
 		}
@@ -195,7 +195,7 @@ func (v *ValuationManagerImpl) trackPositions(analysis *tax.Valuation, startPosi
 	for _, t := range trades {
 		tradeDate, dateErr := t.GetDate()
 		if dateErr != nil {
-			return currentPosition, common.NewServerError(fmt.Errorf("failed to parse trade date during position tracking: %w", dateErr))
+			return currentPosition, dateErr
 		}
 
 		if t.Type == "BUY" {
