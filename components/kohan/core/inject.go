@@ -75,14 +75,34 @@ func (ki *KohanInjector) provideSBIClient(client *resty.Client) clients.SBIClien
 	return clients.NewSBIClient(client, ki.config.Tax.SBIBaseURL)
 }
 
-// ---- Manager Providers ----
-func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) *manager.TickerManagerImpl {
-	return manager.NewTickerManager(client, ki.config.Tax.DownloadsDir)
-}
-
 // ---- Repository Providers ----
 func (ki *KohanInjector) provideExchangeRepository() repository.ExchangeRepository {
 	return repository.NewExchangeRepository(ki.config.Tax.SBIFilePath)
+}
+
+func (ki *KohanInjector) provideGainsRepository() repository.GainsRepository {
+	return repository.NewGainsRepository(ki.config.Tax.GainsFilePath)
+}
+
+func (ki *KohanInjector) provideDividendRepository() repository.DividendRepository {
+	return repository.NewDividendRepository(ki.config.Tax.DividendFilePath)
+}
+
+func (ki *KohanInjector) provideInterestRepository() repository.InterestRepository {
+	return repository.NewInterestRepository(ki.config.Tax.InterestFilePath)
+}
+
+func (ki *KohanInjector) provideAccountRepository() repository.AccountRepository {
+	return repository.NewAccountRepository(ki.config.Tax.AccountFilePath)
+}
+
+func (ki *KohanInjector) provideTradeRepository() repository.TradeRepository {
+	return repository.NewTradeRepository(ki.config.Tax.BrokerStatementPath)
+}
+
+// ---- Manager Providers ----
+func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) *manager.TickerManagerImpl {
+	return manager.NewTickerManager(client, ki.config.Tax.DownloadsDir)
 }
 
 func (ki *KohanInjector) provideSBIManager(client clients.SBIClient, exchangeRepo repository.ExchangeRepository) manager.SBIManager {
@@ -91,10 +111,6 @@ func (ki *KohanInjector) provideSBIManager(client clients.SBIClient, exchangeRep
 
 func (ki *KohanInjector) provideExchangeManager(sbiManager manager.SBIManager) manager.ExchangeManager {
 	return manager.NewExchangeManager(sbiManager)
-}
-
-func (ki *KohanInjector) provideAccountRepository() repository.AccountRepository {
-	return repository.NewAccountRepository(ki.config.Tax.AccountFilePath)
 }
 
 func (ki *KohanInjector) provideAccountManager(accountRepo repository.AccountRepository) manager.AccountManager {
@@ -116,16 +132,16 @@ func (ki *KohanInjector) provideTaxValuationManager(
 	return manager.NewTaxValuationManager(exchangeManager, valuationManager)
 }
 
-func (ki *KohanInjector) provideGainsRepository() repository.GainsRepository {
-	return repository.NewGainsRepository(ki.config.Tax.GainsFilePath)
-}
-
 func (ki *KohanInjector) provideFinancialYearManagerGains() manager.FinancialYearManager[taxmodels.Gains] {
 	return manager.NewFinancialYearManager[taxmodels.Gains]()
 }
 
 func (ki *KohanInjector) provideFinancialYearManagerInterest() manager.FinancialYearManager[taxmodels.Interest] {
 	return manager.NewFinancialYearManager[taxmodels.Interest]()
+}
+
+func (ki *KohanInjector) provideFinancialYearManagerDividends() manager.FinancialYearManager[taxmodels.Dividend] {
+	return manager.NewFinancialYearManager[taxmodels.Dividend]()
 }
 
 func (ki *KohanInjector) provideCapitalGainManager(
@@ -144,20 +160,12 @@ func (ki *KohanInjector) provideInterestManager(
 	return manager.NewInterestManager(exchangeMgr, fyMgr, interestRepo)
 }
 
-func (ki *KohanInjector) provideFinancialYearManagerDividends() manager.FinancialYearManager[taxmodels.Dividend] {
-	return manager.NewFinancialYearManager[taxmodels.Dividend]()
-}
-
-func (ki *KohanInjector) provideDividendRepository() repository.DividendRepository {
-	return repository.NewDividendRepository(ki.config.Tax.DividendFilePath)
-}
-
-func (ki *KohanInjector) provideInterestRepository() repository.InterestRepository {
-	return repository.NewInterestRepository(ki.config.Tax.InterestFilePath)
-}
-
-func (ki *KohanInjector) provideTradeRepository() repository.TradeRepository {
-	return repository.NewTradeRepository(ki.config.Tax.BrokerStatementPath)
+func (ki *KohanInjector) provideDividendManager(
+	exchangeMgr manager.ExchangeManager,
+	fyMgr manager.FinancialYearManager[taxmodels.Dividend],
+	dividendRepo repository.DividendRepository,
+) manager.DividendManager {
+	return manager.NewDividendManager(exchangeMgr, fyMgr, dividendRepo)
 }
 
 func (ki *KohanInjector) provideTaxManager(
@@ -169,7 +177,22 @@ func (ki *KohanInjector) provideTaxManager(
 	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager)
 }
 
-func (ki *KohanInjector) registerBaseDependencies() {
+func provideServiceManager(cfg config.DariusConfig) (serviceManager tui.ServiceManager) {
+	return tui.NewServiceManager(cfg.MakeDir, cfg.SelectedServiceFile)
+}
+
+func provideUIManager(app *tview.Application, svcManager tui.ServiceManager) tui.UIManager {
+	return tui.NewUIManager(app, svcManager)
+}
+
+func provideHotkeyManager(uiManager tui.UIManager, serviceManager tui.ServiceManager) tui.HotkeyManager {
+	return tui.NewHotkeyManager(uiManager, serviceManager)
+}
+
+// ---- Dependency Registration ----
+
+// registerClients registers core clients like REST client and API clients.
+func (ki *KohanInjector) registerClients() {
 	// First register the REST client
 	container.MustSingleton(ki.di, resty.New)
 
@@ -185,6 +208,7 @@ func (ki *KohanInjector) registerBaseDependencies() {
 	})
 }
 
+// registerRepositories registers all repository implementations.
 func (ki *KohanInjector) registerRepositories() {
 	container.MustSingleton(ki.di, ki.provideExchangeRepository)
 	container.MustSingleton(ki.di, ki.provideGainsRepository)
@@ -194,6 +218,7 @@ func (ki *KohanInjector) registerRepositories() {
 	container.MustSingleton(ki.di, ki.provideTradeRepository)
 }
 
+// registerCoreManagers registers managers that depend on clients or repositories.
 func (ki *KohanInjector) registerCoreManagers() {
 	// Register managers that depend on clients or repositories
 	container.MustSingleton(ki.di, ki.provideSBIManager)
@@ -212,12 +237,14 @@ func (ki *KohanInjector) registerCoreManagers() {
 	container.MustSingleton(ki.di, ki.provideTaxValuationManager)
 }
 
+// registerFinancialYearManagers registers managers for handling financial year data.
 func (ki *KohanInjector) registerFinancialYearManagers() {
 	container.MustSingleton(ki.di, ki.provideFinancialYearManagerGains)
 	container.MustSingleton(ki.di, ki.provideFinancialYearManagerDividends)
 	container.MustSingleton(ki.di, ki.provideFinancialYearManagerInterest)
 }
 
+// registerTaxComponents registers managers specifically for tax calculations.
 func (ki *KohanInjector) registerTaxComponents() {
 	container.MustSingleton(ki.di, ki.provideCapitalGainManager)
 	container.MustSingleton(ki.di, ki.provideDividendManager)
@@ -225,28 +252,16 @@ func (ki *KohanInjector) registerTaxComponents() {
 	container.MustSingleton(ki.di, ki.provideTaxManager)
 }
 
+// registerTaxDependencies registers all dependencies required for tax calculations.
 func (ki *KohanInjector) registerTaxDependencies() {
-	ki.registerBaseDependencies()
+	ki.registerClients()
 	ki.registerRepositories()
 	ki.registerCoreManagers()
 	ki.registerFinancialYearManagers()
 	ki.registerTaxComponents()
 }
 
-func (ki *KohanInjector) registerDariusDependencies(cfg config.DariusConfig) {
-	// Register base dependencies, repositories, and all managers needed for tax calculations
-	// This ensures all components potentially used by Darius are available.
-	ki.registerBaseDependencies()
-	ki.registerRepositories()
-	ki.registerCoreManagers()
-	ki.registerFinancialYearManagers()
-	ki.registerTaxComponents() // Includes CapitalGain, Dividend, Interest, Tax managers
-
-	// Register Darius specific configurations and TUI managers
-	ki.registerDariusConfig(cfg)
-	ki.registerDariusTuiManagers()
-}
-
+// registerDariusConfig registers configuration specific to the Darius application.
 func (ki *KohanInjector) registerDariusConfig(cfg config.DariusConfig) {
 	// Register config for this specific build
 	container.MustSingleton(ki.di, func() config.DariusConfig {
@@ -267,22 +282,13 @@ func (ki *KohanInjector) registerDariusTuiManagers() {
 	container.MustSingleton(ki.di, provideHotkeyManager)
 }
 
-func (ki *KohanInjector) provideDividendManager(
-	exchangeMgr manager.ExchangeManager,
-	fyMgr manager.FinancialYearManager[taxmodels.Dividend],
-	dividendRepo repository.DividendRepository,
-) manager.DividendManager {
-	return manager.NewDividendManager(exchangeMgr, fyMgr, dividendRepo)
-}
+// registerDariusDependencies registers all dependencies required for the Darius application.
+func (ki *KohanInjector) registerDariusDependencies(cfg config.DariusConfig) {
+	// Register base dependencies, repositories, and all managers needed for tax calculations
+	// This ensures all components potentially used by Darius are available.
+	ki.registerTaxDependencies() // Includes CapitalGain, Dividend, Interest, Tax managers
 
-func provideServiceManager(cfg config.DariusConfig) (serviceManager tui.ServiceManager) {
-	return tui.NewServiceManager(cfg.MakeDir, cfg.SelectedServiceFile)
-}
-
-func provideUIManager(app *tview.Application, svcManager tui.ServiceManager) tui.UIManager {
-	return tui.NewUIManager(app, svcManager)
-}
-
-func provideHotkeyManager(uiManager tui.UIManager, serviceManager tui.ServiceManager) tui.HotkeyManager {
-	return tui.NewHotkeyManager(uiManager, serviceManager)
+	// Register Darius specific configurations and TUI managers
+	ki.registerDariusConfig(cfg)
+	ki.registerDariusTuiManagers()
 }
