@@ -8,9 +8,9 @@ import (
 
 // Base interface for all CSV records
 type CSVRecord interface {
-	GetKey() string                               // For key-based lookups (symbol/date)
-	GetDate() (time.Time, common.HttpError)       // For date-based operations, returns error if parsing fails
-	IsValid() bool                                // Validate record fields
+	GetKey() string                         // For key-based lookups (symbol/date)
+	GetDate() (time.Time, common.HttpError) // For date-based operations, returns error if parsing fails
+	IsValid() bool                          // Validate record fields
 }
 
 // Exchangeable now extends CSVRecord

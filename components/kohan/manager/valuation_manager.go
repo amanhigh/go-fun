@@ -122,7 +122,7 @@ func (v *ValuationManagerImpl) sortTradesChronologically(trades []tax.Trade) ([]
 }
 
 // processTickerTrades analyzes the valuation for a single ticker's sorted trades.
-func (v *ValuationManagerImpl) processTickerTrades(ctx context.Context, ticker string, sortedTrades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
+func (v *ValuationManagerImpl) processTickerTrades(ctx context.Context, _ string, sortedTrades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
 	// Call the *existing* AnalyzeValuation method for this ticker's sorted trades
 	valuation, analyzeErr := v.AnalyzeValuation(ctx, sortedTrades, year)
 	if analyzeErr != nil {
