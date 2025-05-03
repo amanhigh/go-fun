@@ -12,13 +12,13 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"Continue.continue",
 				"golang.go",
 				"YuichiNakamura.code-to-clipboard",
 				"RooVeterinaryInc.roo-cline",
 				"Gruntfuggly.todo-tree",
 				"hoovercj.vscode-dimmer",
-				"Codeium.codeium"
+				"Codeium.codeium",
+				"GitHub.copilot-chat"
 			]
 		}
 	}
