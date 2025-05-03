@@ -6,10 +6,19 @@ import (
 	"time"
 )
 
+type InvalidDateError interface {
+	error
+	Code() int
+}
+
 type RateNotFoundError interface {
 	error
 	Code() int
 	GetRequestedDate() time.Time
+}
+
+type invalidDateError struct {
+	reason string
 }
 
 type closestDateError struct {
@@ -25,6 +34,12 @@ func NewClosestDateError(requested, closest time.Time) ClosestDateError {
 	return &closestDateError{
 		requestedDate: requested,
 		closestDate:   closest,
+	}
+}
+
+func NewInvalidDateError(reason string) InvalidDateError {
+	return &invalidDateError{
+		reason: reason, // Store the reason directly
 	}
 }
 
@@ -60,6 +75,14 @@ func (e *closestDateError) GetClosestDate() time.Time {
 
 func (e *closestDateError) GetRequestedDate() time.Time {
 	return e.requestedDate
+}
+
+func (e *invalidDateError) Error() string {
+	return fmt.Sprintf("invalid date: %v", e.reason)
+}
+
+func (e *invalidDateError) Code() int {
+	return http.StatusBadRequest
 }
 
 func (e *rateNotFoundError) GetRequestedDate() time.Time {

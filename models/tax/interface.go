@@ -10,7 +10,7 @@ import (
 type CSVRecord interface {
 	GetKey() string // For key-based lookups (symbol/date)
 	// FIXME: Should we Return error to caller?
-	GetDate() (time.Time, error) // For date-based operations
+	GetDate() (time.Time, error) // For date-based operations, returns error if parsing fails
 	IsValid() bool               // Validate record fields
 }
 

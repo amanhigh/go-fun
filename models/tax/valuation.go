@@ -89,8 +89,13 @@ func (t *INRPosition) INRValue() float64 {
 }
 
 // Implement Exchangeable interface for INRPosition
-func (t *INRPosition) GetDate() time.Time {
-	return t.Date
+func (t *INRPosition) GetDate() (time.Time, error) {
+	// Check if the embedded Position Date is zero
+	if t.Date.IsZero() {
+		// Return an error indicating an invalid date
+		return time.Time{}, NewInvalidDateError("position date is zero")
+	}
+	return t.Date, nil
 }
 
 func (t *INRPosition) GetKey() string {

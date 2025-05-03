@@ -18,9 +18,8 @@ func (d Dividend) IsValid() bool {
 	return d.Symbol != "" && d.Date != "" && d.Amount != 0
 }
 
-func (d Dividend) GetDate() time.Time {
-	date, _ := time.Parse(time.DateOnly, d.Date)
-	return date
+func (d Dividend) GetDate() (time.Time, error) {
+	return time.Parse(time.DateOnly, d.Date)
 }
 
 // INRDividend adds exchange rate details to basic dividend
@@ -31,7 +30,7 @@ type INRDividend struct {
 }
 
 // Implement Exchangeable interface
-func (d *INRDividend) GetDate() time.Time {
+func (d *INRDividend) GetDate() (time.Time, error) {
 	// Use embedded dividend's GetDate
 	return d.Dividend.GetDate()
 }

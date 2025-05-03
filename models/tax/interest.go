@@ -22,9 +22,8 @@ func (i Interest) IsValid() bool {
 	return i.Symbol != "" && i.Date != "" && i.Amount != 0
 }
 
-func (i Interest) GetDate() time.Time {
-	date, _ := time.Parse(time.DateOnly, i.Date)
-	return date
+func (i Interest) GetDate() (time.Time, error) {
+	return time.Parse(time.DateOnly, i.Date)
 }
 
 // INRInterest adds exchange rate details to basic interest
@@ -35,9 +34,9 @@ type INRInterest struct {
 }
 
 // Implement Exchangeable interface
-func (i *INRInterest) GetDate() time.Time {
-	date, _ := time.Parse(time.DateOnly, i.Date)
-	return date
+func (i *INRInterest) GetDate() (time.Time, error) {
+	// Use embedded interest's GetDate
+	return i.Interest.GetDate()
 }
 
 func (i *INRInterest) GetUSDAmount() float64 {
@@ -53,6 +52,7 @@ func (i *INRInterest) SetTTDate(date time.Time) {
 }
 
 // Helper method for INR calculations
+// FIXME: Add Test for INRInterest
 func (i *INRInterest) INRValue() float64 {
 	return math.Round(i.Amount*i.TTRate*ROUNDING_FACTOR_2_DECIMALS) / ROUNDING_FACTOR_2_DECIMALS
 }

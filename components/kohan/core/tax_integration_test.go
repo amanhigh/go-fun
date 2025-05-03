@@ -107,7 +107,11 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 
 			// Sort results by date to ensure consistent order for assertions
 			sort.Slice(summary.INRDividends, func(i, j int) bool {
-				return summary.INRDividends[i].GetDate().Before(summary.INRDividends[j].GetDate())
+				dateI, err := summary.INRDividends[i].GetDate()
+				Expect(err).NotTo(HaveOccurred())
+				dateJ, err := summary.INRDividends[j].GetDate()
+				Expect(err).NotTo(HaveOccurred())
+				return dateI.Before(dateJ)
 			})
 
 			// --- Assertions for Jan 15 Dividend (AAPL) - Full Detail ---
