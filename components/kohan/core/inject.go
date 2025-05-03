@@ -30,11 +30,40 @@ type KohanInjector struct {
 	config config.KohanConfig
 }
 
+// ---- KohanInjector Methods ----
+
 func SetupKohanInjector(config config.KohanConfig) {
 	globalInjector = &KohanInjector{
 		di:     container.New(),
 		config: config,
 	}
+}
+
+// Public singleton access - returns interface only
+func GetKohanInterface() KohanInterface {
+	return globalInjector
+}
+
+func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface {
+	return manager.NewAutoManager(wait, capturePath)
+}
+
+func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
+	ki.registerTaxDependencies()
+
+	// Resolve and return TaxManager
+	var taxManager manager.TaxManager
+	err := ki.di.Resolve(&taxManager)
+	return taxManager, err
+}
+
+func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error) {
+	ki.registerDariusDependencies(cfg)
+
+	// Build app
+	app := &DariusV1{}
+	err := ki.di.Fill(app)
+	return app, err
 }
 
 // ---- Client Providers ----
@@ -46,10 +75,12 @@ func (ki *KohanInjector) provideSBIClient(client *resty.Client) clients.SBIClien
 	return clients.NewSBIClient(client, ki.config.Tax.SBIBaseURL)
 }
 
+// ---- Manager Providers ----
 func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) *manager.TickerManagerImpl {
 	return manager.NewTickerManager(client, ki.config.Tax.DownloadsDir)
 }
 
+// ---- Repository Providers ----
 func (ki *KohanInjector) provideExchangeRepository() repository.ExchangeRepository {
 	return repository.NewExchangeRepository(ki.config.Tax.SBIFilePath)
 }
@@ -138,15 +169,6 @@ func (ki *KohanInjector) provideTaxManager(
 	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager)
 }
 
-// Public singleton access - returns interface only
-func GetKohanInterface() KohanInterface {
-	return globalInjector
-}
-
-func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface {
-	return manager.NewAutoManager(wait, capturePath)
-}
-
 func (ki *KohanInjector) registerBaseDependencies() {
 	// First register the REST client
 	container.MustSingleton(ki.di, resty.New)
@@ -209,24 +231,6 @@ func (ki *KohanInjector) registerTaxDependencies() {
 	ki.registerCoreManagers()
 	ki.registerFinancialYearManagers()
 	ki.registerTaxComponents()
-}
-
-func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
-	ki.registerTaxDependencies()
-
-	// Resolve and return TaxManager
-	var taxManager manager.TaxManager
-	err := ki.di.Resolve(&taxManager)
-	return taxManager, err
-}
-
-func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error) {
-	ki.registerDariusDependencies(cfg)
-
-	// Build app
-	app := &DariusV1{}
-	err := ki.di.Fill(app)
-	return app, err
 }
 
 func (ki *KohanInjector) registerDariusDependencies(cfg config.DariusConfig) {
