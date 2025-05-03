@@ -34,9 +34,9 @@ func NewSBIManager(client clients.SBIClient, filePath string, exchangeRepo repos
 }
 
 func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, requestedDate time.Time) (rate float64, err common.HttpError) {
-	rates, err := s.exchangeRepo.GetAllRecords(ctx)
-	if err != nil {
-		return 0, err
+	rates, repoErr := s.exchangeRepo.GetAllRecords(ctx)
+	if repoErr != nil {
+		return 0, common.NewHttpError(repoErr.Error(), 500)
 	}
 
 	if len(rates) == 0 {
@@ -76,9 +76,10 @@ func (s *SBIManagerImpl) findClosestRate(rates []tax.SbiRate, requestedDate time
 	var closestRate float64
 
 	for _, rate := range rates {
-		rateDate, err := rate.GetDate()
-		if err != nil {
-			return 0, err
+		rateDate, dateErr := rate.GetDate()
+		if dateErr != nil {
+			// Wrap the standard error in a common.HttpError
+			return 0, common.NewHttpError(dateErr.Error(), 500)
 		}
 		rateDateStr := rateDate.Format(time.DateOnly)
 		if rateDateStr <= dateStr && (closestDate.IsZero() || rateDate.After(closestDate)) {
@@ -102,14 +103,15 @@ func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpErro
 	}
 
 	var csvContent string
-	if csvContent, err = s.client.FetchExchangeRates(ctx); err != nil {
-		return
+	var fetchErr error // Rename error variable to avoid shadowing
+	if csvContent, fetchErr = s.client.FetchExchangeRates(ctx); fetchErr != nil {
+		return common.NewHttpError(fetchErr.Error(), 500) // Wrap the standard error
 	}
 
 	// Write to file
 	if err1 := os.WriteFile(s.filePath, []byte(csvContent), util.DEFAULT_PERM); err1 != nil {
-		return common.NewServerError(err1)
+		return common.NewHttpError(err1.Error(), 500)
 	}
 
-	return
+	return nil
 }

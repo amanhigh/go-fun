@@ -57,8 +57,14 @@ func (v *ValuationManagerImpl) GetYearlyValuationsUSD(ctx context.Context, year 
 
 	valuations = make([]tax.Valuation, 0, len(tradesByTicker))
 
-	// Iterate through the grouped map (ticker -> list of trades)
-	for _, tickerTrades := range tradesByTicker {
+	// Get tickers and sort them for deterministic processing
+	tickers := lo.Keys(tradesByTicker)
+	slices.Sort(tickers)
+
+	// Iterate through sorted tickers
+	for _, ticker := range tickers {
+		tickerTrades := tradesByTicker[ticker]
+
 		// Sort the trades for this specific ticker chronologically
 		slices.SortFunc(tickerTrades, func(a, b tax.Trade) int {
 			if a.GetDate().Before(b.GetDate()) {
