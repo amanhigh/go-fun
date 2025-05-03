@@ -90,42 +90,45 @@ var _ = Describe("SBIManager", func() {
 		It("should get rate for date using repository", func() {
 			testDate := time.Date(2024, 1, 23, 0, 0, 0, 0, time.UTC)
 			expectedRate := 82.50
+			expectedRecord := tax.SbiRate{Date: "2024-01-23 Wednesday", TTBuy: expectedRate, TTSell: 83.50}
 
-			mockExchange.EXPECT().GetAllRecords(ctx).Return([]tax.SbiRate{
-				{Date: "2024-01-23 Wednesday", TTBuy: expectedRate, TTSell: 83.50},
-				{Date: "2024-01-24 Thursday", TTBuy: 82.75, TTSell: 83.75},
-			}, nil)
+			// Mock GetRecordsForTicker for the exact date
+			mockExchange.EXPECT().GetRecordsForTicker(ctx, "2024-01-23").Return([]tax.SbiRate{expectedRecord}, nil)
 
 			rate, err := sbiManager.GetTTBuyRate(ctx, testDate)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(rate).To(Equal(expectedRate))
 		})
-	})
 
-	Context("When exact date not found", func() {
-		var (
-			requestedDate = time.Date(2024, 1, 24, 0, 0, 0, 0, time.UTC)
-			closestDate   = time.Date(2024, 1, 23, 0, 0, 0, 0, time.UTC)
-			expectedRate  = 82.50
-		)
+		Context("When exact date not found", func() {
+			var (
+				requestedDate = time.Date(2024, 1, 24, 0, 0, 0, 0, time.UTC)
+				closestDate   = time.Date(2024, 1, 23, 0, 0, 0, 0, time.UTC)
+				expectedRate  = 82.50
+			)
 
-		BeforeEach(func() {
-			// First mock the exact date lookup to return nothing
-			mockExchange.EXPECT().GetRecordsForTicker(ctx, "2024-01-24").Return([]tax.SbiRate{}, nil)
-		})
+			BeforeEach(func() {
+				// First mock the exact date lookup to return nothing
+				mockExchange.EXPECT().GetRecordsForTicker(ctx, "2024-01-24").Return([]tax.SbiRate{}, nil)
 
-		It("should return closest previous date with ClosestDateError", func() {
-			rate, err := sbiManager.GetTTBuyRate(ctx, requestedDate)
-			Expect(rate).To(Equal(expectedRate))
+				// Mock GetAllRecords for the fallback mechanism
+				closestRecord := tax.SbiRate{Date: "2024-01-23 Wednesday", TTBuy: expectedRate, TTSell: 83.50}
+				mockExchange.EXPECT().GetAllRecords(ctx).Return([]tax.SbiRate{closestRecord}, nil)
+			})
 
-			// Verify ClosestDateError details
-			closestErr, ok := err.(tax.ClosestDateError)
-			Expect(ok).To(BeTrue())
-			Expect(closestErr.Code()).To(Equal(http.StatusOK))
-			Expect(closestErr.GetRequestedDate()).To(Equal(requestedDate))
-			Expect(closestErr.GetClosestDate()).To(Equal(closestDate))
-			Expect(closestErr.Error()).To(ContainSubstring("exact rate not found for 2024-01-24"))
-			Expect(closestErr.Error()).To(ContainSubstring("using closest available date 2024-01-23"))
+			It("should return closest previous date with ClosestDateError", func() {
+				rate, err := sbiManager.GetTTBuyRate(ctx, requestedDate)
+				Expect(rate).To(Equal(expectedRate))
+
+				// Verify ClosestDateError details
+				closestErr, ok := err.(tax.ClosestDateError)
+				Expect(ok).To(BeTrue())
+				Expect(closestErr.Code()).To(Equal(http.StatusOK))
+				Expect(closestErr.GetRequestedDate()).To(Equal(requestedDate))
+				Expect(closestErr.GetClosestDate()).To(Equal(closestDate))
+				Expect(closestErr.Error()).To(ContainSubstring("exact rate not found for 2024-01-24"))
+				Expect(closestErr.Error()).To(ContainSubstring("using closest available date 2024-01-23"))
+			})
 		})
 	})
 })

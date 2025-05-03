@@ -34,25 +34,26 @@ func NewSBIManager(client clients.SBIClient, filePath string, exchangeRepo repos
 }
 
 func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, requestedDate time.Time) (rate float64, err common.HttpError) {
-	rates, repoErr := s.exchangeRepo.GetAllRecords(ctx)
-	if repoErr != nil {
-		return 0, common.NewServerError(repoErr)
-	}
-
-	if len(rates) == 0 {
-		return 0, tax.NewRateNotFoundError(requestedDate)
-	}
-
-	// Try exact match first
-	rate, err = s.findExactRate(rates, requestedDate)
+	// Try exact match first using repository's direct lookup
+	rate, err = s.findExactRate(ctx, requestedDate)
 	if err == nil {
 		return rate, nil
 	}
 
-	// If the error is RateNotFoundError, try finding the closest rate.
-	// Otherwise, return the error (e.g., ServerError from date parsing).
+	// If the error is RateNotFoundError, try finding the closest rate by fetching all records.
+	// Otherwise, return the original error (e.g., ServerError from date parsing).
 	if _, ok := err.(tax.RateNotFoundError); ok {
-		// Find closest previous rate
+		rates, repoErr := s.exchangeRepo.GetAllRecords(ctx)
+		if repoErr != nil {
+			return 0, common.NewServerError(repoErr)
+		}
+
+		if len(rates) == 0 {
+			// If no records at all, still a RateNotFoundError
+			return 0, tax.NewRateNotFoundError(requestedDate)
+		}
+
+		// Find closest previous rate from all records
 		return s.findClosestRate(rates, requestedDate)
 	}
 
@@ -60,11 +61,10 @@ func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, requestedDate time.Ti
 	return 0, err
 }
 
-// findExactRate attempts to find exact date match
-func (s *SBIManagerImpl) findExactRate(_ []tax.SbiRate, requestedDate time.Time) (rate float64, err common.HttpError) {
-	// Use repository's direct lookup by date
+// findExactRate attempts to find exact date match using the repository's direct lookup.
+func (s *SBIManagerImpl) findExactRate(ctx context.Context, requestedDate time.Time) (rate float64, err common.HttpError) {
 	dateStr := requestedDate.Format(time.DateOnly)
-	rateRecords, repoErr := s.exchangeRepo.GetRecordsForTicker(context.Background(), dateStr)
+	rateRecords, repoErr := s.exchangeRepo.GetRecordsForTicker(ctx, dateStr)
 	if repoErr != nil {
 		return 0, common.NewServerError(repoErr)
 	}
