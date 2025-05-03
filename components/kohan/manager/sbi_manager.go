@@ -36,7 +36,7 @@ func NewSBIManager(client clients.SBIClient, filePath string, exchangeRepo repos
 func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, requestedDate time.Time) (rate float64, err common.HttpError) {
 	rates, repoErr := s.exchangeRepo.GetAllRecords(ctx)
 	if repoErr != nil {
-		return 0, common.NewHttpError(repoErr.Error(), 500)
+		return 0, common.NewServerError(repoErr)
 	}
 
 	if len(rates) == 0 {
@@ -104,12 +104,12 @@ func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpErro
 	var csvContent string
 	var fetchErr error // Rename error variable to avoid shadowing
 	if csvContent, fetchErr = s.client.FetchExchangeRates(ctx); fetchErr != nil {
-		return common.NewHttpError(fetchErr.Error(), 500) // Wrap the standard error
+		return common.NewServerError(fetchErr) // Wrap the standard error
 	}
 
 	// Write to file
 	if err1 := os.WriteFile(s.filePath, []byte(csvContent), util.DEFAULT_PERM); err1 != nil {
-		return common.NewHttpError(err1.Error(), 500)
+		return common.NewServerError(err1)
 	}
 
 	return nil
