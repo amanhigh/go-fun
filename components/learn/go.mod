@@ -13,7 +13,7 @@ require (
 	github.com/etcinit/speedbump v2.0.0+incompatible
 	github.com/facebookgo/inject v0.0.0-20180706035515-f23751cae28b
 	github.com/go-playground/validator/v10 v10.16.0
-	github.com/go-resty/resty/v2 v2.10.0
+	github.com/go-resty/resty/v2 v2.11.0
 	github.com/go-zookeeper/zk v1.0.3
 	github.com/hashicorp/consul/api v1.18.0
 	github.com/hashicorp/vault v1.13.12
