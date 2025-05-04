@@ -91,7 +91,6 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		})
 	})
 
-	// FUTURE CONTEXT: Placeholder for Dividends
 	Context("Dividend Calculation (INRDividends)", func() {
 		It("should calculate dividends correctly for multiple symbols, filtering by financial year", func() {
 			// Retrieve the summary for the test year (FY 2023-24)
@@ -179,10 +178,62 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		})
 	})
 
-	// FUTURE CONTEXT: Placeholder for Valuations
-	/*
-		Context("Valuation Calculation (INRValuation)", func() {
-		    // ... tests for valuations ...
+	Context("Valuation Calculation (INRValuation)", func() {
+		It("should calculate valuations correctly for carry-over and fresh-start tickers", func() {
+			summary, err := taxManager.GetTaxSummary(ctx, testYear)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(summary.INRValuations).ToNot(BeNil())
+			Expect(summary.INRValuations).To(HaveLen(2))
+
+			// Sort by Ticker for consistent assertion order
+			sort.Slice(summary.INRValuations, func(i, j int) bool {
+				return summary.INRValuations[i].Ticker < summary.INRValuations[j].Ticker
+			})
+
+			aaplVal := summary.INRValuations[0]
+			msftVal := summary.INRValuations[1]
+
+			// Assert AAPL (Carry-over)
+			Expect(aaplVal.Ticker).To(Equal("AAPL"))
+			// First Position (AAPL)
+			Expect(aaplVal.FirstPosition.Quantity).To(Equal(50.0))
+			Expect(aaplVal.FirstPosition.USDPrice).To(Equal(160.00))
+			Expect(aaplVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2022-12-31"))
+			Expect(aaplVal.FirstPosition.TTRate).To(Equal(81.50))
+			Expect(aaplVal.FirstPosition.TTDate.Format(time.DateOnly)).To(Equal("2022-12-30"))
+			// Peak Position (AAPL)
+			Expect(aaplVal.PeakPosition.Quantity).To(Equal(60.0))
+			Expect(aaplVal.PeakPosition.USDPrice).To(Equal(175.00))
+			Expect(aaplVal.PeakPosition.Date.Format(time.DateOnly)).To(Equal("2023-11-10"))
+			Expect(aaplVal.PeakPosition.TTRate).To(Equal(82.95))
+			Expect(aaplVal.PeakPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-11-09"))
+			// Year End Position (AAPL)
+			Expect(aaplVal.YearEndPosition.Quantity).To(Equal(60.0))
+			Expect(aaplVal.YearEndPosition.USDPrice).To(Equal(181.00))
+			Expect(aaplVal.YearEndPosition.Date.Format(time.DateOnly)).To(Equal("2023-12-31"))
+			Expect(aaplVal.YearEndPosition.TTRate).To(Equal(82.00))
+			Expect(aaplVal.YearEndPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
+
+			// Assert MSFT (Fresh Start)
+			Expect(msftVal.Ticker).To(Equal("MSFT"))
+			// First Position (MSFT)
+			Expect(msftVal.FirstPosition.Quantity).To(Equal(20.0))
+			Expect(msftVal.FirstPosition.USDPrice).To(Equal(205.00))
+			Expect(msftVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2023-05-01"))
+			Expect(msftVal.FirstPosition.TTRate).To(Equal(82.00))
+			Expect(msftVal.FirstPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-05-01"))
+			// Peak Position (MSFT)
+			Expect(msftVal.PeakPosition.Quantity).To(Equal(50.0))
+			Expect(msftVal.PeakPosition.USDPrice).To(Equal(215.00))
+			Expect(msftVal.PeakPosition.Date.Format(time.DateOnly)).To(Equal("2023-09-01"))
+			Expect(msftVal.PeakPosition.TTRate).To(Equal(82.55))
+			Expect(msftVal.PeakPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-08-31"))
+			// Year End Position (MSFT)
+			Expect(msftVal.YearEndPosition.Quantity).To(Equal(50.0))
+			Expect(msftVal.YearEndPosition.USDPrice).To(Equal(221.00))
+			Expect(msftVal.YearEndPosition.Date.Format(time.DateOnly)).To(Equal("2023-12-31"))
+			Expect(msftVal.YearEndPosition.TTRate).To(Equal(82.00))
+			Expect(msftVal.YearEndPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
 		})
-	*/
+	})
 })
