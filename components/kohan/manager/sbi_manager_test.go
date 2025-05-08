@@ -18,8 +18,8 @@ import (
 )
 
 const testCSV = `DATE,TT BUY,TT SELL
-2024-01-23 Wednesday,82.50,83.50
-2024-01-24 Thursday,82.75,83.75
+2024-01-23,82.50,83.50
+2024-01-24,82.75,83.75
 `
 
 var _ = Describe("SBIManager", func() {
@@ -90,7 +90,7 @@ var _ = Describe("SBIManager", func() {
 		It("should get rate for date using repository", func() {
 			testDate := time.Date(2024, 1, 23, 0, 0, 0, 0, time.UTC)
 			expectedRate := 82.50
-			expectedRecord := tax.SbiRate{Date: "2024-01-23 Wednesday", TTBuy: expectedRate, TTSell: 83.50}
+			expectedRecord := tax.SbiRate{Date: "2024-01-23", TTBuy: expectedRate, TTSell: 83.50}
 
 			// Mock GetRecordsForTicker for the exact date
 			mockExchange.EXPECT().GetRecordsForTicker(ctx, "2024-01-23").Return([]tax.SbiRate{expectedRecord}, nil)
@@ -112,7 +112,7 @@ var _ = Describe("SBIManager", func() {
 				mockExchange.EXPECT().GetRecordsForTicker(ctx, "2024-01-24").Return([]tax.SbiRate{}, nil)
 
 				// Mock GetAllRecords for the fallback mechanism
-				closestRecord := tax.SbiRate{Date: "2024-01-23 Wednesday", TTBuy: expectedRate, TTSell: 83.50}
+				closestRecord := tax.SbiRate{Date: "2024-01-23", TTBuy: expectedRate, TTSell: 83.50}
 				mockExchange.EXPECT().GetAllRecords(ctx).Return([]tax.SbiRate{closestRecord}, nil)
 			})
 
