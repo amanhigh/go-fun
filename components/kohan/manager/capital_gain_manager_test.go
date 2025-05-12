@@ -33,104 +33,106 @@ var _ = Describe("CapitalGainManager", func() {
 		gainManager = manager.NewCapitalGainManager(mockExchangeManager, mockGainsRepo, mockFYManager)
 	})
 
-	Context("Basic Gains Processing", func() {
-		var (
-			gains []tax.Gains
-			pnl   = 1000.00
-		)
+	Context("ProcessTaxGains", func() {
 
-		BeforeEach(func() {
-			gains = []tax.Gains{
-				{
+		Context("Basic Gains Processing", func() {
+			var (
+				gains []tax.Gains
+				pnl   = 1000.00
+			)
+
+			BeforeEach(func() {
+				gains = []tax.Gains{
+					{
+						Symbol:   ticker,
+						SellDate: sellDate,
+						PNL:      pnl,
+					},
+				}
+
+				mockExchangeManager.EXPECT().
+					Exchange(ctx, mock.Anything).
+					Return(nil)
+			})
+
+			It("should process gain and keep original Gain Values", func() {
+				taxGains, err := gainManager.ProcessTaxGains(ctx, gains)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(taxGains).To(HaveLen(1))
+
+				result := taxGains[0]
+				Expect(result.Gains).To(Equal(gains[0]))
+			})
+		})
+
+		Context("Exchange Rate Error", func() {
+			var gains []tax.Gains
+
+			BeforeEach(func() {
+				gains = []tax.Gains{{
 					Symbol:   ticker,
 					SellDate: sellDate,
-					PNL:      pnl,
-				},
-			}
-
-			mockExchangeManager.EXPECT().
-				Exchange(ctx, mock.Anything).
-				Return(nil)
-		})
-
-		It("should process gain and keep original Gain Values", func() {
-			taxGains, err := gainManager.ProcessTaxGains(ctx, gains)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(taxGains).To(HaveLen(1))
-
-			result := taxGains[0]
-			Expect(result.Gains).To(Equal(gains[0]))
-		})
-	})
-
-	Context("Exchange Rate Error", func() {
-		var gains []tax.Gains
-
-		BeforeEach(func() {
-			gains = []tax.Gains{{
-				Symbol:   ticker,
-				SellDate: sellDate,
-				PNL:      1000.00,
-			}}
-
-			mockExchangeManager.EXPECT().
-				Exchange(ctx, mock.Anything).
-				Return(common.ErrNotFound)
-		})
-
-		It("should handle missing exchange rate", func() {
-			_, err := gainManager.ProcessTaxGains(ctx, gains)
-			Expect(err).To(Equal(common.ErrNotFound))
-		})
-	})
-
-	Context("Multiple Gains", func() {
-		var (
-			gains []tax.Gains
-		)
-
-		BeforeEach(func() {
-			gains = []tax.Gains{
-				{
-					Symbol:   "AAPL",
-					SellDate: "2024-01-15",
 					PNL:      1000.00,
-				},
-				{
-					Symbol:   "MSFT",
-					SellDate: "2024-01-16",
-					PNL:      2000.00,
-				},
-			}
+				}}
 
-			// Verify that exchangeables passed contain correct gain amounts
-			mockExchangeManager.EXPECT().
-				Exchange(ctx, mock.AnythingOfType("[]tax.Exchangeable")).
-				Run(func(_ context.Context, exchangeables []tax.Exchangeable) {
-					Expect(exchangeables).To(HaveLen(2))
-					Expect(exchangeables[0].GetUSDAmount()).To(Equal(1000.00))
-					Expect(exchangeables[1].GetUSDAmount()).To(Equal(2000.00))
-				}).
-				Return(nil)
+				mockExchangeManager.EXPECT().
+					Exchange(ctx, mock.Anything).
+					Return(common.ErrNotFound)
+			})
+
+			It("should handle missing exchange rate", func() {
+				_, err := gainManager.ProcessTaxGains(ctx, gains)
+				Expect(err).To(Equal(common.ErrNotFound))
+			})
 		})
 
-		It("should process multiple gains correctly", func() {
-			taxGains, err := gainManager.ProcessTaxGains(ctx, gains)
+		Context("Multiple Gains", func() {
+			var (
+				gains []tax.Gains
+			)
 
-			Expect(err).ToNot(HaveOccurred())
-			Expect(taxGains).To(HaveLen(2))
+			BeforeEach(func() {
+				gains = []tax.Gains{
+					{
+						Symbol:   "AAPL",
+						SellDate: "2024-01-15",
+						PNL:      1000.00,
+					},
+					{
+						Symbol:   "MSFT",
+						SellDate: "2024-01-16",
+						PNL:      2000.00,
+					},
+				}
 
-			// Verify first gain
-			Expect(taxGains[0].Gains.Symbol).To(Equal("AAPL"))
-			Expect(taxGains[0].Gains.PNL).To(Equal(1000.00))
+				// Verify that exchangeables passed contain correct gain amounts
+				mockExchangeManager.EXPECT().
+					Exchange(ctx, mock.AnythingOfType("[]tax.Exchangeable")).
+					Run(func(_ context.Context, exchangeables []tax.Exchangeable) {
+						Expect(exchangeables).To(HaveLen(2))
+						Expect(exchangeables[0].GetUSDAmount()).To(Equal(1000.00))
+						Expect(exchangeables[1].GetUSDAmount()).To(Equal(2000.00))
+					}).
+					Return(nil)
+			})
 
-			// Verify second gain
-			Expect(taxGains[1].Gains.Symbol).To(Equal("MSFT"))
-			Expect(taxGains[1].Gains.PNL).To(Equal(2000.00))
+			It("should process multiple gains correctly", func() {
+				taxGains, err := gainManager.ProcessTaxGains(ctx, gains)
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(taxGains).To(HaveLen(2))
+
+				// Verify first gain
+				Expect(taxGains[0].Gains.Symbol).To(Equal("AAPL"))
+				Expect(taxGains[0].Gains.PNL).To(Equal(1000.00))
+
+				// Verify second gain
+				Expect(taxGains[1].Gains.Symbol).To(Equal("MSFT"))
+				Expect(taxGains[1].Gains.PNL).To(Equal(2000.00))
+			})
 		})
 	})
 
-	// BUG: #C Put Upper Methods in Function Context
 	Context("GetGainsForYear", func() {
 		var (
 			testYear = 2024

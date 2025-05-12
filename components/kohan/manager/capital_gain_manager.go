@@ -53,7 +53,7 @@ func (c *CapitalGainManagerImpl) ProcessTaxGains(ctx context.Context, gains []ta
 	}
 
 	// Exchange rates will modify the structs in taxGains via the pointers in exchangeableGains
-	// TODO: Use SBI Rate on Last Month. For the stocks, the capital gains are the (sell value in $ — buy value in $) * TTBR on the last date of the preceding month to the sell date.
+	// TODO: #B Use SBI Rate on Last Month. For the stocks, the capital gains are the (sell value in $ — buy value in $) * TTBR on the last date of the preceding month to the sell date.
 	err = c.exchangeManager.Exchange(ctx, exchangeableGains)
 
 	return

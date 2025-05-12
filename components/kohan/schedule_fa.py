@@ -81,7 +81,7 @@ import requests
 import json
 import csv
 from datetime import datetime
-# TODO: #B Create Readme on how to use FA.
+# TODO: #A Create Readme on how to use FA.
 # Constants
 TICKERS = ['AMZN', 'SIVR']
 DOWNLOADS_DIR = '~/Downloads/Tickers'
@@ -221,7 +221,7 @@ def print_table(data):
         print(" | ".join(f"{str(row[i]):<{col_widths[i]}}" for i in range(len(row))))
 
 def main():
-    # // TODO: Clean file after Testing new Cmd.
+    # // TODO: #A Clean file after Testing new Cmd.
     print("Tickers:", TICKERS)
     print(f"Tax Year: {TAX_YEAR}")
 
