@@ -26,17 +26,20 @@ type ValuationManagerImpl struct {
 	tickerManager   TickerManager
 	accountManager  AccountManager
 	tradeRepository repository.TradeRepository
+	fyManager       FinancialYearManager[tax.Trade]
 }
 
 func NewValuationManager(
 	tickerManager TickerManager,
 	accountManager AccountManager,
 	tradeRepository repository.TradeRepository,
+	fyManager FinancialYearManager[tax.Trade],
 ) ValuationManager {
 	return &ValuationManagerImpl{
 		tickerManager:   tickerManager,
 		accountManager:  accountManager,
 		tradeRepository: tradeRepository,
+		fyManager:       fyManager,
 	}
 }
 
@@ -46,79 +49,50 @@ func (v *ValuationManagerImpl) GetYearlyValuationsUSD(ctx context.Context, year 
 		return nil, repoErr // Return other errors
 	}
 
-	if len(allTrades) == 0 {
-		return []tax.Valuation{}, common.NewHttpError("no trades found", http.StatusNotFound)
+	// Filter trades for the specified US financial year (calendar year) and sort them
+	yearTrades, filterErr := v.fyManager.FilterUS(ctx, allTrades, year)
+	if filterErr != nil {
+		return nil, filterErr
+	}
+	if len(yearTrades) == 0 {
+		return []tax.Valuation{}, common.NewHttpError(fmt.Sprintf("no trades found for year %d", year), http.StatusNotFound)
 	}
 
-	// Group trades directly by Ticker Symbol
-	tradesByTicker := lo.GroupBy(allTrades, func(trade tax.Trade) string {
+	// Group filtered trades by Ticker Symbol
+	tradesByTicker := lo.GroupBy(yearTrades, func(trade tax.Trade) string {
 		return trade.Symbol
 	})
 
-	valuations = make([]tax.Valuation, 0, len(tradesByTicker))
+	// Process trades for all tickers using the helper function
+	valuations, err = v.processTradesByTicker(ctx, tradesByTicker, year)
+	if err != nil {
+		return nil, err
+	}
 
-	// Get tickers and sort them for deterministic processing
+	return valuations, nil // Return aggregated results if all analyses succeeded
+}
+
+// processTradesByTicker iterates through tickers, sorts their trades, and processes them.
+func (v *ValuationManagerImpl) processTradesByTicker(ctx context.Context, tradesByTicker map[string][]tax.Trade, year int) ([]tax.Valuation, common.HttpError) {
+	valuations := make([]tax.Valuation, 0, len(tradesByTicker))
+
+	// Get tickers for processing (Sort Order Helps in Tests)
 	tickers := lo.Keys(tradesByTicker)
 	slices.Sort(tickers)
 
-	// Iterate through sorted tickers
+	// Iterate through tickers
 	for _, ticker := range tickers {
 		tickerTrades := tradesByTicker[ticker]
 
-		// Sort trades chronologically
-		sortedTickerTrades, sortErr := v.sortTradesChronologically(tickerTrades)
-		if sortErr != nil {
-			return nil, sortErr // Return error if sorting fails
-		}
-
-		// Process trades for the current ticker
-		valuation, processErr := v.processTickerTrades(ctx, ticker, sortedTickerTrades, year)
+		// Process trades for the current ticker (trades are assumed sorted by FilterUS)
+		valuation, processErr := v.processTickerTrades(ctx, ticker, tickerTrades, year)
 		if processErr != nil {
 			// Fail fast: return immediately upon the first analysis error
 			return nil, processErr
 		}
 		valuations = append(valuations, valuation)
 	}
-
-	return valuations, nil // Return aggregated results if all analyses succeeded
-}
-
-// sortTradesChronologically sorts a slice of trades by date.
-func (v *ValuationManagerImpl) sortTradesChronologically(trades []tax.Trade) ([]tax.Trade, common.HttpError) {
-	// Define a temporary struct to hold trade and its parsed date
-	type tradeWithDate struct {
-		Trade tax.Trade
-		Date  time.Time
-	}
-
-	// Parse dates and create a slice of tradeWithDate
-	tradesWithDates := make([]tradeWithDate, len(trades))
-	for i, trade := range trades {
-		tradeDate, dateErr := trade.GetDate()
-		if dateErr != nil {
-			// Return error if date parsing fails
-			return nil, dateErr
-		}
-		tradesWithDates[i] = tradeWithDate{Trade: trade, Date: tradeDate}
-	}
-
-	// Sort the trades chronologically using the parsed dates
-	slices.SortFunc(tradesWithDates, func(a, b tradeWithDate) int {
-		if a.Date.Before(b.Date) {
-			return -1
-		} else if a.Date.After(b.Date) {
-			return 1
-		}
-		return 0
-	})
-
-	// Extract the sorted trades back into a new slice
-	sortedTrades := make([]tax.Trade, len(tradesWithDates))
-	for i, twd := range tradesWithDates {
-		sortedTrades[i] = twd.Trade
-	}
-
-	return sortedTrades, nil
+	return valuations, nil
 }
 
 // processTickerTrades analyzes the valuation for a single ticker's sorted trades.

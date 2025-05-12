@@ -22,6 +22,7 @@ var _ = Describe("ValuationManager", func() {
 		mockTickerManager   *mocks.TickerManager
 		mockAccountManager  *mocks.AccountManager
 		mockTradeRepository *repoMocks.TradeRepository
+		mockFyManager       *mocks.FinancialYearManager[tax.Trade] // Added mock for FY Manager
 		valuationManager    manager.ValuationManager
 
 		// Common variables
@@ -35,7 +36,8 @@ var _ = Describe("ValuationManager", func() {
 		mockTickerManager = mocks.NewTickerManager(GinkgoT())
 		mockAccountManager = mocks.NewAccountManager(GinkgoT())
 		mockTradeRepository = repoMocks.NewTradeRepository(GinkgoT())
-		valuationManager = manager.NewValuationManager(mockTickerManager, mockAccountManager, mockTradeRepository)
+		mockFyManager = mocks.NewFinancialYearManager[tax.Trade](GinkgoT())                                                       // Initialize mock FY Manager
+		valuationManager = manager.NewValuationManager(mockTickerManager, mockAccountManager, mockTradeRepository, mockFyManager) // Pass mockFyManager
 	})
 
 	Context("Analyse Valuation", func() {
@@ -398,6 +400,9 @@ var _ = Describe("ValuationManager", func() {
 			// Mock Repo: GetAllRecords returns combined trades
 			mockTradeRepository.EXPECT().GetAllRecords(ctx).Return(allTrades, nil).Once()
 
+			// Mock FY Manager: FilterUS returns the same trades (assuming all are in the year for this test)
+			mockFyManager.EXPECT().FilterUS(ctx, allTrades, year).Return(allTrades, nil).Once()
+
 			// Mock dependencies needed by AnalyzeValuation for AAPL
 			mockAccountManager.EXPECT().GetRecord(ctx, AAPL).Return(tax.Account{}, common.ErrNotFound).Once() // Fresh start for AAPL
 			mockTickerManager.EXPECT().GetPrice(ctx, AAPL, yearEndDate).Return(150.0, nil).Once()             // AAPL year end price
@@ -447,20 +452,29 @@ var _ = Describe("ValuationManager", func() {
 		})
 
 		It("should return empty slice if no trades found", func() {
-			// Mock Repo: GetAllRecords returns empty list
-			mockTradeRepository.EXPECT().GetAllRecords(ctx).Return([]tax.Trade{}, nil).Once()
+			// Mock Repo: GetAllRecords returns empty list initially
+			initialTrades := []tax.Trade{}
+			mockTradeRepository.EXPECT().GetAllRecords(ctx).Return(initialTrades, nil).Once()
+
+			// Mock FY Manager: FilterUS is called even with empty initial trades
+			// It should return an empty slice and no error in this scenario before the length check.
+			mockFyManager.EXPECT().FilterUS(ctx, initialTrades, year).Return([]tax.Trade{}, nil).Once()
 
 			valuations, err := valuationManager.GetYearlyValuationsUSD(ctx, year)
 
+			// Assert that the specific StatusNotFound error is returned
 			Expect(err).To(HaveOccurred())
 			Expect(err.Code()).To(Equal(http.StatusNotFound))
-			Expect(valuations).To(BeEmpty())
+			Expect(err.Error()).To(ContainSubstring("no trades found for year"))
+			Expect(valuations).To(BeEmpty()) // Expect empty valuations slice
 		})
 
 		It("should return error from GetAllRecords", func() {
 			// Mock Repo: GetAllRecords returns a generic error
 			expectedErr := common.NewServerError(errors.New("repo failed"))
 			mockTradeRepository.EXPECT().GetAllRecords(ctx).Return(nil, expectedErr).Once()
+
+			// No need to mock FilterUS as it won't be called if GetAllRecords fails
 
 			_, err := valuationManager.GetYearlyValuationsUSD(ctx, year)
 
@@ -471,6 +485,9 @@ var _ = Describe("ValuationManager", func() {
 		It("should fail fast if AnalyzeValuation returns error for one ticker", func() {
 			// Mock Repo: GetAllRecords returns trades for two tickers
 			mockTradeRepository.EXPECT().GetAllRecords(ctx).Return(allTrades, nil).Once()
+
+			// Mock FY Manager: FilterUS returns the same trades
+			mockFyManager.EXPECT().FilterUS(ctx, allTrades, year).Return(allTrades, nil).Once()
 
 			// Mock dependencies for AAPL (enough to trigger AnalyzeValuation)
 			mockAccountManager.EXPECT().GetRecord(ctx, AAPL).Return(tax.Account{}, common.ErrNotFound).Once()

@@ -121,8 +121,9 @@ func (ki *KohanInjector) provideValuationManager(
 	tickerManager manager.TickerManager,
 	accountManager manager.AccountManager,
 	tradeRepository repository.TradeRepository,
+	fyManager manager.FinancialYearManager[taxmodels.Trade], // Added fyManager parameter
 ) manager.ValuationManager {
-	return manager.NewValuationManager(tickerManager, accountManager, tradeRepository)
+	return manager.NewValuationManager(tickerManager, accountManager, tradeRepository, fyManager) // Pass fyManager
 }
 
 func (ki *KohanInjector) provideTaxValuationManager(
@@ -142,6 +143,10 @@ func (ki *KohanInjector) provideFinancialYearManagerInterest() manager.Financial
 
 func (ki *KohanInjector) provideFinancialYearManagerDividends() manager.FinancialYearManager[taxmodels.Dividend] {
 	return manager.NewFinancialYearManager[taxmodels.Dividend]()
+}
+
+func (ki *KohanInjector) provideFinancialYearManagerTrade() manager.FinancialYearManager[taxmodels.Trade] {
+	return manager.NewFinancialYearManager[taxmodels.Trade]()
 }
 
 func (ki *KohanInjector) provideCapitalGainManager(
@@ -242,6 +247,7 @@ func (ki *KohanInjector) registerFinancialYearManagers() {
 	container.MustSingleton(ki.di, ki.provideFinancialYearManagerGains)
 	container.MustSingleton(ki.di, ki.provideFinancialYearManagerDividends)
 	container.MustSingleton(ki.di, ki.provideFinancialYearManagerInterest)
+	container.MustSingleton(ki.di, ki.provideFinancialYearManagerTrade) // Register Trade FY Manager
 }
 
 // registerTaxComponents registers managers specifically for tax calculations.
@@ -256,8 +262,8 @@ func (ki *KohanInjector) registerTaxComponents() {
 func (ki *KohanInjector) registerTaxDependencies() {
 	ki.registerClients()
 	ki.registerRepositories()
-	ki.registerCoreManagers()
-	ki.registerFinancialYearManagers()
+	ki.registerFinancialYearManagers() // Register FY Managers first
+	ki.registerCoreManagers()          // Then register managers that might depend on them
 	ki.registerTaxComponents()
 }
 
