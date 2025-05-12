@@ -37,7 +37,7 @@ var _ = Describe("FinancialYearManager", func() {
 		})
 
 		It("should filter records for correct financial year", func() {
-			filtered, err := fyManager.FilterRecordsByFY(ctx, testRecords, year)
+			filtered, err := fyManager.FilterIndia(ctx, testRecords, year)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(filtered).To(HaveLen(3))
 			Expect(filtered[0].Amount).To(Equal(100.0))
@@ -46,7 +46,7 @@ var _ = Describe("FinancialYearManager", func() {
 		})
 
 		It("should handle empty record list", func() {
-			filtered, err := fyManager.FilterRecordsByFY(ctx, []tax.Interest{}, year)
+			filtered, err := fyManager.FilterIndia(ctx, []tax.Interest{}, year)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(filtered).To(BeEmpty())
 		})

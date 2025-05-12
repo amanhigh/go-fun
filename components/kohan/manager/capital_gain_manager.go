@@ -37,7 +37,7 @@ func (c *CapitalGainManagerImpl) GetGainsForYear(ctx context.Context, year int) 
 	}
 
 	// Filter by financial year
-	return c.financialYearManager.FilterRecordsByFY(ctx, records, year)
+	return c.financialYearManager.FilterIndia(ctx, records, year)
 }
 
 func (c *CapitalGainManagerImpl) ProcessTaxGains(ctx context.Context, gains []tax.Gains) (taxGains []tax.INRGains, err common.HttpError) {

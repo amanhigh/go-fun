@@ -10,7 +10,7 @@ import (
 
 //go:generate mockery --name FinancialYearManager
 type FinancialYearManager[T tax.CSVRecord] interface {
-	FilterRecordsByFY(ctx context.Context, records []T, year int) ([]T, common.HttpError)
+	FilterIndia(ctx context.Context, records []T, year int) ([]T, common.HttpError)
 }
 
 type FinancialYearManagerImpl[T tax.CSVRecord] struct{}
@@ -19,7 +19,7 @@ func NewFinancialYearManager[T tax.CSVRecord]() FinancialYearManager[T] {
 	return &FinancialYearManagerImpl[T]{}
 }
 
-func (f *FinancialYearManagerImpl[T]) FilterRecordsByFY(_ context.Context, records []T, year int) ([]T, common.HttpError) {
+func (f *FinancialYearManagerImpl[T]) FilterIndia(_ context.Context, records []T, year int) ([]T, common.HttpError) {
 	var filtered []T
 
 	fyStart := time.Date(year, 4, 1, 0, 0, 0, 0, time.UTC)

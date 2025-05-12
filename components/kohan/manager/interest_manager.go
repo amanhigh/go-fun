@@ -47,7 +47,7 @@ func (i *InterestManagerImpl) GetInterestForYear(ctx context.Context, year int) 
 	}
 
 	// Filter by financial year
-	return i.financialYearManager.FilterRecordsByFY(ctx, records, year)
+	return i.financialYearManager.FilterIndia(ctx, records, year)
 }
 
 // ProcessInterest implementation (Ensure it uses injected exchangeManager)

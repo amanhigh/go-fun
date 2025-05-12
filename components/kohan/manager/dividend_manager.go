@@ -57,5 +57,5 @@ func (d *DividendManagerImpl) GetDividendsForYear(ctx context.Context, year int)
 	}
 
 	// Filter by financial year
-	return d.financialYearManager.FilterRecordsByFY(ctx, records, year)
+	return d.financialYearManager.FilterIndia(ctx, records, year)
 }
