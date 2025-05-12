@@ -90,12 +90,6 @@ type INRPosition struct {
 	TTRate   float64   // TT Buy rate used for conversion
 }
 
-// INRValue calculates INR value using embedded position's USD value
-// BUG: #A Should INRValue be part of Interface or remove if unused.
-func (t *INRPosition) INRValue() float64 {
-	return t.USDValue() * t.TTRate
-}
-
 // Implement Exchangeable interface for INRPosition
 func (t *INRPosition) GetDate() (time.Time, common.HttpError) {
 	// Check if the embedded Position Date is zero
