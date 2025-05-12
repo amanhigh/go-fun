@@ -91,5 +91,20 @@ var _ = Describe("FinancialYearManager", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(filtered).To(BeEmpty())
 		})
+
+		It("should sort records by date", func() {
+			testRecords = []tax.Interest{
+				{Symbol: "AAPL", Date: "2024-12-31", Amount: 300}, // End of FY
+				{Symbol: "AAPL", Date: "2024-01-01", Amount: 100}, // Start of FY
+				{Symbol: "AAPL", Date: "2024-06-15", Amount: 200}, // Mid FY
+			}
+			filtered, err := fyManager.FilterUS(ctx, testRecords, year)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(filtered).To(HaveLen(3))
+			// Check if sorted correctly
+			Expect(filtered[0].Amount).To(Equal(100.0)) // Jan 1st
+			Expect(filtered[1].Amount).To(Equal(200.0)) // Jun 15th
+			Expect(filtered[2].Amount).To(Equal(300.0)) // Dec 31st
+		})
 	})
 })
