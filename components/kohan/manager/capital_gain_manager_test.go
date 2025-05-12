@@ -25,8 +25,6 @@ var _ = Describe("CapitalGainManager", func() {
 		ticker   = "AAPL"
 		sellDate = "2024-01-15"
 	)
-	// FIXME: #B Add unit tests for edge date conditions (e.g., buy/sell on April 1st, March 31st) for financial year boundaries.
-	// FIXME: Enhance unit tests to verify correct processing and aggregation details when multiple valid gains exist within the same financial year.
 
 	BeforeEach(func() {
 		mockExchangeManager = mocks.NewExchangeManager(GinkgoT())
@@ -193,6 +191,34 @@ var _ = Describe("CapitalGainManager", func() {
 				_, err := gainManager.GetGainsForYear(ctx, testYear)
 
 				Expect(err).To(Equal(common.ErrInternalServerError))
+			})
+		})
+
+		Context("with multiple gains in the same financial year", func() {
+			var (
+				multiGains = []tax.Gains{
+					tax.NewGains("AAPL", "2024-05-10", 100.00),  // FY 2024
+					tax.NewGains("MSFT", "2024-12-25", 200.00),  // FY 2024
+					tax.NewGains("GOOGL", "2025-02-15", 300.00), // FY 2024
+					tax.NewGains("AMZN", "2025-04-05", 400.00),  // FY 2025 (Should be filtered out)
+				}
+				expectedFilteredGains = multiGains[:3] // First 3 are in FY 2024
+			)
+			BeforeEach(func() {
+				mockGainsRepo.EXPECT().
+					GetAllRecords(ctx).
+					Return(multiGains, nil)
+
+				mockFYManager.EXPECT().
+					FilterIndia(ctx, multiGains, testYear).
+					Return(expectedFilteredGains, nil)
+			})
+
+			It("should return all gains belonging to that financial year", func() {
+				gains, err := gainManager.GetGainsForYear(ctx, testYear)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(gains).To(HaveLen(3))
+				Expect(gains).To(Equal(expectedFilteredGains))
 			})
 		})
 	})
