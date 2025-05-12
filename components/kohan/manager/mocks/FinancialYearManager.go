@@ -25,12 +25,12 @@ func (_m *FinancialYearManager[T]) EXPECT() *FinancialYearManager_Expecter[T] {
 	return &FinancialYearManager_Expecter[T]{mock: &_m.Mock}
 }
 
-// FilterRecordsByFY provides a mock function with given fields: ctx, records, year
-func (_m *FinancialYearManager[T]) FilterRecordsByFY(ctx context.Context, records []T, year int) ([]T, common.HttpError) {
+// FilterIndia provides a mock function with given fields: ctx, records, year
+func (_m *FinancialYearManager[T]) FilterIndia(ctx context.Context, records []T, year int) ([]T, common.HttpError) {
 	ret := _m.Called(ctx, records, year)
 
 	if len(ret) == 0 {
-		panic("no return value specified for FilterRecordsByFY")
+		panic("no return value specified for FilterIndia")
 	}
 
 	var r0 []T
@@ -57,32 +57,94 @@ func (_m *FinancialYearManager[T]) FilterRecordsByFY(ctx context.Context, record
 	return r0, r1
 }
 
-// FinancialYearManager_FilterRecordsByFY_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FilterRecordsByFY'
-type FinancialYearManager_FilterRecordsByFY_Call[T tax.CSVRecord] struct {
+// FinancialYearManager_FilterIndia_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FilterIndia'
+type FinancialYearManager_FilterIndia_Call[T tax.CSVRecord] struct {
 	*mock.Call
 }
 
-// FilterRecordsByFY is a helper method to define mock.On call
+// FilterIndia is a helper method to define mock.On call
 //   - ctx context.Context
 //   - records []T
 //   - year int
-func (_e *FinancialYearManager_Expecter[T]) FilterRecordsByFY(ctx interface{}, records interface{}, year interface{}) *FinancialYearManager_FilterRecordsByFY_Call[T] {
-	return &FinancialYearManager_FilterRecordsByFY_Call[T]{Call: _e.mock.On("FilterRecordsByFY", ctx, records, year)}
+func (_e *FinancialYearManager_Expecter[T]) FilterIndia(ctx interface{}, records interface{}, year interface{}) *FinancialYearManager_FilterIndia_Call[T] {
+	return &FinancialYearManager_FilterIndia_Call[T]{Call: _e.mock.On("FilterIndia", ctx, records, year)}
 }
 
-func (_c *FinancialYearManager_FilterRecordsByFY_Call[T]) Run(run func(ctx context.Context, records []T, year int)) *FinancialYearManager_FilterRecordsByFY_Call[T] {
+func (_c *FinancialYearManager_FilterIndia_Call[T]) Run(run func(ctx context.Context, records []T, year int)) *FinancialYearManager_FilterIndia_Call[T] {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].([]T), args[2].(int))
 	})
 	return _c
 }
 
-func (_c *FinancialYearManager_FilterRecordsByFY_Call[T]) Return(_a0 []T, _a1 common.HttpError) *FinancialYearManager_FilterRecordsByFY_Call[T] {
+func (_c *FinancialYearManager_FilterIndia_Call[T]) Return(_a0 []T, _a1 common.HttpError) *FinancialYearManager_FilterIndia_Call[T] {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *FinancialYearManager_FilterRecordsByFY_Call[T]) RunAndReturn(run func(context.Context, []T, int) ([]T, common.HttpError)) *FinancialYearManager_FilterRecordsByFY_Call[T] {
+func (_c *FinancialYearManager_FilterIndia_Call[T]) RunAndReturn(run func(context.Context, []T, int) ([]T, common.HttpError)) *FinancialYearManager_FilterIndia_Call[T] {
+	_c.Call.Return(run)
+	return _c
+}
+
+// FilterUS provides a mock function with given fields: ctx, records, year
+func (_m *FinancialYearManager[T]) FilterUS(ctx context.Context, records []T, year int) ([]T, common.HttpError) {
+	ret := _m.Called(ctx, records, year)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FilterUS")
+	}
+
+	var r0 []T
+	var r1 common.HttpError
+	if rf, ok := ret.Get(0).(func(context.Context, []T, int) ([]T, common.HttpError)); ok {
+		return rf(ctx, records, year)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []T, int) []T); ok {
+		r0 = rf(ctx, records, year)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]T)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []T, int) common.HttpError); ok {
+		r1 = rf(ctx, records, year)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(common.HttpError)
+		}
+	}
+
+	return r0, r1
+}
+
+// FinancialYearManager_FilterUS_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FilterUS'
+type FinancialYearManager_FilterUS_Call[T tax.CSVRecord] struct {
+	*mock.Call
+}
+
+// FilterUS is a helper method to define mock.On call
+//   - ctx context.Context
+//   - records []T
+//   - year int
+func (_e *FinancialYearManager_Expecter[T]) FilterUS(ctx interface{}, records interface{}, year interface{}) *FinancialYearManager_FilterUS_Call[T] {
+	return &FinancialYearManager_FilterUS_Call[T]{Call: _e.mock.On("FilterUS", ctx, records, year)}
+}
+
+func (_c *FinancialYearManager_FilterUS_Call[T]) Run(run func(ctx context.Context, records []T, year int)) *FinancialYearManager_FilterUS_Call[T] {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]T), args[2].(int))
+	})
+	return _c
+}
+
+func (_c *FinancialYearManager_FilterUS_Call[T]) Return(_a0 []T, _a1 common.HttpError) *FinancialYearManager_FilterUS_Call[T] {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *FinancialYearManager_FilterUS_Call[T]) RunAndReturn(run func(context.Context, []T, int) ([]T, common.HttpError)) *FinancialYearManager_FilterUS_Call[T] {
 	_c.Call.Return(run)
 	return _c
 }

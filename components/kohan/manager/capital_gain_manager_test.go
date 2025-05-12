@@ -152,7 +152,7 @@ var _ = Describe("CapitalGainManager", func() {
 
 				// Setup FY manager to filter gains
 				mockFYManager.EXPECT().
-					FilterRecordsByFY(ctx, allGains, testYear).
+					FilterIndia(ctx, allGains, testYear).
 					Return(filteredGains, nil)
 			})
 
@@ -185,7 +185,7 @@ var _ = Describe("CapitalGainManager", func() {
 					Return(allGains, nil)
 
 				mockFYManager.EXPECT().
-					FilterRecordsByFY(ctx, allGains, testYear).
+					FilterIndia(ctx, allGains, testYear).
 					Return(nil, common.ErrInternalServerError)
 			})
 
