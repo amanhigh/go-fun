@@ -114,37 +114,141 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 		return tax.Valuation{}, err
 	}
 
-	// Set ticker and get starting position
-	analysis := tax.Valuation{
-		Ticker: trades[0].Symbol,
-	}
-	startPosition, err := v.getStartingPosition(ctx, analysis.Ticker, year)
+	analysis := tax.Valuation{Ticker: trades[0].Symbol}
+	openingPeriodPosition, err := v.getOpeningPositionForPeriod(ctx, analysis.Ticker, year)
 	if err != nil {
-		return analysis, err
+		return tax.Valuation{}, common.NewServerError(fmt.Errorf("failed to get opening position for %s: %w", analysis.Ticker, err))
+	}
+	analysis.FirstPosition = openingPeriodPosition
+	analysis.PeakPosition = openingPeriodPosition
+
+	currentQuantity, _, err := v.processTradesForValuation(&analysis, trades, openingPeriodPosition)
+	if err != nil {
+		return tax.Valuation{}, err
 	}
 
-	// Process trades with starting position
-	currentPosition, trackErr := v.trackPositions(&analysis, startPosition, trades)
-	if trackErr != nil {
-		return analysis, trackErr
-	}
-
-	// Update year-end position if there are remaining holdings
-	if currentPosition > 0 {
-		yearEndDate := time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
-		price, err := v.tickerManager.GetPrice(ctx, analysis.Ticker, yearEndDate)
-		if err != nil {
-			return analysis, common.NewServerError(fmt.Errorf("failed to get year end price: %w", err))
-		}
-
-		analysis.YearEndPosition = tax.Position{
-			Date:     yearEndDate,
-			Quantity: currentPosition,
-			USDPrice: price,
-		}
+	if err := v.determineYearEndPosition(ctx, &analysis, year, currentQuantity, openingPeriodPosition, trades); err != nil {
+		return tax.Valuation{}, err
 	}
 
 	return analysis, nil
+}
+
+// processTradesForValuation updates analysis based on trades and opening position.
+// It returns the final currentQuantity, maxQuantityDuringPeriod, and any error.
+func (v *ValuationManagerImpl) processTradesForValuation(
+	analysis *tax.Valuation,
+	trades []tax.Trade,
+	openingPeriodPosition tax.Position,
+) (currentQuantity, maxQuantityDuringPeriod float64, err common.HttpError) { // Combined return types
+	currentQuantity = openingPeriodPosition.Quantity
+	maxQuantityDuringPeriod = currentQuantity
+	firstPositionAlreadySetByTrade := false
+
+	for _, trade := range trades {
+		tradeDate, dateErr := trade.GetDate()
+		if dateErr != nil {
+			return 0, 0, dateErr
+		}
+
+		isFreshStartScenario := openingPeriodPosition.Date.IsZero()
+
+		if isFreshStartScenario && !firstPositionAlreadySetByTrade && trade.Type == "BUY" {
+			maxQuantityDuringPeriod, firstPositionAlreadySetByTrade = v.handleFreshStartTrade(analysis, trade, tradeDate)
+		}
+
+		if trade.Type == "BUY" {
+			currentQuantity += trade.Quantity
+		} else {
+			currentQuantity -= trade.Quantity
+		}
+
+		peakCtx := peakPositionContext{
+			analysis:                       analysis,
+			trade:                          trade,
+			tradeDate:                      tradeDate,
+			currentQuantity:                currentQuantity,
+			maxQuantityDuringPeriod:        maxQuantityDuringPeriod,
+			firstPositionAlreadySetByTrade: firstPositionAlreadySetByTrade,
+			isFreshStartScenario:           isFreshStartScenario,
+		}
+		maxQuantityDuringPeriod = v.updatePeakPositionIfNeeded(peakCtx)
+	}
+	return currentQuantity, maxQuantityDuringPeriod, nil
+}
+
+// handleFreshStartTrade updates analysis for the first BUY trade in a fresh start scenario.
+// It returns the new maxQuantityDuringPeriod and sets firstPositionAlreadySetByTrade to true.
+func (v *ValuationManagerImpl) handleFreshStartTrade(analysis *tax.Valuation, trade tax.Trade, tradeDate time.Time) (float64, bool) {
+	analysis.FirstPosition = tax.Position{
+		Date:     tradeDate,
+		Quantity: trade.Quantity,
+		USDPrice: trade.USDPrice,
+	}
+	analysis.PeakPosition = analysis.FirstPosition
+	return trade.Quantity, true
+}
+
+type peakPositionContext struct {
+	analysis                       *tax.Valuation
+	trade                          tax.Trade
+	tradeDate                      time.Time
+	currentQuantity                float64
+	maxQuantityDuringPeriod        float64
+	firstPositionAlreadySetByTrade bool
+	isFreshStartScenario           bool
+}
+
+// updatePeakPositionIfNeeded updates the peak position if the current quantity is higher.
+// It returns the updated maxQuantityDuringPeriod.
+func (v *ValuationManagerImpl) updatePeakPositionIfNeeded(ctx peakPositionContext) float64 {
+	if (ctx.firstPositionAlreadySetByTrade || !ctx.isFreshStartScenario) && ctx.currentQuantity > ctx.maxQuantityDuringPeriod {
+		newMaxQuantity := ctx.currentQuantity
+		ctx.analysis.PeakPosition = tax.Position{
+			Date:     ctx.tradeDate,
+			Quantity: newMaxQuantity,
+			USDPrice: ctx.trade.USDPrice,
+		}
+		return newMaxQuantity
+	}
+	return ctx.maxQuantityDuringPeriod
+}
+
+// determineYearEndPosition sets the YearEndPosition in the analysis.
+func (v *ValuationManagerImpl) determineYearEndPosition(
+	ctx context.Context,
+	analysis *tax.Valuation,
+	year int,
+	currentQuantity float64,
+	openingPeriodPosition tax.Position,
+	trades []tax.Trade,
+) common.HttpError {
+	yearEndDate := time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
+	switch {
+	case currentQuantity > 0:
+		price, priceErr := v.tickerManager.GetPrice(ctx, analysis.Ticker, yearEndDate)
+		if priceErr != nil {
+			return common.NewServerError(fmt.Errorf("failed to get year end price for %s: %w", analysis.Ticker, priceErr))
+		}
+		analysis.YearEndPosition = tax.Position{
+			Date:     yearEndDate,
+			Quantity: currentQuantity,
+			USDPrice: price,
+		}
+	case openingPeriodPosition.Quantity > 0 && len(trades) == 0:
+		price, priceErr := v.tickerManager.GetPrice(ctx, analysis.Ticker, yearEndDate)
+		if priceErr != nil {
+			return common.NewServerError(fmt.Errorf("failed to get year end price for carry-over only asset %s: %w", analysis.Ticker, priceErr))
+		}
+		analysis.YearEndPosition = tax.Position{
+			Date:     yearEndDate,
+			Quantity: openingPeriodPosition.Quantity,
+			USDPrice: price,
+		}
+	default:
+		analysis.YearEndPosition = tax.Position{Date: yearEndDate}
+	}
+	return nil
 }
 
 func (v *ValuationManagerImpl) validateTrades(trades []tax.Trade) common.HttpError {
@@ -156,66 +260,31 @@ func (v *ValuationManagerImpl) validateTrades(trades []tax.Trade) common.HttpErr
 	return nil
 }
 
-func (v *ValuationManagerImpl) getStartingPosition(ctx context.Context, ticker string, year int) (position tax.Position, err common.HttpError) {
+func (v *ValuationManagerImpl) getOpeningPositionForPeriod(ctx context.Context, ticker string, year int) (position tax.Position, err common.HttpError) {
 	// Last year's account record
-	account, err := v.accountManager.GetRecord(ctx, ticker)
-	if err != nil {
-		if errors.Is(err, common.ErrNotFound) {
-			// Return zero position for fresh start
-			return position, nil
+	account, accErr := v.accountManager.GetRecord(ctx, ticker)
+	if accErr != nil {
+		if errors.Is(accErr, common.ErrNotFound) {
+			// No account record found -> fresh start for this period.
+			// Return a zero position. Its Date field will be the zero value for time.Time.
+			return tax.Position{}, nil
 		}
-		return position, err
+		return tax.Position{}, accErr // Other errors from accountManager
 	}
 
-	// Convert account to last year-end position
-	lastYearEnd := time.Date(year-1, 12, 31, 0, 0, 0, 0, time.UTC)
-	position = tax.Position{
-		Date:     lastYearEnd,
+	// Account record found (carry-over scenario)
+	// Account record found (carry-over scenario)
+	openingDate := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+	var openingPrice float64
+	if account.Quantity > 0 { // Avoid division by zero
+		openingPrice = account.MarketValue / account.Quantity
+	} else {
+		openingPrice = 0 // If prior year quantity was zero, opening price is zero
+	}
+
+	return tax.Position{
+		Date:     openingDate,
 		Quantity: account.Quantity,
-		USDPrice: account.MarketValue / account.Quantity,
-	}
-	return
-}
-
-func (v *ValuationManagerImpl) trackPositions(analysis *tax.Valuation, startPosition tax.Position, trades []tax.Trade) (currentPosition float64, err common.HttpError) {
-	currentPosition = startPosition.Quantity
-	maxPosition := currentPosition
-
-	// Set initial position
-	analysis.FirstPosition = startPosition
-	analysis.PeakPosition = startPosition
-
-	// Process all trades
-	for _, t := range trades {
-		tradeDate, dateErr := t.GetDate()
-		if dateErr != nil {
-			return currentPosition, dateErr
-		}
-
-		if t.Type == "BUY" {
-			currentPosition += t.Quantity
-		} else {
-			currentPosition -= t.Quantity
-		}
-
-		// Update first position if starting from zero
-		if startPosition.Quantity == 0 && t.Type == "BUY" && analysis.FirstPosition.Quantity == 0 {
-			analysis.FirstPosition = tax.Position{
-				Date:     tradeDate,
-				Quantity: t.Quantity,
-				USDPrice: t.USDPrice,
-			}
-		}
-
-		// Track peak position
-		if currentPosition > maxPosition {
-			maxPosition = currentPosition
-			analysis.PeakPosition = tax.Position{
-				Date:     tradeDate,
-				Quantity: maxPosition,
-				USDPrice: t.USDPrice,
-			}
-		}
-	}
-	return currentPosition, nil
+		USDPrice: openingPrice,
+	}, nil
 }

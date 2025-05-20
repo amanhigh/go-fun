@@ -242,7 +242,6 @@ var _ = Describe("ValuationManager", func() {
 
 				Context("Multiple Position Peaks", func() {
 					var trades []tax.Trade
-
 					BeforeEach(func() {
 						// HACK: #C Multiple Peaks with Same Value (Take Second higher TBBR Rate) or Throw Error.
 						trades = []tax.Trade{
@@ -440,10 +439,10 @@ var _ = Describe("ValuationManager", func() {
 
 			// Assert MSFT Valuation (based on AnalyzeValuation logic)
 			Expect(msftVal.Ticker).To(Equal("MSFT"))
-			Expect(msftVal.FirstPosition.Quantity).To(Equal(10.0))                                        // From starting position
-			Expect(msftVal.FirstPosition.Date).To(Equal(time.Date(year-1, 12, 31, 0, 0, 0, 0, time.UTC))) // Date of start pos
-			Expect(msftVal.PeakPosition.Quantity).To(Equal(30.0))                                         // 10 start + 20 buy
-			msftPeakDate, getDateErr := tradeMSFT1.GetDate()                                              // Use getDateErr here too
+			Expect(msftVal.FirstPosition.Quantity).To(Equal(10.0))                                    // From starting position
+			Expect(msftVal.FirstPosition.Date).To(Equal(time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC))) // Date of start pos (Jan 1st of analysis year)
+			Expect(msftVal.PeakPosition.Quantity).To(Equal(30.0))                                     // 10 start + 20 buy
+			msftPeakDate, getDateErr := tradeMSFT1.GetDate()                                          // Use getDateErr here too
 			Expect(getDateErr).NotTo(HaveOccurred())
 			Expect(msftVal.PeakPosition.Date).To(Equal(msftPeakDate))              // Date peak reached
 			Expect(msftVal.YearEndPosition.Quantity).To(BeNumerically("~", 30.0))  // Final quantity
@@ -498,12 +497,69 @@ var _ = Describe("ValuationManager", func() {
 			// We don't expect mocks for MSFT because it should fail fast on AAPL
 
 			_, err := valuationManager.GetYearlyValuationsUSD(ctx, year)
-
 			// Assertions
 			Expect(err).To(HaveOccurred())
 			// Check if the error is the one returned by GetPrice (or wrapped by AnalyzeValuation)
-			Expect(err.Error()).To(ContainSubstring("failed to get year end price: price fetch failed"))
+			Expect(err.Error()).To(ContainSubstring("failed to get year end price"))
 			Expect(err.Code()).To(Equal(http.StatusInternalServerError)) // As wrapped by AnalyzeValuation
+		})
+	})
+
+	Context("With Carry-Over Position", func() {
+		var (
+			carryOverAccount tax.Account
+			tradesInYear     []tax.Trade
+			testTicker       = "AAPL" // Ensure testTicker is AAPL for this context
+			testYear         = 2023
+			yearEndDate      = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
+			eodPriceAAPL     = 181.00
+		)
+
+		BeforeEach(func() {
+			carryOverAccount = tax.Account{
+				Symbol:      testTicker,
+				Quantity:    50,
+				MarketValue: 8000.00, // Implies $160.00 per share
+			}
+
+			mockAccountManager.EXPECT().
+				GetRecord(ctx, testTicker).
+				Return(carryOverAccount, nil).Once()
+
+			mockTickerManager.EXPECT().
+				GetPrice(ctx, testTicker, yearEndDate).
+				Return(eodPriceAAPL, nil).Once()
+
+			tradesInYear = []tax.Trade{
+				tax.NewTrade(testTicker, "2023-03-15", "BUY", 20, 150.00),
+				tax.NewTrade(testTicker, "2023-10-20", "SELL", 10, 170.00),
+			}
+		})
+
+		It("should correctly set FirstPosition based on carry-over and track subsequent trades to Peak and YearEnd", func() {
+			valuation, err := valuationManager.AnalyzeValuation(ctx, tradesInYear, testYear)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(valuation.Ticker).To(Equal(testTicker))
+
+			// 1. Assert FirstPosition (Opening balance for the period)
+			expectedFirstPosDate := time.Date(testYear, 1, 1, 0, 0, 0, 0, time.UTC)
+			Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
+			Expect(valuation.FirstPosition.Quantity).To(BeNumerically("~", 50.0))
+			Expect(valuation.FirstPosition.USDPrice).To(BeNumerically("~", 160.00))
+
+			// 2. Assert PeakPosition
+			// Start: 50. After Buy1 (20 shares @ $150 on Mar 15): 70 shares. This is the peak quantity.
+			expectedPeakPosDate, _ := time.Parse(time.DateOnly, "2023-03-15")
+			Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(expectedPeakPosDate.Format(time.DateOnly)))
+			Expect(valuation.PeakPosition.Quantity).To(BeNumerically("~", 70.0))
+			Expect(valuation.PeakPosition.USDPrice).To(BeNumerically("~", 150.00))
+
+			// 3. Assert YearEndPosition
+			// After Sell1 (10 shares): 70 - 10 = 60 shares remaining.
+			Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
+			Expect(valuation.YearEndPosition.Quantity).To(BeNumerically("~", 60.0))
+			Expect(valuation.YearEndPosition.USDPrice).To(BeNumerically("~", eodPriceAAPL))
 		})
 	})
 })
