@@ -25,9 +25,9 @@ func (_m *ValuationManager) EXPECT() *ValuationManager_Expecter {
 	return &ValuationManager_Expecter{mock: &_m.Mock}
 }
 
-// AnalyzeValuation provides a mock function with given fields: ctx, trades, year
-func (_m *ValuationManager) AnalyzeValuation(ctx context.Context, trades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
-	ret := _m.Called(ctx, trades, year)
+// AnalyzeValuation provides a mock function with given fields: ctx, tickerSymbol, trades, year
+func (_m *ValuationManager) AnalyzeValuation(ctx context.Context, tickerSymbol string, trades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
+	ret := _m.Called(ctx, tickerSymbol, trades, year)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AnalyzeValuation")
@@ -35,17 +35,17 @@ func (_m *ValuationManager) AnalyzeValuation(ctx context.Context, trades []tax.T
 
 	var r0 tax.Valuation
 	var r1 common.HttpError
-	if rf, ok := ret.Get(0).(func(context.Context, []tax.Trade, int) (tax.Valuation, common.HttpError)); ok {
-		return rf(ctx, trades, year)
+	if rf, ok := ret.Get(0).(func(context.Context, string, []tax.Trade, int) (tax.Valuation, common.HttpError)); ok {
+		return rf(ctx, tickerSymbol, trades, year)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, []tax.Trade, int) tax.Valuation); ok {
-		r0 = rf(ctx, trades, year)
+	if rf, ok := ret.Get(0).(func(context.Context, string, []tax.Trade, int) tax.Valuation); ok {
+		r0 = rf(ctx, tickerSymbol, trades, year)
 	} else {
 		r0 = ret.Get(0).(tax.Valuation)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, []tax.Trade, int) common.HttpError); ok {
-		r1 = rf(ctx, trades, year)
+	if rf, ok := ret.Get(1).(func(context.Context, string, []tax.Trade, int) common.HttpError); ok {
+		r1 = rf(ctx, tickerSymbol, trades, year)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(common.HttpError)
@@ -62,15 +62,16 @@ type ValuationManager_AnalyzeValuation_Call struct {
 
 // AnalyzeValuation is a helper method to define mock.On call
 //   - ctx context.Context
+//   - tickerSymbol string
 //   - trades []tax.Trade
 //   - year int
-func (_e *ValuationManager_Expecter) AnalyzeValuation(ctx interface{}, trades interface{}, year interface{}) *ValuationManager_AnalyzeValuation_Call {
-	return &ValuationManager_AnalyzeValuation_Call{Call: _e.mock.On("AnalyzeValuation", ctx, trades, year)}
+func (_e *ValuationManager_Expecter) AnalyzeValuation(ctx interface{}, tickerSymbol interface{}, trades interface{}, year interface{}) *ValuationManager_AnalyzeValuation_Call {
+	return &ValuationManager_AnalyzeValuation_Call{Call: _e.mock.On("AnalyzeValuation", ctx, tickerSymbol, trades, year)}
 }
 
-func (_c *ValuationManager_AnalyzeValuation_Call) Run(run func(ctx context.Context, trades []tax.Trade, year int)) *ValuationManager_AnalyzeValuation_Call {
+func (_c *ValuationManager_AnalyzeValuation_Call) Run(run func(ctx context.Context, tickerSymbol string, trades []tax.Trade, year int)) *ValuationManager_AnalyzeValuation_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([]tax.Trade), args[2].(int))
+		run(args[0].(context.Context), args[1].(string), args[2].([]tax.Trade), args[3].(int))
 	})
 	return _c
 }
@@ -80,7 +81,7 @@ func (_c *ValuationManager_AnalyzeValuation_Call) Return(_a0 tax.Valuation, _a1 
 	return _c
 }
 
-func (_c *ValuationManager_AnalyzeValuation_Call) RunAndReturn(run func(context.Context, []tax.Trade, int) (tax.Valuation, common.HttpError)) *ValuationManager_AnalyzeValuation_Call {
+func (_c *ValuationManager_AnalyzeValuation_Call) RunAndReturn(run func(context.Context, string, []tax.Trade, int) (tax.Valuation, common.HttpError)) *ValuationManager_AnalyzeValuation_Call {
 	_c.Call.Return(run)
 	return _c
 }

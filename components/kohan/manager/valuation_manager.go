@@ -16,7 +16,7 @@ import (
 
 //go:generate mockery --name=ValuationManager
 type ValuationManager interface {
-	AnalyzeValuation(ctx context.Context, trades []tax.Trade, year int) (tax.Valuation, common.HttpError)
+	AnalyzeValuation(ctx context.Context, tickerSymbol string, trades []tax.Trade, year int) (tax.Valuation, common.HttpError)
 	// GetYearlyValuationsUSD calculates the base USD Valuation (First, Peak, YearEnd)
 	// for all relevant tickers based on trade history up to the end of the specified calendar year.
 	GetYearlyValuationsUSD(ctx context.Context, year int) ([]tax.Valuation, common.HttpError)
@@ -96,36 +96,51 @@ func (v *ValuationManagerImpl) processTradesByTicker(ctx context.Context, trades
 }
 
 // processTickerTrades analyzes the valuation for a single ticker's sorted trades.
-func (v *ValuationManagerImpl) processTickerTrades(ctx context.Context, _ string, sortedTrades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
-	// Call the *existing* AnalyzeValuation method for this ticker's sorted trades
-	valuation, analyzeErr := v.AnalyzeValuation(ctx, sortedTrades, year)
+func (v *ValuationManagerImpl) processTickerTrades(ctx context.Context, tickerSymbol string, sortedTrades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
+	// Call AnalyzeValuation with the known tickerSymbol
+	valuation, analyzeErr := v.AnalyzeValuation(ctx, tickerSymbol, sortedTrades, year)
 	if analyzeErr != nil {
 		return tax.Valuation{}, analyzeErr
 	}
 	return valuation, nil
 }
 
-func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
-	if err := v.validateTrades(trades); err != nil {
+// AnalyzeValuation calculates valuation based on trades and opening position for a given ticker.
+func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbol string, trades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
+	if tickerSymbol == "" {
+		return tax.Valuation{}, common.NewHttpError("ticker symbol cannot be empty for valuation analysis", http.StatusBadRequest)
+	}
+
+	// Step 1: Validate trade symbols first. This is crucial for the "Multiple Ticker Trades" test
+	// to fail before attempting to get an opening position if symbols are inconsistent.
+	if err := v.validateTradeSymbols(trades, tickerSymbol); err != nil {
 		return tax.Valuation{}, err
 	}
 
-	analysis := tax.Valuation{Ticker: trades[0].Symbol}
-	openingPosition, err := v.getOpeningPositionForPeriod(ctx, analysis.Ticker, year)
+	// Step 2: Get opening position
+	openingPosition, err := v.getOpeningPositionForPeriod(ctx, tickerSymbol, year)
 	if err != nil {
-		return tax.Valuation{}, common.NewServerError(fmt.Errorf("failed to get opening position for %s: %w", analysis.Ticker, err))
+		// getOpeningPositionForPeriod returns (tax.Position{}, nil) for common.ErrNotFound (fresh start)
+		// So, any non-nil err here is an actual error.
+		return tax.Valuation{}, common.NewServerError(fmt.Errorf("failed to get opening position for %s: %w", tickerSymbol, err))
 	}
 
+	// Step 3: Validate if trades exist or if there's a carry-over
+	if err := v.validateTradesExistOrCarryOver(trades, openingPosition, tickerSymbol); err != nil {
+		return tax.Valuation{}, err
+	}
+
+	analysis := tax.Valuation{Ticker: tickerSymbol}
 	analysis.FirstPosition = openingPosition
 	analysis.PeakPosition = openingPosition
 
-	currentQuantity, err := v.processTrades(&analysis, trades, openingPosition)
-	if err != nil {
-		return tax.Valuation{}, err
+	currentQuantity, processErr := v.processTrades(&analysis, trades, openingPosition)
+	if processErr != nil {
+		return tax.Valuation{}, processErr
 	}
 
-	if err := v.determineYearEndPosition(ctx, &analysis, year, currentQuantity, openingPosition, trades); err != nil {
-		return tax.Valuation{}, err
+	if detErr := v.determineYearEndPosition(ctx, &analysis, year, currentQuantity, openingPosition, trades); detErr != nil {
+		return tax.Valuation{}, detErr
 	}
 
 	return analysis, nil
@@ -213,14 +228,29 @@ func (v *ValuationManagerImpl) determineYearEndPosition(
 	return nil
 }
 
-func (v *ValuationManagerImpl) validateTrades(trades []tax.Trade) common.HttpError {
-	if len(trades) == 0 {
-		return common.NewHttpError("no trades provided", http.StatusBadRequest)
-	}
-	for _, t := range trades {
-		if t.Symbol != trades[0].Symbol {
-			return common.NewHttpError("multiple tickers found in trades", http.StatusBadRequest)
+// validateTradeSymbols checks if the trades (if any) have symbols consistent with the expectedTicker.
+func (v *ValuationManagerImpl) validateTradeSymbols(trades []tax.Trade, expectedTicker string) common.HttpError {
+	if len(trades) > 0 {
+		// Ensure the first trade's symbol matches the expected ticker.
+		if trades[0].Symbol != expectedTicker {
+			return common.NewHttpError(fmt.Sprintf("first trade symbol %s does not match expected ticker %s", trades[0].Symbol, expectedTicker), http.StatusBadRequest)
 		}
+		// Ensure all trades consistently use the expected ticker.
+		for _, t := range trades {
+			if t.Symbol != expectedTicker {
+				// Using t.Date directly in Sprintf might be problematic if it's not a simple string.
+				// Assuming t.Date is a string or has a String() method.
+				return common.NewHttpError(fmt.Sprintf("multiple tickers found in trades, expected %s but found %s in trade dated %s", expectedTicker, t.Symbol, t.Date), http.StatusBadRequest)
+			}
+		}
+	}
+	return nil
+}
+
+// validateTradesExistOrCarryOver checks if there are trades or a carry-over position.
+func (v *ValuationManagerImpl) validateTradesExistOrCarryOver(trades []tax.Trade, openingPosition tax.Position, expectedTicker string) common.HttpError {
+	if len(trades) == 0 && openingPosition.Quantity == 0 {
+		return common.NewHttpError(fmt.Sprintf("no trades or carry-over position provided for ticker %s", expectedTicker), http.StatusBadRequest)
 	}
 	return nil
 }

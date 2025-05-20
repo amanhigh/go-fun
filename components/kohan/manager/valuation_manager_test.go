@@ -65,7 +65,7 @@ var _ = Describe("ValuationManager", func() {
 					})
 
 					It("should compute correct positions", func() {
-						valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
+						valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 						Expect(err).ToNot(HaveOccurred())
 
 						// First position
@@ -96,7 +96,7 @@ var _ = Describe("ValuationManager", func() {
 					})
 
 					It("should compute positions with zero year-end", func() {
-						valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
+						valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 						Expect(err).ToNot(HaveOccurred())
 
 						// First position from buy
@@ -132,7 +132,7 @@ var _ = Describe("ValuationManager", func() {
 					})
 
 					It("should track increasing position correctly", func() {
-						valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
+						valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 						Expect(err).ToNot(HaveOccurred())
 
 						// First position from first buy
@@ -172,7 +172,7 @@ var _ = Describe("ValuationManager", func() {
 					})
 
 					It("should track averaged position correctly", func() {
-						valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
+						valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 						Expect(err).ToNot(HaveOccurred())
 
 						// First position from initial buy
@@ -216,7 +216,7 @@ var _ = Describe("ValuationManager", func() {
 					})
 
 					It("should handle year end trades correctly", func() {
-						valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
+						valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 						Expect(err).ToNot(HaveOccurred())
 
 						// First position from initial buy
@@ -258,7 +258,7 @@ var _ = Describe("ValuationManager", func() {
 					})
 
 					It("should identify highest peak through multiple cycles", func() {
-						valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
+						valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 						Expect(err).ToNot(HaveOccurred())
 
 						// First position
@@ -300,7 +300,7 @@ var _ = Describe("ValuationManager", func() {
 					})
 
 					It("should track partial sells correctly", func() {
-						valuation, err := valuationManager.AnalyzeValuation(ctx, trades, year)
+						valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 						Expect(err).ToNot(HaveOccurred())
 
 						// First position from initial buy
@@ -329,9 +329,11 @@ var _ = Describe("ValuationManager", func() {
 			Context("Empty Trades", func() {
 				It("should return error for empty trades", func() {
 					trades := []tax.Trade{}
-					_, err := valuationManager.AnalyzeValuation(ctx, trades, year)
+					mockAccountManager.EXPECT().GetRecord(ctx, AAPL).Return(tax.Account{}, common.ErrNotFound).Maybe()
+					_, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(ContainSubstring("no trades provided"))
+					Expect(err.Error()).To(ContainSubstring(AAPL))
+					Expect(err.Error()).To(ContainSubstring("no trades or carry-over position provided"))
 					Expect(err.Code()).To(Equal(http.StatusBadRequest))
 				})
 			})
@@ -347,7 +349,9 @@ var _ = Describe("ValuationManager", func() {
 				})
 
 				It("should return error for mixed ticker trades", func() {
-					_, err := valuationManager.AnalyzeValuation(ctx, trades, year)
+					// We pass the first trade's ticker as the expected one.
+					// The validation logic should then find the mismatch.
+					_, err := valuationManager.AnalyzeValuation(ctx, trades[0].Symbol, trades, year)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("multiple tickers found"))
 					Expect(err.Code()).To(Equal(http.StatusBadRequest))
@@ -372,7 +376,7 @@ var _ = Describe("ValuationManager", func() {
 				})
 
 				It("should handle ticker price fetch error", func() {
-					_, err := valuationManager.AnalyzeValuation(ctx, trades, year)
+					_, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("failed to get year end price"))
 					Expect(err.Code()).To(Equal(http.StatusInternalServerError))
@@ -537,7 +541,7 @@ var _ = Describe("ValuationManager", func() {
 		})
 
 		It("should correctly set FirstPosition based on carry-over and track subsequent trades to Peak and YearEnd", func() {
-			valuation, err := valuationManager.AnalyzeValuation(ctx, tradesInYear, testYear)
+			valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, tradesInYear, testYear)
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(valuation.Ticker).To(Equal(AAPL))
@@ -564,5 +568,54 @@ var _ = Describe("ValuationManager", func() {
 		})
 	})
 
-	// FIXME: Carry Over with No Trades in Year.
+	Context("Carry Over with No Trades in Year", func() {
+		var (
+			carryOverAccount tax.Account
+			tradesInYear     []tax.Trade // Empty slice for this scenario
+			testYear         = 2023
+			yearEndDate      = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
+			yearEndPrice     = 185.00 // A different price for clarity
+		)
+
+		BeforeEach(func() {
+			carryOverAccount = tax.Account{
+				Symbol:      AAPL,
+				Quantity:    75,
+				MarketValue: 12000.00, // Implies $160.00 per share
+			}
+
+			mockAccountManager.EXPECT().
+				GetRecord(ctx, AAPL).
+				Return(carryOverAccount, nil).Once()
+
+			mockTickerManager.EXPECT().
+				GetPrice(ctx, AAPL, yearEndDate).
+				Return(yearEndPrice, nil).Once()
+
+			tradesInYear = []tax.Trade{} // Explicitly empty
+		})
+
+		It("should correctly set Valuations based on carry-over when no trades occur", func() {
+			valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, tradesInYear, testYear)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(valuation.Ticker).To(Equal(AAPL))
+
+			// 1. Assert FirstPosition (Opening balance for the period)
+			expectedFirstPosDate := time.Date(testYear, 1, 1, 0, 0, 0, 0, time.UTC)
+			Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
+			Expect(valuation.FirstPosition.Quantity).To(Equal(75.0))
+			Expect(valuation.FirstPosition.USDPrice).To(Equal(160.00)) // From carryOverAccount MarketValue/Quantity
+
+			// 2. Assert PeakPosition (Should be the same as FirstPosition as no trades increased quantity)
+			Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
+			Expect(valuation.PeakPosition.Quantity).To(Equal(75.0))
+			Expect(valuation.PeakPosition.USDPrice).To(Equal(160.00))
+
+			// 3. Assert YearEndPosition (Quantity remains the same, price is year-end price)
+			Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
+			Expect(valuation.YearEndPosition.Quantity).To(Equal(75.0))
+			Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
+		})
+	})
 })
