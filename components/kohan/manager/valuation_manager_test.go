@@ -563,4 +563,6 @@ var _ = Describe("ValuationManager", func() {
 			Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
 		})
 	})
+
+	// FIXME: Carry Over with No Trades in Year.
 })

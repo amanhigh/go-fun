@@ -119,7 +119,7 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []ta
 	analysis.FirstPosition = openingPosition
 	analysis.PeakPosition = openingPosition
 
-	currentQuantity, _, err := v.processTrades(&analysis, trades, openingPosition)
+	currentQuantity, err := v.processTrades(&analysis, trades, openingPosition)
 	if err != nil {
 		return tax.Valuation{}, err
 	}
@@ -137,78 +137,43 @@ func (v *ValuationManagerImpl) processTrades(
 	analysis *tax.Valuation,
 	trades []tax.Trade,
 	openingPeriodPosition tax.Position,
-) (currentQuantity, maxQuantityDuringPeriod float64, err common.HttpError) { // Combined return types
+) (currentQuantity float64, err common.HttpError) { // Combined return types
 	currentQuantity = openingPeriodPosition.Quantity
-	maxQuantityDuringPeriod = currentQuantity
-	firstPositionAlreadySetByTrade := false
 
 	for _, trade := range trades {
 		tradeDate, dateErr := trade.GetDate()
 		if dateErr != nil {
-			return 0, 0, dateErr
+			return 0, dateErr
 		}
 
-		isFreshStartScenario := openingPeriodPosition.Date.IsZero()
-
-		if isFreshStartScenario && !firstPositionAlreadySetByTrade && trade.Type == "BUY" {
-			maxQuantityDuringPeriod, firstPositionAlreadySetByTrade = v.handleFreshStartTrade(analysis, trade, tradeDate)
+		// Handle the very first BUY trade in a fresh start scenario
+		if analysis.FirstPosition.Date.IsZero() && trade.Type == "BUY" {
+			analysis.FirstPosition = tax.Position{
+				Date:     tradeDate,
+				Quantity: trade.Quantity,
+				USDPrice: trade.USDPrice,
+			}
+			analysis.PeakPosition = analysis.FirstPosition // Initial peak is the first buy
+			currentQuantity = trade.Quantity
+			continue // Move to the next trade
 		}
 
+		// Process subsequent trades or trades in a carry-over scenario
 		if trade.Type == "BUY" {
 			currentQuantity += trade.Quantity
-		} else {
+			// Update PeakPosition if current quantity is a new high
+			if currentQuantity > analysis.PeakPosition.Quantity {
+				analysis.PeakPosition = tax.Position{
+					Date:     tradeDate,
+					Quantity: currentQuantity,
+					USDPrice: trade.USDPrice, // Price of the trade that resulted in this new peak quantity
+				}
+			}
+		} else { // SELL
 			currentQuantity -= trade.Quantity
 		}
-
-		peakCtx := peakPositionContext{
-			analysis:                       analysis,
-			trade:                          trade,
-			tradeDate:                      tradeDate,
-			currentQuantity:                currentQuantity,
-			maxQuantityDuringPeriod:        maxQuantityDuringPeriod,
-			firstPositionAlreadySetByTrade: firstPositionAlreadySetByTrade,
-			isFreshStartScenario:           isFreshStartScenario,
-		}
-		maxQuantityDuringPeriod = v.updatePeakPositionIfNeeded(peakCtx)
 	}
-	return currentQuantity, maxQuantityDuringPeriod, nil
-}
-
-// handleFreshStartTrade updates analysis for the first BUY trade in a fresh start scenario.
-// It returns the new maxQuantityDuringPeriod and sets firstPositionAlreadySetByTrade to true.
-func (v *ValuationManagerImpl) handleFreshStartTrade(analysis *tax.Valuation, trade tax.Trade, tradeDate time.Time) (float64, bool) {
-	analysis.FirstPosition = tax.Position{
-		Date:     tradeDate,
-		Quantity: trade.Quantity,
-		USDPrice: trade.USDPrice,
-	}
-	analysis.PeakPosition = analysis.FirstPosition
-	return trade.Quantity, true
-}
-
-type peakPositionContext struct {
-	analysis                       *tax.Valuation
-	trade                          tax.Trade
-	tradeDate                      time.Time
-	currentQuantity                float64
-	maxQuantityDuringPeriod        float64
-	firstPositionAlreadySetByTrade bool
-	isFreshStartScenario           bool
-}
-
-// updatePeakPositionIfNeeded updates the peak position if the current quantity is higher.
-// It returns the updated maxQuantityDuringPeriod.
-func (v *ValuationManagerImpl) updatePeakPositionIfNeeded(ctx peakPositionContext) float64 {
-	if (ctx.firstPositionAlreadySetByTrade || !ctx.isFreshStartScenario) && ctx.currentQuantity > ctx.maxQuantityDuringPeriod {
-		newMaxQuantity := ctx.currentQuantity
-		ctx.analysis.PeakPosition = tax.Position{
-			Date:     ctx.tradeDate,
-			Quantity: newMaxQuantity,
-			USDPrice: ctx.trade.USDPrice,
-		}
-		return newMaxQuantity
-	}
-	return ctx.maxQuantityDuringPeriod
+	return currentQuantity, nil
 }
 
 // determineYearEndPosition sets the YearEndPosition in the analysis.
