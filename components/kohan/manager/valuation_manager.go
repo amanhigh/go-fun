@@ -106,37 +106,34 @@ func (v *ValuationManagerImpl) processTickerTrades(ctx context.Context, _ string
 }
 
 func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, trades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
-	if len(trades) == 0 {
-		return tax.Valuation{}, common.NewHttpError("no trades provided", http.StatusBadRequest)
-	}
-
 	if err := v.validateTrades(trades); err != nil {
 		return tax.Valuation{}, err
 	}
 
 	analysis := tax.Valuation{Ticker: trades[0].Symbol}
-	openingPeriodPosition, err := v.getOpeningPositionForPeriod(ctx, analysis.Ticker, year)
+	openingPosition, err := v.getOpeningPositionForPeriod(ctx, analysis.Ticker, year)
 	if err != nil {
 		return tax.Valuation{}, common.NewServerError(fmt.Errorf("failed to get opening position for %s: %w", analysis.Ticker, err))
 	}
-	analysis.FirstPosition = openingPeriodPosition
-	analysis.PeakPosition = openingPeriodPosition
 
-	currentQuantity, _, err := v.processTradesForValuation(&analysis, trades, openingPeriodPosition)
+	analysis.FirstPosition = openingPosition
+	analysis.PeakPosition = openingPosition
+
+	currentQuantity, _, err := v.processTrades(&analysis, trades, openingPosition)
 	if err != nil {
 		return tax.Valuation{}, err
 	}
 
-	if err := v.determineYearEndPosition(ctx, &analysis, year, currentQuantity, openingPeriodPosition, trades); err != nil {
+	if err := v.determineYearEndPosition(ctx, &analysis, year, currentQuantity, openingPosition, trades); err != nil {
 		return tax.Valuation{}, err
 	}
 
 	return analysis, nil
 }
 
-// processTradesForValuation updates analysis based on trades and opening position.
+// processTrades updates analysis based on trades and opening position.
 // It returns the final currentQuantity, maxQuantityDuringPeriod, and any error.
-func (v *ValuationManagerImpl) processTradesForValuation(
+func (v *ValuationManagerImpl) processTrades(
 	analysis *tax.Valuation,
 	trades []tax.Trade,
 	openingPeriodPosition tax.Position,
@@ -252,6 +249,9 @@ func (v *ValuationManagerImpl) determineYearEndPosition(
 }
 
 func (v *ValuationManagerImpl) validateTrades(trades []tax.Trade) common.HttpError {
+	if len(trades) == 0 {
+		return common.NewHttpError("no trades provided", http.StatusBadRequest)
+	}
 	for _, t := range trades {
 		if t.Symbol != trades[0].Symbol {
 			return common.NewHttpError("multiple tickers found in trades", http.StatusBadRequest)

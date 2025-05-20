@@ -509,30 +509,30 @@ var _ = Describe("ValuationManager", func() {
 		var (
 			carryOverAccount tax.Account
 			tradesInYear     []tax.Trade
-			testTicker       = "AAPL" // Ensure testTicker is AAPL for this context
 			testYear         = 2023
 			yearEndDate      = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
-			eodPriceAAPL     = 181.00
+			yearEndPrice     = 181.00
 		)
 
 		BeforeEach(func() {
 			carryOverAccount = tax.Account{
-				Symbol:      testTicker,
+				Symbol:      AAPL,
 				Quantity:    50,
 				MarketValue: 8000.00, // Implies $160.00 per share
 			}
 
 			mockAccountManager.EXPECT().
-				GetRecord(ctx, testTicker).
+				GetRecord(ctx, AAPL).
 				Return(carryOverAccount, nil).Once()
 
 			mockTickerManager.EXPECT().
-				GetPrice(ctx, testTicker, yearEndDate).
-				Return(eodPriceAAPL, nil).Once()
+				GetPrice(ctx, AAPL, yearEndDate).
+				Return(yearEndPrice, nil).Once()
 
 			tradesInYear = []tax.Trade{
-				tax.NewTrade(testTicker, "2023-03-15", "BUY", 20, 150.00),
-				tax.NewTrade(testTicker, "2023-10-20", "SELL", 10, 170.00),
+				tax.NewTrade(AAPL, "2023-03-15", "BUY", 20, 150.00),  // 50 (start) + 20 = 70 shares
+				tax.NewTrade(AAPL, "2023-06-01", "BUY", 30, 165.00),  // 70 + 30 = 100 shares (New Peak)
+				tax.NewTrade(AAPL, "2023-10-20", "SELL", 10, 170.00), // 100 - 10 = 90 shares
 			}
 		})
 
@@ -540,26 +540,27 @@ var _ = Describe("ValuationManager", func() {
 			valuation, err := valuationManager.AnalyzeValuation(ctx, tradesInYear, testYear)
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(valuation.Ticker).To(Equal(testTicker))
+			Expect(valuation.Ticker).To(Equal(AAPL))
 
 			// 1. Assert FirstPosition (Opening balance for the period)
 			expectedFirstPosDate := time.Date(testYear, 1, 1, 0, 0, 0, 0, time.UTC)
 			Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
-			Expect(valuation.FirstPosition.Quantity).To(BeNumerically("~", 50.0))
-			Expect(valuation.FirstPosition.USDPrice).To(BeNumerically("~", 160.00))
+			Expect(valuation.FirstPosition.Quantity).To(Equal(50.0))
+			Expect(valuation.FirstPosition.USDPrice).To(Equal(160.00))
 
 			// 2. Assert PeakPosition
-			// Start: 50. After Buy1 (20 shares @ $150 on Mar 15): 70 shares. This is the peak quantity.
-			expectedPeakPosDate, _ := time.Parse(time.DateOnly, "2023-03-15")
+			// Start: 50. After Buy1 (20 shares @ $150 on Mar 15): 70 shares.
+			// After Buy2 (30 shares @ $165 on Jun 01): 100 shares. This is the new peak quantity.
+			expectedPeakPosDate, _ := time.Parse(time.DateOnly, "2023-06-01")
 			Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(expectedPeakPosDate.Format(time.DateOnly)))
-			Expect(valuation.PeakPosition.Quantity).To(BeNumerically("~", 70.0))
-			Expect(valuation.PeakPosition.USDPrice).To(BeNumerically("~", 150.00))
+			Expect(valuation.PeakPosition.Quantity).To(Equal(100.0))
+			Expect(valuation.PeakPosition.USDPrice).To(Equal(165.00))
 
 			// 3. Assert YearEndPosition
-			// After Sell1 (10 shares): 70 - 10 = 60 shares remaining.
+			// After Sell1 (10 shares): 100 - 10 = 90 shares remaining.
 			Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
-			Expect(valuation.YearEndPosition.Quantity).To(BeNumerically("~", 60.0))
-			Expect(valuation.YearEndPosition.USDPrice).To(BeNumerically("~", eodPriceAAPL))
+			Expect(valuation.YearEndPosition.Quantity).To(Equal(90.0))
+			Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
 		})
 	})
 })
