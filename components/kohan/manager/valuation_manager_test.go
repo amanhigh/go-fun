@@ -353,7 +353,7 @@ var _ = Describe("ValuationManager", func() {
 					// The validation logic should then find the mismatch.
 					_, err := valuationManager.AnalyzeValuation(ctx, trades[0].Symbol, trades, year)
 					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(ContainSubstring("multiple tickers found"))
+					Expect(err.Error()).To(ContainSubstring("trade symbol mismatch"))
 					Expect(err.Code()).To(Equal(http.StatusBadRequest))
 				})
 			})

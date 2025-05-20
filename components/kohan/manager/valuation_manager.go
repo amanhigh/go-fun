@@ -107,10 +107,6 @@ func (v *ValuationManagerImpl) processTickerTrades(ctx context.Context, tickerSy
 
 // AnalyzeValuation calculates valuation based on trades and opening position for a given ticker.
 func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbol string, trades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
-	if tickerSymbol == "" {
-		return tax.Valuation{}, common.NewHttpError("ticker symbol cannot be empty for valuation analysis", http.StatusBadRequest)
-	}
-
 	// Step 1: Validate trade symbols first. This is crucial for the "Multiple Ticker Trades" test
 	// to fail before attempting to get an opening position if symbols are inconsistent.
 	if err := v.validateTradeSymbols(trades, tickerSymbol); err != nil {
@@ -152,7 +148,7 @@ func (v *ValuationManagerImpl) processTrades(
 	analysis *tax.Valuation,
 	trades []tax.Trade,
 	openingPeriodPosition tax.Position,
-) (currentQuantity float64, err common.HttpError) { // Combined return types
+) (currentQuantity float64, err common.HttpError) {
 	currentQuantity = openingPeriodPosition.Quantity
 
 	for _, trade := range trades {
@@ -230,18 +226,13 @@ func (v *ValuationManagerImpl) determineYearEndPosition(
 
 // validateTradeSymbols checks if the trades (if any) have symbols consistent with the expectedTicker.
 func (v *ValuationManagerImpl) validateTradeSymbols(trades []tax.Trade, expectedTicker string) common.HttpError {
-	if len(trades) > 0 {
-		// Ensure the first trade's symbol matches the expected ticker.
-		if trades[0].Symbol != expectedTicker {
-			return common.NewHttpError(fmt.Sprintf("first trade symbol %s does not match expected ticker %s", trades[0].Symbol, expectedTicker), http.StatusBadRequest)
-		}
-		// Ensure all trades consistently use the expected ticker.
-		for _, t := range trades {
-			if t.Symbol != expectedTicker {
-				// Using t.Date directly in Sprintf might be problematic if it's not a simple string.
-				// Assuming t.Date is a string or has a String() method.
-				return common.NewHttpError(fmt.Sprintf("multiple tickers found in trades, expected %s but found %s in trade dated %s", expectedTicker, t.Symbol, t.Date), http.StatusBadRequest)
-			}
+	if expectedTicker == "" {
+		return common.NewHttpError("expected ticker symbol cannot be empty", http.StatusBadRequest)
+	}
+	for _, t := range trades {
+		if t.Symbol != expectedTicker {
+			// Assuming t.Date is a string or has a String() method.
+			return common.NewHttpError(fmt.Sprintf("trade symbol mismatch: expected %s but found %s in trade dated %s", expectedTicker, t.Symbol, t.Date), http.StatusBadRequest)
 		}
 	}
 	return nil
