@@ -51,7 +51,11 @@ func (s *statusHelperImpl) InitializeStatus(ctx context.Context, memcached *cach
 			Message: "Starting reconciliation",
 		})
 
-		return s.controller.Status().Update(ctx, memcached)
+		err := s.controller.Status().Update(ctx, memcached)
+		if err != nil {
+			return fmt.Errorf("failed to update status after initialization: %w", err)
+		}
+		return nil
 	}
 	return nil
 }
@@ -68,7 +72,11 @@ func (s *statusHelperImpl) UpdateSuccessStatus(ctx context.Context, memcached *c
 		Message: fmt.Sprintf("Deployment for custom resource (%s) with %d replicas created successfully", memcached.Name, size),
 	})
 
-	return s.controller.Status().Update(ctx, memcached)
+	err := s.controller.Status().Update(ctx, memcached)
+	if err != nil {
+		return fmt.Errorf("failed to update success status: %w", err)
+	}
+	return nil
 }
 
 // UpdateStatusWithError updates status when an error occurs during reconciliation
@@ -83,7 +91,11 @@ func (s *statusHelperImpl) UpdateStatusWithError(ctx context.Context, memcached 
 		Message: fmt.Sprintf("%s: %s", message, err),
 	})
 
-	return s.controller.Status().Update(ctx, memcached)
+	err = s.controller.Status().Update(ctx, memcached)
+	if err != nil {
+		return fmt.Errorf("failed to update status with error: %w", err)
+	}
+	return nil
 }
 
 // UpdateDegradedStatus sets the status to a degraded state, typically used during deletion
@@ -98,5 +110,9 @@ func (s *statusHelperImpl) UpdateDegradedStatus(ctx context.Context, memcached *
 		Message: message,
 	})
 
-	return s.controller.Status().Update(ctx, memcached)
+	err := s.controller.Status().Update(ctx, memcached)
+	if err != nil {
+		return fmt.Errorf("failed to update degraded status: %w", err)
+	}
+	return nil
 }

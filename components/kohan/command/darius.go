@@ -1,6 +1,8 @@
 package command
 
 import (
+	"fmt"
+
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/spf13/cobra"
@@ -16,7 +18,7 @@ var dariusCmd = &cobra.Command{
 		}
 		darius, err := core.GetKohanInterface().GetDariusApp(config)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get darius app: %w", err)
 		}
 		return darius.Run()
 	},

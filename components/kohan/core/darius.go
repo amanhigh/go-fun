@@ -1,6 +1,8 @@
 package core
 
 import (
+	"fmt"
+
 	"github.com/amanhigh/go-fun/components/kohan/manager/tui"
 	"github.com/rivo/tview"
 )
@@ -14,5 +16,6 @@ type DariusV1 struct {
 func (d *DariusV1) Run() error {
 	d.uiManager.SetupLayout()
 	d.hotkeys.SetupHotkeys()
-	return d.app.Run()
+	err := d.app.Run()
+	return fmt.Errorf("failed to run darius app: %w", err)
 }

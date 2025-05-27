@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/clients"
@@ -54,7 +55,10 @@ func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
 	// Resolve and return TaxManager
 	var taxManager manager.TaxManager
 	err := ki.di.Resolve(&taxManager)
-	return taxManager, err
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve tax manager: %w", err)
+	}
+	return taxManager, nil
 }
 
 func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error) {
@@ -63,7 +67,10 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 	// Build app
 	app := &DariusV1{}
 	err := ki.di.Fill(app)
-	return app, err
+	if err != nil {
+		return nil, fmt.Errorf("failed to fill darius app: %w", err)
+	}
+	return app, nil
 }
 
 // ---- Client Providers ----

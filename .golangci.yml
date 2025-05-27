@@ -8,13 +8,12 @@ version: "2"
 linters:
   default: none
   enable:
-    # TODO: #C Strengthen linters and fix issues.
     # High Priority - Code Correctness & Bugs
     - errcheck      # critical error checking
     - govet        # suspicious constructs
     - staticcheck  # advanced static analysis
     - gosec        # security checks
-    # - wrapcheck    # error wrapping validation
+    - wrapcheck    # error wrapping validation
     
     # Safety & Resources
     - bodyclose      # ensure http response closed
@@ -25,7 +24,6 @@ linters:
     - unconvert    # type conversion
     
     # Code Style Essentials
-    # - goimports     # import sorting + gofmt
     - revive        # general style (golint replacement)
     - gocritic      
     - unused        # unused code detection
@@ -39,7 +37,6 @@ linters:
     - whitespace    # ws formatting
     - ginkgolinter  # ginkgo best practices
     - dupl           # duplicate code detection
-    # - ireturn        # interface return
 
     # Complexity
     - gocyclo      # Cyclomatic complexity
@@ -75,9 +72,10 @@ linters:
 
     errcheck:
       check-type-assertions: true
+   
     wrapcheck:
       ignorePackageGlobs:
-        - "github.com/amanhigh/go-fun/components/..." # Ignore errors originating from our own repo components
+        - "github.com/amanhigh/go-fun/..." # Ignore errors originating from our own repo components
       ignoreSigs:
         - ^fmt\.Errorf$  # Already formatted errors
         - ^time\.Parse$  # Simple parsing errors
