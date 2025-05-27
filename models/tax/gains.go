@@ -34,11 +34,19 @@ func (g Gains) GetDate() (time.Time, common.HttpError) {
 }
 
 func (g Gains) ParseBuyDate() (time.Time, error) {
-	return time.Parse(time.DateOnly, g.BuyDate)
+	parsedTime, err := time.Parse(time.DateOnly, g.BuyDate)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to parse buy date '%s': %w", g.BuyDate, err)
+	}
+	return parsedTime, nil
 }
 
 func (g Gains) ParseSellDate() (time.Time, error) {
-	return time.Parse(time.DateOnly, g.SellDate)
+	parsedTime, err := time.Parse(time.DateOnly, g.SellDate)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to parse sell date '%s': %w", g.SellDate, err)
+	}
+	return parsedTime, nil
 }
 
 // INRGains adds exchange rate details to basic gains

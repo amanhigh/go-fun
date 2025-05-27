@@ -19,7 +19,11 @@ const APPEND_PERM = os.FileMode(0600)      // Owner RW,Group None,Other None
 */
 
 func OpenOrCreateFile(path string) (*os.File, error) {
-	return os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, DEFAULT_PERM)
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, DEFAULT_PERM)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open or create file %s: %w", path, err)
+	}
+	return file, nil
 }
 
 func AppendFile(path, content string) {
@@ -117,7 +121,11 @@ func ReadAllLines(filePath string) (lines []string) {
 
 func WriteLines(filePath string, lines []string) error {
 	content := strings.Join(lines, "\n")
-	return os.WriteFile(filePath, []byte(content), DEFAULT_PERM)
+	err := os.WriteFile(filePath, []byte(content), DEFAULT_PERM)
+	if err != nil {
+		return fmt.Errorf("failed to write lines to file %s: %w", filePath, err)
+	}
+	return nil
 }
 
 func PathExists(path string) bool {
@@ -148,7 +156,11 @@ func ClearDirectory(dirPath string) {
 func Copy(src, dest string) error {
 	input, err := os.ReadFile(src)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read source file %s: %w", src, err)
 	}
-	return os.WriteFile(dest, input, DEFAULT_PERM)
+	err = os.WriteFile(dest, input, DEFAULT_PERM)
+	if err != nil {
+		return fmt.Errorf("failed to write to destination file %s: %w", dest, err)
+	}
+	return nil
 }

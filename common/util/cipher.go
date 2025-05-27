@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"io"
 )
 
@@ -41,7 +42,7 @@ func Decrypt(key, text string) (string, error) {
 	// Decode Base64 to get back encrypted text
 	textBytes, err := base64.URLEncoding.DecodeString(text)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to decode base64 string: %w", err)
 	}
 
 	// Check minimum cipher text length
@@ -52,7 +53,7 @@ func Decrypt(key, text string) (string, error) {
 	// Create new cipher
 	block, err := aes.NewCipher(keyBytes)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to create AES cipher: %w", err)
 	}
 
 	// Extract block of text to be encrypted

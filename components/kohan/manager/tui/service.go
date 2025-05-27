@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"regexp"
@@ -141,7 +142,11 @@ func (sm *ServiceManagerImpl) ToggleFilteredServices() {
 }
 
 func (sm *ServiceManagerImpl) saveSelectedServices() error {
-	return util.WriteLines(sm.selectedServicePath, sm.selectedServices)
+	err := util.WriteLines(sm.selectedServicePath, sm.selectedServices)
+	if err != nil {
+		return fmt.Errorf("failed to save selected services: %w", err)
+	}
+	return nil
 }
 
 func (sm *ServiceManagerImpl) loadSelectedServices() {
@@ -196,7 +201,7 @@ func executeMakeCommand(dirPath, file, target string) ([]string, error) {
 	cmd := exec.Command("make", "-s", "-C", dirPath, "-f", file, target)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to execute make command: %w", err)
 	}
 
 	return strings.Split(string(output), "\n"), nil

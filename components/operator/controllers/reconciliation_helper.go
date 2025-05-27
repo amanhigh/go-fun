@@ -56,7 +56,7 @@ func (r *reconciliationHelperImpl) FetchMemcachedInstance(ctx context.Context, r
 			return nil, nil
 		}
 		log.Error(err, "Failed to get memcached")
-		return nil, err
+		return nil, fmt.Errorf("failed to get Memcached instance: %w", err)
 	}
 	return memcached, nil
 }
@@ -83,7 +83,7 @@ func (r *reconciliationHelperImpl) ExecuteFinalizer(
 	// Update status to indicate deletion
 	if err := r.statusHelper.UpdateDegradedStatus(ctx, memcached,
 		fmt.Sprintf("Performing finalizer operations for the custom resource: %s", memcached.Name)); err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("failed to update degraded status: %w", err)
 	}
 
 	// Record event for deletion
@@ -99,7 +99,7 @@ func (r *reconciliationHelperImpl) ExecuteFinalizer(
 
 	if err := r.controller.Update(ctx, memcached); err != nil {
 		log.Error(err, "Failed to remove finalizer")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("failed to update CR to remove finalizer: %w", err)
 	}
 
 	return ctrl.Result{}, nil
@@ -124,7 +124,7 @@ func (r *reconciliationHelperImpl) AddFinalizer(
 
 	if err := r.controller.Update(ctx, memcached); err != nil {
 		log.Error(err, "Failed to update CR to add finalizer")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("failed to update CR to add finalizer: %w", err)
 	}
 
 	return ctrl.Result{}, nil
@@ -171,13 +171,13 @@ func (r *reconciliationHelperImpl) handleDeploymentCreation(
 		var result ctrl.Result
 		result, err = r.deployHelper.ValidateAndCreateDeployment(ctx, memcached)
 		if err != nil {
-			return result, err
+			return result, fmt.Errorf("failed to validate and create deployment: %w", err)
 		}
 		// Requeue for deployment creation
 		return ctrl.Result{RequeueAfter: time.Minute}, nil
 	} else if err != nil {
 		log.Error(err, "Failed to get Deployment")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("failed to get Deployment: %w", err)
 	}
 
 	return ctrl.Result{}, nil
@@ -205,14 +205,14 @@ func (r *reconciliationHelperImpl) handleDeploymentUpdate(
 		if err := r.controller.Update(ctx, dep); err != nil {
 			log.Error(err, "Failed to update Deployment",
 				"Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
-			return ctrl.Result{}, err
+			return ctrl.Result{}, fmt.Errorf("failed to update Deployment: %w", err)
 		}
 		return ctrl.Result{Requeue: true}, nil
 	}
 
 	// Update success status
 	if err := r.statusHelper.UpdateSuccessStatus(ctx, memcached, size); err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("failed to update success status: %w", err)
 	}
 
 	return ctrl.Result{}, nil
