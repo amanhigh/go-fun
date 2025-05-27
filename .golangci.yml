@@ -38,7 +38,6 @@ linters:
     - testifylint   # testify best practices
     - whitespace    # ws formatting
     - ginkgolinter  # ginkgo best practices
-    # - interfacebloat # interface bloat
     # - dupl           # duplicate code detection
     # - ireturn        # interface return
 
@@ -47,6 +46,8 @@ linters:
     - cyclop       # Package complexity and maintainability
     - funlen       # Function length control
     - lll          # Line length control
+    - interfacebloat # interface bloat
+    
   settings:
     govet:
       enable-all: true

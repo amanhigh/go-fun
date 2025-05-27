@@ -11,9 +11,27 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// ServiceFilterer provides filtering capabilities for Kubernetes services
+type ServiceFilterer interface {
+	// Filter Operations
+
+	// FilterServices filters available services based on given keyword
+	// Services containing keyword (case-insensitive) are added to filtered list
+	FilterServices(keyword string)
+
+	// GetFilteredServices returns services matching current filter
+	GetFilteredServices() []string
+
+	// ToggleFilteredServices toggles selection state of all filtered services
+	// This affects all services currently in filtered list
+	ToggleFilteredServices()
+}
+
 // ServiceManager provides management capabilities for Kubernetes services including
 // selection, filtering and operations like setup, clean and update
 type ServiceManager interface {
+	ServiceFilterer // Embed the new interface
+
 	// Service Management Operations
 
 	// GetAllServices returns all available services discovered from the makefiles
@@ -48,19 +66,6 @@ type ServiceManager interface {
 	// UpdateServices runs update make target on currently selected services
 	// Returns output of make command and any error encountered
 	UpdateServices() (string, error)
-
-	// Filter Operations
-
-	// FilterServices filters available services based on given keyword
-	// Services containing keyword (case-insensitive) are added to filtered list
-	FilterServices(keyword string)
-
-	// GetFilteredServices returns services matching current filter
-	GetFilteredServices() []string
-
-	// ToggleFilteredServices toggles selection state of all filtered services
-	// This affects all services currently in filtered list
-	ToggleFilteredServices()
 }
 
 // TODO: Move to Repository Layer ?

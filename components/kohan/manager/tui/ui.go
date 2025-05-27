@@ -7,25 +7,34 @@ import (
 	"github.com/rivo/tview"
 )
 
-type UIManager interface {
-	SetupLayout()
-	ToggleServiceSelection()
-	UpdateServicesList(filter string)
-	ToggleFilteredServices()
-	UpdateContext()
-	ShowOutput(output string)
-	ShowError(err error)
-	clearFilterInput()
-
+// UIFocusManager provides focus management capabilities for the UI components
+type UIFocusManager interface {
 	// Focus Management Methods
 	FocusServiceList()     // Focus the service list component
 	FocusFilterInput()     // Focus the filter input component
 	IsFocusOnFilter() bool // Check if filter input has focus
 	IsFocusOnList() bool   // Check if service list has focus
+}
 
-	// New methods for hotkey management
+type UIAppControl interface {
+	SetupLayout()
+	UpdateContext()
 	SetGlobalInputCapture(capture func(*tcell.EventKey) *tcell.EventKey)
 	StopApplication()
+}
+
+// UIManager provides management capabilities for the TUI including
+// service selection, filtering, context updates, and focus management.
+type UIManager interface {
+	UIFocusManager // Embed the focus manager interface
+	UIAppControl   // Embed the new app control interface
+
+	ToggleServiceSelection()
+	UpdateServicesList(filter string)
+	ToggleFilteredServices()
+	ShowOutput(output string)
+	ShowError(err error)
+	clearFilterInput()
 }
 
 type UIManagerImpl struct {
