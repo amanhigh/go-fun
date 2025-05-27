@@ -95,6 +95,7 @@ var _ = Describe("DividendManager", func() {
 		})
 	})
 
+	//nolint:dupl
 	Context("Multiple Dividends", func() {
 		var (
 			dividends []tax.Dividend

@@ -38,7 +38,7 @@ linters:
     - testifylint   # testify best practices
     - whitespace    # ws formatting
     - ginkgolinter  # ginkgo best practices
-    # - dupl           # duplicate code detection
+    - dupl           # duplicate code detection
     # - ireturn        # interface return
 
     # Complexity

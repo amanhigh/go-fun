@@ -16,6 +16,21 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+// Helper function to assert valuation positions
+var assertValuationPositions = func(valuation tax.Valuation, expectedFirst tax.Position, expectedPeak tax.Position, expectedYearEnd tax.Position) {
+	Expect(valuation.FirstPosition.Date).To(Equal(expectedFirst.Date))
+	Expect(valuation.FirstPosition.Quantity).To(Equal(expectedFirst.Quantity))
+	Expect(valuation.FirstPosition.USDPrice).To(Equal(expectedFirst.USDPrice))
+
+	Expect(valuation.PeakPosition.Date).To(Equal(expectedPeak.Date))
+	Expect(valuation.PeakPosition.Quantity).To(Equal(expectedPeak.Quantity))
+	Expect(valuation.PeakPosition.USDPrice).To(Equal(expectedPeak.USDPrice))
+
+	Expect(valuation.YearEndPosition.Date).To(Equal(expectedYearEnd.Date))
+	Expect(valuation.YearEndPosition.Quantity).To(Equal(expectedYearEnd.Quantity))
+	Expect(valuation.YearEndPosition.USDPrice).To(Equal(expectedYearEnd.USDPrice))
+}
+
 var _ = Describe("ValuationManager", func() {
 	var (
 		ctx                 = context.Background()
@@ -219,24 +234,22 @@ var _ = Describe("ValuationManager", func() {
 						valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 						Expect(err).ToNot(HaveOccurred())
 
-						// First position from initial buy
-						date, getDateErr := trades[0].GetDate()
-						Expect(getDateErr).NotTo(HaveOccurred())
-						Expect(valuation.FirstPosition.Date).To(Equal(date))
-						Expect(valuation.FirstPosition.Quantity).To(Equal(5.0))
-						Expect(valuation.FirstPosition.USDPrice).To(Equal(100.0))
+						firstPosDate, _ := trades[0].GetDate()
+						peakPosDate, _ := trades[1].GetDate()
 
-						// Peak position should be final position
-						date, getDateErr = trades[1].GetDate() // Reuse getDateErr
-						Expect(getDateErr).NotTo(HaveOccurred())
-						Expect(valuation.PeakPosition.Date).To(Equal(date))
-						Expect(valuation.PeakPosition.Quantity).To(Equal(10.0))
-						Expect(valuation.PeakPosition.USDPrice).To(Equal(120.0))
-
-						// Year end position
-						Expect(valuation.YearEndPosition.Date).To(Equal(yearEndDate))
-						Expect(valuation.YearEndPosition.Quantity).To(Equal(10.0))
-						Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
+						assertValuationPositions(valuation, tax.Position{
+							Date:     firstPosDate,
+							Quantity: 5.0,
+							USDPrice: 100.0,
+						}, tax.Position{
+							Date:     peakPosDate,
+							Quantity: 10.0,
+							USDPrice: 120.0,
+						}, tax.Position{
+							Date:     yearEndDate,
+							Quantity: 10.0,
+							USDPrice: yearEndPrice,
+						})
 					})
 				})
 
@@ -261,24 +274,22 @@ var _ = Describe("ValuationManager", func() {
 						valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 						Expect(err).ToNot(HaveOccurred())
 
-						// First position
-						date, getDateErr := trades[0].GetDate()
-						Expect(getDateErr).NotTo(HaveOccurred())
-						Expect(valuation.FirstPosition.Date).To(Equal(date))
-						Expect(valuation.FirstPosition.Quantity).To(Equal(10.0))
-						Expect(valuation.FirstPosition.USDPrice).To(Equal(100.0))
+						firstPosDate, _ := trades[0].GetDate()
+						peakPosDate, _ := trades[3].GetDate()
 
-						// Peak should be second peak with 17 shares
-						date, getDateErr = trades[3].GetDate() // Reuse getDateErr
-						Expect(getDateErr).NotTo(HaveOccurred())
-						Expect(valuation.PeakPosition.Date).To(Equal(date))
-						Expect(valuation.PeakPosition.Quantity).To(Equal(17.0))  // 7 + 10 shares
-						Expect(valuation.PeakPosition.USDPrice).To(Equal(115.0)) // Price at peak
-
-						// Year end position shows final holdings
-						Expect(valuation.YearEndPosition.Date).To(Equal(yearEndDate))
-						Expect(valuation.YearEndPosition.Quantity).To(Equal(5.0)) // Final position after all trades
-						Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
+						assertValuationPositions(valuation, tax.Position{
+							Date:     firstPosDate,
+							Quantity: 10.0,
+							USDPrice: 100.0,
+						}, tax.Position{
+							Date:     peakPosDate,
+							Quantity: 17.0,
+							USDPrice: 115.0,
+						}, tax.Position{
+							Date:     yearEndDate,
+							Quantity: 5.0,
+							USDPrice: yearEndPrice,
+						})
 					})
 				})
 			})
