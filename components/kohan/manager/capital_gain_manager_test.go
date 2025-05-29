@@ -50,8 +50,9 @@ var _ = Describe("CapitalGainManager", func() {
 					},
 				}
 
+				// Expect ExchangeGains to be called with a slice of tax.INRGains
 				mockExchangeManager.EXPECT().
-					Exchange(ctx, mock.Anything).
+					ExchangeGains(ctx, mock.AnythingOfType("[]tax.INRGains")).
 					Return(nil)
 			})
 
@@ -76,7 +77,7 @@ var _ = Describe("CapitalGainManager", func() {
 				}}
 
 				mockExchangeManager.EXPECT().
-					Exchange(ctx, mock.Anything).
+					ExchangeGains(ctx, mock.AnythingOfType("[]tax.INRGains")).
 					Return(common.ErrNotFound)
 			})
 
@@ -105,13 +106,14 @@ var _ = Describe("CapitalGainManager", func() {
 					},
 				}
 
-				// Verify that exchangeables passed contain correct gain amounts
+				// Verify that ExchangeGains is called and can inspect the passed INRGains
 				mockExchangeManager.EXPECT().
-					Exchange(ctx, mock.AnythingOfType("[]tax.Exchangeable")).
-					Run(func(_ context.Context, exchangeables []tax.Exchangeable) {
-						Expect(exchangeables).To(HaveLen(2))
-						Expect(exchangeables[0].GetUSDAmount()).To(Equal(1000.00))
-						Expect(exchangeables[1].GetUSDAmount()).To(Equal(2000.00))
+					ExchangeGains(ctx, mock.AnythingOfType("[]tax.INRGains")).
+					Run(func(_ context.Context, processedGains []tax.INRGains) {
+						Expect(processedGains).To(HaveLen(2))
+						// Check PNL from the embedded Gains struct
+						Expect(processedGains[0].Gains.PNL).To(Equal(1000.00))
+						Expect(processedGains[1].Gains.PNL).To(Equal(2000.00))
 					}).
 					Return(nil)
 			})
