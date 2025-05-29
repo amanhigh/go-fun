@@ -1,5 +1,11 @@
 package tax
 
+import (
+	"time"
+
+	"github.com/amanhigh/go-fun/models/common"
+)
+
 // Account represents year-end account position
 type Account struct {
 	Symbol      string  `csv:"Symbol"`
@@ -8,9 +14,17 @@ type Account struct {
 	MarketValue float64 `csv:"MarketValue"`
 }
 
-// GetSymbol implements CSVRecord interface
-func (a Account) GetSymbol() string {
+// GetKey implements CSVRecord interface
+func (a Account) GetKey() string {
 	return a.Symbol
+}
+
+// GetDate implements CSVRecord interface.
+// For an Account record from accounts.csv, the date is implicit (year-end).
+// This method returns a zero time; the effective date is set by the consuming logic.
+func (a Account) GetDate() (time.Time, common.HttpError) {
+	// Return zero time and no error, as account snapshot date is context-dependent.
+	return time.Time{}, nil
 }
 
 // IsValid implements CSVRecord interface

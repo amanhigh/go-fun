@@ -193,27 +193,30 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			aaplVal := summary.INRValuations[0]
 			msftVal := summary.INRValuations[1]
 
-			// Assert AAPL (Carry-over)
+			// Assert AAPL (Carry-over with new trades for 2023)
 			Expect(aaplVal.Ticker).To(Equal("AAPL"))
-			// TODO: #B Implement Carryover logic and adjust assertions accordingly
-			// Assert FirstPosition (AAPL) - Temporarily adjusted for current bug
-			Expect(aaplVal.FirstPosition.Quantity).To(Equal(10.0))                             // CHANGED from 50.0
-			Expect(aaplVal.FirstPosition.USDPrice).To(Equal(175.00))                           // CHANGED from 160.00
-			Expect(aaplVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2023-11-10"))   // CHANGED from "2022-12-31"
-			Expect(aaplVal.FirstPosition.TTRate).To(Equal(82.95))                              // CHANGED from 81.50
-			Expect(aaplVal.FirstPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-11-09")) // CHANGED from "2022-12-30"
 
-			// Peak Position (AAPL) - Adjusted based on observed behavior (matches FirstPosition)
-			Expect(aaplVal.PeakPosition.Quantity).To(Equal(10.0)) // CHANGED from 60.0
-			Expect(aaplVal.PeakPosition.USDPrice).To(Equal(175.00))
-			Expect(aaplVal.PeakPosition.Date.Format(time.DateOnly)).To(Equal("2023-11-10"))
-			Expect(aaplVal.PeakPosition.TTRate).To(Equal(82.95))
-			Expect(aaplVal.PeakPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-11-09"))
-			// Year End Position (AAPL) - Adjusted based on observed PeakPosition behavior
-			Expect(aaplVal.YearEndPosition.Quantity).To(Equal(10.0)) // CHANGED from 60.0
-			Expect(aaplVal.YearEndPosition.USDPrice).To(Equal(181.00))
+			// FirstPosition for AAPL (opening balance for 2023 period, from Dec 31, 2022 accounts.csv)
+			Expect(aaplVal.FirstPosition.Quantity).To(BeNumerically("~", 50.0))
+			Expect(aaplVal.FirstPosition.USDPrice).To(BeNumerically("~", 160.00))
+			Expect(aaplVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2023-01-01"))
+			Expect(aaplVal.FirstPosition.TTRate).To(BeNumerically("~", 81.50))
+			Expect(aaplVal.FirstPosition.TTDate.Format(time.DateOnly)).To(Equal("2022-12-30"))
+
+			// Peak Position for AAPL (achieved on Jul 10, 2023, after Buy1 and Buy2)
+			// Opening: 50. Buy1 (Mar 15): +20 (Total 70). Buy2 (Jul 10): +30 (Total 100 - This is Peak Qty)
+			Expect(aaplVal.PeakPosition.Quantity).To(BeNumerically("~", 100.0))
+			Expect(aaplVal.PeakPosition.USDPrice).To(BeNumerically("~", 165.00)) // Price of the Buy2 trade on Jul 10
+			Expect(aaplVal.PeakPosition.Date.Format(time.DateOnly)).To(Equal("2023-07-10"))
+			Expect(aaplVal.PeakPosition.TTRate).To(BeNumerically("~", 82.50)) // Assumed rate for 2023-07-10
+			Expect(aaplVal.PeakPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-07-10"))
+
+			// Year End Position for AAPL (after Sell1 on Oct 20)
+			// Peak Qty: 100. Sell1: -15. Year-End Qty: 85
+			Expect(aaplVal.YearEndPosition.Quantity).To(BeNumerically("~", 85.0))
+			Expect(aaplVal.YearEndPosition.USDPrice).To(BeNumerically("~", 181.00)) // From AAPL.json for 2023-12-31
 			Expect(aaplVal.YearEndPosition.Date.Format(time.DateOnly)).To(Equal("2023-12-31"))
-			Expect(aaplVal.YearEndPosition.TTRate).To(Equal(82.00))
+			Expect(aaplVal.YearEndPosition.TTRate).To(BeNumerically("~", 82.00)) // From sbi_rates.csv for 2023-12-31
 			Expect(aaplVal.YearEndPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
 
 			// Assert MSFT (Fresh Start)
