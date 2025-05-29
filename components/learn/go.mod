@@ -1,6 +1,8 @@
 module github.com/amanhigh/go-fun/components/learn
 
-go 1.23
+go 1.23.0
+
+toolchain go1.23.8
 
 require (
 	github.com/amanhigh/go-fun/common v1.0.1
@@ -22,7 +24,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/slok/goresilience v0.2.0
 	github.com/smartystreets/goconvey v1.7.2
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/teris-io/shortid v0.0.0-20220617161101-71ec9f2aa569
 	github.com/thoas/go-funk v0.9.3
 	github.com/xlab/treeprint v1.1.0
@@ -69,9 +71,9 @@ require (
 	go.uber.org/dig v1.17.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/exp/shiny v0.0.0-20240222234643-814bf88cf225 // indirect
-	golang.org/x/image v0.14.0 // indirect
+	golang.org/x/image v0.25.0 // indirect
 	golang.org/x/mobile v0.0.0-20231127183840-76ac6878050a // indirect
-	golang.org/x/sync v0.7.0 // indirect
+	golang.org/x/sync v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
 	google.golang.org/grpc v1.65.0 // indirect
 	gorm.io/driver/mysql v1.5.2 // indirect
@@ -171,13 +173,13 @@ require (
 	go.uber.org/fx v1.20.1
 	go.uber.org/goleak v1.3.0 // indirect
 	golang.design/x/clipboard v0.7.0
-	golang.org/x/crypto v0.24.0 // indirect
+	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/mod v0.17.0 // indirect
-	golang.org/x/net v0.26.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/oauth2 v0.20.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
-	golang.org/x/term v0.21.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/term v0.32.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect

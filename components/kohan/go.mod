@@ -20,6 +20,8 @@ require (
 	github.com/samber/lo v1.39.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.10.0
+	github.com/xuri/excelize/v2 v2.9.1
+	go.uber.org/mock v0.4.0
 )
 
 require (
@@ -72,7 +74,6 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/xuri/efp v0.0.1 // indirect
-	github.com/xuri/excelize/v2 v2.9.1 // indirect
 	github.com/xuri/nfp v0.0.1 // indirect
 	golang.org/x/arch v0.6.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
