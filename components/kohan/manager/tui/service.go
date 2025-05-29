@@ -1,10 +1,10 @@
 package tui
 
 import (
-	"fmt"
 	"strings"
 
-	"github.com/amanhigh/go-fun/components/kohan/repository" // Added
+	"github.com/amanhigh/go-fun/components/kohan/repository"
+	"github.com/amanhigh/go-fun/models/common" // Added for HttpError
 	"github.com/rs/zerolog/log"
 )
 
@@ -54,15 +54,15 @@ type ServiceManager interface {
 
 	// SetupServices runs setup make target on currently selected services
 	// Returns output of make command and any error encountered
-	SetupServices() (string, error)
+	SetupServices() (string, common.HttpError)
 
 	// CleanServices runs clean make target on currently selected services
 	// Returns output of make command and any error encountered
-	CleanServices() (string, error)
+	CleanServices() (string, common.HttpError)
 
 	// UpdateServices runs update make target on currently selected services
 	// Returns output of make command and any error encountered
-	UpdateServices() (string, error)
+	UpdateServices() (string, common.HttpError)
 }
 
 func NewServiceManager(makeDir string, repo repository.TuiServiceRepository) *ServiceManagerImpl {
@@ -142,12 +142,8 @@ func (sm *ServiceManagerImpl) ToggleFilteredServices() {
 	}
 }
 
-func (sm *ServiceManagerImpl) saveSelectedServices() error {
-	err := sm.repo.SaveSelectedServices(sm.selectedServices)
-	if err != nil {
-		return fmt.Errorf("failed to save selected services: %w", err)
-	}
-	return nil
+func (sm *ServiceManagerImpl) saveSelectedServices() common.HttpError {
+	return sm.repo.SaveSelectedServices(sm.selectedServices)
 }
 
 func (sm *ServiceManagerImpl) loadSelectedServices() {
@@ -181,7 +177,7 @@ func (sm *ServiceManagerImpl) getServiceMakeDir() string {
 	return sm.makeDir + "/services"
 }
 
-func (sm *ServiceManagerImpl) CleanServices() (string, error) {
+func (sm *ServiceManagerImpl) CleanServices() (string, common.HttpError) {
 	output, err := sm.repo.ExecuteMakeCommand(sm.getServiceMakeDir(), "Makefile", "clean")
 	if err != nil {
 		return "", err
@@ -189,7 +185,7 @@ func (sm *ServiceManagerImpl) CleanServices() (string, error) {
 	return strings.Join(output, "\n"), nil
 }
 
-func (sm *ServiceManagerImpl) SetupServices() (string, error) {
+func (sm *ServiceManagerImpl) SetupServices() (string, common.HttpError) {
 	output, err := sm.repo.ExecuteMakeCommand(sm.getServiceMakeDir(), "Makefile", "setup")
 	if err != nil {
 		return "", err
@@ -197,7 +193,7 @@ func (sm *ServiceManagerImpl) SetupServices() (string, error) {
 	return strings.Join(output, "\n"), nil
 }
 
-func (sm *ServiceManagerImpl) UpdateServices() (string, error) {
+func (sm *ServiceManagerImpl) UpdateServices() (string, common.HttpError) {
 	output, err := sm.repo.ExecuteMakeCommand(sm.getServiceMakeDir(), "Makefile", "update")
 	if err != nil {
 		return "", err

@@ -8,26 +8,27 @@ import (
 	"strings"
 
 	"github.com/amanhigh/go-fun/common/util"
-	"github.com/rs/zerolog/log" // Added for logging consistency if needed
+	"github.com/amanhigh/go-fun/models/common" // Added for HttpError
+	"github.com/rs/zerolog/log"                // Added for logging consistency if needed
 )
 
 //go:generate mockery --name TuiServiceRepository
 type TuiServiceRepository interface {
-	LoadAvailableServices(makeDir string) ([]string, error)
-	LoadSelectedServices() ([]string, error)
-	SaveSelectedServices(services []string) error
-	ExecuteMakeCommand(makeDir, file, target string) ([]string, error)
+	LoadAvailableServices(makeDir string) ([]string, common.HttpError)
+	LoadSelectedServices() ([]string, common.HttpError)
+	SaveSelectedServices(services []string) common.HttpError
+	ExecuteMakeCommand(makeDir, file, target string) ([]string, common.HttpError)
 }
 
 type tuiServiceRepositoryImpl struct {
 	selectedServicePath string
 }
 
-func (r *tuiServiceRepositoryImpl) ExecuteMakeCommand(makeDir, file, target string) ([]string, error) {
+func (r *tuiServiceRepositoryImpl) ExecuteMakeCommand(makeDir, file, target string) ([]string, common.HttpError) {
 	cmd := exec.Command("make", "-s", "-C", makeDir, "-f", file, target)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute make command: %w. Output: %s", err, string(output))
+		return nil, common.NewServerError(fmt.Errorf("failed to execute make command: %w. Output: %s", err, string(output)))
 	}
 	return strings.Split(string(output), "\n"), nil
 }
@@ -52,14 +53,14 @@ func getServiceMakeDir(makeDir string) string {
 	return makeDir + "/services"
 }
 
-func (r *tuiServiceRepositoryImpl) LoadAvailableServices(makeDir string) ([]string, error) {
+func (r *tuiServiceRepositoryImpl) LoadAvailableServices(makeDir string) ([]string, common.HttpError) {
 	var services []string
 	// Use the helper function for makeDir, passing the parameter
 	lines, err := r.ExecuteMakeCommand(getServiceMakeDir(makeDir), "services.mk", "help")
 	if err != nil {
 		log.Error().Err(err).Str("makeDir", makeDir).Msg("Failed to load available services via make command")
 		// Return error instead of fallback, let caller decide
-		return nil, fmt.Errorf("LoadAvailableServices: %w", err)
+		return nil, common.NewServerError(fmt.Errorf("LoadAvailableServices: %w", err))
 	}
 
 	ansiRegex := regexp.MustCompile(`\x1b\[[0-9;]*m`)
@@ -84,7 +85,7 @@ func (r *tuiServiceRepositoryImpl) LoadAvailableServices(makeDir string) ([]stri
 	return services, nil
 }
 
-func (r *tuiServiceRepositoryImpl) LoadSelectedServices() ([]string, error) {
+func (r *tuiServiceRepositoryImpl) LoadSelectedServices() ([]string, common.HttpError) {
 	if _, err := os.Stat(r.selectedServicePath); os.IsNotExist(err) {
 		// File not existing is not an error for loading, means no services selected yet.
 		// This matches original logic where sm.selectedServices would remain empty.
@@ -95,7 +96,7 @@ func (r *tuiServiceRepositoryImpl) LoadSelectedServices() ([]string, error) {
 	content, err := os.ReadFile(r.selectedServicePath)
 	if err != nil {
 		log.Error().Err(err).Str("path", r.selectedServicePath).Msg("Failed to read selected services file")
-		return nil, fmt.Errorf("LoadSelectedServices: reading file: %w", err)
+		return nil, common.NewServerError(fmt.Errorf("LoadSelectedServices: reading file: %w", err))
 	}
 
 	lines := strings.Split(strings.TrimSpace(string(content)), "\n")
@@ -109,11 +110,11 @@ func (r *tuiServiceRepositoryImpl) LoadSelectedServices() ([]string, error) {
 	return selectedServices, nil
 }
 
-func (r *tuiServiceRepositoryImpl) SaveSelectedServices(services []string) error {
+func (r *tuiServiceRepositoryImpl) SaveSelectedServices(services []string) common.HttpError {
 	err := util.WriteLines(r.selectedServicePath, services)
 	if err != nil {
 		log.Error().Err(err).Str("path", r.selectedServicePath).Msg("Failed to save selected services to file")
-		return fmt.Errorf("SaveSelectedServices: writing lines: %w", err)
+		return common.NewServerError(fmt.Errorf("SaveSelectedServices: writing lines: %w", err))
 	}
 	return nil
 }
