@@ -2,12 +2,9 @@ package tui
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-	"regexp"
 	"strings"
 
-	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/components/kohan/repository" // Added
 	"github.com/rs/zerolog/log"
 )
 
@@ -68,13 +65,12 @@ type ServiceManager interface {
 	UpdateServices() (string, error)
 }
 
-// TODO: Move to Repository Layer ?
-func NewServiceManager(makeDir, serviceFile string) *ServiceManagerImpl {
+func NewServiceManager(makeDir string, repo repository.TuiServiceRepository) *ServiceManagerImpl {
 	manager := &ServiceManagerImpl{
-		allServices:         []string{},
-		selectedServices:    []string{},
-		makeDir:             makeDir,
-		selectedServicePath: serviceFile,
+		allServices:      []string{},
+		selectedServices: []string{},
+		makeDir:          makeDir,
+		repo:             repo, // Added
 	}
 	manager.loadAvailableServices()
 	manager.loadSelectedServices()
@@ -82,11 +78,11 @@ func NewServiceManager(makeDir, serviceFile string) *ServiceManagerImpl {
 }
 
 type ServiceManagerImpl struct {
-	allServices         []string
-	selectedServices    []string
-	filteredServices    []string
-	makeDir             string
-	selectedServicePath string
+	allServices      []string
+	selectedServices []string
+	filteredServices []string
+	makeDir          string
+	repo             repository.TuiServiceRepository // Added
 }
 
 func (sm *ServiceManagerImpl) GetAllServices() []string {
@@ -147,7 +143,7 @@ func (sm *ServiceManagerImpl) ToggleFilteredServices() {
 }
 
 func (sm *ServiceManagerImpl) saveSelectedServices() error {
-	err := util.WriteLines(sm.selectedServicePath, sm.selectedServices)
+	err := sm.repo.SaveSelectedServices(sm.selectedServices)
 	if err != nil {
 		return fmt.Errorf("failed to save selected services: %w", err)
 	}
@@ -155,9 +151,13 @@ func (sm *ServiceManagerImpl) saveSelectedServices() error {
 }
 
 func (sm *ServiceManagerImpl) loadSelectedServices() {
-	if _, err := os.Stat(sm.selectedServicePath); os.IsNotExist(err) {
-		sm.selectedServices = util.ReadAllLines(sm.selectedServicePath)
+	services, err := sm.repo.LoadSelectedServices()
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to load selected services from repository")
+		sm.selectedServices = []string{} // Default to empty on error
+		return
 	}
+	sm.selectedServices = services
 }
 
 func (sm *ServiceManagerImpl) ClearSelectedServices() {
@@ -168,52 +168,21 @@ func (sm *ServiceManagerImpl) ClearSelectedServices() {
 }
 
 func (sm *ServiceManagerImpl) loadAvailableServices() {
-	var services []string
-	lines, err := executeMakeCommand(sm.getServiceMakeDir(), "services.mk", "help")
+	services, err := sm.repo.LoadAvailableServices(sm.makeDir)
 	if err != nil {
-		services = []string{"dummy"} // Fallback or error handling
-	}
-	ansiRegex := regexp.MustCompile(`\x1b\[[0-9;]*m`)
-	for _, line := range lines {
-		if line == "" {
-			continue
-		}
-		fields := strings.Fields(line)
-		service := ansiRegex.ReplaceAllString(fields[0], "")
-		if !startsWithExcludedName(service) {
-			services = append(services, service)
-		}
+		log.Error().Err(err).Str("makeDir", sm.makeDir).Msg("Failed to load available services from repository")
+		sm.allServices = []string{"dummy"} // Fallback as per plan
+		return
 	}
 	sm.allServices = services
-}
-
-var excludedNames = []string{"make", "help", "[First"}
-
-func startsWithExcludedName(line string) bool {
-	for _, name := range excludedNames {
-		if strings.HasPrefix(line, name) {
-			return true
-		}
-	}
-	return false
 }
 
 func (sm *ServiceManagerImpl) getServiceMakeDir() string {
 	return sm.makeDir + "/services"
 }
 
-func executeMakeCommand(dirPath, file, target string) ([]string, error) {
-	cmd := exec.Command("make", "-s", "-C", dirPath, "-f", file, target)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute make command: %w", err)
-	}
-
-	return strings.Split(string(output), "\n"), nil
-}
-
 func (sm *ServiceManagerImpl) CleanServices() (string, error) {
-	output, err := executeMakeCommand(sm.getServiceMakeDir(), "Makefile", "clean")
+	output, err := sm.repo.ExecuteMakeCommand(sm.getServiceMakeDir(), "Makefile", "clean")
 	if err != nil {
 		return "", err
 	}
@@ -221,7 +190,7 @@ func (sm *ServiceManagerImpl) CleanServices() (string, error) {
 }
 
 func (sm *ServiceManagerImpl) SetupServices() (string, error) {
-	output, err := executeMakeCommand(sm.getServiceMakeDir(), "Makefile", "setup")
+	output, err := sm.repo.ExecuteMakeCommand(sm.getServiceMakeDir(), "Makefile", "setup")
 	if err != nil {
 		return "", err
 	}
@@ -229,7 +198,7 @@ func (sm *ServiceManagerImpl) SetupServices() (string, error) {
 }
 
 func (sm *ServiceManagerImpl) UpdateServices() (string, error) {
-	output, err := executeMakeCommand(sm.getServiceMakeDir(), "Makefile", "update")
+	output, err := sm.repo.ExecuteMakeCommand(sm.getServiceMakeDir(), "Makefile", "update")
 	if err != nil {
 		return "", err
 	}
