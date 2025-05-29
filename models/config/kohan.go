@@ -44,6 +44,7 @@ type TaxConfig struct {
 	AccountFilePath     string `env:"ACCOUNT_FILE_PATH"`
 	GainsFilePath       string `env:"GAINS_FILE_PATH"`
 	InterestFilePath    string `env:"INTEREST_FILE_PATH"`
+	YearlySummaryPath   string `env:"YEARLY_SUMMARY_PATH"`
 }
 
 func NewKohanConfig() (config KohanConfig, err error) {
