@@ -42,9 +42,8 @@ endif
 
 lint-dead:
 	printf $(_TITLE) "LINT" "DeadCode"
-	go work edit -json | jq -r '.Use[].DiskPath' | grep -v "common\|models" | xargs -I{} deadcode {}/...
+	go work edit -json | jq -r '.Use[].DiskPath' | sed 's|^\./||' | grep -v "common\|models" | xargs -I{} deadcode github.com/amanhigh/go-fun/{}/...
 
-# HACK: Fix Deadcode in after basic Lint
 lint: lint-ci  ## Lint the Code
 
 format: ## Format Go code with goimports
@@ -369,7 +368,7 @@ info: info-release info-docker ## Repo Information
 infos: info space-info ## Repo Extended Information
 prepare: setup-tools setup-k8 install-deadcode ## One Time Setup
 
-setup: sync test generate build helm-package docker-build # Build and Test
+setup: sync test generate build lint-dead helm-package docker-build # Build and Test
 install: install-kohan ## Install Kohan CLI
 clean: test-clean build-clean ## Clean up Residue
 
