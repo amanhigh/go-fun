@@ -14,13 +14,13 @@ import (
 //go:generate mockery --name TuiServiceRepository
 type TuiServiceRepository interface {
 	LoadAvailableServices(makeDir string) ([]string, error)
-	LoadSelectedServices(filePath string) ([]string, error)
-	SaveSelectedServices(filePath string, services []string) error
+	LoadSelectedServices() ([]string, error)
+	SaveSelectedServices(services []string) error
 	ExecuteMakeCommand(makeDir, file, target string) ([]string, error)
 }
 
 type tuiServiceRepositoryImpl struct {
-	// No fields needed for this implementation as parameters are passed to methods
+	selectedServicePath string
 }
 
 func (r *tuiServiceRepositoryImpl) ExecuteMakeCommand(makeDir, file, target string) ([]string, error) {
@@ -33,8 +33,8 @@ func (r *tuiServiceRepositoryImpl) ExecuteMakeCommand(makeDir, file, target stri
 }
 
 // NewTuiServiceRepository creates a new TuiServiceRepository.
-func NewTuiServiceRepository() TuiServiceRepository {
-	return &tuiServiceRepositoryImpl{}
+func NewTuiServiceRepository(selectedServicePath string) TuiServiceRepository {
+	return &tuiServiceRepositoryImpl{selectedServicePath: selectedServicePath}
 }
 
 var excludedNames = []string{"make", "help", "[First"}
@@ -84,17 +84,17 @@ func (r *tuiServiceRepositoryImpl) LoadAvailableServices(makeDir string) ([]stri
 	return services, nil
 }
 
-func (r *tuiServiceRepositoryImpl) LoadSelectedServices(filePath string) ([]string, error) {
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+func (r *tuiServiceRepositoryImpl) LoadSelectedServices() ([]string, error) {
+	if _, err := os.Stat(r.selectedServicePath); os.IsNotExist(err) {
 		// File not existing is not an error for loading, means no services selected yet.
 		// This matches original logic where sm.selectedServices would remain empty.
 		return []string{}, nil
 	}
 	// util.ReadAllLines does not return an error in its signature,
 	// but it can panic. It's better to use os.ReadFile and handle errors.
-	content, err := os.ReadFile(filePath)
+	content, err := os.ReadFile(r.selectedServicePath)
 	if err != nil {
-		log.Error().Err(err).Str("path", filePath).Msg("Failed to read selected services file")
+		log.Error().Err(err).Str("path", r.selectedServicePath).Msg("Failed to read selected services file")
 		return nil, fmt.Errorf("LoadSelectedServices: reading file: %w", err)
 	}
 
@@ -109,10 +109,10 @@ func (r *tuiServiceRepositoryImpl) LoadSelectedServices(filePath string) ([]stri
 	return selectedServices, nil
 }
 
-func (r *tuiServiceRepositoryImpl) SaveSelectedServices(filePath string, services []string) error {
-	err := util.WriteLines(filePath, services)
+func (r *tuiServiceRepositoryImpl) SaveSelectedServices(services []string) error {
+	err := util.WriteLines(r.selectedServicePath, services)
 	if err != nil {
-		log.Error().Err(err).Str("path", filePath).Msg("Failed to save selected services to file")
+		log.Error().Err(err).Str("path", r.selectedServicePath).Msg("Failed to save selected services to file")
 		return fmt.Errorf("SaveSelectedServices: writing lines: %w", err)
 	}
 	return nil

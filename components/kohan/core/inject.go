@@ -189,8 +189,12 @@ func (ki *KohanInjector) provideTaxManager(
 	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager)
 }
 
-func provideServiceManager(cfg config.DariusConfig) (serviceManager tui.ServiceManager) {
-	return tui.NewServiceManager(cfg.MakeDir, cfg.SelectedServiceFile)
+func provideTuiServiceRepository(cfg config.DariusConfig) repository.TuiServiceRepository {
+	return repository.NewTuiServiceRepository(cfg.SelectedServiceFile)
+}
+
+func provideServiceManager(cfg config.DariusConfig, repo repository.TuiServiceRepository) tui.ServiceManager {
+	return tui.NewServiceManager(cfg.MakeDir, repo)
 }
 
 func provideUIManager(app *tview.Application, svcManager tui.ServiceManager) tui.UIManager {
@@ -290,6 +294,10 @@ func (ki *KohanInjector) registerDariusConfig(cfg config.DariusConfig) {
 // by calling registerBaseDependencies, registerRepositories, registerCoreManagers, etc.
 // within registerDariusDependencies.
 func (ki *KohanInjector) registerDariusTuiManagers() {
+	// Register TuiServiceRepository first as ServiceManager depends on it.
+	container.MustSingleton(ki.di, provideTuiServiceRepository)
+
+	// Register ServiceManager, UIManager, HotkeyManager
 	container.MustSingleton(ki.di, provideServiceManager)
 	container.MustSingleton(ki.di, provideUIManager)
 	container.MustSingleton(ki.di, provideHotkeyManager)

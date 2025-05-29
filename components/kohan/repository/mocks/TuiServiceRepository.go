@@ -135,9 +135,9 @@ func (_c *TuiServiceRepository_LoadAvailableServices_Call) RunAndReturn(run func
 	return _c
 }
 
-// LoadSelectedServices provides a mock function with given fields: filePath
-func (_m *TuiServiceRepository) LoadSelectedServices(filePath string) ([]string, error) {
-	ret := _m.Called(filePath)
+// LoadSelectedServices provides a mock function with given fields:
+func (_m *TuiServiceRepository) LoadSelectedServices() ([]string, error) {
+	ret := _m.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for LoadSelectedServices")
@@ -145,19 +145,19 @@ func (_m *TuiServiceRepository) LoadSelectedServices(filePath string) ([]string,
 
 	var r0 []string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string) ([]string, error)); ok {
-		return rf(filePath)
+	if rf, ok := ret.Get(0).(func() ([]string, error)); ok {
+		return rf()
 	}
-	if rf, ok := ret.Get(0).(func(string) []string); ok {
-		r0 = rf(filePath)
+	if rf, ok := ret.Get(0).(func() []string); ok {
+		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]string)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(filePath)
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -171,14 +171,13 @@ type TuiServiceRepository_LoadSelectedServices_Call struct {
 }
 
 // LoadSelectedServices is a helper method to define mock.On call
-//   - filePath string
-func (_e *TuiServiceRepository_Expecter) LoadSelectedServices(filePath interface{}) *TuiServiceRepository_LoadSelectedServices_Call {
-	return &TuiServiceRepository_LoadSelectedServices_Call{Call: _e.mock.On("LoadSelectedServices", filePath)}
+func (_e *TuiServiceRepository_Expecter) LoadSelectedServices() *TuiServiceRepository_LoadSelectedServices_Call {
+	return &TuiServiceRepository_LoadSelectedServices_Call{Call: _e.mock.On("LoadSelectedServices")}
 }
 
-func (_c *TuiServiceRepository_LoadSelectedServices_Call) Run(run func(filePath string)) *TuiServiceRepository_LoadSelectedServices_Call {
+func (_c *TuiServiceRepository_LoadSelectedServices_Call) Run(run func()) *TuiServiceRepository_LoadSelectedServices_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		run()
 	})
 	return _c
 }
@@ -188,22 +187,22 @@ func (_c *TuiServiceRepository_LoadSelectedServices_Call) Return(_a0 []string, _
 	return _c
 }
 
-func (_c *TuiServiceRepository_LoadSelectedServices_Call) RunAndReturn(run func(string) ([]string, error)) *TuiServiceRepository_LoadSelectedServices_Call {
+func (_c *TuiServiceRepository_LoadSelectedServices_Call) RunAndReturn(run func() ([]string, error)) *TuiServiceRepository_LoadSelectedServices_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// SaveSelectedServices provides a mock function with given fields: filePath, services
-func (_m *TuiServiceRepository) SaveSelectedServices(filePath string, services []string) error {
-	ret := _m.Called(filePath, services)
+// SaveSelectedServices provides a mock function with given fields: services
+func (_m *TuiServiceRepository) SaveSelectedServices(services []string) error {
+	ret := _m.Called(services)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SaveSelectedServices")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, []string) error); ok {
-		r0 = rf(filePath, services)
+	if rf, ok := ret.Get(0).(func([]string) error); ok {
+		r0 = rf(services)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -217,15 +216,14 @@ type TuiServiceRepository_SaveSelectedServices_Call struct {
 }
 
 // SaveSelectedServices is a helper method to define mock.On call
-//   - filePath string
 //   - services []string
-func (_e *TuiServiceRepository_Expecter) SaveSelectedServices(filePath interface{}, services interface{}) *TuiServiceRepository_SaveSelectedServices_Call {
-	return &TuiServiceRepository_SaveSelectedServices_Call{Call: _e.mock.On("SaveSelectedServices", filePath, services)}
+func (_e *TuiServiceRepository_Expecter) SaveSelectedServices(services interface{}) *TuiServiceRepository_SaveSelectedServices_Call {
+	return &TuiServiceRepository_SaveSelectedServices_Call{Call: _e.mock.On("SaveSelectedServices", services)}
 }
 
-func (_c *TuiServiceRepository_SaveSelectedServices_Call) Run(run func(filePath string, services []string)) *TuiServiceRepository_SaveSelectedServices_Call {
+func (_c *TuiServiceRepository_SaveSelectedServices_Call) Run(run func(services []string)) *TuiServiceRepository_SaveSelectedServices_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].([]string))
+		run(args[0].([]string))
 	})
 	return _c
 }
@@ -235,7 +233,7 @@ func (_c *TuiServiceRepository_SaveSelectedServices_Call) Return(_a0 error) *Tui
 	return _c
 }
 
-func (_c *TuiServiceRepository_SaveSelectedServices_Call) RunAndReturn(run func(string, []string) error) *TuiServiceRepository_SaveSelectedServices_Call {
+func (_c *TuiServiceRepository_SaveSelectedServices_Call) RunAndReturn(run func([]string) error) *TuiServiceRepository_SaveSelectedServices_Call {
 	_c.Call.Return(run)
 	return _c
 }
