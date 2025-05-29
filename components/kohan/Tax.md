@@ -173,10 +173,6 @@ This conceptual flow allows for modular management of different aspects of tax c
 
 To enhance accuracy and comprehensive reporting, the following improvements to the system's computation logic are planned:
 
-1.  **Currency Conversion for Income (Capital Gains, Dividends, Interest):**
-    *   **Current Readme Principle (Target):** The exchange rate used is the SBI TT Buying rate on the last day of the month immediately preceding the month of the transaction (e.g., P&L realization, dividend payment, interest credit).
-    *   **Planned Enhancement:** Ensure the system's implementation consistently and accurately fetches and applies this specific exchange rate rule for all relevant income calculations. *(This implies the current code might use a different date, like the actual transaction date, and needs alignment).*
-
 2.  **Peak Balance Valuation for Schedule FA:**
     *   **Current Readme Principle (Target):** The "Peak Balance Value" reported in Schedule FA should be the highest INR value of the asset holding during the calendar year, determined by daily evaluation of `(Quantity_on_Day_X * USD_Market_Price_on_Day_X) * SBI_TT_Buy_Exchange_Rate_on_Day_X`.
     *   **Planned Enhancement:** Implement a daily evaluation mechanism to accurately identify the true peak INR value, considering daily fluctuations in both the asset's USD market price and the USD-INR exchange rate. *(This implies the current code might determine peak based on USD value at peak quantity from a trade event, and not daily INR re-evaluation).*
