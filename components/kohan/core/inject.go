@@ -180,13 +180,19 @@ func (ki *KohanInjector) provideDividendManager(
 	return manager.NewDividendManager(exchangeMgr, fyMgr, dividendRepo)
 }
 
+func (ki *KohanInjector) provideExcelManager() manager.ExcelManager {
+	// Assuming ki.config.Tax.YearlySummaryExcelPath is available and validated.
+	return manager.NewExcelManager(ki.config.Tax.YearlySummaryPath)
+}
+
 func (ki *KohanInjector) provideTaxManager(
 	gainMgr manager.CapitalGainManager,
 	dividendManager manager.DividendManager,
 	interestManager manager.InterestManager,
 	taxValuationManager manager.TaxValuationManager,
+	excelMgr manager.ExcelManager, // ADD THIS DEPENDENCY
 ) manager.TaxManager {
-	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager)
+	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager, excelMgr) // PASS THE NEW DEPENDENCY
 }
 
 func provideTuiServiceRepository(cfg config.DariusConfig) repository.TuiServiceRepository {
@@ -266,6 +272,8 @@ func (ki *KohanInjector) registerTaxComponents() {
 	container.MustSingleton(ki.di, ki.provideCapitalGainManager)
 	container.MustSingleton(ki.di, ki.provideDividendManager)
 	container.MustSingleton(ki.di, ki.provideInterestManager)
+	// Register ExcelManager first since TaxManager depends on it
+	container.MustSingleton(ki.di, ki.provideExcelManager)
 	container.MustSingleton(ki.di, ki.provideTaxManager)
 }
 

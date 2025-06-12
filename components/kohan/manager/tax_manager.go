@@ -9,6 +9,7 @@ import (
 
 type TaxManager interface {
 	GetTaxSummary(ctx context.Context, year int) (tax.Summary, common.HttpError)
+	SaveTaxSummaryToExcel(ctx context.Context, summary tax.Summary) error // ADD THIS METHOD
 }
 
 // Struct updated with TaxValuationManager
@@ -17,6 +18,7 @@ type TaxManagerImpl struct {
 	dividendManager     DividendManager
 	interestManager     InterestManager
 	taxValuationManager TaxValuationManager // Added field
+	excelManager        ExcelManager        // ADD THIS FIELD
 }
 
 // Constructor updated to accept TaxValuationManager
@@ -25,12 +27,14 @@ func NewTaxManager(
 	dividendManager DividendManager,
 	interestManager InterestManager,
 	taxValuationManager TaxValuationManager, // Added parameter
+	excelManager ExcelManager, // ADD THIS PARAMETER
 ) TaxManager {
 	return &TaxManagerImpl{
 		capitalGainManager:  capitalGainManager,
 		dividendManager:     dividendManager,
 		interestManager:     interestManager,
 		taxValuationManager: taxValuationManager, // Assign new dependency
+		excelManager:        excelManager,        // ASSIGN IT
 	}
 }
 
@@ -88,4 +92,11 @@ func (t *TaxManagerImpl) processValuations(ctx context.Context, year int) ([]tax
 		return nil, err
 	}
 	return t.taxValuationManager.ProcessValuations(ctx, usdValuations)
+}
+
+// ADD THIS METHOD
+func (t *TaxManagerImpl) SaveTaxSummaryToExcel(ctx context.Context, summary tax.Summary) error {
+	// Delegate the call to the injected ExcelManager.
+	// The excelManager instance is already configured with the output path.
+	return t.excelManager.GenerateTaxSummaryExcel(ctx, summary)
 }
