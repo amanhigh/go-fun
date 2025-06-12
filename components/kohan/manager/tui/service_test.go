@@ -1,9 +1,10 @@
 package tui
 
 import (
-	"fmt"
+	"net/http"
 
 	"github.com/amanhigh/go-fun/components/kohan/repository/mocks"
+	"github.com/amanhigh/go-fun/models/common"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/mock"
@@ -148,7 +149,7 @@ var _ = Describe("ServiceManager", func() {
 		})
 
 		It("should handle error from CleanServices", func() {
-			mockRepo.On("ExecuteMakeCommand", serviceMakeDir, "Makefile", "clean").Return(nil, fmt.Errorf("make error")).Once()
+			mockRepo.On("ExecuteMakeCommand", serviceMakeDir, "Makefile", "clean").Return(nil, common.NewHttpError("make error", http.StatusInternalServerError)).Once()
 			_, err := svcMgr.CleanServices()
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("make error"))
