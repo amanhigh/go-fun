@@ -47,9 +47,9 @@ func (e *ExcelManagerImpl) GenerateTaxSummaryExcel(ctx context.Context, summary 
 	}
 
 	// --- Future Sheets (Example structure) ---
-	// if err := e.writeDividendsSheet(ctx, f, summary.INRDividends); err != nil {
-	// 	return err
-	// }
+	if err := e.writeDividendsSheet(ctx, f, summary.INRDividends); err != nil {
+		return err
+	}
 	// ... and so on for Interest, Valuations ...
 
 	if err := f.SaveAs(e.outputFilePath); err != nil {
@@ -102,6 +102,42 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 			e.formatDateForExcel(gainRecord.TTDate), // Format date
 			gainRecord.TTRate,
 			gainRecord.INRValue(), // Calculated PNL (INR)
+		}
+		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// writeDividendsSheet handles the creation and population of the "Dividends" sheet.
+// It assumes tax.INRDividend has fields: Symbol, Date, Amount, TTDate, TTRate and a method INRValue().
+func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.File, dividends []tax.INRDividend) error {
+	sheetName := "Dividends"
+	index, err := f.NewSheet(sheetName)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Str("sheet", sheetName).Msg("Failed to create sheet")
+		return fmt.Errorf("failed to create sheet %s: %w", sheetName, err)
+	}
+	f.SetActiveSheet(index)
+
+	headers := []string{
+		"Symbol", "Date", "Amount (USD)", "TTDate", "TTRate", "Amount (INR)",
+	}
+	if err := e.writeHeaders(f, sheetName, headers); err != nil {
+		return err
+	}
+
+	for idx, dividendRecord := range dividends {
+		rowNum := idx + 2 // Data starts from row 2
+		rowData := []interface{}{
+			dividendRecord.Symbol,
+			dividendRecord.Date,
+			dividendRecord.Amount,
+			e.formatDateForExcel(dividendRecord.TTDate),
+			dividendRecord.TTRate,
+			dividendRecord.INRValue(),
 		}
 		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
 			return err

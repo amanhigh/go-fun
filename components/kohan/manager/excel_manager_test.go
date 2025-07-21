@@ -231,6 +231,99 @@ var _ = Describe("ExcelManagerImpl", func() {
 			})
 		})
 
+		Context("when generating the 'Dividends' sheet with data", func() {
+			var (
+				excelManager       manager.ExcelManager
+				tempOutputFilePath string
+				sampleSummary      tax.Summary
+				sheetName          = "Dividends"
+			)
+
+			BeforeEach(func() {
+				contextTempDir, err := os.MkdirTemp(baseTempDir, "dividends_data_test_*")
+				Expect(err).ToNot(HaveOccurred())
+				tempOutputFilePath = filepath.Join(contextTempDir, "summary_with_dividends.xlsx")
+
+				excelManager = manager.NewExcelManager(tempOutputFilePath)
+
+				div1TTDate, _ := time.Parse(time.DateOnly, "2023-04-05")
+				div1 := tax.INRDividend{
+					Dividend: tax.Dividend{Symbol: "AAPL", Date: "2023-04-10", Amount: 50.25},
+					TTDate:   div1TTDate, TTRate: 82.10,
+				}
+				div2TTDate, _ := time.Parse(time.DateOnly, "2023-05-12")
+				div2 := tax.INRDividend{
+					Dividend: tax.Dividend{Symbol: "GOOG", Date: "2023-05-15", Amount: 75.50},
+					TTDate:   div2TTDate, TTRate: 82.50,
+				}
+				sampleSummary.INRDividends = []tax.INRDividend{div1, div2}
+			})
+
+			It("should create the 'Dividends' sheet with correct headers and data", func() {
+				err := excelManager.GenerateTaxSummaryExcel(ctx, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				rows, err := f.GetRows(sheetName)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rows).To(HaveLen(1 + len(sampleSummary.INRDividends)))
+
+				// Verify Headers
+				expectedHeaders := []string{
+					"Symbol", "Date", "Amount (USD)", "TTDate", "TTRate", "Amount (INR)",
+				}
+				Expect(rows[0]).To(Equal(expectedHeaders))
+
+				// Verify first data row for accuracy (basic check)
+				div1 := sampleSummary.INRDividends[0]
+				Expect(rows[1][0]).To(Equal(div1.Symbol))
+				Expect(rows[1][1]).To(Equal(div1.Date))
+				amountUSD1, _ := getCellFloat(f, sheetName, "C2")
+				Expect(amountUSD1).To(BeNumerically("~", div1.Amount, 0.001))
+				Expect(rows[1][3]).To(Equal(div1.TTDate.Format(time.DateOnly)))
+				rate1, _ := getCellFloat(f, sheetName, "E2")
+				Expect(rate1).To(BeNumerically("~", div1.TTRate, 0.001))
+				amountINR1, _ := getCellFloat(f, sheetName, "F2")
+				Expect(amountINR1).To(BeNumerically("~", div1.INRValue(), 0.001))
+			})
+		})
+
+		Context("when INRDividends slice is empty", func() {
+			var (
+				excelManager       manager.ExcelManager
+				tempOutputFilePath string
+			)
+			BeforeEach(func() {
+				contextTempDir, err := os.MkdirTemp(baseTempDir, "empty_dividends_test_*")
+				Expect(err).ToNot(HaveOccurred())
+				tempOutputFilePath = filepath.Join(contextTempDir, "summary_empty_dividends.xlsx")
+				excelManager = manager.NewExcelManager(tempOutputFilePath)
+			})
+
+			It("should create the 'Dividends' sheet with only headers", func() {
+				emptySummary := tax.Summary{INRDividends: []tax.INRDividend{}}
+				err := excelManager.GenerateTaxSummaryExcel(ctx, emptySummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				sheetName := "Dividends"
+				rows, err := f.GetRows(sheetName)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rows).To(HaveLen(1))
+
+				expectedHeaders := []string{
+					"Symbol", "Date", "Amount (USD)", "TTDate", "TTRate", "Amount (INR)",
+				}
+				Expect(rows[0]).To(Equal(expectedHeaders))
+			})
+		})
+
 		Context("regarding file system operations", func() {
 			It("should create parent directories for the output file if they do not exist", func() {
 				nestedDirPath := filepath.Join(baseTempDir, "reports_test", "fy_temp")
