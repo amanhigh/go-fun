@@ -75,7 +75,7 @@ linters:
    
     wrapcheck:
       ignorePackageGlobs:
-        - "github.com/amanhigh/go-fun/..." # Ignore errors originating from our own repo components
+        - "github.com/amanhigh/go-fun/**" # Ignore errors originating from our own repo components
       ignoreSigs:
         - ^fmt\.Errorf$  # Already formatted errors
         - ^time\.Parse$  # Simple parsing errors
