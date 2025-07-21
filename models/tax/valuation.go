@@ -120,3 +120,6 @@ func (t *INRPosition) SetTTDate(date time.Time) {
 func (t *INRPosition) IsValid() bool {
 	return !t.Date.IsZero() && t.TTRate > 0
 }
+func (t *INRPosition) INRValue() float64 {
+	return t.USDValue() * t.TTRate
+}

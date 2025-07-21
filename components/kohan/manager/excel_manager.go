@@ -171,17 +171,19 @@ func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize
 
 	for idx, valuationRecord := range valuations {
 		rowNum := idx + 2 // Data starts from row 2
+		// Accessing nested YearEndPosition for valuation data
+		position := valuationRecord.YearEndPosition
 		rowData := []interface{}{
-			valuationRecord.Valuation.Symbol,
-			valuationRecord.Valuation.Quantity,
-			valuationRecord.Valuation.BuyDate,
-			valuationRecord.Valuation.BuyPrice,
-			valuationRecord.Valuation.ValuationDate,
-			valuationRecord.Valuation.ValuationPrice,
-			valuationRecord.Valuation.USDValue(),
-			e.formatDateForExcel(valuationRecord.TTDate),
-			valuationRecord.TTRate,
-			valuationRecord.INRValue(),
+			valuationRecord.Ticker,
+			position.Quantity,
+			position.Date.Format(time.DateOnly), // Assuming BuyDate is the Position Date
+			position.USDPrice,                   // Assuming BuyPrice is the Position Price
+			position.Date.Format(time.DateOnly), // Valuation Date
+			position.USDPrice,                   // Valuation Price
+			position.USDValue(),
+			e.formatDateForExcel(position.TTDate),
+			position.TTRate,
+			position.INRValue(),
 		}
 		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
 			return err
