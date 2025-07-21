@@ -152,7 +152,7 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 }
 
 // writeValuationsSheet handles the creation and population of the "Valuations" sheet.
-func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize.File, valuations []tax.INRValutaion) error {
+func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize.File, valuations []tax.INRValuation) error {
 	sheetName := "Valuations"
 	index, err := f.NewSheet(sheetName)
 	if err != nil {

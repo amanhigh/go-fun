@@ -10,7 +10,7 @@ import (
 // TaxValuationManager handles currency exchange rate processing
 type TaxValuationManager interface {
 	// Processes a list of Valuation records, adding INR values based on exchange rates.
-	ProcessValuations(ctx context.Context, valuations []tax.Valuation) ([]tax.INRValutaion, common.HttpError)
+	ProcessValuations(ctx context.Context, valuations []tax.Valuation) ([]tax.INRValuation, common.HttpError)
 
 	// GetYearlyValuationsUSD calculates the base USD Valuation (First, Peak, YearEnd)
 	// for all relevant tickers based on trade history up to the end of the specified calendar year.
@@ -31,9 +31,9 @@ func NewTaxValuationManager(exchangeManager ExchangeManager, valuationManager Va
 	}
 }
 
-func (v *TaxValuationManagerImpl) ProcessValuations(ctx context.Context, valuations []tax.Valuation) (inrValuations []tax.INRValutaion, err common.HttpError) {
+func (v *TaxValuationManagerImpl) ProcessValuations(ctx context.Context, valuations []tax.Valuation) (inrValuations []tax.INRValuation, err common.HttpError) {
 	// Pre-allocate slice with the correct size
-	inrValuations = make([]tax.INRValutaion, len(valuations))
+	inrValuations = make([]tax.INRValuation, len(valuations))
 
 	// Pre-allocate exchangeAbles slice with the final capacity
 	exchangeAbles := make([]tax.Exchangeable, 0, len(valuations)*3) // 3 positions per valuation

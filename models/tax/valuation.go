@@ -64,8 +64,8 @@ type Valuation struct {
 	YearEndPosition Position
 }
 
-// INRValutaion mirrors Valuation structure with tax positions
-type INRValutaion struct {
+// INRValuation mirrors Valuation structure with tax positions
+type INRValuation struct {
 	Ticker          string
 	FirstPosition   INRPosition // First position with exchange rate details
 	PeakPosition    INRPosition // Peak position with exchange rate details
@@ -73,8 +73,8 @@ type INRValutaion struct {
 }
 
 // Helper to create tax valuation from base valuation
-func NewINRValuation(valuation Valuation) INRValutaion {
-	return INRValutaion{
+func NewINRValuation(valuation Valuation) INRValuation {
+	return INRValuation{
 		Ticker:          valuation.Ticker,
 		FirstPosition:   INRPosition{Position: valuation.FirstPosition},
 		PeakPosition:    INRPosition{Position: valuation.PeakPosition},

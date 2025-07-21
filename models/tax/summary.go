@@ -5,6 +5,6 @@ type Summary struct {
 	INRGains      []INRGains    // Processed capital gains in INR
 	INRDividends  []INRDividend // Processed dividends in INR
 	INRInterest   []INRInterest
-	INRValuations []INRValutaion
+	INRValuations []INRValuation
 	// TODO: Repurpose Valuations or Add Format for accounts.csv
 }

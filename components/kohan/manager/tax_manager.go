@@ -86,7 +86,7 @@ func (t *TaxManagerImpl) processInterest(ctx context.Context, year int) ([]tax.I
 	return t.interestManager.ProcessInterest(ctx, interests)
 }
 
-func (t *TaxManagerImpl) processValuations(ctx context.Context, year int) ([]tax.INRValutaion, common.HttpError) {
+func (t *TaxManagerImpl) processValuations(ctx context.Context, year int) ([]tax.INRValuation, common.HttpError) {
 	usdValuations, err := t.taxValuationManager.GetYearlyValuationsUSD(ctx, year)
 	if err != nil {
 		return nil, err
