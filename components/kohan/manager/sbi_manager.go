@@ -16,6 +16,7 @@ import (
 //go:generate mockery --name SBIManager
 type SBIManager interface {
 	DownloadRates(ctx context.Context) common.HttpError
+	// TODO: Get Last TT Buy Rate for month.
 	GetTTBuyRate(ctx context.Context, date time.Time) (float64, common.HttpError)
 }
 
