@@ -324,6 +324,75 @@ var _ = Describe("ExcelManagerImpl", func() {
 			})
 		})
 
+		Context("when generating the 'Valuations' sheet with data", func() {
+			var (
+				excelManager       manager.ExcelManager
+				tempOutputFilePath string
+				sampleSummary      tax.Summary
+				sheetName          = "Valuations"
+			)
+
+			BeforeEach(func() {
+				contextTempDir, err := os.MkdirTemp(baseTempDir, "valuations_data_test_*")
+				Expect(err).ToNot(HaveOccurred())
+				tempOutputFilePath = filepath.Join(contextTempDir, "summary_with_valuations.xlsx")
+
+				excelManager = manager.NewExcelManager(tempOutputFilePath)
+
+				val1TTDate, _ := time.Parse(time.DateOnly, "2023-03-31")
+				val1 := tax.INRValuation{
+					Symbol:         "TSLA",
+					Quantity:       10,
+					BuyDate:        "2022-01-10",
+					BuyPrice:       250.0,
+					ValuationDate:  "2023-03-31",
+					ValuationPrice: 207.46,
+					TTDate:         val1TTDate,
+					TTRate:         82.17,
+				}
+				sampleSummary.INRValuations = []tax.INRValuation{val1}
+			})
+
+			It("should create the 'Valuations' sheet with correct headers and data", func() {
+				err := excelManager.GenerateTaxSummaryExcel(ctx, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				rows, err := f.GetRows(sheetName)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rows).To(HaveLen(1 + len(sampleSummary.INRValuations)))
+
+				// Verify Headers
+				expectedHeaders := []string{
+					"Symbol", "Quantity", "Buy Date", "Buy Price (USD)", "Valuation Date",
+					"Valuation Price (USD)", "Valuation (USD)", "TTDate", "TTRate", "Valuation (INR)",
+				}
+				Expect(rows[0]).To(Equal(expectedHeaders))
+
+				// Verify first data row for accuracy
+				val1 := sampleSummary.INRValuations[0]
+				Expect(rows[1][0]).To(Equal(val1.Symbol))
+				qty, _ := getCellFloat(f, sheetName, "B2")
+				Expect(qty).To(BeNumerically("~", val1.Quantity, 0.001))
+				Expect(rows[1][2]).To(Equal(val1.BuyDate))
+				buyPrice, _ := getCellFloat(f, sheetName, "D2")
+				Expect(buyPrice).To(BeNumerically("~", val1.BuyPrice, 0.001))
+				Expect(rows[1][4]).To(Equal(val1.ValuationDate))
+				valPrice, _ := getCellFloat(f, sheetName, "F2")
+				Expect(valPrice).To(BeNumerically("~", val1.ValuationPrice, 0.001))
+				valUSD, _ := getCellFloat(f, sheetName, "G2")
+				Expect(valUSD).To(BeNumerically("~", val1.USDValue(), 0.001))
+				Expect(rows[1][7]).To(Equal(val1.TTDate.Format(time.DateOnly)))
+				rate, _ := getCellFloat(f, sheetName, "I2")
+				Expect(rate).To(BeNumerically("~", val1.TTRate, 0.001))
+				valINR, _ := getCellFloat(f, sheetName, "J2")
+				Expect(valINR).To(BeNumerically("~", val1.INRValue(), 0.001))
+			})
+		})
+
 		Context("regarding file system operations", func() {
 			It("should create parent directories for the output file if they do not exist", func() {
 				nestedDirPath := filepath.Join(baseTempDir, "reports_test", "fy_temp")

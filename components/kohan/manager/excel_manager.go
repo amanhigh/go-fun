@@ -50,7 +50,11 @@ func (e *ExcelManagerImpl) GenerateTaxSummaryExcel(ctx context.Context, summary 
 	if err := e.writeDividendsSheet(ctx, f, summary.INRDividends); err != nil {
 		return err
 	}
-	// ... and so on for Interest, Valuations ...
+
+	// --- Valuations Sheet ---
+	if err := e.writeValuationsSheet(ctx, f, summary.INRValuations); err != nil {
+		return err
+	}
 
 	if err := f.SaveAs(e.outputFilePath); err != nil {
 		log.Ctx(ctx).Error().Err(err).Str("path", e.outputFilePath).Msg("Failed to save Excel file")
@@ -138,6 +142,46 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 			e.formatDateForExcel(dividendRecord.TTDate),
 			dividendRecord.TTRate,
 			dividendRecord.INRValue(),
+		}
+		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// writeValuationsSheet handles the creation and population of the "Valuations" sheet.
+func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize.File, valuations []tax.INRValutaion) error {
+	sheetName := "Valuations"
+	index, err := f.NewSheet(sheetName)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Str("sheet", sheetName).Msg("Failed to create sheet")
+		return fmt.Errorf("failed to create sheet %s: %w", sheetName, err)
+	}
+	f.SetActiveSheet(index)
+
+	headers := []string{
+		"Symbol", "Quantity", "Buy Date", "Buy Price (USD)", "Valuation Date",
+		"Valuation Price (USD)", "Valuation (USD)", "TTDate", "TTRate", "Valuation (INR)",
+	}
+	if err := e.writeHeaders(f, sheetName, headers); err != nil {
+		return err
+	}
+
+	for idx, valuationRecord := range valuations {
+		rowNum := idx + 2 // Data starts from row 2
+		rowData := []interface{}{
+			valuationRecord.Valuation.Symbol,
+			valuationRecord.Valuation.Quantity,
+			valuationRecord.Valuation.BuyDate,
+			valuationRecord.Valuation.BuyPrice,
+			valuationRecord.Valuation.ValuationDate,
+			valuationRecord.Valuation.ValuationPrice,
+			valuationRecord.Valuation.USDValue(),
+			e.formatDateForExcel(valuationRecord.TTDate),
+			valuationRecord.TTRate,
+			valuationRecord.INRValue(),
 		}
 		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
 			return err
