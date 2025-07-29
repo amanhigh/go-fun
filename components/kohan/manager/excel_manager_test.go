@@ -341,6 +341,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 				// Define dates
 				firstDate, _ := time.Parse(time.DateOnly, "2022-01-10")
+				firstTTDate, _ := time.Parse(time.DateOnly, "2022-01-11")
 				peakDate, _ := time.Parse(time.DateOnly, "2022-11-25")
 				yearEndDate, _ := time.Parse(time.DateOnly, "2023-03-31")
 
@@ -349,14 +350,16 @@ var _ = Describe("ExcelManagerImpl", func() {
 					Ticker: "TSLA",
 					FirstPosition: tax.INRPosition{
 						Position: tax.Position{Date: firstDate, Quantity: 10, USDPrice: 250.0},
+						TTDate:   firstTTDate,
+						TTRate:   80.5,
 					},
 					PeakPosition: tax.INRPosition{
-						Position: tax.Position{Date: peakDate, Quantity: 10, USDPrice: 310.0},
+						Position: tax.Position{Date: peakDate, Quantity: 15, USDPrice: 310.0},
 						TTDate:   peakDate,
 						TTRate:   81.90,
 					},
 					YearEndPosition: tax.INRPosition{
-						Position: tax.Position{Date: yearEndDate, Quantity: 10, USDPrice: 207.46},
+						Position: tax.Position{Date: yearEndDate, Quantity: 5, USDPrice: 207.46},
 						TTDate:   yearEndDate,
 						TTRate:   82.17,
 					},
@@ -364,7 +367,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				sampleSummary.INRValuations = []tax.INRValuation{val1}
 			})
 
-			It("should create the 'Valuations' sheet with correct headers and data", func() {
+			It("should create the 'Valuations' sheet with correct headers and data for all positions", func() {
 				err := excelManager.GenerateTaxSummaryExcel(ctx, sampleSummary)
 				Expect(err).ToNot(HaveOccurred())
 
@@ -374,67 +377,65 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 				rows, err := f.GetRows(sheetName)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(rows).To(HaveLen(4)) // Header + First, Peak, Year End
+				Expect(rows).To(HaveLen(2)) // Header + 1 Data Row
 
 				// Verify Headers
 				expectedHeaders := []string{
-					"Symbol", "Position Type", "Quantity", "Valuation Date",
-					"Valuation Price (USD)", "Valuation (USD)", "TTDate", "TTRate", "Valuation (INR)",
+					"Symbol",
+					"Date (First)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+					"Date (Peak)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+					"Date (YearEnd)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
 				}
 				Expect(rows[0]).To(Equal(expectedHeaders))
 
+				// Verify Data Row
 				val1 := sampleSummary.INRValuations[0]
 
-				// Verify First Position (Row 2)
+				// First Position
 				posFirst := val1.FirstPosition
 				Expect(rows[1][0]).To(Equal(val1.Ticker))
-				Expect(rows[1][1]).To(Equal("First"))
+				Expect(rows[1][1]).To(Equal(posFirst.Date.Format(time.DateOnly)))
 				qty, _ := getCellFloat(f, sheetName, "C2")
-				Expect(qty).To(BeNumerically("~", posFirst.Quantity))
-				Expect(rows[1][3]).To(Equal(posFirst.Date.Format(time.DateOnly)))
-				price, _ := getCellFloat(f, sheetName, "E2")
-				Expect(price).To(BeNumerically("~", posFirst.USDPrice))
-				valUSD, _ := getCellFloat(f, sheetName, "F2")
-				Expect(valUSD).To(BeNumerically("~", posFirst.USDValue()))
-				Expect(rows[1][6]).To(Equal("")) // No TTDate
-				rate, _ := getCellFloat(f, sheetName, "H2")
-				Expect(rate).To(BeZero())
-				valINR, _ := getCellFloat(f, sheetName, "I2")
-				Expect(valINR).To(BeNumerically("~", posFirst.INRValue()))
+				Expect(qty).To(Equal(posFirst.Quantity))
+				price, _ := getCellFloat(f, sheetName, "D2")
+				Expect(price).To(Equal(posFirst.USDPrice))
+				valUSD, _ := getCellFloat(f, sheetName, "E2")
+				Expect(valUSD).To(Equal(posFirst.USDValue()))
+				Expect(rows[1][5]).To(Equal(posFirst.TTDate.Format(time.DateOnly)))
+				rate, _ := getCellFloat(f, sheetName, "G2")
+				Expect(rate).To(Equal(posFirst.TTRate))
+				valINR, _ := getCellFloat(f, sheetName, "H2")
+				Expect(valINR).To(Equal(posFirst.INRValue()))
 
-				// Verify Peak Position (Row 3)
+				// Peak Position
 				posPeak := val1.PeakPosition
-				Expect(rows[2][0]).To(Equal(val1.Ticker))
-				Expect(rows[2][1]).To(Equal("Peak"))
-				qty, _ = getCellFloat(f, sheetName, "C3")
-				Expect(qty).To(BeNumerically("~", posPeak.Quantity))
-				Expect(rows[2][3]).To(Equal(posPeak.Date.Format(time.DateOnly)))
-				price, _ = getCellFloat(f, sheetName, "E3")
-				Expect(price).To(BeNumerically("~", posPeak.USDPrice))
-				valUSD, _ = getCellFloat(f, sheetName, "F3")
-				Expect(valUSD).To(BeNumerically("~", posPeak.USDValue()))
-				Expect(rows[2][6]).To(Equal(posPeak.TTDate.Format(time.DateOnly)))
-				rate, _ = getCellFloat(f, sheetName, "H3")
-				Expect(rate).To(BeNumerically("~", posPeak.TTRate))
-				valINR, _ = getCellFloat(f, sheetName, "I3")
-				Expect(valINR).To(BeNumerically("~", posPeak.INRValue()))
+				Expect(rows[1][8]).To(Equal(posPeak.Date.Format(time.DateOnly)))
+				qty, _ = getCellFloat(f, sheetName, "J2")
+				Expect(qty).To(Equal(posPeak.Quantity))
+				price, _ = getCellFloat(f, sheetName, "K2")
+				Expect(price).To(Equal(posPeak.USDPrice))
+				valUSD, _ = getCellFloat(f, sheetName, "L2")
+				Expect(valUSD).To(Equal(posPeak.USDValue()))
+				Expect(rows[1][12]).To(Equal(posPeak.TTDate.Format(time.DateOnly)))
+				rate, _ = getCellFloat(f, sheetName, "N2")
+				Expect(rate).To(Equal(posPeak.TTRate))
+				valINR, _ = getCellFloat(f, sheetName, "O2")
+				Expect(valINR).To(Equal(posPeak.INRValue()))
 
-				// Verify Year End Position (Row 4)
+				// Year End Position
 				posYearEnd := val1.YearEndPosition
-				Expect(rows[3][0]).To(Equal(val1.Ticker))
-				Expect(rows[3][1]).To(Equal("Year End"))
-				qty, _ = getCellFloat(f, sheetName, "C4")
-				Expect(qty).To(BeNumerically("~", posYearEnd.Quantity))
-				Expect(rows[3][3]).To(Equal(posYearEnd.Date.Format(time.DateOnly)))
-				price, _ = getCellFloat(f, sheetName, "E4")
-				Expect(price).To(BeNumerically("~", posYearEnd.USDPrice))
-				valUSD, _ = getCellFloat(f, sheetName, "F4")
-				Expect(valUSD).To(BeNumerically("~", posYearEnd.USDValue()))
-				Expect(rows[3][6]).To(Equal(posYearEnd.TTDate.Format(time.DateOnly)))
-				rate, _ = getCellFloat(f, sheetName, "H4")
-				Expect(rate).To(BeNumerically("~", posYearEnd.TTRate))
-				valINR, _ = getCellFloat(f, sheetName, "I4")
-				Expect(valINR).To(BeNumerically("~", posYearEnd.INRValue()))
+				Expect(rows[1][15]).To(Equal(posYearEnd.Date.Format(time.DateOnly)))
+				qty, _ = getCellFloat(f, sheetName, "Q2")
+				Expect(qty).To(Equal(posYearEnd.Quantity))
+				price, _ = getCellFloat(f, sheetName, "R2")
+				Expect(price).To(Equal(posYearEnd.USDPrice))
+				valUSD, _ = getCellFloat(f, sheetName, "S2")
+				Expect(valUSD).To(Equal(posYearEnd.USDValue()))
+				Expect(rows[1][19]).To(Equal(posYearEnd.TTDate.Format(time.DateOnly)))
+				rate, _ = getCellFloat(f, sheetName, "U2")
+				Expect(rate).To(Equal(posYearEnd.TTRate))
+				valINR, _ = getCellFloat(f, sheetName, "V2")
+				Expect(valINR).To(BeNumerically("~", posYearEnd.INRValue(), 0.001))
 			})
 		})
 

@@ -162,8 +162,10 @@ func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize
 	f.SetActiveSheet(index)
 
 	headers := []string{
-		"Symbol", "Quantity", "Buy Date", "Buy Price (USD)", "Valuation Date",
-		"Valuation Price (USD)", "Valuation (USD)", "TTDate", "TTRate", "Valuation (INR)",
+		"Symbol",
+		"Date (First)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+		"Date (Peak)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+		"Date (YearEnd)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
 	}
 	if err := e.writeHeaders(f, sheetName, headers); err != nil {
 		return err
@@ -171,19 +173,35 @@ func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize
 
 	for idx, valuationRecord := range valuations {
 		rowNum := idx + 2 // Data starts from row 2
-		// Accessing nested YearEndPosition for valuation data
-		position := valuationRecord.YearEndPosition
+		firstPos := valuationRecord.FirstPosition
+		peakPos := valuationRecord.PeakPosition
+		yearEndPos := valuationRecord.YearEndPosition
 		rowData := []interface{}{
 			valuationRecord.Ticker,
-			position.Quantity,
-			position.Date.Format(time.DateOnly), // Assuming BuyDate is the Position Date
-			position.USDPrice,                   // Assuming BuyPrice is the Position Price
-			position.Date.Format(time.DateOnly), // Valuation Date
-			position.USDPrice,                   // Valuation Price
-			position.USDValue(),
-			e.formatDateForExcel(position.TTDate),
-			position.TTRate,
-			position.INRValue(),
+			// First Position
+			e.formatDateForExcel(firstPos.Date),
+			firstPos.Quantity,
+			firstPos.USDPrice,
+			firstPos.USDValue(),
+			e.formatDateForExcel(firstPos.TTDate),
+			firstPos.TTRate,
+			firstPos.INRValue(),
+			// Peak Position
+			e.formatDateForExcel(peakPos.Date),
+			peakPos.Quantity,
+			peakPos.USDPrice,
+			peakPos.USDValue(),
+			e.formatDateForExcel(peakPos.TTDate),
+			peakPos.TTRate,
+			peakPos.INRValue(),
+			// Year End Position
+			e.formatDateForExcel(yearEndPos.Date),
+			yearEndPos.Quantity,
+			yearEndPos.USDPrice,
+			yearEndPos.USDValue(),
+			e.formatDateForExcel(yearEndPos.TTDate),
+			yearEndPos.TTRate,
+			yearEndPos.INRValue(),
 		}
 		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
 			return err
