@@ -2,6 +2,7 @@ package core_test
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"sort" // Add import
 	"time"
@@ -12,21 +13,25 @@ import (
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/xuri/excelize/v2"
 )
 
 var _ = Describe("Tax Integration", Label("it"), func() {
 	var (
-		ctx        context.Context
-		taxManager manager.TaxManager
-		testYear   = 2023
+		ctx         context.Context
+		taxManager  manager.TaxManager
+		testYear    = 2023
+		kohanConfig config.KohanConfig
 	)
 
 	BeforeEach(func() {
 		ctx = context.Background()
 		testDataBasePath := filepath.Join("..", "testdata", "tax")
+		tempDir, err := os.MkdirTemp("", "tax_integration_test_*")
+		Expect(err).ToNot(HaveOccurred())
 
 		// Configure KohanConfig with TaxConfig pointing to test data files
-		kohanConfig := config.KohanConfig{
+		kohanConfig = config.KohanConfig{
 			Tax: config.TaxConfig{
 				// DownloadsDir is separate, points to base testdata path for this test
 				DownloadsDir: testDataBasePath,
@@ -37,6 +42,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 				AccountFilePath:     filepath.Join(testDataBasePath, tax.ACCOUNTS_FILENAME),
 				GainsFilePath:       filepath.Join(testDataBasePath, tax.GAINS_FILENAME),
 				InterestFilePath:    filepath.Join(testDataBasePath, tax.INTEREST_FILENAME),
+				YearlySummaryPath:   filepath.Join(tempDir, "tax_summary.xlsx"),
 			},
 		}
 
@@ -44,7 +50,6 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		core.SetupKohanInjector(kohanConfig)
 
 		// Retrieve the TaxManager instance
-		var err error
 		taxManager, err = core.GetKohanInterface().GetTaxManager()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(taxManager).ToNot(BeNil())
@@ -240,6 +245,34 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(msftVal.YearEndPosition.Date.Format(time.DateOnly)).To(Equal("2023-12-31"))
 			Expect(msftVal.YearEndPosition.TTRate).To(Equal(82.00))
 			Expect(msftVal.YearEndPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
+		})
+	})
+
+	Context("Excel File Generation", func() {
+		It("should generate a valid Excel file with the correct sheets", func() {
+			// Get the tax summary
+			summary, err := taxManager.GetTaxSummary(ctx, testYear)
+			Expect(err).ToNot(HaveOccurred())
+
+			// Save the summary to Excel
+			saveErr := taxManager.SaveTaxSummaryToExcel(ctx, summary)
+			Expect(saveErr).ToNot(HaveOccurred())
+
+			// Verify that the file was created
+			filePath := kohanConfig.Tax.YearlySummaryPath
+			Expect(filePath).Should(BeARegularFile())
+
+			// Open the generated file to verify its integrity and sheets
+			f, openErr := excelize.OpenFile(filePath)
+			Expect(openErr).ToNot(HaveOccurred(), "Generated Excel file should be valid and readable")
+			defer f.Close()
+
+			// Check for the presence of all required sheets
+			expectedSheets := []string{"Gains", "Dividends", "Valuations", "Interest"}
+			for _, sheetName := range expectedSheets {
+				_, sheetErr := f.GetRows(sheetName)
+				Expect(sheetErr).ToNot(HaveOccurred(), "Sheet '%s' should exist and be readable", sheetName)
+			}
 		})
 	})
 })
