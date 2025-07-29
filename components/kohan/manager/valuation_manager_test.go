@@ -629,4 +629,53 @@ var _ = Describe("ValuationManager", func() {
 			Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
 		})
 	})
+
+	Context("With Carry-Over and Only Sell Trades", func() {
+		var (
+			carryOverAccount tax.Account
+			tradesInYear     []tax.Trade
+			testYear         = 2024
+			yearEndDate      = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
+			MSFT             = "MSFT"
+		)
+
+		BeforeEach(func() {
+			carryOverAccount = tax.Account{
+				Symbol:      MSFT,
+				Quantity:    50,
+				MarketValue: 10000.00, // Implies $200.00 per share
+			}
+
+			mockAccountManager.EXPECT().
+				GetRecord(ctx, MSFT).
+				Return(carryOverAccount, nil).Once()
+
+			tradesInYear = []tax.Trade{
+				tax.NewTrade(MSFT, "2024-02-15", "SELL", 50, 210.00),
+			}
+		})
+
+		It("should correctly calculate valuation", func() {
+			valuation, err := valuationManager.AnalyzeValuation(ctx, MSFT, tradesInYear, testYear)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(valuation.Ticker).To(Equal(MSFT))
+
+			// 1. Assert FirstPosition (Opening balance for the period)
+			expectedFirstPosDate := time.Date(testYear, 1, 1, 0, 0, 0, 0, time.UTC)
+			Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
+			Expect(valuation.FirstPosition.Quantity).To(Equal(50.0))
+			Expect(valuation.FirstPosition.USDPrice).To(Equal(200.00))
+
+			// 2. Assert PeakPosition (Should be the same as FirstPosition as no trades increased quantity)
+			Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
+			Expect(valuation.PeakPosition.Quantity).To(Equal(50.0))
+			Expect(valuation.PeakPosition.USDPrice).To(Equal(200.00))
+
+			// 3. Assert YearEndPosition (Quantity is zero after the sell)
+			Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
+			Expect(valuation.YearEndPosition.Quantity).To(Equal(0.0))
+			Expect(valuation.YearEndPosition.USDPrice).To(Equal(0.0)) // Price is irrelevant for zero quantity
+		})
+	})
 })
