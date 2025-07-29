@@ -42,8 +42,8 @@ type TaxConfig struct {
 	DividendFilePath    string `env:"FA_DIVIDEND_FILE_PATH"`
 	SBIFilePath         string `env:"SBI_FILE_PATH"`
 	AccountFilePath     string `env:"ACCOUNT_FILE_PATH"`
-	GainsFilePath       string `env:"GAINS_FILE_PATH"`
-	InterestFilePath    string `env:"INTEREST_FILE_PATH"`
+	GainsFilePath       string `env:"FA_GAINS_FILE_PATH"`
+	InterestFilePath    string `env:"FA_INTEREST_FILE_PATH"`
 	YearlySummaryPath   string `env:"YEARLY_SUMMARY_PATH"`
 }
 
