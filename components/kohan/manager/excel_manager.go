@@ -56,6 +56,11 @@ func (e *ExcelManagerImpl) GenerateTaxSummaryExcel(ctx context.Context, summary 
 		return err
 	}
 
+	// --- Interest Sheet ---
+	if err := e.writeInterestSheet(ctx, f, summary.INRInterest); err != nil {
+		return err
+	}
+
 	if err := f.SaveAs(e.outputFilePath); err != nil {
 		log.Ctx(ctx).Error().Err(err).Str("path", e.outputFilePath).Msg("Failed to save Excel file")
 		return fmt.Errorf("failed to save excel file to %s: %w", e.outputFilePath, err)
@@ -202,6 +207,44 @@ func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize
 			e.formatDateForExcel(yearEndPos.TTDate),
 			yearEndPos.TTRate,
 			yearEndPos.INRValue(),
+		}
+		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// writeInterestSheet handles the creation and population of the "Interest" sheet.
+func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.File, interest []tax.INRInterest) error {
+	sheetName := "Interest"
+	index, err := f.NewSheet(sheetName)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Str("sheet", sheetName).Msg("Failed to create sheet")
+		return fmt.Errorf("failed to create sheet %s: %w", sheetName, err)
+	}
+	f.SetActiveSheet(index)
+
+	headers := []string{
+		"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)",
+		"TTDate", "TTRate", "Amount (INR)",
+	}
+	if err := e.writeHeaders(f, sheetName, headers); err != nil {
+		return err
+	}
+
+	for idx, interestRecord := range interest {
+		rowNum := idx + 2 // Data starts from row 2
+		rowData := []interface{}{
+			interestRecord.Symbol,
+			interestRecord.Date,
+			interestRecord.Amount,
+			interestRecord.Tax,
+			interestRecord.Net,
+			e.formatDateForExcel(interestRecord.TTDate),
+			interestRecord.TTRate,
+			interestRecord.INRValue(),
 		}
 		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
 			return err

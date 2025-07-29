@@ -439,6 +439,77 @@ var _ = Describe("ExcelManagerImpl", func() {
 			})
 		})
 
+		Context("when generating the 'Interest' sheet with data", func() {
+			var (
+				excelManager       manager.ExcelManager
+				tempOutputFilePath string
+				sampleSummary      tax.Summary
+				sheetName          = "Interest"
+			)
+
+			BeforeEach(func() {
+				contextTempDir, err := os.MkdirTemp(baseTempDir, "interest_data_test_*")
+				Expect(err).ToNot(HaveOccurred())
+				tempOutputFilePath = filepath.Join(contextTempDir, "summary_with_interest.xlsx")
+
+				excelManager = manager.NewExcelManager(tempOutputFilePath)
+
+				// Define dates
+				interestDate, _ := time.Parse(time.DateOnly, "2023-06-01")
+				ttDate, _ := time.Parse(time.DateOnly, "2023-06-02")
+
+				// Create a full interest object
+				interest1 := tax.INRInterest{
+					Interest: tax.Interest{
+						Symbol: "US-TBILL",
+						Date:   interestDate.Format(time.DateOnly),
+						Amount: 100.0,
+						Tax:    10.0,
+						Net:    90.0,
+					},
+					TTDate: ttDate,
+					TTRate: 82.5,
+				}
+				sampleSummary.INRInterest = []tax.INRInterest{interest1}
+			})
+
+			It("should create the 'Interest' sheet with correct headers and data", func() {
+				err := excelManager.GenerateTaxSummaryExcel(ctx, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				rows, err := f.GetRows(sheetName)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rows).To(HaveLen(2)) // Header + 1 Data Row
+
+				// Verify Headers
+				expectedHeaders := []string{
+					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)",
+					"TTDate", "TTRate", "Amount (INR)",
+				}
+				Expect(rows[0]).To(Equal(expectedHeaders))
+
+				// Verify Data Row
+				interest1 := sampleSummary.INRInterest[0]
+				Expect(rows[1][0]).To(Equal(interest1.Symbol))
+				Expect(rows[1][1]).To(Equal(interest1.Date))
+				amount, _ := getCellFloat(f, sheetName, "C2")
+				Expect(amount).To(BeNumerically("==", interest1.Amount))
+				taxVal, _ := getCellFloat(f, sheetName, "D2")
+				Expect(taxVal).To(BeNumerically("==", interest1.Tax))
+				net, _ := getCellFloat(f, sheetName, "E2")
+				Expect(net).To(BeNumerically("==", interest1.Net))
+				Expect(rows[1][5]).To(Equal(interest1.TTDate.Format(time.DateOnly)))
+				rate, _ := getCellFloat(f, sheetName, "G2")
+				Expect(rate).To(BeNumerically("==", interest1.TTRate))
+				inrValue, _ := getCellFloat(f, sheetName, "H2")
+				Expect(inrValue).To(BeNumerically("~", interest1.INRValue(), 0.001))
+			})
+		})
+
 		Context("regarding file system operations", func() {
 			It("should create parent directories for the output file if they do not exist", func() {
 				nestedDirPath := filepath.Join(baseTempDir, "reports_test", "fy_temp")
