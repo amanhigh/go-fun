@@ -510,6 +510,72 @@ var _ = Describe("ExcelManagerImpl", func() {
 			})
 		})
 
+		Context("when the tax summary is completely empty", func() {
+			var (
+				excelManager       manager.ExcelManager
+				tempOutputFilePath string
+			)
+
+			BeforeEach(func() {
+				contextTempDir, err := os.MkdirTemp(baseTempDir, "empty_summary_test_*")
+				Expect(err).ToNot(HaveOccurred())
+				tempOutputFilePath = filepath.Join(contextTempDir, "empty_summary.xlsx")
+				excelManager = manager.NewExcelManager(tempOutputFilePath)
+			})
+
+			It("should create a valid Excel file with all sheets containing only headers", func() {
+				emptySummary := tax.Summary{}
+				err := excelManager.GenerateTaxSummaryExcel(ctx, emptySummary)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(tempOutputFilePath).Should(BeARegularFile())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				// Check Gains Sheet
+				rows, err := f.GetRows("Gains")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rows).To(HaveLen(1))
+				expectedGainsHeaders := []string{
+					"Symbol", "BuyDate", "SellDate", "Quantity", "PNL (USD)",
+					"Commission (USD)", "Type", "TTDate", "TTRate", "PNL (INR)",
+				}
+				Expect(rows[0]).To(Equal(expectedGainsHeaders))
+
+				// Check Dividends Sheet
+				rows, err = f.GetRows("Dividends")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rows).To(HaveLen(1))
+				expectedDividendsHeaders := []string{
+					"Symbol", "Date", "Amount (USD)", "TTDate", "TTRate", "Amount (INR)",
+				}
+				Expect(rows[0]).To(Equal(expectedDividendsHeaders))
+
+				// Check Valuations Sheet
+				rows, err = f.GetRows("Valuations")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rows).To(HaveLen(1))
+				expectedValuationsHeaders := []string{
+					"Symbol",
+					"Date (First)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+					"Date (Peak)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+					"Date (YearEnd)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+				}
+				Expect(rows[0]).To(Equal(expectedValuationsHeaders))
+
+				// Check Interest Sheet
+				rows, err = f.GetRows("Interest")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rows).To(HaveLen(1))
+				expectedInterestHeaders := []string{
+					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)",
+					"TTDate", "TTRate", "Amount (INR)",
+				}
+				Expect(rows[0]).To(Equal(expectedInterestHeaders))
+			})
+		})
+
 		Context("regarding file system operations", func() {
 			It("should create parent directories for the output file if they do not exist", func() {
 				nestedDirPath := filepath.Join(baseTempDir, "reports_test", "fy_temp")
