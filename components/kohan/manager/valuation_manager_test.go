@@ -336,6 +336,20 @@ var _ = Describe("ValuationManager", func() {
 
 		})
 
+		Context("First Trade is Sell on Fresh Start", func() {
+			It("should return error", func() {
+				trades := []tax.Trade{
+					tax.NewTrade(AAPL, "2024-01-15", "SELL", 10, 100),
+				}
+				mockAccountManager.EXPECT().GetRecord(ctx, AAPL).Return(tax.Account{}, common.ErrNotFound)
+
+				_, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Code()).To(Equal(http.StatusBadRequest))
+				Expect(err.Error()).To(ContainSubstring("first trade can't be sell on fresh start"))
+			})
+		})
+
 		Context("Error Cases", func() {
 			Context("Empty Trades", func() {
 				It("should return error for empty trades", func() {
