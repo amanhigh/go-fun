@@ -33,9 +33,13 @@ const (
 var memcachedlog = logf.Log.WithName("memcached-resource")
 
 func (r *Memcached) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
+	err := ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
+	if err != nil {
+		return fmt.Errorf("failed to complete webhook setup: %w", err)
+	}
+	return nil
 }
 
 //nolint:lll

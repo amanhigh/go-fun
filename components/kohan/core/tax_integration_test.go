@@ -2,6 +2,7 @@ package core_test
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"sort" // Add import
 	"time"
@@ -12,21 +13,25 @@ import (
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/xuri/excelize/v2"
 )
 
 var _ = Describe("Tax Integration", Label("it"), func() {
 	var (
-		ctx        context.Context
-		taxManager manager.TaxManager
-		testYear   = 2023
+		ctx         context.Context
+		taxManager  manager.TaxManager
+		testYear    = 2023
+		kohanConfig config.KohanConfig
 	)
 
 	BeforeEach(func() {
 		ctx = context.Background()
 		testDataBasePath := filepath.Join("..", "testdata", "tax")
+		tempDir, err := os.MkdirTemp("", "tax_integration_test_*")
+		Expect(err).ToNot(HaveOccurred())
 
 		// Configure KohanConfig with TaxConfig pointing to test data files
-		kohanConfig := config.KohanConfig{
+		kohanConfig = config.KohanConfig{
 			Tax: config.TaxConfig{
 				// DownloadsDir is separate, points to base testdata path for this test
 				DownloadsDir: testDataBasePath,
@@ -37,6 +42,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 				AccountFilePath:     filepath.Join(testDataBasePath, tax.ACCOUNTS_FILENAME),
 				GainsFilePath:       filepath.Join(testDataBasePath, tax.GAINS_FILENAME),
 				InterestFilePath:    filepath.Join(testDataBasePath, tax.INTEREST_FILENAME),
+				YearlySummaryPath:   filepath.Join(tempDir, "tax_summary.xlsx"),
 			},
 		}
 
@@ -44,7 +50,6 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		core.SetupKohanInjector(kohanConfig)
 
 		// Retrieve the TaxManager instance
-		var err error
 		taxManager, err = core.GetKohanInterface().GetTaxManager()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(taxManager).ToNot(BeNil())
@@ -70,28 +75,28 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			// --- Assertions for AAPL (Expected at index 0 after sort) ---
 			aaplGain := summary.INRGains[0]
 			Expect(aaplGain.Symbol).To(Equal("AAPL"))
-			Expect(aaplGain.PNL).To(BeNumerically("~", 1000.00))
+			Expect(aaplGain.PNL).To(Equal(1000.00))
 			Expect(aaplGain.Type).To(Equal("STCG")) // Holding < 730 days
 			Expect(aaplGain.BuyDate).To(Equal("2024-01-15"))
 			Expect(aaplGain.SellDate).To(Equal("2024-01-17"))
-			Expect(aaplGain.TTRate).To(BeNumerically("~", 82.90)) // Rate for Jan 17
-			Expect(aaplGain.INRValue()).To(BeNumerically("~", 1000.00*82.90))
-			Expect(aaplGain.TTDate.Format(time.DateOnly)).To(Equal("2024-01-17"))
+			Expect(aaplGain.TTRate).To(Equal(82.00))
+			Expect(aaplGain.INRValue()).To(Equal(82000.00)) // 1000.00 * 82.00
+			Expect(aaplGain.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
 
 			// --- Assertions for MSFT (Expected at index 1 after sort) ---
 			msftGain := summary.INRGains[1]
 			Expect(msftGain.Symbol).To(Equal("MSFT"))
-			Expect(msftGain.PNL).To(BeNumerically("~", 500.00))
+			Expect(msftGain.PNL).To(Equal(500.00))
 			Expect(msftGain.Type).To(Equal("LTCG")) // Holding > 730 days
 			Expect(msftGain.BuyDate).To(Equal("2022-01-10"))
 			Expect(msftGain.SellDate).To(Equal("2024-02-15"))
-			Expect(msftGain.TTRate).To(BeNumerically("~", 83.00)) // Rate for Feb 15 (from test data)
-			Expect(msftGain.INRValue()).To(BeNumerically("~", 500.00*83.00))
-			Expect(msftGain.TTDate.Format(time.DateOnly)).To(Equal("2024-02-15"))
+			// Updated assertions for MSFT based on new logic (rate from 2024-01-17, as 2024-01-31 is missing)
+			Expect(msftGain.TTRate).To(Equal(82.90))
+			Expect(msftGain.INRValue()).To(Equal(41450.00)) // 500.00 * 82.90
+			Expect(msftGain.TTDate.Format(time.DateOnly)).To(Equal("2024-01-17"))
 		})
 	})
 
-	// FUTURE CONTEXT: Placeholder for Dividends
 	Context("Dividend Calculation (INRDividends)", func() {
 		It("should calculate dividends correctly for multiple symbols, filtering by financial year", func() {
 			// Retrieve the summary for the test year (FY 2023-24)
@@ -179,10 +184,95 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		})
 	})
 
-	// FUTURE CONTEXT: Placeholder for Valuations
-	/*
-		Context("Valuation Calculation (INRValuation)", func() {
-		    // ... tests for valuations ...
+	Context("Valuation Calculation (INRValuation)", func() {
+		It("should calculate valuations correctly for carry-over and fresh-start tickers", func() {
+			summary, err := taxManager.GetTaxSummary(ctx, testYear)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(summary.INRValuations).ToNot(BeNil())
+			Expect(summary.INRValuations).To(HaveLen(2))
+
+			// Sort by Ticker for consistent assertion order
+			sort.Slice(summary.INRValuations, func(i, j int) bool {
+				return summary.INRValuations[i].Ticker < summary.INRValuations[j].Ticker
+			})
+
+			aaplVal := summary.INRValuations[0]
+			msftVal := summary.INRValuations[1]
+
+			// Assert AAPL (Carry-over with new trades for 2023)
+			Expect(aaplVal.Ticker).To(Equal("AAPL"))
+
+			// FirstPosition for AAPL (opening balance for 2023 period, from Dec 31, 2022 accounts.csv)
+			Expect(aaplVal.FirstPosition.Quantity).To(Equal(50.0))
+			Expect(aaplVal.FirstPosition.USDPrice).To(Equal(160.00))
+			Expect(aaplVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2023-01-01"))
+			Expect(aaplVal.FirstPosition.TTRate).To(Equal(81.50))
+			Expect(aaplVal.FirstPosition.TTDate.Format(time.DateOnly)).To(Equal("2022-12-30"))
+
+			// Peak Position for AAPL (achieved on Jul 10, 2023, after Buy1 and Buy2)
+			// Opening: 50. Buy1 (Mar 15): +20 (Total 70). Buy2 (Jul 10): +30 (Total 100 - This is Peak Qty)
+			Expect(aaplVal.PeakPosition.Quantity).To(Equal(100.0))
+			Expect(aaplVal.PeakPosition.USDPrice).To(Equal(165.00)) // Price of the Buy2 trade on Jul 10
+			Expect(aaplVal.PeakPosition.Date.Format(time.DateOnly)).To(Equal("2023-07-10"))
+			Expect(aaplVal.PeakPosition.TTRate).To(Equal(82.50)) // Assumed rate for 2023-07-10
+			Expect(aaplVal.PeakPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-07-10"))
+
+			// Year End Position for AAPL (after Sell1 on Oct 20)
+			// Peak Qty: 100. Sell1: -15. Year-End Qty: 85
+			Expect(aaplVal.YearEndPosition.Quantity).To(Equal(85.0))
+			Expect(aaplVal.YearEndPosition.USDPrice).To(Equal(181.00)) // From AAPL.json for 2023-12-31
+			Expect(aaplVal.YearEndPosition.Date.Format(time.DateOnly)).To(Equal("2023-12-31"))
+			Expect(aaplVal.YearEndPosition.TTRate).To(Equal(82.00)) // From sbi_rates.csv for 2023-12-31
+			Expect(aaplVal.YearEndPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
+
+			// Assert MSFT (Fresh Start)
+			Expect(msftVal.Ticker).To(Equal("MSFT"))
+			// First Position (MSFT)
+			Expect(msftVal.FirstPosition.Quantity).To(Equal(50.0))
+			Expect(msftVal.FirstPosition.USDPrice).To(Equal(200.00))
+			Expect(msftVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2023-01-01"))
+			Expect(msftVal.FirstPosition.TTRate).To(Equal(81.50))
+			Expect(msftVal.FirstPosition.TTDate.Format(time.DateOnly)).To(Equal("2022-12-30"))
+			// Peak Position (MSFT)
+			Expect(msftVal.PeakPosition.Quantity).To(Equal(100.0))
+			Expect(msftVal.PeakPosition.USDPrice).To(Equal(215.00))
+			Expect(msftVal.PeakPosition.Date.Format(time.DateOnly)).To(Equal("2023-09-01"))
+			Expect(msftVal.PeakPosition.TTRate).To(Equal(82.55))
+			Expect(msftVal.PeakPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-08-31"))
+			// Year End Position (MSFT)
+			Expect(msftVal.YearEndPosition.Quantity).To(Equal(100.0))
+			Expect(msftVal.YearEndPosition.USDPrice).To(Equal(221.00))
+			Expect(msftVal.YearEndPosition.Date.Format(time.DateOnly)).To(Equal("2023-12-31"))
+			Expect(msftVal.YearEndPosition.TTRate).To(Equal(82.00))
+			Expect(msftVal.YearEndPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
 		})
-	*/
+	})
+
+	Context("Excel File Generation", func() {
+		It("should generate a valid Excel file with the correct sheets", func() {
+			// Get the tax summary
+			summary, err := taxManager.GetTaxSummary(ctx, testYear)
+			Expect(err).ToNot(HaveOccurred())
+
+			// Save the summary to Excel
+			saveErr := taxManager.SaveTaxSummaryToExcel(ctx, summary)
+			Expect(saveErr).ToNot(HaveOccurred())
+
+			// Verify that the file was created
+			filePath := kohanConfig.Tax.YearlySummaryPath
+			Expect(filePath).Should(BeARegularFile())
+
+			// Open the generated file to verify its integrity and sheets
+			f, openErr := excelize.OpenFile(filePath)
+			Expect(openErr).ToNot(HaveOccurred(), "Generated Excel file should be valid and readable")
+			defer f.Close()
+
+			// Check for the presence of all required sheets
+			expectedSheets := []string{"Gains", "Dividends", "Valuations", "Interest"}
+			for _, sheetName := range expectedSheets {
+				_, sheetErr := f.GetRows(sheetName)
+				Expect(sheetErr).ToNot(HaveOccurred(), "Sheet '%s' should exist and be readable", sheetName)
+			}
+		})
+	})
 })

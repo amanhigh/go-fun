@@ -16,8 +16,6 @@ import (
 )
 
 const (
-	// HACK: Ticker Length Not Being Used ?
-	TICKER_LENGTH         = 15
 	SIDE_MONITOR          = 1
 	MAIL_WORKSPACE        = "2"
 	DATE_FORMAT           = "20060102__150405"

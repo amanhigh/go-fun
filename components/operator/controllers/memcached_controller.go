@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -67,28 +68,50 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// Fetch Instance - If not found, it means the Custom Resource was deleted
 	memcached, err := r.reconcileHelper.FetchMemcachedInstance(ctx, req)
-	if memcached == nil || err != nil {
-		return ctrl.Result{}, err
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to fetch Memcached instance: %w", err)
+	}
+	if memcached == nil {
+		return ctrl.Result{}, nil
 	}
 
 	// Initialize Status - Sets up initial conditions if none exist
-	if err := r.statusHelper.InitializeStatus(ctx, memcached); err != nil {
-		return ctrl.Result{}, err
+	if err = r.statusHelper.InitializeStatus(ctx, memcached); err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to initialize Memcached status: %w", err)
 	}
 
 	// Check if Resource is being deleted
 	if memcached.GetDeletionTimestamp() != nil {
-		log.Info("Resource is being deleted, performing finalizer operations")
-		return r.reconcileHelper.ExecuteFinalizer(ctx, memcached)
+		return r.handleFinalizer(ctx, memcached)
 	}
 
+	return r.reconcileNormal(ctx, memcached)
+}
+
+func (r *MemcachedReconciler) reconcileNormal(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error) {
 	// Add Finalizer if it doesn't exist
-	if result, err := r.reconcileHelper.AddFinalizer(ctx, memcached); err != nil {
-		return result, err
+	result, err := r.reconcileHelper.AddFinalizer(ctx, memcached)
+	if err != nil {
+		return result, fmt.Errorf("failed to add finalizer: %w", err)
 	}
 
 	// Reconcile Deployment - Creates or updates the deployment to match desired state
-	return r.reconcileHelper.ReconcileDeployment(ctx, memcached)
+	result, err = r.reconcileHelper.ReconcileDeployment(ctx, memcached)
+	if err != nil {
+		return result, fmt.Errorf("failed to reconcile deployment: %w", err)
+	}
+	return result, nil
+}
+
+// handleFinalizer will perform the required operations before deleting the CR.
+func (r *MemcachedReconciler) handleFinalizer(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error) {
+	log := log.FromContext(ctx)
+	log.Info("Resource is being deleted, performing finalizer operations")
+	result, err := r.reconcileHelper.ExecuteFinalizer(ctx, memcached)
+	if err != nil {
+		return result, fmt.Errorf("failed to execute finalizer: %w", err)
+	}
+	return result, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -100,11 +123,15 @@ func (r *MemcachedReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.deployHelper = NewDeploymentHelper(r)
 	r.reconcileHelper = NewReconciliationHelper(r.statusHelper, r.deployHelper, r)
 
-	return ctrl.NewControllerManagedBy(mgr).
+	err := ctrl.NewControllerManagedBy(mgr).
 		For(&cachev1beta1.Memcached{}).
 		// Inform Reconciler when any change happens in Owned Resources including deletion
 		Owns(&appsv1.Deployment{}).
 		Complete(r)
+	if err != nil {
+		return fmt.Errorf("failed to complete controller setup: %w", err)
+	}
+	return nil
 }
 
 /*

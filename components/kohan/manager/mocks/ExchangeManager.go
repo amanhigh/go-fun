@@ -74,6 +74,55 @@ func (_c *ExchangeManager_Exchange_Call) RunAndReturn(run func(context.Context, 
 	return _c
 }
 
+// ExchangeGains provides a mock function with given fields: ctx, gains
+func (_m *ExchangeManager) ExchangeGains(ctx context.Context, gains []tax.INRGains) common.HttpError {
+	ret := _m.Called(ctx, gains)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ExchangeGains")
+	}
+
+	var r0 common.HttpError
+	if rf, ok := ret.Get(0).(func(context.Context, []tax.INRGains) common.HttpError); ok {
+		r0 = rf(ctx, gains)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(common.HttpError)
+		}
+	}
+
+	return r0
+}
+
+// ExchangeManager_ExchangeGains_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ExchangeGains'
+type ExchangeManager_ExchangeGains_Call struct {
+	*mock.Call
+}
+
+// ExchangeGains is a helper method to define mock.On call
+//   - ctx context.Context
+//   - gains []tax.INRGains
+func (_e *ExchangeManager_Expecter) ExchangeGains(ctx interface{}, gains interface{}) *ExchangeManager_ExchangeGains_Call {
+	return &ExchangeManager_ExchangeGains_Call{Call: _e.mock.On("ExchangeGains", ctx, gains)}
+}
+
+func (_c *ExchangeManager_ExchangeGains_Call) Run(run func(ctx context.Context, gains []tax.INRGains)) *ExchangeManager_ExchangeGains_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]tax.INRGains))
+	})
+	return _c
+}
+
+func (_c *ExchangeManager_ExchangeGains_Call) Return(_a0 common.HttpError) *ExchangeManager_ExchangeGains_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ExchangeManager_ExchangeGains_Call) RunAndReturn(run func(context.Context, []tax.INRGains) common.HttpError) *ExchangeManager_ExchangeGains_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewExchangeManager creates a new instance of ExchangeManager. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewExchangeManager(t interface {

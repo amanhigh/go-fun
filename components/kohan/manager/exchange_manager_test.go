@@ -200,4 +200,135 @@ var _ = Describe("ExchangeManager", func() {
 			})
 		})
 	})
+
+	Describe("ExchangeGains", func() {
+		var (
+			gains []tax.INRGains
+		)
+
+		Context("Successful Rate Fetch (Exact Date)", func() {
+			BeforeEach(func() {
+				gains = []tax.INRGains{
+					{Gains: tax.Gains{Symbol: "AAPL", SellDate: "2023-04-15", PNL: 100}},
+				}
+				// Expected target date for SellDate "2023-04-15" is "2023-03-31"
+				expectedTargetDate := time.Date(2023, 3, 31, 0, 0, 0, 0, time.UTC)
+				mockSBI.EXPECT().GetTTBuyRate(ctx, expectedTargetDate).Return(82.50, nil).Once()
+			})
+
+			It("should set TTRate and TTDate correctly", func() {
+				err := exchangeMgr.ExchangeGains(ctx, gains)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(gains[0].TTRate).To(Equal(82.50))
+				Expect(gains[0].TTDate.Format(time.DateOnly)).To(Equal("2023-03-31"))
+			})
+		})
+
+		Context("Closest Date Scenario", func() {
+			BeforeEach(func() {
+				gains = []tax.INRGains{
+					{Gains: tax.Gains{Symbol: "MSFT", SellDate: "2023-03-10", PNL: 200}},
+				}
+				// Expected target date for SellDate "2023-03-10" is "2023-02-28"
+				requestedTargetDate := time.Date(2023, 2, 28, 0, 0, 0, 0, time.UTC)
+				closestDate := time.Date(2023, 2, 27, 0, 0, 0, 0, time.UTC)
+				mockSBI.EXPECT().GetTTBuyRate(ctx, requestedTargetDate).Return(82.00, tax.NewClosestDateError(requestedTargetDate, closestDate)).Once()
+			})
+
+			It("should set TTRate to closest rate and TTDate to closest date", func() {
+				err := exchangeMgr.ExchangeGains(ctx, gains)
+				Expect(err).ToNot(HaveOccurred()) // ClosestDateError is not a processing failure for ExchangeGains itself
+				Expect(gains[0].TTRate).To(Equal(82.00))
+				Expect(gains[0].TTDate.Format(time.DateOnly)).To(Equal("2023-02-27"))
+			})
+		})
+
+		Context("Error from SBIManager", func() {
+			BeforeEach(func() {
+				gains = []tax.INRGains{
+					{Gains: tax.Gains{Symbol: "GOOG", SellDate: "2023-05-20", PNL: 150}},
+				}
+				// Expected target date for SellDate "2023-05-20" is "2023-04-30"
+				expectedTargetDate := time.Date(2023, 4, 30, 0, 0, 0, 0, time.UTC)
+				mockSBI.EXPECT().GetTTBuyRate(ctx, expectedTargetDate).Return(0.0, common.ErrInternalServerError).Once() // Using a predefined common.HttpError
+			})
+
+			It("should return the error from SBIManager", func() {
+				err := exchangeMgr.ExchangeGains(ctx, gains)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(Equal(common.ErrInternalServerError))
+			})
+		})
+
+		Context("Invalid SellDate in INRGains", func() {
+			BeforeEach(func() {
+				gains = []tax.INRGains{
+					{Gains: tax.Gains{Symbol: "TSLA", SellDate: "invalid-date", PNL: 50}},
+				}
+				// No mock expectation for SBIManager as it shouldn't be called
+			})
+
+			It("should return an InvalidDateError", func() {
+				err := exchangeMgr.ExchangeGains(ctx, gains)
+				Expect(err).To(HaveOccurred())
+				_, ok := err.(tax.InvalidDateError) // Check if the error is of the expected type
+				Expect(ok).To(BeTrue(), "Error should be of type tax.InvalidDateError")
+			})
+		})
+
+		Context("Multiple Gains Processing", func() {
+			// Define dates clearly for readability
+			var (
+				sellDate1    = "2023-04-15" // Target Mar 31
+				targetDate1  = time.Date(2023, 3, 31, 0, 0, 0, 0, time.UTC)
+				rate1        = 82.50
+				sellDate2    = "2023-03-10" // Target Feb 28
+				targetDate2  = time.Date(2023, 2, 28, 0, 0, 0, 0, time.UTC)
+				closestDate2 = time.Date(2023, 2, 27, 0, 0, 0, 0, time.UTC)
+				rate2        = 82.00
+				sellDate3    = "2023-01-05" // Target Dec 31 (prev year)
+				targetDate3  = time.Date(2022, 12, 31, 0, 0, 0, 0, time.UTC)
+				rate3        = 81.00
+			)
+			BeforeEach(func() {
+				gains = []tax.INRGains{
+					{Gains: tax.Gains{Symbol: "S1", SellDate: sellDate1, PNL: 10}},
+					{Gains: tax.Gains{Symbol: "S2", SellDate: sellDate2, PNL: 20}},
+					{Gains: tax.Gains{Symbol: "S3", SellDate: sellDate3, PNL: 30}},
+				}
+				mockSBI.EXPECT().GetTTBuyRate(ctx, targetDate1).Return(rate1, nil).Once()
+				mockSBI.EXPECT().GetTTBuyRate(ctx, targetDate2).Return(rate2, tax.NewClosestDateError(targetDate2, closestDate2)).Once()
+				mockSBI.EXPECT().GetTTBuyRate(ctx, targetDate3).Return(rate3, nil).Once()
+			})
+
+			It("should process all gains correctly", func() {
+				err := exchangeMgr.ExchangeGains(ctx, gains)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Gain 1
+				Expect(gains[0].TTRate).To(Equal(rate1))
+				Expect(gains[0].TTDate.Format(time.DateOnly)).To(Equal(targetDate1.Format(time.DateOnly)))
+
+				// Gain 2 (Closest Date)
+				Expect(gains[1].TTRate).To(Equal(rate2))
+				Expect(gains[1].TTDate.Format(time.DateOnly)).To(Equal(closestDate2.Format(time.DateOnly)))
+
+				// Gain 3
+				Expect(gains[2].TTRate).To(Equal(rate3))
+				Expect(gains[2].TTDate.Format(time.DateOnly)).To(Equal(targetDate3.Format(time.DateOnly)))
+			})
+		})
+
+		Context("Empty Gains Slice", func() {
+			BeforeEach(func() {
+				gains = []tax.INRGains{}
+				// No mock expectations as SBIManager should not be called.
+			})
+
+			It("should complete without error", func() {
+				err := exchangeMgr.ExchangeGains(ctx, gains)
+				Expect(err).ToNot(HaveOccurred())
+			})
+		})
+	})
 })

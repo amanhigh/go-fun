@@ -64,8 +64,8 @@ type Valuation struct {
 	YearEndPosition Position
 }
 
-// INRValutaion mirrors Valuation structure with tax positions
-type INRValutaion struct {
+// INRValuation mirrors Valuation structure with tax positions
+type INRValuation struct {
 	Ticker          string
 	FirstPosition   INRPosition // First position with exchange rate details
 	PeakPosition    INRPosition // Peak position with exchange rate details
@@ -73,8 +73,8 @@ type INRValutaion struct {
 }
 
 // Helper to create tax valuation from base valuation
-func NewINRValuation(valuation Valuation) INRValutaion {
-	return INRValutaion{
+func NewINRValuation(valuation Valuation) INRValuation {
+	return INRValuation{
 		Ticker:          valuation.Ticker,
 		FirstPosition:   INRPosition{Position: valuation.FirstPosition},
 		PeakPosition:    INRPosition{Position: valuation.PeakPosition},
@@ -88,12 +88,6 @@ type INRPosition struct {
 	Position           // Embed original position
 	TTDate   time.Time // Date for which exchange rate is applied
 	TTRate   float64   // TT Buy rate used for conversion
-}
-
-// INRValue calculates INR value using embedded position's USD value
-// BUG: Should INRValue be part of Interface or remove if unused.
-func (t *INRPosition) INRValue() float64 {
-	return t.USDValue() * t.TTRate
 }
 
 // Implement Exchangeable interface for INRPosition
@@ -125,4 +119,7 @@ func (t *INRPosition) SetTTDate(date time.Time) {
 
 func (t *INRPosition) IsValid() bool {
 	return !t.Date.IsZero() && t.TTRate > 0
+}
+func (t *INRPosition) INRValue() float64 {
+	return t.USDValue() * t.TTRate
 }

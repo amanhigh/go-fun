@@ -95,6 +95,7 @@ var _ = Describe("InterestManager", func() {
 		})
 	})
 
+	//nolint: dupl
 	Context("Multiple Interests", func() {
 		var (
 			interests []tax.Interest

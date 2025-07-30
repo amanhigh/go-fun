@@ -10,11 +10,11 @@ import (
 // TaxValuationManager handles currency exchange rate processing
 type TaxValuationManager interface {
 	// Processes a list of Valuation records, adding INR values based on exchange rates.
-	ProcessValuations(ctx context.Context, valuations []tax.Valuation) ([]tax.INRValutaion, common.HttpError)
+	ProcessValuations(ctx context.Context, valuations []tax.Valuation) ([]tax.INRValuation, common.HttpError)
 
 	// GetYearlyValuationsUSD calculates the base USD Valuation (First, Peak, YearEnd)
 	// for all relevant tickers based on trade history up to the end of the specified calendar year.
-	GetYearlyValuationsUSD(ctx context.Context, year int) ([]tax.Valuation, common.HttpError) // Added method signature
+	GetYearlyValuationsUSD(ctx context.Context, year int) ([]tax.Valuation, common.HttpError)
 }
 
 // Implementation struct updated with ValuationManager
@@ -31,24 +31,27 @@ func NewTaxValuationManager(exchangeManager ExchangeManager, valuationManager Va
 	}
 }
 
-func (v *TaxValuationManagerImpl) ProcessValuations(ctx context.Context, valuations []tax.Valuation) (inrValuations []tax.INRValutaion, err common.HttpError) {
-	exchangeAbles := make([]tax.Exchangeable, 0, len(valuations))
+func (v *TaxValuationManagerImpl) ProcessValuations(ctx context.Context, valuations []tax.Valuation) (inrValuations []tax.INRValuation, err common.HttpError) {
+	// Pre-allocate slice with the correct size
+	inrValuations = make([]tax.INRValuation, len(valuations))
 
-	for _, valuation := range valuations {
-		// Create tax valuation with positions
-		inrValuation := tax.NewINRValuation(valuation)
+	// Pre-allocate exchangeAbles slice with the final capacity
+	exchangeAbles := make([]tax.Exchangeable, 0, len(valuations)*3) // 3 positions per valuation
 
-		// Collect all positions that need exchange rates
+	// Iterate using index
+	for i, valuation := range valuations {
+		// Create and assign the INRValuation directly into the final slice at index i
+		inrValuations[i] = tax.NewINRValuation(valuation)
+
+		// Append pointers *from the element within the inrValuations slice*
 		exchangeAbles = append(exchangeAbles,
-			&inrValuation.FirstPosition,
-			&inrValuation.PeakPosition,
-			&inrValuation.YearEndPosition)
-
-		inrValuations = append(inrValuations, inrValuation)
+			&inrValuations[i].FirstPosition,
+			&inrValuations[i].PeakPosition,
+			&inrValuations[i].YearEndPosition)
 	}
 
+	// ExchangeManager modifies the structs in inrValuations via these pointers
 	err = v.exchangeManager.Exchange(ctx, exchangeAbles)
-
 	return
 }
 

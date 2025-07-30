@@ -8,15 +8,12 @@ version: "2"
 linters:
   default: none
   enable:
-    # TODO: #C Strengthen linters and fix issues.
     # High Priority - Code Correctness & Bugs
     - errcheck      # critical error checking
     - govet        # suspicious constructs
     - staticcheck  # advanced static analysis
-    # - gosimple     # code simplification
-    # - typecheck    # type checking
     - gosec        # security checks
-    # - wrapcheck    # error wrapping validation
+    - wrapcheck    # error wrapping validation
     
     # Safety & Resources
     - bodyclose      # ensure http response closed
@@ -27,7 +24,6 @@ linters:
     - unconvert    # type conversion
     
     # Code Style Essentials
-    # - goimports     # import sorting + gofmt
     - revive        # general style (golint replacement)
     - gocritic      
     - unused        # unused code detection
@@ -40,15 +36,15 @@ linters:
     - testifylint   # testify best practices
     - whitespace    # ws formatting
     - ginkgolinter  # ginkgo best practices
-    # - interfacebloat # interface bloat
-    # - dupl           # duplicate code detection
-    # - ireturn        # interface return
+    - dupl           # duplicate code detection
 
     # Complexity
     - gocyclo      # Cyclomatic complexity
     - cyclop       # Package complexity and maintainability
     - funlen       # Function length control
     - lll          # Line length control
+    - interfacebloat # interface bloat
+    
   settings:
     govet:
       enable-all: true
@@ -76,13 +72,14 @@ linters:
 
     errcheck:
       check-type-assertions: true
-
+   
     wrapcheck:
+      ignorePackageGlobs:
+        - "github.com/amanhigh/go-fun/**" # Ignore errors originating from our own repo components
       ignoreSigs:
         - ^fmt\.Errorf$  # Already formatted errors
         - ^time\.Parse$  # Simple parsing errors
         - ^errors\.New$  # Basic error creation
-
     # https://go-critic.com/overview
     gocritic:
       enabled-checks:
@@ -117,7 +114,7 @@ linters:
         - name: superfluous-else
         - name: unused-parameter
         - name: unreachable-code
-        - name: redefines-builtin-id  
+        - name: redefines-builtin-id
         - name: argument-limit
           arguments: [6]      # Max parameters
         - name: function-result-limit
@@ -163,4 +160,4 @@ formatters:
 output:
   sort-order:
     - linter
-    - severity    
+    - severity

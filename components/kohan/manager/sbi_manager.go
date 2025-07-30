@@ -16,6 +16,7 @@ import (
 //go:generate mockery --name SBIManager
 type SBIManager interface {
 	DownloadRates(ctx context.Context) common.HttpError
+	// TODO: Get Last TT Buy Rate for month.
 	GetTTBuyRate(ctx context.Context, date time.Time) (float64, common.HttpError)
 }
 
@@ -34,25 +35,26 @@ func NewSBIManager(client clients.SBIClient, filePath string, exchangeRepo repos
 }
 
 func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, requestedDate time.Time) (rate float64, err common.HttpError) {
-	rates, repoErr := s.exchangeRepo.GetAllRecords(ctx)
-	if repoErr != nil {
-		return 0, common.NewServerError(repoErr)
-	}
-
-	if len(rates) == 0 {
-		return 0, tax.NewRateNotFoundError(requestedDate)
-	}
-
-	// Try exact match first
-	rate, err = s.findExactRate(rates, requestedDate)
+	// Try exact match first using repository's direct lookup
+	rate, err = s.findExactRate(ctx, requestedDate)
 	if err == nil {
 		return rate, nil
 	}
 
-	// If the error is RateNotFoundError, try finding the closest rate.
-	// Otherwise, return the error (e.g., ServerError from date parsing).
+	// If the error is RateNotFoundError, try finding the closest rate by fetching all records.
+	// Otherwise, return the original error (e.g., ServerError from date parsing).
 	if _, ok := err.(tax.RateNotFoundError); ok {
-		// Find closest previous rate
+		rates, repoErr := s.exchangeRepo.GetAllRecords(ctx)
+		if repoErr != nil {
+			return 0, common.NewServerError(repoErr)
+		}
+
+		if len(rates) == 0 {
+			// If no records at all, still a RateNotFoundError
+			return 0, tax.NewRateNotFoundError(requestedDate)
+		}
+
+		// Find closest previous rate from all records
 		return s.findClosestRate(rates, requestedDate)
 	}
 
@@ -60,18 +62,15 @@ func (s *SBIManagerImpl) GetTTBuyRate(ctx context.Context, requestedDate time.Ti
 	return 0, err
 }
 
-// findExactRate attempts to find exact date match
-func (s *SBIManagerImpl) findExactRate(rates []tax.SbiRate, requestedDate time.Time) (rate float64, err common.HttpError) {
-	// FIXME: #C Use exchangeRepo.GetRecordsForTicker which is now Date.
+// findExactRate attempts to find exact date match using the repository's direct lookup.
+func (s *SBIManagerImpl) findExactRate(ctx context.Context, requestedDate time.Time) (rate float64, err common.HttpError) {
 	dateStr := requestedDate.Format(time.DateOnly)
-	for _, rate := range rates {
-		rateDate, dateErr := rate.GetDate()
-		if dateErr != nil {
-			return 0, dateErr
-		}
-		if rateDate.Format(time.DateOnly) == dateStr {
-			return rate.TTBuy, nil
-		}
+	rateRecords, repoErr := s.exchangeRepo.GetRecordsForTicker(ctx, dateStr)
+	if repoErr != nil {
+		return 0, common.NewServerError(repoErr)
+	}
+	if len(rateRecords) > 0 {
+		return rateRecords[0].TTBuy, nil
 	}
 	return 0, tax.NewRateNotFoundError(requestedDate)
 }

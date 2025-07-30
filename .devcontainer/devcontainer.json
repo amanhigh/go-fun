@@ -12,7 +12,6 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"Continue.continue",
 				"golang.go",
 				"YuichiNakamura.code-to-clipboard",
 				"RooVeterinaryInc.roo-cline",

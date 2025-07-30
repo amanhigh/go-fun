@@ -37,23 +37,20 @@ func (c *CapitalGainManagerImpl) GetGainsForYear(ctx context.Context, year int) 
 	}
 
 	// Filter by financial year
-	return c.financialYearManager.FilterRecordsByFY(ctx, records, year)
+	return c.financialYearManager.FilterIndia(ctx, records, year)
 }
 
-func (c *CapitalGainManagerImpl) ProcessTaxGains(ctx context.Context, gains []tax.Gains) (taxGains []tax.INRGains, err common.HttpError) {
-	// Initialize taxGains slice and a slice for exchangeable items
-	taxGains = make([]tax.INRGains, len(gains))
-	exchangeableGains := make([]tax.Exchangeable, len(gains))
+func (c *CapitalGainManagerImpl) ProcessTaxGains(ctx context.Context, gains []tax.Gains) ([]tax.INRGains, common.HttpError) {
+	taxGains := make([]tax.INRGains, len(gains))
 
 	for i, gain := range gains {
-		// Populate taxGains slice with base gains
 		taxGains[i].Gains = gain
-		// Create slice of pointers to elements in taxGains for the exchange manager
-		exchangeableGains[i] = &taxGains[i]
 	}
 
-	// Exchange rates will modify the structs in taxGains via the pointers in exchangeableGains
-	err = c.exchangeManager.Exchange(ctx, exchangeableGains)
+	err := c.exchangeManager.ExchangeGains(ctx, taxGains)
+	if err != nil {
+		return nil, err
+	}
 
-	return
+	return taxGains, nil
 }

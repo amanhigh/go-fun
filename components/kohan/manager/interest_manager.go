@@ -12,7 +12,7 @@ import (
 type InterestManager interface {
 	// Retrieves all Interest records for the specified financial year.
 	// The year parameter represents the starting year of the financial year (e.g., 2023 for FY 2023-24).
-	GetInterestForYear(ctx context.Context, year int) ([]tax.Interest, common.HttpError) // Added method signature
+	GetInterestForYear(ctx context.Context, year int) ([]tax.Interest, common.HttpError)
 
 	// Processes a list of Interest records, adding INR values based on exchange rates.
 	ProcessInterest(ctx context.Context, interest []tax.Interest) ([]tax.INRInterest, common.HttpError)
@@ -47,7 +47,7 @@ func (i *InterestManagerImpl) GetInterestForYear(ctx context.Context, year int) 
 	}
 
 	// Filter by financial year
-	return i.financialYearManager.FilterRecordsByFY(ctx, records, year)
+	return i.financialYearManager.FilterIndia(ctx, records, year)
 }
 
 // ProcessInterest implementation (Ensure it uses injected exchangeManager)

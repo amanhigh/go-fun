@@ -83,7 +83,7 @@ func setupFlags() *operatorConfig {
 func setupManager(config *operatorConfig) (ctrl.Manager, error) {
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&config.zapOptions)))
 
-	return ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     config.metricsAddr,
 		Port:                   defaultWebhookPort,
@@ -102,6 +102,10 @@ func setupManager(config *operatorConfig) (ctrl.Manager, error) {
 		// after the manager stops then its usage might be unsafe.
 		// LeaderElectionReleaseOnCancel: true,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("unable to create manager: %w", err)
+	}
+	return mgr, nil
 }
 
 func setupControllers(mgr ctrl.Manager) error {

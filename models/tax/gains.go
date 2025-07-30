@@ -7,7 +7,6 @@ import (
 	"github.com/amanhigh/go-fun/models/common"
 )
 
-// FIXME: #A Create Test Data for Integration Test for all CSV Models
 type Gains struct {
 	Symbol     string  `csv:"Symbol"`
 	BuyDate    string  `csv:"BuyDate"`
@@ -35,14 +34,21 @@ func (g Gains) GetDate() (time.Time, common.HttpError) {
 }
 
 func (g Gains) ParseBuyDate() (time.Time, error) {
-	return time.Parse(time.DateOnly, g.BuyDate)
+	parsedTime, err := time.Parse(time.DateOnly, g.BuyDate)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to parse buy date '%s': %w", g.BuyDate, err)
+	}
+	return parsedTime, nil
 }
 
 func (g Gains) ParseSellDate() (time.Time, error) {
-	return time.Parse(time.DateOnly, g.SellDate)
+	parsedTime, err := time.Parse(time.DateOnly, g.SellDate)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to parse sell date '%s': %w", g.SellDate, err)
+	}
+	return parsedTime, nil
 }
 
-// FIXME: #A Create TaxSummary model and Wire up TaxManager.
 // INRGains adds exchange rate details to basic gains
 type INRGains struct {
 	Gains            // Embed original gains
@@ -71,4 +77,13 @@ func (g *INRGains) SetTTDate(date time.Time) {
 // INRValue computes the PNL value in INR
 func (g *INRGains) INRValue() float64 {
 	return g.PNL * g.TTRate
+}
+
+// NewGains creates a new Gains object.
+func NewGains(symbol, sellDate string, pnl float64) Gains {
+	return Gains{
+		Symbol:   symbol,
+		SellDate: sellDate,
+		PNL:      pnl,
+	}
 }

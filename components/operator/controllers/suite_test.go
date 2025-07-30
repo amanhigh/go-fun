@@ -17,7 +17,9 @@ limitations under the License.
 package controllers
 
 import (
+	"os"
 	"path/filepath"
+
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -49,6 +51,8 @@ func TestAPIs(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
+	os.Setenv("KUBEBUILDER_ASSETS", "/tmp/envtest/k8s/1.25.0-linux-amd64")
+
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
 	By("bootstrapping test environment")

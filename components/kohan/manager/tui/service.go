@@ -1,18 +1,34 @@
 package tui
 
 import (
-	"os"
-	"os/exec"
-	"regexp"
 	"strings"
 
-	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/components/kohan/repository"
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/rs/zerolog/log"
 )
+
+// ServiceFilterer provides filtering capabilities for Kubernetes services
+type ServiceFilterer interface {
+	// Filter Operations
+
+	// FilterServices filters available services based on given keyword
+	// Services containing keyword (case-insensitive) are added to filtered list
+	FilterServices(keyword string)
+
+	// GetFilteredServices returns services matching current filter
+	GetFilteredServices() []string
+
+	// ToggleFilteredServices toggles selection state of all filtered services
+	// This affects all services currently in filtered list
+	ToggleFilteredServices()
+}
 
 // ServiceManager provides management capabilities for Kubernetes services including
 // selection, filtering and operations like setup, clean and update
 type ServiceManager interface {
+	ServiceFilterer // Embed the new interface
+
 	// Service Management Operations
 
 	// GetAllServices returns all available services discovered from the makefiles
@@ -38,37 +54,23 @@ type ServiceManager interface {
 
 	// SetupServices runs setup make target on currently selected services
 	// Returns output of make command and any error encountered
-	SetupServices() (string, error)
+	SetupServices() (string, common.HttpError)
 
 	// CleanServices runs clean make target on currently selected services
 	// Returns output of make command and any error encountered
-	CleanServices() (string, error)
+	CleanServices() (string, common.HttpError)
 
 	// UpdateServices runs update make target on currently selected services
 	// Returns output of make command and any error encountered
-	UpdateServices() (string, error)
-
-	// Filter Operations
-
-	// FilterServices filters available services based on given keyword
-	// Services containing keyword (case-insensitive) are added to filtered list
-	FilterServices(keyword string)
-
-	// GetFilteredServices returns services matching current filter
-	GetFilteredServices() []string
-
-	// ToggleFilteredServices toggles selection state of all filtered services
-	// This affects all services currently in filtered list
-	ToggleFilteredServices()
+	UpdateServices() (string, common.HttpError)
 }
 
-// TODO: Move to Repository Layer ?
-func NewServiceManager(makeDir, serviceFile string) *ServiceManagerImpl {
+func NewServiceManager(makeDir string, repo repository.TuiServiceRepository) *ServiceManagerImpl {
 	manager := &ServiceManagerImpl{
-		allServices:         []string{},
-		selectedServices:    []string{},
-		makeDir:             makeDir,
-		selectedServicePath: serviceFile,
+		allServices:      []string{},
+		selectedServices: []string{},
+		makeDir:          makeDir,
+		repo:             repo,
 	}
 	manager.loadAvailableServices()
 	manager.loadSelectedServices()
@@ -76,11 +78,11 @@ func NewServiceManager(makeDir, serviceFile string) *ServiceManagerImpl {
 }
 
 type ServiceManagerImpl struct {
-	allServices         []string
-	selectedServices    []string
-	filteredServices    []string
-	makeDir             string
-	selectedServicePath string
+	allServices      []string
+	selectedServices []string
+	filteredServices []string
+	makeDir          string
+	repo             repository.TuiServiceRepository
 }
 
 func (sm *ServiceManagerImpl) GetAllServices() []string {
@@ -140,14 +142,18 @@ func (sm *ServiceManagerImpl) ToggleFilteredServices() {
 	}
 }
 
-func (sm *ServiceManagerImpl) saveSelectedServices() error {
-	return util.WriteLines(sm.selectedServicePath, sm.selectedServices)
+func (sm *ServiceManagerImpl) saveSelectedServices() common.HttpError {
+	return sm.repo.SaveSelectedServices(sm.selectedServices)
 }
 
 func (sm *ServiceManagerImpl) loadSelectedServices() {
-	if _, err := os.Stat(sm.selectedServicePath); os.IsNotExist(err) {
-		sm.selectedServices = util.ReadAllLines(sm.selectedServicePath)
+	services, err := sm.repo.LoadSelectedServices()
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to load selected services from repository")
+		sm.selectedServices = []string{} // Default to empty on error
+		return
 	}
+	sm.selectedServices = services
 }
 
 func (sm *ServiceManagerImpl) ClearSelectedServices() {
@@ -158,68 +164,37 @@ func (sm *ServiceManagerImpl) ClearSelectedServices() {
 }
 
 func (sm *ServiceManagerImpl) loadAvailableServices() {
-	var services []string
-	lines, err := executeMakeCommand(sm.getServiceMakeDir(), "services.mk", "help")
+	services, err := sm.repo.LoadAvailableServices(sm.makeDir)
 	if err != nil {
-		services = []string{"dummy"} // Fallback or error handling
-	}
-	ansiRegex := regexp.MustCompile(`\x1b\[[0-9;]*m`)
-	for _, line := range lines {
-		if line == "" {
-			continue
-		}
-		fields := strings.Fields(line)
-		service := ansiRegex.ReplaceAllString(fields[0], "")
-		if !startsWithExcludedName(service) {
-			services = append(services, service)
-		}
+		log.Error().Err(err).Str("makeDir", sm.makeDir).Msg("Failed to load available services from repository")
+		sm.allServices = []string{"dummy"} // Fallback as per plan
+		return
 	}
 	sm.allServices = services
-}
-
-var excludedNames = []string{"make", "help", "[First"}
-
-func startsWithExcludedName(line string) bool {
-	for _, name := range excludedNames {
-		if strings.HasPrefix(line, name) {
-			return true
-		}
-	}
-	return false
 }
 
 func (sm *ServiceManagerImpl) getServiceMakeDir() string {
 	return sm.makeDir + "/services"
 }
 
-func executeMakeCommand(dirPath, file, target string) ([]string, error) {
-	cmd := exec.Command("make", "-s", "-C", dirPath, "-f", file, target)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, err
-	}
-
-	return strings.Split(string(output), "\n"), nil
-}
-
-func (sm *ServiceManagerImpl) CleanServices() (string, error) {
-	output, err := executeMakeCommand(sm.getServiceMakeDir(), "Makefile", "clean")
+func (sm *ServiceManagerImpl) CleanServices() (string, common.HttpError) {
+	output, err := sm.repo.ExecuteMakeCommand(sm.getServiceMakeDir(), "Makefile", "clean")
 	if err != nil {
 		return "", err
 	}
 	return strings.Join(output, "\n"), nil
 }
 
-func (sm *ServiceManagerImpl) SetupServices() (string, error) {
-	output, err := executeMakeCommand(sm.getServiceMakeDir(), "Makefile", "setup")
+func (sm *ServiceManagerImpl) SetupServices() (string, common.HttpError) {
+	output, err := sm.repo.ExecuteMakeCommand(sm.getServiceMakeDir(), "Makefile", "setup")
 	if err != nil {
 		return "", err
 	}
 	return strings.Join(output, "\n"), nil
 }
 
-func (sm *ServiceManagerImpl) UpdateServices() (string, error) {
-	output, err := executeMakeCommand(sm.getServiceMakeDir(), "Makefile", "update")
+func (sm *ServiceManagerImpl) UpdateServices() (string, common.HttpError) {
+	output, err := sm.repo.ExecuteMakeCommand(sm.getServiceMakeDir(), "Makefile", "update")
 	if err != nil {
 		return "", err
 	}

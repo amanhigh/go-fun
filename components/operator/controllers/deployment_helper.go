@@ -75,7 +75,7 @@ func (d *deploymentHelperImpl) CreateNewDeployment(ctx context.Context, memcache
 	// Set controller reference
 	if err := ctrl.SetControllerReference(memcached, dep, d.controller.Scheme); err != nil {
 		log.Error(err, "Failed to set controller reference")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("failed to set controller reference: %w", err)
 	}
 
 	// Create deployment
@@ -83,7 +83,7 @@ func (d *deploymentHelperImpl) CreateNewDeployment(ctx context.Context, memcache
 		"Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
 	if err := d.controller.Create(ctx, dep); err != nil {
 		log.Error(err, "Failed to create deployment")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("failed to create deployment: %w", err)
 	}
 
 	return ctrl.Result{RequeueAfter: time.Minute}, nil
