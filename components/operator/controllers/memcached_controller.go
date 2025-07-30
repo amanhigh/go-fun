@@ -68,10 +68,13 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// Fetch Instance - If not found, it means the Custom Resource was deleted
 	memcached, err := r.reconcileHelper.FetchMemcachedInstance(ctx, req)
-	var result ctrl.Result // Declare result variable
-	if memcached == nil || err != nil {
+	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to fetch Memcached instance: %w", err)
 	}
+	if memcached == nil {
+		return ctrl.Result{}, nil
+	}
+	var result ctrl.Result // Declare result variable
 
 	// Initialize Status - Sets up initial conditions if none exist
 	if err = r.statusHelper.InitializeStatus(ctx, memcached); err != nil {
