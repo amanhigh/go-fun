@@ -19,6 +19,11 @@ mkdir -p "$OUTPUT_DIR"
 
 # 2. Schedule cleanup to run when the script exits
 cleanup() {
+  # Copy the summary if it was created successfully
+  if [ -f "$YEARLY_SUMMARY_PATH" ]; then
+    echo "Copying summary to ~/Downloads..."
+    cp "$YEARLY_SUMMARY_PATH" ~/Downloads/
+  fi
   echo "Cleaning up E2E test environment..."
   rm -rf "$TEMP_DIR"
 }
