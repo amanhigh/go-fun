@@ -149,7 +149,15 @@ func (v *ValuationManagerImpl) processTrades(
 	trades []tax.Trade,
 	openingPeriodPosition tax.Position,
 ) (currentQuantity float64, err common.HttpError) {
+	// Add this check at the beginning of the function
+	if openingPeriodPosition.Quantity == 0 && len(trades) > 0 && trades[0].Type == "SELL" {
+		return 0, common.NewHttpError(fmt.Sprintf("first trade can't be sell on fresh start for %s", analysis.Ticker), http.StatusBadRequest)
+	}
+
 	currentQuantity = openingPeriodPosition.Quantity
+	if openingPeriodPosition.Quantity > 0 {
+		analysis.PeakPosition = openingPeriodPosition
+	}
 
 	for _, trade := range trades {
 		tradeDate, dateErr := trade.GetDate()
