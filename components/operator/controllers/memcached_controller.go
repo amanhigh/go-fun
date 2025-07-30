@@ -74,7 +74,6 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	if memcached == nil {
 		return ctrl.Result{}, nil
 	}
-	var result ctrl.Result // Declare result variable
 
 	// Initialize Status - Sets up initial conditions if none exist
 	if err = r.statusHelper.InitializeStatus(ctx, memcached); err != nil {
@@ -83,16 +82,16 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// Check if Resource is being deleted
 	if memcached.GetDeletionTimestamp() != nil {
-		log.Info("Resource is being deleted, performing finalizer operations")
-		result, err = r.reconcileHelper.ExecuteFinalizer(ctx, memcached)
-		if err != nil {
-			return result, fmt.Errorf("failed to execute finalizer: %w", err)
-		}
-		return result, nil
+		return r.handleFinalizer(ctx, memcached)
 	}
 
+	return r.reconcileNormal(ctx, memcached)
+}
+
+func (r *MemcachedReconciler) reconcileNormal(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error) {
 	// Add Finalizer if it doesn't exist
-	if result, err = r.reconcileHelper.AddFinalizer(ctx, memcached); err != nil {
+	result, err := r.reconcileHelper.AddFinalizer(ctx, memcached)
+	if err != nil {
 		return result, fmt.Errorf("failed to add finalizer: %w", err)
 	}
 
@@ -100,6 +99,17 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	result, err = r.reconcileHelper.ReconcileDeployment(ctx, memcached)
 	if err != nil {
 		return result, fmt.Errorf("failed to reconcile deployment: %w", err)
+	}
+	return result, nil
+}
+
+// handleFinalizer will perform the required operations before deleting the CR.
+func (r *MemcachedReconciler) handleFinalizer(ctx context.Context, memcached *cachev1beta1.Memcached) (ctrl.Result, error) {
+	log := log.FromContext(ctx)
+	log.Info("Resource is being deleted, performing finalizer operations")
+	result, err := r.reconcileHelper.ExecuteFinalizer(ctx, memcached)
+	if err != nil {
+		return result, fmt.Errorf("failed to execute finalizer: %w", err)
 	}
 	return result, nil
 }

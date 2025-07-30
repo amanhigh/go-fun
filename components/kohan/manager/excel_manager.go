@@ -89,10 +89,7 @@ func (e *ExcelManagerImpl) createSheetWithHeaders(ctx context.Context, f *exceli
 	}
 	f.SetActiveSheet(index)
 
-	if err := e.writeHeaders(f, sheetName, headers); err != nil {
-		return err
-	}
-	return nil
+	return e.writeHeaders(f, sheetName, headers)
 }
 
 // writeGainsSheet handles the creation and population of the "Gains" sheet.
