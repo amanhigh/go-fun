@@ -80,22 +80,30 @@ func (e *ExcelManagerImpl) ensureDirectoryExists(ctx context.Context) error {
 	return nil
 }
 
-// writeGainsSheet handles the creation and population of the "Gains" sheet.
-func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File, gains []tax.INRGains) error {
-	sheetName := "Gains"
+// createSheetWithHeaders creates a new sheet and writes the headers.
+func (e *ExcelManagerImpl) createSheetWithHeaders(ctx context.Context, f *excelize.File, sheetName string, headers []string) error {
 	index, err := f.NewSheet(sheetName)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Str("sheet", sheetName).Msg("Failed to create sheet")
 		return fmt.Errorf("failed to create sheet %s: %w", sheetName, err)
 	}
-	f.SetActiveSheet(index) // Important to set active sheet for operations like SetRowStyle
+	f.SetActiveSheet(index)
 
+	if err := e.writeHeaders(f, sheetName, headers); err != nil {
+		return err
+	}
+	return nil
+}
+
+// writeGainsSheet handles the creation and population of the "Gains" sheet.
+func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File, gains []tax.INRGains) error {
+	sheetName := "Gains"
 	headers := []string{
 		"Symbol", "BuyDate", "SellDate", "Quantity", "PNL (USD)",
 		"Commission (USD)", "Type", "TTDate", "TTRate", "PNL (INR)",
 	}
-	if err := e.writeHeaders(f, sheetName, headers); err != nil {
-		return err // Error logged in writeHeaders
+	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
+		return err
 	}
 
 	for idx, gainRecord := range gains {
@@ -124,17 +132,10 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 // It assumes tax.INRDividend has fields: Symbol, Date, Amount, TTDate, TTRate and a method INRValue().
 func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.File, dividends []tax.INRDividend) error {
 	sheetName := "Dividends"
-	index, err := f.NewSheet(sheetName)
-	if err != nil {
-		log.Ctx(ctx).Error().Err(err).Str("sheet", sheetName).Msg("Failed to create sheet")
-		return fmt.Errorf("failed to create sheet %s: %w", sheetName, err)
-	}
-	f.SetActiveSheet(index)
-
 	headers := []string{
 		"Symbol", "Date", "Amount (USD)", "TTDate", "TTRate", "Amount (INR)",
 	}
-	if err := e.writeHeaders(f, sheetName, headers); err != nil {
+	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
 		return err
 	}
 
@@ -159,20 +160,7 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 // writeValuationsSheet handles the creation and population of the "Valuations" sheet.
 func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize.File, valuations []tax.INRValuation) error {
 	sheetName := "Valuations"
-	index, err := f.NewSheet(sheetName)
-	if err != nil {
-		log.Ctx(ctx).Error().Err(err).Str("sheet", sheetName).Msg("Failed to create sheet")
-		return fmt.Errorf("failed to create sheet %s: %w", sheetName, err)
-	}
-	f.SetActiveSheet(index)
-
-	headers := []string{
-		"Symbol",
-		"Date (First)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
-		"Date (Peak)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
-		"Date (YearEnd)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
-	}
-	if err := e.writeHeaders(f, sheetName, headers); err != nil {
+	if err := e.createSheetWithHeaders(ctx, f, sheetName, e.getValuationHeaders()); err != nil {
 		return err
 	}
 
@@ -187,54 +175,43 @@ func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize
 	return nil
 }
 
-func (e *ExcelManagerImpl) buildValuationRow(valuationRecord tax.INRValuation) []interface{} {
-	firstPos := valuationRecord.FirstPosition
-	peakPos := valuationRecord.PeakPosition
-	yearEndPos := valuationRecord.YearEndPosition
+func (e *ExcelManagerImpl) getValuationHeaders() []string {
+	return []string{
+		"Symbol",
+		"Date (First)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+		"Date (Peak)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+		"Date (YearEnd)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+	}
+}
+
+func (e *ExcelManagerImpl) buildValuationRow(valuation tax.INRValuation) []interface{} {
+	rowData := []interface{}{valuation.Ticker}
+	rowData = append(rowData, e.getPositionRowData(&valuation.FirstPosition)...)
+	rowData = append(rowData, e.getPositionRowData(&valuation.PeakPosition)...)
+	rowData = append(rowData, e.getPositionRowData(&valuation.YearEndPosition)...)
+	return rowData
+}
+
+func (e *ExcelManagerImpl) getPositionRowData(pos *tax.INRPosition) []interface{} {
 	return []interface{}{
-		valuationRecord.Ticker,
-		// First Position
-		e.formatDateForExcel(firstPos.Date),
-		firstPos.Quantity,
-		firstPos.USDPrice,
-		firstPos.USDValue(),
-		e.formatDateForExcel(firstPos.TTDate),
-		firstPos.TTRate,
-		firstPos.INRValue(),
-		// Peak Position
-		e.formatDateForExcel(peakPos.Date),
-		peakPos.Quantity,
-		peakPos.USDPrice,
-		peakPos.USDValue(),
-		e.formatDateForExcel(peakPos.TTDate),
-		peakPos.TTRate,
-		peakPos.INRValue(),
-		// Year End Position
-		e.formatDateForExcel(yearEndPos.Date),
-		yearEndPos.Quantity,
-		yearEndPos.USDPrice,
-		yearEndPos.USDValue(),
-		e.formatDateForExcel(yearEndPos.TTDate),
-		yearEndPos.TTRate,
-		yearEndPos.INRValue(),
+		e.formatDateForExcel(pos.Date),
+		pos.Quantity,
+		pos.USDPrice,
+		pos.USDValue(),
+		e.formatDateForExcel(pos.TTDate),
+		pos.TTRate,
+		pos.INRValue(),
 	}
 }
 
 // writeInterestSheet handles the creation and population of the "Interest" sheet.
 func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.File, interest []tax.INRInterest) error {
 	sheetName := "Interest"
-	index, err := f.NewSheet(sheetName)
-	if err != nil {
-		log.Ctx(ctx).Error().Err(err).Str("sheet", sheetName).Msg("Failed to create sheet")
-		return fmt.Errorf("failed to create sheet %s: %w", sheetName, err)
-	}
-	f.SetActiveSheet(index)
-
 	headers := []string{
 		"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)",
 		"TTDate", "TTRate", "Amount (INR)",
 	}
-	if err := e.writeHeaders(f, sheetName, headers); err != nil {
+	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
 		return err
 	}
 
