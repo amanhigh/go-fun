@@ -130,7 +130,7 @@ func (ki *KohanInjector) provideValuationManager(
 	tradeRepository repository.TradeRepository,
 	fyManager manager.FinancialYearManager[taxmodels.Trade],
 ) manager.ValuationManager {
-	return manager.NewValuationManager(tickerManager, accountManager, tradeRepository, fyManager) // Pass fyManager
+	return manager.NewValuationManager(tickerManager, accountManager, tradeRepository, fyManager)
 }
 
 func (ki *KohanInjector) provideTaxValuationManager(
@@ -192,7 +192,7 @@ func (ki *KohanInjector) provideTaxManager(
 	taxValuationManager manager.TaxValuationManager,
 	excelMgr manager.ExcelManager,
 ) manager.TaxManager {
-	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager, excelMgr) // PASS THE NEW DEPENDENCY
+	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager, excelMgr)
 }
 
 func provideTuiServiceRepository(cfg config.DariusConfig) repository.TuiServiceRepository {
@@ -264,7 +264,7 @@ func (ki *KohanInjector) registerFinancialYearManagers() {
 	container.MustSingleton(ki.di, ki.provideFinancialYearManagerGains)
 	container.MustSingleton(ki.di, ki.provideFinancialYearManagerDividends)
 	container.MustSingleton(ki.di, ki.provideFinancialYearManagerInterest)
-	container.MustSingleton(ki.di, ki.provideFinancialYearManagerTrade) // Register Trade FY Manager
+	container.MustSingleton(ki.di, ki.provideFinancialYearManagerTrade)
 }
 
 // registerTaxComponents registers managers specifically for tax calculations.

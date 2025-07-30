@@ -51,8 +51,8 @@ var _ = Describe("ValuationManager", func() {
 		mockTickerManager = mocks.NewTickerManager(GinkgoT())
 		mockAccountManager = mocks.NewAccountManager(GinkgoT())
 		mockTradeRepository = repoMocks.NewTradeRepository(GinkgoT())
-		mockFyManager = mocks.NewFinancialYearManager[tax.Trade](GinkgoT())                                                       // Initialize mock FY Manager
-		valuationManager = manager.NewValuationManager(mockTickerManager, mockAccountManager, mockTradeRepository, mockFyManager) // Pass mockFyManager
+		mockFyManager = mocks.NewFinancialYearManager[tax.Trade](GinkgoT())
+		valuationManager = manager.NewValuationManager(mockTickerManager, mockAccountManager, mockTradeRepository, mockFyManager)
 	})
 
 	Context("Analyse Valuation", func() {
