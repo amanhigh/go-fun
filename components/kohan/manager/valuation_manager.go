@@ -143,13 +143,12 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 }
 
 // processTrades updates analysis based on trades and opening position.
-// It returns the final currentQuantity, maxQuantityDuringPeriod, and any error.
+// It returns the final currentQuantity, and any error.
 func (v *ValuationManagerImpl) processTrades(
 	analysis *tax.Valuation,
 	trades []tax.Trade,
 	openingPeriodPosition tax.Position,
 ) (currentQuantity float64, err common.HttpError) {
-	// Add this check at the beginning of the function
 	if openingPeriodPosition.Quantity == 0 && len(trades) > 0 && trades[0].Type == "SELL" {
 		return 0, common.NewHttpError(fmt.Sprintf("first trade can't be sell on fresh start for %s", analysis.Ticker), http.StatusBadRequest)
 	}
@@ -159,38 +158,60 @@ func (v *ValuationManagerImpl) processTrades(
 		analysis.PeakPosition = openingPeriodPosition
 	}
 
-	for _, trade := range trades {
-		tradeDate, dateErr := trade.GetDate()
-		if dateErr != nil {
-			return 0, dateErr
+	for i, trade := range trades {
+		if i == 0 && openingPeriodPosition.Quantity == 0 {
+			currentQuantity, err = v.handleFirstTrade(analysis, trade)
+			if err != nil {
+				return 0, err
+			}
+			continue
 		}
 
-		// Handle the very first BUY trade in a fresh start scenario
-		if analysis.FirstPosition.Date.IsZero() && trade.Type == "BUY" {
-			analysis.FirstPosition = tax.Position{
+		currentQuantity, err = v.applyTrade(analysis, trade, currentQuantity)
+		if err != nil {
+			return 0, err
+		}
+	}
+	return currentQuantity, nil
+}
+
+// handleFirstTrade handles the very first BUY trade in a fresh start scenario.
+func (v *ValuationManagerImpl) handleFirstTrade(analysis *tax.Valuation, trade tax.Trade) (currentQuantity float64, err common.HttpError) {
+	tradeDate, dateErr := trade.GetDate()
+	if dateErr != nil {
+		return 0, dateErr
+	}
+
+	if trade.Type == "BUY" {
+		analysis.FirstPosition = tax.Position{
+			Date:     tradeDate,
+			Quantity: trade.Quantity,
+			USDPrice: trade.USDPrice,
+		}
+		analysis.PeakPosition = analysis.FirstPosition // Initial peak is the first buy
+		return trade.Quantity, nil
+	}
+	return 0, nil // Should not happen due to initial check in processTrades
+}
+
+// applyTrade processes subsequent trades or trades in a carry-over scenario.
+func (v *ValuationManagerImpl) applyTrade(analysis *tax.Valuation, trade tax.Trade, currentQuantity float64) (float64, common.HttpError) {
+	tradeDate, dateErr := trade.GetDate()
+	if dateErr != nil {
+		return 0, dateErr
+	}
+
+	if trade.Type == "BUY" {
+		currentQuantity += trade.Quantity
+		if currentQuantity > analysis.PeakPosition.Quantity {
+			analysis.PeakPosition = tax.Position{
 				Date:     tradeDate,
-				Quantity: trade.Quantity,
+				Quantity: currentQuantity,
 				USDPrice: trade.USDPrice,
 			}
-			analysis.PeakPosition = analysis.FirstPosition // Initial peak is the first buy
-			currentQuantity = trade.Quantity
-			continue // Move to the next trade
 		}
-
-		// Process subsequent trades or trades in a carry-over scenario
-		if trade.Type == "BUY" {
-			currentQuantity += trade.Quantity
-			// Update PeakPosition if current quantity is a new high
-			if currentQuantity > analysis.PeakPosition.Quantity {
-				analysis.PeakPosition = tax.Position{
-					Date:     tradeDate,
-					Quantity: currentQuantity,
-					USDPrice: trade.USDPrice, // Price of the trade that resulted in this new peak quantity
-				}
-			}
-		} else { // SELL
-			currentQuantity -= trade.Quantity
-		}
+	} else { // SELL
+		currentQuantity -= trade.Quantity
 	}
 	return currentQuantity, nil
 }

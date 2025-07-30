@@ -178,42 +178,46 @@ func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize
 
 	for idx, valuationRecord := range valuations {
 		rowNum := idx + 2 // Data starts from row 2
-		firstPos := valuationRecord.FirstPosition
-		peakPos := valuationRecord.PeakPosition
-		yearEndPos := valuationRecord.YearEndPosition
-		rowData := []interface{}{
-			valuationRecord.Ticker,
-			// First Position
-			e.formatDateForExcel(firstPos.Date),
-			firstPos.Quantity,
-			firstPos.USDPrice,
-			firstPos.USDValue(),
-			e.formatDateForExcel(firstPos.TTDate),
-			firstPos.TTRate,
-			firstPos.INRValue(),
-			// Peak Position
-			e.formatDateForExcel(peakPos.Date),
-			peakPos.Quantity,
-			peakPos.USDPrice,
-			peakPos.USDValue(),
-			e.formatDateForExcel(peakPos.TTDate),
-			peakPos.TTRate,
-			peakPos.INRValue(),
-			// Year End Position
-			e.formatDateForExcel(yearEndPos.Date),
-			yearEndPos.Quantity,
-			yearEndPos.USDPrice,
-			yearEndPos.USDValue(),
-			e.formatDateForExcel(yearEndPos.TTDate),
-			yearEndPos.TTRate,
-			yearEndPos.INRValue(),
-		}
+		rowData := e.buildValuationRow(valuationRecord)
 		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func (e *ExcelManagerImpl) buildValuationRow(valuationRecord tax.INRValuation) []interface{} {
+	firstPos := valuationRecord.FirstPosition
+	peakPos := valuationRecord.PeakPosition
+	yearEndPos := valuationRecord.YearEndPosition
+	return []interface{}{
+		valuationRecord.Ticker,
+		// First Position
+		e.formatDateForExcel(firstPos.Date),
+		firstPos.Quantity,
+		firstPos.USDPrice,
+		firstPos.USDValue(),
+		e.formatDateForExcel(firstPos.TTDate),
+		firstPos.TTRate,
+		firstPos.INRValue(),
+		// Peak Position
+		e.formatDateForExcel(peakPos.Date),
+		peakPos.Quantity,
+		peakPos.USDPrice,
+		peakPos.USDValue(),
+		e.formatDateForExcel(peakPos.TTDate),
+		peakPos.TTRate,
+		peakPos.INRValue(),
+		// Year End Position
+		e.formatDateForExcel(yearEndPos.Date),
+		yearEndPos.Quantity,
+		yearEndPos.USDPrice,
+		yearEndPos.USDValue(),
+		e.formatDateForExcel(yearEndPos.TTDate),
+		yearEndPos.TTRate,
+		yearEndPos.INRValue(),
+	}
 }
 
 // writeInterestSheet handles the creation and population of the "Interest" sheet.
