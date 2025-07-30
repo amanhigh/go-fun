@@ -135,7 +135,7 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 		return tax.Valuation{}, processErr
 	}
 
-	if detErr := v.determineYearEndPosition(ctx, &analysis, year, currentQuantity, openingPosition, trades); detErr != nil {
+	if detErr := v.determineYearEndPosition(ctx, &analysis, year, currentQuantity); detErr != nil {
 		return tax.Valuation{}, detErr
 	}
 
@@ -201,8 +201,6 @@ func (v *ValuationManagerImpl) determineYearEndPosition(
 	analysis *tax.Valuation,
 	year int,
 	currentQuantity float64,
-	openingPeriodPosition tax.Position,
-	trades []tax.Trade,
 ) common.HttpError {
 	yearEndDate := time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
 	switch {
@@ -214,16 +212,6 @@ func (v *ValuationManagerImpl) determineYearEndPosition(
 		analysis.YearEndPosition = tax.Position{
 			Date:     yearEndDate,
 			Quantity: currentQuantity,
-			USDPrice: price,
-		}
-	case openingPeriodPosition.Quantity > 0 && len(trades) == 0:
-		price, priceErr := v.tickerManager.GetPrice(ctx, analysis.Ticker, yearEndDate)
-		if priceErr != nil {
-			return common.NewServerError(fmt.Errorf("failed to get year end price for carry-over only asset %s: %w", analysis.Ticker, priceErr))
-		}
-		analysis.YearEndPosition = tax.Position{
-			Date:     yearEndDate,
-			Quantity: openingPeriodPosition.Quantity,
 			USDPrice: price,
 		}
 	default:
