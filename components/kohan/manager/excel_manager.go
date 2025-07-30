@@ -61,6 +61,9 @@ func (e *ExcelManagerImpl) GenerateTaxSummaryExcel(ctx context.Context, summary 
 		return err
 	}
 
+	// Delete the default "Sheet1"
+	f.DeleteSheet("Sheet1")
+
 	if err := f.SaveAs(e.outputFilePath); err != nil {
 		log.Ctx(ctx).Error().Err(err).Str("path", e.outputFilePath).Msg("Failed to save Excel file")
 		return fmt.Errorf("failed to save excel file to %s: %w", e.outputFilePath, err)

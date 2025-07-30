@@ -574,6 +574,20 @@ var _ = Describe("ExcelManagerImpl", func() {
 				}
 				Expect(rows[0]).To(Equal(expectedInterestHeaders))
 			})
+
+			It("should create a file with exactly 4 sheets and no 'Sheet1'", func() {
+				emptySummary := tax.Summary{}
+				err := excelManager.GenerateTaxSummaryExcel(ctx, emptySummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				sheets := f.GetSheetList()
+				Expect(sheets).To(HaveLen(4), "There should be exactly 4 sheets")
+				Expect(sheets).To(ConsistOf("Gains", "Dividends", "Valuations", "Interest"))
+			})
 		})
 
 		Context("regarding file system operations", func() {
