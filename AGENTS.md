@@ -1,13 +1,13 @@
 ## Build, Lint, and Test
 
-- **Build:** `make build` (includes format and lint)
+- **Build:** `make OUT=/dev/stdout build` (includes format and lint)
 - **Lint:** `make lint`
-- **Test All:** `make test` (run after all work is finished)
+- **Test All:** `make OUT=/dev/stdout test` (run after all work is finished)
 - **Test Kohan:** `ginkgo -r components/kohan/`
-- **Run targeted tests:** `ginkgo -r <package>` after a code change in that package.
+- **Targeted tests:** `ginkgo -r <package>` after a code change in that package.
 - **Format code:** `make format`
 
-** Note: After every code change run Build and Targeted Tests **
+** IMPORTANT Note: After every code change run Build and Targeted Tests **
 
 ## Code Style (via `make format` and `make lint`)
 
