@@ -11,7 +11,7 @@ import (
 type DividendManager interface {
 	// Retrieves all Dividend records for the specified financial year.
 	// The year parameter represents the starting year of the financial year (e.g., 2023 for FY 2023-24).
-	GetDividendsForYear(ctx context.Context, year int) ([]tax.Dividend, common.HttpError) // Added method signature
+	GetDividendsForYear(ctx context.Context, year int) ([]tax.Dividend, common.HttpError)
 
 	// Processes a list of Dividend records, adding INR values based on exchange rates.
 	ProcessDividends(ctx context.Context, dividends []tax.Dividend) ([]tax.INRDividend, common.HttpError)

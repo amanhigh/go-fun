@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/amanhigh/go-fun/common/util"
-	"github.com/amanhigh/go-fun/models/common" // Added for HttpError
-	"github.com/rs/zerolog/log"                // Added for logging consistency if needed
+	"github.com/amanhigh/go-fun/models/common"
+	"github.com/rs/zerolog/log"
 )
 
 //go:generate mockery --name TuiServiceRepository

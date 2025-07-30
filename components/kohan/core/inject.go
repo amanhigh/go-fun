@@ -128,7 +128,7 @@ func (ki *KohanInjector) provideValuationManager(
 	tickerManager manager.TickerManager,
 	accountManager manager.AccountManager,
 	tradeRepository repository.TradeRepository,
-	fyManager manager.FinancialYearManager[taxmodels.Trade], // Added fyManager parameter
+	fyManager manager.FinancialYearManager[taxmodels.Trade],
 ) manager.ValuationManager {
 	return manager.NewValuationManager(tickerManager, accountManager, tradeRepository, fyManager) // Pass fyManager
 }
@@ -190,7 +190,7 @@ func (ki *KohanInjector) provideTaxManager(
 	dividendManager manager.DividendManager,
 	interestManager manager.InterestManager,
 	taxValuationManager manager.TaxValuationManager,
-	excelMgr manager.ExcelManager, // ADD THIS DEPENDENCY
+	excelMgr manager.ExcelManager,
 ) manager.TaxManager {
 	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager, excelMgr) // PASS THE NEW DEPENDENCY
 }

@@ -14,7 +14,7 @@ type TaxValuationManager interface {
 
 	// GetYearlyValuationsUSD calculates the base USD Valuation (First, Peak, YearEnd)
 	// for all relevant tickers based on trade history up to the end of the specified calendar year.
-	GetYearlyValuationsUSD(ctx context.Context, year int) ([]tax.Valuation, common.HttpError) // Added method signature
+	GetYearlyValuationsUSD(ctx context.Context, year int) ([]tax.Valuation, common.HttpError)
 }
 
 // Implementation struct updated with ValuationManager

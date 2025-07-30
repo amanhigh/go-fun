@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/amanhigh/go-fun/components/kohan/repository"
-	"github.com/amanhigh/go-fun/models/common" // Added for HttpError
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/rs/zerolog/log"
 )
 
@@ -70,7 +70,7 @@ func NewServiceManager(makeDir string, repo repository.TuiServiceRepository) *Se
 		allServices:      []string{},
 		selectedServices: []string{},
 		makeDir:          makeDir,
-		repo:             repo, // Added
+		repo:             repo,
 	}
 	manager.loadAvailableServices()
 	manager.loadSelectedServices()
@@ -82,7 +82,7 @@ type ServiceManagerImpl struct {
 	selectedServices []string
 	filteredServices []string
 	makeDir          string
-	repo             repository.TuiServiceRepository // Added
+	repo             repository.TuiServiceRepository
 }
 
 func (sm *ServiceManagerImpl) GetAllServices() []string {

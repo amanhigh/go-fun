@@ -37,7 +37,7 @@ var _ = Describe("ValuationManager", func() {
 		mockTickerManager   *mocks.TickerManager
 		mockAccountManager  *mocks.AccountManager
 		mockTradeRepository *repoMocks.TradeRepository
-		mockFyManager       *mocks.FinancialYearManager[tax.Trade] // Added mock for FY Manager
+		mockFyManager       *mocks.FinancialYearManager[tax.Trade]
 		valuationManager    manager.ValuationManager
 
 		// Common variables

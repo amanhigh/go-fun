@@ -3,38 +3,38 @@ package manager
 import (
 	"context"
 
+	"fmt"
+
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 )
 
 type TaxManager interface {
 	GetTaxSummary(ctx context.Context, year int) (tax.Summary, common.HttpError)
-	SaveTaxSummaryToExcel(ctx context.Context, summary tax.Summary) error // ADD THIS METHOD
+	SaveTaxSummaryToExcel(ctx context.Context, summary tax.Summary) error
 }
 
-// Struct updated with TaxValuationManager
 type TaxManagerImpl struct {
 	capitalGainManager  CapitalGainManager
 	dividendManager     DividendManager
 	interestManager     InterestManager
-	taxValuationManager TaxValuationManager // Added field
-	excelManager        ExcelManager        // ADD THIS FIELD
+	taxValuationManager TaxValuationManager
+	excelManager        ExcelManager
 }
 
-// Constructor updated to accept TaxValuationManager
 func NewTaxManager(
 	capitalGainManager CapitalGainManager,
 	dividendManager DividendManager,
 	interestManager InterestManager,
-	taxValuationManager TaxValuationManager, // Added parameter
-	excelManager ExcelManager, // ADD THIS PARAMETER
+	taxValuationManager TaxValuationManager,
+	excelManager ExcelManager,
 ) TaxManager {
 	return &TaxManagerImpl{
 		capitalGainManager:  capitalGainManager,
 		dividendManager:     dividendManager,
 		interestManager:     interestManager,
-		taxValuationManager: taxValuationManager, // Assign new dependency
-		excelManager:        excelManager,        // ASSIGN IT
+		taxValuationManager: taxValuationManager,
+		excelManager:        excelManager,
 	}
 }
 
@@ -94,9 +94,9 @@ func (t *TaxManagerImpl) processValuations(ctx context.Context, year int) ([]tax
 	return t.taxValuationManager.ProcessValuations(ctx, usdValuations)
 }
 
-// ADD THIS METHOD
 func (t *TaxManagerImpl) SaveTaxSummaryToExcel(ctx context.Context, summary tax.Summary) error {
-	// Delegate the call to the injected ExcelManager.
-	// The excelManager instance is already configured with the output path.
-	return t.excelManager.GenerateTaxSummaryExcel(ctx, summary)
+	if err := t.excelManager.GenerateTaxSummaryExcel(ctx, summary); err != nil {
+		return fmt.Errorf("failed to generate tax summary excel: %w", err)
+	}
+	return nil
 }
