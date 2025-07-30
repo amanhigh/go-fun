@@ -538,9 +538,6 @@ var _ = Describe("ValuationManager", func() {
 		var (
 			carryOverAccount tax.Account
 			tradesInYear     []tax.Trade
-			testYear         = 2023
-			yearEndDate      = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
-			yearEndPrice     = 181.00
 		)
 
 		BeforeEach(func() {
@@ -549,147 +546,149 @@ var _ = Describe("ValuationManager", func() {
 				Quantity:    50,
 				MarketValue: 8000.00, // Implies $160.00 per share
 			}
-
-			mockAccountManager.EXPECT().
-				GetRecord(ctx, AAPL).
-				Return(carryOverAccount, nil).Once()
-
-			mockTickerManager.EXPECT().
-				GetPrice(ctx, AAPL, yearEndDate).
-				Return(yearEndPrice, nil).Once()
-
-			tradesInYear = []tax.Trade{
-				tax.NewTrade(AAPL, "2023-03-15", "BUY", 20, 150.00),  // 50 (start) + 20 = 70 shares
-				tax.NewTrade(AAPL, "2023-06-01", "BUY", 30, 165.00),  // 70 + 30 = 100 shares (New Peak)
-				tax.NewTrade(AAPL, "2023-10-20", "SELL", 10, 170.00), // 100 - 10 = 90 shares
-			}
 		})
 
-		It("should correctly set FirstPosition based on carry-over and track subsequent trades to Peak and YearEnd", func() {
-			valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, tradesInYear, testYear)
+		Context("With Trades in Year", func() {
+			var (
+				testYear     = 2023
+				yearEndDate  = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
+				yearEndPrice = 181.00
+			)
+			BeforeEach(func() {
+				mockAccountManager.EXPECT().
+					GetRecord(ctx, AAPL).
+					Return(carryOverAccount, nil).Once()
 
-			Expect(err).ToNot(HaveOccurred())
-			Expect(valuation.Ticker).To(Equal(AAPL))
+				mockTickerManager.EXPECT().
+					GetPrice(ctx, AAPL, yearEndDate).
+					Return(yearEndPrice, nil).Once()
 
-			// 1. Assert FirstPosition (Opening balance for the period)
-			expectedFirstPosDate := time.Date(testYear, 1, 1, 0, 0, 0, 0, time.UTC)
-			Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
-			Expect(valuation.FirstPosition.Quantity).To(Equal(50.0))
-			Expect(valuation.FirstPosition.USDPrice).To(Equal(160.00))
+				tradesInYear = []tax.Trade{
+					tax.NewTrade(AAPL, "2023-03-15", "BUY", 20, 150.00),  // 50 (start) + 20 = 70 shares
+					tax.NewTrade(AAPL, "2023-06-01", "BUY", 30, 165.00),  // 70 + 30 = 100 shares (New Peak)
+					tax.NewTrade(AAPL, "2023-10-20", "SELL", 10, 170.00), // 100 - 10 = 90 shares
+				}
+			})
 
-			// 2. Assert PeakPosition
-			// Start: 50. After Buy1 (20 shares @ $150 on Mar 15): 70 shares.
-			// After Buy2 (30 shares @ $165 on Jun 01): 100 shares. This is the new peak quantity.
-			expectedPeakPosDate, _ := time.Parse(time.DateOnly, "2023-06-01")
-			Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(expectedPeakPosDate.Format(time.DateOnly)))
-			Expect(valuation.PeakPosition.Quantity).To(Equal(100.0))
-			Expect(valuation.PeakPosition.USDPrice).To(Equal(165.00))
+			It("should correctly set FirstPosition based on carry-over and track subsequent trades to Peak and YearEnd", func() {
+				valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, tradesInYear, testYear)
 
-			// 3. Assert YearEndPosition
-			// After Sell1 (10 shares): 100 - 10 = 90 shares remaining.
-			Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
-			Expect(valuation.YearEndPosition.Quantity).To(Equal(90.0))
-			Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
-		})
-	})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(valuation.Ticker).To(Equal(AAPL))
 
-	Context("Carry Over with No Trades in Year", func() {
-		var (
-			carryOverAccount tax.Account
-			tradesInYear     []tax.Trade // Empty slice for this scenario
-			testYear         = 2023
-			yearEndDate      = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
-			yearEndPrice     = 185.00 // A different price for clarity
-		)
+				// 1. Assert FirstPosition (Opening balance for the period)
+				expectedFirstPosDate := time.Date(testYear, 1, 1, 0, 0, 0, 0, time.UTC)
+				Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
+				Expect(valuation.FirstPosition.Quantity).To(Equal(50.0))
+				Expect(valuation.FirstPosition.USDPrice).To(Equal(160.00))
 
-		BeforeEach(func() {
-			carryOverAccount = tax.Account{
-				Symbol:      AAPL,
-				Quantity:    75,
-				MarketValue: 12000.00, // Implies $160.00 per share
-			}
+				// 2. Assert PeakPosition
+				// Start: 50. After Buy1 (20 shares @ $150 on Mar 15): 70 shares.
+				// After Buy2 (30 shares @ $165 on Jun 01): 100 shares. This is the new peak quantity.
+				expectedPeakPosDate, _ := time.Parse(time.DateOnly, "2023-06-01")
+				Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(expectedPeakPosDate.Format(time.DateOnly)))
+				Expect(valuation.PeakPosition.Quantity).To(Equal(100.0))
+				Expect(valuation.PeakPosition.USDPrice).To(Equal(165.00))
 
-			mockAccountManager.EXPECT().
-				GetRecord(ctx, AAPL).
-				Return(carryOverAccount, nil).Once()
-
-			mockTickerManager.EXPECT().
-				GetPrice(ctx, AAPL, yearEndDate).
-				Return(yearEndPrice, nil).Once()
-
-			tradesInYear = []tax.Trade{} // Explicitly empty
+				// 3. Assert YearEndPosition
+				// After Sell1 (10 shares): 100 - 10 = 90 shares remaining.
+				Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
+				Expect(valuation.YearEndPosition.Quantity).To(Equal(90.0))
+				Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
+			})
 		})
 
-		It("should correctly set Valuations based on carry-over when no trades occur", func() {
-			valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, tradesInYear, testYear)
+		Context("With No Trades in Year", func() {
+			var (
+				testYear     = 2023
+				yearEndDate  = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
+				yearEndPrice = 185.00 // A different price for clarity
+			)
 
-			Expect(err).ToNot(HaveOccurred())
-			Expect(valuation.Ticker).To(Equal(AAPL))
+			BeforeEach(func() {
+				carryOverAccount.Quantity = 75
+				carryOverAccount.MarketValue = 12000.00 // Implies $160.00 per share
 
-			// 1. Assert FirstPosition (Opening balance for the period)
-			expectedFirstPosDate := time.Date(testYear, 1, 1, 0, 0, 0, 0, time.UTC)
-			Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
-			Expect(valuation.FirstPosition.Quantity).To(Equal(75.0))
-			Expect(valuation.FirstPosition.USDPrice).To(Equal(160.00)) // From carryOverAccount MarketValue/Quantity
+				mockAccountManager.EXPECT().
+					GetRecord(ctx, AAPL).
+					Return(carryOverAccount, nil).Once()
 
-			// 2. Assert PeakPosition (Should be the same as FirstPosition as no trades increased quantity)
-			Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
-			Expect(valuation.PeakPosition.Quantity).To(Equal(75.0))
-			Expect(valuation.PeakPosition.USDPrice).To(Equal(160.00))
+				mockTickerManager.EXPECT().
+					GetPrice(ctx, AAPL, yearEndDate).
+					Return(yearEndPrice, nil).Once()
 
-			// 3. Assert YearEndPosition (Quantity remains the same, price is year-end price)
-			Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
-			Expect(valuation.YearEndPosition.Quantity).To(Equal(75.0))
-			Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
-		})
-	})
+				tradesInYear = []tax.Trade{} // Explicitly empty
+			})
 
-	Context("With Carry-Over and Only Sell Trades", func() {
-		var (
-			carryOverAccount tax.Account
-			tradesInYear     []tax.Trade
-			testYear         = 2024
-			yearEndDate      = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
-			MSFT             = "MSFT"
-		)
+			It("should correctly set Valuations based on carry-over when no trades occur", func() {
+				valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, tradesInYear, testYear)
 
-		BeforeEach(func() {
-			carryOverAccount = tax.Account{
-				Symbol:      MSFT,
-				Quantity:    50,
-				MarketValue: 10000.00, // Implies $200.00 per share
-			}
+				Expect(err).ToNot(HaveOccurred())
+				Expect(valuation.Ticker).To(Equal(AAPL))
 
-			mockAccountManager.EXPECT().
-				GetRecord(ctx, MSFT).
-				Return(carryOverAccount, nil).Once()
+				// 1. Assert FirstPosition (Opening balance for the period)
+				expectedFirstPosDate := time.Date(testYear, 1, 1, 0, 0, 0, 0, time.UTC)
+				Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
+				Expect(valuation.FirstPosition.Quantity).To(Equal(75.0))
+				Expect(valuation.FirstPosition.USDPrice).To(Equal(160.00)) // From carryOverAccount MarketValue/Quantity
 
-			tradesInYear = []tax.Trade{
-				tax.NewTrade(MSFT, "2024-02-15", "SELL", 50, 210.00),
-			}
+				// 2. Assert PeakPosition (Should be the same as FirstPosition as no trades increased quantity)
+				Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
+				Expect(valuation.PeakPosition.Quantity).To(Equal(75.0))
+				Expect(valuation.PeakPosition.USDPrice).To(Equal(160.00))
+
+				// 3. Assert YearEndPosition (Quantity remains the same, price is year-end price)
+				Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
+				Expect(valuation.YearEndPosition.Quantity).To(Equal(75.0))
+				Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
+			})
 		})
 
-		It("should correctly calculate valuation", func() {
-			valuation, err := valuationManager.AnalyzeValuation(ctx, MSFT, tradesInYear, testYear)
+		Context("With Only Sell Trades", func() {
+			var (
+				MSFT        = "MSFT"
+				testYear    = 2024
+				yearEndDate = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
+			)
 
-			Expect(err).ToNot(HaveOccurred())
-			Expect(valuation.Ticker).To(Equal(MSFT))
+			BeforeEach(func() {
+				carryOverAccount = tax.Account{
+					Symbol:      MSFT,
+					Quantity:    50,
+					MarketValue: 10000.00, // Implies $200.00 per share
+				}
 
-			// 1. Assert FirstPosition (Opening balance for the period)
-			expectedFirstPosDate := time.Date(testYear, 1, 1, 0, 0, 0, 0, time.UTC)
-			Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
-			Expect(valuation.FirstPosition.Quantity).To(Equal(50.0))
-			Expect(valuation.FirstPosition.USDPrice).To(Equal(200.00))
+				mockAccountManager.EXPECT().
+					GetRecord(ctx, MSFT).
+					Return(carryOverAccount, nil).Once()
 
-			// 2. Assert PeakPosition (Should be the same as FirstPosition as no trades increased quantity)
-			Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
-			Expect(valuation.PeakPosition.Quantity).To(Equal(50.0))
-			Expect(valuation.PeakPosition.USDPrice).To(Equal(200.00))
+				tradesInYear = []tax.Trade{
+					tax.NewTrade(MSFT, "2024-02-15", "SELL", 50, 210.00),
+				}
+			})
 
-			// 3. Assert YearEndPosition (Quantity is zero after the sell)
-			Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
-			Expect(valuation.YearEndPosition.Quantity).To(Equal(0.0))
-			Expect(valuation.YearEndPosition.USDPrice).To(Equal(0.0)) // Price is irrelevant for zero quantity
+			It("should correctly calculate valuation", func() {
+				valuation, err := valuationManager.AnalyzeValuation(ctx, MSFT, tradesInYear, testYear)
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(valuation.Ticker).To(Equal(MSFT))
+
+				// 1. Assert FirstPosition (Opening balance for the period)
+				expectedFirstPosDate := time.Date(testYear, 1, 1, 0, 0, 0, 0, time.UTC)
+				Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
+				Expect(valuation.FirstPosition.Quantity).To(Equal(50.0))
+				Expect(valuation.FirstPosition.USDPrice).To(Equal(200.00))
+
+				// 2. Assert PeakPosition (Should be the same as FirstPosition as no trades increased quantity)
+				Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
+				Expect(valuation.PeakPosition.Quantity).To(Equal(50.0))
+				Expect(valuation.PeakPosition.USDPrice).To(Equal(200.00))
+
+				// 3. Assert YearEndPosition (Quantity is zero after the sell)
+				Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
+				Expect(valuation.YearEndPosition.Quantity).To(Equal(0.0))
+				Expect(valuation.YearEndPosition.USDPrice).To(Equal(0.0)) // Price is irrelevant for zero quantity
+			})
 		})
 	})
 })
