@@ -7,6 +7,8 @@
 - **Targeted tests:** `ginkgo -r <package>` after a code change in that package.
 - **Format code:** `make format`
 
+* When Build or Test Fails do not `OUT=/dev/stdout` is not cause of that it is Supported in Root Make File.
+Without this you won't be able to see details. Check for actual Error Instead.*
 ** IMPORTANT Note: After every code change run Build and Targeted Tests **
 
 ## Code Style (via `make format` and `make lint`)

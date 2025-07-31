@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -113,7 +114,13 @@ func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) manage
 }
 
 func (ki *KohanInjector) provideSBIManager(client clients.SBIClient, exchangeRepo repository.ExchangeRepository) manager.SBIManager {
-	return manager.NewSBIManager(client, ki.config.Tax.TTRateFilePath, exchangeRepo)
+	sbiManager := manager.NewSBIManager(client, ki.config.Tax.TTRateFilePath, exchangeRepo)
+	if err := sbiManager.DownloadRates(context.Background()); err != nil {
+		// If download fails, we should not continue.
+		// A panic here is acceptable as it's a startup dependency.
+		panic(fmt.Sprintf("Failed to download SBI rates: %v", err))
+	}
+	return sbiManager
 }
 
 func (ki *KohanInjector) provideExchangeManager(sbiManager manager.SBIManager) manager.ExchangeManager {
