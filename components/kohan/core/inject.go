@@ -23,6 +23,7 @@ type KohanInterface interface {
 	GetDariusApp(cfg config.DariusConfig) (*DariusV1, error)
 	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
 	GetTaxManager() (manager.TaxManager, error)
+	GetDriveWealthManager() (manager.DriveWealthManager, error)
 }
 
 // Private singleton instance
@@ -61,6 +62,18 @@ func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
 		return nil, fmt.Errorf("failed to resolve tax manager: %w", err)
 	}
 	return taxManager, nil
+}
+
+func (ki *KohanInjector) GetDriveWealthManager() (manager.DriveWealthManager, error) {
+	ki.registerTaxDependencies()
+
+	// Resolve and return DriveWealthManager
+	var driveWealthManager manager.DriveWealthManager
+	err := ki.di.Resolve(&driveWealthManager)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve drive wealth manager: %w", err)
+	}
+	return driveWealthManager, nil
 }
 
 func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error) {
@@ -193,6 +206,10 @@ func (ki *KohanInjector) provideExcelManager() manager.ExcelManager {
 	return manager.NewExcelManager(ki.config.Tax.YearlySummaryPath)
 }
 
+func (ki *KohanInjector) provideDriveWealthManager() manager.DriveWealthManager {
+	return manager.NewDriveWealthManager(ki.config.Tax)
+}
+
 func (ki *KohanInjector) provideTaxManager(
 	gainMgr manager.CapitalGainManager,
 	dividendManager manager.DividendManager,
@@ -283,6 +300,7 @@ func (ki *KohanInjector) registerTaxComponents() {
 	// Register ExcelManager first since TaxManager depends on it
 	container.MustSingleton(ki.di, ki.provideExcelManager)
 	container.MustSingleton(ki.di, ki.provideTaxManager)
+	container.MustSingleton(ki.di, ki.provideDriveWealthManager)
 }
 
 // registerTaxDependencies registers all dependencies required for tax calculations.

@@ -29,6 +29,7 @@ var _ = Describe("DriveWealthManager", func() {
 		sampleExcelPath = filepath.Join(tempTestDir, "vested_transactions.xlsx")
 		taxConfig = config.TaxConfig{
 			InterestFilePath: filepath.Join(tempTestDir, "interest.csv"),
+			DriveWealthPath:  sampleExcelPath,
 		}
 	})
 
@@ -92,7 +93,7 @@ var _ = Describe("DriveWealthManager", func() {
 			err = f.SaveAs(sampleExcelPath)
 			Expect(err).ToNot(HaveOccurred())
 
-			driveWealthManager = manager.NewDriveWealthManager(sampleExcelPath, taxConfig)
+			driveWealthManager = manager.NewDriveWealthManager(taxConfig)
 		})
 
 		Context("when parsing interests", func() {
@@ -178,7 +179,10 @@ var _ = Describe("DriveWealthManager", func() {
 	Context("with an invalid or malformed Excel file", func() {
 		Context("when the Excel file is missing", func() {
 			It("should return an error", func() {
-				nonExistentManager := manager.NewDriveWealthManager("non_existent_file.xlsx", taxConfig)
+				// This test works because the top-level BeforeEach sets up the path
+				// but does not create the file. The manager is initialized with a
+				// path that points to a non-existent file, so Parse should fail.
+				nonExistentManager := manager.NewDriveWealthManager(taxConfig)
 				_, err := nonExistentManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})
@@ -194,7 +198,7 @@ var _ = Describe("DriveWealthManager", func() {
 				err = f.SaveAs(sampleExcelPath)
 				Expect(err).ToNot(HaveOccurred())
 
-				driveWealthManager = manager.NewDriveWealthManager(sampleExcelPath, taxConfig)
+				driveWealthManager = manager.NewDriveWealthManager(taxConfig)
 				_, err = driveWealthManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})
@@ -209,7 +213,7 @@ var _ = Describe("DriveWealthManager", func() {
 				err = f.SaveAs(sampleExcelPath)
 				Expect(err).ToNot(HaveOccurred())
 
-				driveWealthManager = manager.NewDriveWealthManager(sampleExcelPath, taxConfig)
+				driveWealthManager = manager.NewDriveWealthManager(taxConfig)
 				_, err = driveWealthManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})

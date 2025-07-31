@@ -20,13 +20,12 @@ type DriveWealthManager interface {
 
 // DriveWealthManagerImpl handles parsing of DriveWealth reports.
 type DriveWealthManagerImpl struct {
-	filePath string
-	config   config.TaxConfig
+	config config.TaxConfig
 }
 
 // NewDriveWealthManager creates a new DriveWealthManager.
-func NewDriveWealthManager(filePath string, config config.TaxConfig) DriveWealthManager {
-	return &DriveWealthManagerImpl{filePath: filePath, config: config}
+func NewDriveWealthManager(config config.TaxConfig) DriveWealthManager {
+	return &DriveWealthManagerImpl{config: config}
 }
 
 func (m *DriveWealthManagerImpl) GenerateCsv(info tax.DriveWealthInfo) (err error) {
@@ -43,7 +42,7 @@ func (m *DriveWealthManagerImpl) GenerateCsv(info tax.DriveWealthInfo) (err erro
 
 // Parse orchestrates the parsing of the DriveWealth Excel file.
 func (m *DriveWealthManagerImpl) Parse() (info tax.DriveWealthInfo, err error) {
-	f, err := excelize.OpenFile(m.filePath)
+	f, err := excelize.OpenFile(m.config.DriveWealthPath)
 	if err != nil {
 		err = fmt.Errorf("failed to open excel file: %w", err)
 		return
