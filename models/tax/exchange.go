@@ -23,7 +23,7 @@ type SbiRate struct {
 
 // IsValid checks if the rate has all required fields populated
 func (r SbiRate) IsValid() bool {
-	return r.Date != "" && r.TTBuy != 0 && r.TTSell != 0
+	return r.Date != "" && r.TTBuy >= 0 && r.TTSell >= 0
 }
 
 func (r SbiRate) GetKey() string {
