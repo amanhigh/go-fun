@@ -29,6 +29,8 @@ var _ = Describe("DriveWealthManager", func() {
 		sampleExcelPath = filepath.Join(tempTestDir, "vested_transactions.xlsx")
 		taxConfig = config.TaxConfig{
 			InterestFilePath: filepath.Join(tempTestDir, "interest.csv"),
+			TradesPath:       filepath.Join(tempTestDir, "trades.csv"),
+			DividendFilePath: filepath.Join(tempTestDir, "dividends.csv"),
 			DriveWealthPath:  sampleExcelPath,
 		}
 	})
@@ -67,8 +69,8 @@ var _ = Describe("DriveWealthManager", func() {
 				Expect(err).ToNot(HaveOccurred())
 			}
 
-			//Remove Default Sheet
-			f.DeleteSheet("Sheet1")
+			// Remove Default Sheet
+			Expect(f.DeleteSheet("Sheet1")).To(Succeed())
 
 			/* Create Trades Sheet */
 			tradeSheet := "Trades"
@@ -156,22 +158,38 @@ var _ = Describe("DriveWealthManager", func() {
 		})
 
 		Context("when generating CSV", func() {
-			It("should create a valid interest.csv file", func() {
+			It("should create valid csv files", func() {
 				info := tax.DriveWealthInfo{
 					Interests: []tax.Interest{
 						{Symbol: "CASH", Date: "2025-06-03", Amount: 0.59, Tax: 0, Net: 0.59},
 						{Symbol: "CASH", Date: "2025-05-02", Amount: 1.18, Tax: 0, Net: 1.18},
+					},
+					Trades: []tax.Trade{
+						{Symbol: "VTWO", Date: "2025-04-03", Type: "Buy", Quantity: 70, USDPrice: 77.41, USDValue: 5418.7, Commission: 0},
+					},
+					Dividends: []tax.Dividend{
+						{Symbol: "IEF", Date: "2025-06-06", Amount: 158.17, Tax: 39.54, Net: 118.63},
 					},
 				}
 
 				err := driveWealthManager.GenerateCsv(info)
 				Expect(err).ToNot(HaveOccurred())
 
-				// Verify file content
+				// Verify Interest file content
 				data, err := os.ReadFile(taxConfig.InterestFilePath)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(string(data)).To(ContainSubstring("CASH,2025-06-03,0.59,0,0.59"))
 				Expect(string(data)).To(ContainSubstring("CASH,2025-05-02,1.18,0,1.18"))
+
+				// Verify Trade file content
+				data, err = os.ReadFile(taxConfig.TradesPath)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(string(data)).To(ContainSubstring("VTWO,2025-04-03,Buy,70,77.41,5418.7,0"))
+
+				// Verify Dividend file content
+				data, err = os.ReadFile(taxConfig.DividendFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(string(data)).To(ContainSubstring("IEF,2025-06-06,158.17,39.54,118.63"))
 			})
 		})
 	})
@@ -194,7 +212,7 @@ var _ = Describe("DriveWealthManager", func() {
 				f := excelize.NewFile()
 				_, err := f.NewSheet("OtherSheet")
 				Expect(err).ToNot(HaveOccurred())
-				f.DeleteSheet("Sheet1")
+				Expect(f.DeleteSheet("Sheet1")).To(Succeed())
 				err = f.SaveAs(sampleExcelPath)
 				Expect(err).ToNot(HaveOccurred())
 
@@ -209,7 +227,7 @@ var _ = Describe("DriveWealthManager", func() {
 				f := excelize.NewFile()
 				_, err := f.NewSheet("Income")
 				Expect(err).ToNot(HaveOccurred())
-				f.DeleteSheet("Sheet1")
+				Expect(f.DeleteSheet("Sheet1")).To(Succeed())
 				err = f.SaveAs(sampleExcelPath)
 				Expect(err).ToNot(HaveOccurred())
 

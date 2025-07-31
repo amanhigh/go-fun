@@ -29,7 +29,7 @@ func NewDriveWealthManager(config config.TaxConfig) DriveWealthManager {
 }
 
 func (m *DriveWealthManagerImpl) GenerateCsv(info tax.DriveWealthInfo) (err error) {
-	//Create Interest File
+	// Create Interest File
 	interestFile, err := os.Create(m.config.InterestFilePath)
 	if err != nil {
 		return
@@ -37,6 +37,29 @@ func (m *DriveWealthManagerImpl) GenerateCsv(info tax.DriveWealthInfo) (err erro
 	defer interestFile.Close()
 
 	err = gocsv.MarshalFile(&info.Interests, interestFile)
+	if err != nil {
+		return
+	}
+
+	// Create Trade File
+	tradeFile, err := os.Create(m.config.TradesPath)
+	if err != nil {
+		return
+	}
+	defer tradeFile.Close()
+	err = gocsv.MarshalFile(&info.Trades, tradeFile)
+	if err != nil {
+		return
+	}
+
+	// Create Dividend File
+	dividendFile, err := os.Create(m.config.DividendFilePath)
+	if err != nil {
+		return
+	}
+	defer dividendFile.Close()
+	err = gocsv.MarshalFile(&info.Dividends, dividendFile)
+
 	return
 }
 
