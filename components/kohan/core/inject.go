@@ -12,6 +12,7 @@ import (
 	"github.com/amanhigh/go-fun/models/config"
 	taxmodels "github.com/amanhigh/go-fun/models/tax"
 	"github.com/go-resty/resty/v2"
+	"github.com/rs/zerolog/log"
 
 	"github.com/golobby/container/v3"
 	"github.com/rivo/tview"
@@ -118,7 +119,7 @@ func (ki *KohanInjector) provideSBIManager(client clients.SBIClient, exchangeRep
 	if err := sbiManager.DownloadRates(context.Background()); err != nil {
 		// If download fails, we should not continue.
 		// A panic here is acceptable as it's a startup dependency.
-		panic(fmt.Sprintf("Failed to download SBI rates: %v", err))
+		log.Fatal().Err(err).Msg("Failed to download SBI rates")
 	}
 	return sbiManager
 }
