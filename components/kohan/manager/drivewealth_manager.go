@@ -20,7 +20,7 @@ func NewDriveWealthManager(filePath string) *DriveWealthManager {
 }
 
 // Parse orchestrates the parsing of the DriveWealth Excel file.
-func (m *DriveWealthManager) Parse() (interests []tax.Interest, dividends []tax.Dividend, trades []tax.Trade, err error) {
+func (m *DriveWealthManager) Parse() (info tax.DriveWealthInfo, err error) {
 	f, err := excelize.OpenFile(m.filePath)
 	if err != nil {
 		err = fmt.Errorf("failed to open excel file: %w", err)
@@ -62,12 +62,12 @@ func (m *DriveWealthManager) Parse() (interests []tax.Interest, dividends []tax.
 		return
 	}
 
-	interests, err = m.parseInterest(rows)
+	info.Interests, err = m.parseInterest(rows)
 	if err != nil {
 		return
 	}
 
-	dividends, err = m.parseDividends(rows)
+	info.Dividends, err = m.parseDividends(rows)
 	if err != nil {
 		return
 	}
@@ -77,7 +77,7 @@ func (m *DriveWealthManager) Parse() (interests []tax.Interest, dividends []tax.
 		err = fmt.Errorf("failed to get rows from 'Trades' sheet: %w", err)
 		return
 	}
-	trades, err = m.parseTrades(tradeRows)
+	info.Trades, err = m.parseTrades(tradeRows)
 	if err != nil {
 		return
 	}

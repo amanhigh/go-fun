@@ -75,6 +75,7 @@ var _ = Describe("DriveWealthManager", func() {
 			tradeRows := [][]interface{}{
 				{"2025-04-03", "04:53:52 PM", "Vanguard Russell 2000 ETF", "VTWO", "Buy", "Market", 70, 77.41, 5418.7, 0},
 				{"2025-04-03", "04:26:02 PM", "Europe ETF FTSE Vanguard", "VGK", "Buy", "Market", 60, 70.18, 4210.8, 0},
+				{"2025-02-14", "02:30:00 PM", "Barclays 1-3 Month T-Bill ETF SPDR", "BIL", "Sell", "Market", 1, 91.58, 91.58, 0},
 			}
 
 			for i, rowData := range tradeRows {
@@ -90,54 +91,60 @@ var _ = Describe("DriveWealthManager", func() {
 
 		Context("when parsing interests", func() {
 			It("should extract interest entries correctly", func() {
-				interests, _, _, err := driveWealthManager.Parse()
+				info, err := driveWealthManager.Parse()
 				Expect(err).ToNot(HaveOccurred())
-				Expect(interests).To(HaveLen(2))
-				Expect(interests[0].Amount).To(BeNumerically("~", 0.59))
-				Expect(interests[1].Amount).To(BeNumerically("~", 1.18))
+				Expect(info.Interests).To(HaveLen(2))
+				Expect(info.Interests[0].Amount).To(BeNumerically("~", 0.59))
+				Expect(info.Interests[1].Amount).To(BeNumerically("~", 1.18))
 			})
 		})
 
 		Context("when parsing dividends", func() {
 			It("should extract dividend entries correctly", func() {
-				_, dividends, _, err := driveWealthManager.Parse()
+				info, err := driveWealthManager.Parse()
 				Expect(err).ToNot(HaveOccurred())
-				Expect(dividends).To(HaveLen(3))
+				Expect(info.Dividends).To(HaveLen(3))
 
-				Expect(dividends[0].Symbol).To(Equal("IEF"))
-				Expect(dividends[0].Amount).To(BeNumerically("~", 158.17))
-				Expect(dividends[0].Tax).To(BeNumerically("~", 39.54))
-				Expect(dividends[0].Net).To(BeNumerically("~", 118.63))
+				Expect(info.Dividends[0].Symbol).To(Equal("IEF"))
+				Expect(info.Dividends[0].Amount).To(BeNumerically("~", 158.17))
+				Expect(info.Dividends[0].Tax).To(BeNumerically("~", 39.54))
+				Expect(info.Dividends[0].Net).To(BeNumerically("~", 118.63))
 
-				Expect(dividends[1].Symbol).To(Equal("TLT"))
-				Expect(dividends[1].Amount).To(BeNumerically("~", 3.51))
-				Expect(dividends[1].Tax).To(BeNumerically("~", 0.0))
-				Expect(dividends[1].Net).To(BeNumerically("~", 3.51))
+				Expect(info.Dividends[1].Symbol).To(Equal("TLT"))
+				Expect(info.Dividends[1].Amount).To(BeNumerically("~", 3.51))
+				Expect(info.Dividends[1].Tax).To(BeNumerically("~", 0.0))
+				Expect(info.Dividends[1].Net).To(BeNumerically("~", 3.51))
 
-				Expect(dividends[2].Symbol).To(Equal("BIL"))
-				Expect(dividends[2].Amount).To(BeNumerically("~", 142.07))
-				Expect(dividends[2].Tax).To(BeNumerically("~", 35.52))
-				Expect(dividends[2].Net).To(BeNumerically("~", 106.55))
+				Expect(info.Dividends[2].Symbol).To(Equal("BIL"))
+				Expect(info.Dividends[2].Amount).To(BeNumerically("~", 142.07))
+				Expect(info.Dividends[2].Tax).To(BeNumerically("~", 35.52))
+				Expect(info.Dividends[2].Net).To(BeNumerically("~", 106.55))
 			})
 		})
 
 		Context("when parsing trades", func() {
 			It("should extract trade entries correctly", func() {
-				_, _, trades, err := driveWealthManager.Parse()
+				info, err := driveWealthManager.Parse()
 				Expect(err).ToNot(HaveOccurred())
-				Expect(trades).To(HaveLen(2))
+				Expect(info.Trades).To(HaveLen(3))
 
-				Expect(trades[0].Symbol).To(Equal("VTWO"))
-				Expect(trades[0].Quantity).To(BeNumerically("~", 70))
-				Expect(trades[0].USDPrice).To(BeNumerically("~", 77.41))
-				Expect(trades[0].USDValue).To(BeNumerically("~", 5418.7))
-				Expect(trades[0].Type).To(Equal("Buy"))
+				Expect(info.Trades[0].Symbol).To(Equal("VTWO"))
+				Expect(info.Trades[0].Quantity).To(BeNumerically("~", 70))
+				Expect(info.Trades[0].USDPrice).To(BeNumerically("~", 77.41))
+				Expect(info.Trades[0].USDValue).To(BeNumerically("~", 5418.7))
+				Expect(info.Trades[0].Type).To(Equal("Buy"))
 
-				Expect(trades[1].Symbol).To(Equal("VGK"))
-				Expect(trades[1].Quantity).To(BeNumerically("~", 60))
-				Expect(trades[1].USDPrice).To(BeNumerically("~", 70.18))
-				Expect(trades[1].USDValue).To(BeNumerically("~", 4210.8))
-				Expect(trades[1].Type).To(Equal("Buy"))
+				Expect(info.Trades[1].Symbol).To(Equal("VGK"))
+				Expect(info.Trades[1].Quantity).To(BeNumerically("~", 60))
+				Expect(info.Trades[1].USDPrice).To(BeNumerically("~", 70.18))
+				Expect(info.Trades[1].USDValue).To(BeNumerically("~", 4210.8))
+				Expect(info.Trades[1].Type).To(Equal("Buy"))
+
+				Expect(info.Trades[2].Symbol).To(Equal("BIL"))
+				Expect(info.Trades[2].Quantity).To(BeNumerically("~", 1))
+				Expect(info.Trades[2].USDPrice).To(BeNumerically("~", 91.58))
+				Expect(info.Trades[2].USDValue).To(BeNumerically("~", 91.58))
+				Expect(info.Trades[2].Type).To(Equal("Sell"))
 			})
 		})
 	})
@@ -146,7 +153,7 @@ var _ = Describe("DriveWealthManager", func() {
 		Context("when the Excel file is missing", func() {
 			It("should return an error", func() {
 				nonExistentManager := manager.NewDriveWealthManager("non_existent_file.xlsx")
-				_, _, _, err := nonExistentManager.Parse()
+				_, err := nonExistentManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -162,7 +169,7 @@ var _ = Describe("DriveWealthManager", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				driveWealthManager = manager.NewDriveWealthManager(sampleExcelPath)
-				_, _, _, err = driveWealthManager.Parse()
+				_, err = driveWealthManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -177,7 +184,7 @@ var _ = Describe("DriveWealthManager", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				driveWealthManager = manager.NewDriveWealthManager(sampleExcelPath)
-				_, _, _, err = driveWealthManager.Parse()
+				_, err = driveWealthManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})
 		})
