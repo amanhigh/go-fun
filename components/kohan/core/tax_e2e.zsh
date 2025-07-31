@@ -13,20 +13,19 @@ PROJECT_ROOT=$(cd "$SCRIPT_DIR/../../.." && pwd)
 TEST_DATA_DIR="$PROJECT_ROOT/components/kohan/testdata/tax"
 FA_COMPUTE_DIR=~/Downloads/FACompute
 
-# 1. Create a temporary directory for outputs
-mkdir -p "$FA_COMPUTE_DIR"
-
-
-
-# 3. Copy test data to default directory
-echo "Copying test data to $FA_COMPUTE_DIR..."
-cp "$TEST_DATA_DIR/trades.csv" "$FA_COMPUTE_DIR/"
-cp "$TEST_DATA_DIR/dividends.csv" "$FA_COMPUTE_DIR/"
-cp "$TEST_DATA_DIR/interest.csv" "$FA_COMPUTE_DIR/"
-cp "$TEST_DATA_DIR/gains.csv" "$FA_COMPUTE_DIR/"
-cp "$TEST_DATA_DIR/sbi_rates.csv" "$FA_COMPUTE_DIR/"
-cp "$TEST_DATA_DIR/accounts.csv" "$FA_COMPUTE_DIR/"
-cp "$TEST_DATA_DIR/AAPL.json" "$FA_COMPUTE_DIR/"
+if [ ! -d "$FA_COMPUTE_DIR" ]; then
+    echo "Creating directory and copying test data to $FA_COMPUTE_DIR..."
+    mkdir -p "$FA_COMPUTE_DIR"
+    cp "$TEST_DATA_DIR/trades.csv" "$FA_COMPUTE_DIR/"
+    cp "$TEST_DATA_DIR/dividends.csv" "$FA_COMPUTE_DIR/"
+    cp "$TEST_DATA_DIR/interest.csv" "$FA_COMPUTE_DIR/"
+    cp "$TEST_DATA_DIR/gains.csv" "$FA_COMPUTE_DIR/"
+    cp "$TEST_DATA_DIR/sbi_rates.csv" "$FA_COMPUTE_DIR/"
+    cp "$TEST_DATA_DIR/accounts.csv" "$FA_COMPUTE_DIR/"
+    cp "$TEST_DATA_DIR/AAPL.json" "$FA_COMPUTE_DIR/"
+else
+    echo "Directory $FA_COMPUTE_DIR already exists, skipping creation and copy."
+fi
 
 # 4. Print environment for debugging
 echo "--- Running with the following configuration ---"
