@@ -38,15 +38,16 @@ type TaxConfig struct {
 	AlphaAPIKey  string `env:"ALPHA_API_KEY" envDefault:"DUMMY_KEY_FOR_E2E"`
 
 	// File System Configuration
-	// DownloadsDir stores downloaded ticker data, separate from tax input files.
-	DownloadsDir        string `env:"FA_DOWNLOADS_DIR" envDefault:"~/Downloads/FACompute"`
-	BrokerStatementPath string `env:"FA_BROKER_STATEMENT_PATH" envDefault:"~/Downloads/FACompute/trades.csv"`
-	DividendFilePath    string `env:"FA_DIVIDEND_FILE_PATH" envDefault:"~/Downloads/FACompute/dividends.csv"`
-	SBIFilePath         string `env:"SBI_FILE_PATH" envDefault:"~/Downloads/FACompute/sbi_rates.csv"`
-	AccountFilePath     string `env:"ACCOUNT_FILE_PATH" envDefault:"~/Downloads/FACompute/accounts.csv"`
-	GainsFilePath       string `env:"FA_GAINS_FILE_PATH" envDefault:"~/Downloads/FACompute/gains.csv"`
-	InterestFilePath    string `env:"FA_INTEREST_FILE_PATH" envDefault:"~/Downloads/FACompute/interest.csv"`
-	YearlySummaryPath   string `env:"YEARLY_SUMMARY_PATH" envDefault:"~/Downloads/FACompute/tax_summary.xlsx"`
+	// TickerInfoDir stores downloaded ticker data, separate from tax input files.
+	TickerInfoDir     string `env:"TICKER_INFO_DIR" envDefault:"~/Downloads/FACompute/Tickers"`
+	TTRateFilePath    string `env:"TTRATE_FILE_PATH" envDefault:"~/Downloads/FACompute/sbi_rates.csv"`
+	YearlySummaryPath string `env:"YEARLY_SUMMARY_PATH" envDefault:"~/Downloads/FACompute/tax_summary.xlsx"`
+
+	AccountFilePath  string `env:"ACCOUNT_FILE_PATH" envDefault:"~/Downloads/FACompute/accounts.csv"`
+	TradesPath       string `env:"FA_TRADE_FILE_PATH" envDefault:"~/Downloads/FACompute/trades.csv"`
+	DividendFilePath string `env:"FA_DIVIDEND_FILE_PATH" envDefault:"~/Downloads/FACompute/dividends.csv"`
+	GainsFilePath    string `env:"FA_GAINS_FILE_PATH" envDefault:"~/Downloads/FACompute/gains.csv"`
+	InterestFilePath string `env:"FA_INTEREST_FILE_PATH" envDefault:"~/Downloads/FACompute/interest.csv"`
 }
 
 func NewKohanConfig() (config KohanConfig, err error) {
@@ -61,10 +62,11 @@ func NewKohanConfig() (config KohanConfig, err error) {
 		return config, fmt.Errorf("failed to get user home directory: %w", err)
 	}
 
-	config.Tax.DownloadsDir = strings.Replace(config.Tax.DownloadsDir, "~", homeDir, 1)
-	config.Tax.BrokerStatementPath = strings.Replace(config.Tax.BrokerStatementPath, "~", homeDir, 1)
+	// HACK: Remove this Hack.
+	config.Tax.TickerInfoDir = strings.Replace(config.Tax.TickerInfoDir, "~", homeDir, 1)
+	config.Tax.TradesPath = strings.Replace(config.Tax.TradesPath, "~", homeDir, 1)
 	config.Tax.DividendFilePath = strings.Replace(config.Tax.DividendFilePath, "~", homeDir, 1)
-	config.Tax.SBIFilePath = strings.Replace(config.Tax.SBIFilePath, "~", homeDir, 1)
+	config.Tax.TTRateFilePath = strings.Replace(config.Tax.TTRateFilePath, "~", homeDir, 1)
 	config.Tax.AccountFilePath = strings.Replace(config.Tax.AccountFilePath, "~", homeDir, 1)
 	config.Tax.GainsFilePath = strings.Replace(config.Tax.GainsFilePath, "~", homeDir, 1)
 	config.Tax.InterestFilePath = strings.Replace(config.Tax.InterestFilePath, "~", homeDir, 1)

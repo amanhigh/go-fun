@@ -34,15 +34,15 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		kohanConfig = config.KohanConfig{
 			Tax: config.TaxConfig{
 				// DownloadsDir is separate, points to base testdata path for this test
-				DownloadsDir: testDataBasePath,
+				TickerInfoDir: testDataBasePath,
 				// File Paths using constants and joined with base path
-				BrokerStatementPath: filepath.Join(testDataBasePath, tax.TRADES_FILENAME),
-				DividendFilePath:    filepath.Join(testDataBasePath, tax.DIVIDENDS_FILENAME),
-				SBIFilePath:         filepath.Join(testDataBasePath, tax.SBI_RATES_FILENAME),
-				AccountFilePath:     filepath.Join(testDataBasePath, tax.ACCOUNTS_FILENAME),
-				GainsFilePath:       filepath.Join(testDataBasePath, tax.GAINS_FILENAME),
-				InterestFilePath:    filepath.Join(testDataBasePath, tax.INTEREST_FILENAME),
-				YearlySummaryPath:   filepath.Join(tempDir, "tax_summary.xlsx"),
+				TradesPath:        filepath.Join(testDataBasePath, tax.TRADES_FILENAME),
+				DividendFilePath:  filepath.Join(testDataBasePath, tax.DIVIDENDS_FILENAME),
+				TTRatePath:        filepath.Join(testDataBasePath, tax.SBI_RATES_FILENAME),
+				AccountFilePath:   filepath.Join(testDataBasePath, tax.ACCOUNTS_FILENAME),
+				GainsFilePath:     filepath.Join(testDataBasePath, tax.GAINS_FILENAME),
+				InterestFilePath:  filepath.Join(testDataBasePath, tax.INTEREST_FILENAME),
+				YearlySummaryPath: filepath.Join(tempDir, "tax_summary.xlsx"),
 			},
 		}
 
