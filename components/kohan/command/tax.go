@@ -11,9 +11,13 @@ import (
 )
 
 var taxCmd = &cobra.Command{
-	Use:   "tax [YEAR]",
-	Short: "Generate tax reports",
-	Long:  `Generate tax reports including Excel summary for the given year`,
+	Use:   "tax",
+	Short: "Tax related commands",
+}
+
+var computeCmd = &cobra.Command{
+	Use:   "compute [YEAR]",
+	Short: "Compute and generate tax reports for a given year",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(_ *cobra.Command, args []string) error {
 		year := args[0]
@@ -55,6 +59,7 @@ var taxCmd = &cobra.Command{
 func init() {
 	appsCmd.AddCommand(taxCmd)
 	taxCmd.AddCommand(vestedCmd)
+	taxCmd.AddCommand(computeCmd)
 }
 
 var vestedCmd = &cobra.Command{

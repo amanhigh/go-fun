@@ -35,7 +35,7 @@ echo "------------------------------------------------"
 
 # 5. Run the application's tax command from the project root
 echo "Executing 'go run ./components/kohan apps tax 2024' from $PROJECT_ROOT..."
-(cd "$PROJECT_ROOT" && go run ./components/kohan apps tax 2024) || echo "Application returned non-zero exit code, continuing for verification..."
+(cd "$PROJECT_ROOT" && go run ./components/kohan apps tax compute 2024) || echo "Application returned non-zero exit code, continuing for verification..."
 
 # 6. Verify that the output file was created
 echo "Verifying output..."
