@@ -20,7 +20,7 @@ func NewDriveWealthManager(filePath string) *DriveWealthManager {
 }
 
 // Parse orchestrates the parsing of the DriveWealth Excel file.
-func (m *DriveWealthManager) Parse() (interests []tax.Interest, dividends []tax.Dividend, err error) {
+func (m *DriveWealthManager) Parse() (interests []tax.Interest, dividends []tax.Dividend, trades []tax.Trade, err error) {
 	f, err := excelize.OpenFile(m.filePath)
 	if err != nil {
 		err = fmt.Errorf("failed to open excel file: %w", err)
@@ -58,7 +58,55 @@ func (m *DriveWealthManager) Parse() (interests []tax.Interest, dividends []tax.
 		return
 	}
 
+	tradeRows, err := f.GetRows("Trades")
+	if err != nil {
+		err = fmt.Errorf("failed to get rows from 'Trades' sheet: %w", err)
+		return
+	}
+	trades, err = m.parseTrades(tradeRows)
+	if err != nil {
+		return
+	}
+
 	return
+}
+
+func (m *DriveWealthManager) parseTrades(rows [][]string) ([]tax.Trade, error) {
+	var trades []tax.Trade
+	if len(rows) > 0 {
+		for _, row := range rows[1:] { // Skip header row
+			if len(row) >= 9 {
+				quantity, err := strconv.ParseFloat(row[6], 64)
+				if err != nil {
+					continue
+				}
+				price, err := strconv.ParseFloat(row[7], 64)
+				if err != nil {
+					continue
+				}
+				value, err := strconv.ParseFloat(row[8], 64)
+				if err != nil {
+					continue
+				}
+				commission, err := strconv.ParseFloat(row[9], 64)
+				if err != nil {
+					continue
+				}
+
+				trade := tax.Trade{
+					Symbol:     row[3],
+					Date:       strings.Split(row[0], " ")[0],
+					Type:       row[4],
+					Quantity:   quantity,
+					USDPrice:   price,
+					USDValue:   value,
+					Commission: commission,
+				}
+				trades = append(trades, trade)
+			}
+		}
+	}
+	return trades, nil
 }
 
 // parseInterest extracts interest entries from the "Income" sheet rows.
