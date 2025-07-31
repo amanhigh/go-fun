@@ -63,6 +63,25 @@ var _ = Describe("DriveWealthManager", func() {
 			//Remove Default Sheet
 			f.DeleteSheet("Sheet1")
 
+			/* Create Trades Sheet */
+			tradeSheet := "Trades"
+			_, err = f.NewSheet(tradeSheet)
+			Expect(err).ToNot(HaveOccurred())
+
+			tradeHeaders := []string{"Date", "Time (in UTC)", "Name", "Ticker", "Activity", "Order Type", "Quantity", "Price Per Share (in USD)", "Cash Amount (in USD)", "Commission Charges (in USD)"}
+			err = f.SetSheetRow(tradeSheet, "A1", &tradeHeaders)
+			Expect(err).ToNot(HaveOccurred())
+
+			tradeRows := [][]interface{}{
+				{"2025-04-03", "04:53:52 PM", "Vanguard Russell 2000 ETF", "VTWO", "Buy", "Market", 70, 77.41, 5418.7, 0},
+				{"2025-04-03", "04:26:02 PM", "Europe ETF FTSE Vanguard", "VGK", "Buy", "Market", 60, 70.18, 4210.8, 0},
+			}
+
+			for i, rowData := range tradeRows {
+				err = f.SetSheetRow(tradeSheet, fmt.Sprintf("A%d", i+2), &rowData)
+				Expect(err).ToNot(HaveOccurred())
+			}
+
 			err = f.SaveAs(sampleExcelPath)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -71,7 +90,7 @@ var _ = Describe("DriveWealthManager", func() {
 
 		Context("when parsing interests", func() {
 			It("should extract interest entries correctly", func() {
-				interests, _, err := driveWealthManager.Parse()
+				interests, _, _, err := driveWealthManager.Parse()
 				Expect(err).ToNot(HaveOccurred())
 				Expect(interests).To(HaveLen(2))
 				Expect(interests[0].Amount).To(BeNumerically("~", 0.59))
@@ -81,7 +100,7 @@ var _ = Describe("DriveWealthManager", func() {
 
 		Context("when parsing dividends", func() {
 			It("should extract dividend entries correctly", func() {
-				_, dividends, err := driveWealthManager.Parse()
+				_, dividends, _, err := driveWealthManager.Parse()
 				Expect(err).ToNot(HaveOccurred())
 				Expect(dividends).To(HaveLen(3))
 
@@ -101,13 +120,33 @@ var _ = Describe("DriveWealthManager", func() {
 				Expect(dividends[2].Net).To(BeNumerically("~", 106.55))
 			})
 		})
+
+		Context("when parsing trades", func() {
+			It("should extract trade entries correctly", func() {
+				_, _, trades, err := driveWealthManager.Parse()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(trades).To(HaveLen(2))
+
+				Expect(trades[0].Symbol).To(Equal("VTWO"))
+				Expect(trades[0].Quantity).To(BeNumerically("~", 70))
+				Expect(trades[0].USDPrice).To(BeNumerically("~", 77.41))
+				Expect(trades[0].USDValue).To(BeNumerically("~", 5418.7))
+				Expect(trades[0].Type).To(Equal("Buy"))
+
+				Expect(trades[1].Symbol).To(Equal("VGK"))
+				Expect(trades[1].Quantity).To(BeNumerically("~", 60))
+				Expect(trades[1].USDPrice).To(BeNumerically("~", 70.18))
+				Expect(trades[1].USDValue).To(BeNumerically("~", 4210.8))
+				Expect(trades[1].Type).To(Equal("Buy"))
+			})
+		})
 	})
 
 	Context("with an invalid or malformed Excel file", func() {
 		Context("when the Excel file is missing", func() {
 			It("should return an error", func() {
 				nonExistentManager := manager.NewDriveWealthManager("non_existent_file.xlsx")
-				_, _, err := nonExistentManager.Parse()
+				_, _, _, err := nonExistentManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -123,7 +162,7 @@ var _ = Describe("DriveWealthManager", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				driveWealthManager = manager.NewDriveWealthManager(sampleExcelPath)
-				_, _, err = driveWealthManager.Parse()
+				_, _, _, err = driveWealthManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})
 		})
