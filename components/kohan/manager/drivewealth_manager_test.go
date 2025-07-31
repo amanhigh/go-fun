@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/models/config"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/xuri/excelize/v2"
@@ -16,6 +17,7 @@ var _ = Describe("DriveWealthManager", func() {
 		tempTestDir        string
 		sampleExcelPath    string
 		driveWealthManager *manager.DriveWealthManager
+		taxConfig          config.TaxConfig
 	)
 
 	BeforeEach(func() {
@@ -24,6 +26,9 @@ var _ = Describe("DriveWealthManager", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		sampleExcelPath = filepath.Join(tempTestDir, "vested_transactions.xlsx")
+		taxConfig = config.TaxConfig{
+			InterestFilePath: filepath.Join(tempTestDir, "interest.csv"),
+		}
 	})
 
 	AfterEach(func() {
@@ -86,7 +91,7 @@ var _ = Describe("DriveWealthManager", func() {
 			err = f.SaveAs(sampleExcelPath)
 			Expect(err).ToNot(HaveOccurred())
 
-			driveWealthManager = manager.NewDriveWealthManager(sampleExcelPath)
+			driveWealthManager = manager.NewDriveWealthManager(sampleExcelPath, taxConfig)
 		})
 
 		Context("when parsing interests", func() {
@@ -152,7 +157,7 @@ var _ = Describe("DriveWealthManager", func() {
 	Context("with an invalid or malformed Excel file", func() {
 		Context("when the Excel file is missing", func() {
 			It("should return an error", func() {
-				nonExistentManager := manager.NewDriveWealthManager("non_existent_file.xlsx")
+				nonExistentManager := manager.NewDriveWealthManager("non_existent_file.xlsx", taxConfig)
 				_, err := nonExistentManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})
@@ -168,7 +173,7 @@ var _ = Describe("DriveWealthManager", func() {
 				err = f.SaveAs(sampleExcelPath)
 				Expect(err).ToNot(HaveOccurred())
 
-				driveWealthManager = manager.NewDriveWealthManager(sampleExcelPath)
+				driveWealthManager = manager.NewDriveWealthManager(sampleExcelPath, taxConfig)
 				_, err = driveWealthManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})
@@ -183,7 +188,7 @@ var _ = Describe("DriveWealthManager", func() {
 				err = f.SaveAs(sampleExcelPath)
 				Expect(err).ToNot(HaveOccurred())
 
-				driveWealthManager = manager.NewDriveWealthManager(sampleExcelPath)
+				driveWealthManager = manager.NewDriveWealthManager(sampleExcelPath, taxConfig)
 				_, err = driveWealthManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})

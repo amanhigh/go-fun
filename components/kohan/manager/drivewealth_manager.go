@@ -2,21 +2,37 @@ package manager
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/tax"
+	"github.com/gocarina/gocsv"
 	"github.com/xuri/excelize/v2"
 )
 
 // DriveWealthManager handles parsing of DriveWealth reports.
 type DriveWealthManager struct {
 	filePath string
+	config   config.TaxConfig
 }
 
 // NewDriveWealthManager creates a new DriveWealthManager.
-func NewDriveWealthManager(filePath string) *DriveWealthManager {
-	return &DriveWealthManager{filePath: filePath}
+func NewDriveWealthManager(filePath string, config config.TaxConfig) *DriveWealthManager {
+	return &DriveWealthManager{filePath: filePath, config: config}
+}
+
+func (m *DriveWealthManager) GenerateCsv(info tax.DriveWealthInfo) (err error) {
+	//Create Interest File
+	interestFile, err := os.Create(m.config.InterestFilePath)
+	if err != nil {
+		return
+	}
+	defer interestFile.Close()
+
+	err = gocsv.MarshalFile(&info.Interests, interestFile)
+	return
 }
 
 // Parse orchestrates the parsing of the DriveWealth Excel file.
