@@ -12,6 +12,11 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+const (
+	// tradeRowLength is the expected number of columns in a trade row.
+	tradeRowLength = 10
+)
+
 //go:generate mockery --name DriveWealthManager
 type DriveWealthManager interface {
 	Parse() (info tax.DriveWealthInfo, err error)
@@ -72,34 +77,23 @@ func (m *DriveWealthManagerImpl) Parse() (info tax.DriveWealthInfo, err error) {
 	}
 	defer f.Close()
 
-	// Check if "Income" sheet exists
-	sheetExists := false
-	for _, sheet := range f.GetSheetList() {
-		if sheet == "Income" {
-			sheetExists = true
-			break
-		}
+	// Verify that the required sheets exist.
+	if err = m.checkSheetExists(f, "Income"); err != nil {
+		return
 	}
-
-	if !sheetExists {
-		err = fmt.Errorf("sheet 'Income' not found in the Excel file")
+	if err = m.checkSheetExists(f, "Trades"); err != nil {
 		return
 	}
 
-	// Check if "Trades" sheet exists
-	sheetExists = false
-	for _, sheet := range f.GetSheetList() {
-		if sheet == "Trades" {
-			sheetExists = true
-			break
-		}
-	}
-
-	if !sheetExists {
-		err = fmt.Errorf("sheet 'Trades' not found in the Excel file")
+	// Parse the sheets.
+	if info, err = m.parseSheets(f); err != nil {
 		return
 	}
 
+	return
+}
+
+func (m *DriveWealthManagerImpl) parseSheets(f *excelize.File) (info tax.DriveWealthInfo, err error) {
 	rows, err := f.GetRows("Income")
 	if err != nil {
 		err = fmt.Errorf("failed to get rows from 'Income' sheet: %w", err)
@@ -125,15 +119,23 @@ func (m *DriveWealthManagerImpl) Parse() (info tax.DriveWealthInfo, err error) {
 	if err != nil {
 		return
 	}
-
 	return
+}
+
+func (m *DriveWealthManagerImpl) checkSheetExists(f *excelize.File, sheetName string) error {
+	for _, sheet := range f.GetSheetList() {
+		if sheet == sheetName {
+			return nil
+		}
+	}
+	return fmt.Errorf("sheet '%s' not found in the Excel file", sheetName)
 }
 
 func (m *DriveWealthManagerImpl) parseTrades(rows [][]string) ([]tax.Trade, error) {
 	var trades []tax.Trade
 	if len(rows) > 0 {
 		for _, row := range rows[1:] { // Skip header row
-			if len(row) >= 9 {
+			if len(row) >= tradeRowLength {
 				quantity, err := strconv.ParseFloat(row[6], 64)
 				if err != nil {
 					continue
@@ -196,28 +198,9 @@ func (m *DriveWealthManagerImpl) parseInterest(rows [][]string) ([]tax.Interest,
 }
 
 func (m *DriveWealthManagerImpl) parseDividends(rows [][]string) ([]tax.Dividend, error) {
-	// taxMap stores tax amounts keyed by symbol, then by date.
-	// This allows for efficient lookup of taxes for a given dividend.
-	taxMap := make(map[string]map[string]float64) // symbol -> date -> taxAmount
-
-	// First pass: Iterate through all rows to aggregate tax entries.
-	// This is done first because taxes may not appear immediately after dividends.
-	for _, row := range rows[1:] { // Skip header
-		if len(row) >= 5 && row[2] == "Tax" {
-			symbol := row[3]
-			date := strings.Split(row[0], " ")[0]
-			taxAmount, err := strconv.ParseFloat(row[4], 64)
-			if err != nil {
-				continue // Skip row if tax amount is not a valid number.
-			}
-
-			// Create the nested map if it doesn't exist for the symbol.
-			if _, ok := taxMap[symbol]; !ok {
-				taxMap[symbol] = make(map[string]float64)
-			}
-			// Add the tax amount. Report lists taxes as negative, so we negate to store as a positive value.
-			taxMap[symbol][date] += -taxAmount
-		}
+	taxMap, err := m.buildTaxMap(rows)
+	if err != nil {
+		return nil, err
 	}
 
 	var dividendEntries []tax.Dividend
@@ -254,4 +237,31 @@ func (m *DriveWealthManagerImpl) parseDividends(rows [][]string) ([]tax.Dividend
 	}
 
 	return dividendEntries, nil
+}
+
+func (m *DriveWealthManagerImpl) buildTaxMap(rows [][]string) (map[string]map[string]float64, error) {
+	// taxMap stores tax amounts keyed by symbol, then by date.
+	// This allows for efficient lookup of taxes for a given dividend.
+	taxMap := make(map[string]map[string]float64) // symbol -> date -> taxAmount
+
+	// First pass: Iterate through all rows to aggregate tax entries.
+	// This is done first because taxes may not appear immediately after dividends.
+	for _, row := range rows[1:] { // Skip header
+		if len(row) >= 5 && row[2] == "Tax" {
+			symbol := row[3]
+			date := strings.Split(row[0], " ")[0]
+			taxAmount, err := strconv.ParseFloat(row[4], 64)
+			if err != nil {
+				continue // Skip row if tax amount is not a valid number.
+			}
+
+			// Create the nested map if it doesn't exist for the symbol.
+			if _, ok := taxMap[symbol]; !ok {
+				taxMap[symbol] = make(map[string]float64)
+			}
+			// Add the tax amount. Report lists taxes as negative, so we negate to store as a positive value.
+			taxMap[symbol][date] += -taxAmount
+		}
+	}
+	return taxMap, nil
 }
