@@ -12,18 +12,24 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-// DriveWealthManager handles parsing of DriveWealth reports.
-type DriveWealthManager struct {
+//go:generate mockery --name DriveWealthManager
+type DriveWealthManager interface {
+	Parse() (info tax.DriveWealthInfo, err error)
+	GenerateCsv(info tax.DriveWealthInfo) (err error)
+}
+
+// DriveWealthManagerImpl handles parsing of DriveWealth reports.
+type DriveWealthManagerImpl struct {
 	filePath string
 	config   config.TaxConfig
 }
 
 // NewDriveWealthManager creates a new DriveWealthManager.
-func NewDriveWealthManager(filePath string, config config.TaxConfig) *DriveWealthManager {
-	return &DriveWealthManager{filePath: filePath, config: config}
+func NewDriveWealthManager(filePath string, config config.TaxConfig) DriveWealthManager {
+	return &DriveWealthManagerImpl{filePath: filePath, config: config}
 }
 
-func (m *DriveWealthManager) GenerateCsv(info tax.DriveWealthInfo) (err error) {
+func (m *DriveWealthManagerImpl) GenerateCsv(info tax.DriveWealthInfo) (err error) {
 	//Create Interest File
 	interestFile, err := os.Create(m.config.InterestFilePath)
 	if err != nil {
@@ -36,7 +42,7 @@ func (m *DriveWealthManager) GenerateCsv(info tax.DriveWealthInfo) (err error) {
 }
 
 // Parse orchestrates the parsing of the DriveWealth Excel file.
-func (m *DriveWealthManager) Parse() (info tax.DriveWealthInfo, err error) {
+func (m *DriveWealthManagerImpl) Parse() (info tax.DriveWealthInfo, err error) {
 	f, err := excelize.OpenFile(m.filePath)
 	if err != nil {
 		err = fmt.Errorf("failed to open excel file: %w", err)
@@ -101,7 +107,7 @@ func (m *DriveWealthManager) Parse() (info tax.DriveWealthInfo, err error) {
 	return
 }
 
-func (m *DriveWealthManager) parseTrades(rows [][]string) ([]tax.Trade, error) {
+func (m *DriveWealthManagerImpl) parseTrades(rows [][]string) ([]tax.Trade, error) {
 	var trades []tax.Trade
 	if len(rows) > 0 {
 		for _, row := range rows[1:] { // Skip header row
@@ -140,7 +146,7 @@ func (m *DriveWealthManager) parseTrades(rows [][]string) ([]tax.Trade, error) {
 }
 
 // parseInterest extracts interest entries from the "Income" sheet rows.
-func (m *DriveWealthManager) parseInterest(rows [][]string) ([]tax.Interest, error) {
+func (m *DriveWealthManagerImpl) parseInterest(rows [][]string) ([]tax.Interest, error) {
 	var interestEntries []tax.Interest
 
 	if len(rows) > 0 {
@@ -167,7 +173,7 @@ func (m *DriveWealthManager) parseInterest(rows [][]string) ([]tax.Interest, err
 	return interestEntries, nil
 }
 
-func (m *DriveWealthManager) parseDividends(rows [][]string) ([]tax.Dividend, error) {
+func (m *DriveWealthManagerImpl) parseDividends(rows [][]string) ([]tax.Dividend, error) {
 	// taxMap stores tax amounts keyed by symbol, then by date.
 	// This allows for efficient lookup of taxes for a given dividend.
 	taxMap := make(map[string]map[string]float64) // symbol -> date -> taxAmount

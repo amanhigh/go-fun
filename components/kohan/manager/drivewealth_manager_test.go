@@ -7,6 +7,7 @@ import (
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/models/config"
+	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/xuri/excelize/v2"
@@ -16,7 +17,7 @@ var _ = Describe("DriveWealthManager", func() {
 	var (
 		tempTestDir        string
 		sampleExcelPath    string
-		driveWealthManager *manager.DriveWealthManager
+		driveWealthManager manager.DriveWealthManager
 		taxConfig          config.TaxConfig
 	)
 
@@ -150,6 +151,26 @@ var _ = Describe("DriveWealthManager", func() {
 				Expect(info.Trades[2].USDPrice).To(BeNumerically("~", 91.58))
 				Expect(info.Trades[2].USDValue).To(BeNumerically("~", 91.58))
 				Expect(info.Trades[2].Type).To(Equal("Sell"))
+			})
+		})
+
+		Context("when generating CSV", func() {
+			It("should create a valid interest.csv file", func() {
+				info := tax.DriveWealthInfo{
+					Interests: []tax.Interest{
+						{Symbol: "CASH", Date: "2025-06-03", Amount: 0.59, Tax: 0, Net: 0.59},
+						{Symbol: "CASH", Date: "2025-05-02", Amount: 1.18, Tax: 0, Net: 1.18},
+					},
+				}
+
+				err := driveWealthManager.GenerateCsv(info)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Verify file content
+				data, err := os.ReadFile(taxConfig.InterestFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(string(data)).To(ContainSubstring("CASH,2025-06-03,0.59,0,0.59"))
+				Expect(string(data)).To(ContainSubstring("CASH,2025-05-02,1.18,0,1.18"))
 			})
 		})
 	})
