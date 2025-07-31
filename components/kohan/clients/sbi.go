@@ -26,11 +26,10 @@ func NewSBIClient(client *resty.Client, baseUrl string) *SBIClientImpl {
 }
 
 func (s *SBIClientImpl) FetchExchangeRates(ctx context.Context) (result string, err common.HttpError) {
-	response, resErr := s.client.R().
-		SetResult(&result).
-		SetContext(ctx).
-		Get(s.baseUrl)
+	response, resErr := s.client.R().SetContext(ctx).Get(s.baseUrl)
 
-	err = util.ResponseProcessor(response, resErr)
+	if err = util.ResponseProcessor(response, resErr); err == nil {
+		result = response.String()
+	}
 	return
 }

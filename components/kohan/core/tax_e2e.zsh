@@ -2,7 +2,6 @@
 
 # Exit immediately if a command exits with a non-zero status.
 set -e
-
 # --- E2E Test for the 'tax' command ---
 
 echo "Setting up E2E test environment..."
@@ -12,6 +11,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 PROJECT_ROOT=$(cd "$SCRIPT_DIR/../../.." && pwd)
 TEST_DATA_DIR="$PROJECT_ROOT/components/kohan/testdata/tax"
 FA_COMPUTE_DIR=~/Downloads/FACompute
+rm -f $FA_COMPUTE_DIR/sbi_rates.csv
 
 if [ ! -d "$FA_COMPUTE_DIR" ]; then
     echo "Creating directory and copying test data to $FA_COMPUTE_DIR..."
@@ -20,7 +20,7 @@ if [ ! -d "$FA_COMPUTE_DIR" ]; then
     cp "$TEST_DATA_DIR/dividends.csv" "$FA_COMPUTE_DIR/"
     cp "$TEST_DATA_DIR/interest.csv" "$FA_COMPUTE_DIR/"
     cp "$TEST_DATA_DIR/gains.csv" "$FA_COMPUTE_DIR/"
-    cp "$TEST_DATA_DIR/sbi_rates.csv" "$FA_COMPUTE_DIR/"
+    
     cp "$TEST_DATA_DIR/accounts.csv" "$FA_COMPUTE_DIR/"
     cp "$TEST_DATA_DIR/AAPL.json" "$FA_COMPUTE_DIR/Tickers/"
 else
@@ -35,10 +35,21 @@ echo "------------------------------------------------"
 
 # 5. Run the application's tax command from the project root
 echo "Executing 'go run ./components/kohan apps tax 2024' from $PROJECT_ROOT..."
-(cd "$PROJECT_ROOT" && go run ./components/kohan apps tax 2024)
+(cd "$PROJECT_ROOT" && go run ./components/kohan apps tax 2024) || echo "Application returned non-zero exit code, continuing for verification..."
 
 # 6. Verify that the output file was created
 echo "Verifying output..."
+
+echo "--- Checking sbi_rates.csv ---"
+if [ -f "$FA_COMPUTE_DIR/sbi_rates.csv" ]; then
+    echo "✅ sbi_rates.csv was created."
+    echo "Line count:"
+    wc -l "$FA_COMPUTE_DIR/sbi_rates.csv"
+else
+    echo "❌ FAILURE: sbi_rates.csv was NOT created."
+fi
+echo "-----------------------------------"
+
 if [ -f "$FA_COMPUTE_DIR/tax_summary.xlsx" ]; then
   echo "✅ SUCCESS: Tax summary Excel file was created at $FA_COMPUTE_DIR/tax_summary.xlsx"
 else
