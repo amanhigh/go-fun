@@ -42,6 +42,20 @@ func (m *DriveWealthManager) Parse() (interests []tax.Interest, dividends []tax.
 		return
 	}
 
+	// Check if "Trades" sheet exists
+	sheetExists = false
+	for _, sheet := range f.GetSheetList() {
+		if sheet == "Trades" {
+			sheetExists = true
+			break
+		}
+	}
+
+	if !sheetExists {
+		err = fmt.Errorf("sheet 'Trades' not found in the Excel file")
+		return
+	}
+
 	rows, err := f.GetRows("Income")
 	if err != nil {
 		err = fmt.Errorf("failed to get rows from 'Income' sheet: %w", err)

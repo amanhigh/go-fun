@@ -166,5 +166,20 @@ var _ = Describe("DriveWealthManager", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
+		Context("when the 'Trades' sheet is missing", func() {
+			It("should return an error", func() {
+				// Create a new Excel file without the "Trades" sheet
+				f := excelize.NewFile()
+				_, err := f.NewSheet("Income")
+				Expect(err).ToNot(HaveOccurred())
+				f.DeleteSheet("Sheet1")
+				err = f.SaveAs(sampleExcelPath)
+				Expect(err).ToNot(HaveOccurred())
+
+				driveWealthManager = manager.NewDriveWealthManager(sampleExcelPath)
+				_, _, _, err = driveWealthManager.Parse()
+				Expect(err).To(HaveOccurred())
+			})
+		})
 	})
 })
