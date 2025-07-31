@@ -33,12 +33,12 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		// Configure KohanConfig with TaxConfig pointing to test data files
 		kohanConfig = config.KohanConfig{
 			Tax: config.TaxConfig{
-				// DownloadsDir is separate, points to base testdata path for this test
+				// TickerInfoDir is separate, points to base testdata path for this test
 				TickerInfoDir: testDataBasePath,
 				// File Paths using constants and joined with base path
 				TradesPath:        filepath.Join(testDataBasePath, tax.TRADES_FILENAME),
 				DividendFilePath:  filepath.Join(testDataBasePath, tax.DIVIDENDS_FILENAME),
-				TTRatePath:        filepath.Join(testDataBasePath, tax.SBI_RATES_FILENAME),
+				TTRateFilePath:    filepath.Join(testDataBasePath, tax.SBI_RATES_FILENAME),
 				AccountFilePath:   filepath.Join(testDataBasePath, tax.ACCOUNTS_FILENAME),
 				GainsFilePath:     filepath.Join(testDataBasePath, tax.GAINS_FILENAME),
 				InterestFilePath:  filepath.Join(testDataBasePath, tax.INTEREST_FILENAME),

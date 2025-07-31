@@ -84,7 +84,7 @@ func (ki *KohanInjector) provideSBIClient(client *resty.Client) clients.SBIClien
 
 // ---- Repository Providers ----
 func (ki *KohanInjector) provideExchangeRepository() repository.ExchangeRepository {
-	return repository.NewExchangeRepository(ki.config.Tax.TTRatePath)
+	return repository.NewExchangeRepository(ki.config.Tax.TTRateFilePath)
 }
 
 func (ki *KohanInjector) provideGainsRepository() repository.GainsRepository {
@@ -108,12 +108,12 @@ func (ki *KohanInjector) provideTradeRepository() repository.TradeRepository {
 }
 
 // ---- Manager Providers ----
-func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) *manager.TickerManagerImpl {
+func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) manager.TickerManager {
 	return manager.NewTickerManager(client, ki.config.Tax.TickerInfoDir)
 }
 
 func (ki *KohanInjector) provideSBIManager(client clients.SBIClient, exchangeRepo repository.ExchangeRepository) manager.SBIManager {
-	return manager.NewSBIManager(client, ki.config.Tax.TTRatePath, exchangeRepo)
+	return manager.NewSBIManager(client, ki.config.Tax.TTRateFilePath, exchangeRepo)
 }
 
 func (ki *KohanInjector) provideExchangeManager(sbiManager manager.SBIManager) manager.ExchangeManager {

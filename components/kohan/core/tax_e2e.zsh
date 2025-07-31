@@ -15,14 +15,14 @@ FA_COMPUTE_DIR=~/Downloads/FACompute
 
 if [ ! -d "$FA_COMPUTE_DIR" ]; then
     echo "Creating directory and copying test data to $FA_COMPUTE_DIR..."
-    mkdir -p "$FA_COMPUTE_DIR"
+    mkdir -p "$FA_COMPUTE_DIR/Tickers"
     cp "$TEST_DATA_DIR/trades.csv" "$FA_COMPUTE_DIR/"
     cp "$TEST_DATA_DIR/dividends.csv" "$FA_COMPUTE_DIR/"
     cp "$TEST_DATA_DIR/interest.csv" "$FA_COMPUTE_DIR/"
     cp "$TEST_DATA_DIR/gains.csv" "$FA_COMPUTE_DIR/"
     cp "$TEST_DATA_DIR/sbi_rates.csv" "$FA_COMPUTE_DIR/"
     cp "$TEST_DATA_DIR/accounts.csv" "$FA_COMPUTE_DIR/"
-    cp "$TEST_DATA_DIR/AAPL.json" "$FA_COMPUTE_DIR/"
+    cp "$TEST_DATA_DIR/AAPL.json" "$FA_COMPUTE_DIR/Tickers/"
 else
     echo "Directory $FA_COMPUTE_DIR already exists, skipping creation and copy."
 fi
