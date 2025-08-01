@@ -20,6 +20,7 @@ type TaxManagerImpl struct {
 	interestManager     InterestManager
 	taxValuationManager TaxValuationManager
 	excelManager        ExcelManager
+	accountManager      AccountManager
 }
 
 func NewTaxManager(
@@ -28,6 +29,7 @@ func NewTaxManager(
 	interestManager InterestManager,
 	taxValuationManager TaxValuationManager,
 	excelManager ExcelManager,
+	accountManager AccountManager,
 ) TaxManager {
 	return &TaxManagerImpl{
 		capitalGainManager:  capitalGainManager,
@@ -35,6 +37,7 @@ func NewTaxManager(
 		interestManager:     interestManager,
 		taxValuationManager: taxValuationManager,
 		excelManager:        excelManager,
+		accountManager:      accountManager,
 	}
 }
 
@@ -91,6 +94,12 @@ func (t *TaxManagerImpl) processValuations(ctx context.Context, year int) ([]tax
 	if err != nil {
 		return nil, err
 	}
+
+	// Generate Year End Accounts CSV
+	if err := t.accountManager.GenerateYearEndAccounts(ctx, year, usdValuations); err != nil {
+		return nil, err
+	}
+
 	return t.taxValuationManager.ProcessValuations(ctx, usdValuations)
 }
 

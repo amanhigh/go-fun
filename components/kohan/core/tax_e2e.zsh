@@ -50,6 +50,17 @@ else
 fi
 echo "-----------------------------------"
 
+echo "--- Checking accounts_2024.csv ---"
+if [ -f "$FA_COMPUTE_DIR/accounts_2024.csv" ]; then
+    echo "✅ accounts_2024.csv was created."
+    echo "Line count:"
+    wc -l "$FA_COMPUTE_DIR/accounts_2024.csv"
+else
+    echo "❌ FAILURE: accounts_2024.csv was NOT created."
+    exit 1
+fi
+echo "-----------------------------------"
+
 if [ -f "$FA_COMPUTE_DIR/tax_summary.xlsx" ]; then
   echo "✅ SUCCESS: Tax summary Excel file was created at $FA_COMPUTE_DIR/tax_summary.xlsx"
 else

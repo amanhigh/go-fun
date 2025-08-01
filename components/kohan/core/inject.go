@@ -216,8 +216,9 @@ func (ki *KohanInjector) provideTaxManager(
 	interestManager manager.InterestManager,
 	taxValuationManager manager.TaxValuationManager,
 	excelMgr manager.ExcelManager,
+	accountMgr manager.AccountManager,
 ) manager.TaxManager {
-	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager, excelMgr)
+	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager, excelMgr, accountMgr)
 }
 
 func provideTuiServiceRepository(cfg config.DariusConfig) repository.TuiServiceRepository {

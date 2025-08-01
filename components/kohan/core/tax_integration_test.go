@@ -275,4 +275,19 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			}
 		})
 	})
+
+	Context("Account CSV Generation", func() {
+		It("should generate a CSV file with year-end account data", func() {
+			// Get the tax summary, which triggers the CSV generation
+			_, err := taxManager.GetTaxSummary(ctx, testYear)
+			Expect(err).ToNot(HaveOccurred())
+
+			// Define the expected path for the generated CSV
+			expectedCsvPath := filepath.Join(filepath.Dir(kohanConfig.Tax.AccountFilePath), "accounts_2023.csv")
+			defer os.Remove(expectedCsvPath)
+
+			// Verify that the file was created
+			Expect(expectedCsvPath).Should(BeARegularFile())
+		})
+	})
 })
