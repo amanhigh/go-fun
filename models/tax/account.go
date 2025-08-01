@@ -31,3 +31,17 @@ func (a Account) GetDate() (time.Time, common.HttpError) {
 func (a Account) IsValid() bool {
 	return a.Symbol != "" && a.Quantity != 0 && a.Cost != 0 && a.MarketValue != 0
 }
+
+// FromValuations converts a slice of Valuation to a slice of Account.
+func FromValuations(valuations []Valuation) []Account {
+	accounts := make([]Account, len(valuations))
+	for i, valuation := range valuations {
+		accounts[i] = Account{
+			Symbol:      valuation.Ticker,
+			Quantity:    valuation.YearEndPosition.Quantity,
+			Cost:        valuation.YearEndPosition.USDValue(),
+			MarketValue: valuation.YearEndPosition.USDValue(),
+		}
+	}
+	return accounts
+}

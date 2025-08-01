@@ -142,7 +142,7 @@ func (ki *KohanInjector) provideExchangeManager(sbiManager manager.SBIManager) m
 }
 
 func (ki *KohanInjector) provideAccountManager(accountRepo repository.AccountRepository) manager.AccountManager {
-	return manager.NewAccountManager(accountRepo)
+	return manager.NewAccountManager(accountRepo, ki.config.Tax.AccountFilePath)
 }
 
 func (ki *KohanInjector) provideValuationManager(

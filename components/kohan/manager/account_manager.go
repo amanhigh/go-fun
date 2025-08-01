@@ -4,25 +4,53 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	repository "github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
+	"github.com/gocarina/gocsv"
 )
 
 //go:generate mockery --name AccountManager
 type AccountManager interface {
 	GetRecord(ctx context.Context, symbol string) (tax.Account, common.HttpError)
+	GenerateYearEndAccounts(ctx context.Context, year int, valuations []tax.Valuation) common.HttpError
 }
 
 type AccountManagerImpl struct {
-	repository repository.AccountRepository
+	repository      repository.AccountRepository
+	accountFilePath string
 }
 
-func NewAccountManager(repo repository.AccountRepository) AccountManager {
+func NewAccountManager(repo repository.AccountRepository, accountFilePath string) AccountManager {
 	return &AccountManagerImpl{
-		repository: repo,
+		repository:      repo,
+		accountFilePath: accountFilePath,
 	}
+}
+
+func (a *AccountManagerImpl) GenerateYearEndAccounts(ctx context.Context, year int, valuations []tax.Valuation) common.HttpError {
+	accounts := tax.FromValuations(valuations)
+
+	// Create a new file for the year-end accounts
+	fileName := fmt.Sprintf("accounts_%d.csv", year)
+	filePath := filepath.Join(filepath.Dir(a.accountFilePath), fileName)
+
+	// Create the file
+	file, err := os.Create(filePath)
+	if err != nil {
+		return common.NewServerError(fmt.Errorf("failed to create year-end accounts file: %w", err))
+	}
+	defer file.Close()
+
+	// Marshal and write to the new file
+	if err := gocsv.MarshalFile(&accounts, file); err != nil {
+		return common.NewServerError(fmt.Errorf("failed to write year-end accounts: %w", err))
+	}
+
+	return nil
 }
 
 func (a *AccountManagerImpl) GetRecord(ctx context.Context, symbol string) (account tax.Account, err common.HttpError) {

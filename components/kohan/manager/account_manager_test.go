@@ -3,6 +3,8 @@ package manager_test
 import (
 	"context"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/repository/mocks"
@@ -14,15 +16,16 @@ import (
 
 var _ = Describe("AccountManager", func() {
 	var (
-		ctx            = context.Background()
-		mockRepo       *mocks.AccountRepository
-		accountManager manager.AccountManager
-		testAccount    tax.Account
+		ctx             = context.Background()
+		mockRepo        *mocks.AccountRepository
+		accountManager  manager.AccountManager
+		testAccount     tax.Account
+		accountFilePath = "/tmp/accounts.csv"
 	)
 
 	BeforeEach(func() {
 		mockRepo = mocks.NewAccountRepository(GinkgoT())
-		accountManager = manager.NewAccountManager(mockRepo)
+		accountManager = manager.NewAccountManager(mockRepo, accountFilePath)
 
 		// Setup test account
 		testAccount = tax.Account{
@@ -87,6 +90,31 @@ var _ = Describe("AccountManager", func() {
 				_, err := accountManager.GetRecord(ctx, testAccount.Symbol)
 				Expect(err).To(Equal(common.ErrInternalServerError))
 			})
+		})
+	})
+
+	Context("GenerateYearEndAccounts", func() {
+		It("should generate year end accounts", func() {
+			valuations := []tax.Valuation{
+				{
+					Ticker: "GOOG",
+					YearEndPosition: tax.Position{
+						Quantity: 10,
+						USDPrice: 150,
+					},
+				},
+			}
+			err := accountManager.GenerateYearEndAccounts(ctx, 2023, valuations)
+			Expect(err).ToNot(HaveOccurred())
+
+			// Verify file was created
+			fileName := "accounts_2023.csv"
+			filePath := filepath.Join(filepath.Dir(accountFilePath), fileName)
+			_, statErr := os.Stat(filePath)
+			Expect(statErr).ToNot(HaveOccurred())
+
+			// Clean up
+			os.Remove(filePath)
 		})
 	})
 })

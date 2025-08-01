@@ -6,5 +6,4 @@ type Summary struct {
 	INRDividends  []INRDividend // Processed dividends in INR
 	INRInterest   []INRInterest
 	INRValuations []INRValuation
-	// FIXME: Repurpose Valuations or Add Format for accounts.csv
 }
