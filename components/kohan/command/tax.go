@@ -44,7 +44,7 @@ var computeCmd = &cobra.Command{
 
 		summary, httpErr := taxManager.GetTaxSummary(ctx, yearInt)
 		if httpErr != nil {
-			return fmt.Errorf("failed to get tax summary: %w", httpErr)
+			return fmt.Errorf("failed to get tax summary (file: %s): %w", kohanConfig.Tax.AccountFilePath, httpErr)
 		}
 
 		if err := taxManager.SaveTaxSummaryToExcel(ctx, summary); err != nil {
