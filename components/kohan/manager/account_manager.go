@@ -31,7 +31,7 @@ func NewAccountManager(repo repository.AccountRepository, accountFilePath string
 	}
 }
 
-func (a *AccountManagerImpl) GenerateYearEndAccounts(ctx context.Context, year int, valuations []tax.Valuation) common.HttpError {
+func (a *AccountManagerImpl) GenerateYearEndAccounts(_ context.Context, year int, valuations []tax.Valuation) common.HttpError {
 	accounts := tax.FromValuations(valuations)
 
 	// Create a new file for the year-end accounts

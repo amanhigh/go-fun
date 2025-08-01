@@ -8,8 +8,8 @@ import (
 
 // Account represents year-end account position
 type Account struct {
-	Symbol      string  `csv:"Symbol"`
-	Quantity    float64 `csv:"Quantity"`
+	Symbol   string  `csv:"Symbol"`
+	Quantity float64 `csv:"Quantity"`
 	// BUG: Rename fields why cost is Required ?
 	Cost        float64 `csv:"Cost"`
 	MarketValue float64 `csv:"MarketValue"`
