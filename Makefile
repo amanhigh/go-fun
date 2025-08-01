@@ -288,7 +288,7 @@ helm-package:
 setup-tools:
 	printf $(_TITLE) "Setting up Tools"
 	go install github.com/onsi/ginkgo/v2/ginkgo
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.3.0
 	go install github.com/swaggo/swag/cmd/swag
 	go install golang.org/x/tools/cmd/goimports@latest
 	go install github.com/vektra/mockery/v2@v2.51.1
