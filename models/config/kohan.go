@@ -63,7 +63,7 @@ func NewKohanConfig() (config KohanConfig, err error) {
 		return config, fmt.Errorf("failed to get user home directory: %w", err)
 	}
 
-	// HACK: Remove this Hack.
+	// HACK: #C Remove this Hack.
 	config.Tax.TickerInfoDir = strings.Replace(config.Tax.TickerInfoDir, "~", homeDir, 1)
 	config.Tax.TradesPath = strings.Replace(config.Tax.TradesPath, "~", homeDir, 1)
 	config.Tax.DividendFilePath = strings.Replace(config.Tax.DividendFilePath, "~", homeDir, 1)
