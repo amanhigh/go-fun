@@ -37,11 +37,11 @@ Support:
 -`
 )
 
+//go:generate mockery --name AutoManagerInterface
 type AutoManagerInterface interface {
 	RecordTicker(ctx context.Context, ticker, path string) error
 	TryOpenTicker(ctx context.Context, ticker string)
 	MonitorInternetConnection(ctx context.Context)
-	MonitorSubmap(ctx context.Context)
 }
 
 type AutoManagerImpl struct {
@@ -157,16 +157,6 @@ func (a *AutoManagerImpl) openTicker(ticker string) (err error) {
 		}
 	}
 	return
-}
-
-func (a *AutoManagerImpl) MonitorSubmap(_ context.Context) {
-	wait := time.Second
-	util.ScheduleJob(wait, func(_ bool) {
-		err := tools.ActivateSubmap("swiftkeys", "SwiftKeys")
-		if err != nil {
-			log.Error().Err(err).Msg("Activate Submap Failed")
-		}
-	})
 }
 
 func (a *AutoManagerImpl) restartNetworkManager() {
