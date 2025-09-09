@@ -174,6 +174,14 @@ mysql-op: ## Mysql Operator
 	printf $(_INFO) "Mysql Clear" "kubectl delete mysql mysql-operator;"
 	printf $(_INFO) "Login" "root/root, aman/aman [Host: mysql]"
 
+zeppelin: ## Apache Zeppelin Data Analytics
+	-helm $(CMD) zeppelin onechart/onechart -f zeppelin.yml > $(OUT)
+	printf $(_INFO) "URL" "http://zeppelin.docker/"
+	printf $(_INFO) "MySQL Connection" "Host: mysql-primary, Port: 3306, User: aman/aman or root/root"
+	printf $(_INFO) "Database" "compute"
+	printf $(_INFO) "JDBC URL" "jdbc:mysql://mysql-primary:3306/compute"
+	printf $(_DETAIL) "Testing" "Visit Zeppelin UI and create a notebook to test MySQL connectivity"
+
 consul: ## Consul
 	-helm $(CMD) consul hashicorp/consul -f consul.yml > $(OUT)
 	printf $(_INFO) "URL" "http://consul.docker/"
