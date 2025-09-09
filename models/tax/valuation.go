@@ -2,6 +2,7 @@ package tax
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/amanhigh/go-fun/models/common"
@@ -41,8 +42,13 @@ func (t Trade) GetDate() (time.Time, common.HttpError) {
 }
 
 func (t Trade) IsValid() bool {
-	return t.Symbol != "" && t.Date != "" && t.Type != "" &&
-		(t.Type == "BUY" || t.Type == "SELL")
+	if t.Symbol == "" || t.Date == "" || t.Type == "" {
+		return false
+	}
+
+	// Accept both uppercase and mixed case trade types (BUY/Buy, SELL/Sell)
+	uppercaseType := strings.ToUpper(t.Type)
+	return uppercaseType == "BUY" || uppercaseType == "SELL"
 }
 
 // Position represents a snapshot of holdings at a point in time
