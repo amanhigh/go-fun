@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/amanhigh/go-fun/models/common"
@@ -46,7 +47,10 @@ func (g *GainsComputationManagerImpl) ComputeGainsFromTrades(_ context.Context, 
 			return nil, common.NewHttpError(fmt.Sprintf("invalid trade date '%s': %v", trade.Date, err), http.StatusBadRequest)
 		}
 
-		switch trade.Type {
+		// Normalize trade type to uppercase for consistent matching
+		normalizedType := strings.ToUpper(trade.Type)
+
+		switch normalizedType {
 		case tax.TRADE_TYPE_BUY:
 			// Add to buy positions for this symbol
 			lot := PositionLot{

@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -20,52 +21,91 @@ const (
 //go:generate mockery --name DriveWealthManager
 type DriveWealthManager interface {
 	Parse() (info tax.DriveWealthInfo, err error)
-	GenerateCsv(info tax.DriveWealthInfo) (err error)
+	GenerateCsv(ctx context.Context, info tax.DriveWealthInfo) (err error)
 }
 
 // DriveWealthManagerImpl handles parsing of DriveWealth reports.
 type DriveWealthManagerImpl struct {
-	config config.TaxConfig
+	config       config.TaxConfig
+	gainsManager GainsComputationManager
 }
 
 // NewDriveWealthManager creates a new DriveWealthManager.
-func NewDriveWealthManager(config config.TaxConfig) DriveWealthManager {
-	return &DriveWealthManagerImpl{config: config}
+func NewDriveWealthManager(config config.TaxConfig, gainsManager GainsComputationManager) DriveWealthManager {
+	return &DriveWealthManagerImpl{
+		config:       config,
+		gainsManager: gainsManager,
+	}
 }
 
-func (m *DriveWealthManagerImpl) GenerateCsv(info tax.DriveWealthInfo) (err error) {
-	// Create Interest File
+func (m *DriveWealthManagerImpl) GenerateCsv(ctx context.Context, info tax.DriveWealthInfo) (err error) {
+	if err = m.createInterestFile(info.Interests); err != nil {
+		return
+	}
+	if err = m.createTradeFile(info.Trades); err != nil {
+		return
+	}
+	if err = m.createDividendFile(info.Dividends); err != nil {
+		return
+	}
+	return m.createGainsFile(ctx, info.Trades)
+}
+
+func (m *DriveWealthManagerImpl) createInterestFile(interests []tax.Interest) error {
 	interestFile, err := os.Create(m.config.InterestFilePath)
 	if err != nil {
-		return
+		return fmt.Errorf("failed to create interest file: %w", err)
 	}
 	defer interestFile.Close()
 
-	err = gocsv.MarshalFile(&info.Interests, interestFile)
-	if err != nil {
-		return
+	if err := gocsv.MarshalFile(&interests, interestFile); err != nil {
+		return fmt.Errorf("failed to marshal interest data: %w", err)
 	}
+	return nil
+}
 
-	// Create Trade File
+func (m *DriveWealthManagerImpl) createTradeFile(trades []tax.Trade) error {
 	tradeFile, err := os.Create(m.config.TradesPath)
 	if err != nil {
-		return
+		return fmt.Errorf("failed to create trades file: %w", err)
 	}
 	defer tradeFile.Close()
-	err = gocsv.MarshalFile(&info.Trades, tradeFile)
-	if err != nil {
-		return
-	}
 
-	// Create Dividend File
+	if err := gocsv.MarshalFile(&trades, tradeFile); err != nil {
+		return fmt.Errorf("failed to marshal trades data: %w", err)
+	}
+	return nil
+}
+
+func (m *DriveWealthManagerImpl) createDividendFile(dividends []tax.Dividend) error {
 	dividendFile, err := os.Create(m.config.DividendFilePath)
 	if err != nil {
-		return
+		return fmt.Errorf("failed to create dividends file: %w", err)
 	}
 	defer dividendFile.Close()
-	err = gocsv.MarshalFile(&info.Dividends, dividendFile)
 
-	return
+	if err := gocsv.MarshalFile(&dividends, dividendFile); err != nil {
+		return fmt.Errorf("failed to marshal dividends data: %w", err)
+	}
+	return nil
+}
+
+func (m *DriveWealthManagerImpl) createGainsFile(ctx context.Context, trades []tax.Trade) error {
+	gains, httpErr := m.gainsManager.ComputeGainsFromTrades(ctx, trades)
+	if httpErr != nil {
+		return httpErr
+	}
+
+	gainsFile, err := os.Create(m.config.GainsFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to create gains file: %w", err)
+	}
+	defer gainsFile.Close()
+
+	if err := gocsv.MarshalFile(&gains, gainsFile); err != nil {
+		return fmt.Errorf("failed to marshal gains data: %w", err)
+	}
+	return nil
 }
 
 // Parse orchestrates the parsing of the DriveWealth Excel file.

@@ -70,6 +70,8 @@ var vestedCmd = &cobra.Command{
 	Short: "Generate Vested Brokerage Report",
 	Long:  `Generate Vested Brokerage Report from DriveWealth Excel file`,
 	RunE: func(_ *cobra.Command, _ []string) error {
+		ctx := context.Background()
+
 		// Initialize config and injector
 		kohanConfig, err := config.NewKohanConfig()
 		if err != nil {
@@ -90,7 +92,7 @@ var vestedCmd = &cobra.Command{
 		}
 
 		// FIXME: #A Ensure Drive wealth Parsing is Working
-		if err := driveWealthManager.GenerateCsv(info); err != nil {
+		if err := driveWealthManager.GenerateCsv(ctx, info); err != nil {
 			return fmt.Errorf("failed to generate csv: %w", err)
 		}
 

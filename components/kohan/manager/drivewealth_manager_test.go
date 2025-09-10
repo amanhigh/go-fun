@@ -1,11 +1,13 @@
 package manager_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
@@ -19,6 +21,8 @@ var _ = Describe("DriveWealthManager", func() {
 		sampleExcelPath    string
 		driveWealthManager manager.DriveWealthManager
 		taxConfig          config.TaxConfig
+		mockGainsManager   *mocks.GainsComputationManager
+		ctx                = context.Background()
 	)
 
 	BeforeEach(func() {
@@ -31,8 +35,11 @@ var _ = Describe("DriveWealthManager", func() {
 			InterestFilePath: filepath.Join(tempTestDir, "interest.csv"),
 			TradesPath:       filepath.Join(tempTestDir, "trades.csv"),
 			DividendFilePath: filepath.Join(tempTestDir, "dividends.csv"),
+			GainsFilePath:    filepath.Join(tempTestDir, "gains.csv"),
 			DriveWealthPath:  sampleExcelPath,
 		}
+
+		mockGainsManager = mocks.NewGainsComputationManager(GinkgoT())
 	})
 
 	AfterEach(func() {
@@ -95,7 +102,7 @@ var _ = Describe("DriveWealthManager", func() {
 			err = f.SaveAs(sampleExcelPath)
 			Expect(err).ToNot(HaveOccurred())
 
-			driveWealthManager = manager.NewDriveWealthManager(taxConfig)
+			driveWealthManager = manager.NewDriveWealthManager(taxConfig, mockGainsManager)
 		})
 
 		Context("when parsing interests", func() {
@@ -158,7 +165,7 @@ var _ = Describe("DriveWealthManager", func() {
 		})
 
 		Context("when generating CSV", func() {
-			It("should create valid csv files", func() {
+			It("should create valid csv files including gains.csv", func() {
 				info := tax.DriveWealthInfo{
 					Interests: []tax.Interest{
 						{Symbol: "CASH", Date: "2025-06-03", Amount: 0.59, Tax: 0, Net: 0.59},
@@ -172,7 +179,13 @@ var _ = Describe("DriveWealthManager", func() {
 					},
 				}
 
-				err := driveWealthManager.GenerateCsv(info)
+				// Mock the gains computation
+				expectedGains := []tax.Gains{
+					{Symbol: "VTWO", BuyDate: "2025-04-03", SellDate: "2025-04-04", Type: "STCG", Quantity: 10, PNL: 5.9, Commission: 0},
+				}
+				mockGainsManager.EXPECT().ComputeGainsFromTrades(ctx, info.Trades).Return(expectedGains, nil)
+
+				err := driveWealthManager.GenerateCsv(ctx, info)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Verify Interest file content
@@ -190,6 +203,11 @@ var _ = Describe("DriveWealthManager", func() {
 				data, err = os.ReadFile(taxConfig.DividendFilePath)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(string(data)).To(ContainSubstring("IEF,2025-06-06,158.17,39.54,118.63"))
+
+				// Verify Gains file content
+				data, err = os.ReadFile(taxConfig.GainsFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(string(data)).To(ContainSubstring("VTWO,2025-04-03,2025-04-04,10,5.9,0,STCG"))
 			})
 		})
 	})
@@ -200,7 +218,7 @@ var _ = Describe("DriveWealthManager", func() {
 				// This test works because the top-level BeforeEach sets up the path
 				// but does not create the file. The manager is initialized with a
 				// path that points to a non-existent file, so Parse should fail.
-				nonExistentManager := manager.NewDriveWealthManager(taxConfig)
+				nonExistentManager := manager.NewDriveWealthManager(taxConfig, mockGainsManager)
 				_, err := nonExistentManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})
@@ -216,7 +234,7 @@ var _ = Describe("DriveWealthManager", func() {
 				err = f.SaveAs(sampleExcelPath)
 				Expect(err).ToNot(HaveOccurred())
 
-				driveWealthManager = manager.NewDriveWealthManager(taxConfig)
+				driveWealthManager = manager.NewDriveWealthManager(taxConfig, mockGainsManager)
 				_, err = driveWealthManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})
@@ -231,7 +249,7 @@ var _ = Describe("DriveWealthManager", func() {
 				err = f.SaveAs(sampleExcelPath)
 				Expect(err).ToNot(HaveOccurred())
 
-				driveWealthManager = manager.NewDriveWealthManager(taxConfig)
+				driveWealthManager = manager.NewDriveWealthManager(taxConfig, mockGainsManager)
 				_, err = driveWealthManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})

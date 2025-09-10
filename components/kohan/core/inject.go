@@ -206,8 +206,12 @@ func (ki *KohanInjector) provideExcelManager() manager.ExcelManager {
 	return manager.NewExcelManager(ki.config.Tax.YearlySummaryPath)
 }
 
-func (ki *KohanInjector) provideDriveWealthManager() manager.DriveWealthManager {
-	return manager.NewDriveWealthManager(ki.config.Tax)
+func (ki *KohanInjector) provideGainsComputationManager() manager.GainsComputationManager {
+	return manager.NewGainsComputationManager()
+}
+
+func (ki *KohanInjector) provideDriveWealthManager(gainsManager manager.GainsComputationManager) manager.DriveWealthManager {
+	return manager.NewDriveWealthManager(ki.config.Tax, gainsManager)
 }
 
 func (ki *KohanInjector) provideTaxManager(
@@ -301,6 +305,8 @@ func (ki *KohanInjector) registerTaxComponents() {
 	// Register ExcelManager first since TaxManager depends on it
 	container.MustSingleton(ki.di, ki.provideExcelManager)
 	container.MustSingleton(ki.di, ki.provideTaxManager)
+	// Register GainsComputationManager before DriveWealthManager since it depends on it
+	container.MustSingleton(ki.di, ki.provideGainsComputationManager)
 	container.MustSingleton(ki.di, ki.provideDriveWealthManager)
 }
 
