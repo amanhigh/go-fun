@@ -75,7 +75,7 @@ func (g *GainsComputationManagerImpl) ComputeGainsFromTrades(_ context.Context, 
 	return gains, nil
 }
 
-// sortTradesByDate sorts trades chronologically by date
+// sortTradesByDate sorts trades chronologically by date and ensures BUY trades come before SELL trades on the same date
 func (g *GainsComputationManagerImpl) sortTradesByDate(trades []tax.Trade) []tax.Trade {
 	sortedTrades := make([]tax.Trade, len(trades))
 	copy(sortedTrades, trades)
@@ -86,7 +86,26 @@ func (g *GainsComputationManagerImpl) sortTradesByDate(trades []tax.Trade) []tax
 		if errI != nil || errJ != nil {
 			return false // Keep original order if date parsing fails
 		}
-		return dateI.Before(dateJ)
+
+		// If dates are different, sort by date
+		if !dateI.Equal(dateJ) {
+			return dateI.Before(dateJ)
+		}
+
+		// For same-day trades, ensure BUY comes before SELL
+		typeI := strings.ToUpper(sortedTrades[i].Type)
+		typeJ := strings.ToUpper(sortedTrades[j].Type)
+
+		// BUY should come before SELL on the same day
+		if typeI == tax.TRADE_TYPE_BUY && typeJ == tax.TRADE_TYPE_SELL {
+			return true
+		}
+		if typeI == tax.TRADE_TYPE_SELL && typeJ == tax.TRADE_TYPE_BUY {
+			return false
+		}
+
+		// For same type or other combinations, keep stable order
+		return false
 	})
 
 	return sortedTrades

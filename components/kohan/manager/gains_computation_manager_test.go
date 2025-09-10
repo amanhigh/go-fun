@@ -301,6 +301,34 @@ var _ = Describe("GainsComputationManager", func() {
 				Expect(gain.PNL).To(Equal(980.00))
 			})
 		})
+
+		Context("with same-day sell-before-buy ordering issue", func() {
+			var trades []tax.Trade
+
+			BeforeEach(func() {
+				// Reproduce the exact issue from real vested data:
+				// Sell transaction appears before buy transaction in data order,
+				// even though they have the same date
+				trades = []tax.Trade{
+					{Symbol: "AAPL", Date: "2024-08-05", Type: "SELL", Quantity: 6, USDPrice: 209.00, Commission: 0},
+					{Symbol: "AAPL", Date: "2024-08-05", Type: "BUY", Quantity: 6, USDPrice: 199.00, Commission: 0},
+				}
+			})
+
+			It("should handle same-day sell-before-buy by sorting trades chronologically first", func() {
+				gains, err := gainsManager.ComputeGainsFromTrades(ctx, trades)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(gains).To(HaveLen(1))
+
+				gain := gains[0]
+				Expect(gain.Symbol).To(Equal("AAPL"))
+				Expect(gain.BuyDate).To(Equal("2024-08-05"))
+				Expect(gain.SellDate).To(Equal("2024-08-05"))
+				Expect(gain.Quantity).To(Equal(6.0))
+				Expect(gain.PNL).To(Equal(60.00)) // (209-199)*6 = 60
+				Expect(gain.Type).To(Equal("STCG"))
+			})
+		})
 	})
 
 	Context("with complex multi-symbol, multi-lot scenario", func() {
