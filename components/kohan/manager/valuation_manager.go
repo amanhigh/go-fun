@@ -116,9 +116,16 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 	// Step 2: Get opening position
 	openingPosition, err := v.getOpeningPositionForPeriod(ctx, tickerSymbol, year)
 	if err != nil {
-		// getOpeningPositionForPeriod returns (tax.Position{}, nil) for common.ErrNotFound (fresh start)
-		// So, any non-nil err here is an actual error.
-		return tax.Valuation{}, common.NewServerError(fmt.Errorf("failed to get opening position for %s: %w", tickerSymbol, err))
+		if errors.Is(err, common.ErrNotFound) {
+			// Fresh start - create zero position with valid date
+			openingPosition = tax.Position{
+				Date:     time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC),
+				Quantity: 0,
+				USDPrice: 0,
+			}
+		} else {
+			return tax.Valuation{}, common.NewServerError(fmt.Errorf("failed to get opening position for %s: %w", tickerSymbol, err))
+		}
 	}
 
 	// Step 3: Validate if trades exist or if there's a carry-over
@@ -264,20 +271,19 @@ func (v *ValuationManagerImpl) validateTradesExistOrCarryOver(trades []tax.Trade
 }
 
 func (v *ValuationManagerImpl) getOpeningPositionForPeriod(ctx context.Context, ticker string, year int) (position tax.Position, err common.HttpError) {
-	// Last year's account record
-	account, accErr := v.accountManager.GetRecord(ctx, ticker)
+	// Smart account detection for previous year
+	account, accErr := v.accountManager.GetRecord(ctx, ticker, year)
 	if accErr != nil {
 		if errors.Is(accErr, common.ErrNotFound) {
-			// No account record found -> fresh start for this period.
-			// Return a zero position. Its Date field will be the zero value for time.Time.
-			return tax.Position{}, nil
+			// Fresh start - no previous year account
+			return tax.Position{}, common.ErrNotFound
 		}
 		return tax.Position{}, accErr // Other errors from accountManager
 	}
 
 	// Account record found (carry-over scenario)
-	// Account record found (carry-over scenario)
-	openingDate := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+	// Use December 31st of previous year for carry-over positions
+	openingDate := time.Date(year-1, 12, 31, 23, 59, 59, 0, time.UTC)
 	var openingPrice float64
 	if account.Quantity > 0 { // Avoid division by zero
 		openingPrice = account.MarketValue / account.Quantity
