@@ -15,19 +15,19 @@ import (
 
 //go:generate mockery --name AccountManager
 type AccountManager interface {
-	GetRecord(ctx context.Context, symbol string) (tax.Account, common.HttpError)
+	GetRecord(ctx context.Context, symbol string, year int) (tax.Account, common.HttpError)
 	GenerateYearEndAccounts(ctx context.Context, year int, valuations []tax.Valuation) common.HttpError
 }
 
 type AccountManagerImpl struct {
-	repository      repository.AccountRepository
-	accountFilePath string
+	repository repository.AccountRepository
+	accountDir string
 }
 
-func NewAccountManager(repo repository.AccountRepository, accountFilePath string) AccountManager {
+func NewAccountManager(repo repository.AccountRepository, accountDir string) AccountManager {
 	return &AccountManagerImpl{
-		repository:      repo,
-		accountFilePath: accountFilePath,
+		repository: repo,
+		accountDir: accountDir,
 	}
 }
 
@@ -36,7 +36,7 @@ func (a *AccountManagerImpl) GenerateYearEndAccounts(_ context.Context, year int
 
 	// Create a new file for the year-end accounts
 	fileName := fmt.Sprintf("accounts_%d.csv", year)
-	filePath := filepath.Join(filepath.Dir(a.accountFilePath), fileName)
+	filePath := filepath.Join(a.accountDir, fileName)
 
 	// Create the file
 	file, err := os.Create(filePath)
@@ -53,20 +53,26 @@ func (a *AccountManagerImpl) GenerateYearEndAccounts(_ context.Context, year int
 	return nil
 }
 
-func (a *AccountManagerImpl) GetRecord(ctx context.Context, symbol string) (account tax.Account, err common.HttpError) {
-	// Get all records for symbol
-	records, err := a.repository.GetRecordsForTicker(ctx, symbol)
-	if err != nil {
-		return account, err
+func (a *AccountManagerImpl) GetRecord(ctx context.Context, symbol string, year int) (account tax.Account, err common.HttpError) {
+	// Smart detection: Only check for auto-generated previous year file
+	prevYearPath := fmt.Sprintf("accounts_%d.csv", year-1)
+	fallbackPath := filepath.Join(a.accountDir, prevYearPath)
+
+	if _, fileErr := os.Stat(fallbackPath); fileErr == nil {
+		// Use auto-generated previous year file
+		prevRepo := repository.NewAccountRepository(fallbackPath)
+		records, repoErr := prevRepo.GetRecordsForTicker(ctx, symbol)
+		if repoErr == nil && len(records) > 0 {
+			// Validate single record from previous year file
+			switch len(records) {
+			case 1:
+				return records[0], nil
+			default:
+				return account, common.NewHttpError(fmt.Sprintf("multiple accounts found for symbol: %s in %s", symbol, prevYearPath), http.StatusBadRequest)
+			}
+		}
 	}
 
-	// Validate single record
-	switch len(records) {
-	case 0:
-		return account, common.ErrNotFound
-	case 1:
-		return records[0], nil
-	default:
-		return account, common.NewHttpError(fmt.Sprintf("multiple accounts found for symbol: %s", symbol), http.StatusBadRequest)
-	}
+	// No previous year file OR ticker not found -> Fresh start
+	return tax.Account{}, common.ErrNotFound
 }

@@ -6,6 +6,7 @@ import (
 	context "context"
 
 	common "github.com/amanhigh/go-fun/models/common"
+
 	mock "github.com/stretchr/testify/mock"
 
 	tax "github.com/amanhigh/go-fun/models/tax"
@@ -56,7 +57,7 @@ func (_m *GainsComputationManager) ComputeGainsFromTrades(ctx context.Context, t
 	return r0, r1
 }
 
-// ComputeGainsFromTrades_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ComputeGainsFromTrades'
+// GainsComputationManager_ComputeGainsFromTrades_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ComputeGainsFromTrades'
 type GainsComputationManager_ComputeGainsFromTrades_Call struct {
 	*mock.Call
 }

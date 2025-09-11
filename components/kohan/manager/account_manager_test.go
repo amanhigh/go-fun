@@ -10,6 +10,7 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/repository/mocks"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
+	"github.com/gocarina/gocsv"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -45,7 +46,7 @@ var _ = Describe("AccountManager", func() {
 			})
 
 			It("returns account details", func() {
-				account, err := accountManager.GetRecord(ctx, testAccount.Symbol)
+				account, err := accountManager.GetRecord(ctx, testAccount.Symbol, 2024)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(account).To(Equal(testAccount))
 			})
@@ -59,7 +60,7 @@ var _ = Describe("AccountManager", func() {
 			})
 
 			It("returns not found error", func() {
-				_, err := accountManager.GetRecord(ctx, testAccount.Symbol)
+				_, err := accountManager.GetRecord(ctx, testAccount.Symbol, 2024)
 				Expect(err).To(Equal(common.ErrNotFound))
 			})
 		})
@@ -72,7 +73,7 @@ var _ = Describe("AccountManager", func() {
 			})
 
 			It("returns bad request error", func() {
-				_, err := accountManager.GetRecord(ctx, testAccount.Symbol)
+				_, err := accountManager.GetRecord(ctx, testAccount.Symbol, 2024)
 				Expect(err).To(HaveOccurred())
 				Expect(err.Code()).To(Equal(http.StatusBadRequest))
 				Expect(err.Error()).To(ContainSubstring("multiple accounts found"))
@@ -87,8 +88,73 @@ var _ = Describe("AccountManager", func() {
 			})
 
 			It("returns error from repository", func() {
-				_, err := accountManager.GetRecord(ctx, testAccount.Symbol)
+				_, err := accountManager.GetRecord(ctx, testAccount.Symbol, 2024)
 				Expect(err).To(Equal(common.ErrInternalServerError))
+			})
+		})
+	})
+
+	Context("Smart Account File Detection", func() {
+		Context("when accounts_2023.csv exists for 2024 tax computation", func() {
+			var accounts2023Path string
+
+			BeforeEach(func() {
+				// Create accounts_2023.csv with test data
+				accounts2023Path = filepath.Join(accountFilePath, "../accounts_2023.csv")
+				accounts := []tax.Account{testAccount}
+				file, err := os.Create(accounts2023Path)
+				Expect(err).ToNot(HaveOccurred())
+				defer file.Close()
+				err = gocsv.MarshalFile(&accounts, file)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				os.Remove(accounts2023Path)
+			})
+
+			It("should auto-use accounts_2023.csv", func() {
+				account, err := accountManager.GetRecord(ctx, testAccount.Symbol, 2024)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(account.Symbol).To(Equal(testAccount.Symbol))
+				Expect(account.Quantity).To(Equal(testAccount.Quantity))
+			})
+		})
+
+		Context("when no previous year file exists", func() {
+			It("should handle fresh start scenario", func() {
+				_, err := accountManager.GetRecord(ctx, "NEWSTOCK", 2024)
+				Expect(err).To(Equal(common.ErrNotFound))
+			})
+		})
+
+		Context("when ticker not found in previous year file", func() {
+			var accounts2023Path string
+
+			BeforeEach(func() {
+				// Create accounts_2023.csv with different stock
+				accounts2023Path = filepath.Join(filepath.Dir(accountFilePath), "accounts_2023.csv")
+				differentAccount := tax.Account{
+					Symbol:      "MSFT",
+					Quantity:    50,
+					Cost:        5000,
+					MarketValue: 5500,
+				}
+				accounts := []tax.Account{differentAccount}
+				file, err := os.Create(accounts2023Path)
+				Expect(err).ToNot(HaveOccurred())
+				defer file.Close()
+				err = gocsv.MarshalFile(&accounts, file)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				os.Remove(accounts2023Path)
+			})
+
+			It("should return fresh start for that ticker", func() {
+				_, err := accountManager.GetRecord(ctx, "NEWSTOCK", 2024)
+				Expect(err).To(Equal(common.ErrNotFound))
 			})
 		})
 	})

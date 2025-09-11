@@ -75,9 +75,9 @@ func (_c *AccountManager_GenerateYearEndAccounts_Call) RunAndReturn(run func(con
 	return _c
 }
 
-// GetRecord provides a mock function with given fields: ctx, symbol
-func (_m *AccountManager) GetRecord(ctx context.Context, symbol string) (tax.Account, common.HttpError) {
-	ret := _m.Called(ctx, symbol)
+// GetRecord provides a mock function with given fields: ctx, symbol, year
+func (_m *AccountManager) GetRecord(ctx context.Context, symbol string, year int) (tax.Account, common.HttpError) {
+	ret := _m.Called(ctx, symbol, year)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetRecord")
@@ -85,17 +85,17 @@ func (_m *AccountManager) GetRecord(ctx context.Context, symbol string) (tax.Acc
 
 	var r0 tax.Account
 	var r1 common.HttpError
-	if rf, ok := ret.Get(0).(func(context.Context, string) (tax.Account, common.HttpError)); ok {
-		return rf(ctx, symbol)
+	if rf, ok := ret.Get(0).(func(context.Context, string, int) (tax.Account, common.HttpError)); ok {
+		return rf(ctx, symbol, year)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) tax.Account); ok {
-		r0 = rf(ctx, symbol)
+	if rf, ok := ret.Get(0).(func(context.Context, string, int) tax.Account); ok {
+		r0 = rf(ctx, symbol, year)
 	} else {
 		r0 = ret.Get(0).(tax.Account)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) common.HttpError); ok {
-		r1 = rf(ctx, symbol)
+	if rf, ok := ret.Get(1).(func(context.Context, string, int) common.HttpError); ok {
+		r1 = rf(ctx, symbol, year)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(common.HttpError)
@@ -113,13 +113,14 @@ type AccountManager_GetRecord_Call struct {
 // GetRecord is a helper method to define mock.On call
 //   - ctx context.Context
 //   - symbol string
-func (_e *AccountManager_Expecter) GetRecord(ctx interface{}, symbol interface{}) *AccountManager_GetRecord_Call {
-	return &AccountManager_GetRecord_Call{Call: _e.mock.On("GetRecord", ctx, symbol)}
+//   - year int
+func (_e *AccountManager_Expecter) GetRecord(ctx interface{}, symbol interface{}, year interface{}) *AccountManager_GetRecord_Call {
+	return &AccountManager_GetRecord_Call{Call: _e.mock.On("GetRecord", ctx, symbol, year)}
 }
 
-func (_c *AccountManager_GetRecord_Call) Run(run func(ctx context.Context, symbol string)) *AccountManager_GetRecord_Call {
+func (_c *AccountManager_GetRecord_Call) Run(run func(ctx context.Context, symbol string, year int)) *AccountManager_GetRecord_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(int))
 	})
 	return _c
 }
@@ -129,7 +130,7 @@ func (_c *AccountManager_GetRecord_Call) Return(_a0 tax.Account, _a1 common.Http
 	return _c
 }
 
-func (_c *AccountManager_GetRecord_Call) RunAndReturn(run func(context.Context, string) (tax.Account, common.HttpError)) *AccountManager_GetRecord_Call {
+func (_c *AccountManager_GetRecord_Call) RunAndReturn(run func(context.Context, string, int) (tax.Account, common.HttpError)) *AccountManager_GetRecord_Call {
 	_c.Call.Return(run)
 	return _c
 }
