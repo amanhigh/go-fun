@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//go:generate mockery --name=AccountRepository
+//mockery:name AccountRepository
 type AccountRepository interface {
 	GetAllRecordsForYear(ctx context.Context, year int) ([]tax.Account, common.HttpError)
 	SaveYearEndAccounts(ctx context.Context, year int, accounts []tax.Account) common.HttpError

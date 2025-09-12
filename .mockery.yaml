@@ -1,2 +1,17 @@
-# https://vektra.github.io/mockery/latest/configuration/#parameter-descriptions
-with-expecter: true
+# v3 config - explicit interface specification in mocks subdirectory
+all: false
+dir: '{{ .InterfaceDir }}/mocks'
+filename: '{{ .StructName }}.go'
+structname: '{{ .InterfaceName }}'
+pkgname: 'mocks'
+template: testify
+packages:
+  "github.com/amanhigh/go-fun/components/kohan/repository":
+    interfaces:
+      AccountRepository:
+  "github.com/amanhigh/go-fun/components/kohan/clients":
+    config:
+      all: true
+  "github.com/amanhigh/go-fun/components/kohan/manager":
+    config:
+      all: true
