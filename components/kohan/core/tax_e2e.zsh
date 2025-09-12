@@ -23,8 +23,16 @@ if [ ! -d "$FA_COMPUTE_DIR" ]; then
     
     cp "$TEST_DATA_DIR/accounts.csv" "$FA_COMPUTE_DIR/"
     cp "$TEST_DATA_DIR/AAPL.json" "$FA_COMPUTE_DIR/Tickers/"
+    
+    # Add NVDA ticker to trades.csv for auto-download testing
+    echo "NVDA,2024-06-15,BUY,25,300.00,7500.00,2.50" >> "$FA_COMPUTE_DIR/trades.csv"
 else
-    echo "Directory $FA_COMPUTE_DIR already exists, skipping creation and copy."
+    echo "Directory $FA_COMPUTE_DIR already exists, updating test data..."
+    # Ensure we have the base trades.csv and add NVDA ticker for auto-download testing
+    cp "$TEST_DATA_DIR/trades.csv" "$FA_COMPUTE_DIR/"
+    if ! grep -q "NVDA" "$FA_COMPUTE_DIR/trades.csv"; then
+        echo "NVDA,2024-06-15,BUY,25,300.00,7500.00,2.50" >> "$FA_COMPUTE_DIR/trades.csv"
+    fi
 fi
 
 # 4. Print environment for debugging
@@ -37,7 +45,19 @@ echo "------------------------------------------------"
 echo "Executing 'go run ./components/kohan apps tax 2024' from $PROJECT_ROOT..."
 (cd "$PROJECT_ROOT" && go run ./components/kohan apps tax compute 2024) || echo "Application returned non-zero exit code, continuing for verification..."
 
-# 6. Verify that the output file was created
+# 6. Verify ticker auto-download functionality
+echo "--- Verifying Ticker Auto-Download ---"
+if [ -f "$FA_COMPUTE_DIR/Tickers/NVDA.json" ]; then
+    echo "✅ SUCCESS: NVDA.json was auto-downloaded"
+    echo "File size: $(wc -c < "$FA_COMPUTE_DIR/Tickers/NVDA.json") bytes"
+else
+    echo "❌ FAILURE: NVDA.json was NOT auto-downloaded"
+    echo "Available tickers: $(ls -la "$FA_COMPUTE_DIR/Tickers/" || echo "No ticker directory")"
+    exit 1
+fi
+echo "-----------------------------------"
+
+# 7. Verify that the output files were created
 echo "Verifying output..."
 
 echo "--- Checking sbi_rates.csv ---"
@@ -68,4 +88,13 @@ else
   exit 1
 fi
 
-echo "E2E Test Passed!"
+# 8. Cleanup auto-downloaded files for clean test environment
+echo "--- Cleaning up auto-downloaded files ---"
+if [ -f "$FA_COMPUTE_DIR/Tickers/NVDA.json" ]; then
+    rm -f "$FA_COMPUTE_DIR/Tickers/NVDA.json"
+    echo "✅ Cleaned up NVDA.json"
+else
+    echo "ℹ️  No NVDA.json to clean up"
+fi
+
+echo "✅ E2E Test with Ticker Auto-Download PASSED!"

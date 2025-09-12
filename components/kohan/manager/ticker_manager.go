@@ -134,7 +134,7 @@ func (t *TickerManagerImpl) findClosestPreviousPrice(ticker string, data tax.Van
 	return 0, common.NewHttpError("No price data found", http.StatusNotFound)
 }
 
-func (t *TickerManagerImpl) getTickerData(_ context.Context, ticker string) (data tax.VantageStockData, err common.HttpError) {
+func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (data tax.VantageStockData, err common.HttpError) {
 	// Try cache first
 	t.cacheLock.RLock()
 	data, exists := t.cache[ticker]
@@ -145,8 +145,8 @@ func (t *TickerManagerImpl) getTickerData(_ context.Context, ticker string) (dat
 		return data, nil
 	}
 
-	// Cache miss - load from file
-	data, err = t.readTickerData(ticker)
+	// Cache miss - load from file or auto-download
+	data, err = t.loadOrDownloadTickerData(ctx, ticker)
 	if err == nil {
 		t.cacheLock.Lock()
 		t.cache[ticker] = data
@@ -155,6 +155,33 @@ func (t *TickerManagerImpl) getTickerData(_ context.Context, ticker string) (dat
 	}
 
 	return
+}
+
+// loadOrDownloadTickerData attempts to load ticker data from file,
+// and auto-downloads if file is missing
+func (t *TickerManagerImpl) loadOrDownloadTickerData(ctx context.Context, ticker string) (tax.VantageStockData, common.HttpError) {
+	// Try loading from file first
+	data, err := t.readTickerData(ticker)
+	if err == nil {
+		return data, nil
+	}
+
+	// File not found - attempt auto-download
+	log.Info().Str("Ticker", ticker).Msg("Ticker file missing, attempting auto-download")
+
+	if downloadErr := t.DownloadTicker(ctx, ticker); downloadErr != nil {
+		log.Error().Str("Ticker", ticker).Err(downloadErr).Msg("Failed to auto-download ticker")
+		return data, common.NewServerError(fmt.Errorf("failed to auto-download ticker %s: %w", ticker, downloadErr))
+	}
+
+	// Retry reading after download
+	data, err = t.readTickerData(ticker)
+	if err != nil {
+		return data, common.NewServerError(fmt.Errorf("failed to read ticker %s after auto-download: %w", ticker, err))
+	}
+
+	log.Info().Str("Ticker", ticker).Msg("Successfully auto-downloaded and loaded ticker data")
+	return data, nil
 }
 
 func (t *TickerManagerImpl) readTickerData(ticker string) (tax.VantageStockData, common.HttpError) {
