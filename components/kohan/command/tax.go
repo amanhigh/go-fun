@@ -91,7 +91,6 @@ var vestedCmd = &cobra.Command{
 			return fmt.Errorf("failed to parse drive wealth report: %w", err)
 		}
 
-		// FIXME: #A Ensure Drive wealth Parsing is Working
 		if err := driveWealthManager.GenerateCsv(ctx, info); err != nil {
 			return fmt.Errorf("failed to generate csv: %w", err)
 		}
