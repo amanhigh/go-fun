@@ -353,10 +353,10 @@ generate-swagger:
 	swag i --parseDependency true > $(OUT);\
 	printf $(_INFO) "Swagger" "http://localhost:8080/swagger/index.html";
 
-# Generate mocks across all modules
+# Generate mocks using mockery v3 configuration
 generate-mocks:
 	printf $(_TITLE) "Generate" "Mocks"
-	find . -name "go.mod" -execdir go generate ./... > $(OUT) 2>&1 \;
+	mockery > $(OUT) 2>&1
 
 generate: generate-mocks generate-swagger ## Generate Files
 

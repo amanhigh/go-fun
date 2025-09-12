@@ -41,7 +41,7 @@ var _ = Describe("AccountManager", func() {
 		Context("when single account exists", func() {
 			BeforeEach(func() {
 				mockRepo.EXPECT().
-					GetRecordsForTicker(ctx, testAccount.Symbol).
+					GetAllRecordsForYear(ctx, 2024).
 					Return([]tax.Account{testAccount}, nil)
 			})
 
@@ -55,7 +55,7 @@ var _ = Describe("AccountManager", func() {
 		Context("when no account found", func() {
 			BeforeEach(func() {
 				mockRepo.EXPECT().
-					GetRecordsForTicker(ctx, testAccount.Symbol).
+					GetAllRecordsForYear(ctx, 2024).
 					Return([]tax.Account{}, nil)
 			})
 
@@ -68,7 +68,7 @@ var _ = Describe("AccountManager", func() {
 		Context("when multiple accounts found", func() {
 			BeforeEach(func() {
 				mockRepo.EXPECT().
-					GetRecordsForTicker(ctx, testAccount.Symbol).
+					GetAllRecordsForYear(ctx, 2024).
 					Return([]tax.Account{testAccount, testAccount}, nil)
 			})
 
@@ -83,7 +83,7 @@ var _ = Describe("AccountManager", func() {
 		Context("when repository error occurs", func() {
 			BeforeEach(func() {
 				mockRepo.EXPECT().
-					GetRecordsForTicker(ctx, testAccount.Symbol).
+					GetAllRecordsForYear(ctx, 2024).
 					Return(nil, common.ErrInternalServerError)
 			})
 
