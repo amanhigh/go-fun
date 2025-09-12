@@ -19,7 +19,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//go:generate mockery --name TickerManager
 type TickerManager interface {
 	DownloadTicker(ctx context.Context, ticker string) (err common.HttpError)
 	FindPeakPrice(ctx context.Context, ticker string, year int) (tax.PeakPrice, common.HttpError)

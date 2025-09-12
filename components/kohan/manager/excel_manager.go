@@ -12,7 +12,6 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-//go:generate mockery --name ExcelManager
 type ExcelManager interface {
 	GenerateTaxSummaryExcel(ctx context.Context, summary tax.Summary) error
 }

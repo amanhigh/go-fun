@@ -9,7 +9,6 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-//go:generate mockery --name AlphaClient
 type AlphaClient interface {
 	FetchDailyPrices(ctx context.Context, ticker string) (tax.VantageStockData, common.HttpError)
 }

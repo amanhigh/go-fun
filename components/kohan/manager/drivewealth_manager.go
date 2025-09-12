@@ -18,7 +18,6 @@ const (
 	tradeRowLength = 10
 )
 
-//go:generate mockery --name DriveWealthManager
 type DriveWealthManager interface {
 	Parse() (info tax.DriveWealthInfo, err error)
 	GenerateCsv(ctx context.Context, info tax.DriveWealthInfo) (err error)

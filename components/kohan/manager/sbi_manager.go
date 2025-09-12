@@ -13,7 +13,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//go:generate mockery --name SBIManager
 type SBIManager interface {
 	DownloadRates(ctx context.Context) common.HttpError
 	// TODO: Get Last TT Buy Rate for month.

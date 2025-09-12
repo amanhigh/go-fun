@@ -37,7 +37,6 @@ Support:
 -`
 )
 
-//go:generate mockery --name AutoManagerInterface
 type AutoManagerInterface interface {
 	RecordTicker(ctx context.Context, ticker, path string) error
 	TryOpenTicker(ctx context.Context, ticker string)

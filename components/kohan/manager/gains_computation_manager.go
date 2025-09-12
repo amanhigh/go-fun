@@ -12,7 +12,6 @@ import (
 	"github.com/amanhigh/go-fun/models/tax"
 )
 
-//go:generate mockery --name GainsComputationManager
 type GainsComputationManager interface {
 	ComputeGainsFromTrades(ctx context.Context, trades []tax.Trade) ([]tax.Gains, common.HttpError)
 }

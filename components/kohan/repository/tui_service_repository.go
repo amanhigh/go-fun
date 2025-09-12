@@ -13,7 +13,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//go:generate mockery --name TuiServiceRepository
 type TuiServiceRepository interface {
 	LoadAvailableServices(makeDir string) ([]string, common.HttpError)
 	LoadSelectedServices() ([]string, common.HttpError)
