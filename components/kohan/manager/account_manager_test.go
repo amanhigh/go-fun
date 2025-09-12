@@ -17,16 +17,16 @@ import (
 
 var _ = Describe("AccountManager", func() {
 	var (
-		ctx             = context.Background()
-		mockRepo        *mocks.AccountRepository
-		accountManager  manager.AccountManager
-		testAccount     tax.Account
-		accountFilePath = "/tmp/accounts.csv"
+		ctx            = context.Background()
+		mockRepo       *mocks.AccountRepository
+		accountManager manager.AccountManager
+		testAccount    tax.Account
+		accountDir     = "/tmp"
 	)
 
 	BeforeEach(func() {
 		mockRepo = mocks.NewAccountRepository(GinkgoT())
-		accountManager = manager.NewAccountManager(mockRepo, accountFilePath)
+		accountManager = manager.NewAccountManager(mockRepo, accountDir)
 
 		// Setup test account
 		testAccount = tax.Account{
@@ -100,7 +100,7 @@ var _ = Describe("AccountManager", func() {
 
 			BeforeEach(func() {
 				// Create accounts_2023.csv with test data
-				accounts2023Path = filepath.Join(accountFilePath, "../accounts_2023.csv")
+				accounts2023Path = filepath.Join(accountDir, "accounts_2023.csv")
 				accounts := []tax.Account{testAccount}
 				file, err := os.Create(accounts2023Path)
 				Expect(err).ToNot(HaveOccurred())
@@ -133,7 +133,7 @@ var _ = Describe("AccountManager", func() {
 
 			BeforeEach(func() {
 				// Create accounts_2023.csv with different stock
-				accounts2023Path = filepath.Join(filepath.Dir(accountFilePath), "accounts_2023.csv")
+				accounts2023Path = filepath.Join(accountDir, "accounts_2023.csv")
 				differentAccount := tax.Account{
 					Symbol:      "MSFT",
 					Quantity:    50,
@@ -175,7 +175,7 @@ var _ = Describe("AccountManager", func() {
 
 			// Verify file was created
 			fileName := "accounts_2023.csv"
-			filePath := filepath.Join(filepath.Dir(accountFilePath), fileName)
+			filePath := filepath.Join(accountDir, fileName)
 			_, statErr := os.Stat(filePath)
 			Expect(statErr).ToNot(HaveOccurred())
 
