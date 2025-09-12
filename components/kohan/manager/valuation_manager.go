@@ -271,7 +271,7 @@ func (v *ValuationManagerImpl) validateTradesExistOrCarryOver(trades []tax.Trade
 
 func (v *ValuationManagerImpl) getOpeningPositionForPeriod(ctx context.Context, ticker string, year int) (position tax.Position, err common.HttpError) {
 	// Smart account detection for previous year
-	account, accErr := v.accountManager.GetRecord(ctx, ticker, year)
+	account, accErr := v.accountManager.GetRecord(ctx, ticker, year-1)
 	if accErr != nil {
 		if errors.Is(accErr, common.ErrNotFound) {
 			// Fresh start - no previous year account
@@ -281,8 +281,8 @@ func (v *ValuationManagerImpl) getOpeningPositionForPeriod(ctx context.Context, 
 	}
 
 	// Account record found (carry-over scenario)
-	// Use December 31st of previous year for carry-over positions
-	openingDate := time.Date(year-1, 12, 31, 23, 59, 59, 0, time.UTC)
+	// Use January 1st of analysis year for opening positions
+	openingDate := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
 	var openingPrice float64
 	if account.Quantity > 0 { // Avoid division by zero
 		openingPrice = account.MarketValue / account.Quantity
