@@ -39,7 +39,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 				TradesPath:        filepath.Join(testDataBasePath, tax.TRADES_FILENAME),
 				DividendFilePath:  filepath.Join(testDataBasePath, tax.DIVIDENDS_FILENAME),
 				TTRateFilePath:    filepath.Join(testDataBasePath, tax.SBI_RATES_FILENAME),
-				AccountFilePath:   filepath.Join(testDataBasePath, tax.ACCOUNTS_FILENAME),
+				AccountDir:        testDataBasePath,
 				GainsFilePath:     filepath.Join(testDataBasePath, tax.GAINS_FILENAME),
 				InterestFilePath:  filepath.Join(testDataBasePath, tax.INTEREST_FILENAME),
 				YearlySummaryPath: filepath.Join(tempDir, "tax_summary.xlsx"),
@@ -283,7 +283,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Define the expected path for the generated CSV
-			expectedCsvPath := filepath.Join(filepath.Dir(kohanConfig.Tax.AccountFilePath), "accounts_2023.csv")
+			expectedCsvPath := filepath.Join(kohanConfig.Tax.AccountDir, "accounts_2023.csv")
 			defer os.Remove(expectedCsvPath)
 
 			// Verify that the file was created

@@ -43,7 +43,7 @@ type TaxConfig struct {
 	TTRateFilePath    string `env:"TTRATE_FILE_PATH" envDefault:"~/Downloads/FACompute/sbi_rates.csv"`
 	YearlySummaryPath string `env:"YEARLY_SUMMARY_PATH" envDefault:"~/Downloads/FACompute/tax_summary.xlsx"`
 
-	AccountFilePath  string `env:"ACCOUNT_FILE_PATH" envDefault:"~/Downloads/FACompute/accounts.csv"`
+	AccountDir       string `env:"ACCOUNT_DIR" envDefault:"~/Downloads/FACompute"`
 	TradesPath       string `env:"FA_TRADE_FILE_PATH" envDefault:"~/Downloads/FACompute/trades.csv"`
 	DividendFilePath string `env:"FA_DIVIDEND_FILE_PATH" envDefault:"~/Downloads/FACompute/dividends.csv"`
 	GainsFilePath    string `env:"FA_GAINS_FILE_PATH" envDefault:"~/Downloads/FACompute/gains.csv"`
@@ -68,7 +68,7 @@ func NewKohanConfig() (config KohanConfig, err error) {
 	config.Tax.TradesPath = strings.Replace(config.Tax.TradesPath, "~", homeDir, 1)
 	config.Tax.DividendFilePath = strings.Replace(config.Tax.DividendFilePath, "~", homeDir, 1)
 	config.Tax.TTRateFilePath = strings.Replace(config.Tax.TTRateFilePath, "~", homeDir, 1)
-	config.Tax.AccountFilePath = strings.Replace(config.Tax.AccountFilePath, "~", homeDir, 1)
+	config.Tax.AccountDir = strings.Replace(config.Tax.AccountDir, "~", homeDir, 1)
 	config.Tax.GainsFilePath = strings.Replace(config.Tax.GainsFilePath, "~", homeDir, 1)
 	config.Tax.InterestFilePath = strings.Replace(config.Tax.InterestFilePath, "~", homeDir, 1)
 	config.Tax.YearlySummaryPath = strings.Replace(config.Tax.YearlySummaryPath, "~", homeDir, 1)

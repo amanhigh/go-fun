@@ -115,7 +115,7 @@ func (ki *KohanInjector) provideInterestRepository() repository.InterestReposito
 }
 
 func (ki *KohanInjector) provideAccountRepository() repository.AccountRepository {
-	return repository.NewAccountRepository(ki.config.Tax.AccountFilePath)
+	return repository.NewAccountRepository(ki.config.Tax.AccountDir)
 }
 
 func (ki *KohanInjector) provideTradeRepository() repository.TradeRepository {
@@ -142,7 +142,7 @@ func (ki *KohanInjector) provideExchangeManager(sbiManager manager.SBIManager) m
 }
 
 func (ki *KohanInjector) provideAccountManager(accountRepo repository.AccountRepository) manager.AccountManager {
-	return manager.NewAccountManager(accountRepo, ki.config.Tax.AccountFilePath)
+	return manager.NewAccountManager(accountRepo, ki.config.Tax.AccountDir)
 }
 
 func (ki *KohanInjector) provideValuationManager(

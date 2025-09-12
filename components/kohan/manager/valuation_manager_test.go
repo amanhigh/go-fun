@@ -61,7 +61,7 @@ var _ = Describe("ValuationManager", func() {
 			BeforeEach(func() {
 				// All tests under Fresh Start expect no last year position
 				mockAccountManager.EXPECT().
-					GetRecord(ctx, AAPL, 2023).
+					GetRecord(ctx, AAPL, 2024).
 					Return(tax.Account{}, common.ErrNotFound)
 			})
 
@@ -341,7 +341,7 @@ var _ = Describe("ValuationManager", func() {
 				trades := []tax.Trade{
 					tax.NewTrade(AAPL, "2024-01-15", "SELL", 10, 100),
 				}
-				mockAccountManager.EXPECT().GetRecord(ctx, AAPL, 2023).Return(tax.Account{}, common.ErrNotFound)
+				mockAccountManager.EXPECT().GetRecord(ctx, AAPL, 2024).Return(tax.Account{}, common.ErrNotFound)
 
 				_, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 				Expect(err).To(HaveOccurred())
@@ -354,7 +354,7 @@ var _ = Describe("ValuationManager", func() {
 			Context("Empty Trades", func() {
 				It("should return error for empty trades", func() {
 					trades := []tax.Trade{}
-					mockAccountManager.EXPECT().GetRecord(ctx, AAPL, 2023).Return(tax.Account{}, common.ErrNotFound).Maybe()
+					mockAccountManager.EXPECT().GetRecord(ctx, AAPL, 2024).Return(tax.Account{}, common.ErrNotFound).Maybe()
 					_, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring(AAPL))
@@ -396,7 +396,7 @@ var _ = Describe("ValuationManager", func() {
 						Return(0.0, common.ErrNotFound)
 
 					mockAccountManager.EXPECT().
-						GetRecord(ctx, AAPL, 2023).
+						GetRecord(ctx, AAPL, 2024).
 						Return(tax.Account{}, common.ErrNotFound)
 				})
 
@@ -432,11 +432,11 @@ var _ = Describe("ValuationManager", func() {
 			mockFyManager.EXPECT().FilterUS(ctx, allTrades, year).Return(allTrades, nil).Once()
 
 			// Mock dependencies needed by AnalyzeValuation for AAPL
-			mockAccountManager.EXPECT().GetRecord(ctx, AAPL, 2023).Return(tax.Account{}, common.ErrNotFound).Once() // Fresh start for AAPL
+			mockAccountManager.EXPECT().GetRecord(ctx, AAPL, 2024).Return(tax.Account{}, common.ErrNotFound).Once() // Fresh start for AAPL
 			mockTickerManager.EXPECT().GetPrice(ctx, AAPL, yearEndDate).Return(150.0, nil).Once()                   // AAPL year end price
 
 			// Mock dependencies needed by AnalyzeValuation for MSFT
-			mockAccountManager.EXPECT().GetRecord(ctx, "MSFT", 2023).Return(tax.Account{Quantity: 10, MarketValue: 1800}, nil).Once() // Start MSFT with 10 shares @ 180
+			mockAccountManager.EXPECT().GetRecord(ctx, "MSFT", 2024).Return(tax.Account{Quantity: 10, MarketValue: 1800}, nil).Once() // Start MSFT with 10 shares @ 180
 			mockTickerManager.EXPECT().GetPrice(ctx, "MSFT", yearEndDate).Return(210.0, nil).Once()                                   // MSFT year end price
 
 			// Call the target method
@@ -518,7 +518,7 @@ var _ = Describe("ValuationManager", func() {
 			mockFyManager.EXPECT().FilterUS(ctx, allTrades, year).Return(allTrades, nil).Once()
 
 			// Mock dependencies for AAPL (enough to trigger AnalyzeValuation)
-			mockAccountManager.EXPECT().GetRecord(ctx, AAPL, 2023).Return(tax.Account{}, common.ErrNotFound).Once()
+			mockAccountManager.EXPECT().GetRecord(ctx, AAPL, 2024).Return(tax.Account{}, common.ErrNotFound).Once()
 			// Make TickerManager fail for AAPL
 			expectedErr := common.NewServerError(errors.New("price fetch failed"))
 			mockTickerManager.EXPECT().GetPrice(ctx, AAPL, yearEndDate).Return(0.0, expectedErr).Once()
@@ -556,7 +556,7 @@ var _ = Describe("ValuationManager", func() {
 			)
 			BeforeEach(func() {
 				mockAccountManager.EXPECT().
-					GetRecord(ctx, AAPL, 2023).
+					GetRecord(ctx, AAPL, 2024).
 					Return(carryOverAccount, nil).Once()
 
 				mockTickerManager.EXPECT().
@@ -610,7 +610,7 @@ var _ = Describe("ValuationManager", func() {
 				carryOverAccount.MarketValue = 12000.00 // Implies $160.00 per share
 
 				mockAccountManager.EXPECT().
-					GetRecord(ctx, AAPL, 2023).
+					GetRecord(ctx, AAPL, 2024).
 					Return(carryOverAccount, nil).Once()
 
 				mockTickerManager.EXPECT().
