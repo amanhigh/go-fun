@@ -205,7 +205,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			// FirstPosition for AAPL (opening balance for 2023 period, from Dec 31, 2022 accounts.csv)
 			Expect(aaplVal.FirstPosition.Quantity).To(Equal(50.0))
 			Expect(aaplVal.FirstPosition.USDPrice).To(Equal(160.00))
-			Expect(aaplVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2023-01-01"))
+			Expect(aaplVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2022-12-31"))
 			Expect(aaplVal.FirstPosition.TTRate).To(Equal(81.50))
 			Expect(aaplVal.FirstPosition.TTDate.Format(time.DateOnly)).To(Equal("2022-12-30"))
 
@@ -230,7 +230,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			// First Position (MSFT)
 			Expect(msftVal.FirstPosition.Quantity).To(Equal(50.0))
 			Expect(msftVal.FirstPosition.USDPrice).To(Equal(200.00))
-			Expect(msftVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2023-01-01"))
+			Expect(msftVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2022-12-31"))
 			Expect(msftVal.FirstPosition.TTRate).To(Equal(81.50))
 			Expect(msftVal.FirstPosition.TTDate.Format(time.DateOnly)).To(Equal("2022-12-30"))
 			// Peak Position (MSFT)
