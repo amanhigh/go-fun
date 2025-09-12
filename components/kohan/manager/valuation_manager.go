@@ -118,7 +118,7 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 		if errors.Is(err, common.ErrNotFound) {
 			// Fresh start - create zero position with valid date
 			openingPosition = tax.Position{
-				Date:     time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC),
+				Date:     time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC), // January 1st of analysis year
 				Quantity: 0,
 				USDPrice: 0,
 			}
@@ -281,8 +281,8 @@ func (v *ValuationManagerImpl) getOpeningPositionForPeriod(ctx context.Context, 
 	}
 
 	// Account record found (carry-over scenario)
-	// Use January 1st of analysis year for opening positions
-	openingDate := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+	// Use December 31st of previous year to maintain historical context
+	openingDate := time.Date(year-1, 12, 31, 0, 0, 0, 0, time.UTC)
 	var openingPrice float64
 	if account.Quantity > 0 { // Avoid division by zero
 		openingPrice = account.MarketValue / account.Quantity

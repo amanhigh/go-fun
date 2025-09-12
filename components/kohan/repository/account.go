@@ -28,15 +28,15 @@ func NewAccountRepository(accountDir string) AccountRepository {
 }
 
 func (r *AccountRepositoryImpl) GetAllRecordsForYear(ctx context.Context, year int) ([]tax.Account, common.HttpError) {
-	prevYearPath := filepath.Join(r.accountDir, fmt.Sprintf("accounts_%d.csv", year-1))
+	accountsPath := filepath.Join(r.accountDir, fmt.Sprintf("accounts_%d.csv", year))
 
 	// File existence check
-	if _, err := os.Stat(prevYearPath); err != nil {
+	if _, err := os.Stat(accountsPath); err != nil {
 		return nil, common.ErrNotFound
 	}
 
 	// Read accounts from file
-	return r.readAccountsFromFile(ctx, prevYearPath)
+	return r.readAccountsFromFile(ctx, accountsPath)
 }
 
 func (r *AccountRepositoryImpl) SaveYearEndAccounts(_ context.Context, year int, accounts []tax.Account) common.HttpError {
