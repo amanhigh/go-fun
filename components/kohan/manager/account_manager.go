@@ -2,15 +2,13 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 
 	repository "github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
-	"github.com/gocarina/gocsv"
 )
 
 //go:generate mockery --name AccountManager
@@ -31,48 +29,39 @@ func NewAccountManager(repo repository.AccountRepository, accountDir string) Acc
 	}
 }
 
-func (a *AccountManagerImpl) GenerateYearEndAccounts(_ context.Context, year int, valuations []tax.Valuation) common.HttpError {
+func (a *AccountManagerImpl) GenerateYearEndAccounts(ctx context.Context, year int, valuations []tax.Valuation) common.HttpError {
+	// Business logic: convert valuations to accounts
 	accounts := tax.FromValuations(valuations)
 
-	// Create a new file for the year-end accounts
-	fileName := fmt.Sprintf("accounts_%d.csv", year)
-	filePath := filepath.Join(a.accountDir, fileName)
-
-	// Create the file
-	file, err := os.Create(filePath)
-	if err != nil {
-		return common.NewServerError(fmt.Errorf("failed to create year-end accounts file: %w", err))
-	}
-	defer file.Close()
-
-	// Marshal and write to the new file
-	if err := gocsv.MarshalFile(&accounts, file); err != nil {
-		return common.NewServerError(fmt.Errorf("failed to write year-end accounts: %w", err))
-	}
-
-	return nil
+	// Delegate write operation to repository (repository handles accountDir internally)
+	return a.repository.SaveYearEndAccounts(ctx, year, accounts)
 }
 
-func (a *AccountManagerImpl) GetRecord(ctx context.Context, symbol string, year int) (account tax.Account, err common.HttpError) {
-	// Smart detection: Only check for auto-generated previous year file
-	prevYearPath := fmt.Sprintf("accounts_%d.csv", year-1)
-	fallbackPath := filepath.Join(a.accountDir, prevYearPath)
+func (a *AccountManagerImpl) GetRecord(ctx context.Context, symbol string, year int) (tax.Account, common.HttpError) {
+	// Get ALL records from repository for the specified year
+	allRecords, err := a.repository.GetAllRecordsForYear(ctx, year)
+	if err != nil {
+		if errors.Is(err, common.ErrNotFound) {
+			return tax.Account{}, common.ErrNotFound // Fresh start
+		}
+		return tax.Account{}, err
+	}
 
-	if _, fileErr := os.Stat(fallbackPath); fileErr == nil {
-		// Use auto-generated previous year file
-		prevRepo := repository.NewAccountRepository(fallbackPath)
-		records, repoErr := prevRepo.GetRecordsForTicker(ctx, symbol)
-		if repoErr == nil && len(records) > 0 {
-			// Validate single record from previous year file
-			switch len(records) {
-			case 1:
-				return records[0], nil
-			default:
-				return account, common.NewHttpError(fmt.Sprintf("multiple accounts found for symbol: %s in %s", symbol, prevYearPath), http.StatusBadRequest)
-			}
+	// MANAGER responsibility: Filter by symbol
+	var matchingRecords []tax.Account
+	for _, record := range allRecords {
+		if record.Symbol == symbol {
+			matchingRecords = append(matchingRecords, record)
 		}
 	}
 
-	// No previous year file OR ticker not found -> Fresh start
-	return tax.Account{}, common.ErrNotFound
+	// MANAGER responsibility: Business validation
+	switch len(matchingRecords) {
+	case 0:
+		return tax.Account{}, common.ErrNotFound
+	case 1:
+		return matchingRecords[0], nil
+	default:
+		return tax.Account{}, common.NewHttpError(fmt.Sprintf("multiple accounts found for symbol: %s", symbol), http.StatusBadRequest)
+	}
 }
