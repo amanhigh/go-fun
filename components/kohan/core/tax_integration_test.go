@@ -31,12 +31,9 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		tempDir, err := os.MkdirTemp("", "tax_integration_test_*")
 		Expect(err).ToNot(HaveOccurred())
 
-		// Configure KohanConfig with TaxConfig pointing to test data files
 		kohanConfig = config.KohanConfig{
 			Tax: config.TaxConfig{
-				// TickerInfoDir is separate, points to base testdata path for this test
-				TickerInfoDir: testDataBasePath,
-				// File Paths using constants and joined with base path
+				TickerInfoDir:    testDataBasePath,
 				TradesPath:       filepath.Join(testDataBasePath, tax.TRADES_FILENAME),
 				DividendFilePath: filepath.Join(testDataBasePath, tax.DIVIDENDS_FILENAME),
 				TTRateFilePath:   filepath.Join(testDataBasePath, tax.SBI_RATES_FILENAME),
@@ -47,10 +44,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			},
 		}
 
-		// Setup the global injector with test configuration
 		core.SetupKohanInjector(kohanConfig)
-
-		// Retrieve the TaxManager instance
 		taxManager, err = core.GetKohanInterface().GetTaxManager()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(taxManager).ToNot(BeNil())
@@ -249,45 +243,24 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		})
 	})
 
-	// 🔴 RED: Failing test that reproduces the real-world 2022 position calculation bug
-	Context("Buy-Only Year Position Bug", func() {
-		var (
-			testYear2022    = 2022 // Common variable for this context
-			expectedMSFTQty = 50.0 // MSFT shares bought in 2022-01-10
-		)
+	Context("2022 Position Calculation Bug", func() {
+		It("preserves quantities when ticker prices unavailable", func() {
+			summary, err := taxManager.GetTaxSummary(ctx, 2022)
 
-		It("should preserve positions when ticker price fetching fails", func() {
-			// This test reproduces the exact real-world scenario:
-			// 1. Only BUY transactions exist (no SELL in 2022)
-			// 2. Ticker files are missing (price fetching fails)
-			// 3. BUG: System generates zero positions instead of preserving quantities
-			// 4. EXPECTED: Should preserve calculated quantities even with zero/missing prices
+			Expect(err).ToNot(HaveOccurred())
+			Expect(summary.INRValuations).ToNot(BeEmpty())
 
-			summary, err := taxManager.GetTaxSummary(ctx, testYear2022)
-
-			// If this succeeds, the bug is NOT the price fetching failure causing total failure
-			// If this fails, the bug IS that price fetching failure kills the entire computation
-			Expect(err).ToNot(HaveOccurred(), "Tax computation should succeed even with missing ticker prices")
-			Expect(summary).ToNot(BeNil())
-
-			// The core assertion: positions should exist for symbols with BUY transactions
-			// even when ticker price fetching fails
-			Expect(summary.INRValuations).ToNot(BeEmpty(), "Should have valuations even with missing ticker prices")
-
-			// Real-world verification: MSFT had 50 shares bought in 2022, no sales
-			// Year-end position should have expectedMSFTQty shares (regardless of price availability)
+			// Find MSFT position
 			var msftFound bool
-			for _, valuation := range summary.INRValuations {
-				if valuation.Ticker == "MSFT" {
+			for _, val := range summary.INRValuations {
+				if val.Ticker == "MSFT" {
 					msftFound = true
-					// 🔴 CRITICAL TEST: This should preserve the 50 shares even if price is 0
-					Expect(valuation.YearEndPosition.Quantity).To(Equal(expectedMSFTQty),
-						"MSFT quantity should be preserved (%v shares) even when ticker price unavailable", expectedMSFTQty)
-					// Price might be 0 due to missing ticker data, but quantity must be preserved
+					Expect(val.YearEndPosition.Quantity).To(Equal(50.0))
 					break
 				}
 			}
-			Expect(msftFound).To(BeTrue(), "MSFT valuation should exist for 2022")
+
+			Expect(msftFound).To(BeTrue())
 		})
 	})
 
