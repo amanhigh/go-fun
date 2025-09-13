@@ -38,12 +38,11 @@ type TaxConfig struct {
 	AlphaAPIKey  string `env:"ALPHA_API_KEY" envDefault:"DUMMY_KEY_FOR_E2E"`
 
 	// File System Configuration
-	// TickerInfoDir stores downloaded ticker data, separate from tax input files.
-	TickerInfoDir    string `env:"TICKER_INFO_DIR" envDefault:"~/Downloads/FACompute/Tickers"`
+	// TaxDir is the base directory for all tax-related files and subdirectories
+	TaxDir string `env:"TAX_DIR" envDefault:"~/Downloads/FACompute"`
+	// TickerCacheDir stores downloaded ticker data, separate from tax input files
+	TickerCacheDir   string `env:"TICKER_CACHE_DIR" envDefault:"~/Downloads/FACompute/Tickers"`
 	TTRateFilePath   string `env:"TTRATE_FILE_PATH" envDefault:"~/Downloads/FACompute/sbi_rates.csv"`
-	YearlySummaryDir string `env:"YEARLY_SUMMARY_DIR" envDefault:"~/Downloads/FACompute"`
-
-	AccountDir       string `env:"ACCOUNT_DIR" envDefault:"~/Downloads/FACompute"`
 	TradesPath       string `env:"FA_TRADE_FILE_PATH" envDefault:"~/Downloads/FACompute/trades.csv"`
 	DividendFilePath string `env:"FA_DIVIDEND_FILE_PATH" envDefault:"~/Downloads/FACompute/dividends.csv"`
 	GainsFilePath    string `env:"FA_GAINS_FILE_PATH" envDefault:"~/Downloads/FACompute/gains.csv"`
@@ -64,14 +63,13 @@ func NewKohanConfig() (config KohanConfig, err error) {
 	}
 
 	// HACK: #C Remove this Hack.
-	config.Tax.TickerInfoDir = strings.Replace(config.Tax.TickerInfoDir, "~", homeDir, 1)
+	config.Tax.TaxDir = strings.Replace(config.Tax.TaxDir, "~", homeDir, 1)
+	config.Tax.TickerCacheDir = strings.Replace(config.Tax.TickerCacheDir, "~", homeDir, 1)
 	config.Tax.TradesPath = strings.Replace(config.Tax.TradesPath, "~", homeDir, 1)
 	config.Tax.DividendFilePath = strings.Replace(config.Tax.DividendFilePath, "~", homeDir, 1)
 	config.Tax.TTRateFilePath = strings.Replace(config.Tax.TTRateFilePath, "~", homeDir, 1)
-	config.Tax.AccountDir = strings.Replace(config.Tax.AccountDir, "~", homeDir, 1)
 	config.Tax.GainsFilePath = strings.Replace(config.Tax.GainsFilePath, "~", homeDir, 1)
 	config.Tax.InterestFilePath = strings.Replace(config.Tax.InterestFilePath, "~", homeDir, 1)
-	config.Tax.YearlySummaryDir = strings.Replace(config.Tax.YearlySummaryDir, "~", homeDir, 1)
 	config.Tax.DriveWealthPath = strings.Replace(config.Tax.DriveWealthPath, "~", homeDir, 1)
 
 	return

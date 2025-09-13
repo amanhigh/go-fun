@@ -28,23 +28,21 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 	BeforeEach(func() {
 		ctx = context.Background()
 		testDataBasePath := filepath.Join("..", "testdata", "tax")
-		tempDir, err := os.MkdirTemp("", "tax_integration_test_*")
-		Expect(err).ToNot(HaveOccurred())
 
 		kohanConfig = config.KohanConfig{
 			Tax: config.TaxConfig{
-				TickerInfoDir:    testDataBasePath,
+				TaxDir:           testDataBasePath,
+				TickerCacheDir:   testDataBasePath,
 				TradesPath:       filepath.Join(testDataBasePath, tax.TRADES_FILENAME),
 				DividendFilePath: filepath.Join(testDataBasePath, tax.DIVIDENDS_FILENAME),
 				TTRateFilePath:   filepath.Join(testDataBasePath, tax.SBI_RATES_FILENAME),
-				AccountDir:       testDataBasePath,
 				GainsFilePath:    filepath.Join(testDataBasePath, tax.GAINS_FILENAME),
 				InterestFilePath: filepath.Join(testDataBasePath, tax.INTEREST_FILENAME),
-				YearlySummaryDir: tempDir,
 			},
 		}
 
 		core.SetupKohanInjector(kohanConfig)
+		var err error
 		taxManager, err = core.GetKohanInterface().GetTaxManager()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(taxManager).ToNot(BeNil())
@@ -275,7 +273,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(saveErr).ToNot(HaveOccurred())
 
 			// Verify that the file was created
-			filePath := filepath.Join(kohanConfig.Tax.YearlySummaryDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
+			filePath := filepath.Join(kohanConfig.Tax.TaxDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
 			Expect(filePath).Should(BeARegularFile())
 
 			// Open the generated file to verify its integrity and sheets
@@ -299,7 +297,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Define the expected path for the generated CSV
-			expectedCsvPath := filepath.Join(kohanConfig.Tax.AccountDir, "accounts_2023.csv")
+			expectedCsvPath := filepath.Join(kohanConfig.Tax.TaxDir, "accounts_2023.csv")
 			defer os.Remove(expectedCsvPath)
 
 			// Verify that the file was created
