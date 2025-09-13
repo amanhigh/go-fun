@@ -81,8 +81,8 @@ else
 fi
 echo "-----------------------------------"
 
-if [ -f "$FA_COMPUTE_DIR/tax_summary.xlsx" ]; then
-  echo "✅ SUCCESS: Tax summary Excel file was created at $FA_COMPUTE_DIR/tax_summary.xlsx"
+if [ -f "$FA_COMPUTE_DIR/tax_summary_2024.xlsx" ]; then
+  echo "✅ SUCCESS: Tax summary Excel file was created at $FA_COMPUTE_DIR/tax_summary_2024.xlsx"
 else
   echo "❌ FAILURE: Tax summary Excel file was NOT created."
   exit 1
