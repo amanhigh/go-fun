@@ -146,7 +146,7 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.File, dividends []tax.INRDividend) error {
 	sheetName := "Dividends"
 	headers := []string{
-		"Symbol", "Date", "Amount (USD)", "TTDate", "TTRate", "Amount (INR)",
+		"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate", "Amount (INR)",
 	}
 	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
 		return err
@@ -158,6 +158,8 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 			dividendRecord.Symbol,
 			dividendRecord.Date,
 			dividendRecord.Amount,
+			dividendRecord.Tax,
+			dividendRecord.Net,
 			e.formatDateForExcel(dividendRecord.TTDate),
 			dividendRecord.TTRate,
 			dividendRecord.INRValue(),

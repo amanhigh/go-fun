@@ -250,12 +250,12 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 				div1TTDate, _ := time.Parse(time.DateOnly, "2023-04-05")
 				div1 := tax.INRDividend{
-					Dividend: tax.Dividend{Symbol: "AAPL", Date: "2023-04-10", Amount: 50.25},
+					Dividend: tax.Dividend{Symbol: "AAPL", Date: "2023-04-10", Amount: 50.25, Tax: 7.54, Net: 42.71},
 					TTDate:   div1TTDate, TTRate: 82.10,
 				}
 				div2TTDate, _ := time.Parse(time.DateOnly, "2023-05-12")
 				div2 := tax.INRDividend{
-					Dividend: tax.Dividend{Symbol: "GOOG", Date: "2023-05-15", Amount: 75.50},
+					Dividend: tax.Dividend{Symbol: "GOOG", Date: "2023-05-15", Amount: 75.50, Tax: 11.33, Net: 64.17},
 					TTDate:   div2TTDate, TTRate: 82.50,
 				}
 				sampleSummary.INRDividends = []tax.INRDividend{div1, div2}
@@ -275,7 +275,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 				// Verify Headers
 				expectedHeaders := []string{
-					"Symbol", "Date", "Amount (USD)", "TTDate", "TTRate", "Amount (INR)",
+					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate", "Amount (INR)",
 				}
 				Expect(rows[0]).To(Equal(expectedHeaders))
 
@@ -285,10 +285,14 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(rows[1][1]).To(Equal(div1.Date))
 				amountUSD1, _ := getCellFloat(f, sheetName, "C2")
 				Expect(amountUSD1).To(BeNumerically("~", div1.Amount, 0.001))
-				Expect(rows[1][3]).To(Equal(div1.TTDate.Format(time.DateOnly)))
-				rate1, _ := getCellFloat(f, sheetName, "E2")
+				taxUSD1, _ := getCellFloat(f, sheetName, "D2")
+				Expect(taxUSD1).To(BeNumerically("~", div1.Tax, 0.001))
+				netUSD1, _ := getCellFloat(f, sheetName, "E2")
+				Expect(netUSD1).To(BeNumerically("~", div1.Net, 0.001))
+				Expect(rows[1][5]).To(Equal(div1.TTDate.Format(time.DateOnly)))
+				rate1, _ := getCellFloat(f, sheetName, "G2")
 				Expect(rate1).To(BeNumerically("~", div1.TTRate, 0.001))
-				amountINR1, _ := getCellFloat(f, sheetName, "F2")
+				amountINR1, _ := getCellFloat(f, sheetName, "H2")
 				Expect(amountINR1).To(BeNumerically("~", div1.INRValue(), 0.001))
 			})
 		})
@@ -319,7 +323,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(rows).To(HaveLen(1))
 
 				expectedHeaders := []string{
-					"Symbol", "Date", "Amount (USD)", "TTDate", "TTRate", "Amount (INR)",
+					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate", "Amount (INR)",
 				}
 				Expect(rows[0]).To(Equal(expectedHeaders))
 			})
@@ -546,7 +550,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(rows).To(HaveLen(1))
 				expectedDividendsHeaders := []string{
-					"Symbol", "Date", "Amount (USD)", "TTDate", "TTRate", "Amount (INR)",
+					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate", "Amount (INR)",
 				}
 				Expect(rows[0]).To(Equal(expectedDividendsHeaders))
 
