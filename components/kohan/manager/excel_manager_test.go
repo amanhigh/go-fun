@@ -17,8 +17,10 @@ import (
 
 var _ = Describe("ExcelManagerImpl", func() {
 	var (
-		ctx         context.Context
-		baseTempDir string
+		ctx                context.Context
+		baseTempDir        string
+		testYear           = 2023
+		tempOutputFilePath string
 	)
 
 	BeforeEach(func() {
@@ -26,6 +28,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 		var err error
 		baseTempDir, err = os.MkdirTemp(os.TempDir(), "excel_manager_test_run_*")
 		Expect(err).ToNot(HaveOccurred())
+		tempOutputFilePath = filepath.Join(baseTempDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
 	})
 
 	AfterEach(func() {
@@ -53,12 +56,10 @@ var _ = Describe("ExcelManagerImpl", func() {
 	Describe("GenerateTaxSummaryExcel", func() {
 		Context("when generating the 'Gains' sheet with data", func() {
 			var (
-				excelManager       manager.ExcelManager
-				tempOutputDir      string
-				tempOutputFilePath string
-				sampleSummary      tax.Summary
-				sheetName          = "Gains"
-				testYear           = 2023
+				excelManager  manager.ExcelManager
+				tempOutputDir string
+				sampleSummary tax.Summary
+				sheetName     = "Gains"
 			)
 
 			BeforeEach(func() {
@@ -190,17 +191,15 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 		Context("when INRGains slice is empty", func() {
 			var (
-				excelManager       manager.ExcelManager
-				tempOutputFilePath string
-				emptySummary       tax.Summary
-				testYear           = 2023
+				excelManager manager.ExcelManager
+				emptySummary tax.Summary
 			)
 			BeforeEach(func() {
 				contextTempDir, err := os.MkdirTemp(baseTempDir, "empty_gains_test_*")
 				Expect(err).ToNot(HaveOccurred())
-				tempOutputFilePath = filepath.Join(contextTempDir, "summary_empty_gains.xlsx")
+				tempOutputFilePath = filepath.Join(contextTempDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
 
-				excelManager = manager.NewExcelManager(tempOutputFilePath)
+				excelManager = manager.NewExcelManager(contextTempDir)
 				emptySummary = tax.Summary{INRGains: []tax.INRGains{}}
 			})
 
@@ -237,18 +236,17 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 		Context("when generating the 'Dividends' sheet with data", func() {
 			var (
-				excelManager       manager.ExcelManager
-				tempOutputFilePath string
-				sampleSummary      tax.Summary
-				sheetName          = "Dividends"
+				excelManager  manager.ExcelManager
+				sampleSummary tax.Summary
+				sheetName     = "Dividends"
 			)
 
 			BeforeEach(func() {
 				contextTempDir, err := os.MkdirTemp(baseTempDir, "dividends_data_test_*")
 				Expect(err).ToNot(HaveOccurred())
-				tempOutputFilePath = filepath.Join(contextTempDir, "summary_with_dividends.xlsx")
+				tempOutputFilePath = filepath.Join(contextTempDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
 
-				excelManager = manager.NewExcelManager(tempOutputFilePath)
+				excelManager = manager.NewExcelManager(contextTempDir)
 
 				div1TTDate, _ := time.Parse(time.DateOnly, "2023-04-05")
 				div1 := tax.INRDividend{
@@ -297,14 +295,13 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 		Context("when INRDividends slice is empty", func() {
 			var (
-				excelManager       manager.ExcelManager
-				tempOutputFilePath string
+				excelManager manager.ExcelManager
 			)
 			BeforeEach(func() {
 				contextTempDir, err := os.MkdirTemp(baseTempDir, "empty_dividends_test_*")
 				Expect(err).ToNot(HaveOccurred())
-				tempOutputFilePath = filepath.Join(contextTempDir, "summary_empty_dividends.xlsx")
-				excelManager = manager.NewExcelManager(tempOutputFilePath)
+				tempOutputFilePath = filepath.Join(contextTempDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
+				excelManager = manager.NewExcelManager(contextTempDir)
 			})
 
 			It("should create the 'Dividends' sheet with only headers", func() {
@@ -330,18 +327,17 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 		Context("when generating the 'Valuations' sheet with data", func() {
 			var (
-				excelManager       manager.ExcelManager
-				tempOutputFilePath string
-				sampleSummary      tax.Summary
-				sheetName          = "Valuations"
+				excelManager  manager.ExcelManager
+				sampleSummary tax.Summary
+				sheetName     = "Valuations"
 			)
 
 			BeforeEach(func() {
 				contextTempDir, err := os.MkdirTemp(baseTempDir, "valuations_data_test_*")
 				Expect(err).ToNot(HaveOccurred())
-				tempOutputFilePath = filepath.Join(contextTempDir, "summary_with_valuations.xlsx")
+				tempOutputFilePath = filepath.Join(contextTempDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
 
-				excelManager = manager.NewExcelManager(tempOutputFilePath)
+				excelManager = manager.NewExcelManager(contextTempDir)
 
 				// Define dates
 				firstDate, _ := time.Parse(time.DateOnly, "2022-01-10")
@@ -445,18 +441,17 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 		Context("when generating the 'Interest' sheet with data", func() {
 			var (
-				excelManager       manager.ExcelManager
-				tempOutputFilePath string
-				sampleSummary      tax.Summary
-				sheetName          = "Interest"
+				excelManager  manager.ExcelManager
+				sampleSummary tax.Summary
+				sheetName     = "Interest"
 			)
 
 			BeforeEach(func() {
 				contextTempDir, err := os.MkdirTemp(baseTempDir, "interest_data_test_*")
 				Expect(err).ToNot(HaveOccurred())
-				tempOutputFilePath = filepath.Join(contextTempDir, "summary_with_interest.xlsx")
+				tempOutputFilePath = filepath.Join(contextTempDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
 
-				excelManager = manager.NewExcelManager(tempOutputFilePath)
+				excelManager = manager.NewExcelManager(contextTempDir)
 
 				// Define dates
 				interestDate, _ := time.Parse(time.DateOnly, "2023-06-01")
@@ -516,15 +511,14 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 		Context("when the tax summary is completely empty", func() {
 			var (
-				excelManager       manager.ExcelManager
-				tempOutputFilePath string
+				excelManager manager.ExcelManager
 			)
 
 			BeforeEach(func() {
 				contextTempDir, err := os.MkdirTemp(baseTempDir, "empty_summary_test_*")
 				Expect(err).ToNot(HaveOccurred())
-				tempOutputFilePath = filepath.Join(contextTempDir, "empty_summary.xlsx")
-				excelManager = manager.NewExcelManager(tempOutputFilePath)
+				tempOutputFilePath = filepath.Join(contextTempDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
+				excelManager = manager.NewExcelManager(contextTempDir)
 			})
 
 			It("should create a valid Excel file with all sheets containing only headers", func() {
@@ -597,9 +591,9 @@ var _ = Describe("ExcelManagerImpl", func() {
 		Context("regarding file system operations", func() {
 			It("should create parent directories for the output file if they do not exist", func() {
 				nestedDirPath := filepath.Join(baseTempDir, "reports_test", "fy_temp")
-				specificOutputFilePath := filepath.Join(nestedDirPath, "final_summary.xlsx")
+				specificOutputFilePath := filepath.Join(nestedDirPath, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
 
-				excelManager := manager.NewExcelManager(specificOutputFilePath)
+				excelManager := manager.NewExcelManager(nestedDirPath)
 
 				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, tax.Summary{})
 				Expect(err).ToNot(HaveOccurred())
@@ -609,10 +603,17 @@ var _ = Describe("ExcelManagerImpl", func() {
 			})
 
 			It("should return an error if saving the file to an invalid target fails", func() {
-				invalidOutputFilePath := baseTempDir
-				excelManager := manager.NewExcelManager(invalidOutputFilePath)
+				// Use a directory path that will make SaveAs fail - create a directory with the same name as the expected file
+				invalidDir := filepath.Join(baseTempDir, "invalid_test")
+				invalidFile := filepath.Join(invalidDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
 
-				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, tax.Summary{})
+				// Create a directory where the file should be created
+				err := os.MkdirAll(invalidFile, 0755)
+				Expect(err).ToNot(HaveOccurred())
+
+				excelManager := manager.NewExcelManager(invalidDir)
+
+				err = excelManager.GenerateTaxSummaryExcel(ctx, testYear, tax.Summary{})
 				Expect(err).To(HaveOccurred())
 			})
 		})
