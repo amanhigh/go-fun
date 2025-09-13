@@ -11,7 +11,7 @@ import (
 
 type TaxManager interface {
 	GetTaxSummary(ctx context.Context, year int) (tax.Summary, common.HttpError)
-	SaveTaxSummaryToExcel(ctx context.Context, summary tax.Summary) error
+	SaveTaxSummaryToExcel(ctx context.Context, year int, summary tax.Summary) error
 }
 
 type TaxManagerImpl struct {
@@ -103,8 +103,8 @@ func (t *TaxManagerImpl) processValuations(ctx context.Context, year int) ([]tax
 	return t.taxValuationManager.ProcessValuations(ctx, usdValuations)
 }
 
-func (t *TaxManagerImpl) SaveTaxSummaryToExcel(ctx context.Context, summary tax.Summary) error {
-	if err := t.excelManager.GenerateTaxSummaryExcel(ctx, summary); err != nil {
+func (t *TaxManagerImpl) SaveTaxSummaryToExcel(ctx context.Context, year int, summary tax.Summary) error {
+	if err := t.excelManager.GenerateTaxSummaryExcel(ctx, year, summary); err != nil {
 		return fmt.Errorf("failed to generate tax summary excel: %w", err)
 	}
 	return nil

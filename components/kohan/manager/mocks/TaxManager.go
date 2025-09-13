@@ -108,16 +108,16 @@ func (_c *TaxManager_GetTaxSummary_Call) RunAndReturn(run func(ctx context.Conte
 }
 
 // SaveTaxSummaryToExcel provides a mock function for the type TaxManager
-func (_mock *TaxManager) SaveTaxSummaryToExcel(ctx context.Context, summary tax.Summary) error {
-	ret := _mock.Called(ctx, summary)
+func (_mock *TaxManager) SaveTaxSummaryToExcel(ctx context.Context, year int, summary tax.Summary) error {
+	ret := _mock.Called(ctx, year, summary)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SaveTaxSummaryToExcel")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, tax.Summary) error); ok {
-		r0 = returnFunc(ctx, summary)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int, tax.Summary) error); ok {
+		r0 = returnFunc(ctx, year, summary)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -131,24 +131,30 @@ type TaxManager_SaveTaxSummaryToExcel_Call struct {
 
 // SaveTaxSummaryToExcel is a helper method to define mock.On call
 //   - ctx context.Context
+//   - year int
 //   - summary tax.Summary
-func (_e *TaxManager_Expecter) SaveTaxSummaryToExcel(ctx interface{}, summary interface{}) *TaxManager_SaveTaxSummaryToExcel_Call {
-	return &TaxManager_SaveTaxSummaryToExcel_Call{Call: _e.mock.On("SaveTaxSummaryToExcel", ctx, summary)}
+func (_e *TaxManager_Expecter) SaveTaxSummaryToExcel(ctx interface{}, year interface{}, summary interface{}) *TaxManager_SaveTaxSummaryToExcel_Call {
+	return &TaxManager_SaveTaxSummaryToExcel_Call{Call: _e.mock.On("SaveTaxSummaryToExcel", ctx, year, summary)}
 }
 
-func (_c *TaxManager_SaveTaxSummaryToExcel_Call) Run(run func(ctx context.Context, summary tax.Summary)) *TaxManager_SaveTaxSummaryToExcel_Call {
+func (_c *TaxManager_SaveTaxSummaryToExcel_Call) Run(run func(ctx context.Context, year int, summary tax.Summary)) *TaxManager_SaveTaxSummaryToExcel_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 tax.Summary
+		var arg1 int
 		if args[1] != nil {
-			arg1 = args[1].(tax.Summary)
+			arg1 = args[1].(int)
+		}
+		var arg2 tax.Summary
+		if args[2] != nil {
+			arg2 = args[2].(tax.Summary)
 		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -159,7 +165,7 @@ func (_c *TaxManager_SaveTaxSummaryToExcel_Call) Return(err error) *TaxManager_S
 	return _c
 }
 
-func (_c *TaxManager_SaveTaxSummaryToExcel_Call) RunAndReturn(run func(ctx context.Context, summary tax.Summary) error) *TaxManager_SaveTaxSummaryToExcel_Call {
+func (_c *TaxManager_SaveTaxSummaryToExcel_Call) RunAndReturn(run func(ctx context.Context, year int, summary tax.Summary) error) *TaxManager_SaveTaxSummaryToExcel_Call {
 	_c.Call.Return(run)
 	return _c
 }

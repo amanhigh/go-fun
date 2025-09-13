@@ -13,23 +13,29 @@ import (
 )
 
 type ExcelManager interface {
-	GenerateTaxSummaryExcel(ctx context.Context, summary tax.Summary) error
+	GenerateTaxSummaryExcel(ctx context.Context, year int, summary tax.Summary) error
 }
 
 type ExcelManagerImpl struct {
-	outputFilePath string // Full exact path, injected via constructor
+	outputDir string // Directory path where Excel files will be saved
 }
 
-func NewExcelManager(outputFilePath string) ExcelManager {
+func NewExcelManager(outputDir string) ExcelManager {
 	return &ExcelManagerImpl{
-		outputFilePath: outputFilePath,
+		outputDir: outputDir,
 	}
 }
 
-// In ExcelManagerImpl
+// generateYearlyFilePath creates the year-specific filepath for tax summary
+func (e *ExcelManagerImpl) generateYearlyFilePath(year int) string {
+	filename := fmt.Sprintf("tax_summary_%d.xlsx", year)
+	return filepath.Join(e.outputDir, filename)
+}
 
-func (e *ExcelManagerImpl) GenerateTaxSummaryExcel(ctx context.Context, summary tax.Summary) (err error) {
-	if err = e.ensureDirectoryExists(ctx); err != nil {
+func (e *ExcelManagerImpl) GenerateTaxSummaryExcel(ctx context.Context, year int, summary tax.Summary) (err error) {
+	outputFilePath := e.generateYearlyFilePath(year)
+
+	if err = e.ensureDirectoryExists(ctx, outputFilePath); err != nil {
 		return
 	}
 
@@ -52,12 +58,12 @@ func (e *ExcelManagerImpl) GenerateTaxSummaryExcel(ctx context.Context, summary 
 		log.Ctx(ctx).Warn().Err(err).Msg("Failed to delete default sheet")
 	}
 
-	if err = f.SaveAs(e.outputFilePath); err != nil {
-		log.Ctx(ctx).Error().Err(err).Str("path", e.outputFilePath).Msg("Failed to save Excel file")
-		return fmt.Errorf("failed to save excel file to %s: %w", e.outputFilePath, err)
+	if err = f.SaveAs(outputFilePath); err != nil {
+		log.Ctx(ctx).Error().Err(err).Str("path", outputFilePath).Msg("Failed to save Excel file")
+		return fmt.Errorf("failed to save excel file to %s: %w", outputFilePath, err)
 	}
 
-	log.Ctx(ctx).Info().Str("path", e.outputFilePath).Msg("Excel summary generated successfully.")
+	log.Ctx(ctx).Info().Str("path", outputFilePath).Msg("Excel summary generated successfully.")
 	return
 }
 
@@ -81,8 +87,8 @@ func (e *ExcelManagerImpl) writeSheets(ctx context.Context, f *excelize.File, su
 }
 
 // ensureDirectoryExists creates the directory for the output file if it doesn't exist.
-func (e *ExcelManagerImpl) ensureDirectoryExists(ctx context.Context) error {
-	dir := filepath.Dir(e.outputFilePath)
+func (e *ExcelManagerImpl) ensureDirectoryExists(ctx context.Context, filePath string) error {
+	dir := filepath.Dir(filePath)
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		log.Ctx(ctx).Error().Err(err).Str("directory", dir).Msg("Failed to create output directory")
 		return fmt.Errorf("failed to create output directory %s: %w", dir, err)

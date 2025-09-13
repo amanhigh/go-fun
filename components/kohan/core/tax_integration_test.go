@@ -2,6 +2,7 @@ package core_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort" // Add import
@@ -36,13 +37,13 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 				// TickerInfoDir is separate, points to base testdata path for this test
 				TickerInfoDir: testDataBasePath,
 				// File Paths using constants and joined with base path
-				TradesPath:        filepath.Join(testDataBasePath, tax.TRADES_FILENAME),
-				DividendFilePath:  filepath.Join(testDataBasePath, tax.DIVIDENDS_FILENAME),
-				TTRateFilePath:    filepath.Join(testDataBasePath, tax.SBI_RATES_FILENAME),
-				AccountDir:        testDataBasePath,
-				GainsFilePath:     filepath.Join(testDataBasePath, tax.GAINS_FILENAME),
-				InterestFilePath:  filepath.Join(testDataBasePath, tax.INTEREST_FILENAME),
-				YearlySummaryPath: filepath.Join(tempDir, "tax_summary.xlsx"),
+				TradesPath:       filepath.Join(testDataBasePath, tax.TRADES_FILENAME),
+				DividendFilePath: filepath.Join(testDataBasePath, tax.DIVIDENDS_FILENAME),
+				TTRateFilePath:   filepath.Join(testDataBasePath, tax.SBI_RATES_FILENAME),
+				AccountDir:       testDataBasePath,
+				GainsFilePath:    filepath.Join(testDataBasePath, tax.GAINS_FILENAME),
+				InterestFilePath: filepath.Join(testDataBasePath, tax.INTEREST_FILENAME),
+				YearlySummaryDir: tempDir,
 			},
 		}
 
@@ -303,11 +304,11 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Save the summary to Excel
-			saveErr := taxManager.SaveTaxSummaryToExcel(ctx, summary)
+			saveErr := taxManager.SaveTaxSummaryToExcel(ctx, testYear, summary)
 			Expect(saveErr).ToNot(HaveOccurred())
 
 			// Verify that the file was created
-			filePath := kohanConfig.Tax.YearlySummaryPath
+			filePath := filepath.Join(kohanConfig.Tax.YearlySummaryDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
 			Expect(filePath).Should(BeARegularFile())
 
 			// Open the generated file to verify its integrity and sheets

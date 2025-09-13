@@ -202,8 +202,8 @@ func (ki *KohanInjector) provideDividendManager(
 }
 
 func (ki *KohanInjector) provideExcelManager() manager.ExcelManager {
-	// Assuming ki.config.Tax.YearlySummaryExcelPath is available and validated.
-	return manager.NewExcelManager(ki.config.Tax.YearlySummaryPath)
+	// Pass the directory path, ExcelManager will generate year-specific filenames
+	return manager.NewExcelManager(ki.config.Tax.YearlySummaryDir)
 }
 
 func (ki *KohanInjector) provideGainsComputationManager() manager.GainsComputationManager {
