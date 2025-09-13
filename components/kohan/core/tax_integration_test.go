@@ -248,6 +248,54 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		})
 	})
 
+	// 🔴 RED: Failing test that reproduces the 2022 position calculation bug
+	Context("2022 Buy-Only Year Position Bug", func() {
+		It("should correctly calculate year-end positions when only BUY transactions exist", func() {
+			// This test reproduces the exact scenario we see in real 2022 data:
+			// - Only BUY transactions (no SELL transactions)
+			// - Multiple symbols with different quantities
+			// - Expected: Non-zero positions at year-end
+			// - Actual bug: Zero positions in accounts_2022.csv
+
+			// Test with 2022 year to match real scenario
+			testYear2022 := 2022
+			summary, err := taxManager.GetTaxSummary(ctx, testYear2022)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(summary).ToNot(BeNil())
+
+			// Check that we have transactions for 2022 and they are all BUY
+			// The testdata has MSFT 2022-01-10 BUY transaction
+
+			// The specific bug we're testing:
+			// Real-world 2022 data shows all accounts_2022.csv with Quantity=0
+			// even though all trades were BUY transactions (no SELL in 2022)
+
+			// Verify we have at least one valuation for 2022
+			Expect(summary.INRValuations).ToNot(BeEmpty(), "Should have valuations for 2022")
+
+			// Find the MSFT valuation (only 2022 transaction in testdata)
+			var msftValuation *tax.INRValuation
+			for i, valuation := range summary.INRValuations {
+				if valuation.Ticker == "MSFT" {
+					msftValuation = &summary.INRValuations[i]
+					break
+				}
+			}
+
+			Expect(msftValuation).ToNot(BeNil(), "Should have MSFT valuation for 2022")
+
+			// 🔴 This assertion should FAIL due to the position calculation bug
+			// MSFT had 50 shares bought in 2022-01-10, no sales in 2022
+			// So year-end 2022 position should be 50 shares, not 0
+			Expect(msftValuation.YearEndPosition.Quantity).To(Equal(50.0),
+				"MSFT should have 50 shares at 2022 year-end (bought 50, sold 0)")
+
+			// Additional assertion that should also fail
+			Expect(msftValuation.YearEndPosition.USDValue()).To(BeNumerically(">", 0),
+				"MSFT should have non-zero USD value at 2022 year-end")
+		})
+	})
+
 	Context("Excel File Generation", func() {
 		It("should generate a valid Excel file with the correct sheets", func() {
 			// Get the tax summary
