@@ -383,7 +383,7 @@ var _ = Describe("ValuationManager", func() {
 				})
 			})
 
-			Context("Year End Price Error", func() {
+			Context("Year End Price Not Found Error", func() {
 				var trades []tax.Trade
 
 				BeforeEach(func() {
@@ -391,6 +391,7 @@ var _ = Describe("ValuationManager", func() {
 						tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
 					}
 
+					// Mock a 404 not found error (missing ticker data - legitimate case)
 					mockTickerManager.EXPECT().
 						GetPrice(ctx, AAPL, yearEndDate).
 						Return(0.0, common.ErrNotFound)
@@ -400,11 +401,43 @@ var _ = Describe("ValuationManager", func() {
 						Return(tax.Account{}, common.ErrNotFound)
 				})
 
-				It("should handle ticker price fetch error", func() {
+				It("should gracefully handle 404 not found errors", func() {
+					valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
+
+					// 🔴 This should FAIL initially - current implementation fails hard on all errors
+					// After GREEN phase, this should PASS - graceful handling for missing data
+					Expect(err).ToNot(HaveOccurred())
+					Expect(valuation.YearEndPosition.USDPrice).To(Equal(0.0))
+					Expect(valuation.YearEndPosition.Quantity).To(Equal(10.0))
+				})
+			})
+
+			Context("Year End Price Server Error", func() {
+				var trades []tax.Trade
+
+				BeforeEach(func() {
+					trades = []tax.Trade{
+						tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
+					}
+
+					// Mock a 500 server error (file system issue, JSON parse error, etc.)
+					serverError := common.NewServerError(errors.New("file system permission denied"))
+					mockTickerManager.EXPECT().
+						GetPrice(ctx, AAPL, yearEndDate).
+						Return(0.0, serverError)
+
+					mockAccountManager.EXPECT().
+						GetRecord(ctx, AAPL, year-1).
+						Return(tax.Account{}, common.ErrNotFound)
+				})
+
+				It("should fail hard on server errors (NOT gracefully handle)", func() {
 					_, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
+
+					// ✅ This should PASS both before and after - server errors should always fail hard
 					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(ContainSubstring("failed to get year end price"))
 					Expect(err.Code()).To(Equal(http.StatusInternalServerError))
+					Expect(err.Error()).To(ContainSubstring("failed to get year end price"))
 				})
 			})
 		})
