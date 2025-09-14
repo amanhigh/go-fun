@@ -19,6 +19,7 @@ var _ = Describe("AccountManager", func() {
 		accountManager manager.AccountManager
 		testAccount    tax.Account
 		accountDir     = "/tmp"
+		testYear       = 2024
 	)
 
 	BeforeEach(func() {
@@ -38,12 +39,12 @@ var _ = Describe("AccountManager", func() {
 		Context("when single account exists", func() {
 			BeforeEach(func() {
 				mockRepo.EXPECT().
-					GetAllRecordsForYear(ctx, 2024).
+					GetAllRecordsForYear(ctx, testYear).
 					Return([]tax.Account{testAccount}, nil)
 			})
 
 			It("returns account details", func() {
-				account, err := accountManager.GetRecord(ctx, testAccount.Symbol, 2024)
+				account, err := accountManager.GetRecord(ctx, testAccount.Symbol, testYear)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(account).To(Equal(testAccount))
 			})
@@ -52,12 +53,12 @@ var _ = Describe("AccountManager", func() {
 		Context("when no account found", func() {
 			BeforeEach(func() {
 				mockRepo.EXPECT().
-					GetAllRecordsForYear(ctx, 2024).
+					GetAllRecordsForYear(ctx, testYear).
 					Return([]tax.Account{}, nil)
 			})
 
 			It("returns not found error", func() {
-				_, err := accountManager.GetRecord(ctx, testAccount.Symbol, 2024)
+				_, err := accountManager.GetRecord(ctx, testAccount.Symbol, testYear)
 				Expect(err).To(Equal(common.ErrNotFound))
 			})
 		})
@@ -65,12 +66,12 @@ var _ = Describe("AccountManager", func() {
 		Context("when multiple accounts found", func() {
 			BeforeEach(func() {
 				mockRepo.EXPECT().
-					GetAllRecordsForYear(ctx, 2024).
+					GetAllRecordsForYear(ctx, testYear).
 					Return([]tax.Account{testAccount, testAccount}, nil)
 			})
 
 			It("returns bad request error", func() {
-				_, err := accountManager.GetRecord(ctx, testAccount.Symbol, 2024)
+				_, err := accountManager.GetRecord(ctx, testAccount.Symbol, testYear)
 				Expect(err).To(HaveOccurred())
 				Expect(err.Code()).To(Equal(http.StatusBadRequest))
 				Expect(err.Error()).To(ContainSubstring("multiple accounts found"))
@@ -80,12 +81,12 @@ var _ = Describe("AccountManager", func() {
 		Context("when repository error occurs", func() {
 			BeforeEach(func() {
 				mockRepo.EXPECT().
-					GetAllRecordsForYear(ctx, 2024).
+					GetAllRecordsForYear(ctx, testYear).
 					Return(nil, common.ErrInternalServerError)
 			})
 
 			It("returns error from repository", func() {
-				_, err := accountManager.GetRecord(ctx, testAccount.Symbol, 2024)
+				_, err := accountManager.GetRecord(ctx, testAccount.Symbol, testYear)
 				Expect(err).To(Equal(common.ErrInternalServerError))
 			})
 		})
@@ -96,12 +97,12 @@ var _ = Describe("AccountManager", func() {
 			BeforeEach(func() {
 				// Mock repository returns test data from accounts_2023.csv
 				mockRepo.EXPECT().
-					GetAllRecordsForYear(ctx, 2024).
+					GetAllRecordsForYear(ctx, testYear).
 					Return([]tax.Account{testAccount}, nil)
 			})
 
 			It("should auto-use accounts_2023.csv", func() {
-				account, err := accountManager.GetRecord(ctx, testAccount.Symbol, 2024)
+				account, err := accountManager.GetRecord(ctx, testAccount.Symbol, testYear)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(account.Symbol).To(Equal(testAccount.Symbol))
 				Expect(account.Quantity).To(Equal(testAccount.Quantity))
@@ -112,12 +113,12 @@ var _ = Describe("AccountManager", func() {
 			BeforeEach(func() {
 				// Mock repository returns not found error
 				mockRepo.EXPECT().
-					GetAllRecordsForYear(ctx, 2024).
+					GetAllRecordsForYear(ctx, testYear).
 					Return(nil, common.ErrNotFound)
 			})
 
 			It("should handle fresh start scenario", func() {
-				_, err := accountManager.GetRecord(ctx, "NEWSTOCK", 2024)
+				_, err := accountManager.GetRecord(ctx, "NEWSTOCK", testYear)
 				Expect(err).To(Equal(common.ErrNotFound))
 			})
 		})
@@ -132,12 +133,12 @@ var _ = Describe("AccountManager", func() {
 					MarketValue: 5500,
 				}
 				mockRepo.EXPECT().
-					GetAllRecordsForYear(ctx, 2024).
+					GetAllRecordsForYear(ctx, testYear).
 					Return([]tax.Account{differentAccount}, nil)
 			})
 
 			It("should return fresh start for that ticker", func() {
-				_, err := accountManager.GetRecord(ctx, "NEWSTOCK", 2024)
+				_, err := accountManager.GetRecord(ctx, "NEWSTOCK", testYear)
 				Expect(err).To(Equal(common.ErrNotFound))
 			})
 		})
