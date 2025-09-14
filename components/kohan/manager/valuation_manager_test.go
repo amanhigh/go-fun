@@ -401,12 +401,11 @@ var _ = Describe("ValuationManager", func() {
 						Return(tax.Account{}, common.ErrNotFound)
 				})
 
-				It("should handle ticker price fetch error gracefully", func() {
-					valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
-					Expect(err).ToNot(HaveOccurred())                             // No error - graceful handling
-					Expect(valuation.YearEndPosition.USDPrice).To(Equal(0.0))     // Zero price fallback
-					Expect(valuation.YearEndPosition.Quantity).To(Equal(10.0))    // Quantity preserved
-					Expect(valuation.YearEndPosition.Date).To(Equal(yearEndDate)) // Valid date set
+				It("should fail when ticker price fetch fails", func() {
+					_, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
+					Expect(err).To(HaveOccurred())                                           // Should fail fast
+					Expect(err.Code()).To(Equal(http.StatusInternalServerError))             // Server error expected
+					Expect(err.Error()).To(ContainSubstring("failed to get year end price")) // Specific error message
 				})
 			})
 		})
@@ -415,9 +414,9 @@ var _ = Describe("ValuationManager", func() {
 	Context("GetYearlyValuationsUSD", func() {
 		var (
 			// Define sample trades for multiple tickers
-			tradeAAPL1 = tax.NewTrade(AAPL, "2024-01-10", "BUY", 10, 100)   // Date: 2024-01-10
-			tradeAAPL2 = tax.NewTrade(AAPL, "2024-05-15", "SELL", 5, 120)   // Date: 2024-05-15
-			tradeMSFT1 = tax.NewTrade("MSFT", "2024-02-20", "BUY", 20, 200) // Date: 2024-02-20
+			tradeAAPL1 = tax.NewTrade(AAPL, "2024-01-10", "BUY", 10, 100) // Date: 2024-01-10
+			tradeAAPL2 = tax.NewTrade(AAPL, "2024-05-15", "SELL", 5, 120) // Date: 2024-05-15
+			tradeMSFT1 = tax.NewTrade(MSFT, "2024-02-20", "BUY", 20, 200) // Date: 2024-02-20
 			allTrades  []tax.Trade
 		)
 
@@ -512,7 +511,7 @@ var _ = Describe("ValuationManager", func() {
 			Expect(err).To(Equal(expectedErr))
 		})
 
-		It("should fail fast if AnalyzeValuation returns error for one ticker", func() {
+		It("should fail when any ticker price fetch fails", func() {
 			// Mock Repo: GetAllRecords returns trades for two tickers
 			mockTradeRepository.EXPECT().GetAllRecords(ctx).Return(allTrades, nil).Once()
 
@@ -524,14 +523,14 @@ var _ = Describe("ValuationManager", func() {
 			expectedErr := common.NewServerError(errors.New("price fetch failed"))
 			mockTickerManager.EXPECT().GetPrice(ctx, AAPL, yearEndDate).Return(0.0, expectedErr).Once()
 
-			// We don't expect mocks for MSFT because it should fail fast on AAPL
+			// MSFT dependencies should NOT be called since AAPL fails first (fail-fast behavior)
+			// No MSFT mocks needed - they should never be reached
 
 			_, err := valuationManager.GetYearlyValuationsUSD(ctx, year)
-			// Assertions
+			// Assertions: Should fail fast when any ticker has price fetch error
 			Expect(err).To(HaveOccurred())
-			// Check if the error is the one returned by GetPrice (or wrapped by AnalyzeValuation)
+			Expect(err.Code()).To(Equal(http.StatusInternalServerError))
 			Expect(err.Error()).To(ContainSubstring("failed to get year end price"))
-			Expect(err.Code()).To(Equal(http.StatusInternalServerError)) // As wrapped by AnalyzeValuation
 		})
 	})
 

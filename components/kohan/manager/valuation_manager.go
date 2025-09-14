@@ -232,19 +232,12 @@ func (v *ValuationManagerImpl) determineYearEndPosition(
 	case currentQuantity > 0:
 		price, priceErr := v.tickerManager.GetPrice(ctx, analysis.Ticker, yearEndDate)
 		if priceErr != nil {
-			// Graceful fallback for ANY error (preserves auto-download functionality)
-			analysis.YearEndPosition = tax.Position{
-				Date:     yearEndDate,     // Valid date prevents "zero date" error
-				Quantity: currentQuantity, // Preserve quantity
-				USDPrice: 0,               // Zero price as fallback
-			}
-		} else {
-			// Normal path with actual price
-			analysis.YearEndPosition = tax.Position{
-				Date:     yearEndDate,
-				Quantity: currentQuantity,
-				USDPrice: price,
-			}
+			return common.NewServerError(fmt.Errorf("failed to get year end price for %s: %w", analysis.Ticker, priceErr))
+		}
+		analysis.YearEndPosition = tax.Position{
+			Date:     yearEndDate,
+			Quantity: currentQuantity,
+			USDPrice: price,
 		}
 	default:
 		analysis.YearEndPosition = tax.Position{Date: yearEndDate}
