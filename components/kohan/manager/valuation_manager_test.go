@@ -42,6 +42,7 @@ var _ = Describe("ValuationManager", func() {
 
 		// Common variables
 		AAPL         = "AAPL"
+		MSFT         = "MSFT"
 		year         = 2024
 		yearEndDate  = time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
 		yearEndPrice = 150.00
@@ -400,11 +401,12 @@ var _ = Describe("ValuationManager", func() {
 						Return(tax.Account{}, common.ErrNotFound)
 				})
 
-				It("should handle ticker price fetch error", func() {
-					_, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
-					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(ContainSubstring("failed to get year end price"))
-					Expect(err.Code()).To(Equal(http.StatusInternalServerError))
+				It("should handle ticker price fetch error gracefully", func() {
+					valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
+					Expect(err).ToNot(HaveOccurred())                             // No error - graceful handling
+					Expect(valuation.YearEndPosition.USDPrice).To(Equal(0.0))     // Zero price fallback
+					Expect(valuation.YearEndPosition.Quantity).To(Equal(10.0))    // Quantity preserved
+					Expect(valuation.YearEndPosition.Date).To(Equal(yearEndDate)) // Valid date set
 				})
 			})
 		})

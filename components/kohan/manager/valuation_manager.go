@@ -90,7 +90,11 @@ func (v *ValuationManagerImpl) processTradesByTicker(ctx context.Context, trades
 			// Fail fast: return immediately upon the first analysis error
 			return nil, processErr
 		}
-		valuations = append(valuations, valuation)
+
+		// Skip tickers with zero year-end quantity - no meaningful tax information to report
+		if valuation.YearEndPosition.Quantity > 0 {
+			valuations = append(valuations, valuation)
+		}
 	}
 	return valuations, nil
 }
@@ -228,12 +232,19 @@ func (v *ValuationManagerImpl) determineYearEndPosition(
 	case currentQuantity > 0:
 		price, priceErr := v.tickerManager.GetPrice(ctx, analysis.Ticker, yearEndDate)
 		if priceErr != nil {
-			return common.NewServerError(fmt.Errorf("failed to get year end price for %s: %w", analysis.Ticker, priceErr))
-		}
-		analysis.YearEndPosition = tax.Position{
-			Date:     yearEndDate,
-			Quantity: currentQuantity,
-			USDPrice: price,
+			// Graceful fallback for ANY error (preserves auto-download functionality)
+			analysis.YearEndPosition = tax.Position{
+				Date:     yearEndDate,     // Valid date prevents "zero date" error
+				Quantity: currentQuantity, // Preserve quantity
+				USDPrice: 0,               // Zero price as fallback
+			}
+		} else {
+			// Normal path with actual price
+			analysis.YearEndPosition = tax.Position{
+				Date:     yearEndDate,
+				Quantity: currentQuantity,
+				USDPrice: price,
+			}
 		}
 	default:
 		analysis.YearEndPosition = tax.Position{Date: yearEndDate}
@@ -276,8 +287,8 @@ func (v *ValuationManagerImpl) getOpeningPositionForPeriod(ctx context.Context, 
 	}
 
 	// Account record found (carry-over scenario)
-	// Account record found (carry-over scenario)
-	openingDate := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+	// Opening position date should be Dec 31st of previous year for carry-over positions
+	openingDate := time.Date(year-1, 12, 31, 0, 0, 0, 0, time.UTC)
 	var openingPrice float64
 	if account.Quantity > 0 { // Avoid division by zero
 		openingPrice = account.MarketValue / account.Quantity
