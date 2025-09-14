@@ -14,6 +14,7 @@ import (
 	"github.com/samber/lo"
 )
 
+//go:generate mockery --name=ValuationManager
 type ValuationManager interface {
 	AnalyzeValuation(ctx context.Context, tickerSymbol string, trades []tax.Trade, year int) (tax.Valuation, common.HttpError)
 	// GetYearlyValuationsUSD calculates the base USD Valuation (First, Peak, YearEnd)
@@ -115,16 +116,9 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 	// Step 2: Get opening position
 	openingPosition, err := v.getOpeningPositionForPeriod(ctx, tickerSymbol, year)
 	if err != nil {
-		if errors.Is(err, common.ErrNotFound) {
-			// Fresh start - create zero position with valid date
-			openingPosition = tax.Position{
-				Date:     time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC), // January 1st of analysis year
-				Quantity: 0,
-				USDPrice: 0,
-			}
-		} else {
-			return tax.Valuation{}, common.NewServerError(fmt.Errorf("failed to get opening position for %s: %w", tickerSymbol, err))
-		}
+		// getOpeningPositionForPeriod returns (tax.Position{}, nil) for common.ErrNotFound (fresh start)
+		// So, any non-nil err here is an actual error.
+		return tax.Valuation{}, common.NewServerError(fmt.Errorf("failed to get opening position for %s: %w", tickerSymbol, err))
 	}
 
 	// Step 3: Validate if trades exist or if there's a carry-over
@@ -234,24 +228,12 @@ func (v *ValuationManagerImpl) determineYearEndPosition(
 	case currentQuantity > 0:
 		price, priceErr := v.tickerManager.GetPrice(ctx, analysis.Ticker, yearEndDate)
 		if priceErr != nil {
-			// 🎯 KEY CHANGE: Check error type before deciding how to handle
-			if priceErr.Code() == http.StatusNotFound {
-				// Graceful handling for missing ticker data (404)
-				analysis.YearEndPosition = tax.Position{
-					Date:     yearEndDate,
-					Quantity: currentQuantity,
-					USDPrice: 0,
-				}
-			} else {
-				// Hard failure for system/server errors (500+)
-				return common.NewServerError(fmt.Errorf("failed to get year end price for %s: %w", analysis.Ticker, priceErr))
-			}
-		} else {
-			analysis.YearEndPosition = tax.Position{
-				Date:     yearEndDate,
-				Quantity: currentQuantity,
-				USDPrice: price,
-			}
+			return common.NewServerError(fmt.Errorf("failed to get year end price for %s: %w", analysis.Ticker, priceErr))
+		}
+		analysis.YearEndPosition = tax.Position{
+			Date:     yearEndDate,
+			Quantity: currentQuantity,
+			USDPrice: price,
 		}
 	default:
 		analysis.YearEndPosition = tax.Position{Date: yearEndDate}
@@ -282,19 +264,20 @@ func (v *ValuationManagerImpl) validateTradesExistOrCarryOver(trades []tax.Trade
 }
 
 func (v *ValuationManagerImpl) getOpeningPositionForPeriod(ctx context.Context, ticker string, year int) (position tax.Position, err common.HttpError) {
-	// Smart account detection for previous year
+	// Last year's account record
 	account, accErr := v.accountManager.GetRecord(ctx, ticker, year-1)
 	if accErr != nil {
 		if errors.Is(accErr, common.ErrNotFound) {
-			// Fresh start - no previous year account
-			return tax.Position{}, common.ErrNotFound
+			// No account record found -> fresh start for this period.
+			// Return a zero position. Its Date field will be the zero value for time.Time.
+			return tax.Position{}, nil
 		}
 		return tax.Position{}, accErr // Other errors from accountManager
 	}
 
 	// Account record found (carry-over scenario)
-	// Use December 31st of previous year to maintain historical context
-	openingDate := time.Date(year-1, 12, 31, 0, 0, 0, 0, time.UTC)
+	// Account record found (carry-over scenario)
+	openingDate := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
 	var openingPrice float64
 	if account.Quantity > 0 { // Avoid division by zero
 		openingPrice = account.MarketValue / account.Quantity
