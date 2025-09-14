@@ -468,10 +468,10 @@ var _ = Describe("ValuationManager", func() {
 
 			// Assert MSFT Valuation (based on AnalyzeValuation logic)
 			Expect(msftVal.Ticker).To(Equal("MSFT"))
-			Expect(msftVal.FirstPosition.Quantity).To(Equal(10.0))                                    // From starting position
-			Expect(msftVal.FirstPosition.Date).To(Equal(time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC))) // Date of start pos (Jan 1st of analysis year)
-			Expect(msftVal.PeakPosition.Quantity).To(Equal(30.0))                                     // 10 start + 20 buy
-			msftPeakDate, getDateErr := tradeMSFT1.GetDate()                                          // Use getDateErr here too
+			Expect(msftVal.FirstPosition.Quantity).To(Equal(10.0))                                        // From starting position
+			Expect(msftVal.FirstPosition.Date).To(Equal(time.Date(year-1, 12, 31, 0, 0, 0, 0, time.UTC))) // Date of start pos (Dec 31st of previous year)
+			Expect(msftVal.PeakPosition.Quantity).To(Equal(30.0))                                         // 10 start + 20 buy
+			msftPeakDate, getDateErr := tradeMSFT1.GetDate()                                              // Use getDateErr here too
 			Expect(getDateErr).NotTo(HaveOccurred())
 			Expect(msftVal.PeakPosition.Date).To(Equal(msftPeakDate))              // Date peak reached
 			Expect(msftVal.YearEndPosition.Quantity).To(BeNumerically("~", 30.0))  // Final quantity
@@ -517,9 +517,8 @@ var _ = Describe("ValuationManager", func() {
 			// Mock FY Manager: FilterUS returns the same trades
 			mockFyManager.EXPECT().FilterUS(ctx, allTrades, year).Return(allTrades, nil).Once()
 
-			// Mock dependencies for AAPL (enough to trigger AnalyzeValuation)
+			// Mock dependencies for AAPL (price fetch fails)
 			mockAccountManager.EXPECT().GetRecord(ctx, AAPL, year-1).Return(tax.Account{}, common.ErrNotFound).Once()
-			// Make TickerManager fail for AAPL
 			expectedErr := common.NewServerError(errors.New("price fetch failed"))
 			mockTickerManager.EXPECT().GetPrice(ctx, AAPL, yearEndDate).Return(0.0, expectedErr).Once()
 
@@ -577,7 +576,7 @@ var _ = Describe("ValuationManager", func() {
 				Expect(valuation.Ticker).To(Equal(AAPL))
 
 				// 1. Assert FirstPosition (Opening balance for the period)
-				expectedFirstPosDate := time.Date(testYear, 1, 1, 0, 0, 0, 0, time.UTC)
+				expectedFirstPosDate := time.Date(testYear-1, 12, 31, 0, 0, 0, 0, time.UTC)
 				Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
 				Expect(valuation.FirstPosition.Quantity).To(Equal(50.0))
 				Expect(valuation.FirstPosition.USDPrice).To(Equal(160.00))
@@ -627,7 +626,7 @@ var _ = Describe("ValuationManager", func() {
 				Expect(valuation.Ticker).To(Equal(AAPL))
 
 				// 1. Assert FirstPosition (Opening balance for the period)
-				expectedFirstPosDate := time.Date(testYear, 1, 1, 0, 0, 0, 0, time.UTC)
+				expectedFirstPosDate := time.Date(testYear-1, 12, 31, 0, 0, 0, 0, time.UTC)
 				Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
 				Expect(valuation.FirstPosition.Quantity).To(Equal(75.0))
 				Expect(valuation.FirstPosition.USDPrice).To(Equal(160.00)) // From carryOverAccount MarketValue/Quantity
@@ -674,7 +673,7 @@ var _ = Describe("ValuationManager", func() {
 				Expect(valuation.Ticker).To(Equal(MSFT))
 
 				// 1. Assert FirstPosition (Opening balance for the period)
-				expectedFirstPosDate := time.Date(testYear, 1, 1, 0, 0, 0, 0, time.UTC)
+				expectedFirstPosDate := time.Date(testYear-1, 12, 31, 0, 0, 0, 0, time.UTC)
 				Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
 				Expect(valuation.FirstPosition.Quantity).To(Equal(50.0))
 				Expect(valuation.FirstPosition.USDPrice).To(Equal(200.00))
