@@ -241,24 +241,19 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		})
 	})
 
-	Context("2022 Position Calculation Bug", func() {
-		It("preserves quantities when ticker prices unavailable", func() {
-			summary, err := taxManager.GetTaxSummary(ctx, 2022)
+	Context("Fail-Fast Ticker Download - TDD", func() {
+		It("should fail fast when ticker data missing for positive positions", func() {
+			// TDD Test: Validates proper fail-fast behavior for tax systems
+			//
+			// SCENARIO: 2022 has BUY trades (IEF=42 shares) but IEF.json missing
+			// EXPECTED: System should fail with standardized error format
+			// This ensures tax accuracy over convenience - no silent failures
 
-			Expect(err).ToNot(HaveOccurred())
-			Expect(summary.INRValuations).ToNot(BeEmpty())
+			_, err := taxManager.GetTaxSummary(ctx, 2022)
 
-			// Find MSFT position
-			var msftFound bool
-			for _, val := range summary.INRValuations {
-				if val.Ticker == "MSFT" {
-					msftFound = true
-					Expect(val.YearEndPosition.Quantity).To(Equal(50.0))
-					break
-				}
-			}
-
-			Expect(msftFound).To(BeTrue())
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("failed to get year end price for IEF"))
+			Expect(err.Error()).To(ContainSubstring("failed to auto-download ticker"))
 		})
 	})
 

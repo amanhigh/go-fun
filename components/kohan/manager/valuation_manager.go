@@ -91,10 +91,7 @@ func (v *ValuationManagerImpl) processTradesByTicker(ctx context.Context, trades
 			return nil, processErr
 		}
 
-		// Skip tickers with zero year-end quantity - no meaningful tax information to report
-		if valuation.YearEndPosition.Quantity > 0 {
-			valuations = append(valuations, valuation)
-		}
+		valuations = append(valuations, valuation)
 	}
 	return valuations, nil
 }
