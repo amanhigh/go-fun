@@ -34,8 +34,8 @@ type TaxConfig struct {
 	SBIBaseURL string `env:"SBI_BASE_URL" envDefault:"https://raw.githubusercontent.com/sahilgupta/sbi-fx-ratekeeper/main/csv_files/SBI_REFERENCE_RATES_USD.csv"`
 
 	// Alpha Vantage Configuration
-	AlphaBaseURL string `env:"ALPHA_BASE_URL" envDefault:"https://www.alphavantage.co/query"`
-	AlphaAPIKey  string `env:"ALPHA_API_KEY" envDefault:"DUMMY_KEY_FOR_E2E"`
+	AlphaBaseURL string `env:"ALPHAVANTAGE_BASE_URL" envDefault:"https://www.alphavantage.co/query"`
+	AlphaAPIKey  string `env:"ALPHAVANTAGE_API_KEY" envDefault:"DUMMY_KEY_FOR_E2E"`
 
 	// File System Configuration
 	// TaxDir is the base directory for all tax-related files and subdirectories

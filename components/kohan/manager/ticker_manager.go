@@ -50,6 +50,12 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 		return nil
 	}
 
+	// Validate API key before attempting download
+	if err = t.client.ValidateAPIKey(); err != nil {
+		log.Error().Str("Ticker", ticker).Err(err).Msg("API key validation failed")
+		return err
+	}
+
 	// Create directory if it doesn't exist
 	if err1 := os.MkdirAll(t.downloads, util.DIR_DEFAULT_PERM); err1 != nil {
 		return common.NewServerError(err1)

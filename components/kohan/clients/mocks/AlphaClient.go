@@ -106,3 +106,49 @@ func (_c *AlphaClient_FetchDailyPrices_Call) RunAndReturn(run func(ctx context.C
 	_c.Call.Return(run)
 	return _c
 }
+
+// ValidateAPIKey provides a mock function for the type AlphaClient
+func (_mock *AlphaClient) ValidateAPIKey() common.HttpError {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for ValidateAPIKey")
+	}
+
+	var r0 common.HttpError
+	if returnFunc, ok := ret.Get(0).(func() common.HttpError); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(common.HttpError)
+		}
+	}
+	return r0
+}
+
+// AlphaClient_ValidateAPIKey_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ValidateAPIKey'
+type AlphaClient_ValidateAPIKey_Call struct {
+	*mock.Call
+}
+
+// ValidateAPIKey is a helper method to define mock.On call
+func (_e *AlphaClient_Expecter) ValidateAPIKey() *AlphaClient_ValidateAPIKey_Call {
+	return &AlphaClient_ValidateAPIKey_Call{Call: _e.mock.On("ValidateAPIKey")}
+}
+
+func (_c *AlphaClient_ValidateAPIKey_Call) Run(run func()) *AlphaClient_ValidateAPIKey_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *AlphaClient_ValidateAPIKey_Call) Return(httpError common.HttpError) *AlphaClient_ValidateAPIKey_Call {
+	_c.Call.Return(httpError)
+	return _c
+}
+
+func (_c *AlphaClient_ValidateAPIKey_Call) RunAndReturn(run func() common.HttpError) *AlphaClient_ValidateAPIKey_Call {
+	_c.Call.Return(run)
+	return _c
+}
