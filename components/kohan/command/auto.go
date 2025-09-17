@@ -42,12 +42,10 @@ var monitorCmd = &cobra.Command{
 		server := core.NewMonitorServer(args[0], autoManager)
 
 		go autoManager.MonitorInternetConnection(cmd.Context())
-		go func() {
-			if err := server.Start(MonitorServerPort); err != nil {
-				log.Error().Err(err).Msg("Failed to start monitor server")
-			}
-		}()
-		autoManager.MonitorSubmap(cmd.Context())
+
+		if err := server.Start(MonitorServerPort); err != nil {
+			log.Error().Err(err).Msg("Failed to start monitor server")
+		}
 		return
 	},
 }

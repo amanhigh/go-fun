@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -43,7 +44,7 @@ func RunAsyncCommand(heading, cmd string, wg *sync.WaitGroup) {
 // The function returns an error if the command fails to start.
 // The cancel function can be used to kill the command and all of its child processes.
 func RunBackgroundProcess(command string) (cancel util.CancelFunc, err error) {
-	cmd := exec.Command("sh", "-c", command)
+	cmd := exec.CommandContext(context.Background(), "sh", "-c", command)
 	// Ensure any Child Process are Killed As Well.
 	// https://medium.com/@felixge/killing-a-child-process-and-all-of-its-children-in-go-54079af94773
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
@@ -100,12 +101,12 @@ func runCommand(cmd string) (string, error) {
 	if util.IsDebugMode() {
 		log.Debug().Str("CMD", cmd).Msg("Running Command")
 	}
-	output, err := exec.Command("sh", "-c", cmd).Output()
+	output, err := exec.CommandContext(context.Background(), "sh", "-c", cmd).Output()
 	return strings.TrimSpace(string(output)), err
 }
 
 func LiveCommand(cmd string) {
-	command := exec.Command("sh", "-c", cmd)
+	command := exec.CommandContext(context.Background(), "sh", "-c", cmd)
 	if util.IsDebugMode() {
 		log.Debug().Str("CMD", cmd).Msg("Running Command")
 	}

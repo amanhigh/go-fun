@@ -2,6 +2,8 @@ package clients
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
@@ -9,9 +11,9 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-//go:generate mockery --name AlphaClient
 type AlphaClient interface {
 	FetchDailyPrices(ctx context.Context, ticker string) (tax.VantageStockData, common.HttpError)
+	ValidateAPIKey() common.HttpError
 }
 
 type AlphaClientImpl struct {
@@ -26,6 +28,13 @@ func NewAlphaClient(client *resty.Client, baseURL, apiKey string) *AlphaClientIm
 		apiKey:  apiKey,
 		client:  client,
 	}
+}
+
+func (a *AlphaClientImpl) ValidateAPIKey() common.HttpError {
+	if strings.TrimSpace(a.apiKey) == "" {
+		return common.NewServerError(fmt.Errorf("alpha Vantage API key is required for ticker download"))
+	}
+	return nil
 }
 
 func (a *AlphaClientImpl) FetchDailyPrices(ctx context.Context, ticker string) (stockData tax.VantageStockData, err common.HttpError) {

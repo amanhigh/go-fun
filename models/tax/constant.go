@@ -12,6 +12,14 @@ const (
 	GAINS_FILENAME     = "gains.csv"
 	INTEREST_FILENAME  = "interest.csv"
 
+	// Trade Types
+	TRADE_TYPE_BUY  = "BUY"
+	TRADE_TYPE_SELL = "SELL"
+
+	// Gain Types
+	GAIN_TYPE_STCG = "STCG"
+	GAIN_TYPE_LTCG = "LTCG"
+
 	// Rounding factor for 2 decimal places
 	ROUNDING_FACTOR_2_DECIMALS = 100.0
 )

@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -10,35 +11,56 @@ import (
 	"github.com/amanhigh/go-fun/models/tax"
 )
 
-//go:generate mockery --name AccountManager
 type AccountManager interface {
-	GetRecord(ctx context.Context, symbol string) (tax.Account, common.HttpError)
+	GetRecord(ctx context.Context, symbol string, year int) (tax.Account, common.HttpError)
+	GenerateYearEndAccounts(ctx context.Context, year int, valuations []tax.Valuation) common.HttpError
 }
 
 type AccountManagerImpl struct {
 	repository repository.AccountRepository
+	accountDir string
 }
 
-func NewAccountManager(repo repository.AccountRepository) AccountManager {
+func NewAccountManager(repo repository.AccountRepository, accountDir string) AccountManager {
 	return &AccountManagerImpl{
 		repository: repo,
+		accountDir: accountDir,
 	}
 }
 
-func (a *AccountManagerImpl) GetRecord(ctx context.Context, symbol string) (account tax.Account, err common.HttpError) {
-	// Get all records for symbol
-	records, err := a.repository.GetRecordsForTicker(ctx, symbol)
+func (a *AccountManagerImpl) GenerateYearEndAccounts(ctx context.Context, year int, valuations []tax.Valuation) common.HttpError {
+	// Business logic: convert valuations to accounts
+	accounts := tax.FromValuations(valuations)
+
+	// Delegate write operation to repository (repository handles accountDir internally)
+	return a.repository.SaveYearEndAccounts(ctx, year, accounts)
+}
+
+func (a *AccountManagerImpl) GetRecord(ctx context.Context, symbol string, year int) (tax.Account, common.HttpError) {
+	// Get ALL records from repository for the specified year
+	allRecords, err := a.repository.GetAllRecordsForYear(ctx, year)
 	if err != nil {
-		return account, err
+		if errors.Is(err, common.ErrNotFound) {
+			return tax.Account{}, common.ErrNotFound // Fresh start
+		}
+		return tax.Account{}, err
 	}
 
-	// Validate single record
-	switch len(records) {
+	// MANAGER responsibility: Filter by symbol
+	var matchingRecords []tax.Account
+	for _, record := range allRecords {
+		if record.Symbol == symbol {
+			matchingRecords = append(matchingRecords, record)
+		}
+	}
+
+	// MANAGER responsibility: Business validation
+	switch len(matchingRecords) {
 	case 0:
-		return account, common.ErrNotFound
+		return tax.Account{}, common.ErrNotFound
 	case 1:
-		return records[0], nil
+		return matchingRecords[0], nil
 	default:
-		return account, common.NewHttpError(fmt.Sprintf("multiple accounts found for symbol: %s", symbol), http.StatusBadRequest)
+		return tax.Account{}, common.NewHttpError(fmt.Sprintf("multiple accounts found for symbol: %s", symbol), http.StatusBadRequest)
 	}
 }

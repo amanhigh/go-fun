@@ -1,0 +1,36 @@
+# https://zeppelin.apache.org/docs/0.11.0/setup/deployment/docker.html
+image:
+  repository: apache/zeppelin
+  tag: "0.11.0"
+
+containerPort: 8080
+svcPort: 8080
+
+probe:
+  enabled: true
+  path: "/"
+  settings:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+vars:
+  ZEPPELIN_ADDR: "0.0.0.0"
+  ZEPPELIN_PORT: "8080"
+  ZEPPELIN_MEM: "-Xmx1024m -XX:MaxMetaspaceSize=512m"
+
+resources:
+  limits:
+    cpu: "1000m"
+    memory: "2Gi"
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  path: /
+  host: zeppelin.docker

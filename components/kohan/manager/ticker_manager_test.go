@@ -3,6 +3,7 @@ package manager_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -61,6 +62,10 @@ var _ = Describe("TickerManager", func() {
 
 		It("should download and save ticker data successfully", func() {
 			mockClient.EXPECT().
+				ValidateAPIKey().
+				Return(nil)
+
+			mockClient.EXPECT().
 				FetchDailyPrices(ctx, ticker).
 				Return(stockData, nil)
 
@@ -89,8 +94,23 @@ var _ = Describe("TickerManager", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
+		It("should fail when API key validation fails", func() {
+			expectedErr := common.NewServerError(fmt.Errorf("alpha Vantage API key is required for ticker download"))
+
+			mockClient.EXPECT().
+				ValidateAPIKey().
+				Return(expectedErr)
+
+			err = tickerManager.DownloadTicker(ctx, ticker)
+			Expect(err).To(Equal(expectedErr))
+		})
+
 		It("should handle API errors", func() {
 			expectedErr := common.NewHttpError("API Error", http.StatusInternalServerError)
+
+			mockClient.EXPECT().
+				ValidateAPIKey().
+				Return(nil)
 
 			mockClient.EXPECT().
 				FetchDailyPrices(ctx, ticker).

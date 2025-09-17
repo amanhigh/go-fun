@@ -11,7 +11,7 @@ import (
 
 type TaxManager interface {
 	GetTaxSummary(ctx context.Context, year int) (tax.Summary, common.HttpError)
-	SaveTaxSummaryToExcel(ctx context.Context, summary tax.Summary) error
+	SaveTaxSummaryToExcel(ctx context.Context, year int, summary tax.Summary) error
 }
 
 type TaxManagerImpl struct {
@@ -20,6 +20,7 @@ type TaxManagerImpl struct {
 	interestManager     InterestManager
 	taxValuationManager TaxValuationManager
 	excelManager        ExcelManager
+	accountManager      AccountManager
 }
 
 func NewTaxManager(
@@ -28,6 +29,7 @@ func NewTaxManager(
 	interestManager InterestManager,
 	taxValuationManager TaxValuationManager,
 	excelManager ExcelManager,
+	accountManager AccountManager,
 ) TaxManager {
 	return &TaxManagerImpl{
 		capitalGainManager:  capitalGainManager,
@@ -35,6 +37,7 @@ func NewTaxManager(
 		interestManager:     interestManager,
 		taxValuationManager: taxValuationManager,
 		excelManager:        excelManager,
+		accountManager:      accountManager,
 	}
 }
 
@@ -91,11 +94,17 @@ func (t *TaxManagerImpl) processValuations(ctx context.Context, year int) ([]tax
 	if err != nil {
 		return nil, err
 	}
+
+	// Generate Year End Accounts CSV
+	if err := t.accountManager.GenerateYearEndAccounts(ctx, year, usdValuations); err != nil {
+		return nil, err
+	}
+
 	return t.taxValuationManager.ProcessValuations(ctx, usdValuations)
 }
 
-func (t *TaxManagerImpl) SaveTaxSummaryToExcel(ctx context.Context, summary tax.Summary) error {
-	if err := t.excelManager.GenerateTaxSummaryExcel(ctx, summary); err != nil {
+func (t *TaxManagerImpl) SaveTaxSummaryToExcel(ctx context.Context, year int, summary tax.Summary) error {
+	if err := t.excelManager.GenerateTaxSummaryExcel(ctx, year, summary); err != nil {
 		return fmt.Errorf("failed to generate tax summary excel: %w", err)
 	}
 	return nil

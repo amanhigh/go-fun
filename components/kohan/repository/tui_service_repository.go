@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -12,7 +13,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//go:generate mockery --name TuiServiceRepository
 type TuiServiceRepository interface {
 	LoadAvailableServices(makeDir string) ([]string, common.HttpError)
 	LoadSelectedServices() ([]string, common.HttpError)
@@ -25,7 +25,7 @@ type tuiServiceRepositoryImpl struct {
 }
 
 func (r *tuiServiceRepositoryImpl) ExecuteMakeCommand(makeDir, file, target string) ([]string, common.HttpError) {
-	cmd := exec.Command("make", "-s", "-C", makeDir, "-f", file, target)
+	cmd := exec.CommandContext(context.Background(), "make", "-s", "-C", makeDir, "-f", file, target)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, common.NewServerError(fmt.Errorf("failed to execute make command: %w. Output: %s", err, string(output)))

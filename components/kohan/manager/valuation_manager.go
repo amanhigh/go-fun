@@ -90,6 +90,7 @@ func (v *ValuationManagerImpl) processTradesByTicker(ctx context.Context, trades
 			// Fail fast: return immediately upon the first analysis error
 			return nil, processErr
 		}
+
 		valuations = append(valuations, valuation)
 	}
 	return valuations, nil
@@ -265,7 +266,7 @@ func (v *ValuationManagerImpl) validateTradesExistOrCarryOver(trades []tax.Trade
 
 func (v *ValuationManagerImpl) getOpeningPositionForPeriod(ctx context.Context, ticker string, year int) (position tax.Position, err common.HttpError) {
 	// Last year's account record
-	account, accErr := v.accountManager.GetRecord(ctx, ticker)
+	account, accErr := v.accountManager.GetRecord(ctx, ticker, year-1)
 	if accErr != nil {
 		if errors.Is(accErr, common.ErrNotFound) {
 			// No account record found -> fresh start for this period.
@@ -276,8 +277,8 @@ func (v *ValuationManagerImpl) getOpeningPositionForPeriod(ctx context.Context, 
 	}
 
 	// Account record found (carry-over scenario)
-	// Account record found (carry-over scenario)
-	openingDate := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+	// Opening position date should be Dec 31st of previous year for carry-over positions
+	openingDate := time.Date(year-1, 12, 31, 0, 0, 0, 0, time.UTC)
 	var openingPrice float64
 	if account.Quantity > 0 { // Avoid division by zero
 		openingPrice = account.MarketValue / account.Quantity

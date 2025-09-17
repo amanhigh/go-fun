@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/amanhigh/go-fun/models/config"
 	taxmodels "github.com/amanhigh/go-fun/models/tax"
 	"github.com/go-resty/resty/v2"
+	"github.com/rs/zerolog/log"
 
 	"github.com/golobby/container/v3"
 	"github.com/rivo/tview"
@@ -21,6 +23,7 @@ type KohanInterface interface {
 	GetDariusApp(cfg config.DariusConfig) (*DariusV1, error)
 	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
 	GetTaxManager() (manager.TaxManager, error)
+	GetDriveWealthManager() (manager.DriveWealthManager, error)
 }
 
 // Private singleton instance
@@ -61,6 +64,18 @@ func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
 	return taxManager, nil
 }
 
+func (ki *KohanInjector) GetDriveWealthManager() (manager.DriveWealthManager, error) {
+	ki.registerTaxDependencies()
+
+	// Resolve and return DriveWealthManager
+	var driveWealthManager manager.DriveWealthManager
+	err := ki.di.Resolve(&driveWealthManager)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve drive wealth manager: %w", err)
+	}
+	return driveWealthManager, nil
+}
+
 func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error) {
 	ki.registerDariusDependencies(cfg)
 
@@ -84,7 +99,7 @@ func (ki *KohanInjector) provideSBIClient(client *resty.Client) clients.SBIClien
 
 // ---- Repository Providers ----
 func (ki *KohanInjector) provideExchangeRepository() repository.ExchangeRepository {
-	return repository.NewExchangeRepository(ki.config.Tax.SBIFilePath)
+	return repository.NewExchangeRepository(ki.config.Tax.TTRateFilePath)
 }
 
 func (ki *KohanInjector) provideGainsRepository() repository.GainsRepository {
@@ -100,20 +115,26 @@ func (ki *KohanInjector) provideInterestRepository() repository.InterestReposito
 }
 
 func (ki *KohanInjector) provideAccountRepository() repository.AccountRepository {
-	return repository.NewAccountRepository(ki.config.Tax.AccountFilePath)
+	return repository.NewAccountRepository(ki.config.Tax.TaxDir)
 }
 
 func (ki *KohanInjector) provideTradeRepository() repository.TradeRepository {
-	return repository.NewTradeRepository(ki.config.Tax.BrokerStatementPath)
+	return repository.NewTradeRepository(ki.config.Tax.TradesPath)
 }
 
 // ---- Manager Providers ----
-func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) *manager.TickerManagerImpl {
-	return manager.NewTickerManager(client, ki.config.Tax.DownloadsDir)
+func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) manager.TickerManager {
+	return manager.NewTickerManager(client, ki.config.Tax.TickerCacheDir)
 }
 
 func (ki *KohanInjector) provideSBIManager(client clients.SBIClient, exchangeRepo repository.ExchangeRepository) manager.SBIManager {
-	return manager.NewSBIManager(client, ki.config.Tax.SBIFilePath, exchangeRepo)
+	sbiManager := manager.NewSBIManager(client, ki.config.Tax.TTRateFilePath, exchangeRepo)
+	if err := sbiManager.DownloadRates(context.Background()); err != nil {
+		// If download fails, we should not continue.
+		// A panic here is acceptable as it's a startup dependency.
+		log.Fatal().Err(err).Msg("Failed to download SBI rates")
+	}
+	return sbiManager
 }
 
 func (ki *KohanInjector) provideExchangeManager(sbiManager manager.SBIManager) manager.ExchangeManager {
@@ -121,7 +142,7 @@ func (ki *KohanInjector) provideExchangeManager(sbiManager manager.SBIManager) m
 }
 
 func (ki *KohanInjector) provideAccountManager(accountRepo repository.AccountRepository) manager.AccountManager {
-	return manager.NewAccountManager(accountRepo)
+	return manager.NewAccountManager(accountRepo, ki.config.Tax.TaxDir)
 }
 
 func (ki *KohanInjector) provideValuationManager(
@@ -181,8 +202,16 @@ func (ki *KohanInjector) provideDividendManager(
 }
 
 func (ki *KohanInjector) provideExcelManager() manager.ExcelManager {
-	// Assuming ki.config.Tax.YearlySummaryExcelPath is available and validated.
-	return manager.NewExcelManager(ki.config.Tax.YearlySummaryPath)
+	// Pass the directory path, ExcelManager will generate year-specific filenames
+	return manager.NewExcelManager(ki.config.Tax.TaxDir)
+}
+
+func (ki *KohanInjector) provideGainsComputationManager() manager.GainsComputationManager {
+	return manager.NewGainsComputationManager()
+}
+
+func (ki *KohanInjector) provideDriveWealthManager(gainsManager manager.GainsComputationManager) manager.DriveWealthManager {
+	return manager.NewDriveWealthManager(ki.config.Tax, gainsManager)
 }
 
 func (ki *KohanInjector) provideTaxManager(
@@ -191,8 +220,9 @@ func (ki *KohanInjector) provideTaxManager(
 	interestManager manager.InterestManager,
 	taxValuationManager manager.TaxValuationManager,
 	excelMgr manager.ExcelManager,
+	accountMgr manager.AccountManager,
 ) manager.TaxManager {
-	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager, excelMgr)
+	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager, excelMgr, accountMgr)
 }
 
 func provideTuiServiceRepository(cfg config.DariusConfig) repository.TuiServiceRepository {
@@ -275,6 +305,9 @@ func (ki *KohanInjector) registerTaxComponents() {
 	// Register ExcelManager first since TaxManager depends on it
 	container.MustSingleton(ki.di, ki.provideExcelManager)
 	container.MustSingleton(ki.di, ki.provideTaxManager)
+	// Register GainsComputationManager before DriveWealthManager since it depends on it
+	container.MustSingleton(ki.di, ki.provideGainsComputationManager)
+	container.MustSingleton(ki.di, ki.provideDriveWealthManager)
 }
 
 // registerTaxDependencies registers all dependencies required for tax calculations.

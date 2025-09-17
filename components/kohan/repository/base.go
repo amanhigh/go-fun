@@ -122,10 +122,12 @@ func (b *BaseCSVRepositoryImpl[T]) readCSVFile(ctx context.Context) (records []T
 		return nil, common.NewHttpError("empty CSV file", http.StatusBadRequest)
 	}
 
-	// Update type assertion to use CSVRecord
-	if record, ok := any(records[0]).(tax.CSVRecord); ok {
-		if !record.IsValid() {
-			return nil, common.NewHttpError("invalid CSV format", http.StatusBadRequest)
+	// Validate first record to catch malformed CSV data early
+	if len(records) > 0 {
+		if record, ok := any(records[0]).(tax.CSVRecord); ok {
+			if !record.IsValid() {
+				return nil, common.NewHttpError("invalid CSV format", http.StatusBadRequest)
+			}
 		}
 	}
 

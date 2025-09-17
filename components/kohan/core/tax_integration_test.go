@@ -2,6 +2,7 @@ package core_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort" // Add import
@@ -27,29 +28,21 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 	BeforeEach(func() {
 		ctx = context.Background()
 		testDataBasePath := filepath.Join("..", "testdata", "tax")
-		tempDir, err := os.MkdirTemp("", "tax_integration_test_*")
-		Expect(err).ToNot(HaveOccurred())
 
-		// Configure KohanConfig with TaxConfig pointing to test data files
 		kohanConfig = config.KohanConfig{
 			Tax: config.TaxConfig{
-				// DownloadsDir is separate, points to base testdata path for this test
-				DownloadsDir: testDataBasePath,
-				// File Paths using constants and joined with base path
-				BrokerStatementPath: filepath.Join(testDataBasePath, tax.TRADES_FILENAME),
-				DividendFilePath:    filepath.Join(testDataBasePath, tax.DIVIDENDS_FILENAME),
-				SBIFilePath:         filepath.Join(testDataBasePath, tax.SBI_RATES_FILENAME),
-				AccountFilePath:     filepath.Join(testDataBasePath, tax.ACCOUNTS_FILENAME),
-				GainsFilePath:       filepath.Join(testDataBasePath, tax.GAINS_FILENAME),
-				InterestFilePath:    filepath.Join(testDataBasePath, tax.INTEREST_FILENAME),
-				YearlySummaryPath:   filepath.Join(tempDir, "tax_summary.xlsx"),
+				TaxDir:           testDataBasePath,
+				TickerCacheDir:   testDataBasePath,
+				TradesPath:       filepath.Join(testDataBasePath, tax.TRADES_FILENAME),
+				DividendFilePath: filepath.Join(testDataBasePath, tax.DIVIDENDS_FILENAME),
+				TTRateFilePath:   filepath.Join(testDataBasePath, tax.SBI_RATES_FILENAME),
+				GainsFilePath:    filepath.Join(testDataBasePath, tax.GAINS_FILENAME),
+				InterestFilePath: filepath.Join(testDataBasePath, tax.INTEREST_FILENAME),
 			},
 		}
 
-		// Setup the global injector with test configuration
 		core.SetupKohanInjector(kohanConfig)
-
-		// Retrieve the TaxManager instance
+		var err error
 		taxManager, err = core.GetKohanInterface().GetTaxManager()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(taxManager).ToNot(BeNil())
@@ -205,7 +198,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			// FirstPosition for AAPL (opening balance for 2023 period, from Dec 31, 2022 accounts.csv)
 			Expect(aaplVal.FirstPosition.Quantity).To(Equal(50.0))
 			Expect(aaplVal.FirstPosition.USDPrice).To(Equal(160.00))
-			Expect(aaplVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2023-01-01"))
+			Expect(aaplVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2022-12-31"))
 			Expect(aaplVal.FirstPosition.TTRate).To(Equal(81.50))
 			Expect(aaplVal.FirstPosition.TTDate.Format(time.DateOnly)).To(Equal("2022-12-30"))
 
@@ -230,7 +223,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			// First Position (MSFT)
 			Expect(msftVal.FirstPosition.Quantity).To(Equal(50.0))
 			Expect(msftVal.FirstPosition.USDPrice).To(Equal(200.00))
-			Expect(msftVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2023-01-01"))
+			Expect(msftVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2022-12-31"))
 			Expect(msftVal.FirstPosition.TTRate).To(Equal(81.50))
 			Expect(msftVal.FirstPosition.TTDate.Format(time.DateOnly)).To(Equal("2022-12-30"))
 			// Peak Position (MSFT)
@@ -248,6 +241,22 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		})
 	})
 
+	Context("Fail-Fast Ticker Download - TDD", func() {
+		It("should fail fast when ticker data missing for positive positions", func() {
+			// TDD Test: Validates proper fail-fast behavior for tax systems
+			//
+			// SCENARIO: 2022 has BUY trades (IEF=42 shares) but IEF.json missing
+			// EXPECTED: System should fail with standardized error format
+			// This ensures tax accuracy over convenience - no silent failures
+
+			_, err := taxManager.GetTaxSummary(ctx, 2022)
+
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("failed to get year end price for IEF"))
+			Expect(err.Error()).To(ContainSubstring("failed to auto-download ticker"))
+		})
+	})
+
 	Context("Excel File Generation", func() {
 		It("should generate a valid Excel file with the correct sheets", func() {
 			// Get the tax summary
@@ -255,11 +264,11 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Save the summary to Excel
-			saveErr := taxManager.SaveTaxSummaryToExcel(ctx, summary)
+			saveErr := taxManager.SaveTaxSummaryToExcel(ctx, testYear, summary)
 			Expect(saveErr).ToNot(HaveOccurred())
 
 			// Verify that the file was created
-			filePath := kohanConfig.Tax.YearlySummaryPath
+			filePath := filepath.Join(kohanConfig.Tax.TaxDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
 			Expect(filePath).Should(BeARegularFile())
 
 			// Open the generated file to verify its integrity and sheets
@@ -273,6 +282,21 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 				_, sheetErr := f.GetRows(sheetName)
 				Expect(sheetErr).ToNot(HaveOccurred(), "Sheet '%s' should exist and be readable", sheetName)
 			}
+		})
+	})
+
+	Context("Account CSV Generation", func() {
+		It("should generate a CSV file with year-end account data", func() {
+			// Get the tax summary, which triggers the CSV generation
+			_, err := taxManager.GetTaxSummary(ctx, testYear)
+			Expect(err).ToNot(HaveOccurred())
+
+			// Define the expected path for the generated CSV
+			expectedCsvPath := filepath.Join(kohanConfig.Tax.TaxDir, "accounts_2023.csv")
+			defer os.Remove(expectedCsvPath)
+
+			// Verify that the file was created
+			Expect(expectedCsvPath).Should(BeARegularFile())
 		})
 	})
 })

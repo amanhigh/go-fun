@@ -288,10 +288,10 @@ helm-package:
 setup-tools:
 	printf $(_TITLE) "Setting up Tools"
 	go install github.com/onsi/ginkgo/v2/ginkgo
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.3.0
 	go install github.com/swaggo/swag/cmd/swag
 	go install golang.org/x/tools/cmd/goimports@latest
-	go install github.com/vektra/mockery/v2@v2.51.1
+	go install github.com/vektra/mockery/v3@v3.5.5
 
 setup-k8: ## Kubernetes Setup
 	printf $(_TITLE) "Setting up Kubernetes"
@@ -353,10 +353,10 @@ generate-swagger:
 	swag i --parseDependency true > $(OUT);\
 	printf $(_INFO) "Swagger" "http://localhost:8080/swagger/index.html";
 
-# Generate mocks across all modules
+# Generate mocks using mockery v3 configuration
 generate-mocks:
 	printf $(_TITLE) "Generate" "Mocks"
-	find . -name "go.mod" -execdir go generate ./... > $(OUT) 2>&1 \;
+	mockery > $(OUT) 2>&1
 
 generate: generate-mocks generate-swagger ## Generate Files
 

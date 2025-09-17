@@ -21,7 +21,6 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.10.0
 	github.com/xuri/excelize/v2 v2.9.1
-	go.uber.org/mock v0.4.0
 )
 
 require (
