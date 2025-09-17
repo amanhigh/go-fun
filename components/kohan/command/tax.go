@@ -85,7 +85,7 @@ var vestedCmd = &cobra.Command{
 			return fmt.Errorf("failed to get drive wealth manager: %w", err)
 		}
 
-		// FIXME: #B Match First Year Summary from Vested.
+		// FIXME: #A Match First Year Summary from Vested (ticker download not working).
 		info, err := driveWealthManager.Parse()
 		if err != nil {
 			return fmt.Errorf("failed to parse drive wealth report: %w", err)
