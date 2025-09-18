@@ -2,6 +2,7 @@ package play_fast_test
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
@@ -110,6 +111,115 @@ var _ = Describe("Watermill", func() {
 				By("Verifying message can be nacked without error")
 				Expect(receivedMsg.UUID).To(Equal(msg.UUID))
 				Expect(string(receivedMsg.Payload)).To(Equal(testPayload))
+			})
+		})
+
+		Context("Multiple Messages", func() {
+			Context("Batch Publishing", func() {
+				var (
+					msg1, msg2, msg3 *message.Message
+					receivedMsgs     []*message.Message
+					expectedPayloads []string
+				)
+
+				BeforeEach(func() {
+					expectedPayloads = []string{"payload-1", "payload-2", "payload-3"}
+					msg1 = message.NewMessage(watermill.NewUUID(), []byte(expectedPayloads[0]))
+					msg2 = message.NewMessage(watermill.NewUUID(), []byte(expectedPayloads[1]))
+					msg3 = message.NewMessage(watermill.NewUUID(), []byte(expectedPayloads[2]))
+
+					By("Publishing multiple messages at once")
+					err = publisher.Publish(testTopic, msg1, msg2, msg3)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("Receiving all published messages")
+					receivedMsgs = make([]*message.Message, 0, 3)
+					for i := 0; i < 3; i++ {
+						select {
+						case receivedMsg := <-messages:
+							Expect(receivedMsg).NotTo(BeNil())
+							receivedMsgs = append(receivedMsgs, receivedMsg)
+						case <-ctx.Done():
+							Fail("Timeout waiting for message")
+						}
+					}
+				})
+
+				// BATCH: Publishing multiple messages in single operation (order not guaranteed)
+				// Important: Different pub/sub implementations have different ordering guarantees:
+				// - GoChannel (in-memory): No FIFO guarantee for batch operations
+				// - Kafka: Preserves order within partitions
+				// - RabbitMQ: Order depends on configuration
+				// Batch publishing is about throughput and efficiency, not ordering guarantees
+				It("should publish and receive all messages", func() {
+					Expect(receivedMsgs).To(HaveLen(3))
+
+					receivedPayloads := make([]string, len(receivedMsgs))
+					for i, msg := range receivedMsgs {
+						receivedPayloads[i] = string(msg.Payload)
+					}
+					Expect(receivedPayloads).To(ContainElements(expectedPayloads))
+				})
+			})
+
+			Context("Sequential Processing", func() {
+				var (
+					seqMsgs      []*message.Message
+					receivedMsgs []*message.Message
+				)
+
+				BeforeEach(func() {
+					seqMsgs = make([]*message.Message, 3)
+					for i := 0; i < 3; i++ {
+						payload := fmt.Sprintf("sequence-%d", i+1)
+						seqMsgs[i] = message.NewMessage(watermill.NewUUID(), []byte(payload))
+					}
+
+					By("Publishing messages with sequence numbers")
+					err = publisher.Publish(testTopic, seqMsgs...)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("Receiving messages for processing")
+					receivedMsgs = make([]*message.Message, 0, 3)
+					for i := 0; i < 3; i++ {
+						select {
+						case receivedMsg := <-messages:
+							Expect(receivedMsg).NotTo(BeNil())
+							receivedMsgs = append(receivedMsgs, receivedMsg)
+						case <-ctx.Done():
+							Fail("Timeout waiting for message")
+						}
+					}
+				})
+
+				// SEQUENCE: All sequence messages received
+				It("should process all sequence messages", func() {
+					receivedPayloads := make([]string, len(receivedMsgs))
+					for i, msg := range receivedMsgs {
+						receivedPayloads[i] = string(msg.Payload)
+					}
+					expectedSequences := []string{"sequence-1", "sequence-2", "sequence-3"}
+					Expect(receivedPayloads).To(ContainElements(expectedSequences))
+				})
+
+				// MIXED RESPONSES: Real-world ack/nack scenarios
+				It("should handle mixed ack/nack scenarios", func() {
+					By("Acking first received message")
+					receivedMsgs[0].Ack()
+
+					By("Nacking second received message")
+					receivedMsgs[1].Nack()
+
+					By("Acking third received message")
+					receivedMsgs[2].Ack()
+
+					By("Verifying all operations completed without error")
+					Expect(receivedMsgs).To(HaveLen(3))
+					for _, msg := range receivedMsgs {
+						payload := string(msg.Payload)
+						Expect(payload).To(MatchRegexp("sequence-[1-3]"))
+					}
+				})
 			})
 		})
 	})
