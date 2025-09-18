@@ -20,18 +20,21 @@ var _ = Describe("Watermill", func() {
 		err        error
 		ctx        context.Context
 		cancel     context.CancelFunc
+		pubSub     *gochannel.GoChannel
 	)
 
 	const (
 		testTopic   = "test-topic"
 		testPayload = "test-payload"
+		inputTopic  = "input-topic"
+		outputTopic = "output-topic"
 	)
 
 	BeforeEach(func() {
 		logger = watermill.NewStdLogger(false, false)
 		ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 
-		pubSub := gochannel.NewGoChannel(
+		pubSub = gochannel.NewGoChannel(
 			gochannel.Config{},
 			logger,
 		)
@@ -41,9 +44,12 @@ var _ = Describe("Watermill", func() {
 	})
 
 	AfterEach(func() {
-		cancel()
-		publisher.Close()
-		subscriber.Close()
+		if cancel != nil {
+			cancel()
+		}
+		if pubSub != nil {
+			pubSub.Close()
+		}
 	})
 
 	It("should build publisher and subscriber", func() {
@@ -221,6 +227,69 @@ var _ = Describe("Watermill", func() {
 					}
 				})
 			})
+		})
+	})
+
+	Context("Router", func() {
+		var (
+			router         *message.Router
+			outputMessages <-chan *message.Message
+		)
+
+		BeforeEach(func() {
+			router, err = message.NewRouter(message.RouterConfig{}, logger)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(router).NotTo(BeNil())
+
+			// Subscribe to output topic to capture produced messages
+			outputMessages, err = pubSub.Subscribe(ctx, outputTopic)
+			Expect(err).NotTo(HaveOccurred())
+
+			// TRANSFORM: Handler that transforms input to output message
+			transformHandler := func(msg *message.Message) ([]*message.Message, error) {
+				outputPayload := fmt.Sprintf("processed-%s", string(msg.Payload))
+				outputMsg := message.NewMessage(watermill.NewUUID(), []byte(outputPayload))
+				return []*message.Message{outputMsg}, nil
+			}
+
+			router.AddHandler(
+				"transform-handler",
+				inputTopic,
+				pubSub,
+				outputTopic,
+				pubSub,
+				transformHandler,
+			)
+		})
+
+		AfterEach(func() {
+			router.Close()
+		})
+
+		// TRANSFORM: Router handlers can transform and route messages to other topics
+		// This test covers: router creation, handler registration, message processing, and topic routing
+		It("should transform and route messages", func() {
+			By("Starting the router")
+			go router.Run(ctx)
+			defer router.Close()
+
+			// Wait for router to start
+			<-router.Running()
+
+			By("Publishing message to input topic")
+			inputMsg := message.NewMessage(watermill.NewUUID(), []byte("transform-me"))
+			err = pubSub.Publish(inputTopic, inputMsg)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Receiving transformed message from output topic")
+			select {
+			case outputMsg := <-outputMessages:
+				Expect(outputMsg).NotTo(BeNil())
+				Expect(string(outputMsg.Payload)).To(Equal("processed-transform-me"))
+				outputMsg.Ack()
+			case <-ctx.Done():
+				Fail("Timeout waiting for output message")
+			}
 		})
 	})
 })
