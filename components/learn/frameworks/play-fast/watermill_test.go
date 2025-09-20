@@ -238,74 +238,75 @@ var _ = Describe("Watermill", func() {
 		)
 
 		BeforeEach(func() {
-			router, err = message.NewRouter(message.RouterConfig{}, logger)
+			router, err = message.NewRouter(message.RouterConfig{
+				CloseTimeout: 50 * time.Millisecond, // Ultra-aggressive cleanup timeout for tests
+			}, logger)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(router).NotTo(BeNil())
 
 			// Subscribe to output topic to capture produced messages
 			outputMessages, err = pubSub.Subscribe(ctx, outputTopic)
 			Expect(err).NotTo(HaveOccurred())
-
-			// TRANSFORM: Handler that transforms input to output message
-			transformHandler := func(msg *message.Message) ([]*message.Message, error) {
-				outputPayload := fmt.Sprintf("processed-%s", string(msg.Payload))
-				outputMsg := message.NewMessage(watermill.NewUUID(), []byte(outputPayload))
-				return []*message.Message{outputMsg}, nil
-			}
-
-			router.AddHandler(
-				"transform-handler",
-				inputTopic,
-				pubSub,
-				outputTopic,
-				pubSub,
-				transformHandler,
-			)
 		})
 
 		AfterEach(func() {
 			router.Close()
 		})
 
-		// TRANSFORM: Router handlers can transform and route messages to other topics
-		// This test covers: router creation, handler registration, message processing, and topic routing
-		It("should transform and route messages", func() {
-			By("Starting the router")
-			go router.Run(ctx)
-			defer router.Close()
+		Context("Transform Handler", func() {
+			BeforeEach(func() {
+				// TRANSFORM: Handler that transforms input to output message
+				transformHandler := func(msg *message.Message) ([]*message.Message, error) {
+					outputPayload := fmt.Sprintf("processed-%s", string(msg.Payload))
+					outputMsg := message.NewMessage(watermill.NewUUID(), []byte(outputPayload))
+					return []*message.Message{outputMsg}, nil
+				}
 
-			// Wait for router to start
-			<-router.Running()
+				router.AddHandler(
+					"transform-handler",
+					inputTopic,
+					pubSub,
+					outputTopic,
+					pubSub,
+					transformHandler,
+				)
+			})
 
-			By("Publishing message to input topic")
-			inputMsg := message.NewMessage(watermill.NewUUID(), []byte("transform-me"))
-			err = pubSub.Publish(inputTopic, inputMsg)
-			Expect(err).NotTo(HaveOccurred())
+			// TRANSFORM: Router handlers can transform and route messages to other topics
+			// This test covers: router creation, handler registration, message processing, and topic routing
+			It("should transform and route messages", func() {
+				By("Starting the router")
+				go router.Run(ctx)
+				defer router.Close()
 
-			By("Receiving transformed message from output topic")
-			select {
-			case outputMsg := <-outputMessages:
-				Expect(outputMsg).NotTo(BeNil())
-				Expect(string(outputMsg.Payload)).To(Equal("processed-transform-me"))
-				outputMsg.Ack()
-			case <-ctx.Done():
-				Fail("Timeout waiting for output message")
-			}
+				// Wait for router to start
+				<-router.Running()
+
+				By("Publishing message to input topic")
+				inputMsg := message.NewMessage(watermill.NewUUID(), []byte("transform-me"))
+				err = pubSub.Publish(inputTopic, inputMsg)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Receiving transformed message from output topic")
+				select {
+				case outputMsg := <-outputMessages:
+					Expect(outputMsg).NotTo(BeNil())
+					Expect(string(outputMsg.Payload)).To(Equal("processed-transform-me"))
+					outputMsg.Ack()
+				case <-ctx.Done():
+					Fail("Timeout waiting for output message")
+				}
+			})
 		})
 
 		Context("Consumer Handler", func() {
 			var (
-				router            *message.Router
 				consumedMessages  []string
 				publishedMessages []string
 				mu                sync.Mutex
 			)
 
 			BeforeEach(func() {
-				router, err = message.NewRouter(message.RouterConfig{}, logger)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(router).NotTo(BeNil())
-
 				// Reset message tracking
 				mu.Lock()
 				consumedMessages = []string{}
@@ -313,15 +314,8 @@ var _ = Describe("Watermill", func() {
 				mu.Unlock()
 			})
 
-			AfterEach(func() {
-				if router != nil {
-					router.Close()
-				}
-			})
-
-			// LIFECYCLE: Complete consumer handler lifecycle demonstration
-			It("should demonstrate complete consumer handler lifecycle", func() {
-				By("Creating consumer handler with processing and conditional publishing")
+			BeforeEach(func() {
+				// LIFECYCLE: Consumer handler setup with processing and conditional publishing
 				consumerHandler := func(msg *message.Message) error {
 					// CONSUME: Track all received messages
 					mu.Lock()
@@ -348,7 +342,10 @@ var _ = Describe("Watermill", func() {
 					pubSub,
 					consumerHandler,
 				)
+			})
 
+			// LIFECYCLE: Complete consumer handler lifecycle demonstration
+			It("should demonstrate complete consumer handler lifecycle", func() {
 				By("Starting router and waiting for it to be running")
 				go router.Run(ctx)
 				<-router.Running()
@@ -367,14 +364,14 @@ var _ = Describe("Watermill", func() {
 					mu.Lock()
 					defer mu.Unlock()
 					return append([]string{}, consumedMessages...)
-				}, "2s", "100ms").Should(ContainElements("test-message-1", "publish-me", "test-message-2"))
+				}, "200ms", "10ms").Should(ContainElements("test-message-1", "publish-me", "test-message-2"))
 
 				By("Verifying direct publishing worked for conditional messages")
 				Eventually(func() []string {
 					mu.Lock()
 					defer mu.Unlock()
 					return append([]string{}, publishedMessages...)
-				}, "2s", "100ms").Should(ContainElement("processed-publish-me"))
+				}, "200ms", "10ms").Should(ContainElement("processed-publish-me"))
 			})
 		})
 	})
