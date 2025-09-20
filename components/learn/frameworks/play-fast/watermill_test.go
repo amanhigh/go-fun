@@ -3,6 +3,7 @@ package play_fast_test
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
@@ -290,6 +291,91 @@ var _ = Describe("Watermill", func() {
 			case <-ctx.Done():
 				Fail("Timeout waiting for output message")
 			}
+		})
+
+		Context("Consumer Handler", func() {
+			var (
+				router            *message.Router
+				consumedMessages  []string
+				publishedMessages []string
+				mu                sync.Mutex
+			)
+
+			BeforeEach(func() {
+				router, err = message.NewRouter(message.RouterConfig{}, logger)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(router).NotTo(BeNil())
+
+				// Reset message tracking
+				mu.Lock()
+				consumedMessages = []string{}
+				publishedMessages = []string{}
+				mu.Unlock()
+			})
+
+			AfterEach(func() {
+				if router != nil {
+					router.Close()
+				}
+			})
+
+			// LIFECYCLE: Complete consumer handler lifecycle demonstration
+			It("should demonstrate complete consumer handler lifecycle", func() {
+				By("Creating consumer handler with processing and conditional publishing")
+				consumerHandler := func(msg *message.Message) error {
+					// CONSUME: Track all received messages
+					mu.Lock()
+					consumedMessages = append(consumedMessages, string(msg.Payload))
+					mu.Unlock()
+
+					// DIRECT-PUBLISH: Conditionally publish to output topic
+					if string(msg.Payload) == "publish-me" {
+						outputMsg := message.NewMessage(watermill.NewUUID(), []byte("processed-"+string(msg.Payload)))
+						err := pubSub.Publish(outputTopic, outputMsg)
+						if err == nil {
+							mu.Lock()
+							publishedMessages = append(publishedMessages, string(outputMsg.Payload))
+							mu.Unlock()
+						}
+						return err
+					}
+					return nil
+				}
+
+				router.AddConsumerHandler(
+					"lifecycle-consumer",
+					testTopic,
+					pubSub,
+					consumerHandler,
+				)
+
+				By("Starting router and waiting for it to be running")
+				go router.Run(ctx)
+				<-router.Running()
+				Expect(router.IsRunning()).To(BeTrue())
+
+				By("Publishing test messages to consumer topic")
+				testMsg1 := message.NewMessage(watermill.NewUUID(), []byte("test-message-1"))
+				testMsg2 := message.NewMessage(watermill.NewUUID(), []byte("publish-me"))
+				testMsg3 := message.NewMessage(watermill.NewUUID(), []byte("test-message-2"))
+
+				err = pubSub.Publish(testTopic, testMsg1, testMsg2, testMsg3)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Verifying messages were consumed by handlers")
+				Eventually(func() []string {
+					mu.Lock()
+					defer mu.Unlock()
+					return append([]string{}, consumedMessages...)
+				}, "2s", "100ms").Should(ContainElements("test-message-1", "publish-me", "test-message-2"))
+
+				By("Verifying direct publishing worked for conditional messages")
+				Eventually(func() []string {
+					mu.Lock()
+					defer mu.Unlock()
+					return append([]string{}, publishedMessages...)
+				}, "2s", "100ms").Should(ContainElement("processed-publish-me"))
+			})
 		})
 	})
 })
