@@ -2,17 +2,93 @@ package play_fast_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+// CQRS Domain Objects - Simplest Implementation
+type BookRoom struct {
+	RoomID    string `json:"room_id"`
+	GuestName string `json:"guest_name"`
+}
+
+type RoomBooked struct {
+	RoomID    string `json:"room_id"`
+	GuestName string `json:"guest_name"`
+	Price     int64  `json:"price"`
+}
+
+type BookRoomHandler struct {
+	eventBus *cqrs.EventBus
+}
+
+func (h BookRoomHandler) Handle(ctx context.Context, cmd *BookRoom) error {
+	return h.eventBus.Publish(ctx, &RoomBooked{
+		RoomID:    cmd.RoomID,
+		GuestName: cmd.GuestName,
+		Price:     100, // Fixed price for simplicity
+	})
+}
+
+type FinancialReport struct {
+	events  *[]string
+	revenue *int64
+	mutex   sync.Mutex
+}
+
+func NewFinancialReport(events *[]string, revenue *int64) *FinancialReport {
+	return &FinancialReport{
+		events:  events,
+		revenue: revenue,
+	}
+}
+
+func (f *FinancialReport) Handle(_ context.Context, event *RoomBooked) error {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+
+	*f.events = append(*f.events, "RoomBooked")
+	*f.revenue += event.Price
+	return nil
+}
+
+type WelcomeEmailService struct {
+	emails []string
+	mutex  sync.Mutex
+}
+
+func NewWelcomeEmailService() *WelcomeEmailService {
+	return &WelcomeEmailService{
+		emails: []string{},
+	}
+}
+
+func (w *WelcomeEmailService) Handle(_ context.Context, event *RoomBooked) error {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
+	emailContent := fmt.Sprintf("Welcome %s! Your room %s is confirmed.",
+		event.GuestName, event.RoomID)
+	w.emails = append(w.emails, emailContent)
+
+	return nil
+}
+
+func (w *WelcomeEmailService) GetEmails() []string {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+	return append([]string{}, w.emails...) // Return copy for thread safety
+}
 
 var _ = Describe("Watermill", func() {
 	var (
@@ -854,6 +930,146 @@ var _ = Describe("Watermill", func() {
 					}
 				}).Should(BeTrue())
 			})
+		})
+	})
+
+	Context("CQRS - Event-Driven Architecture", func() {
+		var (
+			router           *message.Router
+			commandBus       *cqrs.CommandBus
+			eventBus         *cqrs.EventBus
+			commandProcessor *cqrs.CommandProcessor
+			eventProcessor   *cqrs.EventProcessor
+
+			bookRoomHandler     BookRoomHandler
+			financialReport     *FinancialReport
+			welcomeEmailService *WelcomeEmailService
+
+			roomID    string
+			guestName string
+
+			receivedEvents []string
+			totalRevenue   int64
+		)
+
+		BeforeEach(func() {
+			pubSub = gochannel.NewGoChannel(gochannel.Config{}, logger)
+
+			router, err = message.NewRouter(message.RouterConfig{}, logger)
+			Expect(err).ToNot(HaveOccurred())
+
+			commandBus, err = cqrs.NewCommandBusWithConfig(pubSub, cqrs.CommandBusConfig{
+				GeneratePublishTopic: func(params cqrs.CommandBusGeneratePublishTopicParams) (string, error) {
+					return "commands." + params.CommandName, nil
+				},
+				Marshaler: cqrs.JSONMarshaler{},
+				Logger:    logger,
+			})
+			Expect(err).ToNot(HaveOccurred())
+
+			eventBus, err = cqrs.NewEventBusWithConfig(pubSub, cqrs.EventBusConfig{
+				GeneratePublishTopic: func(params cqrs.GenerateEventPublishTopicParams) (string, error) {
+					return "events." + params.EventName, nil
+				},
+				Marshaler: cqrs.JSONMarshaler{},
+				Logger:    logger,
+			})
+			Expect(err).ToNot(HaveOccurred())
+
+			commandProcessor, err = cqrs.NewCommandProcessorWithConfig(router, cqrs.CommandProcessorConfig{
+				GenerateSubscribeTopic: func(params cqrs.CommandProcessorGenerateSubscribeTopicParams) (string, error) {
+					return "commands." + params.CommandName, nil
+				},
+				SubscriberConstructor: func(_ cqrs.CommandProcessorSubscriberConstructorParams) (message.Subscriber, error) {
+					return pubSub, nil
+				},
+				Marshaler: cqrs.JSONMarshaler{},
+				Logger:    logger,
+			})
+			Expect(err).ToNot(HaveOccurred())
+
+			eventProcessor, err = cqrs.NewEventProcessorWithConfig(router, cqrs.EventProcessorConfig{
+				GenerateSubscribeTopic: func(params cqrs.EventProcessorGenerateSubscribeTopicParams) (string, error) {
+					return "events." + params.EventName, nil
+				},
+				SubscriberConstructor: func(_ cqrs.EventProcessorSubscriberConstructorParams) (message.Subscriber, error) {
+					return pubSub, nil
+				},
+				Marshaler: cqrs.JSONMarshaler{},
+				Logger:    logger,
+			})
+			Expect(err).ToNot(HaveOccurred())
+
+			receivedEvents = []string{}
+			totalRevenue = 0
+
+			bookRoomHandler = BookRoomHandler{eventBus: eventBus}
+			financialReport = NewFinancialReport(&receivedEvents, &totalRevenue)
+			welcomeEmailService = NewWelcomeEmailService()
+
+			err = commandProcessor.AddHandlers(
+				cqrs.NewCommandHandler("BookRoomHandler", bookRoomHandler.Handle),
+			)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = eventProcessor.AddHandlers(
+				cqrs.NewEventHandler("FinancialReport", financialReport.Handle),
+				cqrs.NewEventHandler("WelcomeEmailService", welcomeEmailService.Handle),
+			)
+			Expect(err).ToNot(HaveOccurred())
+
+			roomID = "101"
+			guestName = "John Doe"
+
+			go func() {
+				defer GinkgoRecover()
+				err := router.Run(ctx)
+				if err != nil && !errors.Is(err, context.Canceled) {
+					panic(err)
+				}
+			}()
+
+			time.Sleep(100 * time.Millisecond)
+		})
+
+		AfterEach(func() {
+			if router != nil {
+				router.Close()
+			}
+		})
+
+		It("should demonstrate CQRS fan-out: 1 Command → 1 Event → Multiple Handlers", func() {
+			bookRoomCmd := &BookRoom{
+				RoomID:    roomID,
+				GuestName: guestName,
+			}
+
+			err := commandBus.Send(ctx, bookRoomCmd)
+			Expect(err).ToNot(HaveOccurred())
+
+			// Verify Financial Report Handler processed the event
+			Eventually(func() []string {
+				return receivedEvents
+			}, "5s", "100ms").Should(ContainElement("RoomBooked"))
+
+			Eventually(func() int64 {
+				return totalRevenue
+			}, "5s", "100ms").Should(Equal(int64(100)))
+
+			// Verify Welcome Email Handler processed the same event
+			Eventually(func() []string {
+				return welcomeEmailService.GetEmails()
+			}, "5s", "100ms").Should(HaveLen(1))
+
+			// Verify email content
+			emails := welcomeEmailService.GetEmails()
+			Expect(emails[0]).To(ContainSubstring("Welcome John Doe"))
+			Expect(emails[0]).To(ContainSubstring("room 101"))
+
+			// Verify both handlers processed the SAME event independently
+			Expect(receivedEvents).To(HaveLen(1))
+			Expect(totalRevenue).To(Equal(int64(100)))
+			Expect(emails).To(HaveLen(1))
 		})
 	})
 })
