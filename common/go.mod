@@ -49,8 +49,8 @@ require (
 	github.com/jackc/pgx/v5 v5.4.3 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/stretchr/testify v1.10.0 // indirect
-	golang.org/x/sync v0.14.0 // indirect
+	github.com/stretchr/testify v1.11.0 // indirect
+	golang.org/x/sync v0.15.0 // indirect
 	modernc.org/libc v1.22.5 // indirect
 	modernc.org/mathutil v1.5.0 // indirect
 	modernc.org/memory v1.5.0 // indirect
@@ -86,7 +86,7 @@ require (
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/pprof v0.0.0-20230323073829-e72429f035bd // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0 // indirect
@@ -95,7 +95,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.16.5 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
@@ -130,11 +130,11 @@ require (
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea // indirect
 	golang.org/x/mod v0.17.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240528184218-531527333157 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
-	google.golang.org/protobuf v1.34.2 // indirect
+	google.golang.org/protobuf v1.36.8 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

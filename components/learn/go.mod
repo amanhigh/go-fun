@@ -5,6 +5,7 @@ go 1.23.0
 toolchain go1.23.8
 
 require (
+	github.com/ThreeDotsLabs/watermill v1.5.1
 	github.com/amanhigh/go-fun/common v1.0.1
 	github.com/amanhigh/go-fun/components/operator v0.0.0-20231105173700-27dd61fe1606
 	github.com/amanhigh/go-fun/models v1.0.3
@@ -43,8 +44,8 @@ require (
 require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Microsoft/hcsshim v0.11.4 // indirect
-	github.com/ThreeDotsLabs/watermill v1.5.1 // indirect
 	github.com/bits-and-blooms/bitset v1.13.0 // indirect
+	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/containerd/containerd v1.7.11 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/cpuguy83/dockercfg v0.3.1 // indirect
@@ -67,6 +68,7 @@ require (
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/shirou/gopsutil/v3 v3.23.11 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
+	github.com/sony/gobreaker v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
@@ -174,7 +176,6 @@ require (
 	github.com/yuin/goldmark v1.7.0
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/fx v1.20.1
-	go.uber.org/goleak v1.3.0 // indirect
 	golang.design/x/clipboard v0.7.0
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/mod v0.17.0 // indirect
