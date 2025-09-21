@@ -374,5 +374,99 @@ var _ = Describe("Watermill", func() {
 				}, "200ms", "10ms").Should(ContainElement("processed-publish-me"))
 			})
 		})
+
+		Context("Auto Ack Test", func() {
+			var (
+				capturedMsg *message.Message
+				processed   chan struct{}
+			)
+
+			BeforeEach(func() {
+				processed = make(chan struct{})
+
+				// Simple handler that stores message reference and succeeds
+				autoHandler := func(msg *message.Message) error {
+					capturedMsg = msg // Store message reference
+					close(processed)  // Signal handler completion
+					return nil        // Router will ack AFTER this returns
+				}
+
+				router.AddConsumerHandler(
+					"auto-ack-handler",
+					testTopic,
+					pubSub,
+					autoHandler,
+				)
+			})
+
+			It("should automatically ack successful messages", func() {
+				By("Starting router and waiting for it to be running")
+				go router.Run(ctx)
+				<-router.Running()
+
+				By("Publishing message")
+				msg := message.NewMessage(watermill.NewUUID(), []byte("test"))
+				err = pubSub.Publish(testTopic, msg)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Waiting for handler to complete processing")
+				Eventually(processed).Should(BeClosed())
+
+				By("Verifying Router automatically acked the message")
+				Eventually(capturedMsg.Acked()).Should(BeClosed())
+
+				By("Verifying Router did NOT nack the message")
+				Consistently(capturedMsg.Nacked(), "100ms", "10ms").ShouldNot(BeClosed())
+			})
+		})
+
+		Context("Auto Nack Test", func() {
+			var (
+				capturedMsg *message.Message
+				processed   chan struct{}
+				once        sync.Once
+			)
+
+			BeforeEach(func() {
+				processed = make(chan struct{})
+				once = sync.Once{}
+
+				// Simple handler that stores message reference and fails
+				autoHandler := func(msg *message.Message) error {
+					once.Do(func() {
+						capturedMsg = msg // Store message reference (only first time)
+						close(processed)  // Signal handler completion (only once)
+					})
+					return fmt.Errorf("intentional handler error") // Router will nack AFTER this returns
+				}
+
+				router.AddConsumerHandler(
+					"auto-nack-handler",
+					testTopic,
+					pubSub,
+					autoHandler,
+				)
+			})
+
+			It("should automatically nack failed messages", func() {
+				By("Starting router and waiting for it to be running")
+				go router.Run(ctx)
+				<-router.Running()
+
+				By("Publishing message")
+				msg := message.NewMessage(watermill.NewUUID(), []byte("test"))
+				err = pubSub.Publish(testTopic, msg)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Waiting for handler to complete processing")
+				Eventually(processed).Should(BeClosed())
+
+				By("Verifying Router automatically nacked the message")
+				Eventually(capturedMsg.Nacked()).Should(BeClosed())
+
+				By("Verifying Router did NOT ack the message")
+				Consistently(capturedMsg.Acked(), "100ms", "10ms").ShouldNot(BeClosed())
+			})
+		})
 	})
 })
