@@ -3,7 +3,7 @@
 # Silent: -s, Keepgoing -k, 
 # Paraller Jobs: -j2
 ### Calls
-# Override Vars: make test-it COVER_DIR=./test
+# Override Vars: make cover COVER_DIR=./test
 # Call Target: $(MAKE) --no-print-directory XTRA=ISTIO bootstrap
 # Make In Directory: make -C /path/to/dir
 # Continue Step or error: Start with `-`. Eg. -rm test.txt
@@ -57,7 +57,7 @@ test-operator:
 
 test-unit:
 	printf $(_TITLE) "Running Unit Tests"
-	ginkgo -r '--label-filter=!setup && !slow' -cover . > $(OUT)
+	ginkgo -r --label-filter=\!setup\ \&\&\ \!slow -cover . > $(OUT)
 
 test-slow: ## Run slow tests
 	printf $(_TITLE) "Running Slow Tests"
@@ -81,7 +81,8 @@ test-focus:
 	printf $(_TITLE) "Running Focus Tests"
 	ginkgo --focus "should create & get person" $(FUN_DIR)/it > $(OUT)
 
-test-it: run-fun-cover test-unit cover-analyse
+cover: run-fun-cover test-unit cover-analyse ## Show comprehensive coverage (unit + integration)
+	-pkill -f "bin/fun" 2>/dev/null
 test-clean:
 	printf $(_WARN) "Cleaning Tests"
 	rm -rf $(COVER_DIR)
@@ -361,7 +362,7 @@ generate-mocks:
 generate: generate-mocks generate-swagger ## Generate Files
 
 ### Workflows
-test: test-operator test-it ## Run all tests (Excludes test-slow)
+test: test-operator cover ## Run all tests (Excludes test-slow)
 build: format lint build-fun build-kohan ## Build all Binaries
 
 info: info-release info-docker ## Repo Information
