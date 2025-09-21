@@ -8,6 +8,7 @@ import (
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -635,6 +636,223 @@ var _ = Describe("Watermill", func() {
 				// We can verify both handlers are stopped as evidence of router closure
 				Expect(handler1.Stopped()).To(BeClosed())
 				Expect(handler2.Stopped()).To(BeClosed())
+			})
+		})
+	})
+
+	Context("Router Middleware", func() {
+		var (
+			router      *message.Router
+			processed   chan bool
+			failCount   int
+			maxFailures int
+		)
+
+		BeforeEach(func() {
+			router, err = message.NewRouter(message.RouterConfig{}, logger)
+			Expect(err).NotTo(HaveOccurred())
+
+			processed = make(chan bool, 1)
+			failCount = 0
+		})
+
+		AfterEach(func() {
+			if router != nil {
+				router.Close()
+			}
+		})
+
+		Context("Retry Middleware", func() {
+			BeforeEach(func() {
+				maxFailures = 2 // Fail twice, succeed on third attempt
+
+				// Add retry middleware with 3 max retries
+				router.AddMiddleware(
+					middleware.Retry{
+						MaxRetries:      3,
+						InitialInterval: 10 * time.Millisecond,
+						Logger:          logger,
+					}.Middleware,
+				)
+
+				// Handler that fails first two times, succeeds on third
+				router.AddConsumerHandler(
+					"retry-test-handler",
+					testTopic,
+					pubSub,
+					func(_ *message.Message) error {
+						failCount++
+						if failCount <= maxFailures {
+							return fmt.Errorf("simulated failure %d", failCount)
+						}
+						processed <- true
+						return nil
+					},
+				)
+			})
+
+			It("should retry handler on failure then succeed", func() {
+				go router.Run(ctx)
+				<-router.Running()
+
+				err = router.RunHandlers(ctx)
+				Expect(err).NotTo(HaveOccurred())
+
+				// Publish message
+				msg := message.NewMessage(watermill.NewUUID(), []byte(testPayload))
+				err = pubSub.Publish(testTopic, msg)
+				Expect(err).NotTo(HaveOccurred())
+
+				// Should eventually succeed after retries
+				Eventually(processed).Should(Receive(Equal(true)))
+				Expect(failCount).To(Equal(3)) // 2 failures + 1 success
+			})
+		})
+
+		Context("Timeout Middleware", func() {
+			var timeout time.Duration
+
+			BeforeEach(func() {
+				timeout = 50 * time.Millisecond
+
+				// Add timeout middleware
+				router.AddMiddleware(
+					middleware.Timeout(timeout),
+				)
+
+				// Handler that takes longer than timeout
+				router.AddConsumerHandler(
+					"timeout-test-handler",
+					testTopic,
+					pubSub,
+					func(msg *message.Message) error {
+						select {
+						case <-msg.Context().Done():
+							// Context cancelled due to timeout
+							processed <- true
+							return msg.Context().Err()
+						case <-time.After(200 * time.Millisecond):
+							// Should not reach here due to timeout
+							return nil
+						}
+					},
+				)
+			})
+
+			It("should timeout long-running handler", func() {
+				go router.Run(ctx)
+				<-router.Running()
+
+				err = router.RunHandlers(ctx)
+				Expect(err).NotTo(HaveOccurred())
+
+				// Publish message
+				msg := message.NewMessage(watermill.NewUUID(), []byte(testPayload))
+				err = pubSub.Publish(testTopic, msg)
+				Expect(err).NotTo(HaveOccurred())
+
+				// Should receive timeout signal
+				Eventually(processed).Should(Receive(Equal(true)))
+			})
+		})
+
+		Context("Deduplicator Middleware", func() {
+			var processCount int
+
+			BeforeEach(func() {
+				processCount = 0
+
+				// Add deduplicator middleware with default settings
+				router.AddMiddleware(
+					(&middleware.Deduplicator{}).Middleware,
+				)
+
+				// Handler that counts processed messages
+				router.AddConsumerHandler(
+					"dedup-test-handler",
+					testTopic,
+					pubSub,
+					func(_ *message.Message) error {
+						processCount++
+						processed <- true
+						return nil
+					},
+				)
+			})
+
+			It("should drop duplicate messages", func() {
+				go router.Run(ctx)
+				<-router.Running()
+
+				err = router.RunHandlers(ctx)
+				Expect(err).NotTo(HaveOccurred())
+
+				// Publish same message twice (same payload = same hash)
+				msg1 := message.NewMessage(watermill.NewUUID(), []byte("duplicate-content"))
+				msg2 := message.NewMessage(watermill.NewUUID(), []byte("duplicate-content"))
+
+				err = pubSub.Publish(testTopic, msg1)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = pubSub.Publish(testTopic, msg2)
+				Expect(err).NotTo(HaveOccurred())
+
+				// Should only process first message, second should be dropped
+				Eventually(processed).Should(Receive(Equal(true)))
+				Consistently(processed, 100*time.Millisecond).ShouldNot(Receive())
+				Expect(processCount).To(Equal(1)) // Only first message processed
+			})
+		})
+
+		Context("Poison Queue Middleware", func() {
+			var (
+				poisonTopic    = "poison-topic"
+				poisonMessages <-chan *message.Message
+			)
+
+			BeforeEach(func() {
+				// Subscribe to poison topic to capture poisoned messages
+				var err error
+				poisonMessages, err = pubSub.Subscribe(ctx, poisonTopic)
+				Expect(err).NotTo(HaveOccurred())
+
+				// Add poison queue middleware
+				poisonMiddleware, err := middleware.PoisonQueue(pubSub, poisonTopic)
+				Expect(err).NotTo(HaveOccurred())
+				router.AddMiddleware(poisonMiddleware)
+
+				// Handler that always fails
+				router.AddConsumerHandler(
+					"poison-test-handler",
+					testTopic,
+					pubSub,
+					func(_ *message.Message) error {
+						return fmt.Errorf("unprocessable message")
+					},
+				)
+			})
+
+			It("should send failing messages to poison queue", func() {
+				go router.Run(ctx)
+				<-router.Running()
+
+				err = router.RunHandlers(ctx)
+				Expect(err).NotTo(HaveOccurred())
+
+				// Publish a message that will fail
+				msg := message.NewMessage(watermill.NewUUID(), []byte("failing-message"))
+				err = pubSub.Publish(testTopic, msg)
+				Expect(err).NotTo(HaveOccurred())
+
+				// Should receive the message on poison queue
+				Eventually(func() bool {
+					select {
+					case poisonMsg := <-poisonMessages:
+						return string(poisonMsg.Payload) == "failing-message"
+					default:
+						return false
+					}
+				}).Should(BeTrue())
 			})
 		})
 	})
