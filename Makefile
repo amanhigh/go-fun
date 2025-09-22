@@ -19,14 +19,16 @@ COMPONENT_DIR := ./components
 FUN_DIR := $(COMPONENT_DIR)/fun-app
 BIN_DIR := bin
 
-COVER_DIR:= /tmp/cover
-PROFILE_FILE:= $(COVER_DIR)/integration-coverage.out
+# Coverage directories for binary coverage data
+COVER_DIR := /tmp/cover
+UNIT_COVER_DIR := $(COVER_DIR)/unit
+INTEGRATION_COVER_DIR := $(COVER_DIR)/integration  
+OPERATOR_COVER_DIR := $(COVER_DIR)/operator
+SLOW_COVER_DIR := $(COVER_DIR)/slow
 
-# Coverage file names with descriptive names
-UNIT_COVERAGE_FILE := ./unit-coverage.out
-INTEGRATION_COVERAGE_FILE := $(COVER_DIR)/integration-coverage.out
-OPERATOR_COVERAGE_FILE := ./components/operator/operator-coverage.out
-SLOW_COVERAGE_FILE := ./slow-coverage.out
+# Combined coverage file (only one needed for GitHub Actions)
+COMBINED_COVERAGE_FILE := $(COVER_DIR)/coverage-combined.out
+PROFILE_FILE := $(COMBINED_COVERAGE_FILE)
 
 FUN_IMAGE_TAG := amanfdk/fun-app
 
@@ -59,24 +61,23 @@ format: ## Format Go code with goimports
 ### Testing
 test-operator:
 	printf $(_TITLE) "Running Operator Tests"
-	make -C $(COMPONENT_DIR)/operator/ test > $(OUT)
+	make -C $(COMPONENT_DIR)/operator/ test GOCOVERDIR=$(OPERATOR_COVER_DIR) > $(OUT)
 
 test-unit:
 	printf $(_TITLE) "Running Unit Tests"
-	mkdir -p $(COVER_DIR)
-	ginkgo -r --label-filter=\!setup\ \&\&\ \!slow -cover --coverprofile=$(UNIT_COVERAGE_FILE) . > $(OUT)
+	mkdir -p $(UNIT_COVER_DIR)
+	# Generate binary coverage for accurate merging
+	ginkgo -r --label-filter=\!setup\ \&\&\ \!slow -cover . -- -test.gocoverdir=$(UNIT_COVER_DIR) > $(OUT)
 
 test-slow: ## Run slow tests
 	printf $(_TITLE) "Running Slow Tests"
-	mkdir -p $(COVER_DIR)
-	ginkgo -r '--label-filter=slow' -cover --coverprofile=$(SLOW_COVERAGE_FILE) . > $(OUT)
+	mkdir -p $(SLOW_COVER_DIR)
+	# Generate binary coverage for accurate merging  
+	ginkgo -r '--label-filter=slow' -cover . -- -test.gocoverdir=$(SLOW_COVER_DIR) > $(OUT)
 
-cover-analyse:
+cover-analyse: combine-coverage
 	printf $(_TITLE) "Analysing Coverage Reports"
-	# Generate Cover Profile
-	go tool covdata textfmt -i=$(COVER_DIR) -o $(PROFILE_FILE)
-	
-	# Analyse Cover Profile
+	# Analyse Combined Coverage Profile
 	go tool cover -func=$(PROFILE_FILE) > $(OUT)
 
 	printf $(_TITLE) "Package Summary";
@@ -139,7 +140,7 @@ test-focus:
 	printf $(_TITLE) "Running Focus Tests"
 	ginkgo --focus "should create & get person" $(FUN_DIR)/it > $(OUT)
 
-cover: run-fun-cover test-unit cover-analyse ## Show comprehensive coverage (unit + integration)
+cover: run-fun-cover test-unit test-operator cover-analyse ## Show comprehensive coverage (unit + integration + operator)
 	-pkill -f "bin/fun" 2>/dev/null
 test-clean:
 	printf $(_WARN) "Cleaning Tests"
@@ -336,8 +337,8 @@ watch: ## Watch (entr): `make watch CMD=ls`
 # Guide - https://dustinspecker.com/posts/go-combined-unit-integration-code-coverage/
 run-fun-cover: build-fun-cover
 	printf $(_TITLE) "Running Fun App with Coverage"
-	mkdir -p $(COVER_DIR)
-	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(BIN_DIR)/fun > $(OUT) 2>&1 &
+	mkdir -p $(INTEGRATION_COVER_DIR)
+	GOCOVERDIR=$(INTEGRATION_COVER_DIR) PORT=8085 $(BIN_DIR)/fun > $(OUT) 2>&1 &
 
 ### Helm
 helm-package:
