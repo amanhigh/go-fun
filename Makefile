@@ -28,7 +28,6 @@ SLOW_COVER_DIR := $(COVER_DIR)/slow
 
 # Combined coverage file (only one needed for GitHub Actions)
 COMBINED_COVERAGE_FILE := $(COVER_DIR)/coverage-combined.out
-PROFILE_FILE := $(COMBINED_COVERAGE_FILE)
 
 FUN_IMAGE_TAG := amanfdk/fun-app
 
@@ -78,24 +77,24 @@ test-slow: ## Run slow tests
 cover-analyse: combine-coverage
 	printf $(_TITLE) "Analysing Coverage Reports"
 	# Analyse Combined Coverage Profile
-	go tool cover -func=$(PROFILE_FILE) > $(OUT)
+	go tool cover -func=$(COMBINED_COVERAGE_FILE) > $(OUT)
 
 	printf $(_TITLE) "Package Summary";
 	# Enhanced Coverage Report
 	$(MAKE) --no-print-directory cover-report;
 	echo "";
-	go tool cover -html=$(PROFILE_FILE) -o /tmp/coverage.html 2>$(OUT); \
+	go tool cover -html=$(COMBINED_COVERAGE_FILE) -o /tmp/coverage.html 2>$(OUT); \
 	printf $(_INFO) "HTML Report: file:///tmp/coverage.html";
-	printf $(_INFO) "Vscode" "go.apply.coverprofile $(PROFILE_FILE)";
+	printf $(_INFO) "Vscode" "go.apply.coverprofile $(COMBINED_COVERAGE_FILE)";
 
 cover-report: ## Enhanced coverage report with color-coding and categorization
-	@if [ ! -f "$(PROFILE_FILE)" ]; then \
+	@if [ ! -f "$(COMBINED_COVERAGE_FILE)" ]; then \
 		printf $(_WARN) "No coverage profile found. Run 'make cover' first." ; \
 		exit 1; \
 	fi
 	@printf $(_TITLE) "Coverage Analysis Report"
-	@go tool cover -func=$(PROFILE_FILE) > $(OUT) 2>&1
-	@overall=$$(go tool cover -func=$(PROFILE_FILE) 2>$(OUT) | tail -1 | awk '{print $$3}'); \
+	@go tool cover -func=$(COMBINED_COVERAGE_FILE) > $(OUT) 2>&1
+	@overall=$$(go tool cover -func=$(COMBINED_COVERAGE_FILE) 2>$(OUT) | tail -1 | awk '{print $$3}'); \
 	echo "Overall Coverage: $$overall"
 	@echo ""
 	@printf $(_TITLE) "Packages by Coverage (Lowest to Highest)"
@@ -145,6 +144,24 @@ cover: run-fun-cover test-unit test-operator cover-analyse ## Show comprehensive
 test-clean:
 	printf $(_WARN) "Cleaning Tests"
 	rm -rf $(COVER_DIR)
+
+combine-coverage: ## Combine all binary coverage data into a single comprehensive report
+	printf $(_TITLE) "Combining Binary Coverage Data"
+	@coverage_dirs=""; \
+	for dir in $(UNIT_COVER_DIR) $(INTEGRATION_COVER_DIR) $(OPERATOR_COVER_DIR) $(SLOW_COVER_DIR); do \
+		if [ -d "$$dir" ] && [ -n "$$(ls -A $$dir 2>/dev/null)" ]; then \
+			coverage_dirs="$$coverage_dirs,$$dir"; \
+			printf $(_INFO) "Found coverage data in $$(basename $$dir)"; \
+		fi; \
+	done; \
+	if [ -n "$$coverage_dirs" ]; then \
+		coverage_dirs=$${coverage_dirs#,}; \
+		printf $(_INFO) "Merging coverage from: $$coverage_dirs"; \
+		go tool covdata textfmt -i=$$coverage_dirs -o $(COMBINED_COVERAGE_FILE); \
+		printf $(_SUCCESS) "Combined coverage created: $(COMBINED_COVERAGE_FILE)"; \
+	else \
+		printf $(_WARN) "No coverage data found to combine"; \
+	fi
 
 verify: test-focus ## Verify Basic Fun App Flow
 	printf $(_INFO) "mk watch CMD='make verify'"
