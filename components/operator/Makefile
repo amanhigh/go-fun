@@ -106,7 +106,7 @@ vet: ## Run go vet against code.
 TEST_ASSET_DIR=/tmp/envtest
 
 test: setup-envtest manifests generate fmt vet ## Run tests.
-	KUBEBUILDER_ASSETS=$(TEST_ASSET_DIR)/k8s/$(ENVTEST_K8S_VERSION)-linux-amd64 go test ./... -coverprofile cover.out
+	KUBEBUILDER_ASSETS=$(TEST_ASSET_DIR)/k8s/$(ENVTEST_K8S_VERSION)-linux-amd64 go test ./... -coverprofile operator-coverage.out
 
 # Setup envtest assets in user directory
 setup-envtest: envtest

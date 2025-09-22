@@ -44,7 +44,7 @@ jobs:
       - name: COVERAGE -> Report
         uses: codecov/codecov-action@v3
         with:
-          files: ./coverprofile.out,./components/operator/cover.out,/tmp/cover/profile.out
+          files: ./unit-coverage.out,./components/operator/operator-coverage.out,/tmp/cover/integration-coverage.out
           flags: unittests
           verbose: true
           name: codecov-go-fun

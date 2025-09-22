@@ -20,7 +20,13 @@ FUN_DIR := $(COMPONENT_DIR)/fun-app
 BIN_DIR := bin
 
 COVER_DIR:= /tmp/cover
-PROFILE_FILE:= $(COVER_DIR)/profile.out
+PROFILE_FILE:= $(COVER_DIR)/integration-coverage.out
+
+# Coverage file names with descriptive names
+UNIT_COVERAGE_FILE := ./unit-coverage.out
+INTEGRATION_COVERAGE_FILE := $(COVER_DIR)/integration-coverage.out
+OPERATOR_COVERAGE_FILE := ./components/operator/operator-coverage.out
+SLOW_COVERAGE_FILE := ./slow-coverage.out
 
 FUN_IMAGE_TAG := amanfdk/fun-app
 
@@ -57,11 +63,13 @@ test-operator:
 
 test-unit:
 	printf $(_TITLE) "Running Unit Tests"
-	ginkgo -r --label-filter=\!setup\ \&\&\ \!slow -cover . > $(OUT)
+	mkdir -p $(COVER_DIR)
+	ginkgo -r --label-filter=\!setup\ \&\&\ \!slow -cover --coverprofile=$(UNIT_COVERAGE_FILE) . > $(OUT)
 
 test-slow: ## Run slow tests
 	printf $(_TITLE) "Running Slow Tests"
-	ginkgo -r '--label-filter=slow' -cover . > $(OUT)
+	mkdir -p $(COVER_DIR)
+	ginkgo -r '--label-filter=slow' -cover --coverprofile=$(SLOW_COVERAGE_FILE) . > $(OUT)
 
 cover-analyse:
 	printf $(_TITLE) "Analysing Coverage Reports"
