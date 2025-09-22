@@ -139,15 +139,14 @@ test-focus:
 	printf $(_TITLE) "Running Focus Tests"
 	ginkgo --focus "should create & get person" $(FUN_DIR)/it > $(OUT)
 
-cover: run-fun-cover test-unit test-operator cover-analyse ## Show comprehensive coverage (unit + integration + operator)
-	-pkill -f "bin/fun" 2>/dev/null
+cover: run-fun-cover test-unit cover-analyse ## Show comprehensive coverage (unit + integration)
 test-clean:
 	printf $(_WARN) "Cleaning Tests"
 	rm -rf $(COVER_DIR)
 
 combine-coverage: ## Combine all binary coverage data into a single comprehensive report
 	printf $(_TITLE) "Combining Binary Coverage Data"
-	@coverage_dirs=""; \
+	coverage_dirs=""; \
 	for dir in $(UNIT_COVER_DIR) $(INTEGRATION_COVER_DIR) $(OPERATOR_COVER_DIR) $(SLOW_COVER_DIR); do \
 		if [ -d "$$dir" ] && [ -n "$$(ls -A $$dir 2>/dev/null)" ]; then \
 			coverage_dirs="$$coverage_dirs,$$dir"; \
