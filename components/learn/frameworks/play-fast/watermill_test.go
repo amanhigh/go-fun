@@ -1072,4 +1072,50 @@ var _ = Describe("Watermill", func() {
 			Expect(emails).To(HaveLen(1))
 		})
 	})
+
+	// ================================================================================
+	// OUTBOX PATTERN DOCUMENTATION - Solving the Dual-Write Problem
+	// ================================================================================
+	//
+	// THE PROBLEM:
+	// You need to update a database AND publish an event atomically.
+	// If either fails, the system becomes inconsistent.
+	//
+	// Example Scenario:
+	// 1. Save order to database
+	// 2. Publish "OrderCreated" event
+	//
+	// What if step 2 fails? Database updated but no event published!
+	// What if step 1 fails after step 2? Event published but no database record!
+	//
+	// THE SOLUTION (Outbox Pattern):
+	// 1. Save order to database
+	// 2. Save "OrderCreated" event to SAME database (in same transaction)
+	// 3. Background process reads events from database and forwards to message broker
+	//
+	// GUARANTEE: Either both succeed (transaction commits) or both fail (transaction rolls back)
+	//
+	// WATERMILL IMPLEMENTATION:
+	// - OutboxPublisher (ForwarderPublisher): Publishes events to database instead of message broker
+	// - EventRelay (Forwarder): Background daemon that forwards DB events to broker
+	// - Event (Envelope): Contains destination topic + original message
+	//
+	// REAL-WORLD USAGE:
+	// - E-commerce: Order processing with payment + inventory + notifications
+	// - Banking: Account transfers with audit trail + customer notifications
+	// - Microservices: Service updates with reliable inter-service communication
+	//
+	// BENEFITS:
+	// ✅ Guaranteed consistency between DB writes and event publishing
+	// ✅ Works with existing database transactions
+	// ✅ Handles network failures gracefully
+	// ✅ Provides exactly-once delivery semantics
+	//
+	// TRADE-OFFS:
+	// ❌ Events are eventually consistent (slight delay)
+	// ❌ Requires background processing capability
+	// ❌ Additional complexity in infrastructure
+	//
+	// TODO: Implement Outbox Pattern test demonstration
+	// Future: Add Fanout, FanIn, and other messaging patterns
 })
