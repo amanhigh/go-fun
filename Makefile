@@ -72,10 +72,60 @@ cover-analyse:
 	go tool cover -func=$(PROFILE_FILE) > $(OUT)
 
 	printf $(_TITLE) "Package Summary";
-	# Analyse Report and Print Coverage
-	go tool covdata percent -i=$(COVER_DIR);
+	# Enhanced Coverage Report
+	$(MAKE) --no-print-directory cover-report;
 	echo "";
+	go tool cover -html=$(PROFILE_FILE) -o /tmp/coverage.html 2>$(OUT); \
+	printf $(_INFO) "HTML Report: file:///tmp/coverage.html";
 	printf $(_INFO) "Vscode" "go.apply.coverprofile $(PROFILE_FILE)";
+
+cover-report: ## Enhanced coverage report with color-coding and categorization
+	@if [ ! -f "$(PROFILE_FILE)" ]; then \
+		printf $(_WARN) "No coverage profile found. Run 'make cover' first." ; \
+		exit 1; \
+	fi
+	@printf $(_TITLE) "Coverage Analysis Report"
+	@go tool cover -func=$(PROFILE_FILE) > $(OUT) 2>&1
+	@overall=$$(go tool cover -func=$(PROFILE_FILE) 2>$(OUT) | tail -1 | awk '{print $$3}'); \
+	echo "Overall Coverage: $$overall"
+	@echo ""
+	@printf $(_TITLE) "Packages by Coverage (Lowest to Highest)"
+	@go tool covdata percent -i=$(COVER_DIR) 2>$(OUT) | \
+		awk '/coverage:/ { \
+			gsub(/github.com\/amanhigh\/go-fun\//, "", $$1); \
+			gsub(/coverage: /, "", $$3); \
+			gsub(/%.*/, "", $$3); \
+			if ($$3 ~ /^[0-9]+\.?[0-9]*$$/) print $$1, $$3; \
+		}' | \
+		sort -k2 -n | \
+		awk 'BEGIN{critical=0; low=0; medium=0; good=0} \
+		{ \
+			pct = int($$2); \
+			if (pct == 0) { \
+				print "\033[31m🔴 " sprintf("%-40s %6s%%", $$1, $$2) "\033[0m ← NEEDS TESTS!"; \
+				critical++; \
+			} else if (pct < 25) { \
+				print "\033[31m🟠 " sprintf("%-40s %6s%%", $$1, $$2) "\033[0m ← CRITICAL"; \
+				low++; \
+			} else if (pct < 50) { \
+				print "\033[33m🟡 " sprintf("%-40s %6s%%", $$1, $$2) "\033[0m ← LOW"; \
+				low++; \
+			} else if (pct < 75) { \
+				print "\033[34m🔵 " sprintf("%-40s %6s%%", $$1, $$2) "\033[0m ← MEDIUM"; \
+				medium++; \
+			} else { \
+				print "\033[32m🟢 " sprintf("%-40s %6s%%", $$1, $$2) "\033[0m"; \
+				good++; \
+			} \
+		} \
+		END { \
+			print ""; \
+			print "\033[32m[Summary]\033[0m"; \
+			print "🔴 Critical (0%): " critical " packages"; \
+			print "🟠 Low (<50%): " low " packages"; \
+			print "🔵 Medium (50-75%): " medium " packages"; \
+			print "🟢 Good (≥75%): " good " packages"; \
+		}';
 
 test-focus:
 	printf $(_TITLE) "Running Focus Tests"
