@@ -88,23 +88,29 @@ cover-analyse: combine-coverage
 	printf $(_INFO) "Vscode" "go.apply.coverprofile $(COMBINED_COVERAGE_FILE)";
 
 cover-report: ## Enhanced coverage report with color-coding and categorization
-	@if [ ! -f "$(COMBINED_COVERAGE_FILE)" ]; then \
+	if [ ! -f "$(COMBINED_COVERAGE_FILE)" ]; then \
 		printf $(_WARN) "No coverage profile found. Run 'make cover' first." ; \
 		exit 1; \
 	fi
-	@printf $(_TITLE) "Coverage Analysis Report"
-	@go tool cover -func=$(COMBINED_COVERAGE_FILE) > $(OUT) 2>&1
-	@overall=$$(go tool cover -func=$(COMBINED_COVERAGE_FILE) 2>$(OUT) | tail -1 | awk '{print $$3}'); \
+	printf $(_TITLE) "Coverage Analysis Report"
+	go tool cover -func=$(COMBINED_COVERAGE_FILE) > $(OUT) 2>&1
+	overall=$$(go tool cover -func=$(COMBINED_COVERAGE_FILE) 2>$(OUT) | tail -1 | awk '{print $$3}'); \
 	echo "Overall Coverage: $$overall"
-	@echo ""
-	@printf $(_TITLE) "Packages by Coverage (Lowest to Highest)"
-	@go tool covdata percent -i=$(COVER_DIR) 2>$(OUT) | \
-		awk '/coverage:/ { \
+	echo ""
+	printf $(_TITLE) "Packages by Coverage (Lowest to Highest)"
+	go tool cover -func=$(COMBINED_COVERAGE_FILE) 2>$(OUT) | \
+		awk '/github.com\/amanhigh\/go-fun\// { \
 			gsub(/github.com\/amanhigh\/go-fun\//, "", $$1); \
-			gsub(/coverage: /, "", $$3); \
-			gsub(/%.*/, "", $$3); \
-			if ($$3 ~ /^[0-9]+\.?[0-9]*$$/) print $$1, $$3; \
-		}' | \
+			gsub(/\/[^\/]*\.go:.*/, "", $$1); \
+			gsub(/%/, "", $$3); \
+			if ($$1 != prev_pkg) { \
+				if (prev_pkg != "") print prev_pkg, int(total/count); \
+				prev_pkg = $$1; total = $$3; count = 1; \
+			} else { \
+				total += $$3; count++; \
+			} \
+		} \
+		END { if (prev_pkg != "") print prev_pkg, int(total/count) }' | \
 		sort -k2 -n | \
 		awk 'BEGIN{critical=0; low=0; medium=0; good=0} \
 		{ \
@@ -122,7 +128,7 @@ cover-report: ## Enhanced coverage report with color-coding and categorization
 				print "\033[34m🔵 " sprintf("%-40s %6s%%", $$1, $$2) "\033[0m ← MEDIUM"; \
 				medium++; \
 			} else { \
-				print "\033[32m🟢 " sprintf("%-40s %6s%%", $$1, $$2) "\033[0m"; \
+				print "\033[32m🟢 " sprintf("%-40s %6s%%", $$1, $$2) "\033[0m ← GOOD"; \
 				good++; \
 			} \
 		} \
@@ -133,7 +139,7 @@ cover-report: ## Enhanced coverage report with color-coding and categorization
 			print "🟠 Low (<50%): " low " packages"; \
 			print "🔵 Medium (50-75%): " medium " packages"; \
 			print "🟢 Good (≥75%): " good " packages"; \
-		}';
+		}'
 
 test-focus:
 	printf $(_TITLE) "Running Focus Tests"
