@@ -29,6 +29,15 @@ var _ = Describe("Time", func() {
 			})
 		})
 
+		Context("TimeAgo", func() {
+			It("calculates time ago correctly", func() {
+				duration, _ := time.ParseDuration("24h")
+				expected := time.Now().Add(-duration)
+				result := util.TimeAgo(duration)
+				Expect(result).To(BeTemporally("~", expected, time.Second))
+			})
+		})
+
 		Context("DaysHour", func() {
 			It("computes date and time correctly", func() {
 				computedTime := util.DaysHour("24 4:05AM")
