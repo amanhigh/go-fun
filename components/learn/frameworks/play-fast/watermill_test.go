@@ -2,6 +2,7 @@ package play_fast_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sync"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
+	"github.com/ThreeDotsLabs/watermill/components/forwarder"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
@@ -88,6 +90,14 @@ func (w *WelcomeEmailService) GetEmails() []string {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
 	return append([]string{}, w.emails...) // Return copy for thread safety
+}
+
+// Outbox Pattern Domain Objects - E-commerce Order Processing
+type OrderCreated struct {
+	OrderID    string `json:"order_id"`
+	CustomerID string `json:"customer_id"`
+	Amount     int64  `json:"amount"`
+	Timestamp  string `json:"timestamp"`
 }
 
 var _ = Describe("Watermill", func() {
@@ -1080,7 +1090,7 @@ var _ = Describe("Watermill", func() {
 	// THE PROBLEM:
 	// You need to update a database AND publish an event atomically.
 	// If either fails, the system becomes inconsistent.
-	//
+	//k
 	// Example Scenario:
 	// 1. Save order to database
 	// 2. Publish "OrderCreated" event
@@ -1116,6 +1126,275 @@ var _ = Describe("Watermill", func() {
 	// ❌ Requires background processing capability
 	// ❌ Additional complexity in infrastructure
 	//
-	// TODO: Implement Outbox Pattern test demonstration
+	// IMPLEMENTATION: See Patterns context below for working demonstration
 	// Future: Add Fanout, FanIn, and other messaging patterns
+
+	// ================================================================================
+	// PATTERNS - Advanced Messaging Patterns with Watermill
+	// ================================================================================
+	Context("Patterns", func() {
+		var (
+			// Common setup for all messaging patterns
+			logger          watermill.LoggerAdapter
+			ctx             context.Context
+			cancel          context.CancelFunc
+			pubSub          *gochannel.GoChannel
+			forwarderPubSub *gochannel.GoChannel // Separate pubsub for forwarder
+		)
+
+		BeforeEach(func() {
+			// Shared pattern infrastructure
+			logger = watermill.NewStdLogger(false, false)
+			ctx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
+			pubSub = gochannel.NewGoChannel(gochannel.Config{}, logger)
+			forwarderPubSub = gochannel.NewGoChannel(gochannel.Config{}, logger)
+		})
+
+		AfterEach(func() {
+			// Common cleanup
+			if cancel != nil {
+				cancel()
+			}
+			if pubSub != nil {
+				pubSub.Close()
+			}
+			if forwarderPubSub != nil {
+				forwarderPubSub.Close()
+			}
+		})
+
+		// OUTBOX PATTERN - Solving the Dual-Write Problem
+		// Demonstrates Watermill's ForwarderPublisher and Forwarder components
+		// that enable atomic database updates + event publishing
+		Context("Outbox Pattern - Solving the Dual-Write Problem", func() {
+			var (
+				// Core Outbox components
+				forwarderPublisher message.Publisher
+				forwarderDaemon    *forwarder.Forwarder
+
+				// Topics
+				outboxTopic = "outbox"
+				ordersTopic = "orders"
+
+				// Message channels for verification
+				outboxMessages <-chan *message.Message
+				orderMessages  <-chan *message.Message
+			)
+
+			BeforeEach(func() {
+				// Setup ForwarderPublisher - wraps messages in envelopes and publishes to outbox
+				forwarderPublisher = forwarder.NewPublisher(pubSub, forwarder.PublisherConfig{
+					ForwarderTopic: outboxTopic,
+				})
+
+				// Setup Forwarder daemon - reads from pubSub (outbox) and forwards to forwarderPubSub (destinations)
+				var err error
+				forwarderDaemon, err = forwarder.NewForwarder(pubSub, forwarderPubSub, logger, forwarder.Config{
+					ForwarderTopic: outboxTopic,
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				// Subscribe to outbox topic for verification (using original pubSub)
+				outboxMessages, err = pubSub.Subscribe(ctx, outboxTopic)
+				Expect(err).NotTo(HaveOccurred())
+
+				// Subscribe to orders topic for verification (using forwarderPubSub where forwarded messages go)
+				orderMessages, err = forwarderPubSub.Subscribe(ctx, ordersTopic)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				// Cleanup outbox-specific resources
+				if forwarderDaemon != nil {
+					forwarderDaemon.Close()
+				}
+			})
+
+			// ENVELOPE WRAPPING: Shows how ForwarderPublisher wraps messages
+			// Instead of publishing directly to "orders", it publishes envelope to "outbox"
+			It("should wrap messages in envelopes and publish to outbox topic", func() {
+				By("Publishing order event using ForwarderPublisher")
+				orderEvent := OrderCreated{
+					OrderID:    "order-123",
+					CustomerID: "customer-456",
+					Amount:     9999,
+					Timestamp:  time.Now().Format(time.RFC3339),
+				}
+
+				payload, err := json.Marshal(orderEvent)
+				Expect(err).NotTo(HaveOccurred())
+
+				msg := message.NewMessage(watermill.NewUUID(), payload)
+				err = forwarderPublisher.Publish(ordersTopic, msg)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Verifying message appears in outbox topic (not orders topic)")
+				select {
+				case envelopedMsg := <-outboxMessages:
+					Expect(envelopedMsg).NotTo(BeNil())
+
+					// Verify it's an envelope (contains destination topic info)
+					Expect(string(envelopedMsg.Payload)).To(ContainSubstring("destination_topic"))
+					Expect(string(envelopedMsg.Payload)).To(ContainSubstring(ordersTopic))
+
+					// Verify the envelope structure
+					var envelope map[string]interface{}
+					err = json.Unmarshal(envelopedMsg.Payload, &envelope)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(envelope["destination_topic"]).To(Equal(ordersTopic))
+					Expect(envelope["payload"]).NotTo(BeEmpty())
+
+					envelopedMsg.Ack()
+				case <-ctx.Done():
+					Fail("Timeout waiting for enveloped message in outbox")
+				}
+
+				By("Verifying message does NOT appear directly in orders topic")
+				select {
+				case <-orderMessages:
+					Fail("Message should not appear directly in orders topic")
+				case <-time.After(100 * time.Millisecond):
+					// Expected - no direct message
+				}
+			})
+
+			// MESSAGE FORWARDING: Shows how Forwarder unwraps and forwards
+			// Forwarder reads from outbox and forwards to actual destination
+			It("should unwrap enveloped messages and forward to destination", func() {
+				By("Starting the Forwarder daemon")
+				// Create a context for the forwarder with proper lifecycle management
+				forwarderCtx, forwarderCancel := context.WithCancel(ctx)
+				defer forwarderCancel()
+
+				// Start forwarder and wait for it to be ready
+				forwarderReady := make(chan struct{})
+				go func() {
+					defer GinkgoRecover()
+					close(forwarderReady) // Signal ready immediately, forwarder handles its own startup
+					err := forwarderDaemon.Run(forwarderCtx)
+					if err != nil && err != context.Canceled {
+						Fail("Forwarder daemon failed: " + err.Error())
+					}
+				}()
+
+				// Wait for forwarder to signal ready and give it a moment to fully initialize
+				<-forwarderReady
+				time.Sleep(100 * time.Millisecond) // Brief pause for forwarder to fully start
+
+				By("Publishing order event through ForwarderPublisher")
+				orderEvent := OrderCreated{
+					OrderID:    "order-789",
+					CustomerID: "customer-101",
+					Amount:     5000,
+					Timestamp:  time.Now().Format(time.RFC3339),
+				}
+
+				payload, err := json.Marshal(orderEvent)
+				Expect(err).NotTo(HaveOccurred())
+
+				msg := message.NewMessage(watermill.NewUUID(), payload)
+				err = forwarderPublisher.Publish(ordersTopic, msg)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Verifying Forwarder unwraps and forwards to orders topic")
+				select {
+				case forwardedMsg := <-orderMessages:
+					Expect(forwardedMsg).NotTo(BeNil())
+
+					// Verify it's the original message (unwrapped)
+					var receivedEvent OrderCreated
+					err = json.Unmarshal(forwardedMsg.Payload, &receivedEvent)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(receivedEvent.OrderID).To(Equal("order-789"))
+					Expect(receivedEvent.CustomerID).To(Equal("customer-101"))
+					Expect(receivedEvent.Amount).To(Equal(int64(5000)))
+
+					forwardedMsg.Ack()
+				case <-time.After(5 * time.Second):
+					Fail("Timeout waiting for forwarded message in orders topic")
+				}
+			})
+
+			// COMPLETE OUTBOX FLOW: End-to-end demonstration
+			// Shows the complete pattern: App → ForwarderPublisher → Outbox → Forwarder → Final Topic
+			It("should demonstrate complete outbox pattern flow", func() {
+				By("Starting the complete outbox infrastructure")
+				// Create a context for the forwarder with proper lifecycle management
+				forwarderCtx, forwarderCancel := context.WithCancel(ctx)
+				defer forwarderCancel()
+
+				// Start forwarder with proper initialization
+				forwarderReady := make(chan struct{})
+				go func() {
+					defer GinkgoRecover()
+					close(forwarderReady) // Signal ready immediately
+					err := forwarderDaemon.Run(forwarderCtx)
+					if err != nil && err != context.Canceled {
+						Fail("Forwarder daemon failed: " + err.Error())
+					}
+				}()
+
+				// Wait for forwarder initialization
+				<-forwarderReady
+				time.Sleep(100 * time.Millisecond) // Brief pause for forwarder to fully start
+
+				By("Application publishes multiple events atomically")
+				events := []OrderCreated{
+					{OrderID: "order-001", CustomerID: "customer-A", Amount: 1000, Timestamp: time.Now().Format(time.RFC3339)},
+					{OrderID: "order-002", CustomerID: "customer-B", Amount: 2000, Timestamp: time.Now().Format(time.RFC3339)},
+					{OrderID: "order-003", CustomerID: "customer-C", Amount: 3000, Timestamp: time.Now().Format(time.RFC3339)},
+				}
+
+				By("Publishing all events through ForwarderPublisher")
+				for _, event := range events {
+					payload, err := json.Marshal(event)
+					Expect(err).NotTo(HaveOccurred())
+
+					msg := message.NewMessage(watermill.NewUUID(), payload)
+					err = forwarderPublisher.Publish(ordersTopic, msg)
+					Expect(err).NotTo(HaveOccurred())
+				}
+
+				By("Verifying all events reach final destination")
+				receivedOrders := make([]OrderCreated, 0, 3)
+
+				for i := 0; i < 3; i++ {
+					select {
+					case orderMsg := <-orderMessages:
+						var order OrderCreated
+						err := json.Unmarshal(orderMsg.Payload, &order)
+						Expect(err).NotTo(HaveOccurred())
+
+						receivedOrders = append(receivedOrders, order)
+						orderMsg.Ack()
+					case <-time.After(5 * time.Second):
+						Fail(fmt.Sprintf("Timeout waiting for order event %d of 3", i+1))
+					}
+				}
+
+				By("Verifying all orders were received correctly")
+				Expect(receivedOrders).To(HaveLen(3))
+
+				orderIDs := make([]string, len(receivedOrders))
+				for i, order := range receivedOrders {
+					orderIDs[i] = order.OrderID
+				}
+
+				Expect(orderIDs).To(ContainElements("order-001", "order-002", "order-003"))
+
+				By("Demonstrating the outbox pattern solved the dual-write problem")
+				// In real scenarios:
+				// 1. Save orders to database (in transaction)
+				// 2. Save events to outbox table (same transaction)
+				// 3. Forwarder forwards events to message broker
+				// GUARANTEE: Either both succeed or both fail (atomicity)
+			})
+		})
+
+		// Future patterns can be added here:
+		// Context("FanOut Pattern") { }
+		// Context("FanIn Pattern") { }
+	})
 })
