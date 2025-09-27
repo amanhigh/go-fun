@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
+//go:generate mockery --name Shutdown
 type Shutdown interface {
 	Wait() context.Context
 	Stop(c context.Context)
