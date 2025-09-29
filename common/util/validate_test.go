@@ -13,12 +13,12 @@ var _ = Describe("Validate", func() {
 		Context("Single Error", func() {
 			It("should return nil when no error provided", func() {
 				err := util.Verify()
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("should return nil when single nil error provided", func() {
 				err := util.Verify(nil)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("should return the error when single error provided", func() {
@@ -31,7 +31,7 @@ var _ = Describe("Validate", func() {
 		Context("Multiple Errors", func() {
 			It("should return nil when all errors are nil", func() {
 				err := util.Verify(nil, nil, nil)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("should return first non-nil error", func() {
@@ -75,13 +75,13 @@ var _ = Describe("Validate", func() {
 		Context("Valid Arguments", func() {
 			It("should return nil for valid enum value", func() {
 				err := util.ValidateEnumArg("option1", validEnum)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("should return nil for each valid enum value", func() {
 				for _, option := range validEnum {
 					err := util.ValidateEnumArg(option, validEnum)
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 				}
 			})
 
@@ -129,7 +129,7 @@ var _ = Describe("Validate", func() {
 			It("should handle enum with special characters", func() {
 				specialEnum := []string{"option@1", "ñáéíóú"}
 				err := util.ValidateEnumArg("ñáéíóú", specialEnum)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 			})
 		})
 

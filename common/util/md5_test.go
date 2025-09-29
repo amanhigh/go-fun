@@ -1,7 +1,7 @@
 package util_test
 
 import (
-	"crypto/md5"
+	"crypto/md5" //nolint:gosec // MD5 used intentionally for testing MD5 utility functions
 	"encoding/hex"
 
 	"github.com/amanhigh/go-fun/common/util"
@@ -18,7 +18,7 @@ var _ = Describe("MD5", func() {
 
 			// Verify it matches standard library
 			testInput := "test string"
-			hasher := md5.New()
+			hasher := md5.New() //nolint:gosec // MD5 used intentionally for testing MD5 utility functions
 			hasher.Write([]byte(testInput))
 			expected := hex.EncodeToString(hasher.Sum(nil))
 			Expect(util.GetMD5Hash(testInput)).To(Equal(expected))

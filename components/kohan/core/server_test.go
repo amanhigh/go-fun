@@ -131,15 +131,18 @@ var _ = Describe("MonitorServer", func() {
 			serverDone = make(chan error, 1)
 
 			// Get free port
-			listener, err := net.Listen("tcp", ":0")
+			listener, err := net.Listen("tcp", ":0") //nolint:gosec // Binding to all interfaces intentionally for testing
 			Expect(err).ToNot(HaveOccurred())
-			freePort = listener.Addr().(*net.TCPAddr).Port
-			listener.Close()
+			tcpAddr, ok := listener.Addr().(*net.TCPAddr)
+			Expect(ok).To(BeTrue(), "Expected TCP address")
+			freePort = tcpAddr.Port
+			err = listener.Close()
+			Expect(err).ToNot(HaveOccurred())
 
 			// Helper function to start server and wait for readiness
 			startAndWaitForServer = func(port int) {
 				go func() {
-					err := server.StartWithShutdownHandler(port, realShutdown)
+					err := server.Start(port, realShutdown)
 					serverDone <- err
 				}()
 
@@ -177,7 +180,7 @@ var _ = Describe("MonitorServer", func() {
 			if resp != nil {
 				defer resp.Body.Close()
 			}
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			realShutdown.Stop(context.Background())
 			Eventually(serverDone, 2*time.Second).Should(Receive(BeNil()))
@@ -186,7 +189,7 @@ var _ = Describe("MonitorServer", func() {
 		It("should handle startup errors", func() {
 			// Don't use helper - test error case directly
 			go func() {
-				err := server.StartWithShutdownHandler(-1, realShutdown)
+				err := server.Start(-1, realShutdown)
 				serverDone <- err
 			}()
 

@@ -1,7 +1,10 @@
 package command
 
 import (
+	"fmt"
+
 	"github.com/amanhigh/go-fun/common/tools"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -43,8 +46,10 @@ var monitorCmd = &cobra.Command{
 
 		go autoManager.MonitorInternetConnection(cmd.Context())
 
-		if err := server.Start(MonitorServerPort); err != nil {
+		shutdown := util.NewGracefulShutdown()
+		if err := server.Start(MonitorServerPort, shutdown); err != nil {
 			log.Error().Err(err).Msg("Failed to start monitor server")
+			return fmt.Errorf("monitor server startup failed: %w", err)
 		}
 		return
 	},

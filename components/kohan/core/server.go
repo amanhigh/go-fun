@@ -13,6 +13,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	shutdownTimeout = 3 * time.Second
+	readTimeout     = 5 * time.Second
+	writeTimeout    = 5 * time.Second
+)
+
 type MonitorServer struct {
 	mux         *gin.Engine
 	capturePath string
@@ -34,18 +40,15 @@ func NewMonitorServer(capturePath string, autoManager manager.AutoManagerInterfa
 	return server
 }
 
-func (s *MonitorServer) Start(port int) (err error) {
-	log.Info().Int("port", port).Msg("Starting Monitor Server")
-	err = s.mux.Run(fmt.Sprintf(":%d", port))
-	return
-}
-
-// StartWithShutdownHandler starts the server with graceful shutdown support using util.Shutdown
-func (s *MonitorServer) StartWithShutdownHandler(port int, shutdown util.Shutdown) error {
-	// Create HTTP server
+// Start starts the server with graceful shutdown support using util.Shutdown
+func (s *MonitorServer) Start(port int, shutdown util.Shutdown) error {
+	// Create HTTP server with security timeouts
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
-		Handler: s.mux,
+		Addr:              fmt.Sprintf(":%d", port),
+		Handler:           s.mux,
+		ReadHeaderTimeout: readTimeout,
+		ReadTimeout:       readTimeout,
+		WriteTimeout:      writeTimeout,
 	}
 
 	// Start server in goroutine so it won't block graceful shutdown handling
@@ -67,7 +70,7 @@ func (s *MonitorServer) StartWithShutdownHandler(port int, shutdown util.Shutdow
 		shutdownCtx := shutdown.Wait() // This blocks until SIGTERM/SIGINT or programmatic stop
 
 		// Graceful shutdown with timeout
-		ctxTimed, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctxTimed, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
 
 		log.Info().Msg("Shutting down monitor server gracefully")
