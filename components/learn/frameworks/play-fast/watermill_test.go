@@ -1134,20 +1134,20 @@ var _ = Describe("Watermill", func() {
 	// ================================================================================
 	Context("Patterns", func() {
 		var (
-			// Common setup for all messaging patterns
-			logger          watermill.LoggerAdapter
-			ctx             context.Context
-			cancel          context.CancelFunc
-			pubSub          *gochannel.GoChannel
-			forwarderPubSub *gochannel.GoChannel // Separate pubsub for forwarder
+			// Common setup for all messaging patterns - A→db→broker→B flow
+			logger watermill.LoggerAdapter
+			ctx    context.Context
+			cancel context.CancelFunc
+			db     *gochannel.GoChannel // Database with outbox (A writes here)
+			broker *gochannel.GoChannel // Message broker (events distributed to B)
 		)
 
 		BeforeEach(func() {
 			// Shared pattern infrastructure
 			logger = watermill.NewStdLogger(false, false)
 			ctx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
-			pubSub = gochannel.NewGoChannel(gochannel.Config{}, logger)
-			forwarderPubSub = gochannel.NewGoChannel(gochannel.Config{}, logger)
+			db = gochannel.NewGoChannel(gochannel.Config{}, logger)
+			broker = gochannel.NewGoChannel(gochannel.Config{}, logger)
 		})
 
 		AfterEach(func() {
@@ -1155,11 +1155,11 @@ var _ = Describe("Watermill", func() {
 			if cancel != nil {
 				cancel()
 			}
-			if pubSub != nil {
-				pubSub.Close()
+			if db != nil {
+				db.Close()
 			}
-			if forwarderPubSub != nil {
-				forwarderPubSub.Close()
+			if broker != nil {
+				broker.Close()
 			}
 		})
 
@@ -1168,52 +1168,52 @@ var _ = Describe("Watermill", func() {
 		// that enable atomic database updates + event publishing
 		Context("Outbox Pattern - Solving the Dual-Write Problem", func() {
 			var (
-				// Core Outbox components
-				forwarderPublisher message.Publisher
-				forwarderDaemon    *forwarder.Forwarder
+				// A→db→broker→B outbox components
+				publisher message.Publisher    // A writes to db via this
+				relayer   *forwarder.Forwarder // Moves events db→broker
 
 				// Topics
 				outboxTopic = "outbox"
 				ordersTopic = "orders"
 
-				// Message channels for verification
-				outboxMessages <-chan *message.Message
-				orderMessages  <-chan *message.Message
+				// Event monitoring channels
+				dbEvents     <-chan *message.Message // Events stored in db
+				brokerEvents <-chan *message.Message // Events distributed by broker
 			)
 
 			BeforeEach(func() {
-				// Setup ForwarderPublisher - wraps messages in envelopes and publishes to outbox
-				forwarderPublisher = forwarder.NewPublisher(pubSub, forwarder.PublisherConfig{
+				// Setup publisher - A (app) writes to db with outbox pattern
+				publisher = forwarder.NewPublisher(db, forwarder.PublisherConfig{
 					ForwarderTopic: outboxTopic,
 				})
 
-				// Setup Forwarder daemon - reads from pubSub (outbox) and forwards to forwarderPubSub (destinations)
+				// Setup relayer - moves events from db to broker
 				var err error
-				forwarderDaemon, err = forwarder.NewForwarder(pubSub, forwarderPubSub, logger, forwarder.Config{
+				relayer, err = forwarder.NewForwarder(db, broker, logger, forwarder.Config{
 					ForwarderTopic: outboxTopic,
 				})
 				Expect(err).NotTo(HaveOccurred())
 
-				// Subscribe to outbox topic for verification (using original pubSub)
-				outboxMessages, err = pubSub.Subscribe(ctx, outboxTopic)
+				// Subscribe to db events for verification
+				dbEvents, err = db.Subscribe(ctx, outboxTopic)
 				Expect(err).NotTo(HaveOccurred())
 
-				// Subscribe to orders topic for verification (using forwarderPubSub where forwarded messages go)
-				orderMessages, err = forwarderPubSub.Subscribe(ctx, ordersTopic)
+				// Subscribe to broker events for verification
+				brokerEvents, err = broker.Subscribe(ctx, ordersTopic)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			AfterEach(func() {
-				// Cleanup outbox-specific resources
-				if forwarderDaemon != nil {
-					forwarderDaemon.Close()
+				// Cleanup outbox pattern resources
+				if relayer != nil {
+					relayer.Close()
 				}
 			})
 
 			// ENVELOPE WRAPPING: Shows how ForwarderPublisher wraps messages
 			// Instead of publishing directly to "orders", it publishes envelope to "outbox"
 			It("should wrap messages in envelopes and publish to outbox topic", func() {
-				By("Publishing order event using ForwarderPublisher")
+				By("Publishing order event using publisher (A→db)")
 				orderEvent := OrderCreated{
 					OrderID:    "order-123",
 					CustomerID: "customer-456",
@@ -1225,12 +1225,12 @@ var _ = Describe("Watermill", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				msg := message.NewMessage(watermill.NewUUID(), payload)
-				err = forwarderPublisher.Publish(ordersTopic, msg)
+				err = publisher.Publish(ordersTopic, msg)
 				Expect(err).NotTo(HaveOccurred())
 
-				By("Verifying message appears in outbox topic (not orders topic)")
+				By("Verifying message appears in db outbox (not broker)")
 				select {
-				case envelopedMsg := <-outboxMessages:
+				case envelopedMsg := <-dbEvents:
 					Expect(envelopedMsg).NotTo(BeNil())
 
 					// Verify it's an envelope (contains destination topic info)
@@ -1250,39 +1250,39 @@ var _ = Describe("Watermill", func() {
 					Fail("Timeout waiting for enveloped message in outbox")
 				}
 
-				By("Verifying message does NOT appear directly in orders topic")
+				By("Verifying message does NOT appear directly in broker")
 				select {
-				case <-orderMessages:
-					Fail("Message should not appear directly in orders topic")
+				case <-brokerEvents:
+					Fail("Message should not appear directly in broker")
 				case <-time.After(100 * time.Millisecond):
-					// Expected - no direct message
+					// Expected - no direct message in broker yet
 				}
 			})
 
 			// MESSAGE FORWARDING: Shows how Forwarder unwraps and forwards
 			// Forwarder reads from outbox and forwards to actual destination
 			It("should unwrap enveloped messages and forward to destination", func() {
-				By("Starting the Forwarder daemon")
-				// Create a context for the forwarder with proper lifecycle management
-				forwarderCtx, forwarderCancel := context.WithCancel(ctx)
-				defer forwarderCancel()
+				By("Starting the event relayer (db→broker)")
+				// Create a context for the relayer with proper lifecycle management
+				relayerCtx, relayerCancel := context.WithCancel(ctx)
+				defer relayerCancel()
 
-				// Start forwarder and wait for it to be ready
-				forwarderReady := make(chan struct{})
+				// Start relayer and wait for it to be ready
+				relayerReady := make(chan struct{})
 				go func() {
 					defer GinkgoRecover()
-					close(forwarderReady) // Signal ready immediately, forwarder handles its own startup
-					err := forwarderDaemon.Run(forwarderCtx)
-					if err != nil && err != context.Canceled {
-						Fail("Forwarder daemon failed: " + err.Error())
+					close(relayerReady) // Signal ready immediately, relayer handles its own startup
+					err := relayer.Run(relayerCtx)
+					if err != nil && !errors.Is(err, context.Canceled) {
+						Fail("Event relayer failed: " + err.Error())
 					}
 				}()
 
-				// Wait for forwarder to signal ready and give it a moment to fully initialize
-				<-forwarderReady
-				time.Sleep(100 * time.Millisecond) // Brief pause for forwarder to fully start
+				// Wait for relayer to signal ready and give it a moment to fully initialize
+				<-relayerReady
+				time.Sleep(100 * time.Millisecond) // Brief pause for relayer to fully start
 
-				By("Publishing order event through ForwarderPublisher")
+				By("Publishing order event through publisher (A→db)")
 				orderEvent := OrderCreated{
 					OrderID:    "order-789",
 					CustomerID: "customer-101",
@@ -1294,12 +1294,12 @@ var _ = Describe("Watermill", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				msg := message.NewMessage(watermill.NewUUID(), payload)
-				err = forwarderPublisher.Publish(ordersTopic, msg)
+				err = publisher.Publish(ordersTopic, msg)
 				Expect(err).NotTo(HaveOccurred())
 
-				By("Verifying Forwarder unwraps and forwards to orders topic")
+				By("Verifying relayer unwraps and forwards to broker")
 				select {
-				case forwardedMsg := <-orderMessages:
+				case forwardedMsg := <-brokerEvents:
 					Expect(forwardedMsg).NotTo(BeNil())
 
 					// Verify it's the original message (unwrapped)
@@ -1320,49 +1320,49 @@ var _ = Describe("Watermill", func() {
 			// COMPLETE OUTBOX FLOW: End-to-end demonstration
 			// Shows the complete pattern: App → ForwarderPublisher → Outbox → Forwarder → Final Topic
 			It("should demonstrate complete outbox pattern flow", func() {
-				By("Starting the complete outbox infrastructure")
-				// Create a context for the forwarder with proper lifecycle management
-				forwarderCtx, forwarderCancel := context.WithCancel(ctx)
-				defer forwarderCancel()
+				By("Starting the complete A→db→broker→B infrastructure")
+				// Create a context for the relayer with proper lifecycle management
+				relayerCtx, relayerCancel := context.WithCancel(ctx)
+				defer relayerCancel()
 
-				// Start forwarder with proper initialization
-				forwarderReady := make(chan struct{})
+				// Start relayer with proper initialization
+				relayerReady := make(chan struct{})
 				go func() {
 					defer GinkgoRecover()
-					close(forwarderReady) // Signal ready immediately
-					err := forwarderDaemon.Run(forwarderCtx)
-					if err != nil && err != context.Canceled {
-						Fail("Forwarder daemon failed: " + err.Error())
+					close(relayerReady) // Signal ready immediately
+					err := relayer.Run(relayerCtx)
+					if err != nil && !errors.Is(err, context.Canceled) {
+						Fail("Event relayer failed: " + err.Error())
 					}
 				}()
 
-				// Wait for forwarder initialization
-				<-forwarderReady
-				time.Sleep(100 * time.Millisecond) // Brief pause for forwarder to fully start
+				// Wait for relayer initialization
+				<-relayerReady
+				time.Sleep(100 * time.Millisecond) // Brief pause for relayer to fully start
 
-				By("Application publishes multiple events atomically")
+				By("Application (A) publishes multiple events atomically")
 				events := []OrderCreated{
 					{OrderID: "order-001", CustomerID: "customer-A", Amount: 1000, Timestamp: time.Now().Format(time.RFC3339)},
 					{OrderID: "order-002", CustomerID: "customer-B", Amount: 2000, Timestamp: time.Now().Format(time.RFC3339)},
 					{OrderID: "order-003", CustomerID: "customer-C", Amount: 3000, Timestamp: time.Now().Format(time.RFC3339)},
 				}
 
-				By("Publishing all events through ForwarderPublisher")
+				By("Publishing all events through publisher (A→db)")
 				for _, event := range events {
 					payload, err := json.Marshal(event)
 					Expect(err).NotTo(HaveOccurred())
 
 					msg := message.NewMessage(watermill.NewUUID(), payload)
-					err = forwarderPublisher.Publish(ordersTopic, msg)
+					err = publisher.Publish(ordersTopic, msg)
 					Expect(err).NotTo(HaveOccurred())
 				}
 
-				By("Verifying all events reach final destination")
+				By("Verifying all events reach broker (final destination for B)")
 				receivedOrders := make([]OrderCreated, 0, 3)
 
 				for i := 0; i < 3; i++ {
 					select {
-					case orderMsg := <-orderMessages:
+					case orderMsg := <-brokerEvents:
 						var order OrderCreated
 						err := json.Unmarshal(orderMsg.Payload, &order)
 						Expect(err).NotTo(HaveOccurred())
@@ -1384,12 +1384,13 @@ var _ = Describe("Watermill", func() {
 
 				Expect(orderIDs).To(ContainElements("order-001", "order-002", "order-003"))
 
-				By("Demonstrating the outbox pattern solved the dual-write problem")
+				By("Demonstrating the A→db→broker→B outbox pattern solved dual-write problem")
 				// In real scenarios:
-				// 1. Save orders to database (in transaction)
-				// 2. Save events to outbox table (same transaction)
-				// 3. Forwarder forwards events to message broker
-				// GUARANTEE: Either both succeed or both fail (atomicity)
+				// 1. A (app) saves order model to db (in transaction)
+				// 2. A (app) saves events to db outbox (same transaction)
+				// 3. Relayer forwards events from db to broker
+				// 4. B (services) consume events from broker
+				// GUARANTEE: Either both A writes succeed or both fail (atomicity)
 			})
 		})
 
