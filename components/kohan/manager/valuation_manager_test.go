@@ -351,6 +351,44 @@ var _ = Describe("ValuationManager", func() {
 			})
 		})
 
+		Context("Title Case Trade Types (Real DriveWealth Data)", func() {
+			It("should handle 'Buy'/'Sell' trade types case-insensitively", func() {
+				// Real DriveWealth data has "Buy"/"Sell" (title case), not "BUY"/"SELL"
+				trades := []tax.Trade{
+					{Symbol: AAPL, Date: "2024-01-15", Type: "Buy", Quantity: 10, USDPrice: 100.0},
+					{Symbol: AAPL, Date: "2024-02-15", Type: "Buy", Quantity: 5, USDPrice: 110.0},
+					{Symbol: AAPL, Date: "2024-03-15", Type: "Sell", Quantity: 3, USDPrice: 120.0},
+				}
+
+				mockAccountManager.EXPECT().
+					GetRecord(ctx, AAPL, year-1).
+					Return(tax.Account{}, common.ErrNotFound) // Fresh start
+
+				mockTickerManager.EXPECT().
+					GetPrice(ctx, AAPL, yearEndDate).
+					Return(yearEndPrice, nil)
+
+				valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Verify correct quantity calculations despite title case
+				// 10 (buy) + 5 (buy) - 3 (sell) = 12 shares at year end
+				Expect(valuation.YearEndPosition.Quantity).To(Equal(12.0))
+
+				// Verify peak was tracked correctly (after second buy)
+				Expect(valuation.PeakPosition.Quantity).To(Equal(15.0))
+
+				// Verify first position set correctly
+				Expect(valuation.FirstPosition.Quantity).To(Equal(10.0))
+
+				// Verify all positions have valid dates (critical for ProcessValuations -> Exchange)
+				Expect(valuation.FirstPosition.Date).ToNot(BeZero())
+				Expect(valuation.PeakPosition.Date).ToNot(BeZero())
+				Expect(valuation.YearEndPosition.Date).ToNot(BeZero())
+				Expect(valuation.YearEndPosition.Date).To(Equal(yearEndDate))
+			})
+		})
+
 		Context("Error Cases", func() {
 			Context("Empty Trades", func() {
 				It("should return error for empty trades", func() {
