@@ -54,14 +54,29 @@ func (v *ValuationManagerImpl) GetYearlyValuationsUSD(ctx context.Context, year 
 	if filterErr != nil {
 		return nil, filterErr
 	}
-	if len(yearTrades) == 0 {
-		return []tax.Valuation{}, common.NewHttpError(fmt.Sprintf("no trades found for year %d", year), http.StatusNotFound)
-	}
 
 	// Group filtered trades by Ticker Symbol
 	tradesByTicker := lo.GroupBy(yearTrades, func(trade tax.Trade) string {
 		return trade.Symbol
 	})
+
+	// TDD FIX: Get all tickers with carry-over positions from previous year
+	// This ensures tickers without trades in target year are still included
+	prevYearAccounts, accErr := v.accountManager.GetAllRecords(ctx, year-1)
+	if accErr != nil && !errors.Is(accErr, common.ErrNotFound) {
+		return nil, accErr
+	}
+
+	// Add carry-over tickers that don't have trades in target year
+	for _, account := range prevYearAccounts {
+		if account.Quantity > 0 && tradesByTicker[account.Symbol] == nil {
+			tradesByTicker[account.Symbol] = []tax.Trade{} // Empty trades, will use carry-over position
+		}
+	}
+
+	if len(tradesByTicker) == 0 {
+		return []tax.Valuation{}, common.NewHttpError(fmt.Sprintf("no trades or carry-over positions found for year %d", year), http.StatusNotFound)
+	}
 
 	// Process trades for all tickers using the helper function
 	valuations, err = v.processTradesByTicker(ctx, tradesByTicker, year)

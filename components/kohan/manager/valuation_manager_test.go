@@ -470,6 +470,9 @@ var _ = Describe("ValuationManager", func() {
 			// Mock FY Manager: FilterUS returns the same trades (assuming all are in the year for this test)
 			mockFyManager.EXPECT().FilterUS(ctx, allTrades, year).Return(allTrades, nil).Once()
 
+			// Mock AccountManager: GetAllRecords for carry-over (none in this test)
+			mockAccountManager.EXPECT().GetAllRecords(ctx, year-1).Return([]tax.Account{}, common.ErrNotFound).Once()
+
 			// Mock dependencies needed by AnalyzeValuation for AAPL
 			mockAccountManager.EXPECT().GetRecord(ctx, AAPL, year-1).Return(tax.Account{}, common.ErrNotFound).Once() // Fresh start for AAPL
 			mockTickerManager.EXPECT().GetPrice(ctx, AAPL, yearEndDate).Return(150.0, nil).Once()                     // AAPL year end price
@@ -527,12 +530,15 @@ var _ = Describe("ValuationManager", func() {
 			// It should return an empty slice and no error in this scenario before the length check.
 			mockFyManager.EXPECT().FilterUS(ctx, initialTrades, year).Return([]tax.Trade{}, nil).Once()
 
+			// Mock AccountManager: GetAllRecords for carry-over (none in this test)
+			mockAccountManager.EXPECT().GetAllRecords(ctx, year-1).Return([]tax.Account{}, common.ErrNotFound).Once()
+
 			valuations, err := valuationManager.GetYearlyValuationsUSD(ctx, year)
 
 			// Assert that the specific StatusNotFound error is returned
 			Expect(err).To(HaveOccurred())
 			Expect(err.Code()).To(Equal(http.StatusNotFound))
-			Expect(err.Error()).To(ContainSubstring("no trades found for year"))
+			Expect(err.Error()).To(ContainSubstring("no trades or carry-over positions found for year"))
 			Expect(valuations).To(BeEmpty()) // Expect empty valuations slice
 		})
 
@@ -556,6 +562,9 @@ var _ = Describe("ValuationManager", func() {
 			// Mock FY Manager: FilterUS returns the same trades
 			mockFyManager.EXPECT().FilterUS(ctx, allTrades, year).Return(allTrades, nil).Once()
 
+			// Mock AccountManager: GetAllRecords for carry-over (none in this test)
+			mockAccountManager.EXPECT().GetAllRecords(ctx, year-1).Return([]tax.Account{}, common.ErrNotFound).Once()
+
 			// Mock dependencies for AAPL (price fetch fails)
 			mockAccountManager.EXPECT().GetRecord(ctx, AAPL, year-1).Return(tax.Account{}, common.ErrNotFound).Once()
 			expectedErr := common.NewServerError(errors.New("price fetch failed"))
@@ -569,6 +578,74 @@ var _ = Describe("ValuationManager", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err.Code()).To(Equal(http.StatusInternalServerError))
 			Expect(err.Error()).To(ContainSubstring("failed to get year end price"))
+		})
+
+		Context("Carry-Over Without Trades", func() {
+			// TDD Bug Fix: Ticker with carry-over from previous year but NO trades in current year
+			// Should still appear in valuations (SIVR/TLT missing from 2023 accounts bug)
+			var (
+				tickerWithTrades    string
+				tickerWithoutTrades string
+				prevYearAccount     tax.Account
+				tradeInYear         tax.Trade
+			)
+
+			BeforeEach(func() {
+				tickerWithTrades = "AAPL"
+				tickerWithoutTrades = "MSFT"
+				prevYearAccount = tax.Account{Symbol: tickerWithoutTrades, Quantity: 50, Cost: 10000, MarketValue: 10000}
+				tradeInYear = tax.NewTrade(tickerWithTrades, "2024-06-15", tax.TRADE_TYPE_BUY, 10, 150)
+
+				// Mock: Only AAPL has trades in target year
+				mockTradeRepository.EXPECT().GetAllRecords(ctx).Return([]tax.Trade{tradeInYear}, nil).Once()
+				mockFyManager.EXPECT().FilterUS(ctx, []tax.Trade{tradeInYear}, year).Return([]tax.Trade{tradeInYear}, nil).Once()
+
+				// Mock: MSFT has carry-over from previous year (no trades in current year)
+				mockAccountManager.EXPECT().GetAllRecords(ctx, year-1).Return([]tax.Account{prevYearAccount}, nil).Once()
+
+				// Mock: AAPL dependencies (fresh start in current year)
+				mockAccountManager.EXPECT().GetRecord(ctx, tickerWithTrades, year-1).Return(tax.Account{}, common.ErrNotFound).Once()
+				mockTickerManager.EXPECT().GetPrice(ctx, tickerWithTrades, yearEndDate).Return(160.0, nil).Once()
+
+				// Mock: MSFT dependencies (carry-over, no trades)
+				mockAccountManager.EXPECT().GetRecord(ctx, tickerWithoutTrades, year-1).Return(prevYearAccount, nil).Once()
+				mockTickerManager.EXPECT().GetPrice(ctx, tickerWithoutTrades, yearEndDate).Return(210.0, nil).Once()
+			})
+
+			It("should include ticker with carry-over but no trades", func() {
+				// Execute
+				valuations, err := valuationManager.GetYearlyValuationsUSD(ctx, year)
+
+				// Assert: Should include BOTH tickers (AAPL with trades + MSFT carry-over only)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(valuations).To(HaveLen(2), "Should include ticker with trades AND ticker with carry-over only")
+
+				// Find MSFT (carry-over without trades)
+				var msftVal *tax.Valuation
+				for i := range valuations {
+					if valuations[i].Ticker == tickerWithoutTrades {
+						msftVal = &valuations[i]
+						break
+					}
+				}
+				Expect(msftVal).ToNot(BeNil(), "MSFT should be included despite no trades")
+
+				// Assert FirstPosition: Should be carried from previous year
+				prevYearEnd := time.Date(year-1, 12, 31, 0, 0, 0, 0, time.UTC)
+				Expect(msftVal.FirstPosition.Date).To(Equal(prevYearEnd), "FirstPosition date from carry-over (Dec 31 of previous year)")
+				Expect(msftVal.FirstPosition.Quantity).To(Equal(50.0), "FirstPosition quantity from carry-over")
+				Expect(msftVal.FirstPosition.USDPrice).To(Equal(200.0), "FirstPosition price from carry-over (10000/50)")
+
+				// Assert PeakPosition: Should remain same as FirstPosition (no trades to change it)
+				Expect(msftVal.PeakPosition.Date).To(Equal(prevYearEnd), "PeakPosition date unchanged (no trades)")
+				Expect(msftVal.PeakPosition.Quantity).To(Equal(50.0), "PeakPosition quantity unchanged (no trades)")
+				Expect(msftVal.PeakPosition.USDPrice).To(Equal(200.0), "PeakPosition price unchanged (no trades)")
+
+				// Assert YearEndPosition: Should have current year date with year-end price
+				Expect(msftVal.YearEndPosition.Date).To(Equal(yearEndDate), "YearEndPosition date is current year Dec 31")
+				Expect(msftVal.YearEndPosition.Quantity).To(Equal(50.0), "YearEndPosition quantity unchanged (no trades)")
+				Expect(msftVal.YearEndPosition.USDPrice).To(Equal(210.0), "YearEndPosition price from year-end lookup")
+			})
 		})
 	})
 
