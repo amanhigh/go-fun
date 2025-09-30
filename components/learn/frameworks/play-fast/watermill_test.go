@@ -1259,86 +1259,25 @@ var _ = Describe("Watermill", func() {
 				}
 			})
 
-			// MESSAGE FORWARDING: Shows how Forwarder unwraps and forwards
-			// Forwarder reads from outbox and forwards to actual destination
-			It("should unwrap enveloped messages and forward to destination", func() {
-				By("Starting the event relayer (db→broker)")
-				// Create a context for the relayer with proper lifecycle management
-				relayerCtx, relayerCancel := context.WithCancel(ctx)
-				defer relayerCancel()
-
-				// Start relayer and wait for it to be ready
-				relayerReady := make(chan struct{})
-				go func() {
-					defer GinkgoRecover()
-					close(relayerReady) // Signal ready immediately, relayer handles its own startup
-					err := relayer.Run(relayerCtx)
-					if err != nil && !errors.Is(err, context.Canceled) {
-						Fail("Event relayer failed: " + err.Error())
-					}
-				}()
-
-				// Wait for relayer to signal ready and give it a moment to fully initialize
-				<-relayerReady
-				time.Sleep(100 * time.Millisecond) // Brief pause for relayer to fully start
-
-				By("Publishing order event through publisher (A→db)")
-				orderEvent := OrderCreated{
-					OrderID:    "order-789",
-					CustomerID: "customer-101",
-					Amount:     5000,
-					Timestamp:  time.Now().Format(time.RFC3339),
-				}
-
-				payload, err := json.Marshal(orderEvent)
-				Expect(err).NotTo(HaveOccurred())
-
-				msg := message.NewMessage(watermill.NewUUID(), payload)
-				err = publisher.Publish(ordersTopic, msg)
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Verifying relayer unwraps and forwards to broker")
-				select {
-				case forwardedMsg := <-brokerEvents:
-					Expect(forwardedMsg).NotTo(BeNil())
-
-					// Verify it's the original message (unwrapped)
-					var receivedEvent OrderCreated
-					err = json.Unmarshal(forwardedMsg.Payload, &receivedEvent)
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(receivedEvent.OrderID).To(Equal("order-789"))
-					Expect(receivedEvent.CustomerID).To(Equal("customer-101"))
-					Expect(receivedEvent.Amount).To(Equal(int64(5000)))
-
-					forwardedMsg.Ack()
-				case <-time.After(5 * time.Second):
-					Fail("Timeout waiting for forwarded message in orders topic")
-				}
-			})
-
-			// COMPLETE OUTBOX FLOW: End-to-end demonstration
+			// COMPLETE OUTBOX FLOW: End-to-end demonstration with forwarding and batch processing
 			// Shows the complete pattern: App → ForwarderPublisher → Outbox → Forwarder → Final Topic
-			It("should demonstrate complete outbox pattern flow", func() {
+			It("should demonstrate complete outbox pattern with message forwarding", func() {
 				By("Starting the complete A→db→broker→B infrastructure")
-				// Create a context for the relayer with proper lifecycle management
 				relayerCtx, relayerCancel := context.WithCancel(ctx)
 				defer relayerCancel()
 
-				// Start relayer with proper initialization
 				relayerReady := make(chan struct{})
 				go func() {
 					defer GinkgoRecover()
-					close(relayerReady) // Signal ready immediately
+					close(relayerReady)
 					err := relayer.Run(relayerCtx)
 					if err != nil && !errors.Is(err, context.Canceled) {
 						Fail("Event relayer failed: " + err.Error())
 					}
 				}()
 
-				// Wait for relayer initialization
 				<-relayerReady
-				time.Sleep(100 * time.Millisecond) // Brief pause for relayer to fully start
+				time.Sleep(100 * time.Millisecond)
 
 				By("Application (A) publishes multiple events atomically")
 				events := []OrderCreated{
@@ -1357,7 +1296,7 @@ var _ = Describe("Watermill", func() {
 					Expect(err).NotTo(HaveOccurred())
 				}
 
-				By("Verifying all events reach broker (final destination for B)")
+				By("Verifying relayer unwraps and forwards all events to broker")
 				receivedOrders := make([]OrderCreated, 0, 3)
 
 				for i := 0; i < 3; i++ {
@@ -1370,11 +1309,11 @@ var _ = Describe("Watermill", func() {
 						receivedOrders = append(receivedOrders, order)
 						orderMsg.Ack()
 					case <-time.After(5 * time.Second):
-						Fail(fmt.Sprintf("Timeout waiting for order event %d of 3", i+1))
+						Fail(fmt.Sprintf("Timeout waiting for forwarded event %d of 3", i+1))
 					}
 				}
 
-				By("Verifying all orders were received correctly")
+				By("Verifying all orders were unwrapped and forwarded correctly")
 				Expect(receivedOrders).To(HaveLen(3))
 
 				orderIDs := make([]string, len(receivedOrders))
