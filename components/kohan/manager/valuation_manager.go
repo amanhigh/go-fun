@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"strings"
 	"time"
 
 	repository "github.com/amanhigh/go-fun/components/kohan/repository"
@@ -151,8 +150,8 @@ func (v *ValuationManagerImpl) processTrades(
 	trades []tax.Trade,
 	openingPeriodPosition tax.Position,
 ) (currentQuantity float64, err common.HttpError) {
-	// Use case-insensitive comparison for first trade validation
-	if openingPeriodPosition.Quantity == 0 && len(trades) > 0 && strings.ToUpper(trades[0].Type) == "SELL" {
+	// Use GetType() for normalized type comparison
+	if openingPeriodPosition.Quantity == 0 && len(trades) > 0 && trades[0].GetType() == tax.TRADE_TYPE_SELL {
 		return 0, common.NewHttpError(fmt.Sprintf("first trade can't be sell on fresh start for %s", analysis.Ticker), http.StatusBadRequest)
 	}
 
@@ -185,10 +184,9 @@ func (v *ValuationManagerImpl) handleFirstTrade(analysis *tax.Valuation, trade t
 		return 0, dateErr
 	}
 
-	// TDD Fix: Use case-insensitive comparison (consistent with Trade.IsValid())
-	// Real data has "Buy"/"Sell" from DriveWealth, not "BUY"/"SELL"
-	uppercaseType := strings.ToUpper(trade.Type)
-	if uppercaseType == "BUY" {
+	// Use GetType() for normalized type comparison with constants
+	// Real data has "Buy"/"Sell" from DriveWealth, GetType() normalizes to uppercase
+	if trade.GetType() == tax.TRADE_TYPE_BUY {
 		analysis.FirstPosition = tax.Position{
 			Date:     tradeDate,
 			Quantity: trade.Quantity,
@@ -207,9 +205,8 @@ func (v *ValuationManagerImpl) applyTrade(analysis *tax.Valuation, trade tax.Tra
 		return 0, dateErr
 	}
 
-	// Use case-insensitive comparison (consistent with handleFirstTrade and Trade.IsValid())
-	uppercaseType := strings.ToUpper(trade.Type)
-	if uppercaseType == "BUY" {
+	// Use GetType() for normalized type comparison with constants
+	if trade.GetType() == tax.TRADE_TYPE_BUY {
 		currentQuantity += trade.Quantity
 		if currentQuantity > analysis.PeakPosition.Quantity {
 			analysis.PeakPosition = tax.Position{

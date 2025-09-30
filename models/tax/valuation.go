@@ -41,14 +41,17 @@ func (t Trade) GetDate() (time.Time, common.HttpError) {
 	return parsedTime, nil
 }
 
+func (t Trade) GetType() string {
+	return strings.ToUpper(t.Type)
+}
+
 func (t Trade) IsValid() bool {
 	if t.Symbol == "" || t.Date == "" || t.Type == "" {
 		return false
 	}
 
 	// Accept both uppercase and mixed case trade types (BUY/Buy, SELL/Sell)
-	uppercaseType := strings.ToUpper(t.Type)
-	return uppercaseType == "BUY" || uppercaseType == "SELL"
+	return t.GetType() == TRADE_TYPE_BUY || t.GetType() == TRADE_TYPE_SELL
 }
 
 // Position represents a snapshot of holdings at a point in time

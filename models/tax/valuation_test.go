@@ -25,14 +25,14 @@ var _ = Describe("Valuation", func() {
 				validTrade := Trade{
 					Symbol: "AAPL",
 					Date:   "2024-01-01",
-					Type:   "BUY",
+					Type:   TRADE_TYPE_BUY,
 				}
 				Expect(validTrade.IsValid()).To(BeTrue())
 
 				validSell := Trade{
 					Symbol: "AAPL",
 					Date:   "2024-01-01",
-					Type:   "SELL",
+					Type:   TRADE_TYPE_SELL,
 				}
 				Expect(validSell.IsValid()).To(BeTrue())
 			})
@@ -61,10 +61,10 @@ var _ = Describe("Valuation", func() {
 
 			It("should reject invalid trades", func() {
 				invalidTrades := []Trade{
-					{Symbol: "", Date: "2024-01-01", Type: "BUY"},         // Empty symbol
-					{Symbol: "AAPL", Date: "", Type: "BUY"},               // Empty date
-					{Symbol: "AAPL", Date: "2024-01-01", Type: ""},        // Empty type
-					{Symbol: "AAPL", Date: "2024-01-01", Type: "INVALID"}, // Invalid type
+					{Symbol: "", Date: "2024-01-01", Type: TRADE_TYPE_BUY}, // Empty symbol
+					{Symbol: "AAPL", Date: "", Type: TRADE_TYPE_BUY},       // Empty date
+					{Symbol: "AAPL", Date: "2024-01-01", Type: ""},         // Empty type
+					{Symbol: "AAPL", Date: "2024-01-01", Type: "INVALID"},  // Invalid type
 				}
 
 				for _, trade := range invalidTrades {
