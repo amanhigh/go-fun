@@ -182,7 +182,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			summary, err := taxManager.GetTaxSummary(ctx, testYear)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(summary.INRValuations).ToNot(BeNil())
-			Expect(summary.INRValuations).To(HaveLen(2))
+			Expect(summary.INRValuations).To(HaveLen(3))
 
 			// Sort by Ticker for consistent assertion order
 			sort.Slice(summary.INRValuations, func(i, j int) bool {
@@ -190,7 +190,8 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			})
 
 			aaplVal := summary.INRValuations[0]
-			msftVal := summary.INRValuations[1]
+			googlVal := summary.INRValuations[1]
+			msftVal := summary.INRValuations[2]
 
 			// Assert AAPL (Carry-over with new trades for 2023)
 			Expect(aaplVal.Ticker).To(Equal("AAPL"))
@@ -217,6 +218,17 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(aaplVal.YearEndPosition.Date.Format(time.DateOnly)).To(Equal("2023-12-31"))
 			Expect(aaplVal.YearEndPosition.TTRate).To(Equal(82.00)) // From sbi_rates.csv for 2023-12-31
 			Expect(aaplVal.YearEndPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
+
+			// Assert GOOGL (Carry-over without trades)
+			Expect(googlVal.Ticker).To(Equal("GOOGL"))
+			Expect(googlVal.FirstPosition.Quantity).To(Equal(25.0))
+			Expect(googlVal.FirstPosition.USDPrice).To(Equal(200.00))
+			Expect(googlVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2022-12-31"))
+			Expect(googlVal.PeakPosition.Quantity).To(Equal(25.0))
+			Expect(googlVal.PeakPosition.Date.Format(time.DateOnly)).To(Equal("2022-12-31"))
+			Expect(googlVal.YearEndPosition.Quantity).To(Equal(25.0))
+			Expect(googlVal.YearEndPosition.USDPrice).To(Equal(140.00))
+			Expect(googlVal.YearEndPosition.Date.Format(time.DateOnly)).To(Equal("2023-12-31"))
 
 			// Assert MSFT (Fresh Start)
 			Expect(msftVal.Ticker).To(Equal("MSFT"))
