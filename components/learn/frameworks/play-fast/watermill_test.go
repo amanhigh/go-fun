@@ -10,6 +10,7 @@ import (
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
+	"github.com/ThreeDotsLabs/watermill/components/fanin"
 	"github.com/ThreeDotsLabs/watermill/components/forwarder"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
@@ -1333,8 +1334,231 @@ var _ = Describe("Watermill", func() {
 			})
 		})
 
-		// Future patterns can be added here:
-		// Context("FanOut Pattern") { }
-		// Context("FanIn Pattern") { }
+		// FANIN PATTERN - Multi-Region Event Aggregation
+		// Demonstrates Watermill's FanIn component for merging multiple event streams
+		// into a single unified stream for centralized processing
+		//
+		// THE PROBLEM:
+		// In distributed systems, you have multiple independent event sources
+		// (e.g., multiple regions, services, or data centers) that need to be
+		// processed together as a unified stream.
+		//
+		// Example Scenario:
+		// - US region produces "orders-us" events
+		// - EU region produces "orders-eu" events
+		// - Asia region produces "orders-asia" events
+		// - Analytics service needs to process ALL orders from one stream
+		//
+		// Without FanIn: Need 3 separate consumers, manual correlation, complex orchestration
+		//
+		// THE SOLUTION (FanIn Pattern):
+		// 1. Multiple sources publish to their regional topics
+		// 2. FanIn component subscribes to all regional topics
+		// 3. FanIn merges events into single unified topic
+		// 4. Single consumer processes unified stream
+		//
+		// GUARANTEE: All events from all sources reach the unified stream
+		//
+		// WATERMILL IMPLEMENTATION:
+		// - FanIn Component: Subscribes to multiple source topics, publishes to one target topic
+		// - Per-Source Ordering: Events from same source maintain their order
+		// - Cross-Source Independence: Sources don't affect each other
+		//
+		// REAL-WORLD USAGE:
+		// - E-commerce: Multi-region order aggregation for global analytics
+		// - Microservices: Centralized log aggregation from multiple services
+		// - IoT: Sensor data collection from multiple device types
+		// - Financial: Order book aggregation from multiple exchanges
+		//
+		// BENEFITS:
+		// ✅ Simplified architecture - one consumer instead of N consumers
+		// ✅ Centralized processing - single pipeline for all sources
+		// ✅ Fault isolation - one source failure doesn't affect others
+		// ✅ Scalability - easy to add new sources without changing consumers
+		//
+		// TRADE-OFFS:
+		// ❌ No global ordering guarantee (only per-source ordering)
+		// ❌ Single point of aggregation (though can be scaled horizontally)
+		// ❌ Potential bottleneck if source volume is very high
+		//
+		// IMPLEMENTATION: See tests below for working demonstration
+		Context("FanIn Pattern - Multi-Region Event Aggregation", func() {
+			var (
+				regionalOrders *gochannel.GoChannel
+				globalOrders   *gochannel.GoChannel
+				fanIn          *fanin.FanIn
+
+				usTopic     = "orders-us"
+				euTopic     = "orders-eu"
+				asiaTopic   = "orders-asia"
+				globalTopic = "orders-global"
+
+				globalEvents <-chan *message.Message
+			)
+
+			BeforeEach(func() {
+				var err error
+
+				regionalOrders = gochannel.NewGoChannel(gochannel.Config{}, logger)
+				globalOrders = gochannel.NewGoChannel(gochannel.Config{}, logger)
+
+				fanIn, err = fanin.NewFanIn(
+					regionalOrders,
+					globalOrders,
+					fanin.Config{
+						SourceTopics: []string{usTopic, euTopic, asiaTopic},
+						TargetTopic:  globalTopic,
+					},
+					logger,
+				)
+				Expect(err).NotTo(HaveOccurred())
+
+				globalEvents, err = globalOrders.Subscribe(ctx, globalTopic)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				if fanIn != nil {
+					fanIn.Close()
+				}
+				if regionalOrders != nil {
+					regionalOrders.Close()
+				}
+				if globalOrders != nil {
+					globalOrders.Close()
+				}
+			})
+
+			It("should merge orders from multiple regions into unified analytics stream", func() {
+				By("Starting FanIn to merge regional order streams")
+				fanInCtx, fanInCancel := context.WithCancel(ctx)
+				defer fanInCancel()
+
+				fanInReady := make(chan struct{})
+				go func() {
+					defer GinkgoRecover()
+					close(fanInReady)
+					err := fanIn.Run(fanInCtx)
+					if err != nil && !errors.Is(err, context.Canceled) {
+						Fail("FanIn failed: " + err.Error())
+					}
+				}()
+
+				<-fanInReady
+				time.Sleep(100 * time.Millisecond)
+
+				By("Processing orders from US, EU, and Asia regions")
+				usOrder := OrderCreated{OrderID: "US-order-001", CustomerID: "us-customer-1", Amount: 100, Timestamp: time.Now().Format(time.RFC3339)}
+				euOrder := OrderCreated{OrderID: "EU-order-001", CustomerID: "eu-customer-1", Amount: 200, Timestamp: time.Now().Format(time.RFC3339)}
+				asiaOrder := OrderCreated{OrderID: "Asia-order-001", CustomerID: "asia-customer-1", Amount: 300, Timestamp: time.Now().Format(time.RFC3339)}
+
+				for _, order := range []struct {
+					topic string
+					order OrderCreated
+				}{
+					{usTopic, usOrder},
+					{euTopic, euOrder},
+					{asiaTopic, asiaOrder},
+				} {
+					payload, err := json.Marshal(order.order)
+					Expect(err).NotTo(HaveOccurred())
+					msg := message.NewMessage(watermill.NewUUID(), payload)
+					err = regionalOrders.Publish(order.topic, msg)
+					Expect(err).NotTo(HaveOccurred())
+				}
+
+				By("Verifying all regional orders reach global analytics")
+				receivedOrders := make([]OrderCreated, 0, 3)
+
+				for i := 0; i < 3; i++ {
+					select {
+					case orderMsg := <-globalEvents:
+						var order OrderCreated
+						err := json.Unmarshal(orderMsg.Payload, &order)
+						Expect(err).NotTo(HaveOccurred())
+
+						receivedOrders = append(receivedOrders, order)
+						orderMsg.Ack()
+					case <-time.After(5 * time.Second):
+						Fail(fmt.Sprintf("Timeout waiting for order %d of 3", i+1))
+					}
+				}
+
+				Expect(receivedOrders).To(HaveLen(3))
+
+				orderIDs := make([]string, len(receivedOrders))
+				for i, order := range receivedOrders {
+					orderIDs[i] = order.OrderID
+				}
+
+				Expect(orderIDs).To(ContainElements("US-order-001", "EU-order-001", "Asia-order-001"))
+			})
+
+			It("should continue processing orders when one region is unavailable", func() {
+				By("Starting FanIn with all 3 regions")
+				fanInCtx, fanInCancel := context.WithCancel(ctx)
+				defer fanInCancel()
+
+				fanInReady := make(chan struct{})
+				go func() {
+					defer GinkgoRecover()
+					close(fanInReady)
+					err := fanIn.Run(fanInCtx)
+					if err != nil && !errors.Is(err, context.Canceled) {
+						Fail("FanIn failed: " + err.Error())
+					}
+				}()
+
+				<-fanInReady
+				time.Sleep(100 * time.Millisecond)
+
+				By("Simulating Asia region outage")
+
+				By("Verifying US and EU orders still reach global analytics")
+				usOrder := OrderCreated{OrderID: "US-order-002", CustomerID: "us-customer-2", Amount: 150, Timestamp: time.Now().Format(time.RFC3339)}
+				euOrder := OrderCreated{OrderID: "EU-order-002", CustomerID: "eu-customer-2", Amount: 250, Timestamp: time.Now().Format(time.RFC3339)}
+
+				for _, order := range []struct {
+					topic string
+					order OrderCreated
+				}{
+					{usTopic, usOrder},
+					{euTopic, euOrder},
+				} {
+					payload, err := json.Marshal(order.order)
+					Expect(err).NotTo(HaveOccurred())
+					msg := message.NewMessage(watermill.NewUUID(), payload)
+					err = regionalOrders.Publish(order.topic, msg)
+					Expect(err).NotTo(HaveOccurred())
+				}
+
+				receivedOrders := make([]OrderCreated, 0, 2)
+
+				for i := 0; i < 2; i++ {
+					select {
+					case orderMsg := <-globalEvents:
+						var order OrderCreated
+						err := json.Unmarshal(orderMsg.Payload, &order)
+						Expect(err).NotTo(HaveOccurred())
+
+						receivedOrders = append(receivedOrders, order)
+						orderMsg.Ack()
+					case <-time.After(5 * time.Second):
+						Fail(fmt.Sprintf("Timeout waiting for order %d of 2", i+1))
+					}
+				}
+
+				Expect(receivedOrders).To(HaveLen(2))
+
+				orderIDs := make([]string, len(receivedOrders))
+				for i, order := range receivedOrders {
+					orderIDs[i] = order.OrderID
+				}
+
+				Expect(orderIDs).To(ContainElements("US-order-002", "EU-order-002"))
+
+				By("Demonstrating regional isolation preserves business continuity")
+			})
+		})
 	})
 })
