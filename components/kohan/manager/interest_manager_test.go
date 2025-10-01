@@ -57,7 +57,7 @@ var _ = Describe("InterestManager", func() {
 			}
 
 			mockExchange.EXPECT().
-				Exchange(ctx, mock.Anything).
+				ExchangeWithPrecedingMonth(ctx, mock.Anything).
 				Return(nil)
 		})
 
@@ -85,7 +85,7 @@ var _ = Describe("InterestManager", func() {
 			}}
 
 			mockExchange.EXPECT().
-				Exchange(ctx, mock.Anything).
+				ExchangeWithPrecedingMonth(ctx, mock.Anything).
 				Return(common.ErrNotFound)
 		})
 
@@ -121,7 +121,7 @@ var _ = Describe("InterestManager", func() {
 
 			// Verify that exchangeables passed contain correct interest amounts
 			mockExchange.EXPECT().
-				Exchange(ctx, mock.AnythingOfType("[]tax.Exchangeable")).
+				ExchangeWithPrecedingMonth(ctx, mock.AnythingOfType("[]tax.Exchangeable")).
 				Run(func(_ context.Context, exchangeables []tax.Exchangeable) {
 					Expect(exchangeables).To(HaveLen(2))
 					Expect(exchangeables[0].GetUSDAmount()).To(Equal(100.00))

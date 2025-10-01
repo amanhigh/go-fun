@@ -161,19 +161,19 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(decInterest.Amount).To(Equal(20.00))
 			Expect(decInterest.Tax).To(Equal(4.00))
 			Expect(decInterest.Net).To(Equal(16.00))
-			Expect(decInterest.TTRate).To(Equal(82.00)) // Assumed rate for Dec 31
-			Expect(decInterest.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
-			Expect(decInterest.INRValue()).To(Equal(1640.00)) // 20.00 * 82.00
+			Expect(decInterest.TTRate).To(Equal(83.20)) // Nov 2023 month-end rate (preceding month)
+			Expect(decInterest.TTDate.Format(time.DateOnly)).To(Equal("2023-11-15"))
+			Expect(decInterest.INRValue()).To(Equal(1664.00)) // 20.00 * 83.20
 
 			// --- Assertions for Jan 10 Interest (AAPL) - Key Details ---
 			janInterest := summary.INRInterest[1]
 			Expect(janInterest.Symbol).To(Equal("AAPL"))
 			Expect(janInterest.Amount).To(Equal(5.50))  // Check Amount for AAPL
-			Expect(janInterest.TTRate).To(Equal(82.40)) // Assumed rate for Jan 10
-			Expect(janInterest.TTDate.Format(time.DateOnly)).To(Equal("2024-01-10"))
+			Expect(janInterest.TTRate).To(Equal(82.00)) // Dec 2023 month-end rate (preceding month)
+			Expect(janInterest.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
 			Expect(janInterest.Tax).To(Equal(1.10))
 			Expect(janInterest.Net).To(Equal(4.40))
-			Expect(janInterest.INRValue()).To(Equal(453.20)) // 5.50 * 82.40
+			Expect(janInterest.INRValue()).To(Equal(451.00)) // 5.50 * 82.00
 		})
 	})
 
