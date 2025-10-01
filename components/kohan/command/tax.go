@@ -58,10 +58,10 @@ var computeCmd = &cobra.Command{
 
 func init() {
 	appsCmd.AddCommand(taxCmd)
-	// TODO: #A Second Year Summary from Vested.
-	// TODO: #B Add Interactive Broker Parser.
+	// FIXME: #A Second Year Summary from Vested.
+	// FIXME: #B Add Interactive Broker Parser.
 	taxCmd.AddCommand(vestedCmd)
-	// TODO: #C Match Computation for Interactive Broker.
+	// TODO: #A Match Computation for Interactive Broker.
 	taxCmd.AddCommand(computeCmd)
 }
 
@@ -85,7 +85,6 @@ var vestedCmd = &cobra.Command{
 			return fmt.Errorf("failed to get drive wealth manager: %w", err)
 		}
 
-		// FIXME: #A Match First Year Summary from Vested (ticker download not working).
 		info, err := driveWealthManager.Parse()
 		if err != nil {
 			return fmt.Errorf("failed to parse drive wealth report: %w", err)
