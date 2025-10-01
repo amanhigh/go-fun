@@ -42,7 +42,6 @@ func NewMonitorServer(capturePath string, autoManager manager.AutoManagerInterfa
 
 // Start starts the server with graceful shutdown support using util.Shutdown
 func (s *MonitorServer) Start(port int, shutdown util.Shutdown) error {
-	// Create HTTP server with security timeouts
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%d", port),
 		Handler:           s.mux,
@@ -51,36 +50,51 @@ func (s *MonitorServer) Start(port int, shutdown util.Shutdown) error {
 		WriteTimeout:      writeTimeout,
 	}
 
-	// Start server in goroutine so it won't block graceful shutdown handling
 	errChan := make(chan error, 1)
-	go func() {
-		log.Info().Int("port", port).Msg("Starting Monitor Server with graceful shutdown")
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			errChan <- err
-		}
-	}()
+	serverStopped := make(chan struct{})
 
-	// Check for startup errors or wait for shutdown signal (following fun-app pattern)
+	go s.runServer(srv, errChan, serverStopped, port)
+	go s.handleShutdown(srv, shutdown, errChan, serverStopped)
+
+	err := <-errChan
+	close(serverStopped)
+	if err != nil {
+		log.Error().Err(err).Msg("Server error occurred")
+		return err
+	}
+	return nil
+}
+
+func (s *MonitorServer) runServer(srv *http.Server, errChan chan<- error, serverStopped <-chan struct{}, port int) {
+	log.Info().Int("port", port).Msg("Starting Monitor Server with graceful shutdown")
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		select {
+		case errChan <- err:
+		case <-serverStopped:
+		}
+	}
+}
+
+func (s *MonitorServer) handleShutdown(srv *http.Server, shutdown util.Shutdown, errChan chan<- error, serverStopped <-chan struct{}) {
+	shutdownCtx := shutdown.Wait()
+
+	ctxTimed, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	log.Info().Msg("Shutting down monitor server gracefully")
+	if err := srv.Shutdown(ctxTimed); err != nil {
+		log.Error().Err(err).Msg("Server forced shutdown")
+		select {
+		case errChan <- fmt.Errorf("graceful shutdown failed: %w", err):
+		case <-serverStopped:
+		}
+		return
+	}
+
+	log.Info().Ctx(shutdownCtx).Msg("Monitor server shutdown complete")
 	select {
-	case err := <-errChan:
-		log.Error().Err(err).Msg("Failed to start monitor server")
-		return fmt.Errorf("server start failed: %w", err)
-	case <-time.After(time.Second):
-		// No error occurred, wait for graceful shutdown signal
-		shutdownCtx := shutdown.Wait() // This blocks until SIGTERM/SIGINT or programmatic stop
-
-		// Graceful shutdown with timeout
-		ctxTimed, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
-		defer cancel()
-
-		log.Info().Msg("Shutting down monitor server gracefully")
-		if err := srv.Shutdown(ctxTimed); err != nil {
-			log.Error().Err(err).Msg("Server forced shutdown")
-			return fmt.Errorf("graceful shutdown failed: %w", err)
-		}
-
-		log.Info().Ctx(shutdownCtx).Msg("Monitor server shutdown complete")
-		return nil
+	case errChan <- nil:
+	case <-serverStopped:
 	}
 }
 

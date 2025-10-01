@@ -157,25 +157,23 @@ var _ = Describe("MonitorServer", func() {
 		})
 
 		AfterEach(func() {
-			// Ensure server shutdown completes (if not already consumed by test)
 			select {
 			case <-serverDone:
-				// Already consumed by test
-			case <-time.After(4 * time.Second):
-				// Timeout - server should have shutdown by now
+			default:
 			}
 		})
 
 		It("should start and shutdown gracefully", func() {
 			startAndWaitForServer(freePort)
+			time.Sleep(100 * time.Millisecond)
 			realShutdown.Stop(context.Background())
 			Eventually(serverDone, 2*time.Second).Should(Receive(BeNil()))
 		})
 
 		It("should serve HTTP requests before shutdown", func() {
 			startAndWaitForServer(freePort)
+			time.Sleep(100 * time.Millisecond)
 
-			// Make actual HTTP request to verify server is functional
 			resp, err := http.Get(fmt.Sprintf("http://localhost:%d/v1/clip/", freePort))
 			if resp != nil {
 				defer resp.Body.Close()
@@ -187,7 +185,6 @@ var _ = Describe("MonitorServer", func() {
 		})
 
 		It("should handle startup errors", func() {
-			// Don't use helper - test error case directly
 			go func() {
 				err := server.Start(-1, realShutdown)
 				serverDone <- err
