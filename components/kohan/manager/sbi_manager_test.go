@@ -2,6 +2,7 @@ package manager_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -129,6 +130,139 @@ var _ = Describe("SBIManager", func() {
 				Expect(closestErr.Error()).To(ContainSubstring("exact rate not found for 2024-01-24"))
 				Expect(closestErr.Error()).To(ContainSubstring("using closest available date 2024-01-23"))
 			})
+		})
+	})
+
+	Context("GetLastMonthEndRate", func() {
+		var allRates []tax.SbiRate
+
+		BeforeEach(func() {
+			allRates = []tax.SbiRate{
+				{Date: "2024-01-10", TTBuy: 82.40, TTSell: 83.40},
+				{Date: "2024-01-15", TTBuy: 82.50, TTSell: 83.50},
+				{Date: "2024-01-31", TTBuy: 82.75, TTSell: 83.75},
+				{Date: "2024-02-05", TTBuy: 83.00, TTSell: 84.00},
+			}
+		})
+
+		It("should return last rate in preceding month for dividend/interest date", func() {
+			mockExchange.EXPECT().GetAllRecords(ctx).Return(allRates, nil).Once()
+
+			inputDate := time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)
+			result, err := sbiManager.GetLastMonthEndRate(ctx, inputDate)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(result.Rate).To(Equal(82.75))
+			Expect(result.ActualDate).To(Equal(time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)))
+		})
+
+		It("should return last available rate when month-end date missing", func() {
+			ratesWithoutMonthEnd := []tax.SbiRate{
+				{Date: "2024-01-10", TTBuy: 82.40, TTSell: 83.40},
+				{Date: "2024-01-15", TTBuy: 82.50, TTSell: 83.50},
+				{Date: "2024-02-05", TTBuy: 83.00, TTSell: 84.00},
+			}
+
+			mockExchange.EXPECT().GetAllRecords(ctx).Return(ratesWithoutMonthEnd, nil).Once()
+
+			inputDate := time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)
+			result, err := sbiManager.GetLastMonthEndRate(ctx, inputDate)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(result.Rate).To(Equal(82.50))
+			Expect(result.ActualDate).To(Equal(time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)))
+		})
+
+		It("should cache results for subsequent calls", func() {
+			mockExchange.EXPECT().GetAllRecords(ctx).Return(allRates, nil).Once()
+
+			inputDate := time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)
+			result1, err1 := sbiManager.GetLastMonthEndRate(ctx, inputDate)
+			Expect(err1).ToNot(HaveOccurred())
+
+			result2, err2 := sbiManager.GetLastMonthEndRate(ctx, inputDate)
+
+			Expect(err2).ToNot(HaveOccurred())
+			Expect(result2.Rate).To(Equal(result1.Rate))
+			Expect(result2.ActualDate).To(Equal(result1.ActualDate))
+		})
+
+		It("should return error when no rates in preceding month", func() {
+			emptyMonthRates := []tax.SbiRate{
+				{Date: "2024-02-05", TTBuy: 83.00, TTSell: 84.00},
+			}
+
+			mockExchange.EXPECT().GetAllRecords(ctx).Return(emptyMonthRates, nil).Once()
+
+			inputDate := time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)
+			result, err := sbiManager.GetLastMonthEndRate(ctx, inputDate)
+
+			Expect(err).To(HaveOccurred())
+			Expect(result.Rate).To(Equal(0.0))
+			Expect(result.ActualDate.IsZero()).To(BeTrue())
+
+			_, ok := err.(tax.RateNotFoundError)
+			Expect(ok).To(BeTrue())
+		})
+
+		It("should handle different months independently", func() {
+			mockExchange.EXPECT().GetAllRecords(ctx).Return(allRates, nil).Once()
+
+			febDate := time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)
+			janResult, err1 := sbiManager.GetLastMonthEndRate(ctx, febDate)
+			Expect(err1).ToNot(HaveOccurred())
+			Expect(janResult.Rate).To(Equal(82.75))
+			Expect(janResult.ActualDate.Month()).To(Equal(time.January))
+
+			marDate := time.Date(2024, 3, 15, 0, 0, 0, 0, time.UTC)
+			febResult, err2 := sbiManager.GetLastMonthEndRate(ctx, marDate)
+			Expect(err2).ToNot(HaveOccurred())
+			Expect(febResult.Rate).To(Equal(83.00))
+			Expect(febResult.ActualDate.Month()).To(Equal(time.February))
+		})
+
+		It("should propagate repository errors", func() {
+			expectedErr := common.NewServerError(errors.New("repository error"))
+			mockExchange.EXPECT().GetAllRecords(ctx).Return(nil, expectedErr).Once()
+
+			inputDate := time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)
+			result, err := sbiManager.GetLastMonthEndRate(ctx, inputDate)
+
+			Expect(err).To(HaveOccurred())
+			Expect(result.Rate).To(Equal(0.0))
+			Expect(result.ActualDate.IsZero()).To(BeTrue())
+		})
+
+		It("should handle leap year February correctly", func() {
+			leapYearRates := []tax.SbiRate{
+				{Date: "2024-02-28", TTBuy: 83.00, TTSell: 84.00},
+				{Date: "2024-02-29", TTBuy: 83.05, TTSell: 84.05},
+			}
+
+			mockExchange.EXPECT().GetAllRecords(ctx).Return(leapYearRates, nil).Once()
+
+			inputDate := time.Date(2024, 3, 15, 0, 0, 0, 0, time.UTC)
+			result, err := sbiManager.GetLastMonthEndRate(ctx, inputDate)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(result.Rate).To(Equal(83.05))
+			Expect(result.ActualDate.Day()).To(Equal(29))
+		})
+
+		It("should calculate preceding month correctly for January", func() {
+			decemberRates := []tax.SbiRate{
+				{Date: "2023-12-28", TTBuy: 82.00, TTSell: 83.00},
+				{Date: "2023-12-31", TTBuy: 82.10, TTSell: 83.10},
+			}
+
+			mockExchange.EXPECT().GetAllRecords(ctx).Return(decemberRates, nil).Once()
+
+			inputDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
+			result, err := sbiManager.GetLastMonthEndRate(ctx, inputDate)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(result.Rate).To(Equal(82.10))
+			Expect(result.ActualDate).To(Equal(time.Date(2023, 12, 31, 0, 0, 0, 0, time.UTC)))
 		})
 	})
 })

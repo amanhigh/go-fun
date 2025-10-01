@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/models/common"
+	"github.com/amanhigh/go-fun/models/tax"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -88,6 +89,74 @@ func (_c *SBIManager_DownloadRates_Call) Return(httpError common.HttpError) *SBI
 }
 
 func (_c *SBIManager_DownloadRates_Call) RunAndReturn(run func(ctx context.Context) common.HttpError) *SBIManager_DownloadRates_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetLastMonthEndRate provides a mock function for the type SBIManager
+func (_mock *SBIManager) GetLastMonthEndRate(ctx context.Context, date time.Time) (tax.MonthEndRate, common.HttpError) {
+	ret := _mock.Called(ctx, date)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLastMonthEndRate")
+	}
+
+	var r0 tax.MonthEndRate
+	var r1 common.HttpError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) (tax.MonthEndRate, common.HttpError)); ok {
+		return returnFunc(ctx, date)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) tax.MonthEndRate); ok {
+		r0 = returnFunc(ctx, date)
+	} else {
+		r0 = ret.Get(0).(tax.MonthEndRate)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, time.Time) common.HttpError); ok {
+		r1 = returnFunc(ctx, date)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(common.HttpError)
+		}
+	}
+	return r0, r1
+}
+
+// SBIManager_GetLastMonthEndRate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLastMonthEndRate'
+type SBIManager_GetLastMonthEndRate_Call struct {
+	*mock.Call
+}
+
+// GetLastMonthEndRate is a helper method to define mock.On call
+//   - ctx context.Context
+//   - date time.Time
+func (_e *SBIManager_Expecter) GetLastMonthEndRate(ctx interface{}, date interface{}) *SBIManager_GetLastMonthEndRate_Call {
+	return &SBIManager_GetLastMonthEndRate_Call{Call: _e.mock.On("GetLastMonthEndRate", ctx, date)}
+}
+
+func (_c *SBIManager_GetLastMonthEndRate_Call) Run(run func(ctx context.Context, date time.Time)) *SBIManager_GetLastMonthEndRate_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 time.Time
+		if args[1] != nil {
+			arg1 = args[1].(time.Time)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *SBIManager_GetLastMonthEndRate_Call) Return(monthEndRate tax.MonthEndRate, httpError common.HttpError) *SBIManager_GetLastMonthEndRate_Call {
+	_c.Call.Return(monthEndRate, httpError)
+	return _c
+}
+
+func (_c *SBIManager_GetLastMonthEndRate_Call) RunAndReturn(run func(ctx context.Context, date time.Time) (tax.MonthEndRate, common.HttpError)) *SBIManager_GetLastMonthEndRate_Call {
 	_c.Call.Return(run)
 	return _c
 }

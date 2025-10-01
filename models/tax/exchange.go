@@ -38,3 +38,9 @@ func (r SbiRate) GetDate() (time.Time, common.HttpError) {
 	}
 	return t, nil
 }
+
+// MonthEndRate represents the last available TT Buy rate for a given month
+type MonthEndRate struct {
+	Rate       float64
+	ActualDate time.Time
+}
