@@ -53,7 +53,7 @@ var _ = Describe("DividendManager", func() {
 			}
 
 			mockExchangeManager.EXPECT().
-				Exchange(ctx, mock.Anything).
+				ExchangeWithPrecedingMonth(ctx, mock.Anything).
 				Return(nil)
 		})
 
@@ -85,7 +85,7 @@ var _ = Describe("DividendManager", func() {
 			}}
 
 			mockExchangeManager.EXPECT().
-				Exchange(ctx, mock.Anything).
+				ExchangeWithPrecedingMonth(ctx, mock.Anything).
 				Return(common.ErrNotFound)
 		})
 
@@ -119,9 +119,8 @@ var _ = Describe("DividendManager", func() {
 				},
 			}
 
-			// Verify that exchangeables passed contain correct dividend amounts
 			mockExchangeManager.EXPECT().
-				Exchange(ctx, mock.AnythingOfType("[]tax.Exchangeable")).
+				ExchangeWithPrecedingMonth(ctx, mock.AnythingOfType("[]tax.Exchangeable")).
 				Run(func(_ context.Context, exchangeables []tax.Exchangeable) {
 					Expect(exchangeables).To(HaveLen(2))
 					Expect(exchangeables[0].GetUSDAmount()).To(Equal(100.00))

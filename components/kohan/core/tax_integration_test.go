@@ -119,25 +119,25 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(janDividend.Amount).To(Equal(115.00))
 			Expect(janDividend.Tax).To(Equal(17.25))
 			Expect(janDividend.Net).To(Equal(97.75))
-			Expect(janDividend.TTRate).To(Equal(82.50)) // Rate for Jan 15 from sbi_rates.csv
-			Expect(janDividend.TTDate.Format(time.DateOnly)).To(Equal("2024-01-15"))
-			Expect(janDividend.INRValue()).To(Equal(9487.50)) // 115.00 * 82.50
+			Expect(janDividend.TTRate).To(Equal(82.00))
+			Expect(janDividend.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
+			Expect(janDividend.INRValue()).To(Equal(9430.00))
 
 			// --- Assertions for Feb 20 Dividend (MSFT) - Key Details ---
 			febDividend := summary.INRDividends[1]
 			Expect(febDividend.Symbol).To(Equal("MSFT"))
-			Expect(febDividend.Amount).To(Equal(50.00)) // Check Amount for MSFT
-			Expect(febDividend.TTRate).To(Equal(83.05)) // Assumed rate for Feb 20
-			Expect(febDividend.TTDate.Format(time.DateOnly)).To(Equal("2024-02-20"))
-			Expect(febDividend.INRValue()).To(Equal(4152.50)) // 50.00 * 83.05
+			Expect(febDividend.Amount).To(Equal(50.00))
+			Expect(febDividend.TTRate).To(Equal(82.90))
+			Expect(febDividend.TTDate.Format(time.DateOnly)).To(Equal("2024-01-17"))
+			Expect(febDividend.INRValue()).To(Equal(4145.00))
 
 			// --- Assertions for Mar 15 Dividend (AAPL) - Key Details ---
 			marDividend := summary.INRDividends[2]
 			Expect(marDividend.Symbol).To(Equal("AAPL"))
-			Expect(marDividend.Amount).To(Equal(100.00)) // Check Amount for AAPL Mar
-			Expect(marDividend.TTRate).To(Equal(83.10))  // Rate for Mar 15 from sbi_rates.csv
-			Expect(marDividend.TTDate.Format(time.DateOnly)).To(Equal("2024-03-15"))
-			Expect(marDividend.INRValue()).To(Equal(8310.00)) // 100.00 * 83.10
+			Expect(marDividend.Amount).To(Equal(100.00))
+			Expect(marDividend.TTRate).To(Equal(83.05))
+			Expect(marDividend.TTDate.Format(time.DateOnly)).To(Equal("2024-02-20"))
+			Expect(marDividend.INRValue()).To(Equal(8305.00))
 		})
 	})
 

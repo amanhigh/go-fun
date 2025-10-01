@@ -331,4 +331,153 @@ var _ = Describe("ExchangeManager", func() {
 			})
 		})
 	})
+
+	Describe("ExchangeWithPrecedingMonth", func() {
+		var (
+			exchangeables []tax.Exchangeable
+			dividend      tax.INRDividend
+		)
+
+		Context("Successful Preceding Month Rate Application", func() {
+			var paymentDate time.Time
+
+			BeforeEach(func() {
+				paymentDate = time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)
+				dividend = tax.INRDividend{
+					Dividend: tax.Dividend{
+						Symbol: "AAPL",
+						Date:   "2024-02-20",
+						Amount: 50.00,
+						Tax:    12.50,
+						Net:    37.50,
+					},
+				}
+				exchangeables = []tax.Exchangeable{&dividend}
+
+				expectedRate := tax.MonthEndRate{
+					Rate:       82.75,
+					ActualDate: time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC),
+				}
+
+				mockSBI.EXPECT().
+					GetLastMonthEndRate(ctx, paymentDate).
+					Return(expectedRate, nil).
+					Once()
+			})
+
+			It("should set rate from preceding month-end", func() {
+				err := exchangeMgr.ExchangeWithPrecedingMonth(ctx, exchangeables)
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(dividend.TTRate).To(Equal(82.75))
+				Expect(dividend.TTDate).To(Equal(time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)))
+			})
+		})
+
+		Context("Rate Not Found Error", func() {
+			var paymentDate time.Time
+
+			BeforeEach(func() {
+				paymentDate = time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)
+				dividend = tax.INRDividend{
+					Dividend: tax.Dividend{
+						Symbol: "AAPL",
+						Date:   "2024-02-20",
+						Amount: 50.00,
+					},
+				}
+				exchangeables = []tax.Exchangeable{&dividend}
+
+				mockSBI.EXPECT().
+					GetLastMonthEndRate(ctx, paymentDate).
+					Return(tax.MonthEndRate{}, tax.NewRateNotFoundError(paymentDate)).
+					Once()
+			})
+
+			It("should return RateNotFoundError", func() {
+				err := exchangeMgr.ExchangeWithPrecedingMonth(ctx, exchangeables)
+
+				Expect(err).To(HaveOccurred())
+				_, ok := err.(tax.RateNotFoundError)
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("Multiple Dividends with Different Months", func() {
+			var (
+				dividend1 tax.INRDividend
+				dividend2 tax.INRDividend
+			)
+
+			BeforeEach(func() {
+				dividend1 = tax.INRDividend{
+					Dividend: tax.Dividend{
+						Symbol: "AAPL",
+						Date:   "2024-02-20",
+						Amount: 50.00,
+					},
+				}
+				dividend2 = tax.INRDividend{
+					Dividend: tax.Dividend{
+						Symbol: "MSFT",
+						Date:   "2024-03-15",
+						Amount: 100.00,
+					},
+				}
+				exchangeables = []tax.Exchangeable{&dividend1, &dividend2}
+
+				mockSBI.EXPECT().
+					GetLastMonthEndRate(ctx, time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)).
+					Return(tax.MonthEndRate{Rate: 82.75, ActualDate: time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)}, nil).
+					Once()
+
+				mockSBI.EXPECT().
+					GetLastMonthEndRate(ctx, time.Date(2024, 3, 15, 0, 0, 0, 0, time.UTC)).
+					Return(tax.MonthEndRate{Rate: 83.00, ActualDate: time.Date(2024, 2, 29, 0, 0, 0, 0, time.UTC)}, nil).
+					Once()
+			})
+
+			It("should apply correct preceding month rates for each dividend", func() {
+				err := exchangeMgr.ExchangeWithPrecedingMonth(ctx, exchangeables)
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(dividend1.TTRate).To(Equal(82.75))
+				Expect(dividend1.TTDate).To(Equal(time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)))
+				Expect(dividend2.TTRate).To(Equal(83.00))
+				Expect(dividend2.TTDate).To(Equal(time.Date(2024, 2, 29, 0, 0, 0, 0, time.UTC)))
+			})
+		})
+
+		Context("Empty Exchangeables Slice", func() {
+			BeforeEach(func() {
+				exchangeables = []tax.Exchangeable{}
+			})
+
+			It("should complete without error", func() {
+				err := exchangeMgr.ExchangeWithPrecedingMonth(ctx, exchangeables)
+				Expect(err).ToNot(HaveOccurred())
+			})
+		})
+
+		Context("Invalid Date in Exchangeable", func() {
+			BeforeEach(func() {
+				dividend = tax.INRDividend{
+					Dividend: tax.Dividend{
+						Symbol: "AAPL",
+						Date:   "invalid-date",
+						Amount: 50.00,
+					},
+				}
+				exchangeables = []tax.Exchangeable{&dividend}
+			})
+
+			It("should return date parsing error", func() {
+				err := exchangeMgr.ExchangeWithPrecedingMonth(ctx, exchangeables)
+
+				Expect(err).To(HaveOccurred())
+				_, ok := err.(tax.InvalidDateError)
+				Expect(ok).To(BeTrue())
+			})
+		})
+	})
 })

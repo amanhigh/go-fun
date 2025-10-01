@@ -37,14 +37,14 @@ func NewDividendManager(
 
 func (d *DividendManagerImpl) ProcessDividends(ctx context.Context, dividends []tax.Dividend) (inrDividends []tax.INRDividend, err common.HttpError) {
 	exchangeables := make([]tax.Exchangeable, 0, len(dividends))
-	inrDividends = make([]tax.INRDividend, len(dividends)) // Pre-allocate slice
+	inrDividends = make([]tax.INRDividend, len(dividends))
 
 	for i, dividend := range dividends {
 		inrDividends[i].Dividend = dividend
-		exchangeables = append(exchangeables, &inrDividends[i]) // Add pointer to element in pre-allocated slice
+		exchangeables = append(exchangeables, &inrDividends[i])
 	}
 
-	err = d.exchangeManager.Exchange(ctx, exchangeables)
+	err = d.exchangeManager.ExchangeWithPrecedingMonth(ctx, exchangeables)
 	return
 }
 
