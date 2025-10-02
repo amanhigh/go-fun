@@ -90,7 +90,7 @@ func (s *SBIManagerImpl) findClosestRate(rates []tax.SbiRate, requestedDate time
 			return 0, dateErr
 		}
 		rateDateStr := rateDate.Format(time.DateOnly)
-		if rateDateStr <= dateStr && (closestDate.IsZero() || rateDate.After(closestDate)) {
+		if rateDateStr <= dateStr && rate.TTBuy > 0 && (closestDate.IsZero() || rateDate.After(closestDate)) {
 			closestDate = rateDate
 			closestRate = rate.TTBuy
 		}

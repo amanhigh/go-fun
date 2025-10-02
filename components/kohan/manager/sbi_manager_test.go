@@ -131,6 +131,59 @@ var _ = Describe("SBIManager", func() {
 				Expect(closestErr.Error()).To(ContainSubstring("using closest available date 2024-01-23"))
 			})
 		})
+
+		Context("When weekend/holiday with zero TTBuy rate", func() {
+			It("should skip zero rates and use previous non-zero rate", func() {
+				// Scenario: Request rate for Monday (2022-05-02) after weekend
+				// Weekend Saturday has TTBuy=0 (no forex trading)
+				// Should skip Saturday and use Friday's rate
+				requestedDate := time.Date(2022, 5, 2, 0, 0, 0, 0, time.UTC) // Monday
+				fridayDate := time.Date(2022, 4, 29, 0, 0, 0, 0, time.UTC)   // Friday
+				expectedRate := 76.00
+
+				// Mock exact date lookup (Monday not found - holiday)
+				mockExchange.EXPECT().GetRecordsForTicker(ctx, "2022-05-02").Return([]tax.SbiRate{}, nil)
+
+				// Mock GetAllRecords with Friday (valid) and Saturday (zero) rates
+				allRates := []tax.SbiRate{
+					{Date: "2022-04-29", TTBuy: 76.00, TTSell: 77.00}, // Friday - valid
+					{Date: "2022-04-30", TTBuy: 0, TTSell: 0},         // Saturday - weekend (zero)
+				}
+				mockExchange.EXPECT().GetAllRecords(ctx).Return(allRates, nil)
+
+				rate, err := sbiManager.GetTTBuyRate(ctx, requestedDate)
+
+				// Should skip Saturday (zero) and use Friday
+				Expect(rate).To(Equal(expectedRate))
+
+				// Verify ClosestDateError with Friday's date (not Saturday)
+				closestErr, ok := err.(tax.ClosestDateError)
+				Expect(ok).To(BeTrue())
+				Expect(closestErr.GetRequestedDate()).To(Equal(requestedDate))
+				Expect(closestErr.GetClosestDate()).To(Equal(fridayDate))
+			})
+
+			It("should return error when all previous rates are zero", func() {
+				requestedDate := time.Date(2024, 1, 10, 0, 0, 0, 0, time.UTC)
+
+				// Mock exact date lookup
+				mockExchange.EXPECT().GetRecordsForTicker(ctx, "2024-01-10").Return([]tax.SbiRate{}, nil)
+
+				// All rates are zero (all weekends)
+				allRates := []tax.SbiRate{
+					{Date: "2024-01-07", TTBuy: 0, TTSell: 0},
+					{Date: "2024-01-06", TTBuy: 0, TTSell: 0},
+				}
+				mockExchange.EXPECT().GetAllRecords(ctx).Return(allRates, nil)
+
+				rate, err := sbiManager.GetTTBuyRate(ctx, requestedDate)
+
+				// Should return error when no valid rate found
+				Expect(rate).To(Equal(0.0))
+				_, ok := err.(tax.RateNotFoundError)
+				Expect(ok).To(BeTrue())
+			})
+		})
 	})
 
 	Context("GetLastMonthEndRate", func() {
