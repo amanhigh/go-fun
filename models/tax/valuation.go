@@ -79,6 +79,7 @@ type INRValuation struct {
 	FirstPosition   INRPosition // First position with exchange rate details
 	PeakPosition    INRPosition // Peak position with exchange rate details
 	YearEndPosition INRPosition // Year end position with exchange rate details
+	AmountPaid      float64     // Sum of gross dividends in INR for Schedule FA
 }
 
 // Helper to create tax valuation from base valuation
