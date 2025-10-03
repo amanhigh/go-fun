@@ -99,9 +99,9 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(summary.INRDividends).ToNot(BeNil()) // Ensure the slice itself is not nil
 
 			// --- Assertions for Dividends (FY 2023-24: 2023-04-01 to 2024-03-31) ---
-			// Based on testdata: AAPL Jan 15, MSFT Feb 20 (added), AAPL Mar 15 fall in this FY.
+			// Based on testdata: AAPL Jun 15, AAPL Dec 30, AAPL Jan 15, MSFT Feb 20, AAPL Mar 15 fall in this FY.
 			// AAPL Apr 15 should be filtered out.
-			Expect(summary.INRDividends).To(HaveLen(3)) // Expecting 3 dividends after filtering
+			Expect(summary.INRDividends).To(HaveLen(5)) // Expecting 5 dividends after filtering
 
 			// Sort results by date to ensure consistent order for assertions
 			sort.Slice(summary.INRDividends, func(i, j int) bool {
@@ -112,8 +112,30 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 				return dateI.Before(dateJ)
 			})
 
-			// --- Assertions for Jan 15 Dividend (AAPL) - Full Detail ---
-			janDividend := summary.INRDividends[0]
+			// --- Assertions for Jun 15, 2023 Dividend (AAPL) - First after sorting ---
+			junDividend := summary.INRDividends[0]
+			Expect(junDividend.Symbol).To(Equal("AAPL"))
+			Expect(junDividend.Date).To(Equal("2023-06-15"))
+			Expect(junDividend.Amount).To(Equal(50.00))
+			Expect(junDividend.Tax).To(Equal(7.50))
+			Expect(junDividend.Net).To(Equal(42.50))
+			Expect(junDividend.TTRate).To(Equal(82.00)) // May 2023 month-end
+			Expect(junDividend.TTDate.Format(time.DateOnly)).To(Equal("2023-05-01"))
+			Expect(junDividend.INRValue()).To(Equal(4100.00))
+
+			// --- Assertions for Dec 30, 2023 Dividend (AAPL) ---
+			decDividend := summary.INRDividends[1]
+			Expect(decDividend.Symbol).To(Equal("AAPL"))
+			Expect(decDividend.Date).To(Equal("2023-12-30"))
+			Expect(decDividend.Amount).To(Equal(60.00))
+			Expect(decDividend.Tax).To(Equal(9.00))
+			Expect(decDividend.Net).To(Equal(51.00))
+			Expect(decDividend.TTRate).To(Equal(83.20)) // Nov 2023 month-end
+			Expect(decDividend.TTDate.Format(time.DateOnly)).To(Equal("2023-11-15"))
+			Expect(decDividend.INRValue()).To(Equal(4992.00))
+
+			// --- Assertions for Jan 15, 2024 Dividend (AAPL) - Full Detail ---
+			janDividend := summary.INRDividends[2]
 			Expect(janDividend.Symbol).To(Equal("AAPL"))
 			Expect(janDividend.Date).To(Equal("2024-01-15"))
 			Expect(janDividend.Amount).To(Equal(115.00))
@@ -123,18 +145,22 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(janDividend.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
 			Expect(janDividend.INRValue()).To(Equal(9430.00))
 
-			// --- Assertions for Feb 20 Dividend (MSFT) - Key Details ---
-			febDividend := summary.INRDividends[1]
+			// --- Assertions for Feb 20, 2024 Dividend (MSFT) - Key Details ---
+			febDividend := summary.INRDividends[3]
 			Expect(febDividend.Symbol).To(Equal("MSFT"))
 			Expect(febDividend.Amount).To(Equal(50.00))
+			Expect(febDividend.Tax).To(Equal(7.50))
+			Expect(febDividend.Net).To(Equal(42.50))
 			Expect(febDividend.TTRate).To(Equal(82.90))
 			Expect(febDividend.TTDate.Format(time.DateOnly)).To(Equal("2024-01-17"))
 			Expect(febDividend.INRValue()).To(Equal(4145.00))
 
-			// --- Assertions for Mar 15 Dividend (AAPL) - Key Details ---
-			marDividend := summary.INRDividends[2]
+			// --- Assertions for Mar 15, 2024 Dividend (AAPL) - Key Details ---
+			marDividend := summary.INRDividends[4]
 			Expect(marDividend.Symbol).To(Equal("AAPL"))
 			Expect(marDividend.Amount).To(Equal(100.00))
+			Expect(marDividend.Tax).To(Equal(15.00))
+			Expect(marDividend.Net).To(Equal(85.00))
 			Expect(marDividend.TTRate).To(Equal(83.05))
 			Expect(marDividend.TTDate.Format(time.DateOnly)).To(Equal("2024-02-20"))
 			Expect(marDividend.INRValue()).To(Equal(8305.00))
@@ -219,6 +245,12 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(aaplVal.YearEndPosition.TTRate).To(Equal(82.00)) // From sbi_rates.csv for 2023-12-31
 			Expect(aaplVal.YearEndPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
 
+			// AmountPaid: AAPL has 2 dividends in US Year 2023 (Jun 15 + Dec 30)
+			// Jun 15: $50 × 82.00 (May month-end) = ₹4,100
+			// Dec 30: $60 × 83.20 (Nov month-end) = ₹4,992
+			// Total: ₹9,092
+			Expect(aaplVal.AmountPaid).To(Equal(9092.0))
+
 			// Assert GOOGL (Carry-over without trades)
 			Expect(googlVal.Ticker).To(Equal("GOOGL"))
 			Expect(googlVal.FirstPosition.Quantity).To(Equal(25.0))
@@ -229,6 +261,9 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(googlVal.YearEndPosition.Quantity).To(Equal(25.0))
 			Expect(googlVal.YearEndPosition.USDPrice).To(Equal(140.00))
 			Expect(googlVal.YearEndPosition.Date.Format(time.DateOnly)).To(Equal("2023-12-31"))
+
+			// AmountPaid: GOOGL has no dividends in US Year 2023
+			Expect(googlVal.AmountPaid).To(Equal(0.0))
 
 			// Assert MSFT (Fresh Start)
 			Expect(msftVal.Ticker).To(Equal("MSFT"))
@@ -250,6 +285,9 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(msftVal.YearEndPosition.Date.Format(time.DateOnly)).To(Equal("2023-12-31"))
 			Expect(msftVal.YearEndPosition.TTRate).To(Equal(82.00))
 			Expect(msftVal.YearEndPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
+
+			// AmountPaid: MSFT has no dividends in US Year 2023
+			Expect(msftVal.AmountPaid).To(Equal(0.0))
 		})
 	})
 
