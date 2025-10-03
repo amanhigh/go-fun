@@ -258,6 +258,24 @@ var _ = Describe("SBIManager", func() {
 			Expect(ok).To(BeTrue())
 		})
 
+		It("should skip zero TTBuy rates at month-end and use previous valid rate", func() {
+			ratesWithZeroAtMonthEnd := []tax.SbiRate{
+				{Date: "2024-01-27", TTBuy: 79.42, TTSell: 80.27},
+				{Date: "2024-01-29", TTBuy: 78.85, TTSell: 79.70},
+				{Date: "2024-01-30", TTBuy: 0.00, TTSell: 0.00}, // Invalid month-end
+				{Date: "2024-02-05", TTBuy: 83.00, TTSell: 84.00},
+			}
+
+			mockExchange.EXPECT().GetAllRecords(ctx).Return(ratesWithZeroAtMonthEnd, nil).Once()
+
+			inputDate := time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)
+			result, err := sbiManager.GetLastMonthEndRate(ctx, inputDate)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(result.Rate).To(Equal(78.85)) // Should use Jan 29, not Jan 30
+			Expect(result.ActualDate).To(Equal(time.Date(2024, 1, 29, 0, 0, 0, 0, time.UTC)))
+		})
+
 		It("should handle different months independently", func() {
 			mockExchange.EXPECT().GetAllRecords(ctx).Return(allRates, nil).Once()
 
