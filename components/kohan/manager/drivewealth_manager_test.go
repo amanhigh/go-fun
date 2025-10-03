@@ -166,7 +166,7 @@ var _ = Describe("DriveWealthManager", func() {
 
 		Context("when generating CSV", func() {
 			It("should create valid csv files including gains.csv", func() {
-				info := tax.DriveWealthInfo{
+				info := tax.BrokerageInfo{
 					Interests: []tax.Interest{
 						{Symbol: "CASH", Date: "2025-06-03", Amount: 0.59, Tax: 0, Net: 0.59},
 						{Symbol: "CASH", Date: "2025-05-02", Amount: 1.18, Tax: 0, Net: 1.18},

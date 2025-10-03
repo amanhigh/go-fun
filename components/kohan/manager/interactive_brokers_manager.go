@@ -15,8 +15,8 @@ import (
 )
 
 type InteractiveBrokersManager interface {
-	Parse() (info tax.InteractiveBrokersInfo, err error)
-	GenerateCsv(ctx context.Context, info tax.InteractiveBrokersInfo) (err error)
+	Parse() (info tax.BrokerageInfo, err error)
+	GenerateCsv(ctx context.Context, info tax.BrokerageInfo) (err error)
 }
 
 type InteractiveBrokersManagerImpl struct {
@@ -31,7 +31,13 @@ func NewInteractiveBrokersManager(config config.TaxConfig, gainsManager GainsCom
 	}
 }
 
-func (m *InteractiveBrokersManagerImpl) GenerateCsv(ctx context.Context, info tax.InteractiveBrokersInfo) (err error) {
+func (m *InteractiveBrokersManagerImpl) GenerateCsv(ctx context.Context, info tax.BrokerageInfo) (err error) {
+	// TODO: Add Interest file generation when IB Activity Statement parser is implemented
+	// Interest income is available in IB Activity Statement, not in Realized.csv
+	// if err = m.createInterestFile(info.Interests); err != nil {
+	// 	return
+	// }
+
 	if err = m.createTradeFile(info.Trades); err != nil {
 		return
 	}
@@ -85,7 +91,7 @@ func (m *InteractiveBrokersManagerImpl) createGainsFile(ctx context.Context, tra
 	return nil
 }
 
-func (m *InteractiveBrokersManagerImpl) Parse() (info tax.InteractiveBrokersInfo, err error) {
+func (m *InteractiveBrokersManagerImpl) Parse() (info tax.BrokerageInfo, err error) {
 	file, err := os.Open(m.config.IBPath)
 	if err != nil {
 		err = fmt.Errorf("failed to open CSV file: %w", err)
@@ -100,6 +106,12 @@ func (m *InteractiveBrokersManagerImpl) Parse() (info tax.InteractiveBrokersInfo
 		err = fmt.Errorf("failed to read CSV: %w", err)
 		return
 	}
+
+	// TODO: Parse Interest from IB Activity Statement (separate from Realized.csv)
+	// info.Interests, err = m.parseInterest(records)
+	// if err != nil {
+	// 	return
+	// }
 
 	info.Trades, err = m.parseTrades(records)
 	if err != nil {

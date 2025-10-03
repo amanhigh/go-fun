@@ -19,8 +19,8 @@ const (
 )
 
 type DriveWealthManager interface {
-	Parse() (info tax.DriveWealthInfo, err error)
-	GenerateCsv(ctx context.Context, info tax.DriveWealthInfo) (err error)
+	Parse() (info tax.BrokerageInfo, err error)
+	GenerateCsv(ctx context.Context, info tax.BrokerageInfo) (err error)
 }
 
 // DriveWealthManagerImpl handles parsing of DriveWealth reports.
@@ -37,7 +37,7 @@ func NewDriveWealthManager(config config.TaxConfig, gainsManager GainsComputatio
 	}
 }
 
-func (m *DriveWealthManagerImpl) GenerateCsv(ctx context.Context, info tax.DriveWealthInfo) (err error) {
+func (m *DriveWealthManagerImpl) GenerateCsv(ctx context.Context, info tax.BrokerageInfo) (err error) {
 	if err = m.createInterestFile(info.Interests); err != nil {
 		return
 	}
@@ -108,7 +108,7 @@ func (m *DriveWealthManagerImpl) createGainsFile(ctx context.Context, trades []t
 }
 
 // Parse orchestrates the parsing of the DriveWealth Excel file.
-func (m *DriveWealthManagerImpl) Parse() (info tax.DriveWealthInfo, err error) {
+func (m *DriveWealthManagerImpl) Parse() (info tax.BrokerageInfo, err error) {
 	f, err := excelize.OpenFile(m.config.DriveWealthPath)
 	if err != nil {
 		err = fmt.Errorf("failed to open excel file: %w", err)
@@ -132,7 +132,7 @@ func (m *DriveWealthManagerImpl) Parse() (info tax.DriveWealthInfo, err error) {
 	return
 }
 
-func (m *DriveWealthManagerImpl) parseSheets(f *excelize.File) (info tax.DriveWealthInfo, err error) {
+func (m *DriveWealthManagerImpl) parseSheets(f *excelize.File) (info tax.BrokerageInfo, err error) {
 	rows, err := f.GetRows("Income")
 	if err != nil {
 		err = fmt.Errorf("failed to get rows from 'Income' sheet: %w", err)

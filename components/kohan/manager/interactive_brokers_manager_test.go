@@ -112,7 +112,7 @@ Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per
 
 		Context("when generating CSV", func() {
 			It("should create valid csv files including gains.csv", func() {
-				info := tax.InteractiveBrokersInfo{
+				info := tax.BrokerageInfo{
 					Trades: []tax.Trade{
 						{Symbol: "MPC", Date: "2024-10-31", Type: "BUY", Quantity: 8, USDPrice: 146.21, USDValue: 1169.68, Commission: 0.36024125},
 						{Symbol: "MPC", Date: "2024-12-17", Type: "SELL", Quantity: 8, USDPrice: 136.85, USDValue: 1094.8, Commission: 0.38419669},
