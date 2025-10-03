@@ -88,6 +88,30 @@ else
   exit 1
 fi
 
+# 7.1 Validate Excel sheets using read_excel.zsh
+echo "--- Validating Excel Sheets ---"
+EXCEL_OUTPUT=$("$SCRIPT_DIR/read_excel.zsh" "$FA_COMPUTE_DIR/tax_summary_2024.xlsx" 2>&1)
+SHEETS_LINE=$(echo "$EXCEL_OUTPUT" | grep "Available sheets:")
+
+REQUIRED_SHEETS=("Gains" "Dividends" "Valuations" "Interest")
+MISSING_SHEETS=()
+
+for sheet in "${REQUIRED_SHEETS[@]}"; do
+  if ! echo "$SHEETS_LINE" | grep -q "$sheet"; then
+    MISSING_SHEETS+=("$sheet")
+  fi
+done
+
+if [ ${#MISSING_SHEETS[@]} -eq 0 ]; then
+  echo "✅ SUCCESS: All required sheets are present: ${REQUIRED_SHEETS[*]}"
+  echo "   Found sheets: $SHEETS_LINE"
+else
+  echo "❌ FAILURE: Missing sheets: ${MISSING_SHEETS[*]}"
+  echo "   Found sheets: $SHEETS_LINE"
+  exit 1
+fi
+echo "-----------------------------------"
+
 # 8. Cleanup auto-downloaded files for clean test environment
 echo "--- Cleaning up auto-downloaded files ---"
 if [ -f "$FA_COMPUTE_DIR/Tickers/NVDA.json" ]; then
