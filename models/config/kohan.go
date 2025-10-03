@@ -46,6 +46,7 @@ type TaxConfig struct {
 	GainsFilePath    string `env:"FA_GAINS_FILE_PATH" envDefault:"${HOME}/Downloads/FACompute/gains.csv" envExpand:"true"`
 	InterestFilePath string `env:"FA_INTEREST_FILE_PATH" envDefault:"${HOME}/Downloads/FACompute/interest.csv" envExpand:"true"`
 	DriveWealthPath  string `env:"VESTED_PATH" envDefault:"${HOME}/Downloads/FACompute/vested.xlsx" envExpand:"true"`
+	IBPath           string `env:"IB_PATH" envDefault:"${HOME}/Downloads/FACompute/ib.csv" envExpand:"true"`
 }
 
 func NewKohanConfig() (config KohanConfig, err error) {

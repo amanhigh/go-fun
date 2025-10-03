@@ -165,7 +165,7 @@ func (s *SBIManagerImpl) buildMonthEndCache(ctx context.Context) common.HttpErro
 
 		monthKey := fmt.Sprintf("%d-%02d", rateDate.Year(), rateDate.Month())
 
-		// Keep the latest date in each month with valid TTBuy rate
+		// Keep the latest date in each month with valid TTBuy rate (skip zero rates)
 		if rate.TTBuy > 0 {
 			if existing, found := monthMap[monthKey]; !found || rateDate.After(existing.ActualDate) {
 				monthMap[monthKey] = tax.MonthEndRate{
