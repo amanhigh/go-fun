@@ -110,8 +110,8 @@ func (_c *TaxValuationManager_GetYearlyValuationsUSD_Call) RunAndReturn(run func
 }
 
 // ProcessValuations provides a mock function for the type TaxValuationManager
-func (_mock *TaxValuationManager) ProcessValuations(ctx context.Context, valuations []tax.Valuation) ([]tax.INRValuation, common.HttpError) {
-	ret := _mock.Called(ctx, valuations)
+func (_mock *TaxValuationManager) ProcessValuations(ctx context.Context, valuations []tax.Valuation, dividends []tax.INRDividend) ([]tax.INRValuation, common.HttpError) {
+	ret := _mock.Called(ctx, valuations, dividends)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ProcessValuations")
@@ -119,18 +119,18 @@ func (_mock *TaxValuationManager) ProcessValuations(ctx context.Context, valuati
 
 	var r0 []tax.INRValuation
 	var r1 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, []tax.Valuation) ([]tax.INRValuation, common.HttpError)); ok {
-		return returnFunc(ctx, valuations)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []tax.Valuation, []tax.INRDividend) ([]tax.INRValuation, common.HttpError)); ok {
+		return returnFunc(ctx, valuations, dividends)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, []tax.Valuation) []tax.INRValuation); ok {
-		r0 = returnFunc(ctx, valuations)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []tax.Valuation, []tax.INRDividend) []tax.INRValuation); ok {
+		r0 = returnFunc(ctx, valuations, dividends)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]tax.INRValuation)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, []tax.Valuation) common.HttpError); ok {
-		r1 = returnFunc(ctx, valuations)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, []tax.Valuation, []tax.INRDividend) common.HttpError); ok {
+		r1 = returnFunc(ctx, valuations, dividends)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(common.HttpError)
@@ -147,11 +147,12 @@ type TaxValuationManager_ProcessValuations_Call struct {
 // ProcessValuations is a helper method to define mock.On call
 //   - ctx context.Context
 //   - valuations []tax.Valuation
-func (_e *TaxValuationManager_Expecter) ProcessValuations(ctx interface{}, valuations interface{}) *TaxValuationManager_ProcessValuations_Call {
-	return &TaxValuationManager_ProcessValuations_Call{Call: _e.mock.On("ProcessValuations", ctx, valuations)}
+//   - dividends []tax.INRDividend
+func (_e *TaxValuationManager_Expecter) ProcessValuations(ctx interface{}, valuations interface{}, dividends interface{}) *TaxValuationManager_ProcessValuations_Call {
+	return &TaxValuationManager_ProcessValuations_Call{Call: _e.mock.On("ProcessValuations", ctx, valuations, dividends)}
 }
 
-func (_c *TaxValuationManager_ProcessValuations_Call) Run(run func(ctx context.Context, valuations []tax.Valuation)) *TaxValuationManager_ProcessValuations_Call {
+func (_c *TaxValuationManager_ProcessValuations_Call) Run(run func(ctx context.Context, valuations []tax.Valuation, dividends []tax.INRDividend)) *TaxValuationManager_ProcessValuations_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -161,9 +162,14 @@ func (_c *TaxValuationManager_ProcessValuations_Call) Run(run func(ctx context.C
 		if args[1] != nil {
 			arg1 = args[1].([]tax.Valuation)
 		}
+		var arg2 []tax.INRDividend
+		if args[2] != nil {
+			arg2 = args[2].([]tax.INRDividend)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -174,7 +180,7 @@ func (_c *TaxValuationManager_ProcessValuations_Call) Return(iNRValuations []tax
 	return _c
 }
 
-func (_c *TaxValuationManager_ProcessValuations_Call) RunAndReturn(run func(ctx context.Context, valuations []tax.Valuation) ([]tax.INRValuation, common.HttpError)) *TaxValuationManager_ProcessValuations_Call {
+func (_c *TaxValuationManager_ProcessValuations_Call) RunAndReturn(run func(ctx context.Context, valuations []tax.Valuation, dividends []tax.INRDividend) ([]tax.INRValuation, common.HttpError)) *TaxValuationManager_ProcessValuations_Call {
 	_c.Call.Return(run)
 	return _c
 }

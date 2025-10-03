@@ -10,7 +10,8 @@ import (
 // TaxValuationManager handles currency exchange rate processing
 type TaxValuationManager interface {
 	// Processes a list of Valuation records, adding INR values based on exchange rates.
-	ProcessValuations(ctx context.Context, valuations []tax.Valuation) ([]tax.INRValuation, common.HttpError)
+	// Accepts dividends (can be empty slice) to calculate AmountPaid per ticker.
+	ProcessValuations(ctx context.Context, valuations []tax.Valuation, dividends []tax.INRDividend) ([]tax.INRValuation, common.HttpError)
 
 	// GetYearlyValuationsUSD calculates the base USD Valuation (First, Peak, YearEnd)
 	// for all relevant tickers based on trade history up to the end of the specified calendar year.
@@ -31,7 +32,7 @@ func NewTaxValuationManager(exchangeManager ExchangeManager, valuationManager Va
 	}
 }
 
-func (v *TaxValuationManagerImpl) ProcessValuations(ctx context.Context, valuations []tax.Valuation) (inrValuations []tax.INRValuation, err common.HttpError) {
+func (v *TaxValuationManagerImpl) ProcessValuations(ctx context.Context, valuations []tax.Valuation, dividends []tax.INRDividend) (inrValuations []tax.INRValuation, err common.HttpError) {
 	// Pre-allocate slice with the correct size
 	inrValuations = make([]tax.INRValuation, len(valuations))
 
@@ -52,7 +53,25 @@ func (v *TaxValuationManagerImpl) ProcessValuations(ctx context.Context, valuati
 
 	// ExchangeManager modifies the structs in inrValuations via these pointers
 	err = v.exchangeManager.Exchange(ctx, exchangeAbles)
+	if err != nil {
+		return
+	}
+
+	// Calculate AmountPaid (mandatory - will be 0 if no dividends)
+	dividendsByTicker := v.groupDividendsByTicker(dividends)
+	for i := range inrValuations {
+		inrValuations[i].AmountPaid = dividendsByTicker[inrValuations[i].Ticker]
+	}
+
 	return
+}
+
+func (v *TaxValuationManagerImpl) groupDividendsByTicker(dividends []tax.INRDividend) map[string]float64 {
+	sumByTicker := make(map[string]float64)
+	for _, div := range dividends {
+		sumByTicker[div.Symbol] += div.INRValue()
+	}
+	return sumByTicker
 }
 
 // GetYearlyValuationsUSD passes the call through to the underlying ValuationManager.

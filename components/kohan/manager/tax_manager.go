@@ -100,7 +100,20 @@ func (t *TaxManagerImpl) processValuations(ctx context.Context, year int) ([]tax
 		return nil, err
 	}
 
-	return t.taxValuationManager.ProcessValuations(ctx, usdValuations)
+	// Get US year dividends for AmountPaid calculation (always fetch, even if empty)
+	usDividends, err := t.dividendManager.GetDividendsForUSYear(ctx, year)
+	if err != nil {
+		return nil, err
+	}
+
+	// Process dividends to INR (always pass, even if empty slice)
+	inrDividends, err := t.dividendManager.ProcessDividends(ctx, usDividends)
+	if err != nil {
+		return nil, err
+	}
+
+	// Always pass dividends to ProcessValuations (mandatory parameter)
+	return t.taxValuationManager.ProcessValuations(ctx, usdValuations, inrDividends)
 }
 
 func (t *TaxManagerImpl) SaveTaxSummaryToExcel(ctx context.Context, year int, summary tax.Summary) error {

@@ -389,6 +389,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 					"Date (First)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
 					"Date (Peak)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
 					"Date (YearEnd)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+					"AmountPaid (INR)",
 				}
 				Expect(rows[0]).To(Equal(expectedHeaders))
 
@@ -563,6 +564,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 					"Date (First)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
 					"Date (Peak)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
 					"Date (YearEnd)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+					"AmountPaid (INR)",
 				}
 				Expect(rows[0]).To(Equal(expectedValuationsHeaders))
 

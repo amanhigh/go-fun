@@ -196,6 +196,7 @@ func (e *ExcelManagerImpl) getValuationHeaders() []string {
 		"Date (First)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
 		"Date (Peak)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
 		"Date (YearEnd)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+		"AmountPaid (INR)",
 	}
 }
 
@@ -204,6 +205,7 @@ func (e *ExcelManagerImpl) buildValuationRow(valuation tax.INRValuation) []inter
 	rowData = append(rowData, e.getPositionRowData(&valuation.FirstPosition)...)
 	rowData = append(rowData, e.getPositionRowData(&valuation.PeakPosition)...)
 	rowData = append(rowData, e.getPositionRowData(&valuation.YearEndPosition)...)
+	rowData = append(rowData, valuation.AmountPaid)
 	return rowData
 }
 
