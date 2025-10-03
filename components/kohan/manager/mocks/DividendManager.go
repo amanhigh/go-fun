@@ -39,6 +39,76 @@ func (_m *DividendManager) EXPECT() *DividendManager_Expecter {
 	return &DividendManager_Expecter{mock: &_m.Mock}
 }
 
+// GetDividendsForUSYear provides a mock function for the type DividendManager
+func (_mock *DividendManager) GetDividendsForUSYear(ctx context.Context, year int) ([]tax.Dividend, common.HttpError) {
+	ret := _mock.Called(ctx, year)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetDividendsForUSYear")
+	}
+
+	var r0 []tax.Dividend
+	var r1 common.HttpError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int) ([]tax.Dividend, common.HttpError)); ok {
+		return returnFunc(ctx, year)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int) []tax.Dividend); ok {
+		r0 = returnFunc(ctx, year)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]tax.Dividend)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int) common.HttpError); ok {
+		r1 = returnFunc(ctx, year)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(common.HttpError)
+		}
+	}
+	return r0, r1
+}
+
+// DividendManager_GetDividendsForUSYear_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetDividendsForUSYear'
+type DividendManager_GetDividendsForUSYear_Call struct {
+	*mock.Call
+}
+
+// GetDividendsForUSYear is a helper method to define mock.On call
+//   - ctx context.Context
+//   - year int
+func (_e *DividendManager_Expecter) GetDividendsForUSYear(ctx interface{}, year interface{}) *DividendManager_GetDividendsForUSYear_Call {
+	return &DividendManager_GetDividendsForUSYear_Call{Call: _e.mock.On("GetDividendsForUSYear", ctx, year)}
+}
+
+func (_c *DividendManager_GetDividendsForUSYear_Call) Run(run func(ctx context.Context, year int)) *DividendManager_GetDividendsForUSYear_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int
+		if args[1] != nil {
+			arg1 = args[1].(int)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *DividendManager_GetDividendsForUSYear_Call) Return(dividends []tax.Dividend, httpError common.HttpError) *DividendManager_GetDividendsForUSYear_Call {
+	_c.Call.Return(dividends, httpError)
+	return _c
+}
+
+func (_c *DividendManager_GetDividendsForUSYear_Call) RunAndReturn(run func(ctx context.Context, year int) ([]tax.Dividend, common.HttpError)) *DividendManager_GetDividendsForUSYear_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetDividendsForYear provides a mock function for the type DividendManager
 func (_mock *DividendManager) GetDividendsForYear(ctx context.Context, year int) ([]tax.Dividend, common.HttpError) {
 	ret := _mock.Called(ctx, year)

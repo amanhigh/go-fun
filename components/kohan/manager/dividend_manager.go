@@ -9,9 +9,13 @@ import (
 )
 
 type DividendManager interface {
-	// Retrieves all Dividend records for the specified financial year.
+	// Retrieves all Dividend records for the specified Indian financial year (Apr-Mar).
 	// The year parameter represents the starting year of the financial year (e.g., 2023 for FY 2023-24).
 	GetDividendsForYear(ctx context.Context, year int) ([]tax.Dividend, common.HttpError)
+
+	// Retrieves all Dividend records for the specified US calendar year (Jan-Dec).
+	// Used for Schedule FA reporting which follows US calendar year.
+	GetDividendsForUSYear(ctx context.Context, year int) ([]tax.Dividend, common.HttpError)
 
 	// Processes a list of Dividend records, adding INR values based on exchange rates.
 	ProcessDividends(ctx context.Context, dividends []tax.Dividend) ([]tax.INRDividend, common.HttpError)
@@ -48,7 +52,6 @@ func (d *DividendManagerImpl) ProcessDividends(ctx context.Context, dividends []
 	return
 }
 
-// GetDividendsForYear implementation added
 func (d *DividendManagerImpl) GetDividendsForYear(ctx context.Context, year int) ([]tax.Dividend, common.HttpError) {
 	// Get all records from repository
 	records, err := d.dividendRepository.GetAllRecords(ctx)
@@ -56,6 +59,17 @@ func (d *DividendManagerImpl) GetDividendsForYear(ctx context.Context, year int)
 		return nil, err
 	}
 
-	// Filter by financial year
+	// Filter by Indian financial year (Apr-Mar)
 	return d.financialYearManager.FilterIndia(ctx, records, year)
+}
+
+func (d *DividendManagerImpl) GetDividendsForUSYear(ctx context.Context, year int) ([]tax.Dividend, common.HttpError) {
+	// Get all records from repository
+	records, err := d.dividendRepository.GetAllRecords(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter by US calendar year (Jan-Dec)
+	return d.financialYearManager.FilterUS(ctx, records, year)
 }
