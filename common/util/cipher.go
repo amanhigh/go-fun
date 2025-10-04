@@ -19,21 +19,27 @@ func Encrypt(key, text string) (encryptedText string, err error) {
 	textBytes := []byte(text)
 
 	/* Create New Cipher */
-	if block, err := aes.NewCipher(keyBytes); err == nil {
-		/* Build Cipher Text Placeholder */
-		ciphertext := make([]byte, aes.BlockSize+len(textBytes))
-
-		/* Encrypt using AES */
-		iv := ciphertext[:aes.BlockSize]
-		if _, err := io.ReadFull(rand.Reader, iv); err == nil {
-			cfb := cipher.NewCFBEncrypter(block, iv)
-			cfb.XORKeyStream(ciphertext[aes.BlockSize:], textBytes)
-
-			/* Do Base64 Encoding on Encrypted Text */
-			encryptedText = base64.URLEncoding.EncodeToString(ciphertext)
-		}
+	block, err := aes.NewCipher(keyBytes)
+	if err != nil {
+		return "", fmt.Errorf("failed to create AES cipher: %w", err)
 	}
-	return
+
+	/* Build Cipher Text Placeholder */
+	ciphertext := make([]byte, aes.BlockSize+len(textBytes))
+
+	/* Generate IV */
+	iv := ciphertext[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return "", fmt.Errorf("failed to generate IV: %w", err)
+	}
+
+	/* Encrypt using AES-CTR (recommended replacement for CFB) */
+	stream := cipher.NewCTR(block, iv)
+	stream.XORKeyStream(ciphertext[aes.BlockSize:], textBytes)
+
+	/* Do Base64 Encoding on Encrypted Text */
+	encryptedText = base64.URLEncoding.EncodeToString(ciphertext)
+	return encryptedText, nil
 }
 
 func Decrypt(key, text string) (string, error) {
@@ -56,13 +62,13 @@ func Decrypt(key, text string) (string, error) {
 		return "", fmt.Errorf("failed to create AES cipher: %w", err)
 	}
 
-	// Extract block of text to be encrypted
-	textRight := textBytes[:aes.BlockSize]
+	// Extract IV from the beginning
+	iv := textBytes[:aes.BlockSize]
 	textBytes = textBytes[aes.BlockSize:]
 
-	// Decrypt AES
-	cfb := cipher.NewCFBDecrypter(block, textRight)
-	cfb.XORKeyStream(textBytes, textBytes)
+	// Decrypt using AES-CTR (recommended replacement for CFB)
+	stream := cipher.NewCTR(block, iv)
+	stream.XORKeyStream(textBytes, textBytes)
 
 	// Convert decrypted bytes to string
 	return string(textBytes), nil

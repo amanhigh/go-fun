@@ -117,19 +117,19 @@ var _ = Describe("Cipher", func() {
 
 		Context("Error Conditions", func() {
 			Context("Encrypt Error Handling", func() {
-				It("should fail silently with invalid key sizes - returns empty string", func() {
+				It("should return error with invalid key sizes", func() {
 					shortKey := "short"
 					encrypted, err := util.Encrypt(shortKey, plaintext)
-					// Implementation bug: doesn't return error, just empty string
-					Expect(err).NotTo(HaveOccurred())
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("failed to create AES cipher"))
 					Expect(encrypted).To(BeEmpty())
 				})
 
-				It("should fail silently with wrong key size - returns empty string", func() {
+				It("should return error with wrong key size", func() {
 					key13Bytes := "1234567890123" // 13 bytes - invalid for AES
 					encrypted, err := util.Encrypt(key13Bytes, plaintext)
-					// Implementation bug: doesn't return error, just empty string
-					Expect(err).NotTo(HaveOccurred())
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("failed to create AES cipher"))
 					Expect(encrypted).To(BeEmpty())
 				})
 			})

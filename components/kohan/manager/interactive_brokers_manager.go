@@ -130,49 +130,61 @@ func (m *InteractiveBrokersManagerImpl) parseTrades(records [][]string) ([]tax.T
 	var trades []tax.Trade
 
 	for _, record := range records {
-		if len(record) < 14 || record[0] != "Trades" || record[1] != "Data" {
+		if !m.isValidTradeRecord(record) {
 			continue
 		}
 
-		symbol := record[5]
-		dateTime := record[6]
-		date := strings.Split(dateTime, ",")[0]
-
-		quantity, err := strconv.ParseFloat(record[7], 64)
+		trade, err := m.parseTradeRecord(record)
 		if err != nil {
 			continue
 		}
 
-		price, err := strconv.ParseFloat(record[8], 64)
-		if err != nil {
-			continue
-		}
-
-		proceeds, err := strconv.ParseFloat(record[9], 64)
-		if err != nil {
-			continue
-		}
-
-		commission, err := strconv.ParseFloat(record[10], 64)
-		if err != nil {
-			continue
-		}
-
-		tradeType := m.determineTradeType(quantity)
-
-		trade := tax.Trade{
-			Symbol:     symbol,
-			Date:       date,
-			Type:       tradeType,
-			Quantity:   math.Abs(quantity),
-			USDPrice:   price,
-			USDValue:   math.Abs(proceeds),
-			Commission: math.Abs(commission),
-		}
 		trades = append(trades, trade)
 	}
 
 	return trades, nil
+}
+
+func (m *InteractiveBrokersManagerImpl) isValidTradeRecord(record []string) bool {
+	return len(record) >= 14 && record[0] == "Trades" && record[1] == "Data"
+}
+
+func (m *InteractiveBrokersManagerImpl) parseTradeRecord(record []string) (tax.Trade, error) {
+	symbol := record[5]
+	dateTime := record[6]
+	date := strings.Split(dateTime, ",")[0]
+
+	quantity, err := strconv.ParseFloat(record[7], 64)
+	if err != nil {
+		return tax.Trade{}, fmt.Errorf("failed to parse quantity: %w", err)
+	}
+
+	price, err := strconv.ParseFloat(record[8], 64)
+	if err != nil {
+		return tax.Trade{}, fmt.Errorf("failed to parse price: %w", err)
+	}
+
+	proceeds, err := strconv.ParseFloat(record[9], 64)
+	if err != nil {
+		return tax.Trade{}, fmt.Errorf("failed to parse proceeds: %w", err)
+	}
+
+	commission, err := strconv.ParseFloat(record[10], 64)
+	if err != nil {
+		return tax.Trade{}, fmt.Errorf("failed to parse commission: %w", err)
+	}
+
+	tradeType := m.determineTradeType(quantity)
+
+	return tax.Trade{
+		Symbol:     symbol,
+		Date:       date,
+		Type:       tradeType,
+		Quantity:   math.Abs(quantity),
+		USDPrice:   price,
+		USDValue:   math.Abs(proceeds),
+		Commission: math.Abs(commission),
+	}, nil
 }
 
 func (m *InteractiveBrokersManagerImpl) parseDividends(records [][]string) ([]tax.Dividend, error) {
@@ -181,41 +193,58 @@ func (m *InteractiveBrokersManagerImpl) parseDividends(records [][]string) ([]ta
 	var dividends []tax.Dividend
 
 	for _, record := range records {
-		if len(record) < 6 || record[0] != "Dividends" || record[1] != "Data" {
+		if !m.isValidDividendRecord(record) {
 			continue
 		}
 
-		date := record[3]
-		description := record[4]
-		symbol := extractSymbol(description)
-
-		if symbol == "" {
-			continue
-		}
-
-		amount, err := strconv.ParseFloat(record[5], 64)
+		dividend, err := m.parseDividendRecord(record, taxMap)
 		if err != nil {
 			continue
 		}
 
-		dividend := tax.Dividend{
-			Symbol: symbol,
-			Date:   date,
-			Amount: amount,
-		}
-
-		if dateTaxes, ok := taxMap[symbol]; ok {
-			if taxAmount, ok := dateTaxes[date]; ok {
-				dividend.Tax = taxAmount
-				delete(dateTaxes, date)
-			}
-		}
-
-		dividend.Net = dividend.Amount - dividend.Tax
 		dividends = append(dividends, dividend)
 	}
 
 	return dividends, nil
+}
+
+func (m *InteractiveBrokersManagerImpl) isValidDividendRecord(record []string) bool {
+	return len(record) >= 6 && record[0] == "Dividends" && record[1] == "Data"
+}
+
+func (m *InteractiveBrokersManagerImpl) parseDividendRecord(record []string, taxMap map[string]map[string]float64) (tax.Dividend, error) {
+	date := record[3]
+	description := record[4]
+	symbol := extractSymbol(description)
+
+	if symbol == "" {
+		return tax.Dividend{}, fmt.Errorf("empty symbol")
+	}
+
+	amount, err := strconv.ParseFloat(record[5], 64)
+	if err != nil {
+		return tax.Dividend{}, fmt.Errorf("failed to parse dividend amount: %w", err)
+	}
+
+	dividend := tax.Dividend{
+		Symbol: symbol,
+		Date:   date,
+		Amount: amount,
+	}
+
+	m.applyWithholdingTax(&dividend, taxMap)
+	dividend.Net = dividend.Amount - dividend.Tax
+
+	return dividend, nil
+}
+
+func (m *InteractiveBrokersManagerImpl) applyWithholdingTax(dividend *tax.Dividend, taxMap map[string]map[string]float64) {
+	if dateTaxes, ok := taxMap[dividend.Symbol]; ok {
+		if taxAmount, ok := dateTaxes[dividend.Date]; ok {
+			dividend.Tax = taxAmount
+			delete(dateTaxes, dividend.Date)
+		}
+	}
 }
 
 func (m *InteractiveBrokersManagerImpl) buildTaxMap(records [][]string) map[string]map[string]float64 {

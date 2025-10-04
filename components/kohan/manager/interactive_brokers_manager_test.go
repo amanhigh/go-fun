@@ -58,7 +58,7 @@ Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share
 Withholding Tax,Header,Currency,Date,Description,Amount,Code
 Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share - US Tax,-1.82,`
 
-			err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0644)
+			err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
 			Expect(err).ToNot(HaveOccurred())
 
 			ibManager = manager.NewInteractiveBrokersManager(taxConfig, mockGainsManager)
@@ -159,13 +159,13 @@ Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per
 				csvContent := `Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Code
 Trades,Data,Order,Stocks,USD,INVALID,,BADQTY,BADPRICE,0,0,0,0,O`
 
-				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0644)
+				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
 				Expect(err).ToNot(HaveOccurred())
 
 				ibManager = manager.NewInteractiveBrokersManager(taxConfig, mockGainsManager)
 				info, err := ibManager.Parse()
 				Expect(err).ToNot(HaveOccurred())
-				Expect(info.Trades).To(HaveLen(0))
+				Expect(info.Trades).To(BeEmpty())
 			})
 		})
 
@@ -174,7 +174,7 @@ Trades,Data,Order,Stocks,USD,INVALID,,BADQTY,BADPRICE,0,0,0,0,O`
 				csvContent := `Dividends,Header,Currency,Date,Description,Amount
 Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share (Ordinary Dividend),7.28`
 
-				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0644)
+				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
 				Expect(err).ToNot(HaveOccurred())
 
 				ibManager = manager.NewInteractiveBrokersManager(taxConfig, mockGainsManager)

@@ -96,8 +96,8 @@ func (t *TaxManagerImpl) processValuations(ctx context.Context, year int) ([]tax
 	}
 
 	// Generate Year End Accounts CSV
-	if err := t.accountManager.GenerateYearEndAccounts(ctx, year, usdValuations); err != nil {
-		return nil, err
+	if accountErr := t.accountManager.GenerateYearEndAccounts(ctx, year, usdValuations); accountErr != nil {
+		return nil, accountErr
 	}
 
 	// Get US year dividends for AmountPaid calculation (always fetch, even if empty)
