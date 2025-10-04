@@ -1,28 +1,21 @@
 package manager_test
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
-	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
-	"github.com/amanhigh/go-fun/models/config"
-	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/xuri/excelize/v2"
 )
 
-var _ = Describe("DriveWealthManager", func() {
+var _ = Describe("DriveWealthManagerImpl", func() {
 	var (
 		tempTestDir        string
 		sampleExcelPath    string
-		driveWealthManager manager.DriveWealthManager
-		taxConfig          config.TaxConfig
-		mockGainsManager   *mocks.GainsComputationManager
-		ctx                = context.Background()
+		driveWealthManager manager.Broker
 	)
 
 	BeforeEach(func() {
@@ -31,15 +24,6 @@ var _ = Describe("DriveWealthManager", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		sampleExcelPath = filepath.Join(tempTestDir, "vested_transactions.xlsx")
-		taxConfig = config.TaxConfig{
-			InterestFilePath: filepath.Join(tempTestDir, "interest.csv"),
-			TradesPath:       filepath.Join(tempTestDir, "trades.csv"),
-			DividendFilePath: filepath.Join(tempTestDir, "dividends.csv"),
-			GainsFilePath:    filepath.Join(tempTestDir, "gains.csv"),
-			DriveWealthPath:  sampleExcelPath,
-		}
-
-		mockGainsManager = mocks.NewGainsComputationManager(GinkgoT())
 	})
 
 	AfterEach(func() {
@@ -49,18 +33,15 @@ var _ = Describe("DriveWealthManager", func() {
 
 	Context("with a valid Excel file", func() {
 		BeforeEach(func() {
-			// Create a dummy Excel file for testing
 			f := excelize.NewFile()
 			sheetName := "Income"
 			_, err := f.NewSheet(sheetName)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Add headers
 			headers := []string{"Date", "Time (in UTC)", "Activity", "Ticker", "Gross Cash Amount (in USD)"}
 			err = f.SetSheetRow(sheetName, "A1", &headers)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Add sample data
 			rows := [][]interface{}{
 				{"2025-06-06", "05:24:40 AM", "Dividend", "IEF", 158.17},
 				{"2025-06-06", "05:24:39 AM", "Tax", "IEF", -39.54},
@@ -76,10 +57,8 @@ var _ = Describe("DriveWealthManager", func() {
 				Expect(err).ToNot(HaveOccurred())
 			}
 
-			// Remove Default Sheet
 			Expect(f.DeleteSheet("Sheet1")).To(Succeed())
 
-			/* Create Trades Sheet */
 			tradeSheet := "Trades"
 			_, err = f.NewSheet(tradeSheet)
 			Expect(err).ToNot(HaveOccurred())
@@ -102,7 +81,7 @@ var _ = Describe("DriveWealthManager", func() {
 			err = f.SaveAs(sampleExcelPath)
 			Expect(err).ToNot(HaveOccurred())
 
-			driveWealthManager = manager.NewDriveWealthManager(taxConfig, mockGainsManager)
+			driveWealthManager = manager.NewDriveWealthManagerImpl(sampleExcelPath)
 		})
 
 		Context("when parsing interests", func() {
@@ -110,8 +89,8 @@ var _ = Describe("DriveWealthManager", func() {
 				info, err := driveWealthManager.Parse()
 				Expect(err).ToNot(HaveOccurred())
 				Expect(info.Interests).To(HaveLen(2))
-				Expect(info.Interests[0].Amount).To(BeNumerically("~", 0.59))
-				Expect(info.Interests[1].Amount).To(BeNumerically("~", 1.18))
+				Expect(info.Interests[0].Amount).To(Equal(0.59))
+				Expect(info.Interests[1].Amount).To(Equal(1.18))
 			})
 		})
 
@@ -122,19 +101,19 @@ var _ = Describe("DriveWealthManager", func() {
 				Expect(info.Dividends).To(HaveLen(3))
 
 				Expect(info.Dividends[0].Symbol).To(Equal("IEF"))
-				Expect(info.Dividends[0].Amount).To(BeNumerically("~", 158.17))
-				Expect(info.Dividends[0].Tax).To(BeNumerically("~", 39.54))
-				Expect(info.Dividends[0].Net).To(BeNumerically("~", 118.63))
+				Expect(info.Dividends[0].Amount).To(Equal(158.17))
+				Expect(info.Dividends[0].Tax).To(Equal(39.54))
+				Expect(info.Dividends[0].Net).To(Equal(118.63))
 
 				Expect(info.Dividends[1].Symbol).To(Equal("TLT"))
-				Expect(info.Dividends[1].Amount).To(BeNumerically("~", 3.51))
-				Expect(info.Dividends[1].Tax).To(BeNumerically("~", 0.0))
-				Expect(info.Dividends[1].Net).To(BeNumerically("~", 3.51))
+				Expect(info.Dividends[1].Amount).To(Equal(3.51))
+				Expect(info.Dividends[1].Tax).To(Equal(0.0))
+				Expect(info.Dividends[1].Net).To(Equal(3.51))
 
 				Expect(info.Dividends[2].Symbol).To(Equal("BIL"))
-				Expect(info.Dividends[2].Amount).To(BeNumerically("~", 142.07))
-				Expect(info.Dividends[2].Tax).To(BeNumerically("~", 35.52))
-				Expect(info.Dividends[2].Net).To(BeNumerically("~", 106.55))
+				Expect(info.Dividends[2].Amount).To(Equal(142.07))
+				Expect(info.Dividends[2].Tax).To(Equal(35.52))
+				Expect(info.Dividends[2].Net).To(BeNumerically("~", 106.55, 0.01))
 			})
 		})
 
@@ -145,69 +124,22 @@ var _ = Describe("DriveWealthManager", func() {
 				Expect(info.Trades).To(HaveLen(3))
 
 				Expect(info.Trades[0].Symbol).To(Equal("VTWO"))
-				Expect(info.Trades[0].Quantity).To(BeNumerically("~", 70))
-				Expect(info.Trades[0].USDPrice).To(BeNumerically("~", 77.41))
-				Expect(info.Trades[0].USDValue).To(BeNumerically("~", 5418.7))
+				Expect(info.Trades[0].Quantity).To(Equal(70.0))
+				Expect(info.Trades[0].USDPrice).To(Equal(77.41))
+				Expect(info.Trades[0].USDValue).To(Equal(5418.7))
 				Expect(info.Trades[0].Type).To(Equal("Buy"))
 
 				Expect(info.Trades[1].Symbol).To(Equal("VGK"))
-				Expect(info.Trades[1].Quantity).To(BeNumerically("~", 60))
-				Expect(info.Trades[1].USDPrice).To(BeNumerically("~", 70.18))
-				Expect(info.Trades[1].USDValue).To(BeNumerically("~", 4210.8))
+				Expect(info.Trades[1].Quantity).To(Equal(60.0))
+				Expect(info.Trades[1].USDPrice).To(Equal(70.18))
+				Expect(info.Trades[1].USDValue).To(Equal(4210.8))
 				Expect(info.Trades[1].Type).To(Equal("Buy"))
 
 				Expect(info.Trades[2].Symbol).To(Equal("BIL"))
-				Expect(info.Trades[2].Quantity).To(BeNumerically("~", 1))
-				Expect(info.Trades[2].USDPrice).To(BeNumerically("~", 91.58))
-				Expect(info.Trades[2].USDValue).To(BeNumerically("~", 91.58))
+				Expect(info.Trades[2].Quantity).To(Equal(1.0))
+				Expect(info.Trades[2].USDPrice).To(Equal(91.58))
+				Expect(info.Trades[2].USDValue).To(Equal(91.58))
 				Expect(info.Trades[2].Type).To(Equal("Sell"))
-			})
-		})
-
-		Context("when generating CSV", func() {
-			It("should create valid csv files including gains.csv", func() {
-				info := tax.BrokerageInfo{
-					Interests: []tax.Interest{
-						{Symbol: "CASH", Date: "2025-06-03", Amount: 0.59, Tax: 0, Net: 0.59},
-						{Symbol: "CASH", Date: "2025-05-02", Amount: 1.18, Tax: 0, Net: 1.18},
-					},
-					Trades: []tax.Trade{
-						{Symbol: "VTWO", Date: "2025-04-03", Type: "Buy", Quantity: 70, USDPrice: 77.41, USDValue: 5418.7, Commission: 0},
-					},
-					Dividends: []tax.Dividend{
-						{Symbol: "IEF", Date: "2025-06-06", Amount: 158.17, Tax: 39.54, Net: 118.63},
-					},
-				}
-
-				// Mock the gains computation
-				expectedGains := []tax.Gains{
-					{Symbol: "VTWO", BuyDate: "2025-04-03", SellDate: "2025-04-04", Type: "STCG", Quantity: 10, PNL: 5.9, Commission: 0},
-				}
-				mockGainsManager.EXPECT().ComputeGainsFromTrades(ctx, info.Trades).Return(expectedGains, nil)
-
-				err := driveWealthManager.GenerateCsv(ctx, info)
-				Expect(err).ToNot(HaveOccurred())
-
-				// Verify Interest file content
-				data, err := os.ReadFile(taxConfig.InterestFilePath)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(data)).To(ContainSubstring("CASH,2025-06-03,0.59,0,0.59"))
-				Expect(string(data)).To(ContainSubstring("CASH,2025-05-02,1.18,0,1.18"))
-
-				// Verify Trade file content
-				data, err = os.ReadFile(taxConfig.TradesPath)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(data)).To(ContainSubstring("VTWO,2025-04-03,Buy,70,77.41,5418.7,0"))
-
-				// Verify Dividend file content
-				data, err = os.ReadFile(taxConfig.DividendFilePath)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(data)).To(ContainSubstring("IEF,2025-06-06,158.17,39.54,118.63"))
-
-				// Verify Gains file content
-				data, err = os.ReadFile(taxConfig.GainsFilePath)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(data)).To(ContainSubstring("VTWO,2025-04-03,2025-04-04,10,5.9,0,STCG"))
 			})
 		})
 	})
@@ -215,10 +147,7 @@ var _ = Describe("DriveWealthManager", func() {
 	Context("with an invalid or malformed Excel file", func() {
 		Context("when the Excel file is missing", func() {
 			It("should return an error", func() {
-				// This test works because the top-level BeforeEach sets up the path
-				// but does not create the file. The manager is initialized with a
-				// path that points to a non-existent file, so Parse should fail.
-				nonExistentManager := manager.NewDriveWealthManager(taxConfig, mockGainsManager)
+				nonExistentManager := manager.NewDriveWealthManagerImpl(sampleExcelPath)
 				_, err := nonExistentManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})
@@ -226,7 +155,6 @@ var _ = Describe("DriveWealthManager", func() {
 
 		Context("when the 'Income' sheet is missing", func() {
 			It("should return an error", func() {
-				// Create a new Excel file without the "Income" sheet
 				f := excelize.NewFile()
 				_, err := f.NewSheet("OtherSheet")
 				Expect(err).ToNot(HaveOccurred())
@@ -234,14 +162,14 @@ var _ = Describe("DriveWealthManager", func() {
 				err = f.SaveAs(sampleExcelPath)
 				Expect(err).ToNot(HaveOccurred())
 
-				driveWealthManager = manager.NewDriveWealthManager(taxConfig, mockGainsManager)
+				driveWealthManager = manager.NewDriveWealthManagerImpl(sampleExcelPath)
 				_, err = driveWealthManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})
 		})
+
 		Context("when the 'Trades' sheet is missing", func() {
 			It("should return an error", func() {
-				// Create a new Excel file without the "Trades" sheet
 				f := excelize.NewFile()
 				_, err := f.NewSheet("Income")
 				Expect(err).ToNot(HaveOccurred())
@@ -249,7 +177,7 @@ var _ = Describe("DriveWealthManager", func() {
 				err = f.SaveAs(sampleExcelPath)
 				Expect(err).ToNot(HaveOccurred())
 
-				driveWealthManager = manager.NewDriveWealthManager(taxConfig, mockGainsManager)
+				driveWealthManager = manager.NewDriveWealthManagerImpl(sampleExcelPath)
 				_, err = driveWealthManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})

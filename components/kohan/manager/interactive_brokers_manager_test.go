@@ -1,26 +1,20 @@
 package manager_test
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
-	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
-	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("InteractiveBrokersManager", func() {
+var _ = Describe("InteractiveBrokersManagerImpl", func() {
 	var (
-		tempTestDir      string
-		sampleCSVPath    string
-		ibManager        manager.InteractiveBrokersManager
-		taxConfig        config.TaxConfig
-		mockGainsManager *mocks.GainsComputationManager
-		ctx              = context.Background()
+		tempTestDir   string
+		sampleCSVPath string
+		ibManager     manager.Broker
 	)
 
 	BeforeEach(func() {
@@ -29,15 +23,6 @@ var _ = Describe("InteractiveBrokersManager", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		sampleCSVPath = filepath.Join(tempTestDir, "realized.csv")
-		taxConfig = config.TaxConfig{
-			TradesPath:       filepath.Join(tempTestDir, "trades.csv"),
-			DividendFilePath: filepath.Join(tempTestDir, "dividends.csv"),
-			GainsFilePath:    filepath.Join(tempTestDir, "gains.csv"),
-			InterestFilePath: filepath.Join(tempTestDir, "interest.csv"),
-			IBPath:           sampleCSVPath,
-		}
-
-		mockGainsManager = mocks.NewGainsComputationManager(GinkgoT())
 	})
 
 	AfterEach(func() {
@@ -62,7 +47,7 @@ Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per
 			err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
 			Expect(err).ToNot(HaveOccurred())
 
-			ibManager = manager.NewInteractiveBrokersManager(taxConfig, mockGainsManager)
+			ibManager = manager.NewInteractiveBrokersManagerImpl(sampleCSVPath)
 		})
 
 		Context("when parsing trades", func() {
@@ -122,53 +107,12 @@ Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per
 				Expect(info.Dividends[0].Net).To(Equal(5.46))
 			})
 		})
-
-		Context("when generating CSV", func() {
-			var (
-				info          tax.BrokerageInfo
-				expectedGains []tax.Gains
-			)
-
-			BeforeEach(func() {
-				info = tax.BrokerageInfo{
-					Trades: []tax.Trade{
-						{Symbol: "MPC", Date: "2024-10-31", Type: "BUY", Quantity: 8, USDPrice: 146.21, USDValue: 1169.68, Commission: 0.36024125},
-						{Symbol: "MPC", Date: "2024-12-17", Type: "SELL", Quantity: 8, USDPrice: 136.85, USDValue: 1094.8, Commission: 0.38419669},
-					},
-					Dividends: []tax.Dividend{
-						{Symbol: "MPC", Date: "2024-12-10", Amount: 7.28, Tax: 1.82, Net: 5.46},
-					},
-				}
-
-				expectedGains = []tax.Gains{
-					{Symbol: "MPC", BuyDate: "2024-10-31", SellDate: "2024-12-17", Type: "STCG", Quantity: 8, PNL: -75.62, Commission: 0.74},
-				}
-				mockGainsManager.EXPECT().ComputeGainsFromTrades(ctx, info.Trades).Return(expectedGains, nil)
-
-				err := ibManager.GenerateCsv(ctx, info)
-				Expect(err).ToNot(HaveOccurred())
-			})
-
-			It("should create valid csv files including gains.csv", func() {
-				data, err := os.ReadFile(taxConfig.TradesPath)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(data)).To(ContainSubstring("MPC,2024-10-31,BUY,8,146.21"))
-
-				data, err = os.ReadFile(taxConfig.DividendFilePath)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(data)).To(ContainSubstring("MPC,2024-12-10,7.28,1.82,5.46"))
-
-				data, err = os.ReadFile(taxConfig.GainsFilePath)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(data)).To(ContainSubstring("MPC,2024-10-31,2024-12-17"))
-			})
-		})
 	})
 
 	Context("with invalid CSV files", func() {
 		Context("when CSV file is missing", func() {
 			BeforeEach(func() {
-				ibManager = manager.NewInteractiveBrokersManager(taxConfig, mockGainsManager)
+				ibManager = manager.NewInteractiveBrokersManagerImpl(sampleCSVPath)
 			})
 
 			It("should return an error", func() {
@@ -187,7 +131,7 @@ Trades,Data,Order,Stocks,USD,INVALID,,BADQTY,BADPRICE,0,0,0,0,O`
 				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
 				Expect(err).ToNot(HaveOccurred())
 
-				ibManager = manager.NewInteractiveBrokersManager(taxConfig, mockGainsManager)
+				ibManager = manager.NewInteractiveBrokersManagerImpl(sampleCSVPath)
 				var parseErr error
 				info, parseErr = ibManager.Parse()
 				Expect(parseErr).ToNot(HaveOccurred())
@@ -208,7 +152,7 @@ Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share
 				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
 				Expect(err).ToNot(HaveOccurred())
 
-				ibManager = manager.NewInteractiveBrokersManager(taxConfig, mockGainsManager)
+				ibManager = manager.NewInteractiveBrokersManagerImpl(sampleCSVPath)
 				var parseErr error
 				info, parseErr = ibManager.Parse()
 				Expect(parseErr).ToNot(HaveOccurred())
@@ -238,7 +182,7 @@ Dividends,Data,Total,,,7.28`
 				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
 				Expect(err).ToNot(HaveOccurred())
 
-				ibManager = manager.NewInteractiveBrokersManager(taxConfig, mockGainsManager)
+				ibManager = manager.NewInteractiveBrokersManagerImpl(sampleCSVPath)
 				var parseErr error
 				info, parseErr = ibManager.Parse()
 				Expect(parseErr).ToNot(HaveOccurred())
@@ -260,7 +204,7 @@ Dividends,Header,Currency,Date,Description,Amount`
 				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
 				Expect(err).ToNot(HaveOccurred())
 
-				ibManager = manager.NewInteractiveBrokersManager(taxConfig, mockGainsManager)
+				ibManager = manager.NewInteractiveBrokersManagerImpl(sampleCSVPath)
 				var parseErr error
 				info, parseErr = ibManager.Parse()
 				Expect(parseErr).ToNot(HaveOccurred())
