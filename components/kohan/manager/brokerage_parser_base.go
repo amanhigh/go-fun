@@ -26,12 +26,10 @@ func NewBrokerageParserBase(config config.TaxConfig, gainsManager GainsComputati
 }
 
 // GenerateCsv creates all CSV output files from parsed brokerage information.
-// It generates: trades.csv, dividends.csv, gains.csv, and optionally interest.csv.
+// It generates: trades.csv, dividends.csv, gains.csv, and interest.csv (even if empty).
 func (b *BrokerageParserBase) GenerateCsv(ctx context.Context, info tax.BrokerageInfo) error {
-	if len(info.Interests) > 0 {
-		if err := b.createInterestFile(info.Interests); err != nil {
-			return err
-		}
+	if err := b.createInterestFile(info.Interests); err != nil {
+		return err
 	}
 
 	if err := b.createTradeFile(info.Trades); err != nil {

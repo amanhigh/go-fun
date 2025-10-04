@@ -102,11 +102,12 @@ var _ = Describe("BrokerageParserBase", func() {
 			})
 		})
 
-		Context("with no interest data", func() {
+		Context("with empty interest data", func() {
 			var info tax.BrokerageInfo
 
 			BeforeEach(func() {
 				info = tax.BrokerageInfo{
+					Interests: []tax.Interest{},
 					Trades: []tax.Trade{
 						{Symbol: "AAPL", Date: "2024-01-10", Type: "BUY", Quantity: 10, USDPrice: 150.0, USDValue: 1500, Commission: 1.0},
 					},
@@ -120,14 +121,65 @@ var _ = Describe("BrokerageParserBase", func() {
 				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("should skip interest file creation", func() {
-				_, err := os.Stat(taxConfig.InterestFilePath)
-				Expect(os.IsNotExist(err)).To(BeTrue())
+			It("should create empty interest file with headers only", func() {
+				data, err := os.ReadFile(taxConfig.InterestFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(string(data)).To(ContainSubstring("Symbol"))
 			})
 
 			It("should create trades file", func() {
 				_, err := os.Stat(taxConfig.TradesPath)
 				Expect(err).ToNot(HaveOccurred())
+			})
+		})
+
+		Context("with empty trades data", func() {
+			var info tax.BrokerageInfo
+
+			BeforeEach(func() {
+				info = tax.BrokerageInfo{
+					Interests: []tax.Interest{},
+					Trades:    []tax.Trade{},
+					Dividends: []tax.Dividend{},
+				}
+
+				expectedGains := []tax.Gains{}
+				mockGainsManager.EXPECT().ComputeGainsFromTrades(ctx, info.Trades).Return(expectedGains, nil)
+
+				err := base.GenerateCsv(ctx, info)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("should create empty trades file with headers only", func() {
+				data, err := os.ReadFile(taxConfig.TradesPath)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(string(data)).To(ContainSubstring("Symbol"))
+			})
+		})
+
+		Context("with empty dividends data", func() {
+			var info tax.BrokerageInfo
+
+			BeforeEach(func() {
+				info = tax.BrokerageInfo{
+					Interests: []tax.Interest{},
+					Trades: []tax.Trade{
+						{Symbol: "AAPL", Date: "2024-01-10", Type: "BUY", Quantity: 10, USDPrice: 150.0, USDValue: 1500, Commission: 1.0},
+					},
+					Dividends: []tax.Dividend{},
+				}
+
+				expectedGains := []tax.Gains{}
+				mockGainsManager.EXPECT().ComputeGainsFromTrades(ctx, info.Trades).Return(expectedGains, nil)
+
+				err := base.GenerateCsv(ctx, info)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("should create empty dividends file with headers only", func() {
+				data, err := os.ReadFile(taxConfig.DividendFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(string(data)).To(ContainSubstring("Symbol"))
 			})
 		})
 

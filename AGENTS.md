@@ -40,6 +40,8 @@ This file contains guidelines for coding, testing, and examples on coding style 
 
 ### Test Data Management
 - For test data, keep test data closest to It (test blocks) in BeforeEach blocks for each Context to enhance readability and localization. Common setup should be in higher-level BeforeEach.
+- All data preparation and operations must be in BeforeEach blocks. It blocks should only contain assertions.
+- Declare result variables at Context level, populate them in BeforeEach, and assert in It blocks
 
 ### Test Assertions
 - Use `Expect(value).To(Equal(expected))` for exact value comparisons instead of `BeNumerically("~", expected)` wherever possible
@@ -99,6 +101,7 @@ type FileContent struct {
 - See `components/learn/frameworks/play/zoo_test.go` for real Zookeeper testing with Context nesting
 - See `components/kohan/manager/capital_gain_manager_test.go` for manager testing patterns
 - See `components/kohan/clients/sbi_client_test.go` for client testing with testcontainers
+- See `components/kohan/manager/interactive_brokers_manager_test.go` for proper BeforeEach/It separation
 ```go
 // Test Example showing nesting pattern
 func TestFileManager(t *testing.T) {
@@ -128,7 +131,7 @@ func TestFileManager(t *testing.T) {
         })
 
         It("should write file successfully", func() {
-            // Verify write
+            // Only assertions
         })
 
         Context("Read After Write", func() {

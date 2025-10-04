@@ -11,7 +11,6 @@ import (
 
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/tax"
-	"github.com/gocarina/gocsv"
 )
 
 type InteractiveBrokersManager interface {
@@ -20,75 +19,15 @@ type InteractiveBrokersManager interface {
 }
 
 type InteractiveBrokersManagerImpl struct {
-	config       config.TaxConfig
-	gainsManager GainsComputationManager
+	BrokerageParserBase
+	config config.TaxConfig
 }
 
 func NewInteractiveBrokersManager(config config.TaxConfig, gainsManager GainsComputationManager) InteractiveBrokersManager {
 	return &InteractiveBrokersManagerImpl{
-		config:       config,
-		gainsManager: gainsManager,
+		BrokerageParserBase: NewBrokerageParserBase(config, gainsManager),
+		config:              config,
 	}
-}
-
-func (m *InteractiveBrokersManagerImpl) GenerateCsv(ctx context.Context, info tax.BrokerageInfo) (err error) {
-	// TODO: Add Interest file generation when IB Activity Statement parser is implemented
-	// Interest income is available in IB Activity Statement, not in Realized.csv
-	// if err = m.createInterestFile(info.Interests); err != nil {
-	// 	return
-	// }
-
-	if err = m.createTradeFile(info.Trades); err != nil {
-		return
-	}
-	if err = m.createDividendFile(info.Dividends); err != nil {
-		return
-	}
-	return m.createGainsFile(ctx, info.Trades)
-}
-
-func (m *InteractiveBrokersManagerImpl) createTradeFile(trades []tax.Trade) error {
-	tradeFile, err := os.Create(m.config.TradesPath)
-	if err != nil {
-		return fmt.Errorf("failed to create trades file: %w", err)
-	}
-	defer tradeFile.Close()
-
-	if err := gocsv.MarshalFile(&trades, tradeFile); err != nil {
-		return fmt.Errorf("failed to marshal trades data: %w", err)
-	}
-	return nil
-}
-
-func (m *InteractiveBrokersManagerImpl) createDividendFile(dividends []tax.Dividend) error {
-	dividendFile, err := os.Create(m.config.DividendFilePath)
-	if err != nil {
-		return fmt.Errorf("failed to create dividends file: %w", err)
-	}
-	defer dividendFile.Close()
-
-	if err := gocsv.MarshalFile(&dividends, dividendFile); err != nil {
-		return fmt.Errorf("failed to marshal dividends data: %w", err)
-	}
-	return nil
-}
-
-func (m *InteractiveBrokersManagerImpl) createGainsFile(ctx context.Context, trades []tax.Trade) error {
-	gains, httpErr := m.gainsManager.ComputeGainsFromTrades(ctx, trades)
-	if httpErr != nil {
-		return httpErr
-	}
-
-	gainsFile, err := os.Create(m.config.GainsFilePath)
-	if err != nil {
-		return fmt.Errorf("failed to create gains file: %w", err)
-	}
-	defer gainsFile.Close()
-
-	if err := gocsv.MarshalFile(&gains, gainsFile); err != nil {
-		return fmt.Errorf("failed to marshal gains data: %w", err)
-	}
-	return nil
 }
 
 func (m *InteractiveBrokersManagerImpl) Parse() (info tax.BrokerageInfo, err error) {
@@ -226,25 +165,15 @@ func (m *InteractiveBrokersManagerImpl) parseDividendRecord(record []string, tax
 		return tax.Dividend{}, fmt.Errorf("failed to parse dividend amount: %w", err)
 	}
 
-	dividend := tax.Dividend{
+	dividend := &tax.Dividend{
 		Symbol: symbol,
 		Date:   date,
 		Amount: amount,
 	}
 
-	m.applyWithholdingTax(&dividend, taxMap)
-	dividend.Net = dividend.Amount - dividend.Tax
+	m.MatchDividendWithTax(dividend, taxMap)
 
-	return dividend, nil
-}
-
-func (m *InteractiveBrokersManagerImpl) applyWithholdingTax(dividend *tax.Dividend, taxMap map[string]map[string]float64) {
-	if dateTaxes, ok := taxMap[dividend.Symbol]; ok {
-		if taxAmount, ok := dateTaxes[dividend.Date]; ok {
-			dividend.Tax = taxAmount
-			delete(dateTaxes, dividend.Date)
-		}
-	}
+	return *dividend, nil
 }
 
 func (m *InteractiveBrokersManagerImpl) buildTaxMap(records [][]string) map[string]map[string]float64 {

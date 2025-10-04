@@ -33,6 +33,7 @@ var _ = Describe("InteractiveBrokersManager", func() {
 			TradesPath:       filepath.Join(tempTestDir, "trades.csv"),
 			DividendFilePath: filepath.Join(tempTestDir, "dividends.csv"),
 			GainsFilePath:    filepath.Join(tempTestDir, "gains.csv"),
+			InterestFilePath: filepath.Join(tempTestDir, "interest.csv"),
 			IBPath:           sampleCSVPath,
 		}
 
@@ -65,9 +66,15 @@ Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per
 		})
 
 		Context("when parsing trades", func() {
-			It("should extract trade entries correctly", func() {
-				info, err := ibManager.Parse()
+			var info tax.BrokerageInfo
+
+			BeforeEach(func() {
+				var err error
+				info, err = ibManager.Parse()
 				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("should extract trade entries correctly", func() {
 				Expect(info.Trades).To(HaveLen(4))
 
 				Expect(info.Trades[0].Symbol).To(Equal("MPC"))
@@ -97,9 +104,15 @@ Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per
 		})
 
 		Context("when parsing dividends", func() {
-			It("should extract dividend entries and match withholding tax", func() {
-				info, err := ibManager.Parse()
+			var info tax.BrokerageInfo
+
+			BeforeEach(func() {
+				var err error
+				info, err = ibManager.Parse()
 				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("should extract dividend entries and match withholding tax", func() {
 				Expect(info.Dividends).To(HaveLen(1))
 
 				Expect(info.Dividends[0].Symbol).To(Equal("MPC"))
@@ -111,8 +124,13 @@ Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per
 		})
 
 		Context("when generating CSV", func() {
-			It("should create valid csv files including gains.csv", func() {
-				info := tax.BrokerageInfo{
+			var (
+				info          tax.BrokerageInfo
+				expectedGains []tax.Gains
+			)
+
+			BeforeEach(func() {
+				info = tax.BrokerageInfo{
 					Trades: []tax.Trade{
 						{Symbol: "MPC", Date: "2024-10-31", Type: "BUY", Quantity: 8, USDPrice: 146.21, USDValue: 1169.68, Commission: 0.36024125},
 						{Symbol: "MPC", Date: "2024-12-17", Type: "SELL", Quantity: 8, USDPrice: 136.85, USDValue: 1094.8, Commission: 0.38419669},
@@ -122,14 +140,16 @@ Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per
 					},
 				}
 
-				expectedGains := []tax.Gains{
+				expectedGains = []tax.Gains{
 					{Symbol: "MPC", BuyDate: "2024-10-31", SellDate: "2024-12-17", Type: "STCG", Quantity: 8, PNL: -75.62, Commission: 0.74},
 				}
 				mockGainsManager.EXPECT().ComputeGainsFromTrades(ctx, info.Trades).Return(expectedGains, nil)
 
 				err := ibManager.GenerateCsv(ctx, info)
 				Expect(err).ToNot(HaveOccurred())
+			})
 
+			It("should create valid csv files including gains.csv", func() {
 				data, err := os.ReadFile(taxConfig.TradesPath)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(string(data)).To(ContainSubstring("MPC,2024-10-31,BUY,8,146.21"))
@@ -147,15 +167,20 @@ Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per
 
 	Context("with invalid CSV files", func() {
 		Context("when CSV file is missing", func() {
+			BeforeEach(func() {
+				ibManager = manager.NewInteractiveBrokersManager(taxConfig, mockGainsManager)
+			})
+
 			It("should return an error", func() {
-				nonExistentManager := manager.NewInteractiveBrokersManager(taxConfig, mockGainsManager)
-				_, err := nonExistentManager.Parse()
+				_, err := ibManager.Parse()
 				Expect(err).To(HaveOccurred())
 			})
 		})
 
 		Context("when CSV has malformed data", func() {
-			It("should skip invalid rows gracefully", func() {
+			var info tax.BrokerageInfo
+
+			BeforeEach(func() {
 				csvContent := `Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Code
 Trades,Data,Order,Stocks,USD,INVALID,,BADQTY,BADPRICE,0,0,0,0,O`
 
@@ -163,14 +188,20 @@ Trades,Data,Order,Stocks,USD,INVALID,,BADQTY,BADPRICE,0,0,0,0,O`
 				Expect(err).ToNot(HaveOccurred())
 
 				ibManager = manager.NewInteractiveBrokersManager(taxConfig, mockGainsManager)
-				info, err := ibManager.Parse()
-				Expect(err).ToNot(HaveOccurred())
+				var parseErr error
+				info, parseErr = ibManager.Parse()
+				Expect(parseErr).ToNot(HaveOccurred())
+			})
+
+			It("should skip invalid rows gracefully", func() {
 				Expect(info.Trades).To(BeEmpty())
 			})
 		})
 
 		Context("when dividend has no matching tax", func() {
-			It("should set tax to 0", func() {
+			var info tax.BrokerageInfo
+
+			BeforeEach(func() {
 				csvContent := `Dividends,Header,Currency,Date,Description,Amount
 Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share (Ordinary Dividend),7.28`
 
@@ -178,11 +209,66 @@ Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share
 				Expect(err).ToNot(HaveOccurred())
 
 				ibManager = manager.NewInteractiveBrokersManager(taxConfig, mockGainsManager)
-				info, err := ibManager.Parse()
-				Expect(err).ToNot(HaveOccurred())
+				var parseErr error
+				info, parseErr = ibManager.Parse()
+				Expect(parseErr).ToNot(HaveOccurred())
+			})
+
+			It("should set tax to 0", func() {
 				Expect(info.Dividends).To(HaveLen(1))
 				Expect(info.Dividends[0].Tax).To(Equal(0.0))
 				Expect(info.Dividends[0].Net).To(Equal(7.28))
+			})
+		})
+	})
+
+	Context("with edge case CSV data", func() {
+		Context("when CSV has SubTotal and Total rows", func() {
+			var info tax.BrokerageInfo
+
+			BeforeEach(func() {
+				csvContent := `Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Code
+Trades,Data,Order,Stocks,USD,MPC,"2024-10-31, 09:30:00",8,146.21,-1169.68,-0.36024125,1170.04024125,0,O
+Trades,SubTotal,,Stocks,USD,MPC,,0,,-74.88,-0.74443794,0.00000125,-75.624437,
+Trades,Total,,Stocks,USD,,,,,-129.958,-2.097372693,0.000001215,-132.055372,
+Dividends,Header,Currency,Date,Description,Amount
+Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend,7.28
+Dividends,Data,Total,,,7.28`
+
+				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
+				Expect(err).ToNot(HaveOccurred())
+
+				ibManager = manager.NewInteractiveBrokersManager(taxConfig, mockGainsManager)
+				var parseErr error
+				info, parseErr = ibManager.Parse()
+				Expect(parseErr).ToNot(HaveOccurred())
+			})
+
+			It("should skip them and only parse Data rows", func() {
+				Expect(info.Trades).To(HaveLen(1))
+				Expect(info.Dividends).To(HaveLen(1))
+			})
+		})
+
+		Context("when CSV has only headers with no data", func() {
+			var info tax.BrokerageInfo
+
+			BeforeEach(func() {
+				csvContent := `Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Code
+Dividends,Header,Currency,Date,Description,Amount`
+
+				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
+				Expect(err).ToNot(HaveOccurred())
+
+				ibManager = manager.NewInteractiveBrokersManager(taxConfig, mockGainsManager)
+				var parseErr error
+				info, parseErr = ibManager.Parse()
+				Expect(parseErr).ToNot(HaveOccurred())
+			})
+
+			It("should return empty arrays", func() {
+				Expect(info.Trades).To(BeEmpty())
+				Expect(info.Dividends).To(BeEmpty())
 			})
 		})
 	})
