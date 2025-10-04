@@ -1,8 +1,6 @@
 module github.com/amanhigh/go-fun/models
 
-go 1.23.0
-
-toolchain go1.23.8
+go 1.25.1
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
