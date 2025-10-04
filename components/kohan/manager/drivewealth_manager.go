@@ -1,12 +1,10 @@
 package manager
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/tax"
 	"github.com/xuri/excelize/v2"
 )
@@ -16,28 +14,22 @@ const (
 	tradeRowLength = 10
 )
 
-type DriveWealthManager interface {
-	Parse() (info tax.BrokerageInfo, err error)
-	GenerateCsv(ctx context.Context, info tax.BrokerageInfo) (err error)
-}
-
-// DriveWealthManagerImpl handles parsing of DriveWealth reports.
+// DriveWealthManagerImpl handles parsing of DriveWealth reports and implements Broker interface.
 type DriveWealthManagerImpl struct {
-	BrokerageParserBase
-	config config.TaxConfig
+	BrokerageParserHelper
+	excelPath string
 }
 
-// NewDriveWealthManager creates a new DriveWealthManager.
-func NewDriveWealthManager(config config.TaxConfig, gainsManager GainsComputationManager) DriveWealthManager {
+// NewDriveWealthManagerImpl creates a new DriveWealth broker parser.
+func NewDriveWealthManagerImpl(excelPath string) Broker {
 	return &DriveWealthManagerImpl{
-		BrokerageParserBase: NewBrokerageParserBase(config, gainsManager),
-		config:              config,
+		excelPath: excelPath,
 	}
 }
 
 // Parse orchestrates the parsing of the DriveWealth Excel file.
 func (m *DriveWealthManagerImpl) Parse() (info tax.BrokerageInfo, err error) {
-	f, err := excelize.OpenFile(m.config.DriveWealthPath)
+	f, err := excelize.OpenFile(m.excelPath)
 	if err != nil {
 		err = fmt.Errorf("failed to open excel file: %w", err)
 		return

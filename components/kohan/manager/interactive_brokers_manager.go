@@ -1,7 +1,6 @@
 package manager
 
 import (
-	"context"
 	"encoding/csv"
 	"fmt"
 	"math"
@@ -9,29 +8,23 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/tax"
 )
 
-type InteractiveBrokersManager interface {
-	Parse() (info tax.BrokerageInfo, err error)
-	GenerateCsv(ctx context.Context, info tax.BrokerageInfo) (err error)
-}
-
+// InteractiveBrokersManagerImpl handles parsing of IB reports and implements Broker interface.
 type InteractiveBrokersManagerImpl struct {
-	BrokerageParserBase
-	config config.TaxConfig
+	BrokerageParserHelper
+	csvPath string
 }
 
-func NewInteractiveBrokersManager(config config.TaxConfig, gainsManager GainsComputationManager) InteractiveBrokersManager {
+func NewInteractiveBrokersManagerImpl(csvPath string) Broker {
 	return &InteractiveBrokersManagerImpl{
-		BrokerageParserBase: NewBrokerageParserBase(config, gainsManager),
-		config:              config,
+		csvPath: csvPath,
 	}
 }
 
 func (m *InteractiveBrokersManagerImpl) Parse() (info tax.BrokerageInfo, err error) {
-	file, err := os.Open(m.config.IBPath)
+	file, err := os.Open(m.csvPath)
 	if err != nil {
 		err = fmt.Errorf("failed to open CSV file: %w", err)
 		return
