@@ -3,13 +3,11 @@ package manager
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/tax"
-	"github.com/gocarina/gocsv"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -25,86 +23,16 @@ type DriveWealthManager interface {
 
 // DriveWealthManagerImpl handles parsing of DriveWealth reports.
 type DriveWealthManagerImpl struct {
-	config       config.TaxConfig
-	gainsManager GainsComputationManager
+	BrokerageParserBase
+	config config.TaxConfig
 }
 
 // NewDriveWealthManager creates a new DriveWealthManager.
 func NewDriveWealthManager(config config.TaxConfig, gainsManager GainsComputationManager) DriveWealthManager {
 	return &DriveWealthManagerImpl{
-		config:       config,
-		gainsManager: gainsManager,
+		BrokerageParserBase: NewBrokerageParserBase(config, gainsManager),
+		config:              config,
 	}
-}
-
-func (m *DriveWealthManagerImpl) GenerateCsv(ctx context.Context, info tax.BrokerageInfo) (err error) {
-	if err = m.createInterestFile(info.Interests); err != nil {
-		return
-	}
-	if err = m.createTradeFile(info.Trades); err != nil {
-		return
-	}
-	if err = m.createDividendFile(info.Dividends); err != nil {
-		return
-	}
-	return m.createGainsFile(ctx, info.Trades)
-}
-
-func (m *DriveWealthManagerImpl) createInterestFile(interests []tax.Interest) error {
-	interestFile, err := os.Create(m.config.InterestFilePath)
-	if err != nil {
-		return fmt.Errorf("failed to create interest file: %w", err)
-	}
-	defer interestFile.Close()
-
-	if err := gocsv.MarshalFile(&interests, interestFile); err != nil {
-		return fmt.Errorf("failed to marshal interest data: %w", err)
-	}
-	return nil
-}
-
-func (m *DriveWealthManagerImpl) createTradeFile(trades []tax.Trade) error {
-	tradeFile, err := os.Create(m.config.TradesPath)
-	if err != nil {
-		return fmt.Errorf("failed to create trades file: %w", err)
-	}
-	defer tradeFile.Close()
-
-	if err := gocsv.MarshalFile(&trades, tradeFile); err != nil {
-		return fmt.Errorf("failed to marshal trades data: %w", err)
-	}
-	return nil
-}
-
-func (m *DriveWealthManagerImpl) createDividendFile(dividends []tax.Dividend) error {
-	dividendFile, err := os.Create(m.config.DividendFilePath)
-	if err != nil {
-		return fmt.Errorf("failed to create dividends file: %w", err)
-	}
-	defer dividendFile.Close()
-
-	if err := gocsv.MarshalFile(&dividends, dividendFile); err != nil {
-		return fmt.Errorf("failed to marshal dividends data: %w", err)
-	}
-	return nil
-}
-
-func (m *DriveWealthManagerImpl) createGainsFile(ctx context.Context, trades []tax.Trade) error {
-	gains, httpErr := m.gainsManager.ComputeGainsFromTrades(ctx, trades)
-	if httpErr != nil {
-		return httpErr
-	}
-
-	gainsFile, err := os.Create(m.config.GainsFilePath)
-	if err != nil {
-		return fmt.Errorf("failed to create gains file: %w", err)
-	}
-	defer gainsFile.Close()
-
-	if err := gocsv.MarshalFile(&gains, gainsFile); err != nil {
-		return fmt.Errorf("failed to marshal gains data: %w", err)
-	}
-	return nil
 }
 
 // Parse orchestrates the parsing of the DriveWealth Excel file.
@@ -243,35 +171,21 @@ func (m *DriveWealthManagerImpl) parseDividends(rows [][]string) ([]tax.Dividend
 	}
 
 	var dividendEntries []tax.Dividend
-	// Second pass: Process dividend entries and associate them with the collected taxes.
-	for _, row := range rows[1:] { // Skip header
+	for _, row := range rows[1:] {
 		if len(row) >= 5 && row[2] == "Dividend" {
 			amount, err := strconv.ParseFloat(row[4], 64)
 			if err != nil {
-				continue // Skip row if dividend amount is not a valid number.
+				continue
 			}
 
-			symbol := row[3]
-			date := strings.Split(row[0], " ")[0]
-
-			entry := tax.Dividend{
-				Symbol: symbol,
-				Date:   date,
+			dividend := &tax.Dividend{
+				Symbol: row[3],
+				Date:   strings.Split(row[0], " ")[0],
 				Amount: amount,
 			}
 
-			// Look for a matching tax in the map using the dividend's symbol and date.
-			if dateTaxes, ok := taxMap[symbol]; ok {
-				if taxAmount, ok := dateTaxes[date]; ok {
-					entry.Tax = taxAmount
-					// Remove the tax from the map to ensure it's not used again.
-					delete(dateTaxes, date)
-				}
-			}
-
-			// Calculate the net amount after deducting tax.
-			entry.Net = entry.Amount - entry.Tax
-			dividendEntries = append(dividendEntries, entry)
+			m.MatchDividendWithTax(dividend, taxMap)
+			dividendEntries = append(dividendEntries, *dividend)
 		}
 	}
 
