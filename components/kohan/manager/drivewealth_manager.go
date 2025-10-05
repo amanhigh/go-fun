@@ -16,7 +16,6 @@ const (
 
 // DriveWealthManagerImpl handles parsing of DriveWealth reports and implements Broker interface.
 type DriveWealthManagerImpl struct {
-	BrokerageParserHelper
 	excelPath string
 }
 
@@ -181,7 +180,7 @@ func (m *DriveWealthManagerImpl) parseDividends(rows [][]string) ([]tax.Dividend
 				Amount: amount,
 			}
 
-			m.MatchDividendWithTax(dividend, taxMap)
+			MatchDividendWithTax(dividend, taxMap)
 			dividendEntries = append(dividendEntries, *dividend)
 		}
 	}

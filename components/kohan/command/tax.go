@@ -58,21 +58,17 @@ var computeCmd = &cobra.Command{
 
 func init() {
 	appsCmd.AddCommand(taxCmd)
-	// FIXME: #A Second Year Summary from Vested.
-	// FIXME: #B Add Interactive Broker Parser.
-	taxCmd.AddCommand(vestedCmd)
-	// TODO: #A Match Computation for Interactive Broker.
+	taxCmd.AddCommand(parseCmd)
 	taxCmd.AddCommand(computeCmd)
 }
 
-var vestedCmd = &cobra.Command{
-	Use:   "vested",
-	Short: "Generate Vested Brokerage Report",
-	Long:  `Generate Vested Brokerage Report from DriveWealth Excel file`,
+var parseCmd = &cobra.Command{
+	Use:   "parse",
+	Short: "Parse all broker files and generate CSVs",
+	Long:  `Auto-detects and parses DriveWealth, Interactive Brokers files. Merges and generates consolidated CSVs.`,
 	RunE: func(_ *cobra.Command, _ []string) error {
 		ctx := context.Background()
 
-		// Initialize config and injector
 		kohanConfig, err := config.NewKohanConfig()
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
@@ -80,21 +76,17 @@ var vestedCmd = &cobra.Command{
 
 		core.SetupKohanInjector(kohanConfig)
 		ki := core.GetKohanInterface()
-		driveWealthManager, err := ki.GetDriveWealthManager()
+
+		brokerageManager, err := ki.GetBrokerageManager()
 		if err != nil {
-			return fmt.Errorf("failed to get drive wealth manager: %w", err)
+			return fmt.Errorf("failed to get brokerage manager: %w", err)
 		}
 
-		info, err := driveWealthManager.Parse()
-		if err != nil {
-			return fmt.Errorf("failed to parse drive wealth report: %w", err)
+		if err := brokerageManager.ParseAndGenerate(ctx); err != nil {
+			return fmt.Errorf("failed to parse brokers: %w", err)
 		}
 
-		if err := driveWealthManager.GenerateCsv(ctx, info); err != nil {
-			return fmt.Errorf("failed to generate csv: %w", err)
-		}
-
-		fmt.Println("Successfully generated Vested Brokerage Report")
+		fmt.Println("Successfully parsed broker files and generated CSVs")
 		return nil
 	},
 }

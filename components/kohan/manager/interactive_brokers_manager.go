@@ -13,7 +13,6 @@ import (
 
 // InteractiveBrokersManagerImpl handles parsing of IB reports and implements Broker interface.
 type InteractiveBrokersManagerImpl struct {
-	BrokerageParserHelper
 	csvPath string
 }
 
@@ -169,7 +168,7 @@ func (m *InteractiveBrokersManagerImpl) parseDividendRecord(record []string, tax
 		Amount: amount,
 	}
 
-	m.MatchDividendWithTax(dividend, taxMap)
+	MatchDividendWithTax(dividend, taxMap)
 
 	return *dividend, nil
 }
