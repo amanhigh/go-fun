@@ -27,6 +27,11 @@ func NewDriveWealthManagerImpl(excelPath string) Broker {
 	}
 }
 
+// GetName returns the broker name.
+func (m *DriveWealthManagerImpl) GetName() string {
+	return "DriveWealth"
+}
+
 // Parse orchestrates the parsing of the DriveWealth Excel file.
 func (m *DriveWealthManagerImpl) Parse() (info tax.BrokerageInfo, err error) {
 	f, err := excelize.OpenFile(m.excelPath)

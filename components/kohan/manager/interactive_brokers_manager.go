@@ -23,6 +23,11 @@ func NewInteractiveBrokersManagerImpl(csvPath string) Broker {
 	}
 }
 
+// GetName returns the broker name.
+func (m *InteractiveBrokersManagerImpl) GetName() string {
+	return "Interactive Brokers"
+}
+
 func (m *InteractiveBrokersManagerImpl) Parse() (info tax.BrokerageInfo, err error) {
 	file, err := os.Open(m.csvPath)
 	if err != nil {
