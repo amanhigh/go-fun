@@ -23,7 +23,7 @@ type KohanInterface interface {
 	GetDariusApp(cfg config.DariusConfig) (*DariusV1, error)
 	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
 	GetTaxManager() (manager.TaxManager, error)
-	GetDriveWealthManager() (manager.DriveWealthManager, error)
+	GetBrokerageManager() (manager.BrokerageManager, error)
 }
 
 // Private singleton instance
@@ -64,16 +64,15 @@ func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
 	return taxManager, nil
 }
 
-func (ki *KohanInjector) GetDriveWealthManager() (manager.DriveWealthManager, error) {
+func (ki *KohanInjector) GetBrokerageManager() (manager.BrokerageManager, error) {
 	ki.registerTaxDependencies()
 
-	// Resolve and return DriveWealthManager
-	var driveWealthManager manager.DriveWealthManager
-	err := ki.di.Resolve(&driveWealthManager)
+	var brokerageManager manager.BrokerageManager
+	err := ki.di.Resolve(&brokerageManager)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve drive wealth manager: %w", err)
+		return nil, fmt.Errorf("failed to resolve brokerage manager: %w", err)
 	}
-	return driveWealthManager, nil
+	return brokerageManager, nil
 }
 
 func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error) {
@@ -210,8 +209,20 @@ func (ki *KohanInjector) provideGainsComputationManager() manager.GainsComputati
 	return manager.NewGainsComputationManager()
 }
 
-func (ki *KohanInjector) provideDriveWealthManager(gainsManager manager.GainsComputationManager) manager.DriveWealthManager {
-	return manager.NewDriveWealthManager(ki.config.Tax, gainsManager)
+func (ki *KohanInjector) provideDriveWealthManager() manager.Broker {
+	return manager.NewDriveWealthManagerImpl(ki.config.Tax.DriveWealthPath)
+}
+
+func (ki *KohanInjector) provideInteractiveBrokersManager() manager.Broker {
+	return manager.NewInteractiveBrokersManagerImpl(ki.config.Tax.IBPath)
+}
+
+func (ki *KohanInjector) provideBrokerageManager(
+	dwManager manager.Broker,
+	ibManager manager.Broker,
+	gainsManager manager.GainsComputationManager,
+) manager.BrokerageManager {
+	return manager.NewBrokerageManager(dwManager, ibManager, gainsManager, ki.config.Tax)
 }
 
 func (ki *KohanInjector) provideTaxManager(
@@ -302,12 +313,12 @@ func (ki *KohanInjector) registerTaxComponents() {
 	container.MustSingleton(ki.di, ki.provideCapitalGainManager)
 	container.MustSingleton(ki.di, ki.provideDividendManager)
 	container.MustSingleton(ki.di, ki.provideInterestManager)
-	// Register ExcelManager first since TaxManager depends on it
 	container.MustSingleton(ki.di, ki.provideExcelManager)
 	container.MustSingleton(ki.di, ki.provideTaxManager)
-	// Register GainsComputationManager before DriveWealthManager since it depends on it
 	container.MustSingleton(ki.di, ki.provideGainsComputationManager)
 	container.MustSingleton(ki.di, ki.provideDriveWealthManager)
+	container.MustSingleton(ki.di, ki.provideInteractiveBrokersManager)
+	container.MustSingleton(ki.di, ki.provideBrokerageManager)
 }
 
 // registerTaxDependencies registers all dependencies required for tax calculations.

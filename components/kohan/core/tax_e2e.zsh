@@ -22,6 +22,11 @@ if [ -f "$FA_COMPUTE_DIR/vested.xlsx" ]; then
     echo "✅ Backed up vested.xlsx"
 fi
 
+if [ -f "$FA_COMPUTE_DIR/ib.csv" ]; then
+    cp "$FA_COMPUTE_DIR/ib.csv" "$BACKUP_DIR/"
+    echo "✅ Backed up ib.csv"
+fi
+
 if [ -f "$FA_COMPUTE_DIR/sbi_rates.csv" ]; then
     cp "$FA_COMPUTE_DIR/sbi_rates.csv" "$BACKUP_DIR/"
     echo "✅ Backed up sbi_rates.csv ($(wc -l < "$FA_COMPUTE_DIR/sbi_rates.csv") lines)"
@@ -65,6 +70,11 @@ echo "--- Restoring preserved files ---"
 if [ -f "$BACKUP_DIR/vested.xlsx" ]; then
     cp "$BACKUP_DIR/vested.xlsx" "$FA_COMPUTE_DIR/"
     echo "✅ Restored vested.xlsx"
+fi
+
+if [ -f "$BACKUP_DIR/ib.csv" ]; then
+    cp "$BACKUP_DIR/ib.csv" "$FA_COMPUTE_DIR/"
+    echo "✅ Restored ib.csv"
 fi
 
 if [ -f "$BACKUP_DIR/sbi_rates.csv" ]; then
