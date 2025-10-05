@@ -209,20 +209,26 @@ func (ki *KohanInjector) provideGainsComputationManager() manager.GainsComputati
 	return manager.NewGainsComputationManager()
 }
 
+func (ki *KohanInjector) provideBrokerageManager() manager.BrokerageManager {
+	brokerageManager := &manager.BrokerageManagerImpl{
+		Config: ki.config.Tax,
+	}
+
+	// Fill will inject GainsManager via DI
+	err := ki.di.Fill(brokerageManager)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to fill brokerage manager")
+	}
+
+	return brokerageManager
+}
+
 func (ki *KohanInjector) provideDriveWealthManager() manager.Broker {
 	return manager.NewDriveWealthManagerImpl(ki.config.Tax.DriveWealthPath)
 }
 
 func (ki *KohanInjector) provideInteractiveBrokersManager() manager.Broker {
 	return manager.NewInteractiveBrokersManagerImpl(ki.config.Tax.IBPath)
-}
-
-func (ki *KohanInjector) provideBrokerageManager(
-	dwManager manager.Broker,
-	ibManager manager.Broker,
-	gainsManager manager.GainsComputationManager,
-) manager.BrokerageManager {
-	return manager.NewBrokerageManager(dwManager, ibManager, gainsManager, ki.config.Tax)
 }
 
 func (ki *KohanInjector) provideTaxManager(
@@ -316,8 +322,11 @@ func (ki *KohanInjector) registerTaxComponents() {
 	container.MustSingleton(ki.di, ki.provideExcelManager)
 	container.MustSingleton(ki.di, ki.provideTaxManager)
 	container.MustSingleton(ki.di, ki.provideGainsComputationManager)
-	container.MustSingleton(ki.di, ki.provideDriveWealthManager)
-	container.MustSingleton(ki.di, ki.provideInteractiveBrokersManager)
+
+	// Register brokers with names to avoid collision (names match struct field names)
+	container.MustNamedSingleton(ki.di, "DriveWealth", ki.provideDriveWealthManager)
+	container.MustNamedSingleton(ki.di, "IB", ki.provideInteractiveBrokersManager)
+
 	container.MustSingleton(ki.di, ki.provideBrokerageManager)
 }
 

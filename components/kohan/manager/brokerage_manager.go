@@ -16,11 +16,13 @@ type BrokerageManager interface {
 }
 
 type BrokerageManagerImpl struct {
-	brokers      []Broker
-	gainsManager GainsComputationManager
-	config       config.TaxConfig
+	DriveWealth  Broker                  `container:"name"`
+	IB           Broker                  `container:"name"`
+	GainsManager GainsComputationManager `container:"type"`
+	Config       config.TaxConfig
 }
 
+// Constructor for tests
 func NewBrokerageManager(
 	dwManager Broker,
 	ibManager Broker,
@@ -28,16 +30,18 @@ func NewBrokerageManager(
 	config config.TaxConfig,
 ) BrokerageManager {
 	return &BrokerageManagerImpl{
-		brokers:      []Broker{dwManager, ibManager},
-		gainsManager: gainsManager,
-		config:       config,
+		DriveWealth:  dwManager,
+		IB:           ibManager,
+		GainsManager: gainsManager,
+		Config:       config,
 	}
 }
 
 func (m *BrokerageManagerImpl) ParseAndGenerate(ctx context.Context) error {
 	var merged tax.BrokerageInfo
+	brokers := []Broker{m.DriveWealth, m.IB}
 
-	for _, broker := range m.brokers {
+	for _, broker := range brokers {
 		info, err := broker.Parse()
 		if err != nil {
 			log.Warn().Str("broker", broker.GetName()).Err(err).Msg("Broker parse failed, skipping")
@@ -72,7 +76,7 @@ func (m *BrokerageManagerImpl) writeCSVs(ctx context.Context, info tax.Brokerage
 }
 
 func (m *BrokerageManagerImpl) createInterestFile(interests []tax.Interest) error {
-	file, err := os.Create(m.config.InterestFilePath)
+	file, err := os.Create(m.Config.InterestFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to create interest file: %w", err)
 	}
@@ -85,7 +89,7 @@ func (m *BrokerageManagerImpl) createInterestFile(interests []tax.Interest) erro
 }
 
 func (m *BrokerageManagerImpl) createTradeFile(trades []tax.Trade) error {
-	file, err := os.Create(m.config.TradesPath)
+	file, err := os.Create(m.Config.TradesPath)
 	if err != nil {
 		return fmt.Errorf("failed to create trades file: %w", err)
 	}
@@ -98,7 +102,7 @@ func (m *BrokerageManagerImpl) createTradeFile(trades []tax.Trade) error {
 }
 
 func (m *BrokerageManagerImpl) createDividendFile(dividends []tax.Dividend) error {
-	file, err := os.Create(m.config.DividendFilePath)
+	file, err := os.Create(m.Config.DividendFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to create dividends file: %w", err)
 	}
@@ -111,12 +115,12 @@ func (m *BrokerageManagerImpl) createDividendFile(dividends []tax.Dividend) erro
 }
 
 func (m *BrokerageManagerImpl) createGainsFile(ctx context.Context, trades []tax.Trade) error {
-	gains, httpErr := m.gainsManager.ComputeGainsFromTrades(ctx, trades)
+	gains, httpErr := m.GainsManager.ComputeGainsFromTrades(ctx, trades)
 	if httpErr != nil {
 		return httpErr
 	}
 
-	file, err := os.Create(m.config.GainsFilePath)
+	file, err := os.Create(m.Config.GainsFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to create gains file: %w", err)
 	}
