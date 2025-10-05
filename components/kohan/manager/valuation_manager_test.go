@@ -257,7 +257,7 @@ var _ = Describe("ValuationManager", func() {
 				Context("Multiple Position Peaks", func() {
 					var trades []tax.Trade
 					BeforeEach(func() {
-						// HACK: #C Multiple Peaks with Same Value (Take Second higher TBBR Rate) or Throw Error.
+						// FIXME: #A Multiple Peaks with Same Value (Take Second higher TBBR Rate) or Throw Error.
 						trades = []tax.Trade{
 							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),  // Initial 10
 							tax.NewTrade(AAPL, "2024-02-15", "BUY", 5, 110),   // Peak 1: 15 shares

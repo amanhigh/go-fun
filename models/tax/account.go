@@ -8,7 +8,7 @@ import (
 
 // Account represents year-end account position
 type Account struct {
-	// FIXME: #B First Purchase Date.
+	// FIXME: #C First Purchase Date.
 	Symbol   string  `csv:"Symbol"`
 	Quantity float64 `csv:"Quantity"`
 	// BUG: Rename fields why cost is Required ?
