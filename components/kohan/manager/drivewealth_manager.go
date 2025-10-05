@@ -32,7 +32,8 @@ func (m *DriveWealthManagerImpl) GetName() string {
 }
 
 // Parse orchestrates the parsing of the DriveWealth Excel file.
-func (m *DriveWealthManagerImpl) Parse() (info tax.BrokerageInfo, err error) {
+// The year parameter is ignored as DriveWealth file contains complete history.
+func (m *DriveWealthManagerImpl) Parse(_ int) (info tax.BrokerageInfo, err error) {
 	f, err := excelize.OpenFile(m.excelPath)
 	if err != nil {
 		err = fmt.Errorf("failed to open excel file: %w", err)

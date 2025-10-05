@@ -86,7 +86,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 
 		Context("when parsing interests", func() {
 			It("should extract interest entries correctly", func() {
-				info, err := driveWealthManager.Parse()
+				info, err := driveWealthManager.Parse(testYear)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(info.Interests).To(HaveLen(2))
 				Expect(info.Interests[0].Amount).To(Equal(0.59))
@@ -96,7 +96,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 
 		Context("when parsing dividends", func() {
 			It("should extract dividend entries correctly", func() {
-				info, err := driveWealthManager.Parse()
+				info, err := driveWealthManager.Parse(testYear)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(info.Dividends).To(HaveLen(3))
 
@@ -119,7 +119,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 
 		Context("when parsing trades", func() {
 			It("should extract trade entries correctly", func() {
-				info, err := driveWealthManager.Parse()
+				info, err := driveWealthManager.Parse(testYear)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(info.Trades).To(HaveLen(3))
 
@@ -148,7 +148,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 		Context("when the Excel file is missing", func() {
 			It("should return an error", func() {
 				nonExistentManager := manager.NewDriveWealthManagerImpl(sampleExcelPath)
-				_, err := nonExistentManager.Parse()
+				_, err := nonExistentManager.Parse(testYear)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -163,7 +163,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				driveWealthManager = manager.NewDriveWealthManagerImpl(sampleExcelPath)
-				_, err = driveWealthManager.Parse()
+				_, err = driveWealthManager.Parse(testYear)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -178,7 +178,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				driveWealthManager = manager.NewDriveWealthManagerImpl(sampleExcelPath)
-				_, err = driveWealthManager.Parse()
+				_, err = driveWealthManager.Parse(testYear)
 				Expect(err).To(HaveOccurred())
 			})
 		})

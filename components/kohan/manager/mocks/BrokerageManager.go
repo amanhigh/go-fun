@@ -38,16 +38,16 @@ func (_m *BrokerageManager) EXPECT() *BrokerageManager_Expecter {
 }
 
 // ParseAndGenerate provides a mock function for the type BrokerageManager
-func (_mock *BrokerageManager) ParseAndGenerate(ctx context.Context) error {
-	ret := _mock.Called(ctx)
+func (_mock *BrokerageManager) ParseAndGenerate(ctx context.Context, year int) error {
+	ret := _mock.Called(ctx, year)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ParseAndGenerate")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context) error); ok {
-		r0 = returnFunc(ctx)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int) error); ok {
+		r0 = returnFunc(ctx, year)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -61,18 +61,24 @@ type BrokerageManager_ParseAndGenerate_Call struct {
 
 // ParseAndGenerate is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *BrokerageManager_Expecter) ParseAndGenerate(ctx interface{}) *BrokerageManager_ParseAndGenerate_Call {
-	return &BrokerageManager_ParseAndGenerate_Call{Call: _e.mock.On("ParseAndGenerate", ctx)}
+//   - year int
+func (_e *BrokerageManager_Expecter) ParseAndGenerate(ctx interface{}, year interface{}) *BrokerageManager_ParseAndGenerate_Call {
+	return &BrokerageManager_ParseAndGenerate_Call{Call: _e.mock.On("ParseAndGenerate", ctx, year)}
 }
 
-func (_c *BrokerageManager_ParseAndGenerate_Call) Run(run func(ctx context.Context)) *BrokerageManager_ParseAndGenerate_Call {
+func (_c *BrokerageManager_ParseAndGenerate_Call) Run(run func(ctx context.Context, year int)) *BrokerageManager_ParseAndGenerate_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
+		var arg1 int
+		if args[1] != nil {
+			arg1 = args[1].(int)
+		}
 		run(
 			arg0,
+			arg1,
 		)
 	})
 	return _c
@@ -83,7 +89,7 @@ func (_c *BrokerageManager_ParseAndGenerate_Call) Return(err error) *BrokerageMa
 	return _c
 }
 
-func (_c *BrokerageManager_ParseAndGenerate_Call) RunAndReturn(run func(ctx context.Context) error) *BrokerageManager_ParseAndGenerate_Call {
+func (_c *BrokerageManager_ParseAndGenerate_Call) RunAndReturn(run func(ctx context.Context, year int) error) *BrokerageManager_ParseAndGenerate_Call {
 	_c.Call.Return(run)
 	return _c
 }

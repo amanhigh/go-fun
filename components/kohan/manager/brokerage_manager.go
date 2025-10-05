@@ -15,7 +15,7 @@ import (
 )
 
 type BrokerageManager interface {
-	ParseAndGenerate(ctx context.Context) error
+	ParseAndGenerate(ctx context.Context, year int) error
 }
 
 type BrokerageManagerImpl struct {
@@ -40,12 +40,12 @@ func NewBrokerageManager(
 	}
 }
 
-func (m *BrokerageManagerImpl) ParseAndGenerate(ctx context.Context) error {
+func (m *BrokerageManagerImpl) ParseAndGenerate(ctx context.Context, year int) error {
 	var merged tax.BrokerageInfo
 	brokers := []Broker{m.DriveWealth, m.IB}
 
 	for _, broker := range brokers {
-		info, err := broker.Parse()
+		info, err := broker.Parse(year)
 		if err != nil {
 			log.Warn().Str("broker", broker.GetName()).Err(err).Msg("Broker parse failed, skipping")
 			continue

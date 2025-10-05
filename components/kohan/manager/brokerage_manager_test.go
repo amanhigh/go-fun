@@ -17,6 +17,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+const testYear = 2024
+
 func mockError(message string) common.HttpError {
 	return common.NewHttpError(message, http.StatusBadRequest)
 }
@@ -89,8 +91,8 @@ var _ = Describe("BrokerageManager", func() {
 					},
 				}
 
-				mockDWBroker.EXPECT().Parse().Return(dwInfo, nil)
-				mockIBBroker.EXPECT().Parse().Return(ibInfo, nil)
+				mockDWBroker.EXPECT().Parse(2024).Return(dwInfo, nil)
+				mockIBBroker.EXPECT().Parse(2024).Return(ibInfo, nil)
 
 				mergedTrades := append(dwInfo.Trades, ibInfo.Trades...)
 				expectedGains := []tax.Gains{
@@ -98,7 +100,7 @@ var _ = Describe("BrokerageManager", func() {
 				}
 				mockGainsManager.EXPECT().ComputeGainsFromTrades(ctx, mergedTrades).Return(expectedGains, nil)
 
-				err := brokerageManager.ParseAndGenerate(ctx)
+				err := brokerageManager.ParseAndGenerate(ctx, 2024)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
@@ -138,13 +140,13 @@ var _ = Describe("BrokerageManager", func() {
 					},
 				}
 
-				mockDWBroker.EXPECT().Parse().Return(dwInfo, nil)
-				mockIBBroker.EXPECT().Parse().Return(emptyInfo, mockError("file not found"))
+				mockDWBroker.EXPECT().Parse(2024).Return(dwInfo, nil)
+				mockIBBroker.EXPECT().Parse(2024).Return(emptyInfo, mockError("file not found"))
 
 				expectedGains := []tax.Gains{}
 				mockGainsManager.EXPECT().ComputeGainsFromTrades(ctx, dwInfo.Trades).Return(expectedGains, nil)
 
-				err := brokerageManager.ParseAndGenerate(ctx)
+				err := brokerageManager.ParseAndGenerate(ctx, 2024)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
@@ -157,12 +159,12 @@ var _ = Describe("BrokerageManager", func() {
 
 		Context("with all brokers failing", func() {
 			BeforeEach(func() {
-				mockDWBroker.EXPECT().Parse().Return(emptyInfo, mockError("file not found"))
-				mockIBBroker.EXPECT().Parse().Return(emptyInfo, mockError("file not found"))
+				mockDWBroker.EXPECT().Parse(2024).Return(emptyInfo, mockError("file not found"))
+				mockIBBroker.EXPECT().Parse(2024).Return(emptyInfo, mockError("file not found"))
 			})
 
 			It("should return error for no data", func() {
-				err := brokerageManager.ParseAndGenerate(ctx)
+				err := brokerageManager.ParseAndGenerate(ctx, testYear)
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("no data found"))
 			})
@@ -170,12 +172,12 @@ var _ = Describe("BrokerageManager", func() {
 
 		Context("with empty data from all brokers", func() {
 			BeforeEach(func() {
-				mockDWBroker.EXPECT().Parse().Return(emptyInfo, nil)
-				mockIBBroker.EXPECT().Parse().Return(emptyInfo, nil)
+				mockDWBroker.EXPECT().Parse(2024).Return(emptyInfo, nil)
+				mockIBBroker.EXPECT().Parse(2024).Return(emptyInfo, nil)
 			})
 
 			It("should return error for empty data", func() {
-				err := brokerageManager.ParseAndGenerate(ctx)
+				err := brokerageManager.ParseAndGenerate(ctx, testYear)
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("no data found"))
 			})
@@ -189,13 +191,13 @@ var _ = Describe("BrokerageManager", func() {
 					},
 				}
 
-				mockDWBroker.EXPECT().Parse().Return(dwInfo, nil)
-				mockIBBroker.EXPECT().Parse().Return(emptyInfo, nil)
+				mockDWBroker.EXPECT().Parse(2024).Return(dwInfo, nil)
+				mockIBBroker.EXPECT().Parse(2024).Return(emptyInfo, nil)
 				mockGainsManager.EXPECT().ComputeGainsFromTrades(ctx, dwInfo.Trades).Return(nil, mockError("no buy positions"))
 			})
 
 			It("should return gains computation error", func() {
-				err := brokerageManager.ParseAndGenerate(ctx)
+				err := brokerageManager.ParseAndGenerate(ctx, testYear)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -219,13 +221,13 @@ var _ = Describe("BrokerageManager", func() {
 
 		Context("when trades are in wrong order (SELL before BUY on same date)", func() {
 			BeforeEach(func() {
-				mockDWBroker.EXPECT().Parse().Return(unorderedTrades, nil)
-				mockIBBroker.EXPECT().Parse().Return(emptyInfo, nil)
+				mockDWBroker.EXPECT().Parse(2024).Return(unorderedTrades, nil)
+				mockIBBroker.EXPECT().Parse(2024).Return(emptyInfo, nil)
 				mockGainsManager.EXPECT().ComputeGainsFromTrades(ctx, mock.Anything).Return([]tax.Gains{}, nil)
 			})
 
 			It("should sort trades by date then type (BUY before SELL)", func() {
-				err := brokerageManager.ParseAndGenerate(ctx)
+				err := brokerageManager.ParseAndGenerate(ctx, testYear)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Read generated trades file

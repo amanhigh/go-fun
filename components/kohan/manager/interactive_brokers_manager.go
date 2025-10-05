@@ -13,12 +13,12 @@ import (
 
 // InteractiveBrokersManagerImpl handles parsing of IB reports and implements Broker interface.
 type InteractiveBrokersManagerImpl struct {
-	csvPath string
+	basePath string
 }
 
-func NewInteractiveBrokersManagerImpl(csvPath string) Broker {
+func NewInteractiveBrokersManagerImpl(basePath string) Broker {
 	return &InteractiveBrokersManagerImpl{
-		csvPath: csvPath,
+		basePath: basePath,
 	}
 }
 
@@ -27,8 +27,13 @@ func (m *InteractiveBrokersManagerImpl) GetName() string {
 	return "Interactive Brokers"
 }
 
-func (m *InteractiveBrokersManagerImpl) Parse() (info tax.BrokerageInfo, err error) {
-	file, err := os.Open(m.csvPath)
+func (m *InteractiveBrokersManagerImpl) resolveFilePath(year int) string {
+	return fmt.Sprintf("%s_%d.csv", m.basePath, year)
+}
+
+func (m *InteractiveBrokersManagerImpl) Parse(year int) (info tax.BrokerageInfo, err error) {
+	filePath := m.resolveFilePath(year)
+	file, err := os.Open(filePath)
 	if err != nil {
 		err = fmt.Errorf("failed to open CSV file: %w", err)
 		return

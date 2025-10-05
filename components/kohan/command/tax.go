@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/amanhigh/go-fun/models/config"
@@ -82,7 +83,10 @@ var parseCmd = &cobra.Command{
 			return fmt.Errorf("failed to get brokerage manager: %w", err)
 		}
 
-		if err := brokerageManager.ParseAndGenerate(ctx); err != nil {
+		// TODO: Accept year as optional argument and pass to ParseAndGenerate
+		// For now, use current year as default
+		year := time.Now().Year()
+		if err := brokerageManager.ParseAndGenerate(ctx, year); err != nil {
 			return fmt.Errorf("failed to parse brokers: %w", err)
 		}
 

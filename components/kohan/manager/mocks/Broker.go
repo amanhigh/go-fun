@@ -81,8 +81,8 @@ func (_c *Broker_GetName_Call) RunAndReturn(run func() string) *Broker_GetName_C
 }
 
 // Parse provides a mock function for the type Broker
-func (_mock *Broker) Parse() (tax.BrokerageInfo, error) {
-	ret := _mock.Called()
+func (_mock *Broker) Parse(year int) (tax.BrokerageInfo, error) {
+	ret := _mock.Called(year)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Parse")
@@ -90,16 +90,16 @@ func (_mock *Broker) Parse() (tax.BrokerageInfo, error) {
 
 	var r0 tax.BrokerageInfo
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func() (tax.BrokerageInfo, error)); ok {
-		return returnFunc()
+	if returnFunc, ok := ret.Get(0).(func(int) (tax.BrokerageInfo, error)); ok {
+		return returnFunc(year)
 	}
-	if returnFunc, ok := ret.Get(0).(func() tax.BrokerageInfo); ok {
-		r0 = returnFunc()
+	if returnFunc, ok := ret.Get(0).(func(int) tax.BrokerageInfo); ok {
+		r0 = returnFunc(year)
 	} else {
 		r0 = ret.Get(0).(tax.BrokerageInfo)
 	}
-	if returnFunc, ok := ret.Get(1).(func() error); ok {
-		r1 = returnFunc()
+	if returnFunc, ok := ret.Get(1).(func(int) error); ok {
+		r1 = returnFunc(year)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -112,13 +112,20 @@ type Broker_Parse_Call struct {
 }
 
 // Parse is a helper method to define mock.On call
-func (_e *Broker_Expecter) Parse() *Broker_Parse_Call {
-	return &Broker_Parse_Call{Call: _e.mock.On("Parse")}
+//   - year int
+func (_e *Broker_Expecter) Parse(year interface{}) *Broker_Parse_Call {
+	return &Broker_Parse_Call{Call: _e.mock.On("Parse", year)}
 }
 
-func (_c *Broker_Parse_Call) Run(run func()) *Broker_Parse_Call {
+func (_c *Broker_Parse_Call) Run(run func(year int)) *Broker_Parse_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		var arg0 int
+		if args[0] != nil {
+			arg0 = args[0].(int)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -128,7 +135,7 @@ func (_c *Broker_Parse_Call) Return(brokerageInfo tax.BrokerageInfo, err error) 
 	return _c
 }
 
-func (_c *Broker_Parse_Call) RunAndReturn(run func() (tax.BrokerageInfo, error)) *Broker_Parse_Call {
+func (_c *Broker_Parse_Call) RunAndReturn(run func(year int) (tax.BrokerageInfo, error)) *Broker_Parse_Call {
 	_c.Call.Return(run)
 	return _c
 }

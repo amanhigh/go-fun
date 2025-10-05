@@ -14,6 +14,7 @@ var _ = Describe("InteractiveBrokersManagerImpl", func() {
 	var (
 		tempTestDir   string
 		sampleCSVPath string
+		basePath      string
 		ibManager     manager.Broker
 	)
 
@@ -22,7 +23,8 @@ var _ = Describe("InteractiveBrokersManagerImpl", func() {
 		tempTestDir, err = os.MkdirTemp("", "ib_test_*")
 		Expect(err).ToNot(HaveOccurred())
 
-		sampleCSVPath = filepath.Join(tempTestDir, "realized.csv")
+		basePath = filepath.Join(tempTestDir, "realized")
+		sampleCSVPath = filepath.Join(tempTestDir, "realized_2024.csv")
 	})
 
 	AfterEach(func() {
@@ -47,7 +49,7 @@ Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per
 			err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
 			Expect(err).ToNot(HaveOccurred())
 
-			ibManager = manager.NewInteractiveBrokersManagerImpl(sampleCSVPath)
+			ibManager = manager.NewInteractiveBrokersManagerImpl(basePath)
 		})
 
 		Context("when parsing trades", func() {
@@ -55,7 +57,7 @@ Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per
 
 			BeforeEach(func() {
 				var err error
-				info, err = ibManager.Parse()
+				info, err = ibManager.Parse(testYear)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
@@ -93,7 +95,7 @@ Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per
 
 			BeforeEach(func() {
 				var err error
-				info, err = ibManager.Parse()
+				info, err = ibManager.Parse(testYear)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
@@ -116,7 +118,7 @@ Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per
 			})
 
 			It("should return an error", func() {
-				_, err := ibManager.Parse()
+				_, err := ibManager.Parse(testYear)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -131,9 +133,9 @@ Trades,Data,Order,Stocks,USD,INVALID,,BADQTY,BADPRICE,0,0,0,0,O`
 				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
 				Expect(err).ToNot(HaveOccurred())
 
-				ibManager = manager.NewInteractiveBrokersManagerImpl(sampleCSVPath)
+				ibManager = manager.NewInteractiveBrokersManagerImpl(basePath)
 				var parseErr error
-				info, parseErr = ibManager.Parse()
+				info, parseErr = ibManager.Parse(testYear)
 				Expect(parseErr).ToNot(HaveOccurred())
 			})
 
@@ -154,7 +156,7 @@ Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share
 
 				ibManager = manager.NewInteractiveBrokersManagerImpl(sampleCSVPath)
 				var parseErr error
-				info, parseErr = ibManager.Parse()
+				info, parseErr = ibManager.Parse(testYear)
 				Expect(parseErr).ToNot(HaveOccurred())
 			})
 
@@ -184,7 +186,7 @@ Dividends,Data,Total,,,7.28`
 
 				ibManager = manager.NewInteractiveBrokersManagerImpl(sampleCSVPath)
 				var parseErr error
-				info, parseErr = ibManager.Parse()
+				info, parseErr = ibManager.Parse(testYear)
 				Expect(parseErr).ToNot(HaveOccurred())
 			})
 
@@ -206,7 +208,7 @@ Dividends,Header,Currency,Date,Description,Amount`
 
 				ibManager = manager.NewInteractiveBrokersManagerImpl(sampleCSVPath)
 				var parseErr error
-				info, parseErr = ibManager.Parse()
+				info, parseErr = ibManager.Parse(testYear)
 				Expect(parseErr).ToNot(HaveOccurred())
 			})
 
