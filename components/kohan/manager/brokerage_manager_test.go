@@ -11,8 +11,10 @@ import (
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/tax"
+	"github.com/gocarina/gocsv"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/mock"
 )
 
 func mockError(message string) common.HttpError {
@@ -198,4 +200,63 @@ var _ = Describe("BrokerageManager", func() {
 			})
 		})
 	})
+
+	Context("Trade Ordering", func() {
+		var (
+			unorderedTrades tax.BrokerageInfo
+		)
+
+		BeforeEach(func() {
+			// Trades in wrong order: SELL before BUY on same date
+			unorderedTrades = tax.BrokerageInfo{
+				Trades: []tax.Trade{
+					{Symbol: "AAPL", Date: "2024-08-05", Type: "SELL", Quantity: 6, USDPrice: 209, USDValue: 1254},
+					{Symbol: "AAPL", Date: "2024-08-05", Type: "BUY", Quantity: 6, USDPrice: 199, USDValue: 1194},
+					{Symbol: "MSFT", Date: "2024-08-01", Type: "BUY", Quantity: 10, USDPrice: 100, USDValue: 1000},
+				},
+			}
+		})
+
+		Context("when trades are in wrong order (SELL before BUY on same date)", func() {
+			BeforeEach(func() {
+				mockDWBroker.EXPECT().Parse().Return(unorderedTrades, nil)
+				mockIBBroker.EXPECT().Parse().Return(emptyInfo, nil)
+				mockGainsManager.EXPECT().ComputeGainsFromTrades(ctx, mock.Anything).Return([]tax.Gains{}, nil)
+			})
+
+			It("should sort trades by date then type (BUY before SELL)", func() {
+				err := brokerageManager.ParseAndGenerate(ctx)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Read generated trades file
+				trades := readTradesCSV(taxConfig.TradesPath)
+				Expect(trades).To(HaveLen(3))
+
+				// Verify ordering: BUY should come before SELL on same date
+				Expect(trades[0].Symbol).To(Equal("MSFT"))
+				Expect(trades[0].Date).To(Equal("2024-08-01"))
+				Expect(trades[0].Type).To(Equal("BUY"))
+
+				Expect(trades[1].Symbol).To(Equal("AAPL"))
+				Expect(trades[1].Date).To(Equal("2024-08-05"))
+				Expect(trades[1].Type).To(Equal("BUY")) // BUY first
+
+				Expect(trades[2].Symbol).To(Equal("AAPL"))
+				Expect(trades[2].Date).To(Equal("2024-08-05"))
+				Expect(trades[2].Type).To(Equal("SELL")) // SELL second
+			})
+		})
+	})
 })
+
+func readTradesCSV(path string) []tax.Trade {
+	file, err := os.Open(path)
+	Expect(err).ToNot(HaveOccurred())
+	defer file.Close()
+
+	var trades []tax.Trade
+	err = gocsv.UnmarshalFile(file, &trades)
+	Expect(err).ToNot(HaveOccurred())
+
+	return trades
+}

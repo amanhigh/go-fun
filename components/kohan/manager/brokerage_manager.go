@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
+	"strings"
+	"time"
 
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/tax"
@@ -64,7 +67,10 @@ func (m *BrokerageManagerImpl) writeCSVs(ctx context.Context, info tax.Brokerage
 		return err
 	}
 
-	if err := m.createTradeFile(info.Trades); err != nil {
+	// Sort trades before writing to ensure correct ordering (BUY before SELL on same date)
+	sortedTrades := sortTradesByDate(info.Trades)
+
+	if err := m.createTradeFile(sortedTrades); err != nil {
 		return err
 	}
 
@@ -72,7 +78,7 @@ func (m *BrokerageManagerImpl) writeCSVs(ctx context.Context, info tax.Brokerage
 		return err
 	}
 
-	return m.createGainsFile(ctx, info.Trades)
+	return m.createGainsFile(ctx, sortedTrades)
 }
 
 func (m *BrokerageManagerImpl) createInterestFile(interests []tax.Interest) error {
@@ -138,4 +144,39 @@ func mergeBrokerageInfo(a, b tax.BrokerageInfo) tax.BrokerageInfo {
 		Dividends: append(a.Dividends, b.Dividends...),
 		Interests: append(a.Interests, b.Interests...),
 	}
+}
+
+// sortTradesByDate sorts trades chronologically by date and ensures BUY trades come before SELL trades on the same date
+func sortTradesByDate(trades []tax.Trade) []tax.Trade {
+	sortedTrades := make([]tax.Trade, len(trades))
+	copy(sortedTrades, trades)
+
+	sort.SliceStable(sortedTrades, func(i, j int) bool {
+		dateI, errI := time.Parse(time.DateOnly, sortedTrades[i].Date)
+		dateJ, errJ := time.Parse(time.DateOnly, sortedTrades[j].Date)
+		if errI != nil || errJ != nil {
+			return false // Keep original order if date parsing fails
+		}
+
+		// If dates are different, sort by date
+		if !dateI.Equal(dateJ) {
+			return dateI.Before(dateJ)
+		}
+
+		// For same-day trades, ensure BUY comes before SELL
+		typeI := strings.ToUpper(sortedTrades[i].Type)
+		typeJ := strings.ToUpper(sortedTrades[j].Type)
+
+		// BUY should come before SELL on the same day
+		if typeI == tax.TRADE_TYPE_BUY && typeJ == tax.TRADE_TYPE_SELL {
+			return true
+		}
+		if typeI == tax.TRADE_TYPE_SELL && typeJ == tax.TRADE_TYPE_BUY {
+			return false
+		}
+
+		return false // Keep original order for same type
+	})
+
+	return sortedTrades
 }

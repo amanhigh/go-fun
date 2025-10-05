@@ -302,52 +302,26 @@ var _ = Describe("GainsComputationManager", func() {
 			})
 		})
 
-		Context("with same-day sell-before-buy ordering issue", func() {
-			var trades []tax.Trade
-
-			BeforeEach(func() {
-				// Reproduce the exact issue from real vested data:
-				// Sell transaction appears before buy transaction in data order,
-				// even though they have the same date
-				trades = []tax.Trade{
-					{Symbol: "AAPL", Date: "2024-08-05", Type: "SELL", Quantity: 6, USDPrice: 209.00, Commission: 0},
-					{Symbol: "AAPL", Date: "2024-08-05", Type: "BUY", Quantity: 6, USDPrice: 199.00, Commission: 0},
-				}
-			})
-
-			It("should handle same-day sell-before-buy by sorting trades chronologically first", func() {
-				gains, err := gainsManager.ComputeGainsFromTrades(ctx, trades)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(gains).To(HaveLen(1))
-
-				gain := gains[0]
-				Expect(gain.Symbol).To(Equal("AAPL"))
-				Expect(gain.BuyDate).To(Equal("2024-08-05"))
-				Expect(gain.SellDate).To(Equal("2024-08-05"))
-				Expect(gain.Quantity).To(Equal(6.0))
-				Expect(gain.PNL).To(Equal(60.00)) // (209-199)*6 = 60
-				Expect(gain.Type).To(Equal("STCG"))
-			})
-		})
 	})
 
 	Context("with complex multi-symbol, multi-lot scenario", func() {
 		var trades []tax.Trade
 
 		BeforeEach(func() {
-			// Reproduce the exact test data pattern
+			// Trades are pre-sorted by BrokerageManager (chronologically, BUY before SELL on same date)
 			trades = []tax.Trade{
-				// AAPL transactions
-				{Symbol: "AAPL", Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
-				{Symbol: "AAPL", Date: "2023-03-15", Type: "BUY", Quantity: 20, USDPrice: 150.00, Commission: 1.00},
-				{Symbol: "AAPL", Date: "2023-07-10", Type: "BUY", Quantity: 30, USDPrice: 165.00, Commission: 1.00},
-				{Symbol: "AAPL", Date: "2023-10-20", Type: "SELL", Quantity: 15, USDPrice: 170.00, Commission: 1.00},
-				{Symbol: "AAPL", Date: "2024-01-17", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
-
-				// MSFT transactions
+				// MSFT transactions (chronologically first)
 				{Symbol: "MSFT", Date: "2022-01-10", Type: "BUY", Quantity: 50, USDPrice: 200.00, Commission: 5.00},
+
+				// AAPL and MSFT transactions interleaved chronologically
+				{Symbol: "AAPL", Date: "2023-03-15", Type: "BUY", Quantity: 20, USDPrice: 150.00, Commission: 1.00},
 				{Symbol: "MSFT", Date: "2023-05-01", Type: "BUY", Quantity: 20, USDPrice: 205.00, Commission: 2.00},
+				{Symbol: "AAPL", Date: "2023-07-10", Type: "BUY", Quantity: 30, USDPrice: 165.00, Commission: 1.00},
 				{Symbol: "MSFT", Date: "2023-09-01", Type: "BUY", Quantity: 30, USDPrice: 215.00, Commission: 3.00},
+				{Symbol: "AAPL", Date: "2023-10-20", Type: "SELL", Quantity: 15, USDPrice: 170.00, Commission: 1.00},
+
+				{Symbol: "AAPL", Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
+				{Symbol: "AAPL", Date: "2024-01-17", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
 				{Symbol: "MSFT", Date: "2024-02-15", Type: "SELL", Quantity: 50, USDPrice: 210.00, Commission: 5.00},
 			}
 		})

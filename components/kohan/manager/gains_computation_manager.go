@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"sort"
 	"strings"
 	"time"
 
@@ -34,13 +33,14 @@ type PositionLot struct {
 }
 
 func (g *GainsComputationManagerImpl) ComputeGainsFromTrades(_ context.Context, trades []tax.Trade) ([]tax.Gains, common.HttpError) {
-	sortedTrades := g.sortTradesByDate(trades)
+	// Trades are already sorted by BrokerageManager before being written to trades.csv
+	// No need to sort again - just process them in order
 
 	// Track buy positions by symbol using FIFO
 	buyPositions := make(map[string][]PositionLot)
 	var gains []tax.Gains
 
-	for _, trade := range sortedTrades {
+	for _, trade := range trades {
 		tradeDate, err := time.Parse(time.DateOnly, trade.Date)
 		if err != nil {
 			return nil, common.NewHttpError(fmt.Sprintf("invalid trade date '%s': %v", trade.Date, err), http.StatusBadRequest)
@@ -72,42 +72,6 @@ func (g *GainsComputationManagerImpl) ComputeGainsFromTrades(_ context.Context, 
 	}
 
 	return gains, nil
-}
-
-// sortTradesByDate sorts trades chronologically by date and ensures BUY trades come before SELL trades on the same date
-func (g *GainsComputationManagerImpl) sortTradesByDate(trades []tax.Trade) []tax.Trade {
-	sortedTrades := make([]tax.Trade, len(trades))
-	copy(sortedTrades, trades)
-
-	sort.SliceStable(sortedTrades, func(i, j int) bool {
-		dateI, errI := time.Parse(time.DateOnly, sortedTrades[i].Date)
-		dateJ, errJ := time.Parse(time.DateOnly, sortedTrades[j].Date)
-		if errI != nil || errJ != nil {
-			return false // Keep original order if date parsing fails
-		}
-
-		// If dates are different, sort by date
-		if !dateI.Equal(dateJ) {
-			return dateI.Before(dateJ)
-		}
-
-		// For same-day trades, ensure BUY comes before SELL
-		typeI := strings.ToUpper(sortedTrades[i].Type)
-		typeJ := strings.ToUpper(sortedTrades[j].Type)
-
-		// BUY should come before SELL on the same day
-		if typeI == tax.TRADE_TYPE_BUY && typeJ == tax.TRADE_TYPE_SELL {
-			return true
-		}
-		if typeI == tax.TRADE_TYPE_SELL && typeJ == tax.TRADE_TYPE_BUY {
-			return false
-		}
-
-		// For same type or other combinations, keep stable order
-		return false
-	})
-
-	return sortedTrades
 }
 
 // matchSellWithBuys matches a sell transaction with buy positions using FIFO
