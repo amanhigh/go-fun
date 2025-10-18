@@ -38,19 +38,55 @@ var _ = Describe("Enrollment API", func() {
 	})
 
 	Context("CreateEnrollment", func() {
-		It("should enroll person when grade is within capacity", func() {
-			enrollRequest = fun.EnrollmentRequest{PersonID: createdPerson.Id, Grade: 4}
-			enrollResp, err = client.EnrollmentService.CreateEnrollment(ctx, enrollRequest)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(enrollResp.PersonID).To(Equal(createdPerson.Id))
-			Expect(enrollResp.Status).To(Equal("ACTIVE"))
-			Expect(enrollResp.Grade).To(Equal(4))
+		var (
+			initialRequest fun.EnrollmentRequest
+		)
 
-			getResp, getErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
-			Expect(getErr).ToNot(HaveOccurred())
-			Expect(getResp.PersonID).To(Equal(createdPerson.Id))
-			Expect(getResp.Grade).To(Equal(4))
-			Expect(getResp.Status).To(Equal("ACTIVE"))
+		Context("when grade is within capacity", func() {
+			BeforeEach(func() {
+				initialRequest = fun.EnrollmentRequest{PersonID: createdPerson.Id, Grade: 4}
+				enrollResp, err = client.EnrollmentService.CreateEnrollment(ctx, initialRequest)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("should create enrollment with ACTIVE status", func() {
+				Expect(enrollResp.EnrollmentID).ToNot(BeEmpty())
+				Expect(enrollResp.PersonID).To(Equal(createdPerson.Id))
+				Expect(enrollResp.Status).To(Equal("ACTIVE"))
+				Expect(enrollResp.Grade).To(Equal(initialRequest.Grade))
+
+				getResp, getErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
+				Expect(getErr).ToNot(HaveOccurred())
+				Expect(getResp.EnrollmentID).To(Equal(enrollResp.EnrollmentID))
+				Expect(getResp.PersonID).To(Equal(createdPerson.Id))
+				Expect(getResp.Grade).To(Equal(initialRequest.Grade))
+				Expect(getResp.Status).To(Equal("ACTIVE"))
+			})
+
+			Context("and enrollment is created again", func() {
+				var (
+					secondRequest fun.EnrollmentRequest
+					secondResp    fun.EnrollmentResponse
+					secondErr     common.HttpError
+				)
+
+				BeforeEach(func() {
+					secondRequest = fun.EnrollmentRequest{PersonID: createdPerson.Id, Grade: 2}
+					secondResp, secondErr = client.EnrollmentService.CreateEnrollment(ctx, secondRequest)
+					Expect(secondErr).ToNot(HaveOccurred())
+				})
+
+				It("should update the existing enrollment", func() {
+					Expect(secondResp.EnrollmentID).To(Equal(enrollResp.EnrollmentID))
+					Expect(secondResp.Grade).To(Equal(secondRequest.Grade))
+
+					getResp, getErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
+					Expect(getErr).ToNot(HaveOccurred())
+					Expect(getResp.EnrollmentID).To(Equal(enrollResp.EnrollmentID))
+					Expect(getResp.Grade).To(Equal(secondRequest.Grade))
+					Expect(getResp.Status).To(Equal("ACTIVE"))
+				})
+			})
 		})
 
 		It("should fail when grade exceeds capacity", func() {

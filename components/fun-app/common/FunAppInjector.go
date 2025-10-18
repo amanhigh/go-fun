@@ -98,6 +98,7 @@ func (fi *FunAppInjector) registerMetrics() {
 func (fi *FunAppInjector) registerComponents() {
 	container.MustSingleton(fi.di, util.NewBaseDao)
 	container.MustSingleton(fi.di, dao.NewPersonDao)
+	container.MustSingleton(fi.di, dao.NewEnrollmentDao)
 	container.MustSingleton(fi.di, manager.NewPersonManager)
 	container.MustSingleton(fi.di, manager.NewEnrollmentManager)
 }
@@ -186,6 +187,7 @@ func newDb(config config.FunAppConfig) (db *gorm.DB, err error) {
 	err = db.AutoMigrate(
 		&fun.Person{},
 		&fun.PersonAudit{},
+		&fun.Enrollment{},
 	)
 	return
 }

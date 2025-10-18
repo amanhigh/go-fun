@@ -34,7 +34,7 @@ func (eh *EnrollmentHandler) CreateEnrollment(c *gin.Context) {
 		return
 	}
 
-	person, err := eh.Manager.EnrollPerson(ctx, request.PersonID, request.Grade)
+	enrollment, err := eh.Manager.EnrollPerson(ctx, request.PersonID, request.Grade)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
@@ -43,9 +43,10 @@ func (eh *EnrollmentHandler) CreateEnrollment(c *gin.Context) {
 	}
 
 	response := fun.EnrollmentResponse{
-		PersonID: person.Id,
-		Grade:    request.Grade,
-		Status:   "ACTIVE",
+		EnrollmentID: enrollment.ID,
+		PersonID:     enrollment.PersonID,
+		Grade:        enrollment.Grade,
+		Status:       enrollment.Status,
 	}
 
 	span.SetStatus(codes.Ok, "Enrollment completed")
