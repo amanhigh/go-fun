@@ -99,6 +99,7 @@ func (fi *FunAppInjector) registerComponents() {
 	container.MustSingleton(fi.di, util.NewBaseDao)
 	container.MustSingleton(fi.di, dao.NewPersonDao)
 	container.MustSingleton(fi.di, manager.NewPersonManager)
+	container.MustSingleton(fi.di, manager.NewEnrollmentManager)
 }
 
 func (fi *FunAppInjector) registerHandlers() {
@@ -219,6 +220,11 @@ func registerHandlers(di container.Container) {
 	container.MustSingleton(di, func() (handler *handlers.PersonHandler, err error) {
 		handler = &handlers.PersonHandler{}
 
+		err = di.Fill(handler)
+		return
+	})
+	container.MustSingleton(di, func() (handler *handlers.EnrollmentHandler, err error) {
+		handler = handlers.NewEnrollmentHandler()
 		err = di.Fill(handler)
 		return
 	})

@@ -24,8 +24,9 @@ type FunServer struct {
 	Tracer    trace.Tracer  `container:"type"`
 
 	/* Handlers */
-	PersonHandler *PersonHandler `container:"type"`
-	AdminHandler  *AdminHandler  `container:"type"`
+	PersonHandler     *PersonHandler     `container:"type"`
+	EnrollmentHandler *EnrollmentHandler `container:"type"`
+	AdminHandler      *AdminHandler      `container:"type"`
 }
 
 func (fs *FunServer) initRoutes() {
@@ -42,6 +43,9 @@ func (fs *FunServer) initRoutes() {
 	personGroup.PUT("/:id", fs.PersonHandler.UpdatePerson)
 	personGroup.POST("", fs.PersonHandler.CreatePerson)
 	personGroup.DELETE(":id", fs.PersonHandler.DeletePersons)
+
+	enrollmentGroup := v1.Group("/enrollments")
+	enrollmentGroup.POST("", fs.EnrollmentHandler.CreateEnrollment)
 
 	adminGroup := fs.GinEngine.Group("/admin")
 	adminGroup.GET("/stop", fs.AdminHandler.Stop)
