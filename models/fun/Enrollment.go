@@ -9,8 +9,7 @@ type EnrollmentRequest struct {
 // EnrollmentResponse summarizes the enrollment outcome.
 // TODO: Extend with richer metadata once student model is introduced.
 type EnrollmentResponse struct {
-	PersonID string            `json:"personId"`
-	Grade    int               `json:"grade"`
-	Status   string            `json:"status"`
-	Links    map[string]string `json:"links"`
+	PersonID string `json:"personId"`
+	Grade    int    `json:"grade"`
+	Status   string `json:"status"`
 }

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/amanhigh/go-fun/common/util"
@@ -47,9 +46,6 @@ func (eh *EnrollmentHandler) CreateEnrollment(c *gin.Context) {
 		PersonID: person.Id,
 		Grade:    request.Grade,
 		Status:   "ACTIVE",
-		Links: map[string]string{
-			"person": fmt.Sprintf("/v1/person/%s", person.Id),
-		},
 	}
 
 	span.SetStatus(codes.Ok, "Enrollment completed")

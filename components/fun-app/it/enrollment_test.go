@@ -1,7 +1,6 @@
 package it_test
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/amanhigh/go-fun/models/common"
@@ -46,7 +45,6 @@ var _ = Describe("Enrollment API", func() {
 			Expect(enrollResp.PersonID).To(Equal(createdPerson.Id))
 			Expect(enrollResp.Status).To(Equal("ACTIVE"))
 			Expect(enrollResp.Grade).To(Equal(4))
-			Expect(enrollResp.Links).To(HaveKeyWithValue("person", fmt.Sprintf("/v1/person/%s", createdPerson.Id)))
 		})
 
 		It("should fail when grade exceeds capacity", func() {

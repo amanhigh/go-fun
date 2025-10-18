@@ -498,6 +498,7 @@ var _ = Describe("Person Integration Test", func() {
 		})
 	})
 
+	// TODO: Break up Fun App Test logically and move to separate files
 	Context("Admin", func() {
 		It("should serve metrics", func() {
 			err = client.AdminService.HealthCheck(ctx)
