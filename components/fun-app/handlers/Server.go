@@ -46,6 +46,7 @@ func (fs *FunServer) initRoutes() {
 
 	enrollmentGroup := v1.Group("/enrollments")
 	enrollmentGroup.POST("", fs.EnrollmentHandler.CreateEnrollment)
+	enrollmentGroup.GET(":personId", fs.EnrollmentHandler.GetEnrollment)
 
 	adminGroup := fs.GinEngine.Group("/admin")
 	adminGroup.GET("/stop", fs.AdminHandler.Stop)

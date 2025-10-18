@@ -45,6 +45,12 @@ var _ = Describe("Enrollment API", func() {
 			Expect(enrollResp.PersonID).To(Equal(createdPerson.Id))
 			Expect(enrollResp.Status).To(Equal("ACTIVE"))
 			Expect(enrollResp.Grade).To(Equal(4))
+
+			getResp, getErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
+			Expect(getErr).ToNot(HaveOccurred())
+			Expect(getResp.PersonID).To(Equal(createdPerson.Id))
+			Expect(getResp.Grade).To(Equal(4))
+			Expect(getResp.Status).To(Equal("ACTIVE"))
 		})
 
 		It("should fail when grade exceeds capacity", func() {
@@ -52,6 +58,16 @@ var _ = Describe("Enrollment API", func() {
 			_, err = client.EnrollmentService.CreateEnrollment(ctx, enrollRequest)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Code()).To(Equal(http.StatusConflict))
+
+			_, getErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
+			Expect(getErr).To(HaveOccurred())
+			Expect(getErr.Code()).To(Equal(http.StatusNotFound))
+		})
+
+		It("should return not found for unknown enrollment", func() {
+			_, getErr := client.EnrollmentService.GetEnrollment(ctx, "missing-id")
+			Expect(getErr).To(HaveOccurred())
+			Expect(getErr.Code()).To(Equal(http.StatusNotFound))
 		})
 	})
 })

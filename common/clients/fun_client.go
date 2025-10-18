@@ -30,6 +30,7 @@ type PersonServiceInterface interface {
 
 type EnrollmentServiceInterface interface {
 	CreateEnrollment(ctx context.Context, request fun.EnrollmentRequest) (response fun.EnrollmentResponse, err common.HttpError)
+	GetEnrollment(ctx context.Context, personID string) (response fun.EnrollmentResponse, err common.HttpError)
 }
 
 type AdminServiceInterface interface {
@@ -137,6 +138,12 @@ func (c *PersonService) DeletePerson(ctx context.Context, name string) (err comm
 func (e *EnrollmentService) CreateEnrollment(ctx context.Context, request fun.EnrollmentRequest) (response fun.EnrollmentResponse, err common.HttpError) {
 	res, err1 := e.request(ctx).SetHeader("Content-Type", "application/json").
 		SetBody(request).SetResult(&response).Post(e.VersionUrl + "/enrollments")
+	err = util.ResponseProcessor(res, err1)
+	return
+}
+
+func (e *EnrollmentService) GetEnrollment(ctx context.Context, personID string) (response fun.EnrollmentResponse, err common.HttpError) {
+	res, err1 := e.request(ctx).SetResult(&response).Get(fmt.Sprintf(e.VersionUrl+"/enrollments/%s", personID))
 	err = util.ResponseProcessor(res, err1)
 	return
 }

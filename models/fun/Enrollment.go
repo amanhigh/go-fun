@@ -13,3 +13,7 @@ type EnrollmentResponse struct {
 	Grade    int    `json:"grade"`
 	Status   string `json:"status"`
 }
+
+type EnrollmentPath struct {
+	PersonID string `uri:"personId" binding:"required"`
+}

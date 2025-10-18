@@ -51,3 +51,28 @@ func (eh *EnrollmentHandler) CreateEnrollment(c *gin.Context) {
 	span.SetStatus(codes.Ok, "Enrollment completed")
 	c.JSON(http.StatusCreated, response)
 }
+
+func (eh *EnrollmentHandler) GetEnrollment(c *gin.Context) {
+	ctx, span := eh.Tracer.Start(c.Request.Context(), "GetEnrollment.Handler")
+	defer span.End()
+
+	var path fun.EnrollmentPath
+	if err := c.ShouldBindUri(&path); err != nil {
+		httpErr := util.ProcessValidationError(err)
+		span.RecordError(httpErr)
+		span.SetStatus(codes.Error, httpErr.Error())
+		c.JSON(http.StatusBadRequest, httpErr)
+		return
+	}
+
+	response, err := eh.Manager.GetEnrollment(ctx, path.PersonID)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		c.JSON(err.Code(), err)
+		return
+	}
+
+	span.SetStatus(codes.Ok, "Enrollment retrieved")
+	c.JSON(http.StatusOK, response)
+}
