@@ -6,11 +6,16 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
+
 	"github.com/amanhigh/go-fun/common/telemetry"
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	"github.com/amanhigh/go-fun/components/fun-app/handlers"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
+	"github.com/amanhigh/go-fun/components/fun-app/publisher"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/amanhigh/go-fun/models/interfaces"
@@ -73,7 +78,9 @@ func (fi *FunAppInjector) registerValidators() {
 func (fi *FunAppInjector) setupDependencies() {
 	fi.registerCoreDependencies()
 	fi.registerMetrics()
+	fi.registerMessaging()
 	fi.registerComponents()
+	fi.registerMessagingHandlers()
 	fi.registerHandlers()
 }
 
@@ -99,8 +106,34 @@ func (fi *FunAppInjector) registerComponents() {
 	container.MustSingleton(fi.di, util.NewBaseDao)
 	container.MustSingleton(fi.di, dao.NewPersonDao)
 	container.MustSingleton(fi.di, dao.NewEnrollmentDao)
+	container.MustSingleton(fi.di, publisher.NewEnrollmentPublisher)
 	container.MustSingleton(fi.di, manager.NewPersonManager)
 	container.MustSingleton(fi.di, manager.NewEnrollmentManager)
+}
+
+func (fi *FunAppInjector) registerMessaging() {
+	container.MustSingleton(fi.di, util.NewStdWatermillLogger)
+	container.MustSingleton(fi.di, util.NewGoChannel)
+	container.MustSingleton(fi.di, providePublisher)
+	container.MustSingleton(fi.di, provideSubscriber)
+}
+
+func (fi *FunAppInjector) registerMessagingHandlers() {
+	container.MustSingleton(fi.di, func(logger watermill.LoggerAdapter, subscriber message.Subscriber, enrollmentManager manager.EnrollmentManagerInterface) *message.Router {
+		router, err := util.NewRouter(logger)
+		if err != nil {
+			log.Fatal().Err(err).Msg("Failed to initialize Watermill router")
+		}
+
+		if err = handlers.RegisterEnrollmentHandlers(router, subscriber, enrollmentManager); err != nil {
+			log.Fatal().Err(err).Msg("Failed to register enrollment handlers")
+		}
+
+		return router
+	})
+	container.MustSingleton(fi.di, func(router *message.Router, channel *gochannel.GoChannel) util.WatermillController {
+		return util.NewWatermillController(router, channel)
+	})
 }
 
 func (fi *FunAppInjector) registerHandlers() {
@@ -178,6 +211,14 @@ func newPrometheus(engine *gin.Engine) (prometheus *ginprometheus.Prometheus) {
 	prometheus.ReqCntURLLabelMappingFn = telemetry.AccessMetrics
 	prometheus.Use(engine)
 	return
+}
+
+func providePublisher(channel *gochannel.GoChannel) message.Publisher {
+	return channel
+}
+
+func provideSubscriber(channel *gochannel.GoChannel) message.Subscriber {
+	return channel
 }
 
 func newDb(config config.FunAppConfig) (db *gorm.DB, err error) {
