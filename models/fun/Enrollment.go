@@ -8,7 +8,11 @@ import (
 )
 
 const (
-	EnrollmentStatusActive = "ACTIVE"
+	EnrollmentStatusSeatAllocationInitiated = "SEAT_ALLOCATION_INITIATED"
+	EnrollmentStatusSeatReserved            = "SEAT_RESERVED"
+	EnrollmentStatusWaitlisted              = "WAITLISTED"
+	EnrollmentStatusConfirmed               = "CONFIRMED"
+	EnrollmentStatusCancelled               = "CANCELLED"
 )
 
 // EnrollmentRequest drives the enrollment orchestration using an existing person.

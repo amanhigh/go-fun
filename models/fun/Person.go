@@ -87,8 +87,8 @@ type PersonAudit struct {
 	Gender string `gorm:"not null"`
 
 	// Audit Fields
-	AuditID   uint      `gorm:"primaryKey"`
-	Operation string    `gorm:"not null"`
+	AuditID   uint   `gorm:"primaryKey"`
+	Operation string `gorm:"not null"`
 	// HACK: Use Base Dao of Gorm for common Fields ?
 	CreatedBy string    `gorm:"not null"`
 	CreatedAt time.Time `gorm:"not null"`
