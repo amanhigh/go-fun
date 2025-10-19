@@ -27,6 +27,8 @@ type FunServer struct {
 	PersonHandler     *PersonHandler     `container:"type"`
 	EnrollmentHandler *EnrollmentHandler `container:"type"`
 	AdminHandler      *AdminHandler      `container:"type"`
+
+	Watermill util.WatermillController `container:"type"`
 }
 
 func (fs *FunServer) initRoutes() {
@@ -70,6 +72,8 @@ func (fs *FunServer) initRoutes() {
 func (fs *FunServer) Start(c context.Context) (err error) {
 	fs.initRoutes()
 
+	fs.Watermill.Start(c)
+
 	// Initializing the server in a goroutine so that
 	// it won't block the graceful shutdown handling below
 	var errChan = make(chan error, 1)
@@ -100,6 +104,8 @@ func (fs *FunServer) Stop(c context.Context) {
 	// the request it is currently handling
 	ctx, span := fs.Tracer.Start(c, "Stop.Server")
 	defer span.End()
+
+	fs.Watermill.Shutdown(c)
 
 	ctxTimed, cancel := context.WithTimeout(context.Background(), 10*time.Second) //nolint:mnd // Standard server shutdown timeout
 	defer cancel()
