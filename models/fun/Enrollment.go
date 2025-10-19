@@ -39,12 +39,3 @@ func (e *Enrollment) BeforeCreate(_ *gorm.DB) (err error) {
 	e.ID = uuid.NewString()[:8]
 	return
 }
-
-// EnrollmentResponse summarizes the enrollment outcome.
-// TODO: Extend with richer metadata once student model is introduced.
-type EnrollmentResponse struct {
-	EnrollmentID string `json:"enrollmentId"`
-	PersonID     string `json:"personId"`
-	Grade        int    `json:"grade"`
-	Status       string `json:"status"`
-}

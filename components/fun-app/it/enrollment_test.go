@@ -2,6 +2,7 @@ package it_test
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
@@ -14,7 +15,7 @@ var _ = Describe("Enrollment API", func() {
 		personRequest fun.PersonRequest
 		createdPerson fun.Person
 		enrollRequest fun.EnrollmentRequest
-		enrollResp    fun.EnrollmentResponse
+		enrollResp    fun.Enrollment
 		err           common.HttpError
 	)
 
@@ -49,24 +50,32 @@ var _ = Describe("Enrollment API", func() {
 				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("should create enrollment with ACTIVE status", func() {
-				Expect(enrollResp.EnrollmentID).ToNot(BeEmpty())
+			It("should create enrollment and confirm asynchronously", func() {
+				Expect(enrollResp.ID).ToNot(BeEmpty())
 				Expect(enrollResp.PersonID).To(Equal(createdPerson.Id))
 				Expect(enrollResp.Status).To(Equal(fun.EnrollmentStatusSeatAllocationInitiated))
 				Expect(enrollResp.Grade).To(Equal(initialRequest.Grade))
 
+				Eventually(func() string {
+					resp, pollErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
+					if pollErr != nil {
+						return ""
+					}
+					return resp.Status
+				}, time.Second, 50*time.Millisecond).Should(Equal(fun.EnrollmentStatusConfirmed))
+
 				getResp, getErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
 				Expect(getErr).ToNot(HaveOccurred())
-				Expect(getResp.EnrollmentID).To(Equal(enrollResp.EnrollmentID))
+				Expect(getResp.ID).To(Equal(enrollResp.ID))
 				Expect(getResp.PersonID).To(Equal(createdPerson.Id))
 				Expect(getResp.Grade).To(Equal(initialRequest.Grade))
-				Expect(getResp.Status).To(Equal(fun.EnrollmentStatusSeatAllocationInitiated))
+				Expect(getResp.Status).To(Equal(fun.EnrollmentStatusConfirmed))
 			})
 
 			Context("and enrollment is created again", func() {
 				var (
 					secondRequest fun.EnrollmentRequest
-					secondResp    fun.EnrollmentResponse
+					secondResp    fun.Enrollment
 					secondErr     common.HttpError
 				)
 
@@ -77,15 +86,26 @@ var _ = Describe("Enrollment API", func() {
 				})
 
 				It("should update the existing enrollment", func() {
-					Expect(secondResp.EnrollmentID).To(Equal(enrollResp.EnrollmentID))
+					Expect(secondResp.ID).To(Equal(enrollResp.ID))
 					Expect(secondResp.Grade).To(Equal(secondRequest.Grade))
 					Expect(secondResp.Status).To(Equal(fun.EnrollmentStatusSeatAllocationInitiated))
 
+					Eventually(func() string {
+						resp, pollErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
+						if pollErr != nil {
+							return ""
+						}
+						if resp.Grade != secondRequest.Grade {
+							return ""
+						}
+						return resp.Status
+					}, time.Second, 50*time.Millisecond).Should(Equal(fun.EnrollmentStatusConfirmed))
+
 					getResp, getErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
 					Expect(getErr).ToNot(HaveOccurred())
-					Expect(getResp.EnrollmentID).To(Equal(enrollResp.EnrollmentID))
+					Expect(getResp.ID).To(Equal(enrollResp.ID))
 					Expect(getResp.Grade).To(Equal(secondRequest.Grade))
-					Expect(getResp.Status).To(Equal(fun.EnrollmentStatusSeatAllocationInitiated))
+					Expect(getResp.Status).To(Equal(fun.EnrollmentStatusConfirmed))
 				})
 			})
 		})
@@ -96,9 +116,13 @@ var _ = Describe("Enrollment API", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(enrollResp.Status).To(Equal(fun.EnrollmentStatusWaitlisted))
 
-			getResp, getErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
-			Expect(getErr).ToNot(HaveOccurred())
-			Expect(getResp.Status).To(Equal(fun.EnrollmentStatusWaitlisted))
+			Eventually(func() string {
+				resp, pollErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
+				if pollErr != nil {
+					return ""
+				}
+				return resp.Status
+			}, time.Second, 50*time.Millisecond).Should(Equal(fun.EnrollmentStatusWaitlisted))
 		})
 
 		It("should return not found for unknown enrollment", func() {

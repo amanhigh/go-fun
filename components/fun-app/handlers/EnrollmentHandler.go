@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/amanhigh/go-fun/common/util"
@@ -42,15 +43,9 @@ func (eh *EnrollmentHandler) CreateEnrollment(c *gin.Context) {
 		return
 	}
 
-	response := fun.EnrollmentResponse{
-		EnrollmentID: enrollment.ID,
-		PersonID:     enrollment.PersonID,
-		Grade:        enrollment.Grade,
-		Status:       enrollment.Status,
-	}
-
-	span.SetStatus(codes.Ok, "Enrollment completed")
-	c.JSON(http.StatusCreated, response)
+	c.Header("Location", fmt.Sprintf("/v1/enrollments/%s", enrollment.PersonID))
+	span.SetStatus(codes.Ok, "Enrollment accepted")
+	c.JSON(http.StatusAccepted, enrollment)
 }
 
 func (eh *EnrollmentHandler) GetEnrollment(c *gin.Context) {
@@ -66,7 +61,7 @@ func (eh *EnrollmentHandler) GetEnrollment(c *gin.Context) {
 		return
 	}
 
-	response, err := eh.Manager.GetEnrollment(ctx, path.PersonID)
+	enrollment, err := eh.Manager.GetEnrollment(ctx, path.PersonID)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
@@ -75,5 +70,5 @@ func (eh *EnrollmentHandler) GetEnrollment(c *gin.Context) {
 	}
 
 	span.SetStatus(codes.Ok, "Enrollment retrieved")
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, enrollment)
 }
