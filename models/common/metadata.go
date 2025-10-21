@@ -27,9 +27,8 @@ func MustBaseMetadata(correlationID string) Metadata {
 // With returns a clone containing the additional key/value when value is non-empty.
 func (m Metadata) With(key, value string) Metadata {
 	if value == "" {
-		return m.Clone()
+		return m
 	}
-
 	cloned := m.Clone()
 	cloned[key] = value
 	return cloned

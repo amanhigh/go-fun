@@ -9,6 +9,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
+	modelcommon "github.com/amanhigh/go-fun/models/common"
 )
 
 // WatermillLifecycle abstracts router lifecycle management.
@@ -38,19 +39,27 @@ func NewRouter(logger watermill.LoggerAdapter) (*message.Router, error) {
 }
 
 // PublishJSONMessage marshals payload, attaches metadata, and publishes to the topic.
-func PublishJSONMessage(_ context.Context, publisher message.Publisher, topic string, payload any, metadata map[string]string) error {
+func PublishJSONMessage(_ context.Context, publisher message.Publisher, topic string, payload any, metadata modelcommon.Metadata) error {
 	data, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("marshal payload: %w", err)
 	}
 
-	msg := message.NewMessage(watermill.NewUUID(), data)
+	// Correlation is mandatory for all saga messages.
+	if c := metadata[modelcommon.MetadataCorrelationIDKey]; c == "" {
+		return fmt.Errorf("missing %s", modelcommon.MetadataCorrelationIDKey)
+	}
+
+	id := watermill.NewUUID()
+	msg := message.NewMessage(id, data)
+
+	// Copy provided metadata.
 	for key, value := range metadata {
-		if value == "" {
-			continue
-		}
 		msg.Metadata.Set(key, value)
 	}
+
+	// Always mirror the message id for downstream consumers.
+	msg.Metadata.Set(modelcommon.MetadataMessageIDKey, id)
 
 	if err = publisher.Publish(topic, msg); err != nil {
 		return fmt.Errorf("publish topic %s: %w", topic, err)
