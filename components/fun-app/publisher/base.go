@@ -2,6 +2,7 @@ package publisher
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/amanhigh/go-fun/common/util"
@@ -18,10 +19,35 @@ func NewBasePublisher(p message.Publisher) BasePublisher {
 	return BasePublisher{publisher: p}
 }
 
-// Publish marshals the payload, attaches metadata, and emits it on the given topic.
-func (bp BasePublisher) Publish(ctx context.Context, topic string, payload any, metadata map[string]string) common.HttpError {
-	if err := util.PublishJSONMessage(ctx, bp.publisher, topic, payload, metadata); err != nil {
+// PublishWithExtras marshals the payload, attaches context-derived metadata, and emits it on the given topic.
+// It expects the correlation id to be present in the context (via common.WithCorrelation).
+func (bp BasePublisher) PublishWithExtras(ctx context.Context, topic string, payload any, extras map[string]string) common.HttpError {
+	metadata, err := bp.buildMetadata(ctx, extras)
+	if err != nil {
+		return common.NewServerError(err)
+	}
+
+	if err = util.PublishJSONMessage(ctx, bp.publisher, topic, payload, metadata); err != nil {
 		return common.NewServerError(err)
 	}
 	return nil
+}
+
+func (bp BasePublisher) buildMetadata(ctx context.Context, extras map[string]string) (common.Metadata, error) {
+	correlation := common.CorrelationFrom(ctx)
+	if correlation == "" {
+		return nil, fmt.Errorf("correlation id missing from context")
+	}
+
+	meta := common.MustBaseMetadata(correlation)
+
+	if causation := common.CausationFrom(ctx); causation != "" {
+		meta = meta.WithCausation(causation)
+	}
+
+	if len(extras) > 0 {
+		meta = meta.WithPairs(extras)
+	}
+
+	return meta, nil
 }
