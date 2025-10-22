@@ -106,6 +106,8 @@ func (fi *FunAppInjector) registerComponents() {
 	container.MustSingleton(fi.di, util.NewBaseDao)
 	container.MustSingleton(fi.di, dao.NewPersonDao)
 	container.MustSingleton(fi.di, dao.NewEnrollmentDao)
+	container.MustSingleton(fi.di, publisher.NewBasePublisher)
+	container.MustSingleton(fi.di, publisher.NewSeatAllocationPublisher)
 	container.MustSingleton(fi.di, publisher.NewEnrollmentPublisher)
 	container.MustSingleton(fi.di, manager.NewPersonManager)
 	container.MustSingleton(fi.di, manager.NewEnrollmentManager)
@@ -131,9 +133,7 @@ func (fi *FunAppInjector) registerMessagingHandlers() {
 
 		return router
 	})
-	container.MustSingleton(fi.di, func(router *message.Router, channel *gochannel.GoChannel) util.WatermillController {
-		return util.NewWatermillController(router, channel)
-	})
+	container.MustSingleton(fi.di, util.NewWatermillController)
 }
 
 func (fi *FunAppInjector) registerHandlers() {

@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"errors"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
@@ -37,7 +38,7 @@ func (wc *watermillController) Start(ctx context.Context) {
 	wc.cancel = cancel
 
 	go func() {
-		if err := wc.router.Run(routerCtx); err != nil && err != context.Canceled {
+		if err := wc.router.Run(routerCtx); err != nil && !errors.Is(err, context.Canceled) {
 			// router logs its own errors
 			return
 		}

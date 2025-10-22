@@ -10,6 +10,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
 	modelcommon "github.com/amanhigh/go-fun/models/common"
+	"github.com/pkg/errors"
 )
 
 // WatermillLifecycle abstracts router lifecycle management.
@@ -27,7 +28,7 @@ func NewGoChannel(logger watermill.LoggerAdapter) *gochannel.GoChannel {
 func NewRouter(logger watermill.LoggerAdapter) (*message.Router, error) {
 	router, err := message.NewRouter(message.RouterConfig{}, logger)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "new watermill router")
 	}
 
 	router.AddMiddleware(
