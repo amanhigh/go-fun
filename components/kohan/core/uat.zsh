@@ -25,8 +25,8 @@ rm -f "$FA_COMPUTE_DIR/gains.csv"
 find "$FA_COMPUTE_DIR" -maxdepth 1 -name "accounts_*.csv" -delete 2>/dev/null || true
 find "$FA_COMPUTE_DIR" -maxdepth 1 -name "tax_summary_*.xlsx" -delete 2>/dev/null || true
 
-# Preserve: vested.xlsx, ib.csv, sbi_rates.csv, Tickers/
-echo "✅ Cleaned outputs (preserved: vested.xlsx, ib.csv, sbi_rates.csv, Tickers/)"
+# Preserve: vested.xlsx, ib_*.csv, sbi_rates.csv, Tickers/
+echo "✅ Cleaned outputs (preserved: vested.xlsx, ib_*.csv, sbi_rates.csv, Tickers/)"
 echo "-----------------------------------"
 echo ""
 

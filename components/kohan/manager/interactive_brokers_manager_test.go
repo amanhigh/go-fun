@@ -145,7 +145,7 @@ Trades,Data,Order,Stocks,USD,INVALID,,BADQTY,BADPRICE,0,0,0,0,O`
 			})
 		})
 
-		PContext("when dividend has no matching tax", func() {
+		Context("when dividend has no matching tax", func() {
 			var info tax.BrokerageInfo
 
 			BeforeEach(func() {
@@ -155,7 +155,8 @@ Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share
 				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
 				Expect(err).ToNot(HaveOccurred())
 
-				ibManager = manager.NewInteractiveBrokersManagerImpl(sampleCSVPath)
+				// Use basePath so Parse(year) resolves basePath_YYYY.csv
+				ibManager = manager.NewInteractiveBrokersManagerImpl(basePath)
 				var parseErr error
 				info, parseErr = ibManager.Parse(testYear)
 				Expect(parseErr).ToNot(HaveOccurred())
@@ -170,7 +171,7 @@ Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share
 	})
 
 	Context("with edge case CSV data", func() {
-		PContext("when CSV has SubTotal and Total rows", func() {
+		Context("when CSV has SubTotal and Total rows", func() {
 			var info tax.BrokerageInfo
 
 			BeforeEach(func() {
@@ -185,7 +186,8 @@ Dividends,Data,Total,,,7.28`
 				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
 				Expect(err).ToNot(HaveOccurred())
 
-				ibManager = manager.NewInteractiveBrokersManagerImpl(sampleCSVPath)
+				// Use basePath so Parse(year) resolves basePath_YYYY.csv
+				ibManager = manager.NewInteractiveBrokersManagerImpl(basePath)
 				var parseErr error
 				info, parseErr = ibManager.Parse(testYear)
 				Expect(parseErr).ToNot(HaveOccurred())
@@ -197,7 +199,7 @@ Dividends,Data,Total,,,7.28`
 			})
 		})
 
-		PContext("when CSV has only headers with no data", func() {
+		Context("when CSV has only headers with no data", func() {
 			var info tax.BrokerageInfo
 
 			BeforeEach(func() {
@@ -207,7 +209,8 @@ Dividends,Header,Currency,Date,Description,Amount`
 				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
 				Expect(err).ToNot(HaveOccurred())
 
-				ibManager = manager.NewInteractiveBrokersManagerImpl(sampleCSVPath)
+				// Use basePath so Parse(year) resolves basePath_YYYY.csv
+				ibManager = manager.NewInteractiveBrokersManagerImpl(basePath)
 				var parseErr error
 				info, parseErr = ibManager.Parse(testYear)
 				Expect(parseErr).ToNot(HaveOccurred())

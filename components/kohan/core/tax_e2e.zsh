@@ -22,9 +22,10 @@ if [ -f "$FA_COMPUTE_DIR/vested.xlsx" ]; then
     echo "✅ Backed up vested.xlsx"
 fi
 
-if [ -f "$FA_COMPUTE_DIR/ib.csv" ]; then
-    cp "$FA_COMPUTE_DIR/ib.csv" "$BACKUP_DIR/"
-    echo "✅ Backed up ib.csv"
+IB_FILES=($(ls "$FA_COMPUTE_DIR"/ib_*.csv 2>/dev/null))
+if [ ${#IB_FILES[@]} -gt 0 ]; then
+    cp "${IB_FILES[@]}" "$BACKUP_DIR/" 2>/dev/null || true
+    echo "✅ Backed up IB files: $(printf "%s " ${IB_FILES[@]} | xargs -n1 basename | tr '\n' ' ' )"
 fi
 
 if [ -f "$FA_COMPUTE_DIR/sbi_rates.csv" ]; then
@@ -72,9 +73,10 @@ if [ -f "$BACKUP_DIR/vested.xlsx" ]; then
     echo "✅ Restored vested.xlsx"
 fi
 
-if [ -f "$BACKUP_DIR/ib.csv" ]; then
-    cp "$BACKUP_DIR/ib.csv" "$FA_COMPUTE_DIR/"
-    echo "✅ Restored ib.csv"
+RESTORE_IB_FILES=($(ls "$BACKUP_DIR"/ib_*.csv 2>/dev/null))
+if [ ${#RESTORE_IB_FILES[@]} -gt 0 ]; then
+    cp "${RESTORE_IB_FILES[@]}" "$FA_COMPUTE_DIR/" 2>/dev/null || true
+    echo "✅ Restored IB files: $(printf "%s " ${RESTORE_IB_FILES[@]} | xargs -n1 basename | tr '\n' ' ' )"
 fi
 
 if [ -f "$BACKUP_DIR/sbi_rates.csv" ]; then
