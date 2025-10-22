@@ -57,6 +57,7 @@ This file contains guidelines for coding, testing, and examples on coding style 
 - **Use `make generate` to generate mocks** - do not run `go generate` directly to ensure consistency across all modules
 - Don't use gomock; use the testify mock package where required. Example: mock.Anything (see `components/kohan/manager/capital_gain_manager_test.go` for usage examples)
 - See `components/kohan/clients/mocks/SBIClient.go` for generated mock example
+- Do not set `GOCACHE` or `GOMODCACHE` inside this repository, scripts, or committed configs.
 
 ## Examples
 

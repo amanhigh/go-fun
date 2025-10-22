@@ -41,6 +41,7 @@ var monitorCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		log.Info().Dur("Wait", wait).Str("Screenshots", args[0]).Msg("Monitoring Systems")
 
+		// BUG: Retry When Disk not Mounter, Watermill Exponential Backoff ?
 		autoManager := core.GetKohanInterface().GetAutoManager(wait, args[0])
 		server := core.NewMonitorServer(args[0], autoManager)
 
