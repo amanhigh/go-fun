@@ -1,72 +1,53 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
-	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
-	"github.com/rs/zerolog"
 )
 
-// SeatCommandHandler defines the contract for handling seat-related commands.
-//
-// Implementations must be idempotent and safe for at-least-once delivery.
+// SeatCommandHandler handles seat-related commands and events.
 type SeatCommandHandler interface {
-	// Handle processes an incoming AllocateSeat command message.
-	Handle(msg *message.Message) error
+	AllocateSeatCmd(msg *message.Message) error
+	SeatReservedEvt(msg *message.Message) error
+	SeatWaitlistedEvt(msg *message.Message) error
 }
 
-type seatCommandHandler struct {
-	seatMgr manager.SeatManagerInterface
+type SeatCommandHandlerImpl struct {
+	SeatManager manager.SeatManagerInterface `container:"type"`
 }
 
-// NewSeatCommandHandler constructs a SeatCommandHandler.
-func NewSeatCommandHandler(seatMgr manager.SeatManagerInterface) SeatCommandHandler {
-	return &seatCommandHandler{seatMgr: seatMgr}
-}
+func NewSeatCommandHandler() *SeatCommandHandlerImpl { return &SeatCommandHandlerImpl{} }
 
-// Handle processes AllocateSeatCmdV1 messages and invokes SeatManager.
-func (h *seatCommandHandler) Handle(msg *message.Message) error {
+func (h *SeatCommandHandlerImpl) AllocateSeatCmd(msg *message.Message) error {
 	var cmd fun.AllocateSeatCmdV1
 	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
-		zerolog.Ctx(msg.Context()).Error().
-			Err(err).
-			Str("handler", "seat_allocate").
-			Msg("Failed to unmarshal AllocateSeatCmdV1 payload")
 		return fmt.Errorf("unmarshal allocate seat cmd: %w", err)
 	}
 
-	handlerCtx := msg.Context()
-	if handlerCtx == nil {
-		handlerCtx = context.Background()
-	}
-
-	// Correlation and causation propagation from metadata/message.
-	corr := cmd.EnrollmentID
-	if v := msg.Metadata.Get(common.MetadataCorrelationIDKey); v != "" {
-		corr = v
-	}
-	handlerCtx = common.WithCorrelation(handlerCtx, corr)
-	if caus := msg.Metadata.Get(common.MetadataCausationIDKey); caus != "" {
-		handlerCtx = common.WithCausation(handlerCtx, caus)
-	} else if msg.UUID != "" {
-		handlerCtx = common.WithCausation(handlerCtx, msg.UUID)
-	}
-
-	// Build minimal enrollment DTO for seat manager.
-	enrollment := fun.Enrollment{
-		ID:       cmd.EnrollmentID,
-		PersonID: cmd.PersonID,
-		Grade:    cmd.Grade,
-		Status:   fun.EnrollmentStatusSeatAllocationInitiated,
-	}
-
-	if _, err := h.seatMgr.AllocateSeat(handlerCtx, enrollment); err != nil {
-		return err
-	}
-	return nil
+	ctx := stampCtx(msg.Context(), msg.Metadata, cmd.EnrollmentID, msg.UUID)
+	return h.SeatManager.AllocateSeat(ctx, cmd)
 }
+
+func (h *SeatCommandHandlerImpl) SeatReservedEvt(msg *message.Message) error {
+	var evt fun.SeatReservedEvtV1
+	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
+		return fmt.Errorf("unmarshal seat reserved evt: %w", err)
+	}
+	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
+	return h.SeatManager.ConfirmSeat(ctx, evt)
+}
+
+func (h *SeatCommandHandlerImpl) SeatWaitlistedEvt(msg *message.Message) error {
+	var evt fun.SeatWaitlistedEvtV1
+	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
+		return fmt.Errorf("unmarshal seat waitlisted evt: %w", err)
+	}
+	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
+	return h.SeatManager.WaitlistSeat(ctx, evt)
+}
+
+// emit helpers removed; direct publisher calls are used.
