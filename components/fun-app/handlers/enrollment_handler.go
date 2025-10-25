@@ -12,14 +12,13 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// EnrollmentHandler exposes REST endpoints for enrollment resources.
 type EnrollmentHandler struct {
 	Manager manager.EnrollmentManagerInterface `container:"type"`
 	Tracer  trace.Tracer                       `container:"type"`
 }
 
-func NewEnrollmentHandler() *EnrollmentHandler {
-	return &EnrollmentHandler{}
-}
+func NewEnrollmentHandler() *EnrollmentHandler { return &EnrollmentHandler{} }
 
 // CreateEnrollment orchestrates enrollment using an existing person record.
 func (eh *EnrollmentHandler) CreateEnrollment(c *gin.Context) {
@@ -48,6 +47,7 @@ func (eh *EnrollmentHandler) CreateEnrollment(c *gin.Context) {
 	c.JSON(http.StatusAccepted, enrollment)
 }
 
+// GetEnrollment fetches enrollment status for a person.
 func (eh *EnrollmentHandler) GetEnrollment(c *gin.Context) {
 	ctx, span := eh.Tracer.Start(c.Request.Context(), "GetEnrollment.Handler")
 	defer span.End()

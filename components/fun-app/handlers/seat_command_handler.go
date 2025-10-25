@@ -17,7 +17,8 @@ type SeatCommandHandler interface {
 }
 
 type SeatCommandHandlerImpl struct {
-	SeatManager manager.SeatManagerInterface `container:"type"`
+	SeatManager       manager.SeatManagerInterface       `container:"type"`
+	EnrollmentManager manager.EnrollmentManagerInterface `container:"type"`
 }
 
 func NewSeatCommandHandler() *SeatCommandHandlerImpl { return &SeatCommandHandlerImpl{} }
@@ -38,7 +39,8 @@ func (h *SeatCommandHandlerImpl) SeatReservedEvt(msg *message.Message) error {
 		return fmt.Errorf("unmarshal seat reserved evt: %w", err)
 	}
 	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
-	return h.SeatManager.ConfirmSeat(ctx, evt)
+	e := fun.Enrollment{ID: evt.EnrollmentID, PersonID: evt.PersonID, Grade: evt.Grade}
+	return h.EnrollmentManager.ConfirmFlow(ctx, e)
 }
 
 func (h *SeatCommandHandlerImpl) SeatWaitlistedEvt(msg *message.Message) error {
@@ -47,7 +49,7 @@ func (h *SeatCommandHandlerImpl) SeatWaitlistedEvt(msg *message.Message) error {
 		return fmt.Errorf("unmarshal seat waitlisted evt: %w", err)
 	}
 	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
-	return h.SeatManager.WaitlistSeat(ctx, evt)
+	return h.SeatManager.OnSeatWaitlistedEvt(ctx, evt)
 }
 
 // emit helpers removed; direct publisher calls are used.
