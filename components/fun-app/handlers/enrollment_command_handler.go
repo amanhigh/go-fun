@@ -6,9 +6,7 @@ import (
 	"fmt"
 
 	"github.com/ThreeDotsLabs/watermill/message"
-	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
-	"github.com/amanhigh/go-fun/components/fun-app/publisher"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
 )
@@ -21,78 +19,42 @@ type EnrollmentCommandHandler interface {
 }
 
 type EnrollmentCommandHandlerImpl struct {
-	Manager             manager.EnrollmentManagerInterface `container:"type"`
-	SeatPublisher       publisher.SeatAllocationPublisher  `container:"type"`
-	EnrollmentPublisher publisher.EnrollmentPublisher      `container:"type"`
-	EnrollmentDao       dao.EnrollmentDaoInterface         `container:"type"`
+	Manager manager.EnrollmentManagerInterface `container:"type"`
 }
 
 func NewEnrollmentCommandHandler() *EnrollmentCommandHandlerImpl {
 	return &EnrollmentCommandHandlerImpl{}
 }
 
-// EnrollCmd processes EnrollCmdV1 commands via EnrollmentManager, then emits follow-ups.
+// EnrollCmd forwards EnrollCmdV1 to EnrollmentManager; it delegates to SeatManager internally.
 func (h *EnrollmentCommandHandlerImpl) EnrollCmd(msg *message.Message) error {
-	var payload fun.EnrollCmdV1
-	if err := json.Unmarshal(msg.Payload, &payload); err != nil {
+	var cmd fun.EnrollCmdV1
+	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
 		return fmt.Errorf("unmarshal enroll cmd: %w", err)
 	}
 
-	ctx := stampCtx(msg.Context(), msg.Metadata, payload.EnrollmentID, msg.UUID)
-
-	actions, err := h.Manager.ProcessEnrollRequested(ctx, payload, msg.Metadata, msg.UUID)
-	if err != nil {
-		return err
-	}
-
-	if actions.Waitlisted {
-		enrollment := fun.Enrollment{ID: payload.EnrollmentID, PersonID: payload.PersonID, Grade: payload.Grade, Status: fun.EnrollmentStatusWaitlisted}
-		return h.SeatPublisher.SeatWaitlisted(ctx, enrollment, "capacity_unavailable")
-	}
-	if actions.AllocationStarted {
-		enrollment := fun.Enrollment{ID: payload.EnrollmentID, PersonID: payload.PersonID, Grade: payload.Grade, Status: fun.EnrollmentStatusSeatAllocationInitiated}
-		return h.SeatPublisher.AllocateSeat(ctx, enrollment)
-	}
-	return nil
+	ctx := stampCtx(msg.Context(), msg.Metadata, cmd.EnrollmentID, msg.UUID)
+	return h.Manager.EnrollCmd(ctx, cmd, msg.Metadata, msg.UUID)
 }
 
-// EnrollmentConfirmedEvt idempotently persists CONFIRMED status.
+// EnrollmentConfirmedEvt persists CONFIRMED status via manager sink.
 func (h *EnrollmentCommandHandlerImpl) EnrollmentConfirmedEvt(msg *message.Message) error {
 	var evt fun.EnrollmentConfirmedEvtV1
 	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
 		return fmt.Errorf("unmarshal enrollment confirmed evt: %w", err)
 	}
 	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
-
-	return h.EnrollmentDao.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		var enrollment fun.Enrollment
-		if findErr := h.EnrollmentDao.FindById(c, evt.EnrollmentID, &enrollment); findErr != nil {
-			return findErr
-		}
-		if enrollment.Status == fun.EnrollmentStatusConfirmed {
-			return nil
-		}
-		enrollment.Status = fun.EnrollmentStatusConfirmed
-		return h.EnrollmentDao.Update(c, &enrollment)
-	})
+	return h.Manager.OnEnrollmentConfirmedEvt(ctx, evt)
 }
 
-// EnrollmentCancelledEvt persists CANCELLED status.
+// EnrollmentCancelledEvt persists CANCELLED status via manager sink.
 func (h *EnrollmentCommandHandlerImpl) EnrollmentCancelledEvt(msg *message.Message) error {
 	var evt fun.EnrollmentCancelledEvtV1
 	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
 		return fmt.Errorf("unmarshal enrollment cancelled evt: %w", err)
 	}
 	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
-
-	return h.EnrollmentDao.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		var enrollment fun.Enrollment
-		if findErr := h.EnrollmentDao.FindById(c, evt.EnrollmentID, &enrollment); findErr != nil {
-			return findErr
-		}
-		enrollment.Status = fun.EnrollmentStatusCancelled
-		return h.EnrollmentDao.Update(c, &enrollment)
-	})
+	return h.Manager.OnEnrollmentCancelledEvt(ctx, evt)
 }
 
 // stampCtx helper to apply correlation/causation from message metadata.

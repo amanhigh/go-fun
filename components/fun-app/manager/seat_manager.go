@@ -9,44 +9,40 @@ import (
 )
 
 // SeatManagerInterface handles only seat-related saga processing and publishing.
-// - AllocateSeat: decides reservation vs waitlist and emits the appropriate event
-// - OnSeatWaitlistedEvt: persists WAITLISTED as a sink (idempotent), no further publishing
-
-// Seat reservation confirmation (after SeatReserved event) is handled by EnrollmentManager via handler.
+// PublishAllocateSeat emits AllocateSeat command (C2) downstream.
+// AllocateSeat decides reservation vs waitlist and emits the appropriate seat event.
 type SeatManagerInterface interface {
+	PublishAllocateSeat(ctx context.Context, enrollment fun.Enrollment) common.HttpError
 	AllocateSeat(ctx context.Context, cmd fun.AllocateSeatCmdV1) common.HttpError
-	OnSeatWaitlistedEvt(ctx context.Context, evt fun.SeatWaitlistedEvtV1) common.HttpError
 }
 
 type SeatManager struct {
-	SeatPublisher     publisher.SeatAllocationPublisher
-	EnrollmentManager EnrollmentManagerInterface
+	SeatPublisher publisher.SeatAllocationPublisher
 }
 
-const seatWaitlistThreshold = 5 // TODO: move to config when real capacity is implemented
+const (
+	seatWaitlistThreshold        = 5 // TODO: move to config when real capacity is implemented
+	seatWaitlistedReasonCapacity = "capacity_unavailable"
+)
 
-// NewSeatManager constructs a seat-only manager that publishes seat events and
-// delegates enrollment status persistence to the EnrollmentManager where needed.
-func NewSeatManager(seatPublisher publisher.SeatAllocationPublisher, enrollmentManager EnrollmentManagerInterface) SeatManagerInterface {
+// NewSeatManager constructs a seat-only manager that publishes seat events.
+func NewSeatManager(seatPublisher publisher.SeatAllocationPublisher) SeatManagerInterface {
 	return &SeatManager{
-		SeatPublisher:     seatPublisher,
-		EnrollmentManager: enrollmentManager,
+		SeatPublisher: seatPublisher,
 	}
 }
 
-// OnAllocateSeatCmd processes AllocateSeat command and emits SeatReserved or SeatWaitlisted.
+// PublishAllocateSeat emits the AllocateSeat command for async processing.
+func (sm *SeatManager) PublishAllocateSeat(ctx context.Context, enrollment fun.Enrollment) common.HttpError {
+	return sm.SeatPublisher.AllocateSeat(ctx, enrollment)
+}
+
+// AllocateSeat processes AllocateSeat command and emits SeatReserved or SeatWaitlisted.
 // No DB writes here; persistence happens in subsequent event handlers.
 func (sm *SeatManager) AllocateSeat(ctx context.Context, cmd fun.AllocateSeatCmdV1) common.HttpError {
-	e := fun.Enrollment{ID: cmd.EnrollmentID, PersonID: cmd.PersonID, Grade: cmd.Grade}
+	enrollment := fun.Enrollment{ID: cmd.EnrollmentID, PersonID: cmd.PersonID, Grade: cmd.Grade}
 	if cmd.Grade >= seatWaitlistThreshold {
-		return sm.SeatPublisher.SeatWaitlisted(ctx, e, seatWaitlistedReasonCapacity)
+		return sm.SeatPublisher.SeatWaitlisted(ctx, enrollment, seatWaitlistedReasonCapacity)
 	}
-	return sm.SeatPublisher.SeatReserved(ctx, e)
-}
-
-// OnSeatWaitlistedEvt idempotently persists WAITLISTED status as a sink.
-// No event is (re)published here to avoid loops; EnrollmentManager handles persistence.
-func (sm *SeatManager) OnSeatWaitlistedEvt(ctx context.Context, evt fun.SeatWaitlistedEvtV1) common.HttpError {
-	e := fun.Enrollment{ID: evt.EnrollmentID, PersonID: evt.PersonID, Grade: evt.Grade}
-	return sm.EnrollmentManager.UpdateToWaitlisted(ctx, e)
+	return sm.SeatPublisher.SeatReserved(ctx, enrollment)
 }

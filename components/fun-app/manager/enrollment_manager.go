@@ -8,59 +8,48 @@ import (
 	"github.com/amanhigh/go-fun/components/fun-app/publisher"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
-	"github.com/rs/zerolog"
 )
 
-// EnrollmentManagerInterface orchestrates enrollment flows using existing person records.
+// EnrollmentManagerInterface orchestrates enrollment flows and delegates seat allocation.
+//
+// Architecture rules enforced here:
+//   - Flow is always Handler -> Manager -> Publisher. Handlers never publish directly.
+//   - Managers only talk to their own publisher; cross-domain messages use Manager-to-Manager calls.
+//   - EnrollmentManager responsibilities:
+//   - EnrollPerson persists an initiated enrollment and publishes EnrollCmd (C1).
+//   - EnrollCmd delegates seat allocation to SeatManager, which publishes AllocateSeat (C2).
+//   - OnSeatReservedEvt, UpdateToWaitlisted, OnEnrollmentConfirmedEvt, and OnEnrollmentCancelledEvt are idempotent sinks that persist status without publishing.
+//   - SeatManager publishes only seat-related commands/events and never touches enrollment publishers.
+//
 // TODO: Rename Person usage to Student once the domain model is updated.
 type EnrollmentManagerInterface interface {
 	EnrollPerson(ctx context.Context, personID string, grade int) (fun.Enrollment, common.HttpError)
 	GetEnrollment(ctx context.Context, personID string) (fun.Enrollment, common.HttpError)
-	ProcessEnrollRequested(ctx context.Context, event fun.EnrollCmdV1, meta message.Metadata, messageID string) (EnrollmentActions, common.HttpError)
-	// Seat flows (called by SeatManager)
-	SeatReservedFlow(ctx context.Context, e fun.Enrollment) common.HttpError
-	SeatWaitlistedFlow(ctx context.Context, e fun.Enrollment, reason string) common.HttpError
-	ConfirmFlow(ctx context.Context, e fun.Enrollment) common.HttpError
-	// Update only, used when consuming SeatWaitlisted event (no publish)
-	UpdateToWaitlisted(ctx context.Context, e fun.Enrollment) common.HttpError
+	EnrollCmd(ctx context.Context, cmd fun.EnrollCmdV1, meta message.Metadata, messageID string) common.HttpError
+	OnSeatReservedEvt(ctx context.Context, enrollment fun.Enrollment) common.HttpError
+	UpdateToWaitlisted(ctx context.Context, enrollment fun.Enrollment) common.HttpError
+	OnEnrollmentConfirmedEvt(ctx context.Context, evt fun.EnrollmentConfirmedEvtV1) common.HttpError
+	OnEnrollmentCancelledEvt(ctx context.Context, evt fun.EnrollmentCancelledEvtV1) common.HttpError
 }
 
 type EnrollmentManager struct {
 	PersonManager       PersonManagerInterface
 	EnrollmentDao       dao.EnrollmentDaoInterface
 	EnrollmentPublisher publisher.EnrollmentPublisher
-	SeatPublisher       publisher.SeatAllocationPublisher
-}
-
-const (
-	waitlistGradeThreshold       = 5
-	seatWaitlistedReasonCapacity = "capacity_unavailable"
-)
-
-// transitionState captures actions to emit after DB state changes.
-type transitionState struct {
-	emitAllocationStarted bool
-	emitWaitlisted        bool
-	noOp                  bool
-}
-
-// EnrollmentActions distills transition intents for handlers.
-type EnrollmentActions struct {
-	AllocationStarted bool
-	Waitlisted        bool
+	SeatManager         SeatManagerInterface
 }
 
 func NewEnrollmentManager(
 	personManager PersonManagerInterface,
 	enrollmentDao dao.EnrollmentDaoInterface,
 	enrollmentPublisher publisher.EnrollmentPublisher,
-	seatPublisher publisher.SeatAllocationPublisher,
+	seatManager SeatManagerInterface,
 ) EnrollmentManagerInterface {
 	return &EnrollmentManager{
 		PersonManager:       personManager,
 		EnrollmentDao:       enrollmentDao,
 		EnrollmentPublisher: enrollmentPublisher,
-		SeatPublisher:       seatPublisher,
+		SeatManager:         seatManager,
 	}
 }
 
@@ -92,34 +81,45 @@ func (em *EnrollmentManager) GetEnrollment(ctx context.Context, personID string)
 	return enrollment, nil
 }
 
-func (em *EnrollmentManager) ProcessEnrollRequested(ctx context.Context, event fun.EnrollCmdV1, meta message.Metadata, messageID string) (EnrollmentActions, common.HttpError) {
+// EnrollCmd coordinates seat allocation by delegating to SeatManager.
+func (em *EnrollmentManager) EnrollCmd(ctx context.Context, cmd fun.EnrollCmdV1, meta message.Metadata, messageID string) common.HttpError {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
-	ctx = em.bindMessageContext(ctx, event, meta, messageID)
+	ctx = em.bindMessageContext(ctx, cmd.EnrollmentID, meta, messageID)
 
-	state, _, err := em.computeTransitions(ctx, event)
-	if err != nil {
-		if state.noOp {
-			return EnrollmentActions{}, nil
-		}
-		return EnrollmentActions{}, err
-	}
-	if state.noOp {
-		return EnrollmentActions{}, nil
+	enrollment := fun.Enrollment{
+		ID:       cmd.EnrollmentID,
+		PersonID: cmd.PersonID,
+		Grade:    cmd.Grade,
 	}
 
-	actions := EnrollmentActions{
-		AllocationStarted: state.emitAllocationStarted,
-		Waitlisted:        state.emitWaitlisted,
-	}
-	// Do not publish here; handlers will emit commands/events based on updated state.
-	return actions, nil
+	return em.SeatManager.PublishAllocateSeat(ctx, enrollment)
 }
 
-func (em *EnrollmentManager) bindMessageContext(ctx context.Context, event fun.EnrollCmdV1, meta message.Metadata, messageID string) context.Context {
-	correlationID := event.EnrollmentID
+// OnSeatReservedEvt persists CONFIRMED status without publishing.
+func (em *EnrollmentManager) OnSeatReservedEvt(ctx context.Context, enrollment fun.Enrollment) common.HttpError {
+	return em.updateStatusByID(ctx, enrollment.ID, fun.EnrollmentStatusConfirmed)
+}
+
+// UpdateToWaitlisted persists WAITLISTED status without publishing.
+func (em *EnrollmentManager) UpdateToWaitlisted(ctx context.Context, enrollment fun.Enrollment) common.HttpError {
+	return em.updateStatusByID(ctx, enrollment.ID, fun.EnrollmentStatusWaitlisted)
+}
+
+// OnEnrollmentConfirmedEvt persists CONFIRMED status without publishing.
+func (em *EnrollmentManager) OnEnrollmentConfirmedEvt(ctx context.Context, evt fun.EnrollmentConfirmedEvtV1) common.HttpError {
+	return em.updateStatusByID(ctx, evt.EnrollmentID, fun.EnrollmentStatusConfirmed)
+}
+
+// OnEnrollmentCancelledEvt persists CANCELLED status without publishing.
+func (em *EnrollmentManager) OnEnrollmentCancelledEvt(ctx context.Context, evt fun.EnrollmentCancelledEvtV1) common.HttpError {
+	return em.updateStatusByID(ctx, evt.EnrollmentID, fun.EnrollmentStatusCancelled)
+}
+
+func (em *EnrollmentManager) bindMessageContext(ctx context.Context, enrollmentID string, meta message.Metadata, messageID string) context.Context {
+	correlationID := enrollmentID
 	if meta != nil {
 		if corr := meta.Get(common.MetadataCorrelationIDKey); corr != "" {
 			correlationID = corr
@@ -140,102 +140,18 @@ func (em *EnrollmentManager) bindMessageContext(ctx context.Context, event fun.E
 	return ctx
 }
 
-func (em *EnrollmentManager) evalAndUpdateTransition(ctx context.Context, enrollment *fun.Enrollment) (transitionState, common.HttpError) {
-	var state transitionState
-
-	switch enrollment.Status {
-	case fun.EnrollmentStatusConfirmed, fun.EnrollmentStatusWaitlisted:
-		state.noOp = true
-		return state, nil
-	}
-
-	if enrollment.Grade >= waitlistGradeThreshold {
-		if err := em.updateEnrollmentStatus(ctx, enrollment, fun.EnrollmentStatusWaitlisted); err != nil {
-			return state, err
-		}
-		state.emitWaitlisted = true
-		return state, nil
-	}
-
-	if enrollment.Status == fun.EnrollmentStatusSeatAllocationInitiated {
-		// No DB change; seat allocation will be processed asynchronously.
-		state.emitAllocationStarted = true
-	}
-
-	return state, nil
-}
-
-func (em *EnrollmentManager) computeTransitions(ctx context.Context, event fun.EnrollCmdV1) (transitionState, fun.Enrollment, common.HttpError) {
-	var (
-		state      transitionState
-		enrollment fun.Enrollment
-	)
-
-	err := em.EnrollmentDao.UseOrCreateTx(ctx, func(txCtx context.Context) common.HttpError {
-		if err := em.EnrollmentDao.FindById(txCtx, event.EnrollmentID, &enrollment); err != nil {
-			return err
-		}
-
-		var evalErr common.HttpError
-		state, evalErr = em.evalAndUpdateTransition(txCtx, &enrollment)
-		return evalErr
-	})
-
-	return state, enrollment, err
-}
-
-// No publishing here; handlers own emitting commands/events.
-
-// SeatReservedFlow publishes SeatReserved event; persistence to Confirmed happens on reserved evt.
-func (em *EnrollmentManager) SeatReservedFlow(ctx context.Context, e fun.Enrollment) common.HttpError {
-	return em.SeatPublisher.SeatReserved(ctx, e)
-}
-
-// SeatWaitlistedFlow persists WAITLISTED and publishes SeatWaitlisted.
-func (em *EnrollmentManager) SeatWaitlistedFlow(ctx context.Context, e fun.Enrollment, reason string) common.HttpError {
-	if err := em.UpdateToWaitlisted(ctx, e); err != nil {
-		return err
-	}
-	return em.SeatPublisher.SeatWaitlisted(ctx, e, reason)
-}
-
-// UpdateToWaitlisted persists WAITLISTED without publishing (used by SeatManager on sink event).
-func (em *EnrollmentManager) UpdateToWaitlisted(ctx context.Context, e fun.Enrollment) common.HttpError {
+func (em *EnrollmentManager) updateStatusByID(ctx context.Context, enrollmentID, status string) common.HttpError {
 	return em.EnrollmentDao.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		var existing fun.Enrollment
-		if findErr := em.EnrollmentDao.FindById(c, e.ID, &existing); findErr != nil {
+		var enrollment fun.Enrollment
+		if findErr := em.EnrollmentDao.FindById(c, enrollmentID, &enrollment); findErr != nil {
 			return findErr
 		}
-		if existing.Status != fun.EnrollmentStatusWaitlisted {
-			existing.Status = fun.EnrollmentStatusWaitlisted
-			if updErr := em.EnrollmentDao.Update(c, &existing); updErr != nil {
-				return updErr
-			}
+		if enrollment.Status == status {
+			return nil
 		}
-		e = existing
-		return nil
+		enrollment.Status = status
+		return em.EnrollmentDao.Update(c, &enrollment)
 	})
-}
-
-// ConfirmFlow persists CONFIRMED and publishes EnrollmentConfirmed.
-func (em *EnrollmentManager) ConfirmFlow(ctx context.Context, e fun.Enrollment) common.HttpError {
-	if err := em.EnrollmentDao.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		var existing fun.Enrollment
-		if findErr := em.EnrollmentDao.FindById(c, e.ID, &existing); findErr != nil {
-			return findErr
-		}
-		if existing.Status != fun.EnrollmentStatusConfirmed {
-			existing.Status = fun.EnrollmentStatusConfirmed
-			if updErr := em.EnrollmentDao.Update(c, &existing); updErr != nil {
-				return updErr
-			}
-		}
-		e = existing
-		return nil
-	}); err != nil {
-		return err
-	}
-	return em.EnrollmentPublisher.EnrollmentConfirmedEvt(ctx, e)
 }
 
 func (em *EnrollmentManager) upsertEnrollment(ctx context.Context, enrollment *fun.Enrollment) common.HttpError {
@@ -264,35 +180,9 @@ func (em *EnrollmentManager) retrievePerson(ctx context.Context, personID string
 }
 
 func (em *EnrollmentManager) buildEnrollment(personID string, grade int) *fun.Enrollment {
-	status := fun.EnrollmentStatusSeatAllocationInitiated
-	if grade >= waitlistGradeThreshold {
-		status = fun.EnrollmentStatusWaitlisted
-	}
 	return &fun.Enrollment{
 		PersonID: personID,
 		Grade:    grade,
-		Status:   status,
+		Status:   fun.EnrollmentStatusSeatAllocationInitiated,
 	}
-}
-
-func (em *EnrollmentManager) updateEnrollmentStatus(ctx context.Context, enrollment *fun.Enrollment, status string) common.HttpError {
-	if enrollment.Status == status {
-		return nil
-	}
-
-	enrollment.Status = status
-	if err := em.EnrollmentDao.Update(ctx, enrollment); err != nil {
-		return err
-	}
-
-	em.logStatusTransition(ctx, enrollment)
-	return nil
-}
-
-func (em *EnrollmentManager) logStatusTransition(ctx context.Context, enrollment *fun.Enrollment) {
-	zerolog.Ctx(ctx).Info().
-		Str("enrollmentId", enrollment.ID).
-		Str("personId", enrollment.PersonID).
-		Str("status", enrollment.Status).
-		Msg("Enrollment status updated")
 }

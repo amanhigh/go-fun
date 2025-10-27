@@ -40,7 +40,7 @@ func (h *SeatCommandHandlerImpl) SeatReservedEvt(msg *message.Message) error {
 	}
 	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
 	e := fun.Enrollment{ID: evt.EnrollmentID, PersonID: evt.PersonID, Grade: evt.Grade}
-	return h.EnrollmentManager.ConfirmFlow(ctx, e)
+	return h.EnrollmentManager.OnSeatReservedEvt(ctx, e)
 }
 
 func (h *SeatCommandHandlerImpl) SeatWaitlistedEvt(msg *message.Message) error {
@@ -49,7 +49,8 @@ func (h *SeatCommandHandlerImpl) SeatWaitlistedEvt(msg *message.Message) error {
 		return fmt.Errorf("unmarshal seat waitlisted evt: %w", err)
 	}
 	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
-	return h.SeatManager.OnSeatWaitlistedEvt(ctx, evt)
+	enrollment := fun.Enrollment{ID: evt.EnrollmentID, PersonID: evt.PersonID, Grade: evt.Grade}
+	return h.EnrollmentManager.UpdateToWaitlisted(ctx, enrollment)
 }
 
 // emit helpers removed; direct publisher calls are used.
