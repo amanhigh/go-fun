@@ -8,6 +8,8 @@ const (
 	TopicEnrollmentConfirmedEvt    = "funapp.enrollment.event.enrollment_confirmed.v1"
 	TopicEnrollmentCancelledEvt    = "funapp.enrollment.event.enrollment_cancelled.v1"
 	TopicEnrollmentStateTransition = "funapp.enrollment.event.state_transition.v1"
+	// Poison queue for failed messages after retries are exhausted
+	TopicPoison = "funapp.enrollment.poison"
 )
 
 type SeatReservedEvtV1 struct {

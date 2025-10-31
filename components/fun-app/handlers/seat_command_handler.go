@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
@@ -14,6 +15,7 @@ type SeatCommandHandler interface {
 	AllocateSeatCmd(msg *message.Message) error
 	SeatReservedEvt(msg *message.Message) error
 	SeatWaitlistedEvt(msg *message.Message) error
+	PoisonAllocate(msg *message.Message) error
 }
 
 type SeatCommandHandlerImpl struct {
@@ -50,7 +52,27 @@ func (h *SeatCommandHandlerImpl) SeatWaitlistedEvt(msg *message.Message) error {
 	}
 	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
 	enrollment := fun.Enrollment{ID: evt.EnrollmentID, PersonID: evt.PersonID, Grade: evt.Grade}
-	return h.EnrollmentManager.UpdateToWaitlisted(ctx, enrollment)
+	// 1) Persist WAITLISTED state via manager sink (idempotent)
+	if err := h.EnrollmentManager.UpdateToWaitlisted(ctx, enrollment); err != nil {
+		return err
+	}
+	// Done after sink; retry will be driven by middleware on AllocateSeatCmd path
+	return nil
+}
+
+// PoisonAllocate consumes poison messages after retries and cancels enrollment.
+func (h *SeatCommandHandlerImpl) PoisonAllocate(msg *message.Message) error {
+	var cmd fun.AllocateSeatCmdV1
+	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
+		return fmt.Errorf("unmarshal poison allocate: %w", err)
+	}
+	ctx := stampCtx(msg.Context(), msg.Metadata, cmd.EnrollmentID, msg.UUID)
+	return h.EnrollmentManager.OnEnrollmentCancelledEvt(ctx, fun.EnrollmentCancelledEvtV1{
+		EnrollmentID: cmd.EnrollmentID,
+		PersonID:     cmd.PersonID,
+		Reason:       "waitlist_retries_exhausted",
+		CancelledAt:  time.Now().UTC(),
+	})
 }
 
 // emit helpers removed; direct publisher calls are used.

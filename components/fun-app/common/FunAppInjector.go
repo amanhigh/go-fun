@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
 
@@ -121,18 +120,12 @@ func (fi *FunAppInjector) registerMessaging() {
 }
 
 func (fi *FunAppInjector) registerMessagingHandlers() {
-	container.MustSingleton(fi.di, func(logger watermill.LoggerAdapter, subscriber message.Subscriber, enrollmentManager manager.EnrollmentManagerInterface) *message.Router {
-		router, err := util.NewRouter(logger)
-		if err != nil {
-			log.Fatal().Err(err).Msg("Failed to initialize Watermill router")
-		}
-
-		if err = handlers.RegisterEnrollmentHandlers(router, subscriber, enrollmentManager); err != nil {
-			log.Fatal().Err(err).Msg("Failed to register enrollment handlers")
-		}
-
-		return router
-	})
+	// Provide MessagingServer and expose its router for controller
+	container.MustSingleton(fi.di, handlers.NewMessagingServer)
+	container.MustSingleton(fi.di, provideRouter)
+	// DI registrations for command handlers so they can be resolved
+	container.MustSingleton(fi.di, handlers.NewEnrollmentCommandHandler)
+	container.MustSingleton(fi.di, handlers.NewSeatCommandHandler)
 	container.MustSingleton(fi.di, util.NewWatermillController)
 }
 
@@ -219,6 +212,11 @@ func providePublisher(channel *gochannel.GoChannel) message.Publisher {
 
 func provideSubscriber(channel *gochannel.GoChannel) message.Subscriber {
 	return channel
+}
+
+// provideRouter adapts MessagingServer into a *message.Router for WatermillController.
+func provideRouter(srv *handlers.MessagingServer) *message.Router {
+	return srv.Router()
 }
 
 func newDb(config config.FunAppConfig) (db *gorm.DB, err error) {
