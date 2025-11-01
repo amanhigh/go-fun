@@ -109,6 +109,7 @@ func (fi *FunAppInjector) registerComponents() {
 	container.MustSingleton(fi.di, publisher.NewSeatAllocationPublisher)
 	container.MustSingleton(fi.di, publisher.NewEnrollmentPublisher)
 	container.MustSingleton(fi.di, manager.NewPersonManager)
+	container.MustSingleton(fi.di, manager.NewSeatManager)
 	container.MustSingleton(fi.di, manager.NewEnrollmentManager)
 }
 
@@ -120,12 +121,13 @@ func (fi *FunAppInjector) registerMessaging() {
 }
 
 func (fi *FunAppInjector) registerMessagingHandlers() {
-	// Provide MessagingServer and expose its router for controller
-	container.MustSingleton(fi.di, handlers.NewMessagingServer)
-	container.MustSingleton(fi.di, provideRouter)
-	// DI registrations for command handlers so they can be resolved
+	// DI registrations via providers that return interface types (no Fill)
 	container.MustSingleton(fi.di, handlers.NewEnrollmentCommandHandler)
 	container.MustSingleton(fi.di, handlers.NewSeatCommandHandler)
+	// Provide MessagingServer (depends on handlers) and expose its router for controller
+	container.MustSingleton(fi.di, handlers.NewMessagingServer)
+	container.MustSingleton(fi.di, provideRouter)
+	// Wire WatermillController after router is available
 	container.MustSingleton(fi.di, util.NewWatermillController)
 }
 
@@ -258,15 +260,11 @@ func registerMetrics(di container.Container) {
 
 func registerHandlers(di container.Container) {
 	container.MustSingleton(di, handlers.NewAdminHandler)
-	container.MustSingleton(di, func() (handler *handlers.PersonHandler, err error) {
-		handler = &handlers.PersonHandler{}
-
-		err = di.Fill(handler)
+	container.MustSingleton(di, func() (handler handlers.PersonHandler, err error) {
+		impl := &handlers.PersonHandlerImpl{}
+		err = di.Fill(impl)
+		handler = impl
 		return
 	})
-	container.MustSingleton(di, func() (handler *handlers.EnrollmentHandler, err error) {
-		handler = handlers.NewEnrollmentHandler()
-		err = di.Fill(handler)
-		return
-	})
+	container.MustSingleton(di, handlers.NewEnrollmentHandler)
 }

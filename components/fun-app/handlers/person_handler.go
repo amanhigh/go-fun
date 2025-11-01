@@ -16,7 +16,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type PersonHandler struct {
+type PersonHandler interface {
+	CreatePerson(c *gin.Context)
+	GetPerson(c *gin.Context)
+	ListPersons(c *gin.Context)
+	ListPersonAudit(c *gin.Context)
+	UpdatePerson(c *gin.Context)
+	DeletePersons(c *gin.Context)
+}
+
+type PersonHandlerImpl struct {
 	Manager          manager.PersonManagerInterface `container:"type"`
 	Tracer           trace.Tracer                   `container:"type"`
 	CreateCounter    metric.Int64Counter            `container:"name"`
@@ -36,7 +45,7 @@ type PersonHandler struct {
 // @Failure 400 {string} string "Bad Request"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person [post]
-func (ph *PersonHandler) CreatePerson(c *gin.Context) {
+func (ph *PersonHandlerImpl) CreatePerson(c *gin.Context) {
 	/* Captures Create Person Latency */
 	startTime := time.Now()
 	defer func() {
@@ -76,7 +85,7 @@ func (ph *PersonHandler) CreatePerson(c *gin.Context) {
 // @Success 200 {object} fun.Person
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person/{id} [get]
-func (ph *PersonHandler) GetPerson(c *gin.Context) {
+func (ph *PersonHandlerImpl) GetPerson(c *gin.Context) {
 	var path fun.PersonPath
 
 	ctx, span := ph.Tracer.Start(c.Request.Context(), "GetPerson.Handler", trace.WithAttributes(attribute.String("id", path.Id)))
@@ -109,7 +118,7 @@ func (ph *PersonHandler) GetPerson(c *gin.Context) {
 // @Success 200 {object} fun.PersonList
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person [get]
-func (ph *PersonHandler) ListPersons(c *gin.Context) {
+func (ph *PersonHandlerImpl) ListPersons(c *gin.Context) {
 	var personQuery fun.PersonQuery
 	personQuery.Order = "asc" // Default Sort Order
 
@@ -143,7 +152,7 @@ func (ph *PersonHandler) ListPersons(c *gin.Context) {
 // @Success 200 {object} []fun.PersonAudit
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person/{id}/audit [get]
-func (ph *PersonHandler) ListPersonAudit(c *gin.Context) {
+func (ph *PersonHandlerImpl) ListPersonAudit(c *gin.Context) {
 	var path fun.PersonPath
 
 	ctx, span := ph.Tracer.Start(c.Request.Context(), "ListPersonAudit.Handler", trace.WithAttributes(attribute.String("id", path.Id)))
@@ -174,7 +183,7 @@ func (ph *PersonHandler) ListPersonAudit(c *gin.Context) {
 // @Failure 404 {string} string "Not Found"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person/{id} [put]
-func (ph *PersonHandler) UpdatePerson(c *gin.Context) {
+func (ph *PersonHandlerImpl) UpdatePerson(c *gin.Context) {
 	//https://stackoverflow.com/a/37544666/173136
 
 	ctx, span := ph.Tracer.Start(c.Request.Context(), "UpdatePerson.Handler")
@@ -209,7 +218,7 @@ func (ph *PersonHandler) UpdatePerson(c *gin.Context) {
 // @Failure 404 {string} string "Not Found"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /person/{id} [delete]
-func (ph *PersonHandler) DeletePersons(c *gin.Context) {
+func (ph *PersonHandlerImpl) DeletePersons(c *gin.Context) {
 	ctx, span := ph.Tracer.Start(c.Request.Context(), "DeletePersons.Handler")
 	defer span.End()
 

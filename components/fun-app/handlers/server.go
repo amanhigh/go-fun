@@ -24,9 +24,9 @@ type FunServer struct {
 	Tracer    trace.Tracer  `container:"type"`
 
 	/* Handlers */
-	PersonHandler     *PersonHandler     `container:"type"`
-	EnrollmentHandler *EnrollmentHandler `container:"type"`
-	AdminHandler      *AdminHandler      `container:"type"`
+	PersonHandler     PersonHandler     `container:"type"`
+	EnrollmentHandler EnrollmentHandler `container:"type"`
+	AdminHandler      AdminHandler      `container:"type"`
 
 	Watermill util.WatermillController `container:"type"`
 }

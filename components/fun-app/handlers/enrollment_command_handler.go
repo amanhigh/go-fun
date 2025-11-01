@@ -19,11 +19,12 @@ type EnrollmentCommandHandler interface {
 }
 
 type EnrollmentCommandHandlerImpl struct {
-	Manager manager.EnrollmentManagerInterface `container:"type"`
+	Manager manager.EnrollmentManagerInterface
 }
 
-func NewEnrollmentCommandHandler() *EnrollmentCommandHandlerImpl {
-	return &EnrollmentCommandHandlerImpl{}
+// NewEnrollmentCommandHandler constructs handler with explicit manager dependency and returns interface.
+func NewEnrollmentCommandHandler(manager manager.EnrollmentManagerInterface) EnrollmentCommandHandler {
+	return &EnrollmentCommandHandlerImpl{Manager: manager}
 }
 
 // EnrollCmd forwards EnrollCmdV1 to EnrollmentManager; it delegates to SeatManager internally.

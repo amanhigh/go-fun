@@ -2,7 +2,6 @@ package manager
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/amanhigh/go-fun/components/fun-app/publisher"
 	"github.com/amanhigh/go-fun/models/common"
@@ -40,15 +39,12 @@ func (sm *SeatManager) PublishAllocateSeat(ctx context.Context, enrollment fun.E
 }
 
 // AllocateSeat processes AllocateSeat command and emits SeatReserved or SeatWaitlisted.
-// On capacity-unavailable it returns an error to trigger middleware retry.
+// On technical failure it returns an error; waitlist is not a failure.
 // No DB writes here; persistence happens in subsequent event handlers.
 func (sm *SeatManager) AllocateSeat(ctx context.Context, cmd fun.AllocateSeatCmdV1) common.HttpError {
 	enrollment := fun.Enrollment{ID: cmd.EnrollmentID, PersonID: cmd.PersonID, Grade: cmd.Grade}
 	if cmd.Grade >= seatWaitlistThreshold {
-		if err := sm.SeatPublisher.SeatWaitlisted(ctx, enrollment, seatWaitlistedReasonCapacity); err != nil {
-			return err
-		}
-		return common.NewHttpError("capacity_unavailable_retry", http.StatusServiceUnavailable)
+		return sm.SeatPublisher.SeatWaitlisted(ctx, enrollment, seatWaitlistedReasonCapacity)
 	}
 	return sm.SeatPublisher.SeatReserved(ctx, enrollment)
 }

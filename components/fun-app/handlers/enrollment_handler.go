@@ -13,15 +13,24 @@ import (
 )
 
 // EnrollmentHandler exposes REST endpoints for enrollment resources.
-type EnrollmentHandler struct {
+type EnrollmentHandler interface {
+	CreateEnrollment(c *gin.Context)
+	GetEnrollment(c *gin.Context)
+}
+
+type EnrollmentHandlerImpl struct {
 	Manager manager.EnrollmentManagerInterface `container:"type"`
 	Tracer  trace.Tracer                       `container:"type"`
 }
 
-func NewEnrollmentHandler() *EnrollmentHandler { return &EnrollmentHandler{} }
+// NewEnrollmentHandler constructs handler with explicit dependencies and returns interface.
+func NewEnrollmentHandler(manager manager.EnrollmentManagerInterface, tracer trace.Tracer) EnrollmentHandler {
+	h := &EnrollmentHandlerImpl{Manager: manager, Tracer: tracer}
+	return h
+}
 
 // CreateEnrollment orchestrates enrollment using an existing person record.
-func (eh *EnrollmentHandler) CreateEnrollment(c *gin.Context) {
+func (eh *EnrollmentHandlerImpl) CreateEnrollment(c *gin.Context) {
 	ctx, span := eh.Tracer.Start(c.Request.Context(), "CreateEnrollment.Handler")
 	defer span.End()
 
@@ -48,7 +57,7 @@ func (eh *EnrollmentHandler) CreateEnrollment(c *gin.Context) {
 }
 
 // GetEnrollment fetches enrollment status for a person.
-func (eh *EnrollmentHandler) GetEnrollment(c *gin.Context) {
+func (eh *EnrollmentHandlerImpl) GetEnrollment(c *gin.Context) {
 	ctx, span := eh.Tracer.Start(c.Request.Context(), "GetEnrollment.Handler")
 	defer span.End()
 

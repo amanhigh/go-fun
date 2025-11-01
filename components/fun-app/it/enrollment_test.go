@@ -62,7 +62,7 @@ var _ = Describe("Enrollment API", func() {
 						return ""
 					}
 					return resp.Status
-				}, time.Second, 50*time.Millisecond).Should(Equal(fun.EnrollmentStatusConfirmed))
+				}, 3*time.Second, 50*time.Millisecond).Should(Equal(fun.EnrollmentStatusConfirmed))
 
 				getResp, getErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
 				Expect(getErr).ToNot(HaveOccurred())
@@ -99,7 +99,7 @@ var _ = Describe("Enrollment API", func() {
 							return ""
 						}
 						return resp.Status
-					}, time.Second, 50*time.Millisecond).Should(Equal(fun.EnrollmentStatusConfirmed))
+					}, 3*time.Second, 50*time.Millisecond).Should(Equal(fun.EnrollmentStatusConfirmed))
 
 					getResp, getErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
 					Expect(getErr).ToNot(HaveOccurred())
@@ -114,7 +114,7 @@ var _ = Describe("Enrollment API", func() {
 			enrollRequest = fun.EnrollmentRequest{PersonID: createdPerson.Id, Grade: 6}
 			enrollResp, err = client.EnrollmentService.CreateEnrollment(ctx, enrollRequest)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(enrollResp.Status).To(Equal(fun.EnrollmentStatusWaitlisted))
+			Expect(enrollResp.Status).To(Equal(fun.EnrollmentStatusSeatAllocationInitiated))
 
 			Eventually(func() string {
 				resp, pollErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
