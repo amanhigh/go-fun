@@ -12,6 +12,7 @@ import (
 type EnrollmentPublisher interface {
 	Enroll(ctx context.Context, enrollment fun.Enrollment) common.HttpError
 	EnrollmentConfirmedEvt(ctx context.Context, enrollment fun.Enrollment) common.HttpError
+	EnrollmentCancelledEvt(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError
 }
 
 type enrollmentPublisher struct {
@@ -53,4 +54,20 @@ func (ep *enrollmentPublisher) EnrollmentConfirmedEvt(ctx context.Context, enrol
 	}
 
 	return ep.base.PublishWithExtras(ctx, fun.TopicEnrollmentConfirmedEvt, payload, extras)
+}
+
+func (ep *enrollmentPublisher) EnrollmentCancelledEvt(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError {
+	payload := fun.EnrollmentCancelledEvtV1{
+		EnrollmentID: enrollment.ID,
+		PersonID:     enrollment.PersonID,
+		Reason:       reason,
+		CancelledAt:  time.Now().UTC(),
+	}
+
+	extras := map[string]string{
+		fun.MetadataEnrollmentID: enrollment.ID,
+		fun.MetadataPersonID:     enrollment.PersonID,
+	}
+
+	return ep.base.PublishWithExtras(ctx, fun.TopicEnrollmentCancelledEvt, payload, extras)
 }

@@ -70,7 +70,7 @@ func (h *SeatCommandHandlerImpl) PoisonAllocate(msg *message.Message) error {
 		return fmt.Errorf("unmarshal poison allocate: %w", err)
 	}
 	ctx := stampCtx(msg.Context(), msg.Metadata, cmd.EnrollmentID, msg.UUID)
-	return h.EnrollmentManager.OnEnrollmentCancelledEvt(ctx, fun.EnrollmentCancelledEvtV1{
+	return h.EnrollmentManager.CancelEnrollmentAndPublish(ctx, fun.EnrollmentCancelledEvtV1{
 		EnrollmentID: cmd.EnrollmentID,
 		PersonID:     cmd.PersonID,
 		Reason:       "waitlist_retries_exhausted",
