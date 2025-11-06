@@ -80,8 +80,6 @@ var _ = Describe("EnrollmentManager", func() {
 			Expect(err).To(BeNil())
 		})
 
-
-
 		It("propagates SeatManager error", func() {
 			ctx = common.WithCausation(common.WithCorrelation(context.Background(), "corr-err"), "cause-err")
 			expected := common.NewHttpError("seat-fail", 500)
