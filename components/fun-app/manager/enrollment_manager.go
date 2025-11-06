@@ -18,7 +18,9 @@ import (
 //   - EnrollmentManager responsibilities:
 //   - EnrollPerson persists an initiated enrollment and publishes EnrollCmd (C1).
 //   - EnrollCmd delegates seat allocation to SeatManager, which publishes AllocateSeat (C2).
-//   - OnSeatReservedEvt, UpdateToWaitlisted, OnEnrollmentConfirmedEvt, and OnEnrollmentCancelledEvt are idempotent sinks that persist status without publishing.
+//   - OnSeatReservedEvt persists status and emits EnrollmentConfirmedEvt.
+//   - CancelEnrollmentAndPublish persists status and emits EnrollmentCancelledEvt for origin-side cancellations.
+//   - OnEnrollmentConfirmedEvt and OnEnrollmentCancelledEvt are idempotent sinks that persist status without publishing.
 //   - SeatManager publishes only seat-related commands/events and never touches enrollment publishers.
 //
 // TODO: Rename Person usage to Student once the domain model is updated.
@@ -28,6 +30,7 @@ type EnrollmentManagerInterface interface {
 	EnrollCmd(ctx context.Context, cmd fun.EnrollCmdV1, meta message.Metadata, messageID string) common.HttpError
 	OnSeatReservedEvt(ctx context.Context, enrollment fun.Enrollment) common.HttpError
 	UpdateToWaitlisted(ctx context.Context, enrollment fun.Enrollment) common.HttpError
+	CancelEnrollmentAndPublish(ctx context.Context, evt fun.EnrollmentCancelledEvtV1) common.HttpError
 	OnEnrollmentConfirmedEvt(ctx context.Context, evt fun.EnrollmentConfirmedEvtV1) common.HttpError
 	OnEnrollmentCancelledEvt(ctx context.Context, evt fun.EnrollmentCancelledEvtV1) common.HttpError
 }
@@ -98,24 +101,46 @@ func (em *EnrollmentManager) EnrollCmd(ctx context.Context, cmd fun.EnrollCmdV1,
 	return em.SeatManager.PublishAllocateSeat(ctx, enrollment)
 }
 
-// OnSeatReservedEvt persists CONFIRMED status without publishing.
+// OnSeatReservedEvt persists CONFIRMED status and publishes confirmation when status changes.
 func (em *EnrollmentManager) OnSeatReservedEvt(ctx context.Context, enrollment fun.Enrollment) common.HttpError {
-	return em.updateStatusByID(ctx, enrollment.ID, fun.EnrollmentStatusConfirmed)
+	persisted, changed, err := em.updateStatusByID(ctx, enrollment.ID, fun.EnrollmentStatusConfirmed)
+	if err != nil {
+		return err
+	}
+	if !changed {
+		return nil
+	}
+	return em.EnrollmentPublisher.EnrollmentConfirmedEvt(ctx, persisted)
 }
 
 // UpdateToWaitlisted persists WAITLISTED status without publishing.
 func (em *EnrollmentManager) UpdateToWaitlisted(ctx context.Context, enrollment fun.Enrollment) common.HttpError {
-	return em.updateStatusByID(ctx, enrollment.ID, fun.EnrollmentStatusWaitlisted)
+	_, _, err := em.updateStatusByID(ctx, enrollment.ID, fun.EnrollmentStatusWaitlisted)
+	return err
+}
+
+// CancelEnrollmentAndPublish persists CANCELLED status and emits cancellation event when status changes.
+func (em *EnrollmentManager) CancelEnrollmentAndPublish(ctx context.Context, evt fun.EnrollmentCancelledEvtV1) common.HttpError {
+	persisted, changed, err := em.updateStatusByID(ctx, evt.EnrollmentID, fun.EnrollmentStatusCancelled)
+	if err != nil {
+		return err
+	}
+	if !changed {
+		return nil
+	}
+	return em.EnrollmentPublisher.EnrollmentCancelledEvt(ctx, persisted, evt.Reason)
 }
 
 // OnEnrollmentConfirmedEvt persists CONFIRMED status without publishing.
 func (em *EnrollmentManager) OnEnrollmentConfirmedEvt(ctx context.Context, evt fun.EnrollmentConfirmedEvtV1) common.HttpError {
-	return em.updateStatusByID(ctx, evt.EnrollmentID, fun.EnrollmentStatusConfirmed)
+	_, _, err := em.updateStatusByID(ctx, evt.EnrollmentID, fun.EnrollmentStatusConfirmed)
+	return err
 }
 
 // OnEnrollmentCancelledEvt persists CANCELLED status without publishing.
 func (em *EnrollmentManager) OnEnrollmentCancelledEvt(ctx context.Context, evt fun.EnrollmentCancelledEvtV1) common.HttpError {
-	return em.updateStatusByID(ctx, evt.EnrollmentID, fun.EnrollmentStatusCancelled)
+	_, _, err := em.updateStatusByID(ctx, evt.EnrollmentID, fun.EnrollmentStatusCancelled)
+	return err
 }
 
 func (em *EnrollmentManager) bindMessageContext(ctx context.Context, enrollmentID string, meta message.Metadata, messageID string) context.Context {
@@ -140,18 +165,25 @@ func (em *EnrollmentManager) bindMessageContext(ctx context.Context, enrollmentI
 	return ctx
 }
 
-func (em *EnrollmentManager) updateStatusByID(ctx context.Context, enrollmentID, status string) common.HttpError {
-	return em.EnrollmentDao.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		var enrollment fun.Enrollment
-		if findErr := em.EnrollmentDao.FindById(c, enrollmentID, &enrollment); findErr != nil {
+func (em *EnrollmentManager) updateStatusByID(ctx context.Context, enrollmentID, status string) (fun.Enrollment, bool, common.HttpError) {
+	var persisted fun.Enrollment
+	changed := false
+
+	err := em.EnrollmentDao.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+		if findErr := em.EnrollmentDao.FindById(c, enrollmentID, &persisted); findErr != nil {
 			return findErr
 		}
-		if enrollment.Status == status {
+		if persisted.Status == status {
 			return nil
 		}
-		enrollment.Status = status
-		return em.EnrollmentDao.Update(c, &enrollment)
+		persisted.Status = status
+		changed = true
+		return em.EnrollmentDao.Update(c, &persisted)
 	})
+	if err != nil {
+		return fun.Enrollment{}, false, err
+	}
+	return persisted, changed, nil
 }
 
 func (em *EnrollmentManager) upsertEnrollment(ctx context.Context, enrollment *fun.Enrollment) common.HttpError {
