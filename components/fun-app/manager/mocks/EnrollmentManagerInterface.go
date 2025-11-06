@@ -7,7 +7,6 @@ package mocks
 import (
 	"context"
 
-	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
 	mock "github.com/stretchr/testify/mock"
@@ -100,16 +99,16 @@ func (_c *EnrollmentManagerInterface_CancelEnrollmentAndPublish_Call) RunAndRetu
 }
 
 // EnrollCmd provides a mock function for the type EnrollmentManagerInterface
-func (_mock *EnrollmentManagerInterface) EnrollCmd(ctx context.Context, cmd fun.EnrollCmdV1, meta message.Metadata, messageID string) common.HttpError {
-	ret := _mock.Called(ctx, cmd, meta, messageID)
+func (_mock *EnrollmentManagerInterface) EnrollCmd(ctx context.Context, cmd fun.EnrollCmdV1) common.HttpError {
+	ret := _mock.Called(ctx, cmd)
 
 	if len(ret) == 0 {
 		panic("no return value specified for EnrollCmd")
 	}
 
 	var r0 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, fun.EnrollCmdV1, message.Metadata, string) common.HttpError); ok {
-		r0 = returnFunc(ctx, cmd, meta, messageID)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, fun.EnrollCmdV1) common.HttpError); ok {
+		r0 = returnFunc(ctx, cmd)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(common.HttpError)
@@ -126,13 +125,11 @@ type EnrollmentManagerInterface_EnrollCmd_Call struct {
 // EnrollCmd is a helper method to define mock.On call
 //   - ctx context.Context
 //   - cmd fun.EnrollCmdV1
-//   - meta message.Metadata
-//   - messageID string
-func (_e *EnrollmentManagerInterface_Expecter) EnrollCmd(ctx interface{}, cmd interface{}, meta interface{}, messageID interface{}) *EnrollmentManagerInterface_EnrollCmd_Call {
-	return &EnrollmentManagerInterface_EnrollCmd_Call{Call: _e.mock.On("EnrollCmd", ctx, cmd, meta, messageID)}
+func (_e *EnrollmentManagerInterface_Expecter) EnrollCmd(ctx interface{}, cmd interface{}) *EnrollmentManagerInterface_EnrollCmd_Call {
+	return &EnrollmentManagerInterface_EnrollCmd_Call{Call: _e.mock.On("EnrollCmd", ctx, cmd)}
 }
 
-func (_c *EnrollmentManagerInterface_EnrollCmd_Call) Run(run func(ctx context.Context, cmd fun.EnrollCmdV1, meta message.Metadata, messageID string)) *EnrollmentManagerInterface_EnrollCmd_Call {
+func (_c *EnrollmentManagerInterface_EnrollCmd_Call) Run(run func(ctx context.Context, cmd fun.EnrollCmdV1)) *EnrollmentManagerInterface_EnrollCmd_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -142,19 +139,9 @@ func (_c *EnrollmentManagerInterface_EnrollCmd_Call) Run(run func(ctx context.Co
 		if args[1] != nil {
 			arg1 = args[1].(fun.EnrollCmdV1)
 		}
-		var arg2 message.Metadata
-		if args[2] != nil {
-			arg2 = args[2].(message.Metadata)
-		}
-		var arg3 string
-		if args[3] != nil {
-			arg3 = args[3].(string)
-		}
 		run(
 			arg0,
 			arg1,
-			arg2,
-			arg3,
 		)
 	})
 	return _c
@@ -165,7 +152,7 @@ func (_c *EnrollmentManagerInterface_EnrollCmd_Call) Return(httpError common.Htt
 	return _c
 }
 
-func (_c *EnrollmentManagerInterface_EnrollCmd_Call) RunAndReturn(run func(ctx context.Context, cmd fun.EnrollCmdV1, meta message.Metadata, messageID string) common.HttpError) *EnrollmentManagerInterface_EnrollCmd_Call {
+func (_c *EnrollmentManagerInterface_EnrollCmd_Call) RunAndReturn(run func(ctx context.Context, cmd fun.EnrollCmdV1) common.HttpError) *EnrollmentManagerInterface_EnrollCmd_Call {
 	_c.Call.Return(run)
 	return _c
 }

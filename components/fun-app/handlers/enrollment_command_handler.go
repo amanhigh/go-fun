@@ -37,7 +37,7 @@ func (h *EnrollmentCommandHandlerImpl) EnrollCmd(msg *message.Message) error {
 	}
 
 	ctx := stampCtx(msg.Context(), msg.Metadata, cmd.EnrollmentID, msg.UUID)
-	return h.Manager.EnrollCmd(ctx, cmd, msg.Metadata, msg.UUID)
+	return h.Manager.EnrollCmd(ctx, cmd)
 }
 
 // EnrollmentConfirmedEvt persists CONFIRMED status via manager sink.

@@ -3,7 +3,6 @@ package manager
 import (
 	"context"
 
-	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	"github.com/amanhigh/go-fun/components/fun-app/publisher"
 	"github.com/amanhigh/go-fun/models/common"
@@ -27,7 +26,7 @@ import (
 type EnrollmentManagerInterface interface {
 	EnrollPerson(ctx context.Context, personID string, grade int) (fun.Enrollment, common.HttpError)
 	GetEnrollment(ctx context.Context, personID string) (fun.Enrollment, common.HttpError)
-	EnrollCmd(ctx context.Context, cmd fun.EnrollCmdV1, meta message.Metadata, messageID string) common.HttpError
+	EnrollCmd(ctx context.Context, cmd fun.EnrollCmdV1) common.HttpError
 	OnSeatReservedEvt(ctx context.Context, enrollment fun.Enrollment) common.HttpError
 	UpdateToWaitlisted(ctx context.Context, enrollment fun.Enrollment) common.HttpError
 	CancelEnrollmentAndPublish(ctx context.Context, evt fun.EnrollmentCancelledEvtV1) common.HttpError
@@ -69,7 +68,9 @@ func (em *EnrollmentManager) EnrollPerson(ctx context.Context, personID string, 
 		return fun.Enrollment{}, err
 	}
 
-	ctx = common.WithCorrelation(ctx, enrollment.ID)
+	if common.CorrelationFrom(ctx) == "" {
+		ctx = common.WithCorrelation(ctx, enrollment.ID)
+	}
 
 	if publishErr := em.EnrollmentPublisher.Enroll(ctx, *enrollment); publishErr != nil {
 		return fun.Enrollment{}, publishErr
@@ -87,12 +88,10 @@ func (em *EnrollmentManager) GetEnrollment(ctx context.Context, personID string)
 }
 
 // EnrollCmd coordinates seat allocation by delegating to SeatManager.
-func (em *EnrollmentManager) EnrollCmd(ctx context.Context, cmd fun.EnrollCmdV1, meta message.Metadata, messageID string) common.HttpError {
+func (em *EnrollmentManager) EnrollCmd(ctx context.Context, cmd fun.EnrollCmdV1) common.HttpError {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-
-	ctx = em.bindMessageContext(ctx, cmd.EnrollmentID, meta, messageID)
 
 	enrollment := fun.Enrollment{
 		ID:       cmd.EnrollmentID,
@@ -143,28 +142,6 @@ func (em *EnrollmentManager) OnEnrollmentConfirmedEvt(ctx context.Context, evt f
 func (em *EnrollmentManager) OnEnrollmentCancelledEvt(ctx context.Context, evt fun.EnrollmentCancelledEvtV1) common.HttpError {
 	_, _, err := em.updateStatusByID(ctx, evt.EnrollmentID, fun.EnrollmentStatusCancelled)
 	return err
-}
-
-func (em *EnrollmentManager) bindMessageContext(ctx context.Context, enrollmentID string, meta message.Metadata, messageID string) context.Context {
-	correlationID := enrollmentID
-	if meta != nil {
-		if corr := meta.Get(common.MetadataCorrelationIDKey); corr != "" {
-			correlationID = corr
-		}
-	}
-
-	causationID := messageID
-	if meta != nil {
-		if causation := meta.Get(common.MetadataCausationIDKey); causation != "" {
-			causationID = causation
-		}
-	}
-
-	ctx = common.WithCorrelation(ctx, correlationID)
-	if causationID != "" {
-		ctx = common.WithCausation(ctx, causationID)
-	}
-	return ctx
 }
 
 func (em *EnrollmentManager) updateStatusByID(ctx context.Context, enrollmentID, status string) (fun.Enrollment, bool, common.HttpError) {
