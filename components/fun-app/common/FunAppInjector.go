@@ -11,9 +11,7 @@ import (
 
 	"github.com/amanhigh/go-fun/common/telemetry"
 	"github.com/amanhigh/go-fun/common/util"
-	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	"github.com/amanhigh/go-fun/components/fun-app/handlers"
-	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	"github.com/amanhigh/go-fun/components/fun-app/publisher"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/fun"
@@ -103,14 +101,14 @@ func (fi *FunAppInjector) registerMetrics() {
 
 func (fi *FunAppInjector) registerComponents() {
 	container.MustSingleton(fi.di, util.NewBaseDao)
-	container.MustSingleton(fi.di, dao.NewPersonDao)
-	container.MustSingleton(fi.di, dao.NewEnrollmentDao)
+	container.MustSingleton(fi.di, ProvidePersonDao)
+	container.MustSingleton(fi.di, ProvideEnrollmentDao)
 	container.MustSingleton(fi.di, publisher.NewBasePublisher)
 	container.MustSingleton(fi.di, publisher.NewSeatAllocationPublisher)
 	container.MustSingleton(fi.di, publisher.NewEnrollmentPublisher)
-	container.MustSingleton(fi.di, manager.NewPersonManager)
-	container.MustSingleton(fi.di, manager.NewSeatManager)
-	container.MustSingleton(fi.di, manager.NewEnrollmentManager)
+	container.MustSingleton(fi.di, ProvidePersonManager)
+	container.MustSingleton(fi.di, ProvideSeatManager)
+	container.MustSingleton(fi.di, ProvideEnrollmentManager)
 }
 
 func (fi *FunAppInjector) registerMessaging() {

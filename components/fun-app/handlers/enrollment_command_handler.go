@@ -22,10 +22,12 @@ type EnrollmentCommandHandlerImpl struct {
 	Manager manager.EnrollmentManagerInterface
 }
 
-// NewEnrollmentCommandHandler constructs handler with explicit manager dependency and returns interface.
-func NewEnrollmentCommandHandler(manager manager.EnrollmentManagerInterface) EnrollmentCommandHandler {
+// NewEnrollmentCommandHandler constructs handler with explicit manager dependency.
+func NewEnrollmentCommandHandler(manager manager.EnrollmentManagerInterface) *EnrollmentCommandHandlerImpl {
 	return &EnrollmentCommandHandlerImpl{Manager: manager}
 }
+
+var _ EnrollmentCommandHandler = (*EnrollmentCommandHandlerImpl)(nil)
 
 // EnrollCmd forwards EnrollCmdV1 to EnrollmentManager; it delegates to SeatManager internally.
 func (h *EnrollmentCommandHandlerImpl) EnrollCmd(msg *message.Message) error {

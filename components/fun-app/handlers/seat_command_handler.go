@@ -23,10 +23,12 @@ type SeatCommandHandlerImpl struct {
 	EnrollmentManager manager.EnrollmentManagerInterface
 }
 
-// NewSeatCommandHandler constructs handler with explicit dependencies and returns interface.
-func NewSeatCommandHandler(seatManager manager.SeatManagerInterface, enrollmentManager manager.EnrollmentManagerInterface) SeatCommandHandler {
+// NewSeatCommandHandler constructs handler with explicit dependencies.
+func NewSeatCommandHandler(seatManager manager.SeatManagerInterface, enrollmentManager manager.EnrollmentManagerInterface) *SeatCommandHandlerImpl {
 	return &SeatCommandHandlerImpl{SeatManager: seatManager, EnrollmentManager: enrollmentManager}
 }
+
+var _ SeatCommandHandler = (*SeatCommandHandlerImpl)(nil)
 
 func (h *SeatCommandHandlerImpl) AllocateSeatCmd(msg *message.Message) error {
 	var cmd fun.AllocateSeatCmdV1

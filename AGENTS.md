@@ -7,6 +7,7 @@ This file contains guidelines for coding, testing, and examples on coding style 
 ### Interfaces and Implementations
 - Include constructor for each class in the same file with interface and class.
   - Example: FileManager (Interface), FileManagerImpl (Class), NewFileManager (*FileManagerImpl) (Constructor) - Return Pointer
+  - Add `var _ InterfaceName = (*Impl)(nil)` compile-time assertions after constructors to guarantee interface compliance.
 
 ### Parameters and Dependencies
 - Parameters to New (Constructor) and Provider (Injector) methods should be interfaces, not pointers.

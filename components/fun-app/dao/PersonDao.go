@@ -22,7 +22,9 @@ type PersonDao struct {
 	util.BaseDao
 }
 
-func NewPersonDao(baseDao util.BaseDao) PersonDaoInterface {
+var _ PersonDaoInterface = (*PersonDao)(nil)
+
+func NewPersonDao(baseDao util.BaseDao) *PersonDao {
 	return &PersonDao{BaseDao: baseDao}
 }
 
@@ -55,8 +57,7 @@ func (pd *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) 
 
 func (pd *PersonDao) ListPersonAudit(c context.Context, id string) (personAuditList []fun.PersonAudit, err common.HttpError) {
 	var txErr error
-	var audit = fun.PersonAudit{}
-	audit.Id = id
+	audit := fun.PersonAudit{Id: id}
 
 	// Fetch Person Audit Records
 	if txErr = util.Tx(c).Where(audit).Find(&personAuditList).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {

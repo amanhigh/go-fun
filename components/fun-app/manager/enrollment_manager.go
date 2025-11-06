@@ -47,7 +47,7 @@ func NewEnrollmentManager(
 	enrollmentDao dao.EnrollmentDaoInterface,
 	enrollmentPublisher publisher.EnrollmentPublisher,
 	seatManager SeatManagerInterface,
-) EnrollmentManagerInterface {
+) *EnrollmentManager {
 	return &EnrollmentManager{
 		PersonManager:       personManager,
 		EnrollmentDao:       enrollmentDao,
@@ -55,6 +55,8 @@ func NewEnrollmentManager(
 		SeatManager:         seatManager,
 	}
 }
+
+var _ EnrollmentManagerInterface = (*EnrollmentManager)(nil)
 
 func (em *EnrollmentManager) EnrollPerson(ctx context.Context, personID string, grade int) (fun.Enrollment, common.HttpError) {
 	person, err := em.retrievePerson(ctx, personID)

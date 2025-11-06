@@ -27,11 +27,13 @@ const (
 )
 
 // NewSeatManager constructs a seat-only manager that publishes seat events.
-func NewSeatManager(seatPublisher publisher.SeatAllocationPublisher) SeatManagerInterface {
+func NewSeatManager(seatPublisher publisher.SeatAllocationPublisher) *SeatManager {
 	return &SeatManager{
 		SeatPublisher: seatPublisher,
 	}
 }
+
+var _ SeatManagerInterface = (*SeatManager)(nil)
 
 // PublishAllocateSeat emits the AllocateSeat command for async processing.
 func (sm *SeatManager) PublishAllocateSeat(ctx context.Context, enrollment fun.Enrollment) common.HttpError {

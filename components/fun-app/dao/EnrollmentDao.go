@@ -17,7 +17,9 @@ type EnrollmentDao struct {
 	util.BaseDao
 }
 
-func NewEnrollmentDao(baseDao util.BaseDao) EnrollmentDaoInterface {
+var _ EnrollmentDaoInterface = (*EnrollmentDao)(nil)
+
+func NewEnrollmentDao(baseDao util.BaseDao) *EnrollmentDao {
 	return &EnrollmentDao{BaseDao: baseDao}
 }
 
