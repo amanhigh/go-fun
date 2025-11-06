@@ -22,6 +22,12 @@
 # Switch ENV - Ctrl + OPT + E
 @limit={{$randomInt 2 5}}
 
+### Tips
+# * Right Click to Copy as Curl or Generate Script
+# RandomInt, Timestamp, GUID Available for Generation.
+# Hover on Variable to see it's value.
+
+
 ### List 
 
 GET http://{{host}}:{{port}}/{{version}}/person?offset=0&limit={{limit}}&sort_by=name&order=asc
