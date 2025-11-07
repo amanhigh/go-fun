@@ -63,7 +63,7 @@ var _ = Describe("EnrollmentManager", func() {
 			seatMgr.EXPECT().PublishAllocateSeat(ctxMatcher, enrMatcher).Return(nil)
 
 			err := em.EnrollCmd(ctx, cmd)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("works with nil context (uses non-nil ctx, no stamps)", func() {
@@ -77,14 +77,14 @@ var _ = Describe("EnrollmentManager", func() {
 
 			var nilCtx context.Context
 			err := em.EnrollCmd(nilCtx, cmd)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("propagates SeatManager error", func() {
 			ctx = common.WithCausation(common.WithCorrelation(context.Background(), "corr-err"), "cause-err")
 			expected := common.NewHttpError("seat-fail", 500)
 
-			ctxMatcher := mock.MatchedBy(func(c context.Context) bool { return true })
+			ctxMatcher := mock.MatchedBy(func(_ context.Context) bool { return true })
 			enrMatcher := mock.MatchedBy(func(e fun.Enrollment) bool { return e.ID == cmd.EnrollmentID })
 			seatMgr.EXPECT().PublishAllocateSeat(ctxMatcher, enrMatcher).Return(expected)
 

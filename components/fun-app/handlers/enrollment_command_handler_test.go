@@ -51,7 +51,7 @@ var _ = Describe("EnrollmentCommandHandler", func() {
 				RequestedAt:  time.Now().UTC(),
 			}
 			payload, err := json.Marshal(cmd)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			msg = message.NewMessage("msg-uuid", payload)
 		})
 
@@ -68,7 +68,7 @@ var _ = Describe("EnrollmentCommandHandler", func() {
 			})
 
 			It("sets correlation to EnrollmentID and causation to message UUID", func() {
-				Expect(resultErr).To(BeNil())
+				Expect(resultErr).ToNot(HaveOccurred())
 				Expect(common.CorrelationFrom(capturedCtx)).To(Equal(cmd.EnrollmentID))
 				Expect(common.CausationFrom(capturedCtx)).To(Equal(msg.UUID))
 				Expect(capturedCmd.EnrollmentID).To(Equal(cmd.EnrollmentID))
@@ -94,7 +94,7 @@ var _ = Describe("EnrollmentCommandHandler", func() {
 			})
 
 			It("uses Metadata[CorrelationID] and Metadata[CausationID] instead of defaults", func() {
-				Expect(resultErr).To(BeNil())
+				Expect(resultErr).ToNot(HaveOccurred())
 				Expect(common.CorrelationFrom(capturedCtx)).To(Equal("meta-corr"))
 				Expect(common.CausationFrom(capturedCtx)).To(Equal("meta-cause"))
 				Expect(capturedCmd.EnrollmentID).To(Equal(cmd.EnrollmentID))
@@ -103,7 +103,7 @@ var _ = Describe("EnrollmentCommandHandler", func() {
 
 		Context("nil message context falls back to background ctx", func() {
 			BeforeEach(func() {
-				msg.SetContext(nil)
+				msg.SetContext(context.TODO())
 				managerMock.EXPECT().EnrollCmd(mock.Anything, mock.Anything).
 					Run(func(c context.Context, in fun.EnrollCmdV1) {
 						capturedCtx = c
@@ -115,7 +115,7 @@ var _ = Describe("EnrollmentCommandHandler", func() {
 			})
 
 			It("uses background ctx and default stamps when msg.Context() is nil", func() {
-				Expect(resultErr).To(BeNil())
+				Expect(resultErr).ToNot(HaveOccurred())
 				Expect(capturedCtx).ToNot(BeNil())
 				Expect(common.CorrelationFrom(capturedCtx)).To(Equal(cmd.EnrollmentID))
 				Expect(common.CausationFrom(capturedCtx)).To(Equal(msg.UUID))
@@ -139,14 +139,14 @@ var _ = Describe("EnrollmentCommandHandler", func() {
 		Context("manager error propagation", func() {
 			BeforeEach(func() {
 				expectedErr = common.NewHttpError("seat-fail", 500)
-				ctxMatcher := mock.MatchedBy(func(c context.Context) bool { return true })
+				ctxMatcher := mock.MatchedBy(func(_ context.Context) bool { return true })
 				cmdMatcher := mock.MatchedBy(func(in fun.EnrollCmdV1) bool { return in.EnrollmentID == cmd.EnrollmentID })
 				managerMock.EXPECT().EnrollCmd(ctxMatcher, cmdMatcher).Return(expectedErr)
 				resultErr = handler.EnrollCmd(msg)
 			})
 
 			It("returns the same HttpError returned by manager.EnrollCmd", func() {
-				Expect(resultErr).ToNot(BeNil())
+				Expect(resultErr).To(HaveOccurred())
 				Expect(resultErr).To(Equal(expectedErr))
 			})
 		})

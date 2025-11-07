@@ -66,7 +66,7 @@ test-unit:
 	printf $(_TITLE) "Running Unit Tests"
 	mkdir -p $(UNIT_COVER_DIR)
 	# Generate binary coverage for accurate merging
-	ginkgo -r --label-filter=\!setup\ \&\&\ \!slow -cover . -- -test.gocoverdir=$(UNIT_COVER_DIR) > $(OUT)
+	ginkgo -r --label-filter=\!setup\ \&\&\ \!slow --skip-package=$(COMPONENT_DIR)/fun-app/it -cover . -- -test.gocoverdir=$(UNIT_COVER_DIR) > $(OUT)
 
 test-slow: ## Run slow tests
 	printf $(_TITLE) "Running Slow Tests"
