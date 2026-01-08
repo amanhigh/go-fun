@@ -89,8 +89,8 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 }
 
 // ---- Client Providers ----
-func (ki *KohanInjector) provideAlphaClient(client *resty.Client) clients.AlphaClient {
-	return clients.NewAlphaClient(client, ki.config.Tax.AlphaBaseURL, ki.config.Tax.AlphaAPIKey)
+func (ki *KohanInjector) provideYahooClient(client *resty.Client) clients.StockDataClient {
+	return clients.NewYahooClient(client)
 }
 
 func (ki *KohanInjector) provideSBIClient(client *resty.Client) clients.SBIClient {
@@ -123,7 +123,7 @@ func (ki *KohanInjector) provideTradeRepository() repository.TradeRepository {
 }
 
 // ---- Manager Providers ----
-func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) manager.TickerManager {
+func (ki *KohanInjector) provideTickerManager(client clients.StockDataClient) manager.TickerManager {
 	return manager.NewTickerManager(client, ki.config.Tax.TickerCacheDir)
 }
 
@@ -252,8 +252,8 @@ func (ki *KohanInjector) registerClients() {
 	var client *resty.Client
 	container.MustResolve(ki.di, &client)
 
-	container.MustSingleton(ki.di, func() clients.AlphaClient {
-		return ki.provideAlphaClient(client)
+	container.MustSingleton(ki.di, func() clients.StockDataClient {
+		return ki.provideYahooClient(client)
 	})
 	container.MustSingleton(ki.di, func() clients.SBIClient {
 		return ki.provideSBIClient(client)
