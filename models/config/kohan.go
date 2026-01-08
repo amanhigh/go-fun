@@ -33,6 +33,9 @@ type TaxConfig struct {
 	// SBI Configuration
 	SBIBaseURL string `env:"SBI_BASE_URL" envDefault:"https://raw.githubusercontent.com/sahilgupta/sbi-fx-ratekeeper/main/csv_files/SBI_REFERENCE_RATES_USD.csv"`
 
+	// Yahoo Finance Configuration
+	YahooBaseURL string `env:"YAHOO_BASE_URL" envDefault:"https://query1.finance.yahoo.com"`
+
 	// File System Configuration
 	// TaxDir is the base directory for all tax-related files and subdirectories
 	TaxDir string `env:"TAX_DIR" envDefault:"~/Downloads/FACompute"`

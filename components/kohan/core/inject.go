@@ -90,7 +90,7 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 
 // ---- Client Providers ----
 func (ki *KohanInjector) provideYahooClient(client *resty.Client) clients.StockDataClient {
-	return clients.NewYahooClient(client)
+	return clients.NewYahooClient(client, ki.config.Tax.YahooBaseURL)
 }
 
 func (ki *KohanInjector) provideSBIClient(client *resty.Client) clients.SBIClient {
