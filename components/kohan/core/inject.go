@@ -277,11 +277,11 @@ func (ki *KohanInjector) registerCoreManagers() {
 	container.MustSingleton(ki.di, ki.provideExchangeManager)
 	container.MustSingleton(ki.di, ki.provideAccountManager)
 
-	// Register TickerManager (depends on AlphaClient)
-	var alphaClient clients.AlphaClient
-	container.MustResolve(ki.di, &alphaClient)
+	// Register TickerManager (depends on StockDataClient)
+	var stockDataClient clients.StockDataClient
+	container.MustResolve(ki.di, &stockDataClient)
 	container.MustSingleton(ki.di, func() manager.TickerManager {
-		return ki.provideTickerManager(alphaClient)
+		return ki.provideTickerManager(stockDataClient)
 	})
 
 	// Register managers that depend on TickerManager and/or AccountManager/TradeRepository
