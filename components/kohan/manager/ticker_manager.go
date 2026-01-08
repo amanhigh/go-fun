@@ -26,17 +26,17 @@ type TickerManager interface {
 }
 
 type TickerManagerImpl struct {
-	client    clients.AlphaClient
+	client    clients.StockDataClient
 	downloads string
-	cache     map[string]tax.VantageStockData
+	cache     map[string]tax.StockData
 	cacheLock sync.RWMutex
 }
 
-func NewTickerManager(client clients.AlphaClient, downloads string) *TickerManagerImpl {
+func NewTickerManager(client clients.StockDataClient, downloads string) *TickerManagerImpl {
 	return &TickerManagerImpl{
 		client:    client,
 		downloads: downloads,
-		cache:     make(map[string]tax.VantageStockData),
+		cache:     make(map[string]tax.StockData),
 	}
 }
 
@@ -50,19 +50,13 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 		return nil
 	}
 
-	// Validate API key before attempting download
-	if err = t.client.ValidateAPIKey(); err != nil {
-		log.Error().Str("Ticker", ticker).Err(err).Msg("API key validation failed")
-		return err
-	}
-
 	// Create directory if it doesn't exist
 	if err1 := os.MkdirAll(t.downloads, util.DIR_DEFAULT_PERM); err1 != nil {
 		return common.NewServerError(err1)
 	}
 
 	// Fetch data using AlphaClient
-	var data tax.VantageStockData
+	var data tax.StockData
 	if data, err = t.client.FetchDailyPrices(ctx, ticker); err != nil {
 		return err
 	}
@@ -87,7 +81,7 @@ func (t *TickerManagerImpl) FindPeakPrice(_ context.Context, ticker string, year
 	}
 
 	yearStr := strconv.Itoa(year)
-	return t.analyzeTimeSeries(stockData.TimeSeries, ticker, yearStr), nil
+	return t.analyzePrices(stockData.Prices, ticker, yearStr), nil
 }
 
 func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date time.Time) (float64, common.HttpError) {
@@ -101,10 +95,8 @@ func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date ti
 	dateStr := date.Format(time.DateOnly)
 
 	// Try exact date match first
-	if dayPrice, exists := data.TimeSeries[dateStr]; exists {
-		if price, err := strconv.ParseFloat(dayPrice.Close, 64); err == nil {
-			return price, nil
-		}
+	if closePrice, exists := data.Prices[dateStr]; exists {
+		return closePrice, nil
 	}
 
 	// Find closest previous date if exact not found
@@ -116,31 +108,29 @@ func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date ti
 	return 0, common.NewHttpError("No price data found", http.StatusNotFound)
 }
 
-func (t *TickerManagerImpl) findClosestPreviousPrice(ticker string, data tax.VantageStockData, dateStr string) (float64, common.HttpError) {
+func (t *TickerManagerImpl) findClosestPreviousPrice(ticker string, data tax.StockData, dateStr string) (float64, common.HttpError) {
 	var closestDate string
-	for tsDate := range data.TimeSeries {
-		if tsDate <= dateStr && (closestDate == "" || tsDate > closestDate) {
-			closestDate = tsDate
+	for priceDate := range data.Prices {
+		if priceDate <= dateStr && (closestDate == "" || priceDate > closestDate) {
+			closestDate = priceDate
 		}
 	}
 
 	if closestDate != "" {
-		if dayPrice, exists := data.TimeSeries[closestDate]; exists {
-			if price, err := strconv.ParseFloat(dayPrice.Close, 64); err == nil {
-				log.Debug().
-					Str("Ticker", ticker).
-					Str("RequestedDate", dateStr).
-					Str("ClosestDate", closestDate).
-					Float64("Price", price).
-					Msg("Using closest previous date price")
-				return price, nil
-			}
+		if closePrice, exists := data.Prices[closestDate]; exists {
+			log.Debug().
+				Str("Ticker", ticker).
+				Str("RequestedDate", dateStr).
+				Str("ClosestDate", closestDate).
+				Float64("Price", closePrice).
+				Msg("Using closest previous date price")
+			return closePrice, nil
 		}
 	}
 	return 0, common.NewHttpError("No price data found", http.StatusNotFound)
 }
 
-func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (data tax.VantageStockData, err common.HttpError) {
+func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (data tax.StockData, err common.HttpError) {
 	// Try cache first
 	t.cacheLock.RLock()
 	data, exists := t.cache[ticker]
@@ -165,7 +155,7 @@ func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (d
 
 // loadOrDownloadTickerData attempts to load ticker data from file,
 // and auto-downloads if file is missing
-func (t *TickerManagerImpl) loadOrDownloadTickerData(ctx context.Context, ticker string) (tax.VantageStockData, common.HttpError) {
+func (t *TickerManagerImpl) loadOrDownloadTickerData(ctx context.Context, ticker string) (tax.StockData, common.HttpError) {
 	// Try loading from file first
 	data, err := t.readTickerData(ticker)
 	if err == nil {
@@ -190,8 +180,8 @@ func (t *TickerManagerImpl) loadOrDownloadTickerData(ctx context.Context, ticker
 	return data, nil
 }
 
-func (t *TickerManagerImpl) readTickerData(ticker string) (tax.VantageStockData, common.HttpError) {
-	var stockData tax.VantageStockData
+func (t *TickerManagerImpl) readTickerData(ticker string) (tax.StockData, common.HttpError) {
+	var stockData tax.StockData
 
 	filePath := filepath.Join(t.downloads, fmt.Sprintf("%s.json", ticker))
 	data, readErr := os.ReadFile(filePath)
@@ -207,17 +197,12 @@ func (t *TickerManagerImpl) readTickerData(ticker string) (tax.VantageStockData,
 	return stockData, nil
 }
 
-func (t *TickerManagerImpl) analyzeTimeSeries(timeSeries map[string]tax.DayPrice, ticker, yearStr string) tax.PeakPrice {
+func (t *TickerManagerImpl) analyzePrices(prices map[string]float64, ticker, yearStr string) tax.PeakPrice {
 	var highestClose float64
 	var highestDate string
 
-	for date, values := range timeSeries {
+	for date, closePrice := range prices {
 		if !strings.HasPrefix(date, yearStr) {
-			continue
-		}
-		// Parse close price
-		closePrice, parseErr := strconv.ParseFloat(values.Close, 64)
-		if parseErr != nil {
 			continue
 		}
 		// Track highest close
