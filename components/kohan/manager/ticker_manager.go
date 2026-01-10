@@ -19,9 +19,18 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// TickerManager manages ticker data lifecycle - download, cache, and price lookup.
 type TickerManager interface {
+	// DownloadTicker fetches ticker data from YahooClient and saves to file.
 	DownloadTicker(ctx context.Context, ticker string) (err common.HttpError)
+
+	// FindPeakPrice finds highest close price for a year from pre-downloaded ticker data.
+	// Requires file to exist - call DownloadTicker(ctx, ticker) first if needed.
+	// No caching or auto-download (unlike GetPrice which has both).
 	FindPeakPrice(ctx context.Context, ticker string, year int) (tax.PeakPrice, common.HttpError)
+
+	// GetPrice returns closing price for a date. Uses in-memory cache and auto-downloads if file missing.
+	// Best for repeated calls on same ticker (valuation calculations).
 	GetPrice(ctx context.Context, ticker string, date time.Time) (float64, common.HttpError)
 }
 

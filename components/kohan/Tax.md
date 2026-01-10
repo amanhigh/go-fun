@@ -148,9 +148,9 @@ This component is crucial for reporting in **Schedule FA (Foreign Assets)** of t
 The system operates by:
 
 1.  **Data Ingestion:**
-    *   Reading user-provided CSV files containing brokerage transactions (buys/sells), dividend records, interest records, and potentially prior year-end account balances. (Example: `trades.csv`, `dividends.csv`, `interest.csv`, `accounts.csv`).
-    *   Fetching historical daily stock prices for relevant U.S. tickers from external financial data providers (e.g., Alpha Vantage). This data is typically cached locally to optimize performance and reduce API calls (e.g., in `~/Downloads/Tickers/`).
-    *   Loading historical USD-INR exchange rates, specifically SBI TT Buy rates, from a local data store (e.g., `sbi_rates.csv`). This file may need to be periodically updated.
+     *   Reading user-provided CSV files containing brokerage transactions (buys/sells), dividend records, interest records, and potentially prior year-end account balances. (Example: `trades.csv`, `dividends.csv`, `interest.csv`, `accounts.csv`).
+     *   Fetching historical daily stock prices for relevant U.S. tickers from external financial data providers (e.g., Yahoo Finance). This data is typically cached locally to optimize performance and reduce API calls (e.g., in `~/Downloads/Tickers/`).
+     *   Loading historical USD-INR exchange rates, specifically SBI TT Buy rates, from a local data store (e.g., `sbi_rates.csv`). This file may need to be periodically updated.
 
 2.  **Data Processing and Calculation (by various managers within the Kohan component):**
     *   **Trade Processing:** Analyzing buy and sell transactions to determine quantities held, holding periods, and USD P&L for capital gains.
