@@ -31,13 +31,19 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 
 		kohanConfig = config.KohanConfig{
 			Tax: config.TaxConfig{
-				TaxDir:           testDataBasePath,
-				TickerCacheDir:   testDataBasePath, // Flat structure: ticker files at root
-				TradesPath:       filepath.Join(testDataBasePath, tax.TRADES_FILENAME),
-				DividendFilePath: filepath.Join(testDataBasePath, tax.DIVIDENDS_FILENAME),
-				TTRateFilePath:   filepath.Join(testDataBasePath, tax.SBI_RATES_FILENAME), // Flat structure: sbi_rates.csv at root
-				GainsFilePath:    filepath.Join(testDataBasePath, tax.GAINS_FILENAME),
-				InterestFilePath: filepath.Join(testDataBasePath, tax.INTEREST_FILENAME),
+				TaxDir: testDataBasePath,
+				// Layer 1: Input - Parsed transaction data
+				TradesPath:       filepath.Join(testDataBasePath, "Input", "Parsed", tax.TRADES_FILENAME),
+				DividendFilePath: filepath.Join(testDataBasePath, "Input", "Parsed", tax.DIVIDENDS_FILENAME),
+				InterestFilePath: filepath.Join(testDataBasePath, "Input", "Parsed", tax.INTEREST_FILENAME),
+				// Layer 2: Data - Reference data (tickers, exchange rates)
+				TickerCacheDir: filepath.Join(testDataBasePath, "Data", "Tickers"),
+				TTRateFilePath: filepath.Join(testDataBasePath, "Data", "Reference", tax.SBI_RATES_FILENAME),
+				// Layer 3: Output - Computed and generated results
+				GainsFilePath: filepath.Join(testDataBasePath, "Output", "Computed", tax.GAINS_FILENAME),
+				AccountsDir:   filepath.Join(testDataBasePath, "Output", "YearEndBalance"),
+				ReportsDir:    filepath.Join(testDataBasePath, "Output", "Reports"),
+				ComputedDir:   filepath.Join(testDataBasePath, "Output", "Computed"),
 			},
 		}
 
@@ -259,6 +265,8 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 
 	Context("Excel File Generation", func() {
 		It("should generate a valid Excel file with the correct sheets", func() {
+			// NOTE: Output files (Layer 3) are cleaned up after each test for isolation.
+			// This ensures tests are independent and don't accumulate state.
 			// Get the tax summary
 			summary, err := taxManager.GetTaxSummary(ctx, testYear)
 			Expect(err).ToNot(HaveOccurred())
@@ -267,8 +275,9 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			saveErr := taxManager.SaveTaxSummaryToExcel(ctx, testYear, summary)
 			Expect(saveErr).ToNot(HaveOccurred())
 
-			// Verify that the file was created
-			filePath := filepath.Join(kohanConfig.Tax.TaxDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
+			// Verify that the file was created in Output/Reports/
+			filePath := filepath.Join(kohanConfig.Tax.ReportsDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
+			defer os.Remove(filePath) // Clean up test artifact
 			Expect(filePath).Should(BeARegularFile())
 
 			// Open the generated file to verify its integrity and sheets
@@ -292,7 +301,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Define the expected path for the generated CSV
-			expectedCsvPath := filepath.Join(kohanConfig.Tax.TaxDir, "accounts_2023.csv")
+			expectedCsvPath := filepath.Join(kohanConfig.Tax.AccountsDir, "accounts_2023.csv")
 			defer os.Remove(expectedCsvPath)
 
 			// Verify that the file was created

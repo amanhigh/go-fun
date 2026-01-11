@@ -40,6 +40,11 @@ func (r *AccountRepositoryImpl) GetAllRecordsForYear(ctx context.Context, year i
 }
 
 func (r *AccountRepositoryImpl) SaveYearEndAccounts(_ context.Context, year int, accounts []tax.Account) common.HttpError {
+	// Ensure the output directory exists
+	if err := os.MkdirAll(r.accountDir, os.ModePerm); err != nil {
+		return common.NewServerError(fmt.Errorf("failed to create year-end accounts directory: %w", err))
+	}
+
 	fileName := fmt.Sprintf("accounts_%d.csv", year)
 	filePath := filepath.Join(r.accountDir, fileName)
 
