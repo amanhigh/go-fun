@@ -32,10 +32,10 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		kohanConfig = config.KohanConfig{
 			Tax: config.TaxConfig{
 				TaxDir:           testDataBasePath,
-				TickerCacheDir:   testDataBasePath,
+				TickerCacheDir:   filepath.Join(testDataBasePath, "Data", "Tickers"),
 				TradesPath:       filepath.Join(testDataBasePath, tax.TRADES_FILENAME),
 				DividendFilePath: filepath.Join(testDataBasePath, tax.DIVIDENDS_FILENAME),
-				TTRateFilePath:   filepath.Join(testDataBasePath, tax.SBI_RATES_FILENAME),
+				TTRateFilePath:   filepath.Join(testDataBasePath, "Data", "Reference", tax.SBI_RATES_FILENAME),
 				GainsFilePath:    filepath.Join(testDataBasePath, tax.GAINS_FILENAME),
 				InterestFilePath: filepath.Join(testDataBasePath, tax.INTEREST_FILENAME),
 			},

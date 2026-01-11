@@ -15,14 +15,24 @@ rm -f $FA_COMPUTE_DIR/sbi_rates.csv
 
 if [ ! -d "$FA_COMPUTE_DIR" ]; then
     echo "Creating directory and copying test data to $FA_COMPUTE_DIR..."
-    mkdir -p "$FA_COMPUTE_DIR/Tickers"
+    mkdir -p "$FA_COMPUTE_DIR/Data/Tickers"
+    mkdir -p "$FA_COMPUTE_DIR/Data/Reference"
+    
     cp "$TEST_DATA_DIR/trades.csv" "$FA_COMPUTE_DIR/"
     cp "$TEST_DATA_DIR/dividends.csv" "$FA_COMPUTE_DIR/"
     cp "$TEST_DATA_DIR/interest.csv" "$FA_COMPUTE_DIR/"
     cp "$TEST_DATA_DIR/gains.csv" "$FA_COMPUTE_DIR/"
     
-    cp "$TEST_DATA_DIR/accounts.csv" "$FA_COMPUTE_DIR/"
-    cp "$TEST_DATA_DIR/AAPL.json" "$FA_COMPUTE_DIR/Tickers/"
+    cp "$TEST_DATA_DIR/accounts_2023.csv" "$FA_COMPUTE_DIR/"
+    
+    # Copy ticker files from Data/Tickers
+    cp "$TEST_DATA_DIR/Data/Tickers/AAPL.json" "$FA_COMPUTE_DIR/Data/Tickers/"
+    cp "$TEST_DATA_DIR/Data/Tickers/MSFT.json" "$FA_COMPUTE_DIR/Data/Tickers/"
+    cp "$TEST_DATA_DIR/Data/Tickers/VWO.json" "$FA_COMPUTE_DIR/Data/Tickers/"
+    cp "$TEST_DATA_DIR/Data/Tickers/IEF.json" "$FA_COMPUTE_DIR/Data/Tickers/"
+    
+    # Copy reference data from Data/Reference
+    cp "$TEST_DATA_DIR/Data/Reference/sbi_rates.csv" "$FA_COMPUTE_DIR/Data/Reference/"
     
     # Add NVDA ticker to trades.csv for auto-download testing
     echo "NVDA,2024-06-15,BUY,25,300.00,7500.00,2.50" >> "$FA_COMPUTE_DIR/trades.csv"
@@ -30,6 +40,20 @@ else
     echo "Directory $FA_COMPUTE_DIR already exists, updating test data..."
     # Ensure we have the base trades.csv and add NVDA ticker for auto-download testing
     cp "$TEST_DATA_DIR/trades.csv" "$FA_COMPUTE_DIR/"
+    
+    # Ensure Data directories exist
+    mkdir -p "$FA_COMPUTE_DIR/Data/Tickers"
+    mkdir -p "$FA_COMPUTE_DIR/Data/Reference"
+    
+    # Copy ticker files from Data/Tickers
+    cp "$TEST_DATA_DIR/Data/Tickers/AAPL.json" "$FA_COMPUTE_DIR/Data/Tickers/"
+    cp "$TEST_DATA_DIR/Data/Tickers/MSFT.json" "$FA_COMPUTE_DIR/Data/Tickers/"
+    cp "$TEST_DATA_DIR/Data/Tickers/VWO.json" "$FA_COMPUTE_DIR/Data/Tickers/"
+    cp "$TEST_DATA_DIR/Data/Tickers/IEF.json" "$FA_COMPUTE_DIR/Data/Tickers/"
+    
+    # Copy reference data from Data/Reference
+    cp "$TEST_DATA_DIR/Data/Reference/sbi_rates.csv" "$FA_COMPUTE_DIR/Data/Reference/"
+    
     if ! grep -q "NVDA" "$FA_COMPUTE_DIR/trades.csv"; then
         echo "NVDA,2024-06-15,BUY,25,300.00,7500.00,2.50" >> "$FA_COMPUTE_DIR/trades.csv"
     fi
@@ -47,12 +71,12 @@ echo "Executing 'go run ./components/kohan apps tax 2024' from $PROJECT_ROOT..."
 
 # 6. Verify ticker auto-download functionality
 echo "--- Verifying Ticker Auto-Download ---"
-if [ -f "$FA_COMPUTE_DIR/Tickers/NVDA.json" ]; then
+if [ -f "$FA_COMPUTE_DIR/Data/Tickers/NVDA.json" ]; then
     echo "✅ SUCCESS: NVDA.json was auto-downloaded"
-    echo "File size: $(wc -c < "$FA_COMPUTE_DIR/Tickers/NVDA.json") bytes"
+    echo "File size: $(wc -c < "$FA_COMPUTE_DIR/Data/Tickers/NVDA.json") bytes"
 else
     echo "❌ FAILURE: NVDA.json was NOT auto-downloaded"
-    echo "Available tickers: $(ls -la "$FA_COMPUTE_DIR/Tickers/" || echo "No ticker directory")"
+    echo "Available tickers: $(ls -la "$FA_COMPUTE_DIR/Data/Tickers/" || echo "No ticker directory")"
     exit 1
 fi
 echo "-----------------------------------"
@@ -90,8 +114,8 @@ fi
 
 # 8. Cleanup auto-downloaded files for clean test environment
 echo "--- Cleaning up auto-downloaded files ---"
-if [ -f "$FA_COMPUTE_DIR/Tickers/NVDA.json" ]; then
-    rm -f "$FA_COMPUTE_DIR/Tickers/NVDA.json"
+if [ -f "$FA_COMPUTE_DIR/Data/Tickers/NVDA.json" ]; then
+    rm -f "$FA_COMPUTE_DIR/Data/Tickers/NVDA.json"
     echo "✅ Cleaned up NVDA.json"
 else
     echo "ℹ️  No NVDA.json to clean up"
