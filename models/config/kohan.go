@@ -58,9 +58,11 @@ type TaxConfig struct {
 	// Output/Computed/ contains gains.csv from capital gains calculation
 	GainsFilePath string `env:"FA_GAINS_FILE_PATH" envDefault:"~/Downloads/FACompute/Output/Computed/gains.csv"`
 	// Output/YearEndBalance/ contains accounts_YYYY.csv computed at year-end
-	// Constructed dynamically: TaxDir + "/Output/YearEndBalance/accounts_" + year + ".csv"
+	AccountsDir string `env:"ACCOUNTS_DIR" envDefault:"~/Downloads/FACompute/Output/YearEndBalance"`
 	// Output/Reports/ contains tax_summary_YYYY.xlsx generated for ITR filing
-	// Constructed dynamically: TaxDir + "/Output/Reports/tax_summary_" + year + ".xlsx"
+	ReportsDir string `env:"REPORTS_DIR" envDefault:"~/Downloads/FACompute/Output/Reports"`
+	// ComputedDir stores gains.csv and other computed results
+	ComputedDir string `env:"COMPUTED_DIR" envDefault:"~/Downloads/FACompute/Output/Computed"`
 }
 
 func NewKohanConfig() (config KohanConfig, err error) {
@@ -85,6 +87,9 @@ func NewKohanConfig() (config KohanConfig, err error) {
 	config.Tax.GainsFilePath = strings.Replace(config.Tax.GainsFilePath, "~", homeDir, 1)
 	config.Tax.InterestFilePath = strings.Replace(config.Tax.InterestFilePath, "~", homeDir, 1)
 	config.Tax.DriveWealthPath = strings.Replace(config.Tax.DriveWealthPath, "~", homeDir, 1)
+	config.Tax.AccountsDir = strings.Replace(config.Tax.AccountsDir, "~", homeDir, 1)
+	config.Tax.ReportsDir = strings.Replace(config.Tax.ReportsDir, "~", homeDir, 1)
+	config.Tax.ComputedDir = strings.Replace(config.Tax.ComputedDir, "~", homeDir, 1)
 
 	return
 }

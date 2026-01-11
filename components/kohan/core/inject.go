@@ -115,7 +115,8 @@ func (ki *KohanInjector) provideInterestRepository() repository.InterestReposito
 }
 
 func (ki *KohanInjector) provideAccountRepository() repository.AccountRepository {
-	return repository.NewAccountRepository(ki.config.Tax.TaxDir)
+	// AccountRepository uses Output/YearEndBalance/ for accounts_YYYY.csv files
+	return repository.NewAccountRepository(ki.config.Tax.AccountsDir)
 }
 
 func (ki *KohanInjector) provideTradeRepository() repository.TradeRepository {
@@ -142,7 +143,8 @@ func (ki *KohanInjector) provideExchangeManager(sbiManager manager.SBIManager) m
 }
 
 func (ki *KohanInjector) provideAccountManager(accountRepo repository.AccountRepository) manager.AccountManager {
-	return manager.NewAccountManager(accountRepo, ki.config.Tax.TaxDir)
+	// AccountRepository handles directory path internally, manager just delegates
+	return manager.NewAccountManager(accountRepo)
 }
 
 func (ki *KohanInjector) provideValuationManager(
@@ -202,8 +204,8 @@ func (ki *KohanInjector) provideDividendManager(
 }
 
 func (ki *KohanInjector) provideExcelManager() manager.ExcelManager {
-	// Pass the directory path, ExcelManager will generate year-specific filenames
-	return manager.NewExcelManager(ki.config.Tax.TaxDir)
+	// ExcelManager uses Output/Reports/ for tax_summary_YYYY.xlsx files
+	return manager.NewExcelManager(ki.config.Tax.ReportsDir)
 }
 
 func (ki *KohanInjector) provideGainsComputationManager() manager.GainsComputationManager {
