@@ -192,22 +192,7 @@ FARoot (~/Downloads/FACompute/)
 
 ### Test Data Structure (components/kohan/testdata/tax/)
 
-Test data is kept completely flat and contains only reference files for verification:
-
-```
-testdata/tax/
-├── AAPL.json                                Reference ticker data
-├── MSFT.json                                Reference ticker data
-├── VWO.json                                 Reference ticker data
-├── IEF.json                                 Reference ticker data
-├── sbi_rates.csv                            Reference exchange rates
-├── accounts_2022.csv                        Reference: starting portfolio (2022)
-├── trades.csv                               Reference: expected parsed output
-├── dividends.csv                            Reference: expected parsed output
-├── interest.csv                             Reference: expected parsed output
-├── gains.csv                                Reference: expected computed output
-└── tax_summary_2023.xlsx                    Reference: expected report
-```
+Test data follows the same three-layer immutable structure as runtime: `Input/`, `Data/`, and `Output/` subdirectories with same organization.
 
 ### Layer Definitions & Detailed Specifications
 
