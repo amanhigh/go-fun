@@ -11,28 +11,24 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 PROJECT_ROOT=$(cd "$SCRIPT_DIR/../../.." && pwd)
 TEST_DATA_DIR="$PROJECT_ROOT/components/kohan/testdata/tax"
 FA_COMPUTE_DIR=~/Downloads/FACompute
-rm -f $FA_COMPUTE_DIR/sbi_rates.csv
 
-if [ ! -d "$FA_COMPUTE_DIR" ]; then
-    echo "Creating directory and copying test data to $FA_COMPUTE_DIR..."
-    mkdir -p "$FA_COMPUTE_DIR/Tickers"
-    cp "$TEST_DATA_DIR/trades.csv" "$FA_COMPUTE_DIR/"
-    cp "$TEST_DATA_DIR/dividends.csv" "$FA_COMPUTE_DIR/"
-    cp "$TEST_DATA_DIR/interest.csv" "$FA_COMPUTE_DIR/"
-    cp "$TEST_DATA_DIR/gains.csv" "$FA_COMPUTE_DIR/"
-    
-    cp "$TEST_DATA_DIR/accounts.csv" "$FA_COMPUTE_DIR/"
-    cp "$TEST_DATA_DIR/AAPL.json" "$FA_COMPUTE_DIR/Tickers/"
-    
-    # Add NVDA ticker to trades.csv for auto-download testing
-    echo "NVDA,2024-06-15,BUY,25,300.00,7500.00,2.50" >> "$FA_COMPUTE_DIR/trades.csv"
-else
-    echo "Directory $FA_COMPUTE_DIR already exists, updating test data..."
-    # Ensure we have the base trades.csv and add NVDA ticker for auto-download testing
-    cp "$TEST_DATA_DIR/trades.csv" "$FA_COMPUTE_DIR/"
-    if ! grep -q "NVDA" "$FA_COMPUTE_DIR/trades.csv"; then
-        echo "NVDA,2024-06-15,BUY,25,300.00,7500.00,2.50" >> "$FA_COMPUTE_DIR/trades.csv"
-    fi
+echo "Copying test data to $FA_COMPUTE_DIR..."
+
+# Ensure base directory exists
+mkdir -p "$FA_COMPUTE_DIR"
+
+# Copy entire test data directory structure (Input, Data, Output layers)
+# The -r flag recursively copies directories
+cp -r "$TEST_DATA_DIR/Input" "$FA_COMPUTE_DIR/"
+cp -r "$TEST_DATA_DIR/Data" "$FA_COMPUTE_DIR/"
+cp -r "$TEST_DATA_DIR/Output" "$FA_COMPUTE_DIR/"
+
+# Ensure Reports directory exists (it will be empty initially, filled by application)
+mkdir -p "$FA_COMPUTE_DIR/Output/Reports"
+
+# Add NVDA ticker to trades.csv for auto-download testing (if not already present)
+if ! grep -q "NVDA" "$FA_COMPUTE_DIR/Input/Parsed/trades.csv" 2>/dev/null; then
+    echo "NVDA,2024-06-15,BUY,25,300.00,7500.00,2.50" >> "$FA_COMPUTE_DIR/Input/Parsed/trades.csv"
 fi
 
 # 4. Print environment for debugging
@@ -47,12 +43,12 @@ echo "Executing 'go run ./components/kohan apps tax 2024' from $PROJECT_ROOT..."
 
 # 6. Verify ticker auto-download functionality
 echo "--- Verifying Ticker Auto-Download ---"
-if [ -f "$FA_COMPUTE_DIR/Tickers/NVDA.json" ]; then
+if [ -f "$FA_COMPUTE_DIR/Data/Tickers/NVDA.json" ]; then
     echo "✅ SUCCESS: NVDA.json was auto-downloaded"
-    echo "File size: $(wc -c < "$FA_COMPUTE_DIR/Tickers/NVDA.json") bytes"
+    echo "File size: $(wc -c < "$FA_COMPUTE_DIR/Data/Tickers/NVDA.json") bytes"
 else
     echo "❌ FAILURE: NVDA.json was NOT auto-downloaded"
-    echo "Available tickers: $(ls -la "$FA_COMPUTE_DIR/Tickers/" || echo "No ticker directory")"
+    echo "Available tickers: $(ls -la "$FA_COMPUTE_DIR/Data/Tickers/" || echo "No ticker directory")"
     exit 1
 fi
 echo "-----------------------------------"
@@ -60,38 +56,40 @@ echo "-----------------------------------"
 # 7. Verify that the output files were created
 echo "Verifying output..."
 
-echo "--- Checking sbi_rates.csv ---"
-if [ -f "$FA_COMPUTE_DIR/sbi_rates.csv" ]; then
-    echo "✅ sbi_rates.csv was created."
+echo "--- Checking sbi_rates.csv (Layer 2: Data/Reference) ---"
+if [ -f "$FA_COMPUTE_DIR/Data/Reference/sbi_rates.csv" ]; then
+    echo "✅ sbi_rates.csv exists in Data/Reference/"
     echo "Line count:"
-    wc -l "$FA_COMPUTE_DIR/sbi_rates.csv"
+    wc -l "$FA_COMPUTE_DIR/Data/Reference/sbi_rates.csv"
 else
-    echo "❌ FAILURE: sbi_rates.csv was NOT created."
+    echo "❌ FAILURE: sbi_rates.csv NOT found in Data/Reference/"
 fi
 echo "-----------------------------------"
 
-echo "--- Checking accounts_2024.csv ---"
-if [ -f "$FA_COMPUTE_DIR/accounts_2024.csv" ]; then
-    echo "✅ accounts_2024.csv was created."
+echo "--- Checking accounts_2024.csv (Layer 3: Output/YearEndBalance) ---"
+if [ -f "$FA_COMPUTE_DIR/Output/YearEndBalance/accounts_2024.csv" ]; then
+    echo "✅ accounts_2024.csv was created in Output/YearEndBalance/"
     echo "Line count:"
-    wc -l "$FA_COMPUTE_DIR/accounts_2024.csv"
+    wc -l "$FA_COMPUTE_DIR/Output/YearEndBalance/accounts_2024.csv"
 else
-    echo "❌ FAILURE: accounts_2024.csv was NOT created."
+    echo "❌ FAILURE: accounts_2024.csv was NOT created in Output/YearEndBalance/"
     exit 1
 fi
 echo "-----------------------------------"
 
-if [ -f "$FA_COMPUTE_DIR/tax_summary_2024.xlsx" ]; then
-  echo "✅ SUCCESS: Tax summary Excel file was created at $FA_COMPUTE_DIR/tax_summary_2024.xlsx"
+echo "--- Checking tax_summary_2024.xlsx (Layer 3: Output/Reports) ---"
+if [ -f "$FA_COMPUTE_DIR/Output/Reports/tax_summary_2024.xlsx" ]; then
+  echo "✅ SUCCESS: Tax summary Excel file was created at Output/Reports/tax_summary_2024.xlsx"
 else
-  echo "❌ FAILURE: Tax summary Excel file was NOT created."
+  echo "❌ FAILURE: Tax summary Excel file was NOT created in Output/Reports/"
   exit 1
 fi
+echo "-----------------------------------"
 
 # 8. Cleanup auto-downloaded files for clean test environment
 echo "--- Cleaning up auto-downloaded files ---"
-if [ -f "$FA_COMPUTE_DIR/Tickers/NVDA.json" ]; then
-    rm -f "$FA_COMPUTE_DIR/Tickers/NVDA.json"
+if [ -f "$FA_COMPUTE_DIR/Data/Tickers/NVDA.json" ]; then
+    rm -f "$FA_COMPUTE_DIR/Data/Tickers/NVDA.json"
     echo "✅ Cleaned up NVDA.json"
 else
     echo "ℹ️  No NVDA.json to clean up"

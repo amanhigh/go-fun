@@ -3,7 +3,6 @@ package manager_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,7 +19,7 @@ import (
 
 var _ = Describe("TickerManager", func() {
 	var (
-		mockClient    *mocks.AlphaClient
+		mockClient    *mocks.StockDataClient
 		tickerManager *manager.TickerManagerImpl
 		testDir       string
 		ctx           = context.Background()
@@ -28,7 +27,7 @@ var _ = Describe("TickerManager", func() {
 	)
 
 	BeforeEach(func() {
-		mockClient = mocks.NewAlphaClient(GinkgoT())
+		mockClient = mocks.NewStockDataClient(GinkgoT())
 
 		var err error
 		testDir, err = os.MkdirTemp("", "ticker-test-*")
@@ -45,15 +44,14 @@ var _ = Describe("TickerManager", func() {
 	Context("DownloadTicker", func() {
 		var (
 			ticker    = "TEST"
-			stockData tax.VantageStockData
+			stockData tax.StockData
 			filePath  string
 		)
 
 		BeforeEach(func() {
-			stockData = tax.VantageStockData{
-				MetaData: tax.MetaData{Symbol: ticker},
-				TimeSeries: map[string]tax.DayPrice{
-					"2024-01-23": {Close: "100.00"},
+			stockData = tax.StockData{
+				Prices: map[string]float64{
+					"2024-01-23": 100.00,
 				},
 			}
 
@@ -61,10 +59,6 @@ var _ = Describe("TickerManager", func() {
 		})
 
 		It("should download and save ticker data successfully", func() {
-			mockClient.EXPECT().
-				ValidateAPIKey().
-				Return(nil)
-
 			mockClient.EXPECT().
 				FetchDailyPrices(ctx, ticker).
 				Return(stockData, nil)
@@ -77,7 +71,7 @@ var _ = Describe("TickerManager", func() {
 			fileContent, err := os.ReadFile(filePath)
 			Expect(err).ToNot(HaveOccurred())
 
-			var savedData tax.VantageStockData
+			var savedData tax.StockData
 			err = json.Unmarshal(fileContent, &savedData)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(savedData).To(Equal(stockData))
@@ -94,27 +88,12 @@ var _ = Describe("TickerManager", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		It("should fail when API key validation fails", func() {
-			expectedErr := common.NewServerError(fmt.Errorf("alpha Vantage API key is required for ticker download"))
-
-			mockClient.EXPECT().
-				ValidateAPIKey().
-				Return(expectedErr)
-
-			err = tickerManager.DownloadTicker(ctx, ticker)
-			Expect(err).To(Equal(expectedErr))
-		})
-
 		It("should handle API errors", func() {
 			expectedErr := common.NewHttpError("API Error", http.StatusInternalServerError)
 
 			mockClient.EXPECT().
-				ValidateAPIKey().
-				Return(nil)
-
-			mockClient.EXPECT().
 				FetchDailyPrices(ctx, ticker).
-				Return(tax.VantageStockData{}, expectedErr)
+				Return(tax.StockData{}, expectedErr)
 
 			err = tickerManager.DownloadTicker(ctx, ticker)
 			Expect(err).To(Equal(expectedErr))
@@ -125,17 +104,16 @@ var _ = Describe("TickerManager", func() {
 		var (
 			ticker    = "TEST"
 			year      = 2024
-			stockData tax.VantageStockData
+			stockData tax.StockData
 		)
 
 		BeforeEach(func() {
 			// Create test data with known peak and year-end prices
-			stockData = tax.VantageStockData{
-				MetaData: tax.MetaData{Symbol: ticker},
-				TimeSeries: map[string]tax.DayPrice{
-					"2024-03-15": {Close: "150.00"}, // Peak price
-					"2024-02-01": {Close: "120.00"},
-					"2024-12-31": {Close: "130.00"}, // Year end
+			stockData = tax.StockData{
+				Prices: map[string]float64{
+					"2024-03-15": 150.00, // Peak price
+					"2024-02-01": 120.00,
+					"2024-12-31": 130.00, // Year end
 				},
 			}
 
@@ -165,16 +143,15 @@ var _ = Describe("TickerManager", func() {
 	Context("GetPrice", func() {
 		var (
 			ticker    = "TEST"
-			stockData tax.VantageStockData
+			stockData tax.StockData
 		)
 
 		BeforeEach(func() {
-			stockData = tax.VantageStockData{
-				MetaData: tax.MetaData{Symbol: ticker},
-				TimeSeries: map[string]tax.DayPrice{
-					"2024-01-15": {Close: "100.00"},
-					"2024-01-16": {Close: "101.00"},
-					"2024-01-17": {Close: "102.00"},
+			stockData = tax.StockData{
+				Prices: map[string]float64{
+					"2024-01-15": 100.00,
+					"2024-01-16": 101.00,
+					"2024-01-17": 102.00,
 				},
 			}
 
@@ -209,7 +186,7 @@ var _ = Describe("TickerManager", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Modify file to verify cache is used
-			stockData.TimeSeries["2024-01-15"] = tax.DayPrice{Close: "999.00"}
+			stockData.Prices["2024-01-15"] = 999.00
 			data, _ := json.Marshal(stockData)
 			filePath := filepath.Join(testDir, ticker+".json")
 			writeErr := os.WriteFile(filePath, data, 0600)
