@@ -15,48 +15,73 @@ rm -f $FA_COMPUTE_DIR/sbi_rates.csv
 
 if [ ! -d "$FA_COMPUTE_DIR" ]; then
     echo "Creating directory and copying test data to $FA_COMPUTE_DIR..."
+    # Create runtime directory structure with new Input/Data/Output subdirectories
+    mkdir -p "$FA_COMPUTE_DIR/Input/Brokerage"
+    mkdir -p "$FA_COMPUTE_DIR/Input/Parsed"
     mkdir -p "$FA_COMPUTE_DIR/Data/Tickers"
     mkdir -p "$FA_COMPUTE_DIR/Data/Reference"
+    mkdir -p "$FA_COMPUTE_DIR/Output/Computed"
+    mkdir -p "$FA_COMPUTE_DIR/Output/YearEndBalance"
+    mkdir -p "$FA_COMPUTE_DIR/Output/Reports"
     
-    cp "$TEST_DATA_DIR/trades.csv" "$FA_COMPUTE_DIR/"
-    cp "$TEST_DATA_DIR/dividends.csv" "$FA_COMPUTE_DIR/"
-    cp "$TEST_DATA_DIR/interest.csv" "$FA_COMPUTE_DIR/"
-    cp "$TEST_DATA_DIR/gains.csv" "$FA_COMPUTE_DIR/"
+    # Copy parsed CSV files to Input/Parsed (from Input/Parsed structure)
+    cp "$TEST_DATA_DIR/Input/Parsed/trades.csv" "$FA_COMPUTE_DIR/Input/Parsed/"
+    cp "$TEST_DATA_DIR/Input/Parsed/dividends.csv" "$FA_COMPUTE_DIR/Input/Parsed/"
+    cp "$TEST_DATA_DIR/Input/Parsed/interest.csv" "$FA_COMPUTE_DIR/Input/Parsed/"
     
-    cp "$TEST_DATA_DIR/accounts_2023.csv" "$FA_COMPUTE_DIR/"
+    # Copy computed gains to Output/Computed (from Output/Computed structure)
+    cp "$TEST_DATA_DIR/Output/Computed/gains.csv" "$FA_COMPUTE_DIR/Output/Computed/"
     
-    # Copy ticker files from Data/Tickers
+    # Copy year-end accounts to Output/YearEndBalance (from Output/YearEndBalance structure, use 2022 as prior year)
+    cp "$TEST_DATA_DIR/Output/YearEndBalance/accounts_2022.csv" "$FA_COMPUTE_DIR/Output/YearEndBalance/"
+    
+    # Copy ticker files to Data/Tickers (from Data/Tickers structure)
     cp "$TEST_DATA_DIR/Data/Tickers/AAPL.json" "$FA_COMPUTE_DIR/Data/Tickers/"
     cp "$TEST_DATA_DIR/Data/Tickers/MSFT.json" "$FA_COMPUTE_DIR/Data/Tickers/"
-    cp "$TEST_DATA_DIR/Data/Tickers/VWO.json" "$FA_COMPUTE_DIR/Data/Tickers/"
-    cp "$TEST_DATA_DIR/Data/Tickers/IEF.json" "$FA_COMPUTE_DIR/Data/Tickers/"
     
-    # Copy reference data from Data/Reference
+    # Copy reference data to Data/Reference (from Data/Reference structure)
     cp "$TEST_DATA_DIR/Data/Reference/sbi_rates.csv" "$FA_COMPUTE_DIR/Data/Reference/"
+    
+    # Copy year-end accounts to Output/YearEndBalance (for 2024 computation, we need 2023 opening position)
+    cp "$TEST_DATA_DIR/Output/YearEndBalance/accounts_2023.csv" "$FA_COMPUTE_DIR/Output/YearEndBalance/"
     
     # Add NVDA ticker to trades.csv for auto-download testing
-    echo "NVDA,2024-06-15,BUY,25,300.00,7500.00,2.50" >> "$FA_COMPUTE_DIR/trades.csv"
+    echo "NVDA,2024-06-15,BUY,25,300.00,7500.00,2.50" >> "$FA_COMPUTE_DIR/Input/Parsed/trades.csv"
 else
     echo "Directory $FA_COMPUTE_DIR already exists, updating test data..."
-    # Ensure we have the base trades.csv and add NVDA ticker for auto-download testing
-    cp "$TEST_DATA_DIR/trades.csv" "$FA_COMPUTE_DIR/"
-    
-    # Ensure Data directories exist
+    # Ensure all directories exist
+    mkdir -p "$FA_COMPUTE_DIR/Input/Brokerage"
+    mkdir -p "$FA_COMPUTE_DIR/Input/Parsed"
     mkdir -p "$FA_COMPUTE_DIR/Data/Tickers"
     mkdir -p "$FA_COMPUTE_DIR/Data/Reference"
+    mkdir -p "$FA_COMPUTE_DIR/Output/Computed"
+    mkdir -p "$FA_COMPUTE_DIR/Output/YearEndBalance"
+    mkdir -p "$FA_COMPUTE_DIR/Output/Reports"
     
-    # Copy ticker files from Data/Tickers
-    cp "$TEST_DATA_DIR/Data/Tickers/AAPL.json" "$FA_COMPUTE_DIR/Data/Tickers/"
-    cp "$TEST_DATA_DIR/Data/Tickers/MSFT.json" "$FA_COMPUTE_DIR/Data/Tickers/"
-    cp "$TEST_DATA_DIR/Data/Tickers/VWO.json" "$FA_COMPUTE_DIR/Data/Tickers/"
-    cp "$TEST_DATA_DIR/Data/Tickers/IEF.json" "$FA_COMPUTE_DIR/Data/Tickers/"
+    # Copy parsed CSV files to Input/Parsed (from Input/Parsed structure)
+    cp "$TEST_DATA_DIR/Input/Parsed/trades.csv" "$FA_COMPUTE_DIR/Input/Parsed/"
+    cp "$TEST_DATA_DIR/Input/Parsed/dividends.csv" "$FA_COMPUTE_DIR/Input/Parsed/"
+    cp "$TEST_DATA_DIR/Input/Parsed/interest.csv" "$FA_COMPUTE_DIR/Input/Parsed/"
     
-    # Copy reference data from Data/Reference
-    cp "$TEST_DATA_DIR/Data/Reference/sbi_rates.csv" "$FA_COMPUTE_DIR/Data/Reference/"
+    # Copy computed gains to Output/Computed (from Output/Computed structure)
+    cp "$TEST_DATA_DIR/Output/Computed/gains.csv" "$FA_COMPUTE_DIR/Output/Computed/"
     
-    if ! grep -q "NVDA" "$FA_COMPUTE_DIR/trades.csv"; then
-        echo "NVDA,2024-06-15,BUY,25,300.00,7500.00,2.50" >> "$FA_COMPUTE_DIR/trades.csv"
-    fi
+    # Copy year-end accounts to Output/YearEndBalance (from Output/YearEndBalance structure, use 2022 as prior year)
+    cp "$TEST_DATA_DIR/Output/YearEndBalance/accounts_2022.csv" "$FA_COMPUTE_DIR/Output/YearEndBalance/"
+    
+     # Copy ticker files to Data/Tickers (from Data/Tickers structure)
+     cp "$TEST_DATA_DIR/Data/Tickers/AAPL.json" "$FA_COMPUTE_DIR/Data/Tickers/"
+     cp "$TEST_DATA_DIR/Data/Tickers/MSFT.json" "$FA_COMPUTE_DIR/Data/Tickers/"
+     
+     # Copy reference data to Data/Reference (from Data/Reference structure)
+     cp "$TEST_DATA_DIR/Data/Reference/sbi_rates.csv" "$FA_COMPUTE_DIR/Data/Reference/"
+     
+     # Copy year-end accounts to Output/YearEndBalance (for 2024 computation, we need 2023 opening position)
+     cp "$TEST_DATA_DIR/Output/YearEndBalance/accounts_2023.csv" "$FA_COMPUTE_DIR/Output/YearEndBalance/"
+     
+     if ! grep -q "NVDA" "$FA_COMPUTE_DIR/Input/Parsed/trades.csv"; then
+         echo "NVDA,2024-06-15,BUY,25,300.00,7500.00,2.50" >> "$FA_COMPUTE_DIR/Input/Parsed/trades.csv"
+     fi
 fi
 
 # 4. Print environment for debugging
@@ -84,33 +109,35 @@ echo "-----------------------------------"
 # 7. Verify that the output files were created
 echo "Verifying output..."
 
-echo "--- Checking sbi_rates.csv ---"
-if [ -f "$FA_COMPUTE_DIR/sbi_rates.csv" ]; then
-    echo "✅ sbi_rates.csv was created."
+echo "--- Checking sbi_rates.csv (Layer 2: Data/Reference) ---"
+if [ -f "$FA_COMPUTE_DIR/Data/Reference/sbi_rates.csv" ]; then
+    echo "✅ sbi_rates.csv exists in Data/Reference/"
     echo "Line count:"
-    wc -l "$FA_COMPUTE_DIR/sbi_rates.csv"
+    wc -l "$FA_COMPUTE_DIR/Data/Reference/sbi_rates.csv"
 else
-    echo "❌ FAILURE: sbi_rates.csv was NOT created."
+    echo "❌ FAILURE: sbi_rates.csv NOT found in Data/Reference/"
 fi
 echo "-----------------------------------"
 
-echo "--- Checking accounts_2024.csv ---"
-if [ -f "$FA_COMPUTE_DIR/accounts_2024.csv" ]; then
-    echo "✅ accounts_2024.csv was created."
+echo "--- Checking accounts_2024.csv (Layer 3: Output/YearEndBalance) ---"
+if [ -f "$FA_COMPUTE_DIR/Output/YearEndBalance/accounts_2024.csv" ]; then
+    echo "✅ accounts_2024.csv was created in Output/YearEndBalance/"
     echo "Line count:"
-    wc -l "$FA_COMPUTE_DIR/accounts_2024.csv"
+    wc -l "$FA_COMPUTE_DIR/Output/YearEndBalance/accounts_2024.csv"
 else
-    echo "❌ FAILURE: accounts_2024.csv was NOT created."
+    echo "❌ FAILURE: accounts_2024.csv was NOT created in Output/YearEndBalance/"
     exit 1
 fi
 echo "-----------------------------------"
 
-if [ -f "$FA_COMPUTE_DIR/tax_summary_2024.xlsx" ]; then
-  echo "✅ SUCCESS: Tax summary Excel file was created at $FA_COMPUTE_DIR/tax_summary_2024.xlsx"
+echo "--- Checking tax_summary_2024.xlsx (Layer 3: Output/Reports) ---"
+if [ -f "$FA_COMPUTE_DIR/Output/Reports/tax_summary_2024.xlsx" ]; then
+  echo "✅ SUCCESS: Tax summary Excel file was created at Output/Reports/tax_summary_2024.xlsx"
 else
-  echo "❌ FAILURE: Tax summary Excel file was NOT created."
+  echo "❌ FAILURE: Tax summary Excel file was NOT created in Output/Reports/"
   exit 1
 fi
+echo "-----------------------------------"
 
 # 8. Cleanup auto-downloaded files for clean test environment
 echo "--- Cleaning up auto-downloaded files ---"
