@@ -11,77 +11,24 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 PROJECT_ROOT=$(cd "$SCRIPT_DIR/../../.." && pwd)
 TEST_DATA_DIR="$PROJECT_ROOT/components/kohan/testdata/tax"
 FA_COMPUTE_DIR=~/Downloads/FACompute
-rm -f $FA_COMPUTE_DIR/sbi_rates.csv
 
-if [ ! -d "$FA_COMPUTE_DIR" ]; then
-    echo "Creating directory and copying test data to $FA_COMPUTE_DIR..."
-    # Create runtime directory structure with new Input/Data/Output subdirectories
-    mkdir -p "$FA_COMPUTE_DIR/Input/Brokerage"
-    mkdir -p "$FA_COMPUTE_DIR/Input/Parsed"
-    mkdir -p "$FA_COMPUTE_DIR/Data/Tickers"
-    mkdir -p "$FA_COMPUTE_DIR/Data/Reference"
-    mkdir -p "$FA_COMPUTE_DIR/Output/Computed"
-    mkdir -p "$FA_COMPUTE_DIR/Output/YearEndBalance"
-    mkdir -p "$FA_COMPUTE_DIR/Output/Reports"
-    
-    # Copy parsed CSV files to Input/Parsed (from Input/Parsed structure)
-    cp "$TEST_DATA_DIR/Input/Parsed/trades.csv" "$FA_COMPUTE_DIR/Input/Parsed/"
-    cp "$TEST_DATA_DIR/Input/Parsed/dividends.csv" "$FA_COMPUTE_DIR/Input/Parsed/"
-    cp "$TEST_DATA_DIR/Input/Parsed/interest.csv" "$FA_COMPUTE_DIR/Input/Parsed/"
-    
-    # Copy computed gains to Output/Computed (from Output/Computed structure)
-    cp "$TEST_DATA_DIR/Output/Computed/gains.csv" "$FA_COMPUTE_DIR/Output/Computed/"
-    
-    # Copy year-end accounts to Output/YearEndBalance (from Output/YearEndBalance structure, use 2022 as prior year)
-    cp "$TEST_DATA_DIR/Output/YearEndBalance/accounts_2022.csv" "$FA_COMPUTE_DIR/Output/YearEndBalance/"
-    
-    # Copy ticker files to Data/Tickers (from Data/Tickers structure)
-    cp "$TEST_DATA_DIR/Data/Tickers/AAPL.json" "$FA_COMPUTE_DIR/Data/Tickers/"
-    cp "$TEST_DATA_DIR/Data/Tickers/MSFT.json" "$FA_COMPUTE_DIR/Data/Tickers/"
-    
-    # Copy reference data to Data/Reference (from Data/Reference structure)
-    cp "$TEST_DATA_DIR/Data/Reference/sbi_rates.csv" "$FA_COMPUTE_DIR/Data/Reference/"
-    
-    # Copy year-end accounts to Output/YearEndBalance (for 2024 computation, we need 2023 opening position)
-    cp "$TEST_DATA_DIR/Output/YearEndBalance/accounts_2023.csv" "$FA_COMPUTE_DIR/Output/YearEndBalance/"
-    
-    # Add NVDA ticker to trades.csv for auto-download testing
+echo "Copying test data to $FA_COMPUTE_DIR..."
+
+# Ensure base directory exists
+mkdir -p "$FA_COMPUTE_DIR"
+
+# Copy entire test data directory structure (Input, Data, Output layers)
+# The -r flag recursively copies directories
+cp -r "$TEST_DATA_DIR/Input" "$FA_COMPUTE_DIR/"
+cp -r "$TEST_DATA_DIR/Data" "$FA_COMPUTE_DIR/"
+cp -r "$TEST_DATA_DIR/Output" "$FA_COMPUTE_DIR/"
+
+# Ensure Reports directory exists (it will be empty initially, filled by application)
+mkdir -p "$FA_COMPUTE_DIR/Output/Reports"
+
+# Add NVDA ticker to trades.csv for auto-download testing (if not already present)
+if ! grep -q "NVDA" "$FA_COMPUTE_DIR/Input/Parsed/trades.csv" 2>/dev/null; then
     echo "NVDA,2024-06-15,BUY,25,300.00,7500.00,2.50" >> "$FA_COMPUTE_DIR/Input/Parsed/trades.csv"
-else
-    echo "Directory $FA_COMPUTE_DIR already exists, updating test data..."
-    # Ensure all directories exist
-    mkdir -p "$FA_COMPUTE_DIR/Input/Brokerage"
-    mkdir -p "$FA_COMPUTE_DIR/Input/Parsed"
-    mkdir -p "$FA_COMPUTE_DIR/Data/Tickers"
-    mkdir -p "$FA_COMPUTE_DIR/Data/Reference"
-    mkdir -p "$FA_COMPUTE_DIR/Output/Computed"
-    mkdir -p "$FA_COMPUTE_DIR/Output/YearEndBalance"
-    mkdir -p "$FA_COMPUTE_DIR/Output/Reports"
-    
-    # Copy parsed CSV files to Input/Parsed (from Input/Parsed structure)
-    cp "$TEST_DATA_DIR/Input/Parsed/trades.csv" "$FA_COMPUTE_DIR/Input/Parsed/"
-    cp "$TEST_DATA_DIR/Input/Parsed/dividends.csv" "$FA_COMPUTE_DIR/Input/Parsed/"
-    cp "$TEST_DATA_DIR/Input/Parsed/interest.csv" "$FA_COMPUTE_DIR/Input/Parsed/"
-    
-    # Copy computed gains to Output/Computed (from Output/Computed structure)
-    cp "$TEST_DATA_DIR/Output/Computed/gains.csv" "$FA_COMPUTE_DIR/Output/Computed/"
-    
-    # Copy year-end accounts to Output/YearEndBalance (from Output/YearEndBalance structure, use 2022 as prior year)
-    cp "$TEST_DATA_DIR/Output/YearEndBalance/accounts_2022.csv" "$FA_COMPUTE_DIR/Output/YearEndBalance/"
-    
-     # Copy ticker files to Data/Tickers (from Data/Tickers structure)
-     cp "$TEST_DATA_DIR/Data/Tickers/AAPL.json" "$FA_COMPUTE_DIR/Data/Tickers/"
-     cp "$TEST_DATA_DIR/Data/Tickers/MSFT.json" "$FA_COMPUTE_DIR/Data/Tickers/"
-     
-     # Copy reference data to Data/Reference (from Data/Reference structure)
-     cp "$TEST_DATA_DIR/Data/Reference/sbi_rates.csv" "$FA_COMPUTE_DIR/Data/Reference/"
-     
-     # Copy year-end accounts to Output/YearEndBalance (for 2024 computation, we need 2023 opening position)
-     cp "$TEST_DATA_DIR/Output/YearEndBalance/accounts_2023.csv" "$FA_COMPUTE_DIR/Output/YearEndBalance/"
-     
-     if ! grep -q "NVDA" "$FA_COMPUTE_DIR/Input/Parsed/trades.csv"; then
-         echo "NVDA,2024-06-15,BUY,25,300.00,7500.00,2.50" >> "$FA_COMPUTE_DIR/Input/Parsed/trades.csv"
-     fi
 fi
 
 # 4. Print environment for debugging
