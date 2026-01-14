@@ -19,13 +19,11 @@ type AccountManager interface {
 
 type AccountManagerImpl struct {
 	repository repository.AccountRepository
-	accountDir string
 }
 
-func NewAccountManager(repo repository.AccountRepository, accountDir string) AccountManager {
+func NewAccountManager(repo repository.AccountRepository) AccountManager {
 	return &AccountManagerImpl{
 		repository: repo,
-		accountDir: accountDir,
 	}
 }
 

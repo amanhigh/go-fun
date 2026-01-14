@@ -18,13 +18,12 @@ var _ = Describe("AccountManager", func() {
 		mockRepo       *mocks.AccountRepository
 		accountManager manager.AccountManager
 		testAccount    tax.Account
-		accountDir     = "/tmp"
 		testYear       = 2024
 	)
 
 	BeforeEach(func() {
 		mockRepo = mocks.NewAccountRepository(GinkgoT())
-		accountManager = manager.NewAccountManager(mockRepo, accountDir)
+		accountManager = manager.NewAccountManager(mockRepo)
 
 		// Setup test account
 		testAccount = tax.Account{

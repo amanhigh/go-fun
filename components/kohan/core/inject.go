@@ -88,8 +88,8 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 }
 
 // ---- Client Providers ----
-func (ki *KohanInjector) provideAlphaClient(client *resty.Client) clients.AlphaClient {
-	return clients.NewAlphaClient(client, ki.config.Tax.AlphaBaseURL, ki.config.Tax.AlphaAPIKey)
+func (ki *KohanInjector) provideYahooClient(client *resty.Client) clients.StockDataClient {
+	return clients.NewYahooClient(client, ki.config.Tax.YahooBaseURL)
 }
 
 func (ki *KohanInjector) provideSBIClient(client *resty.Client) clients.SBIClient {
@@ -114,7 +114,8 @@ func (ki *KohanInjector) provideInterestRepository() repository.InterestReposito
 }
 
 func (ki *KohanInjector) provideAccountRepository() repository.AccountRepository {
-	return repository.NewAccountRepository(ki.config.Tax.TaxDir)
+	// AccountRepository uses Output/YearEndBalance/ for accounts_YYYY.csv files
+	return repository.NewAccountRepository(ki.config.Tax.AccountsDir)
 }
 
 func (ki *KohanInjector) provideTradeRepository() repository.TradeRepository {
@@ -122,7 +123,7 @@ func (ki *KohanInjector) provideTradeRepository() repository.TradeRepository {
 }
 
 // ---- Manager Providers ----
-func (ki *KohanInjector) provideTickerManager(client clients.AlphaClient) manager.TickerManager {
+func (ki *KohanInjector) provideTickerManager(client clients.StockDataClient) manager.TickerManager {
 	return manager.NewTickerManager(client, ki.config.Tax.TickerCacheDir)
 }
 
@@ -141,7 +142,8 @@ func (ki *KohanInjector) provideExchangeManager(sbiManager manager.SBIManager) m
 }
 
 func (ki *KohanInjector) provideAccountManager(accountRepo repository.AccountRepository) manager.AccountManager {
-	return manager.NewAccountManager(accountRepo, ki.config.Tax.TaxDir)
+	// AccountRepository handles directory path internally, manager just delegates
+	return manager.NewAccountManager(accountRepo)
 }
 
 func (ki *KohanInjector) provideValuationManager(
@@ -201,8 +203,8 @@ func (ki *KohanInjector) provideDividendManager(
 }
 
 func (ki *KohanInjector) provideExcelManager() manager.ExcelManager {
-	// Pass the directory path, ExcelManager will generate year-specific filenames
-	return manager.NewExcelManager(ki.config.Tax.TaxDir)
+	// ExcelManager uses Output/Reports/ for tax_summary_YYYY.xlsx files
+	return manager.NewExcelManager(ki.config.Tax.ReportsDir)
 }
 
 func (ki *KohanInjector) provideGainsComputationManager() manager.GainsComputationManager {
@@ -269,8 +271,8 @@ func (ki *KohanInjector) registerClients() {
 	var client *resty.Client
 	container.MustResolve(ki.di, &client)
 
-	container.MustSingleton(ki.di, func() clients.AlphaClient {
-		return ki.provideAlphaClient(client)
+	container.MustSingleton(ki.di, func() clients.StockDataClient {
+		return ki.provideYahooClient(client)
 	})
 	container.MustSingleton(ki.di, func() clients.SBIClient {
 		return ki.provideSBIClient(client)
@@ -294,11 +296,11 @@ func (ki *KohanInjector) registerCoreManagers() {
 	container.MustSingleton(ki.di, ki.provideExchangeManager)
 	container.MustSingleton(ki.di, ki.provideAccountManager)
 
-	// Register TickerManager (depends on AlphaClient)
-	var alphaClient clients.AlphaClient
-	container.MustResolve(ki.di, &alphaClient)
+	// Register TickerManager (depends on StockDataClient)
+	var stockDataClient clients.StockDataClient
+	container.MustResolve(ki.di, &stockDataClient)
 	container.MustSingleton(ki.di, func() manager.TickerManager {
-		return ki.provideTickerManager(alphaClient)
+		return ki.provideTickerManager(stockDataClient)
 	})
 
 	// Register managers that depend on TickerManager and/or AccountManager/TradeRepository
