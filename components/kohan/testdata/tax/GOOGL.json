@@ -1,7 +1,0 @@
-{
-    "Meta Data": { "2. Symbol": "GOOGL", "3. Last Refreshed": "2024-04-01", "5. Time Zone": "US/Eastern" },
-    "Time Series (Daily)": {
-        "2022-12-31": { "1. open": "199.00", "2. high": "201.00", "3. low": "198.50", "4. close": "200.00", "5. volume": "25000000" },
-        "2023-12-31": { "1. open": "139.00", "2. high": "141.00", "3. low": "138.50", "4. close": "140.00", "5. volume": "30000000" }
-    }
-}
