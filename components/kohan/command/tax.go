@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/amanhigh/go-fun/models/config"
@@ -64,11 +63,18 @@ func init() {
 }
 
 var parseCmd = &cobra.Command{
-	Use:   "parse",
+	Use:   "parse YEAR",
 	Short: "Parse all broker files and generate CSVs",
-	Long:  `Auto-detects and parses DriveWealth, Interactive Brokers files. Merges and generates consolidated CSVs.`,
-	RunE: func(_ *cobra.Command, _ []string) error {
+	Long:  `Auto-detects and parses DriveWealth, Interactive Brokers files for the specified year. Merges and generates consolidated CSVs.`,
+	Args:  cobra.ExactArgs(1),
+	RunE: func(_ *cobra.Command, args []string) error {
 		ctx := context.Background()
+
+		// Parse year from arguments
+		year, err := strconv.Atoi(args[0])
+		if err != nil {
+			return fmt.Errorf("invalid year format: %w", err)
+		}
 
 		kohanConfig, err := config.NewKohanConfig()
 		if err != nil {
@@ -83,14 +89,11 @@ var parseCmd = &cobra.Command{
 			return fmt.Errorf("failed to get brokerage manager: %w", err)
 		}
 
-		// TODO: Accept year as optional argument and pass to ParseAndGenerate
-		// For now, use current year as default
-		year := time.Now().Year()
 		if err := brokerageManager.ParseAndGenerate(ctx, year); err != nil {
 			return fmt.Errorf("failed to parse brokers: %w", err)
 		}
 
-		fmt.Println("Successfully parsed broker files and generated CSVs")
+		fmt.Printf("Successfully parsed broker files for year %d and generated CSVs\n", year)
 		return nil
 	},
 }
