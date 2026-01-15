@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/caarlos0/env/v6"
 )
@@ -45,12 +47,16 @@ type TaxConfig struct {
 	TTRateFilePath string `env:"TTRATE_FILE_PATH" envDefault:"~/Downloads/FACompute/Data/Reference/sbi_rates.csv"`
 
 	// Input Layer (Layer 1: User-Provided Data - Immutable)
+	// Input base directory for all brokerage and parsed data
+	InputDir string `env:"INPUT_DIR" envDefault:"~/Downloads/FACompute/Input"`
 	// Input/Brokerage/ contains vested.xlsx export from DriveWealth
 	DriveWealthPath string `env:"VESTED_PATH" envDefault:"~/Downloads/FACompute/Input/Brokerage/vested.xlsx"`
 	// Input/Parsed/ contains CSV files parsed from vested.xlsx by 'tax vested parse' command
 	TradesPath       string `env:"FA_TRADE_FILE_PATH" envDefault:"~/Downloads/FACompute/Input/Parsed/trades.csv"`
 	DividendFilePath string `env:"FA_DIVIDEND_FILE_PATH" envDefault:"~/Downloads/FACompute/Input/Parsed/dividends.csv"`
 	InterestFilePath string `env:"FA_INTEREST_FILE_PATH" envDefault:"~/Downloads/FACompute/Input/Parsed/interest.csv"`
+	// Input/InteractiveBrokers/ contains data exported from Interactive Brokers
+	IBInputPath string `env:"IB_INPUT_PATH" envDefault:"~/Downloads/FACompute/Input/InteractiveBrokers"`
 
 	// Output Layer (Layer 3: System-Generated Results - Mutable)
 	// Output/Computed/ contains gains.csv from capital gains calculation
@@ -78,6 +84,7 @@ func NewKohanConfig() (config KohanConfig, err error) {
 	// HACK: #C Remove this Hack.
 	// Expand home directory (~) in all file paths
 	config.Tax.TaxDir = strings.Replace(config.Tax.TaxDir, "~", homeDir, 1)
+	config.Tax.InputDir = strings.Replace(config.Tax.InputDir, "~", homeDir, 1)
 	config.Tax.TickerCacheDir = strings.Replace(config.Tax.TickerCacheDir, "~", homeDir, 1)
 	config.Tax.TradesPath = strings.Replace(config.Tax.TradesPath, "~", homeDir, 1)
 	config.Tax.DividendFilePath = strings.Replace(config.Tax.DividendFilePath, "~", homeDir, 1)
@@ -88,6 +95,7 @@ func NewKohanConfig() (config KohanConfig, err error) {
 	config.Tax.AccountsDir = strings.Replace(config.Tax.AccountsDir, "~", homeDir, 1)
 	config.Tax.ReportsDir = strings.Replace(config.Tax.ReportsDir, "~", homeDir, 1)
 	config.Tax.ComputedDir = strings.Replace(config.Tax.ComputedDir, "~", homeDir, 1)
+	config.Tax.IBInputPath = strings.Replace(config.Tax.IBInputPath, "~", homeDir, 1)
 
 	return
 }

@@ -24,8 +24,8 @@ var _ = Describe("KohanConfig", func() {
 
 			// Verify ${HOME} was expanded to exact paths
 			Expect(config.Tax.TaxDir).To(Equal(homeDir + "/Downloads/FACompute"))
-			Expect(config.Tax.TickerCacheDir).To(Equal(homeDir + "/Downloads/FACompute/Tickers"))
-			Expect(config.Tax.TradesPath).To(Equal(homeDir + "/Downloads/FACompute/trades.csv"))
+			Expect(config.Tax.TickerCacheDir).To(Equal(homeDir + "/Downloads/FACompute/Data/Tickers"))
+			Expect(config.Tax.TradesPath).To(Equal(homeDir + "/Downloads/FACompute/Input/Parsed/trades.csv"))
 
 			// Ensure no literal ${HOME} remains
 			Expect(config.Tax.TaxDir).ToNot(ContainSubstring("${HOME}"))
@@ -36,7 +36,7 @@ var _ = Describe("KohanConfig", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Verify basic configuration is loaded
-			Expect(config.Tax.AlphaBaseURL).To(Equal("https://www.alphavantage.co/query"))
+			Expect(config.Tax.YahooBaseURL).To(Equal("https://query1.finance.yahoo.com"))
 			Expect(config.Tax.SBIBaseURL).To(ContainSubstring("raw.githubusercontent.com"))
 			Expect(config.Tax.TaxDir).ToNot(BeEmpty())
 		})

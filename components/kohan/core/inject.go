@@ -230,7 +230,7 @@ func (ki *KohanInjector) provideDriveWealthManager() manager.Broker {
 }
 
 func (ki *KohanInjector) provideInteractiveBrokersManager() manager.Broker {
-	return manager.NewInteractiveBrokersManagerImpl(ki.config.Tax.IBBasePath)
+	return manager.NewInteractiveBrokersManagerImpl(ki.config.Tax.IBInputPath)
 }
 
 func (ki *KohanInjector) provideTaxManager(
