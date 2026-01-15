@@ -14,7 +14,7 @@ import (
 var _ = Describe("DriveWealthManagerImpl", func() {
 	var (
 		tempTestDir        string
-		sampleExcelPath    string
+		basePath           string
 		driveWealthManager manager.Broker
 	)
 
@@ -23,7 +23,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 		tempTestDir, err = os.MkdirTemp("", "drivewealth_test_*")
 		Expect(err).ToNot(HaveOccurred())
 
-		sampleExcelPath = filepath.Join(tempTestDir, "vested_transactions.xlsx")
+		basePath = filepath.Join(tempTestDir, "vested")
 	})
 
 	AfterEach(func() {
@@ -43,13 +43,13 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			rows := [][]interface{}{
-				{"2025-06-06", "05:24:40 AM", "Dividend", "IEF", 158.17},
-				{"2025-06-06", "05:24:39 AM", "Tax", "IEF", -39.54},
-				{"2025-06-06", "05:24:37 AM", "Dividend", "TLT", 3.51},
-				{"2025-06-06", "05:24:37 AM", "Tax", "BIL", -35.52},
-				{"2025-06-06", "05:24:36 AM", "Dividend", "BIL", 142.07},
-				{"2025-06-03", "05:34:52 AM", "Interest", "", 0.59},
-				{"2025-05-02", "04:57:05 AM", "Interest", "", 1.18},
+				{"2024-06-06", "05:24:40 AM", "Dividend", "IEF", 158.17},
+				{"2024-06-06", "05:24:39 AM", "Tax", "IEF", -39.54},
+				{"2024-06-06", "05:24:37 AM", "Dividend", "TLT", 3.51},
+				{"2024-06-06", "05:24:37 AM", "Tax", "BIL", -35.52},
+				{"2024-06-06", "05:24:36 AM", "Dividend", "BIL", 142.07},
+				{"2024-06-03", "05:34:52 AM", "Interest", "", 0.59},
+				{"2024-05-02", "04:57:05 AM", "Interest", "", 1.18},
 			}
 
 			for i, rowData := range rows {
@@ -68,9 +68,9 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			tradeRows := [][]interface{}{
-				{"2025-04-03", "04:53:52 PM", "Vanguard Russell 2000 ETF", "VTWO", "Buy", "Market", 70, 77.41, 5418.7, 0},
-				{"2025-04-03", "04:26:02 PM", "Europe ETF FTSE Vanguard", "VGK", "Buy", "Market", 60, 70.18, 4210.8, 0},
-				{"2025-02-14", "02:30:00 PM", "Barclays 1-3 Month T-Bill ETF SPDR", "BIL", "Sell", "Market", 1, 91.58, 91.58, 0},
+				{"2024-04-03", "04:53:52 PM", "Vanguard Russell 2000 ETF", "VTWO", "Buy", "Market", 70, 77.41, 5418.7, 0},
+				{"2024-04-03", "04:26:02 PM", "Europe ETF FTSE Vanguard", "VGK", "Buy", "Market", 60, 70.18, 4210.8, 0},
+				{"2024-02-14", "02:30:00 PM", "Barclays 1-3 Month T-Bill ETF SPDR", "BIL", "Sell", "Market", 1, 91.58, 91.58, 0},
 			}
 
 			for i, rowData := range tradeRows {
@@ -78,10 +78,10 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 				Expect(err).ToNot(HaveOccurred())
 			}
 
-			err = f.SaveAs(sampleExcelPath)
+			err = f.SaveAs(basePath + "_2024.xlsx")
 			Expect(err).ToNot(HaveOccurred())
 
-			driveWealthManager = manager.NewDriveWealthManagerImpl(sampleExcelPath)
+			driveWealthManager = manager.NewDriveWealthManagerImpl(basePath)
 		})
 
 		Context("when parsing interests", func() {
@@ -147,7 +147,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 	Context("with an invalid or malformed Excel file", func() {
 		Context("when the Excel file is missing", func() {
 			It("should return an error", func() {
-				nonExistentManager := manager.NewDriveWealthManagerImpl(sampleExcelPath)
+				nonExistentManager := manager.NewDriveWealthManagerImpl(basePath)
 				_, err := nonExistentManager.Parse(testYear)
 				Expect(err).To(HaveOccurred())
 			})
@@ -159,10 +159,10 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 				_, err := f.NewSheet("OtherSheet")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(f.DeleteSheet("Sheet1")).To(Succeed())
-				err = f.SaveAs(sampleExcelPath)
+				err = f.SaveAs(basePath + "_2024.xlsx")
 				Expect(err).ToNot(HaveOccurred())
 
-				driveWealthManager = manager.NewDriveWealthManagerImpl(sampleExcelPath)
+				driveWealthManager = manager.NewDriveWealthManagerImpl(basePath)
 				_, err = driveWealthManager.Parse(testYear)
 				Expect(err).To(HaveOccurred())
 			})
@@ -174,10 +174,10 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 				_, err := f.NewSheet("Income")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(f.DeleteSheet("Sheet1")).To(Succeed())
-				err = f.SaveAs(sampleExcelPath)
+				err = f.SaveAs(basePath + "_2024.xlsx")
 				Expect(err).ToNot(HaveOccurred())
 
-				driveWealthManager = manager.NewDriveWealthManagerImpl(sampleExcelPath)
+				driveWealthManager = manager.NewDriveWealthManagerImpl(basePath)
 				_, err = driveWealthManager.Parse(testYear)
 				Expect(err).To(HaveOccurred())
 			})

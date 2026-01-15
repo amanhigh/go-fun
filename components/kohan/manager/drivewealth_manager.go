@@ -16,13 +16,14 @@ const (
 
 // DriveWealthManagerImpl handles parsing of DriveWealth reports and implements Broker interface.
 type DriveWealthManagerImpl struct {
-	excelPath string
+	basePath string
 }
 
 // NewDriveWealthManagerImpl creates a new DriveWealth broker parser.
-func NewDriveWealthManagerImpl(excelPath string) Broker {
+// basePath should be the base path without year or extension (e.g., ~/path/to/vested)
+func NewDriveWealthManagerImpl(basePath string) Broker {
 	return &DriveWealthManagerImpl{
-		excelPath: excelPath,
+		basePath: basePath,
 	}
 }
 
@@ -31,10 +32,15 @@ func (m *DriveWealthManagerImpl) GetName() string {
 	return "DriveWealth"
 }
 
-// Parse orchestrates the parsing of the DriveWealth Excel file.
-// The year parameter is ignored as DriveWealth file contains complete history.
-func (m *DriveWealthManagerImpl) Parse(_ int) (info tax.BrokerageInfo, err error) {
-	f, err := excelize.OpenFile(m.excelPath)
+// resolveFilePath constructs the year-specific file path
+func (m *DriveWealthManagerImpl) resolveFilePath(year int) string {
+	return fmt.Sprintf("%s_%d.xlsx", m.basePath, year)
+}
+
+// Parse orchestrates the parsing of the DriveWealth Excel file for the given year.
+func (m *DriveWealthManagerImpl) Parse(year int) (info tax.BrokerageInfo, err error) {
+	filePath := m.resolveFilePath(year)
+	f, err := excelize.OpenFile(filePath)
 	if err != nil {
 		err = fmt.Errorf("failed to open excel file: %w", err)
 		return

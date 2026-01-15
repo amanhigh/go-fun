@@ -32,14 +32,18 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		kohanConfig = config.KohanConfig{
 			Tax: config.TaxConfig{
 				TaxDir: testDataBasePath,
-				// Layer 1: Input - Parsed transaction data
+				// Layer 1: Input - Raw broker statements
+				DriveWealthBase: filepath.Join(testDataBasePath, "Input", "Brokerage", "vested"),
+				IBKRBase:        filepath.Join(testDataBasePath, "Input", "Brokerage", "ibkr"),
+				// Layer 2.5: Parsed - Generated from broker statements
+				ParsedDir:        filepath.Join(testDataBasePath, "Input", "Parsed"),
 				TradesPath:       filepath.Join(testDataBasePath, "Input", "Parsed", tax.TRADES_FILENAME),
 				DividendFilePath: filepath.Join(testDataBasePath, "Input", "Parsed", tax.DIVIDENDS_FILENAME),
 				InterestFilePath: filepath.Join(testDataBasePath, "Input", "Parsed", tax.INTEREST_FILENAME),
-				// Layer 2: Data - Reference data (tickers, exchange rates)
+				// Layer 3: Reference data (tickers, exchange rates)
 				TickerCacheDir: filepath.Join(testDataBasePath, "Data", "Tickers"),
 				TTRateFilePath: filepath.Join(testDataBasePath, "Data", "Reference", tax.SBI_RATES_FILENAME),
-				// Layer 3: Output - Computed and generated results
+				// Layer 4: Output - Computed and generated results
 				GainsFilePath: filepath.Join(testDataBasePath, "Output", "Computed", tax.GAINS_FILENAME),
 				AccountsDir:   filepath.Join(testDataBasePath, "Output", "YearEndBalance"),
 				ReportsDir:    filepath.Join(testDataBasePath, "Output", "Reports"),
