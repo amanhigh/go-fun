@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/models/common"
-	"github.com/amanhigh/go-fun/models/tax"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -95,80 +94,6 @@ func (_c *TickerManager_DownloadTicker_Call) Return(err common.HttpError) *Ticke
 }
 
 func (_c *TickerManager_DownloadTicker_Call) RunAndReturn(run func(ctx context.Context, ticker string) common.HttpError) *TickerManager_DownloadTicker_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// FindPeakPrice provides a mock function for the type TickerManager
-func (_mock *TickerManager) FindPeakPrice(ctx context.Context, ticker string, year int) (tax.PeakPrice, common.HttpError) {
-	ret := _mock.Called(ctx, ticker, year)
-
-	if len(ret) == 0 {
-		panic("no return value specified for FindPeakPrice")
-	}
-
-	var r0 tax.PeakPrice
-	var r1 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) (tax.PeakPrice, common.HttpError)); ok {
-		return returnFunc(ctx, ticker, year)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) tax.PeakPrice); ok {
-		r0 = returnFunc(ctx, ticker, year)
-	} else {
-		r0 = ret.Get(0).(tax.PeakPrice)
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string, int) common.HttpError); ok {
-		r1 = returnFunc(ctx, ticker, year)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(common.HttpError)
-		}
-	}
-	return r0, r1
-}
-
-// TickerManager_FindPeakPrice_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindPeakPrice'
-type TickerManager_FindPeakPrice_Call struct {
-	*mock.Call
-}
-
-// FindPeakPrice is a helper method to define mock.On call
-//   - ctx context.Context
-//   - ticker string
-//   - year int
-func (_e *TickerManager_Expecter) FindPeakPrice(ctx interface{}, ticker interface{}, year interface{}) *TickerManager_FindPeakPrice_Call {
-	return &TickerManager_FindPeakPrice_Call{Call: _e.mock.On("FindPeakPrice", ctx, ticker, year)}
-}
-
-func (_c *TickerManager_FindPeakPrice_Call) Run(run func(ctx context.Context, ticker string, year int)) *TickerManager_FindPeakPrice_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 string
-		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		var arg2 int
-		if args[2] != nil {
-			arg2 = args[2].(int)
-		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-		)
-	})
-	return _c
-}
-
-func (_c *TickerManager_FindPeakPrice_Call) Return(peakPrice tax.PeakPrice, httpError common.HttpError) *TickerManager_FindPeakPrice_Call {
-	_c.Call.Return(peakPrice, httpError)
-	return _c
-}
-
-func (_c *TickerManager_FindPeakPrice_Call) RunAndReturn(run func(ctx context.Context, ticker string, year int) (tax.PeakPrice, common.HttpError)) *TickerManager_FindPeakPrice_Call {
 	_c.Call.Return(run)
 	return _c
 }

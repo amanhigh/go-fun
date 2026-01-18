@@ -101,46 +101,6 @@ var _ = Describe("TickerManager", func() {
 		})
 	})
 
-	Context("FindPeakPrice", func() {
-		var (
-			ticker    = "TEST"
-			year      = 2024
-			stockData tax.StockData
-		)
-
-		BeforeEach(func() {
-			// Create test data with known peak and year-end prices
-			stockData = tax.StockData{
-				Prices: map[string]float64{
-					"2024-03-15": 150.00, // Peak price
-					"2024-02-01": 120.00,
-					"2024-12-31": 130.00, // Year end
-				},
-			}
-
-			// Save test data to file
-			filePath := filepath.Join(testDir, ticker+".json")
-			data, _ := json.Marshal(stockData)
-			err := os.WriteFile(filePath, data, 0600)
-			Expect(err).ToNot(HaveOccurred())
-		})
-
-		It("should correctly analyze yearly data", func() {
-			peakPrice, err := tickerManager.FindPeakPrice(ctx, ticker, year)
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(peakPrice.Ticker).To(Equal(ticker))
-			Expect(peakPrice.Date).To(Equal("2024-03-15"))
-			Expect(peakPrice.Price).To(Equal(150.00))
-		})
-
-		It("should handle missing data", func() {
-			// Test with non-existent ticker
-			_, err := tickerManager.FindPeakPrice(ctx, "INVALID", year)
-			Expect(err).To(HaveOccurred())
-		})
-	})
-
 	Context("GetPrice", func() {
 		var (
 			ticker    = "TEST"

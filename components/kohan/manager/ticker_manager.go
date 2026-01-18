@@ -24,11 +24,6 @@ type TickerManager interface {
 	// DownloadTicker fetches ticker data from YahooClient and saves to file.
 	DownloadTicker(ctx context.Context, ticker string) (err common.HttpError)
 
-	// FindPeakPrice finds highest close price for a year from pre-downloaded ticker data.
-	// Requires file to exist - call DownloadTicker(ctx, ticker) first if needed.
-	// No caching or auto-download (unlike GetPrice which has both).
-	FindPeakPrice(ctx context.Context, ticker string, year int) (tax.PeakPrice, common.HttpError)
-
 	// GetPrice returns closing price for a date. Uses in-memory cache and auto-downloads if file missing.
 	// Best for repeated calls on same ticker (valuation calculations).
 	GetPrice(ctx context.Context, ticker string, date time.Time) (float64, common.HttpError)
@@ -86,16 +81,6 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 	}
 
 	return nil
-}
-
-func (t *TickerManagerImpl) FindPeakPrice(_ context.Context, ticker string, year int) (peakPrice tax.PeakPrice, err common.HttpError) {
-	stockData, err := t.readTickerData(ticker)
-	if err != nil {
-		return peakPrice, err
-	}
-
-	yearStr := strconv.Itoa(year)
-	return t.analyzePrices(stockData.Prices, ticker, yearStr), nil
 }
 
 func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date time.Time) (float64, common.HttpError) {
@@ -209,28 +194,6 @@ func (t *TickerManagerImpl) readTickerData(ticker string) (tax.StockData, common
 	}
 
 	return stockData, nil
-}
-
-func (t *TickerManagerImpl) analyzePrices(prices map[string]float64, ticker, yearStr string) tax.PeakPrice {
-	var highestClose float64
-	var highestDate string
-
-	for date, closePrice := range prices {
-		if !strings.HasPrefix(date, yearStr) {
-			continue
-		}
-		// Track highest close
-		if closePrice > highestClose {
-			highestClose = closePrice
-			highestDate = date
-		}
-	}
-
-	return tax.PeakPrice{
-		Ticker: ticker,
-		Date:   highestDate,
-		Price:  highestClose,
-	}
 }
 
 // GetDailyPrices returns all available closing prices for a given year
