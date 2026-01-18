@@ -32,6 +32,11 @@ type TickerManager interface {
 	// GetPrice returns closing price for a date. Uses in-memory cache and auto-downloads if file missing.
 	// Best for repeated calls on same ticker (valuation calculations).
 	GetPrice(ctx context.Context, ticker string, date time.Time) (float64, common.HttpError)
+
+	// GetDailyPrices returns all available closing prices for a given year as map[date]price.
+	// Used for daily peak evaluation in valuation calculations.
+	// Date format in returned map: "YYYY-MM-DD"
+	GetDailyPrices(ctx context.Context, ticker string, year int) (map[string]float64, common.HttpError)
 }
 
 type TickerManagerImpl struct {
@@ -226,4 +231,33 @@ func (t *TickerManagerImpl) analyzePrices(prices map[string]float64, ticker, yea
 		Date:   highestDate,
 		Price:  highestClose,
 	}
+}
+
+// GetDailyPrices returns all available closing prices for a given year
+// as a map with date format "YYYY-MM-DD" as key and price as value.
+// Used for daily peak INR value evaluation during valuation calculations.
+func (t *TickerManagerImpl) GetDailyPrices(ctx context.Context, ticker string, year int) (map[string]float64, common.HttpError) {
+	data, err := t.getTickerData(ctx, ticker)
+	if err != nil {
+		return nil, err
+	}
+
+	yearStr := strconv.Itoa(year)
+	yearPrices := make(map[string]float64)
+
+	// Filter prices for the specified year
+	for date, price := range data.Prices {
+		if strings.HasPrefix(date, yearStr) {
+			yearPrices[date] = price
+		}
+	}
+
+	if len(yearPrices) == 0 {
+		return nil, common.NewHttpError(
+			fmt.Sprintf("no price data found for ticker %s in year %d", ticker, year),
+			http.StatusNotFound,
+		)
+	}
+
+	return yearPrices, nil
 }

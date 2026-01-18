@@ -20,6 +20,10 @@ type SBIManager interface {
 	// GetLastMonthEndRate returns the last available TT Buy rate for the month preceding the given date.
 	// It precomputes and caches all month-end rates on first call for performance.
 	GetLastMonthEndRate(ctx context.Context, date time.Time) (tax.MonthEndRate, common.HttpError)
+	// GetDailyRates returns all available SBI TT Buy rates for a given year
+	// as a map with date format "YYYY-MM-DD" as key and rate as value.
+	// Used for daily peak INR value evaluation during valuation calculations.
+	GetDailyRates(ctx context.Context, year int) (map[string]float64, common.HttpError)
 }
 
 type SBIManagerImpl struct {
@@ -204,4 +208,41 @@ func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpErro
 	}
 
 	return nil
+}
+
+// GetDailyRates returns all available SBI TT Buy rates for a given year
+// as a map with date format "YYYY-MM-DD" as key and rate as value.
+// Used for daily peak INR value evaluation during valuation calculations.
+func (s *SBIManagerImpl) GetDailyRates(ctx context.Context, year int) (map[string]float64, common.HttpError) {
+	// Get all exchange rates from the repository
+	allRates, repoErr := s.exchangeRepo.GetAllRecords(ctx)
+	if repoErr != nil {
+		return nil, common.NewServerError(repoErr)
+	}
+
+	if len(allRates) == 0 {
+		return nil, tax.NewRateNotFoundError(time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC))
+	}
+
+	yearRates := make(map[string]float64)
+
+	// Filter rates for the specified year
+	for _, rate := range allRates {
+		parsedDate, dateErr := rate.GetDate()
+		if dateErr != nil {
+			// Skip rates with invalid dates
+			continue
+		}
+
+		if parsedDate.Year() == year && rate.TTBuy > 0 {
+			dateStr := parsedDate.Format(time.DateOnly)
+			yearRates[dateStr] = rate.TTBuy
+		}
+	}
+
+	if len(yearRates) == 0 {
+		return nil, tax.NewRateNotFoundError(time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC))
+	}
+
+	return yearRates, nil
 }

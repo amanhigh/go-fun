@@ -336,4 +336,179 @@ var _ = Describe("SBIManager", func() {
 			Expect(result.ActualDate).To(Equal(time.Date(2023, 12, 31, 0, 0, 0, 0, time.UTC)))
 		})
 	})
+
+	Context("GetDailyRates", func() {
+		var allRates []tax.SbiRate
+
+		BeforeEach(func() {
+			// Setup test rates for a full year (2023)
+			allRates = []tax.SbiRate{
+				{Date: "2023-01-10", TTBuy: 82.00, TTSell: 83.00},
+				{Date: "2023-01-15", TTBuy: 82.10, TTSell: 83.10},
+				{Date: "2023-01-31", TTBuy: 82.20, TTSell: 83.20},
+				{Date: "2023-02-15", TTBuy: 82.30, TTSell: 83.30},
+				{Date: "2023-02-28", TTBuy: 82.40, TTSell: 83.40},
+				{Date: "2023-03-15", TTBuy: 82.50, TTSell: 83.50},
+				{Date: "2023-03-31", TTBuy: 82.60, TTSell: 83.60},
+				{Date: "2023-06-30", TTBuy: 82.70, TTSell: 83.70},
+				{Date: "2023-07-15", TTBuy: 82.80, TTSell: 83.80},
+				{Date: "2023-12-31", TTBuy: 82.90, TTSell: 83.90},
+				// Rates from other years should be filtered out
+				{Date: "2022-12-31", TTBuy: 81.00, TTSell: 82.00},
+				{Date: "2024-01-15", TTBuy: 84.00, TTSell: 85.00},
+			}
+		})
+
+		It("should return daily rates as map[date]rate for requested year", func() {
+			mockExchange.EXPECT().GetAllRecords(ctx).Return(allRates, nil)
+
+			year := 2023
+			rates, err := sbiManager.GetDailyRates(ctx, year)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(rates).NotTo(BeNil())
+
+			// Verify only 2023 rates are included
+			Expect(rates).To(HaveLen(10))
+
+			// Verify specific dates and rates
+			Expect(rates["2023-01-10"]).To(Equal(82.00))
+			Expect(rates["2023-01-31"]).To(Equal(82.20))
+			Expect(rates["2023-06-30"]).To(Equal(82.70))
+			Expect(rates["2023-07-15"]).To(Equal(82.80))
+			Expect(rates["2023-12-31"]).To(Equal(82.90))
+
+			// Verify rates from other years are NOT included
+			Expect(rates).NotTo(HaveKey("2022-12-31"))
+			Expect(rates).NotTo(HaveKey("2024-01-15"))
+		})
+
+		It("should filter out zero rates (weekends/holidays)", func() {
+			ratesWithZeros := []tax.SbiRate{
+				{Date: "2023-01-10", TTBuy: 82.00, TTSell: 83.00},
+				{Date: "2023-01-15", TTBuy: 0, TTSell: 0}, // Weekend - zero rate
+				{Date: "2023-01-31", TTBuy: 82.20, TTSell: 83.20},
+				{Date: "2023-02-15", TTBuy: 0, TTSell: 0}, // Holiday - zero rate
+				{Date: "2024-01-15", TTBuy: 84.00, TTSell: 85.00},
+			}
+
+			mockExchange.EXPECT().GetAllRecords(ctx).Return(ratesWithZeros, nil)
+
+			year := 2023
+			rates, err := sbiManager.GetDailyRates(ctx, year)
+
+			Expect(err).ToNot(HaveOccurred())
+
+			// Should exclude zero rates
+			Expect(rates).To(HaveLen(2))
+			Expect(rates).To(HaveKey("2023-01-10"))
+			Expect(rates).To(HaveKey("2023-01-31"))
+
+			// Zero rates should not be included
+			Expect(rates).NotTo(HaveKey("2023-01-15"))
+			Expect(rates).NotTo(HaveKey("2023-02-15"))
+
+			// Rates from other years should not be included
+			Expect(rates).NotTo(HaveKey("2024-01-15"))
+		})
+
+		It("should return error when no rates available for requested year", func() {
+			mockExchange.EXPECT().GetAllRecords(ctx).Return(allRates, nil)
+
+			year := 2025 // No rates for this year
+			rates, err := sbiManager.GetDailyRates(ctx, year)
+
+			// When no rates found for year, should return RateNotFoundError
+			Expect(err).To(HaveOccurred())
+			_, ok := err.(tax.RateNotFoundError)
+			Expect(ok).To(BeTrue())
+			Expect(rates).To(BeNil())
+		})
+
+		It("should return error when repository fails", func() {
+			expectedErr := common.NewHttpError("Failed to fetch rates", http.StatusInternalServerError)
+			mockExchange.EXPECT().GetAllRecords(ctx).Return(nil, expectedErr)
+
+			year := 2023
+			rates, err := sbiManager.GetDailyRates(ctx, year)
+
+			Expect(err).To(Equal(expectedErr))
+			Expect(rates).To(BeNil())
+		})
+
+		It("should return error when repository returns empty list", func() {
+			mockExchange.EXPECT().GetAllRecords(ctx).Return([]tax.SbiRate{}, nil)
+
+			year := 2023
+			rates, err := sbiManager.GetDailyRates(ctx, year)
+
+			// Should return error when no rates available at all
+			Expect(err).To(HaveOccurred())
+			_, ok := err.(tax.RateNotFoundError)
+			Expect(ok).To(BeTrue())
+			Expect(rates).To(BeNil())
+		})
+
+		It("should correctly parse dates with year filtering", func() {
+			ratesMultiYear := []tax.SbiRate{
+				{Date: "2022-12-15", TTBuy: 81.50, TTSell: 82.50},
+				{Date: "2022-12-31", TTBuy: 81.60, TTSell: 82.60},
+				{Date: "2023-01-01", TTBuy: 82.00, TTSell: 83.00},
+				{Date: "2023-01-15", TTBuy: 82.10, TTSell: 83.10},
+				{Date: "2023-12-31", TTBuy: 82.90, TTSell: 83.90},
+				{Date: "2024-01-01", TTBuy: 84.00, TTSell: 85.00},
+				{Date: "2024-12-31", TTBuy: 84.50, TTSell: 85.50},
+			}
+
+			mockExchange.EXPECT().GetAllRecords(ctx).Return(ratesMultiYear, nil)
+
+			year := 2023
+			rates, err := sbiManager.GetDailyRates(ctx, year)
+
+			Expect(err).ToNot(HaveOccurred())
+
+			// Should only include 2023 dates
+			Expect(rates).To(HaveLen(3))
+			Expect(rates).To(HaveKey("2023-01-01"))
+			Expect(rates).To(HaveKey("2023-01-15"))
+			Expect(rates).To(HaveKey("2023-12-31"))
+
+			// Verify values
+			Expect(rates["2023-01-01"]).To(Equal(82.00))
+			Expect(rates["2023-01-15"]).To(Equal(82.10))
+			Expect(rates["2023-12-31"]).To(Equal(82.90))
+
+			// Verify other years excluded
+			Expect(rates).NotTo(HaveKey("2022-12-15"))
+			Expect(rates).NotTo(HaveKey("2022-12-31"))
+			Expect(rates).NotTo(HaveKey("2024-01-01"))
+			Expect(rates).NotTo(HaveKey("2024-12-31"))
+		})
+
+		It("should return all valid rates including sparse dates", func() {
+			sparseRates := []tax.SbiRate{
+				{Date: "2023-01-15", TTBuy: 82.10, TTSell: 83.10},
+				// Large gap (no February rates)
+				{Date: "2023-03-31", TTBuy: 82.60, TTSell: 83.60},
+				// Sparse in middle
+				{Date: "2023-07-15", TTBuy: 82.80, TTSell: 83.80},
+				// Large gap (no August-November rates)
+				{Date: "2023-12-31", TTBuy: 82.90, TTSell: 83.90},
+			}
+
+			mockExchange.EXPECT().GetAllRecords(ctx).Return(sparseRates, nil)
+
+			year := 2023
+			rates, err := sbiManager.GetDailyRates(ctx, year)
+
+			Expect(err).ToNot(HaveOccurred())
+
+			// All provided rates should be included
+			Expect(rates).To(HaveLen(4))
+			Expect(rates["2023-01-15"]).To(Equal(82.10))
+			Expect(rates["2023-03-31"]).To(Equal(82.60))
+			Expect(rates["2023-07-15"]).To(Equal(82.80))
+			Expect(rates["2023-12-31"]).To(Equal(82.90))
+		})
+	})
 })

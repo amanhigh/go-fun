@@ -151,8 +151,9 @@ func (ki *KohanInjector) provideValuationManager(
 	accountManager manager.AccountManager,
 	tradeRepository repository.TradeRepository,
 	fyManager manager.FinancialYearManager[taxmodels.Trade],
+	sbiManager manager.SBIManager,
 ) manager.ValuationManager {
-	return manager.NewValuationManager(tickerManager, accountManager, tradeRepository, fyManager)
+	return manager.NewValuationManager(tickerManager, accountManager, tradeRepository, fyManager, sbiManager)
 }
 
 func (ki *KohanInjector) provideTaxValuationManager(
