@@ -27,6 +27,7 @@ type ValuationManagerImpl struct {
 	accountManager  AccountManager
 	tradeRepository repository.TradeRepository
 	fyManager       FinancialYearManager[tax.Trade]
+	sbiManager      SBIManager
 }
 
 func NewValuationManager(
@@ -34,12 +35,14 @@ func NewValuationManager(
 	accountManager AccountManager,
 	tradeRepository repository.TradeRepository,
 	fyManager FinancialYearManager[tax.Trade],
+	sbiManager SBIManager,
 ) ValuationManager {
 	return &ValuationManagerImpl{
 		tickerManager:   tickerManager,
 		accountManager:  accountManager,
 		tradeRepository: tradeRepository,
 		fyManager:       fyManager,
+		sbiManager:      sbiManager,
 	}
 }
 
@@ -146,11 +149,22 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 	analysis.FirstPosition = openingPosition
 	analysis.PeakPosition = openingPosition
 
+	// Step 4: Calculate daily peak value (Tax.md Line 124 compliance - MANDATORY)
+	// Daily peak calculation is the authoritative method for determining peak INR value
+	peakPosition, peakErr := v.calculateDailyPeak(ctx, tickerSymbol, year, openingPosition, trades)
+	if peakErr != nil {
+		return tax.Valuation{}, common.NewServerError(
+			fmt.Errorf("failed to calculate daily peak for %s: %w", tickerSymbol, peakErr))
+	}
+	analysis.PeakPosition = peakPosition
+
+	// Step 5: Determine current quantity at year end
 	currentQuantity, processErr := v.processTrades(&analysis, trades, openingPosition)
 	if processErr != nil {
 		return tax.Valuation{}, processErr
 	}
 
+	// Step 6: Determine year end position
 	if detErr := v.determineYearEndPosition(ctx, &analysis, year, currentQuantity); detErr != nil {
 		return tax.Valuation{}, detErr
 	}
@@ -171,9 +185,7 @@ func (v *ValuationManagerImpl) processTrades(
 	}
 
 	currentQuantity = openingPeriodPosition.Quantity
-	if openingPeriodPosition.Quantity > 0 {
-		analysis.PeakPosition = openingPeriodPosition
-	}
+	// Peak will be calculated by calculateDailyPeak() using INR values
 
 	for i, trade := range trades {
 		if i == 0 && openingPeriodPosition.Quantity == 0 {
@@ -207,29 +219,18 @@ func (v *ValuationManagerImpl) handleFirstTrade(analysis *tax.Valuation, trade t
 			Quantity: trade.Quantity,
 			USDPrice: trade.USDPrice,
 		}
-		analysis.PeakPosition = analysis.FirstPosition // Initial peak is the first buy
+		// Peak will be calculated by calculateDailyPeak() using INR values
 		return trade.Quantity, nil
 	}
 	return 0, nil // Should not happen due to initial check in processTrades
 }
 
 // applyTrade processes subsequent trades or trades in a carry-over scenario.
-func (v *ValuationManagerImpl) applyTrade(analysis *tax.Valuation, trade tax.Trade, currentQuantity float64) (float64, common.HttpError) {
-	tradeDate, dateErr := trade.GetDate()
-	if dateErr != nil {
-		return 0, dateErr
-	}
-
+func (v *ValuationManagerImpl) applyTrade(_ *tax.Valuation, trade tax.Trade, currentQuantity float64) (float64, common.HttpError) {
 	// Use GetType() for normalized type comparison with constants
 	if trade.GetType() == tax.TRADE_TYPE_BUY {
 		currentQuantity += trade.Quantity
-		if currentQuantity > analysis.PeakPosition.Quantity {
-			analysis.PeakPosition = tax.Position{
-				Date:     tradeDate,
-				Quantity: currentQuantity,
-				USDPrice: trade.USDPrice,
-			}
-		}
+		// Peak calculation happens in calculateDailyPeak() which uses INR values
 	} else { // SELL
 		currentQuantity -= trade.Quantity
 	}
@@ -310,4 +311,209 @@ func (v *ValuationManagerImpl) getOpeningPositionForPeriod(ctx context.Context, 
 		Quantity: account.Quantity,
 		USDPrice: openingPrice,
 	}, nil
+}
+
+// calculateDailyPeak evaluates (Quantity × Market_Price × SBI_Rate) for every day in the year
+// to find the true INR peak value during the calendar year.
+// This ensures compliance with Tax.md Line 124 requirement for daily evaluation.
+func (v *ValuationManagerImpl) calculateDailyPeak(
+	ctx context.Context,
+	ticker string,
+	year int,
+	openingPosition tax.Position,
+	trades []tax.Trade,
+) (peakPosition tax.Position, err common.HttpError) {
+	// Step 1: Build daily quantity timeline by processing trades chronologically
+	quantityByDate := v.buildDailyQuantityTimeline(year, openingPosition, trades)
+	if len(quantityByDate) == 0 {
+		// No holdings during the year
+		return tax.Position{}, nil
+	}
+
+	// Step 2: Get daily market prices for the ticker
+	dailyPrices, priceErr := v.tickerManager.GetDailyPrices(ctx, ticker, year)
+	if priceErr != nil {
+		return tax.Position{}, priceErr
+	}
+
+	// Step 3: Get daily SBI TT Buy rates for the year
+	dailyRates, rateErr := v.sbiManager.GetDailyRates(ctx, year)
+	if rateErr != nil {
+		return tax.Position{}, rateErr
+	}
+
+	// Step 4: Find the date with maximum INR value
+	return v.findDailyPeakPosition(year, openingPosition, quantityByDate, dailyPrices, dailyRates), nil
+}
+
+// peakCalculationData holds data needed for daily peak calculation
+type peakCalculationData struct {
+	quantityByDate map[string]float64
+	dailyPrices    map[string]float64
+	dailyRates     map[string]float64
+	maxINRValue    float64
+}
+
+// findDailyPeakPosition iterates through each day of the year to find the maximum INR value
+func (v *ValuationManagerImpl) findDailyPeakPosition(
+	year int,
+	openingPosition tax.Position,
+	quantityByDate map[string]float64,
+	dailyPrices map[string]float64,
+	dailyRates map[string]float64,
+) tax.Position {
+	data := peakCalculationData{
+		quantityByDate: quantityByDate,
+		dailyPrices:    dailyPrices,
+		dailyRates:     dailyRates,
+		maxINRValue:    0,
+	}
+
+	peakPosition := openingPosition
+	startDate := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+	endDate := time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
+
+	for currDate := startDate; !currDate.After(endDate); currDate = currDate.AddDate(0, 0, 1) {
+		dateStr := currDate.Format(time.DateOnly)
+		peakPosition = v.updatePeakIfHigher(peakPosition, currDate, dateStr, &data)
+	}
+
+	return peakPosition
+}
+
+// updatePeakIfHigher checks if the current date's INR value is higher than the current peak
+func (v *ValuationManagerImpl) updatePeakIfHigher(
+	peakPos tax.Position,
+	currDate time.Time,
+	dateStr string,
+	data *peakCalculationData,
+) tax.Position {
+	quantity := v.getQuantityForDate(data.quantityByDate, dateStr)
+	if quantity == 0 {
+		return peakPos
+	}
+
+	price := v.getClosestPrice(data.dailyPrices, dateStr)
+	if price == 0 {
+		return peakPos
+	}
+
+	rate := v.getClosestRate(data.dailyRates, dateStr)
+	if rate == 0 {
+		return peakPos
+	}
+
+	inrValue := quantity * price * rate
+	if inrValue > data.maxINRValue {
+		data.maxINRValue = inrValue
+		return tax.Position{
+			Date:     currDate,
+			Quantity: quantity,
+			USDPrice: price,
+		}
+	}
+	return peakPos
+}
+
+// buildDailyQuantityTimeline creates a map of date → quantity held by processing trades
+func (v *ValuationManagerImpl) buildDailyQuantityTimeline(
+	year int,
+	openingPosition tax.Position,
+	trades []tax.Trade,
+) map[string]float64 {
+	timeline := make(map[string]float64)
+	currentQuantity := openingPosition.Quantity
+
+	// Initialize the year with opening quantity
+	startDate := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+	timeline[startDate.Format(time.DateOnly)] = currentQuantity
+
+	// Process each trade chronologically
+	for _, trade := range trades {
+		tradeDate, dateErr := trade.GetDate()
+		if dateErr != nil {
+			continue // Skip trades with invalid dates
+		}
+
+		if tradeDate.Year() != year {
+			continue // Skip trades outside the target year
+		}
+
+		// Update quantity based on trade type
+		if trade.GetType() == tax.TRADE_TYPE_BUY {
+			currentQuantity += trade.Quantity
+		} else { // SELL
+			currentQuantity -= trade.Quantity
+		}
+
+		timeline[tradeDate.Format(time.DateOnly)] = currentQuantity
+	}
+
+	return timeline
+}
+
+// getQuantityForDate returns the quantity held on a given date by using the last known quantity
+func (v *ValuationManagerImpl) getQuantityForDate(timeline map[string]float64, dateStr string) float64 {
+	if qty, exists := timeline[dateStr]; exists {
+		return qty
+	}
+
+	// Backfill: find the closest previous date's quantity
+	parsedDate, _ := time.Parse(time.DateOnly, dateStr)
+	var closestQty float64
+	var closestDate time.Time
+
+	for dateKey, qty := range timeline {
+		keyDate, _ := time.Parse(time.DateOnly, dateKey)
+		if !keyDate.After(parsedDate) && (closestDate.IsZero() || keyDate.After(closestDate)) {
+			closestQty = qty
+			closestDate = keyDate
+		}
+	}
+
+	return closestQty
+}
+
+// getClosestPrice finds the nearest previous market price for a given date
+func (v *ValuationManagerImpl) getClosestPrice(dailyPrices map[string]float64, dateStr string) float64 {
+	if price, exists := dailyPrices[dateStr]; exists {
+		return price
+	}
+
+	// Backfill: find closest previous date with available price
+	parsedDate, _ := time.Parse(time.DateOnly, dateStr)
+	var closestPrice float64
+	var closestDate time.Time
+
+	for priceDate, price := range dailyPrices {
+		keyDate, _ := time.Parse(time.DateOnly, priceDate)
+		if !keyDate.After(parsedDate) && (closestDate.IsZero() || keyDate.After(closestDate)) {
+			closestPrice = price
+			closestDate = keyDate
+		}
+	}
+
+	return closestPrice
+}
+
+// getClosestRate finds the nearest previous SBI exchange rate for a given date
+func (v *ValuationManagerImpl) getClosestRate(dailyRates map[string]float64, dateStr string) float64 {
+	if rate, exists := dailyRates[dateStr]; exists {
+		return rate
+	}
+
+	// Backfill: find closest previous date with available rate
+	parsedDate, _ := time.Parse(time.DateOnly, dateStr)
+	var closestRate float64
+	var closestDate time.Time
+
+	for rateDate, rate := range dailyRates {
+		keyDate, _ := time.Parse(time.DateOnly, rateDate)
+		if !keyDate.After(parsedDate) && (closestDate.IsZero() || keyDate.After(closestDate)) {
+			closestRate = rate
+			closestDate = keyDate
+		}
+	}
+
+	return closestRate
 }
