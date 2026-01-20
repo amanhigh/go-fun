@@ -38,6 +38,7 @@ var _ = Describe("ValuationManager", func() {
 		mockAccountManager  *mocks.AccountManager
 		mockTradeRepository *repoMocks.TradeRepository
 		mockFyManager       *mocks.FinancialYearManager[tax.Trade]
+		mockSBIManager      *mocks.SBIManager
 		valuationManager    manager.ValuationManager
 
 		// Common variables
@@ -53,7 +54,8 @@ var _ = Describe("ValuationManager", func() {
 		mockAccountManager = mocks.NewAccountManager(GinkgoT())
 		mockTradeRepository = repoMocks.NewTradeRepository(GinkgoT())
 		mockFyManager = mocks.NewFinancialYearManager[tax.Trade](GinkgoT())
-		valuationManager = manager.NewValuationManager(mockTickerManager, mockAccountManager, mockTradeRepository, mockFyManager)
+		mockSBIManager = mocks.NewSBIManager(GinkgoT())
+		valuationManager = manager.NewValuationManager(mockTickerManager, mockAccountManager, mockTradeRepository, mockFyManager, mockSBIManager)
 	})
 
 	Context("Analyse Valuation", func() {
@@ -75,6 +77,21 @@ var _ = Describe("ValuationManager", func() {
 							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
 						}
 
+						// Daily prices for peak calculation (match trade execution price)
+						dailyPrices := map[string]float64{
+							"2024-01-15": 100.0,
+						}
+						// Daily rates for INR calculation
+						dailyRates := map[string]float64{
+							"2024-01-15": 82.5,
+						}
+
+						mockTickerManager.EXPECT().
+							GetDailyPrices(ctx, AAPL, year).
+							Return(dailyPrices, nil)
+						mockSBIManager.EXPECT().
+							GetDailyRates(ctx, year).
+							Return(dailyRates, nil)
 						mockTickerManager.EXPECT().
 							GetPrice(ctx, AAPL, yearEndDate).
 							Return(yearEndPrice, nil)
@@ -109,6 +126,26 @@ var _ = Describe("ValuationManager", func() {
 							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
 							tax.NewTrade(AAPL, "2024-02-15", "SELL", 10, 120),
 						}
+
+						// Daily prices for peak calculation
+						dailyPrices := map[string]float64{
+							"2024-01-15": 100.0,
+							"2024-02-15": 120.0,
+						}
+						// Daily rates for INR calculation
+						dailyRates := map[string]float64{
+							"2024-01-15": 82.5,
+							"2024-02-15": 83.0,
+						}
+
+						mockTickerManager.EXPECT().
+							GetDailyPrices(ctx, AAPL, year).
+							Return(dailyPrices, nil)
+						mockSBIManager.EXPECT().
+							GetDailyRates(ctx, year).
+							Return(dailyRates, nil)
+						// NOTE: No GetPrice mock needed - position fully exits (quantity = 0),
+						// so determineYearEndPosition doesn't call GetPrice (see line 249 in valuation_manager.go)
 					})
 
 					It("should compute positions with zero year-end", func() {
@@ -142,6 +179,25 @@ var _ = Describe("ValuationManager", func() {
 							tax.NewTrade(AAPL, "2024-03-15", "BUY", 5, 120),
 						}
 
+						// Daily prices for peak calculation
+						dailyPrices := map[string]float64{
+							"2024-01-15": 100.0,
+							"2024-02-15": 110.0,
+							"2024-03-15": 120.0,
+						}
+						// Daily rates for INR calculation (increasing rates ensure peak stays on last trade)
+						dailyRates := map[string]float64{
+							"2024-01-15": 82.5,
+							"2024-02-15": 83.0,
+							"2024-03-15": 83.5,
+						}
+
+						mockTickerManager.EXPECT().
+							GetDailyPrices(ctx, AAPL, year).
+							Return(dailyPrices, nil)
+						mockSBIManager.EXPECT().
+							GetDailyRates(ctx, year).
+							Return(dailyRates, nil)
 						mockTickerManager.EXPECT().
 							GetPrice(ctx, AAPL, yearEndDate).
 							Return(yearEndPrice, nil)
@@ -182,6 +238,25 @@ var _ = Describe("ValuationManager", func() {
 							tax.NewTrade(AAPL, "2024-03-15", "BUY", 5, 90),  // $450  - Recovery buy
 						}
 
+						// Daily prices for peak calculation
+						dailyPrices := map[string]float64{
+							"2024-01-15": 100.0,
+							"2024-02-15": 80.0,
+							"2024-03-15": 90.0,
+						}
+						// Daily rates for INR calculation (increasing rates ensure peak stays on last trade)
+						dailyRates := map[string]float64{
+							"2024-01-15": 82.5,
+							"2024-02-15": 83.0,
+							"2024-03-15": 83.5,
+						}
+
+						mockTickerManager.EXPECT().
+							GetDailyPrices(ctx, AAPL, year).
+							Return(dailyPrices, nil)
+						mockSBIManager.EXPECT().
+							GetDailyRates(ctx, year).
+							Return(dailyRates, nil)
 						mockTickerManager.EXPECT().
 							GetPrice(ctx, AAPL, yearEndDate).
 							Return(yearEndPrice, nil)
@@ -226,6 +301,23 @@ var _ = Describe("ValuationManager", func() {
 							tax.NewTrade(AAPL, "2024-12-31", "BUY", 5, 120), // Year end trade
 						}
 
+						// Daily prices for peak calculation (match trade execution prices)
+						dailyPrices := map[string]float64{
+							"2024-01-15": 100.0,
+							"2024-12-31": 120.0, // Year-end trade price
+						}
+						// Daily rates for INR calculation (increasing rates ensure Dec 31 peak stays)
+						dailyRates := map[string]float64{
+							"2024-01-15": 82.5,
+							"2024-12-31": 84.0, // Higher rate ensures Dec 31 wins
+						}
+
+						mockTickerManager.EXPECT().
+							GetDailyPrices(ctx, AAPL, year).
+							Return(dailyPrices, nil)
+						mockSBIManager.EXPECT().
+							GetDailyRates(ctx, year).
+							Return(dailyRates, nil)
 						mockTickerManager.EXPECT().
 							GetPrice(ctx, AAPL, yearEndDate).
 							Return(yearEndPrice, nil)
@@ -258,14 +350,50 @@ var _ = Describe("ValuationManager", func() {
 					var trades []tax.Trade
 					BeforeEach(func() {
 						// FIXME: #A Multiple Peaks with Same Value (Take Second higher TBBR Rate) or Throw Error.
+						// Test validates that when multiple position peaks exist with SAME quantity,
+						// the second peak wins because it has HIGHER USD price AND HIGHER TBBR rate
 						trades = []tax.Trade{
-							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),  // Initial 10
-							tax.NewTrade(AAPL, "2024-02-15", "BUY", 5, 110),   // Peak 1: 15 shares
-							tax.NewTrade(AAPL, "2024-03-15", "SELL", 8, 120),  // Down to 7
-							tax.NewTrade(AAPL, "2024-04-15", "BUY", 10, 115),  // Peak 2: 17 shares
-							tax.NewTrade(AAPL, "2024-05-15", "SELL", 12, 125), // Down to 5
+							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),  // Initial 10 shares
+							tax.NewTrade(AAPL, "2024-02-15", "BUY", 5, 110),   // Peak 1: 15 shares @ $110
+							tax.NewTrade(AAPL, "2024-03-15", "SELL", 5, 120),  // Down to 10 shares
+							tax.NewTrade(AAPL, "2024-04-15", "BUY", 5, 115),   // Peak 2: 15 shares @ $115 ← Expected peak (same qty, higher price+rate)
+							tax.NewTrade(AAPL, "2024-05-15", "SELL", 12, 125), // Down to 3 shares
 						}
 
+						// Daily prices for peak calculation
+						dailyPrices := map[string]float64{
+							"2024-01-15": 100.0,
+							"2024-02-15": 110.0,
+							"2024-03-15": 120.0,
+							"2024-04-15": 115.0,
+							"2024-05-15": 125.0,
+						}
+
+						// Daily rates for peak calculation
+						// Strategy: Both Feb 15 and Apr 15 have 15 shares (SAME quantity)
+						// Difference: Apr 15 has higher USD price ($115 vs $110) AND higher TBBR rate
+						// Apr 15 wins when using > comparison because: 15×115×85.0 > 15×110×82.0
+						//
+						// INR Calculations:
+						// Jan 15: 10 × 100 × 80.0 = 80,000 INR
+						// Feb 15: 15 × 110 × 82.0 = 132,300 INR (first peak candidate, same qty as Apr 15)
+						// Mar 15: 10 × 120 × 82.5 = 99,000 INR (position reduces from 15)
+						// Apr 15: 15 × 115 × 85.0 = 147,375 INR ← PEAK (second peak, same qty but higher price+rate)
+						// May 15: 3 × 125 × 85.5 = 31,912.5 INR (position reduces from 15)
+						dailyRates := map[string]float64{
+							"2024-01-15": 80.0,
+							"2024-02-15": 82.0,
+							"2024-03-15": 82.5,
+							"2024-04-15": 85.0, // Higher TBBR rate for Apr 15 (second peak advantage)
+							"2024-05-15": 85.5,
+						}
+
+						mockTickerManager.EXPECT().
+							GetDailyPrices(ctx, AAPL, year).
+							Return(dailyPrices, nil)
+						mockSBIManager.EXPECT().
+							GetDailyRates(ctx, year).
+							Return(dailyRates, nil)
 						mockTickerManager.EXPECT().
 							GetPrice(ctx, AAPL, yearEndDate).
 							Return(yearEndPrice, nil)
@@ -284,11 +412,11 @@ var _ = Describe("ValuationManager", func() {
 							USDPrice: 100.0,
 						}, tax.Position{
 							Date:     peakPosDate,
-							Quantity: 17.0,
+							Quantity: 15.0,
 							USDPrice: 115.0,
 						}, tax.Position{
 							Date:     yearEndDate,
-							Quantity: 5.0,
+							Quantity: 3.0,
 							USDPrice: yearEndPrice,
 						})
 					})
@@ -306,6 +434,29 @@ var _ = Describe("ValuationManager", func() {
 							tax.NewTrade(AAPL, "2024-03-15", "SELL", 4, 120), // Sell 4 shares
 						}
 
+						// Daily prices for peak calculation
+						dailyPrices := map[string]float64{
+							"2024-01-15": 100.0,
+							"2024-02-15": 110.0,
+							"2024-03-15": 120.0,
+						}
+
+						// Daily rates for peak calculation (decreasing to ensure Jan 15 is peak)
+						// Jan 15: 10 × 100 × 83.0 = 83,000 INR ← PEAK
+						// Feb 15: 7 × 110 × 82.5 = 63,525 INR
+						// Mar 15: 3 × 120 × 82.0 = 29,520 INR
+						dailyRates := map[string]float64{
+							"2024-01-15": 83.0,
+							"2024-02-15": 82.5,
+							"2024-03-15": 82.0,
+						}
+
+						mockTickerManager.EXPECT().
+							GetDailyPrices(ctx, AAPL, year).
+							Return(dailyPrices, nil)
+						mockSBIManager.EXPECT().
+							GetDailyRates(ctx, year).
+							Return(dailyRates, nil)
 						mockTickerManager.EXPECT().
 							GetPrice(ctx, AAPL, yearEndDate).
 							Return(yearEndPrice, nil)
@@ -342,7 +493,22 @@ var _ = Describe("ValuationManager", func() {
 				trades := []tax.Trade{
 					tax.NewTrade(AAPL, "2024-01-15", "SELL", 10, 100),
 				}
+
+				// Daily prices and rates needed (calculateDailyPeak called before processTrades validation)
+				dailyPrices := map[string]float64{
+					"2024-01-15": 100.0,
+				}
+				dailyRates := map[string]float64{
+					"2024-01-15": 82.5,
+				}
+
 				mockAccountManager.EXPECT().GetRecord(ctx, AAPL, year-1).Return(tax.Account{}, common.ErrNotFound)
+				mockTickerManager.EXPECT().
+					GetDailyPrices(ctx, AAPL, year).
+					Return(dailyPrices, nil)
+				mockSBIManager.EXPECT().
+					GetDailyRates(ctx, year).
+					Return(dailyRates, nil)
 
 				_, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 				Expect(err).To(HaveOccurred())
@@ -360,10 +526,33 @@ var _ = Describe("ValuationManager", func() {
 					{Symbol: AAPL, Date: "2024-03-15", Type: "Sell", Quantity: 3, USDPrice: 120.0},
 				}
 
+				// Daily prices for peak calculation
+				dailyPrices := map[string]float64{
+					"2024-01-15": 100.0,
+					"2024-02-15": 110.0,
+					"2024-03-15": 120.0,
+				}
+
+				// Daily rates for peak calculation (increasing to ensure Feb 15 is peak)
+				// Jan 15: 10 × 100 × 82.0 = 82,000 INR
+				// Feb 15: 15 × 110 × 83.0 = 137,250 INR ← PEAK
+				// Mar 15: 12 × 120 × 82.5 = 118,800 INR
+				dailyRates := map[string]float64{
+					"2024-01-15": 82.0,
+					"2024-02-15": 83.0,
+					"2024-03-15": 82.5,
+				}
+
 				mockAccountManager.EXPECT().
 					GetRecord(ctx, AAPL, year-1).
 					Return(tax.Account{}, common.ErrNotFound) // Fresh start
 
+				mockTickerManager.EXPECT().
+					GetDailyPrices(ctx, AAPL, year).
+					Return(dailyPrices, nil)
+				mockSBIManager.EXPECT().
+					GetDailyRates(ctx, year).
+					Return(dailyRates, nil)
 				mockTickerManager.EXPECT().
 					GetPrice(ctx, AAPL, yearEndDate).
 					Return(yearEndPrice, nil)
@@ -430,13 +619,26 @@ var _ = Describe("ValuationManager", func() {
 						tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
 					}
 
-					mockTickerManager.EXPECT().
-						GetPrice(ctx, AAPL, yearEndDate).
-						Return(0.0, common.ErrNotFound)
+					// Daily prices and rates for peak calculation (succeeds)
+					dailyPrices := map[string]float64{
+						"2024-01-15": 100.0,
+					}
+					dailyRates := map[string]float64{
+						"2024-01-15": 82.5,
+					}
 
 					mockAccountManager.EXPECT().
 						GetRecord(ctx, AAPL, year-1).
 						Return(tax.Account{}, common.ErrNotFound)
+					mockTickerManager.EXPECT().
+						GetDailyPrices(ctx, AAPL, year).
+						Return(dailyPrices, nil)
+					mockSBIManager.EXPECT().
+						GetDailyRates(ctx, year).
+						Return(dailyRates, nil)
+					mockTickerManager.EXPECT().
+						GetPrice(ctx, AAPL, yearEndDate).
+						Return(0.0, common.ErrNotFound)
 				})
 
 				It("should fail when ticker price fetch fails", func() {
