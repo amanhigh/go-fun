@@ -423,6 +423,248 @@ var _ = Describe("ValuationManager", func() {
 				})
 			})
 
+			Context("Peak Should be INR Based (Qty × Price × Rate)", func() {
+				// Test suite validating that peak is determined by INR value (Qty × USD_Price × SBI_Rate),
+				// NOT just by quantity. All scenarios use constant quantity to isolate price/rate variations.
+				// This ensures compliance with Tax.md Line 124 daily peak calculation requirement.
+
+				Context("Scenario 1: Same Qty, Lower USD Price WINS due to Higher Rate", func() {
+					// Prove that exchange rate can dominate over USD price
+					var trades []tax.Trade
+
+					BeforeEach(func() {
+						trades = []tax.Trade{
+							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
+						}
+
+						// Same quantity (10 shares) held on both dates
+						aaplDailyPrices := map[string]float64{
+							"2024-01-15": 100.0, // Lower price
+							"2024-06-15": 120.0, // Higher price (but won't be peak)
+						}
+
+						// Rate determines peak: higher rate on lower price date
+						aaplDailyRates := map[string]float64{
+							"2024-01-15": 85.0, // Higher rate on lower price date
+							"2024-06-15": 70.0, // Lower rate on higher price date
+						}
+
+						// INR Calculations:
+						// Jan 15: 10 × $100 × 85.0 = 85,000 INR ← PEAK
+						// Jun 15: 10 × $120 × 70.0 = 84,000 INR (higher price but lower INR)
+
+						mockTickerManager.EXPECT().
+							GetDailyPrices(ctx, AAPL, year).
+							Return(aaplDailyPrices, nil)
+						mockSBIManager.EXPECT().
+							GetDailyRates(ctx, year).
+							Return(aaplDailyRates, nil)
+						mockTickerManager.EXPECT().
+							GetPrice(ctx, AAPL, yearEndDate).
+							Return(yearEndPrice, nil)
+					})
+
+					It("should identify peak on lower USD price date due to higher exchange rate", func() {
+						valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
+						Expect(err).ToNot(HaveOccurred())
+
+						// Peak should be Jan 15 (lower USD price but higher rate)
+						peakDate, _ := trades[0].GetDate()
+						Expect(valuation.PeakPosition.Date).To(Equal(peakDate))
+						Expect(valuation.PeakPosition.Quantity).To(Equal(10.0))
+						Expect(valuation.PeakPosition.USDPrice).To(Equal(100.0))
+
+						// Verify INR values: Jan 15 > Jun 15
+						jan15INR := 10.0 * 100.0 * 85.0 // = 85,000 INR
+						jun15INR := 10.0 * 120.0 * 70.0 // = 84,000 INR
+						Expect(jan15INR).To(BeNumerically(">", jun15INR))
+
+						// Verify peak is indeed the maximum INR value
+						actualPeakINR := valuation.PeakPosition.Quantity * valuation.PeakPosition.USDPrice * 85.0
+						Expect(actualPeakINR).To(Equal(jan15INR))
+						Expect(actualPeakINR).To(BeNumerically(">", jun15INR))
+					})
+				})
+
+				Context("Scenario 2: Same Qty, Same Price, Rate Determines Peak", func() {
+					// Pure rate variation test: isolates rate as the only changing factor
+					var trades []tax.Trade
+
+					BeforeEach(func() {
+						trades = []tax.Trade{
+							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
+						}
+
+						// Same quantity and same price on both dates
+						aaplDailyPrices := map[string]float64{
+							"2024-01-15": 100.0,
+							"2024-06-15": 100.0, // Same price as Jan 15
+						}
+
+						// Only rate varies: higher rate later
+						aaplDailyRates := map[string]float64{
+							"2024-01-15": 82.0,
+							"2024-06-15": 84.0, // Higher rate
+						}
+
+						// INR Calculations:
+						// Jan 15: 10 × $100 × 82.0 = 82,000 INR
+						// Jun 15: 10 × $100 × 84.0 = 84,000 INR ← PEAK (only rate differs)
+
+						mockTickerManager.EXPECT().
+							GetDailyPrices(ctx, AAPL, year).
+							Return(aaplDailyPrices, nil)
+						mockSBIManager.EXPECT().
+							GetDailyRates(ctx, year).
+							Return(aaplDailyRates, nil)
+						mockTickerManager.EXPECT().
+							GetPrice(ctx, AAPL, yearEndDate).
+							Return(yearEndPrice, nil)
+					})
+
+					It("should identify peak on higher rate date when price and quantity are same", func() {
+						valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
+						Expect(err).ToNot(HaveOccurred())
+
+						// Peak should be Jun 15 (higher rate)
+						Expect(valuation.PeakPosition.Date).To(Equal(time.Date(2024, 6, 15, 0, 0, 0, 0, time.UTC)))
+						Expect(valuation.PeakPosition.Quantity).To(Equal(10.0))
+						Expect(valuation.PeakPosition.USDPrice).To(Equal(100.0))
+
+						// Verify INR values: Jun 15 > Jan 15
+						jan15INR := 10.0 * 100.0 * 82.0 // = 82,000 INR
+						jun15INR := 10.0 * 100.0 * 84.0 // = 84,000 INR
+						Expect(jun15INR).To(BeNumerically(">", jan15INR))
+
+						// Verify only rate changed
+						actualPeakINR := valuation.PeakPosition.Quantity * valuation.PeakPosition.USDPrice * 84.0
+						Expect(actualPeakINR).To(Equal(jun15INR))
+						Expect(actualPeakINR).To(BeNumerically(">", jan15INR))
+					})
+				})
+
+				Context("Scenario 3: Same Qty, Price-Rate Tradeoff (Multi-Factor Optimization)", func() {
+					// Both price and rate vary across 3 dates: tests multi-factor optimization
+					var trades []tax.Trade
+
+					BeforeEach(func() {
+						trades = []tax.Trade{
+							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
+						}
+
+						// Quantity constant (10 shares) across all dates, but price varies
+						aaplDailyPrices := map[string]float64{
+							"2024-01-15": 100.0, // Medium price
+							"2024-06-15": 120.0, // High price ← Peak here due to price × rate product
+							"2024-09-15": 90.0,  // Low price
+						}
+
+						// Rate varies inversely to price to create optimization scenario
+						aaplDailyRates := map[string]float64{
+							"2024-01-15": 82.0, // Medium rate
+							"2024-06-15": 75.0, // Low rate (but high price compensates)
+							"2024-09-15": 92.0, // High rate (but low price doesn't compensate)
+						}
+
+						// INR Calculations:
+						// Jan 15: 10 × $100 × 82.0 = 82,000 INR
+						// Jun 15: 10 × $120 × 75.0 = 90,000 INR ← PEAK (high price × rate product wins)
+						// Sep 15: 10 × $90 × 92.0 = 82,800 INR (high rate can't compensate for low price)
+
+						mockTickerManager.EXPECT().
+							GetDailyPrices(ctx, AAPL, year).
+							Return(aaplDailyPrices, nil)
+						mockSBIManager.EXPECT().
+							GetDailyRates(ctx, year).
+							Return(aaplDailyRates, nil)
+						mockTickerManager.EXPECT().
+							GetPrice(ctx, AAPL, yearEndDate).
+							Return(yearEndPrice, nil)
+					})
+
+					It("should identify peak where Price × Rate product is optimal", func() {
+						valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
+						Expect(err).ToNot(HaveOccurred())
+
+						// Peak should be Jun 15 (high price dominates despite low rate)
+						Expect(valuation.PeakPosition.Date).To(Equal(time.Date(2024, 6, 15, 0, 0, 0, 0, time.UTC)))
+						Expect(valuation.PeakPosition.Quantity).To(Equal(10.0))
+						Expect(valuation.PeakPosition.USDPrice).To(Equal(120.0))
+
+						// Verify INR calculations for all three dates
+						jan15INR := 10.0 * 100.0 * 82.0 // = 82,000 INR
+						jun15INR := 10.0 * 120.0 * 75.0 // = 90,000 INR ← PEAK
+						sep15INR := 10.0 * 90.0 * 92.0  // = 82,800 INR
+
+						// Verify Jun 15 is the maximum
+						Expect(jun15INR).To(BeNumerically(">", jan15INR))
+						Expect(jun15INR).To(BeNumerically(">", sep15INR))
+
+						// Verify peak INR matches Jun 15 calculation
+						actualPeakINR := valuation.PeakPosition.Quantity * valuation.PeakPosition.USDPrice * 75.0
+						Expect(actualPeakINR).To(Equal(jun15INR))
+					})
+				})
+
+				Context("Scenario 4: Same Qty, Lower Price & Rate LOSES (Negative Test)", func() {
+					// Validate that when both price and rate are lower, peak doesn't shift
+					var trades []tax.Trade
+
+					BeforeEach(func() {
+						trades = []tax.Trade{
+							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
+						}
+
+						// Quantity constant (10 shares), but price lower on later date
+						aaplDailyPrices := map[string]float64{
+							"2024-01-15": 100.0,
+							"2024-06-15": 95.0, // Lower price
+						}
+
+						// Rate also lower on the later date
+						aaplDailyRates := map[string]float64{
+							"2024-01-15": 83.0,
+							"2024-06-15": 80.0, // Lower rate
+						}
+
+						// INR Calculations:
+						// Jan 15: 10 × $100 × 83.0 = 83,000 INR ← PEAK
+						// Jun 15: 10 × $95 × 80.0 = 76,000 INR (both factors lower)
+
+						mockTickerManager.EXPECT().
+							GetDailyPrices(ctx, AAPL, year).
+							Return(aaplDailyPrices, nil)
+						mockSBIManager.EXPECT().
+							GetDailyRates(ctx, year).
+							Return(aaplDailyRates, nil)
+						mockTickerManager.EXPECT().
+							GetPrice(ctx, AAPL, yearEndDate).
+							Return(yearEndPrice, nil)
+					})
+
+					It("should not shift peak when both price and rate are lower", func() {
+						valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
+						Expect(err).ToNot(HaveOccurred())
+
+						// Peak should remain Jan 15 (both price and rate lower on Jun 15)
+						peakDate, _ := trades[0].GetDate()
+						Expect(valuation.PeakPosition.Date).To(Equal(peakDate))
+						Expect(valuation.PeakPosition.Quantity).To(Equal(10.0))
+						Expect(valuation.PeakPosition.USDPrice).To(Equal(100.0))
+
+						// Verify INR values: Jan 15 > Jun 15
+						jan15INR := 10.0 * 100.0 * 83.0 // = 83,000 INR
+						jun15INR := 10.0 * 95.0 * 80.0  // = 76,000 INR
+
+						// Verify Jan 15 remains peak
+						Expect(jan15INR).To(BeNumerically(">", jun15INR))
+						actualPeakINR := valuation.PeakPosition.Quantity * valuation.PeakPosition.USDPrice * 83.0
+						Expect(actualPeakINR).To(Equal(jan15INR))
+						Expect(actualPeakINR).To(BeNumerically(">", jun15INR))
+					})
+				})
+			})
+
 			Context("Position Reduction", func() {
 				Context("Partial Position Selling", func() {
 					var trades []tax.Trade
