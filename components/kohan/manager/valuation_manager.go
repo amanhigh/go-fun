@@ -103,25 +103,15 @@ func (v *ValuationManagerImpl) processTradesByTicker(ctx context.Context, trades
 		tickerTrades := tradesByTicker[ticker]
 
 		// Process trades for the current ticker (trades are assumed sorted by FilterUS)
-		valuation, processErr := v.processTickerTrades(ctx, ticker, tickerTrades, year)
-		if processErr != nil {
+		valuation, analyzeErr := v.AnalyzeValuation(ctx, ticker, tickerTrades, year)
+		if analyzeErr != nil {
 			// Fail fast: return immediately upon the first analysis error
-			return nil, processErr
+			return nil, analyzeErr
 		}
 
 		valuations = append(valuations, valuation)
 	}
 	return valuations, nil
-}
-
-// processTickerTrades analyzes the valuation for a single ticker's sorted trades.
-func (v *ValuationManagerImpl) processTickerTrades(ctx context.Context, tickerSymbol string, sortedTrades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
-	// Call AnalyzeValuation with the known tickerSymbol
-	valuation, analyzeErr := v.AnalyzeValuation(ctx, tickerSymbol, sortedTrades, year)
-	if analyzeErr != nil {
-		return tax.Valuation{}, analyzeErr
-	}
-	return valuation, nil
 }
 
 // AnalyzeValuation calculates valuation based on trades and opening position for a given ticker.
@@ -196,10 +186,7 @@ func (v *ValuationManagerImpl) processTrades(
 			continue
 		}
 
-		currentQuantity, err = v.applyTrade(analysis, trade, currentQuantity)
-		if err != nil {
-			return 0, err
-		}
+		currentQuantity = v.applyTrade(trade, currentQuantity)
 	}
 	return currentQuantity, nil
 }
@@ -226,15 +213,11 @@ func (v *ValuationManagerImpl) handleFirstTrade(analysis *tax.Valuation, trade t
 }
 
 // applyTrade processes subsequent trades or trades in a carry-over scenario.
-func (v *ValuationManagerImpl) applyTrade(_ *tax.Valuation, trade tax.Trade, currentQuantity float64) (float64, common.HttpError) {
-	// Use GetType() for normalized type comparison with constants
+func (v *ValuationManagerImpl) applyTrade(trade tax.Trade, currentQuantity float64) float64 {
 	if trade.GetType() == tax.TRADE_TYPE_BUY {
-		currentQuantity += trade.Quantity
-		// Peak calculation happens in calculateDailyPeak() which uses INR values
-	} else { // SELL
-		currentQuantity -= trade.Quantity
+		return currentQuantity + trade.Quantity
 	}
-	return currentQuantity, nil
+	return currentQuantity - trade.Quantity
 }
 
 // determineYearEndPosition sets the YearEndPosition in the analysis.
