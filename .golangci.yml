@@ -139,6 +139,9 @@ linters:
         path: _test\.go
         text: '^dot-imports:'
       - linters:
+          - dupl
+        path: components/kohan/manager/valuation_manager_test\.go
+      - linters:
           - bodyclose
         path: common/clients/http_client.go
       - linters:
