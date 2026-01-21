@@ -342,74 +342,42 @@ func (v *ValuationManagerImpl) calculateDailyPeak(
 		return tax.Position{}, rateErr
 	}
 
-	// Step 4: Find the date with maximum INR value
-	return v.findDailyPeakPosition(year, openingPosition, quantityByDate, dailyPrices, dailyRates), nil
+	// Step 4: Find the date with maximum INR value by iterating through each day
+	return v.findPeakByIteratingYear(year, openingPosition, quantityByDate, dailyPrices, dailyRates), nil
 }
 
-// peakCalculationData holds data needed for daily peak calculation
-type peakCalculationData struct {
-	quantityByDate map[string]float64
-	dailyPrices    map[string]float64
-	dailyRates     map[string]float64
-	maxINRValue    float64
-}
-
-// findDailyPeakPosition iterates through each day of the year to find the maximum INR value
-func (v *ValuationManagerImpl) findDailyPeakPosition(
+// findPeakByIteratingYear finds maximum INR value (Qty × Price × Rate) across the year (Tax.md Line 124).
+func (v *ValuationManagerImpl) findPeakByIteratingYear(
 	year int,
 	openingPosition tax.Position,
 	quantityByDate map[string]float64,
 	dailyPrices map[string]float64,
 	dailyRates map[string]float64,
 ) tax.Position {
-	data := peakCalculationData{
-		quantityByDate: quantityByDate,
-		dailyPrices:    dailyPrices,
-		dailyRates:     dailyRates,
-		maxINRValue:    0,
-	}
-
-	peakPosition := openingPosition
+	peakPos := openingPosition
+	maxINRValue := 0.0
 	startDate := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
 	endDate := time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
 
 	for currDate := startDate; !currDate.After(endDate); currDate = currDate.AddDate(0, 0, 1) {
 		dateStr := currDate.Format(time.DateOnly)
-		peakPosition = v.updatePeakIfHigher(peakPosition, currDate, dateStr, &data)
-	}
+		quantity := v.getClosestValue(quantityByDate, dateStr)
+		if quantity == 0 {
+			continue
+		}
+		price := v.getClosestValue(dailyPrices, dateStr)
+		if price == 0 {
+			continue
+		}
+		rate := v.getClosestValue(dailyRates, dateStr)
+		if rate == 0 {
+			continue
+		}
 
-	return peakPosition
-}
-
-// updatePeakIfHigher checks if the current date's INR value is higher than the current peak
-func (v *ValuationManagerImpl) updatePeakIfHigher(
-	peakPos tax.Position,
-	currDate time.Time,
-	dateStr string,
-	data *peakCalculationData,
-) tax.Position {
-	quantity := v.getQuantityForDate(data.quantityByDate, dateStr)
-	if quantity == 0 {
-		return peakPos
-	}
-
-	price := v.getClosestPrice(data.dailyPrices, dateStr)
-	if price == 0 {
-		return peakPos
-	}
-
-	rate := v.getClosestRate(data.dailyRates, dateStr)
-	if rate == 0 {
-		return peakPos
-	}
-
-	inrValue := quantity * price * rate
-	if inrValue > data.maxINRValue {
-		data.maxINRValue = inrValue
-		return tax.Position{
-			Date:     currDate,
-			Quantity: quantity,
-			USDPrice: price,
+		inrValue := quantity * price * rate
+		if inrValue > maxINRValue {
+			maxINRValue = inrValue
+			peakPos = tax.Position{Date: currDate, Quantity: quantity, USDPrice: price}
 		}
 	}
 	return peakPos
@@ -452,68 +420,27 @@ func (v *ValuationManagerImpl) buildDailyQuantityTimeline(
 	return timeline
 }
 
-// getQuantityForDate returns the quantity held on a given date by using the last known quantity
-func (v *ValuationManagerImpl) getQuantityForDate(timeline map[string]float64, dateStr string) float64 {
-	if qty, exists := timeline[dateStr]; exists {
-		return qty
+// getClosestValue finds the nearest previous value for a given date using backfill logic.
+// If the exact date exists in the map, it returns that value immediately.
+// Otherwise, it searches for the closest previous date with available data.
+// Returns 0 if no previous data is found.
+func (v *ValuationManagerImpl) getClosestValue(dataMap map[string]float64, dateStr string) float64 {
+	if value, exists := dataMap[dateStr]; exists {
+		return value
 	}
 
-	// Backfill: find the closest previous date's quantity
+	// Backfill: find the closest previous date's value
 	parsedDate, _ := time.Parse(time.DateOnly, dateStr)
-	var closestQty float64
+	var closestValue float64
 	var closestDate time.Time
 
-	for dateKey, qty := range timeline {
+	for dateKey, value := range dataMap {
 		keyDate, _ := time.Parse(time.DateOnly, dateKey)
 		if !keyDate.After(parsedDate) && (closestDate.IsZero() || keyDate.After(closestDate)) {
-			closestQty = qty
+			closestValue = value
 			closestDate = keyDate
 		}
 	}
 
-	return closestQty
-}
-
-// getClosestPrice finds the nearest previous market price for a given date
-func (v *ValuationManagerImpl) getClosestPrice(dailyPrices map[string]float64, dateStr string) float64 {
-	if price, exists := dailyPrices[dateStr]; exists {
-		return price
-	}
-
-	// Backfill: find closest previous date with available price
-	parsedDate, _ := time.Parse(time.DateOnly, dateStr)
-	var closestPrice float64
-	var closestDate time.Time
-
-	for priceDate, price := range dailyPrices {
-		keyDate, _ := time.Parse(time.DateOnly, priceDate)
-		if !keyDate.After(parsedDate) && (closestDate.IsZero() || keyDate.After(closestDate)) {
-			closestPrice = price
-			closestDate = keyDate
-		}
-	}
-
-	return closestPrice
-}
-
-// getClosestRate finds the nearest previous SBI exchange rate for a given date
-func (v *ValuationManagerImpl) getClosestRate(dailyRates map[string]float64, dateStr string) float64 {
-	if rate, exists := dailyRates[dateStr]; exists {
-		return rate
-	}
-
-	// Backfill: find closest previous date with available rate
-	parsedDate, _ := time.Parse(time.DateOnly, dateStr)
-	var closestRate float64
-	var closestDate time.Time
-
-	for rateDate, rate := range dailyRates {
-		keyDate, _ := time.Parse(time.DateOnly, rateDate)
-		if !keyDate.After(parsedDate) && (closestDate.IsZero() || keyDate.After(closestDate)) {
-			closestRate = rate
-			closestDate = keyDate
-		}
-	}
-
-	return closestRate
+	return closestValue
 }
