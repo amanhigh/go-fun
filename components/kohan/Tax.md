@@ -345,13 +345,27 @@ The system operates by:
 
 This conceptual flow allows for modular management of different aspects of tax computation, from data sourcing and cleaning to complex calculations and final currency conversion.
 
-## Future Improvements
-<!-- TODO: #B Pending Improvments -->
-To enhance accuracy and comprehensive reporting, the following improvements to the system's computation logic are planned:
+## Peak Balance Calculation Details
 
-2.  **Peak Balance Valuation for Schedule FA:**
-    *   **Current Readme Principle (Target):** The "Peak Balance Value" reported in Schedule FA should be the highest INR value of the asset holding during the calendar year, determined by daily evaluation of `(Quantity_on_Day_X * USD_Market_Price_on_Day_X) * SBI_TT_Buy_Exchange_Rate_on_Day_X`.
-    *   **Planned Enhancement:** Implement a daily evaluation mechanism to accurately identify the true peak INR value, considering daily fluctuations in both the asset's USD market price and the USD-INR exchange rate. *(This implies the current code might determine peak based on USD value at peak quantity from a trade event, and not daily INR re-evaluation).*
+### Finding Peak Balance Value (Line 124)
+
+The "Peak Balance Value" reported in Schedule FA is the highest INR value of the asset holding during the calendar year. The system evaluates `(Quantity_on_Day_X * USD_Market_Price_on_Day_X) * SBI_TT_Buy_Exchange_Rate_on_Day_X` for each day to find this peak.
+
+**Daily Evaluation Mechanism:**
+
+The system performs daily INR valuation throughout the calendar year, considering simultaneous fluctuations in:
+- The asset's USD market price
+- The USD-INR exchange rate
+
+**Calculation Process:**
+1. **Daily Quantity Timeline:** Tracks quantity held on each day, accounting for all buy/sell trades
+2. **Daily Market Data:** For each day, retrieves:
+   - Market price (if exact date unavailable, uses closest previous available close)
+   - Exchange rate (if exact date unavailable, uses closest previous available rate)
+3. **Daily INR Valuation:** For each day with holdings: `INR_Value = Daily_Quantity × USD_Price × Exchange_Rate`
+4. **Peak Identification:** The maximum INR value across all days in the calendar year becomes the "Peak Balance Value"
+
+This approach ensures the reported peak reflects the true highest INR valuation, capturing scenarios where exchange rate movements may dominate price movements or vice versa.
 
 ## Disclaimer
 
