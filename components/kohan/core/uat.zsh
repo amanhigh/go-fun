@@ -2,7 +2,7 @@
 
 set -e
 
-echo "=== UAT: Parse & Compute 2022-2023 Multi-Year Taxes ==="
+echo "=== UAT: Parse & Compute 2022-2024 Multi-Year Taxes ==="
 echo ""
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
@@ -86,10 +86,50 @@ else
 fi
 
 if [ -f "$FA_COMPUTE_DIR/Output/Reports/tax_summary_2023.xlsx" ]; then
-    echo "✅ tax_summary_2023.xlsx created"
+	echo "✅ tax_summary_2023.xlsx created"
 else
-    echo "❌ tax_summary_2023.xlsx NOT FOUND"
-    exit 1
+	echo "❌ tax_summary_2023.xlsx NOT FOUND"
+	exit 1
+fi
+echo ""
+
+echo "Step 5: Parse 2024 Broker Files"
+(cd "$PROJECT_ROOT" && go run ./components/kohan apps tax parse 2024)
+echo "✅ Parsed 2024"
+echo ""
+
+if [ -f "$FA_COMPUTE_DIR/Input/Parsed/trades.csv" ]; then
+	TRADES_2022=$(grep -c "^[^,]*,2022-" "$FA_COMPUTE_DIR/Input/Parsed/trades.csv" || true)
+	TRADES_2023=$(grep -c "^[^,]*,2023-" "$FA_COMPUTE_DIR/Input/Parsed/trades.csv" || true)
+	TRADES_2024=$(grep -c "^[^,]*,2024-" "$FA_COMPUTE_DIR/Input/Parsed/trades.csv" || true)
+	echo "✅ trades.csv updated ($TRADES_2022 2022 + $TRADES_2023 2023 + $TRADES_2024 2024 trades)"
+else
+	echo "❌ trades.csv NOT FOUND"
+	exit 1
+fi
+echo ""
+
+echo "Step 6: Compute 2024 Taxes (with carry-forward from 2023)"
+if [ ! -f "$FA_COMPUTE_DIR/Output/YearEndBalance/accounts_2023.csv" ]; then
+	echo "❌ accounts_2023.csv NOT FOUND - cannot proceed"
+	exit 1
+fi
+(cd "$PROJECT_ROOT" && go run ./components/kohan apps tax compute 2024)
+echo "✅ Computed 2024"
+echo ""
+
+if [ -f "$FA_COMPUTE_DIR/Output/YearEndBalance/accounts_2024.csv" ]; then
+	echo "✅ accounts_2024.csv created"
+else
+	echo "❌ accounts_2024.csv NOT FOUND"
+	exit 1
+fi
+
+if [ -f "$FA_COMPUTE_DIR/Output/Reports/tax_summary_2024.xlsx" ]; then
+	echo "✅ tax_summary_2024.xlsx created"
+else
+	echo "❌ tax_summary_2024.xlsx NOT FOUND"
+	exit 1
 fi
 echo ""
 
@@ -99,5 +139,7 @@ echo "Generated Files:"
 echo "  ✅ Input/Parsed/trades.csv"
 echo "  ✅ Output/YearEndBalance/accounts_2022.csv"
 echo "  ✅ Output/YearEndBalance/accounts_2023.csv"
+echo "  ✅ Output/YearEndBalance/accounts_2024.csv"
 echo "  ✅ Output/Reports/tax_summary_2022.xlsx"
 echo "  ✅ Output/Reports/tax_summary_2023.xlsx"
+echo "  ✅ Output/Reports/tax_summary_2024.xlsx"
