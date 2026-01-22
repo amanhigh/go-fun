@@ -40,6 +40,13 @@ func NewExchangeManager(sbiManager SBIManager) ExchangeManager {
 
 func (e *ExchangeManagerImpl) Exchange(ctx context.Context, exchangeables []tax.Exchangeable) common.HttpError {
 	for _, exchangeable := range exchangeables {
+		// Skip exchange rate lookup for zero-value positions (fully liquidated).
+		// For positions with Quantity=0 or USD Value=0, the final INR value will be 0
+		// regardless of the exchange rate, so there's no need to fetch it.
+		if exchangeable.GetUSDAmount() == 0 {
+			continue
+		}
+
 		requestedDate, dateErr := exchangeable.GetDate()
 		if dateErr != nil {
 			return dateErr
