@@ -362,4 +362,139 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(expectedCsvPath).Should(BeARegularFile())
 		})
 	})
+
+	Context("Zero Quantity Positions (Fully Liquidated) - ADI", func() {
+		var (
+			adiKohanConfig config.KohanConfig
+		)
+
+		BeforeEach(func() {
+			testDataBasePath := filepath.Join("..", "testdata", "tax")
+
+			adiKohanConfig = config.KohanConfig{
+				Tax: config.TaxConfig{
+					TaxDir: testDataBasePath,
+					// Layer 1: Input - Raw broker statements
+					DriveWealthBase: filepath.Join(testDataBasePath, "Input", "Brokerage", "vested"),
+					IBKRBase:        filepath.Join(testDataBasePath, "Input", "Brokerage", "ibkr"),
+					// Layer 2.5: Parsed - Generated from broker statements
+					ParsedDir:        filepath.Join(testDataBasePath, "Input", "Parsed"),
+					TradesPath:       filepath.Join(testDataBasePath, "Input", "Parsed", tax.TRADES_FILENAME),
+					DividendFilePath: filepath.Join(testDataBasePath, "Input", "Parsed", tax.DIVIDENDS_FILENAME),
+					InterestFilePath: filepath.Join(testDataBasePath, "Input", "Parsed", tax.INTEREST_FILENAME),
+					// Layer 3: Reference data (tickers, exchange rates)
+					TickerCacheDir: filepath.Join(testDataBasePath, "Data", "Tickers"),
+					TTRateFilePath: filepath.Join(testDataBasePath, "Data", "Reference", tax.SBI_RATES_FILENAME),
+					// Layer 4: Output - Computed and generated results
+					GainsFilePath: filepath.Join(testDataBasePath, "Output", "Computed", tax.GAINS_FILENAME),
+					AccountsDir:   filepath.Join(testDataBasePath, "Output", "YearEndBalance"),
+					ReportsDir:    filepath.Join(testDataBasePath, "Output", "Reports"),
+					ComputedDir:   filepath.Join(testDataBasePath, "Output", "Computed"),
+				},
+			}
+
+			core.SetupKohanInjector(adiKohanConfig)
+		})
+
+		It("should handle fully liquidated positions with zero year-end quantity", func() {
+			// Integration test for year 2024 where ADI is fully liquidated
+			// ADI: Bought 2 shares (Jan 4) → Sold 2 shares (Jan 20) → Zero year-end
+			// This tests the critical bug where exchange_manager tries to fetch
+			// exchange rates for positions with USD amount = 0 (unnecessary computation)
+
+			// Re-get the tax manager with the ADI-specific config
+			adiTaxManager, err := core.GetKohanInterface().GetTaxManager()
+			Expect(err).ToNot(HaveOccurred())
+			Expect(adiTaxManager).ToNot(BeNil())
+
+			summary, err := adiTaxManager.GetTaxSummary(ctx, 2024)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(summary).ToNot(BeNil())
+
+			// ============================================================
+			// PART 1: Verify Capital Gains Processing (ADI trade worked)
+			// ============================================================
+
+			// ADI should have a capital gain entry (STCG)
+			var adiGain *tax.INRGains
+			for i := range summary.INRGains {
+				if summary.INRGains[i].Symbol == "ADI" {
+					adiGain = &summary.INRGains[i]
+					break
+				}
+			}
+
+			Expect(adiGain).ToNot(BeNil(), "ADI should have a capital gain entry")
+			Expect(adiGain.Symbol).To(Equal("ADI"))
+
+			// ADI P&L calculation:
+			// Sell: 2 × $194.75 = $389.50
+			// Buy:  2 × $181.90 = $363.80
+			// Commission: $0.00 (both trades have 0 commission)
+			// P&L: $389.50 - $363.80 = $25.70
+			Expect(adiGain.PNL).To(Equal(25.70))
+			Expect(adiGain.Type).To(Equal("STCG")) // Holding period < 730 days
+			Expect(adiGain.BuyDate).To(Equal("2024-01-04"))
+			Expect(adiGain.SellDate).To(Equal("2024-01-20"))
+
+			// Exchange rate lookup for gains (sell date month-end precedent)
+			// Jan 2024 sell → uses Jan 20 rate: 82.68 (TT Buy)
+			Expect(adiGain.TTRate).To(Equal(82.68))
+			Expect(adiGain.INRValue()).To(Equal(2125.08)) // 25.70 × 82.68 ≈ 2125.08
+
+			// ============================================================
+			// PART 2: Verify Valuation Processing (Zero-Quantity Handling)
+			// ============================================================
+
+			// Find ADI valuation entry
+			var adiVal *tax.INRValuation
+			for i := range summary.INRValuations {
+				if summary.INRValuations[i].Ticker == "ADI" {
+					adiVal = &summary.INRValuations[i]
+					break
+				}
+			}
+
+			// ADI should have a valuation entry (for audit trail and completeness)
+			Expect(adiVal).ToNot(BeNil(), "ADI should have valuation entry despite zero year-end quantity")
+
+			// FirstPosition: ADI has no carry-forward, so first position is from first trade
+			Expect(adiVal.FirstPosition.Quantity).To(Equal(2.0))
+			Expect(adiVal.FirstPosition.USDPrice).To(Equal(181.90))
+			Expect(adiVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2024-01-04"))
+			Expect(adiVal.FirstPosition.TTRate).To(Equal(82.84)) // Jan 4 rate
+
+			// PeakPosition: Same as FirstPosition (no additional buys after first purchase)
+			Expect(adiVal.PeakPosition.Quantity).To(Equal(2.0))
+			Expect(adiVal.PeakPosition.USDPrice).To(Equal(181.90))
+			Expect(adiVal.PeakPosition.Date.Format(time.DateOnly)).To(Equal("2024-01-04"))
+
+			// YearEndPosition: ZERO quantity (fully liquidated)
+			Expect(adiVal.YearEndPosition.Quantity).To(Equal(0.0))
+			Expect(adiVal.YearEndPosition.USDPrice).To(Equal(230.06)) // Year-end price from ADI.json
+			Expect(adiVal.YearEndPosition.Date.Format(time.DateOnly)).To(Equal("2024-12-31"))
+
+			// ============================================================
+			// CRITICAL ASSERTION: This is what the bug test is about!
+			// ============================================================
+
+			// USD Amount should be ZERO (Quantity × Price = 0 × $230.06 = $0)
+			Expect(adiVal.YearEndPosition.GetUSDAmount()).To(Equal(0.0))
+
+			// TTRate SHOULD BE ZERO (no exchange rate lookup for zero-value position)
+			// BEFORE FIX: This will FAIL because system fetches 2024-12-31 rate (85.20)
+			// AFTER FIX: This will PASS because system skips exchange (TTRate remains 0)
+			Expect(adiVal.YearEndPosition.TTRate).To(Equal(0.0),
+				"TTRate should be 0 for zero-quantity position (no exchange rate lookup needed)")
+
+			// INR Value must be zero (0 × price × rate = 0 regardless of rate)
+			expectedINRValue := adiVal.YearEndPosition.Quantity *
+				adiVal.YearEndPosition.USDPrice *
+				adiVal.YearEndPosition.TTRate
+			Expect(expectedINRValue).To(Equal(0.0))
+
+			// AmountPaid: ADI has no dividends in 2024
+			Expect(adiVal.AmountPaid).To(Equal(0.0))
+		})
+	})
 })
