@@ -73,7 +73,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			summary, err := taxManager.GetTaxSummary(ctx, testYear)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(summary).ToNot(BeNil())
-			Expect(summary.INRGains).To(HaveLen(2)) // Expecting AAPL (STCG) and MSFT (LTCG)
+			Expect(summary.INRGains).To(HaveLen(3)) // Expecting AAPL (STCG), ADI (STCG), and MSFT (LTCG)
 
 			// --- Assertions for AAPL (Expected at index 0 after sort) ---
 			aaplGain := summary.INRGains[0]
@@ -86,8 +86,19 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(aaplGain.INRValue()).To(Equal(82000.00)) // 1000.00 * 82.00
 			Expect(aaplGain.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
 
-			// --- Assertions for MSFT (Expected at index 1 after sort) ---
-			msftGain := summary.INRGains[1]
+			// --- Assertions for ADI (Expected at index 1) ---
+			adiGain := summary.INRGains[1]
+			Expect(adiGain.Symbol).To(Equal("ADI"))
+			Expect(adiGain.PNL).To(Equal(25.70))
+			Expect(adiGain.Type).To(Equal("STCG"))
+			Expect(adiGain.BuyDate).To(Equal("2023-06-15"))
+			Expect(adiGain.SellDate).To(Equal("2023-08-31"))
+			Expect(adiGain.TTRate).To(Equal(82.50))
+			Expect(adiGain.INRValue()).To(Equal(2120.25)) // 25.70 * 82.50
+			Expect(adiGain.TTDate.Format(time.DateOnly)).To(Equal("2023-07-10"))
+
+			// --- Assertions for MSFT (Expected at index 2) ---
+			msftGain := summary.INRGains[2]
 			Expect(msftGain.Symbol).To(Equal("MSFT"))
 			Expect(msftGain.PNL).To(Equal(500.00))
 			Expect(msftGain.Type).To(Equal("LTCG")) // Holding > 730 days
@@ -109,9 +120,9 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(summary.INRDividends).ToNot(BeNil()) // Ensure the slice itself is not nil
 
 			// --- Assertions for Dividends (FY 2023-24: 2023-04-01 to 2024-03-31) ---
-			// Based on testdata: AAPL Jun 15, AAPL Dec 30, AAPL Jan 15, MSFT Feb 20, AAPL Mar 15 fall in this FY.
+			// Based on testdata: AAPL Jun 15, ADI Jul 10, AAPL Dec 30, AAPL Jan 15, MSFT Feb 20, AAPL Mar 15 fall in this FY.
 			// AAPL Apr 15 should be filtered out.
-			Expect(summary.INRDividends).To(HaveLen(5)) // Expecting 5 dividends after filtering
+			Expect(summary.INRDividends).To(HaveLen(6)) // Expecting 6 dividends after filtering
 
 			// Sort results by date to ensure consistent order for assertions
 			sort.Slice(summary.INRDividends, func(i, j int) bool {
@@ -133,8 +144,19 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(junDividend.TTDate.Format(time.DateOnly)).To(Equal("2023-05-01"))
 			Expect(junDividend.INRValue()).To(Equal(4100.00))
 
+			// --- Assertions for Jul 10, 2023 Dividend (ADI) ---
+			julDividend := summary.INRDividends[1]
+			Expect(julDividend.Symbol).To(Equal("ADI"))
+			Expect(julDividend.Date).To(Equal("2023-07-10"))
+			Expect(julDividend.Amount).To(Equal(30.00))
+			Expect(julDividend.Tax).To(Equal(4.50))
+			Expect(julDividend.Net).To(Equal(25.50))
+			Expect(julDividend.TTRate).To(Equal(82.10)) // Jun 2023 month-end
+			Expect(julDividend.TTDate.Format(time.DateOnly)).To(Equal("2023-06-15"))
+			Expect(julDividend.INRValue()).To(Equal(2463.00))
+
 			// --- Assertions for Dec 30, 2023 Dividend (AAPL) ---
-			decDividend := summary.INRDividends[1]
+			decDividend := summary.INRDividends[2]
 			Expect(decDividend.Symbol).To(Equal("AAPL"))
 			Expect(decDividend.Date).To(Equal("2023-12-30"))
 			Expect(decDividend.Amount).To(Equal(60.00))
@@ -145,7 +167,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(decDividend.INRValue()).To(Equal(4992.00))
 
 			// --- Assertions for Jan 15, 2024 Dividend (AAPL) - Full Detail ---
-			janDividend := summary.INRDividends[2]
+			janDividend := summary.INRDividends[3]
 			Expect(janDividend.Symbol).To(Equal("AAPL"))
 			Expect(janDividend.Date).To(Equal("2024-01-15"))
 			Expect(janDividend.Amount).To(Equal(115.00))
@@ -156,7 +178,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(janDividend.INRValue()).To(Equal(9430.00))
 
 			// --- Assertions for Feb 20, 2024 Dividend (MSFT) - Key Details ---
-			febDividend := summary.INRDividends[3]
+			febDividend := summary.INRDividends[4]
 			Expect(febDividend.Symbol).To(Equal("MSFT"))
 			Expect(febDividend.Amount).To(Equal(50.00))
 			Expect(febDividend.Tax).To(Equal(7.50))
@@ -166,7 +188,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(febDividend.INRValue()).To(Equal(4145.00))
 
 			// --- Assertions for Mar 15, 2024 Dividend (AAPL) - Key Details ---
-			marDividend := summary.INRDividends[4]
+			marDividend := summary.INRDividends[5]
 			Expect(marDividend.Symbol).To(Equal("AAPL"))
 			Expect(marDividend.Amount).To(Equal(100.00))
 			Expect(marDividend.Tax).To(Equal(15.00))
@@ -218,7 +240,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			summary, err := taxManager.GetTaxSummary(ctx, testYear)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(summary.INRValuations).ToNot(BeNil())
-			Expect(summary.INRValuations).To(HaveLen(3))
+			Expect(summary.INRValuations).To(HaveLen(4)) // AAPL, ADI, GOOGL, MSFT
 
 			// Sort by Ticker for consistent assertion order
 			sort.Slice(summary.INRValuations, func(i, j int) bool {
@@ -226,8 +248,8 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			})
 
 			aaplVal := summary.INRValuations[0]
-			googlVal := summary.INRValuations[1]
-			msftVal := summary.INRValuations[2]
+			googlVal := summary.INRValuations[2]
+			msftVal := summary.INRValuations[3]
 
 			// Assert AAPL (Carry-over with new trades for 2023)
 			Expect(aaplVal.Ticker).To(Equal("AAPL"))
