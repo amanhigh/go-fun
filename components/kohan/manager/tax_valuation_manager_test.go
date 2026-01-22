@@ -275,5 +275,81 @@ var _ = Describe("TaxValuationManager", func() {
 
 			// UNKNOWN ticker dividend is ignored (not in valuations)
 		})
+
+		Context("Zero Quantity Positions", func() {
+			var (
+				testDate  time.Time
+				yearEnd   time.Time
+				valuation tax.Valuation
+			)
+
+			BeforeEach(func() {
+				testDate = time.Date(2024, 1, 4, 0, 0, 0, 0, time.UTC)
+				yearEnd = time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
+
+				// Simulate ADI: Bought Jan 4, Sold Jan 20 (fully liquidated)
+				valuation = tax.Valuation{
+					Ticker: "ADI",
+					FirstPosition: tax.Position{
+						Date:     testDate,
+						Quantity: 2,
+						USDPrice: 181.90,
+					},
+					PeakPosition: tax.Position{
+						Date:     time.Date(2024, 1, 20, 0, 0, 0, 0, time.UTC),
+						Quantity: 2,
+						USDPrice: 194.75,
+					},
+					YearEndPosition: tax.Position{
+						Date:     yearEnd,
+						Quantity: 0, // ⚠️ FULLY LIQUIDATED
+						USDPrice: 0,
+					},
+				}
+			})
+
+			It("should pass all positions to exchange including zero-quantity year-end", func() {
+				// Exchange should receive ALL 3 positions
+				// Exchange manager should skip zero-value positions internally
+				mockExchange.EXPECT().
+					Exchange(ctx, mock.AnythingOfType("[]tax.Exchangeable")).
+					Run(func(_ context.Context, exchangeables []tax.Exchangeable) {
+						// All 3 positions should be passed to Exchange
+						Expect(exchangeables).To(HaveLen(3),
+							"All positions should be passed to Exchange (including zero-qty)")
+
+						// Verify positions
+						Expect(exchangeables[0].GetUSDAmount()).To(BeNumerically(">", 0), "First position should have value")
+						Expect(exchangeables[1].GetUSDAmount()).To(BeNumerically(">", 0), "Peak position should have value")
+						Expect(exchangeables[2].GetUSDAmount()).To(Equal(0.0), "YearEnd position should have zero value")
+					}).
+					Return(nil)
+
+				result, err := valuationManager.ProcessValuations(ctx, []tax.Valuation{valuation}, nil)
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(result).To(HaveLen(1))
+
+				adi := result[0]
+				Expect(adi.Ticker).To(Equal("ADI"))
+
+				// ✅ All three positions should be present in output
+				Expect(adi.FirstPosition.Quantity).To(Equal(2.0), "FirstPosition preserved")
+				Expect(adi.FirstPosition.Date).To(Equal(testDate))
+
+				Expect(adi.PeakPosition.Quantity).To(Equal(2.0), "PeakPosition preserved")
+
+				// ✅ YearEndPosition preserved with zero values (not exchanged)
+				Expect(adi.YearEndPosition.Quantity).To(Equal(0.0),
+					"YearEnd position preserved in output (audit trail)")
+				Expect(adi.YearEndPosition.Date).To(Equal(yearEnd),
+					"YearEnd date preserved")
+				Expect(adi.YearEndPosition.TTRate).To(Equal(0.0),
+					"Zero-quantity position not exchanged (no TTRate)")
+				Expect(adi.YearEndPosition.INRValue()).To(Equal(0.0),
+					"Zero-quantity position has zero INR value")
+			})
+
+		})
 	})
 })
