@@ -85,10 +85,15 @@ func (m *DriveWealthManagerImpl) parseSheets(f *excelize.File) (info tax.Brokera
 		err = fmt.Errorf("failed to get rows from 'Trades' sheet: %w", err)
 		return
 	}
-	info.Trades, err = m.parseTrades(tradeRows)
-	if err != nil {
-		return
+
+	// Load commission map from All Transactions sheet if available
+	commissionMap := make(map[string]float64)
+	allTransRows, errAT := f.GetRows("All Transactions")
+	if errAT == nil {
+		commissionMap = m.parseCommissions(allTransRows)
 	}
+
+	info.Trades, err = m.parseTrades(tradeRows, commissionMap)
 	return
 }
 
@@ -101,42 +106,64 @@ func (m *DriveWealthManagerImpl) checkSheetExists(f *excelize.File, sheetName st
 	return fmt.Errorf("sheet '%s' not found in the Excel file", sheetName)
 }
 
-func (m *DriveWealthManagerImpl) parseTrades(rows [][]string) ([]tax.Trade, error) {
+func (m *DriveWealthManagerImpl) parseTrades(rows [][]string, commissionMap map[string]float64) ([]tax.Trade, error) {
 	var trades []tax.Trade
-	if len(rows) > 0 {
-		for _, row := range rows[1:] { // Skip header row
-			if len(row) >= tradeRowLength {
-				quantity, err := strconv.ParseFloat(row[6], 64)
-				if err != nil {
-					continue
-				}
-				price, err := strconv.ParseFloat(row[7], 64)
-				if err != nil {
-					continue
-				}
-				value, err := strconv.ParseFloat(row[8], 64)
-				if err != nil {
-					continue
-				}
-				commission, err := strconv.ParseFloat(row[9], 64)
-				if err != nil {
-					continue
-				}
+	if len(rows) <= 1 {
+		return trades, nil
+	}
 
-				trade := tax.Trade{
-					Symbol:     row[3],
-					Date:       strings.Split(row[0], " ")[0],
-					Type:       row[4],
-					Quantity:   quantity,
-					USDPrice:   price,
-					USDValue:   value,
-					Commission: commission,
-				}
-				trades = append(trades, trade)
-			}
+	for _, row := range rows[1:] { // Skip header row
+		if len(row) < tradeRowLength {
+			continue
 		}
+
+		trade, err := m.parseTradeRow(row, commissionMap)
+		if err != nil {
+			continue
+		}
+		trades = append(trades, trade)
 	}
 	return trades, nil
+}
+
+// parseTradeRow parses a single trade row and applies commission fallback logic.
+func (m *DriveWealthManagerImpl) parseTradeRow(row []string, commissionMap map[string]float64) (tax.Trade, error) {
+	quantity, err := strconv.ParseFloat(row[6], 64)
+	if err != nil {
+		return tax.Trade{}, fmt.Errorf("failed to parse quantity: %w", err)
+	}
+	price, err := strconv.ParseFloat(row[7], 64)
+	if err != nil {
+		return tax.Trade{}, fmt.Errorf("failed to parse price: %w", err)
+	}
+	value, err := strconv.ParseFloat(row[8], 64)
+	if err != nil {
+		return tax.Trade{}, fmt.Errorf("failed to parse value: %w", err)
+	}
+	commission, err := strconv.ParseFloat(row[9], 64)
+	if err != nil {
+		return tax.Trade{}, fmt.Errorf("failed to parse commission: %w", err)
+	}
+
+	// Apply commission fallback: if Trades sheet commission is zero, lookup from All Transactions
+	if commission == 0 && len(commissionMap) > 0 {
+		date := strings.Split(row[0], " ")[0]
+		lookupKey := fmt.Sprintf("%s|%s|%s", date, row[3], row[4])
+		if fallbackCommission, exists := commissionMap[lookupKey]; exists {
+			commission = fallbackCommission
+		}
+	}
+
+	date := strings.Split(row[0], " ")[0]
+	return tax.Trade{
+		Symbol:     row[3],
+		Date:       date,
+		Type:       row[4],
+		Quantity:   quantity,
+		USDPrice:   price,
+		USDValue:   value,
+		Commission: commission,
+	}, nil
 }
 
 // parseInterest extracts interest entries from the "Income" sheet rows.
@@ -220,4 +247,44 @@ func (m *DriveWealthManagerImpl) buildTaxMap(rows [][]string) (map[string]map[st
 		}
 	}
 	return taxMap, nil
+}
+
+// parseCommissions extracts commission data from "All Transactions" sheet.
+// Returns a map with key format "Date|Symbol|Type" -> commission amount.
+// Expected comment format: "COMM Buy SYMBOL base=amount" or "COMM Sell SYMBOL base=amount"
+func (m *DriveWealthManagerImpl) parseCommissions(rows [][]string) map[string]float64 {
+	commissionMap := make(map[string]float64)
+
+	if len(rows) <= 1 {
+		return commissionMap // Return empty map if no data rows
+	}
+
+	for _, row := range rows[1:] { // Skip header row
+		// Expected columns: Date(0), Time(1), Type(2), Amount(3), Account Balance(4), Comment(5)
+		if len(row) >= 6 && row[2] == "COMM" {
+			comment := row[5]
+			// Parse comment: "COMM Buy SYMBOL base=amount"
+			parts := strings.Fields(comment)
+			if len(parts) >= 4 && parts[0] == "COMM" {
+				tradeType := parts[1]  // "Buy" or "Sell"
+				symbol := parts[2]     // Stock symbol
+				basePrefix := parts[3] // "base=amount"
+
+				// Extract amount from "base=amount"
+				if strings.HasPrefix(basePrefix, "base=") {
+					commissionStr := strings.TrimPrefix(basePrefix, "base=")
+					commission, err := strconv.ParseFloat(commissionStr, 64)
+					if err != nil {
+						continue // Skip malformed entries
+					}
+
+					date := strings.Split(row[0], " ")[0]
+					lookupKey := fmt.Sprintf("%s|%s|%s", date, symbol, tradeType)
+					commissionMap[lookupKey] = commission
+				}
+			}
+		}
+	}
+
+	return commissionMap
 }

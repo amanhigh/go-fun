@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/xuri/excelize/v2"
@@ -180,6 +181,127 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 				driveWealthManager = manager.NewDriveWealthManagerImpl(basePath)
 				_, err = driveWealthManager.Parse(testYear)
 				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
+
+	Context("commission fallback from All Transactions sheet", func() {
+		const testYear = 2024
+
+		Context("when commission fallback logic is applied", func() {
+			BeforeEach(func() {
+				f := excelize.NewFile()
+
+				// Setup Income sheet
+				sheetName := "Income"
+				_, err := f.NewSheet(sheetName)
+				Expect(err).ToNot(HaveOccurred())
+
+				headers := []string{"Date", "Time (in UTC)", "Activity", "Ticker", "Gross Cash Amount (in USD)"}
+				err = f.SetSheetRow(sheetName, "A1", &headers)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(f.DeleteSheet("Sheet1")).To(Succeed())
+
+				// Create Trades sheet with MIXED commissions (some zero, some non-zero)
+				tradeSheet := "Trades"
+				_, err = f.NewSheet(tradeSheet)
+				Expect(err).ToNot(HaveOccurred())
+
+				tradeHeaders := []string{
+					"Date", "Time (in UTC)", "Name", "Ticker", "Activity",
+					"Order Type", "Quantity", "Price Per Share (in USD)",
+					"Cash Amount (in USD)", "Commission Charges (in USD)",
+				}
+				err = f.SetSheetRow(tradeSheet, "A1", &tradeHeaders)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Mixed: zero commissions (Buy/Sell MCD) and non-zero (Buy AAPL)
+				tradeRows := [][]interface{}{
+					{"2024-07-01", "02:26:51 PM", "McDonald's Corp.", "MCD", "Buy", "Market", 5, 251.54, 1257.7, 0},  // Zero -> fallback
+					{"2024-07-09", "03:12:32 PM", "McDonald's Corp.", "MCD", "Sell", "Market", 5, 245.10, 1225.5, 0}, // Zero -> fallback
+					{"2024-07-15", "10:30:00 AM", "Apple Inc.", "AAPL", "Buy", "Market", 10, 225.50, 2255.0, 5.00},   // Non-zero -> use as-is
+				}
+
+				for i, rowData := range tradeRows {
+					err = f.SetSheetRow(tradeSheet, fmt.Sprintf("A%d", i+2), &rowData)
+					Expect(err).ToNot(HaveOccurred())
+				}
+
+				// Create All Transactions sheet with commission data for MCD only
+				commSheet := "All Transactions"
+				_, err = f.NewSheet(commSheet)
+				Expect(err).ToNot(HaveOccurred())
+
+				commHeaders := []string{
+					"Date", "Time (in UTC)", "Type", "Amount", "Account Balance", "Comment",
+				}
+				err = f.SetSheetRow(commSheet, "A1", &commHeaders)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Commission entries for MCD trades only (AAPL not present to test non-matched)
+				commRows := [][]interface{}{
+					{"2024-07-01", "02:26:51 PM", "COMM", 2.51, 65358.96, "COMM Buy MCD base=2.51"},
+					{"2024-07-09", "03:12:32 PM", "COMM", 3.06, 66844.73, "COMM Sell MCD base=3.06"},
+				}
+
+				for i, rowData := range commRows {
+					err = f.SetSheetRow(commSheet, fmt.Sprintf("A%d", i+2), &rowData)
+					Expect(err).ToNot(HaveOccurred())
+				}
+
+				err = f.SaveAs(basePath + "_2024.xlsx")
+				Expect(err).ToNot(HaveOccurred())
+
+				driveWealthManager = manager.NewDriveWealthManagerImpl(basePath)
+			})
+
+			It("should fallback to All Transactions when Trades sheet has zero commission", func() {
+				info, err := driveWealthManager.Parse(testYear)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(info.Trades).To(HaveLen(3))
+
+				// Find MCD buy trade (zero -> fallback to 2.51)
+				var mcdBuy *tax.Trade
+				for i := range info.Trades {
+					if info.Trades[i].Symbol == "MCD" && info.Trades[i].Type == "Buy" {
+						mcdBuy = &info.Trades[i]
+						break
+					}
+				}
+				Expect(mcdBuy).ToNot(BeNil())
+				Expect(mcdBuy.Commission).To(Equal(2.51))
+
+				// Find MCD sell trade (zero -> fallback to 3.06)
+				var mcdSell *tax.Trade
+				for i := range info.Trades {
+					if info.Trades[i].Symbol == "MCD" && info.Trades[i].Type == "Sell" {
+						mcdSell = &info.Trades[i]
+						break
+					}
+				}
+				Expect(mcdSell).ToNot(BeNil())
+				Expect(mcdSell.Commission).To(Equal(3.06))
+			})
+
+			It("should prefer Trades sheet commission over All Transactions when non-zero", func() {
+				info, err := driveWealthManager.Parse(testYear)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(info.Trades).To(HaveLen(3))
+
+				// Find AAPL buy trade (has 5.00 in Trades sheet -> should use 5.00, NOT fallback)
+				var aaplBuy *tax.Trade
+				for i := range info.Trades {
+					if info.Trades[i].Symbol == "AAPL" && info.Trades[i].Type == "Buy" {
+						aaplBuy = &info.Trades[i]
+						break
+					}
+				}
+
+				Expect(aaplBuy).ToNot(BeNil())
+				Expect(aaplBuy.Commission).To(Equal(5.00))
 			})
 		})
 	})
