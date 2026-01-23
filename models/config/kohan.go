@@ -57,6 +57,9 @@ type TaxConfig struct {
 	SBIBaseURL   string `env:"SBI_BASE_URL" envDefault:"https://raw.githubusercontent.com/sahilgupta/sbi-fx-ratekeeper/main/csv_files/SBI_REFERENCE_RATES_USD.csv"`
 	YahooBaseURL string `env:"YAHOO_BASE_URL" envDefault:"https://query1.finance.yahoo.com"`
 
+	// Ticker data start year (avoids sparse/missing data from very old periods)
+	TickerDataStartYear int `env:"TICKER_DATA_START_YEAR" envDefault:"2020"`
+
 	// Root directory
 	TaxDir string `env:"TAX_DIR" envDefault:"~/Downloads/FACompute"`
 
