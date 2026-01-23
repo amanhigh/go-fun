@@ -2,7 +2,16 @@
 
 set -e
 
+# Parse --fresh-start flag to regenerate all reference data
+FRESH_START=false
+if [[ "$1" == "--fresh-start" ]]; then
+    FRESH_START=true
+fi
+
 echo "=== UAT: Parse & Compute 2022-2024 Multi-Year Taxes ==="
+if [[ "$FRESH_START" == true ]]; then
+    echo "MODE: FRESH START (regenerating all reference data)"
+fi
 echo ""
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
@@ -12,12 +21,19 @@ FA_COMPUTE_DIR=~/Downloads/FACompute
 echo "Cleaning previous test outputs..."
 rm -rf "$FA_COMPUTE_DIR/Input/Parsed"
 rm -rf "$FA_COMPUTE_DIR/Output"
-rm -f "$FA_COMPUTE_DIR/Data/Reference/sbi_rates.csv"
+
+if [[ "$FRESH_START" == true ]]; then
+    echo "  → Deleting reference data (tickers, SBI rates)..."
+    rm -rf "$FA_COMPUTE_DIR/Data/Tickers"
+    rm -f "$FA_COMPUTE_DIR/Data/Reference/sbi_rates.csv"
+fi
+
 mkdir -p "$FA_COMPUTE_DIR/Input/Parsed"
 mkdir -p "$FA_COMPUTE_DIR/Output/YearEndBalance"
 mkdir -p "$FA_COMPUTE_DIR/Output/Computed"
 mkdir -p "$FA_COMPUTE_DIR/Output/Reports"
 mkdir -p "$FA_COMPUTE_DIR/Data/Reference"
+mkdir -p "$FA_COMPUTE_DIR/Data/Tickers"
 echo "✅ Cleaned"
 echo ""
 
