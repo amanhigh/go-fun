@@ -85,4 +85,25 @@ var _ = Describe("Type", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
+
+	Context("RoundToDecimals - Generic rounding function", func() {
+		It("should round floating point precision errors to specified decimals", func() {
+			Expect(util.RoundToDecimals(0.3899999999999999, 2)).To(Equal(0.39))
+			Expect(util.RoundToDecimals(24.95999999999999, 2)).To(Equal(24.96))
+			Expect(util.RoundToDecimals(-37.76999999999999, 2)).To(Equal(-37.77))
+		})
+
+		It("should handle accumulated calculation errors from multiple operations", func() {
+			// Examples from FIFO calculations
+			Expect(util.RoundToDecimals(0.777+0.333, 2)).To(Equal(1.11))
+			Expect(util.RoundToDecimals(0.292661638, 2)).To(Equal(0.29))
+			Expect(util.RoundToDecimals(2.6500000004, 2)).To(Equal(2.65))
+		})
+
+		It("should support rounding to any decimal precision", func() {
+			Expect(util.RoundToDecimals(1.23456, 1)).To(Equal(1.2))
+			Expect(util.RoundToDecimals(1.23456, 3)).To(Equal(1.235))
+			Expect(util.RoundToDecimals(1.23456, 4)).To(Equal(1.2346))
+		})
+	})
 })

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 )
@@ -143,6 +144,10 @@ func (g *GainsComputationManagerImpl) createGainFromLot(sellTrade tax.Trade, sel
 
 	// Adjust PNL for commissions
 	pnl -= totalCommission
+
+	// Round PNL and Commission to 2 decimal places to avoid floating point precision issues
+	pnl = util.RoundToDecimals(pnl, 2)
+	totalCommission = util.RoundToDecimals(totalCommission, 2)
 
 	// Classify as STCG or LTCG (2-year rule for foreign stocks)
 	gainType := g.classifyGainType(lot.BuyDate, sellDate)

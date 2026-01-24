@@ -371,6 +371,34 @@ var _ = Describe("GainsComputationManager", func() {
 			Expect(totalPnl).To(BeNumerically(">", 0))
 		})
 	})
+
+	Context("Rounding to 2 decimal places for floating point precision", func() {
+		var trades []tax.Trade
+
+		BeforeEach(func() {
+			// Use commission values that create floating point precision issues
+			trades = []tax.Trade{
+				// Partial lot matching will create commission allocation with many decimal places
+				{Symbol: "TEST", Date: "2024-01-15", Type: "BUY", Quantity: 3, USDPrice: 100.00, Commission: 0.777},
+				{Symbol: "TEST", Date: "2024-01-17", Type: "SELL", Quantity: 3, USDPrice: 100.50, Commission: 0.333},
+			}
+		})
+
+		It("should round PNL and Commission to exactly 2 decimal places", func() {
+			gains, err := gainsManager.ComputeGainsFromTrades(ctx, trades)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(gains).To(HaveLen(1))
+
+			gain := gains[0]
+			Expect(gain.Symbol).To(Equal("TEST"))
+
+			// Commission: 0.777 * (3/3) + 0.333 * (3/3) = 0.777 + 0.333 = 1.11
+			Expect(gain.Commission).To(Equal(1.11))
+
+			// PNL: (100.50 - 100.00) * 3 - 1.11 = 0.50 * 3 - 1.11 = 1.50 - 1.11 = 0.39
+			Expect(gain.PNL).To(Equal(0.39))
+		})
+	})
 })
 
 // Helper function for finding gains by symbol (could be moved to test helpers if needed)
