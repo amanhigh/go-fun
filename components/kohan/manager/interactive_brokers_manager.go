@@ -105,12 +105,14 @@ func (m *InteractiveBrokersManagerImpl) parseTradeRecord(record []string) (tax.T
 		return tax.Trade{}, fmt.Errorf("failed to parse price: %w", err)
 	}
 
-	proceeds, err := strconv.ParseFloat(record[9], 64)
+	// Skip C. Price at record[9], read Proceeds at record[10]
+	proceeds, err := strconv.ParseFloat(record[10], 64)
 	if err != nil {
 		return tax.Trade{}, fmt.Errorf("failed to parse proceeds: %w", err)
 	}
 
-	commission, err := strconv.ParseFloat(record[10], 64)
+	// Read Comm/Fee at record[11]
+	commission, err := strconv.ParseFloat(record[11], 64)
 	if err != nil {
 		return tax.Trade{}, fmt.Errorf("failed to parse commission: %w", err)
 	}
