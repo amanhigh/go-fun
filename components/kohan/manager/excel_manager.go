@@ -213,7 +213,7 @@ func (e *ExcelManagerImpl) getPositionRowData(pos *tax.INRPosition) []interface{
 	return []interface{}{
 		e.formatDateForExcel(pos.Date),
 		pos.Quantity,
-		pos.USDPrice,
+		pos.RoundedUSDPrice(),
 		pos.USDValue(),
 		e.formatDateForExcel(pos.TTDate),
 		pos.TTRate,

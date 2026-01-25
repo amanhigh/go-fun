@@ -26,6 +26,15 @@ var _ = Describe("Valuation", func() {
 			}
 			Expect(position.USDValue()).To(Equal(4309.17))
 		})
+
+		It("should round USD price to 2 decimals for display", func() {
+			position := Position{
+				Date:     time.Now(),
+				Quantity: 5,
+				USDPrice: 194.77000427246094,
+			}
+			Expect(position.RoundedUSDPrice()).To(Equal(194.77))
+		})
 	})
 
 	Describe("INRPosition", func() {

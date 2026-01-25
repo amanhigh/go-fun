@@ -66,6 +66,10 @@ func (p *Position) USDValue() float64 {
 	return util.RoundToDecimals(p.Quantity*p.USDPrice, 2)
 }
 
+func (p *Position) RoundedUSDPrice() float64 {
+	return util.RoundToDecimals(p.USDPrice, 2)
+}
+
 // Valuation tracks key positions for a ticker
 type Valuation struct {
 	Ticker          string
