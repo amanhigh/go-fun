@@ -176,5 +176,21 @@ var _ = Describe("Tax Utils", func() {
 				Expect(dividend.Net).To(Equal(50.0))
 			})
 		})
+
+		It("should handle floating-point precision errors: 142.07 - 35.52 = 106.55", func() {
+			// Without rounding: 142.07 - 35.52 = 106.54999999999998
+			taxMap["BIL"] = map[string]float64{"2025-06-06": 35.52}
+			dividend = &tax.Dividend{Symbol: "BIL", Date: "2025-06-06", Amount: 142.07}
+			manager.MatchDividendWithTax(dividend, taxMap)
+			Expect(dividend.Net).To(Equal(106.55))
+		})
+
+		It("should round negative net correctly: 1.38 - 16.77 = -15.39", func() {
+			// Without rounding: 1.38 - 16.77 = -15.390000000000004
+			taxMap["IVV"] = map[string]float64{"2025-03-24": 16.77}
+			dividend = &tax.Dividend{Symbol: "IVV", Date: "2025-03-24", Amount: 1.38}
+			manager.MatchDividendWithTax(dividend, taxMap)
+			Expect(dividend.Net).To(Equal(-15.39))
+		})
 	})
 })
