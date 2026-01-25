@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
 )
 
@@ -62,7 +63,7 @@ type Position struct {
 }
 
 func (p *Position) USDValue() float64 {
-	return p.Quantity * p.USDPrice
+	return util.RoundToDecimals(p.Quantity*p.USDPrice, 2)
 }
 
 // Valuation tracks key positions for a ticker
@@ -131,5 +132,5 @@ func (t *INRPosition) IsValid() bool {
 	return !t.Date.IsZero() && t.TTRate > 0
 }
 func (t *INRPosition) INRValue() float64 {
-	return t.USDValue() * t.TTRate
+	return util.RoundToDecimals(t.Quantity*t.USDPrice*t.TTRate, 2)
 }
