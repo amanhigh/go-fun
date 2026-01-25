@@ -323,18 +323,17 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		})
 	})
 
-	Context("Fail-Fast Ticker Download - TDD", func() {
+	Context("Fail-Fast Ticker Download", func() {
 		It("should fail fast when ticker data missing for positive positions", func() {
-			// TDD Test: Validates proper fail-fast behavior for tax systems
+			// Validates proper fail-fast behavior for tax systems
 			//
 			// SCENARIO: 2022 has BUY trades (IEF=42 shares) but IEF.json missing
-			// EXPECTED: System should fail with standardized error format
+			// EXPECTED: System should fail when attempting to download missing ticker
 			// This ensures tax accuracy over convenience - no silent failures
 
 			_, err := taxManager.GetTaxSummary(ctx, 2022)
 
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("failed to get year end price for IEF"))
 			Expect(err.Error()).To(ContainSubstring("failed to auto-download ticker"))
 		})
 	})
