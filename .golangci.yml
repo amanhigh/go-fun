@@ -129,27 +129,30 @@ linters:
       - legacy
       - std-error-handling
     rules:
-      - linters:
-          - bodyclose
-          - noctx
-          - wrapcheck
-        path: _test\.go
-      - linters:
-          - revive
-        path: _test\.go
-        text: '^dot-imports:'
-      - linters:
-          - dupl
-        path: components/kohan/manager/valuation_manager_test\.go
-      - linters:
-          - bodyclose
-        path: common/clients/http_client.go
-      - linters:
-          - errcheck
-          - govet
-          - mnd
-          - wrapcheck
-        path: components/learn/
+       - linters:
+           - bodyclose
+           - noctx
+           - wrapcheck
+         path: _test\.go
+       - linters:
+           - revive
+         path: _test\.go
+         text: '^dot-imports:'
+       - linters:
+           - dupl
+         path: components/kohan/manager/valuation_manager_test\.go
+       - linters:
+           - dupl
+         path: components/kohan/core/tax_integration_test\.go
+       - linters:
+           - bodyclose
+         path: common/clients/http_client.go
+       - linters:
+           - errcheck
+           - govet
+           - mnd
+           - wrapcheck
+         path: components/learn/
     paths:
 issues:
   max-issues-per-linter: 15
