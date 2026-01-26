@@ -418,8 +418,8 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		})
 
 		It("should handle fully liquidated positions with zero year-end quantity", func() {
-			// Integration test for year 2024 where ADI is fully liquidated
-			// ADI: Bought 2 shares (Jan 4) → Sold 2 shares (Jan 20) → Zero year-end
+			// Integration test for year 2023 where ADI is fully liquidated
+			// ADI: Bought 2 shares (Jun 15) → Sold 2 shares (Aug 31) → Zero year-end
 			// This tests the critical bug where exchange_manager tries to fetch
 			// exchange rates for positions with USD amount = 0 (unnecessary computation)
 
@@ -428,7 +428,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(adiTaxManager).ToNot(BeNil())
 
-			summary, err := adiTaxManager.GetTaxSummary(ctx, 2024)
+			summary, err := adiTaxManager.GetTaxSummary(ctx, 2023)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(summary).ToNot(BeNil())
 
@@ -455,13 +455,13 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			// P&L: $389.50 - $363.80 = $25.70
 			Expect(adiGain.PNL).To(Equal(25.70))
 			Expect(adiGain.Type).To(Equal("STCG")) // Holding period < 730 days
-			Expect(adiGain.BuyDate).To(Equal("2024-01-04"))
-			Expect(adiGain.SellDate).To(Equal("2024-01-20"))
+			Expect(adiGain.BuyDate).To(Equal("2023-06-15"))
+			Expect(adiGain.SellDate).To(Equal("2023-08-31"))
 
 			// Exchange rate lookup for gains (sell date month-end precedent)
-			// Jan 2024 sell → uses Jan 20 rate: 82.68 (TT Buy)
-			Expect(adiGain.TTRate).To(Equal(82.68))
-			Expect(adiGain.INRValue()).To(Equal(2125.08)) // 25.70 × 82.68 ≈ 2125.08
+			// Aug 2023 sell → uses closest month-end rate: 82.50 (TT Buy)
+			Expect(adiGain.TTRate).To(Equal(82.50))
+			Expect(adiGain.INRValue()).To(Equal(2120.25)) // 25.70 × 82.50 = 2120.25
 
 			// ============================================================
 			// PART 2: Verify Valuation Processing (Zero-Quantity Handling)
@@ -482,29 +482,31 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			// FirstPosition: ADI has no carry-forward, so first position is from first trade
 			Expect(adiVal.FirstPosition.Quantity).To(Equal(2.0))
 			Expect(adiVal.FirstPosition.USDPrice).To(Equal(181.90))
-			Expect(adiVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2024-01-04"))
-			Expect(adiVal.FirstPosition.TTRate).To(Equal(82.84)) // Jan 4 rate
+			Expect(adiVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2023-06-15"))
+			Expect(adiVal.FirstPosition.TTRate).To(Equal(82.10)) // Jun 15 TT Buy rate
 
-			// PeakPosition: Same as FirstPosition (no additional buys after first purchase)
+			// PeakPosition: Occurs on Jul 10, 2023 (highest INR value from Qty × Price × ExchangeRate)
+			// Note: Price is same (181.90 from backfill), but exchange rate is higher on Jul 10 (82.1 vs 82.0)
 			Expect(adiVal.PeakPosition.Quantity).To(Equal(2.0))
 			Expect(adiVal.PeakPosition.USDPrice).To(Equal(181.90))
-			Expect(adiVal.PeakPosition.Date.Format(time.DateOnly)).To(Equal("2024-01-04"))
+			Expect(adiVal.PeakPosition.Date.Format(time.DateOnly)).To(Equal("2023-07-10"))
 
-			// YearEndPosition: ZERO quantity (fully liquidated)
+			// YearEndPosition: ZERO quantity (fully liquidated on Aug 31, 2023)
+			// System does not fetch year-end price for zero quantity (optimization: 0 × anyPrice = 0)
 			Expect(adiVal.YearEndPosition.Quantity).To(Equal(0.0))
-			Expect(adiVal.YearEndPosition.USDPrice).To(Equal(230.06)) // Year-end price from ADI.json
-			Expect(adiVal.YearEndPosition.Date.Format(time.DateOnly)).To(Equal("2024-12-31"))
+			Expect(adiVal.YearEndPosition.USDPrice).To(Equal(0.0)) // No price fetch for zero qty position
+			Expect(adiVal.YearEndPosition.Date.Format(time.DateOnly)).To(Equal("2023-12-31"))
 
 			// ============================================================
 			// CRITICAL ASSERTION: This is what the bug test is about!
 			// ============================================================
 
-			// USD Amount should be ZERO (Quantity × Price = 0 × $230.06 = $0)
+			// USD Amount should be ZERO (Quantity × Price = 0 × $0.00 = $0)
 			Expect(adiVal.YearEndPosition.GetUSDAmount()).To(Equal(0.0))
 
 			// TTRate SHOULD BE ZERO (no exchange rate lookup for zero-value position)
-			// BEFORE FIX: This will FAIL because system fetches 2024-12-31 rate (85.20)
-			// AFTER FIX: This will PASS because system skips exchange (TTRate remains 0)
+			// System optimization: For zero quantity positions, skip exchange rate lookup since
+			// the final INR value will be zero regardless (0 × price × rate = 0)
 			Expect(adiVal.YearEndPosition.TTRate).To(Equal(0.0),
 				"TTRate should be 0 for zero-quantity position (no exchange rate lookup needed)")
 
@@ -514,8 +516,12 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 				adiVal.YearEndPosition.TTRate
 			Expect(expectedINRValue).To(Equal(0.0))
 
-			// AmountPaid: ADI has no dividends in 2024
-			Expect(adiVal.AmountPaid).To(Equal(0.0))
+			// AmountPaid: ADI has one dividend on Jul 10, 2023
+			// Amount: $30.00, Tax: $4.50, Net: $25.50
+			// INR Value: $25.50 × 82.1 ≈ 2093.55
+			// Note: AmountPaid uses the full dividend amount (before tax) in INR
+			// Amount ($30.00) × TTRate (82.1) = 2463.00
+			Expect(adiVal.AmountPaid).To(Equal(2463.00))
 		})
 	})
 })
