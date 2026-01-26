@@ -1378,11 +1378,14 @@ var _ = Describe("ValuationManager", func() {
 			// Key Positions (Qty | Backfilled Price | TT Rate | INR Value):
 			// Jan 1-Mar 14:  50 qty | $160 (backfilled 2022-12-31) | 82.00 | ₹656,000
 			// Mar 15-Jul 9:  70 qty | $160 (backfilled 2022-12-31) | 82.00-82.50 | ₹915,200-₹918,400
-			// Jul 10:       100 qty | $160 (backfilled 2022-12-31) | 82.50 | ₹1,320,000 ← PEAK REQUIRED
-			// Jul 11-Nov 9: 100 qty | $160 (backfilled 2022-12-31) | 82.50-82.95 | ₹1,320,000-₹1,327,200
-			// Nov 10:        85 qty | $175 (price exists)          | 82.95 | ₹1,233,806
+			// Jul 10:       100 qty | $160 (backfilled 2022-12-31) | 82.50 | ₹1,320,000
+			// Jul 11-Aug 30: 100 qty | $160 (backfilled 2022-12-31) | 82.50 (backfilled) | ₹1,320,000
+			// Aug 31:       100 qty | $160 (backfilled 2022-12-31) | 82.55 | ₹1,320,800 ← PEAK (highest INR value)
+			// Sep 1-Oct 19: 100 qty | $160 (backfilled 2022-12-31) | 82.55 (backfilled) | ₹1,320,800
+			// Oct 20-Nov 9:  85 qty | $160 (backfilled 2022-12-31) | 82.55 (backfilled) | ₹1,120,780
+			// Nov 10:        85 qty | $175 (price exists)          | 82.55 (backfilled) | ₹1,224,436
 			// Nov 15:        85 qty | $175 (backfilled Nov 10)     | 83.20 | ₹1,236,700
-			// Dec 31:        85 qty | $181 (price exists)          | 82.00 | ₹1,260,170 ✗ Currently returned (WRONG - lower than Jul 10!)
+			// Dec 31:        85 qty | $181 (price exists)          | 82.00 | ₹1,260,170
 
 			var (
 				testYear     = 2023
@@ -1400,8 +1403,9 @@ var _ = Describe("ValuationManager", func() {
 					tax.NewTrade(AAPL, "2023-10-20", "SELL", 15, 170.00),
 				}
 
-				// Sparse prices (only Nov 10, Dec 31)
+				// Sparse prices (only Nov 10, Dec 31) + previous year-end for backfill
 				aaplDailyPrices := map[string]float64{
+					"2022-12-31": 160.00, // Previous year-end for backfill support
 					"2023-11-10": 175.00,
 					"2023-12-31": 181.00,
 				}
@@ -1409,6 +1413,7 @@ var _ = Describe("ValuationManager", func() {
 				aaplDailyRates := map[string]float64{
 					"2023-03-15": 82.00,
 					"2023-07-10": 82.50,
+					"2023-08-31": 82.55,
 					"2023-11-15": 83.20,
 					"2023-12-31": 82.00,
 				}
@@ -1419,16 +1424,14 @@ var _ = Describe("ValuationManager", func() {
 				mockTickerManager.EXPECT().GetPrice(ctx, AAPL, yearEndDate).Return(yearEndPrice, nil).Once()
 			})
 
-			It("should identify Jul 10 as peak based on INR calculation", func() {
+			It("should identify Aug 31 as peak based on INR calculation", func() {
 				valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, tradesInYear, testYear)
 				Expect(err).ToNot(HaveOccurred())
 
-				// Peak should be Jul 10 (100 shares @ $160 backfilled × 82.50 rate = ₹1,320,000)
-				// This is highest INR value in year, higher than Dec 31 (₹1,260,170)
-				Expect(valuation.PeakPosition.Date).To(Equal(time.Date(2023, 7, 10, 0, 0, 0, 0, time.UTC)))
+				Expect(valuation.PeakPosition.Date).To(Equal(time.Date(2023, 8, 31, 0, 0, 0, 0, time.UTC)))
 				Expect(valuation.PeakPosition.Quantity).To(Equal(100.0))
 				Expect(valuation.PeakPosition.USDPrice).To(Equal(160.00))
-				Expect(valuation.PeakPosition.Quantity * valuation.PeakPosition.USDPrice * 82.50).To(Equal(1320000.0))
+				Expect(valuation.PeakPosition.Quantity * valuation.PeakPosition.USDPrice * 82.55).To(Equal(1320800.0))
 			})
 		})
 	})

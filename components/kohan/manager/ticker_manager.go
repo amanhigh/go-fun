@@ -215,11 +215,19 @@ func (t *TickerManagerImpl) GetDailyPrices(ctx context.Context, ticker string, y
 		}
 	}
 
+	// Return error if no prices found for the requested year
 	if len(yearPrices) == 0 {
 		return nil, common.NewHttpError(
 			fmt.Sprintf("no price data found for ticker %s in year %d", ticker, year),
 			http.StatusNotFound,
 		)
+	}
+
+	// Include previous year-end price for backfill support during peak calculation
+	// This enables proper price backfilling for carry-over positions in early-year dates
+	prevYearEnd := fmt.Sprintf("%d-12-31", year-1)
+	if prevPrice, exists := data.Prices[prevYearEnd]; exists {
+		yearPrices[prevYearEnd] = prevPrice
 	}
 
 	return yearPrices, nil

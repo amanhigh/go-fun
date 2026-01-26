@@ -209,10 +209,11 @@ var _ = Describe("TickerManager", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(prices).NotTo(BeNil())
 
-			// Verify only 2023 prices are included
-			Expect(prices).To(HaveLen(6))
+			// Verify 2023 prices + previous year-end price are included (for backfill support)
+			Expect(prices).To(HaveLen(7))
 
 			// Verify specific dates and prices
+			Expect(prices["2022-12-31"]).To(Equal(151.00)) // Previous year-end for backfill
 			Expect(prices["2023-01-15"]).To(Equal(152.00))
 			Expect(prices["2023-02-14"]).To(Equal(153.00))
 			Expect(prices["2023-03-31"]).To(Equal(154.00))
@@ -220,9 +221,8 @@ var _ = Describe("TickerManager", func() {
 			Expect(prices["2023-07-15"]).To(Equal(156.00))
 			Expect(prices["2023-12-31"]).To(Equal(157.00))
 
-			// Verify prices from other years are NOT included
+			// Verify other years' prices are NOT included
 			Expect(prices).NotTo(HaveKey("2022-12-30"))
-			Expect(prices).NotTo(HaveKey("2022-12-31"))
 			Expect(prices).NotTo(HaveKey("2024-01-15"))
 			Expect(prices).NotTo(HaveKey("2024-12-31"))
 		})
@@ -312,8 +312,8 @@ var _ = Describe("TickerManager", func() {
 			prices2, err2 := tickerManager.GetDailyPrices(ctx, ticker, year)
 			Expect(err2).ToNot(HaveOccurred())
 
-			// Should return cached values (original length of 6)
-			Expect(prices2).To(HaveLen(6))
+			// Should return cached values (original length of 7 including previous year-end)
+			Expect(prices2).To(HaveLen(7))
 			Expect(prices1).To(Equal(prices2))
 		})
 
@@ -354,14 +354,14 @@ var _ = Describe("TickerManager", func() {
 			prices, err := tickerManager.GetDailyPrices(ctx, "BOUNDARY", year)
 
 			Expect(err).ToNot(HaveOccurred())
-			// Should only include 2023 dates
-			Expect(prices).To(HaveLen(4))
+			// Should include 2023 dates + previous year-end for backfill support
+			Expect(prices).To(HaveLen(5))
+			Expect(prices).To(HaveKey("2022-12-31")) // Previous year-end for backfill
 			Expect(prices).To(HaveKey("2023-01-01"))
 			Expect(prices).To(HaveKey("2023-01-02"))
 			Expect(prices).To(HaveKey("2023-12-30"))
 			Expect(prices).To(HaveKey("2023-12-31"))
-			// Should NOT include boundary years
-			Expect(prices).NotTo(HaveKey("2022-12-31"))
+			// Should NOT include 2024 prices
 			Expect(prices).NotTo(HaveKey("2024-01-01"))
 		})
 
@@ -372,9 +372,9 @@ var _ = Describe("TickerManager", func() {
 			data2022, err2022 := tickerManager.GetDailyPrices(ctx, ticker, 2022)
 			Expect(err2022).ToNot(HaveOccurred())
 
-			// 2023 should have 6 entries
-			Expect(data2023).To(HaveLen(6))
-			// 2022 should have 2 entries
+			// 2023 should have 7 entries (6 from 2023 + 2022-12-31 for backfill)
+			Expect(data2023).To(HaveLen(7))
+			// 2022 should have 2 entries (2022-12-30, 2022-12-31; no 2021-12-31 in test data)
 			Expect(data2022).To(HaveLen(2))
 
 			// Data should be different

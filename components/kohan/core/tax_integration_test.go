@@ -283,22 +283,20 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			//
 			// Exchange Rate Timeline (from sbi_rates.csv, relevant 2023 dates):
 			//   Jul 10: 82.50 (TT BUY)
-			//   Nov 15: 83.20 (TT BUY) ← highest rate in year
+			//   Aug 31: 82.55 (TT BUY) ← higher rate than Jul 10
+			//   Nov 15: 83.20 (TT BUY) ← highest rate in year (but lower quantity)
 			//   Dec 31: 82.00 (TT BUY)
 			//
 			// Theoretical INR Peak Calculations (per Tax.md Line 124):
-			//   Jul 10: 100 × $160 × 82.50 = ₹1,320,000 ← Should be PEAK INR VALUE
+			//   Jul 10: 100 × $160 × 82.50 = ₹1,320,000
+			//   Aug 31: 100 × $160 × 82.55 = ₹1,320,800 ← highest
 			//   Nov 15: 85 × $175 × 83.20 = ₹1,236,700
 			//   Dec 31: 85 × $181 × 82.00 = ₹1,260,170
-			//
-			// ACTUAL SYSTEM RESULT (current behavior):
-			// System returns Dec 31 as peak (₹1,260,170) instead of Jul 10 (₹1,320,000)
-			// This appears to be a bug in peak calculation logic, but test matches actual output
-			Expect(aaplVal.PeakPosition.Quantity).To(Equal(85.0))
-			Expect(aaplVal.PeakPosition.USDPrice).To(Equal(181.00))
-			Expect(aaplVal.PeakPosition.Date.Format(time.DateOnly)).To(Equal("2023-12-31"))
-			Expect(aaplVal.PeakPosition.TTRate).To(Equal(82.00))
-			Expect(aaplVal.PeakPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-12-31"))
+			Expect(aaplVal.PeakPosition.Quantity).To(Equal(100.0))
+			Expect(aaplVal.PeakPosition.USDPrice).To(Equal(160.00))
+			Expect(aaplVal.PeakPosition.Date.Format(time.DateOnly)).To(Equal("2023-08-31"))
+			Expect(aaplVal.PeakPosition.TTRate).To(Equal(82.55))
+			Expect(aaplVal.PeakPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-08-31"))
 
 			// Year End Position: Holdings remaining after all trades
 			// Timeline: Jan 1 → 50 → Mar 15 +20 → 70 → Jul 10 +30 → 100 → Oct 20 -15 → 85 (held through Dec 31)
