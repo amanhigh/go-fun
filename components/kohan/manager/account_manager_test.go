@@ -27,9 +27,9 @@ var _ = Describe("AccountManager", func() {
 
 		// Setup test account
 		testAccount = tax.Account{
-			Symbol:      "AAPL",
-			Quantity:    100,
-			Cost:        3833,
+			Symbol:   "AAPL",
+			Quantity: 100,
+
 			MarketValue: 4201,
 		}
 	})
@@ -126,9 +126,9 @@ var _ = Describe("AccountManager", func() {
 			BeforeEach(func() {
 				// Mock repository returns different account
 				differentAccount := tax.Account{
-					Symbol:      "MSFT",
-					Quantity:    50,
-					Cost:        5000,
+					Symbol:   "MSFT",
+					Quantity: 50,
+
 					MarketValue: 5500,
 				}
 				mockRepo.EXPECT().
@@ -160,7 +160,6 @@ var _ = Describe("AccountManager", func() {
 				{
 					Symbol:      "GOOG",
 					Quantity:    10,
-					Cost:        1500, // 10 * 150
 					MarketValue: 1500, // 10 * 150
 				},
 			}

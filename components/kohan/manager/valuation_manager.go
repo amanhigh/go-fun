@@ -281,14 +281,10 @@ func (v *ValuationManagerImpl) getOpeningPositionForPeriod(ctx context.Context, 
 
 	// Account record found (carry-over scenario)
 	// Reconstruct FirstPosition from Account metadata (original acquisition date/price)
-	// If OriginDate is empty, treat as fresh start (no opening position for this year)
-	if account.OriginDate == "" {
-		return tax.Position{}, nil
-	}
-
+	// OriginDate MUST be present for carry-over accounts - it's required for tax reporting
 	originDate, parseErr := time.Parse(time.DateOnly, account.OriginDate)
 	if parseErr != nil {
-		return tax.Position{}, tax.NewInvalidDateError(fmt.Sprintf("failed to parse OriginDate '%s': %v", account.OriginDate, parseErr))
+		return tax.Position{}, tax.NewInvalidDateError(fmt.Sprintf("failed to parse OriginDate '%s' for carry-over account %s: %v", account.OriginDate, ticker, parseErr))
 	}
 
 	return tax.Position{

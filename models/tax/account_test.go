@@ -72,7 +72,6 @@ var _ = Describe("Account", func() {
 
 			Expect(accounts[0].Symbol).To(Equal("GOOG"))
 			Expect(accounts[0].Quantity).To(Equal(float64(10)))
-			Expect(accounts[0].Cost).To(Equal(float64(1500)))
 			Expect(accounts[0].MarketValue).To(Equal(float64(1500)))
 			Expect(accounts[0].OriginDate).To(Equal("2021-03-05"))
 			Expect(accounts[0].OriginQty).To(Equal(10.0))
@@ -80,7 +79,6 @@ var _ = Describe("Account", func() {
 
 			Expect(accounts[1].Symbol).To(Equal("AAPL"))
 			Expect(accounts[1].Quantity).To(Equal(float64(20)))
-			Expect(accounts[1].Cost).To(Equal(float64(3500)))
 			Expect(accounts[1].MarketValue).To(Equal(float64(3500)))
 			Expect(accounts[1].OriginDate).To(Equal("2020-08-15"))
 			Expect(accounts[1].OriginQty).To(Equal(20.0))
@@ -91,9 +89,9 @@ var _ = Describe("Account", func() {
 	Context("IsValid", func() {
 		It("should validate account with required fields", func() {
 			account := tax.Account{
-				Symbol:      "AAPL",
-				Quantity:    100,
-				Cost:        15050.00,
+				Symbol:   "AAPL",
+				Quantity: 100,
+
 				MarketValue: 16000.00,
 			}
 			Expect(account.IsValid()).To(BeTrue())
@@ -101,9 +99,9 @@ var _ = Describe("Account", func() {
 
 		It("should invalidate account missing symbol", func() {
 			account := tax.Account{
-				Symbol:      "",
-				Quantity:    100,
-				Cost:        15050.00,
+				Symbol:   "",
+				Quantity: 100,
+
 				MarketValue: 16000.00,
 			}
 			Expect(account.IsValid()).To(BeFalse())
@@ -111,9 +109,9 @@ var _ = Describe("Account", func() {
 
 		It("should allow origin fields to be zero", func() {
 			account := tax.Account{
-				Symbol:      "AAPL",
-				Quantity:    100,
-				Cost:        15050.00,
+				Symbol:   "AAPL",
+				Quantity: 100,
+
 				MarketValue: 16000.00,
 				// Origin fields are zero/empty, which is allowed
 			}
