@@ -944,7 +944,14 @@ var _ = Describe("ValuationManager", func() {
 			mockTickerManager.EXPECT().GetPrice(ctx, AAPL, yearEndDate).Return(150.0, nil).Once() // AAPL year end price
 
 			// Mock dependencies needed by AnalyzeValuation for MSFT
-			mockAccountManager.EXPECT().GetRecord(ctx, "MSFT", year-1).Return(tax.Account{Quantity: 10, MarketValue: 1800}, nil).Once() // Start MSFT with 10 shares @ 180
+			// Carry-over account with OriginDate to preserve FirstPosition metadata
+			mockAccountManager.EXPECT().GetRecord(ctx, "MSFT", year-1).Return(tax.Account{
+				Quantity:    10,
+				MarketValue: 1800,
+				OriginDate:  "2023-03-15",
+				OriginQty:   10,
+				OriginPrice: 180.0,
+			}, nil).Once()
 			mockTickerManager.EXPECT().GetDailyPrices(ctx, "MSFT", year).Return(msftDailyPrices, nil).Once()
 			mockTickerManager.EXPECT().GetPrice(ctx, "MSFT", yearEndDate).Return(210.0, nil).Once() // MSFT year end price
 
@@ -980,10 +987,10 @@ var _ = Describe("ValuationManager", func() {
 
 			// Assert MSFT Valuation (based on AnalyzeValuation logic)
 			Expect(msftVal.Ticker).To(Equal("MSFT"))
-			Expect(msftVal.FirstPosition.Quantity).To(Equal(10.0))                                        // From starting position
-			Expect(msftVal.FirstPosition.Date).To(Equal(time.Date(year-1, 12, 31, 0, 0, 0, 0, time.UTC))) // Date of start pos (Dec 31st of previous year)
-			Expect(msftVal.PeakPosition.Quantity).To(Equal(30.0))                                         // 10 start + 20 buy
-			msftPeakDate, getDateErr := tradeMSFT1.GetDate()                                              // Use getDateErr here too
+			Expect(msftVal.FirstPosition.Quantity).To(Equal(10.0))                                     // From starting carry-over position
+			Expect(msftVal.FirstPosition.Date).To(Equal(time.Date(2023, 3, 15, 0, 0, 0, 0, time.UTC))) // OriginDate from account carry-over
+			Expect(msftVal.PeakPosition.Quantity).To(Equal(30.0))                                      // 10 start + 20 buy
+			msftPeakDate, getDateErr := tradeMSFT1.GetDate()                                           // Use getDateErr here too
 			Expect(getDateErr).NotTo(HaveOccurred())
 			Expect(msftVal.PeakPosition.Date).To(Equal(msftPeakDate))              // Date peak reached
 			Expect(msftVal.YearEndPosition.Quantity).To(BeNumerically("~", 30.0))  // Final quantity
@@ -1078,7 +1085,16 @@ var _ = Describe("ValuationManager", func() {
 			BeforeEach(func() {
 				tickerWithTrades = "AAPL"
 				tickerWithoutTrades = "MSFT"
-				prevYearAccount = tax.Account{Symbol: tickerWithoutTrades, Quantity: 50, Cost: 10000, MarketValue: 10000}
+				prevYearAccount = tax.Account{
+					Symbol:   tickerWithoutTrades,
+					Quantity: 50,
+
+					MarketValue: 10000,
+					// Carry-over account must have OriginDate for FirstPosition reconstruction
+					OriginDate:  "2020-03-20",
+					OriginQty:   50,
+					OriginPrice: 200.0,
+				}
 				tradeInYear = tax.NewTrade(tickerWithTrades, "2024-06-15", tax.TRADE_TYPE_BUY, 10, 150)
 
 				// Mock: Only AAPL has trades in target year
@@ -1093,12 +1109,21 @@ var _ = Describe("ValuationManager", func() {
 					"2024-06-15": 150.0,
 				}
 
-				// Daily prices for MSFT (empty - no trades in current year, Q3: Yes, empty maps work)
-				msftDailyPrices := map[string]float64{}
+				// Daily prices for MSFT (carry-over with varying prices across the year)
+				// Shows how peak differs from first position when quantity is constant but price varies
+				// OriginDate: 2020-03-20 @ $200.00 → Peak: Sep 1 @ $215.00 (higher price despite same quantity)
+				msftDailyPrices := map[string]float64{
+					"2024-05-01": 205.0, // Mid-year price increase
+					"2024-09-01": 215.0, // Highest price (peak will be here)
+					"2024-12-31": 210.0, // Year-end price
+				}
 
 				// Merged daily rates (both tickers)
 				mergedDailyRates := map[string]float64{
-					"2024-06-15": 82.5, // AAPL trade
+					"2024-05-01": 82.0,  // May rate
+					"2024-06-15": 82.5,  // AAPL trade
+					"2024-09-01": 82.10, // Sep rate (slightly lower than May/Jun but price is highest)
+					"2024-12-31": 83.0,  // Year-end rate
 				}
 
 				// Mock: AAPL dependencies (fresh start in current year)
@@ -1133,16 +1158,22 @@ var _ = Describe("ValuationManager", func() {
 				}
 				Expect(msftVal).ToNot(BeNil(), "MSFT should be included despite no trades")
 
-				// Assert FirstPosition: Should be carried from previous year
-				prevYearEnd := time.Date(year-1, 12, 31, 0, 0, 0, 0, time.UTC)
-				Expect(msftVal.FirstPosition.Date).To(Equal(prevYearEnd), "FirstPosition date from carry-over (Dec 31 of previous year)")
+				// Assert FirstPosition: Should be carried from previous year (OriginDate metadata)
+				originDate := time.Date(2020, 3, 20, 0, 0, 0, 0, time.UTC)
+				Expect(msftVal.FirstPosition.Date).To(Equal(originDate), "FirstPosition date from carry-over OriginDate")
 				Expect(msftVal.FirstPosition.Quantity).To(Equal(50.0), "FirstPosition quantity from carry-over")
-				Expect(msftVal.FirstPosition.USDPrice).To(Equal(200.0), "FirstPosition price from carry-over (10000/50)")
+				Expect(msftVal.FirstPosition.USDPrice).To(Equal(200.0), "FirstPosition price from carry-over OriginPrice")
 
-				// Assert PeakPosition: Should remain same as FirstPosition (no trades to change it)
-				Expect(msftVal.PeakPosition.Date).To(Equal(prevYearEnd), "PeakPosition date unchanged (no trades)")
-				Expect(msftVal.PeakPosition.Quantity).To(Equal(50.0), "PeakPosition quantity unchanged (no trades)")
-				Expect(msftVal.PeakPosition.USDPrice).To(Equal(200.0), "PeakPosition price unchanged (no trades)")
+				// Assert PeakPosition: Should be on Sep 1 when price is highest ($215 > $200 origin price)
+				// Quantity is constant (50 shares) but price varies across the year
+				// INR Peak Calculation (Qty × Price × Rate):
+				//   Origin (2020-03-20): 50 × $200 × unknown_rate = baseline
+				//   May 1:   50 × $205 × 82.0 = ₹840,500
+				//   Sep 1:   50 × $215 × 82.10 = ₹881,075 ← PEAK (highest price * rate combination)
+				peakDate := time.Date(2024, 9, 1, 0, 0, 0, 0, time.UTC)
+				Expect(msftVal.PeakPosition.Date).To(Equal(peakDate), "PeakPosition date is Sep 1 (highest INR value)")
+				Expect(msftVal.PeakPosition.Quantity).To(Equal(50.0), "PeakPosition quantity unchanged (same holding)")
+				Expect(msftVal.PeakPosition.USDPrice).To(Equal(215.0), "PeakPosition price on peak date (highest price)")
 
 				// Assert YearEndPosition: Should have current year date with year-end price
 				Expect(msftVal.YearEndPosition.Date).To(Equal(yearEndDate), "YearEndPosition date is current year Dec 31")
@@ -1163,7 +1194,7 @@ var _ = Describe("ValuationManager", func() {
 				Symbol:      AAPL,
 				Quantity:    50,
 				MarketValue: 8000.00, // Year-end market value: $160.00 per share
-				Cost:        6500.00, // Original cost basis
+				// Original cost basis
 				// NEW: FirstPosition metadata (original acquisition details)
 				OriginDate:  "2021-03-05",
 				OriginQty:   50.0,
@@ -1256,8 +1287,7 @@ var _ = Describe("ValuationManager", func() {
 			BeforeEach(func() {
 				carryOverAccount.Quantity = 75
 				carryOverAccount.MarketValue = 12000.00 // Year-end market value: $160.00 per share
-				carryOverAccount.Cost = 9750.00         // Original cost basis
-				// NEW: FirstPosition metadata
+				// FirstPosition metadata
 				carryOverAccount.OriginDate = "2020-08-15"
 				carryOverAccount.OriginQty = 75.0
 				carryOverAccount.OriginPrice = 130.00
