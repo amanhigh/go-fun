@@ -280,19 +280,21 @@ func (v *ValuationManagerImpl) getOpeningPositionForPeriod(ctx context.Context, 
 	}
 
 	// Account record found (carry-over scenario)
-	// Opening position date should be Dec 31st of previous year for carry-over positions
-	openingDate := time.Date(year-1, 12, 31, 0, 0, 0, 0, time.UTC)
-	var openingPrice float64
-	if account.Quantity > 0 { // Avoid division by zero
-		openingPrice = account.MarketValue / account.Quantity
-	} else {
-		openingPrice = 0 // If prior year quantity was zero, opening price is zero
+	// Reconstruct FirstPosition from Account metadata (original acquisition date/price)
+	// If OriginDate is empty, treat as fresh start (no opening position for this year)
+	if account.OriginDate == "" {
+		return tax.Position{}, nil
+	}
+
+	originDate, parseErr := time.Parse(time.DateOnly, account.OriginDate)
+	if parseErr != nil {
+		return tax.Position{}, tax.NewInvalidDateError(fmt.Sprintf("failed to parse OriginDate '%s': %v", account.OriginDate, parseErr))
 	}
 
 	return tax.Position{
-		Date:     openingDate,
-		Quantity: account.Quantity,
-		USDPrice: openingPrice,
+		Date:     originDate,
+		Quantity: account.OriginQty,
+		USDPrice: account.OriginPrice,
 	}, nil
 }
 
