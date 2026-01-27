@@ -345,6 +345,87 @@ The system operates by:
 
 This conceptual flow allows for modular management of different aspects of tax computation, from data sourcing and cleaning to complex calculations and final currency conversion.
 
+## Initial Value (FirstPosition) Calculation Details
+
+### Understanding FirstPosition
+
+The `FirstPosition` represents the **opening balance** of a security at the start of the reporting period (calendar year). It establishes the acquisition cost basis for Schedule FA reporting.
+
+**Two Primary Scenarios:**
+
+#### Scenario 1: Carry-Over from Prior Year (Typical Case)
+
+When holdings continue from the previous year, `FirstPosition` reflects the prior year's year-end position:
+- **Date:** December 31st of the prior year
+- **Quantity:** Shares held at year-end
+- **Price:** Market price per share on Dec 31st of prior year (or cost basis if derived from opening balance)
+- **Example:**
+  - 2022 year-end: 50 AAPL shares valued at $160/share
+  - 2023 FirstPosition: (50 qty, $160 price, 2022-12-31 date)
+  - SBI Rate on 2022-12-31: 81.50 INR/USD
+  - INRValue = 50 × $160 × 81.50 = **₹652,000**
+
+#### Scenario 2: Fresh Acquisition (First Purchase of Year)
+
+When acquiring a security for the first time in a calendar year:
+- **Date:** Date of first BUY trade
+- **Quantity:** Shares purchased in that first trade
+- **Price:** Purchase price per share
+- **Example:**
+  - 2024 Jan 15: First BUY 10 AAPL @ $175/share
+  - 2024 FirstPosition: (10 qty, $175 price, 2024-01-15 date)
+  - SBI Rate on 2024-01-15: 83.00 INR/USD
+  - INRValue = 10 × $175 × 83.00 = **₹145,250**
+
+#### Scenario 3: Complete Liquidation & Re-acquisition in Subsequent Year
+
+**Important Behavior:** When a security position is completely liquidated (sold out entirely to 0 quantity) at year-end and then **re-acquired in the following year**, the `FirstPosition` resets to reflect the new acquisition date and price from the subsequent year.
+
+**Rationale:** The `FirstPosition` anchors to the initial acquisition within a holding period. If a position is completely liquidated by year-end (quantity = 0), the prior year's `FirstPosition` is final and reported for Schedule FA. When re-acquired in the next year, the new year begins with a fresh holding period, so `FirstPosition` reflects the new acquisition date from that year.
+
+**Scenario 3A: Liquidation at Year-End, Re-acquisition in Next Year**
+
+| Year | Date | Transaction | Quantity | Price | Balance | FirstPosition Status |
+|------|------|-------------|----------|-------|---------|----------------------|
+| 2024 | 2024-01-15 | BUY 10 AAPL | 10 | $170 | 10 shares | FirstPosition = (10 qty, $170, 2024-01-15, SBI: 83.00) → ₹141,100 |
+| 2024 | 2024-05-20 | SELL 10 AAPL | -10 | $185 | **0 shares** | Position completely liquidated by year-end |
+| 2024 | 2024-12-31 | Year-End | - | - | 0 shares | **2024 Schedule FA:** No AAPL entry (quantity = 0) |
+| 2025 | 2025-03-10 | BUY 5 AAPL | 5 | $180 | 5 shares | **FirstPosition RESETS** = (5 qty, $180, 2025-03-10, SBI: 81.00) → ₹72,900 |
+| 2025 | 2025-12-31 | Year-End | - | $190 | 5 shares | YearEndPosition = (5 qty, $190, 2025-12-31, SBI: 82.50) → ₹79,125 |
+
+**Schedule FA Reporting:**
+- **2024:** No AAPL entry in Schedule FA (completely liquidated)
+- **2025 AAPL Holding:**
+  - Initial Value: ₹72,900 (reflects Mar 10, 2025 re-acquisition)
+  - Peak Value: Maximum INR value across all days in 2025
+  - Year-End Value: ₹79,125
+
+---
+
+**Scenario 3B: Liquidation & Re-acquisition Within Same Year (FirstPosition Remains Unchanged)**
+
+**Important:** If a position is completely sold and then re-purchased **within the same calendar year**, the `FirstPosition` remains anchored to the **original first acquisition date of that year**, NOT the re-acquisition date.
+
+| Date | Transaction | Quantity | Price | Balance | FirstPosition Status |
+|------|-------------|----------|-------|---------|----------------------|
+| 2024-01-15 | BUY 10 AAPL | 10 | $170 | 10 shares | FirstPosition = (10 qty, $170, 2024-01-15, SBI: 83.00) → ₹141,100 |
+| 2024-05-20 | SELL 10 AAPL | -10 | $185 | **0 shares** | Position liquidated mid-year |
+| 2024-08-10 | BUY 5 AAPL | 5 | $180 | 5 shares | **FirstPosition REMAINS** = (10 qty, $170, 2024-01-15, SBI: 83.00) → ₹141,100 |
+| 2024-12-31 | Year-End | - | $190 | 5 shares | YearEndPosition = (5 qty, $190, 2024-12-31, SBI: 82.50) → ₹79,125 |
+
+**Schedule FA Reporting for 2024:**
+- **Initial Value:** ₹141,100 (original Jan 15 acquisition, not the Aug 10 re-purchase)
+- **Peak Value:** Maximum INR value across all days in 2024
+- **Year-End Value:** ₹79,125
+
+**Tax Implications:**
+- The Jan 15 purchase and May 20 sale are treated as a **complete transaction** - reported separately as capital gains/losses
+- The Aug 10 re-purchase is treated as a **new position** for 2024 reporting, but inherits the original FirstPosition from Jan 15
+- Schedule FA for 2024 reflects the Jan 15 acquisition cost as initial value
+- At year-end 2024, the holding consists of 5 shares from Aug 10, but Schedule FA still anchors to Jan 15 (the original acquisition within that year)
+
+---
+
 ## Peak Balance Calculation Details
 
 ### Finding Peak Balance Value (Line 124)
