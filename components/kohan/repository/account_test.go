@@ -13,10 +13,10 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-const testAccountsCSV = `Symbol,Quantity,Cost,MarketValue,OriginDate,OriginQty,OriginPrice
-AAPL,100,15050.00,16000.00,2021-03-05,50,130.00
-GOOGL,50,125000.00,130000.00,2020-08-15,50,2500.00
-MSFT,75,22500.00,24000.00,2022-01-10,75,300.00`
+const testAccountsCSV = `Symbol,Quantity,MarketValue,OriginDate,OriginQty,OriginPrice
+AAPL,100,16000.00,2021-03-05,50,130.00
+GOOGL,50,130000.00,2020-08-15,50,2500.00
+MSFT,75,24000.00,2022-01-10,75,300.00`
 
 var _ = Describe("AccountRepository", func() {
 	var (
@@ -36,11 +36,11 @@ var _ = Describe("AccountRepository", func() {
 
 		// Setup test data
 		testAccounts = []tax.Account{
-			{Symbol: "AAPL", Quantity: 100, Cost: 15050.00, MarketValue: 16000.00,
+			{Symbol: "AAPL", Quantity: 100, MarketValue: 16000.00,
 				OriginDate: "2021-03-05", OriginQty: 50, OriginPrice: 130.00},
-			{Symbol: "GOOGL", Quantity: 50, Cost: 125000.00, MarketValue: 130000.00,
+			{Symbol: "GOOGL", Quantity: 50, MarketValue: 130000.00,
 				OriginDate: "2020-08-15", OriginQty: 50, OriginPrice: 2500.00},
-			{Symbol: "MSFT", Quantity: 75, Cost: 22500.00, MarketValue: 24000.00,
+			{Symbol: "MSFT", Quantity: 75, MarketValue: 24000.00,
 				OriginDate: "2022-01-10", OriginQty: 75, OriginPrice: 300.00},
 		}
 	})
@@ -61,9 +61,9 @@ var _ = Describe("AccountRepository", func() {
 			// Verify file content
 			content, readErr := os.ReadFile(expectedPath)
 			Expect(readErr).ToNot(HaveOccurred())
-			Expect(string(content)).To(ContainSubstring("AAPL,100,15050,16000,2021-03-05,50,130"))
-			Expect(string(content)).To(ContainSubstring("GOOGL,50,125000,130000,2020-08-15,50,2500"))
-			Expect(string(content)).To(ContainSubstring("MSFT,75,22500,24000,2022-01-10,75,300"))
+			Expect(string(content)).To(ContainSubstring("AAPL,100,16000,2021-03-05,50,130"))
+			Expect(string(content)).To(ContainSubstring("GOOGL,50,130000,2020-08-15,50,2500"))
+			Expect(string(content)).To(ContainSubstring("MSFT,75,24000,2022-01-10,75,300"))
 		})
 
 		It("should handle empty accounts slice", func() {
@@ -81,7 +81,7 @@ var _ = Describe("AccountRepository", func() {
 
 			// Second save with different data
 			newAccounts := []tax.Account{
-				{Symbol: "TSLA", Quantity: 25, Cost: 50000.00, MarketValue: 55000.00},
+				{Symbol: "TSLA", Quantity: 25, MarketValue: 55000.00},
 			}
 			httpErr = accountRepo.SaveYearEndAccounts(ctx, 2024, newAccounts)
 			Expect(httpErr).ToNot(HaveOccurred())
@@ -90,7 +90,7 @@ var _ = Describe("AccountRepository", func() {
 			expectedPath := filepath.Join(testDir, "accounts_2024.csv")
 			content, readErr := os.ReadFile(expectedPath)
 			Expect(readErr).ToNot(HaveOccurred())
-			Expect(string(content)).To(ContainSubstring("TSLA,25,50000,55000"))
+			Expect(string(content)).To(ContainSubstring("TSLA,25,55000"))
 			Expect(string(content)).ToNot(ContainSubstring("AAPL"))
 		})
 
@@ -135,14 +135,12 @@ var _ = Describe("AccountRepository", func() {
 			first := accounts[0]
 			Expect(first.Symbol).To(Equal("AAPL"))
 			Expect(first.Quantity).To(Equal(100.0))
-			Expect(first.Cost).To(Equal(15050.00))
 			Expect(first.MarketValue).To(Equal(16000.00))
 
 			// Verify second account
 			second := accounts[1]
 			Expect(second.Symbol).To(Equal("GOOGL"))
 			Expect(second.Quantity).To(Equal(50.0))
-			Expect(second.Cost).To(Equal(125000.00))
 			Expect(second.MarketValue).To(Equal(130000.00))
 		})
 
@@ -224,7 +222,6 @@ var _ = Describe("AccountRepository", func() {
 				actual := readAccounts[i]
 				Expect(actual.Symbol).To(Equal(expected.Symbol))
 				Expect(actual.Quantity).To(Equal(expected.Quantity))
-				Expect(actual.Cost).To(Equal(expected.Cost))
 				Expect(actual.MarketValue).To(Equal(expected.MarketValue))
 				Expect(actual.OriginDate).To(Equal(expected.OriginDate))
 				Expect(actual.OriginQty).To(Equal(expected.OriginQty))
@@ -234,10 +231,10 @@ var _ = Describe("AccountRepository", func() {
 
 		It("should handle multiple years independently", func() {
 			accounts2023 := []tax.Account{
-				{Symbol: "NVDA", Quantity: 30, Cost: 45000.00, MarketValue: 50000.00},
+				{Symbol: "NVDA", Quantity: 30, MarketValue: 50000.00},
 			}
 			accounts2024 := []tax.Account{
-				{Symbol: "AMD", Quantity: 200, Cost: 30000.00, MarketValue: 32000.00},
+				{Symbol: "AMD", Quantity: 200, MarketValue: 32000.00},
 			}
 
 			// Save different data for different years

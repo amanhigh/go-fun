@@ -10,11 +10,8 @@ import (
 // Preserves FirstPosition for Schedule FA reporting across years.
 type Account struct {
 	Symbol      string  `csv:"Symbol"`
-	Quantity    float64 `csv:"Quantity"`
-	Cost        float64 `csv:"Cost"`        // Year-end position cost basis
+	Quantity    float64 `csv:"Quantity"`    // Year-end quantity
 	MarketValue float64 `csv:"MarketValue"` // Year-end market value
-
-	// Original acquisition metadata - preserves FirstPosition for Schedule FA
 	OriginDate  string  `csv:"OriginDate"`  // ISO format: YYYY-MM-DD (original acquisition date)
 	OriginQty   float64 `csv:"OriginQty"`   // Original acquisition quantity
 	OriginPrice float64 `csv:"OriginPrice"` // Original cost basis per unit (USD)
@@ -35,7 +32,7 @@ func (a Account) GetDate() (time.Time, common.HttpError) {
 
 // IsValid implements CSVRecord interface
 func (a Account) IsValid() bool {
-	return a.Symbol != "" && a.Quantity != 0 && a.Cost != 0 && a.MarketValue != 0
+	return a.Symbol != "" && a.Quantity != 0 && a.MarketValue != 0
 }
 
 // FromValuations converts a slice of Valuation to a slice of Account.
@@ -52,7 +49,6 @@ func FromValuations(valuations []Valuation) []Account {
 		accounts[i] = Account{
 			Symbol:      valuation.Ticker,
 			Quantity:    valuation.YearEndPosition.Quantity,
-			Cost:        valuation.YearEndPosition.USDValue(),
 			MarketValue: valuation.YearEndPosition.USDValue(),
 
 			// Preserve FirstPosition metadata for carryover
