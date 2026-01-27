@@ -1313,6 +1313,84 @@ var _ = Describe("ValuationManager", func() {
 			})
 		})
 
+		Context("Re-acquisition After Liquidation (Empty Origin Date)", func() {
+			var (
+				GOOGL        = "GOOGL"
+				testYear     = 2024
+				yearEndDate  = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
+				yearEndPrice = 140.00
+			)
+
+			BeforeEach(func() {
+				// SCENARIO: Liquidated position (Quantity=0) with re-acquisition in next year
+				// - Year 2023: GOOGL fully liquidated → accounts_2023.csv: GOOGL,0,0,0
+				// - Year 2024: GOOGL re-purchased with new trades, but OriginDate is empty
+				// - Tests fallback: FirstPosition.Date = first trade date (NOT zero)
+				carryOverAccount = tax.Account{
+					Symbol:      GOOGL,
+					Quantity:    0, // Liquidated position persists in CSV
+					Cost:        0,
+					MarketValue: 0,
+					OriginDate:  "", // Metadata missing/cleared
+					OriginQty:   0,
+					OriginPrice: 0,
+				}
+
+				// Re-acquired in current year
+				tradesInYear = []tax.Trade{
+					tax.NewTrade(GOOGL, "2024-04-10", "BUY", 50, 125.00),
+					tax.NewTrade(GOOGL, "2024-08-15", "BUY", 30, 135.00),
+				}
+
+				// Mock setup
+				mockAccountManager.EXPECT().
+					GetRecord(ctx, GOOGL, testYear-1).
+					Return(carryOverAccount, nil).Once()
+
+				mockTickerManager.EXPECT().
+					GetDailyPrices(ctx, GOOGL, testYear).
+					Return(map[string]float64{
+						"2024-04-10": 125.00,
+						"2024-08-15": 135.00,
+					}, nil).Once()
+
+				mockSBIManager.EXPECT().
+					GetDailyRates(ctx, testYear).
+					Return(map[string]float64{
+						"2024-04-10": 83.0,
+						"2024-08-15": 83.5,
+					}, nil).Once()
+
+				mockTickerManager.EXPECT().
+					GetPrice(ctx, GOOGL, yearEndDate).
+					Return(yearEndPrice, nil).Once()
+			})
+
+			It("should use first trade date when OriginDate is empty (re-acquisition fallback)", func() {
+				valuation, err := valuationManager.AnalyzeValuation(ctx, GOOGL, tradesInYear, testYear)
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(valuation.Ticker).To(Equal(GOOGL))
+
+				// FirstPosition.Date must be set from first trade when OriginDate is empty
+				expectedFirstDate := time.Date(2024, 4, 10, 0, 0, 0, 0, time.UTC)
+				Expect(valuation.FirstPosition.Date).To(Equal(expectedFirstDate))
+				Expect(valuation.FirstPosition.Date.IsZero()).To(BeFalse())
+
+				// FirstPosition qty/price set by first trade
+				Expect(valuation.FirstPosition.Quantity).To(Equal(50.0))
+				Expect(valuation.FirstPosition.USDPrice).To(Equal(125.00))
+
+				// PeakPosition after both buys
+				Expect(valuation.PeakPosition.Date).To(Equal(time.Date(2024, 8, 15, 0, 0, 0, 0, time.UTC)))
+				Expect(valuation.PeakPosition.Quantity).To(Equal(80.0))
+
+				// YearEndPosition
+				Expect(valuation.YearEndPosition.Quantity).To(Equal(80.0))
+				Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
+			})
+		})
+
 		Context("With Only Sell Trades", func() {
 			var (
 				MSFT        = "MSFT"
