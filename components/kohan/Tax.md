@@ -348,21 +348,37 @@ This conceptual flow allows for modular management of different aspects of tax c
 
 ### Understanding FirstPosition
 
-The `FirstPosition` represents the **opening balance** of a security at the start of the reporting period (calendar year). It establishes the acquisition cost basis for Schedule FA reporting.
+The `FirstPosition` represents the **acquisition cost basis** of a security - the original date, quantity, and price at which it was first acquired. It establishes the cost baseline for Schedule FA reporting and persists across years as long as holdings remain uninterrupted.
 
-**Two Primary Scenarios:**
+---
+
+### Key Principle: FirstPosition Preservation
+
+**The `FirstPosition` is immutable and anchors to the cost basis of the initial acquisition.** 
+
+- **FirstPosition is set ONCE** when a security is first acquired
+- **FirstPosition persists UNCHANGED** across years as long as holdings continue (even through quantity changes or buying more shares)
+- **FirstPosition anchors to ORIGINAL ACQUISITION DATE/PRICE/QUANTITY**, not the current market price
+- **FirstPosition RESETS** only when the position is completely liquidated to 0 quantity at year-end AND then re-acquired in a subsequent year
+- For Schedule FA reporting, this ensures the true cost basis is maintained indefinitely
+
+---
+
+### Scenarios:
 
 #### Scenario 1: Carry-Over from Prior Year (Typical Case)
 
-When holdings continue from the previous year, `FirstPosition` reflects the prior year's year-end position:
-- **Date:** December 31st of the prior year
-- **Quantity:** Shares held at year-end
-- **Price:** Market price per share on Dec 31st of prior year (or cost basis if derived from opening balance)
+When holdings continue from the previous year, `FirstPosition` reflects the **original first acquisition date and price** of that security, preserved from when it was first purchased (potentially years ago). The `FirstPosition` remains constant as long as holdings continue uninterrupted.
+
+- **Date:** Date of the very first BUY of this security (preserved across years)
+- **Quantity:** Original quantity purchased at first acquisition
+- **Price:** Original price per share at first acquisition
 - **Example:**
-  - 2022 year-end: 50 AAPL shares valued at $160/share
-  - 2023 FirstPosition: (50 qty, $160 price, 2022-12-31 date)
-  - SBI Rate on 2022-12-31: 81.50 INR/USD
-  - INRValue = 50 × $160 × 81.50 = **₹652,000**
+  - 2021 March 5: First BUY 50 AAPL @ $130/share (Initial acquisition)
+  - 2022 year-end: Still holding 50 shares (market value $160/share)
+  - 2023 FirstPosition: (50 qty, $130 price, 2021-03-05 date) ← **Preserved from original acquisition**
+  - SBI Rate on 2021-03-05: 74.00 INR/USD
+  - INRValue = 50 × $130 × 74.00 = **₹481,000** (This value represents the original cost basis)
 
 #### Scenario 2: Fresh Acquisition (First Purchase of Year)
 
