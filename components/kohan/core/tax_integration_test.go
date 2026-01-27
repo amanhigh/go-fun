@@ -261,11 +261,12 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 
 			// FirstPosition: Opening balance from accounts_2022.csv for period start (2023-01-01)
 			// AAPL was held from 2022, so first position shows prior year acquisition
+			// Date: Preserved from accounts_2022.csv OriginDate (original acquisition date)
 			Expect(aaplVal.FirstPosition.Quantity).To(Equal(50.0))
 			Expect(aaplVal.FirstPosition.USDPrice).To(Equal(160.00))
-			Expect(aaplVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2022-12-31"))
-			Expect(aaplVal.FirstPosition.TTRate).To(Equal(81.50))
-			Expect(aaplVal.FirstPosition.TTDate.Format(time.DateOnly)).To(Equal("2022-12-30"))
+			Expect(aaplVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2023-03-15")) // From OriginDate in CSV
+			Expect(aaplVal.FirstPosition.TTRate).To(Equal(82.00))                            // From sbi_rates.csv 2023-03-15 (TT BUY)
+			Expect(aaplVal.FirstPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-03-15"))
 
 			// Peak Position for AAPL (Tax.md Line 124: highest INR value during calendar year)
 			// Per Tax.md, system should evaluate: Qty × USD_Price × Exchange_Rate for EVERY day in 2023
@@ -319,10 +320,10 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			googlVal := summary.INRValuations[2]
 			Expect(googlVal.Ticker).To(Equal("GOOGL"))
 
-			// FirstPosition: Opening balance from accounts_2022.csv
+			// FirstPosition: Opening balance from accounts_2022.csv (OriginDate: 2022-01-10)
 			Expect(googlVal.FirstPosition.Quantity).To(Equal(25.0))
 			Expect(googlVal.FirstPosition.USDPrice).To(Equal(200.00))
-			Expect(googlVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2022-12-31"))
+			Expect(googlVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2022-01-10")) // Using 2022 date to avoid confusion
 
 			// Peak Position: Since no trades in 2023, quantity is constant throughout year
 			// Peak is determined by highest INR value across all 365 days
@@ -346,12 +347,12 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			msftVal := summary.INRValuations[3]
 			Expect(msftVal.Ticker).To(Equal("MSFT"))
 
-			// FirstPosition: Opening balance from accounts_2022.csv
+			// FirstPosition: Opening balance from accounts_2022.csv (OriginDate: 2023-05-01, non-December to avoid confusion)
 			Expect(msftVal.FirstPosition.Quantity).To(Equal(50.0))
 			Expect(msftVal.FirstPosition.USDPrice).To(Equal(200.00))
-			Expect(msftVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2022-12-31"))
-			Expect(msftVal.FirstPosition.TTRate).To(Equal(81.50))
-			Expect(msftVal.FirstPosition.TTDate.Format(time.DateOnly)).To(Equal("2022-12-30"))
+			Expect(msftVal.FirstPosition.Date.Format(time.DateOnly)).To(Equal("2023-05-01"))
+			Expect(msftVal.FirstPosition.TTRate).To(Equal(82.00))
+			Expect(msftVal.FirstPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-05-01"))
 
 			// Peak Position for MSFT (Tax.md Line 124: highest INR value during calendar year)
 			// MSFT Quantity Timeline 2023:
