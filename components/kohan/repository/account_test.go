@@ -13,10 +13,10 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-const testAccountsCSV = `Symbol,Quantity,Cost,MarketValue
-AAPL,100,15050.00,16000.00
-GOOGL,50,125000.00,130000.00
-MSFT,75,22500.00,24000.00`
+const testAccountsCSV = `Symbol,Quantity,Cost,MarketValue,OriginDate,OriginQty,OriginPrice
+AAPL,100,15050.00,16000.00,2021-03-05,50,130.00
+GOOGL,50,125000.00,130000.00,2020-08-15,50,2500.00
+MSFT,75,22500.00,24000.00,2022-01-10,75,300.00`
 
 var _ = Describe("AccountRepository", func() {
 	var (
@@ -36,9 +36,12 @@ var _ = Describe("AccountRepository", func() {
 
 		// Setup test data
 		testAccounts = []tax.Account{
-			{Symbol: "AAPL", Quantity: 100, Cost: 15050.00, MarketValue: 16000.00},
-			{Symbol: "GOOGL", Quantity: 50, Cost: 125000.00, MarketValue: 130000.00},
-			{Symbol: "MSFT", Quantity: 75, Cost: 22500.00, MarketValue: 24000.00},
+			{Symbol: "AAPL", Quantity: 100, Cost: 15050.00, MarketValue: 16000.00,
+				OriginDate: "2021-03-05", OriginQty: 50, OriginPrice: 130.00},
+			{Symbol: "GOOGL", Quantity: 50, Cost: 125000.00, MarketValue: 130000.00,
+				OriginDate: "2020-08-15", OriginQty: 50, OriginPrice: 2500.00},
+			{Symbol: "MSFT", Quantity: 75, Cost: 22500.00, MarketValue: 24000.00,
+				OriginDate: "2022-01-10", OriginQty: 75, OriginPrice: 300.00},
 		}
 	})
 
@@ -58,9 +61,9 @@ var _ = Describe("AccountRepository", func() {
 			// Verify file content
 			content, readErr := os.ReadFile(expectedPath)
 			Expect(readErr).ToNot(HaveOccurred())
-			Expect(string(content)).To(ContainSubstring("AAPL,100,15050,16000"))
-			Expect(string(content)).To(ContainSubstring("GOOGL,50,125000,130000"))
-			Expect(string(content)).To(ContainSubstring("MSFT,75,22500,24000"))
+			Expect(string(content)).To(ContainSubstring("AAPL,100,15050,16000,2021-03-05,50,130"))
+			Expect(string(content)).To(ContainSubstring("GOOGL,50,125000,130000,2020-08-15,50,2500"))
+			Expect(string(content)).To(ContainSubstring("MSFT,75,22500,24000,2022-01-10,75,300"))
 		})
 
 		It("should handle empty accounts slice", func() {
@@ -216,13 +219,16 @@ var _ = Describe("AccountRepository", func() {
 			Expect(httpErr).ToNot(HaveOccurred())
 			Expect(readAccounts).To(HaveLen(len(testAccounts)))
 
-			// Verify data integrity
+			// Verify data integrity including origin fields
 			for i, expected := range testAccounts {
 				actual := readAccounts[i]
 				Expect(actual.Symbol).To(Equal(expected.Symbol))
 				Expect(actual.Quantity).To(Equal(expected.Quantity))
 				Expect(actual.Cost).To(Equal(expected.Cost))
 				Expect(actual.MarketValue).To(Equal(expected.MarketValue))
+				Expect(actual.OriginDate).To(Equal(expected.OriginDate))
+				Expect(actual.OriginQty).To(Equal(expected.OriginQty))
+				Expect(actual.OriginPrice).To(Equal(expected.OriginPrice))
 			}
 		})
 

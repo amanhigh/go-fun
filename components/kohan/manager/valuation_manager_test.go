@@ -1162,7 +1162,12 @@ var _ = Describe("ValuationManager", func() {
 			carryOverAccount = tax.Account{
 				Symbol:      AAPL,
 				Quantity:    50,
-				MarketValue: 8000.00, // Implies $160.00 per share
+				MarketValue: 8000.00, // Year-end market value: $160.00 per share
+				Cost:        6500.00, // Original cost basis
+				// NEW: FirstPosition metadata (original acquisition details)
+				OriginDate:  "2021-03-05",
+				OriginQty:   50.0,
+				OriginPrice: 130.00,
 			}
 		})
 
@@ -1218,11 +1223,12 @@ var _ = Describe("ValuationManager", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(valuation.Ticker).To(Equal(AAPL))
 
-				// 1. Assert FirstPosition (Opening balance for the period)
-				expectedFirstPosDate := time.Date(testYear-1, 12, 31, 0, 0, 0, 0, time.UTC)
+				// 1. Assert FirstPosition (Opening balance preserves ORIGINAL acquisition from prior years)
+				// Should be: 2021-03-05 (original first acquisition), NOT 2022-12-31 (year-end)
+				expectedFirstPosDate := time.Date(2021, 3, 5, 0, 0, 0, 0, time.UTC)
 				Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
 				Expect(valuation.FirstPosition.Quantity).To(Equal(50.0))
-				Expect(valuation.FirstPosition.USDPrice).To(Equal(160.00))
+				Expect(valuation.FirstPosition.USDPrice).To(Equal(130.00)) // Original cost, NOT $160 market value
 
 				// 2. Assert PeakPosition
 				// Start: 50. After Buy1 (20 shares @ $150 on Mar 15): 70 shares.
@@ -1249,7 +1255,12 @@ var _ = Describe("ValuationManager", func() {
 
 			BeforeEach(func() {
 				carryOverAccount.Quantity = 75
-				carryOverAccount.MarketValue = 12000.00 // Implies $160.00 per share
+				carryOverAccount.MarketValue = 12000.00 // Year-end market value: $160.00 per share
+				carryOverAccount.Cost = 9750.00         // Original cost basis
+				// NEW: FirstPosition metadata
+				carryOverAccount.OriginDate = "2020-08-15"
+				carryOverAccount.OriginQty = 75.0
+				carryOverAccount.OriginPrice = 130.00
 
 				// Daily prices map is empty (no trades in year)
 				// Q3: Yes, empty maps work - getClosestPrice returns 0, day skipped
@@ -1283,16 +1294,17 @@ var _ = Describe("ValuationManager", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(valuation.Ticker).To(Equal(AAPL))
 
-				// 1. Assert FirstPosition (Opening balance for the period)
-				expectedFirstPosDate := time.Date(testYear-1, 12, 31, 0, 0, 0, 0, time.UTC)
+				// 1. Assert FirstPosition (Opening balance preserves ORIGINAL acquisition)
+				// Should be: 2020-08-15 (original first acquisition), NOT 2022-12-31 (year-end)
+				expectedFirstPosDate := time.Date(2020, 8, 15, 0, 0, 0, 0, time.UTC)
 				Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
 				Expect(valuation.FirstPosition.Quantity).To(Equal(75.0))
-				Expect(valuation.FirstPosition.USDPrice).To(Equal(160.00)) // From carryOverAccount MarketValue/Quantity
+				Expect(valuation.FirstPosition.USDPrice).To(Equal(130.00)) // Original cost, NOT $160 market value
 
-				// 2. Assert PeakPosition (Should be the same as FirstPosition as no trades increased quantity)
+				// 2. Assert PeakPosition (Should be the same as FirstPosition as no trades occurred)
 				Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
 				Expect(valuation.PeakPosition.Quantity).To(Equal(75.0))
-				Expect(valuation.PeakPosition.USDPrice).To(Equal(160.00))
+				Expect(valuation.PeakPosition.USDPrice).To(Equal(130.00)) // Same as FirstPosition
 
 				// 3. Assert YearEndPosition (Quantity remains the same, price is year-end price)
 				Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
