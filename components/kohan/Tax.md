@@ -118,8 +118,7 @@ This component is crucial for reporting in **Schedule FA (Foreign Assets)** of t
 *   **Key Valuation and Income Points for Schedule FA (All values in INR, for the U.S. Calendar Year Jan 1st - Dec 31st):**
     Schedule FA requires reporting the following for each foreign asset:
     1.  **Initial Value (Cost of Acquisition):**
-        *   Original cost of acquisition (USD) converted to INR using the SBI TT Buy rate on the *date of first acquisition*. This value is fixed for that lot of shares.
-        *   The `FirstPosition` in the `INRValuation` data structure captures this. For new securities acquired in the current reporting year, their acquisition cost is this "Initial Value."
+        *   Represented by the `FirstPosition` in the `INRValuation` data structure. For detailed calculation rules, scenarios (carry-over, fresh acquisition, liquidation & re-acquisition), and examples, refer to the **"Initial Value (FirstPosition) Calculation Details"** section.
     2.  **Peak Balance Value during the accounting period (January 1st - December 31st):**
         *   The **highest INR value** of the total holding, calculated as `(Total_Quantity_Held_on_Day_X * USD_Market_Price_on_Day_X) * SBI_TT_Buy_Exchange_Rate_on_Day_X` for every day shares were held.
         *   The `PeakPosition` in the `INRValuation` data structure captures this.
