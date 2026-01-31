@@ -28,7 +28,8 @@ excel_file = os.path.expanduser(excel_file)
 
 try:
     print(f"Reading Excel file: {excel_file}\n")
-    wb = load_workbook(excel_file, data_only=True)
+    # Load without data_only to preserve formulas
+    wb = load_workbook(excel_file, data_only=False)
     
     print(f"Available sheets: {wb.sheetnames}\n")
     print("=" * 100)
@@ -39,9 +40,17 @@ try:
         print(f"SHEET: {sheet_name}")
         print(f"{'=' * 100}\n")
         
-        # Print all rows
-        for row_idx, row in enumerate(ws.iter_rows(values_only=True), start=1):
-            row_data = [str(cell) if cell is not None else "" for cell in row]
+        # Print all rows with formula support
+        for row_idx, row in enumerate(ws.iter_rows(max_row=ws.max_row, max_col=ws.max_column), start=1):
+            row_data = []
+            for cell in row:
+                if cell.value is None:
+                    row_data.append("")
+                elif isinstance(cell.value, str) and cell.value.startswith('='):
+                    # It's a formula - show the formula
+                    row_data.append(f"[FORMULA: {cell.value}]")
+                else:
+                    row_data.append(str(cell.value))
             print(f"Row {row_idx:3d}: {' | '.join(row_data)}")
         
         print(f"\nTotal rows in {sheet_name}: {ws.max_row}")

@@ -146,7 +146,9 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 				rows, errGetRows := f.GetRows(sheetName)
 				Expect(errGetRows).ToNot(HaveOccurred())
-				Expect(rows).To(HaveLen(1+len(sampleSummary.INRGains)), "Number of rows should be headers + data records")
+				// Rows include: headers + data records + empty row + TOTALS row + empty row + STCG row + LTCG row
+				expectedRowCount := 1 + len(sampleSummary.INRGains) + 5
+				Expect(rows).To(HaveLen(expectedRowCount), "Number of rows should be headers + data records + totals section")
 
 				// Verify gain1 (row 2 in Excel, index 1 in `rows` slice)
 				gain1 := sampleSummary.INRGains[0]
@@ -286,7 +288,9 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 				rows, err := f.GetRows(sheetName)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(rows).To(HaveLen(1 + len(sampleSummary.INRDividends)))
+				// Rows include: headers + data records + empty row + TOTALS row
+				expectedRowCount := 1 + len(sampleSummary.INRDividends) + 2
+				Expect(rows).To(HaveLen(expectedRowCount))
 
 				// Verify Headers
 				expectedHeaders := []string{
@@ -400,7 +404,9 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 				rows, err := f.GetRows(sheetName)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(rows).To(HaveLen(2)) // Header + 1 Data Row
+				// Rows include: headers + data records + empty row + TOTALS row
+				expectedRowCount := 1 + len(sampleSummary.INRValuations) + 2
+				Expect(rows).To(HaveLen(expectedRowCount))
 
 				// Verify Headers
 				expectedHeaders := []string{
@@ -503,7 +509,9 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 				rows, err := f.GetRows(sheetName)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(rows).To(HaveLen(2)) // Header + 1 Data Row
+				// Rows include: headers + data records + empty row + TOTALS row
+				expectedRowCount := 1 + len(sampleSummary.INRInterest) + 2
+				Expect(rows).To(HaveLen(expectedRowCount))
 
 				// Verify Headers
 				expectedHeaders := []string{

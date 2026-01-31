@@ -148,6 +148,14 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 		}
 	}
 
+	// Write totals section with STCG/LTCG breakdown
+	if len(gains) > 0 {
+		lastDataRow := len(gains) + 1
+		if err := e.writeGainsTotals(f, sheetName, lastDataRow); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -187,6 +195,14 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 		}
 	}
 
+	// Write totals section
+	if len(dividends) > 0 {
+		lastDataRow := len(dividends) + 1
+		if err := e.writeDividendsTotals(f, sheetName, lastDataRow); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -220,6 +236,14 @@ func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize
 			22: fmt.Sprintf("=S%d*U%d", rowNum, rowNum), // V: ValINR = ValUSD * TTRate (uses S!)
 		}
 		if err := e.writeFormulaRange(f, sheetName, rowNum, formulas); err != nil {
+			return err
+		}
+	}
+
+	// Write totals section - ONLY AmountPaid (INR) in column W
+	if len(valuations) > 0 {
+		lastDataRow := len(valuations) + 1
+		if err := e.writeValuationsTotals(f, sheetName, lastDataRow); err != nil {
 			return err
 		}
 	}
@@ -289,6 +313,14 @@ func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.F
 
 		// Write formulas for INR columns (Amount, Tax, Net all converted to INR)
 		if err := e.writeTaxWithheldINRFormulas(f, sheetName, rowNum); err != nil {
+			return err
+		}
+	}
+
+	// Write totals section
+	if len(interest) > 0 {
+		lastDataRow := len(interest) + 1
+		if err := e.writeInterestTotals(f, sheetName, lastDataRow); err != nil {
 			return err
 		}
 	}
@@ -376,4 +408,137 @@ func (e *ExcelManagerImpl) writeTaxWithheldINRFormulas(f *excelize.File, sheetNa
 		10: fmt.Sprintf("=E%d*G%d", rowNum, rowNum), // Column J: Net(INR) = Net(USD) * TTRate
 	}
 	return e.writeFormulaRange(f, sheetName, rowNum, formulas)
+}
+
+// writeTotalsLabel writes "TOTALS", "STCG", "LTCG" etc. to column A with bold styling
+func (e *ExcelManagerImpl) writeTotalsLabel(f *excelize.File, sheetName string, rowNum int, label string) error {
+	cellName, err := excelize.CoordinatesToCellName(1, rowNum) // Column A
+	if err != nil {
+		return fmt.Errorf("failed to get cell name for label row %d: %w", rowNum, err)
+	}
+	if err = f.SetCellValue(sheetName, cellName, label); err != nil {
+		return fmt.Errorf("failed to set label '%s': %w", label, err)
+	}
+
+	// Apply bold style to label
+	style, err := f.NewStyle(&excelize.Style{Font: &excelize.Font{Bold: true}})
+	if err != nil {
+		return fmt.Errorf("failed to create bold style: %w", err)
+	}
+	if err = f.SetCellStyle(sheetName, cellName, cellName, style); err != nil {
+		return fmt.Errorf("failed to set style for label: %w", err)
+	}
+	return nil
+}
+
+// writeGainsTotals writes TOTALS row and STCG/LTCG breakdown for Gains sheet
+// Columns: E (PNL USD), F (Commission USD), J (PNL INR)
+// STCG/LTCG use SUMIF based on Type column (G)
+func (e *ExcelManagerImpl) writeGainsTotals(f *excelize.File, sheetName string, lastDataRow int) error {
+	// Calculate row numbers
+	totalsRow := lastDataRow + 2
+	stcgRow := totalsRow + 2
+	ltcgRow := stcgRow + 1
+
+	// Write TOTALS row
+	if err := e.writeTotalsLabel(f, sheetName, totalsRow, "TOTALS"); err != nil {
+		return err
+	}
+
+	// Write TOTALS formulas for columns E, F, J
+	totalsFormulas := map[int]string{
+		5:  fmt.Sprintf("=SUM(E2:E%d)", lastDataRow), // Column E: PNL USD
+		6:  fmt.Sprintf("=SUM(F2:F%d)", lastDataRow), // Column F: Commission USD
+		10: fmt.Sprintf("=SUM(J2:J%d)", lastDataRow), // Column J: PNL INR
+	}
+	if err := e.writeFormulaRange(f, sheetName, totalsRow, totalsFormulas); err != nil {
+		return err
+	}
+
+	// Write STCG row
+	if err := e.writeTotalsLabel(f, sheetName, stcgRow, "STCG"); err != nil {
+		return err
+	}
+
+	// Write STCG formulas (SUMIF for Type="STCG")
+	stcgFormulas := map[int]string{
+		5:  fmt.Sprintf("=SUMIF(G2:G%d,\"STCG\",E2:E%d)", lastDataRow, lastDataRow), // Column E: PNL USD
+		10: fmt.Sprintf("=SUMIF(G2:G%d,\"STCG\",J2:J%d)", lastDataRow, lastDataRow), // Column J: PNL INR
+	}
+	if err := e.writeFormulaRange(f, sheetName, stcgRow, stcgFormulas); err != nil {
+		return err
+	}
+
+	// Write LTCG row
+	if err := e.writeTotalsLabel(f, sheetName, ltcgRow, "LTCG"); err != nil {
+		return err
+	}
+
+	// Write LTCG formulas (SUMIF for Type="LTCG")
+	ltcgFormulas := map[int]string{
+		5:  fmt.Sprintf("=SUMIF(G2:G%d,\"LTCG\",E2:E%d)", lastDataRow, lastDataRow), // Column E: PNL USD
+		10: fmt.Sprintf("=SUMIF(G2:G%d,\"LTCG\",J2:J%d)", lastDataRow, lastDataRow), // Column J: PNL INR
+	}
+	return e.writeFormulaRange(f, sheetName, ltcgRow, ltcgFormulas)
+}
+
+// writeDividendsTotals writes TOTALS row for Dividends sheet
+// Columns: C (Amount USD), D (Tax USD), E (Net USD), H (Amount INR), I (Tax INR), J (Net INR)
+func (e *ExcelManagerImpl) writeDividendsTotals(f *excelize.File, sheetName string, lastDataRow int) error {
+	totalsRow := lastDataRow + 2
+
+	// Write TOTALS row label
+	if err := e.writeTotalsLabel(f, sheetName, totalsRow, "TOTALS"); err != nil {
+		return err
+	}
+
+	// Write TOTALS formulas for all 6 columns
+	totalsFormulas := map[int]string{
+		3:  fmt.Sprintf("=SUM(C2:C%d)", lastDataRow), // Column C: Amount USD
+		4:  fmt.Sprintf("=SUM(D2:D%d)", lastDataRow), // Column D: Tax USD
+		5:  fmt.Sprintf("=SUM(E2:E%d)", lastDataRow), // Column E: Net USD
+		8:  fmt.Sprintf("=SUM(H2:H%d)", lastDataRow), // Column H: Amount INR
+		9:  fmt.Sprintf("=SUM(I2:I%d)", lastDataRow), // Column I: Tax INR
+		10: fmt.Sprintf("=SUM(J2:J%d)", lastDataRow), // Column J: Net INR
+	}
+	return e.writeFormulaRange(f, sheetName, totalsRow, totalsFormulas)
+}
+
+// writeInterestTotals writes TOTALS row for Interest sheet
+// Columns: C (Amount USD), D (Tax USD), E (Net USD), H (Amount INR), I (Tax INR), J (Net INR)
+func (e *ExcelManagerImpl) writeInterestTotals(f *excelize.File, sheetName string, lastDataRow int) error {
+	totalsRow := lastDataRow + 2
+
+	// Write TOTALS row label
+	if err := e.writeTotalsLabel(f, sheetName, totalsRow, "TOTALS"); err != nil {
+		return err
+	}
+
+	// Write TOTALS formulas for all 6 columns (same as Dividends)
+	totalsFormulas := map[int]string{
+		3:  fmt.Sprintf("=SUM(C2:C%d)", lastDataRow), // Column C: Amount USD
+		4:  fmt.Sprintf("=SUM(D2:D%d)", lastDataRow), // Column D: Tax USD
+		5:  fmt.Sprintf("=SUM(E2:E%d)", lastDataRow), // Column E: Net USD
+		8:  fmt.Sprintf("=SUM(H2:H%d)", lastDataRow), // Column H: Amount INR
+		9:  fmt.Sprintf("=SUM(I2:I%d)", lastDataRow), // Column I: Tax INR
+		10: fmt.Sprintf("=SUM(J2:J%d)", lastDataRow), // Column J: Net INR
+	}
+	return e.writeFormulaRange(f, sheetName, totalsRow, totalsFormulas)
+}
+
+// writeValuationsTotals writes TOTALS row for Valuations sheet - ONLY AmountPaid (INR)
+// Column: W (AmountPaid INR)
+func (e *ExcelManagerImpl) writeValuationsTotals(f *excelize.File, sheetName string, lastDataRow int) error {
+	totalsRow := lastDataRow + 2
+
+	// Write TOTALS row label
+	if err := e.writeTotalsLabel(f, sheetName, totalsRow, "TOTALS"); err != nil {
+		return err
+	}
+
+	// Write TOTALS formula for column W only (AmountPaid INR)
+	totalsFormulas := map[int]string{
+		23: fmt.Sprintf("=SUM(W2:W%d)", lastDataRow), // Column W: AmountPaid INR
+	}
+	return e.writeFormulaRange(f, sheetName, totalsRow, totalsFormulas)
 }
