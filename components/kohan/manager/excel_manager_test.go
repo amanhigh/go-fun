@@ -519,6 +519,33 @@ var _ = Describe("ExcelManagerImpl", func() {
 				expectFormulaCell(f, sheetName, "S2", "=Q2*R2", posYearEnd.USDValue())
 				expectFormulaCell(f, sheetName, "V2", "=S2*U2", posYearEnd.INRValue())
 			})
+
+			It("should write TOTALS row for AmountPaid column", func() {
+				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				// Calculate expected value using lo.SumBy (1 total)
+				totalAmountPaidINR := lo.SumBy(sampleSummary.INRValuations, func(v tax.INRValuation) float64 {
+					return v.AmountPaid
+				})
+
+				// Verify TOTALS row position
+				lastDataRow := len(sampleSummary.INRValuations) + 1 // Row 2 (1 data row)
+				totalsRow := lastDataRow + 2                        // Row 4 (skip empty row 3)
+
+				// Verify TOTALS label
+				totalsLabel, err := f.GetCellValue(sheetName, fmt.Sprintf("A%d", totalsRow))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(totalsLabel).To(Equal("TOTALS"))
+
+				// Verify AmountPaid (INR) column W
+				expectFormulaCell(f, sheetName, fmt.Sprintf("W%d", totalsRow),
+					fmt.Sprintf("=SUM(W2:W%d)", lastDataRow), totalAmountPaidINR)
+			})
 		})
 
 		Context("when generating the 'Interest' sheet with data", func() {
@@ -592,6 +619,60 @@ var _ = Describe("ExcelManagerImpl", func() {
 				expectFormulaCell(f, sheetName, "H2", "=C2*G2", interest1.Amount*interest1.TTRate) // Amount (INR)
 				expectFormulaCell(f, sheetName, "I2", "=D2*G2", interest1.Tax*interest1.TTRate)    // Tax (INR)
 				expectFormulaCell(f, sheetName, "J2", "=E2*G2", interest1.Net*interest1.TTRate)    // Net (INR)
+			})
+
+			It("should write TOTALS row with correct formulas and calculated values", func() {
+				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				// Calculate expected values using lo.SumBy
+				totalAmountUSD := lo.SumBy(sampleSummary.INRInterest, func(i tax.INRInterest) float64 {
+					return i.Amount
+				})
+				totalTaxUSD := lo.SumBy(sampleSummary.INRInterest, func(i tax.INRInterest) float64 {
+					return i.Tax
+				})
+				totalNetUSD := lo.SumBy(sampleSummary.INRInterest, func(i tax.INRInterest) float64 {
+					return i.Net
+				})
+				totalAmountINR := lo.SumBy(sampleSummary.INRInterest, func(i tax.INRInterest) float64 {
+					return i.Amount * i.TTRate
+				})
+				totalTaxINR := lo.SumBy(sampleSummary.INRInterest, func(i tax.INRInterest) float64 {
+					return i.Tax * i.TTRate
+				})
+				totalNetINR := lo.SumBy(sampleSummary.INRInterest, func(i tax.INRInterest) float64 {
+					return i.Net * i.TTRate
+				})
+
+				// Verify TOTALS row position
+				lastDataRow := len(sampleSummary.INRInterest) + 1 // Row 2 (1 data row)
+				totalsRow := lastDataRow + 2                      // Row 4 (skip empty row 3)
+
+				// Verify TOTALS label
+				totalsLabel, err := f.GetCellValue(sheetName, fmt.Sprintf("A%d", totalsRow))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(totalsLabel).To(Equal("TOTALS"))
+
+				// Verify USD columns (C, D, E)
+				expectFormulaCell(f, sheetName, fmt.Sprintf("C%d", totalsRow),
+					fmt.Sprintf("=SUM(C2:C%d)", lastDataRow), totalAmountUSD)
+				expectFormulaCell(f, sheetName, fmt.Sprintf("D%d", totalsRow),
+					fmt.Sprintf("=SUM(D2:D%d)", lastDataRow), totalTaxUSD)
+				expectFormulaCell(f, sheetName, fmt.Sprintf("E%d", totalsRow),
+					fmt.Sprintf("=SUM(E2:E%d)", lastDataRow), totalNetUSD)
+
+				// Verify INR columns (H, I, J)
+				expectFormulaCell(f, sheetName, fmt.Sprintf("H%d", totalsRow),
+					fmt.Sprintf("=SUM(H2:H%d)", lastDataRow), totalAmountINR)
+				expectFormulaCell(f, sheetName, fmt.Sprintf("I%d", totalsRow),
+					fmt.Sprintf("=SUM(I2:I%d)", lastDataRow), totalTaxINR)
+				expectFormulaCell(f, sheetName, fmt.Sprintf("J%d", totalsRow),
+					fmt.Sprintf("=SUM(J2:J%d)", lastDataRow), totalNetINR)
 			})
 		})
 
