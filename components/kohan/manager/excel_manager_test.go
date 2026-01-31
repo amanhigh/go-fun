@@ -546,6 +546,121 @@ var _ = Describe("ExcelManagerImpl", func() {
 				expectFormulaCell(f, sheetName, fmt.Sprintf("W%d", totalsRow),
 					fmt.Sprintf("=SUM(W2:W%d)", lastDataRow), totalAmountPaidINR)
 			})
+
+			It("should write TOTALS row for AmountPaid with non-zero value", func() {
+				// Define dates for this test
+				firstDate2, _ := time.Parse(time.DateOnly, "2022-02-15")
+				firstTTDate2, _ := time.Parse(time.DateOnly, "2022-02-16")
+				peakDate2, _ := time.Parse(time.DateOnly, "2022-12-20")
+				yearEndDate2, _ := time.Parse(time.DateOnly, "2023-04-30")
+
+				// Create new valuations with non-zero AmountPaid
+				val2 := tax.INRValuation{
+					Ticker: "AAPL",
+					FirstPosition: tax.INRPosition{
+						Position: tax.Position{Date: firstDate2, Quantity: 100, USDPrice: 150.0},
+						TTDate:   firstTTDate2,
+						TTRate:   82.0,
+					},
+					PeakPosition: tax.INRPosition{
+						Position: tax.Position{Date: peakDate2, Quantity: 120, USDPrice: 180.0},
+						TTDate:   peakDate2,
+						TTRate:   82.5,
+					},
+					YearEndPosition: tax.INRPosition{
+						Position: tax.Position{Date: yearEndDate2, Quantity: 110, USDPrice: 175.0},
+						TTDate:   yearEndDate2,
+						TTRate:   83.0,
+					},
+					AmountPaid: 5432.10, // Sum of gross dividends in INR
+				}
+
+				val3 := tax.INRValuation{
+					Ticker: "MSFT",
+					FirstPosition: tax.INRPosition{
+						Position: tax.Position{Date: firstDate2, Quantity: 50, USDPrice: 300.0},
+						TTDate:   firstTTDate2,
+						TTRate:   82.0,
+					},
+					PeakPosition: tax.INRPosition{
+						Position: tax.Position{Date: peakDate2, Quantity: 60, USDPrice: 350.0},
+						TTDate:   peakDate2,
+						TTRate:   82.5,
+					},
+					YearEndPosition: tax.INRPosition{
+						Position: tax.Position{Date: yearEndDate2, Quantity: 55, USDPrice: 325.0},
+						TTDate:   yearEndDate2,
+						TTRate:   83.0,
+					},
+					AmountPaid: 3210.50, // Sum of gross dividends in INR
+				}
+
+				nonZeroSummary := tax.Summary{
+					INRValuations: []tax.INRValuation{val2, val3},
+				}
+
+				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, nonZeroSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				// Calculate expected value using lo.SumBy (2 valuations)
+				totalAmountPaidINR := lo.SumBy(nonZeroSummary.INRValuations, func(v tax.INRValuation) float64 {
+					return v.AmountPaid
+				})
+
+				// Verify TOTALS row position
+				lastDataRow := len(nonZeroSummary.INRValuations) + 1 // Row 3 (2 data rows)
+				totalsRow := lastDataRow + 2                         // Row 5 (skip empty row 4)
+
+				// Verify TOTALS label
+				totalsLabel, err := f.GetCellValue(sheetName, fmt.Sprintf("A%d", totalsRow))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(totalsLabel).To(Equal("TOTALS"))
+
+				// Verify AmountPaid (INR) column W with non-zero total
+				// Expected: 5432.10 + 3210.50 = 8642.60
+				expectFormulaCell(f, sheetName, fmt.Sprintf("W%d", totalsRow),
+					fmt.Sprintf("=SUM(W2:W%d)", lastDataRow), totalAmountPaidINR)
+			})
+		})
+
+		Context("when INRValuations slice is empty", func() {
+			var (
+				excelManager manager.ExcelManager
+			)
+			BeforeEach(func() {
+				contextTempDir, err := os.MkdirTemp(baseTempDir, "empty_valuations_test_*")
+				Expect(err).ToNot(HaveOccurred())
+				tempOutputFilePath = filepath.Join(contextTempDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
+				excelManager = manager.NewExcelManager(contextTempDir)
+			})
+
+			It("should create the 'Valuations' sheet with only headers", func() {
+				emptySummary := tax.Summary{INRValuations: []tax.INRValuation{}}
+				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, emptySummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				sheetName := "Valuations"
+				rows, err := f.GetRows(sheetName)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rows).To(HaveLen(1), "Sheet should only contain the header row")
+
+				expectedHeaders := []string{
+					"Symbol",
+					"Date (First)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+					"Date (Peak)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+					"Date (YearEnd)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+					"AmountPaid (INR)",
+				}
+				Expect(rows[0]).To(Equal(expectedHeaders))
+			})
 		})
 
 		Context("when generating the 'Interest' sheet with data", func() {
@@ -673,6 +788,39 @@ var _ = Describe("ExcelManagerImpl", func() {
 					fmt.Sprintf("=SUM(I2:I%d)", lastDataRow), totalTaxINR)
 				expectFormulaCell(f, sheetName, fmt.Sprintf("J%d", totalsRow),
 					fmt.Sprintf("=SUM(J2:J%d)", lastDataRow), totalNetINR)
+			})
+		})
+
+		Context("when INRInterest slice is empty", func() {
+			var (
+				excelManager manager.ExcelManager
+			)
+			BeforeEach(func() {
+				contextTempDir, err := os.MkdirTemp(baseTempDir, "empty_interest_test_*")
+				Expect(err).ToNot(HaveOccurred())
+				tempOutputFilePath = filepath.Join(contextTempDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
+				excelManager = manager.NewExcelManager(contextTempDir)
+			})
+
+			It("should create the 'Interest' sheet with only headers", func() {
+				emptySummary := tax.Summary{INRInterest: []tax.INRInterest{}}
+				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, emptySummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				sheetName := "Interest"
+				rows, err := f.GetRows(sheetName)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rows).To(HaveLen(1), "Sheet should only contain the header row")
+
+				expectedHeaders := []string{
+					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)",
+					"TTDate", "TTRate", "Amount (INR)", "Tax (INR)", "Net (INR)",
+				}
+				Expect(rows[0]).To(Equal(expectedHeaders))
 			})
 		})
 
