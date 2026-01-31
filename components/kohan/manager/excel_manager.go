@@ -58,6 +58,9 @@ func (e *ExcelManagerImpl) GenerateTaxSummaryExcel(ctx context.Context, year int
 		log.Ctx(ctx).Warn().Err(err).Msg("Failed to delete default sheet")
 	}
 
+	// Move Summary sheet to the first position
+	e.moveSummarySheetToFirst(f)
+
 	if err = f.SaveAs(outputFilePath); err != nil {
 		log.Ctx(ctx).Error().Err(err).Str("path", outputFilePath).Msg("Failed to save Excel file")
 		return fmt.Errorf("failed to save excel file to %s: %w", outputFilePath, err)
@@ -83,7 +86,17 @@ func (e *ExcelManagerImpl) writeSheets(ctx context.Context, f *excelize.File, su
 	if err = e.writeInterestSheet(ctx, f, summary.INRInterest); err != nil {
 		return
 	}
-	return
+
+	// Write Summary sheet LAST (after all detail sheets exist)
+	return e.writeSummarySheet(ctx, f, summary)
+}
+
+// moveSummarySheetToFirst moves the Summary sheet to the first position in the workbook
+func (e *ExcelManagerImpl) moveSummarySheetToFirst(f *excelize.File) {
+	summaryIndex, getErr := f.GetSheetIndex("Summary")
+	if getErr == nil && summaryIndex > 0 {
+		_ = f.MoveSheet("Summary", "Gains")
+	}
 }
 
 // ensureDirectoryExists creates the directory for the output file if it doesn't exist.
@@ -531,4 +544,79 @@ func (e *ExcelManagerImpl) writeValuationsTotals(f *excelize.File, sheetName str
 	return e.writeSimpleTotals(f, sheetName, lastDataRow, map[int]string{
 		23: "W", // Column W: AmountPaid (INR)
 	})
+}
+
+// writeSummarySheet creates the Summary sheet with cross-referenced formulas to detail sheets
+// This sheet must be created AFTER all detail sheets to know their TOTALS row positions
+func (e *ExcelManagerImpl) writeSummarySheet(ctx context.Context, f *excelize.File, summary tax.Summary) error {
+	const dividendsSectionStartRow = 3
+
+	sheetName := "Summary"
+	if err := e.createSheetWithHeaders(ctx, f, sheetName, []string{}); err != nil {
+		return err
+	}
+
+	// Write header (Row 1: "SUMMARY")
+	if err := e.writeSummaryHeader(f, sheetName); err != nil {
+		return err
+	}
+
+	// Calculate Dividends TOTALS row position
+	// lastDataRow = len(dividends) + 1
+	// totalsRow = lastDataRow + 2
+	dividendsDataCount := len(summary.INRDividends)
+	var dividendsTotalsRow int
+	if dividendsDataCount > 0 {
+		dividendsTotalsRow = (dividendsDataCount + 1) + 2
+	}
+
+	// Write Dividends section (starts at row 3)
+	return e.writeDividendsSection(f, sheetName, dividendsSectionStartRow, dividendsTotalsRow)
+}
+
+// writeSummaryHeader writes the title row (Row 1: "SUMMARY" - bold)
+func (e *ExcelManagerImpl) writeSummaryHeader(f *excelize.File, sheetName string) error {
+	return e.writeTotalsLabel(f, sheetName, 1, "SUMMARY")
+}
+
+// writeDividendsSection writes the Dividends section with cross-referenced formulas
+// startRow: where to start writing section header (typically row 3)
+// dividendsTotalsRow: row number in Dividends sheet where TOTALS row exists (0 if no data)
+func (e *ExcelManagerImpl) writeDividendsSection(f *excelize.File, sheetName string, startRow, dividendsTotalsRow int) error {
+	// Row startRow: "Dividends" (bold section header)
+	if err := e.writeTotalsLabel(f, sheetName, startRow, "Dividends"); err != nil {
+		return err
+	}
+
+	// Row startRow+1: Column headers (USD first, then INR) - bold
+	headerRow := startRow + 1
+	headers := []interface{}{
+		"Amount (USD)", "Tax (USD)", "Net (USD)",
+		"Amount (INR)", "Tax (INR)", "Net (INR)",
+	}
+	if err := e.writeRow(f, sheetName, headerRow, headers); err != nil {
+		return err
+	}
+
+	// Apply bold style to headers
+	style, err := f.NewStyle(&excelize.Style{Font: &excelize.Font{Bold: true}})
+	if err != nil {
+		return fmt.Errorf("failed to create header style: %w", err)
+	}
+	if err := f.SetRowStyle(sheetName, headerRow, headerRow, style); err != nil {
+		return fmt.Errorf("failed to set header row style: %w", err)
+	}
+
+	// Row startRow+2: Formulas referencing Dividends TOTALS row
+	valuesRow := startRow + 2
+	formulas := map[int]string{
+		1: fmt.Sprintf("=Dividends!C%d", dividendsTotalsRow), // A: Amount USD
+		2: fmt.Sprintf("=Dividends!D%d", dividendsTotalsRow), // B: Tax USD
+		3: fmt.Sprintf("=Dividends!E%d", dividendsTotalsRow), // C: Net USD
+		4: fmt.Sprintf("=Dividends!H%d", dividendsTotalsRow), // D: Amount INR
+		5: fmt.Sprintf("=Dividends!I%d", dividendsTotalsRow), // E: Tax INR
+		6: fmt.Sprintf("=Dividends!J%d", dividendsTotalsRow), // F: Net INR
+	}
+
+	return e.writeFormulaRange(f, sheetName, valuesRow, formulas)
 }
