@@ -307,8 +307,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(rows[1][5]).To(Equal(div1.TTDate.Format(time.DateOnly)))
 				rate1, _ := getCellFloat(f, sheetName, "G2")
 				Expect(rate1).To(BeNumerically("~", div1.TTRate, 0.001))
-				amountINR1, _ := getCellFloat(f, sheetName, "H2")
-				Expect(amountINR1).To(BeNumerically("~", div1.INRValue(), 0.001))
+				// Verify formula for Amount (INR) = Amount (USD) * TTRate
+				expectFormulaCell(f, sheetName, "H2", "=C2*G2", div1.INRValue())
 			})
 		})
 
@@ -419,13 +419,12 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(qty).To(Equal(posFirst.Quantity))
 				price, _ := getCellFloat(f, sheetName, "D2")
 				Expect(price).To(Equal(posFirst.USDPrice))
-				valUSD, _ := getCellFloat(f, sheetName, "E2")
-				Expect(valUSD).To(Equal(posFirst.USDValue()))
 				Expect(rows[1][5]).To(Equal(posFirst.TTDate.Format(time.DateOnly)))
 				rate, _ := getCellFloat(f, sheetName, "G2")
 				Expect(rate).To(Equal(posFirst.TTRate))
-				valINR, _ := getCellFloat(f, sheetName, "H2")
-				Expect(valINR).To(Equal(posFirst.INRValue()))
+				// Verify First Position formulas
+				expectFormulaCell(f, sheetName, "E2", "=C2*D2", posFirst.USDValue())
+				expectFormulaCell(f, sheetName, "H2", "=E2*G2", posFirst.INRValue())
 
 				// Peak Position
 				posPeak := val1.PeakPosition
@@ -434,13 +433,12 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(qty).To(Equal(posPeak.Quantity))
 				price, _ = getCellFloat(f, sheetName, "K2")
 				Expect(price).To(Equal(posPeak.USDPrice))
-				valUSD, _ = getCellFloat(f, sheetName, "L2")
-				Expect(valUSD).To(Equal(posPeak.USDValue()))
 				Expect(rows[1][12]).To(Equal(posPeak.TTDate.Format(time.DateOnly)))
 				rate, _ = getCellFloat(f, sheetName, "N2")
 				Expect(rate).To(Equal(posPeak.TTRate))
-				valINR, _ = getCellFloat(f, sheetName, "O2")
-				Expect(valINR).To(Equal(posPeak.INRValue()))
+				// Verify Peak Position formulas
+				expectFormulaCell(f, sheetName, "L2", "=J2*K2", posPeak.USDValue())
+				expectFormulaCell(f, sheetName, "O2", "=L2*N2", posPeak.INRValue())
 
 				// Year End Position
 				posYearEnd := val1.YearEndPosition
@@ -449,13 +447,12 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(qty).To(Equal(posYearEnd.Quantity))
 				price, _ = getCellFloat(f, sheetName, "R2")
 				Expect(price).To(Equal(posYearEnd.USDPrice))
-				valUSD, _ = getCellFloat(f, sheetName, "S2")
-				Expect(valUSD).To(Equal(posYearEnd.USDValue()))
 				Expect(rows[1][19]).To(Equal(posYearEnd.TTDate.Format(time.DateOnly)))
 				rate, _ = getCellFloat(f, sheetName, "U2")
 				Expect(rate).To(Equal(posYearEnd.TTRate))
-				valINR, _ = getCellFloat(f, sheetName, "V2")
-				Expect(valINR).To(BeNumerically("~", posYearEnd.INRValue(), 0.001))
+				// Verify YearEnd Position formulas
+				expectFormulaCell(f, sheetName, "S2", "=Q2*R2", posYearEnd.USDValue())
+				expectFormulaCell(f, sheetName, "V2", "=S2*U2", posYearEnd.INRValue())
 			})
 		})
 
@@ -524,8 +521,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(rows[1][5]).To(Equal(interest1.TTDate.Format(time.DateOnly)))
 				rate, _ := getCellFloat(f, sheetName, "G2")
 				Expect(rate).To(BeNumerically("==", interest1.TTRate))
-				inrValue, _ := getCellFloat(f, sheetName, "H2")
-				Expect(inrValue).To(BeNumerically("~", interest1.INRValue(), 0.001))
+				// Verify formula for Amount (INR) = Amount (USD) * TTRate
+				expectFormulaCell(f, sheetName, "H2", "=C2*G2", interest1.INRValue())
 			})
 		})
 

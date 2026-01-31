@@ -172,9 +172,14 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 			dividendRecord.Net,
 			e.formatDateForExcel(dividendRecord.TTDate),
 			dividendRecord.TTRate,
-			dividendRecord.INRValue(),
+			"", // Placeholder for Amount (INR) - will be formula
 		}
 		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
+			return err
+		}
+
+		// Write formula for Amount (INR) = Amount (USD) * TTRate
+		if err := e.writeSimpleINRFormula(f, sheetName, rowNum); err != nil {
 			return err
 		}
 	}
@@ -193,6 +198,25 @@ func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize
 		rowNum := idx + 2 // Data starts from row 2
 		rowData := e.buildValuationRow(valuationRecord)
 		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
+			return err
+		}
+
+		// Write formulas for all 3 positions (6 formulas total)
+		// Each position: ValUSD = Qty * Price, ValINR = ValUSD * TTRate
+		formulas := map[int]string{
+			// First Position: Columns E (ValUSD), H (ValINR)
+			5: fmt.Sprintf("=C%d*D%d", rowNum, rowNum), // E: ValUSD = Qty * Price
+			8: fmt.Sprintf("=E%d*G%d", rowNum, rowNum), // H: ValINR = ValUSD * TTRate (uses E!)
+
+			// Peak Position: Columns L (ValUSD), O (ValINR)
+			12: fmt.Sprintf("=J%d*K%d", rowNum, rowNum), // L: ValUSD = Qty * Price
+			15: fmt.Sprintf("=L%d*N%d", rowNum, rowNum), // O: ValINR = ValUSD * TTRate (uses L!)
+
+			// YearEnd Position: Columns S (ValUSD), V (ValINR)
+			19: fmt.Sprintf("=Q%d*R%d", rowNum, rowNum), // S: ValUSD = Qty * Price
+			22: fmt.Sprintf("=S%d*U%d", rowNum, rowNum), // V: ValINR = ValUSD * TTRate (uses S!)
+		}
+		if err := e.writeFormulaRange(f, sheetName, rowNum, formulas); err != nil {
 			return err
 		}
 	}
@@ -224,10 +248,10 @@ func (e *ExcelManagerImpl) getPositionRowData(pos *tax.INRPosition) []interface{
 		e.formatDateForExcel(pos.Date),
 		pos.Quantity,
 		pos.RoundedUSDPrice(),
-		pos.USDValue(),
+		"", // Placeholder for ValUSD - will be formula: Qty * Price
 		e.formatDateForExcel(pos.TTDate),
 		pos.TTRate,
-		pos.INRValue(),
+		"", // Placeholder for ValINR - will be formula: ValUSD * TTRate
 	}
 }
 
@@ -252,9 +276,14 @@ func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.F
 			interestRecord.Net,
 			e.formatDateForExcel(interestRecord.TTDate),
 			interestRecord.TTRate,
-			interestRecord.INRValue(),
+			"", // Placeholder for Amount (INR) - will be formula
 		}
 		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
+			return err
+		}
+
+		// Write formula for Amount (INR) = Amount (USD) * TTRate
+		if err := e.writeSimpleINRFormula(f, sheetName, rowNum); err != nil {
 			return err
 		}
 	}
@@ -317,4 +346,24 @@ func (e *ExcelManagerImpl) writeFormulaCell(f *excelize.File, sheetName string, 
 		return fmt.Errorf("failed to set formula at %s: %w", cellName, err)
 	}
 	return nil
+}
+
+// writeFormulaRange writes multiple formulas for a single row
+// formulas is a map of columnIndex -> formulaString
+func (e *ExcelManagerImpl) writeFormulaRange(f *excelize.File, sheetName string, rowNum int, formulas map[int]string) error {
+	for colNum, formula := range formulas {
+		if err := e.writeFormulaCell(f, sheetName, rowNum, colNum, formula); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// writeSimpleINRFormula writes a simple INR formula for Dividends and Interest sheets
+// Formula: Column H (INR) = Column C (USD) * Column G (TTRate)
+func (e *ExcelManagerImpl) writeSimpleINRFormula(f *excelize.File, sheetName string, rowNum int) error {
+	formulas := map[int]string{
+		8: fmt.Sprintf("=C%d*G%d", rowNum, rowNum), // Column H: Amount(INR) = Amount(USD) * TTRate
+	}
+	return e.writeFormulaRange(f, sheetName, rowNum, formulas)
 }
