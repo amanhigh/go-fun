@@ -13,10 +13,8 @@
 		"vscode": {
 			"extensions": [
 				"golang.go",
-				"YuichiNakamura.code-to-clipboard",
 				"Gruntfuggly.todo-tree",
-				"hoovercj.vscode-dimmer",
-				"Codeium.codeium"
+				"hoovercj.vscode-dimmer"
 			]
 		}
 	}
