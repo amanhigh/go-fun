@@ -145,6 +145,12 @@ linters:
            - dupl
          path: components/kohan/core/tax_integration_test\.go
        - linters:
+           - dupl
+         path: components/kohan/manager/excel_manager_test\.go
+       - linters:
+           - dupl
+         path: components/kohan/manager/excel_manager\.go
+       - linters:
            - bodyclose
          path: common/clients/http_client.go
        - linters:
