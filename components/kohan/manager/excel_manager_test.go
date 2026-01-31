@@ -12,6 +12,7 @@ import (
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/samber/lo"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -316,6 +317,60 @@ var _ = Describe("ExcelManagerImpl", func() {
 				expectFormulaCell(f, sheetName, "H2", "=C2*G2", div1.Amount*div1.TTRate) // Amount (INR)
 				expectFormulaCell(f, sheetName, "I2", "=D2*G2", div1.Tax*div1.TTRate)    // Tax (INR)
 				expectFormulaCell(f, sheetName, "J2", "=E2*G2", div1.Net*div1.TTRate)    // Net (INR)
+			})
+
+			It("should write TOTALS row with correct formulas and calculated values", func() {
+				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				// Calculate expected values using lo.SumBy
+				totalAmountUSD := lo.SumBy(sampleSummary.INRDividends, func(d tax.INRDividend) float64 {
+					return d.Amount
+				})
+				totalTaxUSD := lo.SumBy(sampleSummary.INRDividends, func(d tax.INRDividend) float64 {
+					return d.Tax
+				})
+				totalNetUSD := lo.SumBy(sampleSummary.INRDividends, func(d tax.INRDividend) float64 {
+					return d.Net
+				})
+				totalAmountINR := lo.SumBy(sampleSummary.INRDividends, func(d tax.INRDividend) float64 {
+					return d.Amount * d.TTRate
+				})
+				totalTaxINR := lo.SumBy(sampleSummary.INRDividends, func(d tax.INRDividend) float64 {
+					return d.Tax * d.TTRate
+				})
+				totalNetINR := lo.SumBy(sampleSummary.INRDividends, func(d tax.INRDividend) float64 {
+					return d.Net * d.TTRate
+				})
+
+				// Verify TOTALS row position
+				lastDataRow := len(sampleSummary.INRDividends) + 1 // Row 3 (2 data rows)
+				totalsRow := lastDataRow + 2                       // Row 5 (skip empty row 4)
+
+				// Verify TOTALS label
+				totalsLabel, err := f.GetCellValue(sheetName, fmt.Sprintf("A%d", totalsRow))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(totalsLabel).To(Equal("TOTALS"))
+
+				// Verify USD columns (C, D, E)
+				expectFormulaCell(f, sheetName, fmt.Sprintf("C%d", totalsRow),
+					fmt.Sprintf("=SUM(C2:C%d)", lastDataRow), totalAmountUSD)
+				expectFormulaCell(f, sheetName, fmt.Sprintf("D%d", totalsRow),
+					fmt.Sprintf("=SUM(D2:D%d)", lastDataRow), totalTaxUSD)
+				expectFormulaCell(f, sheetName, fmt.Sprintf("E%d", totalsRow),
+					fmt.Sprintf("=SUM(E2:E%d)", lastDataRow), totalNetUSD)
+
+				// Verify INR columns (H, I, J)
+				expectFormulaCell(f, sheetName, fmt.Sprintf("H%d", totalsRow),
+					fmt.Sprintf("=SUM(H2:H%d)", lastDataRow), totalAmountINR)
+				expectFormulaCell(f, sheetName, fmt.Sprintf("I%d", totalsRow),
+					fmt.Sprintf("=SUM(I2:I%d)", lastDataRow), totalTaxINR)
+				expectFormulaCell(f, sheetName, fmt.Sprintf("J%d", totalsRow),
+					fmt.Sprintf("=SUM(J2:J%d)", lastDataRow), totalNetINR)
 			})
 		})
 

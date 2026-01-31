@@ -431,6 +431,31 @@ func (e *ExcelManagerImpl) writeTotalsLabel(f *excelize.File, sheetName string, 
 	return nil
 }
 
+// writeSimpleTotals writes a single TOTALS row with SUM formulas for specified columns
+// columns: map of columnIndex -> columnLetter for SUM formulas (e.g., {3: "C", 4: "D"})
+// This generic helper reduces duplication across Dividends, Interest, and Valuations sheets
+func (e *ExcelManagerImpl) writeSimpleTotals(
+	f *excelize.File,
+	sheetName string,
+	lastDataRow int,
+	columns map[int]string,
+) error {
+	totalsRow := lastDataRow + 2
+
+	// Write TOTALS label in column A
+	if err := e.writeTotalsLabel(f, sheetName, totalsRow, "TOTALS"); err != nil {
+		return err
+	}
+
+	// Build SUM formulas for each specified column
+	formulas := make(map[int]string)
+	for colIdx, colLetter := range columns {
+		formulas[colIdx] = fmt.Sprintf("=SUM(%s2:%s%d)", colLetter, colLetter, lastDataRow)
+	}
+
+	return e.writeFormulaRange(f, sheetName, totalsRow, formulas)
+}
+
 // writeGainsTotals writes TOTALS row and STCG/LTCG breakdown for Gains sheet
 // Columns: E (PNL USD), F (Commission USD), J (PNL INR)
 // STCG/LTCG use SUMIF based on Type column (G)
@@ -485,60 +510,25 @@ func (e *ExcelManagerImpl) writeGainsTotals(f *excelize.File, sheetName string, 
 // writeDividendsTotals writes TOTALS row for Dividends sheet
 // Columns: C (Amount USD), D (Tax USD), E (Net USD), H (Amount INR), I (Tax INR), J (Net INR)
 func (e *ExcelManagerImpl) writeDividendsTotals(f *excelize.File, sheetName string, lastDataRow int) error {
-	totalsRow := lastDataRow + 2
-
-	// Write TOTALS row label
-	if err := e.writeTotalsLabel(f, sheetName, totalsRow, "TOTALS"); err != nil {
-		return err
-	}
-
-	// Write TOTALS formulas for all 6 columns
-	totalsFormulas := map[int]string{
-		3:  fmt.Sprintf("=SUM(C2:C%d)", lastDataRow), // Column C: Amount USD
-		4:  fmt.Sprintf("=SUM(D2:D%d)", lastDataRow), // Column D: Tax USD
-		5:  fmt.Sprintf("=SUM(E2:E%d)", lastDataRow), // Column E: Net USD
-		8:  fmt.Sprintf("=SUM(H2:H%d)", lastDataRow), // Column H: Amount INR
-		9:  fmt.Sprintf("=SUM(I2:I%d)", lastDataRow), // Column I: Tax INR
-		10: fmt.Sprintf("=SUM(J2:J%d)", lastDataRow), // Column J: Net INR
-	}
-	return e.writeFormulaRange(f, sheetName, totalsRow, totalsFormulas)
+	return e.writeSimpleTotals(f, sheetName, lastDataRow, map[int]string{
+		3: "C", 4: "D", 5: "E", // USD columns: Amount, Tax, Net
+		8: "H", 9: "I", 10: "J", // INR columns: Amount, Tax, Net
+	})
 }
 
 // writeInterestTotals writes TOTALS row for Interest sheet
 // Columns: C (Amount USD), D (Tax USD), E (Net USD), H (Amount INR), I (Tax INR), J (Net INR)
 func (e *ExcelManagerImpl) writeInterestTotals(f *excelize.File, sheetName string, lastDataRow int) error {
-	totalsRow := lastDataRow + 2
-
-	// Write TOTALS row label
-	if err := e.writeTotalsLabel(f, sheetName, totalsRow, "TOTALS"); err != nil {
-		return err
-	}
-
-	// Write TOTALS formulas for all 6 columns (same as Dividends)
-	totalsFormulas := map[int]string{
-		3:  fmt.Sprintf("=SUM(C2:C%d)", lastDataRow), // Column C: Amount USD
-		4:  fmt.Sprintf("=SUM(D2:D%d)", lastDataRow), // Column D: Tax USD
-		5:  fmt.Sprintf("=SUM(E2:E%d)", lastDataRow), // Column E: Net USD
-		8:  fmt.Sprintf("=SUM(H2:H%d)", lastDataRow), // Column H: Amount INR
-		9:  fmt.Sprintf("=SUM(I2:I%d)", lastDataRow), // Column I: Tax INR
-		10: fmt.Sprintf("=SUM(J2:J%d)", lastDataRow), // Column J: Net INR
-	}
-	return e.writeFormulaRange(f, sheetName, totalsRow, totalsFormulas)
+	return e.writeSimpleTotals(f, sheetName, lastDataRow, map[int]string{
+		3: "C", 4: "D", 5: "E", // USD columns: Amount, Tax, Net
+		8: "H", 9: "I", 10: "J", // INR columns: Amount, Tax, Net
+	})
 }
 
 // writeValuationsTotals writes TOTALS row for Valuations sheet - ONLY AmountPaid (INR)
-// Column: W (AmountPaid INR)
+// Column: W (AmountPaid INR) - No totals for position valuations as they're not meaningful
 func (e *ExcelManagerImpl) writeValuationsTotals(f *excelize.File, sheetName string, lastDataRow int) error {
-	totalsRow := lastDataRow + 2
-
-	// Write TOTALS row label
-	if err := e.writeTotalsLabel(f, sheetName, totalsRow, "TOTALS"); err != nil {
-		return err
-	}
-
-	// Write TOTALS formula for column W only (AmountPaid INR)
-	totalsFormulas := map[int]string{
-		23: fmt.Sprintf("=SUM(W2:W%d)", lastDataRow), // Column W: AmountPaid INR
-	}
-	return e.writeFormulaRange(f, sheetName, totalsRow, totalsFormulas)
+	return e.writeSimpleTotals(f, sheetName, lastDataRow, map[int]string{
+		23: "W", // Column W: AmountPaid (INR)
+	})
 }
