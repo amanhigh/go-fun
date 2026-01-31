@@ -1343,85 +1343,13 @@ var _ = Describe("ValuationManager", func() {
 			})
 		})
 
-		Context("Re-acquisition After Liquidation (Empty Origin Date)", func() {
-			var (
-				GOOGL        = "GOOGL"
-				testYear     = 2024
-				yearEndDate  = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
-				yearEndPrice = 140.00
-			)
-
-			BeforeEach(func() {
-				// SCENARIO: Liquidated position (Quantity=0) with re-acquisition in next year
-				// - Year 2023: GOOGL fully liquidated → accounts_2023.csv: GOOGL,0,0,0
-				// - Year 2024: GOOGL re-purchased with new trades, but OriginDate is empty
-				// - Tests fallback: FirstPosition.Date = first trade date (NOT zero)
-				carryOverAccount = tax.Account{
-					Symbol:      GOOGL,
-					Quantity:    0, // Liquidated position persists in CSV
-					Cost:        0,
-					MarketValue: 0,
-					OriginDate:  "", // Metadata missing/cleared
-					OriginQty:   0,
-					OriginPrice: 0,
-				}
-
-				// Re-acquired in current year
-				tradesInYear = []tax.Trade{
-					tax.NewTrade(GOOGL, "2024-04-10", "BUY", 50, 125.00),
-					tax.NewTrade(GOOGL, "2024-08-15", "BUY", 30, 135.00),
-				}
-
-				// Mock setup
-				mockAccountManager.EXPECT().
-					GetRecord(ctx, GOOGL, testYear-1).
-					Return(carryOverAccount, nil).Once()
-
-				mockTickerManager.EXPECT().
-					GetDailyPrices(ctx, GOOGL, testYear).
-					Return(map[string]float64{
-						"2024-04-10": 125.00,
-						"2024-08-15": 135.00,
-					}, nil).Once()
-
-				mockSBIManager.EXPECT().
-					GetDailyRates(ctx, testYear).
-					Return(map[string]float64{
-						"2024-04-10": 83.0,
-						"2024-08-15": 83.5,
-					}, nil).Once()
-
-				mockTickerManager.EXPECT().
-					GetPrice(ctx, GOOGL, yearEndDate).
-					Return(yearEndPrice, nil).Once()
-			})
-
-			It("should use first trade date when OriginDate is empty (re-acquisition fallback)", func() {
-				valuation, err := valuationManager.AnalyzeValuation(ctx, GOOGL, tradesInYear, testYear)
-
-				Expect(err).ToNot(HaveOccurred())
-				Expect(valuation.Ticker).To(Equal(GOOGL))
-
-				// FirstPosition.Date must be set from first trade when OriginDate is empty
-				expectedFirstDate := time.Date(2024, 4, 10, 0, 0, 0, 0, time.UTC)
-				Expect(valuation.FirstPosition.Date).To(Equal(expectedFirstDate))
-				Expect(valuation.FirstPosition.Date.IsZero()).To(BeFalse())
-
-				// FirstPosition qty/price set by first trade
-				Expect(valuation.FirstPosition.Quantity).To(Equal(50.0))
-				Expect(valuation.FirstPosition.USDPrice).To(Equal(125.00))
-
-				// PeakPosition after both buys
-				Expect(valuation.PeakPosition.Date).To(Equal(time.Date(2024, 8, 15, 0, 0, 0, 0, time.UTC)))
-				Expect(valuation.PeakPosition.Quantity).To(Equal(80.0))
-
-				// YearEndPosition
-				Expect(valuation.YearEndPosition.Quantity).To(Equal(80.0))
-				Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
-			})
-		})
-
-		Context("With Only Sell Trades", func() {
+		Context("Carry-Over Position Fully Liquidated During Year", func() {
+			// Scenario: Position acquired in 2023, carried to 2024, fully sold in Feb 2024
+			// - 2023 year-end: 50 shares (acquired May 1, 2023) - NOT liquidated at year-end
+			// - 2024-02-15: Sell all 50 shares (fully liquidated DURING 2024)
+			// - FirstPosition.Date = 2023-05-01 (preserves original acquisition from 2023)
+			// - YearEndPosition.Quantity = 0 (fully liquidated by Dec 31, 2024)
+			// Tax.md: This is carry-over scenario with full liquidation during current year
 			var (
 				MSFT        = "MSFT"
 				testYear    = 2024
@@ -1432,17 +1360,30 @@ var _ = Describe("ValuationManager", func() {
 				carryOverAccount = tax.Account{
 					Symbol:      MSFT,
 					Quantity:    50,
-					MarketValue: 10000.00, // Implies $200.00 per share
+					MarketValue: 10000.00, // Year-end $200.00 per share
+					// FirstPosition metadata from 2023 acquisition
+					OriginDate:  "2023-05-01",
+					OriginQty:   50,
+					OriginPrice: 200.0,
 				}
 
-				// Daily prices for the sell trade
+				// Daily prices for sell trade and holding period
+				// Shows peak occurs on sell date (highest price when multiplied by rate)
 				msftDailyPrices := map[string]float64{
-					"2024-02-15": 210.00,
+					"2024-01-05": 195.00, // Opening price from OriginDate region
+					"2024-01-15": 198.00, // Early year price
+					"2024-02-10": 205.00, // Price just before sell
+					"2024-02-15": 210.00, // Sell date (HIGHEST price)
+					"2024-03-01": 208.00, // Price after (for reference)
 				}
 
 				// Daily rates for peak calculation
 				msftDailyRates := map[string]float64{
-					"2024-02-15": 82.5,
+					"2024-01-05": 81.50, // Lower rate early
+					"2024-01-15": 81.80,
+					"2024-02-10": 82.20,
+					"2024-02-15": 82.50, // HIGHEST rate at sell date (combined with highest price = peak)
+					"2024-03-01": 82.30,
 				}
 
 				mockAccountManager.EXPECT().
@@ -1465,22 +1406,29 @@ var _ = Describe("ValuationManager", func() {
 				}
 			})
 
-			It("should correctly calculate valuation", func() {
+			It("should preserve 2023 OriginDate even though position fully liquidated in 2024", func() {
 				valuation, err := valuationManager.AnalyzeValuation(ctx, MSFT, tradesInYear, testYear)
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(valuation.Ticker).To(Equal(MSFT))
 
-				// 1. Assert FirstPosition (Opening balance for the period)
-				expectedFirstPosDate := time.Date(testYear-1, 12, 31, 0, 0, 0, 0, time.UTC)
+				// 1. Assert FirstPosition (Preserves 2023 OriginDate from carry-over)
+				// Tax.md: FirstPosition persists from original acquisition as long as holdings continue
+				// Even though liquidated IN 2024, the 2024 Schedule FA reports the 2023 origin
+				expectedFirstPosDate := time.Date(2023, 5, 1, 0, 0, 0, 0, time.UTC)
 				Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
 				Expect(valuation.FirstPosition.Quantity).To(Equal(50.0))
 				Expect(valuation.FirstPosition.USDPrice).To(Equal(200.00))
 
-				// 2. Assert PeakPosition (Should be the same as FirstPosition as no trades increased quantity)
-				Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
+				// 2. Assert PeakPosition (Should be on Feb 10 when price × rate is highest)
+				// INR Peak Calculation (Qty × Price × Rate):
+				//   Jan 15: 50 × $198 × 81.80 = ₹809,820
+				//   Feb 10: 50 × $205 × 82.20 = ₹842,025 ← PEAK (highest INR value during holding)
+				//   Feb 15: Sell date with highest price, but Feb 10 has best price-to-rate ratio
+				peakDate := time.Date(2024, 2, 10, 0, 0, 0, 0, time.UTC)
+				Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(peakDate.Format(time.DateOnly)))
 				Expect(valuation.PeakPosition.Quantity).To(Equal(50.0))
-				Expect(valuation.PeakPosition.USDPrice).To(Equal(200.00))
+				Expect(valuation.PeakPosition.USDPrice).To(Equal(205.00))
 
 				// 3. Assert YearEndPosition (Quantity is zero after the sell)
 				Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
@@ -1552,6 +1500,101 @@ var _ = Describe("ValuationManager", func() {
 				Expect(valuation.PeakPosition.Quantity).To(Equal(100.0))
 				Expect(valuation.PeakPosition.USDPrice).To(Equal(160.00))
 				Expect(valuation.PeakPosition.Quantity * valuation.PeakPosition.USDPrice * 82.55).To(Equal(1320800.0))
+			})
+		})
+	})
+
+	Context("Fresh Acquisition After Prior Liquidation (Tax.md Scenario 3A)", func() {
+		// Scenario: Position fully liquidated at prior year-end, then re-acquired in current year
+		// Per Tax.md Scenario 3A (lines 398-409), FirstPosition resets to the new acquisition date
+		// (NOT preserved from prior year).
+		var (
+			tradesInYear []tax.Trade
+		)
+
+		Context("Liquidated at Year-End, Re-acquired Next Year", func() {
+			// Scenario: Position fully liquidated at 2023 year-end, then re-acquired in 2024
+			// - 2023-05-01: Acquired 30 shares @ $180
+			// - 2023-10-15: Sold all 30 shares (fully liquidated)
+			// - 2023 year-end: Qty = 0 (NO carry-over to 2024)
+			// - 2024-03-10: Re-acquired 25 shares @ $195
+			// - FirstPosition.Date RESETS to 2024-03-10 (new acquisition date)
+			// Tax.md Line 398-409: "FirstPosition resets to reflect new acquisition date from subsequent year"
+			var (
+				NVDA        = "NVDA"
+				testYear    = 2024
+				yearEndDate = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
+			)
+
+			BeforeEach(func() {
+				// NO carry-over account from 2023 (liquidated at year-end 2023)
+				mockAccountManager.EXPECT().
+					GetRecord(ctx, NVDA, testYear-1).
+					Return(tax.Account{}, common.ErrNotFound).Once()
+
+				// Daily prices showing holding period and peak
+				nvdaDailyPrices := map[string]float64{
+					"2024-03-10": 195.00, // Re-acquisition date
+					"2024-05-15": 210.00, // Mid-year price increase
+					"2024-07-20": 225.00, // Peak price (highest USD)
+					"2024-09-10": 220.00, // Later price
+					"2024-11-05": 215.00, // Near year-end
+				}
+
+				// Daily rates for peak calculation
+				nvdaDailyRates := map[string]float64{
+					"2024-03-10": 82.00,
+					"2024-05-15": 82.50,
+					"2024-07-20": 83.20, // Peak rate with peak price
+					"2024-09-10": 83.00,
+					"2024-11-05": 82.80,
+				}
+
+				mockTickerManager.EXPECT().
+					GetDailyPrices(ctx, NVDA, testYear).
+					Return(nvdaDailyPrices, nil).Once()
+
+				mockSBIManager.EXPECT().
+					GetDailyRates(ctx, testYear).
+					Return(nvdaDailyRates, nil).Once()
+
+				mockTickerManager.EXPECT().
+					GetPrice(ctx, NVDA, yearEndDate).
+					Return(212.00, nil).Once()
+
+				tradesInYear = []tax.Trade{
+					tax.NewTrade(NVDA, "2024-03-10", "BUY", 25, 195.00), // Fresh acquisition in 2024
+					tax.NewTrade(NVDA, "2024-05-15", "BUY", 15, 210.00), // Additional purchase
+				}
+			})
+
+			It("should reset OriginDate to 2024 re-acquisition date (NOT 2023)", func() {
+				valuation, err := valuationManager.AnalyzeValuation(ctx, NVDA, tradesInYear, testYear)
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(valuation.Ticker).To(Equal(NVDA))
+
+				// 1. Assert FirstPosition RESETS to 2024 acquisition (NOT 2023)
+				// Tax.md Scenario 3A: "FirstPosition RESETS = (5 qty, $180, 2025-03-10)"
+				expectedFirstPosDate := time.Date(2024, 3, 10, 0, 0, 0, 0, time.UTC)
+				Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)),
+					"FirstPosition.Date should be 2024-03-10 (fresh acquisition after 2023 liquidation)")
+				Expect(valuation.FirstPosition.Quantity).To(Equal(25.0),
+					"FirstPosition.Quantity should be from first 2024 trade")
+				Expect(valuation.FirstPosition.USDPrice).To(Equal(195.00),
+					"FirstPosition.Price should be from first 2024 trade")
+
+				// 2. Assert PeakPosition (July 20 with highest INR value)
+				// INR calculation: 40 × $225 × 83.20 = ₹748,800
+				peakDate := time.Date(2024, 7, 20, 0, 0, 0, 0, time.UTC)
+				Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(peakDate.Format(time.DateOnly)))
+				Expect(valuation.PeakPosition.Quantity).To(Equal(40.0)) // 25 + 15 from both buys
+				Expect(valuation.PeakPosition.USDPrice).To(Equal(225.00))
+
+				// 3. Assert YearEndPosition
+				Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
+				Expect(valuation.YearEndPosition.Quantity).To(Equal(40.0))
+				Expect(valuation.YearEndPosition.USDPrice).To(Equal(212.00))
 			})
 		})
 	})
