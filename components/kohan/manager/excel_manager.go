@@ -133,14 +133,14 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 			gainRecord.Type,
 			e.formatDateForExcel(gainRecord.TTDate), // Format date
 			gainRecord.TTRate,                       // Column I
+			"",                                      // Placeholder for PNL (INR) - will be formula
 		}
 		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
 			return err
 		}
 
-		// Write formula for column J (PNL INR) = E * I
-		// Column E = PNL (USD), Column I = TTRate
-		// Excel auto-rounds when base values are rounded
+		// Write formula for PNL (INR) column
+		// J: PNL (INR) = E * I
 		const pnlINRColumn = 10 // Column J
 		formula := fmt.Sprintf("=E%d*I%d", rowNum, rowNum)
 		if err := e.writeFormulaCell(f, sheetName, rowNum, pnlINRColumn, formula); err != nil {
@@ -152,11 +152,12 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 }
 
 // writeDividendsSheet handles the creation and population of the "Dividends" sheet.
-// It assumes tax.INRDividend has fields: Symbol, Date, Amount, TTDate, TTRate and a method INRValue().
+// It assumes tax.INRDividend has fields: Symbol, Date, Amount, TTDate, TTRate.
 func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.File, dividends []tax.INRDividend) error {
 	sheetName := "Dividends"
 	headers := []string{
-		"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate", "Amount (INR)",
+		"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate",
+		"Amount (INR)", "Tax (INR)", "Net (INR)",
 	}
 	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
 		return err
@@ -173,13 +174,15 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 			e.formatDateForExcel(dividendRecord.TTDate),
 			dividendRecord.TTRate,
 			"", // Placeholder for Amount (INR) - will be formula
+			"", // Placeholder for Tax (INR) - will be formula
+			"", // Placeholder for Net (INR) - will be formula
 		}
 		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
 			return err
 		}
 
-		// Write formula for Amount (INR) = Amount (USD) * TTRate
-		if err := e.writeSimpleINRFormula(f, sheetName, rowNum); err != nil {
+		// Write formulas for INR columns (Amount, Tax, Net all converted to INR)
+		if err := e.writeTaxWithheldINRFormulas(f, sheetName, rowNum); err != nil {
 			return err
 		}
 	}
@@ -260,7 +263,7 @@ func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.F
 	sheetName := "Interest"
 	headers := []string{
 		"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)",
-		"TTDate", "TTRate", "Amount (INR)",
+		"TTDate", "TTRate", "Amount (INR)", "Tax (INR)", "Net (INR)",
 	}
 	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
 		return err
@@ -277,13 +280,15 @@ func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.F
 			e.formatDateForExcel(interestRecord.TTDate),
 			interestRecord.TTRate,
 			"", // Placeholder for Amount (INR) - will be formula
+			"", // Placeholder for Tax (INR) - will be formula
+			"", // Placeholder for Net (INR) - will be formula
 		}
 		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
 			return err
 		}
 
-		// Write formula for Amount (INR) = Amount (USD) * TTRate
-		if err := e.writeSimpleINRFormula(f, sheetName, rowNum); err != nil {
+		// Write formulas for INR columns (Amount, Tax, Net all converted to INR)
+		if err := e.writeTaxWithheldINRFormulas(f, sheetName, rowNum); err != nil {
 			return err
 		}
 	}
@@ -359,11 +364,16 @@ func (e *ExcelManagerImpl) writeFormulaRange(f *excelize.File, sheetName string,
 	return nil
 }
 
-// writeSimpleINRFormula writes a simple INR formula for Dividends and Interest sheets
-// Formula: Column H (INR) = Column C (USD) * Column G (TTRate)
-func (e *ExcelManagerImpl) writeSimpleINRFormula(f *excelize.File, sheetName string, rowNum int) error {
+// writeTaxWithheldINRFormulas writes three formulas for tax-withheld items (Dividends/Interest)
+// Formulas:
+//   - Column H: Amount(INR) = Amount(USD) * TTRate
+//   - Column I: Tax(INR) = Tax(USD) * TTRate
+//   - Column J: Net(INR) = Net(USD) * TTRate
+func (e *ExcelManagerImpl) writeTaxWithheldINRFormulas(f *excelize.File, sheetName string, rowNum int) error {
 	formulas := map[int]string{
-		8: fmt.Sprintf("=C%d*G%d", rowNum, rowNum), // Column H: Amount(INR) = Amount(USD) * TTRate
+		8:  fmt.Sprintf("=C%d*G%d", rowNum, rowNum), // Column H: Amount(INR) = Amount(USD) * TTRate
+		9:  fmt.Sprintf("=D%d*G%d", rowNum, rowNum), // Column I: Tax(INR) = Tax(USD) * TTRate
+		10: fmt.Sprintf("=E%d*G%d", rowNum, rowNum), // Column J: Net(INR) = Net(USD) * TTRate
 	}
 	return e.writeFormulaRange(f, sheetName, rowNum, formulas)
 }

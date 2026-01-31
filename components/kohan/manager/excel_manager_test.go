@@ -164,7 +164,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				rate1, _ := getCellFloat(f, sheetName, "I2")
 				Expect(rate1).To(BeNumerically("~", gain1.TTRate, 0.001))
 				// Column J has formula =E2*I2 and calculates PNL (INR)
-				expectFormulaCell(f, sheetName, "J2", "=E2*I2", gain1.INRValue())
+				expectFormulaCell(f, sheetName, "J2", "=E2*I2", gain1.PNL*gain1.TTRate)
 
 				// Verify gain2 (row 3 in Excel, index 2 in `rows` slice)
 				gain2 := sampleSummary.INRGains[1]
@@ -182,7 +182,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				rate2, _ := getCellFloat(f, sheetName, "I3")
 				Expect(rate2).To(BeNumerically("~", gain2.TTRate, 0.001))
 				// Column J has formula =E3*I3 and calculates PNL (INR)
-				expectFormulaCell(f, sheetName, "J3", "=E3*I3", gain2.INRValue())
+				expectFormulaCell(f, sheetName, "J3", "=E3*I3", gain2.PNL*gain2.TTRate)
 
 				// Verify gain3WithZeroTTDate (row 4 in Excel, index 3 in `rows` slice)
 				gain3 := sampleSummary.INRGains[2]
@@ -200,7 +200,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				rate3, _ := getCellFloat(f, sheetName, "I4")
 				Expect(rate3).To(BeNumerically("~", gain3.TTRate, 0.001))
 				// Column J has formula =E4*I4 and calculates PNL (INR)
-				expectFormulaCell(f, sheetName, "J4", "=E4*I4", gain3.INRValue())
+				expectFormulaCell(f, sheetName, "J4", "=E4*I4", gain3.PNL*gain3.TTRate)
 			})
 		})
 
@@ -290,7 +290,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 				// Verify Headers
 				expectedHeaders := []string{
-					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate", "Amount (INR)",
+					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate",
+					"Amount (INR)", "Tax (INR)", "Net (INR)",
 				}
 				Expect(rows[0]).To(Equal(expectedHeaders))
 
@@ -307,8 +308,10 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(rows[1][5]).To(Equal(div1.TTDate.Format(time.DateOnly)))
 				rate1, _ := getCellFloat(f, sheetName, "G2")
 				Expect(rate1).To(BeNumerically("~", div1.TTRate, 0.001))
-				// Verify formula for Amount (INR) = Amount (USD) * TTRate
-				expectFormulaCell(f, sheetName, "H2", "=C2*G2", div1.INRValue())
+				// Verify formulas for INR columns
+				expectFormulaCell(f, sheetName, "H2", "=C2*G2", div1.Amount*div1.TTRate) // Amount (INR)
+				expectFormulaCell(f, sheetName, "I2", "=D2*G2", div1.Tax*div1.TTRate)    // Tax (INR)
+				expectFormulaCell(f, sheetName, "J2", "=E2*G2", div1.Net*div1.TTRate)    // Net (INR)
 			})
 		})
 
@@ -338,7 +341,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(rows).To(HaveLen(1))
 
 				expectedHeaders := []string{
-					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate", "Amount (INR)",
+					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate",
+					"Amount (INR)", "Tax (INR)", "Net (INR)",
 				}
 				Expect(rows[0]).To(Equal(expectedHeaders))
 			})
@@ -504,7 +508,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				// Verify Headers
 				expectedHeaders := []string{
 					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)",
-					"TTDate", "TTRate", "Amount (INR)",
+					"TTDate", "TTRate", "Amount (INR)", "Tax (INR)", "Net (INR)",
 				}
 				Expect(rows[0]).To(Equal(expectedHeaders))
 
@@ -521,8 +525,10 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(rows[1][5]).To(Equal(interest1.TTDate.Format(time.DateOnly)))
 				rate, _ := getCellFloat(f, sheetName, "G2")
 				Expect(rate).To(BeNumerically("==", interest1.TTRate))
-				// Verify formula for Amount (INR) = Amount (USD) * TTRate
-				expectFormulaCell(f, sheetName, "H2", "=C2*G2", interest1.INRValue())
+				// Verify formulas for INR columns
+				expectFormulaCell(f, sheetName, "H2", "=C2*G2", interest1.Amount*interest1.TTRate) // Amount (INR)
+				expectFormulaCell(f, sheetName, "I2", "=D2*G2", interest1.Tax*interest1.TTRate)    // Tax (INR)
+				expectFormulaCell(f, sheetName, "J2", "=E2*G2", interest1.Net*interest1.TTRate)    // Net (INR)
 			})
 		})
 
@@ -563,7 +569,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(rows).To(HaveLen(1))
 				expectedDividendsHeaders := []string{
-					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate", "Amount (INR)",
+					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate",
+					"Amount (INR)", "Tax (INR)", "Net (INR)",
 				}
 				Expect(rows[0]).To(Equal(expectedDividendsHeaders))
 
@@ -586,7 +593,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(rows).To(HaveLen(1))
 				expectedInterestHeaders := []string{
 					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)",
-					"TTDate", "TTRate", "Amount (INR)",
+					"TTDate", "TTRate", "Amount (INR)", "Tax (INR)", "Net (INR)",
 				}
 				Expect(rows[0]).To(Equal(expectedInterestHeaders))
 			})
