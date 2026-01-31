@@ -121,19 +121,29 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 
 	for idx, gainRecord := range gains {
 		rowNum := idx + 2 // Data starts from row 2
+
+		// Write data columns (A-I) - all except PNL (INR)
 		rowData := []interface{}{
 			gainRecord.Symbol,
 			gainRecord.BuyDate,  // Assuming string
 			gainRecord.SellDate, // Assuming string
 			gainRecord.Quantity,
-			gainRecord.PNL, // USD PNL
+			gainRecord.PNL, // USD PNL (column E)
 			gainRecord.Commission,
 			gainRecord.Type,
 			e.formatDateForExcel(gainRecord.TTDate), // Format date
-			gainRecord.TTRate,
-			gainRecord.INRValue(), // Calculated PNL (INR)
+			gainRecord.TTRate,                       // Column I
 		}
 		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
+			return err
+		}
+
+		// Write formula for column J (PNL INR) = E * I
+		// Column E = PNL (USD), Column I = TTRate
+		// Excel auto-rounds when base values are rounded
+		const pnlINRColumn = 10 // Column J
+		formula := fmt.Sprintf("=E%d*I%d", rowNum, rowNum)
+		if err := e.writeFormulaCell(f, sheetName, rowNum, pnlINRColumn, formula); err != nil {
 			return err
 		}
 	}
@@ -294,4 +304,17 @@ func (e *ExcelManagerImpl) formatDateForExcel(t time.Time) interface{} {
 		return "" // Return empty string for zero/uninitialized dates
 	}
 	return t.Format(time.DateOnly) // "2006-01-02"
+}
+
+// writeFormulaCell writes a formula to a specific cell
+func (e *ExcelManagerImpl) writeFormulaCell(f *excelize.File, sheetName string, rowNum, colNum int, formula string) error {
+	cellName, err := excelize.CoordinatesToCellName(colNum, rowNum)
+	if err != nil {
+		return fmt.Errorf("failed to get cell name for col %d, row %d: %w", colNum, rowNum, err)
+	}
+
+	if err := f.SetCellFormula(sheetName, cellName, formula); err != nil {
+		return fmt.Errorf("failed to set formula at %s: %w", cellName, err)
+	}
+	return nil
 }

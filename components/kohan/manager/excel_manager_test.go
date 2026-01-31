@@ -53,6 +53,21 @@ var _ = Describe("ExcelManagerImpl", func() {
 		return floatVal, nil
 	}
 
+	// expectFormulaCell verifies both the formula string and calculated value
+	expectFormulaCell := func(f *excelize.File, sheetName, axis, expectedFormula string, expectedValue float64) {
+		// Verify formula string
+		formula, err := f.GetCellFormula(sheetName, axis)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(formula).To(Equal(expectedFormula))
+
+		// Verify calculated value (with 2 decimal places precision)
+		calculatedStr, err := f.CalcCellValue(sheetName, axis)
+		Expect(err).ToNot(HaveOccurred())
+		calculatedVal, err := strconv.ParseFloat(calculatedStr, 64)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(calculatedVal).To(BeNumerically("~", expectedValue, 0.01))
+	}
+
 	Describe("GenerateTaxSummaryExcel", func() {
 		Context("when generating the 'Gains' sheet with data", func() {
 			var (
@@ -148,8 +163,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(rows[1][7]).To(Equal(gain1.TTDate.Format(time.DateOnly)))
 				rate1, _ := getCellFloat(f, sheetName, "I2")
 				Expect(rate1).To(BeNumerically("~", gain1.TTRate, 0.001))
-				pnlINR1, _ := getCellFloat(f, sheetName, "J2")
-				Expect(pnlINR1).To(BeNumerically("~", gain1.INRValue(), 0.001))
+				// Column J has formula =E2*I2 and calculates PNL (INR)
+				expectFormulaCell(f, sheetName, "J2", "=E2*I2", gain1.INRValue())
 
 				// Verify gain2 (row 3 in Excel, index 2 in `rows` slice)
 				gain2 := sampleSummary.INRGains[1]
@@ -166,8 +181,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(rows[2][7]).To(Equal(gain2.TTDate.Format(time.DateOnly)))
 				rate2, _ := getCellFloat(f, sheetName, "I3")
 				Expect(rate2).To(BeNumerically("~", gain2.TTRate, 0.001))
-				pnlINR2, _ := getCellFloat(f, sheetName, "J3")
-				Expect(pnlINR2).To(BeNumerically("~", gain2.INRValue(), 0.001))
+				// Column J has formula =E3*I3 and calculates PNL (INR)
+				expectFormulaCell(f, sheetName, "J3", "=E3*I3", gain2.INRValue())
 
 				// Verify gain3WithZeroTTDate (row 4 in Excel, index 3 in `rows` slice)
 				gain3 := sampleSummary.INRGains[2]
@@ -184,8 +199,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(rows[3][7]).To(Equal(""), "TTDate for zero time should be an empty string")
 				rate3, _ := getCellFloat(f, sheetName, "I4")
 				Expect(rate3).To(BeNumerically("~", gain3.TTRate, 0.001))
-				pnlINR3, _ := getCellFloat(f, sheetName, "J4")
-				Expect(pnlINR3).To(BeNumerically("~", gain3.INRValue(), 0.001))
+				// Column J has formula =E4*I4 and calculates PNL (INR)
+				expectFormulaCell(f, sheetName, "J4", "=E4*I4", gain3.INRValue())
 			})
 		})
 
