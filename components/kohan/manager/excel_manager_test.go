@@ -966,7 +966,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 			})
 		})
 
-		Context("when generating the 'Summary' sheet with Dividends data", func() {
+		Context("when generating Summary sheet with all sections", func() {
 			var (
 				excelManager  manager.ExcelManager
 				tempOutputDir string
@@ -977,44 +977,63 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 			BeforeEach(func() {
 				var err error
-				tempOutputDir, err = os.MkdirTemp(baseTempDir, "summary_dividends_test_*")
+				tempOutputDir, err = os.MkdirTemp(baseTempDir, "summary_all_sections_test_*")
 				Expect(err).ToNot(HaveOccurred())
 				tempOutputFilePath = filepath.Join(tempOutputDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
 
 				excelManager = manager.NewExcelManager(tempOutputDir)
 
-				// Create sample dividends (2 records)
+				// Create Gains data (3 records: 1 STCG, 2 LTCG)
+				gain1TTDate, _ := time.Parse(time.DateOnly, "2023-01-15")
+				gain1 := tax.INRGains{
+					Gains:  tax.Gains{Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10.5, PNL: 100.75, Commission: 5.25, Type: "STCG"},
+					TTDate: gain1TTDate, TTRate: 82.50,
+				}
+				gain2TTDate, _ := time.Parse(time.DateOnly, "2023-02-10")
+				gain2 := tax.INRGains{
+					Gains:  tax.Gains{Symbol: "MSFT", BuyDate: "2020-05-01", SellDate: "2023-02-15", Quantity: 5, PNL: -50.20, Commission: 0, Type: "LTCG"},
+					TTDate: gain2TTDate, TTRate: 83.10,
+				}
+				gain3WithZeroTTDate := tax.INRGains{
+					Gains:  tax.Gains{Symbol: "GOOG", BuyDate: "2021-01-01", SellDate: "2023-03-10", Quantity: 20, PNL: 200.00, Commission: 1.50, Type: "LTCG"},
+					TTDate: time.Time{}, TTRate: 81.75,
+				}
+
+				// Create Dividends data (2 records)
 				div1TTDate, _ := time.Parse(time.DateOnly, "2023-03-01")
 				div1 := tax.INRDividend{
 					Dividend: tax.Dividend{
-						Symbol: "AAPL",
-						Date:   "2023-03-15",
-						Amount: 50.25,
-						Tax:    7.54,
-						Net:    42.71,
+						Symbol: "AAPL", Date: "2023-03-15",
+						Amount: 50.25, Tax: 7.54, Net: 42.71,
 					},
-					TTDate: div1TTDate,
-					TTRate: 82.10,
+					TTDate: div1TTDate, TTRate: 82.10,
 				}
-
 				div2TTDate, _ := time.Parse(time.DateOnly, "2023-03-05")
 				div2 := tax.INRDividend{
 					Dividend: tax.Dividend{
-						Symbol: "GOOG",
-						Date:   "2023-03-20",
-						Amount: 75.50,
-						Tax:    11.33,
-						Net:    64.17,
+						Symbol: "GOOG", Date: "2023-03-20",
+						Amount: 75.50, Tax: 11.33, Net: 64.17,
 					},
-					TTDate: div2TTDate,
-					TTRate: 82.50,
+					TTDate: div2TTDate, TTRate: 82.50,
 				}
 
+				// Create Interest data (1 record)
+				interestDate, _ := time.Parse(time.DateOnly, "2023-06-15")
+				ttDate, _ := time.Parse(time.DateOnly, "2023-06-30")
+				interest1 := tax.INRInterest{
+					Interest: tax.Interest{
+						Symbol: "US-TBILL", Date: interestDate.Format(time.DateOnly),
+						Amount: 100.0, Tax: 10.0, Net: 90.0,
+					},
+					TTDate: ttDate, TTRate: 82.5,
+				}
+
+				// Build summary with ALL data types
 				sampleSummary = tax.Summary{
 					Year:          testYear,
+					INRGains:      []tax.INRGains{gain1, gain2, gain3WithZeroTTDate},
 					INRDividends:  []tax.INRDividend{div1, div2},
-					INRGains:      []tax.INRGains{},
-					INRInterest:   []tax.INRInterest{},
+					INRInterest:   []tax.INRInterest{interest1},
 					INRValuations: []tax.INRValuation{},
 				}
 
@@ -1045,75 +1064,132 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(header).To(Equal("SUMMARY"))
 			})
 
-			It("should write Dividends section header in row 3", func() {
-				sectionHeader, err := f.GetCellValue(sheetName, "A3")
-				Expect(err).ToNot(HaveOccurred())
-				Expect(sectionHeader).To(Equal("Dividends"))
+			Context("Short Term Gains section", func() {
+				It("should write section header and column headers in rows 3-4", func() {
+					// Section header (row 3)
+					sectionHeader, err := f.GetCellValue(sheetName, "A3")
+					Expect(err).ToNot(HaveOccurred())
+					Expect(sectionHeader).To(Equal("Short Term"))
+
+					// Column headers (row 4)
+					headers := []struct{ cell, expected string }{
+						{"A4", "PNL (USD)"},
+						{"B4", "Commission (USD)"},
+						{"C4", "PNL (INR)"},
+					}
+					for _, h := range headers {
+						val, err := f.GetCellValue(sheetName, h.cell)
+						Expect(err).ToNot(HaveOccurred())
+						Expect(val).To(Equal(h.expected))
+					}
+				})
+
+				It("should write formulas referencing Gains STCG row (row 5)", func() {
+					// Gains sheet: 3 gains → lastDataRow=4, totalsRow=6, stcgRow=8
+					expectCrossSheetFormula(f, "Summary", "A5", "Gains", "E8") // PNL USD
+					expectCrossSheetFormula(f, "Summary", "B5", "Gains", "F6") // Commission from TOTALS
+					expectCrossSheetFormula(f, "Summary", "C5", "Gains", "J8") // PNL INR
+				})
 			})
 
-			It("should write Amount (USD) column header in row 4", func() {
-				header, err := f.GetCellValue(sheetName, "A4")
-				Expect(err).ToNot(HaveOccurred())
-				Expect(header).To(Equal("Amount (USD)"))
+			Context("Long Term Gains section", func() {
+				It("should write section header and column headers in rows 8-9", func() {
+					// Section header (row 8)
+					sectionHeader, err := f.GetCellValue(sheetName, "A8")
+					Expect(err).ToNot(HaveOccurred())
+					Expect(sectionHeader).To(Equal("Long Term"))
+
+					// Column headers (row 9)
+					headers := []struct{ cell, expected string }{
+						{"A9", "PNL (USD)"},
+						{"B9", "Commission (USD)"},
+						{"C9", "PNL (INR)"},
+					}
+					for _, h := range headers {
+						val, err := f.GetCellValue(sheetName, h.cell)
+						Expect(err).ToNot(HaveOccurred())
+						Expect(val).To(Equal(h.expected))
+					}
+				})
+
+				It("should write formulas referencing Gains LTCG row (row 10)", func() {
+					// Gains sheet: ltcgRow=9
+					expectCrossSheetFormula(f, "Summary", "A10", "Gains", "E9") // PNL USD
+					expectCrossSheetFormula(f, "Summary", "B10", "Gains", "F6") // Commission from TOTALS
+					expectCrossSheetFormula(f, "Summary", "C10", "Gains", "J9") // PNL INR
+				})
 			})
 
-			It("should write Tax (USD) column header in row 4", func() {
-				header, err := f.GetCellValue(sheetName, "B4")
-				Expect(err).ToNot(HaveOccurred())
-				Expect(header).To(Equal("Tax (USD)"))
+			Context("Dividends section", func() {
+				It("should write section header and column headers in rows 13-14", func() {
+					// Section header (row 13)
+					sectionHeader, err := f.GetCellValue(sheetName, "A13")
+					Expect(err).ToNot(HaveOccurred())
+					Expect(sectionHeader).To(Equal("Dividends"))
+
+					// Column headers (row 14)
+					headers := []struct{ cell, expected string }{
+						{"A14", "Amount (USD)"},
+						{"B14", "Tax (USD)"},
+						{"C14", "Net (USD)"},
+						{"D14", "Amount (INR)"},
+						{"E14", "Tax (INR)"},
+						{"F14", "Net (INR)"},
+					}
+					for _, h := range headers {
+						val, err := f.GetCellValue(sheetName, h.cell)
+						Expect(err).ToNot(HaveOccurred())
+						Expect(val).To(Equal(h.expected))
+					}
+				})
+
+				It("should write formulas referencing Dividends TOTALS row (row 15)", func() {
+					// Dividends sheet: 2 dividends → lastDataRow=3, totalsRow=5
+					expectCrossSheetFormula(f, "Summary", "A15", "Dividends", "C5") // Amount USD
+					expectCrossSheetFormula(f, "Summary", "B15", "Dividends", "D5") // Tax USD
+					expectCrossSheetFormula(f, "Summary", "C15", "Dividends", "E5") // Net USD
+					expectCrossSheetFormula(f, "Summary", "D15", "Dividends", "H5") // Amount INR
+					expectCrossSheetFormula(f, "Summary", "E15", "Dividends", "I5") // Tax INR
+					expectCrossSheetFormula(f, "Summary", "F15", "Dividends", "J5") // Net INR
+				})
 			})
 
-			It("should write Net (USD) column header in row 4", func() {
-				header, err := f.GetCellValue(sheetName, "C4")
-				Expect(err).ToNot(HaveOccurred())
-				Expect(header).To(Equal("Net (USD)"))
-			})
+			Context("Interest section", func() {
+				It("should write section header and column headers in rows 18-19", func() {
+					// Section header (row 18)
+					sectionHeader, err := f.GetCellValue(sheetName, "A18")
+					Expect(err).ToNot(HaveOccurred())
+					Expect(sectionHeader).To(Equal("Interest Income"))
 
-			It("should write Amount (INR) column header in row 4", func() {
-				header, err := f.GetCellValue(sheetName, "D4")
-				Expect(err).ToNot(HaveOccurred())
-				Expect(header).To(Equal("Amount (INR)"))
-			})
+					// Column headers (row 19)
+					headers := []struct{ cell, expected string }{
+						{"A19", "Amount (USD)"},
+						{"B19", "Tax (USD)"},
+						{"C19", "Net (USD)"},
+						{"D19", "Amount (INR)"},
+						{"E19", "Tax (INR)"},
+						{"F19", "Net (INR)"},
+					}
+					for _, h := range headers {
+						val, err := f.GetCellValue(sheetName, h.cell)
+						Expect(err).ToNot(HaveOccurred())
+						Expect(val).To(Equal(h.expected))
+					}
+				})
 
-			It("should write Tax (INR) column header in row 4", func() {
-				header, err := f.GetCellValue(sheetName, "E4")
-				Expect(err).ToNot(HaveOccurred())
-				Expect(header).To(Equal("Tax (INR)"))
-			})
-
-			It("should write Net (INR) column header in row 4", func() {
-				header, err := f.GetCellValue(sheetName, "F4")
-				Expect(err).ToNot(HaveOccurred())
-				Expect(header).To(Equal("Net (INR)"))
-			})
-
-			It("should write Amount (USD) formula and value matching Dividends TOTALS", func() {
-				// Dividends TOTALS row: lastDataRow=3, totalsRow=5
-				expectCrossSheetFormula(f, "Summary", "A5", "Dividends", "C5")
-			})
-
-			It("should write Tax (USD) formula and value matching Dividends TOTALS", func() {
-				expectCrossSheetFormula(f, "Summary", "B5", "Dividends", "D5")
-			})
-
-			It("should write Net (USD) formula and value matching Dividends TOTALS", func() {
-				expectCrossSheetFormula(f, "Summary", "C5", "Dividends", "E5")
-			})
-
-			It("should write Amount (INR) formula and value matching Dividends TOTALS", func() {
-				expectCrossSheetFormula(f, "Summary", "D5", "Dividends", "H5")
-			})
-
-			It("should write Tax (INR) formula and value matching Dividends TOTALS", func() {
-				expectCrossSheetFormula(f, "Summary", "E5", "Dividends", "I5")
-			})
-
-			It("should write Net (INR) formula and value matching Dividends TOTALS", func() {
-				expectCrossSheetFormula(f, "Summary", "F5", "Dividends", "J5")
+				It("should write formulas referencing Interest TOTALS row (row 20)", func() {
+					// Interest sheet: 1 interest → lastDataRow=2, totalsRow=4
+					expectCrossSheetFormula(f, "Summary", "A20", "Interest", "C4") // Amount USD
+					expectCrossSheetFormula(f, "Summary", "B20", "Interest", "D4") // Tax USD
+					expectCrossSheetFormula(f, "Summary", "C20", "Interest", "E4") // Net USD
+					expectCrossSheetFormula(f, "Summary", "D20", "Interest", "H4") // Amount INR
+					expectCrossSheetFormula(f, "Summary", "E20", "Interest", "I4") // Tax INR
+					expectCrossSheetFormula(f, "Summary", "F20", "Interest", "J4") // Net INR
+				})
 			})
 		})
 
-		Context("when generating Summary sheet with empty Dividends", func() {
+		Context("when generating Summary sheet with only Gains data", func() {
 			var (
 				excelManager  manager.ExcelManager
 				tempOutputDir string
@@ -1124,26 +1200,30 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 			BeforeEach(func() {
 				var err error
-				tempOutputDir, err = os.MkdirTemp(baseTempDir, "summary_empty_dividends_test_*")
+				tempOutputDir, err = os.MkdirTemp(baseTempDir, "summary_only_gains_test_*")
 				Expect(err).ToNot(HaveOccurred())
 				tempOutputFilePath = filepath.Join(tempOutputDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
 
 				excelManager = manager.NewExcelManager(tempOutputDir)
 
-				// Empty dividends
+				// Create Gains data only
+				gain1TTDate, _ := time.Parse(time.DateOnly, "2023-01-15")
+				gain1 := tax.INRGains{
+					Gains:  tax.Gains{Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10.5, PNL: 100.75, Commission: 5.25, Type: "STCG"},
+					TTDate: gain1TTDate, TTRate: 82.50,
+				}
+
 				sampleSummary = tax.Summary{
 					Year:          testYear,
-					INRDividends:  []tax.INRDividend{}, // Empty!
-					INRGains:      []tax.INRGains{},
+					INRGains:      []tax.INRGains{gain1},
+					INRDividends:  []tax.INRDividend{},
 					INRInterest:   []tax.INRInterest{},
 					INRValuations: []tax.INRValuation{},
 				}
 
-				// Generate Excel
 				err = excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
 				Expect(err).ToNot(HaveOccurred())
 
-				// Open file for verification
 				f, err = excelize.OpenFile(tempOutputFilePath)
 				Expect(err).ToNot(HaveOccurred())
 			})
@@ -1154,23 +1234,184 @@ var _ = Describe("ExcelManagerImpl", func() {
 				}
 			})
 
-			It("should create Summary sheet even with empty Dividends", func() {
-				sheets := f.GetSheetList()
-				Expect(sheets[0]).To(Equal("Summary"))
+			It("should write Gains sections starting at row 3 when other sections are empty", func() {
+				// Short Term starts at row 3 (no Dividends/Interest before it)
+				sectionHeader, err := f.GetCellValue(sheetName, "A3")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(sectionHeader).To(Equal("Short Term"))
+
+				// Long Term starts at row 8
+				sectionHeader, err = f.GetCellValue(sheetName, "A8")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(sectionHeader).To(Equal("Long Term"))
+			})
+		})
+
+		Context("when generating Summary sheet with only Dividends data", func() {
+			var (
+				excelManager  manager.ExcelManager
+				tempOutputDir string
+				sampleSummary tax.Summary
+				sheetName     = "Summary"
+				f             *excelize.File
+			)
+
+			BeforeEach(func() {
+				var err error
+				tempOutputDir, err = os.MkdirTemp(baseTempDir, "summary_only_dividends_test_*")
+				Expect(err).ToNot(HaveOccurred())
+				tempOutputFilePath = filepath.Join(tempOutputDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
+
+				excelManager = manager.NewExcelManager(tempOutputDir)
+
+				// Create Dividends data only
+				div1TTDate, _ := time.Parse(time.DateOnly, "2023-03-01")
+				div1 := tax.INRDividend{
+					Dividend: tax.Dividend{
+						Symbol: "AAPL", Date: "2023-03-15",
+						Amount: 50.25, Tax: 7.54, Net: 42.71,
+					},
+					TTDate: div1TTDate, TTRate: 82.10,
+				}
+
+				sampleSummary = tax.Summary{
+					Year:          testYear,
+					INRGains:      []tax.INRGains{},
+					INRDividends:  []tax.INRDividend{div1},
+					INRInterest:   []tax.INRInterest{},
+					INRValuations: []tax.INRValuation{},
+				}
+
+				err = excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err = excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("should write Dividends section with headers", func() {
+			AfterEach(func() {
+				if f != nil {
+					f.Close()
+				}
+			})
+
+			It("should write Dividends section starting at row 3 when Gains/Interest are empty", func() {
+				// Dividends starts at row 3 (no Gains before it)
 				sectionHeader, err := f.GetCellValue(sheetName, "A3")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(sectionHeader).To(Equal("Dividends"))
 			})
+		})
 
-			It("should reference Dividends sheet even when empty", func() {
-				// When empty: no data rows, no TOTALS row
-				// Formula will reference row 0 or non-existent row
-				formula, err := f.GetCellFormula(sheetName, "A5")
+		Context("when generating Summary sheet with only Interest data", func() {
+			var (
+				excelManager  manager.ExcelManager
+				tempOutputDir string
+				sampleSummary tax.Summary
+				sheetName     = "Summary"
+				f             *excelize.File
+			)
+
+			BeforeEach(func() {
+				var err error
+				tempOutputDir, err = os.MkdirTemp(baseTempDir, "summary_only_interest_test_*")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(formula).To(ContainSubstring("Dividends!"))
+				tempOutputFilePath = filepath.Join(tempOutputDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
+
+				excelManager = manager.NewExcelManager(tempOutputDir)
+
+				// Create Interest data only
+				interestDate, _ := time.Parse(time.DateOnly, "2023-06-15")
+				ttDate, _ := time.Parse(time.DateOnly, "2023-06-30")
+				interest1 := tax.INRInterest{
+					Interest: tax.Interest{
+						Symbol: "US-TBILL", Date: interestDate.Format(time.DateOnly),
+						Amount: 100.0, Tax: 10.0, Net: 90.0,
+					},
+					TTDate: ttDate, TTRate: 82.5,
+				}
+
+				sampleSummary = tax.Summary{
+					Year:          testYear,
+					INRGains:      []tax.INRGains{},
+					INRDividends:  []tax.INRDividend{},
+					INRInterest:   []tax.INRInterest{interest1},
+					INRValuations: []tax.INRValuation{},
+				}
+
+				err = excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err = excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				if f != nil {
+					f.Close()
+				}
+			})
+
+			It("should write Interest section starting at row 3 when Gains/Dividends are empty", func() {
+				// Interest starts at row 3 (no Gains/Dividends before it)
+				sectionHeader, err := f.GetCellValue(sheetName, "A3")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(sectionHeader).To(Equal("Interest Income"))
+			})
+		})
+
+		Context("when generating Summary sheet with empty data", func() {
+			var (
+				excelManager  manager.ExcelManager
+				tempOutputDir string
+				sampleSummary tax.Summary
+				sheetName     = "Summary"
+				f             *excelize.File
+			)
+
+			BeforeEach(func() {
+				var err error
+				tempOutputDir, err = os.MkdirTemp(baseTempDir, "summary_empty_test_*")
+				Expect(err).ToNot(HaveOccurred())
+				tempOutputFilePath = filepath.Join(tempOutputDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
+
+				excelManager = manager.NewExcelManager(tempOutputDir)
+
+				// All empty
+				sampleSummary = tax.Summary{
+					Year:          testYear,
+					INRGains:      []tax.INRGains{},
+					INRDividends:  []tax.INRDividend{},
+					INRInterest:   []tax.INRInterest{},
+					INRValuations: []tax.INRValuation{},
+				}
+
+				err = excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err = excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				if f != nil {
+					f.Close()
+				}
+			})
+
+			It("should create Summary sheet with header only when all data is empty", func() {
+				sheets := f.GetSheetList()
+				Expect(sheets[0]).To(Equal("Summary"))
+
+				// Should have SUMMARY header
+				header, err := f.GetCellValue(sheetName, "A1")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(header).To(Equal("SUMMARY"))
+
+				// Should NOT have any section headers (row 3 should be empty)
+				val, err := f.GetCellValue(sheetName, "A3")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(val).To(BeEmpty())
 			})
 		})
 	})

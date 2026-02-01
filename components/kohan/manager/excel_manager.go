@@ -549,8 +549,6 @@ func (e *ExcelManagerImpl) writeValuationsTotals(f *excelize.File, sheetName str
 // writeSummarySheet creates the Summary sheet with cross-referenced formulas to detail sheets
 // This sheet must be created AFTER all detail sheets to know their TOTALS row positions
 func (e *ExcelManagerImpl) writeSummarySheet(ctx context.Context, f *excelize.File, summary tax.Summary) error {
-	const dividendsSectionStartRow = 3
-
 	sheetName := "Summary"
 	if err := e.createSheetWithHeaders(ctx, f, sheetName, []string{}); err != nil {
 		return err
@@ -561,22 +559,81 @@ func (e *ExcelManagerImpl) writeSummarySheet(ctx context.Context, f *excelize.Fi
 		return err
 	}
 
-	// Calculate Dividends TOTALS row position
-	// lastDataRow = len(dividends) + 1
-	// totalsRow = lastDataRow + 2
-	dividendsDataCount := len(summary.INRDividends)
-	var dividendsTotalsRow int
-	if dividendsDataCount > 0 {
-		dividendsTotalsRow = (dividendsDataCount + 1) + 2
+	// Calculate TOTALS row positions for all sheets
+	gainsTotalsRow, gainsSTCGRow, gainsLTCGRow := e.calculateGainsRows(summary.INRGains)
+	dividendsTotalsRow := e.calculateTotalsRow(summary.INRDividends)
+	interestTotalsRow := e.calculateTotalsRow(summary.INRInterest)
+
+	// Write sections in order: Gains → Dividends → Interest
+	currentRow := 3 // Start after header and empty row
+
+	// Gains section (Short Term + Long Term) - only if data exists
+	if len(summary.INRGains) > 0 {
+		if err := e.writeGainsSection(f, sheetName, currentRow, gainsSTCGRow, gainsLTCGRow, gainsTotalsRow); err != nil {
+			return err
+		}
+		currentRow += 10 // Short Term (4 rows) + Long Term (4 rows) + 2 empty
 	}
 
-	// Write Dividends section (starts at row 3)
-	return e.writeDividendsSection(f, sheetName, dividendsSectionStartRow, dividendsTotalsRow)
+	// Dividends section - only if data exists
+	if len(summary.INRDividends) > 0 {
+		if err := e.writeDividendsSection(f, sheetName, currentRow, dividendsTotalsRow); err != nil {
+			return err
+		}
+		currentRow += 5 // Section header + headers + values + 2 empty
+	}
+
+	// Interest section - only if data exists
+	if len(summary.INRInterest) > 0 {
+		return e.writeInterestSection(f, sheetName, currentRow, interestTotalsRow)
+	}
+
+	return nil
+}
+
+// calculateGainsRows computes TOTALS, STCG, and LTCG row positions for Gains sheet
+func (e *ExcelManagerImpl) calculateGainsRows(gains []tax.INRGains) (int, int, int) {
+	if len(gains) == 0 {
+		return 0, 0, 0
+	}
+	totalsRow := (len(gains) + 1) + 2
+	stcgRow := totalsRow + 2
+	ltcgRow := stcgRow + 1
+	return totalsRow, stcgRow, ltcgRow
+}
+
+// calculateTotalsRow computes the TOTALS row position for a data slice
+func (e *ExcelManagerImpl) calculateTotalsRow(data interface{}) int {
+	switch v := data.(type) {
+	case []tax.INRDividend:
+		if len(v) == 0 {
+			return 0
+		}
+		return (len(v) + 1) + 2
+	case []tax.INRInterest:
+		if len(v) == 0 {
+			return 0
+		}
+		return (len(v) + 1) + 2
+	}
+	return 0
 }
 
 // writeSummaryHeader writes the title row (Row 1: "SUMMARY" - bold)
 func (e *ExcelManagerImpl) writeSummaryHeader(f *excelize.File, sheetName string) error {
 	return e.writeTotalsLabel(f, sheetName, 1, "SUMMARY")
+}
+
+// applyBoldStyle applies bold font style to an entire row
+func (e *ExcelManagerImpl) applyBoldStyle(f *excelize.File, sheetName string, rowNum int) error {
+	style, err := f.NewStyle(&excelize.Style{Font: &excelize.Font{Bold: true}})
+	if err != nil {
+		return fmt.Errorf("failed to create bold style: %w", err)
+	}
+	if err := f.SetRowStyle(sheetName, rowNum, rowNum, style); err != nil {
+		return fmt.Errorf("failed to set bold row style: %w", err)
+	}
+	return nil
 }
 
 // writeDividendsSection writes the Dividends section with cross-referenced formulas
@@ -599,12 +656,8 @@ func (e *ExcelManagerImpl) writeDividendsSection(f *excelize.File, sheetName str
 	}
 
 	// Apply bold style to headers
-	style, err := f.NewStyle(&excelize.Style{Font: &excelize.Font{Bold: true}})
-	if err != nil {
-		return fmt.Errorf("failed to create header style: %w", err)
-	}
-	if err := f.SetRowStyle(sheetName, headerRow, headerRow, style); err != nil {
-		return fmt.Errorf("failed to set header row style: %w", err)
+	if err := e.applyBoldStyle(f, sheetName, headerRow); err != nil {
+		return err
 	}
 
 	// Row startRow+2: Formulas referencing Dividends TOTALS row
@@ -616,6 +669,86 @@ func (e *ExcelManagerImpl) writeDividendsSection(f *excelize.File, sheetName str
 		4: fmt.Sprintf("=Dividends!H%d", dividendsTotalsRow), // D: Amount INR
 		5: fmt.Sprintf("=Dividends!I%d", dividendsTotalsRow), // E: Tax INR
 		6: fmt.Sprintf("=Dividends!J%d", dividendsTotalsRow), // F: Net INR
+	}
+
+	return e.writeFormulaRange(f, sheetName, valuesRow, formulas)
+}
+
+// writeGainsSection writes the Gains section with Short Term and Long Term subsections
+// startRow: where to start writing (typically row 3)
+// gainsSTCGRow, gainsLTCGRow: row numbers in Gains sheet for STCG/LTCG breakdowns (0 if no data)
+// gainsTotalsRow: row number in Gains sheet for TOTALS row (0 if no data)
+func (e *ExcelManagerImpl) writeGainsSection(f *excelize.File, sheetName string, startRow, gainsSTCGRow, gainsLTCGRow, gainsTotalsRow int) error {
+	const ltcgSectionRowOffset = 5
+
+	// Write Short Term section
+	if err := e.writeGainsCategorySection(f, sheetName, startRow, "Short Term", gainsSTCGRow, gainsTotalsRow); err != nil {
+		return err
+	}
+
+	// Write Long Term section
+	return e.writeGainsCategorySection(f, sheetName, startRow+ltcgSectionRowOffset, "Long Term", gainsLTCGRow, gainsTotalsRow)
+}
+
+// writeGainsCategorySection writes either Short Term or Long Term subsection
+func (e *ExcelManagerImpl) writeGainsCategorySection(f *excelize.File, sheetName string, startRow int, category string, gainsRow, totalsRow int) error {
+	headers := []interface{}{"PNL (USD)", "Commission (USD)", "PNL (INR)"}
+
+	// Row startRow: Category header (bold section header)
+	if err := e.writeTotalsLabel(f, sheetName, startRow, category); err != nil {
+		return err
+	}
+
+	// Row startRow+1: Column headers (bold)
+	headerRow := startRow + 1
+	if err := e.writeRow(f, sheetName, headerRow, headers); err != nil {
+		return err
+	}
+	if err := e.applyBoldStyle(f, sheetName, headerRow); err != nil {
+		return err
+	}
+
+	// Row startRow+2: Formulas
+	valuesRow := startRow + 2
+	formulas := map[int]string{
+		1: fmt.Sprintf("=Gains!E%d", gainsRow),  // A: PNL USD
+		2: fmt.Sprintf("=Gains!F%d", totalsRow), // B: Commission from TOTALS
+		3: fmt.Sprintf("=Gains!J%d", gainsRow),  // C: PNL INR
+	}
+	return e.writeFormulaRange(f, sheetName, valuesRow, formulas)
+}
+
+// writeInterestSection writes the Interest Income section with cross-referenced formulas
+// startRow: where to start writing section header
+// interestTotalsRow: row number in Interest sheet where TOTALS row exists (0 if no data)
+func (e *ExcelManagerImpl) writeInterestSection(f *excelize.File, sheetName string, startRow, interestTotalsRow int) error {
+	// Row startRow: "Interest Income" (bold section header)
+	if err := e.writeTotalsLabel(f, sheetName, startRow, "Interest Income"); err != nil {
+		return err
+	}
+
+	// Row startRow+1: Column headers (USD first, then INR) - bold
+	headerRow := startRow + 1
+	headers := []interface{}{
+		"Amount (USD)", "Tax (USD)", "Net (USD)",
+		"Amount (INR)", "Tax (INR)", "Net (INR)",
+	}
+	if err := e.writeRow(f, sheetName, headerRow, headers); err != nil {
+		return err
+	}
+	if err := e.applyBoldStyle(f, sheetName, headerRow); err != nil {
+		return err
+	}
+
+	// Row startRow+2: Formulas referencing Interest TOTALS row
+	valuesRow := startRow + 2
+	formulas := map[int]string{
+		1: fmt.Sprintf("=Interest!C%d", interestTotalsRow), // A: Amount USD
+		2: fmt.Sprintf("=Interest!D%d", interestTotalsRow), // B: Tax USD
+		3: fmt.Sprintf("=Interest!E%d", interestTotalsRow), // C: Net USD
+		4: fmt.Sprintf("=Interest!H%d", interestTotalsRow), // D: Amount INR
+		5: fmt.Sprintf("=Interest!I%d", interestTotalsRow), // E: Tax INR
+		6: fmt.Sprintf("=Interest!J%d", interestTotalsRow), // F: Net INR
 	}
 
 	return e.writeFormulaRange(f, sheetName, valuesRow, formulas)
