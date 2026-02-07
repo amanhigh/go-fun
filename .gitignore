@@ -1,46 +1,29 @@
-# Compiled Object files, Static and Dynamic libs (Shared Objects)
-*.o
-*.a
-*.so
-
-# Folders
-_obj
-_test
-
 # Binary Output Directory
 bin/
 
-# Architecture specific extensions/prefixes
-*.[568vq]
-[568vq].out
-
-*.cgo1.go
-*.cgo2.c
-_cgo_defun.c
-_cgo_gotypes.go
-_cgo_export.*
-
-_testmain.go
-
+# Binary Output Files
 *.exe
 *.test
 *.prof
 *.iml
 cover*.out
-.idea
+
+# Helm Charts & tarballs
+*.tgz
+
+# Project-specific
 aman.json
 wrk.log
 
-#DB
-gorm.db
-dist/
+# IDE
+.idea
+.vscode/
 
-# Helm
-*.tgz
-
-# Ignore DevSpace cache and log folder
+# DevSpace
 .devspace/
 
+# AI
+Plan.md
 
 #### LATEX #####
 ## https://github.com/github/gitignore/blob/main/TeX.gitignore
@@ -89,12 +72,3 @@ dist/
 # Inkscape
 svg-inkscape
 
-# AI
-.aider*
-Plan.md
-repomix-output.md
-.roomodes
-memory-bank/
-.cline*
-aider.md
-components/kohan/testdata/tax/tax_summary_2023.xlsx
