@@ -15,6 +15,8 @@ const (
 // Metadata represents a mutable key/value map for event publishing.
 type Metadata map[string]string
 
+// HACK: Is this Best way to structure Metadata?
+
 // MustBaseMetadata constructs metadata with a mandatory correlation id.
 // It panics if correlationID is empty and should be used only when the caller is sure the id exists.
 func MustBaseMetadata(correlationID string) Metadata {
