@@ -9,8 +9,9 @@ import (
 	"github.com/amanhigh/go-fun/models/fun"
 )
 
+// FIXME: Add to AGENTS.md
 // EnrollmentManagerInterface orchestrates enrollment flows and delegates seat allocation.
-//
+// 
 // Architecture rules enforced here:
 //   - Flow is always Handler -> Manager -> Publisher. Handlers never publish directly.
 //   - Managers only talk to their own publisher; cross-domain messages use Manager-to-Manager calls.

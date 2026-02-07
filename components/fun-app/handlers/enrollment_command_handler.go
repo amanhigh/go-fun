@@ -62,6 +62,7 @@ func (h *EnrollmentCommandHandlerImpl) EnrollmentCancelledEvt(msg *message.Messa
 
 // stampCtx helper to apply correlation/causation from message metadata.
 func stampCtx(in context.Context, meta message.Metadata, enrollmentID, messageID string) context.Context {
+	// HACK: Can this Be a Generic Implementation ?
 	if in == nil {
 		in = context.Background()
 	}

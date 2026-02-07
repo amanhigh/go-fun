@@ -68,6 +68,7 @@ func (h *SeatCommandHandlerImpl) SeatWaitlistedEvt(msg *message.Message) error {
 // PoisonAllocate consumes poison messages after retries and cancels enrollment.
 func (h *SeatCommandHandlerImpl) PoisonAllocate(msg *message.Message) error {
 	var cmd fun.AllocateSeatCmdV1
+	// HACK: Rename PoisonAllocateCmd ?
 	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
 		return fmt.Errorf("unmarshal poison allocate: %w", err)
 	}

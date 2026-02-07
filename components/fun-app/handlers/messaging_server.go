@@ -112,6 +112,7 @@ func addPoisonHandlers(router *message.Router, subscriber message.Subscriber, se
 		wmPoisonTopic,
 		subscriber,
 		func(msg *message.Message) error {
+			// FIXME: Is Poison Handler Worknig ?
 			// Try decode as AllocateSeatCmdV1 and cancel via handler
 			var cmd fun.AllocateSeatCmdV1
 			if err := json.Unmarshal(msg.Payload, &cmd); err == nil {
