@@ -59,7 +59,7 @@ func NewEnrollmentManager(
 var _ EnrollmentManagerInterface = (*EnrollmentManager)(nil)
 
 func (em *EnrollmentManager) EnrollPerson(ctx context.Context, personID string, grade int) (fun.Enrollment, common.HttpError) {
-	person, err := em.retrievePerson(ctx, personID)
+	person, err := em.PersonManager.GetPerson(ctx,personID)
 	if err != nil {
 		return fun.Enrollment{}, err
 	}
@@ -187,9 +187,6 @@ func (em *EnrollmentManager) upsertEnrollment(ctx context.Context, enrollment *f
 	})
 }
 
-func (em *EnrollmentManager) retrievePerson(ctx context.Context, personID string) (fun.Person, common.HttpError) {
-	return em.PersonManager.GetPerson(ctx, personID)
-}
 
 func (em *EnrollmentManager) buildEnrollment(personID string, grade int) *fun.Enrollment {
 	return &fun.Enrollment{

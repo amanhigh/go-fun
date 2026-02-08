@@ -61,6 +61,7 @@ func (h *SeatCommandHandlerImpl) SeatWaitlistedEvt(msg *message.Message) error {
 	if err := h.EnrollmentManager.UpdateToWaitlisted(ctx, enrollment); err != nil {
 		return err
 	}
+	// BUG: Not Sure if Retry would work Unclear Who does SeatAllocation Retry.
 	// Done after sink; retry will be driven by middleware on AllocateSeatCmd path
 	return nil
 }
