@@ -16,6 +16,25 @@ import (
 	"github.com/viccon/sturdyc"
 )
 
+// testMetricsRecorder implements sturdyc.MetricsRecorder for testing
+type testMetricsRecorder struct {
+	onHit  func()
+	onMiss func()
+}
+
+func (r *testMetricsRecorder) CacheHit()                     { r.onHit() }
+func (r *testMetricsRecorder) CacheMiss()                    { r.onMiss() }
+func (r *testMetricsRecorder) AsynchronousRefresh()          {}
+func (r *testMetricsRecorder) SynchronousRefresh()           {}
+func (r *testMetricsRecorder) MissingRecord()                {}
+func (r *testMetricsRecorder) ForcedEviction()               {}
+func (r *testMetricsRecorder) EntriesEvicted(_ int)          {}
+func (r *testMetricsRecorder) ShardIndex(_ int)              {}
+func (r *testMetricsRecorder) CacheBatchRefreshSize(_ int)   {}
+func (r *testMetricsRecorder) ObserveCacheSize(_ func() int) {}
+
+var _ sturdyc.MetricsRecorder = (*testMetricsRecorder)(nil)
+
 var _ = Describe("Cache", func() {
 
 	// TASK: Bigcache, Freecache
@@ -901,6 +920,44 @@ var _ = Describe("Cache", func() {
 		// - Direct cost-based eviction (capacity-based only)
 		// - OnEvict callbacks per item
 		// - Negative cost values
+
+		// FR-002 2.5: DistributedStorage interface requires an external storage backend
+		// (e.g., Redis) and is tested in play/cron_distributed_test.go with testcontainers.
+		// The DistributedStorage interface (Set, SetBatch, missing record handling) is
+		// designed for integration with distributed caches and is out of scope for fast tests.
+
+		Context("Metrics", func() {
+			It("should track cache hits and misses via WithMetrics", func() {
+				var (
+					hitCount  atomic.Int32
+					missCount atomic.Int32
+				)
+
+				recorder := &testMetricsRecorder{
+					onHit:  func() { hitCount.Add(1) },
+					onMiss: func() { missCount.Add(1) },
+				}
+
+				metricsCache := sturdyc.New[string](capacity, numShards, ttl, evictionPct,
+					sturdyc.WithMetrics(recorder),
+				)
+
+				By("Setting and getting a value (hit)")
+				metricsCache.Set("key1", "value1")
+				sturdyc.GetOrFetch(context.Background(), metricsCache, "key1", func(_ context.Context) (string, error) {
+					return "value1", nil
+				})
+
+				By("Getting a non-existent value (miss)")
+				sturdyc.GetOrFetch(context.Background(), metricsCache, "missing-key", func(_ context.Context) (string, error) {
+					return "fetched", nil
+				})
+
+				By("Verifying metrics were recorded")
+				Expect(hitCount.Load()).To(BeNumerically(">=", int32(1)))
+				Expect(missCount.Load()).To(BeNumerically(">=", int32(1)))
+			})
+		})
 
 		Context("Negative Scenarios", func() {
 			It("should handle empty keys", func() {

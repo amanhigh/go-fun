@@ -1,9 +1,12 @@
 package play_fast
 
 import (
+	"time"
+
 	"github.com/jinzhu/copier"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gmeasure"
 	deepcopy "github.com/tiendc/go-deepcopy"
 )
 
@@ -336,6 +339,42 @@ var _ = Describe("Copy", func() {
 				Expect(dst[1].Name).To(Equal("Latte"))
 			})
 		})
+
+		Context("Type Conversion", func() {
+			It("should copy between compatible types", func() {
+				type Src struct {
+					Name string
+					Age  int
+				}
+				type Dst struct {
+					Name string
+					Age  int64
+				}
+
+				src := Src{Name: "Alice", Age: 30}
+				var dst Dst
+				err := copier.Copy(&dst, &src)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(dst.Name).To(Equal("Alice"))
+				Expect(dst.Age).To(Equal(int64(30)))
+			})
+
+			It("should handle type conversion failures gracefully", func() {
+				type Src struct {
+					Value string
+				}
+				type Dst struct {
+					Value int
+				}
+
+				src := Src{Value: "not-a-number"}
+				var dst Dst
+				// Copier silently skips incompatible types (no error, field stays zero)
+				err := copier.Copy(&dst, &src)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(dst.Value).To(Equal(0))
+			})
+		})
 	})
 
 	Context("DeepCopy", func() {
@@ -494,9 +533,87 @@ var _ = Describe("Copy", func() {
 			})
 		})
 
+		Context("Interface Fields", func() {
+			It("should deep copy structs with interface fields", func() {
+				type WithInterface struct {
+					Name  string
+					Value interface{}
+				}
+
+				src := WithInterface{Name: "test", Value: map[string]int{"a": 1}}
+				var dst WithInterface
+				err := deepcopy.Copy(&dst, &src)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(dst.Name).To(Equal("test"))
+				Expect(dst.Value).To(Equal(map[string]int{"a": 1}))
+			})
+		})
+
+		Context("Performance Benchmarks", FlakeAttempts(3), func() {
+			It("should benchmark deep copy operations", func() {
+				experiment := gmeasure.NewExperiment("DeepCopy Operations")
+				AddReportEntry(experiment.Name, experiment)
+
+				experiment.SampleDuration("simple-struct", func(_ int) {
+					src := Inner{Value: "benchmark"}
+					var dst Inner
+					deepcopy.Copy(&dst, &src)
+				}, gmeasure.SamplingConfig{N: 10000})
+
+				experiment.SampleDuration("nested-struct", func(_ int) {
+					src := Nested{
+						Name:   "root",
+						Inner:  &Inner{Value: "nested"},
+						Tags:   []string{"a", "b", "c"},
+						Scores: map[string]int{"x": 1, "y": 2},
+					}
+					var dst Nested
+					deepcopy.Copy(&dst, &src)
+				}, gmeasure.SamplingConfig{N: 10000})
+
+				AddReportEntry("Simple Struct Stats", experiment.GetStats("simple-struct"))
+				AddReportEntry("Nested Struct Stats", experiment.GetStats("nested-struct"))
+
+				Expect(experiment.GetStats("simple-struct").DurationFor(gmeasure.StatMedian)).To(
+					BeNumerically("<", 10*time.Microsecond), "Median simple deep copy should be fast")
+			})
+		})
+
 		// NOT SUPPORTED:
 		// - Unexported field copying (limited support)
 		// - Custom deep copy methods
 		// - Channels and function copying
+		// - Circular reference handling (will cause infinite recursion)
+	})
+
+	Context("Shallow vs Deep Copy Comparison", func() {
+		It("should demonstrate difference between Copier (shallow) and go-deepcopy (deep)", func() {
+			type Data struct {
+				Name   string
+				Values []int
+			}
+
+			original := Data{Name: "original", Values: []int{1, 2, 3}}
+
+			By("Shallow copy with Copier (default) - shares slice reference")
+			var shallowDst Data
+			err := copier.Copy(&shallowDst, &original)
+			Expect(err).ToNot(HaveOccurred())
+			shallowDst.Values[0] = 999
+			// Shallow copy: modifying dst affects original's slice
+			Expect(original.Values[0]).To(Equal(999))
+
+			By("Resetting original for deep copy test")
+			original.Values[0] = 1
+
+			By("Deep copy with go-deepcopy - independent slice")
+			var deepDst Data
+			err = deepcopy.Copy(&deepDst, &original)
+			Expect(err).ToNot(HaveOccurred())
+			deepDst.Values[0] = 888
+			// Deep copy: modifying dst does NOT affect original
+			Expect(original.Values[0]).To(Equal(1))
+		})
 	})
 })

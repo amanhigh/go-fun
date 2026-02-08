@@ -22,6 +22,7 @@ require (
 	github.com/hashicorp/vault v1.13.12
 	github.com/jinzhu/copier v0.4.0
 	github.com/jonboulle/clockwork v0.5.0
+	github.com/lib/pq v1.10.9
 	github.com/lithammer/fuzzysearch v1.1.8
 	github.com/maypok86/otter v1.2.4
 	github.com/onsi/ginkgo/v2 v2.13.2

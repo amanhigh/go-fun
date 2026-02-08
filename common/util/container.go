@@ -97,6 +97,28 @@ func ZookeeperTestContainer(ctx context.Context) (zookeeperContainer testcontain
 	return
 }
 
+func PostgresTestContainer(ctx context.Context) (postgresContainer testcontainers.Container, err error) {
+	port := "5432/tcp"
+	req := testcontainers.ContainerRequest{
+		Image:        "postgres:latest",
+		ExposedPorts: []string{port},
+		Env: map[string]string{
+			"POSTGRES_USER":     "test",
+			"POSTGRES_PASSWORD": "test",
+			"POSTGRES_DB":       "testdb",
+		},
+		WaitingFor: wait.ForAll(
+			wait.ForListeningPort(nat.Port(port)).WithStartupTimeout(WAIT_TIME),
+			wait.ForLog("database system is ready to accept connections").WithOccurrence(2).WithStartupTimeout(WAIT_TIME),
+		),
+	}
+	postgresContainer, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	return
+}
+
 func ElasticSearchTestContainer(ctx context.Context) (elasticSearchContainer testcontainers.Container, err error) {
 	req := testcontainers.ContainerRequest{
 		Image:        "bitnami/elasticsearch:latest",

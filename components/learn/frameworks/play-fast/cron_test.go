@@ -272,6 +272,28 @@ var _ = Describe("Cron", func() {
 
 				Expect(s.Jobs()).To(HaveLen(3))
 			})
+
+			It("should update job schedule by removing and re-adding", func() {
+				By("Creating initial job with 1 minute interval")
+				j, err := s.NewJob(
+					gocron.DurationJob(time.Minute),
+					gocron.NewTask(func() {}),
+				)
+				Expect(err).ToNot(HaveOccurred())
+				originalID := j.ID()
+
+				By("Removing old job and creating new one with updated schedule")
+				err = s.RemoveJob(originalID)
+				Expect(err).ToNot(HaveOccurred())
+
+				j2, err := s.NewJob(
+					gocron.DurationJob(30*time.Second),
+					gocron.NewTask(func() {}),
+				)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(j2.ID()).ToNot(Equal(originalID))
+				Expect(s.Jobs()).To(HaveLen(1))
+			})
 		})
 
 		Context("Error Scenarios", func() {
@@ -297,6 +319,69 @@ var _ = Describe("Cron", func() {
 					gocron.NewTask(nil),
 				)
 				Expect(err).To(HaveOccurred())
+			})
+
+			It("should shutdown gracefully while jobs are running", func() {
+				var jobStarted sync.WaitGroup
+				jobStarted.Add(1)
+
+				s, err := gocron.NewScheduler()
+				Expect(err).ToNot(HaveOccurred())
+
+				_, err = s.NewJob(
+					gocron.DurationJob(50*time.Millisecond),
+					gocron.NewTask(func() {
+						jobStarted.Done()
+						time.Sleep(200 * time.Millisecond)
+					}),
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				s.Start()
+
+				By("Waiting for job to start executing")
+				jobStarted.Wait()
+
+				By("Shutting down while job is running")
+				err = s.Shutdown()
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("should recover from job panics via AfterJobRunsWithPanic", func() {
+				var panicCaptured atomic.Bool
+				fakeClock := clockwork.NewFakeClock()
+
+				s, err := gocron.NewScheduler(gocron.WithClock(fakeClock))
+				Expect(err).ToNot(HaveOccurred())
+
+				var wg sync.WaitGroup
+				wg.Add(1)
+				_, err = s.NewJob(
+					gocron.DurationJob(time.Second),
+					gocron.NewTask(func() {
+						panic("test panic")
+					}),
+					gocron.WithEventListeners(
+						gocron.AfterJobRunsWithPanic(func(_ uuid.UUID, _ string, _ any) {
+							panicCaptured.Store(true)
+							wg.Done()
+						}),
+					),
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				s.Start()
+
+				By("Advancing clock to trigger panicking job")
+				err = fakeClock.BlockUntilContext(context.Background(), 1)
+				Expect(err).ToNot(HaveOccurred())
+				fakeClock.Advance(time.Second)
+
+				wg.Wait()
+				Expect(panicCaptured.Load()).To(BeTrue())
+
+				err = s.Shutdown()
+				Expect(err).ToNot(HaveOccurred())
 			})
 		})
 
