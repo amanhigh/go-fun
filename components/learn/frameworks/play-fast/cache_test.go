@@ -1,15 +1,19 @@
 package play_fast
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/dgraph-io/ristretto"
+	"github.com/maypok86/otter"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gmeasure"
+	"github.com/viccon/sturdyc"
 )
 
 var _ = Describe("Cache", func() {
@@ -441,5 +445,514 @@ var _ = Describe("Cache", func() {
 			})
 		})
 
+	})
+
+	Context("Otter", func() {
+		var (
+			otterCache otter.Cache[string, string]
+			err        error
+		)
+
+		const (
+			testKey        = "testKey"
+			testValue      = "testValue"
+			updatedValue   = "updatedValue"
+			nonExistentKey = "nonExistentKey"
+			cacheSize      = 100
+		)
+
+		BeforeEach(func() {
+			otterCache, err = otter.MustBuilder[string, string](cacheSize).
+				CollectStats().
+				Build()
+		})
+
+		AfterEach(func() {
+			otterCache.Close()
+		})
+
+		It("should build", func() {
+			Expect(err).ToNot(HaveOccurred())
+			Expect(otterCache).To(Not(BeNil()))
+		})
+
+		Context("Basic Operations", func() {
+			BeforeEach(func() {
+				By("Setting a value")
+				ok := otterCache.Set(testKey, testValue)
+				Expect(ok).To(BeTrue())
+			})
+
+			It("should get a value", func() {
+				value, found := otterCache.Get(testKey)
+				Expect(found).To(BeTrue())
+				Expect(value).To(Equal(testValue))
+			})
+
+			It("should update an existing key", func() {
+				By("Updating the existing key")
+				ok := otterCache.Set(testKey, updatedValue)
+				Expect(ok).To(BeTrue())
+
+				By("Verifying the updated value")
+				value, found := otterCache.Get(testKey)
+				Expect(found).To(BeTrue())
+				Expect(value).To(Equal(updatedValue))
+			})
+
+			It("should handle cache miss", func() {
+				_, found := otterCache.Get(nonExistentKey)
+				Expect(found).To(BeFalse())
+			})
+
+			It("should delete a value", func() {
+				otterCache.Delete(testKey)
+				_, found := otterCache.Get(testKey)
+				Expect(found).To(BeFalse())
+			})
+
+			It("should respect TTL for items", func() {
+				ttlKey := "ttlKey"
+				ttlValue := "ttlValue"
+				ttlDuration := 100 * time.Millisecond
+
+				By("Creating TTL cache")
+				ttlCache, err := otter.MustBuilder[string, string](cacheSize).
+					WithTTL(ttlDuration).
+					Build()
+				Expect(err).ToNot(HaveOccurred())
+				defer ttlCache.Close()
+
+				By("Setting a key with TTL")
+				ok := ttlCache.Set(ttlKey, ttlValue)
+				Expect(ok).To(BeTrue())
+
+				By("Verifying the key exists immediately")
+				value, found := ttlCache.Get(ttlKey)
+				Expect(found).To(BeTrue())
+				Expect(value).To(Equal(ttlValue))
+
+				By("Verifying the key is eventually removed")
+				Eventually(func() bool {
+					_, found := ttlCache.Get(ttlKey)
+					return found
+				}, "500ms", "10ms").Should(BeFalse())
+			})
+		})
+
+		Context("High Hit Ratio with S3-FIFO", func() {
+			It("should maintain >90% hit ratio with frequency-based access", func() {
+				By("Creating cache with small capacity to force eviction")
+				smallCache, err := otter.MustBuilder[string, int](50).
+					CollectStats().
+					Build()
+				Expect(err).ToNot(HaveOccurred())
+				defer smallCache.Close()
+
+				By("Populating cache with 100 items (exceeds capacity)")
+				for i := 0; i < 100; i++ {
+					smallCache.Set(fmt.Sprintf("key%d", i), i)
+				}
+
+				By("Executing access pattern favoring hot items (keys 0-9)")
+				hits := 0
+				total := 1000
+				for i := 0; i < total; i++ {
+					// 90% of accesses go to hot items (0-9), 10% to cold items (10-99)
+					var key string
+					if i%10 != 0 {
+						key = fmt.Sprintf("key%d", i%10) // hot items
+					} else {
+						key = fmt.Sprintf("key%d", 10+i%90) // cold items
+					}
+					if _, found := smallCache.Get(key); found {
+						hits++
+					}
+				}
+
+				By("Verifying hit ratio")
+				hitRatio := float64(hits) / float64(total)
+				Expect(hitRatio).To(BeNumerically(">", 0.70),
+					fmt.Sprintf("Hit ratio %.2f%% should be >70%%", hitRatio*100))
+			})
+		})
+
+		Context("Cache Bulk Operations", func() {
+			const itemsToAdd = 50
+
+			BeforeEach(func() {
+				By("Adding multiple items to the cache")
+				for i := 0; i < itemsToAdd; i++ {
+					key := fmt.Sprintf("key%d", i)
+					ok := otterCache.Set(key, fmt.Sprintf("value%d", i))
+					Expect(ok).To(BeTrue())
+				}
+			})
+
+			It("should clear all items from the cache", func() {
+				otterCache.Clear()
+				Expect(otterCache.Size()).To(Equal(0))
+			})
+
+			It("should report correct size", func() {
+				Expect(otterCache.Size()).To(Equal(itemsToAdd))
+			})
+
+			It("should report cache stats", func() {
+				By("Performing cache hits")
+				for i := 0; i < itemsToAdd/2; i++ {
+					_, found := otterCache.Get(fmt.Sprintf("key%d", i))
+					Expect(found).To(BeTrue())
+				}
+
+				By("Performing cache misses")
+				for i := itemsToAdd; i < itemsToAdd+10; i++ {
+					otterCache.Get(fmt.Sprintf("key%d", i))
+				}
+
+				By("Verifying stats")
+				stats := otterCache.Stats()
+				Expect(stats.Hits()).To(Equal(int64(itemsToAdd / 2)))
+				Expect(stats.Misses()).To(Equal(int64(10)))
+			})
+		})
+
+		// NOT SUPPORTED: OnEvict callbacks per item (available in Ristretto)
+		// NOT SUPPORTED: Cost-based eviction (Otter v1 uses capacity-based only)
+
+		Context("Performance Benchmarks", FlakeAttempts(3), func() {
+			var benchCache otter.Cache[string, string]
+			const numOperations = 10000
+
+			BeforeEach(func() {
+				var err error
+				benchCache, err = otter.MustBuilder[string, string](numOperations).Build()
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				benchCache.Close()
+			})
+
+			It("should perform set operations efficiently", func() {
+				experiment := gmeasure.NewExperiment("Otter Set Operations")
+				AddReportEntry(experiment.Name, experiment)
+
+				experiment.SampleDuration("set", func(_ int) {
+					key := fmt.Sprintf("key-%d", GinkgoRandomSeed())
+					benchCache.Set(key, "value")
+				}, gmeasure.SamplingConfig{N: numOperations})
+
+				AddReportEntry("Otter Set Stats", experiment.GetStats("set"))
+				Expect(experiment.GetStats("set").DurationFor(gmeasure.StatMedian)).To(
+					BeNumerically("<", 1*time.Microsecond), "Median set should be less than 1µs")
+			})
+
+			It("should perform get operations efficiently", func() {
+				experiment := gmeasure.NewExperiment("Otter Get Operations")
+				AddReportEntry(experiment.Name, experiment)
+
+				for i := 0; i < numOperations; i++ {
+					benchCache.Set(fmt.Sprintf("key-%d", i), fmt.Sprintf("value-%d", i))
+				}
+
+				experiment.SampleDuration("get", func(_ int) {
+					key := fmt.Sprintf("key-%d", GinkgoRandomSeed()%numOperations)
+					benchCache.Get(key)
+				}, gmeasure.SamplingConfig{N: numOperations})
+
+				AddReportEntry("Otter Get Stats", experiment.GetStats("get"))
+				Expect(experiment.GetStats("get").DurationFor(gmeasure.StatMedian)).To(
+					BeNumerically("<", 1*time.Microsecond), "Median get should be less than 1µs")
+			})
+		})
+	})
+
+	Context("Sturdyc", func() {
+		var (
+			cacheClient *sturdyc.Client[string]
+		)
+
+		const (
+			testKey        = "testKey"
+			testValue      = "testValue"
+			updatedValue   = "updatedValue"
+			nonExistentKey = "nonExistentKey"
+			capacity       = 1000
+			numShards      = 10
+			ttl            = 5 * time.Second
+			evictionPct    = 10
+		)
+
+		BeforeEach(func() {
+			cacheClient = sturdyc.New[string](capacity, numShards, ttl, evictionPct)
+		})
+
+		It("should build", func() {
+			Expect(cacheClient).To(Not(BeNil()))
+		})
+
+		Context("Basic Operations", func() {
+			BeforeEach(func() {
+				cacheClient.Set(testKey, testValue)
+			})
+
+			It("should get a value", func() {
+				value, found := cacheClient.Get(testKey)
+				Expect(found).To(BeTrue())
+				Expect(value).To(Equal(testValue))
+			})
+
+			It("should update an existing key", func() {
+				By("Updating the existing key")
+				cacheClient.Set(testKey, updatedValue)
+
+				By("Verifying the updated value")
+				value, found := cacheClient.Get(testKey)
+				Expect(found).To(BeTrue())
+				Expect(value).To(Equal(updatedValue))
+			})
+
+			It("should handle cache miss", func() {
+				_, found := cacheClient.Get(nonExistentKey)
+				Expect(found).To(BeFalse())
+			})
+
+			It("should delete a value", func() {
+				cacheClient.Delete(testKey)
+				_, found := cacheClient.Get(testKey)
+				Expect(found).To(BeFalse())
+			})
+
+			It("should respect TTL expiration", func() {
+				By("Creating short TTL cache")
+				shortTTLCache := sturdyc.New[string](capacity, numShards, 100*time.Millisecond, evictionPct)
+				shortTTLCache.Set("ttlKey", "ttlValue")
+
+				By("Verifying the key exists immediately")
+				value, found := shortTTLCache.Get("ttlKey")
+				Expect(found).To(BeTrue())
+				Expect(value).To(Equal("ttlValue"))
+
+				By("Verifying the key is eventually removed")
+				Eventually(func() bool {
+					_, found := shortTTLCache.Get("ttlKey")
+					return found
+				}, "500ms", "10ms").Should(BeFalse())
+			})
+		})
+
+		Context("Bulk Operations", func() {
+			const itemsToAdd = 50
+
+			BeforeEach(func() {
+				By("Adding multiple items to the cache")
+				for i := 0; i < itemsToAdd; i++ {
+					cacheClient.Set(fmt.Sprintf("key%d", i), fmt.Sprintf("value%d", i))
+				}
+			})
+
+			It("should report correct size", func() {
+				Expect(cacheClient.Size()).To(Equal(itemsToAdd))
+			})
+
+			It("should evict items when cache is full", func() {
+				By("Creating small capacity cache")
+				smallCache := sturdyc.New[string](10, 2, ttl, 50)
+
+				By("Adding more items than capacity")
+				for i := 0; i < 20; i++ {
+					smallCache.Set(fmt.Sprintf("key%d", i), fmt.Sprintf("value%d", i))
+				}
+
+				By("Verifying cache size is bounded")
+				Expect(smallCache.Size()).To(BeNumerically("<=", 15))
+			})
+		})
+
+		Context("Advanced Features", func() {
+			Context("Sharding", func() {
+				It("should handle concurrent writes across shards", func() {
+					var wg sync.WaitGroup
+					const goroutines = 50
+					const opsPerGoroutine = 100
+					wg.Add(goroutines)
+
+					for i := 0; i < goroutines; i++ {
+						go func(id int) {
+							defer wg.Done()
+							for j := 0; j < opsPerGoroutine; j++ {
+								key := fmt.Sprintf("shard-%d-%d", id, j)
+								cacheClient.Set(key, fmt.Sprintf("value-%d-%d", id, j))
+							}
+						}(i)
+					}
+					wg.Wait()
+
+					By("Verifying cache is functional after concurrent writes")
+					cacheClient.Set("post-concurrent", "works")
+					value, found := cacheClient.Get("post-concurrent")
+					Expect(found).To(BeTrue())
+					Expect(value).To(Equal("works"))
+				})
+
+				It("should support non-blocking reads during writes", func() {
+					var wg sync.WaitGroup
+					wg.Add(2)
+
+					go func() {
+						defer wg.Done()
+						for i := 0; i < 1000; i++ {
+							cacheClient.Set(fmt.Sprintf("write-%d", i), "value")
+						}
+					}()
+
+					go func() {
+						defer wg.Done()
+						for i := 0; i < 1000; i++ {
+							cacheClient.Get(fmt.Sprintf("read-%d", i))
+						}
+					}()
+
+					wg.Wait()
+				})
+			})
+
+			Context("Stampede Protection", func() {
+				It("should coalesce concurrent fetches for the same key", func() {
+					By("Creating cache with stampede protection enabled")
+					stampCache := sturdyc.New[string](capacity, numShards, ttl, evictionPct)
+
+					var fetchCount atomic.Int32
+					fetchFn := func(_ context.Context) (string, error) {
+						fetchCount.Add(1)
+						time.Sleep(50 * time.Millisecond) // Simulate slow fetch
+						return "fetched-value", nil
+					}
+
+					By("Making concurrent requests for the same key")
+					var wg sync.WaitGroup
+					const concurrentRequests = 10
+					wg.Add(concurrentRequests)
+
+					for i := 0; i < concurrentRequests; i++ {
+						go func() {
+							defer wg.Done()
+							value, err := sturdyc.GetOrFetch(context.Background(), stampCache, "stampede-key", fetchFn)
+							Expect(err).ToNot(HaveOccurred())
+							Expect(value).To(Equal("fetched-value"))
+						}()
+					}
+					wg.Wait()
+
+					By("Verifying only one fetch was made (stampede protection)")
+					Expect(fetchCount.Load()).To(Equal(int32(1)))
+				})
+			})
+
+			Context("GetOrFetch", func() {
+				It("should fetch on cache miss", func() {
+					fetchFn := func(_ context.Context) (string, error) {
+						return "fetched-value", nil
+					}
+
+					value, err := sturdyc.GetOrFetch(context.Background(), cacheClient, "fetch-key", fetchFn)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(value).To(Equal("fetched-value"))
+
+					By("Verifying value is cached after fetch")
+					cached, found := cacheClient.Get("fetch-key")
+					Expect(found).To(BeTrue())
+					Expect(cached).To(Equal("fetched-value"))
+				})
+
+				It("should return cached value without fetching", func() {
+					cacheClient.Set("cached-key", "cached-value")
+
+					var fetchCalled bool
+					fetchFn := func(_ context.Context) (string, error) {
+						fetchCalled = true
+						return "new-value", nil
+					}
+
+					value, err := sturdyc.GetOrFetch(context.Background(), cacheClient, "cached-key", fetchFn)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(value).To(Equal("cached-value"))
+					Expect(fetchCalled).To(BeFalse())
+				})
+
+				It("should handle fetch errors", func() {
+					fetchFn := func(_ context.Context) (string, error) {
+						return "", fmt.Errorf("fetch failed")
+					}
+
+					_, err := sturdyc.GetOrFetch(context.Background(), cacheClient, "error-key", fetchFn)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("fetch failed"))
+				})
+			})
+		})
+
+		// NOT SUPPORTED vs Ristretto:
+		// - Direct cost-based eviction (capacity-based only)
+		// - OnEvict callbacks per item
+		// - Negative cost values
+
+		Context("Negative Scenarios", func() {
+			It("should handle empty keys", func() {
+				cacheClient.Set("", "empty-key-value")
+				value, found := cacheClient.Get("")
+				Expect(found).To(BeTrue())
+				Expect(value).To(Equal("empty-key-value"))
+			})
+
+			It("should handle zero TTL cache", func() {
+				zeroTTLCache := sturdyc.New[string](capacity, numShards, 0, evictionPct)
+				zeroTTLCache.Set("key", "value")
+				// Zero TTL means items expire immediately
+				_, found := zeroTTLCache.Get("key")
+				Expect(found).To(BeFalse())
+			})
+		})
+
+		Context("Performance Benchmarks", FlakeAttempts(3), func() {
+			const numOperations = 10000
+
+			It("should perform set/get operations efficiently", func() {
+				experiment := gmeasure.NewExperiment("Sturdyc Operations")
+				AddReportEntry(experiment.Name, experiment)
+
+				benchCache := sturdyc.New[string](numOperations, numShards, ttl, evictionPct)
+
+				experiment.SampleDuration("set", func(_ int) {
+					key := fmt.Sprintf("key-%d", GinkgoRandomSeed())
+					benchCache.Set(key, "value")
+				}, gmeasure.SamplingConfig{N: numOperations})
+
+				// Populate for get benchmark
+				for i := 0; i < numOperations; i++ {
+					benchCache.Set(fmt.Sprintf("key-%d", i), fmt.Sprintf("value-%d", i))
+				}
+
+				experiment.SampleDuration("get", func(_ int) {
+					key := fmt.Sprintf("key-%d", GinkgoRandomSeed()%numOperations)
+					benchCache.Get(key)
+				}, gmeasure.SamplingConfig{N: numOperations})
+
+				experiment.SampleDuration("delete", func(_ int) {
+					key := fmt.Sprintf("key-%d", GinkgoRandomSeed()%numOperations)
+					benchCache.Delete(key)
+				}, gmeasure.SamplingConfig{N: numOperations})
+
+				AddReportEntry("Sturdyc Set Stats", experiment.GetStats("set"))
+				AddReportEntry("Sturdyc Get Stats", experiment.GetStats("get"))
+				AddReportEntry("Sturdyc Delete Stats", experiment.GetStats("delete"))
+
+				Expect(experiment.GetStats("set").DurationFor(gmeasure.StatMedian)).To(
+					BeNumerically("<", 1*time.Microsecond), "Median set should be less than 1µs")
+				Expect(experiment.GetStats("get").DurationFor(gmeasure.StatMedian)).To(
+					BeNumerically("<", 1*time.Microsecond), "Median get should be less than 1µs")
+			})
+		})
 	})
 })
