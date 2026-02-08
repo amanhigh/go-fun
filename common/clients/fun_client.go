@@ -14,8 +14,9 @@ import (
 )
 
 type FunClient struct {
-	PersonService PersonServiceInterface
-	AdminService  AdminServiceInterface
+	PersonService     PersonServiceInterface
+	AdminService      AdminServiceInterface
+	EnrollmentService EnrollmentServiceInterface
 }
 
 type PersonServiceInterface interface {
@@ -25,6 +26,11 @@ type PersonServiceInterface interface {
 	ListPerson(ctx context.Context, query fun.PersonQuery) (personList fun.PersonList, err common.HttpError)
 	ListPersonAudit(ctx context.Context, id string) (personAuditList []fun.PersonAudit, err common.HttpError)
 	DeletePerson(ctx context.Context, name string) (err common.HttpError)
+}
+
+type EnrollmentServiceInterface interface {
+	CreateEnrollment(ctx context.Context, request fun.EnrollmentRequest) (enrollment fun.Enrollment, err common.HttpError)
+	GetEnrollment(ctx context.Context, personID string) (enrollment fun.Enrollment, err common.HttpError)
 }
 
 type AdminServiceInterface interface {
@@ -58,6 +64,10 @@ type PersonService struct {
 	BaseService
 }
 
+type EnrollmentService struct {
+	BaseService
+}
+
 type AdminService struct {
 	BaseService
 }
@@ -81,8 +91,9 @@ func NewFunAppClient(baseUrl string, httpConfig config.HttpClientConfig) *FunCli
 	baseService := BaseService{client: client, VersionUrl: "/v1"}
 
 	return &FunClient{
-		PersonService: &PersonService{BaseService: baseService},
-		AdminService:  &AdminService{BaseService: baseService},
+		PersonService:     &PersonService{BaseService: baseService},
+		AdminService:      &AdminService{BaseService: baseService},
+		EnrollmentService: &EnrollmentService{BaseService: baseService},
 	}
 }
 
@@ -121,6 +132,19 @@ func (c *PersonService) UpdatePerson(ctx context.Context, id string, person fun.
 func (c *PersonService) DeletePerson(ctx context.Context, name string) (err common.HttpError) {
 	response, err1 := c.request(ctx).Delete(fmt.Sprintf(c.VersionUrl+"/person/%s", name))
 	err = util.ResponseProcessor(response, err1)
+	return
+}
+
+func (e *EnrollmentService) CreateEnrollment(ctx context.Context, request fun.EnrollmentRequest) (enrollment fun.Enrollment, err common.HttpError) {
+	res, err1 := e.request(ctx).SetHeader("Content-Type", "application/json").
+		SetBody(request).SetResult(&enrollment).Post(e.VersionUrl + "/enrollments")
+	err = util.ResponseProcessor(res, err1)
+	return
+}
+
+func (e *EnrollmentService) GetEnrollment(ctx context.Context, personID string) (enrollment fun.Enrollment, err common.HttpError) {
+	res, err1 := e.request(ctx).SetResult(&enrollment).Get(fmt.Sprintf(e.VersionUrl+"/enrollments/%s", personID))
+	err = util.ResponseProcessor(res, err1)
 	return
 }
 

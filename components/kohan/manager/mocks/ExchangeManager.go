@@ -156,3 +156,62 @@ func (_c *ExchangeManager_ExchangeGains_Call) RunAndReturn(run func(ctx context.
 	_c.Call.Return(run)
 	return _c
 }
+
+// ExchangeWithPrecedingMonth provides a mock function for the type ExchangeManager
+func (_mock *ExchangeManager) ExchangeWithPrecedingMonth(ctx context.Context, exchangeables []tax.Exchangeable) common.HttpError {
+	ret := _mock.Called(ctx, exchangeables)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ExchangeWithPrecedingMonth")
+	}
+
+	var r0 common.HttpError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []tax.Exchangeable) common.HttpError); ok {
+		r0 = returnFunc(ctx, exchangeables)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(common.HttpError)
+		}
+	}
+	return r0
+}
+
+// ExchangeManager_ExchangeWithPrecedingMonth_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ExchangeWithPrecedingMonth'
+type ExchangeManager_ExchangeWithPrecedingMonth_Call struct {
+	*mock.Call
+}
+
+// ExchangeWithPrecedingMonth is a helper method to define mock.On call
+//   - ctx context.Context
+//   - exchangeables []tax.Exchangeable
+func (_e *ExchangeManager_Expecter) ExchangeWithPrecedingMonth(ctx interface{}, exchangeables interface{}) *ExchangeManager_ExchangeWithPrecedingMonth_Call {
+	return &ExchangeManager_ExchangeWithPrecedingMonth_Call{Call: _e.mock.On("ExchangeWithPrecedingMonth", ctx, exchangeables)}
+}
+
+func (_c *ExchangeManager_ExchangeWithPrecedingMonth_Call) Run(run func(ctx context.Context, exchangeables []tax.Exchangeable)) *ExchangeManager_ExchangeWithPrecedingMonth_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []tax.Exchangeable
+		if args[1] != nil {
+			arg1 = args[1].([]tax.Exchangeable)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *ExchangeManager_ExchangeWithPrecedingMonth_Call) Return(httpError common.HttpError) *ExchangeManager_ExchangeWithPrecedingMonth_Call {
+	_c.Call.Return(httpError)
+	return _c
+}
+
+func (_c *ExchangeManager_ExchangeWithPrecedingMonth_Call) RunAndReturn(run func(ctx context.Context, exchangeables []tax.Exchangeable) common.HttpError) *ExchangeManager_ExchangeWithPrecedingMonth_Call {
+	_c.Call.Return(run)
+	return _c
+}

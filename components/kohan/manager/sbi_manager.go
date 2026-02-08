@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -15,14 +16,21 @@ import (
 
 type SBIManager interface {
 	DownloadRates(ctx context.Context) common.HttpError
-	// TODO: Get Last TT Buy Rate for month.
 	GetTTBuyRate(ctx context.Context, date time.Time) (float64, common.HttpError)
+	// GetLastMonthEndRate returns the last available TT Buy rate for the month preceding the given date.
+	// It precomputes and caches all month-end rates on first call for performance.
+	GetLastMonthEndRate(ctx context.Context, date time.Time) (tax.MonthEndRate, common.HttpError)
+	// GetDailyRates returns all available SBI TT Buy rates for a given year
+	// as a map with date format "YYYY-MM-DD" as key and rate as value.
+	// Used for daily peak INR value evaluation during valuation calculations.
+	GetDailyRates(ctx context.Context, year int) (map[string]float64, common.HttpError)
 }
 
 type SBIManagerImpl struct {
-	client       clients.SBIClient
-	filePath     string
-	exchangeRepo repository.ExchangeRepository
+	client        clients.SBIClient
+	filePath      string
+	exchangeRepo  repository.ExchangeRepository
+	monthEndCache map[string]tax.MonthEndRate
 }
 
 func NewSBIManager(client clients.SBIClient, filePath string, exchangeRepo repository.ExchangeRepository) *SBIManagerImpl {
@@ -86,7 +94,7 @@ func (s *SBIManagerImpl) findClosestRate(rates []tax.SbiRate, requestedDate time
 			return 0, dateErr
 		}
 		rateDateStr := rateDate.Format(time.DateOnly)
-		if rateDateStr <= dateStr && (closestDate.IsZero() || rateDate.After(closestDate)) {
+		if rateDateStr <= dateStr && rate.TTBuy > 0 && (closestDate.IsZero() || rateDate.After(closestDate)) {
 			closestDate = rateDate
 			closestRate = rate.TTBuy
 		}
@@ -97,6 +105,88 @@ func (s *SBIManagerImpl) findClosestRate(rates []tax.SbiRate, requestedDate time
 	}
 
 	return 0, tax.NewRateNotFoundError(requestedDate)
+}
+
+// GetLastMonthEndRate returns the last available TT Buy rate for the month
+// immediately preceding the month of the given date.
+//
+// On first call, it precomputes and caches all month-end rates for performance.
+// The cache is immutable after initialization, so no mutex is needed.
+//
+// Example: date=2024-02-20 → returns last rate from Jan 2024
+func (s *SBIManagerImpl) GetLastMonthEndRate(ctx context.Context, date time.Time) (tax.MonthEndRate, common.HttpError) {
+	if s.monthEndCache == nil {
+		if err := s.buildMonthEndCache(ctx); err != nil {
+			return tax.MonthEndRate{}, err
+		}
+	}
+
+	// Calculate preceding month
+	precedingMonth := getPrecedingMonth(date)
+	cacheKey := fmt.Sprintf("%d-%02d", precedingMonth.Year(), precedingMonth.Month())
+
+	// Lookup in cache (no lock needed - immutable)
+	if cached, found := s.monthEndCache[cacheKey]; found {
+		log.Debug().
+			Time("InputDate", date).
+			Time("PrecedingMonth", precedingMonth).
+			Float64("Rate", cached.Rate).
+			Time("ActualDate", cached.ActualDate).
+			Msg("SBIManager: Month-end rate from cache")
+		return cached, nil
+	}
+
+	return tax.MonthEndRate{}, tax.NewRateNotFoundError(precedingMonth)
+}
+
+// getPrecedingMonth calculates the first day of the month immediately preceding the given date's month
+func getPrecedingMonth(date time.Time) time.Time {
+	firstOfMonth := time.Date(date.Year(), date.Month(), 1, 0, 0, 0, 0, date.Location())
+	return firstOfMonth.AddDate(0, -1, 0)
+}
+
+// buildMonthEndCache precomputes all month-end rates by grouping rates by month
+// and keeping the latest date in each month
+func (s *SBIManagerImpl) buildMonthEndCache(ctx context.Context) common.HttpError {
+	rates, repoErr := s.exchangeRepo.GetAllRecords(ctx)
+	if repoErr != nil {
+		return common.NewServerError(repoErr)
+	}
+
+	if len(rates) == 0 {
+		log.Warn().Msg("SBIManager: No rates available to build cache")
+		s.monthEndCache = make(map[string]tax.MonthEndRate)
+		return nil
+	}
+
+	monthMap := make(map[string]tax.MonthEndRate)
+
+	for _, rate := range rates {
+		rateDate, dateErr := rate.GetDate()
+		if dateErr != nil {
+			return dateErr
+		}
+
+		monthKey := fmt.Sprintf("%d-%02d", rateDate.Year(), rateDate.Month())
+
+		// Keep the latest date in each month with valid TTBuy rate (skip zero rates)
+		if rate.TTBuy > 0 {
+			if existing, found := monthMap[monthKey]; !found || rateDate.After(existing.ActualDate) {
+				monthMap[monthKey] = tax.MonthEndRate{
+					Rate:       rate.TTBuy,
+					ActualDate: rateDate,
+				}
+			}
+		}
+	}
+
+	s.monthEndCache = monthMap
+
+	log.Info().
+		Int("MonthsLoaded", len(monthMap)).
+		Msg("SBIManager: Precomputed and cached all month-end rates")
+
+	return nil
 }
 
 func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpError) {
@@ -118,4 +208,41 @@ func (s *SBIManagerImpl) DownloadRates(ctx context.Context) (err common.HttpErro
 	}
 
 	return nil
+}
+
+// GetDailyRates returns all available SBI TT Buy rates for a given year
+// as a map with date format "YYYY-MM-DD" as key and rate as value.
+// Used for daily peak INR value evaluation during valuation calculations.
+func (s *SBIManagerImpl) GetDailyRates(ctx context.Context, year int) (map[string]float64, common.HttpError) {
+	// Get all exchange rates from the repository
+	allRates, repoErr := s.exchangeRepo.GetAllRecords(ctx)
+	if repoErr != nil {
+		return nil, common.NewServerError(repoErr)
+	}
+
+	if len(allRates) == 0 {
+		return nil, tax.NewRateNotFoundError(time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC))
+	}
+
+	yearRates := make(map[string]float64)
+
+	// Filter rates for the specified year
+	for _, rate := range allRates {
+		parsedDate, dateErr := rate.GetDate()
+		if dateErr != nil {
+			// Skip rates with invalid dates
+			continue
+		}
+
+		if parsedDate.Year() == year && rate.TTBuy > 0 {
+			dateStr := parsedDate.Format(time.DateOnly)
+			yearRates[dateStr] = rate.TTBuy
+		}
+	}
+
+	if len(yearRates) == 0 {
+		return nil, tax.NewRateNotFoundError(time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC))
+	}
+
+	return yearRates, nil
 }

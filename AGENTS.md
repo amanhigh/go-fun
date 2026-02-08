@@ -7,6 +7,7 @@ This file contains guidelines for coding, testing, and examples on coding style 
 ### Interfaces and Implementations
 - Include constructor for each class in the same file with interface and class.
   - Example: FileManager (Interface), FileManagerImpl (Class), NewFileManager (*FileManagerImpl) (Constructor) - Return Pointer
+  - Add `var _ InterfaceName = (*Impl)(nil)` compile-time assertions after constructors to guarantee interface compliance.
 
 ### Parameters and Dependencies
 - Parameters to New (Constructor) and Provider (Injector) methods should be interfaces, not pointers.
@@ -31,6 +32,11 @@ This file contains guidelines for coding, testing, and examples on coding style 
 - See `common/util/` directory for various utility functions like `UnwrapRequest` in `http.go`, error processing in `error.go`, and test helpers in `test.go`
 - Avoid using the same variable name as imports to prevent conflicts. Example: Avoid tax variable if tax.CapitalGain is imported (see `models/tax/gains.go` for Gains struct definition)
 
+### Architectural Constraints
+1. Flow must always follow Handler → Manager → Publisher. Handlers must never publish directly.
+2. Managers must only communicate with their own publisher; cross-domain messages must use Manager-to-Manager calls.
+3. No layer may bypass an intermediate layer (e.g., Handler cannot call Publisher directly, Manager cannot call another Manager's Publisher).
+
 ## Testing
 
 ### Test Structure
@@ -40,6 +46,8 @@ This file contains guidelines for coding, testing, and examples on coding style 
 
 ### Test Data Management
 - For test data, keep test data closest to It (test blocks) in BeforeEach blocks for each Context to enhance readability and localization. Common setup should be in higher-level BeforeEach.
+- All data preparation and operations must be in BeforeEach blocks. It blocks should only contain assertions.
+- Declare result variables at Context level, populate them in BeforeEach, and assert in It blocks
 
 ### Test Assertions
 - Use `Expect(value).To(Equal(expected))` for exact value comparisons instead of `BeNumerically("~", expected)` wherever possible
@@ -55,6 +63,7 @@ This file contains guidelines for coding, testing, and examples on coding style 
 - **Use `make generate` to generate mocks** - do not run `go generate` directly to ensure consistency across all modules
 - Don't use gomock; use the testify mock package where required. Example: mock.Anything (see `components/kohan/manager/capital_gain_manager_test.go` for usage examples)
 - See `components/kohan/clients/mocks/SBIClient.go` for generated mock example
+- Do not set `GOCACHE` or `GOMODCACHE` inside this repository, scripts, or committed configs.
 
 ## Examples
 
@@ -99,6 +108,7 @@ type FileContent struct {
 - See `components/learn/frameworks/play/zoo_test.go` for real Zookeeper testing with Context nesting
 - See `components/kohan/manager/capital_gain_manager_test.go` for manager testing patterns
 - See `components/kohan/clients/sbi_client_test.go` for client testing with testcontainers
+- See `components/kohan/manager/interactive_brokers_manager_test.go` for proper BeforeEach/It separation
 ```go
 // Test Example showing nesting pattern
 func TestFileManager(t *testing.T) {
@@ -128,7 +138,7 @@ func TestFileManager(t *testing.T) {
         })
 
         It("should write file successfully", func() {
-            // Verify write
+            // Only assertions
         })
 
         Context("Read After Write", func() {

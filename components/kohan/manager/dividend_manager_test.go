@@ -53,7 +53,7 @@ var _ = Describe("DividendManager", func() {
 			}
 
 			mockExchangeManager.EXPECT().
-				Exchange(ctx, mock.Anything).
+				ExchangeWithPrecedingMonth(ctx, mock.Anything).
 				Return(nil)
 		})
 
@@ -85,7 +85,7 @@ var _ = Describe("DividendManager", func() {
 			}}
 
 			mockExchangeManager.EXPECT().
-				Exchange(ctx, mock.Anything).
+				ExchangeWithPrecedingMonth(ctx, mock.Anything).
 				Return(common.ErrNotFound)
 		})
 
@@ -119,9 +119,8 @@ var _ = Describe("DividendManager", func() {
 				},
 			}
 
-			// Verify that exchangeables passed contain correct dividend amounts
 			mockExchangeManager.EXPECT().
-				Exchange(ctx, mock.AnythingOfType("[]tax.Exchangeable")).
+				ExchangeWithPrecedingMonth(ctx, mock.AnythingOfType("[]tax.Exchangeable")).
 				Run(func(_ context.Context, exchangeables []tax.Exchangeable) {
 					Expect(exchangeables).To(HaveLen(2))
 					Expect(exchangeables[0].GetUSDAmount()).To(Equal(100.00))
@@ -143,6 +142,64 @@ var _ = Describe("DividendManager", func() {
 			// Verify second dividend
 			Expect(inrDividends[1].Symbol).To(Equal("MSFT"))
 			Expect(inrDividends[1].Amount).To(Equal(200.00))
+		})
+	})
+
+	Context("GetDividendsForUSYear", func() {
+		var (
+			allDividends      []tax.Dividend
+			filteredDividends []tax.Dividend
+			year              int
+		)
+
+		BeforeEach(func() {
+			year = 2022
+			allDividends = []tax.Dividend{
+				{Symbol: "IEF", Date: "2021-12-15", Amount: 50.00},  // Before 2022
+				{Symbol: "IEF", Date: "2022-01-15", Amount: 100.00}, // In 2022
+				{Symbol: "IVV", Date: "2022-06-20", Amount: 150.00}, // In 2022
+				{Symbol: "TLT", Date: "2022-12-31", Amount: 200.00}, // In 2022
+				{Symbol: "VGK", Date: "2023-01-05", Amount: 75.00},  // After 2022
+			}
+
+			filteredDividends = []tax.Dividend{
+				{Symbol: "IEF", Date: "2022-01-15", Amount: 100.00},
+				{Symbol: "IVV", Date: "2022-06-20", Amount: 150.00},
+				{Symbol: "TLT", Date: "2022-12-31", Amount: 200.00},
+			}
+
+			mockDividendRepository.EXPECT().
+				GetAllRecords(ctx).
+				Return(allDividends, nil)
+
+			mockFinancialYearManager.EXPECT().
+				FilterUS(ctx, allDividends, year).
+				Return(filteredDividends, nil)
+		})
+
+		It("should filter dividends by US calendar year", func() {
+			result, err := dividendManager.GetDividendsForUSYear(ctx, year)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(result).To(HaveLen(3))
+			Expect(result[0].Symbol).To(Equal("IEF"))
+			Expect(result[0].Date).To(Equal("2022-01-15"))
+			Expect(result[1].Symbol).To(Equal("IVV"))
+			Expect(result[2].Symbol).To(Equal("TLT"))
+		})
+
+		Context("when repository fails", func() {
+			It("should return error", func() {
+				mockDividendRepository.ExpectedCalls = nil
+				mockFinancialYearManager.ExpectedCalls = nil
+
+				mockDividendRepository.EXPECT().
+					GetAllRecords(ctx).
+					Return(nil, common.ErrNotFound)
+
+				_, err := dividendManager.GetDividendsForUSYear(ctx, year)
+				Expect(err).To(Equal(common.ErrNotFound))
+			})
 		})
 	})
 })

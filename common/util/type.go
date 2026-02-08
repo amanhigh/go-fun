@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -10,6 +11,8 @@ import (
 )
 
 type CancelFunc func() (err error)
+
+const decimalBase = 10 // Base for decimal place calculations
 
 func IsInt(value string) (err error) {
 	if _, err = strconv.Atoi(value); err != nil {
@@ -52,4 +55,11 @@ func ParseFloat(value string) (result float64) {
 	}
 
 	return
+}
+
+// RoundToDecimals rounds a float64 value to specified decimal places
+// For example: RoundToDecimals(0.3899999999999999, 2) returns 0.39
+func RoundToDecimals(value float64, decimals int) float64 {
+	multiplier := math.Pow(decimalBase, float64(decimals))
+	return math.Round(value*multiplier) / multiplier
 }

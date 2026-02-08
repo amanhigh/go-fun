@@ -8,7 +8,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/amanhigh/go-fun/components/kohan/repository"
+	repository "github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 	"github.com/samber/lo"
@@ -27,6 +27,7 @@ type ValuationManagerImpl struct {
 	accountManager  AccountManager
 	tradeRepository repository.TradeRepository
 	fyManager       FinancialYearManager[tax.Trade]
+	sbiManager      SBIManager
 }
 
 func NewValuationManager(
@@ -34,12 +35,14 @@ func NewValuationManager(
 	accountManager AccountManager,
 	tradeRepository repository.TradeRepository,
 	fyManager FinancialYearManager[tax.Trade],
+	sbiManager SBIManager,
 ) ValuationManager {
 	return &ValuationManagerImpl{
 		tickerManager:   tickerManager,
 		accountManager:  accountManager,
 		tradeRepository: tradeRepository,
 		fyManager:       fyManager,
+		sbiManager:      sbiManager,
 	}
 }
 
@@ -54,14 +57,29 @@ func (v *ValuationManagerImpl) GetYearlyValuationsUSD(ctx context.Context, year 
 	if filterErr != nil {
 		return nil, filterErr
 	}
-	if len(yearTrades) == 0 {
-		return []tax.Valuation{}, common.NewHttpError(fmt.Sprintf("no trades found for year %d", year), http.StatusNotFound)
-	}
 
 	// Group filtered trades by Ticker Symbol
 	tradesByTicker := lo.GroupBy(yearTrades, func(trade tax.Trade) string {
 		return trade.Symbol
 	})
+
+	// TDD FIX: Get all tickers with carry-over positions from previous year
+	// This ensures tickers without trades in target year are still included
+	prevYearAccounts, accErr := v.accountManager.GetAllRecords(ctx, year-1)
+	if accErr != nil && !errors.Is(accErr, common.ErrNotFound) {
+		return nil, accErr
+	}
+
+	// Add carry-over tickers that don't have trades in target year
+	for _, account := range prevYearAccounts {
+		if account.Quantity > 0 && tradesByTicker[account.Symbol] == nil {
+			tradesByTicker[account.Symbol] = []tax.Trade{} // Empty trades, will use carry-over position
+		}
+	}
+
+	if len(tradesByTicker) == 0 {
+		return []tax.Valuation{}, common.NewHttpError(fmt.Sprintf("no trades or carry-over positions found for year %d", year), http.StatusNotFound)
+	}
 
 	// Process trades for all tickers using the helper function
 	valuations, err = v.processTradesByTicker(ctx, tradesByTicker, year)
@@ -85,25 +103,15 @@ func (v *ValuationManagerImpl) processTradesByTicker(ctx context.Context, trades
 		tickerTrades := tradesByTicker[ticker]
 
 		// Process trades for the current ticker (trades are assumed sorted by FilterUS)
-		valuation, processErr := v.processTickerTrades(ctx, ticker, tickerTrades, year)
-		if processErr != nil {
+		valuation, analyzeErr := v.AnalyzeValuation(ctx, ticker, tickerTrades, year)
+		if analyzeErr != nil {
 			// Fail fast: return immediately upon the first analysis error
-			return nil, processErr
+			return nil, analyzeErr
 		}
 
 		valuations = append(valuations, valuation)
 	}
 	return valuations, nil
-}
-
-// processTickerTrades analyzes the valuation for a single ticker's sorted trades.
-func (v *ValuationManagerImpl) processTickerTrades(ctx context.Context, tickerSymbol string, sortedTrades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
-	// Call AnalyzeValuation with the known tickerSymbol
-	valuation, analyzeErr := v.AnalyzeValuation(ctx, tickerSymbol, sortedTrades, year)
-	if analyzeErr != nil {
-		return tax.Valuation{}, analyzeErr
-	}
-	return valuation, nil
 }
 
 // AnalyzeValuation calculates valuation based on trades and opening position for a given ticker.
@@ -131,11 +139,22 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 	analysis.FirstPosition = openingPosition
 	analysis.PeakPosition = openingPosition
 
+	// Step 4: Calculate daily peak value (Tax.md Line 124 compliance - MANDATORY)
+	// Daily peak calculation is the authoritative method for determining peak INR value
+	peakPosition, peakErr := v.calculateDailyPeak(ctx, tickerSymbol, year, openingPosition, trades)
+	if peakErr != nil {
+		return tax.Valuation{}, common.NewServerError(
+			fmt.Errorf("failed to calculate daily peak for %s: %w", tickerSymbol, peakErr))
+	}
+	analysis.PeakPosition = peakPosition
+
+	// Step 5: Determine current quantity at year end
 	currentQuantity, processErr := v.processTrades(&analysis, trades, openingPosition)
 	if processErr != nil {
 		return tax.Valuation{}, processErr
 	}
 
+	// Step 6: Determine year end position
 	if detErr := v.determineYearEndPosition(ctx, &analysis, year, currentQuantity); detErr != nil {
 		return tax.Valuation{}, detErr
 	}
@@ -150,14 +169,13 @@ func (v *ValuationManagerImpl) processTrades(
 	trades []tax.Trade,
 	openingPeriodPosition tax.Position,
 ) (currentQuantity float64, err common.HttpError) {
-	if openingPeriodPosition.Quantity == 0 && len(trades) > 0 && trades[0].Type == "SELL" {
+	// Use GetType() for normalized type comparison
+	if openingPeriodPosition.Quantity == 0 && len(trades) > 0 && trades[0].GetType() == tax.TRADE_TYPE_SELL {
 		return 0, common.NewHttpError(fmt.Sprintf("first trade can't be sell on fresh start for %s", analysis.Ticker), http.StatusBadRequest)
 	}
 
 	currentQuantity = openingPeriodPosition.Quantity
-	if openingPeriodPosition.Quantity > 0 {
-		analysis.PeakPosition = openingPeriodPosition
-	}
+	// Peak will be calculated by calculateDailyPeak() using INR values
 
 	for i, trade := range trades {
 		if i == 0 && openingPeriodPosition.Quantity == 0 {
@@ -168,10 +186,7 @@ func (v *ValuationManagerImpl) processTrades(
 			continue
 		}
 
-		currentQuantity, err = v.applyTrade(analysis, trade, currentQuantity)
-		if err != nil {
-			return 0, err
-		}
+		currentQuantity = v.applyTrade(trade, currentQuantity)
 	}
 	return currentQuantity, nil
 }
@@ -183,38 +198,26 @@ func (v *ValuationManagerImpl) handleFirstTrade(analysis *tax.Valuation, trade t
 		return 0, dateErr
 	}
 
-	if trade.Type == "BUY" {
+	// Use GetType() for normalized type comparison with constants
+	// Real data has "Buy"/"Sell" from DriveWealth, GetType() normalizes to uppercase
+	if trade.GetType() == tax.TRADE_TYPE_BUY {
 		analysis.FirstPosition = tax.Position{
 			Date:     tradeDate,
 			Quantity: trade.Quantity,
 			USDPrice: trade.USDPrice,
 		}
-		analysis.PeakPosition = analysis.FirstPosition // Initial peak is the first buy
+		// Peak will be calculated by calculateDailyPeak() using INR values
 		return trade.Quantity, nil
 	}
 	return 0, nil // Should not happen due to initial check in processTrades
 }
 
 // applyTrade processes subsequent trades or trades in a carry-over scenario.
-func (v *ValuationManagerImpl) applyTrade(analysis *tax.Valuation, trade tax.Trade, currentQuantity float64) (float64, common.HttpError) {
-	tradeDate, dateErr := trade.GetDate()
-	if dateErr != nil {
-		return 0, dateErr
+func (v *ValuationManagerImpl) applyTrade(trade tax.Trade, currentQuantity float64) float64 {
+	if trade.GetType() == tax.TRADE_TYPE_BUY {
+		return currentQuantity + trade.Quantity
 	}
-
-	if trade.Type == "BUY" {
-		currentQuantity += trade.Quantity
-		if currentQuantity > analysis.PeakPosition.Quantity {
-			analysis.PeakPosition = tax.Position{
-				Date:     tradeDate,
-				Quantity: currentQuantity,
-				USDPrice: trade.USDPrice,
-			}
-		}
-	} else { // SELL
-		currentQuantity -= trade.Quantity
-	}
-	return currentQuantity, nil
+	return currentQuantity - trade.Quantity
 }
 
 // determineYearEndPosition sets the YearEndPosition in the analysis.
@@ -277,18 +280,148 @@ func (v *ValuationManagerImpl) getOpeningPositionForPeriod(ctx context.Context, 
 	}
 
 	// Account record found (carry-over scenario)
-	// Opening position date should be Dec 31st of previous year for carry-over positions
-	openingDate := time.Date(year-1, 12, 31, 0, 0, 0, 0, time.UTC)
-	var openingPrice float64
-	if account.Quantity > 0 { // Avoid division by zero
-		openingPrice = account.MarketValue / account.Quantity
-	} else {
-		openingPrice = 0 // If prior year quantity was zero, opening price is zero
+	// Reconstruct FirstPosition from Account metadata (original acquisition date/price)
+	// OriginDate MUST be present for carry-over accounts - it's required for tax reporting
+	originDate, parseErr := time.Parse(time.DateOnly, account.OriginDate)
+	if parseErr != nil {
+		return tax.Position{}, tax.NewInvalidDateError(fmt.Sprintf("failed to parse OriginDate '%s' for carry-over account %s: %v", account.OriginDate, ticker, parseErr))
 	}
 
 	return tax.Position{
-		Date:     openingDate,
-		Quantity: account.Quantity,
-		USDPrice: openingPrice,
+		Date:     originDate,
+		Quantity: account.OriginQty,
+		USDPrice: account.OriginPrice,
 	}, nil
+}
+
+// calculateDailyPeak evaluates (Quantity × Market_Price × SBI_Rate) for every day in the year
+// to find the true INR peak value during the calendar year.
+// This ensures compliance with Tax.md Line 124 requirement for daily evaluation.
+func (v *ValuationManagerImpl) calculateDailyPeak(
+	ctx context.Context,
+	ticker string,
+	year int,
+	openingPosition tax.Position,
+	trades []tax.Trade,
+) (peakPosition tax.Position, err common.HttpError) {
+	// Step 1: Build daily quantity timeline by processing trades chronologically
+	quantityByDate := v.buildDailyQuantityTimeline(year, openingPosition, trades)
+	if len(quantityByDate) == 0 {
+		// No holdings during the year
+		return tax.Position{}, nil
+	}
+
+	// Step 2: Get daily market prices for the ticker
+	dailyPrices, priceErr := v.tickerManager.GetDailyPrices(ctx, ticker, year)
+	if priceErr != nil {
+		return tax.Position{}, priceErr
+	}
+
+	// Step 3: Get daily SBI TT Buy rates for the year
+	dailyRates, rateErr := v.sbiManager.GetDailyRates(ctx, year)
+	if rateErr != nil {
+		return tax.Position{}, rateErr
+	}
+
+	// Step 4: Find the date with maximum INR value by iterating through each day
+	return v.findPeakByIteratingYear(year, openingPosition, quantityByDate, dailyPrices, dailyRates), nil
+}
+
+// findPeakByIteratingYear finds maximum INR value (Qty × Price × Rate) across the year (Tax.md Line 124).
+func (v *ValuationManagerImpl) findPeakByIteratingYear(
+	year int,
+	openingPosition tax.Position,
+	quantityByDate map[string]float64,
+	dailyPrices map[string]float64,
+	dailyRates map[string]float64,
+) tax.Position {
+	peakPos := openingPosition
+	maxINRValue := 0.0
+	startDate := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+	endDate := time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
+
+	for currDate := startDate; !currDate.After(endDate); currDate = currDate.AddDate(0, 0, 1) {
+		dateStr := currDate.Format(time.DateOnly)
+		quantity := v.getClosestValue(quantityByDate, dateStr)
+		if quantity == 0 {
+			continue
+		}
+		price := v.getClosestValue(dailyPrices, dateStr)
+		if price == 0 {
+			continue
+		}
+		rate := v.getClosestValue(dailyRates, dateStr)
+		if rate == 0 {
+			continue
+		}
+
+		inrValue := quantity * price * rate
+		if inrValue > maxINRValue {
+			maxINRValue = inrValue
+			peakPos = tax.Position{Date: currDate, Quantity: quantity, USDPrice: price}
+		}
+	}
+	return peakPos
+}
+
+// buildDailyQuantityTimeline creates a map of date → quantity held by processing trades
+func (v *ValuationManagerImpl) buildDailyQuantityTimeline(
+	year int,
+	openingPosition tax.Position,
+	trades []tax.Trade,
+) map[string]float64 {
+	timeline := make(map[string]float64)
+	currentQuantity := openingPosition.Quantity
+
+	// Initialize the year with opening quantity
+	startDate := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+	timeline[startDate.Format(time.DateOnly)] = currentQuantity
+
+	// Process each trade chronologically
+	for _, trade := range trades {
+		tradeDate, dateErr := trade.GetDate()
+		if dateErr != nil {
+			continue // Skip trades with invalid dates
+		}
+
+		if tradeDate.Year() != year {
+			continue // Skip trades outside the target year
+		}
+
+		// Update quantity based on trade type
+		if trade.GetType() == tax.TRADE_TYPE_BUY {
+			currentQuantity += trade.Quantity
+		} else { // SELL
+			currentQuantity -= trade.Quantity
+		}
+
+		timeline[tradeDate.Format(time.DateOnly)] = currentQuantity
+	}
+
+	return timeline
+}
+
+// getClosestValue finds the nearest previous value for a given date using backfill logic.
+// If the exact date exists in the map, it returns that value immediately.
+// Otherwise, it searches for the closest previous date with available data.
+// Returns 0 if no previous data is found.
+func (v *ValuationManagerImpl) getClosestValue(dataMap map[string]float64, dateStr string) float64 {
+	if value, exists := dataMap[dateStr]; exists {
+		return value
+	}
+
+	// Backfill: find the closest previous date's value
+	parsedDate, _ := time.Parse(time.DateOnly, dateStr)
+	var closestValue float64
+	var closestDate time.Time
+
+	for dateKey, value := range dataMap {
+		keyDate, _ := time.Parse(time.DateOnly, dateKey)
+		if !keyDate.After(parsedDate) && (closestDate.IsZero() || keyDate.After(closestDate)) {
+			closestValue = value
+			closestDate = keyDate
+		}
+	}
+
+	return closestValue
 }

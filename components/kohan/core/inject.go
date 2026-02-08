@@ -23,7 +23,7 @@ type KohanInterface interface {
 	GetDariusApp(cfg config.DariusConfig) (*DariusV1, error)
 	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
 	GetTaxManager() (manager.TaxManager, error)
-	GetDriveWealthManager() (manager.DriveWealthManager, error)
+	GetBrokerageManager() (manager.BrokerageManager, error)
 }
 
 // Private singleton instance
@@ -64,16 +64,15 @@ func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
 	return taxManager, nil
 }
 
-func (ki *KohanInjector) GetDriveWealthManager() (manager.DriveWealthManager, error) {
+func (ki *KohanInjector) GetBrokerageManager() (manager.BrokerageManager, error) {
 	ki.registerTaxDependencies()
 
-	// Resolve and return DriveWealthManager
-	var driveWealthManager manager.DriveWealthManager
-	err := ki.di.Resolve(&driveWealthManager)
+	var brokerageManager manager.BrokerageManager
+	err := ki.di.Resolve(&brokerageManager)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve drive wealth manager: %w", err)
+		return nil, fmt.Errorf("failed to resolve brokerage manager: %w", err)
 	}
-	return driveWealthManager, nil
+	return brokerageManager, nil
 }
 
 func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error) {
@@ -90,7 +89,7 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 
 // ---- Client Providers ----
 func (ki *KohanInjector) provideYahooClient(client *resty.Client) clients.StockDataClient {
-	return clients.NewYahooClient(client, ki.config.Tax.YahooBaseURL)
+	return clients.NewYahooClient(client, ki.config.Tax.YahooBaseURL, ki.config.Tax.TickerDataStartYear)
 }
 
 func (ki *KohanInjector) provideSBIClient(client *resty.Client) clients.SBIClient {
@@ -152,8 +151,9 @@ func (ki *KohanInjector) provideValuationManager(
 	accountManager manager.AccountManager,
 	tradeRepository repository.TradeRepository,
 	fyManager manager.FinancialYearManager[taxmodels.Trade],
+	sbiManager manager.SBIManager,
 ) manager.ValuationManager {
-	return manager.NewValuationManager(tickerManager, accountManager, tradeRepository, fyManager)
+	return manager.NewValuationManager(tickerManager, accountManager, tradeRepository, fyManager, sbiManager)
 }
 
 func (ki *KohanInjector) provideTaxValuationManager(
@@ -212,8 +212,26 @@ func (ki *KohanInjector) provideGainsComputationManager() manager.GainsComputati
 	return manager.NewGainsComputationManager()
 }
 
-func (ki *KohanInjector) provideDriveWealthManager(gainsManager manager.GainsComputationManager) manager.DriveWealthManager {
-	return manager.NewDriveWealthManager(ki.config.Tax, gainsManager)
+func (ki *KohanInjector) provideBrokerageManager() manager.BrokerageManager {
+	brokerageManager := &manager.BrokerageManagerImpl{
+		Config: ki.config.Tax,
+	}
+
+	// Fill will inject GainsManager via DI
+	err := ki.di.Fill(brokerageManager)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to fill brokerage manager")
+	}
+
+	return brokerageManager
+}
+
+func (ki *KohanInjector) provideDriveWealthManager() manager.Broker {
+	return manager.NewDriveWealthManagerImpl(ki.config.Tax.DriveWealthBase)
+}
+
+func (ki *KohanInjector) provideInteractiveBrokersManager() manager.Broker {
+	return manager.NewInteractiveBrokersManagerImpl(ki.config.Tax.IBKRBase)
 }
 
 func (ki *KohanInjector) provideTaxManager(
@@ -304,12 +322,15 @@ func (ki *KohanInjector) registerTaxComponents() {
 	container.MustSingleton(ki.di, ki.provideCapitalGainManager)
 	container.MustSingleton(ki.di, ki.provideDividendManager)
 	container.MustSingleton(ki.di, ki.provideInterestManager)
-	// Register ExcelManager first since TaxManager depends on it
 	container.MustSingleton(ki.di, ki.provideExcelManager)
 	container.MustSingleton(ki.di, ki.provideTaxManager)
-	// Register GainsComputationManager before DriveWealthManager since it depends on it
 	container.MustSingleton(ki.di, ki.provideGainsComputationManager)
-	container.MustSingleton(ki.di, ki.provideDriveWealthManager)
+
+	// Register brokers with names to avoid collision (names match struct field names)
+	container.MustNamedSingleton(ki.di, "DriveWealth", ki.provideDriveWealthManager)
+	container.MustNamedSingleton(ki.di, "IB", ki.provideInteractiveBrokersManager)
+
+	container.MustSingleton(ki.di, ki.provideBrokerageManager)
 }
 
 // registerTaxDependencies registers all dependencies required for tax calculations.

@@ -60,6 +60,6 @@ func (i *InterestManagerImpl) ProcessInterest(ctx context.Context, interests []t
 		exchangeables = append(exchangeables, &inrInterests[idx]) // Add pointer to element in pre-allocated slice
 	}
 
-	err = i.exchangeManager.Exchange(ctx, exchangeables)
+	err = i.exchangeManager.ExchangeWithPrecedingMonth(ctx, exchangeables)
 	return
 }

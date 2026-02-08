@@ -17,6 +17,38 @@ var _ = Describe("Valuation", func() {
 			}
 			Expect(p.USDValue()).To(Equal(float64(1000)))
 		})
+
+		It("should round USD value to 2 decimals", func() {
+			position := Position{
+				Date:     time.Now(),
+				Quantity: 50.5,
+				USDPrice: 85.33,
+			}
+			Expect(position.USDValue()).To(Equal(4309.17))
+		})
+
+		It("should round USD price to 2 decimals for display", func() {
+			position := Position{
+				Date:     time.Now(),
+				Quantity: 5,
+				USDPrice: 194.77000427246094,
+			}
+			Expect(position.RoundedUSDPrice()).To(Equal(194.77))
+		})
+	})
+
+	Describe("INRPosition", func() {
+		It("should round INR value to 2 decimals", func() {
+			inrPosition := INRPosition{
+				Position: Position{
+					Date:     time.Now(),
+					Quantity: 50.5,
+					USDPrice: 85.33,
+				},
+				TTRate: 84.15,
+			}
+			Expect(inrPosition.INRValue()).To(Equal(362616.23))
+		})
 	})
 
 	Describe("Trade", func() {
@@ -25,14 +57,14 @@ var _ = Describe("Valuation", func() {
 				validTrade := Trade{
 					Symbol: "AAPL",
 					Date:   "2024-01-01",
-					Type:   "BUY",
+					Type:   TRADE_TYPE_BUY,
 				}
 				Expect(validTrade.IsValid()).To(BeTrue())
 
 				validSell := Trade{
 					Symbol: "AAPL",
 					Date:   "2024-01-01",
-					Type:   "SELL",
+					Type:   TRADE_TYPE_SELL,
 				}
 				Expect(validSell.IsValid()).To(BeTrue())
 			})
@@ -61,10 +93,10 @@ var _ = Describe("Valuation", func() {
 
 			It("should reject invalid trades", func() {
 				invalidTrades := []Trade{
-					{Symbol: "", Date: "2024-01-01", Type: "BUY"},         // Empty symbol
-					{Symbol: "AAPL", Date: "", Type: "BUY"},               // Empty date
-					{Symbol: "AAPL", Date: "2024-01-01", Type: ""},        // Empty type
-					{Symbol: "AAPL", Date: "2024-01-01", Type: "INVALID"}, // Invalid type
+					{Symbol: "", Date: "2024-01-01", Type: TRADE_TYPE_BUY}, // Empty symbol
+					{Symbol: "AAPL", Date: "", Type: TRADE_TYPE_BUY},       // Empty date
+					{Symbol: "AAPL", Date: "2024-01-01", Type: ""},         // Empty type
+					{Symbol: "AAPL", Date: "2024-01-01", Type: "INVALID"},  // Invalid type
 				}
 
 				for _, trade := range invalidTrades {

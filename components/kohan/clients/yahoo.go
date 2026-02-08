@@ -14,27 +14,39 @@ import (
 
 // YahooClient fetches stock prices from Yahoo Finance API
 type YahooClient struct {
-	client  *resty.Client
-	baseURL string
+	client              *resty.Client
+	baseURL             string
+	tickerDataStartYear int
 }
 
-// NewYahooClient creates a new Yahoo Finance client with custom base URL
-func NewYahooClient(client *resty.Client, baseURL string) *YahooClient {
+// NewYahooClient creates a new Yahoo Finance client with custom base URL and ticker data start year
+func NewYahooClient(client *resty.Client, baseURL string, tickerDataStartYear int) *YahooClient {
 	return &YahooClient{
-		client:  client,
-		baseURL: baseURL,
+		client:              client,
+		baseURL:             baseURL,
+		tickerDataStartYear: tickerDataStartYear,
 	}
 }
 
 // FetchDailyPrices fetches daily closing prices from Yahoo Finance
+// Uses period1 and period2 parameters instead of "range" to get daily granularity
+// "range": "max" returns monthly data, while period parameters return true daily data
 func (y *YahooClient) FetchDailyPrices(ctx context.Context, ticker string) (tax.StockData, common.HttpError) {
 	var response tax.YahooChartResponse
+
+	// Use epoch timestamps for maximum date range
+	// period1: based on TickerDataStartYear configuration (avoids sparse/missing data)
+	// period2: now (today's date)
+	// Note: Using period1/period2 returns true daily data, while "range": "max" returns only monthly
+	startDate := time.Date(y.tickerDataStartYear, time.January, 1, 0, 0, 0, 0, time.UTC).Unix()
+	now := time.Now().Unix()
 
 	resp, resErr := y.client.R().
 		SetContext(ctx).
 		SetQueryParams(map[string]string{
 			"interval": "1d",
-			"range":    "max",
+			"period1":  fmt.Sprintf("%d", startDate),
+			"period2":  fmt.Sprintf("%d", now),
 		}).
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36").
 		SetResult(&response).

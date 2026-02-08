@@ -19,6 +19,13 @@ type ExchangeManager interface {
 	// If an exact rate for that date is not found, it relies on the underlying
 	// SBI rate provider to furnish a rate for the closest available date.
 	ExchangeGains(ctx context.Context, gains []tax.INRGains) common.HttpError
+
+	// ExchangeWithPrecedingMonth applies exchange rates using the last available rate
+	// from the month immediately preceding each exchangeable's date.
+	// Per Tax.md: Used for dividends (line 69) and interest (line 94).
+	// Unlike Exchange(), this method uses GetLastMonthEndRate which automatically
+	// provides the last available rate from the preceding month.
+	ExchangeWithPrecedingMonth(ctx context.Context, exchangeables []tax.Exchangeable) common.HttpError
 }
 
 type ExchangeManagerImpl struct {
@@ -33,6 +40,13 @@ func NewExchangeManager(sbiManager SBIManager) ExchangeManager {
 
 func (e *ExchangeManagerImpl) Exchange(ctx context.Context, exchangeables []tax.Exchangeable) common.HttpError {
 	for _, exchangeable := range exchangeables {
+		// Skip exchange rate lookup for zero-value positions (fully liquidated).
+		// For positions with Quantity=0 or USD Value=0, the final INR value will be 0
+		// regardless of the exchange rate, so there's no need to fetch it.
+		if exchangeable.GetUSDAmount() == 0 {
+			continue
+		}
+
 		requestedDate, dateErr := exchangeable.GetDate()
 		if dateErr != nil {
 			return dateErr
@@ -102,6 +116,24 @@ func (e *ExchangeManagerImpl) ExchangeGains(ctx context.Context, gains []tax.INR
 			// So, if err is not nil and not ClosestDateError, it must be another common.HttpError from sbiManager.
 			return err
 		}
+	}
+	return nil
+}
+
+func (e *ExchangeManagerImpl) ExchangeWithPrecedingMonth(ctx context.Context, exchangeables []tax.Exchangeable) common.HttpError {
+	for _, exchangeable := range exchangeables {
+		paymentDate, dateErr := exchangeable.GetDate()
+		if dateErr != nil {
+			return dateErr
+		}
+
+		monthEndRate, err := e.sbiManager.GetLastMonthEndRate(ctx, paymentDate)
+		if err != nil {
+			return err
+		}
+
+		exchangeable.SetTTRate(monthEndRate.Rate)
+		exchangeable.SetTTDate(monthEndRate.ActualDate)
 	}
 	return nil
 }

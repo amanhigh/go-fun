@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
 )
 
@@ -57,6 +58,7 @@ func (d *INRDividend) SetTTDate(date time.Time) {
 }
 
 // Helper method for INR calculations
+// Rounded to 2 decimal places to avoid floating-point precision errors
 func (d *INRDividend) INRValue() float64 {
-	return d.Amount * d.TTRate
+	return util.RoundToDecimals(d.Amount*d.TTRate, 2)
 }

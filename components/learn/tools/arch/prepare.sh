@@ -149,7 +149,7 @@ fi
 
 
 ## Setup Partitions ##
-# Disk Info: fdisk -l ; lsblk (-f) ; findmnt ; df -hl ; blkid
+# Disk Info: fdisk -l ; lsblk (-f) ; findmnt ; df -hl ; blkid (UID)
 
 # fdisk /dev/sda
 # Partition Table: GPT (g) or MBR (Backward Compaitable)

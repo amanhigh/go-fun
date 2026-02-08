@@ -24,8 +24,11 @@ type FunServer struct {
 	Tracer    trace.Tracer  `container:"type"`
 
 	/* Handlers */
-	PersonHandler *PersonHandler `container:"type"`
-	AdminHandler  *AdminHandler  `container:"type"`
+	PersonHandler     PersonHandler     `container:"type"`
+	EnrollmentHandler EnrollmentHandler `container:"type"`
+	AdminHandler      AdminHandler      `container:"type"`
+
+	Watermill util.WatermillController `container:"type"`
 }
 
 func (fs *FunServer) initRoutes() {
@@ -42,6 +45,10 @@ func (fs *FunServer) initRoutes() {
 	personGroup.PUT("/:id", fs.PersonHandler.UpdatePerson)
 	personGroup.POST("", fs.PersonHandler.CreatePerson)
 	personGroup.DELETE(":id", fs.PersonHandler.DeletePersons)
+
+	enrollmentGroup := v1.Group("/enrollments")
+	enrollmentGroup.POST("", fs.EnrollmentHandler.CreateEnrollment)
+	enrollmentGroup.GET(":personId", fs.EnrollmentHandler.GetEnrollment)
 
 	adminGroup := fs.GinEngine.Group("/admin")
 	adminGroup.GET("/stop", fs.AdminHandler.Stop)
@@ -64,6 +71,8 @@ func (fs *FunServer) initRoutes() {
 
 func (fs *FunServer) Start(c context.Context) (err error) {
 	fs.initRoutes()
+
+	fs.Watermill.Start(c)
 
 	// Initializing the server in a goroutine so that
 	// it won't block the graceful shutdown handling below
@@ -95,6 +104,8 @@ func (fs *FunServer) Stop(c context.Context) {
 	// the request it is currently handling
 	ctx, span := fs.Tracer.Start(c, "Stop.Server")
 	defer span.End()
+
+	fs.Watermill.Shutdown(c)
 
 	ctxTimed, cancel := context.WithTimeout(context.Background(), 10*time.Second) //nolint:mnd // Standard server shutdown timeout
 	defer cancel()

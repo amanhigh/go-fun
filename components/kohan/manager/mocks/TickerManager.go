@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/models/common"
-	"github.com/amanhigh/go-fun/models/tax"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -99,23 +98,25 @@ func (_c *TickerManager_DownloadTicker_Call) RunAndReturn(run func(ctx context.C
 	return _c
 }
 
-// FindPeakPrice provides a mock function for the type TickerManager
-func (_mock *TickerManager) FindPeakPrice(ctx context.Context, ticker string, year int) (tax.PeakPrice, common.HttpError) {
+// GetDailyPrices provides a mock function for the type TickerManager
+func (_mock *TickerManager) GetDailyPrices(ctx context.Context, ticker string, year int) (map[string]float64, common.HttpError) {
 	ret := _mock.Called(ctx, ticker, year)
 
 	if len(ret) == 0 {
-		panic("no return value specified for FindPeakPrice")
+		panic("no return value specified for GetDailyPrices")
 	}
 
-	var r0 tax.PeakPrice
+	var r0 map[string]float64
 	var r1 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) (tax.PeakPrice, common.HttpError)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) (map[string]float64, common.HttpError)); ok {
 		return returnFunc(ctx, ticker, year)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) tax.PeakPrice); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) map[string]float64); ok {
 		r0 = returnFunc(ctx, ticker, year)
 	} else {
-		r0 = ret.Get(0).(tax.PeakPrice)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string]float64)
+		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string, int) common.HttpError); ok {
 		r1 = returnFunc(ctx, ticker, year)
@@ -127,20 +128,20 @@ func (_mock *TickerManager) FindPeakPrice(ctx context.Context, ticker string, ye
 	return r0, r1
 }
 
-// TickerManager_FindPeakPrice_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindPeakPrice'
-type TickerManager_FindPeakPrice_Call struct {
+// TickerManager_GetDailyPrices_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetDailyPrices'
+type TickerManager_GetDailyPrices_Call struct {
 	*mock.Call
 }
 
-// FindPeakPrice is a helper method to define mock.On call
+// GetDailyPrices is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ticker string
 //   - year int
-func (_e *TickerManager_Expecter) FindPeakPrice(ctx interface{}, ticker interface{}, year interface{}) *TickerManager_FindPeakPrice_Call {
-	return &TickerManager_FindPeakPrice_Call{Call: _e.mock.On("FindPeakPrice", ctx, ticker, year)}
+func (_e *TickerManager_Expecter) GetDailyPrices(ctx interface{}, ticker interface{}, year interface{}) *TickerManager_GetDailyPrices_Call {
+	return &TickerManager_GetDailyPrices_Call{Call: _e.mock.On("GetDailyPrices", ctx, ticker, year)}
 }
 
-func (_c *TickerManager_FindPeakPrice_Call) Run(run func(ctx context.Context, ticker string, year int)) *TickerManager_FindPeakPrice_Call {
+func (_c *TickerManager_GetDailyPrices_Call) Run(run func(ctx context.Context, ticker string, year int)) *TickerManager_GetDailyPrices_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -163,12 +164,12 @@ func (_c *TickerManager_FindPeakPrice_Call) Run(run func(ctx context.Context, ti
 	return _c
 }
 
-func (_c *TickerManager_FindPeakPrice_Call) Return(peakPrice tax.PeakPrice, httpError common.HttpError) *TickerManager_FindPeakPrice_Call {
-	_c.Call.Return(peakPrice, httpError)
+func (_c *TickerManager_GetDailyPrices_Call) Return(stringToFloat64 map[string]float64, httpError common.HttpError) *TickerManager_GetDailyPrices_Call {
+	_c.Call.Return(stringToFloat64, httpError)
 	return _c
 }
 
-func (_c *TickerManager_FindPeakPrice_Call) RunAndReturn(run func(ctx context.Context, ticker string, year int) (tax.PeakPrice, common.HttpError)) *TickerManager_FindPeakPrice_Call {
+func (_c *TickerManager_GetDailyPrices_Call) RunAndReturn(run func(ctx context.Context, ticker string, year int) (map[string]float64, common.HttpError)) *TickerManager_GetDailyPrices_Call {
 	_c.Call.Return(run)
 	return _c
 }

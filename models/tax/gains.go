@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
 )
 
@@ -74,9 +75,9 @@ func (g *INRGains) SetTTDate(date time.Time) {
 	g.TTDate = date
 }
 
-// INRValue computes the PNL value in INR
+// INRValue computes the PNL value in INR, rounded to 2 decimal places to avoid floating-point precision errors
 func (g *INRGains) INRValue() float64 {
-	return g.PNL * g.TTRate
+	return util.RoundToDecimals(g.PNL*g.TTRate, 2)
 }
 
 // NewGains creates a new Gains object.

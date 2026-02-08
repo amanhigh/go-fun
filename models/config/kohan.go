@@ -29,40 +29,60 @@ type KohanConfig struct {
 	Tax TaxConfig
 }
 
+// TaxConfig defines all paths and URLs for tax computation
+// Directory structure:
+// FACompute/
+// ├── Input/
+// │   ├── Brokerage/
+// │   │   ├── vested_YYYY.xlsx         (DriveWealth exports by year)
+// │   │   ├── ibkr_YYYY.csv            (Interactive Brokers by year)
+// │   └── Parsed/
+// │       ├── trades.csv               (Merged from all brokers)
+// │       ├── dividends.csv
+// │       └── interest.csv
+// ├── Data/
+// │   ├── Tickers/                     (Yahoo Finance cache)
+// │   └── Reference/
+// │       └── sbi_rates.csv            (Exchange rates)
+// └── Output/
+//
+//	├── Computed/
+//	│   └── gains.csv                (Capital gains)
+//	├── YearEndBalance/
+//	│   └── accounts_YYYY.csv        (Year-end positions)
+//	├── Reports/
+//	│   └── tax_summary_YYYY.xlsx
 type TaxConfig struct {
-	// SBI Configuration
-	SBIBaseURL string `env:"SBI_BASE_URL" envDefault:"https://raw.githubusercontent.com/sahilgupta/sbi-fx-ratekeeper/main/csv_files/SBI_REFERENCE_RATES_USD.csv"`
-
-	// Yahoo Finance Configuration
+	// External APIs
+	SBIBaseURL   string `env:"SBI_BASE_URL" envDefault:"https://raw.githubusercontent.com/sahilgupta/sbi-fx-ratekeeper/main/csv_files/SBI_REFERENCE_RATES_USD.csv"`
 	YahooBaseURL string `env:"YAHOO_BASE_URL" envDefault:"https://query1.finance.yahoo.com"`
 
-	// File System Configuration
-	// TaxDir is the base directory for all tax-related files and subdirectories
+	// Ticker data start year (avoids sparse/missing data from very old periods)
+	TickerDataStartYear int `env:"TICKER_DATA_START_YEAR" envDefault:"2020"`
+
+	// Root directory
 	TaxDir string `env:"TAX_DIR" envDefault:"~/Downloads/FACompute"`
 
-	// Data Layer (Layer 2: External Reference Data - Immutable)
-	// TickerCacheDir stores downloaded ticker data from Yahoo Finance
-	TickerCacheDir string `env:"TICKER_CACHE_DIR" envDefault:"~/Downloads/FACompute/Data/Tickers"`
-	// TTRateFilePath stores SBI exchange rates (USD-INR)
-	TTRateFilePath string `env:"TTRATE_FILE_PATH" envDefault:"~/Downloads/FACompute/Data/Reference/sbi_rates.csv"`
+	// Input: Broker statements (Layer 1)
+	// Base paths for broker files - year appended at runtime: {base}_{YYYY}.{ext}
+	DriveWealthBase string `env:"DRIVEWEALTH_BASE" envDefault:"~/Downloads/FACompute/Input/Brokerage/vested"`
+	IBKRBase        string `env:"IBKR_BASE" envDefault:"~/Downloads/FACompute/Input/Brokerage/ibkr"`
 
-	// Input Layer (Layer 1: User-Provided Data - Immutable)
-	// Input/Brokerage/ contains vested.xlsx export from DriveWealth
-	DriveWealthPath string `env:"VESTED_PATH" envDefault:"~/Downloads/FACompute/Input/Brokerage/vested.xlsx"`
-	// Input/Parsed/ contains CSV files parsed from vested.xlsx by 'tax vested parse' command
+	// Input: Parsed data (Layer 2)
+	ParsedDir        string `env:"PARSED_DIR" envDefault:"~/Downloads/FACompute/Input/Parsed"`
 	TradesPath       string `env:"FA_TRADE_FILE_PATH" envDefault:"~/Downloads/FACompute/Input/Parsed/trades.csv"`
 	DividendFilePath string `env:"FA_DIVIDEND_FILE_PATH" envDefault:"~/Downloads/FACompute/Input/Parsed/dividends.csv"`
 	InterestFilePath string `env:"FA_INTEREST_FILE_PATH" envDefault:"~/Downloads/FACompute/Input/Parsed/interest.csv"`
 
-	// Output Layer (Layer 3: System-Generated Results - Mutable)
-	// Output/Computed/ contains gains.csv from capital gains calculation
+	// Data: Reference data (Layer 3)
+	TickerCacheDir string `env:"TICKER_CACHE_DIR" envDefault:"~/Downloads/FACompute/Data/Tickers"`
+	TTRateFilePath string `env:"TTRATE_FILE_PATH" envDefault:"~/Downloads/FACompute/Data/Reference/sbi_rates.csv"`
+
+	// Output: Computed results (Layer 4)
 	GainsFilePath string `env:"FA_GAINS_FILE_PATH" envDefault:"~/Downloads/FACompute/Output/Computed/gains.csv"`
-	// Output/YearEndBalance/ contains accounts_YYYY.csv computed at year-end
-	AccountsDir string `env:"ACCOUNTS_DIR" envDefault:"~/Downloads/FACompute/Output/YearEndBalance"`
-	// Output/Reports/ contains tax_summary_YYYY.xlsx generated for ITR filing
-	ReportsDir string `env:"REPORTS_DIR" envDefault:"~/Downloads/FACompute/Output/Reports"`
-	// ComputedDir stores gains.csv and other computed results
-	ComputedDir string `env:"COMPUTED_DIR" envDefault:"~/Downloads/FACompute/Output/Computed"`
+	AccountsDir   string `env:"ACCOUNTS_DIR" envDefault:"~/Downloads/FACompute/Output/YearEndBalance"`
+	ReportsDir    string `env:"REPORTS_DIR" envDefault:"~/Downloads/FACompute/Output/Reports"`
+	ComputedDir   string `env:"COMPUTED_DIR" envDefault:"~/Downloads/FACompute/Output/Computed"`
 }
 
 func NewKohanConfig() (config KohanConfig, err error) {
@@ -80,13 +100,15 @@ func NewKohanConfig() (config KohanConfig, err error) {
 	// HACK: #C Remove this Hack.
 	// Expand home directory (~) in all file paths
 	config.Tax.TaxDir = strings.Replace(config.Tax.TaxDir, "~", homeDir, 1)
+	config.Tax.DriveWealthBase = strings.Replace(config.Tax.DriveWealthBase, "~", homeDir, 1)
+	config.Tax.IBKRBase = strings.Replace(config.Tax.IBKRBase, "~", homeDir, 1)
 	config.Tax.TickerCacheDir = strings.Replace(config.Tax.TickerCacheDir, "~", homeDir, 1)
+	config.Tax.TTRateFilePath = strings.Replace(config.Tax.TTRateFilePath, "~", homeDir, 1)
+	config.Tax.ParsedDir = strings.Replace(config.Tax.ParsedDir, "~", homeDir, 1)
 	config.Tax.TradesPath = strings.Replace(config.Tax.TradesPath, "~", homeDir, 1)
 	config.Tax.DividendFilePath = strings.Replace(config.Tax.DividendFilePath, "~", homeDir, 1)
-	config.Tax.TTRateFilePath = strings.Replace(config.Tax.TTRateFilePath, "~", homeDir, 1)
-	config.Tax.GainsFilePath = strings.Replace(config.Tax.GainsFilePath, "~", homeDir, 1)
 	config.Tax.InterestFilePath = strings.Replace(config.Tax.InterestFilePath, "~", homeDir, 1)
-	config.Tax.DriveWealthPath = strings.Replace(config.Tax.DriveWealthPath, "~", homeDir, 1)
+	config.Tax.GainsFilePath = strings.Replace(config.Tax.GainsFilePath, "~", homeDir, 1)
 	config.Tax.AccountsDir = strings.Replace(config.Tax.AccountsDir, "~", homeDir, 1)
 	config.Tax.ReportsDir = strings.Replace(config.Tax.ReportsDir, "~", homeDir, 1)
 	config.Tax.ComputedDir = strings.Replace(config.Tax.ComputedDir, "~", homeDir, 1)

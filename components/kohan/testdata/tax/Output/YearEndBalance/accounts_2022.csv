@@ -1,3 +1,4 @@
-Symbol,Quantity,Cost,MarketValue
-AAPL,50,8000,8000
-MSFT,50,10000,10000
+Symbol,Quantity,MarketValue,OriginDate,OriginQty,OriginPrice
+AAPL,50,8000,2023-03-15,50,160.00
+MSFT,50,10000,2023-05-01,50,200.00
+GOOGL,25,5000,2022-01-10,25,200.00

@@ -9,30 +9,43 @@ import (
 
 var _ = Describe("Rand", func() {
 	Describe("RandomInts", func() {
-		Context("when n is greater than 0", func() {
-			It("returns a slice of n random integers", func() {
-				n := 5
-				upperBound := 10
-				result := util.RandomInts(n, upperBound)
+		It("should generate array of random integers (SDK wrapper)", func() {
+			result := util.RandomInts(5, 10)
+			Expect(result).To(HaveLen(5))
+			for _, r := range result {
+				Expect(r).To(BeNumerically(">=", 0))
+				Expect(r).To(BeNumerically("<", 10))
+			}
 
-				Expect(result).To(HaveLen(n))
-				for _, r := range result {
-					Expect(r).To(BeNumerically("<", upperBound))
-				}
-			})
+			// Edge cases
+			Expect(util.RandomInts(0, 10)).To(BeEmpty())
+
+			ones := util.RandomInts(3, 1)
+			for _, r := range ones {
+				Expect(r).To(Equal(0))
+			}
 		})
 	})
 
 	Describe("RandomInt", func() {
-		Context("when min is less than max", func() {
-			It("returns a random integer between min and max", func() {
-				lowerBound := 5
-				upperBound := 10
-				result := util.RandomInt(lowerBound, upperBound)
+		It("should generate random integer in range (SDK wrapper)", func() {
+			result := util.RandomInt(5, 10)
+			Expect(result).To(BeNumerically(">=", 5))
+			Expect(result).To(BeNumerically("<", 10))
 
-				Expect(result).To(BeNumerically(">=", lowerBound))
-				Expect(result).To(BeNumerically("<", upperBound))
-			})
+			// Range of 1
+			Expect(util.RandomInt(5, 6)).To(Equal(5))
+
+			// Negative ranges
+			result = util.RandomInt(-10, -5)
+			Expect(result).To(BeNumerically(">=", -10))
+			Expect(result).To(BeNumerically("<", -5))
+		})
+
+		It("should panic when bounds are equal (implementation limitation)", func() {
+			Expect(func() {
+				util.RandomInt(42, 42)
+			}).To(Panic())
 		})
 	})
 })

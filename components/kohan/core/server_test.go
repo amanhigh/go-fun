@@ -1,10 +1,15 @@
 package core_test
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"time"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
 	"github.com/gin-gonic/gin"
@@ -109,6 +114,83 @@ var _ = Describe("MonitorServer", func() {
 
 				Expect(recorder.Code).To(Equal(http.StatusOK))
 			})
+		})
+	})
+
+	Context("Graceful Shutdown Integration", func() {
+		var (
+			realShutdown          util.Shutdown
+			serverDone            chan error
+			freePort              int
+			startAndWaitForServer func(port int)
+		)
+
+		BeforeEach(func() {
+			// Use REAL util.Shutdown - no mocks!
+			realShutdown = util.NewGracefulShutdown()
+			serverDone = make(chan error, 1)
+
+			// Get free port
+			listener, err := net.Listen("tcp", ":0") //nolint:gosec // Binding to all interfaces intentionally for testing
+			Expect(err).ToNot(HaveOccurred())
+			tcpAddr, ok := listener.Addr().(*net.TCPAddr)
+			Expect(ok).To(BeTrue(), "Expected TCP address")
+			freePort = tcpAddr.Port
+			err = listener.Close()
+			Expect(err).ToNot(HaveOccurred())
+
+			// Helper function to start server and wait for readiness
+			startAndWaitForServer = func(port int) {
+				go func() {
+					err := server.Start(port, realShutdown)
+					serverDone <- err
+				}()
+
+				Eventually(func() error {
+					conn, err := net.Dial("tcp", fmt.Sprintf("localhost:%d", port))
+					if conn != nil {
+						conn.Close()
+					}
+					return err
+				}, 1*time.Second, 50*time.Millisecond).Should(Succeed())
+			}
+		})
+
+		AfterEach(func() {
+			select {
+			case <-serverDone:
+			default:
+			}
+		})
+
+		It("should start and shutdown gracefully", func() {
+			startAndWaitForServer(freePort)
+			time.Sleep(100 * time.Millisecond)
+			realShutdown.Stop(context.Background())
+			Eventually(serverDone, 2*time.Second).Should(Receive(BeNil()))
+		})
+
+		It("should serve HTTP requests before shutdown", func() {
+			startAndWaitForServer(freePort)
+			time.Sleep(100 * time.Millisecond)
+
+			resp, err := http.Get(fmt.Sprintf("http://localhost:%d/v1/clip/", freePort))
+			if resp != nil {
+				defer resp.Body.Close()
+			}
+			Expect(err).ToNot(HaveOccurred())
+
+			realShutdown.Stop(context.Background())
+			Eventually(serverDone, 2*time.Second).Should(Receive(BeNil()))
+		})
+
+		It("should handle startup errors", func() {
+			go func() {
+				err := server.Start(-1, realShutdown)
+				serverDone <- err
+			}()
+
+			Eventually(serverDone, 500*time.Millisecond).Should(Receive(HaveOccurred()))
 		})
 	})
 

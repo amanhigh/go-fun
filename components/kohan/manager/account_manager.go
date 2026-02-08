@@ -13,6 +13,7 @@ import (
 
 type AccountManager interface {
 	GetRecord(ctx context.Context, symbol string, year int) (tax.Account, common.HttpError)
+	GetAllRecords(ctx context.Context, year int) ([]tax.Account, common.HttpError)
 	GenerateYearEndAccounts(ctx context.Context, year int, valuations []tax.Valuation) common.HttpError
 }
 
@@ -34,9 +35,22 @@ func (a *AccountManagerImpl) GenerateYearEndAccounts(ctx context.Context, year i
 	return a.repository.SaveYearEndAccounts(ctx, year, accounts)
 }
 
-func (a *AccountManagerImpl) GetRecord(ctx context.Context, symbol string, year int) (tax.Account, common.HttpError) {
+func (a *AccountManagerImpl) GetAllRecords(ctx context.Context, year int) ([]tax.Account, common.HttpError) {
 	// Get ALL records from repository for the specified year
 	allRecords, err := a.repository.GetAllRecordsForYear(ctx, year)
+	if err != nil {
+		if errors.Is(err, common.ErrNotFound) {
+			return []tax.Account{}, common.ErrNotFound // Fresh start
+		}
+		return nil, err
+	}
+
+	return allRecords, nil
+}
+
+func (a *AccountManagerImpl) GetRecord(ctx context.Context, symbol string, year int) (tax.Account, common.HttpError) {
+	// Get ALL records from repository for the specified year
+	allRecords, err := a.GetAllRecords(ctx, year)
 	if err != nil {
 		if errors.Is(err, common.ErrNotFound) {
 			return tax.Account{}, common.ErrNotFound // Fresh start

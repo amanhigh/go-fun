@@ -24,14 +24,14 @@ type TickerManager interface {
 	// DownloadTicker fetches ticker data from YahooClient and saves to file.
 	DownloadTicker(ctx context.Context, ticker string) (err common.HttpError)
 
-	// FindPeakPrice finds highest close price for a year from pre-downloaded ticker data.
-	// Requires file to exist - call DownloadTicker(ctx, ticker) first if needed.
-	// No caching or auto-download (unlike GetPrice which has both).
-	FindPeakPrice(ctx context.Context, ticker string, year int) (tax.PeakPrice, common.HttpError)
-
 	// GetPrice returns closing price for a date. Uses in-memory cache and auto-downloads if file missing.
 	// Best for repeated calls on same ticker (valuation calculations).
 	GetPrice(ctx context.Context, ticker string, date time.Time) (float64, common.HttpError)
+
+	// GetDailyPrices returns all available closing prices for a given year as map[date]price.
+	// Used for daily peak evaluation in valuation calculations.
+	// Date format in returned map: "YYYY-MM-DD"
+	GetDailyPrices(ctx context.Context, ticker string, year int) (map[string]float64, common.HttpError)
 }
 
 type TickerManagerImpl struct {
@@ -81,16 +81,6 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 	}
 
 	return nil
-}
-
-func (t *TickerManagerImpl) FindPeakPrice(_ context.Context, ticker string, year int) (peakPrice tax.PeakPrice, err common.HttpError) {
-	stockData, err := t.readTickerData(ticker)
-	if err != nil {
-		return peakPrice, err
-	}
-
-	yearStr := strconv.Itoa(year)
-	return t.analyzePrices(stockData.Prices, ticker, yearStr), nil
 }
 
 func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date time.Time) (float64, common.HttpError) {
@@ -206,24 +196,39 @@ func (t *TickerManagerImpl) readTickerData(ticker string) (tax.StockData, common
 	return stockData, nil
 }
 
-func (t *TickerManagerImpl) analyzePrices(prices map[string]float64, ticker, yearStr string) tax.PeakPrice {
-	var highestClose float64
-	var highestDate string
+// GetDailyPrices returns all available closing prices for a given year
+// as a map with date format "YYYY-MM-DD" as key and price as value.
+// Used for daily peak INR value evaluation during valuation calculations.
+func (t *TickerManagerImpl) GetDailyPrices(ctx context.Context, ticker string, year int) (map[string]float64, common.HttpError) {
+	data, err := t.getTickerData(ctx, ticker)
+	if err != nil {
+		return nil, err
+	}
 
-	for date, closePrice := range prices {
-		if !strings.HasPrefix(date, yearStr) {
-			continue
-		}
-		// Track highest close
-		if closePrice > highestClose {
-			highestClose = closePrice
-			highestDate = date
+	yearStr := strconv.Itoa(year)
+	yearPrices := make(map[string]float64)
+
+	// Filter prices for the specified year
+	for date, price := range data.Prices {
+		if strings.HasPrefix(date, yearStr) {
+			yearPrices[date] = price
 		}
 	}
 
-	return tax.PeakPrice{
-		Ticker: ticker,
-		Date:   highestDate,
-		Price:  highestClose,
+	// Return error if no prices found for the requested year
+	if len(yearPrices) == 0 {
+		return nil, common.NewHttpError(
+			fmt.Sprintf("no price data found for ticker %s in year %d", ticker, year),
+			http.StatusNotFound,
+		)
 	}
+
+	// Include previous year-end price for backfill support during peak calculation
+	// This enables proper price backfilling for carry-over positions in early-year dates
+	prevYearEnd := fmt.Sprintf("%d-12-31", year-1)
+	if prevPrice, exists := data.Prices[prevYearEnd]; exists {
+		yearPrices[prevYearEnd] = prevPrice
+	}
+
+	return yearPrices, nil
 }

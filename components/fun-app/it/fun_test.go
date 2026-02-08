@@ -26,11 +26,12 @@ var _ = Describe("Person Integration Test", func() {
 		age         = 31
 		gender      = "MALE"
 		err         common.HttpError
-		ctx         = context.Background()
-		expectedErr = "Bad Request"
+		testCtx     = context.Background()
+		expectedErr string
 	)
 
 	BeforeEach(func() {
+		expectedErr = "Bad Request"
 		request = fun.PersonRequest{
 			Name:   name,
 			Age:    age,
@@ -44,23 +45,23 @@ var _ = Describe("Person Integration Test", func() {
 			auditUser     = "AMAN"
 		)
 		BeforeEach(func() {
-			createdPerson, err = client.PersonService.CreatePerson(ctx, request)
+			createdPerson, err = client.PersonService.CreatePerson(testCtx, request)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(createdPerson.Id).Should(Not(BeEmpty()))
 		})
 		AfterEach(func() {
 			// Delete Person
-			err = client.PersonService.DeletePerson(ctx, createdPerson.Id)
+			err = client.PersonService.DeletePerson(testCtx, createdPerson.Id)
 			Expect(err).ToNot(HaveOccurred())
 
 			// Delete Audit
-			auditList, listErr := client.PersonService.ListPersonAudit(ctx, createdPerson.Id)
+			auditList, listErr := client.PersonService.ListPersonAudit(testCtx, createdPerson.Id)
 			Expect(listErr).ShouldNot(HaveOccurred())
 			Expect(auditList).To(HaveLen(2))
 		})
 
 		It("should create & get person", func() {
-			person, getErr := client.PersonService.GetPerson(ctx, createdPerson.Id)
+			person, getErr := client.PersonService.GetPerson(testCtx, createdPerson.Id)
 			Expect(getErr).ShouldNot(HaveOccurred())
 			Expect(person).Should(Not(BeNil()))
 
@@ -73,7 +74,7 @@ var _ = Describe("Person Integration Test", func() {
 
 		It("should generate Audit", func() {
 			// List Audit
-			auditList, auditErr := client.PersonService.ListPersonAudit(ctx, createdPerson.Id)
+			auditList, auditErr := client.PersonService.ListPersonAudit(testCtx, createdPerson.Id)
 			Expect(auditErr).ShouldNot(HaveOccurred())
 
 			// Check Audit
@@ -100,24 +101,24 @@ var _ = Describe("Person Integration Test", func() {
 					Age:    25,
 					Gender: "FEMALE",
 				}
-				updatedPerson, err = client.PersonService.CreatePerson(ctx, request)
+				updatedPerson, err = client.PersonService.CreatePerson(testCtx, request)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
 
 			AfterEach(func() {
-				err = client.PersonService.DeletePerson(ctx, updatedPerson.Id)
+				err = client.PersonService.DeletePerson(testCtx, updatedPerson.Id)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
 			Context("Success", func() {
 				BeforeEach(func() {
-					updateErr := client.PersonService.UpdatePerson(ctx, updatedPerson.Id, updateRequest)
+					updateErr := client.PersonService.UpdatePerson(testCtx, updatedPerson.Id, updateRequest)
 					Expect(updateErr).ShouldNot(HaveOccurred())
 				})
 
 				It("should update person", func() {
 					// Fetch Update Person
-					person, getErr := client.PersonService.GetPerson(ctx, updatedPerson.Id)
+					person, getErr := client.PersonService.GetPerson(testCtx, updatedPerson.Id)
 					Expect(getErr).ShouldNot(HaveOccurred())
 
 					// MatchFields
@@ -129,7 +130,7 @@ var _ = Describe("Person Integration Test", func() {
 
 				It("should generate Audit", func() {
 					// List Audit
-					auditList, auditErr := client.PersonService.ListPersonAudit(ctx, updatedPerson.Id)
+					auditList, auditErr := client.PersonService.ListPersonAudit(testCtx, updatedPerson.Id)
 					Expect(auditErr).ShouldNot(HaveOccurred())
 
 					// Check Audit
@@ -148,7 +149,7 @@ var _ = Describe("Person Integration Test", func() {
 
 			Context("Bad Requests", func() {
 				AfterEach(func() {
-					err = client.PersonService.UpdatePerson(ctx, updatedPerson.Id, updateRequest)
+					err = client.PersonService.UpdatePerson(testCtx, updatedPerson.Id, updateRequest)
 					Expect(err).Should(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring(expectedErr))
 					Expect(err.Code()).To(Equal(http.StatusBadRequest))
@@ -212,7 +213,7 @@ var _ = Describe("Person Integration Test", func() {
 				for i := 0; i < total; i++ {
 					request.Name = names[i%3] + strconv.Itoa(i)
 					request.Gender = genders[i%3]
-					_, err = client.PersonService.CreatePerson(ctx, request)
+					_, err = client.PersonService.CreatePerson(testCtx, request)
 					Expect(err).ToNot(HaveOccurred())
 				}
 
@@ -232,12 +233,12 @@ var _ = Describe("Person Integration Test", func() {
 					personQuery.Gender = genders[i]
 					personQuery.Limit = 10
 					personQuery.Offset = 0
-					personList, listErr := client.PersonService.ListPerson(ctx, personQuery)
+					personList, listErr := client.PersonService.ListPerson(testCtx, personQuery)
 					Expect(listErr).ToNot(HaveOccurred())
 
 					// Delete all Records of Name
 					for _, person := range personList.Records {
-						err = client.PersonService.DeletePerson(ctx, person.Id)
+						err = client.PersonService.DeletePerson(testCtx, person.Id)
 						Expect(err).ToNot(HaveOccurred())
 					}
 				}
@@ -245,7 +246,7 @@ var _ = Describe("Person Integration Test", func() {
 
 			It("should get all persons upto page Limit", func() {
 				var personList fun.PersonList
-				personList, err = client.PersonService.ListPerson(ctx, personQuery)
+				personList, err = client.PersonService.ListPerson(testCtx, personQuery)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Person Count should be same as Page Limit
@@ -256,7 +257,7 @@ var _ = Describe("Person Integration Test", func() {
 			It("should fetch second Page", func() {
 				var personList fun.PersonList
 				personQuery.Offset = limit
-				personList, err = client.PersonService.ListPerson(ctx, personQuery)
+				personList, err = client.PersonService.ListPerson(testCtx, personQuery)
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(personList.Records).To(HaveLen(limit))
@@ -265,7 +266,7 @@ var _ = Describe("Person Integration Test", func() {
 			It("should search by Name", func() {
 				var personList fun.PersonList
 				personQuery.Name = names[0]
-				personList, err = client.PersonService.ListPerson(ctx, personQuery)
+				personList, err = client.PersonService.ListPerson(testCtx, personQuery)
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(personList.Records).To(HaveLen(limit))
@@ -275,7 +276,7 @@ var _ = Describe("Person Integration Test", func() {
 			It("should search by Gender", func() {
 				var personList fun.PersonList
 				personQuery.Gender = genders[1]
-				personList, err = client.PersonService.ListPerson(ctx, personQuery)
+				personList, err = client.PersonService.ListPerson(testCtx, personQuery)
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(personList.Records).To(HaveLen(limit))
@@ -286,7 +287,7 @@ var _ = Describe("Person Integration Test", func() {
 				var personList fun.PersonList
 				personQuery.Name = names[0]
 				personQuery.Gender = genders[1]
-				personList, err = client.PersonService.ListPerson(ctx, personQuery)
+				personList, err = client.PersonService.ListPerson(testCtx, personQuery)
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(personList.Records).To(BeEmpty())
@@ -299,7 +300,7 @@ var _ = Describe("Person Integration Test", func() {
 					var personList fun.PersonList
 					personQuery.SortBy = "name"
 					personQuery.Order = "asc"
-					personList, err = client.PersonService.ListPerson(ctx, personQuery)
+					personList, err = client.PersonService.ListPerson(testCtx, personQuery)
 
 					Expect(err).ToNot(HaveOccurred())
 					Expect(personList.Records).To(HaveLen(limit))
@@ -315,7 +316,7 @@ var _ = Describe("Person Integration Test", func() {
 					var personList fun.PersonList
 					personQuery.SortBy = "name"
 					personQuery.Order = "desc"
-					personList, err = client.PersonService.ListPerson(ctx, personQuery)
+					personList, err = client.PersonService.ListPerson(testCtx, personQuery)
 
 					Expect(err).ToNot(HaveOccurred())
 					Expect(personList.Records).To(HaveLen(limit))
@@ -332,7 +333,7 @@ var _ = Describe("Person Integration Test", func() {
 					var personList fun.PersonList
 					personQuery.SortBy = "gender"
 					personQuery.Order = "asc"
-					personList, err = client.PersonService.ListPerson(ctx, personQuery)
+					personList, err = client.PersonService.ListPerson(testCtx, personQuery)
 
 					Expect(err).ToNot(HaveOccurred())
 					Expect(personList.Records).To(HaveLen(limit))
@@ -349,7 +350,7 @@ var _ = Describe("Person Integration Test", func() {
 					var personList fun.PersonList
 					personQuery.SortBy = "gender"
 					personQuery.Order = "desc"
-					personList, err = client.PersonService.ListPerson(ctx, personQuery)
+					personList, err = client.PersonService.ListPerson(testCtx, personQuery)
 
 					Expect(err).ToNot(HaveOccurred())
 					Expect(personList.Records).To(HaveLen(limit))
@@ -365,7 +366,7 @@ var _ = Describe("Person Integration Test", func() {
 
 			Context("Bad Requests", func() {
 				AfterEach(func() {
-					_, err = client.PersonService.ListPerson(ctx, personQuery)
+					_, err = client.PersonService.ListPerson(testCtx, personQuery)
 					Expect(err).Should(HaveOccurred())
 					Expect(err.Code()).To(Equal(http.StatusBadRequest))
 					Expect(err.Error()).To(ContainSubstring(expectedErr))
@@ -420,7 +421,7 @@ var _ = Describe("Person Integration Test", func() {
 
 		Context("Bad Requests", func() {
 			AfterEach(func() {
-				_, err = client.PersonService.CreatePerson(ctx, request)
+				_, err = client.PersonService.CreatePerson(testCtx, request)
 
 				Expect(err).Should(HaveOccurred())
 				Expect(err.Code()).To(Equal(http.StatusBadRequest))
@@ -478,7 +479,7 @@ var _ = Describe("Person Integration Test", func() {
 			})
 
 			It("should fail for delete", func() {
-				err = client.PersonService.DeletePerson(ctx, emptyId)
+				err = client.PersonService.DeletePerson(testCtx, emptyId)
 			})
 		})
 
@@ -489,18 +490,19 @@ var _ = Describe("Person Integration Test", func() {
 			})
 
 			It("should fail for get", func() {
-				_, err = client.PersonService.GetPerson(ctx, missingId)
+				_, err = client.PersonService.GetPerson(testCtx, missingId)
 			})
 
 			It("should fail for delete", func() {
-				err = client.PersonService.DeletePerson(ctx, missingId)
+				err = client.PersonService.DeletePerson(testCtx, missingId)
 			})
 		})
 	})
 
+	// TODO: Break up Fun App Test logically and move to separate files
 	Context("Admin", func() {
 		It("should serve metrics", func() {
-			err = client.AdminService.HealthCheck(ctx)
+			err = client.AdminService.HealthCheck(testCtx)
 			Expect(err).ToNot(HaveOccurred())
 		})
 

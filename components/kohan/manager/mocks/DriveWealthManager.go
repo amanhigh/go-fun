@@ -39,7 +39,7 @@ func (_m *DriveWealthManager) EXPECT() *DriveWealthManager_Expecter {
 }
 
 // GenerateCsv provides a mock function for the type DriveWealthManager
-func (_mock *DriveWealthManager) GenerateCsv(ctx context.Context, info tax.DriveWealthInfo) error {
+func (_mock *DriveWealthManager) GenerateCsv(ctx context.Context, info tax.BrokerageInfo) error {
 	ret := _mock.Called(ctx, info)
 
 	if len(ret) == 0 {
@@ -47,7 +47,7 @@ func (_mock *DriveWealthManager) GenerateCsv(ctx context.Context, info tax.Drive
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, tax.DriveWealthInfo) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, tax.BrokerageInfo) error); ok {
 		r0 = returnFunc(ctx, info)
 	} else {
 		r0 = ret.Error(0)
@@ -62,20 +62,20 @@ type DriveWealthManager_GenerateCsv_Call struct {
 
 // GenerateCsv is a helper method to define mock.On call
 //   - ctx context.Context
-//   - info tax.DriveWealthInfo
+//   - info tax.BrokerageInfo
 func (_e *DriveWealthManager_Expecter) GenerateCsv(ctx interface{}, info interface{}) *DriveWealthManager_GenerateCsv_Call {
 	return &DriveWealthManager_GenerateCsv_Call{Call: _e.mock.On("GenerateCsv", ctx, info)}
 }
 
-func (_c *DriveWealthManager_GenerateCsv_Call) Run(run func(ctx context.Context, info tax.DriveWealthInfo)) *DriveWealthManager_GenerateCsv_Call {
+func (_c *DriveWealthManager_GenerateCsv_Call) Run(run func(ctx context.Context, info tax.BrokerageInfo)) *DriveWealthManager_GenerateCsv_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 tax.DriveWealthInfo
+		var arg1 tax.BrokerageInfo
 		if args[1] != nil {
-			arg1 = args[1].(tax.DriveWealthInfo)
+			arg1 = args[1].(tax.BrokerageInfo)
 		}
 		run(
 			arg0,
@@ -90,28 +90,28 @@ func (_c *DriveWealthManager_GenerateCsv_Call) Return(err error) *DriveWealthMan
 	return _c
 }
 
-func (_c *DriveWealthManager_GenerateCsv_Call) RunAndReturn(run func(ctx context.Context, info tax.DriveWealthInfo) error) *DriveWealthManager_GenerateCsv_Call {
+func (_c *DriveWealthManager_GenerateCsv_Call) RunAndReturn(run func(ctx context.Context, info tax.BrokerageInfo) error) *DriveWealthManager_GenerateCsv_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Parse provides a mock function for the type DriveWealthManager
-func (_mock *DriveWealthManager) Parse() (tax.DriveWealthInfo, error) {
+func (_mock *DriveWealthManager) Parse() (tax.BrokerageInfo, error) {
 	ret := _mock.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for Parse")
 	}
 
-	var r0 tax.DriveWealthInfo
+	var r0 tax.BrokerageInfo
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func() (tax.DriveWealthInfo, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func() (tax.BrokerageInfo, error)); ok {
 		return returnFunc()
 	}
-	if returnFunc, ok := ret.Get(0).(func() tax.DriveWealthInfo); ok {
+	if returnFunc, ok := ret.Get(0).(func() tax.BrokerageInfo); ok {
 		r0 = returnFunc()
 	} else {
-		r0 = ret.Get(0).(tax.DriveWealthInfo)
+		r0 = ret.Get(0).(tax.BrokerageInfo)
 	}
 	if returnFunc, ok := ret.Get(1).(func() error); ok {
 		r1 = returnFunc()
@@ -138,12 +138,12 @@ func (_c *DriveWealthManager_Parse_Call) Run(run func()) *DriveWealthManager_Par
 	return _c
 }
 
-func (_c *DriveWealthManager_Parse_Call) Return(info tax.DriveWealthInfo, err error) *DriveWealthManager_Parse_Call {
+func (_c *DriveWealthManager_Parse_Call) Return(info tax.BrokerageInfo, err error) *DriveWealthManager_Parse_Call {
 	_c.Call.Return(info, err)
 	return _c
 }
 
-func (_c *DriveWealthManager_Parse_Call) RunAndReturn(run func() (tax.DriveWealthInfo, error)) *DriveWealthManager_Parse_Call {
+func (_c *DriveWealthManager_Parse_Call) RunAndReturn(run func() (tax.BrokerageInfo, error)) *DriveWealthManager_Parse_Call {
 	_c.Call.Return(run)
 	return _c
 }

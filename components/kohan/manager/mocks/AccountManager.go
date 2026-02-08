@@ -104,6 +104,76 @@ func (_c *AccountManager_GenerateYearEndAccounts_Call) RunAndReturn(run func(ctx
 	return _c
 }
 
+// GetAllRecords provides a mock function for the type AccountManager
+func (_mock *AccountManager) GetAllRecords(ctx context.Context, year int) ([]tax.Account, common.HttpError) {
+	ret := _mock.Called(ctx, year)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllRecords")
+	}
+
+	var r0 []tax.Account
+	var r1 common.HttpError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int) ([]tax.Account, common.HttpError)); ok {
+		return returnFunc(ctx, year)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int) []tax.Account); ok {
+		r0 = returnFunc(ctx, year)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]tax.Account)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int) common.HttpError); ok {
+		r1 = returnFunc(ctx, year)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(common.HttpError)
+		}
+	}
+	return r0, r1
+}
+
+// AccountManager_GetAllRecords_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAllRecords'
+type AccountManager_GetAllRecords_Call struct {
+	*mock.Call
+}
+
+// GetAllRecords is a helper method to define mock.On call
+//   - ctx context.Context
+//   - year int
+func (_e *AccountManager_Expecter) GetAllRecords(ctx interface{}, year interface{}) *AccountManager_GetAllRecords_Call {
+	return &AccountManager_GetAllRecords_Call{Call: _e.mock.On("GetAllRecords", ctx, year)}
+}
+
+func (_c *AccountManager_GetAllRecords_Call) Run(run func(ctx context.Context, year int)) *AccountManager_GetAllRecords_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int
+		if args[1] != nil {
+			arg1 = args[1].(int)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *AccountManager_GetAllRecords_Call) Return(accounts []tax.Account, httpError common.HttpError) *AccountManager_GetAllRecords_Call {
+	_c.Call.Return(accounts, httpError)
+	return _c
+}
+
+func (_c *AccountManager_GetAllRecords_Call) RunAndReturn(run func(ctx context.Context, year int) ([]tax.Account, common.HttpError)) *AccountManager_GetAllRecords_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetRecord provides a mock function for the type AccountManager
 func (_mock *AccountManager) GetRecord(ctx context.Context, symbol string, year int) (tax.Account, common.HttpError) {
 	ret := _mock.Called(ctx, symbol, year)

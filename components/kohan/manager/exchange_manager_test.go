@@ -201,6 +201,116 @@ var _ = Describe("ExchangeManager", func() {
 		})
 	})
 
+	Context("Zero Quantity Positions", func() {
+		var (
+			exchangeables []tax.Exchangeable
+			testDate      time.Time
+			yearEnd       time.Time
+		)
+
+		BeforeEach(func() {
+			testDate = time.Date(2024, 1, 4, 0, 0, 0, 0, time.UTC)
+			yearEnd = time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
+		})
+
+		It("should skip exchange rate lookup for zero-value positions", func() {
+			// Create positions: one with value, one with zero value
+			nonZeroPosition := tax.INRPosition{
+				Position: tax.Position{
+					Date:     testDate,
+					Quantity: 10,
+					USDPrice: 100,
+				},
+			}
+			zeroPosition := tax.INRPosition{
+				Position: tax.Position{
+					Date:     yearEnd,
+					Quantity: 0, // Zero quantity
+					USDPrice: 0,
+				},
+			}
+
+			exchangeables = []tax.Exchangeable{&nonZeroPosition, &zeroPosition}
+
+			// SBIManager should be called ONLY ONCE (for non-zero position)
+			// Should NOT be called for zero-value position
+			mockSBI.EXPECT().
+				GetTTBuyRate(ctx, testDate).
+				Return(82.0, nil).
+				Once()
+
+			err := exchangeMgr.Exchange(ctx, exchangeables)
+
+			Expect(err).ToNot(HaveOccurred())
+
+			// Non-zero position should be exchanged
+			Expect(nonZeroPosition.TTRate).To(Equal(82.0))
+			Expect(nonZeroPosition.TTDate).To(Equal(testDate))
+
+			// Zero position should NOT be exchanged (TTRate remains 0)
+			Expect(zeroPosition.TTRate).To(Equal(0.0), "Zero-value position should not be exchanged")
+			Expect(zeroPosition.TTDate.IsZero()).To(BeTrue(), "Zero-value position should have zero TTDate")
+		})
+
+		It("should handle mixed positions with only zero-value positions", func() {
+			// All positions have zero value (fully liquidated)
+			zeroPosition1 := tax.INRPosition{
+				Position: tax.Position{
+					Date:     testDate,
+					Quantity: 0,
+					USDPrice: 0,
+				},
+			}
+			zeroPosition2 := tax.INRPosition{
+				Position: tax.Position{
+					Date:     yearEnd,
+					Quantity: 0,
+					USDPrice: 0,
+				},
+			}
+
+			exchangeables = []tax.Exchangeable{&zeroPosition1, &zeroPosition2}
+
+			// SBIManager should NOT be called at all
+			// No mock expectations set - if called, test will fail
+
+			err := exchangeMgr.Exchange(ctx, exchangeables)
+
+			Expect(err).ToNot(HaveOccurred())
+
+			// Both positions should remain unexchanged
+			Expect(zeroPosition1.TTRate).To(Equal(0.0))
+			Expect(zeroPosition1.TTDate.IsZero()).To(BeTrue())
+			Expect(zeroPosition2.TTRate).To(Equal(0.0))
+			Expect(zeroPosition2.TTDate.IsZero()).To(BeTrue())
+		})
+
+		It("should handle position with zero quantity but non-zero price (edge case)", func() {
+			// Edge case: Qty=0 but Price is non-zero (shouldn't happen in real data)
+			// GetUSDAmount() = 0 × 100 = 0, so should skip exchange
+			zeroQtyPosition := tax.INRPosition{
+				Position: tax.Position{
+					Date:     testDate,
+					Quantity: 0,
+					USDPrice: 100, // Price is non-zero
+				},
+			}
+
+			exchangeables = []tax.Exchangeable{&zeroQtyPosition}
+
+			// SBIManager should NOT be called (GetUSDAmount() = 0)
+			// No mock expectations set
+
+			err := exchangeMgr.Exchange(ctx, exchangeables)
+
+			Expect(err).ToNot(HaveOccurred())
+
+			// Position should not be exchanged
+			Expect(zeroQtyPosition.TTRate).To(Equal(0.0))
+			Expect(zeroQtyPosition.TTDate.IsZero()).To(BeTrue())
+		})
+	})
+
 	Describe("ExchangeGains", func() {
 		var (
 			gains []tax.INRGains
@@ -328,6 +438,155 @@ var _ = Describe("ExchangeManager", func() {
 			It("should complete without error", func() {
 				err := exchangeMgr.ExchangeGains(ctx, gains)
 				Expect(err).ToNot(HaveOccurred())
+			})
+		})
+	})
+
+	Describe("ExchangeWithPrecedingMonth", func() {
+		var (
+			exchangeables []tax.Exchangeable
+			dividend      tax.INRDividend
+		)
+
+		Context("Successful Preceding Month Rate Application", func() {
+			var paymentDate time.Time
+
+			BeforeEach(func() {
+				paymentDate = time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)
+				dividend = tax.INRDividend{
+					Dividend: tax.Dividend{
+						Symbol: "AAPL",
+						Date:   "2024-02-20",
+						Amount: 50.00,
+						Tax:    12.50,
+						Net:    37.50,
+					},
+				}
+				exchangeables = []tax.Exchangeable{&dividend}
+
+				expectedRate := tax.MonthEndRate{
+					Rate:       82.75,
+					ActualDate: time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC),
+				}
+
+				mockSBI.EXPECT().
+					GetLastMonthEndRate(ctx, paymentDate).
+					Return(expectedRate, nil).
+					Once()
+			})
+
+			It("should set rate from preceding month-end", func() {
+				err := exchangeMgr.ExchangeWithPrecedingMonth(ctx, exchangeables)
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(dividend.TTRate).To(Equal(82.75))
+				Expect(dividend.TTDate).To(Equal(time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)))
+			})
+		})
+
+		Context("Rate Not Found Error", func() {
+			var paymentDate time.Time
+
+			BeforeEach(func() {
+				paymentDate = time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)
+				dividend = tax.INRDividend{
+					Dividend: tax.Dividend{
+						Symbol: "AAPL",
+						Date:   "2024-02-20",
+						Amount: 50.00,
+					},
+				}
+				exchangeables = []tax.Exchangeable{&dividend}
+
+				mockSBI.EXPECT().
+					GetLastMonthEndRate(ctx, paymentDate).
+					Return(tax.MonthEndRate{}, tax.NewRateNotFoundError(paymentDate)).
+					Once()
+			})
+
+			It("should return RateNotFoundError", func() {
+				err := exchangeMgr.ExchangeWithPrecedingMonth(ctx, exchangeables)
+
+				Expect(err).To(HaveOccurred())
+				_, ok := err.(tax.RateNotFoundError)
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("Multiple Dividends with Different Months", func() {
+			var (
+				dividend1 tax.INRDividend
+				dividend2 tax.INRDividend
+			)
+
+			BeforeEach(func() {
+				dividend1 = tax.INRDividend{
+					Dividend: tax.Dividend{
+						Symbol: "AAPL",
+						Date:   "2024-02-20",
+						Amount: 50.00,
+					},
+				}
+				dividend2 = tax.INRDividend{
+					Dividend: tax.Dividend{
+						Symbol: "MSFT",
+						Date:   "2024-03-15",
+						Amount: 100.00,
+					},
+				}
+				exchangeables = []tax.Exchangeable{&dividend1, &dividend2}
+
+				mockSBI.EXPECT().
+					GetLastMonthEndRate(ctx, time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)).
+					Return(tax.MonthEndRate{Rate: 82.75, ActualDate: time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)}, nil).
+					Once()
+
+				mockSBI.EXPECT().
+					GetLastMonthEndRate(ctx, time.Date(2024, 3, 15, 0, 0, 0, 0, time.UTC)).
+					Return(tax.MonthEndRate{Rate: 83.00, ActualDate: time.Date(2024, 2, 29, 0, 0, 0, 0, time.UTC)}, nil).
+					Once()
+			})
+
+			It("should apply correct preceding month rates for each dividend", func() {
+				err := exchangeMgr.ExchangeWithPrecedingMonth(ctx, exchangeables)
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(dividend1.TTRate).To(Equal(82.75))
+				Expect(dividend1.TTDate).To(Equal(time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)))
+				Expect(dividend2.TTRate).To(Equal(83.00))
+				Expect(dividend2.TTDate).To(Equal(time.Date(2024, 2, 29, 0, 0, 0, 0, time.UTC)))
+			})
+		})
+
+		Context("Empty Exchangeables Slice", func() {
+			BeforeEach(func() {
+				exchangeables = []tax.Exchangeable{}
+			})
+
+			It("should complete without error", func() {
+				err := exchangeMgr.ExchangeWithPrecedingMonth(ctx, exchangeables)
+				Expect(err).ToNot(HaveOccurred())
+			})
+		})
+
+		Context("Invalid Date in Exchangeable", func() {
+			BeforeEach(func() {
+				dividend = tax.INRDividend{
+					Dividend: tax.Dividend{
+						Symbol: "AAPL",
+						Date:   "invalid-date",
+						Amount: 50.00,
+					},
+				}
+				exchangeables = []tax.Exchangeable{&dividend}
+			})
+
+			It("should return date parsing error", func() {
+				err := exchangeMgr.ExchangeWithPrecedingMonth(ctx, exchangeables)
+
+				Expect(err).To(HaveOccurred())
+				_, ok := err.(tax.InvalidDateError)
+				Expect(ok).To(BeTrue())
 			})
 		})
 	})

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
 )
 
@@ -41,14 +42,17 @@ func (t Trade) GetDate() (time.Time, common.HttpError) {
 	return parsedTime, nil
 }
 
+func (t Trade) GetType() string {
+	return strings.ToUpper(t.Type)
+}
+
 func (t Trade) IsValid() bool {
 	if t.Symbol == "" || t.Date == "" || t.Type == "" {
 		return false
 	}
 
 	// Accept both uppercase and mixed case trade types (BUY/Buy, SELL/Sell)
-	uppercaseType := strings.ToUpper(t.Type)
-	return uppercaseType == "BUY" || uppercaseType == "SELL"
+	return t.GetType() == TRADE_TYPE_BUY || t.GetType() == TRADE_TYPE_SELL
 }
 
 // Position represents a snapshot of holdings at a point in time
@@ -59,7 +63,11 @@ type Position struct {
 }
 
 func (p *Position) USDValue() float64 {
-	return p.Quantity * p.USDPrice
+	return util.RoundToDecimals(p.Quantity*p.USDPrice, 2)
+}
+
+func (p *Position) RoundedUSDPrice() float64 {
+	return util.RoundToDecimals(p.USDPrice, 2)
 }
 
 // Valuation tracks key positions for a ticker
@@ -76,6 +84,7 @@ type INRValuation struct {
 	FirstPosition   INRPosition // First position with exchange rate details
 	PeakPosition    INRPosition // Peak position with exchange rate details
 	YearEndPosition INRPosition // Year end position with exchange rate details
+	AmountPaid      float64     // Sum of gross dividends in INR for Schedule FA
 }
 
 // Helper to create tax valuation from base valuation
@@ -127,5 +136,5 @@ func (t *INRPosition) IsValid() bool {
 	return !t.Date.IsZero() && t.TTRate > 0
 }
 func (t *INRPosition) INRValue() float64 {
-	return t.USDValue() * t.TTRate
+	return util.RoundToDecimals(t.Quantity*t.USDPrice*t.TTRate, 2)
 }

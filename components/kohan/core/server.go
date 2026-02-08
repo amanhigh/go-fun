@@ -1,13 +1,22 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/amanhigh/go-fun/common/tools"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
+)
+
+const (
+	shutdownTimeout = 3 * time.Second
+	readTimeout     = 5 * time.Second
+	writeTimeout    = 5 * time.Second
 )
 
 type MonitorServer struct {
@@ -31,10 +40,62 @@ func NewMonitorServer(capturePath string, autoManager manager.AutoManagerInterfa
 	return server
 }
 
-func (s *MonitorServer) Start(port int) (err error) {
-	log.Info().Int("port", port).Msg("Starting Monitor Server")
-	err = s.mux.Run(fmt.Sprintf(":%d", port))
-	return
+// Start starts the server with graceful shutdown support using util.Shutdown
+func (s *MonitorServer) Start(port int, shutdown util.Shutdown) error {
+	srv := &http.Server{
+		Addr:              fmt.Sprintf(":%d", port),
+		Handler:           s.mux,
+		ReadHeaderTimeout: readTimeout,
+		ReadTimeout:       readTimeout,
+		WriteTimeout:      writeTimeout,
+	}
+
+	errChan := make(chan error, 1)
+	serverStopped := make(chan struct{})
+
+	go s.runServer(srv, errChan, serverStopped, port)
+	go s.handleShutdown(srv, shutdown, errChan, serverStopped)
+
+	err := <-errChan
+	close(serverStopped)
+	if err != nil {
+		log.Error().Err(err).Msg("Server error occurred")
+		return err
+	}
+	return nil
+}
+
+func (s *MonitorServer) runServer(srv *http.Server, errChan chan<- error, serverStopped <-chan struct{}, port int) {
+	log.Info().Int("port", port).Msg("Starting Monitor Server with graceful shutdown")
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		select {
+		case errChan <- err:
+		case <-serverStopped:
+		}
+	}
+}
+
+func (s *MonitorServer) handleShutdown(srv *http.Server, shutdown util.Shutdown, errChan chan<- error, serverStopped <-chan struct{}) {
+	shutdownCtx := shutdown.Wait()
+
+	ctxTimed, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	log.Info().Msg("Shutting down monitor server gracefully")
+	if err := srv.Shutdown(ctxTimed); err != nil {
+		log.Error().Err(err).Msg("Server forced shutdown")
+		select {
+		case errChan <- fmt.Errorf("graceful shutdown failed: %w", err):
+		case <-serverStopped:
+		}
+		return
+	}
+
+	log.Info().Ctx(shutdownCtx).Msg("Monitor server shutdown complete")
+	select {
+	case errChan <- nil:
+	case <-serverStopped:
+	}
 }
 
 func (s *MonitorServer) HandleReadClip(ctx *gin.Context) {

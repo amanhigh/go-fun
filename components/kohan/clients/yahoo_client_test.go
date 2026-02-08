@@ -14,15 +14,17 @@ import (
 
 var _ = Describe("YahooClient", func() {
 	var (
-		server      *httptest.Server
-		yahooClient *clients.YahooClient
-		ctx         context.Context
-		ticker      string
+		server              *httptest.Server
+		yahooClient         *clients.YahooClient
+		ctx                 context.Context
+		ticker              string
+		tickerDataStartYear int
 	)
 
 	BeforeEach(func() {
 		ctx = context.Background()
 		ticker = "AAPL"
+		tickerDataStartYear = 2020
 	})
 
 	AfterEach(func() {
@@ -68,7 +70,8 @@ var _ = Describe("YahooClient", func() {
 					http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 						Expect(r.URL.Path).To(ContainSubstring("/v8/finance/chart/AAPL"))
 						Expect(r.URL.Query().Get("interval")).To(Equal("1d"))
-						Expect(r.URL.Query().Get("range")).To(Equal("max"))
+						Expect(r.URL.Query().Get("period1")).To(Equal("1577836800")) // 2020-01-01
+						Expect(r.URL.Query().Get("period2")).ToNot(BeEmpty())        // Current timestamp
 						w.Header().Set("Content-Type", "application/json")
 						w.WriteHeader(http.StatusOK)
 						_, _ = w.Write([]byte(responseBody))
@@ -76,7 +79,7 @@ var _ = Describe("YahooClient", func() {
 				)
 
 				client := resty.NewWithClient(&http.Client{})
-				yahooClient = clients.NewYahooClient(client, server.URL)
+				yahooClient = clients.NewYahooClient(client, server.URL, tickerDataStartYear)
 				stockData, err = yahooClient.FetchDailyPrices(ctx, ticker)
 			})
 
@@ -121,7 +124,7 @@ var _ = Describe("YahooClient", func() {
 				)
 
 				client := resty.NewWithClient(&http.Client{})
-				yahooClient = clients.NewYahooClient(client, server.URL)
+				yahooClient = clients.NewYahooClient(client, server.URL, tickerDataStartYear)
 				_, err = yahooClient.FetchDailyPrices(ctx, "INVALID")
 			})
 
@@ -165,7 +168,7 @@ var _ = Describe("YahooClient", func() {
 				)
 
 				client := resty.NewWithClient(&http.Client{})
-				yahooClient = clients.NewYahooClient(client, server.URL)
+				yahooClient = clients.NewYahooClient(client, server.URL, tickerDataStartYear)
 				_, err = yahooClient.FetchDailyPrices(ctx, ticker)
 			})
 
@@ -217,7 +220,7 @@ var _ = Describe("YahooClient", func() {
 				)
 
 				client := resty.NewWithClient(&http.Client{})
-				yahooClient = clients.NewYahooClient(client, server.URL)
+				yahooClient = clients.NewYahooClient(client, server.URL, tickerDataStartYear)
 				_, err = yahooClient.FetchDailyPrices(ctx, ticker)
 			})
 
@@ -270,7 +273,7 @@ var _ = Describe("YahooClient", func() {
 				)
 
 				client := resty.NewWithClient(&http.Client{})
-				yahooClient = clients.NewYahooClient(client, server.URL)
+				yahooClient = clients.NewYahooClient(client, server.URL, tickerDataStartYear)
 				stockData, err = yahooClient.FetchDailyPrices(ctx, ticker)
 			})
 
@@ -335,7 +338,7 @@ var _ = Describe("YahooClient", func() {
 				)
 
 				client := resty.NewWithClient(&http.Client{})
-				yahooClient = clients.NewYahooClient(client, server.URL)
+				yahooClient = clients.NewYahooClient(client, server.URL, tickerDataStartYear)
 				_, err = yahooClient.FetchDailyPrices(ctx, ticker)
 			})
 
@@ -403,7 +406,7 @@ var _ = Describe("YahooClient", func() {
 				)
 
 				client := resty.NewWithClient(&http.Client{})
-				yahooClient = clients.NewYahooClient(client, server.URL)
+				yahooClient = clients.NewYahooClient(client, server.URL, tickerDataStartYear)
 				aaplData, aaplErr = yahooClient.FetchDailyPrices(ctx, "AAPL")
 				msftData, msftErr = yahooClient.FetchDailyPrices(ctx, "MSFT")
 			})

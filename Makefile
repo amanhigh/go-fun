@@ -3,7 +3,7 @@
 # Silent: -s, Keepgoing -k, 
 # Paraller Jobs: -j2
 ### Calls
-# Override Vars: make test-it COVER_DIR=./test
+# Override Vars: make cover COVER_DIR=./test
 # Call Target: $(MAKE) --no-print-directory XTRA=ISTIO bootstrap
 # Make In Directory: make -C /path/to/dir
 # Continue Step or error: Start with `-`. Eg. -rm test.txt
@@ -19,8 +19,15 @@ COMPONENT_DIR := ./components
 FUN_DIR := $(COMPONENT_DIR)/fun-app
 BIN_DIR := bin
 
-COVER_DIR:= /tmp/cover
-PROFILE_FILE:= $(COVER_DIR)/profile.out
+# Coverage directories for binary coverage data
+COVER_DIR := /tmp/cover
+UNIT_COVER_DIR := $(COVER_DIR)/unit
+INTEGRATION_COVER_DIR := $(COVER_DIR)/integration  
+OPERATOR_COVER_DIR := $(COVER_DIR)/operator
+SLOW_COVER_DIR := $(COVER_DIR)/slow
+
+# Combined coverage file (only one needed for GitHub Actions)
+COMBINED_COVERAGE_FILE := $(COVER_DIR)/coverage-combined.out
 
 FUN_IMAGE_TAG := amanfdk/fun-app
 
@@ -53,38 +60,113 @@ format: ## Format Go code with goimports
 ### Testing
 test-operator:
 	printf $(_TITLE) "Running Operator Tests"
-	make -C $(COMPONENT_DIR)/operator/ test > $(OUT)
+	make -C $(COMPONENT_DIR)/operator/ test GOCOVERDIR=$(OPERATOR_COVER_DIR) > $(OUT)
 
 test-unit:
 	printf $(_TITLE) "Running Unit Tests"
-	ginkgo -r '--label-filter=!setup && !slow' -cover . > $(OUT)
+	mkdir -p $(UNIT_COVER_DIR)
+	# Generate binary coverage for accurate merging
+	ginkgo -r --label-filter=\!setup\ \&\&\ \!slow --skip-package=$(COMPONENT_DIR)/fun-app/it -cover . -- -test.gocoverdir=$(UNIT_COVER_DIR) > $(OUT)
 
 test-slow: ## Run slow tests
 	printf $(_TITLE) "Running Slow Tests"
-	ginkgo -r '--label-filter=slow' -cover . > $(OUT)
+	mkdir -p $(SLOW_COVER_DIR)
+	# Generate binary coverage for accurate merging  
+	ginkgo -r '--label-filter=slow' -cover . -- -test.gocoverdir=$(SLOW_COVER_DIR) > $(OUT)
 
-cover-analyse:
+cover-analyse: combine-coverage
 	printf $(_TITLE) "Analysing Coverage Reports"
-	# Generate Cover Profile
-	go tool covdata textfmt -i=$(COVER_DIR) -o $(PROFILE_FILE)
-	
-	# Analyse Cover Profile
-	go tool cover -func=$(PROFILE_FILE) > $(OUT)
+	# Analyse Combined Coverage Profile
+	go tool cover -func=$(COMBINED_COVERAGE_FILE) > $(OUT)
 
 	printf $(_TITLE) "Package Summary";
-	# Analyse Report and Print Coverage
-	go tool covdata percent -i=$(COVER_DIR);
+	# Enhanced Coverage Report
+	$(MAKE) --no-print-directory cover-report;
 	echo "";
-	printf $(_INFO) "Vscode" "go.apply.coverprofile $(PROFILE_FILE)";
+	go tool cover -html=$(COMBINED_COVERAGE_FILE) -o /tmp/coverage.html 2>$(OUT); \
+	printf $(_INFO) "HTML Report: file:///tmp/coverage.html";
+	printf $(_INFO) "Vscode" "go.apply.coverprofile $(COMBINED_COVERAGE_FILE)";
+
+cover-report: ## Enhanced coverage report with color-coding and categorization
+	if [ ! -f "$(COMBINED_COVERAGE_FILE)" ]; then \
+		printf $(_WARN) "No coverage profile found. Run 'make cover' first." ; \
+		exit 1; \
+	fi
+	printf $(_TITLE) "Coverage Analysis Report"
+	go tool cover -func=$(COMBINED_COVERAGE_FILE) > $(OUT) 2>&1
+	overall=$$(go tool cover -func=$(COMBINED_COVERAGE_FILE) 2>$(OUT) | tail -1 | awk '{print $$3}'); \
+	echo "Overall Coverage: $$overall"
+	echo ""
+	printf $(_TITLE) "Packages by Coverage (Lowest to Highest)"
+	go tool cover -func=$(COMBINED_COVERAGE_FILE) 2>$(OUT) | \
+		awk '/github.com\/amanhigh\/go-fun\// { \
+			gsub(/github.com\/amanhigh\/go-fun\//, "", $$1); \
+			gsub(/\/[^\/]*\.go:.*/, "", $$1); \
+			gsub(/%/, "", $$3); \
+			if ($$1 != prev_pkg) { \
+				if (prev_pkg != "") print prev_pkg, int(total/count); \
+				prev_pkg = $$1; total = $$3; count = 1; \
+			} else { \
+				total += $$3; count++; \
+			} \
+		} \
+		END { if (prev_pkg != "") print prev_pkg, int(total/count) }' | \
+		sort -k2 -n | \
+		awk 'BEGIN{critical=0; low=0; medium=0; good=0} \
+		{ \
+			pct = int($$2); \
+			if (pct == 0) { \
+				print "\033[31m🔴 " sprintf("%-40s %6s%%", $$1, $$2) "\033[0m ← NEEDS TESTS!"; \
+				critical++; \
+			} else if (pct < 25) { \
+				print "\033[31m🟠 " sprintf("%-40s %6s%%", $$1, $$2) "\033[0m ← CRITICAL"; \
+				low++; \
+			} else if (pct < 50) { \
+				print "\033[33m🟡 " sprintf("%-40s %6s%%", $$1, $$2) "\033[0m ← LOW"; \
+				low++; \
+			} else if (pct < 75) { \
+				print "\033[34m🔵 " sprintf("%-40s %6s%%", $$1, $$2) "\033[0m ← MEDIUM"; \
+				medium++; \
+			} else { \
+				print "\033[32m🟢 " sprintf("%-40s %6s%%", $$1, $$2) "\033[0m ← GOOD"; \
+				good++; \
+			} \
+		} \
+		END { \
+			print ""; \
+			print "\033[32m[Summary]\033[0m"; \
+			print "🔴 Critical (0%): " critical " packages"; \
+			print "🟠 Low (<50%): " low " packages"; \
+			print "🔵 Medium (50-75%): " medium " packages"; \
+			print "🟢 Good (≥75%): " good " packages"; \
+		}'
 
 test-focus:
 	printf $(_TITLE) "Running Focus Tests"
 	ginkgo --focus "should create & get person" $(FUN_DIR)/it > $(OUT)
 
-test-it: run-fun-cover test-unit cover-analyse
+cover: run-fun-cover test-unit cover-analyse ## Show comprehensive coverage (unit + integration)
 test-clean:
 	printf $(_WARN) "Cleaning Tests"
 	rm -rf $(COVER_DIR)
+
+combine-coverage: ## Combine all binary coverage data into a single comprehensive report
+	printf $(_TITLE) "Combining Binary Coverage Data"
+	coverage_dirs=""; \
+	for dir in $(UNIT_COVER_DIR) $(INTEGRATION_COVER_DIR) $(OPERATOR_COVER_DIR) $(SLOW_COVER_DIR); do \
+		if [ -d "$$dir" ] && [ -n "$$(ls -A $$dir 2>/dev/null)" ]; then \
+			coverage_dirs="$$coverage_dirs,$$dir"; \
+			printf $(_INFO) "Found coverage data in $$(basename $$dir)"; \
+		fi; \
+	done; \
+	if [ -n "$$coverage_dirs" ]; then \
+		coverage_dirs=$${coverage_dirs#,}; \
+		printf $(_INFO) "Merging coverage from: $$coverage_dirs"; \
+		go tool covdata textfmt -i=$$coverage_dirs -o $(COMBINED_COVERAGE_FILE); \
+		printf $(_SUCCESS) "Combined coverage created: $(COMBINED_COVERAGE_FILE)"; \
+	else \
+		printf $(_WARN) "No coverage data found to combine"; \
+	fi
 
 verify: test-focus ## Verify Basic Fun App Flow
 	printf $(_INFO) "mk watch CMD='make verify'"
@@ -277,8 +359,8 @@ watch: ## Watch (entr): `make watch CMD=ls`
 # Guide - https://dustinspecker.com/posts/go-combined-unit-integration-code-coverage/
 run-fun-cover: build-fun-cover
 	printf $(_TITLE) "Running Fun App with Coverage"
-	mkdir -p $(COVER_DIR)
-	GOCOVERDIR=$(COVER_DIR) PORT=8085 $(BIN_DIR)/fun > $(OUT) 2>&1 &
+	mkdir -p $(INTEGRATION_COVER_DIR)
+	GOCOVERDIR=$(INTEGRATION_COVER_DIR) PORT=8085 $(BIN_DIR)/fun > $(OUT) 2>&1 &
 
 ### Helm
 helm-package:
@@ -288,7 +370,7 @@ helm-package:
 setup-tools:
 	printf $(_TITLE) "Setting up Tools"
 	go install github.com/onsi/ginkgo/v2/ginkgo
-	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.3.0
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0
 	go install github.com/swaggo/swag/cmd/swag
 	go install golang.org/x/tools/cmd/goimports@latest
 	go install github.com/vektra/mockery/v3@v3.5.5
@@ -361,7 +443,7 @@ generate-mocks:
 generate: generate-mocks generate-swagger ## Generate Files
 
 ### Workflows
-test: test-operator test-it ## Run all tests (Excludes test-slow)
+test: test-operator cover ## Run all tests (Excludes test-slow)
 build: format lint build-fun build-kohan ## Build all Binaries
 
 info: info-release info-docker ## Repo Information

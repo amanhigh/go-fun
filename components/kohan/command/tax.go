@@ -58,21 +58,24 @@ var computeCmd = &cobra.Command{
 
 func init() {
 	appsCmd.AddCommand(taxCmd)
-	// TODO: #A Second Year Summary from Vested.
-	// TODO: #B Add Interactive Broker Parser.
-	taxCmd.AddCommand(vestedCmd)
-	// TODO: #C Match Computation for Interactive Broker.
+	taxCmd.AddCommand(parseCmd)
 	taxCmd.AddCommand(computeCmd)
 }
 
-var vestedCmd = &cobra.Command{
-	Use:   "vested",
-	Short: "Generate Vested Brokerage Report",
-	Long:  `Generate Vested Brokerage Report from DriveWealth Excel file`,
-	RunE: func(_ *cobra.Command, _ []string) error {
+var parseCmd = &cobra.Command{
+	Use:   "parse YEAR",
+	Short: "Parse all broker files and generate CSVs",
+	Long:  `Auto-detects and parses DriveWealth, Interactive Brokers files for the specified year. Merges and generates consolidated CSVs.`,
+	Args:  cobra.ExactArgs(1),
+	RunE: func(_ *cobra.Command, args []string) error {
 		ctx := context.Background()
 
-		// Initialize config and injector
+		// Parse year from arguments
+		year, err := strconv.Atoi(args[0])
+		if err != nil {
+			return fmt.Errorf("invalid year format: %w", err)
+		}
+
 		kohanConfig, err := config.NewKohanConfig()
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
@@ -80,22 +83,17 @@ var vestedCmd = &cobra.Command{
 
 		core.SetupKohanInjector(kohanConfig)
 		ki := core.GetKohanInterface()
-		driveWealthManager, err := ki.GetDriveWealthManager()
+
+		brokerageManager, err := ki.GetBrokerageManager()
 		if err != nil {
-			return fmt.Errorf("failed to get drive wealth manager: %w", err)
+			return fmt.Errorf("failed to get brokerage manager: %w", err)
 		}
 
-		// FIXME: #A Match First Year Summary from Vested (ticker download not working).
-		info, err := driveWealthManager.Parse()
-		if err != nil {
-			return fmt.Errorf("failed to parse drive wealth report: %w", err)
+		if err := brokerageManager.ParseAndGenerate(ctx, year); err != nil {
+			return fmt.Errorf("failed to parse brokers: %w", err)
 		}
 
-		if err := driveWealthManager.GenerateCsv(ctx, info); err != nil {
-			return fmt.Errorf("failed to generate csv: %w", err)
-		}
-
-		fmt.Println("Successfully generated Vested Brokerage Report")
+		fmt.Printf("Successfully parsed broker files for year %d and generated CSVs\n", year)
 		return nil
 	},
 }
