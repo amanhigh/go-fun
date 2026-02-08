@@ -32,6 +32,11 @@ This file contains guidelines for coding, testing, and examples on coding style 
 - See `common/util/` directory for various utility functions like `UnwrapRequest` in `http.go`, error processing in `error.go`, and test helpers in `test.go`
 - Avoid using the same variable name as imports to prevent conflicts. Example: Avoid tax variable if tax.CapitalGain is imported (see `models/tax/gains.go` for Gains struct definition)
 
+### Architectural Constraints
+1. Flow must always follow Handler → Manager → Publisher. Handlers must never publish directly.
+2. Managers must only communicate with their own publisher; cross-domain messages must use Manager-to-Manager calls.
+3. No layer may bypass an intermediate layer (e.g., Handler cannot call Publisher directly, Manager cannot call another Manager's Publisher).
+
 ## Testing
 
 ### Test Structure

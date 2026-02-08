@@ -11,7 +11,7 @@ import (
 
 // FIXME: Add to AGENTS.md
 // EnrollmentManagerInterface orchestrates enrollment flows and delegates seat allocation.
-// 
+//
 // Architecture rules enforced here:
 //   - Flow is always Handler -> Manager -> Publisher. Handlers never publish directly.
 //   - Managers only talk to their own publisher; cross-domain messages use Manager-to-Manager calls.
@@ -59,7 +59,7 @@ func NewEnrollmentManager(
 var _ EnrollmentManagerInterface = (*EnrollmentManager)(nil)
 
 func (em *EnrollmentManager) EnrollPerson(ctx context.Context, personID string, grade int) (fun.Enrollment, common.HttpError) {
-	person, err := em.PersonManager.GetPerson(ctx,personID)
+	person, err := em.PersonManager.GetPerson(ctx, personID)
 	if err != nil {
 		return fun.Enrollment{}, err
 	}
@@ -186,7 +186,6 @@ func (em *EnrollmentManager) upsertEnrollment(ctx context.Context, enrollment *f
 		}
 	})
 }
-
 
 func (em *EnrollmentManager) buildEnrollment(personID string, grade int) *fun.Enrollment {
 	return &fun.Enrollment{
