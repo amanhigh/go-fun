@@ -19,6 +19,8 @@ COMPONENT_DIR := ./components
 FUN_DIR := $(COMPONENT_DIR)/fun-app
 BIN_DIR := bin
 
+export PATH := $(shell go env GOPATH 2>/dev/null)/bin:$(PATH)
+
 # Coverage directories for binary coverage data
 COVER_DIR := /tmp/cover
 UNIT_COVER_DIR := $(COVER_DIR)/unit

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"hash/fnv"
+	"math"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -46,10 +47,10 @@ func newPgAdvisoryLocker(db *sql.DB) gocron.Locker {
 }
 
 func (l *pgAdvisoryLocker) Lock(ctx context.Context, key string) (gocron.Lock, error) {
-	// Hash the key to get a consistent int64 for advisory lock
+	// Hash the key to get a consistent positive int64 for advisory lock
 	h := fnv.New64a()
 	h.Write([]byte(key))
-	lockKey := int64(h.Sum64())
+	lockKey := int64(h.Sum64() & math.MaxInt64)
 
 	// Use a dedicated connection for session-level advisory lock
 	conn, err := l.db.Conn(ctx)

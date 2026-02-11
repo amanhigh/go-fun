@@ -258,7 +258,7 @@ var _ = Describe("Cron", func() {
 
 				err = s.RemoveJob(j.ID())
 				Expect(err).ToNot(HaveOccurred())
-				Expect(s.Jobs()).To(HaveLen(0))
+				Expect(s.Jobs()).To(BeEmpty())
 			})
 
 			It("should list all scheduled jobs", func() {
