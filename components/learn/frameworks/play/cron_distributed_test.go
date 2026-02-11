@@ -50,7 +50,7 @@ func (l *pgAdvisoryLocker) Lock(ctx context.Context, key string) (gocron.Lock, e
 	// Hash the key to get a consistent positive int64 for advisory lock
 	h := fnv.New64a()
 	h.Write([]byte(key))
-	lockKey := int64(h.Sum64() & math.MaxInt64)
+	lockKey := int64(h.Sum64() & math.MaxInt64) // #nosec G115 -- masked to signed 63-bit range
 
 	// Use a dedicated connection for session-level advisory lock
 	conn, err := l.db.Conn(ctx)

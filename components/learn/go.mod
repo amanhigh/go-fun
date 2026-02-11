@@ -1,6 +1,6 @@
 module github.com/amanhigh/go-fun/components/learn
 
-go 1.25.1
+go 1.25.7
 
 require (
 	github.com/ThreeDotsLabs/watermill v1.5.1
