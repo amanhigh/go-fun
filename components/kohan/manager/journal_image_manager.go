@@ -53,7 +53,7 @@ func (m *ImageManagerImpl) ListImages(ctx context.Context, entryID string) ([]ba
 	return images, nil
 }
 
-func (m *ImageManagerImpl) DeleteImage(ctx context.Context, entryID string, imageID string) common.HttpError {
+func (m *ImageManagerImpl) DeleteImage(ctx context.Context, entryID, imageID string) common.HttpError {
 	if err := m.repo.DeleteImage(ctx, entryID, imageID); err != nil {
 		return common.ErrNotFound
 	}

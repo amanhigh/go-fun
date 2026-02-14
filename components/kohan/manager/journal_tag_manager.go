@@ -42,7 +42,7 @@ func (m *TagManagerImpl) CreateTag(ctx context.Context, entryID string, tag *bar
 	return nil
 }
 
-func (m *TagManagerImpl) ListTags(ctx context.Context, entryID string, tagType string) ([]barkat.Tag, common.HttpError) {
+func (m *TagManagerImpl) ListTags(ctx context.Context, entryID, tagType string) ([]barkat.Tag, common.HttpError) {
 	if httpErr := m.entryMgr.EntryExists(ctx, entryID); httpErr != nil {
 		return nil, httpErr
 	}
@@ -53,7 +53,7 @@ func (m *TagManagerImpl) ListTags(ctx context.Context, entryID string, tagType s
 	return tags, nil
 }
 
-func (m *TagManagerImpl) DeleteTag(ctx context.Context, entryID string, tagID string) common.HttpError {
+func (m *TagManagerImpl) DeleteTag(ctx context.Context, entryID, tagID string) common.HttpError {
 	if err := m.repo.DeleteTag(ctx, entryID, tagID); err != nil {
 		return common.ErrNotFound
 	}

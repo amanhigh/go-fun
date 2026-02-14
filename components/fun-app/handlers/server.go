@@ -27,10 +27,10 @@ type FunServer struct {
 }
 
 func (fs *FunServer) Start(_ context.Context) (err error) {
-	fs.BaseHTTPServer.RegisterRoutes = fs.registerRoutes
-	fs.BaseHTTPServer.BeforeStart = fs.beforeStart
-	fs.BaseHTTPServer.BeforeShutdown = fs.beforeShutdown
-	fs.BaseHTTPServer.AfterShutdown = func(ctx context.Context) {
+	fs.RegisterRoutes = fs.registerRoutes
+	fs.BeforeStart = fs.beforeStart
+	fs.BeforeShutdown = fs.beforeShutdown
+	fs.AfterShutdown = func(ctx context.Context) {
 		telemetry.ShutdownTracerProvider(ctx)
 	}
 	return fs.BaseHTTPServer.Start()
@@ -61,9 +61,6 @@ func (fs *FunServer) registerRoutes(engine *gin.Engine) {
 	// Add Swagger - https://github.com/swaggo/gin-swagger
 	// make swag-fun
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	// http://localhost:8080/debug/statsviz/
-	engine.GET("/debug/statsviz/*filepath", telemetry.StatvizMetrics)
 
 	// Pprof (Use: http://localhost:8080/debug/pprof/)
 	// make profile

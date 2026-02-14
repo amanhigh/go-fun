@@ -43,7 +43,7 @@ func (m *NoteManagerImpl) CreateNote(ctx context.Context, entryID string, note *
 	return nil
 }
 
-func (m *NoteManagerImpl) ListNotes(ctx context.Context, entryID string, status string) ([]barkat.Note, common.HttpError) {
+func (m *NoteManagerImpl) ListNotes(ctx context.Context, entryID, status string) ([]barkat.Note, common.HttpError) {
 	if httpErr := m.entryMgr.EntryExists(ctx, entryID); httpErr != nil {
 		return nil, httpErr
 	}
@@ -54,7 +54,7 @@ func (m *NoteManagerImpl) ListNotes(ctx context.Context, entryID string, status 
 	return notes, nil
 }
 
-func (m *NoteManagerImpl) DeleteNote(ctx context.Context, entryID string, noteID string) common.HttpError {
+func (m *NoteManagerImpl) DeleteNote(ctx context.Context, entryID, noteID string) common.HttpError {
 	if err := m.repo.DeleteNote(ctx, entryID, noteID); err != nil {
 		return common.ErrNotFound
 	}

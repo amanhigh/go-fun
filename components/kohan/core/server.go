@@ -28,7 +28,7 @@ func NewKohanServer(base *util.BaseHTTPServer, monitorHandler handler.MonitorHan
 		noteHandler:    noteHandler,
 		tagHandler:     tagHandler,
 	}
-	server.BaseHTTPServer.RegisterRoutes = server.registerRoutes
+	server.RegisterRoutes = server.registerRoutes
 	return server
 }
 

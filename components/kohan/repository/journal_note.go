@@ -32,7 +32,7 @@ func (r *NoteRepositoryImpl) CreateNote(ctx context.Context, note *barkat.Note) 
 	return r.db.WithContext(ctx).Create(note).Error
 }
 
-func (r *NoteRepositoryImpl) ListNotes(ctx context.Context, entryID string, status string) ([]barkat.Note, error) {
+func (r *NoteRepositoryImpl) ListNotes(ctx context.Context, entryID, status string) ([]barkat.Note, error) {
 	var notes []barkat.Note
 	tx := r.db.WithContext(ctx).Where("entry_id = ?", entryID)
 	if status != "" {
@@ -42,7 +42,7 @@ func (r *NoteRepositoryImpl) ListNotes(ctx context.Context, entryID string, stat
 	return notes, err
 }
 
-func (r *NoteRepositoryImpl) DeleteNote(ctx context.Context, entryID string, noteID string) error {
+func (r *NoteRepositoryImpl) DeleteNote(ctx context.Context, entryID, noteID string) error {
 	result := r.db.WithContext(ctx).Where("id = ? AND entry_id = ?", noteID, entryID).Delete(&barkat.Note{})
 	if result.Error != nil {
 		return result.Error

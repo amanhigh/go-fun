@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/telemetry"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
@@ -57,6 +58,10 @@ func NewBaseHTTPServerWithEngine(name string, port int, shutdown Shutdown, engin
 	engine.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+
+	// FIXME: Add Test for statsviz in http_server_test.go
+	// Statsviz: http://localhost:<port>/debug/statsviz/
+	engine.GET("/debug/statsviz/*filepath", telemetry.StatvizMetrics)
 
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%d", port),

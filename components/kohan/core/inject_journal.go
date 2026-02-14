@@ -29,7 +29,7 @@ func SetupBarkatDB(db *gorm.DB) error {
 func (ki *KohanInjector) provideBarkatDB() (*gorm.DB, error) {
 	db, err := util.CreateSqliteDb(ki.config.Barkat.DbPath, logger.Warn)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create barkat db: %w", err)
 	}
 	if err := SetupBarkatDB(db); err != nil {
 		return nil, err

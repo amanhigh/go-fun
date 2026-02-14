@@ -39,7 +39,7 @@ func (r *ImageRepositoryImpl) ListImages(ctx context.Context, entryID string) ([
 	return images, err
 }
 
-func (r *ImageRepositoryImpl) DeleteImage(ctx context.Context, entryID string, imageID string) error {
+func (r *ImageRepositoryImpl) DeleteImage(ctx context.Context, entryID, imageID string) error {
 	result := r.db.WithContext(ctx).Where("id = ? AND entry_id = ?", imageID, entryID).Delete(&barkat.Image{})
 	if result.Error != nil {
 		return result.Error
