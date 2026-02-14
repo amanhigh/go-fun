@@ -8,6 +8,7 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"go.uber.org/fx"
 )
 
 const (
@@ -41,9 +42,12 @@ var monitorCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		log.Info().Dur("Wait", wait).Str("Screenshots", args[0]).Msg("Monitoring Systems")
 
-		// BUG: Retry When Disk not Mounter, Watermill Exponential Backoff ?
+		// BUG: Retry When Disk not Mounted, Watermill Exponential Backoff ?
 		autoManager := core.GetKohanInterface().GetAutoManager(wait, args[0])
-		server := core.NewKohanServer(args[0], autoManager, nil)
+		server, err := core.GetKohanInterface().GetKohanServer(args[0], autoManager)
+		if err != nil {
+			return fmt.Errorf("failed to build kohan server: %w", err)
+		}
 
 		go autoManager.MonitorInternetConnection(cmd.Context())
 

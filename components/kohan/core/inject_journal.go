@@ -9,8 +9,20 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	barkatmodels "github.com/amanhigh/go-fun/models/barkat"
 	"github.com/golobby/container/v3"
+	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
+
+// ---- Journal Helpers ----
+
+// SetupBarkatDB runs AutoMigrate for all barkat tables on the given database.
+// Used by both DI providers and tests to ensure schema is ready.
+func SetupBarkatDB(db *gorm.DB) error {
+	if err := db.AutoMigrate(&barkatmodels.Entry{}, &barkatmodels.Image{}); err != nil {
+		return fmt.Errorf("failed to migrate barkat tables: %w", err)
+	}
+	return nil
+}
 
 // ---- Journal Providers ----
 
@@ -19,8 +31,9 @@ func (ki *KohanInjector) provideJournalRepository() (repository.JournalRepositor
 	if err != nil {
 		return nil, err
 	}
-	if err := db.AutoMigrate(&barkatmodels.Entry{}, &barkatmodels.Image{}); err != nil {
-		return nil, fmt.Errorf("failed to migrate barkat tables: %w", err)
+	// BUG: Barkat DB should be registered in DI container and resolved from there
+	if err := SetupBarkatDB(db); err != nil {
+		return nil, err
 	}
 	return repository.NewJournalRepository(db), nil
 }

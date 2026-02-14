@@ -17,8 +17,7 @@ type KohanInterface interface {
 	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
 	GetTaxManager() (manager.TaxManager, error)
 	GetBrokerageManager() (manager.BrokerageManager, error)
-	// HACK: Change it to GetKohanServer and introduce/link to a CLI Command.
-	GetJournalHandler() (*handler.JournalHandler, error)
+	GetKohanServer(capturePath string, autoManager manager.AutoManagerInterface) (*KohanServer, error)
 }
 
 // Private singleton instance
@@ -47,16 +46,16 @@ func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) 
 	return manager.NewAutoManager(wait, capturePath)
 }
 
-func (ki *KohanInjector) GetJournalHandler() (*handler.JournalHandler, error) {
+func (ki *KohanInjector) GetKohanServer(capturePath string, autoManager manager.AutoManagerInterface) (*KohanServer, error) {
 	if err := ki.registerJournalDependencies(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)
 	}
 
 	var journalHandler *handler.JournalHandler
 	if err := ki.di.Resolve(&journalHandler); err != nil {
 		return nil, fmt.Errorf("failed to resolve journal handler: %w", err)
 	}
-	return journalHandler, nil
+	return NewKohanServer(capturePath, autoManager, journalHandler), nil
 }
 
 func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {

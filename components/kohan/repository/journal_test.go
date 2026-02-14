@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
 	. "github.com/onsi/ginkgo/v2"
@@ -25,7 +26,7 @@ var _ = Describe("JournalRepository", func() {
 		db, err = util.CreateTestDb(logger.Warn)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = db.AutoMigrate(&barkat.Entry{}, &barkat.Image{})
+		err = core.SetupBarkatDB(db)
 		Expect(err).ToNot(HaveOccurred())
 
 		repo = repository.NewJournalRepository(db)
