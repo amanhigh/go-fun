@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/handler"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/models/config"
@@ -17,7 +18,7 @@ type KohanInterface interface {
 	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
 	GetTaxManager() (manager.TaxManager, error)
 	GetBrokerageManager() (manager.BrokerageManager, error)
-	GetKohanServer(port int, capturePath string, autoManager manager.AutoManagerInterface) (*KohanServer, error)
+	GetKohanServer(port int, capturePath string, autoManager manager.AutoManagerInterface, shutdown util.Shutdown) (*KohanServer, error)
 }
 
 // Private singleton instance
@@ -46,7 +47,7 @@ func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) 
 	return manager.NewAutoManager(wait, capturePath)
 }
 
-func (ki *KohanInjector) GetKohanServer(port int, capturePath string, autoManager manager.AutoManagerInterface) (*KohanServer, error) {
+func (ki *KohanInjector) GetKohanServer(port int, capturePath string, autoManager manager.AutoManagerInterface, shutdown util.Shutdown) (*KohanServer, error) {
 	if err := ki.registerJournalDependencies(); err != nil {
 		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)
 	}
@@ -55,7 +56,7 @@ func (ki *KohanInjector) GetKohanServer(port int, capturePath string, autoManage
 	if err := ki.di.Resolve(&journalHandler); err != nil {
 		return nil, fmt.Errorf("failed to resolve journal handler: %w", err)
 	}
-	return NewKohanServer(port, capturePath, autoManager, journalHandler), nil
+	return NewKohanServer(port, capturePath, autoManager, journalHandler, shutdown), nil
 }
 
 func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {

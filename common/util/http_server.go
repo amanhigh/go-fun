@@ -43,13 +43,13 @@ type BaseHTTPServer struct {
 
 // NewBaseHTTPServer creates a BaseHTTPServer with a default gin.Engine, standard timeouts,
 // and a /health route.
-func NewBaseHTTPServer(name string, port int) *BaseHTTPServer {
-	return NewBaseHTTPServerWithEngine(name, port, gin.Default())
+func NewBaseHTTPServer(name string, port int, shutdown Shutdown) *BaseHTTPServer {
+	return NewBaseHTTPServerWithEngine(name, port, shutdown, gin.Default())
 }
 
 // NewBaseHTTPServerWithEngine creates a BaseHTTPServer using a pre-configured gin.Engine
 // (e.g. with custom middleware, rate limiting, prometheus) and a /health route.
-func NewBaseHTTPServerWithEngine(name string, port int, engine *gin.Engine) *BaseHTTPServer {
+func NewBaseHTTPServerWithEngine(name string, port int, shutdown Shutdown, engine *gin.Engine) *BaseHTTPServer {
 	engine.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
@@ -71,14 +71,13 @@ func NewBaseHTTPServerWithEngine(name string, port int, engine *gin.Engine) *Bas
 		RegisterRoutes: noopRoutes,
 		BeforeShutdown: noop,
 		AfterShutdown:  noop,
+		shutdown:       shutdown,
 	}
 }
 
 // Start registers routes, begins listening, and blocks until graceful shutdown completes.
-func (b *BaseHTTPServer) Start(shutdown Shutdown) error {
+func (b *BaseHTTPServer) Start() error {
 	b.RegisterRoutes(b.Engine)
-	// FIXME: Accept shutdown in constructor.
-	b.shutdown = shutdown
 
 	errChan := make(chan error, 1)
 	serverStopped := make(chan struct{})

@@ -36,12 +36,13 @@ var _ = Describe("Barkat Integration Test", func() {
 			repo := repository.NewJournalRepository(db)
 			mgr := manager.NewJournalManager(repo)
 			journalHandler := handler.NewJournalHandler(mgr)
-			server := core.NewKohanServer(testPort, "", nil, journalHandler)
+			shutdown := util.NewGracefulShutdown()
+			server := core.NewKohanServer(testPort, "", nil, journalHandler, shutdown)
 			baseURL = fmt.Sprintf("http://localhost:%d", testPort)
 
 			go func() {
 				defer GinkgoRecover()
-				_ = server.Start(util.NewGracefulShutdown())
+				_ = server.Start()
 			}()
 
 			// Wait for server to be ready

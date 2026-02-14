@@ -16,9 +16,9 @@ import (
 	"gopkg.in/redis.v5"
 )
 
-func newBaseHTTPServer(cfg config.FunAppConfig) *util.BaseHTTPServer {
+func newBaseHTTPServer(cfg config.FunAppConfig, shutdown util.Shutdown) *util.BaseHTTPServer {
 	engine := newGin(cfg)
-	return util.NewBaseHTTPServerWithEngine(NAMESPACE, cfg.Server.Port, engine)
+	return util.NewBaseHTTPServerWithEngine(NAMESPACE, cfg.Server.Port, shutdown, engine)
 }
 
 func newGin(cfg config.FunAppConfig) (engine *gin.Engine) {

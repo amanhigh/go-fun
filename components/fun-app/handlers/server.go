@@ -16,9 +16,7 @@ import (
 
 type FunServer struct {
 	*util.BaseHTTPServer `container:"type"`
-	// BUG: Shutdown should be part of Base Server.
-	Shutdown             util.Shutdown `container:"type"`
-	Tracer               trace.Tracer  `container:"type"`
+	Tracer               trace.Tracer `container:"type"`
 
 	/* Handlers */
 	PersonHandler     PersonHandler     `container:"type"`
@@ -83,7 +81,7 @@ func (fs *FunServer) Start(c context.Context) (err error) {
 		telemetry.ShutdownTracerProvider(ctx)
 	}
 
-	return fs.BaseHTTPServer.Start(fs.Shutdown)
+	return fs.BaseHTTPServer.Start()
 }
 
 func (fs *FunServer) Stop(c context.Context) {

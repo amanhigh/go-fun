@@ -30,7 +30,7 @@ var _ = Describe("KohanServer", func() {
 		gin.SetMode(gin.TestMode)
 		mockManager = mocks.NewAutoManagerInterface(GinkgoT())
 
-		server = core.NewKohanServer(0, testPath, mockManager, nil)
+		server = core.NewKohanServer(0, testPath, mockManager, nil, util.NewGracefulShutdown())
 	})
 
 	Context("Constructor and Configuration", func() {
@@ -39,7 +39,7 @@ var _ = Describe("KohanServer", func() {
 		})
 
 		It("should accept nil journal handler for constructor", func() {
-			nilServer := core.NewKohanServer(0, testPath, nil, nil)
+			nilServer := core.NewKohanServer(0, testPath, nil, nil, util.NewGracefulShutdown())
 			Expect(nilServer).ToNot(BeNil())
 		})
 	})
@@ -146,12 +146,12 @@ var _ = Describe("KohanServer", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Recreate server with the free port
-			server = core.NewKohanServer(freePort, testPath, mockManager, nil)
+			server = core.NewKohanServer(freePort, testPath, mockManager, nil, realShutdown)
 
 			// Helper function to start server and wait for readiness
 			startAndWaitForServer = func() {
 				go func() {
-					err := server.Start(realShutdown)
+					err := server.Start()
 					serverDone <- err
 				}()
 
@@ -194,9 +194,9 @@ var _ = Describe("KohanServer", func() {
 		})
 
 		It("should handle startup errors", func() {
-			errServer := core.NewKohanServer(-1, testPath, mockManager, nil)
+			errServer := core.NewKohanServer(-1, testPath, mockManager, nil, realShutdown)
 			go func() {
-				err := errServer.Start(realShutdown)
+				err := errServer.Start()
 				serverDone <- err
 			}()
 

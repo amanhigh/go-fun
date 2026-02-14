@@ -104,7 +104,7 @@ func NewKohanConfig() (config KohanConfig, err error) {
 		return config, fmt.Errorf("failed to get user home directory: %w", err)
 	}
 
-	// HACK: #C Remove this Hack.
+	// TODO: #C Remove this Hack.
 	// Expand home directory (~) in all file paths
 	config.Tax.TaxDir = strings.Replace(config.Tax.TaxDir, "~", homeDir, 1)
 	config.Tax.DriveWealthBase = strings.Replace(config.Tax.DriveWealthBase, "~", homeDir, 1)

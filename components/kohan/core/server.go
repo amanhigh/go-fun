@@ -5,9 +5,7 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/handler"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/locales/bg"
 	"github.com/rs/zerolog/log"
-	"go.uber.org/fx"
 )
 
 // KohanServer serves all Kohan HTTP APIs (monitor + journal).
@@ -16,9 +14,9 @@ type KohanServer struct {
 }
 
 // NewKohanServer creates a KohanServer with monitor and journal routes.
-func NewKohanServer(port int, capturePath string, autoManager manager.AutoManagerInterface, journalHandler *handler.JournalHandler) *KohanServer {
+func NewKohanServer(port int, capturePath string, autoManager manager.AutoManagerInterface, journalHandler *handler.JournalHandler, shutdown util.Shutdown) *KohanServer {
 	server := &KohanServer{
-		BaseHTTPServer: util.NewBaseHTTPServer("kohan", port),
+		BaseHTTPServer: util.NewBaseHTTPServer("kohan", port, shutdown),
 	}
 
 	// FIXME: All Handlers should be interface injected by DI
@@ -52,7 +50,7 @@ func registerJournalRoutes(engine *gin.Engine, journalHandler *handler.JournalHa
 			}
 		}
 	} else {
-		
+
 		log.Warn().Msg("JournalHandler is nil, journal API routes will not be registered")
 	}
 }

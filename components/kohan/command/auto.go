@@ -41,17 +41,17 @@ var monitorCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		log.Info().Dur("Wait", wait).Str("Screenshots", args[0]).Msg("Monitoring Systems")
 
-		// BUG: Retry When Disk not Mounted, Watermill Exponential Backoff ?
+		// TODO: Retry When Disk not Mounted, Watermill Exponential Backoff ?
 		autoManager := core.GetKohanInterface().GetAutoManager(wait, args[0])
-		server, err := core.GetKohanInterface().GetKohanServer(MonitorServerPort, args[0], autoManager)
+		shutdown := util.NewGracefulShutdown()
+		server, err := core.GetKohanInterface().GetKohanServer(MonitorServerPort, args[0], autoManager, shutdown)
 		if err != nil {
 			return fmt.Errorf("failed to build kohan server: %w", err)
 		}
 
 		go autoManager.MonitorInternetConnection(cmd.Context())
 
-		shutdown := util.NewGracefulShutdown()
-		if err := server.Start(shutdown); err != nil {
+		if err := server.Start(); err != nil {
 			log.Error().Err(err).Msg("Failed to start monitor server")
 			return fmt.Errorf("monitor server startup failed: %w", err)
 		}
