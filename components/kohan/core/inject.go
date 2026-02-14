@@ -76,13 +76,6 @@ func (ki *KohanInjector) GetBarkatDB() (*gorm.DB, error) {
 	return db, nil
 }
 
-func (ki *KohanInjector) registerMonitorDependencies(capturePath string, autoManager manager.AutoManagerInterface) {
-	container.MustSingleton(ki.di, func() handler.MonitorHandler {
-		// HACK: Make named lambda move to inject_file appropriate place
-		return handler.NewMonitorHandler(capturePath, autoManager)
-	})
-}
-
 func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
 	ki.registerTaxDependencies()
 

@@ -9,6 +9,7 @@ packages:
   "github.com/amanhigh/go-fun/components/kohan/repository":
     interfaces:
       AccountRepository:
+      JournalRepository:
   "github.com/amanhigh/go-fun/components/kohan/clients":
     config:
       all: true

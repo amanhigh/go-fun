@@ -14,7 +14,7 @@ type Entry struct {
 	Ticker    string     `gorm:"column:ticker;not null" json:"ticker" binding:"required"`
 	Sequence  string     `gorm:"column:sequence;not null" json:"sequence" binding:"required,oneof=mwd yr"`
 	Type      string     `gorm:"column:type;not null" json:"type" binding:"required,oneof=rejected result set"`
-	Status    string     `gorm:"column:status;not null" json:"status" binding:"required,oneof=running dropped taken success fail missed just_loss broken rejected"`
+	Status    string     `gorm:"column:status;not null" json:"status" binding:"required,oneof=set running dropped taken rejected success fail missed just_loss broken"`
 	CreatedAt time.Time  `gorm:"column:created_at;not null;index:idx_entry_ticker_created,priority:2,sort:desc" json:"created_at"`
 	DeletedAt *time.Time `gorm:"column:deleted_at" json:"deleted_at,omitempty"`
 
@@ -48,7 +48,7 @@ type EntryQuery struct {
 	common.Pagination
 	Ticker        string `form:"ticker" binding:"omitempty,min=1,max=30"`
 	Type          string `form:"type" binding:"omitempty,oneof=rejected result set"`
-	Status        string `form:"status" binding:"omitempty,oneof=running dropped taken success fail missed just_loss broken rejected"`
+	Status        string `form:"status" binding:"omitempty,oneof=set running dropped taken rejected success fail missed just_loss broken"`
 	Sequence      string `form:"sequence" binding:"omitempty,oneof=mwd yr"`
 	CreatedAfter  string `form:"created-after" binding:"omitempty"`
 	CreatedBefore string `form:"created-before" binding:"omitempty"`
