@@ -15,10 +15,11 @@ import (
 
 var _ = Describe("JournalRepository Image", func() {
 	var (
-		repo    repository.JournalRepository
-		testCtx = context.Background()
-		db      *gorm.DB
-		entry   barkat.Entry
+		repo      repository.ImageRepository
+		entryRepo repository.JournalRepository
+		testCtx   = context.Background()
+		db        *gorm.DB
+		entry     barkat.Entry
 	)
 
 	BeforeEach(func() {
@@ -26,12 +27,13 @@ var _ = Describe("JournalRepository Image", func() {
 		db, err = util.CreateTestDb(logger.Warn)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(core.SetupBarkatDB(db)).To(Succeed())
-		repo = repository.NewJournalRepository(db)
+		entryRepo = repository.NewJournalRepository(db)
+		repo = repository.NewImageRepository(db)
 
 		entry = barkat.Entry{
 			Ticker: "RELIANCE", Sequence: "mwd", Type: "rejected", Status: "fail",
 		}
-		Expect(repo.CreateEntry(testCtx, &entry)).To(Succeed())
+		Expect(entryRepo.CreateEntry(testCtx, &entry)).To(Succeed())
 	})
 
 	AfterEach(func() {

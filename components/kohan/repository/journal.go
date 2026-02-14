@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// JournalRepository provides persistence operations for journal entries and sub-resources.
+// JournalRepository provides persistence operations for journal entries.
 //
 //go:generate mockery --name JournalRepository
 type JournalRepository interface {
@@ -19,27 +19,6 @@ type JournalRepository interface {
 	ListEntries(ctx context.Context, query barkat.EntryQuery) ([]barkat.Entry, int64, error)
 	// EntryExists checks if an entry with the given ID exists.
 	EntryExists(ctx context.Context, id string) (bool, error)
-
-	// CreateImage attaches a new image to an entry.
-	CreateImage(ctx context.Context, image *barkat.Image) error
-	// ListImages returns all images for an entry.
-	ListImages(ctx context.Context, entryID string) ([]barkat.Image, error)
-	// DeleteImage removes an image by ID scoped to an entry.
-	DeleteImage(ctx context.Context, entryID string, imageID string) error
-
-	// CreateNote attaches a new note to an entry.
-	CreateNote(ctx context.Context, note *barkat.Note) error
-	// ListNotes returns all notes for an entry, optionally filtered by status.
-	ListNotes(ctx context.Context, entryID string, status string) ([]barkat.Note, error)
-	// DeleteNote removes a note by ID scoped to an entry.
-	DeleteNote(ctx context.Context, entryID string, noteID string) error
-
-	// CreateTag attaches a new tag to an entry.
-	CreateTag(ctx context.Context, tag *barkat.Tag) error
-	// ListTags returns all tags for an entry, optionally filtered by type.
-	ListTags(ctx context.Context, entryID string, tagType string) ([]barkat.Tag, error)
-	// DeleteTag removes a tag by ID scoped to an entry.
-	DeleteTag(ctx context.Context, entryID string, tagID string) error
 }
 
 type JournalRepositoryImpl struct {

@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// JournalHandler provides HTTP handlers for journal entry and sub-resource operations.
+// JournalHandler provides HTTP handlers for journal entry operations.
 //
 //go:generate mockery --name JournalHandler
 type JournalHandler interface {
@@ -19,27 +19,6 @@ type JournalHandler interface {
 	HandleGetEntry(c *gin.Context)
 	// HandleCreateEntry handles POST /v1/journal-entries
 	HandleCreateEntry(c *gin.Context)
-
-	// HandleCreateImage handles POST /v1/journal-entries/:id/images
-	HandleCreateImage(c *gin.Context)
-	// HandleListImages handles GET /v1/journal-entries/:id/images
-	HandleListImages(c *gin.Context)
-	// HandleDeleteImage handles DELETE /v1/journal-entries/:id/images/:imageId
-	HandleDeleteImage(c *gin.Context)
-
-	// HandleCreateNote handles POST /v1/journal-entries/:id/notes
-	HandleCreateNote(c *gin.Context)
-	// HandleListNotes handles GET /v1/journal-entries/:id/notes
-	HandleListNotes(c *gin.Context)
-	// HandleDeleteNote handles DELETE /v1/journal-entries/:id/notes/:noteId
-	HandleDeleteNote(c *gin.Context)
-
-	// HandleCreateTag handles POST /v1/journal-entries/:id/tags
-	HandleCreateTag(c *gin.Context)
-	// HandleListTags handles GET /v1/journal-entries/:id/tags
-	HandleListTags(c *gin.Context)
-	// HandleDeleteTag handles DELETE /v1/journal-entries/:id/tags/:tagId
-	HandleDeleteTag(c *gin.Context)
 }
 
 type JournalHandlerImpl struct {

@@ -4,11 +4,33 @@ import (
 	"net/http"
 
 	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/gin-gonic/gin"
 )
 
-func (h *JournalHandlerImpl) HandleCreateTag(c *gin.Context) {
+// TagHandler provides HTTP handlers for journal tag operations.
+type TagHandler interface {
+	// HandleCreateTag handles POST /v1/journal-entries/:id/tags
+	HandleCreateTag(c *gin.Context)
+	// HandleListTags handles GET /v1/journal-entries/:id/tags
+	HandleListTags(c *gin.Context)
+	// HandleDeleteTag handles DELETE /v1/journal-entries/:id/tags/:tagId
+	HandleDeleteTag(c *gin.Context)
+}
+
+type TagHandlerImpl struct {
+	tagMgr manager.TagManager
+}
+
+var _ TagHandler = (*TagHandlerImpl)(nil)
+
+// NewTagHandler creates a new TagHandler.
+func NewTagHandler(tagMgr manager.TagManager) *TagHandlerImpl {
+	return &TagHandlerImpl{tagMgr: tagMgr}
+}
+
+func (h *TagHandlerImpl) HandleCreateTag(c *gin.Context) {
 	entryID := c.Param("id")
 	var tag barkat.Tag
 	if err := c.ShouldBindJSON(&tag); err != nil {
@@ -17,17 +39,17 @@ func (h *JournalHandlerImpl) HandleCreateTag(c *gin.Context) {
 		return
 	}
 
-	if httpErr := h.journalManager.CreateTag(c.Request.Context(), entryID, &tag); httpErr != nil {
+	if httpErr := h.tagMgr.CreateTag(c.Request.Context(), entryID, &tag); httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
 	c.JSON(http.StatusCreated, tag)
 }
 
-func (h *JournalHandlerImpl) HandleListTags(c *gin.Context) {
+func (h *TagHandlerImpl) HandleListTags(c *gin.Context) {
 	entryID := c.Param("id")
 	tagType := c.Query("type")
-	tags, httpErr := h.journalManager.ListTags(c.Request.Context(), entryID, tagType)
+	tags, httpErr := h.tagMgr.ListTags(c.Request.Context(), entryID, tagType)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
@@ -35,10 +57,10 @@ func (h *JournalHandlerImpl) HandleListTags(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"tags": tags})
 }
 
-func (h *JournalHandlerImpl) HandleDeleteTag(c *gin.Context) {
+func (h *TagHandlerImpl) HandleDeleteTag(c *gin.Context) {
 	entryID := c.Param("id")
 	tagID := c.Param("tagId")
-	if httpErr := h.journalManager.DeleteTag(c.Request.Context(), entryID, tagID); httpErr != nil {
+	if httpErr := h.tagMgr.DeleteTag(c.Request.Context(), entryID, tagID); httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}

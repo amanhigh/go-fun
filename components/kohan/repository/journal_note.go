@@ -7,11 +7,32 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *JournalRepositoryImpl) CreateNote(ctx context.Context, note *barkat.Note) error {
+// NoteRepository provides persistence operations for journal notes.
+type NoteRepository interface {
+	// CreateNote attaches a new note to an entry.
+	CreateNote(ctx context.Context, note *barkat.Note) error
+	// ListNotes returns all notes for an entry, optionally filtered by status.
+	ListNotes(ctx context.Context, entryID string, status string) ([]barkat.Note, error)
+	// DeleteNote removes a note by ID scoped to an entry.
+	DeleteNote(ctx context.Context, entryID string, noteID string) error
+}
+
+type NoteRepositoryImpl struct {
+	db *gorm.DB
+}
+
+var _ NoteRepository = (*NoteRepositoryImpl)(nil)
+
+// NewNoteRepository creates a new NoteRepository backed by GORM.
+func NewNoteRepository(db *gorm.DB) *NoteRepositoryImpl {
+	return &NoteRepositoryImpl{db: db}
+}
+
+func (r *NoteRepositoryImpl) CreateNote(ctx context.Context, note *barkat.Note) error {
 	return r.db.WithContext(ctx).Create(note).Error
 }
 
-func (r *JournalRepositoryImpl) ListNotes(ctx context.Context, entryID string, status string) ([]barkat.Note, error) {
+func (r *NoteRepositoryImpl) ListNotes(ctx context.Context, entryID string, status string) ([]barkat.Note, error) {
 	var notes []barkat.Note
 	tx := r.db.WithContext(ctx).Where("entry_id = ?", entryID)
 	if status != "" {
@@ -21,7 +42,7 @@ func (r *JournalRepositoryImpl) ListNotes(ctx context.Context, entryID string, s
 	return notes, err
 }
 
-func (r *JournalRepositoryImpl) DeleteNote(ctx context.Context, entryID string, noteID string) error {
+func (r *NoteRepositoryImpl) DeleteNote(ctx context.Context, entryID string, noteID string) error {
 	result := r.db.WithContext(ctx).Where("id = ? AND entry_id = ?", noteID, entryID).Delete(&barkat.Note{})
 	if result.Error != nil {
 		return result.Error

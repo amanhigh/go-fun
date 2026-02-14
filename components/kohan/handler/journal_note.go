@@ -4,11 +4,33 @@ import (
 	"net/http"
 
 	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/gin-gonic/gin"
 )
 
-func (h *JournalHandlerImpl) HandleCreateNote(c *gin.Context) {
+// NoteHandler provides HTTP handlers for journal note operations.
+type NoteHandler interface {
+	// HandleCreateNote handles POST /v1/journal-entries/:id/notes
+	HandleCreateNote(c *gin.Context)
+	// HandleListNotes handles GET /v1/journal-entries/:id/notes
+	HandleListNotes(c *gin.Context)
+	// HandleDeleteNote handles DELETE /v1/journal-entries/:id/notes/:noteId
+	HandleDeleteNote(c *gin.Context)
+}
+
+type NoteHandlerImpl struct {
+	noteMgr manager.NoteManager
+}
+
+var _ NoteHandler = (*NoteHandlerImpl)(nil)
+
+// NewNoteHandler creates a new NoteHandler.
+func NewNoteHandler(noteMgr manager.NoteManager) *NoteHandlerImpl {
+	return &NoteHandlerImpl{noteMgr: noteMgr}
+}
+
+func (h *NoteHandlerImpl) HandleCreateNote(c *gin.Context) {
 	entryID := c.Param("id")
 	var note barkat.Note
 	if err := c.ShouldBindJSON(&note); err != nil {
@@ -17,17 +39,17 @@ func (h *JournalHandlerImpl) HandleCreateNote(c *gin.Context) {
 		return
 	}
 
-	if httpErr := h.journalManager.CreateNote(c.Request.Context(), entryID, &note); httpErr != nil {
+	if httpErr := h.noteMgr.CreateNote(c.Request.Context(), entryID, &note); httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
 	c.JSON(http.StatusCreated, note)
 }
 
-func (h *JournalHandlerImpl) HandleListNotes(c *gin.Context) {
+func (h *NoteHandlerImpl) HandleListNotes(c *gin.Context) {
 	entryID := c.Param("id")
 	status := c.Query("note_status")
-	notes, httpErr := h.journalManager.ListNotes(c.Request.Context(), entryID, status)
+	notes, httpErr := h.noteMgr.ListNotes(c.Request.Context(), entryID, status)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
@@ -35,10 +57,10 @@ func (h *JournalHandlerImpl) HandleListNotes(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"notes": notes})
 }
 
-func (h *JournalHandlerImpl) HandleDeleteNote(c *gin.Context) {
+func (h *NoteHandlerImpl) HandleDeleteNote(c *gin.Context) {
 	entryID := c.Param("id")
 	noteID := c.Param("noteId")
-	if httpErr := h.journalManager.DeleteNote(c.Request.Context(), entryID, noteID); httpErr != nil {
+	if httpErr := h.noteMgr.DeleteNote(c.Request.Context(), entryID, noteID); httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
