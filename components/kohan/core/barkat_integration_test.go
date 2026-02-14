@@ -64,11 +64,13 @@ var _ = Describe("Barkat Integration Test", func() {
 					Ticker:   "RELIANCE",
 					Sequence: "mwd",
 					Type:     "rejected",
-					Outcome:  "fail",
-					Trend:    "trend",
+					Status:   "fail",
 					Images: []barkat.Image{
-						{Position: 1, Path: "assets/trading/2024/01/RELIANCE.mwd.trend.rejected__20240115__100000.png"},
-						{Position: 2, Path: "assets/trading/2024/01/RELIANCE.mwd.trend.rejected__20240115__100001.png"},
+						{Timeframe: "DL"},
+						{Timeframe: "WK"},
+					},
+					Tags: []barkat.Tag{
+						{Tag: "oe", TagType: "reason"},
 					},
 				}
 
@@ -114,7 +116,7 @@ var _ = Describe("Barkat Integration Test", func() {
 					Expect(fetchedEntry.ID).To(Equal(createdEntry.ID))
 					Expect(fetchedEntry.Ticker).To(Equal("RELIANCE"))
 					Expect(fetchedEntry.Images).To(HaveLen(2))
-					Expect(fetchedEntry.Images[0].Path).To(ContainSubstring("RELIANCE"))
+					Expect(fetchedEntry.Images[0].Timeframe).ToNot(BeEmpty())
 				})
 			})
 

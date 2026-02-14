@@ -48,14 +48,19 @@ var _ = Describe("JournalRepository", func() {
 				Ticker:    "RELIANCE",
 				Sequence:  "mwd",
 				Type:      "rejected",
-				Outcome:   "fail",
-				Trend:     "trend",
+				Status:    "fail",
 				CreatedAt: time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC),
 				Images: []barkat.Image{
-					{Position: 1, Path: "assets/trading/2024/01/RELIANCE.mwd.trend.rejected__20240115__100000.png"},
-					{Position: 2, Path: "assets/trading/2024/01/RELIANCE.mwd.trend.rejected__20240115__100001.png"},
-					{Position: 3, Path: "assets/trading/2024/01/RELIANCE.mwd.trend.rejected__20240115__100002.png"},
-					{Position: 4, Path: "assets/trading/2024/01/RELIANCE.mwd.trend.rejected__20240115__100003.png"},
+					{Timeframe: "DL"},
+					{Timeframe: "WK"},
+					{Timeframe: "MN"},
+					{Timeframe: "TMN"},
+				},
+				Tags: []barkat.Tag{
+					{Tag: "oe", TagType: "reason"},
+				},
+				Notes: []barkat.Note{
+					{Status: "rejected", Content: "Strong OE at weekly level."},
 				},
 			}
 
@@ -86,19 +91,23 @@ var _ = Describe("JournalRepository", func() {
 				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("should retrieve entry with images", func() {
+			It("should retrieve entry with associations", func() {
 				Expect(fetchedEntry.ID).To(Equal(entry.ID))
 				Expect(fetchedEntry.Ticker).To(Equal("RELIANCE"))
 				Expect(fetchedEntry.Sequence).To(Equal("mwd"))
 				Expect(fetchedEntry.Type).To(Equal("rejected"))
-				Expect(fetchedEntry.Outcome).To(Equal("fail"))
-				Expect(fetchedEntry.Trend).To(Equal("trend"))
+				Expect(fetchedEntry.Status).To(Equal("fail"))
 				Expect(fetchedEntry.Images).To(HaveLen(4))
+				Expect(fetchedEntry.Tags).To(HaveLen(1))
+				Expect(fetchedEntry.Tags[0].Tag).To(Equal("oe"))
+				Expect(fetchedEntry.Notes).To(HaveLen(1))
+				Expect(fetchedEntry.Notes[0].Content).To(Equal("Strong OE at weekly level."))
 			})
 
-			It("should preserve image positions", func() {
-				for i, img := range fetchedEntry.Images {
-					Expect(img.Position).To(Equal(i + 1))
+			It("should preserve image timeframes", func() {
+				timeframes := []string{"DL", "WK", "MN", "TMN"}
+				for _, img := range fetchedEntry.Images {
+					Expect(timeframes).To(ContainElement(img.Timeframe))
 				}
 			})
 		})
@@ -114,17 +123,17 @@ var _ = Describe("JournalRepository", func() {
 			var secondEntry barkat.Entry
 
 			BeforeEach(func() {
-				notes := "Trends\nHTF - Up\nMTF - Up"
 				secondEntry = barkat.Entry{
-					Ticker:        "INFY",
-					Sequence:      "yr",
-					Type:          "set",
-					Outcome:       "taken",
-					Trend:         "trend",
-					NotesMarkdown: &notes,
-					CreatedAt:     time.Date(2024, 2, 10, 0, 0, 0, 0, time.UTC),
+					Ticker:    "INFY",
+					Sequence:  "yr",
+					Type:      "set",
+					Status:    "taken",
+					CreatedAt: time.Date(2024, 2, 10, 0, 0, 0, 0, time.UTC),
 					Images: []barkat.Image{
-						{Position: 1, Path: "assets/trading/2024/02/INFY.yr.set__20240210__100000.png"},
+						{Timeframe: "DL"},
+					},
+					Notes: []barkat.Note{
+						{Status: "set", Content: "Trends\nHTF - Up\nMTF - Up"},
 					},
 				}
 
@@ -163,8 +172,8 @@ var _ = Describe("JournalRepository", func() {
 				Expect(entries[0].Ticker).To(Equal("RELIANCE"))
 			})
 
-			It("should filter by outcome", func() {
-				query := barkat.EntryQuery{Outcome: "taken"}
+			It("should filter by status", func() {
+				query := barkat.EntryQuery{Status: "taken"}
 				query.Limit = 10
 				entries, total, err := repo.ListEntries(testCtx, query)
 				Expect(err).ToNot(HaveOccurred())

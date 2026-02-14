@@ -10,22 +10,22 @@ import (
 
 // Entry represents a single trade journal capture event.
 type Entry struct {
-	ID            string     `gorm:"column:id;primaryKey" json:"id"`
-	Ticker        string     `gorm:"column:ticker;not null" json:"ticker"`
-	Sequence      string     `gorm:"column:sequence;not null" json:"sequence"`
-	Type          string     `gorm:"column:type;not null" json:"type"`
-	Outcome       string     `gorm:"column:outcome;not null" json:"outcome"`
-	Trend         string     `gorm:"column:trend;not null;default:trend" json:"trend"`
-	NotesMarkdown *string    `gorm:"column:notes_markdown" json:"notes_markdown,omitempty"`
-	CreatedAt     time.Time  `gorm:"column:created_at;not null" json:"created_at"`
-	DeletedAt     *time.Time `gorm:"column:deleted_at" json:"deleted_at,omitempty"`
+	ID        string     `gorm:"column:id;primaryKey" json:"id"`
+	Ticker    string     `gorm:"column:ticker;not null" json:"ticker" binding:"required"`
+	Sequence  string     `gorm:"column:sequence;not null" json:"sequence" binding:"required,oneof=mwd yr"`
+	Type      string     `gorm:"column:type;not null" json:"type" binding:"required,oneof=rejected result set"`
+	Status    string     `gorm:"column:status;not null" json:"status" binding:"required,oneof=running dropped taken success fail missed just_loss broken rejected"`
+	CreatedAt time.Time  `gorm:"column:created_at;not null;index:idx_entry_ticker_created,priority:2,sort:desc" json:"created_at"`
+	DeletedAt *time.Time `gorm:"column:deleted_at" json:"deleted_at,omitempty"`
 
 	// Associations
 	Images []Image `gorm:"foreignKey:EntryID;references:ID" json:"images,omitempty"`
+	Tags   []Tag   `gorm:"foreignKey:EntryID;references:ID" json:"tags,omitempty"`
+	Notes  []Note  `gorm:"foreignKey:EntryID;references:ID" json:"note_blocks,omitempty"`
 }
 
 func (Entry) TableName() string {
-	return "barkat_entries"
+	return "journal_entries"
 }
 
 func (e *Entry) BeforeCreate(_ *gorm.DB) error {
@@ -46,16 +46,18 @@ type EntryPath struct {
 // EntryQuery holds query parameters for listing/filtering entries.
 type EntryQuery struct {
 	common.Pagination
-	Ticker   string `form:"ticker" binding:"omitempty,min=1,max=30"`
-	Type     string `form:"type" binding:"omitempty,oneof=rejected result set"`
-	Outcome  string `form:"outcome" binding:"omitempty,oneof=fail broken taken success running justloss"`
-	Sequence string `form:"sequence" binding:"omitempty,oneof=mwd wdh yr"`
-	From     string `form:"from" binding:"omitempty"`
-	To       string `form:"to" binding:"omitempty"`
+	Ticker        string `form:"ticker" binding:"omitempty,min=1,max=30"`
+	Type          string `form:"type" binding:"omitempty,oneof=rejected result set"`
+	Status        string `form:"status" binding:"omitempty,oneof=running dropped taken success fail missed just_loss broken rejected"`
+	Sequence      string `form:"sequence" binding:"omitempty,oneof=mwd yr"`
+	CreatedAfter  string `form:"created-after" binding:"omitempty"`
+	CreatedBefore string `form:"created-before" binding:"omitempty"`
+	SortBy        string `form:"sort-by" binding:"omitempty,oneof=created_at ticker sequence"`
+	SortOrder     string `form:"sort-order" binding:"omitempty,oneof=asc desc"`
 }
 
 // EntryList is the paginated response for journal entries.
 type EntryList struct {
-	Records  []Entry                  `json:"records"`
+	Records  []Entry                  `json:"entries"`
 	Metadata common.PaginatedResponse `json:"metadata"`
 }

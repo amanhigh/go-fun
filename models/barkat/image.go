@@ -10,17 +10,13 @@ import (
 // Image represents a screenshot attached to a journal entry.
 type Image struct {
 	ID        string    `gorm:"column:id;primaryKey" json:"id"`
-	EntryID   string    `gorm:"column:entry_id;not null" json:"entry_id"`
-	Position  int       `gorm:"column:position;not null" json:"position"`
-	Path      string    `gorm:"column:path;not null" json:"path"`
-	IsCheck   bool      `gorm:"column:is_check;not null;default:false" json:"is_check"`
-	Width     *int      `gorm:"column:width" json:"width,omitempty"`
-	Height    *int      `gorm:"column:height" json:"height,omitempty"`
+	EntryID   string    `gorm:"column:entry_id;not null;index:idx_image_entry_timeframe,priority:1" json:"entry_id"`
+	Timeframe string    `gorm:"column:timeframe;not null;index:idx_image_entry_timeframe,priority:2" json:"timeframe" binding:"required,oneof=DL WK MN TMN SMN YR"`
 	CreatedAt time.Time `gorm:"column:created_at;not null" json:"created_at"`
 }
 
 func (Image) TableName() string {
-	return "barkat_images"
+	return "journal_images"
 }
 
 func (i *Image) BeforeCreate(_ *gorm.DB) error {

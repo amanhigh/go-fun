@@ -18,7 +18,8 @@ import (
 // SetupBarkatDB runs AutoMigrate for all barkat tables on the given database.
 // Used by both DI providers and tests to ensure schema is ready.
 func SetupBarkatDB(db *gorm.DB) error {
-	if err := db.AutoMigrate(&barkatmodels.Entry{}, &barkatmodels.Image{}); err != nil {
+	// HACK: Migrate using Migration Framework and remove AutoMigrate (Use it only for tests)
+	if err := db.AutoMigrate(&barkatmodels.Entry{}, &barkatmodels.Image{}, &barkatmodels.Tag{}, &barkatmodels.Note{}); err != nil {
 		return fmt.Errorf("failed to migrate barkat tables: %w", err)
 	}
 	return nil

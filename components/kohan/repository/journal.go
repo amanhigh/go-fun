@@ -34,7 +34,7 @@ func (r *JournalRepositoryImpl) CreateEntry(ctx context.Context, entry *barkat.E
 
 func (r *JournalRepositoryImpl) GetEntry(ctx context.Context, id string) (barkat.Entry, error) {
 	var entry barkat.Entry
-	err := r.db.WithContext(ctx).Preload("Images").First(&entry, "id = ?", id).Error
+	err := r.db.WithContext(ctx).Preload("Images").Preload("Tags").Preload("Notes").First(&entry, "id = ?", id).Error
 	return entry, err
 }
 
@@ -47,17 +47,17 @@ func (r *JournalRepositoryImpl) ListEntries(ctx context.Context, query barkat.En
 	if query.Type != "" {
 		tx = tx.Where("type = ?", query.Type)
 	}
-	if query.Outcome != "" {
-		tx = tx.Where("outcome = ?", query.Outcome)
+	if query.Status != "" {
+		tx = tx.Where("status = ?", query.Status)
 	}
 	if query.Sequence != "" {
 		tx = tx.Where("sequence = ?", query.Sequence)
 	}
-	if query.From != "" {
-		tx = tx.Where("created_at >= ?", query.From)
+	if query.CreatedAfter != "" {
+		tx = tx.Where("created_at >= ?", query.CreatedAfter)
 	}
-	if query.To != "" {
-		tx = tx.Where("created_at <= ?", query.To)
+	if query.CreatedBefore != "" {
+		tx = tx.Where("created_at <= ?", query.CreatedBefore)
 	}
 
 	var total int64
@@ -65,8 +65,17 @@ func (r *JournalRepositoryImpl) ListEntries(ctx context.Context, query barkat.En
 		return nil, 0, err
 	}
 
+	orderClause := "created_at DESC"
+	if query.SortBy != "" {
+		direction := "DESC"
+		if query.SortOrder == "asc" {
+			direction = "ASC"
+		}
+		orderClause = query.SortBy + " " + direction
+	}
+
 	var entries []barkat.Entry
-	err := tx.Order("created_at DESC").
+	err := tx.Order(orderClause).
 		Offset(query.Offset).
 		Limit(query.Limit).
 		Preload("Images").
