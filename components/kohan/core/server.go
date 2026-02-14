@@ -33,6 +33,8 @@ func NewMonitorServer(capturePath string, autoManager manager.AutoManagerInterfa
 	}
 
 	// Register Routes
+	// HACK: Move to separate file in new handler Package.
+	// HACK: Merge Barkat Server under this and Rename this as Kohan Server.
 	server.mux.GET("/v1/ticker/:ticker/record", server.HandleRecordTicker)
 	server.mux.GET("/v1/clip/", server.HandleReadClip)
 	server.mux.POST("/v1/submap/:action", server.HandleSubmapControl)

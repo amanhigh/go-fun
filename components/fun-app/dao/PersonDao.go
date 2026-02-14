@@ -12,6 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// FIXME: Rename to Repository package stop using dao in files and package.
 type PersonDaoInterface interface {
 	util.BaseDaoInterface
 	ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError)

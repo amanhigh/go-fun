@@ -24,6 +24,7 @@ type KohanInterface interface {
 	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
 	GetTaxManager() (manager.TaxManager, error)
 	GetBrokerageManager() (manager.BrokerageManager, error)
+	GetBarkatServer(dbPath string) (*BarkatServer, error)
 }
 
 // Private singleton instance
@@ -50,6 +51,17 @@ func GetKohanInterface() KohanInterface {
 
 func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface {
 	return manager.NewAutoManager(wait, capturePath)
+}
+
+func (ki *KohanInjector) GetBarkatServer(dbPath string) (*BarkatServer, error) {
+	// FIXME: Introduce Barkat Config in Kohan Config.
+	db, err := SetupBarkatDB(dbPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup barkat db: %w", err)
+	}
+	repo := repository.NewBarkatRepository(db)
+	mgr := manager.NewBarkatManager(repo)
+	return NewBarkatServer(mgr), nil
 }
 
 func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
