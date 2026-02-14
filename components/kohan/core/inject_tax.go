@@ -1,0 +1,255 @@
+package core
+
+import (
+	"context"
+
+	"github.com/amanhigh/go-fun/components/kohan/clients"
+	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/components/kohan/repository"
+	taxmodels "github.com/amanhigh/go-fun/models/tax"
+	"github.com/go-resty/resty/v2"
+	"github.com/golobby/container/v3"
+	"github.com/rs/zerolog/log"
+)
+
+// ---- Client Providers ----
+
+func (ki *KohanInjector) provideYahooClient(client *resty.Client) clients.StockDataClient {
+	return clients.NewYahooClient(client, ki.config.Tax.YahooBaseURL, ki.config.Tax.TickerDataStartYear)
+}
+
+func (ki *KohanInjector) provideSBIClient(client *resty.Client) clients.SBIClient {
+	return clients.NewSBIClient(client, ki.config.Tax.SBIBaseURL)
+}
+
+// ---- Repository Providers ----
+
+func (ki *KohanInjector) provideExchangeRepository() repository.ExchangeRepository {
+	return repository.NewExchangeRepository(ki.config.Tax.TTRateFilePath)
+}
+
+func (ki *KohanInjector) provideGainsRepository() repository.GainsRepository {
+	return repository.NewGainsRepository(ki.config.Tax.GainsFilePath)
+}
+
+func (ki *KohanInjector) provideDividendRepository() repository.DividendRepository {
+	return repository.NewDividendRepository(ki.config.Tax.DividendFilePath)
+}
+
+func (ki *KohanInjector) provideInterestRepository() repository.InterestRepository {
+	return repository.NewInterestRepository(ki.config.Tax.InterestFilePath)
+}
+
+func (ki *KohanInjector) provideAccountRepository() repository.AccountRepository {
+	// AccountRepository uses Output/YearEndBalance/ for accounts_YYYY.csv files
+	return repository.NewAccountRepository(ki.config.Tax.AccountsDir)
+}
+
+func (ki *KohanInjector) provideTradeRepository() repository.TradeRepository {
+	return repository.NewTradeRepository(ki.config.Tax.TradesPath)
+}
+
+// ---- Manager Providers ----
+
+func (ki *KohanInjector) provideTickerManager(client clients.StockDataClient) manager.TickerManager {
+	return manager.NewTickerManager(client, ki.config.Tax.TickerCacheDir)
+}
+
+func (ki *KohanInjector) provideSBIManager(client clients.SBIClient, exchangeRepo repository.ExchangeRepository) manager.SBIManager {
+	sbiManager := manager.NewSBIManager(client, ki.config.Tax.TTRateFilePath, exchangeRepo)
+	if err := sbiManager.DownloadRates(context.Background()); err != nil {
+		// If download fails, we should not continue.
+		// A panic here is acceptable as it's a startup dependency.
+		log.Fatal().Err(err).Msg("Failed to download SBI rates")
+	}
+	return sbiManager
+}
+
+func (ki *KohanInjector) provideExchangeManager(sbiManager manager.SBIManager) manager.ExchangeManager {
+	return manager.NewExchangeManager(sbiManager)
+}
+
+func (ki *KohanInjector) provideAccountManager(accountRepo repository.AccountRepository) manager.AccountManager {
+	// AccountRepository handles directory path internally, manager just delegates
+	return manager.NewAccountManager(accountRepo)
+}
+
+func (ki *KohanInjector) provideValuationManager(
+	tickerManager manager.TickerManager,
+	accountManager manager.AccountManager,
+	tradeRepository repository.TradeRepository,
+	fyManager manager.FinancialYearManager[taxmodels.Trade],
+	sbiManager manager.SBIManager,
+) manager.ValuationManager {
+	return manager.NewValuationManager(tickerManager, accountManager, tradeRepository, fyManager, sbiManager)
+}
+
+func (ki *KohanInjector) provideTaxValuationManager(
+	exchangeManager manager.ExchangeManager,
+	valuationManager manager.ValuationManager,
+) manager.TaxValuationManager {
+	return manager.NewTaxValuationManager(exchangeManager, valuationManager)
+}
+
+func (ki *KohanInjector) provideFinancialYearManagerGains() manager.FinancialYearManager[taxmodels.Gains] {
+	return manager.NewFinancialYearManager[taxmodels.Gains]()
+}
+
+func (ki *KohanInjector) provideFinancialYearManagerInterest() manager.FinancialYearManager[taxmodels.Interest] {
+	return manager.NewFinancialYearManager[taxmodels.Interest]()
+}
+
+func (ki *KohanInjector) provideFinancialYearManagerDividends() manager.FinancialYearManager[taxmodels.Dividend] {
+	return manager.NewFinancialYearManager[taxmodels.Dividend]()
+}
+
+func (ki *KohanInjector) provideFinancialYearManagerTrade() manager.FinancialYearManager[taxmodels.Trade] {
+	return manager.NewFinancialYearManager[taxmodels.Trade]()
+}
+
+func (ki *KohanInjector) provideCapitalGainManager(
+	exchangeMgr manager.ExchangeManager,
+	gainsRepo repository.GainsRepository,
+	fyMgr manager.FinancialYearManager[taxmodels.Gains],
+) manager.CapitalGainManager {
+	return manager.NewCapitalGainManager(exchangeMgr, gainsRepo, fyMgr)
+}
+
+func (ki *KohanInjector) provideInterestManager(
+	exchangeMgr manager.ExchangeManager,
+	fyMgr manager.FinancialYearManager[taxmodels.Interest],
+	interestRepo repository.InterestRepository,
+) manager.InterestManager {
+	return manager.NewInterestManager(exchangeMgr, fyMgr, interestRepo)
+}
+
+func (ki *KohanInjector) provideDividendManager(
+	exchangeMgr manager.ExchangeManager,
+	fyMgr manager.FinancialYearManager[taxmodels.Dividend],
+	dividendRepo repository.DividendRepository,
+) manager.DividendManager {
+	return manager.NewDividendManager(exchangeMgr, fyMgr, dividendRepo)
+}
+
+func (ki *KohanInjector) provideExcelManager() manager.ExcelManager {
+	// ExcelManager uses Output/Reports/ for tax_summary_YYYY.xlsx files
+	return manager.NewExcelManager(ki.config.Tax.ReportsDir)
+}
+
+func (ki *KohanInjector) provideGainsComputationManager() manager.GainsComputationManager {
+	return manager.NewGainsComputationManager()
+}
+
+func (ki *KohanInjector) provideBrokerageManager() manager.BrokerageManager {
+	brokerageManager := &manager.BrokerageManagerImpl{
+		Config: ki.config.Tax,
+	}
+
+	// Fill will inject GainsManager via DI
+	err := ki.di.Fill(brokerageManager)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to fill brokerage manager")
+	}
+
+	return brokerageManager
+}
+
+func (ki *KohanInjector) provideDriveWealthManager() manager.Broker {
+	return manager.NewDriveWealthManagerImpl(ki.config.Tax.DriveWealthBase)
+}
+
+func (ki *KohanInjector) provideInteractiveBrokersManager() manager.Broker {
+	return manager.NewInteractiveBrokersManagerImpl(ki.config.Tax.IBKRBase)
+}
+
+func (ki *KohanInjector) provideTaxManager(
+	gainMgr manager.CapitalGainManager,
+	dividendManager manager.DividendManager,
+	interestManager manager.InterestManager,
+	taxValuationManager manager.TaxValuationManager,
+	excelMgr manager.ExcelManager,
+	accountMgr manager.AccountManager,
+) manager.TaxManager {
+	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager, excelMgr, accountMgr)
+}
+
+// ---- Tax Dependency Registration ----
+
+// registerClients registers core clients like REST client and API clients.
+func (ki *KohanInjector) registerClients() {
+	// First register the REST client
+	container.MustSingleton(ki.di, resty.New)
+
+	// Then register clients that depend on REST client
+	var client *resty.Client
+	container.MustResolve(ki.di, &client)
+
+	container.MustSingleton(ki.di, func() clients.StockDataClient {
+		return ki.provideYahooClient(client)
+	})
+	container.MustSingleton(ki.di, func() clients.SBIClient {
+		return ki.provideSBIClient(client)
+	})
+}
+
+// registerRepositories registers all repository implementations.
+func (ki *KohanInjector) registerRepositories() {
+	container.MustSingleton(ki.di, ki.provideExchangeRepository)
+	container.MustSingleton(ki.di, ki.provideGainsRepository)
+	container.MustSingleton(ki.di, ki.provideDividendRepository)
+	container.MustSingleton(ki.di, ki.provideInterestRepository)
+	container.MustSingleton(ki.di, ki.provideAccountRepository)
+	container.MustSingleton(ki.di, ki.provideTradeRepository)
+}
+
+// registerCoreManagers registers managers that depend on clients or repositories.
+func (ki *KohanInjector) registerCoreManagers() {
+	// Register managers that depend on clients or repositories
+	container.MustSingleton(ki.di, ki.provideSBIManager)
+	container.MustSingleton(ki.di, ki.provideExchangeManager)
+	container.MustSingleton(ki.di, ki.provideAccountManager)
+
+	// Register TickerManager (depends on StockDataClient)
+	var stockDataClient clients.StockDataClient
+	container.MustResolve(ki.di, &stockDataClient)
+	container.MustSingleton(ki.di, func() manager.TickerManager {
+		return ki.provideTickerManager(stockDataClient)
+	})
+
+	// Register managers that depend on TickerManager and/or AccountManager/TradeRepository
+	container.MustSingleton(ki.di, ki.provideValuationManager)
+	container.MustSingleton(ki.di, ki.provideTaxValuationManager)
+}
+
+// registerFinancialYearManagers registers managers for handling financial year data.
+func (ki *KohanInjector) registerFinancialYearManagers() {
+	container.MustSingleton(ki.di, ki.provideFinancialYearManagerGains)
+	container.MustSingleton(ki.di, ki.provideFinancialYearManagerDividends)
+	container.MustSingleton(ki.di, ki.provideFinancialYearManagerInterest)
+	container.MustSingleton(ki.di, ki.provideFinancialYearManagerTrade)
+}
+
+// registerTaxComponents registers managers specifically for tax calculations.
+func (ki *KohanInjector) registerTaxComponents() {
+	container.MustSingleton(ki.di, ki.provideCapitalGainManager)
+	container.MustSingleton(ki.di, ki.provideDividendManager)
+	container.MustSingleton(ki.di, ki.provideInterestManager)
+	container.MustSingleton(ki.di, ki.provideExcelManager)
+	container.MustSingleton(ki.di, ki.provideTaxManager)
+	container.MustSingleton(ki.di, ki.provideGainsComputationManager)
+
+	// Register brokers with names to avoid collision (names match struct field names)
+	container.MustNamedSingleton(ki.di, "DriveWealth", ki.provideDriveWealthManager)
+	container.MustNamedSingleton(ki.di, "IB", ki.provideInteractiveBrokersManager)
+
+	container.MustSingleton(ki.di, ki.provideBrokerageManager)
+}
+
+// registerTaxDependencies registers all dependencies required for tax calculations.
+func (ki *KohanInjector) registerTaxDependencies() {
+	ki.registerClients()
+	ki.registerRepositories()
+	ki.registerFinancialYearManagers() // Register FY Managers first
+	ki.registerCoreManagers()          // Then register managers that might depend on them
+	ki.registerTaxComponents()
+}
