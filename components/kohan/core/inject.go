@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/clients"
+	"github.com/amanhigh/go-fun/components/kohan/handler"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/tui"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
@@ -24,7 +25,7 @@ type KohanInterface interface {
 	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
 	GetTaxManager() (manager.TaxManager, error)
 	GetBrokerageManager() (manager.BrokerageManager, error)
-	GetBarkatServer(dbPath string) (*BarkatServer, error)
+	GetJournalHandler() (*handler.JournalHandler, error)
 }
 
 // Private singleton instance
@@ -53,15 +54,15 @@ func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) 
 	return manager.NewAutoManager(wait, capturePath)
 }
 
-func (ki *KohanInjector) GetBarkatServer(dbPath string) (*BarkatServer, error) {
-	// FIXME: Introduce Barkat Config in Kohan Config.
-	db, err := SetupBarkatDB(dbPath)
+func (ki *KohanInjector) GetJournalHandler() (*handler.JournalHandler, error) {
+	db, err := SetupBarkatDB(ki.config.Barkat.DbPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup barkat db: %w", err)
 	}
-	repo := repository.NewBarkatRepository(db)
-	mgr := manager.NewBarkatManager(repo)
-	return NewBarkatServer(mgr), nil
+	// 2.1 FIXME: Register Journal repository/manager/handler with the DI container instead of manual New* wiring here.
+	repo := repository.NewJournalRepository(db)
+	mgr := manager.NewJournalManager(repo)
+	return handler.NewJournalHandler(mgr), nil
 }
 
 func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {

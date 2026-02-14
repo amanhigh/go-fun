@@ -1,4 +1,4 @@
-package core_test
+package repository_test
 
 import (
 	"context"
@@ -12,21 +12,20 @@ import (
 	"gorm.io/gorm"
 )
 
-// HACK: Should be part of repository package with barkat_test.
-// HACK: We should have separate repository for each table.
-var _ = Describe("BarkatRepository", func() {
+var _ = Describe("JournalRepository", func() {
 	var (
-		repo    repository.BarkatRepository
+		repo    repository.JournalRepository
 		testCtx = context.Background()
 		db      *gorm.DB
 	)
 
 	BeforeEach(func() {
 		var err error
+		// 1.1 FIXME: Replace ad-hoc SetupBarkatDB usage with shared SQLite test helper (util.CreateTestDb) for consistent test DB config.
 		db, err = core.SetupBarkatDB("file::memory:")
 		Expect(err).ToNot(HaveOccurred())
 
-		repo = repository.NewBarkatRepository(db)
+		repo = repository.NewJournalRepository(db)
 	})
 
 	AfterEach(func() {

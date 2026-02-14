@@ -43,7 +43,7 @@ var monitorCmd = &cobra.Command{
 
 		// BUG: Retry When Disk not Mounter, Watermill Exponential Backoff ?
 		autoManager := core.GetKohanInterface().GetAutoManager(wait, args[0])
-		server := core.NewMonitorServer(args[0], autoManager)
+		server := core.NewKohanServer(args[0], autoManager, nil)
 
 		go autoManager.MonitorInternetConnection(cmd.Context())
 

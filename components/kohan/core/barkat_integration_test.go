@@ -1,4 +1,4 @@
-package it_test
+package core_test
 
 import (
 	"bytes"
@@ -8,14 +8,20 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
+	"github.com/amanhigh/go-fun/components/kohan/handler"
+	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 const testPort = 19020
-// FIXME: Move this to Core Package and remove it package.
+
+var baseURL string
+
 var _ = Describe("Barkat Integration Test", func() {
 	BeforeEach(func() {
 		// Start server once for the suite
@@ -24,12 +30,15 @@ var _ = Describe("Barkat Integration Test", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(db).ToNot(BeNil())
 
-			server := core.NewBarkatServerWithDB(db)
+			repo := repository.NewJournalRepository(db)
+			mgr := manager.NewJournalManager(repo)
+			journalHandler := handler.NewJournalHandler(mgr)
+			server := core.NewKohanServer("", nil, journalHandler)
 			baseURL = fmt.Sprintf("http://localhost:%d", testPort)
 
 			go func() {
 				defer GinkgoRecover()
-				_ = server.StartOnPort(testPort)
+				_ = server.Start(testPort, util.NewGracefulShutdown())
 			}()
 
 			// Wait for server to be ready

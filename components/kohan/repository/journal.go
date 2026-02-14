@@ -7,10 +7,9 @@ import (
 	"gorm.io/gorm"
 )
 
-// BarkatRepository provides persistence operations for barkat entries.
-// HACK: Match name with entity it should be JournalRepository (RenameEntity to Journal)
-type BarkatRepository interface {
-	// CreateEntry persists a new barkat entry with its images.
+// JournalRepository provides persistence operations for journal entries.
+type JournalRepository interface {
+	// CreateEntry persists a new journal entry with its images.
 	CreateEntry(ctx context.Context, entry *barkat.Entry) error
 	// GetEntry retrieves a single entry by ID with preloaded images.
 	GetEntry(ctx context.Context, id string) (barkat.Entry, error)
@@ -18,28 +17,28 @@ type BarkatRepository interface {
 	ListEntries(ctx context.Context, query barkat.EntryQuery) ([]barkat.Entry, int64, error)
 }
 
-type BarkatRepositoryImpl struct {
+type JournalRepositoryImpl struct {
 	db *gorm.DB
 }
 
-var _ BarkatRepository = (*BarkatRepositoryImpl)(nil)
+var _ JournalRepository = (*JournalRepositoryImpl)(nil)
 
-// NewBarkatRepository creates a new BarkatRepository backed by GORM.
-func NewBarkatRepository(db *gorm.DB) *BarkatRepositoryImpl {
-	return &BarkatRepositoryImpl{db: db}
+// NewJournalRepository creates a new JournalRepository backed by GORM.
+func NewJournalRepository(db *gorm.DB) *JournalRepositoryImpl {
+	return &JournalRepositoryImpl{db: db}
 }
 
-func (r *BarkatRepositoryImpl) CreateEntry(ctx context.Context, entry *barkat.Entry) error {
+func (r *JournalRepositoryImpl) CreateEntry(ctx context.Context, entry *barkat.Entry) error {
 	return r.db.WithContext(ctx).Create(entry).Error
 }
 
-func (r *BarkatRepositoryImpl) GetEntry(ctx context.Context, id string) (barkat.Entry, error) {
+func (r *JournalRepositoryImpl) GetEntry(ctx context.Context, id string) (barkat.Entry, error) {
 	var entry barkat.Entry
 	err := r.db.WithContext(ctx).Preload("Images").First(&entry, "id = ?", id).Error
 	return entry, err
 }
 
-func (r *BarkatRepositoryImpl) ListEntries(ctx context.Context, query barkat.EntryQuery) ([]barkat.Entry, int64, error) {
+func (r *JournalRepositoryImpl) ListEntries(ctx context.Context, query barkat.EntryQuery) ([]barkat.Entry, int64, error) {
 	tx := r.db.WithContext(ctx).Model(&barkat.Entry{})
 
 	if query.Ticker != "" {

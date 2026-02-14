@@ -8,6 +8,7 @@ import (
 
 	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/components/kohan/handler"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -19,31 +20,47 @@ const (
 	writeTimeout    = 5 * time.Second
 )
 
-type MonitorServer struct {
-	mux         *gin.Engine
-	capturePath string
-	autoManager manager.AutoManagerInterface
+// KohanServer serves all Kohan HTTP APIs (monitor + journal).
+type KohanServer struct {
+	mux            *gin.Engine
+	capturePath    string
+	autoManager    manager.AutoManagerInterface
+	journalHandler *handler.JournalHandler
 }
 
-func NewMonitorServer(capturePath string, autoManager manager.AutoManagerInterface) *MonitorServer {
-	server := &MonitorServer{
-		mux:         gin.Default(),
-		capturePath: capturePath,
-		autoManager: autoManager,
+func NewKohanServer(capturePath string, autoManager manager.AutoManagerInterface, journalHandler *handler.JournalHandler) *KohanServer {
+	server := &KohanServer{
+		mux:            gin.Default(),
+		capturePath:    capturePath,
+		autoManager:    autoManager,
+		journalHandler: journalHandler,
 	}
 
-	// Register Routes
-	// HACK: Move to separate file in new handler Package.
-	// HACK: Merge Barkat Server under this and Rename this as Kohan Server.
+	// Monitor routes
 	server.mux.GET("/v1/ticker/:ticker/record", server.HandleRecordTicker)
 	server.mux.GET("/v1/clip/", server.HandleReadClip)
 	server.mux.POST("/v1/submap/:action", server.HandleSubmapControl)
+
+	// 1.2 BUG: Reject nil JournalHandler instead of silently skipping routing so Barkat APIs don’t start without storage wiring.
+	// Journal API routes
+	if journalHandler != nil {
+		v1 := server.mux.Group("/api/v1")
+		{
+			entries := v1.Group("/journal-entries")
+			{
+				entries.GET("", journalHandler.HandleListEntries)
+				entries.GET("/:id", journalHandler.HandleGetEntry)
+				entries.POST("", journalHandler.HandleCreateEntry)
+			}
+		}
+	}
 
 	return server
 }
 
 // Start starts the server with graceful shutdown support using util.Shutdown
-func (s *MonitorServer) Start(port int, shutdown util.Shutdown) error {
+func (s *KohanServer) Start(port int, shutdown util.Shutdown) error {
+	// 1.3 FIXME: Extract common HTTP server bootstrap (graceful shutdown, mux setup) into a reusable base server like fun-app-server for consistency.
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%d", port),
 		Handler:           s.mux,
@@ -67,8 +84,8 @@ func (s *MonitorServer) Start(port int, shutdown util.Shutdown) error {
 	return nil
 }
 
-func (s *MonitorServer) runServer(srv *http.Server, errChan chan<- error, serverStopped <-chan struct{}, port int) {
-	log.Info().Int("port", port).Msg("Starting Monitor Server with graceful shutdown")
+func (s *KohanServer) runServer(srv *http.Server, errChan chan<- error, serverStopped <-chan struct{}, port int) {
+	log.Info().Int("port", port).Msg("Starting Kohan Server with graceful shutdown")
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		select {
 		case errChan <- err:
@@ -77,13 +94,13 @@ func (s *MonitorServer) runServer(srv *http.Server, errChan chan<- error, server
 	}
 }
 
-func (s *MonitorServer) handleShutdown(srv *http.Server, shutdown util.Shutdown, errChan chan<- error, serverStopped <-chan struct{}) {
+func (s *KohanServer) handleShutdown(srv *http.Server, shutdown util.Shutdown, errChan chan<- error, serverStopped <-chan struct{}) {
 	shutdownCtx := shutdown.Wait()
 
 	ctxTimed, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
-	log.Info().Msg("Shutting down monitor server gracefully")
+	log.Info().Msg("Shutting down kohan server gracefully")
 	if err := srv.Shutdown(ctxTimed); err != nil {
 		log.Error().Err(err).Msg("Server forced shutdown")
 		select {
@@ -93,14 +110,15 @@ func (s *MonitorServer) handleShutdown(srv *http.Server, shutdown util.Shutdown,
 		return
 	}
 
-	log.Info().Ctx(shutdownCtx).Msg("Monitor server shutdown complete")
+	log.Info().Ctx(shutdownCtx).Msg("Kohan server shutdown complete")
 	select {
 	case errChan <- nil:
 	case <-serverStopped:
 	}
 }
 
-func (s *MonitorServer) HandleReadClip(ctx *gin.Context) {
+// 1.4 FIXME: Move monitor handlers (clip, ticker, submap) into handler package to match handler->manager layering and keep core wiring-only.
+func (s *KohanServer) HandleReadClip(ctx *gin.Context) {
 	text, err := tools.ClipPaste()
 	if err == nil {
 		ctx.JSON(http.StatusOK, text)
@@ -109,7 +127,7 @@ func (s *MonitorServer) HandleReadClip(ctx *gin.Context) {
 	}
 }
 
-func (s *MonitorServer) HandleRecordTicker(ctx *gin.Context) {
+func (s *KohanServer) HandleRecordTicker(ctx *gin.Context) {
 	ticker := ctx.Param("ticker")
 	if err := s.autoManager.RecordTicker(ctx, ticker, s.capturePath); err == nil {
 		ctx.JSON(http.StatusOK, "Success")
@@ -119,7 +137,7 @@ func (s *MonitorServer) HandleRecordTicker(ctx *gin.Context) {
 	}
 }
 
-func (s *MonitorServer) HandleSubmapControl(ctx *gin.Context) {
+func (s *KohanServer) HandleSubmapControl(ctx *gin.Context) {
 	action := ctx.Param("action")
 
 	var request struct {

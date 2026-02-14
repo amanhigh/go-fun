@@ -20,7 +20,7 @@ import (
 
 var _ = Describe("MonitorServer", func() {
 	var (
-		server      *core.MonitorServer
+		server      *core.KohanServer
 		mockManager *mocks.AutoManagerInterface
 		testPath    = "/tmp/test-capture"
 	)
@@ -28,7 +28,7 @@ var _ = Describe("MonitorServer", func() {
 	BeforeEach(func() {
 		gin.SetMode(gin.TestMode)
 		mockManager = mocks.NewAutoManagerInterface(GinkgoT())
-		server = core.NewMonitorServer(testPath, mockManager)
+		server = core.NewKohanServer(testPath, mockManager, nil)
 	})
 
 	Context("Constructor and Configuration", func() {
@@ -37,7 +37,7 @@ var _ = Describe("MonitorServer", func() {
 		})
 
 		It("should accept nil manager for constructor", func() {
-			nilServer := core.NewMonitorServer(testPath, nil)
+			nilServer := core.NewKohanServer(testPath, nil, nil)
 			Expect(nilServer).ToNot(BeNil())
 		})
 	})

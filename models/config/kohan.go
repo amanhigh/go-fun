@@ -26,7 +26,15 @@ type DariusConfig struct {
 }
 
 type KohanConfig struct {
-	Tax TaxConfig
+	Tax    TaxConfig
+	Barkat BarkatConfig
+}
+
+// BarkatConfig defines configuration for the Barkat Journal Explorer
+// Database: SQLite file path for journal entries
+type BarkatConfig struct {
+	// FIXME: Default Barkat DB path must move to ~/Downloads/barkat and this temporary default removed before go-live.
+	DbPath string `env:"BARKAT_DB_PATH" envDefault:"~/barkat.db"`
 }
 
 // TaxConfig defines all paths and URLs for tax computation
@@ -112,6 +120,9 @@ func NewKohanConfig() (config KohanConfig, err error) {
 	config.Tax.AccountsDir = strings.Replace(config.Tax.AccountsDir, "~", homeDir, 1)
 	config.Tax.ReportsDir = strings.Replace(config.Tax.ReportsDir, "~", homeDir, 1)
 	config.Tax.ComputedDir = strings.Replace(config.Tax.ComputedDir, "~", homeDir, 1)
+
+	// Barkat config
+	config.Barkat.DbPath = strings.Replace(config.Barkat.DbPath, "~", homeDir, 1)
 
 	return
 }
