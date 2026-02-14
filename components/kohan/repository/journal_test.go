@@ -57,7 +57,7 @@ var _ = Describe("JournalRepository", func() {
 					{Timeframe: "TMN"},
 				},
 				Tags: []barkat.Tag{
-					{Tag: "oe", TagType: "reason"},
+					{Tag: "oe", Type: "reason"},
 				},
 				Notes: []barkat.Note{
 					{Status: "rejected", Content: "Strong OE at weekly level."},
@@ -209,12 +209,15 @@ var _ = Describe("JournalRepository", func() {
 				Expect(entries[0].Ticker).To(Equal("RELIANCE"))
 			})
 
-			It("should preload images on list", func() {
+			It("should return lightweight summaries without associations", func() {
 				query := barkat.EntryQuery{Ticker: "RELIANCE"}
 				query.Limit = 10
 				entries, _, err := repo.ListEntries(testCtx, query)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(entries[0].Images).To(HaveLen(4))
+				Expect(entries[0].Ticker).To(Equal("RELIANCE"))
+				Expect(entries[0].Images).To(BeEmpty())
+				Expect(entries[0].Tags).To(BeEmpty())
+				Expect(entries[0].Notes).To(BeEmpty())
 			})
 
 			It("should return empty for no matches", func() {

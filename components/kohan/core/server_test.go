@@ -1,6 +1,7 @@
 package core_test
 
 import (
+	"bytes"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -8,11 +9,14 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/amanhigh/go-fun/components/kohan/handler"
+	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
+	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm/logger"
 )
 
 var _ = Describe("KohanServer", func() {
@@ -30,18 +34,17 @@ var _ = Describe("KohanServer", func() {
 	Context("Constructor", func() {
 		It("should create server with handlers", func() {
 			monitorHandler := handler.NewMonitorHandler(testPath, mockManager)
-			server = core.NewKohanServer(0, monitorHandler, nil, util.NewGracefulShutdown())
-			Expect(server).ToNot(BeNil())
-		})
-
-		It("should accept nil handlers", func() {
-			// FIXME: Remove this test.
-			server = core.NewKohanServer(0, nil, nil, util.NewGracefulShutdown())
+			db, err := util.CreateTestDb(logger.Warn)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(core.SetupBarkatDB(db)).To(Succeed())
+			repo := repository.NewJournalRepository(db)
+			mgr := manager.NewJournalManager(repo)
+			journalHandler := handler.NewJournalHandler(mgr)
+			server = core.NewKohanServer(0, monitorHandler, journalHandler, util.NewGracefulShutdown())
 			Expect(server).ToNot(BeNil())
 		})
 	})
 
-	// FIXME: Add Content for Journal Handler Tests. (Only one test case is enough)
 	Context("MonitorHandler", func() {
 		var (
 			monitorHandler handler.MonitorHandler
@@ -116,6 +119,38 @@ var _ = Describe("KohanServer", func() {
 
 					Expect(recorder.Code).To(Equal(http.StatusOK))
 				})
+			})
+		})
+	})
+
+	Context("JournalHandler", func() {
+		var (
+			journalHandler handler.JournalHandler
+			recorder       *httptest.ResponseRecorder
+		)
+
+		BeforeEach(func() {
+			db, err := util.CreateTestDb(logger.Warn)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(core.SetupBarkatDB(db)).To(Succeed())
+			repo := repository.NewJournalRepository(db)
+			mgr := manager.NewJournalManager(repo)
+			journalHandler = handler.NewJournalHandler(mgr)
+			recorder = httptest.NewRecorder()
+		})
+
+		Context("HandleCreateEntry", func() {
+			It("should create entry and return 201", func() {
+				body := `{"ticker":"RELIANCE","sequence":"mwd","type":"rejected","status":"fail","images":[{"timeframe":"DL"},{"timeframe":"WK"}]}`
+				req := httptest.NewRequest("POST", "/v1/journal-entries", bytes.NewBufferString(body))
+				req.Header.Set("Content-Type", "application/json")
+				c, _ := gin.CreateTestContext(recorder)
+				c.Request = req
+
+				journalHandler.HandleCreateEntry(c)
+
+				Expect(recorder.Code).To(Equal(http.StatusCreated))
+				Expect(recorder.Body.String()).To(ContainSubstring("RELIANCE"))
 			})
 		})
 	})

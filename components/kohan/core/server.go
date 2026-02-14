@@ -4,7 +4,6 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/handler"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
 )
 
 // KohanServer serves all Kohan HTTP APIs (monitor + journal).
@@ -32,7 +31,6 @@ func (s *KohanServer) registerRoutes(engine *gin.Engine) {
 }
 
 func (s *KohanServer) registerMonitorRoutes(engine *gin.Engine) {
-	// HACK: Nil Handlers should not be checked rely on DI Framework to inject them.
 	if s.monitorHandler == nil {
 		return
 	}
@@ -42,19 +40,22 @@ func (s *KohanServer) registerMonitorRoutes(engine *gin.Engine) {
 }
 
 func (s *KohanServer) registerJournalRoutes(engine *gin.Engine) {
-	// FIXME: Remove Handler Nil Checks.
-	if s.journalHandler != nil {
-		// BUG: Match Monitor Routes Pattern use /v1 only.
-		v1 := engine.Group("/api/v1")
-		{
-			entries := v1.Group("/journal-entries")
-			{
-				entries.GET("", s.journalHandler.HandleListEntries)
-				entries.GET("/:id", s.journalHandler.HandleGetEntry)
-				entries.POST("", s.journalHandler.HandleCreateEntry)
-			}
-		}
-	} else {
-		log.Warn().Msg("JournalHandler is nil, journal API routes will not be registered")
+	entries := engine.Group("/v1/journal-entries")
+	{
+		entries.GET("", s.journalHandler.HandleListEntries)
+		entries.GET("/:id", s.journalHandler.HandleGetEntry)
+		entries.POST("", s.journalHandler.HandleCreateEntry)
+
+		entries.POST("/:id/images", s.journalHandler.HandleCreateImage)
+		entries.GET("/:id/images", s.journalHandler.HandleListImages)
+		entries.DELETE("/:id/images/:imageId", s.journalHandler.HandleDeleteImage)
+
+		entries.POST("/:id/notes", s.journalHandler.HandleCreateNote)
+		entries.GET("/:id/notes", s.journalHandler.HandleListNotes)
+		entries.DELETE("/:id/notes/:noteId", s.journalHandler.HandleDeleteNote)
+
+		entries.POST("/:id/tags", s.journalHandler.HandleCreateTag)
+		entries.GET("/:id/tags", s.journalHandler.HandleListTags)
+		entries.DELETE("/:id/tags/:tagId", s.journalHandler.HandleDeleteTag)
 	}
 }
