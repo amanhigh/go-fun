@@ -57,7 +57,6 @@ func (fs *FunServer) registerRoutes(engine *gin.Engine) {
 	adminGroup := engine.Group("/admin")
 	adminGroup.GET("/stop", fs.AdminHandler.Stop)
 
-	// FIXME: Move Swagger & Statsviz to BaseHTTPServer
 	// Add Swagger - https://github.com/swaggo/gin-swagger
 	// make swag-fun
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

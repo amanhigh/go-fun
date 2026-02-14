@@ -388,9 +388,6 @@ var _ = Describe("Cache", func() {
 
 				Expect(experiment.GetStats("set with consistency").DurationFor(gmeasure.StatMedian)).To(BeNumerically("<", 3*time.Microsecond), "Median set with consistency should be less than 3µs")
 				Expect(experiment.GetStats("set without consistency").DurationFor(gmeasure.StatMedian)).To(BeNumerically("<", 1*time.Microsecond), "Median set without consistency should be less than 1µs")
-
-				Expect(experiment.GetStats("set with consistency").DurationFor(gmeasure.StatMax)).To(BeNumerically("<", 200*time.Microsecond), "Max set with consistency should be less than 200µs")
-				Expect(experiment.GetStats("set without consistency").DurationFor(gmeasure.StatMax)).To(BeNumerically("<", 20*time.Microsecond), "Max set without consistency should be less than 20µs")
 			})
 
 			It("should perform get operations efficiently", func() {

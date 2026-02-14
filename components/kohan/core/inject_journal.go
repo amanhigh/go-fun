@@ -15,11 +15,11 @@ import (
 
 // ---- Journal Helpers ----
 
-// SetupBarkatDB runs migrations for all barkat tables on the given database.
+// SetupBarkatDB uses GORM AutoMigrate to create barkat tables.
+// Use only for in-memory test databases. Production uses RunMigrations with golang-migrate.
 func SetupBarkatDB(db *gorm.DB) error {
-	// HACK: Migrate using Migration go-migrate framework and remove AutoMigrate (Use it only for tests)
 	if err := db.AutoMigrate(&barkatmodels.Entry{}, &barkatmodels.Image{}, &barkatmodels.Tag{}, &barkatmodels.Note{}); err != nil {
-		return fmt.Errorf("failed to migrate barkat tables: %w", err)
+		return fmt.Errorf("failed to auto-migrate barkat tables: %w", err)
 	}
 	return nil
 }
@@ -27,12 +27,12 @@ func SetupBarkatDB(db *gorm.DB) error {
 // ---- Journal Providers ----
 
 func (ki *KohanInjector) provideBarkatDB() (*gorm.DB, error) {
+	if err := RunMigrations(ki.config.Barkat.DbPath); err != nil {
+		return nil, fmt.Errorf("failed to run barkat migrations: %w", err)
+	}
 	db, err := util.CreateSqliteDb(ki.config.Barkat.DbPath, logger.Warn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create barkat db: %w", err)
-	}
-	if err := SetupBarkatDB(db); err != nil {
-		return nil, err
 	}
 	return db, nil
 }

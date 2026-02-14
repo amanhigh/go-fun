@@ -1,4 +1,8 @@
+//nolint:dupl // Intentional similarity: Image and Note repos follow same CRUD pattern for different sub-resources.
 package repository
+
+// NoteRepository provides persistence operations for journal notes.
+// Notes capture trade observations and plans at specific entry statuses.
 
 import (
 	"context"

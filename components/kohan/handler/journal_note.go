@@ -1,4 +1,9 @@
+//nolint:dupl // Intentional CRUD pattern shared with TagHandler for different sub-resources
 package handler
+
+// NoteHandler provides HTTP handlers for journal note operations.
+// Notes capture trade status snapshots with markdown content.
+// This file contains handlers for creating, listing, and deleting journal notes.
 
 import (
 	"net/http"

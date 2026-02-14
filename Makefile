@@ -13,6 +13,8 @@
 
 include ./common/tools/base.mk
 
+export PATH := $(shell go env GOPATH 2>/dev/null)/bin:$(PATH)
+
 ### Variables
 BUILD_OPTS := CGO_ENABLED=0 GOARCH=amd64
 COMPONENT_DIR := ./components

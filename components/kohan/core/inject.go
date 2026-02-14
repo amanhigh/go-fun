@@ -52,10 +52,13 @@ func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) 
 func (ki *KohanInjector) GetKohanServer(port int, capturePath string, autoManager manager.AutoManagerInterface, shutdown util.Shutdown) (*KohanServer, error) {
 	ki.registerMonitorDependencies(capturePath, autoManager)
 	if err := ki.registerJournalDependencies(); err != nil {
-		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)
+		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)		
 	}
 
 	// TODO: Is there better way to get List of Handlers in one shot from DI?
+
+	base := provideBaseHTTPServer(port, shutdown)
+
 	var monitorHandler handler.MonitorHandler
 	if err := ki.di.Resolve(&monitorHandler); err != nil {
 		return nil, fmt.Errorf("failed to resolve monitor handler: %w", err)
@@ -65,7 +68,23 @@ func (ki *KohanInjector) GetKohanServer(port int, capturePath string, autoManage
 	if err := ki.di.Resolve(&journalHandler); err != nil {
 		return nil, fmt.Errorf("failed to resolve journal handler: %w", err)
 	}
-	return NewKohanServer(port, monitorHandler, journalHandler, shutdown), nil
+
+	var imageHandler handler.ImageHandler
+	if err := ki.di.Resolve(&imageHandler); err != nil {
+		return nil, fmt.Errorf("failed to resolve image handler: %w", err)
+	}
+
+	var noteHandler handler.NoteHandler
+	if err := ki.di.Resolve(&noteHandler); err != nil {
+		return nil, fmt.Errorf("failed to resolve note handler: %w", err)
+	}
+
+	var tagHandler handler.TagHandler
+	if err := ki.di.Resolve(&tagHandler); err != nil {
+		return nil, fmt.Errorf("failed to resolve tag handler: %w", err)
+	}
+
+	return NewKohanServer(base, monitorHandler, journalHandler, imageHandler, noteHandler, tagHandler), nil
 }
 
 func (ki *KohanInjector) GetBarkatDB() (*gorm.DB, error) {

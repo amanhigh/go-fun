@@ -51,11 +51,16 @@ var _ = Describe("Barkat Integration Test", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(core.SetupBarkatDB(db)).To(Succeed())
 
-			repo := repository.NewJournalRepository(db)
-			mgr := manager.NewJournalManager(repo)
-			journalHandler := handler.NewJournalHandler(mgr)
+			entryRepo := repository.NewJournalRepository(db)
+			entryMgr := manager.NewJournalManager(entryRepo)
+			journalHandler := handler.NewJournalHandler(entryMgr)
+			imageHandler := handler.NewImageHandler(manager.NewImageManager(entryMgr, repository.NewImageRepository(db)))
+			noteHandler := handler.NewNoteHandler(manager.NewNoteManager(entryMgr, repository.NewNoteRepository(db)))
+			tagHandler := handler.NewTagHandler(manager.NewTagManager(entryMgr, repository.NewTagRepository(db)))
+
 			shutdown := util.NewGracefulShutdown()
-			server := core.NewKohanServer(testPort, nil, journalHandler, shutdown)
+			base := util.NewBaseHTTPServer("kohan", testPort, shutdown)
+			server := core.NewKohanServer(base, nil, journalHandler, imageHandler, noteHandler, tagHandler)
 			baseURL = fmt.Sprintf("http://localhost:%d", testPort)
 
 			go func() {

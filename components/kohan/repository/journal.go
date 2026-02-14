@@ -45,8 +45,18 @@ func (r *JournalRepositoryImpl) GetEntry(ctx context.Context, id string) (barkat
 }
 
 func (r *JournalRepositoryImpl) ListEntries(ctx context.Context, query barkat.EntryQuery) ([]barkat.Entry, int64, error) {
-	tx := r.db.WithContext(ctx).Model(&barkat.Entry{})
+	tx := r.applyEntryFilters(r.db.WithContext(ctx).Model(&barkat.Entry{}), query)
 
+	var total int64
+	if err := tx.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	entries, err := r.fetchEntries(tx, query)
+	return entries, total, err
+}
+
+func (r *JournalRepositoryImpl) applyEntryFilters(tx *gorm.DB, query barkat.EntryQuery) *gorm.DB {
 	if query.Ticker != "" {
 		tx = tx.Where("ticker = ?", query.Ticker)
 	}
@@ -65,12 +75,10 @@ func (r *JournalRepositoryImpl) ListEntries(ctx context.Context, query barkat.En
 	if query.CreatedBefore != "" {
 		tx = tx.Where("created_at <= ?", query.CreatedBefore)
 	}
+	return tx
+}
 
-	var total int64
-	if err := tx.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
-
+func (r *JournalRepositoryImpl) fetchEntries(tx *gorm.DB, query barkat.EntryQuery) ([]barkat.Entry, error) {
 	orderClause := "created_at DESC"
 	if query.SortBy != "" {
 		direction := "DESC"
@@ -81,12 +89,8 @@ func (r *JournalRepositoryImpl) ListEntries(ctx context.Context, query barkat.En
 	}
 
 	var entries []barkat.Entry
-	err := tx.Order(orderClause).
-		Offset(query.Offset).
-		Limit(query.Limit).
-		Find(&entries).Error
-
-	return entries, total, err
+	err := tx.Order(orderClause).Offset(query.Offset).Limit(query.Limit).Find(&entries).Error
+	return entries, err
 }
 
 func (r *JournalRepositoryImpl) EntryExists(ctx context.Context, id string) (bool, error) {

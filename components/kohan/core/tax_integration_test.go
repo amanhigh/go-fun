@@ -1,3 +1,4 @@
+//nolint:dupl // Integration test files often have similar setup patterns
 package core_test
 
 import (

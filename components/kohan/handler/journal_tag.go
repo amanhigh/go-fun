@@ -1,4 +1,8 @@
+//nolint:dupl // Intentional CRUD pattern shared with NoteHandler for different sub-resources
 package handler
+
+// TagHandler provides HTTP handlers for journal tag operations.
+// Tags categorize entries with reason codes (oe, dep, etc.) or management labels.
 
 import (
 	"net/http"

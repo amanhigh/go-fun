@@ -37,6 +37,9 @@ This file contains guidelines for coding, testing, and examples on coding style 
 2. Managers must only communicate with their own publisher; cross-domain messages must use Manager-to-Manager calls.
 3. No layer may bypass an intermediate layer (e.g., Handler cannot call Publisher directly, Manager cannot call another Manager's Publisher).
 
+### Linting
+- The `dupl` linter operates at the file level, so `//nolint:dupl` directives must be placed on line 1 (before the package statement) to work correctly; function-level nolint directives don't work with dupl.
+
 ## Testing
 
 ### Test Structure

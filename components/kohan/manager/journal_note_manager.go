@@ -1,4 +1,8 @@
+//nolint:dupl // Intentional CRUD pattern shared with TagManager for different sub-resources
 package manager
+
+// NoteManager provides business logic for journal note operations.
+// Notes represent freeform text attached to entries at specific trade statuses.
 
 import (
 	"context"

@@ -1,5 +1,8 @@
 package repository
 
+// ImageRepository provides persistence operations for journal images.
+// Images are screenshots captured across multiple timeframes for each entry.
+
 import (
 	"context"
 
