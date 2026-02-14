@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/clients"
 	"github.com/amanhigh/go-fun/components/kohan/handler"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/tui"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
+	barkatmodels "github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/config"
 	taxmodels "github.com/amanhigh/go-fun/models/tax"
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog/log"
+	"gorm.io/gorm/logger"
 
 	"github.com/golobby/container/v3"
 	"github.com/rivo/tview"
@@ -69,9 +72,12 @@ func (ki *KohanInjector) GetJournalHandler() (*handler.JournalHandler, error) {
 // ---- Journal Providers ----
 
 func (ki *KohanInjector) provideJournalRepository() (repository.JournalRepository, error) {
-	db, err := SetupBarkatDB(ki.config.Barkat.DbPath)
+	db, err := util.CreateSqliteDb(ki.config.Barkat.DbPath, logger.Warn)
 	if err != nil {
 		return nil, err
+	}
+	if err := db.AutoMigrate(&barkatmodels.Entry{}, &barkatmodels.Image{}); err != nil {
+		return nil, fmt.Errorf("failed to migrate barkat tables: %w", err)
 	}
 	return repository.NewJournalRepository(db), nil
 }
@@ -206,6 +212,7 @@ func (ki *KohanInjector) provideTaxValuationManager(
 func (ki *KohanInjector) provideFinancialYearManagerGains() manager.FinancialYearManager[taxmodels.Gains] {
 	return manager.NewFinancialYearManager[taxmodels.Gains]()
 }
+
 // HACK: Group and move Providers to seperate file see inject.go in fun-app
 func (ki *KohanInjector) provideFinancialYearManagerInterest() manager.FinancialYearManager[taxmodels.Interest] {
 	return manager.NewFinancialYearManager[taxmodels.Interest]()

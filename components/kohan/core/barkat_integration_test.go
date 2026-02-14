@@ -16,6 +16,7 @@ import (
 	"github.com/amanhigh/go-fun/models/barkat"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"gorm.io/gorm/logger"
 )
 
 const testPort = 19020
@@ -26,9 +27,11 @@ var _ = Describe("Barkat Integration Test", func() {
 	BeforeEach(func() {
 		// Start server once for the suite
 		if baseURL == "" {
-			db, err := core.SetupBarkatDB("file::memory:?cache=shared")
+			db, err := util.CreateTestDb(logger.Warn)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(db).ToNot(BeNil())
+
+			err = db.AutoMigrate(&barkat.Entry{}, &barkat.Image{})
+			Expect(err).ToNot(HaveOccurred())
 
 			repo := repository.NewJournalRepository(db)
 			mgr := manager.NewJournalManager(repo)
