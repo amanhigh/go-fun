@@ -55,14 +55,41 @@ func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) 
 }
 
 func (ki *KohanInjector) GetJournalHandler() (*handler.JournalHandler, error) {
+	if err := ki.registerJournalDependencies(); err != nil {
+		return nil, err
+	}
+
+	var journalHandler *handler.JournalHandler
+	if err := ki.di.Resolve(&journalHandler); err != nil {
+		return nil, fmt.Errorf("failed to resolve journal handler: %w", err)
+	}
+	return journalHandler, nil
+}
+
+// ---- Journal Providers ----
+
+func (ki *KohanInjector) provideJournalRepository() (repository.JournalRepository, error) {
 	db, err := SetupBarkatDB(ki.config.Barkat.DbPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to setup barkat db: %w", err)
+		return nil, err
 	}
-	// 2.1 FIXME: Register Journal repository/manager/handler with the DI container instead of manual New* wiring here.
-	repo := repository.NewJournalRepository(db)
-	mgr := manager.NewJournalManager(repo)
-	return handler.NewJournalHandler(mgr), nil
+	return repository.NewJournalRepository(db), nil
+}
+
+func provideJournalManager(repo repository.JournalRepository) manager.JournalManager {
+	return manager.NewJournalManager(repo)
+}
+
+func provideJournalHandler(mgr manager.JournalManager) *handler.JournalHandler {
+	return handler.NewJournalHandler(mgr)
+}
+
+// registerJournalDependencies registers all dependencies for the journal feature.
+func (ki *KohanInjector) registerJournalDependencies() error {
+	container.MustSingleton(ki.di, ki.provideJournalRepository)
+	container.MustSingleton(ki.di, provideJournalManager)
+	container.MustSingleton(ki.di, provideJournalHandler)
+	return nil
 }
 
 func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
@@ -179,7 +206,7 @@ func (ki *KohanInjector) provideTaxValuationManager(
 func (ki *KohanInjector) provideFinancialYearManagerGains() manager.FinancialYearManager[taxmodels.Gains] {
 	return manager.NewFinancialYearManager[taxmodels.Gains]()
 }
-
+// HACK: Group and move Providers to seperate file see inject.go in fun-app
 func (ki *KohanInjector) provideFinancialYearManagerInterest() manager.FinancialYearManager[taxmodels.Interest] {
 	return manager.NewFinancialYearManager[taxmodels.Interest]()
 }

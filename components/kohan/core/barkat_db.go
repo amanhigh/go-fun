@@ -3,24 +3,18 @@ package core
 import (
 	"fmt"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/barkat"
-	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
+// 3.1 FIXME: Remove barkat_db.go and replace direct DB setup with common util helpers registered via DI config.
 // SetupBarkatDB opens (or creates) the SQLite database and auto-migrates barkat tables.
 func SetupBarkatDB(dbPath string) (*gorm.DB, error) {
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Warn),
-	})
+	db, err := util.CreateSqliteDb(dbPath, logger.Warn)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open barkat db at %s: %w", dbPath, err)
-	}
-
-	// Enable WAL mode for better concurrent read performance
-	if err := db.Exec("PRAGMA journal_mode=WAL").Error; err != nil {
-		return nil, fmt.Errorf("failed to enable WAL mode: %w", err)
+		return nil, err
 	}
 
 	// Auto-migrate barkat tables

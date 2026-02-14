@@ -4,12 +4,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/amanhigh/go-fun/components/kohan/core"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var _ = Describe("JournalRepository", func() {
@@ -21,8 +22,10 @@ var _ = Describe("JournalRepository", func() {
 
 	BeforeEach(func() {
 		var err error
-		// 1.1 FIXME: Replace ad-hoc SetupBarkatDB usage with shared SQLite test helper (util.CreateTestDb) for consistent test DB config.
-		db, err = core.SetupBarkatDB("file::memory:")
+		db, err = util.CreateTestDb(logger.Warn)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = db.AutoMigrate(&barkat.Entry{}, &barkat.Image{})
 		Expect(err).ToNot(HaveOccurred())
 
 		repo = repository.NewJournalRepository(db)

@@ -11,6 +11,7 @@ import (
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
+	"github.com/amanhigh/go-fun/components/kohan/handler"
 	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
@@ -18,7 +19,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var _ = Describe("MonitorServer", func() {
+var _ = Describe("KohanServer", func() {
 	var (
 		server      *core.KohanServer
 		mockManager *mocks.AutoManagerInterface
@@ -36,83 +37,86 @@ var _ = Describe("MonitorServer", func() {
 			Expect(server).ToNot(BeNil())
 		})
 
-		It("should accept nil manager for constructor", func() {
+		It("should accept nil journal handler for constructor", func() {
 			nilServer := core.NewKohanServer(testPath, nil, nil)
 			Expect(nilServer).ToNot(BeNil())
 		})
 	})
 
-	Context("HandleRecordTicker", func() {
+	Context("MonitorHandler", func() {
 		var (
-			recorder *httptest.ResponseRecorder
-			req      *http.Request
+			monitorHandler *handler.MonitorHandler
+			recorder       *httptest.ResponseRecorder
 		)
 
 		BeforeEach(func() {
+			monitorHandler = handler.NewMonitorHandler(testPath, mockManager)
 			recorder = httptest.NewRecorder()
 		})
 
-		Context("when recording succeeds", func() {
-			BeforeEach(func() {
-				mockManager.EXPECT().
-					RecordTicker(mock.Anything, "AAPL", testPath).
-					Return(nil)
-				req = httptest.NewRequest("GET", "/v1/ticker/AAPL/record", nil)
+		Context("HandleRecordTicker", func() {
+			Context("when recording succeeds", func() {
+				BeforeEach(func() {
+					mockManager.EXPECT().
+						RecordTicker(mock.Anything, "AAPL", testPath).
+						Return(nil)
+				})
+
+				It("should return success response", func() {
+					req := httptest.NewRequest("GET", "/v1/ticker/AAPL/record", nil)
+					c, _ := gin.CreateTestContext(recorder)
+					c.Request = req
+					c.Params = gin.Params{
+						{Key: "ticker", Value: "AAPL"},
+					}
+
+					monitorHandler.HandleRecordTicker(c)
+
+					Expect(recorder.Code).To(Equal(http.StatusOK))
+					Expect(recorder.Body.String()).To(ContainSubstring("Success"))
+				})
 			})
 
-			It("should return success response", func() {
-				c, _ := gin.CreateTestContext(recorder)
-				c.Request = req
-				c.Params = gin.Params{
-					{Key: "ticker", Value: "AAPL"},
-				}
+			Context("when recording fails", func() {
+				BeforeEach(func() {
+					mockManager.EXPECT().
+						RecordTicker(mock.Anything, "MSFT", testPath).
+						Return(errors.New("screenshot failed"))
+				})
 
-				server.HandleRecordTicker(c)
+				It("should return error response", func() {
+					req := httptest.NewRequest("GET", "/v1/ticker/MSFT/record", nil)
+					c, _ := gin.CreateTestContext(recorder)
+					c.Request = req
+					c.Params = gin.Params{
+						{Key: "ticker", Value: "MSFT"},
+					}
 
-				Expect(recorder.Code).To(Equal(http.StatusOK))
-				Expect(recorder.Body.String()).To(ContainSubstring("Success"))
+					monitorHandler.HandleRecordTicker(c)
+
+					Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
+					Expect(recorder.Body.String()).To(ContainSubstring("screenshot failed"))
+				})
 			})
-		})
 
-		Context("when recording fails", func() {
-			BeforeEach(func() {
-				mockManager.EXPECT().
-					RecordTicker(mock.Anything, "MSFT", testPath).
-					Return(errors.New("screenshot failed"))
-				req = httptest.NewRequest("GET", "/v1/ticker/MSFT/record", nil)
-			})
+			Context("with different ticker values", func() {
+				It("should pass correct ticker to manager", func() {
+					testTicker := "GOOGL"
+					mockManager.EXPECT().
+						RecordTicker(mock.Anything, testTicker, testPath).
+						Return(nil)
 
-			It("should return error response", func() {
-				c, _ := gin.CreateTestContext(recorder)
-				c.Request = req
-				c.Params = gin.Params{
-					{Key: "ticker", Value: "MSFT"},
-				}
+					req := httptest.NewRequest("GET", "/v1/ticker/"+testTicker+"/record", nil)
+					c, _ := gin.CreateTestContext(recorder)
+					c.Request = req
+					c.Params = gin.Params{
+						{Key: "ticker", Value: testTicker},
+					}
 
-				server.HandleRecordTicker(c)
+					monitorHandler.HandleRecordTicker(c)
 
-				Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
-				Expect(recorder.Body.String()).To(ContainSubstring("screenshot failed"))
-			})
-		})
-
-		Context("with different ticker values", func() {
-			It("should pass correct ticker to manager", func() {
-				testTicker := "GOOGL"
-				mockManager.EXPECT().
-					RecordTicker(mock.Anything, testTicker, testPath).
-					Return(nil)
-
-				req := httptest.NewRequest("GET", "/v1/ticker/"+testTicker+"/record", nil)
-				c, _ := gin.CreateTestContext(recorder)
-				c.Request = req
-				c.Params = gin.Params{
-					{Key: "ticker", Value: testTicker},
-				}
-
-				server.HandleRecordTicker(c)
-
-				Expect(recorder.Code).To(Equal(http.StatusOK))
+					Expect(recorder.Code).To(Equal(http.StatusOK))
+				})
 			})
 		})
 	})
