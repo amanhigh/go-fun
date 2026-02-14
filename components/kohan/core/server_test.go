@@ -29,7 +29,8 @@ var _ = Describe("KohanServer", func() {
 	BeforeEach(func() {
 		gin.SetMode(gin.TestMode)
 		mockManager = mocks.NewAutoManagerInterface(GinkgoT())
-		server = core.NewKohanServer(testPath, mockManager, nil)
+
+		server = core.NewKohanServer(0, testPath, mockManager, nil)
 	})
 
 	Context("Constructor and Configuration", func() {
@@ -38,7 +39,7 @@ var _ = Describe("KohanServer", func() {
 		})
 
 		It("should accept nil journal handler for constructor", func() {
-			nilServer := core.NewKohanServer(testPath, nil, nil)
+			nilServer := core.NewKohanServer(0, testPath, nil, nil)
 			Expect(nilServer).ToNot(BeNil())
 		})
 	})
@@ -122,11 +123,12 @@ var _ = Describe("KohanServer", func() {
 	})
 
 	Context("Graceful Shutdown Integration", func() {
+		// FIXME: Move Basic Tests to Util Package for Base Server only Test Integration here.
 		var (
 			realShutdown          util.Shutdown
 			serverDone            chan error
 			freePort              int
-			startAndWaitForServer func(port int)
+			startAndWaitForServer func()
 		)
 
 		BeforeEach(func() {
@@ -143,15 +145,18 @@ var _ = Describe("KohanServer", func() {
 			err = listener.Close()
 			Expect(err).ToNot(HaveOccurred())
 
+			// Recreate server with the free port
+			server = core.NewKohanServer(freePort, testPath, mockManager, nil)
+
 			// Helper function to start server and wait for readiness
-			startAndWaitForServer = func(port int) {
+			startAndWaitForServer = func() {
 				go func() {
-					err := server.Start(port, realShutdown)
+					err := server.Start(realShutdown)
 					serverDone <- err
 				}()
 
 				Eventually(func() error {
-					conn, err := net.Dial("tcp", fmt.Sprintf("localhost:%d", port))
+					conn, err := net.Dial("tcp", fmt.Sprintf("localhost:%d", freePort))
 					if conn != nil {
 						conn.Close()
 					}
@@ -168,14 +173,14 @@ var _ = Describe("KohanServer", func() {
 		})
 
 		It("should start and shutdown gracefully", func() {
-			startAndWaitForServer(freePort)
+			startAndWaitForServer()
 			time.Sleep(100 * time.Millisecond)
 			realShutdown.Stop(context.Background())
 			Eventually(serverDone, 2*time.Second).Should(Receive(BeNil()))
 		})
 
 		It("should serve HTTP requests before shutdown", func() {
-			startAndWaitForServer(freePort)
+			startAndWaitForServer()
 			time.Sleep(100 * time.Millisecond)
 
 			resp, err := http.Get(fmt.Sprintf("http://localhost:%d/v1/clip/", freePort))
@@ -189,8 +194,9 @@ var _ = Describe("KohanServer", func() {
 		})
 
 		It("should handle startup errors", func() {
+			errServer := core.NewKohanServer(-1, testPath, mockManager, nil)
 			go func() {
-				err := server.Start(-1, realShutdown)
+				err := errServer.Start(realShutdown)
 				serverDone <- err
 			}()
 

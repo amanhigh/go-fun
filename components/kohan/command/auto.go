@@ -8,7 +8,6 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.uber.org/fx"
 )
 
 const (
@@ -44,7 +43,7 @@ var monitorCmd = &cobra.Command{
 
 		// BUG: Retry When Disk not Mounted, Watermill Exponential Backoff ?
 		autoManager := core.GetKohanInterface().GetAutoManager(wait, args[0])
-		server, err := core.GetKohanInterface().GetKohanServer(args[0], autoManager)
+		server, err := core.GetKohanInterface().GetKohanServer(MonitorServerPort, args[0], autoManager)
 		if err != nil {
 			return fmt.Errorf("failed to build kohan server: %w", err)
 		}
@@ -52,7 +51,7 @@ var monitorCmd = &cobra.Command{
 		go autoManager.MonitorInternetConnection(cmd.Context())
 
 		shutdown := util.NewGracefulShutdown()
-		if err := server.Start(MonitorServerPort, shutdown); err != nil {
+		if err := server.Start(shutdown); err != nil {
 			log.Error().Err(err).Msg("Failed to start monitor server")
 			return fmt.Errorf("monitor server startup failed: %w", err)
 		}

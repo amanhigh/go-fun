@@ -5,25 +5,35 @@ import (
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/handlers"
+	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	"github.com/amanhigh/go-fun/components/fun-app/publisher"
 	"github.com/golobby/container/v3"
 )
 
-func (fi *FunAppInjector) registerMessagingCore() {
+func (fi *FunAppInjector) registerMessagingInfra() {
 	container.MustSingleton(fi.di, util.NewStdWatermillLogger)
 	container.MustSingleton(fi.di, util.NewGoChannel)
 	container.MustSingleton(fi.di, providePublisher)
 	container.MustSingleton(fi.di, provideSubscriber)
+}
+
+func (fi *FunAppInjector) registerMessagingWiring() {
 	container.MustSingleton(fi.di, provideRouter)
 	container.MustSingleton(fi.di, util.NewWatermillController)
 }
 
 func (fi *FunAppInjector) registerCommandHandlers() {
-	// DI registrations via providers that return interface types (no Fill)
-	container.MustSingleton(fi.di, handlers.NewEnrollmentCommandHandler)
-	container.MustSingleton(fi.di, handlers.NewSeatCommandHandler)
-	// Provide MessagingServer (depends on handlers) and expose its router for controller
+	container.MustSingleton(fi.di, provideEnrollmentCommandHandler)
+	container.MustSingleton(fi.di, provideSeatCommandHandler)
 	container.MustSingleton(fi.di, handlers.NewMessagingServer)
+}
+
+func provideEnrollmentCommandHandler(mgr manager.EnrollmentManagerInterface) handlers.EnrollmentCommandHandler {
+	return handlers.NewEnrollmentCommandHandler(mgr)
+}
+
+func provideSeatCommandHandler(seatMgr manager.SeatManagerInterface, enrollMgr manager.EnrollmentManagerInterface) handlers.SeatCommandHandler {
+	return handlers.NewSeatCommandHandler(seatMgr, enrollMgr)
 }
 
 func (fi *FunAppInjector) registerPublishers() {

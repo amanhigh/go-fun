@@ -5,28 +5,44 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/handler"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/locales/bg"
 	"github.com/rs/zerolog/log"
+	"go.uber.org/fx"
 )
 
 // KohanServer serves all Kohan HTTP APIs (monitor + journal).
 type KohanServer struct {
-	mux *gin.Engine
+	*util.BaseHTTPServer
 }
 
-// NewKohanServer creates a KohanServer with monitor and journal routes registered.
-func NewKohanServer(capturePath string, autoManager manager.AutoManagerInterface, journalHandler *handler.JournalHandler) *KohanServer {
-	mux := gin.Default()
+// NewKohanServer creates a KohanServer with monitor and journal routes.
+func NewKohanServer(port int, capturePath string, autoManager manager.AutoManagerInterface, journalHandler *handler.JournalHandler) *KohanServer {
+	server := &KohanServer{
+		BaseHTTPServer: util.NewBaseHTTPServer("kohan", port),
+	}
 
-	// Monitor routes
+	// FIXME: All Handlers should be interface injected by DI
+	// FIXME: Route should call handler not Manager Directly create Handler for Auto Manager
+	// HACK: Each Handler sholud be interface injected by DI not Struct Rename it to JournalHandlerImpl
+	server.BaseHTTPServer.RegisterRoutes = func(engine *gin.Engine) {
+		// FIXME: Register Routes should be named function here not lampda.
+		registerMonitorRoutes(engine, capturePath, autoManager)
+		registerJournalRoutes(engine, journalHandler)
+	}
+
+	return server
+}
+
+func registerMonitorRoutes(engine *gin.Engine, capturePath string, autoManager manager.AutoManagerInterface) {
 	monitorHandler := handler.NewMonitorHandler(capturePath, autoManager)
-	mux.GET("/v1/ticker/:ticker/record", monitorHandler.HandleRecordTicker)
-	mux.GET("/v1/clip/", monitorHandler.HandleReadClip)
-	mux.POST("/v1/submap/:action", monitorHandler.HandleSubmapControl)
+	engine.GET("/v1/ticker/:ticker/record", monitorHandler.HandleRecordTicker)
+	engine.GET("/v1/clip/", monitorHandler.HandleReadClip)
+	engine.POST("/v1/submap/:action", monitorHandler.HandleSubmapControl)
+}
 
-	// Journal API routes
-	// 3.3 BUG: Don’t silently accept nil handlers; expose RegisterHandlers hook so DI supplies a complete handler set and fail fast otherwise.
+func registerJournalRoutes(engine *gin.Engine, journalHandler *handler.JournalHandler) {
 	if journalHandler != nil {
-		v1 := mux.Group("/api/v1")
+		v1 := engine.Group("/api/v1")
 		{
 			entries := v1.Group("/journal-entries")
 			{
@@ -36,13 +52,7 @@ func NewKohanServer(capturePath string, autoManager manager.AutoManagerInterface
 			}
 		}
 	} else {
+		
 		log.Warn().Msg("JournalHandler is nil, journal API routes will not be registered")
 	}
-
-	return &KohanServer{mux: mux}
-}
-
-// Start starts the server with graceful shutdown support using util.Shutdown.
-func (s *KohanServer) Start(port int, shutdown util.Shutdown) error {
-	return util.RunHTTPServer("kohan", util.NewHTTPServer(port, s.mux), shutdown)
 }

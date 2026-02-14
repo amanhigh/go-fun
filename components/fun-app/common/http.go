@@ -1,11 +1,8 @@
 package common
 
 import (
-	"fmt"
-	"net/http"
-	"time"
-
 	"github.com/amanhigh/go-fun/common/telemetry"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/handlers"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/etcinit/speedbump"
@@ -19,16 +16,12 @@ import (
 	"gopkg.in/redis.v5"
 )
 
-func newHttpServer(config config.FunAppConfig, engine *gin.Engine) (server *http.Server) {
-	server = &http.Server{
-		Addr:              fmt.Sprintf(":%v", config.Server.Port),
-		Handler:           engine,
-		ReadHeaderTimeout: 5 * time.Second, //nolint:mnd // Reduced HTTP timeout for better performance
-	}
-	return
+func newBaseHTTPServer(cfg config.FunAppConfig) *util.BaseHTTPServer {
+	engine := newGin(cfg)
+	return util.NewBaseHTTPServerWithEngine(NAMESPACE, cfg.Server.Port, engine)
 }
 
-func newGin(config config.FunAppConfig) (engine *gin.Engine) {
+func newGin(cfg config.FunAppConfig) (engine *gin.Engine) {
 	engine = gin.New()
 
 	/* Middleware */
@@ -37,7 +30,7 @@ func newGin(config config.FunAppConfig) (engine *gin.Engine) {
 	engine.Use(otelgin.Middleware(NAMESPACE + "-gin"))
 
 	/* Setup Rate Limit if enabled */
-	setupRateLimit(config.RateLimit, engine)
+	setupRateLimit(cfg.RateLimit, engine)
 	return
 }
 
@@ -62,12 +55,12 @@ func setupRateLimit(cfg config.RateLimit, engine *gin.Engine) {
 	}
 }
 
-func newPrometheus(engine *gin.Engine) (prometheus *ginprometheus.Prometheus) {
+func newPrometheus(base *util.BaseHTTPServer) (prometheus *ginprometheus.Prometheus) {
 	/* Access Metrics */
 	// Visit http://localhost:8080/metrics
 	prometheus = ginprometheus.NewPrometheus("gin_access")
 	prometheus.ReqCntURLLabelMappingFn = telemetry.AccessMetrics
-	prometheus.Use(engine)
+	prometheus.Use(base.Engine)
 	return
 }
 
