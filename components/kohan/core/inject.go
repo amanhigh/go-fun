@@ -10,6 +10,7 @@ import (
 	"github.com/amanhigh/go-fun/models/config"
 
 	"github.com/golobby/container/v3"
+	"gorm.io/gorm"
 )
 
 // Interface and implementation in same file
@@ -19,6 +20,7 @@ type KohanInterface interface {
 	GetTaxManager() (manager.TaxManager, error)
 	GetBrokerageManager() (manager.BrokerageManager, error)
 	GetKohanServer(port int, capturePath string, autoManager manager.AutoManagerInterface, shutdown util.Shutdown) (*KohanServer, error)
+	GetBarkatDB() (*gorm.DB, error)
 }
 
 // Private singleton instance
@@ -48,15 +50,37 @@ func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) 
 }
 
 func (ki *KohanInjector) GetKohanServer(port int, capturePath string, autoManager manager.AutoManagerInterface, shutdown util.Shutdown) (*KohanServer, error) {
+	ki.registerMonitorDependencies(capturePath, autoManager)
 	if err := ki.registerJournalDependencies(); err != nil {
 		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)
 	}
 
-	var journalHandler *handler.JournalHandler
+	// TODO: Is there better way to get List of Handlers in one shot from DI?
+	var monitorHandler handler.MonitorHandler
+	if err := ki.di.Resolve(&monitorHandler); err != nil {
+		return nil, fmt.Errorf("failed to resolve monitor handler: %w", err)
+	}
+
+	var journalHandler handler.JournalHandler
 	if err := ki.di.Resolve(&journalHandler); err != nil {
 		return nil, fmt.Errorf("failed to resolve journal handler: %w", err)
 	}
-	return NewKohanServer(port, capturePath, autoManager, journalHandler, shutdown), nil
+	return NewKohanServer(port, monitorHandler, journalHandler, shutdown), nil
+}
+
+func (ki *KohanInjector) GetBarkatDB() (*gorm.DB, error) {
+	var db *gorm.DB
+	if err := ki.di.Resolve(&db); err != nil {
+		return nil, fmt.Errorf("failed to resolve barkat db: %w", err)
+	}
+	return db, nil
+}
+
+func (ki *KohanInjector) registerMonitorDependencies(capturePath string, autoManager manager.AutoManagerInterface) {
+	container.MustSingleton(ki.di, func() handler.MonitorHandler {
+		// HACK: Make named lambda move to inject_file appropriate place
+		return handler.NewMonitorHandler(capturePath, autoManager)
+	})
 }
 
 func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {

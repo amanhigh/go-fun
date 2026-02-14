@@ -10,18 +10,31 @@ import (
 )
 
 // MonitorHandler provides HTTP handlers for system monitoring operations.
-type MonitorHandler struct {
+//
+//go:generate mockery --name MonitorHandler
+type MonitorHandler interface {
+	// HandleReadClip handles GET /v1/clip/
+	HandleReadClip(ctx *gin.Context)
+	// HandleRecordTicker handles GET /v1/ticker/:ticker/record
+	HandleRecordTicker(ctx *gin.Context)
+	// HandleSubmapControl handles POST /v1/submap/:action
+	HandleSubmapControl(ctx *gin.Context)
+}
+
+type MonitorHandlerImpl struct {
 	capturePath string
 	autoManager manager.AutoManagerInterface
 }
 
+var _ MonitorHandler = (*MonitorHandlerImpl)(nil)
+
 // NewMonitorHandler creates a new MonitorHandler.
-func NewMonitorHandler(capturePath string, autoManager manager.AutoManagerInterface) *MonitorHandler {
-	return &MonitorHandler{capturePath: capturePath, autoManager: autoManager}
+func NewMonitorHandler(capturePath string, autoManager manager.AutoManagerInterface) *MonitorHandlerImpl {
+	return &MonitorHandlerImpl{capturePath: capturePath, autoManager: autoManager}
 }
 
 // HandleReadClip handles GET /v1/clip/
-func (h *MonitorHandler) HandleReadClip(ctx *gin.Context) {
+func (h *MonitorHandlerImpl) HandleReadClip(ctx *gin.Context) {
 	text, err := tools.ClipPaste()
 	if err == nil {
 		ctx.JSON(http.StatusOK, text)
@@ -31,7 +44,7 @@ func (h *MonitorHandler) HandleReadClip(ctx *gin.Context) {
 }
 
 // HandleRecordTicker handles GET /v1/ticker/:ticker/record
-func (h *MonitorHandler) HandleRecordTicker(ctx *gin.Context) {
+func (h *MonitorHandlerImpl) HandleRecordTicker(ctx *gin.Context) {
 	ticker := ctx.Param("ticker")
 	if err := h.autoManager.RecordTicker(ctx, ticker, h.capturePath); err == nil {
 		ctx.JSON(http.StatusOK, "Success")
@@ -42,7 +55,7 @@ func (h *MonitorHandler) HandleRecordTicker(ctx *gin.Context) {
 }
 
 // HandleSubmapControl handles POST /v1/submap/:action
-func (h *MonitorHandler) HandleSubmapControl(ctx *gin.Context) {
+func (h *MonitorHandlerImpl) HandleSubmapControl(ctx *gin.Context) {
 	action := ctx.Param("action")
 
 	var request struct {

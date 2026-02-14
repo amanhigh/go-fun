@@ -26,29 +26,33 @@ func SetupBarkatDB(db *gorm.DB) error {
 
 // ---- Journal Providers ----
 
-func (ki *KohanInjector) provideJournalRepository() (repository.JournalRepository, error) {
+func (ki *KohanInjector) provideBarkatDB() (*gorm.DB, error) {
 	db, err := util.CreateSqliteDb(ki.config.Barkat.DbPath, logger.Warn)
 	if err != nil {
 		return nil, err
 	}
-	// BUG: Barkat DB should be registered in DI container and resolved from there
 	if err := SetupBarkatDB(db); err != nil {
 		return nil, err
 	}
-	return repository.NewJournalRepository(db), nil
+	return db, nil
+}
+
+func provideJournalRepository(db *gorm.DB) repository.JournalRepository {
+	return repository.NewJournalRepository(db)
 }
 
 func provideJournalManager(repo repository.JournalRepository) manager.JournalManager {
 	return manager.NewJournalManager(repo)
 }
 
-func provideJournalHandler(mgr manager.JournalManager) *handler.JournalHandler {
+func provideJournalHandler(mgr manager.JournalManager) handler.JournalHandler {
 	return handler.NewJournalHandler(mgr)
 }
 
 // registerJournalDependencies registers all dependencies for the journal feature.
 func (ki *KohanInjector) registerJournalDependencies() error {
-	container.MustSingleton(ki.di, ki.provideJournalRepository)
+	container.MustSingleton(ki.di, ki.provideBarkatDB)
+	container.MustSingleton(ki.di, provideJournalRepository)
 	container.MustSingleton(ki.di, provideJournalManager)
 	container.MustSingleton(ki.di, provideJournalHandler)
 	return nil

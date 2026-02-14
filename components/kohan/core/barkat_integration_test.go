@@ -37,7 +37,7 @@ var _ = Describe("Barkat Integration Test", func() {
 			mgr := manager.NewJournalManager(repo)
 			journalHandler := handler.NewJournalHandler(mgr)
 			shutdown := util.NewGracefulShutdown()
-			server := core.NewKohanServer(testPort, "", nil, journalHandler, shutdown)
+			server := core.NewKohanServer(testPort, nil, journalHandler, shutdown)
 			baseURL = fmt.Sprintf("http://localhost:%d", testPort)
 
 			go func() {

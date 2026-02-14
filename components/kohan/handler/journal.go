@@ -10,17 +10,30 @@ import (
 )
 
 // JournalHandler provides HTTP handlers for journal entry operations.
-type JournalHandler struct {
+//
+//go:generate mockery --name JournalHandler
+type JournalHandler interface {
+	// HandleListEntries handles GET /api/v1/journal-entries
+	HandleListEntries(c *gin.Context)
+	// HandleGetEntry handles GET /api/v1/journal-entries/:id
+	HandleGetEntry(c *gin.Context)
+	// HandleCreateEntry handles POST /api/v1/journal-entries
+	HandleCreateEntry(c *gin.Context)
+}
+
+type JournalHandlerImpl struct {
 	journalManager manager.JournalManager
 }
 
+var _ JournalHandler = (*JournalHandlerImpl)(nil)
+
 // NewJournalHandler creates a new JournalHandler.
-func NewJournalHandler(journalManager manager.JournalManager) *JournalHandler {
-	return &JournalHandler{journalManager: journalManager}
+func NewJournalHandler(journalManager manager.JournalManager) *JournalHandlerImpl {
+	return &JournalHandlerImpl{journalManager: journalManager}
 }
 
 // HandleListEntries handles GET /api/v1/journal-entries
-func (h *JournalHandler) HandleListEntries(c *gin.Context) {
+func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
 	var query barkat.EntryQuery
 	query.Limit = 10 // Default limit
 
@@ -39,7 +52,7 @@ func (h *JournalHandler) HandleListEntries(c *gin.Context) {
 }
 
 // HandleGetEntry handles GET /api/v1/journal-entries/:id
-func (h *JournalHandler) HandleGetEntry(c *gin.Context) {
+func (h *JournalHandlerImpl) HandleGetEntry(c *gin.Context) {
 	var path barkat.EntryPath
 	if err := c.ShouldBindUri(&path); err != nil {
 		err = util.ProcessValidationError(err)
@@ -56,7 +69,7 @@ func (h *JournalHandler) HandleGetEntry(c *gin.Context) {
 }
 
 // HandleCreateEntry handles POST /api/v1/journal-entries
-func (h *JournalHandler) HandleCreateEntry(c *gin.Context) {
+func (h *JournalHandlerImpl) HandleCreateEntry(c *gin.Context) {
 	var entry barkat.Entry
 	if err := c.ShouldBindJSON(&entry); err != nil {
 		err = util.ProcessValidationError(err)

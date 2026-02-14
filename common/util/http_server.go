@@ -30,6 +30,10 @@ type BaseHTTPServer struct {
 	// Embedders replace this to add their own routes on the gin.Engine.
 	RegisterRoutes func(engine *gin.Engine)
 
+	// BeforeStart runs after routes are registered but before the HTTP server begins listening.
+	// Default is a no-op. Embedders replace this to start background services.
+	BeforeStart func(ctx context.Context)
+
 	// BeforeShutdown runs after the shutdown signal but before the HTTP server stops.
 	// Default is a no-op. Embedders replace this to add custom pre-shutdown logic.
 	BeforeShutdown func(ctx context.Context)
@@ -69,15 +73,17 @@ func NewBaseHTTPServerWithEngine(name string, port int, shutdown Shutdown, engin
 		Engine:         engine,
 		Server:         srv,
 		RegisterRoutes: noopRoutes,
+		BeforeStart:    noop,
 		BeforeShutdown: noop,
 		AfterShutdown:  noop,
 		shutdown:       shutdown,
 	}
 }
 
-// Start registers routes, begins listening, and blocks until graceful shutdown completes.
+// Start registers routes, runs BeforeStart hook, begins listening, and blocks until graceful shutdown completes.
 func (b *BaseHTTPServer) Start() error {
 	b.RegisterRoutes(b.Engine)
+	b.BeforeStart(context.Background())
 
 	errChan := make(chan error, 1)
 	serverStopped := make(chan struct{})

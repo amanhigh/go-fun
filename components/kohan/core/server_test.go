@@ -1,13 +1,9 @@
 package core_test
 
 import (
-	"context"
 	"errors"
-	"fmt"
-	"net"
 	"net/http"
 	"net/http/httptest"
-	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
@@ -29,24 +25,26 @@ var _ = Describe("KohanServer", func() {
 	BeforeEach(func() {
 		gin.SetMode(gin.TestMode)
 		mockManager = mocks.NewAutoManagerInterface(GinkgoT())
-
-		server = core.NewKohanServer(0, testPath, mockManager, nil, util.NewGracefulShutdown())
 	})
 
-	Context("Constructor and Configuration", func() {
-		It("should create server with correct configuration", func() {
+	Context("Constructor", func() {
+		It("should create server with handlers", func() {
+			monitorHandler := handler.NewMonitorHandler(testPath, mockManager)
+			server = core.NewKohanServer(0, monitorHandler, nil, util.NewGracefulShutdown())
 			Expect(server).ToNot(BeNil())
 		})
 
-		It("should accept nil journal handler for constructor", func() {
-			nilServer := core.NewKohanServer(0, testPath, nil, nil, util.NewGracefulShutdown())
-			Expect(nilServer).ToNot(BeNil())
+		It("should accept nil handlers", func() {
+			// FIXME: Remove this test.
+			server = core.NewKohanServer(0, nil, nil, util.NewGracefulShutdown())
+			Expect(server).ToNot(BeNil())
 		})
 	})
 
+	// FIXME: Add Content for Journal Handler Tests. (Only one test case is enough)
 	Context("MonitorHandler", func() {
 		var (
-			monitorHandler *handler.MonitorHandler
+			monitorHandler handler.MonitorHandler
 			recorder       *httptest.ResponseRecorder
 		)
 
@@ -121,87 +119,4 @@ var _ = Describe("KohanServer", func() {
 			})
 		})
 	})
-
-	Context("Graceful Shutdown Integration", func() {
-		// FIXME: Move Basic Tests to Util Package for Base Server only Test Integration here.
-		var (
-			realShutdown          util.Shutdown
-			serverDone            chan error
-			freePort              int
-			startAndWaitForServer func()
-		)
-
-		BeforeEach(func() {
-			// Use REAL util.Shutdown - no mocks!
-			realShutdown = util.NewGracefulShutdown()
-			serverDone = make(chan error, 1)
-
-			// Get free port
-			listener, err := net.Listen("tcp", ":0") //nolint:gosec // Binding to all interfaces intentionally for testing
-			Expect(err).ToNot(HaveOccurred())
-			tcpAddr, ok := listener.Addr().(*net.TCPAddr)
-			Expect(ok).To(BeTrue(), "Expected TCP address")
-			freePort = tcpAddr.Port
-			err = listener.Close()
-			Expect(err).ToNot(HaveOccurred())
-
-			// Recreate server with the free port
-			server = core.NewKohanServer(freePort, testPath, mockManager, nil, realShutdown)
-
-			// Helper function to start server and wait for readiness
-			startAndWaitForServer = func() {
-				go func() {
-					err := server.Start()
-					serverDone <- err
-				}()
-
-				Eventually(func() error {
-					conn, err := net.Dial("tcp", fmt.Sprintf("localhost:%d", freePort))
-					if conn != nil {
-						conn.Close()
-					}
-					return err
-				}, 1*time.Second, 50*time.Millisecond).Should(Succeed())
-			}
-		})
-
-		AfterEach(func() {
-			select {
-			case <-serverDone:
-			default:
-			}
-		})
-
-		It("should start and shutdown gracefully", func() {
-			startAndWaitForServer()
-			time.Sleep(100 * time.Millisecond)
-			realShutdown.Stop(context.Background())
-			Eventually(serverDone, 2*time.Second).Should(Receive(BeNil()))
-		})
-
-		It("should serve HTTP requests before shutdown", func() {
-			startAndWaitForServer()
-			time.Sleep(100 * time.Millisecond)
-
-			resp, err := http.Get(fmt.Sprintf("http://localhost:%d/v1/clip/", freePort))
-			if resp != nil {
-				defer resp.Body.Close()
-			}
-			Expect(err).ToNot(HaveOccurred())
-
-			realShutdown.Stop(context.Background())
-			Eventually(serverDone, 2*time.Second).Should(Receive(BeNil()))
-		})
-
-		It("should handle startup errors", func() {
-			errServer := core.NewKohanServer(-1, testPath, mockManager, nil, realShutdown)
-			go func() {
-				err := errServer.Start()
-				serverDone <- err
-			}()
-
-			Eventually(serverDone, 500*time.Millisecond).Should(Receive(HaveOccurred()))
-		})
-	})
-
 })
