@@ -9,7 +9,7 @@ import (
 )
 
 type EnrollmentDaoInterface interface {
-	// FIXME: Rename to BaseDbRepository Interface and use across Repo in FunApp and Kohan where GORM is used.
+	// FIXME: Rename to BaseDbRepository Interface & Files and use across Repo in FunApp and Kohan where GORM is used.
 	util.BaseDaoInterface
 	FindByPersonID(ctx context.Context, personID string, enrollment *fun.Enrollment) common.HttpError
 }

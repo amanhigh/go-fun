@@ -59,7 +59,6 @@ func NewBaseHTTPServerWithEngine(name string, port int, shutdown Shutdown, engin
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	// FIXME: Add Test for statsviz in http_server_test.go
 	// Statsviz: http://localhost:<port>/debug/statsviz/
 	engine.GET("/debug/statsviz/*filepath", telemetry.StatvizMetrics)
 

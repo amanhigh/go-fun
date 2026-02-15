@@ -87,6 +87,21 @@ var _ = Describe("BaseHTTPServer", func() {
 			Eventually(serverDone, 2*time.Second).Should(Receive(BeNil()))
 		})
 
+		It("should serve statsviz endpoint", func() {
+			startAndWaitForServer()
+			time.Sleep(100 * time.Millisecond)
+
+			resp, err := http.Get(fmt.Sprintf("http://localhost:%d/debug/statsviz/", freePort))
+			if resp != nil {
+				defer resp.Body.Close()
+			}
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+			shutdown.Stop(context.Background())
+			Eventually(serverDone, 2*time.Second).Should(Receive(BeNil()))
+		})
+
 		It("should serve health endpoint", func() {
 			startAndWaitForServer()
 			time.Sleep(100 * time.Millisecond)

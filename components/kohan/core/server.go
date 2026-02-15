@@ -9,6 +9,7 @@ import (
 // KohanServer serves all Kohan HTTP APIs (monitor + journal).
 type KohanServer struct {
 	*util.BaseHTTPServer
+	// FIXME: Inject via Named Tags leave constructor only for test.
 	monitorHandler handler.MonitorHandler
 	journalHandler handler.JournalHandler
 	imageHandler   handler.ImageHandler
