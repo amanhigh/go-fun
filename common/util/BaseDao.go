@@ -13,7 +13,7 @@ import (
 
 const TX_TIMEOUT = 30 * time.Second
 
-type BaseDaoInterface interface {
+type BaseRepository interface {
 	FindById(c context.Context, id any, entity any) (err common.HttpError)
 	FindPaginated(c context.Context, pageParams common.Pagination, result any) (count int64, err common.HttpError)
 	Create(c context.Context, entity any, omit ...string) (err common.HttpError)
