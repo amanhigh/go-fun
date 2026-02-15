@@ -1,9 +1,11 @@
 package play_fast_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/go-resty/resty/v2"
@@ -19,13 +21,23 @@ var _ = Describe("File Server", func() {
 		port = 8092
 		url  = "http://localhost:" + strconv.Itoa(port)
 
+		srv      *http.Server
 		response *resty.Response
 		err      error
 	)
 	BeforeEach(func() {
-		srv := util.NewTestServer(fmt.Sprintf(":%v", port))
+		srv = util.NewTestServer(fmt.Sprintf(":%v", port))
 		srv.Handler = fs
 		go srv.ListenAndServe()
+
+		Eventually(func() error {
+			_, err = resty.New().R().Get(url)
+			return err
+		}).WithTimeout(2 * time.Second).Should(Succeed())
+	})
+
+	AfterEach(func() {
+		Expect(srv.Shutdown(context.Background())).To(Succeed())
 	})
 
 	It("should run", func() {

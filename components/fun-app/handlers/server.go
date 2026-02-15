@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/amanhigh/go-fun/common/telemetry"
 	"github.com/amanhigh/go-fun/common/util"
@@ -33,7 +34,12 @@ func (fs *FunServer) Start(_ context.Context) (err error) {
 	fs.AfterShutdown = func(ctx context.Context) {
 		telemetry.ShutdownTracerProvider(ctx)
 	}
-	return fs.BaseHTTPServer.Start()
+
+	// TODO: Why Linter Flags why it Flags Internal Packages.
+	if err = fs.BaseHTTPServer.Start(); err != nil {
+		return fmt.Errorf("start fun server: %w", err)
+	}
+	return nil
 }
 
 func (fs *FunServer) registerRoutes(engine *gin.Engine) {
