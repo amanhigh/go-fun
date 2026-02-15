@@ -17,6 +17,7 @@ import (
 )
 
 func newBaseHTTPServer(cfg config.FunAppConfig, shutdown util.Shutdown) *util.BaseHTTPServer {
+	// HACK: Only pass required Config extract sepearte HttpServerConfig with required fields and use. Nest it in FunAppConfig.
 	engine := newGin(cfg)
 	return util.NewBaseHTTPServerWithEngine(NAMESPACE, cfg.Server.Port, shutdown, engine)
 }
@@ -56,6 +57,7 @@ func setupRateLimit(cfg config.RateLimit, engine *gin.Engine) {
 }
 
 func newPrometheus(base *util.BaseHTTPServer) (prometheus *ginprometheus.Prometheus) {
+	// HACK: Only pass required engine here.
 	/* Access Metrics */
 	// Visit http://localhost:8080/metrics
 	prometheus = ginprometheus.NewPrometheus("gin_access")
