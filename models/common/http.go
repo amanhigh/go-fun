@@ -39,7 +39,7 @@ func NewServerError(err error) HttpError {
 
 type Pagination struct {
 	Offset int `form:"offset" binding:"min=0"`
-	Limit  int `form:"limit" binding:"required,min=1,max=10"`
+	Limit  int `form:"limit" binding:"min=1,max=100"`
 }
 
 type Sort struct {
