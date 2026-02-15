@@ -52,9 +52,9 @@ var _ = PDescribe("ImageHandler Integration", func() {
 		// Create test entry for image operations
 		entry = barkat.Entry{
 			Ticker:   "GRSE",
-			Sequence: "mwd",
-			Type:     "rejected",
-			Status:   "fail",
+			Sequence: "MWD",
+			Type:     "REJECTED",
+			Status:   "FAIL",
 			Images: []barkat.Image{
 				{Timeframe: "DL"},
 				{Timeframe: "WK"},

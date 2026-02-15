@@ -20,8 +20,8 @@ type Entry struct {
 
 	// Associations
 	Images []Image `gorm:"foreignKey:EntryID;references:ID" json:"images,omitempty" binding:"required,min=4,max=6,dive"`
-	Tags   []Tag   `gorm:"foreignKey:EntryID;references:ID" json:"tags,omitempty"`
-	Notes  []Note  `gorm:"foreignKey:EntryID;references:ID" json:"note_blocks,omitempty"`
+	Tags   []Tag   `gorm:"foreignKey:EntryID;references:ID" json:"tags,omitempty" binding:"dive"`
+	Notes  []Note  `gorm:"foreignKey:EntryID;references:ID" json:"notes,omitempty" binding:"max=1,dive"`
 }
 
 func (Entry) TableName() string {

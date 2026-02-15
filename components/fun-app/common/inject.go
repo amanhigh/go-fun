@@ -49,9 +49,9 @@ func (fi *FunAppInjector) registerCoreDependencies() {
 	container.MustSingleton(fi.di, func() config.FunAppConfig {
 		return fi.config
 	})
+	container.MustSingleton(fi.di, util.NewGracefulShutdown)
 	container.MustSingleton(fi.di, newBaseHTTPServer)
 	container.MustSingleton(fi.di, newPrometheus)
-	container.MustSingleton(fi.di, util.NewGracefulShutdown)
 	container.MustSingleton(fi.di, newDb)
 	container.MustSingleton(fi.di, func() trace.Tracer {
 		return otel.Tracer(NAMESPACE)
