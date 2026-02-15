@@ -40,22 +40,33 @@ func (_m *NoteManager) EXPECT() *NoteManager_Expecter {
 }
 
 // CreateNote provides a mock function for the type NoteManager
-func (_mock *NoteManager) CreateNote(ctx context.Context, entryID string, note *barkat.Note) common.HttpError {
+func (_mock *NoteManager) CreateNote(ctx context.Context, entryID string, note barkat.Note) (*barkat.Note, common.HttpError) {
 	ret := _mock.Called(ctx, entryID, note)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateNote")
 	}
 
-	var r0 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *barkat.Note) common.HttpError); ok {
+	var r0 *barkat.Note
+	var r1 common.HttpError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, barkat.Note) (*barkat.Note, common.HttpError)); ok {
+		return returnFunc(ctx, entryID, note)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, barkat.Note) *barkat.Note); ok {
 		r0 = returnFunc(ctx, entryID, note)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(common.HttpError)
+			r0 = ret.Get(0).(*barkat.Note)
 		}
 	}
-	return r0
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, barkat.Note) common.HttpError); ok {
+		r1 = returnFunc(ctx, entryID, note)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(common.HttpError)
+		}
+	}
+	return r0, r1
 }
 
 // NoteManager_CreateNote_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateNote'
@@ -66,12 +77,12 @@ type NoteManager_CreateNote_Call struct {
 // CreateNote is a helper method to define mock.On call
 //   - ctx context.Context
 //   - entryID string
-//   - note *barkat.Note
+//   - note barkat.Note
 func (_e *NoteManager_Expecter) CreateNote(ctx interface{}, entryID interface{}, note interface{}) *NoteManager_CreateNote_Call {
 	return &NoteManager_CreateNote_Call{Call: _e.mock.On("CreateNote", ctx, entryID, note)}
 }
 
-func (_c *NoteManager_CreateNote_Call) Run(run func(ctx context.Context, entryID string, note *barkat.Note)) *NoteManager_CreateNote_Call {
+func (_c *NoteManager_CreateNote_Call) Run(run func(ctx context.Context, entryID string, note barkat.Note)) *NoteManager_CreateNote_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -81,9 +92,9 @@ func (_c *NoteManager_CreateNote_Call) Run(run func(ctx context.Context, entryID
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
-		var arg2 *barkat.Note
+		var arg2 barkat.Note
 		if args[2] != nil {
-			arg2 = args[2].(*barkat.Note)
+			arg2 = args[2].(barkat.Note)
 		}
 		run(
 			arg0,
@@ -94,12 +105,12 @@ func (_c *NoteManager_CreateNote_Call) Run(run func(ctx context.Context, entryID
 	return _c
 }
 
-func (_c *NoteManager_CreateNote_Call) Return(httpError common.HttpError) *NoteManager_CreateNote_Call {
-	_c.Call.Return(httpError)
+func (_c *NoteManager_CreateNote_Call) Return(note1 *barkat.Note, httpError common.HttpError) *NoteManager_CreateNote_Call {
+	_c.Call.Return(note1, httpError)
 	return _c
 }
 
-func (_c *NoteManager_CreateNote_Call) RunAndReturn(run func(ctx context.Context, entryID string, note *barkat.Note) common.HttpError) *NoteManager_CreateNote_Call {
+func (_c *NoteManager_CreateNote_Call) RunAndReturn(run func(ctx context.Context, entryID string, note barkat.Note) (*barkat.Note, common.HttpError)) *NoteManager_CreateNote_Call {
 	_c.Call.Return(run)
 	return _c
 }

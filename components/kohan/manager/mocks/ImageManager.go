@@ -40,22 +40,33 @@ func (_m *ImageManager) EXPECT() *ImageManager_Expecter {
 }
 
 // CreateImage provides a mock function for the type ImageManager
-func (_mock *ImageManager) CreateImage(ctx context.Context, entryID string, image *barkat.Image) common.HttpError {
+func (_mock *ImageManager) CreateImage(ctx context.Context, entryID string, image barkat.Image) (*barkat.Image, common.HttpError) {
 	ret := _mock.Called(ctx, entryID, image)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateImage")
 	}
 
-	var r0 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *barkat.Image) common.HttpError); ok {
+	var r0 *barkat.Image
+	var r1 common.HttpError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, barkat.Image) (*barkat.Image, common.HttpError)); ok {
+		return returnFunc(ctx, entryID, image)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, barkat.Image) *barkat.Image); ok {
 		r0 = returnFunc(ctx, entryID, image)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(common.HttpError)
+			r0 = ret.Get(0).(*barkat.Image)
 		}
 	}
-	return r0
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, barkat.Image) common.HttpError); ok {
+		r1 = returnFunc(ctx, entryID, image)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(common.HttpError)
+		}
+	}
+	return r0, r1
 }
 
 // ImageManager_CreateImage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateImage'
@@ -66,12 +77,12 @@ type ImageManager_CreateImage_Call struct {
 // CreateImage is a helper method to define mock.On call
 //   - ctx context.Context
 //   - entryID string
-//   - image *barkat.Image
+//   - image barkat.Image
 func (_e *ImageManager_Expecter) CreateImage(ctx interface{}, entryID interface{}, image interface{}) *ImageManager_CreateImage_Call {
 	return &ImageManager_CreateImage_Call{Call: _e.mock.On("CreateImage", ctx, entryID, image)}
 }
 
-func (_c *ImageManager_CreateImage_Call) Run(run func(ctx context.Context, entryID string, image *barkat.Image)) *ImageManager_CreateImage_Call {
+func (_c *ImageManager_CreateImage_Call) Run(run func(ctx context.Context, entryID string, image barkat.Image)) *ImageManager_CreateImage_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -81,9 +92,9 @@ func (_c *ImageManager_CreateImage_Call) Run(run func(ctx context.Context, entry
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
-		var arg2 *barkat.Image
+		var arg2 barkat.Image
 		if args[2] != nil {
-			arg2 = args[2].(*barkat.Image)
+			arg2 = args[2].(barkat.Image)
 		}
 		run(
 			arg0,
@@ -94,12 +105,12 @@ func (_c *ImageManager_CreateImage_Call) Run(run func(ctx context.Context, entry
 	return _c
 }
 
-func (_c *ImageManager_CreateImage_Call) Return(httpError common.HttpError) *ImageManager_CreateImage_Call {
-	_c.Call.Return(httpError)
+func (_c *ImageManager_CreateImage_Call) Return(image1 *barkat.Image, httpError common.HttpError) *ImageManager_CreateImage_Call {
+	_c.Call.Return(image1, httpError)
 	return _c
 }
 
-func (_c *ImageManager_CreateImage_Call) RunAndReturn(run func(ctx context.Context, entryID string, image *barkat.Image) common.HttpError) *ImageManager_CreateImage_Call {
+func (_c *ImageManager_CreateImage_Call) RunAndReturn(run func(ctx context.Context, entryID string, image barkat.Image) (*barkat.Image, common.HttpError)) *ImageManager_CreateImage_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -40,22 +40,33 @@ func (_m *TagManager) EXPECT() *TagManager_Expecter {
 }
 
 // CreateTag provides a mock function for the type TagManager
-func (_mock *TagManager) CreateTag(ctx context.Context, entryID string, tag *barkat.Tag) common.HttpError {
+func (_mock *TagManager) CreateTag(ctx context.Context, entryID string, tag barkat.Tag) (*barkat.Tag, common.HttpError) {
 	ret := _mock.Called(ctx, entryID, tag)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateTag")
 	}
 
-	var r0 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *barkat.Tag) common.HttpError); ok {
+	var r0 *barkat.Tag
+	var r1 common.HttpError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, barkat.Tag) (*barkat.Tag, common.HttpError)); ok {
+		return returnFunc(ctx, entryID, tag)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, barkat.Tag) *barkat.Tag); ok {
 		r0 = returnFunc(ctx, entryID, tag)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(common.HttpError)
+			r0 = ret.Get(0).(*barkat.Tag)
 		}
 	}
-	return r0
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, barkat.Tag) common.HttpError); ok {
+		r1 = returnFunc(ctx, entryID, tag)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(common.HttpError)
+		}
+	}
+	return r0, r1
 }
 
 // TagManager_CreateTag_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateTag'
@@ -66,12 +77,12 @@ type TagManager_CreateTag_Call struct {
 // CreateTag is a helper method to define mock.On call
 //   - ctx context.Context
 //   - entryID string
-//   - tag *barkat.Tag
+//   - tag barkat.Tag
 func (_e *TagManager_Expecter) CreateTag(ctx interface{}, entryID interface{}, tag interface{}) *TagManager_CreateTag_Call {
 	return &TagManager_CreateTag_Call{Call: _e.mock.On("CreateTag", ctx, entryID, tag)}
 }
 
-func (_c *TagManager_CreateTag_Call) Run(run func(ctx context.Context, entryID string, tag *barkat.Tag)) *TagManager_CreateTag_Call {
+func (_c *TagManager_CreateTag_Call) Run(run func(ctx context.Context, entryID string, tag barkat.Tag)) *TagManager_CreateTag_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -81,9 +92,9 @@ func (_c *TagManager_CreateTag_Call) Run(run func(ctx context.Context, entryID s
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
-		var arg2 *barkat.Tag
+		var arg2 barkat.Tag
 		if args[2] != nil {
-			arg2 = args[2].(*barkat.Tag)
+			arg2 = args[2].(barkat.Tag)
 		}
 		run(
 			arg0,
@@ -94,12 +105,12 @@ func (_c *TagManager_CreateTag_Call) Run(run func(ctx context.Context, entryID s
 	return _c
 }
 
-func (_c *TagManager_CreateTag_Call) Return(httpError common.HttpError) *TagManager_CreateTag_Call {
-	_c.Call.Return(httpError)
+func (_c *TagManager_CreateTag_Call) Return(tag1 *barkat.Tag, httpError common.HttpError) *TagManager_CreateTag_Call {
+	_c.Call.Return(tag1, httpError)
 	return _c
 }
 
-func (_c *TagManager_CreateTag_Call) RunAndReturn(run func(ctx context.Context, entryID string, tag *barkat.Tag) common.HttpError) *TagManager_CreateTag_Call {
+func (_c *TagManager_CreateTag_Call) RunAndReturn(run func(ctx context.Context, entryID string, tag barkat.Tag) (*barkat.Tag, common.HttpError)) *TagManager_CreateTag_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -51,7 +51,7 @@ var _ = Describe("ImageHandler", func() {
 
 			BeforeEach(func() {
 				// Mock manager success
-				imageMgr.EXPECT().CreateImage(testCtx, "test-entry-id", mock.AnythingOfType("*barkat.Image")).Return(nil)
+				imageMgr.EXPECT().CreateImage(testCtx, "test-entry-id", mock.AnythingOfType("barkat.Image")).Return(&image, nil)
 
 				// Setup HTTP request using helper
 				req, w = util.CreateTestRequest("POST", "/v1/journal-entries/test-entry-id/images", image)
@@ -90,7 +90,7 @@ var _ = Describe("ImageHandler", func() {
 
 			BeforeEach(func() {
 				// Mock manager error
-				imageMgr.EXPECT().CreateImage(testCtx, "test-entry-id", mock.AnythingOfType("*barkat.Image")).Return(common.ErrNotFound)
+				imageMgr.EXPECT().CreateImage(testCtx, "test-entry-id", mock.AnythingOfType("barkat.Image")).Return(nil, common.ErrNotFound)
 
 				// Setup HTTP request using helper
 				req, w = util.CreateTestRequest("POST", "/v1/journal-entries/test-entry-id/images", image)

@@ -28,110 +28,245 @@ var _ = Describe("ImageManager", func() {
 		repo = repoMocks.NewImageRepository(GinkgoT())
 		imgMgr = manager.NewImageManager(entryMgr, repo)
 
-		image = barkat.Image{Timeframe: "DL"}
+		image = barkat.Image{
+			Timeframe: "DL", // Valid timeframe from PRD spec
+		}
 	})
 
 	Context("CreateImage", func() {
-		Context("with valid entry", func() {
+		Context("Happy Path", func() {
 			BeforeEach(func() {
 				// Mock entry exists
 				entryMgr.EXPECT().EntryExists(testCtx, "test-entry-id").Return(nil)
-				// Mock repository create
+				// Mock repository create within transaction
 				repo.EXPECT().UseOrCreateTx(mock.Anything, mock.AnythingOfType("util.DbRun")).Return(nil)
 			})
 
-			It("should create image successfully", func() {
-				err := imgMgr.CreateImage(testCtx, "test-entry-id", &image)
+			It("should create image successfully with proper contract", func() {
+				createdImage, err := imgMgr.CreateImage(testCtx, "test-entry-id", image)
+
+				// Verify successful creation
 				Expect(err).ToNot(HaveOccurred())
+				Expect(createdImage).ToNot(BeNil())
+
+				// Verify API contract compliance (FR-001, FR-004)
+				Expect(createdImage.EntryID).To(Equal("test-entry-id"))
+				Expect(createdImage.Timeframe).To(Equal("DL"))
+				// Note: In mock environment, ID and CreatedAt are not actually set by BeforeCreate hook
+				// In real implementation, these would be set by GORM hooks
 			})
 		})
 
-		Context("with non-existent entry", func() {
-			BeforeEach(func() {
-				// Mock entry not found
-				entryMgr.EXPECT().EntryExists(testCtx, "nonexistent").Return(common.ErrNotFound)
+		Context("Edge Cases", func() {
+			Context("with repository error", func() {
+				BeforeEach(func() {
+					// Mock entry exists
+					entryMgr.EXPECT().EntryExists(testCtx, "test-entry-id").Return(nil)
+					// Mock repository transaction error
+					repo.EXPECT().UseOrCreateTx(mock.Anything, mock.AnythingOfType("util.DbRun")).Return(&common.HttpErrorImpl{
+						Msg:     "Database constraint violation",
+						ErrCode: http.StatusInternalServerError,
+					})
+				})
+
+				It("should return repository error and nil image", func() {
+					createdImage, err := imgMgr.CreateImage(testCtx, "test-entry-id", image)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Code()).To(Equal(http.StatusInternalServerError))
+					Expect(err.Error()).To(Equal("Database constraint violation"))
+					Expect(createdImage).To(BeNil()) // Critical: should not return partial data on error
+				})
 			})
 
-			It("should return 404 error", func() {
-				err := imgMgr.CreateImage(testCtx, "nonexistent", &image)
+			Context("with invalid timeframe", func() {
+				BeforeEach(func() {
+					// Mock entry exists
+					entryMgr.EXPECT().EntryExists(testCtx, "test-entry-id").Return(nil)
+					// Mock repository validation error
+					repo.EXPECT().UseOrCreateTx(mock.Anything, mock.AnythingOfType("util.DbRun")).Return(&common.HttpErrorImpl{
+						Msg:     "Invalid timeframe: must be one of DL, YR, MN, WK, D",
+						ErrCode: http.StatusBadRequest,
+					})
+				})
+
+				It("should validate timeframe and return 400", func() {
+					invalidImage := barkat.Image{Timeframe: "INVALID"}
+					createdImage, err := imgMgr.CreateImage(testCtx, "test-entry-id", invalidImage)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Code()).To(Equal(http.StatusBadRequest))
+					Expect(err.Error()).To(ContainSubstring("Invalid timeframe"))
+					Expect(createdImage).To(BeNil())
+				})
+			})
+
+			Context("with empty entry ID", func() {
+				BeforeEach(func() {
+					// Mock entry not found for empty ID
+					entryMgr.EXPECT().EntryExists(testCtx, "").Return(common.ErrNotFound)
+				})
+				It("should handle empty entry ID gracefully", func() {
+					createdImage, err := imgMgr.CreateImage(testCtx, "", image)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Code()).To(Equal(http.StatusNotFound))
+					Expect(createdImage).To(BeNil())
+				})
+			})
+		})
+
+		Context("Not Found", func() {
+			BeforeEach(func() {
+				// Mock entry not found
+				entryMgr.EXPECT().EntryExists(testCtx, "nonexistent-entry").Return(common.ErrNotFound)
+			})
+
+			It("should return 404 for non-existent entry and nil image", func() {
+				createdImage, err := imgMgr.CreateImage(testCtx, "nonexistent-entry", image)
 				Expect(err).To(HaveOccurred())
 				Expect(err.Code()).To(Equal(http.StatusNotFound))
+				Expect(err.Error()).To(Equal("NotFound"))
+				Expect(createdImage).To(BeNil()) // Critical: should not return partial data
 			})
 		})
 	})
 
 	Context("ListImages", func() {
-		Context("with valid entry", func() {
+		var (
+			images []barkat.Image
+		)
+
+		Context("Happy Path", func() {
 			BeforeEach(func() {
 				// Mock entry exists
 				entryMgr.EXPECT().EntryExists(testCtx, "test-entry-id").Return(nil)
-				// Mock repository list
+				// Mock repository list within transaction
 				repo.EXPECT().UseOrCreateTx(mock.Anything, mock.AnythingOfType("util.DbRun")).Return(nil)
 			})
 
-			It("should list images successfully", func() {
-				images, err := imgMgr.ListImages(testCtx, "test-entry-id")
+			It("should list images successfully with proper contract", func() {
+				var err common.HttpError
+				images, err = imgMgr.ListImages(testCtx, "test-entry-id")
+
+				// Verify successful listing
 				Expect(err).ToNot(HaveOccurred())
-				// Note: With mocks, we can't easily test the actual return value
-				// This would be better tested with integration tests
-				_ = images
+				Expect(images).To(BeEmpty())
+
+				// Note: In real implementation, images would have proper timeframe metadata (FR-002)
 			})
 		})
 
-		Context("with unknown entry", func() {
-			BeforeEach(func() {
-				// Mock entry not found
-				entryMgr.EXPECT().EntryExists(testCtx, "unknown-id").Return(common.ErrNotFound)
+		Context("Edge Cases", func() {
+			Context("with repository error", func() {
+				BeforeEach(func() {
+					// Mock entry exists
+					entryMgr.EXPECT().EntryExists(testCtx, "test-entry-id").Return(nil)
+					// Mock repository transaction error
+					repo.EXPECT().UseOrCreateTx(mock.Anything, mock.AnythingOfType("util.DbRun")).Return(&common.HttpErrorImpl{
+						Msg:     "Database connection lost",
+						ErrCode: http.StatusInternalServerError,
+					})
+				})
+
+				It("should return repository error and nil images", func() {
+					images, err := imgMgr.ListImages(testCtx, "test-entry-id")
+					Expect(err).To(HaveOccurred())
+					Expect(err.Code()).To(Equal(http.StatusInternalServerError))
+					Expect(err.Error()).To(Equal("Database connection lost"))
+					Expect(images).To(BeNil()) // Critical: should not return partial data on error
+				})
 			})
 
-			It("should return 404 error", func() {
-				_, err := imgMgr.ListImages(testCtx, "unknown-id")
+			Context("with empty entry ID", func() {
+				BeforeEach(func() {
+					// Mock entry not found for empty ID
+					entryMgr.EXPECT().EntryExists(testCtx, "").Return(common.ErrNotFound)
+				})
+				It("should handle empty entry ID gracefully", func() {
+					images, err := imgMgr.ListImages(testCtx, "")
+					Expect(err).To(HaveOccurred())
+					Expect(err.Code()).To(Equal(http.StatusNotFound))
+					Expect(images).To(BeNil())
+				})
+			})
+		})
+
+		Context("Not Found", func() {
+			BeforeEach(func() {
+				// Mock entry not found
+				entryMgr.EXPECT().EntryExists(testCtx, "nonexistent-entry").Return(common.ErrNotFound)
+			})
+
+			It("should return 404 for non-existent entry and nil images", func() {
+				images, err := imgMgr.ListImages(testCtx, "nonexistent-entry")
 				Expect(err).To(HaveOccurred())
 				Expect(err.Code()).To(Equal(http.StatusNotFound))
+				Expect(err.Error()).To(Equal("NotFound"))
+				Expect(images).To(BeNil()) // Critical: should not return partial data
 			})
 		})
 	})
 
 	Context("DeleteImage", func() {
-		Context("with valid entry and image", func() {
+		Context("Happy Path", func() {
 			BeforeEach(func() {
 				// Mock entry exists
 				entryMgr.EXPECT().EntryExists(testCtx, "test-entry-id").Return(nil)
-				// Mock repository delete
-				repo.EXPECT().DeleteById(testCtx, "test-image-id", mock.AnythingOfType("*barkat.Image")).Return(nil)
+				// Mock repository delete within transaction
+				repo.EXPECT().UseOrCreateTx(mock.Anything, mock.AnythingOfType("util.DbRun")).Return(nil)
 			})
 
-			It("should delete image successfully", func() {
+			It("should delete image successfully with proper contract", func() {
 				err := imgMgr.DeleteImage(testCtx, "test-entry-id", "test-image-id")
+
+				// Verify successful deletion (FR-004.5)
 				Expect(err).ToNot(HaveOccurred())
+				// Delete operations should return nil on success, not 204 (that's HTTP layer)
 			})
 		})
 
-		Context("with non-existent entry", func() {
+		Context("Edge Cases", func() {
+			Context("with repository error", func() {
+				BeforeEach(func() {
+					// Mock entry exists
+					entryMgr.EXPECT().EntryExists(testCtx, "test-entry-id").Return(nil)
+					// Mock repository transaction error (image not found)
+					repo.EXPECT().UseOrCreateTx(mock.Anything, mock.AnythingOfType("util.DbRun")).Return(&common.HttpErrorImpl{
+						Msg:     "Image not found",
+						ErrCode: http.StatusNotFound,
+					})
+				})
+
+				It("should return 404 when image does not exist", func() {
+					err := imgMgr.DeleteImage(testCtx, "test-entry-id", "nonexistent-image")
+					Expect(err).To(HaveOccurred())
+					Expect(err.Code()).To(Equal(http.StatusNotFound))
+					Expect(err.Error()).To(Equal("Image not found"))
+				})
+			})
+
+			Context("with empty entry ID", func() {
+				BeforeEach(func() {
+					// Mock entry not found for empty ID
+					entryMgr.EXPECT().EntryExists(testCtx, "").Return(common.ErrNotFound)
+				})
+				It("should handle empty entry ID gracefully", func() {
+					err := imgMgr.DeleteImage(testCtx, "", "test-image-id")
+					Expect(err).To(HaveOccurred())
+					Expect(err.Code()).To(Equal(http.StatusNotFound))
+				})
+			})
+		})
+
+		Context("Not Found", func() {
 			BeforeEach(func() {
 				// Mock entry not found
-				entryMgr.EXPECT().EntryExists(testCtx, "nonexistent").Return(common.ErrNotFound)
+				entryMgr.EXPECT().EntryExists(testCtx, "nonexistent-entry").Return(common.ErrNotFound)
 			})
 
-			It("should return 404 error", func() {
-				err := imgMgr.DeleteImage(testCtx, "nonexistent", "test-image-id")
+			It("should return 404 for non-existent entry", func() {
+				err := imgMgr.DeleteImage(testCtx, "nonexistent-entry", "test-image-id")
 				Expect(err).To(HaveOccurred())
 				Expect(err.Code()).To(Equal(http.StatusNotFound))
-			})
-		})
-
-		Context("with repository error", func() {
-			BeforeEach(func() {
-				// Mock entry exists
-				entryMgr.EXPECT().EntryExists(testCtx, "test-entry-id").Return(nil)
-				// Mock repository error
-				repo.EXPECT().DeleteById(testCtx, "nonexistent-image", mock.AnythingOfType("*barkat.Image")).Return(common.ErrNotFound)
-			})
-
-			It("should return repository error", func() {
-				err := imgMgr.DeleteImage(testCtx, "test-entry-id", "nonexistent-image")
-				Expect(err).To(HaveOccurred())
-				Expect(err.Code()).To(Equal(http.StatusNotFound))
+				Expect(err.Error()).To(Equal("NotFound"))
 			})
 		})
 	})

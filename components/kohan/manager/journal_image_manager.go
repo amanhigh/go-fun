@@ -1,5 +1,8 @@
 package manager
 
+// ImageManager provides business logic for journal image operations.
+// Images represent visual attachments to journal entries with timeframe metadata.
+
 import (
 	"context"
 
@@ -8,10 +11,9 @@ import (
 	"github.com/amanhigh/go-fun/models/common"
 )
 
-// ImageManager provides business logic for journal image operations.
 type ImageManager interface {
 	// CreateImage attaches a new image to an entry.
-	CreateImage(ctx context.Context, entryID string, image *barkat.Image) common.HttpError
+	CreateImage(ctx context.Context, entryID string, image barkat.Image) (*barkat.Image, common.HttpError)
 	// ListImages returns all images for an entry.
 	ListImages(ctx context.Context, entryID string) ([]barkat.Image, common.HttpError)
 	// DeleteImage removes an image by ID scoped to an entry.
@@ -30,34 +32,44 @@ func NewImageManager(entryMgr JournalManager, repo repository.ImageRepository) *
 	return &ImageManagerImpl{entryMgr: entryMgr, repo: repo}
 }
 
-func (m *ImageManagerImpl) CreateImage(ctx context.Context, entryID string, image *barkat.Image) common.HttpError {
-	if httpErr := m.entryMgr.EntryExists(ctx, entryID); httpErr != nil {
-		return httpErr
-	}
+func (m *ImageManagerImpl) CreateImage(ctx context.Context, entryID string, image barkat.Image) (*barkat.Image, common.HttpError) {
 	image.EntryID = entryID
-	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		return m.repo.Create(c, image)
+	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+		// Check entry existence within transaction
+		if httpErr := m.entryMgr.EntryExists(c, entryID); httpErr != nil {
+			return httpErr
+		}
+		return m.repo.Create(c, &image)
 	})
+	if err != nil {
+		return nil, err
+	}
+	return &image, nil
 }
 
 func (m *ImageManagerImpl) ListImages(ctx context.Context, entryID string) ([]barkat.Image, common.HttpError) {
-	if httpErr := m.entryMgr.EntryExists(ctx, entryID); httpErr != nil {
-		return nil, httpErr
-	}
-
 	var images []barkat.Image
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+		// Check entry existence within transaction
+		if httpErr := m.entryMgr.EntryExists(c, entryID); httpErr != nil {
+			return httpErr
+		}
 		var httpErr common.HttpError
 		images, httpErr = m.repo.ListImages(c, entryID)
 		return httpErr
 	})
-	return images, err
+	if err != nil {
+		return nil, err
+	}
+	return images, nil
 }
 
 func (m *ImageManagerImpl) DeleteImage(ctx context.Context, entryID, imageID string) common.HttpError {
-	if httpErr := m.entryMgr.EntryExists(ctx, entryID); httpErr != nil {
-		return httpErr
-	}
-	image := &barkat.Image{EntryID: entryID}
-	return m.repo.DeleteById(ctx, imageID, image)
+	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+		// Check entry existence within transaction
+		if httpErr := m.entryMgr.EntryExists(c, entryID); httpErr != nil {
+			return httpErr
+		}
+		return m.repo.DeleteById(c, imageID, &barkat.Image{EntryID: entryID})
+	})
 }
