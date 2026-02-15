@@ -1,6 +1,7 @@
 package core
 
 import (
+	"embed"
 	"fmt"
 
 	"github.com/amanhigh/go-fun/common/util"
@@ -13,21 +14,33 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+//go:embed migration/*.sql
+var migrationFS embed.FS
+
 // ---- Journal Helpers ----
 
-// SetupBarkatDB uses GORM AutoMigrate to create barkat tables.
-// Use only for in-memory test databases. Production uses RunMigrations with golang-migrate.
-func SetupBarkatDB(db *gorm.DB) error {
-	if err := db.AutoMigrate(&barkatmodels.Entry{}, &barkatmodels.Image{}, &barkatmodels.Tag{}, &barkatmodels.Note{}); err != nil {
-		return fmt.Errorf("failed to auto-migrate barkat tables: %w", err)
+// CreateTestBarkatDB creates a test database using util package with proper migrations.
+// This is the recommended approach for integration tests as it uses the same migration system as production.
+func CreateTestBarkatDB() (*gorm.DB, error) {
+	// Create in-memory SQLite database for testing
+	db, err := util.CreateTestDb(logger.Warn)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create test database: %w", err)
 	}
-	return nil
+
+	// Use AutoMigrate for test database (faster and more reliable for in-memory DB)
+	if err := db.AutoMigrate(&barkatmodels.Entry{}, &barkatmodels.Image{}, &barkatmodels.Tag{}, &barkatmodels.Note{}); err != nil {
+		return nil, fmt.Errorf("failed to auto-migrate barkat tables: %w", err)
+	}
+
+	return db, nil
 }
 
 // ---- Journal Providers ----
 
 func (ki *KohanInjector) provideBarkatDB() (*gorm.DB, error) {
-	if err := RunMigrations(ki.config.Barkat.DbPath); err != nil {
+	// FIXME: Can RunSqlite accept Created DB instead of Path, Can test DB also run Same Migrations ?
+	if err := util.RunSqliteMigrations(ki.config.Barkat.DbPath, migrationFS, "migration"); err != nil {
 		return nil, fmt.Errorf("failed to run barkat migrations: %w", err)
 	}
 	db, err := util.CreateSqliteDb(ki.config.Barkat.DbPath, logger.Warn)

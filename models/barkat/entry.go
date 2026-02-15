@@ -19,7 +19,7 @@ type Entry struct {
 	DeletedAt *time.Time `gorm:"column:deleted_at" json:"deleted_at,omitempty"`
 
 	// Associations
-	Images []Image `gorm:"foreignKey:EntryID;references:ID" json:"images,omitempty"`
+	Images []Image `gorm:"foreignKey:EntryID;references:ID" json:"images,omitempty" binding:"required,min=4,max=6,dive"`
 	Tags   []Tag   `gorm:"foreignKey:EntryID;references:ID" json:"tags,omitempty"`
 	Notes  []Note  `gorm:"foreignKey:EntryID;references:ID" json:"note_blocks,omitempty"`
 }

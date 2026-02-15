@@ -6,6 +6,7 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/models/barkat"
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,6 +20,8 @@ type JournalHandler interface {
 	HandleGetEntry(c *gin.Context)
 	// HandleCreateEntry handles POST /v1/journal-entries
 	HandleCreateEntry(c *gin.Context)
+	// HandleDeleteEntry handles DELETE /v1/journal-entries/:id
+	HandleDeleteEntry(c *gin.Context)
 }
 
 type JournalHandlerImpl struct {
@@ -49,7 +52,8 @@ func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusOK, entryList)
+	response := common.NewEnvelope(entryList)
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *JournalHandlerImpl) HandleGetEntry(c *gin.Context) {
@@ -65,7 +69,8 @@ func (h *JournalHandlerImpl) HandleGetEntry(c *gin.Context) {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusOK, entry)
+	response := common.NewEnvelope(entry)
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *JournalHandlerImpl) HandleCreateEntry(c *gin.Context) {
@@ -80,5 +85,22 @@ func (h *JournalHandlerImpl) HandleCreateEntry(c *gin.Context) {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusCreated, entry)
+	// FIXME: Better Envelope Integration
+	response := common.NewEnvelope(entry)
+	c.JSON(http.StatusCreated, response)
+}
+
+func (h *JournalHandlerImpl) HandleDeleteEntry(c *gin.Context) {
+	var path barkat.EntryPath
+	if err := c.ShouldBindUri(&path); err != nil {
+		err = util.ProcessValidationError(err)
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	if httpErr := h.journalManager.DeleteEntry(c.Request.Context(), path.ID); httpErr != nil {
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+	c.Status(http.StatusNoContent)
 }

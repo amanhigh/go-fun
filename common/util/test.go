@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+
+	"github.com/gin-gonic/gin"
 )
 
 const DIMENSION_COUNT = 2 // Number of values needed for matrix dimensions (n, m)
@@ -62,4 +64,11 @@ func AssertJSONAndStatus(w *httptest.ResponseRecorder, expectedStatus int, v any
 	if err := json.Unmarshal(w.Body.Bytes(), v); err != nil {
 		log.Fatalf("Failed to unmarshal Test JSON: %v", err)
 	}
+}
+
+// CreateTestGinRouter creates a new Gin router configured for testing
+// Used to eliminate duplication across handler integration tests
+func CreateTestGinRouter() *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	return gin.New()
 }
