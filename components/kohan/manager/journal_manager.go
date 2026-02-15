@@ -49,6 +49,7 @@ func NewJournalManager(repo repository.JournalRepository) *JournalManagerImpl {
 
 //nolint:gocyclo,cyclop,funlen // Validation logic requires multiple checks per PRD
 func (m *JournalManagerImpl) CreateEntry(ctx context.Context, entry *barkat.Entry) common.HttpError {
+	// FIXME: Move to Struct tag based Validations via Gin.
 	// Validate images: PRD requires min 4, max 6
 	if len(entry.Images) < MinImages {
 		return common.NewHttpError(fmt.Sprintf("images: minimum %d required", MinImages), http.StatusBadRequest)

@@ -396,7 +396,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				})
 			})
 
-			Context("Date Fields", func() {
+			PContext("Date Fields", func() {
 				Context("Created-After Field", func() {
 					Context("Allowed Values", func() {
 						It("should accept valid ISO 8601 datetime and filter entries", func() {

@@ -142,7 +142,7 @@ var _ = Describe("KohanServer", func() {
 
 		Context("HandleCreateEntry", func() {
 			It("should create entry and return 201", func() {
-				body := `{"ticker":"RELIANCE","sequence":"MWD","type":"REJECTED","status":"FAIL","images":[{"timeframe":"DL"},{"timeframe":"WK"}]}`
+				body := `{"ticker":"RELIANCE","sequence":"MWD","type":"REJECTED","status":"FAIL","images":[{"timeframe":"DL"},{"timeframe":"WK"},{"timeframe":"MN"},{"timeframe":"TMN"}]}`
 				req := httptest.NewRequest("POST", "/v1/journal-entries", bytes.NewBufferString(body))
 				req.Header.Set("Content-Type", "application/json")
 				c, _ := gin.CreateTestContext(recorder)
