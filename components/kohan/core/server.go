@@ -9,25 +9,24 @@ import (
 // KohanServer serves all Kohan HTTP APIs (monitor + journal).
 type KohanServer struct {
 	*util.BaseHTTPServer
-	// FIXME: Inject via Named Tags leave constructor only for test.
-	monitorHandler handler.MonitorHandler
-	journalHandler handler.JournalHandler
-	imageHandler   handler.ImageHandler
-	noteHandler    handler.NoteHandler
-	tagHandler     handler.TagHandler
+	MonitorHandler handler.MonitorHandler
+	JournalHandler handler.JournalHandler
+	ImageHandler   handler.ImageHandler
+	NoteHandler    handler.NoteHandler
+	TagHandler     handler.TagHandler
 }
 
-// NewKohanServer creates a KohanServer with interface-injected handlers.
+// NewKohanServer creates a KohanServer for testing with explicit handler injection.
 func NewKohanServer(base *util.BaseHTTPServer, monitorHandler handler.MonitorHandler,
 	journalHandler handler.JournalHandler, imageHandler handler.ImageHandler,
 	noteHandler handler.NoteHandler, tagHandler handler.TagHandler) *KohanServer {
 	server := &KohanServer{
 		BaseHTTPServer: base,
-		monitorHandler: monitorHandler,
-		journalHandler: journalHandler,
-		imageHandler:   imageHandler,
-		noteHandler:    noteHandler,
-		tagHandler:     tagHandler,
+		MonitorHandler: monitorHandler,
+		JournalHandler: journalHandler,
+		ImageHandler:   imageHandler,
+		NoteHandler:    noteHandler,
+		TagHandler:     tagHandler,
 	}
 	server.RegisterRoutes = server.registerRoutes
 	return server
@@ -39,31 +38,31 @@ func (s *KohanServer) registerRoutes(engine *gin.Engine) {
 }
 
 func (s *KohanServer) registerMonitorRoutes(engine *gin.Engine) {
-	if s.monitorHandler == nil {
+	if s.MonitorHandler == nil {
 		return
 	}
-	engine.GET("/v1/ticker/:ticker/record", s.monitorHandler.HandleRecordTicker)
-	engine.GET("/v1/clip/", s.monitorHandler.HandleReadClip)
-	engine.POST("/v1/submap/:action", s.monitorHandler.HandleSubmapControl)
+	engine.GET("/v1/ticker/:ticker/record", s.MonitorHandler.HandleRecordTicker)
+	engine.GET("/v1/clip/", s.MonitorHandler.HandleReadClip)
+	engine.POST("/v1/submap/:action", s.MonitorHandler.HandleSubmapControl)
 }
 
 func (s *KohanServer) registerJournalRoutes(engine *gin.Engine) {
 	entries := engine.Group("/v1/journal-entries")
 	{
-		entries.GET("", s.journalHandler.HandleListEntries)
-		entries.GET("/:id", s.journalHandler.HandleGetEntry)
-		entries.POST("", s.journalHandler.HandleCreateEntry)
+		entries.GET("", s.JournalHandler.HandleListEntries)
+		entries.GET("/:id", s.JournalHandler.HandleGetEntry)
+		entries.POST("", s.JournalHandler.HandleCreateEntry)
 
-		entries.POST("/:id/images", s.imageHandler.HandleCreateImage)
-		entries.GET("/:id/images", s.imageHandler.HandleListImages)
-		entries.DELETE("/:id/images/:imageId", s.imageHandler.HandleDeleteImage)
+		entries.POST("/:id/images", s.ImageHandler.HandleCreateImage)
+		entries.GET("/:id/images", s.ImageHandler.HandleListImages)
+		entries.DELETE("/:id/images/:imageId", s.ImageHandler.HandleDeleteImage)
 
-		entries.POST("/:id/notes", s.noteHandler.HandleCreateNote)
-		entries.GET("/:id/notes", s.noteHandler.HandleListNotes)
-		entries.DELETE("/:id/notes/:noteId", s.noteHandler.HandleDeleteNote)
+		entries.POST("/:id/notes", s.NoteHandler.HandleCreateNote)
+		entries.GET("/:id/notes", s.NoteHandler.HandleListNotes)
+		entries.DELETE("/:id/notes/:noteId", s.NoteHandler.HandleDeleteNote)
 
-		entries.POST("/:id/tags", s.tagHandler.HandleCreateTag)
-		entries.GET("/:id/tags", s.tagHandler.HandleListTags)
-		entries.DELETE("/:id/tags/:tagId", s.tagHandler.HandleDeleteTag)
+		entries.POST("/:id/tags", s.TagHandler.HandleCreateTag)
+		entries.GET("/:id/tags", s.TagHandler.HandleListTags)
+		entries.DELETE("/:id/tags/:tagId", s.TagHandler.HandleDeleteTag)
 	}
 }

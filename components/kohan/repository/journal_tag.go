@@ -1,4 +1,3 @@
-//nolint:dupl // Intentional CRUD pattern: Tag and Note repos follow same pattern for different sub-resources
 package repository
 
 import (

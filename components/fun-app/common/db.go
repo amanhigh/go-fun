@@ -28,15 +28,15 @@ func newDb(config config.FunAppConfig) (db *gorm.DB, err error) {
 // DAO providers return interfaces while delegating to pointer-returning constructors.
 
 func (fi *FunAppInjector) registerDao() {
-	container.MustSingleton(fi.di, util.NewBaseDao)
+	container.MustSingleton(fi.di, util.NewBaseDbRepository)
 	container.MustSingleton(fi.di, fi.providePersonDao)
 	container.MustSingleton(fi.di, fi.provideEnrollmentDao)
 }
 
-func (fi *FunAppInjector) providePersonDao(base util.BaseDao) dao.PersonDaoInterface {
+func (fi *FunAppInjector) providePersonDao(base util.BaseDbRepository) dao.PersonDaoInterface {
 	return dao.NewPersonDao(base)
 }
 
-func (fi *FunAppInjector) provideEnrollmentDao(base util.BaseDao) dao.EnrollmentDaoInterface {
+func (fi *FunAppInjector) provideEnrollmentDao(base util.BaseDbRepository) dao.EnrollmentDaoInterface {
 	return dao.NewEnrollmentDao(base)
 }

@@ -1,4 +1,3 @@
-//nolint:dupl // Intentional CRUD pattern shared with NoteManager for different sub-resources
 package manager
 
 // TagManager provides business logic for journal tag operations.

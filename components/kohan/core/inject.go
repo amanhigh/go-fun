@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
-	"github.com/amanhigh/go-fun/components/kohan/handler"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/models/config"
 
@@ -50,41 +49,21 @@ func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) 
 }
 
 func (ki *KohanInjector) GetKohanServer(port int, capturePath string, autoManager manager.AutoManagerInterface, shutdown util.Shutdown) (*KohanServer, error) {
+	// FIXME: AutoManager should be created by DI Framework
 	ki.registerMonitorDependencies(capturePath, autoManager)
 	if err := ki.registerJournalDependencies(); err != nil {
 		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)
 	}
 
-	// TODO: Is there better way to get List of Handlers in one shot from DI?
-
 	base := provideBaseHTTPServer(port, shutdown)
 
-	var monitorHandler handler.MonitorHandler
-	if err := ki.di.Resolve(&monitorHandler); err != nil {
-		return nil, fmt.Errorf("failed to resolve monitor handler: %w", err)
+	server := &KohanServer{BaseHTTPServer: base}
+	if err := ki.di.Fill(server); err != nil {
+		return nil, fmt.Errorf("failed to fill kohan server: %w", err)
 	}
 
-	var journalHandler handler.JournalHandler
-	if err := ki.di.Resolve(&journalHandler); err != nil {
-		return nil, fmt.Errorf("failed to resolve journal handler: %w", err)
-	}
-
-	var imageHandler handler.ImageHandler
-	if err := ki.di.Resolve(&imageHandler); err != nil {
-		return nil, fmt.Errorf("failed to resolve image handler: %w", err)
-	}
-
-	var noteHandler handler.NoteHandler
-	if err := ki.di.Resolve(&noteHandler); err != nil {
-		return nil, fmt.Errorf("failed to resolve note handler: %w", err)
-	}
-
-	var tagHandler handler.TagHandler
-	if err := ki.di.Resolve(&tagHandler); err != nil {
-		return nil, fmt.Errorf("failed to resolve tag handler: %w", err)
-	}
-
-	return NewKohanServer(base, monitorHandler, journalHandler, imageHandler, noteHandler, tagHandler), nil
+	server.RegisterRoutes = server.registerRoutes
+	return server, nil
 }
 
 func (ki *KohanInjector) GetBarkatDB() (*gorm.DB, error) {

@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	"github.com/amanhigh/go-fun/components/fun-app/publisher"
@@ -149,7 +150,13 @@ func (em *EnrollmentManager) updateStatusByID(ctx context.Context, enrollmentID,
 	var persisted fun.Enrollment
 	changed := false
 
-	err := em.EnrollmentDao.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+	// HACK: Why we need to typecast can't we access it directly from Interface.
+	// Handle transactions at manager layer using the embedded BaseDbRepository
+	enrollmentDaoImpl, ok := em.EnrollmentDao.(*dao.EnrollmentDao)
+	if !ok {
+		return fun.Enrollment{}, false, common.NewServerError(fmt.Errorf("failed to cast enrollment dao to EnrollmentDao"))
+	}
+	err := enrollmentDaoImpl.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		if findErr := em.EnrollmentDao.FindById(c, enrollmentID, &persisted); findErr != nil {
 			return findErr
 		}
@@ -167,7 +174,12 @@ func (em *EnrollmentManager) updateStatusByID(ctx context.Context, enrollmentID,
 }
 
 func (em *EnrollmentManager) upsertEnrollment(ctx context.Context, enrollment *fun.Enrollment) common.HttpError {
-	return em.EnrollmentDao.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+	// Handle transactions at manager layer using the embedded BaseDbRepository
+	enrollmentDaoImpl, ok := em.EnrollmentDao.(*dao.EnrollmentDao)
+	if !ok {
+		return common.NewServerError(fmt.Errorf("failed to cast enrollment dao to EnrollmentDao"))
+	}
+	return enrollmentDaoImpl.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		var existing fun.Enrollment
 		err := em.EnrollmentDao.FindByPersonID(c, enrollment.PersonID, &existing)
 		switch err {

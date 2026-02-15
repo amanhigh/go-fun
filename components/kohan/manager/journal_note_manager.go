@@ -1,4 +1,3 @@
-//nolint:dupl // Intentional CRUD pattern shared with TagManager for different sub-resources
 package manager
 
 // NoteManager provides business logic for journal note operations.
@@ -40,11 +39,18 @@ func (m *NoteManagerImpl) CreateNote(ctx context.Context, entryID string, note *
 		return httpErr
 	}
 	note.EntryID = entryID
-	// BUG: Handle Transactions using UseOrCreateTx in db Util
-	if err := m.repo.CreateNote(ctx, note); err != nil {
-		return common.NewServerError(fmt.Errorf("failed to create note: %w", err))
+
+	// Handle transactions at manager layer using the embedded BaseDbRepository
+	noteRepoImpl, ok := m.repo.(*repository.NoteRepositoryImpl)
+	if !ok {
+		return common.NewServerError(fmt.Errorf("failed to cast repository to NoteRepositoryImpl"))
 	}
-	return nil
+	return noteRepoImpl.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+		if err := m.repo.CreateNote(c, note); err != nil {
+			return common.NewServerError(fmt.Errorf("failed to create note: %w", err))
+		}
+		return nil
+	})
 }
 
 func (m *NoteManagerImpl) ListNotes(ctx context.Context, entryID, status string) ([]barkat.Note, common.HttpError) {

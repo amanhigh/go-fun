@@ -12,21 +12,21 @@ import (
 	"gorm.io/gorm"
 )
 
-// FIXME: Rename to Repository package stop using dao in files and package.
+// TODO: Rename to Repository package stop using dao in files and package.
 type PersonDaoInterface interface {
-	util.BaseDaoInterface
+	util.BaseDbRepositoryInterface
 	ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError)
 	ListPersonAudit(c context.Context, id string) (personAuditList []fun.PersonAudit, err common.HttpError)
 }
 
 type PersonDao struct {
-	util.BaseDao
+	util.BaseDbRepository
 }
 
 var _ PersonDaoInterface = (*PersonDao)(nil)
 
-func NewPersonDao(baseDao util.BaseDao) *PersonDao {
-	return &PersonDao{BaseDao: baseDao}
+func NewPersonDao(baseRepo util.BaseDbRepository) *PersonDao {
+	return &PersonDao{BaseDbRepository: baseRepo}
 }
 
 func (pd *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {

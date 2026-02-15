@@ -9,19 +9,19 @@ import (
 )
 
 type EnrollmentDaoInterface interface {
-	// FIXME: Rename to BaseDbRepository Interface & Files and use across Repo in FunApp and Kohan where GORM is used.
-	util.BaseDaoInterface
+	// TODO: Rename to BaseDbRepository Interface & Files and use across Repo in FunApp and Kohan where GORM is used.
+	util.BaseDbRepositoryInterface
 	FindByPersonID(ctx context.Context, personID string, enrollment *fun.Enrollment) common.HttpError
 }
 
 type EnrollmentDao struct {
-	util.BaseDao
+	util.BaseDbRepository
 }
 
 var _ EnrollmentDaoInterface = (*EnrollmentDao)(nil)
 
-func NewEnrollmentDao(baseDao util.BaseDao) *EnrollmentDao {
-	return &EnrollmentDao{BaseDao: baseDao}
+func NewEnrollmentDao(baseRepo util.BaseDbRepository) *EnrollmentDao {
+	return &EnrollmentDao{BaseDbRepository: baseRepo}
 }
 
 func (ed *EnrollmentDao) FindByPersonID(ctx context.Context, personID string, enrollment *fun.Enrollment) common.HttpError {
