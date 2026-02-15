@@ -25,9 +25,5 @@ func NewEnrollmentDao(baseRepo util.BaseDbRepository) *EnrollmentDao {
 }
 
 func (ed *EnrollmentDao) FindByPersonID(ctx context.Context, personID string, enrollment *fun.Enrollment) common.HttpError {
-	query := ed.Db.WithContext(ctx)
-	if tx := util.Tx(ctx); tx != nil {
-		query = tx
-	}
-	return util.GormErrorMapper(query.Where("person_id = ?", personID).First(enrollment).Error)
+	return util.GormErrorMapper(ed.SafeTx(ctx).Where("person_id = ?", personID).First(enrollment).Error)
 }

@@ -32,7 +32,7 @@ func NewPersonDao(baseRepo util.BaseDbRepository) *PersonDao {
 func (pd *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {
 	var txErr error
 	// Add Pagination to Query
-	txn := util.Tx(c).Offset(personQuery.Offset).Limit(personQuery.Limit)
+	txn := pd.SafeTx(c).Offset(personQuery.Offset).Limit(personQuery.Limit)
 
 	// Add Query Params if Supplied
 	if personQuery.Name != "" {
@@ -61,7 +61,7 @@ func (pd *PersonDao) ListPersonAudit(c context.Context, id string) (personAuditL
 	audit := fun.PersonAudit{Id: id}
 
 	// Fetch Person Audit Records
-	if txErr = util.Tx(c).Where(audit).Find(&personAuditList).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+	if txErr = pd.SafeTx(c).Where(audit).Find(&personAuditList).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		zerolog.Ctx(c).Error().Str("Id", id).Err(txErr).Msg("Error Fetching Person Audit List")
 		err = util.GormErrorMapper(txErr)
 	}

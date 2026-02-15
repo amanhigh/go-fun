@@ -34,8 +34,7 @@ func NewImageRepository(db *gorm.DB) *ImageRepositoryImpl {
 func (r *ImageRepositoryImpl) ListImages(ctx context.Context, entryID string) ([]barkat.Image, common.HttpError) {
 	var images []barkat.Image
 	var txErr error
-	query := util.Tx(ctx)
-	if txErr = query.Where("entry_id = ?", entryID).Order("timeframe").Find(&images).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+	if txErr = r.SafeTx(ctx).Where("entry_id = ?", entryID).Order("timeframe").Find(&images).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		return nil, util.GormErrorMapper(txErr)
 	}
 	return images, nil
