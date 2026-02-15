@@ -1,6 +1,9 @@
+//nolint:dupl
 package repository
 
 // TagRepository provides persistence operations for journal tags.
+// Tags are categorical labels that organize and classify journal entries.
+
 import (
 	"context"
 	"errors"
@@ -12,9 +15,11 @@ import (
 )
 
 // TagRepository provides persistence operations for journal tags.
+// Tags provide categorical organization with type-based filtering capabilities.
 type TagRepository interface {
 	util.BaseDbRepositoryInterface
 	// ListTags returns all tags for an entry, optionally filtered by type.
+	// Type can be "reason", "management", or empty for all tags.
 	ListTags(ctx context.Context, entryID string, tagType string) ([]barkat.Tag, common.HttpError)
 }
 

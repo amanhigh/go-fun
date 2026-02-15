@@ -17,6 +17,7 @@ import (
 // RunSqliteMigrations opens a separate mattn/go-sqlite3 connection to the given database path
 // and runs all pending golang-migrate migrations from the provided embedded filesystem.
 func RunSqliteMigrations(dbPath string, migrationFS embed.FS, migrationDir string) error {
+	// HACK: Remove alst two params and use defaults for migrationFS and migrationDir
 	sqlDB, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return fmt.Errorf("failed to open sqlite3 for migration: %w", err)
@@ -29,6 +30,7 @@ func RunSqliteMigrations(dbPath string, migrationFS embed.FS, migrationDir strin
 // RunSqliteMigrationsFromDB runs migrations using an existing GORM DB instance.
 // This is more generic and allows running migrations in tests via the migration framework.
 func RunSqliteMigrationsFromDB(db *gorm.DB, migrationFS embed.FS, migrationDir string) error {
+	// HACK: Simplify this Util.
 	sqlDB, err := db.DB()
 	if err != nil {
 		return fmt.Errorf("failed to get underlying sql.DB from gorm: %w", err)
