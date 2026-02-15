@@ -52,7 +52,7 @@ func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) 
 func (ki *KohanInjector) GetKohanServer(port int, capturePath string, autoManager manager.AutoManagerInterface, shutdown util.Shutdown) (*KohanServer, error) {
 	ki.registerMonitorDependencies(capturePath, autoManager)
 	if err := ki.registerJournalDependencies(); err != nil {
-		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)		
+		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)
 	}
 
 	// TODO: Is there better way to get List of Handlers in one shot from DI?

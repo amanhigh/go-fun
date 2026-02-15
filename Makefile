@@ -440,7 +440,7 @@ generate-swagger:
 # Generate mocks using mockery v3 configuration
 generate-mocks:
 	printf $(_TITLE) "Generate" "Mocks"
-	mockery > $(OUT) 2>&1
+	go run github.com/vektra/mockery/v3@v3.5.5 > $(OUT) 2>&1
 
 generate: generate-mocks generate-swagger ## Generate Files
 
