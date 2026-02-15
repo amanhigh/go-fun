@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
 )
 
@@ -64,6 +65,21 @@ func AssertJSONAndStatus(w *httptest.ResponseRecorder, expectedStatus int, v any
 	if err := json.Unmarshal(w.Body.Bytes(), v); err != nil {
 		log.Fatalf("Failed to unmarshal Test JSON: %v", err)
 	}
+}
+
+// UnenvelopeAndAssertStatus combines envelope unwrapping with status checking
+// Use this for API responses that return common.Envelope[T] format
+func UnenvelopeAndAssertStatus[T any](w *httptest.ResponseRecorder, expectedStatus int) T {
+	if w.Code != expectedStatus {
+		log.Fatalf("Expected status %d, got %d", expectedStatus, w.Code)
+	}
+
+	var envelope common.Envelope[T]
+	if err := json.Unmarshal(w.Body.Bytes(), &envelope); err != nil {
+		log.Fatalf("Failed to unmarshal Envelope JSON: %v", err)
+	}
+
+	return envelope.Data
 }
 
 // CreateTestGinRouter creates a new Gin router configured for testing

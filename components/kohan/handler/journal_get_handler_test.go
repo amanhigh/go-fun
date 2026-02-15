@@ -19,6 +19,14 @@ import (
 	"gorm.io/gorm"
 )
 
+func decodeEntry(w *httptest.ResponseRecorder, expectedStatus int) barkat.Entry {
+	return util.UnenvelopeAndAssertStatus[barkat.Entry](w, expectedStatus)
+}
+
+func decodeEntryList(w *httptest.ResponseRecorder, expectedStatus int) barkat.EntryList {
+	return util.UnenvelopeAndAssertStatus[barkat.EntryList](w, expectedStatus)
+}
+
 var _ = Describe("JournalHandler Integration - GET Tests", func() {
 	var (
 		journalHandler *handler.JournalHandlerImpl
@@ -84,12 +92,12 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				})
 
 				It("should return entry with correct ID", func() {
-					util.AssertJSONAndStatus(w, http.StatusOK, &response)
+					response = decodeEntry(w, http.StatusOK)
 					Expect(response.ID).To(Equal(createdEntry.ID))
 				})
 
 				It("should return all entry fields", func() {
-					util.AssertJSONAndStatus(w, http.StatusOK, &response)
+					response = decodeEntry(w, http.StatusOK)
 					Expect(response.Ticker).To(Equal("GRSE"))
 					Expect(response.Sequence).To(Equal("MWD"))
 					Expect(response.Type).To(Equal("REJECTED"))
@@ -165,17 +173,17 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				})
 
 				It("should return all entries", func() {
-					util.AssertJSONAndStatus(w, http.StatusOK, &response)
+					response = decodeEntryList(w, http.StatusOK)
 					Expect(response.Records).To(HaveLen(5))
 				})
 
 				It("should return correct total count", func() {
-					util.AssertJSONAndStatus(w, http.StatusOK, &response)
+					response = decodeEntryList(w, http.StatusOK)
 					Expect(response.Metadata.Total).To(Equal(int64(5)))
 				})
 
 				It("should return entries in reverse chronological order by default", func() {
-					util.AssertJSONAndStatus(w, http.StatusOK, &response)
+					response = decodeEntryList(w, http.StatusOK)
 					for i := 1; i < len(response.Records); i++ {
 						prevTime := response.Records[i-1].CreatedAt
 						currTime := response.Records[i].CreatedAt
@@ -184,7 +192,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				})
 
 				It("should include all required fields in each entry", func() {
-					util.AssertJSONAndStatus(w, http.StatusOK, &response)
+					response = decodeEntryList(w, http.StatusOK)
 					for _, entry := range response.Records {
 						Expect(entry.ID).ToNot(BeEmpty())
 						Expect(entry.Ticker).ToNot(BeEmpty())
@@ -203,8 +211,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should filter by exact ticker match", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?ticker=GRSE", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(1))
 						Expect(response.Records[0].Ticker).To(Equal("GRSE"))
 						Expect(response.Metadata.Total).To(Equal(int64(1)))
@@ -213,8 +220,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should return empty list for ticker with no matches", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?ticker=NOTFOUND", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(BeEmpty())
 						Expect(response.Metadata.Total).To(Equal(int64(0)))
 					})
@@ -234,8 +240,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should filter by type = REJECTED", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?type=REJECTED", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(2))
 						for _, entry := range response.Records {
 							Expect(entry.Type).To(Equal("REJECTED"))
@@ -245,8 +250,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should filter by type = SET", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?type=SET", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(2))
 						for _, entry := range response.Records {
 							Expect(entry.Type).To(Equal("SET"))
@@ -256,8 +260,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should filter by type = RESULT", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?type=RESULT", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(1))
 						Expect(response.Records[0].Type).To(Equal("RESULT"))
 					})
@@ -277,8 +280,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should filter by status = FAIL", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?status=FAIL", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(1))
 						Expect(response.Records[0].Status).To(Equal("FAIL"))
 					})
@@ -286,8 +288,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should filter by status = TAKEN", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?status=TAKEN", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(1))
 						Expect(response.Records[0].Status).To(Equal("TAKEN"))
 					})
@@ -295,8 +296,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should filter by status = SUCCESS", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?status=SUCCESS", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(1))
 						Expect(response.Records[0].Status).To(Equal("SUCCESS"))
 					})
@@ -304,8 +304,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should filter by status = RUNNING", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?status=RUNNING", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(1))
 						Expect(response.Records[0].Status).To(Equal("RUNNING"))
 					})
@@ -313,8 +312,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should filter by status = REJECTED", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?status=REJECTED", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(1))
 						Expect(response.Records[0].Status).To(Equal("REJECTED"))
 					})
@@ -334,8 +332,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should filter by sequence = MWD", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?sequence=MWD", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(3))
 						for _, entry := range response.Records {
 							Expect(entry.Sequence).To(Equal("MWD"))
@@ -345,8 +342,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should filter by sequence = YR", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?sequence=YR", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(2))
 						for _, entry := range response.Records {
 							Expect(entry.Sequence).To(Equal("YR"))
@@ -367,8 +363,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				It("should apply ticker + type filters", func() {
 					req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?ticker=GRSE&type=REJECTED", nil)
 					router.ServeHTTP(w, req)
-					var response barkat.EntryList
-					util.AssertJSONAndStatus(w, http.StatusOK, &response)
+					response := decodeEntryList(w, http.StatusOK)
 					Expect(response.Records).To(HaveLen(1))
 					Expect(response.Records[0].Ticker).To(Equal("GRSE"))
 					Expect(response.Records[0].Type).To(Equal("REJECTED"))
@@ -377,8 +372,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				It("should apply sequence + status filters", func() {
 					req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?sequence=YR&status=TAKEN", nil)
 					router.ServeHTTP(w, req)
-					var response barkat.EntryList
-					util.AssertJSONAndStatus(w, http.StatusOK, &response)
+					response := decodeEntryList(w, http.StatusOK)
 					Expect(response.Records).To(HaveLen(1))
 					Expect(response.Records[0].Sequence).To(Equal("YR"))
 					Expect(response.Records[0].Status).To(Equal("TAKEN"))
@@ -387,8 +381,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				It("should apply type + status + sequence filters", func() {
 					req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?type=SET&status=RUNNING&sequence=MWD", nil)
 					router.ServeHTTP(w, req)
-					var response barkat.EntryList
-					util.AssertJSONAndStatus(w, http.StatusOK, &response)
+					response := decodeEntryList(w, http.StatusOK)
 					Expect(response.Records).To(HaveLen(1))
 					Expect(response.Records[0].Type).To(Equal("SET"))
 					Expect(response.Records[0].Status).To(Equal("RUNNING"))
@@ -404,8 +397,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 							afterTime := time.Now().Add(-1 * time.Hour).Format(time.RFC3339)
 							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-after="+url.QueryEscape(afterTime), nil)
 							router.ServeHTTP(w, req)
-							var response barkat.EntryList
-							util.AssertJSONAndStatus(w, http.StatusOK, &response)
+							response := decodeEntryList(w, http.StatusOK)
 							// All entries created in this test should be returned
 							Expect(response.Records).To(HaveLen(5))
 						})
@@ -414,8 +406,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 							futureTime := time.Now().Add(24 * time.Hour).Format(time.RFC3339)
 							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-after="+url.QueryEscape(futureTime), nil)
 							router.ServeHTTP(w, req)
-							var response barkat.EntryList
-							util.AssertJSONAndStatus(w, http.StatusOK, &response)
+							response := decodeEntryList(w, http.StatusOK)
 							Expect(response.Records).To(BeEmpty())
 						})
 
@@ -424,8 +415,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 							beforeTime := time.Now().Add(1 * time.Hour).Format(time.RFC3339)
 							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-after="+url.QueryEscape(afterTime)+"&created-before="+url.QueryEscape(beforeTime), nil)
 							router.ServeHTTP(w, req)
-							var response barkat.EntryList
-							util.AssertJSONAndStatus(w, http.StatusOK, &response)
+							response := decodeEntryList(w, http.StatusOK)
 							Expect(response.Records).To(HaveLen(5))
 						})
 					})
@@ -467,8 +457,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 							pastTime := time.Now().Add(-24 * time.Hour).Format(time.RFC3339)
 							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-before="+url.QueryEscape(pastTime), nil)
 							router.ServeHTTP(w, req)
-							var response barkat.EntryList
-							util.AssertJSONAndStatus(w, http.StatusOK, &response)
+							response := decodeEntryList(w, http.StatusOK)
 							Expect(response.Records).To(BeEmpty())
 						})
 
@@ -477,8 +466,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 							beforeTime := time.Now().Add(1 * time.Hour).Format(time.RFC3339)
 							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-after="+url.QueryEscape(afterTime)+"&created-before="+url.QueryEscape(beforeTime), nil)
 							router.ServeHTTP(w, req)
-							var response barkat.EntryList
-							util.AssertJSONAndStatus(w, http.StatusOK, &response)
+							response := decodeEntryList(w, http.StatusOK)
 							Expect(response.Records).To(HaveLen(5))
 						})
 					})
@@ -510,8 +498,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should sort by ticker ascending", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?sort-by=ticker&sort-order=asc", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(5))
 						Expect(response.Records[0].Ticker).To(Equal("GRSE"))
 						Expect(response.Records[1].Ticker).To(Equal("INFY"))
@@ -523,8 +510,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should sort by ticker descending", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?sort-by=ticker&sort-order=desc", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(5))
 						Expect(response.Records[0].Ticker).To(Equal("TCS"))
 						Expect(response.Records[1].Ticker).To(Equal("SNF"))
@@ -536,8 +522,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should sort by sequence ascending", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?sort-by=sequence&sort-order=asc", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(5))
 						for i := 0; i < 3; i++ {
 							Expect(response.Records[i].Sequence).To(Equal("MWD"))
@@ -550,8 +535,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should sort by created_at ascending", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?sort-by=created_at&sort-order=asc", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						for i := 1; i < len(response.Records); i++ {
 							prevTime := response.Records[i-1].CreatedAt
 							currTime := response.Records[i].CreatedAt
@@ -562,8 +546,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should sort by created_at descending (default)", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?sort-by=created_at&sort-order=desc", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						for i := 1; i < len(response.Records); i++ {
 							prevTime := response.Records[i-1].CreatedAt
 							currTime := response.Records[i].CreatedAt
@@ -592,8 +575,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should limit results with limit = 2", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?limit=2", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(2))
 						Expect(response.Metadata.Total).To(Equal(int64(5)))
 					})
@@ -601,8 +583,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should skip entries with offset = 2, limit = 2", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?offset=2&limit=2", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(2))
 						Expect(response.Metadata.Total).To(Equal(int64(5)))
 					})
@@ -610,8 +591,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should return last entry with offset = 4, limit = 2", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?offset=4&limit=2", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(1))
 						Expect(response.Metadata.Total).To(Equal(int64(5)))
 					})
@@ -619,8 +599,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should return empty list for offset beyond total", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?offset=10", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(BeEmpty())
 						Expect(response.Metadata.Total).To(Equal(int64(5)))
 					})
@@ -628,16 +607,14 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should accept limit = 1 (minimum)", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?limit=1", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(1))
 					})
 
 					It("should accept limit = 100 (maximum)", func() {
 						req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?limit=100", nil)
 						router.ServeHTTP(w, req)
-						var response barkat.EntryList
-						util.AssertJSONAndStatus(w, http.StatusOK, &response)
+						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(5))
 					})
 				})
@@ -705,8 +682,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				})
 
 				It("should return empty list", func() {
-					var response barkat.EntryList
-					util.AssertJSONAndStatus(w, http.StatusOK, &response)
+					response := decodeEntryList(w, http.StatusOK)
 					Expect(response.Records).To(BeEmpty())
 					Expect(response.Metadata.Total).To(Equal(int64(0)))
 				})
