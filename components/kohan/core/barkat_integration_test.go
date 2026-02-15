@@ -16,7 +16,6 @@ import (
 	"github.com/amanhigh/go-fun/models/barkat"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"gorm.io/gorm/logger"
 )
 
 const testPort = 19020
@@ -47,9 +46,8 @@ func httpDo(method, url string, body interface{}) (*http.Response, []byte) {
 var _ = Describe("Barkat Integration Test", func() {
 	BeforeEach(func() {
 		if baseURL == "" {
-			db, err := util.CreateTestDb(logger.Warn)
+			db, err := core.CreateTestBarkatDB()
 			Expect(err).ToNot(HaveOccurred())
-			Expect(core.SetupBarkatDB(db)).To(Succeed())
 
 			entryRepo := repository.NewJournalRepository(db)
 			entryMgr := manager.NewJournalManager(entryRepo)
@@ -82,9 +80,9 @@ var _ = Describe("Barkat Integration Test", func() {
 		BeforeEach(func() {
 			entry := barkat.Entry{
 				Ticker:   "GRSE",
-				Sequence: "mwd",
-				Type:     "rejected",
-				Status:   "fail",
+				Sequence: "MWD",
+				Type:     "REJECTED",
+				Status:   "FAIL",
 				Images: []barkat.Image{
 					{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"},
 				},
@@ -100,7 +98,7 @@ var _ = Describe("Barkat Integration Test", func() {
 		It("should create with all fields", func() {
 			Expect(createdEntry.ID).ToNot(BeEmpty())
 			Expect(createdEntry.Ticker).To(Equal("GRSE"))
-			Expect(createdEntry.Status).To(Equal("fail"))
+			Expect(createdEntry.Status).To(Equal("FAIL"))
 			Expect(createdEntry.Images).To(HaveLen(4))
 			Expect(createdEntry.Tags).To(HaveLen(1))
 			Expect(createdEntry.Tags[0].Tag).To(Equal("tto"))
@@ -132,9 +130,9 @@ var _ = Describe("Barkat Integration Test", func() {
 		BeforeEach(func() {
 			entry := barkat.Entry{
 				Ticker:   "DIXON",
-				Sequence: "mwd",
-				Type:     "set",
-				Status:   "taken",
+				Sequence: "MWD",
+				Type:     "SET",
+				Status:   "TAKEN",
 				Images: []barkat.Image{
 					{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"},
 				},
@@ -212,9 +210,9 @@ var _ = Describe("Barkat Integration Test", func() {
 		BeforeEach(func() {
 			entry := barkat.Entry{
 				Ticker:   "CEATLTD",
-				Sequence: "mwd",
-				Type:     "set",
-				Status:   "success",
+				Sequence: "MWD",
+				Type:     "SET",
+				Status:   "SUCCESS",
 				Images: []barkat.Image{
 					{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"},
 				},
@@ -342,17 +340,17 @@ var _ = Describe("Barkat Integration Test", func() {
 		BeforeEach(func() {
 			entries := []barkat.Entry{
 				{
-					Ticker: "KEI", Sequence: "mwd", Type: "rejected", Status: "fail",
+					Ticker: "KEI", Sequence: "MWD", Type: "REJECTED", Status: "FAIL",
 					Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}},
 					Tags:   []barkat.Tag{{Tag: "dep", Type: "reason"}},
 				},
 				{
-					Ticker: "SJVN", Sequence: "mwd", Type: "rejected", Status: "fail",
+					Ticker: "SJVN", Sequence: "MWD", Type: "REJECTED", Status: "FAIL",
 					Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}},
 					Tags:   []barkat.Tag{{Tag: "zn", Type: "reason", Override: strPtr("big")}},
 				},
 				{
-					Ticker: "PDSL", Sequence: "yr", Type: "set", Status: "running",
+					Ticker: "PDSL", Sequence: "YR", Type: "SET", Status: "RUNNING",
 					Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}},
 					Notes:  []barkat.Note{{Status: "set", Content: "Trends\nHTF - Up\nMTF - Up\nTTF - Up\n\nPlan: Longs @ TTF DZ"}},
 				},
@@ -373,17 +371,17 @@ var _ = Describe("Barkat Integration Test", func() {
 		})
 
 		It("should filter by sequence=yr", func() {
-			resp, body := httpDo("GET", baseURL+"/v1/journal-entries?sequence=yr&limit=10", nil)
+			resp, body := httpDo("GET", baseURL+"/v1/journal-entries?sequence=YR&limit=10", nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			var result barkat.EntryList
 			Expect(json.Unmarshal(body, &result)).To(Succeed())
 			for _, e := range result.Records {
-				Expect(e.Sequence).To(Equal("yr"))
+				Expect(e.Sequence).To(Equal("YR"))
 			}
 		})
 
 		It("should filter by status=running", func() {
-			resp, body := httpDo("GET", baseURL+"/v1/journal-entries?status=running&limit=10", nil)
+			resp, body := httpDo("GET", baseURL+"/v1/journal-entries?status=RUNNING&limit=10", nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			var result barkat.EntryList
 			Expect(json.Unmarshal(body, &result)).To(Succeed())
