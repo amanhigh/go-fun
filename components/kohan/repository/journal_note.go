@@ -1,3 +1,4 @@
+//nolint:dupl
 package repository
 
 // NoteRepository provides persistence operations for journal notes.

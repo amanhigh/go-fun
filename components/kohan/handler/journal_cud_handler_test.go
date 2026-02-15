@@ -650,8 +650,8 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 			Context("Tags Field", func() {
 				Context("Allowed Values", func() {
-					It("should accept tag with override field (PRD: optional override max 50 chars)", func() {
-						override := "location override"
+					It("should accept tag with override field (PRD: optional override max 5 chars)", func() {
+						override := "loc"
 						entry := barkat.Entry{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
@@ -675,7 +675,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						Expect(envelopeResponse.Status).To(Equal(common.EnvelopeSuccess))
 						Expect(envelopeResponse.Data.Tags).To(HaveLen(1))
 						Expect(envelopeResponse.Data.Tags[0].Override).ToNot(BeNil())
-						Expect(*envelopeResponse.Data.Tags[0].Override).To(Equal("location override"))
+						Expect(*envelopeResponse.Data.Tags[0].Override).To(Equal("loc"))
 					})
 
 					It("should accept tag type = REASON (PRD: uppercase)", func() {

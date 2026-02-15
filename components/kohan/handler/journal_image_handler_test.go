@@ -1,4 +1,3 @@
-//nolint:dupl
 package handler_test
 
 import (
@@ -363,7 +362,7 @@ var _ = Describe("ImageHandler Integration", func() {
 
 				var response map[string][]barkat.Image
 				util.AssertJSONAndStatus(w, http.StatusOK, &response)
-				Expect(response["images"]).To(HaveLen(0))
+				Expect(response["images"]).To(BeEmpty())
 			})
 		})
 	})
@@ -392,7 +391,7 @@ var _ = Describe("ImageHandler Integration", func() {
 				// Verify image is actually deleted from database
 				images, err := imgMgr.ListImages(testCtx, entry.ID)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(images).To(HaveLen(0))
+				Expect(images).To(BeEmpty())
 			})
 
 			It("should return 204 even if image is already deleted", func() {
@@ -488,7 +487,7 @@ var _ = Describe("ImageHandler Integration", func() {
 				// Verify image is deleted
 				images, err := imgMgr.ListImages(testCtx, entry.ID)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(images).To(HaveLen(0))
+				Expect(images).To(BeEmpty())
 			})
 		})
 	})

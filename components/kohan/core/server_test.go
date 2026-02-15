@@ -16,7 +16,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/mock"
-	"gorm.io/gorm/logger"
 )
 
 var _ = Describe("KohanServer", func() {
@@ -34,11 +33,9 @@ var _ = Describe("KohanServer", func() {
 	Context("Constructor", func() {
 		It("should create server with handlers", func() {
 			monitorHandler := handler.NewMonitorHandler(testPath, mockManager)
-			db, err := util.CreateTestDb(logger.Warn)
+			db, err := core.CreateTestBarkatDB()
 			Expect(err).ToNot(HaveOccurred())
-			Expect(core.SetupBarkatDB(db)).To(Succeed())
-			entryRepo := repository.NewJournalRepository(db)
-			entryMgr := manager.NewJournalManager(entryRepo)
+			entryMgr := manager.NewJournalManager(repository.NewJournalRepository(db))
 			journalHandler := handler.NewJournalHandler(entryMgr)
 			// TODO: Wire Up Test using DI Framework Module Override as well.
 			imageHandler := handler.NewImageHandler(manager.NewImageManager(entryMgr, repository.NewImageRepository(db)))
@@ -135,9 +132,8 @@ var _ = Describe("KohanServer", func() {
 		)
 
 		BeforeEach(func() {
-			db, err := util.CreateTestDb(logger.Warn)
+			db, err := core.CreateTestBarkatDB()
 			Expect(err).ToNot(HaveOccurred())
-			Expect(core.SetupBarkatDB(db)).To(Succeed())
 			repo := repository.NewJournalRepository(db)
 			mgr := manager.NewJournalManager(repo)
 			journalHandler = handler.NewJournalHandler(mgr)
@@ -146,7 +142,7 @@ var _ = Describe("KohanServer", func() {
 
 		Context("HandleCreateEntry", func() {
 			It("should create entry and return 201", func() {
-				body := `{"ticker":"RELIANCE","sequence":"mwd","type":"rejected","status":"fail","images":[{"timeframe":"DL"},{"timeframe":"WK"}]}`
+				body := `{"ticker":"RELIANCE","sequence":"MWD","type":"REJECTED","status":"FAIL","images":[{"timeframe":"DL"},{"timeframe":"WK"}]}`
 				req := httptest.NewRequest("POST", "/v1/journal-entries", bytes.NewBufferString(body))
 				req.Header.Set("Content-Type", "application/json")
 				c, _ := gin.CreateTestContext(recorder)
