@@ -44,11 +44,12 @@ func (h *NoteHandlerImpl) HandleCreateNote(c *gin.Context) {
 		return
 	}
 
-	if httpErr := h.noteMgr.CreateNote(c.Request.Context(), entryID, &note); httpErr != nil {
+	createdNote, httpErr := h.noteMgr.CreateNote(c.Request.Context(), entryID, note)
+	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusCreated, note)
+	c.JSON(http.StatusCreated, createdNote)
 }
 
 func (h *NoteHandlerImpl) HandleListNotes(c *gin.Context) {

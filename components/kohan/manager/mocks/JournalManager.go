@@ -98,6 +98,65 @@ func (_c *JournalManager_CreateEntry_Call) RunAndReturn(run func(ctx context.Con
 	return _c
 }
 
+// DeleteEntry provides a mock function for the type JournalManager
+func (_mock *JournalManager) DeleteEntry(ctx context.Context, id string) common.HttpError {
+	ret := _mock.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteEntry")
+	}
+
+	var r0 common.HttpError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) common.HttpError); ok {
+		r0 = returnFunc(ctx, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(common.HttpError)
+		}
+	}
+	return r0
+}
+
+// JournalManager_DeleteEntry_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteEntry'
+type JournalManager_DeleteEntry_Call struct {
+	*mock.Call
+}
+
+// DeleteEntry is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id string
+func (_e *JournalManager_Expecter) DeleteEntry(ctx interface{}, id interface{}) *JournalManager_DeleteEntry_Call {
+	return &JournalManager_DeleteEntry_Call{Call: _e.mock.On("DeleteEntry", ctx, id)}
+}
+
+func (_c *JournalManager_DeleteEntry_Call) Run(run func(ctx context.Context, id string)) *JournalManager_DeleteEntry_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *JournalManager_DeleteEntry_Call) Return(httpError common.HttpError) *JournalManager_DeleteEntry_Call {
+	_c.Call.Return(httpError)
+	return _c
+}
+
+func (_c *JournalManager_DeleteEntry_Call) RunAndReturn(run func(ctx context.Context, id string) common.HttpError) *JournalManager_DeleteEntry_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // EntryExists provides a mock function for the type JournalManager
 func (_mock *JournalManager) EntryExists(ctx context.Context, entryID string) common.HttpError {
 	ret := _mock.Called(ctx, entryID)

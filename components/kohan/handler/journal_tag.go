@@ -43,11 +43,12 @@ func (h *TagHandlerImpl) HandleCreateTag(c *gin.Context) {
 		return
 	}
 
-	if httpErr := h.tagMgr.CreateTag(c.Request.Context(), entryID, &tag); httpErr != nil {
+	createdTag, httpErr := h.tagMgr.CreateTag(c.Request.Context(), entryID, tag)
+	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusCreated, tag)
+	c.JSON(http.StatusCreated, createdTag)
 }
 
 func (h *TagHandlerImpl) HandleListTags(c *gin.Context) {

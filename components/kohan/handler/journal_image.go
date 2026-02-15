@@ -39,11 +39,12 @@ func (h *ImageHandlerImpl) HandleCreateImage(c *gin.Context) {
 		return
 	}
 
-	if httpErr := h.imageMgr.CreateImage(c.Request.Context(), entryID, &image); httpErr != nil {
+	createdImage, httpErr := h.imageMgr.CreateImage(c.Request.Context(), entryID, image)
+	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusCreated, image)
+	c.JSON(http.StatusCreated, createdImage)
 }
 
 func (h *ImageHandlerImpl) HandleListImages(c *gin.Context) {

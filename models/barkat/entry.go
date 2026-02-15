@@ -11,10 +11,10 @@ import (
 // Entry represents a single trade journal capture event.
 type Entry struct {
 	ID        string     `gorm:"column:id;primaryKey" json:"id"`
-	Ticker    string     `gorm:"column:ticker;not null" json:"ticker" binding:"required"`
-	Sequence  string     `gorm:"column:sequence;not null" json:"sequence" binding:"required,oneof=mwd yr"`
-	Type      string     `gorm:"column:type;not null" json:"type" binding:"required,oneof=rejected result set"`
-	Status    string     `gorm:"column:status;not null" json:"status" binding:"required,oneof=set running dropped taken rejected success fail missed just_loss broken"`
+	Ticker    string     `gorm:"column:ticker;not null" json:"ticker" binding:"required,max=10"`
+	Sequence  string     `gorm:"column:sequence;not null" json:"sequence" binding:"required,oneof=MWD YR"`
+	Type      string     `gorm:"column:type;not null" json:"type" binding:"required,oneof=REJECTED RESULT SET"`
+	Status    string     `gorm:"column:status;not null" json:"status" binding:"required,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
 	CreatedAt time.Time  `gorm:"column:created_at;not null;index:idx_entry_ticker_created,priority:2,sort:desc" json:"created_at"`
 	DeletedAt *time.Time `gorm:"column:deleted_at" json:"deleted_at,omitempty"`
 
@@ -46,12 +46,12 @@ type EntryPath struct {
 // EntryQuery holds query parameters for listing/filtering entries.
 type EntryQuery struct {
 	common.Pagination
-	Ticker        string `form:"ticker" binding:"omitempty,min=1,max=30"`
-	Type          string `form:"type" binding:"omitempty,oneof=rejected result set"`
-	Status        string `form:"status" binding:"omitempty,oneof=set running dropped taken rejected success fail missed just_loss broken"`
-	Sequence      string `form:"sequence" binding:"omitempty,oneof=mwd yr"`
-	CreatedAfter  string `form:"created-after" binding:"omitempty"`
-	CreatedBefore string `form:"created-before" binding:"omitempty"`
+	Ticker        string `form:"ticker" binding:"omitempty,min=1,max=10"`
+	Type          string `form:"type" binding:"omitempty,oneof=REJECTED RESULT SET"`
+	Status        string `form:"status" binding:"omitempty,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
+	Sequence      string `form:"sequence" binding:"omitempty,oneof=MWD YR"`
+	CreatedAfter  string `form:"created-after" binding:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	CreatedBefore string `form:"created-before" binding:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
 	SortBy        string `form:"sort-by" binding:"omitempty,oneof=created_at ticker sequence"`
 	SortOrder     string `form:"sort-order" binding:"omitempty,oneof=asc desc"`
 }

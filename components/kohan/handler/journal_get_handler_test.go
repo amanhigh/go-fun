@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
@@ -57,6 +59,12 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				Sequence: "MWD",
 				Type:     "REJECTED",
 				Status:   "FAIL",
+				Images: []barkat.Image{
+					{Timeframe: "DL"},
+					{Timeframe: "WK"},
+					{Timeframe: "MN"},
+					{Timeframe: "TMN"},
+				},
 			}
 			Expect(entryMgr.CreateEntry(testCtx, &entry)).To(Succeed())
 			createdEntry = entry
@@ -124,12 +132,18 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 		var createdEntries []barkat.Entry
 
 		BeforeEach(func() {
+			defaultImages := []barkat.Image{
+				{Timeframe: "DL"},
+				{Timeframe: "WK"},
+				{Timeframe: "MN"},
+				{Timeframe: "TMN"},
+			}
 			entries := []barkat.Entry{
-				{Ticker: "GRSE", Sequence: "MWD", Type: "REJECTED", Status: "FAIL"},
-				{Ticker: "PDSL", Sequence: "YR", Type: "SET", Status: "TAKEN"},
-				{Ticker: "SNF", Sequence: "MWD", Type: "RESULT", Status: "SUCCESS"},
-				{Ticker: "TCS", Sequence: "YR", Type: "REJECTED", Status: "REJECTED"},
-				{Ticker: "INFY", Sequence: "MWD", Type: "SET", Status: "RUNNING"},
+				{Ticker: "GRSE", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: defaultImages},
+				{Ticker: "PDSL", Sequence: "YR", Type: "SET", Status: "TAKEN", Images: defaultImages},
+				{Ticker: "SNF", Sequence: "MWD", Type: "RESULT", Status: "SUCCESS", Images: defaultImages},
+				{Ticker: "TCS", Sequence: "YR", Type: "REJECTED", Status: "REJECTED", Images: defaultImages},
+				{Ticker: "INFY", Sequence: "MWD", Type: "SET", Status: "RUNNING", Images: defaultImages},
 			}
 			for _, entry := range entries {
 				Expect(entryMgr.CreateEntry(testCtx, &entry)).To(Succeed())
@@ -379,6 +393,115 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					Expect(response.Records[0].Type).To(Equal("SET"))
 					Expect(response.Records[0].Status).To(Equal("RUNNING"))
 					Expect(response.Records[0].Sequence).To(Equal("MWD"))
+				})
+			})
+
+			Context("Date Fields", func() {
+				Context("Created-After Field", func() {
+					Context("Allowed Values", func() {
+						It("should accept valid ISO 8601 datetime and filter entries", func() {
+							// Get current time and format as ISO 8601
+							afterTime := time.Now().Add(-1 * time.Hour).Format(time.RFC3339)
+							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-after="+url.QueryEscape(afterTime), nil)
+							router.ServeHTTP(w, req)
+							var response barkat.EntryList
+							util.AssertJSONAndStatus(w, http.StatusOK, &response)
+							// All entries created in this test should be returned
+							Expect(response.Records).To(HaveLen(5))
+						})
+
+						It("should return empty list for future date", func() {
+							futureTime := time.Now().Add(24 * time.Hour).Format(time.RFC3339)
+							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-after="+url.QueryEscape(futureTime), nil)
+							router.ServeHTTP(w, req)
+							var response barkat.EntryList
+							util.AssertJSONAndStatus(w, http.StatusOK, &response)
+							Expect(response.Records).To(BeEmpty())
+						})
+
+						It("should work with created-before combined filter", func() {
+							afterTime := time.Now().Add(-1 * time.Hour).Format(time.RFC3339)
+							beforeTime := time.Now().Add(1 * time.Hour).Format(time.RFC3339)
+							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-after="+url.QueryEscape(afterTime)+"&created-before="+url.QueryEscape(beforeTime), nil)
+							router.ServeHTTP(w, req)
+							var response barkat.EntryList
+							util.AssertJSONAndStatus(w, http.StatusOK, &response)
+							Expect(response.Records).To(HaveLen(5))
+						})
+					})
+
+					Context("Bad Values", func() {
+						It("should return 400 for invalid date format", func() {
+							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-after=invalid-date", nil)
+							router.ServeHTTP(w, req)
+							Expect(w.Code).To(Equal(http.StatusBadRequest))
+						})
+
+						It("should return 400 for empty date", func() {
+							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-after=", nil)
+							router.ServeHTTP(w, req)
+							Expect(w.Code).To(Equal(http.StatusBadRequest))
+						})
+
+						It("should return 400 for non-ISO format", func() {
+							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-after=2024-02-15", nil)
+							router.ServeHTTP(w, req)
+							Expect(w.Code).To(Equal(http.StatusBadRequest))
+						})
+					})
+				})
+
+				Context("Created-Before Field", func() {
+					Context("Allowed Values", func() {
+						It("should accept valid ISO 8601 datetime and filter entries", func() {
+							beforeTime := time.Now().Add(1 * time.Hour).Format(time.RFC3339)
+							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-before="+url.QueryEscape(beforeTime), nil)
+							router.ServeHTTP(w, req)
+							var response barkat.EntryList
+							util.AssertJSONAndStatus(w, http.StatusOK, &response)
+							// All entries created in this test should be returned
+							Expect(response.Records).To(HaveLen(5))
+						})
+
+						It("should return empty list for past date", func() {
+							pastTime := time.Now().Add(-24 * time.Hour).Format(time.RFC3339)
+							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-before="+url.QueryEscape(pastTime), nil)
+							router.ServeHTTP(w, req)
+							var response barkat.EntryList
+							util.AssertJSONAndStatus(w, http.StatusOK, &response)
+							Expect(response.Records).To(BeEmpty())
+						})
+
+						It("should work with created-after combined filter", func() {
+							afterTime := time.Now().Add(-1 * time.Hour).Format(time.RFC3339)
+							beforeTime := time.Now().Add(1 * time.Hour).Format(time.RFC3339)
+							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-after="+url.QueryEscape(afterTime)+"&created-before="+url.QueryEscape(beforeTime), nil)
+							router.ServeHTTP(w, req)
+							var response barkat.EntryList
+							util.AssertJSONAndStatus(w, http.StatusOK, &response)
+							Expect(response.Records).To(HaveLen(5))
+						})
+					})
+
+					Context("Bad Values", func() {
+						It("should return 400 for invalid date format", func() {
+							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-before=not-a-date", nil)
+							router.ServeHTTP(w, req)
+							Expect(w.Code).To(Equal(http.StatusBadRequest))
+						})
+
+						It("should return 400 for empty date", func() {
+							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-before=", nil)
+							router.ServeHTTP(w, req)
+							Expect(w.Code).To(Equal(http.StatusBadRequest))
+						})
+
+						It("should return 400 for non-ISO format", func() {
+							req, w = util.CreateTestRequest("GET", JournalEntriesBaseURL+"?created-before=15-02-2024", nil)
+							router.ServeHTTP(w, req)
+							Expect(w.Code).To(Equal(http.StatusBadRequest))
+						})
+					})
 				})
 			})
 
