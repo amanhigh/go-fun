@@ -2,7 +2,6 @@ package manager
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
@@ -36,26 +35,29 @@ func (m *ImageManagerImpl) CreateImage(ctx context.Context, entryID string, imag
 		return httpErr
 	}
 	image.EntryID = entryID
-	if err := m.repo.CreateImage(ctx, image); err != nil {
-		return common.NewServerError(fmt.Errorf("failed to create image: %w", err))
-	}
-	return nil
+	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+		return m.repo.Create(c, image)
+	})
 }
 
 func (m *ImageManagerImpl) ListImages(ctx context.Context, entryID string) ([]barkat.Image, common.HttpError) {
 	if httpErr := m.entryMgr.EntryExists(ctx, entryID); httpErr != nil {
 		return nil, httpErr
 	}
-	images, err := m.repo.ListImages(ctx, entryID)
-	if err != nil {
-		return nil, common.NewServerError(fmt.Errorf("failed to list images: %w", err))
-	}
-	return images, nil
+
+	var images []barkat.Image
+	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+		var httpErr common.HttpError
+		images, httpErr = m.repo.ListImages(c, entryID)
+		return httpErr
+	})
+	return images, err
 }
 
 func (m *ImageManagerImpl) DeleteImage(ctx context.Context, entryID, imageID string) common.HttpError {
-	if err := m.repo.DeleteImage(ctx, entryID, imageID); err != nil {
-		return common.ErrNotFound
+	if httpErr := m.entryMgr.EntryExists(ctx, entryID); httpErr != nil {
+		return httpErr
 	}
-	return nil
+	image := &barkat.Image{EntryID: entryID}
+	return m.repo.DeleteById(ctx, imageID, image)
 }

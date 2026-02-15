@@ -35,7 +35,11 @@ type DbRun func(c context.Context) (err common.HttpError)
 
 func (b *BaseDbRepository) FindById(c context.Context, id, entity any) (err common.HttpError) {
 	var txErr error
-	if txErr = Tx(c).First(entity, "id=?", id).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+	query := Tx(c)
+	if query == nil {
+		query = b.Db.WithContext(c)
+	}
+	if txErr = query.First(entity, "id=?", id).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		log.Ctx(c).Error().Any("Id", id).Any("Entity", entity).Err(txErr).Msg("Error Fetching Entity")
 	}
 	err = GormErrorMapper(txErr)
@@ -44,7 +48,11 @@ func (b *BaseDbRepository) FindById(c context.Context, id, entity any) (err comm
 
 func (b *BaseDbRepository) FindPaginated(c context.Context, pageParams common.Pagination, result any) (count int64, err common.HttpError) {
 	var txErr error
-	if txErr = Tx(c).Offset(pageParams.Offset).Limit(pageParams.Limit).Find(result).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+	query := Tx(c)
+	if query == nil {
+		query = b.Db.WithContext(c)
+	}
+	if txErr = query.Offset(pageParams.Offset).Limit(pageParams.Limit).Find(result).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		log.Ctx(c).Error().Any("paginationParams", pageParams).Int64("TotalCount", count).
 			Err(txErr).Msg("Error Fetching Paginated Entity")
 		err = GormErrorMapper(txErr)
@@ -57,7 +65,11 @@ func (b *BaseDbRepository) FindPaginated(c context.Context, pageParams common.Pa
 
 func (b *BaseDbRepository) Create(c context.Context, entity any, omit ...string) (err common.HttpError) {
 	var txErr error
-	if txErr = Tx(c).Omit(omit...).Create(entity).Error; txErr != nil {
+	query := Tx(c)
+	if query == nil {
+		query = b.Db.WithContext(c)
+	}
+	if txErr = query.Omit(omit...).Create(entity).Error; txErr != nil {
 		log.Ctx(c).Error().Any("Entity", entity).Err(txErr).Msg("Entity Create Failed")
 	}
 	// Error Conversion
@@ -66,7 +78,11 @@ func (b *BaseDbRepository) Create(c context.Context, entity any, omit ...string)
 }
 
 func (b *BaseDbRepository) Update(c context.Context, entity any, omit ...string) (err common.HttpError) {
-	if txErr := Tx(c).Omit(omit...).Save(entity).Error; txErr != nil {
+	query := Tx(c)
+	if query == nil {
+		query = b.Db.WithContext(c)
+	}
+	if txErr := query.Omit(omit...).Save(entity).Error; txErr != nil {
 		log.Ctx(c).Error().
 			Any("Entity", entity).Err(txErr).Msg("Entity Update Failed")
 		err = GormErrorMapper(txErr)
@@ -75,17 +91,29 @@ func (b *BaseDbRepository) Update(c context.Context, entity any, omit ...string)
 }
 
 func (b *BaseDbRepository) DeleteById(c context.Context, id, entity any) (err common.HttpError) {
-	if txErr := Tx(c).Delete(entity, "id=?", id).Error; txErr != nil {
-		log.Ctx(c).Error().
-			Any("Id", id).Any("Entity", entity).Err(txErr).Msg("Entity Delete Failed")
-		err = GormErrorMapper(txErr)
+	query := Tx(c)
+	if query == nil {
+		query = b.Db.WithContext(c)
 	}
-	return
+	result := query.Delete(entity, "id=?", id)
+	if result.Error != nil {
+		log.Ctx(c).Error().
+			Any("Id", id).Any("Entity", entity).Err(result.Error).Msg("Entity Delete Failed")
+		return GormErrorMapper(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return common.ErrNotFound
+	}
+	return nil
 }
 
 func (b *BaseDbRepository) GetCount(c context.Context, entity any) (count int64, err common.HttpError) {
 	var txErr error
-	if txErr = Tx(c).Model(entity).Count(&count).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+	query := Tx(c)
+	if query == nil {
+		query = b.Db.WithContext(c)
+	}
+	if txErr = query.Model(entity).Count(&count).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		log.Ctx(c).Error().Any("Entity", entity).Err(txErr).Msg("Error Getting Entity Count")
 	}
 	err = GormErrorMapper(txErr)

@@ -167,3 +167,9 @@ func Tx(c context.Context) (tx *gorm.DB) {
 	}
 	return
 }
+
+// SetTxInContext sets the GORM DB in the context for use in tests.
+// This helper is used to provide a transaction context in tests.
+func SetTxInContext(ctx context.Context, db *gorm.DB) context.Context {
+	return context.WithValue(ctx, models.ContextTx, db)
+}

@@ -47,22 +47,11 @@ func (s *KohanServer) registerMonitorRoutes(engine *gin.Engine) {
 }
 
 func (s *KohanServer) registerJournalRoutes(engine *gin.Engine) {
-	entries := engine.Group("/v1/journal-entries")
-	{
-		entries.GET("", s.JournalHandler.HandleListEntries)
-		entries.GET("/:id", s.JournalHandler.HandleGetEntry)
-		entries.POST("", s.JournalHandler.HandleCreateEntry)
+	v1 := engine.Group("/v1")
 
-		entries.POST("/:id/images", s.ImageHandler.HandleCreateImage)
-		entries.GET("/:id/images", s.ImageHandler.HandleListImages)
-		entries.DELETE("/:id/images/:imageId", s.ImageHandler.HandleDeleteImage)
-
-		entries.POST("/:id/notes", s.NoteHandler.HandleCreateNote)
-		entries.GET("/:id/notes", s.NoteHandler.HandleListNotes)
-		entries.DELETE("/:id/notes/:noteId", s.NoteHandler.HandleDeleteNote)
-
-		entries.POST("/:id/tags", s.TagHandler.HandleCreateTag)
-		entries.GET("/:id/tags", s.TagHandler.HandleListTags)
-		entries.DELETE("/:id/tags/:tagId", s.TagHandler.HandleDeleteTag)
-	}
+	// Use reusable route setup functions
+	handler.SetupJournalEntryRoutes(v1, s.JournalHandler)
+	handler.SetupImageRoutes(v1, s.ImageHandler)
+	handler.SetupNoteRoutes(v1, s.NoteHandler)
+	handler.SetupTagRoutes(v1, s.TagHandler)
 }

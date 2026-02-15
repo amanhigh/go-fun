@@ -27,6 +27,8 @@ var _ = Describe("JournalRepository Image", func() {
 		db, err = util.CreateTestDb(logger.Warn)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(core.SetupBarkatDB(db)).To(Succeed())
+
+		util.SetTxInContext(testCtx, db)
 		entryRepo = repository.NewJournalRepository(db)
 		repo = repository.NewImageRepository(db)
 
@@ -42,61 +44,24 @@ var _ = Describe("JournalRepository Image", func() {
 		sqlDB.Close()
 	})
 
-	Context("CreateImage", func() {
-		var image barkat.Image
-
+	Context("ListImages", func() {
 		BeforeEach(func() {
-			image = barkat.Image{EntryID: entry.ID, Timeframe: "DL"}
-			Expect(repo.CreateImage(testCtx, &image)).To(Succeed())
+			dl := barkat.Image{EntryID: entry.ID, Timeframe: "DL"}
+			Expect(repo.Create(testCtx, &dl)).To(Succeed())
+			wk := barkat.Image{EntryID: entry.ID, Timeframe: "WK"}
+			Expect(repo.Create(testCtx, &wk)).To(Succeed())
 		})
 
-		It("should create image with generated ID", func() {
-			Expect(image.ID).ToNot(BeEmpty())
-			Expect(image.EntryID).To(Equal(entry.ID))
-			Expect(image.Timeframe).To(Equal("DL"))
+		It("should list all images for entry", func() {
+			images, err := repo.ListImages(testCtx, entry.ID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(images).To(HaveLen(2))
 		})
 
-		Context("ListImages", func() {
-			BeforeEach(func() {
-				wk := barkat.Image{EntryID: entry.ID, Timeframe: "WK"}
-				Expect(repo.CreateImage(testCtx, &wk)).To(Succeed())
-			})
-
-			It("should list all images for entry", func() {
-				images, err := repo.ListImages(testCtx, entry.ID)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(images).To(HaveLen(2))
-			})
-
-			It("should return empty for unknown entry", func() {
-				images, err := repo.ListImages(testCtx, "unknown-id")
-				Expect(err).ToNot(HaveOccurred())
-				Expect(images).To(BeEmpty())
-			})
-		})
-
-		Context("DeleteImage", func() {
-			BeforeEach(func() {
-				Expect(repo.DeleteImage(testCtx, entry.ID, image.ID)).To(Succeed())
-			})
-
-			It("should remove image", func() {
-				images, err := repo.ListImages(testCtx, entry.ID)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(images).To(BeEmpty())
-			})
-		})
-
-		Context("DeleteImage Not Found", func() {
-			It("should return error for missing image", func() {
-				err := repo.DeleteImage(testCtx, entry.ID, "nonexistent")
-				Expect(err).To(HaveOccurred())
-			})
-
-			It("should return error for wrong entry scope", func() {
-				err := repo.DeleteImage(testCtx, "wrong-entry", image.ID)
-				Expect(err).To(HaveOccurred())
-			})
+		It("should return empty for unknown entry", func() {
+			images, err := repo.ListImages(testCtx, "unknown-id")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(images).To(BeEmpty())
 		})
 	})
 })

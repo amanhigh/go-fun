@@ -18,7 +18,7 @@ type KohanInterface interface {
 	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
 	GetTaxManager() (manager.TaxManager, error)
 	GetBrokerageManager() (manager.BrokerageManager, error)
-	GetKohanServer(port int, capturePath string, autoManager manager.AutoManagerInterface, shutdown util.Shutdown) (*KohanServer, error)
+	GetKohanServer(port int, capturePath string, wait time.Duration, shutdown util.Shutdown) (*KohanServer, error)
 	GetBarkatDB() (*gorm.DB, error)
 }
 
@@ -48,8 +48,8 @@ func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) 
 	return manager.NewAutoManager(wait, capturePath)
 }
 
-func (ki *KohanInjector) GetKohanServer(port int, capturePath string, autoManager manager.AutoManagerInterface, shutdown util.Shutdown) (*KohanServer, error) {
-	// FIXME: AutoManager should be created by DI Framework
+func (ki *KohanInjector) GetKohanServer(port int, capturePath string, wait time.Duration, shutdown util.Shutdown) (*KohanServer, error) {
+	autoManager := ki.GetAutoManager(wait, capturePath)
 	ki.registerMonitorDependencies(capturePath, autoManager)
 	if err := ki.registerJournalDependencies(); err != nil {
 		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)

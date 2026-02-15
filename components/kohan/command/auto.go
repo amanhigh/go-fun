@@ -44,7 +44,7 @@ var monitorCmd = &cobra.Command{
 		// TODO: Retry When Disk not Mounted, Watermill Exponential Backoff ?
 		autoManager := core.GetKohanInterface().GetAutoManager(wait, args[0])
 		shutdown := util.NewGracefulShutdown()
-		server, err := core.GetKohanInterface().GetKohanServer(MonitorServerPort, args[0], autoManager, shutdown)
+		server, err := core.GetKohanInterface().GetKohanServer(MonitorServerPort, args[0], wait, shutdown)
 		if err != nil {
 			return fmt.Errorf("failed to build kohan server: %w", err)
 		}

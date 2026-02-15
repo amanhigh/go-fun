@@ -5,50 +5,38 @@ package repository
 
 import (
 	"context"
+	"errors"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/barkat"
+	"github.com/amanhigh/go-fun/models/common"
 	"gorm.io/gorm"
 )
 
 // ImageRepository provides persistence operations for journal images.
 type ImageRepository interface {
-	// CreateImage attaches a new image to an entry.
-	CreateImage(ctx context.Context, image *barkat.Image) error
+	util.BaseDbRepositoryInterface
 	// ListImages returns all images for an entry.
-	ListImages(ctx context.Context, entryID string) ([]barkat.Image, error)
-	// DeleteImage removes an image by ID scoped to an entry.
-	DeleteImage(ctx context.Context, entryID string, imageID string) error
+	ListImages(ctx context.Context, entryID string) ([]barkat.Image, common.HttpError)
 }
 
 type ImageRepositoryImpl struct {
-	db *gorm.DB
+	util.BaseDbRepository
 }
 
 var _ ImageRepository = (*ImageRepositoryImpl)(nil)
 
 // NewImageRepository creates a new ImageRepository backed by GORM.
 func NewImageRepository(db *gorm.DB) *ImageRepositoryImpl {
-	return &ImageRepositoryImpl{db: db}
+	return &ImageRepositoryImpl{BaseDbRepository: util.NewBaseDbRepository(db)}
 }
 
-func (r *ImageRepositoryImpl) CreateImage(ctx context.Context, image *barkat.Image) error {
-	return r.db.WithContext(ctx).Create(image).Error
-}
-
-func (r *ImageRepositoryImpl) ListImages(ctx context.Context, entryID string) ([]barkat.Image, error) {
+func (r *ImageRepositoryImpl) ListImages(ctx context.Context, entryID string) ([]barkat.Image, common.HttpError) {
 	var images []barkat.Image
-	// TODO: Use Struct Based queries or these are fine ?
-	err := r.db.WithContext(ctx).Where("entry_id = ?", entryID).Order("timeframe").Find(&images).Error
-	return images, err
-}
-
-func (r *ImageRepositoryImpl) DeleteImage(ctx context.Context, entryID, imageID string) error {
-	result := r.db.WithContext(ctx).Where("id = ? AND entry_id = ?", imageID, entryID).Delete(&barkat.Image{})
-	if result.Error != nil {
-		return result.Error
+	var txErr error
+	query := util.Tx(ctx)
+	if txErr = query.Where("entry_id = ?", entryID).Order("timeframe").Find(&images).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+		return nil, util.GormErrorMapper(txErr)
 	}
-	if result.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
-	}
-	return nil
+	return images, nil
 }
