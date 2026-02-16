@@ -31,14 +31,18 @@ jobs:
       - name: INSTALL -> Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.21"
+          go-version: "1.25.7"
+          check-latest: true
 
       - name: SETUP -> Onetime
         run: |
+          export GOTOOLCHAIN=local
           make prepare
 
+    # TODO: Github Build is failing.
       - name: SETUP -> Build
         run: |
+          export GOTOOLCHAIN=local
           make reset OUT=/dev/stdout
 
       - name: COVERAGE -> Report

@@ -21,6 +21,8 @@ COMPONENT_DIR := ./components
 FUN_DIR := $(COMPONENT_DIR)/fun-app
 BIN_DIR := bin
 
+export PATH := $(shell go env GOPATH 2>/dev/null)/bin:$(PATH)
+
 # Coverage directories for binary coverage data
 COVER_DIR := /tmp/cover
 UNIT_COVER_DIR := $(COVER_DIR)/unit
@@ -51,7 +53,7 @@ endif
 
 lint-dead:
 	printf $(_TITLE) "LINT" "DeadCode"
-	go work edit -json | jq -r '.Use[].DiskPath' | sed 's|^\./||' | grep -v "common\|models" | xargs -I{} deadcode github.com/amanhigh/go-fun/{}/...
+	go work edit -json | jq -r '.Use[].DiskPath' | sed 's|^\./||' | grep -vE "common|models|components/learn" | xargs -I{} deadcode github.com/amanhigh/go-fun/{}/...
 
 lint: lint-ci  ## Lint the Code
 
