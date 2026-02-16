@@ -49,6 +49,7 @@ func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) 
 }
 
 func (ki *KohanInjector) GetKohanServer(port int, capturePath string, wait time.Duration, shutdown util.Shutdown) (*KohanServer, error) {
+	// HACK: Shutdown should be created internally not passed as parameter.
 	autoManager := ki.GetAutoManager(wait, capturePath)
 	ki.registerMonitorDependencies(capturePath, autoManager)
 	if err := ki.registerJournalDependencies(); err != nil {
@@ -67,6 +68,8 @@ func (ki *KohanInjector) GetKohanServer(port int, capturePath string, wait time.
 }
 
 func (ki *KohanInjector) GetBarkatDB() (*gorm.DB, error) {
+	// HACK: Why we need Public method for this remove it.
+	// FIXME: DB Migration has many indexes on Primary key remove unwanted indexes.
 	var db *gorm.DB
 	if err := ki.di.Resolve(&db); err != nil {
 		return nil, fmt.Errorf("failed to resolve barkat db: %w", err)

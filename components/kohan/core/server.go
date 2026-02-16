@@ -8,6 +8,7 @@ import (
 
 // KohanServer serves all Kohan HTTP APIs (monitor + journal).
 type KohanServer struct {
+	// HACK: Should we inject pointer to BaseHTTPServer or not?
 	*util.BaseHTTPServer
 	MonitorHandler handler.MonitorHandler
 	JournalHandler handler.JournalHandler
@@ -38,6 +39,7 @@ func (s *KohanServer) registerRoutes(engine *gin.Engine) {
 }
 
 func (s *KohanServer) registerMonitorRoutes(engine *gin.Engine) {
+	// HACK: Remove Nil check and move to Routes similar to other handlers below.
 	if s.MonitorHandler == nil {
 		return
 	}

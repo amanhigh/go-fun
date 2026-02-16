@@ -39,6 +39,7 @@ func NewServerError(err error) HttpError {
 
 type Pagination struct {
 	Offset int `form:"offset" binding:"min=0"`
+	// FIXME: Limit has been made optional add test , set default via tags not via code.
 	Limit  int `form:"limit" binding:"min=1,max=100"`
 }
 

@@ -13,6 +13,7 @@ import (
 // JournalHandler provides HTTP handlers for journal entry operations.
 //
 //go:generate mockery --name JournalHandler
+// FIXME: Find and remove go generate mockery, new version works via mockery.yaml
 type JournalHandler interface {
 	// HandleListEntries handles GET /v1/journal-entries
 	HandleListEntries(c *gin.Context)
@@ -36,9 +37,10 @@ func NewJournalHandler(journalManager manager.JournalManager) *JournalHandlerImp
 }
 
 // ---- Entry Handlers ----
-
+// TODO: Match other Handlers after Review Comments & Test to Standardize Template.
 func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
 	var query barkat.EntryQuery
+	// FIXME: Default values should be set in model via struct tags.
 	query.Limit = 20
 
 	if err := c.ShouldBindQuery(&query); err != nil {
@@ -52,8 +54,7 @@ func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	response := common.NewEnvelope(entryList)
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, common.NewEnvelope(entryList))
 }
 
 func (h *JournalHandlerImpl) HandleGetEntry(c *gin.Context) {
@@ -69,13 +70,13 @@ func (h *JournalHandlerImpl) HandleGetEntry(c *gin.Context) {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	response := common.NewEnvelope(entry)
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, common.NewEnvelope(entry))
 }
 
 func (h *JournalHandlerImpl) HandleCreateEntry(c *gin.Context) {
 	var entry barkat.Entry
 	if err := c.ShouldBindJSON(&entry); err != nil {
+		// FIXME: Enhance ProcessValidationError to return HTTP Code handling Wider Range of Validations.
 		err = util.ProcessValidationError(err)
 		c.JSON(http.StatusBadRequest, err)
 		return
@@ -85,9 +86,7 @@ func (h *JournalHandlerImpl) HandleCreateEntry(c *gin.Context) {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	// FIXME: Better Envelope Integration
-	response := common.NewEnvelope(entry)
-	c.JSON(http.StatusCreated, response)
+	c.JSON(http.StatusCreated, common.NewEnvelope(entry))
 }
 
 func (h *JournalHandlerImpl) HandleDeleteEntry(c *gin.Context) {

@@ -40,6 +40,7 @@ var monitorCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		log.Info().Dur("Wait", wait).Str("Screenshots", args[0]).Msg("Monitoring Systems")
+		// HACK: Rename to Serve command to indicate Kohan Server.
 
 		// TODO: Retry When Disk not Mounted, Watermill Exponential Backoff ?
 		autoManager := core.GetKohanInterface().GetAutoManager(wait, args[0])
@@ -49,6 +50,7 @@ var monitorCmd = &cobra.Command{
 			return fmt.Errorf("failed to build kohan server: %w", err)
 		}
 
+		// TODO: Should use new Cron Libraries in learn Module
 		go autoManager.MonitorInternetConnection(cmd.Context())
 
 		if err := server.Start(); err != nil {
