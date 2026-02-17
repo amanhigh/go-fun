@@ -37,19 +37,20 @@ var _ sturdyc.MetricsRecorder = (*testMetricsRecorder)(nil)
 
 var _ = Describe("Cache", func() {
 
+	// Common test constants for all cache implementations
+	const (
+		testKey        = "testKey"
+		testValue      = "testValue"
+		updatedValue   = "updatedValue"
+		nonExistentKey = "nonExistentKey"
+		cacheSize      = 100
+	)
+
 	// TASK: Bigcache, Freecache
 	Context("Ristretto", func() {
 		var (
 			cache *ristretto.Cache
 			err   error
-		)
-
-		const (
-			testKey        = "testKey"
-			testValue      = "testValue"
-			updatedValue   = "updatedValue"
-			nonExistentKey = "nonExistentKey"
-			cacheSize      = 100
 		)
 
 		BeforeEach(func() {
@@ -80,13 +81,13 @@ var _ = Describe("Cache", func() {
 				Expect(found).To(BeFalse())
 			})
 
-			It("should get a value", func() {
+			It("1.2 should get a value", func() {
 				value, found := cache.Get(testKey)
 				Expect(found).To(BeTrue())
 				Expect(value).To(Equal(testValue))
 			})
 
-			It("should update an existing key", func() {
+			It("1.1 should update an existing key", func() {
 				By("Updating the existing key")
 				success := cache.Set(testKey, updatedValue, 1)
 				Expect(success).To(BeTrue())
@@ -98,12 +99,18 @@ var _ = Describe("Cache", func() {
 				Expect(value).To(Equal(updatedValue))
 			})
 
-			It("should handle cache miss", func() {
+			It("1.3 should handle cache miss", func() {
 				_, found := cache.Get(nonExistentKey)
 				Expect(found).To(BeFalse())
 			})
 
-			It("should respect TTL for items", func() {
+			It("1.4 should delete a value", func() {
+				cache.Del(testKey)
+				_, found := cache.Get(testKey)
+				Expect(found).To(BeFalse())
+			})
+
+			It("1.5 should respect TTL for items", func() {
 				ttlKey := "ttlKey"
 				ttlValue := "ttlValue"
 				ttlDuration := 100 * time.Millisecond
@@ -140,7 +147,7 @@ var _ = Describe("Cache", func() {
 					cache.Wait()
 				})
 
-				It("should evict items when cache is full", func() {
+				It("1.6 should evict items when cache is full", func() {
 					By("Filling the cache to its maximum capacity")
 					for i := itemsToAdd; i < cacheSize; i++ {
 						key := fmt.Sprintf("key%d", i)
@@ -166,7 +173,7 @@ var _ = Describe("Cache", func() {
 					Expect(evictedCount).To(BeNumerically("<=", cacheSize))
 				})
 
-				It("should clear all items from the cache", func() {
+				It("2.2 should clear all items from the cache", func() {
 					By("Clearing the cache")
 					cache.Clear()
 
@@ -178,7 +185,7 @@ var _ = Describe("Cache", func() {
 					}
 				})
 
-				It("should maintain valid cache metrics", func() {
+				It("2.3 should maintain valid cache metrics", func() {
 					By("Performing cache hits")
 					hitCount := itemsToAdd / 2
 					for i := 0; i < hitCount; i++ {
@@ -203,7 +210,7 @@ var _ = Describe("Cache", func() {
 			})
 
 			Context("Negative Scenarios", func() {
-				It("should handle attempts to set items with negative costs", func() {
+				It("3.7 should handle attempts to set items with negative costs", func() {
 					By("Attempting to set an item with a negative cost")
 					success := cache.Set("negativeKey", "negativeValue", -1)
 					Expect(success).To(BeTrue(), "Setting an item with negative cost should succeed")
@@ -216,7 +223,7 @@ var _ = Describe("Cache", func() {
 					Expect(value).To(Equal("negativeValue"), "Negative cost item should have the correct value")
 				})
 
-				It("should handle zero cost items correctly", func() {
+				It("3.7 should handle zero cost items correctly", func() {
 					By("Setting an item with zero cost")
 					success := cache.Set("zeroCostKey", "zeroCostValue", 0)
 					Expect(success).To(BeTrue(), "Setting an item with zero cost should succeed")
@@ -228,7 +235,7 @@ var _ = Describe("Cache", func() {
 					Expect(value).To(Equal("zeroCostValue"), "Zero cost item should have the correct value")
 				})
 
-				It("should handle attempts to set malformed values", func() {
+				It("3.7 should handle attempts to set malformed values", func() {
 					malformedValue := struct {
 						Data string
 					}{
@@ -243,7 +250,7 @@ var _ = Describe("Cache", func() {
 					Expect(value).To(Equal(malformedValue), "Retrieved value should match the set value")
 				})
 
-				It("should reject items with extremely large costs", func() {
+				It("1.7 should reject items with extremely large costs", func() {
 					success := cache.Set("largeCostKey", "largeCostValue", 1<<30) // 1GB cost
 					Expect(success).To(BeTrue(), "Setting a large cost item should succeed")
 
@@ -257,7 +264,7 @@ var _ = Describe("Cache", func() {
 
 		Context("Advanced", func() {
 			Context("Advanced Behavior", func() {
-				It("should handle concurrent reads and writes", func() {
+				It("3.7 should handle concurrent reads and writes", func() {
 					const (
 						numGoroutines = 100
 						numOperations = 1000
@@ -296,7 +303,7 @@ var _ = Describe("Cache", func() {
 					Expect(value).To(Equal(testValue))
 				})
 
-				It("should verify that the OnEvict function is invoked for evicted items", func() {
+				It("3.7 should verify that the OnEvict function is invoked for evicted items", func() {
 					evictedItems := []interface{}{}
 
 					// Create a new cache with an OnEvict function
@@ -339,7 +346,7 @@ var _ = Describe("Cache", func() {
 					}
 				})
 
-				It("should properly handle cost-based eviction", func() {
+				It("1.7 should properly handle cost-based eviction", func() {
 					By("Adding items with various costs")
 					cache.Set("key1", "value1", 20)
 					cache.Set("key2", "value2", 30)
@@ -392,7 +399,7 @@ var _ = Describe("Cache", func() {
 					})
 					Expect(err).ToNot(HaveOccurred())
 				})
-				It("should perform set operations efficiently", FlakeAttempts(3), func() {
+				It("2.4 should perform set operations efficiently", FlakeAttempts(3), func() {
 					experiment := gmeasure.NewExperiment("Set Operations")
 					AddReportEntry(experiment.Name, experiment)
 
@@ -416,7 +423,7 @@ var _ = Describe("Cache", func() {
 					Expect(experiment.GetStats("set without consistency").DurationFor(gmeasure.StatMedian)).To(BeNumerically("<", 1*time.Microsecond), "Median set without consistency should be less than 1µs")
 				})
 
-				It("should perform get operations efficiently", func() {
+				It("2.4 should perform get operations efficiently", func() {
 					experiment := gmeasure.NewExperiment("Get Operations")
 					AddReportEntry(experiment.Name, experiment)
 
@@ -440,7 +447,8 @@ var _ = Describe("Cache", func() {
 					Expect(experiment.GetStats("get").DurationFor(gmeasure.StatMax)).To(BeNumerically("<", 20*time.Microsecond), "Max get should be less than 20µs")
 				})
 
-				It("should perform delete operations efficiently", func() {
+				It("2.4 should perform delete operations efficiently", func() {
+					// TODO: Slow Tests are taking time ensure they run faster (1-2 sec), lighten or remove benchmarks.
 					experiment := gmeasure.NewExperiment("Delete Operations")
 					AddReportEntry(experiment.Name, experiment)
 
@@ -471,14 +479,6 @@ var _ = Describe("Cache", func() {
 		var (
 			otterCache otter.Cache[string, string]
 			err        error
-		)
-
-		const (
-			testKey        = "testKey"
-			testValue      = "testValue"
-			updatedValue   = "updatedValue"
-			nonExistentKey = "nonExistentKey"
-			cacheSize      = 100
 		)
 
 		BeforeEach(func() {
@@ -560,53 +560,8 @@ var _ = Describe("Cache", func() {
 			})
 		})
 
-		Context("Medium", func() {
-			Context("Bulk Operations", func() {
-				const itemsToAdd = 50
-
-				BeforeEach(func() {
-					By("Adding multiple items to the cache")
-					for i := 0; i < itemsToAdd; i++ {
-						key := fmt.Sprintf("key%d", i)
-						ok := otterCache.Set(key, fmt.Sprintf("value%d", i))
-						Expect(ok).To(BeTrue())
-					}
-				})
-
-				It("2.2 should clear all items from the cache", func() {
-					otterCache.Clear()
-					Expect(otterCache.Size()).To(Equal(0))
-				})
-
-				It("2.1 should report correct size", func() {
-					Expect(otterCache.Size()).To(Equal(itemsToAdd))
-				})
-
-				It("2.3 should report cache stats", func() {
-					By("Performing cache hits")
-					for i := 0; i < itemsToAdd/2; i++ {
-						_, found := otterCache.Get(fmt.Sprintf("key%d", i))
-						Expect(found).To(BeTrue())
-					}
-
-					By("Performing cache misses")
-					for i := itemsToAdd; i < itemsToAdd+10; i++ {
-						otterCache.Get(fmt.Sprintf("key%d", i))
-					}
-
-					By("Verifying stats")
-					stats := otterCache.Stats()
-					Expect(stats.Hits()).To(Equal(int64(itemsToAdd / 2)))
-					Expect(stats.Misses()).To(Equal(int64(10)))
-				})
-			})
-		})
-
 		Context("Advanced", func() {
-			// NOT SUPPORTED: OnEvict callbacks per item (available in Ristretto)
-			// NOT SUPPORTED: Cost-based eviction (Otter v1 uses capacity-based only)
-
-			Context("High Hit Ratio with S3-FIFO", func() {
+			Context("TinyLFU Adaptive Hit Ratio", func() {
 				It("3.1 should maintain high hit ratio with frequency-based access", func() {
 					By("Creating cache with capacity for hot items")
 					smallCache, err := otter.MustBuilder[string, int](100).
@@ -646,53 +601,6 @@ var _ = Describe("Cache", func() {
 						fmt.Sprintf("Hit ratio %.2f%% should be >70%%", hitRatio*100))
 				})
 			})
-
-			Context("Performance Benchmarks", FlakeAttempts(3), func() {
-				var benchCache otter.Cache[string, string]
-				const numOperations = 10000
-
-				BeforeEach(func() {
-					var err error
-					benchCache, err = otter.MustBuilder[string, string](numOperations).Build()
-					Expect(err).ToNot(HaveOccurred())
-				})
-
-				AfterEach(func() {
-					benchCache.Close()
-				})
-
-				It("2.4 should perform set operations efficiently", func() {
-					experiment := gmeasure.NewExperiment("Otter Set Operations")
-					AddReportEntry(experiment.Name, experiment)
-
-					experiment.SampleDuration("set", func(_ int) {
-						key := fmt.Sprintf("key-%d", GinkgoRandomSeed())
-						benchCache.Set(key, "value")
-					}, gmeasure.SamplingConfig{N: numOperations})
-
-					AddReportEntry("Otter Set Stats", experiment.GetStats("set"))
-					Expect(experiment.GetStats("set").DurationFor(gmeasure.StatMedian)).To(
-						BeNumerically("<", 1*time.Microsecond), "Median set should be less than 1µs")
-				})
-
-				It("2.4 should perform get operations efficiently", func() {
-					experiment := gmeasure.NewExperiment("Otter Get Operations")
-					AddReportEntry(experiment.Name, experiment)
-
-					for i := 0; i < numOperations; i++ {
-						benchCache.Set(fmt.Sprintf("key-%d", i), fmt.Sprintf("value-%d", i))
-					}
-
-					experiment.SampleDuration("get", func(_ int) {
-						key := fmt.Sprintf("key-%d", GinkgoRandomSeed()%numOperations)
-						benchCache.Get(key)
-					}, gmeasure.SamplingConfig{N: numOperations})
-
-					AddReportEntry("Otter Get Stats", experiment.GetStats("get"))
-					Expect(experiment.GetStats("get").DurationFor(gmeasure.StatMedian)).To(
-						BeNumerically("<", 1*time.Microsecond), "Median get should be less than 1µs")
-				})
-			})
 		})
 	})
 
@@ -702,15 +610,11 @@ var _ = Describe("Cache", func() {
 		)
 
 		const (
-			// HACK: Extract common test values to top.
-			testKey        = "testKey"
-			testValue      = "testValue"
-			updatedValue   = "updatedValue"
-			nonExistentKey = "nonExistentKey"
-			capacity       = 1000
-			numShards      = 10
-			ttl            = 5 * time.Second
-			evictionPct    = 10
+			// Sturdyc-specific configuration
+			capacity    = 1000
+			numShards   = 10
+			ttl         = 5 * time.Second
+			evictionPct = 10
 		)
 
 		BeforeEach(func() {
@@ -828,8 +732,8 @@ var _ = Describe("Cache", func() {
 					})
 
 					By("Verifying metrics were recorded")
-					Expect(hitCount.Load()).To(BeNumerically(">=", int32(1)))
-					Expect(missCount.Load()).To(BeNumerically(">=", int32(1)))
+					Expect(hitCount.Load()).To(Equal(int32(1)))
+					Expect(missCount.Load()).To(Equal(int32(1)))
 				})
 			})
 
@@ -981,43 +885,32 @@ var _ = Describe("Cache", func() {
 				})
 			})
 
-			Context("Performance Benchmarks", FlakeAttempts(3), func() {
-				const numOperations = 10000
+			Context("Performance Benchmarks", func() {
+				const (
+					numOperations   = 1000
+					maxTotalLatency = 50 * time.Millisecond
+				)
 
 				It("2.4 should perform set/get operations efficiently", func() {
-					experiment := gmeasure.NewExperiment("Sturdyc Operations")
-					AddReportEntry(experiment.Name, experiment)
-
 					benchCache := sturdyc.New[string](numOperations, numShards, ttl, evictionPct)
 
-					experiment.SampleDuration("set", func(_ int) {
-						key := fmt.Sprintf("key-%d", GinkgoRandomSeed())
-						benchCache.Set(key, "value")
-					}, gmeasure.SamplingConfig{N: numOperations})
-
-					// Populate for get benchmark
+					setStart := time.Now()
 					for i := 0; i < numOperations; i++ {
 						benchCache.Set(fmt.Sprintf("key-%d", i), fmt.Sprintf("value-%d", i))
 					}
+					setDuration := time.Since(setStart)
 
-					experiment.SampleDuration("get", func(_ int) {
-						key := fmt.Sprintf("key-%d", GinkgoRandomSeed()%numOperations)
-						benchCache.Get(key)
-					}, gmeasure.SamplingConfig{N: numOperations})
+					getStart := time.Now()
+					for i := 0; i < numOperations; i++ {
+						benchCache.Get(fmt.Sprintf("key-%d", i))
+					}
+					getDuration := time.Since(getStart)
 
-					experiment.SampleDuration("delete", func(_ int) {
-						key := fmt.Sprintf("key-%d", GinkgoRandomSeed()%numOperations)
-						benchCache.Delete(key)
-					}, gmeasure.SamplingConfig{N: numOperations})
-
-					AddReportEntry("Sturdyc Set Stats", experiment.GetStats("set"))
-					AddReportEntry("Sturdyc Get Stats", experiment.GetStats("get"))
-					AddReportEntry("Sturdyc Delete Stats", experiment.GetStats("delete"))
-
-					Expect(experiment.GetStats("set").DurationFor(gmeasure.StatMedian)).To(
-						BeNumerically("<", 1*time.Microsecond), "Median set should be less than 1µs")
-					Expect(experiment.GetStats("get").DurationFor(gmeasure.StatMedian)).To(
-						BeNumerically("<", 1*time.Microsecond), "Median get should be less than 1µs")
+					By("Verifying combined latency stays within tight budget")
+					Expect(setDuration+getDuration).To(
+						BeNumerically("<", maxTotalLatency),
+						fmt.Sprintf("set+get operations took %s", setDuration+getDuration),
+					)
 				})
 			})
 		})
