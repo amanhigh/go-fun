@@ -30,6 +30,7 @@ type FunServer struct {
 func (fs *FunServer) Start(_ context.Context) (err error) {
 	fs.RegisterRoutes = fs.registerRoutes
 	fs.BeforeStart = fs.beforeStart
+	// HACK: Add method to Provide Swagger in Lifecycle as well.
 	fs.BeforeShutdown = fs.beforeShutdown
 	fs.AfterShutdown = func(ctx context.Context) {
 		telemetry.ShutdownTracerProvider(ctx)

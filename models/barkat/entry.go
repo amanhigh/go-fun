@@ -9,6 +9,7 @@ import (
 )
 
 // Entry represents a single trade journal capture event.
+// BUG: Rename to Journal all entities in this file & filename.
 type Entry struct {
 	ID        string     `gorm:"column:id;primaryKey" json:"id"`
 	Ticker    string     `gorm:"column:ticker;not null" json:"ticker" binding:"required,max=10"`
@@ -25,7 +26,7 @@ type Entry struct {
 }
 
 func (Entry) TableName() string {
-	return "journal_entries"
+	return "journal"
 }
 
 func (e *Entry) BeforeCreate(_ *gorm.DB) error {
@@ -58,6 +59,7 @@ type EntryQuery struct {
 
 // EntryList is the paginated response for journal entries.
 type EntryList struct {
-	Records  []Entry                  `json:"entries"`
+	Records  []Entry                  `json:"journals"`
+	// BUG: Inline Pagination Metadat as per PRD ?
 	Metadata common.PaginatedResponse `json:"metadata"`
 }

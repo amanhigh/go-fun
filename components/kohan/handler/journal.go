@@ -12,8 +12,9 @@ import (
 
 // JournalHandler provides HTTP handlers for journal entry operations.
 //
-//go:generate mockery --name JournalHandler
 // FIXME: Find and remove go generate mockery, new version works via mockery.yaml
+//
+//go:generate mockery --name JournalHandler
 type JournalHandler interface {
 	// HandleListEntries handles GET /v1/journal-entries
 	HandleListEntries(c *gin.Context)
@@ -58,7 +59,7 @@ func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
 }
 
 func (h *JournalHandlerImpl) HandleGetEntry(c *gin.Context) {
-	var path barkat.EntryPath
+	var path barkat.JournalPath
 	if err := c.ShouldBindUri(&path); err != nil {
 		err = util.ProcessValidationError(err)
 		c.JSON(http.StatusBadRequest, err)
@@ -90,7 +91,7 @@ func (h *JournalHandlerImpl) HandleCreateEntry(c *gin.Context) {
 }
 
 func (h *JournalHandlerImpl) HandleDeleteEntry(c *gin.Context) {
-	var path barkat.EntryPath
+	var path barkat.JournalPath
 	if err := c.ShouldBindUri(&path); err != nil {
 		err = util.ProcessValidationError(err)
 		c.JSON(http.StatusBadRequest, err)

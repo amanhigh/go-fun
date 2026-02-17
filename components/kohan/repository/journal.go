@@ -35,6 +35,7 @@ func NewJournalRepository(db *gorm.DB) *JournalRepositoryImpl {
 // ---- Entry ----
 
 func (r *JournalRepositoryImpl) CreateEntry(ctx context.Context, entry *barkat.Entry) error {
+	// HACK: Remove Redundant Methods directly Use Create, Get from Base Repo.
 	return r.Db.WithContext(ctx).Create(entry).Error
 }
 
@@ -89,6 +90,7 @@ func (r *JournalRepositoryImpl) fetchEntries(tx *gorm.DB, query barkat.EntryQuer
 	}
 
 	var entries []barkat.Entry
+	// HACK: Use SafeTx from Base Repo.
 	err := tx.Order(orderClause).Offset(query.Offset).Limit(query.Limit).Find(&entries).Error
 	return entries, err
 }

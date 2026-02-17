@@ -26,6 +26,7 @@ type BaseHTTPServer struct {
 	Engine *gin.Engine
 	Server *http.Server
 
+	// HACK: #A Extract Server Lifecycle with below 4 Functions and use Composition.
 	// RegisterRoutes is called once during Start to register application routes.
 	// Default is a no-op (/health is already registered by the constructor).
 	// Embedders replace this to add their own routes on the gin.Engine.

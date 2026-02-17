@@ -37,6 +37,7 @@ func NewJournalManager(repo repository.JournalRepository) *JournalManagerImpl {
 // ---- Entry ----
 
 func (m *JournalManagerImpl) CreateEntry(ctx context.Context, entry *barkat.Entry) common.HttpError {
+	// BUG: Transactional Support is missing.
 	if err := m.repo.CreateEntry(ctx, entry); err != nil {
 		return common.NewServerError(fmt.Errorf("failed to create entry: %w", err))
 	}

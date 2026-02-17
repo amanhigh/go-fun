@@ -61,6 +61,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 	)
 
 	BeforeEach(func() {
+		// TODO: Sqlite Snapshots, Comparison and Revert.
 		var err error
 		db, err = core.CreateTestBarkatDB()
 		Expect(err).ToNot(HaveOccurred())
