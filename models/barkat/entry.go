@@ -59,7 +59,7 @@ type EntryQuery struct {
 
 // EntryList is the paginated response for journal entries.
 type EntryList struct {
-	Records  []Entry                  `json:"journals"`
+	Records []Entry `json:"journals"`
 	// BUG: Inline Pagination Metadat as per PRD ?
 	Metadata common.PaginatedResponse `json:"metadata"`
 }

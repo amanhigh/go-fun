@@ -59,7 +59,7 @@ func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
 }
 
 func (h *JournalHandlerImpl) HandleGetEntry(c *gin.Context) {
-	var path barkat.JournalPath
+	var path barkat.EntryPath
 	if err := c.ShouldBindUri(&path); err != nil {
 		err = util.ProcessValidationError(err)
 		c.JSON(http.StatusBadRequest, err)
@@ -91,7 +91,7 @@ func (h *JournalHandlerImpl) HandleCreateEntry(c *gin.Context) {
 }
 
 func (h *JournalHandlerImpl) HandleDeleteEntry(c *gin.Context) {
-	var path barkat.JournalPath
+	var path barkat.EntryPath
 	if err := c.ShouldBindUri(&path); err != nil {
 		err = util.ProcessValidationError(err)
 		c.JSON(http.StatusBadRequest, err)
