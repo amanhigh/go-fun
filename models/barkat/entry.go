@@ -71,7 +71,7 @@ type JournalQuery struct {
 // NewJournalQuery creates a JournalQuery struct with default pagination values
 func NewJournalQuery() JournalQuery {
 	return JournalQuery{
-		Pagination: common.NewPagination(),
+		Pagination: common.Pagination{},
 	}
 }
 

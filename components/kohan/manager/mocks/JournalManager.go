@@ -39,17 +39,17 @@ func (_m *JournalManager) EXPECT() *JournalManager_Expecter {
 	return &JournalManager_Expecter{mock: &_m.Mock}
 }
 
-// CreateEntry provides a mock function for the type JournalManager
-func (_mock *JournalManager) CreateEntry(ctx context.Context, entry *barkat.Entry) common.HttpError {
-	ret := _mock.Called(ctx, entry)
+// CreateJournal provides a mock function for the type JournalManager
+func (_mock *JournalManager) CreateJournal(ctx context.Context, journal *barkat.Journal) common.HttpError {
+	ret := _mock.Called(ctx, journal)
 
 	if len(ret) == 0 {
-		panic("no return value specified for CreateEntry")
+		panic("no return value specified for CreateJournal")
 	}
 
 	var r0 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *barkat.Entry) common.HttpError); ok {
-		r0 = returnFunc(ctx, entry)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *barkat.Journal) common.HttpError); ok {
+		r0 = returnFunc(ctx, journal)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(common.HttpError)
@@ -58,27 +58,27 @@ func (_mock *JournalManager) CreateEntry(ctx context.Context, entry *barkat.Entr
 	return r0
 }
 
-// JournalManager_CreateEntry_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateEntry'
-type JournalManager_CreateEntry_Call struct {
+// JournalManager_CreateJournal_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateJournal'
+type JournalManager_CreateJournal_Call struct {
 	*mock.Call
 }
 
-// CreateEntry is a helper method to define mock.On call
+// CreateJournal is a helper method to define mock.On call
 //   - ctx context.Context
-//   - entry *barkat.Entry
-func (_e *JournalManager_Expecter) CreateEntry(ctx interface{}, entry interface{}) *JournalManager_CreateEntry_Call {
-	return &JournalManager_CreateEntry_Call{Call: _e.mock.On("CreateEntry", ctx, entry)}
+//   - journal *barkat.Journal
+func (_e *JournalManager_Expecter) CreateJournal(ctx interface{}, journal interface{}) *JournalManager_CreateJournal_Call {
+	return &JournalManager_CreateJournal_Call{Call: _e.mock.On("CreateJournal", ctx, journal)}
 }
 
-func (_c *JournalManager_CreateEntry_Call) Run(run func(ctx context.Context, entry *barkat.Entry)) *JournalManager_CreateEntry_Call {
+func (_c *JournalManager_CreateJournal_Call) Run(run func(ctx context.Context, journal *barkat.Journal)) *JournalManager_CreateJournal_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 *barkat.Entry
+		var arg1 *barkat.Journal
 		if args[1] != nil {
-			arg1 = args[1].(*barkat.Entry)
+			arg1 = args[1].(*barkat.Journal)
 		}
 		run(
 			arg0,
@@ -88,22 +88,22 @@ func (_c *JournalManager_CreateEntry_Call) Run(run func(ctx context.Context, ent
 	return _c
 }
 
-func (_c *JournalManager_CreateEntry_Call) Return(httpError common.HttpError) *JournalManager_CreateEntry_Call {
+func (_c *JournalManager_CreateJournal_Call) Return(httpError common.HttpError) *JournalManager_CreateJournal_Call {
 	_c.Call.Return(httpError)
 	return _c
 }
 
-func (_c *JournalManager_CreateEntry_Call) RunAndReturn(run func(ctx context.Context, entry *barkat.Entry) common.HttpError) *JournalManager_CreateEntry_Call {
+func (_c *JournalManager_CreateJournal_Call) RunAndReturn(run func(ctx context.Context, journal *barkat.Journal) common.HttpError) *JournalManager_CreateJournal_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// DeleteEntry provides a mock function for the type JournalManager
-func (_mock *JournalManager) DeleteEntry(ctx context.Context, id string) common.HttpError {
+// DeleteJournal provides a mock function for the type JournalManager
+func (_mock *JournalManager) DeleteJournal(ctx context.Context, id string) common.HttpError {
 	ret := _mock.Called(ctx, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for DeleteEntry")
+		panic("no return value specified for DeleteJournal")
 	}
 
 	var r0 common.HttpError
@@ -117,19 +117,19 @@ func (_mock *JournalManager) DeleteEntry(ctx context.Context, id string) common.
 	return r0
 }
 
-// JournalManager_DeleteEntry_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteEntry'
-type JournalManager_DeleteEntry_Call struct {
+// JournalManager_DeleteJournal_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteJournal'
+type JournalManager_DeleteJournal_Call struct {
 	*mock.Call
 }
 
-// DeleteEntry is a helper method to define mock.On call
+// DeleteJournal is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id string
-func (_e *JournalManager_Expecter) DeleteEntry(ctx interface{}, id interface{}) *JournalManager_DeleteEntry_Call {
-	return &JournalManager_DeleteEntry_Call{Call: _e.mock.On("DeleteEntry", ctx, id)}
+func (_e *JournalManager_Expecter) DeleteJournal(ctx interface{}, id interface{}) *JournalManager_DeleteJournal_Call {
+	return &JournalManager_DeleteJournal_Call{Call: _e.mock.On("DeleteJournal", ctx, id)}
 }
 
-func (_c *JournalManager_DeleteEntry_Call) Run(run func(ctx context.Context, id string)) *JournalManager_DeleteEntry_Call {
+func (_c *JournalManager_DeleteJournal_Call) Run(run func(ctx context.Context, id string)) *JournalManager_DeleteJournal_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -147,92 +147,33 @@ func (_c *JournalManager_DeleteEntry_Call) Run(run func(ctx context.Context, id 
 	return _c
 }
 
-func (_c *JournalManager_DeleteEntry_Call) Return(httpError common.HttpError) *JournalManager_DeleteEntry_Call {
+func (_c *JournalManager_DeleteJournal_Call) Return(httpError common.HttpError) *JournalManager_DeleteJournal_Call {
 	_c.Call.Return(httpError)
 	return _c
 }
 
-func (_c *JournalManager_DeleteEntry_Call) RunAndReturn(run func(ctx context.Context, id string) common.HttpError) *JournalManager_DeleteEntry_Call {
+func (_c *JournalManager_DeleteJournal_Call) RunAndReturn(run func(ctx context.Context, id string) common.HttpError) *JournalManager_DeleteJournal_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// EntryExists provides a mock function for the type JournalManager
-func (_mock *JournalManager) EntryExists(ctx context.Context, entryID string) common.HttpError {
-	ret := _mock.Called(ctx, entryID)
-
-	if len(ret) == 0 {
-		panic("no return value specified for EntryExists")
-	}
-
-	var r0 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) common.HttpError); ok {
-		r0 = returnFunc(ctx, entryID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(common.HttpError)
-		}
-	}
-	return r0
-}
-
-// JournalManager_EntryExists_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'EntryExists'
-type JournalManager_EntryExists_Call struct {
-	*mock.Call
-}
-
-// EntryExists is a helper method to define mock.On call
-//   - ctx context.Context
-//   - entryID string
-func (_e *JournalManager_Expecter) EntryExists(ctx interface{}, entryID interface{}) *JournalManager_EntryExists_Call {
-	return &JournalManager_EntryExists_Call{Call: _e.mock.On("EntryExists", ctx, entryID)}
-}
-
-func (_c *JournalManager_EntryExists_Call) Run(run func(ctx context.Context, entryID string)) *JournalManager_EntryExists_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 string
-		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *JournalManager_EntryExists_Call) Return(httpError common.HttpError) *JournalManager_EntryExists_Call {
-	_c.Call.Return(httpError)
-	return _c
-}
-
-func (_c *JournalManager_EntryExists_Call) RunAndReturn(run func(ctx context.Context, entryID string) common.HttpError) *JournalManager_EntryExists_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetEntry provides a mock function for the type JournalManager
-func (_mock *JournalManager) GetEntry(ctx context.Context, id string) (barkat.Entry, common.HttpError) {
+// GetJournal provides a mock function for the type JournalManager
+func (_mock *JournalManager) GetJournal(ctx context.Context, id string) (barkat.Journal, common.HttpError) {
 	ret := _mock.Called(ctx, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetEntry")
+		panic("no return value specified for GetJournal")
 	}
 
-	var r0 barkat.Entry
+	var r0 barkat.Journal
 	var r1 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (barkat.Entry, common.HttpError)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (barkat.Journal, common.HttpError)); ok {
 		return returnFunc(ctx, id)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) barkat.Entry); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) barkat.Journal); ok {
 		r0 = returnFunc(ctx, id)
 	} else {
-		r0 = ret.Get(0).(barkat.Entry)
+		r0 = ret.Get(0).(barkat.Journal)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string) common.HttpError); ok {
 		r1 = returnFunc(ctx, id)
@@ -244,19 +185,19 @@ func (_mock *JournalManager) GetEntry(ctx context.Context, id string) (barkat.En
 	return r0, r1
 }
 
-// JournalManager_GetEntry_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetEntry'
-type JournalManager_GetEntry_Call struct {
+// JournalManager_GetJournal_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetJournal'
+type JournalManager_GetJournal_Call struct {
 	*mock.Call
 }
 
-// GetEntry is a helper method to define mock.On call
+// GetJournal is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id string
-func (_e *JournalManager_Expecter) GetEntry(ctx interface{}, id interface{}) *JournalManager_GetEntry_Call {
-	return &JournalManager_GetEntry_Call{Call: _e.mock.On("GetEntry", ctx, id)}
+func (_e *JournalManager_Expecter) GetJournal(ctx interface{}, id interface{}) *JournalManager_GetJournal_Call {
+	return &JournalManager_GetJournal_Call{Call: _e.mock.On("GetJournal", ctx, id)}
 }
 
-func (_c *JournalManager_GetEntry_Call) Run(run func(ctx context.Context, id string)) *JournalManager_GetEntry_Call {
+func (_c *JournalManager_GetJournal_Call) Run(run func(ctx context.Context, id string)) *JournalManager_GetJournal_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -274,65 +215,56 @@ func (_c *JournalManager_GetEntry_Call) Run(run func(ctx context.Context, id str
 	return _c
 }
 
-func (_c *JournalManager_GetEntry_Call) Return(entry barkat.Entry, httpError common.HttpError) *JournalManager_GetEntry_Call {
-	_c.Call.Return(entry, httpError)
+func (_c *JournalManager_GetJournal_Call) Return(journal barkat.Journal, httpError common.HttpError) *JournalManager_GetJournal_Call {
+	_c.Call.Return(journal, httpError)
 	return _c
 }
 
-func (_c *JournalManager_GetEntry_Call) RunAndReturn(run func(ctx context.Context, id string) (barkat.Entry, common.HttpError)) *JournalManager_GetEntry_Call {
+func (_c *JournalManager_GetJournal_Call) RunAndReturn(run func(ctx context.Context, id string) (barkat.Journal, common.HttpError)) *JournalManager_GetJournal_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// ListEntries provides a mock function for the type JournalManager
-func (_mock *JournalManager) ListEntries(ctx context.Context, query barkat.EntryQuery) (barkat.EntryList, common.HttpError) {
-	ret := _mock.Called(ctx, query)
+// JournalExists provides a mock function for the type JournalManager
+func (_mock *JournalManager) JournalExists(ctx context.Context, journalID string) common.HttpError {
+	ret := _mock.Called(ctx, journalID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ListEntries")
+		panic("no return value specified for JournalExists")
 	}
 
-	var r0 barkat.EntryList
-	var r1 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, barkat.EntryQuery) (barkat.EntryList, common.HttpError)); ok {
-		return returnFunc(ctx, query)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, barkat.EntryQuery) barkat.EntryList); ok {
-		r0 = returnFunc(ctx, query)
+	var r0 common.HttpError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) common.HttpError); ok {
+		r0 = returnFunc(ctx, journalID)
 	} else {
-		r0 = ret.Get(0).(barkat.EntryList)
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, barkat.EntryQuery) common.HttpError); ok {
-		r1 = returnFunc(ctx, query)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(common.HttpError)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(common.HttpError)
 		}
 	}
-	return r0, r1
+	return r0
 }
 
-// JournalManager_ListEntries_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListEntries'
-type JournalManager_ListEntries_Call struct {
+// JournalManager_JournalExists_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'JournalExists'
+type JournalManager_JournalExists_Call struct {
 	*mock.Call
 }
 
-// ListEntries is a helper method to define mock.On call
+// JournalExists is a helper method to define mock.On call
 //   - ctx context.Context
-//   - query barkat.EntryQuery
-func (_e *JournalManager_Expecter) ListEntries(ctx interface{}, query interface{}) *JournalManager_ListEntries_Call {
-	return &JournalManager_ListEntries_Call{Call: _e.mock.On("ListEntries", ctx, query)}
+//   - journalID string
+func (_e *JournalManager_Expecter) JournalExists(ctx interface{}, journalID interface{}) *JournalManager_JournalExists_Call {
+	return &JournalManager_JournalExists_Call{Call: _e.mock.On("JournalExists", ctx, journalID)}
 }
 
-func (_c *JournalManager_ListEntries_Call) Run(run func(ctx context.Context, query barkat.EntryQuery)) *JournalManager_ListEntries_Call {
+func (_c *JournalManager_JournalExists_Call) Run(run func(ctx context.Context, journalID string)) *JournalManager_JournalExists_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 barkat.EntryQuery
+		var arg1 string
 		if args[1] != nil {
-			arg1 = args[1].(barkat.EntryQuery)
+			arg1 = args[1].(string)
 		}
 		run(
 			arg0,
@@ -342,12 +274,80 @@ func (_c *JournalManager_ListEntries_Call) Run(run func(ctx context.Context, que
 	return _c
 }
 
-func (_c *JournalManager_ListEntries_Call) Return(entryList barkat.EntryList, httpError common.HttpError) *JournalManager_ListEntries_Call {
-	_c.Call.Return(entryList, httpError)
+func (_c *JournalManager_JournalExists_Call) Return(httpError common.HttpError) *JournalManager_JournalExists_Call {
+	_c.Call.Return(httpError)
 	return _c
 }
 
-func (_c *JournalManager_ListEntries_Call) RunAndReturn(run func(ctx context.Context, query barkat.EntryQuery) (barkat.EntryList, common.HttpError)) *JournalManager_ListEntries_Call {
+func (_c *JournalManager_JournalExists_Call) RunAndReturn(run func(ctx context.Context, journalID string) common.HttpError) *JournalManager_JournalExists_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListJournals provides a mock function for the type JournalManager
+func (_mock *JournalManager) ListJournals(ctx context.Context, query barkat.JournalQuery) (barkat.JournalList, common.HttpError) {
+	ret := _mock.Called(ctx, query)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListJournals")
+	}
+
+	var r0 barkat.JournalList
+	var r1 common.HttpError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, barkat.JournalQuery) (barkat.JournalList, common.HttpError)); ok {
+		return returnFunc(ctx, query)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, barkat.JournalQuery) barkat.JournalList); ok {
+		r0 = returnFunc(ctx, query)
+	} else {
+		r0 = ret.Get(0).(barkat.JournalList)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, barkat.JournalQuery) common.HttpError); ok {
+		r1 = returnFunc(ctx, query)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(common.HttpError)
+		}
+	}
+	return r0, r1
+}
+
+// JournalManager_ListJournals_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListJournals'
+type JournalManager_ListJournals_Call struct {
+	*mock.Call
+}
+
+// ListJournals is a helper method to define mock.On call
+//   - ctx context.Context
+//   - query barkat.JournalQuery
+func (_e *JournalManager_Expecter) ListJournals(ctx interface{}, query interface{}) *JournalManager_ListJournals_Call {
+	return &JournalManager_ListJournals_Call{Call: _e.mock.On("ListJournals", ctx, query)}
+}
+
+func (_c *JournalManager_ListJournals_Call) Run(run func(ctx context.Context, query barkat.JournalQuery)) *JournalManager_ListJournals_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 barkat.JournalQuery
+		if args[1] != nil {
+			arg1 = args[1].(barkat.JournalQuery)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *JournalManager_ListJournals_Call) Return(journalList barkat.JournalList, httpError common.HttpError) *JournalManager_ListJournals_Call {
+	_c.Call.Return(journalList, httpError)
+	return _c
+}
+
+func (_c *JournalManager_ListJournals_Call) RunAndReturn(run func(ctx context.Context, query barkat.JournalQuery) (barkat.JournalList, common.HttpError)) *JournalManager_ListJournals_Call {
 	_c.Call.Return(run)
 	return _c
 }

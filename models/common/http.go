@@ -38,9 +38,6 @@ func NewServerError(err error) HttpError {
 }
 
 const (
-	// DefaultPaginationLimit is the default number of records per page
-	DefaultPaginationLimit = 20
-
 	// Base API routes
 	APIV1 = "/v1"
 
@@ -49,8 +46,8 @@ const (
 )
 
 type Pagination struct {
-	Offset int `form:"offset" binding:"min=0"`
-	Limit  int `form:"limit" binding:"omitempty,min=1,max=100"`
+	Offset int `form:"offset,default=0" binding:"min=0"`
+	Limit  int `form:"limit,default=20" binding:"min=1,max=100"`
 }
 
 type Sort struct {

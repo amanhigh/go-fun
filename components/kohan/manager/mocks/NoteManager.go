@@ -40,8 +40,8 @@ func (_m *NoteManager) EXPECT() *NoteManager_Expecter {
 }
 
 // CreateNote provides a mock function for the type NoteManager
-func (_mock *NoteManager) CreateNote(ctx context.Context, entryID string, note barkat.Note) (*barkat.Note, common.HttpError) {
-	ret := _mock.Called(ctx, entryID, note)
+func (_mock *NoteManager) CreateNote(ctx context.Context, journalID string, note barkat.Note) (*barkat.Note, common.HttpError) {
+	ret := _mock.Called(ctx, journalID, note)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateNote")
@@ -50,17 +50,17 @@ func (_mock *NoteManager) CreateNote(ctx context.Context, entryID string, note b
 	var r0 *barkat.Note
 	var r1 common.HttpError
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, barkat.Note) (*barkat.Note, common.HttpError)); ok {
-		return returnFunc(ctx, entryID, note)
+		return returnFunc(ctx, journalID, note)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, barkat.Note) *barkat.Note); ok {
-		r0 = returnFunc(ctx, entryID, note)
+		r0 = returnFunc(ctx, journalID, note)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*barkat.Note)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string, barkat.Note) common.HttpError); ok {
-		r1 = returnFunc(ctx, entryID, note)
+		r1 = returnFunc(ctx, journalID, note)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(common.HttpError)
@@ -76,13 +76,13 @@ type NoteManager_CreateNote_Call struct {
 
 // CreateNote is a helper method to define mock.On call
 //   - ctx context.Context
-//   - entryID string
+//   - journalID string
 //   - note barkat.Note
-func (_e *NoteManager_Expecter) CreateNote(ctx interface{}, entryID interface{}, note interface{}) *NoteManager_CreateNote_Call {
-	return &NoteManager_CreateNote_Call{Call: _e.mock.On("CreateNote", ctx, entryID, note)}
+func (_e *NoteManager_Expecter) CreateNote(ctx interface{}, journalID interface{}, note interface{}) *NoteManager_CreateNote_Call {
+	return &NoteManager_CreateNote_Call{Call: _e.mock.On("CreateNote", ctx, journalID, note)}
 }
 
-func (_c *NoteManager_CreateNote_Call) Run(run func(ctx context.Context, entryID string, note barkat.Note)) *NoteManager_CreateNote_Call {
+func (_c *NoteManager_CreateNote_Call) Run(run func(ctx context.Context, journalID string, note barkat.Note)) *NoteManager_CreateNote_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -110,14 +110,14 @@ func (_c *NoteManager_CreateNote_Call) Return(note1 *barkat.Note, httpError comm
 	return _c
 }
 
-func (_c *NoteManager_CreateNote_Call) RunAndReturn(run func(ctx context.Context, entryID string, note barkat.Note) (*barkat.Note, common.HttpError)) *NoteManager_CreateNote_Call {
+func (_c *NoteManager_CreateNote_Call) RunAndReturn(run func(ctx context.Context, journalID string, note barkat.Note) (*barkat.Note, common.HttpError)) *NoteManager_CreateNote_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // DeleteNote provides a mock function for the type NoteManager
-func (_mock *NoteManager) DeleteNote(ctx context.Context, entryID string, noteID string) common.HttpError {
-	ret := _mock.Called(ctx, entryID, noteID)
+func (_mock *NoteManager) DeleteNote(ctx context.Context, journalID string, noteID string) common.HttpError {
+	ret := _mock.Called(ctx, journalID, noteID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeleteNote")
@@ -125,7 +125,7 @@ func (_mock *NoteManager) DeleteNote(ctx context.Context, entryID string, noteID
 
 	var r0 common.HttpError
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) common.HttpError); ok {
-		r0 = returnFunc(ctx, entryID, noteID)
+		r0 = returnFunc(ctx, journalID, noteID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(common.HttpError)
@@ -141,13 +141,13 @@ type NoteManager_DeleteNote_Call struct {
 
 // DeleteNote is a helper method to define mock.On call
 //   - ctx context.Context
-//   - entryID string
+//   - journalID string
 //   - noteID string
-func (_e *NoteManager_Expecter) DeleteNote(ctx interface{}, entryID interface{}, noteID interface{}) *NoteManager_DeleteNote_Call {
-	return &NoteManager_DeleteNote_Call{Call: _e.mock.On("DeleteNote", ctx, entryID, noteID)}
+func (_e *NoteManager_Expecter) DeleteNote(ctx interface{}, journalID interface{}, noteID interface{}) *NoteManager_DeleteNote_Call {
+	return &NoteManager_DeleteNote_Call{Call: _e.mock.On("DeleteNote", ctx, journalID, noteID)}
 }
 
-func (_c *NoteManager_DeleteNote_Call) Run(run func(ctx context.Context, entryID string, noteID string)) *NoteManager_DeleteNote_Call {
+func (_c *NoteManager_DeleteNote_Call) Run(run func(ctx context.Context, journalID string, noteID string)) *NoteManager_DeleteNote_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -175,14 +175,14 @@ func (_c *NoteManager_DeleteNote_Call) Return(httpError common.HttpError) *NoteM
 	return _c
 }
 
-func (_c *NoteManager_DeleteNote_Call) RunAndReturn(run func(ctx context.Context, entryID string, noteID string) common.HttpError) *NoteManager_DeleteNote_Call {
+func (_c *NoteManager_DeleteNote_Call) RunAndReturn(run func(ctx context.Context, journalID string, noteID string) common.HttpError) *NoteManager_DeleteNote_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ListNotes provides a mock function for the type NoteManager
-func (_mock *NoteManager) ListNotes(ctx context.Context, entryID string, status string) ([]barkat.Note, common.HttpError) {
-	ret := _mock.Called(ctx, entryID, status)
+func (_mock *NoteManager) ListNotes(ctx context.Context, journalID string, status string) ([]barkat.Note, common.HttpError) {
+	ret := _mock.Called(ctx, journalID, status)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListNotes")
@@ -191,17 +191,17 @@ func (_mock *NoteManager) ListNotes(ctx context.Context, entryID string, status 
 	var r0 []barkat.Note
 	var r1 common.HttpError
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) ([]barkat.Note, common.HttpError)); ok {
-		return returnFunc(ctx, entryID, status)
+		return returnFunc(ctx, journalID, status)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) []barkat.Note); ok {
-		r0 = returnFunc(ctx, entryID, status)
+		r0 = returnFunc(ctx, journalID, status)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]barkat.Note)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) common.HttpError); ok {
-		r1 = returnFunc(ctx, entryID, status)
+		r1 = returnFunc(ctx, journalID, status)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(common.HttpError)
@@ -217,13 +217,13 @@ type NoteManager_ListNotes_Call struct {
 
 // ListNotes is a helper method to define mock.On call
 //   - ctx context.Context
-//   - entryID string
+//   - journalID string
 //   - status string
-func (_e *NoteManager_Expecter) ListNotes(ctx interface{}, entryID interface{}, status interface{}) *NoteManager_ListNotes_Call {
-	return &NoteManager_ListNotes_Call{Call: _e.mock.On("ListNotes", ctx, entryID, status)}
+func (_e *NoteManager_Expecter) ListNotes(ctx interface{}, journalID interface{}, status interface{}) *NoteManager_ListNotes_Call {
+	return &NoteManager_ListNotes_Call{Call: _e.mock.On("ListNotes", ctx, journalID, status)}
 }
 
-func (_c *NoteManager_ListNotes_Call) Run(run func(ctx context.Context, entryID string, status string)) *NoteManager_ListNotes_Call {
+func (_c *NoteManager_ListNotes_Call) Run(run func(ctx context.Context, journalID string, status string)) *NoteManager_ListNotes_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -251,7 +251,7 @@ func (_c *NoteManager_ListNotes_Call) Return(notes []barkat.Note, httpError comm
 	return _c
 }
 
-func (_c *NoteManager_ListNotes_Call) RunAndReturn(run func(ctx context.Context, entryID string, status string) ([]barkat.Note, common.HttpError)) *NoteManager_ListNotes_Call {
+func (_c *NoteManager_ListNotes_Call) RunAndReturn(run func(ctx context.Context, journalID string, status string) ([]barkat.Note, common.HttpError)) *NoteManager_ListNotes_Call {
 	_c.Call.Return(run)
 	return _c
 }
