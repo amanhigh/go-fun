@@ -37,11 +37,12 @@ func NewJournalManager(repo repository.JournalRepository) *JournalManagerImpl {
 // ---- Journal ----
 
 func (m *JournalManagerImpl) CreateJournal(ctx context.Context, journal *barkat.Journal) common.HttpError {
-	// BUG: Transactional Support is missing.
-	if err := m.repo.CreateJournal(ctx, journal); err != nil {
-		return common.NewServerError(fmt.Errorf("failed to create journal: %w", err))
-	}
-	return nil
+	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+		if err := m.repo.CreateJournal(c, journal); err != nil {
+			return common.NewServerError(fmt.Errorf("failed to create journal: %w", err))
+		}
+		return nil
+	})
 }
 
 func (m *JournalManagerImpl) GetJournal(ctx context.Context, id string) (barkat.Journal, common.HttpError) {
@@ -73,6 +74,8 @@ func (m *JournalManagerImpl) JournalExists(ctx context.Context, journalID string
 }
 
 func (m *JournalManagerImpl) DeleteJournal(ctx context.Context, id string) common.HttpError {
-	journal := &barkat.Journal{}
-	return m.repo.DeleteById(ctx, id, journal)
+	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+		journal := &barkat.Journal{}
+		return m.repo.DeleteById(c, id, journal)
+	})
 }
