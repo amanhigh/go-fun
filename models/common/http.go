@@ -56,5 +56,7 @@ type Sort struct {
 }
 
 type PaginatedResponse struct {
-	Total int64 `json:"total"`
+	Total  int64 `json:"total"`
+	Offset int   `json:"offset"`
+	Limit  int   `json:"limit"`
 }

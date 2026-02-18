@@ -182,6 +182,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				It("should return correct total count", func() {
 					response = decodeEntryList(w, http.StatusOK)
 					Expect(response.Metadata.Total).To(Equal(int64(5)))
+					Expect(response.Metadata.Offset).To(Equal(0))
+					Expect(response.Metadata.Limit).To(Equal(20))
 				})
 
 				It("should return entries in reverse chronological order by default", func() {
@@ -204,22 +206,6 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						Expect(entry.CreatedAt).ToNot(BeZero())
 					}
 				})
-
-				It("should use default limit of 20 when no limit parameter is provided", func() {
-					// This test verifies that the default limit of 20 is applied
-					// when no limit parameter is passed in the request
-					response = decodeEntryList(w, http.StatusOK)
-					// Since we only have 5 test entries, all should be returned
-					// but the limit should be set to 20 by default
-					Expect(response.Records).To(HaveLen(5))
-					Expect(response.Metadata.Total).To(Equal(int64(5)))
-
-					// Verify this would work with more data by checking the query params
-					// The default limit should be 20 as defined in struct tags
-					req, w = util.CreateTestRequest("GET", barkat.JournalEntries, nil)
-					router.ServeHTTP(w, req)
-					Expect(w.Code).To(Equal(http.StatusOK))
-				})
 			})
 		})
 
@@ -233,6 +219,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						Expect(response.Records).To(HaveLen(1))
 						Expect(response.Records[0].Ticker).To(Equal("GRSE"))
 						Expect(response.Metadata.Total).To(Equal(int64(1)))
+						Expect(response.Metadata.Offset).To(Equal(0))
+						Expect(response.Metadata.Limit).To(Equal(20))
 					})
 
 					It("should return empty list for ticker with no matches", func() {
@@ -241,6 +229,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(BeEmpty())
 						Expect(response.Metadata.Total).To(Equal(int64(0)))
+						Expect(response.Metadata.Offset).To(Equal(0))
+						Expect(response.Metadata.Limit).To(Equal(20))
 					})
 				})
 
@@ -596,6 +586,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(2))
 						Expect(response.Metadata.Total).To(Equal(int64(5)))
+						Expect(response.Metadata.Offset).To(Equal(0))
+						Expect(response.Metadata.Limit).To(Equal(2))
 					})
 
 					It("should skip entries with offset = 2, limit = 2", func() {
@@ -604,6 +596,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(2))
 						Expect(response.Metadata.Total).To(Equal(int64(5)))
+						Expect(response.Metadata.Offset).To(Equal(2))
+						Expect(response.Metadata.Limit).To(Equal(2))
 					})
 
 					It("should return last entry with offset = 4, limit = 2", func() {
@@ -612,6 +606,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(1))
 						Expect(response.Metadata.Total).To(Equal(int64(5)))
+						Expect(response.Metadata.Offset).To(Equal(4))
+						Expect(response.Metadata.Limit).To(Equal(2))
 					})
 
 					It("should return empty list for offset beyond total", func() {
@@ -620,6 +616,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(BeEmpty())
 						Expect(response.Metadata.Total).To(Equal(int64(5)))
+						Expect(response.Metadata.Offset).To(Equal(10))
+						Expect(response.Metadata.Limit).To(Equal(20))
 					})
 
 					It("should accept limit = 1 (minimum)", func() {
@@ -627,6 +625,9 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						router.ServeHTTP(w, req)
 						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(1))
+						Expect(response.Metadata.Total).To(Equal(int64(5)))
+						Expect(response.Metadata.Offset).To(Equal(0))
+						Expect(response.Metadata.Limit).To(Equal(1))
 					})
 
 					It("should accept limit = 100 (maximum)", func() {
@@ -634,6 +635,9 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						router.ServeHTTP(w, req)
 						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(5))
+						Expect(response.Metadata.Total).To(Equal(int64(5)))
+						Expect(response.Metadata.Offset).To(Equal(0))
+						Expect(response.Metadata.Limit).To(Equal(100))
 					})
 				})
 
@@ -704,6 +708,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					response := decodeEntryList(w, http.StatusOK)
 					Expect(response.Records).To(BeEmpty())
 					Expect(response.Metadata.Total).To(Equal(int64(0)))
+					Expect(response.Metadata.Offset).To(Equal(0))
+					Expect(response.Metadata.Limit).To(Equal(20))
 				})
 			})
 		})

@@ -114,16 +114,22 @@ var _ = Describe("PaginatedResponse", func() {
 	Context("Struct Fields", func() {
 		It("should have correct field types", func() {
 			response := common.PaginatedResponse{
-				Total: 100,
+				Total:  100,
+				Offset: 0,
+				Limit:  20,
 			}
 
 			Expect(response.Total).To(Equal(int64(100)))
+			Expect(response.Offset).To(Equal(0))
+			Expect(response.Limit).To(Equal(20))
 		})
 
 		It("should work with zero value", func() {
 			response := common.PaginatedResponse{}
 
 			Expect(response.Total).To(Equal(int64(0)))
+			Expect(response.Offset).To(Equal(0))
+			Expect(response.Limit).To(Equal(0))
 		})
 	})
 })
