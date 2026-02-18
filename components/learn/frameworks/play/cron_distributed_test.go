@@ -47,6 +47,7 @@ func newPgAdvisoryLocker(db *sql.DB) gocron.Locker {
 }
 
 func (l *pgAdvisoryLocker) Lock(ctx context.Context, key string) (gocron.Lock, error) {
+	// HACK: Can this be simplified?
 	// Hash the key to get a consistent positive int64 for advisory lock
 	h := fnv.New64a()
 	h.Write([]byte(key))
@@ -149,6 +150,7 @@ var _ = Describe("CronDistributed", Ordered, Label(models.GINKGO_SLOW), func() {
 	})
 
 	Context("PostgreSQL Distributed Locking", func() {
+		// FIXME: Should setup PostgreSQL only in this context.
 		It("should acquire and release advisory lock", func() {
 			By("Creating PostgreSQL advisory locker")
 			locker := newPgAdvisoryLocker(pgDB)
@@ -294,6 +296,7 @@ var _ = Describe("CronDistributed", Ordered, Label(models.GINKGO_SLOW), func() {
 	})
 
 	Context("Redis Distributed Locking", func() {
+		// FIXME: Should setup Redis only in this context.
 		It("should create locker from Redis client", func() {
 			locker, err := redislock.NewRedisLocker(redisClient)
 			Expect(err).ToNot(HaveOccurred())
