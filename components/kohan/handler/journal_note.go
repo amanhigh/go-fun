@@ -35,9 +35,9 @@ func NewNoteHandler(noteMgr manager.NoteManager) *NoteHandlerImpl {
 func (h *NoteHandlerImpl) HandleCreateNote(c *gin.Context) {
 	journalID := c.Param("id")
 	var note barkat.Note
-	if err := c.ShouldBindJSON(&note); err != nil {
-		err = util.ProcessValidationError(err)
-		c.JSON(http.StatusBadRequest, err)
+	if bindErr := c.ShouldBindJSON(&note); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
 

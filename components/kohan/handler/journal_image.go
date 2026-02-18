@@ -30,9 +30,9 @@ func NewImageHandler(imageMgr manager.ImageManager) *ImageHandlerImpl {
 func (h *ImageHandlerImpl) HandleCreateImage(c *gin.Context) {
 	journalID := c.Param("id")
 	var image barkat.Image
-	if err := c.ShouldBindJSON(&image); err != nil {
-		err = util.ProcessValidationError(err)
-		c.JSON(http.StatusBadRequest, err)
+	if bindErr := c.ShouldBindJSON(&image); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
 

@@ -61,8 +61,8 @@ func (m *JournalManagerImpl) ListJournals(ctx context.Context, query barkat.Jour
 		Records: journals,
 		Metadata: common.PaginatedResponse{
 			Total:  total,
-			Offset: query.Pagination.Offset,
-			Limit:  query.Pagination.Limit,
+			Offset: query.Offset,
+			Limit:  query.Limit,
 		},
 	}, nil
 }

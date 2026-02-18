@@ -34,9 +34,9 @@ func NewJournalHandler(journalManager manager.JournalManager) *JournalHandlerImp
 func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
 	query := barkat.NewJournalQuery()
 
-	if err := c.ShouldBindQuery(&query); err != nil {
-		err = util.ProcessValidationError(err)
-		c.JSON(http.StatusBadRequest, err)
+	if bindErr := c.ShouldBindQuery(&query); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
 
@@ -51,9 +51,9 @@ func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
 func (h *JournalHandlerImpl) HandleGetEntry(c *gin.Context) {
 	var path barkat.JournalPath
 
-	if err := c.ShouldBindUri(&path); err != nil {
-		err = util.ProcessValidationError(err)
-		c.JSON(http.StatusBadRequest, err)
+	if bindErr := c.ShouldBindUri(&path); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
 
@@ -67,10 +67,9 @@ func (h *JournalHandlerImpl) HandleGetEntry(c *gin.Context) {
 
 func (h *JournalHandlerImpl) HandleCreateEntry(c *gin.Context) {
 	var journal barkat.Journal
-	if err := c.ShouldBindJSON(&journal); err != nil {
-		// FIXME: Enhance ProcessValidationError to return HTTP Code handling Wider Range of Validations.
-		err = util.ProcessValidationError(err)
-		c.JSON(http.StatusBadRequest, err)
+	if bindErr := c.ShouldBindJSON(&journal); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
 
@@ -85,9 +84,9 @@ func (h *JournalHandlerImpl) HandleCreateEntry(c *gin.Context) {
 func (h *JournalHandlerImpl) HandleDeleteEntry(c *gin.Context) {
 	var path barkat.JournalPath
 
-	if err := c.ShouldBindUri(&path); err != nil {
-		err = util.ProcessValidationError(err)
-		c.JSON(http.StatusBadRequest, err)
+	if bindErr := c.ShouldBindUri(&path); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
 

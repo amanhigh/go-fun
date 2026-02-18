@@ -34,9 +34,9 @@ func NewTagHandler(tagMgr manager.TagManager) *TagHandlerImpl {
 func (h *TagHandlerImpl) HandleCreateTag(c *gin.Context) {
 	journalID := c.Param("id")
 	var tag barkat.Tag
-	if err := c.ShouldBindJSON(&tag); err != nil {
-		err = util.ProcessValidationError(err)
-		c.JSON(http.StatusBadRequest, err)
+	if bindErr := c.ShouldBindJSON(&tag); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
 

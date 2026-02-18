@@ -69,8 +69,8 @@ func (ph *PersonHandlerImpl) CreatePerson(c *gin.Context) {
 			c.JSON(err.Code(), err)
 		}
 	} else {
-		err = util.ProcessValidationError(err)
-		c.JSON(http.StatusBadRequest, err)
+		httpErr := util.ProcessValidationError(err)
+		c.JSON(httpErr.Code(), httpErr)
 	}
 }
 
@@ -95,10 +95,10 @@ func (ph *PersonHandlerImpl) GetPerson(c *gin.Context) {
 		if person, err := ph.Manager.GetPerson(ctx, path.Id); err == nil {
 			c.JSON(http.StatusOK, person)
 		} else {
-			err = util.ProcessValidationError(err)
-			span.SetStatus(codes.Error, err.Error())
-			span.RecordError(err)
-			c.JSON(err.Code(), err)
+			httpErr := util.ProcessValidationError(err)
+			span.SetStatus(codes.Error, httpErr.Error())
+			span.RecordError(httpErr)
+			c.JSON(httpErr.Code(), httpErr)
 		}
 	})
 }
@@ -134,9 +134,9 @@ func (ph *PersonHandlerImpl) ListPersons(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, err.Error())
 		}
 	} else {
-		err = util.ProcessValidationError(err)
-		zerolog.Ctx(ctx).Error().Err(err).Msg("ListPersons: Bad Request")
-		c.JSON(http.StatusBadRequest, err)
+		httpErr := util.ProcessValidationError(err)
+		zerolog.Ctx(ctx).Error().Err(httpErr).Msg("ListPersons: Bad Request")
+		c.JSON(httpErr.Code(), httpErr)
 	}
 }
 
@@ -161,9 +161,9 @@ func (ph *PersonHandlerImpl) ListPersonAudit(c *gin.Context) {
 		if auditList, err := ph.Manager.ListPersonAudit(ctx, path.Id); err == nil {
 			c.JSON(http.StatusOK, auditList)
 		} else {
-			err = util.ProcessValidationError(err)
-			zerolog.Ctx(ctx).Err(err).Int("status", err.Code()).Msg("ListPersonAudit: Server Error")
-			c.JSON(err.Code(), err)
+			httpErr := util.ProcessValidationError(err)
+			zerolog.Ctx(ctx).Err(httpErr).Int("status", httpErr.Code()).Msg("ListPersonAudit: Server Error")
+			c.JSON(httpErr.Code(), httpErr)
 		}
 	}
 }
@@ -199,9 +199,9 @@ func (ph *PersonHandlerImpl) UpdatePerson(c *gin.Context) {
 			c.JSON(err.Code(), err)
 		}
 	} else {
-		err = util.ProcessValidationError(err)
-		zerolog.Ctx(ctx).Err(err).Int("status", http.StatusBadRequest).Msg("UpdatePerson: Bad Request")
-		c.JSON(http.StatusBadRequest, err)
+		httpErr := util.ProcessValidationError(err)
+		zerolog.Ctx(ctx).Err(httpErr).Int("status", http.StatusBadRequest).Msg("UpdatePerson: Bad Request")
+		c.JSON(httpErr.Code(), httpErr)
 	}
 }
 
@@ -224,8 +224,8 @@ func (ph *PersonHandlerImpl) DeletePersons(c *gin.Context) {
 	if err := ph.Manager.DeletePerson(ctx, c.Param("id")); err == nil {
 		c.JSON(http.StatusNoContent, "DELETED")
 	} else {
-		err = util.ProcessValidationError(err)
-		zerolog.Ctx(ctx).Err(err).Int("status", err.Code()).Msg("DeletePersons: Server Error")
-		c.JSON(err.Code(), err)
+		httpErr := util.ProcessValidationError(err)
+		zerolog.Ctx(ctx).Err(httpErr).Int("status", httpErr.Code()).Msg("DeletePersons: Server Error")
+		c.JSON(httpErr.Code(), httpErr)
 	}
 }

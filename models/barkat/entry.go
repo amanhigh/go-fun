@@ -77,7 +77,6 @@ func NewJournalQuery() JournalQuery {
 
 // JournalList is the paginated response for journals.
 type JournalList struct {
-	Records []Journal `json:"journals"`
-	// BUG: Inline Pagination Metadata as per PRD ?
+	Records  []Journal                `json:"journals"`
 	Metadata common.PaginatedResponse `json:"metadata"`
 }

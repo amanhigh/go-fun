@@ -37,7 +37,7 @@ func ReadMatrixWithDimensions(scanner *bufio.Scanner) (matrix [][]int, n, m int)
 }
 
 // CreateTestRequest creates an HTTP request for testing with JSON headers
-// HACK: Add Linter for interface to any checks for golang.
+// TODO: Add Modernize Linter (Once upgraded to go 1.26) for interface to any checks for golang and other modernization.
 func CreateTestRequest(method, url string, body interface{}) (*http.Request, *httptest.ResponseRecorder) {
 	var jsonData []byte
 	var err error
