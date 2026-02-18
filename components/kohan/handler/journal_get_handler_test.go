@@ -59,7 +59,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 		sqlDB.Close()
 	})
 
-	Describe("GET /v1/journal-entries/{id} - Retrieve Entry", func() {
+	Describe("GET /v1/journal/{id} - Retrieve Entry", func() {
 		var createdEntry barkat.Entry
 
 		BeforeEach(func() {
@@ -137,7 +137,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 		})
 	})
 
-	Describe("GET /v1/journal-entries - List Entries", func() {
+	Describe("GET /v1/journal - List Entries", func() {
 		var createdEntries []barkat.Entry
 
 		BeforeEach(func() {

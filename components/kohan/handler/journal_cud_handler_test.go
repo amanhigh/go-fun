@@ -82,7 +82,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 		sqlDB.Close()
 	})
 
-	Describe("POST /v1/journal-entries - Create Entry", func() {
+	Describe("POST /v1/journal - Create Entry", func() {
 		Context("Happy Path", func() {
 			Context("with minimal valid entry (required fields + min 4 images)", func() {
 				var envelopeResponse common.Envelope[barkat.Entry]
@@ -795,7 +795,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 		})
 	})
 
-	Describe("DELETE /v1/journal-entries/{id} - Delete Entry", func() {
+	Describe("DELETE /v1/journal/{id} - Delete Entry", func() {
 		var createdEntry barkat.Entry
 
 		BeforeEach(func() {
