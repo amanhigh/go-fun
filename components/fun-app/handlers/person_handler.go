@@ -120,7 +120,6 @@ func (ph *PersonHandlerImpl) GetPerson(c *gin.Context) {
 // @Router /person [get]
 func (ph *PersonHandlerImpl) ListPersons(c *gin.Context) {
 	var personQuery fun.PersonQuery
-	personQuery.Order = "asc" // Default Sort Order
 
 	ctx, span := ph.Tracer.Start(c.Request.Context(), "ListPersons.Handler")
 	defer span.End()
