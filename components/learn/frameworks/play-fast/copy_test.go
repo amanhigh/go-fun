@@ -1,15 +1,12 @@
 package play_fast
 
 import (
-	"testing"
 	"time"
 
 	"github.com/jinzhu/copier"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gmeasure"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	deepcopy "github.com/tiendc/go-deepcopy"
 )
 
@@ -35,6 +32,7 @@ type copierCoffeeWithTag struct {
 	RoastLevel string
 	Price      float64
 }
+
 // HACK: Reuse struct with diffierent fields for different Tags.
 type copierCoffeeRequired struct {
 	Name       string `copier:"must"`
@@ -303,7 +301,7 @@ var _ = Describe("Copy", func() {
 					Expect(dst.Name).To(BeEmpty())
 				})
 
-				t.Run("1.2 should copy nested struct fields", func(t *testing.T) {
+				It("1.2 should copy nested struct fields", func() {
 					src := copierPerson{
 						Name:    "Alice",
 						Age:     30,
@@ -311,9 +309,9 @@ var _ = Describe("Copy", func() {
 					}
 					var dst copierPersonDTO
 					err := copier.Copy(&dst, &src)
-					require.NoError(t, err)
-					assert.Equal(t, src.Address.City, dst.Address.City)
-					assert.Equal(t, src.Address.Country, dst.Address.Country)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(src.Address.City).To(Equal(dst.Address.City))
+					Expect(src.Address.Country).To(Equal(dst.Address.Country))
 				})
 				type Src struct {
 					Name string
@@ -529,7 +527,7 @@ var _ = Describe("Copy", func() {
 
 		Context("Performance Benchmarks", FlakeAttempts(3), func() {
 			// FIXME: Time the benchmark and simplify if it takes more time.
-			// BUG: Change to Gingk Benchmark not it block for all benchmarks in this package.					
+			// BUG: Change to Gingk Benchmark not it block for all benchmarks in this package.
 			It("should benchmark deep copy operations", func() {
 				experiment := gmeasure.NewExperiment("DeepCopy Operations")
 				AddReportEntry(experiment.Name, experiment)
