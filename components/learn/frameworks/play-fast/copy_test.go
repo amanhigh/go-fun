@@ -34,20 +34,6 @@ type copierCoffeeWithTag struct {
 }
 
 // HACK: Reuse struct with diffierent fields for different Tags.
-type copierCoffeeRequired struct {
-	Name       string `copier:"must"`
-	Origin     string
-	RoastLevel string
-	Price      float64
-}
-
-type copierCoffeeRequiredNoPanic struct {
-	Name       string `copier:"must,nopanic"`
-	Origin     string
-	RoastLevel string
-	Price      float64
-}
-
 type copierEmployee struct {
 	Name string
 	Age  int32
