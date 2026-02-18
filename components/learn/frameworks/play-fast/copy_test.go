@@ -1,15 +1,19 @@
 package play_fast
 
 import (
+	"testing"
 	"time"
 
 	"github.com/jinzhu/copier"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gmeasure"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	deepcopy "github.com/tiendc/go-deepcopy"
 )
 
+// FIXME: Remove Copier in all Names below.
 // Types for Copier tests (must be at package level for method definitions)
 type copierCoffee struct {
 	Name       string
@@ -31,7 +35,7 @@ type copierCoffeeWithTag struct {
 	RoastLevel string
 	Price      float64
 }
-
+// HACK: Reuse struct with diffierent fields for different Tags.
 type copierCoffeeRequired struct {
 	Name       string `copier:"must"`
 	Origin     string
@@ -101,7 +105,7 @@ var _ = Describe("Copy", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		Context("Basic Field Copying", func() {
+		Context("Basic", func() {
 			var (
 				src copierCoffee
 				dst copierCoffeeDTO
@@ -118,14 +122,14 @@ var _ = Describe("Copy", func() {
 				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("should copy simple struct fields", func() {
+			It("1.1 should copy simple struct fields", func() {
 				Expect(dst.Name).To(Equal(src.Name))
 				Expect(dst.Origin).To(Equal(src.Origin))
 				Expect(dst.RoastLevel).To(Equal(src.RoastLevel))
 				Expect(dst.Price).To(Equal(src.Price))
 			})
 
-			It("should copy nested struct fields", func() {
+			It("1.2 should copy nested struct fields", func() {
 				src := copierPerson{
 					Name:    "Alice",
 					Age:     30,
@@ -139,209 +143,178 @@ var _ = Describe("Copy", func() {
 			})
 		})
 
-		Context("Field Mapping and Transformation", func() {
-			It("should copy from getter methods to fields (method-to-field)", func() {
-				By("Copying Employee with DoubleAge method to Manager with DoubleAge field")
-				emp := copierEmployee{Name: "John", Age: 25, Role: "Admin"}
-				var mgr copierManager
-				err := copier.Copy(&mgr, &emp)
-				Expect(err).ToNot(HaveOccurred())
+		Context("Medium", func() {
+			Context("Field Mapping and Transformation", func() {
+				It("2.1 should copy from getter methods to fields (method-to-field)", func() {
+					By("Copying Employee with DoubleAge method to Manager with DoubleAge field")
+					emp := copierEmployee{Name: "John", Age: 25, Role: "Admin"}
+					var mgr copierManager
+					err := copier.Copy(&mgr, &emp)
+					Expect(err).ToNot(HaveOccurred())
 
-				Expect(mgr.Name).To(Equal("John"))
-				Expect(mgr.Age).To(Equal(int32(25)))
-				Expect(mgr.DoubleAge).To(Equal(int32(50)))
-			})
-
-			It("should copy from fields to setter methods (field-to-method)", func() {
-				By("Copying Employee Role field via Manager Role setter method")
-				emp := copierEmployee{Name: "John", Age: 25, Role: "Admin"}
-				var mgr copierManager
-				err := copier.Copy(&mgr, &emp)
-				Expect(err).ToNot(HaveOccurred())
-
-				Expect(mgr.SuperRole).To(Equal("Super Admin"))
-			})
-
-			It("should map source fields to different destination field names", func() {
-				type Src struct {
-					FullName string
-					Years    int
-				}
-				type Dst struct {
-					Name string
-					Age  int
-				}
-
-				src := Src{FullName: "Alice", Years: 30}
-				var dst Dst
-				err := copier.CopyWithOption(&dst, &src, copier.Option{
-					FieldNameMapping: []copier.FieldNameMapping{
-						{SrcType: Src{}, DstType: Dst{}, Mapping: map[string]string{
-							"FullName": "Name",
-							"Years":    "Age",
-						}},
-					},
+					Expect(mgr.Name).To(Equal("John"))
+					Expect(mgr.Age).To(Equal(int32(25)))
+					Expect(mgr.DoubleAge).To(Equal(int32(50)))
 				})
-				Expect(err).ToNot(HaveOccurred())
-				Expect(dst.Name).To(Equal("Alice"))
-				Expect(dst.Age).To(Equal(30))
-			})
-		})
 
-		Context("Error Handling", func() {
-			It("should handle nil pointers gracefully", func() {
-				var src *copierCoffee
-				dst := &copierCoffeeDTO{}
-				err := copier.Copy(dst, src)
-				Expect(err).To(HaveOccurred())
-			})
+				It("2.2 should copy from fields to setter methods (field-to-method)", func() {
+					By("Copying Employee Role field via Manager Role setter method")
+					emp := copierEmployee{Name: "John", Age: 25, Role: "Admin"}
+					var mgr copierManager
+					err := copier.Copy(&mgr, &emp)
+					Expect(err).ToNot(HaveOccurred())
 
-			It("should handle empty structs", func() {
-				src := copierCoffee{}
-				var dst copierCoffeeDTO
-				err := copier.Copy(&dst, &src)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(dst.Name).To(BeEmpty())
-				Expect(dst.Price).To(Equal(float64(0)))
-			})
-		})
+					Expect(mgr.SuperRole).To(Equal("Super Admin"))
+				})
 
-		Context("Configuration Merging and Overriding", func() {
-			It("should merge configurations from multiple sources", func() {
-				base := copierCoffee{Name: "House Blend", Origin: "Colombia", RoastLevel: "Medium", Price: 12.99}
-				override := copierCoffee{Name: "House Blend Special", Price: 14.99}
+				It("2.3 should map source fields to different destination field names", func() {
+					type Src struct {
+						FullName string
+						Years    int
+					}
+					type Dst struct {
+						Name string
+						Age  int
+					}
 
-				var result copierCoffee
-				err := copier.Copy(&result, &base)
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Applying override with IgnoreEmpty to preserve non-overridden fields")
-				err = copier.CopyWithOption(&result, &override, copier.Option{IgnoreEmpty: true})
-				Expect(err).ToNot(HaveOccurred())
-
-				Expect(result.Name).To(Equal("House Blend Special"))
-				Expect(result.Origin).To(Equal("Colombia"))
-				Expect(result.RoastLevel).To(Equal("Medium"))
-				Expect(result.Price).To(Equal(14.99))
+					src := Src{FullName: "Alice", Years: 30}
+					var dst Dst
+					err := copier.CopyWithOption(&dst, &src, copier.Option{
+						FieldNameMapping: []copier.FieldNameMapping{
+							{SrcType: Src{}, DstType: Dst{}, Mapping: map[string]string{
+								"FullName": "Name",
+								"Years":    "Age",
+							}},
+						},
+					})
+					Expect(err).ToNot(HaveOccurred())
+					Expect(dst.Name).To(Equal("Alice"))
+					Expect(dst.Age).To(Equal(30))
+				})
 			})
 
-			It("should override all fields without IgnoreEmpty", func() {
-				base := copierCoffee{Name: "Base", Origin: "Kenya", RoastLevel: "Dark", Price: 15.0}
-				override := copierCoffee{Name: "Override", Price: 20.0}
+			Context("Configuration Merging and Overriding", func() {
+				It("2.4 should merge configurations from multiple sources", func() {
+					base := copierCoffee{Name: "House Blend", Origin: "Colombia", RoastLevel: "Medium", Price: 12.99}
+					override := copierCoffee{Name: "House Blend Special", Price: 14.99}
 
-				err := copier.Copy(&base, &override)
-				Expect(err).ToNot(HaveOccurred())
+					var result copierCoffee
+					err := copier.Copy(&result, &base)
+					Expect(err).ToNot(HaveOccurred())
 
-				Expect(base.Name).To(Equal("Override"))
-				Expect(base.Origin).To(BeEmpty()) // Overwritten with zero value
-				Expect(base.Price).To(Equal(20.0))
-			})
-		})
+					By("Applying override with IgnoreEmpty to preserve non-overridden fields")
+					err = copier.CopyWithOption(&result, &override, copier.Option{IgnoreEmpty: true})
+					Expect(err).ToNot(HaveOccurred())
 
-		Context("Map Merging", func() {
-			It("should copy maps", func() {
-				src := map[string]int{"a": 1, "b": 2}
-				dst := map[string]int{"b": 3, "c": 4}
-				err := copier.Copy(&dst, &src)
-				Expect(err).ToNot(HaveOccurred())
+					Expect(result.Name).To(Equal("House Blend Special"))
+					Expect(result.Origin).To(Equal("Colombia"))
+					Expect(result.RoastLevel).To(Equal("Medium"))
+					Expect(result.Price).To(Equal(14.99))
+				})
 
-				Expect(dst["a"]).To(Equal(1))
-				Expect(dst["b"]).To(Equal(2)) // Overridden by source
-				Expect(dst["c"]).To(Equal(4)) // Preserved from destination
-			})
-		})
+				It("2.5 should override all fields without IgnoreEmpty", func() {
+					base := copierCoffee{Name: "Base", Origin: "Kenya", RoastLevel: "Dark", Price: 15.0}
+					override := copierCoffee{Name: "Override", Price: 20.0}
 
-		Context("Field Filtering", func() {
-			It("should ignore fields with copier:\"-\" tag", func() {
-				src := copierCoffee{Name: "Espresso", Origin: "Italy", RoastLevel: "Dark", Price: 22.0}
-				var dst copierCoffeeWithTag
-				err := copier.Copy(&dst, &src)
-				Expect(err).ToNot(HaveOccurred())
+					err := copier.Copy(&base, &override)
+					Expect(err).ToNot(HaveOccurred())
 
-				Expect(dst.Name).To(Equal("Espresso"))
-				Expect(dst.Origin).To(BeEmpty()) // Ignored via tag
-				Expect(dst.RoastLevel).To(Equal("Dark"))
-			})
-		})
-
-		Context("Required Fields", func() {
-			It("should copy required fields using must tag", func() {
-				src := copierCoffee{Name: "Latte", Origin: "Brazil"}
-				var dst copierCoffeeRequired
-				err := copier.Copy(&dst, &src)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(dst.Name).To(Equal("Latte"))
+					Expect(base.Name).To(Equal("Override"))
+					Expect(base.Origin).To(BeEmpty()) // Overwritten with zero value
+					Expect(base.Price).To(Equal(20.0))
+				})
 			})
 
-			It("should use noPanic tag with must to return error", func() {
-				src := copierCoffee{Name: "Mocha", Origin: "Colombia"}
-				var dst copierCoffeeRequiredNoPanic
-				err := copier.Copy(&dst, &src)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(dst.Name).To(Equal("Mocha"))
-			})
-		})
+			Context("Map Merging", func() {
+				It("2.6 should copy maps", func() {
+					src := map[string]int{"a": 1, "b": 2}
+					dst := map[string]int{"b": 3, "c": 4}
+					err := copier.Copy(&dst, &src)
+					Expect(err).ToNot(HaveOccurred())
 
-		Context("Advanced Features", func() {
-			It("should handle pointer fields correctly", func() {
-				type WithPtr struct {
-					Name  string
-					Value *int
-				}
-				val := 42
-				src := WithPtr{Name: "test", Value: &val}
-				var dst WithPtr
-				err := copier.CopyWithOption(&dst, &src, copier.Option{DeepCopy: true})
-				Expect(err).ToNot(HaveOccurred())
-
-				Expect(*dst.Value).To(Equal(42))
-				// Deep copy: modifying source should not affect destination
-				*src.Value = 100
-				Expect(*dst.Value).To(Equal(42))
+					Expect(dst["a"]).To(Equal(1))
+					Expect(dst["b"]).To(Equal(2)) // Overridden by source
+					Expect(dst["c"]).To(Equal(4)) // Preserved from destination
+				})
 			})
 
-			It("should copy slices", func() {
-				src := copierPerson{Name: "Alice", Tags: []string{"admin", "dev"}}
-				var dst copierPersonDTO
-				err := copier.Copy(&dst, &src)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(dst.Tags).To(Equal([]string{"admin", "dev"}))
+			Context("Field Filtering", func() {
+				It("2.7 should ignore fields with copier:\"-\" tag", func() {
+					src := copierCoffee{Name: "Espresso", Origin: "Italy", RoastLevel: "Dark", Price: 22.0}
+					var dst copierCoffeeWithTag
+					err := copier.Copy(&dst, &src)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(dst.Name).To(Equal("Espresso"))
+					Expect(dst.Origin).To(BeEmpty()) // Ignored via tag
+					Expect(dst.RoastLevel).To(Equal("Dark"))
+				})
 			})
 
-			It("should copy maps", func() {
-				src := copierPerson{Name: "Alice", Scores: map[string]int{"math": 95, "english": 88}}
-				var dst copierPersonDTO
-				err := copier.Copy(&dst, &src)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(dst.Scores).To(HaveKeyWithValue("math", 95))
-				Expect(dst.Scores).To(HaveKeyWithValue("english", 88))
+			Context("Type Conversion", func() {
+				It("2.8 should copy between compatible types", func() {
+					type Src struct {
+						Name string
+						Age  int
+					}
+					type Dst struct {
+						Name string
+						Age  int64
+					}
+
+					src := Src{Name: "Alice", Age: 30}
+					var dst Dst
+					err := copier.Copy(&dst, &src)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(dst.Name).To(Equal("Alice"))
+					Expect(dst.Age).To(Equal(int64(30)))
+				})
+
+				It("2.9 should handle type conversion failures gracefully", func() {
+					type Src struct {
+						Value string
+					}
+					type Dst struct {
+						Value int
+					}
+
+					src := Src{Value: "not-a-number"}
+					var dst Dst
+					// Copier silently skips incompatible types (no error, field stays zero)
+					err := copier.Copy(&dst, &src)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(dst.Value).To(Equal(0))
+				})
 			})
 
-			It("should copy struct to slice", func() {
-				src := copierCoffee{Name: "Espresso", Origin: "Italy", RoastLevel: "Dark", Price: 3.50}
-				var dst []copierCoffee
-				err := copier.Copy(&dst, &src)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(dst).To(HaveLen(1))
-				Expect(dst[0].Name).To(Equal("Espresso"))
-			})
+			Context("Error Handling", func() {
+				It("1.3 should handle nil pointers gracefully", func() {
+					var src *copierCoffee
+					dst := &copierCoffeeDTO{}
+					err := copier.Copy(dst, src)
+					Expect(err).To(HaveOccurred())
+				})
 
-			It("should copy slice to slice", func() {
-				src := []copierCoffee{
-					{Name: "Espresso", Price: 3.50},
-					{Name: "Latte", Price: 4.50},
-				}
-				var dst []copierCoffeeDTO
-				err := copier.Copy(&dst, &src)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(dst).To(HaveLen(2))
-				Expect(dst[0].Name).To(Equal("Espresso"))
-				Expect(dst[1].Name).To(Equal("Latte"))
-			})
-		})
+				It("1.4 should handle empty structs", func() {
+					src := copierCoffee{}
+					var dst copierCoffeeDTO
+					err := copier.Copy(&dst, &src)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(dst.Name).To(BeEmpty())
+				})
 
-		Context("Type Conversion", func() {
-			It("should copy between compatible types", func() {
+				t.Run("1.2 should copy nested struct fields", func(t *testing.T) {
+					src := copierPerson{
+						Name:    "Alice",
+						Age:     30,
+						Address: copierAddress{City: "Seattle", Country: "USA"},
+					}
+					var dst copierPersonDTO
+					err := copier.Copy(&dst, &src)
+					require.NoError(t, err)
+					assert.Equal(t, src.Address.City, dst.Address.City)
+					assert.Equal(t, src.Address.Country, dst.Address.Country)
+				})
 				type Src struct {
 					Name string
 					Age  int
@@ -379,6 +352,7 @@ var _ = Describe("Copy", func() {
 
 	Context("DeepCopy", func() {
 
+		// FIXME: Have common types for both Copier and DeepCopy
 		type Inner struct {
 			Value string
 		}
@@ -400,6 +374,7 @@ var _ = Describe("Copy", func() {
 
 		Context("Deep Copy Basics", func() {
 			It("should clone simple structs without shared references", func() {
+				// FIXME: make example more meaningful with real world example
 				src := Inner{Value: "original"}
 				var dst Inner
 				err := deepcopy.Copy(&dst, &src)
@@ -454,6 +429,7 @@ var _ = Describe("Copy", func() {
 		})
 
 		Context("Pointer Handling", func() {
+			// FIXME: Add Operation Ids matching with PRD.
 			It("should clone structs with pointer fields independently", func() {
 				type WithPointers struct {
 					IntPtr    *int
@@ -535,6 +511,7 @@ var _ = Describe("Copy", func() {
 
 		Context("Interface Fields", func() {
 			It("should deep copy structs with interface fields", func() {
+				// HACK: Don't use With Prefix have more meaningful names.
 				type WithInterface struct {
 					Name  string
 					Value interface{}
@@ -551,6 +528,8 @@ var _ = Describe("Copy", func() {
 		})
 
 		Context("Performance Benchmarks", FlakeAttempts(3), func() {
+			// FIXME: Time the benchmark and simplify if it takes more time.
+			// BUG: Change to Gingk Benchmark not it block for all benchmarks in this package.					
 			It("should benchmark deep copy operations", func() {
 				experiment := gmeasure.NewExperiment("DeepCopy Operations")
 				AddReportEntry(experiment.Name, experiment)
