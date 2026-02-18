@@ -11,11 +11,8 @@ import (
 
 // MonitorHandler provides HTTP handlers for system monitoring operations.
 type MonitorHandler interface {
-	// HandleReadClip handles GET /v1/clip/
 	HandleReadClip(ctx *gin.Context)
-	// HandleRecordTicker handles GET /v1/ticker/:ticker/record
 	HandleRecordTicker(ctx *gin.Context)
-	// HandleSubmapControl handles POST /v1/submap/:action
 	HandleSubmapControl(ctx *gin.Context)
 }
 

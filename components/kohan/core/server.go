@@ -3,6 +3,8 @@ package core
 import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/handler"
+	"github.com/amanhigh/go-fun/models/barkat"
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
 )
 
@@ -39,12 +41,12 @@ func (s *KohanServer) registerRoutes(engine *gin.Engine) {
 }
 
 func (s *KohanServer) registerMonitorRoutes(engine *gin.Engine) {
-	monitor := engine.Group("/v1/monitor")
+	monitor := engine.Group(common.MonitorBase)
 	handler.SetupMonitorRoutes(monitor, s.MonitorHandler)
 }
 
 func (s *KohanServer) registerJournalRoutes(engine *gin.Engine) {
-	journal := engine.Group("/v1/journal")
+	journal := engine.Group(barkat.JournalBase)
 	handler.SetupJournalEntryRoutes(journal, s.JournalHandler)
 	handler.SetupImageRoutes(journal, s.ImageHandler)
 	handler.SetupNoteRoutes(journal, s.NoteHandler)

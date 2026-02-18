@@ -15,11 +15,8 @@ import (
 
 // TagHandler provides HTTP handlers for journal tag operations.
 type TagHandler interface {
-	// HandleCreateTag handles POST /v1/journal/:id/tags
 	HandleCreateTag(c *gin.Context)
-	// HandleListTags handles GET /v1/journal/:id/tags
 	HandleListTags(c *gin.Context)
-	// HandleDeleteTag handles DELETE /v1/journal/:id/tags/:tagId
 	HandleDeleteTag(c *gin.Context)
 }
 

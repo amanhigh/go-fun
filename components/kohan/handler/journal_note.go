@@ -16,11 +16,8 @@ import (
 
 // NoteHandler provides HTTP handlers for journal note operations.
 type NoteHandler interface {
-	// HandleCreateNote handles POST /v1/journal-entries/:id/notes
 	HandleCreateNote(c *gin.Context)
-	// HandleListNotes handles GET /v1/journal-entries/:id/notes
 	HandleListNotes(c *gin.Context)
-	// HandleDeleteNote handles DELETE /v1/journal-entries/:id/notes/:noteId
 	HandleDeleteNote(c *gin.Context)
 }
 

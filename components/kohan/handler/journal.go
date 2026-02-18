@@ -12,13 +12,9 @@ import (
 
 // JournalHandler provides HTTP handlers for journal entry operations.
 type JournalHandler interface {
-	// HandleListEntries handles GET /v1/journal
 	HandleListEntries(c *gin.Context)
-	// HandleGetEntry handles GET /v1/journal/:id
 	HandleGetEntry(c *gin.Context)
-	// HandleCreateEntry handles POST /v1/journal
 	HandleCreateEntry(c *gin.Context)
-	// HandleDeleteEntry handles DELETE /v1/journal/:id
 	HandleDeleteEntry(c *gin.Context)
 }
 
@@ -36,7 +32,7 @@ func NewJournalHandler(journalManager manager.JournalManager) *JournalHandlerImp
 // ---- Entry Handlers ----
 // TODO: Match other Handlers after Review Comments & Test to Standardize Template.
 func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
-	var query barkat.EntryQuery
+	query := barkat.NewEntryQuery()
 
 	if err := c.ShouldBindQuery(&query); err != nil {
 		err = util.ProcessValidationError(err)

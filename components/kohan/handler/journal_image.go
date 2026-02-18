@@ -11,11 +11,8 @@ import (
 
 // ImageHandler provides HTTP handlers for journal image operations.
 type ImageHandler interface {
-	// HandleCreateImage handles POST /v1/journal/:id/images
 	HandleCreateImage(c *gin.Context)
-	// HandleListImages handles GET /v1/journal/:id/images
 	HandleListImages(c *gin.Context)
-	// HandleDeleteImage handles DELETE /v1/journal/:id/images/:imageId
 	HandleDeleteImage(c *gin.Context)
 }
 

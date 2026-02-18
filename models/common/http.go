@@ -37,6 +37,17 @@ func NewServerError(err error) HttpError {
 	return NewHttpError(err.Error(), http.StatusInternalServerError)
 }
 
+const (
+	// DefaultPaginationLimit is the default number of records per page
+	DefaultPaginationLimit = 20
+
+	// Base API routes
+	APIV1 = "/v1"
+
+	// Monitor routes
+	MonitorBase = APIV1 + "/monitor"
+)
+
 type Pagination struct {
 	Offset int `form:"offset" binding:"min=0"`
 	Limit  int `form:"limit" binding:"omitempty,min=1,max=100"`
