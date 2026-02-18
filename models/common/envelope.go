@@ -34,7 +34,6 @@ func NewEnvelope[T any](data T) Envelope[T] {
 
 // NewFailEnvelope creates a fail response with field-specific errors.
 func NewFailEnvelope(errors map[string]string) Envelope[map[string]string] {
-	// HACK: Rename file to envelope.go
 	return Envelope[map[string]string]{
 		Status: EnvelopeFail,
 		Data:   errors,

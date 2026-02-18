@@ -21,7 +21,7 @@ import (
 
 const (
 	// Base URL for journal entries API
-	JournalEntriesBaseURL = "/v1/journal-entries"
+	JournalEntriesBaseURL = "/v1/journal"
 )
 
 func decodeCreateEntryResponse(w *httptest.ResponseRecorder) barkat.Entry {
@@ -72,7 +72,8 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 		router = util.CreateTestGinRouter()
 		v1 := router.Group("/v1")
-		handler.SetupJournalEntryRoutes(v1, journalHandler)
+		journal := v1.Group("/journal")
+		handler.SetupJournalEntryRoutes(journal, journalHandler)
 	})
 
 	AfterEach(func() {

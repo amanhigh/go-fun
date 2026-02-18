@@ -49,7 +49,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 		router = util.CreateTestGinRouter()
 		v1 := router.Group("/v1")
-		handler.SetupJournalEntryRoutes(v1, journalHandler)
+		journal := v1.Group("/journal")
+		handler.SetupJournalEntryRoutes(journal, journalHandler)
 	})
 
 	AfterEach(func() {

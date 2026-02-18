@@ -14,7 +14,6 @@ import (
 	"github.com/samber/lo"
 )
 
-//go:generate mockery --name=ValuationManager
 type ValuationManager interface {
 	AnalyzeValuation(ctx context.Context, tickerSymbol string, trades []tax.Trade, year int) (tax.Valuation, common.HttpError)
 	// GetYearlyValuationsUSD calculates the base USD Valuation (First, Peak, YearEnd)

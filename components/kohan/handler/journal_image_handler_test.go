@@ -47,7 +47,8 @@ var _ = PDescribe("ImageHandler Integration", func() {
 		// Setup Gin router using helper
 		router = util.CreateTestGinRouter()
 		v1 := router.Group("/v1")
-		handler.SetupImageRoutes(v1, imageHandler)
+		journal := v1.Group("/journal")
+		handler.SetupImageRoutes(journal, imageHandler)
 
 		// Create test entry for image operations
 		entry = barkat.Entry{

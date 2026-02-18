@@ -10,8 +10,6 @@ import (
 )
 
 // MonitorHandler provides HTTP handlers for system monitoring operations.
-//
-//go:generate mockery --name MonitorHandler
 type MonitorHandler interface {
 	// HandleReadClip handles GET /v1/clip/
 	HandleReadClip(ctx *gin.Context)

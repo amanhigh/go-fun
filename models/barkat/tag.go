@@ -17,10 +17,6 @@ type Tag struct {
 	CreatedAt time.Time `gorm:"column:created_at;not null" json:"created_at"`
 }
 
-func (Tag) TableName() string {
-	return "journal_tags"
-}
-
 func (t *Tag) BeforeCreate(_ *gorm.DB) error {
 	if t.ID == "" {
 		t.ID = uuid.NewString()

@@ -9,7 +9,6 @@ import (
 	"github.com/amanhigh/go-fun/models/config"
 
 	"github.com/golobby/container/v3"
-	"gorm.io/gorm"
 )
 
 // Interface and implementation in same file
@@ -19,7 +18,6 @@ type KohanInterface interface {
 	GetTaxManager() (manager.TaxManager, error)
 	GetBrokerageManager() (manager.BrokerageManager, error)
 	GetKohanServer(port int, capturePath string, wait time.Duration, shutdown util.Shutdown) (*KohanServer, error)
-	GetBarkatDB() (*gorm.DB, error)
 }
 
 // Private singleton instance
@@ -57,6 +55,7 @@ func (ki *KohanInjector) GetKohanServer(port int, capturePath string, wait time.
 	}
 
 	base := provideBaseHTTPServer(port, shutdown)
+	// FIXME: DB Migration has many indexes on Primary key remove unwanted indexes.
 
 	server := &KohanServer{BaseHTTPServer: base}
 	if err := ki.di.Fill(server); err != nil {
@@ -65,16 +64,6 @@ func (ki *KohanInjector) GetKohanServer(port int, capturePath string, wait time.
 
 	server.RegisterRoutes = server.registerRoutes
 	return server, nil
-}
-
-func (ki *KohanInjector) GetBarkatDB() (*gorm.DB, error) {
-	// HACK: Why we need Public method for this remove it.
-	// FIXME: DB Migration has many indexes on Primary key remove unwanted indexes.
-	var db *gorm.DB
-	if err := ki.di.Resolve(&db); err != nil {
-		return nil, fmt.Errorf("failed to resolve barkat db: %w", err)
-	}
-	return db, nil
 }
 
 func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {

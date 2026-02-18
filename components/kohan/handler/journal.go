@@ -11,18 +11,14 @@ import (
 )
 
 // JournalHandler provides HTTP handlers for journal entry operations.
-//
-// FIXME: Find and remove go generate mockery, new version works via mockery.yaml
-//
-//go:generate mockery --name JournalHandler
 type JournalHandler interface {
-	// HandleListEntries handles GET /v1/journal-entries
+	// HandleListEntries handles GET /v1/journal
 	HandleListEntries(c *gin.Context)
-	// HandleGetEntry handles GET /v1/journal-entries/:id
+	// HandleGetEntry handles GET /v1/journal/:id
 	HandleGetEntry(c *gin.Context)
-	// HandleCreateEntry handles POST /v1/journal-entries
+	// HandleCreateEntry handles POST /v1/journal
 	HandleCreateEntry(c *gin.Context)
-	// HandleDeleteEntry handles DELETE /v1/journal-entries/:id
+	// HandleDeleteEntry handles DELETE /v1/journal/:id
 	HandleDeleteEntry(c *gin.Context)
 }
 
@@ -41,8 +37,6 @@ func NewJournalHandler(journalManager manager.JournalManager) *JournalHandlerImp
 // TODO: Match other Handlers after Review Comments & Test to Standardize Template.
 func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
 	var query barkat.EntryQuery
-	// FIXME: Default values should be set in model via struct tags.
-	query.Limit = 20
 
 	if err := c.ShouldBindQuery(&query); err != nil {
 		err = util.ProcessValidationError(err)

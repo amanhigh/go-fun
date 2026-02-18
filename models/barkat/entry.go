@@ -9,7 +9,6 @@ import (
 )
 
 // Entry represents a single trade journal capture event.
-// BUG: Rename to Journal all entities in this file & filename.
 type Entry struct {
 	ID        string     `gorm:"column:id;primaryKey" json:"id"`
 	Ticker    string     `gorm:"column:ticker;not null" json:"ticker" binding:"required,max=10"`
@@ -23,10 +22,6 @@ type Entry struct {
 	Images []Image `gorm:"foreignKey:EntryID;references:ID" json:"images,omitempty" binding:"required,min=4,max=6,dive"`
 	Tags   []Tag   `gorm:"foreignKey:EntryID;references:ID" json:"tags,omitempty" binding:"dive"`
 	Notes  []Note  `gorm:"foreignKey:EntryID;references:ID" json:"notes,omitempty" binding:"max=1,dive"`
-}
-
-func (Entry) TableName() string {
-	return "journal"
 }
 
 func (e *Entry) BeforeCreate(_ *gorm.DB) error {

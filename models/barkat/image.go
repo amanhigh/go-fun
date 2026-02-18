@@ -15,11 +15,6 @@ type Image struct {
 	CreatedAt time.Time `gorm:"column:created_at;not null" json:"created_at"`
 }
 
-// BUG: Remove all Table Overrides let default name work.
-func (Image) TableName() string {
-	return "journal_images"
-}
-
 func (i *Image) BeforeCreate(_ *gorm.DB) error {
 	if i.ID == "" {
 		i.ID = uuid.NewString()

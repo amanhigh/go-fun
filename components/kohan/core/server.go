@@ -39,21 +39,14 @@ func (s *KohanServer) registerRoutes(engine *gin.Engine) {
 }
 
 func (s *KohanServer) registerMonitorRoutes(engine *gin.Engine) {
-	// HACK: Remove Nil check and move to Routes similar to other handlers below.
-	if s.MonitorHandler == nil {
-		return
-	}
-	engine.GET("/v1/ticker/:ticker/record", s.MonitorHandler.HandleRecordTicker)
-	engine.GET("/v1/clip/", s.MonitorHandler.HandleReadClip)
-	engine.POST("/v1/submap/:action", s.MonitorHandler.HandleSubmapControl)
+	monitor := engine.Group("/v1/monitor")
+	handler.SetupMonitorRoutes(monitor, s.MonitorHandler)
 }
 
 func (s *KohanServer) registerJournalRoutes(engine *gin.Engine) {
-	v1 := engine.Group("/v1")
-
-	// Use reusable route setup functions
-	handler.SetupJournalEntryRoutes(v1, s.JournalHandler)
-	handler.SetupImageRoutes(v1, s.ImageHandler)
-	handler.SetupNoteRoutes(v1, s.NoteHandler)
-	handler.SetupTagRoutes(v1, s.TagHandler)
+	journal := engine.Group("/v1/journal")
+	handler.SetupJournalEntryRoutes(journal, s.JournalHandler)
+	handler.SetupImageRoutes(journal, s.ImageHandler)
+	handler.SetupNoteRoutes(journal, s.NoteHandler)
+	handler.SetupTagRoutes(journal, s.TagHandler)
 }

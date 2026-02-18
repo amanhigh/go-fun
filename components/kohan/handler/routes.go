@@ -2,10 +2,16 @@ package handler
 
 import "github.com/gin-gonic/gin"
 
-// SetupImageRoutes configures image-related routes for the given v1 router group
-func SetupImageRoutes(v1 *gin.RouterGroup, imageHandler ImageHandler) {
-	entries := v1.Group("/journal-entries")
-	images := entries.Group("/:id/images")
+// SetupMonitorRoutes configures monitor-related routes
+func SetupMonitorRoutes(monitor *gin.RouterGroup, monitorHandler MonitorHandler) {
+	monitor.GET("/ticker/:ticker/record", monitorHandler.HandleRecordTicker)
+	monitor.GET("/clip/", monitorHandler.HandleReadClip)
+	monitor.POST("/submap/:action", monitorHandler.HandleSubmapControl)
+}
+
+// SetupImageRoutes configures image-related routes for the given journal router group
+func SetupImageRoutes(journal *gin.RouterGroup, imageHandler ImageHandler) {
+	images := journal.Group("/:id/images")
 	{
 		images.POST("", imageHandler.HandleCreateImage)
 		images.GET("", imageHandler.HandleListImages)
@@ -13,10 +19,9 @@ func SetupImageRoutes(v1 *gin.RouterGroup, imageHandler ImageHandler) {
 	}
 }
 
-// SetupNoteRoutes configures note-related routes for the given v1 router group
-func SetupNoteRoutes(v1 *gin.RouterGroup, noteHandler NoteHandler) {
-	entries := v1.Group("/journal-entries")
-	notes := entries.Group("/:id/notes")
+// SetupNoteRoutes configures note-related routes for the given journal router group
+func SetupNoteRoutes(journal *gin.RouterGroup, noteHandler NoteHandler) {
+	notes := journal.Group("/:id/notes")
 	{
 		notes.POST("", noteHandler.HandleCreateNote)
 		notes.GET("", noteHandler.HandleListNotes)
@@ -24,10 +29,9 @@ func SetupNoteRoutes(v1 *gin.RouterGroup, noteHandler NoteHandler) {
 	}
 }
 
-// SetupTagRoutes configures tag-related routes for the given v1 router group
-func SetupTagRoutes(v1 *gin.RouterGroup, tagHandler TagHandler) {
-	entries := v1.Group("/journal-entries")
-	tags := entries.Group("/:id/tags")
+// SetupTagRoutes configures tag-related routes for the given journal router group
+func SetupTagRoutes(journal *gin.RouterGroup, tagHandler TagHandler) {
+	tags := journal.Group("/:id/tags")
 	{
 		tags.POST("", tagHandler.HandleCreateTag)
 		tags.GET("", tagHandler.HandleListTags)
@@ -36,12 +40,11 @@ func SetupTagRoutes(v1 *gin.RouterGroup, tagHandler TagHandler) {
 }
 
 // SetupJournalEntryRoutes configures basic journal entry routes
-func SetupJournalEntryRoutes(v1 *gin.RouterGroup, journalHandler JournalHandler) {
-	entries := v1.Group("/journal-entries")
+func SetupJournalEntryRoutes(journal *gin.RouterGroup, journalHandler JournalHandler) {
 	{
-		entries.GET("", journalHandler.HandleListEntries)
-		entries.GET("/:id", journalHandler.HandleGetEntry)
-		entries.POST("", journalHandler.HandleCreateEntry)
-		entries.DELETE("/:id", journalHandler.HandleDeleteEntry)
+		journal.GET("", journalHandler.HandleListEntries)
+		journal.GET("/:id", journalHandler.HandleGetEntry)
+		journal.POST("", journalHandler.HandleCreateEntry)
+		journal.DELETE("/:id", journalHandler.HandleDeleteEntry)
 	}
 }

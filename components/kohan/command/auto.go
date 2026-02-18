@@ -34,14 +34,12 @@ var runOrFocusCmd = &cobra.Command{
 	},
 }
 
-var monitorCmd = &cobra.Command{
-	Use:   "monitor [CapturePath]",
+var serveCmd = &cobra.Command{
+	Use:   "serve [CapturePath]",
 	Short: "System Monitoring",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		log.Info().Dur("Wait", wait).Str("Screenshots", args[0]).Msg("Monitoring Systems")
-		// HACK: Rename to Serve command to indicate Kohan Server.
-
 		// TODO: Retry When Disk not Mounted, Watermill Exponential Backoff ?
 		autoManager := core.GetKohanInterface().GetAutoManager(wait, args[0])
 		shutdown := util.NewGracefulShutdown()
@@ -55,7 +53,7 @@ var monitorCmd = &cobra.Command{
 
 		if err := server.Start(); err != nil {
 			log.Error().Err(err).Msg("Failed to start monitor server")
-			return fmt.Errorf("monitor server startup failed: %w", err)
+			return fmt.Errorf("serve server startup failed: %w", err)
 		}
 		return
 	},
@@ -74,11 +72,11 @@ var openTickerCmd = &cobra.Command{
 
 func init() {
 	// Flags
-	monitorCmd.Flags().DurationVarP(&wait, "wait", "w", wait, "Monitoring Wait Interval")
+	serveCmd.Flags().DurationVarP(&wait, "wait", "w", wait, "Monitoring Wait Interval")
 
 	// Commands
 	autoCmd.AddCommand(runOrFocusCmd)
-	autoCmd.AddCommand(monitorCmd)
+	autoCmd.AddCommand(serveCmd)
 	autoCmd.AddCommand(openTickerCmd)
 	RootCmd.AddCommand(autoCmd)
 }

@@ -18,10 +18,6 @@ type Note struct {
 	CreatedAt time.Time `gorm:"column:created_at;not null" json:"created_at"`
 }
 
-func (Note) TableName() string {
-	return "journal_notes"
-}
-
 func (n *Note) BeforeCreate(_ *gorm.DB) error {
 	if n.ID == "" {
 		n.ID = uuid.NewString()
