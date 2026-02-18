@@ -362,7 +362,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "createdBy": {
-                    "description": "HACK: Use Base Dao of Gorm for common Fields ?",
+                    "description": "TODO: Use Base Dao of Gorm for common Fields ?",
                     "type": "string"
                 },
                 "gender": {

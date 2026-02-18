@@ -26,7 +26,14 @@ type DariusConfig struct {
 }
 
 type KohanConfig struct {
-	Tax TaxConfig
+	Tax    TaxConfig
+	Barkat BarkatConfig
+}
+
+// BarkatConfig defines configuration for the Barkat Journal Explorer
+// Database: SQLite file path for journal entries
+type BarkatConfig struct {
+	DbPath string `env:"BARKAT_DB_PATH" envDefault:"~/Downloads/barkat.db"`
 }
 
 // TaxConfig defines all paths and URLs for tax computation
@@ -87,31 +94,37 @@ type TaxConfig struct {
 
 func NewKohanConfig() (config KohanConfig, err error) {
 	if err = env.Parse(&config); err != nil {
-		err = fmt.Errorf("error parsing kohan config: %w", err)
-		return
+		return config, fmt.Errorf("error parsing kohan config: %w", err)
 	}
 
-	// Expand home directory in file paths
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return config, fmt.Errorf("failed to get user home directory: %w", err)
 	}
 
-	// HACK: #C Remove this Hack.
-	// Expand home directory (~) in all file paths
-	config.Tax.TaxDir = strings.Replace(config.Tax.TaxDir, "~", homeDir, 1)
-	config.Tax.DriveWealthBase = strings.Replace(config.Tax.DriveWealthBase, "~", homeDir, 1)
-	config.Tax.IBKRBase = strings.Replace(config.Tax.IBKRBase, "~", homeDir, 1)
-	config.Tax.TickerCacheDir = strings.Replace(config.Tax.TickerCacheDir, "~", homeDir, 1)
-	config.Tax.TTRateFilePath = strings.Replace(config.Tax.TTRateFilePath, "~", homeDir, 1)
-	config.Tax.ParsedDir = strings.Replace(config.Tax.ParsedDir, "~", homeDir, 1)
-	config.Tax.TradesPath = strings.Replace(config.Tax.TradesPath, "~", homeDir, 1)
-	config.Tax.DividendFilePath = strings.Replace(config.Tax.DividendFilePath, "~", homeDir, 1)
-	config.Tax.InterestFilePath = strings.Replace(config.Tax.InterestFilePath, "~", homeDir, 1)
-	config.Tax.GainsFilePath = strings.Replace(config.Tax.GainsFilePath, "~", homeDir, 1)
-	config.Tax.AccountsDir = strings.Replace(config.Tax.AccountsDir, "~", homeDir, 1)
-	config.Tax.ReportsDir = strings.Replace(config.Tax.ReportsDir, "~", homeDir, 1)
-	config.Tax.ComputedDir = strings.Replace(config.Tax.ComputedDir, "~", homeDir, 1)
+	applyTaxPaths(&config.Tax, homeDir)
+	config.Barkat.DbPath = replaceHome(config.Barkat.DbPath, homeDir)
 
 	return
+}
+
+func applyTaxPaths(tax *TaxConfig, homeDir string) {
+	// TODO: #C Remove this Hack.
+	tax.TaxDir = replaceHome(tax.TaxDir, homeDir)
+	tax.DriveWealthBase = replaceHome(tax.DriveWealthBase, homeDir)
+	tax.IBKRBase = replaceHome(tax.IBKRBase, homeDir)
+	tax.TickerCacheDir = replaceHome(tax.TickerCacheDir, homeDir)
+	tax.TTRateFilePath = replaceHome(tax.TTRateFilePath, homeDir)
+	tax.ParsedDir = replaceHome(tax.ParsedDir, homeDir)
+	tax.TradesPath = replaceHome(tax.TradesPath, homeDir)
+	tax.DividendFilePath = replaceHome(tax.DividendFilePath, homeDir)
+	tax.InterestFilePath = replaceHome(tax.InterestFilePath, homeDir)
+	tax.GainsFilePath = replaceHome(tax.GainsFilePath, homeDir)
+	tax.AccountsDir = replaceHome(tax.AccountsDir, homeDir)
+	tax.ReportsDir = replaceHome(tax.ReportsDir, homeDir)
+	tax.ComputedDir = replaceHome(tax.ComputedDir, homeDir)
+}
+
+func replaceHome(path, homeDir string) string {
+	return strings.Replace(path, "~", homeDir, 1)
 }

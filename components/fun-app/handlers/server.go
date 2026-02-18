@@ -2,14 +2,12 @@ package handlers
 
 import (
 	"context"
-	"net/http"
-	"time"
+	"fmt"
 
 	"github.com/amanhigh/go-fun/common/telemetry"
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/trace"
 
 	docs "github.com/amanhigh/go-fun/components/fun-app/docs"
@@ -18,10 +16,8 @@ import (
 )
 
 type FunServer struct {
-	GinEngine *gin.Engine   `container:"type"`
-	Server    *http.Server  `container:"type"`
-	Shutdown  util.Shutdown `container:"type"`
-	Tracer    trace.Tracer  `container:"type"`
+	*util.BaseHTTPServer `container:"type"`
+	Tracer               trace.Tracer `container:"type"`
 
 	/* Handlers */
 	PersonHandler     PersonHandler     `container:"type"`
@@ -31,12 +27,27 @@ type FunServer struct {
 	Watermill util.WatermillController `container:"type"`
 }
 
-func (fs *FunServer) initRoutes() {
+func (fs *FunServer) Start(_ context.Context) (err error) {
+	fs.RegisterRoutes = fs.registerRoutes
+	fs.BeforeStart = fs.beforeStart
+	// HACK: Add method to Provide Swagger in Lifecycle as well.
+	fs.BeforeShutdown = fs.beforeShutdown
+	fs.AfterShutdown = func(ctx context.Context) {
+		telemetry.ShutdownTracerProvider(ctx)
+	}
+
+	// TODO: Why Linter Flags why it Flags Internal Packages.
+	if err = fs.BaseHTTPServer.Start(); err != nil {
+		return fmt.Errorf("start fun server: %w", err)
+	}
+	return nil
+}
+
+func (fs *FunServer) registerRoutes(engine *gin.Engine) {
 	docs.SwaggerInfo.BasePath = "/v1"
-	// Routes
 
 	// Version Group
-	v1 := fs.GinEngine.Group("/v1")
+	v1 := engine.Group("/v1")
 
 	personGroup := v1.Group("/person")
 	personGroup.GET("/", fs.PersonHandler.ListPersons)
@@ -50,72 +61,32 @@ func (fs *FunServer) initRoutes() {
 	enrollmentGroup.POST("", fs.EnrollmentHandler.CreateEnrollment)
 	enrollmentGroup.GET(":personId", fs.EnrollmentHandler.GetEnrollment)
 
-	adminGroup := fs.GinEngine.Group("/admin")
+	adminGroup := engine.Group("/admin")
 	adminGroup.GET("/stop", fs.AdminHandler.Stop)
 
 	// Add Swagger - https://github.com/swaggo/gin-swagger
 	// make swag-fun
-
-	fs.GinEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	// http://localhost:8080/debug/statsviz/
-	fs.GinEngine.GET("/debug/statsviz/*filepath", telemetry.StatvizMetrics)
+	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Pprof (Use: http://localhost:8080/debug/pprof/)
 	// make profile
 	// Load Test:  wrk2 http://localhost:8080/v1/person/all/ -t 2 -c 100 -d 1m -R2000
 	// Vegeta: echo "GET http://localhost:9000/v1/person/all" | vegeta attack -max-workers=2 -max-connections=100 -duration=1m -rate=2000/1s | tee results.bin | vegeta report
 	// Vegeta Plot: vegeta plot results.bin > ~/Downloads/plot.html
-	pprof.Register(fs.GinEngine)
+	pprof.Register(engine)
 }
 
-func (fs *FunServer) Start(c context.Context) (err error) {
-	fs.initRoutes()
+func (fs *FunServer) beforeStart(ctx context.Context) {
+	fs.Watermill.Start(ctx)
+}
 
-	fs.Watermill.Start(c)
+func (fs *FunServer) beforeShutdown(ctx context.Context) {
+	_, span := fs.Tracer.Start(ctx, "Stop.Server")
+	defer span.End()
 
-	// Initializing the server in a goroutine so that
-	// it won't block the graceful shutdown handling below
-	var errChan = make(chan error, 1)
-
-	go func(errChan chan error) {
-		if srvErr := fs.Server.ListenAndServe(); srvErr != nil && srvErr != http.ErrServerClosed {
-			errChan <- srvErr
-		}
-	}(errChan)
-
-	// Read Error From GoRoutine or proceed in one second
-	select {
-	case err = <-errChan:
-		zerolog.Ctx(c).Trace().Err(err).Msg("Failed To Start Server")
-	case <-time.After(time.Second):
-		// No Error Occurred, wait for Graceful Shutdown Signal.
-		ctx := fs.Shutdown.Wait()
-
-		// Trigger Shutdown Routine
-		fs.Stop(ctx)
-	}
-
-	return
+	fs.Watermill.Shutdown(ctx)
 }
 
 func (fs *FunServer) Stop(c context.Context) {
-	// The context is used to inform the server it has few seconds to finish
-	// the request it is currently handling
-	ctx, span := fs.Tracer.Start(c, "Stop.Server")
-	defer span.End()
-
-	fs.Watermill.Shutdown(c)
-
-	ctxTimed, cancel := context.WithTimeout(context.Background(), 10*time.Second) //nolint:mnd // Standard server shutdown timeout
-	defer cancel()
-	if err := fs.Server.Shutdown(ctxTimed); err != nil {
-		zerolog.Ctx(c).Fatal().Ctx(ctx).Err(err).Msg("Forced Shutdown, Graceful Exit Failed: ")
-	}
-
-	// Stop Tracer
-	span.AddEvent("Stopping Tracer")
-	telemetry.ShutdownTracerProvider(ctx)
-
-	zerolog.Ctx(c).Info().Ctx(ctx).Msg("Bye...")
+	fs.BaseHTTPServer.Stop(c)
 }

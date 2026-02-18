@@ -1,3 +1,4 @@
+//nolint:dupl // Test files often have similar setup patterns
 package manager_test
 
 import (
@@ -349,7 +350,7 @@ var _ = Describe("ValuationManager", func() {
 				Context("Multiple Position Peaks", func() {
 					var trades []tax.Trade
 					BeforeEach(func() {
-						// FIXME: #A Multiple Peaks with Same Value (Take Second higher TBBR Rate) or Throw Error.
+						// TODO: #A Multiple Peaks with Same Value (Take Second higher TBBR Rate) or Throw Error.
 						// Test validates that when multiple position peaks exist with SAME quantity,
 						// the second peak wins because it has HIGHER USD price AND HIGHER TBBR rate
 						trades = []tax.Trade{

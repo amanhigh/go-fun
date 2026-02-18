@@ -9,7 +9,7 @@ import (
 	"github.com/amanhigh/go-fun/models/fun"
 )
 
-// FIXME: Add to AGENTS.md
+// TODO: Add to AGENTS.md
 // EnrollmentManagerInterface orchestrates enrollment flows and delegates seat allocation.
 //
 // Architecture rules enforced here:

@@ -30,17 +30,16 @@ func (fi *FunAppInjector) BuildApp() (app any, err error) {
 	fi.setupTelemetry()
 	fi.registerValidators()
 
-	// Inline all dependency registrations
+	// Register dependencies bottom-up: infra → data → domain → handlers → messaging
 	fi.registerCoreDependencies()
 	fi.registerMetrics()
-	fi.registerMessagingCore()
-
-	// Build Layers
-	fi.registerHandlers()
-	fi.registerCommandHandlers()
-	fi.registerManager()
+	fi.registerMessagingInfra()
 	fi.registerDao()
 	fi.registerPublishers()
+	fi.registerManager()
+	fi.registerHandlers()
+	fi.registerCommandHandlers()
+	fi.registerMessagingWiring()
 
 	app, err = fi.buildApplication()
 	return
@@ -50,10 +49,9 @@ func (fi *FunAppInjector) registerCoreDependencies() {
 	container.MustSingleton(fi.di, func() config.FunAppConfig {
 		return fi.config
 	})
-	container.MustSingleton(fi.di, newGin)
-	container.MustSingleton(fi.di, newPrometheus)
-	container.MustSingleton(fi.di, newHttpServer)
 	container.MustSingleton(fi.di, util.NewGracefulShutdown)
+	container.MustSingleton(fi.di, newBaseHTTPServer)
+	container.MustSingleton(fi.di, newPrometheus)
 	container.MustSingleton(fi.di, newDb)
 	container.MustSingleton(fi.di, func() trace.Tracer {
 		return otel.Tracer(NAMESPACE)

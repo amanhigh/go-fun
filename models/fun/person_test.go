@@ -505,7 +505,7 @@ var _ = Describe("Person", func() {
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 			})
 
-			It("should reject limit above 10", func() {
+			It("should reject limit above 100", func() {
 				router := gin.New()
 				w := httptest.NewRecorder()
 
@@ -518,7 +518,7 @@ var _ = Describe("Person", func() {
 					c.JSON(http.StatusOK, query)
 				})
 
-				req, _ := http.NewRequest("GET", "/persons?offset=0&limit=11", nil)
+				req, _ := http.NewRequest("GET", "/persons?offset=0&limit=101", nil)
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 			})

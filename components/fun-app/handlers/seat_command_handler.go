@@ -61,7 +61,7 @@ func (h *SeatCommandHandlerImpl) SeatWaitlistedEvt(msg *message.Message) error {
 	if err := h.EnrollmentManager.UpdateToWaitlisted(ctx, enrollment); err != nil {
 		return err
 	}
-	// BUG: Not Sure if Retry would work Unclear Who does SeatAllocation Retry.
+	// TODO: Not Sure if Retry would work Unclear Who does SeatAllocation Retry.
 	// Done after sink; retry will be driven by middleware on AllocateSeatCmd path
 	return nil
 }
@@ -69,7 +69,7 @@ func (h *SeatCommandHandlerImpl) SeatWaitlistedEvt(msg *message.Message) error {
 // PoisonAllocate consumes poison messages after retries and cancels enrollment.
 func (h *SeatCommandHandlerImpl) PoisonAllocate(msg *message.Message) error {
 	var cmd fun.AllocateSeatCmdV1
-	// HACK: Rename PoisonAllocateCmd ?
+	// TODO: Rename PoisonAllocateCmd ?
 	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
 		return fmt.Errorf("unmarshal poison allocate: %w", err)
 	}

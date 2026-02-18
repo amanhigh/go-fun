@@ -95,14 +95,27 @@ func ConnectDb(cfg config.Db) (db *gorm.DB, err error) {
 	return
 }
 
-// CreateTestDb creates a test database.
-// Uses in memory Sqlite.
+// CreateTestDb creates an in-memory SQLite test database.
 // Faster CGO Implementation - https://github.com/go-gorm/sqlite
-// It returns a *gorm.DB and an error.
 func CreateTestDb(level logger.LogLevel) (db *gorm.DB, err error) {
 	// Use Log Level 4 for Debug, 3 for Warnings, 2 for Errors
 	// Can use /tmp/gorm.db for file base Db
 	db, err = gorm.Open(sqlite.Open("file:memdb1?mode=memory&cache=shared"), &gorm.Config{Logger: logger.Default.LogMode(level)})
+	return
+}
+
+// CreateSqliteDb opens a file-based SQLite database with WAL mode enabled.
+// Use CreateTestDb for in-memory test databases instead.
+func CreateSqliteDb(dbPath string, level logger.LogLevel) (db *gorm.DB, err error) {
+	if db, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{Logger: logger.Default.LogMode(level)}); err != nil {
+		err = fmt.Errorf("failed to open sqlite db at %s: %w", dbPath, err)
+		return
+	}
+
+	// Enable WAL mode for better concurrent read performance
+	if err = db.Exec("PRAGMA journal_mode=WAL").Error; err != nil {
+		err = fmt.Errorf("failed to enable WAL mode: %w", err)
+	}
 	return
 }
 

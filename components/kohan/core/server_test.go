@@ -1,26 +1,26 @@
 package core_test
 
 import (
-	"context"
+	"bytes"
 	"errors"
-	"fmt"
-	"net"
 	"net/http"
 	"net/http/httptest"
-	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
+	"github.com/amanhigh/go-fun/components/kohan/handler"
+	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
+	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/mock"
 )
 
-var _ = Describe("MonitorServer", func() {
+var _ = Describe("KohanServer", func() {
 	var (
-		server      *core.MonitorServer
+		server      *core.KohanServer
 		mockManager *mocks.AutoManagerInterface
 		testPath    = "/tmp/test-capture"
 	)
@@ -28,170 +28,132 @@ var _ = Describe("MonitorServer", func() {
 	BeforeEach(func() {
 		gin.SetMode(gin.TestMode)
 		mockManager = mocks.NewAutoManagerInterface(GinkgoT())
-		server = core.NewMonitorServer(testPath, mockManager)
 	})
 
-	Context("Constructor and Configuration", func() {
-		It("should create server with correct configuration", func() {
+	Context("Constructor", func() {
+		// TODO: Remove this Test after writing extensive Base Server Test.
+		It("should create server with handlers", func() {
+			monitorHandler := handler.NewMonitorHandler(testPath, mockManager)
+			db, err := core.CreateTestBarkatDB()
+			Expect(err).ToNot(HaveOccurred())
+			entryMgr := manager.NewJournalManager(repository.NewJournalRepository(db))
+			journalHandler := handler.NewJournalHandler(entryMgr)
+			// TODO: Wire Up Test using DI Framework Module Override as well.
+			imageHandler := handler.NewImageHandler(manager.NewImageManager(entryMgr, repository.NewImageRepository(db)))
+			noteHandler := handler.NewNoteHandler(manager.NewNoteManager(entryMgr, repository.NewNoteRepository(db)))
+			tagHandler := handler.NewTagHandler(manager.NewTagManager(entryMgr, repository.NewTagRepository(db)))
+			base := util.NewBaseHTTPServer("kohan", 0, util.NewGracefulShutdown())
+			server = core.NewKohanServer(base, monitorHandler, journalHandler, imageHandler, noteHandler, tagHandler)
 			Expect(server).ToNot(BeNil())
 		})
-
-		It("should accept nil manager for constructor", func() {
-			nilServer := core.NewMonitorServer(testPath, nil)
-			Expect(nilServer).ToNot(BeNil())
-		})
 	})
 
-	Context("HandleRecordTicker", func() {
+	Context("MonitorHandler", func() {
 		var (
-			recorder *httptest.ResponseRecorder
-			req      *http.Request
+			monitorHandler handler.MonitorHandler
+			recorder       *httptest.ResponseRecorder
 		)
 
 		BeforeEach(func() {
+			monitorHandler = handler.NewMonitorHandler(testPath, mockManager)
 			recorder = httptest.NewRecorder()
 		})
 
-		Context("when recording succeeds", func() {
-			BeforeEach(func() {
-				mockManager.EXPECT().
-					RecordTicker(mock.Anything, "AAPL", testPath).
-					Return(nil)
-				req = httptest.NewRequest("GET", "/v1/ticker/AAPL/record", nil)
+		Context("HandleRecordTicker", func() {
+			Context("when recording succeeds", func() {
+				BeforeEach(func() {
+					mockManager.EXPECT().
+						RecordTicker(mock.Anything, "AAPL", testPath).
+						Return(nil)
+				})
+
+				It("should return success response", func() {
+					req := httptest.NewRequest("GET", "/v1/ticker/AAPL/record", nil)
+					c, _ := gin.CreateTestContext(recorder)
+					c.Request = req
+					c.Params = gin.Params{
+						{Key: "ticker", Value: "AAPL"},
+					}
+
+					monitorHandler.HandleRecordTicker(c)
+
+					Expect(recorder.Code).To(Equal(http.StatusOK))
+					Expect(recorder.Body.String()).To(ContainSubstring("Success"))
+				})
 			})
 
-			It("should return success response", func() {
-				c, _ := gin.CreateTestContext(recorder)
-				c.Request = req
-				c.Params = gin.Params{
-					{Key: "ticker", Value: "AAPL"},
-				}
+			Context("when recording fails", func() {
+				BeforeEach(func() {
+					mockManager.EXPECT().
+						RecordTicker(mock.Anything, "MSFT", testPath).
+						Return(errors.New("screenshot failed"))
+				})
 
-				server.HandleRecordTicker(c)
+				It("should return error response", func() {
+					req := httptest.NewRequest("GET", "/v1/ticker/MSFT/record", nil)
+					c, _ := gin.CreateTestContext(recorder)
+					c.Request = req
+					c.Params = gin.Params{
+						{Key: "ticker", Value: "MSFT"},
+					}
 
-				Expect(recorder.Code).To(Equal(http.StatusOK))
-				Expect(recorder.Body.String()).To(ContainSubstring("Success"))
+					monitorHandler.HandleRecordTicker(c)
+
+					Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
+					Expect(recorder.Body.String()).To(ContainSubstring("screenshot failed"))
+				})
 			})
-		})
 
-		Context("when recording fails", func() {
-			BeforeEach(func() {
-				mockManager.EXPECT().
-					RecordTicker(mock.Anything, "MSFT", testPath).
-					Return(errors.New("screenshot failed"))
-				req = httptest.NewRequest("GET", "/v1/ticker/MSFT/record", nil)
-			})
+			Context("with different ticker values", func() {
+				It("should pass correct ticker to manager", func() {
+					testTicker := "GOOGL"
+					mockManager.EXPECT().
+						RecordTicker(mock.Anything, testTicker, testPath).
+						Return(nil)
 
-			It("should return error response", func() {
-				c, _ := gin.CreateTestContext(recorder)
-				c.Request = req
-				c.Params = gin.Params{
-					{Key: "ticker", Value: "MSFT"},
-				}
+					req := httptest.NewRequest("GET", "/v1/ticker/"+testTicker+"/record", nil)
+					c, _ := gin.CreateTestContext(recorder)
+					c.Request = req
+					c.Params = gin.Params{
+						{Key: "ticker", Value: testTicker},
+					}
 
-				server.HandleRecordTicker(c)
+					monitorHandler.HandleRecordTicker(c)
 
-				Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
-				Expect(recorder.Body.String()).To(ContainSubstring("screenshot failed"))
-			})
-		})
-
-		Context("with different ticker values", func() {
-			It("should pass correct ticker to manager", func() {
-				testTicker := "GOOGL"
-				mockManager.EXPECT().
-					RecordTicker(mock.Anything, testTicker, testPath).
-					Return(nil)
-
-				req := httptest.NewRequest("GET", "/v1/ticker/"+testTicker+"/record", nil)
-				c, _ := gin.CreateTestContext(recorder)
-				c.Request = req
-				c.Params = gin.Params{
-					{Key: "ticker", Value: testTicker},
-				}
-
-				server.HandleRecordTicker(c)
-
-				Expect(recorder.Code).To(Equal(http.StatusOK))
+					Expect(recorder.Code).To(Equal(http.StatusOK))
+				})
 			})
 		})
 	})
 
-	Context("Graceful Shutdown Integration", func() {
+	Context("JournalHandler", func() {
 		var (
-			realShutdown          util.Shutdown
-			serverDone            chan error
-			freePort              int
-			startAndWaitForServer func(port int)
+			journalHandler handler.JournalHandler
+			recorder       *httptest.ResponseRecorder
 		)
 
 		BeforeEach(func() {
-			// Use REAL util.Shutdown - no mocks!
-			realShutdown = util.NewGracefulShutdown()
-			serverDone = make(chan error, 1)
-
-			// Get free port
-			listener, err := net.Listen("tcp", ":0") //nolint:gosec // Binding to all interfaces intentionally for testing
+			db, err := core.CreateTestBarkatDB()
 			Expect(err).ToNot(HaveOccurred())
-			tcpAddr, ok := listener.Addr().(*net.TCPAddr)
-			Expect(ok).To(BeTrue(), "Expected TCP address")
-			freePort = tcpAddr.Port
-			err = listener.Close()
-			Expect(err).ToNot(HaveOccurred())
-
-			// Helper function to start server and wait for readiness
-			startAndWaitForServer = func(port int) {
-				go func() {
-					err := server.Start(port, realShutdown)
-					serverDone <- err
-				}()
-
-				Eventually(func() error {
-					conn, err := net.Dial("tcp", fmt.Sprintf("localhost:%d", port))
-					if conn != nil {
-						conn.Close()
-					}
-					return err
-				}, 1*time.Second, 50*time.Millisecond).Should(Succeed())
-			}
+			repo := repository.NewJournalRepository(db)
+			mgr := manager.NewJournalManager(repo)
+			journalHandler = handler.NewJournalHandler(mgr)
+			recorder = httptest.NewRecorder()
 		})
 
-		AfterEach(func() {
-			select {
-			case <-serverDone:
-			default:
-			}
-		})
+		Context("HandleCreateEntry", func() {
+			It("should create entry and return 201", func() {
+				body := `{"ticker":"RELIANCE","sequence":"MWD","type":"REJECTED","status":"FAIL","images":[{"timeframe":"DL"},{"timeframe":"WK"},{"timeframe":"MN"},{"timeframe":"TMN"}]}`
+				req := httptest.NewRequest("POST", "/v1/journal-entries", bytes.NewBufferString(body))
+				req.Header.Set("Content-Type", "application/json")
+				c, _ := gin.CreateTestContext(recorder)
+				c.Request = req
 
-		It("should start and shutdown gracefully", func() {
-			startAndWaitForServer(freePort)
-			time.Sleep(100 * time.Millisecond)
-			realShutdown.Stop(context.Background())
-			Eventually(serverDone, 2*time.Second).Should(Receive(BeNil()))
-		})
+				journalHandler.HandleCreateEntry(c)
 
-		It("should serve HTTP requests before shutdown", func() {
-			startAndWaitForServer(freePort)
-			time.Sleep(100 * time.Millisecond)
-
-			resp, err := http.Get(fmt.Sprintf("http://localhost:%d/v1/clip/", freePort))
-			if resp != nil {
-				defer resp.Body.Close()
-			}
-			Expect(err).ToNot(HaveOccurred())
-
-			realShutdown.Stop(context.Background())
-			Eventually(serverDone, 2*time.Second).Should(Receive(BeNil()))
-		})
-
-		It("should handle startup errors", func() {
-			go func() {
-				err := server.Start(-1, realShutdown)
-				serverDone <- err
-			}()
-
-			Eventually(serverDone, 500*time.Millisecond).Should(Receive(HaveOccurred()))
+				Expect(recorder.Code).To(Equal(http.StatusCreated))
+				Expect(recorder.Body.String()).To(ContainSubstring("RELIANCE"))
+			})
 		})
 	})
-
 })

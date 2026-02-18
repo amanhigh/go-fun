@@ -1,7 +1,7 @@
 # v3 config - explicit interface specification in mocks subdirectory
 all: false
 dir: '{{ .InterfaceDir }}/mocks'
-filename: '{{ .StructName }}.go'
+filename: '{{ .InterfaceName }}.go'
 structname: '{{ .InterfaceName }}'
 pkgname: 'mocks'
 template: testify

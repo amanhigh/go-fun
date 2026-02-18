@@ -1,3 +1,4 @@
+//nolint:dupl // Excel operations have similar patterns for different entity types
 package manager
 
 import (
