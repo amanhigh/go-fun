@@ -45,11 +45,11 @@ func httpDo(method, url string, body interface{}) (*http.Response, []byte) {
 }
 
 // httpDoEntry is a helper for making HTTP requests that return an Entry envelope response.
-func httpDoEntry(method, url string, body interface{}) barkat.Entry {
+func httpDoEntry(method, url string, body interface{}) barkat.Journal {
 	resp, responseBody := httpDo(method, url, body)
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
-	var envelope common.Envelope[barkat.Entry]
+	var envelope common.Envelope[barkat.Journal]
 	Expect(json.Unmarshal(responseBody, &envelope)).To(Succeed())
 	Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 
@@ -89,10 +89,10 @@ var _ = PDescribe("Barkat Integration Test", func() {
 
 	// ---- Real Production Data: GRSE rejected/fail with reason tag tto-loc (2023-06-15) ----
 	Context("GRSE Rejected Entry", func() {
-		var createdEntry barkat.Entry
+		var createdEntry barkat.Journal
 
 		BeforeEach(func() {
-			entry := barkat.Entry{
+			entry := barkat.Journal{
 				Ticker:   "GRSE",
 				Sequence: "MWD",
 				Type:     "REJECTED",
@@ -108,7 +108,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 			Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 			// Handle the envelope response for creation
-			var envelope common.Envelope[barkat.Entry]
+			var envelope common.Envelope[barkat.Journal]
 			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
 			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 			createdEntry = envelope.Data
@@ -125,7 +125,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 		})
 
 		Context("Get", func() {
-			var fetchedEntry barkat.Entry
+			var fetchedEntry barkat.Journal
 
 			BeforeEach(func() {
 				fetchedEntry = httpDoEntry("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID, nil)
@@ -142,10 +142,10 @@ var _ = PDescribe("Barkat Integration Test", func() {
 
 	// ---- Real Production Data: DIXON set/taken with notes (2023-06-15) ----
 	Context("DIXON Set Entry with Notes", func() {
-		var createdEntry barkat.Entry
+		var createdEntry barkat.Journal
 
 		BeforeEach(func() {
-			entry := barkat.Entry{
+			entry := barkat.Journal{
 				Ticker:   "DIXON",
 				Sequence: "MWD",
 				Type:     "SET",
@@ -161,7 +161,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 			Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 			// Handle the envelope response for creation
-			var envelope common.Envelope[barkat.Entry]
+			var envelope common.Envelope[barkat.Journal]
 			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
 			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 			createdEntry = envelope.Data
@@ -186,7 +186,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 
 			It("should attach note to entry", func() {
 				Expect(addedNote.ID).ToNot(BeEmpty())
-				Expect(addedNote.EntryID).To(Equal(createdEntry.ID))
+				Expect(addedNote.JournalID).To(Equal(createdEntry.ID))
 				Expect(addedNote.Status).To(Equal("taken"))
 			})
 
@@ -228,10 +228,10 @@ var _ = PDescribe("Barkat Integration Test", func() {
 
 	// ---- Real Production Data: CEATLTD set/success with management tags (2025-08-21) ----
 	Context("CEATLTD Success with Management Tags", func() {
-		var createdEntry barkat.Entry
+		var createdEntry barkat.Journal
 
 		BeforeEach(func() {
-			entry := barkat.Entry{
+			entry := barkat.Journal{
 				Ticker:   "CEATLTD",
 				Sequence: "MWD",
 				Type:     "SET",
@@ -251,7 +251,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 			Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 			// Handle the envelope response for creation
-			var envelope common.Envelope[barkat.Entry]
+			var envelope common.Envelope[barkat.Journal]
 			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
 			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 			createdEntry = envelope.Data
@@ -366,7 +366,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 	// ---- List with Filters (multiple entries from production patterns) ----
 	Context("List with Filters", func() {
 		BeforeEach(func() {
-			entries := []barkat.Entry{
+			entries := []barkat.Journal{
 				{
 					Ticker: "KEI", Sequence: "MWD", Type: "REJECTED", Status: "FAIL",
 					Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}},
@@ -392,7 +392,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 		It("should filter by ticker", func() {
 			resp, body := httpDo("GET", baseURL+"/v1/journal-entries?ticker=KEI&limit=10", nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			var envelope common.Envelope[barkat.EntryList]
+			var envelope common.Envelope[barkat.JournalList]
 			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
 			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 			Expect(envelope.Data.Records).To(HaveLen(1))
@@ -402,7 +402,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 		It("should filter by sequence=yr", func() {
 			resp, body := httpDo("GET", baseURL+"/v1/journal-entries?sequence=YR&limit=10", nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			var envelope common.Envelope[barkat.EntryList]
+			var envelope common.Envelope[barkat.JournalList]
 			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
 			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 			for _, e := range envelope.Data.Records {
@@ -413,7 +413,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 		It("should filter by status=running", func() {
 			resp, body := httpDo("GET", baseURL+"/v1/journal-entries?status=RUNNING&limit=10", nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			var envelope common.Envelope[barkat.EntryList]
+			var envelope common.Envelope[barkat.JournalList]
 			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
 			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 			for _, e := range envelope.Data.Records {
@@ -424,7 +424,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 		It("should return lightweight summaries without associations", func() {
 			resp, body := httpDo("GET", baseURL+"/v1/journal-entries?limit=10", nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			var envelope common.Envelope[barkat.EntryList]
+			var envelope common.Envelope[barkat.JournalList]
 			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
 			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 			Expect(envelope.Data.Records).ToNot(BeEmpty())

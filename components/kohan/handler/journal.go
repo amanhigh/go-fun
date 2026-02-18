@@ -32,7 +32,7 @@ func NewJournalHandler(journalManager manager.JournalManager) *JournalHandlerImp
 // ---- Entry Handlers ----
 // TODO: Match other Handlers after Review Comments & Test to Standardize Template.
 func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
-	query := barkat.NewEntryQuery()
+	query := barkat.NewJournalQuery()
 
 	if err := c.ShouldBindQuery(&query); err != nil {
 		err = util.ProcessValidationError(err)
@@ -40,57 +40,61 @@ func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
 		return
 	}
 
-	entryList, httpErr := h.journalManager.ListEntries(c.Request.Context(), query)
+	journalList, httpErr := h.journalManager.ListJournals(c.Request.Context(), query)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusOK, common.NewEnvelope(entryList))
+	c.JSON(http.StatusOK, common.NewEnvelope(journalList))
 }
 
 func (h *JournalHandlerImpl) HandleGetEntry(c *gin.Context) {
-	var path barkat.EntryPath
+	var path barkat.JournalPath
+
 	if err := c.ShouldBindUri(&path); err != nil {
 		err = util.ProcessValidationError(err)
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	entry, httpErr := h.journalManager.GetEntry(c.Request.Context(), path.ID)
+	journal, httpErr := h.journalManager.GetJournal(c.Request.Context(), path.ID)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusOK, common.NewEnvelope(entry))
+	c.JSON(http.StatusOK, common.NewEnvelope(journal))
 }
 
 func (h *JournalHandlerImpl) HandleCreateEntry(c *gin.Context) {
-	var entry barkat.Entry
-	if err := c.ShouldBindJSON(&entry); err != nil {
+	var journal barkat.Journal
+	if err := c.ShouldBindJSON(&journal); err != nil {
 		// FIXME: Enhance ProcessValidationError to return HTTP Code handling Wider Range of Validations.
 		err = util.ProcessValidationError(err)
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	if httpErr := h.journalManager.CreateEntry(c.Request.Context(), &entry); httpErr != nil {
+	httpErr := h.journalManager.CreateJournal(c.Request.Context(), &journal)
+	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusCreated, common.NewEnvelope(entry))
+	c.JSON(http.StatusCreated, common.NewEnvelope(&journal))
 }
 
 func (h *JournalHandlerImpl) HandleDeleteEntry(c *gin.Context) {
-	var path barkat.EntryPath
+	var path barkat.JournalPath
+
 	if err := c.ShouldBindUri(&path); err != nil {
 		err = util.ProcessValidationError(err)
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	if httpErr := h.journalManager.DeleteEntry(c.Request.Context(), path.ID); httpErr != nil {
+	httpErr := h.journalManager.DeleteJournal(c.Request.Context(), path.ID)
+	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusNoContent, nil)
 }

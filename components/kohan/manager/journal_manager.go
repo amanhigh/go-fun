@@ -9,18 +9,18 @@ import (
 	"github.com/amanhigh/go-fun/models/common"
 )
 
-// JournalManager provides business logic for journal entry operations.
+// JournalManager provides business logic for journal operations.
 type JournalManager interface {
-	// CreateEntry creates a new journal entry with associations.
-	CreateEntry(ctx context.Context, entry *barkat.Entry) common.HttpError
-	// GetEntry retrieves a single entry by ID with all associations.
-	GetEntry(ctx context.Context, id string) (barkat.Entry, common.HttpError)
-	// ListEntries returns a filtered, paginated list of entry summaries.
-	ListEntries(ctx context.Context, query barkat.EntryQuery) (barkat.EntryList, common.HttpError)
-	// EntryExists checks if an entry with the given ID exists.
-	EntryExists(ctx context.Context, entryID string) common.HttpError
-	// DeleteEntry deletes a journal entry by ID.
-	DeleteEntry(ctx context.Context, id string) common.HttpError
+	// CreateJournal creates a new journal with associations.
+	CreateJournal(ctx context.Context, journal *barkat.Journal) common.HttpError
+	// GetJournal retrieves a single journal by ID with all associations.
+	GetJournal(ctx context.Context, id string) (barkat.Journal, common.HttpError)
+	// ListJournals returns a filtered, paginated list of journal summaries.
+	ListJournals(ctx context.Context, query barkat.JournalQuery) (barkat.JournalList, common.HttpError)
+	// JournalExists checks if a journal with the given ID exists.
+	JournalExists(ctx context.Context, journalID string) common.HttpError
+	// DeleteJournal deletes a journal by ID.
+	DeleteJournal(ctx context.Context, id string) common.HttpError
 }
 
 type JournalManagerImpl struct {
@@ -34,41 +34,41 @@ func NewJournalManager(repo repository.JournalRepository) *JournalManagerImpl {
 	return &JournalManagerImpl{repo: repo}
 }
 
-// ---- Entry ----
+// ---- Journal ----
 
-func (m *JournalManagerImpl) CreateEntry(ctx context.Context, entry *barkat.Entry) common.HttpError {
+func (m *JournalManagerImpl) CreateJournal(ctx context.Context, journal *barkat.Journal) common.HttpError {
 	// BUG: Transactional Support is missing.
-	if err := m.repo.CreateEntry(ctx, entry); err != nil {
-		return common.NewServerError(fmt.Errorf("failed to create entry: %w", err))
+	if err := m.repo.CreateJournal(ctx, journal); err != nil {
+		return common.NewServerError(fmt.Errorf("failed to create journal: %w", err))
 	}
 	return nil
 }
 
-func (m *JournalManagerImpl) GetEntry(ctx context.Context, id string) (barkat.Entry, common.HttpError) {
-	entry, err := m.repo.GetEntry(ctx, id)
+func (m *JournalManagerImpl) GetJournal(ctx context.Context, id string) (barkat.Journal, common.HttpError) {
+	journal, err := m.repo.GetJournal(ctx, id)
 	if err != nil {
-		return barkat.Entry{}, common.ErrNotFound
+		return barkat.Journal{}, common.ErrNotFound
 	}
-	return entry, nil
+	return journal, nil
 }
 
-func (m *JournalManagerImpl) ListEntries(ctx context.Context, query barkat.EntryQuery) (barkat.EntryList, common.HttpError) {
-	entries, total, err := m.repo.ListEntries(ctx, query)
+func (m *JournalManagerImpl) ListJournals(ctx context.Context, query barkat.JournalQuery) (barkat.JournalList, common.HttpError) {
+	journals, total, err := m.repo.ListJournals(ctx, query)
 	if err != nil {
-		return barkat.EntryList{}, common.NewServerError(fmt.Errorf("failed to list entries: %w", err))
+		return barkat.JournalList{}, common.NewServerError(fmt.Errorf("failed to list journals: %w", err))
 	}
-	return barkat.EntryList{
-		Records:  entries,
+	return barkat.JournalList{
+		Records:  journals,
 		Metadata: common.PaginatedResponse{Total: total},
 	}, nil
 }
 
-func (m *JournalManagerImpl) EntryExists(ctx context.Context, entryID string) common.HttpError {
-	entry := &barkat.Entry{}
-	return m.repo.FindById(ctx, entryID, entry)
+func (m *JournalManagerImpl) JournalExists(ctx context.Context, journalID string) common.HttpError {
+	journal := &barkat.Journal{}
+	return m.repo.FindById(ctx, journalID, journal)
 }
 
-func (m *JournalManagerImpl) DeleteEntry(ctx context.Context, id string) common.HttpError {
-	entry := &barkat.Entry{}
-	return m.repo.DeleteById(ctx, id, entry)
+func (m *JournalManagerImpl) DeleteJournal(ctx context.Context, id string) common.HttpError {
+	journal := &barkat.Journal{}
+	return m.repo.DeleteById(ctx, id, journal)
 }

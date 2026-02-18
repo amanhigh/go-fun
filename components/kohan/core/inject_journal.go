@@ -8,7 +8,7 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/handler"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
-	barkatmodels "github.com/amanhigh/go-fun/models/barkat"
+	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/golobby/container/v3"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -29,7 +29,7 @@ func CreateTestBarkatDB() (*gorm.DB, error) {
 	}
 
 	// Use AutoMigrate for test database (faster and more reliable for in-memory DB)
-	if err := db.AutoMigrate(&barkatmodels.Entry{}, &barkatmodels.Image{}, &barkatmodels.Tag{}, &barkatmodels.Note{}); err != nil {
+	if err := db.AutoMigrate(&barkat.Journal{}, &barkat.Image{}, &barkat.Tag{}, &barkat.Note{}); err != nil {
 		return nil, fmt.Errorf("failed to auto-migrate barkat tables: %w", err)
 	}
 

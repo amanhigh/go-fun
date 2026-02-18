@@ -17,7 +17,7 @@ import (
 type ImageRepository interface {
 	util.BaseDbRepositoryInterface
 	// ListImages returns all images for an entry.
-	ListImages(ctx context.Context, entryID string) ([]barkat.Image, common.HttpError)
+	ListImages(ctx context.Context, journalID string) ([]barkat.Image, common.HttpError)
 }
 
 type ImageRepositoryImpl struct {
@@ -31,10 +31,10 @@ func NewImageRepository(db *gorm.DB) *ImageRepositoryImpl {
 	return &ImageRepositoryImpl{BaseDbRepository: util.NewBaseDbRepository(db)}
 }
 
-func (r *ImageRepositoryImpl) ListImages(ctx context.Context, entryID string) ([]barkat.Image, common.HttpError) {
+func (r *ImageRepositoryImpl) ListImages(ctx context.Context, journalID string) ([]barkat.Image, common.HttpError) {
 	var images []barkat.Image
 	var txErr error
-	if txErr = r.SafeTx(ctx).Where("entry_id = ?", entryID).Order("timeframe").Find(&images).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+	if txErr = r.SafeTx(ctx).Where("journal_id = ?", journalID).Order("timeframe").Find(&images).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		return nil, util.GormErrorMapper(txErr)
 	}
 	return images, nil

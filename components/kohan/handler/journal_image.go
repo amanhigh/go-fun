@@ -28,7 +28,7 @@ func NewImageHandler(imageMgr manager.ImageManager) *ImageHandlerImpl {
 }
 
 func (h *ImageHandlerImpl) HandleCreateImage(c *gin.Context) {
-	entryID := c.Param("id")
+	journalID := c.Param("id")
 	var image barkat.Image
 	if err := c.ShouldBindJSON(&image); err != nil {
 		err = util.ProcessValidationError(err)
@@ -36,7 +36,7 @@ func (h *ImageHandlerImpl) HandleCreateImage(c *gin.Context) {
 		return
 	}
 
-	createdImage, httpErr := h.imageMgr.CreateImage(c.Request.Context(), entryID, image)
+	createdImage, httpErr := h.imageMgr.CreateImage(c.Request.Context(), journalID, image)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
@@ -45,8 +45,8 @@ func (h *ImageHandlerImpl) HandleCreateImage(c *gin.Context) {
 }
 
 func (h *ImageHandlerImpl) HandleListImages(c *gin.Context) {
-	entryID := c.Param("id")
-	images, httpErr := h.imageMgr.ListImages(c.Request.Context(), entryID)
+	journalID := c.Param("id")
+	images, httpErr := h.imageMgr.ListImages(c.Request.Context(), journalID)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
@@ -55,9 +55,9 @@ func (h *ImageHandlerImpl) HandleListImages(c *gin.Context) {
 }
 
 func (h *ImageHandlerImpl) HandleDeleteImage(c *gin.Context) {
-	entryID := c.Param("id")
+	journalID := c.Param("id")
 	imageID := c.Param("imageId")
-	if httpErr := h.imageMgr.DeleteImage(c.Request.Context(), entryID, imageID); httpErr != nil {
+	if httpErr := h.imageMgr.DeleteImage(c.Request.Context(), journalID, imageID); httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}

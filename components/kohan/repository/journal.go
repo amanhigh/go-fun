@@ -8,15 +8,15 @@ import (
 	"gorm.io/gorm"
 )
 
-// JournalRepository provides persistence operations for journal entries.
+// JournalRepository provides persistence operations for journals.
 type JournalRepository interface {
 	util.BaseDbRepositoryInterface
-	// CreateEntry persists a new journal entry with its associations.
-	CreateEntry(ctx context.Context, entry *barkat.Entry) error
-	// GetEntry retrieves a single entry by ID with preloaded associations.
-	GetEntry(ctx context.Context, id string) (barkat.Entry, error)
-	// ListEntries returns a filtered, paginated list of entry summaries (no associations).
-	ListEntries(ctx context.Context, query barkat.EntryQuery) ([]barkat.Entry, int64, error)
+	// CreateJournal persists a new journal with its associations.
+	CreateJournal(ctx context.Context, journal *barkat.Journal) error
+	// GetJournal retrieves a single journal by ID with preloaded associations.
+	GetJournal(ctx context.Context, id string) (barkat.Journal, error)
+	// ListJournals returns a filtered, paginated list of journal summaries (no associations).
+	ListJournals(ctx context.Context, query barkat.JournalQuery) ([]barkat.Journal, int64, error)
 }
 
 type JournalRepositoryImpl struct {
@@ -32,32 +32,32 @@ func NewJournalRepository(db *gorm.DB) *JournalRepositoryImpl {
 	}
 }
 
-// ---- Entry ----
+// ---- Journal ----
 
-func (r *JournalRepositoryImpl) CreateEntry(ctx context.Context, entry *barkat.Entry) error {
+func (r *JournalRepositoryImpl) CreateJournal(ctx context.Context, journal *barkat.Journal) error {
 	// HACK: Remove Redundant Methods directly Use Create, Get from Base Repo.
-	return r.Db.WithContext(ctx).Create(entry).Error
+	return r.Db.WithContext(ctx).Create(journal).Error
 }
 
-func (r *JournalRepositoryImpl) GetEntry(ctx context.Context, id string) (barkat.Entry, error) {
-	var entry barkat.Entry
-	err := r.Db.WithContext(ctx).Preload("Images").Preload("Tags").Preload("Notes").First(&entry, "id = ?", id).Error
-	return entry, err
+func (r *JournalRepositoryImpl) GetJournal(ctx context.Context, id string) (barkat.Journal, error) {
+	var journal barkat.Journal
+	err := r.Db.WithContext(ctx).Preload("Images").Preload("Tags").Preload("Notes").First(&journal, "id = ?", id).Error
+	return journal, err
 }
 
-func (r *JournalRepositoryImpl) ListEntries(ctx context.Context, query barkat.EntryQuery) ([]barkat.Entry, int64, error) {
-	tx := r.applyEntryFilters(r.Db.WithContext(ctx).Model(&barkat.Entry{}), query)
+func (r *JournalRepositoryImpl) ListJournals(ctx context.Context, query barkat.JournalQuery) ([]barkat.Journal, int64, error) {
+	tx := r.applyJournalFilters(r.Db.WithContext(ctx).Model(&barkat.Journal{}), query)
 
 	var total int64
 	if err := tx.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	entries, err := r.fetchEntries(tx, query)
-	return entries, total, err
+	journals, err := r.fetchJournals(tx, query)
+	return journals, total, err
 }
 
-func (r *JournalRepositoryImpl) applyEntryFilters(tx *gorm.DB, query barkat.EntryQuery) *gorm.DB {
+func (r *JournalRepositoryImpl) applyJournalFilters(tx *gorm.DB, query barkat.JournalQuery) *gorm.DB {
 	if query.Ticker != "" {
 		tx = tx.Where("ticker = ?", query.Ticker)
 	}
@@ -79,7 +79,7 @@ func (r *JournalRepositoryImpl) applyEntryFilters(tx *gorm.DB, query barkat.Entr
 	return tx
 }
 
-func (r *JournalRepositoryImpl) fetchEntries(tx *gorm.DB, query barkat.EntryQuery) ([]barkat.Entry, error) {
+func (r *JournalRepositoryImpl) fetchJournals(tx *gorm.DB, query barkat.JournalQuery) ([]barkat.Journal, error) {
 	orderClause := "created_at DESC"
 	if query.SortBy != "" {
 		direction := "DESC"
@@ -89,8 +89,8 @@ func (r *JournalRepositoryImpl) fetchEntries(tx *gorm.DB, query barkat.EntryQuer
 		orderClause = query.SortBy + " " + direction
 	}
 
-	var entries []barkat.Entry
+	var journals []barkat.Journal
 	// HACK: Use SafeTx from Base Repo.
-	err := tx.Order(orderClause).Offset(query.Offset).Limit(query.Limit).Find(&entries).Error
-	return entries, err
+	err := tx.Order(orderClause).Offset(query.Offset).Limit(query.Limit).Find(&journals).Error
+	return journals, err
 }

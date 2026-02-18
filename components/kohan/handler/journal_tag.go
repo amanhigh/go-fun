@@ -32,7 +32,7 @@ func NewTagHandler(tagMgr manager.TagManager) *TagHandlerImpl {
 }
 
 func (h *TagHandlerImpl) HandleCreateTag(c *gin.Context) {
-	entryID := c.Param("id")
+	journalID := c.Param("id")
 	var tag barkat.Tag
 	if err := c.ShouldBindJSON(&tag); err != nil {
 		err = util.ProcessValidationError(err)
@@ -40,7 +40,7 @@ func (h *TagHandlerImpl) HandleCreateTag(c *gin.Context) {
 		return
 	}
 
-	createdTag, httpErr := h.tagMgr.CreateTag(c.Request.Context(), entryID, tag)
+	createdTag, httpErr := h.tagMgr.CreateTag(c.Request.Context(), journalID, tag)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
@@ -49,9 +49,9 @@ func (h *TagHandlerImpl) HandleCreateTag(c *gin.Context) {
 }
 
 func (h *TagHandlerImpl) HandleListTags(c *gin.Context) {
-	entryID := c.Param("id")
+	journalID := c.Param("id")
 	tagType := c.Query("type")
-	tags, httpErr := h.tagMgr.ListTags(c.Request.Context(), entryID, tagType)
+	tags, httpErr := h.tagMgr.ListTags(c.Request.Context(), journalID, tagType)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
@@ -60,9 +60,9 @@ func (h *TagHandlerImpl) HandleListTags(c *gin.Context) {
 }
 
 func (h *TagHandlerImpl) HandleDeleteTag(c *gin.Context) {
-	entryID := c.Param("id")
+	journalID := c.Param("id")
 	tagID := c.Param("tagId")
-	if httpErr := h.tagMgr.DeleteTag(c.Request.Context(), entryID, tagID); httpErr != nil {
+	if httpErr := h.tagMgr.DeleteTag(c.Request.Context(), journalID, tagID); httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}

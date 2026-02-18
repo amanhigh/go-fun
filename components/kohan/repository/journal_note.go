@@ -18,7 +18,7 @@ import (
 type NoteRepository interface {
 	util.BaseDbRepositoryInterface
 	// ListNotes returns all notes for an entry, optionally filtered by status.
-	ListNotes(ctx context.Context, entryID string, status string) ([]barkat.Note, common.HttpError)
+	ListNotes(ctx context.Context, journalID string, status string) ([]barkat.Note, common.HttpError)
 }
 
 type NoteRepositoryImpl struct {
@@ -32,10 +32,10 @@ func NewNoteRepository(db *gorm.DB) *NoteRepositoryImpl {
 	return &NoteRepositoryImpl{BaseDbRepository: util.NewBaseDbRepository(db)}
 }
 
-func (r *NoteRepositoryImpl) ListNotes(ctx context.Context, entryID, status string) ([]barkat.Note, common.HttpError) {
+func (r *NoteRepositoryImpl) ListNotes(ctx context.Context, journalID, status string) ([]barkat.Note, common.HttpError) {
 	var notes []barkat.Note
 	var txErr error
-	query := r.SafeTx(ctx).Where("entry_id = ?", entryID)
+	query := r.SafeTx(ctx).Where("journal_id = ?", journalID)
 	if status != "" {
 		query = query.Where("status = ?", status)
 	}

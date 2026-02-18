@@ -19,12 +19,12 @@ import (
 	"gorm.io/gorm"
 )
 
-func decodeEntry(w *httptest.ResponseRecorder, expectedStatus int) barkat.Entry {
-	return util.UnenvelopeAndAssertStatus[barkat.Entry](w, expectedStatus)
+func decodeEntry(w *httptest.ResponseRecorder, expectedStatus int) barkat.Journal {
+	return util.UnenvelopeAndAssertStatus[barkat.Journal](w, expectedStatus)
 }
 
-func decodeEntryList(w *httptest.ResponseRecorder, expectedStatus int) barkat.EntryList {
-	return util.UnenvelopeAndAssertStatus[barkat.EntryList](w, expectedStatus)
+func decodeEntryList(w *httptest.ResponseRecorder, expectedStatus int) barkat.JournalList {
+	return util.UnenvelopeAndAssertStatus[barkat.JournalList](w, expectedStatus)
 }
 
 var _ = Describe("JournalHandler Integration - GET Tests", func() {
@@ -60,10 +60,10 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 	})
 
 	Describe("GET /v1/journal/{id} - Retrieve Entry", func() {
-		var createdEntry barkat.Entry
+		var createdEntry barkat.Journal
 
 		BeforeEach(func() {
-			entry := barkat.Entry{
+			entry := barkat.Journal{
 				Ticker:   "GRSE",
 				Sequence: "MWD",
 				Type:     "REJECTED",
@@ -75,13 +75,13 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					{Timeframe: "TMN"},
 				},
 			}
-			Expect(entryMgr.CreateEntry(testCtx, &entry)).To(Succeed())
+			Expect(entryMgr.CreateJournal(testCtx, &entry)).To(Succeed())
 			createdEntry = entry
 		})
 
 		Context("Happy Path", func() {
 			Context("with valid entry ID", func() {
-				var response barkat.Entry
+				var response barkat.Journal
 
 				BeforeEach(func() {
 					req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/"+createdEntry.ID, nil)
@@ -138,7 +138,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 	})
 
 	Describe("GET /v1/journal - List Entries", func() {
-		var createdEntries []barkat.Entry
+		var createdEntries []barkat.Journal
 
 		BeforeEach(func() {
 			defaultImages := []barkat.Image{
@@ -147,7 +147,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				{Timeframe: "MN"},
 				{Timeframe: "TMN"},
 			}
-			entries := []barkat.Entry{
+			entries := []barkat.Journal{
 				{Ticker: "GRSE", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: defaultImages},
 				{Ticker: "PDSL", Sequence: "YR", Type: "SET", Status: "TAKEN", Images: defaultImages},
 				{Ticker: "SNF", Sequence: "MWD", Type: "RESULT", Status: "SUCCESS", Images: defaultImages},
@@ -155,14 +155,14 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				{Ticker: "INFY", Sequence: "MWD", Type: "SET", Status: "RUNNING", Images: defaultImages},
 			}
 			for _, entry := range entries {
-				Expect(entryMgr.CreateEntry(testCtx, &entry)).To(Succeed())
+				Expect(entryMgr.CreateJournal(testCtx, &entry)).To(Succeed())
 				createdEntries = append(createdEntries, entry)
 			}
 		})
 
 		Context("Happy Path", func() {
 			Context("default pagination (no filters)", func() {
-				var response barkat.EntryList
+				var response barkat.JournalList
 
 				BeforeEach(func() {
 					req, w = util.CreateTestRequest("GET", barkat.JournalEntries, nil)
@@ -448,7 +448,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 							beforeTime := time.Now().Add(1 * time.Hour).Format(time.RFC3339)
 							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before="+url.QueryEscape(beforeTime), nil)
 							router.ServeHTTP(w, req)
-							var response barkat.EntryList
+							var response barkat.JournalList
 							util.AssertJSONAndStatus(w, http.StatusOK, &response)
 							// All entries created in this test should be returned
 							Expect(response.Records).To(HaveLen(5))
@@ -676,7 +676,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 					router = util.CreateTestGinRouter()
 					v1 := router.Group("/v1")
-					handler.SetupJournalEntryRoutes(v1, journalHandler)
+					journal := v1.Group("/journal")
+					handler.SetupJournalEntryRoutes(journal, journalHandler)
 
 					req, w = util.CreateTestRequest("GET", barkat.JournalEntries, nil)
 					router.ServeHTTP(w, req)
