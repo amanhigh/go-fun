@@ -43,18 +43,21 @@ func ReverseArray(input any) {
 	}
 }
 
-func ParseFloat(value string) (result float64) {
-	var err error
-	result = -1
+func ParseFloat(value string) float64 {
+	const defaultValue = -1.0
 
 	floatVal := strings.TrimSpace(value)
-	if floatVal != "" {
-		if result, err = strconv.ParseFloat(floatVal, 64); err != nil {
-			log.Error().Str("Value", value).Err(err).Msg("Error Parsing Float value")
-		}
+	if floatVal == "" {
+		return defaultValue
 	}
 
-	return
+	parsed, err := strconv.ParseFloat(floatVal, 64)
+	if err != nil {
+		log.Error().Str("Value", value).Err(err).Msg("Error Parsing Float value")
+		return defaultValue
+	}
+
+	return parsed
 }
 
 // RoundToDecimals rounds a float64 value to specified decimal places

@@ -44,16 +44,15 @@ var _ = Describe("Type", func() {
 	})
 
 	Context("ParseFloat", func() {
-		It("should parse floats but has implementation bug", func() {
+		It("should parse floats and fall back to default on invalid inputs", func() {
 			result := util.ParseFloat("123.45")
 			Expect(result).To(Equal(123.45))
 
 			result = util.ParseFloat("")
 			Expect(result).To(Equal(-1.0))
 
-			// Implementation bug: doesn't reset to -1 on error
 			result = util.ParseFloat("invalid")
-			Expect(result).To(Equal(0.0)) // Should be -1.0 but implementation has bug
+			Expect(result).To(Equal(-1.0))
 		})
 	})
 
