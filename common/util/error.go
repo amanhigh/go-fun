@@ -57,6 +57,7 @@ func ResponseProcessor(response *resty.Response, restyErr error) common.HttpErro
 }
 
 func ProcessValidationError(validationErr error) common.HttpError {
+	// TODO: Review this file completely.
 	var errs validator.ValidationErrors
 	if errors.As(validationErr, &errs) {
 		for _, e := range errs {
