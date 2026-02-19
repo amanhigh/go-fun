@@ -1,6 +1,8 @@
 package common
 
 import (
+	"fmt"
+
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/handlers"
 	"github.com/amanhigh/go-fun/models/config"
@@ -49,7 +51,14 @@ func (fi *FunAppInjector) registerCoreDependencies() {
 	container.MustSingleton(fi.di, func() config.FunAppConfig {
 		return fi.config
 	})
-	container.MustSingleton(fi.di, util.NewGracefulShutdown)
+
+	// HACK: Don't inject Rate & Http Config
+	container.MustSingleton(fi.di, func() config.RateLimit {
+		return fi.config.RateLimit
+	})	
+	container.MustSingleton(fi.di, func() util.HttpServerConfig {
+		return util.HttpServerConfig{Name: NAMESPACE, Port: fi.config.Server.Port, Shutdown: util.NewGracefulShutdown()}
+	})
 	container.MustSingleton(fi.di, newBaseHTTPServer)
 	container.MustSingleton(fi.di, newPrometheus)
 	container.MustSingleton(fi.di, newDb)
@@ -64,10 +73,18 @@ func (fi *FunAppInjector) registerValidators() {
 }
 
 func (fi *FunAppInjector) buildApplication() (app any, err error) {
-	app = &handlers.FunServer{}
-	err = fi.di.Fill(app)
-	if err == nil {
-		log.Info().Int("Port", fi.config.Server.Port).Msg("Injection Complete")
+	// HACK: Streamline Base Server Building.
+	var base *util.BaseHTTPServer
+	if err = fi.di.Resolve(&base); err != nil {
+		return nil, fmt.Errorf("failed to resolve base http server: %w", err)
 	}
-	return
+
+	lifecycle := &handlers.FunAppServerLifecycle{}
+	if err = fi.di.Fill(lifecycle); err != nil {
+		return nil, fmt.Errorf("failed to fill fun app lifecycle: %w", err)
+	}
+	base.SetLifecycle(lifecycle)
+
+	log.Info().Int("Port", fi.config.Server.Port).Msg("Injection Complete")
+	return base, nil
 }

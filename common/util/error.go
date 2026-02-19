@@ -1,9 +1,12 @@
 package util
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/go-playground/validator/v10"
@@ -53,22 +56,44 @@ func ResponseProcessor(response *resty.Response, restyErr error) common.HttpErro
 	return handleStatusCode(response.StatusCode())
 }
 
-func ProcessValidationError(validationErr error) (err common.HttpError) {
+func ProcessValidationError(validationErr error) common.HttpError {
 	var errs validator.ValidationErrors
 	if errors.As(validationErr, &errs) {
 		for _, e := range errs {
-			err = common.NewHttpError(fmt.Sprintf("'%s' with Value '%v' Violates '%s (%s)'", e.Field(), e.Value(), e.Tag(), e.Param()), http.StatusBadRequest)
-			break
+			return common.NewHttpError(fmt.Sprintf("'%s' with Value '%v' Violates '%s (%s)'", e.Field(), e.Value(), e.Tag(), e.Param()), http.StatusBadRequest)
 		}
-	} else {
-		var httpErr common.HttpError
-		if errors.As(validationErr, &httpErr) {
-			return httpErr
-		}
-		log.Warn().
-			Str("ActualType", fmt.Sprintf("%T", validationErr)).
-			Msg("Failed to convert validation error to HttpError")
-		return common.NewHttpError("Invalid validation error format", http.StatusInternalServerError)
 	}
-	return
+
+	var httpErr common.HttpError
+	if errors.As(validationErr, &httpErr) {
+		return httpErr
+	}
+
+	var syntaxErr *json.SyntaxError
+	if errors.As(validationErr, &syntaxErr) {
+		return common.NewHttpError(fmt.Sprintf("Invalid JSON at position %d", syntaxErr.Offset), http.StatusBadRequest)
+	}
+
+	var unmarshalTypeErr *json.UnmarshalTypeError
+	if errors.As(validationErr, &unmarshalTypeErr) {
+		field := unmarshalTypeErr.Field
+		if field == "" {
+			field = unmarshalTypeErr.Struct
+		}
+		return common.NewHttpError(fmt.Sprintf("Field '%s' expects %s", field, unmarshalTypeErr.Type.String()), http.StatusBadRequest)
+	}
+
+	if errors.Is(validationErr, io.EOF) || errors.Is(validationErr, io.ErrUnexpectedEOF) {
+		return common.NewHttpError("Request body cannot be empty or malformed JSON", http.StatusBadRequest)
+	}
+
+	var numErr *strconv.NumError
+	if errors.As(validationErr, &numErr) {
+		return common.NewHttpError(fmt.Sprintf("Query parameter '%s' must be numeric", numErr.Func), http.StatusBadRequest)
+	}
+
+	log.Warn().
+		Str("ActualType", fmt.Sprintf("%T", validationErr)).
+		Msg("Failed to convert validation error to HttpError")
+	return common.NewHttpError("Invalid validation error format", http.StatusInternalServerError)
 }

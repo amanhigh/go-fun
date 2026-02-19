@@ -16,13 +16,14 @@ import (
 	"gopkg.in/redis.v5"
 )
 
-func newBaseHTTPServer(cfg config.FunAppConfig, shutdown util.Shutdown) *util.BaseHTTPServer {
-	// HACK: Only pass required Config extract sepearte HttpServerConfig with required fields and use. Nest it in FunAppConfig.
-	engine := newGin(cfg)
-	return util.NewBaseHTTPServerWithEngine(NAMESPACE, cfg.Server.Port, shutdown, engine)
+// FIXME: Move near BaseHttp Server definition.
+func newBaseHTTPServer(cfg util.HttpServerConfig, rateCfg config.RateLimit) *util.BaseHTTPServer {
+	engine := newGin(rateCfg)
+	return util.NewBaseHTTPServerWithEngine(cfg, engine)
 }
 
-func newGin(cfg config.FunAppConfig) (engine *gin.Engine) {
+// FIXME: Move this to BaseHTTPServer
+func newGin(rateCfg config.RateLimit) (engine *gin.Engine) {
 	engine = gin.New()
 
 	/* Middleware */
@@ -31,7 +32,7 @@ func newGin(cfg config.FunAppConfig) (engine *gin.Engine) {
 	engine.Use(otelgin.Middleware(NAMESPACE + "-gin"))
 
 	/* Setup Rate Limit if enabled */
-	setupRateLimit(cfg.RateLimit, engine)
+	setupRateLimit(rateCfg, engine)
 	return
 }
 

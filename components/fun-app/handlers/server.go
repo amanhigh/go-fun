@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/amanhigh/go-fun/common/telemetry"
 	"github.com/amanhigh/go-fun/common/util"
@@ -15,9 +14,9 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
 )
 
-type FunServer struct {
-	*util.BaseHTTPServer `container:"type"`
-	Tracer               trace.Tracer `container:"type"`
+// FunAppServerLifecycle implements ServerLifecycle for the FunApp HTTP server.
+type FunAppServerLifecycle struct {
+	Tracer trace.Tracer `container:"type"`
 
 	/* Handlers */
 	PersonHandler     PersonHandler     `container:"type"`
@@ -27,23 +26,9 @@ type FunServer struct {
 	Watermill util.WatermillController `container:"type"`
 }
 
-func (fs *FunServer) Start(_ context.Context) (err error) {
-	fs.RegisterRoutes = fs.registerRoutes
-	fs.BeforeStart = fs.beforeStart
-	// HACK: Add method to Provide Swagger in Lifecycle as well.
-	fs.BeforeShutdown = fs.beforeShutdown
-	fs.AfterShutdown = func(ctx context.Context) {
-		telemetry.ShutdownTracerProvider(ctx)
-	}
+var _ util.ServerLifecycle = (*FunAppServerLifecycle)(nil)
 
-	// TODO: Why Linter Flags why it Flags Internal Packages.
-	if err = fs.BaseHTTPServer.Start(); err != nil {
-		return fmt.Errorf("start fun server: %w", err)
-	}
-	return nil
-}
-
-func (fs *FunServer) registerRoutes(engine *gin.Engine) {
+func (fs *FunAppServerLifecycle) RegisterRoutes(engine *gin.Engine) {
 	docs.SwaggerInfo.BasePath = "/v1"
 
 	// Version Group
@@ -64,6 +49,7 @@ func (fs *FunServer) registerRoutes(engine *gin.Engine) {
 	adminGroup := engine.Group("/admin")
 	adminGroup.GET("/stop", fs.AdminHandler.Stop)
 
+	// FIXME: Extract Swagger Lifecycle method to RegisterSwagger Handler
 	// Add Swagger - https://github.com/swaggo/gin-swagger
 	// make swag-fun
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -76,17 +62,18 @@ func (fs *FunServer) registerRoutes(engine *gin.Engine) {
 	pprof.Register(engine)
 }
 
-func (fs *FunServer) beforeStart(ctx context.Context) {
+func (fs *FunAppServerLifecycle) BeforeStart(ctx context.Context) {
 	fs.Watermill.Start(ctx)
 }
 
-func (fs *FunServer) beforeShutdown(ctx context.Context) {
+func (fs *FunAppServerLifecycle) BeforeShutdown(ctx context.Context) {
 	_, span := fs.Tracer.Start(ctx, "Stop.Server")
 	defer span.End()
 
 	fs.Watermill.Shutdown(ctx)
 }
 
-func (fs *FunServer) Stop(c context.Context) {
-	fs.BaseHTTPServer.Stop(c)
+func (fs *FunAppServerLifecycle) AfterShutdown(ctx context.Context) {
+	// TODO: Verify Git History withRefactoring nothing Broke
+	telemetry.ShutdownTracerProvider(ctx)
 }

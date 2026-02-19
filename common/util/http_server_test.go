@@ -13,6 +13,35 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+// testLifecycle is a test helper implementing ServerLifecycle with optional func overrides.
+type testLifecycle struct {
+	registerRoutes func(*gin.Engine)
+	beforeStart    func(context.Context)
+	beforeShutdown func(context.Context)
+	afterShutdown  func(context.Context)
+}
+
+func (t *testLifecycle) RegisterRoutes(e *gin.Engine) {
+	if t.registerRoutes != nil {
+		t.registerRoutes(e)
+	}
+}
+func (t *testLifecycle) BeforeStart(ctx context.Context) {
+	if t.beforeStart != nil {
+		t.beforeStart(ctx)
+	}
+}
+func (t *testLifecycle) BeforeShutdown(ctx context.Context) {
+	if t.beforeShutdown != nil {
+		t.beforeShutdown(ctx)
+	}
+}
+func (t *testLifecycle) AfterShutdown(ctx context.Context) {
+	if t.afterShutdown != nil {
+		t.afterShutdown(ctx)
+	}
+}
+
 var _ = Describe("BaseHTTPServer", func() {
 	var (
 		server   *util.BaseHTTPServer
@@ -22,10 +51,11 @@ var _ = Describe("BaseHTTPServer", func() {
 	BeforeEach(func() {
 		gin.SetMode(gin.TestMode)
 		shutdown = util.NewGracefulShutdown()
-		server = util.NewBaseHTTPServer("test", 0, shutdown)
+		server = util.NewBaseHTTPServer(util.HttpServerConfig{Name: "test", Port: 0, Shutdown: shutdown})
 	})
 
 	Context("Constructor", func() {
+		// TODO: Improve this test structuring.
 		It("should create server with correct configuration", func() {
 			Expect(server).ToNot(BeNil())
 			Expect(server.Name).To(Equal("test"))
@@ -55,7 +85,7 @@ var _ = Describe("BaseHTTPServer", func() {
 
 			// Recreate server with the free port
 			shutdown = util.NewGracefulShutdown()
-			server = util.NewBaseHTTPServer("test", freePort, shutdown)
+			server = util.NewBaseHTTPServer(util.HttpServerConfig{Name: "test", Port: freePort, Shutdown: shutdown})
 
 			startAndWaitForServer = func() {
 				go func() {
@@ -119,12 +149,14 @@ var _ = Describe("BaseHTTPServer", func() {
 
 		It("should call RegisterRoutes hook", func() {
 			routesCalled := false
-			server.RegisterRoutes = func(engine *gin.Engine) {
-				routesCalled = true
-				engine.GET("/custom", func(c *gin.Context) {
-					c.JSON(http.StatusOK, gin.H{"custom": true})
-				})
-			}
+			server.SetLifecycle(&testLifecycle{
+				registerRoutes: func(engine *gin.Engine) {
+					routesCalled = true
+					engine.GET("/custom", func(c *gin.Context) {
+						c.JSON(http.StatusOK, gin.H{"custom": true})
+					})
+				},
+			})
 
 			startAndWaitForServer()
 			time.Sleep(100 * time.Millisecond)
@@ -143,9 +175,11 @@ var _ = Describe("BaseHTTPServer", func() {
 
 		It("should call BeforeStart hook", func() {
 			beforeStartCalled := false
-			server.BeforeStart = func(_ context.Context) {
-				beforeStartCalled = true
-			}
+			server.SetLifecycle(&testLifecycle{
+				beforeStart: func(_ context.Context) {
+					beforeStartCalled = true
+				},
+			})
 
 			startAndWaitForServer()
 			Expect(beforeStartCalled).To(BeTrue())
@@ -156,7 +190,7 @@ var _ = Describe("BaseHTTPServer", func() {
 
 		It("should handle startup errors", func() {
 			errShutdown := util.NewGracefulShutdown()
-			errServer := util.NewBaseHTTPServer("test", -1, errShutdown)
+			errServer := util.NewBaseHTTPServer(util.HttpServerConfig{Name: "test", Port: -1, Shutdown: errShutdown})
 			go func() {
 				err := errServer.Start()
 				serverDone <- err

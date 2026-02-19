@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/amanhigh/go-fun/common/tools"
-	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -42,8 +41,7 @@ var serveCmd = &cobra.Command{
 		log.Info().Dur("Wait", wait).Str("Screenshots", args[0]).Msg("Monitoring Systems")
 		// TODO: Retry When Disk not Mounted, Watermill Exponential Backoff ?
 		autoManager := core.GetKohanInterface().GetAutoManager(wait, args[0])
-		shutdown := util.NewGracefulShutdown()
-		server, err := core.GetKohanInterface().GetKohanServer(MonitorServerPort, args[0], wait, shutdown)
+		server, err := core.GetKohanInterface().GetKohanServer(MonitorServerPort, args[0], wait)
 		if err != nil {
 			return fmt.Errorf("failed to build kohan server: %w", err)
 		}

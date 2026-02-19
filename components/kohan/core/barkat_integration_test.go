@@ -71,13 +71,14 @@ var _ = PDescribe("Barkat Integration Test", func() {
 			tagHandler := handler.NewTagHandler(manager.NewTagManager(entryMgr, repository.NewTagRepository(db)))
 
 			shutdown := util.NewGracefulShutdown()
-			base := util.NewBaseHTTPServer("kohan", testPort, shutdown)
-			server := core.NewKohanServer(base, nil, journalHandler, imageHandler, noteHandler, tagHandler)
+			base := util.NewBaseHTTPServer(util.HttpServerConfig{Name: "kohan", Port: testPort, Shutdown: shutdown})
+			lifecycle := core.NewKohanServerLifecycle(nil, journalHandler, imageHandler, noteHandler, tagHandler)
+			base.SetLifecycle(lifecycle)
 			baseURL = fmt.Sprintf("http://localhost:%d", testPort)
 
 			go func() {
 				defer GinkgoRecover()
-				_ = server.Start()
+				_ = base.Start()
 			}()
 
 			Eventually(func() error {

@@ -17,6 +17,15 @@ const (
 	defaultShutdownTimeout = 3 * time.Second
 )
 
+// HttpServerConfig holds the minimal configuration needed to create a BaseHTTPServer.
+type HttpServerConfig struct {
+	// FIXME: Move to Models Package.
+	Name string
+	Port int
+	// BUG: Shutdown should be injected as a dependency, not part of config.
+	Shutdown Shutdown
+}
+
 // ServerLifecycle defines hooks that customise HTTP server behaviour.
 // Implement this interface and attach via SetLifecycle to override the default no-ops.
 type ServerLifecycle interface {
@@ -52,13 +61,13 @@ type BaseHTTPServer struct {
 
 // NewBaseHTTPServer creates a BaseHTTPServer with a default gin.Engine, standard timeouts,
 // and a /health route.
-func NewBaseHTTPServer(name string, port int, shutdown Shutdown) *BaseHTTPServer {
-	return NewBaseHTTPServerWithEngine(name, port, shutdown, gin.Default())
+func NewBaseHTTPServer(cfg HttpServerConfig) *BaseHTTPServer {
+	return NewBaseHTTPServerWithEngine(cfg, gin.Default())
 }
 
 // NewBaseHTTPServerWithEngine creates a BaseHTTPServer using a pre-configured gin.Engine
 // (e.g. with custom middleware, rate limiting, prometheus) and a /health route.
-func NewBaseHTTPServerWithEngine(name string, port int, shutdown Shutdown, engine *gin.Engine) *BaseHTTPServer {
+func NewBaseHTTPServerWithEngine(cfg HttpServerConfig, engine *gin.Engine) *BaseHTTPServer {
 	engine.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
@@ -67,7 +76,7 @@ func NewBaseHTTPServerWithEngine(name string, port int, shutdown Shutdown, engin
 	engine.GET("/debug/statsviz/*filepath", telemetry.StatvizMetrics)
 
 	srv := &http.Server{
-		Addr:              fmt.Sprintf(":%d", port),
+		Addr:              fmt.Sprintf(":%d", cfg.Port),
 		Handler:           engine,
 		ReadHeaderTimeout: defaultReadTimeout,
 		ReadTimeout:       defaultReadTimeout,
@@ -75,11 +84,11 @@ func NewBaseHTTPServerWithEngine(name string, port int, shutdown Shutdown, engin
 	}
 
 	return &BaseHTTPServer{
-		Name:      name,
+		Name:      cfg.Name,
 		Engine:    engine,
 		Server:    srv,
 		lifecycle: noopLifecycle{},
-		shutdown:  shutdown,
+		shutdown:  cfg.Shutdown,
 	}
 }
 

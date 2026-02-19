@@ -50,8 +50,8 @@ func (ki *KohanInjector) provideBarkatDB() (*gorm.DB, error) {
 	return db, nil
 }
 
-func provideBaseHTTPServer(port int, shutdown util.Shutdown) *util.BaseHTTPServer {
-	return util.NewBaseHTTPServer("kohan", port, shutdown)
+func provideBaseHTTPServer(cfg util.HttpServerConfig) *util.BaseHTTPServer {
+	return util.NewBaseHTTPServer(cfg)
 }
 
 // ---- Entry ----
