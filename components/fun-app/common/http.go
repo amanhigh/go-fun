@@ -17,9 +17,9 @@ import (
 )
 
 // FIXME: Move near BaseHttp Server definition.
-func newBaseHTTPServer(cfg util.HttpServerConfig, rateCfg config.RateLimit) *util.BaseHTTPServer {
+func newBaseHTTPServer(cfg config.HttpServerConfig, rateCfg config.RateLimit, shutdown util.Shutdown) *util.HttpServer {
 	engine := newGin(rateCfg)
-	return util.NewBaseHTTPServerWithEngine(cfg, engine)
+	return util.NewHttpServer(cfg, engine, shutdown)
 }
 
 // FIXME: Move this to BaseHTTPServer
@@ -57,7 +57,7 @@ func setupRateLimit(cfg config.RateLimit, engine *gin.Engine) {
 	}
 }
 
-func newPrometheus(base *util.BaseHTTPServer) (prometheus *ginprometheus.Prometheus) {
+func newPrometheus(base *util.HttpServer) (prometheus *ginprometheus.Prometheus) {
 	// HACK: Only pass required engine here.
 	/* Access Metrics */
 	// Visit http://localhost:8080/metrics

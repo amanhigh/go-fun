@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/common/telemetry"
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
@@ -16,15 +17,6 @@ const (
 	defaultWriteTimeout    = 5 * time.Second
 	defaultShutdownTimeout = 3 * time.Second
 )
-
-// HttpServerConfig holds the minimal configuration needed to create a BaseHTTPServer.
-type HttpServerConfig struct {
-	// FIXME: Move to Models Package.
-	Name string
-	Port int
-	// BUG: Shutdown should be injected as a dependency, not part of config.
-	Shutdown Shutdown
-}
 
 // ServerLifecycle defines hooks that customise HTTP server behaviour.
 // Implement this interface and attach via SetLifecycle to override the default no-ops.
@@ -47,11 +39,12 @@ func (noopLifecycle) BeforeStart(_ context.Context)    {}
 func (noopLifecycle) BeforeShutdown(_ context.Context) {}
 func (noopLifecycle) AfterShutdown(_ context.Context)  {}
 
-// BaseHTTPServer provides shared HTTP server lifecycle: creation with standard
+// HttpServer provides shared HTTP server lifecycle: creation with standard
 // timeouts, a default /health route, graceful start/stop, and overridable hooks.
 //
 // Call SetLifecycle to attach a ServerLifecycle implementation.
-type BaseHTTPServer struct {
+// HACK: Extract Interface and rename struct to HttpServerImpl
+type HttpServer struct {
 	Name      string
 	Engine    *gin.Engine
 	Server    *http.Server
@@ -59,15 +52,9 @@ type BaseHTTPServer struct {
 	shutdown  Shutdown
 }
 
-// NewBaseHTTPServer creates a BaseHTTPServer with a default gin.Engine, standard timeouts,
+// NewHttpServer creates a HttpServer with the provided gin.Engine, standard timeouts,
 // and a /health route.
-func NewBaseHTTPServer(cfg HttpServerConfig) *BaseHTTPServer {
-	return NewBaseHTTPServerWithEngine(cfg, gin.Default())
-}
-
-// NewBaseHTTPServerWithEngine creates a BaseHTTPServer using a pre-configured gin.Engine
-// (e.g. with custom middleware, rate limiting, prometheus) and a /health route.
-func NewBaseHTTPServerWithEngine(cfg HttpServerConfig, engine *gin.Engine) *BaseHTTPServer {
+func NewHttpServer(cfg config.HttpServerConfig, engine *gin.Engine, shutdown Shutdown) *HttpServer {
 	engine.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
@@ -83,47 +70,47 @@ func NewBaseHTTPServerWithEngine(cfg HttpServerConfig, engine *gin.Engine) *Base
 		WriteTimeout:      defaultWriteTimeout,
 	}
 
-	return &BaseHTTPServer{
+	return &HttpServer{
 		Name:      cfg.Name,
 		Engine:    engine,
 		Server:    srv,
 		lifecycle: noopLifecycle{},
-		shutdown:  cfg.Shutdown,
+		shutdown:  shutdown,
 	}
 }
 
 // SetLifecycle attaches a ServerLifecycle to this server.
-func (b *BaseHTTPServer) SetLifecycle(lc ServerLifecycle) {
-	b.lifecycle = lc
+func (h *HttpServer) SetLifecycle(lc ServerLifecycle) {
+	h.lifecycle = lc
 }
 
 // Start registers routes, runs BeforeStart hook, begins listening, and blocks until graceful shutdown completes.
-func (b *BaseHTTPServer) Start() error {
-	b.lifecycle.RegisterRoutes(b.Engine)
-	b.lifecycle.BeforeStart(context.Background())
+func (h *HttpServer) Start() error {
+	h.lifecycle.RegisterRoutes(h.Engine)
+	h.lifecycle.BeforeStart(context.Background())
 
 	errChan := make(chan error, 1)
 	serverStopped := make(chan struct{})
 
-	go b.listenAndServe(errChan, serverStopped)
-	go b.waitForShutdown(errChan, serverStopped)
+	go h.listenAndServe(errChan, serverStopped)
+	go h.waitForShutdown(errChan, serverStopped)
 
 	err := <-errChan
 	close(serverStopped)
 	if err != nil {
-		log.Error().Err(err).Str("server", b.Name).Msg("Server error occurred")
+		log.Error().Err(err).Str("server", h.Name).Msg("Server error occurred")
 	}
 	return err
 }
 
 // Stop triggers graceful shutdown programmatically.
-func (b *BaseHTTPServer) Stop(ctx context.Context) {
-	b.shutdown.Stop(ctx)
+func (h *HttpServer) Stop(ctx context.Context) {
+	h.shutdown.Stop(ctx)
 }
 
-func (b *BaseHTTPServer) listenAndServe(errChan chan<- error, stopped <-chan struct{}) {
-	log.Info().Str("addr", b.Server.Addr).Str("server", b.Name).Msg("Starting server")
-	if err := b.Server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+func (h *HttpServer) listenAndServe(errChan chan<- error, stopped <-chan struct{}) {
+	log.Info().Str("addr", h.Server.Addr).Str("server", h.Name).Msg("Starting server")
+	if err := h.Server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		select {
 		case errChan <- err:
 		case <-stopped:
@@ -131,17 +118,17 @@ func (b *BaseHTTPServer) listenAndServe(errChan chan<- error, stopped <-chan str
 	}
 }
 
-func (b *BaseHTTPServer) waitForShutdown(errChan chan<- error, stopped <-chan struct{}) {
-	shutdownCtx := b.shutdown.Wait()
+func (h *HttpServer) waitForShutdown(errChan chan<- error, stopped <-chan struct{}) {
+	shutdownCtx := h.shutdown.Wait()
 
-	b.lifecycle.BeforeShutdown(shutdownCtx)
+	h.lifecycle.BeforeShutdown(shutdownCtx)
 
 	ctxTimed, cancel := context.WithTimeout(context.Background(), defaultShutdownTimeout)
 	defer cancel()
 
-	log.Info().Str("server", b.Name).Msg("Shutting down server gracefully")
-	if err := b.Server.Shutdown(ctxTimed); err != nil {
-		log.Error().Err(err).Str("server", b.Name).Msg("Server forced shutdown")
+	log.Info().Str("server", h.Name).Msg("Shutting down server gracefully")
+	if err := h.Server.Shutdown(ctxTimed); err != nil {
+		log.Error().Err(err).Str("server", h.Name).Msg("Server forced shutdown")
 		select {
 		case errChan <- fmt.Errorf("graceful shutdown failed: %w", err):
 		case <-stopped:
@@ -149,9 +136,9 @@ func (b *BaseHTTPServer) waitForShutdown(errChan chan<- error, stopped <-chan st
 		return
 	}
 
-	b.lifecycle.AfterShutdown(shutdownCtx)
+	h.lifecycle.AfterShutdown(shutdownCtx)
 
-	log.Info().Ctx(shutdownCtx).Str("server", b.Name).Msg("Server shutdown complete")
+	log.Info().Ctx(shutdownCtx).Str("server", h.Name).Msg("Server shutdown complete")
 	select {
 	case errChan <- nil:
 	case <-stopped:

@@ -15,6 +15,8 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
+	"github.com/amanhigh/go-fun/models/config"
+	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -71,7 +73,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 			tagHandler := handler.NewTagHandler(manager.NewTagManager(entryMgr, repository.NewTagRepository(db)))
 
 			shutdown := util.NewGracefulShutdown()
-			base := util.NewBaseHTTPServer(util.HttpServerConfig{Name: "kohan", Port: testPort, Shutdown: shutdown})
+			base := util.NewHttpServer(config.HttpServerConfig{Name: "kohan", Port: testPort}, gin.Default(), shutdown)
 			lifecycle := core.NewKohanServerLifecycle(nil, journalHandler, imageHandler, noteHandler, tagHandler)
 			base.SetLifecycle(lifecycle)
 			baseURL = fmt.Sprintf("http://localhost:%d", testPort)

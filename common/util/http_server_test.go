@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -42,16 +43,16 @@ func (t *testLifecycle) AfterShutdown(ctx context.Context) {
 	}
 }
 
-var _ = Describe("BaseHTTPServer", func() {
+var _ = Describe("HttpServer", func() {
 	var (
-		server   *util.BaseHTTPServer
+		server   *util.HttpServer
 		shutdown util.Shutdown
 	)
 
 	BeforeEach(func() {
 		gin.SetMode(gin.TestMode)
 		shutdown = util.NewGracefulShutdown()
-		server = util.NewBaseHTTPServer(util.HttpServerConfig{Name: "test", Port: 0, Shutdown: shutdown})
+		server = util.NewHttpServer(config.HttpServerConfig{Name: "test", Port: 0}, gin.Default(), shutdown)
 	})
 
 	Context("Constructor", func() {
@@ -85,7 +86,7 @@ var _ = Describe("BaseHTTPServer", func() {
 
 			// Recreate server with the free port
 			shutdown = util.NewGracefulShutdown()
-			server = util.NewBaseHTTPServer(util.HttpServerConfig{Name: "test", Port: freePort, Shutdown: shutdown})
+			server = util.NewHttpServer(config.HttpServerConfig{Name: "test", Port: freePort}, gin.Default(), shutdown)
 
 			startAndWaitForServer = func() {
 				go func() {
@@ -190,7 +191,7 @@ var _ = Describe("BaseHTTPServer", func() {
 
 		It("should handle startup errors", func() {
 			errShutdown := util.NewGracefulShutdown()
-			errServer := util.NewBaseHTTPServer(util.HttpServerConfig{Name: "test", Port: -1, Shutdown: errShutdown})
+			errServer := util.NewHttpServer(config.HttpServerConfig{Name: "test", Port: -1}, gin.Default(), errShutdown)
 			go func() {
 				err := errServer.Start()
 				serverDone <- err

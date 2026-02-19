@@ -138,6 +138,12 @@ var DefaultHttpConfig = HttpClientConfig{
 
 type ZoneMap map[string]Server
 
+// HttpServerConfig holds the minimal configuration needed to create a BaseHTTPServer.
+type HttpServerConfig struct {
+	Name string
+	Port int
+}
+
 func (s ZoneMap) GetUrl(zone, uri string) (url string, err error) {
 	if server, ok := s[zone]; ok {
 		return server.GetUrl(uri), nil

@@ -9,6 +9,8 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
+	"github.com/amanhigh/go-fun/models/config"
+	"github.com/gin-gonic/gin"
 	"github.com/golobby/container/v3"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -50,8 +52,8 @@ func (ki *KohanInjector) provideBarkatDB() (*gorm.DB, error) {
 	return db, nil
 }
 
-func provideBaseHTTPServer(cfg util.HttpServerConfig) *util.BaseHTTPServer {
-	return util.NewBaseHTTPServer(cfg)
+func provideHttpServer(cfg config.HttpServerConfig, shutdown util.Shutdown) *util.HttpServer {
+	return util.NewHttpServer(cfg, gin.Default(), shutdown)
 }
 
 // ---- Entry ----

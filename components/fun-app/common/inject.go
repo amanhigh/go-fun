@@ -55,10 +55,11 @@ func (fi *FunAppInjector) registerCoreDependencies() {
 	// HACK: Don't inject Rate & Http Config
 	container.MustSingleton(fi.di, func() config.RateLimit {
 		return fi.config.RateLimit
-	})	
-	container.MustSingleton(fi.di, func() util.HttpServerConfig {
-		return util.HttpServerConfig{Name: NAMESPACE, Port: fi.config.Server.Port, Shutdown: util.NewGracefulShutdown()}
 	})
+	container.MustSingleton(fi.di, func() config.HttpServerConfig {
+		return config.HttpServerConfig{Name: NAMESPACE, Port: fi.config.Server.Port}
+	})
+	container.MustSingleton(fi.di, util.NewGracefulShutdown)
 	container.MustSingleton(fi.di, newBaseHTTPServer)
 	container.MustSingleton(fi.di, newPrometheus)
 	container.MustSingleton(fi.di, newDb)
@@ -74,7 +75,7 @@ func (fi *FunAppInjector) registerValidators() {
 
 func (fi *FunAppInjector) buildApplication() (app any, err error) {
 	// HACK: Streamline Base Server Building.
-	var base *util.BaseHTTPServer
+	var base *util.HttpServer
 	if err = fi.di.Resolve(&base); err != nil {
 		return nil, fmt.Errorf("failed to resolve base http server: %w", err)
 	}

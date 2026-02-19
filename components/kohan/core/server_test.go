@@ -12,6 +12,7 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -42,7 +43,7 @@ var _ = Describe("KohanServer", func() {
 			noteHandler := handler.NewNoteHandler(manager.NewNoteManager(entryMgr, repository.NewNoteRepository(db)))
 			tagHandler := handler.NewTagHandler(manager.NewTagManager(entryMgr, repository.NewTagRepository(db)))
 			shutdown := util.NewGracefulShutdown()
-			base := util.NewBaseHTTPServer(util.HttpServerConfig{Name: "kohan", Port: 0, Shutdown: shutdown})
+			base := util.NewHttpServer(config.HttpServerConfig{Name: "kohan", Port: 0}, gin.Default(), shutdown)
 			lifecycle := core.NewKohanServerLifecycle(monitorHandler, journalHandler, imageHandler, noteHandler, tagHandler)
 			base.SetLifecycle(lifecycle)
 			Expect(base).ToNot(BeNil())
