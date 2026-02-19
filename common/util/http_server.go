@@ -17,34 +17,37 @@ const (
 	defaultShutdownTimeout = 3 * time.Second
 )
 
+// ServerLifecycle defines hooks that customise HTTP server behaviour.
+// Implement this interface and attach via SetLifecycle to override the default no-ops.
+type ServerLifecycle interface {
+	// RegisterRoutes is called once during Start to register application routes.
+	RegisterRoutes(engine *gin.Engine)
+	// BeforeStart runs after routes are registered but before the HTTP server begins listening.
+	BeforeStart(ctx context.Context)
+	// BeforeShutdown runs after the shutdown signal but before the HTTP server stops.
+	BeforeShutdown(ctx context.Context)
+	// AfterShutdown runs after the HTTP server has fully stopped.
+	AfterShutdown(ctx context.Context)
+}
+
+// noopLifecycle is the default no-op ServerLifecycle.
+type noopLifecycle struct{}
+
+func (noopLifecycle) RegisterRoutes(_ *gin.Engine)     {}
+func (noopLifecycle) BeforeStart(_ context.Context)    {}
+func (noopLifecycle) BeforeShutdown(_ context.Context) {}
+func (noopLifecycle) AfterShutdown(_ context.Context)  {}
+
 // BaseHTTPServer provides shared HTTP server lifecycle: creation with standard
 // timeouts, a default /health route, graceful start/stop, and overridable hooks.
 //
-// Embedders override func fields to customise route registration and shutdown behaviour.
+// Call SetLifecycle to attach a ServerLifecycle implementation.
 type BaseHTTPServer struct {
-	Name   string
-	Engine *gin.Engine
-	Server *http.Server
-
-	// HACK: #A Extract Server Lifecycle with below 4 Functions and use Composition.
-	// RegisterRoutes is called once during Start to register application routes.
-	// Default is a no-op (/health is already registered by the constructor).
-	// Embedders replace this to add their own routes on the gin.Engine.
-	RegisterRoutes func(engine *gin.Engine)
-
-	// BeforeStart runs after routes are registered but before the HTTP server begins listening.
-	// Default is a no-op. Embedders replace this to start background services.
-	BeforeStart func(ctx context.Context)
-
-	// BeforeShutdown runs after the shutdown signal but before the HTTP server stops.
-	// Default is a no-op. Embedders replace this to add custom pre-shutdown logic.
-	BeforeShutdown func(ctx context.Context)
-
-	// AfterShutdown runs after the HTTP server has fully stopped.
-	// Default is a no-op. Embedders replace this to add custom post-shutdown logic.
-	AfterShutdown func(ctx context.Context)
-
-	shutdown Shutdown
+	Name      string
+	Engine    *gin.Engine
+	Server    *http.Server
+	lifecycle ServerLifecycle
+	shutdown  Shutdown
 }
 
 // NewBaseHTTPServer creates a BaseHTTPServer with a default gin.Engine, standard timeouts,
@@ -71,24 +74,24 @@ func NewBaseHTTPServerWithEngine(name string, port int, shutdown Shutdown, engin
 		WriteTimeout:      defaultWriteTimeout,
 	}
 
-	noop := func(_ context.Context) {}
-	noopRoutes := func(_ *gin.Engine) {}
 	return &BaseHTTPServer{
-		Name:           name,
-		Engine:         engine,
-		Server:         srv,
-		RegisterRoutes: noopRoutes,
-		BeforeStart:    noop,
-		BeforeShutdown: noop,
-		AfterShutdown:  noop,
-		shutdown:       shutdown,
+		Name:      name,
+		Engine:    engine,
+		Server:    srv,
+		lifecycle: noopLifecycle{},
+		shutdown:  shutdown,
 	}
+}
+
+// SetLifecycle attaches a ServerLifecycle to this server.
+func (b *BaseHTTPServer) SetLifecycle(lc ServerLifecycle) {
+	b.lifecycle = lc
 }
 
 // Start registers routes, runs BeforeStart hook, begins listening, and blocks until graceful shutdown completes.
 func (b *BaseHTTPServer) Start() error {
-	b.RegisterRoutes(b.Engine)
-	b.BeforeStart(context.Background())
+	b.lifecycle.RegisterRoutes(b.Engine)
+	b.lifecycle.BeforeStart(context.Background())
 
 	errChan := make(chan error, 1)
 	serverStopped := make(chan struct{})
@@ -122,7 +125,7 @@ func (b *BaseHTTPServer) listenAndServe(errChan chan<- error, stopped <-chan str
 func (b *BaseHTTPServer) waitForShutdown(errChan chan<- error, stopped <-chan struct{}) {
 	shutdownCtx := b.shutdown.Wait()
 
-	b.BeforeShutdown(shutdownCtx)
+	b.lifecycle.BeforeShutdown(shutdownCtx)
 
 	ctxTimed, cancel := context.WithTimeout(context.Background(), defaultShutdownTimeout)
 	defer cancel()
@@ -137,7 +140,7 @@ func (b *BaseHTTPServer) waitForShutdown(errChan chan<- error, stopped <-chan st
 		return
 	}
 
-	b.AfterShutdown(shutdownCtx)
+	b.lifecycle.AfterShutdown(shutdownCtx)
 
 	log.Info().Ctx(shutdownCtx).Str("server", b.Name).Msg("Server shutdown complete")
 	select {
