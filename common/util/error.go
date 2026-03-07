@@ -56,27 +56,39 @@ func ResponseProcessor(response *resty.Response, restyErr error) common.HttpErro
 	return handleStatusCode(response.StatusCode())
 }
 
-func ProcessValidationError(validationErr error) common.HttpError {
-	// TODO: Review this file completely.
+// TODO: Review this file completely.
+
+func handleValidationError(err error) common.HttpError {
+	if httpErr := handleStructuralErrors(err); httpErr != nil {
+		return httpErr
+	}
+	return handleFormatErrors(err)
+}
+
+func handleStructuralErrors(err error) common.HttpError {
 	var errs validator.ValidationErrors
-	if errors.As(validationErr, &errs) {
+	if errors.As(err, &errs) {
 		for _, e := range errs {
 			return common.NewHttpError(fmt.Sprintf("'%s' with Value '%v' Violates '%s (%s)'", e.Field(), e.Value(), e.Tag(), e.Param()), http.StatusBadRequest)
 		}
 	}
 
 	var httpErr common.HttpError
-	if errors.As(validationErr, &httpErr) {
+	if errors.As(err, &httpErr) {
 		return httpErr
 	}
 
 	var syntaxErr *json.SyntaxError
-	if errors.As(validationErr, &syntaxErr) {
+	if errors.As(err, &syntaxErr) {
 		return common.NewHttpError(fmt.Sprintf("Invalid JSON at position %d", syntaxErr.Offset), http.StatusBadRequest)
 	}
 
+	return nil
+}
+
+func handleFormatErrors(err error) common.HttpError {
 	var unmarshalTypeErr *json.UnmarshalTypeError
-	if errors.As(validationErr, &unmarshalTypeErr) {
+	if errors.As(err, &unmarshalTypeErr) {
 		field := unmarshalTypeErr.Field
 		if field == "" {
 			field = unmarshalTypeErr.Struct
@@ -84,13 +96,21 @@ func ProcessValidationError(validationErr error) common.HttpError {
 		return common.NewHttpError(fmt.Sprintf("Field '%s' expects %s", field, unmarshalTypeErr.Type.String()), http.StatusBadRequest)
 	}
 
-	if errors.Is(validationErr, io.EOF) || errors.Is(validationErr, io.ErrUnexpectedEOF) {
+	if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
 		return common.NewHttpError("Request body cannot be empty or malformed JSON", http.StatusBadRequest)
 	}
 
 	var numErr *strconv.NumError
-	if errors.As(validationErr, &numErr) {
+	if errors.As(err, &numErr) {
 		return common.NewHttpError(fmt.Sprintf("Query parameter '%s' must be numeric", numErr.Func), http.StatusBadRequest)
+	}
+
+	return nil
+}
+
+func ProcessValidationError(validationErr error) common.HttpError {
+	if err := handleValidationError(validationErr); err != nil {
+		return err
 	}
 
 	log.Warn().

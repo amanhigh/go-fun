@@ -1,6 +1,6 @@
 module github.com/amanhigh/go-fun/components/kohan
 
-go 1.25.1
+go 1.26.0
 
 require (
 	github.com/amanhigh/go-fun/common v1.0.1

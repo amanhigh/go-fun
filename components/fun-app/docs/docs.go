@@ -312,6 +312,12 @@ const docTemplate = `{
         "common.PaginatedResponse": {
             "type": "object",
             "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
                 "total": {
                     "type": "integer"
                 }
