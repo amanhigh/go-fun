@@ -45,10 +45,6 @@ func (j *Journal) BeforeCreate(_ *gorm.DB) error {
 	if j.ID == "" {
 		j.ID = uuid.NewString()
 	}
-	// HACK: Rely on gorm to auto fill this ?
-	if j.CreatedAt.IsZero() {
-		j.CreatedAt = time.Now()
-	}
 	return nil
 }
 

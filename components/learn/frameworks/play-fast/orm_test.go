@@ -85,6 +85,8 @@ var _ = Describe("Orm", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(vertical.Name).To(Equal("Test"))
 				Expect(vertical.MyColumn).To(Equal("Hello"))
+				Expect(vertical.CreatedAt).ToNot(BeZero()) // Verify auto-populated timestamp
+				Expect(vertical.UpdatedAt).ToNot(BeZero()) // Verify auto-populated timestamp
 			})
 
 			It("should not find invalid vertical", func() {
@@ -133,6 +135,8 @@ var _ = Describe("Orm", func() {
 					Expect(foundProduct.Code).To(Equal("L1212"))
 					Expect(foundProduct.Price).To(Equal(uint(1000)))
 					Expect(foundProduct.Features).To(HaveLen(2))
+					Expect(foundProduct.CreatedAt).ToNot(BeZero()) // Verify auto-populated timestamp
+					Expect(foundProduct.UpdatedAt).ToNot(BeZero()) // Verify auto-populated timestamp
 				})
 
 				It("should query product with code", func() {

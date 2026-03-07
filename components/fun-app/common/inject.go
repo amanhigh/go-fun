@@ -59,8 +59,9 @@ func (fi *FunAppInjector) registerCoreDependencies() {
 		return config.HttpServerConfig{Name: NAMESPACE, Port: fi.config.Server.Port}
 	})
 	container.MustSingleton(fi.di, util.NewGracefulShutdown)
+	container.MustSingleton(fi.di, provideGin)
 	container.MustSingleton(fi.di, provideHttpServer)
-	container.MustSingleton(fi.di, newPrometheus)
+	container.MustSingleton(fi.di, providePrometheus)
 	container.MustSingleton(fi.di, newDb)
 	container.MustSingleton(fi.di, func() trace.Tracer {
 		return otel.Tracer(NAMESPACE)

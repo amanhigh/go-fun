@@ -16,7 +16,7 @@ import (
 	"gopkg.in/redis.v5"
 )
 
-func newGin(rateCfg config.RateLimit) (engine *gin.Engine) {
+func provideGin(rateCfg config.RateLimit) (engine *gin.Engine) {
 	engine = gin.New()
 
 	/* Middleware */
@@ -29,8 +29,7 @@ func newGin(rateCfg config.RateLimit) (engine *gin.Engine) {
 	return
 }
 
-func provideHttpServer(cfg config.HttpServerConfig, rateCfg config.RateLimit, shutdown util.Shutdown) *util.HttpServer {
-	engine := newGin(rateCfg)
+func provideHttpServer(cfg config.HttpServerConfig, engine *gin.Engine, shutdown util.Shutdown) *util.HttpServer {
 	return util.NewHttpServer(cfg, engine, shutdown)
 }
 
@@ -55,13 +54,12 @@ func setupRateLimit(cfg config.RateLimit, engine *gin.Engine) {
 	}
 }
 
-func newPrometheus(base *util.HttpServer) (prometheus *ginprometheus.Prometheus) {
-	// HACK: Only pass required engine here.
+func providePrometheus(engine *gin.Engine) (prometheus *ginprometheus.Prometheus) {
 	/* Access Metrics */
 	// Visit http://localhost:8080/metrics
 	prometheus = ginprometheus.NewPrometheus("gin_access")
 	prometheus.ReqCntURLLabelMappingFn = telemetry.AccessMetrics
-	prometheus.Use(base.Engine)
+	prometheus.Use(engine)
 	return
 }
 
