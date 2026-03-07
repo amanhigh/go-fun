@@ -16,13 +16,6 @@ import (
 	"gopkg.in/redis.v5"
 )
 
-// FIXME: Move near BaseHttp Server definition.
-func newBaseHTTPServer(cfg config.HttpServerConfig, rateCfg config.RateLimit, shutdown util.Shutdown) *util.HttpServer {
-	engine := newGin(rateCfg)
-	return util.NewHttpServer(cfg, engine, shutdown)
-}
-
-// FIXME: Move this to BaseHTTPServer
 func newGin(rateCfg config.RateLimit) (engine *gin.Engine) {
 	engine = gin.New()
 
@@ -34,6 +27,11 @@ func newGin(rateCfg config.RateLimit) (engine *gin.Engine) {
 	/* Setup Rate Limit if enabled */
 	setupRateLimit(rateCfg, engine)
 	return
+}
+
+func provideHttpServer(cfg config.HttpServerConfig, rateCfg config.RateLimit, shutdown util.Shutdown) *util.HttpServer {
+	engine := newGin(rateCfg)
+	return util.NewHttpServer(cfg, engine, shutdown)
 }
 
 // setupRateLimit enables rate limiting if the limit is above 0.
