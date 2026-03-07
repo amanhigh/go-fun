@@ -33,10 +33,10 @@ func NewImageManager(entryMgr JournalManager, repo repository.ImageRepository) *
 }
 
 func (m *ImageManagerImpl) CreateImage(ctx context.Context, entryID string, image barkat.Image) (*barkat.Image, common.HttpError) {
-	image.EntryID = entryID
+	image.JournalID = entryID
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Check entry existence within transaction
-		if httpErr := m.entryMgr.EntryExists(c, entryID); httpErr != nil {
+		if httpErr := m.entryMgr.JournalExists(c, entryID); httpErr != nil {
 			return httpErr
 		}
 		return m.repo.Create(c, &image)
@@ -51,7 +51,7 @@ func (m *ImageManagerImpl) ListImages(ctx context.Context, entryID string) ([]ba
 	var images []barkat.Image
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Check entry existence within transaction
-		if httpErr := m.entryMgr.EntryExists(c, entryID); httpErr != nil {
+		if httpErr := m.entryMgr.JournalExists(c, entryID); httpErr != nil {
 			return httpErr
 		}
 		var httpErr common.HttpError
@@ -67,9 +67,9 @@ func (m *ImageManagerImpl) ListImages(ctx context.Context, entryID string) ([]ba
 func (m *ImageManagerImpl) DeleteImage(ctx context.Context, entryID, imageID string) common.HttpError {
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Check entry existence within transaction
-		if httpErr := m.entryMgr.EntryExists(c, entryID); httpErr != nil {
+		if httpErr := m.entryMgr.JournalExists(c, entryID); httpErr != nil {
 			return httpErr
 		}
-		return m.repo.DeleteById(c, imageID, &barkat.Image{EntryID: entryID})
+		return m.repo.DeleteById(c, imageID, &barkat.Image{JournalID: entryID})
 	})
 }

@@ -9,7 +9,6 @@ import (
 	"github.com/amanhigh/go-fun/models/config"
 
 	"github.com/golobby/container/v3"
-	"gorm.io/gorm"
 )
 
 // Interface and implementation in same file
@@ -18,8 +17,7 @@ type KohanInterface interface {
 	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
 	GetTaxManager() (manager.TaxManager, error)
 	GetBrokerageManager() (manager.BrokerageManager, error)
-	GetKohanServer(port int, capturePath string, wait time.Duration, shutdown util.Shutdown) (*KohanServer, error)
-	GetBarkatDB() (*gorm.DB, error)
+	GetKohanServer(port int, capturePath string, wait time.Duration) (*util.HttpServer, error)
 }
 
 // Private singleton instance
@@ -48,33 +46,35 @@ func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) 
 	return manager.NewAutoManager(wait, capturePath)
 }
 
-func (ki *KohanInjector) GetKohanServer(port int, capturePath string, wait time.Duration, shutdown util.Shutdown) (*KohanServer, error) {
-	// HACK: Shutdown should be created internally not passed as parameter.
+func (ki *KohanInjector) GetKohanServer(port int, capturePath string, wait time.Duration) (*util.HttpServer, error) {
 	autoManager := ki.GetAutoManager(wait, capturePath)
 	ki.registerMonitorDependencies(capturePath, autoManager)
 	if err := ki.registerJournalDependencies(); err != nil {
 		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)
 	}
+	ki.registerServerDependencies(port)
+	// FIXME: DB Migration has many indexes on Primary key remove unwanted indexes.
 
-	base := provideBaseHTTPServer(port, shutdown)
-
-	server := &KohanServer{BaseHTTPServer: base}
-	if err := ki.di.Fill(server); err != nil {
-		return nil, fmt.Errorf("failed to fill kohan server: %w", err)
+	var base *util.HttpServer
+	if err := ki.di.Resolve(&base); err != nil {
+		return nil, fmt.Errorf("failed to resolve base http server: %w", err)
 	}
 
-	server.RegisterRoutes = server.registerRoutes
-	return server, nil
+	lifecycle := &KohanServerLifecycle{}
+	if err := ki.di.Fill(lifecycle); err != nil {
+		return nil, fmt.Errorf("failed to fill kohan lifecycle: %w", err)
+	}
+	base.SetLifecycle(lifecycle)
+	return base, nil
 }
 
-func (ki *KohanInjector) GetBarkatDB() (*gorm.DB, error) {
-	// HACK: Why we need Public method for this remove it.
-	// FIXME: DB Migration has many indexes on Primary key remove unwanted indexes.
-	var db *gorm.DB
-	if err := ki.di.Resolve(&db); err != nil {
-		return nil, fmt.Errorf("failed to resolve barkat db: %w", err)
-	}
-	return db, nil
+func (ki *KohanInjector) registerServerDependencies(port int) {
+	// FIXME: Sort this mess cleanly build base server and lifecycle.
+	container.MustSingleton(ki.di, util.NewGracefulShutdown)
+	container.MustSingleton(ki.di, func() config.HttpServerConfig {
+		return config.HttpServerConfig{Name: "kohan", Port: port}
+	})
+	container.MustSingleton(ki.di, provideHttpServer)
 }
 
 func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {

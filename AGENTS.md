@@ -40,6 +40,7 @@ This file contains guidelines for coding, testing, and examples on coding style 
 ### Transaction Handling
 - **Managers** should handle transactions using `UseOrCreateTx` from BaseDbRepository
 - **Repository** layer should use `SafeTx` to extract and use existing transactions with automatic fallback
+- **Validation reads must happen inside transactions** to prevent race conditions and ensure data consistency
 
 ### Linting
 - The `dupl` linter operates at the file level, so `//nolint:dupl` directives must be placed on line 1 (before the package statement) to work correctly; function-level nolint directives don't work with dupl.

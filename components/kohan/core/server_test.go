@@ -12,6 +12,7 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -20,7 +21,6 @@ import (
 
 var _ = Describe("KohanServer", func() {
 	var (
-		server      *core.KohanServer
 		mockManager *mocks.AutoManagerInterface
 		testPath    = "/tmp/test-capture"
 	)
@@ -42,9 +42,11 @@ var _ = Describe("KohanServer", func() {
 			imageHandler := handler.NewImageHandler(manager.NewImageManager(entryMgr, repository.NewImageRepository(db)))
 			noteHandler := handler.NewNoteHandler(manager.NewNoteManager(entryMgr, repository.NewNoteRepository(db)))
 			tagHandler := handler.NewTagHandler(manager.NewTagManager(entryMgr, repository.NewTagRepository(db)))
-			base := util.NewBaseHTTPServer("kohan", 0, util.NewGracefulShutdown())
-			server = core.NewKohanServer(base, monitorHandler, journalHandler, imageHandler, noteHandler, tagHandler)
-			Expect(server).ToNot(BeNil())
+			shutdown := util.NewGracefulShutdown()
+			base := util.NewHttpServer(config.HttpServerConfig{Name: "kohan", Port: 0}, gin.Default(), shutdown)
+			lifecycle := core.NewKohanServerLifecycle(monitorHandler, journalHandler, imageHandler, noteHandler, tagHandler)
+			base.SetLifecycle(lifecycle)
+			Expect(base).ToNot(BeNil())
 		})
 	})
 

@@ -16,11 +16,8 @@ import (
 
 // NoteHandler provides HTTP handlers for journal note operations.
 type NoteHandler interface {
-	// HandleCreateNote handles POST /v1/journal-entries/:id/notes
 	HandleCreateNote(c *gin.Context)
-	// HandleListNotes handles GET /v1/journal-entries/:id/notes
 	HandleListNotes(c *gin.Context)
-	// HandleDeleteNote handles DELETE /v1/journal-entries/:id/notes/:noteId
 	HandleDeleteNote(c *gin.Context)
 }
 
@@ -36,15 +33,15 @@ func NewNoteHandler(noteMgr manager.NoteManager) *NoteHandlerImpl {
 }
 
 func (h *NoteHandlerImpl) HandleCreateNote(c *gin.Context) {
-	entryID := c.Param("id")
+	journalID := c.Param("id")
 	var note barkat.Note
-	if err := c.ShouldBindJSON(&note); err != nil {
-		err = util.ProcessValidationError(err)
-		c.JSON(http.StatusBadRequest, err)
+	if bindErr := c.ShouldBindJSON(&note); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
 
-	createdNote, httpErr := h.noteMgr.CreateNote(c.Request.Context(), entryID, note)
+	createdNote, httpErr := h.noteMgr.CreateNote(c.Request.Context(), journalID, note)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
@@ -53,9 +50,9 @@ func (h *NoteHandlerImpl) HandleCreateNote(c *gin.Context) {
 }
 
 func (h *NoteHandlerImpl) HandleListNotes(c *gin.Context) {
-	entryID := c.Param("id")
+	journalID := c.Param("id")
 	status := c.Query("note_status")
-	notes, httpErr := h.noteMgr.ListNotes(c.Request.Context(), entryID, status)
+	notes, httpErr := h.noteMgr.ListNotes(c.Request.Context(), journalID, status)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
@@ -64,9 +61,9 @@ func (h *NoteHandlerImpl) HandleListNotes(c *gin.Context) {
 }
 
 func (h *NoteHandlerImpl) HandleDeleteNote(c *gin.Context) {
-	entryID := c.Param("id")
+	journalID := c.Param("id")
 	noteID := c.Param("noteId")
-	if httpErr := h.noteMgr.DeleteNote(c.Request.Context(), entryID, noteID); httpErr != nil {
+	if httpErr := h.noteMgr.DeleteNote(c.Request.Context(), journalID, noteID); httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}

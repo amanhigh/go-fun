@@ -47,7 +47,7 @@ func newPgAdvisoryLocker(db *sql.DB) gocron.Locker {
 }
 
 func (l *pgAdvisoryLocker) Lock(ctx context.Context, key string) (gocron.Lock, error) {
-	// HACK: Can this be simplified?
+	// TODO: Can this be simplified?
 	// Hash the key to get a consistent positive int64 for advisory lock
 	h := fnv.New64a()
 	h.Write([]byte(key))

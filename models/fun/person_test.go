@@ -88,7 +88,9 @@ var _ = Describe("Person", func() {
 			personList := fun.PersonList{
 				Records: persons,
 				Metadata: common.PaginatedResponse{
-					Total: 2,
+					Total:  2,
+					Offset: 0,
+					Limit:  20,
 				},
 			}
 
@@ -96,6 +98,8 @@ var _ = Describe("Person", func() {
 			Expect(personList.Records[0].Name).To(Equal("John"))
 			Expect(personList.Records[1].Name).To(Equal("Jane"))
 			Expect(personList.Metadata.Total).To(Equal(int64(2)))
+			Expect(personList.Metadata.Offset).To(Equal(0))
+			Expect(personList.Metadata.Limit).To(Equal(20))
 		})
 	})
 

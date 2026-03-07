@@ -35,11 +35,11 @@ func (eh *EnrollmentHandlerImpl) CreateEnrollment(c *gin.Context) {
 	defer span.End()
 
 	var request fun.EnrollmentRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
-		httpErr := util.ProcessValidationError(err)
+	if bindErr := c.ShouldBindJSON(&request); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
 		span.RecordError(httpErr)
 		span.SetStatus(codes.Error, httpErr.Error())
-		c.JSON(http.StatusBadRequest, httpErr)
+		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
 
@@ -62,11 +62,11 @@ func (eh *EnrollmentHandlerImpl) GetEnrollment(c *gin.Context) {
 	defer span.End()
 
 	var path fun.EnrollmentPath
-	if err := c.ShouldBindUri(&path); err != nil {
-		httpErr := util.ProcessValidationError(err)
+	if bindErr := c.ShouldBindUri(&path); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
 		span.RecordError(httpErr)
 		span.SetStatus(codes.Error, httpErr.Error())
-		c.JSON(http.StatusBadRequest, httpErr)
+		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
 

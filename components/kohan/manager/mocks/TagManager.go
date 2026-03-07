@@ -40,8 +40,8 @@ func (_m *TagManager) EXPECT() *TagManager_Expecter {
 }
 
 // CreateTag provides a mock function for the type TagManager
-func (_mock *TagManager) CreateTag(ctx context.Context, entryID string, tag barkat.Tag) (*barkat.Tag, common.HttpError) {
-	ret := _mock.Called(ctx, entryID, tag)
+func (_mock *TagManager) CreateTag(ctx context.Context, journalID string, tag barkat.Tag) (*barkat.Tag, common.HttpError) {
+	ret := _mock.Called(ctx, journalID, tag)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateTag")
@@ -50,17 +50,17 @@ func (_mock *TagManager) CreateTag(ctx context.Context, entryID string, tag bark
 	var r0 *barkat.Tag
 	var r1 common.HttpError
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, barkat.Tag) (*barkat.Tag, common.HttpError)); ok {
-		return returnFunc(ctx, entryID, tag)
+		return returnFunc(ctx, journalID, tag)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, barkat.Tag) *barkat.Tag); ok {
-		r0 = returnFunc(ctx, entryID, tag)
+		r0 = returnFunc(ctx, journalID, tag)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*barkat.Tag)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string, barkat.Tag) common.HttpError); ok {
-		r1 = returnFunc(ctx, entryID, tag)
+		r1 = returnFunc(ctx, journalID, tag)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(common.HttpError)
@@ -76,13 +76,13 @@ type TagManager_CreateTag_Call struct {
 
 // CreateTag is a helper method to define mock.On call
 //   - ctx context.Context
-//   - entryID string
+//   - journalID string
 //   - tag barkat.Tag
-func (_e *TagManager_Expecter) CreateTag(ctx interface{}, entryID interface{}, tag interface{}) *TagManager_CreateTag_Call {
-	return &TagManager_CreateTag_Call{Call: _e.mock.On("CreateTag", ctx, entryID, tag)}
+func (_e *TagManager_Expecter) CreateTag(ctx interface{}, journalID interface{}, tag interface{}) *TagManager_CreateTag_Call {
+	return &TagManager_CreateTag_Call{Call: _e.mock.On("CreateTag", ctx, journalID, tag)}
 }
 
-func (_c *TagManager_CreateTag_Call) Run(run func(ctx context.Context, entryID string, tag barkat.Tag)) *TagManager_CreateTag_Call {
+func (_c *TagManager_CreateTag_Call) Run(run func(ctx context.Context, journalID string, tag barkat.Tag)) *TagManager_CreateTag_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -110,14 +110,14 @@ func (_c *TagManager_CreateTag_Call) Return(tag1 *barkat.Tag, httpError common.H
 	return _c
 }
 
-func (_c *TagManager_CreateTag_Call) RunAndReturn(run func(ctx context.Context, entryID string, tag barkat.Tag) (*barkat.Tag, common.HttpError)) *TagManager_CreateTag_Call {
+func (_c *TagManager_CreateTag_Call) RunAndReturn(run func(ctx context.Context, journalID string, tag barkat.Tag) (*barkat.Tag, common.HttpError)) *TagManager_CreateTag_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // DeleteTag provides a mock function for the type TagManager
-func (_mock *TagManager) DeleteTag(ctx context.Context, entryID string, tagID string) common.HttpError {
-	ret := _mock.Called(ctx, entryID, tagID)
+func (_mock *TagManager) DeleteTag(ctx context.Context, journalID string, tagID string) common.HttpError {
+	ret := _mock.Called(ctx, journalID, tagID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeleteTag")
@@ -125,7 +125,7 @@ func (_mock *TagManager) DeleteTag(ctx context.Context, entryID string, tagID st
 
 	var r0 common.HttpError
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) common.HttpError); ok {
-		r0 = returnFunc(ctx, entryID, tagID)
+		r0 = returnFunc(ctx, journalID, tagID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(common.HttpError)
@@ -141,13 +141,13 @@ type TagManager_DeleteTag_Call struct {
 
 // DeleteTag is a helper method to define mock.On call
 //   - ctx context.Context
-//   - entryID string
+//   - journalID string
 //   - tagID string
-func (_e *TagManager_Expecter) DeleteTag(ctx interface{}, entryID interface{}, tagID interface{}) *TagManager_DeleteTag_Call {
-	return &TagManager_DeleteTag_Call{Call: _e.mock.On("DeleteTag", ctx, entryID, tagID)}
+func (_e *TagManager_Expecter) DeleteTag(ctx interface{}, journalID interface{}, tagID interface{}) *TagManager_DeleteTag_Call {
+	return &TagManager_DeleteTag_Call{Call: _e.mock.On("DeleteTag", ctx, journalID, tagID)}
 }
 
-func (_c *TagManager_DeleteTag_Call) Run(run func(ctx context.Context, entryID string, tagID string)) *TagManager_DeleteTag_Call {
+func (_c *TagManager_DeleteTag_Call) Run(run func(ctx context.Context, journalID string, tagID string)) *TagManager_DeleteTag_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -175,14 +175,14 @@ func (_c *TagManager_DeleteTag_Call) Return(httpError common.HttpError) *TagMana
 	return _c
 }
 
-func (_c *TagManager_DeleteTag_Call) RunAndReturn(run func(ctx context.Context, entryID string, tagID string) common.HttpError) *TagManager_DeleteTag_Call {
+func (_c *TagManager_DeleteTag_Call) RunAndReturn(run func(ctx context.Context, journalID string, tagID string) common.HttpError) *TagManager_DeleteTag_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ListTags provides a mock function for the type TagManager
-func (_mock *TagManager) ListTags(ctx context.Context, entryID string, tagType string) ([]barkat.Tag, common.HttpError) {
-	ret := _mock.Called(ctx, entryID, tagType)
+func (_mock *TagManager) ListTags(ctx context.Context, journalID string, tagType string) ([]barkat.Tag, common.HttpError) {
+	ret := _mock.Called(ctx, journalID, tagType)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListTags")
@@ -191,17 +191,17 @@ func (_mock *TagManager) ListTags(ctx context.Context, entryID string, tagType s
 	var r0 []barkat.Tag
 	var r1 common.HttpError
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) ([]barkat.Tag, common.HttpError)); ok {
-		return returnFunc(ctx, entryID, tagType)
+		return returnFunc(ctx, journalID, tagType)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) []barkat.Tag); ok {
-		r0 = returnFunc(ctx, entryID, tagType)
+		r0 = returnFunc(ctx, journalID, tagType)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]barkat.Tag)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) common.HttpError); ok {
-		r1 = returnFunc(ctx, entryID, tagType)
+		r1 = returnFunc(ctx, journalID, tagType)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(common.HttpError)
@@ -217,13 +217,13 @@ type TagManager_ListTags_Call struct {
 
 // ListTags is a helper method to define mock.On call
 //   - ctx context.Context
-//   - entryID string
+//   - journalID string
 //   - tagType string
-func (_e *TagManager_Expecter) ListTags(ctx interface{}, entryID interface{}, tagType interface{}) *TagManager_ListTags_Call {
-	return &TagManager_ListTags_Call{Call: _e.mock.On("ListTags", ctx, entryID, tagType)}
+func (_e *TagManager_Expecter) ListTags(ctx interface{}, journalID interface{}, tagType interface{}) *TagManager_ListTags_Call {
+	return &TagManager_ListTags_Call{Call: _e.mock.On("ListTags", ctx, journalID, tagType)}
 }
 
-func (_c *TagManager_ListTags_Call) Run(run func(ctx context.Context, entryID string, tagType string)) *TagManager_ListTags_Call {
+func (_c *TagManager_ListTags_Call) Run(run func(ctx context.Context, journalID string, tagType string)) *TagManager_ListTags_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -251,7 +251,7 @@ func (_c *TagManager_ListTags_Call) Return(tags []barkat.Tag, httpError common.H
 	return _c
 }
 
-func (_c *TagManager_ListTags_Call) RunAndReturn(run func(ctx context.Context, entryID string, tagType string) ([]barkat.Tag, common.HttpError)) *TagManager_ListTags_Call {
+func (_c *TagManager_ListTags_Call) RunAndReturn(run func(ctx context.Context, journalID string, tagType string) ([]barkat.Tag, common.HttpError)) *TagManager_ListTags_Call {
 	_c.Call.Return(run)
 	return _c
 }

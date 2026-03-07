@@ -1,15 +1,17 @@
 package core
 
 import (
+	"context"
+
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/handler"
+	"github.com/amanhigh/go-fun/models/barkat"
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
 )
 
-// KohanServer serves all Kohan HTTP APIs (monitor + journal).
-type KohanServer struct {
-	// HACK: Should we inject pointer to BaseHTTPServer or not?
-	*util.BaseHTTPServer
+// KohanServerLifecycle implements ServerLifecycle for the Kohan HTTP server.
+type KohanServerLifecycle struct {
 	MonitorHandler handler.MonitorHandler
 	JournalHandler handler.JournalHandler
 	ImageHandler   handler.ImageHandler
@@ -17,43 +19,39 @@ type KohanServer struct {
 	TagHandler     handler.TagHandler
 }
 
-// NewKohanServer creates a KohanServer for testing with explicit handler injection.
-func NewKohanServer(base *util.BaseHTTPServer, monitorHandler handler.MonitorHandler,
+var _ util.ServerLifecycle = (*KohanServerLifecycle)(nil)
+
+// NewKohanServerLifecycle creates a KohanServerLifecycle for testing with explicit handler injection.
+func NewKohanServerLifecycle(monitorHandler handler.MonitorHandler,
 	journalHandler handler.JournalHandler, imageHandler handler.ImageHandler,
-	noteHandler handler.NoteHandler, tagHandler handler.TagHandler) *KohanServer {
-	server := &KohanServer{
-		BaseHTTPServer: base,
+	noteHandler handler.NoteHandler, tagHandler handler.TagHandler) *KohanServerLifecycle {
+	return &KohanServerLifecycle{
 		MonitorHandler: monitorHandler,
 		JournalHandler: journalHandler,
 		ImageHandler:   imageHandler,
 		NoteHandler:    noteHandler,
 		TagHandler:     tagHandler,
 	}
-	server.RegisterRoutes = server.registerRoutes
-	return server
 }
 
-func (s *KohanServer) registerRoutes(engine *gin.Engine) {
+func (s *KohanServerLifecycle) RegisterRoutes(engine *gin.Engine) {
 	s.registerMonitorRoutes(engine)
 	s.registerJournalRoutes(engine)
 }
 
-func (s *KohanServer) registerMonitorRoutes(engine *gin.Engine) {
-	// HACK: Remove Nil check and move to Routes similar to other handlers below.
-	if s.MonitorHandler == nil {
-		return
-	}
-	engine.GET("/v1/ticker/:ticker/record", s.MonitorHandler.HandleRecordTicker)
-	engine.GET("/v1/clip/", s.MonitorHandler.HandleReadClip)
-	engine.POST("/v1/submap/:action", s.MonitorHandler.HandleSubmapControl)
+func (s *KohanServerLifecycle) BeforeStart(_ context.Context)    {}
+func (s *KohanServerLifecycle) BeforeShutdown(_ context.Context) {}
+func (s *KohanServerLifecycle) AfterShutdown(_ context.Context)  {}
+
+func (s *KohanServerLifecycle) registerMonitorRoutes(engine *gin.Engine) {
+	monitor := engine.Group(common.MonitorBase)
+	handler.SetupMonitorRoutes(monitor, s.MonitorHandler)
 }
 
-func (s *KohanServer) registerJournalRoutes(engine *gin.Engine) {
-	v1 := engine.Group("/v1")
-
-	// Use reusable route setup functions
-	handler.SetupJournalEntryRoutes(v1, s.JournalHandler)
-	handler.SetupImageRoutes(v1, s.ImageHandler)
-	handler.SetupNoteRoutes(v1, s.NoteHandler)
-	handler.SetupTagRoutes(v1, s.TagHandler)
+func (s *KohanServerLifecycle) registerJournalRoutes(engine *gin.Engine) {
+	journal := engine.Group(barkat.JournalBase)
+	handler.SetupJournalEntryRoutes(journal, s.JournalHandler)
+	handler.SetupImageRoutes(journal, s.ImageHandler)
+	handler.SetupNoteRoutes(journal, s.NoteHandler)
+	handler.SetupTagRoutes(journal, s.TagHandler)
 }

@@ -53,6 +53,10 @@ func (pd *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) 
 		err = util.GormErrorMapper(txErr)
 	}
 
+	// Set pagination metadata
+	personList.Metadata.Offset = personQuery.Offset
+	personList.Metadata.Limit = personQuery.Limit
+
 	return
 }
 

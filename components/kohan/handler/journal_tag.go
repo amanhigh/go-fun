@@ -15,11 +15,8 @@ import (
 
 // TagHandler provides HTTP handlers for journal tag operations.
 type TagHandler interface {
-	// HandleCreateTag handles POST /v1/journal-entries/:id/tags
 	HandleCreateTag(c *gin.Context)
-	// HandleListTags handles GET /v1/journal-entries/:id/tags
 	HandleListTags(c *gin.Context)
-	// HandleDeleteTag handles DELETE /v1/journal-entries/:id/tags/:tagId
 	HandleDeleteTag(c *gin.Context)
 }
 
@@ -35,15 +32,15 @@ func NewTagHandler(tagMgr manager.TagManager) *TagHandlerImpl {
 }
 
 func (h *TagHandlerImpl) HandleCreateTag(c *gin.Context) {
-	entryID := c.Param("id")
+	journalID := c.Param("id")
 	var tag barkat.Tag
-	if err := c.ShouldBindJSON(&tag); err != nil {
-		err = util.ProcessValidationError(err)
-		c.JSON(http.StatusBadRequest, err)
+	if bindErr := c.ShouldBindJSON(&tag); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
 
-	createdTag, httpErr := h.tagMgr.CreateTag(c.Request.Context(), entryID, tag)
+	createdTag, httpErr := h.tagMgr.CreateTag(c.Request.Context(), journalID, tag)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
@@ -52,9 +49,9 @@ func (h *TagHandlerImpl) HandleCreateTag(c *gin.Context) {
 }
 
 func (h *TagHandlerImpl) HandleListTags(c *gin.Context) {
-	entryID := c.Param("id")
+	journalID := c.Param("id")
 	tagType := c.Query("type")
-	tags, httpErr := h.tagMgr.ListTags(c.Request.Context(), entryID, tagType)
+	tags, httpErr := h.tagMgr.ListTags(c.Request.Context(), journalID, tagType)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
@@ -63,9 +60,9 @@ func (h *TagHandlerImpl) HandleListTags(c *gin.Context) {
 }
 
 func (h *TagHandlerImpl) HandleDeleteTag(c *gin.Context) {
-	entryID := c.Param("id")
+	journalID := c.Param("id")
 	tagID := c.Param("tagId")
-	if httpErr := h.tagMgr.DeleteTag(c.Request.Context(), entryID, tagID); httpErr != nil {
+	if httpErr := h.tagMgr.DeleteTag(c.Request.Context(), journalID, tagID); httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}

@@ -14,11 +14,11 @@ import (
 
 type TagManager interface {
 	// CreateTag attaches a new tag to an entry.
-	CreateTag(ctx context.Context, entryID string, tag barkat.Tag) (*barkat.Tag, common.HttpError)
+	CreateTag(ctx context.Context, journalID string, tag barkat.Tag) (*barkat.Tag, common.HttpError)
 	// ListTags returns all tags for an entry, optionally filtered by type.
-	ListTags(ctx context.Context, entryID string, tagType string) ([]barkat.Tag, common.HttpError)
+	ListTags(ctx context.Context, journalID string, tagType string) ([]barkat.Tag, common.HttpError)
 	// DeleteTag removes a tag by ID scoped to an entry.
-	DeleteTag(ctx context.Context, entryID string, tagID string) common.HttpError
+	DeleteTag(ctx context.Context, journalID string, tagID string) common.HttpError
 }
 
 type TagManagerImpl struct {
@@ -33,12 +33,13 @@ func NewTagManager(entryMgr JournalManager, repo repository.TagRepository) *TagM
 	return &TagManagerImpl{entryMgr: entryMgr, repo: repo}
 }
 
-func (m *TagManagerImpl) CreateTag(ctx context.Context, entryID string, tag barkat.Tag) (*barkat.Tag, common.HttpError) {
-	if httpErr := m.entryMgr.EntryExists(ctx, entryID); httpErr != nil {
-		return nil, httpErr
-	}
-	tag.EntryID = entryID
+func (m *TagManagerImpl) CreateTag(ctx context.Context, journalID string, tag barkat.Tag) (*barkat.Tag, common.HttpError) {
+	tag.JournalID = journalID
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+		// Check entry existence within transaction
+		if httpErr := m.entryMgr.JournalExists(c, journalID); httpErr != nil {
+			return httpErr
+		}
 		return m.repo.Create(c, &tag)
 	})
 	if err != nil {
@@ -47,15 +48,15 @@ func (m *TagManagerImpl) CreateTag(ctx context.Context, entryID string, tag bark
 	return &tag, nil
 }
 
-func (m *TagManagerImpl) ListTags(ctx context.Context, entryID, tagType string) ([]barkat.Tag, common.HttpError) {
-	if httpErr := m.entryMgr.EntryExists(ctx, entryID); httpErr != nil {
-		return nil, httpErr
-	}
-
+func (m *TagManagerImpl) ListTags(ctx context.Context, journalID, tagType string) ([]barkat.Tag, common.HttpError) {
 	var tags []barkat.Tag
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+		// Check entry existence within transaction
+		if httpErr := m.entryMgr.JournalExists(c, journalID); httpErr != nil {
+			return httpErr
+		}
 		var httpErr common.HttpError
-		tags, httpErr = m.repo.ListTags(c, entryID, tagType)
+		tags, httpErr = m.repo.ListTags(c, journalID, tagType)
 		return httpErr
 	})
 	if err != nil {
@@ -64,11 +65,12 @@ func (m *TagManagerImpl) ListTags(ctx context.Context, entryID, tagType string) 
 	return tags, nil
 }
 
-func (m *TagManagerImpl) DeleteTag(ctx context.Context, entryID, tagID string) common.HttpError {
-	if httpErr := m.entryMgr.EntryExists(ctx, entryID); httpErr != nil {
-		return httpErr
-	}
+func (m *TagManagerImpl) DeleteTag(ctx context.Context, journalID, tagID string) common.HttpError {
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		return m.repo.DeleteById(c, tagID, &barkat.Tag{EntryID: entryID})
+		// Check entry existence within transaction
+		if httpErr := m.entryMgr.JournalExists(c, journalID); httpErr != nil {
+			return httpErr
+		}
+		return m.repo.DeleteById(c, tagID, &barkat.Tag{JournalID: journalID})
 	})
 }

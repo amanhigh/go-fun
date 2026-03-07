@@ -16,13 +16,7 @@ import (
 	"gopkg.in/redis.v5"
 )
 
-func newBaseHTTPServer(cfg config.FunAppConfig, shutdown util.Shutdown) *util.BaseHTTPServer {
-	// HACK: Only pass required Config extract sepearte HttpServerConfig with required fields and use. Nest it in FunAppConfig.
-	engine := newGin(cfg)
-	return util.NewBaseHTTPServerWithEngine(NAMESPACE, cfg.Server.Port, shutdown, engine)
-}
-
-func newGin(cfg config.FunAppConfig) (engine *gin.Engine) {
+func newGin(rateCfg config.RateLimit) (engine *gin.Engine) {
 	engine = gin.New()
 
 	/* Middleware */
@@ -31,8 +25,13 @@ func newGin(cfg config.FunAppConfig) (engine *gin.Engine) {
 	engine.Use(otelgin.Middleware(NAMESPACE + "-gin"))
 
 	/* Setup Rate Limit if enabled */
-	setupRateLimit(cfg.RateLimit, engine)
+	setupRateLimit(rateCfg, engine)
 	return
+}
+
+func provideHttpServer(cfg config.HttpServerConfig, rateCfg config.RateLimit, shutdown util.Shutdown) *util.HttpServer {
+	engine := newGin(rateCfg)
+	return util.NewHttpServer(cfg, engine, shutdown)
 }
 
 // setupRateLimit enables rate limiting if the limit is above 0.
@@ -56,7 +55,7 @@ func setupRateLimit(cfg config.RateLimit, engine *gin.Engine) {
 	}
 }
 
-func newPrometheus(base *util.BaseHTTPServer) (prometheus *ginprometheus.Prometheus) {
+func newPrometheus(base *util.HttpServer) (prometheus *ginprometheus.Prometheus) {
 	// HACK: Only pass required engine here.
 	/* Access Metrics */
 	// Visit http://localhost:8080/metrics

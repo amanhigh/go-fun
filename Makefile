@@ -13,7 +13,12 @@
 
 include ./common/tools/base.mk
 
-export PATH := $(shell go env GOPATH 2>/dev/null)/bin:$(PATH)
+GOBIN := $(shell go env GOPATH 2>/dev/null)/bin
+GOIMPORTS := $(GOBIN)/goimports
+GOLANGCI_LINT := $(GOBIN)/golangci-lint
+DEADCODE := $(GOBIN)/deadcode
+GINKGO := $(GOBIN)/ginkgo
+SWAG := $(GOBIN)/swag
 
 ### Variables
 BUILD_OPTS := CGO_ENABLED=0 GOARCH=amd64
@@ -46,18 +51,18 @@ ifeq ($(GITHUB_ACTIONS),true)
 	printf $(_WARN) "LINT" "Skipping in GitHub Actions Environment"
 else
 	printf $(_TITLE) "LINT" "Golang CLI"
-	go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} golangci-lint run {}/...
+	go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} $(GOLANGCI_LINT) run {}/...
 endif
 
 lint-dead:
 	printf $(_TITLE) "LINT" "DeadCode"
-	go work edit -json | jq -r '.Use[].DiskPath' | sed 's|^\./||' | grep -vE "common|models|components/learn" | xargs -I{} deadcode github.com/amanhigh/go-fun/{}/...
+	go work edit -json | jq -r '.Use[].DiskPath' | sed 's|^\./||' | grep -vE "common|models|components/learn" | xargs -I{} $(DEADCODE) github.com/amanhigh/go-fun/{}/...
 
 lint: lint-ci  ## Lint the Code
 
 format: ## Format Go code with goimports
 	printf $(_TITLE) "Format" "Go Code"
-	goimports -w .
+	$(GOIMPORTS) -w .
 
 ### Testing
 test-operator:
@@ -68,13 +73,13 @@ test-unit:
 	printf $(_TITLE) "Running Unit Tests"
 	mkdir -p $(UNIT_COVER_DIR)
 	# Generate binary coverage for accurate merging
-	ginkgo -r --label-filter=\!setup\ \&\&\ \!slow --skip-package=$(COMPONENT_DIR)/fun-app/it -cover . -- -test.gocoverdir=$(UNIT_COVER_DIR) > $(OUT)
+	$(GINKGO) -r --label-filter=\!setup\ \&\&\ \!slow --skip-package=$(COMPONENT_DIR)/fun-app/it -cover . -- -test.gocoverdir=$(UNIT_COVER_DIR) > $(OUT)
 
 test-slow: ## Run slow tests
 	printf $(_TITLE) "Running Slow Tests"
 	mkdir -p $(SLOW_COVER_DIR)
 	# Generate binary coverage for accurate merging  
-	ginkgo -r '--label-filter=slow' -cover . -- -test.gocoverdir=$(SLOW_COVER_DIR) > $(OUT)
+	$(GINKGO) -r '--label-filter=slow' -cover . -- -test.gocoverdir=$(SLOW_COVER_DIR) > $(OUT)
 
 cover-analyse: combine-coverage
 	printf $(_TITLE) "Analysing Coverage Reports"
@@ -145,7 +150,7 @@ cover-report: ## Enhanced coverage report with color-coding and categorization
 
 test-focus:
 	printf $(_TITLE) "Running Focus Tests"
-	ginkgo --focus "should create & get person" $(FUN_DIR)/it > $(OUT)
+	$(GINKGO) --focus "should create & get person" $(FUN_DIR)/it > $(OUT)
 
 cover: run-fun-cover test-unit cover-analyse ## Show comprehensive coverage (unit + integration)
 test-clean:
@@ -434,7 +439,7 @@ pack: ## Repomix Packing
 generate-swagger:
 	printf $(_TITLE) "Generate" "Swagger"
 	cd $(FUN_DIR);\
-	swag i --parseDependency true > $(OUT);\
+	$(SWAG) i --parseDependency true > $(OUT);\
 	printf $(_INFO) "Swagger" "http://localhost:8080/swagger/index.html";
 
 # Generate mocks using mockery v3 configuration

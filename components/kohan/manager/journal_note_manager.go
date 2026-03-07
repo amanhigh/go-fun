@@ -14,11 +14,11 @@ import (
 
 type NoteManager interface {
 	// CreateNote attaches a new note to an entry.
-	CreateNote(ctx context.Context, entryID string, note barkat.Note) (*barkat.Note, common.HttpError)
+	CreateNote(ctx context.Context, journalID string, note barkat.Note) (*barkat.Note, common.HttpError)
 	// ListNotes returns all notes for an entry, optionally filtered by status.
-	ListNotes(ctx context.Context, entryID string, status string) ([]barkat.Note, common.HttpError)
+	ListNotes(ctx context.Context, journalID string, status string) ([]barkat.Note, common.HttpError)
 	// DeleteNote removes a note by ID scoped to an entry.
-	DeleteNote(ctx context.Context, entryID string, noteID string) common.HttpError
+	DeleteNote(ctx context.Context, journalID string, noteID string) common.HttpError
 }
 
 type NoteManagerImpl struct {
@@ -33,12 +33,13 @@ func NewNoteManager(entryMgr JournalManager, repo repository.NoteRepository) *No
 	return &NoteManagerImpl{entryMgr: entryMgr, repo: repo}
 }
 
-func (m *NoteManagerImpl) CreateNote(ctx context.Context, entryID string, note barkat.Note) (*barkat.Note, common.HttpError) {
-	if httpErr := m.entryMgr.EntryExists(ctx, entryID); httpErr != nil {
-		return nil, httpErr
-	}
-	note.EntryID = entryID
+func (m *NoteManagerImpl) CreateNote(ctx context.Context, journalID string, note barkat.Note) (*barkat.Note, common.HttpError) {
+	note.JournalID = journalID
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+		// Check entry existence within transaction
+		if httpErr := m.entryMgr.JournalExists(c, journalID); httpErr != nil {
+			return httpErr
+		}
 		return m.repo.Create(c, &note)
 	})
 	if err != nil {
@@ -47,15 +48,15 @@ func (m *NoteManagerImpl) CreateNote(ctx context.Context, entryID string, note b
 	return &note, nil
 }
 
-func (m *NoteManagerImpl) ListNotes(ctx context.Context, entryID, status string) ([]barkat.Note, common.HttpError) {
-	if httpErr := m.entryMgr.EntryExists(ctx, entryID); httpErr != nil {
-		return nil, httpErr
-	}
-
+func (m *NoteManagerImpl) ListNotes(ctx context.Context, journalID, status string) ([]barkat.Note, common.HttpError) {
 	var notes []barkat.Note
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+		// Check entry existence within transaction
+		if httpErr := m.entryMgr.JournalExists(c, journalID); httpErr != nil {
+			return httpErr
+		}
 		var httpErr common.HttpError
-		notes, httpErr = m.repo.ListNotes(c, entryID, status)
+		notes, httpErr = m.repo.ListNotes(c, journalID, status)
 		return httpErr
 	})
 	if err != nil {
@@ -64,11 +65,12 @@ func (m *NoteManagerImpl) ListNotes(ctx context.Context, entryID, status string)
 	return notes, nil
 }
 
-func (m *NoteManagerImpl) DeleteNote(ctx context.Context, entryID, noteID string) common.HttpError {
-	if httpErr := m.entryMgr.EntryExists(ctx, entryID); httpErr != nil {
-		return httpErr
-	}
+func (m *NoteManagerImpl) DeleteNote(ctx context.Context, journalID, noteID string) common.HttpError {
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		return m.repo.DeleteById(c, noteID, &barkat.Note{EntryID: entryID})
+		// Check entry existence within transaction
+		if httpErr := m.entryMgr.JournalExists(c, journalID); httpErr != nil {
+			return httpErr
+		}
+		return m.repo.DeleteById(c, noteID, &barkat.Note{JournalID: journalID})
 	})
 }

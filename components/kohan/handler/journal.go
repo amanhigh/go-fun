@@ -11,18 +11,10 @@ import (
 )
 
 // JournalHandler provides HTTP handlers for journal entry operations.
-//
-// FIXME: Find and remove go generate mockery, new version works via mockery.yaml
-//
-//go:generate mockery --name JournalHandler
 type JournalHandler interface {
-	// HandleListEntries handles GET /v1/journal-entries
 	HandleListEntries(c *gin.Context)
-	// HandleGetEntry handles GET /v1/journal-entries/:id
 	HandleGetEntry(c *gin.Context)
-	// HandleCreateEntry handles POST /v1/journal-entries
 	HandleCreateEntry(c *gin.Context)
-	// HandleDeleteEntry handles DELETE /v1/journal-entries/:id
 	HandleDeleteEntry(c *gin.Context)
 }
 
@@ -40,67 +32,68 @@ func NewJournalHandler(journalManager manager.JournalManager) *JournalHandlerImp
 // ---- Entry Handlers ----
 // TODO: Match other Handlers after Review Comments & Test to Standardize Template.
 func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
-	var query barkat.EntryQuery
-	// FIXME: Default values should be set in model via struct tags.
-	query.Limit = 20
+	query := barkat.NewJournalQuery()
 
-	if err := c.ShouldBindQuery(&query); err != nil {
-		err = util.ProcessValidationError(err)
-		c.JSON(http.StatusBadRequest, err)
+	if bindErr := c.ShouldBindQuery(&query); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
 
-	entryList, httpErr := h.journalManager.ListEntries(c.Request.Context(), query)
+	journalList, httpErr := h.journalManager.ListJournals(c.Request.Context(), query)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusOK, common.NewEnvelope(entryList))
+	c.JSON(http.StatusOK, common.NewEnvelope(journalList))
 }
 
 func (h *JournalHandlerImpl) HandleGetEntry(c *gin.Context) {
-	var path barkat.EntryPath
-	if err := c.ShouldBindUri(&path); err != nil {
-		err = util.ProcessValidationError(err)
-		c.JSON(http.StatusBadRequest, err)
+	var path barkat.JournalPath
+
+	if bindErr := c.ShouldBindUri(&path); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
 
-	entry, httpErr := h.journalManager.GetEntry(c.Request.Context(), path.ID)
+	journal, httpErr := h.journalManager.GetJournal(c.Request.Context(), path.ID)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusOK, common.NewEnvelope(entry))
+	c.JSON(http.StatusOK, common.NewEnvelope(journal))
 }
 
 func (h *JournalHandlerImpl) HandleCreateEntry(c *gin.Context) {
-	var entry barkat.Entry
-	if err := c.ShouldBindJSON(&entry); err != nil {
-		// FIXME: Enhance ProcessValidationError to return HTTP Code handling Wider Range of Validations.
-		err = util.ProcessValidationError(err)
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-
-	if httpErr := h.journalManager.CreateEntry(c.Request.Context(), &entry); httpErr != nil {
+	var journal barkat.Journal
+	if bindErr := c.ShouldBindJSON(&journal); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusCreated, common.NewEnvelope(entry))
+
+	httpErr := h.journalManager.CreateJournal(c.Request.Context(), &journal)
+	if httpErr != nil {
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+	c.JSON(http.StatusCreated, common.NewEnvelope(&journal))
 }
 
 func (h *JournalHandlerImpl) HandleDeleteEntry(c *gin.Context) {
-	var path barkat.EntryPath
-	if err := c.ShouldBindUri(&path); err != nil {
-		err = util.ProcessValidationError(err)
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
+	var path barkat.JournalPath
 
-	if httpErr := h.journalManager.DeleteEntry(c.Request.Context(), path.ID); httpErr != nil {
+	if bindErr := c.ShouldBindUri(&path); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.Status(http.StatusNoContent)
+
+	httpErr := h.journalManager.DeleteJournal(c.Request.Context(), path.ID)
+	if httpErr != nil {
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
 }

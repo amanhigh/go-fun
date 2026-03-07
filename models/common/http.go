@@ -37,17 +37,26 @@ func NewServerError(err error) HttpError {
 	return NewHttpError(err.Error(), http.StatusInternalServerError)
 }
 
+const (
+	// Base API routes
+	APIV1 = "/v1"
+
+	// Monitor routes
+	MonitorBase = APIV1 + "/monitor"
+)
+
 type Pagination struct {
-	Offset int `form:"offset" binding:"min=0"`
-	// FIXME: Limit has been made optional add test , set default via tags not via code.
-	Limit int `form:"limit" binding:"min=1,max=100"`
+	Offset int `form:"offset,default=0" binding:"min=0"`
+	Limit  int `form:"limit,default=20" binding:"min=1,max=100"`
 }
 
 type Sort struct {
 	SortBy string `form:"sort_by" binding:"omitempty,eq=name|eq=age|eq=gender"`
-	Order  string `form:"order" binding:"omitempty,eq=asc|eq=desc"`
+	Order  string `form:"order,default=asc" binding:"omitempty,eq=asc|eq=desc"`
 }
 
 type PaginatedResponse struct {
-	Total int64 `json:"total"`
+	Total  int64 `json:"total"`
+	Offset int   `json:"offset"`
+	Limit  int   `json:"limit"`
 }

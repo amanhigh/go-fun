@@ -1,9 +1,12 @@
 package util
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/go-playground/validator/v10"
@@ -53,22 +56,65 @@ func ResponseProcessor(response *resty.Response, restyErr error) common.HttpErro
 	return handleStatusCode(response.StatusCode())
 }
 
-func ProcessValidationError(validationErr error) (err common.HttpError) {
-	var errs validator.ValidationErrors
-	if errors.As(validationErr, &errs) {
-		for _, e := range errs {
-			err = common.NewHttpError(fmt.Sprintf("'%s' with Value '%v' Violates '%s (%s)'", e.Field(), e.Value(), e.Tag(), e.Param()), http.StatusBadRequest)
-			break
-		}
-	} else {
-		var httpErr common.HttpError
-		if errors.As(validationErr, &httpErr) {
-			return httpErr
-		}
-		log.Warn().
-			Str("ActualType", fmt.Sprintf("%T", validationErr)).
-			Msg("Failed to convert validation error to HttpError")
-		return common.NewHttpError("Invalid validation error format", http.StatusInternalServerError)
+// TODO: Review this file completely.
+
+func handleValidationError(err error) common.HttpError {
+	if httpErr := handleStructuralErrors(err); httpErr != nil {
+		return httpErr
 	}
-	return
+	return handleFormatErrors(err)
+}
+
+func handleStructuralErrors(err error) common.HttpError {
+	var errs validator.ValidationErrors
+	if errors.As(err, &errs) {
+		for _, e := range errs {
+			return common.NewHttpError(fmt.Sprintf("'%s' with Value '%v' Violates '%s (%s)'", e.Field(), e.Value(), e.Tag(), e.Param()), http.StatusBadRequest)
+		}
+	}
+
+	var httpErr common.HttpError
+	if errors.As(err, &httpErr) {
+		return httpErr
+	}
+
+	var syntaxErr *json.SyntaxError
+	if errors.As(err, &syntaxErr) {
+		return common.NewHttpError(fmt.Sprintf("Invalid JSON at position %d", syntaxErr.Offset), http.StatusBadRequest)
+	}
+
+	return nil
+}
+
+func handleFormatErrors(err error) common.HttpError {
+	var unmarshalTypeErr *json.UnmarshalTypeError
+	if errors.As(err, &unmarshalTypeErr) {
+		field := unmarshalTypeErr.Field
+		if field == "" {
+			field = unmarshalTypeErr.Struct
+		}
+		return common.NewHttpError(fmt.Sprintf("Field '%s' expects %s", field, unmarshalTypeErr.Type.String()), http.StatusBadRequest)
+	}
+
+	if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
+		return common.NewHttpError("Request body cannot be empty or malformed JSON", http.StatusBadRequest)
+	}
+
+	var numErr *strconv.NumError
+	if errors.As(err, &numErr) {
+		return common.NewHttpError(fmt.Sprintf("Query parameter '%s' must be numeric", numErr.Func), http.StatusBadRequest)
+	}
+
+	return nil
+}
+
+func ProcessValidationError(validationErr error) common.HttpError {
+	if err := handleValidationError(validationErr); err != nil {
+		return err
+	}
+
+	log.Warn().
+		Str("ActualType", fmt.Sprintf("%T", validationErr)).
+		Msg("Failed to convert validation error to HttpError")
+	return common.NewHttpError("Invalid validation error format", http.StatusInternalServerError)
 }

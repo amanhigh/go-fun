@@ -8,44 +8,57 @@ import (
 	"gorm.io/gorm"
 )
 
-// Entry represents a single trade journal capture event.
-// BUG: Rename to Journal all entities in this file & filename.
-type Entry struct {
+// Journal API route constants
+const (
+	// FIXME: Rename file to journal.go
+	// Base journal routes
+	JournalBase      = common.APIV1 + "/journal"
+	JournalEntries   = JournalBase
+	JournalEntryByID = JournalBase + "/:id"
+
+	// Journal sub-resource routes
+	JournalImages    = JournalEntryByID + "/images"
+	JournalImageByID = JournalImages + "/:imageId"
+	JournalNotes     = JournalEntryByID + "/notes"
+	JournalNoteByID  = JournalNotes + "/:noteId"
+	JournalTags      = JournalEntryByID + "/tags"
+	JournalTagByID   = JournalTags + "/:tagId"
+)
+
+// Journal represents a single trade journal capture event.
+type Journal struct {
 	ID        string     `gorm:"column:id;primaryKey" json:"id"`
 	Ticker    string     `gorm:"column:ticker;not null" json:"ticker" binding:"required,max=10"`
 	Sequence  string     `gorm:"column:sequence;not null" json:"sequence" binding:"required,oneof=MWD YR"`
 	Type      string     `gorm:"column:type;not null" json:"type" binding:"required,oneof=REJECTED RESULT SET"`
 	Status    string     `gorm:"column:status;not null" json:"status" binding:"required,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
-	CreatedAt time.Time  `gorm:"column:created_at;not null;index:idx_entry_ticker_created,priority:2,sort:desc" json:"created_at"`
+	CreatedAt time.Time  `gorm:"column:created_at;not null;index:idx_journal_ticker_created,priority:2,sort:desc" json:"created_at"`
 	DeletedAt *time.Time `gorm:"column:deleted_at" json:"deleted_at,omitempty"`
 
 	// Associations
-	Images []Image `gorm:"foreignKey:EntryID;references:ID" json:"images,omitempty" binding:"required,min=4,max=6,dive"`
-	Tags   []Tag   `gorm:"foreignKey:EntryID;references:ID" json:"tags,omitempty" binding:"dive"`
-	Notes  []Note  `gorm:"foreignKey:EntryID;references:ID" json:"notes,omitempty" binding:"max=1,dive"`
+	Images []Image `gorm:"foreignKey:JournalID;references:ID" json:"images,omitempty" binding:"required,min=4,max=6,dive"`
+	Tags   []Tag   `gorm:"foreignKey:JournalID;references:ID" json:"tags,omitempty" binding:"dive"`
+	Notes  []Note  `gorm:"foreignKey:JournalID;references:ID" json:"notes,omitempty" binding:"max=1,dive"`
 }
 
-func (Entry) TableName() string {
-	return "journal"
-}
-
-func (e *Entry) BeforeCreate(_ *gorm.DB) error {
-	if e.ID == "" {
-		e.ID = uuid.NewString()
+func (j *Journal) BeforeCreate(_ *gorm.DB) error {
+	if j.ID == "" {
+		j.ID = uuid.NewString()
 	}
-	if e.CreatedAt.IsZero() {
-		e.CreatedAt = time.Now()
+	// HACK: Rely on gorm to auto fill this ?
+	if j.CreatedAt.IsZero() {
+		j.CreatedAt = time.Now()
 	}
 	return nil
 }
 
-// EntryPath binds the :id path parameter.
-type EntryPath struct {
+// JournalPath binds the :id path parameter.
+type JournalPath struct {
 	ID string `uri:"id" binding:"required"`
 }
 
-// EntryQuery holds query parameters for listing/filtering entries.
-type EntryQuery struct {
+// JournalQuery holds query parameters for listing/filtering journals.
+type JournalQuery struct {
 	common.Pagination
 	Ticker        string `form:"ticker" binding:"omitempty,min=1,max=10"`
 	Type          string `form:"type" binding:"omitempty,oneof=REJECTED RESULT SET"`
@@ -57,9 +70,15 @@ type EntryQuery struct {
 	SortOrder     string `form:"sort-order" binding:"omitempty,oneof=asc desc"`
 }
 
-// EntryList is the paginated response for journal entries.
-type EntryList struct {
-	Records []Entry `json:"journals"`
-	// BUG: Inline Pagination Metadat as per PRD ?
+// NewJournalQuery creates a JournalQuery struct with default pagination values
+func NewJournalQuery() JournalQuery {
+	return JournalQuery{
+		Pagination: common.Pagination{},
+	}
+}
+
+// JournalList is the paginated response for journals.
+type JournalList struct {
+	Records  []Journal                `json:"journals"`
 	Metadata common.PaginatedResponse `json:"metadata"`
 }

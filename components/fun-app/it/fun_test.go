@@ -252,6 +252,8 @@ var _ = Describe("Person Integration Test", func() {
 				// Person Count should be same as Page Limit
 				Expect(personList.Records).To(HaveLen(limit))
 				Expect(personList.Metadata.Total).To(BeNumerically(">=", total))
+				Expect(personList.Metadata.Offset).To(Equal(0))
+				Expect(personList.Metadata.Limit).To(Equal(limit))
 			})
 
 			It("should fetch second Page", func() {
@@ -261,6 +263,8 @@ var _ = Describe("Person Integration Test", func() {
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(personList.Records).To(HaveLen(limit))
+				Expect(personList.Metadata.Offset).To(Equal(limit))
+				Expect(personList.Metadata.Limit).To(Equal(limit))
 			})
 
 			It("should search by Name", func() {
@@ -271,6 +275,8 @@ var _ = Describe("Person Integration Test", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(personList.Records).To(HaveLen(limit))
 				Expect(personList.Metadata.Total).To(BeEquivalentTo(5))
+				Expect(personList.Metadata.Offset).To(Equal(0))
+				Expect(personList.Metadata.Limit).To(Equal(limit))
 			})
 
 			It("should search by Gender", func() {
@@ -281,6 +287,8 @@ var _ = Describe("Person Integration Test", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(personList.Records).To(HaveLen(limit))
 				Expect(personList.Metadata.Total).To(BeEquivalentTo(11))
+				Expect(personList.Metadata.Offset).To(Equal(0))
+				Expect(personList.Metadata.Limit).To(Equal(limit))
 			})
 
 			It("should search by Name & Gender", func() {
@@ -292,6 +300,8 @@ var _ = Describe("Person Integration Test", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(personList.Records).To(BeEmpty())
 				Expect(personList.Metadata.Total).To(BeEquivalentTo(0))
+				Expect(personList.Metadata.Offset).To(Equal(0))
+				Expect(personList.Metadata.Limit).To(Equal(limit))
 			})
 
 			Context("Sort", func() {
@@ -304,6 +314,8 @@ var _ = Describe("Person Integration Test", func() {
 
 					Expect(err).ToNot(HaveOccurred())
 					Expect(personList.Records).To(HaveLen(limit))
+					Expect(personList.Metadata.Offset).To(Equal(0))
+					Expect(personList.Metadata.Limit).To(Equal(limit))
 					// Check if the records are sorted in ascending order by name
 					for i := 0; i < len(personList.Records)-1; i++ {
 						cur := personList.Records[i].Name
@@ -320,6 +332,8 @@ var _ = Describe("Person Integration Test", func() {
 
 					Expect(err).ToNot(HaveOccurred())
 					Expect(personList.Records).To(HaveLen(limit))
+					Expect(personList.Metadata.Offset).To(Equal(0))
+					Expect(personList.Metadata.Limit).To(Equal(limit))
 
 					// Check if the records are sorted in descending order by name
 					for i := 0; i < len(personList.Records)-1; i++ {
@@ -337,6 +351,8 @@ var _ = Describe("Person Integration Test", func() {
 
 					Expect(err).ToNot(HaveOccurred())
 					Expect(personList.Records).To(HaveLen(limit))
+					Expect(personList.Metadata.Offset).To(Equal(0))
+					Expect(personList.Metadata.Limit).To(Equal(limit))
 
 					// Check if the records are sorted in ascending order by gender
 					for i := 0; i < len(personList.Records)-1; i++ {
@@ -354,6 +370,8 @@ var _ = Describe("Person Integration Test", func() {
 
 					Expect(err).ToNot(HaveOccurred())
 					Expect(personList.Records).To(HaveLen(limit))
+					Expect(personList.Metadata.Offset).To(Equal(0))
+					Expect(personList.Metadata.Limit).To(Equal(limit))
 
 					// Check if the records are sorted in descending order by gender
 					for i := 0; i < len(personList.Records)-1; i++ {
