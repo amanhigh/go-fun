@@ -12,11 +12,11 @@ import (
 
 // KohanServerLifecycle implements ServerLifecycle for the Kohan HTTP server.
 type KohanServerLifecycle struct {
-	monitorHandler handler.MonitorHandler
-	journalHandler handler.JournalHandler
-	imageHandler   handler.ImageHandler
-	noteHandler    handler.NoteHandler
-	tagHandler     handler.TagHandler
+	MonitorHandler handler.MonitorHandler
+	JournalHandler handler.JournalHandler
+	ImageHandler   handler.ImageHandler
+	NoteHandler    handler.NoteHandler
+	TagHandler     handler.TagHandler
 }
 
 var _ util.ServerLifecycle = (*KohanServerLifecycle)(nil)
@@ -26,11 +26,11 @@ func NewKohanServerLifecycle(monitorHandler handler.MonitorHandler,
 	journalHandler handler.JournalHandler, imageHandler handler.ImageHandler,
 	noteHandler handler.NoteHandler, tagHandler handler.TagHandler) *KohanServerLifecycle {
 	return &KohanServerLifecycle{
-		monitorHandler: monitorHandler,
-		journalHandler: journalHandler,
-		imageHandler:   imageHandler,
-		noteHandler:    noteHandler,
-		tagHandler:     tagHandler,
+		MonitorHandler: monitorHandler,
+		JournalHandler: journalHandler,
+		ImageHandler:   imageHandler,
+		NoteHandler:    noteHandler,
+		TagHandler:     tagHandler,
 	}
 }
 
@@ -45,13 +45,13 @@ func (s *KohanServerLifecycle) AfterShutdown(_ context.Context)  {}
 
 func (s *KohanServerLifecycle) registerMonitorRoutes(engine *gin.Engine) {
 	monitor := engine.Group(common.MonitorBase)
-	handler.SetupMonitorRoutes(monitor, s.monitorHandler)
+	handler.SetupMonitorRoutes(monitor, s.MonitorHandler)
 }
 
 func (s *KohanServerLifecycle) registerJournalRoutes(engine *gin.Engine) {
 	journal := engine.Group(barkat.JournalBase)
-	handler.SetupJournalEntryRoutes(journal, s.journalHandler)
-	handler.SetupImageRoutes(journal, s.imageHandler)
-	handler.SetupNoteRoutes(journal, s.noteHandler)
-	handler.SetupTagRoutes(journal, s.tagHandler)
+	handler.SetupJournalEntryRoutes(journal, s.JournalHandler)
+	handler.SetupImageRoutes(journal, s.ImageHandler)
+	handler.SetupNoteRoutes(journal, s.NoteHandler)
+	handler.SetupTagRoutes(journal, s.TagHandler)
 }
