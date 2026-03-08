@@ -74,7 +74,7 @@ func (fi *FunAppInjector) registerValidators() {
 }
 
 func (fi *FunAppInjector) buildApplication() (app any, err error) {
-	var base *util.HttpServer
+	var base util.HttpServer
 	if err = fi.di.Resolve(&base); err != nil {
 		return nil, fmt.Errorf("failed to resolve base http server: %w", err)
 	}

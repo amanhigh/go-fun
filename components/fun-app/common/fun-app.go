@@ -1,10 +1,8 @@
 package common
 
 import (
-	"context"
-
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/config"
-	"github.com/amanhigh/go-fun/models/interfaces"
 	"github.com/caarlos0/env/v6"
 )
 
@@ -21,7 +19,7 @@ func RunFunApp() {
 
 		/* Build App */
 		if app, err = injector.BuildApp(); err == nil {
-			err = app.(interfaces.ServerInterface).Start(context.Background()) //nolint:errcheck // error is handled via panic
+			err = app.(util.HttpServer).Start() //nolint:errcheck // error is handled via panic
 		}
 	}
 

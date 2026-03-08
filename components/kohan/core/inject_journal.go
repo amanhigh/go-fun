@@ -52,7 +52,7 @@ func (ki *KohanInjector) provideBarkatDB() (*gorm.DB, error) {
 	return db, nil
 }
 
-func provideHttpServer(cfg config.HttpServerConfig, shutdown util.Shutdown) *util.HttpServer {
+func provideHttpServer(cfg config.HttpServerConfig, shutdown util.Shutdown) util.HttpServer {
 	return util.NewHttpServer(cfg, gin.Default(), shutdown)
 }
 

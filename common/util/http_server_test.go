@@ -45,7 +45,7 @@ func (t *testLifecycle) AfterShutdown(ctx context.Context) {
 
 var _ = Describe("HttpServer", func() {
 	var (
-		server   *util.HttpServer
+		server   *util.HttpServerImpl
 		shutdown util.Shutdown
 	)
 

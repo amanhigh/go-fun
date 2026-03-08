@@ -29,7 +29,7 @@ func provideGin(rateCfg config.RateLimit) (engine *gin.Engine) {
 	return
 }
 
-func provideHttpServer(cfg config.HttpServerConfig, engine *gin.Engine, shutdown util.Shutdown) *util.HttpServer {
+func provideHttpServer(cfg config.HttpServerConfig, engine *gin.Engine, shutdown util.Shutdown) util.HttpServer {
 	return util.NewHttpServer(cfg, engine, shutdown)
 }
 

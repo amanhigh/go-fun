@@ -17,7 +17,7 @@ type KohanInterface interface {
 	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
 	GetTaxManager() (manager.TaxManager, error)
 	GetBrokerageManager() (manager.BrokerageManager, error)
-	GetKohanServer(port int, capturePath string, wait time.Duration) (*util.HttpServer, error)
+	GetKohanServer(port int, capturePath string, wait time.Duration) (util.HttpServer, error)
 }
 
 // Private singleton instance
@@ -46,7 +46,7 @@ func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) 
 	return manager.NewAutoManager(wait, capturePath)
 }
 
-func (ki *KohanInjector) GetKohanServer(port int, capturePath string, wait time.Duration) (*util.HttpServer, error) {
+func (ki *KohanInjector) GetKohanServer(port int, capturePath string, wait time.Duration) (util.HttpServer, error) {
 	autoManager := ki.GetAutoManager(wait, capturePath)
 	ki.registerMonitorDependencies(capturePath, autoManager)
 	if err := ki.registerJournalDependencies(); err != nil {
@@ -55,7 +55,7 @@ func (ki *KohanInjector) GetKohanServer(port int, capturePath string, wait time.
 	ki.registerServerDependencies(port)
 	// FIXME: DB Migration has many indexes on Primary key remove unwanted indexes.
 
-	var base *util.HttpServer
+	var base util.HttpServer
 	if err := ki.di.Resolve(&base); err != nil {
 		return nil, fmt.Errorf("failed to resolve base http server: %w", err)
 	}
