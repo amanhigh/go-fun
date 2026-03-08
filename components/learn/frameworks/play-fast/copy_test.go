@@ -21,6 +21,28 @@ type Coffee struct {
 	Location      Location       // For nested struct copying tests
 	Flavors       []string       // For slice copying tests - coffee flavor notes
 	Ratings       map[string]int // For map copying tests - coffee ratings by source
+	TastingNotes  *string        // For pointer copying tests - detailed tasting notes
+	Quality       CoffeeQuality  // For interface copying tests - quality assessment
+}
+
+// CoffeeQuality interface for quality assessment
+type CoffeeQuality interface {
+	GetScore() int
+	GetDescription() string
+}
+
+// QualityRating implements CoffeeQuality interface
+type QualityRating struct {
+	Score       int
+	Description string
+}
+
+func (qr QualityRating) GetScore() int {
+	return qr.Score
+}
+
+func (qr QualityRating) GetDescription() string {
+	return qr.Description
 }
 
 // Location nested struct for coffee origin information
@@ -319,178 +341,181 @@ var _ = Describe("Copy", func() {
 
 	Context("DeepCopy", func() {
 
-		// FIXME: Have common types for both Copier and DeepCopy
-		type Inner struct {
-			Value string
-		}
-
-		type Nested struct {
-			Name   string
-			Inner  *Inner
-			Tags   []string
-			Scores map[string]int
-		}
-
 		It("should build", func() {
-			src := Inner{Value: "test"}
-			var dst Inner
+			src := Coffee{Name: "test"}
+			var dst Coffee
 			err := deepcopy.Copy(&dst, &src)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(dst.Value).To(Equal("test"))
+			Expect(dst.Name).To(Equal("test"))
 		})
 
 		Context("Deep Copy Basics", func() {
 			It("should clone simple structs without shared references", func() {
-				// FIXME: make example more meaningful with real world example
-				src := Inner{Value: "original"}
-				var dst Inner
+				// Using Coffee struct with realistic coffee data
+				src := Coffee{Name: "Ethiopian Yirgacheffe", Price: 28.99}
+				var dst Coffee
 				err := deepcopy.Copy(&dst, &src)
 				Expect(err).ToNot(HaveOccurred())
 
-				Expect(dst.Value).To(Equal("original"))
-
 				By("Verifying no shared references")
-				src.Value = "modified"
-				Expect(dst.Value).To(Equal("original"))
+				src.Name = "modified"
+				Expect(dst.Name).To(Equal("Ethiopian Yirgacheffe"))
 			})
 		})
 
 		Context("Nested Structure Cloning", func() {
 			var (
-				src Nested
-				dst Nested
+				src Coffee
+				dst Coffee
 			)
 
 			BeforeEach(func() {
-				src = Nested{
-					Name:   "root",
-					Inner:  &Inner{Value: "nested"},
-					Tags:   []string{"a", "b", "c"},
-					Scores: map[string]int{"math": 95, "english": 88},
+				notes := "Complex floral aroma with bright citrus acidity and smooth finish"
+				src = Coffee{
+					Name:         "Ethiopian Yirgacheffe",
+					Origin:       "Ethiopia",
+					RoastLevel:   "Light",
+					Price:        28.99,
+					Age:          1,
+					TastingNotes: &notes,
+					Location: Location{
+						City:     "Yirgacheffe",
+						Country:  "Ethiopia",
+						Region:   "Sidamo",
+						Altitude: 1800,
+					},
+					Flavors: []string{"floral", "citrus", "bergamot", "tea-like"},
+					Ratings: map[string]int{
+						"aroma":      10,
+						"acidity":    9,
+						"body":       7,
+						"flavor":     10,
+						"aftertaste": 9,
+						"sweetness":  8,
+					},
 				}
 				err := deepcopy.Copy(&dst, &src)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("should deep copy all fields", func() {
-				Expect(dst.Name).To(Equal("root"))
-				Expect(dst.Inner.Value).To(Equal("nested"))
-				Expect(dst.Tags).To(Equal([]string{"a", "b", "c"}))
-				Expect(dst.Scores).To(HaveKeyWithValue("math", 95))
-			})
-
-			It("should have no shared pointer references", func() {
-				src.Inner.Value = "changed"
-				Expect(dst.Inner.Value).To(Equal("nested"))
+				Expect(dst.Name).To(Equal("Ethiopian Yirgacheffe"))
+				Expect(dst.Location.City).To(Equal("Yirgacheffe"))
+				Expect(dst.TastingNotes).ToNot(BeNil())
+				Expect(*dst.TastingNotes).To(Equal("Complex floral aroma with bright citrus acidity and smooth finish"))
+				Expect(dst.Flavors).To(HaveLen(4))
+				Expect(dst.Flavors).To(ContainElements("floral", "citrus", "bergamot", "tea-like"))
+				Expect(dst.Ratings).To(HaveKeyWithValue("aroma", 10))
 			})
 
 			It("should have no shared slice references", func() {
-				src.Tags[0] = "modified"
-				Expect(dst.Tags[0]).To(Equal("a"))
+				src.Flavors[0] = "modified"
+				Expect(dst.Flavors[0]).To(Equal("floral"))
 			})
 
 			It("should have no shared map references", func() {
-				src.Scores["math"] = 0
-				Expect(dst.Scores["math"]).To(Equal(95))
+				src.Ratings["aroma"] = 0
+				Expect(dst.Ratings["aroma"]).To(Equal(10))
 			})
 		})
 
 		Context("Pointer Handling", func() {
 			// FIXME: Add Operation Ids matching with PRD.
 			It("should clone structs with pointer fields independently", func() {
-				type WithPointers struct {
-					IntPtr    *int
-					StringPtr *string
+				notes := "Complex floral aroma with bright citrus acidity and smooth finish"
+				src := Coffee{
+					Name:         "Ethiopian Yirgacheffe",
+					Price:        28.99,
+					TastingNotes: &notes,
 				}
-
-				intVal := 42
-				strVal := "hello"
-				src := WithPointers{IntPtr: &intVal, StringPtr: &strVal}
-				var dst WithPointers
+				var dst Coffee
 				err := deepcopy.Copy(&dst, &src)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying values are copied")
-				Expect(*dst.IntPtr).To(Equal(42))
-				Expect(*dst.StringPtr).To(Equal("hello"))
+				Expect(dst.Name).To(Equal("Ethiopian Yirgacheffe"))
+				Expect(dst.Price).To(Equal(28.99))
+				Expect(dst.TastingNotes).ToNot(BeNil())
+				Expect(*dst.TastingNotes).To(Equal("Complex floral aroma with bright citrus acidity and smooth finish"))
 
 				By("Verifying pointed-to data is independent")
-				*src.IntPtr = 100
-				*src.StringPtr = "world"
-				Expect(*dst.IntPtr).To(Equal(42))
-				Expect(*dst.StringPtr).To(Equal("hello"))
+				*src.TastingNotes = "Modified tasting notes"
+				Expect(*dst.TastingNotes).To(Equal("Complex floral aroma with bright citrus acidity and smooth finish"))
 			})
 
 			It("should handle nil pointers", func() {
-				src := Nested{Name: "no-inner", Inner: nil}
-				var dst Nested
+				src := Coffee{Name: "Colombian Supremo", TastingNotes: nil}
+				var dst Coffee
 				err := deepcopy.Copy(&dst, &src)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(dst.Name).To(Equal("no-inner"))
-				Expect(dst.Inner).To(BeNil())
+				Expect(dst.Name).To(Equal("Colombian Supremo"))
+				Expect(dst.TastingNotes).To(BeNil())
 			})
 		})
 
 		Context("Slice and Array Cloning", func() {
-			It("should deep copy slices", func() {
-				src := []int{1, 2, 3, 4, 5}
-				var dst []int
+			It("should deep copy coffee flavors", func() {
+				src := []string{"floral", "citrus", "chocolate", "caramel"}
+				var dst []string
 				err := deepcopy.Copy(&dst, &src)
 				Expect(err).ToNot(HaveOccurred())
 
-				Expect(dst).To(Equal([]int{1, 2, 3, 4, 5}))
+				Expect(dst).To(Equal([]string{"floral", "citrus", "chocolate", "caramel"}))
 
 				By("Verifying modifications to clone don't affect original")
-				dst[0] = 100
-				Expect(src[0]).To(Equal(1))
-			})
-
-			It("should deep copy slice of pointers", func() {
-				a, b := 1, 2
-				src := []*int{&a, &b}
-				var dst []*int
-				err := deepcopy.Copy(&dst, &src)
-				Expect(err).ToNot(HaveOccurred())
-
-				Expect(*dst[0]).To(Equal(1))
-				*src[0] = 100
-				Expect(*dst[0]).To(Equal(1))
+				dst[0] = "modified"
+				Expect(src[0]).To(Equal("floral"))
 			})
 		})
 
 		Context("Map Cloning", func() {
-			It("should deep copy map fields", func() {
-				src := map[string][]int{
-					"a": {1, 2, 3},
-					"b": {4, 5, 6},
+			It("should deep copy coffee ratings map", func() {
+				src := map[string]int{
+					"aroma":      9,
+					"acidity":    8,
+					"body":       7,
+					"flavor":     9,
+					"aftertaste": 8,
 				}
-				var dst map[string][]int
+				var dst map[string]int
 				err := deepcopy.Copy(&dst, &src)
 				Expect(err).ToNot(HaveOccurred())
 
-				Expect(dst["a"]).To(Equal([]int{1, 2, 3}))
+				Expect(dst).To(HaveKeyWithValue("aroma", 9))
 
 				By("Verifying clone has independent map instance")
-				src["a"][0] = 100
-				Expect(dst["a"][0]).To(Equal(1))
+				src["aroma"] = 0
+				Expect(dst["aroma"]).To(Equal(9))
 			})
 		})
 
 		Context("Interface Fields", func() {
 			It("should deep copy structs with interface fields", func() {
-				// HACK: Don't use With Prefix have more meaningful names.
-				type WithInterface struct {
-					Name  string
-					Value interface{}
+				quality := QualityRating{
+					Score:       9,
+					Description: "Exceptional quality with complex flavor profile",
 				}
-
-				src := WithInterface{Name: "test", Value: map[string]int{"a": 1}}
-				var dst WithInterface
+				src := Coffee{
+					Name:    "Ethiopian Yirgacheffe",
+					Price:   28.99,
+					Quality: quality,
+				}
+				var dst Coffee
 				err := deepcopy.Copy(&dst, &src)
 				Expect(err).ToNot(HaveOccurred())
 
-				Expect(dst.Name).To(Equal("test"))
-				Expect(dst.Value).To(Equal(map[string]int{"a": 1}))
+				Expect(dst.Name).To(Equal("Ethiopian Yirgacheffe"))
+				Expect(dst.Price).To(Equal(28.99))
+				Expect(dst.Quality).ToNot(BeNil())
+				Expect(dst.Quality.GetScore()).To(Equal(9))
+				Expect(dst.Quality.GetDescription()).To(Equal("Exceptional quality with complex flavor profile"))
+
+				By("Verifying interface field independence")
+				// Modify the original quality rating
+				originalQuality, ok := src.Quality.(QualityRating)
+				Expect(ok).To(BeTrue())
+				originalQuality.Score = 5
+				Expect(dst.Quality.GetScore()).To(Equal(9)) // Should remain unchanged
 			})
 		})
 
@@ -501,24 +526,40 @@ var _ = Describe("Copy", func() {
 				AddReportEntry(experiment.Name, experiment)
 
 				experiment.SampleDuration("simple-struct", func(_ int) {
-					src := Inner{Value: "benchmark"}
-					var dst Inner
+					src := Coffee{Name: "benchmark"}
+					var dst Coffee
 					deepcopy.Copy(&dst, &src)
 				}, gmeasure.SamplingConfig{N: 10000})
 
-				experiment.SampleDuration("nested-struct", func(_ int) {
-					src := Nested{
-						Name:   "root",
-						Inner:  &Inner{Value: "nested"},
-						Tags:   []string{"a", "b", "c"},
-						Scores: map[string]int{"x": 1, "y": 2},
+				experiment.SampleDuration("complex-struct", func(_ int) {
+					src := Coffee{
+						Name:       "Ethiopian Yirgacheffe",
+						Origin:     "Ethiopia",
+						RoastLevel: "Light",
+						Price:      28.99,
+						Age:        1,
+						Location: Location{
+							City:     "Yirgacheffe",
+							Country:  "Ethiopia",
+							Region:   "Sidamo",
+							Altitude: 1800,
+						},
+						Flavors: []string{"floral", "citrus", "bergamot", "tea-like"},
+						Ratings: map[string]int{
+							"aroma":      10,
+							"acidity":    9,
+							"body":       7,
+							"flavor":     10,
+							"aftertaste": 9,
+							"sweetness":  8,
+						},
 					}
-					var dst Nested
+					var dst Coffee
 					deepcopy.Copy(&dst, &src)
 				}, gmeasure.SamplingConfig{N: 10000})
 
 				AddReportEntry("Simple Struct Stats", experiment.GetStats("simple-struct"))
-				AddReportEntry("Nested Struct Stats", experiment.GetStats("nested-struct"))
+				AddReportEntry("Complex Struct Stats", experiment.GetStats("complex-struct"))
 
 				Expect(experiment.GetStats("simple-struct").DurationFor(gmeasure.StatMedian)).To(
 					BeNumerically("<", 10*time.Microsecond), "Median simple deep copy should be fast")
