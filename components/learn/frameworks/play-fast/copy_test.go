@@ -10,72 +10,48 @@ import (
 	deepcopy "github.com/tiendc/go-deepcopy"
 )
 
-// FIXME: Remove Copier in all Names below.
-// Types for Copier tests (must be at package level for method definitions)
-type copierCoffee struct {
-	Name       string
-	Origin     string
-	RoastLevel string
-	Price      float64
+// Types for Copy tests (must be at package level for method definitions)
+type Coffee struct {
+	Name          string
+	Origin        string
+	RoastLevel    string
+	Price         float64
+	Age           int32          // For method-to-field tests
+	ProcessedRole string         // Target for field-to-method copying
+	Location      Location       // For nested struct copying tests
+	Flavors       []string       // For slice copying tests - coffee flavor notes
+	Ratings       map[string]int // For map copying tests - coffee ratings by source
 }
 
-type copierCoffeeDTO struct {
-	Name       string
-	Origin     string
-	RoastLevel string
-	Price      float64
-}
-
-type copierCoffeeWithTag struct {
-	Name       string
-	Origin     string `copier:"-"`
-	RoastLevel string
-	Price      float64
-}
-
-// HACK: Reuse struct with diffierent fields for different Tags.
-type copierEmployee struct {
-	Name string
-	Age  int32
-	Role string
+// Location nested struct for coffee origin information
+type Location struct {
+	City     string
+	Country  string
+	Region   string
+	Altitude int // meters above sea level
 }
 
 // DoubleAge is a method that copier can use for method-to-field copying
-func (e *copierEmployee) DoubleAge() int32 {
-	return 2 * e.Age
+func (c *Coffee) DoubleAge() int32 {
+	return 2 * c.Age
 }
 
-type copierManager struct {
-	Name      string
-	Age       int32
-	DoubleAge int32
-	SuperRole string
+// ProcessRole is a setter method that copier can use for field-to-method copying
+func (c *Coffee) ProcessRole(role string) {
+	c.ProcessedRole = "Super " + role
 }
 
-// Role is a setter method that copier can use for field-to-method copying
-func (m *copierManager) Role(role string) {
-	m.SuperRole = "Super " + role
-}
-
-type copierAddress struct {
-	City    string
-	Country string
-}
-
-type copierPerson struct {
-	Name    string
-	Age     int
-	Address copierAddress
-	Tags    []string
-	Scores  map[string]int
-}
-
-type copierPersonDTO struct {
-	Name    string
-	Age     int
-	Address copierAddress
-	Tags    []string
-	Scores  map[string]int
+type CoffeeDTO struct {
+	Name        string
+	Origin      string `copier:"-"` // For field exclusion tests
+	RoastLevel  string
+	Price       float64
+	Age         int32
+	DoubleAge   int32          // Target for method-to-field copying
+	ProcessRole string         // Source for field-to-method copying
+	Location    Location       // For nested struct copying tests
+	Flavors     []string       // For slice copying tests - coffee flavor notes
+	Ratings     map[string]int // For map copying tests - coffee ratings by source
 }
 
 var _ = Describe("Copy", func() {
@@ -83,24 +59,31 @@ var _ = Describe("Copy", func() {
 	Context("Copier", func() {
 
 		It("should build", func() {
-			src := copierCoffee{}
-			dst := copierCoffeeDTO{}
+			src := Coffee{}
+			dst := Coffee{}
 			err := copier.Copy(&dst, &src)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		Context("Basic", func() {
 			var (
-				src copierCoffee
-				dst copierCoffeeDTO
+				src Coffee
+				dst CoffeeDTO
 			)
 
 			BeforeEach(func() {
-				src = copierCoffee{
+				src = Coffee{
 					Name:       "Ethiopian Yirgacheffe",
 					Origin:     "Ethiopia",
 					RoastLevel: "Light",
 					Price:      18.99,
+					Age:        0, // Initialize all fields
+					Location: Location{
+						City:     "Yirgacheffe",
+						Country:  "Ethiopia",
+						Region:   "Sidamo",
+						Altitude: 1800,
+					},
 				}
 				err := copier.Copy(&dst, &src)
 				Expect(err).ToNot(HaveOccurred())
@@ -108,47 +91,59 @@ var _ = Describe("Copy", func() {
 
 			It("1.1 should copy simple struct fields", func() {
 				Expect(dst.Name).To(Equal(src.Name))
-				Expect(dst.Origin).To(Equal(src.Origin))
+				Expect(dst.Origin).To(BeEmpty()) // Ignored via copier:"-" tag
 				Expect(dst.RoastLevel).To(Equal(src.RoastLevel))
 				Expect(dst.Price).To(Equal(src.Price))
+				Expect(dst.Age).To(Equal(src.Age))
 			})
 
 			It("1.2 should copy nested struct fields", func() {
-				src := copierPerson{
-					Name:    "Alice",
-					Age:     30,
-					Address: copierAddress{City: "Seattle", Country: "USA"},
+				src := Coffee{
+					Name:     "Alice",
+					Age:      30,
+					Location: Location{City: "Seattle", Country: "USA", Region: "Washington", Altitude: 50},
 				}
-				var dst copierPersonDTO
+				var dst CoffeeDTO
 				err := copier.Copy(&dst, &src)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(dst.Address.City).To(Equal("Seattle"))
-				Expect(dst.Address.Country).To(Equal("USA"))
+				Expect(dst.Location.City).To(Equal("Seattle"))
+				Expect(dst.Location.Country).To(Equal("USA"))
 			})
 		})
 
 		Context("Medium", func() {
 			Context("Field Mapping and Transformation", func() {
 				It("2.1 should copy from getter methods to fields (method-to-field)", func() {
-					By("Copying Employee with DoubleAge method to Manager with DoubleAge field")
-					emp := copierEmployee{Name: "John", Age: 25, Role: "Admin"}
-					var mgr copierManager
-					err := copier.Copy(&mgr, &emp)
+					By("Copying Coffee with DoubleAge method to CoffeeDTO with DoubleAge field")
+					coffee := Coffee{Name: "John", Age: 25}
+					var dto CoffeeDTO
+					err := copier.Copy(&dto, &coffee)
 					Expect(err).ToNot(HaveOccurred())
 
-					Expect(mgr.Name).To(Equal("John"))
-					Expect(mgr.Age).To(Equal(int32(25)))
-					Expect(mgr.DoubleAge).To(Equal(int32(50)))
+					Expect(dto.Name).To(Equal("John"))
+					Expect(dto.Age).To(Equal(int32(25)))
+					Expect(dto.DoubleAge).To(Equal(int32(50)))
 				})
 
 				It("2.2 should copy from fields to setter methods (field-to-method)", func() {
-					By("Copying Employee Role field via Manager Role setter method")
-					emp := copierEmployee{Name: "John", Age: 25, Role: "Admin"}
-					var mgr copierManager
-					err := copier.Copy(&mgr, &emp)
+					By("Copying CoffeeDTO ProcessRole field to Coffee ProcessRole method")
+
+					// Source: DTO with ProcessRole field
+					source := CoffeeDTO{
+						Name:        "John",
+						Age:         25,
+						ProcessRole: "Admin", // This field should trigger ProcessRole method
+					}
+
+					// Destination: Coffee with ProcessRole method and ProcessedRole field
+					var destination Coffee
+					err := copier.Copy(&destination, &source)
 					Expect(err).ToNot(HaveOccurred())
 
-					Expect(mgr.SuperRole).To(Equal("Super Admin"))
+					// Verify field-to-method copying worked
+					Expect(destination.ProcessedRole).To(Equal("Super Admin")) // ProcessRole method added "Super " prefix
+					Expect(destination.Name).To(Equal("John"))
+					Expect(destination.Age).To(Equal(int32(25)))
 				})
 
 				It("2.3 should map source fields to different destination field names", func() {
@@ -179,10 +174,10 @@ var _ = Describe("Copy", func() {
 
 			Context("Configuration Merging and Overriding", func() {
 				It("2.4 should merge configurations from multiple sources", func() {
-					base := copierCoffee{Name: "House Blend", Origin: "Colombia", RoastLevel: "Medium", Price: 12.99}
-					override := copierCoffee{Name: "House Blend Special", Price: 14.99}
+					base := Coffee{Name: "House Blend", Origin: "Colombia", RoastLevel: "Medium", Price: 12.99}
+					override := Coffee{Name: "House Blend Special", Price: 14.99}
 
-					var result copierCoffee
+					var result Coffee
 					err := copier.Copy(&result, &base)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -197,8 +192,8 @@ var _ = Describe("Copy", func() {
 				})
 
 				It("2.5 should override all fields without IgnoreEmpty", func() {
-					base := copierCoffee{Name: "Base", Origin: "Kenya", RoastLevel: "Dark", Price: 15.0}
-					override := copierCoffee{Name: "Override", Price: 20.0}
+					base := Coffee{Name: "Base", Origin: "Kenya", RoastLevel: "Dark", Price: 15.0}
+					override := Coffee{Name: "Override", Price: 20.0}
 
 					err := copier.Copy(&base, &override)
 					Expect(err).ToNot(HaveOccurred())
@@ -224,8 +219,8 @@ var _ = Describe("Copy", func() {
 
 			Context("Field Filtering", func() {
 				It("2.7 should ignore fields with copier:\"-\" tag", func() {
-					src := copierCoffee{Name: "Espresso", Origin: "Italy", RoastLevel: "Dark", Price: 22.0}
-					var dst copierCoffeeWithTag
+					src := Coffee{Name: "Espresso", Origin: "Italy", RoastLevel: "Dark", Price: 22.0, Age: 30}
+					var dst CoffeeDTO
 					err := copier.Copy(&dst, &src)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -273,32 +268,20 @@ var _ = Describe("Copy", func() {
 
 			Context("Error Handling", func() {
 				It("1.3 should handle nil pointers gracefully", func() {
-					var src *copierCoffee
-					dst := &copierCoffeeDTO{}
+					var src *Coffee
+					dst := &Coffee{}
 					err := copier.Copy(dst, src)
 					Expect(err).To(HaveOccurred())
 				})
 
 				It("1.4 should handle empty structs", func() {
-					src := copierCoffee{}
-					var dst copierCoffeeDTO
+					src := Coffee{}
+					var dst Coffee
 					err := copier.Copy(&dst, &src)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(dst.Name).To(BeEmpty())
 				})
 
-				It("1.2 should copy nested struct fields", func() {
-					src := copierPerson{
-						Name:    "Alice",
-						Age:     30,
-						Address: copierAddress{City: "Seattle", Country: "USA"},
-					}
-					var dst copierPersonDTO
-					err := copier.Copy(&dst, &src)
-					Expect(err).ToNot(HaveOccurred())
-					Expect(src.Address.City).To(Equal(dst.Address.City))
-					Expect(src.Address.Country).To(Equal(dst.Address.Country))
-				})
 				type Src struct {
 					Name string
 					Age  int
@@ -513,7 +496,6 @@ var _ = Describe("Copy", func() {
 
 		Context("Performance Benchmarks", FlakeAttempts(3), func() {
 			// FIXME: Time the benchmark and simplify if it takes more time.
-			// BUG: Change to Gingk Benchmark not it block for all benchmarks in this package.
 			It("should benchmark deep copy operations", func() {
 				experiment := gmeasure.NewExperiment("DeepCopy Operations")
 				AddReportEntry(experiment.Name, experiment)
