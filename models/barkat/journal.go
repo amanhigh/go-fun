@@ -10,7 +10,6 @@ import (
 
 // Journal API route constants
 const (
-	// FIXME: Rename file to journal.go
 	// Base journal routes
 	JournalBase      = common.APIV1 + "/journal"
 	JournalEntries   = JournalBase

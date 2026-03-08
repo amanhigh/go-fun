@@ -53,7 +53,6 @@ func (ki *KohanInjector) GetKohanServer(port int, capturePath string, wait time.
 		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)
 	}
 	ki.registerServerDependencies(port)
-	// FIXME: DB Migration has many indexes on Primary key remove unwanted indexes.
 
 	var base util.HttpServer
 	if err := ki.di.Resolve(&base); err != nil {
