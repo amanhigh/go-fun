@@ -401,12 +401,12 @@ var _ = Describe("Person Integration Test", func() {
 
 				It("should fail for Lower Limit", func() {
 					personQuery.Limit = 0
-					expectedErr = "required"
+					expectedErr = "min (1)"
 				})
 
 				It("should fail for Max Limit", func() {
-					personQuery.Limit = 30
-					expectedErr = "Limit"
+					personQuery.Limit = 101
+					expectedErr = "max (100)"
 				})
 
 				It("should fail for invalid Name", func() {
