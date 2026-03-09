@@ -25,8 +25,7 @@ func RunCommandPrintError(cmd string) string {
 }
 
 func RunAsyncCommand(heading, cmd string, wg *sync.WaitGroup) {
-	wg.Add(1)
-	go func() {
+	wg.Go(func() {
 		output, err := runCommand(cmd)
 		color.Cyan(heading)
 		if err == nil {
@@ -34,8 +33,7 @@ func RunAsyncCommand(heading, cmd string, wg *sync.WaitGroup) {
 		} else {
 			color.White(err.Error())
 		}
-		wg.Done()
-	}()
+	})
 }
 
 // RunBackgroundProcess runs a background command and returns an error and a cancel function.

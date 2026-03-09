@@ -1,6 +1,9 @@
 package common
 
-import "context"
+import (
+	"context"
+	"maps"
+)
 
 // Key names shared across saga publishers/consumers.
 const (
@@ -59,9 +62,7 @@ func (m Metadata) WithPairs(pairs map[string]string) Metadata {
 // Clone produces a shallow copy of the metadata map.
 func (m Metadata) Clone() Metadata {
 	cloned := make(Metadata, len(m))
-	for k, v := range m {
-		cloned[k] = v
-	}
+	maps.Copy(cloned, m)
 	return cloned
 }
 

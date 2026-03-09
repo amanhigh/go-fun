@@ -348,7 +348,9 @@ func getFreePort() int {
 	listener, err := net.Listen("tcp", ":0") //nolint:gosec // Binding to all interfaces intentionally for testing
 	Expect(err).ToNot(HaveOccurred())
 	defer listener.Close()
-	return listener.Addr().(*net.TCPAddr).Port
+	addr, ok := listener.Addr().(*net.TCPAddr)
+	Expect(ok).To(BeTrue())
+	return addr.Port
 }
 
 // startServer starts the server and waits for it to be ready

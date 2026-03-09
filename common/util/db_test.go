@@ -23,9 +23,11 @@ var migrationFS embed.FS
 
 var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
 	var (
-		ctx = context.Background()
-		db  *gorm.DB
-		err error
+		ctx               = context.Background()
+		db                *gorm.DB
+		err               error
+		mysqlContainer    testcontainers.Container
+		postgresContainer testcontainers.Container
 	)
 
 	Context("RunMigrations", func() {
@@ -68,10 +70,10 @@ var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
 			const migrationDir = "testdata/migrations/mysql"
 
 			BeforeEach(func() {
-				mysqlContainer, err := util.MysqlTestContainer(ctx)
+				mysqlContainer, err = util.MysqlTestContainer(ctx)
 				Expect(err).ToNot(HaveOccurred())
 				DeferCleanup(func() {
-					testcontainers.TerminateContainer(mysqlContainer)
+					Expect(testcontainers.TerminateContainer(mysqlContainer)).To(Succeed())
 				})
 
 				mysqlHost, err := mysqlContainer.PortEndpoint(ctx, "3306/tcp", "")
@@ -113,10 +115,10 @@ var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
 			const migrationDir = "testdata/migrations/postgres"
 
 			BeforeEach(func() {
-				postgresContainer, err := util.PostgresTestContainer(ctx)
+				postgresContainer, err = util.PostgresTestContainer(ctx)
 				Expect(err).ToNot(HaveOccurred())
 				DeferCleanup(func() {
-					testcontainers.TerminateContainer(postgresContainer)
+					Expect(testcontainers.TerminateContainer(postgresContainer)).To(Succeed())
 				})
 
 				postgresHost, err := postgresContainer.PortEndpoint(ctx, "5432/tcp", "")

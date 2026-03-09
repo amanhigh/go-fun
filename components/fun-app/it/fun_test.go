@@ -210,7 +210,7 @@ var _ = Describe("Person Integration Test", func() {
 
 			BeforeEach(func() {
 				// Create 15 Persons
-				for i := 0; i < total; i++ {
+				for i := range total {
 					request.Name = names[i%3] + strconv.Itoa(i)
 					request.Gender = genders[i%3]
 					_, err = client.PersonService.CreatePerson(testCtx, request)

@@ -12,8 +12,7 @@ func ReplaceRegEx(content, search, replace string) string {
 
 func GoGrep(input, pattern string) (output string) {
 	compile := regexp.MustCompile(pattern)
-	lines := strings.Split(input, "\n")
-	for _, line := range lines {
+	for line := range strings.SplitSeq(input, "\n") {
 		submatch := compile.FindStringSubmatch(line)
 		if len(submatch) > 0 {
 			output += submatch[0] + "\n"
