@@ -204,7 +204,6 @@ func createMigrationDriver(sqlDB *sql.DB, dbType string) (database.Driver, strin
 // Supports SQLite, MySQL, and PostgreSQL databases.
 // Requires explicit migration directory path.
 func RunMigrations(db *gorm.DB, migrationFS embed.FS, migrationDir string) error {
-	// FIXME: Write Unit Test for this Function Using Test Containers and sample Migration Files for all 3 DB Types.
 	// Validate migration directory parameter
 	if migrationDir == "" {
 		return fmt.Errorf("migration directory cannot be empty")
