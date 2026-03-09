@@ -59,7 +59,7 @@ func httpDoEntry(method, url string, body interface{}) barkat.Journal {
 }
 
 var _ = PDescribe("Barkat Integration Test", func() {
-	// TODO: Decide Scenarios for Integration Test and Fix it.
+	// TODO: #B Decide Scenarios for Integration Test and Fix it.
 	BeforeEach(func() {
 		if baseURL == "" {
 			db, err := core.CreateTestBarkatDB()

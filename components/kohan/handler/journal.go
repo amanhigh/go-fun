@@ -30,7 +30,7 @@ func NewJournalHandler(journalManager manager.JournalManager) *JournalHandlerImp
 }
 
 // ---- Entry Handlers ----
-// TODO: Match other Handlers after Review Comments & Test to Standardize Template.
+// TODO: #A Match other Handlers after Review Comments & Test to Standardize Template.
 func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
 	query := barkat.NewJournalQuery()
 

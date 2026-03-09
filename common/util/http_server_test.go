@@ -56,7 +56,7 @@ var _ = Describe("HttpServer", func() {
 	})
 
 	Context("Constructor", func() {
-		// TODO: Improve this test structuring.
+		// TODO: #B Improve this test structuring.
 		It("should create server with correct configuration", func() {
 			Expect(server).ToNot(BeNil())
 			Expect(server.Name).To(Equal("test"))

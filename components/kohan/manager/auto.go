@@ -49,7 +49,7 @@ type AutoManagerImpl struct {
 }
 
 func NewAutoManager(wait time.Duration, capturePath string) AutoManagerInterface {
-	// TODO: Move to Kohan Config and Inject directly via Kohan Injector.
+	// TODO: #C Move to Kohan Config and Inject directly via Kohan Injector.
 	return &AutoManagerImpl{
 		wait:        wait,
 		capturePath: capturePath,

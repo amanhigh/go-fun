@@ -31,14 +31,14 @@ var _ = Describe("KohanServer", func() {
 	})
 
 	Context("Constructor", func() {
-		// TODO: Remove this Test after writing extensive Base Server Test.
+		// TODO: #B Remove this Test after writing extensive Base Server Test.
 		It("should create server with handlers", func() {
 			monitorHandler := handler.NewMonitorHandler(testPath, mockManager)
 			db, err := core.CreateTestBarkatDB()
 			Expect(err).ToNot(HaveOccurred())
 			entryMgr := manager.NewJournalManager(repository.NewJournalRepository(db))
 			journalHandler := handler.NewJournalHandler(entryMgr)
-			// TODO: Wire Up Test using DI Framework Module Override as well.
+			// TODO: #C Wire Up Test using DI Framework Module Override as well.
 			imageHandler := handler.NewImageHandler(manager.NewImageManager(entryMgr, repository.NewImageRepository(db)))
 			noteHandler := handler.NewNoteHandler(manager.NewNoteManager(entryMgr, repository.NewNoteRepository(db)))
 			tagHandler := handler.NewTagHandler(manager.NewTagManager(entryMgr, repository.NewTagRepository(db)))
