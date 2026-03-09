@@ -1,4 +1,3 @@
-//nolint:dupl // Test file with intentional similar test patterns for different fields
 package handler_test
 
 import (

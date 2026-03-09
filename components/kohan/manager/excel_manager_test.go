@@ -1,4 +1,3 @@
-//nolint:dupl // Test files often have similar setup patterns
 package manager_test
 
 import (

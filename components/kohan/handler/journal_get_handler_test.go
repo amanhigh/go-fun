@@ -108,7 +108,6 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 			})
 		})
 
-		//nolint:dupl // Test duplication is legitimate for different HTTP methods (GET vs DELETE)
 		Context("Field Validations", func() {
 			Context("Entry ID Field", func() {
 				Context("Bad Values", func() {
