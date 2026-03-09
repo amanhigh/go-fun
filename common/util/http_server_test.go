@@ -25,15 +25,22 @@ const (
 
 // testLifecycle implements ServerLifecycle with optional func overrides
 type testLifecycle struct {
-	registerRoutes func(*gin.Engine)
-	beforeStart    func(context.Context)
-	beforeShutdown func(context.Context)
-	afterShutdown  func(context.Context)
+	registerRoutes  func(*gin.Engine)
+	registerSwagger func(*gin.Engine)
+	beforeStart     func(context.Context)
+	beforeShutdown  func(context.Context)
+	afterShutdown   func(context.Context)
 }
 
 func (t *testLifecycle) RegisterRoutes(e *gin.Engine) {
 	if t.registerRoutes != nil {
 		t.registerRoutes(e)
+	}
+}
+
+func (t *testLifecycle) RegisterSwagger(e *gin.Engine) {
+	if t.registerSwagger != nil {
+		t.registerSwagger(e)
 	}
 }
 func (t *testLifecycle) BeforeStart(ctx context.Context) {
@@ -239,6 +246,20 @@ var _ = Describe("HttpServer", func() {
 			Eventually(serverDone, testWaitTime).Should(Receive(BeNil()))
 			Expect(called).To(BeTrue())
 		})
+
+		It("should call RegisterSwagger hook", func() {
+			called := false
+			server.SetLifecycle(&testLifecycle{
+				registerSwagger: func(_ *gin.Engine) {
+					called = true
+				},
+			})
+
+			startServer(server, serverDone, freePort)
+			shutdown.Stop(context.Background())
+			Eventually(serverDone, testWaitTime).Should(Receive(BeNil()))
+			Expect(called).To(BeTrue())
+		})
 	})
 
 	Context("Configuration", func() {
@@ -255,9 +276,7 @@ var _ = Describe("HttpServer", func() {
 			testServer := util.NewHttpServer(config.HttpServerConfig{Name: "test", Port: 8080}, customEngine, shutdown)
 			Expect(testServer.Engine).To(Equal(customEngine))
 		})
-	})
 
-	Context("API methods", func() {
 		It("should allow setting lifecycle multiple times", func() {
 			server = util.NewHttpServer(config.HttpServerConfig{Name: "test", Port: 0}, gin.Default(), shutdown)
 

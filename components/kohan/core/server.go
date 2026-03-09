@@ -8,6 +8,8 @@ import (
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // KohanServerLifecycle implements ServerLifecycle for the Kohan HTTP server.
@@ -37,6 +39,13 @@ func NewKohanServerLifecycle(monitorHandler handler.MonitorHandler,
 func (s *KohanServerLifecycle) RegisterRoutes(engine *gin.Engine) {
 	s.registerMonitorRoutes(engine)
 	s.registerJournalRoutes(engine)
+}
+
+func (s *KohanServerLifecycle) RegisterSwagger(engine *gin.Engine) {
+	// TODO: Generate swagger docs for Kohan handlers and add annotations
+	// make swag-kohan
+	// Add Swagger - https://github.com/swaggo/gin-swagger
+	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }
 
 func (s *KohanServerLifecycle) BeforeStart(_ context.Context)    {}

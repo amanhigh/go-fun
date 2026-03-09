@@ -49,8 +49,6 @@ func (fs *FunAppServerLifecycle) RegisterRoutes(engine *gin.Engine) {
 	adminGroup := engine.Group("/admin")
 	adminGroup.GET("/stop", fs.AdminHandler.Stop)
 
-	fs.registerSwaggerRoutes(engine)
-
 	// Pprof (Use: http://localhost:8080/debug/pprof/)
 	// make profile
 	// Load Test:  wrk2 http://localhost:8080/v1/person/all/ -t 2 -c 100 -d 1m -R2000
@@ -59,7 +57,7 @@ func (fs *FunAppServerLifecycle) RegisterRoutes(engine *gin.Engine) {
 	pprof.Register(engine)
 }
 
-func (fs *FunAppServerLifecycle) registerSwaggerRoutes(engine *gin.Engine) {
+func (fs *FunAppServerLifecycle) RegisterSwagger(engine *gin.Engine) {
 	// Add Swagger - https://github.com/swaggo/gin-swagger
 	// make swag-fun
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

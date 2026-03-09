@@ -23,6 +23,8 @@ const (
 type ServerLifecycle interface {
 	// RegisterRoutes is called once during Start to register application routes.
 	RegisterRoutes(engine *gin.Engine)
+	// RegisterSwagger is called once during Start to register swagger documentation routes.
+	RegisterSwagger(engine *gin.Engine)
 	// BeforeStart runs after routes are registered but before the HTTP server begins listening.
 	BeforeStart(ctx context.Context)
 	// BeforeShutdown runs after the shutdown signal but before the HTTP server stops.
@@ -41,6 +43,7 @@ type HttpServer interface {
 type noopLifecycle struct{}
 
 func (noopLifecycle) RegisterRoutes(_ *gin.Engine)     {}
+func (noopLifecycle) RegisterSwagger(_ *gin.Engine)    {}
 func (noopLifecycle) BeforeStart(_ context.Context)    {}
 func (noopLifecycle) BeforeShutdown(_ context.Context) {}
 func (noopLifecycle) AfterShutdown(_ context.Context)  {}
@@ -94,6 +97,7 @@ func (h *HttpServerImpl) SetLifecycle(lc ServerLifecycle) {
 // Start registers routes, runs BeforeStart hook, begins listening, and blocks until graceful shutdown completes.
 func (h *HttpServerImpl) Start() error {
 	h.lifecycle.RegisterRoutes(h.Engine)
+	h.lifecycle.RegisterSwagger(h.Engine)
 	h.lifecycle.BeforeStart(context.Background())
 
 	errChan := make(chan error, 1)
