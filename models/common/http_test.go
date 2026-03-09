@@ -26,6 +26,9 @@ var _ = Describe("HttpError", func() {
 			Expect(common.ErrEntityExists.Code()).To(Equal(http.StatusConflict))
 			Expect(common.ErrEntityExists.Error()).To(Equal("EntityExists"))
 
+			Expect(common.ErrPayloadTooLarge.Code()).To(Equal(http.StatusRequestEntityTooLarge))
+			Expect(common.ErrPayloadTooLarge.Error()).To(Equal("PayloadTooLarge"))
+
 			Expect(common.ErrInternalServerError.Code()).To(Equal(http.StatusInternalServerError))
 			Expect(common.ErrInternalServerError.Error()).To(Equal("InternalServerError"))
 		})

@@ -8,6 +8,7 @@ var ErrNotFound = NewHttpError("NotFound", http.StatusNotFound)
 var ErrNotAuthorized = NewHttpError("NotAuthorized", http.StatusUnauthorized)
 var ErrNotAuthenticated = NewHttpError("NotAuthenticated", http.StatusForbidden)
 var ErrEntityExists = NewHttpError("EntityExists", http.StatusConflict)
+var ErrPayloadTooLarge = NewHttpError("PayloadTooLarge", http.StatusRequestEntityTooLarge)
 var ErrInternalServerError = NewHttpError("InternalServerError", http.StatusInternalServerError)
 
 /* Error Reperesenting Http Error and Status Code  */

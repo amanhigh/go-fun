@@ -20,12 +20,13 @@ import (
 
 // statusCodeMap maps HTTP status codes to predefined HttpError instances.
 var statusCodeMap = map[int]common.HttpError{
-	http.StatusBadRequest:          common.ErrBadRequest,
-	http.StatusNotFound:            common.ErrNotFound,
-	http.StatusUnauthorized:        common.ErrNotAuthorized,
-	http.StatusForbidden:           common.ErrNotAuthenticated,
-	http.StatusConflict:            common.ErrEntityExists,
-	http.StatusInternalServerError: common.ErrInternalServerError,
+	http.StatusBadRequest:            common.ErrBadRequest,
+	http.StatusNotFound:              common.ErrNotFound,
+	http.StatusUnauthorized:          common.ErrNotAuthorized,
+	http.StatusForbidden:             common.ErrNotAuthenticated,
+	http.StatusConflict:              common.ErrEntityExists,
+	http.StatusRequestEntityTooLarge: common.ErrPayloadTooLarge,
+	http.StatusInternalServerError:   common.ErrInternalServerError,
 }
 
 // ResponseProcessor converts a resty response and error into a standardized HttpError.

@@ -88,6 +88,15 @@ var _ = Describe("Error", func() {
 				Expect(result).To(Equal(common.ErrEntityExists))
 			})
 
+			It("should return ErrPayloadTooLarge for 413 status", func() {
+				response := &resty.Response{}
+				response.Request = client.R()
+				response.RawResponse = &http.Response{StatusCode: http.StatusRequestEntityTooLarge}
+
+				result := util.ResponseProcessor(response, nil)
+				Expect(result).To(Equal(common.ErrPayloadTooLarge))
+			})
+
 			It("should return ErrInternalServerError for 500 status", func() {
 				response := &resty.Response{}
 				response.Request = client.R()
