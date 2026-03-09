@@ -11,7 +11,7 @@ import (
 // Journal API route constants
 const (
 	// Base journal routes
-	JournalBase      = common.APIV1 + "/journal"
+	JournalBase      = common.APIV1 + "/journals"
 	JournalEntries   = JournalBase
 	JournalEntryByID = JournalBase + "/:id"
 

@@ -1,4 +1,4 @@
-//nolint:dupl // Test file with similar patterns for different DB types
+// Test file with similar patterns for different DB types
 package util_test
 
 import (
