@@ -75,7 +75,7 @@ func fireSSERequest(ctx context.Context, request *http.Request) (eventChannel ch
 	var response *http.Response
 
 	/* Fire Request */
-	if response, err = http.DefaultClient.Do(request); err == nil {
+	if response, err = http.DefaultClient.Do(request); err == nil { //nolint:gosec // SSRF acceptable in test context
 		/* Open a Reader on Response Body */
 		go liveRequestLoop(ctx, response, eventChannel)
 	} else {

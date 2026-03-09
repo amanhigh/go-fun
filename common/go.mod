@@ -18,7 +18,6 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/golang-migrate/migrate/v4 v4.16.2
 	github.com/google/uuid v1.6.0
-	github.com/mattn/go-sqlite3 v1.14.18
 	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.29.0
 	github.com/rs/zerolog v1.32.0
@@ -58,6 +57,7 @@ require (
 	github.com/jackc/pgx/v5 v5.4.3 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/lithammer/shortuuid/v3 v3.0.7 // indirect
+	github.com/mattn/go-sqlite3 v1.14.18 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/go-archive v0.1.0 // indirect
 	github.com/moby/sys/user v0.4.0 // indirect

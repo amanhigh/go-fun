@@ -76,8 +76,8 @@ var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
 					Expect(testcontainers.TerminateContainer(mysqlContainer)).To(Succeed())
 				})
 
-				mysqlHost, err := mysqlContainer.PortEndpoint(ctx, "3306/tcp", "")
-				Expect(err).ToNot(HaveOccurred())
+				mysqlHost, hostErr := mysqlContainer.PortEndpoint(ctx, "3306/tcp", "")
+				Expect(hostErr).ToNot(HaveOccurred())
 				dbUrl := fmt.Sprintf("aman:aman@tcp(%s)/compute", mysqlHost)
 
 				db, err = gorm.Open(mysql.Open(dbUrl), &gorm.Config{
@@ -121,8 +121,8 @@ var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
 					Expect(testcontainers.TerminateContainer(postgresContainer)).To(Succeed())
 				})
 
-				postgresHost, err := postgresContainer.PortEndpoint(ctx, "5432/tcp", "")
-				Expect(err).ToNot(HaveOccurred())
+				postgresHost, hostErr := postgresContainer.PortEndpoint(ctx, "5432/tcp", "")
+				Expect(hostErr).ToNot(HaveOccurred())
 				dbUrl := fmt.Sprintf("test:test@tcp(%s)/testdb?sslmode=disable", postgresHost)
 
 				db, err = gorm.Open(postgres.Open(dbUrl), &gorm.Config{

@@ -26,7 +26,7 @@ const testPort = 19020
 var baseURL string
 
 // httpDo is a helper for making HTTP requests with method, url, and optional JSON body.
-func httpDo(method, url string, body interface{}) (*http.Response, []byte) {
+func httpDo(method, url string, body any) (*http.Response, []byte) {
 	var reqBody *bytes.Reader
 	if body != nil {
 		b, err := json.Marshal(body)
@@ -47,7 +47,7 @@ func httpDo(method, url string, body interface{}) (*http.Response, []byte) {
 }
 
 // httpDoEntry is a helper for making HTTP requests that return an Entry envelope response.
-func httpDoEntry(method, url string, body interface{}) barkat.Journal {
+func httpDoEntry(method, url string, body any) barkat.Journal {
 	resp, responseBody := httpDo(method, url, body)
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
@@ -104,7 +104,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 					{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"},
 				},
 				Tags: []barkat.Tag{
-					{Tag: "tto", Type: "reason", Override: strPtr("loc")},
+					{Tag: "tto", Type: "reason", Override: new("loc")},
 				},
 			}
 			resp, body := httpDo("POST", baseURL+"/v1/journal-entries", entry)
@@ -378,7 +378,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 				{
 					Ticker: "SJVN", Sequence: "MWD", Type: "REJECTED", Status: "FAIL",
 					Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}},
-					Tags:   []barkat.Tag{{Tag: "zn", Type: "reason", Override: strPtr("big")}},
+					Tags:   []barkat.Tag{{Tag: "zn", Type: "reason", Override: new("big")}},
 				},
 				{
 					Ticker: "PDSL", Sequence: "YR", Type: "SET", Status: "RUNNING",
@@ -467,7 +467,3 @@ var _ = PDescribe("Barkat Integration Test", func() {
 		})
 	})
 })
-
-func strPtr(s string) *string {
-	return &s
-}
