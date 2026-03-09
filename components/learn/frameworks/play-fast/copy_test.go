@@ -321,7 +321,7 @@ var _ = Describe("Copy", func() {
 				Expect(dst.Age).To(Equal(int64(30)))
 			})
 
-			It("should handle type conversion failures gracefully", func() {
+			It("2.7 should handle type conversion failures gracefully", func() {
 				type Src struct {
 					Value string
 				}
@@ -420,8 +420,7 @@ var _ = Describe("Copy", func() {
 		})
 
 		Context("Pointer Handling", func() {
-			// FIXME: Add Operation Ids matching with PRD.
-			It("should clone structs with pointer fields independently", func() {
+			It("3.2 should clone structs with pointer fields independently", func() {
 				notes := "Complex floral aroma with bright citrus acidity and smooth finish"
 				src := Coffee{
 					Name:         "Ethiopian Yirgacheffe",
@@ -443,7 +442,7 @@ var _ = Describe("Copy", func() {
 				Expect(*dst.TastingNotes).To(Equal("Complex floral aroma with bright citrus acidity and smooth finish"))
 			})
 
-			It("should handle nil pointers", func() {
+			It("1.3 should handle nil pointers", func() {
 				src := Coffee{Name: "Colombian Supremo", TastingNotes: nil}
 				var dst Coffee
 				err := deepcopy.Copy(&dst, &src)
@@ -454,7 +453,7 @@ var _ = Describe("Copy", func() {
 		})
 
 		Context("Slice and Array Cloning", func() {
-			It("should deep copy coffee flavors", func() {
+			It("3.3 should deep copy coffee flavors", func() {
 				src := []string{"floral", "citrus", "chocolate", "caramel"}
 				var dst []string
 				err := deepcopy.Copy(&dst, &src)
@@ -469,7 +468,7 @@ var _ = Describe("Copy", func() {
 		})
 
 		Context("Map Cloning", func() {
-			It("should deep copy coffee ratings map", func() {
+			It("3.4 should deep copy coffee ratings map", func() {
 				src := map[string]int{
 					"aroma":      9,
 					"acidity":    8,
@@ -490,7 +489,7 @@ var _ = Describe("Copy", func() {
 		})
 
 		Context("Interface Fields", func() {
-			It("should deep copy structs with interface fields", func() {
+			It("3.6 should deep copy structs with interface fields", func() {
 				quality := QualityRating{
 					Score:       9,
 					Description: "Exceptional quality with complex flavor profile",
@@ -521,7 +520,7 @@ var _ = Describe("Copy", func() {
 
 		Context("Performance Benchmarks", FlakeAttempts(3), func() {
 			// FIXME: Time the benchmark and simplify if it takes more time.
-			It("should benchmark deep copy operations", func() {
+			It("3.8 should benchmark deep copy operations", func() {
 				experiment := gmeasure.NewExperiment("DeepCopy Operations")
 				AddReportEntry(experiment.Name, experiment)
 
@@ -574,7 +573,7 @@ var _ = Describe("Copy", func() {
 	})
 
 	Context("Shallow vs Deep Copy Comparison", func() {
-		It("should demonstrate difference between Copier (shallow) and go-deepcopy (deep)", func() {
+		It("6.1 should demonstrate difference between Copier (shallow) and go-deepcopy (deep)", func() {
 			type Data struct {
 				Name   string
 				Values []int
