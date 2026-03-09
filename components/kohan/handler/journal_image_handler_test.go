@@ -165,7 +165,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 				// Should return validation error about required timeframe
-				var errorResponse map[string]interface{}
+				var errorResponse map[string]any
 				util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
 				Expect(errorResponse["error"]).To(ContainSubstring("required"))
 			})
@@ -176,7 +176,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 				// Should return validation error about oneof constraint
-				var errorResponse map[string]interface{}
+				var errorResponse map[string]any
 				util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
 				Expect(errorResponse["error"]).To(ContainSubstring("oneof"))
 			})
@@ -187,7 +187,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 				// Should return validation error about oneof constraint
-				var errorResponse map[string]interface{}
+				var errorResponse map[string]any
 				util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
 				Expect(errorResponse["error"]).To(ContainSubstring("oneof"))
 			})
@@ -198,7 +198,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 				// Should return validation error about oneof constraint
-				var errorResponse map[string]interface{}
+				var errorResponse map[string]any
 				util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
 				Expect(errorResponse["error"]).To(ContainSubstring("oneof"))
 			})
@@ -209,7 +209,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 				// Should return validation error about required timeframe
-				var errorResponse map[string]interface{}
+				var errorResponse map[string]any
 				util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
 				Expect(errorResponse["error"]).To(ContainSubstring("required"))
 			})

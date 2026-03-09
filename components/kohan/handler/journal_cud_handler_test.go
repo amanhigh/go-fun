@@ -220,7 +220,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]interface{}
+						var errorResponse map[string]any
 						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
 						Expect(errorResponse["message"]).To(ContainSubstring("required"))
 					})
@@ -230,7 +230,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]interface{}
+						var errorResponse map[string]any
 						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
 						Expect(errorResponse["message"]).To(ContainSubstring("max (10)"))
 					})
@@ -262,7 +262,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]interface{}
+						var errorResponse map[string]any
 						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
 						Expect(errorResponse["message"]).To(ContainSubstring("required"))
 					})
@@ -272,7 +272,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]interface{}
+						var errorResponse map[string]any
 						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
 						Expect(errorResponse["message"]).To(ContainSubstring("oneof"))
 					})
@@ -282,7 +282,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]interface{}
+						var errorResponse map[string]any
 						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
 						Expect(errorResponse["message"]).To(ContainSubstring("oneof"))
 					})
@@ -322,7 +322,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]interface{}
+						var errorResponse map[string]any
 						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
 						Expect(errorResponse["message"]).To(ContainSubstring("required"))
 					})
@@ -332,7 +332,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]interface{}
+						var errorResponse map[string]any
 						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
 						Expect(errorResponse["message"]).To(ContainSubstring("oneof"))
 					})
@@ -342,7 +342,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]interface{}
+						var errorResponse map[string]any
 						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
 						Expect(errorResponse["message"]).To(ContainSubstring("oneof"))
 					})
@@ -438,7 +438,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]interface{}
+						var errorResponse map[string]any
 						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
 						Expect(errorResponse["message"]).To(ContainSubstring("required"))
 					})
@@ -448,7 +448,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]interface{}
+						var errorResponse map[string]any
 						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
 						Expect(errorResponse["message"]).To(ContainSubstring("oneof"))
 					})
@@ -458,7 +458,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]interface{}
+						var errorResponse map[string]any
 						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
 						Expect(errorResponse["message"]).To(ContainSubstring("oneof"))
 					})

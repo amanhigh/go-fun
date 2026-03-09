@@ -532,7 +532,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						router.ServeHTTP(w, req)
 						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(5))
-						for i := 0; i < 3; i++ {
+						for i := range 3 {
 							Expect(response.Records[i].Sequence).To(Equal("MWD"))
 						}
 						for i := 3; i < 5; i++ {

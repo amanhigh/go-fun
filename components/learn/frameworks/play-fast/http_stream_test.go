@@ -41,7 +41,7 @@ func stream(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		fmt.Fprintf(w, "data: Streaming - %v\n\n", i)
 		f.Flush()
 		time.Sleep(50 * time.Millisecond)

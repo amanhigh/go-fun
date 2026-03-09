@@ -48,7 +48,7 @@ func buildDaisyChain(n int) (leftmost, current chan int) {
 	left := leftmost
 
 	/** Increase Chain Size by N */
-	for i := 0; i < n; i++ {
+	for range n {
 		/** Build a New Node */
 		current = make(chan int)
 

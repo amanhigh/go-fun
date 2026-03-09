@@ -9,8 +9,8 @@ m-columns
 https://www.hackerrank.com/challenges/ctci-connected-cell-in-a-grid/problem
 */
 func FindRegion(cells, visited [][]int, n, m int) (maxSize int) {
-	for i := 0; i < n; i++ {
-		for j := 0; j < m; j++ {
+	for i := range n {
+		for j := range m {
 			current := FindRegionRecursive(cells, visited, n, m, i, j)
 			if current > maxSize {
 				maxSize = current
