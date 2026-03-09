@@ -18,7 +18,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-//go:embed testdata/migrations/*/*.sql
+//go:embed testdata/migrations/*.sql
 var migrationFS embed.FS
 
 var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
@@ -32,7 +32,7 @@ var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
 
 	Context("RunMigrations", func() {
 		Context("SQLite", func() {
-			const migrationDir = "testdata/migrations/sqlite"
+			const migrationDir = "testdata/migrations"
 
 			BeforeEach(func() {
 				db, err = gorm.Open(sqlite.Open("file:memdb1?mode=memory&cache=shared"), &gorm.Config{
@@ -67,7 +67,7 @@ var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
 		})
 
 		Context("MySQL", func() {
-			const migrationDir = "testdata/migrations/mysql"
+			const migrationDir = "testdata/migrations"
 
 			BeforeEach(func() {
 				mysqlContainer, err = util.MysqlTestContainer(ctx)
@@ -112,7 +112,7 @@ var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
 		})
 
 		Context("PostgreSQL", func() {
-			const migrationDir = "testdata/migrations/postgres"
+			const migrationDir = "testdata/migrations"
 
 			BeforeEach(func() {
 				postgresContainer, err = util.PostgresTestContainer(ctx)
