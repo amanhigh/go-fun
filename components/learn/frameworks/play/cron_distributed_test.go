@@ -150,7 +150,7 @@ var _ = Describe("CronDistributed", Ordered, Label(models.GINKGO_SLOW), func() {
 	})
 
 	Context("PostgreSQL Distributed Locking", func() {
-		// FIXME: Should setup PostgreSQL only in this context.
+		// TODO: Should setup PostgreSQL only in this context.
 		It("should acquire and release advisory lock", func() {
 			By("Creating PostgreSQL advisory locker")
 			locker := newPgAdvisoryLocker(pgDB)
@@ -296,7 +296,7 @@ var _ = Describe("CronDistributed", Ordered, Label(models.GINKGO_SLOW), func() {
 	})
 
 	Context("Redis Distributed Locking", func() {
-		// FIXME: Should setup Redis only in this context.
+		// TODO: Should setup Redis only in this context.
 		It("should create locker from Redis client", func() {
 			locker, err := redislock.NewRedisLocker(redisClient)
 			Expect(err).ToNot(HaveOccurred())
