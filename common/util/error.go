@@ -56,7 +56,7 @@ func ResponseProcessor(response *resty.Response, restyErr error) common.HttpErro
 	return handleStatusCode(response.StatusCode())
 }
 
-// TODO: #A Review this file completely.
+// FIXME: #A Review this file completely.
 
 func handleValidationError(err error) common.HttpError {
 	if httpErr := handleStructuralErrors(err); httpErr != nil {
