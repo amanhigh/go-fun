@@ -70,21 +70,21 @@ var _ = Describe("Data Generator", Label(models.GINKGO_SLOW), func() {
 	BeforeEach(OncePerOrdered, func() {
 
 		// Create School
-		for i := 0; i < schoolCount; i++ {
+		for i := range schoolCount {
 			schools[i] = School{}
 			err = faker.FakeData(&schools[i])
 			Expect(err).ToNot(HaveOccurred())
 		}
 
 		// Create Teachers
-		for i := 0; i < teacherCount; i++ {
+		for i := range teacherCount {
 			teachers[i] = Teacher{}
 			err = faker.FakeData(&teachers[i])
 			Expect(err).ToNot(HaveOccurred())
 		}
 
 		// Create Students
-		for i := 0; i < studentCount; i++ {
+		for i := range studentCount {
 			students[i] = Student{}
 			err = faker.FakeData(&students[i])
 			Expect(err).ToNot(HaveOccurred())

@@ -58,7 +58,11 @@ lint-dead:
 	printf $(_TITLE) "LINT" "DeadCode"
 	go work edit -json | jq -r '.Use[].DiskPath' | sed 's|^\./||' | grep -vE "common|models|components/learn" | xargs -I{} $(DEADCODE) github.com/amanhigh/go-fun/{}/...
 
-lint: lint-ci  ## Lint the Code
+lint: lint-fix lint-ci  ## Lint the Code
+
+lint-fix: ## Auto-fix modernize linter issues
+	printf $(_TITLE) "Auto-fixing Modernize Issues"
+	go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} $(GOLANGCI_LINT) run --enable-only=modernize --fix {}/...
 
 format: ## Format Go code with goimports
 	printf $(_TITLE) "Format" "Go Code"
@@ -152,7 +156,8 @@ test-focus:
 	printf $(_TITLE) "Running Focus Tests"
 	$(GINKGO) --focus "should create & get person" $(FUN_DIR)/it > $(OUT)
 
-cover: run-fun-cover test-unit cover-analyse ## Show comprehensive coverage (unit + integration)
+cover: test-clean run-fun-cover test-unit cover-analyse ## Show comprehensive coverage (unit + integration)
+
 test-clean:
 	printf $(_WARN) "Cleaning Tests"
 	rm -rf $(COVER_DIR)
@@ -377,7 +382,7 @@ helm-package:
 setup-tools:
 	printf $(_TITLE) "Setting up Tools"
 	go install github.com/onsi/ginkgo/v2/ginkgo
-	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.2
 	go install github.com/swaggo/swag/cmd/swag
 	go install golang.org/x/tools/cmd/goimports@latest
 	go install github.com/vektra/mockery/v3@v3.5.5

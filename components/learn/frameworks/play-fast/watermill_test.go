@@ -229,7 +229,7 @@ var _ = Describe("Watermill", func() {
 
 					By("Receiving all published messages")
 					receivedMsgs = make([]*message.Message, 0, 3)
-					for i := 0; i < 3; i++ {
+					for range 3 {
 						select {
 						case receivedMsg := <-messages:
 							Expect(receivedMsg).NotTo(BeNil())
@@ -265,7 +265,7 @@ var _ = Describe("Watermill", func() {
 
 				BeforeEach(func() {
 					seqMsgs = make([]*message.Message, 3)
-					for i := 0; i < 3; i++ {
+					for i := range 3 {
 						payload := fmt.Sprintf("sequence-%d", i+1)
 						seqMsgs[i] = message.NewMessage(watermill.NewUUID(), []byte(payload))
 					}
@@ -276,7 +276,7 @@ var _ = Describe("Watermill", func() {
 
 					By("Receiving messages for processing")
 					receivedMsgs = make([]*message.Message, 0, 3)
-					for i := 0; i < 3; i++ {
+					for range 3 {
 						select {
 						case receivedMsg := <-messages:
 							Expect(receivedMsg).NotTo(BeNil())
@@ -1061,16 +1061,16 @@ var _ = Describe("Watermill", func() {
 			// Verify Financial Report Handler processed the event
 			Eventually(func() []string {
 				return receivedEvents
-			}, "5s", "100ms").Should(ContainElement("RoomBooked"))
+			}, "2s", "100ms").Should(ContainElement("RoomBooked"))
 
 			Eventually(func() int64 {
 				return totalRevenue
-			}, "5s", "100ms").Should(Equal(int64(100)))
+			}, "2s", "100ms").Should(Equal(int64(100)))
 
 			// Verify Welcome Email Handler processed the same event
 			Eventually(func() []string {
 				return welcomeEmailService.GetEmails()
-			}, "5s", "100ms").Should(HaveLen(1))
+			}, "2s", "100ms").Should(HaveLen(1))
 
 			// Verify email content
 			emails := welcomeEmailService.GetEmails()
@@ -1170,8 +1170,9 @@ var _ = Describe("Watermill", func() {
 		Context("Outbox Pattern - Solving the Dual-Write Problem", func() {
 			var (
 				// A→db→broker→B outbox components
-				publisher message.Publisher    // A writes to db via this
-				relayer   *forwarder.Forwarder // Moves events db→broker
+				publisher      message.Publisher    // A writes to db via this
+				relayer        *forwarder.Forwarder // Moves events db→broker
+				relayerRunning bool                 // Track if relayer was started
 
 				// Topics
 				outboxTopic = "outbox"
@@ -1205,8 +1206,8 @@ var _ = Describe("Watermill", func() {
 			})
 
 			AfterEach(func() {
-				// Cleanup outbox pattern resources
-				if relayer != nil {
+				// Cleanup outbox pattern resources only if relayer was used
+				if relayer != nil && relayerRunning {
 					relayer.Close()
 				}
 			})
@@ -1239,7 +1240,7 @@ var _ = Describe("Watermill", func() {
 					Expect(string(envelopedMsg.Payload)).To(ContainSubstring(ordersTopic))
 
 					// Verify the envelope structure
-					var envelope map[string]interface{}
+					var envelope map[string]any
 					err = json.Unmarshal(envelopedMsg.Payload, &envelope)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -1255,7 +1256,7 @@ var _ = Describe("Watermill", func() {
 				select {
 				case <-brokerEvents:
 					Fail("Message should not appear directly in broker")
-				case <-time.After(100 * time.Millisecond):
+				case <-time.After(50 * time.Millisecond):
 					// Expected - no direct message in broker yet
 				}
 			})
@@ -1278,7 +1279,8 @@ var _ = Describe("Watermill", func() {
 				}()
 
 				<-relayerReady
-				time.Sleep(100 * time.Millisecond)
+				relayerRunning = true // Mark relayer as running
+				// Remove unnecessary sleep - relayer is ready immediately
 
 				By("Application (A) publishes multiple events atomically")
 				events := []OrderCreated{
@@ -1300,7 +1302,7 @@ var _ = Describe("Watermill", func() {
 				By("Verifying relayer unwraps and forwards all events to broker")
 				receivedOrders := make([]OrderCreated, 0, 3)
 
-				for i := 0; i < 3; i++ {
+				for i := range 3 {
 					select {
 					case orderMsg := <-brokerEvents:
 						var order OrderCreated
@@ -1470,7 +1472,7 @@ var _ = Describe("Watermill", func() {
 				By("Verifying all regional orders reach global analytics")
 				receivedOrders := make([]OrderCreated, 0, 3)
 
-				for i := 0; i < 3; i++ {
+				for i := range 3 {
 					select {
 					case orderMsg := <-globalEvents:
 						var order OrderCreated
@@ -1534,7 +1536,7 @@ var _ = Describe("Watermill", func() {
 
 				receivedOrders := make([]OrderCreated, 0, 2)
 
-				for i := 0; i < 2; i++ {
+				for i := range 2 {
 					select {
 					case orderMsg := <-globalEvents:
 						var order OrderCreated

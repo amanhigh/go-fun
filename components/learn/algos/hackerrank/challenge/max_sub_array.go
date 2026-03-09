@@ -101,7 +101,7 @@ func MaxSubArrayBruteForce(input []int) (contigousSum, nonContigousSum, start, e
 	*/
 	contigousSum, nonContigousSum = -math.MaxInt32, 0
 	n := len(input)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		sum := 0
 		/* Consider Segment from i to j over all possiblities */
 		for j := i; j < n; j++ {

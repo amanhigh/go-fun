@@ -23,6 +23,8 @@ const (
 type ServerLifecycle interface {
 	// RegisterRoutes is called once during Start to register application routes.
 	RegisterRoutes(engine *gin.Engine)
+	// RegisterSwagger is called once during Start to register swagger documentation routes.
+	RegisterSwagger(engine *gin.Engine)
 	// BeforeStart runs after routes are registered but before the HTTP server begins listening.
 	BeforeStart(ctx context.Context)
 	// BeforeShutdown runs after the shutdown signal but before the HTTP server stops.
@@ -31,20 +33,26 @@ type ServerLifecycle interface {
 	AfterShutdown(ctx context.Context)
 }
 
+type HttpServer interface {
+	SetLifecycle(lc ServerLifecycle)
+	Start() error
+	Stop(ctx context.Context)
+}
+
 // noopLifecycle is the default no-op ServerLifecycle.
 type noopLifecycle struct{}
 
 func (noopLifecycle) RegisterRoutes(_ *gin.Engine)     {}
+func (noopLifecycle) RegisterSwagger(_ *gin.Engine)    {}
 func (noopLifecycle) BeforeStart(_ context.Context)    {}
 func (noopLifecycle) BeforeShutdown(_ context.Context) {}
 func (noopLifecycle) AfterShutdown(_ context.Context)  {}
 
-// HttpServer provides shared HTTP server lifecycle: creation with standard
+// HttpServerImpl provides shared HTTP server lifecycle: creation with standard
 // timeouts, a default /health route, graceful start/stop, and overridable hooks.
 //
 // Call SetLifecycle to attach a ServerLifecycle implementation.
-// HACK: Extract Interface and rename struct to HttpServerImpl
-type HttpServer struct {
+type HttpServerImpl struct {
 	Name      string
 	Engine    *gin.Engine
 	Server    *http.Server
@@ -52,9 +60,9 @@ type HttpServer struct {
 	shutdown  Shutdown
 }
 
-// NewHttpServer creates a HttpServer with the provided gin.Engine, standard timeouts,
+// NewHttpServer creates a HttpServerImpl with the provided gin.Engine, standard timeouts,
 // and a /health route.
-func NewHttpServer(cfg config.HttpServerConfig, engine *gin.Engine, shutdown Shutdown) *HttpServer {
+func NewHttpServer(cfg config.HttpServerConfig, engine *gin.Engine, shutdown Shutdown) *HttpServerImpl {
 	engine.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
@@ -70,7 +78,7 @@ func NewHttpServer(cfg config.HttpServerConfig, engine *gin.Engine, shutdown Shu
 		WriteTimeout:      defaultWriteTimeout,
 	}
 
-	return &HttpServer{
+	return &HttpServerImpl{
 		Name:      cfg.Name,
 		Engine:    engine,
 		Server:    srv,
@@ -79,14 +87,17 @@ func NewHttpServer(cfg config.HttpServerConfig, engine *gin.Engine, shutdown Shu
 	}
 }
 
+var _ HttpServer = (*HttpServerImpl)(nil)
+
 // SetLifecycle attaches a ServerLifecycle to this server.
-func (h *HttpServer) SetLifecycle(lc ServerLifecycle) {
+func (h *HttpServerImpl) SetLifecycle(lc ServerLifecycle) {
 	h.lifecycle = lc
 }
 
 // Start registers routes, runs BeforeStart hook, begins listening, and blocks until graceful shutdown completes.
-func (h *HttpServer) Start() error {
+func (h *HttpServerImpl) Start() error {
 	h.lifecycle.RegisterRoutes(h.Engine)
+	h.lifecycle.RegisterSwagger(h.Engine)
 	h.lifecycle.BeforeStart(context.Background())
 
 	errChan := make(chan error, 1)
@@ -104,11 +115,11 @@ func (h *HttpServer) Start() error {
 }
 
 // Stop triggers graceful shutdown programmatically.
-func (h *HttpServer) Stop(ctx context.Context) {
+func (h *HttpServerImpl) Stop(ctx context.Context) {
 	h.shutdown.Stop(ctx)
 }
 
-func (h *HttpServer) listenAndServe(errChan chan<- error, stopped <-chan struct{}) {
+func (h *HttpServerImpl) listenAndServe(errChan chan<- error, stopped <-chan struct{}) {
 	log.Info().Str("addr", h.Server.Addr).Str("server", h.Name).Msg("Starting server")
 	if err := h.Server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		select {
@@ -118,7 +129,7 @@ func (h *HttpServer) listenAndServe(errChan chan<- error, stopped <-chan struct{
 	}
 }
 
-func (h *HttpServer) waitForShutdown(errChan chan<- error, stopped <-chan struct{}) {
+func (h *HttpServerImpl) waitForShutdown(errChan chan<- error, stopped <-chan struct{}) {
 	shutdownCtx := h.shutdown.Wait()
 
 	h.lifecycle.BeforeShutdown(shutdownCtx)

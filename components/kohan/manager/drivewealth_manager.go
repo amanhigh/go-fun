@@ -2,6 +2,7 @@ package manager
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -98,10 +99,8 @@ func (m *DriveWealthManagerImpl) parseSheets(f *excelize.File) (info tax.Brokera
 }
 
 func (m *DriveWealthManagerImpl) checkSheetExists(f *excelize.File, sheetName string) error {
-	for _, sheet := range f.GetSheetList() {
-		if sheet == sheetName {
-			return nil
-		}
+	if slices.Contains(f.GetSheetList(), sheetName) {
+		return nil
 	}
 	return fmt.Errorf("sheet '%s' not found in the Excel file", sheetName)
 }
@@ -271,8 +270,8 @@ func (m *DriveWealthManagerImpl) parseCommissions(rows [][]string) map[string]fl
 				basePrefix := parts[3] // "base=amount"
 
 				// Extract amount from "base=amount"
-				if strings.HasPrefix(basePrefix, "base=") {
-					commissionStr := strings.TrimPrefix(basePrefix, "base=")
+				if after, ok := strings.CutPrefix(basePrefix, "base="); ok {
+					commissionStr := after
 					commission, err := strconv.ParseFloat(commissionStr, 64)
 					if err != nil {
 						continue // Skip malformed entries

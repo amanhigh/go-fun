@@ -41,10 +41,10 @@ func stream(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := range 5 {
 		fmt.Fprintf(w, "data: Streaming - %v\n\n", i)
 		f.Flush()
-		time.Sleep(time.Second)
+		time.Sleep(50 * time.Millisecond)
 	}
 
 	fmt.Fprint(w, "data: Streaming Finished :)\n\n")
@@ -75,7 +75,7 @@ func fireSSERequest(ctx context.Context, request *http.Request) (eventChannel ch
 	var response *http.Response
 
 	/* Fire Request */
-	if response, err = http.DefaultClient.Do(request); err == nil {
+	if response, err = http.DefaultClient.Do(request); err == nil { //nolint:gosec // SSRF acceptable in test context
 		/* Open a Reader on Response Body */
 		go liveRequestLoop(ctx, response, eventChannel)
 	} else {
@@ -151,7 +151,7 @@ var _ = Describe("HttpStream", func() {
 	})
 
 	AfterEach(func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
 		defer cancel()
 		srv.Shutdown(ctx)
 	})

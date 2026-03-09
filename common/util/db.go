@@ -3,6 +3,7 @@ package util
 import (
 	"context"
 	"database/sql"
+	"embed"
 	"errors"
 	"fmt"
 	"strings"
@@ -15,6 +16,11 @@ import (
 	// mysql driver required for database/sql
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database"
+	migratedb "github.com/golang-migrate/migrate/v4/database/mysql"
+	migratedbpostgres "github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/database/sqlite3"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/rs/zerolog/log"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"gorm.io/driver/mysql"
@@ -166,4 +172,73 @@ func Tx(c context.Context) (tx *gorm.DB) {
 		log.Debug().Msg("Nil Context Passed")
 	}
 	return
+}
+
+// createMigrationDriver creates appropriate migration driver based on database type
+func createMigrationDriver(sqlDB *sql.DB, dbType string) (database.Driver, string, error) {
+	switch dbType {
+	case "sqlite":
+		driver, err := sqlite3.WithInstance(sqlDB, &sqlite3.Config{})
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to create sqlite driver: %w", err)
+		}
+		return driver, "sqlite3", nil
+	case "mysql":
+		driver, err := migratedb.WithInstance(sqlDB, &migratedb.Config{})
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to create mysql driver: %w", err)
+		}
+		return driver, "mysql", nil
+	case "postgres":
+		driver, err := migratedbpostgres.WithInstance(sqlDB, &migratedbpostgres.Config{})
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to create postgres driver: %w", err)
+		}
+		return driver, "postgres", nil
+	default:
+		return nil, "", fmt.Errorf("unsupported database type: %s", dbType)
+	}
+}
+
+// RunMigrations runs all pending migrations using an existing GORM DB instance.
+// Supports SQLite, MySQL, and PostgreSQL databases.
+// Requires explicit migration directory path.
+func RunMigrations(db *gorm.DB, migrationFS embed.FS, migrationDir string) error {
+	// Validate migration directory parameter
+	if migrationDir == "" {
+		return fmt.Errorf("migration directory cannot be empty")
+	}
+
+	// Get underlying SQL DB and create migration source
+	sqlDB, err := db.DB()
+	if err != nil {
+		return fmt.Errorf("failed to get underlying sql.DB from gorm: %w", err)
+	}
+
+	source, err := iofs.New(migrationFS, migrationDir)
+	if err != nil {
+		return fmt.Errorf("failed to create migration source: %w", err)
+	}
+
+	// Create database-specific driver
+	dbDialector := db.Dialector
+	driver, databaseName, err := createMigrationDriver(sqlDB, dbDialector.Name())
+	if err != nil {
+		return err
+	}
+
+	// Run migrations
+	m, err := migrate.NewWithInstance("iofs", source, databaseName, driver)
+	if err != nil {
+		return fmt.Errorf("failed to create migrate instance: %w", err)
+	}
+
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return fmt.Errorf("migration failed: %w", err)
+	}
+
+	// Log migration version
+	version, dirty, _ := m.Version()
+	log.Info().Uint("version", version).Bool("dirty", dirty).Msg("Migrations applied")
+	return nil
 }

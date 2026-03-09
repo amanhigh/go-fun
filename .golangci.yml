@@ -26,6 +26,7 @@ linters:
     # Code Style Essentials
     - revive        # general style (golint replacement)
     - gocritic      
+    - modernize     # modern Go syntax and API usage
     - unused        # unused code detection
     - nolintlint    # nolint linter
 

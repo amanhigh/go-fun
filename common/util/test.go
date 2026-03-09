@@ -3,6 +3,7 @@ package util
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -22,7 +23,7 @@ func ReadCountInts(scanner *bufio.Scanner) (n int, ints []int) {
 
 func ReadMatrix(scanner *bufio.Scanner, n, m int) (matrix [][]int) {
 	matrix = make([][]int, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		matrix[i] = ReadInts(scanner, m)
 	}
 	return
@@ -37,8 +38,7 @@ func ReadMatrixWithDimensions(scanner *bufio.Scanner) (matrix [][]int, n, m int)
 }
 
 // CreateTestRequest creates an HTTP request for testing with JSON headers
-// TODO: Add Modernize Linter (Once upgraded to go 1.26) for interface to any checks for golang and other modernization.
-func CreateTestRequest(method, url string, body interface{}) (*http.Request, *httptest.ResponseRecorder) {
+func CreateTestRequest(method, url string, body any) (*http.Request, *httptest.ResponseRecorder) {
 	var jsonData []byte
 	var err error
 
@@ -51,7 +51,7 @@ func CreateTestRequest(method, url string, body interface{}) (*http.Request, *ht
 		jsonData = []byte{}
 	}
 
-	req := httptest.NewRequest(method, url, bytes.NewBuffer(jsonData))
+	req := httptest.NewRequestWithContext(context.Background(), method, url, bytes.NewBuffer(jsonData))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()

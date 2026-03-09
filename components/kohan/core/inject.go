@@ -11,14 +11,22 @@ import (
 	"github.com/golobby/container/v3"
 )
 
-// Interface and implementation in same file
+// =============================================================================
+// INTERFACE DEFINITION
+// =============================================================================
+
+// KohanInterface defines the public API for the Kohan dependency injection system
 type KohanInterface interface {
 	GetDariusApp(cfg config.DariusConfig) (*DariusV1, error)
 	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
 	GetTaxManager() (manager.TaxManager, error)
 	GetBrokerageManager() (manager.BrokerageManager, error)
-	GetKohanServer(port int, capturePath string, wait time.Duration) (*util.HttpServer, error)
+	GetKohanServer(port int, capturePath string, wait time.Duration) (util.HttpServer, error)
 }
+
+// =============================================================================
+// INJECTOR SETUP
+// =============================================================================
 
 // Private singleton instance
 var globalInjector *KohanInjector
@@ -27,8 +35,6 @@ type KohanInjector struct {
 	di     container.Container
 	config config.KohanConfig
 }
-
-// ---- KohanInjector Methods ----
 
 func SetupKohanInjector(config config.KohanConfig) {
 	globalInjector = &KohanInjector{
@@ -42,39 +48,33 @@ func GetKohanInterface() KohanInterface {
 	return globalInjector
 }
 
+// =============================================================================
+// INTERFACE METHODS
+// =============================================================================
+// These methods implement the KohanInterface and resolve dependencies from the injector
+
 func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface {
 	return manager.NewAutoManager(wait, capturePath)
 }
 
-func (ki *KohanInjector) GetKohanServer(port int, capturePath string, wait time.Duration) (*util.HttpServer, error) {
+func (ki *KohanInjector) GetKohanServer(port int, capturePath string, wait time.Duration) (util.HttpServer, error) {
 	autoManager := ki.GetAutoManager(wait, capturePath)
+
+	// Register all dependencies
 	ki.registerMonitorDependencies(capturePath, autoManager)
 	if err := ki.registerJournalDependencies(); err != nil {
 		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)
 	}
+	ki.registerLifecycleDependencies()
 	ki.registerServerDependencies(port)
-	// FIXME: DB Migration has many indexes on Primary key remove unwanted indexes.
 
-	var base *util.HttpServer
-	if err := ki.di.Resolve(&base); err != nil {
-		return nil, fmt.Errorf("failed to resolve base http server: %w", err)
+	// Resolve server from DI
+	var server util.HttpServer
+	if err := ki.di.Resolve(&server); err != nil {
+		return nil, fmt.Errorf("failed to resolve server: %w", err)
 	}
 
-	lifecycle := &KohanServerLifecycle{}
-	if err := ki.di.Fill(lifecycle); err != nil {
-		return nil, fmt.Errorf("failed to fill kohan lifecycle: %w", err)
-	}
-	base.SetLifecycle(lifecycle)
-	return base, nil
-}
-
-func (ki *KohanInjector) registerServerDependencies(port int) {
-	// FIXME: Sort this mess cleanly build base server and lifecycle.
-	container.MustSingleton(ki.di, util.NewGracefulShutdown)
-	container.MustSingleton(ki.di, func() config.HttpServerConfig {
-		return config.HttpServerConfig{Name: "kohan", Port: port}
-	})
-	container.MustSingleton(ki.di, provideHttpServer)
+	return server, nil
 }
 
 func (ki *KohanInjector) GetTaxManager() (manager.TaxManager, error) {
@@ -110,4 +110,28 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 		return nil, fmt.Errorf("failed to fill darius app: %w", err)
 	}
 	return app, nil
+}
+
+// =============================================================================
+// PROVIDER METHODS
+// =============================================================================
+// These methods register dependencies with the container
+
+func (ki *KohanInjector) registerLifecycleDependencies() {
+	container.MustSingleton(ki.di, func() util.ServerLifecycle {
+		lifecycle := &KohanServerLifecycle{}
+		if err := ki.di.Fill(lifecycle); err != nil {
+			panic(fmt.Sprintf("failed to fill kohan lifecycle: %v", err))
+		}
+		return lifecycle
+	})
+}
+
+func (ki *KohanInjector) registerServerDependencies(port int) {
+	container.MustSingleton(ki.di, util.NewGracefulShutdown)
+	container.MustSingleton(ki.di, func() config.HttpServerConfig {
+		return config.HttpServerConfig{Name: "kohan", Port: port}
+	})
+	container.MustSingleton(ki.di, provideHttpServer)
+	container.MustSingleton(ki.di, provideKohanServer)
 }

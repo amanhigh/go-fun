@@ -31,7 +31,7 @@ var _ = Describe("MaxSubArray", func() {
 
 	AfterEach(func() {
 		n := util.ReadInt(inScan)
-		for i := 0; i < n; i++ {
+		for range n {
 			_, ints := util.ReadCountInts(inScan)
 			expected := util.ReadInts(outScan, 4)
 			arraySum, segmentSum, start, end := challenge.MaxSubArray(ints)

@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// TODO: Rename to Repository package stop using dao in files and package.
+// TODO: #C Rename to Repository package stop using dao in files and package.
 type PersonDaoInterface interface {
 	util.BaseDbRepositoryInterface
 	ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError)

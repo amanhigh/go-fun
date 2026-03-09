@@ -6,7 +6,7 @@ import (
 )
 
 func RandomInts(n, upperBound int) (result []int) {
-	for i := 0; i < n; i++ {
+	for range n {
 		num, _ := rand.Int(rand.Reader, big.NewInt(int64(upperBound)))
 		result = append(result, int(num.Int64()))
 	}

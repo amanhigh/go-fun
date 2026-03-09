@@ -7,7 +7,7 @@ type YahooChartResponse struct {
 
 type YahooChart struct {
 	Result []YahooChartResult `json:"result"`
-	Error  interface{}        `json:"error"`
+	Error  any                `json:"error"`
 }
 
 // YahooChartResult contains all stock data for a ticker from Yahoo Finance

@@ -61,7 +61,7 @@ func SplitDp(money int, denominations []int) (p int) {
 	coinTable[0] = 1
 
 	/* Compute for all Coins */
-	for i := 0; i < m; i++ {
+	for i := range m {
 		/* Take Selected Coin */
 		coin := denominations[i]
 		/*

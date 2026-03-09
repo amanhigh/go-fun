@@ -41,19 +41,30 @@ func CreateTestBarkatDB() (*gorm.DB, error) {
 // ---- Journal Providers ----
 
 func (ki *KohanInjector) provideBarkatDB() (*gorm.DB, error) {
-	// FIXME: Can RunSqlite accept Created DB instead of Path, Can test DB also run Same Migrations ?
-	if err := util.RunSqliteMigrations(ki.config.Barkat.DbPath, migrationFS, "migration"); err != nil {
-		return nil, fmt.Errorf("failed to run barkat migrations: %w", err)
-	}
+	// Create database first
 	db, err := util.CreateSqliteDb(ki.config.Barkat.DbPath, logger.Warn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create barkat db: %w", err)
 	}
+
+	// Run migrations using the created GORM DB
+	if err := util.RunMigrations(db, migrationFS, "migration"); err != nil {
+		return nil, fmt.Errorf("failed to run barkat migrations: %w", err)
+	}
+
 	return db, nil
 }
 
-func provideHttpServer(cfg config.HttpServerConfig, shutdown util.Shutdown) *util.HttpServer {
+func provideHttpServer(cfg config.HttpServerConfig, shutdown util.Shutdown) util.HttpServer {
 	return util.NewHttpServer(cfg, gin.Default(), shutdown)
+}
+
+func provideKohanServer(
+	httpServer util.HttpServer,
+	lifecycle util.ServerLifecycle,
+) util.HttpServer {
+	httpServer.SetLifecycle(lifecycle)
+	return httpServer
 }
 
 // ---- Entry ----

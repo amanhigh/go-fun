@@ -210,7 +210,7 @@ var _ = Describe("Person Integration Test", func() {
 
 			BeforeEach(func() {
 				// Create 15 Persons
-				for i := 0; i < total; i++ {
+				for i := range total {
 					request.Name = names[i%3] + strconv.Itoa(i)
 					request.Gender = genders[i%3]
 					_, err = client.PersonService.CreatePerson(testCtx, request)
@@ -401,12 +401,12 @@ var _ = Describe("Person Integration Test", func() {
 
 				It("should fail for Lower Limit", func() {
 					personQuery.Limit = 0
-					expectedErr = "required"
+					expectedErr = "min (1)"
 				})
 
 				It("should fail for Max Limit", func() {
-					personQuery.Limit = 30
-					expectedErr = "Limit"
+					personQuery.Limit = 101
+					expectedErr = "max (100)"
 				})
 
 				It("should fail for invalid Name", func() {

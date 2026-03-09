@@ -52,7 +52,6 @@ func (fi *FunAppInjector) registerCoreDependencies() {
 		return fi.config
 	})
 
-	// HACK: Don't inject Rate & Http Config
 	container.MustSingleton(fi.di, func() config.RateLimit {
 		return fi.config.RateLimit
 	})
@@ -60,8 +59,9 @@ func (fi *FunAppInjector) registerCoreDependencies() {
 		return config.HttpServerConfig{Name: NAMESPACE, Port: fi.config.Server.Port}
 	})
 	container.MustSingleton(fi.di, util.NewGracefulShutdown)
+	container.MustSingleton(fi.di, provideGin)
 	container.MustSingleton(fi.di, provideHttpServer)
-	container.MustSingleton(fi.di, newPrometheus)
+	container.MustSingleton(fi.di, providePrometheus)
 	container.MustSingleton(fi.di, newDb)
 	container.MustSingleton(fi.di, func() trace.Tracer {
 		return otel.Tracer(NAMESPACE)
@@ -74,8 +74,7 @@ func (fi *FunAppInjector) registerValidators() {
 }
 
 func (fi *FunAppInjector) buildApplication() (app any, err error) {
-	// HACK: Streamline Base Server Building.
-	var base *util.HttpServer
+	var base util.HttpServer
 	if err = fi.di.Resolve(&base); err != nil {
 		return nil, fmt.Errorf("failed to resolve base http server: %w", err)
 	}

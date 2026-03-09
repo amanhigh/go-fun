@@ -81,7 +81,7 @@ var _ = Describe("Cron", func() {
 					var currentJobs atomic.Int32
 					var wg sync.WaitGroup
 
-					for i := 0; i < 4; i++ {
+					for range 4 {
 						wg.Add(1)
 						_, err = s.NewJob(
 							gocron.OneTimeJob(gocron.OneTimeJobStartImmediately()),
@@ -128,7 +128,7 @@ var _ = Describe("Cron", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					s.Start()
-					for i := 0; i < 3; i++ {
+					for range 3 {
 						fakeClock.BlockUntilContext(context.Background(), 1)
 						fakeClock.Advance(5 * time.Second)
 					}
@@ -247,7 +247,7 @@ var _ = Describe("Cron", func() {
 				BeforeEach(func() {
 					job, err = s.NewJob(gocron.DurationJob(time.Minute), gocron.NewTask(func() {}))
 					Expect(err).ToNot(HaveOccurred())
-					for i := 0; i < 2; i++ {
+					for i := range 2 {
 						_, err = s.NewJob(gocron.DurationJob(time.Duration(i+2)*time.Minute), gocron.NewTask(func() {}))
 						Expect(err).ToNot(HaveOccurred())
 					}
@@ -302,7 +302,7 @@ var _ = Describe("Cron", func() {
 				It("3.3 should shutdown gracefully while jobs are running", func() {
 					var wg sync.WaitGroup
 					wg.Add(1)
-					_, err = s.NewJob(gocron.DurationJob(50*time.Millisecond), gocron.NewTask(func() { wg.Done(); time.Sleep(200 * time.Millisecond) }))
+					_, err = s.NewJob(gocron.DurationJob(50*time.Millisecond), gocron.NewTask(func() { wg.Done(); time.Sleep(100 * time.Millisecond) }))
 					Expect(err).ToNot(HaveOccurred())
 
 					s.Start()

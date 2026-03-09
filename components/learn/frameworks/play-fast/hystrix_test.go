@@ -267,7 +267,7 @@ var _ = Describe("Hystrix", func() {
 			It("should keep the circuit breaker closed for successful executions", func() {
 				breaker := breakerBuilder.Build()
 
-				for i := 0; i < 10; i++ {
+				for range 10 {
 					result, err := failsafe.Get(successfulFunction, breaker)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(result).To(Equal("success"))
@@ -283,7 +283,7 @@ var _ = Describe("Hystrix", func() {
 					Build()
 
 				// Execute the failing function up to one before failure threshold
-				for i := 0; i < maxRetries-1; i++ {
+				for range maxRetries - 1 {
 					_, err := failsafe.Get(failingFunction, breaker)
 					Expect(err).To(HaveOccurred())
 					Expect(breaker.State()).To(Equal(circuitbreaker.ClosedState))
@@ -322,7 +322,7 @@ var _ = Describe("Hystrix", func() {
 				}
 
 				// Execute successful functions up to success threshold
-				for i := uint(0); i < successThreshold; i++ {
+				for i := range successThreshold {
 					result, err := failsafe.Get(successfulFunction, breaker)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(result).To(Equal("success"))
@@ -337,7 +337,7 @@ var _ = Describe("Hystrix", func() {
 				}
 
 				// Verify that subsequent calls succeed and keep the circuit closed
-				for i := 0; i < 3; i++ {
+				for range 3 {
 					result, err := failsafe.Get(successfulFunction, breaker)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(result).To(Equal("success"))
@@ -523,10 +523,10 @@ var _ = Describe("Hystrix", func() {
 			)
 
 			BeforeEach(func() {
-				shortTimeout = 100 * time.Millisecond
-				longTimeout = 200 * time.Millisecond
+				shortTimeout = 30 * time.Millisecond
+				longTimeout = 60 * time.Millisecond
 				retryPolicy = retrypolicy.Builder[string]().
-					WithDelay(50 * time.Millisecond).
+					WithDelay(15 * time.Millisecond).
 					WithMaxRetries(3).
 					Build()
 			})

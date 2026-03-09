@@ -128,17 +128,15 @@ var _ = Describe("TradeRepository", func() {
 			var mutex sync.Mutex
 
 			// Multiple goroutines accessing records
-			for i := 0; i < 10; i++ {
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
+			for range 10 {
+				wg.Go(func() {
 					records, err := tradeRepo.GetAllRecords(ctx)
 					Expect(err).ToNot(HaveOccurred())
 
 					mutex.Lock()
 					results = append(results, records)
 					mutex.Unlock()
-				}()
+				})
 			}
 			wg.Wait()
 

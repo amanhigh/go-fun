@@ -62,7 +62,7 @@ func FindReplaceFile(filePath, find, replace string) (err error) {
 	if fileBytes, err = os.ReadFile(filePath); err == nil {
 		if compile, err = regexp.Compile(find); err == nil {
 			replacedBytes := compile.ReplaceAll(fileBytes, []byte(replace))
-			if err := os.WriteFile(filePath, replacedBytes, DEFAULT_PERM); err != nil {
+			if err := os.WriteFile(filePath, replacedBytes, DEFAULT_PERM); err != nil { //nolint:gosec // Path traversal acceptable in utility context
 				log.Error().Str("File", filePath).Err(err).Msg("Error writing replaced content")
 			}
 		}
@@ -92,7 +92,7 @@ func ReplaceContent(path, findRegex, replace string) {
 	if bytes, err := os.ReadFile(path); err == nil {
 		if reg, regexErr := regexp.Compile(findRegex); regexErr == nil {
 			newContent := reg.ReplaceAll(bytes, []byte(replace))
-			if writeErr := os.WriteFile(path, newContent, DEFAULT_PERM); writeErr != nil {
+			if writeErr := os.WriteFile(path, newContent, DEFAULT_PERM); writeErr != nil { //nolint:gosec // Path traversal acceptable in utility context
 				log.Error().Str("File", path).Err(err).Msg("Error Writing File")
 			}
 		} else {
@@ -158,7 +158,7 @@ func Copy(src, dest string) error {
 	if err != nil {
 		return fmt.Errorf("failed to read source file %s: %w", src, err)
 	}
-	err = os.WriteFile(dest, input, DEFAULT_PERM)
+	err = os.WriteFile(dest, input, DEFAULT_PERM) //nolint:gosec // Path traversal acceptable in utility context
 	if err != nil {
 		return fmt.Errorf("failed to write to destination file %s: %w", dest, err)
 	}

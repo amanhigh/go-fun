@@ -11,8 +11,6 @@ import (
 // JournalRepository provides persistence operations for journals.
 type JournalRepository interface {
 	util.BaseDbRepositoryInterface
-	// CreateJournal persists a new journal with its associations.
-	CreateJournal(ctx context.Context, journal *barkat.Journal) error
 	// GetJournal retrieves a single journal by ID with preloaded associations.
 	GetJournal(ctx context.Context, id string) (barkat.Journal, error)
 	// ListJournals returns a filtered, paginated list of journal summaries (no associations).
@@ -34,19 +32,14 @@ func NewJournalRepository(db *gorm.DB) *JournalRepositoryImpl {
 
 // ---- Journal ----
 
-func (r *JournalRepositoryImpl) CreateJournal(ctx context.Context, journal *barkat.Journal) error {
-	// HACK: Remove Redundant Methods directly Use Create, Get from Base Repo.
-	return r.Db.WithContext(ctx).Create(journal).Error
-}
-
 func (r *JournalRepositoryImpl) GetJournal(ctx context.Context, id string) (barkat.Journal, error) {
 	var journal barkat.Journal
-	err := r.Db.WithContext(ctx).Preload("Images").Preload("Tags").Preload("Notes").First(&journal, "id = ?", id).Error
+	err := r.SafeTx(ctx).Preload("Images").Preload("Tags").Preload("Notes").First(&journal, "id = ?", id).Error
 	return journal, err
 }
 
 func (r *JournalRepositoryImpl) ListJournals(ctx context.Context, query barkat.JournalQuery) ([]barkat.Journal, int64, error) {
-	tx := r.applyJournalFilters(r.Db.WithContext(ctx).Model(&barkat.Journal{}), query)
+	tx := r.applyJournalFilters(r.SafeTx(ctx).Model(&barkat.Journal{}), query)
 
 	var total int64
 	if err := tx.Count(&total).Error; err != nil {
@@ -90,7 +83,6 @@ func (r *JournalRepositoryImpl) fetchJournals(tx *gorm.DB, query barkat.JournalQ
 	}
 
 	var journals []barkat.Journal
-	// HACK: Use SafeTx from Base Repo.
 	err := tx.Order(orderClause).Offset(query.Offset).Limit(query.Limit).Find(&journals).Error
 	return journals, err
 }

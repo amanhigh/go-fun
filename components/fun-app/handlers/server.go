@@ -49,17 +49,18 @@ func (fs *FunAppServerLifecycle) RegisterRoutes(engine *gin.Engine) {
 	adminGroup := engine.Group("/admin")
 	adminGroup.GET("/stop", fs.AdminHandler.Stop)
 
-	// FIXME: Extract Swagger Lifecycle method to RegisterSwagger Handler
-	// Add Swagger - https://github.com/swaggo/gin-swagger
-	// make swag-fun
-	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
 	// Pprof (Use: http://localhost:8080/debug/pprof/)
 	// make profile
 	// Load Test:  wrk2 http://localhost:8080/v1/person/all/ -t 2 -c 100 -d 1m -R2000
 	// Vegeta: echo "GET http://localhost:9000/v1/person/all" | vegeta attack -max-workers=2 -max-connections=100 -duration=1m -rate=2000/1s | tee results.bin | vegeta report
 	// Vegeta Plot: vegeta plot results.bin > ~/Downloads/plot.html
 	pprof.Register(engine)
+}
+
+func (fs *FunAppServerLifecycle) RegisterSwagger(engine *gin.Engine) {
+	// Add Swagger - https://github.com/swaggo/gin-swagger
+	// make swag-fun
+	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }
 
 func (fs *FunAppServerLifecycle) BeforeStart(ctx context.Context) {
@@ -74,6 +75,6 @@ func (fs *FunAppServerLifecycle) BeforeShutdown(ctx context.Context) {
 }
 
 func (fs *FunAppServerLifecycle) AfterShutdown(ctx context.Context) {
-	// TODO: Verify Git History withRefactoring nothing Broke
+	// TODO: #B Verify Git History withRefactoring nothing Broke
 	telemetry.ShutdownTracerProvider(ctx)
 }

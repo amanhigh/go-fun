@@ -60,13 +60,13 @@ var _ = Describe("SpeedBump", Ordered, Label(models.GINKGO_SLOW), func() {
 		// Here we create a limiter that will only allow 5 requests per second
 		limiter := speedbump.NewLimiter(client, hasher, 5) // Create one Limiter for each rate limit in usecase
 		// First 5 Request not limited
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			success, err := limiter.Attempt(testIp) // TestIp can be combined with api to do api level rate limiting.
 			Expect(err).ToNot(HaveOccurred())
 			Expect(success).To(BeTrue())
 		}
 		// Next 5 Request are limited
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			success, err := limiter.Attempt(testIp)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(success).To(BeFalse())

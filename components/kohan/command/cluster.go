@@ -81,7 +81,7 @@ var clusterMd5Cmd = &cobra.Command{
 	Short: "Md5 Verification and Diff",
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
-		for _, cluster := range strings.Fields(args[1]) {
+		for cluster := range strings.FieldsSeq(args[1]) {
 			tools.Md5Checker(args[0], cluster)
 		}
 	},

@@ -137,7 +137,7 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 		rowNum := idx + 2 // Data starts from row 2
 
 		// Write data columns (A-I) - all except PNL (INR)
-		rowData := []interface{}{
+		rowData := []any{
 			gainRecord.Symbol,
 			gainRecord.BuyDate,  // Assuming string
 			gainRecord.SellDate, // Assuming string
@@ -187,7 +187,7 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 
 	for idx, dividendRecord := range dividends {
 		rowNum := idx + 2 // Data starts from row 2
-		rowData := []interface{}{
+		rowData := []any{
 			dividendRecord.Symbol,
 			dividendRecord.Date,
 			dividendRecord.Amount,
@@ -275,8 +275,8 @@ func (e *ExcelManagerImpl) getValuationHeaders() []string {
 	}
 }
 
-func (e *ExcelManagerImpl) buildValuationRow(valuation tax.INRValuation) []interface{} {
-	rowData := []interface{}{valuation.Ticker}
+func (e *ExcelManagerImpl) buildValuationRow(valuation tax.INRValuation) []any {
+	rowData := []any{valuation.Ticker}
 	rowData = append(rowData, e.getPositionRowData(&valuation.FirstPosition)...)
 	rowData = append(rowData, e.getPositionRowData(&valuation.PeakPosition)...)
 	rowData = append(rowData, e.getPositionRowData(&valuation.YearEndPosition)...)
@@ -284,8 +284,8 @@ func (e *ExcelManagerImpl) buildValuationRow(valuation tax.INRValuation) []inter
 	return rowData
 }
 
-func (e *ExcelManagerImpl) getPositionRowData(pos *tax.INRPosition) []interface{} {
-	return []interface{}{
+func (e *ExcelManagerImpl) getPositionRowData(pos *tax.INRPosition) []any {
+	return []any{
 		e.formatDateForExcel(pos.Date),
 		pos.Quantity,
 		pos.RoundedUSDPrice(),
@@ -309,7 +309,7 @@ func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.F
 
 	for idx, interestRecord := range interest {
 		rowNum := idx + 2 // Data starts from row 2
-		rowData := []interface{}{
+		rowData := []any{
 			interestRecord.Symbol,
 			interestRecord.Date,
 			interestRecord.Amount,
@@ -364,7 +364,7 @@ func (e *ExcelManagerImpl) writeHeaders(f *excelize.File, sheetName string, head
 }
 
 // writeRow writes a slice of interface{} data to a specific row.
-func (e *ExcelManagerImpl) writeRow(f *excelize.File, sheetName string, rowNum int, data []interface{}) error {
+func (e *ExcelManagerImpl) writeRow(f *excelize.File, sheetName string, rowNum int, data []any) error {
 	for i, val := range data {
 		cellName, err := excelize.CoordinatesToCellName(i+1, rowNum)
 		if err != nil {
@@ -379,7 +379,7 @@ func (e *ExcelManagerImpl) writeRow(f *excelize.File, sheetName string, rowNum i
 
 // formatDateForExcel formats a time.Time for Excel.
 // If time.Time is zero, return an empty string.
-func (e *ExcelManagerImpl) formatDateForExcel(t time.Time) interface{} {
+func (e *ExcelManagerImpl) formatDateForExcel(t time.Time) any {
 	if t.IsZero() {
 		return "" // Return empty string for zero/uninitialized dates
 	}
@@ -604,7 +604,7 @@ func (e *ExcelManagerImpl) calculateGainsRows(gains []tax.INRGains) (int, int, i
 }
 
 // calculateTotalsRow computes the TOTALS row position for a data slice
-func (e *ExcelManagerImpl) calculateTotalsRow(data interface{}) int {
+func (e *ExcelManagerImpl) calculateTotalsRow(data any) int {
 	switch v := data.(type) {
 	case []tax.INRDividend:
 		if len(v) == 0 {
@@ -648,7 +648,7 @@ func (e *ExcelManagerImpl) writeDividendsSection(f *excelize.File, sheetName str
 
 	// Row startRow+1: Column headers (USD first, then INR) - bold
 	headerRow := startRow + 1
-	headers := []interface{}{
+	headers := []any{
 		"Amount (USD)", "Tax (USD)", "Net (USD)",
 		"Amount (INR)", "Tax (INR)", "Net (INR)",
 	}
@@ -693,7 +693,7 @@ func (e *ExcelManagerImpl) writeGainsSection(f *excelize.File, sheetName string,
 
 // writeGainsCategorySection writes either Short Term or Long Term subsection
 func (e *ExcelManagerImpl) writeGainsCategorySection(f *excelize.File, sheetName string, startRow int, category string, gainsRow, totalsRow int) error {
-	headers := []interface{}{"PNL (USD)", "Commission (USD)", "PNL (INR)"}
+	headers := []any{"PNL (USD)", "Commission (USD)", "PNL (INR)"}
 
 	// Row startRow: Category header (bold section header)
 	if err := e.writeTotalsLabel(f, sheetName, startRow, category); err != nil {
@@ -730,7 +730,7 @@ func (e *ExcelManagerImpl) writeInterestSection(f *excelize.File, sheetName stri
 
 	// Row startRow+1: Column headers (USD first, then INR) - bold
 	headerRow := startRow + 1
-	headers := []interface{}{
+	headers := []any{
 		"Amount (USD)", "Tax (USD)", "Net (USD)",
 		"Amount (INR)", "Tax (INR)", "Net (INR)",
 	}

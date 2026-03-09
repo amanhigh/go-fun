@@ -129,7 +129,6 @@ var _ = Describe("Search", func() {
 			})
 
 			Context("Performance Benchmarks", FlakeAttempts(3), func() {
-				// BUG: Convert to Benchmark Test.
 				var dataset []string
 
 				BeforeEach(func() {

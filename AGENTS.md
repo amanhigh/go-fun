@@ -67,6 +67,9 @@ This file contains guidelines for coding, testing, and examples on coding style 
 - See `components/kohan/clients/mocks/SBIClient.go` for generated mock example
 - Do not set `GOCACHE` or `GOMODCACHE` inside this repository, scripts, or committed configs.
 
+### Performance Analysis
+- **Ginkgo timing analysis:** Use `ginkgo --json-report=timing-report.json` to generate detailed timing metadata for test suites; the report contains individual test durations, suite timing breakdown, and performance bottlenecks - useful for identifying slow tests and optimizing "fast" packages like play-fast.
+
 ## Examples
 
 ### Interface, Implementation, and Constructor

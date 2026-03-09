@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/amanhigh/go-fun/components/kohan/repository"
@@ -94,12 +95,7 @@ func (sm *ServiceManagerImpl) GetSelectedServices() []string {
 }
 
 func (sm *ServiceManagerImpl) IsServiceSelected(service string) bool {
-	for _, s := range sm.selectedServices {
-		if s == service {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(sm.selectedServices, service)
 }
 
 func (sm *ServiceManagerImpl) ToggleServiceSelection(service string) {

@@ -23,11 +23,7 @@ func NonDivisibleSubset(input []int, k int) (result int) {
 		modulos[value%k]++
 	}
 
-	if 1 < modulos[0] {
-		result = 1
-	} else {
-		result = modulos[0]
-	}
+	result = min(1, modulos[0])
 	// fmt.Println(result)
 	// fmt.Println(k, modulos)
 

@@ -46,7 +46,7 @@ var serveCmd = &cobra.Command{
 			return fmt.Errorf("failed to build kohan server: %w", err)
 		}
 
-		// TODO: Should use new Cron Libraries in learn Module
+		// TODO: #C Should use new Cron Libraries in learn Module
 		go autoManager.MonitorInternetConnection(cmd.Context())
 
 		if err := server.Start(); err != nil {
