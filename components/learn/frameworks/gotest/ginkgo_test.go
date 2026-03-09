@@ -18,7 +18,7 @@ import (
 type personHasName struct{}
 
 // Matches checks if the given interface{} is of type Person and has a non-empty Name field.
-func (m *personHasName) Matches(x interface{}) bool {
+func (m *personHasName) Matches(x any) bool {
 	p, ok := x.(Person)
 	return ok && p.Name != ""
 }

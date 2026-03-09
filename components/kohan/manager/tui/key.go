@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -106,12 +107,13 @@ func (h *HotkeyManagerImpl) registerHotkeys(hotkeys []Hotkey) {
 }
 
 func (h *HotkeyManagerImpl) GenerateHelpText() string {
-	helpText := "Help:\n"
+	var helpText strings.Builder
+	helpText.WriteString("Help:\n")
 	for _, hotkey := range h.hotkeys {
-		helpText += fmt.Sprintf("- %c: %s\n", hotkey.Key, hotkey.Description)
+		fmt.Fprintf(&helpText, "- %c: %s\n", hotkey.Key, hotkey.Description)
 	}
-	helpText += "\n"
-	return helpText
+	helpText.WriteString("\n")
+	return helpText.String()
 }
 
 func (h *HotkeyManagerImpl) handleHotkeys(event *tcell.EventKey) *tcell.EventKey {

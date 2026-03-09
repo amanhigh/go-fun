@@ -139,7 +139,7 @@ var _ = Describe("Cache", func() {
 
 				BeforeEach(func() {
 					By("Adding multiple items to the cache")
-					for i := 0; i < itemsToAdd; i++ {
+					for i := range itemsToAdd {
 						key := fmt.Sprintf("key%d", i)
 						success := cache.Set(key, i, 1)
 						Expect(success).To(BeTrue())
@@ -161,7 +161,7 @@ var _ = Describe("Cache", func() {
 
 					By("Checking if some items were evicted")
 					evictedCount := 0
-					for i := 0; i < cacheSize; i++ {
+					for i := range cacheSize {
 						key := fmt.Sprintf("key%d", i)
 						_, found := cache.Get(key)
 						if !found {
@@ -178,7 +178,7 @@ var _ = Describe("Cache", func() {
 					cache.Clear()
 
 					By("Verifying all items are removed")
-					for i := 0; i < itemsToAdd; i++ {
+					for i := range itemsToAdd {
 						key := fmt.Sprintf("key%d", i)
 						_, found := cache.Get(key)
 						Expect(found).To(BeFalse())
@@ -188,7 +188,7 @@ var _ = Describe("Cache", func() {
 				It("2.3 should maintain valid cache metrics", func() {
 					By("Performing cache hits")
 					hitCount := itemsToAdd / 2
-					for i := 0; i < hitCount; i++ {
+					for i := range hitCount {
 						_, found := cache.Get(fmt.Sprintf("key%d", i))
 						Expect(found).To(BeTrue(), fmt.Sprintf("Expected key%d to be found", i))
 					}
@@ -272,10 +272,10 @@ var _ = Describe("Cache", func() {
 					var wg sync.WaitGroup
 					wg.Add(numGoroutines)
 
-					for i := 0; i < numGoroutines; i++ {
+					for i := range numGoroutines {
 						go func(id int) {
 							defer wg.Done()
-							for j := 0; j < numOperations; j++ {
+							for j := range numOperations {
 								key := fmt.Sprintf("key%d-%d", id, j)
 								value := fmt.Sprintf("value%d-%d", id, j)
 								// Randomly choose between Set and Get operations
@@ -304,7 +304,7 @@ var _ = Describe("Cache", func() {
 				})
 
 				It("3.7 should verify that the OnEvict function is invoked for evicted items", func() {
-					evictedItems := []interface{}{}
+					evictedItems := []any{}
 
 					// Create a new cache with an OnEvict function
 					cacheWithEvict, err := ristretto.NewCache(&ristretto.Config{
@@ -319,7 +319,7 @@ var _ = Describe("Cache", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					By("Filling the cache to its maximum capacity")
-					for i := uint64(0); i < uint64(cacheSize); i++ {
+					for i := range uint64(cacheSize) {
 						success := cacheWithEvict.Set(i, fmt.Sprintf("value%d", i), 1)
 						Expect(success).To(BeTrue())
 					}
@@ -428,7 +428,7 @@ var _ = Describe("Cache", func() {
 					AddReportEntry(experiment.Name, experiment)
 
 					// Populate cache first
-					for i := 0; i < numOperations; i++ {
+					for i := range numOperations {
 						key := fmt.Sprintf("key-%d", i)
 						success := benchCache.Set(key, fmt.Sprintf("value-%d", i), 1)
 						Expect(success).To(BeTrue())
@@ -453,7 +453,7 @@ var _ = Describe("Cache", func() {
 					AddReportEntry(experiment.Name, experiment)
 
 					// Populate cache first
-					for i := 0; i < numOperations; i++ {
+					for i := range numOperations {
 						key := fmt.Sprintf("key-%d", i)
 						success := benchCache.Set(key, fmt.Sprintf("value-%d", i), 1)
 						Expect(success).To(BeTrue())
@@ -571,15 +571,15 @@ var _ = Describe("Cache", func() {
 					defer smallCache.Close()
 
 					By("Populating cache with hot items and warming up")
-					for i := 0; i < 50; i++ {
+					for i := range 50 {
 						smallCache.Set(fmt.Sprintf("key%d", i), i)
 					}
 					// Allow async admission to process
 					time.Sleep(50 * time.Millisecond)
 
 					By("Accessing hot items to build frequency")
-					for round := 0; round < 3; round++ {
-						for i := 0; i < 10; i++ {
+					for range 3 {
+						for i := range 10 {
 							smallCache.Get(fmt.Sprintf("key%d", i))
 						}
 					}
@@ -588,7 +588,7 @@ var _ = Describe("Cache", func() {
 					By("Measuring hit ratio on hot items")
 					hits := 0
 					total := 100
-					for i := 0; i < total; i++ {
+					for i := range total {
 						key := fmt.Sprintf("key%d", i%10) // hot items only
 						if _, found := smallCache.Get(key); found {
 							hits++
@@ -681,7 +681,7 @@ var _ = Describe("Cache", func() {
 
 				BeforeEach(func() {
 					By("Adding multiple items to the cache")
-					for i := 0; i < itemsToAdd; i++ {
+					for i := range itemsToAdd {
 						cacheClient.Set(fmt.Sprintf("key%d", i), fmt.Sprintf("value%d", i))
 					}
 				})
@@ -695,7 +695,7 @@ var _ = Describe("Cache", func() {
 					smallCache := sturdyc.New[string](10, 2, ttl, 50)
 
 					By("Adding more items than capacity")
-					for i := 0; i < 20; i++ {
+					for i := range 20 {
 						smallCache.Set(fmt.Sprintf("key%d", i), fmt.Sprintf("value%d", i))
 					}
 
@@ -771,10 +771,10 @@ var _ = Describe("Cache", func() {
 					const opsPerGoroutine = 100
 					wg.Add(goroutines)
 
-					for i := 0; i < goroutines; i++ {
+					for i := range goroutines {
 						go func(id int) {
 							defer wg.Done()
-							for j := 0; j < opsPerGoroutine; j++ {
+							for j := range opsPerGoroutine {
 								key := fmt.Sprintf("shard-%d-%d", id, j)
 								cacheClient.Set(key, fmt.Sprintf("value-%d-%d", id, j))
 							}
@@ -795,14 +795,14 @@ var _ = Describe("Cache", func() {
 
 					go func() {
 						defer wg.Done()
-						for i := 0; i < 1000; i++ {
+						for i := range 1000 {
 							cacheClient.Set(fmt.Sprintf("write-%d", i), "value")
 						}
 					}()
 
 					go func() {
 						defer wg.Done()
-						for i := 0; i < 1000; i++ {
+						for i := range 1000 {
 							cacheClient.Get(fmt.Sprintf("read-%d", i))
 						}
 					}()
@@ -828,7 +828,7 @@ var _ = Describe("Cache", func() {
 					const concurrentRequests = 10
 					wg.Add(concurrentRequests)
 
-					for i := 0; i < concurrentRequests; i++ {
+					for range concurrentRequests {
 						go func() {
 							defer wg.Done()
 							value, err := sturdyc.GetOrFetch(context.Background(), stampCache, "stampede-key", fetchFn)
@@ -895,13 +895,13 @@ var _ = Describe("Cache", func() {
 					benchCache := sturdyc.New[string](numOperations, numShards, ttl, evictionPct)
 
 					setStart := time.Now()
-					for i := 0; i < numOperations; i++ {
+					for i := range numOperations {
 						benchCache.Set(fmt.Sprintf("key-%d", i), fmt.Sprintf("value-%d", i))
 					}
 					setDuration := time.Since(setStart)
 
 					getStart := time.Now()
-					for i := 0; i < numOperations; i++ {
+					for i := range numOperations {
 						benchCache.Get(fmt.Sprintf("key-%d", i))
 					}
 					getDuration := time.Since(getStart)

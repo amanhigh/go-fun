@@ -18,7 +18,7 @@ var _ = Describe("RoutineFun", func() {
 
 			key := "somekey"
 			c := SafeCounter{v: make(map[string]int)}
-			for i := 0; i < 500; i++ {
+			for range 500 {
 				go c.Inc(key)
 			}
 			time.Sleep(time.Millisecond * 200)
@@ -88,7 +88,7 @@ var _ = Describe("RoutineFun", func() {
 			go fibonacciMultiChannel(c, quit)
 
 			/** Consumer */
-			for i := 0; i < 10; i++ {
+			for range 10 {
 				<-c // Read Result so next fibonacci can be computed
 			}
 
@@ -181,7 +181,7 @@ func sumOnChannel(a []int, c chan int) {
 /* Fibonacci */
 func fibonacci(n int, c chan int) {
 	x, y := 0, 1
-	for i := 0; i < n; i++ {
+	for range n {
 		c <- x
 		x, y = y, x+y
 	}

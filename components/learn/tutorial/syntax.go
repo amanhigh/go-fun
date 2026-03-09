@@ -58,7 +58,7 @@ func demonstrateConditionals() {
 
 func demonstrateLoops() {
 	count := 2
-	for i := 0; i < count; i++ {
+	for i := range count {
 		fmt.Println("ILoop", i)
 	}
 

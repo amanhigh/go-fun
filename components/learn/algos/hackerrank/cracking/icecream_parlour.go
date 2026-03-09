@@ -29,7 +29,7 @@ func FindIcecreams(icecreams []IceCream, money int) (values, indices []int) {
 	})
 
 	l := len(icecreams)
-	for i := 0; i < l; i++ {
+	for i := range l {
 		/* Consider each icecream */
 		current := icecreams[i]
 

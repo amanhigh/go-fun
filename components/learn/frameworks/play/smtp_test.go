@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/smtp"
+	"strings"
 
 	"github.com/amanhigh/go-fun/models"
 	. "github.com/onsi/ginkgo/v2"
@@ -40,11 +41,11 @@ func composeMimeMail(to, from, subject, body string) []byte {
 	header["Content-Type"] = "text/plain; charset=\"utf-8\""
 	header["Content-Transfer-Encoding"] = "base64"
 
-	message := ""
+	var message strings.Builder
 	for k, v := range header {
-		message += fmt.Sprintf("%s: %s\r\n", k, v)
+		fmt.Fprintf(&message, "%s: %s\r\n", k, v)
 	}
-	message += "\r\n" + base64.StdEncoding.EncodeToString([]byte(body))
+	message.WriteString("\r\n" + base64.StdEncoding.EncodeToString([]byte(body)))
 
-	return []byte(message)
+	return []byte(message.String())
 }

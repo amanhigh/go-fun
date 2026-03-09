@@ -322,7 +322,7 @@ var _ = Describe("GoTour", func() {
 		It("should do iteration", func() {
 			sum := 0
 			count := 10
-			for i := 0; i < count; i++ {
+			for range count {
 				sum++
 			}
 			Expect(sum).To(Equal(count))
@@ -351,7 +351,7 @@ var _ = Describe("GoTour", func() {
 
 			// Run Closures in opposite directions
 			// with varied speeds
-			for i := 0; i < 10; i++ {
+			for i := range 10 {
 				pos(i)
 				neg(-2 * i)
 			}
@@ -363,7 +363,7 @@ var _ = Describe("GoTour", func() {
 
 		It("should have fibonacci", func() {
 			f := fibonacciLambda()
-			for i := 0; i < 10; i++ {
+			for range 10 {
 				f()
 			}
 			Expect(f()).To(Equal(55))
@@ -454,7 +454,7 @@ func sqrt(x int) (float64, error) {
 	fX := float64(x)
 	z := float64(1)
 	z = 1.0
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		z -= (((z * z) - fX) / (2 * z))
 	}
 	return z, nil
@@ -511,9 +511,9 @@ func fibonacciLambda() func() int {
 /* Collections */
 func WordCount(input string) map[string]int {
 	countMap := make(map[string]int)
-	fields := strings.Fields(input)
+	fields := strings.FieldsSeq(input)
 	/** Ranges where i is optional can use _,v */
-	for _, f := range fields {
+	for f := range fields {
 		countMap[f]++ // No NPE :), No Init Required because entry value is primitive
 	}
 	return countMap
