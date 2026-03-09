@@ -519,7 +519,6 @@ var _ = Describe("Copy", func() {
 		})
 
 		Context("Performance Benchmarks", FlakeAttempts(3), func() {
-			// FIXME: Time the benchmark and simplify if it takes more time.
 			It("3.8 should benchmark deep copy operations", func() {
 				experiment := gmeasure.NewExperiment("DeepCopy Operations")
 				AddReportEntry(experiment.Name, experiment)

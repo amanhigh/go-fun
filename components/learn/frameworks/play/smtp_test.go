@@ -1,15 +1,16 @@
-package play_fast_test
+package play_test
 
 import (
 	"encoding/base64"
 	"fmt"
 	"net/smtp"
 
+	"github.com/amanhigh/go-fun/models"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Smtp", func() {
+var _ = Describe("Smtp", Label(models.GINKGO_SLOW), func() {
 
 	// sendemail -f from@gmail.com -t to@gmail.com -u "Bash Subject" -s smtp.mailtrap.io:2525 -m "I am Body" -v -o message-charset=$CHARSET -o username=bc705c85d0f7dc -o password=4dd5c28282e88a
 	// https://mailtrap.io/

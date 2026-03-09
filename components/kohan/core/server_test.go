@@ -31,7 +31,7 @@ var _ = Describe("KohanServer", func() {
 	})
 
 	Context("Constructor", func() {
-		// TODO: #B Remove this Test after writing extensive Base Server Test.
+		// FIXME: #B Remove this Test after writing extensive Base Server Test.
 		It("should create server with handlers", func() {
 			monitorHandler := handler.NewMonitorHandler(testPath, mockManager)
 			db, err := core.CreateTestBarkatDB()

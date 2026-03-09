@@ -556,7 +556,7 @@ var _ = Describe("Cache", func() {
 				Eventually(func() bool {
 					_, found := ttlCache.Get(ttlKey)
 					return found
-				}, "2s", "50ms").Should(BeFalse())
+				}, "1.2s", "50ms").Should(BeFalse())
 			})
 		})
 
@@ -575,7 +575,7 @@ var _ = Describe("Cache", func() {
 						smallCache.Set(fmt.Sprintf("key%d", i), i)
 					}
 					// Allow async admission to process
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(50 * time.Millisecond)
 
 					By("Accessing hot items to build frequency")
 					for round := 0; round < 3; round++ {

@@ -523,10 +523,10 @@ var _ = Describe("Hystrix", func() {
 			)
 
 			BeforeEach(func() {
-				shortTimeout = 100 * time.Millisecond
-				longTimeout = 200 * time.Millisecond
+				shortTimeout = 30 * time.Millisecond
+				longTimeout = 60 * time.Millisecond
 				retryPolicy = retrypolicy.Builder[string]().
-					WithDelay(50 * time.Millisecond).
+					WithDelay(15 * time.Millisecond).
 					WithMaxRetries(3).
 					Build()
 			})

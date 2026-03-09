@@ -302,7 +302,7 @@ var _ = Describe("Cron", func() {
 				It("3.3 should shutdown gracefully while jobs are running", func() {
 					var wg sync.WaitGroup
 					wg.Add(1)
-					_, err = s.NewJob(gocron.DurationJob(50*time.Millisecond), gocron.NewTask(func() { wg.Done(); time.Sleep(200 * time.Millisecond) }))
+					_, err = s.NewJob(gocron.DurationJob(50*time.Millisecond), gocron.NewTask(func() { wg.Done(); time.Sleep(100 * time.Millisecond) }))
 					Expect(err).ToNot(HaveOccurred())
 
 					s.Start()

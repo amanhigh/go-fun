@@ -1061,16 +1061,16 @@ var _ = Describe("Watermill", func() {
 			// Verify Financial Report Handler processed the event
 			Eventually(func() []string {
 				return receivedEvents
-			}, "5s", "100ms").Should(ContainElement("RoomBooked"))
+			}, "2s", "100ms").Should(ContainElement("RoomBooked"))
 
 			Eventually(func() int64 {
 				return totalRevenue
-			}, "5s", "100ms").Should(Equal(int64(100)))
+			}, "2s", "100ms").Should(Equal(int64(100)))
 
 			// Verify Welcome Email Handler processed the same event
 			Eventually(func() []string {
 				return welcomeEmailService.GetEmails()
-			}, "5s", "100ms").Should(HaveLen(1))
+			}, "2s", "100ms").Should(HaveLen(1))
 
 			// Verify email content
 			emails := welcomeEmailService.GetEmails()
@@ -1170,8 +1170,9 @@ var _ = Describe("Watermill", func() {
 		Context("Outbox Pattern - Solving the Dual-Write Problem", func() {
 			var (
 				// A→db→broker→B outbox components
-				publisher message.Publisher    // A writes to db via this
-				relayer   *forwarder.Forwarder // Moves events db→broker
+				publisher      message.Publisher    // A writes to db via this
+				relayer        *forwarder.Forwarder // Moves events db→broker
+				relayerRunning bool                 // Track if relayer was started
 
 				// Topics
 				outboxTopic = "outbox"
@@ -1205,8 +1206,8 @@ var _ = Describe("Watermill", func() {
 			})
 
 			AfterEach(func() {
-				// Cleanup outbox pattern resources
-				if relayer != nil {
+				// Cleanup outbox pattern resources only if relayer was used
+				if relayer != nil && relayerRunning {
 					relayer.Close()
 				}
 			})
@@ -1255,7 +1256,7 @@ var _ = Describe("Watermill", func() {
 				select {
 				case <-brokerEvents:
 					Fail("Message should not appear directly in broker")
-				case <-time.After(100 * time.Millisecond):
+				case <-time.After(50 * time.Millisecond):
 					// Expected - no direct message in broker yet
 				}
 			})
@@ -1278,7 +1279,8 @@ var _ = Describe("Watermill", func() {
 				}()
 
 				<-relayerReady
-				time.Sleep(100 * time.Millisecond)
+				relayerRunning = true // Mark relayer as running
+				// Remove unnecessary sleep - relayer is ready immediately
 
 				By("Application (A) publishes multiple events atomically")
 				events := []OrderCreated{
