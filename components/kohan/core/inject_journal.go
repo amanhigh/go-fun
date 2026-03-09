@@ -59,6 +59,14 @@ func provideHttpServer(cfg config.HttpServerConfig, shutdown util.Shutdown) util
 	return util.NewHttpServer(cfg, gin.Default(), shutdown)
 }
 
+func provideKohanServer(
+	httpServer util.HttpServer,
+	lifecycle util.ServerLifecycle,
+) util.HttpServer {
+	httpServer.SetLifecycle(lifecycle)
+	return httpServer
+}
+
 // ---- Entry ----
 
 func provideJournalRepository(db *gorm.DB) repository.JournalRepository {

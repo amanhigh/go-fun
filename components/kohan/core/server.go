@@ -12,11 +12,11 @@ import (
 
 // KohanServerLifecycle implements ServerLifecycle for the Kohan HTTP server.
 type KohanServerLifecycle struct {
-	MonitorHandler handler.MonitorHandler
-	JournalHandler handler.JournalHandler
-	ImageHandler   handler.ImageHandler
-	NoteHandler    handler.NoteHandler
-	TagHandler     handler.TagHandler
+	MonitorHandler handler.MonitorHandler `container:"type"`
+	JournalHandler handler.JournalHandler `container:"type"`
+	ImageHandler   handler.ImageHandler   `container:"type"`
+	NoteHandler    handler.NoteHandler    `container:"type"`
+	TagHandler     handler.TagHandler     `container:"type"`
 }
 
 var _ util.ServerLifecycle = (*KohanServerLifecycle)(nil)
