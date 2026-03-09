@@ -60,6 +60,10 @@ lint-dead:
 
 lint: lint-ci  ## Lint the Code
 
+lint-fix: ## Auto-fix modernize linter issues
+	printf $(_TITLE) "Auto-fixing Modernize Issues"
+	go work edit -json | jq -r '.Use[].DiskPath'  | xargs -I{} $(GOLANGCI_LINT) run --enable-only=modernize --fix {}/...
+
 format: ## Format Go code with goimports
 	printf $(_TITLE) "Format" "Go Code"
 	$(GOIMPORTS) -w .
@@ -451,7 +455,7 @@ generate: generate-mocks generate-swagger ## Generate Files
 
 ### Workflows
 test: test-operator cover ## Run all tests (Excludes test-slow)
-build: format lint build-fun build-kohan ## Build all Binaries
+build: format lint-fix lint build-fun build-kohan ## Build all Binaries
 
 info: info-release info-docker ## Repo Information
 infos: info space-info ## Repo Extended Information
