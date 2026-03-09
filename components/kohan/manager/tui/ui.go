@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -114,14 +115,15 @@ func (ui *UIManagerImpl) ToggleServiceSelection() {
 }
 
 func (ui *UIManagerImpl) UpdateContext() {
-	selectedServices := "Selected Services:\n"
+	var selectedServices strings.Builder
+	selectedServices.WriteString("Selected Services:\n")
 	for _, service := range ui.svcManager.GetSelectedServices() {
-		selectedServices += fmt.Sprintf("- %s\n", service)
+		fmt.Fprintf(&selectedServices, "- %s\n", service)
 	}
 	if len(ui.svcManager.GetSelectedServices()) == 0 {
-		selectedServices += "(None)"
+		selectedServices.WriteString("(None)")
 	}
-	ui.contextView.SetText(selectedServices)
+	ui.contextView.SetText(selectedServices.String())
 }
 
 func (ui *UIManagerImpl) ShowError(err error) {

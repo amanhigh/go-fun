@@ -22,11 +22,11 @@ https://www.youtube.com/watch?v=yCQN096CwWM
 */
 func MaximumSumSubRectangleSmart(input [][]int, n, m int) (coordinates []int, maxSum int) {
 	maxSum = -math.MaxInt32
-	for jStart := 0; jStart < m; jStart++ {
+	for jStart := range m {
 		columnSum := make([]int, n)
 		for jEnd := jStart; jEnd < m; jEnd++ {
 			/* Sum Column to previous Sum O(n)*/
-			for i := 0; i < n; i++ {
+			for i := range n {
 				columnSum[i] += input[i][jEnd]
 			}
 			/* O(n) */
@@ -48,10 +48,10 @@ O(n^4) or O(n^2m^2) incase fo rectangle
 */
 func MaximumSumSubRectangleBruteForce(input [][]int, n, m int) (coordinates []int, maxSum int) {
 	maxSum = -math.MaxInt32
-	for iStart := 0; iStart < n; iStart++ {
-		for jStart := 0; jStart < m; jStart++ {
-			for iEnd := 0; iEnd < n; iEnd++ {
-				for jEnd := 0; jEnd < m; jEnd++ {
+	for iStart := range n {
+		for jStart := range m {
+			for iEnd := range n {
+				for jEnd := range m {
 					cords := []int{iStart, jStart, iEnd, jEnd}
 					sum := SumSquare(input, cords)
 					if sum > maxSum {

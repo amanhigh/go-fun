@@ -152,7 +152,7 @@ var _ = Describe("Elastic", Ordered, Label(models.GINKGO_SLOW), func() {
 
 		BeforeEach(func() {
 			// Generate 100 students
-			for i := 0; i < 100; i++ {
+			for range 100 {
 				var s Student
 				Expect(faker.FakeData(&s)).NotTo(HaveOccurred())
 				s.CreatedAt = time.Now().UTC()

@@ -43,7 +43,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 			err = f.SetSheetRow(sheetName, "A1", &headers)
 			Expect(err).ToNot(HaveOccurred())
 
-			rows := [][]interface{}{
+			rows := [][]any{
 				{"2024-06-06", "05:24:40 AM", "Dividend", "IEF", 158.17},
 				{"2024-06-06", "05:24:39 AM", "Tax", "IEF", -39.54},
 				{"2024-06-06", "05:24:37 AM", "Dividend", "TLT", 3.51},
@@ -68,7 +68,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 			err = f.SetSheetRow(tradeSheet, "A1", &tradeHeaders)
 			Expect(err).ToNot(HaveOccurred())
 
-			tradeRows := [][]interface{}{
+			tradeRows := [][]any{
 				{"2024-04-03", "04:53:52 PM", "Vanguard Russell 2000 ETF", "VTWO", "Buy", "Market", 70, 77.41, 5418.7, 0},
 				{"2024-04-03", "04:26:02 PM", "Europe ETF FTSE Vanguard", "VGK", "Buy", "Market", 60, 70.18, 4210.8, 0},
 				{"2024-02-14", "02:30:00 PM", "Barclays 1-3 Month T-Bill ETF SPDR", "BIL", "Sell", "Market", 1, 91.58, 91.58, 0},
@@ -217,7 +217,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Mixed: zero commissions (Buy/Sell MCD) and non-zero (Buy AAPL)
-				tradeRows := [][]interface{}{
+				tradeRows := [][]any{
 					{"2024-07-01", "02:26:51 PM", "McDonald's Corp.", "MCD", "Buy", "Market", 5, 251.54, 1257.7, 0},  // Zero -> fallback
 					{"2024-07-09", "03:12:32 PM", "McDonald's Corp.", "MCD", "Sell", "Market", 5, 245.10, 1225.5, 0}, // Zero -> fallback
 					{"2024-07-15", "10:30:00 AM", "Apple Inc.", "AAPL", "Buy", "Market", 10, 225.50, 2255.0, 5.00},   // Non-zero -> use as-is
@@ -240,7 +240,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Commission entries for MCD trades only (AAPL not present to test non-matched)
-				commRows := [][]interface{}{
+				commRows := [][]any{
 					{"2024-07-01", "02:26:51 PM", "COMM", 2.51, 65358.96, "COMM Buy MCD base=2.51"},
 					{"2024-07-09", "03:12:32 PM", "COMM", 3.06, 66844.73, "COMM Sell MCD base=3.06"},
 				}

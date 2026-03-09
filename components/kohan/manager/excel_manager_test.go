@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"time"
 
@@ -149,13 +150,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(err).ToNot(HaveOccurred())
 				defer f.Close()
 
-				sheetFound := false
-				for _, name := range f.GetSheetList() {
-					if name == sheetName {
-						sheetFound = true
-						break
-					}
-				}
+				sheetFound := slices.Contains(f.GetSheetList(), sheetName)
 				Expect(sheetFound).To(BeTrue(), "Sheet 'Gains' should exist")
 
 				rows, err := f.GetRows(sheetName)
@@ -263,13 +258,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				defer f.Close()
 
 				sheetName := "Gains"
-				sheetFound := false
-				for _, name := range f.GetSheetList() {
-					if name == sheetName {
-						sheetFound = true
-						break
-					}
-				}
+				sheetFound := slices.Contains(f.GetSheetList(), sheetName)
 				Expect(sheetFound).To(BeTrue(), "Sheet 'Gains' should exist")
 
 				rows, err := f.GetRows(sheetName)

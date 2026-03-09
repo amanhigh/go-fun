@@ -218,8 +218,8 @@ func (m *InteractiveBrokersManagerImpl) determineTradeType(quantity float64) str
 }
 
 func extractSymbol(description string) string {
-	if idx := strings.Index(description, "("); idx != -1 {
-		return description[:idx]
+	if before, _, ok := strings.Cut(description, "("); ok {
+		return before
 	}
 	return ""
 }
