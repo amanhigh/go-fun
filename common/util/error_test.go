@@ -151,10 +151,14 @@ var _ = Describe("Error", func() {
 
 					result := util.ProcessValidationError(validationErr)
 
-					Expect(result).To(HaveOccurred())
-					Expect(result.Code()).To(Equal(http.StatusBadRequest))
-					Expect(result.Error()).To(ContainSubstring("Name"))
-					Expect(result.Error()).To(ContainSubstring("required"))
+					// First assert that it's a FieldHttpError
+					fieldErr, ok := result.(common.FieldHttpError)
+					Expect(ok).To(BeTrue())
+
+					Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+					Expect(fieldErr.Error()).To(ContainSubstring("Name"))
+					Expect(fieldErr.Error()).To(ContainSubstring("required"))
+					Expect(fieldErr.Field()).To(Equal("Name"))
 				})
 			})
 
@@ -168,10 +172,14 @@ var _ = Describe("Error", func() {
 
 					result := util.ProcessValidationError(validationErr)
 
-					Expect(result).To(HaveOccurred())
-					Expect(result.Code()).To(Equal(http.StatusBadRequest))
-					Expect(result.Error()).To(ContainSubstring("Age"))
-					Expect(result.Error()).To(ContainSubstring("min"))
+					// First assert that it's a FieldHttpError
+					fieldErr, ok := result.(common.FieldHttpError)
+					Expect(ok).To(BeTrue())
+
+					Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+					Expect(fieldErr.Error()).To(ContainSubstring("Age"))
+					Expect(fieldErr.Error()).To(ContainSubstring("min"))
+					Expect(fieldErr.Field()).To(Equal("Age"))
 				})
 
 				It("should handle max violation for strings", func() {
@@ -183,10 +191,14 @@ var _ = Describe("Error", func() {
 
 					result := util.ProcessValidationError(validationErr)
 
-					Expect(result).To(HaveOccurred())
-					Expect(result.Code()).To(Equal(http.StatusBadRequest))
-					Expect(result.Error()).To(ContainSubstring("Ticker"))
-					Expect(result.Error()).To(ContainSubstring("max"))
+					// First assert that it's a FieldHttpError
+					fieldErr, ok := result.(common.FieldHttpError)
+					Expect(ok).To(BeTrue())
+
+					Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+					Expect(fieldErr.Error()).To(ContainSubstring("Ticker"))
+					Expect(fieldErr.Error()).To(ContainSubstring("max"))
+					Expect(fieldErr.Field()).To(Equal("Ticker"))
 				})
 
 				It("should handle min violation for slices", func() {
@@ -198,10 +210,14 @@ var _ = Describe("Error", func() {
 
 					result := util.ProcessValidationError(validationErr)
 
-					Expect(result).To(HaveOccurred())
-					Expect(result.Code()).To(Equal(http.StatusBadRequest))
-					Expect(result.Error()).To(ContainSubstring("Images"))
-					Expect(result.Error()).To(ContainSubstring("min"))
+					// First assert that it's a FieldHttpError
+					fieldErr, ok := result.(common.FieldHttpError)
+					Expect(ok).To(BeTrue())
+
+					Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+					Expect(fieldErr.Error()).To(ContainSubstring("Images"))
+					Expect(fieldErr.Error()).To(ContainSubstring("min"))
+					Expect(fieldErr.Field()).To(Equal("Images"))
 				})
 
 				It("should handle max violation for slices", func() {
@@ -213,10 +229,14 @@ var _ = Describe("Error", func() {
 
 					result := util.ProcessValidationError(validationErr)
 
-					Expect(result).To(HaveOccurred())
-					Expect(result.Code()).To(Equal(http.StatusBadRequest))
-					Expect(result.Error()).To(ContainSubstring("Notes"))
-					Expect(result.Error()).To(ContainSubstring("max"))
+					// First assert that it's a FieldHttpError
+					fieldErr, ok := result.(common.FieldHttpError)
+					Expect(ok).To(BeTrue())
+
+					Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+					Expect(fieldErr.Error()).To(ContainSubstring("Notes"))
+					Expect(fieldErr.Error()).To(ContainSubstring("max"))
+					Expect(fieldErr.Field()).To(Equal("Notes"))
 				})
 			})
 
@@ -230,10 +250,14 @@ var _ = Describe("Error", func() {
 
 					result := util.ProcessValidationError(validationErr)
 
-					Expect(result).To(HaveOccurred())
-					Expect(result.Code()).To(Equal(http.StatusBadRequest))
-					Expect(result.Error()).To(ContainSubstring("Sequence"))
-					Expect(result.Error()).To(ContainSubstring("oneof"))
+					// First assert that it's a FieldHttpError
+					fieldErr, ok := result.(common.FieldHttpError)
+					Expect(ok).To(BeTrue())
+
+					Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+					Expect(fieldErr.Error()).To(ContainSubstring("Sequence"))
+					Expect(fieldErr.Error()).To(ContainSubstring("oneof"))
+					Expect(fieldErr.Field()).To(Equal("Sequence"))
 				})
 
 				It("should handle oneof with multiple values", func() {
@@ -245,9 +269,13 @@ var _ = Describe("Error", func() {
 
 					result := util.ProcessValidationError(validationErr)
 
-					Expect(result).To(HaveOccurred())
-					Expect(result.Code()).To(Equal(http.StatusBadRequest))
-					Expect(result.Error()).To(ContainSubstring("Status"))
+					// First assert that it's a FieldHttpError
+					fieldErr, ok := result.(common.FieldHttpError)
+					Expect(ok).To(BeTrue())
+
+					Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+					Expect(fieldErr.Error()).To(ContainSubstring("Status"))
+					Expect(fieldErr.Field()).To(Equal("Status"))
 				})
 			})
 
@@ -261,10 +289,14 @@ var _ = Describe("Error", func() {
 
 					result := util.ProcessValidationError(validationErr)
 
-					Expect(result).To(HaveOccurred())
-					Expect(result.Code()).To(Equal(http.StatusBadRequest))
-					Expect(result.Error()).To(ContainSubstring("Email"))
-					Expect(result.Error()).To(ContainSubstring("email"))
+					// First assert that it's a FieldHttpError
+					fieldErr, ok := result.(common.FieldHttpError)
+					Expect(ok).To(BeTrue())
+
+					Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+					Expect(fieldErr.Error()).To(ContainSubstring("Email"))
+					Expect(fieldErr.Error()).To(ContainSubstring("email"))
+					Expect(fieldErr.Field()).To(Equal("Email"))
 				})
 			})
 
@@ -283,9 +315,13 @@ var _ = Describe("Error", func() {
 
 					result := util.ProcessValidationError(validationErr)
 
-					Expect(result).To(HaveOccurred())
-					Expect(result.Code()).To(Equal(http.StatusBadRequest))
-					Expect(result.Error()).To(ContainSubstring("Timeframe"))
+					// First assert that it's a FieldHttpError
+					fieldErr, ok := result.(common.FieldHttpError)
+					Expect(ok).To(BeTrue())
+
+					Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+					Expect(fieldErr.Error()).To(ContainSubstring("Timeframe"))
+					Expect(fieldErr.Field()).To(Equal("Timeframe"))
 				})
 			})
 
@@ -301,9 +337,13 @@ var _ = Describe("Error", func() {
 
 					result := util.ProcessValidationError(validationErr)
 
-					Expect(result).To(HaveOccurred())
-					Expect(result.Code()).To(Equal(http.StatusBadRequest))
-					Expect(result.Error()).To(ContainSubstring("Name"))
+					// First assert that it's a FieldHttpError
+					fieldErr, ok := result.(common.FieldHttpError)
+					Expect(ok).To(BeTrue())
+
+					Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+					Expect(fieldErr.Error()).To(ContainSubstring("Name"))
+					Expect(fieldErr.Field()).To(Equal("Name"))
 				})
 			})
 		})
@@ -353,9 +393,13 @@ var _ = Describe("Error", func() {
 
 					result := util.ProcessValidationError(err)
 
-					Expect(result).To(HaveOccurred())
-					Expect(result.Code()).To(Equal(http.StatusBadRequest))
-					Expect(result.Error()).To(ContainSubstring("expects"))
+					// First assert that it's a FieldHttpError
+					fieldErr, ok := result.(common.FieldHttpError)
+					Expect(ok).To(BeTrue())
+
+					Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+					Expect(fieldErr.Error()).To(ContainSubstring("expects"))
+					Expect(fieldErr.Field()).To(Equal("age"))
 				})
 
 				It("should handle int where string expected", func() {
@@ -367,9 +411,13 @@ var _ = Describe("Error", func() {
 
 					result := util.ProcessValidationError(err)
 
-					Expect(result).To(HaveOccurred())
-					Expect(result.Code()).To(Equal(http.StatusBadRequest))
-					Expect(result.Error()).To(ContainSubstring("expects"))
+					// First assert that it's a FieldHttpError
+					fieldErr, ok := result.(common.FieldHttpError)
+					Expect(ok).To(BeTrue())
+
+					Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+					Expect(fieldErr.Error()).To(ContainSubstring("expects"))
+					Expect(fieldErr.Field()).To(Equal("name"))
 				})
 
 				It("should handle array where object expected", func() {
@@ -381,8 +429,12 @@ var _ = Describe("Error", func() {
 
 					result := util.ProcessValidationError(err)
 
-					Expect(result).To(HaveOccurred())
-					Expect(result.Code()).To(Equal(http.StatusBadRequest))
+					// First assert that it's a FieldHttpError
+					fieldErr, ok := result.(common.FieldHttpError)
+					Expect(ok).To(BeTrue())
+
+					Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+					Expect(fieldErr.Field()).To(Equal("data"))
 				})
 			})
 

@@ -66,7 +66,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 		router = util.CreateTestGinRouter()
 		v1 := router.Group("/v1")
-		journal := v1.Group("/journal")
+		journal := v1.Group("/journals")
 		handler.SetupJournalEntryRoutes(journal, journalHandler)
 	})
 

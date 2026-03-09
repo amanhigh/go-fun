@@ -88,8 +88,9 @@ func handleValidatorError(err error) common.HttpError {
 	}
 
 	e := errs[0]
+	fieldName := e.Field()
 	msg := fmt.Sprintf("'%s' with Value '%v' Violates '%s (%s)'", e.Field(), e.Value(), e.Tag(), e.Param())
-	return common.NewHttpError(msg, http.StatusBadRequest)
+	return common.NewFieldHttpError(fieldName, msg)
 }
 
 // handleHttpError passes through existing HttpError instances.
@@ -114,7 +115,7 @@ func handleJSONError(err error) common.HttpError {
 		if field == "" {
 			field = typeErr.Struct
 		}
-		return common.NewHttpError(fmt.Sprintf("Field '%s' expects %s", field, typeErr.Type.String()), http.StatusBadRequest)
+		return common.NewFieldHttpError(field, fmt.Sprintf("Field '%s' expects %s", field, typeErr.Type.String()))
 	}
 
 	if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
