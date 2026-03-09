@@ -58,7 +58,7 @@ lint-dead:
 	printf $(_TITLE) "LINT" "DeadCode"
 	go work edit -json | jq -r '.Use[].DiskPath' | sed 's|^\./||' | grep -vE "common|models|components/learn" | xargs -I{} $(DEADCODE) github.com/amanhigh/go-fun/{}/...
 
-lint: lint-ci  ## Lint the Code
+lint: lint-fix lint-ci  ## Lint the Code
 
 lint-fix: ## Auto-fix modernize linter issues
 	printf $(_TITLE) "Auto-fixing Modernize Issues"
@@ -455,7 +455,7 @@ generate: generate-mocks generate-swagger ## Generate Files
 
 ### Workflows
 test: test-operator cover ## Run all tests (Excludes test-slow)
-build: format lint-fix lint build-fun build-kohan ## Build all Binaries
+build: format lint build-fun build-kohan ## Build all Binaries
 
 info: info-release info-docker ## Repo Information
 infos: info space-info ## Repo Extended Information
