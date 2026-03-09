@@ -200,7 +200,8 @@ var _ = Describe("RunMigrations", Ordered, Label(models.GINKGO_SLOW), func() {
 		const migrationDir = "testdata/migrations/sqlite"
 		It("should panic with nil db", func() {
 			Expect(func() {
-				util.RunMigrations(nil, migrationFS, migrationDir)
+				err := util.RunMigrations(nil, migrationFS, migrationDir)
+				Expect(err).To(HaveOccurred())
 			}).To(Panic())
 		})
 	})
