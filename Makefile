@@ -156,7 +156,8 @@ test-focus:
 	printf $(_TITLE) "Running Focus Tests"
 	$(GINKGO) --focus "should create & get person" $(FUN_DIR)/it > $(OUT)
 
-cover: run-fun-cover test-unit cover-analyse ## Show comprehensive coverage (unit + integration)
+cover: test-clean run-fun-cover test-unit cover-analyse ## Show comprehensive coverage (unit + integration)
+
 test-clean:
 	printf $(_WARN) "Cleaning Tests"
 	rm -rf $(COVER_DIR)
