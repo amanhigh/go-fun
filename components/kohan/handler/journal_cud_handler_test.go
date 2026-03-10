@@ -101,7 +101,6 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				})
 
 				It("should return 201 Created", func() {
-					var envelopeResponse common.Envelope[barkat.Journal]
 					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
 				})
 
