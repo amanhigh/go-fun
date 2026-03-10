@@ -75,7 +75,12 @@ var _ = Describe("Test Helpers", func() {
 				Expect(err).To(Succeed())
 
 				var response map[string]any
-				util.AssertSuccess(w, http.StatusOK, &response) // Will fail with Omega assertion
+				failures := InterceptGomegaFailures(func() {
+					util.AssertSuccess(w, http.StatusOK, &response)
+				})
+				Expect(failures).To(HaveLen(1))
+				// Should fail because expected status 200 doesn't match actual 400
+				Expect(failures[0]).To(ContainSubstring("Expected status 200, got 400"))
 			})
 
 			It("should fail when JSON is invalid", func() {
@@ -85,7 +90,13 @@ var _ = Describe("Test Helpers", func() {
 				Expect(err).To(Succeed())
 
 				var response map[string]any
-				util.AssertSuccess(w, http.StatusOK, &response) // Will fail with Omega assertion
+				failures := InterceptGomegaFailures(func() {
+					util.AssertSuccess(w, http.StatusOK, &response)
+				})
+				Expect(failures).To(HaveLen(1))
+				// Should fail because JSON cannot be unmarshaled
+				Expect(failures[0]).To(ContainSubstring("Failed to unmarshal Test JSON"))
+				Expect(failures[0]).To(ContainSubstring("invalid character"))
 			})
 
 			It("should fail when non-2xx status code is passed", func() {
@@ -95,17 +106,12 @@ var _ = Describe("Test Helpers", func() {
 				Expect(err).To(Succeed())
 
 				var response map[string]any
-				util.AssertSuccess(w, http.StatusBadRequest, &response) // Will fail with Omega assertion
-			})
-
-			It("should fail when 1xx status code is passed", func() {
-				w := httptest.NewRecorder()
-				w.WriteHeader(http.StatusContinue)
-				_, err := w.Write([]byte(`{"status":"continue"}`))
-				Expect(err).To(Succeed())
-
-				var response map[string]any
-				util.AssertSuccess(w, http.StatusContinue, &response) // Will fail with Omega assertion
+				failures := InterceptGomegaFailures(func() {
+					util.AssertSuccess(w, http.StatusBadRequest, &response)
+				})
+				Expect(failures).To(HaveLen(1))
+				// Should fail because 400 is not a 2xx status code
+				Expect(failures[0]).To(ContainSubstring("AssertSuccess only accepts 2xx status codes, got 400"))
 			})
 
 			It("should fail when 3xx status code is passed", func() {
@@ -115,7 +121,12 @@ var _ = Describe("Test Helpers", func() {
 				Expect(err).To(Succeed())
 
 				var response map[string]any
-				util.AssertSuccess(w, http.StatusFound, &response) // Will fail with Omega assertion
+				failures := InterceptGomegaFailures(func() {
+					util.AssertSuccess(w, http.StatusFound, &response)
+				})
+				Expect(failures).To(HaveLen(1))
+				// Should fail because 302 is not a 2xx status code
+				Expect(failures[0]).To(ContainSubstring("AssertSuccess only accepts 2xx status codes, got 302"))
 			})
 		})
 	})

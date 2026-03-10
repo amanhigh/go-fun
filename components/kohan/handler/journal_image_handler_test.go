@@ -163,55 +163,35 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				image := barkat.Image{Timeframe: ""}
 				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
 				router.ServeHTTP(w, req)
-				Expect(w.Code).To(Equal(http.StatusBadRequest))
-				// Should return validation error about required timeframe
-				var errorResponse map[string]any
-				util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
-				Expect(errorResponse["error"]).To(ContainSubstring("required"))
+				util.AssertError(w, "Timeframe", "required")
 			})
 
 			It("should reject invalid timeframe", func() {
 				image := barkat.Image{Timeframe: "INVALID"}
 				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
 				router.ServeHTTP(w, req)
-				Expect(w.Code).To(Equal(http.StatusBadRequest))
-				// Should return validation error about oneof constraint
-				var errorResponse map[string]any
-				util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
-				Expect(errorResponse["error"]).To(ContainSubstring("oneof"))
+				util.AssertError(w, "Timeframe", "oneof")
 			})
 
 			It("should reject lowercase timeframe", func() {
 				image := barkat.Image{Timeframe: "dl"}
 				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
 				router.ServeHTTP(w, req)
-				Expect(w.Code).To(Equal(http.StatusBadRequest))
-				// Should return validation error about oneof constraint
-				var errorResponse map[string]any
-				util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
-				Expect(errorResponse["error"]).To(ContainSubstring("oneof"))
+				util.AssertError(w, "Timeframe", "oneof")
 			})
 
 			It("should reject extra whitespace timeframe", func() {
 				image := barkat.Image{Timeframe: " DL "}
 				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
 				router.ServeHTTP(w, req)
-				Expect(w.Code).To(Equal(http.StatusBadRequest))
-				// Should return validation error about oneof constraint
-				var errorResponse map[string]any
-				util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
-				Expect(errorResponse["error"]).To(ContainSubstring("oneof"))
+				util.AssertError(w, "Timeframe", "oneof")
 			})
 
 			It("should reject missing timeframe field", func() {
 				image := barkat.Image{}
 				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
 				router.ServeHTTP(w, req)
-				Expect(w.Code).To(Equal(http.StatusBadRequest))
-				// Should return validation error about required timeframe
-				var errorResponse map[string]any
-				util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
-				Expect(errorResponse["error"]).To(ContainSubstring("required"))
+				util.AssertError(w, "Timeframe", "required")
 			})
 		})
 

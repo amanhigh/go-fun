@@ -2,7 +2,6 @@ package handler_test
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -283,7 +282,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should return 400 for invalid type enum", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?type=invalid", nil)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "type", "oneof")
+						util.AssertError(w, "Type", "oneof")
 					})
 				})
 			})
@@ -335,7 +334,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should return 400 for invalid status enum", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?status=invalid", nil)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "status", "oneof")
+						util.AssertError(w, "Status", "oneof")
 					})
 				})
 			})
@@ -367,7 +366,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should return 400 for invalid sequence enum", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?sequence=invalid", nil)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "sequence", "oneof")
+						util.AssertError(w, "Sequence", "oneof")
 					})
 				})
 			})

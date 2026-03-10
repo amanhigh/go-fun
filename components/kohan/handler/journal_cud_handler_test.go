@@ -263,20 +263,14 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						entry := barkat.Journal{Ticker: "INFY", Sequence: "mwd", Type: "SET", Status: "TAKEN"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]any
-						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
-						Expect(errorResponse["message"]).To(ContainSubstring("oneof"))
+						util.AssertError(w, "Sequence", "oneof")
 					})
 
 					It("should return 400 for invalid sequence (unsupported)", func() {
 						entry := barkat.Journal{Ticker: "WIPRO", Sequence: "QUARTERLY", Type: "SET", Status: "TAKEN"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]any
-						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
-						Expect(errorResponse["message"]).To(ContainSubstring("oneof"))
+						util.AssertError(w, "Sequence", "oneof")
 					})
 				})
 			})
@@ -313,30 +307,21 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						entry := barkat.Journal{Ticker: "GRSE", Sequence: "MWD", Type: "", Status: "FAIL"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]any
-						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
-						Expect(errorResponse["message"]).To(ContainSubstring("required"))
+						util.AssertError(w, "Type", "required")
 					})
 
 					It("should return 400 for invalid type (lowercase)", func() {
 						entry := barkat.Journal{Ticker: "GRSE", Sequence: "MWD", Type: "rejected", Status: "FAIL"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]any
-						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
-						Expect(errorResponse["message"]).To(ContainSubstring("oneof"))
+						util.AssertError(w, "Type", "oneof")
 					})
 
 					It("should return 400 for invalid type (unsupported)", func() {
 						entry := barkat.Journal{Ticker: "HDFC", Sequence: "MWD", Type: "INVALID", Status: "TAKEN"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]any
-						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
-						Expect(errorResponse["message"]).To(ContainSubstring("oneof"))
+						util.AssertError(w, "Type", "oneof")
 					})
 				})
 			})
@@ -429,30 +414,21 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						entry := barkat.Journal{Ticker: "GRSE", Sequence: "MWD", Type: "REJECTED", Status: ""}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]any
-						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
-						Expect(errorResponse["message"]).To(ContainSubstring("required"))
+						util.AssertError(w, "Status", "required")
 					})
 
 					It("should return 400 for invalid status (lowercase)", func() {
 						entry := barkat.Journal{Ticker: "GRSE", Sequence: "MWD", Type: "REJECTED", Status: "fail"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]any
-						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
-						Expect(errorResponse["message"]).To(ContainSubstring("oneof"))
+						util.AssertError(w, "Status", "oneof")
 					})
 
 					It("should return 400 for invalid status (unsupported)", func() {
 						entry := barkat.Journal{Ticker: "HDFC", Sequence: "MWD", Type: "SET", Status: "INVALID"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]any
-						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
-						Expect(errorResponse["message"]).To(ContainSubstring("oneof"))
+						util.AssertError(w, "Status", "oneof")
 					})
 				})
 			})
@@ -644,9 +620,8 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusCreated))
 						var envelopeResponse common.Envelope[barkat.Journal]
-						util.AssertJSONAndStatus(w, http.StatusCreated, &envelopeResponse)
+						util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
 						Expect(envelopeResponse.Status).To(Equal(common.EnvelopeSuccess))
 						Expect(envelopeResponse.Data.Tags).To(HaveLen(1))
 						Expect(envelopeResponse.Data.Tags[0].Override).ToNot(BeNil())

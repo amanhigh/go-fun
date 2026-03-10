@@ -125,7 +125,7 @@ var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
 
 				postgresHost, hostErr := postgresContainer.PortEndpoint(ctx, "5432/tcp", "")
 				Expect(hostErr).ToNot(HaveOccurred())
-				dbUrl := fmt.Sprintf("test:test@tcp(%s)/testdb?sslmode=disable", postgresHost)
+				dbUrl := fmt.Sprintf("postgres://test:test@%s/testdb?sslmode=disable", postgresHost)
 
 				db, err = gorm.Open(postgres.Open(dbUrl), &gorm.Config{
 					Logger: logger.Default.LogMode(logger.Silent),
