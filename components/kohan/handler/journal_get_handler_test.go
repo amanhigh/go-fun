@@ -649,37 +649,37 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should return 400 for limit exceeds maximum (101)", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?limit=101", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Limit", "max")
 					})
 
 					It("should return 400 for limit = 0 (fails min=1 validation)", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?limit=0", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Limit", "min")
 					})
 
 					It("should return 400 for negative limit", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?limit=-1", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Limit", "min")
 					})
 
 					It("should return 400 for negative offset", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?offset=-1", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Offset", "min")
 					})
 
 					It("should return 400 for non-numeric limit", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?limit=abc", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Limit", "numeric")
 					})
 
 					It("should return 400 for non-numeric offset", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?offset=xyz", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Offset", "numeric")
 					})
 				})
 			})

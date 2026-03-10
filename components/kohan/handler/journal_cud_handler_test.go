@@ -445,7 +445,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Images", "required")
 					})
 
 					It("should return 400 for insufficient images < 4 (PRD: min 4 required)", func() {
@@ -462,7 +462,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Images", "min")
 					})
 
 					It("should return 400 for excessive images > 6 (PRD: max 6 allowed)", func() {
@@ -483,7 +483,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Images", "max")
 					})
 
 					It("should return 400 for invalid timeframe (PRD: must be DL,WK,MN,TMN,SMN,YR)", func() {
@@ -501,7 +501,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Timeframe", "oneof")
 					})
 				})
 			})
@@ -527,10 +527,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Notes", "max")
 					})
 
 					It("should return 400 for invalid note format (PRD: must be MARKDOWN or PLAINTEXT)", func() {
+						// HACK: Extract Created in Before each and override field for Bad request.
 						entry := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
@@ -548,7 +549,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Format", "oneof")
 					})
 
 					It("should return 400 for invalid note status (PRD: must match entry status enum)", func() {
@@ -569,7 +570,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Status", "oneof")
 					})
 
 					It("should return 400 for note content exceeding max length (PRD: max 2000 chars)", func() {
@@ -594,7 +595,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Content", "max")
 					})
 				})
 			})
@@ -690,7 +691,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Type", "oneof")
 					})
 
 					It("should return 400 for tag exceeding max length (PRD: max 10 chars)", func() {
@@ -711,7 +712,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Tag", "max")
 					})
 
 					It("should return 400 for override exceeding max length (PRD: max 50 chars)", func() {
@@ -733,7 +734,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Override", "max")
 					})
 				})
 			})
