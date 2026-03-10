@@ -1,3 +1,4 @@
+//nolint:dupl
 package handler_test
 
 import (
@@ -532,22 +533,29 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			})
 
 			Context("Notes Field", func() {
+				var (
+					entry barkat.Journal
+				)
+
+				BeforeEach(func() {
+					entry = barkat.Journal{
+						Ticker:   "GRSE",
+						Sequence: "MWD",
+						Type:     "REJECTED",
+						Status:   "FAIL",
+						Images: []barkat.Image{
+							{Timeframe: "DL"},
+							{Timeframe: "WK"},
+							{Timeframe: "MN"},
+							{Timeframe: "TMN"},
+						},
+					}
+				})
+
 				Context("Bad Values", func() {
 					It("should return 400 for missing note status (PRD: status required)", func() {
-						entry := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images: []barkat.Image{
-								{Timeframe: "DL"},
-								{Timeframe: "WK"},
-								{Timeframe: "MN"},
-								{Timeframe: "TMN"},
-							},
-							Notes: []barkat.Note{
-								{Status: "", Content: "Note without status", Format: "MARKDOWN"},
-							},
+						entry.Notes = []barkat.Note{
+							{Status: "", Content: "Note without status", Format: "MARKDOWN"},
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
@@ -555,20 +563,8 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					})
 
 					It("should return 400 for missing note content (PRD: content required)", func() {
-						entry := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images: []barkat.Image{
-								{Timeframe: "DL"},
-								{Timeframe: "WK"},
-								{Timeframe: "MN"},
-								{Timeframe: "TMN"},
-							},
-							Notes: []barkat.Note{
-								{Status: "SET", Content: "", Format: "MARKDOWN"},
-							},
+						entry.Notes = []barkat.Note{
+							{Status: "SET", Content: "", Format: "MARKDOWN"},
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
@@ -576,21 +572,9 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					})
 
 					It("should return 400 for multiple notes > 1 (PRD: max 1 at create)", func() {
-						entry := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images: []barkat.Image{
-								{Timeframe: "DL"},
-								{Timeframe: "WK"},
-								{Timeframe: "MN"},
-								{Timeframe: "TMN"},
-							},
-							Notes: []barkat.Note{
-								{Status: "SET", Content: "First note", Format: "MARKDOWN"},
-								{Status: "RUNNING", Content: "Second note", Format: "PLAINTEXT"},
-							},
+						entry.Notes = []barkat.Note{
+							{Status: "SET", Content: "First note", Format: "MARKDOWN"},
+							{Status: "RUNNING", Content: "Second note", Format: "PLAINTEXT"},
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
@@ -598,21 +582,8 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					})
 
 					It("should return 400 for invalid note format (PRD: must be MARKDOWN or PLAINTEXT)", func() {
-						// HACK: Extract Created in Before each and override field for Bad request.
-						entry := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images: []barkat.Image{
-								{Timeframe: "DL"},
-								{Timeframe: "WK"},
-								{Timeframe: "MN"},
-								{Timeframe: "TMN"},
-							},
-							Notes: []barkat.Note{
-								{Status: "SET", Content: "Note with invalid format", Format: "invalid"},
-							},
+						entry.Notes = []barkat.Note{
+							{Status: "SET", Content: "Note with invalid format", Format: "invalid"},
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
@@ -620,20 +591,8 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					})
 
 					It("should return 400 for invalid note status (PRD: must match entry status enum)", func() {
-						entry := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images: []barkat.Image{
-								{Timeframe: "DL"},
-								{Timeframe: "WK"},
-								{Timeframe: "MN"},
-								{Timeframe: "TMN"},
-							},
-							Notes: []barkat.Note{
-								{Status: "INVALID", Content: "Note with invalid status", Format: "MARKDOWN"},
-							},
+						entry.Notes = []barkat.Note{
+							{Status: "INVALID", Content: "Note with invalid status", Format: "MARKDOWN"},
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
@@ -645,20 +604,8 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						for i := range longContent {
 							longContent = longContent[:i] + "a" + longContent[i+1:]
 						}
-						entry := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images: []barkat.Image{
-								{Timeframe: "DL"},
-								{Timeframe: "WK"},
-								{Timeframe: "MN"},
-								{Timeframe: "TMN"},
-							},
-							Notes: []barkat.Note{
-								{Status: "SET", Content: longContent, Format: "MARKDOWN"},
-							},
+						entry.Notes = []barkat.Note{
+							{Status: "SET", Content: longContent, Format: "MARKDOWN"},
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
