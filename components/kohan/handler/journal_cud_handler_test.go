@@ -101,7 +101,8 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				})
 
 				It("should return 201 Created", func() {
-					Expect(w.Code).To(Equal(http.StatusCreated))
+					var envelopeResponse common.Envelope[barkat.Journal]
+					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
 				})
 
 				It("should return Envelope success", func() {
@@ -647,7 +648,8 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusCreated))
+						var envelopeResponse common.Envelope[barkat.Journal]
+						util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
 					})
 
 					It("should accept tag type = MANAGEMENT (PRD: uppercase)", func() {
@@ -668,7 +670,8 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusCreated))
+						var envelopeResponse common.Envelope[barkat.Journal]
+						util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
 					})
 				})
 
