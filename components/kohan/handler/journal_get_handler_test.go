@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -13,6 +14,7 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -20,11 +22,15 @@ import (
 )
 
 func decodeEntry(w *httptest.ResponseRecorder, expectedStatus int) barkat.Journal {
-	return util.UnenvelopeAndAssertStatus[barkat.Journal](w, expectedStatus)
+	var envelope common.Envelope[barkat.Journal]
+	util.AssertSuccess(w, expectedStatus, &envelope)
+	return envelope.Data
 }
 
 func decodeEntryList(w *httptest.ResponseRecorder, expectedStatus int) barkat.JournalList {
-	return util.UnenvelopeAndAssertStatus[barkat.JournalList](w, expectedStatus)
+	var envelope common.Envelope[barkat.JournalList]
+	util.AssertSuccess(w, expectedStatus, &envelope)
+	return envelope.Data
 }
 
 var _ = Describe("JournalHandler Integration - GET Tests", func() {
@@ -277,7 +283,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should return 400 for invalid type enum", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?type=invalid", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "type", "oneof")
 					})
 				})
 			})
@@ -329,7 +335,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should return 400 for invalid status enum", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?status=invalid", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "status", "oneof")
 					})
 				})
 			})
@@ -361,7 +367,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should return 400 for invalid sequence enum", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?sequence=invalid", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "sequence", "oneof")
 					})
 				})
 			})
@@ -455,7 +461,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before="+url.QueryEscape(beforeTime), nil)
 							router.ServeHTTP(w, req)
 							var response barkat.JournalList
-							util.AssertJSONAndStatus(w, http.StatusOK, &response)
+							util.AssertSuccess(w, http.StatusOK, &response)
 							// All entries created in this test should be returned
 							Expect(response.Records).To(HaveLen(5))
 						})

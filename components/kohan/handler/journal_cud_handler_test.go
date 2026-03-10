@@ -19,7 +19,9 @@ import (
 )
 
 func decodeCreateJournalResponse(w *httptest.ResponseRecorder) barkat.Journal {
-	return util.UnenvelopeAndAssertStatus[barkat.Journal](w, http.StatusCreated)
+	var envelope common.Envelope[barkat.Journal]
+	util.AssertSuccess(w, http.StatusCreated, &envelope)
+	return envelope.Data
 }
 
 // JournalHandler Integration Tests - Comprehensive Master Specification
@@ -103,17 +105,17 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				})
 
 				It("should return Envelope success", func() {
-					util.AssertJSONAndStatus(w, http.StatusCreated, &envelopeResponse)
+					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
 					Expect(envelopeResponse.Status).To(Equal(common.EnvelopeSuccess))
 				})
 
 				It("should return created entry with ID in data", func() {
-					util.AssertJSONAndStatus(w, http.StatusCreated, &envelopeResponse)
+					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
 					Expect(envelopeResponse.Data.ID).ToNot(BeEmpty())
 				})
 
 				It("should preserve all input fields", func() {
-					util.AssertJSONAndStatus(w, http.StatusCreated, &envelopeResponse)
+					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
 					Expect(envelopeResponse.Data.Ticker).To(Equal("GRSE"))
 					Expect(envelopeResponse.Data.Sequence).To(Equal("MWD"))
 					Expect(envelopeResponse.Data.Type).To(Equal("REJECTED"))
@@ -121,12 +123,12 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				})
 
 				It("should set created_at timestamp", func() {
-					util.AssertJSONAndStatus(w, http.StatusCreated, &envelopeResponse)
+					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
 					Expect(envelopeResponse.Data.CreatedAt).ToNot(BeZero())
 				})
 
 				It("should persist entry to database", func() {
-					util.AssertJSONAndStatus(w, http.StatusCreated, &envelopeResponse)
+					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
 					dbEntry, err := entryMgr.GetJournal(testCtx, envelopeResponse.Data.ID)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(dbEntry.ID).To(Equal(envelopeResponse.Data.ID))
@@ -218,20 +220,14 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						entry := barkat.Journal{Ticker: "", Sequence: "MWD", Type: "REJECTED", Status: "FAIL"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]any
-						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
-						Expect(errorResponse["message"]).To(ContainSubstring("required"))
+						util.AssertError(w, "Ticker", "required")
 					})
 
 					It("should return 400 for ticker exceeding max length (11)", func() {
 						entry := barkat.Journal{Ticker: "12345678901", Sequence: "MWD", Type: "REJECTED", Status: "FAIL"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]any
-						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
-						Expect(errorResponse["message"]).To(ContainSubstring("max (10)"))
+						util.AssertError(w, "Ticker", "max (10)")
 					})
 				})
 			})
@@ -260,10 +256,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						entry := barkat.Journal{Ticker: "GRSE", Sequence: "", Type: "REJECTED", Status: "FAIL"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-						var errorResponse map[string]any
-						util.AssertJSONAndStatus(w, http.StatusBadRequest, &errorResponse)
-						Expect(errorResponse["message"]).To(ContainSubstring("required"))
+						util.AssertError(w, "Sequence", "required")
 					})
 
 					It("should return 400 for invalid sequence (lowercase)", func() {
