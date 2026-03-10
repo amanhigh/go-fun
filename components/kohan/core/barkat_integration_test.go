@@ -73,7 +73,9 @@ var _ = PDescribe("Barkat Integration Test", func() {
 			tagHandler := handler.NewTagHandler(manager.NewTagManager(entryMgr, repository.NewTagRepository(db)))
 
 			shutdown := util.NewGracefulShutdown()
-			base := util.NewHttpServer(config.HttpServerConfig{Name: "kohan", Port: testPort}, gin.Default(), shutdown)
+			engine := gin.Default()
+			core.RegisterJournalValidators()
+			base := util.NewHttpServer(config.HttpServerConfig{Name: "kohan", Port: testPort}, engine, shutdown)
 			lifecycle := core.NewKohanServerLifecycle(nil, journalHandler, imageHandler, noteHandler, tagHandler)
 			base.SetLifecycle(lifecycle)
 			baseURL = fmt.Sprintf("http://localhost:%d", testPort)

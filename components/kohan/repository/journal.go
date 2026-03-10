@@ -83,6 +83,6 @@ func (r *JournalRepositoryImpl) fetchJournals(tx *gorm.DB, query barkat.JournalQ
 	}
 
 	var journals []barkat.Journal
-	err := tx.Order(orderClause).Offset(query.Offset).Limit(query.Limit).Find(&journals).Error
+	err := tx.Preload("Images").Order(orderClause).Offset(query.Offset).Limit(query.Limit).Find(&journals).Error
 	return journals, err
 }

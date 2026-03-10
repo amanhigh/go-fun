@@ -93,8 +93,12 @@ var _ = Describe("KohanServer", func() {
 			body := `{"ticker":"RELIANCE","sequence":"MWD","type":"REJECTED","status":"FAIL","images":[{"timeframe":"DL"},{"timeframe":"WK"},{"timeframe":"MN"},{"timeframe":"TMN"}]}`
 			req := httptest.NewRequest("POST", "/v1/journal-entries", bytes.NewBufferString(body))
 			req.Header.Set("Content-Type", "application/json")
+
+			// Use the server's engine which has validators registered
 			c, _ := gin.CreateTestContext(recorder)
 			c.Request = req
+			// Register validators for this test context
+			core.RegisterJournalValidators()
 
 			journalHandler.HandleCreateEntry(c)
 

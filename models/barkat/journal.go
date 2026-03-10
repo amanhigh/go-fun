@@ -44,6 +44,11 @@ func (j *Journal) BeforeCreate(_ *gorm.DB) error {
 	if j.ID == "" {
 		j.ID = uuid.NewString()
 	}
+	// Set JournalID for all associated images (required for GORM associations)
+	for i := range j.Images {
+		// HACK: FK on Internal Id or external id ?
+		j.Images[i].JournalID = j.ID
+	}
 	return nil
 }
 

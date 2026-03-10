@@ -16,6 +16,7 @@ import (
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"gorm.io/gorm"
@@ -103,13 +104,18 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					Expect(response.ID).To(Equal(createdEntry.ID))
 				})
 
-				It("should return all entry fields", func() {
+				It("should return all entry fields including images", func() {
 					response = decodeEntry(w, http.StatusOK)
 					Expect(response.Ticker).To(Equal("GRSE"))
 					Expect(response.Sequence).To(Equal("MWD"))
 					Expect(response.Type).To(Equal("REJECTED"))
 					Expect(response.Status).To(Equal("FAIL"))
 					Expect(response.CreatedAt).ToNot(BeZero())
+					Expect(response.Images).To(HaveLen(4))
+					Expect(response.Images[0].Timeframe).To(Equal("DL"))
+					Expect(response.Images[1].Timeframe).To(Equal("WK"))
+					Expect(response.Images[2].Timeframe).To(Equal("MN"))
+					Expect(response.Images[3].Timeframe).To(Equal("TMN"))
 				})
 			})
 		})
@@ -147,19 +153,30 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 		var createdEntries []barkat.Journal
 
 		BeforeEach(func() {
+			// Define default images template
 			defaultImages := []barkat.Image{
 				{Timeframe: "DL"},
 				{Timeframe: "WK"},
 				{Timeframe: "MN"},
 				{Timeframe: "TMN"},
 			}
+
 			entries := []barkat.Journal{
-				{Ticker: "GRSE", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: defaultImages},
-				{Ticker: "PDSL", Sequence: "YR", Type: "SET", Status: "TAKEN", Images: defaultImages},
-				{Ticker: "SNF", Sequence: "MWD", Type: "RESULT", Status: "SUCCESS", Images: defaultImages},
-				{Ticker: "TCS", Sequence: "YR", Type: "REJECTED", Status: "REJECTED", Images: defaultImages},
-				{Ticker: "INFY", Sequence: "MWD", Type: "SET", Status: "RUNNING", Images: defaultImages},
+				{Ticker: "GRSE", Sequence: "MWD", Type: "REJECTED", Status: "FAIL"},
+				{Ticker: "PDSL", Sequence: "YR", Type: "SET", Status: "TAKEN"},
+				{Ticker: "SNF", Sequence: "MWD", Type: "RESULT", Status: "SUCCESS"},
+				{Ticker: "TCS", Sequence: "YR", Type: "REJECTED", Status: "REJECTED"},
+				{Ticker: "INFY", Sequence: "MWD", Type: "SET", Status: "RUNNING"},
 			}
+
+			// Copy default images for each entry to avoid shared slice mutation
+			for i := range entries {
+				var copiedImages []barkat.Image
+				err := copier.Copy(&copiedImages, &defaultImages)
+				Expect(err).ToNot(HaveOccurred())
+				entries[i].Images = copiedImages
+			}
+
 			for _, entry := range entries {
 				Expect(entryMgr.CreateJournal(testCtx, &entry)).To(Succeed())
 				createdEntries = append(createdEntries, entry)
@@ -200,7 +217,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					}
 				})
 
-				It("should include all required fields in each entry", func() {
+				It("should include all required fields and images in each entry", func() {
 					response = decodeEntryList(w, http.StatusOK)
 					for _, entry := range response.Records {
 						Expect(entry.ID).ToNot(BeEmpty())
@@ -209,6 +226,11 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						Expect(entry.Type).ToNot(BeEmpty())
 						Expect(entry.Status).ToNot(BeEmpty())
 						Expect(entry.CreatedAt).ToNot(BeZero())
+						Expect(entry.Images).To(HaveLen(4))
+						Expect(entry.Images[0].Timeframe).To(Equal("DL"))
+						Expect(entry.Images[1].Timeframe).To(Equal("WK"))
+						Expect(entry.Images[2].Timeframe).To(Equal("MN"))
+						Expect(entry.Images[3].Timeframe).To(Equal("TMN"))
 					}
 				})
 			})
