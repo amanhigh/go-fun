@@ -86,7 +86,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				router.ServeHTTP(w, req)
 
 				var response barkat.Image
-				util.AssertJSONAndStatus(w, http.StatusCreated, &response)
+				util.AssertSuccess(w, http.StatusCreated, &response)
 
 				// Verify the created image has proper data
 				Expect(response.Timeframe).To(Equal("DL"))
@@ -108,7 +108,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
 				router.ServeHTTP(w, req)
 				var response barkat.Image
-				util.AssertJSONAndStatus(w, http.StatusCreated, &response)
+				util.AssertSuccess(w, http.StatusCreated, &response)
 				Expect(response.Timeframe).To(Equal("DL"))
 			})
 
@@ -117,7 +117,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
 				router.ServeHTTP(w, req)
 				var response barkat.Image
-				util.AssertJSONAndStatus(w, http.StatusCreated, &response)
+				util.AssertSuccess(w, http.StatusCreated, &response)
 				Expect(response.Timeframe).To(Equal("WK"))
 			})
 
@@ -126,7 +126,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
 				router.ServeHTTP(w, req)
 				var response barkat.Image
-				util.AssertJSONAndStatus(w, http.StatusCreated, &response)
+				util.AssertSuccess(w, http.StatusCreated, &response)
 				Expect(response.Timeframe).To(Equal("MN"))
 			})
 
@@ -135,7 +135,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
 				router.ServeHTTP(w, req)
 				var response barkat.Image
-				util.AssertJSONAndStatus(w, http.StatusCreated, &response)
+				util.AssertSuccess(w, http.StatusCreated, &response)
 				Expect(response.Timeframe).To(Equal("TMN"))
 			})
 
@@ -144,7 +144,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
 				router.ServeHTTP(w, req)
 				var response barkat.Image
-				util.AssertJSONAndStatus(w, http.StatusCreated, &response)
+				util.AssertSuccess(w, http.StatusCreated, &response)
 				Expect(response.Timeframe).To(Equal("SMN"))
 			})
 
@@ -153,7 +153,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
 				router.ServeHTTP(w, req)
 				var response barkat.Image
-				util.AssertJSONAndStatus(w, http.StatusCreated, &response)
+				util.AssertSuccess(w, http.StatusCreated, &response)
 				Expect(response.Timeframe).To(Equal("YR"))
 			})
 		})
@@ -288,7 +288,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				router.ServeHTTP(w, req)
 
 				var response map[string][]barkat.Image
-				util.AssertJSONAndStatus(w, http.StatusOK, &response)
+				util.AssertSuccess(w, http.StatusOK, &response)
 
 				// Verify all images are returned
 				Expect(response["images"]).To(HaveLen(3))
@@ -312,7 +312,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				router.ServeHTTP(w, req)
 
 				var response map[string][]barkat.Image
-				util.AssertJSONAndStatus(w, http.StatusOK, &response)
+				util.AssertSuccess(w, http.StatusOK, &response)
 
 				// Verify images are returned in creation order (DL, WK, MN)
 				Expect(response["images"][0].Timeframe).To(Equal("DL"))
@@ -368,7 +368,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				router.ServeHTTP(w, req)
 
 				var response map[string][]barkat.Image
-				util.AssertJSONAndStatus(w, http.StatusOK, &response)
+				util.AssertSuccess(w, http.StatusOK, &response)
 				Expect(response["images"]).To(BeEmpty())
 			})
 		})

@@ -1,4 +1,6 @@
 // Test file with similar patterns for different DB types
+//
+//nolint:dupl // False positives: Similar test patterns for MySQL/PostgreSQL containers
 package util_test
 
 import (

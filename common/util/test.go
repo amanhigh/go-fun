@@ -10,7 +10,7 @@ import (
 	"net/http/httptest"
 
 	"github.com/gin-gonic/gin"
-	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega" //nolint:revive,staticcheck
 )
 
 const DIMENSION_COUNT = 2 // Number of values needed for matrix dimensions (n, m)
@@ -63,8 +63,8 @@ func CreateTestRequest(method, url string, body any) (*http.Request, *httptest.R
 // Only accepts 2xx status codes and uses Omega assertions without panic
 func AssertSuccess(w *httptest.ResponseRecorder, expectedStatus int, v any) {
 	// Validate that expectedStatus is a 2xx code using Omega assertions
-	ExpectWithOffset(1, expectedStatus).To(BeNumerically(">=", 200), "AssertSuccess only accepts 2xx status codes, got %d", expectedStatus)
-	ExpectWithOffset(1, expectedStatus).To(BeNumerically("<", 300), "AssertSuccess only accepts 2xx status codes, got %d", expectedStatus)
+	ExpectWithOffset(1, expectedStatus).To(BeNumerically(">=", http.StatusOK), "AssertSuccess only accepts 2xx status codes, got %d", expectedStatus)
+	ExpectWithOffset(1, expectedStatus).To(BeNumerically("<", http.StatusMultipleChoices), "AssertSuccess only accepts 2xx status codes, got %d", expectedStatus)
 
 	// Check status code matches using Omega assertions
 	ExpectWithOffset(1, w.Code).To(Equal(expectedStatus), "Expected status %d, got %d", expectedStatus, w.Code)
@@ -99,7 +99,8 @@ func AssertError(w *httptest.ResponseRecorder, fieldName, expectedContent string
 	Expect(response["data"]).ToNot(BeNil())
 
 	// Get data map
-	dataMap := response["data"].(map[string]any)
+	dataMap, ok := response["data"].(map[string]any)
+	Expect(ok).To(BeTrue(), "response data should be a map")
 
 	// Check field exists and validate content
 	errorMsg, ok := dataMap[fieldName]

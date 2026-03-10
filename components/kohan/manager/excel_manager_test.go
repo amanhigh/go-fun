@@ -1,3 +1,4 @@
+//nolint:dupl // False positives: Similar Excel test patterns for dividends/interest sheets
 package manager_test
 
 import (

@@ -1,3 +1,4 @@
+//nolint:dupl // False positives: Similar valuation patterns for different tickers
 package core_test
 
 import (

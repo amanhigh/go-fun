@@ -1,3 +1,4 @@
+//nolint:dupl // False positives: Similar test patterns for interest/dividend processing
 package manager_test
 
 import (
