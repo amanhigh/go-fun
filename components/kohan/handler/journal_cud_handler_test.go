@@ -235,7 +235,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						entry := barkat.Journal{Ticker: "grse", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Ticker", "ticker_format")
+						util.AssertError(w, "Ticker", "ticker")
 					})
 				})
 			})
@@ -813,10 +813,10 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Tag", "tag_format")
+						util.AssertError(w, "Tag", "tag")
 					})
 
-					It("should return 400 for invalid override format (PRD: alphanumeric only)", func() {
+					It("should return 400 for invalid override format (PRD: letters only)", func() {
 						invalidOverride := "a-b"
 						entry := barkat.Journal{
 							Ticker:   "GRSE",
@@ -835,7 +835,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Override", "override_format")
+						util.AssertError(w, "Override", "override")
 					})
 
 					It("should return 400 for exceeding max tags (PRD: max 10)", func() {

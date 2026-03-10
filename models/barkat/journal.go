@@ -27,7 +27,7 @@ const (
 // Journal represents a single trade journal capture event.
 type Journal struct {
 	ID        string     `gorm:"column:id;primaryKey" json:"id"`
-	Ticker    string     `gorm:"column:ticker;not null" json:"ticker" binding:"required,max=10,ticker_format"`
+	Ticker    string     `gorm:"column:ticker;not null" json:"ticker" binding:"required,max=10,ticker"`
 	Sequence  string     `gorm:"column:sequence;not null" json:"sequence" binding:"required,oneof=MWD YR"`
 	Type      string     `gorm:"column:type;not null" json:"type" binding:"required,oneof=REJECTED RESULT SET"`
 	Status    string     `gorm:"column:status;not null" json:"status" binding:"required,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
@@ -55,7 +55,7 @@ type JournalPath struct {
 // JournalQuery holds query parameters for listing/filtering journals.
 type JournalQuery struct {
 	common.Pagination
-	Ticker        string `form:"ticker" binding:"omitempty,min=1,max=10,ticker_format"`
+	Ticker        string `form:"ticker" binding:"omitempty,min=1,max=10,ticker"`
 	Type          string `form:"type" binding:"omitempty,oneof=REJECTED RESULT SET"`
 	Status        string `form:"status" binding:"omitempty,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
 	Sequence      string `form:"sequence" binding:"omitempty,oneof=MWD YR"`
