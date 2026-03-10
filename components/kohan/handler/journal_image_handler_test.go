@@ -47,7 +47,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 		// Setup Gin router using helper
 		router = util.CreateTestGinRouter()
 		v1 := router.Group("/v1")
-		journal := v1.Group("/journal")
+		journal := v1.Group("/journals")
 		handler.SetupImageRoutes(journal, imageHandler)
 
 		// Create test entry for image operations
@@ -236,9 +236,9 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				req, w = util.CreateTestRequest("POST", "barkat.JournalBase//images", image)
 			})
 
-			It("should return 400 for empty entry ID (route not found)", func() {
+			It("should return 404 for empty entry ID (route not found)", func() {
 				router.ServeHTTP(w, req)
-				Expect(w.Code).To(Equal(http.StatusBadRequest))
+				Expect(w.Code).To(Equal(http.StatusNotFound))
 			})
 		})
 	})
@@ -325,7 +325,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 		Context("with empty entry ID", func() {
 			BeforeEach(func() {
-				req, w = util.CreateTestRequest("GET", "barkat.JournalBase//images", nil)
+				req, w = util.CreateTestRequest("GET", barkat.JournalBase+"//images", nil)
 			})
 
 			It("should return 404 for empty entry ID (route not found)", func() {
@@ -367,7 +367,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 		Context("with valid entry and image", func() {
 			BeforeEach(func() {
-				req, w = util.CreateTestRequest("DELETE", "barkat.JournalBase/"+entry.ID+"/images/"+imageToDelete.ID, nil)
+				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ID+"/images/"+imageToDelete.ID, nil)
 			})
 
 			It("should delete image and return 204", func() {
@@ -395,7 +395,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 		Context("with non-existent image", func() {
 			BeforeEach(func() {
-				req, w = util.CreateTestRequest("DELETE", "barkat.JournalBase/"+entry.ID+"/images/nonexistent-image", nil)
+				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ID+"/images/nonexistent-image", nil)
 			})
 
 			It("should return 404 for non-existent image", func() {
@@ -428,7 +428,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 		Context("with empty entry ID", func() {
 			BeforeEach(func() {
-				req, w = util.CreateTestRequest("DELETE", "barkat.JournalBase//images/"+imageToDelete.ID, nil)
+				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"//images/"+imageToDelete.ID, nil)
 			})
 
 			It("should return 400 for empty entry ID (route not found)", func() {
@@ -439,7 +439,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 		Context("with empty image ID", func() {
 			BeforeEach(func() {
-				req, w = util.CreateTestRequest("DELETE", "barkat.JournalBase/"+entry.ID+"/images/", nil)
+				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ID+"/images/", nil)
 			})
 
 			It("should return 400 for empty image ID (route not found)", func() {
@@ -450,7 +450,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 		Context("with malformed image ID", func() {
 			BeforeEach(func() {
-				req, w = util.CreateTestRequest("DELETE", "barkat.JournalBase/"+entry.ID+"/images/invalid-id", nil)
+				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ID+"/images/invalid-id", nil)
 			})
 
 			It("should return 404 for malformed image ID", func() {
@@ -462,12 +462,12 @@ var _ = PDescribe("ImageHandler Integration", func() {
 		Context("with concurrent deletion safety", func() {
 			It("should return 404 when delete request races after first succeeds", func() {
 				// First delete
-				req1, w1 := util.CreateTestRequest("DELETE", "barkat.JournalBase-entries/"+entry.ID+"/images/"+imageToDelete.ID, nil)
+				req1, w1 := util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ID+"/images/"+imageToDelete.ID, nil)
 				router.ServeHTTP(w1, req1)
 				Expect(w1.Code).To(Equal(http.StatusNoContent))
 
 				// Second delete should report missing since image no longer exists
-				req2, w2 := util.CreateTestRequest("DELETE", "barkat.JournalBase-entries/"+entry.ID+"/images/"+imageToDelete.ID, nil)
+				req2, w2 := util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ID+"/images/"+imageToDelete.ID, nil)
 				router.ServeHTTP(w2, req2)
 				Expect(w2.Code).To(Equal(http.StatusNotFound))
 

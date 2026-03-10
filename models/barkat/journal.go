@@ -36,7 +36,7 @@ type Journal struct {
 
 	// Associations
 	Images []Image `gorm:"foreignKey:JournalID;references:ID" json:"images,omitempty" binding:"required,min=4,max=6,dive"`
-	Tags   []Tag   `gorm:"foreignKey:JournalID;references:ID" json:"tags,omitempty" binding:"dive"`
+	Tags   []Tag   `gorm:"foreignKey:JournalID;references:ID" json:"tags,omitempty" binding:"max=10,dive"`
 	Notes  []Note  `gorm:"foreignKey:JournalID;references:ID" json:"notes,omitempty" binding:"max=1,dive"`
 }
 
