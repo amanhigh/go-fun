@@ -242,7 +242,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should return 400 for invalid ticker length", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?ticker=1234567890123456789012345678901", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Ticker", "max")
 					})
 				})
 			})
@@ -436,19 +436,19 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						It("should return 400 for invalid date format", func() {
 							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after=invalid-date", nil)
 							router.ServeHTTP(w, req)
-							Expect(w.Code).To(Equal(http.StatusBadRequest))
+							util.AssertError(w, "CreatedAfter", "datetime")
 						})
 
 						It("should return 400 for empty date", func() {
 							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after=", nil)
 							router.ServeHTTP(w, req)
-							Expect(w.Code).To(Equal(http.StatusBadRequest))
+							util.AssertError(w, "CreatedAfter", "datetime")
 						})
 
 						It("should return 400 for non-ISO format", func() {
 							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after=2024-02-15", nil)
 							router.ServeHTTP(w, req)
-							Expect(w.Code).To(Equal(http.StatusBadRequest))
+							util.AssertError(w, "CreatedAfter", "datetime")
 						})
 					})
 				})
@@ -487,19 +487,19 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						It("should return 400 for invalid date format", func() {
 							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before=not-a-date", nil)
 							router.ServeHTTP(w, req)
-							Expect(w.Code).To(Equal(http.StatusBadRequest))
+							util.AssertError(w, "CreatedBefore", "datetime")
 						})
 
 						It("should return 400 for empty date", func() {
 							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before=", nil)
 							router.ServeHTTP(w, req)
-							Expect(w.Code).To(Equal(http.StatusBadRequest))
+							util.AssertError(w, "CreatedBefore", "datetime")
 						})
 
 						It("should return 400 for non-ISO format", func() {
 							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before=15-02-2024", nil)
 							router.ServeHTTP(w, req)
-							Expect(w.Code).To(Equal(http.StatusBadRequest))
+							util.AssertError(w, "CreatedBefore", "datetime")
 						})
 					})
 				})
@@ -571,13 +571,13 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should return 400 for invalid sort-by field", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?sort-by=invalid", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "SortBy", "oneof")
 					})
 
 					It("should return 400 for invalid sort-order value", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?sort-order=invalid", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "SortOrder", "oneof")
 					})
 				})
 			})
