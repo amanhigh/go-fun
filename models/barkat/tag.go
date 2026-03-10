@@ -11,9 +11,9 @@ import (
 type Tag struct {
 	ID        string    `gorm:"column:id;primaryKey" json:"id"`
 	JournalID string    `gorm:"column:journal_id;not null" json:"journal_id"`
-	Tag       string    `gorm:"column:tag;not null" json:"tag" binding:"required,max=10"`
+	Tag       string    `gorm:"column:tag;not null" json:"tag" binding:"required,max=10,regexp=^[a-zA-Z0-9-]+$"`
 	Type      string    `gorm:"column:type;not null" json:"type" binding:"required,oneof=REASON MANAGEMENT"`
-	Override  *string   `gorm:"column:override" json:"override,omitempty" binding:"omitempty,max=5"`
+	Override  *string   `gorm:"column:override" json:"override,omitempty" binding:"omitempty,max=5,regexp=^[a-zA-Z0-9]*$"`
 	CreatedAt time.Time `gorm:"column:created_at;not null" json:"created_at"`
 }
 

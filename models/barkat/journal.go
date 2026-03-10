@@ -27,7 +27,7 @@ const (
 // Journal represents a single trade journal capture event.
 type Journal struct {
 	ID        string     `gorm:"column:id;primaryKey" json:"id"`
-	Ticker    string     `gorm:"column:ticker;not null" json:"ticker" binding:"required,max=10"`
+	Ticker    string     `gorm:"column:ticker;not null" json:"ticker" binding:"required,max=10,ticker_format"`
 	Sequence  string     `gorm:"column:sequence;not null" json:"sequence" binding:"required,oneof=MWD YR"`
 	Type      string     `gorm:"column:type;not null" json:"type" binding:"required,oneof=REJECTED RESULT SET"`
 	Status    string     `gorm:"column:status;not null" json:"status" binding:"required,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
@@ -55,12 +55,12 @@ type JournalPath struct {
 // JournalQuery holds query parameters for listing/filtering journals.
 type JournalQuery struct {
 	common.Pagination
-	Ticker        string `form:"ticker" binding:"omitempty,min=1,max=10"`
+	Ticker        string `form:"ticker" binding:"omitempty,min=1,max=10,ticker_format"`
 	Type          string `form:"type" binding:"omitempty,oneof=REJECTED RESULT SET"`
 	Status        string `form:"status" binding:"omitempty,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
 	Sequence      string `form:"sequence" binding:"omitempty,oneof=MWD YR"`
-	CreatedAfter  string `form:"created-after" binding:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
-	CreatedBefore string `form:"created-before" binding:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	CreatedAfter  string `form:"created-after" binding:"omitempty,datetime=2006-01-02"`
+	CreatedBefore string `form:"created-before" binding:"omitempty,datetime=2006-01-02"`
 	SortBy        string `form:"sort-by" binding:"omitempty,oneof=created_at ticker sequence"`
 	SortOrder     string `form:"sort-order" binding:"omitempty,oneof=asc desc"`
 }
