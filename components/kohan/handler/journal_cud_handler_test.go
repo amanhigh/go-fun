@@ -230,6 +230,13 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "max (10)")
 					})
+
+					It("should return 400 for lowercase ticker (PRD: uppercase only)", func() {
+						entry := barkat.Journal{Ticker: "grse", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Ticker", "ticker_format")
+					})
 				})
 			})
 
@@ -504,11 +511,71 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Timeframe", "oneof")
 					})
+
+					It("should return 400 for duplicate timeframes (PRD: unique timeframes required)", func() {
+						entry := barkat.Journal{
+							Ticker:   "GRSE",
+							Sequence: "MWD",
+							Type:     "REJECTED",
+							Status:   "FAIL",
+							Images: []barkat.Image{
+								{Timeframe: "DL"},
+								{Timeframe: "DL"},
+								{Timeframe: "MN"},
+								{Timeframe: "TMN"},
+							},
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Images", "Duplicate")
+					})
 				})
 			})
 
 			Context("Notes Field", func() {
 				Context("Bad Values", func() {
+					It("should return 400 for missing note status (PRD: status required)", func() {
+						entry := barkat.Journal{
+							Ticker:   "GRSE",
+							Sequence: "MWD",
+							Type:     "REJECTED",
+							Status:   "FAIL",
+							Images: []barkat.Image{
+								{Timeframe: "DL"},
+								{Timeframe: "WK"},
+								{Timeframe: "MN"},
+								{Timeframe: "TMN"},
+							},
+							Notes: []barkat.Note{
+								{Status: "", Content: "Note without status", Format: "MARKDOWN"},
+							},
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Status", "required")
+					})
+
+					It("should return 400 for missing note content (PRD: content required)", func() {
+						entry := barkat.Journal{
+							Ticker:   "GRSE",
+							Sequence: "MWD",
+							Type:     "REJECTED",
+							Status:   "FAIL",
+							Images: []barkat.Image{
+								{Timeframe: "DL"},
+								{Timeframe: "WK"},
+								{Timeframe: "MN"},
+								{Timeframe: "TMN"},
+							},
+							Notes: []barkat.Note{
+								{Status: "SET", Content: "", Format: "MARKDOWN"},
+							},
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Content", "required")
+					})
+
 					It("should return 400 for multiple notes > 1 (PRD: max 1 at create)", func() {
 						entry := barkat.Journal{
 							Ticker:   "GRSE",
@@ -676,6 +743,48 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				})
 
 				Context("Bad Values", func() {
+					It("should return 400 for missing tag name (PRD: tag required)", func() {
+						entry := barkat.Journal{
+							Ticker:   "GRSE",
+							Sequence: "MWD",
+							Type:     "REJECTED",
+							Status:   "FAIL",
+							Images: []barkat.Image{
+								{Timeframe: "DL"},
+								{Timeframe: "WK"},
+								{Timeframe: "MN"},
+								{Timeframe: "TMN"},
+							},
+							Tags: []barkat.Tag{
+								{Tag: "", Type: "REASON"},
+							},
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Tag", "required")
+					})
+
+					It("should return 400 for missing tag type (PRD: type required)", func() {
+						entry := barkat.Journal{
+							Ticker:   "GRSE",
+							Sequence: "MWD",
+							Type:     "REJECTED",
+							Status:   "FAIL",
+							Images: []barkat.Image{
+								{Timeframe: "DL"},
+								{Timeframe: "WK"},
+								{Timeframe: "MN"},
+								{Timeframe: "TMN"},
+							},
+							Tags: []barkat.Tag{
+								{Tag: "oe", Type: ""},
+							},
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Type", "required")
+					})
+
 					It("should return 400 for invalid tag type (PRD: must be REASON or MANAGEMENT)", func() {
 						entry := barkat.Journal{
 							Ticker:   "GRSE",
@@ -718,8 +827,8 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						util.AssertError(w, "Tag", "max")
 					})
 
-					It("should return 400 for override exceeding max length (PRD: max 50 chars)", func() {
-						longOverride := "this is a very long override string that exceeds fifty characters limit"
+					It("should return 400 for override exceeding max length (PRD: max 5 chars)", func() {
+						longOverride := "toolong"
 						entry := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
@@ -738,6 +847,80 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Override", "max")
+					})
+
+					It("should return 400 for invalid tag format (PRD: alphanumeric with hyphens)", func() {
+						entry := barkat.Journal{
+							Ticker:   "GRSE",
+							Sequence: "MWD",
+							Type:     "REJECTED",
+							Status:   "FAIL",
+							Images: []barkat.Image{
+								{Timeframe: "DL"},
+								{Timeframe: "WK"},
+								{Timeframe: "MN"},
+								{Timeframe: "TMN"},
+							},
+							Tags: []barkat.Tag{
+								{Tag: "bad@tag", Type: "REASON"},
+							},
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Tag", "tag_format")
+					})
+
+					It("should return 400 for invalid override format (PRD: alphanumeric only)", func() {
+						invalidOverride := "a-b"
+						entry := barkat.Journal{
+							Ticker:   "GRSE",
+							Sequence: "MWD",
+							Type:     "REJECTED",
+							Status:   "FAIL",
+							Images: []barkat.Image{
+								{Timeframe: "DL"},
+								{Timeframe: "WK"},
+								{Timeframe: "MN"},
+								{Timeframe: "TMN"},
+							},
+							Tags: []barkat.Tag{
+								{Tag: "dep", Type: "REASON", Override: &invalidOverride},
+							},
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Override", "override_format")
+					})
+
+					It("should return 400 for exceeding max tags (PRD: max 10)", func() {
+						entry := barkat.Journal{
+							Ticker:   "GRSE",
+							Sequence: "MWD",
+							Type:     "REJECTED",
+							Status:   "FAIL",
+							Images: []barkat.Image{
+								{Timeframe: "DL"},
+								{Timeframe: "WK"},
+								{Timeframe: "MN"},
+								{Timeframe: "TMN"},
+							},
+							Tags: []barkat.Tag{
+								{Tag: "t1", Type: "REASON"},
+								{Tag: "t2", Type: "REASON"},
+								{Tag: "t3", Type: "REASON"},
+								{Tag: "t4", Type: "REASON"},
+								{Tag: "t5", Type: "REASON"},
+								{Tag: "t6", Type: "REASON"},
+								{Tag: "t7", Type: "REASON"},
+								{Tag: "t8", Type: "REASON"},
+								{Tag: "t9", Type: "REASON"},
+								{Tag: "t10", Type: "REASON"},
+								{Tag: "t11", Type: "REASON"},
+							},
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Tags", "max")
 					})
 				})
 			})

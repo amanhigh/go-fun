@@ -244,6 +244,12 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "max")
 					})
+
+					It("should return 400 for lowercase ticker (PRD: uppercase only)", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?ticker=grse", nil)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Ticker", "ticker_format")
+					})
 				})
 			})
 

@@ -122,6 +122,20 @@ var _ = Describe("Http Util", func() {
 			})
 		})
 
+		Context("400 Bad Request - HttpError without field (Generic Message)", func() {
+			It("should serialize generic error with 'message' key when field is unavailable", func() {
+				// This covers the strconv.NumError case where Gin doesn't provide field context
+				httpErr := common.NewHttpError("Query parameter 'ParseInt' must be numeric", http.StatusBadRequest)
+				jsonBytes, err := json.Marshal(httpErr)
+				Expect(err).ToNot(HaveOccurred())
+
+				var result map[string]any
+				Expect(json.Unmarshal(jsonBytes, &result)).To(Succeed())
+				Expect(result["status"]).To(Equal("fail"))
+				Expect(result["data"]).To(HaveKeyWithValue("message", "Query parameter 'ParseInt' must be numeric"))
+			})
+		})
+
 		Context("400 Bad Request - FieldHttpError (Fail Format)", func() {
 			It("should serialize field-specific error with field name as key", func() {
 				fieldErr := common.NewFieldHttpError("username", "Username is required")

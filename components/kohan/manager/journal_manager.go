@@ -37,9 +37,27 @@ func NewJournalManager(repo repository.JournalRepository) *JournalManagerImpl {
 // ---- Journal ----
 
 func (m *JournalManagerImpl) CreateJournal(ctx context.Context, journal *barkat.Journal) common.HttpError {
+	// Business rule: validate unique timeframes (PRD Section 3.1)
+	if httpErr := m.validateUniqueTimeframes(journal.Images); httpErr != nil {
+		return httpErr
+	}
+
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		return m.repo.Create(c, journal)
 	})
+}
+
+// validateUniqueTimeframes ensures all image timeframes are unique within a journal.
+// PRD Section 3.1: "Business rule: minimum 4 unique timeframes"
+func (m *JournalManagerImpl) validateUniqueTimeframes(images []barkat.Image) common.HttpError {
+	seen := make(map[string]bool)
+	for _, img := range images {
+		if seen[img.Timeframe] {
+			return common.NewFieldHttpError("Images", "Duplicate timeframe not allowed: "+img.Timeframe)
+		}
+		seen[img.Timeframe] = true
+	}
+	return nil
 }
 
 func (m *JournalManagerImpl) GetJournal(ctx context.Context, id string) (barkat.Journal, common.HttpError) {
