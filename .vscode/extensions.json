@@ -3,6 +3,7 @@
 		"Gruntfuggly.todo-tree",
 		"hoovercj.vscode-dimmer",
 		"golang.go",
-		"bierner.markdown-mermaid"
+		"bierner.markdown-mermaid",
+		"cherrymarkdownpublisher.cherry-markdown"
 	]
 }
