@@ -34,7 +34,7 @@ func NewJournalRepository(db *gorm.DB) *JournalRepositoryImpl {
 
 func (r *JournalRepositoryImpl) GetJournal(ctx context.Context, id string) (barkat.Journal, error) {
 	var journal barkat.Journal
-	err := r.SafeTx(ctx).Preload("Images").Preload("Tags").Preload("Notes").First(&journal, "id = ?", id).Error
+	err := r.SafeTx(ctx).Preload("Images").Preload("Tags").Preload("Notes").First(&journal, "external_id = ?", id).Error
 	return journal, err
 }
 

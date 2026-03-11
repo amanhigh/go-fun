@@ -34,12 +34,16 @@ func NewTagManager(entryMgr JournalManager, repo repository.TagRepository) *TagM
 }
 
 func (m *TagManagerImpl) CreateTag(ctx context.Context, journalID string, tag barkat.Tag) (*barkat.Tag, common.HttpError) {
-	tag.JournalID = journalID
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Check entry existence within transaction
-		if httpErr := m.entryMgr.JournalExists(c, journalID); httpErr != nil {
+		// Get journal entry to obtain internal ID
+		journal, httpErr := m.entryMgr.GetJournal(c, journalID)
+		if httpErr != nil {
 			return httpErr
 		}
+
+		// Set internal ID for foreign key
+		tag.JournalID = journal.ID
+
 		return m.repo.Create(c, &tag)
 	})
 	if err != nil {
@@ -51,13 +55,16 @@ func (m *TagManagerImpl) CreateTag(ctx context.Context, journalID string, tag ba
 func (m *TagManagerImpl) ListTags(ctx context.Context, journalID, tagType string) ([]barkat.Tag, common.HttpError) {
 	var tags []barkat.Tag
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Check entry existence within transaction
-		if httpErr := m.entryMgr.JournalExists(c, journalID); httpErr != nil {
+		// Get journal entry to obtain internal ID
+		journal, httpErr := m.entryMgr.GetJournal(c, journalID)
+		if httpErr != nil {
 			return httpErr
 		}
-		var httpErr common.HttpError
-		tags, httpErr = m.repo.ListTags(c, journalID, tagType)
-		return httpErr
+
+		// Use internal ID for repository query
+		var repoErr common.HttpError
+		tags, repoErr = m.repo.ListTags(c, journal.ID, tagType)
+		return repoErr
 	})
 	if err != nil {
 		return nil, err
@@ -67,10 +74,12 @@ func (m *TagManagerImpl) ListTags(ctx context.Context, journalID, tagType string
 
 func (m *TagManagerImpl) DeleteTag(ctx context.Context, journalID, tagID string) common.HttpError {
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Check entry existence within transaction
-		if httpErr := m.entryMgr.JournalExists(c, journalID); httpErr != nil {
+		// Get journal entry to obtain internal ID
+		journal, httpErr := m.entryMgr.GetJournal(c, journalID)
+		if httpErr != nil {
 			return httpErr
 		}
-		return m.repo.DeleteById(c, tagID, &barkat.Tag{JournalID: journalID})
+		
+		return m.repo.DeleteById(c, tagID, &barkat.Tag{JournalID: journal.ID})
 	})
 }

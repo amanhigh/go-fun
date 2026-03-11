@@ -17,8 +17,6 @@ type JournalManager interface {
 	GetJournal(ctx context.Context, id string) (barkat.Journal, common.HttpError)
 	// ListJournals returns a filtered, paginated list of journal summaries.
 	ListJournals(ctx context.Context, query barkat.JournalQuery) (barkat.JournalList, common.HttpError)
-	// JournalExists checks if a journal with the given ID exists.
-	JournalExists(ctx context.Context, journalID string) common.HttpError
 	// DeleteJournal deletes a journal by ID.
 	DeleteJournal(ctx context.Context, id string) common.HttpError
 }
@@ -81,11 +79,6 @@ func (m *JournalManagerImpl) ListJournals(ctx context.Context, query barkat.Jour
 			Limit:  query.Limit,
 		},
 	}, nil
-}
-
-func (m *JournalManagerImpl) JournalExists(ctx context.Context, journalID string) common.HttpError {
-	journal := &barkat.Journal{}
-	return m.repo.FindById(ctx, journalID, journal)
 }
 
 func (m *JournalManagerImpl) DeleteJournal(ctx context.Context, id string) common.HttpError {

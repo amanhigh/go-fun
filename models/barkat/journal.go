@@ -26,13 +26,14 @@ const (
 
 // Journal represents a single trade journal capture event.
 type Journal struct {
-	ID        string     `gorm:"column:id;primaryKey" json:"id"`
-	Ticker    string     `gorm:"column:ticker;not null" json:"ticker" binding:"required,max=10,ticker"`
-	Sequence  string     `gorm:"column:sequence;not null" json:"sequence" binding:"required,oneof=MWD YR"`
-	Type      string     `gorm:"column:type;not null" json:"type" binding:"required,oneof=REJECTED RESULT SET"`
-	Status    string     `gorm:"column:status;not null" json:"status" binding:"required,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
-	CreatedAt time.Time  `gorm:"column:created_at;not null;index:idx_journal_ticker_created,priority:2,sort:desc" json:"created_at"`
-	DeletedAt *time.Time `gorm:"column:deleted_at" json:"deleted_at,omitempty"`
+	ID         uint64     `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
+	ExternalID string     `gorm:"column:external_id;uniqueIndex;not null" json:"external_id"`
+	Ticker     string     `gorm:"column:ticker;not null;index:idx_journal_ticker" json:"ticker" binding:"required,max=10,ticker"`
+	Sequence   string     `gorm:"column:sequence;not null" json:"sequence" binding:"required,oneof=MWD YR"`
+	Type       string     `gorm:"column:type;not null" json:"type" binding:"required,oneof=REJECTED RESULT SET"`
+	Status     string     `gorm:"column:status;not null" json:"status" binding:"required,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
+	CreatedAt  time.Time  `gorm:"column:created_at;not null;index:idx_journal_created_at" json:"created_at"`
+	DeletedAt  *time.Time `gorm:"column:deleted_at" json:"deleted_at,omitempty"`
 
 	// Associations
 	Images []Image `gorm:"foreignKey:JournalID;references:ID" json:"images,omitempty" binding:"required,min=4,max=6,dive"`
@@ -41,13 +42,8 @@ type Journal struct {
 }
 
 func (j *Journal) BeforeCreate(_ *gorm.DB) error {
-	if j.ID == "" {
-		j.ID = uuid.NewString()
-	}
-	// Set JournalID for all associated images (required for GORM associations)
-	for i := range j.Images {
-		// HACK: FK on Internal Id or external id ?
-		j.Images[i].JournalID = j.ID
+	if j.ExternalID == "" {
+		j.ExternalID = "jrn_" + uuid.NewString()[:8] // Generate external_id with prefix
 	}
 	return nil
 }
