@@ -33,10 +33,10 @@ func NewTagManager(entryMgr JournalManager, repo repository.TagRepository) *TagM
 	return &TagManagerImpl{entryMgr: entryMgr, repo: repo}
 }
 
-func (m *TagManagerImpl) CreateTag(ctx context.Context, journalID string, tag barkat.Tag) (*barkat.Tag, common.HttpError) {
+func (m *TagManagerImpl) CreateTag(ctx context.Context, journalExternalId string, tag barkat.Tag) (*barkat.Tag, common.HttpError) {
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Get journal entry to obtain internal ID
-		journal, httpErr := m.entryMgr.GetJournal(c, journalID)
+		journal, httpErr := m.entryMgr.GetJournal(c, journalExternalId)
 		if httpErr != nil {
 			return httpErr
 		}
@@ -72,14 +72,14 @@ func (m *TagManagerImpl) ListTags(ctx context.Context, journalID, tagType string
 	return tags, nil
 }
 
-func (m *TagManagerImpl) DeleteTag(ctx context.Context, journalID, tagID string) common.HttpError {
+func (m *TagManagerImpl) DeleteTag(ctx context.Context, journalExternalId, tagExternalId string) common.HttpError {
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Get journal entry to obtain internal ID
-		journal, httpErr := m.entryMgr.GetJournal(c, journalID)
+		journal, httpErr := m.entryMgr.GetJournal(c, journalExternalId)
 		if httpErr != nil {
 			return httpErr
 		}
 
-		return m.repo.DeleteById(c, tagID, &barkat.Tag{JournalID: journal.ID})
+		return m.repo.DeleteById(c, tagExternalId, &barkat.Tag{JournalID: journal.ID})
 	})
 }

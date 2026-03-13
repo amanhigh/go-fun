@@ -58,8 +58,8 @@ func (m *JournalManagerImpl) validateUniqueTimeframes(images []barkat.Image) com
 	return nil
 }
 
-func (m *JournalManagerImpl) GetJournal(ctx context.Context, id string) (barkat.Journal, common.HttpError) {
-	journal, err := m.repo.GetJournal(ctx, id)
+func (m *JournalManagerImpl) GetJournal(ctx context.Context, externalId string) (barkat.Journal, common.HttpError) {
+	journal, err := m.repo.GetJournal(ctx, externalId)
 	if err != nil {
 		return barkat.Journal{}, common.ErrNotFound
 	}
@@ -81,10 +81,10 @@ func (m *JournalManagerImpl) ListJournals(ctx context.Context, query barkat.Jour
 	}, nil
 }
 
-func (m *JournalManagerImpl) DeleteJournal(ctx context.Context, id string) common.HttpError {
+func (m *JournalManagerImpl) DeleteJournal(ctx context.Context, externalId string) common.HttpError {
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// First fetch the journal by external_id to get internal ID
-		journal, httpErr := m.GetJournal(c, id)
+		journal, httpErr := m.GetJournal(c, externalId)
 		if httpErr != nil {
 			return httpErr
 		}

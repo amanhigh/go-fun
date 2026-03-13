@@ -33,10 +33,10 @@ func NewNoteManager(entryMgr JournalManager, repo repository.NoteRepository) *No
 	return &NoteManagerImpl{entryMgr: entryMgr, repo: repo}
 }
 
-func (m *NoteManagerImpl) CreateNote(ctx context.Context, journalID string, note barkat.Note) (*barkat.Note, common.HttpError) {
+func (m *NoteManagerImpl) CreateNote(ctx context.Context, journalExternalId string, note barkat.Note) (*barkat.Note, common.HttpError) {
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Get journal entry to obtain internal ID
-		journal, httpErr := m.entryMgr.GetJournal(c, journalID)
+		journal, httpErr := m.entryMgr.GetJournal(c, journalExternalId)
 		if httpErr != nil {
 			return httpErr
 		}
@@ -72,13 +72,13 @@ func (m *NoteManagerImpl) ListNotes(ctx context.Context, journalID, status strin
 	return notes, nil
 }
 
-func (m *NoteManagerImpl) DeleteNote(ctx context.Context, journalID, noteID string) common.HttpError {
+func (m *NoteManagerImpl) DeleteNote(ctx context.Context, journalExternalId, noteExternalId string) common.HttpError {
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Get journal entry to obtain internal ID
-		journal, httpErr := m.entryMgr.GetJournal(c, journalID)
+		journal, httpErr := m.entryMgr.GetJournal(c, journalExternalId)
 		if httpErr != nil {
 			return httpErr
 		}
-		return m.repo.DeleteById(c, noteID, &barkat.Note{JournalID: journal.ID})
+		return m.repo.DeleteById(c, noteExternalId, &barkat.Note{JournalID: journal.ID})
 	})
 }

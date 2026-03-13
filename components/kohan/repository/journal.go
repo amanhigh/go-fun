@@ -11,8 +11,8 @@ import (
 // JournalRepository provides persistence operations for journals.
 type JournalRepository interface {
 	util.BaseDbRepositoryInterface
-	// GetJournal retrieves a single journal by ID with preloaded associations.
-	GetJournal(ctx context.Context, id string) (barkat.Journal, error)
+	// GetJournal retrieves a single journal by external ID with preloaded associations.
+	GetJournal(ctx context.Context, externalId string) (barkat.Journal, error)
 	// ListJournals returns a filtered, paginated list of journal summaries (no associations).
 	ListJournals(ctx context.Context, query barkat.JournalQuery) ([]barkat.Journal, int64, error)
 }
@@ -32,9 +32,9 @@ func NewJournalRepository(db *gorm.DB) *JournalRepositoryImpl {
 
 // ---- Journal ----
 
-func (r *JournalRepositoryImpl) GetJournal(ctx context.Context, id string) (barkat.Journal, error) {
+func (r *JournalRepositoryImpl) GetJournal(ctx context.Context, externalId string) (barkat.Journal, error) {
 	var journal barkat.Journal
-	err := r.SafeTx(ctx).Preload("Images").Preload("Tags").Preload("Notes").First(&journal, "external_id = ?", id).Error
+	err := r.SafeTx(ctx).Preload("Images").Preload("Tags").Preload("Notes").First(&journal, "external_id = ?", externalId).Error
 	return journal, err
 }
 

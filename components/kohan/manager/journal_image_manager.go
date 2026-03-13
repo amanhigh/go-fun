@@ -32,10 +32,10 @@ func NewImageManager(entryMgr JournalManager, repo repository.ImageRepository) *
 	return &ImageManagerImpl{entryMgr: entryMgr, repo: repo}
 }
 
-func (m *ImageManagerImpl) CreateImage(ctx context.Context, journalID string, image barkat.Image) (*barkat.Image, common.HttpError) {
+func (m *ImageManagerImpl) CreateImage(ctx context.Context, journalExternalId string, image barkat.Image) (*barkat.Image, common.HttpError) {
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Get journal entry to obtain internal ID
-		journal, httpErr := m.entryMgr.GetJournal(c, journalID)
+		journal, httpErr := m.entryMgr.GetJournal(c, journalExternalId)
 		if httpErr != nil {
 			return httpErr
 		}
@@ -51,11 +51,11 @@ func (m *ImageManagerImpl) CreateImage(ctx context.Context, journalID string, im
 	return &image, nil
 }
 
-func (m *ImageManagerImpl) ListImages(ctx context.Context, journalID string) ([]barkat.Image, common.HttpError) {
+func (m *ImageManagerImpl) ListImages(ctx context.Context, journalExternalId string) ([]barkat.Image, common.HttpError) {
 	var images []barkat.Image
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Get journal entry to obtain internal ID
-		journal, httpErr := m.entryMgr.GetJournal(c, journalID)
+		journal, httpErr := m.entryMgr.GetJournal(c, journalExternalId)
 		if httpErr != nil {
 			return httpErr
 		}
@@ -71,13 +71,13 @@ func (m *ImageManagerImpl) ListImages(ctx context.Context, journalID string) ([]
 	return images, nil
 }
 
-func (m *ImageManagerImpl) DeleteImage(ctx context.Context, journalID, imageID string) common.HttpError {
+func (m *ImageManagerImpl) DeleteImage(ctx context.Context, journalExternalId, imageExternalId string) common.HttpError {
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Get journal entry to obtain internal ID
-		journal, httpErr := m.entryMgr.GetJournal(c, journalID)
+		journal, httpErr := m.entryMgr.GetJournal(c, journalExternalId)
 		if httpErr != nil {
 			return httpErr
 		}
-		return m.repo.DeleteById(c, imageID, &barkat.Image{JournalID: journal.ID})
+		return m.repo.DeleteById(c, imageExternalId, &barkat.Image{JournalID: journal.ID})
 	})
 }
