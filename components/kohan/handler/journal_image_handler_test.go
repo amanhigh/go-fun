@@ -51,7 +51,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 		handler.SetupImageRoutes(journalDataGroup, imageHandler)
 
 		// Create test journal for image operations
-		journalData := barkat.Journal{
+		journalData = barkat.Journal{
 			Ticker:   "GRSE",
 			Sequence: "MWD",
 			Type:     "REJECTED",

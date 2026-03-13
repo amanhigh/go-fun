@@ -9,8 +9,8 @@ import (
 
 // Tag represents a reason or management tag attached to a journal entry.
 type Tag struct {
-	ID         uint64    `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
-	ExternalID string    `gorm:"column:external_id;uniqueIndex;not null" json:"external_id"`
+	ID         uint64    `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
+	ExternalID string    `gorm:"column:external_id;uniqueIndex;not null" json:"id"`
 	JournalID  uint64    `gorm:"column:journal_id;not null;index:idx_tag_journal_id" json:"journal_id"`
 	Tag        string    `gorm:"column:tag;not null" json:"tag" binding:"required,max=10,tag"`
 	Type       string    `gorm:"column:type;not null" json:"type" binding:"required,oneof=REASON MANAGEMENT"`

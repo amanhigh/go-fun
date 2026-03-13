@@ -101,7 +101,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 				It("should return journal with correct ID", func() {
 					response = decodeEntry(w, http.StatusOK)
-					Expect(response.ID).To(Equal(createdJournal.ID))
+					Expect(response.ExternalID).To(Equal(createdJournal.ExternalID))
 				})
 
 				It("should return all journal fields including images", func() {
@@ -220,7 +220,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				It("should include all required fields and images in each journal", func() {
 					response = decodeEntryList(w, http.StatusOK)
 					for _, journal := range response.Records {
-						Expect(journal.ID).ToNot(Equal(uint64(0)))
+						Expect(journal.ExternalID).To(HavePrefix("jrn_"))
 						Expect(journal.Ticker).ToNot(BeEmpty())
 						Expect(journal.Sequence).ToNot(BeEmpty())
 						Expect(journal.Type).ToNot(BeEmpty())

@@ -9,8 +9,8 @@ import (
 
 // Note represents a freeform note attached to a journal entry at a specific trade status.
 type Note struct {
-	ID         uint64    `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
-	ExternalID string    `gorm:"column:external_id;uniqueIndex;not null" json:"external_id"`
+	ID         uint64    `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
+	ExternalID string    `gorm:"column:external_id;uniqueIndex;not null" json:"id"`
 	JournalID  uint64    `gorm:"column:journal_id;not null;index:idx_note_journal_id" json:"journal_id"`
 	Status     string    `gorm:"column:status;not null;index:idx_note_status" json:"status" binding:"required,oneof=SET RUNNING DROPPEN TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
 	Content    string    `gorm:"column:content;not null" json:"content" binding:"required,max=2000"`

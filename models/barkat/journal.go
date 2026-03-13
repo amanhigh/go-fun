@@ -26,8 +26,8 @@ const (
 
 // Journal represents a single trade journal capture event.
 type Journal struct {
-	ID         uint64     `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
-	ExternalID string     `gorm:"column:external_id;uniqueIndex;not null" json:"external_id"`
+	ID         uint64     `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
+	ExternalID string     `gorm:"column:external_id;uniqueIndex;not null" json:"id"`
 	Ticker     string     `gorm:"column:ticker;not null;index:idx_journal_ticker" json:"ticker" binding:"required,max=10,ticker"`
 	Sequence   string     `gorm:"column:sequence;not null" json:"sequence" binding:"required,oneof=MWD YR"`
 	Type       string     `gorm:"column:type;not null" json:"type" binding:"required,oneof=REJECTED RESULT SET"`

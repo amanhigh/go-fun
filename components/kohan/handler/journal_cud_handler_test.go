@@ -112,7 +112,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 				It("should return created entry with ID in data", func() {
 					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
-					Expect(envelopeResponse.Data.ID).ToNot(Equal(uint64(0)))
+					Expect(envelopeResponse.Data.ExternalID).To(HavePrefix("jrn_"))
 				})
 
 				It("should preserve all input fields", func() {
@@ -132,7 +132,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
 					dbJournal, err := journalMgr.GetJournal(testCtx, envelopeResponse.Data.ExternalID)
 					Expect(err).ToNot(HaveOccurred())
-					Expect(dbJournal.ID).To(Equal(envelopeResponse.Data.ID))
+					Expect(dbJournal.ExternalID).To(Equal(envelopeResponse.Data.ExternalID))
 					Expect(dbJournal.Ticker).To(Equal("GRSE"))
 				})
 			})
@@ -163,6 +163,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 				It("should create entry with all associations", func() {
 					response := decodeCreateJournalResponse(w)
+					Expect(response.ExternalID).To(HavePrefix("jrn_"))
 					Expect(response.Ticker).To(Equal("RELIANCE"))
 					Expect(response.Sequence).To(Equal("YR"))
 					Expect(response.Type).To(Equal("REJECTED"))
@@ -170,6 +171,17 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					Expect(response.Images).To(HaveLen(4))
 					Expect(response.Tags).To(HaveLen(1))
 					Expect(response.Notes).To(HaveLen(1))
+
+					// Validate associated entity IDs
+					for _, img := range response.Images {
+						Expect(img.ExternalID).To(HavePrefix("img_"))
+					}
+					for _, tag := range response.Tags {
+						Expect(tag.ExternalID).To(HavePrefix("tag_"))
+					}
+					for _, note := range response.Notes {
+						Expect(note.ExternalID).To(HavePrefix("not_"))
+					}
 				})
 			})
 		})
@@ -332,7 +344,18 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					})
 
 					It("should accept type = SET", func() {
-						journal := barkat.Journal{Ticker: "RELIANCE", Sequence: "MWD", Type: "SET", Status: "RUNNING", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
+						journal := barkat.Journal{
+							Ticker:   "RELIANCE",
+							Sequence: "MWD",
+							Type:     "SET",
+							Status:   "RUNNING",
+							Images: []barkat.Image{
+								{Timeframe: "DL"},
+								{Timeframe: "WK"},
+								{Timeframe: "MN"},
+								{Timeframe: "TMN"},
+							},
+						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
