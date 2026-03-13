@@ -225,65 +225,6 @@ func (_c *JournalManager_GetJournal_Call) RunAndReturn(run func(ctx context.Cont
 	return _c
 }
 
-// JournalExists provides a mock function for the type JournalManager
-func (_mock *JournalManager) JournalExists(ctx context.Context, journalID string) common.HttpError {
-	ret := _mock.Called(ctx, journalID)
-
-	if len(ret) == 0 {
-		panic("no return value specified for JournalExists")
-	}
-
-	var r0 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) common.HttpError); ok {
-		r0 = returnFunc(ctx, journalID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(common.HttpError)
-		}
-	}
-	return r0
-}
-
-// JournalManager_JournalExists_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'JournalExists'
-type JournalManager_JournalExists_Call struct {
-	*mock.Call
-}
-
-// JournalExists is a helper method to define mock.On call
-//   - ctx context.Context
-//   - journalID string
-func (_e *JournalManager_Expecter) JournalExists(ctx interface{}, journalID interface{}) *JournalManager_JournalExists_Call {
-	return &JournalManager_JournalExists_Call{Call: _e.mock.On("JournalExists", ctx, journalID)}
-}
-
-func (_c *JournalManager_JournalExists_Call) Run(run func(ctx context.Context, journalID string)) *JournalManager_JournalExists_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 string
-		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *JournalManager_JournalExists_Call) Return(httpError common.HttpError) *JournalManager_JournalExists_Call {
-	_c.Call.Return(httpError)
-	return _c
-}
-
-func (_c *JournalManager_JournalExists_Call) RunAndReturn(run func(ctx context.Context, journalID string) common.HttpError) *JournalManager_JournalExists_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // ListJournals provides a mock function for the type JournalManager
 func (_mock *JournalManager) ListJournals(ctx context.Context, query barkat.JournalQuery) (barkat.JournalList, common.HttpError) {
 	ret := _mock.Called(ctx, query)

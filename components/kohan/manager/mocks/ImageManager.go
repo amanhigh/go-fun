@@ -40,8 +40,8 @@ func (_m *ImageManager) EXPECT() *ImageManager_Expecter {
 }
 
 // CreateImage provides a mock function for the type ImageManager
-func (_mock *ImageManager) CreateImage(ctx context.Context, entryID string, image barkat.Image) (*barkat.Image, common.HttpError) {
-	ret := _mock.Called(ctx, entryID, image)
+func (_mock *ImageManager) CreateImage(ctx context.Context, journalID string, image barkat.Image) (*barkat.Image, common.HttpError) {
+	ret := _mock.Called(ctx, journalID, image)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateImage")
@@ -50,17 +50,17 @@ func (_mock *ImageManager) CreateImage(ctx context.Context, entryID string, imag
 	var r0 *barkat.Image
 	var r1 common.HttpError
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, barkat.Image) (*barkat.Image, common.HttpError)); ok {
-		return returnFunc(ctx, entryID, image)
+		return returnFunc(ctx, journalID, image)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, barkat.Image) *barkat.Image); ok {
-		r0 = returnFunc(ctx, entryID, image)
+		r0 = returnFunc(ctx, journalID, image)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*barkat.Image)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string, barkat.Image) common.HttpError); ok {
-		r1 = returnFunc(ctx, entryID, image)
+		r1 = returnFunc(ctx, journalID, image)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(common.HttpError)
@@ -76,13 +76,13 @@ type ImageManager_CreateImage_Call struct {
 
 // CreateImage is a helper method to define mock.On call
 //   - ctx context.Context
-//   - entryID string
+//   - journalID string
 //   - image barkat.Image
-func (_e *ImageManager_Expecter) CreateImage(ctx interface{}, entryID interface{}, image interface{}) *ImageManager_CreateImage_Call {
-	return &ImageManager_CreateImage_Call{Call: _e.mock.On("CreateImage", ctx, entryID, image)}
+func (_e *ImageManager_Expecter) CreateImage(ctx interface{}, journalID interface{}, image interface{}) *ImageManager_CreateImage_Call {
+	return &ImageManager_CreateImage_Call{Call: _e.mock.On("CreateImage", ctx, journalID, image)}
 }
 
-func (_c *ImageManager_CreateImage_Call) Run(run func(ctx context.Context, entryID string, image barkat.Image)) *ImageManager_CreateImage_Call {
+func (_c *ImageManager_CreateImage_Call) Run(run func(ctx context.Context, journalID string, image barkat.Image)) *ImageManager_CreateImage_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -110,14 +110,14 @@ func (_c *ImageManager_CreateImage_Call) Return(image1 *barkat.Image, httpError 
 	return _c
 }
 
-func (_c *ImageManager_CreateImage_Call) RunAndReturn(run func(ctx context.Context, entryID string, image barkat.Image) (*barkat.Image, common.HttpError)) *ImageManager_CreateImage_Call {
+func (_c *ImageManager_CreateImage_Call) RunAndReturn(run func(ctx context.Context, journalID string, image barkat.Image) (*barkat.Image, common.HttpError)) *ImageManager_CreateImage_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // DeleteImage provides a mock function for the type ImageManager
-func (_mock *ImageManager) DeleteImage(ctx context.Context, entryID string, imageID string) common.HttpError {
-	ret := _mock.Called(ctx, entryID, imageID)
+func (_mock *ImageManager) DeleteImage(ctx context.Context, journalID string, imageID string) common.HttpError {
+	ret := _mock.Called(ctx, journalID, imageID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeleteImage")
@@ -125,7 +125,7 @@ func (_mock *ImageManager) DeleteImage(ctx context.Context, entryID string, imag
 
 	var r0 common.HttpError
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) common.HttpError); ok {
-		r0 = returnFunc(ctx, entryID, imageID)
+		r0 = returnFunc(ctx, journalID, imageID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(common.HttpError)
@@ -141,13 +141,13 @@ type ImageManager_DeleteImage_Call struct {
 
 // DeleteImage is a helper method to define mock.On call
 //   - ctx context.Context
-//   - entryID string
+//   - journalID string
 //   - imageID string
-func (_e *ImageManager_Expecter) DeleteImage(ctx interface{}, entryID interface{}, imageID interface{}) *ImageManager_DeleteImage_Call {
-	return &ImageManager_DeleteImage_Call{Call: _e.mock.On("DeleteImage", ctx, entryID, imageID)}
+func (_e *ImageManager_Expecter) DeleteImage(ctx interface{}, journalID interface{}, imageID interface{}) *ImageManager_DeleteImage_Call {
+	return &ImageManager_DeleteImage_Call{Call: _e.mock.On("DeleteImage", ctx, journalID, imageID)}
 }
 
-func (_c *ImageManager_DeleteImage_Call) Run(run func(ctx context.Context, entryID string, imageID string)) *ImageManager_DeleteImage_Call {
+func (_c *ImageManager_DeleteImage_Call) Run(run func(ctx context.Context, journalID string, imageID string)) *ImageManager_DeleteImage_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -175,14 +175,14 @@ func (_c *ImageManager_DeleteImage_Call) Return(httpError common.HttpError) *Ima
 	return _c
 }
 
-func (_c *ImageManager_DeleteImage_Call) RunAndReturn(run func(ctx context.Context, entryID string, imageID string) common.HttpError) *ImageManager_DeleteImage_Call {
+func (_c *ImageManager_DeleteImage_Call) RunAndReturn(run func(ctx context.Context, journalID string, imageID string) common.HttpError) *ImageManager_DeleteImage_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ListImages provides a mock function for the type ImageManager
-func (_mock *ImageManager) ListImages(ctx context.Context, entryID string) ([]barkat.Image, common.HttpError) {
-	ret := _mock.Called(ctx, entryID)
+func (_mock *ImageManager) ListImages(ctx context.Context, journalID string) ([]barkat.Image, common.HttpError) {
+	ret := _mock.Called(ctx, journalID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListImages")
@@ -191,17 +191,17 @@ func (_mock *ImageManager) ListImages(ctx context.Context, entryID string) ([]ba
 	var r0 []barkat.Image
 	var r1 common.HttpError
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string) ([]barkat.Image, common.HttpError)); ok {
-		return returnFunc(ctx, entryID)
+		return returnFunc(ctx, journalID)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string) []barkat.Image); ok {
-		r0 = returnFunc(ctx, entryID)
+		r0 = returnFunc(ctx, journalID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]barkat.Image)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string) common.HttpError); ok {
-		r1 = returnFunc(ctx, entryID)
+		r1 = returnFunc(ctx, journalID)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(common.HttpError)
@@ -217,12 +217,12 @@ type ImageManager_ListImages_Call struct {
 
 // ListImages is a helper method to define mock.On call
 //   - ctx context.Context
-//   - entryID string
-func (_e *ImageManager_Expecter) ListImages(ctx interface{}, entryID interface{}) *ImageManager_ListImages_Call {
-	return &ImageManager_ListImages_Call{Call: _e.mock.On("ListImages", ctx, entryID)}
+//   - journalID string
+func (_e *ImageManager_Expecter) ListImages(ctx interface{}, journalID interface{}) *ImageManager_ListImages_Call {
+	return &ImageManager_ListImages_Call{Call: _e.mock.On("ListImages", ctx, journalID)}
 }
 
-func (_c *ImageManager_ListImages_Call) Run(run func(ctx context.Context, entryID string)) *ImageManager_ListImages_Call {
+func (_c *ImageManager_ListImages_Call) Run(run func(ctx context.Context, journalID string)) *ImageManager_ListImages_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -245,7 +245,7 @@ func (_c *ImageManager_ListImages_Call) Return(images []barkat.Image, httpError 
 	return _c
 }
 
-func (_c *ImageManager_ListImages_Call) RunAndReturn(run func(ctx context.Context, entryID string) ([]barkat.Image, common.HttpError)) *ImageManager_ListImages_Call {
+func (_c *ImageManager_ListImages_Call) RunAndReturn(run func(ctx context.Context, journalID string) ([]barkat.Image, common.HttpError)) *ImageManager_ListImages_Call {
 	_c.Call.Return(run)
 	return _c
 }

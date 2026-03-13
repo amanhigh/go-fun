@@ -52,7 +52,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 		router         *gin.Engine
 		testCtx        = context.Background()
 		db             *gorm.DB
-		entryMgr       manager.JournalManager
+		journalMgr     manager.JournalManager
 		req            *http.Request
 		w              *httptest.ResponseRecorder
 	)
@@ -63,9 +63,9 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 		db, err = core.CreateTestBarkatDB()
 		Expect(err).ToNot(HaveOccurred())
 
-		entryRepo := repository.NewJournalRepository(db)
-		entryMgr = manager.NewJournalManager(entryRepo)
-		journalHandler = handler.NewJournalHandler(entryMgr)
+		journalRepo := repository.NewJournalRepository(db)
+		journalMgr = manager.NewJournalManager(journalRepo)
+		journalHandler = handler.NewJournalHandler(journalMgr)
 
 		router = util.CreateTestGinRouter()
 		v1 := router.Group("/v1")
@@ -85,7 +85,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				var envelopeResponse common.Envelope[barkat.Journal]
 
 				BeforeEach(func() {
-					entry := barkat.Journal{
+					journal := barkat.Journal{
 						Ticker:   "GRSE",
 						Sequence: "MWD",
 						Type:     "REJECTED",
@@ -97,7 +97,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 							{Timeframe: "TMN"},
 						},
 					}
-					req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+					req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 					router.ServeHTTP(w, req)
 				})
 
@@ -112,7 +112,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 				It("should return created entry with ID in data", func() {
 					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
-					Expect(envelopeResponse.Data.ID).ToNot(BeEmpty())
+					Expect(envelopeResponse.Data.ID).ToNot(Equal(uint64(0)))
 				})
 
 				It("should preserve all input fields", func() {
@@ -128,18 +128,18 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					Expect(envelopeResponse.Data.CreatedAt).ToNot(BeZero())
 				})
 
-				It("should persist entry to database", func() {
+				It("should persist journal to database", func() {
 					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
-					dbEntry, err := entryMgr.GetJournal(testCtx, envelopeResponse.Data.ExternalID)
+					dbJournal, err := journalMgr.GetJournal(testCtx, envelopeResponse.Data.ExternalID)
 					Expect(err).ToNot(HaveOccurred())
-					Expect(dbEntry.ID).To(Equal(envelopeResponse.Data.ID))
-					Expect(dbEntry.Ticker).To(Equal("GRSE"))
+					Expect(dbJournal.ID).To(Equal(envelopeResponse.Data.ID))
+					Expect(dbJournal.Ticker).To(Equal("GRSE"))
 				})
 			})
 
-			Context("with complete valid entry including images, tags, and notes", func() {
+			Context("with complete valid journal including images, tags, and notes", func() {
 				BeforeEach(func() {
-					entry := barkat.Journal{
+					journal := barkat.Journal{
 						Ticker:   "RELIANCE",
 						Sequence: "YR",
 						Type:     "REJECTED",
@@ -157,7 +157,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 							{Status: "SET", Content: "Strong OE at weekly level.", Format: "MARKDOWN"},
 						},
 					}
-					req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+					req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 					router.ServeHTTP(w, req)
 				})
 
@@ -178,38 +178,68 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			Context("Ticker Field", func() {
 				Context("Allowed Values", func() {
 					It("should accept ticker with numbers", func() {
-						entry := barkat.Journal{Ticker: "GRSE123", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{
+							Ticker:   "GRSE123",
+							Sequence: "MWD",
+							Type:     "REJECTED",
+							Status:   "FAIL",
+							Images: []barkat.Image{
+								{Timeframe: "DL"},
+								{Timeframe: "WK"},
+								{Timeframe: "MN"},
+								{Timeframe: "TMN"},
+							},
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Ticker).To(Equal("GRSE123"))
 					})
 
 					It("should accept ticker with hyphen", func() {
-						entry := barkat.Journal{
-							Ticker: "GRSE-NSE", Sequence: "MWD", Type: "REJECTED", Status: "FAIL",
-							Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}},
+						journal := barkat.Journal{
+							Ticker:   "GRSE-NSE",
+							Sequence: "MWD",
+							Type:     "REJECTED",
+							Status:   "FAIL",
+							Images: []barkat.Image{
+								{Timeframe: "DL"},
+								{Timeframe: "WK"},
+								{Timeframe: "MN"},
+								{Timeframe: "TMN"},
+							},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Ticker).To(Equal("GRSE-NSE"))
 					})
 
 					It("should accept ticker with dot suffix", func() {
-						entry := barkat.Journal{Ticker: "TCS.NS", Sequence: "YR", Type: "SET", Status: "RUNNING", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{
+							Ticker:   "TCS.NS",
+							Sequence: "YR",
+							Type:     "SET",
+							Status:   "RUNNING",
+							Images: []barkat.Image{
+								{Timeframe: "DL"},
+								{Timeframe: "WK"},
+								{Timeframe: "MN"},
+								{Timeframe: "TMN"},
+							},
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Ticker).To(Equal("TCS.NS"))
 					})
 
 					It("should accept ticker at max length (10)", func() {
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker: "1234567890", Sequence: "MWD", Type: "REJECTED", Status: "FAIL",
 							Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Ticker).To(HaveLen(10))
@@ -218,22 +248,22 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 				Context("Bad Values", func() {
 					It("should return 400 for missing ticker", func() {
-						entry := barkat.Journal{Ticker: "", Sequence: "MWD", Type: "REJECTED", Status: "FAIL"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "", Sequence: "MWD", Type: "REJECTED", Status: "FAIL"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "required")
 					})
 
 					It("should return 400 for ticker exceeding max length (11)", func() {
-						entry := barkat.Journal{Ticker: "12345678901", Sequence: "MWD", Type: "REJECTED", Status: "FAIL"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "12345678901", Sequence: "MWD", Type: "REJECTED", Status: "FAIL"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "max (10)")
 					})
 
 					It("should return 400 for lowercase ticker (PRD: uppercase only)", func() {
-						entry := barkat.Journal{Ticker: "grse", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "grse", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "ticker")
 					})
@@ -243,16 +273,16 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			Context("Sequence Field", func() {
 				Context("Allowed Values", func() {
 					It("should accept sequence = MWD", func() {
-						entry := barkat.Journal{Ticker: "PDSL", Sequence: "MWD", Type: "SET", Status: "TAKEN", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "PDSL", Sequence: "MWD", Type: "SET", Status: "TAKEN", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Sequence).To(Equal("MWD"))
 					})
 
 					It("should accept sequence = YR", func() {
-						entry := barkat.Journal{Ticker: "SNF", Sequence: "YR", Type: "RESULT", Status: "SUCCESS", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "SNF", Sequence: "YR", Type: "RESULT", Status: "SUCCESS", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Sequence).To(Equal("YR"))
@@ -261,22 +291,22 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 				Context("Bad Values", func() {
 					It("should return 400 for missing sequence", func() {
-						entry := barkat.Journal{Ticker: "GRSE", Sequence: "", Type: "REJECTED", Status: "FAIL"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "GRSE", Sequence: "", Type: "REJECTED", Status: "FAIL"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Sequence", "required")
 					})
 
 					It("should return 400 for invalid sequence (lowercase)", func() {
-						entry := barkat.Journal{Ticker: "INFY", Sequence: "mwd", Type: "SET", Status: "TAKEN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "INFY", Sequence: "mwd", Type: "SET", Status: "TAKEN"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Sequence", "oneof")
 					})
 
 					It("should return 400 for invalid sequence (unsupported)", func() {
-						entry := barkat.Journal{Ticker: "WIPRO", Sequence: "QUARTERLY", Type: "SET", Status: "TAKEN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "WIPRO", Sequence: "QUARTERLY", Type: "SET", Status: "TAKEN"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Sequence", "oneof")
 					})
@@ -286,24 +316,24 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			Context("Type Field", func() {
 				Context("Allowed Values", func() {
 					It("should accept type = REJECTED", func() {
-						entry := barkat.Journal{Ticker: "TCS", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "TCS", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Type).To(Equal("REJECTED"))
 					})
 
 					It("should accept type = RESULT", func() {
-						entry := barkat.Journal{Ticker: "INFY", Sequence: "YR", Type: "RESULT", Status: "SUCCESS", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "INFY", Sequence: "YR", Type: "RESULT", Status: "SUCCESS", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Type).To(Equal("RESULT"))
 					})
 
 					It("should accept type = SET", func() {
-						entry := barkat.Journal{Ticker: "RELIANCE", Sequence: "MWD", Type: "SET", Status: "RUNNING", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "RELIANCE", Sequence: "MWD", Type: "SET", Status: "RUNNING", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Type).To(Equal("SET"))
@@ -312,22 +342,22 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 				Context("Bad Values", func() {
 					It("should return 400 for missing type", func() {
-						entry := barkat.Journal{Ticker: "GRSE", Sequence: "MWD", Type: "", Status: "FAIL"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "GRSE", Sequence: "MWD", Type: "", Status: "FAIL"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Type", "required")
 					})
 
 					It("should return 400 for invalid type (lowercase)", func() {
-						entry := barkat.Journal{Ticker: "GRSE", Sequence: "MWD", Type: "rejected", Status: "FAIL"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "GRSE", Sequence: "MWD", Type: "rejected", Status: "FAIL"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Type", "oneof")
 					})
 
 					It("should return 400 for invalid type (unsupported)", func() {
-						entry := barkat.Journal{Ticker: "HDFC", Sequence: "MWD", Type: "INVALID", Status: "TAKEN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "HDFC", Sequence: "MWD", Type: "INVALID", Status: "TAKEN"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Type", "oneof")
 					})
@@ -337,80 +367,102 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			Context("Status Field", func() {
 				Context("Allowed Values - All 10 Status Values", func() {
 					It("should accept status = SET", func() {
-						entry := barkat.Journal{Ticker: "T1", Sequence: "MWD", Type: "SET", Status: "SET", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{
+							Ticker:   "T1",
+							Sequence: "MWD",
+							Type:     "SET",
+							Status:   "SET",
+							Images: []barkat.Image{
+								{Timeframe: "DL"},
+								{Timeframe: "WK"},
+								{Timeframe: "MN"},
+								{Timeframe: "TMN"},
+							},
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Status).To(Equal("SET"))
 					})
 
 					It("should accept status = RUNNING", func() {
-						entry := barkat.Journal{Ticker: "T2", Sequence: "MWD", Type: "SET", Status: "RUNNING", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "T2", Sequence: "MWD", Type: "SET", Status: "RUNNING", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Status).To(Equal("RUNNING"))
 					})
 
 					It("should accept status = DROPPED", func() {
-						entry := barkat.Journal{Ticker: "T3", Sequence: "MWD", Type: "SET", Status: "DROPPED", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "T3", Sequence: "MWD", Type: "SET", Status: "DROPPED", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Status).To(Equal("DROPPED"))
 					})
 
 					It("should accept status = TAKEN", func() {
-						entry := barkat.Journal{Ticker: "T4", Sequence: "MWD", Type: "SET", Status: "TAKEN", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "T4", Sequence: "MWD", Type: "SET", Status: "TAKEN", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Status).To(Equal("TAKEN"))
 					})
 
 					It("should accept status = REJECTED", func() {
-						entry := barkat.Journal{Ticker: "T5", Sequence: "MWD", Type: "REJECTED", Status: "REJECTED", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{
+							Ticker:   "T5",
+							Sequence: "MWD",
+							Type:     "REJECTED",
+							Status:   "REJECTED",
+							Images: []barkat.Image{
+								{Timeframe: "DL"},
+								{Timeframe: "WK"},
+								{Timeframe: "MN"},
+								{Timeframe: "TMN"},
+							},
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Status).To(Equal("REJECTED"))
 					})
 
 					It("should accept status = SUCCESS", func() {
-						entry := barkat.Journal{Ticker: "T6", Sequence: "YR", Type: "RESULT", Status: "SUCCESS", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "T6", Sequence: "YR", Type: "RESULT", Status: "SUCCESS", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Status).To(Equal("SUCCESS"))
 					})
 
 					It("should accept status = FAIL", func() {
-						entry := barkat.Journal{Ticker: "T7", Sequence: "YR", Type: "RESULT", Status: "FAIL", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "T7", Sequence: "YR", Type: "RESULT", Status: "FAIL", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Status).To(Equal("FAIL"))
 					})
 
 					It("should accept status = MISSED", func() {
-						entry := barkat.Journal{Ticker: "T8", Sequence: "YR", Type: "RESULT", Status: "MISSED", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "T8", Sequence: "YR", Type: "RESULT", Status: "MISSED", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Status).To(Equal("MISSED"))
 					})
 
 					It("should accept status = JUST_LOSS", func() {
-						entry := barkat.Journal{Ticker: "T9", Sequence: "YR", Type: "RESULT", Status: "JUST_LOSS", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "T9", Sequence: "YR", Type: "RESULT", Status: "JUST_LOSS", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Status).To(Equal("JUST_LOSS"))
 					})
 
 					It("should accept status = BROKEN", func() {
-						entry := barkat.Journal{Ticker: "T10", Sequence: "YR", Type: "RESULT", Status: "BROKEN", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "T10", Sequence: "YR", Type: "RESULT", Status: "BROKEN", Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}}}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Status).To(Equal("BROKEN"))
@@ -419,22 +471,22 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 				Context("Bad Values", func() {
 					It("should return 400 for missing status", func() {
-						entry := barkat.Journal{Ticker: "GRSE", Sequence: "MWD", Type: "REJECTED", Status: ""}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "GRSE", Sequence: "MWD", Type: "REJECTED", Status: ""}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Status", "required")
 					})
 
 					It("should return 400 for invalid status (lowercase)", func() {
-						entry := barkat.Journal{Ticker: "GRSE", Sequence: "MWD", Type: "REJECTED", Status: "fail"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "GRSE", Sequence: "MWD", Type: "REJECTED", Status: "fail"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Status", "oneof")
 					})
 
 					It("should return 400 for invalid status (unsupported)", func() {
-						entry := barkat.Journal{Ticker: "HDFC", Sequence: "MWD", Type: "SET", Status: "INVALID"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						journal := barkat.Journal{Ticker: "HDFC", Sequence: "MWD", Type: "SET", Status: "INVALID"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Status", "oneof")
 					})
@@ -444,20 +496,20 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			Context("Images Field", func() {
 				Context("Bad Values", func() {
 					It("should return 400 for empty images (PRD: min 4 required)", func() {
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
 							Type:     "REJECTED",
 							Status:   "FAIL",
 							Images:   []barkat.Image{},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Images", "required")
 					})
 
 					It("should return 400 for insufficient images < 4 (PRD: min 4 required)", func() {
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
 							Type:     "REJECTED",
@@ -468,13 +520,13 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 								{Timeframe: "MN"},
 							},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Images", "min")
 					})
 
 					It("should return 400 for excessive images > 6 (PRD: max 6 allowed)", func() {
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
 							Type:     "REJECTED",
@@ -489,13 +541,13 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 								{Timeframe: "DL"},
 							},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Images", "max")
 					})
 
 					It("should return 400 for invalid timeframe (PRD: must be DL,WK,MN,TMN,SMN,YR)", func() {
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
 							Type:     "REJECTED",
@@ -507,13 +559,13 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 								{Timeframe: "TMN"},
 							},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Timeframe", "oneof")
 					})
 
 					It("should return 400 for duplicate timeframes (PRD: unique timeframes required)", func() {
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
 							Type:     "REJECTED",
@@ -525,7 +577,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 								{Timeframe: "TMN"},
 							},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Images", "Duplicate")
 					})
@@ -534,11 +586,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 			Context("Notes Field", func() {
 				var (
-					entry barkat.Journal
+					journal barkat.Journal
 				)
 
 				BeforeEach(func() {
-					entry = barkat.Journal{
+					journal = barkat.Journal{
 						Ticker:   "GRSE",
 						Sequence: "MWD",
 						Type:     "REJECTED",
@@ -554,47 +606,47 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 				Context("Bad Values", func() {
 					It("should return 400 for missing note status (PRD: status required)", func() {
-						entry.Notes = []barkat.Note{
+						journal.Notes = []barkat.Note{
 							{Status: "", Content: "Note without status", Format: "MARKDOWN"},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Status", "required")
 					})
 
 					It("should return 400 for missing note content (PRD: content required)", func() {
-						entry.Notes = []barkat.Note{
+						journal.Notes = []barkat.Note{
 							{Status: "SET", Content: "", Format: "MARKDOWN"},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Content", "required")
 					})
 
 					It("should return 400 for multiple notes > 1 (PRD: max 1 at create)", func() {
-						entry.Notes = []barkat.Note{
+						journal.Notes = []barkat.Note{
 							{Status: "SET", Content: "First note", Format: "MARKDOWN"},
 							{Status: "RUNNING", Content: "Second note", Format: "PLAINTEXT"},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Notes", "max")
 					})
 
 					It("should return 400 for invalid note format (PRD: must be MARKDOWN or PLAINTEXT)", func() {
-						entry.Notes = []barkat.Note{
+						journal.Notes = []barkat.Note{
 							{Status: "SET", Content: "Note with invalid format", Format: "invalid"},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Format", "oneof")
 					})
 
 					It("should return 400 for invalid note status (PRD: must match entry status enum)", func() {
-						entry.Notes = []barkat.Note{
+						journal.Notes = []barkat.Note{
 							{Status: "INVALID", Content: "Note with invalid status", Format: "MARKDOWN"},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Status", "oneof")
 					})
@@ -604,10 +656,10 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						for i := range longContent {
 							longContent = longContent[:i] + "a" + longContent[i+1:]
 						}
-						entry.Notes = []barkat.Note{
+						journal.Notes = []barkat.Note{
 							{Status: "SET", Content: longContent, Format: "MARKDOWN"},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Content", "max")
 					})
@@ -618,7 +670,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				Context("Allowed Values", func() {
 					It("should accept tag with override field (PRD: optional override max 50 chars)", func() {
 						override := "loc"
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
 							Type:     "REJECTED",
@@ -633,7 +685,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 								{Tag: "dep", Type: "REASON", Override: &override},
 							},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						var envelopeResponse common.Envelope[barkat.Journal]
 						util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
@@ -644,7 +696,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					})
 
 					It("should accept tag type = REASON (PRD: uppercase)", func() {
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
 							Type:     "REJECTED",
@@ -659,14 +711,14 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 								{Tag: "oe", Type: "REASON"},
 							},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						var envelopeResponse common.Envelope[barkat.Journal]
 						util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
 					})
 
 					It("should accept tag type = MANAGEMENT (PRD: uppercase)", func() {
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
 							Type:     "REJECTED",
@@ -681,7 +733,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 								{Tag: "sl", Type: "MANAGEMENT"},
 							},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						var envelopeResponse common.Envelope[barkat.Journal]
 						util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
@@ -690,7 +742,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 				Context("Bad Values", func() {
 					It("should return 400 for missing tag name (PRD: tag required)", func() {
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
 							Type:     "REJECTED",
@@ -705,13 +757,13 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 								{Tag: "", Type: "REASON"},
 							},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Tag", "required")
 					})
 
 					It("should return 400 for missing tag type (PRD: type required)", func() {
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
 							Type:     "REJECTED",
@@ -726,13 +778,13 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 								{Tag: "oe", Type: ""},
 							},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Type", "required")
 					})
 
 					It("should return 400 for invalid tag type (PRD: must be REASON or MANAGEMENT)", func() {
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
 							Type:     "REJECTED",
@@ -747,13 +799,13 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 								{Tag: "test", Type: "invalid"},
 							},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Type", "oneof")
 					})
 
 					It("should return 400 for tag exceeding max length (PRD: max 10 chars)", func() {
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
 							Type:     "REJECTED",
@@ -768,14 +820,14 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 								{Tag: "verylongtag1", Type: "REASON"},
 							},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Tag", "max")
 					})
 
 					It("should return 400 for override exceeding max length (PRD: max 5 chars)", func() {
 						longOverride := "toolong"
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
 							Type:     "REJECTED",
@@ -790,13 +842,13 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 								{Tag: "dep", Type: "REASON", Override: &longOverride},
 							},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Override", "max")
 					})
 
 					It("should return 400 for invalid tag format (PRD: alphanumeric with hyphens)", func() {
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
 							Type:     "REJECTED",
@@ -811,14 +863,14 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 								{Tag: "bad@tag", Type: "REASON"},
 							},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Tag", "tag")
 					})
 
 					It("should return 400 for invalid override format (PRD: letters only)", func() {
 						invalidOverride := "a-b"
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
 							Type:     "REJECTED",
@@ -833,13 +885,13 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 								{Tag: "dep", Type: "REASON", Override: &invalidOverride},
 							},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Override", "override")
 					})
 
 					It("should return 400 for exceeding max tags (PRD: max 10)", func() {
-						entry := barkat.Journal{
+						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
 							Type:     "REJECTED",
@@ -864,7 +916,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 								{Tag: "t11", Type: "REASON"},
 							},
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Tags", "max")
 					})
@@ -894,10 +946,10 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 	})
 
 	Describe("DELETE /v1/journal/{id} - Delete Entry", func() {
-		var createdEntry barkat.Journal
+		var createdJournal barkat.Journal
 
 		BeforeEach(func() {
-			entry := barkat.Journal{
+			journal := barkat.Journal{
 				Ticker:   "GRSE",
 				Sequence: "MWD",
 				Type:     "REJECTED",
@@ -909,14 +961,14 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					{Timeframe: "TMN"},
 				},
 			}
-			Expect(entryMgr.CreateJournal(testCtx, &entry)).To(Succeed())
-			createdEntry = entry
+			Expect(journalMgr.CreateJournal(testCtx, &journal)).To(Succeed())
+			createdJournal = journal
 		})
 
 		Context("Happy Path", func() {
 			Context("with valid entry ID", func() {
 				BeforeEach(func() {
-					req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+createdEntry.ExternalID, nil)
+					req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+createdJournal.ExternalID, nil)
 					router.ServeHTTP(w, req)
 				})
 
@@ -924,8 +976,8 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					Expect(w.Code).To(Equal(http.StatusNoContent))
 				})
 
-				It("should actually delete the entry", func() {
-					_, err := entryMgr.GetJournal(testCtx, createdEntry.ExternalID)
+				It("should actually delete the journal", func() {
+					_, err := journalMgr.GetJournal(testCtx, createdJournal.ExternalID)
 					Expect(err).To(HaveOccurred())
 				})
 			})

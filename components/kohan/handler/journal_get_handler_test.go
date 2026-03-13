@@ -40,7 +40,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 		router         *gin.Engine
 		testCtx        = context.Background()
 		db             *gorm.DB
-		entryMgr       manager.JournalManager
+		journalMgr     manager.JournalManager
 		req            *http.Request
 		w              *httptest.ResponseRecorder
 	)
@@ -50,9 +50,9 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 		db, err = core.CreateTestBarkatDB()
 		Expect(err).ToNot(HaveOccurred())
 
-		entryRepo := repository.NewJournalRepository(db)
-		entryMgr = manager.NewJournalManager(entryRepo)
-		journalHandler = handler.NewJournalHandler(entryMgr)
+		journalRepo := repository.NewJournalRepository(db)
+		journalMgr = manager.NewJournalManager(journalRepo)
+		journalHandler = handler.NewJournalHandler(journalMgr)
 
 		router = util.CreateTestGinRouter()
 		v1 := router.Group("/v1")
@@ -67,10 +67,10 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 	})
 
 	Describe("GET /v1/journal/{id} - Retrieve Entry", func() {
-		var createdEntry barkat.Journal
+		var createdJournal barkat.Journal
 
 		BeforeEach(func() {
-			entry := barkat.Journal{
+			journal := barkat.Journal{
 				Ticker:   "GRSE",
 				Sequence: "MWD",
 				Type:     "REJECTED",
@@ -82,8 +82,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					{Timeframe: "TMN"},
 				},
 			}
-			Expect(entryMgr.CreateJournal(testCtx, &entry)).To(Succeed())
-			createdEntry = entry
+			Expect(journalMgr.CreateJournal(testCtx, &journal)).To(Succeed())
+			createdJournal = journal
 		})
 
 		Context("Happy Path", func() {
@@ -91,7 +91,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				var response barkat.Journal
 
 				BeforeEach(func() {
-					req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/"+createdEntry.ExternalID, nil)
+					req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/"+createdJournal.ExternalID, nil)
 					router.ServeHTTP(w, req)
 				})
 
@@ -99,12 +99,12 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					Expect(w.Code).To(Equal(http.StatusOK))
 				})
 
-				It("should return entry with correct ID", func() {
+				It("should return journal with correct ID", func() {
 					response = decodeEntry(w, http.StatusOK)
-					Expect(response.ID).To(Equal(createdEntry.ID))
+					Expect(response.ID).To(Equal(createdJournal.ID))
 				})
 
-				It("should return all entry fields including images", func() {
+				It("should return all journal fields including images", func() {
 					response = decodeEntry(w, http.StatusOK)
 					Expect(response.Ticker).To(Equal("GRSE"))
 					Expect(response.Sequence).To(Equal("MWD"))
@@ -150,7 +150,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 	})
 
 	Describe("GET /v1/journal - List Entries", func() {
-		var createdEntries []barkat.Journal
+		var createdJournals []barkat.Journal
 
 		BeforeEach(func() {
 			// Define default images template
@@ -161,7 +161,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				{Timeframe: "TMN"},
 			}
 
-			entries := []barkat.Journal{
+			journals := []barkat.Journal{
 				{Ticker: "GRSE", Sequence: "MWD", Type: "REJECTED", Status: "FAIL"},
 				{Ticker: "PDSL", Sequence: "YR", Type: "SET", Status: "TAKEN"},
 				{Ticker: "SNF", Sequence: "MWD", Type: "RESULT", Status: "SUCCESS"},
@@ -169,17 +169,17 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				{Ticker: "INFY", Sequence: "MWD", Type: "SET", Status: "RUNNING"},
 			}
 
-			// Copy default images for each entry to avoid shared slice mutation
-			for i := range entries {
+			// Copy default images for each journal to avoid shared slice mutation
+			for i := range journals {
 				var copiedImages []barkat.Image
 				err := copier.Copy(&copiedImages, &defaultImages)
 				Expect(err).ToNot(HaveOccurred())
-				entries[i].Images = copiedImages
+				journals[i].Images = copiedImages
 			}
 
-			for _, entry := range entries {
-				Expect(entryMgr.CreateJournal(testCtx, &entry)).To(Succeed())
-				createdEntries = append(createdEntries, entry)
+			for _, journal := range journals {
+				Expect(journalMgr.CreateJournal(testCtx, &journal)).To(Succeed())
+				createdJournals = append(createdJournals, journal)
 			}
 		})
 
@@ -217,20 +217,20 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					}
 				})
 
-				It("should include all required fields and images in each entry", func() {
+				It("should include all required fields and images in each journal", func() {
 					response = decodeEntryList(w, http.StatusOK)
-					for _, entry := range response.Records {
-						Expect(entry.ID).ToNot(BeEmpty())
-						Expect(entry.Ticker).ToNot(BeEmpty())
-						Expect(entry.Sequence).ToNot(BeEmpty())
-						Expect(entry.Type).ToNot(BeEmpty())
-						Expect(entry.Status).ToNot(BeEmpty())
-						Expect(entry.CreatedAt).ToNot(BeZero())
-						Expect(entry.Images).To(HaveLen(4))
-						Expect(entry.Images[0].Timeframe).To(Equal("DL"))
-						Expect(entry.Images[1].Timeframe).To(Equal("WK"))
-						Expect(entry.Images[2].Timeframe).To(Equal("MN"))
-						Expect(entry.Images[3].Timeframe).To(Equal("TMN"))
+					for _, journal := range response.Records {
+						Expect(journal.ID).ToNot(Equal(uint64(0)))
+						Expect(journal.Ticker).ToNot(BeEmpty())
+						Expect(journal.Sequence).ToNot(BeEmpty())
+						Expect(journal.Type).ToNot(BeEmpty())
+						Expect(journal.Status).ToNot(BeEmpty())
+						Expect(journal.CreatedAt).ToNot(BeZero())
+						Expect(journal.Images).To(HaveLen(4))
+						Expect(journal.Images[0].Timeframe).To(Equal("DL"))
+						Expect(journal.Images[1].Timeframe).To(Equal("WK"))
+						Expect(journal.Images[2].Timeframe).To(Equal("MN"))
+						Expect(journal.Images[3].Timeframe).To(Equal("TMN"))
 					}
 				})
 			})
@@ -283,8 +283,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						router.ServeHTTP(w, req)
 						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(2))
-						for _, entry := range response.Records {
-							Expect(entry.Type).To(Equal("REJECTED"))
+						for _, journal := range response.Records {
+							Expect(journal.Type).To(Equal("REJECTED"))
 						}
 					})
 
@@ -293,8 +293,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						router.ServeHTTP(w, req)
 						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(2))
-						for _, entry := range response.Records {
-							Expect(entry.Type).To(Equal("SET"))
+						for _, journal := range response.Records {
+							Expect(journal.Type).To(Equal("SET"))
 						}
 					})
 
@@ -375,8 +375,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						router.ServeHTTP(w, req)
 						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(3))
-						for _, entry := range response.Records {
-							Expect(entry.Sequence).To(Equal("MWD"))
+						for _, journal := range response.Records {
+							Expect(journal.Sequence).To(Equal("MWD"))
 						}
 					})
 
@@ -385,8 +385,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						router.ServeHTTP(w, req)
 						response := decodeEntryList(w, http.StatusOK)
 						Expect(response.Records).To(HaveLen(2))
-						for _, entry := range response.Records {
-							Expect(entry.Sequence).To(Equal("YR"))
+						for _, journal := range response.Records {
+							Expect(journal.Sequence).To(Equal("YR"))
 						}
 					})
 				})
@@ -727,9 +727,9 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					db, err = core.CreateTestBarkatDB()
 					Expect(err).ToNot(HaveOccurred())
 
-					entryRepo := repository.NewJournalRepository(db)
-					entryMgr = manager.NewJournalManager(entryRepo)
-					journalHandler = handler.NewJournalHandler(entryMgr)
+					journalRepo := repository.NewJournalRepository(db)
+					journalMgr = manager.NewJournalManager(journalRepo)
+					journalHandler = handler.NewJournalHandler(journalMgr)
 
 					router = util.CreateTestGinRouter()
 					v1 := router.Group("/v1")
