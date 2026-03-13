@@ -91,7 +91,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				var response barkat.Journal
 
 				BeforeEach(func() {
-					req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/"+createdEntry.ID, nil)
+					req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/"+createdEntry.ExternalID, nil)
 					router.ServeHTTP(w, req)
 				})
 

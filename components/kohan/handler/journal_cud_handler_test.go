@@ -130,7 +130,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 				It("should persist entry to database", func() {
 					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
-					dbEntry, err := entryMgr.GetJournal(testCtx, envelopeResponse.Data.ID)
+					dbEntry, err := entryMgr.GetJournal(testCtx, envelopeResponse.Data.ExternalID)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(dbEntry.ID).To(Equal(envelopeResponse.Data.ID))
 					Expect(dbEntry.Ticker).To(Equal("GRSE"))
@@ -154,7 +154,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 							{Tag: "oe", Type: "REASON"},
 						},
 						Notes: []barkat.Note{
-							{Status: "SET", Content: "Strong OE at weekly level.", Format: "markdown"},
+							{Status: "SET", Content: "Strong OE at weekly level.", Format: "MARKDOWN"},
 						},
 					}
 					req, w = util.CreateTestRequest("POST", barkat.JournalEntries, entry)
@@ -916,7 +916,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 		Context("Happy Path", func() {
 			Context("with valid entry ID", func() {
 				BeforeEach(func() {
-					req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+createdEntry.ID, nil)
+					req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+createdEntry.ExternalID, nil)
 					router.ServeHTTP(w, req)
 				})
 
@@ -925,7 +925,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				})
 
 				It("should actually delete the entry", func() {
-					_, err := entryMgr.GetJournal(testCtx, createdEntry.ID)
+					_, err := entryMgr.GetJournal(testCtx, createdEntry.ExternalID)
 					Expect(err).To(HaveOccurred())
 				})
 			})

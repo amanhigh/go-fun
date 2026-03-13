@@ -133,7 +133,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 			var fetchedEntry barkat.Journal
 
 			BeforeEach(func() {
-				fetchedEntry = httpDoEntry("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID, nil)
+				fetchedEntry = httpDoEntry("GET", baseURL+"/v1/journal-entries/"+createdEntry.ExternalID, nil)
 			})
 
 			It("should return full entry with associations", func() {
@@ -183,7 +183,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 
 			BeforeEach(func() {
 				note := barkat.Note{Status: "taken", Content: "Entered at 2450, SL at 2420."}
-				resp, body := httpDo("POST", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/notes", note)
+				resp, body := httpDo("POST", baseURL+"/v1/journal-entries/"+createdEntry.ExternalID+"/notes", note)
 				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 				// Sub-resource handlers return direct responses, not enveloped
 				Expect(json.Unmarshal(body, &addedNote)).To(Succeed())
@@ -197,7 +197,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 
 			Context("List Notes", func() {
 				It("should list all notes", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/notes", nil)
+					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ExternalID+"/notes", nil)
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
 					var result map[string][]barkat.Note
 					Expect(json.Unmarshal(body, &result)).To(Succeed())
@@ -205,7 +205,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 				})
 
 				It("should filter notes by status", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/notes?note_status=taken", nil)
+					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ExternalID+"/notes?note_status=taken", nil)
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
 					var result map[string][]barkat.Note
 					Expect(json.Unmarshal(body, &result)).To(Succeed())
@@ -216,12 +216,12 @@ var _ = PDescribe("Barkat Integration Test", func() {
 
 			Context("Delete Note", func() {
 				BeforeEach(func() {
-					resp, _ := httpDo("DELETE", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/notes/"+addedNote.ID, nil)
+					resp, _ := httpDo("DELETE", baseURL+"/v1/journal-entries/"+createdEntry.ExternalID+"/notes/"+addedNote.ExternalID, nil)
 					Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 				})
 
 				It("should remove note from entry", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/notes", nil)
+					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ExternalID+"/notes", nil)
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
 					var result map[string][]barkat.Note
 					Expect(json.Unmarshal(body, &result)).To(Succeed())
@@ -272,7 +272,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 
 			BeforeEach(func() {
 				tag := barkat.Tag{Tag: "er", Type: "reason"}
-				resp, body := httpDo("POST", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/tags", tag)
+				resp, body := httpDo("POST", baseURL+"/v1/journal-entries/"+createdEntry.ExternalID+"/tags", tag)
 				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 				Expect(json.Unmarshal(body, &addedTag)).To(Succeed())
 			})
@@ -285,7 +285,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 
 			Context("List Tags", func() {
 				It("should list all tags", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/tags", nil)
+					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ExternalID+"/tags", nil)
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
 					var result map[string][]barkat.Tag
 					Expect(json.Unmarshal(body, &result)).To(Succeed())
@@ -293,7 +293,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 				})
 
 				It("should filter by type=management", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/tags?type=management", nil)
+					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ExternalID+"/tags?type=management", nil)
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
 					var result map[string][]barkat.Tag
 					Expect(json.Unmarshal(body, &result)).To(Succeed())
@@ -301,7 +301,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 				})
 
 				It("should filter by type=reason", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/tags?type=reason", nil)
+					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ExternalID+"/tags?type=reason", nil)
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
 					var result map[string][]barkat.Tag
 					Expect(json.Unmarshal(body, &result)).To(Succeed())
@@ -312,12 +312,12 @@ var _ = PDescribe("Barkat Integration Test", func() {
 
 			Context("Delete Tag", func() {
 				BeforeEach(func() {
-					resp, _ := httpDo("DELETE", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/tags/"+addedTag.ID, nil)
+					resp, _ := httpDo("DELETE", baseURL+"/v1/journal-entries/"+createdEntry.ExternalID+"/tags/"+addedTag.ExternalID, nil)
 					Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 				})
 
 				It("should remove tag from entry", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/tags", nil)
+					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ExternalID+"/tags", nil)
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
 					var result map[string][]barkat.Tag
 					Expect(json.Unmarshal(body, &result)).To(Succeed())
@@ -331,7 +331,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 
 			BeforeEach(func() {
 				image := barkat.Image{Timeframe: "SMN"}
-				resp, body := httpDo("POST", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/images", image)
+				resp, body := httpDo("POST", baseURL+"/v1/journal-entries/"+createdEntry.ExternalID+"/images", image)
 				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 				Expect(json.Unmarshal(body, &addedImage)).To(Succeed())
 			})
@@ -343,7 +343,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 
 			Context("List Images", func() {
 				It("should list all images", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/images", nil)
+					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ExternalID+"/images", nil)
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
 					var result map[string][]barkat.Image
 					Expect(json.Unmarshal(body, &result)).To(Succeed())
@@ -353,12 +353,12 @@ var _ = PDescribe("Barkat Integration Test", func() {
 
 			Context("Delete Image", func() {
 				BeforeEach(func() {
-					resp, _ := httpDo("DELETE", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/images/"+addedImage.ID, nil)
+					resp, _ := httpDo("DELETE", baseURL+"/v1/journal-entries/"+createdEntry.ExternalID+"/images/"+addedImage.ExternalID, nil)
 					Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 				})
 
 				It("should remove image from entry", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/images", nil)
+					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ExternalID+"/images", nil)
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
 					var result map[string][]barkat.Image
 					Expect(json.Unmarshal(body, &result)).To(Succeed())

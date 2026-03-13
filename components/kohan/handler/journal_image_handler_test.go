@@ -79,7 +79,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				image := barkat.Image{
 					Timeframe: "DL",
 				}
-				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ExternalID+"/images", image)
 			})
 
 			It("should create image and return 201", func() {
@@ -95,7 +95,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				Expect(response.CreatedAt).ToNot(BeZero())
 
 				// Verify image is actually in database
-				images, err := imgMgr.ListImages(testCtx, entry.ID)
+				images, err := imgMgr.ListImages(testCtx, entry.ExternalID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(images).To(HaveLen(1))
 				Expect(images[0].ID).To(Equal(response.ID))
@@ -105,7 +105,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 		Context("with valid timeframe variations", func() {
 			It("should accept DL timeframe", func() {
 				image := barkat.Image{Timeframe: "DL"}
-				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ExternalID+"/images", image)
 				router.ServeHTTP(w, req)
 				var response barkat.Image
 				util.AssertSuccess(w, http.StatusCreated, &response)
@@ -114,7 +114,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 			It("should accept WK timeframe", func() {
 				image := barkat.Image{Timeframe: "WK"}
-				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ExternalID+"/images", image)
 				router.ServeHTTP(w, req)
 				var response barkat.Image
 				util.AssertSuccess(w, http.StatusCreated, &response)
@@ -123,7 +123,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 			It("should accept MN timeframe", func() {
 				image := barkat.Image{Timeframe: "MN"}
-				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ExternalID+"/images", image)
 				router.ServeHTTP(w, req)
 				var response barkat.Image
 				util.AssertSuccess(w, http.StatusCreated, &response)
@@ -132,7 +132,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 			It("should accept TMN timeframe", func() {
 				image := barkat.Image{Timeframe: "TMN"}
-				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ExternalID+"/images", image)
 				router.ServeHTTP(w, req)
 				var response barkat.Image
 				util.AssertSuccess(w, http.StatusCreated, &response)
@@ -141,7 +141,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 			It("should accept SMN timeframe", func() {
 				image := barkat.Image{Timeframe: "SMN"}
-				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ExternalID+"/images", image)
 				router.ServeHTTP(w, req)
 				var response barkat.Image
 				util.AssertSuccess(w, http.StatusCreated, &response)
@@ -150,7 +150,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 			It("should accept YR timeframe", func() {
 				image := barkat.Image{Timeframe: "YR"}
-				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ExternalID+"/images", image)
 				router.ServeHTTP(w, req)
 				var response barkat.Image
 				util.AssertSuccess(w, http.StatusCreated, &response)
@@ -161,35 +161,35 @@ var _ = PDescribe("ImageHandler Integration", func() {
 		Context("field validation", func() {
 			It("should reject empty timeframe", func() {
 				image := barkat.Image{Timeframe: ""}
-				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ExternalID+"/images", image)
 				router.ServeHTTP(w, req)
 				util.AssertError(w, "Timeframe", "required")
 			})
 
 			It("should reject invalid timeframe", func() {
 				image := barkat.Image{Timeframe: "INVALID"}
-				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ExternalID+"/images", image)
 				router.ServeHTTP(w, req)
 				util.AssertError(w, "Timeframe", "oneof")
 			})
 
 			It("should reject lowercase timeframe", func() {
 				image := barkat.Image{Timeframe: "dl"}
-				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ExternalID+"/images", image)
 				router.ServeHTTP(w, req)
 				util.AssertError(w, "Timeframe", "oneof")
 			})
 
 			It("should reject extra whitespace timeframe", func() {
 				image := barkat.Image{Timeframe: " DL "}
-				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ExternalID+"/images", image)
 				router.ServeHTTP(w, req)
 				util.AssertError(w, "Timeframe", "oneof")
 			})
 
 			It("should reject missing timeframe field", func() {
 				image := barkat.Image{}
-				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", image)
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ExternalID+"/images", image)
 				router.ServeHTTP(w, req)
 				util.AssertError(w, "Timeframe", "required")
 			})
@@ -197,7 +197,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 		Context("with invalid JSON", func() {
 			BeforeEach(func() {
-				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ID+"/images", []byte("invalid json"))
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+entry.ExternalID+"/images", []byte("invalid json"))
 			})
 
 			It("should return 400 error", func() {
@@ -233,7 +233,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 		Context("with empty entry ID", func() {
 			BeforeEach(func() {
 				image := barkat.Image{Timeframe: "DL"}
-				req, w = util.CreateTestRequest("POST", "barkat.JournalBase//images", image)
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"//images", image)
 			})
 
 			It("should return 404 for empty entry ID (route not found)", func() {
@@ -253,7 +253,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 			timeframes := []string{"DL", "WK", "MN"}
 			for _, tf := range timeframes {
 				image := barkat.Image{Timeframe: tf}
-				created, err := imgMgr.CreateImage(testCtx, entry.ID, image)
+				created, err := imgMgr.CreateImage(testCtx, entry.ExternalID, image)
 				Expect(err).ToNot(HaveOccurred())
 				createdImages = append(createdImages, *created)
 			}
@@ -261,7 +261,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 		Context("with valid entry", func() {
 			BeforeEach(func() {
-				req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/"+entry.ID+"/images", nil)
+				req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/"+entry.ExternalID+"/images", nil)
 			})
 
 			It("should list images and return 200", func() {
@@ -282,7 +282,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 				// Verify each image has proper metadata
 				for _, img := range response["images"] {
-					Expect(img.JournalID).To(Equal(entry.ID))
+					Expect(img.JournalID).To(Equal(entry.ExternalID))
 					Expect(img.ID).ToNot(BeEmpty())
 					Expect(img.CreatedAt).ToNot(BeZero())
 				}
@@ -338,10 +338,10 @@ var _ = PDescribe("ImageHandler Integration", func() {
 			BeforeEach(func() {
 				// Delete all images for this entry
 				for _, img := range createdImages {
-					err := imgMgr.DeleteImage(testCtx, entry.ID, img.ID)
+					err := imgMgr.DeleteImage(testCtx, entry.ExternalID, img.ExternalID)
 					Expect(err).ToNot(HaveOccurred())
 				}
-				req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/"+entry.ID+"/images", nil)
+				req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/"+entry.ExternalID+"/images", nil)
 			})
 
 			It("should return empty array for entry with no images", func() {
@@ -360,14 +360,14 @@ var _ = PDescribe("ImageHandler Integration", func() {
 		BeforeEach(func() {
 			// Create an image to delete
 			image := barkat.Image{Timeframe: "DL"}
-			created, err := imgMgr.CreateImage(testCtx, entry.ID, image)
+			created, err := imgMgr.CreateImage(testCtx, entry.ExternalID, image)
 			Expect(err).ToNot(HaveOccurred())
 			imageToDelete = *created
 		})
 
 		Context("with valid entry and image", func() {
 			BeforeEach(func() {
-				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ID+"/images/"+imageToDelete.ID, nil)
+				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ExternalID+"/images/"+imageToDelete.ExternalID, nil)
 			})
 
 			It("should delete image and return 204", func() {
@@ -376,7 +376,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 				Expect(w.Body.String()).To(BeEmpty())
 
 				// Verify image is actually deleted from database
-				images, err := imgMgr.ListImages(testCtx, entry.ID)
+				images, err := imgMgr.ListImages(testCtx, entry.ExternalID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(images).To(BeEmpty())
 			})
@@ -395,7 +395,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 		Context("with non-existent image", func() {
 			BeforeEach(func() {
-				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ID+"/images/nonexistent-image", nil)
+				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ExternalID+"/images/nonexistent-image", nil)
 			})
 
 			It("should return 404 for non-existent image", func() {
@@ -406,7 +406,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 		Context("with non-existent entry", func() {
 			BeforeEach(func() {
-				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/nonexistent/images/"+imageToDelete.ID, nil)
+				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/nonexistent/images/"+imageToDelete.ExternalID, nil)
 			})
 
 			It("should return 404 for non-existent entry", func() {
@@ -417,7 +417,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 		Context("with malformed entry ID", func() {
 			BeforeEach(func() {
-				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/invalid-id/images/"+imageToDelete.ID, nil)
+				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/invalid-id/images/"+imageToDelete.ExternalID, nil)
 			})
 
 			It("should return 404 for malformed entry ID", func() {
@@ -428,7 +428,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 		Context("with empty entry ID", func() {
 			BeforeEach(func() {
-				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"//images/"+imageToDelete.ID, nil)
+				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"//images/"+imageToDelete.ExternalID, nil)
 			})
 
 			It("should return 400 for empty entry ID (route not found)", func() {
@@ -439,7 +439,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 		Context("with empty image ID", func() {
 			BeforeEach(func() {
-				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ID+"/images/", nil)
+				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ExternalID+"/images/", nil)
 			})
 
 			It("should return 400 for empty image ID (route not found)", func() {
@@ -450,7 +450,7 @@ var _ = PDescribe("ImageHandler Integration", func() {
 
 		Context("with malformed image ID", func() {
 			BeforeEach(func() {
-				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ID+"/images/invalid-id", nil)
+				req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ExternalID+"/images/invalid-id", nil)
 			})
 
 			It("should return 404 for malformed image ID", func() {
@@ -462,17 +462,17 @@ var _ = PDescribe("ImageHandler Integration", func() {
 		Context("with concurrent deletion safety", func() {
 			It("should return 404 when delete request races after first succeeds", func() {
 				// First delete
-				req1, w1 := util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ID+"/images/"+imageToDelete.ID, nil)
+				req1, w1 := util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ExternalID+"/images/"+imageToDelete.ExternalID, nil)
 				router.ServeHTTP(w1, req1)
 				Expect(w1.Code).To(Equal(http.StatusNoContent))
 
 				// Second delete should report missing since image no longer exists
-				req2, w2 := util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ID+"/images/"+imageToDelete.ID, nil)
+				req2, w2 := util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+entry.ExternalID+"/images/"+imageToDelete.ExternalID, nil)
 				router.ServeHTTP(w2, req2)
 				Expect(w2.Code).To(Equal(http.StatusNotFound))
 
 				// Verify image is deleted
-				images, err := imgMgr.ListImages(testCtx, entry.ID)
+				images, err := imgMgr.ListImages(testCtx, entry.ExternalID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(images).To(BeEmpty())
 			})

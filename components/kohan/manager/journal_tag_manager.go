@@ -79,7 +79,7 @@ func (m *TagManagerImpl) DeleteTag(ctx context.Context, journalID, tagID string)
 		if httpErr != nil {
 			return httpErr
 		}
-		
+
 		return m.repo.DeleteById(c, tagID, &barkat.Tag{JournalID: journal.ID})
 	})
 }
