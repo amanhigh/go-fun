@@ -79,6 +79,20 @@ func (m *NoteManagerImpl) DeleteNote(ctx context.Context, journalExternalId, not
 		if httpErr != nil {
 			return httpErr
 		}
-		return m.repo.DeleteById(c, noteExternalId, &barkat.Note{JournalID: journal.ID})
+
+		// First fetch the note by external_id to get internal ID
+		var note barkat.Note
+		httpErr = m.repo.GetByExternalId(c, noteExternalId, &note)
+		if httpErr != nil {
+			return httpErr
+		}
+
+		// Verify the note belongs to the correct journal
+		if note.JournalID != journal.ID {
+			return common.ErrNotFound
+		}
+
+		// Now delete by internal ID using base repository method
+		return m.repo.DeleteById(c, note.ID, &barkat.Note{})
 	})
 }

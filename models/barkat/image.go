@@ -11,8 +11,8 @@ import (
 type Image struct {
 	ID         uint64    `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
 	ExternalID string    `gorm:"column:external_id;uniqueIndex;not null" json:"id"`
-	JournalID  uint64    `gorm:"column:journal_id;not null;index:idx_image_journal_id" json:"journal_id"`
-	Timeframe  string    `gorm:"column:timeframe;not null" json:"timeframe" binding:"required,oneof=DL WK MN TMN SMN YR"`
+	JournalID  uint64    `gorm:"column:journal_id;not null;index:idx_image_journal_id;uniqueIndex:idx_journal_timeframe" json:"journal_id"`
+	Timeframe  string    `gorm:"column:timeframe;not null;uniqueIndex:idx_journal_timeframe" json:"timeframe" binding:"required,oneof=DL WK MN TMN SMN YR"`
 	FileName   string    `gorm:"column:file_name;not null" json:"file_name" binding:"required,max=255,file_name"`
 	CreatedAt  time.Time `gorm:"column:created_at;not null" json:"created_at"`
 }
@@ -29,6 +29,5 @@ func (i *Image) BeforeCreate(_ *gorm.DB) error {
 
 // ImageList is the response for images.
 type ImageList struct {
-	Images   []Image                  `json:"images"`
-	Metadata common.PaginatedResponse `json:"metadata"`
+	Images []Image `json:"images"`
 }

@@ -80,6 +80,19 @@ func (m *TagManagerImpl) DeleteTag(ctx context.Context, journalExternalId, tagEx
 			return httpErr
 		}
 
-		return m.repo.DeleteById(c, tagExternalId, &barkat.Tag{JournalID: journal.ID})
+		// First fetch the tag by external_id to get internal ID
+		var tag barkat.Tag
+		httpErr = m.repo.GetByExternalId(c, tagExternalId, &tag)
+		if httpErr != nil {
+			return httpErr
+		}
+
+		// Verify the tag belongs to the correct journal
+		if tag.JournalID != journal.ID {
+			return common.ErrNotFound
+		}
+
+		// Now delete by internal ID using base repository method
+		return m.repo.DeleteById(c, tag.ID, &barkat.Tag{})
 	})
 }

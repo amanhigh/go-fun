@@ -80,6 +80,20 @@ func (m *ImageManagerImpl) DeleteImage(ctx context.Context, journalExternalId, i
 		if httpErr != nil {
 			return httpErr
 		}
-		return m.repo.DeleteById(c, imageExternalId, &barkat.Image{JournalID: journal.ID})
+
+		// First fetch the image by external_id to get internal ID
+		var image barkat.Image
+		httpErr = m.repo.GetByExternalId(c, imageExternalId, &image)
+		if httpErr != nil {
+			return httpErr
+		}
+
+		// Verify the image belongs to the correct journal
+		if image.JournalID != journal.ID {
+			return common.ErrNotFound
+		}
+
+		// Now delete by internal ID using base repository method
+		return m.repo.DeleteById(c, image.ID, &barkat.Image{})
 	})
 }

@@ -400,8 +400,8 @@ var _ = PDescribe("Barkat Integration Test", func() {
 			var envelope common.Envelope[barkat.JournalList]
 			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
 			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
-			Expect(envelope.Data.Records).To(HaveLen(1))
-			Expect(envelope.Data.Records[0].Ticker).To(Equal("KEI"))
+			Expect(envelope.Data.Journals).To(HaveLen(1))
+			Expect(envelope.Data.Journals[0].Ticker).To(Equal("KEI"))
 		})
 
 		It("should filter by sequence=yr", func() {
@@ -410,7 +410,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 			var envelope common.Envelope[barkat.JournalList]
 			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
 			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
-			for _, e := range envelope.Data.Records {
+			for _, e := range envelope.Data.Journals {
 				Expect(e.Sequence).To(Equal("YR"))
 			}
 		})
@@ -421,7 +421,7 @@ var _ = PDescribe("Barkat Integration Test", func() {
 			var envelope common.Envelope[barkat.JournalList]
 			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
 			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
-			for _, e := range envelope.Data.Records {
+			for _, e := range envelope.Data.Journals {
 				Expect(e.Status).To(Equal("running"))
 			}
 		})
@@ -432,8 +432,8 @@ var _ = PDescribe("Barkat Integration Test", func() {
 			var envelope common.Envelope[barkat.JournalList]
 			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
 			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
-			Expect(envelope.Data.Records).ToNot(BeEmpty())
-			for _, e := range envelope.Data.Records {
+			Expect(envelope.Data.Journals).ToNot(BeEmpty())
+			for _, e := range envelope.Data.Journals {
 				Expect(e.Images).To(BeEmpty())
 				Expect(e.Tags).To(BeEmpty())
 				Expect(e.Notes).To(BeEmpty())

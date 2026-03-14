@@ -21,6 +21,7 @@ type BaseDbRepositoryInterface interface {
 	DeleteById(c context.Context, id any, entity any) (err common.HttpError)
 	GetCount(c context.Context, entity any) (count int64, err common.HttpError)
 	UseOrCreateTx(c context.Context, run DbRun, readOnly ...bool) (err common.HttpError)
+	GetByExternalId(c context.Context, externalId string, entity any) (err common.HttpError)
 }
 
 type BaseDbRepository struct {
@@ -155,4 +156,15 @@ func (b *BaseDbRepository) SafeTx(c context.Context) *gorm.DB {
 		query = b.Db.WithContext(c)
 	}
 	return query
+}
+
+// GetByExternalId finds an entity by its external_id field
+func (b *BaseDbRepository) GetByExternalId(c context.Context, externalId string, entity any) (err common.HttpError) {
+	var txErr error
+	query := b.SafeTx(c)
+	if txErr = query.First(entity, "external_id=?", externalId).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+		log.Ctx(c).Error().Str("ExternalId", externalId).Any("Entity", entity).Err(txErr).Msg("Error Fetching Entity by External ID")
+	}
+	err = GormErrorMapper(txErr)
+	return
 }

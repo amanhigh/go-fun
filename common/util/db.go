@@ -146,6 +146,10 @@ func GormErrorMapper(err error) common.HttpError {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return common.ErrNotFound
 	}
+	// Handle constraint violations (duplicate unique constraints)
+	if strings.Contains(err.Error(), "constraint failed") || strings.Contains(err.Error(), "UNIQUE constraint") {
+		return common.ErrEntityExists
+	}
 	return common.NewServerError(err)
 }
 
