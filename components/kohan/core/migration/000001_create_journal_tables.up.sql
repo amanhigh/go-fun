@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS tags (
 -- Create indexes for tags
 CREATE UNIQUE INDEX IF NOT EXISTS idx_tag_external_id ON tags (external_id);
 CREATE INDEX IF NOT EXISTS idx_tag_journal_id ON tags (journal_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tag_journal_tag_type ON tags (journal_id, tag, type);
 
 -- Create notes table
 CREATE TABLE IF NOT EXISTS notes (
