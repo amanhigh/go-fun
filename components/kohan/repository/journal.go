@@ -63,11 +63,13 @@ func (r *JournalRepositoryImpl) applyJournalFilters(tx *gorm.DB, query barkat.Jo
 	if query.Sequence != "" {
 		tx = tx.Where("sequence = ?", query.Sequence)
 	}
-	if !query.CreatedAfter.IsZero() {
-		tx = tx.Where("created_at >= ?", query.CreatedAfter)
+	if query.CreatedAfter != "" {
+		// Use DATE() function to compare date strings with datetime fields
+		tx = tx.Where("DATE(created_at) >= ?", query.CreatedAfter)
 	}
-	if !query.CreatedBefore.IsZero() {
-		tx = tx.Where("created_at <= ?", query.CreatedBefore)
+	if query.CreatedBefore != "" {
+		// Use DATE() function to compare date strings with datetime fields
+		tx = tx.Where("DATE(created_at) <= ?", query.CreatedBefore)
 	}
 	return tx
 }

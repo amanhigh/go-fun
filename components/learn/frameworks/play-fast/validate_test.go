@@ -1,6 +1,7 @@
 package play_fast
 
 import (
+	"errors"
 	"regexp"
 	"time"
 
@@ -90,7 +91,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -104,7 +106,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -119,7 +122,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -135,7 +139,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -150,7 +155,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -165,7 +171,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -182,7 +189,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -198,7 +206,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -213,7 +222,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -230,7 +240,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -252,7 +263,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -266,7 +278,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -281,7 +294,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -296,7 +310,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -319,7 +334,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -342,7 +358,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -357,7 +374,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
@@ -372,7 +390,8 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Typecast to ValidationErrors and check field name
-			validationErrors := err.(validator.ValidationErrors)
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
