@@ -3,6 +3,7 @@ package handler_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 
@@ -80,6 +81,19 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 	})
 
 	Describe("POST /v1/journal - Create Entry", func() {
+		defaultTimeframes := []string{"DL", "WK", "MN", "TMN"}
+
+		createTestImages := func() []barkat.Image {
+			images := make([]barkat.Image, len(defaultTimeframes))
+			for i, timeframe := range defaultTimeframes {
+				images[i] = barkat.Image{
+					Timeframe: timeframe,
+					FileName:  fmt.Sprintf("TEST.%s.rejected.oe__20240115_132138.png", timeframe),
+				}
+			}
+			return images
+		}
+
 		Context("Happy Path", func() {
 			Context("with minimal valid entry (required fields + min 4 images)", func() {
 				var envelopeResponse common.Envelope[barkat.Journal]
@@ -90,12 +104,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						Sequence: "MWD",
 						Type:     "REJECTED",
 						Status:   "FAIL",
-						Images: []barkat.Image{
-							{Timeframe: "DL"},
-							{Timeframe: "WK"},
-							{Timeframe: "MN"},
-							{Timeframe: "TMN"},
-						},
+						Images:   createTestImages(),
 					}
 					req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 					router.ServeHTTP(w, req)
@@ -128,6 +137,18 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					Expect(envelopeResponse.Data.CreatedAt).ToNot(BeZero())
 				})
 
+				It("should include default timeframe images in response", func() {
+					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
+					Expect(envelopeResponse.Data.Images).To(HaveLen(len(defaultTimeframes)))
+
+					recorded := make([]string, 0, len(envelopeResponse.Data.Images))
+					for _, img := range envelopeResponse.Data.Images {
+						Expect(img.ExternalID).To(HavePrefix("img_"))
+						recorded = append(recorded, img.Timeframe)
+					}
+					Expect(recorded).To(ConsistOf(defaultTimeframes))
+				})
+
 				It("should persist journal to database", func() {
 					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
 					dbJournal, err := journalMgr.GetJournal(testCtx, envelopeResponse.Data.ExternalID)
@@ -144,12 +165,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						Sequence: "YR",
 						Type:     "REJECTED",
 						Status:   "RUNNING",
-						Images: []barkat.Image{
-							{Timeframe: "DL"},
-							{Timeframe: "WK"},
-							{Timeframe: "MN"},
-							{Timeframe: "TMN"},
-						},
+						Images:   createTestImages(),
 						Tags: []barkat.Tag{
 							{Tag: "oe", Type: "REASON"},
 						},

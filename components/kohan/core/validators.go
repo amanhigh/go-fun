@@ -15,6 +15,8 @@ var (
 	tagRegex = regexp.MustCompile(`^[a-zA-Z0-9-]+$`)
 	// Override: letters only (e.g., "loc", "abc")
 	overrideRegex = regexp.MustCompile(`^[a-zA-Z]*$`)
+	// FileName: alphanumeric with dots, hyphens, underscores, valid image extensions
+	fileNameRegex = regexp.MustCompile(`^[a-zA-Z0-9._-]+\.(png|jpg|jpeg)$`)
 )
 
 // RegisterJournalValidators registers custom validators for journal fields.
@@ -24,6 +26,7 @@ func RegisterJournalValidators() {
 		_ = v.RegisterValidation("ticker", TickerValidator)
 		_ = v.RegisterValidation("tag", TagValidator)
 		_ = v.RegisterValidation("override", OverrideValidator)
+		_ = v.RegisterValidation("file_name", FileNameValidator)
 	}
 }
 
@@ -43,4 +46,10 @@ func TagValidator(fl validator.FieldLevel) bool {
 func OverrideValidator(fl validator.FieldLevel) bool {
 	field := fl.Field().String()
 	return field == "" || overrideRegex.MatchString(field)
+}
+
+// FileNameValidator validates file name format using pre-compiled regex
+func FileNameValidator(fl validator.FieldLevel) bool {
+	field := fl.Field().String()
+	return field == "" || fileNameRegex.MatchString(field)
 }

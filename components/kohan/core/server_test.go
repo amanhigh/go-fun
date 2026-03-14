@@ -90,7 +90,7 @@ var _ = Describe("KohanServer", func() {
 		})
 
 		It("should handle journal entry creation", func() {
-			body := `{"ticker":"RELIANCE","sequence":"MWD","type":"REJECTED","status":"FAIL","images":[{"timeframe":"DL"},{"timeframe":"WK"},{"timeframe":"MN"},{"timeframe":"TMN"}]}`
+			body := `{"ticker":"RELIANCE","sequence":"MWD","type":"REJECTED","status":"FAIL","images":[{"timeframe":"DL","file_name":"RELIANCE.mwd.test.png"},{"timeframe":"WK","file_name":"RELIANCE.mwd.test.png"},{"timeframe":"MN","file_name":"RELIANCE.mwd.test.png"},{"timeframe":"TMN","file_name":"RELIANCE.mwd.test.png"}]}`
 			req := httptest.NewRequest("POST", "/v1/journal-entries", bytes.NewBufferString(body))
 			req.Header.Set("Content-Type", "application/json")
 
