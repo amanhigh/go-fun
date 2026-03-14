@@ -5,6 +5,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
@@ -247,7 +248,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 
 					It("should accept maximum file name length (255 chars)", func() {
 						longFileName := ""
-						for i := 0; i < 251; i++ { // 251 + ".png" = 255
+						for range 251 { // 251 + ".png" = 255
 							longFileName += "a"
 						}
 						longFileName += ".png"
@@ -308,11 +309,11 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					})
 
 					It("should return 400 for file_name exceeding max length (PRD: max 255 chars)", func() {
-						longFileName := ""
-						for i := 0; i < 256; i++ { // 256 chars exceeds limit
-							longFileName += "a"
+						var longFileName strings.Builder
+						for range 256 { // 256 chars exceeds limit
+							longFileName.WriteString("a")
 						}
-						image := barkat.Image{Timeframe: "DL", FileName: longFileName}
+						image := barkat.Image{Timeframe: "DL", FileName: longFileName.String()}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "FileName", "max")

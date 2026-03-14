@@ -5,6 +5,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
@@ -322,11 +323,11 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 					})
 
 					It("should return 400 for content exceeding max length (PRD: max 2000 chars)", func() {
-						longContent := ""
-						for i := 0; i < 2001; i++ {
-							longContent += "X"
+						var longContent strings.Builder
+						for range 2001 {
+							longContent.WriteString("X")
 						}
-						note := barkat.Note{Status: "SET", Content: longContent, Format: "MARKDOWN"}
+						note := barkat.Note{Status: "SET", Content: longContent.String(), Format: "MARKDOWN"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Content", "max")
