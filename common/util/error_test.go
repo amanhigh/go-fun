@@ -3,11 +3,9 @@ package util_test
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/go-resty/resty/v2"
@@ -327,43 +325,24 @@ var _ = Describe("Error", func() {
 				})
 			})
 
-			Context("Time Format Tag", func() {
-				It("should handle time parsing error for created-before field", func() {
-					timeErr := &time.ParseError{
-						Layout: "2006-01-02",
-						Value:  "invalid-date",
+			Context("Datetime Validation", func() {
+				It("should handle datetime validation error", func() {
+					type TestStruct struct {
+						Date string `validate:"datetime=2006-01-02"`
 					}
-					// Wrap with field context to simulate Gin binding error
-					fieldErr := fmt.Errorf("created-before: %w", timeErr)
+					testData := TestStruct{Date: "invalid-date"}
+					validationErr := validate.Struct(testData)
 
-					result := util.ProcessValidationError(fieldErr)
+					result := util.ProcessValidationError(validationErr)
 
 					// First assert that it's a FieldHttpError
-					fieldErrResult, ok := result.(common.FieldHttpError)
+					fieldErr, ok := result.(common.FieldHttpError)
 					Expect(ok).To(BeTrue())
 
-					Expect(fieldErrResult.Code()).To(Equal(http.StatusBadRequest))
-					Expect(fieldErrResult.Field()).To(Equal("CreatedBefore"))
-					Expect(fieldErrResult.Error()).To(Equal("Must be YYYY-MM-DD format"))
-				})
-
-				It("should handle time parsing error for created-after field", func() {
-					timeErr := &time.ParseError{
-						Layout: "2006-01-02",
-						Value:  "15-02-2024",
-					}
-					// Wrap with field context
-					fieldErr := fmt.Errorf("created-after: %w", timeErr)
-
-					result := util.ProcessValidationError(fieldErr)
-
-					// First assert that it's a FieldHttpError
-					fieldErrResult, ok := result.(common.FieldHttpError)
-					Expect(ok).To(BeTrue())
-
-					Expect(fieldErrResult.Code()).To(Equal(http.StatusBadRequest))
-					Expect(fieldErrResult.Field()).To(Equal("CreatedAfter"))
-					Expect(fieldErrResult.Error()).To(Equal("Must be YYYY-MM-DD format"))
+					Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+					Expect(fieldErr.Field()).To(Equal("Date"))
+					Expect(fieldErr.Error()).To(ContainSubstring("Violates 'datetime"))
+					Expect(fieldErr.Error()).To(ContainSubstring("2006-01-02"))
 				})
 			})
 

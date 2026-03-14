@@ -27,6 +27,7 @@ func decodeEntry(w *httptest.ResponseRecorder, expectedStatus int) barkat.Journa
 	util.AssertSuccess(w, expectedStatus, &envelope)
 	return envelope.Data
 }
+
 // HACK: Ensure decode Functions are used everywhere in this test where response is expected
 func decodeEntryList(w *httptest.ResponseRecorder, expectedStatus int) barkat.JournalList {
 	var envelope common.Envelope[barkat.JournalList]
@@ -465,7 +466,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						It("should return 400 for invalid date format", func() {
 							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after=invalid-date", nil)
 							router.ServeHTTP(w, req)
-							util.AssertError(w, "CreatedAfter", "datetime")
+							util.AssertError(w, "CreatedAfter", "Violates 'datetime")
 						})
 
 						It("should ignore empty date and return all entries", func() {
@@ -479,7 +480,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						It("should return 400 for wrong format (DD-MM-YYYY)", func() {
 							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after=15-02-2024", nil)
 							router.ServeHTTP(w, req)
-							util.AssertError(w, "CreatedAfter", "datetime")
+							util.AssertError(w, "CreatedAfter", "Violates 'datetime")
 						})
 					})
 				})
@@ -517,7 +518,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						It("should return 400 for invalid date format", func() {
 							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before=not-a-date", nil)
 							router.ServeHTTP(w, req)
-							util.AssertError(w, "CreatedBefore", "datetime")
+							util.AssertError(w, "CreatedBefore", "Violates 'datetime")
 						})
 
 						It("should ignore empty date and return all entries", func() {
@@ -531,7 +532,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						It("should return 400 for wrong format (DD-MM-YYYY)", func() {
 							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before=15-02-2024", nil)
 							router.ServeHTTP(w, req)
-							util.AssertError(w, "CreatedBefore", "datetime")
+							util.AssertError(w, "CreatedBefore", "Violates 'datetime")
 						})
 					})
 				})
