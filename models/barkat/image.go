@@ -13,6 +13,7 @@ type Image struct {
 	ExternalID string    `gorm:"column:external_id;uniqueIndex;not null" json:"id"`
 	JournalID  uint64    `gorm:"column:journal_id;not null;index:idx_image_journal_id" json:"journal_id"`
 	Timeframe  string    `gorm:"column:timeframe;not null" json:"timeframe" binding:"required,oneof=DL WK MN TMN SMN YR"`
+	FileName   string    `gorm:"column:file_name;not null" json:"file_name" binding:"required,max=255"`
 	CreatedAt  time.Time `gorm:"column:created_at;not null" json:"created_at"`
 }
 
