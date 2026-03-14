@@ -51,8 +51,15 @@ func (h *TagHandlerImpl) HandleCreateTag(c *gin.Context) {
 
 func (h *TagHandlerImpl) HandleListTags(c *gin.Context) {
 	journalID := c.Param("id")
-	tagType := c.Query("type")
-	tagList, httpErr := h.tagMgr.ListTags(c.Request.Context(), journalID, tagType)
+	query := barkat.TagQuery{}
+
+	if bindErr := c.ShouldBindQuery(&query); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+
+	tagList, httpErr := h.tagMgr.ListTags(c.Request.Context(), journalID, query.Type)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return

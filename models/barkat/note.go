@@ -32,3 +32,8 @@ func (n *Note) BeforeCreate(_ *gorm.DB) error {
 type NoteList struct {
 	Notes []Note `json:"notes"`
 }
+
+// NoteQuery holds query parameters for listing/filtering notes.
+type NoteQuery struct {
+	Status string `form:"note_status" binding:"omitempty,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
+}

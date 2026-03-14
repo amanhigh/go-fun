@@ -52,8 +52,15 @@ func (h *NoteHandlerImpl) HandleCreateNote(c *gin.Context) {
 
 func (h *NoteHandlerImpl) HandleListNotes(c *gin.Context) {
 	journalID := c.Param("id")
-	status := c.Query("note_status")
-	noteList, httpErr := h.noteMgr.ListNotes(c.Request.Context(), journalID, status)
+	query := barkat.NoteQuery{}
+
+	if bindErr := c.ShouldBindQuery(&query); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+
+	noteList, httpErr := h.noteMgr.ListNotes(c.Request.Context(), journalID, query.Status)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return

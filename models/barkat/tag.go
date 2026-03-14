@@ -32,3 +32,8 @@ func (t *Tag) BeforeCreate(_ *gorm.DB) error {
 type TagList struct {
 	Tags []Tag `json:"tags"`
 }
+
+// TagQuery holds query parameters for listing/filtering tags.
+type TagQuery struct {
+	Type string `form:"type" binding:"omitempty,oneof=REASON MANAGEMENT"`
+}
