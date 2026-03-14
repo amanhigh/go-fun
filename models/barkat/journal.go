@@ -56,14 +56,14 @@ type JournalPath struct {
 // JournalQuery holds query parameters for listing/filtering journals.
 type JournalQuery struct {
 	common.Pagination
-	Ticker        string `form:"ticker" binding:"omitempty,min=1,max=10,ticker"`
-	Type          string `form:"type" binding:"omitempty,oneof=REJECTED RESULT SET"`
-	Status        string `form:"status" binding:"omitempty,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
-	Sequence      string `form:"sequence" binding:"omitempty,oneof=MWD YR"`
-	CreatedAfter  string `form:"created-after" binding:"omitempty,datetime=2006-01-02"`
-	CreatedBefore string `form:"created-before" binding:"omitempty,datetime=2006-01-02"`
-	SortBy        string `form:"sort-by" binding:"omitempty,oneof=created_at ticker sequence"`
-	SortOrder     string `form:"sort-order" binding:"omitempty,oneof=asc desc"`
+	Ticker        string    `form:"ticker" binding:"omitempty,min=1,max=10,ticker"`
+	Type          string    `form:"type" binding:"omitempty,oneof=REJECTED RESULT SET"`
+	Status        string    `form:"status" binding:"omitempty,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
+	Sequence      string    `form:"sequence" binding:"omitempty,oneof=MWD YR"`
+	CreatedAfter  time.Time `form:"created-after" time_format:"2006-01-02" binding:"omitempty"`
+	CreatedBefore time.Time `form:"created-before" time_format:"2006-01-02" binding:"omitempty"`
+	SortBy        string    `form:"sort-by" binding:"omitempty,oneof=created_at ticker sequence"`
+	SortOrder     string    `form:"sort-order" binding:"omitempty,oneof=asc desc"`
 }
 
 // NewJournalQuery creates a JournalQuery struct with default pagination values
