@@ -173,12 +173,12 @@ var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
 	Context("GormErrorMapper", func() {
 		It("should return nil for nil error", func() {
 			httpErr := util.GormErrorMapper(nil)
-			Expect(httpErr).To(BeNil())
+			Expect(httpErr).ToNot(HaveOccurred())
 		})
 
 		It("should return ErrNotFound for gorm.ErrRecordNotFound", func() {
 			httpErr := util.GormErrorMapper(gorm.ErrRecordNotFound)
-			Expect(httpErr).ToNot(BeNil())
+			Expect(httpErr).To(HaveOccurred())
 			Expect(httpErr.Code()).To(Equal(404))
 			Expect(httpErr.Error()).To(Equal("NotFound"))
 		})
@@ -186,7 +186,7 @@ var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
 		It("should return ErrEntityExists for SQLite constraint failed", func() {
 			sqliteErr := fmt.Errorf("constraint failed: UNIQUE constraint failed: test_table.test_column")
 			httpErr := util.GormErrorMapper(sqliteErr)
-			Expect(httpErr).ToNot(BeNil())
+			Expect(httpErr).To(HaveOccurred())
 			Expect(httpErr.Code()).To(Equal(409))
 			Expect(httpErr.Error()).To(Equal("EntityExists"))
 		})
@@ -194,7 +194,7 @@ var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
 		It("should return ErrEntityExists for MySQL UNIQUE constraint", func() {
 			mysqlErr := fmt.Errorf("Error 1062: Duplicate entry 'test' for key 'uq_test_column' - UNIQUE constraint failed")
 			httpErr := util.GormErrorMapper(mysqlErr)
-			Expect(httpErr).ToNot(BeNil())
+			Expect(httpErr).To(HaveOccurred())
 			Expect(httpErr.Code()).To(Equal(409))
 			Expect(httpErr.Error()).To(Equal("EntityExists"))
 		})
@@ -202,7 +202,7 @@ var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
 		It("should return ErrEntityExists for PostgreSQL unique constraint", func() {
 			postgresErr := fmt.Errorf("pq: duplicate key value violates unique constraint \"test_table_pkey\" - UNIQUE constraint failed")
 			httpErr := util.GormErrorMapper(postgresErr)
-			Expect(httpErr).ToNot(BeNil())
+			Expect(httpErr).To(HaveOccurred())
 			Expect(httpErr.Code()).To(Equal(409))
 			Expect(httpErr.Error()).To(Equal("EntityExists"))
 		})
@@ -210,7 +210,7 @@ var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
 		It("should return server error for unknown errors", func() {
 			unknownErr := fmt.Errorf("some random error")
 			httpErr := util.GormErrorMapper(unknownErr)
-			Expect(httpErr).ToNot(BeNil())
+			Expect(httpErr).To(HaveOccurred())
 			Expect(httpErr.Code()).To(Equal(500))
 			Expect(httpErr.Error()).To(Equal("some random error"))
 		})

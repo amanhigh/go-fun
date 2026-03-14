@@ -552,7 +552,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 				It("should actually delete the image from database", func() {
 					imageList, err := imgMgr.ListImages(testCtx, journal.ExternalID)
 					Expect(err).ToNot(HaveOccurred())
-					Expect(imageList.Images).To(HaveLen(0)) // 1 - 1 = 0
+					Expect(imageList.Images).To(BeEmpty()) // 1 - 1 = 0
 				})
 			})
 		})

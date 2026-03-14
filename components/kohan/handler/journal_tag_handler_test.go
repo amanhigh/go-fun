@@ -80,10 +80,10 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 			Type:     "REJECTED",
 			Status:   "FAIL",
 			Images: []barkat.Image{
-				{Timeframe: "DL"},
-				{Timeframe: "WK"},
-				{Timeframe: "MN"},
-				{Timeframe: "TMN"},
+				{Timeframe: "DL", FileName: "test-dl.png"},
+				{Timeframe: "WK", FileName: "test-wk.png"},
+				{Timeframe: "MN", FileName: "test-mn.png"},
+				{Timeframe: "TMN", FileName: "test-tmn.png"},
 			},
 		}
 		Expect(journalMgr.CreateJournal(testCtx, &journal)).To(Succeed())
