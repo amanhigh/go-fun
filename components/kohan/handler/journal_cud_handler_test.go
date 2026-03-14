@@ -962,4 +962,228 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			// No server error scenarios for DELETE currently
 		})
 	})
+
+	Describe("PATCH /v1/journal/{id} - Update Review Status", func() {
+		var createdJournal barkat.Journal
+
+		BeforeEach(func() {
+			journal := barkat.Journal{
+				Ticker:   "TCS",
+				Sequence: "MWD",
+				Type:     "REJECTED",
+				Status:   "FAIL",
+				Images:   standardImages,
+			}
+			Expect(journalMgr.CreateJournal(testCtx, &journal)).To(Succeed())
+			createdJournal = journal
+		})
+
+		Context("Happy Path", func() {
+			Context("mark as reviewed", func() {
+				BeforeEach(func() {
+					payload := barkat.JournalReviewUpdate{Reviewed: true}
+					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+					router.ServeHTTP(w, req)
+				})
+
+				It("should return 200 OK", func() {
+					Expect(w.Code).To(Equal(http.StatusOK))
+				})
+
+				It("should return success envelope", func() {
+					var envelope common.Envelope[barkat.UpdateJournalStatusResponse]
+					util.AssertSuccess(w, http.StatusOK, &envelope)
+					Expect(envelope.Data).ToNot(BeNil())
+				})
+
+				It("should return correct response fields", func() {
+					var envelope common.Envelope[barkat.UpdateJournalStatusResponse]
+					util.AssertSuccess(w, http.StatusOK, &envelope)
+
+					data := envelope.Data
+					Expect(data.ID).To(Equal(createdJournal.ExternalID))
+					Expect(data.ReviewedAt).ToNot(BeNil())
+				})
+
+				It("should actually update the journal in database", func() {
+					updatedJournal, err := journalMgr.GetJournal(testCtx, createdJournal.ExternalID)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(updatedJournal.ReviewedAt).ToNot(BeNil())
+				})
+			})
+
+			Context("mark as unreviewed", func() {
+				BeforeEach(func() {
+					// First mark as reviewed
+					payload := barkat.JournalReviewUpdate{Reviewed: true}
+					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+					router.ServeHTTP(w, req)
+
+					// Then mark as unreviewed
+					payload = barkat.JournalReviewUpdate{Reviewed: false}
+					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+					router.ServeHTTP(w, req)
+				})
+
+				It("should return 200 OK", func() {
+					Expect(w.Code).To(Equal(http.StatusOK))
+				})
+
+				It("should return reviewed_at as null", func() {
+					var envelope common.Envelope[barkat.UpdateJournalStatusResponse]
+					util.AssertSuccess(w, http.StatusOK, &envelope)
+
+					data := envelope.Data
+					Expect(data.ReviewedAt).To(BeNil())
+				})
+
+				It("should actually clear reviewed_at in database", func() {
+					updatedJournal, err := journalMgr.GetJournal(testCtx, createdJournal.ExternalID)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(updatedJournal.ReviewedAt).To(BeNil())
+				})
+			})
+
+			Context("idempotent operations", func() {
+				BeforeEach(func() {
+					// Mark as reviewed twice
+					payload := barkat.JournalReviewUpdate{Reviewed: true}
+					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+					router.ServeHTTP(w, req)
+
+					// Second time should be idempotent
+					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+					router.ServeHTTP(w, req)
+				})
+
+				It("should return 200 OK for idempotent operation", func() {
+					Expect(w.Code).To(Equal(http.StatusOK))
+				})
+
+				It("should maintain reviewed_at timestamp", func() {
+					var envelope common.Envelope[barkat.UpdateJournalStatusResponse]
+					util.AssertSuccess(w, http.StatusOK, &envelope)
+
+					data := envelope.Data
+					Expect(data.ReviewedAt).ToNot(BeNil())
+				})
+			})
+		})
+
+		Context("Field Validations", func() {
+			Context("reviewed field", func() {
+				Context("Allowed Values", func() {
+					It("should accept true boolean", func() {
+						payload := `{"reviewed": true}`
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+
+					It("should accept false boolean", func() {
+						payload := `{"reviewed": false}`
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+				})
+
+				Context("Bad Values", func() {
+					It("should return 400 for missing reviewed field", func() {
+						payload := `{}`
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "reviewed", "required")
+					})
+
+					It("should return 400 for null reviewed field", func() {
+						payload := `{"reviewed": null}`
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "reviewed", "required")
+					})
+
+					It("should return 400 for string instead of boolean", func() {
+						payload := map[string]string{"reviewed": "true"}
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "reviewed", "boolean")
+					})
+
+					It("should return 400 for number instead of boolean", func() {
+						payload := `{"reviewed": 1}`
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "reviewed", "boolean")
+					})
+
+					It("should return 400 for array instead of boolean", func() {
+						payload := `{"reviewed": [true]}`
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "reviewed", "boolean")
+					})
+				})
+			})
+
+			Context("Entry ID Field", func() {
+				Context("Bad Values", func() {
+					It("should return 404 for non-existent entry ID", func() {
+						payload := `{"reviewed": true}`
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/nonexistent-id", payload)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusNotFound))
+					})
+
+					It("should return 404 for invalid UUID format", func() {
+						payload := `{"reviewed": true}`
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/invalid-uuid-format", payload)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusNotFound))
+					})
+
+					It("should return 404 for valid UUID format but non-existent", func() {
+						payload := `{"reviewed": true}`
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/550e8400-e29b-41d4-a716-446655440000", payload)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusNotFound))
+					})
+				})
+			})
+		})
+
+		Context("Errors", func() {
+			Context("Malformed JSON", func() {
+				It("should return 400 for empty body", func() {
+					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, "")
+					router.ServeHTTP(w, req)
+					Expect(w.Code).To(Equal(http.StatusBadRequest))
+				})
+
+				It("should return 400 for invalid JSON syntax", func() {
+					payload := `{"reviewed": true` // Missing closing brace
+					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+					router.ServeHTTP(w, req)
+					Expect(w.Code).To(Equal(http.StatusBadRequest))
+				})
+
+				It("should return 400 for extra fields", func() {
+					payload := `{"reviewed": true, "extra": "field"}`
+					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+					router.ServeHTTP(w, req)
+					Expect(w.Code).To(Equal(http.StatusBadRequest))
+				})
+			})
+
+			Context("Content-Type Issues", func() {
+				It("should return 400 for wrong content type", func() {
+					payload := barkat.JournalReviewUpdate{Reviewed: true}
+					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+					req.Header.Set("Content-Type", "text/plain")
+					router.ServeHTTP(w, req)
+					Expect(w.Code).To(Equal(http.StatusBadRequest))
+				})
+			})
+		})
+	})
 })

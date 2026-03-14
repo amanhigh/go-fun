@@ -45,6 +45,7 @@ func SetupJournalEntryRoutes(journal *gin.RouterGroup, journalHandler JournalHan
 		journal.GET("", journalHandler.HandleListEntries)
 		journal.GET("/:id", journalHandler.HandleGetEntry)
 		journal.POST("", journalHandler.HandleCreateEntry)
+		journal.PATCH("/:id", journalHandler.HandleUpdateReviewStatus)
 		journal.DELETE("/:id", journalHandler.HandleDeleteEntry)
 	}
 }

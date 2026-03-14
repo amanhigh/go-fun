@@ -16,6 +16,7 @@ type JournalHandler interface {
 	HandleGetEntry(c *gin.Context)
 	HandleCreateEntry(c *gin.Context)
 	HandleDeleteEntry(c *gin.Context)
+	HandleUpdateReviewStatus(c *gin.Context)
 }
 
 type JournalHandlerImpl struct {
@@ -96,4 +97,33 @@ func (h *JournalHandlerImpl) HandleDeleteEntry(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusNoContent, nil)
+}
+
+func (h *JournalHandlerImpl) HandleUpdateReviewStatus(c *gin.Context) {
+	var path barkat.JournalPath
+	if bindErr := c.ShouldBindUri(&path); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+
+	var update barkat.JournalReviewUpdate
+	if bindErr := c.ShouldBindJSON(&update); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+
+	journal, httpErr := h.journalManager.UpdateReviewStatus(c.Request.Context(), path.ID, update)
+	if httpErr != nil {
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+
+	// Return minimal response as per PATCH best practices
+	response := barkat.UpdateJournalStatusResponse{
+		ID:         journal.ExternalID,
+		ReviewedAt: journal.ReviewedAt,
+	}
+	c.JSON(http.StatusOK, common.NewEnvelope(response))
 }

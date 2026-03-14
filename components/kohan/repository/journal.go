@@ -12,7 +12,7 @@ import (
 type JournalRepository interface {
 	util.BaseDbRepositoryInterface
 	// GetJournal retrieves a single journal by external ID with preloaded associations.
-	GetJournal(ctx context.Context, externalId string) (barkat.Journal, error)
+	GetJournal(ctx context.Context, journalExternalId string) (barkat.Journal, error)
 	// ListJournals returns a filtered, paginated list of journal summaries (no associations).
 	ListJournals(ctx context.Context, query barkat.JournalQuery) ([]barkat.Journal, int64, error)
 }
@@ -32,9 +32,9 @@ func NewJournalRepository(db *gorm.DB) *JournalRepositoryImpl {
 
 // ---- Journal ----
 
-func (r *JournalRepositoryImpl) GetJournal(ctx context.Context, externalId string) (barkat.Journal, error) {
+func (r *JournalRepositoryImpl) GetJournal(ctx context.Context, journalExternalId string) (barkat.Journal, error) {
 	var journal barkat.Journal
-	err := r.SafeTx(ctx).Preload("Images").Preload("Tags").Preload("Notes").First(&journal, "external_id = ?", externalId).Error
+	err := r.SafeTx(ctx).Preload("Images").Preload("Tags").Preload("Notes").First(&journal, "external_id = ?", journalExternalId).Error
 	return journal, err
 }
 
@@ -70,6 +70,13 @@ func (r *JournalRepositoryImpl) applyJournalFilters(tx *gorm.DB, query barkat.Jo
 	if query.CreatedBefore != "" {
 		// Use DATE() function to compare date strings with datetime fields
 		tx = tx.Where("DATE(created_at) <= ?", query.CreatedBefore)
+	}
+	if query.Reviewed != nil {
+		if *query.Reviewed {
+			tx = tx.Where("reviewed_at IS NOT NULL")
+		} else {
+			tx = tx.Where("reviewed_at IS NULL")
+		}
 	}
 	return tx
 }

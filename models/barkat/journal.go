@@ -33,6 +33,7 @@ type Journal struct {
 	Type       string     `gorm:"column:type;not null" json:"type" binding:"required,oneof=REJECTED RESULT SET"`
 	Status     string     `gorm:"column:status;not null" json:"status" binding:"required,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
 	CreatedAt  time.Time  `gorm:"column:created_at;not null;index:idx_journal_created_at" json:"created_at"`
+	ReviewedAt *time.Time `gorm:"column:reviewed_at" json:"reviewed_at,omitempty"`
 	DeletedAt  *time.Time `gorm:"column:deleted_at" json:"deleted_at,omitempty"`
 
 	// Associations
@@ -62,6 +63,7 @@ type JournalQuery struct {
 	Sequence      string `form:"sequence" binding:"omitempty,oneof=MWD YR"`
 	CreatedAfter  string `form:"created-after" binding:"omitempty,datetime=2006-01-02"`
 	CreatedBefore string `form:"created-before" binding:"omitempty,datetime=2006-01-02"`
+	Reviewed      *bool  `form:"reviewed" binding:"omitempty"`
 	SortBy        string `form:"sort-by" binding:"omitempty,oneof=created_at ticker sequence"`
 	SortOrder     string `form:"sort-order" binding:"omitempty,oneof=asc desc"`
 }
@@ -77,4 +79,16 @@ func NewJournalQuery() JournalQuery {
 type JournalList struct {
 	Journals []Journal                `json:"journals"`
 	Metadata common.PaginatedResponse `json:"metadata"`
+}
+
+// JournalReviewUpdate represents the request body for updating journal review status.
+type JournalReviewUpdate struct {
+	Reviewed bool `json:"reviewed" binding:"required"`
+}
+
+// UpdateJournalStatusResponse represents the response for PATCH review status updates.
+// This follows the PRD specification for minimal PATCH responses.
+type UpdateJournalStatusResponse struct {
+	ID         string     `json:"id"`
+	ReviewedAt *time.Time `json:"reviewed_at,omitempty"`
 }

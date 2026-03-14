@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS journals (
     type VARCHAR(8) NOT NULL CHECK (type IN ('REJECTED', 'RESULT', 'SET')),
     status VARCHAR(10) NOT NULL CHECK (status IN ('SET', 'RUNNING', 'DROPPED', 'TAKEN', 'REJECTED', 'SUCCESS', 'FAIL', 'MISSED', 'JUST_LOSS', 'BROKEN')),
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    reviewed_at DATETIME,
     deleted_at DATETIME
 );
 
@@ -27,7 +28,7 @@ CREATE TABLE IF NOT EXISTS images (
 
 -- Create indexes for images
 CREATE UNIQUE INDEX IF NOT EXISTS idx_image_external_id ON images (external_id);
-CREATE INDEX IF NOT EXISTS idx_image_journal_id ON images (journal_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_image_journal_timeframe ON images (journal_id, timeframe);
 
 -- Create tags table
 CREATE TABLE IF NOT EXISTS tags (
