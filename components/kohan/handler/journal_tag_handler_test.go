@@ -26,9 +26,9 @@ func decodeTagResponse(w *httptest.ResponseRecorder) barkat.Tag {
 }
 
 func decodeTagListResponse(w *httptest.ResponseRecorder) []barkat.Tag {
-	var envelope common.Envelope[map[string][]barkat.Tag]
+	var envelope common.Envelope[barkat.TagList]
 	util.AssertSuccess(w, http.StatusOK, &envelope)
-	return envelope.Data["tags"]
+	return envelope.Data.Tags
 }
 
 // TagHandler Integration Tests - Comprehensive Master Specification
@@ -143,9 +143,9 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 				})
 
 				It("should persist tag to database", func() {
-					tags, err := tagMgr.ListTags(testCtx, journal.ExternalID, "")
+					tagList, err := tagMgr.ListTags(testCtx, journal.ExternalID, "")
 					Expect(err).ToNot(HaveOccurred())
-					Expect(tags).To(HaveLen(1))
+					Expect(tagList.Tags).To(HaveLen(1))
 				})
 			})
 
@@ -584,9 +584,9 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 				})
 
 				It("should actually delete the tag from database", func() {
-					tags, err := tagMgr.ListTags(testCtx, journal.ExternalID, "")
+					tagList, err := tagMgr.ListTags(testCtx, journal.ExternalID, "")
 					Expect(err).ToNot(HaveOccurred())
-					Expect(tags).To(BeEmpty())
+					Expect(tagList.Tags).To(BeEmpty())
 				})
 			})
 		})

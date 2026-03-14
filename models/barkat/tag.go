@@ -27,3 +27,8 @@ func (t *Tag) BeforeCreate(_ *gorm.DB) error {
 	}
 	return nil
 }
+
+// TagList is the response for tags.
+type TagList struct {
+	Tags []Tag `json:"tags"`
+}

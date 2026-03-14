@@ -16,7 +16,7 @@ type NoteManager interface {
 	// CreateNote attaches a new note to an entry.
 	CreateNote(ctx context.Context, journalID string, note barkat.Note) (*barkat.Note, common.HttpError)
 	// ListNotes returns all notes for an entry, optionally filtered by status.
-	ListNotes(ctx context.Context, journalID string, status string) ([]barkat.Note, common.HttpError)
+	ListNotes(ctx context.Context, journalID string, status string) (barkat.NoteList, common.HttpError)
 	// DeleteNote removes a note by ID scoped to an entry.
 	DeleteNote(ctx context.Context, journalID string, noteID string) common.HttpError
 }
@@ -52,7 +52,7 @@ func (m *NoteManagerImpl) CreateNote(ctx context.Context, journalExternalId stri
 	return &note, nil
 }
 
-func (m *NoteManagerImpl) ListNotes(ctx context.Context, journalID, status string) ([]barkat.Note, common.HttpError) {
+func (m *NoteManagerImpl) ListNotes(ctx context.Context, journalID, status string) (barkat.NoteList, common.HttpError) {
 	var notes []barkat.Note
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Get journal entry to obtain internal ID
@@ -67,9 +67,9 @@ func (m *NoteManagerImpl) ListNotes(ctx context.Context, journalID, status strin
 		return repoErr
 	})
 	if err != nil {
-		return nil, err
+		return barkat.NoteList{}, err
 	}
-	return notes, nil
+	return barkat.NoteList{Notes: notes}, nil
 }
 
 func (m *NoteManagerImpl) DeleteNote(ctx context.Context, journalExternalId, noteExternalId string) common.HttpError {

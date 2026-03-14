@@ -27,3 +27,8 @@ func (n *Note) BeforeCreate(_ *gorm.DB) error {
 	}
 	return nil
 }
+
+// NoteList is the response for notes.
+type NoteList struct {
+	Notes []Note `json:"notes"`
+}

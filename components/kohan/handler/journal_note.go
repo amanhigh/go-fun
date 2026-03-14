@@ -53,12 +53,12 @@ func (h *NoteHandlerImpl) HandleCreateNote(c *gin.Context) {
 func (h *NoteHandlerImpl) HandleListNotes(c *gin.Context) {
 	journalID := c.Param("id")
 	status := c.Query("note_status")
-	notes, httpErr := h.noteMgr.ListNotes(c.Request.Context(), journalID, status)
+	noteList, httpErr := h.noteMgr.ListNotes(c.Request.Context(), journalID, status)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusOK, common.NewEnvelope(gin.H{"notes": notes}))
+	c.JSON(http.StatusOK, common.NewEnvelope(noteList))
 }
 
 func (h *NoteHandlerImpl) HandleDeleteNote(c *gin.Context) {

@@ -52,12 +52,12 @@ func (h *TagHandlerImpl) HandleCreateTag(c *gin.Context) {
 func (h *TagHandlerImpl) HandleListTags(c *gin.Context) {
 	journalID := c.Param("id")
 	tagType := c.Query("type")
-	tags, httpErr := h.tagMgr.ListTags(c.Request.Context(), journalID, tagType)
+	tagList, httpErr := h.tagMgr.ListTags(c.Request.Context(), journalID, tagType)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusOK, common.NewEnvelope(gin.H{"tags": tags}))
+	c.JSON(http.StatusOK, common.NewEnvelope(tagList))
 }
 
 func (h *TagHandlerImpl) HandleDeleteTag(c *gin.Context) {

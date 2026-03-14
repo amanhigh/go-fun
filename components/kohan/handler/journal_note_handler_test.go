@@ -27,9 +27,9 @@ func decodeNoteResponse(w *httptest.ResponseRecorder) barkat.Note {
 }
 
 func decodeNoteListResponse(w *httptest.ResponseRecorder) []barkat.Note {
-	var envelope common.Envelope[map[string][]barkat.Note]
+	var envelope common.Envelope[barkat.NoteList]
 	util.AssertSuccess(w, http.StatusOK, &envelope)
-	return envelope.Data["notes"]
+	return envelope.Data.Notes
 }
 
 // NoteHandler Integration Tests - Comprehensive Master Specification
@@ -150,9 +150,9 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 				})
 
 				It("should persist note to database", func() {
-					notes, err := noteMgr.ListNotes(testCtx, journal.ExternalID, "")
+					noteList, err := noteMgr.ListNotes(testCtx, journal.ExternalID, "")
 					Expect(err).ToNot(HaveOccurred())
-					Expect(notes).To(HaveLen(1))
+					Expect(noteList.Notes).To(HaveLen(1))
 				})
 			})
 
@@ -546,9 +546,9 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 				})
 
 				It("should actually delete the note from database", func() {
-					notes, err := noteMgr.ListNotes(testCtx, journal.ExternalID, "")
+					noteList, err := noteMgr.ListNotes(testCtx, journal.ExternalID, "")
 					Expect(err).ToNot(HaveOccurred())
-					Expect(notes).To(BeEmpty())
+					Expect(noteList.Notes).To(BeEmpty())
 				})
 			})
 		})

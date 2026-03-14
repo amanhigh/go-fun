@@ -16,7 +16,7 @@ type TagManager interface {
 	// CreateTag attaches a new tag to an entry.
 	CreateTag(ctx context.Context, journalID string, tag barkat.Tag) (*barkat.Tag, common.HttpError)
 	// ListTags returns all tags for an entry, optionally filtered by type.
-	ListTags(ctx context.Context, journalID string, tagType string) ([]barkat.Tag, common.HttpError)
+	ListTags(ctx context.Context, journalID string, tagType string) (barkat.TagList, common.HttpError)
 	// DeleteTag removes a tag by ID scoped to an entry.
 	DeleteTag(ctx context.Context, journalID string, tagID string) common.HttpError
 }
@@ -52,7 +52,7 @@ func (m *TagManagerImpl) CreateTag(ctx context.Context, journalExternalId string
 	return &tag, nil
 }
 
-func (m *TagManagerImpl) ListTags(ctx context.Context, journalID, tagType string) ([]barkat.Tag, common.HttpError) {
+func (m *TagManagerImpl) ListTags(ctx context.Context, journalID, tagType string) (barkat.TagList, common.HttpError) {
 	var tags []barkat.Tag
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Get journal entry to obtain internal ID
@@ -67,9 +67,9 @@ func (m *TagManagerImpl) ListTags(ctx context.Context, journalID, tagType string
 		return repoErr
 	})
 	if err != nil {
-		return nil, err
+		return barkat.TagList{}, err
 	}
-	return tags, nil
+	return barkat.TagList{Tags: tags}, nil
 }
 
 func (m *TagManagerImpl) DeleteTag(ctx context.Context, journalExternalId, tagExternalId string) common.HttpError {
