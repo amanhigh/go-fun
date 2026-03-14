@@ -181,24 +181,22 @@ func (_c *ImageManager_DeleteImage_Call) RunAndReturn(run func(ctx context.Conte
 }
 
 // ListImages provides a mock function for the type ImageManager
-func (_mock *ImageManager) ListImages(ctx context.Context, journalID string) ([]barkat.Image, common.HttpError) {
+func (_mock *ImageManager) ListImages(ctx context.Context, journalID string) (barkat.ImageList, common.HttpError) {
 	ret := _mock.Called(ctx, journalID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListImages")
 	}
 
-	var r0 []barkat.Image
+	var r0 barkat.ImageList
 	var r1 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) ([]barkat.Image, common.HttpError)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (barkat.ImageList, common.HttpError)); ok {
 		return returnFunc(ctx, journalID)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) []barkat.Image); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) barkat.ImageList); ok {
 		r0 = returnFunc(ctx, journalID)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]barkat.Image)
-		}
+		r0 = ret.Get(0).(barkat.ImageList)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string) common.HttpError); ok {
 		r1 = returnFunc(ctx, journalID)
@@ -240,12 +238,12 @@ func (_c *ImageManager_ListImages_Call) Run(run func(ctx context.Context, journa
 	return _c
 }
 
-func (_c *ImageManager_ListImages_Call) Return(images []barkat.Image, httpError common.HttpError) *ImageManager_ListImages_Call {
-	_c.Call.Return(images, httpError)
+func (_c *ImageManager_ListImages_Call) Return(imageList barkat.ImageList, httpError common.HttpError) *ImageManager_ListImages_Call {
+	_c.Call.Return(imageList, httpError)
 	return _c
 }
 
-func (_c *ImageManager_ListImages_Call) RunAndReturn(run func(ctx context.Context, journalID string) ([]barkat.Image, common.HttpError)) *ImageManager_ListImages_Call {
+func (_c *ImageManager_ListImages_Call) RunAndReturn(run func(ctx context.Context, journalID string) (barkat.ImageList, common.HttpError)) *ImageManager_ListImages_Call {
 	_c.Call.Return(run)
 	return _c
 }

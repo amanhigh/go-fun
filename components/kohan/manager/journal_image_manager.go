@@ -15,7 +15,7 @@ type ImageManager interface {
 	// CreateImage attaches a new image to a journal.
 	CreateImage(ctx context.Context, journalID string, image barkat.Image) (*barkat.Image, common.HttpError)
 	// ListImages returns all images for a journal.
-	ListImages(ctx context.Context, journalID string) ([]barkat.Image, common.HttpError)
+	ListImages(ctx context.Context, journalID string) (barkat.ImageList, common.HttpError)
 	// DeleteImage removes an image by ID scoped to a journal.
 	DeleteImage(ctx context.Context, journalID string, imageID string) common.HttpError
 }
@@ -51,7 +51,7 @@ func (m *ImageManagerImpl) CreateImage(ctx context.Context, journalExternalId st
 	return &image, nil
 }
 
-func (m *ImageManagerImpl) ListImages(ctx context.Context, journalExternalId string) ([]barkat.Image, common.HttpError) {
+func (m *ImageManagerImpl) ListImages(ctx context.Context, journalExternalId string) (barkat.ImageList, common.HttpError) {
 	var images []barkat.Image
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Get journal entry to obtain internal ID
@@ -66,9 +66,11 @@ func (m *ImageManagerImpl) ListImages(ctx context.Context, journalExternalId str
 		return repoErr
 	})
 	if err != nil {
-		return nil, err
+		return barkat.ImageList{}, err
 	}
-	return images, nil
+	return barkat.ImageList{
+		Images: images,
+	}, nil
 }
 
 func (m *ImageManagerImpl) DeleteImage(ctx context.Context, journalExternalId, imageExternalId string) common.HttpError {

@@ -72,7 +72,7 @@ func (m *JournalManagerImpl) ListJournals(ctx context.Context, query barkat.Jour
 		return barkat.JournalList{}, common.NewServerError(fmt.Errorf("failed to list journals: %w", err))
 	}
 	return barkat.JournalList{
-		Records: journals,
+		Journals: journals,
 		Metadata: common.PaginatedResponse{
 			Total:  total,
 			Offset: query.Offset,

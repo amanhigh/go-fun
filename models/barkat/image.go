@@ -26,3 +26,9 @@ func (i *Image) BeforeCreate(_ *gorm.DB) error {
 	}
 	return nil
 }
+
+// ImageList is the response for images.
+type ImageList struct {
+	Images   []Image                  `json:"images"`
+	Metadata common.PaginatedResponse `json:"metadata"`
+}
