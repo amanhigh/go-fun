@@ -5,7 +5,6 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
@@ -22,12 +21,13 @@ import (
 	"gorm.io/gorm"
 )
 
+// HACK: Rename to decodeJournal and decodeJournalList
 func decodeEntry(w *httptest.ResponseRecorder, expectedStatus int) barkat.Journal {
 	var envelope common.Envelope[barkat.Journal]
 	util.AssertSuccess(w, expectedStatus, &envelope)
 	return envelope.Data
 }
-
+// HACK: Ensure decode Functions are used everywhere in this test where response is expected
 func decodeEntryList(w *httptest.ResponseRecorder, expectedStatus int) barkat.JournalList {
 	var envelope common.Envelope[barkat.JournalList]
 	util.AssertSuccess(w, expectedStatus, &envelope)
@@ -430,14 +430,13 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				})
 			})
 
-			// FIXME: Date filtering needs code fix - SQLite datetime format mismatch with RFC3339
-			PContext("Date Fields", func() {
+			Context("Date Fields", func() {
 				Context("Created-After Field", func() {
 					Context("Allowed Values", func() {
-						It("should accept valid ISO 8601 datetime and filter entries", func() {
-							// Get current time and format as ISO 8601
-							afterTime := time.Now().Add(-1 * time.Hour).Format(time.RFC3339)
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after="+url.QueryEscape(afterTime), nil)
+						It("should accept valid YYYY-MM-DD date and filter entries", func() {
+							// Use yesterday's date to ensure all entries are captured
+							afterDate := time.Now().Add(-24 * time.Hour).Format("2006-01-02")
+							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after="+afterDate, nil)
 							router.ServeHTTP(w, req)
 							response := decodeEntryList(w, http.StatusOK)
 							// All entries created in this test should be returned
@@ -445,17 +444,17 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						})
 
 						It("should return empty list for future date", func() {
-							futureTime := time.Now().Add(24 * time.Hour).Format(time.RFC3339)
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after="+url.QueryEscape(futureTime), nil)
+							futureDate := time.Now().Add(24 * time.Hour).Format("2006-01-02")
+							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after="+futureDate, nil)
 							router.ServeHTTP(w, req)
 							response := decodeEntryList(w, http.StatusOK)
 							Expect(response.Records).To(BeEmpty())
 						})
 
 						It("should work with created-before combined filter", func() {
-							afterTime := time.Now().Add(-1 * time.Hour).Format(time.RFC3339)
-							beforeTime := time.Now().Add(1 * time.Hour).Format(time.RFC3339)
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after="+url.QueryEscape(afterTime)+"&created-before="+url.QueryEscape(beforeTime), nil)
+							afterDate := time.Now().Add(-24 * time.Hour).Format("2006-01-02")
+							beforeDate := time.Now().Add(24 * time.Hour).Format("2006-01-02")
+							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after="+afterDate+"&created-before="+beforeDate, nil)
 							router.ServeHTTP(w, req)
 							response := decodeEntryList(w, http.StatusOK)
 							Expect(response.Records).To(HaveLen(5))
@@ -469,14 +468,16 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 							util.AssertError(w, "CreatedAfter", "datetime")
 						})
 
-						It("should return 400 for empty date", func() {
+						It("should ignore empty date and return all entries", func() {
 							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after=", nil)
 							router.ServeHTTP(w, req)
-							util.AssertError(w, "CreatedAfter", "datetime")
+							response := decodeEntryList(w, http.StatusOK)
+							// Empty date is ignored, all entries returned
+							Expect(response.Records).To(HaveLen(5))
 						})
 
-						It("should return 400 for non-ISO format", func() {
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after=2024-02-15", nil)
+						It("should return 400 for wrong format (DD-MM-YYYY)", func() {
+							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after=15-02-2024", nil)
 							router.ServeHTTP(w, req)
 							util.AssertError(w, "CreatedAfter", "datetime")
 						})
@@ -485,28 +486,27 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 				Context("Created-Before Field", func() {
 					Context("Allowed Values", func() {
-						It("should accept valid ISO 8601 datetime and filter entries", func() {
-							beforeTime := time.Now().Add(1 * time.Hour).Format(time.RFC3339)
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before="+url.QueryEscape(beforeTime), nil)
+						It("should accept valid YYYY-MM-DD date and filter entries", func() {
+							beforeDate := time.Now().Add(24 * time.Hour).Format("2006-01-02")
+							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before="+beforeDate, nil)
 							router.ServeHTTP(w, req)
-							var response barkat.JournalList
-							util.AssertSuccess(w, http.StatusOK, &response)
+							response := decodeEntryList(w, http.StatusOK)
 							// All entries created in this test should be returned
 							Expect(response.Records).To(HaveLen(5))
 						})
 
 						It("should return empty list for past date", func() {
-							pastTime := time.Now().Add(-24 * time.Hour).Format(time.RFC3339)
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before="+url.QueryEscape(pastTime), nil)
+							pastDate := time.Now().Add(-48 * time.Hour).Format("2006-01-02")
+							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before="+pastDate, nil)
 							router.ServeHTTP(w, req)
 							response := decodeEntryList(w, http.StatusOK)
 							Expect(response.Records).To(BeEmpty())
 						})
 
 						It("should work with created-after combined filter", func() {
-							afterTime := time.Now().Add(-1 * time.Hour).Format(time.RFC3339)
-							beforeTime := time.Now().Add(1 * time.Hour).Format(time.RFC3339)
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after="+url.QueryEscape(afterTime)+"&created-before="+url.QueryEscape(beforeTime), nil)
+							afterDate := time.Now().Add(-24 * time.Hour).Format("2006-01-02")
+							beforeDate := time.Now().Add(24 * time.Hour).Format("2006-01-02")
+							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after="+afterDate+"&created-before="+beforeDate, nil)
 							router.ServeHTTP(w, req)
 							response := decodeEntryList(w, http.StatusOK)
 							Expect(response.Records).To(HaveLen(5))
@@ -520,13 +520,15 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 							util.AssertError(w, "CreatedBefore", "datetime")
 						})
 
-						It("should return 400 for empty date", func() {
+						It("should ignore empty date and return all entries", func() {
 							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before=", nil)
 							router.ServeHTTP(w, req)
-							util.AssertError(w, "CreatedBefore", "datetime")
+							response := decodeEntryList(w, http.StatusOK)
+							// Empty date is ignored, all entries returned
+							Expect(response.Records).To(HaveLen(5))
 						})
 
-						It("should return 400 for non-ISO format", func() {
+						It("should return 400 for wrong format (DD-MM-YYYY)", func() {
 							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before=15-02-2024", nil)
 							router.ServeHTTP(w, req)
 							util.AssertError(w, "CreatedBefore", "datetime")

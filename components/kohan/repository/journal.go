@@ -63,10 +63,10 @@ func (r *JournalRepositoryImpl) applyJournalFilters(tx *gorm.DB, query barkat.Jo
 	if query.Sequence != "" {
 		tx = tx.Where("sequence = ?", query.Sequence)
 	}
-	if query.CreatedAfter != "" {
+	if !query.CreatedAfter.IsZero() {
 		tx = tx.Where("created_at >= ?", query.CreatedAfter)
 	}
-	if query.CreatedBefore != "" {
+	if !query.CreatedBefore.IsZero() {
 		tx = tx.Where("created_at <= ?", query.CreatedBefore)
 	}
 	return tx
