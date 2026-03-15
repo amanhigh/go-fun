@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
@@ -106,7 +107,13 @@ func (m *JournalManagerImpl) UpdateReviewStatus(ctx context.Context, journalExte
 		}
 
 		// Update reviewed_at based on the update request
-		journal.ReviewedAt = update.ReviewedAt
+		if update.ReviewedAt != nil {
+			// Convert civil.Date to time.Time for GORM using the In() function
+			reviewedTime := update.ReviewedAt.In(time.UTC)
+			journal.ReviewedAt = &reviewedTime
+		} else {
+			journal.ReviewedAt = nil
+		}
 
 		// Save the updated journal
 		if httpErr := m.repo.Update(c, &journal); httpErr != nil {

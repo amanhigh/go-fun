@@ -1,4 +1,3 @@
-//nolint:dupl
 package handler_test
 
 import (
@@ -120,21 +119,15 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 		})
 
 		Context("Field Validations", func() {
-			Context("Entry ID Field", func() {
+			Context("Journal ID Field", func() {
 				Context("Bad Values", func() {
-					It("should return 404 for non-existent entry ID", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/nonexistent-id", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
-					})
-
 					It("should return 404 for malformed UUID", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/invalid-uuid-format", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
 
-					It("should return 404 for valid ID format but non-existent", func() {
+					It("should return 404 for valid journal ID format but non-existent", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/jrn_12345678", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))

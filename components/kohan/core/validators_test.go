@@ -179,27 +179,42 @@ var _ = Describe("Validators", func() {
 
 	Describe("not_future validator", func() {
 		Context("future date business rule", func() {
+			type TestStruct struct {
+				ReviewedAt *civil.Date `validate:"not_future"`
+			}
+
 			It("should accept past dates", func() {
 				pastDate1 := civil.Date{Year: 2024, Month: 1, Day: 16}
 				pastDate2 := civil.Date{Year: 2023, Month: 12, Day: 31}
 				pastDate3 := civil.Date{Year: 2020, Month: 1, Day: 1}
-				Expect(v.Var(pastDate1, "not_future")).To(Succeed())
-				Expect(v.Var(pastDate2, "not_future")).To(Succeed())
-				Expect(v.Var(pastDate3, "not_future")).To(Succeed())
+
+				test1 := TestStruct{ReviewedAt: &pastDate1}
+				test2 := TestStruct{ReviewedAt: &pastDate2}
+				test3 := TestStruct{ReviewedAt: &pastDate3}
+
+				Expect(v.Struct(test1)).To(Succeed())
+				Expect(v.Struct(test2)).To(Succeed())
+				Expect(v.Struct(test3)).To(Succeed())
 			})
 
 			It("should accept today's date", func() {
 				today := civil.DateOf(time.Now())
-				Expect(v.Var(today, "not_future")).To(Succeed())
+				test := TestStruct{ReviewedAt: &today}
+				Expect(v.Struct(test)).To(Succeed())
 			})
 
 			It("should reject future dates", func() {
 				futureDate1 := civil.Date{Year: 2099, Month: 12, Day: 31}
 				futureDate2 := civil.Date{Year: 2100, Month: 1, Day: 1}
 				futureDate3 := civil.Date{Year: 2030, Month: 7, Day: 15}
-				Expect(v.Var(futureDate1, "not_future")).ToNot(Succeed())
-				Expect(v.Var(futureDate2, "not_future")).ToNot(Succeed())
-				Expect(v.Var(futureDate3, "not_future")).ToNot(Succeed())
+
+				test1 := TestStruct{ReviewedAt: &futureDate1}
+				test2 := TestStruct{ReviewedAt: &futureDate2}
+				test3 := TestStruct{ReviewedAt: &futureDate3}
+
+				Expect(v.Struct(test1)).ToNot(Succeed())
+				Expect(v.Struct(test2)).ToNot(Succeed())
+				Expect(v.Struct(test3)).ToNot(Succeed())
 			})
 		})
 	})

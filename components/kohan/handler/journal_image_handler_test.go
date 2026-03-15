@@ -354,13 +354,6 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 
 			Context("Journal ID Path Parameter", func() {
 				Context("Bad Values", func() {
-					It("should return 404 for non-existent journal ID", func() {
-						image := barkat.Image{Timeframe: "WK", FileName: "RELIANCE.mwd.test.png"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/nonexistent-id/images", image)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
-					})
-
 					It("should return 404 for malformed journal ID", func() {
 						image := barkat.Image{Timeframe: "MN", FileName: "RELIANCE.mwd.test.png"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/invalid-uuid-format/images", image)
@@ -496,12 +489,6 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 		Context("Field Validations", func() {
 			Context("Journal ID Path Parameter", func() {
 				Context("Bad Values", func() {
-					It("should return 404 for non-existent journal ID", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/nonexistent-id/images", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
-					})
-
 					It("should return 404 for malformed journal ID", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/invalid-uuid-format/images", nil)
 						router.ServeHTTP(w, req)
@@ -559,14 +546,14 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 		Context("Field Validations", func() {
 			Context("Journal ID Path Parameter", func() {
 				Context("Bad Values", func() {
-					It("should return 404 for non-existent journal ID", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/nonexistent-id/images/"+imageToDelete.ExternalID, nil)
+					It("should return 404 for malformed journal ID", func() {
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/invalid-uuid-format/images/"+imageToDelete.ExternalID, nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
 
-					It("should return 404 for malformed journal ID", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/invalid-uuid-format/images/"+imageToDelete.ExternalID, nil)
+					It("should return 404 for valid ID format but non-existent", func() {
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/jrn_12345678/images/"+imageToDelete.ExternalID, nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
