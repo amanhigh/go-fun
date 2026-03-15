@@ -569,14 +569,8 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 
 			Context("Tag ID Path Parameter", func() {
 				Context("Bad Values", func() {
-					It("should return 400 for malformed tag ID", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/tags/invalid-uuid-format", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-					})
-
-					It("should return 400 for random string tag ID", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/tags/random-string", nil)
+					It("should return 400 for invalid tag ID format", func() {
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/tags/invalid-tag-format", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})

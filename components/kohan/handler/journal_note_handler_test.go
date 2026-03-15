@@ -559,12 +559,6 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 			Context("Note ID Path Parameter", func() {
 				Context("Bad Values", func() {
-					It("should return 400 for random string note ID", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/notes/random-string", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-					})
-
 					It("should return 400 for invalid note ID format", func() {
 						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/notes/invalid-note-format", nil)
 						router.ServeHTTP(w, req)

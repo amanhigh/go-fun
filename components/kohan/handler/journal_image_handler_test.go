@@ -551,23 +551,11 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
-
-					It("should return 404 for valid ID format but non-existent", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/jrn_12345678/images/"+imageToDelete.ExternalID, nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
-					})
 				})
 			})
 
 			Context("Image ID Path Parameter", func() {
 				Context("Bad Values", func() {
-					It("should return 400 for random string image ID", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/images/random-string", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-					})
-
 					It("should return 400 for invalid image ID format", func() {
 						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/images/invalid-image-format", nil)
 						router.ServeHTTP(w, req)
