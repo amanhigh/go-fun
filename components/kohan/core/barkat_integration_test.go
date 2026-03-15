@@ -65,7 +65,7 @@ var _ = Describe("Barkat E2E Test", func() {
 				Tags:     []barkat.Tag{{Tag: "oe", Type: "REASON"}},
 				Notes:    []barkat.Note{{Status: "SET", Content: "Initial setup note", Format: "MARKDOWN"}},
 			}
-			resp, err := client.R().SetBody(entry).Post("/v1/journal-entries")
+			resp, err := client.R().SetBody(entry).Post(barkat.JournalBase)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
 			createdEntry = decodeJournalResponse(resp)
@@ -86,7 +86,7 @@ var _ = Describe("Barkat E2E Test", func() {
 		})
 
 		It("should retrieve entry with associations", func() {
-			resp, err := client.R().Get("/v1/journal-entries/" + createdEntry.ExternalID)
+			resp, err := client.R().Get(barkat.JournalBase + "/" + createdEntry.ExternalID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 
@@ -98,7 +98,7 @@ var _ = Describe("Barkat E2E Test", func() {
 		})
 
 		It("should list entries with pagination", func() {
-			resp, err := client.R().Get("/v1/journal-entries?limit=10")
+			resp, err := client.R().Get(barkat.JournalBase + "?limit=10")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 
@@ -108,12 +108,12 @@ var _ = Describe("Barkat E2E Test", func() {
 		})
 
 		It("should delete entry and cascade to associations", func() {
-			resp, err := client.R().Delete("/v1/journal-entries/" + createdEntry.ExternalID)
+			resp, err := client.R().Delete(barkat.JournalBase + "/" + createdEntry.ExternalID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusNoContent))
 
 			// Verify entry is deleted
-			resp, err = client.R().Get("/v1/journal-entries/" + createdEntry.ExternalID)
+			resp, err = client.R().Get(barkat.JournalBase + "/" + createdEntry.ExternalID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusNotFound))
 		})
@@ -132,7 +132,7 @@ var _ = Describe("Barkat E2E Test", func() {
 				Status:   "RUNNING",
 				Images:   standardImages,
 			}
-			resp, err := client.R().SetBody(entry).Post("/v1/journal-entries")
+			resp, err := client.R().SetBody(entry).Post(barkat.JournalBase)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
 			createdEntry = decodeJournalResponse(resp)
@@ -141,7 +141,7 @@ var _ = Describe("Barkat E2E Test", func() {
 
 		It("should add additional timeframe image", func() {
 			newImage := barkat.Image{Timeframe: "WK", FileName: "weekly.png"}
-			resp, err := client.R().SetBody(newImage).Post("/v1/journal-entries/" + createdEntry.ExternalID + "/images")
+			resp, err := client.R().SetBody(newImage).Post(barkat.JournalBase + "/" + createdEntry.ExternalID + "/images")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
 
@@ -153,7 +153,7 @@ var _ = Describe("Barkat E2E Test", func() {
 		})
 
 		It("should list all images for journal", func() {
-			resp, err := client.R().Get("/v1/journal-entries/" + createdEntry.ExternalID + "/images")
+			resp, err := client.R().Get(barkat.JournalBase + "/" + createdEntry.ExternalID + "/images")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 
@@ -173,12 +173,12 @@ var _ = Describe("Barkat E2E Test", func() {
 		})
 
 		It("should delete individual image", func() {
-			resp, err := client.R().Delete("/v1/journal-entries/" + createdEntry.ExternalID + "/images/" + createdImage.ExternalID)
+			resp, err := client.R().Delete(barkat.JournalBase + "/" + createdEntry.ExternalID + "/images/" + createdImage.ExternalID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusNoContent))
 
 			// Verify image is deleted (should have 3 remaining)
-			resp, err = client.R().Get("/v1/journal-entries/" + createdEntry.ExternalID + "/images")
+			resp, err = client.R().Get(barkat.JournalBase + "/" + createdEntry.ExternalID + "/images")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 
@@ -201,7 +201,7 @@ var _ = Describe("Barkat E2E Test", func() {
 				Status:   "SUCCESS",
 				Images:   standardImages,
 			}
-			resp, err := client.R().SetBody(entry).Post("/v1/journal-entries")
+			resp, err := client.R().SetBody(entry).Post(barkat.JournalBase)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
 			createdEntry = decodeJournalResponse(resp)
@@ -212,7 +212,7 @@ var _ = Describe("Barkat E2E Test", func() {
 				Content: "Trade execution plan: Long at support with 2:1 RR",
 				Format:  "MARKDOWN",
 			}
-			resp, err = client.R().SetBody(note).Post("/v1/journal-entries/" + createdEntry.ExternalID + "/notes")
+			resp, err = client.R().SetBody(note).Post(barkat.JournalBase + "/" + createdEntry.ExternalID + "/notes")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
 
@@ -232,7 +232,7 @@ var _ = Describe("Barkat E2E Test", func() {
 		})
 
 		It("should list all notes for journal", func() {
-			resp, err := client.R().Get("/v1/journal-entries/" + createdEntry.ExternalID + "/notes")
+			resp, err := client.R().Get(barkat.JournalBase + "/" + createdEntry.ExternalID + "/notes")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 
@@ -255,12 +255,12 @@ var _ = Describe("Barkat E2E Test", func() {
 
 		It("should delete individual note", func() {
 			// Delete the note created in BeforeEach
-			resp, err := client.R().Delete("/v1/journal-entries/" + createdEntry.ExternalID + "/notes/" + createdNote.ExternalID)
+			resp, err := client.R().Delete(barkat.JournalBase + "/" + createdEntry.ExternalID + "/notes/" + createdNote.ExternalID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusNoContent))
 
 			// Verify note is deleted
-			resp, err = client.R().Get("/v1/journal-entries/" + createdEntry.ExternalID + "/notes")
+			resp, err = client.R().Get(barkat.JournalBase + "/" + createdEntry.ExternalID + "/notes")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 
@@ -288,7 +288,7 @@ var _ = Describe("Barkat E2E Test", func() {
 				Status:   "FAIL",
 				Images:   standardImages,
 			}
-			resp, err := client.R().SetBody(entry).Post("/v1/journal-entries")
+			resp, err := client.R().SetBody(entry).Post(barkat.JournalBase)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
 			createdEntry = decodeJournalResponse(resp)
@@ -298,7 +298,7 @@ var _ = Describe("Barkat E2E Test", func() {
 				Tag:  "oe",
 				Type: "REASON",
 			}
-			resp, err = client.R().SetBody(tag).Post("/v1/journal-entries/" + createdEntry.ExternalID + "/tags")
+			resp, err = client.R().SetBody(tag).Post(barkat.JournalBase + "/" + createdEntry.ExternalID + "/tags")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
 
@@ -317,9 +317,8 @@ var _ = Describe("Barkat E2E Test", func() {
 			Expect(createdTag.Type).To(Equal("REASON"))
 		})
 
-
 		It("should list all tags for journal", func() {
-			resp, err := client.R().Get("/v1/journal-entries/" + createdEntry.ExternalID + "/tags")
+			resp, err := client.R().Get(barkat.JournalBase + "/" + createdEntry.ExternalID + "/tags")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 
@@ -343,12 +342,12 @@ var _ = Describe("Barkat E2E Test", func() {
 
 		It("should delete individual tag", func() {
 			// Delete the tag created in BeforeEach
-			resp, err := client.R().Delete("/v1/journal-entries/" + createdEntry.ExternalID + "/tags/" + createdTag.ExternalID)
+			resp, err := client.R().Delete(barkat.JournalBase + "/" + createdEntry.ExternalID + "/tags/" + createdTag.ExternalID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusNoContent))
 
 			// Verify tag is deleted
-			resp, err = client.R().Get("/v1/journal-entries/" + createdEntry.ExternalID + "/tags")
+			resp, err = client.R().Get(barkat.JournalBase + "/" + createdEntry.ExternalID + "/tags")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 
@@ -375,7 +374,7 @@ var _ = Describe("Barkat E2E Test", func() {
 				Status:   "SUCCESS",
 				Images:   standardImages,
 			}
-			resp, err := client.R().SetBody(entry).Post("/v1/journal-entries")
+			resp, err := client.R().SetBody(entry).Post(barkat.JournalBase)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
 			createdEntry = decodeJournalResponse(resp)
@@ -385,7 +384,7 @@ var _ = Describe("Barkat E2E Test", func() {
 			reviewDate := civil.Date{Year: 2024, Month: 1, Day: 15}
 			payload := barkat.JournalReviewUpdate{ReviewedAt: &reviewDate}
 
-			resp, err := client.R().SetBody(payload).Patch("/v1/journal-entries/" + createdEntry.ExternalID)
+			resp, err := client.R().SetBody(payload).Patch(barkat.JournalBase + "/" + createdEntry.ExternalID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 
@@ -398,12 +397,12 @@ var _ = Describe("Barkat E2E Test", func() {
 			// First mark as reviewed
 			reviewDate := civil.Date{Year: 2024, Month: 1, Day: 15}
 			resp, _ := client.R().SetBody(barkat.JournalReviewUpdate{ReviewedAt: &reviewDate}).
-				Patch("/v1/journal-entries/" + createdEntry.ExternalID)
+				Patch(barkat.JournalBase + "/" + createdEntry.ExternalID)
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 
 			// Then clear
 			resp, err := client.R().SetBody(barkat.JournalReviewUpdate{ReviewedAt: nil}).
-				Patch("/v1/journal-entries/" + createdEntry.ExternalID)
+				Patch(barkat.JournalBase + "/" + createdEntry.ExternalID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 
@@ -423,7 +422,7 @@ var _ = Describe("Barkat E2E Test", func() {
 				Status:   "RUNNING",
 				Images:   standardImages,
 			}
-			resp, err := client.R().SetBody(entry).Post("/v1/journal-entries")
+			resp, err := client.R().SetBody(entry).Post(barkat.JournalBase)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusBadRequest))
 		})
@@ -436,7 +435,7 @@ var _ = Describe("Barkat E2E Test", func() {
 				Status:   "RUNNING",
 				Images:   []barkat.Image{{Timeframe: "DL", FileName: "only_one.png"}}, // PRD: min 4
 			}
-			resp, err := client.R().SetBody(entry).Post("/v1/journal-entries")
+			resp, err := client.R().SetBody(entry).Post(barkat.JournalBase)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusBadRequest))
 		})
@@ -450,13 +449,13 @@ var _ = Describe("Barkat E2E Test", func() {
 				Status:   "RUNNING",
 				Images:   standardImages,
 			}
-			resp, _ := client.R().SetBody(entry).Post("/v1/journal-entries")
+			resp, _ := client.R().SetBody(entry).Post(barkat.JournalBase)
 			created := decodeJournalResponse(resp)
 
 			// Try to set future date
 			futureDate := civil.Date{Year: 2099, Month: 12, Day: 31}
 			resp, err := client.R().SetBody(barkat.JournalReviewUpdate{ReviewedAt: &futureDate}).
-				Patch("/v1/journal-entries/" + created.ExternalID)
+				Patch(barkat.JournalBase + "/" + created.ExternalID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusBadRequest))
 		})
@@ -466,13 +465,13 @@ var _ = Describe("Barkat E2E Test", func() {
 	Context("Error Handling", func() {
 		It("should return 404 for non-existent entry", func() {
 			// Use valid format (8 hex chars) but non-existent ID
-			resp, err := client.R().Get("/v1/journal-entries/jrn_12345678")
+			resp, err := client.R().Get(barkat.JournalBase + "/jrn_12345678")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusNotFound))
 		})
 
 		It("should return 400 for invalid ID format", func() {
-			resp, err := client.R().Get("/v1/journal-entries/invalid_format")
+			resp, err := client.R().Get(barkat.JournalBase + "/invalid_format")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusBadRequest))
 		})

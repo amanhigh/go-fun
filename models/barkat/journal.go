@@ -12,17 +12,14 @@ import (
 // Journal API route constants
 const (
 	// Base journal routes
-	JournalBase      = common.APIV1 + "/journals"
-	JournalEntries   = JournalBase
-	JournalEntryByID = JournalBase + "/:id"
+	JournalBase = common.APIV1 + "/journals"
 
 	// Journal sub-resource routes
-	// HACK: Rename Entry to Journal everywhere.
-	JournalImages    = JournalEntryByID + "/images"
+	JournalImages    = JournalBase + "/:id/images"
 	JournalImageByID = JournalImages + "/:imageId"
-	JournalNotes     = JournalEntryByID + "/notes"
+	JournalNotes     = JournalBase + "/:id/notes"
 	JournalNoteByID  = JournalNotes + "/:noteId"
-	JournalTags      = JournalEntryByID + "/tags"
+	JournalTags      = JournalBase + "/:id/tags"
 	JournalTagByID   = JournalTags + "/:tagId"
 )
 

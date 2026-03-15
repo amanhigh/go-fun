@@ -9,6 +9,7 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/handler"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
+	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
@@ -30,9 +31,8 @@ type testLifecycle struct {
 }
 
 func (t *testLifecycle) RegisterRoutes(engine *gin.Engine) {
-	// Only register journal routes for this test
-	// BUG: Use Register Method in Injector core.
-	journal := engine.Group("/v1/journal-entries")
+	// Using same path as real server to avoid bugs
+	journal := engine.Group(barkat.JournalBase)
 	handler.SetupJournalEntryRoutes(journal, t.journalHandler)
 	handler.SetupImageRoutes(journal, t.imageHandler)
 	handler.SetupNoteRoutes(journal, t.noteHandler)
