@@ -17,6 +17,7 @@ const (
 	JournalEntryByID = JournalBase + "/:id"
 
 	// Journal sub-resource routes
+	// HACK: Rename Entry to Journal everywhere.
 	JournalImages    = JournalEntryByID + "/images"
 	JournalImageByID = JournalImages + "/:imageId"
 	JournalNotes     = JournalEntryByID + "/notes"
