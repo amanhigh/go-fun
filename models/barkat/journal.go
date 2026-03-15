@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/models/common"
+	"github.com/golang-sql/civil"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -83,12 +84,12 @@ type JournalList struct {
 
 // JournalReviewUpdate represents the request body for updating journal review status.
 type JournalReviewUpdate struct {
-	ReviewedAt string `json:"reviewed_at" binding:"required,datetime=2006-01-02,future_date"`
+	ReviewedAt *civil.Date `json:"reviewed_at" binding:"required,not_future"`
 }
 
 // UpdateJournalStatusResponse represents the response for PATCH review status updates.
 // This follows the PRD specification for minimal PATCH responses.
 type UpdateJournalStatusResponse struct {
-	ID         string  `json:"id"`
-	ReviewedAt *string `json:"reviewed_at"`
+	ID         string      `json:"id"`
+	ReviewedAt *civil.Date `json:"reviewed_at"`
 }

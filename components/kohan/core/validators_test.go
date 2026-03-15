@@ -1,7 +1,10 @@
 package core_test
 
 import (
+	"time"
+
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-sql/civil"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -19,7 +22,7 @@ var _ = Describe("Validators", func() {
 		_ = v.RegisterValidation("ticker", core.TickerValidator)
 		_ = v.RegisterValidation("tag", core.TagValidator)
 		_ = v.RegisterValidation("override", core.OverrideValidator)
-		_ = v.RegisterValidation("future_date", core.FutureDateValidator)
+		_ = v.RegisterValidation("not_future", core.NotFutureValidator)
 	})
 
 	Describe("ticker validator", func() {
@@ -174,34 +177,29 @@ var _ = Describe("Validators", func() {
 		})
 	})
 
-	Describe("reviewed_at validator", func() {
+	Describe("not_future validator", func() {
 		Context("future date business rule", func() {
-			It("should accept empty string", func() {
-				Expect(v.Var("", "future_date")).To(Succeed())
-			})
-
 			It("should accept past dates", func() {
-				Expect(v.Var("2024-01-16", "future_date")).To(Succeed())
-				Expect(v.Var("2023-12-31", "future_date")).To(Succeed())
-				Expect(v.Var("2020-01-01", "future_date")).To(Succeed())
+				pastDate1 := civil.Date{Year: 2024, Month: 1, Day: 16}
+				pastDate2 := civil.Date{Year: 2023, Month: 12, Day: 31}
+				pastDate3 := civil.Date{Year: 2020, Month: 1, Day: 1}
+				Expect(v.Var(pastDate1, "not_future")).To(Succeed())
+				Expect(v.Var(pastDate2, "not_future")).To(Succeed())
+				Expect(v.Var(pastDate3, "not_future")).To(Succeed())
 			})
 
 			It("should accept today's date", func() {
-				today := "2024-01-15" // Assuming test runs on 2024-01-15 or later
-				Expect(v.Var(today, "future_date")).To(Succeed())
+				today := civil.DateOf(time.Now())
+				Expect(v.Var(today, "not_future")).To(Succeed())
 			})
 
 			It("should reject future dates", func() {
-				Expect(v.Var("2099-12-31", "future_date")).ToNot(Succeed())
-				Expect(v.Var("2100-01-01", "future_date")).ToNot(Succeed())
-				Expect(v.Var("2030-07-15", "future_date")).ToNot(Succeed())
-			})
-
-			It("should pass through invalid formats to datetime validator", func() {
-				// Custom validator should return true for invalid formats, letting datetime validator handle them
-				Expect(v.Var("invalid-date", "future_date")).To(Succeed())
-				Expect(v.Var("2024-13-32", "future_date")).To(Succeed())
-				Expect(v.Var("2024/01/16", "future_date")).To(Succeed())
+				futureDate1 := civil.Date{Year: 2099, Month: 12, Day: 31}
+				futureDate2 := civil.Date{Year: 2100, Month: 1, Day: 1}
+				futureDate3 := civil.Date{Year: 2030, Month: 7, Day: 15}
+				Expect(v.Var(futureDate1, "not_future")).ToNot(Succeed())
+				Expect(v.Var(futureDate2, "not_future")).ToNot(Succeed())
+				Expect(v.Var(futureDate3, "not_future")).ToNot(Succeed())
 			})
 		})
 	})

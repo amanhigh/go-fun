@@ -15,6 +15,7 @@ import (
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-sql/civil"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"gorm.io/gorm"
@@ -964,6 +965,17 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 	})
 
 	Describe("PATCH /v1/journal/{id} - Update Review Status", func() {
+		// Common test payloads for JournalReviewUpdate to reduce duplication
+		// Kept close to the API tests that use them per AGENTS.md guidelines
+		var (
+			validReviewDate  = civil.Date{Year: 2024, Month: 1, Day: 16}
+			futureReviewDate = civil.Date{Year: 2099, Month: 12, Day: 31}
+
+			markReviewedPayload   = barkat.JournalReviewUpdate{ReviewedAt: &validReviewDate}
+			markUnreviewedPayload = barkat.JournalReviewUpdate{ReviewedAt: nil}
+			futureDatePayload     = barkat.JournalReviewUpdate{ReviewedAt: &futureReviewDate}
+		)
+
 		var createdJournal barkat.Journal
 
 		BeforeEach(func() {
@@ -981,9 +993,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 		Context("Happy Path", func() {
 			Context("mark as reviewed", func() {
 				BeforeEach(func() {
-					dateStr := "2024-01-16"
-					payload := barkat.JournalReviewUpdate{ReviewedAt: dateStr}
-					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, markReviewedPayload)
 					router.ServeHTTP(w, req)
 				})
 
@@ -1016,15 +1026,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			Context("mark as unreviewed", func() {
 				BeforeEach(func() {
 					// First mark as reviewed
-					dateStr := "2024-01-16"
-					payload := barkat.JournalReviewUpdate{ReviewedAt: dateStr}
-					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, markReviewedPayload)
 					router.ServeHTTP(w, req)
 
 					// Then mark as unreviewed
-					emptyStr := ""
-					payload = barkat.JournalReviewUpdate{ReviewedAt: emptyStr}
-					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, markUnreviewedPayload)
 					router.ServeHTTP(w, req)
 				})
 
@@ -1050,13 +1056,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			Context("idempotent operations", func() {
 				BeforeEach(func() {
 					// Mark as reviewed twice
-					dateStr := "2024-01-16"
-					payload := barkat.JournalReviewUpdate{ReviewedAt: dateStr}
-					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, markReviewedPayload)
 					router.ServeHTTP(w, req)
 
 					// Second time should be idempotent
-					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, markReviewedPayload)
 					router.ServeHTTP(w, req)
 				})
 
@@ -1078,15 +1082,13 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			Context("reviewed_at field", func() {
 				Context("Allowed Values", func() {
 					It("should accept valid date string", func() {
-						payload := barkat.JournalReviewUpdate{ReviewedAt: "2024-01-16"}
-						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, markReviewedPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
 
 					It("should accept empty string for unreviewed", func() {
-						payload := barkat.JournalReviewUpdate{ReviewedAt: ""}
-						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, markUnreviewedPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
@@ -1108,18 +1110,16 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					})
 
 					It("should return 400 for invalid date format", func() {
-						payload := barkat.JournalReviewUpdate{ReviewedAt: "2024-01-16T14:30:00Z"}
+						payload := `{"reviewed_at": "2024-01-16T14:30:00Z"}`
 						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "reviewed-at", "YYYY-MM-DD")
+						util.AssertError(w, "reviewed_at", "Violates")
 					})
 
 					It("should return 400 for future date (PRD 3.1 business rule)", func() {
-						futureDate := "2099-12-31"
-						payload := barkat.JournalReviewUpdate{ReviewedAt: futureDate}
-						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, futureDatePayload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "reviewed_at", "future_date")
+						util.AssertError(w, "reviewed_at", "not_future")
 					})
 
 					It("should return 400 for non-string types", func() {
@@ -1134,22 +1134,19 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			Context("Entry ID Field", func() {
 				Context("Bad Values", func() {
 					It("should return 404 for non-existent entry ID", func() {
-						payload := barkat.JournalReviewUpdate{ReviewedAt: "2024-01-16"}
-						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/nonexistent-id", payload)
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/nonexistent-id", markReviewedPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
 
 					It("should return 404 for invalid UUID format", func() {
-						payload := barkat.JournalReviewUpdate{ReviewedAt: "2024-01-16"}
-						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/invalid-uuid-format", payload)
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/invalid-uuid-format", markReviewedPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
 
 					It("should return 404 for valid UUID format but non-existent", func() {
-						payload := barkat.JournalReviewUpdate{ReviewedAt: "2024-01-16"}
-						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/550e8400-e29b-41d4-a716-446655440000", payload)
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/550e8400-e29b-41d4-a716-446655440000", markReviewedPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
@@ -1175,8 +1172,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 			Context("Content-Type Issues", func() {
 				It("should return 400 for wrong content type", func() {
-					payload := barkat.JournalReviewUpdate{ReviewedAt: "2024-01-16"}
-					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
+					req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, markReviewedPayload)
 					req.Header.Set("Content-Type", "text/plain")
 					router.ServeHTTP(w, req)
 					Expect(w.Code).To(Equal(http.StatusBadRequest))

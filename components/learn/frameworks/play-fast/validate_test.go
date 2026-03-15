@@ -345,7 +345,7 @@ var _ = Describe("Validate", func() {
 			validData.ReviewedAt = nil // Nil pointer should be valid with omitempty
 			err = validate.Struct(validData)
 			Expect(err).ToNot(HaveOccurred())
-		})		
+		})
 
 		It("should fail with future date", func() {
 			futureDate := civil.Date{Year: 2099, Month: 12, Day: 25}

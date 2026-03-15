@@ -3,7 +3,6 @@ package manager
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
@@ -107,16 +106,7 @@ func (m *JournalManagerImpl) UpdateReviewStatus(ctx context.Context, journalExte
 		}
 
 		// Update reviewed_at based on the update request
-		if update.ReviewedAt != "" {
-			// Parse the date string and set reviewed_at
-			if parsedTime, err := time.Parse("2006-01-02", update.ReviewedAt); err == nil {
-				journal.ReviewedAt = &parsedTime
-			} else {
-				return common.NewFieldHttpError("reviewed-at", "Must be YYYY-MM-DD (e.g., 2024-01-16)")
-			}
-		} else {
-			journal.ReviewedAt = nil
-		}
+		journal.ReviewedAt = update.ReviewedAt
 
 		// Save the updated journal
 		if httpErr := m.repo.Update(c, &journal); httpErr != nil {
