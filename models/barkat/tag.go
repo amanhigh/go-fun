@@ -37,3 +37,11 @@ type TagList struct {
 type TagQuery struct {
 	Type string `form:"type" binding:"omitempty,oneof=REASON MANAGEMENT"`
 }
+
+// ---- Path Parameter Structs ----
+
+// TagPath binds the :id and :tagId path parameters for tag operations.
+type TagPath struct {
+	JournalID string `uri:"id" binding:"required,journal_id"`
+	TagID     string `uri:"tagId" binding:"required,tag_id"`
+}

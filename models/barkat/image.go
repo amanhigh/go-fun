@@ -31,3 +31,11 @@ func (i *Image) BeforeCreate(_ *gorm.DB) error {
 type ImageList struct {
 	Images []Image `json:"images"`
 }
+
+// ---- Path Parameter Structs ----
+
+// ImagePath binds the :id and :imageId path parameters for image operations.
+type ImagePath struct {
+	JournalID string `uri:"id" binding:"required,journal_id"`
+	ImageID   string `uri:"imageId" binding:"required,image_id"`
+}

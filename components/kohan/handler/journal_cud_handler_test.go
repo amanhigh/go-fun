@@ -67,7 +67,6 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 	)
 
 	BeforeEach(func() {
-		// FIXME: #A Sqlite Snapshots, Comparison and Revert.
 		var err error
 
 		// Register custom validators for journal fields
@@ -943,10 +942,10 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 		Context("Field Validations", func() {
 			Context("Journal ID Field", func() {
 				Context("Bad Values", func() {
-					It("should return 404 for invalid journal ID format", func() {
+					It("should return 400 for invalid journal ID format", func() {
 						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/invalid_format", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid journal ID format but non-existent", func() {
@@ -1102,10 +1101,10 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 			Context("Journal ID Field", func() {
 				Context("Bad Values", func() {
-					It("should return 404 for invalid journal ID format", func() {
+					It("should return 400 for invalid journal ID format", func() {
 						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/invalid_format", markReviewedPayload)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid journal ID format but non-existent", func() {

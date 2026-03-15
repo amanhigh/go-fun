@@ -33,7 +33,14 @@ func NewTagHandler(tagMgr manager.TagManager) *TagHandlerImpl {
 }
 
 func (h *TagHandlerImpl) HandleCreateTag(c *gin.Context) {
-	journalID := c.Param("id")
+	var path barkat.JournalPath
+
+	if bindErr := c.ShouldBindUri(&path); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+
 	var tag barkat.Tag
 	if bindErr := c.ShouldBindJSON(&tag); bindErr != nil {
 		httpErr := util.ProcessValidationError(bindErr)
@@ -41,7 +48,7 @@ func (h *TagHandlerImpl) HandleCreateTag(c *gin.Context) {
 		return
 	}
 
-	createdTag, httpErr := h.tagMgr.CreateTag(c.Request.Context(), journalID, tag)
+	createdTag, httpErr := h.tagMgr.CreateTag(c.Request.Context(), path.JournalID, tag)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
@@ -50,7 +57,14 @@ func (h *TagHandlerImpl) HandleCreateTag(c *gin.Context) {
 }
 
 func (h *TagHandlerImpl) HandleListTags(c *gin.Context) {
-	journalID := c.Param("id")
+	var path barkat.JournalPath
+
+	if bindErr := c.ShouldBindUri(&path); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+
 	query := barkat.TagQuery{}
 
 	if bindErr := c.ShouldBindQuery(&query); bindErr != nil {
@@ -59,7 +73,7 @@ func (h *TagHandlerImpl) HandleListTags(c *gin.Context) {
 		return
 	}
 
-	tagList, httpErr := h.tagMgr.ListTags(c.Request.Context(), journalID, query.Type)
+	tagList, httpErr := h.tagMgr.ListTags(c.Request.Context(), path.JournalID, query.Type)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
@@ -68,9 +82,15 @@ func (h *TagHandlerImpl) HandleListTags(c *gin.Context) {
 }
 
 func (h *TagHandlerImpl) HandleDeleteTag(c *gin.Context) {
-	journalID := c.Param("id")
-	tagID := c.Param("tagId")
-	if httpErr := h.tagMgr.DeleteTag(c.Request.Context(), journalID, tagID); httpErr != nil {
+	var path barkat.TagPath
+
+	if bindErr := c.ShouldBindUri(&path); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+
+	if httpErr := h.tagMgr.DeleteTag(c.Request.Context(), path.JournalID, path.TagID); httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}

@@ -29,7 +29,14 @@ func NewImageHandler(imageMgr manager.ImageManager) *ImageHandlerImpl {
 }
 
 func (h *ImageHandlerImpl) HandleCreateImage(c *gin.Context) {
-	journalID := c.Param("id")
+	var path barkat.JournalPath
+
+	if bindErr := c.ShouldBindUri(&path); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+
 	var image barkat.Image
 	if bindErr := c.ShouldBindJSON(&image); bindErr != nil {
 		httpErr := util.ProcessValidationError(bindErr)
@@ -37,7 +44,7 @@ func (h *ImageHandlerImpl) HandleCreateImage(c *gin.Context) {
 		return
 	}
 
-	createdImage, httpErr := h.imageMgr.CreateImage(c.Request.Context(), journalID, image)
+	createdImage, httpErr := h.imageMgr.CreateImage(c.Request.Context(), path.JournalID, image)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
@@ -46,8 +53,15 @@ func (h *ImageHandlerImpl) HandleCreateImage(c *gin.Context) {
 }
 
 func (h *ImageHandlerImpl) HandleListImages(c *gin.Context) {
-	journalID := c.Param("id")
-	imageList, httpErr := h.imageMgr.ListImages(c.Request.Context(), journalID)
+	var path barkat.JournalPath
+
+	if bindErr := c.ShouldBindUri(&path); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+
+	imageList, httpErr := h.imageMgr.ListImages(c.Request.Context(), path.JournalID)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
@@ -56,9 +70,15 @@ func (h *ImageHandlerImpl) HandleListImages(c *gin.Context) {
 }
 
 func (h *ImageHandlerImpl) HandleDeleteImage(c *gin.Context) {
-	journalID := c.Param("id")
-	imageID := c.Param("imageId")
-	if httpErr := h.imageMgr.DeleteImage(c.Request.Context(), journalID, imageID); httpErr != nil {
+	var path barkat.ImagePath
+
+	if bindErr := c.ShouldBindUri(&path); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+
+	if httpErr := h.imageMgr.DeleteImage(c.Request.Context(), path.JournalID, path.ImageID); httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}

@@ -37,3 +37,11 @@ type NoteList struct {
 type NoteQuery struct {
 	Status string `form:"note_status" binding:"omitempty,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
 }
+
+// ---- Path Parameter Structs ----
+
+// NotePath binds the :id and :noteId path parameters for note operations.
+type NotePath struct {
+	JournalID string `uri:"id" binding:"required,journal_id"`
+	NoteID    string `uri:"noteId" binding:"required,note_id"`
+}

@@ -372,11 +372,11 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 			Context("Journal ID Path Parameter", func() {
 				Context("Bad Values", func() {
-					It("should return 404 for malformed journal ID", func() {
+					It("should return 400 for malformed journal ID", func() {
 						note := barkat.Note{Status: "SET", Content: "Test content", Format: "MARKDOWN"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/invalid-uuid-format/notes", note)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid ID format but non-existent", func() {
@@ -482,11 +482,11 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 		Context("Field Validations", func() {
 			Context("Journal ID Path Parameter", func() {
 				Context("Bad Values", func() {
-					It("should return 404 for malformed journal ID", func() {
+					It("should return 400 for malformed journal ID", func() {
 						note := barkat.Note{Status: "SET", Content: "Test content", Format: "MARKDOWN"}
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/invalid_format/notes", note)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid ID format but non-existent", func() {
@@ -543,10 +543,10 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 		Context("Field Validations", func() {
 			Context("Journal ID Path Parameter", func() {
 				Context("Bad Values", func() {
-					It("should return 404 for malformed journal ID", func() {
+					It("should return 400 for malformed journal ID", func() {
 						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/invalid-uuid-format/notes/"+noteToDelete.ExternalID, nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid ID format but non-existent", func() {
@@ -559,20 +559,20 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 			Context("Note ID Path Parameter", func() {
 				Context("Bad Values", func() {
+					It("should return 400 for random string note ID", func() {
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/notes/random-string", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+
+					It("should return 400 for invalid note ID format", func() {
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/notes/invalid-note-format", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+
 					It("should return 404 for non-existent note ID", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/notes/nonexistent-note", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
-					})
-
-					It("should return 404 for malformed note ID", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/notes/invalid-uuid-format", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
-					})
-
-					It("should return 404 for valid ID format but non-existent", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/notes/note_12345678", nil)
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/notes/not_99999999", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})

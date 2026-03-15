@@ -125,10 +125,10 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 		Context("Field Validations", func() {
 			Context("Journal ID Field", func() {
 				Context("Bad Values", func() {
-					It("should return 404 for malformed UUID", func() {
+					It("should return 400 for malformed UUID", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/invalid-uuid-format", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid journal ID format but non-existent", func() {

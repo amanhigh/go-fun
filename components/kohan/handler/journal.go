@@ -32,7 +32,6 @@ func NewJournalHandler(journalManager manager.JournalManager) *JournalHandlerImp
 }
 
 // ---- Entry Handlers ----
-// FIXME: #A Match other Handlers after Review Comments & Test to Standardize Template.
 func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
 	query := barkat.NewJournalQuery()
 
@@ -59,7 +58,7 @@ func (h *JournalHandlerImpl) HandleGetEntry(c *gin.Context) {
 		return
 	}
 
-	journal, httpErr := h.journalManager.GetJournal(c.Request.Context(), path.ID)
+	journal, httpErr := h.journalManager.GetJournal(c.Request.Context(), path.JournalID)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
@@ -92,8 +91,7 @@ func (h *JournalHandlerImpl) HandleDeleteEntry(c *gin.Context) {
 		return
 	}
 
-	httpErr := h.journalManager.DeleteJournal(c.Request.Context(), path.ID)
-	if httpErr != nil {
+	if httpErr := h.journalManager.DeleteJournal(c.Request.Context(), path.JournalID); httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
@@ -115,7 +113,7 @@ func (h *JournalHandlerImpl) HandleUpdateReviewStatus(c *gin.Context) {
 		return
 	}
 
-	journal, httpErr := h.journalManager.UpdateReviewStatus(c.Request.Context(), path.ID, update)
+	journal, httpErr := h.journalManager.UpdateReviewStatus(c.Request.Context(), path.JournalID, update)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return

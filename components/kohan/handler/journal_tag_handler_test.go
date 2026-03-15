@@ -331,11 +331,11 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 
 			Context("Journal ID Path Parameter", func() {
 				Context("Bad Values", func() {
-					It("should return 404 for malformed journal ID", func() {
+					It("should return 400 for malformed journal ID", func() {
 						tag := barkat.Tag{Tag: "dep", Type: "REASON"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/invalid-uuid-format/tags", tag)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid ID format but non-existent", func() {
@@ -493,10 +493,10 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 			})
 			Context("Journal ID Path Parameter", func() {
 				Context("Bad Values", func() {
-					It("should return 404 for malformed journal ID", func() {
+					It("should return 400 for malformed journal ID", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/invalid_format/tags", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid ID format but non-existent", func() {
@@ -553,10 +553,10 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 		Context("Field Validations", func() {
 			Context("Journal ID Path Parameter", func() {
 				Context("Bad Values", func() {
-					It("should return 404 for malformed journal ID", func() {
+					It("should return 400 for malformed journal ID", func() {
 						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/invalid-uuid-format/tags/"+tagToDelete.ExternalID, nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid ID format but non-existent", func() {
@@ -569,20 +569,20 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 
 			Context("Tag ID Path Parameter", func() {
 				Context("Bad Values", func() {
-					It("should return 404 for non-existent tag ID", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/tags/nonexistent-tag", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
-					})
-
-					It("should return 404 for malformed tag ID", func() {
+					It("should return 400 for malformed tag ID", func() {
 						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/tags/invalid-uuid-format", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusNotFound))
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
-					It("should return 404 for valid ID format but non-existent", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/tags/tag_12345678", nil)
+					It("should return 400 for random string tag ID", func() {
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/tags/random-string", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+
+					It("should return 404 for non-existent tag ID", func() {
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/tags/tag_99999999", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})

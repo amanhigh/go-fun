@@ -52,7 +52,7 @@ func (j *Journal) BeforeCreate(_ *gorm.DB) error {
 
 // JournalPath binds the :id path parameter.
 type JournalPath struct {
-	ID string `uri:"id" binding:"required"`
+	JournalID string `uri:"id" binding:"required,journal_id"`
 }
 
 // JournalQuery holds query parameters for listing/filtering journals.
