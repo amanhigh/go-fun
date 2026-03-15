@@ -104,7 +104,7 @@ var _ = Describe("KohanServer", func() {
 			// Register validators for this test context
 			core.RegisterJournalValidators()
 
-			journalHandler.HandleCreateEntry(c)
+			journalHandler.HandleCreateJournal(c)
 
 			Expect(recorder.Code).To(Equal(http.StatusCreated))
 			Expect(recorder.Body.String()).To(ContainSubstring("RELIANCE"))

@@ -108,7 +108,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 						Tag:  "dep",
 						Type: "REASON",
 					}
-					req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+					req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 					router.ServeHTTP(w, req)
 				})
 
@@ -155,7 +155,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 				Context("Allowed Values", func() {
 					It("should accept minimum tag length (1 char)", func() {
 						tag := barkat.Tag{Tag: "a", Type: "REASON"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						response := decodeTagResponse(w)
 						Expect(response.Tag).To(Equal("a"))
@@ -163,7 +163,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 
 					It("should accept maximum tag length (10 chars)", func() {
 						tag := barkat.Tag{Tag: "abcdefghij", Type: "REASON"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						response := decodeTagResponse(w)
 						Expect(response.Tag).To(Equal("abcdefghij"))
@@ -171,7 +171,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 
 					It("should accept tag with alphanumeric characters", func() {
 						tag := barkat.Tag{Tag: "dep123", Type: "REASON"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						response := decodeTagResponse(w)
 						Expect(response.Tag).To(Equal("dep123"))
@@ -179,7 +179,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 
 					It("should accept tag with hyphens", func() {
 						tag := barkat.Tag{Tag: "dep-loc", Type: "REASON"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						response := decodeTagResponse(w)
 						Expect(response.Tag).To(Equal("dep-loc"))
@@ -189,28 +189,28 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 				Context("Bad Values", func() {
 					It("should return 400 for missing tag (PRD: required)", func() {
 						tag := barkat.Tag{Tag: "", Type: "REASON"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Tag", "required")
 					})
 
 					It("should return 400 for tag exceeding max length (PRD: max 10 chars)", func() {
 						tag := barkat.Tag{Tag: "abcdefghijk", Type: "REASON"} // 11 chars
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Tag", "max")
 					})
 
 					It("should return 400 for tag with invalid characters (PRD: alphanumeric with hyphens)", func() {
 						tag := barkat.Tag{Tag: "dep@loc", Type: "REASON"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Tag", "tag")
 					})
 
 					It("should return 400 for tag with spaces", func() {
 						tag := barkat.Tag{Tag: "dep loc", Type: "REASON"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Tag", "tag")
 					})
@@ -221,7 +221,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 				Context("Allowed Values", func() {
 					It("should accept type = REASON", func() {
 						tag := barkat.Tag{Tag: "dep", Type: "REASON"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						response := decodeTagResponse(w)
 						Expect(response.Type).To(Equal("REASON"))
@@ -229,7 +229,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 
 					It("should accept type = MANAGEMENT", func() {
 						tag := barkat.Tag{Tag: "ptr", Type: "MANAGEMENT"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						response := decodeTagResponse(w)
 						Expect(response.Type).To(Equal("MANAGEMENT"))
@@ -239,21 +239,21 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 				Context("Bad Values", func() {
 					It("should return 400 for missing type (PRD: required)", func() {
 						tag := barkat.Tag{Tag: "dep", Type: ""}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Type", "required")
 					})
 
 					It("should return 400 for invalid type enum (PRD: must be REASON or MANAGEMENT)", func() {
 						tag := barkat.Tag{Tag: "dep", Type: "INVALID"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Type", "oneof")
 					})
 
 					It("should return 400 for lowercase type (PRD: case-sensitive)", func() {
 						tag := barkat.Tag{Tag: "dep", Type: "reason"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Type", "oneof")
 					})
@@ -268,7 +268,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 							Type: "REASON",
 							// Override is nil by default
 						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						response := decodeTagResponse(w)
 						Expect(response.Override).To(BeNil())
@@ -277,7 +277,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 					It("should accept minimum override length (1 char)", func() {
 						override := "a"
 						tag := barkat.Tag{Tag: "dep", Type: "REASON", Override: &override}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						response := decodeTagResponse(w)
 						Expect(*response.Override).To(Equal("a"))
@@ -286,7 +286,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 					It("should accept maximum override length (5 chars)", func() {
 						override := "abcde"
 						tag := barkat.Tag{Tag: "dep", Type: "REASON", Override: &override}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						response := decodeTagResponse(w)
 						Expect(*response.Override).To(Equal("abcde"))
@@ -295,7 +295,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 					It("should accept override with letters only", func() {
 						override := "loc"
 						tag := barkat.Tag{Tag: "dep", Type: "REASON", Override: &override}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						response := decodeTagResponse(w)
 						Expect(*response.Override).To(Equal("loc"))
@@ -306,7 +306,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 					It("should return 400 for override exceeding max length (PRD: max 5 chars)", func() {
 						override := "abcdef" // 6 chars
 						tag := barkat.Tag{Tag: "dep", Type: "REASON", Override: &override}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Override", "max")
 					})
@@ -314,7 +314,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 					It("should return 400 for override with numbers (PRD: letters only)", func() {
 						override := "loc1"
 						tag := barkat.Tag{Tag: "dep", Type: "REASON", Override: &override}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Override", "override")
 					})
@@ -322,7 +322,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 					It("should return 400 for override with special characters", func() {
 						override := "loc@"
 						tag := barkat.Tag{Tag: "dep", Type: "REASON", Override: &override}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Override", "override")
 					})
@@ -333,14 +333,14 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 				Context("Bad Values", func() {
 					It("should return 400 for malformed journal ID", func() {
 						tag := barkat.Tag{Tag: "dep", Type: "REASON"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/invalid-uuid-format/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/invalid-uuid-format/tags", tag)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid ID format but non-existent", func() {
 						tag := barkat.Tag{Tag: "dep", Type: "REASON"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/jrn_12345678/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/jrn_12345678/tags", tag)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
@@ -350,19 +350,19 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 
 		Context("Errors", func() {
 			It("should return 400 for invalid JSON", func() {
-				req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", []byte("invalid json"))
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", []byte("invalid json"))
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 			})
 
 			It("should return 400 for empty request body", func() {
-				req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", []byte(""))
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", []byte(""))
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 			})
 
 			It("should return 400 for null request body", func() {
-				req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", []byte("null"))
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", []byte("null"))
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 			})
@@ -375,7 +375,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 
 				// Attempt to create duplicate
 				tag2 := barkat.Tag{Tag: "dep", Type: "REASON"}
-				req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag2)
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag2)
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusConflict))
 			})
@@ -400,7 +400,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 					_, err = tagMgr.CreateTag(testCtx, journal.ExternalID, tag2)
 					Expect(err).ToNot(HaveOccurred())
 
-					req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", nil)
+					req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/"+journal.ExternalID+"/tags", nil)
 					router.ServeHTTP(w, req)
 				})
 
@@ -439,7 +439,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 
 			Context("with journal having no tags", func() {
 				BeforeEach(func() {
-					req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", nil)
+					req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/"+journal.ExternalID+"/tags", nil)
 					router.ServeHTTP(w, req)
 				})
 
@@ -465,7 +465,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 
 				Context("Allowed Values", func() {
 					It("should filter tags by type = REASON", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/"+journal.ExternalID+"/tags?type=REASON", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/"+journal.ExternalID+"/tags?type=REASON", nil)
 						router.ServeHTTP(w, req)
 						tags := decodeTagListResponse(w)
 						Expect(tags).To(HaveLen(1))
@@ -474,7 +474,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 					})
 
 					It("should filter tags by type = MANAGEMENT", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/"+journal.ExternalID+"/tags?type=MANAGEMENT", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/"+journal.ExternalID+"/tags?type=MANAGEMENT", nil)
 						router.ServeHTTP(w, req)
 						tags := decodeTagListResponse(w)
 						Expect(tags).To(HaveLen(1))
@@ -485,7 +485,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 
 				Context("Bad Values", func() {
 					It("should return 400 for invalid type query parameter", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/"+journal.ExternalID+"/tags?type=INVALID", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/"+journal.ExternalID+"/tags?type=INVALID", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
@@ -494,13 +494,13 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 			Context("Journal ID Path Parameter", func() {
 				Context("Bad Values", func() {
 					It("should return 400 for malformed journal ID", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/invalid_format/tags", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/invalid_format/tags", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid ID format but non-existent", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/jrn_12345678/tags", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/jrn_12345678/tags", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
@@ -530,7 +530,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 		Context("Happy Path", func() {
 			Context("with valid journal and tag IDs", func() {
 				BeforeEach(func() {
-					req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/tags/"+tagToDelete.ExternalID, nil)
+					req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+journal.ExternalID+"/tags/"+tagToDelete.ExternalID, nil)
 					router.ServeHTTP(w, req)
 				})
 
@@ -554,13 +554,13 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 			Context("Journal ID Path Parameter", func() {
 				Context("Bad Values", func() {
 					It("should return 400 for malformed journal ID", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/invalid-uuid-format/tags/"+tagToDelete.ExternalID, nil)
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/invalid-uuid-format/tags/"+tagToDelete.ExternalID, nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid ID format but non-existent", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/jrn_12345678/tags/"+tagToDelete.ExternalID, nil)
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/jrn_12345678/tags/"+tagToDelete.ExternalID, nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
@@ -570,13 +570,13 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 			Context("Tag ID Path Parameter", func() {
 				Context("Bad Values", func() {
 					It("should return 400 for invalid tag ID format", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/tags/invalid-tag-format", nil)
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+journal.ExternalID+"/tags/invalid-tag-format", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for non-existent tag ID", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/tags/tag_99999999", nil)
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+journal.ExternalID+"/tags/tag_99999999", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
@@ -587,12 +587,12 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 		Context("Errors", func() {
 			It("should return 404 on second delete (idempotency check)", func() {
 				// First delete
-				req1, w1 := util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/tags/"+tagToDelete.ExternalID, nil)
+				req1, w1 := util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+journal.ExternalID+"/tags/"+tagToDelete.ExternalID, nil)
 				router.ServeHTTP(w1, req1)
 				Expect(w1.Code).To(Equal(http.StatusNoContent))
 
 				// Second delete should return 404
-				req2, w2 := util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/tags/"+tagToDelete.ExternalID, nil)
+				req2, w2 := util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+journal.ExternalID+"/tags/"+tagToDelete.ExternalID, nil)
 				router.ServeHTTP(w2, req2)
 				Expect(w2.Code).To(Equal(http.StatusNotFound))
 			})

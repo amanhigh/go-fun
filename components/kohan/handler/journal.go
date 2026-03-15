@@ -11,12 +11,12 @@ import (
 	"github.com/golang-sql/civil"
 )
 
-// JournalHandler provides HTTP handlers for journal entry operations.
+// JournalHandler provides HTTP handlers for journal operations.
 type JournalHandler interface {
-	HandleListEntries(c *gin.Context)
-	HandleGetEntry(c *gin.Context)
-	HandleCreateEntry(c *gin.Context)
-	HandleDeleteEntry(c *gin.Context)
+	HandleListJournals(c *gin.Context)
+	HandleGetJournal(c *gin.Context)
+	HandleCreateJournal(c *gin.Context)
+	HandleDeleteJournal(c *gin.Context)
 	HandleUpdateReviewStatus(c *gin.Context)
 }
 
@@ -31,8 +31,8 @@ func NewJournalHandler(journalManager manager.JournalManager) *JournalHandlerImp
 	return &JournalHandlerImpl{journalManager: journalManager}
 }
 
-// ---- Entry Handlers ----
-func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
+// ---- Journal Handlers ----
+func (h *JournalHandlerImpl) HandleListJournals(c *gin.Context) {
 	query := barkat.NewJournalQuery()
 
 	if bindErr := c.ShouldBindQuery(&query); bindErr != nil {
@@ -49,7 +49,7 @@ func (h *JournalHandlerImpl) HandleListEntries(c *gin.Context) {
 	c.JSON(http.StatusOK, common.NewEnvelope(journalList))
 }
 
-func (h *JournalHandlerImpl) HandleGetEntry(c *gin.Context) {
+func (h *JournalHandlerImpl) HandleGetJournal(c *gin.Context) {
 	var path barkat.JournalPath
 
 	if bindErr := c.ShouldBindUri(&path); bindErr != nil {
@@ -66,7 +66,7 @@ func (h *JournalHandlerImpl) HandleGetEntry(c *gin.Context) {
 	c.JSON(http.StatusOK, common.NewEnvelope(journal))
 }
 
-func (h *JournalHandlerImpl) HandleCreateEntry(c *gin.Context) {
+func (h *JournalHandlerImpl) HandleCreateJournal(c *gin.Context) {
 	var journal barkat.Journal
 	if bindErr := c.ShouldBindJSON(&journal); bindErr != nil {
 		httpErr := util.ProcessValidationError(bindErr)
@@ -82,7 +82,7 @@ func (h *JournalHandlerImpl) HandleCreateEntry(c *gin.Context) {
 	c.JSON(http.StatusCreated, common.NewEnvelope(&journal))
 }
 
-func (h *JournalHandlerImpl) HandleDeleteEntry(c *gin.Context) {
+func (h *JournalHandlerImpl) HandleDeleteJournal(c *gin.Context) {
 	var path barkat.JournalPath
 
 	if bindErr := c.ShouldBindUri(&path); bindErr != nil {

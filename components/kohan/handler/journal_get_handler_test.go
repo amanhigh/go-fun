@@ -55,7 +55,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 		router = util.CreateTestGinRouter()
 		v1 := router.Group("/v1")
 		journal := v1.Group("/journals")
-		handler.SetupJournalEntryRoutes(journal, journalHandler)
+		handler.SetupJournalRoutes(journal, journalHandler)
 	})
 
 	AfterEach(func() {
@@ -64,7 +64,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 		sqlDB.Close()
 	})
 
-	Describe("GET /v1/journal/{id} - Retrieve Entry", func() {
+	Describe("GET /v1/journal/{id} - Retrieve Journal", func() {
 		var createdJournal barkat.Journal
 
 		BeforeEach(func() {
@@ -87,11 +87,11 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 		})
 
 		Context("Happy Path", func() {
-			Context("with valid entry ID", func() {
+			Context("with valid journal ID", func() {
 				var response barkat.Journal
 
 				BeforeEach(func() {
-					req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/"+createdJournal.ExternalID, nil)
+					req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/"+createdJournal.ExternalID, nil)
 					router.ServeHTTP(w, req)
 				})
 
@@ -126,13 +126,13 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 			Context("Journal ID Field", func() {
 				Context("Bad Values", func() {
 					It("should return 400 for malformed UUID", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/invalid-uuid-format", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/invalid-uuid-format", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid journal ID format but non-existent", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/jrn_12345678", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/jrn_12345678", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
@@ -186,7 +186,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				var response barkat.JournalList
 
 				BeforeEach(func() {
-					req, w = util.CreateTestRequest("GET", barkat.JournalEntries, nil)
+					req, w = util.CreateTestRequest("GET", barkat.JournalBase, nil)
 					router.ServeHTTP(w, req)
 				})
 
@@ -241,7 +241,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 			Context("Ticker Filter", func() {
 				Context("Allowed Values", func() {
 					It("should filter by exact ticker match", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?ticker=GRSE", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?ticker=GRSE", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(1))
@@ -253,7 +253,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					})
 
 					It("should return empty list for ticker with no matches", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?ticker=NOTFOUND", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?ticker=NOTFOUND", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(BeEmpty())
@@ -265,13 +265,13 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 				Context("Bad Values", func() {
 					It("should return 400 for invalid ticker length", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?ticker=1234567890123456789012345678901", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?ticker=1234567890123456789012345678901", nil)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "max")
 					})
 
 					It("should return 400 for lowercase ticker (PRD: uppercase only)", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?ticker=grse", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?ticker=grse", nil)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "ticker")
 					})
@@ -281,7 +281,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 			Context("Type Filter", func() {
 				Context("Allowed Values", func() {
 					It("should filter by type = REJECTED", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?type=REJECTED", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?type=REJECTED", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(2))
@@ -291,7 +291,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					})
 
 					It("should filter by type = SET", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?type=SET", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?type=SET", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(2))
@@ -301,7 +301,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					})
 
 					It("should filter by type = RESULT", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?type=RESULT", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?type=RESULT", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(1))
@@ -312,7 +312,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 				Context("Bad Values", func() {
 					It("should return 400 for invalid type enum", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?type=invalid", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?type=invalid", nil)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Type", "oneof")
 					})
@@ -322,7 +322,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 			Context("Status Filter", func() {
 				Context("Allowed Values", func() {
 					It("should filter by status = FAIL", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?status=FAIL", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?status=FAIL", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(1))
@@ -331,7 +331,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					})
 
 					It("should filter by status = TAKEN", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?status=TAKEN", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?status=TAKEN", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(1))
@@ -339,7 +339,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					})
 
 					It("should filter by status = SUCCESS", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?status=SUCCESS", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?status=SUCCESS", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(1))
@@ -347,7 +347,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					})
 
 					It("should filter by status = RUNNING", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?status=RUNNING", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?status=RUNNING", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(1))
@@ -355,7 +355,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					})
 
 					It("should filter by status = REJECTED", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?status=REJECTED", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?status=REJECTED", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(1))
@@ -365,7 +365,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 				Context("Bad Values", func() {
 					It("should return 400 for invalid status enum", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?status=invalid", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?status=invalid", nil)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Status", "oneof")
 					})
@@ -375,7 +375,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 			Context("Sequence Filter", func() {
 				Context("Allowed Values", func() {
 					It("should filter by sequence = MWD", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?sequence=MWD", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sequence=MWD", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(3))
@@ -385,7 +385,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					})
 
 					It("should filter by sequence = YR", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?sequence=YR", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sequence=YR", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(2))
@@ -397,7 +397,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 				Context("Bad Values", func() {
 					It("should return 400 for invalid sequence enum", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?sequence=invalid", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sequence=invalid", nil)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Sequence", "oneof")
 					})
@@ -406,7 +406,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 			Context("Combined Filters", func() {
 				It("should apply ticker + type filters", func() {
-					req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?ticker=GRSE&type=REJECTED", nil)
+					req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?ticker=GRSE&type=REJECTED", nil)
 					router.ServeHTTP(w, req)
 					response := decodeJournalList(w, http.StatusOK)
 					Expect(response.Journals).To(HaveLen(1))
@@ -416,7 +416,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				})
 
 				It("should apply sequence + status filters", func() {
-					req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?sequence=YR&status=TAKEN", nil)
+					req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sequence=YR&status=TAKEN", nil)
 					router.ServeHTTP(w, req)
 					response := decodeJournalList(w, http.StatusOK)
 					Expect(response.Journals).To(HaveLen(1))
@@ -425,7 +425,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				})
 
 				It("should apply type + status + sequence filters", func() {
-					req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?type=SET&status=RUNNING&sequence=MWD", nil)
+					req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?type=SET&status=RUNNING&sequence=MWD", nil)
 					router.ServeHTTP(w, req)
 					response := decodeJournalList(w, http.StatusOK)
 					Expect(response.Journals).To(HaveLen(1))
@@ -441,7 +441,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						It("should accept valid YYYY-MM-DD date and filter entries", func() {
 							// Use yesterday's date to ensure all entries are captured
 							afterDate := time.Now().Add(-24 * time.Hour).Format("2006-01-02")
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after="+afterDate, nil)
+							req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?created-after="+afterDate, nil)
 							router.ServeHTTP(w, req)
 							response := decodeJournalList(w, http.StatusOK)
 							// All entries created in this test should be returned
@@ -450,7 +450,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 						It("should return empty list for future date", func() {
 							futureDate := time.Now().Add(24 * time.Hour).Format("2006-01-02")
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after="+futureDate, nil)
+							req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?created-after="+futureDate, nil)
 							router.ServeHTTP(w, req)
 							response := decodeJournalList(w, http.StatusOK)
 							Expect(response.Journals).To(BeEmpty())
@@ -459,7 +459,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						It("should work with created-before combined filter", func() {
 							afterDate := time.Now().Add(-24 * time.Hour).Format("2006-01-02")
 							beforeDate := time.Now().Add(24 * time.Hour).Format("2006-01-02")
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after="+afterDate+"&created-before="+beforeDate, nil)
+							req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?created-after="+afterDate+"&created-before="+beforeDate, nil)
 							router.ServeHTTP(w, req)
 							response := decodeJournalList(w, http.StatusOK)
 							Expect(response.Journals).To(HaveLen(5))
@@ -468,13 +468,13 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 					Context("Bad Values", func() {
 						It("should return 400 for invalid date format", func() {
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after=invalid-date", nil)
+							req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?created-after=invalid-date", nil)
 							router.ServeHTTP(w, req)
 							util.AssertError(w, "CreatedAfter", "Violates 'datetime")
 						})
 
 						It("should ignore empty date and return all entries", func() {
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after=", nil)
+							req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?created-after=", nil)
 							router.ServeHTTP(w, req)
 							response := decodeJournalList(w, http.StatusOK)
 							// Empty date is ignored, all entries returned
@@ -482,7 +482,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						})
 
 						It("should return 400 for wrong format (DD-MM-YYYY)", func() {
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after=15-02-2024", nil)
+							req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?created-after=15-02-2024", nil)
 							router.ServeHTTP(w, req)
 							util.AssertError(w, "CreatedAfter", "Violates 'datetime")
 						})
@@ -493,7 +493,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					Context("Allowed Values", func() {
 						It("should accept valid YYYY-MM-DD date and filter entries", func() {
 							beforeDate := time.Now().Add(24 * time.Hour).Format("2006-01-02")
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before="+beforeDate, nil)
+							req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?created-before="+beforeDate, nil)
 							router.ServeHTTP(w, req)
 							response := decodeJournalList(w, http.StatusOK)
 							// All entries created in this test should be returned
@@ -502,7 +502,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 						It("should return empty list for past date", func() {
 							pastDate := time.Now().Add(-48 * time.Hour).Format("2006-01-02")
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before="+pastDate, nil)
+							req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?created-before="+pastDate, nil)
 							router.ServeHTTP(w, req)
 							response := decodeJournalList(w, http.StatusOK)
 							Expect(response.Journals).To(BeEmpty())
@@ -511,7 +511,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						It("should work with created-after combined filter", func() {
 							afterDate := time.Now().Add(-24 * time.Hour).Format("2006-01-02")
 							beforeDate := time.Now().Add(24 * time.Hour).Format("2006-01-02")
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-after="+afterDate+"&created-before="+beforeDate, nil)
+							req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?created-after="+afterDate+"&created-before="+beforeDate, nil)
 							router.ServeHTTP(w, req)
 							response := decodeJournalList(w, http.StatusOK)
 							Expect(response.Journals).To(HaveLen(5))
@@ -520,13 +520,13 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 					Context("Bad Values", func() {
 						It("should return 400 for invalid date format", func() {
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before=not-a-date", nil)
+							req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?created-before=not-a-date", nil)
 							router.ServeHTTP(w, req)
 							util.AssertError(w, "CreatedBefore", "Violates 'datetime")
 						})
 
 						It("should ignore empty date and return all entries", func() {
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before=", nil)
+							req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?created-before=", nil)
 							router.ServeHTTP(w, req)
 							response := decodeJournalList(w, http.StatusOK)
 							// Empty date is ignored, all entries returned
@@ -534,7 +534,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						})
 
 						It("should return 400 for wrong format (DD-MM-YYYY)", func() {
-							req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?created-before=15-02-2024", nil)
+							req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?created-before=15-02-2024", nil)
 							router.ServeHTTP(w, req)
 							util.AssertError(w, "CreatedBefore", "Violates 'datetime")
 						})
@@ -545,7 +545,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 			Context("Sorting", func() {
 				Context("Allowed Values", func() {
 					It("should sort by ticker ascending", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?sort-by=ticker&sort-order=asc", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sort-by=ticker&sort-order=asc", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(5))
@@ -558,7 +558,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					})
 
 					It("should sort by ticker descending", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?sort-by=ticker&sort-order=desc", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sort-by=ticker&sort-order=desc", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(5))
@@ -571,7 +571,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					})
 
 					It("should sort by sequence ascending", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?sort-by=sequence&sort-order=asc", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sort-by=sequence&sort-order=asc", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(5))
@@ -585,7 +585,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					})
 
 					It("should sort by created_at ascending", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?sort-by=created_at&sort-order=asc", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sort-by=created_at&sort-order=asc", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						journals := response.Journals
@@ -597,7 +597,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					})
 
 					It("should sort by created_at descending (default)", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?sort-by=created_at&sort-order=desc", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sort-by=created_at&sort-order=desc", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						journals := response.Journals
@@ -611,13 +611,13 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 				Context("Bad Values", func() {
 					It("should return 400 for invalid sort-by field", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?sort-by=invalid", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sort-by=invalid", nil)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "SortBy", "oneof")
 					})
 
 					It("should return 400 for invalid sort-order value", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?sort-order=invalid", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sort-order=invalid", nil)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "SortOrder", "oneof")
 					})
@@ -627,7 +627,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 			Context("Pagination", func() {
 				Context("Allowed Values", func() {
 					It("should limit results with limit = 2", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?limit=2", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?limit=2", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(2))
@@ -637,7 +637,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					})
 
 					It("should skip entries with offset = 2, limit = 2", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?offset=2&limit=2", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?offset=2&limit=2", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(2))
@@ -646,8 +646,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						Expect(response.Metadata.Limit).To(Equal(2))
 					})
 
-					It("should return last entry with offset = 4, limit = 2", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?offset=4&limit=2", nil)
+					It("should return last journal with offset = 4, limit = 2", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?offset=4&limit=2", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(1))
@@ -657,7 +657,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					})
 
 					It("should return empty list for offset beyond total", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?offset=10", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?offset=10", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(BeEmpty())
@@ -667,7 +667,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					})
 
 					It("should accept limit = 1 (minimum)", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?limit=1", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?limit=1", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(1))
@@ -677,7 +677,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					})
 
 					It("should accept limit = 100 (maximum)", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?limit=100", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?limit=100", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(5))
@@ -689,37 +689,37 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 				Context("Bad Values", func() {
 					It("should return 400 for limit exceeds maximum (101)", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?limit=101", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?limit=101", nil)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Limit", "max")
 					})
 
 					It("should return 400 for limit = 0 (fails min=1 validation)", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?limit=0", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?limit=0", nil)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Limit", "min")
 					})
 
 					It("should return 400 for negative limit", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?limit=-1", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?limit=-1", nil)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Limit", "min")
 					})
 
 					It("should return 400 for negative offset", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?offset=-1", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?offset=-1", nil)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Offset", "min")
 					})
 
 					It("should return 400 for non-numeric limit", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?limit=abc", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?limit=abc", nil)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "message", "numeric")
 					})
 
 					It("should return 400 for non-numeric offset", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?offset=xyz", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?offset=xyz", nil)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "message", "numeric")
 					})
@@ -744,9 +744,9 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					router = util.CreateTestGinRouter()
 					v1 := router.Group("/v1")
 					journal := v1.Group("/journals")
-					handler.SetupJournalEntryRoutes(journal, journalHandler)
+					handler.SetupJournalRoutes(journal, journalHandler)
 
-					req, w = util.CreateTestRequest("GET", barkat.JournalEntries, nil)
+					req, w = util.CreateTestRequest("GET", barkat.JournalBase, nil)
 					router.ServeHTTP(w, req)
 				})
 

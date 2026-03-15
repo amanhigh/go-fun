@@ -33,7 +33,7 @@ type testLifecycle struct {
 func (t *testLifecycle) RegisterRoutes(engine *gin.Engine) {
 	// Using same path as real server to avoid bugs
 	journal := engine.Group(barkat.JournalBase)
-	handler.SetupJournalEntryRoutes(journal, t.journalHandler)
+	handler.SetupJournalRoutes(journal, t.journalHandler)
 	handler.SetupImageRoutes(journal, t.imageHandler)
 	handler.SetupNoteRoutes(journal, t.noteHandler)
 	handler.SetupTagRoutes(journal, t.tagHandler)

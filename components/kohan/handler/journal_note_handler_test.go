@@ -110,7 +110,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 						Content: "Strong OE at weekly level, watching for confirmation on daily.",
 						Format:  "MARKDOWN",
 					}
-					req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+					req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 					router.ServeHTTP(w, req)
 				})
 
@@ -162,7 +162,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 						Status:  "SET",
 						Content: "Note without explicit format.",
 					}
-					req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+					req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 					router.ServeHTTP(w, req)
 					response := decodeNoteResponse(w)
 					Expect(response.Format).To(Equal("MARKDOWN"))
@@ -175,7 +175,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 				Context("Allowed Values", func() {
 					It("should accept status = SET", func() {
 						note := barkat.Note{Status: "SET", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
 						Expect(response.Status).To(Equal("SET"))
@@ -183,7 +183,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 					It("should accept status = RUNNING", func() {
 						note := barkat.Note{Status: "RUNNING", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
 						Expect(response.Status).To(Equal("RUNNING"))
@@ -191,7 +191,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 					It("should accept status = DROPPED", func() {
 						note := barkat.Note{Status: "DROPPED", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
 						Expect(response.Status).To(Equal("DROPPED"))
@@ -199,7 +199,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 					It("should accept status = TAKEN", func() {
 						note := barkat.Note{Status: "TAKEN", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
 						Expect(response.Status).To(Equal("TAKEN"))
@@ -207,7 +207,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 					It("should accept status = REJECTED", func() {
 						note := barkat.Note{Status: "REJECTED", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
 						Expect(response.Status).To(Equal("REJECTED"))
@@ -215,7 +215,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 					It("should accept status = SUCCESS", func() {
 						note := barkat.Note{Status: "SUCCESS", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
 						Expect(response.Status).To(Equal("SUCCESS"))
@@ -223,7 +223,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 					It("should accept status = FAIL", func() {
 						note := barkat.Note{Status: "FAIL", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
 						Expect(response.Status).To(Equal("FAIL"))
@@ -231,7 +231,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 					It("should accept status = MISSED", func() {
 						note := barkat.Note{Status: "MISSED", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
 						Expect(response.Status).To(Equal("MISSED"))
@@ -239,7 +239,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 					It("should accept status = JUST_LOSS", func() {
 						note := barkat.Note{Status: "JUST_LOSS", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
 						Expect(response.Status).To(Equal("JUST_LOSS"))
@@ -247,7 +247,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 					It("should accept status = BROKEN", func() {
 						note := barkat.Note{Status: "BROKEN", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
 						Expect(response.Status).To(Equal("BROKEN"))
@@ -257,21 +257,21 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 				Context("Bad Values", func() {
 					It("should return 400 for missing status (PRD: required)", func() {
 						note := barkat.Note{Status: "", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Status", "required")
 					})
 
 					It("should return 400 for invalid status enum (PRD: must be valid status)", func() {
 						note := barkat.Note{Status: "INVALID", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Status", "oneof")
 					})
 
 					It("should return 400 for lowercase status (PRD: case-sensitive)", func() {
 						note := barkat.Note{Status: "set", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Status", "oneof")
 					})
@@ -282,7 +282,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 				Context("Allowed Values", func() {
 					It("should accept minimum content length (1 char)", func() {
 						note := barkat.Note{Status: "SET", Content: "X", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
 						Expect(response.Content).To(Equal("X"))
@@ -290,7 +290,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 					It("should accept content with special characters", func() {
 						note := barkat.Note{Status: "SET", Content: "Test with special chars: @#$%^&*()", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
 						Expect(response.Content).To(Equal("Test with special chars: @#$%^&*()"))
@@ -298,7 +298,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 					It("should accept content with newlines", func() {
 						note := barkat.Note{Status: "SET", Content: "Line 1\nLine 2\nLine 3", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
 						Expect(response.Content).To(ContainSubstring("\n"))
@@ -306,7 +306,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 					It("should accept content with markdown formatting", func() {
 						note := barkat.Note{Status: "SET", Content: "# Header\n- Item 1\n- Item 2\n**bold**", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
 						Expect(response.Content).To(ContainSubstring("# Header"))
@@ -316,7 +316,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 				Context("Bad Values", func() {
 					It("should return 400 for missing content (PRD: required)", func() {
 						note := barkat.Note{Status: "SET", Content: "", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Content", "required")
 					})
@@ -327,7 +327,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 							longContent.WriteString("X")
 						}
 						note := barkat.Note{Status: "SET", Content: longContent.String(), Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Content", "max")
 					})
@@ -338,7 +338,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 				Context("Allowed Values", func() {
 					It("should accept format = MARKDOWN", func() {
 						note := barkat.Note{Status: "SET", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
 						Expect(response.Format).To(Equal("MARKDOWN"))
@@ -346,7 +346,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 					It("should accept format = PLAINTEXT", func() {
 						note := barkat.Note{Status: "SET", Content: "Test content", Format: "PLAINTEXT"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
 						Expect(response.Format).To(Equal("PLAINTEXT"))
@@ -356,14 +356,14 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 				Context("Bad Values", func() {
 					It("should return 400 for invalid format enum (PRD: must be MARKDOWN or PLAINTEXT)", func() {
 						note := barkat.Note{Status: "SET", Content: "Test content", Format: "HTML"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Format", "oneof")
 					})
 
 					It("should return 400 for lowercase format (PRD: case-sensitive)", func() {
 						note := barkat.Note{Status: "SET", Content: "Test content", Format: "markdown"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Format", "oneof")
 					})
@@ -374,14 +374,14 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 				Context("Bad Values", func() {
 					It("should return 400 for malformed journal ID", func() {
 						note := barkat.Note{Status: "SET", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/invalid-uuid-format/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/invalid-uuid-format/notes", note)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid ID format but non-existent", func() {
 						note := barkat.Note{Status: "SET", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/jrn_12345678/notes", note)
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/jrn_12345678/notes", note)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
@@ -391,19 +391,19 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 		Context("Errors", func() {
 			It("should return 400 for invalid JSON", func() {
-				req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", []byte("invalid json"))
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", []byte("invalid json"))
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 			})
 
 			It("should return 400 for empty request body", func() {
-				req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", []byte(""))
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", []byte(""))
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 			})
 
 			It("should return 400 for null request body", func() {
-				req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", []byte("null"))
+				req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", []byte("null"))
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 			})
@@ -428,7 +428,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 					_, err = noteMgr.CreateNote(testCtx, journal.ExternalID, note2)
 					Expect(err).ToNot(HaveOccurred())
 
-					req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", nil)
+					req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/"+journal.ExternalID+"/notes", nil)
 					router.ServeHTTP(w, req)
 				})
 
@@ -467,7 +467,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 			Context("with journal having no notes", func() {
 				BeforeEach(func() {
-					req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", nil)
+					req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/"+journal.ExternalID+"/notes", nil)
 					router.ServeHTTP(w, req)
 				})
 
@@ -484,13 +484,13 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 				Context("Bad Values", func() {
 					It("should return 400 for malformed journal ID", func() {
 						note := barkat.Note{Status: "SET", Content: "Test content", Format: "MARKDOWN"}
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/invalid_format/notes", note)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/invalid_format/notes", note)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid ID format but non-existent", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/jrn_12345678/notes", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/jrn_12345678/notes", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
@@ -520,7 +520,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 		Context("Happy Path", func() {
 			Context("with valid journal and note IDs", func() {
 				BeforeEach(func() {
-					req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/notes/"+noteToDelete.ExternalID, nil)
+					req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+journal.ExternalID+"/notes/"+noteToDelete.ExternalID, nil)
 					router.ServeHTTP(w, req)
 				})
 
@@ -544,13 +544,13 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 			Context("Journal ID Path Parameter", func() {
 				Context("Bad Values", func() {
 					It("should return 400 for malformed journal ID", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/invalid-uuid-format/notes/"+noteToDelete.ExternalID, nil)
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/invalid-uuid-format/notes/"+noteToDelete.ExternalID, nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid ID format but non-existent", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/jrn_12345678/notes/"+noteToDelete.ExternalID, nil)
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/jrn_12345678/notes/"+noteToDelete.ExternalID, nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
@@ -560,13 +560,13 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 			Context("Note ID Path Parameter", func() {
 				Context("Bad Values", func() {
 					It("should return 400 for invalid note ID format", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/notes/invalid-note-format", nil)
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+journal.ExternalID+"/notes/invalid-note-format", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for non-existent note ID", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/notes/not_99999999", nil)
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+journal.ExternalID+"/notes/not_99999999", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
@@ -577,12 +577,12 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 		Context("Errors", func() {
 			It("should return 404 on second delete (idempotency check)", func() {
 				// First delete
-				req1, w1 := util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/notes/"+noteToDelete.ExternalID, nil)
+				req1, w1 := util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+journal.ExternalID+"/notes/"+noteToDelete.ExternalID, nil)
 				router.ServeHTTP(w1, req1)
 				Expect(w1.Code).To(Equal(http.StatusNoContent))
 
 				// Second delete should return 404
-				req2, w2 := util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/notes/"+noteToDelete.ExternalID, nil)
+				req2, w2 := util.CreateTestRequest("DELETE", barkat.JournalBase+"/"+journal.ExternalID+"/notes/"+noteToDelete.ExternalID, nil)
 				router.ServeHTTP(w2, req2)
 				Expect(w2.Code).To(Equal(http.StatusNotFound))
 			})
