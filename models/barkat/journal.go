@@ -83,12 +83,12 @@ type JournalList struct {
 
 // JournalReviewUpdate represents the request body for updating journal review status.
 type JournalReviewUpdate struct {
-	Reviewed bool `json:"reviewed" binding:"required"`
+	ReviewedAt string `json:"reviewed_at" binding:"required"`
 }
 
 // UpdateJournalStatusResponse represents the response for PATCH review status updates.
 // This follows the PRD specification for minimal PATCH responses.
 type UpdateJournalStatusResponse struct {
-	ID         string     `json:"id"`
-	ReviewedAt *time.Time `json:"reviewed_at,omitempty"`
+	ID         string  `json:"id"`
+	ReviewedAt *string `json:"reviewed_at"`
 }
