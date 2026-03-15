@@ -368,10 +368,9 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
 
-					It("should return 404 for valid UUID format but non-existent", func() {
+					It("should return 404 for valid ID format but non-existent", func() {
 						image := barkat.Image{Timeframe: "TMN", FileName: "RELIANCE.mwd.test.png"}
-						// BUG: uid format not matching journal format.
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/550e8400-e29b-41d4-a716-446655440000/images", image)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/jrn_12345678/images", image)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
@@ -509,8 +508,8 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
 
-					It("should return 404 for valid UUID format but non-existent", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/550e8400-e29b-41d4-a716-446655440000/images", nil)
+					It("should return 404 for valid ID format but non-existent", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/jrn_12345678/images", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
@@ -588,8 +587,8 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
 
-					It("should return 404 for valid UUID format but non-existent", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/images/550e8400-e29b-41d4-a716-446655440000", nil)
+					It("should return 404 for valid ID format but non-existent", func() {
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/images/img_12345678", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})

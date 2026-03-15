@@ -939,19 +939,19 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			Context("Entry ID Field", func() {
 				Context("Bad Values", func() {
 					It("should return 404 for non-existent entry ID", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/nonexistent-id", nil)
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/jrn_nonexistent", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
 
-					It("should return 404 for malformed UUID", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/invalid-uuid-format", nil)
+					It("should return 404 for invalid ID format", func() {
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/invalid_format", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
 
-					It("should return 404 for valid UUID format but non-existent", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/550e8400-e29b-41d4-a716-446655440000", nil)
+					It("should return 404 for valid ID format but non-existent", func() {
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/jrn_12345678", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
@@ -1134,19 +1134,19 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			Context("Entry ID Field", func() {
 				Context("Bad Values", func() {
 					It("should return 404 for non-existent entry ID", func() {
-						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/nonexistent-id", markReviewedPayload)
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/jrn_nonexistent", markReviewedPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
 
-					It("should return 404 for invalid UUID format", func() {
-						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/invalid-uuid-format", markReviewedPayload)
+					It("should return 404 for invalid ID format", func() {
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/invalid_format", markReviewedPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
 
-					It("should return 404 for valid UUID format but non-existent", func() {
-						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/550e8400-e29b-41d4-a716-446655440000", markReviewedPayload)
+					It("should return 404 for valid ID format but non-existent", func() {
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/jrn_12345678", markReviewedPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})

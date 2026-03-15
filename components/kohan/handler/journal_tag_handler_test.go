@@ -373,9 +373,9 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
 
-					It("should return 404 for valid UUID format but non-existent", func() {
+					It("should return 404 for valid ID format but non-existent", func() {
 						tag := barkat.Tag{Tag: "dep", Type: "REASON"}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/550e8400-e29b-41d4-a716-446655440000/tags", tag)
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/jrn_12345678/tags", tag)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
@@ -535,13 +535,13 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 					})
 
 					It("should return 404 for malformed journal ID", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/invalid-uuid-format/tags", nil)
+						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/invalid_format/tags", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
 
-					It("should return 404 for valid UUID format but non-existent", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/550e8400-e29b-41d4-a716-446655440000/tags", nil)
+					It("should return 404 for valid ID format but non-existent", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"/jrn_12345678/tags", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
@@ -622,8 +622,8 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})
 
-					It("should return 404 for valid UUID format but non-existent", func() {
-						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/tags/550e8400-e29b-41d4-a716-446655440000", nil)
+					It("should return 404 for valid ID format but non-existent", func() {
+						req, w = util.CreateTestRequest("DELETE", barkat.JournalEntries+"/"+journal.ExternalID+"/tags/tag_12345678", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
 					})

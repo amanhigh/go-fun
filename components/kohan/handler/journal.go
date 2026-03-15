@@ -8,6 +8,7 @@ import (
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-sql/civil"
 )
 
 // JournalHandler provides HTTP handlers for journal entry operations.
@@ -108,8 +109,8 @@ func (h *JournalHandlerImpl) HandleUpdateReviewStatus(c *gin.Context) {
 	}
 
 	var update barkat.JournalReviewUpdate
-	if bindErr := c.ShouldBindJSON(&update); bindErr != nil {
-		httpErr := util.ProcessValidationError(bindErr)
+	if err := c.ShouldBindJSON(&update); err != nil {
+		httpErr := util.ProcessValidationError(err)
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
@@ -121,9 +122,14 @@ func (h *JournalHandlerImpl) HandleUpdateReviewStatus(c *gin.Context) {
 	}
 
 	// Return minimal response as per PATCH best practices
+	var reviewedAt *civil.Date
+	if journal.ReviewedAt != nil {
+		civilDate := civil.DateOf(*journal.ReviewedAt)
+		reviewedAt = &civilDate
+	}
 	response := barkat.UpdateJournalStatusResponse{
 		ID:         journal.ExternalID,
-		ReviewedAt: journal.ReviewedAt,
+		ReviewedAt: reviewedAt,
 	}
 	c.JSON(http.StatusOK, common.NewEnvelope(response))
 }
