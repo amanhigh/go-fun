@@ -1,7 +1,7 @@
 package repository
 
 // ImageRepository provides persistence operations for journal images.
-// Images are screenshots captured across multiple timeframes for each entry.
+// Images are screenshots captured across multiple timeframes for each journal.
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 // ImageRepository provides persistence operations for journal images.
 type ImageRepository interface {
 	util.BaseDbRepositoryInterface
-	// ListImages returns all images for an entry.
+	// ListImages returns all images for a journal.
 	ListImages(ctx context.Context, journalID uint64) ([]barkat.Image, common.HttpError)
 }
 

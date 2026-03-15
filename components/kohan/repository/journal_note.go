@@ -2,7 +2,7 @@
 package repository
 
 // NoteRepository provides persistence operations for journal notes.
-// Notes capture trade observations and plans at specific entry statuses.
+// Notes capture trade observations and plans at specific journal statuses.
 
 import (
 	"context"

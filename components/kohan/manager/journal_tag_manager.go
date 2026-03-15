@@ -13,30 +13,30 @@ import (
 )
 
 type TagManager interface {
-	// CreateTag attaches a new tag to an entry.
+	// CreateTag attaches a new tag to a journal.
 	CreateTag(ctx context.Context, journalID string, tag barkat.Tag) (*barkat.Tag, common.HttpError)
-	// ListTags returns all tags for an entry, optionally filtered by type.
+	// ListTags returns all tags for a journal, optionally filtered by type.
 	ListTags(ctx context.Context, journalID string, tagType string) (barkat.TagList, common.HttpError)
-	// DeleteTag removes a tag by ID scoped to an entry.
+	// DeleteTag removes a tag by ID scoped to a journal.
 	DeleteTag(ctx context.Context, journalID string, tagID string) common.HttpError
 }
 
 type TagManagerImpl struct {
-	entryMgr JournalManager
-	repo     repository.TagRepository
+	journalMgr JournalManager
+	repo       repository.TagRepository
 }
 
 var _ TagManager = (*TagManagerImpl)(nil)
 
 // NewTagManager creates a new TagManager.
-func NewTagManager(entryMgr JournalManager, repo repository.TagRepository) *TagManagerImpl {
-	return &TagManagerImpl{entryMgr: entryMgr, repo: repo}
+func NewTagManager(journalMgr JournalManager, repo repository.TagRepository) *TagManagerImpl {
+	return &TagManagerImpl{journalMgr: journalMgr, repo: repo}
 }
 
 func (m *TagManagerImpl) CreateTag(ctx context.Context, journalExternalId string, tag barkat.Tag) (*barkat.Tag, common.HttpError) {
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Get journal entry to obtain internal ID
-		journal, httpErr := m.entryMgr.GetJournal(c, journalExternalId)
+		// Get journal to obtain internal ID
+		journal, httpErr := m.journalMgr.GetJournal(c, journalExternalId)
 		if httpErr != nil {
 			return httpErr
 		}
@@ -55,8 +55,8 @@ func (m *TagManagerImpl) CreateTag(ctx context.Context, journalExternalId string
 func (m *TagManagerImpl) ListTags(ctx context.Context, journalID, tagType string) (barkat.TagList, common.HttpError) {
 	var tags []barkat.Tag
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Get journal entry to obtain internal ID
-		journal, httpErr := m.entryMgr.GetJournal(c, journalID)
+		// Get journal to obtain internal ID
+		journal, httpErr := m.journalMgr.GetJournal(c, journalID)
 		if httpErr != nil {
 			return httpErr
 		}
@@ -74,8 +74,8 @@ func (m *TagManagerImpl) ListTags(ctx context.Context, journalID, tagType string
 
 func (m *TagManagerImpl) DeleteTag(ctx context.Context, journalExternalId, tagExternalId string) common.HttpError {
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Get journal entry to obtain internal ID
-		journal, httpErr := m.entryMgr.GetJournal(c, journalExternalId)
+		// Get journal to obtain internal ID
+		journal, httpErr := m.journalMgr.GetJournal(c, journalExternalId)
 		if httpErr != nil {
 			return httpErr
 		}

@@ -21,21 +21,21 @@ type ImageManager interface {
 }
 
 type ImageManagerImpl struct {
-	entryMgr JournalManager
-	repo     repository.ImageRepository
+	journalMgr JournalManager
+	repo       repository.ImageRepository
 }
 
 var _ ImageManager = (*ImageManagerImpl)(nil)
 
 // NewImageManager creates a new ImageManager.
-func NewImageManager(entryMgr JournalManager, repo repository.ImageRepository) *ImageManagerImpl {
-	return &ImageManagerImpl{entryMgr: entryMgr, repo: repo}
+func NewImageManager(journalMgr JournalManager, repo repository.ImageRepository) *ImageManagerImpl {
+	return &ImageManagerImpl{journalMgr: journalMgr, repo: repo}
 }
 
 func (m *ImageManagerImpl) CreateImage(ctx context.Context, journalExternalId string, image barkat.Image) (*barkat.Image, common.HttpError) {
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Get journal entry to obtain internal ID
-		journal, httpErr := m.entryMgr.GetJournal(c, journalExternalId)
+		// Get journal to obtain internal ID
+		journal, httpErr := m.journalMgr.GetJournal(c, journalExternalId)
 		if httpErr != nil {
 			return httpErr
 		}
@@ -54,8 +54,8 @@ func (m *ImageManagerImpl) CreateImage(ctx context.Context, journalExternalId st
 func (m *ImageManagerImpl) ListImages(ctx context.Context, journalExternalId string) (barkat.ImageList, common.HttpError) {
 	var images []barkat.Image
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Get journal entry to obtain internal ID
-		journal, httpErr := m.entryMgr.GetJournal(c, journalExternalId)
+		// Get journal to obtain internal ID
+		journal, httpErr := m.journalMgr.GetJournal(c, journalExternalId)
 		if httpErr != nil {
 			return httpErr
 		}
@@ -75,8 +75,8 @@ func (m *ImageManagerImpl) ListImages(ctx context.Context, journalExternalId str
 
 func (m *ImageManagerImpl) DeleteImage(ctx context.Context, journalExternalId, imageExternalId string) common.HttpError {
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Get journal entry to obtain internal ID
-		journal, httpErr := m.entryMgr.GetJournal(c, journalExternalId)
+		// Get journal to obtain internal ID
+		journal, httpErr := m.journalMgr.GetJournal(c, journalExternalId)
 		if httpErr != nil {
 			return httpErr
 		}

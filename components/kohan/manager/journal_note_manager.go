@@ -13,30 +13,30 @@ import (
 )
 
 type NoteManager interface {
-	// CreateNote attaches a new note to an entry.
+	// CreateNote attaches a new note to a journal.
 	CreateNote(ctx context.Context, journalID string, note barkat.Note) (*barkat.Note, common.HttpError)
-	// ListNotes returns all notes for an entry, optionally filtered by status.
+	// ListNotes returns all notes for a journal, optionally filtered by status.
 	ListNotes(ctx context.Context, journalID string, status string) (barkat.NoteList, common.HttpError)
-	// DeleteNote removes a note by ID scoped to an entry.
+	// DeleteNote removes a note by ID scoped to a journal.
 	DeleteNote(ctx context.Context, journalID string, noteID string) common.HttpError
 }
 
 type NoteManagerImpl struct {
-	entryMgr JournalManager
-	repo     repository.NoteRepository
+	journalMgr JournalManager
+	repo       repository.NoteRepository
 }
 
 var _ NoteManager = (*NoteManagerImpl)(nil)
 
 // NewNoteManager creates a new NoteManager.
-func NewNoteManager(entryMgr JournalManager, repo repository.NoteRepository) *NoteManagerImpl {
-	return &NoteManagerImpl{entryMgr: entryMgr, repo: repo}
+func NewNoteManager(journalMgr JournalManager, repo repository.NoteRepository) *NoteManagerImpl {
+	return &NoteManagerImpl{journalMgr: journalMgr, repo: repo}
 }
 
 func (m *NoteManagerImpl) CreateNote(ctx context.Context, journalExternalId string, note barkat.Note) (*barkat.Note, common.HttpError) {
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Get journal entry to obtain internal ID
-		journal, httpErr := m.entryMgr.GetJournal(c, journalExternalId)
+		// Get journal to obtain internal ID
+		journal, httpErr := m.journalMgr.GetJournal(c, journalExternalId)
 		if httpErr != nil {
 			return httpErr
 		}
@@ -55,8 +55,8 @@ func (m *NoteManagerImpl) CreateNote(ctx context.Context, journalExternalId stri
 func (m *NoteManagerImpl) ListNotes(ctx context.Context, journalID, status string) (barkat.NoteList, common.HttpError) {
 	var notes []barkat.Note
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Get journal entry to obtain internal ID
-		journal, httpErr := m.entryMgr.GetJournal(c, journalID)
+		// Get journal to obtain internal ID
+		journal, httpErr := m.journalMgr.GetJournal(c, journalID)
 		if httpErr != nil {
 			return httpErr
 		}
@@ -74,8 +74,8 @@ func (m *NoteManagerImpl) ListNotes(ctx context.Context, journalID, status strin
 
 func (m *NoteManagerImpl) DeleteNote(ctx context.Context, journalExternalId, noteExternalId string) common.HttpError {
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Get journal entry to obtain internal ID
-		journal, httpErr := m.entryMgr.GetJournal(c, journalExternalId)
+		// Get journal to obtain internal ID
+		journal, httpErr := m.journalMgr.GetJournal(c, journalExternalId)
 		if httpErr != nil {
 			return httpErr
 		}

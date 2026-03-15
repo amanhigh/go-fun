@@ -70,7 +70,7 @@ func provideKohanServer(
 	return httpServer
 }
 
-// ---- Entry ----
+// ---- Journal ----
 
 func provideJournalRepository(db *gorm.DB) repository.JournalRepository {
 	return repository.NewJournalRepository(db)
@@ -90,8 +90,8 @@ func provideImageRepository(db *gorm.DB) repository.ImageRepository {
 	return repository.NewImageRepository(db)
 }
 
-func provideImageManager(entryMgr manager.JournalManager, repo repository.ImageRepository) manager.ImageManager {
-	return manager.NewImageManager(entryMgr, repo)
+func provideImageManager(journalMgr manager.JournalManager, repo repository.ImageRepository) manager.ImageManager {
+	return manager.NewImageManager(journalMgr, repo)
 }
 
 func provideImageHandler(mgr manager.ImageManager) handler.ImageHandler {
@@ -104,8 +104,8 @@ func provideNoteRepository(db *gorm.DB) repository.NoteRepository {
 	return repository.NewNoteRepository(db)
 }
 
-func provideNoteManager(entryMgr manager.JournalManager, repo repository.NoteRepository) manager.NoteManager {
-	return manager.NewNoteManager(entryMgr, repo)
+func provideNoteManager(journalMgr manager.JournalManager, repo repository.NoteRepository) manager.NoteManager {
+	return manager.NewNoteManager(journalMgr, repo)
 }
 
 func provideNoteHandler(mgr manager.NoteManager) handler.NoteHandler {
@@ -118,8 +118,8 @@ func provideTagRepository(db *gorm.DB) repository.TagRepository {
 	return repository.NewTagRepository(db)
 }
 
-func provideTagManager(entryMgr manager.JournalManager, repo repository.TagRepository) manager.TagManager {
-	return manager.NewTagManager(entryMgr, repo)
+func provideTagManager(journalMgr manager.JournalManager, repo repository.TagRepository) manager.TagManager {
+	return manager.NewTagManager(journalMgr, repo)
 }
 
 func provideTagHandler(mgr manager.TagManager) handler.TagHandler {
@@ -130,7 +130,7 @@ func provideTagHandler(mgr manager.TagManager) handler.TagHandler {
 func (ki *KohanInjector) registerJournalDependencies() error {
 	container.MustSingleton(ki.di, ki.provideBarkatDB)
 
-	// Entry
+	// Journal
 	container.MustSingleton(ki.di, provideJournalRepository)
 	container.MustSingleton(ki.di, provideJournalManager)
 	container.MustSingleton(ki.di, provideJournalHandler)

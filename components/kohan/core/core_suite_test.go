@@ -53,12 +53,12 @@ var _ = BeforeSuite(func() {
 	db, err := core.CreateTestBarkatDB()
 	Expect(err).ToNot(HaveOccurred())
 
-	entryRepo := repository.NewJournalRepository(db)
-	entryMgr := manager.NewJournalManager(entryRepo)
-	journalHandler := handler.NewJournalHandler(entryMgr)
-	imageHandler := handler.NewImageHandler(manager.NewImageManager(entryMgr, repository.NewImageRepository(db)))
-	noteHandler := handler.NewNoteHandler(manager.NewNoteManager(entryMgr, repository.NewNoteRepository(db)))
-	tagHandler := handler.NewTagHandler(manager.NewTagManager(entryMgr, repository.NewTagRepository(db)))
+	journalRepo := repository.NewJournalRepository(db)
+	journalMgr := manager.NewJournalManager(journalRepo)
+	journalHandler := handler.NewJournalHandler(journalMgr)
+	imageHandler := handler.NewImageHandler(manager.NewImageManager(journalMgr, repository.NewImageRepository(db)))
+	noteHandler := handler.NewNoteHandler(manager.NewNoteManager(journalMgr, repository.NewNoteRepository(db)))
+	tagHandler := handler.NewTagHandler(manager.NewTagManager(journalMgr, repository.NewTagRepository(db)))
 
 	shutdown := util.NewGracefulShutdown()
 	engine := gin.Default()

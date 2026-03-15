@@ -39,11 +39,11 @@ var _ = Describe("KohanServer", func() {
 		monitorHandler = handler.NewMonitorHandler(testPath, mockManager)
 		db, err := core.CreateTestBarkatDB()
 		Expect(err).ToNot(HaveOccurred())
-		entryMgr := manager.NewJournalManager(repository.NewJournalRepository(db))
-		journalHandler = handler.NewJournalHandler(entryMgr)
-		imageHandler = handler.NewImageHandler(manager.NewImageManager(entryMgr, repository.NewImageRepository(db)))
-		noteHandler = handler.NewNoteHandler(manager.NewNoteManager(entryMgr, repository.NewNoteRepository(db)))
-		tagHandler = handler.NewTagHandler(manager.NewTagManager(entryMgr, repository.NewTagRepository(db)))
+		journalMgr := manager.NewJournalManager(repository.NewJournalRepository(db))
+		journalHandler = handler.NewJournalHandler(journalMgr)
+		imageHandler = handler.NewImageHandler(manager.NewImageManager(journalMgr, repository.NewImageRepository(db)))
+		noteHandler = handler.NewNoteHandler(manager.NewNoteManager(journalMgr, repository.NewNoteRepository(db)))
+		tagHandler = handler.NewTagHandler(manager.NewTagManager(journalMgr, repository.NewTagRepository(db)))
 
 		// Setup server
 		shutdown = util.NewGracefulShutdown()
@@ -89,13 +89,13 @@ var _ = Describe("KohanServer", func() {
 			recorder = httptest.NewRecorder()
 		})
 
-		It("should handle journal entry creation", func() {
+		It("should handle journal creation", func() {
 			body := `{"ticker":"RELIANCE","sequence":"MWD","type":"REJECTED","status":"FAIL","images":[` +
 				`{"timeframe":"DL","file_name":"RELIANCE.mwd.test.png"},` +
 				`{"timeframe":"WK","file_name":"RELIANCE.mwd.test.png"},` +
 				`{"timeframe":"MN","file_name":"RELIANCE.mwd.test.png"},` +
 				`{"timeframe":"TMN","file_name":"RELIANCE.mwd.test.png"}]}`
-			req := httptest.NewRequest("POST", "/v1/journal-entries", bytes.NewBufferString(body))
+			req := httptest.NewRequest("POST", "/v1/journals", bytes.NewBufferString(body))
 			req.Header.Set("Content-Type", "application/json")
 
 			// Use the server's engine which has validators registered
