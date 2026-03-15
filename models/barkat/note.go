@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Note represents a freeform note attached to a journal entry at a specific trade status.
+// Note represents a freeform note attached to a journal at a specific trade status.
 type Note struct {
 	ID         uint64    `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
 	ExternalID string    `gorm:"column:external_id;uniqueIndex;not null" json:"id"`

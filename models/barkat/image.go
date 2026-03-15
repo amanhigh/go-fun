@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Image represents a screenshot attached to a journal entry.
+// Image represents a screenshot attached to a journal.
 type Image struct {
 	ID         uint64    `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
 	ExternalID string    `gorm:"column:external_id;uniqueIndex;not null" json:"id"`

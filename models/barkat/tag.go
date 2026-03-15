@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Tag represents a reason or management tag attached to a journal entry.
+// Tag represents a reason or management tag attached to a journal.
 type Tag struct {
 	ID         uint64    `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
 	ExternalID string    `gorm:"column:external_id;uniqueIndex;not null" json:"id"`
