@@ -18,10 +18,13 @@ type ValidateTestStruct struct {
 	Email     string    `validate:"required,email"`
 	IsActive  bool      `validate:"required"`
 	Tags      []string  `validate:"required,min=1,max=3"`
-	BirthDate time.Time `validate:"required"`
+	BirthTime time.Time `validate:"required"`
 
 	// DateTime format field (string for datetime validation)
 	CreatedAt string `validate:"required,datetime=2006-01-02"`
+
+	// DateTime format field (nullable pointer for datetime validation)
+	ReviewedAt *string `validate:"omitempty,datetime=2006-01-02,not_future"`
 
 	// Custom validator field
 	SecretKey string `validate:"required,custom=secret"`
@@ -58,6 +61,21 @@ var _ = Describe("Validate", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 
+		// Register not_future validator
+		err = validate.RegisterValidation("not_future", func(fl validator.FieldLevel) bool {
+			dateStr := fl.Field().String()
+			if dateStr == "" {
+				return true // Empty string is handled by omitempty
+			}
+			parsedDate, err := time.Parse("2006-01-02", dateStr)
+			if err != nil {
+				return false // Invalid format
+			}
+			now := time.Now()
+			return parsedDate.Before(now) || parsedDate.Equal(now)
+		})
+		Expect(err).ToNot(HaveOccurred())
+
 		// Initialize valid data struct
 		validData = ValidateTestStruct{
 			Name:        "John Doe",
@@ -66,8 +84,9 @@ var _ = Describe("Validate", func() {
 			Email:       "john@example.com",
 			IsActive:    true,
 			Tags:        []string{"tech", "golang"},
-			BirthDate:   time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC),
+			BirthTime:   time.Date(1990, 1, 1, 14, 30, 0, 0, time.UTC),
 			CreatedAt:   "2023-12-25",
+			ReviewedAt:  func() *string { s := "2023-12-25"; return &s }(),
 			SecretKey:   "secret",
 			ProductCode: "AB-1234",
 		}
@@ -233,9 +252,9 @@ var _ = Describe("Validate", func() {
 		})
 	})
 
-	Context("Time Validations", func() {
-		It("should fail required time", func() {
-			validData.BirthDate = time.Time{} // Zero time to trigger required validation
+	Context("DateTime Validations (BirthTime - time.Time)", func() {
+		It("should fail required datetime", func() {
+			validData.BirthTime = time.Time{} // Zero time to trigger required validation
 			err = validate.Struct(validData)
 			Expect(err).To(HaveOccurred())
 
@@ -245,12 +264,12 @@ var _ = Describe("Validate", func() {
 			Expect(validationErrors).To(HaveLen(1))
 
 			fieldError := validationErrors[0]
-			Expect(fieldError.Field()).To(Equal("BirthDate"))
+			Expect(fieldError.Field()).To(Equal("BirthTime"))
 			Expect(fieldError.Tag()).To(Equal("required"))
 		})
 	})
 
-	Context("DateTime Format Validations", func() {
+	Context("DateTime Format Validations (CreatedAt - string)", func() {
 		It("should pass datetime format", func() {
 			// validData already has correct datetime format (2023-12-25)
 			err = validate.Struct(validData)
@@ -318,6 +337,87 @@ var _ = Describe("Validate", func() {
 			Expect(fieldError.Field()).To(Equal("CreatedAt"))
 			Expect(fieldError.Tag()).To(Equal("datetime"))
 			Expect(fieldError.Param()).To(Equal("2006-01-02"))
+		})
+	})
+
+	Context("DateTime Format Validations (ReviewedAt - *string)", func() {
+		It("should pass with valid date", func() {
+			// validData already has correct date format (2023-12-25)
+			err = validate.Struct(validData)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("should pass with nil pointer", func() {
+			validData.ReviewedAt = nil // Nil pointer should be valid with omitempty
+			err = validate.Struct(validData)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("should fail with invalid date format", func() {
+			invalidDate := "25/12/2023" // European date format
+			validData.ReviewedAt = &invalidDate
+			err = validate.Struct(validData)
+			Expect(err).To(HaveOccurred())
+
+			// Typecast to ValidationErrors and check field name
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
+			Expect(validationErrors).To(HaveLen(1))
+
+			fieldError := validationErrors[0]
+			Expect(fieldError.Field()).To(Equal("ReviewedAt"))
+			Expect(fieldError.Tag()).To(Equal("datetime"))
+			Expect(fieldError.Param()).To(Equal("2006-01-02"))
+		})
+
+		It("should fail with datetime instead of date", func() {
+			invalidDate := "2023-12-25T14:30:00Z" // DateTime format, should be date only
+			validData.ReviewedAt = &invalidDate
+			err = validate.Struct(validData)
+			Expect(err).To(HaveOccurred())
+
+			// Typecast to ValidationErrors and check field name
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
+			Expect(validationErrors).To(HaveLen(1))
+
+			fieldError := validationErrors[0]
+			Expect(fieldError.Field()).To(Equal("ReviewedAt"))
+			Expect(fieldError.Tag()).To(Equal("datetime"))
+			Expect(fieldError.Param()).To(Equal("2006-01-02"))
+		})
+
+		It("should fail with invalid date", func() {
+			invalidDate := "2023-13-45" // Invalid month and day
+			validData.ReviewedAt = &invalidDate
+			err = validate.Struct(validData)
+			Expect(err).To(HaveOccurred())
+
+			// Typecast to ValidationErrors and check field name
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
+			Expect(validationErrors).To(HaveLen(1))
+
+			fieldError := validationErrors[0]
+			Expect(fieldError.Field()).To(Equal("ReviewedAt"))
+			Expect(fieldError.Tag()).To(Equal("datetime"))
+			Expect(fieldError.Param()).To(Equal("2006-01-02"))
+		})
+
+		It("should fail with future date", func() {
+			futureDate := "2099-12-25" // Future date
+			validData.ReviewedAt = &futureDate
+			err = validate.Struct(validData)
+			Expect(err).To(HaveOccurred())
+
+			// Typecast to ValidationErrors and check field name
+			var validationErrors validator.ValidationErrors
+			Expect(errors.As(err, &validationErrors)).To(BeTrue())
+			Expect(validationErrors).To(HaveLen(1))
+
+			fieldError := validationErrors[0]
+			Expect(fieldError.Field()).To(Equal("ReviewedAt"))
+			Expect(fieldError.Tag()).To(Equal("not_future"))
 		})
 	})
 
