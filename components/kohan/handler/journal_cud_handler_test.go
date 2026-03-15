@@ -1119,7 +1119,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						payload := barkat.JournalReviewUpdate{ReviewedAt: futureDate}
 						req, w = util.CreateTestRequest("PATCH", barkat.JournalEntries+"/"+createdJournal.ExternalID, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "reviewed-at", "future")
+						util.AssertError(w, "reviewed_at", "future_date")
 					})
 
 					It("should return 400 for non-string types", func() {

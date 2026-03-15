@@ -2,6 +2,7 @@ package core
 
 import (
 	"regexp"
+	"time"
 
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -27,6 +28,7 @@ func RegisterJournalValidators() {
 		_ = v.RegisterValidation("tag", TagValidator)
 		_ = v.RegisterValidation("override", OverrideValidator)
 		_ = v.RegisterValidation("file_name", FileNameValidator)
+		_ = v.RegisterValidation("future_date", FutureDateValidator)
 	}
 }
 
@@ -52,4 +54,23 @@ func OverrideValidator(fl validator.FieldLevel) bool {
 func FileNameValidator(fl validator.FieldLevel) bool {
 	field := fl.Field().String()
 	return field == "" || fileNameRegex.MatchString(field)
+}
+
+// FutureDateValidator validates business rule: date should not be in the future
+func FutureDateValidator(fl validator.FieldLevel) bool {
+	field := fl.Field().String()
+
+	// Empty string is allowed (for unreviewed journals)
+	if field == "" {
+		return true
+	}
+
+	// Parse the date and validate business rule: not future date
+	if parsedTime, err := time.Parse("2006-01-02", field); err == nil {
+		now := time.Now()
+		return !parsedTime.After(now)
+	}
+
+	// If parsing fails, let the datetime validator handle the format error
+	return true
 }

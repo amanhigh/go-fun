@@ -83,7 +83,7 @@ type JournalList struct {
 
 // JournalReviewUpdate represents the request body for updating journal review status.
 type JournalReviewUpdate struct {
-	ReviewedAt string `json:"reviewed_at" binding:"required"`
+	ReviewedAt string `json:"reviewed_at" binding:"required,datetime=2006-01-02,future_date"`
 }
 
 // UpdateJournalStatusResponse represents the response for PATCH review status updates.

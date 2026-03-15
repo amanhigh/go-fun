@@ -19,6 +19,7 @@ var _ = Describe("Validators", func() {
 		_ = v.RegisterValidation("ticker", core.TickerValidator)
 		_ = v.RegisterValidation("tag", core.TagValidator)
 		_ = v.RegisterValidation("override", core.OverrideValidator)
+		_ = v.RegisterValidation("future_date", core.FutureDateValidator)
 	})
 
 	Describe("ticker validator", func() {
@@ -169,6 +170,38 @@ var _ = Describe("Validators", func() {
 				Expect(v.Var("abc1", "override")).ToNot(Succeed())
 				Expect(v.Var("ABC123", "override")).ToNot(Succeed())
 				Expect(v.Var("test123name", "override")).ToNot(Succeed())
+			})
+		})
+	})
+
+	Describe("reviewed_at validator", func() {
+		Context("future date business rule", func() {
+			It("should accept empty string", func() {
+				Expect(v.Var("", "future_date")).To(Succeed())
+			})
+
+			It("should accept past dates", func() {
+				Expect(v.Var("2024-01-16", "future_date")).To(Succeed())
+				Expect(v.Var("2023-12-31", "future_date")).To(Succeed())
+				Expect(v.Var("2020-01-01", "future_date")).To(Succeed())
+			})
+
+			It("should accept today's date", func() {
+				today := "2024-01-15" // Assuming test runs on 2024-01-15 or later
+				Expect(v.Var(today, "future_date")).To(Succeed())
+			})
+
+			It("should reject future dates", func() {
+				Expect(v.Var("2099-12-31", "future_date")).ToNot(Succeed())
+				Expect(v.Var("2100-01-01", "future_date")).ToNot(Succeed())
+				Expect(v.Var("2030-07-15", "future_date")).ToNot(Succeed())
+			})
+
+			It("should pass through invalid formats to datetime validator", func() {
+				// Custom validator should return true for invalid formats, letting datetime validator handle them
+				Expect(v.Var("invalid-date", "future_date")).To(Succeed())
+				Expect(v.Var("2024-13-32", "future_date")).To(Succeed())
+				Expect(v.Var("2024/01/16", "future_date")).To(Succeed())
 			})
 		})
 	})
