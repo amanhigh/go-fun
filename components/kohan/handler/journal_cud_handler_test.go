@@ -586,6 +586,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					})
 
 					It("should return 400 for duplicate timeframes (PRD: unique timeframes required)", func() {
+						// BUG: Duplicate Timeframe should be allowed.
 						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",

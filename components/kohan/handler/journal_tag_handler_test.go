@@ -148,34 +148,6 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 					Expect(tagList.Tags).To(HaveLen(1))
 				})
 			})
-
-			// HACK: Remove as it is Covered in Field Validation.
-			Context("with optional override field", func() {
-				It("should accept tag with override", func() {
-					override := "loc"
-					tag := barkat.Tag{
-						Tag:      "dep",
-						Type:     "REASON",
-						Override: &override,
-					}
-					req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
-					router.ServeHTTP(w, req)
-					response := decodeTagResponse(w)
-					Expect(response.Override).ToNot(BeNil())
-					Expect(*response.Override).To(Equal("loc"))
-				})
-
-				It("should accept tag without override (nil)", func() {
-					tag := barkat.Tag{
-						Tag:  "oe",
-						Type: "REASON",
-					}
-					req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/tags", tag)
-					router.ServeHTTP(w, req)
-					response := decodeTagResponse(w)
-					Expect(response.Override).To(BeNil())
-				})
-			})
 		})
 
 		Context("Field Validations", func() {

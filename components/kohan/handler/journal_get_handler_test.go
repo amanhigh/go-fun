@@ -78,6 +78,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					{Timeframe: "WK"},
 					{Timeframe: "MN"},
 					{Timeframe: "TMN"},
+					{Timeframe: "SMN"},
+					{Timeframe: "YR"},
 				},
 			}
 			Expect(journalMgr.CreateJournal(testCtx, &journal)).To(Succeed())
@@ -109,11 +111,13 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					Expect(response.Type).To(Equal("REJECTED"))
 					Expect(response.Status).To(Equal("FAIL"))
 					Expect(response.CreatedAt).ToNot(BeZero())
-					Expect(response.Images).To(HaveLen(4))
+					Expect(response.Images).To(HaveLen(6))
 					Expect(response.Images[0].Timeframe).To(Equal("DL"))
 					Expect(response.Images[1].Timeframe).To(Equal("WK"))
 					Expect(response.Images[2].Timeframe).To(Equal("MN"))
 					Expect(response.Images[3].Timeframe).To(Equal("TMN"))
+					Expect(response.Images[4].Timeframe).To(Equal("SMN"))
+					Expect(response.Images[5].Timeframe).To(Equal("YR"))
 				})
 			})
 		})
@@ -151,6 +155,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				{Timeframe: "WK"},
 				{Timeframe: "MN"},
 				{Timeframe: "TMN"},
+				{Timeframe: "SMN"},
+				{Timeframe: "YR"},
 			}
 
 			journals := []barkat.Journal{
@@ -219,11 +225,13 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						Expect(journal.Type).ToNot(BeEmpty())
 						Expect(journal.Status).ToNot(BeEmpty())
 						Expect(journal.CreatedAt).ToNot(BeZero())
-						Expect(journal.Images).To(HaveLen(4))
+						Expect(journal.Images).To(HaveLen(6))
 						Expect(journal.Images[0].Timeframe).To(Equal("DL"))
 						Expect(journal.Images[1].Timeframe).To(Equal("WK"))
 						Expect(journal.Images[2].Timeframe).To(Equal("MN"))
 						Expect(journal.Images[3].Timeframe).To(Equal("TMN"))
+						Expect(journal.Images[4].Timeframe).To(Equal("SMN"))
+						Expect(journal.Images[5].Timeframe).To(Equal("YR"))
 					}
 				})
 			})

@@ -30,11 +30,18 @@ func NewJournalRepository(db *gorm.DB) *JournalRepositoryImpl {
 	}
 }
 
+// ---- Constants ----
+
+// ImageTimeframeOrder defines the SQL order clause for image timeframes
+const ImageTimeframeOrder = "CASE timeframe WHEN 'DL' THEN 1 WHEN 'WK' THEN 2 WHEN 'MN' THEN 3 WHEN 'TMN' THEN 4 WHEN 'SMN' THEN 5 WHEN 'YR' THEN 6 ELSE 7 END"
+
 // ---- Journal ----
 
 func (r *JournalRepositoryImpl) GetJournal(ctx context.Context, journalExternalId string) (barkat.Journal, error) {
 	var journal barkat.Journal
-	err := r.SafeTx(ctx).Preload("Images").Preload("Tags").Preload("Notes").First(&journal, "external_id = ?", journalExternalId).Error
+	err := r.SafeTx(ctx).Preload("Images", func(db *gorm.DB) *gorm.DB {
+		return db.Order(ImageTimeframeOrder)
+	}).Preload("Tags").Preload("Notes").First(&journal, "external_id = ?", journalExternalId).Error
 	return journal, err
 }
 
@@ -92,6 +99,8 @@ func (r *JournalRepositoryImpl) fetchJournals(tx *gorm.DB, query barkat.JournalQ
 	}
 
 	var journals []barkat.Journal
-	err := tx.Preload("Images").Order(orderClause).Offset(query.Offset).Limit(query.Limit).Find(&journals).Error
+	err := tx.Preload("Images", func(db *gorm.DB) *gorm.DB {
+		return db.Order(ImageTimeframeOrder)
+	}).Order(orderClause).Offset(query.Offset).Limit(query.Limit).Find(&journals).Error
 	return journals, err
 }

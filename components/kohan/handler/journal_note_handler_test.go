@@ -189,7 +189,6 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 						Expect(response.Status).To(Equal("RUNNING"))
 					})
 
-					// FIXME: Model has typo "DROPPEN" instead of "DROPPED" - fix in note.go binding tag
 					It("should accept status = DROPPED", func() {
 						note := barkat.Note{Status: "DROPPED", Content: "Test content", Format: "MARKDOWN"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/notes", note)
