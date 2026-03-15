@@ -10,6 +10,7 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/models/barkat"
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
 )
 
@@ -45,18 +46,25 @@ func (h *TagHandlerImpl) HandleCreateTag(c *gin.Context) {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusCreated, createdTag)
+	c.JSON(http.StatusCreated, common.NewEnvelope(createdTag))
 }
 
 func (h *TagHandlerImpl) HandleListTags(c *gin.Context) {
 	journalID := c.Param("id")
-	tagType := c.Query("type")
-	tags, httpErr := h.tagMgr.ListTags(c.Request.Context(), journalID, tagType)
+	query := barkat.TagQuery{}
+
+	if bindErr := c.ShouldBindQuery(&query); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+
+	tagList, httpErr := h.tagMgr.ListTags(c.Request.Context(), journalID, query.Type)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"tags": tags})
+	c.JSON(http.StatusOK, common.NewEnvelope(tagList))
 }
 
 func (h *TagHandlerImpl) HandleDeleteTag(c *gin.Context) {

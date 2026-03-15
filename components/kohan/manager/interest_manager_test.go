@@ -1,3 +1,4 @@
+//nolint:dupl // False positives: Similar test patterns for interest/dividend processing
 package manager_test
 
 import (
@@ -95,7 +96,6 @@ var _ = Describe("InterestManager", func() {
 		})
 	})
 
-	//nolint: dupl
 	Context("Multiple Interests", func() {
 		var (
 			interests []tax.Interest

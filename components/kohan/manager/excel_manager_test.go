@@ -1,4 +1,4 @@
-//nolint:dupl // Test files often have similar setup patterns
+//nolint:dupl // False positives: Similar Excel test patterns for dividends/interest sheets
 package manager_test
 
 import (

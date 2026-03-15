@@ -181,24 +181,22 @@ func (_c *NoteManager_DeleteNote_Call) RunAndReturn(run func(ctx context.Context
 }
 
 // ListNotes provides a mock function for the type NoteManager
-func (_mock *NoteManager) ListNotes(ctx context.Context, journalID string, status string) ([]barkat.Note, common.HttpError) {
+func (_mock *NoteManager) ListNotes(ctx context.Context, journalID string, status string) (barkat.NoteList, common.HttpError) {
 	ret := _mock.Called(ctx, journalID, status)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListNotes")
 	}
 
-	var r0 []barkat.Note
+	var r0 barkat.NoteList
 	var r1 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) ([]barkat.Note, common.HttpError)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (barkat.NoteList, common.HttpError)); ok {
 		return returnFunc(ctx, journalID, status)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) []barkat.Note); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) barkat.NoteList); ok {
 		r0 = returnFunc(ctx, journalID, status)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]barkat.Note)
-		}
+		r0 = ret.Get(0).(barkat.NoteList)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) common.HttpError); ok {
 		r1 = returnFunc(ctx, journalID, status)
@@ -246,12 +244,12 @@ func (_c *NoteManager_ListNotes_Call) Run(run func(ctx context.Context, journalI
 	return _c
 }
 
-func (_c *NoteManager_ListNotes_Call) Return(notes []barkat.Note, httpError common.HttpError) *NoteManager_ListNotes_Call {
-	_c.Call.Return(notes, httpError)
+func (_c *NoteManager_ListNotes_Call) Return(noteList barkat.NoteList, httpError common.HttpError) *NoteManager_ListNotes_Call {
+	_c.Call.Return(noteList, httpError)
 	return _c
 }
 
-func (_c *NoteManager_ListNotes_Call) RunAndReturn(run func(ctx context.Context, journalID string, status string) ([]barkat.Note, common.HttpError)) *NoteManager_ListNotes_Call {
+func (_c *NoteManager_ListNotes_Call) RunAndReturn(run func(ctx context.Context, journalID string, status string) (barkat.NoteList, common.HttpError)) *NoteManager_ListNotes_Call {
 	_c.Call.Return(run)
 	return _c
 }

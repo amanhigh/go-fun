@@ -11,6 +11,7 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/models/barkat"
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
 )
 
@@ -46,18 +47,25 @@ func (h *NoteHandlerImpl) HandleCreateNote(c *gin.Context) {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusCreated, createdNote)
+	c.JSON(http.StatusCreated, common.NewEnvelope(createdNote))
 }
 
 func (h *NoteHandlerImpl) HandleListNotes(c *gin.Context) {
 	journalID := c.Param("id")
-	status := c.Query("note_status")
-	notes, httpErr := h.noteMgr.ListNotes(c.Request.Context(), journalID, status)
+	query := barkat.NoteQuery{}
+
+	if bindErr := c.ShouldBindQuery(&query); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+
+	noteList, httpErr := h.noteMgr.ListNotes(c.Request.Context(), journalID, query.Status)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"notes": notes})
+	c.JSON(http.StatusOK, common.NewEnvelope(noteList))
 }
 
 func (h *NoteHandlerImpl) HandleDeleteNote(c *gin.Context) {

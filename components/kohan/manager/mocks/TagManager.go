@@ -181,24 +181,22 @@ func (_c *TagManager_DeleteTag_Call) RunAndReturn(run func(ctx context.Context, 
 }
 
 // ListTags provides a mock function for the type TagManager
-func (_mock *TagManager) ListTags(ctx context.Context, journalID string, tagType string) ([]barkat.Tag, common.HttpError) {
+func (_mock *TagManager) ListTags(ctx context.Context, journalID string, tagType string) (barkat.TagList, common.HttpError) {
 	ret := _mock.Called(ctx, journalID, tagType)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListTags")
 	}
 
-	var r0 []barkat.Tag
+	var r0 barkat.TagList
 	var r1 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) ([]barkat.Tag, common.HttpError)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (barkat.TagList, common.HttpError)); ok {
 		return returnFunc(ctx, journalID, tagType)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) []barkat.Tag); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) barkat.TagList); ok {
 		r0 = returnFunc(ctx, journalID, tagType)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]barkat.Tag)
-		}
+		r0 = ret.Get(0).(barkat.TagList)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) common.HttpError); ok {
 		r1 = returnFunc(ctx, journalID, tagType)
@@ -246,12 +244,12 @@ func (_c *TagManager_ListTags_Call) Run(run func(ctx context.Context, journalID 
 	return _c
 }
 
-func (_c *TagManager_ListTags_Call) Return(tags []barkat.Tag, httpError common.HttpError) *TagManager_ListTags_Call {
-	_c.Call.Return(tags, httpError)
+func (_c *TagManager_ListTags_Call) Return(tagList barkat.TagList, httpError common.HttpError) *TagManager_ListTags_Call {
+	_c.Call.Return(tagList, httpError)
 	return _c
 }
 
-func (_c *TagManager_ListTags_Call) RunAndReturn(run func(ctx context.Context, journalID string, tagType string) ([]barkat.Tag, common.HttpError)) *TagManager_ListTags_Call {
+func (_c *TagManager_ListTags_Call) RunAndReturn(run func(ctx context.Context, journalID string, tagType string) (barkat.TagList, common.HttpError)) *TagManager_ListTags_Call {
 	_c.Call.Return(run)
 	return _c
 }

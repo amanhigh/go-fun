@@ -6,6 +6,7 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/models/barkat"
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
 )
 
@@ -41,17 +42,17 @@ func (h *ImageHandlerImpl) HandleCreateImage(c *gin.Context) {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusCreated, createdImage)
+	c.JSON(http.StatusCreated, common.NewEnvelope(createdImage))
 }
 
 func (h *ImageHandlerImpl) HandleListImages(c *gin.Context) {
 	journalID := c.Param("id")
-	images, httpErr := h.imageMgr.ListImages(c.Request.Context(), journalID)
+	imageList, httpErr := h.imageMgr.ListImages(c.Request.Context(), journalID)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"images": images})
+	c.JSON(http.StatusOK, common.NewEnvelope(imageList))
 }
 
 func (h *ImageHandlerImpl) HandleDeleteImage(c *gin.Context) {

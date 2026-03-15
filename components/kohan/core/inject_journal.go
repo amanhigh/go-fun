@@ -56,7 +56,10 @@ func (ki *KohanInjector) provideBarkatDB() (*gorm.DB, error) {
 }
 
 func provideHttpServer(cfg config.HttpServerConfig, shutdown util.Shutdown) util.HttpServer {
-	return util.NewHttpServer(cfg, gin.Default(), shutdown)
+	// Create Gin engine and register validators before setting up routes
+	engine := gin.Default()
+	RegisterJournalValidators()
+	return util.NewHttpServer(cfg, engine, shutdown)
 }
 
 func provideKohanServer(

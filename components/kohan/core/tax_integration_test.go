@@ -1,4 +1,4 @@
-//nolint:dupl // Integration test files often have similar setup patterns
+//nolint:dupl // False positives: Similar valuation patterns for different tickers
 package core_test
 
 import (
