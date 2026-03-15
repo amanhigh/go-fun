@@ -715,14 +715,12 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					It("should return 400 for non-numeric limit", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?limit=abc", nil)
 						router.ServeHTTP(w, req)
-						// BUG: Gin returns strconv.NumError without field context, so check generic message
 						util.AssertError(w, "message", "numeric")
 					})
 
 					It("should return 400 for non-numeric offset", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalEntries+"?offset=xyz", nil)
 						router.ServeHTTP(w, req)
-						// Gin returns strconv.NumError without field context, so check generic message
 						util.AssertError(w, "message", "numeric")
 					})
 				})

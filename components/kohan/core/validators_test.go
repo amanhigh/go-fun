@@ -22,7 +22,12 @@ var _ = Describe("Validators", func() {
 		_ = v.RegisterValidation("ticker", core.TickerValidator)
 		_ = v.RegisterValidation("tag", core.TagValidator)
 		_ = v.RegisterValidation("override", core.OverrideValidator)
+		_ = v.RegisterValidation("file_name", core.FileNameValidator)
 		_ = v.RegisterValidation("not_future", core.NotFutureValidator)
+		_ = v.RegisterValidation("journal_id", core.JournalIDValidator)
+		_ = v.RegisterValidation("note_id", core.NoteIDValidator)
+		_ = v.RegisterValidation("tag_id", core.TagIDValidator)
+		_ = v.RegisterValidation("image_id", core.ImageIDValidator)
 	})
 
 	Describe("ticker validator", func() {
@@ -215,6 +220,202 @@ var _ = Describe("Validators", func() {
 				Expect(v.Struct(test1)).ToNot(Succeed())
 				Expect(v.Struct(test2)).ToNot(Succeed())
 				Expect(v.Struct(test3)).ToNot(Succeed())
+			})
+		})
+	})
+
+	Describe("file_name validator", func() {
+		Context("valid file names", func() {
+			It("should accept png files", func() {
+				Expect(v.Var("image.png", "file_name")).To(Succeed())
+				Expect(v.Var("test-image.png", "file_name")).To(Succeed())
+				Expect(v.Var("file_name_123.png", "file_name")).To(Succeed())
+			})
+
+			It("should accept jpg files", func() {
+				Expect(v.Var("image.jpg", "file_name")).To(Succeed())
+				Expect(v.Var("test-image.jpg", "file_name")).To(Succeed())
+				Expect(v.Var("file_name_123.jpg", "file_name")).To(Succeed())
+			})
+
+			It("should accept jpeg files", func() {
+				Expect(v.Var("image.jpeg", "file_name")).To(Succeed())
+				Expect(v.Var("test-image.jpeg", "file_name")).To(Succeed())
+				Expect(v.Var("file_name_123.jpeg", "file_name")).To(Succeed())
+			})
+
+			It("should accept complex names with valid characters", func() {
+				Expect(v.Var("test-image_123.file.png", "file_name")).To(Succeed())
+				Expect(v.Var("my_image.test.jpg", "file_name")).To(Succeed())
+				Expect(v.Var("complex-file_name.jpeg", "file_name")).To(Succeed())
+			})
+
+			It("should accept empty string", func() {
+				Expect(v.Var("", "file_name")).To(Succeed())
+			})
+		})
+
+		Context("invalid file names", func() {
+			It("should reject invalid file extensions", func() {
+				Expect(v.Var("image.gif", "file_name")).ToNot(Succeed())
+				Expect(v.Var("file.txt", "file_name")).ToNot(Succeed())
+				Expect(v.Var("document.pdf", "file_name")).ToNot(Succeed())
+			})
+
+			It("should reject special characters", func() {
+				Expect(v.Var("image@file.png", "file_name")).ToNot(Succeed())
+				Expect(v.Var("test#image.jpg", "file_name")).ToNot(Succeed())
+				Expect(v.Var("file&name.jpeg", "file_name")).ToNot(Succeed())
+			})
+
+			It("should reject spaces", func() {
+				Expect(v.Var("image file.png", "file_name")).ToNot(Succeed())
+				Expect(v.Var("test image.jpg", "file_name")).ToNot(Succeed())
+			})
+
+			It("should reject files without extension", func() {
+				Expect(v.Var("image", "file_name")).ToNot(Succeed())
+				Expect(v.Var("test-file", "file_name")).ToNot(Succeed())
+			})
+		})
+	})
+
+	//nolint:dupl
+	Describe("journal_id validator", func() {
+		Context("valid journal IDs", func() {
+			It("should accept jrn_ prefix with 8 alphanumeric characters", func() {
+				Expect(v.Var("jrn_12345678", "journal_id")).To(Succeed())
+				Expect(v.Var("jrn_ABCDEFGH", "journal_id")).To(Succeed())
+				Expect(v.Var("jrn_ab12CD34", "journal_id")).To(Succeed())
+			})
+
+			It("should accept empty string", func() {
+				Expect(v.Var("", "journal_id")).To(Succeed())
+			})
+		})
+
+		Context("invalid journal IDs", func() {
+			It("should reject wrong prefix", func() {
+				Expect(v.Var("journal_12345678", "journal_id")).ToNot(Succeed())
+				Expect(v.Var("jrn12345678", "journal_id")).ToNot(Succeed())
+				Expect(v.Var("test_12345678", "journal_id")).ToNot(Succeed())
+			})
+
+			It("should reject wrong length", func() {
+				Expect(v.Var("jrn_1234567", "journal_id")).ToNot(Succeed())
+				Expect(v.Var("jrn_123456789", "journal_id")).ToNot(Succeed())
+				Expect(v.Var("jrn_123", "journal_id")).ToNot(Succeed())
+			})
+
+			It("should reject special characters", func() {
+				Expect(v.Var("jrn_1234_5678", "journal_id")).ToNot(Succeed())
+				Expect(v.Var("jrn_123-45678", "journal_id")).ToNot(Succeed())
+				Expect(v.Var("jrn_123@45678", "journal_id")).ToNot(Succeed())
+			})
+		})
+	})
+
+	//nolint:dupl
+	Describe("note_id validator", func() {
+		Context("valid note IDs", func() {
+			It("should accept not_ prefix with 8 alphanumeric characters", func() {
+				Expect(v.Var("not_12345678", "note_id")).To(Succeed())
+				Expect(v.Var("not_ABCDEFGH", "note_id")).To(Succeed())
+				Expect(v.Var("not_ab12CD34", "note_id")).To(Succeed())
+			})
+
+			It("should accept empty string", func() {
+				Expect(v.Var("", "note_id")).To(Succeed())
+			})
+		})
+
+		Context("invalid note IDs", func() {
+			It("should reject wrong prefix", func() {
+				Expect(v.Var("note_12345678", "note_id")).ToNot(Succeed())
+				Expect(v.Var("not12345678", "note_id")).ToNot(Succeed())
+				Expect(v.Var("test_12345678", "note_id")).ToNot(Succeed())
+			})
+
+			It("should reject wrong length", func() {
+				Expect(v.Var("not_1234567", "note_id")).ToNot(Succeed())
+				Expect(v.Var("not_123456789", "note_id")).ToNot(Succeed())
+				Expect(v.Var("not_123", "note_id")).ToNot(Succeed())
+			})
+
+			It("should reject special characters", func() {
+				Expect(v.Var("not_1234_5678", "note_id")).ToNot(Succeed())
+				Expect(v.Var("not_123-45678", "note_id")).ToNot(Succeed())
+				Expect(v.Var("not_123@45678", "note_id")).ToNot(Succeed())
+			})
+		})
+	})
+
+	//nolint:dupl
+	Describe("tag_id validator", func() {
+		Context("valid tag IDs", func() {
+			It("should accept tag_ prefix with 8 alphanumeric characters", func() {
+				Expect(v.Var("tag_12345678", "tag_id")).To(Succeed())
+				Expect(v.Var("tag_ABCDEFGH", "tag_id")).To(Succeed())
+				Expect(v.Var("tag_ab12CD34", "tag_id")).To(Succeed())
+			})
+
+			It("should accept empty string", func() {
+				Expect(v.Var("", "tag_id")).To(Succeed())
+			})
+		})
+
+		Context("invalid tag IDs", func() {
+			It("should reject wrong prefix", func() {
+				Expect(v.Var("tags_12345678", "tag_id")).ToNot(Succeed())
+				Expect(v.Var("tag12345678", "tag_id")).ToNot(Succeed())
+				Expect(v.Var("test_12345678", "tag_id")).ToNot(Succeed())
+			})
+
+			It("should reject wrong length", func() {
+				Expect(v.Var("tag_1234567", "tag_id")).ToNot(Succeed())
+				Expect(v.Var("tag_123456789", "tag_id")).ToNot(Succeed())
+				Expect(v.Var("tag_123", "tag_id")).ToNot(Succeed())
+			})
+
+			It("should reject special characters", func() {
+				Expect(v.Var("tag_1234_5678", "tag_id")).ToNot(Succeed())
+				Expect(v.Var("tag_123-45678", "tag_id")).ToNot(Succeed())
+				Expect(v.Var("tag_123@45678", "tag_id")).ToNot(Succeed())
+			})
+		})
+	})
+
+	//nolint:dupl
+	Describe("image_id validator", func() {
+		Context("valid image IDs", func() {
+			It("should accept img_ prefix with 8 alphanumeric characters", func() {
+				Expect(v.Var("img_12345678", "image_id")).To(Succeed())
+				Expect(v.Var("img_ABCDEFGH", "image_id")).To(Succeed())
+				Expect(v.Var("img_ab12CD34", "image_id")).To(Succeed())
+			})
+
+			It("should accept empty string", func() {
+				Expect(v.Var("", "image_id")).To(Succeed())
+			})
+		})
+
+		Context("invalid image IDs", func() {
+			It("should reject wrong prefix", func() {
+				Expect(v.Var("image_12345678", "image_id")).ToNot(Succeed())
+				Expect(v.Var("img12345678", "image_id")).ToNot(Succeed())
+				Expect(v.Var("test_12345678", "image_id")).ToNot(Succeed())
+			})
+
+			It("should reject wrong length", func() {
+				Expect(v.Var("img_1234567", "image_id")).ToNot(Succeed())
+				Expect(v.Var("img_123456789", "image_id")).ToNot(Succeed())
+				Expect(v.Var("img_123", "image_id")).ToNot(Succeed())
+			})
+
+			It("should reject special characters", func() {
+				Expect(v.Var("img_1234_5678", "image_id")).ToNot(Succeed())
+				Expect(v.Var("img_123-45678", "image_id")).ToNot(Succeed())
+				Expect(v.Var("img_123@45678", "image_id")).ToNot(Succeed())
 			})
 		})
 	})

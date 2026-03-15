@@ -352,6 +352,24 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 				})
 			})
 
+			Context("Images Field", func() {
+				Context("Allowed Values", func() {
+					It("should allow duplicate timeframe (PRD: duplicates allowed)", func() {
+						// First image with DL timeframe already exists from journal creation
+						image := barkat.Image{
+							Timeframe: "DL",
+							FileName:  "RELIANCE.mwd.duplicate.png",
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/images", image)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusCreated))
+						response := decodeImageResponse(w)
+						Expect(response.Timeframe).To(Equal("DL"))
+						Expect(response.FileName).To(Equal("RELIANCE.mwd.duplicate.png"))
+					})
+				})
+			})
+
 			Context("Journal ID Path Parameter", func() {
 				Context("Bad Values", func() {
 					It("should return 400 for malformed journal ID", func() {
@@ -388,17 +406,6 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 				req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/images", []byte("null"))
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
-			})
-
-			It("should return 409 for duplicate timeframe (PRD: unique timeframe per journal)", func() {
-				// First image with DL timeframe already exists from journal creation
-				image := barkat.Image{
-					Timeframe: "DL",
-					FileName:  "RELIANCE.mwd.duplicate.png",
-				}
-				req, w = util.CreateTestRequest("POST", barkat.JournalEntries+"/"+journal.ExternalID+"/images", image)
-				router.ServeHTTP(w, req)
-				Expect(w.Code).To(Equal(http.StatusConflict))
 			})
 		})
 	})

@@ -27,6 +27,12 @@ func decodeCreateJournalResponse(w *httptest.ResponseRecorder) barkat.Journal {
 	return envelope.Data
 }
 
+func decodeUpdateJournalStatusResponse(w *httptest.ResponseRecorder) barkat.UpdateJournalStatusResponse {
+	var envelope common.Envelope[barkat.UpdateJournalStatusResponse]
+	util.AssertSuccess(w, http.StatusOK, &envelope)
+	return envelope.Data
+}
+
 // JournalHandler Integration Tests - Comprehensive Master Specification
 // Tests complete HTTP → Handler → Manager → Repository → Database flow
 // Covers all PRD validations, enum values, edge cases, pagination, sorting, and error scenarios
@@ -107,8 +113,6 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 		Context("Happy Path", func() {
 			Context("with minimal valid entry (required fields + min 4 images)", func() {
-				var envelopeResponse common.Envelope[barkat.Journal]
-
 				BeforeEach(func() {
 					journal := barkat.Journal{
 						Ticker:   "GRSE",
@@ -122,38 +126,39 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				})
 
 				It("should return 201 Created", func() {
-					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
+					response := decodeCreateJournalResponse(w)
+					Expect(response.ExternalID).To(HavePrefix("jrn_"))
 				})
 
 				It("should return Envelope success", func() {
-					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
-					Expect(envelopeResponse.Status).To(Equal(common.EnvelopeSuccess))
+					response := decodeCreateJournalResponse(w)
+					Expect(response.ExternalID).To(HavePrefix("jrn_"))
 				})
 
 				It("should return created entry with ID in data", func() {
-					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
-					Expect(envelopeResponse.Data.ExternalID).To(HavePrefix("jrn_"))
+					response := decodeCreateJournalResponse(w)
+					Expect(response.ExternalID).To(HavePrefix("jrn_"))
 				})
 
 				It("should preserve all input fields", func() {
-					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
-					Expect(envelopeResponse.Data.Ticker).To(Equal("GRSE"))
-					Expect(envelopeResponse.Data.Sequence).To(Equal("MWD"))
-					Expect(envelopeResponse.Data.Type).To(Equal("REJECTED"))
-					Expect(envelopeResponse.Data.Status).To(Equal("FAIL"))
+					response := decodeCreateJournalResponse(w)
+					Expect(response.Ticker).To(Equal("GRSE"))
+					Expect(response.Sequence).To(Equal("MWD"))
+					Expect(response.Type).To(Equal("REJECTED"))
+					Expect(response.Status).To(Equal("FAIL"))
 				})
 
 				It("should set created_at timestamp", func() {
-					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
-					Expect(envelopeResponse.Data.CreatedAt).ToNot(BeZero())
+					response := decodeCreateJournalResponse(w)
+					Expect(response.CreatedAt).ToNot(BeZero())
 				})
 
 				It("should include default timeframe images in response", func() {
-					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
-					Expect(envelopeResponse.Data.Images).To(HaveLen(len(defaultTimeframes)))
+					response := decodeCreateJournalResponse(w)
+					Expect(response.Images).To(HaveLen(len(defaultTimeframes)))
 
-					recorded := make([]string, 0, len(envelopeResponse.Data.Images))
-					for _, img := range envelopeResponse.Data.Images {
+					recorded := make([]string, 0, len(response.Images))
+					for _, img := range response.Images {
 						Expect(img.ExternalID).To(HavePrefix("img_"))
 						recorded = append(recorded, img.Timeframe)
 					}
@@ -161,10 +166,10 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				})
 
 				It("should persist journal to database", func() {
-					util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
-					dbJournal, err := journalMgr.GetJournal(testCtx, envelopeResponse.Data.ExternalID)
+					response := decodeCreateJournalResponse(w)
+					dbJournal, err := journalMgr.GetJournal(testCtx, response.ExternalID)
 					Expect(err).ToNot(HaveOccurred())
-					Expect(dbJournal.ExternalID).To(Equal(envelopeResponse.Data.ExternalID))
+					Expect(dbJournal.ExternalID).To(Equal(response.ExternalID))
 					Expect(dbJournal.Ticker).To(Equal("GRSE"))
 				})
 			})
@@ -514,6 +519,37 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			})
 
 			Context("Images Field", func() {
+				Context("Allowed Values", func() {
+					It("should allow duplicate timeframes (PRD: duplicates allowed)", func() {
+						journal := barkat.Journal{
+							Ticker:   "GRSE",
+							Sequence: "MWD",
+							Type:     "REJECTED",
+							Status:   "FAIL",
+							Images: []barkat.Image{
+								{Timeframe: "DL", FileName: "test-dl.png"},
+								{Timeframe: "DL", FileName: "test-dl-duplicate.png"},
+								{Timeframe: "MN", FileName: "test-mn.png"},
+								{Timeframe: "TMN", FileName: "test-tmn.png"},
+							},
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
+						router.ServeHTTP(w, req)
+						response := decodeCreateJournalResponse(w)
+						Expect(response.ExternalID).To(HavePrefix("jrn_"))
+						Expect(response.Images).To(HaveLen(4))
+
+						// Verify duplicate timeframes are preserved
+						dlCount := 0
+						for _, img := range response.Images {
+							if img.Timeframe == "DL" {
+								dlCount++
+							}
+						}
+						Expect(dlCount).To(Equal(2))
+					})
+				})
+
 				Context("Bad Values", func() {
 					It("should return 400 for empty images (PRD: min 4 required)", func() {
 						journal := barkat.Journal{
@@ -545,7 +581,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						util.AssertError(w, "Images", "min")
 					})
 
-					It("should return 400 for excessive images > 6 (PRD: max 6 allowed)", func() {
+					It("should return 400 for excessive images > 16 (PRD: max 16 allowed)", func() {
 						journal := barkat.Journal{
 							Ticker:   "GRSE",
 							Sequence: "MWD",
@@ -558,7 +594,17 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 								{Timeframe: "TMN", FileName: "test-tmn.png"},
 								{Timeframe: "SMN", FileName: "test-smn.png"},
 								{Timeframe: "YR", FileName: "test-yr.png"},
-								{Timeframe: "DL", FileName: "test-dl.png"},
+								{Timeframe: "DL", FileName: "test-dl-2.png"},
+								{Timeframe: "WK", FileName: "test-wk-2.png"},
+								{Timeframe: "MN", FileName: "test-mn-2.png"},
+								{Timeframe: "TMN", FileName: "test-tmn-2.png"},
+								{Timeframe: "SMN", FileName: "test-smn-2.png"},
+								{Timeframe: "YR", FileName: "test-yr-2.png"},
+								{Timeframe: "DL", FileName: "test-dl-3.png"},
+								{Timeframe: "WK", FileName: "test-wk-3.png"},
+								{Timeframe: "MN", FileName: "test-mn-3.png"},
+								{Timeframe: "TMN", FileName: "test-tmn-3.png"},
+								{Timeframe: "SMN", FileName: "test-smn-3.png"},
 							},
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
@@ -582,25 +628,6 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Timeframe", "oneof")
-					})
-
-					It("should return 400 for duplicate timeframes (PRD: unique timeframes required)", func() {
-						// BUG: Duplicate Timeframe should be allowed.
-						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images: []barkat.Image{
-								{Timeframe: "DL", FileName: "test-dl.png"},
-								{Timeframe: "DL", FileName: "test-dl.png"},
-								{Timeframe: "MN", FileName: "test-mn.png"},
-								{Timeframe: "TMN", FileName: "test-tmn.png"},
-							},
-						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "Images", "Duplicate")
 					})
 				})
 			})
@@ -698,12 +725,10 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
-						var envelopeResponse common.Envelope[barkat.Journal]
-						util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
-						Expect(envelopeResponse.Status).To(Equal(common.EnvelopeSuccess))
-						Expect(envelopeResponse.Data.Tags).To(HaveLen(1))
-						Expect(envelopeResponse.Data.Tags[0].Override).ToNot(BeNil())
-						Expect(*envelopeResponse.Data.Tags[0].Override).To(Equal("loc"))
+						response := decodeCreateJournalResponse(w)
+						Expect(response.Tags).To(HaveLen(1))
+						Expect(response.Tags[0].Override).ToNot(BeNil())
+						Expect(*response.Tags[0].Override).To(Equal("loc"))
 					})
 
 					It("should accept tag type = REASON (PRD: uppercase)", func() {
@@ -719,8 +744,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
-						var envelopeResponse common.Envelope[barkat.Journal]
-						util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
+						decodeCreateJournalResponse(w)
 					})
 
 					It("should accept tag type = MANAGEMENT (PRD: uppercase)", func() {
@@ -736,8 +760,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalEntries, journal)
 						router.ServeHTTP(w, req)
-						var envelopeResponse common.Envelope[barkat.Journal]
-						util.AssertSuccess(w, http.StatusCreated, &envelopeResponse)
+						decodeCreateJournalResponse(w)
 					})
 				})
 
@@ -998,18 +1021,15 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				})
 
 				It("should return success envelope", func() {
-					var envelope common.Envelope[barkat.UpdateJournalStatusResponse]
-					util.AssertSuccess(w, http.StatusOK, &envelope)
-					Expect(envelope.Data).ToNot(BeNil())
+					response := decodeUpdateJournalStatusResponse(w)
+					Expect(response).ToNot(BeNil())
 				})
 
 				It("should return correct response fields", func() {
-					var envelope common.Envelope[barkat.UpdateJournalStatusResponse]
-					util.AssertSuccess(w, http.StatusOK, &envelope)
+					response := decodeUpdateJournalStatusResponse(w)
 
-					data := envelope.Data
-					Expect(data.ID).To(Equal(createdJournal.ExternalID))
-					Expect(data.ReviewedAt).ToNot(BeNil())
+					Expect(response.ID).To(Equal(createdJournal.ExternalID))
+					Expect(response.ReviewedAt).ToNot(BeNil())
 				})
 
 				It("should actually update the journal in database", func() {
@@ -1035,11 +1055,9 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				})
 
 				It("should return reviewed_at as null", func() {
-					var envelope common.Envelope[barkat.UpdateJournalStatusResponse]
-					util.AssertSuccess(w, http.StatusOK, &envelope)
+					response := decodeUpdateJournalStatusResponse(w)
 
-					data := envelope.Data
-					Expect(data.ReviewedAt).To(BeNil())
+					Expect(response.ReviewedAt).To(BeNil())
 				})
 
 				It("should actually clear reviewed_at in database", func() {
@@ -1065,11 +1083,9 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				})
 
 				It("should maintain reviewed_at timestamp", func() {
-					var envelope common.Envelope[barkat.UpdateJournalStatusResponse]
-					util.AssertSuccess(w, http.StatusOK, &envelope)
+					response := decodeUpdateJournalStatusResponse(w)
 
-					data := envelope.Data
-					Expect(data.ReviewedAt).ToNot(BeNil())
+					Expect(response.ReviewedAt).ToNot(BeNil())
 				})
 			})
 		})

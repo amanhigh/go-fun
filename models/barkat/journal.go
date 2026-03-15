@@ -38,7 +38,7 @@ type Journal struct {
 	DeletedAt  *time.Time `gorm:"column:deleted_at" json:"deleted_at,omitempty"`
 
 	// Associations
-	Images []Image `gorm:"foreignKey:JournalID;references:ID" json:"images,omitempty" binding:"required,min=4,max=6,dive"`
+	Images []Image `gorm:"foreignKey:JournalID;references:ID" json:"images,omitempty" binding:"required,min=4,max=16,dive"`
 	Tags   []Tag   `gorm:"foreignKey:JournalID;references:ID" json:"tags,omitempty" binding:"max=10,dive"`
 	Notes  []Note  `gorm:"foreignKey:JournalID;references:ID" json:"notes,omitempty" binding:"max=1,dive"`
 }

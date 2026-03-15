@@ -28,7 +28,6 @@ CREATE TABLE IF NOT EXISTS images (
 
 -- Create indexes for images
 CREATE UNIQUE INDEX IF NOT EXISTS idx_image_external_id ON images (external_id);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_image_journal_timeframe ON images (journal_id, timeframe);
 
 -- Create tags table
 CREATE TABLE IF NOT EXISTS tags (
