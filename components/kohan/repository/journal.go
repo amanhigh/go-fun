@@ -11,8 +11,8 @@ import (
 // JournalRepository provides persistence operations for journals.
 type JournalRepository interface {
 	util.BaseDbRepositoryInterface
-	// GetJournal retrieves a single journal by ID with preloaded associations.
-	GetJournal(ctx context.Context, id string) (barkat.Journal, error)
+	// GetJournal retrieves a single journal by external ID with preloaded associations.
+	GetJournal(ctx context.Context, journalExternalId string) (barkat.Journal, error)
 	// ListJournals returns a filtered, paginated list of journal summaries (no associations).
 	ListJournals(ctx context.Context, query barkat.JournalQuery) ([]barkat.Journal, int64, error)
 }
@@ -30,11 +30,18 @@ func NewJournalRepository(db *gorm.DB) *JournalRepositoryImpl {
 	}
 }
 
+// ---- Constants ----
+
+// ImageTimeframeOrder defines the SQL order clause for image timeframes
+const ImageTimeframeOrder = "CASE timeframe WHEN 'DL' THEN 1 WHEN 'WK' THEN 2 WHEN 'MN' THEN 3 WHEN 'TMN' THEN 4 WHEN 'SMN' THEN 5 WHEN 'YR' THEN 6 ELSE 7 END"
+
 // ---- Journal ----
 
-func (r *JournalRepositoryImpl) GetJournal(ctx context.Context, id string) (barkat.Journal, error) {
+func (r *JournalRepositoryImpl) GetJournal(ctx context.Context, journalExternalId string) (barkat.Journal, error) {
 	var journal barkat.Journal
-	err := r.SafeTx(ctx).Preload("Images").Preload("Tags").Preload("Notes").First(&journal, "id = ?", id).Error
+	err := r.SafeTx(ctx).Preload("Images", func(db *gorm.DB) *gorm.DB {
+		return db.Order(ImageTimeframeOrder)
+	}).Preload("Tags").Preload("Notes").First(&journal, "external_id = ?", journalExternalId).Error
 	return journal, err
 }
 
@@ -64,10 +71,19 @@ func (r *JournalRepositoryImpl) applyJournalFilters(tx *gorm.DB, query barkat.Jo
 		tx = tx.Where("sequence = ?", query.Sequence)
 	}
 	if query.CreatedAfter != "" {
-		tx = tx.Where("created_at >= ?", query.CreatedAfter)
+		// Use DATE() function to compare date strings with datetime fields
+		tx = tx.Where("DATE(created_at) >= ?", query.CreatedAfter)
 	}
 	if query.CreatedBefore != "" {
-		tx = tx.Where("created_at <= ?", query.CreatedBefore)
+		// Use DATE() function to compare date strings with datetime fields
+		tx = tx.Where("DATE(created_at) <= ?", query.CreatedBefore)
+	}
+	if query.Reviewed != nil {
+		if *query.Reviewed {
+			tx = tx.Where("reviewed_at IS NOT NULL")
+		} else {
+			tx = tx.Where("reviewed_at IS NULL")
+		}
 	}
 	return tx
 }
@@ -83,6 +99,8 @@ func (r *JournalRepositoryImpl) fetchJournals(tx *gorm.DB, query barkat.JournalQ
 	}
 
 	var journals []barkat.Journal
-	err := tx.Order(orderClause).Offset(query.Offset).Limit(query.Limit).Find(&journals).Error
+	err := tx.Preload("Images", func(db *gorm.DB) *gorm.DB {
+		return db.Order(ImageTimeframeOrder)
+	}).Order(orderClause).Offset(query.Offset).Limit(query.Limit).Find(&journals).Error
 	return journals, err
 }

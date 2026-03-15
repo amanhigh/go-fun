@@ -75,6 +75,5 @@ func (fs *FunAppServerLifecycle) BeforeShutdown(ctx context.Context) {
 }
 
 func (fs *FunAppServerLifecycle) AfterShutdown(ctx context.Context) {
-	// TODO: #B Verify Git History withRefactoring nothing Broke
 	telemetry.ShutdownTracerProvider(ctx)
 }

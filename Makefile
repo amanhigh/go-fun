@@ -156,7 +156,7 @@ test-focus:
 	printf $(_TITLE) "Running Focus Tests"
 	$(GINKGO) --focus "should create & get person" $(FUN_DIR)/it > $(OUT)
 
-cover: test-clean run-fun-cover test-unit cover-analyse ## Show comprehensive coverage (unit + integration)
+cover: test-clean test-unit run-fun-cover cover-analyse ## Show comprehensive coverage (unit + integration)
 
 test-clean:
 	printf $(_WARN) "Cleaning Tests"
@@ -455,7 +455,7 @@ generate-mocks:
 generate: generate-mocks generate-swagger ## Generate Files
 
 ### Workflows
-test: test-operator cover ## Run all tests (Excludes test-slow)
+test: cover test-operator ## Run all tests (Excludes test-slow)
 build: format lint build-fun build-kohan ## Build all Binaries
 
 info: info-release info-docker ## Repo Information

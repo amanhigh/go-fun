@@ -18,9 +18,9 @@ import (
 // Tags provide categorical organization with type-based filtering capabilities.
 type TagRepository interface {
 	util.BaseDbRepositoryInterface
-	// ListTags returns all tags for an entry, optionally filtered by type.
+	// ListTags returns all tags for a journal, optionally filtered by type.
 	// Type can be "reason", "management", or empty for all tags.
-	ListTags(ctx context.Context, journalID string, tagType string) ([]barkat.Tag, common.HttpError)
+	ListTags(ctx context.Context, journalID uint64, tagType string) ([]barkat.Tag, common.HttpError)
 }
 
 type TagRepositoryImpl struct {
@@ -34,7 +34,7 @@ func NewTagRepository(db *gorm.DB) *TagRepositoryImpl {
 	return &TagRepositoryImpl{BaseDbRepository: util.NewBaseDbRepository(db)}
 }
 
-func (r *TagRepositoryImpl) ListTags(ctx context.Context, journalID, tagType string) ([]barkat.Tag, common.HttpError) {
+func (r *TagRepositoryImpl) ListTags(ctx context.Context, journalID uint64, tagType string) ([]barkat.Tag, common.HttpError) {
 	var tags []barkat.Tag
 	var txErr error
 	query := r.SafeTx(ctx).Where("journal_id = ?", journalID)

@@ -517,7 +517,7 @@ var _ = Describe("Person Integration Test", func() {
 		})
 	})
 
-	// TODO: Break up Fun App Test logically and move to Handler Masterspec (JournalEntry)
+	// TODO: Break up Fun App Test logically and move to Handler Masterspec (Journal)
 	Context("Admin", func() {
 		It("should serve metrics", func() {
 			err = client.AdminService.HealthCheck(testCtx)

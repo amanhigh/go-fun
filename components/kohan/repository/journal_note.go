@@ -2,7 +2,7 @@
 package repository
 
 // NoteRepository provides persistence operations for journal notes.
-// Notes capture trade observations and plans at specific entry statuses.
+// Notes capture trade observations and plans at specific journal statuses.
 
 import (
 	"context"
@@ -17,8 +17,8 @@ import (
 // NoteRepository provides persistence operations for journal notes.
 type NoteRepository interface {
 	util.BaseDbRepositoryInterface
-	// ListNotes returns all notes for an entry, optionally filtered by status.
-	ListNotes(ctx context.Context, journalID string, status string) ([]barkat.Note, common.HttpError)
+	// ListNotes returns all notes for a journal, optionally filtered by status.
+	ListNotes(ctx context.Context, journalID uint64, status string) ([]barkat.Note, common.HttpError)
 }
 
 type NoteRepositoryImpl struct {
@@ -32,7 +32,7 @@ func NewNoteRepository(db *gorm.DB) *NoteRepositoryImpl {
 	return &NoteRepositoryImpl{BaseDbRepository: util.NewBaseDbRepository(db)}
 }
 
-func (r *NoteRepositoryImpl) ListNotes(ctx context.Context, journalID, status string) ([]barkat.Note, common.HttpError) {
+func (r *NoteRepositoryImpl) ListNotes(ctx context.Context, journalID uint64, status string) ([]barkat.Note, common.HttpError) {
 	var notes []barkat.Note
 	var txErr error
 	query := r.SafeTx(ctx).Where("journal_id = ?", journalID)

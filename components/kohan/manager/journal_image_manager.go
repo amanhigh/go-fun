@@ -12,33 +12,37 @@ import (
 )
 
 type ImageManager interface {
-	// CreateImage attaches a new image to an entry.
-	CreateImage(ctx context.Context, entryID string, image barkat.Image) (*barkat.Image, common.HttpError)
-	// ListImages returns all images for an entry.
-	ListImages(ctx context.Context, entryID string) ([]barkat.Image, common.HttpError)
-	// DeleteImage removes an image by ID scoped to an entry.
-	DeleteImage(ctx context.Context, entryID string, imageID string) common.HttpError
+	// CreateImage attaches a new image to a journal.
+	CreateImage(ctx context.Context, journalID string, image barkat.Image) (*barkat.Image, common.HttpError)
+	// ListImages returns all images for a journal.
+	ListImages(ctx context.Context, journalID string) (barkat.ImageList, common.HttpError)
+	// DeleteImage removes an image by ID scoped to a journal.
+	DeleteImage(ctx context.Context, journalID string, imageID string) common.HttpError
 }
 
 type ImageManagerImpl struct {
-	entryMgr JournalManager
-	repo     repository.ImageRepository
+	journalMgr JournalManager
+	repo       repository.ImageRepository
 }
 
 var _ ImageManager = (*ImageManagerImpl)(nil)
 
 // NewImageManager creates a new ImageManager.
-func NewImageManager(entryMgr JournalManager, repo repository.ImageRepository) *ImageManagerImpl {
-	return &ImageManagerImpl{entryMgr: entryMgr, repo: repo}
+func NewImageManager(journalMgr JournalManager, repo repository.ImageRepository) *ImageManagerImpl {
+	return &ImageManagerImpl{journalMgr: journalMgr, repo: repo}
 }
 
-func (m *ImageManagerImpl) CreateImage(ctx context.Context, entryID string, image barkat.Image) (*barkat.Image, common.HttpError) {
-	image.JournalID = entryID
+func (m *ImageManagerImpl) CreateImage(ctx context.Context, journalExternalId string, image barkat.Image) (*barkat.Image, common.HttpError) {
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Check entry existence within transaction
-		if httpErr := m.entryMgr.JournalExists(c, entryID); httpErr != nil {
+		// Get journal to obtain internal ID
+		journal, httpErr := m.journalMgr.GetJournal(c, journalExternalId)
+		if httpErr != nil {
 			return httpErr
 		}
+
+		// Set internal ID for foreign key
+		image.JournalID = journal.ID
+
 		return m.repo.Create(c, &image)
 	})
 	if err != nil {
@@ -47,29 +51,49 @@ func (m *ImageManagerImpl) CreateImage(ctx context.Context, entryID string, imag
 	return &image, nil
 }
 
-func (m *ImageManagerImpl) ListImages(ctx context.Context, entryID string) ([]barkat.Image, common.HttpError) {
+func (m *ImageManagerImpl) ListImages(ctx context.Context, journalExternalId string) (barkat.ImageList, common.HttpError) {
 	var images []barkat.Image
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Check entry existence within transaction
-		if httpErr := m.entryMgr.JournalExists(c, entryID); httpErr != nil {
+		// Get journal to obtain internal ID
+		journal, httpErr := m.journalMgr.GetJournal(c, journalExternalId)
+		if httpErr != nil {
 			return httpErr
 		}
-		var httpErr common.HttpError
-		images, httpErr = m.repo.ListImages(c, entryID)
-		return httpErr
+
+		// Use internal ID for repository query
+		var repoErr common.HttpError
+		images, repoErr = m.repo.ListImages(c, journal.ID)
+		return repoErr
 	})
 	if err != nil {
-		return nil, err
+		return barkat.ImageList{}, err
 	}
-	return images, nil
+	return barkat.ImageList{
+		Images: images,
+	}, nil
 }
 
-func (m *ImageManagerImpl) DeleteImage(ctx context.Context, entryID, imageID string) common.HttpError {
+func (m *ImageManagerImpl) DeleteImage(ctx context.Context, journalExternalId, imageExternalId string) common.HttpError {
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Check entry existence within transaction
-		if httpErr := m.entryMgr.JournalExists(c, entryID); httpErr != nil {
+		// Get journal to obtain internal ID
+		journal, httpErr := m.journalMgr.GetJournal(c, journalExternalId)
+		if httpErr != nil {
 			return httpErr
 		}
-		return m.repo.DeleteById(c, imageID, &barkat.Image{JournalID: entryID})
+
+		// First fetch the image by external_id to get internal ID
+		var image barkat.Image
+		httpErr = m.repo.GetByExternalId(c, imageExternalId, &image)
+		if httpErr != nil {
+			return httpErr
+		}
+
+		// Verify the image belongs to the correct journal
+		if image.JournalID != journal.ID {
+			return common.ErrNotFound
+		}
+
+		// Now delete by internal ID using base repository method
+		return m.repo.DeleteById(c, image.ID, &barkat.Image{})
 	})
 }

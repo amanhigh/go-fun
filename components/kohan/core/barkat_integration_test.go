@@ -1,469 +1,479 @@
+//nolint:dupl
 package core_test
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"time"
 
-	"github.com/amanhigh/go-fun/common/util"
-	"github.com/amanhigh/go-fun/components/kohan/core"
-	"github.com/amanhigh/go-fun/components/kohan/handler"
-	"github.com/amanhigh/go-fun/components/kohan/manager"
-	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
-	"github.com/amanhigh/go-fun/models/config"
-	"github.com/gin-gonic/gin"
+	"github.com/go-resty/resty/v2"
+	"github.com/golang-sql/civil"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-const testPort = 19020
-
-var baseURL string
-
-// httpDo is a helper for making HTTP requests with method, url, and optional JSON body.
-func httpDo(method, url string, body any) (*http.Response, []byte) {
-	var reqBody *bytes.Reader
-	if body != nil {
-		b, err := json.Marshal(body)
-		Expect(err).ToNot(HaveOccurred())
-		reqBody = bytes.NewReader(b)
-	} else {
-		reqBody = bytes.NewReader(nil)
-	}
-	req, err := http.NewRequest(method, url, reqBody)
-	Expect(err).ToNot(HaveOccurred())
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := http.DefaultClient.Do(req)
-	Expect(err).ToNot(HaveOccurred())
-	respBody, err := io.ReadAll(resp.Body)
-	Expect(err).ToNot(HaveOccurred())
-	resp.Body.Close()
-	return resp, respBody
+// standardImages provides 4 required images for journal creation
+var standardImages = []barkat.Image{
+	{Timeframe: "DL", FileName: "daily.png"},
+	{Timeframe: "WK", FileName: "weekly.png"},
+	{Timeframe: "MN", FileName: "monthly.png"},
+	{Timeframe: "TMN", FileName: "trend_monthly.png"},
 }
 
-// httpDoEntry is a helper for making HTTP requests that return an Entry envelope response.
-func httpDoEntry(method, url string, body any) barkat.Journal {
-	resp, responseBody := httpDo(method, url, body)
-	Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
+// decodeJournalResponse unmarshals response body into Journal envelope
+func decodeJournalResponse(resp *resty.Response) barkat.Journal {
 	var envelope common.Envelope[barkat.Journal]
-	Expect(json.Unmarshal(responseBody, &envelope)).To(Succeed())
-	Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
-
+	ExpectWithOffset(1, json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
+	ExpectWithOffset(1, envelope.Status).To(Equal(common.EnvelopeSuccess))
 	return envelope.Data
 }
 
-var _ = PDescribe("Barkat Integration Test", func() {
-	// TODO: #B Decide Scenarios for Integration Test and Fix it.
+// Barkat E2E Test Suite
+//
+// Tests critical paths through real HTTP server with in-memory SQLite DB.
+// Focuses on scenarios that add value beyond unit/integration tests:
+// - Full CRUD lifecycle with associations
+// - Cascade delete (FK constraints)
+// - Validation through real HTTP stack
+// - Review status workflow
+//
+// Server is started/stopped in core_suite_test.go BeforeSuite/AfterSuite
+var _ = Describe("Barkat E2E Test", func() {
+	var client *resty.Client
+
 	BeforeEach(func() {
-		if baseURL == "" {
-			db, err := core.CreateTestBarkatDB()
-			Expect(err).ToNot(HaveOccurred())
-
-			entryRepo := repository.NewJournalRepository(db)
-			entryMgr := manager.NewJournalManager(entryRepo)
-			journalHandler := handler.NewJournalHandler(entryMgr)
-			imageHandler := handler.NewImageHandler(manager.NewImageManager(entryMgr, repository.NewImageRepository(db)))
-			noteHandler := handler.NewNoteHandler(manager.NewNoteManager(entryMgr, repository.NewNoteRepository(db)))
-			tagHandler := handler.NewTagHandler(manager.NewTagManager(entryMgr, repository.NewTagRepository(db)))
-
-			shutdown := util.NewGracefulShutdown()
-			base := util.NewHttpServer(config.HttpServerConfig{Name: "kohan", Port: testPort}, gin.Default(), shutdown)
-			lifecycle := core.NewKohanServerLifecycle(nil, journalHandler, imageHandler, noteHandler, tagHandler)
-			base.SetLifecycle(lifecycle)
-			baseURL = fmt.Sprintf("http://localhost:%d", testPort)
-
-			go func() {
-				defer GinkgoRecover()
-				_ = base.Start()
-			}()
-
-			Eventually(func() error {
-				_, err := http.Get(baseURL + "/v1/journal-entries")
-				return err
-			}, 5*time.Second, 100*time.Millisecond).Should(Succeed())
-		}
+		// Create fresh client for each test - server is managed by core_suite_test.go
+		client = resty.New()
+		client.SetTimeout(5 * time.Second)
+		client.SetHeader("Content-Type", "application/json")
+		client.SetBaseURL(fmt.Sprintf("http://localhost:%d", testPort))
 	})
 
-	// ---- Real Production Data: GRSE rejected/fail with reason tag tto-loc (2023-06-15) ----
-	Context("GRSE Rejected Entry", func() {
-		var createdEntry barkat.Journal
+	// Full CRUD Lifecycle - Tests complete flow through real HTTP + DB
+	Context("Journal CRUD Lifecycle", func() {
+		var createdJournal barkat.Journal
 
 		BeforeEach(func() {
-			entry := barkat.Journal{
-				Ticker:   "GRSE",
+			journal := barkat.Journal{
+				Ticker:   "LIFECYCLE",
+				Sequence: "MWD",
+				Type:     "SET",
+				Status:   "RUNNING",
+				Images:   standardImages,
+				Tags:     []barkat.Tag{{Tag: "oe", Type: "REASON"}},
+				Notes:    []barkat.Note{{Status: "SET", Content: "Initial setup note", Format: "MARKDOWN"}},
+			}
+			resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
+			createdJournal = decodeJournalResponse(resp)
+		})
+
+		It("should create journal with all associations", func() {
+			Expect(createdJournal.ExternalID).To(HavePrefix("jrn_"))
+			Expect(createdJournal.Images).To(HaveLen(4))
+			Expect(createdJournal.Tags).To(HaveLen(1))
+			Expect(createdJournal.Notes).To(HaveLen(1))
+
+			// Verify association IDs
+			for _, img := range createdJournal.Images {
+				Expect(img.ExternalID).To(HavePrefix("img_"))
+			}
+			Expect(createdJournal.Tags[0].ExternalID).To(HavePrefix("tag_"))
+			Expect(createdJournal.Notes[0].ExternalID).To(HavePrefix("not_"))
+		})
+
+		It("should retrieve journal with associations", func() {
+			resp, err := client.R().Get(barkat.JournalBase + "/" + createdJournal.ExternalID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+
+			fetched := decodeJournalResponse(resp)
+			Expect(fetched.Ticker).To(Equal("LIFECYCLE"))
+			Expect(fetched.Images).To(HaveLen(4))
+			Expect(fetched.Tags).To(HaveLen(1))
+			Expect(fetched.Notes).To(HaveLen(1))
+		})
+
+		It("should list entries with pagination", func() {
+			resp, err := client.R().Get(barkat.JournalBase + "?limit=10")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+
+			var envelope common.Envelope[barkat.JournalList]
+			Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
+			Expect(envelope.Data.Journals).ToNot(BeEmpty())
+		})
+
+		It("should delete journal and cascade to associations", func() {
+			resp, err := client.R().Delete(barkat.JournalBase + "/" + createdJournal.ExternalID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusNoContent))
+
+			// Verify journal is deleted
+			resp, err = client.R().Get(barkat.JournalBase + "/" + createdJournal.ExternalID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusNotFound))
+		})
+	})
+
+	// Image Management - Tests FR-003: Journal Image Management
+	Context("Image Management", func() {
+		var createdJournal barkat.Journal
+		var createdImage barkat.Image
+
+		BeforeEach(func() {
+			journal := barkat.Journal{
+				Ticker:   "IMGTEST",
+				Sequence: "MWD",
+				Type:     "SET",
+				Status:   "RUNNING",
+				Images:   standardImages,
+			}
+			resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
+			createdJournal = decodeJournalResponse(resp)
+			createdImage = createdJournal.Images[0]
+		})
+
+		It("should add additional timeframe image", func() {
+			newImage := barkat.Image{Timeframe: "WK", FileName: "weekly.png"}
+			resp, err := client.R().SetBody(newImage).Post(barkat.JournalBase + "/" + createdJournal.ExternalID + "/images")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
+
+			var envelope common.Envelope[barkat.Image]
+			Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
+			addedImage := envelope.Data
+			Expect(addedImage.ExternalID).To(HavePrefix("img_"))
+			Expect(addedImage.Timeframe).To(Equal("WK"))
+		})
+
+		It("should list all images for journal", func() {
+			resp, err := client.R().Get(barkat.JournalBase + "/" + createdJournal.ExternalID + "/images")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+
+			var envelope common.Envelope[barkat.ImageList]
+			Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
+			images := envelope.Data.Images
+			Expect(images).To(HaveLen(4)) // standardImages has 4 images
+			// Check for standard timeframes
+			timeframes := make(map[string]bool)
+			for _, img := range images {
+				timeframes[img.Timeframe] = true
+			}
+			Expect(timeframes["DL"]).To(BeTrue())
+			Expect(timeframes["WK"]).To(BeTrue())
+			Expect(timeframes["MN"]).To(BeTrue())
+			Expect(timeframes["TMN"]).To(BeTrue())
+		})
+
+		It("should delete individual image", func() {
+			resp, err := client.R().Delete(barkat.JournalBase + "/" + createdJournal.ExternalID + "/images/" + createdImage.ExternalID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusNoContent))
+
+			// Verify image is deleted (should have 3 remaining)
+			resp, err = client.R().Get(barkat.JournalBase + "/" + createdJournal.ExternalID + "/images")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+
+			var envelope common.Envelope[barkat.ImageList]
+			Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
+			Expect(envelope.Data.Images).To(HaveLen(3)) // Started with 4, deleted 1
+		})
+	})
+
+	// Note Management - Tests FR-004: Journal Note Management
+	Context("Note Management", func() {
+		var createdJournal barkat.Journal
+		var createdNote barkat.Note
+
+		BeforeEach(func() {
+			journal := barkat.Journal{
+				Ticker:   "NOTETEST",
+				Sequence: "YR",
+				Type:     "RESULT",
+				Status:   "SUCCESS",
+				Images:   standardImages,
+			}
+			resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
+			createdJournal = decodeJournalResponse(resp)
+
+			// Create a note for use in tests
+			note := barkat.Note{
+				Status:  "SET",
+				Content: "Trade execution plan: Long at support with 2:1 RR",
+				Format:  "MARKDOWN",
+			}
+			resp, err = client.R().SetBody(note).Post(barkat.JournalBase + "/" + createdJournal.ExternalID + "/notes")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
+
+			var envelope common.Envelope[barkat.Note]
+			Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
+			createdNote = envelope.Data
+			Expect(createdNote.ExternalID).To(HavePrefix("not_"))
+			Expect(createdNote.Status).To(Equal("SET"))
+		})
+
+		It("should have created note available", func() {
+			// Verify the note created in BeforeEach is available
+			Expect(createdNote.ExternalID).To(HavePrefix("not_"))
+			Expect(createdNote.Status).To(Equal("SET"))
+			Expect(createdNote.Content).To(Equal("Trade execution plan: Long at support with 2:1 RR"))
+			Expect(createdNote.Format).To(Equal("MARKDOWN"))
+		})
+
+		It("should list all notes for journal", func() {
+			resp, err := client.R().Get(barkat.JournalBase + "/" + createdJournal.ExternalID + "/notes")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+
+			var envelope common.Envelope[barkat.NoteList]
+			Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
+			notes := envelope.Data.Notes
+			Expect(notes).ToNot(BeEmpty())
+
+			// Verify our created note is in the list
+			found := false
+			for _, n := range notes {
+				if n.ExternalID == createdNote.ExternalID {
+					found = true
+					Expect(n.Status).To(Equal("SET"))
+					break
+				}
+			}
+			Expect(found).To(BeTrue(), "Created note should be in the list")
+		})
+
+		It("should delete individual note", func() {
+			// Delete the note created in BeforeEach
+			resp, err := client.R().Delete(barkat.JournalBase + "/" + createdJournal.ExternalID + "/notes/" + createdNote.ExternalID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusNoContent))
+
+			// Verify note deletion by checking the notes list
+			resp, err = client.R().Get(barkat.JournalBase + "/" + createdJournal.ExternalID + "/notes")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+
+			var listEnvelope common.Envelope[barkat.NoteList]
+			Expect(json.Unmarshal(resp.Body(), &listEnvelope)).To(Succeed())
+			notes := listEnvelope.Data.Notes
+
+			// Check that deleted note is not in the list
+			for _, n := range notes {
+				Expect(n.ExternalID).ToNot(Equal(createdNote.ExternalID))
+			}
+		})
+	})
+
+	// Tag Management - Tests FR-005: Journal Tag Management
+	Context("Tag Management", func() {
+		var createdJournal barkat.Journal
+		var createdTag barkat.Tag
+
+		BeforeEach(func() {
+			journal := barkat.Journal{
+				Ticker:   "TAGTEST",
 				Sequence: "MWD",
 				Type:     "REJECTED",
 				Status:   "FAIL",
-				Images: []barkat.Image{
-					{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"},
-				},
-				Tags: []barkat.Tag{
-					{Tag: "tto", Type: "reason", Override: new("loc")},
-				},
+				Images:   standardImages,
 			}
-			resp, body := httpDo("POST", baseURL+"/v1/journal-entries", entry)
-			Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+			resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
+			createdJournal = decodeJournalResponse(resp)
 
-			// Handle the envelope response for creation
-			var envelope common.Envelope[barkat.Journal]
-			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
-			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
-			createdEntry = envelope.Data
+			// Create a tag for use in tests
+			tag := barkat.Tag{
+				Tag:  "oe",
+				Type: "REASON",
+			}
+			resp, err = client.R().SetBody(tag).Post(barkat.JournalBase + "/" + createdJournal.ExternalID + "/tags")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
+
+			var envelope common.Envelope[barkat.Tag]
+			Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
+			createdTag = envelope.Data
+			Expect(createdTag.ExternalID).To(HavePrefix("tag_"))
+			Expect(createdTag.Tag).To(Equal("oe"))
+			Expect(createdTag.Type).To(Equal("REASON"))
 		})
 
-		It("should create with all fields", func() {
-			Expect(createdEntry.ID).ToNot(BeEmpty())
-			Expect(createdEntry.Ticker).To(Equal("GRSE"))
-			Expect(createdEntry.Status).To(Equal("FAIL"))
-			Expect(createdEntry.Images).To(HaveLen(4))
-			Expect(createdEntry.Tags).To(HaveLen(1))
-			Expect(createdEntry.Tags[0].Tag).To(Equal("tto"))
-			Expect(*createdEntry.Tags[0].Override).To(Equal("loc"))
+		It("should have created tag available", func() {
+			// Verify the tag created in BeforeEach is available
+			Expect(createdTag.ExternalID).To(HavePrefix("tag_"))
+			Expect(createdTag.Tag).To(Equal("oe"))
+			Expect(createdTag.Type).To(Equal("REASON"))
 		})
 
-		Context("Get", func() {
-			var fetchedEntry barkat.Journal
+		It("should list all tags for journal", func() {
+			resp, err := client.R().Get(barkat.JournalBase + "/" + createdJournal.ExternalID + "/tags")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 
-			BeforeEach(func() {
-				fetchedEntry = httpDoEntry("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID, nil)
-			})
+			var envelope common.Envelope[barkat.TagList]
+			Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
+			tags := envelope.Data.Tags
+			Expect(tags).ToNot(BeEmpty())
 
-			It("should return full entry with associations", func() {
-				Expect(fetchedEntry.ID).To(Equal(createdEntry.ID))
-				Expect(fetchedEntry.Ticker).To(Equal("GRSE"))
-				Expect(fetchedEntry.Images).To(HaveLen(4))
-				Expect(fetchedEntry.Tags).To(HaveLen(1))
-			})
+			// Verify our created tag is in the list
+			found := false
+			for _, t := range tags {
+				if t.ExternalID == createdTag.ExternalID {
+					found = true
+					Expect(t.Tag).To(Equal("oe"))
+					Expect(t.Type).To(Equal("REASON"))
+					break
+				}
+			}
+			Expect(found).To(BeTrue(), "Created tag should be in the list")
+		})
+
+		It("should delete individual tag", func() {
+			// Delete the tag created in BeforeEach
+			resp, err := client.R().Delete(barkat.JournalBase + "/" + createdJournal.ExternalID + "/tags/" + createdTag.ExternalID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusNoContent))
+
+			// Verify tag deletion by checking the tags list
+			resp, err = client.R().Get(barkat.JournalBase + "/" + createdJournal.ExternalID + "/tags")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+
+			var listEnvelope common.Envelope[barkat.TagList]
+			Expect(json.Unmarshal(resp.Body(), &listEnvelope)).To(Succeed())
+			tags := listEnvelope.Data.Tags
+
+			// Check that deleted tag is not in the list
+			for _, t := range tags {
+				Expect(t.ExternalID).ToNot(Equal(createdTag.ExternalID))
+			}
 		})
 	})
 
-	// ---- Real Production Data: DIXON set/taken with notes (2023-06-15) ----
-	Context("DIXON Set Entry with Notes", func() {
-		var createdEntry barkat.Journal
+	// Review Status Workflow - Tests FR-009: Journal Review
+	Context("Review Status Workflow", func() {
+		var createdJournal barkat.Journal
 
 		BeforeEach(func() {
-			entry := barkat.Journal{
-				Ticker:   "DIXON",
-				Sequence: "MWD",
-				Type:     "SET",
-				Status:   "TAKEN",
-				Images: []barkat.Image{
-					{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"},
-				},
-				Notes: []barkat.Note{
-					{Status: "set", Content: "Trends\nMN - DN\nWK - Up\nD1 - Up\n\nPlan: Shorts @ WK SZ nested in MN SZ", Format: "markdown"},
-				},
-			}
-			resp, body := httpDo("POST", baseURL+"/v1/journal-entries", entry)
-			Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-			// Handle the envelope response for creation
-			var envelope common.Envelope[barkat.Journal]
-			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
-			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
-			createdEntry = envelope.Data
-		})
-
-		It("should create with inline note", func() {
-			Expect(createdEntry.Notes).To(HaveLen(1))
-			Expect(createdEntry.Notes[0].Content).To(ContainSubstring("Shorts @ WK SZ"))
-			Expect(createdEntry.Notes[0].Format).To(Equal("markdown"))
-		})
-
-		Context("Add Note via API", func() {
-			var addedNote barkat.Note
-
-			BeforeEach(func() {
-				note := barkat.Note{Status: "taken", Content: "Entered at 2450, SL at 2420."}
-				resp, body := httpDo("POST", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/notes", note)
-				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-				// Sub-resource handlers return direct responses, not enveloped
-				Expect(json.Unmarshal(body, &addedNote)).To(Succeed())
-			})
-
-			It("should attach note to entry", func() {
-				Expect(addedNote.ID).ToNot(BeEmpty())
-				Expect(addedNote.JournalID).To(Equal(createdEntry.ID))
-				Expect(addedNote.Status).To(Equal("taken"))
-			})
-
-			Context("List Notes", func() {
-				It("should list all notes", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/notes", nil)
-					Expect(resp.StatusCode).To(Equal(http.StatusOK))
-					var result map[string][]barkat.Note
-					Expect(json.Unmarshal(body, &result)).To(Succeed())
-					Expect(result["notes"]).To(HaveLen(2))
-				})
-
-				It("should filter notes by status", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/notes?note_status=taken", nil)
-					Expect(resp.StatusCode).To(Equal(http.StatusOK))
-					var result map[string][]barkat.Note
-					Expect(json.Unmarshal(body, &result)).To(Succeed())
-					Expect(result["notes"]).To(HaveLen(1))
-					Expect(result["notes"][0].Status).To(Equal("taken"))
-				})
-			})
-
-			Context("Delete Note", func() {
-				BeforeEach(func() {
-					resp, _ := httpDo("DELETE", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/notes/"+addedNote.ID, nil)
-					Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
-				})
-
-				It("should remove note from entry", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/notes", nil)
-					Expect(resp.StatusCode).To(Equal(http.StatusOK))
-					var result map[string][]barkat.Note
-					Expect(json.Unmarshal(body, &result)).To(Succeed())
-					Expect(result["notes"]).To(HaveLen(1))
-				})
-			})
-		})
-	})
-
-	// ---- Real Production Data: CEATLTD set/success with management tags (2025-08-21) ----
-	Context("CEATLTD Success with Management Tags", func() {
-		var createdEntry barkat.Journal
-
-		BeforeEach(func() {
-			entry := barkat.Journal{
-				Ticker:   "CEATLTD",
-				Sequence: "MWD",
-				Type:     "SET",
+			journal := barkat.Journal{
+				Ticker:   "REVIEW",
+				Sequence: "YR",
+				Type:     "RESULT",
 				Status:   "SUCCESS",
-				Images: []barkat.Image{
-					{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"},
-				},
-				Tags: []barkat.Tag{
-					{Tag: "enl", Type: "management"},
-					{Tag: "ntr", Type: "management"},
-				},
-				Notes: []barkat.Note{
-					{Status: "set", Content: "Trends\nHTF - Up\nMTF - Up\nTTF - Up\n\nPlan: Longs @ WK DZ\n\nSupport:\n- MN EMA", Format: "markdown"},
-				},
+				Images:   standardImages,
 			}
-			resp, body := httpDo("POST", baseURL+"/v1/journal-entries", entry)
-			Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-
-			// Handle the envelope response for creation
-			var envelope common.Envelope[barkat.Journal]
-			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
-			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
-			createdEntry = envelope.Data
+			resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
+			createdJournal = decodeJournalResponse(resp)
 		})
 
-		It("should create with management tags", func() {
-			Expect(createdEntry.Tags).To(HaveLen(2))
-			Expect(createdEntry.Tags[0].Type).To(Equal("management"))
+		It("should mark journal as reviewed", func() {
+			reviewDate := civil.Date{Year: 2024, Month: 1, Day: 15}
+			payload := barkat.JournalReviewUpdate{ReviewedAt: &reviewDate}
+
+			resp, err := client.R().SetBody(payload).Patch(barkat.JournalBase + "/" + createdJournal.ExternalID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+
+			var envelope common.Envelope[barkat.UpdateJournalStatusResponse]
+			Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
+			Expect(envelope.Data.ReviewedAt).ToNot(BeNil())
 		})
 
-		Context("Tag Sub-resource APIs", func() {
-			var addedTag barkat.Tag
+		It("should clear reviewed status", func() {
+			// First mark as reviewed
+			reviewDate := civil.Date{Year: 2024, Month: 1, Day: 15}
+			resp, _ := client.R().SetBody(barkat.JournalReviewUpdate{ReviewedAt: &reviewDate}).Patch(barkat.JournalBase + "/" + createdJournal.ExternalID)
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 
-			BeforeEach(func() {
-				tag := barkat.Tag{Tag: "er", Type: "reason"}
-				resp, body := httpDo("POST", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/tags", tag)
-				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-				Expect(json.Unmarshal(body, &addedTag)).To(Succeed())
-			})
+			// Then clear
+			resp, err := client.R().SetBody(barkat.JournalReviewUpdate{ReviewedAt: nil}).
+				Patch(barkat.JournalBase + "/" + createdJournal.ExternalID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 
-			It("should add tag to entry", func() {
-				Expect(addedTag.ID).ToNot(BeEmpty())
-				Expect(addedTag.Tag).To(Equal("er"))
-				Expect(addedTag.Type).To(Equal("reason"))
-			})
-
-			Context("List Tags", func() {
-				It("should list all tags", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/tags", nil)
-					Expect(resp.StatusCode).To(Equal(http.StatusOK))
-					var result map[string][]barkat.Tag
-					Expect(json.Unmarshal(body, &result)).To(Succeed())
-					Expect(result["tags"]).To(HaveLen(3))
-				})
-
-				It("should filter by type=management", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/tags?type=management", nil)
-					Expect(resp.StatusCode).To(Equal(http.StatusOK))
-					var result map[string][]barkat.Tag
-					Expect(json.Unmarshal(body, &result)).To(Succeed())
-					Expect(result["tags"]).To(HaveLen(2))
-				})
-
-				It("should filter by type=reason", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/tags?type=reason", nil)
-					Expect(resp.StatusCode).To(Equal(http.StatusOK))
-					var result map[string][]barkat.Tag
-					Expect(json.Unmarshal(body, &result)).To(Succeed())
-					Expect(result["tags"]).To(HaveLen(1))
-					Expect(result["tags"][0].Tag).To(Equal("er"))
-				})
-			})
-
-			Context("Delete Tag", func() {
-				BeforeEach(func() {
-					resp, _ := httpDo("DELETE", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/tags/"+addedTag.ID, nil)
-					Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
-				})
-
-				It("should remove tag from entry", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/tags", nil)
-					Expect(resp.StatusCode).To(Equal(http.StatusOK))
-					var result map[string][]barkat.Tag
-					Expect(json.Unmarshal(body, &result)).To(Succeed())
-					Expect(result["tags"]).To(HaveLen(2))
-				})
-			})
-		})
-
-		Context("Image Sub-resource APIs", func() {
-			var addedImage barkat.Image
-
-			BeforeEach(func() {
-				image := barkat.Image{Timeframe: "SMN"}
-				resp, body := httpDo("POST", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/images", image)
-				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-				Expect(json.Unmarshal(body, &addedImage)).To(Succeed())
-			})
-
-			It("should add image to entry", func() {
-				Expect(addedImage.ID).ToNot(BeEmpty())
-				Expect(addedImage.Timeframe).To(Equal("SMN"))
-			})
-
-			Context("List Images", func() {
-				It("should list all images", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/images", nil)
-					Expect(resp.StatusCode).To(Equal(http.StatusOK))
-					var result map[string][]barkat.Image
-					Expect(json.Unmarshal(body, &result)).To(Succeed())
-					Expect(result["images"]).To(HaveLen(5))
-				})
-			})
-
-			Context("Delete Image", func() {
-				BeforeEach(func() {
-					resp, _ := httpDo("DELETE", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/images/"+addedImage.ID, nil)
-					Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
-				})
-
-				It("should remove image from entry", func() {
-					resp, body := httpDo("GET", baseURL+"/v1/journal-entries/"+createdEntry.ID+"/images", nil)
-					Expect(resp.StatusCode).To(Equal(http.StatusOK))
-					var result map[string][]barkat.Image
-					Expect(json.Unmarshal(body, &result)).To(Succeed())
-					Expect(result["images"]).To(HaveLen(4))
-				})
-			})
+			var envelope common.Envelope[barkat.UpdateJournalStatusResponse]
+			Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
+			Expect(envelope.Data.ReviewedAt).To(BeNil())
 		})
 	})
 
-	// ---- List with Filters (multiple entries from production patterns) ----
-	Context("List with Filters", func() {
-		BeforeEach(func() {
-			entries := []barkat.Journal{
-				{
-					Ticker: "KEI", Sequence: "MWD", Type: "REJECTED", Status: "FAIL",
-					Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}},
-					Tags:   []barkat.Tag{{Tag: "dep", Type: "reason"}},
-				},
-				{
-					Ticker: "SJVN", Sequence: "MWD", Type: "REJECTED", Status: "FAIL",
-					Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}},
-					Tags:   []barkat.Tag{{Tag: "zn", Type: "reason", Override: new("big")}},
-				},
-				{
-					Ticker: "PDSL", Sequence: "YR", Type: "SET", Status: "RUNNING",
-					Images: []barkat.Image{{Timeframe: "DL"}, {Timeframe: "WK"}, {Timeframe: "MN"}, {Timeframe: "TMN"}},
-					Notes:  []barkat.Note{{Status: "set", Content: "Trends\nHTF - Up\nMTF - Up\nTTF - Up\n\nPlan: Longs @ TTF DZ", Format: "markdown"}},
-				},
+	// Validation Through HTTP Stack - Ensures validators are registered
+	Context("Validation Errors", func() {
+		It("should reject invalid ticker format", func() {
+			journal := barkat.Journal{
+				Ticker:   "lowercase", // PRD: must be uppercase
+				Sequence: "MWD",
+				Type:     "SET",
+				Status:   "RUNNING",
+				Images:   standardImages,
 			}
-			for i := range entries {
-				resp, _ := httpDo("POST", baseURL+"/v1/journal-entries", entries[i])
-				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-			}
+			resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusBadRequest))
 		})
 
-		It("should filter by ticker", func() {
-			resp, body := httpDo("GET", baseURL+"/v1/journal-entries?ticker=KEI&limit=10", nil)
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			var envelope common.Envelope[barkat.JournalList]
-			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
-			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
-			Expect(envelope.Data.Records).To(HaveLen(1))
-			Expect(envelope.Data.Records[0].Ticker).To(Equal("KEI"))
+		It("should reject insufficient images", func() {
+			journal := barkat.Journal{
+				Ticker:   "VALID",
+				Sequence: "MWD",
+				Type:     "SET",
+				Status:   "RUNNING",
+				Images:   []barkat.Image{{Timeframe: "DL", FileName: "only_one.png"}}, // PRD: min 4
+			}
+			resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusBadRequest))
 		})
 
-		It("should filter by sequence=yr", func() {
-			resp, body := httpDo("GET", baseURL+"/v1/journal-entries?sequence=YR&limit=10", nil)
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			var envelope common.Envelope[barkat.JournalList]
-			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
-			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
-			for _, e := range envelope.Data.Records {
-				Expect(e.Sequence).To(Equal("YR"))
+		It("should reject future review date", func() {
+			// Create journal first
+			journal := barkat.Journal{
+				Ticker:   "FUTURE",
+				Sequence: "MWD",
+				Type:     "SET",
+				Status:   "RUNNING",
+				Images:   standardImages,
 			}
-		})
+			resp, _ := client.R().SetBody(journal).Post(barkat.JournalBase)
+			created := decodeJournalResponse(resp)
 
-		It("should filter by status=running", func() {
-			resp, body := httpDo("GET", baseURL+"/v1/journal-entries?status=RUNNING&limit=10", nil)
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			var envelope common.Envelope[barkat.JournalList]
-			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
-			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
-			for _, e := range envelope.Data.Records {
-				Expect(e.Status).To(Equal("running"))
-			}
-		})
-
-		It("should return lightweight summaries without associations", func() {
-			resp, body := httpDo("GET", baseURL+"/v1/journal-entries?limit=10", nil)
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			var envelope common.Envelope[barkat.JournalList]
-			Expect(json.Unmarshal(body, &envelope)).To(Succeed())
-			Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
-			Expect(envelope.Data.Records).ToNot(BeEmpty())
-			for _, e := range envelope.Data.Records {
-				Expect(e.Images).To(BeEmpty())
-				Expect(e.Tags).To(BeEmpty())
-				Expect(e.Notes).To(BeEmpty())
-			}
+			// Try to set future date
+			futureDate := civil.Date{Year: 2099, Month: 12, Day: 31}
+			resp, err := client.R().SetBody(barkat.JournalReviewUpdate{ReviewedAt: &futureDate}).
+				Patch(barkat.JournalBase + "/" + created.ExternalID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusBadRequest))
 		})
 	})
 
-	// ---- Error Cases ----
-	Context("Error Cases", func() {
-		It("should return 404 for missing entry", func() {
-			resp, _ := httpDo("GET", baseURL+"/v1/journal-entries/nonexistent-id", nil)
-			Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
+	// Error Handling - Tests 404 and invalid ID scenarios
+	Context("Error Handling", func() {
+		It("should return 404 for non-existent journal", func() {
+			// Use valid format (8 hex chars) but non-existent ID
+			resp, err := client.R().Get(barkat.JournalBase + "/jrn_12345678")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusNotFound))
 		})
 
-		It("should return 404 for sub-resource on missing entry", func() {
-			resp, _ := httpDo("GET", baseURL+"/v1/journal-entries/nonexistent-id/images", nil)
-			Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
-		})
-
-		It("should return 404 for deleting missing image", func() {
-			resp, _ := httpDo("DELETE", baseURL+"/v1/journal-entries/nonexistent-id/images/missing-img", nil)
-			Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
-		})
-
-		It("should return 404 for deleting missing note", func() {
-			resp, _ := httpDo("DELETE", baseURL+"/v1/journal-entries/nonexistent-id/notes/missing-note", nil)
-			Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
-		})
-
-		It("should return 404 for deleting missing tag", func() {
-			resp, _ := httpDo("DELETE", baseURL+"/v1/journal-entries/nonexistent-id/tags/missing-tag", nil)
-			Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
+		It("should return 400 for invalid ID format", func() {
+			resp, err := client.R().Get(barkat.JournalBase + "/invalid_format")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusBadRequest))
 		})
 	})
 })

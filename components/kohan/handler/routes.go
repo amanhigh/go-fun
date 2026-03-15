@@ -39,12 +39,13 @@ func SetupTagRoutes(journal *gin.RouterGroup, tagHandler TagHandler) {
 	}
 }
 
-// SetupJournalEntryRoutes configures basic journal entry routes
-func SetupJournalEntryRoutes(journal *gin.RouterGroup, journalHandler JournalHandler) {
+// SetupJournalRoutes configures basic journal routes
+func SetupJournalRoutes(journal *gin.RouterGroup, journalHandler JournalHandler) {
 	{
-		journal.GET("", journalHandler.HandleListEntries)
-		journal.GET("/:id", journalHandler.HandleGetEntry)
-		journal.POST("", journalHandler.HandleCreateEntry)
-		journal.DELETE("/:id", journalHandler.HandleDeleteEntry)
+		journal.GET("", journalHandler.HandleListJournals)
+		journal.GET("/:id", journalHandler.HandleGetJournal)
+		journal.POST("", journalHandler.HandleCreateJournal)
+		journal.PATCH("/:id", journalHandler.HandleUpdateReviewStatus)
+		journal.DELETE("/:id", journalHandler.HandleDeleteJournal)
 	}
 }

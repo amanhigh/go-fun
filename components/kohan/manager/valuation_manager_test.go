@@ -1,4 +1,4 @@
-//nolint:dupl // Test files often have similar setup patterns
+//nolint:dupl // False positives: Similar valuation test patterns for different scenarios
 package manager_test
 
 import (

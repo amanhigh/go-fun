@@ -59,7 +59,7 @@ func (s *KohanServerLifecycle) registerMonitorRoutes(engine *gin.Engine) {
 
 func (s *KohanServerLifecycle) registerJournalRoutes(engine *gin.Engine) {
 	journal := engine.Group(barkat.JournalBase)
-	handler.SetupJournalEntryRoutes(journal, s.JournalHandler)
+	handler.SetupJournalRoutes(journal, s.JournalHandler)
 	handler.SetupImageRoutes(journal, s.ImageHandler)
 	handler.SetupNoteRoutes(journal, s.NoteHandler)
 	handler.SetupTagRoutes(journal, s.TagHandler)
