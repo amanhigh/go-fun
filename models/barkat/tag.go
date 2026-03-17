@@ -22,9 +22,6 @@ func (t *Tag) BeforeCreate(_ *gorm.DB) error {
 	if t.ExternalID == "" {
 		t.ExternalID = "tag_" + uuid.NewString()[:8] // Generate external_id with prefix
 	}
-	if t.CreatedAt.IsZero() {
-		t.CreatedAt = time.Now()
-	}
 	return nil
 }
 
