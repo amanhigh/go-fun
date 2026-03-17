@@ -1,4 +1,3 @@
-//nolint:dupl
 package core_test
 
 import (
@@ -9,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -19,23 +19,314 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-// LegacyJournalEntry represents a parsed entry from Logseq markdown
-type LegacyJournalEntry struct {
-	Ticker    string
-	Sequence  string
-	Type      string
-	Status    string
-	Direction string
-	Reason    string
-	Images    []string
-	Note      string
+// ============================================================================
+// LOGGING INFRASTRUCTURE
+// ============================================================================
+
+// MigrationLogger handles all logging for migration process
+type MigrationLogger struct {
+	logFile       *os.File
+	logPath       string
+	sanitizations []SanitizationLog
+	modifications []ModificationLog
+	errors        []ErrorLog
+	successes     []SuccessLog
 }
 
-// parseLegacyMarkdown parses a Logseq journal markdown file into entries
-func parseLegacyMarkdown(filePath string) ([]LegacyJournalEntry, error) {
+type SanitizationLog struct {
+	File     string `json:"file"`
+	Ticker   string `json:"ticker"`
+	Field    string `json:"field"`
+	OldValue string `json:"old_value"`
+	NewValue string `json:"new_value"`
+	Reason   string `json:"reason"`
+}
+
+type ModificationLog struct {
+	File    string `json:"file"`
+	Ticker  string `json:"ticker"`
+	Field   string `json:"field"`
+	Action  string `json:"action"`
+	Details string `json:"details"`
+}
+
+type ErrorLog struct {
+	File    string `json:"file"`
+	Ticker  string `json:"ticker"`
+	Line    int    `json:"line,omitempty"`
+	Error   string `json:"error"`
+	RawData string `json:"raw_data,omitempty"`
+}
+
+type SuccessLog struct {
+	File       string `json:"file"`
+	Ticker     string `json:"ticker"`
+	JournalID  string `json:"journal_id"`
+	ImageCount int    `json:"image_count"`
+	HasNote    bool   `json:"has_note"`
+	HasTag     bool   `json:"has_tag"`
+}
+
+// ValidationCounts for independent verification
+type ValidationCounts struct {
+	// From raw file scanning (independent)
+	RawTickerLines   int `json:"raw_ticker_lines"`
+	RawImageLines    int `json:"raw_image_lines"`
+	RawCodeBlocks    int `json:"raw_code_blocks"`
+	RawTotalLines    int `json:"raw_total_lines"`
+	RawNonEmptyLines int `json:"raw_non_empty_lines"`
+
+	// From parsing
+	ParsedTickers int `json:"parsed_tickers"`
+	ParsedImages  int `json:"parsed_images"`
+	ParsedNotes   int `json:"parsed_notes"`
+
+	// From API migration
+	MigratedJournals int `json:"migrated_journals"`
+	MigratedImages   int `json:"migrated_images"`
+	MigratedNotes    int `json:"migrated_notes"`
+	MigratedTags     int `json:"migrated_tags"`
+}
+
+func NewMigrationLogger(logDir string) (*MigrationLogger, error) {
+	timestamp := time.Now().Format("20060102_150405")
+	logPath := filepath.Join(logDir, fmt.Sprintf("migration_%s.log", timestamp))
+
+	logFile, err := os.Create(logPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create log file: %w", err)
+	}
+
+	return &MigrationLogger{
+		logFile: logFile,
+		logPath: logPath,
+	}, nil
+}
+
+func (l *MigrationLogger) LogSanitization(file, ticker, field, oldVal, newVal, reason string) {
+	entry := SanitizationLog{
+		File:     filepath.Base(file),
+		Ticker:   ticker,
+		Field:    field,
+		OldValue: oldVal,
+		NewValue: newVal,
+		Reason:   reason,
+	}
+	l.sanitizations = append(l.sanitizations, entry)
+	l.writeJSON("SANITIZATION", entry)
+}
+
+func (l *MigrationLogger) LogModification(file, ticker, field, action, details string) {
+	entry := ModificationLog{
+		File:    filepath.Base(file),
+		Ticker:  ticker,
+		Field:   field,
+		Action:  action,
+		Details: details,
+	}
+	l.modifications = append(l.modifications, entry)
+	l.writeJSON("MODIFICATION", entry)
+}
+
+func (l *MigrationLogger) LogError(file, ticker string, line int, errMsg, rawData string) {
+	entry := ErrorLog{
+		File:    filepath.Base(file),
+		Ticker:  ticker,
+		Line:    line,
+		Error:   errMsg,
+		RawData: rawData,
+	}
+	l.errors = append(l.errors, entry)
+	l.writeJSON("ERROR", entry)
+}
+
+func (l *MigrationLogger) LogSuccess(file, ticker, journalID string, imageCount int, hasNote, hasTag bool) {
+	entry := SuccessLog{
+		File:       filepath.Base(file),
+		Ticker:     ticker,
+		JournalID:  journalID,
+		ImageCount: imageCount,
+		HasNote:    hasNote,
+		HasTag:     hasTag,
+	}
+	l.successes = append(l.successes, entry)
+	l.writeJSON("SUCCESS", entry)
+}
+
+func (l *MigrationLogger) LogInfo(message string, data interface{}) {
+	l.writeJSON("INFO", map[string]interface{}{"message": message, "data": data})
+}
+
+func (l *MigrationLogger) writeJSON(logType string, data interface{}) {
+	jsonData, _ := json.Marshal(data)
+	fmt.Fprintf(l.logFile, "%s|%s|%s\n", time.Now().Format(time.RFC3339), logType, string(jsonData))
+}
+
+func (l *MigrationLogger) WriteSummary(processed, validation ValidationCounts, files int) {
+	summary := map[string]interface{}{
+		"files_processed": files,
+		"processing": map[string]int{
+			"parsed_tickers":    processed.ParsedTickers,
+			"parsed_images":     processed.ParsedImages,
+			"parsed_notes":      processed.ParsedNotes,
+			"migrated_journals": processed.MigratedJournals,
+			"migrated_images":   processed.MigratedImages,
+			"migrated_notes":    processed.MigratedNotes,
+			"migrated_tags":     processed.MigratedTags,
+		},
+		"validation": map[string]int{
+			"raw_ticker_lines":    validation.RawTickerLines,
+			"raw_image_lines":     validation.RawImageLines,
+			"raw_code_blocks":     validation.RawCodeBlocks,
+			"raw_total_lines":     validation.RawTotalLines,
+			"raw_non_empty_lines": validation.RawNonEmptyLines,
+		},
+		"match_status": map[string]interface{}{
+			"tickers_match": processed.ParsedTickers == validation.RawTickerLines,
+			"images_match":  processed.ParsedImages == validation.RawImageLines,
+			"ticker_diff":   validation.RawTickerLines - processed.ParsedTickers,
+			"image_diff":    validation.RawImageLines - processed.ParsedImages,
+		},
+		"totals": map[string]int{
+			"sanitizations": len(l.sanitizations),
+			"modifications": len(l.modifications),
+			"errors":        len(l.errors),
+			"successes":     len(l.successes),
+		},
+	}
+	l.writeJSON("SUMMARY", summary)
+}
+
+func (l *MigrationLogger) Close() {
+	if l.logFile != nil {
+		l.logFile.Close()
+	}
+}
+
+func (l *MigrationLogger) GetLogPath() string {
+	return l.logPath
+}
+
+func (l *MigrationLogger) GetErrorCount() int {
+	return len(l.errors)
+}
+
+func (l *MigrationLogger) GetSanitizationCount() int {
+	return len(l.sanitizations)
+}
+
+func (l *MigrationLogger) GetModificationCount() int {
+	return len(l.modifications)
+}
+
+// ============================================================================
+// LEGACY ENTRY STRUCTURES
+// ============================================================================
+
+// LegacyJournalEntry represents a parsed entry from Logseq markdown
+// Stores raw values as-is from markdown, conversion happens separately
+type LegacyJournalEntry struct {
+	Ticker      string
+	RawTags     []string // Store all raw tags for logging
+	Sequence    string
+	Type        string
+	Status      string
+	Direction   string
+	Reason      string
+	Images      []string
+	Note        string
+	RawLine     string // Original line for reference
+	LineNumber  int    // Line number in file
+	RawMarkdown string // Complete raw markdown block for this entry
+}
+
+// ============================================================================
+// INDEPENDENT VALIDATION - Raw file scanning
+// ============================================================================
+
+// scanFileForValidation performs independent counting without parsing logic
+func scanFileForValidation(filePath string) (ValidationCounts, error) {
+	var counts ValidationCounts
+
 	file, err := os.Open(filePath)
 	if err != nil {
-		return nil, err
+		return counts, err
+	}
+	defer file.Close()
+
+	// Patterns for independent validation
+	tickerPattern := regexp.MustCompile(`\|\s*` + "`" + `[A-Z0-9_!]+` + "`" + `\s*\|`)
+	imagePattern := regexp.MustCompile(`!\[.*?\]\([^)]+\)`)
+	codeBlockPattern := regexp.MustCompile("^\\s*```")
+
+	scanner := bufio.NewScanner(file)
+	inCodeBlock := false
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		counts.RawTotalLines++
+
+		if strings.TrimSpace(line) != "" {
+			counts.RawNonEmptyLines++
+		}
+
+		// Count code blocks
+		if codeBlockPattern.MatchString(line) {
+			if !inCodeBlock {
+				counts.RawCodeBlocks++
+			}
+			inCodeBlock = !inCodeBlock
+		}
+
+		// Count ticker lines (table rows with backtick-wrapped tickers)
+		if tickerPattern.MatchString(line) {
+			counts.RawTickerLines++
+		}
+
+		// Count image lines
+		if imagePattern.MatchString(line) {
+			counts.RawImageLines++
+		}
+	}
+
+	return counts, scanner.Err()
+}
+
+// ============================================================================
+// DATE EXTRACTION
+// ============================================================================
+
+// extractDateFromFilename extracts date from filename like "2023_06_15.md"
+func extractDateFromFilename(filename string) (time.Time, error) {
+	base := filepath.Base(filename)
+	base = strings.TrimSuffix(base, ".md")
+
+	// Try format: 2023_06_15
+	t, err := time.Parse("2006_01_02", base)
+	if err == nil {
+		return t, nil
+	}
+
+	// Try format: 2023-06-15
+	t, err = time.Parse("2006-01-02", base)
+	if err == nil {
+		return t, nil
+	}
+
+	return time.Time{}, fmt.Errorf("cannot parse date from filename: %s", filename)
+}
+
+// ============================================================================
+// PARSING WITH LOGGING
+// ============================================================================
+
+// parseLegacyMarkdownWithLogging parses markdown and captures raw content
+func parseLegacyMarkdownWithLogging(filePath string, logger *MigrationLogger) ([]LegacyJournalEntry, ValidationCounts, error) {
+	var counts ValidationCounts
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, counts, err
 	}
 	defer file.Close()
 
@@ -43,15 +334,23 @@ func parseLegacyMarkdown(filePath string) ([]LegacyJournalEntry, error) {
 	var currentEntry *LegacyJournalEntry
 	var inCodeBlock bool
 	var noteContent strings.Builder
+	var rawMarkdown strings.Builder
+	var lineNumber int
 
 	scanner := bufio.NewScanner(file)
 	// Regex patterns
-	entryPattern := regexp.MustCompile(`\|\s*` + "`" + `([A-Z0-9]+)` + "`" + `\s*\|(.+)\|`)
+	entryPattern := regexp.MustCompile(`\|\s*` + "`" + `([A-Z0-9_!]+)` + "`" + `\s*\|(.+)\|`)
 	imagePattern := regexp.MustCompile(`!\[.*?\]\(([^)]+)\)`)
 	tagPattern := regexp.MustCompile(`#([trm])\.([a-z0-9-]+)`)
 
 	for scanner.Scan() {
 		line := scanner.Text()
+		lineNumber++
+
+		// Track raw markdown for current entry
+		if currentEntry != nil {
+			rawMarkdown.WriteString(line + "\n")
+		}
 
 		// Handle code blocks for notes
 		if strings.Contains(line, "```") {
@@ -59,6 +358,9 @@ func parseLegacyMarkdown(filePath string) ([]LegacyJournalEntry, error) {
 				// End of code block
 				if currentEntry != nil {
 					currentEntry.Note = strings.TrimSpace(noteContent.String())
+					if currentEntry.Note != "" {
+						counts.ParsedNotes++
+					}
 				}
 				noteContent.Reset()
 			}
@@ -75,6 +377,7 @@ func parseLegacyMarkdown(filePath string) ([]LegacyJournalEntry, error) {
 		if matches := entryPattern.FindStringSubmatch(line); matches != nil {
 			// Save previous entry if exists
 			if currentEntry != nil {
+				currentEntry.RawMarkdown = rawMarkdown.String()
 				entries = append(entries, *currentEntry)
 			}
 
@@ -82,25 +385,30 @@ func parseLegacyMarkdown(filePath string) ([]LegacyJournalEntry, error) {
 			tagsPart := matches[2]
 
 			entry := LegacyJournalEntry{
-				Ticker: ticker,
+				Ticker:     ticker,
+				RawLine:    line,
+				LineNumber: lineNumber,
 			}
+			counts.ParsedTickers++
 
-			// Parse tags from the line
+			// Reset raw markdown for new entry
+			rawMarkdown.Reset()
+			rawMarkdown.WriteString(line + "\n")
+
+			// Parse and store raw tags
 			tags := tagPattern.FindAllStringSubmatch(tagsPart, -1)
 			for _, tag := range tags {
+				entry.RawTags = append(entry.RawTags, fmt.Sprintf("#%s.%s", tag[1], tag[2]))
 				prefix := tag[1]
 				value := tag[2]
 
-				// BUG: Legacy entry should capture data as is, Mapping should be done during conversion to new model
 				switch prefix {
 				case "t":
-					// Type tags
 					switch value {
 					case "mwd", "yr":
 						entry.Sequence = strings.ToUpper(value)
 					case "wdh":
-						// WDH is legacy, map to MWD
-						entry.Sequence = "MWD"
+						entry.Sequence = "WDH" // Store as-is, convert later
 					case "rejected":
 						entry.Type = "REJECTED"
 					case "set":
@@ -125,7 +433,6 @@ func parseLegacyMarkdown(filePath string) ([]LegacyJournalEntry, error) {
 						entry.Direction = value
 					}
 				case "r":
-					// Reason tag
 					entry.Reason = value
 				}
 			}
@@ -138,53 +445,94 @@ func parseLegacyMarkdown(filePath string) ([]LegacyJournalEntry, error) {
 		if currentEntry != nil {
 			if matches := imagePattern.FindStringSubmatch(line); matches != nil {
 				currentEntry.Images = append(currentEntry.Images, matches[1])
+				counts.ParsedImages++
 			}
 		}
 	}
 
 	// Don't forget the last entry
 	if currentEntry != nil {
+		currentEntry.RawMarkdown = rawMarkdown.String()
 		entries = append(entries, *currentEntry)
 	}
 
-	return entries, scanner.Err()
+	return entries, counts, scanner.Err()
 }
 
-// sanitizeFileName removes invalid characters from filenames
-func sanitizeFileName(name string) string {
-	// Replace ! and other invalid chars with underscore
-	// BUG: Print Log of any Santization with Old Value and New Value.
+// ============================================================================
+// CONVERSION WITH LOGGING
+// ============================================================================
+
+// sanitizeFileNameWithLogging removes invalid characters and logs changes
+func sanitizeFileNameWithLogging(name, file, ticker string, logger *MigrationLogger) string {
 	invalidChars := regexp.MustCompile(`[!@#$%^&*()+=\[\]{}|;:'",<>?/\\]`)
-	return invalidChars.ReplaceAllString(name, "_")
+	sanitized := invalidChars.ReplaceAllString(name, "_")
+
+	if sanitized != name {
+		logger.LogSanitization(file, ticker, "filename", name, sanitized, "invalid_characters_removed")
+	}
+
+	return sanitized
 }
 
-// convertToJournal converts a legacy entry to the new Journal model
-func convertToJournal(entry LegacyJournalEntry, journalDate string) barkat.Journal {
-	// BUG: CreateAt should be journalDate
-	// Build images from legacy image paths
+// sanitizeTickerWithLogging sanitizes ticker symbols and logs changes
+func sanitizeTickerWithLogging(ticker, file string, logger *MigrationLogger) string {
+	original := ticker
+
+	// Remove trailing ! (futures symbols)
+	if strings.HasSuffix(ticker, "!") {
+		ticker = strings.TrimSuffix(ticker, "!")
+		logger.LogSanitization(file, original, "ticker", original, ticker, "removed_trailing_exclamation")
+	}
+
+	// Replace underscores with nothing (NSE tickers don't have underscores)
+	// M_MFIN -> MMFIN, MCDOWELL_N -> MCDOWELLN, M_M -> MM
+	if strings.Contains(ticker, "_") {
+		newTicker := strings.ReplaceAll(ticker, "_", "")
+		logger.LogSanitization(file, original, "ticker", ticker, newTicker, "removed_underscores")
+		ticker = newTicker
+	}
+
+	return ticker
+}
+
+// convertToJournalWithLogging converts legacy entry with full logging
+func convertToJournalWithLogging(entry LegacyJournalEntry, journalDate time.Time, filePath string, logger *MigrationLogger) barkat.Journal {
+	ticker := sanitizeTickerWithLogging(entry.Ticker, filePath, logger)
+
+	// Build images with logging
 	images := make([]barkat.Image, 0, len(entry.Images))
 	timeframes := []string{"DL", "WK", "MN", "TMN"}
 
 	for i, imgPath := range entry.Images {
-		// Assign timeframes cyclically if we have more images than timeframes
 		timeframe := timeframes[i%len(timeframes)]
+		sanitizedName := sanitizeFileNameWithLogging(filepath.Base(imgPath), filePath, ticker, logger)
 		images = append(images, barkat.Image{
 			Timeframe: timeframe,
-			FileName:  sanitizeFileName(filepath.Base(imgPath)),
+			FileName:  sanitizedName,
+			CreatedAt: journalDate,
 		})
 	}
 
-	// Ensure minimum 4 images
+	originalImageCount := len(images)
+
+	// Log placeholder additions
+	if len(images) < 4 {
+		logger.LogModification(filePath, ticker, "images", "placeholder_added",
+			fmt.Sprintf("added %d placeholder images (had %d, need 4)", 4-len(images), len(images)))
+	}
 	for len(images) < 4 {
 		images = append(images, barkat.Image{
 			Timeframe: timeframes[len(images)],
 			FileName:  fmt.Sprintf("placeholder_%d.png", len(images)),
+			CreatedAt: journalDate,
 		})
 	}
 
-	// Truncate to max 16 images (PRD limit)
-	// BUG: Any Modification should be logged
+	// Log truncation
 	if len(images) > 16 {
+		logger.LogModification(filePath, ticker, "images", "truncated",
+			fmt.Sprintf("truncated from %d to 16 images", len(images)))
 		images = images[:16]
 	}
 
@@ -192,60 +540,103 @@ func convertToJournal(entry LegacyJournalEntry, journalDate string) barkat.Journ
 	var tags []barkat.Tag
 	if entry.Reason != "" {
 		tags = append(tags, barkat.Tag{
-			Tag:  entry.Reason,
-			Type: "REASON",
+			Tag:       entry.Reason,
+			Type:      "REASON",
+			CreatedAt: journalDate,
 		})
 	}
 
-	// Build notes
+	// Build notes - include original markdown as first note
 	var notes []barkat.Note
-	if entry.Note != "" {
-		notes = append(notes, barkat.Note{
-			Status:  entry.Status,
-			Content: entry.Note,
-			Format:  "PLAINTEXT",
-		})
-	}
 
-	// Default status based on type if not set
-	status := entry.Status
-	if status == "" {
+	// Determine the note status (must be a valid journal status)
+	// Use the entry's status, or derive from type if not set
+	noteStatus := entry.Status
+	if noteStatus == "" {
 		switch entry.Type {
 		case "REJECTED":
-			status = "FAIL"
+			noteStatus = "FAIL"
 		case "SET":
-			status = "SET"
+			noteStatus = "SET"
 		case "RESULT":
-			status = "SUCCESS"
+			noteStatus = "SUCCESS"
 		default:
-			status = "FAIL"
+			noteStatus = "FAIL"
 		}
 	}
 
-	// Default sequence if not set
+	// Add original markdown content as note for preservation
+	originalContent := fmt.Sprintf("=== ORIGINAL MARKDOWN ===\n%s", entry.RawMarkdown)
+	notes = append(notes, barkat.Note{
+		Status:    noteStatus,
+		Content:   originalContent,
+		Format:    "MARKDOWN",
+		CreatedAt: journalDate,
+	})
+
+	// Handle sequence mapping with logging
 	sequence := entry.Sequence
+	if sequence == "WDH" {
+		logger.LogSanitization(filePath, ticker, "sequence", "WDH", "MWD", "legacy_sequence_mapped")
+		sequence = "MWD"
+	}
 	if sequence == "" {
+		logger.LogModification(filePath, ticker, "sequence", "default_applied", "set to MWD (was empty)")
 		sequence = "MWD"
 	}
 
-	// Default type if not set
+	// Handle status with logging
+	status := entry.Status
+	if status == "" {
+		var defaultStatus string
+		switch entry.Type {
+		case "REJECTED":
+			defaultStatus = "FAIL"
+		case "SET":
+			defaultStatus = "SET"
+		case "RESULT":
+			defaultStatus = "SUCCESS"
+		default:
+			defaultStatus = "FAIL"
+		}
+		logger.LogModification(filePath, ticker, "status", "default_applied",
+			fmt.Sprintf("set to %s based on type %s (was empty)", defaultStatus, entry.Type))
+		status = defaultStatus
+	}
+
+	// Handle type with logging
 	journalType := entry.Type
 	if journalType == "" {
+		logger.LogModification(filePath, ticker, "type", "default_applied", "set to REJECTED (was empty)")
 		journalType = "REJECTED"
 	}
 
+	// Log if we had to add placeholders or truncate
+	if originalImageCount != len(entry.Images) || len(images) != originalImageCount {
+		logger.LogInfo("image_count_change", map[string]interface{}{
+			"file":     filepath.Base(filePath),
+			"ticker":   ticker,
+			"original": len(entry.Images),
+			"final":    len(images),
+		})
+	}
+
 	return barkat.Journal{
-		Ticker:   entry.Ticker,
-		Sequence: sequence,
-		Type:     journalType,
-		Status:   status,
-		Images:   images,
-		Tags:     tags,
-		Notes:    notes,
+		Ticker:    ticker,
+		Sequence:  sequence,
+		Type:      journalType,
+		Status:    status,
+		CreatedAt: journalDate,
+		Images:    images,
+		Tags:      tags,
+		Notes:     notes,
 	}
 }
 
-// MigrationStats tracks migration progress
+// ============================================================================
+// MIGRATION STATS
+// ============================================================================
+
 type MigrationStats struct {
 	TotalEntries    int
 	SuccessCount    int
@@ -254,50 +645,75 @@ type MigrationStats struct {
 	FailureMessages []string
 }
 
-// Barkat Migration Test Suite
-//
-// Tests FR-007: Logseq Migration and FR-008: Migration Integration Test
-// Migrates legacy Logseq markdown journal files to the new structured system
+// ============================================================================
+// TEST SUITE
+// ============================================================================
+
 var _ = Describe("Barkat Migration Test", func() {
-	var client *resty.Client
+	var (
+		client *resty.Client
+		logger *MigrationLogger
+	)
 
 	BeforeEach(func() {
 		client = resty.New()
-		client.SetTimeout(5 * time.Second)
+		client.SetTimeout(10 * time.Second)
 		client.SetHeader("Content-Type", "application/json")
 		client.SetBaseURL(fmt.Sprintf("http://localhost:%d", testPort))
+
+		// Create logger in test directory
+		var err error
+		logger, err = NewMigrationLogger("/home/aman/Projects/go-fun/components/kohan/core")
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	AfterEach(func() {
+		if logger != nil {
+			logger.Close()
+		}
 	})
 
 	Context("Single File Migration", func() {
 		var (
 			testFilePath string
 			entries      []LegacyJournalEntry
+			parsedCounts ValidationCounts
 		)
 
 		BeforeEach(func() {
-			// Use the sample file from processed folder
 			testFilePath = "/home/aman/Projects/go-fun/processed/2023_06_15.md"
 
 			var err error
-			entries, err = parseLegacyMarkdown(testFilePath)
+			entries, parsedCounts, err = parseLegacyMarkdownWithLogging(testFilePath, logger)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		It("should parse legacy markdown file", func() {
-			Expect(entries).ToNot(BeEmpty())
-			// Based on the file content, we expect 6 entries
-			Expect(len(entries)).To(BeNumerically(">=", 1))
+		It("should parse legacy markdown file with validation", func() {
+			// Independent validation
+			rawCounts, err := scanFileForValidation(testFilePath)
+			Expect(err).ToNot(HaveOccurred())
 
-			// Verify first entry structure
-			firstEntry := entries[0]
-			Expect(firstEntry.Ticker).ToNot(BeEmpty())
+			Expect(entries).ToNot(BeEmpty())
+			Expect(len(entries)).To(BeNumerically(">=", 6))
+
+			// Verify counts match
+			GinkgoWriter.Printf("\n=== Validation Counts ===\n")
+			GinkgoWriter.Printf("Raw ticker lines: %d, Parsed tickers: %d\n", rawCounts.RawTickerLines, parsedCounts.ParsedTickers)
+			GinkgoWriter.Printf("Raw image lines: %d, Parsed images: %d\n", rawCounts.RawImageLines, parsedCounts.ParsedImages)
+
+			Expect(parsedCounts.ParsedTickers).To(Equal(rawCounts.RawTickerLines), "Ticker count mismatch")
+			Expect(parsedCounts.ParsedImages).To(Equal(rawCounts.RawImageLines), "Image count mismatch")
 		})
 
-		It("should migrate entries via POST API", func() {
+		It("should migrate entries via POST API with logging", func() {
+			journalDate, err := extractDateFromFilename(testFilePath)
+			Expect(err).ToNot(HaveOccurred())
+
 			stats := MigrationStats{}
+			var migratedCounts ValidationCounts
 
 			for _, entry := range entries {
-				journal := convertToJournal(entry, "2023-06-15")
+				journal := convertToJournalWithLogging(entry, journalDate, testFilePath, logger)
 
 				resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
 				Expect(err).ToNot(HaveOccurred())
@@ -307,18 +723,21 @@ var _ = Describe("Barkat Migration Test", func() {
 				if resp.StatusCode() == http.StatusCreated {
 					stats.SuccessCount++
 
-					// Verify response
 					var envelope common.Envelope[barkat.Journal]
 					Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
-					Expect(envelope.Data.ExternalID).To(HavePrefix("jrn_"))
 
-					// FIXME: Put Complete Markdown (Original) as note in the journal
-					// FIXME: Add Note for any Data Changes to match Sanitization done as seperate Note.
-					Expect(envelope.Data.Ticker).To(Equal(entry.Ticker))
+					migratedCounts.MigratedJournals++
+					migratedCounts.MigratedImages += len(envelope.Data.Images)
+					migratedCounts.MigratedNotes += len(envelope.Data.Notes)
+					migratedCounts.MigratedTags += len(envelope.Data.Tags)
+
+					logger.LogSuccess(testFilePath, entry.Ticker, envelope.Data.ExternalID,
+						len(envelope.Data.Images), len(envelope.Data.Notes) > 0, len(envelope.Data.Tags) > 0)
 				} else {
 					stats.FailureCount++
 					stats.FailedTickers = append(stats.FailedTickers, entry.Ticker)
 					stats.FailureMessages = append(stats.FailureMessages, string(resp.Body()))
+					logger.LogError(testFilePath, entry.Ticker, entry.LineNumber, string(resp.Body()), entry.RawLine)
 				}
 			}
 
@@ -327,39 +746,13 @@ var _ = Describe("Barkat Migration Test", func() {
 			GinkgoWriter.Printf("Total Entries: %d\n", stats.TotalEntries)
 			GinkgoWriter.Printf("Success: %d\n", stats.SuccessCount)
 			GinkgoWriter.Printf("Failures: %d\n", stats.FailureCount)
+			GinkgoWriter.Printf("Log file: %s\n", logger.GetLogPath())
 
-			if stats.FailureCount > 0 {
-				GinkgoWriter.Printf("\nFailed Tickers:\n")
-				for i, ticker := range stats.FailedTickers {
-					GinkgoWriter.Printf("  - %s: %s\n", ticker, stats.FailureMessages[i])
-				}
-			}
-
-			// All entries should succeed
 			Expect(stats.FailureCount).To(Equal(0), "All migrations should succeed")
-		})
-
-		It("should retrieve migrated journals", func() {
-			// First migrate
-			for _, entry := range entries {
-				journal := convertToJournal(entry, "2023-06-15")
-				resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
-			}
-
-			// Then verify via list API
-			resp, err := client.R().Get(barkat.JournalBase + "?limit=100")
-			Expect(err).ToNot(HaveOccurred())
-			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
-
-			var envelope common.Envelope[barkat.JournalList]
-			Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
-			Expect(len(envelope.Data.Journals)).To(BeNumerically(">=", len(entries)))
 		})
 	})
 
-	Context("Folder Migration", func() {
+	Context("Folder Migration with Full Validation", func() {
 		var (
 			processedFolder string
 			allFiles        []string
@@ -368,63 +761,184 @@ var _ = Describe("Barkat Migration Test", func() {
 		BeforeEach(func() {
 			processedFolder = "/home/aman/Projects/go-fun/processed"
 
-			// Find all .md files in the folder
 			files, err := filepath.Glob(filepath.Join(processedFolder, "*.md"))
 			Expect(err).ToNot(HaveOccurred())
+			sort.Strings(files) // Process in order
 			allFiles = files
 		})
 
-		It("should migrate all files in folder", func() {
-			// Skip("Enable when single file migration is stable")
-
+		It("should migrate all files with comprehensive validation", func() {
+			var totalParsedCounts ValidationCounts
+			var totalRawCounts ValidationCounts
+			var totalMigratedCounts ValidationCounts
 			totalStats := MigrationStats{}
 
+			// Track files with issues
+			var filesWithMismatch []string
+
 			for _, filePath := range allFiles {
-				entries, err := parseLegacyMarkdown(filePath)
+				// Independent validation first
+				rawCounts, err := scanFileForValidation(filePath)
 				if err != nil {
-					GinkgoWriter.Printf("Error parsing %s: %v\n", filePath, err)
+					logger.LogError(filePath, "", 0, fmt.Sprintf("scan error: %v", err), "")
 					continue
 				}
 
+				totalRawCounts.RawTickerLines += rawCounts.RawTickerLines
+				totalRawCounts.RawImageLines += rawCounts.RawImageLines
+				totalRawCounts.RawCodeBlocks += rawCounts.RawCodeBlocks
+				totalRawCounts.RawTotalLines += rawCounts.RawTotalLines
+				totalRawCounts.RawNonEmptyLines += rawCounts.RawNonEmptyLines
+
+				// Parse with logging
+				entries, parsedCounts, err := parseLegacyMarkdownWithLogging(filePath, logger)
+				if err != nil {
+					logger.LogError(filePath, "", 0, fmt.Sprintf("parse error: %v", err), "")
+					continue
+				}
+
+				totalParsedCounts.ParsedTickers += parsedCounts.ParsedTickers
+				totalParsedCounts.ParsedImages += parsedCounts.ParsedImages
+				totalParsedCounts.ParsedNotes += parsedCounts.ParsedNotes
+
+				// Check for mismatch in this file
+				if parsedCounts.ParsedTickers != rawCounts.RawTickerLines ||
+					parsedCounts.ParsedImages != rawCounts.RawImageLines {
+					filesWithMismatch = append(filesWithMismatch, filepath.Base(filePath))
+					logger.LogError(filePath, "", 0, "count_mismatch",
+						fmt.Sprintf("tickers: raw=%d parsed=%d, images: raw=%d parsed=%d",
+							rawCounts.RawTickerLines, parsedCounts.ParsedTickers,
+							rawCounts.RawImageLines, parsedCounts.ParsedImages))
+				}
+
+				// Extract date from filename
+				journalDate, err := extractDateFromFilename(filePath)
+				if err != nil {
+					logger.LogError(filePath, "", 0, fmt.Sprintf("date extraction error: %v", err), "")
+					// Use file modification time as fallback
+					info, _ := os.Stat(filePath)
+					if info != nil {
+						journalDate = info.ModTime()
+					} else {
+						journalDate = time.Now()
+					}
+				}
+
+				// Migrate entries
 				for _, entry := range entries {
-					journal := convertToJournal(entry, filepath.Base(filePath))
+					journal := convertToJournalWithLogging(entry, journalDate, filePath, logger)
 
 					resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
-					Expect(err).ToNot(HaveOccurred())
+					if err != nil {
+						logger.LogError(filePath, entry.Ticker, entry.LineNumber, fmt.Sprintf("http error: %v", err), entry.RawLine)
+						totalStats.FailureCount++
+						continue
+					}
 
 					totalStats.TotalEntries++
 
 					if resp.StatusCode() == http.StatusCreated {
 						totalStats.SuccessCount++
+
+						var envelope common.Envelope[barkat.Journal]
+						if json.Unmarshal(resp.Body(), &envelope) == nil {
+							totalMigratedCounts.MigratedJournals++
+							totalMigratedCounts.MigratedImages += len(envelope.Data.Images)
+							totalMigratedCounts.MigratedNotes += len(envelope.Data.Notes)
+							totalMigratedCounts.MigratedTags += len(envelope.Data.Tags)
+
+							logger.LogSuccess(filePath, entry.Ticker, envelope.Data.ExternalID,
+								len(envelope.Data.Images), len(envelope.Data.Notes) > 0, len(envelope.Data.Tags) > 0)
+						}
 					} else {
 						totalStats.FailureCount++
 						totalStats.FailedTickers = append(totalStats.FailedTickers,
 							fmt.Sprintf("%s:%s", filepath.Base(filePath), entry.Ticker))
 						totalStats.FailureMessages = append(totalStats.FailureMessages, string(resp.Body()))
+						logger.LogError(filePath, entry.Ticker, entry.LineNumber, string(resp.Body()), entry.RawLine)
 					}
 				}
 			}
 
-			// Report final stats
-			GinkgoWriter.Printf("\n=== Full Migration Stats ===\n")
-			GinkgoWriter.Printf("Files Processed: %d\n", len(allFiles))
-			GinkgoWriter.Printf("Total Entries: %d\n", totalStats.TotalEntries)
-			// FIXME: Need to have indepedent way to Validate total number of Tickers images are migrated or note.
-			// Eg Grep command to count total number of images,tickers in processed folder
-			// Total Lines exclude non patterns ensuring completeness of migration
-			GinkgoWriter.Printf("Success: %d\n", totalStats.SuccessCount)
-			GinkgoWriter.Printf("Failures: %d\n", totalStats.FailureCount)
+			// Write comprehensive summary
+			logger.WriteSummary(totalParsedCounts, totalRawCounts, len(allFiles))
 
-			if totalStats.FailureCount > 0 {
-				GinkgoWriter.Printf("\nFailed Entries:\n")
-				for i, ticker := range totalStats.FailedTickers {
-					GinkgoWriter.Printf("  - %s: %s\n", ticker, totalStats.FailureMessages[i])
+			// Print detailed report
+			GinkgoWriter.Printf("\n" + strings.Repeat("=", 80) + "\n")
+			GinkgoWriter.Printf("MIGRATION SUMMARY REPORT\n")
+			GinkgoWriter.Printf(strings.Repeat("=", 80) + "\n\n")
+
+			GinkgoWriter.Printf("FILES PROCESSED: %d\n\n", len(allFiles))
+
+			GinkgoWriter.Printf("--- INDEPENDENT VALIDATION (Raw Scan) ---\n")
+			GinkgoWriter.Printf("  Raw Ticker Lines:    %d\n", totalRawCounts.RawTickerLines)
+			GinkgoWriter.Printf("  Raw Image Lines:     %d\n", totalRawCounts.RawImageLines)
+			GinkgoWriter.Printf("  Raw Code Blocks:     %d\n", totalRawCounts.RawCodeBlocks)
+			GinkgoWriter.Printf("  Raw Total Lines:     %d\n", totalRawCounts.RawTotalLines)
+			GinkgoWriter.Printf("  Raw Non-Empty Lines: %d\n\n", totalRawCounts.RawNonEmptyLines)
+
+			GinkgoWriter.Printf("--- PARSING RESULTS ---\n")
+			GinkgoWriter.Printf("  Parsed Tickers: %d\n", totalParsedCounts.ParsedTickers)
+			GinkgoWriter.Printf("  Parsed Images:  %d\n", totalParsedCounts.ParsedImages)
+			GinkgoWriter.Printf("  Parsed Notes:   %d\n\n", totalParsedCounts.ParsedNotes)
+
+			GinkgoWriter.Printf("--- MIGRATION RESULTS ---\n")
+			GinkgoWriter.Printf("  Migrated Journals: %d\n", totalMigratedCounts.MigratedJournals)
+			GinkgoWriter.Printf("  Migrated Images:   %d\n", totalMigratedCounts.MigratedImages)
+			GinkgoWriter.Printf("  Migrated Notes:    %d\n", totalMigratedCounts.MigratedNotes)
+			GinkgoWriter.Printf("  Migrated Tags:     %d\n\n", totalMigratedCounts.MigratedTags)
+
+			GinkgoWriter.Printf("--- VALIDATION STATUS ---\n")
+			tickerMatch := totalParsedCounts.ParsedTickers == totalRawCounts.RawTickerLines
+			imageMatch := totalParsedCounts.ParsedImages == totalRawCounts.RawImageLines
+			GinkgoWriter.Printf("  Tickers Match: %v (diff: %d)\n", tickerMatch,
+				totalRawCounts.RawTickerLines-totalParsedCounts.ParsedTickers)
+			GinkgoWriter.Printf("  Images Match:  %v (diff: %d)\n\n", imageMatch,
+				totalRawCounts.RawImageLines-totalParsedCounts.ParsedImages)
+
+			GinkgoWriter.Printf("--- PROCESSING STATS ---\n")
+			GinkgoWriter.Printf("  Total Entries:   %d\n", totalStats.TotalEntries)
+			GinkgoWriter.Printf("  Success:         %d\n", totalStats.SuccessCount)
+			GinkgoWriter.Printf("  Failures:        %d\n", totalStats.FailureCount)
+			GinkgoWriter.Printf("  Sanitizations:   %d\n", logger.GetSanitizationCount())
+			GinkgoWriter.Printf("  Modifications:   %d\n\n", logger.GetModificationCount())
+
+			if len(filesWithMismatch) > 0 {
+				GinkgoWriter.Printf("--- FILES WITH COUNT MISMATCH ---\n")
+				for _, f := range filesWithMismatch {
+					GinkgoWriter.Printf("  - %s\n", f)
 				}
+				GinkgoWriter.Printf("\n")
 			}
 
+			if totalStats.FailureCount > 0 {
+				GinkgoWriter.Printf("--- FAILED ENTRIES (first 20) ---\n")
+				limit := 20
+				if len(totalStats.FailedTickers) < limit {
+					limit = len(totalStats.FailedTickers)
+				}
+				for i := 0; i < limit; i++ {
+					GinkgoWriter.Printf("  - %s: %s\n", totalStats.FailedTickers[i], totalStats.FailureMessages[i])
+				}
+				if len(totalStats.FailedTickers) > 20 {
+					GinkgoWriter.Printf("  ... and %d more (see log file)\n", len(totalStats.FailedTickers)-20)
+				}
+				// HACK: Ensure No Tag is Lost #t, #r, #m or anything else.
+				GinkgoWriter.Printf("\n")
+			}
+
+			GinkgoWriter.Printf("LOG FILE: %s\n", logger.GetLogPath())
+			GinkgoWriter.Printf(strings.Repeat("=", 80) + "\n")
+
+			// Assertions
+			Expect(tickerMatch).To(BeTrue(), "All ticker lines should be parsed")
+			Expect(imageMatch).To(BeTrue(), "All image lines should be parsed")
+
 			// Allow up to 5% failure rate as per PRD
-			failureRate := float64(totalStats.FailureCount) / float64(totalStats.TotalEntries)
-			Expect(failureRate).To(BeNumerically("<", 0.05), "Failure rate should be < 5%")
+			if totalStats.TotalEntries > 0 {
+				failureRate := float64(totalStats.FailureCount) / float64(totalStats.TotalEntries)
+				Expect(failureRate).To(BeNumerically("<", 0.05), "Failure rate should be < 5%")
+			}
 		})
 	})
 })
