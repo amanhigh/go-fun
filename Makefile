@@ -386,6 +386,7 @@ setup-tools:
 	go install github.com/swaggo/swag/cmd/swag
 	go install golang.org/x/tools/cmd/goimports@latest
 	go install github.com/vektra/mockery/v3@v3.5.5
+	go install github.com/a-h/templ/cmd/templ@latest
 
 setup-k8: ## Kubernetes Setup
 	printf $(_TITLE) "Setting up Kubernetes"
@@ -452,7 +453,12 @@ generate-mocks:
 	printf $(_TITLE) "Generate" "Mocks"
 	go run github.com/vektra/mockery/v3@v3.5.5 > $(OUT) 2>&1
 
-generate: generate-mocks generate-swagger ## Generate Files
+# Generate Templ components to Go code
+generate-templ:
+	printf $(_TITLE) "Generate" "Templ Components"
+	$(GOBIN)/templ generate -path components/learn
+
+generate: generate-mocks generate-swagger generate-templ ## Generate Files
 
 ### Workflows
 test: cover test-operator ## Run all tests (Excludes test-slow)
