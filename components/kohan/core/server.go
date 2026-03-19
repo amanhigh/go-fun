@@ -14,7 +14,7 @@ import (
 
 // KohanServerLifecycle implements ServerLifecycle for the Kohan HTTP server.
 type KohanServerLifecycle struct {
-	MonitorHandler handler.MonitorHandler `container:"type"`
+	OSHandler      handler.OSHandler      `container:"type"`
 	JournalHandler handler.JournalHandler `container:"type"`
 	ImageHandler   handler.ImageHandler   `container:"type"`
 	NoteHandler    handler.NoteHandler    `container:"type"`
@@ -24,11 +24,11 @@ type KohanServerLifecycle struct {
 var _ util.ServerLifecycle = (*KohanServerLifecycle)(nil)
 
 // NewKohanServerLifecycle creates a KohanServerLifecycle for testing with explicit handler injection.
-func NewKohanServerLifecycle(monitorHandler handler.MonitorHandler,
+func NewKohanServerLifecycle(osHandler handler.OSHandler,
 	journalHandler handler.JournalHandler, imageHandler handler.ImageHandler,
 	noteHandler handler.NoteHandler, tagHandler handler.TagHandler) *KohanServerLifecycle {
 	return &KohanServerLifecycle{
-		MonitorHandler: monitorHandler,
+		OSHandler:      osHandler,
 		JournalHandler: journalHandler,
 		ImageHandler:   imageHandler,
 		NoteHandler:    noteHandler,
@@ -37,7 +37,7 @@ func NewKohanServerLifecycle(monitorHandler handler.MonitorHandler,
 }
 
 func (s *KohanServerLifecycle) RegisterRoutes(engine *gin.Engine) {
-	s.registerMonitorRoutes(engine)
+	s.registerOSRoutes(engine)
 	s.registerJournalRoutes(engine)
 }
 
@@ -52,9 +52,9 @@ func (s *KohanServerLifecycle) BeforeStart(_ context.Context)    {}
 func (s *KohanServerLifecycle) BeforeShutdown(_ context.Context) {}
 func (s *KohanServerLifecycle) AfterShutdown(_ context.Context)  {}
 
-func (s *KohanServerLifecycle) registerMonitorRoutes(engine *gin.Engine) {
-	monitor := engine.Group(common.MonitorBase)
-	handler.SetupMonitorRoutes(monitor, s.MonitorHandler)
+func (s *KohanServerLifecycle) registerOSRoutes(engine *gin.Engine) {
+	os := engine.Group(common.OSBase)
+	handler.SetupOSRoutes(os, s.OSHandler)
 }
 
 func (s *KohanServerLifecycle) registerJournalRoutes(engine *gin.Engine) {

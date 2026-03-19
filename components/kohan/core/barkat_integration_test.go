@@ -52,6 +52,38 @@ var _ = Describe("Barkat E2E Test", func() {
 		client.SetBaseURL(fmt.Sprintf("http://localhost:%d", testPort))
 	})
 
+	// Admin Endpoints - Tests server administration functionality
+	Context("Admin Endpoints", func() {
+		It("should handle health endpoint", func() {
+			resp, err := client.R().Get("/health")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+			Expect(resp.String()).To(ContainSubstring("ok"))
+		})
+	})
+
+	// OS Endpoints - Tests system-level operations
+	Context("OS Endpoints", func() {
+		It("should handle OS endpoint", func() {
+			resp, err := client.R().SetBody(map[string]string{"submap": "test"}).
+				Post("/v1/os/submap/disable")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+
+			var result map[string]any
+			Expect(json.Unmarshal(resp.Body(), &result)).To(Succeed())
+			Expect(result["status"]).To(Equal("success"))
+			Expect(result["action"]).To(Equal("disable"))
+		})
+
+		It("should handle ticker recording endpoint", func() {
+			resp, err := client.R().Get("/v1/os/ticker/AAPL/record")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+			Expect(resp.String()).To(ContainSubstring("Success"))
+		})
+	})
+
 	// Full CRUD Lifecycle - Tests complete flow through real HTTP + DB
 	Context("Journal CRUD Lifecycle", func() {
 		var createdJournal barkat.Journal

@@ -61,7 +61,7 @@ func (ki *KohanInjector) GetKohanServer(port int, capturePath string, wait time.
 	autoManager := ki.GetAutoManager(wait, capturePath)
 
 	// Register all dependencies
-	ki.registerMonitorDependencies(capturePath, autoManager)
+	ki.registerOSDependencies(capturePath, autoManager)
 	if err := ki.registerJournalDependencies(); err != nil {
 		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)
 	}

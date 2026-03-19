@@ -871,7 +871,7 @@ var _ = Describe("Barkat Migration Test", func() {
 
 	Context("Single File Migration", func() {
 		var (
-			testFilePath string = filepath.Join(ProcessedFolder, TestFile)
+			testFilePath = filepath.Join(ProcessedFolder, TestFile)
 			entries      []LegacyJournalEntry
 			parsedCounts ProcessingCounts
 		)
@@ -948,7 +948,7 @@ var _ = Describe("Barkat Migration Test", func() {
 
 	Context("Folder Migration with Full Validation", func() {
 		var (
-			testFolder string = ProcessedFolder
+			testFolder = ProcessedFolder
 			allFiles   []string
 		)
 

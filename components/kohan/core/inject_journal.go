@@ -56,14 +56,14 @@ func (ki *KohanInjector) provideBarkatDB() (*gorm.DB, error) {
 }
 
 func ProvideKohanLifecycle(
-	monitorHandler handler.MonitorHandler,
+	osHandler handler.OSHandler,
 	journalHandler handler.JournalHandler,
 	imageHandler handler.ImageHandler,
 	noteHandler handler.NoteHandler,
 	tagHandler handler.TagHandler,
 ) util.ServerLifecycle {
 	return &KohanServerLifecycle{
-		MonitorHandler: monitorHandler,
+		OSHandler:      osHandler,
 		JournalHandler: journalHandler,
 		ImageHandler:   imageHandler,
 		NoteHandler:    noteHandler,

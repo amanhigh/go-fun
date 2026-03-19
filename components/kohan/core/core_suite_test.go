@@ -2,18 +2,20 @@ package core_test
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/amanhigh/go-fun/components/kohan/handler"
+	handlerMocks "github.com/amanhigh/go-fun/components/kohan/handler/mocks"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
-	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/mock"
 )
 
 const testPort = 19020
@@ -22,27 +24,27 @@ var (
 	server util.HttpServer
 )
 
-// testLifecycle implements ServerLifecycle without monitor handler for testing
-type testLifecycle struct {
-	journalHandler handler.JournalHandler
-	imageHandler   handler.ImageHandler
-	noteHandler    handler.NoteHandler
-	tagHandler     handler.TagHandler
-}
+// configureMockOSHandler creates and configures a mock OS handler for safe testing
+func configureMockOSHandler() *handlerMocks.OSHandler {
+	osHandler := handlerMocks.NewOSHandler(GinkgoT())
 
-func (t *testLifecycle) RegisterRoutes(engine *gin.Engine) {
-	// Using same path as real server to avoid bugs
-	journal := engine.Group(barkat.JournalBase)
-	handler.SetupJournalRoutes(journal, t.journalHandler)
-	handler.SetupImageRoutes(journal, t.imageHandler)
-	handler.SetupNoteRoutes(journal, t.noteHandler)
-	handler.SetupTagRoutes(journal, t.tagHandler)
-}
+	// Configure mock to return safe responses instead of executing real OS operations
+	osHandler.On("HandleSubmapControl", mock.Anything).Run(func(args mock.Arguments) {
+		ctx := args.Get(0).(*gin.Context)
+		action := ctx.Param("action")
+		ctx.JSON(http.StatusOK, gin.H{"status": "success", "action": action})
+	})
+	osHandler.On("HandleRecordTicker", mock.Anything).Run(func(args mock.Arguments) {
+		ctx := args.Get(0).(*gin.Context)
+		ctx.JSON(http.StatusOK, "Success")
+	})
+	osHandler.On("HandleReadClip", mock.Anything).Run(func(args mock.Arguments) {
+		ctx := args.Get(0).(*gin.Context)
+		ctx.JSON(http.StatusOK, "mock_clipboard_content")
+	}).Maybe()
 
-func (t *testLifecycle) RegisterSwagger(_ *gin.Engine)    {}
-func (t *testLifecycle) BeforeStart(_ context.Context)    {}
-func (t *testLifecycle) BeforeShutdown(_ context.Context) {}
-func (t *testLifecycle) AfterShutdown(_ context.Context)  {}
+	return osHandler
+}
 
 func TestCore(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -60,13 +62,12 @@ var _ = BeforeSuite(func() {
 	noteHandler := handler.NewNoteHandler(manager.NewNoteManager(journalMgr, repository.NewNoteRepository(db)))
 	tagHandler := handler.NewTagHandler(manager.NewTagManager(journalMgr, repository.NewTagRepository(db)))
 
-	// Create monitor handler for testing
-	autoManager := manager.NewAutoManager(5*time.Second, "/tmp/test")
-	monitorHandler := handler.NewMonitorHandler("/tmp/test", autoManager)
+	// Create mock OS handler for testing (safe - no real OS operations)
+	osHandler := configureMockOSHandler()
 
 	// Use provider function to create lifecycle (in sync with production)
 	lifecycle := core.ProvideKohanLifecycle(
-		monitorHandler,
+		osHandler,
 		journalHandler,
 		imageHandler,
 		noteHandler,
@@ -77,12 +78,6 @@ var _ = BeforeSuite(func() {
 	engine := gin.Default()
 	core.RegisterJournalValidators()
 	server = util.NewHttpServer(config.HttpServerConfig{Name: "kohan-e2e", Port: testPort}, engine, shutdown)
-	lifecycle := &testLifecycle{
-		journalHandler: journalHandler,
-		imageHandler:   imageHandler,
-		noteHandler:    noteHandler,
-		tagHandler:     tagHandler,
-	}
 	server.SetLifecycle(lifecycle)
 
 	go func() {

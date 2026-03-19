@@ -9,27 +9,29 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// MonitorHandler provides HTTP handlers for system monitoring operations.
-type MonitorHandler interface {
+// OSHandler provides HTTP handlers for OS-level system operations.
+//
+//go:generate mockery --name OSHandler
+type OSHandler interface {
 	HandleReadClip(ctx *gin.Context)
 	HandleRecordTicker(ctx *gin.Context)
 	HandleSubmapControl(ctx *gin.Context)
 }
 
-type MonitorHandlerImpl struct {
+type OSHandlerImpl struct {
 	capturePath string
 	autoManager manager.AutoManagerInterface
 }
 
-var _ MonitorHandler = (*MonitorHandlerImpl)(nil)
+var _ OSHandler = (*OSHandlerImpl)(nil)
 
-// NewMonitorHandler creates a new MonitorHandler.
-func NewMonitorHandler(capturePath string, autoManager manager.AutoManagerInterface) *MonitorHandlerImpl {
-	return &MonitorHandlerImpl{capturePath: capturePath, autoManager: autoManager}
+// NewOSHandler creates a new OSHandler.
+func NewOSHandler(capturePath string, autoManager manager.AutoManagerInterface) *OSHandlerImpl {
+	return &OSHandlerImpl{capturePath: capturePath, autoManager: autoManager}
 }
 
 // HandleReadClip handles GET /v1/clip/
-func (h *MonitorHandlerImpl) HandleReadClip(ctx *gin.Context) {
+func (h *OSHandlerImpl) HandleReadClip(ctx *gin.Context) {
 	text, err := tools.ClipPaste()
 	if err == nil {
 		ctx.JSON(http.StatusOK, text)
@@ -38,8 +40,8 @@ func (h *MonitorHandlerImpl) HandleReadClip(ctx *gin.Context) {
 	}
 }
 
-// HandleRecordTicker handles GET /v1/ticker/:ticker/record
-func (h *MonitorHandlerImpl) HandleRecordTicker(ctx *gin.Context) {
+// HandleRecordTicker handles GET /v1/os/ticker/:ticker/record
+func (h *OSHandlerImpl) HandleRecordTicker(ctx *gin.Context) {
 	ticker := ctx.Param("ticker")
 	if err := h.autoManager.RecordTicker(ctx, ticker, h.capturePath); err == nil {
 		ctx.JSON(http.StatusOK, "Success")
@@ -50,7 +52,7 @@ func (h *MonitorHandlerImpl) HandleRecordTicker(ctx *gin.Context) {
 }
 
 // HandleSubmapControl handles POST /v1/submap/:action
-func (h *MonitorHandlerImpl) HandleSubmapControl(ctx *gin.Context) {
+func (h *OSHandlerImpl) HandleSubmapControl(ctx *gin.Context) {
 	action := ctx.Param("action")
 
 	var request struct {

@@ -15,6 +15,9 @@ packages:
   "github.com/amanhigh/go-fun/components/kohan/manager":
     config:
       all: true
+  "github.com/amanhigh/go-fun/components/kohan/handler":
+    interfaces:
+      OSHandler:
   "github.com/amanhigh/go-fun/common/util":
     interfaces:
       Shutdown:
