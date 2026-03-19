@@ -214,11 +214,13 @@ type LegacyJournalEntry struct {
 	Direction      string   // trend or ctrend -> maps to DIRECTION tag
 	ReasonTags     []string // All #r.* tags with their full values (e.g., "dep-loc")
 	ManagementTags []string // All #m.* tags (e.g., "ntr", "enl")
+	IsImportant    bool     // #important tag present
 	Images         []string
-	Note           string
-	RawLine        string // Original line for reference
-	LineNumber     int    // Line number in file
-	RawMarkdown    string // Complete raw markdown block for this entry
+	Note           string   // Code block note (Plan notes)
+	SimpleNotes    []string // Simple notes outside code blocks (review comments)
+	RawLine        string   // Original line for reference
+	LineNumber     int      // Line number in file
+	RawMarkdown    string   // Complete raw markdown block for this entry
 }
 
 // ============================================================================
@@ -431,12 +433,26 @@ func handleEntryLine(ctx lineProcessContext, matches []string) lineProcessResult
 	return lineProcessResult{ctx.currentEntry, ctx.entries, ctx.counts, ctx.inCodeBlock}
 }
 
-// handleImageLine processes image lines
+// handleImageLine processes image lines and simple notes
 func handleImageLine(ctx lineProcessContext) lineProcessResult {
 	if ctx.currentEntry != nil {
+		// Check for image
 		if matches := ctx.imagePattern.FindStringSubmatch(ctx.line); matches != nil {
 			ctx.currentEntry.Images = append(ctx.currentEntry.Images, matches[1])
 			ctx.counts.ParsedImages++
+			return lineProcessResult{ctx.currentEntry, ctx.entries, ctx.counts, ctx.inCodeBlock}
+		}
+
+		// Check for simple note (starts with - but not an image, not empty)
+		lineStripped := strings.TrimSpace(ctx.line)
+		if after, ok := strings.CutPrefix(lineStripped, "-"); ok {
+			noteContent := strings.TrimSpace(after)
+			// Skip empty dashes and logseq properties
+			if noteContent != "" && !strings.Contains(noteContent, "::") {
+				// This is a simple note - capture it!
+				ctx.currentEntry.SimpleNotes = append(ctx.currentEntry.SimpleNotes, noteContent)
+				ctx.counts.ParsedNotes++
+			}
 		}
 	}
 	return lineProcessResult{ctx.currentEntry, ctx.entries, ctx.counts, ctx.inCodeBlock}
@@ -488,6 +504,12 @@ func parseLegacyTags(tagsPart string, entry *LegacyJournalEntry) *LegacyJournalE
 			entry.ManagementTags = append(entry.ManagementTags, value)
 		}
 	}
+
+	// Check for #important tag (PRD 4.8.6.3 - must be captured)
+	if strings.Contains(tagsPart, "#important") {
+		entry.IsImportant = true
+	}
+
 	return entry
 }
 
@@ -638,60 +660,83 @@ func buildTagsFromLegacy(entry LegacyJournalEntry, journalDate time.Time) []bark
 
 	// Add direction tag (trend/ctrend -> DIRECTION type)
 	if entry.Direction != "" {
-		directionTag := entry.Direction
-		if directionTag == "ctrend" {
-			directionTag = "ctrend" // Keep as-is, fits within 10 char limit
-		}
-		tags = append(tags, barkat.Tag{
-			Tag:       directionTag,
-			Type:      "DIRECTION",
-			CreatedAt: journalDate,
-		})
+		tags = append(tags, buildDirectionTag(entry.Direction, journalDate))
 	}
 
 	// Add reason tags (PRD 4.8.6.3.2)
-	for _, reasonTag := range entry.ReasonTags {
-		// Handle tags with overrides (e.g., "dep-loc" -> tag: dep, override: loc)
+	tags = append(tags, buildReasonTags(entry.ReasonTags, journalDate)...)
+
+	// Add management tags (PRD 4.8.6.3.3)
+	tags = append(tags, buildManagementTags(entry.ManagementTags, journalDate)...)
+
+	// Add #important tag if present (PRD 4.8.6.3 - must be captured)
+	if entry.IsImportant {
+		tags = append(tags, barkat.Tag{Tag: "important", Type: "MANAGEMENT", CreatedAt: journalDate})
+	}
+
+	return tags
+}
+
+// buildDirectionTag creates a DIRECTION tag
+func buildDirectionTag(direction string, journalDate time.Time) barkat.Tag {
+	return barkat.Tag{Tag: direction, Type: "DIRECTION", CreatedAt: journalDate}
+}
+
+// buildReasonTags creates REASON tags with optional overrides
+func buildReasonTags(reasonTags []string, journalDate time.Time) []barkat.Tag {
+	var tags []barkat.Tag
+	for _, reasonTag := range reasonTags {
 		parts := strings.SplitN(reasonTag, "-", 2)
-		tag := barkat.Tag{
-			Tag:       parts[0],
-			Type:      "REASON",
-			CreatedAt: journalDate,
-		}
+		tag := barkat.Tag{Tag: parts[0], Type: "REASON", CreatedAt: journalDate}
 		if len(parts) > 1 {
 			override := parts[1]
 			tag.Override = &override
 		}
 		tags = append(tags, tag)
 	}
+	return tags
+}
 
-	// Add management tags (PRD 4.8.6.3.3)
-	for _, mgmtTag := range entry.ManagementTags {
-		tags = append(tags, barkat.Tag{
-			Tag:       mgmtTag,
-			Type:      "MANAGEMENT",
-			CreatedAt: journalDate,
-		})
+// buildManagementTags creates MANAGEMENT tags
+func buildManagementTags(mgmtTags []string, journalDate time.Time) []barkat.Tag {
+	var tags []barkat.Tag
+	for _, mgmtTag := range mgmtTags {
+		tags = append(tags, barkat.Tag{Tag: mgmtTag, Type: "MANAGEMENT", CreatedAt: journalDate})
 	}
-
 	return tags
 }
 
 // buildNotesFromLegacy creates notes from legacy entry
+// Plan notes (code blocks) have status SET (when trade is set)
+// Simple notes (review comments) have FINAL status (success/fail outcome)
+// Note: Model allows max=1 note, so we combine all content into one note
 func buildNotesFromLegacy(entry LegacyJournalEntry, journalDate time.Time) []barkat.Note {
 	var notes []barkat.Note
 
-	// Determine the note status (must be a valid journal status)
-	noteStatus := entry.Status
-	if noteStatus == "" {
-		noteStatus = deriveStatusFromType(entry.Type)
+	// Determine the FINAL status for review notes
+	finalStatus := entry.Status
+	if finalStatus == "" {
+		finalStatus = deriveStatusFromType(entry.Type)
 	}
 
-	// Add original markdown content as note for preservation
-	originalContent := fmt.Sprintf("=== ORIGINAL MARKDOWN ===\n%s", entry.RawMarkdown)
+	// Build combined note content (model allows max=1 note)
+	var contentBuilder strings.Builder
+	contentBuilder.WriteString("=== ORIGINAL MARKDOWN ===\n")
+	contentBuilder.WriteString(entry.RawMarkdown)
+
+	// Append simple notes (review comments) to the same note
+	if len(entry.SimpleNotes) > 0 {
+		contentBuilder.WriteString("\n=== REVIEW NOTES ===\n")
+		for _, simpleNote := range entry.SimpleNotes {
+			contentBuilder.WriteString("- ")
+			contentBuilder.WriteString(simpleNote)
+			contentBuilder.WriteString("\n")
+		}
+	}
+
 	notes = append(notes, barkat.Note{
-		Status:    noteStatus,
-		Content:   originalContent,
+		Status:    finalStatus,
+		Content:   contentBuilder.String(),
 		Format:    "MARKDOWN",
 		CreatedAt: journalDate,
 	})
