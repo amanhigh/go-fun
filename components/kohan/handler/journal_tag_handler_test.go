@@ -5,6 +5,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
@@ -325,6 +326,51 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Override", "override")
+					})
+				})
+			})
+
+			Context("CreatedAt Field", func() {
+				Context("Allowed Values", func() {
+					It("should accept valid ISO 8601 datetime (PRD: optional for migration)", func() {
+						historicalTime := time.Date(2023, 6, 15, 14, 30, 0, 0, time.UTC)
+						tag := barkat.Tag{
+							Tag:       "dep",
+							Type:      "REASON",
+							CreatedAt: historicalTime,
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
+						router.ServeHTTP(w, req)
+						response := decodeTagResponse(w)
+						Expect(response.CreatedAt).To(Equal(historicalTime))
+					})
+
+					It("should accept nil CreatedAt (PRD: system sets current timestamp)", func() {
+						tag := barkat.Tag{
+							Tag:  "dep",
+							Type: "REASON",
+							// CreatedAt left as zero value
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
+						router.ServeHTTP(w, req)
+						response := decodeTagResponse(w)
+						Expect(response.CreatedAt).ToNot(BeZero())
+						Expect(response.CreatedAt).To(BeTemporally("~", time.Now(), 5*time.Second))
+					})
+				})
+
+				Context("Bad Values", func() {
+					It("should accept zero CreatedAt (PRD: BeforeCreate hook sets current time)", func() {
+						tag := barkat.Tag{
+							Tag:       "dep",
+							Type:      "REASON",
+							CreatedAt: time.Time{}, // Zero time - BeforeCreate will set current time
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/tags", tag)
+						router.ServeHTTP(w, req)
+						response := decodeTagResponse(w)
+						Expect(response.CreatedAt).ToNot(BeZero())
+						Expect(response.CreatedAt).To(BeTemporally("~", time.Now(), 5*time.Second))
 					})
 				})
 			})

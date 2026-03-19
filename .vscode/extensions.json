@@ -4,6 +4,7 @@
 		"hoovercj.vscode-dimmer",
 		"golang.go",
 		"bierner.markdown-mermaid",
-		"cherrymarkdownpublisher.cherry-markdown"
+		"cherrymarkdownpublisher.cherry-markdown",
+		"imaken.any-markdown"
 	]
 }

@@ -6,14 +6,14 @@ import (
 	"github.com/golobby/container/v3"
 )
 
-// provideMonitorHandler creates a MonitorHandler with the given capture path and auto manager.
-func provideMonitorHandler(capturePath string, autoManager manager.AutoManagerInterface) handler.MonitorHandler {
-	return handler.NewMonitorHandler(capturePath, autoManager)
+// provideOSHandler creates a OSHandler with the given capture path and auto manager.
+func provideOSHandler(capturePath string, autoManager manager.AutoManagerInterface) handler.OSHandler {
+	return handler.NewOSHandler(capturePath, autoManager)
 }
 
-// registerMonitorDependencies registers all dependencies for the monitor feature.
-func (ki *KohanInjector) registerMonitorDependencies(capturePath string, autoManager manager.AutoManagerInterface) {
-	container.MustSingleton(ki.di, func() handler.MonitorHandler {
-		return provideMonitorHandler(capturePath, autoManager)
+// registerOSDependencies registers all dependencies for the OS feature.
+func (ki *KohanInjector) registerOSDependencies(capturePath string, autoManager manager.AutoManagerInterface) {
+	container.MustSingleton(ki.di, func() handler.OSHandler {
+		return provideOSHandler(capturePath, autoManager)
 	})
 }

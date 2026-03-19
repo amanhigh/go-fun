@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	MonitorServerPort = 9010
+	KohanServerPort = 9010
 )
 
 var autoCmd = &cobra.Command{
@@ -35,13 +35,13 @@ var runOrFocusCmd = &cobra.Command{
 
 var serveCmd = &cobra.Command{
 	Use:   "serve [CapturePath]",
-	Short: "System Monitoring",
+	Short: "Start Kohan Server",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		log.Info().Dur("Wait", wait).Str("Screenshots", args[0]).Msg("Monitoring Systems")
+		log.Info().Dur("Wait", wait).Str("Screenshots", args[0]).Msg("Starting Kohan Server")
 		// TODO: Retry When Disk not Mounted, Watermill Exponential Backoff ?
 		autoManager := core.GetKohanInterface().GetAutoManager(wait, args[0])
-		server, err := core.GetKohanInterface().GetKohanServer(MonitorServerPort, args[0], wait)
+		server, err := core.GetKohanInterface().GetKohanServer(KohanServerPort, args[0], wait)
 		if err != nil {
 			return fmt.Errorf("failed to build kohan server: %w", err)
 		}
@@ -50,7 +50,7 @@ var serveCmd = &cobra.Command{
 		go autoManager.MonitorInternetConnection(cmd.Context())
 
 		if err := server.Start(); err != nil {
-			log.Error().Err(err).Msg("Failed to start monitor server")
+			log.Error().Err(err).Msg("Failed to start Kohan server")
 			return fmt.Errorf("serve server startup failed: %w", err)
 		}
 		return
@@ -70,7 +70,7 @@ var openTickerCmd = &cobra.Command{
 
 func init() {
 	// Flags
-	serveCmd.Flags().DurationVarP(&wait, "wait", "w", wait, "Monitoring Wait Interval")
+	serveCmd.Flags().DurationVarP(&wait, "wait", "w", wait, "OS Wait Interval")
 
 	// Commands
 	autoCmd.AddCommand(runOrFocusCmd)

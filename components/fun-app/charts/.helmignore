@@ -1,0 +1,10 @@
+# Prevent recursive packaging - exclude packaged charts
+fun-app-*.tgz
+
+# Exclude temporary chart storage
+tmpcharts/
+
+# Exclude development artifacts
+.git
+.gitignore
+.DS_Store

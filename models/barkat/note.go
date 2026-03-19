@@ -22,9 +22,6 @@ func (n *Note) BeforeCreate(_ *gorm.DB) error {
 	if n.ExternalID == "" {
 		n.ExternalID = "not_" + uuid.NewString()[:8] // Generate external_id with prefix
 	}
-	if n.CreatedAt.IsZero() {
-		n.CreatedAt = time.Now()
-	}
 	return nil
 }
 

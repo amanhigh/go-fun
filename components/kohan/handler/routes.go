@@ -2,11 +2,11 @@ package handler
 
 import "github.com/gin-gonic/gin"
 
-// SetupMonitorRoutes configures monitor-related routes
-func SetupMonitorRoutes(monitor *gin.RouterGroup, monitorHandler MonitorHandler) {
-	monitor.GET("/ticker/:ticker/record", monitorHandler.HandleRecordTicker)
-	monitor.GET("/clip/", monitorHandler.HandleReadClip)
-	monitor.POST("/submap/:action", monitorHandler.HandleSubmapControl)
+// SetupOSRoutes configures OS-related routes
+func SetupOSRoutes(os *gin.RouterGroup, osHandler OSHandler) {
+	os.GET("/ticker/:ticker/record", osHandler.HandleRecordTicker)
+	os.GET("/clip/", osHandler.HandleReadClip)
+	os.POST("/submap/:action", osHandler.HandleSubmapControl)
 }
 
 // SetupImageRoutes configures image-related routes for the given journal router group

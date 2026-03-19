@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
@@ -367,6 +368,53 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 						Expect(response.Timeframe).To(Equal("DL"))
 						Expect(response.FileName).To(Equal("RELIANCE.mwd.duplicate.png"))
 					})
+				})
+			})
+
+			Context("CreatedAt Field", func() {
+				Context("Allowed Values", func() {
+					It("should accept valid ISO 8601 datetime (PRD: optional for migration)", func() {
+						historicalTime := time.Date(2023, 6, 15, 14, 30, 0, 0, time.UTC)
+						image := barkat.Image{
+							Timeframe: "TMN",
+							FileName:  "RELIANCE.yr.rejected.oe__20230615__143000.png",
+							CreatedAt: historicalTime,
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
+						router.ServeHTTP(w, req)
+						response := decodeImageResponse(w)
+						Expect(response.CreatedAt).To(Equal(historicalTime))
+					})
+
+					It("should accept omitted CreatedAt (PRD: system sets current timestamp)", func() {
+						image := barkat.Image{
+							Timeframe: "TMN",
+							FileName:  "RELIANCE.yr.rejected.oe__20230615__143001.png",
+							// CreatedAt omitted - BeforeCreate will set current time
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
+						router.ServeHTTP(w, req)
+						response := decodeImageResponse(w)
+						Expect(response.CreatedAt).ToNot(BeZero())
+						Expect(response.CreatedAt).To(BeTemporally("~", time.Now(), 5*time.Second))
+					})
+
+					It("should accept zero CreatedAt (PRD: BeforeCreate hook sets current time)", func() {
+						image := barkat.Image{
+							Timeframe: "TMN",
+							FileName:  "RELIANCE.yr.rejected.oe__20230615__143002.png",
+							CreatedAt: time.Time{}, // Zero time - BeforeCreate will set current time
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
+						router.ServeHTTP(w, req)
+						response := decodeImageResponse(w)
+						Expect(response.CreatedAt).ToNot(BeZero())
+						Expect(response.CreatedAt).To(BeTemporally("~", time.Now(), 5*time.Second))
+					})
+				})
+
+				Context("Bad Values", func() {
+					// No bad values for CreatedAt - it's optional and zero values are handled by BeforeCreate
 				})
 			})
 

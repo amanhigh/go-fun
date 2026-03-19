@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
@@ -315,6 +316,14 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Sequence).To(Equal("YR"))
+					})
+
+					It("should accept sequence = WDH (PRD 4.8.6.3.1 legacy tag support)", func() {
+						journal := barkat.Journal{Ticker: "GRSE", Sequence: "WDH", Type: "REJECTED", Status: "FAIL", Images: standardImages}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
+						router.ServeHTTP(w, req)
+						response := decodeCreateJournalResponse(w)
+						Expect(response.Sequence).To(Equal("WDH"))
 					})
 				})
 
@@ -762,6 +771,24 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						router.ServeHTTP(w, req)
 						decodeCreateJournalResponse(w)
 					})
+
+					It("should accept tag type = DIRECTION (PRD 4.8.6.3.1 legacy tag support)", func() {
+						journal := barkat.Journal{
+							Ticker:   "GRSE",
+							Sequence: "MWD",
+							Type:     "REJECTED",
+							Status:   "FAIL",
+							Images:   standardImages,
+							Tags: []barkat.Tag{
+								{Tag: "trend", Type: "DIRECTION"},
+							},
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
+						router.ServeHTTP(w, req)
+						response := decodeCreateJournalResponse(w)
+						Expect(response.Tags).To(HaveLen(1))
+						Expect(response.Tags[0].Type).To(Equal("DIRECTION"))
+					})
 				})
 
 				Context("Bad Values", func() {
@@ -905,6 +932,62 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						util.AssertError(w, "Tags", "max")
 					})
 				})
+			})
+		})
+
+		Context("CreatedAt Field", func() {
+			Context("Allowed Values", func() {
+				It("should accept valid ISO 8601 datetime (PRD: optional for migration)", func() {
+					historicalTime := time.Date(2023, 6, 15, 14, 30, 0, 0, time.UTC)
+					journal := barkat.Journal{
+						Ticker:    "GRSE",
+						Sequence:  "MWD",
+						Type:      "REJECTED",
+						Status:    "FAIL",
+						Images:    standardImages,
+						CreatedAt: historicalTime,
+					}
+					req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
+					router.ServeHTTP(w, req)
+					response := decodeCreateJournalResponse(w)
+					Expect(response.CreatedAt).To(Equal(historicalTime))
+				})
+
+				It("should accept omitted CreatedAt (PRD: system sets current timestamp)", func() {
+					journal := barkat.Journal{
+						Ticker:   "GRSE",
+						Sequence: "MWD",
+						Type:     "REJECTED",
+						Status:   "FAIL",
+						Images:   standardImages,
+						// CreatedAt omitted - BeforeCreate will set current time
+					}
+					req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
+					router.ServeHTTP(w, req)
+					response := decodeCreateJournalResponse(w)
+					Expect(response.CreatedAt).ToNot(BeZero())
+					Expect(response.CreatedAt).To(BeTemporally("~", time.Now(), 5*time.Second))
+				})
+
+				It("should accept zero CreatedAt (PRD: BeforeCreate hook sets current time)", func() {
+					journal := barkat.Journal{
+						Ticker:    "GRSE",
+						Sequence:  "MWD",
+						Type:      "REJECTED",
+						Status:    "FAIL",
+						Images:    standardImages,
+						CreatedAt: time.Time{}, // Zero time - BeforeCreate will set current time
+					}
+					req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
+					router.ServeHTTP(w, req)
+					response := decodeCreateJournalResponse(w)
+					Expect(response.CreatedAt).ToNot(BeZero())
+					Expect(response.CreatedAt).To(BeTemporally("~", time.Now(), 5*time.Second))
+				})
+			})
+
+			Context("Bad Values", func() {
+				// No bad values for CreatedAt - it's optional and zero values are handled by BeforeCreate
 			})
 		})
 

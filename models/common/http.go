@@ -118,8 +118,8 @@ const (
 	// Base API routes
 	APIV1 = "/v1"
 
-	// Monitor routes
-	MonitorBase = APIV1 + "/monitor"
+	// OS routes
+	OSBase = APIV1 + "/os"
 )
 
 type Pagination struct {

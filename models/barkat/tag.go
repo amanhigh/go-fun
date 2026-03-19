@@ -13,7 +13,7 @@ type Tag struct {
 	ExternalID string    `gorm:"column:external_id;uniqueIndex;not null" json:"id"`
 	JournalID  uint64    `gorm:"column:journal_id;not null;index:idx_tag_journal_id;uniqueIndex:idx_tag_journal_tag_type" json:"journal_id"`
 	Tag        string    `gorm:"column:tag;not null;uniqueIndex:idx_tag_journal_tag_type" json:"tag" binding:"required,max=10,tag"`
-	Type       string    `gorm:"column:type;not null;uniqueIndex:idx_tag_journal_tag_type" json:"type" binding:"required,oneof=REASON MANAGEMENT"`
+	Type       string    `gorm:"column:type;not null;uniqueIndex:idx_tag_journal_tag_type" json:"type" binding:"required,oneof=REASON MANAGEMENT DIRECTION"`
 	Override   *string   `gorm:"column:override" json:"override,omitempty" binding:"omitempty,max=5,override"`
 	CreatedAt  time.Time `gorm:"column:created_at;not null" json:"created_at"`
 }
@@ -21,9 +21,6 @@ type Tag struct {
 func (t *Tag) BeforeCreate(_ *gorm.DB) error {
 	if t.ExternalID == "" {
 		t.ExternalID = "tag_" + uuid.NewString()[:8] // Generate external_id with prefix
-	}
-	if t.CreatedAt.IsZero() {
-		t.CreatedAt = time.Now()
 	}
 	return nil
 }
@@ -35,7 +32,7 @@ type TagList struct {
 
 // TagQuery holds query parameters for listing/filtering tags.
 type TagQuery struct {
-	Type string `form:"type" binding:"omitempty,oneof=REASON MANAGEMENT"`
+	Type string `form:"type" binding:"omitempty,oneof=REASON MANAGEMENT DIRECTION"`
 }
 
 // ---- Path Parameter Structs ----

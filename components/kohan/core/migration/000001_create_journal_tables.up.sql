@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS journals (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     external_id VARCHAR(26) UNIQUE NOT NULL,
     ticker VARCHAR(10) NOT NULL,
-    sequence VARCHAR(3) NOT NULL CHECK (sequence IN ('MWD', 'YR')),
+    sequence VARCHAR(3) NOT NULL CHECK (sequence IN ('MWD', 'YR', 'WDH')),
     type VARCHAR(8) NOT NULL CHECK (type IN ('REJECTED', 'RESULT', 'SET')),
     status VARCHAR(10) NOT NULL CHECK (status IN ('SET', 'RUNNING', 'DROPPED', 'TAKEN', 'REJECTED', 'SUCCESS', 'FAIL', 'MISSED', 'JUST_LOSS', 'BROKEN')),
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS images (
     external_id VARCHAR(26) UNIQUE NOT NULL,
     journal_id INTEGER NOT NULL,
     timeframe VARCHAR(3) NOT NULL CHECK (timeframe IN ('DL', 'WK', 'MN', 'TMN', 'SMN', 'YR')),
+    file_name VARCHAR(255) NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (journal_id) REFERENCES journals(id) ON DELETE CASCADE
 );
@@ -35,7 +36,7 @@ CREATE TABLE IF NOT EXISTS tags (
     external_id VARCHAR(26) UNIQUE NOT NULL,
     journal_id INTEGER NOT NULL,
     tag VARCHAR(10) NOT NULL,
-    type VARCHAR(9) NOT NULL CHECK (type IN ('REASON', 'MANAGEMENT')),
+    type VARCHAR(10) NOT NULL CHECK (type IN ('REASON', 'MANAGEMENT', 'DIRECTION')),
     override VARCHAR(5),
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (journal_id) REFERENCES journals(id) ON DELETE CASCADE

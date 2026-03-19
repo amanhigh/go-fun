@@ -61,11 +61,10 @@ func (ki *KohanInjector) GetKohanServer(port int, capturePath string, wait time.
 	autoManager := ki.GetAutoManager(wait, capturePath)
 
 	// Register all dependencies
-	ki.registerMonitorDependencies(capturePath, autoManager)
+	ki.registerOSDependencies(capturePath, autoManager)
 	if err := ki.registerJournalDependencies(); err != nil {
 		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)
 	}
-	ki.registerLifecycleDependencies()
 	ki.registerServerDependencies(port)
 
 	// Resolve server from DI
@@ -117,21 +116,10 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 // =============================================================================
 // These methods register dependencies with the container
 
-func (ki *KohanInjector) registerLifecycleDependencies() {
-	container.MustSingleton(ki.di, func() util.ServerLifecycle {
-		lifecycle := &KohanServerLifecycle{}
-		if err := ki.di.Fill(lifecycle); err != nil {
-			panic(fmt.Sprintf("failed to fill kohan lifecycle: %v", err))
-		}
-		return lifecycle
-	})
-}
-
 func (ki *KohanInjector) registerServerDependencies(port int) {
 	container.MustSingleton(ki.di, util.NewGracefulShutdown)
 	container.MustSingleton(ki.di, func() config.HttpServerConfig {
 		return config.HttpServerConfig{Name: "kohan", Port: port}
 	})
 	container.MustSingleton(ki.di, provideHttpServer)
-	container.MustSingleton(ki.di, provideKohanServer)
 }

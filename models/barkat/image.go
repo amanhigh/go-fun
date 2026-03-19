@@ -21,9 +21,6 @@ func (i *Image) BeforeCreate(_ *gorm.DB) error {
 	if i.ExternalID == "" {
 		i.ExternalID = "img_" + uuid.NewString()[:8] // Generate external_id with prefix
 	}
-	if i.CreatedAt.IsZero() {
-		i.CreatedAt = time.Now()
-	}
 	return nil
 }
 
