@@ -317,6 +317,14 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Sequence).To(Equal("YR"))
 					})
+
+					It("should accept sequence = WDH (PRD 4.8.6.3.1 legacy tag support)", func() {
+						journal := barkat.Journal{Ticker: "GRSE", Sequence: "WDH", Type: "REJECTED", Status: "FAIL", Images: standardImages}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
+						router.ServeHTTP(w, req)
+						response := decodeCreateJournalResponse(w)
+						Expect(response.Sequence).To(Equal("WDH"))
+					})
 				})
 
 				Context("Bad Values", func() {
@@ -762,6 +770,24 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						decodeCreateJournalResponse(w)
+					})
+
+					It("should accept tag type = DIRECTION (PRD 4.8.6.3.1 legacy tag support)", func() {
+						journal := barkat.Journal{
+							Ticker:   "GRSE",
+							Sequence: "MWD",
+							Type:     "REJECTED",
+							Status:   "FAIL",
+							Images:   standardImages,
+							Tags: []barkat.Tag{
+								{Tag: "trend", Type: "DIRECTION"},
+							},
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
+						router.ServeHTTP(w, req)
+						response := decodeCreateJournalResponse(w)
+						Expect(response.Tags).To(HaveLen(1))
+						Expect(response.Tags[0].Type).To(Equal("DIRECTION"))
 					})
 				})
 

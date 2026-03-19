@@ -206,18 +206,19 @@ func (l *MigrationLogger) GetModificationCount() int {
 // LegacyJournalEntry represents a parsed entry from Logseq markdown
 // Stores raw values as-is from markdown, conversion happens separately
 type LegacyJournalEntry struct {
-	Ticker      string
-	RawTags     []string // Store all raw tags for logging
-	Sequence    string
-	Type        string
-	Status      string
-	Direction   string
-	Reason      string
-	Images      []string
-	Note        string
-	RawLine     string // Original line for reference
-	LineNumber  int    // Line number in file
-	RawMarkdown string // Complete raw markdown block for this entry
+	Ticker         string
+	RawTags        []string // Store all raw tags for logging
+	Sequence       string
+	Type           string
+	Status         string
+	Direction      string   // trend or ctrend -> maps to DIRECTION tag
+	ReasonTags     []string // All #r.* tags with their full values (e.g., "dep-loc")
+	ManagementTags []string // All #m.* tags (e.g., "ntr", "enl")
+	Images         []string
+	Note           string
+	RawLine        string // Original line for reference
+	LineNumber     int    // Line number in file
+	RawMarkdown    string // Complete raw markdown block for this entry
 }
 
 // ============================================================================
@@ -361,7 +362,11 @@ func parseLegacyMarkdownWithLogging(filePath string, logger *MigrationLogger) ([
 						entry.Direction = value
 					}
 				case "r":
-					entry.Reason = value
+					// Store full reason tag value (e.g., "dep-loc", "nca-egf")
+					entry.ReasonTags = append(entry.ReasonTags, value)
+				case "m":
+					// Store management tags (e.g., "ntr", "enl", "slt")
+					entry.ManagementTags = append(entry.ManagementTags, value)
 				}
 			}
 
@@ -464,12 +469,43 @@ func convertToJournalWithLogging(entry LegacyJournalEntry, journalDate time.Time
 		images = images[:16]
 	}
 
-	// Build tags
+	// Build tags per PRD 4.8.6.3
 	var tags []barkat.Tag
-	if entry.Reason != "" {
+
+	// Add direction tag (trend/ctrend -> DIRECTION type)
+	if entry.Direction != "" {
+		directionTag := entry.Direction
+		if directionTag == "ctrend" {
+			directionTag = "ctrend" // Keep as-is, fits within 10 char limit
+		}
 		tags = append(tags, barkat.Tag{
-			Tag:       entry.Reason,
+			Tag:       directionTag,
+			Type:      "DIRECTION",
+			CreatedAt: journalDate,
+		})
+	}
+
+	// Add reason tags (PRD 4.8.6.3.2)
+	for _, reasonTag := range entry.ReasonTags {
+		// Handle tags with overrides (e.g., "dep-loc" -> tag: dep, override: loc)
+		parts := strings.SplitN(reasonTag, "-", 2)
+		tag := barkat.Tag{
+			Tag:       parts[0],
 			Type:      "REASON",
+			CreatedAt: journalDate,
+		}
+		if len(parts) > 1 {
+			override := parts[1]
+			tag.Override = &override
+		}
+		tags = append(tags, tag)
+	}
+
+	// Add management tags (PRD 4.8.6.3.3)
+	for _, mgmtTag := range entry.ManagementTags {
+		tags = append(tags, barkat.Tag{
+			Tag:       mgmtTag,
+			Type:      "MANAGEMENT",
 			CreatedAt: journalDate,
 		})
 	}
@@ -502,12 +538,8 @@ func convertToJournalWithLogging(entry LegacyJournalEntry, journalDate time.Time
 		CreatedAt: journalDate,
 	})
 
-	// Handle sequence mapping with logging
+	// Handle sequence with logging (WDH is now a valid sequence per PRD 4.8.6.3.1)
 	sequence := entry.Sequence
-	if sequence == "WDH" {
-		logger.LogSanitization(filePath, ticker, "sequence", "WDH", "MWD", "legacy_sequence_mapped")
-		sequence = "MWD"
-	}
 	if sequence == "" {
 		logger.LogModification(filePath, ticker, "sequence", "default_applied", "set to MWD (was empty)")
 		sequence = "MWD"

@@ -99,28 +99,73 @@ def analyze_journal_data():
     print(f"Total Tags: {total_tag_count} occurrences")
     print()
     
-    # Detailed tag analysis
-    print("=== Detailed Tag Analysis ===")
+    # Detailed tag analysis per PRD 4.8.6.3
+    print("=== Detailed Tag Analysis (PRD 4.8.6.3) ===")
     
-    # Trade tags by frequency
+    # Trade tags by frequency - ALL of them for migration verification
     trade_counter = Counter(trade_tags)
-    print("Trade Tags by frequency:")
-    for tag, count in trade_counter.most_common(10):
+    print("Trade Tags (#t.*) - Complete List:")
+    for tag, count in trade_counter.most_common():
         print(f"   {count:4d} {tag}")
+    print(f"   Total: {trade_count} occurrences, {len(trade_counter)} unique")
     print()
     
-    # Top 10 reason tags
+    # ALL reason tags for migration verification
     reason_counter = Counter(reason_tags)
-    print("Top 10 Reason Tags:")
-    for tag, count in reason_counter.most_common(10):
+    print("Reason Tags (#r.*) - Complete List:")
+    for tag, count in reason_counter.most_common():
         print(f"    {count:3d} {tag}")
+    print(f"   Total: {reason_count} occurrences, {len(reason_counter)} unique")
     print()
     
-    # Management tags
+    # ALL management tags
     management_counter = Counter(management_tags)
-    print("Management Tags:")
+    print("Management Tags (#m.*) - Complete List:")
     for tag, count in management_counter.most_common():
         print(f"    {count:3d} {tag}")
+    print(f"   Total: {management_count} occurrences, {len(management_counter)} unique")
+    print()
+    
+    # Tag mapping verification for migration
+    print("=== Tag Mapping Verification (PRD 4.8.6.3) ===")
+    print("\nTrade Tag Mappings:")
+    trade_mappings = {
+        't.trend': 'tags -> tag: trend, type: DIRECTION',
+        't.ctrend': 'tags -> tag: ctrend, type: DIRECTION',
+        't.mwd': 'sequence -> MWD',
+        't.yr': 'sequence -> YR',
+        't.wdh': 'sequence -> WDH',
+        't.rejected': 'type -> REJECTED',
+        't.set': 'type -> SET',
+        't.taken': 'type -> TAKEN',
+        't.fail': 'status -> FAIL',
+        't.success': 'status -> SUCCESS',
+        't.broken': 'status -> BROKEN',
+        't.miss': 'status -> MISSED',
+        't.justloss': 'status -> JUST_LOSS',
+        't.running': 'status -> RUNNING',
+        't.full': 'tags -> tag: double, type: MANAGEMENT',
+    }
+    for tag, count in trade_counter.most_common():
+        mapping = trade_mappings.get(tag, 'UNKNOWN - needs mapping')
+        print(f"   {count:4d} {tag} -> {mapping}")
+    print()
+    
+    print("Reason Tag Mappings (all map to tags with type: REASON):")
+    for tag, count in reason_counter.most_common():
+        # Check for override pattern (e.g., r.dep-loc)
+        tag_value = tag[2:]  # Remove 'r.' prefix
+        if '-' in tag_value:
+            parts = tag_value.split('-', 1)
+            print(f"    {count:3d} {tag} -> tag: {parts[0]}, override: {parts[1]}")
+        else:
+            print(f"    {count:3d} {tag} -> tag: {tag_value}")
+    print()
+    
+    print("Management Tag Mappings (all map to tags with type: MANAGEMENT):")
+    for tag, count in management_counter.most_common():
+        tag_value = tag[2:]  # Remove 'm.' prefix
+        print(f"    {count:3d} {tag} -> tag: {tag_value}")
     print()
     
     # Date range analysis
@@ -255,21 +300,21 @@ def analyze_journal_data():
         'Journal rows': 0,
         'SNF lines': 0,
         'Collapsed lines': 0,
-        'Code blocks': 0,
+        'Code block markers': 0,  # Just the ``` lines
+        'Code block content': 0,  # Content inside code blocks (part of notes)
         'Empty lines': 0,
         'Other lines': 0
     }
     
-    # Collect samples for analysis
-    post_set_samples = []
+    # Collect samples for analysis with detailed file/line info
+    post_set_samples = []  # (filename, line_num, content, context)
     plan_note_samples = []
     other_note_samples = []
     code_block_samples = []
     other_line_samples = []
     
-    # Track file context for samples
-    current_file = ""
-    file_line_numbers = []
+    # Track potential notes after images (user's concern)
+    potential_post_image_notes = []
     
     # Process files and track context
     file_contents = {}
@@ -279,8 +324,55 @@ def analyze_journal_data():
     
     for file_path, lines in file_contents.items():
         current_file = file_path.split('/')[-1]  # Get just filename
+        prev_was_image = False
+        in_code_block = False  # Track if we're inside a code block
+        
         for i, line in enumerate(lines):
             line_stripped = line.strip()
+            
+            # Check for code block markers first
+            if '```' in line:
+                line_types['Code block markers'] += 1
+                in_code_block = not in_code_block
+                if len(code_block_samples) < 10:
+                    code_block_samples.append({
+                        'file': current_file,
+                        'line': i + 1,
+                        'content': line.strip()
+                    })
+                continue
+            
+            # If inside code block, count as code block content (part of notes)
+            if in_code_block:
+                line_types['Code block content'] += 1
+                # Also check for Plan: inside code blocks
+                if 'Plan:' in line:
+                    line_types['Plan notes'] += 1
+                    if len(plan_note_samples) < 10:
+                        plan_note_samples.append({
+                            'file': current_file,
+                            'line': i + 1,
+                            'content': line.strip()
+                        })
+                continue
+            
+            # Check if this line could be a post-image note
+            if prev_was_image and line_stripped:
+                # Not an image, not a table row, not collapsed, not code block
+                if (not re.search(image_pattern, line) and 
+                    not line_stripped.startswith('|') and 
+                    'collapsed::' not in line and
+                    '```' not in line and
+                    'SNF' not in line and
+                    not line_stripped.startswith('-')):
+                    potential_post_image_notes.append({
+                        'file': current_file,
+                        'line': i + 1,
+                        'content': line_stripped,
+                        'prev_line': lines[i-1].strip() if i > 0 else ''
+                    })
+            
+            prev_was_image = bool(re.search(image_pattern, line))
             
             if not line_stripped:
                 line_types['Empty lines'] += 1
@@ -291,74 +383,109 @@ def analyze_journal_data():
                 # Check for post-set notes after images
                 if i + 1 < len(lines):
                     next_line = lines[i + 1].strip()
-                    if next_line and not next_line.startswith('-') and not next_line.startswith('|') and not re.search(image_pattern, next_line) and 'SNF' not in next_line and 'collapsed::' not in next_line:
+                    if next_line and not next_line.startswith('-') and not next_line.startswith('|') and not re.search(image_pattern, next_line) and 'SNF' not in next_line and 'collapsed::' not in next_line and '```' not in next_line:
                         line_types['Post-set notes'] += 1
-                        if len(post_set_samples) < 5:
-                            post_set_samples.append(next_line)
+                        if len(post_set_samples) < 10:
+                            post_set_samples.append({
+                                'file': current_file,
+                                'line': i + 2,  # next line
+                                'content': next_line,
+                                'image_line': line.strip()
+                            })
             elif 'Plan:' in line:
                 line_types['Plan notes'] += 1
-                if len(plan_note_samples) < 5:
-                    plan_note_samples.append(line.strip())
+                if len(plan_note_samples) < 10:
+                    plan_note_samples.append({
+                        'file': current_file,
+                        'line': i + 1,
+                        'content': line.strip()
+                    })
             elif line.startswith('- ') and 'SNF' not in line:
                 line_types['Other notes'] += 1
-                if len(other_note_samples) < 5:
-                    other_note_samples.append(line.strip())
+                if len(other_note_samples) < 10:
+                    other_note_samples.append({
+                        'file': current_file,
+                        'line': i + 1,
+                        'content': line.strip()
+                    })
             elif 'collapsed::' in line:
                 line_types['Collapsed lines'] += 1
             elif '|' in line:
                 line_types['Journal rows'] += 1
-            elif '```' in line:
-                line_types['Code blocks'] += 1
-                if len(code_block_samples) < 10:
-                    code_block_samples.append(line.strip())
             else:
                 line_types['Other lines'] += 1
-                if len(other_line_samples) < 20:
-                    other_line_samples.append(f"{current_file}:{i+1}: {line.rstrip()}")
+                if len(other_line_samples) < 30:
+                    other_line_samples.append({
+                        'file': current_file,
+                        'line': i + 1,
+                        'content': line.rstrip()
+                    })
     
     print("Line type distribution:")
     for line_type, count in line_types.items():
         print(f"  {line_type}: {count}")
     
-    # Verify total
-    line_total = sum(line_types.values())
-    print(f"\nLine total verification: {line_total} (should equal {total_lines})")
-    print(f"Match: {'✓' if line_total == total_lines else '✗ MISMATCH'}")
+    # Calculate total properly - code block content is part of notes
+    total_excluding_content = sum(line_types.values()) - line_types['Code block content']
+    print(f"\nLine total verification: {total_excluding_content} + {line_types['Code block content']} (code block content) = {total_excluding_content + line_types['Code block content']} (should equal {total_lines})")
+    print(f"Match: {'✓' if total_excluding_content + line_types['Code block content'] == total_lines else '✗ MISMATCH'}")
     print()
     
-    # Show samples of different note types
-    print("=== Note Type Analysis ===")
+    # Update notes total to include code block content (which are part of notes)
+    total_notes = line_types['Plan notes'] + line_types['Post-set notes'] + line_types['Other notes']
+    print("=== Updated Notes Analysis ===")
+    print(f"  Plan notes: {line_types['Plan notes']}")
+    print(f"  Post-set notes: {line_types['Post-set notes']}")
+    print(f"  Other notes: {line_types['Other notes']}")
+    print(f"  Code block content (part of notes): {line_types['Code block content']}")
+    print(f"  Total notes (including code block content): {total_notes + line_types['Code block content']}")
+    print()
+    
+    # Show samples of different note types with file/line info
+    print("=== Note Type Analysis (with file:line) ===")
     
     print("Plan note samples:")
     for sample in plan_note_samples:
-        print(f"  {sample}")
+        print(f"  {sample['file']}:{sample['line']}: {sample['content']}")
     print()
     
     if post_set_samples:
-        print("Post-set note samples (notes after images):")
+        print(f"Post-set note samples (notes after images) - {len(post_set_samples)} shown of {line_types['Post-set notes']} total:")
         for sample in post_set_samples:
-            print(f"  {sample}")
+            print(f"  {sample['file']}:{sample['line']}: {sample['content']}")
+            print(f"    (after image: {sample['image_line'][:60]}...)")
         print()
     
     if other_note_samples:
-        print("Other note samples:")
+        print(f"Other note samples (- lines) - {len(other_note_samples)} shown of {line_types['Other notes']} total:")
         for sample in other_note_samples:
-            print(f"  {sample}")
+            print(f"  {sample['file']}:{sample['line']}: {sample['content']}")
+        print()
+    
+    # Show potential post-image notes that might be missed
+    if potential_post_image_notes:
+        print(f"=== POTENTIAL POST-IMAGE NOTES (User Concern) ===")
+        print(f"Found {len(potential_post_image_notes)} lines that appear after images and might be notes:")
+        for i, note in enumerate(potential_post_image_notes[:20]):
+            print(f"  {i+1}. {note['file']}:{note['line']}: {note['content']}")
+        if len(potential_post_image_notes) > 20:
+            print(f"  ... and {len(potential_post_image_notes) - 20} more")
         print()
     
     # Show uncategorized content
     print("=== Uncategorized Content Analysis ===")
     
     if code_block_samples:
-        print("Code block samples:")
+        print("Code block samples (with file:line):")
         for i, sample in enumerate(code_block_samples, 1):
-            print(f"  {i}. {sample}")
+            print(f"  {i}. {sample['file']}:{sample['line']}: {sample['content']}")
         print()
     
     if other_line_samples:
-        print(f"Other line samples (showing {len(other_line_samples)} of {line_types['Other lines']} total):")
+        print(f"=== OTHER/UNEXPLAINED LINES (showing {len(other_line_samples)} of {line_types['Other lines']} total) ===")
+        print("These lines are NOT categorized and need review:")
         for i, sample in enumerate(other_line_samples, 1):
-            print(f"  {i:2d}. {sample}")
+            print(f"  {i:2d}. {sample['file']}:{sample['line']}: {sample['content']}")
         print()
         
         # Show more context around other lines
