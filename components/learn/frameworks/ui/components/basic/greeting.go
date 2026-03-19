@@ -1,9 +1,6 @@
 package basic
 
 import (
-	"context"
-	"io"
-
 	"github.com/a-h/templ"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
@@ -31,10 +28,7 @@ func NewGreetingComponent(name string) *GreetingComponent {
 }
 
 func (c *GreetingComponent) render() templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		_, _ = io.WriteString(w, `<div class="greeting"><h1>Hello, `+c.name+`!</h1><p>Welcome to Templ learning.</p></div>`)
-		return nil
-	})
+	return Greeting(c.name)
 }
 
 // DefaultGreetingComponent returns the default greeting component for demo

@@ -30,7 +30,7 @@ func NewEmptyListComponent() *EmptyListComponent {
 }
 
 func (c *EmptyListComponent) render() templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+	return templ.ComponentFunc(func(_ context.Context, w io.Writer) error {
 		_, _ = io.WriteString(w, `<div class="todo-list"><h3>Todo Items</h3><ul></ul></div>`)
 		return nil
 	})

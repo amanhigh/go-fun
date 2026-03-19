@@ -5,8 +5,9 @@ import (
 	"io"
 
 	"github.com/a-h/templ"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/advanced"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/basic"
 )
 
 // ComposedComponent demonstrates multiple components composed together
@@ -33,9 +34,9 @@ func NewComposedComponent(name string, todos []string) *ComposedComponent {
 }
 
 func (c *ComposedComponent) render() templ.Component {
-	greeting := ui.Greeting(c.name)
-	todoList := ui.TodoList(c.todos)
-	return ui.Page("Composed View", composedContent(greeting, todoList))
+	greeting := basic.Greeting(c.name)
+	todoList := basic.TodoList(c.todos)
+	return advanced.Page("Composed View", composedContent(greeting, todoList))
 }
 
 // composedContent wraps multiple components in a single templ component

@@ -2,8 +2,9 @@ package medium
 
 import (
 	"github.com/a-h/templ"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/advanced"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/basic"
 )
 
 // NestedComponent demonstrates nested component composition
@@ -30,8 +31,8 @@ func NewNestedComponent(title, name string) *NestedComponent {
 }
 
 func (c *NestedComponent) render() templ.Component {
-	greeting := ui.Greeting(c.name)
-	return ui.Page(c.title, greeting)
+	greeting := basic.Greeting(c.name)
+	return advanced.Page(c.title, greeting)
 }
 
 // DefaultNestedComponent returns the default nested component for demo

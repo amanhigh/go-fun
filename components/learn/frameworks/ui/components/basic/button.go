@@ -1,9 +1,6 @@
 package basic
 
 import (
-	"context"
-	"io"
-
 	"github.com/a-h/templ"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
@@ -36,14 +33,7 @@ func NewButtonComponent(text string, disabled bool) *ButtonComponent {
 }
 
 func (c *ButtonComponent) render() templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		disabledAttr := ""
-		if c.disabled {
-			disabledAttr = " disabled"
-		}
-		_, _ = io.WriteString(w, `<button type="button" class="btn"`+disabledAttr+`>`+c.text+`</button>`)
-		return nil
-	})
+	return Button(c.text, c.disabled)
 }
 
 // DefaultButtonComponent returns the default button component for demo

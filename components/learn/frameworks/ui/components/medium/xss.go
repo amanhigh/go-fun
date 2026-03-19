@@ -2,8 +2,8 @@ package medium
 
 import (
 	"github.com/a-h/templ"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/basic"
 )
 
 // XSSComponent demonstrates HTML escaping for security
@@ -29,7 +29,7 @@ func NewXSSComponent(name string) *XSSComponent {
 }
 
 func (c *XSSComponent) render() templ.Component {
-	return ui.Greeting(c.name)
+	return basic.Greeting(c.name)
 }
 
 // DefaultXSSComponent returns the default XSS component for demo

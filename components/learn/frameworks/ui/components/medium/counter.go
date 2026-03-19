@@ -2,7 +2,6 @@ package medium
 
 import (
 	"github.com/a-h/templ"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
 
@@ -29,7 +28,7 @@ func NewCounterComponent(count int) *CounterComponent {
 }
 
 func (c *CounterComponent) render() templ.Component {
-	return ui.Counter(c.count)
+	return Counter(c.count)
 }
 
 // DefaultCounterComponent returns the default counter component for demo

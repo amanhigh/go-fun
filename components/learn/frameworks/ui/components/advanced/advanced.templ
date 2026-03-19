@@ -1,0 +1,23 @@
+package advanced
+
+// Nested component example
+templ Page(title string, content templ.Component) {
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<title>{ title }</title>
+			<style>
+				body { font-family: Arial, sans-serif; margin: 20px; }
+				.greeting { background: #f0f0f0; padding: 20px; border-radius: 8px; }
+				.user-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; }
+				.badge { padding: 5px 10px; border-radius: 4px; font-size: 12px; }
+				.badge.active { background: #4caf50; color: white; }
+				.badge.inactive { background: #f44336; color: white; }
+				.todo-list { margin: 20px 0; }
+			</style>
+		</head>
+		<body>
+			@content
+		</body>
+	</html>
+}

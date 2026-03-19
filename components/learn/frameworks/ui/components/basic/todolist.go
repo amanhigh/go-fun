@@ -1,9 +1,6 @@
 package basic
 
 import (
-	"context"
-	"io"
-
 	"github.com/a-h/templ"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
@@ -31,14 +28,7 @@ func NewTodoListComponent(todos []string) *TodoListComponent {
 }
 
 func (c *TodoListComponent) render() templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		_, _ = io.WriteString(w, `<div class="todo-list"><h3>Todo Items</h3><ul>`)
-		for _, todo := range c.todos {
-			_, _ = io.WriteString(w, `<li>`+todo+`</li>`)
-		}
-		_, _ = io.WriteString(w, `</ul></div>`)
-		return nil
-	})
+	return TodoList(c.todos)
 }
 
 // DefaultTodoListComponent returns the default todo list component for demo

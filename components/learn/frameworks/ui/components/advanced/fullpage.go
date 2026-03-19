@@ -2,8 +2,8 @@ package advanced
 
 import (
 	"github.com/a-h/templ"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/basic"
 )
 
 // FullPageComponent demonstrates a complete page with all component types
@@ -29,8 +29,8 @@ func NewFullPageComponent() *FullPageComponent {
 
 func (c *FullPageComponent) render() templ.Component {
 	// Create a complex page with multiple nested components
-	greeting := ui.Greeting("Advanced User")
-	return ui.Page("Advanced Full Page Demo", greeting)
+	greeting := basic.Greeting("Advanced User")
+	return Page("Advanced Full Page Demo", greeting)
 }
 
 // DefaultFullPageComponent returns the default full page component for demo

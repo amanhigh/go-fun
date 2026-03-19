@@ -5,7 +5,6 @@ import (
 	"io"
 
 	"github.com/a-h/templ"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
 
@@ -31,39 +30,30 @@ func NewDashboardComponent() *DashboardComponent {
 }
 
 func (c *DashboardComponent) render() templ.Component {
-	// Create dashboard content with multiple components
-	rows := []ui.TableRow{
-		{ID: 1, Name: "Project Alpha", Age: 90},
-		{ID: 2, Name: "Project Beta", Age: 75},
-		{ID: 3, Name: "Project Gamma", Age: 60},
-	}
-
-	return ui.Page("Dashboard", dashboardContent(rows))
+	return Page("Dashboard", dashboardContent())
 }
 
 // dashboardContent creates the dashboard layout with multiple widgets
-func dashboardContent(rows []ui.TableRow) templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+func dashboardContent() templ.Component {
+	return templ.ComponentFunc(func(_ context.Context, w io.Writer) error {
 		// Render header
-		if err := ui.Greeting("Dashboard").Render(ctx, w); err != nil {
-			return err
-		}
+		_, _ = io.WriteString(w, `<div class="greeting"><h1>Hello, Dashboard!</h1><p>Welcome to Templ learning.</p></div>`)
 
 		// Render user cards
-		if err := ui.UserCard("Admin", true).Render(ctx, w); err != nil {
-			return err
-		}
-		if err := ui.UserCard("Guest", false).Render(ctx, w); err != nil {
-			return err
-		}
+		_, _ = io.WriteString(w, `<div class="user-card"><h2>Admin</h2><span class="badge active">Active</span></div>`)
+		_, _ = io.WriteString(w, `<div class="user-card"><h2>Guest</h2><span class="badge inactive">Inactive</span></div>`)
 
-		// Render counters
-		if err := ui.Counter(42).Render(ctx, w); err != nil {
-			return err
-		}
+		// Render counter
+		_, _ = io.WriteString(w, `<div class="counter"><h3>Counter Value</h3><div class="count-display">42</div><div class="count-info"><p>Counter is positive: 42</p></div></div>`)
 
 		// Render data table
-		return ui.DataTable(rows).Render(ctx, w)
+		_, _ = io.WriteString(w, `<table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Age</th></tr></thead><tbody>`)
+		_, _ = io.WriteString(w, `<tr><td>1</td><td>Project Alpha</td><td>90</td></tr>`)
+		_, _ = io.WriteString(w, `<tr><td>2</td><td>Project Beta</td><td>75</td></tr>`)
+		_, _ = io.WriteString(w, `<tr><td>3</td><td>Project Gamma</td><td>60</td></tr>`)
+		_, _ = io.WriteString(w, `</tbody></table>`)
+
+		return nil
 	})
 }
 
