@@ -146,17 +146,17 @@ func (l *MigrationLogger) LogSuccess(file, ticker, journalID string, imageCount 
 	l.writeJSON("SUCCESS", entry)
 }
 
-func (l *MigrationLogger) LogInfo(message string, data interface{}) {
-	l.writeJSON("INFO", map[string]interface{}{"message": message, "data": data})
+func (l *MigrationLogger) LogInfo(message string, data any) {
+	l.writeJSON("INFO", map[string]any{"message": message, "data": data})
 }
 
-func (l *MigrationLogger) writeJSON(logType string, data interface{}) {
+func (l *MigrationLogger) writeJSON(logType string, data any) {
 	jsonData, _ := json.Marshal(data)
 	fmt.Fprintf(l.logFile, "%s|%s|%s\n", time.Now().Format(time.RFC3339), logType, string(jsonData))
 }
 
 func (l *MigrationLogger) WriteSummary(processed ProcessingCounts, files int) {
-	summary := map[string]interface{}{
+	summary := map[string]any{
 		"files_processed": files,
 		"processing": map[string]int{
 			"parsed_tickers":    processed.ParsedTickers,
@@ -250,7 +250,7 @@ func extractDateFromFilename(filename string) (time.Time, error) {
 // ============================================================================
 
 // parseLegacyMarkdownWithLogging parses markdown and captures raw content
-func parseLegacyMarkdownWithLogging(filePath string, logger *MigrationLogger) ([]LegacyJournalEntry, ProcessingCounts, error) {
+func parseLegacyMarkdownWithLogging(filePath string, _ *MigrationLogger) ([]LegacyJournalEntry, ProcessingCounts, error) {
 	var counts ProcessingCounts
 
 	file, err := os.Open(filePath)
@@ -260,7 +260,6 @@ func parseLegacyMarkdownWithLogging(filePath string, logger *MigrationLogger) ([
 	defer file.Close()
 
 	var entries []LegacyJournalEntry
-	var currentEntry *LegacyJournalEntry
 	var inCodeBlock bool
 	var noteContent strings.Builder
 	var rawMarkdown strings.Builder
@@ -270,126 +269,261 @@ func parseLegacyMarkdownWithLogging(filePath string, logger *MigrationLogger) ([
 	// Regex patterns
 	entryPattern := regexp.MustCompile(`\|\s*` + "`" + `([A-Z0-9_!]+)` + "`" + `\s*\|(.+)\|`)
 	imagePattern := regexp.MustCompile(`!\[.*?\]\(([^)]+)\)`)
-	tagPattern := regexp.MustCompile(`#([trm])\.([a-z0-9-]+)`)
+	// tagPattern is defined in parseLegacyTags helper function
 
-	for scanner.Scan() {
-		line := scanner.Text()
-		lineNumber++
+	result := processMarkdownLines(markdownProcessContext{
+		scanner:      scanner,
+		lineNumber:   lineNumber,
+		currentEntry: nil,
+		entries:      entries,
+		counts:       counts,
+		inCodeBlock:  inCodeBlock,
+		rawMarkdown:  rawMarkdown,
+		noteContent:  noteContent,
+		entryPattern: entryPattern,
+		imagePattern: imagePattern,
+	})
+	entries = result.entries
+	counts = result.counts
 
-		// Track raw markdown for current entry
-		if currentEntry != nil {
-			rawMarkdown.WriteString(line + "\n")
-		}
+	return entries, counts, scanner.Err()
+}
 
-		// Handle code blocks for notes
-		if strings.Contains(line, "```") {
-			if inCodeBlock {
-				// End of code block
-				if currentEntry != nil {
-					currentEntry.Note = strings.TrimSpace(noteContent.String())
-					if currentEntry.Note != "" {
-						counts.ParsedNotes++
-					}
-				}
-				noteContent.Reset()
-			}
-			inCodeBlock = !inCodeBlock
-			continue
-		}
+// markdownProcessResult holds the result of processing markdown lines
+type markdownProcessResult struct {
+	entries      []LegacyJournalEntry
+	counts       ProcessingCounts
+	currentEntry *LegacyJournalEntry
+	inCodeBlock  bool
+}
 
-		if inCodeBlock {
-			noteContent.WriteString(line + "\n")
-			continue
-		}
+// markdownProcessContext holds parameters for markdown processing
+type markdownProcessContext struct {
+	scanner      *bufio.Scanner
+	lineNumber   int
+	currentEntry *LegacyJournalEntry
+	entries      []LegacyJournalEntry
+	counts       ProcessingCounts
+	inCodeBlock  bool
+	rawMarkdown  strings.Builder
+	noteContent  strings.Builder
+	entryPattern *regexp.Regexp
+	imagePattern *regexp.Regexp
+}
 
-		// Check for entry line (table row with ticker)
-		if matches := entryPattern.FindStringSubmatch(line); matches != nil {
-			// Save previous entry if exists
-			if currentEntry != nil {
-				currentEntry.RawMarkdown = rawMarkdown.String()
-				entries = append(entries, *currentEntry)
-			}
+// processMarkdownLines processes all lines in the markdown file
+func processMarkdownLines(ctx markdownProcessContext) markdownProcessResult {
+	for ctx.scanner.Scan() {
+		line := ctx.scanner.Text()
+		ctx.lineNumber++
 
-			ticker := matches[1]
-			tagsPart := matches[2]
-
-			entry := LegacyJournalEntry{
-				Ticker:     ticker,
-				RawLine:    line,
-				LineNumber: lineNumber,
-			}
-			counts.ParsedTickers++
-
-			// Reset raw markdown for new entry
-			rawMarkdown.Reset()
-			rawMarkdown.WriteString(line + "\n")
-
-			// Parse and store raw tags
-			tags := tagPattern.FindAllStringSubmatch(tagsPart, -1)
-			for _, tag := range tags {
-				entry.RawTags = append(entry.RawTags, fmt.Sprintf("#%s.%s", tag[1], tag[2]))
-				prefix := tag[1]
-				value := tag[2]
-
-				switch prefix {
-				case "t":
-					switch value {
-					case "mwd", "yr":
-						entry.Sequence = strings.ToUpper(value)
-					case "wdh":
-						entry.Sequence = "WDH" // Store as-is, convert later
-					case "rejected":
-						entry.Type = "REJECTED"
-					case "set":
-						entry.Type = "SET"
-					case "result":
-						entry.Type = "RESULT"
-					case "fail":
-						entry.Status = "FAIL"
-					case "taken":
-						entry.Status = "TAKEN"
-					case "success":
-						entry.Status = "SUCCESS"
-					case "running":
-						entry.Status = "RUNNING"
-					case "broken":
-						entry.Status = "BROKEN"
-					case "missed":
-						entry.Status = "MISSED"
-					case "dropped":
-						entry.Status = "DROPPED"
-					case "trend", "ctrend":
-						entry.Direction = value
-					}
-				case "r":
-					// Store full reason tag value (e.g., "dep-loc", "nca-egf")
-					entry.ReasonTags = append(entry.ReasonTags, value)
-				case "m":
-					// Store management tags (e.g., "ntr", "enl", "slt")
-					entry.ManagementTags = append(entry.ManagementTags, value)
-				}
-			}
-
-			currentEntry = &entry
-			continue
-		}
-
-		// Check for image line
-		if currentEntry != nil {
-			if matches := imagePattern.FindStringSubmatch(line); matches != nil {
-				currentEntry.Images = append(currentEntry.Images, matches[1])
-				counts.ParsedImages++
-			}
-		}
+		result := processLine(lineProcessContext{
+			line:         line,
+			lineNumber:   ctx.lineNumber,
+			currentEntry: ctx.currentEntry,
+			entries:      ctx.entries,
+			counts:       ctx.counts,
+			inCodeBlock:  ctx.inCodeBlock,
+			rawMarkdown:  ctx.rawMarkdown,
+			noteContent:  ctx.noteContent,
+			entryPattern: ctx.entryPattern,
+			imagePattern: ctx.imagePattern,
+		})
+		ctx.currentEntry = result.currentEntry
+		ctx.entries = result.entries
+		ctx.counts = result.counts
+		ctx.inCodeBlock = result.inCodeBlock
 	}
 
 	// Don't forget the last entry
-	if currentEntry != nil {
-		currentEntry.RawMarkdown = rawMarkdown.String()
-		entries = append(entries, *currentEntry)
+	if ctx.currentEntry != nil {
+		ctx.currentEntry.RawMarkdown = ctx.rawMarkdown.String()
+		ctx.entries = append(ctx.entries, *ctx.currentEntry)
 	}
 
-	return entries, counts, scanner.Err()
+	return markdownProcessResult{ctx.entries, ctx.counts, ctx.currentEntry, ctx.inCodeBlock}
+}
+
+// lineProcessResult holds the result of processing a line
+type lineProcessResult struct {
+	currentEntry *LegacyJournalEntry
+	entries      []LegacyJournalEntry
+	counts       ProcessingCounts
+	inCodeBlock  bool
+}
+
+// lineProcessContext holds parameters for line processing
+type lineProcessContext struct {
+	line         string
+	lineNumber   int
+	currentEntry *LegacyJournalEntry
+	entries      []LegacyJournalEntry
+	counts       ProcessingCounts
+	inCodeBlock  bool
+	rawMarkdown  strings.Builder
+	noteContent  strings.Builder
+	entryPattern *regexp.Regexp
+	imagePattern *regexp.Regexp
+}
+
+// processLine handles individual line processing during parsing
+func processLine(ctx lineProcessContext) lineProcessResult {
+	// Track raw markdown for current entry
+	updateRawMarkdown(ctx)
+
+	// Handle code blocks for notes
+	if strings.Contains(ctx.line, "```") {
+		return handleCodeBlockLine(ctx)
+	}
+
+	if ctx.inCodeBlock {
+		return handleInCodeBlockLine(ctx)
+	}
+
+	// Check for entry line (table row with ticker)
+	if matches := ctx.entryPattern.FindStringSubmatch(ctx.line); matches != nil {
+		return handleEntryLine(ctx, matches)
+	}
+
+	// Check for image line
+	return handleImageLine(ctx)
+}
+
+// updateRawMarkdown tracks raw markdown for current entry
+func updateRawMarkdown(ctx lineProcessContext) {
+	if ctx.currentEntry != nil {
+		ctx.rawMarkdown.WriteString(ctx.line + "\n")
+	}
+}
+
+// handleCodeBlockLine processes code block markers
+func handleCodeBlockLine(ctx lineProcessContext) lineProcessResult {
+	ctx.currentEntry, ctx.counts = handleCodeBlock(ctx.line, ctx.inCodeBlock, ctx.currentEntry, ctx.noteContent, ctx.counts)
+	ctx.inCodeBlock = !ctx.inCodeBlock
+	return lineProcessResult{ctx.currentEntry, ctx.entries, ctx.counts, ctx.inCodeBlock}
+}
+
+// handleInCodeBlockLine collects note content inside code blocks
+func handleInCodeBlockLine(ctx lineProcessContext) lineProcessResult {
+	if ctx.currentEntry != nil {
+		ctx.noteContent.WriteString(ctx.line + "\n")
+	}
+	return lineProcessResult{ctx.currentEntry, ctx.entries, ctx.counts, ctx.inCodeBlock}
+}
+
+// handleEntryLine processes journal entry lines (table rows)
+func handleEntryLine(ctx lineProcessContext, matches []string) lineProcessResult {
+	// Save previous entry if exists
+	if ctx.currentEntry != nil {
+		ctx.currentEntry.RawMarkdown = ctx.rawMarkdown.String()
+		ctx.entries = append(ctx.entries, *ctx.currentEntry)
+	}
+
+	ctx.currentEntry = parseEntryLine(matches, ctx.line, ctx.lineNumber)
+	ctx.counts.ParsedTickers++
+
+	// Reset raw markdown for new entry
+	ctx.rawMarkdown.Reset()
+	ctx.rawMarkdown.WriteString(ctx.line + "\n")
+
+	// Parse and store raw tags
+	ctx.currentEntry = parseLegacyTags(matches[2], ctx.currentEntry)
+	return lineProcessResult{ctx.currentEntry, ctx.entries, ctx.counts, ctx.inCodeBlock}
+}
+
+// handleImageLine processes image lines
+func handleImageLine(ctx lineProcessContext) lineProcessResult {
+	if ctx.currentEntry != nil {
+		if matches := ctx.imagePattern.FindStringSubmatch(ctx.line); matches != nil {
+			ctx.currentEntry.Images = append(ctx.currentEntry.Images, matches[1])
+			ctx.counts.ParsedImages++
+		}
+	}
+	return lineProcessResult{ctx.currentEntry, ctx.entries, ctx.counts, ctx.inCodeBlock}
+}
+
+// handleCodeBlock processes code block start/end markers
+func handleCodeBlock(_ string, inCodeBlock bool, currentEntry *LegacyJournalEntry, noteContent strings.Builder, counts ProcessingCounts) (*LegacyJournalEntry, ProcessingCounts) {
+	if inCodeBlock {
+		// End of code block
+		if currentEntry != nil {
+			currentEntry.Note = strings.TrimSpace(noteContent.String())
+			if currentEntry.Note != "" {
+				counts.ParsedNotes++
+			}
+		}
+		noteContent.Reset()
+	}
+	return currentEntry, counts
+}
+
+// parseEntryLine creates a basic LegacyJournalEntry from a table row
+func parseEntryLine(matches []string, line string, lineNumber int) *LegacyJournalEntry {
+	ticker := matches[1]
+	return &LegacyJournalEntry{
+		Ticker:     ticker,
+		RawLine:    line,
+		LineNumber: lineNumber,
+	}
+}
+
+// parseLegacyTags extracts and categorizes legacy tags from tag string
+func parseLegacyTags(tagsPart string, entry *LegacyJournalEntry) *LegacyJournalEntry {
+	tagPattern := regexp.MustCompile(`#([trm])\.([a-z0-9-]+)`)
+	tags := tagPattern.FindAllStringSubmatch(tagsPart, -1)
+
+	for _, tag := range tags {
+		entry.RawTags = append(entry.RawTags, fmt.Sprintf("#%s.%s", tag[1], tag[2]))
+		prefix := tag[1]
+		value := tag[2]
+
+		switch prefix {
+		case "t":
+			entry = processTradeTag(value, entry)
+		case "r":
+			// Store full reason tag value (e.g., "dep-loc", "nca-egf")
+			entry.ReasonTags = append(entry.ReasonTags, value)
+		case "m":
+			// Store management tags (e.g., "ntr", "enl", "slt")
+			entry.ManagementTags = append(entry.ManagementTags, value)
+		}
+	}
+	return entry
+}
+
+// processTradeTag handles trade tag mappings
+func processTradeTag(value string, entry *LegacyJournalEntry) *LegacyJournalEntry {
+	switch value {
+	case "mwd", "yr":
+		entry.Sequence = strings.ToUpper(value)
+	case "wdh":
+		entry.Sequence = "WDH"
+	case "rejected":
+		entry.Type = "REJECTED"
+	case "set":
+		entry.Type = "SET"
+	case "result":
+		entry.Type = "RESULT"
+	case "fail", "taken", "success", "running", "broken", "missed", "dropped":
+		entry.Status = mapStatusTag(value)
+	case "trend", "ctrend":
+		entry.Direction = value
+	}
+	return entry
+}
+
+// mapStatusTag maps status tag values to journal status
+func mapStatusTag(value string) string {
+	statusMap := map[string]string{
+		"fail":    "FAIL",
+		"taken":   "TAKEN",
+		"success": "SUCCESS",
+		"running": "RUNNING",
+		"broken":  "BROKEN",
+		"missed":  "MISSED",
+		"dropped": "DROPPED",
+	}
+	return statusMap[value]
 }
 
 // ============================================================================
@@ -413,8 +547,8 @@ func sanitizeTickerWithLogging(ticker, file string, logger *MigrationLogger) str
 	original := ticker
 
 	// Remove trailing ! (futures symbols)
-	if strings.HasSuffix(ticker, "!") {
-		ticker = strings.TrimSuffix(ticker, "!")
+	if before, ok := strings.CutSuffix(ticker, "!"); ok {
+		ticker = before
 		logger.LogSanitization(file, original, "ticker", original, ticker, "removed_trailing_exclamation")
 	}
 
@@ -434,10 +568,38 @@ func convertToJournalWithLogging(entry LegacyJournalEntry, journalDate time.Time
 	ticker := sanitizeTickerWithLogging(entry.Ticker, filePath, logger)
 
 	// Build images with logging
-	images := make([]barkat.Image, 0, len(entry.Images))
+	images, originalImageCount := buildImagesWithLogging(entry.Images, ticker, journalDate, filePath, logger)
+
+	// Build tags per PRD 4.8.6.3
+	tags := buildTagsFromLegacy(entry, journalDate)
+
+	// Build notes - include original markdown as first note
+	notes := buildNotesFromLegacy(entry, journalDate)
+
+	// Handle defaults with logging
+	sequence, status, journalType := applyDefaultsWithLogging(entry, ticker, filePath, logger)
+
+	// Log image count changes
+	logImageCountChanges(originalImageCount, len(entry.Images), len(images), ticker, filePath, logger)
+
+	return barkat.Journal{
+		Ticker:    ticker,
+		Sequence:  sequence,
+		Type:      journalType,
+		Status:    status,
+		CreatedAt: journalDate,
+		Images:    images,
+		Tags:      tags,
+		Notes:     notes,
+	}
+}
+
+// buildImagesWithLogging creates and validates image list
+func buildImagesWithLogging(imagePaths []string, ticker string, journalDate time.Time, filePath string, logger *MigrationLogger) ([]barkat.Image, int) {
+	images := make([]barkat.Image, 0, len(imagePaths))
 	timeframes := []string{"DL", "WK", "MN", "TMN"}
 
-	for i, imgPath := range entry.Images {
+	for i, imgPath := range imagePaths {
 		timeframe := timeframes[i%len(timeframes)]
 		sanitizedName := sanitizeFileNameWithLogging(filepath.Base(imgPath), filePath, ticker, logger)
 		images = append(images, barkat.Image{
@@ -446,8 +608,6 @@ func convertToJournalWithLogging(entry LegacyJournalEntry, journalDate time.Time
 			CreatedAt: journalDate,
 		})
 	}
-
-	originalImageCount := len(images)
 
 	// Log placeholder additions
 	if len(images) < 4 {
@@ -469,7 +629,11 @@ func convertToJournalWithLogging(entry LegacyJournalEntry, journalDate time.Time
 		images = images[:16]
 	}
 
-	// Build tags per PRD 4.8.6.3
+	return images, len(imagePaths)
+}
+
+// buildTagsFromLegacy converts legacy tags to barkat.Tags
+func buildTagsFromLegacy(entry LegacyJournalEntry, journalDate time.Time) []barkat.Tag {
 	var tags []barkat.Tag
 
 	// Add direction tag (trend/ctrend -> DIRECTION type)
@@ -510,23 +674,17 @@ func convertToJournalWithLogging(entry LegacyJournalEntry, journalDate time.Time
 		})
 	}
 
-	// Build notes - include original markdown as first note
+	return tags
+}
+
+// buildNotesFromLegacy creates notes from legacy entry
+func buildNotesFromLegacy(entry LegacyJournalEntry, journalDate time.Time) []barkat.Note {
 	var notes []barkat.Note
 
 	// Determine the note status (must be a valid journal status)
-	// Use the entry's status, or derive from type if not set
 	noteStatus := entry.Status
 	if noteStatus == "" {
-		switch entry.Type {
-		case "REJECTED":
-			noteStatus = "FAIL"
-		case "SET":
-			noteStatus = "SET"
-		case "RESULT":
-			noteStatus = "SUCCESS"
-		default:
-			noteStatus = "FAIL"
-		}
+		noteStatus = deriveStatusFromType(entry.Type)
 	}
 
 	// Add original markdown content as note for preservation
@@ -538,6 +696,25 @@ func convertToJournalWithLogging(entry LegacyJournalEntry, journalDate time.Time
 		CreatedAt: journalDate,
 	})
 
+	return notes
+}
+
+// deriveStatusFromType maps journal type to default status
+func deriveStatusFromType(journalType string) string {
+	switch journalType {
+	case "REJECTED":
+		return "FAIL"
+	case "SET":
+		return "SET"
+	case "RESULT":
+		return "SUCCESS"
+	default:
+		return "FAIL"
+	}
+}
+
+// applyDefaultsWithLogging applies default values and logs changes
+func applyDefaultsWithLogging(entry LegacyJournalEntry, ticker, filePath string, logger *MigrationLogger) (string, string, string) {
 	// Handle sequence with logging (WDH is now a valid sequence per PRD 4.8.6.3.1)
 	sequence := entry.Sequence
 	if sequence == "" {
@@ -548,17 +725,7 @@ func convertToJournalWithLogging(entry LegacyJournalEntry, journalDate time.Time
 	// Handle status with logging
 	status := entry.Status
 	if status == "" {
-		var defaultStatus string
-		switch entry.Type {
-		case "REJECTED":
-			defaultStatus = "FAIL"
-		case "SET":
-			defaultStatus = "SET"
-		case "RESULT":
-			defaultStatus = "SUCCESS"
-		default:
-			defaultStatus = "FAIL"
-		}
+		defaultStatus := deriveStatusFromType(entry.Type)
 		logger.LogModification(filePath, ticker, "status", "default_applied",
 			fmt.Sprintf("set to %s based on type %s (was empty)", defaultStatus, entry.Type))
 		status = defaultStatus
@@ -571,25 +738,18 @@ func convertToJournalWithLogging(entry LegacyJournalEntry, journalDate time.Time
 		journalType = "REJECTED"
 	}
 
-	// Log if we had to add placeholders or truncate
-	if originalImageCount != len(entry.Images) || len(images) != originalImageCount {
-		logger.LogInfo("image_count_change", map[string]interface{}{
+	return sequence, status, journalType
+}
+
+// logImageCountChanges logs image count modifications
+func logImageCountChanges(originalCount, entryImageCount, finalCount int, ticker, filePath string, logger *MigrationLogger) {
+	if originalCount != entryImageCount || finalCount != originalCount {
+		logger.LogInfo("image_count_change", map[string]any{
 			"file":     filepath.Base(filePath),
 			"ticker":   ticker,
-			"original": len(entry.Images),
-			"final":    len(images),
+			"original": entryImageCount,
+			"final":    finalCount,
 		})
-	}
-
-	return barkat.Journal{
-		Ticker:    ticker,
-		Sequence:  sequence,
-		Type:      journalType,
-		Status:    status,
-		CreatedAt: journalDate,
-		Images:    images,
-		Tags:      tags,
-		Notes:     notes,
 	}
 }
 
@@ -824,11 +984,8 @@ var _ = Describe("Barkat Migration Test", func() {
 
 			if totalStats.FailureCount > 0 {
 				GinkgoWriter.Printf("--- FAILED ENTRIES (first 20) ---\n")
-				limit := 20
-				if len(totalStats.FailedTickers) < limit {
-					limit = len(totalStats.FailedTickers)
-				}
-				for i := 0; i < limit; i++ {
+				limit := min(len(totalStats.FailedTickers), 20)
+				for i := range limit {
 					GinkgoWriter.Printf("  - %s: %s\n", totalStats.FailedTickers[i], totalStats.FailureMessages[i])
 				}
 				if len(totalStats.FailedTickers) > 20 {
