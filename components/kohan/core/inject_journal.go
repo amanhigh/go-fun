@@ -55,19 +55,29 @@ func (ki *KohanInjector) provideBarkatDB() (*gorm.DB, error) {
 	return db, nil
 }
 
-func provideHttpServer(cfg config.HttpServerConfig, shutdown util.Shutdown) util.HttpServer {
+func provideKohanLifecycle(
+	monitorHandler handler.MonitorHandler,
+	journalHandler handler.JournalHandler,
+	imageHandler handler.ImageHandler,
+	noteHandler handler.NoteHandler,
+	tagHandler handler.TagHandler,
+) util.ServerLifecycle {
+	return &KohanServerLifecycle{
+		MonitorHandler: monitorHandler,
+		JournalHandler: journalHandler,
+		ImageHandler:   imageHandler,
+		NoteHandler:    noteHandler,
+		TagHandler:     tagHandler,
+	}
+}
+
+func provideHttpServer(cfg config.HttpServerConfig, shutdown util.Shutdown, lifecycle util.ServerLifecycle) util.HttpServer {
 	// Create Gin engine and register validators before setting up routes
 	engine := gin.Default()
 	RegisterJournalValidators()
-	return util.NewHttpServer(cfg, engine, shutdown)
-}
-
-func provideKohanServer(
-	httpServer util.HttpServer,
-	lifecycle util.ServerLifecycle,
-) util.HttpServer {
-	httpServer.SetLifecycle(lifecycle)
-	return httpServer
+	server := util.NewHttpServer(cfg, engine, shutdown)
+	server.SetLifecycle(lifecycle)
+	return server
 }
 
 // ---- Journal ----
@@ -149,6 +159,9 @@ func (ki *KohanInjector) registerJournalDependencies() error {
 	container.MustSingleton(ki.di, provideTagRepository)
 	container.MustSingleton(ki.di, provideTagManager)
 	container.MustSingleton(ki.di, provideTagHandler)
+
+	// Lifecycle
+	container.MustSingleton(ki.di, provideKohanLifecycle)
 
 	return nil
 }
