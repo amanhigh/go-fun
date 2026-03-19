@@ -30,16 +30,25 @@ func configureMockOSHandler() *handlerMocks.OSHandler {
 
 	// Configure mock to return safe responses instead of executing real OS operations
 	osHandler.On("HandleSubmapControl", mock.Anything).Run(func(args mock.Arguments) {
-		ctx := args.Get(0).(*gin.Context)
+		ctx, ok := args.Get(0).(*gin.Context)
+		if !ok {
+			return
+		}
 		action := ctx.Param("action")
 		ctx.JSON(http.StatusOK, gin.H{"status": "success", "action": action})
 	})
 	osHandler.On("HandleRecordTicker", mock.Anything).Run(func(args mock.Arguments) {
-		ctx := args.Get(0).(*gin.Context)
+		ctx, ok := args.Get(0).(*gin.Context)
+		if !ok {
+			return
+		}
 		ctx.JSON(http.StatusOK, "Success")
 	})
 	osHandler.On("HandleReadClip", mock.Anything).Run(func(args mock.Arguments) {
-		ctx := args.Get(0).(*gin.Context)
+		ctx, ok := args.Get(0).(*gin.Context)
+		if !ok {
+			return
+		}
 		ctx.JSON(http.StatusOK, "mock_clipboard_content")
 	}).Maybe()
 
