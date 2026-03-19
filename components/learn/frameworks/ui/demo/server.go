@@ -3,158 +3,103 @@ package main
 import (
 	"net/http"
 
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components/advanced"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components/basic"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components/medium"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/pages"
 	"github.com/gin-gonic/gin"
 )
 
 // UIServer provides HTTP endpoints to view Templ components in browser
 type UIServer struct {
-	port string
+	port     string
+	registry *components.Registry
 }
 
-// NewUIServer creates a new UI server instance
+// NewUIServer creates a new UI server instance with all components registered
 func NewUIServer(port string) *UIServer {
+	registry := components.NewRegistry()
+
+	// Register all components
+	basic.RegisterAll(registry)
+	medium.RegisterAll(registry)
+	advanced.RegisterAll(registry)
+
 	return &UIServer{
-		port: port,
+		port:     port,
+		registry: registry,
 	}
+}
+
+// Registry returns the component registry for testing
+func (s *UIServer) Registry() *components.Registry {
+	return s.registry
 }
 
 // Start starts the HTTP server and serves the UI demo pages
 func (s *UIServer) Start() error {
 	r := gin.Default()
-
-	// Main demo page
-	r.GET("/", s.indexHandler)
-
-	// Individual component demos
-	r.GET("/greeting/:name", s.greetingHandler)
-	r.GET("/usercard/:username/:active", s.userCardHandler)
-	r.GET("/todolist", s.todoListHandler)
-	r.GET("/button/:text/:disabled", s.buttonHandler)
-	r.GET("/counter/:count", s.counterHandler)
-
+	s.SetupRoutes(r)
 	return r.Run(":" + s.port)
 }
 
-// indexHandler serves the main demo page with links to all examples
-func (s *UIServer) indexHandler(c *gin.Context) {
-	html := `<!DOCTYPE html>
-<html>
-<head>
-    <title>Templ UI Demo</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .demo-section { margin: 30px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
-        .demo-link { color: #007bff; text-decoration: none; font-weight: bold; }
-        .demo-link:hover { text-decoration: underline; }
-        .back-link { margin-top: 20px; display: block; }
-    </style>
-</head>
-<body>
-    <h1>Templ UI Component Demo</h1>
-    <p>This demo showcases the first 5 basic Templ components. Click on any component to see it rendered:</p>
-    
-    <div class="demo-section">
-        <h2>1. Greeting Component</h2>
-        <p>A simple greeting component with a name parameter.</p>
-        <a href="/greeting/Alice" class="demo-link">View Greeting: "Alice"</a> | 
-        <a href="/greeting/Bob" class="demo-link">View Greeting: "Bob"</a>
-    </div>
+// SetupRoutes configures all routes on the given gin engine
+func (s *UIServer) SetupRoutes(r *gin.Engine) {
+	// Index page
+	r.GET("/", s.indexHandler)
 
-    <div class="demo-section">
-        <h2>2. UserCard Component</h2>
-        <p>A user card with conditional active/inactive badge rendering.</p>
-        <a href="/usercard/John/true" class="demo-link">View UserCard: John (Active)</a> | 
-        <a href="/usercard/Jane/false" class="demo-link">View UserCard: Jane (Inactive)</a>
-    </div>
+	// Level pages
+	r.GET("/basic", s.basicPageHandler)
+	r.GET("/medium", s.mediumPageHandler)
+	r.GET("/advanced", s.advancedPageHandler)
 
-    <div class="demo-section">
-        <h2>3. TodoList Component</h2>
-        <p>A todo list that renders items in a loop.</p>
-        <a href="/todolist" class="demo-link">View TodoList</a>
-    </div>
-
-    <div class="demo-section">
-        <h2>4. Button Component</h2>
-        <p>A button with disabled state attribute handling.</p>
-        <a href="/button/ClickMe/false" class="demo-link">View Button: Enabled</a> | 
-        <a href="/button/Disabled/true" class="demo-link">View Button: Disabled</a>
-    </div>
-
-    <div class="demo-section">
-        <h2>5. Counter Component</h2>
-        <p>A counter with different state rendering (positive, negative, zero).</p>
-        <a href="/counter/0" class="demo-link">View Counter: 0</a> | 
-        <a href="/counter/5" class="demo-link">View Counter: 5</a> | 
-        <a href="/counter/-3" class="demo-link">View Counter: -3</a>
-    </div>
-</body>
-</html>`
-
-	c.Header("Content-Type", "text/html")
-	c.String(http.StatusOK, html)
-}
-
-// greetingHandler renders the Greeting component
-func (s *UIServer) greetingHandler(c *gin.Context) {
-	name := c.Param("name")
-	component := ui.Greeting(name)
-
-	c.Header("Content-Type", "text/html")
-	component.Render(c.Request.Context(), c.Writer)
-}
-
-// userCardHandler renders the UserCard component
-func (s *UIServer) userCardHandler(c *gin.Context) {
-	username := c.Param("username")
-	activeStr := c.Param("active")
-	isActive := activeStr == "true"
-
-	component := ui.UserCard(username, isActive)
-
-	c.Header("Content-Type", "text/html")
-	component.Render(c.Request.Context(), c.Writer)
-}
-
-// todoListHandler renders the TodoList component
-func (s *UIServer) todoListHandler(c *gin.Context) {
-	todos := []string{"Learn Templ", "Build UI", "Test Components", "Write Documentation"}
-	component := ui.TodoList(todos)
-
-	c.Header("Content-Type", "text/html")
-	component.Render(c.Request.Context(), c.Writer)
-}
-
-// buttonHandler renders the Button component
-func (s *UIServer) buttonHandler(c *gin.Context) {
-	text := c.Param("text")
-	disabledStr := c.Param("disabled")
-	isDisabled := disabledStr == "true"
-
-	component := ui.Button(text, isDisabled)
-
-	c.Header("Content-Type", "text/html")
-	component.Render(c.Request.Context(), c.Writer)
-}
-
-// counterHandler renders the Counter component
-func (s *UIServer) counterHandler(c *gin.Context) {
-	countStr := c.Param("count")
-	// For simplicity, we'll use a fixed count. In a real app, you'd parse this properly
-	var count int
-	switch countStr {
-	case "0":
-		count = 0
-	case "5":
-		count = 5
-	case "-3":
-		count = -3
-	default:
-		count = 0
+	// Register all component routes dynamically
+	for _, comp := range s.registry.All() {
+		s.registerComponentRoute(r, comp)
 	}
-
-	component := ui.Counter(count)
-
-	c.Header("Content-Type", "text/html")
-	component.Render(c.Request.Context(), c.Writer)
 }
+
+// registerComponentRoute registers a route for a single component
+func (s *UIServer) registerComponentRoute(r *gin.Engine, comp components.Component) {
+	url := comp.URL()
+	r.GET(url, func(c *gin.Context) {
+		c.Header("Content-Type", "text/html")
+		comp.Render().Render(c.Request.Context(), c.Writer)
+	})
+}
+
+// indexHandler serves the main index page
+func (s *UIServer) indexHandler(c *gin.Context) {
+	c.Header("Content-Type", "text/html")
+	pages.IndexPage().Render(c.Request.Context(), c.Writer)
+}
+
+// basicPageHandler serves the basic components page
+func (s *UIServer) basicPageHandler(c *gin.Context) {
+	comps := pages.ComponentsToInfoList(s.registry.Basic())
+	c.Header("Content-Type", "text/html")
+	pages.LevelPage("basic", "Basic Components", comps).Render(c.Request.Context(), c.Writer)
+}
+
+// mediumPageHandler serves the medium components page
+func (s *UIServer) mediumPageHandler(c *gin.Context) {
+	comps := pages.ComponentsToInfoList(s.registry.Medium())
+	c.Header("Content-Type", "text/html")
+	pages.LevelPage("medium", "Medium Components", comps).Render(c.Request.Context(), c.Writer)
+}
+
+// advancedPageHandler serves the advanced components page
+func (s *UIServer) advancedPageHandler(c *gin.Context) {
+	comps := pages.ComponentsToInfoList(s.registry.Advanced())
+	c.Header("Content-Type", "text/html")
+	pages.LevelPage("advanced", "Advanced Components", comps).Render(c.Request.Context(), c.Writer)
+}
+
+// GetComponent returns a component by URL for testing
+func (s *UIServer) GetComponent(url string) components.Component {
+	return s.registry.FindByURL(url)
+}
+
+// Ensure UIServer is not used directly
+var _ = http.StatusOK

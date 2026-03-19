@@ -4,6 +4,7 @@ go 1.26.0
 
 require (
 	github.com/ThreeDotsLabs/watermill v1.5.1
+	github.com/a-h/templ v0.3.1001
 	github.com/amanhigh/go-fun/common v1.0.3
 	github.com/amanhigh/go-fun/components/operator v0.0.0-20231105173700-27dd61fe1606
 	github.com/amanhigh/go-fun/models v1.0.3
@@ -13,6 +14,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/etcinit/speedbump v2.0.0+incompatible
 	github.com/facebookgo/inject v0.0.0-20180706035515-f23751cae28b
+	github.com/gin-gonic/gin v1.12.0
 	github.com/go-co-op/gocron-redis-lock/v2 v2.2.1
 	github.com/go-co-op/gocron/v2 v2.19.1
 	github.com/go-playground/validator/v10 v10.30.1
@@ -52,15 +54,12 @@ require (
 
 require (
 	dario.cat/mergo v1.0.2 // indirect
-	github.com/a-h/templ v0.3.1001 // indirect
 	github.com/arl/statsviz v0.6.0 // indirect
 	github.com/bits-and-blooms/bitset v1.13.0 // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/bytedance/sonic v1.15.0 // indirect
 	github.com/bytedance/sonic/loader v0.5.0 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
-	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
-	github.com/chenzhuoyu/iasm v0.9.1 // indirect
 	github.com/cloudwego/base64x v0.1.6 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
@@ -76,7 +75,6 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gammazero/deque v0.2.1 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
-	github.com/gin-gonic/gin v1.12.0 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
 	github.com/glebarez/sqlite v1.10.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
