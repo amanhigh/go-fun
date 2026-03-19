@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-Comprehensive Journal Validation Script - STRICT LINE ACCOUNTING
+Comprehensive Journal Validation and Analysis Script - STRICT LINE ACCOUNTING
 Every line must be either:
 1. PROCESSED (understood and will be migrated)
 2. SKIPPED (understood but intentionally not migrated)
 3. FLAGGED (unexplained - needs investigation)
 
+Provides both validation (line accounting) and analysis (statistics, mapping verification)
 Usage: python3 journal_validation.py
 """
 
@@ -40,6 +41,11 @@ class LineAccountant:
         self.tags = {'trade': [], 'reason': [], 'management': [], 'other': []}
         self.notes = {'code_block': [], 'simple': [], 'plan': []}
         self.important_tags = []  # #important tags
+        
+        # Analysis data
+        self.ticker_occurrences = []
+        self.date_range = {'earliest': None, 'latest': None}
+        self.file_count = 0
         
     def process_line(self, file_name, line_num, line, category, subcategory, status):
         """Record a line's status."""
@@ -111,6 +117,7 @@ def analyze_journal_line(line, line_stripped, in_code_block, prev_line_type, fil
     if ticker_match and '|' in line:
         ticker = ticker_match.group(1)
         accountant.tickers.append({'file': file_name, 'line': line_num, 'ticker': ticker})
+        accountant.ticker_occurrences.append(ticker)  # Add to analysis data
         
         # Extract all tags from this line
         tags = re.findall(tag_pattern, line)
@@ -205,6 +212,18 @@ def validate_journals():
     # Process each file
     for file_path in files:
         file_name = os.path.basename(file_path)
+        accountant.file_count += 1
+        
+        # Extract date from filename for analysis
+        date_match = re.search(r'(\d{4}_\d{2}_\d{2})', file_name)
+        if date_match:
+            date_str = date_match.group(1)
+            formatted_date = f"{date_str[:4]}-{date_str[5:7]}-{date_str[8:10]}"
+            
+            if not accountant.date_range['earliest'] or formatted_date < accountant.date_range['earliest']:
+                accountant.date_range['earliest'] = formatted_date
+            if not accountant.date_range['latest'] or formatted_date > accountant.date_range['latest']:
+                accountant.date_range['latest'] = formatted_date
         
         with open(file_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
@@ -335,6 +354,82 @@ def validate_journals():
     mgmt_counter = Counter([t['tag'] for t in accountant.tags['management']])
     for tag, count in mgmt_counter.most_common():
         print(f"  {tag}: {count}")
+    
+    # === COMPREHENSIVE ANALYSIS SECTION ===
+    print("\n" + "=" * 80)
+    print("COMPREHENSIVE JOURNAL ANALYSIS")
+    print("=" * 80)
+    
+    # Date range analysis
+    print("\n=== Date Range Analysis ===")
+    if accountant.date_range['earliest'] and accountant.date_range['latest']:
+        print(f"Date range: {accountant.date_range['earliest']} to {accountant.date_range['latest']}")
+        print(f"Total dates with entries: {accountant.file_count}")
+    
+    # Detailed ticker analysis
+    print("\n=== Ticker Analysis ===")
+    ticker_counter = Counter(accountant.ticker_occurrences)
+    print(f"Total ticker occurrences: {len(accountant.ticker_occurrences)}")
+    print(f"Unique tickers: {len(ticker_counter)}")
+    print(f"Average occurrences per ticker: {len(accountant.ticker_occurrences)/len(ticker_counter):.1f}")
+    
+    print("\nTop 20 Most Active Tickers:")
+    for ticker, count in ticker_counter.most_common(20):
+        print(f"    {count:3d} {ticker}")
+    
+    # PRD validation counts
+    print("\n=== PRD Validation Counts ===")
+    print("These counts should match section 4.8.6 in the PRD:")
+    print()
+    
+    print("Journal Statistics (4.8.6.1):")
+    print(f"  Files: {accountant.file_count}")
+    print(f"  Lines: {accountant.total_lines}")
+    print(f"  Images: {len(accountant.images)}")
+    print(f"  Notes: {len(accountant.notes['code_block']) + len(accountant.notes['simple']) + len(accountant.notes['plan'])}")
+    print(f"  Journal Rows: {len(accountant.tickers)}")
+    print(f"  Tickers: {len(ticker_counter)}")
+    print(f"  Tags: {len(accountant.tags['trade']) + len(accountant.tags['reason']) + len(accountant.tags['management'])}")
+    print(f"  SNF Rows: {len(accountant.skipped_details.get('snf_header', []))}")
+    
+    # Tag mapping verification for migration
+    print("\n=== Tag Mapping Verification (PRD 4.8.6.3) ===")
+    print("\nTrade Tag Mappings:")
+    trade_mappings = {
+        't.trend': 'tags -> tag: trend, type: DIRECTION',
+        't.ctrend': 'tags -> tag: ctrend, type: DIRECTION',
+        't.mwd': 'sequence -> MWD',
+        't.yr': 'sequence -> YR',
+        't.wdh': 'sequence -> WDH',
+        't.rejected': 'type -> REJECTED',
+        't.set': 'type -> SET',
+        't.taken': 'type -> TAKEN',
+        't.fail': 'status -> FAIL',
+        't.success': 'status -> SUCCESS',
+        't.broken': 'status -> BROKEN',
+        't.miss': 'status -> MISSED',
+        't.justloss': 'status -> JUST_LOSS',
+        't.running': 'status -> RUNNING',
+        't.full': 'tags -> tag: double, type: MANAGEMENT',
+    }
+    for tag, count in trade_counter.most_common():
+        mapping = trade_mappings.get(tag, 'UNKNOWN - needs mapping')
+        print(f"   {count:4d} {tag} -> {mapping}")
+    
+    print("\nReason Tag Mappings (all map to tags with type: REASON):")
+    for tag, count in reason_counter.most_common():
+        # Check for override pattern (e.g., r.dep-loc)
+        tag_value = tag[2:]  # Remove 'r.' prefix
+        if '-' in tag_value:
+            parts = tag_value.split('-', 1)
+            print(f"    {count:3d} {tag} -> tag: {parts[0]}, override: {parts[1]}")
+        else:
+            print(f"    {count:3d} {tag} -> tag: {tag_value}")
+    
+    print("\nManagement Tag Mappings (all map to tags with type: MANAGEMENT):")
+    for tag, count in mgmt_counter.most_common():
+        tag_value = tag[2:]  # Remove 'm.' prefix
+        print(f"    {count:3d} {tag} -> tag: {tag_value}")
     
     # === FINAL SUMMARY ===
     print("\n" + "=" * 80)

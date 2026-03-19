@@ -20,6 +20,18 @@ import (
 )
 
 // ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const (
+	// ProcessedFolder is the base path for journal files
+	ProcessedFolder = "/home/aman/Projects/go-fun/processed"
+
+	// TestFile is the specific test file used for single file migration
+	TestFile = "2023_06_15.md"
+)
+
+// ============================================================================
 // LOGGING INFRASTRUCTURE
 // ============================================================================
 
@@ -826,27 +838,37 @@ var _ = Describe("Barkat Migration Test", func() {
 		client.SetHeader("Content-Type", "application/json")
 		client.SetBaseURL(fmt.Sprintf("http://localhost:%d", testPort))
 
-		// Create logger in test directory
+		// Create logger in temp directory for cleanup
 		var err error
-		logger, err = NewMigrationLogger("/home/aman/Projects/go-fun/components/kohan/core")
+		logger, err = NewMigrationLogger("/tmp")
 		Expect(err).ToNot(HaveOccurred())
 	})
 
 	AfterEach(func() {
 		if logger != nil {
+			logPath := logger.GetLogPath()
 			logger.Close()
+
+			// Clean up migration log file from temp directory
+			if logPath != "" {
+				os.Remove(logPath) // Ignore errors, cleanup is best effort
+			}
 		}
 	})
 
 	Context("Single File Migration", func() {
 		var (
-			testFilePath string
+			testFilePath string = filepath.Join(ProcessedFolder, TestFile)
 			entries      []LegacyJournalEntry
 			parsedCounts ProcessingCounts
 		)
 
 		BeforeEach(func() {
-			testFilePath = "/home/aman/Projects/go-fun/processed/2023_06_15.md"
+			// Check if file exists before proceeding
+			if _, err := os.Stat(testFilePath); os.IsNotExist(err) {
+				Skip(fmt.Sprintf("Test file not found: %s", testFilePath))
+				return
+			}
 
 			var err error
 			entries, parsedCounts, err = parseLegacyMarkdownWithLogging(testFilePath, logger)
@@ -913,15 +935,24 @@ var _ = Describe("Barkat Migration Test", func() {
 
 	Context("Folder Migration with Full Validation", func() {
 		var (
-			processedFolder string
-			allFiles        []string
+			testFolder string = ProcessedFolder
+			allFiles   []string
 		)
 
 		BeforeEach(func() {
-			processedFolder = "/home/aman/Projects/go-fun/processed"
+			files, err := filepath.Glob(filepath.Join(testFolder, "*.md"))
+			if err != nil {
+				// If folder doesn't exist or is inaccessible, skip this test
+				Skip(fmt.Sprintf("Processed folder not accessible: %v", err))
+				return
+			}
 
-			files, err := filepath.Glob(filepath.Join(processedFolder, "*.md"))
-			Expect(err).ToNot(HaveOccurred())
+			if len(files) == 0 {
+				// If no markdown files found, skip this test
+				Skip("No markdown files found in processed folder")
+				return
+			}
+
 			sort.Strings(files) // Process in order
 			allFiles = files
 		})
