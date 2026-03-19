@@ -1,9 +1,11 @@
 package basic
 
 import (
+	"context"
+	"io"
+
 	"github.com/a-h/templ"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
 
 // TodoListComponent demonstrates loop rendering with a list of items
@@ -29,7 +31,14 @@ func NewTodoListComponent(todos []string) *TodoListComponent {
 }
 
 func (c *TodoListComponent) render() templ.Component {
-	return ui.TodoList(c.todos)
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		_, _ = io.WriteString(w, `<div class="todo-list"><h3>Todo Items</h3><ul>`)
+		for _, todo := range c.todos {
+			_, _ = io.WriteString(w, `<li>`+todo+`</li>`)
+		}
+		_, _ = io.WriteString(w, `</ul></div>`)
+		return nil
+	})
 }
 
 // DefaultTodoListComponent returns the default todo list component for demo

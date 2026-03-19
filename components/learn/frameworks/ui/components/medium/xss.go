@@ -3,7 +3,7 @@ package medium
 import (
 	"github.com/a-h/templ"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
 
 // XSSComponent demonstrates HTML escaping for security

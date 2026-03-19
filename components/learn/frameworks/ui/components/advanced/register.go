@@ -1,7 +1,7 @@
 package advanced
 
 import (
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
 
 // RegisterAll registers all advanced components with the given registry

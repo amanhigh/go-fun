@@ -1,9 +1,11 @@
 package basic
 
 import (
+	"context"
+	"io"
+
 	"github.com/a-h/templ"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
 
 // EmptyListComponent demonstrates graceful handling of empty lists
@@ -28,7 +30,10 @@ func NewEmptyListComponent() *EmptyListComponent {
 }
 
 func (c *EmptyListComponent) render() templ.Component {
-	return ui.TodoList([]string{})
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		_, _ = io.WriteString(w, `<div class="todo-list"><h3>Todo Items</h3><ul></ul></div>`)
+		return nil
+	})
 }
 
 // DefaultEmptyListComponent returns the default empty list component for demo

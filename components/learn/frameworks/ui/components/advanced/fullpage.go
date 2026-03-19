@@ -3,7 +3,7 @@ package advanced
 import (
 	"github.com/a-h/templ"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
 
 // FullPageComponent demonstrates a complete page with all component types

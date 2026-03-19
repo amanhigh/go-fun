@@ -3,11 +3,11 @@ package main
 import (
 	"net/http"
 
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components/advanced"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components/basic"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components/medium"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/pages"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/advanced"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/basic"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/medium"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/pages"
 	"github.com/gin-gonic/gin"
 )
 

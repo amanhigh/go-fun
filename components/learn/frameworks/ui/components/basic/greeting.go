@@ -1,9 +1,11 @@
 package basic
 
 import (
+	"context"
+	"io"
+
 	"github.com/a-h/templ"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
 
 // GreetingComponent demonstrates a simple greeting with name parameter
@@ -29,7 +31,10 @@ func NewGreetingComponent(name string) *GreetingComponent {
 }
 
 func (c *GreetingComponent) render() templ.Component {
-	return ui.Greeting(c.name)
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		_, _ = io.WriteString(w, `<div class="greeting"><h1>Hello, `+c.name+`!</h1><p>Welcome to Templ learning.</p></div>`)
+		return nil
+	})
 }
 
 // DefaultGreetingComponent returns the default greeting component for demo

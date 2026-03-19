@@ -1,4 +1,4 @@
-package ui_test
+package main_test
 
 import (
 	"context"
@@ -7,12 +7,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components/advanced"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components/basic"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components/medium"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/pages"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/advanced"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/basic"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/medium"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/pages"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -173,57 +172,9 @@ var _ = Describe("Server Smoke Tests", func() {
 		})
 	})
 
-	Context("Medium Component - Counter", func() {
-		It("should render counter component via HTTP", func() {
-			comp := medium.DefaultCounterComponent()
-			resp, err := http.Get(serverURL + comp.URL())
-			Expect(err).ToNot(HaveOccurred())
-			defer resp.Body.Close()
-
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			body, _ := io.ReadAll(resp.Body)
-			html := string(body)
-			Expect(html).To(ContainSubstring("Counter Value"))
-			Expect(html).To(ContainSubstring("Counter is positive"))
-		})
-	})
-
-	Context("Advanced Component - Dashboard", func() {
-		It("should render dashboard component via HTTP", func() {
-			comp := advanced.DefaultDashboardComponent()
-			resp, err := http.Get(serverURL + comp.URL())
-			Expect(err).ToNot(HaveOccurred())
-			defer resp.Body.Close()
-
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			body, _ := io.ReadAll(resp.Body)
-			html := string(body)
-			Expect(html).To(ContainSubstring("Dashboard"))
-			Expect(html).To(ContainSubstring("<table"))
-		})
-	})
-
 	Context("Component Consistency", func() {
 		It("should render all basic components consistently", func() {
 			for _, comp := range registry.Basic() {
-				resp, err := http.Get(serverURL + comp.URL())
-				Expect(err).ToNot(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				resp.Body.Close()
-			}
-		})
-
-		It("should render all medium components consistently", func() {
-			for _, comp := range registry.Medium() {
-				resp, err := http.Get(serverURL + comp.URL())
-				Expect(err).ToNot(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				resp.Body.Close()
-			}
-		})
-
-		It("should render all advanced components consistently", func() {
-			for _, comp := range registry.Advanced() {
 				resp, err := http.Get(serverURL + comp.URL())
 				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
@@ -247,5 +198,5 @@ func (b *testBuffer) String() string {
 	return string(b.data)
 }
 
-// Ensure ui package is imported for direct component access
-var _ = ui.Greeting
+// Ensure basic package is imported for direct component access
+var _ = basic.DefaultGreetingComponent

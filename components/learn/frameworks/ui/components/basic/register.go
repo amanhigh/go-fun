@@ -1,7 +1,7 @@
 package basic
 
 import (
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/demo/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
 
 // RegisterAll registers all basic components with the given registry
