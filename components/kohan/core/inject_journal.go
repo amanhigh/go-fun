@@ -55,7 +55,7 @@ func (ki *KohanInjector) provideBarkatDB() (*gorm.DB, error) {
 	return db, nil
 }
 
-func provideKohanLifecycle(
+func ProvideKohanLifecycle(
 	monitorHandler handler.MonitorHandler,
 	journalHandler handler.JournalHandler,
 	imageHandler handler.ImageHandler,
@@ -161,7 +161,7 @@ func (ki *KohanInjector) registerJournalDependencies() error {
 	container.MustSingleton(ki.di, provideTagHandler)
 
 	// Lifecycle
-	container.MustSingleton(ki.di, provideKohanLifecycle)
+	container.MustSingleton(ki.di, ProvideKohanLifecycle)
 
 	return nil
 }

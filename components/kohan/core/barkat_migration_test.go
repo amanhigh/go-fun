@@ -29,6 +29,11 @@ const (
 
 	// TestFile is the specific test file used for single file migration
 	TestFile = "2023_06_15.md"
+
+	// RealServerURL - set to URL of real server for testing against live database
+	// If empty, tests will run against in-memory database (default behavior)
+	// Note: Set to "http://localhost:9010" to test against real server
+	RealServerURL = "" // Using in-memory DB - data already loaded in real DB
 )
 
 // ============================================================================
@@ -836,7 +841,15 @@ var _ = Describe("Barkat Migration Test", func() {
 		client = resty.New()
 		client.SetTimeout(10 * time.Second)
 		client.SetHeader("Content-Type", "application/json")
-		client.SetBaseURL(fmt.Sprintf("http://localhost:%d", testPort))
+
+		// Use real server URL if provided, otherwise use test port for in-memory DB
+		if RealServerURL != "" {
+			client.SetBaseURL(RealServerURL)
+			GinkgoWriter.Printf("Using real server: %s\n", RealServerURL)
+		} else {
+			client.SetBaseURL(fmt.Sprintf("http://localhost:%d", testPort))
+			GinkgoWriter.Printf("Using test server: http://localhost:%d (in-memory DB)\n", testPort)
+		}
 
 		// Create logger in temp directory for cleanup
 		var err error

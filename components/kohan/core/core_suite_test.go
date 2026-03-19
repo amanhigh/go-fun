@@ -60,6 +60,19 @@ var _ = BeforeSuite(func() {
 	noteHandler := handler.NewNoteHandler(manager.NewNoteManager(journalMgr, repository.NewNoteRepository(db)))
 	tagHandler := handler.NewTagHandler(manager.NewTagManager(journalMgr, repository.NewTagRepository(db)))
 
+	// Create monitor handler for testing
+	autoManager := manager.NewAutoManager(5*time.Second, "/tmp/test")
+	monitorHandler := handler.NewMonitorHandler("/tmp/test", autoManager)
+
+	// Use provider function to create lifecycle (in sync with production)
+	lifecycle := core.ProvideKohanLifecycle(
+		monitorHandler,
+		journalHandler,
+		imageHandler,
+		noteHandler,
+		tagHandler,
+	)
+
 	shutdown := util.NewGracefulShutdown()
 	engine := gin.Default()
 	core.RegisterJournalValidators()
