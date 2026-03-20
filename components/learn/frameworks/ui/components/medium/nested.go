@@ -4,7 +4,7 @@ import (
 	"github.com/a-h/templ"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/advanced"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/basic"
+	"github.com/templui/templui/components/input"
 )
 
 // NestedComponent demonstrates nested component composition
@@ -31,8 +31,16 @@ func NewNestedComponent(title, name string) *NestedComponent {
 }
 
 func (c *NestedComponent) render() templ.Component {
-	greeting := basic.Greeting(c.name)
-	return advanced.Page(c.title, greeting)
+	content := input.Input(input.Props{
+		ID:          "nested-name",
+		Name:        "nested-name",
+		Placeholder: "Hello, " + c.name + "!",
+		Value:       c.name,
+		Attributes: templ.Attributes{
+			"title": "Nested composition using templUI input",
+		},
+	})
+	return advanced.Page(c.title, content)
 }
 
 // DefaultNestedComponent returns the default nested component for demo

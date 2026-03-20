@@ -1,6 +1,10 @@
 package pages
 
-import "github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
+import (
+	"fmt"
+
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
+)
 
 // ComponentInfo holds display information for a component
 type ComponentInfo struct {
@@ -9,8 +13,17 @@ type ComponentInfo struct {
 	URL         string
 }
 
+// LevelInfo holds display information for a level
+type LevelInfo struct {
+	Name        string
+	Path        string
+	Description string
+	Count       int
+	BadgeClass  string
+}
+
 // IndexPage renders the main index page with links to all levels
-templ IndexPage() {
+templ IndexPage(levels []LevelInfo) {
 	<!DOCTYPE html>
 	<html>
 		<head>
@@ -33,21 +46,13 @@ templ IndexPage() {
 			<div class="container">
 				<h1>Templ UI Component Demo</h1>
 				<p>Explore Templ components organized by complexity level. Each level builds upon the previous one.</p>
-				
-				<div class="level-section">
-					<a href="/basic" class="level-link">Basic Components <span class="badge badge-basic">8 components</span></a>
-					<p class="level-desc">Core UI building blocks: Button, TextInput, TextArea, Dropdown, Badge, Radio, Checkbox, and Modal components with professional styling.</p>
-				</div>
 
-				<div class="level-section">
-					<a href="/medium" class="level-link">Medium Components <span class="badge badge-medium">6 components</span></a>
-					<p class="level-desc">Intermediate patterns: nested components, state handling, data tables, composition, and security.</p>
-				</div>
-
-				<div class="level-section">
-					<a href="/advanced" class="level-link">Advanced Components <span class="badge badge-advanced">2 components</span></a>
-					<p class="level-desc">Complex patterns: full page layouts, dashboards with multiple widgets, and advanced composition.</p>
-				</div>
+				for _, level := range levels {
+					<div class="level-section">
+						<a href={ templ.SafeURL(level.Path) } class="level-link">{ level.Name } <span class={ "badge", level.BadgeClass }>{ fmt.Sprintf("%d components", level.Count) }</span></a>
+						<p class="level-desc">{ level.Description }</p>
+					</div>
+				}
 			</div>
 		</body>
 	</html>

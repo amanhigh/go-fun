@@ -35,6 +35,7 @@ require (
 	github.com/slok/goresilience v0.2.0
 	github.com/smartystreets/goconvey v1.7.2
 	github.com/stretchr/testify v1.11.1
+	github.com/templui/templui v1.9.1
 	github.com/teris-io/shortid v0.0.0-20220617161101-71ec9f2aa569
 	github.com/thoas/go-funk v0.9.3
 	github.com/tiendc/go-deepcopy v1.7.2
@@ -54,6 +55,7 @@ require (
 
 require (
 	dario.cat/mergo v1.0.2 // indirect
+	github.com/Oudwins/tailwind-merge-go v0.2.0 // indirect
 	github.com/arl/statsviz v0.6.0 // indirect
 	github.com/bits-and-blooms/bitset v1.13.0 // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect
@@ -177,8 +179,8 @@ require (
 	github.com/facebookgo/structtag v0.0.0-20150214074306-217e25fb9691 // indirect
 	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
 	github.com/failsafe-go/failsafe-go v0.6.8
-	github.com/fatih/color v1.16.0
-	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/fatih/color v1.18.0
+	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-openapi/jsonpointer v0.20.0 // indirect
@@ -215,7 +217,7 @@ require (
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -237,7 +239,7 @@ require (
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/testcontainers/testcontainers-go v0.39.0
-	github.com/yuin/goldmark v1.7.0
+	github.com/yuin/goldmark v1.7.13
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/fx v1.20.1
 	golang.design/x/clipboard v0.7.0

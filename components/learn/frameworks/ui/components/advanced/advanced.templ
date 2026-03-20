@@ -5,18 +5,86 @@ templ Page(title string, content templ.Component) {
 	<!DOCTYPE html>
 	<html>
 		<head>
+			<meta charset="UTF-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
 			<title>{ title }</title>
+			<!-- Tailwind CSS for templui components -->
+			<script src="https://cdn.tailwindcss.com"></script>
+			<script>
+				tailwind.config = {
+					darkMode: 'class',
+					theme: {
+						extend: {
+							borderRadius: {
+								lg: 'var(--radius)',
+								md: 'calc(var(--radius) - 2px)',
+								sm: 'calc(var(--radius) - 4px)',
+							},
+							colors: {
+								background: 'var(--background)',
+								foreground: 'var(--foreground)',
+								card: {
+									DEFAULT: 'var(--card)',
+									foreground: 'var(--card-foreground)',
+								},
+								popover: {
+									DEFAULT: 'var(--popover)',
+									foreground: 'var(--popover-foreground)',
+								},
+								primary: {
+									DEFAULT: 'var(--primary)',
+									foreground: 'var(--primary-foreground)',
+								},
+								secondary: {
+									DEFAULT: 'var(--secondary)',
+									foreground: 'var(--secondary-foreground)',
+								},
+								muted: {
+									DEFAULT: 'var(--muted)',
+									foreground: 'var(--muted-foreground)',
+								},
+								accent: {
+									DEFAULT: 'var(--accent)',
+									foreground: 'var(--accent-foreground)',
+								},
+								destructive: {
+									DEFAULT: 'var(--destructive)',
+									foreground: 'var(--destructive-foreground)',
+								},
+								border: 'var(--border)',
+								input: 'var(--input)',
+								ring: 'var(--ring)',
+							}
+						}
+					}
+				}
+			</script>
 			<style>
-				body { font-family: Arial, sans-serif; margin: 20px; }
-				.greeting { background: #f0f0f0; padding: 20px; border-radius: 8px; }
-				.user-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; }
-				.badge { padding: 5px 10px; border-radius: 4px; font-size: 12px; }
-				.badge.active { background: #4caf50; color: white; }
-				.badge.inactive { background: #f44336; color: white; }
-				.todo-list { margin: 20px 0; }
+				:root {
+					--radius: 0.5rem;
+					--background: 0 0% 100%;
+					--foreground: 222.2 84% 4.9%;
+					--card: 0 0% 100%;
+					--card-foreground: 222.2 84% 4.9%;
+					--popover: 0 0% 100%;
+					--popover-foreground: 222.2 84% 4.9%;
+					--primary: 222.2 47.4% 11.2%;
+					--primary-foreground: 210 40% 98%;
+					--secondary: 210 40% 96%;
+					--secondary-foreground: 222.2 47.4% 11.2%;
+					--muted: 210 40% 96%;
+					--muted-foreground: 215.4 16.3% 46.9%;
+					--accent: 210 40% 96%;
+					--accent-foreground: 222.2 47.4% 11.2%;
+					--destructive: 0 84.2% 60.2%;
+					--destructive-foreground: 210 40% 98%;
+					--border: 214.3 31.8% 91.4%;
+					--input: 214.3 31.8% 91.4%;
+					--ring: 222.2 84% 4.9%;
+				}
 			</style>
 		</head>
-		<body>
+		<body class="min-h-screen bg-background text-foreground">
 			@content
 		</body>
 	</html>

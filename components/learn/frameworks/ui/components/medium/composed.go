@@ -7,7 +7,8 @@ import (
 	"github.com/a-h/templ"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/advanced"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/basic"
+	"github.com/templui/templui/components/input"
+	"github.com/templui/templui/components/textarea"
 )
 
 // ComposedComponent demonstrates multiple components composed together
@@ -34,9 +35,22 @@ func NewComposedComponent(name string, todos []string) *ComposedComponent {
 }
 
 func (c *ComposedComponent) render() templ.Component {
-	greeting := basic.Greeting(c.name)
-	todoList := basic.TodoList(c.todos)
-	return advanced.Page("Composed View", composedContent(greeting, todoList))
+	profile := input.Input(input.Props{
+		ID:          "composed-team",
+		Name:        "composed-team",
+		Placeholder: c.name,
+		Value:       c.name,
+	})
+
+	notes := textarea.Textarea(textarea.Props{
+		ID:          "composed-notes",
+		Name:        "composed-notes",
+		Placeholder: "Tasks",
+		Value:       "Review code\nDeploy app\nWrite docs",
+		Rows:        4,
+	})
+
+	return advanced.Page("Composed View", composedContent(profile, notes))
 }
 
 // composedContent wraps multiple components in a single templ component

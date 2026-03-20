@@ -1,0 +1,8 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go run ."
+  bin = ""
+  delay = 100
+  include_ext = ["go", "templ"]

@@ -161,11 +161,24 @@ test-focus:
 	printf $(_TITLE) "Running Focus Tests"
 	$(GINKGO) --focus "should create & get person" $(FUN_DIR)/it > $(OUT)
 
-cover: test-clean test-unit run-fun-cover cover-analyse ## Show comprehensive coverage (unit + integration)
+cover: clean-test test-unit run-fun-cover cover-analyse ## Show comprehensive coverage (unit + integration)
 
-test-clean:
+### Clean
+clean-test:
 	printf $(_WARN) "Cleaning Tests"
 	rm -rf $(COVER_DIR)
+
+clean-build:
+	printf $(_WARN) "Cleaning Build"
+	-rm -rf $(BIN_DIR)
+	-make -C $(COMPONENT_DIR)/operator/ clean > $(OUT)
+
+clean-templ:
+	printf $(_WARN) "Cleaning Templ Files"
+	find components/learn/frameworks/ui -name "*_templ.go" -delete
+	find components/learn/frameworks/ui -name "*_templ.txt" -delete
+
+clean: clean-test clean-build clean-templ ## Clean up Residue
 
 combine-coverage: ## Combine all binary coverage data into a single comprehensive report
 	printf $(_TITLE) "Combining Binary Coverage Data"
@@ -213,11 +226,6 @@ build-kohan:
 	printf $(_TITLE) "Building Kohan"
 	mkdir -p $(BIN_DIR)
 	$(BUILD_OPTS) CGO_ENABLED=1 go build -o $(BIN_DIR)/kohan $(COMPONENT_DIR)/kohan/main.go
-
-build-clean:
-	printf $(_WARN) "Cleaning Build"
-	-rm -rf $(BIN_DIR)
-	-make -C $(COMPONENT_DIR)/operator/ clean > $(OUT)
 
 ### Install
 install-kohan:
@@ -475,7 +483,6 @@ prepare: setup-tools setup-k8 install-deadcode ## One Time Setup
 
 setup: sync test generate build lint-dead helm-package docker-build # Build and Test
 install: install-kohan ## Install Kohan CLI
-clean: test-clean build-clean ## Clean up Residue
 
 reset: setup info clean ## Setup with Info and Clean
 all: prepare docker-fun-clean install reset infos test-slow ## Run All Targets

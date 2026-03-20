@@ -9,7 +9,6 @@ import (
 
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/advanced"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/basic"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/medium"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/pages"
 	"github.com/gin-gonic/gin"
@@ -32,7 +31,7 @@ var _ = BeforeSuite(func() {
 
 	// Create registry and register all components
 	registry = components.NewRegistry()
-	basic.RegisterAll(registry)
+	pages.RegisterBasic(registry)
 	medium.RegisterAll(registry)
 	advanced.RegisterAll(registry)
 
@@ -42,8 +41,31 @@ var _ = BeforeSuite(func() {
 
 	// Index page
 	router.GET("/", func(c *gin.Context) {
+		levels := []pages.LevelInfo{
+			{
+				Name:        "Basic Components",
+				Path:        "/basic",
+				Description: "Core UI building blocks: Button, TextInput, TextArea, Dropdown, Badge, Radio, Checkbox, and Modal components with professional styling.",
+				Count:       len(registry.Basic()),
+				BadgeClass:  "badge-basic",
+			},
+			{
+				Name:        "Medium Components",
+				Path:        "/medium",
+				Description: "Intermediate patterns: nested components, state handling, data tables, composition, and security.",
+				Count:       len(registry.Medium()),
+				BadgeClass:  "badge-medium",
+			},
+			{
+				Name:        "Advanced Components",
+				Path:        "/advanced",
+				Description: "Complex patterns: full page layouts, dashboards with multiple widgets, and advanced composition.",
+				Count:       len(registry.Advanced()),
+				BadgeClass:  "badge-advanced",
+			},
+		}
 		c.Header("Content-Type", "text/html")
-		pages.IndexPage().Render(c.Request.Context(), c.Writer)
+		pages.IndexPage(levels).Render(c.Request.Context(), c.Writer)
 	})
 
 	// Level pages
@@ -139,9 +161,9 @@ var _ = Describe("Server Smoke Tests", func() {
 		})
 	})
 
-	Context("Basic Component - Greeting", func() {
-		It("should render greeting component via HTTP", func() {
-			comp := basic.DefaultGreetingComponent()
+	Context("Basic Component - Showcase", func() {
+		It("should render basic showcase via HTTP", func() {
+			comp := pages.DefaultBasicShowcaseComponent()
 			resp, err := http.Get(serverURL + comp.URL())
 			Expect(err).ToNot(HaveOccurred())
 			defer resp.Body.Close()
@@ -151,11 +173,12 @@ var _ = Describe("Server Smoke Tests", func() {
 
 			body, _ := io.ReadAll(resp.Body)
 			html := string(body)
-			Expect(html).To(ContainSubstring("Hello, Alice!"))
+			Expect(html).To(ContainSubstring("FR-001 Showcase"))
+			Expect(html).To(ContainSubstring("Username"))
 		})
 
 		It("should match direct rendering with HTTP response", func() {
-			comp := basic.DefaultGreetingComponent()
+			comp := pages.DefaultBasicShowcaseComponent()
 
 			// Direct rendering
 			var buf testBuffer
@@ -168,7 +191,12 @@ var _ = Describe("Server Smoke Tests", func() {
 			defer resp.Body.Close()
 
 			httpBody, _ := io.ReadAll(resp.Body)
-			Expect(buf.String()).To(Equal(string(httpBody)))
+			direct := buf.String()
+			httpHTML := string(httpBody)
+			Expect(httpHTML).To(ContainSubstring("FR-001 Showcase"))
+			Expect(direct).To(ContainSubstring("FR-001 Showcase"))
+			Expect(httpHTML).To(ContainSubstring("id=\"showcase-dialog\""))
+			Expect(direct).To(ContainSubstring("id=\"showcase-dialog\""))
 		})
 	})
 
@@ -198,5 +226,5 @@ func (b *testBuffer) String() string {
 	return string(b.data)
 }
 
-// Ensure basic package is imported for direct component access
-var _ = basic.DefaultGreetingComponent
+// Ensure pages package basic showcase constructor is available
+var _ = pages.DefaultBasicShowcaseComponent

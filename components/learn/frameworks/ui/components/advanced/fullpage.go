@@ -3,7 +3,7 @@ package advanced
 import (
 	"github.com/a-h/templ"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/basic"
+	"github.com/templui/templui/components/textarea"
 )
 
 // FullPageComponent demonstrates a complete page with all component types
@@ -28,9 +28,13 @@ func NewFullPageComponent() *FullPageComponent {
 }
 
 func (c *FullPageComponent) render() templ.Component {
-	// Create a complex page with multiple nested components
-	greeting := basic.Greeting("Advanced User")
-	return Page("Advanced Full Page Demo", greeting)
+	content := textarea.Textarea(textarea.Props{
+		ID:          "advanced-notes",
+		Name:        "advanced-notes",
+		Placeholder: "Capture advanced page notes",
+		Rows:        4,
+	})
+	return Page("Advanced Full Page Demo", content)
 }
 
 // DefaultFullPageComponent returns the default full page component for demo

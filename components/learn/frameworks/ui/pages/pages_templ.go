@@ -6,6 +6,8 @@ package pages
 //lint:file-ignore SA4006 This context is only used if a nested component is present.
 
 import (
+	"fmt"
+
 	"github.com/a-h/templ"
 	templruntime "github.com/a-h/templ/runtime"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
@@ -18,8 +20,17 @@ type ComponentInfo struct {
 	URL         string
 }
 
+// LevelInfo holds display information for a level
+type LevelInfo struct {
+	Name        string
+	Path        string
+	Description string
+	Count       int
+	BadgeClass  string
+}
+
 // IndexPage renders the main index page with links to all levels
-func IndexPage() templ.Component {
+func IndexPage(levels []LevelInfo) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -40,7 +51,91 @@ func IndexPage() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html><head><title>Templ UI Demo</title><style>\n\t\t\t\tbody { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }\n\t\t\t\t.container { max-width: 800px; margin: 0 auto; }\n\t\t\t\th1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }\n\t\t\t\t.level-section { margin: 30px 0; padding: 25px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\n\t\t\t\t.level-link { display: block; color: #007bff; text-decoration: none; font-size: 1.5em; font-weight: bold; margin-bottom: 10px; }\n\t\t\t\t.level-link:hover { text-decoration: underline; }\n\t\t\t\t.level-desc { color: #666; margin: 0; }\n\t\t\t\t.badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 0.8em; margin-left: 10px; }\n\t\t\t\t.badge-basic { background: #28a745; color: white; }\n\t\t\t\t.badge-medium { background: #ffc107; color: #333; }\n\t\t\t\t.badge-advanced { background: #dc3545; color: white; }\n\t\t\t</style></head><body><div class=\"container\"><h1>Templ UI Component Demo</h1><p>Explore Templ components organized by complexity level. Each level builds upon the previous one.</p><div class=\"level-section\"><a href=\"/basic\" class=\"level-link\">Basic Components <span class=\"badge badge-basic\">8 components</span></a><p class=\"level-desc\">Core UI building blocks: Button, TextInput, TextArea, Dropdown, Badge, Radio, Checkbox, and Modal components with professional styling.</p></div><div class=\"level-section\"><a href=\"/medium\" class=\"level-link\">Medium Components <span class=\"badge badge-medium\">6 components</span></a><p class=\"level-desc\">Intermediate patterns: nested components, state handling, data tables, composition, and security.</p></div><div class=\"level-section\"><a href=\"/advanced\" class=\"level-link\">Advanced Components <span class=\"badge badge-advanced\">2 components</span></a><p class=\"level-desc\">Complex patterns: full page layouts, dashboards with multiple widgets, and advanced composition.</p></div></div></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html><head><title>Templ UI Demo</title><style>\n\t\t\t\tbody { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }\n\t\t\t\t.container { max-width: 800px; margin: 0 auto; }\n\t\t\t\th1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }\n\t\t\t\t.level-section { margin: 30px 0; padding: 25px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\n\t\t\t\t.level-link { display: block; color: #007bff; text-decoration: none; font-size: 1.5em; font-weight: bold; margin-bottom: 10px; }\n\t\t\t\t.level-link:hover { text-decoration: underline; }\n\t\t\t\t.level-desc { color: #666; margin: 0; }\n\t\t\t\t.badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 0.8em; margin-left: 10px; }\n\t\t\t\t.badge-basic { background: #28a745; color: white; }\n\t\t\t\t.badge-medium { background: #ffc107; color: #333; }\n\t\t\t\t.badge-advanced { background: #dc3545; color: white; }\n\t\t\t</style></head><body><div class=\"container\"><h1>Templ UI Component Demo</h1><p>Explore Templ components organized by complexity level. Each level builds upon the previous one.</p>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		for _, level := range levels {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"level-section\"><a href=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var2 templ.SafeURL
+			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(level.Path))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 52, Col: 41}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" class=\"level-link\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 string
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(level.Name)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 52, Col: 75}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, " ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var4 = []any{"badge", level.BadgeClass}
+			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var4...)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<span class=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var5 string
+			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var4).String())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 1, Col: 0}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var6 string
+			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d components", level.Count))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 52, Col: 163}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</span></a><p class=\"level-desc\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var7 string
+			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(level.Description)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 53, Col: 47}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</p></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -65,100 +160,100 @@ func LevelPage(level string, levelTitle string, components []ComponentInfo) temp
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var2 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var2 == nil {
-			templ_7745c5c3_Var2 = templ.NopComponent
+		templ_7745c5c3_Var8 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var8 == nil {
+			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<!doctype html><html><head><title>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<!doctype html><html><head><title>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(levelTitle)
+		var templ_7745c5c3_Var9 string
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(levelTitle)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 61, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 66, Col: 22}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " - Templ UI Demo</title><style>\n\t\t\t\tbody { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }\n\t\t\t\t.container { max-width: 800px; margin: 0 auto; }\n\t\t\t\th1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }\n\t\t\t\t.back-link { display: inline-block; margin-bottom: 20px; color: #007bff; text-decoration: none; }\n\t\t\t\t.back-link:hover { text-decoration: underline; }\n\t\t\t\t.component-card { margin: 20px 0; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\n\t\t\t\t.component-name { color: #333; margin: 0 0 10px 0; }\n\t\t\t\t.component-name a { color: #007bff; text-decoration: none; }\n\t\t\t\t.component-name a:hover { text-decoration: underline; }\n\t\t\t\t.component-desc { color: #666; margin: 0 0 10px 0; }\n\t\t\t\t.component-url { font-family: monospace; background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 0.9em; }\n\t\t\t</style></head><body><div class=\"container\"><a href=\"/\" class=\"back-link\">← Back to Index</a><h1>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(levelTitle)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 79, Col: 20}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, " - Templ UI Demo</title><style>\n\t\t\t\tbody { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }\n\t\t\t\t.container { max-width: 800px; margin: 0 auto; }\n\t\t\t\th1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }\n\t\t\t\t.back-link { display: inline-block; margin-bottom: 20px; color: #007bff; text-decoration: none; }\n\t\t\t\t.back-link:hover { text-decoration: underline; }\n\t\t\t\t.component-card { margin: 20px 0; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\n\t\t\t\t.component-name { color: #333; margin: 0 0 10px 0; }\n\t\t\t\t.component-name a { color: #007bff; text-decoration: none; }\n\t\t\t\t.component-name a:hover { text-decoration: underline; }\n\t\t\t\t.component-desc { color: #666; margin: 0 0 10px 0; }\n\t\t\t\t.component-url { font-family: monospace; background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 0.9em; }\n\t\t\t</style></head><body><div class=\"container\"><a href=\"/\" class=\"back-link\">← Back to Index</a><h1>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</h1>")
+		var templ_7745c5c3_Var10 string
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(levelTitle)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 84, Col: 20}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</h1>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		for _, comp := range components {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"component-card\"><h3 class=\"component-name\"><a href=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"component-card\"><h3 class=\"component-name\"><a href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var5 templ.SafeURL
-			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(comp.URL))
+			var templ_7745c5c3_Var11 templ.SafeURL
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(comp.URL))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 83, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 88, Col: 66}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var6 string
-			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(comp.Name)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 83, Col: 80}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</a></h3><p class=\"component-desc\">")
+			var templ_7745c5c3_Var12 string
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(comp.Name)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 88, Col: 80}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var7 string
-			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(comp.Description)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 84, Col: 50}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</a></h3><p class=\"component-desc\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</p><code class=\"component-url\">")
+			var templ_7745c5c3_Var13 string
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(comp.Description)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 89, Col: 50}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var8 string
-			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(comp.URL)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 85, Col: 44}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</p><code class=\"component-url\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</code></div>")
+			var templ_7745c5c3_Var14 string
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(comp.URL)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/pages.templ`, Line: 90, Col: 44}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</code></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

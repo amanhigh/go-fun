@@ -5,7 +5,6 @@ import (
 
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/advanced"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/basic"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/medium"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/pages"
 	"github.com/gin-gonic/gin"
@@ -22,7 +21,7 @@ func NewUIServer(port string) *UIServer {
 	registry := components.NewRegistry()
 
 	// Register all components
-	basic.RegisterAll(registry)
+	pages.RegisterBasic(registry)
 	medium.RegisterAll(registry)
 	advanced.RegisterAll(registry)
 
@@ -69,10 +68,10 @@ func (s *UIServer) registerComponentRoute(r *gin.Engine, comp components.Compone
 	})
 }
 
-// indexHandler serves the main index page
+// indexHandler serves the main index page with basic components showcase
 func (s *UIServer) indexHandler(c *gin.Context) {
 	c.Header("Content-Type", "text/html")
-	pages.IndexPage().Render(c.Request.Context(), c.Writer)
+	pages.HomePage().Render(c.Request.Context(), c.Writer)
 }
 
 // basicPageHandler serves the basic components page
