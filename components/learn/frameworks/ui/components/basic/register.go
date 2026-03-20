@@ -11,4 +11,7 @@ func RegisterAll(r *components.Registry) {
 	r.Register(DefaultTodoListComponent())
 	r.Register(DefaultButtonComponent())
 	r.Register(DefaultEmptyListComponent())
+	r.Register(DefaultTextInputComponent())
+	r.Register(ErrorTextInputComponent())
+	r.Register(SuccessTextInputComponent())
 }
