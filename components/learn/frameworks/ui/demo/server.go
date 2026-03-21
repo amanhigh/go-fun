@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/advanced"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/pages"
 	"github.com/gin-gonic/gin"
 )
@@ -22,7 +21,7 @@ func NewUIServer(port string) *UIServer {
 	// Register all components
 	pages.RegisterBasic(registry)
 	pages.RegisterMedium(registry)
-	advanced.RegisterAll(registry)
+	pages.RegisterAdvanced(registry)
 
 	return &UIServer{
 		port:     port,

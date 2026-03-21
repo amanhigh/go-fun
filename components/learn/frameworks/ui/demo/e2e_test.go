@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/advanced"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/pages"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
@@ -32,7 +31,7 @@ var _ = BeforeSuite(func() {
 	registry = components.NewRegistry()
 	pages.RegisterBasic(registry)
 	pages.RegisterMedium(registry)
-	advanced.RegisterAll(registry)
+	pages.RegisterAdvanced(registry)
 
 	// Create gin router
 	gin.SetMode(gin.ReleaseMode)
@@ -59,9 +58,9 @@ var _ = BeforeSuite(func() {
 				BadgeClass:  "badge-medium",
 			},
 			{
-				Name:        "Advanced Components",
+				Name:        "Advanced Showcase",
 				Path:        "/advanced",
-				Description: "Complex patterns: full page layouts, dashboards with multiple widgets, and advanced composition.",
+				Description: "Real-world applications: complete pages, dashboards, and complex layouts.",
 				Count:       len(registry.Advanced()),
 				BadgeClass:  "badge-advanced",
 			},

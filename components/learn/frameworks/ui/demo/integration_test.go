@@ -7,7 +7,6 @@ import (
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/advanced"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/pages"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
@@ -33,7 +32,7 @@ var _ = Describe("UI Component Handler Tests", func() {
 		// Create registry and register all components
 		pages.RegisterBasic(registry)
 		pages.RegisterMedium(registry)
-		advanced.RegisterAll(registry)
+		pages.RegisterAdvanced(registry)
 
 		// Register component routes
 		for _, comp := range registry.All() {
@@ -218,7 +217,7 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 	})
 
-	Context("Advanced Components", func() {
+	Context("Advanced Showcase", func() {
 		var (
 			w    *httptest.ResponseRecorder
 			html string
@@ -228,8 +227,8 @@ var _ = Describe("UI Component Handler Tests", func() {
 			w = httptest.NewRecorder()
 		})
 
-		It("should render fullpage component", func() {
-			comp := advanced.DefaultFullPageComponent()
+		It("should render advanced showcase page", func() {
+			comp := pages.NewAdvancedShowcaseComponent()
 			req, _ := http.NewRequest("GET", comp.URL(), nil)
 			router.ServeHTTP(w, req)
 
@@ -237,20 +236,43 @@ var _ = Describe("UI Component Handler Tests", func() {
 			body, _ := io.ReadAll(w.Body)
 			html = string(body)
 			Expect(html).To(ContainSubstring("<!doctype html>"))
-			Expect(html).To(ContainSubstring("Advanced Full Page Demo"))
+			Expect(html).To(ContainSubstring("🚀 Advanced Showcase"))
+			Expect(html).To(ContainSubstring("Dashboard Layout"))
+			Expect(html).To(ContainSubstring("Full Page Composition"))
+			Expect(html).To(ContainSubstring("Project Alpha"))
 		})
 
-		It("should render dashboard component", func() {
-			comp := advanced.DefaultDashboardComponent()
-			req, _ := http.NewRequest("GET", comp.URL(), nil)
+		It("should have working dashboard elements", func() {
+			req, _ := http.NewRequest("GET", "/advanced/showcase", nil)
 			router.ServeHTTP(w, req)
 
 			Expect(w.Code).To(Equal(http.StatusOK))
 			body, _ := io.ReadAll(w.Body)
 			html = string(body)
-			Expect(html).To(ContainSubstring("Dashboard"))
-			Expect(html).To(ContainSubstring("Admin"))
-			Expect(html).To(ContainSubstring("<table"))
+			Expect(html).To(ContainSubstring("📊 Dashboard Layout"))
+			Expect(html).To(ContainSubstring("👤 Admin User"))
+			Expect(html).To(ContainSubstring("📈 Performance Metrics"))
+			Expect(html).To(ContainSubstring("📋 Project Status"))
+		})
+
+		It("should have working full page elements", func() {
+			req, _ := http.NewRequest("GET", "/advanced/showcase", nil)
+			router.ServeHTTP(w, req)
+
+			Expect(w.Code).To(Equal(http.StatusOK))
+			body, _ := io.ReadAll(w.Body)
+			html = string(body)
+			Expect(html).To(ContainSubstring("📄 Full Page Composition"))
+			Expect(html).To(ContainSubstring("Advanced Notes"))
+			Expect(html).To(ContainSubstring("textarea"))
+		})
+
+		It("should implement Component interface for advanced showcase component", func() {
+			var _ components.Component = pages.NewAdvancedShowcaseComponent()
+
+			showcase := pages.NewAdvancedShowcaseComponent()
+			Expect(showcase.Name()).To(Equal("showcase"))
+			Expect(showcase.Level()).To(Equal(components.LevelAdvanced))
 		})
 	})
 
@@ -264,7 +286,7 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should have correct number of advanced components", func() {
-			Expect(registry.Advanced()).To(HaveLen(2))
+			Expect(registry.Advanced()).To(HaveLen(1))
 		})
 
 		It("should find component by URL", func() {
