@@ -485,9 +485,14 @@ generate-css:
 		done | sort -u; \
 		echo "@source \"$$TEMPLUI_PATH/components/**/*.templ\";"; \
 	) > ./assets/css/sources.generated.css && \
-	$$TAILWIND_CMD -i ./assets/css/input.css -o ./assets/css/output.css
+	$$TAILWIND_CMD -i ./assets/css/input.css -o ./assets/css/app.css
 
-generate: generate-mocks generate-swagger generate-templ generate-css ## Generate Files
+generate-js:
+	@printf $(_TITLE) "Generate" "JavaScript"
+	@cd components/learn/frameworks/frontend && \
+	npx esbuild assets/js/input.js --bundle --outfile=assets/js/app.js --format=esm --target=es2020
+
+generate: generate-mocks generate-swagger generate-templ generate-css generate-js ## Generate Files
 
 ### Workflows
 test: cover test-operator ## Run all tests (Excludes test-slow)

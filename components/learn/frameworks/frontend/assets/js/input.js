@@ -1,5 +1,3 @@
 // Input entry point for esbuild - imports and exports everything
-import './app.js';
+import './custom.js';
 
-// Re-export anything that needs to be globally available
-export { initCustomBehaviors, enhanceCounter } from './custom.js';

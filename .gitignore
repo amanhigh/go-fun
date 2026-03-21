@@ -26,7 +26,10 @@ wrk.log
 Plan.md
 
 # CSS Output
-**/assets/css/output.css
+**/assets/css/app.css
+
+# JavaScript Output
+**/assets/js/app.js
 
 #### LATEX #####
 ## https://github.com/github/gitignore/blob/main/TeX.gitignore

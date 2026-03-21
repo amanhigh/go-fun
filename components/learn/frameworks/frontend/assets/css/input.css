@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./sources.generated.css";
+@import "./showcase.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -94,6 +95,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-/* Import custom showcase styles */
-@import "./showcase.css";

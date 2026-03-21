@@ -46,7 +46,7 @@ func Base(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><!-- Tailwind CSS --><link rel=\"stylesheet\" href=\"/assets/css/output.css\"><!-- Alpine.js for native component interactivity --><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><!-- Consolidated CSS (Tailwind + Custom) --><link rel=\"stylesheet\" href=\"/assets/css/app.css\"><!-- Alpine.js for native component interactivity --><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script><!-- Consolidated JavaScript built with esbuild --><script type=\"module\" src=\"/assets/js/app.js\"></script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
