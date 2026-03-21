@@ -27,6 +27,9 @@ var _ = Describe("UI Component Handler Tests", func() {
 		router = gin.New()
 		registry = components.NewRegistry()
 
+		// Serve static files (JS, CSS, images)
+		router.Static("/static", "../static")
+
 		// Create registry and register all components
 		pages.RegisterBasic(registry)
 		pages.RegisterMedium(registry)
@@ -273,6 +276,38 @@ var _ = Describe("UI Component Handler Tests", func() {
 		It("should return nil for unknown URL", func() {
 			comp := registry.FindByURL("/unknown/path")
 			Expect(comp).To(BeNil())
+		})
+
+		It("should serve static JS files", func() {
+			req, w := util.CreateHTMLTestRequest("GET", "/static/js/basic.js")
+			router.ServeHTTP(w, req)
+
+			Expect(w.Code).To(Equal(http.StatusOK))
+			Expect(w.Header().Get("Content-Type")).To(ContainSubstring("javascript"))
+		})
+
+		It("should serve CSS files", func() {
+			req, w := util.CreateHTMLTestRequest("GET", "/static/css/showcase.css")
+			router.ServeHTTP(w, req)
+
+			Expect(w.Code).To(Equal(http.StatusOK))
+			Expect(w.Header().Get("Content-Type")).To(ContainSubstring("text/css"))
+			Expect(w.Body.String()).To(ContainSubstring("CSS_LOADED_SUCCESSFULLY"))
+		})
+
+		It("should serve image files", func() {
+			req, w := util.CreateHTMLTestRequest("GET", "/static/images/sample-logo.png")
+			router.ServeHTTP(w, req)
+
+			Expect(w.Code).To(Equal(http.StatusOK))
+			Expect(w.Header().Get("Content-Type")).To(ContainSubstring("image"))
+		})
+
+		It("should return 404 for non-existent static files", func() {
+			req, w := util.CreateHTMLTestRequest("GET", "/static/css/nonexistent.css")
+			router.ServeHTTP(w, req)
+
+			Expect(w.Code).To(Equal(http.StatusNotFound))
 		})
 	})
 })

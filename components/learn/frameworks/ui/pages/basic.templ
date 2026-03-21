@@ -32,38 +32,52 @@ templ BasicShowcasePage() {
 			<title>Basic Components Showcase</title>
 			<!-- Pico CSS - Minimal CSS Framework -->
 			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
+			<!-- Custom showcase styles -->
+			<link rel="stylesheet" href="/static/css/showcase.css"/>
 			<!-- Alpine.js for client-side interactivity -->
 			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-		</head>
-		<body x-data="{ 
-			notesLength: 0,
-			notesMaxLength: 200,
-			showDialog: false,
-			updateNotesLength($event) {
-				this.notesLength = $event.target.value.length;
-			},
-			openDialog() {
-				this.showDialog = true;
-				this.$nextTick(() => {
-					this.$refs.dialog.showModal();
-				});
-			},
-			closeDialog() {
-				this.showDialog = false;
-				this.$refs.dialog.close();
-			},
-			submitForm($event) {
-				const terms = document.getElementById('terms');
-				if (!terms.checked) {
-					$event.preventDefault();
-					alert('Please accept terms and conditions.');
+			<style>
+				.breadcrumb {
+					background: var(--muted-color);
+					padding: 1rem;
+					margin: -2rem -2rem 2rem -2rem;
+					border-bottom: 1px solid var(--muted-border-color);
 				}
-			}
-		}">
+				.breadcrumb nav {
+					display: flex;
+					align-items: center;
+					gap: 0.5rem;
+				}
+				.breadcrumb a {
+					color: var(--primary);
+					text-decoration: none;
+				}
+				.breadcrumb a:hover {
+					text-decoration: underline;
+				}
+			</style>
+		</head>
+		<body x-data="basicShowcase">
+			<div class="breadcrumb">
+				<div class="container">
+					<nav>
+						<a href="/">🏠 Home</a>
+						<span>›</span>
+						<a href="/basic">Basic Components</a>
+						<span>›</span>
+						<span>Showcase Demo</span>
+					</nav>
+				</div>
+			</div>
+
 			<main class="container">
+				<nav style="margin-bottom: 2rem;">
+					<a href="/basic" role="button" class="secondary">← Back to Basic Components</a>
+				</nav>
+
 				<hgroup>
 					<h1>✨ Basic Components Showcase</h1>
-					<p>Native HTML elements styled with Pico CSS - no JavaScript required for basic interactivity.</p>
+					<p>Native HTML elements styled with Pico CSS - no JavaScript required for basic interactivity. Try the character counter and modal interactions!</p>
 				</hgroup>
 
 				<form id="basic-showcase-form" @submit="submitForm($event)">
@@ -155,6 +169,8 @@ templ BasicShowcasePage() {
 				</dialog>
 			</main>
 
-			</body>
+			<!-- External Alpine.js component logic -->
+			<script src="/static/js/basic.js"></script>
+		</body>
 	</html>
 }

@@ -38,6 +38,9 @@ var _ = BeforeSuite(func() {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 
+	// Serve static files (JS, CSS, images)
+	router.Static("/static", "../static")
+
 	// Index page
 	router.GET("/", func(c *gin.Context) {
 		levels := []pages.LevelInfo{
@@ -212,6 +215,20 @@ var _ = Describe("Server Smoke Tests", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 				resp.Body.Close()
 			}
+		})
+	})
+
+	Context("Static File Serving", func() {
+		It("should serve JavaScript files", func() {
+			resp, err := http.Get(serverURL + "/static/js/basic.js")
+			Expect(err).ToNot(HaveOccurred())
+			defer resp.Body.Close()
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			Expect(resp.Header.Get("Content-Type")).To(ContainSubstring("javascript"))
+
+			body, _ := io.ReadAll(resp.Body)
+			Expect(string(body)).To(ContainSubstring("alpine:init"))
 		})
 	})
 })

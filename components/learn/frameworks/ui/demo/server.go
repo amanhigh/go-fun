@@ -44,6 +44,9 @@ func (s *UIServer) Start() error {
 
 // SetupRoutes configures all routes on the given gin engine
 func (s *UIServer) SetupRoutes(r *gin.Engine) {
+	// Serve static files (JS, CSS, images) - path relative to demo directory
+	r.Static("/static", "../static")
+
 	// Index page
 	r.GET("/", s.indexHandler)
 

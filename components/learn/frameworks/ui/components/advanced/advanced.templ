@@ -10,9 +10,44 @@ templ Page(title string, content templ.Component) {
 			<title>{ title }</title>
 			<!-- Pico CSS only - no custom styling -->
 			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
+			<style>
+				.breadcrumb {
+					background: var(--muted-color);
+					padding: 1rem;
+					margin: -2rem -2rem 2rem -2rem;
+					border-bottom: 1px solid var(--muted-border-color);
+				}
+				.breadcrumb nav {
+					display: flex;
+					align-items: center;
+					gap: 0.5rem;
+				}
+				.breadcrumb a {
+					color: var(--primary);
+					text-decoration: none;
+				}
+				.breadcrumb a:hover {
+					text-decoration: underline;
+				}
+			</style>
 		</head>
 		<body>
+			<div class="breadcrumb">
+				<div class="container">
+					<nav>
+						<a href="/">🏠 Home</a>
+						<span>›</span>
+						<a href="/advanced">Advanced Components</a>
+						<span>›</span>
+						<span>{ title }</span>
+					</nav>
+				</div>
+			</div>
+
 			<main class="container">
+				<nav style="margin-bottom: 2rem;">
+					<a href="/advanced" role="button" class="secondary">← Back to Advanced Components</a>
+				</nav>
 				@content
 			</main>
 		</body>
