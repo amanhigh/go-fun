@@ -4,10 +4,12 @@ import "fmt"
 
 // Component with counter (for medium complexity)
 templ Counter(count int) {
-	<div class="counter">
-		<h3>Counter Value</h3>
-		<div class="count-display">{ fmt.Sprintf("%d", count) }</div>
-		<div class="count-info">
+	<article>
+		<header>
+			<h3>Counter Value</h3>
+		</header>
+		<p>{ fmt.Sprintf("%d", count) }</p>
+		<footer>
 			if count == 0 {
 				<p>Counter is at zero</p>
 			} else if count > 0 {
@@ -15,8 +17,8 @@ templ Counter(count int) {
 			} else {
 				<p>Counter is negative: { fmt.Sprintf("%d", count) }</p>
 			}
-		</div>
-	</div>
+		</footer>
+	</article>
 }
 
 // Table component with data
@@ -27,7 +29,7 @@ type TableRow struct {
 }
 
 templ DataTable(rows []TableRow) {
-	<table class="data-table">
+	<table>
 		<thead>
 			<tr>
 				<th>ID</th>

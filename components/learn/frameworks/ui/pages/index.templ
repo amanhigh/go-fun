@@ -1,6 +1,111 @@
 package pages
 
-// HomePage renders the basic components showcase as the main landing page
-templ HomePage() {
-	@BasicShowcasePage()
+import (
+	"fmt"
+
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
+)
+
+// ComponentInfo holds display information for a component
+type ComponentInfo struct {
+	Name        string
+	Description string
+	URL         string
+}
+
+// LevelInfo holds display information for a level
+type LevelInfo struct {
+	Name        string
+	Path        string
+	Description string
+	Count       int
+	BadgeClass  string
+}
+
+// IndexPage renders the main index page with links to all levels
+templ IndexPage(levels []LevelInfo) {
+	<!DOCTYPE html>
+	<html lang="en" data-theme="dark">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Templ UI Demo</title>
+			<!-- Pico CSS only -->
+			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
+		</head>
+		<body>
+			<main class="container">
+				<h1>Templ UI Component Demo</h1>
+				<p>Explore Templ components organized by complexity level. Each level builds upon the previous one.</p>
+
+				<section>
+					for _, level := range levels {
+						<article>
+							<header>
+								<h3>
+									<a href={ templ.SafeURL(level.Path) }>{ level.Name }</a>
+									<mark>{ fmt.Sprintf("%d components", level.Count) }</mark>
+								</h3>
+							</header>
+							<p>{ level.Description }</p>
+						</article>
+					}
+				</section>
+			</main>
+		</body>
+	</html>
+}
+
+// LevelPage renders a page listing all components for a given level
+templ LevelPage(level string, levelTitle string, components []ComponentInfo) {
+	<!DOCTYPE html>
+	<html lang="en" data-theme="dark">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ levelTitle } Components</title>
+			<!-- Pico CSS only -->
+			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
+		</head>
+		<body>
+			<main class="container">
+				<nav>
+					<a href="/" role="button" class="secondary">← Back to Index</a>
+				</nav>
+				<h1>{ levelTitle } Components</h1>
+				
+				<section>
+					for _, comp := range components {
+						<article>
+							<header>
+								<h3><a href={ templ.SafeURL(comp.URL) }>{ comp.Name }</a></h3>
+							</header>
+							<p>{ comp.Description }</p>
+							<footer>
+								<small><code>{ comp.URL }</code></small>
+							</footer>
+						</article>
+					}
+				</section>
+			</main>
+		</body>
+	</html>
+}
+
+// ComponentToInfo converts a Component to ComponentInfo for display
+func ComponentToInfo(c components.Component) ComponentInfo {
+	return ComponentInfo{
+		Name:        c.Name(),
+		Description: c.Description(),
+		URL:         c.URL(),
+	}
+}
+
+// ComponentsToInfoList converts a slice of Components to ComponentInfo slice
+func ComponentsToInfoList(comps []components.Component) []ComponentInfo {
+	infos := make([]ComponentInfo, len(comps))
+	for i, c := range comps {
+		infos[i] = ComponentToInfo(c)
+	}
+	return infos
 }
