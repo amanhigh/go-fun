@@ -8,7 +8,6 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/advanced"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/medium"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/pages"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
@@ -28,9 +27,9 @@ var _ = Describe("UI Component Handler Tests", func() {
 		router = gin.New()
 		registry = components.NewRegistry()
 
-		// Register all components
+		// Create registry and register all components
 		pages.RegisterBasic(registry)
-		medium.RegisterAll(registry)
+		pages.RegisterMedium(registry)
 		advanced.RegisterAll(registry)
 
 		// Register component routes
@@ -45,24 +44,27 @@ var _ = Describe("UI Component Handler Tests", func() {
 	})
 
 	Context("Basic Components - Core Showcase", func() {
-		It("should render unified showcase with all core components", func() {
-			comp := pages.DefaultBasicShowcaseComponent()
-			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
-			router.ServeHTTP(w, req)
+		var (
+			comp *pages.BasicShowcaseComponent
+			w    *httptest.ResponseRecorder
+			html string
+		)
 
+		BeforeEach(func() {
+			comp = pages.NewBasicShowcaseComponent()
+			var req *http.Request
+			req, w = util.CreateHTMLTestRequest("GET", comp.URL())
+			router.ServeHTTP(w, req)
+			html = w.Body.String()
+		})
+
+		It("should render unified showcase with all core components", func() {
 			Expect(w.Code).To(Equal(http.StatusOK))
 			Expect(w.Header().Get("Content-Type")).To(ContainSubstring("text/html"))
-
-			html := w.Body.String()
 			Expect(html).To(ContainSubstring("Basic Components Showcase"))
 		})
 
 		It("should showcase Button components", func() {
-			comp := pages.DefaultBasicShowcaseComponent()
-			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
-			router.ServeHTTP(w, req)
-
-			html := w.Body.String()
 			// Verify button actions are present
 			Expect(html).To(ContainSubstring("Save Draft"))
 			Expect(html).To(ContainSubstring("Submit"))
@@ -70,11 +72,6 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should showcase Text Input components", func() {
-			comp := pages.DefaultBasicShowcaseComponent()
-			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
-			router.ServeHTTP(w, req)
-
-			html := w.Body.String()
 			// Verify inputs with labels
 			Expect(html).To(ContainSubstring("Username"))
 			Expect(html).To(ContainSubstring("Email"))
@@ -84,23 +81,13 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should showcase Text Area component", func() {
-			comp := pages.DefaultBasicShowcaseComponent()
-			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
-			router.ServeHTTP(w, req)
-
-			html := w.Body.String()
 			// Verify textarea
 			Expect(html).To(ContainSubstring("Notes"))
 			Expect(html).To(ContainSubstring("<textarea"))
 			Expect(html).To(ContainSubstring("id=\"notes\""))
 		})
 
-		It("should showcase Select/Dropdown component", func() {
-			comp := pages.DefaultBasicShowcaseComponent()
-			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
-			router.ServeHTTP(w, req)
-
-			html := w.Body.String()
+		It("should showcase Select Box component", func() {
 			// Verify select box for country
 			Expect(html).To(ContainSubstring("Country"))
 			Expect(html).To(ContainSubstring("id=\"country\""))
@@ -109,23 +96,13 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should showcase Badge components", func() {
-			comp := pages.DefaultBasicShowcaseComponent()
-			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
-			router.ServeHTTP(w, req)
-
-			html := w.Body.String()
 			// Verify status badges
 			Expect(html).To(ContainSubstring("Ready"))
 			Expect(html).To(ContainSubstring("Review"))
 			Expect(html).To(ContainSubstring("Info"))
 		})
 
-		It("should showcase Radio Button components", func() {
-			comp := pages.DefaultBasicShowcaseComponent()
-			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
-			router.ServeHTTP(w, req)
-
-			html := w.Body.String()
+		It("should showcase Radio Button component", func() {
 			// Verify radio buttons for plan selection
 			Expect(html).To(ContainSubstring("Subscription Plan"))
 			Expect(html).To(ContainSubstring("Starter"))
@@ -135,22 +112,12 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should showcase Checkbox component", func() {
-			comp := pages.DefaultBasicShowcaseComponent()
-			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
-			router.ServeHTTP(w, req)
-
-			html := w.Body.String()
 			// Verify checkbox for terms
 			Expect(html).To(ContainSubstring("terms and conditions"))
 			Expect(html).To(ContainSubstring("id=\"terms\""))
 		})
 
 		It("should showcase Modal/Dialog component", func() {
-			comp := pages.DefaultBasicShowcaseComponent()
-			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
-			router.ServeHTTP(w, req)
-
-			html := w.Body.String()
 			// Verify dialog structure
 			Expect(html).To(ContainSubstring("id=\"showcase-dialog\""))
 			Expect(html).To(ContainSubstring("Submission Preview"))
@@ -158,118 +125,126 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should implement Component interface for showcase component", func() {
-			var _ components.Component = pages.DefaultBasicShowcaseComponent()
+			var _ components.Component = pages.NewBasicShowcaseComponent()
 
-			showcase := pages.DefaultBasicShowcaseComponent()
+			showcase := pages.NewBasicShowcaseComponent()
 			Expect(showcase.Name()).To(Equal("basic-showcase"))
 			Expect(showcase.Level()).To(Equal(components.LevelBasic))
 		})
 	})
 
 	Context("Medium Components", func() {
-		It("should render nested component", func() {
-			comp := medium.DefaultNestedComponent()
-			w := httptest.NewRecorder()
+		var (
+			comp *pages.MediumShowcaseComponent
+			w    *httptest.ResponseRecorder
+			html string
+		)
+
+		BeforeEach(func() {
+			comp = pages.NewMediumShowcaseComponent()
+			w = httptest.NewRecorder()
 			req, _ := http.NewRequest("GET", comp.URL(), nil)
 			router.ServeHTTP(w, req)
 
 			Expect(w.Code).To(Equal(http.StatusOK))
 			body, _ := io.ReadAll(w.Body)
-			html := string(body)
-			Expect(html).To(ContainSubstring("Welcome Page"))
-			Expect(html).To(ContainSubstring("Hello, Bob!"))
+			html = string(body)
 		})
 
-		It("should render counter component", func() {
-			comp := medium.DefaultCounterComponent()
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", comp.URL(), nil)
-			router.ServeHTTP(w, req)
-
-			Expect(w.Code).To(Equal(http.StatusOK))
-			body, _ := io.ReadAll(w.Body)
-			html := string(body)
-			Expect(html).To(ContainSubstring("Counter Value"))
-			Expect(html).To(ContainSubstring("Counter is positive"))
+		It("should render medium showcase page with all components", func() {
+			Expect(html).To(ContainSubstring("Medium Components Showcase"))
+			Expect(html).To(ContainSubstring("Layout & Content Blocks"))
 		})
 
-		It("should render datatable component", func() {
-			comp := medium.DefaultDataTableComponent()
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", comp.URL(), nil)
-			router.ServeHTTP(w, req)
-
-			Expect(w.Code).To(Equal(http.StatusOK))
-			body, _ := io.ReadAll(w.Body)
-			html := string(body)
-			Expect(html).To(ContainSubstring("<table"))
-			Expect(html).To(ContainSubstring("Alice"))
-			Expect(html).To(ContainSubstring("Bob"))
+		It("should render Card components section", func() {
+			Expect(html).To(ContainSubstring("Card Components"))
+			Expect(html).To(ContainSubstring("Cards provide flexible content containers"))
+			Expect(html).To(ContainSubstring("Basic Card"))
+			Expect(html).To(ContainSubstring("Feature Card"))
+			Expect(html).To(ContainSubstring("Product Showcase"))
+			Expect(html).To(ContainSubstring("Analytics Dashboard"))
+			Expect(html).To(ContainSubstring("card component structure"))
+			Expect(html).To(ContainSubstring("key performance indicators"))
 		})
 
-		It("should render composed component", func() {
-			comp := medium.DefaultComposedComponent()
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", comp.URL(), nil)
-			router.ServeHTTP(w, req)
-
-			Expect(w.Code).To(Equal(http.StatusOK))
-			body, _ := io.ReadAll(w.Body)
-			html := string(body)
-			Expect(html).To(ContainSubstring("Team"))
-			Expect(html).To(ContainSubstring("Review code"))
+		It("should render Data Tables section", func() {
+			Expect(html).To(ContainSubstring("Data Tables"))
+			Expect(html).To(ContainSubstring("Structured data presentation"))
+			Expect(html).To(ContainSubstring("Sample user data"))
+			Expect(html).To(ContainSubstring("Alice Johnson"))
+			Expect(html).To(ContainSubstring("Bob Smith"))
+			Expect(html).To(ContainSubstring("Carol Davis"))
+			Expect(html).To(ContainSubstring("Developer"))
+			Expect(html).To(ContainSubstring("Designer"))
+			Expect(html).To(ContainSubstring("Manager"))
 		})
 
-		It("should render xss component with escaped content", func() {
-			comp := medium.DefaultXSSComponent()
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", comp.URL(), nil)
-			router.ServeHTTP(w, req)
-
-			Expect(w.Code).To(Equal(http.StatusOK))
-			body, _ := io.ReadAll(w.Body)
-			html := string(body)
-			Expect(html).ToNot(ContainSubstring("<script>"))
-			Expect(html).To(ContainSubstring("&lt;script&gt;"))
+		It("should render Status Indicators section", func() {
+			Expect(html).To(ContainSubstring("Status Indicators"))
+			Expect(html).To(ContainSubstring("Visual state representations"))
+			Expect(html).To(ContainSubstring("Project Status"))
+			Expect(html).To(ContainSubstring("✅ Ready"))
+			Expect(html).To(ContainSubstring("🕒 In Progress"))
+			Expect(html).To(ContainSubstring("⚠️ Review"))
+			Expect(html).To(ContainSubstring("❌ Blocked"))
+			Expect(html).To(ContainSubstring("ℹ️ Info"))
+			Expect(html).To(ContainSubstring("Priority Levels"))
+			Expect(html).To(ContainSubstring("🔴 High"))
+			Expect(html).To(ContainSubstring("🟡 Medium"))
+			Expect(html).To(ContainSubstring("🟢 Low"))
 		})
 
-		It("should render emptytable component", func() {
-			comp := medium.DefaultEmptyTableComponent()
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", comp.URL(), nil)
-			router.ServeHTTP(w, req)
+		It("should render Content Organization section", func() {
+			Expect(html).To(ContainSubstring("Content Organization"))
+			Expect(html).To(ContainSubstring("Content hierarchy and organization"))
+			Expect(html).To(ContainSubstring("Project Overview"))
+			Expect(html).To(ContainSubstring("Key Objectives"))
+			Expect(html).To(ContainSubstring("Demonstrate card component usage"))
+			Expect(html).To(ContainSubstring("Show table data presentation"))
+			Expect(html).To(ContainSubstring("Display status indicators"))
+			Expect(html).To(ContainSubstring("Organize content hierarchically"))
+			Expect(html).To(ContainSubstring("Last updated: 2024-03-21"))
+		})
 
-			Expect(w.Code).To(Equal(http.StatusOK))
-			body, _ := io.ReadAll(w.Body)
-			html := string(body)
-			Expect(html).To(ContainSubstring("<table"))
-			Expect(html).To(ContainSubstring("<thead>"))
+		It("should implement Component interface for medium showcase component", func() {
+			var _ components.Component = pages.NewMediumShowcaseComponent()
+
+			showcase := pages.NewMediumShowcaseComponent()
+			Expect(showcase.Name()).To(Equal("medium-showcase"))
+			Expect(showcase.Level()).To(Equal(components.LevelMedium))
 		})
 	})
 
 	Context("Advanced Components", func() {
+		var (
+			w    *httptest.ResponseRecorder
+			html string
+		)
+
+		BeforeEach(func() {
+			w = httptest.NewRecorder()
+		})
+
 		It("should render fullpage component", func() {
 			comp := advanced.DefaultFullPageComponent()
-			w := httptest.NewRecorder()
 			req, _ := http.NewRequest("GET", comp.URL(), nil)
 			router.ServeHTTP(w, req)
 
 			Expect(w.Code).To(Equal(http.StatusOK))
 			body, _ := io.ReadAll(w.Body)
-			html := string(body)
+			html = string(body)
 			Expect(html).To(ContainSubstring("<!doctype html>"))
 			Expect(html).To(ContainSubstring("Advanced Full Page Demo"))
 		})
 
 		It("should render dashboard component", func() {
 			comp := advanced.DefaultDashboardComponent()
-			w := httptest.NewRecorder()
 			req, _ := http.NewRequest("GET", comp.URL(), nil)
 			router.ServeHTTP(w, req)
 
 			Expect(w.Code).To(Equal(http.StatusOK))
 			body, _ := io.ReadAll(w.Body)
-			html := string(body)
+			html = string(body)
 			Expect(html).To(ContainSubstring("Dashboard"))
 			Expect(html).To(ContainSubstring("Admin"))
 			Expect(html).To(ContainSubstring("<table"))
@@ -282,7 +257,7 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should have correct number of medium components", func() {
-			Expect(registry.Medium()).To(HaveLen(6))
+			Expect(registry.Medium()).To(HaveLen(1))
 		})
 
 		It("should have correct number of advanced components", func() {

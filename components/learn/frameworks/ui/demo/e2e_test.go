@@ -9,7 +9,6 @@ import (
 
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/advanced"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/medium"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/pages"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
@@ -32,7 +31,7 @@ var _ = BeforeSuite(func() {
 	// Create registry and register all components
 	registry = components.NewRegistry()
 	pages.RegisterBasic(registry)
-	medium.RegisterAll(registry)
+	pages.RegisterMedium(registry)
 	advanced.RegisterAll(registry)
 
 	// Create gin router
@@ -162,9 +161,16 @@ var _ = Describe("Server Smoke Tests", func() {
 	})
 
 	Context("Basic Component - Showcase", func() {
+		var (
+			cshowcase *pages.BasicShowcaseComponent
+		)
+
+		BeforeEach(func() {
+			cshowcase = pages.NewBasicShowcaseComponent()
+		})
+
 		It("should render basic showcase via HTTP", func() {
-			comp := pages.DefaultBasicShowcaseComponent()
-			resp, err := http.Get(serverURL + comp.URL())
+			resp, err := http.Get(serverURL + cshowcase.URL())
 			Expect(err).ToNot(HaveOccurred())
 			defer resp.Body.Close()
 
@@ -178,15 +184,13 @@ var _ = Describe("Server Smoke Tests", func() {
 		})
 
 		It("should match direct rendering with HTTP response", func() {
-			comp := pages.DefaultBasicShowcaseComponent()
-
 			// Direct rendering
 			var buf testBuffer
-			err := comp.Render().Render(context.Background(), &buf)
+			err := cshowcase.Render().Render(context.Background(), &buf)
 			Expect(err).ToNot(HaveOccurred())
 
 			// HTTP rendering
-			resp, err := http.Get(serverURL + comp.URL())
+			resp, err := http.Get(serverURL + cshowcase.URL())
 			Expect(err).ToNot(HaveOccurred())
 			defer resp.Body.Close()
 
@@ -227,4 +231,4 @@ func (b *testBuffer) String() string {
 }
 
 // Ensure pages package basic showcase constructor is available
-var _ = pages.DefaultBasicShowcaseComponent
+var _ = pages.NewBasicShowcaseComponent()

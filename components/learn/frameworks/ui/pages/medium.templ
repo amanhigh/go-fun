@@ -1,0 +1,174 @@
+package pages
+
+import (
+	"fmt"
+
+	"github.com/templui/templui/components/card"
+	"github.com/templui/templui/components/table"
+)
+
+// MediumShowcasePage demonstrates medium complexity components
+templ MediumShowcasePage() {
+	<!DOCTYPE html>
+	<html lang="en" data-theme="dark">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Medium Components Showcase - Layout & Content Blocks</title>
+			<!-- Pico CSS only -->
+			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
+		</head>
+		<body>
+			<main class="container">
+				<header>
+					<h1>🔷 Medium Components Showcase</h1>
+					<p>Layout & Content Blocks - Demonstrating cards, tables, and data organization patterns.</p>
+				</header>
+
+				<form>
+					<!-- Card Components Section -->
+					<article>
+						<header>
+							<h2>🃏 Card Components</h2>
+						</header>
+						<p>Cards provide flexible content containers with consistent padding, elevation, and responsive behavior.</p>
+						
+						@CardExample("Basic Card", "Product Showcase", "This is a basic card demonstrating the card component structure with header and content areas.")
+						@CardExample("Feature Card", "Analytics Dashboard", "Cards can be used for displaying metrics, statistics, and key performance indicators in dashboards.")
+					</article>
+
+					<!-- Data Tables Section -->
+					<article>
+						<header>
+							<h2>📊 Data Tables</h2>
+						</header>
+						<p>Structured data presentation with proper header styling and responsive behavior for tabular information.</p>
+						
+						@DataTableExample()
+					</article>
+
+					<!-- Status Indicators Section -->
+					<article>
+						<header>
+							<h2>🏷️ Status Indicators</h2>
+						</header>
+						<p>Visual state representations using badges and status markers for different states and conditions.</p>
+						
+						@StatusIndicatorsExample()
+					</article>
+
+					<!-- Content Organization Section -->
+					<article>
+						<header>
+							<h2>📂 Content Organization</h2>
+						</header>
+						 <p>Content hierarchy and organization patterns using structured layouts and semantic grouping.</p>
+						
+						@ContentOrganizationExample()
+					</article>
+				</form>
+			</main>
+		</body>
+	</html>
+}
+
+// CardExample demonstrates card component usage
+templ CardExample(title string, subtitle string, content string) {
+	@card.Card(card.Props{
+		Class: "w-full",
+	}) {
+		@card.Header() {
+			@card.Title() { { title } }
+			@card.Description() { { subtitle } }
+		}
+		@card.Content() {
+			<p>{ content }</p>
+		}
+	}
+}
+
+// DataTableExample demonstrates table component with sample data
+templ DataTableExample() {
+	@table.Table(table.Props{
+		Class: "w-full",
+	}) {
+		@table.Caption() {
+			Sample user data with status indicators
+		}
+		@table.Header() {
+			@table.Row() {
+				@table.Head() { ID }
+				@table.Head() { Name }
+				@table.Head() { Role }
+				@table.Head() { Status }
+			}
+		}
+		@table.Body() {
+			@table.Row() {
+				@table.Cell() { 1 }
+				@table.Cell() { Alice Johnson }
+				@table.Cell() { Developer }
+				@table.Cell() { <mark>✅ Active</mark> }
+			}
+			@table.Row() {
+				@table.Cell() { 2 }
+				@table.Cell() { Bob Smith }
+				@table.Cell() { Designer }
+				@table.Cell() { <mark>🕒 Review</mark> }
+			}
+			@table.Row() {
+				@table.Cell() { 3 }
+				@table.Cell() { Carol Davis }
+				@table.Cell() { Manager }
+				@table.Cell() { <mark>ℹ️ Info</mark> }
+			}
+		}
+	}
+}
+
+// StatusIndicatorsExample demonstrates different status states
+templ StatusIndicatorsExample() {
+	<section>
+		<p>
+			<strong>Project Status:</strong>
+			<mark>✅ Ready</mark>
+			<mark>🕒 In Progress</mark>
+			<mark>⚠️ Review</mark>
+			<mark>❌ Blocked</mark>
+			<mark>ℹ️ Info</mark>
+		</p>
+		<p>
+			<strong>Priority Levels:</strong>
+			<mark style="background: #dc2626; color: white;">🔴 High</mark>
+			<mark style="background: #f59e0b; color: black;">🟡 Medium</mark>
+			<mark style="background: #10b981; color: white;">🟢 Low</mark>
+		</p>
+	</section>
+}
+
+// ContentOrganizationExample demonstrates content hierarchy
+templ ContentOrganizationExample() {
+	<section>
+		<article>
+			<header>
+				<h3>📋 Project Overview</h3>
+			</header>
+			<p>This section demonstrates how to organize content using semantic HTML and proper hierarchy.</p>
+			<footer>
+				<small>Last updated: { fmt.Sprintf("%s", "2024-03-21") }</small>
+			</footer>
+		</article>
+		
+		<article>
+			<header>
+				<h3>🎯 Key Objectives</h3>
+			</header>
+			<ul>
+				<li>Demonstrate card component usage</li>
+				<li>Show table data presentation</li>
+				<li>Display status indicators</li>
+				<li>Organize content hierarchically</li>
+			</ul>
+		</article>
+	</section>
+}

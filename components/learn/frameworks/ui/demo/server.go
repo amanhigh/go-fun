@@ -5,7 +5,6 @@ import (
 
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/advanced"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/medium"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/pages"
 	"github.com/gin-gonic/gin"
 )
@@ -22,7 +21,7 @@ func NewUIServer(port string) *UIServer {
 
 	// Register all components
 	pages.RegisterBasic(registry)
-	medium.RegisterAll(registry)
+	pages.RegisterMedium(registry)
 	advanced.RegisterAll(registry)
 
 	return &UIServer{
@@ -84,7 +83,7 @@ func (s *UIServer) indexHandler(c *gin.Context) {
 		{
 			Name:        "Medium Components",
 			Path:        "/medium",
-			Description: "Composition patterns - nested components, state management, and data presentation.",
+			Description: "Layout & Content Blocks - cards, tables, status indicators, and content organization patterns.",
 			Count:       len(s.registry.Medium()),
 			BadgeClass:  "badge-medium",
 		},
@@ -109,9 +108,8 @@ func (s *UIServer) basicPageHandler(c *gin.Context) {
 
 // mediumPageHandler serves the medium components page
 func (s *UIServer) mediumPageHandler(c *gin.Context) {
-	comps := pages.ComponentsToInfoList(s.registry.Medium())
 	c.Header("Content-Type", "text/html")
-	pages.LevelPage("medium", "Medium Components", comps).Render(c.Request.Context(), c.Writer)
+	pages.MediumShowcasePage().Render(c.Request.Context(), c.Writer)
 }
 
 // advancedPageHandler serves the advanced components page
