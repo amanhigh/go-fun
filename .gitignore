@@ -26,7 +26,7 @@ wrk.log
 Plan.md
 
 # CSS Output
-**/static/css/output.css
+**/assets/css/output.css
 
 #### LATEX #####
 ## https://github.com/github/gitignore/blob/main/TeX.gitignore
@@ -75,3 +75,4 @@ Plan.md
 # Inkscape
 svg-inkscape
 
+/processed

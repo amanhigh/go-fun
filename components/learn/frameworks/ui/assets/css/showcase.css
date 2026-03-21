@@ -1,0 +1,31 @@
+/* Test CSS to verify custom styles are loading */
+.test-css-loaded {
+    --css-loaded: true;
+}
+
+/* Simple marker style to confirm CSS works */
+.css-test-marker {
+    content: "CSS_LOADED_SUCCESSFULLY";
+}
+
+/* Form label visibility fixes */
+form label {
+    display: inline-block !important;
+    margin-right: 0.5rem !important;
+    color: var(--text-color, #333) !important;
+}
+
+/* Radio button and checkbox text visibility */
+input[type="radio"] + span,
+input[type="checkbox"] + span {
+    display: inline-block !important;
+    margin-left: 0.5rem !important;
+    color: var(--text-color, #333) !important;
+}
+
+/* Ensure templui component labels are visible */
+[data-testid="radio-label"],
+[data-testid="checkbox-label"] {
+    display: inline-block !important;
+    color: var(--text-color, #333) !important;
+}

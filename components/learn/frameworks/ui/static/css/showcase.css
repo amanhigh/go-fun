@@ -1,9 +1,0 @@
-/* Test CSS to verify custom styles are loading */
-.test-css-loaded {
-    --css-loaded: true;
-}
-
-/* Simple marker style to confirm CSS works */
-.css-test-marker {
-    content: "CSS_LOADED_SUCCESSFULLY";
-}

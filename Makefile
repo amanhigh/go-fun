@@ -472,7 +472,13 @@ generate-templ:
 	printf $(_TITLE) "Generate" "Templ Components"
 	$(GOBIN)/templ generate -path components/learn
 
-generate: generate-mocks generate-swagger generate-templ ## Generate Files
+generate-css:
+	@if [ -f components/learn/frameworks/ui/assets/input.css ]; then \
+		printf $(_TITLE) "Generate" "CSS"; \
+		cd components/learn/frameworks/ui && tailwindcss -i ./assets/input.css -o ./assets/css/output.css; \
+	fi
+
+generate: generate-mocks generate-swagger generate-templ generate-css ## Generate Files
 
 ### Workflows
 test: cover test-operator ## Run all tests (Excludes test-slow)
