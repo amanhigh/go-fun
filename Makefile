@@ -85,10 +85,11 @@ test-slow: ## Run slow tests
 	# Generate binary coverage for accurate conversion  
 	$(GINKGO) -r '--label-filter=slow' -cover . -- -test.gocoverdir=$(SLOW_COVER_DIR) > $(OUT)
 
-ui-demo: ## Run Templ UI Demo Server
+ui: ## Run UI Demo Server with hot reload
 	printf $(_TITLE) "Starting UI Demo Server"
-	printf $(_INFO) "Demo Server" "Visit http://localhost:8080 to view Templ components"
-	cd components/learn/frameworks/ui/demo && go run .
+	printf $(_INFO) "Server" "http://localhost:8080"
+	printf $(_DETAIL) "Note" "Auto-reloads on .go and .templ changes (manual browser refresh)"
+	cd components/learn/frameworks/ui/demo && go run github.com/air-verse/air@latest -c .air.toml
 
 cover-analyse: combine-coverage
 	printf $(_TITLE) "Analysing Coverage Reports"

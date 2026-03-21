@@ -68,10 +68,36 @@ func (s *UIServer) registerComponentRoute(r *gin.Engine, comp components.Compone
 	})
 }
 
-// indexHandler serves the main index page with basic components showcase
+// indexHandler serves the main index page with three level options
 func (s *UIServer) indexHandler(c *gin.Context) {
 	c.Header("Content-Type", "text/html")
-	pages.HomePage().Render(c.Request.Context(), c.Writer)
+
+	// Prepare level information for the index page
+	levels := []pages.LevelInfo{
+		{
+			Name:        "Basic Components",
+			Path:        "/basic",
+			Description: "Core UI building blocks - buttons, inputs, forms, and essential interactive elements.",
+			Count:       len(s.registry.Basic()),
+			BadgeClass:  "badge-basic",
+		},
+		{
+			Name:        "Medium Components",
+			Path:        "/medium",
+			Description: "Composition patterns - nested components, state management, and data presentation.",
+			Count:       len(s.registry.Medium()),
+			BadgeClass:  "badge-medium",
+		},
+		{
+			Name:        "Advanced Components",
+			Path:        "/advanced",
+			Description: "Real-world applications - complete pages, dashboards, and complex layouts.",
+			Count:       len(s.registry.Advanced()),
+			BadgeClass:  "badge-advanced",
+		},
+	}
+
+	pages.IndexPage(levels).Render(c.Request.Context(), c.Writer)
 }
 
 // basicPageHandler serves the basic components page

@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/advanced"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/basic"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components/medium"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/pages"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -28,7 +29,7 @@ var _ = Describe("UI Component Handler Tests", func() {
 		registry = components.NewRegistry()
 
 		// Register all components
-		basic.RegisterAll(registry)
+		pages.RegisterBasic(registry)
 		medium.RegisterAll(registry)
 		advanced.RegisterAll(registry)
 
@@ -43,66 +44,123 @@ var _ = Describe("UI Component Handler Tests", func() {
 		}
 	})
 
-	Context("Basic Components", func() {
-		It("should render unified FR-001 showcase", func() {
-			comp := basic.DefaultBasicShowcaseComponent()
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", comp.URL(), nil)
+	Context("Basic Components - Core Showcase", func() {
+		It("should render unified showcase with all core components", func() {
+			comp := pages.DefaultBasicShowcaseComponent()
+			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
 			router.ServeHTTP(w, req)
 
 			Expect(w.Code).To(Equal(http.StatusOK))
 			Expect(w.Header().Get("Content-Type")).To(ContainSubstring("text/html"))
 
-			body, _ := io.ReadAll(w.Body)
-			html := string(body)
-			Expect(html).To(ContainSubstring("FR-001 Showcase"))
+			html := w.Body.String()
+			Expect(html).To(ContainSubstring("Basic Components Showcase"))
+		})
+
+		It("should showcase Button components", func() {
+			comp := pages.DefaultBasicShowcaseComponent()
+			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
+			router.ServeHTTP(w, req)
+
+			html := w.Body.String()
+			// Verify button actions are present
+			Expect(html).To(ContainSubstring("Save Draft"))
+			Expect(html).To(ContainSubstring("Submit"))
+			Expect(html).To(ContainSubstring("Preview Modal"))
+		})
+
+		It("should showcase Text Input components", func() {
+			comp := pages.DefaultBasicShowcaseComponent()
+			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
+			router.ServeHTTP(w, req)
+
+			html := w.Body.String()
+			// Verify inputs with labels
 			Expect(html).To(ContainSubstring("Username"))
+			Expect(html).To(ContainSubstring("Email"))
+			Expect(html).To(ContainSubstring("id=\"username\""))
+			Expect(html).To(ContainSubstring("id=\"email\""))
+			Expect(html).To(ContainSubstring("type=\"email\""))
+		})
+
+		It("should showcase Text Area component", func() {
+			comp := pages.DefaultBasicShowcaseComponent()
+			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
+			router.ServeHTTP(w, req)
+
+			html := w.Body.String()
+			// Verify textarea
+			Expect(html).To(ContainSubstring("Notes"))
+			Expect(html).To(ContainSubstring("<textarea"))
+			Expect(html).To(ContainSubstring("id=\"notes\""))
+		})
+
+		It("should showcase Select/Dropdown component", func() {
+			comp := pages.DefaultBasicShowcaseComponent()
+			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
+			router.ServeHTTP(w, req)
+
+			html := w.Body.String()
+			// Verify select box for country
 			Expect(html).To(ContainSubstring("Country"))
-			Expect(html).To(ContainSubstring("showcase-modal"))
+			Expect(html).To(ContainSubstring("id=\"country\""))
+			Expect(html).To(ContainSubstring("United States"))
+			Expect(html).To(ContainSubstring("India"))
 		})
 
-		It("should support button variants (FR-001 1.1)", func() {
-			primary := basic.NewButtonComponent("Submit", basic.ButtonVariantPrimary, basic.ButtonSizeMedium, false)
-			Expect(primary.Variant()).To(Equal(basic.ButtonVariantPrimary))
+		It("should showcase Badge components", func() {
+			comp := pages.DefaultBasicShowcaseComponent()
+			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
+			router.ServeHTTP(w, req)
 
-			secondary := basic.NewButtonComponent("Cancel", basic.ButtonVariantSecondary, basic.ButtonSizeMedium, false)
-			Expect(secondary.Variant()).To(Equal(basic.ButtonVariantSecondary))
-
-			tertiary := basic.NewButtonComponent("Learn", basic.ButtonVariantTertiary, basic.ButtonSizeMedium, false)
-			Expect(tertiary.Variant()).To(Equal(basic.ButtonVariantTertiary))
+			html := w.Body.String()
+			// Verify status badges
+			Expect(html).To(ContainSubstring("Ready"))
+			Expect(html).To(ContainSubstring("Review"))
+			Expect(html).To(ContainSubstring("Info"))
 		})
 
-		It("should support button sizes and states (FR-001 1.1)", func() {
-			small := basic.NewButtonComponent("S", basic.ButtonVariantPrimary, basic.ButtonSizeSmall, false)
-			Expect(small.Size()).To(Equal(basic.ButtonSizeSmall))
+		It("should showcase Radio Button components", func() {
+			comp := pages.DefaultBasicShowcaseComponent()
+			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
+			router.ServeHTTP(w, req)
 
-			large := basic.NewButtonComponent("L", basic.ButtonVariantPrimary, basic.ButtonSizeLarge, false)
-			Expect(large.Size()).To(Equal(basic.ButtonSizeLarge))
-
-			enabled := basic.NewButtonComponent("Enabled", basic.ButtonVariantPrimary, basic.ButtonSizeMedium, false)
-			Expect(enabled.Disabled()).To(BeFalse())
-
-			disabled := basic.NewButtonComponent("Disabled", basic.ButtonVariantPrimary, basic.ButtonSizeMedium, true)
-			Expect(disabled.Disabled()).To(BeTrue())
+			html := w.Body.String()
+			// Verify radio buttons for plan selection
+			Expect(html).To(ContainSubstring("Subscription Plan"))
+			Expect(html).To(ContainSubstring("Starter"))
+			Expect(html).To(ContainSubstring("Pro"))
+			Expect(html).To(ContainSubstring("id=\"plan-starter\""))
+			Expect(html).To(ContainSubstring("id=\"plan-pro\""))
 		})
 
-		It("should support text input states (FR-001 1.2)", func() {
-			defaultInput := basic.DefaultTextInputComponent()
-			Expect(defaultInput.State()).To(Equal(basic.InputStateDefault))
+		It("should showcase Checkbox component", func() {
+			comp := pages.DefaultBasicShowcaseComponent()
+			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
+			router.ServeHTTP(w, req)
 
-			errorInput := basic.ErrorTextInputComponent()
-			Expect(errorInput.State()).To(Equal(basic.InputStateError))
-			Expect(errorInput.ErrorMessage()).To(Equal("Please enter a valid email address"))
+			html := w.Body.String()
+			// Verify checkbox for terms
+			Expect(html).To(ContainSubstring("terms and conditions"))
+			Expect(html).To(ContainSubstring("id=\"terms\""))
+		})
 
-			successInput := basic.SuccessTextInputComponent()
-			Expect(successInput.State()).To(Equal(basic.InputStateSuccess))
-			Expect(successInput.Value()).To(Equal("12345"))
+		It("should showcase Modal/Dialog component", func() {
+			comp := pages.DefaultBasicShowcaseComponent()
+			req, w := util.CreateHTMLTestRequest("GET", comp.URL())
+			router.ServeHTTP(w, req)
+
+			html := w.Body.String()
+			// Verify dialog structure
+			Expect(html).To(ContainSubstring("id=\"showcase-dialog\""))
+			Expect(html).To(ContainSubstring("Submission Preview"))
+			Expect(html).To(ContainSubstring("Confirm"))
 		})
 
 		It("should implement Component interface for showcase component", func() {
-			var _ components.Component = basic.DefaultBasicShowcaseComponent()
+			var _ components.Component = pages.DefaultBasicShowcaseComponent()
 
-			showcase := basic.DefaultBasicShowcaseComponent()
+			showcase := pages.DefaultBasicShowcaseComponent()
 			Expect(showcase.Name()).To(Equal("basic-showcase"))
 			Expect(showcase.Level()).To(Equal(components.LevelBasic))
 		})

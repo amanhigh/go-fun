@@ -5,10 +5,8 @@ package advanced
 
 //lint:file-ignore SA4006 This context is only used if a nested component is present.
 
-import (
-	"github.com/a-h/templ"
-	templruntime "github.com/a-h/templ/runtime"
-)
+import "github.com/a-h/templ"
+import templruntime "github.com/a-h/templ/runtime"
 
 // Nested component example
 func Page(title string, content templ.Component) templ.Component {
@@ -32,7 +30,7 @@ func Page(title string, content templ.Component) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\" data-theme=\"dark\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -45,7 +43,7 @@ func Page(title string, content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><!-- Tailwind CSS for templui components --><script src=\"https://cdn.tailwindcss.com\"></script><script>\n\t\t\t\ttailwind.config = {\n\t\t\t\t\tdarkMode: 'class',\n\t\t\t\t\ttheme: {\n\t\t\t\t\t\textend: {\n\t\t\t\t\t\t\tborderRadius: {\n\t\t\t\t\t\t\t\tlg: 'var(--radius)',\n\t\t\t\t\t\t\t\tmd: 'calc(var(--radius) - 2px)',\n\t\t\t\t\t\t\t\tsm: 'calc(var(--radius) - 4px)',\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\tcolors: {\n\t\t\t\t\t\t\t\tbackground: 'var(--background)',\n\t\t\t\t\t\t\t\tforeground: 'var(--foreground)',\n\t\t\t\t\t\t\t\tcard: {\n\t\t\t\t\t\t\t\t\tDEFAULT: 'var(--card)',\n\t\t\t\t\t\t\t\t\tforeground: 'var(--card-foreground)',\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\tpopover: {\n\t\t\t\t\t\t\t\t\tDEFAULT: 'var(--popover)',\n\t\t\t\t\t\t\t\t\tforeground: 'var(--popover-foreground)',\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\tprimary: {\n\t\t\t\t\t\t\t\t\tDEFAULT: 'var(--primary)',\n\t\t\t\t\t\t\t\t\tforeground: 'var(--primary-foreground)',\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\tsecondary: {\n\t\t\t\t\t\t\t\t\tDEFAULT: 'var(--secondary)',\n\t\t\t\t\t\t\t\t\tforeground: 'var(--secondary-foreground)',\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\tmuted: {\n\t\t\t\t\t\t\t\t\tDEFAULT: 'var(--muted)',\n\t\t\t\t\t\t\t\t\tforeground: 'var(--muted-foreground)',\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\taccent: {\n\t\t\t\t\t\t\t\t\tDEFAULT: 'var(--accent)',\n\t\t\t\t\t\t\t\t\tforeground: 'var(--accent-foreground)',\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\tdestructive: {\n\t\t\t\t\t\t\t\t\tDEFAULT: 'var(--destructive)',\n\t\t\t\t\t\t\t\t\tforeground: 'var(--destructive-foreground)',\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\tborder: 'var(--border)',\n\t\t\t\t\t\t\t\tinput: 'var(--input)',\n\t\t\t\t\t\t\t\tring: 'var(--ring)',\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t</script><style>\n\t\t\t\t:root {\n\t\t\t\t\t--radius: 0.5rem;\n\t\t\t\t\t--background: 0 0% 100%;\n\t\t\t\t\t--foreground: 222.2 84% 4.9%;\n\t\t\t\t\t--card: 0 0% 100%;\n\t\t\t\t\t--card-foreground: 222.2 84% 4.9%;\n\t\t\t\t\t--popover: 0 0% 100%;\n\t\t\t\t\t--popover-foreground: 222.2 84% 4.9%;\n\t\t\t\t\t--primary: 222.2 47.4% 11.2%;\n\t\t\t\t\t--primary-foreground: 210 40% 98%;\n\t\t\t\t\t--secondary: 210 40% 96%;\n\t\t\t\t\t--secondary-foreground: 222.2 47.4% 11.2%;\n\t\t\t\t\t--muted: 210 40% 96%;\n\t\t\t\t\t--muted-foreground: 215.4 16.3% 46.9%;\n\t\t\t\t\t--accent: 210 40% 96%;\n\t\t\t\t\t--accent-foreground: 222.2 47.4% 11.2%;\n\t\t\t\t\t--destructive: 0 84.2% 60.2%;\n\t\t\t\t\t--destructive-foreground: 210 40% 98%;\n\t\t\t\t\t--border: 214.3 31.8% 91.4%;\n\t\t\t\t\t--input: 214.3 31.8% 91.4%;\n\t\t\t\t\t--ring: 222.2 84% 4.9%;\n\t\t\t\t}\n\t\t\t</style></head><body class=\"min-h-screen bg-background text-foreground\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><!-- Pico CSS only - no custom styling --><link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css\"></head><body><main class=\"container\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -53,7 +51,7 @@ func Page(title string, content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</main></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

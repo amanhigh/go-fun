@@ -173,7 +173,7 @@ var _ = Describe("Server Smoke Tests", func() {
 
 			body, _ := io.ReadAll(resp.Body)
 			html := string(body)
-			Expect(html).To(ContainSubstring("FR-001 Showcase"))
+			Expect(html).To(ContainSubstring("Basic Components Showcase"))
 			Expect(html).To(ContainSubstring("Username"))
 		})
 
@@ -193,8 +193,8 @@ var _ = Describe("Server Smoke Tests", func() {
 			httpBody, _ := io.ReadAll(resp.Body)
 			direct := buf.String()
 			httpHTML := string(httpBody)
-			Expect(httpHTML).To(ContainSubstring("FR-001 Showcase"))
-			Expect(direct).To(ContainSubstring("FR-001 Showcase"))
+			Expect(httpHTML).To(ContainSubstring("Basic Components Showcase"))
+			Expect(direct).To(ContainSubstring("Basic Components Showcase"))
 			Expect(httpHTML).To(ContainSubstring("id=\"showcase-dialog\""))
 			Expect(direct).To(ContainSubstring("id=\"showcase-dialog\""))
 		})
