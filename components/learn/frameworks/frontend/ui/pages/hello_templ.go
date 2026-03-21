@@ -302,7 +302,7 @@ func HelloPage() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</section><!-- Native Counter Component --> <section class=\"mb-8 p-6 border rounded-lg bg-card\"><h2 class=\"text-xl font-semibold mb-2\">Native Counter Component</h2><p class=\"text-sm text-muted-foreground mb-4\">A simple counter built with native HTML templates and Alpine.js for interactivity.  Demonstrates basic state management and event handling without external component libraries.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</section><!-- Native Counter Component --> <section class=\"mb-8 p-6 border rounded-lg bg-card\"><h2 class=\"text-xl font-semibold mb-2\">Native Counter Component</h2><p class=\"text-sm text-muted-foreground mb-4\">A simple counter built with native HTML templates and Alpine.js for interactivity.  Demonstrates basic state management and event handling without external component libraries.</p><p class=\"text-xs text-muted-foreground mb-4\"><strong>Custom Features:</strong> Press <kbd class=\"px-1 py-0.5 bg-muted rounded text-xs\">R</kbd> key to reset counter |  Custom CSS: monospace font on display, cubic-bezier transitions on buttons</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

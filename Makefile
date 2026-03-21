@@ -490,7 +490,7 @@ generate-css:
 generate-js:
 	@printf $(_TITLE) "Generate" "JavaScript"
 	@cd components/learn/frameworks/frontend && \
-	npx esbuild assets/js/input.js --bundle --outfile=assets/js/app.js --format=esm --target=es2020
+	npx esbuild assets/js/input.js --bundle --outfile=assets/js/app.js --format=iife --target=es2020
 
 generate: generate-mocks generate-swagger generate-templ generate-css generate-js ## Generate Files
 
