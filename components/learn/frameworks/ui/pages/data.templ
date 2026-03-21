@@ -1,6 +1,12 @@
+//go:generate templ generate
 package pages
 
-import "github.com/templui/templui/components/card"
+import (
+	"github.com/templui/templui/components/badge"
+	"github.com/templui/templui/components/breadcrumb"
+	"github.com/templui/templui/components/card"
+	"github.com/templui/templui/components/table"
+)
 
 templ DataShowcasePage() {
 	<!DOCTYPE html>
@@ -10,6 +16,8 @@ templ DataShowcasePage() {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>📊 Data Presentation</title>
 			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
+			<link rel="stylesheet" href="/static/css/showcase.css"/>
+			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 			<style>
 				.breadcrumb {
 					background: var(--muted-color);
@@ -45,11 +53,15 @@ templ DataShowcasePage() {
 		<body>
 			<div class="breadcrumb">
 				<div class="container">
-					<nav>
-						<a href="/">🏠 Home</a>
-						<span>›</span>
-						<span>Data Presentation</span>
-					</nav>
+					@breadcrumb.Breadcrumb() {
+						@breadcrumb.List() {
+							@breadcrumb.Item() {
+								<a href="/">🏠 Home</a>
+							}
+							@breadcrumb.Separator() { › }
+							@breadcrumb.Item() { Data Presentation }
+						}
+					}
 				</div>
 			</div>
 
@@ -94,36 +106,39 @@ templ DataShowcasePage() {
 						</header>
 						<p>Structured data presentation with proper header styling and responsive behavior.</p>
 						
-						<table>
-							<thead>
-								<tr>
-									<th>ID</th>
-									<th>Product</th>
-									<th>Revenue</th>
-									<th>Status</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td>1</td>
-									<td>Enterprise Suite</td>
-									<td>$45,000</td>
-									<td><mark class="status-badge status-active">Active</mark></td>
-								</tr>
-								<tr>
-									<td>2</td>
-									<td>Cloud Services</td>
-									<td>$32,000</td>
-									<td><mark class="status-badge status-warning">Pending</mark></td>
-								</tr>
-								<tr>
-									<td>3</td>
-									<td>Consulting</td>
-									<td>$28,000</td>
-									<td><mark class="status-badge status-active">Active</mark></td>
-								</tr>
-							</tbody>
-						</table>
+						@table.Table() {
+							@table.Caption() {
+								Product Revenue Data
+							}
+							@table.Header() {
+								@table.Row() {
+									@table.Head() { ID }
+									@table.Head() { Product }
+									@table.Head() { Revenue }
+									@table.Head() { Status }
+								}
+							}
+							@table.Body() {
+								@table.Row() {
+									@table.Cell() { 1 }
+									@table.Cell() { Enterprise Suite }
+									@table.Cell() { $45,000 }
+									@table.Cell() { @badge.Badge(badge.Props{Variant: badge.VariantDefault}) { Active } }
+								}
+								@table.Row() {
+									@table.Cell() { 2 }
+									@table.Cell() { Cloud Services }
+									@table.Cell() { $32,000 }
+									@table.Cell() { @badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { Pending } }
+								}
+								@table.Row() {
+									@table.Cell() { 3 }
+									@table.Cell() { Consulting }
+									@table.Cell() { $28,000 }
+									@table.Cell() { @badge.Badge(badge.Props{Variant: badge.VariantDefault}) { Active } }
+								}
+							}
+						}
 					</article>
 
 					<!-- Status Indicators Section -->

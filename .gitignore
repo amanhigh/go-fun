@@ -25,6 +25,9 @@ wrk.log
 # AI
 Plan.md
 
+# CSS Output
+**/static/css/output.css
+
 #### LATEX #####
 ## https://github.com/github/gitignore/blob/main/TeX.gitignore
 ## Core latex/pdflatex auxiliary files:

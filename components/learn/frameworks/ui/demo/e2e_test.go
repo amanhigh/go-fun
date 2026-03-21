@@ -206,6 +206,31 @@ var _ = Describe("Server Smoke Tests", func() {
 		})
 	})
 
+	Context("Hello Page", func() {
+		var (
+			hshowcase *pages.HelloComponent
+		)
+
+		BeforeEach(func() {
+			hshowcase = pages.NewHelloComponent()
+		})
+
+		It("should render hello page via HTTP", func() {
+			resp, err := http.Get(serverURL + hshowcase.URL())
+			Expect(err).ToNot(HaveOccurred())
+			defer resp.Body.Close()
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			Expect(resp.Header.Get("Content-Type")).To(ContainSubstring("text/html"))
+
+			body, _ := io.ReadAll(resp.Body)
+			html := string(body)
+			Expect(html).To(ContainSubstring("Hello Selectbox Test"))
+			Expect(html).To(ContainSubstring("Country"))
+			Expect(html).To(ContainSubstring("selectbox.min.js"))
+		})
+	})
+
 	Context("Component Consistency", func() {
 		It("should render all basic components consistently", func() {
 			for _, comp := range registry.Basic() {

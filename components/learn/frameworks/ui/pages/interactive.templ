@@ -1,24 +1,35 @@
+//go:generate templ generate
 package pages
 
-import "fmt"
+import (
+	"github.com/templui/templui/components/breadcrumb"
+	"github.com/templui/templui/components/button"
+	"github.com/templui/templui/components/checkbox"
+	"github.com/templui/templui/components/form"
+	"github.com/templui/templui/components/input"
+	"github.com/templui/templui/components/textarea"
+)
 
-// InteractiveTextArea with Alpine.js character counter
+// InteractiveTextArea with Alpine.js character counter - replaced by templui
 templ InteractiveTextArea(id string, label string, placeholder string, value string, rows int, maxLength int, helperText string) {
-	<label for={ id }>
-		{ label }
-		<textarea
-			id={ id }
-			name={ id }
-			placeholder={ placeholder }
-			rows={ fmt.Sprintf("%d", rows) }
-			x-init="updateNotesLength($event)"
-			x-on:input="updateNotesLength($event)"
-			maxlength={ fmt.Sprintf("%d", maxLength) }
-		>{ value }</textarea>
-		if helperText != "" {
-			<small>{ helperText }</small>
+	@form.Item() {
+		@form.Label(form.LabelProps{For: id}) {
+			{ label }
 		}
-	</label>
+		@textarea.Textarea(textarea.Props{
+			ID:          id,
+			Name:        id,
+			Placeholder: placeholder,
+			Rows:        rows,
+			Attributes:  templ.Attributes{"x-init": "updateNotesLength($event)", "x-on:input": "updateNotesLength($event)", "maxlength": maxLength},
+			Value:       value,
+		})
+		if helperText != "" {
+			@form.Description() {
+				{ helperText }
+			}
+		}
+	}
 }
 
 templ InteractiveShowcasePage() {
@@ -57,11 +68,15 @@ templ InteractiveShowcasePage() {
 		<body x-data="basicShowcase">
 			<div class="breadcrumb">
 				<div class="container">
-					<nav>
-						<a href="/">🏠 Home</a>
-						<span>›</span>
-						<span>Interactive Behaviors</span>
-					</nav>
+					@breadcrumb.Breadcrumb() {
+						@breadcrumb.List() {
+							@breadcrumb.Item() {
+								<a href="/">🏠 Home</a>
+							}
+							@breadcrumb.Separator() { › }
+							@breadcrumb.Item() { Interactive Behaviors }
+						}
+					}
 				</div>
 			</div>
 
@@ -96,8 +111,12 @@ templ InteractiveShowcasePage() {
 						
 						<footer>
 							<div role="group">
-								<button type="button" class="secondary">Regular Action</button>
-								<button type="button" class="outline" @click="openDialog()">🪟 Open Modal</button>
+								@button.Button(button.Props{Variant: button.VariantSecondary, Type: button.TypeButton}) {
+									Regular Action
+								}
+								@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"@click": "openDialog()"}}) {
+									🪟 Open Modal
+								}
 							</div>
 						</footer>
 					</article>
@@ -109,16 +128,29 @@ templ InteractiveShowcasePage() {
 						</header>
 						<p>Client-side validation with visual feedback before submission.</p>
 						
-						<label for="validation-email">
-							Email (with validation)
-							<input type="email" id="validation-email" name="validation-email" placeholder="test@example.com" required/>
-						</label>
-						<label>
-							<input type="checkbox" id="validation-terms" name="validation-terms" required/>
-							I agree to the terms (required for submission)
-						</label>
+						@form.Item() {
+							@form.Label(form.LabelProps{For: "validation-email"}) {
+								Email (with validation)
+							}
+							@input.Input(input.Props{
+								ID:       "validation-email",
+								Name:     "validation-email",
+								Type:     input.TypeEmail,
+								Required: true,
+							})
+						}
+						@form.Item() {
+							@checkbox.Checkbox(checkbox.Props{
+								ID:   "validation-terms",
+								Name: "validation-terms",
+							}) {
+								I agree to the terms (required for submission)
+							}
+						}
 						<footer>
-							<button type="submit">Submit with Validation</button>
+							@button.Button(button.Props{Type: button.TypeSubmit}) {
+								Submit with Validation
+							}
 						</footer>
 					</article>
 				</form>
@@ -131,8 +163,12 @@ templ InteractiveShowcasePage() {
 						</header>
 						<p>This modal demonstrates Alpine.js state management. The dialog opens and closes based on Alpine's reactive state.</p>
 						<footer>
-							<button class="secondary" @click="closeDialog()">Cancel</button>
-							<button @click="closeDialog()">Confirm Action</button>
+							@button.Button(button.Props{Variant: button.VariantSecondary, Type: button.TypeButton, Attributes: templ.Attributes{"@click": "closeDialog()"}}) {
+								Cancel
+							}
+							@button.Button(button.Props{Type: button.TypeButton, Attributes: templ.Attributes{"@click": "closeDialog()"}}) {
+								Confirm Action
+							}
 						</footer>
 					</article>
 				</dialog>
