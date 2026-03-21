@@ -9,6 +9,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
 	"github.com/templui/templui/components/form"
 	"github.com/templui/templui/components/selectbox"
@@ -47,7 +48,7 @@ func HelloPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<h1 class=\"text-2xl font-bold mb-4\">Hello Selectbox Test</h1><p class=\"mb-6\">Testing just one selectbox component</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<h1 class=\"text-3xl font-bold mb-4\">Hello World Showcase</h1><p class=\"text-lg mb-8 text-muted-foreground\">Demonstrating both TemplUI components and native HTML templates</p><!-- TemplUI Component --> <section class=\"mb-8 p-6 border rounded-lg bg-card\"><h2 class=\"text-xl font-semibold mb-2\">TemplUI Component</h2><p class=\"text-sm text-muted-foreground mb-4\">A professional selectbox component from the TemplUI library with built-in accessibility,  keyboard navigation, and consistent styling.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -301,9 +302,21 @@ func HelloPage() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</section><!-- Native Counter Component --> <section class=\"mb-8 p-6 border rounded-lg bg-card\"><h2 class=\"text-xl font-semibold mb-2\">Native Counter Component</h2><p class=\"text-sm text-muted-foreground mb-4\">A simple counter built with native HTML templates and Alpine.js for interactivity.  Demonstrates basic state management and event handling without external component libraries.</p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = components.Counter().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</section>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 			return nil
 		})
-		templ_7745c5c3_Err = layout.Base("Hello - Selectbox Test").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layout.Base("Hello World Showcase").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

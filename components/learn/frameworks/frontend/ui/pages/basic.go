@@ -2,7 +2,7 @@ package pages
 
 import (
 	"github.com/a-h/templ"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
 )
 
 // FormShowcaseComponent renders the form essentials showcase page.

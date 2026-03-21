@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 
 	"github.com/amanhigh/go-fun/common/util"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/pages"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/pages"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

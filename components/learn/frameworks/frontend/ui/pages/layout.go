@@ -2,7 +2,7 @@ package pages
 
 import (
 	"github.com/a-h/templ"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
 )
 
 // LayoutShowcaseComponent renders the layout & composition showcase page.

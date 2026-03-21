@@ -472,6 +472,7 @@ generate-templ:
 	printf $(_TITLE) "Generate" "Templ Components"
 	$(GOBIN)/templ generate -path components/learn
 
+# BUG: Use Global tailwindcss command
 generate-css:
 	@printf $(_TITLE) "Generate" "CSS"
 	@cd components/learn/frameworks/frontend && \

@@ -1,36 +1,59 @@
 package pages
 
 import (
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
 	"github.com/templui/templui/components/form"
 	"github.com/templui/templui/components/selectbox"
 )
 
 templ HelloPage() {
-	@layout.Base("Hello - Selectbox Test") {
-		<h1 class="text-2xl font-bold mb-4">Hello Selectbox Test</h1>
-		<p class="mb-6">Testing just one selectbox component</p>
+	@layout.Base("Hello World Showcase") {
+		<h1 class="text-3xl font-bold mb-4">Hello World Showcase</h1>
+		<p class="text-lg mb-8 text-muted-foreground">
+			Demonstrating both TemplUI components and native HTML templates
+		</p>
 		
-		@form.Item() {
-			@form.Label(form.LabelProps{For: "country"}) {
-				Country
-			}
-			@selectbox.SelectBox() {
-				@selectbox.Trigger(selectbox.TriggerProps{ID: "country", Name: "country"}) {
-					@selectbox.Value(selectbox.ValueProps{Placeholder: "Choose your country"})
+		<!-- TemplUI Component -->
+		<section class="mb-8 p-6 border rounded-lg bg-card">
+			<h2 class="text-xl font-semibold mb-2">TemplUI Component</h2>
+			<p class="text-sm text-muted-foreground mb-4">
+				A professional selectbox component from the TemplUI library with built-in accessibility, 
+				keyboard navigation, and consistent styling.
+			</p>
+			
+			@form.Item() {
+				@form.Label(form.LabelProps{For: "country"}) {
+					Country
 				}
-				@selectbox.Content() {
-					@selectbox.Group() {
-						@selectbox.Label() { Countries }
-						@selectbox.Item(selectbox.ItemProps{Value: "us"}) { United States }
-						@selectbox.Item(selectbox.ItemProps{Value: "in"}) { India }
-						@selectbox.Item(selectbox.ItemProps{Value: "uk"}) { United Kingdom }
+				@selectbox.SelectBox() {
+					@selectbox.Trigger(selectbox.TriggerProps{ID: "country", Name: "country"}) {
+						@selectbox.Value(selectbox.ValueProps{Placeholder: "Choose your country"})
+					}
+					@selectbox.Content() {
+						@selectbox.Group() {
+							@selectbox.Label() { Countries }
+							@selectbox.Item(selectbox.ItemProps{Value: "us"}) { United States }
+							@selectbox.Item(selectbox.ItemProps{Value: "in"}) { India }
+							@selectbox.Item(selectbox.ItemProps{Value: "uk"}) { United Kingdom }
+						}
 					}
 				}
+				@form.Description() {
+					Select your country from the dropdown
+				}
 			}
-			@form.Description() {
-				Select your country from the dropdown
-			}
-		}
+		</section>
+		
+		<!-- Native Counter Component -->
+		<section class="mb-8 p-6 border rounded-lg bg-card">
+			<h2 class="text-xl font-semibold mb-2">Native Counter Component</h2>
+			<p class="text-sm text-muted-foreground mb-4">
+				A simple counter built with native HTML templates and Alpine.js for interactivity. 
+				Demonstrates basic state management and event handling without external component libraries.
+			</p>
+			
+			@components.Counter()
+		</section>
 	}
 }

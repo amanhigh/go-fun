@@ -3,8 +3,8 @@ package main
 import (
 	"net/http"
 
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/pages"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/pages"
 	"github.com/gin-gonic/gin"
 	"github.com/templui/templui/utils"
 )

@@ -4,7 +4,7 @@ import (
 	"github.com/templui/templui/components/selectbox"
 )
 
-templ Base(title string, content templ.Component) {
+templ Base(title string) {
 	<!DOCTYPE html>
 	<html lang="en" class="h-full">
 		<head>
@@ -13,6 +13,8 @@ templ Base(title string, content templ.Component) {
 			<title>{ title }</title>
 			<!-- Tailwind CSS -->
 			<link rel="stylesheet" href="/assets/css/output.css"/>
+			<!-- Alpine.js for native component interactivity -->
+			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 			@selectbox.Script()
 		</head>
 		<body class="h-full bg-background text-foreground">
@@ -33,7 +35,7 @@ templ Base(title string, content templ.Component) {
 				
 				<!-- Main Content -->
 				<main class="flex-1 container mx-auto px-4 py-8">
-					@content
+					{ children... }
 				</main>
 				
 				<!-- Footer -->

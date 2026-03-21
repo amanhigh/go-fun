@@ -1,0 +1,27 @@
+package components
+
+templ Counter() {
+	<div x-data="{ count: 0 }" class="flex items-center gap-4">
+		<button 
+			@click="count--" 
+			class="counter-button px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors font-medium"
+		>
+			-
+		</button>
+		<span class="counter-display text-2xl font-semibold min-w-[4rem] text-center" x-text="count">
+			0
+		</span>
+		<button 
+			@click="count++" 
+			class="counter-button px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors font-medium"
+		>
+			+
+		</button>
+		<button 
+			@click="count = 0" 
+			class="counter-button px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors font-medium"
+		>
+			Reset
+		</button>
+	</div>
+}
