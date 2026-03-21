@@ -37,16 +37,14 @@ templ Page(title string, content templ.Component) {
 					<nav>
 						<a href="/">🏠 Home</a>
 						<span>›</span>
-						<a href="/advanced">Advanced Components</a>
-						<span>›</span>
-						<span>{ title }</span>
+						<span>Advanced Showcase</span>
 					</nav>
 				</div>
 			</div>
 
 			<main class="container">
 				<nav style="margin-bottom: 2rem;">
-					<a href="/advanced" role="button" class="secondary">← Back to Advanced Components</a>
+					<a href="/" role="button" class="secondary">← Back to Home</a>
 				</nav>
 				@content
 			</main>

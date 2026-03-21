@@ -2,6 +2,7 @@ package pages
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
@@ -92,18 +93,18 @@ templ IndexPage(levels []LevelInfo) {
 							<article class="level-card">
 								<header>
 									<h3>
-										<a href={ templ.SafeURL(level.Path) } style="text-decoration: none; color: inherit;">
-											{ level.Name }
+										<a href={ templ.SafeURL(level.Path) + "/showcase" } style="text-decoration: none; color: inherit;">
+											{ strings.Replace(level.Name, " Components", " Showcase", 1) }
 										</a>
 										<span class={ fmt.Sprintf("badge %s", level.BadgeClass) }>
-											{ fmt.Sprintf("%d", level.Count) }
+											Live Demo
 										</span>
 									</h3>
 								</header>
 								<p>{ level.Description }</p>
 								<footer>
-									<a href={ templ.SafeURL(level.Path) } role="button" class="outline">
-										Explore { level.Name } →
+									<a href={ templ.SafeURL(level.Path) + "/showcase" } role="button" class="outline">
+										Open { strings.Replace(level.Name, " Components", " Showcase", 1) } →
 									</a>
 								</footer>
 							</article>
@@ -195,8 +196,8 @@ templ LevelPage(level string, levelTitle string, components []ComponentInfo) {
 
 			<main class="container">
 				<header>
-					<h1>{ levelTitle } Components</h1>
-					<p>Interactive demonstrations of { fmt.Sprintf("%d", len(components)) } components. Click any component to explore its features and implementation.</p>
+					<h1>{ levelTitle }</h1>
+					<p>Interactive demonstrations of UI components. Click any component to explore its features and implementation.</p>
 				</header>
 				
 				<nav style="margin-bottom: 2rem;">

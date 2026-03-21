@@ -43,20 +43,7 @@ func Page(title string, content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><!-- Pico CSS only - no custom styling --><link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css\"><style>\n\t\t\t\t.breadcrumb {\n\t\t\t\t\tbackground: var(--muted-color);\n\t\t\t\t\tpadding: 1rem;\n\t\t\t\t\tmargin: -2rem -2rem 2rem -2rem;\n\t\t\t\t\tborder-bottom: 1px solid var(--muted-border-color);\n\t\t\t\t}\n\t\t\t\t.breadcrumb nav {\n\t\t\t\t\tdisplay: flex;\n\t\t\t\t\talign-items: center;\n\t\t\t\t\tgap: 0.5rem;\n\t\t\t\t}\n\t\t\t\t.breadcrumb a {\n\t\t\t\t\tcolor: var(--primary);\n\t\t\t\t\ttext-decoration: none;\n\t\t\t\t}\n\t\t\t\t.breadcrumb a:hover {\n\t\t\t\t\ttext-decoration: underline;\n\t\t\t\t}\n\t\t\t</style></head><body><div class=\"breadcrumb\"><div class=\"container\"><nav><a href=\"/\">🏠 Home</a> <span>›</span> <a href=\"/advanced\">Advanced Components</a> <span>›</span> <span>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(title)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/components/advanced/advanced.templ`, Line: 42, Col: 19}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</span></nav></div></div><main class=\"container\"><nav style=\"margin-bottom: 2rem;\"><a href=\"/advanced\" role=\"button\" class=\"secondary\">← Back to Advanced Components</a></nav>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><!-- Pico CSS only - no custom styling --><link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css\"><style>\n\t\t\t\t.breadcrumb {\n\t\t\t\t\tbackground: var(--muted-color);\n\t\t\t\t\tpadding: 1rem;\n\t\t\t\t\tmargin: -2rem -2rem 2rem -2rem;\n\t\t\t\t\tborder-bottom: 1px solid var(--muted-border-color);\n\t\t\t\t}\n\t\t\t\t.breadcrumb nav {\n\t\t\t\t\tdisplay: flex;\n\t\t\t\t\talign-items: center;\n\t\t\t\t\tgap: 0.5rem;\n\t\t\t\t}\n\t\t\t\t.breadcrumb a {\n\t\t\t\t\tcolor: var(--primary);\n\t\t\t\t\ttext-decoration: none;\n\t\t\t\t}\n\t\t\t\t.breadcrumb a:hover {\n\t\t\t\t\ttext-decoration: underline;\n\t\t\t\t}\n\t\t\t</style></head><body><div class=\"breadcrumb\"><div class=\"container\"><nav><a href=\"/\">🏠 Home</a> <span>›</span> <span>Advanced Showcase</span></nav></div></div><main class=\"container\"><nav style=\"margin-bottom: 2rem;\"><a href=\"/\" role=\"button\" class=\"secondary\">← Back to Home</a></nav>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -64,7 +51,7 @@ func Page(title string, content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</main></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</main></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -2,11 +2,12 @@ root = "."
 tmp_dir = "/tmp/ui-demo"
 
 [build]
-  cmd = "go build -o /tmp/ui-demo/main ."
+  cmd = "$GOBIN/templ generate && go build -o /tmp/ui-demo/main ."
   entrypoint = "/tmp/ui-demo/main"
   delay = 1000
   include_ext = ["go", "templ"]
-  exclude_dir = ["tmp"]
+  include_dir = [".", "../components", "../pages"]
+  exclude_regex = ["_test\\.go"]
   kill_delay = "0s"
   send_interrupt = false
   stop_on_error = true

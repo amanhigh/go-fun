@@ -37,7 +37,7 @@ func MediumShowcasePage() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\" data-theme=\"dark\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Medium Components Showcase - Layout & Content Blocks</title><!-- Pico CSS only --><link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css\"><style>\n\t\t\t\t.breadcrumb {\n\t\t\t\t\tbackground: var(--muted-color);\n\t\t\t\t\tpadding: 1rem;\n\t\t\t\t\tmargin: -2rem -2rem 2rem -2rem;\n\t\t\t\t\tborder-bottom: 1px solid var(--muted-border-color);\n\t\t\t\t}\n\t\t\t\t.breadcrumb nav {\n\t\t\t\t\tdisplay: flex;\n\t\t\t\t\talign-items: center;\n\t\t\t\t\tgap: 0.5rem;\n\t\t\t\t}\n\t\t\t\t.breadcrumb a {\n\t\t\t\t\tcolor: var(--primary);\n\t\t\t\t\ttext-decoration: none;\n\t\t\t\t}\n\t\t\t\t.breadcrumb a:hover {\n\t\t\t\t\ttext-decoration: underline;\n\t\t\t\t}\n\t\t\t</style></head><body><div class=\"breadcrumb\"><div class=\"container\"><nav><a href=\"/\">🏠 Home</a> <span>›</span> <a href=\"/medium\">Medium Components</a> <span>›</span> <span>Showcase Demo</span></nav></div></div><main class=\"container\"><nav style=\"margin-bottom: 2rem;\"><a href=\"/medium\" role=\"button\" class=\"secondary\">← Back to Medium Components</a></nav><header><h1>🔷 Medium Components Showcase</h1><p>Layout & Content Blocks - Demonstrating cards, tables, and data organization patterns.</p></header><form><!-- Card Components Section --><article><header><h2>🃏 Card Components</h2></header><p>Cards provide flexible content containers with consistent padding, elevation, and responsive behavior.</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\" data-theme=\"dark\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Medium Components Showcase - Layout & Content Blocks</title><!-- Pico CSS only --><link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css\"><style>\n\t\t\t\t.breadcrumb {\n\t\t\t\t\tbackground: var(--muted-color);\n\t\t\t\t\tpadding: 1rem;\n\t\t\t\t\tmargin: -2rem -2rem 2rem -2rem;\n\t\t\t\t\tborder-bottom: 1px solid var(--muted-border-color);\n\t\t\t\t}\n\t\t\t\t.breadcrumb nav {\n\t\t\t\t\tdisplay: flex;\n\t\t\t\t\talign-items: center;\n\t\t\t\t\tgap: 0.5rem;\n\t\t\t\t}\n\t\t\t\t.breadcrumb a {\n\t\t\t\t\tcolor: var(--primary);\n\t\t\t\t\ttext-decoration: none;\n\t\t\t\t}\n\t\t\t\t.breadcrumb a:hover {\n\t\t\t\t\ttext-decoration: underline;\n\t\t\t\t}\n\t\t\t</style></head><body><div class=\"breadcrumb\"><div class=\"container\"><nav><a href=\"/\">🏠 Home</a> <span>›</span> <span>Medium Showcase</span></nav></div></div><main class=\"container\"><nav style=\"margin-bottom: 2rem;\"><a href=\"/\" role=\"button\" class=\"secondary\">← Back to Home</a></nav><header><h1>🔷 Medium Showcase</h1><p>Layout & Content Blocks - Demonstrating cards, tables, and data organization patterns.</p></header><form><!-- Card Components Section --><article><header><h2>🃏 Card Components</h2></header><p>Cards provide flexible content containers with consistent padding, elevation, and responsive behavior.</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -142,7 +142,7 @@ func CardExample(title string, subtitle string, content string) templ.Component 
 					var templ_7745c5c3_Var6 string
 					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/medium.templ`, Line: 117, Col: 26}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/medium.templ`, Line: 115, Col: 26}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
@@ -173,7 +173,7 @@ func CardExample(title string, subtitle string, content string) templ.Component 
 					var templ_7745c5c3_Var8 string
 					templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(subtitle)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/medium.templ`, Line: 118, Col: 35}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/medium.templ`, Line: 116, Col: 35}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 					if templ_7745c5c3_Err != nil {
@@ -214,7 +214,7 @@ func CardExample(title string, subtitle string, content string) templ.Component 
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(content)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/medium.templ`, Line: 121, Col: 15}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/medium.templ`, Line: 119, Col: 15}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -893,7 +893,7 @@ func ContentOrganizationExample() templ.Component {
 		var templ_7745c5c3_Var38 string
 		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s", "2024-03-21"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/medium.templ`, Line: 194, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/medium.templ`, Line: 192, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 		if templ_7745c5c3_Err != nil {
