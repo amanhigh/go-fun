@@ -68,7 +68,7 @@ func InteractiveTextArea(id string, label string, placeholder string, value stri
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/interactive.templ`, Line: 17, Col: 10}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/interactive.templ`, Line: 17, Col: 10}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -115,7 +115,7 @@ func InteractiveTextArea(id string, label string, placeholder string, value stri
 					var templ_7745c5c3_Var6 string
 					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(helperText)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/ui/pages/interactive.templ`, Line: 29, Col: 16}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/interactive.templ`, Line: 29, Col: 16}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {

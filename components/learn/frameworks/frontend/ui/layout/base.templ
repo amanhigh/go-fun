@@ -1,0 +1,50 @@
+package layout
+
+import (
+	"github.com/templui/templui/components/selectbox"
+)
+
+templ Base(title string, content templ.Component) {
+	<!DOCTYPE html>
+	<html lang="en" class="h-full">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title }</title>
+			<!-- Tailwind CSS -->
+			<link rel="stylesheet" href="/assets/css/output.css"/>
+			@selectbox.Script()
+		</head>
+		<body class="h-full bg-background text-foreground">
+			<div class="min-h-screen flex flex-col">
+				<!-- Header -->
+				<header class="border-b border-border bg-card">
+					<div class="container mx-auto px-4 py-4">
+						<nav class="flex items-center justify-between">
+							<h1 class="text-xl font-semibold text-foreground">UI Framework</h1>
+							<div class="flex gap-4">
+								<a href="/" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Home</a>
+								<a href="/form" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Forms</a>
+								<a href="/hello" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Hello</a>
+							</div>
+						</nav>
+					</div>
+				</header>
+				
+				<!-- Main Content -->
+				<main class="flex-1 container mx-auto px-4 py-8">
+					@content
+				</main>
+				
+				<!-- Footer -->
+				<footer class="border-t border-border bg-card mt-auto">
+					<div class="container mx-auto px-4 py-4">
+						<p class="text-sm text-muted-foreground text-center">
+							Built with TemplUI & Tailwind CSS
+						</p>
+					</div>
+				</footer>
+			</div>
+		</body>
+	</html>
+}
