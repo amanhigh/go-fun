@@ -2,7 +2,6 @@ package pages
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
@@ -93,8 +92,8 @@ templ IndexPage(levels []LevelInfo) {
 							<article class="level-card">
 								<header>
 									<h3>
-										<a href={ templ.SafeURL(level.Path) + "/showcase" } style="text-decoration: none; color: inherit;">
-											{ strings.Replace(level.Name, " Components", " Showcase", 1) }
+										<a href={ templ.SafeURL(level.Path) } style="text-decoration: none; color: inherit;">
+											{ level.Name }
 										</a>
 										<span class={ fmt.Sprintf("badge %s", level.BadgeClass) }>
 											Live Demo
@@ -103,8 +102,8 @@ templ IndexPage(levels []LevelInfo) {
 								</header>
 								<p>{ level.Description }</p>
 								<footer>
-									<a href={ templ.SafeURL(level.Path) + "/showcase" } role="button" class="outline">
-										Open { strings.Replace(level.Name, " Components", " Showcase", 1) } →
+									<a href={ templ.SafeURL(level.Path) } role="button" class="outline">
+										Open { level.Name } →
 									</a>
 								</footer>
 							</article>
@@ -115,9 +114,10 @@ templ IndexPage(levels []LevelInfo) {
 				<section style="margin-top: 3rem;">
 					<h3>🛠️ Quick Start</h3>
 					<ol>
-						<li><strong>Basic:</strong> Start here for core UI building blocks</li>
-						<li><strong>Medium:</strong> Learn composition and layout patterns</li>
-						<li><strong>Advanced:</strong> Master complex layouts and dashboards</li>
+						<li><strong>📝 Form Essentials:</strong> Master form inputs, validation, and user data collection</li>
+						<li><strong>📊 Data Presentation:</strong> Display structured data with tables and cards</li>
+						<li><strong>⚡ Interactive Behaviors:</strong> Dynamic client-side interactions with Alpine.js</li>
+						<li><strong>🎨 Layout & Composition:</strong> Complex layouts and responsive design patterns</li>
 					</ol>
 				</section>
 			</main>

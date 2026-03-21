@@ -22,6 +22,7 @@ func NewUIServer(port string) *UIServer {
 	pages.RegisterBasic(registry)
 	pages.RegisterMedium(registry)
 	pages.RegisterAdvanced(registry)
+	pages.RegisterLayout(registry)
 
 	return &UIServer{
 		port:     port,
@@ -49,10 +50,11 @@ func (s *UIServer) SetupRoutes(r *gin.Engine) {
 	// Index page
 	r.GET("/", s.indexHandler)
 
-	// Level pages
-	r.GET("/basic", s.basicPageHandler)
-	r.GET("/medium", s.mediumPageHandler)
-	r.GET("/advanced", s.advancedPageHandler)
+	// Showcase pages (new feature-based names)
+	r.GET("/form", s.formShowcaseHandler)
+	r.GET("/data", s.dataShowcaseHandler)
+	r.GET("/interactive", s.interactiveShowcaseHandler)
+	r.GET("/layout", s.layoutShowcaseHandler)
 
 	// Register all component routes dynamically
 	for _, comp := range s.registry.All() {
@@ -69,31 +71,37 @@ func (s *UIServer) registerComponentRoute(r *gin.Engine, comp components.Compone
 	})
 }
 
-// indexHandler serves the main index page with three level options
+// indexHandler serves the main index page with links to all showcases
 func (s *UIServer) indexHandler(c *gin.Context) {
 	c.Header("Content-Type", "text/html")
 
-	// Prepare level information for the index page
 	levels := []pages.LevelInfo{
 		{
-			Name:        "Basic Components",
-			Path:        "/basic",
-			Description: "Core UI building blocks - buttons, inputs, forms, and essential interactive elements.",
-			Count:       len(s.registry.Basic()),
+			Name:        "📝 Form Essentials",
+			Path:        "/form",
+			Description: "Master form inputs, validation, and user data collection patterns. Text fields, dropdowns, checkboxes, and radio buttons with proper validation.",
+			Count:       1,
 			BadgeClass:  "badge-basic",
 		},
 		{
-			Name:        "Medium Components",
-			Path:        "/medium",
-			Description: "Layout & Content Blocks - cards, tables, status indicators, and content organization patterns.",
-			Count:       len(s.registry.Medium()),
+			Name:        "📊 Data Presentation",
+			Path:        "/data",
+			Description: "Display structured data with tables, cards, status indicators, and content organization patterns for dashboards and reports.",
+			Count:       1,
 			BadgeClass:  "badge-medium",
 		},
 		{
-			Name:        "Advanced Components",
-			Path:        "/advanced",
-			Description: "Real-world applications - complete pages, dashboards, and complex layouts.",
-			Count:       len(s.registry.Advanced()),
+			Name:        "⚡ Interactive Behaviors",
+			Path:        "/interactive",
+			Description: "Dynamic client-side interactions with Alpine.js. Modals, character counters, real-time updates, and state management patterns.",
+			Count:       1,
+			BadgeClass:  "badge-advanced",
+		},
+		{
+			Name:        "🎨 Layout & Composition",
+			Path:        "/layout",
+			Description: "Complex page layouts, grid systems, responsive design, and component composition for production-ready applications.",
+			Count:       1,
 			BadgeClass:  "badge-advanced",
 		},
 	}
@@ -101,24 +109,28 @@ func (s *UIServer) indexHandler(c *gin.Context) {
 	pages.IndexPage(levels).Render(c.Request.Context(), c.Writer)
 }
 
-// basicPageHandler serves the basic components page
-func (s *UIServer) basicPageHandler(c *gin.Context) {
-	comps := pages.ComponentsToInfoList(s.registry.Basic())
+// formShowcaseHandler serves the form essentials showcase
+func (s *UIServer) formShowcaseHandler(c *gin.Context) {
 	c.Header("Content-Type", "text/html")
-	pages.LevelPage("basic", "Basic Components", comps).Render(c.Request.Context(), c.Writer)
+	pages.FormShowcasePage().Render(c.Request.Context(), c.Writer)
 }
 
-// mediumPageHandler serves the medium components page
-func (s *UIServer) mediumPageHandler(c *gin.Context) {
+// dataShowcaseHandler serves the data presentation showcase
+func (s *UIServer) dataShowcaseHandler(c *gin.Context) {
 	c.Header("Content-Type", "text/html")
-	pages.MediumShowcasePage().Render(c.Request.Context(), c.Writer)
+	pages.DataShowcasePage().Render(c.Request.Context(), c.Writer)
 }
 
-// advancedPageHandler serves the advanced components page
-func (s *UIServer) advancedPageHandler(c *gin.Context) {
-	comps := pages.ComponentsToInfoList(s.registry.Advanced())
+// interactiveShowcaseHandler serves the interactive behaviors showcase
+func (s *UIServer) interactiveShowcaseHandler(c *gin.Context) {
 	c.Header("Content-Type", "text/html")
-	pages.LevelPage("advanced", "Advanced Components", comps).Render(c.Request.Context(), c.Writer)
+	pages.InteractiveShowcasePage().Render(c.Request.Context(), c.Writer)
+}
+
+// layoutShowcaseHandler serves the layout & composition showcase
+func (s *UIServer) layoutShowcaseHandler(c *gin.Context) {
+	c.Header("Content-Type", "text/html")
+	pages.LayoutShowcasePage().Render(c.Request.Context(), c.Writer)
 }
 
 // GetComponent returns a component by URL for testing

@@ -2,8 +2,8 @@ package pages
 
 import "fmt"
 
-// ExampleTextArea keeps one local component implementation as a reference example.
-templ ExampleTextArea(id string, label string, placeholder string, value string, rows int, maxLength int, helperText string) {
+// FormTextArea demonstrates textarea with validation
+templ FormTextArea(id string, label string, placeholder string, value string, rows int, maxLength int, helperText string) {
 	<label for={ id }>
 		{ label }
 		<textarea
@@ -11,11 +11,7 @@ templ ExampleTextArea(id string, label string, placeholder string, value string,
 			name={ id }
 			placeholder={ placeholder }
 			rows={ fmt.Sprintf("%d", rows) }
-			x-init="updateNotesLength($event)"
-			x-on:input="updateNotesLength($event)"
-			if maxLength > 0 {
-				maxlength={ fmt.Sprintf("%d", maxLength) }
-			}
+			maxlength={ fmt.Sprintf("%d", maxLength) }
 		>{ value }</textarea>
 		if helperText != "" {
 			<small>{ helperText }</small>
@@ -23,19 +19,15 @@ templ ExampleTextArea(id string, label string, placeholder string, value string,
 	</label>
 }
 
-templ BasicShowcasePage() {
+templ FormShowcasePage() {
 	<!DOCTYPE html>
 	<html lang="en" data-theme="dark">
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>Basic Components Showcase</title>
-			<!-- Pico CSS - Minimal CSS Framework -->
+			<title>📝 Form Essentials</title>
 			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
-			<!-- Custom showcase styles -->
 			<link rel="stylesheet" href="/static/css/showcase.css"/>
-			<!-- Alpine.js for client-side interactivity -->
-			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 			<style>
 				.breadcrumb {
 					background: var(--muted-color);
@@ -52,18 +44,15 @@ templ BasicShowcasePage() {
 					color: var(--primary);
 					text-decoration: none;
 				}
-				.breadcrumb a:hover {
-					text-decoration: underline;
-				}
 			</style>
 		</head>
-		<body x-data="basicShowcase">
+		<body>
 			<div class="breadcrumb">
 				<div class="container">
 					<nav>
 						<a href="/">🏠 Home</a>
 						<span>›</span>
-						<span>Basic Showcase</span>
+						<span>Form Essentials</span>
 					</nav>
 				</div>
 			</div>
@@ -74,15 +63,15 @@ templ BasicShowcasePage() {
 				</nav>
 
 				<hgroup>
-					<h1>✨ Basic Showcase</h1>
-					<p>Native HTML elements styled with Pico CSS - no JavaScript required for basic interactivity. Try the character counter and modal interactions!</p>
+					<h1>📝 Form Essentials</h1>
+					<p>Master form inputs, validation, and user data collection patterns. Text fields, dropdowns, checkboxes, and radio buttons with proper validation.</p>
 				</hgroup>
 
-				<form id="basic-showcase-form" @submit="submitForm($event)">
-					<!-- Profile Information Section -->
+				<form>
+					<!-- Text Inputs Section -->
 					<article>
 						<header>
-							<h2>🧾 Profile Information</h2>
+							<h2>🧾 Text Inputs</h2>
 						</header>
 						<label for="username">
 							Username
@@ -94,15 +83,13 @@ templ BasicShowcasePage() {
 							<input type="email" id="email" name="email" placeholder="name@example.com" required/>
 							<small>Use a valid email format</small>
 						</label>
-						@ExampleTextArea("notes", "Notes", "Share your goals...", "", 4, 200, "Local templ component with character limit")
-						<!-- Alpine.js character counter display -->
-						<p x-text="`Character count: ${notesLength}/${notesMaxLength}`"></p>
+						@FormTextArea("notes", "Notes", "Share your goals...", "", 4, 200, "Maximum 200 characters")
 					</article>
 
-					<!-- Preferences Section -->
+					<!-- Selection Controls Section -->
 					<article>
 						<header>
-							<h2>⚙️ Preferences</h2>
+							<h2>⚙️ Selection Controls</h2>
 						</header>
 						<label for="country">
 							Country
@@ -131,44 +118,21 @@ templ BasicShowcasePage() {
 						</label>
 					</article>
 
-					<!-- Status and Actions Section -->
+					<!-- Form Actions -->
 					<article>
 						<header>
-							<h2>🚀 Status and Actions</h2>
+							<h2>🚀 Form Actions</h2>
 						</header>
-						<p>
-							<strong>Current Status:</strong>
-							<mark>✅ Ready</mark>
-							<mark>🕒 Review</mark>
-							<mark>ℹ️ Info</mark>
-						</p>
 						<footer>
 							<div role="group">
 								<button type="button" class="secondary">Save Draft</button>
-								<button type="submit">Submit</button>
-								<button type="button" class="outline" @click="openDialog()">👀 Preview Modal</button>
+								<button type="submit">Submit Form</button>
+								<button type="reset" class="outline">Reset</button>
 							</div>
 						</footer>
 					</article>
 				</form>
-
-				<!-- Modal Dialog -->
-				<dialog id="showcase-dialog" x-show="showDialog" x-ref="dialog">
-					<article>
-						<header>
-							<h3>📋 Submission Preview</h3>
-						</header>
-						<p>Please confirm your demo submission. This modal demonstrates Alpine.js state management. ✅</p>
-						<footer>
-							<button class="secondary" @click="closeDialog()">Close</button>
-							<button @click="closeDialog()">Confirm</button>
-						</footer>
-					</article>
-				</dialog>
 			</main>
-
-			<!-- External Alpine.js component logic -->
-			<script src="/static/js/basic.js"></script>
 		</body>
 	</html>
 }

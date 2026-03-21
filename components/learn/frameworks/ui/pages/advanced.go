@@ -5,18 +5,18 @@ import (
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
 
-// AdvancedShowcaseComponent renders the advanced showcase page.
-type AdvancedShowcaseComponent struct {
+// InteractiveShowcaseComponent renders the interactive behaviors showcase page.
+type InteractiveShowcaseComponent struct {
 	*components.BaseComponent
 }
 
-// NewAdvancedShowcaseComponent creates the advanced component showcase.
-func NewAdvancedShowcaseComponent() *AdvancedShowcaseComponent {
-	c := &AdvancedShowcaseComponent{}
+// NewInteractiveShowcaseComponent creates the interactive behaviors showcase.
+func NewInteractiveShowcaseComponent() *InteractiveShowcaseComponent {
+	c := &InteractiveShowcaseComponent{}
 	c.BaseComponent = components.NewBaseComponent(
-		"showcase",
-		"Single-page showcase for advanced components",
-		"/advanced/showcase",
+		"interactive-showcase",
+		"⚡ Interactive Behaviors - Dynamic client-side interactions with Alpine.js",
+		"/interactive",
 		components.LevelAdvanced,
 		1,
 		c.render,
@@ -24,11 +24,11 @@ func NewAdvancedShowcaseComponent() *AdvancedShowcaseComponent {
 	return c
 }
 
-func (c *AdvancedShowcaseComponent) render() templ.Component {
-	return AdvancedShowcasePage()
+func (c *InteractiveShowcaseComponent) render() templ.Component {
+	return InteractiveShowcasePage()
 }
 
-// RegisterAdvanced registers the advanced showcase component with the given registry.
+// RegisterAdvanced registers the interactive behaviors showcase component with the given registry.
 func RegisterAdvanced(r *components.Registry) {
-	r.Register(NewAdvancedShowcaseComponent())
+	r.Register(NewInteractiveShowcaseComponent())
 }

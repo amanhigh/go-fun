@@ -1,0 +1,163 @@
+package pages
+
+import "github.com/templui/templui/components/card"
+
+templ DataShowcasePage() {
+	<!DOCTYPE html>
+	<html lang="en" data-theme="dark">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>📊 Data Presentation</title>
+			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
+			<style>
+				.breadcrumb {
+					background: var(--muted-color);
+					padding: 1rem;
+					margin: -2rem -2rem 2rem -2rem;
+					border-bottom: 1px solid var(--muted-border-color);
+				}
+				.breadcrumb nav {
+					display: flex;
+					align-items: center;
+					gap: 0.5rem;
+				}
+				.breadcrumb a {
+					color: var(--primary);
+					text-decoration: none;
+				}
+				.data-grid {
+					display: grid;
+					grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+					gap: 1.5rem;
+					margin-top: 2rem;
+				}
+				.status-badge {
+					padding: 0.25rem 0.5rem;
+					border-radius: 1rem;
+					font-size: 0.875rem;
+				}
+				.status-active { background: #10b981; color: white; }
+				.status-warning { background: #f59e0b; color: black; }
+				.status-error { background: #ef4444; color: white; }
+			</style>
+		</head>
+		<body>
+			<div class="breadcrumb">
+				<div class="container">
+					<nav>
+						<a href="/">🏠 Home</a>
+						<span>›</span>
+						<span>Data Presentation</span>
+					</nav>
+				</div>
+			</div>
+
+			<main class="container">
+				<nav style="margin-bottom: 2rem;">
+					<a href="/" role="button" class="secondary">← Back to Home</a>
+				</nav>
+
+				<header>
+					<h1>📊 Data Presentation</h1>
+					<p>Display structured data with tables, cards, status indicators, and content organization patterns for dashboards and reports.</p>
+				</header>
+
+				<form>
+					<!-- Cards Section -->
+					<article>
+						<header>
+							<h2>🃏 Data Cards</h2>
+						</header>
+						<p>Flexible content containers for displaying metrics, statistics, and key information.</p>
+						
+						@card.Card(card.Props{
+							Class: "w-full",
+						}) {
+							@card.Header() {
+								@card.Title() { Product Metrics }
+								@card.Description() { Q4 2024 Performance }
+							}
+							@card.Content() {
+								<p>Revenue up 23% compared to last quarter. User engagement metrics show consistent growth across all demographics.</p>
+							}
+							@card.Footer() {
+								<small>Last updated: 2 hours ago</small>
+							}
+						}
+					</article>
+
+					<!-- Data Table Section -->
+					<article>
+						<header>
+							<h2>📋 Data Tables</h2>
+						</header>
+						<p>Structured data presentation with proper header styling and responsive behavior.</p>
+						
+						<table>
+							<thead>
+								<tr>
+									<th>ID</th>
+									<th>Product</th>
+									<th>Revenue</th>
+									<th>Status</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>1</td>
+									<td>Enterprise Suite</td>
+									<td>$45,000</td>
+									<td><mark class="status-badge status-active">Active</mark></td>
+								</tr>
+								<tr>
+									<td>2</td>
+									<td>Cloud Services</td>
+									<td>$32,000</td>
+									<td><mark class="status-badge status-warning">Pending</mark></td>
+								</tr>
+								<tr>
+									<td>3</td>
+									<td>Consulting</td>
+									<td>$28,000</td>
+									<td><mark class="status-badge status-active">Active</mark></td>
+								</tr>
+							</tbody>
+						</table>
+					</article>
+
+					<!-- Status Indicators Section -->
+					<article>
+						<header>
+							<h2>🏷️ Status Indicators</h2>
+						</header>
+						<p>Visual state representations for different conditions and states.</p>
+						
+						<div class="data-grid">
+							<article>
+								<header>
+									<h3>System Status</h3>
+								</header>
+								<p>
+									<span class="status-badge status-active">✅ Online</span>
+									<span class="status-badge status-warning">⚠️ Maintenance</span>
+									<span class="status-badge status-error">❌ Offline</span>
+								</p>
+							</article>
+							<article>
+								<header>
+									<h3>Priority Levels</h3>
+								</header>
+								<p>
+									<mark style="background: #10b981; color: white;">Low</mark>
+									<mark style="background: #f59e0b; color: black;">Medium</mark>
+									<mark style="background: #ef4444; color: white;">High</mark>
+								</p>
+							</article>
+						</div>
+					</article>
+				</form>
+			</main>
+		</body>
+	</html>
+}

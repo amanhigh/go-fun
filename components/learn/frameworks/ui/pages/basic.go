@@ -5,18 +5,18 @@ import (
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
 
-// BasicShowcaseComponent renders the basic showcase page.
-type BasicShowcaseComponent struct {
+// FormShowcaseComponent renders the form essentials showcase page.
+type FormShowcaseComponent struct {
 	*components.BaseComponent
 }
 
-// NewBasicShowcaseComponent creates the basic component showcase.
-func NewBasicShowcaseComponent() *BasicShowcaseComponent {
-	c := &BasicShowcaseComponent{}
+// NewFormShowcaseComponent creates the form essentials showcase.
+func NewFormShowcaseComponent() *FormShowcaseComponent {
+	c := &FormShowcaseComponent{}
 	c.BaseComponent = components.NewBaseComponent(
-		"basic-showcase",
-		"Single-page showcase for basic components",
-		"/basic/showcase",
+		"form-showcase",
+		"📝 Form Essentials - Master form inputs, validation, and user data collection patterns",
+		"/form",
 		components.LevelBasic,
 		1,
 		c.render,
@@ -24,13 +24,13 @@ func NewBasicShowcaseComponent() *BasicShowcaseComponent {
 	return c
 }
 
-var _ components.Component = (*BasicShowcaseComponent)(nil)
+var _ components.Component = (*FormShowcaseComponent)(nil)
 
-func (c *BasicShowcaseComponent) render() templ.Component {
-	return BasicShowcasePage()
+func (c *FormShowcaseComponent) render() templ.Component {
+	return FormShowcasePage()
 }
 
-// RegisterBasic registers all basic components with the given registry.
+// RegisterBasic registers all form components with the given registry.
 func RegisterBasic(r *components.Registry) {
-	r.Register(NewBasicShowcaseComponent())
+	r.Register(NewFormShowcaseComponent())
 }

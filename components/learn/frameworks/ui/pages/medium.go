@@ -5,18 +5,18 @@ import (
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 )
 
-// MediumShowcaseComponent renders the medium showcase page.
-type MediumShowcaseComponent struct {
+// DataShowcaseComponent renders the data presentation showcase page.
+type DataShowcaseComponent struct {
 	*components.BaseComponent
 }
 
-// NewMediumShowcaseComponent creates the medium component showcase.
-func NewMediumShowcaseComponent() *MediumShowcaseComponent {
-	c := &MediumShowcaseComponent{}
+// NewDataShowcaseComponent creates the data presentation showcase.
+func NewDataShowcaseComponent() *DataShowcaseComponent {
+	c := &DataShowcaseComponent{}
 	c.BaseComponent = components.NewBaseComponent(
-		"medium-showcase",
-		"Single-page showcase for medium components",
-		"/medium/showcase",
+		"data-showcase",
+		"📊 Data Presentation - Display structured data with tables, cards, and status indicators",
+		"/data",
 		components.LevelMedium,
 		1,
 		c.render,
@@ -24,13 +24,13 @@ func NewMediumShowcaseComponent() *MediumShowcaseComponent {
 	return c
 }
 
-var _ components.Component = (*MediumShowcaseComponent)(nil)
+var _ components.Component = (*DataShowcaseComponent)(nil)
 
-func (c *MediumShowcaseComponent) render() templ.Component {
-	return MediumShowcasePage()
+func (c *DataShowcaseComponent) render() templ.Component {
+	return DataShowcasePage()
 }
 
-// RegisterMedium registers all medium components with the given registry
+// RegisterMedium registers all data presentation components with the given registry
 func RegisterMedium(r *components.Registry) {
-	r.Register(NewMediumShowcaseComponent())
+	r.Register(NewDataShowcaseComponent())
 }

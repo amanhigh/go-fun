@@ -45,15 +45,15 @@ var _ = Describe("UI Component Handler Tests", func() {
 		}
 	})
 
-	Context("Basic Components - Core Showcase", func() {
+	Context("Form Essentials Showcase", func() {
 		var (
-			comp *pages.BasicShowcaseComponent
+			comp *pages.FormShowcaseComponent
 			w    *httptest.ResponseRecorder
 			html string
 		)
 
 		BeforeEach(func() {
-			comp = pages.NewBasicShowcaseComponent()
+			comp = pages.NewFormShowcaseComponent()
 			var req *http.Request
 			req, w = util.CreateHTMLTestRequest("GET", comp.URL())
 			router.ServeHTTP(w, req)
@@ -126,24 +126,24 @@ var _ = Describe("UI Component Handler Tests", func() {
 			Expect(html).To(ContainSubstring("Confirm"))
 		})
 
-		It("should implement Component interface for showcase component", func() {
-			var _ components.Component = pages.NewBasicShowcaseComponent()
+		It("should implement Component interface for form showcase component", func() {
+			var _ components.Component = pages.NewFormShowcaseComponent()
 
-			showcase := pages.NewBasicShowcaseComponent()
-			Expect(showcase.Name()).To(Equal("basic-showcase"))
+			showcase := pages.NewFormShowcaseComponent()
+			Expect(showcase.Name()).To(Equal("form-showcase"))
 			Expect(showcase.Level()).To(Equal(components.LevelBasic))
 		})
 	})
 
-	Context("Medium Components", func() {
+	Context("Data Presentation Showcase", func() {
 		var (
-			comp *pages.MediumShowcaseComponent
+			comp *pages.DataShowcaseComponent
 			w    *httptest.ResponseRecorder
 			html string
 		)
 
 		BeforeEach(func() {
-			comp = pages.NewMediumShowcaseComponent()
+			comp = pages.NewDataShowcaseComponent()
 			w = httptest.NewRecorder()
 			req, _ := http.NewRequest("GET", comp.URL(), nil)
 			router.ServeHTTP(w, req)
@@ -208,11 +208,11 @@ var _ = Describe("UI Component Handler Tests", func() {
 			Expect(html).To(ContainSubstring("Last updated: 2024-03-21"))
 		})
 
-		It("should implement Component interface for medium showcase component", func() {
-			var _ components.Component = pages.NewMediumShowcaseComponent()
+		It("should implement Component interface for data showcase component", func() {
+			var _ components.Component = pages.NewDataShowcaseComponent()
 
-			showcase := pages.NewMediumShowcaseComponent()
-			Expect(showcase.Name()).To(Equal("medium-showcase"))
+			showcase := pages.NewDataShowcaseComponent()
+			Expect(showcase.Name()).To(Equal("data-showcase"))
 			Expect(showcase.Level()).To(Equal(components.LevelMedium))
 		})
 	})
@@ -228,7 +228,7 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should render advanced showcase page", func() {
-			comp := pages.NewAdvancedShowcaseComponent()
+			comp := pages.NewInteractiveShowcaseComponent()
 			req, _ := http.NewRequest("GET", comp.URL(), nil)
 			router.ServeHTTP(w, req)
 
@@ -268,10 +268,10 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should implement Component interface for advanced showcase component", func() {
-			var _ components.Component = pages.NewAdvancedShowcaseComponent()
+			var _ components.Component = pages.NewInteractiveShowcaseComponent()
 
-			showcase := pages.NewAdvancedShowcaseComponent()
-			Expect(showcase.Name()).To(Equal("showcase"))
+			showcase := pages.NewInteractiveShowcaseComponent()
+			Expect(showcase.Name()).To(Equal("interactive-showcase"))
 			Expect(showcase.Level()).To(Equal(components.LevelAdvanced))
 		})
 	})
@@ -286,13 +286,13 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should have correct number of advanced components", func() {
-			Expect(registry.Advanced()).To(HaveLen(1))
+			Expect(registry.Advanced()).To(HaveLen(2))
 		})
 
 		It("should find component by URL", func() {
-			comp := registry.FindByURL("/basic/showcase")
+			comp := registry.FindByURL("/form")
 			Expect(comp).ToNot(BeNil())
-			Expect(comp.Name()).To(Equal("basic-showcase"))
+			Expect(comp.Name()).To(Equal("form-showcase"))
 		})
 
 		It("should return nil for unknown URL", func() {

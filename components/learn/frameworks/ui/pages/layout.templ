@@ -1,14 +1,12 @@
 package pages
 
-// AdvancedShowcasePage demonstrates advanced complexity components
-templ AdvancedShowcasePage() {
+templ LayoutShowcasePage() {
 	<!DOCTYPE html>
 	<html lang="en" data-theme="dark">
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>Advanced Showcase - Real-world Applications</title>
-			<!-- Pico CSS only -->
+			<title>🎨 Layout & Composition</title>
 			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
 			<style>
 				.breadcrumb {
@@ -25,9 +23,6 @@ templ AdvancedShowcasePage() {
 				.breadcrumb a {
 					color: var(--primary);
 					text-decoration: none;
-				}
-				.breadcrumb a:hover {
-					text-decoration: underline;
 				}
 				.dashboard-grid {
 					display: grid;
@@ -56,7 +51,7 @@ templ AdvancedShowcasePage() {
 					<nav>
 						<a href="/">🏠 Home</a>
 						<span>›</span>
-						<span>Advanced Showcase</span>
+						<span>Layout & Composition</span>
 					</nav>
 				</div>
 			</div>
@@ -67,17 +62,17 @@ templ AdvancedShowcasePage() {
 				</nav>
 
 				<header>
-					<h1>🚀 Advanced Showcase</h1>
-					<p>Real-world applications - complete pages, dashboards, and complex layouts demonstrating production-ready patterns.</p>
+					<h1>🎨 Layout & Composition</h1>
+					<p>Complex page layouts, grid systems, responsive design, and component composition for production-ready applications.</p>
 				</header>
 
 				<form>
-					<!-- Dashboard Section -->
+					<!-- Dashboard Layout Section -->
 					<article>
 						<header>
 							<h2>📊 Dashboard Layout</h2>
 						</header>
-						<p>Complex dashboard with multiple widgets, status indicators, and data visualization patterns.</p>
+						<p>Complex dashboard with multiple widgets using CSS Grid for responsive layouts.</p>
 						
 						<div class="dashboard-grid">
 							<!-- User Status Cards -->
@@ -108,11 +103,11 @@ templ AdvancedShowcasePage() {
 								</header>
 								<p><mark class="counter-positive">42</mark> requests/second</p>
 								<footer>
-									<p>Performance is optimal - above target threshold</p>
+									<p>Performance is optimal</p>
 								</footer>
 							</div>
 							
-							<!-- Data Table -->
+							<!-- Wide Table Widget -->
 							<div class="dashboard-card" style="grid-column: 1 / -1;">
 								<header>
 									<h3>📋 Project Status</h3>
@@ -151,26 +146,25 @@ templ AdvancedShowcasePage() {
 						</div>
 					</article>
 
-					<!-- Full Page Section -->
+					<!-- Page Composition Section -->
 					<article>
 						<header>
-							<h2>📄 Full Page Composition</h2>
+							<h2>📄 Page Composition</h2>
 						</header>
-						<p>Complete page demonstrating all component types working together in a cohesive layout.</p>
+						<p>Complete page structure demonstrating header, navigation, main content areas, and footer organization.</p>
 						
-						<label for="advanced-notes">
-							Advanced Notes
+						<label for="layout-notes">
+							Layout Notes
 							<textarea 
-								id="advanced-notes" 
-								name="advanced-notes" 
-								placeholder="Capture advanced page notes and observations..."
+								id="layout-notes" 
+								name="layout-notes" 
+								placeholder="Document your layout decisions and responsive breakpoints..."
 								rows="4">
 							</textarea>
-							<small>Rich text area for detailed content capture and documentation.</small>
 						</label>
 					</article>
 
-					<!-- Status and Actions Section -->
+					<!-- System Status Section -->
 					<article>
 						<header>
 							<h2>🎯 System Status</h2>
