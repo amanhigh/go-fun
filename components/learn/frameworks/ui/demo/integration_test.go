@@ -135,6 +135,59 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 	})
 
+	Context("Hello Page", func() {
+		var (
+			comp *pages.HelloComponent
+			w    *httptest.ResponseRecorder
+			html string
+		)
+
+		BeforeEach(func() {
+			comp = pages.NewHelloComponent()
+			w = httptest.NewRecorder()
+			req, _ := http.NewRequest("GET", comp.URL(), nil)
+			router.ServeHTTP(w, req)
+
+			Expect(w.Code).To(Equal(http.StatusOK))
+			body, _ := io.ReadAll(w.Body)
+			html = string(body)
+		})
+
+		It("should render hello page with selectbox", func() {
+			Expect(html).To(ContainSubstring("Hello Selectbox Test"))
+			Expect(html).To(ContainSubstring("Testing just one selectbox component"))
+		})
+
+		It("should showcase Select Box component", func() {
+			// Verify select box structure
+			Expect(html).To(ContainSubstring("Country"))
+			Expect(html).To(ContainSubstring("id=\"country\""))
+			Expect(html).To(ContainSubstring("Choose your country"))
+			Expect(html).To(ContainSubstring("United States"))
+			Expect(html).To(ContainSubstring("India"))
+			Expect(html).To(ContainSubstring("United Kingdom"))
+		})
+
+		It("should include selectbox script", func() {
+			// Verify selectbox JavaScript is loaded
+			Expect(html).To(ContainSubstring("selectbox.min.js"))
+		})
+
+		It("should include Tailwind CSS", func() {
+			// Verify Tailwind CSS is loaded
+			Expect(html).To(ContainSubstring("cdn.tailwindcss.com"))
+		})
+
+		It("should implement Component interface for hello component", func() {
+			var _ components.Component = pages.NewHelloComponent()
+
+			hello := pages.NewHelloComponent()
+			Expect(hello.Name()).To(Equal("hello"))
+			Expect(hello.Level()).To(Equal(components.LevelBasic))
+			Expect(hello.URL()).To(Equal("/hello"))
+		})
+	})
+
 	Context("Data Presentation Showcase", func() {
 		var (
 			comp *pages.DataShowcaseComponent
@@ -278,7 +331,7 @@ var _ = Describe("UI Component Handler Tests", func() {
 
 	Context("Component Registry", func() {
 		It("should have correct number of basic components", func() {
-			Expect(registry.Basic()).To(HaveLen(1))
+			Expect(registry.Basic()).To(HaveLen(2))
 		})
 
 		It("should have correct number of medium components", func() {
@@ -286,7 +339,7 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should have correct number of advanced components", func() {
-			Expect(registry.Advanced()).To(HaveLen(2))
+			Expect(registry.Advanced()).To(HaveLen(1))
 		})
 
 		It("should find component by URL", func() {

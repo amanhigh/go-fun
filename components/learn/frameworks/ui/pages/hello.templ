@@ -1,0 +1,48 @@
+package pages
+
+import (
+	"github.com/templui/templui/components/form"
+	"github.com/templui/templui/components/selectbox"
+)
+
+templ HelloPage() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Hello - Selectbox Test</title>
+			<!-- Tailwind CSS via CDN -->
+			<script src="https://cdn.tailwindcss.com"></script>
+			@selectbox.Script()
+		</head>
+		<body>
+			<div class="container">
+				<h1>Hello Selectbox Test</h1>
+				<p>Testing just one selectbox component</p>
+				
+				@form.Item() {
+					@form.Label(form.LabelProps{For: "country"}) {
+						Country
+					}
+					@selectbox.SelectBox() {
+						@selectbox.Trigger(selectbox.TriggerProps{ID: "country", Name: "country"}) {
+							@selectbox.Value(selectbox.ValueProps{Placeholder: "Choose your country"})
+						}
+						@selectbox.Content() {
+							@selectbox.Group() {
+								@selectbox.Label() { Countries }
+								@selectbox.Item(selectbox.ItemProps{Value: "us"}) { United States }
+								@selectbox.Item(selectbox.ItemProps{Value: "in"}) { India }
+								@selectbox.Item(selectbox.ItemProps{Value: "uk"}) { United Kingdom }
+							}
+						}
+					}
+					@form.Description() {
+						Select your country from the dropdown
+					}
+				}
+			</div>
+		</body>
+	</html>
+}

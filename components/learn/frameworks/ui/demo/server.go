@@ -6,6 +6,7 @@ import (
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/ui/pages"
 	"github.com/gin-gonic/gin"
+	"github.com/templui/templui/utils"
 )
 
 // UIServer provides HTTP endpoints to view Templ components in browser
@@ -45,7 +46,12 @@ func (s *UIServer) Start() error {
 // SetupRoutes configures all routes on the given gin engine
 func (s *UIServer) SetupRoutes(r *gin.Engine) {
 	// Serve static files (JS, CSS, images) - path relative to demo directory
-	r.Static("/static", "./static")
+	r.Static("/static", "../static")
+
+	// Serve templui JavaScript files using embedded assets
+	mux := http.NewServeMux()
+	utils.SetupScriptRoutes(mux, true) // true for development
+	r.Any("/templui/*filepath", gin.WrapH(mux))
 
 	// Index page - shows all available components
 	r.GET("/", s.indexHandler)
