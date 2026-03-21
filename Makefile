@@ -176,8 +176,8 @@ clean-build:
 
 clean-templ:
 	printf $(_WARN) "Cleaning Templ Files"
-	find components/learn/frameworks/ui -name "*_templ.go" -delete
-	find components/learn/frameworks/ui -name "*_templ.txt" -delete
+	find components/learn/frameworks/frontend -name "*_templ.go" -delete
+	find components/learn/frameworks/frontend -name "*_templ.txt" -delete
 
 clean: clean-test clean-build clean-templ ## Clean up Residue
 
@@ -473,20 +473,18 @@ generate-templ:
 	$(GOBIN)/templ generate -path components/learn
 
 generate-css:
-	@if [ -f components/learn/frameworks/ui/assets/css/input.css ]; then \
-		printf $(_TITLE) "Generate" "CSS"; \
-		TAILWIND_CMD="$$(npm config get prefix)/bin/tailwindcss"; \
-		cd components/learn/frameworks/ui && \
-		TEMPLUI_PATH="$$(go list -m -f '{{.Dir}}' github.com/templui/templui)" && \
-		{ \
-			find . -name "*.templ" -type f | sed 's|^\./||' | while read -r file; do \
-				dir=$$(dirname "$$file"); \
-				echo "@source \"./$$dir/**/*.templ\";"; \
-			done | sort -u; \
-			echo "@source \"$$TEMPLUI_PATH/components/**/*.templ\";"; \
-		} > ./assets/css/sources.generated.css && \
-		$$TAILWIND_CMD -i ./assets/css/input.css -o ./assets/css/output.css; \
-	fi
+	@printf $(_TITLE) "Generate" "CSS"
+	@cd components/learn/frameworks/frontend && \
+	TAILWIND_CMD="$$(npm config get prefix)/bin/tailwindcss" && \
+	TEMPLUI_PATH="$$(go list -m -f '{{.Dir}}' github.com/templui/templui)" && \
+	( \
+		find . -name "*.templ" -type f | sed 's|^\./||' | while read -r file; do \
+			dir=$$(dirname "$$file"); \
+			echo "@source \"./$$dir/**/*.templ\";"; \
+		done | sort -u; \
+		echo "@source \"$$TEMPLUI_PATH/components/**/*.templ\";"; \
+	) > ./assets/css/sources.generated.css && \
+	$$TAILWIND_CMD -i ./assets/css/input.css -o ./assets/css/output.css
 
 generate: generate-mocks generate-swagger generate-templ generate-css ## Generate Files
 
