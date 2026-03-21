@@ -7,9 +7,10 @@ package pages
 
 //lint:file-ignore SA4006 This context is only used if a nested component is present.
 
+import "github.com/a-h/templ"
+import templruntime "github.com/a-h/templ/runtime"
+
 import (
-	"github.com/a-h/templ"
-	templruntime "github.com/a-h/templ/runtime"
 	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/breadcrumb"
 	"github.com/templui/templui/components/card"
@@ -37,7 +38,7 @@ func DataShowcasePage() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\" data-theme=\"dark\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>📊 Data Presentation</title><link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css\"><link rel=\"stylesheet\" href=\"/static/css/showcase.css\"><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script><style>\n\t\t\t\t.breadcrumb {\n\t\t\t\t\tbackground: var(--muted-color);\n\t\t\t\t\tpadding: 1rem;\n\t\t\t\t\tmargin: -2rem -2rem 2rem -2rem;\n\t\t\t\t\tborder-bottom: 1px solid var(--muted-border-color);\n\t\t\t\t}\n\t\t\t\t.breadcrumb nav {\n\t\t\t\t\tdisplay: flex;\n\t\t\t\t\talign-items: center;\n\t\t\t\t\tgap: 0.5rem;\n\t\t\t\t}\n\t\t\t\t.breadcrumb a {\n\t\t\t\t\tcolor: var(--primary);\n\t\t\t\t\ttext-decoration: none;\n\t\t\t\t}\n\t\t\t\t.data-grid {\n\t\t\t\t\tdisplay: grid;\n\t\t\t\t\tgrid-template-columns: repeat(auto-fit, minmax(300px, 1fr));\n\t\t\t\t\tgap: 1.5rem;\n\t\t\t\t\tmargin-top: 2rem;\n\t\t\t\t}\n\t\t\t\t.status-badge {\n\t\t\t\t\tpadding: 0.25rem 0.5rem;\n\t\t\t\t\tborder-radius: 1rem;\n\t\t\t\t\tfont-size: 0.875rem;\n\t\t\t\t}\n\t\t\t\t.status-active { background: #10b981; color: white; }\n\t\t\t\t.status-warning { background: #f59e0b; color: black; }\n\t\t\t\t.status-error { background: #ef4444; color: white; }\n\t\t\t</style></head><body><div class=\"breadcrumb\"><div class=\"container\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\" data-theme=\"dark\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>📊 Data Presentation</title><link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css\"><link rel=\"stylesheet\" href=\"/assets/css/showcase.css\"><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script><style>\n\t\t\t\t.breadcrumb {\n\t\t\t\t\tbackground: var(--muted-color);\n\t\t\t\t\tpadding: 1rem;\n\t\t\t\t\tmargin: -2rem -2rem 2rem -2rem;\n\t\t\t\t\tborder-bottom: 1px solid var(--muted-border-color);\n\t\t\t\t}\n\t\t\t\t.breadcrumb nav {\n\t\t\t\t\tdisplay: flex;\n\t\t\t\t\talign-items: center;\n\t\t\t\t\tgap: 0.5rem;\n\t\t\t\t}\n\t\t\t\t.breadcrumb a {\n\t\t\t\t\tcolor: var(--primary);\n\t\t\t\t\ttext-decoration: none;\n\t\t\t\t}\n\t\t\t\t.data-grid {\n\t\t\t\t\tdisplay: grid;\n\t\t\t\t\tgrid-template-columns: repeat(auto-fit, minmax(300px, 1fr));\n\t\t\t\t\tgap: 1.5rem;\n\t\t\t\t\tmargin-top: 2rem;\n\t\t\t\t}\n\t\t\t\t.status-badge {\n\t\t\t\t\tpadding: 0.25rem 0.5rem;\n\t\t\t\t\tborder-radius: 1rem;\n\t\t\t\t\tfont-size: 0.875rem;\n\t\t\t\t}\n\t\t\t\t.status-active { background: #10b981; color: white; }\n\t\t\t\t.status-warning { background: #f59e0b; color: black; }\n\t\t\t\t.status-error { background: #ef4444; color: white; }\n\t\t\t</style></head><body><div class=\"breadcrumb\"><div class=\"container\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

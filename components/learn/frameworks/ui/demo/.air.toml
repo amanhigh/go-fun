@@ -2,7 +2,7 @@ root = "."
 tmp_dir = "/tmp/ui-demo"
 
 [build]
-  cmd = "$GOBIN/templ generate && cd .. && tailwindcss -i ./assets/input.css -o ./assets/css/output.css 2>/dev/null && cd demo && go build -o /tmp/ui-demo/main ."
+  cmd = "$GOBIN/templ generate && cd .. && tailwindcss -i ./assets/css/input.css -o ./assets/css/output.css 2>/dev/null && cd demo && go build -o /tmp/ui-demo/main ."
   entrypoint = "/tmp/ui-demo/main"
   delay = 1000
   include_ext = ["go", "templ", "css"]
