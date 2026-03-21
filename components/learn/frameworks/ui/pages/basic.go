@@ -7,26 +7,25 @@ import (
 
 // FormShowcaseComponent renders the form essentials showcase page.
 type FormShowcaseComponent struct {
-	*components.BaseComponent
+	components.BaseComponent
 }
 
 // NewFormShowcaseComponent creates the form essentials showcase.
 func NewFormShowcaseComponent() *FormShowcaseComponent {
-	c := &FormShowcaseComponent{}
-	c.BaseComponent = components.NewBaseComponent(
-		"form-showcase",
-		"📝 Form Essentials - Master form inputs, validation, and user data collection patterns",
-		"/form",
-		components.LevelBasic,
-		1,
-		c.render,
-	)
-	return c
+	return &FormShowcaseComponent{
+		BaseComponent: components.NewBaseComponent(
+			"form-showcase",
+			"📝 Form Essentials - Master form inputs, validation, and user data collection patterns",
+			"/form",
+			components.LevelBasic,
+			1,
+		),
+	}
 }
 
 var _ components.Component = (*FormShowcaseComponent)(nil)
 
-func (c *FormShowcaseComponent) render() templ.Component {
+func (c *FormShowcaseComponent) Render() templ.Component {
 	return FormShowcasePage()
 }
 

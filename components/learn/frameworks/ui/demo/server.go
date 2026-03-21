@@ -45,18 +45,12 @@ func (s *UIServer) Start() error {
 // SetupRoutes configures all routes on the given gin engine
 func (s *UIServer) SetupRoutes(r *gin.Engine) {
 	// Serve static files (JS, CSS, images) - path relative to demo directory
-	r.Static("/static", "../static")
+	r.Static("/static", "./static")
 
-	// Index page
+	// Index page - shows all available components
 	r.GET("/", s.indexHandler)
 
-	// Showcase pages (new feature-based names)
-	r.GET("/form", s.formShowcaseHandler)
-	r.GET("/data", s.dataShowcaseHandler)
-	r.GET("/interactive", s.interactiveShowcaseHandler)
-	r.GET("/layout", s.layoutShowcaseHandler)
-
-	// Register all component routes dynamically
+	// Register all component routes dynamically using the registry
 	for _, comp := range s.registry.All() {
 		s.registerComponentRoute(r, comp)
 	}
@@ -75,62 +69,27 @@ func (s *UIServer) registerComponentRoute(r *gin.Engine, comp components.Compone
 func (s *UIServer) indexHandler(c *gin.Context) {
 	c.Header("Content-Type", "text/html")
 
-	levels := []pages.LevelInfo{
-		{
-			Name:        "📝 Form Essentials",
-			Path:        "/form",
-			Description: "Master form inputs, validation, and user data collection patterns. Text fields, dropdowns, checkboxes, and radio buttons with proper validation.",
+	// Build levels dynamically from registry
+	levels := make([]pages.LevelInfo, 0, len(s.registry.All()))
+	for _, comp := range s.registry.All() {
+		badgeClass := "badge-basic"
+		switch comp.Level() {
+		case components.LevelMedium:
+			badgeClass = "badge-medium"
+		case components.LevelAdvanced:
+			badgeClass = "badge-advanced"
+		}
+
+		levels = append(levels, pages.LevelInfo{
+			Name:        comp.Name(),
+			Path:        comp.URL(),
+			Description: comp.Description(),
 			Count:       1,
-			BadgeClass:  "badge-basic",
-		},
-		{
-			Name:        "📊 Data Presentation",
-			Path:        "/data",
-			Description: "Display structured data with tables, cards, status indicators, and content organization patterns for dashboards and reports.",
-			Count:       1,
-			BadgeClass:  "badge-medium",
-		},
-		{
-			Name:        "⚡ Interactive Behaviors",
-			Path:        "/interactive",
-			Description: "Dynamic client-side interactions with Alpine.js. Modals, character counters, real-time updates, and state management patterns.",
-			Count:       1,
-			BadgeClass:  "badge-advanced",
-		},
-		{
-			Name:        "🎨 Layout & Composition",
-			Path:        "/layout",
-			Description: "Complex page layouts, grid systems, responsive design, and component composition for production-ready applications.",
-			Count:       1,
-			BadgeClass:  "badge-advanced",
-		},
+			BadgeClass:  badgeClass,
+		})
 	}
 
 	pages.IndexPage(levels).Render(c.Request.Context(), c.Writer)
-}
-
-// formShowcaseHandler serves the form essentials showcase
-func (s *UIServer) formShowcaseHandler(c *gin.Context) {
-	c.Header("Content-Type", "text/html")
-	pages.FormShowcasePage().Render(c.Request.Context(), c.Writer)
-}
-
-// dataShowcaseHandler serves the data presentation showcase
-func (s *UIServer) dataShowcaseHandler(c *gin.Context) {
-	c.Header("Content-Type", "text/html")
-	pages.DataShowcasePage().Render(c.Request.Context(), c.Writer)
-}
-
-// interactiveShowcaseHandler serves the interactive behaviors showcase
-func (s *UIServer) interactiveShowcaseHandler(c *gin.Context) {
-	c.Header("Content-Type", "text/html")
-	pages.InteractiveShowcasePage().Render(c.Request.Context(), c.Writer)
-}
-
-// layoutShowcaseHandler serves the layout & composition showcase
-func (s *UIServer) layoutShowcaseHandler(c *gin.Context) {
-	c.Header("Content-Type", "text/html")
-	pages.LayoutShowcasePage().Render(c.Request.Context(), c.Writer)
 }
 
 // GetComponent returns a component by URL for testing

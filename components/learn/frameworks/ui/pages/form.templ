@@ -1,22 +1,36 @@
+//go:generate templ generate
 package pages
 
-import "fmt"
+import (
+	"github.com/templui/templui/components/breadcrumb"
+	"github.com/templui/templui/components/button"
+	"github.com/templui/templui/components/checkbox"
+	"github.com/templui/templui/components/form"
+	"github.com/templui/templui/components/input"
+	"github.com/templui/templui/components/radio"
+	"github.com/templui/templui/components/textarea"
+)
 
-// FormTextArea demonstrates textarea with validation
+// FormTextArea demonstrates textarea with validation - replaced by templui Textarea
 templ FormTextArea(id string, label string, placeholder string, value string, rows int, maxLength int, helperText string) {
-	<label for={ id }>
-		{ label }
-		<textarea
-			id={ id }
-			name={ id }
-			placeholder={ placeholder }
-			rows={ fmt.Sprintf("%d", rows) }
-			maxlength={ fmt.Sprintf("%d", maxLength) }
-		>{ value }</textarea>
-		if helperText != "" {
-			<small>{ helperText }</small>
+	@form.Item() {
+		@form.Label(form.LabelProps{For: id}) {
+			{ label }
 		}
-	</label>
+		@textarea.Textarea(textarea.Props{
+			ID:          id,
+			Name:        id,
+			Placeholder: placeholder,
+			Rows:        rows,
+			Attributes:  templ.Attributes{"maxlength": maxLength},
+			Value:       value,
+		})
+		if helperText != "" {
+			@form.Description() {
+				{ helperText }
+			}
+		}
+	}
 }
 
 templ FormShowcasePage() {
@@ -28,6 +42,7 @@ templ FormShowcasePage() {
 			<title>📝 Form Essentials</title>
 			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
 			<link rel="stylesheet" href="/static/css/showcase.css"/>
+			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 			<style>
 				.breadcrumb {
 					background: var(--muted-color);
@@ -44,22 +59,42 @@ templ FormShowcasePage() {
 					color: var(--primary);
 					text-decoration: none;
 				}
+				/* Style native select to work with templUI forms */
+				select {
+					width: 100%;
+					padding: 0.5rem;
+					border: 1px solid var(--border-color);
+					border-radius: 0.375rem;
+					background-color: var(--background-color);
+					color: var(--text-color);
+					font-size: 0.875rem;
+				}
+				select:focus {
+					outline: 2px solid var(--primary);
+					outline-offset: 2px;
+				}
 			</style>
 		</head>
-		<body>
+		<body x-data="{ selectedCountry: '' }">
 			<div class="breadcrumb">
 				<div class="container">
-					<nav>
-						<a href="/">🏠 Home</a>
-						<span>›</span>
-						<span>Form Essentials</span>
-					</nav>
+					@breadcrumb.Breadcrumb() {
+						@breadcrumb.List() {
+							@breadcrumb.Item() {
+								<a href="/">🏠 Home</a>
+							}
+							@breadcrumb.Separator() { › }
+							@breadcrumb.Item() { Form Essentials }
+						}
+					}
 				</div>
 			</div>
 
 			<main class="container">
 				<nav style="margin-bottom: 2rem;">
-					<a href="/" role="button" class="secondary">← Back to Home</a>
+					@button.Button(button.Props{Variant: button.VariantSecondary, Type: button.TypeButton, Attributes: templ.Attributes{"onclick": "window.location.href='/'"}}) {
+						← Back to Home
+					}
 				</nav>
 
 				<hgroup>
@@ -73,16 +108,37 @@ templ FormShowcasePage() {
 						<header>
 							<h2>🧾 Text Inputs</h2>
 						</header>
-						<label for="username">
-							Username
-							<input type="text" id="username" name="username" placeholder="Enter username" required pattern="^[a-zA-Z0-9_]{3,20}$"/>
-							<small>3-20 characters: letters, numbers, underscore</small>
-						</label>
-						<label for="email">
-							Email
-							<input type="email" id="email" name="email" placeholder="name@example.com" required/>
-							<small>Use a valid email format</small>
-						</label>
+						@form.Item() {
+							@form.Label(form.LabelProps{For: "username"}) {
+								Username
+							}
+							@input.Input(input.Props{
+								ID:         "username",
+								Name:       "username",
+								Type:       input.TypeText,
+								Placeholder: "Enter username",
+								Required:   true,
+								Attributes: templ.Attributes{"pattern": "^[a-zA-Z0-9_]{3,20}$"},
+							})
+							@form.Description() {
+								3-20 characters: letters, numbers, underscore
+							}
+						}
+						@form.Item() {
+							@form.Label(form.LabelProps{For: "email"}) {
+								Email
+							}
+							@input.Input(input.Props{
+								ID:         "email",
+								Name:       "email",
+								Type:       input.TypeEmail,
+								Placeholder: "name@example.com",
+								Required:   true,
+							})
+							@form.Description() {
+								Use a valid email format
+							}
+						}
 						@FormTextArea("notes", "Notes", "Share your goals...", "", 4, 200, "Maximum 200 characters")
 					</article>
 
@@ -91,31 +147,49 @@ templ FormShowcasePage() {
 						<header>
 							<h2>⚙️ Selection Controls</h2>
 						</header>
-						<label for="country">
-							Country
-							<select id="country" name="country" required>
+						@form.Item() {
+							@form.Label(form.LabelProps{For: "country"}) {
+								Country
+							}
+							<select id="country" name="country" required x-model="selectedCountry">
 								<option value="" disabled selected>Choose your primary region</option>
 								<option value="us">United States</option>
 								<option value="in">India</option>
 								<option value="uk">United Kingdom</option>
 								<option value="de">Germany</option>
 							</select>
-						</label>
-						<fieldset>
-							<legend>Subscription Plan</legend>
-							<label>
-								<input type="radio" id="plan-starter" name="plan" value="starter" checked/>
+							@form.Description() {
+								Select your primary region for services
+							}
+						}
+						@form.Item() {
+							@form.Label() {
+								Subscription Plan
+							}
+							@radio.Radio(radio.Props{
+								ID:    "plan-starter",
+								Name:  "plan",
+								Value: "starter",
+							}) {
 								Starter
-							</label>
-							<label>
-								<input type="radio" id="plan-pro" name="plan" value="pro"/>
+							}
+							@radio.Radio(radio.Props{
+								ID:    "plan-pro",
+								Name:  "plan",
+								Value: "pro",
+							}) {
 								Pro
-							</label>
-						</fieldset>
-						<label>
-							<input type="checkbox" id="terms" name="terms" value="accepted"/>
-							I accept terms and conditions
-						</label>
+							}
+						}
+						@form.Item() {
+							@checkbox.Checkbox(checkbox.Props{
+								ID:    "terms",
+								Name:  "terms",
+								Value: "accepted",
+							}) {
+								I accept terms and conditions
+							}
+						}
 					</article>
 
 					<!-- Form Actions -->
@@ -125,9 +199,15 @@ templ FormShowcasePage() {
 						</header>
 						<footer>
 							<div role="group">
-								<button type="button" class="secondary">Save Draft</button>
-								<button type="submit">Submit Form</button>
-								<button type="reset" class="outline">Reset</button>
+								@button.Button(button.Props{Variant: button.VariantSecondary, Type: button.TypeButton}) {
+									Save Draft
+								}
+								@button.Button(button.Props{Type: button.TypeSubmit}) {
+									Submit Form
+								}
+								@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeReset}) {
+									Reset
+								}
 							</div>
 						</footer>
 					</article>

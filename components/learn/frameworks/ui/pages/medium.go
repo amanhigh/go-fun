@@ -7,26 +7,25 @@ import (
 
 // DataShowcaseComponent renders the data presentation showcase page.
 type DataShowcaseComponent struct {
-	*components.BaseComponent
+	components.BaseComponent
 }
 
 // NewDataShowcaseComponent creates the data presentation showcase.
 func NewDataShowcaseComponent() *DataShowcaseComponent {
-	c := &DataShowcaseComponent{}
-	c.BaseComponent = components.NewBaseComponent(
-		"data-showcase",
-		"📊 Data Presentation - Display structured data with tables, cards, and status indicators",
-		"/data",
-		components.LevelMedium,
-		1,
-		c.render,
-	)
-	return c
+	return &DataShowcaseComponent{
+		BaseComponent: components.NewBaseComponent(
+			"data-showcase",
+			"📊 Data Presentation - Display structured data with tables, cards, and status indicators",
+			"/data",
+			components.LevelMedium,
+			1,
+		),
+	}
 }
 
 var _ components.Component = (*DataShowcaseComponent)(nil)
 
-func (c *DataShowcaseComponent) render() templ.Component {
+func (c *DataShowcaseComponent) Render() templ.Component {
 	return DataShowcasePage()
 }
 

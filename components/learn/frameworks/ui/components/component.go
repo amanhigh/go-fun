@@ -111,33 +111,28 @@ func sortByOrder(components []Component) []Component {
 	return sorted
 }
 
-var _ Component = (*BaseComponent)(nil)
-
-// BaseComponent provides a base implementation for components
+// BaseComponent provides base implementation with common fields that can be embedded
 type BaseComponent struct {
 	name        string
 	description string
 	url         string
 	level       Level
 	order       int
-	renderFunc  func() templ.Component
 }
 
-// NewBaseComponent creates a new base component
-func NewBaseComponent(name, description, url string, level Level, order int, renderFunc func() templ.Component) *BaseComponent {
-	return &BaseComponent{
+// NewBaseComponent creates a new base component with common fields
+func NewBaseComponent(name, description, url string, level Level, order int) BaseComponent {
+	return BaseComponent{
 		name:        name,
 		description: description,
 		url:         url,
 		level:       level,
 		order:       order,
-		renderFunc:  renderFunc,
 	}
 }
 
-func (b *BaseComponent) Name() string            { return b.name }
-func (b *BaseComponent) Description() string     { return b.description }
-func (b *BaseComponent) URL() string             { return b.url }
-func (b *BaseComponent) Level() Level            { return b.level }
-func (b *BaseComponent) Order() int              { return b.order }
-func (b *BaseComponent) Render() templ.Component { return b.renderFunc() }
+func (b *BaseComponent) Name() string        { return b.name }
+func (b *BaseComponent) Description() string { return b.description }
+func (b *BaseComponent) URL() string         { return b.url }
+func (b *BaseComponent) Level() Level        { return b.level }
+func (b *BaseComponent) Order() int          { return b.order }

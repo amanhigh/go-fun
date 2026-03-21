@@ -7,24 +7,23 @@ import (
 
 // InteractiveShowcaseComponent renders the interactive behaviors showcase page.
 type InteractiveShowcaseComponent struct {
-	*components.BaseComponent
+	components.BaseComponent
 }
 
 // NewInteractiveShowcaseComponent creates the interactive behaviors showcase.
 func NewInteractiveShowcaseComponent() *InteractiveShowcaseComponent {
-	c := &InteractiveShowcaseComponent{}
-	c.BaseComponent = components.NewBaseComponent(
-		"interactive-showcase",
-		"⚡ Interactive Behaviors - Dynamic client-side interactions with Alpine.js",
-		"/interactive",
-		components.LevelAdvanced,
-		1,
-		c.render,
-	)
-	return c
+	return &InteractiveShowcaseComponent{
+		BaseComponent: components.NewBaseComponent(
+			"interactive-showcase",
+			"⚡ Interactive Behaviors - Dynamic client-side interactions with Alpine.js",
+			"/interactive",
+			components.LevelAdvanced,
+			1,
+		),
+	}
 }
 
-func (c *InteractiveShowcaseComponent) render() templ.Component {
+func (c *InteractiveShowcaseComponent) Render() templ.Component {
 	return InteractiveShowcasePage()
 }
 

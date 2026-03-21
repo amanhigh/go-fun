@@ -162,13 +162,13 @@ var _ = Describe("Server Smoke Tests", func() {
 		})
 	})
 
-	Context("Basic Component - Showcase", func() {
+	Context("Form Essentials Showcase", func() {
 		var (
-			cshowcase *pages.BasicShowcaseComponent
+			cshowcase *pages.FormShowcaseComponent
 		)
 
 		BeforeEach(func() {
-			cshowcase = pages.NewBasicShowcaseComponent()
+			cshowcase = pages.NewFormShowcaseComponent()
 		})
 
 		It("should render basic showcase via HTTP", func() {
@@ -246,5 +246,5 @@ func (b *testBuffer) String() string {
 	return string(b.data)
 }
 
-// Ensure pages package basic showcase constructor is available
-var _ = pages.NewBasicShowcaseComponent()
+// Ensure pages package form showcase constructor is available
+var _ = pages.NewFormShowcaseComponent()

@@ -7,24 +7,23 @@ import (
 
 // LayoutShowcaseComponent renders the layout & composition showcase page.
 type LayoutShowcaseComponent struct {
-	*components.BaseComponent
+	components.BaseComponent
 }
 
 // NewLayoutShowcaseComponent creates the layout & composition showcase.
 func NewLayoutShowcaseComponent() *LayoutShowcaseComponent {
-	c := &LayoutShowcaseComponent{}
-	c.BaseComponent = components.NewBaseComponent(
-		"layout-showcase",
-		"🎨 Layout & Composition - Complex page layouts and responsive design patterns",
-		"/layout",
-		components.LevelAdvanced,
-		2,
-		c.render,
-	)
-	return c
+	return &LayoutShowcaseComponent{
+		BaseComponent: components.NewBaseComponent(
+			"layout-showcase",
+			"🎨 Layout & Composition - Complex page layouts and responsive design patterns",
+			"/layout",
+			components.LevelAdvanced,
+			2,
+		),
+	}
 }
 
-func (c *LayoutShowcaseComponent) render() templ.Component {
+func (c *LayoutShowcaseComponent) Render() templ.Component {
 	return LayoutShowcasePage()
 }
 
