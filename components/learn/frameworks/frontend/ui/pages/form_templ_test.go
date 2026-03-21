@@ -124,5 +124,11 @@ var _ = Describe("Form Page Tests", func() {
 			Expect(html).To(ContainSubstring("Maximum 200 characters"))
 			Expect(html).To(ContainSubstring("Select your primary region for services"))
 		})
+
+		It("should include form validation attributes", func() {
+			Expect(html).To(ContainSubstring("required"))
+			Expect(html).To(ContainSubstring("pattern"))
+			Expect(html).To(ContainSubstring("maxlength"))
+		})
 	})
 })

@@ -471,6 +471,7 @@ generate-mocks:
 generate-templ:
 	printf $(_TITLE) "Generate" "Templ Components"
 	$(GOBIN)/templ generate -path components/learn
+	$(MAKE) format
 
 # BUG: Use Global tailwindcss command
 generate-css:
@@ -492,7 +493,7 @@ generate-js:
 	@cd components/learn/frameworks/frontend && \
 	npx esbuild assets/js/input.js --bundle --outfile=assets/js/app.js --format=iife --target=es2020
 
-generate: generate-mocks generate-swagger generate-templ generate-css generate-js format ## Generate Files
+generate: generate-mocks generate-swagger generate-templ generate-css generate-js ## Generate Files
 
 ### Workflows
 test: cover test-operator ## Run all tests (Excludes test-slow)
