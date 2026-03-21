@@ -2,6 +2,7 @@
 package pages
 
 import (
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
 	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/breadcrumb"
 	"github.com/templui/templui/components/button"
@@ -37,205 +38,191 @@ templ FormTextArea(id string, label string, placeholder string, value string, ro
 }
 
 templ FormShowcasePage() {
-	<!DOCTYPE html>
-	<html lang="en">
-		<head>
-			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>📝 Form Essentials</title>
-			<!-- Tailwind CSS via CDN (for development/demo) -->
-			<script src="https://cdn.tailwindcss.com"></script>
-			@selectbox.Script()
-			@dialog.Script()
-		</head>
-		<body>
-			<div class="container">
-					@breadcrumb.Breadcrumb() {
-						@breadcrumb.List() {
-							@breadcrumb.Item() {
-								<a href="/">🏠 Home</a>
+	@layout.Base("📝 Form Essentials") {
+		<div class="container">
+			@breadcrumb.Breadcrumb() {
+				@breadcrumb.List() {
+					@breadcrumb.Item() {
+						<a href="/">🏠 Home</a>
+					}
+					@breadcrumb.Separator() { › }
+					@breadcrumb.Item() { Form Essentials }
+				}
+			}
+		}
+
+		<nav style="margin-bottom: 2rem;">
+			@button.Button(button.Props{Variant: button.VariantSecondary, Type: button.TypeButton, Attributes: templ.Attributes{"onclick": "window.location.href='/'"}}) {
+				← Back to Home
+			}
+		</nav>
+
+		<hgroup>
+			<h1>📝 Basic Components Showcase</h1>
+			<p>Master form inputs, validation, and user data collection patterns. Text fields, dropdowns, checkboxes, and radio buttons with proper validation.</p>
+		</hgroup>
+
+		<form>
+			<!-- Text Inputs Section -->
+			<article>
+				<header>
+					<h2>🧾 Text Inputs</h2>
+				</header>
+				@form.Item() {
+					@form.Label(form.LabelProps{For: "username"}) {
+						Username
+					}
+					@input.Input(input.Props{
+						ID:         "username",
+						Name:       "username",
+						Type:       input.TypeText,
+						Placeholder: "Enter username",
+						Required:   true,
+						Attributes: templ.Attributes{"pattern": "^[a-zA-Z0-9_]{3,20}$"},
+					})
+					@form.Description() {
+						3-20 characters: letters, numbers, underscore
+					}
+				}
+				@form.Item() {
+					@form.Label(form.LabelProps{For: "email"}) {
+						Email
+					}
+					@input.Input(input.Props{
+						ID:         "email",
+						Name:       "email",
+						Type:       input.TypeEmail,
+						Placeholder: "name@example.com",
+						Required:   true,
+					})
+					@form.Description() {
+						Use a valid email format
+					}
+				}
+				@FormTextArea("notes", "Notes", "Share your goals...", "", 4, 200, "Maximum 200 characters")
+			</article>
+
+			<!-- Selection Controls Section -->
+			<article>
+				<header>
+					<h2>⚙️ Selection Controls</h2>
+				</header>
+				@form.Item() {
+					@form.Label(form.LabelProps{For: "country"}) {
+						Country
+					}
+					@selectbox.SelectBox() {
+						@selectbox.Trigger(selectbox.TriggerProps{ID: "country", Name: "country"}) {
+							@selectbox.Value(selectbox.ValueProps{Placeholder: "Choose your primary region"})
+						}
+						@selectbox.Content() {
+							@selectbox.Group() {
+								@selectbox.Label() { Regions }
+								@selectbox.Item(selectbox.ItemProps{Value: "us"}) { United States }
+								@selectbox.Item(selectbox.ItemProps{Value: "in"}) { India }
+								@selectbox.Item(selectbox.ItemProps{Value: "uk"}) { United Kingdom }
+								@selectbox.Item(selectbox.ItemProps{Value: "de"}) { Germany }
 							}
-							@breadcrumb.Separator() { › }
-							@breadcrumb.Item() { Form Essentials }
 						}
 					}
-			</div>
-
-			<main>
-				<nav style="margin-bottom: 2rem;">
-					@button.Button(button.Props{Variant: button.VariantSecondary, Type: button.TypeButton, Attributes: templ.Attributes{"onclick": "window.location.href='/'"}}) {
-						← Back to Home
+					@form.Description() {
+						Select your primary region for services
 					}
-				</nav>
+				}
+				<!-- Radio buttons using templUI -->
+				@form.Item() {
+					@form.Label() {
+						Subscription Plan
+					}
+					<div class="choice-group">
+						@form.ItemFlex() {
+							@radio.Radio(radio.Props{ID: "plan-starter", Name: "plan", Value: "starter"})
+							@form.Label(form.LabelProps{For: "plan-starter"}) {
+								Starter
+							}
+						}
+						@form.ItemFlex() {
+							@radio.Radio(radio.Props{ID: "plan-pro", Name: "plan", Value: "pro"})
+							@form.Label(form.LabelProps{For: "plan-pro"}) {
+								Pro
+							}
+						}
+					</div>
+				}
+				<!-- Checkbox using templUI -->
+				@form.Item() {
+					@form.ItemFlex() {
+						@checkbox.Checkbox(checkbox.Props{ID: "terms", Name: "terms", Value: "accepted"})
+						@form.Label(form.LabelProps{For: "terms"}) {
+							I accept terms and conditions
+						}
+					}
+				}
+			</article>
 
-				<hgroup>
-					<h1>📝 Basic Components Showcase</h1>
-					<p>Master form inputs, validation, and user data collection patterns. Text fields, dropdowns, checkboxes, and radio buttons with proper validation.</p>
-				</hgroup>
+			<!-- Form Actions -->
+			<article>
+				<header>
+					<h2>🚀 Form Actions</h2>
+				</header>
+				<footer>
+					<div role="group">
+						@button.Button(button.Props{Variant: button.VariantSecondary, Type: button.TypeButton}) {
+							Save Draft
+						}
+						@button.Button(button.Props{Type: button.TypeSubmit}) {
+							Submit Form
+						}
+						@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeReset}) {
+							Reset
+						}
+					</div>
+				</footer>
+			</article>
 
-				<form>
-					<!-- Text Inputs Section -->
-					<article>
-						<header>
-							<h2>🧾 Text Inputs</h2>
-						</header>
-						@form.Item() {
-							@form.Label(form.LabelProps{For: "username"}) {
-								Username
-							}
-							@input.Input(input.Props{
-								ID:         "username",
-								Name:       "username",
-								Type:       input.TypeText,
-								Placeholder: "Enter username",
-								Required:   true,
-								Attributes: templ.Attributes{"pattern": "^[a-zA-Z0-9_]{3,20}$"},
-							})
-							@form.Description() {
-								3-20 characters: letters, numbers, underscore
-							}
-						}
-						@form.Item() {
-							@form.Label(form.LabelProps{For: "email"}) {
-								Email
-							}
-							@input.Input(input.Props{
-								ID:         "email",
-								Name:       "email",
-								Type:       input.TypeEmail,
-								Placeholder: "name@example.com",
-								Required:   true,
-							})
-							@form.Description() {
-								Use a valid email format
-							}
-						}
-						@FormTextArea("notes", "Notes", "Share your goals...", "", 4, 200, "Maximum 200 characters")
-					</article>
+			<!-- Status Badges Section -->
+			<article>
+				<header>
+					<h2>🏷️ Status Indicators</h2>
+				</header>
+				<div>
+					@badge.Badge(badge.Props{Variant: badge.VariantDefault}) { Ready }
+					@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { Review }
+					@badge.Badge(badge.Props{Variant: badge.VariantOutline}) { Info }
+					@badge.Badge(badge.Props{Variant: badge.VariantDestructive}) { Critical }
+				</div>
+			</article>
 
-					<!-- Selection Controls Section -->
-					<article>
-						<header>
-							<h2>⚙️ Selection Controls</h2>
-						</header>
-						@form.Item() {
-							@form.Label(form.LabelProps{For: "country"}) {
-								Country
-							}
-							@selectbox.SelectBox() {
-								@selectbox.Trigger(selectbox.TriggerProps{ID: "country", Name: "country"}) {
-									@selectbox.Value(selectbox.ValueProps{Placeholder: "Choose your primary region"})
-								}
-								@selectbox.Content() {
-									@selectbox.Group() {
-										@selectbox.Label() { Regions }
-										@selectbox.Item(selectbox.ItemProps{Value: "us"}) { United States }
-										@selectbox.Item(selectbox.ItemProps{Value: "in"}) { India }
-										@selectbox.Item(selectbox.ItemProps{Value: "uk"}) { United Kingdom }
-										@selectbox.Item(selectbox.ItemProps{Value: "de"}) { Germany }
-									}
-								}
-							}
-							@form.Description() {
-								Select your primary region for services
-							}
+			<!-- Modal Dialog Section -->
+			<article>
+				<header>
+					<h2>🪟 Modal Dialog</h2>
+				</header>
+				<footer>
+					<div role="group">
+						@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"onclick": "document.getElementById('showcase-dialog').showModal()"}}) {
+							Preview Modal
 						}
-						<!-- Radio buttons using templUI -->
-						@form.Item() {
-							@form.Label() {
-								Subscription Plan
+					</div>
+					@dialog.Dialog(dialog.Props{ID: "showcase-dialog"}) {
+						@dialog.Content() {
+							@dialog.Header() {
+								<h3>Submission Preview</h3>
+								@dialog.Close() {}
 							}
-							<div class="choice-group">
-								@form.ItemFlex() {
-									@radio.Radio(radio.Props{ID: "plan-starter", Name: "plan", Value: "starter"})
-									@form.Label(form.LabelProps{For: "plan-starter"}) {
-										Starter
-									}
+							<p>This is a preview of your form submission.</p>
+							@dialog.Footer() {
+								@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"onclick": "document.getElementById('showcase-dialog').close()"}}) {
+									Cancel
 								}
-								@form.ItemFlex() {
-									@radio.Radio(radio.Props{ID: "plan-pro", Name: "plan", Value: "pro"})
-									@form.Label(form.LabelProps{For: "plan-pro"}) {
-										Pro
-									}
-								}
-							</div>
-						}
-						<!-- Checkbox using templUI -->
-						@form.Item() {
-							@form.ItemFlex() {
-								@checkbox.Checkbox(checkbox.Props{ID: "terms", Name: "terms", Value: "accepted"})
-								@form.Label(form.LabelProps{For: "terms"}) {
-									I accept terms and conditions
+								@button.Button(button.Props{Type: button.TypeButton, Attributes: templ.Attributes{"onclick": "document.getElementById('showcase-dialog').close()"}}) {
+									Confirm
 								}
 							}
 						}
-					</article>
-
-					<!-- Form Actions -->
-					<article>
-						<header>
-							<h2>🚀 Form Actions</h2>
-						</header>
-						<footer>
-							<div role="group">
-								@button.Button(button.Props{Variant: button.VariantSecondary, Type: button.TypeButton}) {
-									Save Draft
-								}
-								@button.Button(button.Props{Type: button.TypeSubmit}) {
-									Submit Form
-								}
-								@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeReset}) {
-									Reset
-								}
-							</div>
-						</footer>
-					</article>
-
-					<!-- Status Badges Section -->
-					<article>
-						<header>
-							<h2>🏷️ Status Indicators</h2>
-						</header>
-						<div>
-							@badge.Badge(badge.Props{Variant: badge.VariantDefault}) { Ready }
-							@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { Review }
-							@badge.Badge(badge.Props{Variant: badge.VariantOutline}) { Info }
-							@badge.Badge(badge.Props{Variant: badge.VariantDestructive}) { Critical }
-						</div>
-					</article>
-
-					<!-- Modal Dialog Section -->
-					<article>
-						<header>
-							<h2>🪟 Modal Dialog</h2>
-						</header>
-						<footer>
-							<div role="group">
-								@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"onclick": "document.getElementById('showcase-dialog').showModal()"}}) {
-									Preview Modal
-								}
-							</div>
-							@dialog.Dialog(dialog.Props{ID: "showcase-dialog"}) {
-								@dialog.Content() {
-									@dialog.Header() {
-										<h3>Submission Preview</h3>
-										@dialog.Close() {}
-									}
-									<p>This is a preview of your form submission.</p>
-									@dialog.Footer() {
-										@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"onclick": "document.getElementById('showcase-dialog').close()"}}) {
-											Cancel
-										}
-										@button.Button(button.Props{Type: button.TypeButton, Attributes: templ.Attributes{"onclick": "document.getElementById('showcase-dialog').close()"}}) {
-											Confirm
-										}
-									}
-								}
-							}
-						</footer>
-					</article>
-				</form>
-			</main>
-		</body>
-	</html>
+					}
+				</footer>
+			</article>
+		</form>
+	}
 }
