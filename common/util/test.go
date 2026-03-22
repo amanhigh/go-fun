@@ -112,3 +112,12 @@ func AssertError(w *httptest.ResponseRecorder, fieldName, expectedContent string
 	// Validate expected content
 	Expect(errorMsgStr).To(ContainSubstring(expectedContent))
 }
+
+// CreateHTMLTestRequest creates HTTP request and recorder for HTML/UI testing
+// Configures request with text/html content type for UI component tests
+func CreateHTMLTestRequest(method, url string) (*http.Request, *httptest.ResponseRecorder) {
+	req := httptest.NewRequestWithContext(context.Background(), method, url, nil)
+	req.Header.Set("Content-Type", "text/html")
+	w := httptest.NewRecorder()
+	return req, w
+}

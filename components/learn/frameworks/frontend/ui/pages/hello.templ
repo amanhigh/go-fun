@@ -1,0 +1,67 @@
+package pages
+
+import (
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
+	"github.com/templui/templui/components/form"
+	"github.com/templui/templui/components/selectbox"
+)
+
+templ HelloPage() {
+	@layout.Base("Hello World Showcase") {
+		@layout.Page(layout.PageProps{
+			CurrentPage: "Hello World Showcase",
+			Eyebrow:     "Component Basics",
+			Heading:     "Hello World Showcase",
+			Description: "Demonstrating both TemplUI components and native HTML templates",
+			Tags:        []string{"TemplUI", "Native HTML"},
+		}) {
+			<!-- TemplUI Component -->
+			<section>
+				@layout.Card(
+					"Library",
+					"TemplUI Component",
+					"A professional selectbox component from the TemplUI library with built-in accessibility, keyboard navigation, and consistent styling.",
+				) {
+					@form.Item() {
+						@form.Label(form.LabelProps{For: "country"}) {
+							Country
+						}
+						@selectbox.SelectBox() {
+							@selectbox.Trigger(selectbox.TriggerProps{ID: "country", Name: "country"}) {
+								@selectbox.Value(selectbox.ValueProps{Placeholder: "Choose your country"})
+							}
+							@selectbox.Content() {
+								@selectbox.Group() {
+									@selectbox.Label() { Countries }
+									@selectbox.Item(selectbox.ItemProps{Value: "us"}) { United States }
+									@selectbox.Item(selectbox.ItemProps{Value: "in"}) { India }
+									@selectbox.Item(selectbox.ItemProps{Value: "uk"}) { United Kingdom }
+								}
+							}
+						}
+						@form.Description() {
+							Select your country from the dropdown
+						}
+					}
+				}
+			</section>
+
+			<!-- Native Counter Component -->
+			<section>
+				@layout.Card(
+					"Interactivity",
+					"Native Counter Component",
+					"A simple counter built with native HTML templates and Alpine.js for interactivity. Demonstrates basic state management and event handling without external component libraries.",
+				) {
+					<p class="mb-4 text-xs text-muted-foreground">
+						<strong>Custom Features:</strong> Press <kbd class="px-1 py-0.5 bg-muted rounded text-xs">R</kbd> key to reset counter |
+						Custom CSS: monospace font on display, cubic-bezier transitions on buttons
+					</p>
+
+					@components.Counter()
+				}
+			</section>
+		}
+	}
+}

@@ -1,0 +1,22 @@
+root = "."
+tmp_dir = "/tmp/ui-demo"
+
+[build]
+  cmd = "$GOBIN/templ generate && cd .. && tailwindcss -i ./assets/css/input.css -o ./assets/css/app.css 2>/dev/null && cd demo && go build -o /tmp/ui-demo/main ."
+  entrypoint = "/tmp/ui-demo/main"
+  delay = 1000
+  include_ext = ["go", "templ", "css"]
+  include_dir = [".", "../components", "../pages", ".."]
+  exclude_regex = ["_test\\.go"]
+  kill_delay = "0s"
+  send_interrupt = false
+  stop_on_error = true
+
+[log]
+  time = false
+
+[color]
+  main = "magenta"
+  watcher = "cyan"
+  build = "yellow"
+  runner = "green"

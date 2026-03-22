@@ -1,0 +1,83 @@
+package pages
+
+import (
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
+)
+
+// IndexPage renders the main index page with links to all components
+templ IndexPage(components []components.Component) {
+	@layout.Base("Templ UI Component Demo") {
+		<style>
+			.hero {
+				text-align: center;
+				padding: 3rem 0;
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+				color: white;
+				margin: -2rem -2rem 2rem -2rem;
+			}
+			.level-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+				gap: 1.5rem;
+				margin-top: 2rem;
+			}
+			.level-card {
+				border: 1px solid var(--muted-border-color);
+				border-radius: 0.5rem;
+				padding: 1.5rem;
+			}
+			.level-card:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+			}
+			.level-card h3 {
+				margin: 0;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+			.badge {
+				background: #10b981;
+				color: white;
+				padding: 0.25rem 0.5rem;
+				border-radius: 1rem;
+				font-size: 0.875rem;
+			}
+		</style>
+		
+		<div class="hero">
+			<div class="container">
+				<h1>🚀 Templ UI Component Demo</h1>
+				<p>Explore a comprehensive collection of Templ components organized by complexity. Each level builds upon the previous one, from basic building blocks to advanced patterns.</p>
+			</div>
+		</div>
+
+		<main class="container">
+			<section>
+				<h2>📚 Learning Path</h2>
+				<p>Choose your starting point based on your familiarity with Templ and UI components:</p>
+				
+				<div class="level-grid">
+					for _, comp := range components {
+						<article class="level-card">
+							<header>
+								<h3>
+									<a href={ comp.URL() } style="text-decoration: none; color: inherit;">
+										{ comp.Name() }
+									</a>
+									<span class="badge">Live Demo</span>
+								</h3>
+							</header>
+							<p>{ comp.Description() }</p>
+							<footer>
+								<a href={ comp.URL() } role="button" class="outline">Open { comp.Name() } →</a>
+							</footer>
+						</article>
+					}
+				</div>
+			</section>
+
+		</main>
+	}
+}

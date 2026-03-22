@@ -130,4 +130,27 @@ var _ = Describe("Test Helpers", func() {
 			})
 		})
 	})
+
+	Context("CreateHTMLTestRequest", func() {
+		Context("HTML Request Creation", func() {
+			It("should create request with text/html content type", func() {
+				req, w := util.CreateHTMLTestRequest("GET", "/test/path")
+				Expect(req).ToNot(BeNil())
+				Expect(w).ToNot(BeNil())
+				Expect(req.Method).To(Equal("GET"))
+				Expect(req.URL.Path).To(Equal("/test/path"))
+				Expect(req.Header.Get("Content-Type")).To(Equal("text/html"))
+			})
+
+			It("should create request with different HTTP methods", func() {
+				postReq, postW := util.CreateHTMLTestRequest("POST", "/submit")
+				Expect(postReq.Method).To(Equal("POST"))
+				Expect(postW).ToNot(BeNil())
+
+				putReq, putW := util.CreateHTMLTestRequest("PUT", "/update")
+				Expect(putReq.Method).To(Equal("PUT"))
+				Expect(putW).ToNot(BeNil())
+			})
+		})
+	})
 })

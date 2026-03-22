@@ -13,12 +13,18 @@
 
 include ./common/tools/base.mk
 
+# Tools
 GOBIN := $(shell go env GOPATH 2>/dev/null)/bin
 GOIMPORTS := $(GOBIN)/goimports
 GOLANGCI_LINT := $(GOBIN)/golangci-lint
 DEADCODE := $(GOBIN)/deadcode
 GINKGO := $(GOBIN)/ginkgo
 SWAG := $(GOBIN)/swag
+MOCKERY := $(GOBIN)/mockery
+TEMPL := $(GOBIN)/templ
+TAILWINDCSS := tailwindcss
+AIR := github.com/air-verse/air@latest
+ESBUILD := esbuild
 
 ### Variables
 BUILD_OPTS := CGO_ENABLED=0 GOARCH=amd64
@@ -82,8 +88,14 @@ test-unit:
 test-slow: ## Run slow tests
 	printf $(_TITLE) "Running Slow Tests"
 	mkdir -p $(SLOW_COVER_DIR)
-	# Generate binary coverage for accurate merging  
+	# Generate binary coverage for accurate conversion  
 	$(GINKGO) -r '--label-filter=slow' -cover . -- -test.gocoverdir=$(SLOW_COVER_DIR) > $(OUT)
+
+ui: ## Run UI Demo Server with hot reload
+	printf $(_TITLE) "Starting UI Demo Server"
+	printf $(_INFO) "Server" "http://localhost:8080"
+	printf $(_DETAIL) "Note" "Auto-reloads on .go and .templ changes (manual browser refresh)"
+	cd components/learn/frameworks/frontend/demo && go run $(AIR) -c .air.toml
 
 cover-analyse: combine-coverage
 	printf $(_TITLE) "Analysing Coverage Reports"
@@ -156,11 +168,19 @@ test-focus:
 	printf $(_TITLE) "Running Focus Tests"
 	$(GINKGO) --focus "should create & get person" $(FUN_DIR)/it > $(OUT)
 
-cover: test-clean test-unit run-fun-cover cover-analyse ## Show comprehensive coverage (unit + integration)
+cover: clean-test test-unit run-fun-cover cover-analyse ## Show comprehensive coverage (unit + integration)
 
-test-clean:
+### Clean
+clean-test:
 	printf $(_WARN) "Cleaning Tests"
 	rm -rf $(COVER_DIR)
+
+clean-build:
+	printf $(_WARN) "Cleaning Build"
+	-rm -rf $(BIN_DIR)
+	-make -C $(COMPONENT_DIR)/operator/ clean > $(OUT)
+
+clean: clean-test clean-build ## Clean up Residue
 
 combine-coverage: ## Combine all binary coverage data into a single comprehensive report
 	printf $(_TITLE) "Combining Binary Coverage Data"
@@ -208,11 +228,6 @@ build-kohan:
 	printf $(_TITLE) "Building Kohan"
 	mkdir -p $(BIN_DIR)
 	$(BUILD_OPTS) CGO_ENABLED=1 go build -o $(BIN_DIR)/kohan $(COMPONENT_DIR)/kohan/main.go
-
-build-clean:
-	printf $(_WARN) "Cleaning Build"
-	-rm -rf $(BIN_DIR)
-	-make -C $(COMPONENT_DIR)/operator/ clean > $(OUT)
 
 ### Install
 install-kohan:
@@ -386,6 +401,8 @@ setup-tools:
 	go install github.com/swaggo/swag/cmd/swag
 	go install golang.org/x/tools/cmd/goimports@latest
 	go install github.com/vektra/mockery/v3@v3.5.5
+	go install github.com/a-h/templ/cmd/templ@latest
+	go install github.com/air-verse/air@latest
 
 setup-k8: ## Kubernetes Setup
 	printf $(_TITLE) "Setting up Kubernetes"
@@ -450,9 +467,39 @@ generate-swagger:
 # Generate mocks using mockery v3 configuration
 generate-mocks:
 	printf $(_TITLE) "Generate" "Mocks"
-	go run github.com/vektra/mockery/v3@v3.5.5 > $(OUT) 2>&1
+	$(MOCKERY) > $(OUT) 2>&1
 
-generate: generate-mocks generate-swagger ## Generate Files
+# Generate Templ components to Go code
+generate-templ:
+	printf $(_TITLE) "Generate" "Templ Components"
+	$(TEMPL) generate -path components/learn
+	$(MAKE) format
+
+# Generate sources file for Tailwind CSS
+generate-css-sources:
+	@printf $(_TITLE) "Generate" "CSS Sources"
+	@cd components/learn/frameworks/frontend && \
+	TEMPLUI_PATH="$$(go list -m -f '{{.Dir}}' github.com/templui/templui)" && \
+	( \
+		find . -name "*.templ" -type f | sed 's|^\./||' | while read -r file; do \
+			dir=$$(dirname "$$file"); \
+			echo "@source \"./$$dir/**/*.templ\";"; \
+		done | sort -u; \
+		echo "@source \"$$TEMPLUI_PATH/components/**/*.templ\";"; \
+	) > ./assets/css/sources.generated.css
+
+# Generate CSS using tailwindcss (assumes always available)
+generate-css: generate-css-sources
+	@printf $(_TITLE) "Generate" "CSS"
+	@cd components/learn/frameworks/frontend && $(TAILWINDCSS) build --input ./assets/css/input.css --output ./assets/css/app.css
+
+generate-js:
+	@printf $(_TITLE) "Generate" "JavaScript"
+	@cd components/learn/frameworks/frontend && $(ESBUILD) assets/js/input.js --bundle --outfile=assets/js/app.js --format=iife --target=es2020 || printf $(_WARN) "JS" "esbuild failed, skipping JS bundling"
+
+generate-ui: generate-css generate-js ## Generate UI assets (CSS & JS)
+
+generate: generate-mocks generate-swagger generate-templ ## Generate Files (skip UI for CI)
 
 ### Workflows
 test: cover test-operator ## Run all tests (Excludes test-slow)
@@ -464,7 +511,6 @@ prepare: setup-tools setup-k8 install-deadcode ## One Time Setup
 
 setup: sync test generate build lint-dead helm-package docker-build # Build and Test
 install: install-kohan ## Install Kohan CLI
-clean: test-clean build-clean ## Clean up Residue
 
 reset: setup info clean ## Setup with Info and Clean
 all: prepare docker-fun-clean install reset infos test-slow ## Run All Targets

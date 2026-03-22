@@ -1,0 +1,281 @@
+//go:generate templ generate
+package pages
+
+import (
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
+	"github.com/templui/templui/components/badge"
+	"github.com/templui/templui/components/button"
+	"github.com/templui/templui/components/checkbox"
+	"github.com/templui/templui/components/dialog"
+	"github.com/templui/templui/components/form"
+	"github.com/templui/templui/components/input"
+	"github.com/templui/templui/components/radio"
+	"github.com/templui/templui/components/selectbox"
+	"github.com/templui/templui/components/textarea"
+)
+
+// FormTextArea demonstrates textarea with validation - replaced by templui Textarea
+templ FormTextArea(id string, label string, placeholder string, value string, rows int, maxLength int, helperText string) {
+	@form.Item() {
+		@form.Label(form.LabelProps{For: id}) {
+			{ label }
+		}
+		@textarea.Textarea(textarea.Props{
+			ID:          id,
+			Name:        id,
+			Placeholder: placeholder,
+			Rows:        rows,
+			Attributes:  templ.Attributes{"maxlength": maxLength},
+			Value:       value,
+		})
+		if helperText != "" {
+			@form.Description() {
+				{ helperText }
+			}
+		}
+	}
+}
+
+// FormTextInput creates a text input with label and description
+templ FormTextInput(id string, label string, placeholder string, pattern string, description string) {
+	@form.Item() {
+		@form.Label(form.LabelProps{For: id}) {
+			{ label }
+		}
+		@input.Input(input.Props{
+			ID:          id,
+			Name:        id,
+			Type:        input.TypeText,
+			Placeholder: placeholder,
+			Required:    true,
+			Attributes:  templ.Attributes{"pattern": pattern},
+		})
+		@form.Description() {
+			{ description }
+		}
+	}
+}
+
+// FormEmailInput creates an email input with label and description
+templ FormEmailInput(id string, label string, placeholder string, description string) {
+	@form.Item() {
+		@form.Label(form.LabelProps{For: id}) {
+			{ label }
+		}
+		@input.Input(input.Props{
+			ID:          id,
+			Name:        id,
+			Type:        input.TypeEmail,
+			Placeholder: placeholder,
+			Required:    true,
+		})
+		@form.Description() {
+			{ description }
+		}
+	}
+}
+
+// FormSelectBox creates a select dropdown with label and description
+templ FormSelectBox(id string, label string, placeholder string, description string) {
+	@form.Item() {
+		@form.Label(form.LabelProps{For: id}) {
+			{ label }
+		}
+		@selectbox.SelectBox() {
+			@selectbox.Trigger(selectbox.TriggerProps{ID: id, Name: id}) {
+				@selectbox.Value(selectbox.ValueProps{Placeholder: placeholder})
+			}
+			@selectbox.Content() {
+				@selectbox.Group() {
+					@selectbox.Label() { Regions }
+					@selectbox.Item(selectbox.ItemProps{Value: "us"}) { United States }
+					@selectbox.Item(selectbox.ItemProps{Value: "in"}) { India }
+					@selectbox.Item(selectbox.ItemProps{Value: "uk"}) { United Kingdom }
+					@selectbox.Item(selectbox.ItemProps{Value: "de"}) { Germany }
+				}
+			}
+		}
+		@form.Description() {
+			{ description }
+		}
+	}
+}
+
+// FormRadioCard creates a radio button in a card layout
+templ FormRadioCard(id string, name string, value string, title string, description string) {
+	<label for={id} class="block cursor-pointer rounded-2xl border border-border bg-muted/30 p-4 transition-all hover:border-primary/40 has-[:checked]:border-primary has-[:checked]:bg-primary/5 has-[:checked]:ring-1 has-[:checked]:ring-primary">
+		<div class="flex items-start gap-3">
+			@radio.Radio(radio.Props{ID: id, Name: name, Value: value})
+			<div class="grid gap-1.5">
+				<p class="text-sm font-medium leading-none text-foreground">{ title }</p>
+				<p class="text-sm text-muted-foreground">{ description }</p>
+			</div>
+		</div>
+	</label>
+}
+
+// FormCheckbox creates a checkbox with label
+templ FormCheckbox(id string, name string, value string, label string) {
+	<div class="rounded-2xl border border-dashed border-border bg-muted/20 p-4">
+		@form.Item() {
+			@form.ItemFlex() {
+				@checkbox.Checkbox(checkbox.Props{ID: id, Name: name, Value: value})
+				@form.Label(form.LabelProps{For: id}) {
+					{ label }
+				}
+			}
+		}
+	</div>
+}
+
+// FormActionButtons creates submit, save, and reset buttons
+templ FormActionButtons() {
+	<footer>
+		<div class="grid gap-3">
+			@button.Button(button.Props{Type: button.TypeSubmit}) {
+				Submit Form
+			}
+			@button.Button(button.Props{Variant: button.VariantSecondary, Type: button.TypeButton}) {
+				Save Draft
+			}
+			@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeReset}) {
+				Reset
+			}
+		</div>
+	</footer>
+}
+
+// StatusBadges creates a set of status indicator badges
+templ StatusBadges() {
+	<div class="flex flex-wrap gap-3">
+		@badge.Badge(badge.Props{Variant: badge.VariantDefault}) { Ready }
+		@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { Review }
+		@badge.Badge(badge.Props{Variant: badge.VariantOutline}) { Info }
+		@badge.Badge(badge.Props{Variant: badge.VariantDestructive}) { Critical }
+	</div>
+}
+
+// ModalDialog creates a preview modal dialog
+templ ModalDialog() {
+	<footer>
+		<div role="group" class="flex flex-wrap gap-3">
+			@dialog.Trigger(dialog.TriggerProps{For: "showcase-dialog"}) {
+				@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton}) {
+					Preview Modal
+				}
+			}
+		</div>
+		@dialog.Dialog(dialog.Props{ID: "showcase-dialog"}) {
+			@dialog.Content() {
+				@dialog.Header() {
+					<h3>Submission Preview</h3>
+					@dialog.Close() {}
+				}
+				<p>This is a preview of your form submission.</p>
+				@dialog.Footer() {
+					@dialog.Close() {
+						@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton}) {
+							Cancel
+						}
+					}
+					@dialog.Close() {
+						@button.Button(button.Props{Type: button.TypeButton}) {
+							Confirm
+						}
+					}
+				}
+			}
+		}
+	</footer>
+}
+
+templ FormShowcasePage() {
+	@layout.Base("📝 Form Essentials") {
+		@layout.Page(layout.PageProps{
+			CurrentPage: "Form Essentials",
+			Eyebrow:     "Form Patterns",
+			Heading:     "📝 Basic Components Showcase",
+			Description: "Master form inputs, validation, and user data collection patterns. Text fields, dropdowns, checkboxes, and radio buttons with proper validation.",
+			Tags:        []string{"Accessible", "Responsive"},
+		}) {
+			<form>
+				<div class="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.9fr)]">
+					<div class="space-y-6">
+						<!-- Text Inputs Section -->
+						<article>
+							@layout.Card(
+								"Foundation",
+								"🧾 Text Inputs",
+								"Start with high-signal identity fields and helper text that guide users before validation appears.",
+							) {
+								<div class="space-y-5">
+									@FormTextInput("username", "Username", "Enter username", "^[a-zA-Z0-9_]{3,20}$", "3-20 characters: letters, numbers, underscore")
+									@FormEmailInput("email", "Email", "name@example.com", "Use a valid email format")
+									@FormTextArea("notes", "Notes", "Share your goals...", "", 4, 200, "Maximum 200 characters")
+								</div>
+							}
+						</article>
+
+						<!-- Selection Controls Section -->
+						<article>
+							@layout.Card(
+								"Preferences",
+								"⚙️ Selection Controls",
+								"Group related choices together so users can set region, plan, and consent without hunting across the page.",
+							) {
+								<div class="space-y-6">
+									@FormSelectBox("country", "Country", "Choose your primary region", "Select your primary region for services")
+									@form.Item() {
+										@form.Label() {
+											Subscription Plan
+										}
+										<div class="grid gap-3 sm:grid-cols-2">
+											@FormRadioCard("plan-starter", "plan", "starter", "Starter", "Core setup for trying the workflow and saving drafts.")
+											@FormRadioCard("plan-pro", "plan", "pro", "Pro", "Advanced validation, faster review, and production-ready controls.")
+										</div>
+									}
+									@FormCheckbox("terms", "terms", "accepted", "I accept terms and conditions")
+								</div>
+							}
+						</article>
+					</div>
+
+					<div class="space-y-6">
+						<!-- Form Actions -->
+						<article>
+							@layout.Card(
+								"Workflow",
+								"🚀 Form Actions",
+								"Primary and secondary actions are separated to reduce accidental submits and keep the next step obvious.",
+							) {
+								@FormActionButtons()
+							}
+						</article>
+
+						<!-- Status Badges Section -->
+						<article>
+							@layout.Card(
+								"States",
+								"🏷️ Status Indicators",
+								"Use short visual labels to show readiness, review stages, passive information, and critical escalation.",
+							) {
+								@StatusBadges()
+							}
+						</article>
+
+						<!-- Modal Dialog Section -->
+						<article>
+							@layout.Card(
+								"Review",
+								"🪟 Modal Dialog",
+								"Preview the current submission in a focused overlay before committing the final action.",
+							) {
+								@ModalDialog()
+							}
+						</article>
+					</div>
+				</div>
+			</form>
+		}
+	}
+}
