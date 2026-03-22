@@ -38,7 +38,7 @@ var _ = Describe("Form Page Tests", func() {
 			Expect(html).To(ContainSubstring("Breadcrumb"))
 			Expect(html).To(ContainSubstring("🏠 Home"))
 			Expect(html).To(ContainSubstring("Form Essentials"))
-			Expect(html).To(ContainSubstring("← Back to Home"))
+			Expect(html).ToNot(ContainSubstring("← Back to Home"))
 		})
 
 		It("should render multiple form sections", func() {
