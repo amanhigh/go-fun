@@ -76,7 +76,7 @@ var _ = Describe("UI Server Integration Tests", func() {
 
 		Context("JavaScript Files", func() {
 			It("should serve JavaScript files with correct content type", func() {
-				req, w := util.CreateHTMLTestRequest("GET", "/assets/js/app.js")
+				req, w := util.CreateHTMLTestRequest("GET", "/assets/js/custom.js")
 				router.ServeHTTP(w, req)
 
 				Expect(w.Code).To(Equal(http.StatusOK))
