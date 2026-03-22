@@ -13,12 +13,19 @@
 
 include ./common/tools/base.mk
 
+# Tools
 GOBIN := $(shell go env GOPATH 2>/dev/null)/bin
 GOIMPORTS := $(GOBIN)/goimports
 GOLANGCI_LINT := $(GOBIN)/golangci-lint
 DEADCODE := $(GOBIN)/deadcode
 GINKGO := $(GOBIN)/ginkgo
 SWAG := $(GOBIN)/swag
+MOCKERY := $(GOBIN)/mockery
+TEMPL := $(GOBIN)/templ
+NPM_GLOBAL_PREFIX := $(shell npm config get prefix 2>/dev/null)
+TAILWINDCSS := $(NPM_GLOBAL_PREFIX)/bin/tailwindcss
+AIR := github.com/air-verse/air@latest
+ESBUILD := esbuild
 
 ### Variables
 BUILD_OPTS := CGO_ENABLED=0 GOARCH=amd64
@@ -89,7 +96,7 @@ ui: ## Run UI Demo Server with hot reload
 	printf $(_TITLE) "Starting UI Demo Server"
 	printf $(_INFO) "Server" "http://localhost:8080"
 	printf $(_DETAIL) "Note" "Auto-reloads on .go and .templ changes (manual browser refresh)"
-	cd components/learn/frameworks/frontend/demo && go run github.com/air-verse/air@latest -c .air.toml
+	cd components/learn/frameworks/frontend/demo && go run $(AIR) -c .air.toml
 
 cover-analyse: combine-coverage
 	printf $(_TITLE) "Analysing Coverage Reports"
@@ -401,6 +408,7 @@ setup-tools:
 	go install golang.org/x/tools/cmd/goimports@latest
 	go install github.com/vektra/mockery/v3@v3.5.5
 	go install github.com/a-h/templ/cmd/templ@latest
+	go install github.com/air-verse/air@latest
 
 setup-k8: ## Kubernetes Setup
 	printf $(_TITLE) "Setting up Kubernetes"
@@ -465,19 +473,18 @@ generate-swagger:
 # Generate mocks using mockery v3 configuration
 generate-mocks:
 	printf $(_TITLE) "Generate" "Mocks"
-	go run github.com/vektra/mockery/v3@v3.5.5 > $(OUT) 2>&1
+	$(MOCKERY) > $(OUT) 2>&1
 
 # Generate Templ components to Go code
 generate-templ:
 	printf $(_TITLE) "Generate" "Templ Components"
-	$(GOBIN)/templ generate -path components/learn
+	$(TEMPL) generate -path components/learn
 	$(MAKE) format
 
-# BUG: Use Global tailwindcss command
-generate-css:
-	@printf $(_TITLE) "Generate" "CSS"
+# Generate sources file for Tailwind CSS
+generate-css-sources:
+	@printf $(_TITLE) "Generate" "CSS Sources"
 	@cd components/learn/frameworks/frontend && \
-	TAILWIND_CMD="$$(npm config get prefix)/bin/tailwindcss" && \
 	TEMPLUI_PATH="$$(go list -m -f '{{.Dir}}' github.com/templui/templui)" && \
 	( \
 		find . -name "*.templ" -type f | sed 's|^\./||' | while read -r file; do \
@@ -485,15 +492,20 @@ generate-css:
 			echo "@source \"./$$dir/**/*.templ\";"; \
 		done | sort -u; \
 		echo "@source \"$$TEMPLUI_PATH/components/**/*.templ\";"; \
-	) > ./assets/css/sources.generated.css && \
-	$$TAILWIND_CMD -i ./assets/css/input.css -o ./assets/css/app.css
+	) > ./assets/css/sources.generated.css
+
+# Generate CSS using tailwindcss (assumes always available)
+generate-css: generate-css-sources
+	@printf $(_TITLE) "Generate" "CSS"
+	@cd components/learn/frameworks/frontend && $(TAILWINDCSS) build --input ./assets/css/input.css --output ./assets/css/app.css
 
 generate-js:
 	@printf $(_TITLE) "Generate" "JavaScript"
-	@cd components/learn/frameworks/frontend && \
-	npx esbuild assets/js/input.js --bundle --outfile=assets/js/app.js --format=iife --target=es2020
+	@cd components/learn/frameworks/frontend && $(ESBUILD) assets/js/input.js --bundle --outfile=assets/js/app.js --format=iife --target=es2020 || printf $(_WARN) "JS" "esbuild failed, skipping JS bundling"
 
-generate: generate-mocks generate-swagger generate-templ generate-css generate-js ## Generate Files
+generate-ui: generate-css generate-js ## Generate UI assets (CSS & JS)
+
+generate: generate-mocks generate-swagger generate-templ ## Generate Files (skip UI for CI)
 
 ### Workflows
 test: cover test-operator ## Run all tests (Excludes test-slow)

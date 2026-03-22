@@ -67,7 +67,7 @@ var _ = AfterSuite(func() {
 
 // Server Smoke Tests - Tests one component from each level on real HTTP server
 // This validates the full HTTP stack works correctly for each complexity level
-var _ = Describe("Server Smoke Tests", func() {
+var _ = Describe("Server Tests", func() {
 	Context("Index and Component Pages", func() {
 		It("should serve index page with component links", func() {
 			resp, err := http.Get(serverURL + "/")
