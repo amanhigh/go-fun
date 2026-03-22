@@ -148,6 +148,9 @@ linters:
            - mnd
            - wrapcheck
          path: components/learn/
+       - linters:
+           - cyclop
+         path: ".*_templ.go"
     paths:
 issues:
   max-issues-per-linter: 15

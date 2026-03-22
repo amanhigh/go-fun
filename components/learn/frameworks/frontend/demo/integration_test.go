@@ -31,8 +31,6 @@ var _ = Describe("UI Component Handler Tests", func() {
 
 		// Create registry and register all components
 		pages.RegisterBasic(registry)
-		pages.RegisterMedium(registry)
-		pages.RegisterAdvanced(registry)
 
 		// Register component routes
 		for _, comp := range registry.All() {
@@ -188,134 +186,9 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 	})
 
-	Context("Data Presentation Showcase", func() {
-		var (
-			comp *pages.DataShowcaseComponent
-			w    *httptest.ResponseRecorder
-			html string
-		)
-
-		BeforeEach(func() {
-			comp = pages.NewDataShowcaseComponent()
-			w = httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", comp.URL(), nil)
-			router.ServeHTTP(w, req)
-
-			Expect(w.Code).To(Equal(http.StatusOK))
-			body, _ := io.ReadAll(w.Body)
-			html = string(body)
-		})
-
-		It("should render medium showcase page with all components", func() {
-			Expect(html).To(ContainSubstring("📊 Data Presentation"))
-			Expect(html).To(ContainSubstring("Structured data presentation"))
-		})
-
-		It("should render Card components section", func() {
-			Expect(html).To(ContainSubstring("🃏 Data Cards"))
-			Expect(html).To(ContainSubstring("Flexible content containers"))
-		})
-
-		It("should render Data Tables section", func() {
-			Expect(html).To(ContainSubstring("📋 Data Tables"))
-			Expect(html).To(ContainSubstring("Structured data presentation"))
-		})
-
-		It("should render Status Indicators section", func() {
-			Expect(html).To(ContainSubstring("🏷️ Status Indicators"))
-			Expect(html).To(ContainSubstring("Visual state representations"))
-			Expect(html).To(ContainSubstring("✅ Online"))
-			Expect(html).To(ContainSubstring("⚠️ Maintenance"))
-			Expect(html).To(ContainSubstring("❌ Offline"))
-			Expect(html).To(ContainSubstring("Priority Levels"))
-		})
-
-		It("should render Content Organization section", func() {
-			Expect(html).To(ContainSubstring("Data Cards"))
-			Expect(html).To(ContainSubstring("Data Tables"))
-			Expect(html).To(ContainSubstring("Status Indicators"))
-			Expect(html).To(ContainSubstring("System Status"))
-			Expect(html).To(ContainSubstring("Priority Levels"))
-		})
-
-		It("should implement Component interface for data showcase component", func() {
-			var _ components.Component = pages.NewDataShowcaseComponent()
-
-			showcase := pages.NewDataShowcaseComponent()
-			Expect(showcase.Name()).To(Equal("data-showcase"))
-			Expect(showcase.Level()).To(Equal(components.LevelMedium))
-		})
-	})
-
-	Context("Advanced Showcase", func() {
-		var (
-			w    *httptest.ResponseRecorder
-			html string
-		)
-
-		BeforeEach(func() {
-			w = httptest.NewRecorder()
-		})
-
-		It("should render advanced showcase page", func() {
-			comp := pages.NewInteractiveShowcaseComponent()
-			req, _ := http.NewRequest("GET", comp.URL(), nil)
-			router.ServeHTTP(w, req)
-
-			Expect(w.Code).To(Equal(http.StatusOK))
-			body, _ := io.ReadAll(w.Body)
-			html = string(body)
-			Expect(html).To(ContainSubstring("⚡ Interactive Behaviors"))
-			Expect(html).To(ContainSubstring("Dynamic client-side interactions"))
-			Expect(html).To(ContainSubstring("🔢 Live Character Counter"))
-			Expect(html).To(ContainSubstring("🪟 Modal Dialog"))
-		})
-
-		It("should have working dashboard elements", func() {
-			comp := pages.NewInteractiveShowcaseComponent()
-			req, _ := http.NewRequest("GET", comp.URL(), nil)
-			router.ServeHTTP(w, req)
-
-			Expect(w.Code).To(Equal(http.StatusOK))
-			body, _ := io.ReadAll(w.Body)
-			html = string(body)
-			Expect(html).To(ContainSubstring("🔢 Live Character Counter"))
-			Expect(html).To(ContainSubstring("🪟 Modal Dialog"))
-			Expect(html).To(ContainSubstring("✅ Form Validation"))
-		})
-
-		It("should have working full page elements", func() {
-			comp := pages.NewInteractiveShowcaseComponent()
-			req, _ := http.NewRequest("GET", comp.URL(), nil)
-			router.ServeHTTP(w, req)
-
-			Expect(w.Code).To(Equal(http.StatusOK))
-			body, _ := io.ReadAll(w.Body)
-			html = string(body)
-			Expect(html).To(ContainSubstring("Character Counter"))
-			Expect(html).To(ContainSubstring("textarea"))
-		})
-
-		It("should implement Component interface for advanced showcase component", func() {
-			var _ components.Component = pages.NewInteractiveShowcaseComponent()
-
-			showcase := pages.NewInteractiveShowcaseComponent()
-			Expect(showcase.Name()).To(Equal("interactive-showcase"))
-			Expect(showcase.Level()).To(Equal(components.LevelAdvanced))
-		})
-	})
-
 	Context("Component Registry", func() {
 		It("should have correct number of basic components", func() {
 			Expect(registry.Basic()).To(HaveLen(2))
-		})
-
-		It("should have correct number of medium components", func() {
-			Expect(registry.Medium()).To(HaveLen(1))
-		})
-
-		It("should have correct number of advanced components", func() {
-			Expect(registry.Advanced()).To(HaveLen(1))
 		})
 
 		It("should find component by URL", func() {

@@ -30,8 +30,6 @@ var _ = BeforeSuite(func() {
 	// Create registry and register all components
 	registry = components.NewRegistry()
 	pages.RegisterBasic(registry)
-	pages.RegisterMedium(registry)
-	pages.RegisterAdvanced(registry)
 
 	// Create gin router
 	gin.SetMode(gin.ReleaseMode)
@@ -50,20 +48,6 @@ var _ = BeforeSuite(func() {
 				Count:       len(registry.Basic()),
 				BadgeClass:  "badge-basic",
 			},
-			{
-				Name:        "Medium Components",
-				Path:        "/medium",
-				Description: "Intermediate patterns: nested components, state handling, data tables, composition, and security.",
-				Count:       len(registry.Medium()),
-				BadgeClass:  "badge-medium",
-			},
-			{
-				Name:        "Advanced Showcase",
-				Path:        "/advanced",
-				Description: "Real-world applications: complete pages, dashboards, and complex layouts.",
-				Count:       len(registry.Advanced()),
-				BadgeClass:  "badge-advanced",
-			},
 		}
 		c.Header("Content-Type", "text/html")
 		pages.IndexPage(levels).Render(c.Request.Context(), c.Writer)
@@ -74,18 +58,6 @@ var _ = BeforeSuite(func() {
 		comps := pages.ComponentsToInfoList(registry.Basic())
 		c.Header("Content-Type", "text/html")
 		pages.LevelPage("basic", "Basic Components", comps).Render(c.Request.Context(), c.Writer)
-	})
-
-	router.GET("/medium", func(c *gin.Context) {
-		comps := pages.ComponentsToInfoList(registry.Medium())
-		c.Header("Content-Type", "text/html")
-		pages.LevelPage("medium", "Medium Components", comps).Render(c.Request.Context(), c.Writer)
-	})
-
-	router.GET("/advanced", func(c *gin.Context) {
-		comps := pages.ComponentsToInfoList(registry.Advanced())
-		c.Header("Content-Type", "text/html")
-		pages.LevelPage("advanced", "Advanced Components", comps).Render(c.Request.Context(), c.Writer)
 	})
 
 	// Register all component routes
@@ -145,8 +117,6 @@ var _ = Describe("Server Smoke Tests", func() {
 
 			Expect(html).To(ContainSubstring("Templ UI Component Demo"))
 			Expect(html).To(ContainSubstring("/basic"))
-			Expect(html).To(ContainSubstring("/medium"))
-			Expect(html).To(ContainSubstring("/advanced"))
 		})
 
 		It("should serve basic level page", func() {

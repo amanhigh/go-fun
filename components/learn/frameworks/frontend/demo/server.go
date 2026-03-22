@@ -21,9 +21,6 @@ func NewUIServer(port string) *UIServer {
 
 	// Register all components
 	pages.RegisterBasic(registry)
-	pages.RegisterMedium(registry)
-	pages.RegisterAdvanced(registry)
-	pages.RegisterLayout(registry)
 
 	return &UIServer{
 		port:     port,
