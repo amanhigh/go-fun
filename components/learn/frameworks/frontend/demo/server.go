@@ -27,6 +27,10 @@ func SetupRoutes(r *gin.Engine, components []components.Component) {
 	utils.SetupScriptRoutes(mux, true) // true for development
 	r.Any("/templui/*filepath", gin.WrapH(mux))
 
+	// Initialize and register student API routes
+	studentHandler := NewStudentHandler()
+	studentHandler.RegisterRoutes(r)
+
 	// Index page - shows all available components
 	r.GET("/", func(c *gin.Context) {
 		c.Header("Content-Type", "text/html")
