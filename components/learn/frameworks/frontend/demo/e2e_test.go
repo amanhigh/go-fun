@@ -38,7 +38,7 @@ var _ = BeforeSuite(func() {
 	router := gin.New()
 
 	// Serve static files (JS, CSS, images)
-	router.Static("/static", "../static")
+	router.Static("/assets", "../assets")
 
 	// Index page
 	router.GET("/", func(c *gin.Context) {
@@ -225,7 +225,7 @@ var _ = Describe("Server Smoke Tests", func() {
 
 			body, _ := io.ReadAll(resp.Body)
 			html := string(body)
-			Expect(html).To(ContainSubstring("Hello Selectbox Test"))
+			Expect(html).To(ContainSubstring("Hello World Showcase"))
 			Expect(html).To(ContainSubstring("Country"))
 			Expect(html).To(ContainSubstring("selectbox.min.js"))
 		})
@@ -244,7 +244,7 @@ var _ = Describe("Server Smoke Tests", func() {
 
 	Context("Static File Serving", func() {
 		It("should serve JavaScript files", func() {
-			resp, err := http.Get(serverURL + "/static/js/basic.js")
+			resp, err := http.Get(serverURL + "/assets/js/app.js")
 			Expect(err).ToNot(HaveOccurred())
 			defer resp.Body.Close()
 

@@ -5,10 +5,9 @@ package pages
 
 //lint:file-ignore SA4006 This context is only used if a nested component is present.
 
-import "github.com/a-h/templ"
-import templruntime "github.com/a-h/templ/runtime"
-
 import (
+	"github.com/a-h/templ"
+	templruntime "github.com/a-h/templ/runtime"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
 	"github.com/templui/templui/components/form"
@@ -328,7 +327,7 @@ func HelloPage() templ.Component {
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = components.SectionCard(
+				templ_7745c5c3_Err = layout.Card(
 					"Library",
 					"TemplUI Component",
 					"A professional selectbox component from the TemplUI library with built-in accessibility, keyboard navigation, and consistent styling.",
@@ -362,7 +361,7 @@ func HelloPage() templ.Component {
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = components.SectionCard(
+				templ_7745c5c3_Err = layout.Card(
 					"Interactivity",
 					"Native Counter Component",
 					"A simple counter built with native HTML templates and Alpine.js for interactivity. Demonstrates basic state management and event handling without external component libraries.",

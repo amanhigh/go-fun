@@ -27,7 +27,7 @@ var _ = Describe("UI Component Handler Tests", func() {
 		registry = components.NewRegistry()
 
 		// Serve static files (JS, CSS, images)
-		router.Static("/static", "../static")
+		router.Static("/assets", "../assets")
 
 		// Create registry and register all components
 		pages.RegisterBasic(registry)
@@ -154,8 +154,8 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should render hello page with selectbox", func() {
-			Expect(html).To(ContainSubstring("Hello Selectbox Test"))
-			Expect(html).To(ContainSubstring("Testing just one selectbox component"))
+			Expect(html).To(ContainSubstring("Hello World Showcase"))
+			Expect(html).To(ContainSubstring("Demonstrating both TemplUI components and native HTML templates"))
 		})
 
 		It("should showcase Select Box component", func() {
@@ -175,7 +175,7 @@ var _ = Describe("UI Component Handler Tests", func() {
 
 		It("should include Tailwind CSS", func() {
 			// Verify Tailwind CSS is loaded
-			Expect(html).To(ContainSubstring("cdn.tailwindcss.com"))
+			Expect(html).To(ContainSubstring("/assets/css/app.css"))
 		})
 
 		It("should implement Component interface for hello component", func() {
@@ -207,58 +207,35 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should render medium showcase page with all components", func() {
-			Expect(html).To(ContainSubstring("Medium Components Showcase"))
-			Expect(html).To(ContainSubstring("Layout & Content Blocks"))
+			Expect(html).To(ContainSubstring("📊 Data Presentation"))
+			Expect(html).To(ContainSubstring("Structured data presentation"))
 		})
 
 		It("should render Card components section", func() {
-			Expect(html).To(ContainSubstring("Card Components"))
-			Expect(html).To(ContainSubstring("Cards provide flexible content containers"))
-			Expect(html).To(ContainSubstring("Basic Card"))
-			Expect(html).To(ContainSubstring("Feature Card"))
-			Expect(html).To(ContainSubstring("Product Showcase"))
-			Expect(html).To(ContainSubstring("Analytics Dashboard"))
-			Expect(html).To(ContainSubstring("card component structure"))
-			Expect(html).To(ContainSubstring("key performance indicators"))
+			Expect(html).To(ContainSubstring("🃏 Data Cards"))
+			Expect(html).To(ContainSubstring("Flexible content containers"))
 		})
 
 		It("should render Data Tables section", func() {
-			Expect(html).To(ContainSubstring("Data Tables"))
+			Expect(html).To(ContainSubstring("📋 Data Tables"))
 			Expect(html).To(ContainSubstring("Structured data presentation"))
-			Expect(html).To(ContainSubstring("Sample user data"))
-			Expect(html).To(ContainSubstring("Alice Johnson"))
-			Expect(html).To(ContainSubstring("Bob Smith"))
-			Expect(html).To(ContainSubstring("Carol Davis"))
-			Expect(html).To(ContainSubstring("Developer"))
-			Expect(html).To(ContainSubstring("Designer"))
-			Expect(html).To(ContainSubstring("Manager"))
 		})
 
 		It("should render Status Indicators section", func() {
-			Expect(html).To(ContainSubstring("Status Indicators"))
+			Expect(html).To(ContainSubstring("🏷️ Status Indicators"))
 			Expect(html).To(ContainSubstring("Visual state representations"))
-			Expect(html).To(ContainSubstring("Project Status"))
-			Expect(html).To(ContainSubstring("✅ Ready"))
-			Expect(html).To(ContainSubstring("🕒 In Progress"))
-			Expect(html).To(ContainSubstring("⚠️ Review"))
-			Expect(html).To(ContainSubstring("❌ Blocked"))
-			Expect(html).To(ContainSubstring("ℹ️ Info"))
+			Expect(html).To(ContainSubstring("✅ Online"))
+			Expect(html).To(ContainSubstring("⚠️ Maintenance"))
+			Expect(html).To(ContainSubstring("❌ Offline"))
 			Expect(html).To(ContainSubstring("Priority Levels"))
-			Expect(html).To(ContainSubstring("🔴 High"))
-			Expect(html).To(ContainSubstring("🟡 Medium"))
-			Expect(html).To(ContainSubstring("🟢 Low"))
 		})
 
 		It("should render Content Organization section", func() {
-			Expect(html).To(ContainSubstring("Content Organization"))
-			Expect(html).To(ContainSubstring("Content hierarchy and organization"))
-			Expect(html).To(ContainSubstring("Project Overview"))
-			Expect(html).To(ContainSubstring("Key Objectives"))
-			Expect(html).To(ContainSubstring("Demonstrate card component usage"))
-			Expect(html).To(ContainSubstring("Show table data presentation"))
-			Expect(html).To(ContainSubstring("Display status indicators"))
-			Expect(html).To(ContainSubstring("Organize content hierarchically"))
-			Expect(html).To(ContainSubstring("Last updated: 2024-03-21"))
+			Expect(html).To(ContainSubstring("Data Cards"))
+			Expect(html).To(ContainSubstring("Data Tables"))
+			Expect(html).To(ContainSubstring("Status Indicators"))
+			Expect(html).To(ContainSubstring("System Status"))
+			Expect(html).To(ContainSubstring("Priority Levels"))
 		})
 
 		It("should implement Component interface for data showcase component", func() {
@@ -288,35 +265,34 @@ var _ = Describe("UI Component Handler Tests", func() {
 			Expect(w.Code).To(Equal(http.StatusOK))
 			body, _ := io.ReadAll(w.Body)
 			html = string(body)
-			Expect(html).To(ContainSubstring("<!doctype html>"))
-			Expect(html).To(ContainSubstring("🚀 Advanced Showcase"))
-			Expect(html).To(ContainSubstring("Dashboard Layout"))
-			Expect(html).To(ContainSubstring("Full Page Composition"))
-			Expect(html).To(ContainSubstring("Project Alpha"))
+			Expect(html).To(ContainSubstring("⚡ Interactive Behaviors"))
+			Expect(html).To(ContainSubstring("Dynamic client-side interactions"))
+			Expect(html).To(ContainSubstring("🔢 Live Character Counter"))
+			Expect(html).To(ContainSubstring("🪟 Modal Dialog"))
 		})
 
 		It("should have working dashboard elements", func() {
-			req, _ := http.NewRequest("GET", "/advanced/showcase", nil)
+			comp := pages.NewInteractiveShowcaseComponent()
+			req, _ := http.NewRequest("GET", comp.URL(), nil)
 			router.ServeHTTP(w, req)
 
 			Expect(w.Code).To(Equal(http.StatusOK))
 			body, _ := io.ReadAll(w.Body)
 			html = string(body)
-			Expect(html).To(ContainSubstring("📊 Dashboard Layout"))
-			Expect(html).To(ContainSubstring("👤 Admin User"))
-			Expect(html).To(ContainSubstring("📈 Performance Metrics"))
-			Expect(html).To(ContainSubstring("📋 Project Status"))
+			Expect(html).To(ContainSubstring("🔢 Live Character Counter"))
+			Expect(html).To(ContainSubstring("🪟 Modal Dialog"))
+			Expect(html).To(ContainSubstring("✅ Form Validation"))
 		})
 
 		It("should have working full page elements", func() {
-			req, _ := http.NewRequest("GET", "/advanced/showcase", nil)
+			comp := pages.NewInteractiveShowcaseComponent()
+			req, _ := http.NewRequest("GET", comp.URL(), nil)
 			router.ServeHTTP(w, req)
 
 			Expect(w.Code).To(Equal(http.StatusOK))
 			body, _ := io.ReadAll(w.Body)
 			html = string(body)
-			Expect(html).To(ContainSubstring("📄 Full Page Composition"))
-			Expect(html).To(ContainSubstring("Advanced Notes"))
+			Expect(html).To(ContainSubstring("Character Counter"))
 			Expect(html).To(ContainSubstring("textarea"))
 		})
 
@@ -354,7 +330,7 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should serve static JS files", func() {
-			req, w := util.CreateHTMLTestRequest("GET", "/static/js/basic.js")
+			req, w := util.CreateHTMLTestRequest("GET", "/assets/js/app.js")
 			router.ServeHTTP(w, req)
 
 			Expect(w.Code).To(Equal(http.StatusOK))
@@ -362,7 +338,7 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should serve CSS files", func() {
-			req, w := util.CreateHTMLTestRequest("GET", "/static/css/showcase.css")
+			req, w := util.CreateHTMLTestRequest("GET", "/assets/css/showcase.css")
 			router.ServeHTTP(w, req)
 
 			Expect(w.Code).To(Equal(http.StatusOK))
@@ -371,7 +347,7 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should serve image files", func() {
-			req, w := util.CreateHTMLTestRequest("GET", "/static/images/sample-logo.png")
+			req, w := util.CreateHTMLTestRequest("GET", "/assets/images/sample-logo.png")
 			router.ServeHTTP(w, req)
 
 			Expect(w.Code).To(Equal(http.StatusOK))
@@ -379,7 +355,7 @@ var _ = Describe("UI Component Handler Tests", func() {
 		})
 
 		It("should return 404 for non-existent static files", func() {
-			req, w := util.CreateHTMLTestRequest("GET", "/static/css/nonexistent.css")
+			req, w := util.CreateHTMLTestRequest("GET", "/assets/css/nonexistent.css")
 			router.ServeHTTP(w, req)
 
 			Expect(w.Code).To(Equal(http.StatusNotFound))

@@ -80,6 +80,8 @@ func (s *UIServer) indexHandler(c *gin.Context) {
 	for _, comp := range s.registry.All() {
 		badgeClass := "badge-basic"
 		switch comp.Level() {
+		case components.LevelBasic:
+			badgeClass = "badge-basic"
 		case components.LevelMedium:
 			badgeClass = "badge-medium"
 		case components.LevelAdvanced:

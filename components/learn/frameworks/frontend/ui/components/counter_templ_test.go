@@ -91,7 +91,7 @@ var _ = Describe("Counter Component Tests", func() {
 			Expect(display.AttrOr("class", "")).To(ContainSubstring("text-center"))
 
 			// Consistent button styling
-			buttons.Each(func(i int, s *goquery.Selection) {
+			buttons.Each(func(_ int, s *goquery.Selection) {
 				class := s.AttrOr("class", "")
 				Expect(class).To(ContainSubstring("counter-button"))
 				Expect(class).To(ContainSubstring("px-4 py-2"))
