@@ -22,8 +22,7 @@ GINKGO := $(GOBIN)/ginkgo
 SWAG := $(GOBIN)/swag
 MOCKERY := $(GOBIN)/mockery
 TEMPL := $(GOBIN)/templ
-NPM_GLOBAL_PREFIX := $(shell npm config get prefix 2>/dev/null)
-TAILWINDCSS := $(NPM_GLOBAL_PREFIX)/bin/tailwindcss
+TAILWINDCSS := tailwindcss
 AIR := github.com/air-verse/air@latest
 ESBUILD := esbuild
 
