@@ -1,17 +1,12 @@
 package pages
 
-import "github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
+import (
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
+)
 
-// LevelInfo holds display information for a level
-type LevelInfo struct {
-	Name        string
-	Path        string
-	Description string
-	BadgeClass  string
-}
-
-// IndexPage renders the main index page with links to all levels
-templ IndexPage(levels []LevelInfo) {
+// IndexPage renders the main index page with links to all components
+templ IndexPage(components []components.Component) {
 	@layout.Base("Templ UI Component Demo") {
 		<style>
 			.hero {
@@ -64,19 +59,19 @@ templ IndexPage(levels []LevelInfo) {
 				<p>Choose your starting point based on your familiarity with Templ and UI components:</p>
 				
 				<div class="level-grid">
-					for _, level := range levels {
+					for _, comp := range components {
 						<article class="level-card">
 							<header>
 								<h3>
-									<a href={ level.Path } style="text-decoration: none; color: inherit;">
-										{ level.Name }
+									<a href={ comp.URL() } style="text-decoration: none; color: inherit;">
+										{ comp.Name() }
 									</a>
-									<span class={ "badge " + level.BadgeClass }>Live Demo</span>
+									<span class="badge">Live Demo</span>
 								</h3>
 							</header>
-							<p>{ level.Description }</p>
+							<p>{ comp.Description() }</p>
 							<footer>
-								<a href={ level.Path } role="button" class="outline">Open { level.Name } →</a>
+								<a href={ comp.URL() } role="button" class="outline">Open { comp.Name() } →</a>
 							</footer>
 						</article>
 					}

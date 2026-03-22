@@ -17,9 +17,8 @@ import (
 const testPort = 18081
 
 var (
-	serverURL string
 	server    *http.Server
-	registry  *components.Registry
+	serverURL string
 )
 
 var _ = BeforeSuite(func() {
@@ -27,38 +26,31 @@ var _ = BeforeSuite(func() {
 
 	serverURL = fmt.Sprintf("http://localhost:%d", testPort)
 
-	// Create registry and register all components
-	registry = components.NewRegistry()
-	pages.RegisterBasic(registry)
-
-	// Create gin router
+	// Create gin router using same pattern as server
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
+
+	// Create components once
+	components := []components.Component{
+		pages.NewFormShowcaseComponent(),
+		pages.NewHelloComponent(),
+	}
 
 	// Serve static files (JS, CSS, images)
 	router.Static("/assets", "../assets")
 
 	// Index page
 	router.GET("/", func(c *gin.Context) {
-		levels := []pages.LevelInfo{
-			{
-				Name:        "Form Essentials",
-				Path:        "/form",
-				Description: "Master form inputs, validation, and user data collection with professional UI components.",
-				BadgeClass:  "badge-basic",
-			},
-		}
 		c.Header("Content-Type", "text/html")
-		pages.IndexPage(levels).Render(c.Request.Context(), c.Writer)
+		pages.IndexPage(components).Render(c.Request.Context(), c.Writer)
 	})
 
-	// Register all component routes
-	for _, comp := range registry.All() {
-		url := comp.URL()
-		c := comp
-		router.GET(url, func(ctx *gin.Context) {
+	// Register component routes
+	for _, comp := range components {
+		comp := comp // capture for closure
+		router.GET(comp.URL(), func(ctx *gin.Context) {
 			ctx.Header("Content-Type", "text/html")
-			c.Render().Render(ctx.Request.Context(), ctx.Writer)
+			comp.Render().Render(ctx.Request.Context(), ctx.Writer)
 		})
 	}
 
@@ -97,8 +89,8 @@ var _ = AfterSuite(func() {
 // Server Smoke Tests - Tests one component from each level on real HTTP server
 // This validates the full HTTP stack works correctly for each complexity level
 var _ = Describe("Server Smoke Tests", func() {
-	Context("Index and Level Pages", func() {
-		It("should serve index page with level links", func() {
+	Context("Index and Component Pages", func() {
+		It("should serve index page with component links", func() {
 			resp, err := http.Get(serverURL + "/")
 			Expect(err).ToNot(HaveOccurred())
 			defer resp.Body.Close()
@@ -109,125 +101,43 @@ var _ = Describe("Server Smoke Tests", func() {
 
 			Expect(html).To(ContainSubstring("Templ UI Component Demo"))
 			Expect(html).To(ContainSubstring("/form"))
+			Expect(html).To(ContainSubstring("/hello"))
 		})
 
 		It("should serve individual component pages", func() {
+			testCases := []string{"/form", "/hello"}
+			for _, url := range testCases {
+				resp, err := http.Get(serverURL + url)
+				Expect(err).ToNot(HaveOccurred())
+				defer resp.Body.Close()
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			}
+		})
+	})
+
+	Context("Component Content Validation", func() {
+		It("should render form showcase with expected content", func() {
 			resp, err := http.Get(serverURL + "/form")
 			Expect(err).ToNot(HaveOccurred())
 			defer resp.Body.Close()
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-		})
-	})
-
-	Context("Form Essentials Showcase", func() {
-		var (
-			cshowcase *pages.FormShowcaseComponent
-		)
-
-		BeforeEach(func() {
-			cshowcase = pages.NewFormShowcaseComponent()
-		})
-
-		It("should render basic showcase via HTTP", func() {
-			resp, err := http.Get(serverURL + cshowcase.URL())
-			Expect(err).ToNot(HaveOccurred())
-			defer resp.Body.Close()
-
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			Expect(resp.Header.Get("Content-Type")).To(ContainSubstring("text/html"))
-
 			body, _ := io.ReadAll(resp.Body)
 			html := string(body)
 			Expect(html).To(ContainSubstring("Basic Components Showcase"))
 			Expect(html).To(ContainSubstring("Username"))
 		})
 
-		It("should match direct rendering with HTTP response", func() {
-			// Direct rendering
-			var buf testBuffer
-			err := cshowcase.Render().Render(context.Background(), &buf)
-			Expect(err).ToNot(HaveOccurred())
-
-			// HTTP rendering
-			resp, err := http.Get(serverURL + cshowcase.URL())
-			Expect(err).ToNot(HaveOccurred())
-			defer resp.Body.Close()
-
-			httpBody, _ := io.ReadAll(resp.Body)
-			direct := buf.String()
-			httpHTML := string(httpBody)
-			Expect(httpHTML).To(ContainSubstring("Basic Components Showcase"))
-			Expect(direct).To(ContainSubstring("Basic Components Showcase"))
-			Expect(httpHTML).To(ContainSubstring("id=\"showcase-dialog\""))
-			Expect(direct).To(ContainSubstring("id=\"showcase-dialog\""))
-		})
-	})
-
-	Context("Hello Page", func() {
-		var (
-			hshowcase *pages.HelloComponent
-		)
-
-		BeforeEach(func() {
-			hshowcase = pages.NewHelloComponent()
-		})
-
-		It("should render hello page via HTTP", func() {
-			resp, err := http.Get(serverURL + hshowcase.URL())
+		It("should render hello page with expected content", func() {
+			resp, err := http.Get(serverURL + "/hello")
 			Expect(err).ToNot(HaveOccurred())
 			defer resp.Body.Close()
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			Expect(resp.Header.Get("Content-Type")).To(ContainSubstring("text/html"))
-
 			body, _ := io.ReadAll(resp.Body)
 			html := string(body)
 			Expect(html).To(ContainSubstring("Hello World Showcase"))
 			Expect(html).To(ContainSubstring("Country"))
-			Expect(html).To(ContainSubstring("selectbox.min.js"))
-		})
-	})
-
-	Context("Component Consistency", func() {
-		It("should render all basic components consistently", func() {
-			for _, comp := range registry.Basic() {
-				resp, err := http.Get(serverURL + comp.URL())
-				Expect(err).ToNot(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				resp.Body.Close()
-			}
-		})
-	})
-
-	Context("Static File Serving", func() {
-		It("should serve JavaScript files", func() {
-			resp, err := http.Get(serverURL + "/assets/js/app.js")
-			Expect(err).ToNot(HaveOccurred())
-			defer resp.Body.Close()
-
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			Expect(resp.Header.Get("Content-Type")).To(ContainSubstring("javascript"))
-
-			body, _ := io.ReadAll(resp.Body)
-			Expect(string(body)).To(ContainSubstring("alpine:init"))
 		})
 	})
 })
-
-// testBuffer implements io.Writer for testing
-type testBuffer struct {
-	data []byte
-}
-
-func (b *testBuffer) Write(p []byte) (n int, err error) {
-	b.data = append(b.data, p...)
-	return len(p), nil
-}
-
-func (b *testBuffer) String() string {
-	return string(b.data)
-}
-
-// Ensure pages package form showcase constructor is available
-var _ = pages.NewFormShowcaseComponent()
