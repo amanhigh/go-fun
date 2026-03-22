@@ -7,8 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/pages"
+	demo "github.com/amanhigh/go-fun/components/learn/frameworks/frontend/demo"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -30,29 +29,9 @@ var _ = BeforeSuite(func() {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 
-	// Create components once
-	components := []components.Component{
-		pages.NewFormShowcaseComponent(),
-		pages.NewHelloComponent(),
-	}
-
-	// Serve static files (JS, CSS, images)
-	router.Static("/assets", "../assets")
-
-	// Index page
-	router.GET("/", func(c *gin.Context) {
-		c.Header("Content-Type", "text/html")
-		pages.IndexPage(components).Render(c.Request.Context(), c.Writer)
-	})
-
-	// Register component routes
-	for _, comp := range components {
-		comp := comp // capture for closure
-		router.GET(comp.URL(), func(ctx *gin.Context) {
-			ctx.Header("Content-Type", "text/html")
-			comp.Render().Render(ctx.Request.Context(), ctx.Writer)
-		})
-	}
+	// Use server functions for consistent setup
+	components := demo.CreateComponents()
+	demo.SetupRoutes(router, components)
 
 	server = &http.Server{
 		Addr:              fmt.Sprintf(":%d", testPort),

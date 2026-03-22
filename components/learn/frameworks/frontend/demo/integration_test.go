@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/amanhigh/go-fun/common/util"
+	demo "github.com/amanhigh/go-fun/components/learn/frameworks/frontend/demo"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/pages"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -21,31 +21,12 @@ var _ = Describe("UI Server Integration Tests", func() {
 
 	BeforeEach(func() {
 		gin.SetMode(gin.TestMode)
+		// Create gin router
 		router = gin.New()
 
-		// Serve static files (JS, CSS, images)
-		router.Static("/assets", "../assets")
-
-		// Create components and register routes like the server does
-		comps = []components.Component{
-			pages.NewFormShowcaseComponent(),
-			pages.NewHelloComponent(),
-		}
-
-		// Register component routes
-		for _, comp := range comps {
-			comp := comp // capture for closure
-			router.GET(comp.URL(), func(c *gin.Context) {
-				c.Header("Content-Type", "text/html")
-				comp.Render().Render(c.Request.Context(), c.Writer)
-			})
-		}
-
-		// Add index page
-		router.GET("/", func(c *gin.Context) {
-			c.Header("Content-Type", "text/html")
-			pages.IndexPage(comps).Render(c.Request.Context(), c.Writer)
-		})
+		// Use server functions for consistent setup
+		comps = demo.CreateComponents()
+		demo.SetupRoutes(router, comps)
 	})
 
 	Context("Server Routes", func() {
