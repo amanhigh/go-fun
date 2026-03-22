@@ -181,12 +181,7 @@ clean-build:
 	-rm -rf $(BIN_DIR)
 	-make -C $(COMPONENT_DIR)/operator/ clean > $(OUT)
 
-clean-templ:
-	printf $(_WARN) "Cleaning Templ Files"
-	find components/learn/frameworks/frontend -name "*_templ.go" -delete
-	find components/learn/frameworks/frontend -name "*_templ.txt" -delete
-
-clean: clean-test clean-build clean-templ ## Clean up Residue
+clean: clean-test clean-build ## Clean up Residue
 
 combine-coverage: ## Combine all binary coverage data into a single comprehensive report
 	printf $(_TITLE) "Combining Binary Coverage Data"
