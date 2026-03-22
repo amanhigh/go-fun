@@ -18,33 +18,5 @@ document.addEventListener('alpine:init', () => {
         }
     });
     
-    // Register Alpine.js components for interactive pages
-    Alpine.data('basicShowcase', () => ({
-        notesLength: 0,
-        notesMaxLength: 200,
-        showDialog: false,
-        
-        updateNotesLength(event) {
-            this.notesLength = event.target.value.length;
-        },
-        
-        openDialog() {
-            this.showDialog = true;
-            this.$nextTick(() => this.$refs.dialog?.showModal());
-        },
-        
-        closeDialog() {
-            this.showDialog = false;
-            this.$refs.dialog?.close();
-        },
-        
-        submitForm(event) {
-            if (!document.getElementById('terms')?.checked) {
-                event.preventDefault();
-                alert('Please accept terms and conditions.');
-            }
-        }
-    }));
-    
     console.log('Custom JS initialized');
 });
