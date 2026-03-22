@@ -49,7 +49,6 @@ var _ = Describe("Markdown", func() {
 			Expect(root).ShouldNot(BeNil())
 			Expect(root).To(BeAssignableToTypeOf(&ast.Document{}))
 			Expect(root.Kind()).Should(Equal(ast.KindDocument))
-			Expect(root.Text(data)).ShouldNot(BeNil())
 			Expect(root.HasChildren()).Should(BeTrue())
 			Expect(root.ChildCount()).Should(BeNumerically(">", 10))
 		})
@@ -63,7 +62,7 @@ var _ = Describe("Markdown", func() {
 				case *ast.Heading:
 					Expect(n).To(BeAssignableToTypeOf(&ast.Heading{}))
 					Expect(node.Kind()).Should(Equal(ast.KindHeading))
-					Expect(node.Text(data)).Should(Equal([]byte(headingText)))
+					Expect(node.(*ast.Heading).FirstChild().(*ast.Text).Segment.Value(data)).Should(Equal([]byte(headingText)))
 					return ast.WalkStop, nil
 				}
 				return ast.WalkContinue, nil
@@ -83,7 +82,7 @@ var _ = Describe("Markdown", func() {
 				Expect(node).ShouldNot(BeNil())
 				Expect(node).To(BeAssignableToTypeOf(&ast.Heading{}))
 				Expect(node.Kind()).Should(Equal(ast.KindHeading))
-				Expect(node.Text(data)).Should(Equal([]byte(headingText)))
+				Expect(node.(*ast.Heading).FirstChild().(*ast.Text).Segment.Value(data)).Should(Equal([]byte(headingText)))
 
 				Expect(node.Parent()).Should(Equal(root))
 				Expect(node.NextSibling()).ShouldNot(BeNil())
@@ -100,7 +99,7 @@ var _ = Describe("Markdown", func() {
 				Expect(text).ShouldNot(BeNil())
 				Expect(text).To(BeAssignableToTypeOf(&ast.Text{}))
 				Expect(text.Kind()).Should(Equal(ast.KindText))
-				Expect(text.Text(data)).Should(Equal([]byte(headingText)))
+				Expect(text.(*ast.Text).Segment.Value(data)).Should(Equal([]byte(headingText)))
 
 				Expect(text.Parent()).Should(Equal(node))
 				Expect(text.NextSibling()).Should(BeNil())
@@ -136,8 +135,10 @@ var _ = Describe("Markdown", func() {
 					// Sub List
 					Expect(list.FirstChild().Kind()).Should(Equal(ast.KindListItem))
 					Expect(list.FirstChild()).Should(BeAssignableToTypeOf(&ast.ListItem{}))
-					Expect(list.FirstChild().Text(data)).Should(Equal([]byte("Level 1 Item 1")))
-					Expect(list.LastChild().Text(data)).Should(Equal([]byte("Level 1 Item 3")))
+					segment := list.FirstChild().(*ast.ListItem).FirstChild().(*ast.TextBlock).Lines().At(0)
+					Expect(segment.Value(data)).Should(Equal([]byte("Level 1 Item 1")))
+					segment2 := list.LastChild().(*ast.ListItem).FirstChild().(*ast.TextBlock).Lines().At(0)
+					Expect(segment2.Value(data)).Should(Equal([]byte("Level 1 Item 3")))
 				})
 
 				Context("Sub Lists (Under Level 1 Item 2)", func() {
@@ -162,7 +163,8 @@ var _ = Describe("Markdown", func() {
 							if entering { // Only process the node when entering, not when exiting.
 								if list, ok := node.(*ast.List); ok && list.Parent() != nil {
 									if textBlock, ok := list.Parent().FirstChild().(*ast.TextBlock); ok {
-										if string(textBlock.Text(data)) == "Level 1 Item 2" {
+										segment := textBlock.Lines().At(0)
+										if segment.Value(data)[0] == 'L' {
 											level2List = list
 											return ast.WalkStop, nil
 										}
@@ -188,7 +190,8 @@ var _ = Describe("Markdown", func() {
 						It("should have correct content", func() {
 							content := level2Item2a.FirstChild()
 							Expect(content.Kind()).Should(Equal(ast.KindTextBlock))
-							Expect(string(content.Text(data))).Should(Equal("Level 2 Item 2a"))
+							segment := content.(*ast.TextBlock).Lines().At(0)
+							Expect(segment.Value(data)).Should(Equal([]byte("Level 2 Item 2a")))
 						})
 
 						It("should have two children (content and nested list)", func() {
@@ -210,7 +213,8 @@ var _ = Describe("Markdown", func() {
 								level3Item := level3List.FirstChild().(*ast.ListItem)
 								content := level3Item.FirstChild()
 								Expect(content.Kind()).Should(Equal(ast.KindTextBlock))
-								Expect(string(content.Text(data))).Should(Equal("Level 3 Item 2a1"))
+								segment := content.(*ast.TextBlock).Lines().At(0)
+								Expect(segment.Value(data)).Should(Equal([]byte("Level 3 Item 2a1")))
 							})
 						})
 					})
@@ -219,7 +223,8 @@ var _ = Describe("Markdown", func() {
 						level2Item2b := level2List.LastChild().(*ast.ListItem)
 						content := level2Item2b.FirstChild()
 						Expect(content.Kind()).Should(Equal(ast.KindTextBlock))
-						Expect(string(content.Text(data))).Should(Equal("Level 2 Item 2b"))
+						segment := content.(*ast.TextBlock).Lines().At(0)
+						Expect(segment.Value(data)).Should(Equal([]byte("Level 2 Item 2b")))
 					})
 				})
 			})

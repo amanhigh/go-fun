@@ -28,9 +28,3 @@ var _ components.Component = (*FormShowcaseComponent)(nil)
 func (c *FormShowcaseComponent) Render() templ.Component {
 	return FormShowcasePage()
 }
-
-// RegisterBasic registers all form components with the given registry.
-func RegisterBasic(r *components.Registry) {
-	r.Register(NewHelloComponent())
-	r.Register(NewFormShowcaseComponent())
-}
