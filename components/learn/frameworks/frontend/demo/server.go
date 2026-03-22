@@ -89,7 +89,6 @@ func (s *UIServer) indexHandler(c *gin.Context) {
 			Name:        comp.Name(),
 			Path:        comp.URL(),
 			Description: comp.Description(),
-			Count:       1,
 			BadgeClass:  badgeClass,
 		})
 	}

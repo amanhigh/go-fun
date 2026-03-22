@@ -1,248 +1,88 @@
 package pages
 
-import (
-	"fmt"
-
-	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
-)
-
-// ComponentInfo holds display information for a component
-type ComponentInfo struct {
-	Name        string
-	Description string
-	URL         string
-}
+import "github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
 
 // LevelInfo holds display information for a level
 type LevelInfo struct {
 	Name        string
 	Path        string
 	Description string
-	Count       int
 	BadgeClass  string
 }
 
 // IndexPage renders the main index page with links to all levels
 templ IndexPage(levels []LevelInfo) {
-	<!DOCTYPE html>
-	<html lang="en" data-theme="dark">
-		<head>
-			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>Templ UI Component Demo</title>
-			<!-- Pico CSS only -->
-			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
-			<style>
-				.hero {
-					text-align: center;
-					padding: 3rem 0;
-					background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-					color: white;
-					margin: -2rem -2rem 2rem -2rem;
-				}
-				.level-grid {
-					display: grid;
-					grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-					gap: 1.5rem;
-					margin-top: 2rem;
-				}
-				.level-card {
-					border: 1px solid var(--muted-border-color);
-					border-radius: 0.5rem;
-					padding: 1.5rem;
-					transition: transform 0.2s ease, box-shadow 0.2s ease;
-				}
-				.level-card:hover {
-					transform: translateY(-2px);
-					box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-				}
-				.level-card h3 {
-					margin-top: 0;
-					display: flex;
-					align-items: center;
-					justify-content: space-between;
-				}
-				.badge {
-					background: var(--primary);
-					color: white;
-					padding: 0.25rem 0.5rem;
-					border-radius: 1rem;
-					font-size: 0.875rem;
-				}
-				.badge-basic { background: #10b981; }
-				.badge-medium { background: #f59e0b; }
-				.badge-advanced { background: #ef4444; }
-			</style>
-		</head>
-		<body>
-			<div class="hero">
-				<div class="container">
-					<h1>🚀 Templ UI Component Demo</h1>
-					<p>Explore a comprehensive collection of Templ components organized by complexity. Each level builds upon the previous one, from basic building blocks to advanced patterns.</p>
-				</div>
+	@layout.Base("Templ UI Component Demo") {
+		<style>
+			.hero {
+				text-align: center;
+				padding: 3rem 0;
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+				color: white;
+				margin: -2rem -2rem 2rem -2rem;
+			}
+			.level-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+				gap: 1.5rem;
+				margin-top: 2rem;
+			}
+			.level-card {
+				border: 1px solid var(--muted-border-color);
+				border-radius: 0.5rem;
+				padding: 1.5rem;
+			}
+			.level-card:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+			}
+			.level-card h3 {
+				margin: 0;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+			.badge {
+				background: #10b981;
+				color: white;
+				padding: 0.25rem 0.5rem;
+				border-radius: 1rem;
+				font-size: 0.875rem;
+			}
+		</style>
+		
+		<div class="hero">
+			<div class="container">
+				<h1>🚀 Templ UI Component Demo</h1>
+				<p>Explore a comprehensive collection of Templ components organized by complexity. Each level builds upon the previous one, from basic building blocks to advanced patterns.</p>
 			</div>
+		</div>
 
-			<main class="container">
-				<section>
-					<h2>📚 Learning Path</h2>
-					<p>Choose your starting point based on your familiarity with Templ and UI components:</p>
-					
-					<div class="level-grid">
-						for _, level := range levels {
-							<article class="level-card">
-								<header>
-									<h3>
-										<a href={ templ.SafeURL(level.Path) } style="text-decoration: none; color: inherit;">
-											{ level.Name }
-										</a>
-										<span class={ fmt.Sprintf("badge %s", level.BadgeClass) }>
-											Live Demo
-										</span>
-									</h3>
-								</header>
-								<p>{ level.Description }</p>
-								<footer>
-									<a href={ templ.SafeURL(level.Path) } role="button" class="outline">
-										Open { level.Name } →
-									</a>
-								</footer>
-							</article>
-						}
-					</div>
-				</section>
-
-				<section style="margin-top: 3rem;">
-					<h3>🛠️ Quick Start</h3>
-					<ol>
-						<li><strong>📝 Form Essentials:</strong> Master form inputs, validation, and user data collection</li>
-						<li><strong>📊 Data Presentation:</strong> Display structured data with tables and cards</li>
-						<li><strong>⚡ Interactive Behaviors:</strong> Dynamic client-side interactions with Alpine.js</li>
-						<li><strong>🎨 Layout & Composition:</strong> Complex layouts and responsive design patterns</li>
-					</ol>
-				</section>
-			</main>
-		</body>
-	</html>
-}
-
-// LevelPage renders a page listing all components for a given level
-templ LevelPage(level string, levelTitle string, components []ComponentInfo) {
-	<!DOCTYPE html>
-	<html lang="en" data-theme="dark">
-		<head>
-			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>{ levelTitle } Components</title>
-			<!-- Pico CSS only -->
-			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
-			<style>
-				.breadcrumb {
-					background: var(--muted-color);
-					padding: 1rem;
-					margin: -2rem -2rem 2rem -2rem;
-					border-bottom: 1px solid var(--muted-border-color);
-				}
-				.breadcrumb nav {
-					display: flex;
-					align-items: center;
-					gap: 0.5rem;
-				}
-				.breadcrumb a {
-					color: var(--primary);
-					text-decoration: none;
-				}
-				.breadcrumb a:hover {
-					text-decoration: underline;
-				}
-				.component-grid {
-					display: grid;
-					grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-					gap: 1.5rem;
-					margin-top: 2rem;
-				}
-				.component-card {
-					border: 1px solid var(--muted-border-color);
-					border-radius: 0.5rem;
-					padding: 1.5rem;
-					transition: transform 0.2s ease, box-shadow 0.2s ease;
-				}
-				.component-card:hover {
-					transform: translateY(-2px);
-					box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-				}
-				.component-card h3 {
-					margin-top: 0;
-				}
-				.component-url {
-					background: var(--code-background-color);
-					padding: 0.25rem 0.5rem;
-					border-radius: 0.25rem;
-					font-family: monospace;
-					font-size: 0.875rem;
-					color: var(--muted-color);
-				}
-			</style>
-		</head>
-		<body>
-			<div class="breadcrumb">
-				<div class="container">
-					<nav>
-						<a href="/">🏠 Home</a>
-						<span>›</span>
-						<span>{ levelTitle }</span>
-					</nav>
-				</div>
-			</div>
-
-			<main class="container">
-				<header>
-					<h1>{ levelTitle }</h1>
-					<p>Interactive demonstrations of UI components. Click any component to explore its features and implementation.</p>
-				</header>
+		<main class="container">
+			<section>
+				<h2>📚 Learning Path</h2>
+				<p>Choose your starting point based on your familiarity with Templ and UI components:</p>
 				
-				<nav style="margin-bottom: 2rem;">
-					<a href="/" role="button" class="secondary">← Back to Home</a>
-				</nav>
+				<div class="level-grid">
+					for _, level := range levels {
+						<article class="level-card">
+							<header>
+								<h3>
+									<a href={ level.Path } style="text-decoration: none; color: inherit;">
+										{ level.Name }
+									</a>
+									<span class={ "badge " + level.BadgeClass }>Live Demo</span>
+								</h3>
+							</header>
+							<p>{ level.Description }</p>
+							<footer>
+								<a href={ level.Path } role="button" class="outline">Open { level.Name } →</a>
+							</footer>
+						</article>
+					}
+				</div>
+			</section>
 
-				<section>
-					<div class="component-grid">
-						for _, comp := range components {
-							<article class="component-card">
-								<header>
-									<h3><a href={ templ.SafeURL(comp.URL) } style="text-decoration: none; color: inherit;">{ comp.Name }</a></h3>
-								</header>
-								<p>{ comp.Description }</p>
-								<footer>
-									<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
-										<span class="component-url">{ comp.URL }</span>
-										<a href={ templ.SafeURL(comp.URL) } role="button" class="outline">
-											View Demo →
-										</a>
-									</div>
-								</footer>
-							</article>
-						}
-					</div>
-				</section>
-			</main>
-		</body>
-	</html>
-}
-
-// ComponentToInfo converts a Component to ComponentInfo for display
-func ComponentToInfo(c components.Component) ComponentInfo {
-	return ComponentInfo{
-		Name:        c.Name(),
-		Description: c.Description(),
-		URL:         c.URL(),
+		</main>
 	}
-}
-
-// ComponentsToInfoList converts a slice of Components to ComponentInfo slice
-func ComponentsToInfoList(comps []components.Component) []ComponentInfo {
-	infos := make([]ComponentInfo, len(comps))
-	for i, c := range comps {
-		infos[i] = ComponentToInfo(c)
-	}
-	return infos
 }

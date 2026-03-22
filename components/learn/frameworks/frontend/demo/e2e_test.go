@@ -42,22 +42,14 @@ var _ = BeforeSuite(func() {
 	router.GET("/", func(c *gin.Context) {
 		levels := []pages.LevelInfo{
 			{
-				Name:        "Basic Components",
-				Path:        "/basic",
-				Description: "Core UI building blocks: Button, TextInput, TextArea, Dropdown, Badge, Radio, Checkbox, and Modal components with professional styling.",
-				Count:       len(registry.Basic()),
+				Name:        "Form Essentials",
+				Path:        "/form",
+				Description: "Master form inputs, validation, and user data collection with professional UI components.",
 				BadgeClass:  "badge-basic",
 			},
 		}
 		c.Header("Content-Type", "text/html")
 		pages.IndexPage(levels).Render(c.Request.Context(), c.Writer)
-	})
-
-	// Level pages
-	router.GET("/basic", func(c *gin.Context) {
-		comps := pages.ComponentsToInfoList(registry.Basic())
-		c.Header("Content-Type", "text/html")
-		pages.LevelPage("basic", "Basic Components", comps).Render(c.Request.Context(), c.Writer)
 	})
 
 	// Register all component routes
@@ -116,19 +108,15 @@ var _ = Describe("Server Smoke Tests", func() {
 			html := string(body)
 
 			Expect(html).To(ContainSubstring("Templ UI Component Demo"))
-			Expect(html).To(ContainSubstring("/basic"))
+			Expect(html).To(ContainSubstring("/form"))
 		})
 
-		It("should serve basic level page", func() {
-			resp, err := http.Get(serverURL + "/basic")
+		It("should serve individual component pages", func() {
+			resp, err := http.Get(serverURL + "/form")
 			Expect(err).ToNot(HaveOccurred())
 			defer resp.Body.Close()
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			body, _ := io.ReadAll(resp.Body)
-			html := string(body)
-
-			Expect(html).To(ContainSubstring("Basic Components"))
 		})
 	})
 
