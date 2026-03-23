@@ -13,6 +13,7 @@ import (
 func CreateComponents() []components.Component {
 	return []components.Component{
 		pages.NewFormShowcaseComponent(),
+		pages.NewStudentListComponent(),
 		pages.NewHelloComponent(),
 	}
 }
