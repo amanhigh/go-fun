@@ -2,8 +2,18 @@ package components
 
 import "github.com/templui/templui/components/selectbox"
 
-// StudentGradeSelectItems renders grade options as templUI selectbox items.
-// Pass required=true for the form modal (no blank option), false for filter (includes blank).
+// StudentGradeOptions renders native <option> elements for use with <select>.
+// Used in the form modal where x-model binding requires native select.
+templ StudentGradeOptions(placeholder string) {
+	<option value="">{ placeholder }</option>
+	<option value="Freshman">Freshman</option>
+	<option value="Sophomore">Sophomore</option>
+	<option value="Junior">Junior</option>
+	<option value="Senior">Senior</option>
+}
+
+// StudentGradeSelectItems renders templUI selectbox items for the grade filter.
+// Pass required=true to exclude the blank "All Grades" option.
 templ StudentGradeSelectItems(required bool) {
 	if !required {
 		@selectbox.Item(selectbox.ItemProps{Value: ""}) { All Grades }
