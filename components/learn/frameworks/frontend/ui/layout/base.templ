@@ -3,6 +3,7 @@ package layout
 import (
 	"github.com/templui/templui/components/dialog"
 	"github.com/templui/templui/components/selectbox"
+	"github.com/templui/templui/components/toast"
 )
 
 templ Base(title string) {
@@ -16,6 +17,7 @@ templ Base(title string) {
 			<link rel="stylesheet" href="/assets/css/app.css"/>
 			@dialog.Script()
 			@selectbox.Script()
+			@toast.Script()
 		</head>
 		<body class="h-full bg-background text-foreground">
 			<div class="min-h-screen flex flex-col">

@@ -1,9 +1,15 @@
 package components
 
-templ StudentGradeOptions(placeholder string) {
-	<option value="">{ placeholder }</option>
-	<option value="Freshman">Freshman</option>
-	<option value="Sophomore">Sophomore</option>
-	<option value="Junior">Junior</option>
-	<option value="Senior">Senior</option>
+import "github.com/templui/templui/components/selectbox"
+
+// StudentGradeSelectItems renders grade options as templUI selectbox items.
+// Pass required=true for the form modal (no blank option), false for filter (includes blank).
+templ StudentGradeSelectItems(required bool) {
+	if !required {
+		@selectbox.Item(selectbox.ItemProps{Value: ""}) { All Grades }
+	}
+	@selectbox.Item(selectbox.ItemProps{Value: "Freshman"}) { Freshman }
+	@selectbox.Item(selectbox.ItemProps{Value: "Sophomore"}) { Sophomore }
+	@selectbox.Item(selectbox.ItemProps{Value: "Junior"}) { Junior }
+	@selectbox.Item(selectbox.ItemProps{Value: "Senior"}) { Senior }
 }
