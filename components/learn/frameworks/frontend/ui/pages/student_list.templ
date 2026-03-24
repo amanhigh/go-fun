@@ -1,9 +1,12 @@
+//go:generate templ generate
 package pages
 
 import (
+	uiComponents "github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
 	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/button"
+	"github.com/templui/templui/components/form"
 	"github.com/templui/templui/components/input"
 )
 
@@ -16,431 +19,518 @@ templ StudentListPage() {
 			Description: "Search, filter, create, edit, and delete students using the sample API endpoints.",
 			Tags:        []string{"Interactive", "CRUD", "Alpine.js"},
 		}) {
-			<div x-data="studentListPage()" x-init="init()" class="space-y-6">
-				<div class="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-6">
-					<div class="flex flex-col gap-4 lg:flex-row lg:items-center">
-						<div class="w-full lg:flex-1">
+			@StudentListContent()
+			@StudentListScript()
+		}
+	}
+}
+
+templ StudentListContent() {
+	<div x-data="studentListPage()" x-init="init()" class="space-y-6">
+		@StudentFilterPanel()
+		@StudentLoadingState()
+		@StudentErrorState()
+		@StudentTableState()
+		@StudentEmptyState()
+		@StudentToast()
+		@StudentFormModal()
+		@StudentDeleteModal()
+	</div>
+}
+
+templ StudentFilterPanel() {
+	<div class="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-6">
+		<div class="flex flex-col gap-4 lg:flex-row lg:items-center">
+			<div class="w-full lg:flex-1">
+				@input.Input(input.Props{
+					Type:        input.TypeText,
+					Placeholder: "🔍 Search students...",
+					ID:          "search-students",
+					Class:       "w-full",
+					Attributes: templ.Attributes{
+						"x-model":    "searchQuery",
+						"x-on:input": "currentPage = 1",
+					},
+				})
+			</div>
+			<div class="w-full sm:w-56">
+				<select x-model="selectedGrade" x-on:change="currentPage = 1" class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+					@uiComponents.StudentGradeOptions("All Grades")
+				</select>
+			</div>
+			<div class="flex items-center gap-2">
+				@button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Type:    button.TypeButton,
+					Class:   "whitespace-nowrap",
+					Attributes: templ.Attributes{
+						"x-on:click": "clearFilters()",
+					},
+				}) {
+					Clear
+				}
+				@button.Button(button.Props{
+					Type:  button.TypeButton,
+					Class: "whitespace-nowrap",
+					Attributes: templ.Attributes{
+						"x-on:click": "openCreateModal()",
+					},
+				}) {
+					+ Add Student
+				}
+			</div>
+		</div>
+
+		@StudentActiveFilters()
+	</div>
+}
+
+templ StudentActiveFilters() {
+	<div class="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+		<span x-show="searchQuery !== '' || selectedGrade !== ''">Active filters:</span>
+		<span x-show="searchQuery !== ''" class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700" x-text="`🔍 ${searchQuery}`"></span>
+		<span x-show="selectedGrade !== ''" class="inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700" x-text="`📚 ${selectedGrade}`"></span>
+		<span x-text="`Showing ${paginatedStudents.length} of ${filteredStudents.length} students`"></span>
+	</div>
+}
+
+templ StudentLoadingState() {
+	<div x-show="loading" class="rounded-3xl border border-border bg-card p-6 shadow-sm">
+		<div class="space-y-3">
+			<div class="h-10 animate-pulse rounded-lg bg-muted"></div>
+			<div class="h-10 animate-pulse rounded-lg bg-muted"></div>
+			<div class="h-10 animate-pulse rounded-lg bg-muted"></div>
+		</div>
+	</div>
+}
+
+templ StudentErrorState() {
+	<div x-show="errorMessage !== ''" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+		<div class="flex items-center justify-between gap-3">
+			<span x-text="errorMessage"></span>
+			@button.Button(button.Props{
+				Variant: button.VariantOutline,
+				Type:    button.TypeButton,
+				Class:   "h-8 px-3 text-xs",
+				Attributes: templ.Attributes{
+					"x-on:click": "fetchStudents()",
+				},
+			}) {
+				Retry
+			}
+		</div>
+	</div>
+}
+
+templ StudentTableState() {
+	<div x-show="!loading" class="rounded-3xl border border-border bg-card shadow-sm">
+		<div class="overflow-x-auto">
+			<table class="w-full min-w-[760px] text-left">
+				<thead class="border-b border-border bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
+					<tr>
+						<th class="px-4 py-3">ID</th>
+						<th class="px-4 py-3">Name</th>
+						<th class="px-4 py-3">Email</th>
+						<th class="px-4 py-3">Grade</th>
+						<th class="px-4 py-3 text-right">Actions</th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-border text-sm">
+					<template x-for="student in paginatedStudents" x-bind:key="student.id">
+						<tr class="hover:bg-muted/20">
+							<td class="px-4 py-3 font-mono text-xs" x-text="student.id"></td>
+							<td class="px-4 py-3 font-medium" x-text="`${student.first_name} ${student.last_name}`"></td>
+							<td class="px-4 py-3 text-muted-foreground" x-text="student.email"></td>
+							<td class="px-4 py-3">
+								@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
+									<span x-text="student.grade"></span>
+								}
+							</td>
+							<td class="px-4 py-3 text-right">
+								<div class="flex justify-end gap-2">
+									@button.Button(button.Props{
+										Variant: button.VariantOutline,
+										Type:    button.TypeButton,
+										Class:   "h-8 px-3 text-xs",
+										Attributes: templ.Attributes{
+											"x-on:click": "openEditModal(student)",
+										},
+									}) {
+										✏️ Edit
+									}
+									@button.Button(button.Props{
+										Variant: button.VariantDestructive,
+										Type:    button.TypeButton,
+										Class:   "h-8 px-3 text-xs",
+										Attributes: templ.Attributes{
+											"x-on:click": "openDeleteModal(student)",
+										},
+									}) {
+										🗑️ Delete
+									}
+								</div>
+							</td>
+						</tr>
+					</template>
+				</tbody>
+			</table>
+		</div>
+
+		@StudentPagination()
+	</div>
+}
+
+templ StudentPagination() {
+	<div class="flex flex-col gap-3 border-t border-border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+		<div class="text-muted-foreground" x-text="`Showing ${startItem}-${endItem} of ${filteredStudents.length}`"></div>
+		<div class="flex items-center gap-2">
+			@button.Button(button.Props{
+				Variant: button.VariantOutline,
+				Type:    button.TypeButton,
+				Class:   "h-8 px-3 text-xs",
+				Attributes: templ.Attributes{
+					"x-on:click":      "goToPreviousPage()",
+					"x-bind:disabled": "currentPage === 1",
+				},
+			}) {
+				Prev
+			}
+			<span class="rounded-md bg-muted px-3 py-1 text-xs" x-text="currentPage"></span>
+			@button.Button(button.Props{
+				Variant: button.VariantOutline,
+				Type:    button.TypeButton,
+				Class:   "h-8 px-3 text-xs",
+				Attributes: templ.Attributes{
+					"x-on:click":      "goToNextPage()",
+					"x-bind:disabled": "currentPage >= totalPages",
+				},
+			}) {
+				Next &gt;
+			}
+		</div>
+	</div>
+}
+
+templ StudentEmptyState() {
+	<div x-show="!loading && filteredStudents.length === 0" class="rounded-3xl border border-dashed border-border bg-card px-6 py-14 text-center">
+		<div class="mx-auto max-w-sm space-y-3">
+			<p class="text-2xl">📭</p>
+			<h3 class="text-lg font-semibold">No students found</h3>
+			<p class="text-sm text-muted-foreground">Try adjusting search and grade filters, or add your first student.</p>
+			<div class="flex justify-center gap-2">
+				@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "clearFilters()"}}) {
+					Clear Filters
+				}
+				@button.Button(button.Props{Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "openCreateModal()"}}) {
+					Add Student
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ StudentToast() {
+	<div x-show="toastMessage !== ''" class="fixed right-4 top-4 z-50">
+		<div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 shadow-lg" x-text="toastMessage"></div>
+	</div>
+}
+
+templ StudentFormModal() {
+	<div x-show="showFormModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4" x-on:keydown.escape.window="closeFormModal()">
+		<div class="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-xl">
+			<div class="mb-5 flex items-start justify-between">
+				<div>
+					<h3 class="text-xl font-semibold" x-text="editingStudentID === '' ? 'Add New Student' : 'Edit Student'"></h3>
+					<p class="text-sm text-muted-foreground">Fill all required details before saving.</p>
+				</div>
+				@button.Button(button.Props{
+					Variant: button.VariantGhost,
+					Type:    button.TypeButton,
+					Class:   "h-8 w-8 p-0 text-muted-foreground",
+					Attributes: templ.Attributes{
+						"x-on:click": "closeFormModal()",
+					},
+				}) {
+					✕
+				}
+			</div>
+
+			<form class="space-y-4" x-on:submit.prevent="submitStudent()">
+				<div class="grid gap-4 sm:grid-cols-2">
+					@StudentTextField("first-name", "First Name *", "form.first_name")
+					@StudentTextField("last-name", "Last Name *", "form.last_name")
+				</div>
+				<div>
+					@form.Item() {
+						@form.Label(form.LabelProps{For: "email"}) {
+							Email *
+						}
+						@input.Input(input.Props{
+							ID:       "email",
+							Type:     input.TypeEmail,
+							Required: true,
+							Class:    "h-10 w-full",
+							Attributes: templ.Attributes{
+								"x-model": "form.email",
+							},
+						})
+					}
+				</div>
+				<div class="grid gap-4 sm:grid-cols-2">
+					<div>
+						@form.Item() {
+							@form.Label(form.LabelProps{For: "age"}) {
+								Age
+							}
 							@input.Input(input.Props{
-								Type:        "text",
-								Placeholder: "🔍 Search students...",
-								ID:          "search-students",
-								Class:       "w-full",
+								ID:    "age",
+								Type:  "number",
+								Class: "h-10 w-full",
 								Attributes: templ.Attributes{
-									"x-model":    "searchQuery",
-									"x-on:input": "currentPage = 1",
+									"x-model.number": "form.age",
+									"min":            "1",
 								},
 							})
-						</div>
-						<div class="w-full sm:w-56">
-							<select
-								x-model="selectedGrade"
-								x-on:change="currentPage = 1"
-								class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-							>
-								<option value="">All Grades</option>
-								<option value="Freshman">Freshman</option>
-								<option value="Sophomore">Sophomore</option>
-								<option value="Junior">Junior</option>
-								<option value="Senior">Senior</option>
+						}
+					</div>
+					<div>
+						@form.Item() {
+							@form.Label(form.LabelProps{For: "grade"}) {
+								Grade *
+							}
+							<select id="grade" x-model="form.grade" class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" required>
+								@uiComponents.StudentGradeOptions("Select grade")
 							</select>
-						</div>
-						<div class="flex items-center gap-2">
-							@button.Button(button.Props{
-								Variant: button.VariantOutline,
-								Type:    button.TypeButton,
-								Class:   "whitespace-nowrap",
-								Attributes: templ.Attributes{
-									"x-on:click": "clearFilters()",
-								},
-							}) {
-								Clear
-							}
-							@button.Button(button.Props{
-								Type:  button.TypeButton,
-								Class: "whitespace-nowrap",
-								Attributes: templ.Attributes{
-									"x-on:click": "openCreateModal()",
-								},
-							}) {
-								+ Add Student
-							}
-						</div>
-					</div>
-
-					<div class="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-						<span x-show="searchQuery !== '' || selectedGrade !== ''">Active filters:</span>
-						<span x-show="searchQuery !== ''" class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700" x-text="`🔍 ${searchQuery}`"></span>
-						<span x-show="selectedGrade !== ''" class="inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700" x-text="`📚 ${selectedGrade}`"></span>
-						<span x-text="`Showing ${paginatedStudents.length} of ${filteredStudents.length} students`"></span>
-					</div>
-				</div>
-
-				<div x-show="loading" class="rounded-3xl border border-border bg-card p-6 shadow-sm">
-					<div class="space-y-3">
-						<div class="h-10 animate-pulse rounded-lg bg-muted"></div>
-						<div class="h-10 animate-pulse rounded-lg bg-muted"></div>
-						<div class="h-10 animate-pulse rounded-lg bg-muted"></div>
-					</div>
-				</div>
-
-				<div
-					x-show="errorMessage !== ''"
-					class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-				>
-					<div class="flex items-center justify-between gap-3">
-						<span x-text="errorMessage"></span>
-						@button.Button(button.Props{
-							Variant: button.VariantOutline,
-							Type:    button.TypeButton,
-							Class:   "h-8 px-3 text-xs",
-							Attributes: templ.Attributes{
-								"x-on:click": "fetchStudents()",
-							},
-						}) {
-							Retry
 						}
 					</div>
 				</div>
 
-				<div x-show="!loading" class="rounded-3xl border border-border bg-card shadow-sm">
-					<div class="overflow-x-auto">
-						<table class="w-full min-w-[760px] text-left">
-							<thead class="border-b border-border bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
-								<tr>
-									<th class="px-4 py-3">ID</th>
-									<th class="px-4 py-3">Name</th>
-									<th class="px-4 py-3">Email</th>
-									<th class="px-4 py-3">Grade</th>
-									<th class="px-4 py-3 text-right">Actions</th>
-								</tr>
-							</thead>
-							<tbody class="divide-y divide-border text-sm">
-								<template x-for="student in paginatedStudents" x-bind:key="student.id">
-									<tr class="hover:bg-muted/20">
-										<td class="px-4 py-3 font-mono text-xs" x-text="student.id"></td>
-										<td class="px-4 py-3 font-medium" x-text="`${student.first_name} ${student.last_name}`"></td>
-										<td class="px-4 py-3 text-muted-foreground" x-text="student.email"></td>
-										<td class="px-4 py-3">
-											@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
-												<span x-text="student.grade"></span>
-											}
-										</td>
-										<td class="px-4 py-3 text-right">
-											<div class="flex justify-end gap-2">
-												<button
-													type="button"
-													x-on:click="openEditModal(student)"
-													class="inline-flex h-8 items-center rounded-md border border-border px-3 text-xs font-medium hover:bg-muted"
-												>
-													✏️ Edit
-												</button>
-												<button
-													type="button"
-													x-on:click="openDeleteModal(student)"
-													class="inline-flex h-8 items-center rounded-md border border-red-200 px-3 text-xs font-medium text-red-700 hover:bg-red-50"
-												>
-													🗑️ Delete
-												</button>
-											</div>
-										</td>
-									</tr>
-								</template>
-							</tbody>
-						</table>
-					</div>
-
-					<div class="flex flex-col gap-3 border-t border-border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-						<div class="text-muted-foreground" x-text="`Showing ${startItem}-${endItem} of ${filteredStudents.length}`"></div>
-						<div class="flex items-center gap-2">
-							<button
-								type="button"
-								x-on:click="goToPreviousPage()"
-								x-bind:disabled="currentPage === 1"
-								class="inline-flex h-8 items-center rounded-md border border-border px-3 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50"
-							>
-								Prev
-							</button>
-							<span class="rounded-md bg-muted px-3 py-1 text-xs" x-text="currentPage"></span>
-							<button
-								type="button"
-								x-on:click="goToNextPage()"
-								x-bind:disabled="currentPage >= totalPages"
-								class="inline-flex h-8 items-center rounded-md border border-border px-3 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50"
-							>
-								Next >
-							</button>
-						</div>
-					</div>
+				<div class="flex justify-end gap-2 pt-2">
+					@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "closeFormModal()"}}) {
+						Cancel
+					}
+					@button.Button(button.Props{Type: button.TypeSubmit, Attributes: templ.Attributes{"x-bind:disabled": "formSubmitting"}}) {
+						<span x-show="!formSubmitting" x-text="editingStudentID === '' ? 'Create Student' : 'Save Changes'"></span>
+						<span x-show="formSubmitting">Saving...</span>
+					}
 				</div>
+			</form>
+		</div>
+	</div>
+}
 
-				<div x-show="!loading && filteredStudents.length === 0" class="rounded-3xl border border-dashed border-border bg-card px-6 py-14 text-center">
-					<div class="mx-auto max-w-sm space-y-3">
-						<p class="text-2xl">📭</p>
-						<h3 class="text-lg font-semibold">No students found</h3>
-						<p class="text-sm text-muted-foreground">Try adjusting search and grade filters, or add your first student.</p>
-						<div class="flex justify-center gap-2">
-							@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "clearFilters()"}}) {
-								Clear Filters
-							}
-							@button.Button(button.Props{Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "openCreateModal()"}}) {
-								Add Student
-							}
-						</div>
-					</div>
-				</div>
-
-				<div x-show="toastMessage !== ''" class="fixed right-4 top-4 z-50">
-					<div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 shadow-lg" x-text="toastMessage"></div>
-				</div>
-
-				<div x-show="showFormModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4" x-on:keydown.escape.window="closeFormModal()">
-					<div class="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-xl">
-						<div class="mb-5 flex items-start justify-between">
-							<div>
-								<h3 class="text-xl font-semibold" x-text="editingStudentID === '' ? 'Add New Student' : 'Edit Student'"></h3>
-								<p class="text-sm text-muted-foreground">Fill all required details before saving.</p>
-							</div>
-							<button type="button" x-on:click="closeFormModal()" class="rounded-md p-2 text-muted-foreground hover:bg-muted">✕</button>
-						</div>
-
-						<form class="space-y-4" x-on:submit.prevent="submitStudent()">
-							<div class="grid gap-4 sm:grid-cols-2">
-								<div>
-									<label for="first-name" class="mb-1 block text-sm font-medium">First Name *</label>
-									<input id="first-name" x-model="form.first_name" type="text" class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" required/>
-								</div>
-								<div>
-									<label for="last-name" class="mb-1 block text-sm font-medium">Last Name *</label>
-									<input id="last-name" x-model="form.last_name" type="text" class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" required/>
-								</div>
-							</div>
-							<div>
-								<label for="email" class="mb-1 block text-sm font-medium">Email *</label>
-								<input id="email" x-model="form.email" type="email" class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" required/>
-							</div>
-							<div class="grid gap-4 sm:grid-cols-2">
-								<div>
-									<label for="age" class="mb-1 block text-sm font-medium">Age</label>
-									<input id="age" x-model.number="form.age" type="number" min="1" class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"/>
-								</div>
-								<div>
-									<label for="grade" class="mb-1 block text-sm font-medium">Grade *</label>
-									<select id="grade" x-model="form.grade" class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" required>
-										<option value="">Select grade</option>
-										<option value="Freshman">Freshman</option>
-										<option value="Sophomore">Sophomore</option>
-										<option value="Junior">Junior</option>
-										<option value="Senior">Senior</option>
-									</select>
-								</div>
-							</div>
-
-							<div class="flex justify-end gap-2 pt-2">
-								@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "closeFormModal()"}}) {
-									Cancel
-								}
-								@button.Button(button.Props{Type: button.TypeSubmit, Attributes: templ.Attributes{"x-bind:disabled": "formSubmitting"}}) {
-									<span x-show="!formSubmitting" x-text="editingStudentID === '' ? 'Create Student' : 'Save Changes'"></span>
-									<span x-show="formSubmitting">Saving...</span>
-								}
-							</div>
-						</form>
-					</div>
-				</div>
-
-				<div x-show="showDeleteModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4" x-on:keydown.escape.window="closeDeleteModal()">
-					<div class="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
-						<h3 class="text-lg font-semibold">Delete Student</h3>
-						<p class="mt-2 text-sm text-muted-foreground">Are you sure you want to remove <strong x-text="deleteStudentName"></strong>?</p>
-						<div class="mt-6 flex justify-end gap-2">
-							@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "closeDeleteModal()"}}) {
-								Cancel
-							}
-							@button.Button(button.Props{Variant: button.VariantDestructive, Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "confirmDelete()"}}) {
-								Delete
-							}
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<script>
-				function studentListPage() {
-					return {
-						students: [],
-						loading: false,
-						errorMessage: '',
-						searchQuery: '',
-						selectedGrade: '',
-						currentPage: 1,
-						pageSize: 5,
-						toastMessage: '',
-						showFormModal: false,
-						showDeleteModal: false,
-						deleteStudentID: '',
-						deleteStudentName: '',
-						editingStudentID: '',
-						formSubmitting: false,
-						form: {
-							first_name: '',
-							last_name: '',
-							email: '',
-							age: 18,
-							grade: '',
-						},
-						get filteredStudents() {
-							const query = this.searchQuery.toLowerCase().trim();
-							return this.students.filter((student) => {
-								const fullName = `${student.first_name} ${student.last_name}`.toLowerCase();
-								const matchesSearch = query === '' || fullName.includes(query) || student.email.toLowerCase().includes(query);
-								const matchesGrade = this.selectedGrade === '' || student.grade === this.selectedGrade;
-								return matchesSearch && matchesGrade;
-							});
-						},
-						get totalPages() {
-							return Math.max(1, Math.ceil(this.filteredStudents.length / this.pageSize));
-						},
-						get paginatedStudents() {
-							const start = (this.currentPage - 1) * this.pageSize;
-							return this.filteredStudents.slice(start, start + this.pageSize);
-						},
-						get startItem() {
-							if (this.filteredStudents.length === 0) {
-								return 0;
-							}
-							return (this.currentPage - 1) * this.pageSize + 1;
-						},
-						get endItem() {
-							if (this.filteredStudents.length === 0) {
-								return 0;
-							}
-							return Math.min(this.currentPage * this.pageSize, this.filteredStudents.length);
-						},
-						init() {
-							this.fetchStudents();
-						},
-						showToast(message) {
-							this.toastMessage = message;
-							setTimeout(() => {
-								this.toastMessage = '';
-							}, 3000);
-						},
-						clearFilters() {
-							this.searchQuery = '';
-							this.selectedGrade = '';
-							this.currentPage = 1;
-						},
-						goToNextPage() {
-							if (this.currentPage < this.totalPages) {
-								this.currentPage += 1;
-							}
-						},
-						goToPreviousPage() {
-							if (this.currentPage > 1) {
-								this.currentPage -= 1;
-							}
-						},
-						async fetchStudents() {
-							this.loading = true;
-							this.errorMessage = '';
-							try {
-								const response = await fetch('/api/students');
-								if (!response.ok) {
-									throw new Error('Could not load students');
-								}
-								const payload = await response.json();
-								this.students = payload.data || [];
-								this.currentPage = 1;
-							} catch (error) {
-								this.errorMessage = "Couldn't load students";
-							} finally {
-								this.loading = false;
-							}
-						},
-						resetForm() {
-							this.form = {
-								first_name: '',
-								last_name: '',
-								email: '',
-								age: 18,
-								grade: '',
-							};
-						},
-						openCreateModal() {
-							this.editingStudentID = '';
-							this.resetForm();
-							this.showFormModal = true;
-						},
-						openEditModal(student) {
-							this.editingStudentID = student.id;
-							this.form = {
-								first_name: student.first_name,
-								last_name: student.last_name,
-								email: student.email,
-								age: student.age,
-								grade: student.grade,
-							};
-							this.showFormModal = true;
-						},
-						closeFormModal() {
-							if (!this.formSubmitting) {
-								this.showFormModal = false;
-							}
-						},
-						async submitStudent() {
-							this.formSubmitting = true;
-							const isUpdate = this.editingStudentID !== '';
-							const url = isUpdate ? `/api/students/${this.editingStudentID}` : '/api/students';
-							const method = isUpdate ? 'PUT' : 'POST';
-							try {
-								const response = await fetch(url, {
-									method,
-									headers: {
-										'Content-Type': 'application/json',
-									},
-									body: JSON.stringify(this.form),
-								});
-								if (!response.ok) {
-									throw new Error('Save failed');
-								}
-								this.showFormModal = false;
-								this.showToast(isUpdate ? 'Student updated successfully' : 'Student added successfully');
-								await this.fetchStudents();
-							} catch (error) {
-								this.errorMessage = isUpdate ? 'Failed to update student' : 'Failed to create student';
-							} finally {
-								this.formSubmitting = false;
-							}
-						},
-						openDeleteModal(student) {
-							this.deleteStudentID = student.id;
-							this.deleteStudentName = `${student.first_name} ${student.last_name}`;
-							this.showDeleteModal = true;
-						},
-						closeDeleteModal() {
-							this.showDeleteModal = false;
-							this.deleteStudentID = '';
-							this.deleteStudentName = '';
-						},
-						async confirmDelete() {
-							if (this.deleteStudentID === '') {
-								return;
-							}
-							try {
-								const response = await fetch(`/api/students/${this.deleteStudentID}`, { method: 'DELETE' });
-								if (!response.ok) {
-									throw new Error('Delete failed');
-								}
-								this.closeDeleteModal();
-								this.showToast('Student deleted successfully');
-								await this.fetchStudents();
-							} catch (error) {
-								this.errorMessage = 'Failed to delete student';
-							}
-						},
-					};
-				}
-			</script>
+templ StudentTextField(fieldID string, labelText string, modelKey string) {
+	<div>
+		@form.Item() {
+			@form.Label(form.LabelProps{For: fieldID}) {
+				{ labelText }
+			}
+			@input.Input(input.Props{
+				ID:       fieldID,
+				Type:     input.TypeText,
+				Required: true,
+				Class:    "h-10 w-full",
+				Attributes: templ.Attributes{
+					"x-model": modelKey,
+				},
+			})
 		}
-	}
+	</div>
+}
+
+templ StudentDeleteModal() {
+	<div x-show="showDeleteModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4" x-on:keydown.escape.window="closeDeleteModal()">
+		<div class="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
+			<h3 class="text-lg font-semibold">Delete Student</h3>
+			<p class="mt-2 text-sm text-muted-foreground">Are you sure you want to remove <strong x-text="deleteStudentName"></strong>?</p>
+			<div class="mt-6 flex justify-end gap-2">
+				@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "closeDeleteModal()"}}) {
+					Cancel
+				}
+				@button.Button(button.Props{Variant: button.VariantDestructive, Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "confirmDelete()"}}) {
+					Delete
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ StudentListScript() {
+	<script>
+		function studentListPage() {
+			return {
+				students: [],
+				loading: false,
+				errorMessage: '',
+				searchQuery: '',
+				selectedGrade: '',
+				currentPage: 1,
+				pageSize: 5,
+				toastMessage: '',
+				showFormModal: false,
+				showDeleteModal: false,
+				deleteStudentID: '',
+				deleteStudentName: '',
+				editingStudentID: '',
+				formSubmitting: false,
+				form: {
+					first_name: '',
+					last_name: '',
+					email: '',
+					age: 18,
+					grade: '',
+				},
+				get filteredStudents() {
+					const query = this.searchQuery.toLowerCase().trim();
+					return this.students.filter((student) => {
+						const fullName = `${student.first_name} ${student.last_name}`.toLowerCase();
+						const matchesSearch = query === '' || fullName.includes(query) || student.email.toLowerCase().includes(query);
+						const matchesGrade = this.selectedGrade === '' || student.grade === this.selectedGrade;
+						return matchesSearch && matchesGrade;
+					});
+				},
+				get totalPages() {
+					return Math.max(1, Math.ceil(this.filteredStudents.length / this.pageSize));
+				},
+				get paginatedStudents() {
+					const start = (this.currentPage - 1) * this.pageSize;
+					return this.filteredStudents.slice(start, start + this.pageSize);
+				},
+				get startItem() {
+					if (this.filteredStudents.length === 0) {
+						return 0;
+					}
+					return (this.currentPage - 1) * this.pageSize + 1;
+				},
+				get endItem() {
+					if (this.filteredStudents.length === 0) {
+						return 0;
+					}
+					return Math.min(this.currentPage * this.pageSize, this.filteredStudents.length);
+				},
+				init() {
+					this.fetchStudents();
+				},
+				showToast(message) {
+					this.toastMessage = message;
+					setTimeout(() => {
+						this.toastMessage = '';
+					}, 3000);
+				},
+				clearFilters() {
+					this.searchQuery = '';
+					this.selectedGrade = '';
+					this.currentPage = 1;
+				},
+				goToNextPage() {
+					if (this.currentPage < this.totalPages) {
+						this.currentPage += 1;
+					}
+				},
+				goToPreviousPage() {
+					if (this.currentPage > 1) {
+						this.currentPage -= 1;
+					}
+				},
+				async fetchStudents() {
+					this.loading = true;
+					this.errorMessage = '';
+					try {
+						const response = await fetch('/api/students');
+						if (!response.ok) {
+							throw new Error('Could not load students');
+						}
+						const payload = await response.json();
+						this.students = payload.data || [];
+						this.currentPage = 1;
+					} catch (error) {
+						this.errorMessage = "Couldn't load students";
+					} finally {
+						this.loading = false;
+					}
+				},
+				resetForm() {
+					this.form = {
+						first_name: '',
+						last_name: '',
+						email: '',
+						age: 18,
+						grade: '',
+					};
+				},
+				openCreateModal() {
+					this.editingStudentID = '';
+					this.resetForm();
+					this.showFormModal = true;
+				},
+				openEditModal(student) {
+					this.editingStudentID = student.id;
+					this.form = {
+						first_name: student.first_name,
+						last_name: student.last_name,
+						email: student.email,
+						age: student.age,
+						grade: student.grade,
+					};
+					this.showFormModal = true;
+				},
+				closeFormModal() {
+					if (!this.formSubmitting) {
+						this.showFormModal = false;
+					}
+				},
+				async submitStudent() {
+					this.formSubmitting = true;
+					const isUpdate = this.editingStudentID !== '';
+					const url = isUpdate ? `/api/students/${this.editingStudentID}` : '/api/students';
+					const method = isUpdate ? 'PUT' : 'POST';
+					try {
+						const response = await fetch(url, {
+							method,
+							headers: {
+								'Content-Type': 'application/json',
+							},
+							body: JSON.stringify(this.form),
+						});
+						if (!response.ok) {
+							throw new Error('Save failed');
+						}
+						this.showFormModal = false;
+						this.showToast(isUpdate ? 'Student updated successfully' : 'Student added successfully');
+						await this.fetchStudents();
+					} catch (error) {
+						this.errorMessage = isUpdate ? 'Failed to update student' : 'Failed to create student';
+					} finally {
+						this.formSubmitting = false;
+					}
+				},
+				openDeleteModal(student) {
+					this.deleteStudentID = student.id;
+					this.deleteStudentName = `${student.first_name} ${student.last_name}`;
+					this.showDeleteModal = true;
+				},
+				closeDeleteModal() {
+					this.showDeleteModal = false;
+					this.deleteStudentID = '';
+					this.deleteStudentName = '';
+				},
+				async confirmDelete() {
+					if (this.deleteStudentID === '') {
+						return;
+					}
+					try {
+						const response = await fetch(`/api/students/${this.deleteStudentID}`, { method: 'DELETE' });
+						if (!response.ok) {
+							throw new Error('Delete failed');
+						}
+						this.closeDeleteModal();
+						this.showToast('Student deleted successfully');
+						await this.fetchStudents();
+					} catch (error) {
+						this.errorMessage = 'Failed to delete student';
+					}
+				},
+			};
+		}
+	</script>
 }
