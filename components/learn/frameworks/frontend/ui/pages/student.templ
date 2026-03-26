@@ -1,0 +1,573 @@
+//go:generate templ generate
+package pages
+
+// =============================================================================
+// STUDENT CRUD PAGE — templUI + Alpine.js Demo
+// =============================================================================
+//
+// This file is a self-contained tutorial demonstrating how to build a
+// professional CRUD interface using:
+//
+//   • templUI  — Go component library providing styled HTML elements
+//               (table, badge, skeleton, pagination, button, input, form, selectbox)
+//   • Alpine.js — Lightweight JS framework for reactive state and API calls
+//               All Alpine logic lives in /assets/js/student.js
+//   • Tailwind CSS — Utility-first CSS (generated via assets/css/app.css)
+//
+// FILE STRUCTURE (read top to bottom as a tutorial):
+//
+//   SECTION 1 — Page Entry Point   : StudentPage(), StudentContent()
+//   SECTION 2 — Shared Data        : grade option helpers used by filter + form
+//   SECTION 3 — Filter & Toolbar   : search input, grade filter, action buttons
+//   SECTION 4 — Data Table         : table rows rendered by Alpine x-for
+//   SECTION 5 — States             : loading skeleton, error banner, empty state
+//   SECTION 6 — Modals             : create/edit form modal, delete confirm modal
+//
+// ALPINE ↔ TEMPL INTERACTION PATTERN:
+//
+//   templ renders static HTML with Alpine attributes (x-data, x-model, x-on, etc.)
+//   Alpine reads those attributes at runtime and makes the page reactive.
+//   templUI dialog.Dialog CANNOT be used for modals here because its JS teleports
+//   the DOM node to document.body, disconnecting it from Alpine's x-data scope.
+//   Solution: use plain <div x-show="..."> wrappers with templUI components inside.
+//
+// JS SEPARATION:
+//   All state, computed properties, and API calls are in assets/js/student.js.
+//   This file contains ZERO inline JavaScript — only HTML structure + Alpine attrs.
+
+import (
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
+	"github.com/templui/templui/components/badge"
+	"github.com/templui/templui/components/button"
+	"github.com/templui/templui/components/form"
+	"github.com/templui/templui/components/input"
+	"github.com/templui/templui/components/pagination"
+	"github.com/templui/templui/components/selectbox"
+	"github.com/templui/templui/components/skeleton"
+	"github.com/templui/templui/components/table"
+)
+
+// =============================================================================
+// SECTION 1 — PAGE ENTRY POINT
+// =============================================================================
+// StudentPage is the top-level entry point rendered by the server route /students.
+// It composes the base layout, page shell, content, and loads the Alpine.js file.
+
+templ StudentPage() {
+	@layout.Base("Student Management") {
+		@layout.Page(layout.PageProps{
+			CurrentPage: "Student Management",
+			Eyebrow:     "CRUD Interface",
+			Heading:     "👥 Student List Management",
+			Description: "Search, filter, create, edit, and delete students using the sample API endpoints.",
+			Tags:        []string{"Interactive", "CRUD", "Alpine.js"},
+		}) {
+			@StudentContent()
+			// Load Alpine component logic from external JS file.
+			// student.js defines studentListPage() used by x-data below.
+			<script src="/assets/js/student.js"></script>
+		}
+	}
+}
+
+// StudentContent is the root Alpine.js component container.
+// x-data="studentListPage()" attaches the Alpine component defined in student.js.
+// x-init="init()" triggers the initial API fetch when the component mounts.
+// All child templates share this Alpine scope via the DOM tree.
+templ StudentContent() {
+	<div x-data="studentListPage()" x-init="init()" class="space-y-6">
+		@StudentFilterPanel()
+		@StudentLoadingState()
+		@StudentErrorState()
+		@StudentTable()
+		@StudentEmptyState()
+		// Modals must remain INSIDE this x-data div to retain Alpine scope access.
+		// If moved outside, Alpine bindings (x-model, x-text, x-show) stop working.
+		@StudentFormModal()
+		@StudentDeleteModal()
+		// Toast notification target: student.js injects a templUI-styled toast here.
+		<div id="toast-container"></div>
+	</div>
+}
+
+// =============================================================================
+// SECTION 2 — SHARED DATA: GRADE OPTIONS
+// =============================================================================
+// These helpers centralise the grade list used in both the filter selectbox
+// and the form modal. Two variants exist due to a key constraint:
+//
+//   StudentGradeSelectItems  — templUI selectbox.Item nodes (filter only)
+//   StudentGradeOptions      — native <option> nodes (form modal <select>)
+//
+// WHY two variants?
+//   templUI's selectbox component uses JS to power its dropdown. That JS moves
+//   the DOM node to a portal layer, breaking Alpine's x-model 2-way binding.
+//   So the form modal uses a plain native <select> with Tailwind styling instead,
+//   which works correctly with x-model inside Alpine's scope.
+
+// StudentGradeSelectItems renders items for the templUI selectbox grade filter.
+// When required=false an "All Grades" blank option is included (for the filter).
+templ StudentGradeSelectItems(required bool) {
+	if !required {
+		@selectbox.Item(selectbox.ItemProps{Value: ""}) { All Grades }
+	}
+	@selectbox.Item(selectbox.ItemProps{Value: "Freshman"}) { Freshman }
+	@selectbox.Item(selectbox.ItemProps{Value: "Sophomore"}) { Sophomore }
+	@selectbox.Item(selectbox.ItemProps{Value: "Junior"}) { Junior }
+	@selectbox.Item(selectbox.ItemProps{Value: "Senior"}) { Senior }
+}
+
+// StudentGradeOptions renders native <option> elements for a plain <select>.
+// Used inside the form modal where x-model 2-way binding is required.
+templ StudentGradeOptions(placeholder string) {
+	<option value="">{ placeholder }</option>
+	<option value="Freshman">Freshman</option>
+	<option value="Sophomore">Sophomore</option>
+	<option value="Junior">Junior</option>
+	<option value="Senior">Senior</option>
+}
+
+// =============================================================================
+// SECTION 3 — FILTER TOOLBAR
+// =============================================================================
+// The filter panel contains three interactive areas, each demonstrating a
+// different Alpine ↔ templUI integration pattern:
+//
+//   1. Search input  — templUI input.Input with x-model (2-way bind to searchQuery)
+//   2. Grade filter  — templUI selectbox (1-way: selectbox -> onGradeFilterChange())
+//   3. Action buttons — templUI button.Button with x-on:click handlers
+
+templ StudentFilterPanel() {
+	<div class="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-6">
+		<div class="flex flex-col gap-4 lg:flex-row lg:items-center">
+			// Search: x-model binds this input directly to Alpine's searchQuery state.
+			// Typing here immediately updates filteredStudents via Alpine's computed getter.
+			<div class="w-full lg:flex-1">
+				@input.Input(input.Props{
+					Type:        input.TypeText,
+					Placeholder: "🔍 Search students...",
+					ID:          "search-students",
+					Class:       "w-full",
+					Attributes: templ.Attributes{
+						"x-model":    "searchQuery",   // 2-way bind: input <-> Alpine state
+						"x-on:input": "currentPage = 1", // reset pagination on new search
+					},
+				})
+			</div>
+			// Grade filter: templUI selectbox (one-way).
+			// selectbox.Trigger fires a native change event when the user picks a grade.
+			// Alpine catches it via x-on:change -> onGradeFilterChange() in student.js.
+			<div class="w-full sm:w-56">
+				@selectbox.SelectBox() {
+					@selectbox.Trigger(selectbox.TriggerProps{
+						ID:   "grade-filter",
+						Name: "grade-filter",
+						Attributes: templ.Attributes{
+							"x-on:change": "onGradeFilterChange($event)",
+						},
+					}) {
+						@selectbox.Value(selectbox.ValueProps{Placeholder: "All Grades"})
+					}
+					@selectbox.Content() {
+						@selectbox.Group() {
+							@StudentGradeSelectItems(false)
+						}
+					}
+				}
+			</div>
+			// Buttons: x-on:click calls Alpine methods defined in student.js.
+			<div class="flex items-center gap-2">
+				@button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Type:    button.TypeButton,
+					Class:   "whitespace-nowrap",
+					Attributes: templ.Attributes{
+						"x-on:click": "clearFilters()",
+					},
+				}) {
+					Clear
+				}
+				@button.Button(button.Props{
+					Type:  button.TypeButton,
+					Class: "whitespace-nowrap",
+					Attributes: templ.Attributes{
+						"x-on:click": "openCreateModal()",
+					},
+				}) {
+					+ Add Student
+				}
+			</div>
+		</div>
+		@StudentActiveFilters()
+	</div>
+}
+
+// StudentActiveFilters shows live filter badges below the toolbar.
+// x-show hides the label and each badge unless the relevant filter is active.
+// x-text renders the current filter value inside the templUI Badge component.
+templ StudentActiveFilters() {
+	<div class="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+		// x-show: only visible when at least one filter is active
+		<span x-show="searchQuery !== '' || selectedGrade !== ''">Active filters:</span>
+		// Each badge is hidden until its filter state is non-empty
+		@badge.Badge(badge.Props{
+			Variant: badge.VariantSecondary,
+			Attributes: templ.Attributes{
+				"x-show": "searchQuery !== ''",
+				"x-text": "`🔍 ${searchQuery}`", // backtick template literal in Alpine expression
+			},
+		}) {}
+		@badge.Badge(badge.Props{
+			Variant: badge.VariantSecondary,
+			Attributes: templ.Attributes{
+				"x-show": "selectedGrade !== ''",
+				"x-text": "`📚 ${selectedGrade}`",
+			},
+		}) {}
+		// x-text dynamically updates the count as filters change
+		<span x-text="`Showing ${paginatedStudents.length} of ${filteredStudents.length} students`"></span>
+	</div>
+}
+
+// =============================================================================
+// SECTION 4 — DATA TABLE
+// =============================================================================
+// The table is the main data display. Key Alpine patterns here:
+//
+//   x-show="!loading"    — hides the table while data is being fetched
+//   x-for="student in paginatedStudents" — Alpine loop rendering one row per student
+//   x-text="student.name" — binds cell content to Alpine state
+//
+// templUI table components (table.Table, table.Header, table.Body, etc.) provide
+// the semantic HTML and styling. Alpine populates the rows at runtime.
+
+templ StudentTable() {
+	<div x-show="!loading" class="rounded-3xl border border-border bg-card shadow-sm overflow-x-auto">
+		@table.Table(table.Props{Class: "min-w-[760px]"}) {
+			@table.Header(table.HeaderProps{Class: "bg-muted/30 text-xs uppercase tracking-wide"}) {
+				@table.Row() {
+					@table.Head(table.HeadProps{Class: "px-4 py-3"}) { ID }
+					@table.Head(table.HeadProps{Class: "px-4 py-3"}) { Name }
+					@table.Head(table.HeadProps{Class: "px-4 py-3"}) { Email }
+					@table.Head(table.HeadProps{Class: "px-4 py-3"}) { Grade }
+					@table.Head(table.HeadProps{Class: "px-4 py-3 text-right"}) { Actions }
+				}
+			}
+			@table.Body() {
+				// Alpine x-for loop: renders one table row per student in paginatedStudents.
+				// x-bind:key helps Alpine efficiently patch the DOM on data changes.
+				<template x-for="student in paginatedStudents" x-bind:key="student.id">
+					@table.Row() {
+						@table.Cell(table.CellProps{Class: "px-4 py-3 font-mono text-xs"}) {
+							<span x-text="student.id"></span>
+						}
+						@table.Cell(table.CellProps{Class: "px-4 py-3 font-medium"}) {
+							<span x-text="`${student.first_name} ${student.last_name}`"></span>
+						}
+						@table.Cell(table.CellProps{Class: "px-4 py-3 text-muted-foreground"}) {
+							<span x-text="student.email"></span>
+						}
+						@table.Cell(table.CellProps{Class: "px-4 py-3"}) {
+							// templUI Badge wraps an x-text span to style the grade value
+							@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
+								<span x-text="student.grade"></span>
+							}
+						}
+						@table.Cell(table.CellProps{Class: "px-4 py-3 text-right"}) {
+							<div class="flex justify-end gap-2">
+								// x-on:click passes the current loop variable (student) to Alpine
+								@button.Button(button.Props{
+									Variant: button.VariantOutline,
+									Type:    button.TypeButton,
+									Class:   "h-8 px-3 text-xs",
+									Attributes: templ.Attributes{
+										"x-on:click": "openEditModal(student)",
+									},
+								}) {
+									✏️ Edit
+								}
+								@button.Button(button.Props{
+									Variant: button.VariantDestructive,
+									Type:    button.TypeButton,
+									Class:   "h-8 px-3 text-xs",
+									Attributes: templ.Attributes{
+										"x-on:click": "openDeleteModal(student)",
+									},
+								}) {
+									🗑️ Delete
+								}
+							</div>
+						}
+					}
+				</template>
+			}
+		}
+		@StudentPagination()
+	</div>
+}
+
+// StudentPagination renders prev/page/next controls using templUI pagination components.
+// x-bind:disabled disables the buttons at the boundaries (first/last page).
+// x-on:click calls Alpine navigation methods defined in student.js.
+templ StudentPagination() {
+	<div class="flex flex-col gap-3 border-t border-border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+		// x-text renders live count driven by Alpine computed getters startItem/endItem
+		<div class="text-muted-foreground" x-text="`Showing ${startItem}-${endItem} of ${filteredStudents.length}`"></div>
+		@pagination.Pagination() {
+			@pagination.Content() {
+				@pagination.Item() {
+					@pagination.Previous(pagination.PreviousProps{
+						Attributes: templ.Attributes{
+							"x-on:click":      "goToPreviousPage()",
+							"x-bind:disabled": "currentPage === 1",
+						},
+					})
+				}
+				@pagination.Item() {
+					<span class="rounded-md bg-muted px-3 py-1 text-xs" x-text="currentPage"></span>
+				}
+				@pagination.Item() {
+					@pagination.Next(pagination.NextProps{
+						Attributes: templ.Attributes{
+							"x-on:click":      "goToNextPage()",
+							"x-bind:disabled": "currentPage >= totalPages",
+						},
+					})
+				}
+			}
+		}
+	</div>
+}
+
+// =============================================================================
+// SECTION 5 — CONDITIONAL STATES
+// =============================================================================
+// These three components represent mutually exclusive UI states driven by Alpine.
+// They use x-show to toggle visibility without removing elements from the DOM.
+//
+//   Loading  — visible while fetchStudents() is running (loading = true)
+//   Error    — visible when errorMessage is set by a failed API call
+//   Empty    — visible after load when no students match the active filters
+
+// StudentLoadingState uses templUI Skeleton components as animated placeholders.
+// x-show="loading" — Alpine shows this while the API fetch is in progress.
+templ StudentLoadingState() {
+	<div x-show="loading" class="rounded-3xl border border-border bg-card p-6 shadow-sm">
+		<div class="space-y-3">
+			@skeleton.Skeleton(skeleton.Props{Class: "h-10 w-full"})
+			@skeleton.Skeleton(skeleton.Props{Class: "h-10 w-full"})
+			@skeleton.Skeleton(skeleton.Props{Class: "h-10 w-full"})
+		</div>
+	</div>
+}
+
+// StudentErrorState is shown when errorMessage is non-empty.
+// x-text renders the error string; x-on:click retries the API call.
+templ StudentErrorState() {
+	<div x-show="errorMessage !== ''" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+		<div class="flex items-center justify-between gap-3">
+			<span x-text="errorMessage"></span>
+			@button.Button(button.Props{
+				Variant: button.VariantOutline,
+				Type:    button.TypeButton,
+				Class:   "h-8 px-3 text-xs",
+				Attributes: templ.Attributes{
+					"x-on:click": "fetchStudents()",
+				},
+			}) {
+				Retry
+			}
+		</div>
+	</div>
+}
+
+// StudentEmptyState is shown when loading is complete but no students match filters.
+// Both buttons call Alpine methods to recover (clear filters or open create modal).
+templ StudentEmptyState() {
+	<div x-show="!loading && filteredStudents.length === 0" class="rounded-3xl border border-dashed border-border bg-card px-6 py-14 text-center">
+		<div class="mx-auto max-w-sm space-y-3">
+			<p class="text-2xl">📭</p>
+			<h3 class="text-lg font-semibold">No students found</h3>
+			<p class="text-sm text-muted-foreground">Try adjusting search and grade filters, or add your first student.</p>
+			<div class="flex justify-center gap-2">
+				@button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Type:    button.TypeButton,
+					Attributes: templ.Attributes{
+						"x-on:click": "clearFilters()",
+					},
+				}) {
+					Clear Filters
+				}
+				@button.Button(button.Props{
+					Type: button.TypeButton,
+					Attributes: templ.Attributes{
+						"x-on:click": "openCreateModal()",
+					},
+				}) {
+					Add Student
+				}
+			</div>
+		</div>
+	</div>
+}
+
+// =============================================================================
+// SECTION 6 — MODALS (CREATE / EDIT / DELETE)
+// =============================================================================
+// WHY NOT templUI dialog.Dialog?
+//   templUI's dialog component moves its DOM content into a portal layer
+//   (appended to document.body) via JavaScript. Once moved, those nodes are
+//   no longer descendants of the <div x-data="studentListPage()"> container,
+//   so all Alpine bindings (x-model, x-text, x-show, x-bind) stop working.
+//
+// SOLUTION: Plain <div x-show="..."> overlays with:
+//   • x-show  — controls open/close state via Alpine booleans
+//   • x-cloak — prevents flash of unstyled content before Alpine initialises
+//   • x-on:keydown.escape.window — closes on Escape key
+//   • x-on:click.outside        — closes on backdrop click
+//   • templUI form/input/button components inside for consistent styling
+
+// StudentFormModal handles both Create and Edit workflows in one modal.
+// The title and submit button label switch based on editingStudentID (set by Alpine).
+//
+// FORM INPUTS:
+//   text/email/number — use templUI input.Input with x-model for 2-way Alpine binding
+//   grade <select>    — uses a native <select> (NOT templUI selectbox) because
+//                       selectbox's JS also teleports its dropdown, breaking x-model
+templ StudentFormModal() {
+	// x-show toggles visibility; x-cloak hides element until Alpine is ready
+	<div x-show="showFormModal" x-cloak
+		class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4"
+		x-on:keydown.escape.window="closeFormModal()">
+		<div class="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-xl"
+			x-on:click.outside="closeFormModal()">
+			<div class="mb-5">
+				// x-text switches between "Add New Student" and "Edit Student"
+				<h3 class="text-lg font-semibold"
+					x-text="editingStudentID === '' ? 'Add New Student' : 'Edit Student'"></h3>
+				<p class="text-sm text-muted-foreground">Fill all required details before saving.</p>
+			</div>
+			// x-on:submit.prevent intercepts native form submit and calls Alpine method
+			<form class="space-y-4" x-on:submit.prevent="submitStudent()">
+				<div class="grid gap-4 sm:grid-cols-2">
+					// Reusable helper renders a labelled templUI input with x-model binding
+					@StudentTextField("first-name", "First Name *", "form.first_name")
+					@StudentTextField("last-name", "Last Name *", "form.last_name")
+				</div>
+				@form.Item() {
+					@form.Label(form.LabelProps{For: "email"}) { Email * }
+					@input.Input(input.Props{
+						ID:       "email",
+						Type:     input.TypeEmail,
+						Required: true,
+						Attributes: templ.Attributes{
+							"x-model": "form.email", // x-model syncs input value <-> Alpine form.email
+						},
+					})
+				}
+				<div class="grid gap-4 sm:grid-cols-2">
+					@form.Item() {
+						@form.Label(form.LabelProps{For: "age"}) { Age }
+						@input.Input(input.Props{
+							ID:   "age",
+							Type: "number",
+							Attributes: templ.Attributes{
+								"x-model.number": "form.age", // .number modifier auto-casts string -> int
+								"min":            "1",
+							},
+						})
+					}
+					// Grade: native <select> with Tailwind styling + x-model for Alpine 2-way bind
+					@form.Item() {
+						@form.Label(form.LabelProps{For: "form-grade"}) { Grade * }
+						<select id="form-grade" x-model="form.grade" required
+							class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+							@StudentGradeOptions("Select grade")
+						</select>
+					}
+				</div>
+				<div class="flex justify-end gap-2 pt-2">
+					@button.Button(button.Props{
+						Variant: button.VariantOutline,
+						Type:    button.TypeButton,
+						Attributes: templ.Attributes{
+							"x-on:click": "closeFormModal()",
+						},
+					}) {
+						Cancel
+					}
+					@button.Button(button.Props{
+						Type: button.TypeSubmit,
+						Attributes: templ.Attributes{
+							"x-bind:disabled": "formSubmitting", // disables button during API call
+						},
+					}) {
+						// Dual spans: Alpine toggles between label and spinner
+						<span x-show="!formSubmitting"
+							x-text="editingStudentID === '' ? 'Create Student' : 'Save Changes'"></span>
+						<span x-show="formSubmitting">Saving...</span>
+					}
+				</div>
+			</form>
+		</div>
+	</div>
+}
+
+// StudentTextField is a reusable helper rendering a labelled templUI text input.
+// fieldID  — HTML id attribute (matched by <label for="...">)
+// labelText — displayed label string
+// modelKey  — Alpine expression passed to x-model (e.g. "form.first_name")
+templ StudentTextField(fieldID string, labelText string, modelKey string) {
+	@form.Item() {
+		@form.Label(form.LabelProps{For: fieldID}) {
+			{ labelText }
+		}
+		@input.Input(input.Props{
+			ID:       fieldID,
+			Type:     input.TypeText,
+			Required: true,
+			Attributes: templ.Attributes{
+				"x-model": modelKey,
+			},
+		})
+	}
+}
+
+// StudentDeleteModal shows a confirmation dialog before deleting a student.
+// deleteStudentName is set by Alpine's openDeleteModal(student) in student.js.
+// x-text renders the student's name dynamically in the confirmation message.
+templ StudentDeleteModal() {
+	<div x-show="showDeleteModal" x-cloak
+		class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4"
+		x-on:keydown.escape.window="closeDeleteModal()">
+		<div class="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl"
+			x-on:click.outside="closeDeleteModal()">
+			<h3 class="text-lg font-semibold">Delete Student</h3>
+			<p class="mt-2 text-sm text-muted-foreground">
+				Are you sure you want to remove
+				<strong x-text="deleteStudentName"></strong>? // x-text renders current student name
+			</p>
+			<div class="mt-6 flex justify-end gap-2">
+				@button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Type:    button.TypeButton,
+					Attributes: templ.Attributes{
+						"x-on:click": "closeDeleteModal()",
+					},
+				}) {
+					Cancel
+				}
+				@button.Button(button.Props{
+					Variant: button.VariantDestructive,
+					Type:    button.TypeButton,
+					Attributes: templ.Attributes{
+						"x-on:click": "confirmDelete()", // calls DELETE /api/students/:id in student.js
+					},
+				}) {
+					Delete
+				}
+			</div>
+		</div>
+	</div>
+}

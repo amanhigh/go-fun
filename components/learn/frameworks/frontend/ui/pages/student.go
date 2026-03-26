@@ -26,5 +26,5 @@ func NewStudentListComponent() *StudentListComponent {
 var _ components.Component = (*StudentListComponent)(nil)
 
 func (c *StudentListComponent) Render() templ.Component {
-	return StudentListPage()
+	return StudentPage()
 }
