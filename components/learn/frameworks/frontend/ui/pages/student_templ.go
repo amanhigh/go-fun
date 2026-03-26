@@ -7,8 +7,19 @@ package pages
 
 //lint:file-ignore SA4006 This context is only used if a nested component is present.
 
-import "github.com/a-h/templ"
-import templruntime "github.com/a-h/templ/runtime"
+import (
+	"github.com/a-h/templ"
+	templruntime "github.com/a-h/templ/runtime"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
+	"github.com/templui/templui/components/badge"
+	"github.com/templui/templui/components/button"
+	"github.com/templui/templui/components/form"
+	"github.com/templui/templui/components/input"
+	"github.com/templui/templui/components/pagination"
+	"github.com/templui/templui/components/selectbox"
+	"github.com/templui/templui/components/skeleton"
+	"github.com/templui/templui/components/table"
+)
 
 // =============================================================================
 // STUDENT CRUD PAGE — templUI + Alpine.js Demo
@@ -43,18 +54,6 @@ import templruntime "github.com/a-h/templ/runtime"
 // JS SEPARATION:
 //   All state, computed properties, and API calls are in assets/js/student.js.
 //   This file contains ZERO inline JavaScript — only HTML structure + Alpine attrs.
-
-import (
-	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
-	"github.com/templui/templui/components/badge"
-	"github.com/templui/templui/components/button"
-	"github.com/templui/templui/components/form"
-	"github.com/templui/templui/components/input"
-	"github.com/templui/templui/components/pagination"
-	"github.com/templui/templui/components/selectbox"
-	"github.com/templui/templui/components/skeleton"
-	"github.com/templui/templui/components/table"
-)
 
 // =============================================================================
 // SECTION 1 — PAGE ENTRY POINT
@@ -385,7 +384,7 @@ func StudentGradeOptions(placeholder string) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(placeholder)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/student.templ`, Line: 124, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/student.templ`, Line: 124, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -1796,7 +1795,7 @@ func StudentTextField(fieldID string, labelText string, modelKey string) templ.C
 				var templ_7745c5c3_Var60 string
 				templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(labelText)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/student.templ`, Line: 516, Col: 14}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/student.templ`, Line: 516, Col: 14}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 				if templ_7745c5c3_Err != nil {
@@ -1857,7 +1856,7 @@ func StudentDeleteModal() templ.Component {
 			templ_7745c5c3_Var61 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "<div x-show=\"showDeleteModal\" x-cloak class=\"fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4\" x-on:keydown.escape.window=\"closeDeleteModal()\"><div class=\"w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl\" x-on:click.outside=\"closeDeleteModal()\"><h3 class=\"text-lg font-semibold\">Delete Student</h3><p class=\"mt-2 text-sm text-muted-foreground\">Are you sure you want to remove <strong x-text=\"deleteStudentName\"></strong>? // x-text renders current student name</p><div class=\"mt-6 flex justify-end gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "<div x-show=\"showDeleteModal\" x-cloak class=\"fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4\" x-on:keydown.escape.window=\"closeDeleteModal()\"><div class=\"w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl\" x-on:click.outside=\"closeDeleteModal()\"><h3 class=\"text-lg font-semibold\">Delete Student</h3><p class=\"mt-2 text-sm text-muted-foreground\">Are you sure you want to remove <strong x-text=\"deleteStudentName\"></strong>?</p><div class=\"mt-6 flex justify-end gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
