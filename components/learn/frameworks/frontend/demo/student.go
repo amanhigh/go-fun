@@ -40,51 +40,21 @@ func NewInMemoryStudentService() *InMemoryStudentService {
 		students: make(map[string]Student),
 		nextID:   1,
 	}
-
-	// Add sample students
-	sampleStudents := []Student{
-		{
-			FirstName: "John",
-			LastName:  "Doe",
-			Email:     "john.doe@school.edu",
-			Age:       20,
-			Grade:     "Sophomore",
-		},
-		{
-			FirstName: "Jane",
-			LastName:  "Smith",
-			Email:     "jane.smith@school.edu",
-			Age:       21,
-			Grade:     "Junior",
-		},
-		{
-			FirstName: "Mike",
-			LastName:  "Johnson",
-			Email:     "mike.johnson@school.edu",
-			Age:       19,
-			Grade:     "Freshman",
-		},
-		{
-			FirstName: "Sarah",
-			LastName:  "Williams",
-			Email:     "sarah.williams@school.edu",
-			Age:       22,
-			Grade:     "Senior",
-		},
-		{
-			FirstName: "David",
-			LastName:  "Brown",
-			Email:     "david.brown@school.edu",
-			Age:       20,
-			Grade:     "Sophomore",
-		},
+	for _, s := range sampleStudents() {
+		service.CreateStudent(s)
 	}
-
-	for _, student := range sampleStudents {
-		service.CreateStudent(student)
-	}
-
 	return service
+}
+
+// sampleStudents returns seed data for the in-memory store.
+func sampleStudents() []Student {
+	return []Student{
+		{FirstName: "John", LastName: "Doe", Email: "john.doe@school.edu", Age: 20, Grade: "Sophomore"},
+		{FirstName: "Jane", LastName: "Smith", Email: "jane.smith@school.edu", Age: 21, Grade: "Junior"},
+		{FirstName: "Mike", LastName: "Johnson", Email: "mike.johnson@school.edu", Age: 19, Grade: "Freshman"},
+		{FirstName: "Sarah", LastName: "Williams", Email: "sarah.williams@school.edu", Age: 22, Grade: "Senior"},
+		{FirstName: "David", LastName: "Brown", Email: "david.brown@school.edu", Age: 20, Grade: "Sophomore"},
+	}
 }
 
 func (s *InMemoryStudentService) GetAllStudents() []Student {

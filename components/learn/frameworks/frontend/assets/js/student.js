@@ -1,26 +1,35 @@
 /**
- * Student List Page - Alpine.js Component
+ * Student CRUD Page — Alpine.js component (studentListPage)
  *
- * This file contains all client-side logic for the Student CRUD page.
- * It works alongside student_list.templ which provides the HTML structure
- * using templUI components (table, badge, skeleton, pagination, button, input, form).
+ * WHY Alpine.js is required here (and what templUI cannot do alone):
  *
- * Architecture:
- *   - templUI components handle all UI rendering and styling
- *   - Alpine.js handles reactive state, API calls, and dynamic behavior
- *   - Modals use Alpine x-show (not templUI dialog) because templUI dialog
- *     moves DOM nodes to document.body, breaking Alpine's x-data scope
- *   - Grade filter uses templUI selectbox (read-only, no 2-way bind needed)
- *   - Form grade uses native <select> styled with Tailwind (needs x-model binding)
+ *  1. CLIENT-SIDE STATE  — templUI renders static HTML. Alpine holds the live
+ *     student array, filter values, pagination index, and form data in memory
+ *     without a full page reload.
  *
- * Data Flow:
- *   Alpine x-data ──> templ components render with x-bind/x-text/x-show
- *   User actions ──> Alpine methods ──> fetch() API ──> update Alpine state
- *   State change ──> Alpine reactivity ──> DOM auto-updates
+ *  2. ASYNC API CALLS    — fetch() to GET/POST/PUT/DELETE /api/students is JS-only.
+ *     templUI has no built-in data-fetching; it pairs with HTMX or Alpine for that.
+ *
+ *  3. CLIENT FILTERING   — Filtering/searching the in-memory array and slicing
+ *     pages is pure JS logic; templUI is a rendering library, not a data layer.
+ *
+ *  4. MODAL VISIBILITY   — templUI dialog.Dialog teleports its DOM to <body>,
+ *     breaking Alpine x-model bindings. Plain x-show on a <div> keeps the modal
+ *     inside Alpine's x-data scope so all bindings work correctly.
+ *
+ *  5. TOAST ON MUTATION  — After an API call succeeds we inject a toast node.
+ *     templUI's toast.js watches MutationObserver on <body> and auto-dismisses
+ *     any node with [data-tui-toast] — so we inject the minimal wrapper and let
+ *     templUI handle the animation and dismiss timer (no custom CSS/JS needed).
  */
+
+// Plain function export — Alpine calls studentListPage() lazily when it processes
+// x-data="studentListPage()" on the DOM element, so load order doesn't matter.
+// Alpine.data() registration was tried but requires Alpine global to exist at
+// alpine:init time, which is unreliable when bundled before Alpine loads.
 function studentListPage() {
   return {
-    // --- Reactive State ---
+    // ── State ─────────────────────────────────────────────────────────────────
     students: [],
     loading: false,
     errorMessage: '',
@@ -29,195 +38,103 @@ function studentListPage() {
     currentPage: 1,
     pageSize: 5,
 
-    // Modal state (Alpine-managed since templUI dialog breaks x-data scope)
+    // Alpine owns modal visibility; templUI dialog cannot be used here (see WHY #4)
     showFormModal: false,
     showDeleteModal: false,
 
-    // Form state
     editingStudentID: '',
     formSubmitting: false,
     form: { first_name: '', last_name: '', email: '', age: 18, grade: '' },
-
-    // Delete confirmation state
     deleteStudentID: '',
     deleteStudentName: '',
 
-    // --- Computed Properties ---
-
-    /** Filter students by search query and grade */
+    // ── Computed (Alpine getters drive x-text / x-for / x-bind in the template) ──
     get filteredStudents() {
-      const query = this.searchQuery.toLowerCase().trim();
+      const q = this.searchQuery.toLowerCase().trim();
       return this.students.filter((s) => {
         const name = `${s.first_name} ${s.last_name}`.toLowerCase();
-        const matchSearch = !query || name.includes(query) || s.email.toLowerCase().includes(query);
-        const matchGrade = !this.selectedGrade || s.grade === this.selectedGrade;
-        return matchSearch && matchGrade;
+        return (!q || name.includes(q) || s.email.toLowerCase().includes(q))
+          && (!this.selectedGrade || s.grade === this.selectedGrade);
       });
     },
+    get totalPages()      { return Math.max(1, Math.ceil(this.filteredStudents.length / this.pageSize)); },
+    get paginatedStudents() { const s = (this.currentPage - 1) * this.pageSize; return this.filteredStudents.slice(s, s + this.pageSize); },
+    get startItem()       { return this.filteredStudents.length ? (this.currentPage - 1) * this.pageSize + 1 : 0; },
+    get endItem()         { return this.filteredStudents.length ? Math.min(this.currentPage * this.pageSize, this.filteredStudents.length) : 0; },
 
-    get totalPages() {
-      return Math.max(1, Math.ceil(this.filteredStudents.length / this.pageSize));
-    },
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+    init() { this.fetchStudents(); },
 
-    get paginatedStudents() {
-      const start = (this.currentPage - 1) * this.pageSize;
-      return this.filteredStudents.slice(start, start + this.pageSize);
-    },
-
-    get startItem() {
-      return this.filteredStudents.length === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1;
-    },
-
-    get endItem() {
-      return this.filteredStudents.length === 0
-        ? 0
-        : Math.min(this.currentPage * this.pageSize, this.filteredStudents.length);
-    },
-
-    // --- Lifecycle ---
-
-    init() {
-      this.fetchStudents();
-    },
-
-    // --- API Methods ---
-
-    /** Fetch all students from the API */
+    // ── API ───────────────────────────────────────────────────────────────────
     async fetchStudents() {
-      this.loading = true;
-      this.errorMessage = '';
+      this.loading = true; this.errorMessage = '';
       try {
-        const res = await fetch('/api/students');
-        if (!res.ok) throw new Error('Failed');
-        const payload = await res.json();
-        this.students = payload.data || [];
+        const r = await fetch('/api/students');
+        if (!r.ok) throw new Error();
+        this.students = (await r.json()).data || [];
         this.currentPage = 1;
-      } catch {
-        this.errorMessage = "Couldn't load students";
-      } finally {
-        this.loading = false;
-      }
+      } catch { this.errorMessage = "Couldn't load students"; }
+      finally  { this.loading = false; }
     },
 
-    /** Create or update a student via API */
     async submitStudent() {
       this.formSubmitting = true;
-      const isUpdate = this.editingStudentID !== '';
-      const url = isUpdate ? `/api/students/${this.editingStudentID}` : '/api/students';
+      const update = this.editingStudentID !== '';
       try {
-        const res = await fetch(url, {
-          method: isUpdate ? 'PUT' : 'POST',
+        const r = await fetch(update ? `/api/students/${this.editingStudentID}` : '/api/students', {
+          method:  update ? 'PUT' : 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(this.form),
+          body:    JSON.stringify(this.form),
         });
-        if (!res.ok) throw new Error('Save failed');
+        if (!r.ok) throw new Error();
         this.showFormModal = false;
-        this.showToast(isUpdate ? 'Student updated ✓' : 'Student added ✓');
+        this.showToast(update ? 'Student updated ✓' : 'Student added ✓', 'success');
         await this.fetchStudents();
-      } catch {
-        this.errorMessage = isUpdate ? 'Failed to update student' : 'Failed to create student';
-      } finally {
-        this.formSubmitting = false;
-      }
+      } catch { this.errorMessage = update ? 'Failed to update' : 'Failed to create'; }
+      finally  { this.formSubmitting = false; }
     },
 
-    /** Delete a student via API */
     async confirmDelete() {
-      if (!this.deleteStudentID) return;
       try {
-        const res = await fetch(`/api/students/${this.deleteStudentID}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error('Delete failed');
+        const r = await fetch(`/api/students/${this.deleteStudentID}`, { method: 'DELETE' });
+        if (!r.ok) throw new Error();
         this.closeDeleteModal();
-        this.showToast('Student deleted ✓');
+        this.showToast('Student deleted ✓', 'success');
         await this.fetchStudents();
-      } catch {
-        this.errorMessage = 'Failed to delete student';
-      }
+      } catch { this.errorMessage = 'Failed to delete student'; }
     },
 
-    // --- Filter & Pagination ---
-
-    /** Called by templUI selectbox change event for grade filter */
-    onGradeFilterChange(event) {
-      const input = event.target?.querySelector?.('input[type="hidden"]') || event.target;
-      this.selectedGrade = input?.value ?? '';
+    // ── Filters & Pagination ──────────────────────────────────────────────────
+    // templUI selectbox fires a native 'change' event on its hidden <input>.
+    // Alpine captures it via x-on:change and reads the value from the event target.
+    onGradeFilterChange(e) {
+      this.selectedGrade = e.target?.value ?? '';
       this.currentPage = 1;
     },
 
-    clearFilters() {
-      this.searchQuery = '';
-      this.selectedGrade = '';
-      this.currentPage = 1;
-    },
+    clearFilters()   { this.searchQuery = ''; this.selectedGrade = ''; this.currentPage = 1; },
+    goToNextPage()   { if (this.currentPage < this.totalPages) this.currentPage++; },
+    goToPreviousPage() { if (this.currentPage > 1) this.currentPage--; },
 
-    goToNextPage() {
-      if (this.currentPage < this.totalPages) this.currentPage++;
-    },
+    // ── Modals ────────────────────────────────────────────────────────────────
+    openCreateModal() { this.editingStudentID = ''; this.form = { first_name: '', last_name: '', email: '', age: 18, grade: '' }; this.showFormModal = true; },
+    openEditModal(s)  { this.editingStudentID = s.id; this.form = { first_name: s.first_name, last_name: s.last_name, email: s.email, age: s.age, grade: s.grade }; this.showFormModal = true; },
+    closeFormModal()  { if (!this.formSubmitting) this.showFormModal = false; },
+    openDeleteModal(s) { this.deleteStudentID = s.id; this.deleteStudentName = `${s.first_name} ${s.last_name}`; this.showDeleteModal = true; },
+    closeDeleteModal() { this.showDeleteModal = false; this.deleteStudentID = ''; this.deleteStudentName = ''; },
 
-    goToPreviousPage() {
-      if (this.currentPage > 1) this.currentPage--;
-    },
-
-    // --- Modal Management ---
-    // Uses Alpine x-show instead of templUI dialog because dialog.Dialog
-    // moves DOM nodes to document.body via JS, disconnecting them from
-    // Alpine's x-data scope and breaking all reactive bindings.
-
-    openCreateModal() {
-      this.editingStudentID = '';
-      this.form = { first_name: '', last_name: '', email: '', age: 18, grade: '' };
-      this.showFormModal = true;
-    },
-
-    openEditModal(student) {
-      this.editingStudentID = student.id;
-      this.form = {
-        first_name: student.first_name,
-        last_name: student.last_name,
-        email: student.email,
-        age: student.age,
-        grade: student.grade,
-      };
-      this.showFormModal = true;
-    },
-
-    closeFormModal() {
-      if (!this.formSubmitting) this.showFormModal = false;
-    },
-
-    openDeleteModal(student) {
-      this.deleteStudentID = student.id;
-      this.deleteStudentName = `${student.first_name} ${student.last_name}`;
-      this.showDeleteModal = true;
-    },
-
-    closeDeleteModal() {
-      this.showDeleteModal = false;
-      this.deleteStudentID = '';
-      this.deleteStudentName = '';
-    },
-
-    // --- Toast Notification ---
-    // Injects a templUI-styled toast into #toast-container.
-    // Uses templUI's data-tui-toast attributes so its JS auto-dismisses it.
-
-    showToast(message) {
+    // ── Toast ─────────────────────────────────────────────────────────────────
+    // We inject the minimal [data-tui-toast] wrapper into #toast-container.
+    // templUI's toast.js MutationObserver detects the new node automatically
+    // and handles positioning, animation, and auto-dismiss — no custom CSS needed.
+    showToast(message, variant = 'success') {
       const el = document.getElementById('toast-container');
       if (!el) return;
-      el.innerHTML = `
-        <div data-tui-toast data-tui-toast-duration="3000" data-position="top-right"
-          class="z-50 fixed pointer-events-auto p-4 w-full md:max-w-[420px] top-0 right-0
-                 animate-in fade-in slide-in-from-top-4 duration-300">
-          <div class="w-full bg-popover text-popover-foreground rounded-lg shadow-xs border
-                      pt-5 pb-4 px-4 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-green-500 flex-shrink-0"
-              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <path d="m9 11 3 3L22 4"/>
-            </svg>
-            <span class="text-sm font-medium">${message}</span>
-          </div>
-        </div>`;
+      el.innerHTML = `<div data-tui-toast data-tui-toast-duration="3000" data-position="top-right" data-variant="${variant}">
+        <div class="w-full bg-popover text-popover-foreground rounded-lg shadow-xs border pt-5 pb-4 px-4 flex items-center gap-3">
+          <span class="flex-1 text-sm font-semibold">${message}</span>
+        </div>
+      </div>`;
     },
   };
 }

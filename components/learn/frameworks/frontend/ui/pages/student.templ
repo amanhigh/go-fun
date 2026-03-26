@@ -63,19 +63,20 @@ templ StudentPage() {
 			Tags:        []string{"Interactive", "CRUD", "Alpine.js"},
 		}) {
 			@StudentContent()
-			// Load Alpine component logic from external JS file.
-			// student.js defines studentListPage() used by x-data below.
+			// student.js is a page-specific Alpine component loaded as a static file.
+			// It cannot be bundled into app.js: esbuild's iife format tree-shakes plain
+			// global functions that nothing imports. app.js is for shared utilities only.
 			<script src="/assets/js/student.js"></script>
 		}
 	}
 }
 
 // StudentContent is the root Alpine.js component container.
-// x-data="studentListPage()" attaches the Alpine component defined in student.js.
-// x-init="init()" triggers the initial API fetch when the component mounts.
+// x-data="studentListPage()" calls the plain function defined in student.js.
+// Alpine automatically calls init() on mount as a reserved lifecycle hook.
 // All child templates share this Alpine scope via the DOM tree.
 templ StudentContent() {
-	<div x-data="studentListPage()" x-init="init()" class="space-y-6">
+	<div x-data="studentListPage()" class="space-y-6">
 		@StudentFilterPanel()
 		@StudentLoadingState()
 		@StudentErrorState()
@@ -246,11 +247,11 @@ templ StudentTable() {
 		@table.Table(table.Props{Class: "min-w-[760px]"}) {
 			@table.Header(table.HeaderProps{Class: "bg-muted/30 text-xs uppercase tracking-wide"}) {
 				@table.Row() {
-					@table.Head(table.HeadProps{Class: "px-4 py-3"}) { ID }
-					@table.Head(table.HeadProps{Class: "px-4 py-3"}) { Name }
-					@table.Head(table.HeadProps{Class: "px-4 py-3"}) { Email }
-					@table.Head(table.HeadProps{Class: "px-4 py-3"}) { Grade }
-					@table.Head(table.HeadProps{Class: "px-4 py-3 text-right"}) { Actions }
+					@table.Head() { ID }
+					@table.Head() { Name }
+					@table.Head() { Email }
+					@table.Head() { Grade }
+					@table.Head(table.HeadProps{Class: "text-right"}) { Actions }
 				}
 			}
 			@table.Body() {
@@ -258,22 +259,13 @@ templ StudentTable() {
 				// x-bind:key helps Alpine efficiently patch the DOM on data changes.
 				<template x-for="student in paginatedStudents" x-bind:key="student.id">
 					@table.Row() {
-						@table.Cell(table.CellProps{Class: "px-4 py-3 font-mono text-xs"}) {
-							<span x-text="student.id"></span>
+						@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "student.id"}}) {}
+						@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "`${student.first_name} ${student.last_name}`"}}) {}
+						@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "student.email"}}) {}
+						@table.Cell() {
+							@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"x-text": "student.grade"}}) {}
 						}
-						@table.Cell(table.CellProps{Class: "px-4 py-3 font-medium"}) {
-							<span x-text="`${student.first_name} ${student.last_name}`"></span>
-						}
-						@table.Cell(table.CellProps{Class: "px-4 py-3 text-muted-foreground"}) {
-							<span x-text="student.email"></span>
-						}
-						@table.Cell(table.CellProps{Class: "px-4 py-3"}) {
-							// templUI Badge wraps an x-text span to style the grade value
-							@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
-								<span x-text="student.grade"></span>
-							}
-						}
-						@table.Cell(table.CellProps{Class: "px-4 py-3 text-right"}) {
+						@table.Cell(table.CellProps{Class: "text-right"}) {
 							<div class="flex justify-end gap-2">
 								// x-on:click passes the current loop variable (student) to Alpine
 								@button.Button(button.Props{
@@ -546,7 +538,7 @@ templ StudentDeleteModal() {
 			<h3 class="text-lg font-semibold">Delete Student</h3>
 			<p class="mt-2 text-sm text-muted-foreground">
 				Are you sure you want to remove
-				<strong x-text="deleteStudentName"></strong>? // x-text renders current student name
+				<strong x-text="deleteStudentName"></strong>?
 			</p>
 			<div class="mt-6 flex justify-end gap-2">
 				@button.Button(button.Props{
