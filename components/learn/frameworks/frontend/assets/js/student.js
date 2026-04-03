@@ -13,16 +13,18 @@
  *     array is pure JS logic that templUI has no equivalent for.
  *
  *  4. DIALOG COORDINATION — templUI dialog.Dialog IS used (window.tui.dialog API).
- *     dialog.Content teleports to <body>, so each dialog carries its own x-data
- *     scope. The parent communicates via window CustomEvents before opening.
+ *     dialog.Content teleports to <body>, destroying Alpine scope. We use plain
+ *     DOM APIs (getElementById, FormData) inside dialogs, and CustomEvents to
+ *     notify the parent Alpine component after API calls succeed/fail.
  *
  *  5. TOAST ON MUTATION  — After API success, inject a minimal [data-tui-toast]
  *     node. templUI toast.js MutationObserver auto-handles animation + dismiss.
  *
- * THREE Alpine components in this file:
- *   studentListPage()   — page-level: data, filters, pagination, API, opens dialogs
- *   studentFormDialog() — scoped to form dialog Content (teleports to <body>)
- *   studentDeleteDialog() — scoped to delete dialog Content (teleports to <body>)
+ * ONE Alpine component + TWO global helpers in this file:
+ *   studentListPage()      — Alpine: data, filters, pagination, API, opens dialogs
+ *   setFormFields()        — populates form inputs via getElementById before dialog open
+ *   studentFormSubmit()    — reads FormData on submit, calls API, fires CustomEvent
+ *   studentDeleteConfirm() — reads hidden ID, calls DELETE API, fires CustomEvent
  */
 
 // ── studentListPage ───────────────────────────────────────────────────────────
@@ -72,26 +74,22 @@ function studentListPage() {
     goToPreviousPage()      { if (this.currentPage > 1) this.currentPage--; },
 
     // ── Open Dialogs ──────────────────────────────────────────────────────────
-    // Dispatch CustomEvent BEFORE opening so dialog x-data has the payload ready.
-    // window.tui.dialog.open/close is the public API exposed by templUI dialog.js.
+    // dialog.js teleports Content to <body>, destroying any Alpine scope on it.
+    // We use DOM APIs to populate inputs directly before opening the dialog.
+    // On submit/confirm, global functions read values back via FormData / getElementById.
     openCreateModal() {
-      window.dispatchEvent(new CustomEvent('student:open-form', {
-        detail: { id: '', form: { first_name: '', last_name: '', email: '', age: 18, grade: '' } },
-      }));
+      setFormFields({ id: '', first_name: '', last_name: '', email: '', age: 18, grade: '' });
       window.tui.dialog.open('student-form-dialog');
     },
 
     openEditModal(s) {
-      window.dispatchEvent(new CustomEvent('student:open-form', {
-        detail: { id: s.id, form: { first_name: s.first_name, last_name: s.last_name, email: s.email, age: s.age, grade: s.grade } },
-      }));
+      setFormFields({ id: s.id, first_name: s.first_name, last_name: s.last_name, email: s.email, age: s.age, grade: s.grade });
       window.tui.dialog.open('student-form-dialog');
     },
 
     openDeleteModal(s) {
-      window.dispatchEvent(new CustomEvent('student:open-delete', {
-        detail: { id: s.id, name: `${s.first_name} ${s.last_name}` },
-      }));
+      document.getElementById('s-delete-id').value   = s.id;
+      document.getElementById('s-delete-name').textContent = `${s.first_name} ${s.last_name}`;
       window.tui.dialog.open('student-delete-dialog');
     },
 
@@ -107,80 +105,69 @@ function studentListPage() {
       </div>`;
     },
 
-    // Called by dialog components after API success to refresh the list + show toast.
-    async afterSave(message) {
-      this.showToast(message, 'success');
-      await this.fetchStudents();
-    },
-
-    setError(msg) { this.errorMessage = msg; },
+    async afterSave(message) { this.showToast(message, 'success'); await this.fetchStudents(); },
+    setError(msg)             { this.errorMessage = msg; },
   };
 }
 
-// ── studentFormDialog ─────────────────────────────────────────────────────────
-// Scoped Alpine component for the form dialog Content node.
-// This x-data travels with the Content node when dialog.js teleports it to <body>.
-// Receives form payload via 'student:open-form' CustomEvent from parent.
-function studentFormDialog() {
-  return {
-    isEdit: false,
-    studentID: '',
-    submitting: false,
-    form: { first_name: '', last_name: '', email: '', age: 18, grade: '' },
+// ── Dialog helpers (global, called from onsubmit / onclick in dialog Content) ─
+// These must be global because dialog.Content teleports to <body> and loses
+// any Alpine scope. Plain JS functions are always accessible regardless of DOM position.
 
-    // Called by x-on:student:open-form.window when parent dispatches before open
-    receive(detail) {
-      this.studentID = detail.id;
-      this.isEdit    = detail.id !== '';
-      this.form      = { ...detail.form };
-    },
-
-    async submit() {
-      this.submitting = true;
-      try {
-        const r = await fetch(this.isEdit ? `/api/students/${this.studentID}` : '/api/students', {
-          method:  this.isEdit ? 'PUT' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify(this.form),
-        });
-        if (!r.ok) throw new Error();
-        window.tui.dialog.close('student-form-dialog');
-        // Notify parent to refresh list and show toast
-        window.dispatchEvent(new CustomEvent('student:saved', {
-          detail: { message: this.isEdit ? 'Student updated ✓' : 'Student added ✓' },
-        }));
-      } catch {
-        window.dispatchEvent(new CustomEvent('student:error', {
-          detail: { message: this.isEdit ? 'Failed to update' : 'Failed to create' },
-        }));
-      } finally { this.submitting = false; }
-    },
+function setFormFields(s) {
+  const fields = {
+    's-student-id': s.id, 's-first-name': s.first_name, 's-last-name': s.last_name,
+    's-email': s.email, 's-age': s.age, 's-grade': s.grade,
   };
+  for (const [id, val] of Object.entries(fields)) {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+    else console.error(`[student] #${id} not found`);
+  }
 }
 
-// ── studentDeleteDialog ───────────────────────────────────────────────────────
-// Scoped Alpine component for the delete confirmation dialog Content node.
-// Receives {id, name} via 'student:open-delete' CustomEvent from parent.
-function studentDeleteDialog() {
-  return {
-    studentID: '',
-    name: '',
-
-    receive(detail) { this.studentID = detail.id; this.name = detail.name; },
-
-    async confirmDelete() {
-      try {
-        const r = await fetch(`/api/students/${this.studentID}`, { method: 'DELETE' });
-        if (!r.ok) throw new Error();
-        window.tui.dialog.close('student-delete-dialog');
-        window.dispatchEvent(new CustomEvent('student:saved', {
-          detail: { message: 'Student deleted ✓' },
-        }));
-      } catch {
-        window.dispatchEvent(new CustomEvent('student:error', {
-          detail: { message: 'Failed to delete student' },
-        }));
-      }
-    },
+// Called by <form onsubmit="return studentFormSubmit(event)"> inside the form dialog.
+// Reads FormData, calls the API, then notifies the parent Alpine component via CustomEvent.
+async function studentFormSubmit(event) {
+  event.preventDefault();
+  const fd  = new FormData(event.target);
+  const id  = document.getElementById('s-student-id').value;
+  const isEdit = id !== '';
+  const body = {
+    first_name: fd.get('first_name'),
+    last_name:  fd.get('last_name'),
+    email:      fd.get('email'),
+    age:        parseInt(fd.get('age'), 10) || 18,
+    grade:      fd.get('grade'),
   };
+  try {
+    const r = await fetch(isEdit ? `/api/students/${id}` : '/api/students', {
+      method:  isEdit ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(body),
+    });
+    if (!r.ok) throw new Error();
+    window.tui.dialog.close('student-form-dialog');
+    window.dispatchEvent(new CustomEvent('student:saved', {
+      detail: { message: isEdit ? 'Student updated ✓' : 'Student added ✓' },
+    }));
+  } catch {
+    window.dispatchEvent(new CustomEvent('student:error', {
+      detail: { message: isEdit ? 'Failed to update' : 'Failed to create' },
+    }));
+  }
+  return false;
+}
+
+// Called by the Delete button onclick inside the delete confirmation dialog.
+async function studentDeleteConfirm() {
+  const id = document.getElementById('s-delete-id').value;
+  try {
+    const r = await fetch(`/api/students/${id}`, { method: 'DELETE' });
+    if (!r.ok) throw new Error();
+    window.tui.dialog.close('student-delete-dialog');
+    window.dispatchEvent(new CustomEvent('student:saved', { detail: { message: 'Student deleted ✓' } }));
+  } catch {
+    window.dispatchEvent(new CustomEvent('student:error', { detail: { message: 'Failed to delete student' } }));
+  }
 }

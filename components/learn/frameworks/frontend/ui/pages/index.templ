@@ -3,6 +3,12 @@ package pages
 import (
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
+	"github.com/templui/templui/components/badge"
+	"github.com/templui/templui/components/button"
+	"github.com/templui/templui/components/card"
+	"github.com/templui/templui/components/container"
+	"github.com/templui/templui/components/heading"
+	"github.com/templui/templui/components/link"
 )
 
 // IndexPage renders the main index page with links to all components
@@ -22,62 +28,46 @@ templ IndexPage(components []components.Component) {
 				gap: 1.5rem;
 				margin-top: 2rem;
 			}
-			.level-card {
-				border: 1px solid var(--muted-border-color);
-				border-radius: 0.5rem;
-				padding: 1.5rem;
-			}
-			.level-card:hover {
-				transform: translateY(-2px);
-				box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-			}
-			.level-card h3 {
-				margin: 0;
-				display: flex;
-				justify-content: space-between;
-				align-items: center;
-			}
-			.badge {
-				background: #10b981;
-				color: white;
-				padding: 0.25rem 0.5rem;
-				border-radius: 1rem;
-				font-size: 0.875rem;
-			}
 		</style>
 		
 		<div class="hero">
-			<div class="container">
-				<h1>🚀 Templ UI Component Demo</h1>
+			@container.Container() {
+				@heading.Heading(heading.Props{Level: 1}) { 🚀 Templ UI Component Demo }
 				<p>Explore a comprehensive collection of Templ components organized by complexity. Each level builds upon the previous one, from basic building blocks to advanced patterns.</p>
-			</div>
+			}
 		</div>
 
-		<main class="container">
-			<section>
-				<h2>📚 Learning Path</h2>
-				<p>Choose your starting point based on your familiarity with Templ and UI components:</p>
-				
-				<div class="level-grid">
-					for _, comp := range components {
-						<article class="level-card">
-							<header>
-								<h3>
-									<a href={ comp.URL() } style="text-decoration: none; color: inherit;">
-										{ comp.Name() }
-									</a>
-									<span class="badge">Live Demo</span>
-								</h3>
-							</header>
-							<p>{ comp.Description() }</p>
-							<footer>
-								<a href={ comp.URL() } role="button" class="outline">Open { comp.Name() } →</a>
-							</footer>
-						</article>
-					}
-				</div>
-			</section>
+		@container.Container() {
+			@heading.Heading(heading.Props{Level: 2}) { 📚 Learning Path }
+			<p>Choose your starting point based on your familiarity with Templ and UI components:</p>
+			
+			<div class="level-grid">
+				for _, comp := range components {
+					@ComponentCard(comp)
+				}
+			</div>
+		}
+	}
+}
 
-		</main>
+// ComponentCard renders a single component card in the grid
+templ ComponentCard(comp components.Component) {
+	@card.Card(card.Props{Class: "h-full"}) {
+		@card.Header() {
+			<div class="flex justify-between items-center">
+				@link.Link(link.Props{URL: comp.URL(), Variant: link.VariantGhost}) {
+					@heading.Heading(heading.Props{Level: 3}) { comp.Name() }
+				}
+				@badge.Badge(badge.Props{Variant: badge.VariantSuccess}) { Live Demo }
+			</div>
+		}
+		@card.Content() {
+			<p>{ comp.Description() }</p>
+		}
+		@card.Footer() {
+			@button.Button(button.Props{Variant: button.VariantOutline, As: "a", Href: comp.URL()}) {
+				Open { comp.Name() } →
+			}
+		}
 	}
 }

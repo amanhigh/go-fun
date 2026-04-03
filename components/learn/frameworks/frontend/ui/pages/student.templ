@@ -413,62 +413,63 @@ templ StudentEmptyState() {
 // =============================================================================
 // Uses templUI dialog.Dialog for all modals.
 //
-// HOW ALPINE + templUI dialog WORKS TOGETHER:
-//   dialog.Dialog wrapper stays in-place in the DOM (inside Alpine x-data scope).
+// HOW ALPINE + templUI dialog.Dialog WORKS TOGETHER:
+//   dialog.Dialog wrapper stays in-place in the DOM — Alpine scope intact.
 //   dialog.Content is teleported to #tui-dialog-layer-root at <body> by dialog.js.
+//   Moving a DOM node DESTROYS its Alpine scope, so NO Alpine directives on Content.
 //
-//   Because Content moves, x-model on inputs inside it would lose the parent scope.
-//   SOLUTION: Put x-data directly on dialog.Content via Attributes — the scope
-//   travels with the node. The parent communicates via CustomEvents:
-//     parent:  window.dispatchEvent(new CustomEvent('student:open-form', {detail: form}))
-//     content: x-on:student:open-form.window="form = $event.detail"
+//   APPROACH: Standard HTML forms + global JS functions (no Alpine inside Content):
+//     1. Before open: student.js populates inputs via getElementById (setFormFields)
+//     2. Open:        window.tui.dialog.open(id)  — templUI public API
+//     3. On submit:   studentFormSubmit(event) reads FormData, calls API, dispatches
+//                     'student:saved' / 'student:error' CustomEvent
+//     4. Parent div (x-data="studentListPage()") listens with x-on:student:saved.window
+//        to refresh the list and show a toast
 //
-//   Open/close is driven by window.tui.dialog.open/close(id) called from student.js.
-//   ESC, click-away, backdrop, animations — all handled by templUI dialog.js.
+//   ESC, click-away, backdrop overlay, animations — all handled by templUI dialog.js.
 
 // StudentFormModal handles both Create and Edit workflows.
-// Parent dispatches 'student:open-form' CustomEvent with {id, form} payload.
-// Content's own x-data receives it and populates the form fields.
+//
+// WHY x-data on dialog.Dialog wrapper, NOT on dialog.Content:
+//   dialog.js teleports Content to <body>. Moving a DOM node DESTROYS its Alpine
+//   scope — x-data on Content is re-initialized after teleport with blank state,
+//   so the CustomEvent payload is lost. The Dialog wrapper div never moves, so
+//   x-data on it is stable. Alpine does NOT walk across the portal boundary into
+//   teleported Content, so x-model on inputs inside Content still won't see the
+//   wrapper scope.
+//
+// SOLUTION: Use standard HTML form + JS FormData on submit (no x-model needed).
+//   student.js populates input values via DOM APIs before opening (getElementById).
+//   On submit, reads FormData from the <form id="student-form"> element directly.
+//   This requires zero Alpine on the Content node — plain HTML form behaviour.
 templ StudentFormModal() {
 	@dialog.Dialog(dialog.Props{ID: "student-form-dialog"}) {
-		@dialog.Content(dialog.ContentProps{
-			HideCloseButton: true,
-			Attributes: templ.Attributes{
-				// x-data travels with Content node to <body> portal — bindings work
-				"x-data": "studentFormDialog()",
-				// Listen for open event dispatched by parent Alpine (student.js openFormModal)
-				"x-on:student:open-form.window": "receive($event.detail)",
-			},
-		}) {
+		@dialog.Content(dialog.ContentProps{HideCloseButton: true}) {
 			@dialog.Header() {
-				@dialog.Title(dialog.TitleProps{
-					Attributes: templ.Attributes{
-						"x-text": "isEdit ? 'Edit Student' : 'Add New Student'",
-					},
-				}) {}
+				@dialog.Title() { Student }
 				@dialog.Description() { Fill all required details before saving. }
 			}
-			<form class="space-y-4" x-on:submit.prevent="submit()">
+			<form id="student-form" class="space-y-4" onsubmit="return studentFormSubmit(event)">
+				<input type="hidden" id="s-student-id"/>
 				<div class="grid gap-4 sm:grid-cols-2">
-					@StudentTextField("first-name", "First Name *", "form.first_name")
-					@StudentTextField("last-name", "Last Name *", "form.last_name")
+					@StudentTextField("s-first-name", "First Name *", "first_name")
+					@StudentTextField("s-last-name", "Last Name *", "last_name")
 				</div>
 				@form.Item() {
 					@form.Label(form.LabelProps{For: "s-email"}) { Email * }
 					@input.Input(input.Props{ID: "s-email", Type: input.TypeEmail, Required: true,
-						Attributes: templ.Attributes{"x-model": "form.email"}})
+						Attributes: templ.Attributes{"name": "email"}})
 				}
 				<div class="grid gap-4 sm:grid-cols-2">
 					@form.Item() {
 						@form.Label(form.LabelProps{For: "s-age"}) { Age }
 						@input.Input(input.Props{ID: "s-age", Type: "number",
-							Attributes: templ.Attributes{"x-model.number": "form.age", "min": "1"}})
+							Attributes: templ.Attributes{"name": "age", "min": "1"}})
 					}
-					// Grade uses native <select> — templUI selectbox also teleports its dropdown
-					// portal, which would break x-model even inside this local x-data scope.
+					// Grade: native <select> — templUI selectbox also teleports its dropdown
 					@form.Item() {
 						@form.Label(form.LabelProps{For: "s-grade"}) { Grade * }
-						<select id="s-grade" x-model="form.grade" required
+						<select id="s-grade" name="grade" required
 							class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
 							@StudentGradeOptions("Select grade")
 						</select>
@@ -480,48 +481,39 @@ templ StudentFormModal() {
 							Cancel
 						}
 					}
-					@button.Button(button.Props{Type: button.TypeSubmit,
-						Attributes: templ.Attributes{"x-bind:disabled": "submitting"}}) {
-						<span x-show="!submitting"
-							x-text="isEdit ? 'Save Changes' : 'Create Student'"></span>
-						<span x-show="submitting">Saving...</span>
-					}
+					@button.Button(button.Props{Type: button.TypeSubmit}) { Save }
 				}
 			</form>
 		}
 	}
 }
 
-// StudentTextField is a reusable helper rendering a labelled templUI text input.
-// Works inside dialog.Content because x-model references the local x-data scope.
-templ StudentTextField(fieldID string, labelText string, modelKey string) {
+// StudentTextField renders a labelled templUI text input with a HTML name attr.
+// name attr allows FormData.get(name) on submit without Alpine x-model.
+templ StudentTextField(fieldID string, labelText string, name string) {
 	@form.Item() {
 		@form.Label(form.LabelProps{For: fieldID}) { { labelText } }
 		@input.Input(input.Props{
 			ID:       fieldID,
 			Type:     input.TypeText,
 			Required: true,
-			Attributes: templ.Attributes{"x-model": modelKey},
+			Attributes: templ.Attributes{"name": name},
 		})
 	}
 }
 
 // StudentDeleteModal confirms before deleting.
-// Parent dispatches 'student:open-delete' with {id, name} payload.
+// student.js sets #s-delete-name text and #s-delete-id value before opening.
+// On confirm, studentDeleteConfirm() reads those DOM values directly.
 templ StudentDeleteModal() {
 	@dialog.Dialog(dialog.Props{ID: "student-delete-dialog"}) {
-		@dialog.Content(dialog.ContentProps{
-			HideCloseButton: true,
-			Attributes: templ.Attributes{
-				"x-data": "studentDeleteDialog()",
-				"x-on:student:open-delete.window": "receive($event.detail)",
-			},
-		}) {
+		@dialog.Content(dialog.ContentProps{HideCloseButton: true}) {
+			<input type="hidden" id="s-delete-id"/>
 			@dialog.Header() {
 				@dialog.Title() { Delete Student }
 				@dialog.Description() {
 					<span>Are you sure you want to remove </span>
-					<strong x-text="name"></strong>
+					<strong id="s-delete-name"></strong>
 					<span>?</span>
 				}
 			}
@@ -532,7 +524,7 @@ templ StudentDeleteModal() {
 					}
 				}
 				@button.Button(button.Props{Variant: button.VariantDestructive, Type: button.TypeButton,
-					Attributes: templ.Attributes{"x-on:click": "confirmDelete()"}}) {
+					Attributes: templ.Attributes{"onclick": "studentDeleteConfirm()"}}) {
 					Delete
 				}
 			}

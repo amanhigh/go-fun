@@ -12,9 +12,9 @@ import (
 // CreateComponents creates the standard set of UI components
 func CreateComponents() []components.Component {
 	return []components.Component{
+		pages.NewHelloComponent(),
 		pages.NewFormShowcaseComponent(),
 		pages.NewStudentListComponent(),
-		pages.NewHelloComponent(),
 	}
 }
 
