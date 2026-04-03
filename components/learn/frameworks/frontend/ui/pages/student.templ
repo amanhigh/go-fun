@@ -65,14 +65,14 @@ templ StudentPage() {
 			Tags:        []string{"Interactive", "CRUD", "Alpine.js"},
 		}) {
 			@StudentContent()
-			// student.js is bundled into app.js so the page functions are available
+			// student.ts is bundled into app.js so the page functions are available
 			// automatically through the shared frontend asset pipeline.
 		}
 	}
 }
 
 // StudentContent is the root Alpine.js component container.
-// x-data="studentListPage" uses the Alpine.data registration from student.js.
+// x-data="studentListPage" uses the Alpine.data registration from student.ts.
 // Alpine automatically calls init() on mount as a reserved lifecycle hook.
 // All child templates share this Alpine scope via the DOM tree.
 templ StudentContent() {

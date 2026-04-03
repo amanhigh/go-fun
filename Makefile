@@ -93,7 +93,7 @@ test-slow: ## Run slow tests
 
 ui: ## Run UI Demo Server with hot reload
 	printf $(_TITLE) "Starting UI Demo Server"
-	printf $(_INFO) "Server" "http://localhost:8080"
+	printf $(_INFO) "Server" "http://localhost:9090"
 	printf $(_DETAIL) "Note" "Auto-reloads on .go and .templ changes (manual browser refresh)"
 	cd components/learn/frameworks/frontend/demo && go run $(AIR) -c .air.toml
 
@@ -495,7 +495,7 @@ generate-css: generate-css-sources
 
 generate-js:
 	@printf $(_TITLE) "Generate" "JavaScript"
-	@cd components/learn/frameworks/frontend && $(ESBUILD) assets/js/input.js --bundle --outfile=assets/js/app.js --format=iife --target=es2020 || printf $(_WARN) "JS" "esbuild failed, skipping JS bundling"
+	@cd components/learn/frameworks/frontend && $(ESBUILD) assets/js/input.ts --bundle --outfile=assets/js/app.js --format=iife --target=es2020 || printf $(_WARN) "JS" "esbuild failed, skipping JS bundling"
 
 generate-ui: generate-css generate-js ## Generate UI assets (CSS & JS)
 
