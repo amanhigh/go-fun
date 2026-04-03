@@ -11,7 +11,7 @@ package pages
 //   • templUI  — Go component library providing styled HTML elements
 //               (table, badge, skeleton, pagination, button, input, form, selectbox)
 //   • Alpine.js — Lightweight JS framework for reactive state and API calls
-//               All Alpine logic lives in /assets/js/student.js
+//               All Alpine logic lives in /assets/js/student.ts
 //   • Tailwind CSS — Utility-first CSS (generated via assets/css/app.css)
 //
 // FILE STRUCTURE (read top to bottom as a tutorial):
@@ -33,7 +33,7 @@ package pages
 //   See SECTION 6 for full explanation.
 //
 // JS SEPARATION:
-//   All state, computed properties, and API calls are in assets/js/student.js.
+//   All state, computed properties, and API calls are in assets/js/student.ts.
 //   This file contains ZERO inline JavaScript — only HTML structure + Alpine attrs.
 
 import (
@@ -85,10 +85,10 @@ templ StudentContent() {
 		@StudentTable()
 		@StudentEmptyState()
 		// Dialog wrappers stay inside x-data scope; only their Content teleports to <body>.
-		// Communication parent->dialog uses CustomEvents (see student.js + Section 6 comments).
+		// Communication parent->dialog uses CustomEvents (see student.ts + Section 6 comments).
 		@StudentFormModal()
 		@StudentDeleteModal()
-		// Toast target: student.js injects a minimal [data-tui-toast] node here.
+		// Toast target: student.ts injects a minimal [data-tui-toast] node here.
 		<div id="toast-container"></div>
 	</div>
 }
@@ -159,7 +159,7 @@ templ StudentFilterPanel() {
 			</div>
 			// Grade filter: templUI selectbox (one-way).
 			// selectbox.Trigger fires a native change event when the user picks a grade.
-			// Alpine catches it via x-on:change -> onGradeFilterChange() in student.js.
+			// Alpine catches it via x-on:change -> onGradeFilterChange() in student.ts.
 			<div class="w-full sm:w-56">
 				@selectbox.SelectBox() {
 					@selectbox.Trigger(selectbox.TriggerProps{
@@ -178,7 +178,7 @@ templ StudentFilterPanel() {
 					}
 				}
 			</div>
-			// Buttons: x-on:click calls Alpine methods defined in student.js.
+			// Buttons: x-on:click calls Alpine methods defined in student.ts.
 			<div class="flex items-center gap-2">
 				@button.Button(button.Props{
 					Variant: button.VariantOutline,
@@ -302,7 +302,7 @@ templ StudentTable() {
 
 // StudentPagination renders prev/page/next controls using templUI pagination components.
 // x-bind:disabled disables the buttons at the boundaries (first/last page).
-// x-on:click calls Alpine navigation methods defined in student.js.
+// x-on:click calls Alpine navigation methods defined in student.ts.
 templ StudentPagination() {
 	<div class="flex flex-col gap-3 border-t border-border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
 		// x-text renders live count driven by Alpine computed getters startItem/endItem
@@ -417,7 +417,7 @@ templ StudentEmptyState() {
 //   Moving a DOM node DESTROYS its Alpine scope, so NO Alpine directives on Content.
 //
 //   APPROACH: Standard HTML forms + global JS functions (no Alpine inside Content):
-//     1. Before open: student.js populates inputs via getElementById (setFormFields)
+//     1. Before open: student.ts populates inputs via getElementById (setFormFields)
 //     2. Open:        window.tui.dialog.open(id)  — templUI public API
 //     3. On submit:   studentFormSubmit(event) reads FormData, calls API, dispatches
 //                     'student:saved' / 'student:error' CustomEvent
@@ -437,7 +437,7 @@ templ StudentEmptyState() {
 //   wrapper scope.
 //
 // SOLUTION: Use standard HTML form + JS FormData on submit (no x-model needed).
-//   student.js populates input values via DOM APIs before opening (getElementById).
+//   student.ts populates input values via DOM APIs before opening (getElementById).
 //   On submit, reads FormData from the <form id="student-form"> element directly.
 //   This requires zero Alpine on the Content node — plain HTML form behaviour.
 templ StudentFormModal() {
@@ -501,7 +501,7 @@ templ StudentTextField(fieldID string, labelText string, name string) {
 }
 
 // StudentDeleteModal confirms before deleting.
-// student.js sets #s-delete-name text and #s-delete-id value before opening.
+// student.ts sets #s-delete-name text and #s-delete-id value before opening.
 // On confirm, studentDeleteConfirm() reads those DOM values directly.
 templ StudentDeleteModal() {
 	@dialog.Dialog(dialog.Props{ID: "student-delete-dialog"}) {

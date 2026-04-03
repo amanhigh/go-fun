@@ -1,34 +1,35 @@
 /**
- * Student CRUD Page — Alpine.js components
- *
- * WHY Alpine.js is required here (and what templUI cannot do alone):
- *
- *  1. CLIENT-SIDE STATE  — templUI renders static HTML. Alpine holds the live
- *     student array, filter values, and pagination in memory without page reloads.
- *
- *  2. ASYNC API CALLS    — fetch() GET/POST/PUT/DELETE is JS-only. templUI is a
- *     rendering library; it pairs with HTMX or Alpine for data fetching.
- *
- *  3. CLIENT FILTERING   — Filtering, searching, and paginating an in-memory
- *     array is pure JS logic that templUI has no equivalent for.
- *
- *  4. DIALOG COORDINATION — templUI dialog.Dialog IS used (window.tui.dialog API).
- *     dialog.Content teleports to <body>, destroying Alpine scope. We use plain
- *     DOM APIs (getElementById, FormData) inside dialogs, and CustomEvents to
- *     notify the parent Alpine component after API calls succeed/fail.
- *
- *  5. TOAST ON MUTATION  — After API success, inject a minimal [data-tui-toast]
- *     node. templUI toast.js MutationObserver auto-handles animation + dismiss.
- *
- * ONE Alpine component + TWO global helpers in this file:
- *   studentListPage()      — Alpine: data, filters, pagination, API, opens dialogs
- *   setFormFields()        — populates form inputs via getElementById before dialog open
- *   studentFormSubmit()    — reads FormData on submit, calls API, fires CustomEvent
- *   studentDeleteConfirm() — reads hidden ID, calls DELETE API, fires CustomEvent
- *
- * The functions are attached to window at the bottom so they can be bundled into
- * app.js while still being callable from Alpine expressions and inline handlers.
+ * =============================================================================
+ * LESSON INDEX
+ * =============================================================================
+ * 1. Why this page exists
+ *    - This file is the benchmark implementation for a real Alpine + templUI
+ *      CRUD page in this demo project.
+ * 2. Why the data types are explicit
+ *    - The TypeScript interfaces define the contract for the page state and for
+ *      the student API payloads, making the demo easy to extend safely.
+ * 3. Why Alpine owns the live state
+ *    - templUI renders the shell, while Alpine owns filtering, pagination, and
+ *      the list data that changes without a full page reload.
+ * 4. Why the dialogs use DOM helpers
+ *    - templUI dialog.Content teleports into <body>, so direct DOM helpers are
+ *      more reliable than trying to keep Alpine scope alive across the portal.
+ * 5. Why toast feedback is manual
+ *    - The benchmark favors explicitness over magic: API success becomes a toast
+ *      through one tiny DOM injection that templUI toast.js can pick up.
+ * 6. Why we export globals
+ *    - The bundle is loaded as a side effect, so the helpers must also be
+ *      available on window for Alpine expressions and inline handlers.
+ * =============================================================================
  */
+
+// SECTION 1 — WHY THIS PAGE EXISTS
+// This is the benchmark page for CRUD + Alpine + templUI. The code is written as
+// a teaching example, so the comments explain both the implementation and the why.
+
+// SECTION 2 — WHY THE TYPES ARE EXPLICIT
+// These types document the contract between the page model and the backend API.
+// Keeping them here makes the demo safer to extend and easier to reason about.
 
 type Grade = '' | 'Freshman' | 'Sophomore' | 'Junior' | 'Senior';
 type ToastVariant = 'success' | 'destructive';
@@ -78,6 +79,11 @@ interface StudentListPageState {
   setError(this: StudentListPageState, message: string): void;
 }
 
+// SECTION 3 — WHY WE DECLARE GLOBALS
+// The JS bundle is imported for side effects, so Alpine and inline handlers need
+// a stable global surface. This avoids hidden coupling and makes the benchmark
+// easier to inspect from the browser console.
+
 declare global {
   interface Window {
     tui?: {
@@ -99,9 +105,9 @@ declare global {
   };
 }
 
-// ── studentListPage ───────────────────────────────────────────────────────────
-// Page-level Alpine component. Owns the student list, filters, and pagination.
-// Opens dialogs via window.tui.dialog.open() and passes data via CustomEvents.
+// SECTION 4 — WHY ALPINE OWNS THE PAGE STATE
+// templUI provides the structure, but Alpine owns the changing view-model data
+// so the page can filter, paginate, and update without a full reload.
 function studentListPage(): StudentListPageState {
   return {
     students: [],
@@ -148,8 +154,9 @@ function studentListPage(): StudentListPageState {
       }
     },
 
-    // ── Filters & Pagination ──────────────────────────────────────────────────
-    // templUI selectbox fires a native 'change' event; Alpine reads e.target.value.
+    // SECTION 5 — WHY FILTERS AND PAGINATION LIVE HERE
+    // The UI is small, but the behavior is stateful. Keeping it in this object is
+    // the cleanest benchmark pattern for a page-level Alpine component.
     onGradeFilterChange(event: Event) {
       const target = event.target as HTMLSelectElement | null;
       this.selectedGrade = (target?.value ?? '') as Grade;
@@ -167,10 +174,10 @@ function studentListPage(): StudentListPageState {
       if (this.currentPage > 1) this.currentPage -= 1;
     },
 
-    // ── Open Dialogs ──────────────────────────────────────────────────────────
-    // dialog.js teleports Content to <body>, destroying any Alpine scope on it.
-    // We use DOM APIs to populate inputs directly before opening the dialog.
-    // On submit/confirm, global functions read values back via FormData / getElementById.
+    // SECTION 6 — WHY DIALOGS USE DOM HELPERS
+    // templUI dialog.Content teleports to <body>. That is great for overlay UX,
+    // but it means we should not rely on Alpine scope crossing the portal.
+    // Direct DOM writes are simpler, explicit, and more reliable for this demo.
     openCreateModal() {
       setFormFields({ id: '', first_name: '', last_name: '', email: '', age: 18, grade: '' });
       window.tui?.dialog.open('student-form-dialog');
@@ -196,8 +203,10 @@ function studentListPage(): StudentListPageState {
       window.tui?.dialog.open('student-delete-dialog');
     },
 
-    // ── Toast ─────────────────────────────────────────────────────────────────
-    // Inject minimal [data-tui-toast] node; templUI toast.js handles the rest.
+    // SECTION 7 — WHY TOASTS ARE INJECTED MANUALLY
+    // A tiny DOM insert is enough to hand off to templUI's toast observer. This
+    // keeps the demo benchmark honest: the page owns the state transition, and
+    // templUI owns the UI effect.
     showToast(message: string, variant: ToastVariant = 'success') {
       const el = document.getElementById('toast-container');
       if (!el) return;
@@ -218,9 +227,10 @@ function studentListPage(): StudentListPageState {
   };
 }
 
-// ── Dialog helpers (global, called from onsubmit / onclick in dialog Content) ─
-// These must be global because dialog.Content teleports to <body> and loses
-// any Alpine scope. Plain JS functions are always accessible regardless of DOM position.
+// SECTION 8 — WHY THE HELPERS ARE GLOBAL
+// These helpers are attached to window because dialog Content is teleported and
+// because the page intentionally keeps the bundle simple: one file to load, one
+// place to inspect, and no hidden dependency injection layer.
 function setFormFields(fields: StudentFormFields): void {
   const entries: Array<[keyof StudentFormFields, string | number]> = [
     ['id', fields.id],
@@ -240,8 +250,9 @@ function setFormFields(fields: StudentFormFields): void {
   }
 }
 
-// Called by <form onsubmit="return studentFormSubmit(event)"> inside the form dialog.
-// Reads FormData, calls the API, then notifies the parent Alpine component via CustomEvent.
+// SECTION 9 — WHY SUBMIT IS HANDLED THIS WAY
+// The form submits through a single helper so the page can stay declarative in
+// templUI markup while still performing a real API request and emitting events.
 async function studentFormSubmit(event: SubmitEvent): Promise<boolean> {
   event.preventDefault();
   const form = event.target as HTMLFormElement | null;
@@ -278,7 +289,9 @@ async function studentFormSubmit(event: SubmitEvent): Promise<boolean> {
   return false;
 }
 
-// Called by the Delete button onclick inside the delete confirmation dialog.
+// SECTION 10 — WHY DELETE USES THE SAME PATTERN
+// Delete is intentionally parallel to save: same style, same state handoff, same
+// benchmark principle of keeping behavior predictable and easy to audit.
 async function studentDeleteConfirm(): Promise<void> {
   const id = (document.getElementById('s-delete-id') as HTMLInputElement | null)?.value ?? '';
   try {
@@ -291,13 +304,21 @@ async function studentDeleteConfirm(): Promise<void> {
   }
 }
 
+// SECTION 11 — WHY REGISTRATION HAPPENS ON alpine:init
+// Alpine must know about the page data factory before it processes x-data.
 document.addEventListener('alpine:init', () => {
   Alpine.data('studentListPage', studentListPage);
 });
 
+// SECTION 12 — WHY THE GLOBAL EXPORTS REMAIN
+// These globals are the compatibility layer for inline handlers and for pages
+// that want to inspect the benchmark implementation directly from the console.
 window.studentListPage = studentListPage;
 window.setFormFields = setFormFields;
 window.studentFormSubmit = studentFormSubmit;
 window.studentDeleteConfirm = studentDeleteConfirm;
 
+// SECTION 13 — WHY THERE IS NO MODULE EXPORT API
+// The file exists for side effects and page wiring, so an empty export keeps the
+// module boundary explicit without encouraging direct imports elsewhere.
 export {};
