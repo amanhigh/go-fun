@@ -483,7 +483,6 @@ generate-templ:
 	$(TEMPL) generate -path components/learn
 	$(MAKE) format
 
-# Generate sources file for Tailwind CSS
 generate-css-sources:
 	@printf $(_TITLE) "Generate" "CSS Sources"
 	@cd $(FRONTEND_DIR) && \
@@ -496,7 +495,6 @@ generate-css-sources:
 		echo "@source \"$$TEMPLUI_PATH/components/**/*.templ\";"; \
 	) > ./assets/css/sources.generated.css
 
-# Generate CSS using tailwindcss (assumes always available)
 generate-css: generate-css-sources
 	@printf $(_TITLE) "Generate" "CSS"
 	@cd $(FRONTEND_DIR) && $(TAILWINDCSS) build --input $(FRONTEND_CSS_INPUT) --output $(FRONTEND_CSS_OUTPUT)
@@ -505,7 +503,12 @@ generate-js:
 	@printf $(_TITLE) "Generate" "JavaScript"
 	@cd $(FRONTEND_DIR) && $(ESBUILD) $(FRONTEND_JS_ENTRY) --bundle --outfile=$(FRONTEND_JS_OUTPUT) --format=iife --target=es2020 || printf $(_WARN) "JS" "esbuild failed, skipping JS bundling"
 
-generate-ui: generate-css generate-js ## Generate UI assets (CSS & JS)
+generate-ui: generate-css generate-js
+
+
+build-air: generate-templ generate-ui
+	@printf $(_TITLE) "Build" "Frontend Demo"
+	@cd $(FRONTEND_DEMO_DIR) && go build -o /tmp/ui-demo/main .
 
 generate: generate-mocks generate-swagger generate-templ ## Generate Files (skip UI for CI)
 

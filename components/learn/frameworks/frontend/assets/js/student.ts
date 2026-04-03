@@ -2,39 +2,30 @@
  * =============================================================================
  * LESSON INDEX
  * =============================================================================
- * 1. Why this page exists
- *    - This file is the benchmark implementation for a real Alpine + templUI
- *      CRUD page in this demo project.
- * 2. Why the data types are explicit
- *    - The TypeScript interfaces define the contract for the page state and for
- *      the student API payloads, making the demo easy to extend safely.
- * 3. Why Alpine owns the live state
- *    - templUI renders the shell, while Alpine owns filtering, pagination, and
- *      the list data that changes without a full page reload.
- * 4. Why the dialogs use DOM helpers
- *    - templUI dialog.Content teleports into <body>, so direct DOM helpers are
- *      more reliable than trying to keep Alpine scope alive across the portal.
- * 5. Why toast feedback is manual
- *    - The benchmark favors explicitness over magic: API success becomes a toast
- *      through one tiny DOM injection that templUI toast.js can pick up.
- * 6. Why we export globals
- *    - The bundle is loaded as a side effect, so the helpers must also be
- *      available on window for Alpine expressions and inline handlers.
+ * 1. Type declarations
+ *    - These define the shape of page state, API payloads, and shared variants.
+ * 2. Page state factory
+ *    - This builds the Alpine data object that drives filtering, pagination, and
+ *      CRUD requests.
+ * 3. Dialog and toast helpers
+ *    - templUI dialog Content teleports to <body>, so direct DOM helpers keep the
+ *      interaction predictable and easy to audit.
+ * 4. Alpine registration and globals
+ *    - The bundle is loaded for side effects, so we register the factory and
+ *      export the helpers on window.
  * =============================================================================
  */
 
-// SECTION 1 — WHY THIS PAGE EXISTS
-// This is the benchmark page for CRUD + Alpine + templUI. The code is written as
-// a teaching example, so the comments explain both the implementation and the why.
-
-// SECTION 2 — WHY THE TYPES ARE EXPLICIT
-// These types document the contract between the page model and the backend API.
-// Keeping them here makes the demo safer to extend and easier to reason about.
+// SECTION 1 — TYPE DECLARATIONS
+// These types keep the demo honest: each one documents a contract used by the
+// page state, the form dialog, or the student API payloads.
 
 type Grade = '' | 'Freshman' | 'Sophomore' | 'Junior' | 'Senior';
+// One-line purpose: the page only allows these grades in filters and forms.
 type ToastVariant = 'success' | 'destructive';
+// One-line purpose: toast variants stay aligned with templUI's supported styles.
 
-interface StudentRecord {
+interface StudentApiRecord {
   id: string;
   first_name: string;
   last_name: string;
@@ -43,8 +34,16 @@ interface StudentRecord {
   grade: Grade;
 }
 
-interface StudentFormFields {
+interface StudentFormValues {
   id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  age: number;
+  grade: Grade;
+}
+
+interface StudentApiPayload {
   first_name: string;
   last_name: string;
   email: string;
@@ -52,37 +51,69 @@ interface StudentFormFields {
   grade: Grade;
 }
 
-interface StudentListPageState {
-  students: StudentRecord[];
+interface StudentDataState {
+  students: StudentApiRecord[];
   loading: boolean;
   errorMessage: string;
+}
+
+interface StudentFilterState {
   searchQuery: string;
   selectedGrade: Grade;
+}
+
+interface StudentPaginationState {
   currentPage: number;
   pageSize: number;
-  readonly filteredStudents: StudentRecord[];
+}
+
+const studentFormFieldIds = {
+  id: 's-student-id',
+  firstName: 's-first-name',
+  lastName: 's-last-name',
+  email: 's-email',
+  age: 's-age',
+  grade: 's-grade',
+} as const;
+
+const studentDialogFieldIds = {
+  deleteId: 's-delete-id',
+  deleteName: 's-delete-name',
+  gradeFilter: 'grade-filter',
+} as const;
+
+const emptyStudentFormValues: StudentFormValues = {
+  id: '',
+  firstName: '',
+  lastName: '',
+  email: '',
+  age: 18,
+  grade: '',
+};
+
+interface StudentPageState extends StudentDataState, StudentFilterState, StudentPaginationState {
+  readonly filteredStudents: StudentApiRecord[];
   readonly totalPages: number;
-  readonly paginatedStudents: StudentRecord[];
+  readonly paginatedStudents: StudentApiRecord[];
   readonly startItem: number;
   readonly endItem: number;
   init(): void;
-  fetchStudents(this: StudentListPageState): Promise<void>;
-  onGradeFilterChange(this: StudentListPageState, event: Event): void;
-  clearFilters(this: StudentListPageState): void;
-  goToNextPage(this: StudentListPageState): void;
-  goToPreviousPage(this: StudentListPageState): void;
-  openCreateModal(this: StudentListPageState): void;
-  openEditModal(this: StudentListPageState, student: StudentRecord): void;
-  openDeleteModal(this: StudentListPageState, student: StudentRecord): void;
-  showToast(this: StudentListPageState, message: string, variant?: ToastVariant): void;
-  afterSave(this: StudentListPageState, message: string): Promise<void>;
-  setError(this: StudentListPageState, message: string): void;
+  fetchStudents(this: StudentPageState): Promise<void>;
+  onGradeFilterChange(this: StudentPageState, event: Event): void;
+  clearFilters(this: StudentPageState): void;
+  goToNextPage(this: StudentPageState): void;
+  goToPreviousPage(this: StudentPageState): void;
+  openCreateModal(this: StudentPageState): void;
+  openEditModal(this: StudentPageState, student: StudentApiRecord): void;
+  openDeleteModal(this: StudentPageState, student: StudentApiRecord): void;
+  showToast(this: StudentPageState, message: string, variant?: ToastVariant): void;
+  afterSave(this: StudentPageState, message: string): Promise<void>;
+  setError(this: StudentPageState, message: string): void;
 }
 
-// SECTION 3 — WHY WE DECLARE GLOBALS
-// The JS bundle is imported for side effects, so Alpine and inline handlers need
-// a stable global surface. This avoids hidden coupling and makes the benchmark
-// easier to inspect from the browser console.
+// SECTION 2 — PAGE STATE FACTORY
+// This is the benchmark-level Alpine state object. It owns filtering, paging,
+// API calls, and the dialog entry points.
 
 declare global {
   interface Window {
@@ -94,21 +125,18 @@ declare global {
         isOpen(id: string): boolean;
       };
     };
-    studentListPage: typeof studentListPage;
+    studentPage: typeof studentPage;
     setFormFields: typeof setFormFields;
     studentFormSubmit: typeof studentFormSubmit;
     studentDeleteConfirm: typeof studentDeleteConfirm;
   }
 
   const Alpine: {
-    data(name: string, callback: () => StudentListPageState): void;
+    data(name: string, callback: () => StudentPageState): void;
   };
 }
 
-// SECTION 4 — WHY ALPINE OWNS THE PAGE STATE
-// templUI provides the structure, but Alpine owns the changing view-model data
-// so the page can filter, paginate, and update without a full reload.
-function studentListPage(): StudentListPageState {
+function studentPage(): StudentPageState {
   return {
     students: [],
     loading: false,
@@ -119,10 +147,10 @@ function studentListPage(): StudentListPageState {
     pageSize: 5,
 
     get filteredStudents() {
-      const q = this.searchQuery.toLowerCase().trim();
+      const query = this.searchQuery.toLowerCase().trim();
       return this.students.filter((student) => {
         const name = `${student.first_name} ${student.last_name}`.toLowerCase();
-        return (!q || name.includes(q) || student.email.toLowerCase().includes(q))
+        return (!query || name.includes(query) || student.email.toLowerCase().includes(query))
           && (!this.selectedGrade || student.grade === this.selectedGrade);
       });
     },
@@ -144,8 +172,8 @@ function studentListPage(): StudentListPageState {
       try {
         const response = await fetch('/api/students');
         if (!response.ok) throw new Error('Failed to fetch students');
-        const payload = (await response.json()) as { data?: StudentRecord[] };
-        this.students = payload.data || [];
+        const payload = (await response.json()) as { data?: StudentApiRecord[] };
+        this.students = payload.data ?? [];
         this.currentPage = 1;
       } catch {
         this.errorMessage = "Couldn't load students";
@@ -154,11 +182,11 @@ function studentListPage(): StudentListPageState {
       }
     },
 
-    // SECTION 5 — WHY FILTERS AND PAGINATION LIVE HERE
+    // SECTION 3 — WHY FILTERS AND PAGINATION LIVE HERE
     // The UI is small, but the behavior is stateful. Keeping it in this object is
-    // the cleanest benchmark pattern for a page-level Alpine component.
+    // the benchmark pattern for Alpine page state.
     onGradeFilterChange(event: Event) {
-      const target = event.target as HTMLSelectElement | null;
+      const target = event.target as HTMLInputElement | HTMLSelectElement | null;
       this.selectedGrade = (target?.value ?? '') as Grade;
       this.currentPage = 1;
     },
@@ -166,6 +194,8 @@ function studentListPage(): StudentListPageState {
       this.searchQuery = '';
       this.selectedGrade = '';
       this.currentPage = 1;
+
+      resetTemplSelectboxValue(studentDialogFieldIds.gradeFilter);
     },
     goToNextPage() {
       if (this.currentPage < this.totalPages) this.currentPage += 1;
@@ -174,39 +204,28 @@ function studentListPage(): StudentListPageState {
       if (this.currentPage > 1) this.currentPage -= 1;
     },
 
-    // SECTION 6 — WHY DIALOGS USE DOM HELPERS
-    // templUI dialog.Content teleports to <body>. That is great for overlay UX,
-    // but it means we should not rely on Alpine scope crossing the portal.
-    // Direct DOM writes are simpler, explicit, and more reliable for this demo.
+    // SECTION 4 — WHY DIALOGS USE DOM HELPERS
+    // templUI dialog.Content teleports to <body>, so DOM writes are more reliable
+    // than trying to preserve Alpine scope through the portal.
     openCreateModal() {
-      setFormFields({ id: '', first_name: '', last_name: '', email: '', age: 18, grade: '' });
+      setFormFields(emptyStudentFormValues);
       window.tui?.dialog.open('student-form-dialog');
     },
 
     openEditModal(student) {
-      setFormFields({
-        id: student.id,
-        first_name: student.first_name,
-        last_name: student.last_name,
-        email: student.email,
-        age: student.age,
-        grade: student.grade,
-      });
+      setFormFields(toStudentFormValues(student));
       window.tui?.dialog.open('student-form-dialog');
     },
 
     openDeleteModal(student) {
-      const deleteId = document.getElementById('s-delete-id') as HTMLInputElement | null;
-      const deleteName = document.getElementById('s-delete-name');
-      if (deleteId) deleteId.value = student.id;
-      if (deleteName) deleteName.textContent = `${student.first_name} ${student.last_name}`;
+      setInputValue(studentDialogFieldIds.deleteId, student.id);
+      setTextContent(studentDialogFieldIds.deleteName, `${student.first_name} ${student.last_name}`);
       window.tui?.dialog.open('student-delete-dialog');
     },
 
-    // SECTION 7 — WHY TOASTS ARE INJECTED MANUALLY
-    // A tiny DOM insert is enough to hand off to templUI's toast observer. This
-    // keeps the demo benchmark honest: the page owns the state transition, and
-    // templUI owns the UI effect.
+    // SECTION 5 — WHY TOASTS ARE INJECTED MANUALLY
+    // A tiny DOM insert hands off to templUI's toast observer while keeping the
+    // page state transition explicit and easy to inspect.
     showToast(message: string, variant: ToastVariant = 'success') {
       const el = document.getElementById('toast-container');
       if (!el) return;
@@ -227,48 +246,86 @@ function studentListPage(): StudentListPageState {
   };
 }
 
-// SECTION 8 — WHY THE HELPERS ARE GLOBAL
-// These helpers are attached to window because dialog Content is teleported and
-// because the page intentionally keeps the bundle simple: one file to load, one
-// place to inspect, and no hidden dependency injection layer.
-function setFormFields(fields: StudentFormFields): void {
-  const entries: Array<[keyof StudentFormFields, string | number]> = [
-    ['id', fields.id],
-    ['first_name', fields.first_name],
-    ['last_name', fields.last_name],
-    ['email', fields.email],
-    ['age', fields.age],
-    ['grade', fields.grade],
+// SECTION 6 — GLOBAL HELPERS FOR DIALOGS
+// These helpers stay global because dialog Content is teleported and the bundle
+// is intentionally loaded for side effects.
+function setFormFields(fields: StudentFormValues): void {
+  const mappings: Array<[string, string | number]> = [
+    [studentFormFieldIds.id, fields.id],
+    [studentFormFieldIds.firstName, fields.firstName],
+    [studentFormFieldIds.lastName, fields.lastName],
+    [studentFormFieldIds.email, fields.email],
+    [studentFormFieldIds.age, fields.age],
+    [studentFormFieldIds.grade, fields.grade],
   ];
 
-  for (const [key, value] of entries) {
-    const domKey = `s-${String(key).replace(/_/g, '-')}`;
-    const el = document.getElementById(domKey) as HTMLInputElement | HTMLSelectElement | null;
-    if (el) {
-      el.value = String(value);
-    }
+  for (const [id, value] of mappings) {
+    setInputValue(id, value);
   }
 }
 
-// SECTION 9 — WHY SUBMIT IS HANDLED THIS WAY
-// The form submits through a single helper so the page can stay declarative in
-// templUI markup while still performing a real API request and emitting events.
+function toStudentFormValues(student: StudentApiRecord): StudentFormValues {
+  return {
+    id: student.id,
+    firstName: student.first_name,
+    lastName: student.last_name,
+    email: student.email,
+    age: student.age,
+    grade: student.grade,
+  };
+}
+
+function setInputValue(id: string, value: string | number): void {
+  const el = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null;
+  if (el) el.value = String(value);
+}
+
+function setTextContent(id: string, value: string): void {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function resetTemplSelectboxValue(triggerId: string): void {
+  const trigger = document.getElementById(triggerId) as HTMLButtonElement | null;
+  const hiddenValue = trigger?.querySelector('input[type="hidden"]') as HTMLInputElement | null;
+  if (!hiddenValue) return;
+
+  hiddenValue.value = '';
+  hiddenValue.dispatchEvent(new Event('input', { bubbles: true }));
+  hiddenValue.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function readInputValue(id: string): string {
+  return (document.getElementById(id) as HTMLInputElement | null)?.value ?? '';
+}
+
+function readStudentFormPayload(form: HTMLFormElement): StudentApiPayload {
+  const formData = new FormData(form);
+  const ageValue = formData.get('age');
+
+  return {
+    first_name: String(formData.get('first_name') ?? ''),
+    last_name: String(formData.get('last_name') ?? ''),
+    email: String(formData.get('email') ?? ''),
+    age: Number(ageValue) || 18,
+    grade: String(formData.get('grade') ?? '') as Grade,
+  };
+}
+
+function emitStudentEvent(type: 'student:saved' | 'student:error', message: string): void {
+  window.dispatchEvent(new CustomEvent(type, { detail: { message } }));
+}
+
+// SECTION 7 — WHY SUBMIT IS HANDLED THIS WAY
+// One helper keeps the markup declarative while still doing a real API request.
 async function studentFormSubmit(event: SubmitEvent): Promise<boolean> {
   event.preventDefault();
   const form = event.target as HTMLFormElement | null;
   if (!form) return false;
 
-  const fd = new FormData(form);
-  const id = (document.getElementById('s-student-id') as HTMLInputElement | null)?.value ?? '';
+  const id = readInputValue(studentFormFieldIds.id);
   const isEdit = id !== '';
-  const ageValue = fd.get('age');
-  const body = {
-    first_name: String(fd.get('first_name') ?? ''),
-    last_name: String(fd.get('last_name') ?? ''),
-    email: String(fd.get('email') ?? ''),
-    age: Number(ageValue) || 18,
-    grade: String(fd.get('grade') ?? ''),
-  };
+  const body = readStudentFormPayload(form);
 
   try {
     const response = await fetch(isEdit ? `/api/students/${id}` : '/api/students', {
@@ -278,47 +335,41 @@ async function studentFormSubmit(event: SubmitEvent): Promise<boolean> {
     });
     if (!response.ok) throw new Error('Failed to save student');
     window.tui?.dialog.close('student-form-dialog');
-    window.dispatchEvent(new CustomEvent('student:saved', {
-      detail: { message: isEdit ? 'Student updated ✓' : 'Student added ✓' },
-    }));
+    emitStudentEvent('student:saved', isEdit ? 'Student updated ✓' : 'Student added ✓');
   } catch {
-    window.dispatchEvent(new CustomEvent('student:error', {
-      detail: { message: isEdit ? 'Failed to update' : 'Failed to create' },
-    }));
+    emitStudentEvent('student:error', isEdit ? 'Failed to update' : 'Failed to create');
   }
   return false;
 }
 
-// SECTION 10 — WHY DELETE USES THE SAME PATTERN
-// Delete is intentionally parallel to save: same style, same state handoff, same
-// benchmark principle of keeping behavior predictable and easy to audit.
+// SECTION 8 — WHY DELETE USES THE SAME PATTERN
+// Delete mirrors save so the page behavior stays predictable and easy to audit.
 async function studentDeleteConfirm(): Promise<void> {
-  const id = (document.getElementById('s-delete-id') as HTMLInputElement | null)?.value ?? '';
+  const id = readInputValue(studentDialogFieldIds.deleteId);
   try {
     const response = await fetch(`/api/students/${id}`, { method: 'DELETE' });
     if (!response.ok) throw new Error('Failed to delete student');
     window.tui?.dialog.close('student-delete-dialog');
-    window.dispatchEvent(new CustomEvent('student:saved', { detail: { message: 'Student deleted ✓' } }));
+    emitStudentEvent('student:saved', 'Student deleted ✓');
   } catch {
-    window.dispatchEvent(new CustomEvent('student:error', { detail: { message: 'Failed to delete student' } }));
+    emitStudentEvent('student:error', 'Failed to delete student');
   }
 }
 
-// SECTION 11 — WHY REGISTRATION HAPPENS ON alpine:init
-// Alpine must know about the page data factory before it processes x-data.
+// SECTION 9 — ALPINE REGISTRATION
+// Alpine must know about the page factory before it processes x-data.
 document.addEventListener('alpine:init', () => {
-  Alpine.data('studentListPage', studentListPage);
+  Alpine.data('studentPage', studentPage);
 });
 
-// SECTION 12 — WHY THE GLOBAL EXPORTS REMAIN
-// These globals are the compatibility layer for inline handlers and for pages
-// that want to inspect the benchmark implementation directly from the console.
-window.studentListPage = studentListPage;
+// SECTION 10 — GLOBAL EXPORTS
+// These globals keep inline handlers and browser-console inspection working.
+window.studentPage = studentPage;
 window.setFormFields = setFormFields;
 window.studentFormSubmit = studentFormSubmit;
 window.studentDeleteConfirm = studentDeleteConfirm;
 
-// SECTION 13 — WHY THERE IS NO MODULE EXPORT API
-// The file exists for side effects and page wiring, so an empty export keeps the
-// module boundary explicit without encouraging direct imports elsewhere.
+// SECTION 11 — WHY THERE IS NO MODULE EXPORT API
+// This file exists for side effects and page wiring, so the empty export keeps
+// the module boundary explicit without encouraging direct imports elsewhere.
 export {};

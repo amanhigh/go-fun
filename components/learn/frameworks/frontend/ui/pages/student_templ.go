@@ -138,7 +138,7 @@ func StudentPage() templ.Component {
 }
 
 // StudentContent is the root Alpine.js component container.
-// x-data="studentListPage" uses the Alpine.data registration from student.ts.
+// x-data="studentPage" uses the Alpine.data registration from student.ts.
 // Alpine automatically calls init() on mount as a reserved lifecycle hook.
 // All child templates share this Alpine scope via the DOM tree.
 func StudentContent() templ.Component {
@@ -162,7 +162,7 @@ func StudentContent() templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div x-data=\"studentListPage\" class=\"space-y-6\" x-on:student:saved.window=\"afterSave($event.detail.message)\" x-on:student:error.window=\"setError($event.detail.message)\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div x-data=\"studentPage\" class=\"space-y-6\" x-on:student:saved.window=\"afterSave($event.detail.message)\" x-on:student:error.window=\"setError($event.detail.message)\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1466,7 +1466,7 @@ func StudentEmptyState() templ.Component {
 //     2. Open:        window.tui.dialog.open(id)  — templUI public API
 //     3. On submit:   studentFormSubmit(event) reads FormData, calls API, dispatches
 //                     'student:saved' / 'student:error' CustomEvent
-//     4. Parent div (x-data="studentListPage()") listens with x-on:student:saved.window
+//     4. Parent div (x-data="studentPage") listens with x-on:student:saved.window
 //        to refresh the list and show a toast
 //
 //   ESC, click-away, backdrop overlay, animations — all handled by templUI dialog.js.

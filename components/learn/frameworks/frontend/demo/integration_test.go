@@ -74,13 +74,13 @@ var _ = Describe("UI Server Integration Tests", func() {
 			})
 		})
 
-		Context("JavaScript Files", func() {
-			It("should serve JavaScript files with correct content type", func() {
-				req, w := util.CreateHTMLTestRequest("GET", "/assets/js/custom.js")
+		Context("TypeScript Source Files", func() {
+			It("should fetch the custom TypeScript source file", func() {
+				req, w := util.CreateHTMLTestRequest("GET", "/assets/js/custom.ts")
 				router.ServeHTTP(w, req)
 
 				Expect(w.Code).To(Equal(http.StatusOK))
-				Expect(w.Header().Get("Content-Type")).To(ContainSubstring("javascript"))
+				Expect(w.Body.String()).To(ContainSubstring("AlpineCounterElement"))
 			})
 		})
 

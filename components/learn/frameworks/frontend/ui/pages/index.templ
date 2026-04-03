@@ -6,9 +6,6 @@ import (
 	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/button"
 	"github.com/templui/templui/components/card"
-	"github.com/templui/templui/components/container"
-	"github.com/templui/templui/components/heading"
-	"github.com/templui/templui/components/link"
 )
 
 // IndexPage renders the main index page with links to all components
@@ -31,14 +28,14 @@ templ IndexPage(components []components.Component) {
 		</style>
 		
 		<div class="hero">
-			@container.Container() {
-				@heading.Heading(heading.Props{Level: 1}) { 🚀 Templ UI Component Demo }
+			<div class="mx-auto max-w-5xl px-6">
+				<h1>🚀 Templ UI Component Demo</h1>
 				<p>Explore a comprehensive collection of Templ components organized by complexity. Each level builds upon the previous one, from basic building blocks to advanced patterns.</p>
-			}
+			</div>
 		</div>
 
-		@container.Container() {
-			@heading.Heading(heading.Props{Level: 2}) { 📚 Learning Path }
+		<div class="mx-auto max-w-5xl px-6">
+			<h2>📚 Learning Path</h2>
 			<p>Choose your starting point based on your familiarity with Templ and UI components:</p>
 			
 			<div class="level-grid">
@@ -46,7 +43,7 @@ templ IndexPage(components []components.Component) {
 					@ComponentCard(comp)
 				}
 			</div>
-		}
+		</div>
 	}
 }
 
@@ -55,17 +52,17 @@ templ ComponentCard(comp components.Component) {
 	@card.Card(card.Props{Class: "h-full"}) {
 		@card.Header() {
 			<div class="flex justify-between items-center">
-				@link.Link(link.Props{URL: comp.URL(), Variant: link.VariantGhost}) {
-					@heading.Heading(heading.Props{Level: 3}) { comp.Name() }
+				@button.Button(button.Props{Variant: button.VariantLink, Href: comp.URL(), Class: "p-0 h-auto font-semibold"}) {
+					{ comp.Name() }
 				}
-				@badge.Badge(badge.Props{Variant: badge.VariantSuccess}) { Live Demo }
+				@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { Live Demo }
 			</div>
 		}
 		@card.Content() {
 			<p>{ comp.Description() }</p>
 		}
 		@card.Footer() {
-			@button.Button(button.Props{Variant: button.VariantOutline, As: "a", Href: comp.URL()}) {
+			@button.Button(button.Props{Variant: button.VariantOutline, Href: comp.URL()}) {
 				Open { comp.Name() } →
 			}
 		}
