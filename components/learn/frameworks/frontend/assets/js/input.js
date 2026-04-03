@@ -1,4 +1,5 @@
 // Input entry point for esbuild - imports and exports everything
-// Page-specific Alpine components (e.g. student.js) are loaded as separate
-// static script tags per page — global functions are tree-shaken by esbuild.
+// Shared JS and page-specific bundles that expose globals are imported here so
+// they end up in app.js and load automatically with the base layout.
 import './custom.js';
+import './student.js';

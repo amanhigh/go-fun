@@ -65,20 +65,18 @@ templ StudentPage() {
 			Tags:        []string{"Interactive", "CRUD", "Alpine.js"},
 		}) {
 			@StudentContent()
-			// student.js is a page-specific Alpine component loaded as a static file.
-			// It cannot be bundled into app.js: esbuild's iife format tree-shakes plain
-			// global functions that nothing imports. app.js is for shared utilities only.
-			<script src="/assets/js/student.js"></script>
+			// student.js is bundled into app.js so the page functions are available
+			// automatically through the shared frontend asset pipeline.
 		}
 	}
 }
 
 // StudentContent is the root Alpine.js component container.
-// x-data="studentListPage()" calls the plain function defined in student.js.
+// x-data="studentListPage" uses the Alpine.data registration from student.js.
 // Alpine automatically calls init() on mount as a reserved lifecycle hook.
 // All child templates share this Alpine scope via the DOM tree.
 templ StudentContent() {
-	<div x-data="studentListPage()" class="space-y-6"
+	<div x-data="studentListPage" class="space-y-6"
 		x-on:student:saved.window="afterSave($event.detail.message)"
 		x-on:student:error.window="setError($event.detail.message)">
 		@StudentFilterPanel()

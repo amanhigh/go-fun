@@ -25,6 +25,9 @@
  *   setFormFields()        — populates form inputs via getElementById before dialog open
  *   studentFormSubmit()    — reads FormData on submit, calls API, fires CustomEvent
  *   studentDeleteConfirm() — reads hidden ID, calls DELETE API, fires CustomEvent
+ *
+ * The functions are attached to window at the bottom so they can be bundled into
+ * app.js while still being callable from Alpine expressions and inline handlers.
  */
 
 // ── studentListPage ───────────────────────────────────────────────────────────
@@ -171,3 +174,12 @@ async function studentDeleteConfirm() {
     window.dispatchEvent(new CustomEvent('student:error', { detail: { message: 'Failed to delete student' } }));
   }
 }
+
+document.addEventListener('alpine:init', () => {
+  Alpine.data('studentListPage', studentListPage);
+});
+
+window.studentListPage = studentListPage;
+window.setFormFields = setFormFields;
+window.studentFormSubmit = studentFormSubmit;
+window.studentDeleteConfirm = studentDeleteConfirm;
