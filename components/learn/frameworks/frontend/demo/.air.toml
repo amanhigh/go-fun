@@ -2,7 +2,7 @@ root = "."
 tmp_dir = "/tmp/ui-demo"
 
 [build]
-  cmd = "$(go env GOPATH)/bin/templ generate && make -C ../../../../../ generate-js && cd .. && tailwindcss -i ./assets/css/input.css -o ./assets/css/app.css 2>/dev/null && cd demo && go build -o /tmp/ui-demo/main ."
+  cmd = "make -C ../../../../../ frontend-demo-build"
   entrypoint = "/tmp/ui-demo/main"
   delay = 1000
   include_ext = ["go", "templ", "css", "ts"]

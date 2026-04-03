@@ -26,6 +26,14 @@ TAILWINDCSS := tailwindcss
 AIR := github.com/air-verse/air@latest
 ESBUILD := esbuild
 
+FRONTEND_DIR := components/learn/frameworks/frontend
+FRONTEND_DEMO_DIR := $(FRONTEND_DIR)/demo
+FRONTEND_DEMO_URL := http://localhost:9090
+FRONTEND_CSS_INPUT := ./assets/css/input.css
+FRONTEND_CSS_OUTPUT := ./assets/css/app.css
+FRONTEND_JS_ENTRY := assets/js/input.ts
+FRONTEND_JS_OUTPUT := assets/js/app.js
+
 ### Variables
 BUILD_OPTS := CGO_ENABLED=0 GOARCH=amd64
 COMPONENT_DIR := ./components
@@ -93,9 +101,9 @@ test-slow: ## Run slow tests
 
 ui: ## Run UI Demo Server with hot reload
 	printf $(_TITLE) "Starting UI Demo Server"
-	printf $(_INFO) "Server" "http://localhost:9090"
+	printf $(_INFO) "Server" "$(FRONTEND_DEMO_URL)"
 	printf $(_DETAIL) "Note" "Auto-reloads on .go and .templ changes (manual browser refresh)"
-	cd components/learn/frameworks/frontend/demo && go run $(AIR) -c .air.toml
+	cd $(FRONTEND_DEMO_DIR) && go run $(AIR) -c .air.toml
 
 cover-analyse: combine-coverage
 	printf $(_TITLE) "Analysing Coverage Reports"
@@ -478,7 +486,7 @@ generate-templ:
 # Generate sources file for Tailwind CSS
 generate-css-sources:
 	@printf $(_TITLE) "Generate" "CSS Sources"
-	@cd components/learn/frameworks/frontend && \
+	@cd $(FRONTEND_DIR) && \
 	TEMPLUI_PATH="$$(go list -m -f '{{.Dir}}' github.com/templui/templui)" && \
 	( \
 		find . -name "*.templ" -type f | sed 's|^\./||' | while read -r file; do \
@@ -491,11 +499,11 @@ generate-css-sources:
 # Generate CSS using tailwindcss (assumes always available)
 generate-css: generate-css-sources
 	@printf $(_TITLE) "Generate" "CSS"
-	@cd components/learn/frameworks/frontend && $(TAILWINDCSS) build --input ./assets/css/input.css --output ./assets/css/app.css
+	@cd $(FRONTEND_DIR) && $(TAILWINDCSS) build --input $(FRONTEND_CSS_INPUT) --output $(FRONTEND_CSS_OUTPUT)
 
 generate-js:
 	@printf $(_TITLE) "Generate" "JavaScript"
-	@cd components/learn/frameworks/frontend && $(ESBUILD) assets/js/input.ts --bundle --outfile=assets/js/app.js --format=iife --target=es2020 || printf $(_WARN) "JS" "esbuild failed, skipping JS bundling"
+	@cd $(FRONTEND_DIR) && $(ESBUILD) $(FRONTEND_JS_ENTRY) --bundle --outfile=$(FRONTEND_JS_OUTPUT) --format=iife --target=es2020 || printf $(_WARN) "JS" "esbuild failed, skipping JS bundling"
 
 generate-ui: generate-css generate-js ## Generate UI assets (CSS & JS)
 

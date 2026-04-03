@@ -32,7 +32,7 @@ import (
 //   • templUI  — Go component library providing styled HTML elements
 //               (table, badge, skeleton, pagination, button, input, form, selectbox)
 //   • Alpine.js — Lightweight JS framework for reactive state and API calls
-//               All Alpine logic lives in /assets/js/student.js
+//               All Alpine logic lives in /assets/js/student.ts
 //   • Tailwind CSS — Utility-first CSS (generated via assets/css/app.css)
 //
 // FILE STRUCTURE (read top to bottom as a tutorial):
@@ -54,7 +54,7 @@ import (
 //   See SECTION 6 for full explanation.
 //
 // JS SEPARATION:
-//   All state, computed properties, and API calls are in assets/js/student.js.
+//   All state, computed properties, and API calls are in assets/js/student.ts.
 //   This file contains ZERO inline JavaScript — only HTML structure + Alpine attrs.
 
 // =============================================================================
@@ -111,7 +111,7 @@ func StudentPage() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "    <script src=\"/assets/js/student.js\"></script>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "  ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -138,7 +138,7 @@ func StudentPage() templ.Component {
 }
 
 // StudentContent is the root Alpine.js component container.
-// x-data="studentListPage()" calls the plain function defined in student.js.
+// x-data="studentListPage" uses the Alpine.data registration from student.ts.
 // Alpine automatically calls init() on mount as a reserved lifecycle hook.
 // All child templates share this Alpine scope via the DOM tree.
 func StudentContent() templ.Component {
@@ -162,7 +162,7 @@ func StudentContent() templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div x-data=\"studentListPage()\" class=\"space-y-6\" x-on:student:saved.window=\"afterSave($event.detail.message)\" x-on:student:error.window=\"setError($event.detail.message)\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div x-data=\"studentListPage\" class=\"space-y-6\" x-on:student:saved.window=\"afterSave($event.detail.message)\" x-on:student:error.window=\"setError($event.detail.message)\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -386,7 +386,7 @@ func StudentGradeOptions(placeholder string) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(placeholder)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/student.templ`, Line: 128, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/student.templ`, Line: 126, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -1086,7 +1086,7 @@ func StudentTable() templ.Component {
 
 // StudentPagination renders prev/page/next controls using templUI pagination components.
 // x-bind:disabled disables the buttons at the boundaries (first/last page).
-// x-on:click calls Alpine navigation methods defined in student.js.
+// x-on:click calls Alpine navigation methods defined in student.ts.
 func StudentPagination() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1462,7 +1462,7 @@ func StudentEmptyState() templ.Component {
 //   Moving a DOM node DESTROYS its Alpine scope, so NO Alpine directives on Content.
 //
 //   APPROACH: Standard HTML forms + global JS functions (no Alpine inside Content):
-//     1. Before open: student.js populates inputs via getElementById (setFormFields)
+//     1. Before open: student.ts populates inputs via getElementById (setFormFields)
 //     2. Open:        window.tui.dialog.open(id)  — templUI public API
 //     3. On submit:   studentFormSubmit(event) reads FormData, calls API, dispatches
 //                     'student:saved' / 'student:error' CustomEvent
@@ -1484,7 +1484,7 @@ func StudentEmptyState() templ.Component {
 //
 // SOLUTION: Use standard HTML form + JS FormData on submit (no x-model needed).
 //
-//	student.js populates input values via DOM APIs before opening (getElementById).
+//	student.ts populates input values via DOM APIs before opening (getElementById).
 //	On submit, reads FormData from the <form id="student-form"> element directly.
 //	This requires zero Alpine on the Content node — plain HTML form behaviour.
 func StudentFormModal() templ.Component {
@@ -1926,7 +1926,7 @@ func StudentTextField(fieldID string, labelText string, name string) templ.Compo
 				var templ_7745c5c3_Var67 string
 				templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(labelText)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/student.templ`, Line: 495, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/student.templ`, Line: 493, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 				if templ_7745c5c3_Err != nil {
@@ -1962,7 +1962,7 @@ func StudentTextField(fieldID string, labelText string, name string) templ.Compo
 }
 
 // StudentDeleteModal confirms before deleting.
-// student.js sets #s-delete-name text and #s-delete-id value before opening.
+// student.ts sets #s-delete-name text and #s-delete-id value before opening.
 // On confirm, studentDeleteConfirm() reads those DOM values directly.
 func StudentDeleteModal() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
