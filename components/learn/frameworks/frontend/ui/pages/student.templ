@@ -1,40 +1,9 @@
 //go:generate templ generate
 package pages
 
-// =============================================================================
-// STUDENT CRUD PAGE — templUI + Alpine.js Demo
-// =============================================================================
-//
-// This file is a self-contained tutorial demonstrating how to build a
-// professional CRUD interface using:
-//
-//   • templUI  — Go component library providing styled HTML elements
-//               (table, badge, skeleton, pagination, button, input, form, selectbox)
-//   • Alpine.js — Lightweight JS framework for reactive state and API calls
-//               All Alpine logic lives in /assets/js/student.ts
-//   • Tailwind CSS — Utility-first CSS (generated via assets/css/app.css)
-//
-// FILE STRUCTURE (read top to bottom as a tutorial):
-//
-//   SECTION 1 — Page Entry Point   : StudentPage(), StudentContent()
-//   SECTION 2 — Shared Data        : grade option helpers used by filter + form
-//   SECTION 3 — Filter & Toolbar   : search input, grade filter, action buttons
-//   SECTION 4 — Data Table         : table rows rendered by Alpine x-for
-//   SECTION 5 — States             : loading skeleton, error banner, empty state
-//   SECTION 6 — Modals             : create/edit form modal, delete confirm modal
-//
-// ALPINE ↔ TEMPL INTERACTION PATTERN:
-//
-//   templ renders static HTML with Alpine attributes (x-data, x-model, x-on, etc.)
-//   Alpine reads those attributes at runtime and makes the page reactive.
-//   templUI dialog.Dialog IS used for modals. dialog.Content teleports to <body>,
-//   so each dialog carries its own x-data scope (travels with the node). The parent
-//   Alpine component communicates via window CustomEvents dispatched before opening.
-//   See SECTION 6 for full explanation.
-//
-// JS SEPARATION:
-//   All state, computed properties, and API calls are in assets/js/student.ts.
-//   This file contains ZERO inline JavaScript — only HTML structure + Alpine attrs.
+// Student CRUD page — templUI components + Alpine.js state (student.ts) + Tailwind CSS.
+// templ renders static HTML with Alpine attrs; Alpine makes it reactive at runtime.
+// All state, API calls, and computed properties live in assets/js/student.ts.
 
 import (
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
@@ -55,12 +24,7 @@ import (
 	"github.com/templui/templui/components/tooltip"
 )
 
-// =============================================================================
-// SECTION 1 — PAGE ENTRY POINT
-// =============================================================================
-// StudentPage is the top-level entry point rendered by the server route /students.
-// It composes the base layout, page shell, content, and loads the Alpine.js file.
-
+// StudentPage is the top-level entry point for /students.
 templ StudentPage() {
 	@layout.Base("Student Management") {
 		@layout.Page(layout.PageProps{
@@ -70,76 +34,53 @@ templ StudentPage() {
 			Description: "Search, filter, create, edit, and delete students using the sample API endpoints.",
 			Tags:        []string{"Interactive", "CRUD", "Alpine.js"},
 		}) {
-			@StudentContent()
-			// student.ts is bundled into app.js so the page functions are available
-			// automatically through the shared frontend asset pipeline.
+			<div x-data="studentPage" class="space-y-6">
+				@StudentFilterPanel()
+				@StudentLoadingState()
+				@StudentErrorState()
+				@StudentTable()
+				@StudentEmptyState()
+				@StudentFormModal()
+				@StudentToasts()
+			</div>
 		}
 	}
 }
 
-// StudentContent is the root Alpine.js component container.
-// x-data="studentPage" uses the Alpine.data registration from student.ts.
-// Alpine automatically calls init() on mount as a reserved lifecycle hook.
-// All child templates share this Alpine scope via the DOM tree.
-templ StudentContent() {
-	<div x-data="studentPage" class="space-y-6"
-		x-on:student:saved.window="afterSave($event.detail.message, $event.detail.action); showToast($event.detail.message, 'success')"
-		x-on:student:error.window="setError($event.detail.message); showToast($event.detail.message, 'error')"
-		x-init="showToast = function(message, variant) {
-			const el = document.getElementById('toast-container');
-			if (!el) return;
-			const toastTemplate = document.getElementById('student-toast-template');
-			if (!toastTemplate) return;
-			const toastVariant = variant === 'error' ? 'destructive' : 'success';
-			const toastMarkup = toastTemplate.innerHTML.replace('__STUDENT_TOAST_MESSAGE__', message);
-			const fragment = document.createElement('div');
-			fragment.innerHTML = toastMarkup.trim();
-			const toastNode = fragment.firstElementChild;
-			if (!toastNode) return;
-			toastNode.dataset.variant = toastVariant;
-			el.replaceChildren(toastNode);
-		}">
-		@StudentFilterPanel()
-		@StudentLoadingState()
-		@StudentErrorState()
-		@StudentTable()
-		@StudentEmptyState()
-		// Dialog wrappers stay inside x-data scope; only their Content teleports to <body>.
-		// Communication parent->dialog uses CustomEvents (see student.ts + Section 6 comments).
-		@StudentFormModal()
-		// Toast target: student.ts clones the templUI toast template and injects it here.
-		<div id="toast-container"></div>
-		<template id="student-toast-template">
-			@toast.Toast(toast.Props{
-				Title:       "Student update",
-				Description: "__STUDENT_TOAST_MESSAGE__",
-				Variant:     toast.VariantSuccess,
-				Position:    toast.PositionTopRight,
-				Duration:    3000,
-				Dismissible: true,
-				Icon:        true,
-			})
-		</template>
-	</div>
+// StudentToasts provides hidden templUI toast templates cloned by showToast() in student.ts.
+// templUI handles the dismiss animation, indicator, and removal after the duration.
+// templUI Auto initializes Cloned Nodes.
+templ StudentToasts() {
+	<template id="student-success-toast-template">
+		@toast.Toast(toast.Props{
+			Title:         "__STUDENT_TOAST_TITLE__",
+			Description:   "__STUDENT_TOAST_MESSAGE__",
+			Variant:       toast.VariantSuccess,
+			Position:      toast.PositionBottomRight,
+			Duration:      4000,
+			Dismissible:   true,
+			ShowIndicator: true,
+			Icon:          true,
+			Class:         "z-[9999]",
+		})
+	</template>
+	<template id="student-error-toast-template">
+		@toast.Toast(toast.Props{
+			Title:         "__STUDENT_TOAST_TITLE__",
+			Description:   "__STUDENT_TOAST_MESSAGE__",
+			Variant:       toast.VariantError,
+			Position:      toast.PositionBottomRight,
+			Duration:      4000,
+			Dismissible:   true,
+			ShowIndicator: true,
+			Icon:          true,
+			Class:         "z-[9999]",
+		})
+	</template>
 }
 
-// =============================================================================
-// SECTION 2 — SHARED DATA: GRADE OPTIONS
-// =============================================================================
-// These helpers centralise the grade list used in both the filter selectbox
-// and the form modal. Two variants exist due to a key constraint:
-//
-//   StudentGradeSelectItems  — templUI selectbox.Item nodes (filter only)
-//   StudentGradeOptions      — native <option> nodes (form modal <select>)
-//
-// WHY two variants?
-//   templUI's selectbox component uses JS to power its dropdown. That JS moves
-//   the DOM node to a portal layer, breaking Alpine's x-model 2-way binding.
-//   So the form modal uses a plain native <select> with Tailwind styling instead,
-//   which works correctly with x-model inside Alpine's scope.
-
-// StudentGradeSelectItems renders items for the templUI selectbox grade filter.
-// When required=false an "All Grades" blank option is included (for the filter).
+// StudentGradeSelectItems: templUI selectbox items for the grade filter.
+// required=false adds an "All Grades" blank option.
 templ StudentGradeSelectItems(required bool) {
 	if !required {
 		@selectbox.Item(selectbox.ItemProps{Value: ""}) { All Grades }
@@ -150,8 +91,8 @@ templ StudentGradeSelectItems(required bool) {
 	@selectbox.Item(selectbox.ItemProps{Value: "Senior"}) { Senior }
 }
 
-// StudentGradeOptions renders native <option> elements for a plain <select>.
-// Used inside the form modal where x-model 2-way binding is required.
+// StudentGradeOptions: native <option> elements for the form modal <select>.
+// Plain <select> is used because templUI selectbox teleports its dropdown, breaking x-model.
 templ StudentGradeOptions(placeholder string) {
 	<option value="">{ placeholder }</option>
 	<option value="Freshman">Freshman</option>
@@ -160,16 +101,7 @@ templ StudentGradeOptions(placeholder string) {
 	<option value="Senior">Senior</option>
 }
 
-// =============================================================================
-// SECTION 3 — FILTER TOOLBAR
-// =============================================================================
-// The filter panel contains three interactive areas, each demonstrating a
-// different Alpine ↔ templUI integration pattern:
-//
-//   1. Search input  — templUI input.Input with x-model (2-way bind to searchQuery)
-//   2. Grade filter  — templUI selectbox (1-way: selectbox -> onGradeFilterChange())
-//   3. Action buttons — templUI button.Button with x-on:click handlers
-
+// StudentFilterPanel: search input (x-model), grade selectbox (x-on:change), and action buttons.
 templ StudentFilterPanel() {
 	@card.Card(card.Props{Class: "rounded-3xl border-border shadow-sm"}) {
 		@card.Header() {
@@ -195,8 +127,6 @@ templ StudentFilterPanel() {
 		}
 		@card.Content() {
 			<div class="flex flex-col gap-4 lg:flex-row lg:items-end">
-			// Search: x-model binds this input directly to Alpine's searchQuery state.
-			// Typing here immediately updates filteredStudents via Alpine's computed getter.
 			<div class="w-full lg:flex-1">
 				@label.Label(label.Props{For: "search-students", Class: "mb-2 inline-flex text-sm font-medium"}) {
 					Search Students
@@ -207,14 +137,11 @@ templ StudentFilterPanel() {
 					ID:          "search-students",
 					Class:       "w-full",
 					Attributes: templ.Attributes{
-						"x-model":    "searchQuery",   // 2-way bind: input <-> Alpine state
-						"x-on:input": "currentPage = 1", // reset pagination on new search
+						"x-model":    "searchQuery",
+						"x-on:input": "currentPage = 1",
 					},
 				})
 			</div>
-			// Grade filter: templUI selectbox (one-way).
-			// selectbox.Trigger fires a native change event when the user picks a grade.
-			// Alpine catches it via x-on:change -> onGradeFilterChange() in student.ts.
 			<div class="w-full sm:w-56">
 				@label.Label(label.Props{For: "grade-filter", Class: "mb-2 inline-flex text-sm font-medium"}) {
 					Grade
@@ -236,7 +163,6 @@ templ StudentFilterPanel() {
 					}
 				}
 			</div>
-			// Buttons: x-on:click calls Alpine methods defined in student.ts.
 			<div class="flex items-center gap-2">
 				@button.Button(button.Props{
 					Variant: button.VariantOutline,
@@ -268,14 +194,10 @@ templ StudentFilterPanel() {
 	}
 }
 
-// StudentActiveFilters shows live filter badges below the toolbar.
-// x-show hides the label and each badge unless the relevant filter is active.
-// x-text renders the current filter value inside the templUI Badge component.
+// StudentActiveFilters: live filter badges driven by Alpine x-show/x-text.
 templ StudentActiveFilters() {
 	<div class="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-		// x-show: only visible when at least one filter is active
 		<span x-show="searchQuery !== '' || selectedGrade !== ''">Active filters:</span>
-		// Each badge is hidden until its filter state is non-empty
 		@badge.Badge(badge.Props{
 			Variant: badge.VariantSecondary,
 			Attributes: templ.Attributes{
@@ -290,23 +212,11 @@ templ StudentActiveFilters() {
 				"x-text": "`📚 ${selectedGrade}`",
 			},
 		}) {}
-		// x-text dynamically updates the count as filters change
 		<span x-text="`Showing ${paginatedStudents.length} of ${filteredStudents.length} students`"></span>
 	</div>
 }
 
-// =============================================================================
-// SECTION 4 — DATA TABLE
-// =============================================================================
-// The table is the main data display. Key Alpine patterns here:
-//
-//   x-show="!loading"    — hides the table while data is being fetched
-//   x-for="student in paginatedStudents" — Alpine loop rendering one row per student
-//   x-text="student.name" — binds cell content to Alpine state
-//
-// templUI table components (table.Table, table.Header, table.Body, etc.) provide
-// the semantic HTML and styling. Alpine populates the rows at runtime.
-
+// StudentTable: templUI table with Alpine x-for rows; hidden while loading.
 templ StudentTable() {
 	<div x-show="!loading">
 		@card.Card(card.Props{Class: "rounded-3xl border-border shadow-sm overflow-hidden"}) {
@@ -331,8 +241,6 @@ templ StudentTable() {
 				}
 			}
 			@table.Body() {
-				// Alpine x-for loop: renders one table row per student in paginatedStudents.
-				// x-bind:key helps Alpine efficiently patch the DOM on data changes.
 				<template x-for="student in paginatedStudents" x-bind:key="student.id">
 					@table.Row() {
 						@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "student.id"}}) {}
@@ -389,12 +297,9 @@ templ StudentTable() {
 	</div>
 }
 
-// StudentPagination renders prev/page/next controls using templUI pagination components.
-// x-bind:disabled disables the buttons at the boundaries (first/last page).
-// x-on:click calls Alpine navigation methods defined in student.ts.
+// StudentPagination: prev/page/next controls; boundaries disabled via x-bind:disabled.
 templ StudentPagination() {
 	<div class="flex flex-col gap-3 border-t border-border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-		// x-text renders live count driven by Alpine computed getters startItem/endItem
 		<div class="text-muted-foreground" x-text="`Showing ${startItem}-${endItem} of ${filteredStudents.length}`"></div>
 		@pagination.Pagination() {
 			@pagination.Content() {
@@ -422,18 +327,7 @@ templ StudentPagination() {
 	</div>
 }
 
-// =============================================================================
-// SECTION 5 — CONDITIONAL STATES
-// =============================================================================
-// These three components represent mutually exclusive UI states driven by Alpine.
-// They use x-show to toggle visibility without removing elements from the DOM.
-//
-//   Loading  — visible while fetchStudents() is running (loading = true)
-//   Error    — visible when errorMessage is set by a failed API call
-//   Empty    — visible after load when no students match the active filters
-
-// StudentLoadingState uses templUI Skeleton components as animated placeholders.
-// x-show="loading" — Alpine shows this while the API fetch is in progress.
+// StudentLoadingState: skeleton placeholders shown while fetchStudents() is running.
 templ StudentLoadingState() {
 	<div x-show="loading" class="rounded-3xl border border-border bg-card p-6 shadow-sm">
 		<div class="space-y-3">
@@ -444,8 +338,7 @@ templ StudentLoadingState() {
 	</div>
 }
 
-// StudentErrorState is shown when errorMessage is non-empty.
-// x-text renders the error string; x-on:click retries the API call.
+// StudentErrorState: shown when errorMessage is non-empty; retry button re-fetches.
 templ StudentErrorState() {
 	<div x-show="errorMessage !== ''" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
 		<div class="flex items-center justify-between gap-3">
@@ -464,8 +357,7 @@ templ StudentErrorState() {
 	</div>
 }
 
-// StudentEmptyState is shown when loading is complete but no students match filters.
-// Both buttons call Alpine methods to recover (clear filters or open create modal).
+// StudentEmptyState: shown when loaded but no students match active filters.
 templ StudentEmptyState() {
 	<div x-show="!loading && filteredStudents.length === 0" class="rounded-3xl border border-dashed border-border bg-card px-6 py-14 text-center">
 		<div class="mx-auto max-w-sm space-y-3">
@@ -495,40 +387,9 @@ templ StudentEmptyState() {
 	</div>
 }
 
-// =============================================================================
-// SECTION 6 — MODALS (CREATE / EDIT / DELETE)
-// =============================================================================
-// Uses templUI dialog.Dialog for all modals.
-//
-// HOW ALPINE + templUI dialog.Dialog WORKS TOGETHER:
-//   dialog.Dialog wrapper stays in-place in the DOM — Alpine scope intact.
-//   dialog.Content is teleported to #tui-dialog-layer-root at <body> by dialog.js.
-//   Moving a DOM node DESTROYS its Alpine scope, so NO Alpine directives on Content.
-//
-//   APPROACH: Standard HTML forms + global JS functions (no Alpine inside Content):
-//     1. Before open: student.ts populates inputs via getElementById (setFormFields)
-//     2. Open:        window.tui.dialog.open(id)  — templUI public API
-//     3. On submit:   studentFormSubmit(event) reads FormData, calls API, dispatches
-//                     'student:saved' / 'student:error' CustomEvent
-//     4. Parent div (x-data="studentPage") listens with x-on:student:saved.window
-//        to refresh the list and show a toast
-//
-//   ESC, click-away, backdrop overlay, animations — all handled by templUI dialog.js.
-
-// StudentFormModal handles both Create and Edit workflows.
-//
-// WHY x-data on dialog.Dialog wrapper, NOT on dialog.Content:
-//   dialog.js teleports Content to <body>. Moving a DOM node DESTROYS its Alpine
-//   scope — x-data on Content is re-initialized after teleport with blank state,
-//   so the CustomEvent payload is lost. The Dialog wrapper div never moves, so
-//   x-data on it is stable. Alpine does NOT walk across the portal boundary into
-//   teleported Content, so x-model on inputs inside Content still won't see the
-//   wrapper scope.
-//
-// SOLUTION: Use standard HTML form + JS FormData on submit (no x-model needed).
-//   student.ts populates input values via DOM APIs before opening (getElementById).
-//   On submit, reads FormData from the <form id="student-form"> element directly.
-//   This requires zero Alpine on the Content node — plain HTML form behaviour.
+// StudentFormModal: shared create/edit dialog.
+// dialog.Content teleports to <body>, so Alpine scope doesn't cross the portal.
+// student.ts populates fields via DOM before opening; submit reads FormData directly.
 templ StudentFormModal() {
 	@dialog.Dialog(dialog.Props{ID: "student-form-dialog"}) {
 		@dialog.Content(dialog.ContentProps{HideCloseButton: true}) {
@@ -575,8 +436,7 @@ templ StudentFormModal() {
 	}
 }
 
-// StudentTextField renders a labelled templUI text input with a HTML name attr.
-// name attr allows FormData.get(name) on submit without Alpine x-model.
+// StudentTextField: labelled text input; name attr enables FormData.get() on submit.
 templ StudentTextField(fieldID string, labelText string, name string) {
 	@form.Item() {
 		@form.Label(form.LabelProps{For: fieldID}) { { labelText } }
