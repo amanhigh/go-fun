@@ -62,6 +62,7 @@ func (h *StudentHandler) getStudentByID(c *gin.Context) {
 // createStudent creates a new student
 func (h *StudentHandler) createStudent(c *gin.Context) {
 	var student Student
+	// FIXME: Add Server Side Validation for one field.
 	if err := c.ShouldBindJSON(&student); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
