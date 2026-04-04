@@ -22,8 +22,25 @@
 
 type Grade = '' | 'Freshman' | 'Sophomore' | 'Junior' | 'Senior';
 // One-line purpose: the page only allows these grades in filters and forms.
-type ToastVariant = 'success' | 'destructive';
-// One-line purpose: toast variants stay aligned with templUI's supported styles.
+type ToastVariant = 'success' | 'error';
+// One-line purpose: page-level toast variants are mapped to templUI variants.
+
+type StudentMutationAction = 'create' | 'update' | 'delete';
+// One-line purpose: submit behavior changes based on whether the action adds, edits, or removes a student.
+
+interface StudentErrorResponse {
+  error?: string;
+}
+
+interface StudentMutationEventDetail {
+  message: string;
+  action?: StudentMutationAction;
+}
+
+
+interface FetchStudentsOptions {
+  page?: number | 'last';
+}
 
 interface StudentApiRecord {
   id: string;
@@ -67,6 +84,12 @@ interface StudentPaginationState {
   pageSize: number;
 }
 
+interface StudentDeleteState {
+  pendingDeleteId: string;
+  pendingDeleteSeconds: number;
+  pendingDeleteTimer: number | null;
+}
+
 const studentFormFieldIds = {
   id: 's-student-id',
   firstName: 's-first-name',
@@ -77,8 +100,6 @@ const studentFormFieldIds = {
 } as const;
 
 const studentDialogFieldIds = {
-  deleteId: 's-delete-id',
-  deleteName: 's-delete-name',
   gradeFilter: 'grade-filter',
 } as const;
 
@@ -91,23 +112,25 @@ const emptyStudentFormValues: StudentFormValues = {
   grade: '',
 };
 
-interface StudentPageState extends StudentDataState, StudentFilterState, StudentPaginationState {
+interface StudentPageState extends StudentDataState, StudentFilterState, StudentPaginationState, StudentDeleteState {
   readonly filteredStudents: StudentApiRecord[];
   readonly totalPages: number;
   readonly paginatedStudents: StudentApiRecord[];
   readonly startItem: number;
   readonly endItem: number;
   init(): void;
-  fetchStudents(this: StudentPageState): Promise<void>;
+  fetchStudents(this: StudentPageState, options?: FetchStudentsOptions): Promise<void>;
   onGradeFilterChange(this: StudentPageState, event: Event): void;
   clearFilters(this: StudentPageState): void;
   goToNextPage(this: StudentPageState): void;
   goToPreviousPage(this: StudentPageState): void;
   openCreateModal(this: StudentPageState): void;
   openEditModal(this: StudentPageState, student: StudentApiRecord): void;
-  openDeleteModal(this: StudentPageState, student: StudentApiRecord): void;
-  showToast(this: StudentPageState, message: string, variant?: ToastVariant): void;
-  afterSave(this: StudentPageState, message: string): Promise<void>;
+  requestDelete(this: StudentPageState, student: StudentApiRecord): void;
+  undoDelete(this: StudentPageState): void;
+  confirmPendingDelete(this: StudentPageState): Promise<void>;
+  clearPendingDelete(this: StudentPageState): void;
+  afterSave(this: StudentPageState, message: string, action?: StudentMutationAction): Promise<void>;
   setError(this: StudentPageState, message: string): void;
 }
 
@@ -128,7 +151,6 @@ declare global {
     studentPage: typeof studentPage;
     setFormFields: typeof setFormFields;
     studentFormSubmit: typeof studentFormSubmit;
-    studentDeleteConfirm: typeof studentDeleteConfirm;
   }
 
   const Alpine: {
@@ -144,7 +166,10 @@ function studentPage(): StudentPageState {
     searchQuery: '',
     selectedGrade: '',
     currentPage: 1,
-    pageSize: 5,
+    pageSize: 4,
+    pendingDeleteId: '',
+    pendingDeleteSeconds: 0,
+    pendingDeleteTimer: null,
 
     get filteredStudents() {
       const query = this.searchQuery.toLowerCase().trim();
@@ -166,7 +191,7 @@ function studentPage(): StudentPageState {
       void this.fetchStudents();
     },
 
-    async fetchStudents() {
+    async fetchStudents(options?: FetchStudentsOptions) {
       this.loading = true;
       this.errorMessage = '';
       try {
@@ -174,7 +199,9 @@ function studentPage(): StudentPageState {
         if (!response.ok) throw new Error('Failed to fetch students');
         const payload = (await response.json()) as { data?: StudentApiRecord[] };
         this.students = payload.data ?? [];
-        this.currentPage = 1;
+        const requestedPage = options?.page ?? this.currentPage;
+        const targetPage = requestedPage === 'last' ? this.totalPages : requestedPage;
+        this.currentPage = Math.min(Math.max(targetPage, 1), this.totalPages);
       } catch {
         this.errorMessage = "Couldn't load students";
       } finally {
@@ -217,28 +244,53 @@ function studentPage(): StudentPageState {
       window.tui?.dialog.open('student-form-dialog');
     },
 
-    openDeleteModal(student) {
-      setInputValue(studentDialogFieldIds.deleteId, student.id);
-      setTextContent(studentDialogFieldIds.deleteName, `${student.first_name} ${student.last_name}`);
-      window.tui?.dialog.open('student-delete-dialog');
+    requestDelete(student) {
+      this.clearPendingDelete();
+      this.pendingDeleteId = student.id;
+      this.pendingDeleteSeconds = 3;
+
+      this.pendingDeleteTimer = window.setInterval(() => {
+        if (this.pendingDeleteSeconds <= 1) {
+          void this.confirmPendingDelete();
+          return;
+        }
+        this.pendingDeleteSeconds -= 1;
+      }, 1000);
     },
 
-    // SECTION 5 — WHY TOASTS ARE INJECTED MANUALLY
-    // A tiny DOM insert hands off to templUI's toast observer while keeping the
-    // page state transition explicit and easy to inspect.
-    showToast(message: string, variant: ToastVariant = 'success') {
-      const el = document.getElementById('toast-container');
-      if (!el) return;
-      el.innerHTML = `<div data-tui-toast data-tui-toast-duration="3000" data-position="top-right" data-variant="${variant}">
-        <div class="w-full bg-popover text-popover-foreground rounded-lg shadow-xs border pt-5 pb-4 px-4 flex items-center gap-3">
-          <span class="flex-1 text-sm font-semibold">${message}</span>
-        </div>
-      </div>`;
+    undoDelete() {
+      this.clearPendingDelete();
     },
 
-    async afterSave(message: string) {
-      this.showToast(message, 'success');
-      await this.fetchStudents();
+    async confirmPendingDelete() {
+      const id = this.pendingDeleteId;
+      if (!id) return;
+
+      this.clearPendingDelete();
+
+      try {
+        const response = await fetch(`/api/students/${id}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Failed to delete student');
+        emitStudentEvent('student:saved', 'Student deleted ✓', 'delete');
+      } catch {
+        emitStudentEvent('student:error', 'Failed to delete student');
+      }
+    },
+
+    clearPendingDelete() {
+      if (this.pendingDeleteTimer !== null) {
+        window.clearInterval(this.pendingDeleteTimer);
+      }
+      this.pendingDeleteId = '';
+      this.pendingDeleteSeconds = 0;
+      this.pendingDeleteTimer = null;
+    },
+
+    // SECTION 5 — WHY THERE IS NO TOAST LOGIC HERE
+    // Toasts are rendered by templUI templates; this file only emits business events.
+
+    async afterSave(message: string, action: StudentMutationAction = 'update') {
+      await this.fetchStudents({ page: action === 'create' ? 'last' : this.currentPage });
     },
     setError(message: string) {
       this.errorMessage = message;
@@ -280,11 +332,6 @@ function setInputValue(id: string, value: string | number): void {
   if (el) el.value = String(value);
 }
 
-function setTextContent(id: string, value: string): void {
-  const el = document.getElementById(id);
-  if (el) el.textContent = value;
-}
-
 function resetTemplSelectboxValue(triggerId: string): void {
   const trigger = document.getElementById(triggerId) as HTMLButtonElement | null;
   const hiddenValue = trigger?.querySelector('input[type="hidden"]') as HTMLInputElement | null;
@@ -301,19 +348,34 @@ function readInputValue(id: string): string {
 
 function readStudentFormPayload(form: HTMLFormElement): StudentApiPayload {
   const formData = new FormData(form);
-  const ageValue = formData.get('age');
+  const ageValue = String(formData.get('age') ?? '').trim();
+  const ageNumber = Number(ageValue);
 
   return {
     first_name: String(formData.get('first_name') ?? ''),
     last_name: String(formData.get('last_name') ?? ''),
     email: String(formData.get('email') ?? ''),
-    age: Number(ageValue) || 18,
+    age: Number.isFinite(ageNumber) ? ageNumber : 0,
     grade: String(formData.get('grade') ?? '') as Grade,
   };
 }
 
-function emitStudentEvent(type: 'student:saved' | 'student:error', message: string): void {
-  window.dispatchEvent(new CustomEvent(type, { detail: { message } }));
+async function readErrorMessage(response: Response, fallback: string): Promise<string> {
+  try {
+    const payload = (await response.json()) as StudentErrorResponse;
+    return payload.error || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function emitStudentEvent(
+  type: 'student:saved' | 'student:error',
+  message: string,
+  action?: StudentMutationAction,
+): void {
+  const detail: StudentMutationEventDetail = action ? { message, action } : { message };
+  window.dispatchEvent(new CustomEvent(type, { detail }));
 }
 
 // SECTION 7 — WHY SUBMIT IS HANDLED THIS WAY
@@ -333,27 +395,19 @@ async function studentFormSubmit(event: SubmitEvent): Promise<boolean> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    if (!response.ok) throw new Error('Failed to save student');
+    if (!response.ok) {
+      const fallback = isEdit ? 'Failed to update student' : 'Failed to create student';
+      const errorMessage = await readErrorMessage(response, fallback);
+      throw new Error(errorMessage);
+    }
     window.tui?.dialog.close('student-form-dialog');
-    emitStudentEvent('student:saved', isEdit ? 'Student updated ✓' : 'Student added ✓');
-  } catch {
-    emitStudentEvent('student:error', isEdit ? 'Failed to update' : 'Failed to create');
+    emitStudentEvent('student:saved', isEdit ? 'Student updated ✓' : 'Student added ✓', isEdit ? 'update' : 'create');
+  } catch (error) {
+    const fallback = isEdit ? 'Failed to update student' : 'Failed to create student';
+    const message = error instanceof Error ? error.message : fallback;
+    emitStudentEvent('student:error', message);
   }
   return false;
-}
-
-// SECTION 8 — WHY DELETE USES THE SAME PATTERN
-// Delete mirrors save so the page behavior stays predictable and easy to audit.
-async function studentDeleteConfirm(): Promise<void> {
-  const id = readInputValue(studentDialogFieldIds.deleteId);
-  try {
-    const response = await fetch(`/api/students/${id}`, { method: 'DELETE' });
-    if (!response.ok) throw new Error('Failed to delete student');
-    window.tui?.dialog.close('student-delete-dialog');
-    emitStudentEvent('student:saved', 'Student deleted ✓');
-  } catch {
-    emitStudentEvent('student:error', 'Failed to delete student');
-  }
 }
 
 // SECTION 9 — ALPINE REGISTRATION
@@ -367,7 +421,6 @@ document.addEventListener('alpine:init', () => {
 window.studentPage = studentPage;
 window.setFormFields = setFormFields;
 window.studentFormSubmit = studentFormSubmit;
-window.studentDeleteConfirm = studentDeleteConfirm;
 
 // SECTION 11 — WHY THERE IS NO MODULE EXPORT API
 // This file exists for side effects and page wiring, so the empty export keeps

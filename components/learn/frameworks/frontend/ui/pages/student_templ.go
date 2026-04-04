@@ -168,7 +168,7 @@ func StudentContent() templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div x-data=\"studentPage\" class=\"space-y-6\" x-on:student:saved.window=\"afterSave($event.detail.message, $event.detail.action)\" x-on:student:error.window=\"setError($event.detail.message)\" x-on:student:saved.window=\"showToast($event.detail.message, 'success')\" x-on:student:error.window=\"showToast($event.detail.message, 'error')\" x-init=\"showToast = function(message, variant) {\n\t\t\tconst el = document.getElementById('toast-container');\n\t\t\tif (!el) return;\n\t\t\tconst toastTemplate = document.getElementById('student-toast-template');\n\t\t\tif (!toastTemplate) return;\n\t\t\tconst toastVariant = variant === 'error' ? 'destructive' : 'success';\n\t\t\tconst toastMarkup = toastTemplate.innerHTML.replace('__STUDENT_TOAST_MESSAGE__', message);\n\t\t\tconst fragment = document.createElement('div');\n\t\t\tfragment.innerHTML = toastMarkup.trim();\n\t\t\tconst toastNode = fragment.firstElementChild;\n\t\t\tif (!toastNode) return;\n\t\t\ttoastNode.dataset.variant = toastVariant;\n\t\t\tel.replaceChildren(toastNode);\n\t\t}\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div x-data=\"studentPage\" class=\"space-y-6\" x-on:student:saved.window=\"afterSave($event.detail.message, $event.detail.action); showToast($event.detail.message, 'success')\" x-on:student:error.window=\"setError($event.detail.message); showToast($event.detail.message, 'error')\" x-init=\"showToast = function(message, variant) {\n\t\t\tconst el = document.getElementById('toast-container');\n\t\t\tif (!el) return;\n\t\t\tconst toastTemplate = document.getElementById('student-toast-template');\n\t\t\tif (!toastTemplate) return;\n\t\t\tconst toastVariant = variant === 'error' ? 'destructive' : 'success';\n\t\t\tconst toastMarkup = toastTemplate.innerHTML.replace('__STUDENT_TOAST_MESSAGE__', message);\n\t\t\tconst fragment = document.createElement('div');\n\t\t\tfragment.innerHTML = toastMarkup.trim();\n\t\t\tconst toastNode = fragment.firstElementChild;\n\t\t\tif (!toastNode) return;\n\t\t\ttoastNode.dataset.variant = toastVariant;\n\t\t\tel.replaceChildren(toastNode);\n\t\t}\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -404,7 +404,7 @@ func StudentGradeOptions(placeholder string) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(placeholder)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/student.templ`, Line: 158, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/student.templ`, Line: 156, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -476,7 +476,7 @@ func StudentFilterPanel() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = icon.Icon("filter")(icon.Props{Class: "h-4 w-4"}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = icon.Funnel(icon.Props{Class: "h-4 w-4"}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -2254,7 +2254,7 @@ func StudentTextField(fieldID string, labelText string, name string) templ.Compo
 				var templ_7745c5c3_Var79 string
 				templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.JoinStringErrs(labelText)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/student.templ`, Line: 584, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/student.templ`, Line: 582, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var79))
 				if templ_7745c5c3_Err != nil {

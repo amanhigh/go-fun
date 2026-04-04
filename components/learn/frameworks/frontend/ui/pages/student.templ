@@ -83,10 +83,8 @@ templ StudentPage() {
 // All child templates share this Alpine scope via the DOM tree.
 templ StudentContent() {
 	<div x-data="studentPage" class="space-y-6"
-		x-on:student:saved.window="afterSave($event.detail.message, $event.detail.action)"
-		x-on:student:error.window="setError($event.detail.message)"
-		x-on:student:saved.window="showToast($event.detail.message, 'success')"
-		x-on:student:error.window="showToast($event.detail.message, 'error')"
+		x-on:student:saved.window="afterSave($event.detail.message, $event.detail.action); showToast($event.detail.message, 'success')"
+		x-on:student:error.window="setError($event.detail.message); showToast($event.detail.message, 'error')"
 		x-init="showToast = function(message, variant) {
 			const el = document.getElementById('toast-container');
 			if (!el) return;
@@ -178,7 +176,7 @@ templ StudentFilterPanel() {
 			<div class="flex items-start justify-between gap-3">
 				<div>
 					<h3 class="text-lg font-semibold inline-flex items-center gap-2">
-						@icon.Icon("filter")(icon.Props{Class: "h-4 w-4"})
+						@icon.Funnel(icon.Props{Class: "h-4 w-4"})
 						<span>Student filters</span>
 					</h3>
 					<p class="text-sm text-muted-foreground">Use search and grade filters, then add or manage records.</p>

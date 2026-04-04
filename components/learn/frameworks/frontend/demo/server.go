@@ -20,7 +20,8 @@ func CreateComponents() []components.Component {
 
 // SetupRoutes configures all routes on the given gin engine with provided components
 func SetupRoutes(r *gin.Engine, components []components.Component) {
-	// Serve static files (JS, CSS, images) - path relative to demo directory
+	// Serve static files (JS, CSS, images) from the frontend assets directory.
+	// Air runs the binary with CWD = demo/, so ../assets is the correct relative path.
 	r.Static("/assets", "../assets")
 
 	// Serve templui JavaScript files using embedded assets
