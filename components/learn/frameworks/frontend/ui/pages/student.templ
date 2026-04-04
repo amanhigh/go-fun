@@ -40,13 +40,19 @@ import (
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
 	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/button"
+	"github.com/templui/templui/components/card"
 	"github.com/templui/templui/components/dialog"
+	"github.com/templui/templui/components/icon"
 	"github.com/templui/templui/components/form"
+	"github.com/templui/templui/components/label"
 	"github.com/templui/templui/components/input"
 	"github.com/templui/templui/components/pagination"
+	"github.com/templui/templui/components/separator"
 	"github.com/templui/templui/components/selectbox"
 	"github.com/templui/templui/components/skeleton"
+	"github.com/templui/templui/components/toast"
 	"github.com/templui/templui/components/table"
+	"github.com/templui/templui/components/tooltip"
 )
 
 // =============================================================================
@@ -79,6 +85,8 @@ templ StudentContent() {
 	<div x-data="studentPage" class="space-y-6"
 		x-on:student:saved.window="afterSave($event.detail.message)"
 		x-on:student:error.window="setError($event.detail.message)">
+		@StudentShowcasePanel()
+		@separator.Separator(separator.Props{ID: "student-page-separator", Class: "my-2"})
 		@StudentFilterPanel()
 		@StudentLoadingState()
 		@StudentErrorState()
@@ -90,6 +98,147 @@ templ StudentContent() {
 		@StudentDeleteModal()
 		// Toast target: student.ts injects a minimal [data-tui-toast] node here.
 		<div id="toast-container"></div>
+	</div>
+}
+
+// StudentShowcasePanel highlights templUI building blocks used on this page.
+templ StudentShowcasePanel() {
+	<div class="grid gap-4 lg:grid-cols-3">
+		@card.Card(card.Props{Class: "h-full overflow-hidden"}) {
+			@card.Header() {
+				<div class="flex items-center justify-between gap-3">
+					<div class="flex items-center gap-2">
+						@icon.LayoutGrid(icon.Props{Class: "size-5 text-emerald-600"})
+						<h3 class="text-lg font-semibold">Student UI toolkit</h3>
+					</div>
+					@tooltip.Tooltip(tooltip.Props{ID: "student-toolkit-tooltip"}) {
+						@tooltip.Trigger(tooltip.TriggerProps{ID: "student-toolkit-trigger", Class: "inline-flex"}) {
+							@icon.CircleQuestionMark(icon.Props{Class: "size-4 text-muted-foreground"})
+						}
+						@tooltip.Content(tooltip.ContentProps{Class: "max-w-xs text-sm"}) {
+							Cards, separators, icons, tooltips, and toasts all work together here.
+						}
+					}
+				</div>
+			}
+			@card.Content() {
+				<p class="text-sm text-muted-foreground">
+					This demo uses templUI primitives to structure the student experience without losing the Alpine.js interactions.
+				</p>
+				@separator.Separator(separator.Props{ID: "student-toolkit-content-separator", Class: "my-4"})
+				<div class="space-y-3">
+					<div class="flex items-start gap-3">
+						@icon.Sparkles(icon.Props{Class: "mt-0.5 size-4 text-primary"})
+						<div>
+							<p class="font-medium">Card layout</p>
+							<p class="text-sm text-muted-foreground">Keeps page sections visually consistent and easy to scan.</p>
+						</div>
+					</div>
+					<div class="flex items-start gap-3">
+						@icon.SeparatorHorizontal(icon.Props{Class: "mt-0.5 size-4 text-primary"})
+						<div>
+							<p class="font-medium">Separator</p>
+							<p class="text-sm text-muted-foreground">Creates a clear boundary before the interactive CRUD controls.</p>
+						</div>
+					</div>
+				</div>
+			}
+		}
+
+		@card.Card(card.Props{Class: "h-full overflow-hidden"}) {
+			@card.Header() {
+				<div class="flex items-center gap-2">
+					@icon.Bell(icon.Props{Class: "size-5 text-sky-600"})
+					<h3 class="text-lg font-semibold">Toast composer</h3>
+				</div>
+			}
+			@card.Content() {
+				<p class="text-sm text-muted-foreground">
+					templUI toast is already loaded by the base layout; this panel shows a label-driven input plus a live notification trigger.
+				</p>
+				@separator.Separator(separator.Props{ID: "student-toast-composer-separator", Class: "my-4"})
+				<div class="grid gap-3">
+					<div class="grid gap-2">
+						@label.Label(label.Props{For: "student-toast-message", Class: "text-sm font-medium"}) {
+							Toast message
+						}
+						@input.Input(input.Props{
+							ID:    "student-toast-message",
+							Type:  input.TypeText,
+							Value: "TemplUI toast demo: student tools are ready.",
+							Class: "w-full",
+						})
+					</div>
+					<p class="text-sm text-muted-foreground">
+						The button below reads the input value and forwards it to the shared toast pipeline.
+					</p>
+					@toast.Toast(toast.Props{
+						Title:       "Toast component preview",
+						Description: "This is the templUI toast component rendered directly in the student demo.",
+						Variant:     toast.VariantInfo,
+						Position:    toast.PositionBottomRight,
+						Duration:    5000,
+						Dismissible: true,
+						Icon:        true,
+					})
+				</div>
+			}
+			@card.Footer() {
+				@button.Button(button.Props{
+					Type: button.TypeButton,
+					Attributes: templ.Attributes{
+						"x-on:click": "showToast(document.getElementById('student-toast-message').value || 'TemplUI toast demo: student tools are ready.', 'success')",
+					},
+				}) {
+					<span class="inline-flex items-center gap-2">
+						@icon.Sparkles(icon.Props{Class: "size-4"})
+						Show Toast
+					</span>
+				}
+			}
+		}
+
+		@card.Card(card.Props{Class: "h-full overflow-hidden"}) {
+			@card.Header() {
+				<div class="flex items-center justify-between gap-3">
+					<div class="flex items-center gap-2">
+						@icon.Bell(icon.Props{Class: "size-5 text-amber-600"})
+						<h3 class="text-lg font-semibold">Toast and tooltip</h3>
+					</div>
+					@tooltip.Tooltip(tooltip.Props{ID: "student-toast-tooltip"}) {
+						@tooltip.Trigger(tooltip.TriggerProps{ID: "student-toast-trigger", Class: "inline-flex"}) {
+							@icon.Info(icon.Props{Class: "size-4 text-muted-foreground"})
+						}
+						@tooltip.Content(tooltip.ContentProps{Class: "max-w-xs text-sm"}) {
+							The toast system is already loaded by the base layout and driven by student.ts.
+						}
+					}
+				</div>
+			}
+			@card.Content() {
+				<p class="text-sm text-muted-foreground">
+					Use the button below to fire a live templUI toast and verify the shared notification pipeline.
+				</p>
+				@separator.Separator(separator.Props{ID: "student-toast-content-separator", Class: "my-4"})
+				<div class="rounded-2xl border border-dashed border-border bg-muted/20 p-4">
+					<p class="text-sm font-medium">Toast preview</p>
+					<p class="mt-1 text-sm text-muted-foreground">A toast is injected into <code>#toast-container</code> and rendered by templUI.</p>
+				</div>
+			}
+			@card.Footer() {
+				@button.Button(button.Props{
+					Type: button.TypeButton,
+					Attributes: templ.Attributes{
+						"x-on:click": "showToast(`TemplUI toast demo: student tools are ready.`, 'success')",
+					},
+				}) {
+					<span class="inline-flex items-center gap-2">
+						@icon.Sparkles(icon.Props{Class: "size-4"})
+						Show Toast
+					</span>
+				}
+			}
+		}
 	</div>
 }
 

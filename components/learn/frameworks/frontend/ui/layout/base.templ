@@ -4,6 +4,7 @@ import (
 	"github.com/templui/templui/components/dialog"
 	"github.com/templui/templui/components/selectbox"
 	"github.com/templui/templui/components/toast"
+	"github.com/templui/templui/components/tooltip"
 )
 
 templ Base(title string) {
@@ -18,6 +19,7 @@ templ Base(title string) {
 			@dialog.Script()
 			@selectbox.Script()
 			@toast.Script()
+			@tooltip.Script()
 		</head>
 		<body class="h-full bg-background text-foreground">
 			<div class="min-h-screen flex flex-col">
