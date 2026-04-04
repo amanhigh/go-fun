@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -22,7 +23,7 @@ type Student struct {
 
 // StudentService interface for student operations
 type StudentService interface {
-	GetAllStudents() []Student
+	GetAllStudents(offset, limit int, searchQuery, grade string) ([]Student, int)
 	GetStudentByID(id string) *Student
 	CreateStudent(student Student) *Student
 	UpdateStudent(id string, student Student) *Student
@@ -74,10 +75,57 @@ func sampleStudents() []Student {
 	}
 }
 
-func (s *InMemoryStudentService) GetAllStudents() []Student {
+func (s *InMemoryStudentService) GetAllStudents(offset, limit int, searchQuery, grade string) ([]Student, int) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
+	students := s.filteredStudents(searchQuery, grade)
+	total := len(students)
+	if limit <= 0 {
+		limit = total
+	}
+	if limit <= 0 {
+		return students, total
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	if offset >= total {
+		offset = max(0, total-limit)
+	}
+	return sliceOffset(students, offset, limit), total
+}
+
+func (s *InMemoryStudentService) filteredStudents(searchQuery, grade string) []Student {
+	students := s.sortedStudents()
+	query := strings.ToLower(strings.TrimSpace(searchQuery))
+	grade = strings.TrimSpace(grade)
+	if query == "" && grade == "" {
+		return students
+	}
+
+	filtered := make([]Student, 0, len(students))
+	for _, student := range students {
+		if !matchesStudentFilters(student, query, grade) {
+			continue
+		}
+		filtered = append(filtered, student)
+	}
+	return filtered
+}
+
+func matchesStudentFilters(student Student, query, grade string) bool {
+	if grade != "" && student.Grade != grade {
+		return false
+	}
+	if query == "" {
+		return true
+	}
+	name := strings.ToLower(student.FirstName + " " + student.LastName)
+	return strings.Contains(name, query)
+}
+
+func (s *InMemoryStudentService) sortedStudents() []Student {
 	students := make([]Student, 0, len(s.students))
 	for _, student := range s.students {
 		students = append(students, student)
@@ -91,6 +139,14 @@ func (s *InMemoryStudentService) GetAllStudents() []Student {
 		return left < right
 	})
 	return students
+}
+
+func sliceOffset(students []Student, offset, limit int) []Student {
+	if offset >= len(students) {
+		return []Student{}
+	}
+	end := min(offset+limit, len(students))
+	return students[offset:end]
 }
 
 func (s *InMemoryStudentService) GetStudentByID(id string) *Student {

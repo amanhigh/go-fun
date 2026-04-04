@@ -3,6 +3,7 @@ package layout
 import (
 	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/breadcrumb"
+	"github.com/templui/templui/components/card"
 )
 
 type PageProps struct {
@@ -60,18 +61,24 @@ templ Page(props PageProps) {
 
 // Card creates a styled card container with header and content
 templ Card(eyebrow string, title string, description string) {
-	<div class="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
-		<header>
+	@card.Card(card.Props{Class: "rounded-3xl border-border shadow-sm"}) {
+		@card.Header(card.HeaderProps{Class: "p-6 pb-0 sm:p-8 sm:pb-0"}) {
 			<div class="mb-8 space-y-3">
 				if eyebrow != "" {
 					<p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground/80">{ eyebrow }</p>
 				}
-				<h2 class="text-2xl font-semibold leading-tight tracking-[-0.02em] text-foreground sm:text-[1.75rem]">{ title }</h2>
+				@card.Title(card.TitleProps{Class: "text-2xl font-semibold leading-tight tracking-[-0.02em] text-foreground sm:text-[1.75rem]"}) {
+					{ title }
+				}
 				if description != "" {
-					<p class="max-w-2xl text-sm leading-7 text-muted-foreground">{ description }</p>
+					@card.Description(card.DescriptionProps{Class: "max-w-2xl text-sm leading-7 text-muted-foreground"}) {
+						{ description }
+					}
 				}
 			</div>
-		</header>
-		{ children... }
-	</div>
+		}
+		@card.Content(card.ContentProps{Class: "p-6 pt-0 sm:p-8 sm:pt-0"}) {
+			{ children... }
+		}
+	}
 }

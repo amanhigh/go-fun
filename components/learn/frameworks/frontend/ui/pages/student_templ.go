@@ -78,7 +78,7 @@ func StudentPage() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div x-data=\"studentPage\" class=\"space-y-6\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div x-data=\"studentPage\" x-init=\"fetchStudents()\" class=\"space-y-6\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -138,6 +138,7 @@ func StudentPage() templ.Component {
 
 // StudentToasts provides hidden templUI toast templates cloned by showToast() in student.ts.
 // templUI handles the dismiss animation, indicator, and removal after the duration.
+// templUI Auto initializes Cloned Nodes.
 func StudentToasts() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -372,7 +373,7 @@ func StudentGradeOptions(placeholder string) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(placeholder)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/student.templ`, Line: 96, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/student.templ`, Line: 97, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -577,7 +578,7 @@ func StudentFilterPanel() templ.Component {
 					Class:       "w-full",
 					Attributes: templ.Attributes{
 						"x-model":    "searchQuery",
-						"x-on:input": "currentPage = 1",
+						"x-on:input": "offset = 0; fetchStudents()",
 					},
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
@@ -846,7 +847,7 @@ func StudentActiveFilters() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<span x-text=\"`Showing ${paginatedStudents.length} of ${filteredStudents.length} students`\"></span></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<span x-text=\"`Showing ${paginatedStudents.length} of ${totalStudents} students`\"></span></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1382,7 +1383,7 @@ func StudentPagination() templ.Component {
 			templ_7745c5c3_Var48 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<div class=\"flex flex-col gap-3 border-t border-border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between\"><div class=\"text-muted-foreground\" x-text=\"`Showing ${startItem}-${endItem} of ${filteredStudents.length}`\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<div class=\"flex flex-col gap-3 border-t border-border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between\"><div class=\"text-muted-foreground\" x-text=\"`Showing ${startItem}-${endItem} of ${totalStudents}`\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2153,7 +2154,7 @@ func StudentTextField(fieldID string, labelText string, name string) templ.Compo
 				var templ_7745c5c3_Var79 string
 				templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.JoinStringErrs(labelText)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/student.templ`, Line: 441, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/student.templ`, Line: 442, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var79))
 				if templ_7745c5c3_Err != nil {

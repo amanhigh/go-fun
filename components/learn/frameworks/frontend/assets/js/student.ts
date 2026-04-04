@@ -15,10 +15,6 @@ interface StudentMutationEventDetail {
 }
 
 
-interface FetchStudentsOptions {
-  page?: number | 'last';
-}
-
 interface StudentApiRecord {
   id: string;
   first_name: string;
@@ -45,10 +41,19 @@ interface StudentApiPayload {
   grade: Grade;
 }
 
+interface StudentListResponse {
+  data?: StudentApiRecord[];
+  count?: number;
+  offset?: number;
+  limit?: number;
+  total_pages?: number;
+}
+
 interface StudentDataState {
   students: StudentApiRecord[];
   loading: boolean;
   errorMessage: string;
+  totalStudents: number;
 }
 
 interface StudentFilterState {
@@ -57,8 +62,8 @@ interface StudentFilterState {
 }
 
 interface StudentPaginationState {
-  currentPage: number;
-  pageSize: number;
+  offset: number;
+  limit: number;
 }
 
 interface StudentDeleteState {
@@ -87,12 +92,13 @@ const emptyStudentFormValues: StudentFormValues = {
 
 interface StudentPageState extends StudentDataState, StudentFilterState, StudentPaginationState, StudentDeleteState {
   readonly filteredStudents: StudentApiRecord[];
+  readonly currentPage: number;
   readonly totalPages: number;
   readonly paginatedStudents: StudentApiRecord[];
   readonly startItem: number;
   readonly endItem: number;
   init(): void;
-  fetchStudents(this: StudentPageState, options?: FetchStudentsOptions): Promise<void>;
+  fetchStudents(this: StudentPageState): Promise<void>;
   onGradeFilterChange(this: StudentPageState, event: Event): void;
   clearFilters(this: StudentPageState): void;
   goToNextPage(this: StudentPageState): void;
@@ -133,14 +139,16 @@ function studentPage(): StudentPageState {
     students: [],
     loading: false,
     errorMessage: '',
+    totalStudents: 0,
     searchQuery: '',
     selectedGrade: '',
-    currentPage: 1,
-    pageSize: 4,
+    offset: 0,
+    limit: 4,
     pendingDeleteId: '',
     pendingDeleteSeconds: 0,
     pendingDeleteTimer: null,
 
+    get currentPage() { return Math.floor(this.offset / this.limit) + 1; },
     get filteredStudents() {
       const query = this.searchQuery.toLowerCase().trim();
       return this.students.filter((student) => {
@@ -149,16 +157,12 @@ function studentPage(): StudentPageState {
           && (!this.selectedGrade || student.grade === this.selectedGrade);
       });
     },
-    get totalPages() { return Math.max(1, Math.ceil(this.filteredStudents.length / this.pageSize)); },
-    get paginatedStudents() {
-      const start = (this.currentPage - 1) * this.pageSize;
-      return this.filteredStudents.slice(start, start + this.pageSize);
-    },
-    get startItem() { return this.filteredStudents.length ? (this.currentPage - 1) * this.pageSize + 1 : 0; },
-    get endItem() { return this.filteredStudents.length ? Math.min(this.currentPage * this.pageSize, this.filteredStudents.length) : 0; },
+    get totalPages() { return Math.max(1, Math.ceil(this.totalStudents / this.limit)); },
+    get paginatedStudents() { return this.filteredStudents; },
+    get startItem() { return this.totalStudents ? this.offset + 1 : 0; },
+    get endItem() { return this.totalStudents ? Math.min(this.offset + this.students.length, this.totalStudents) : 0; },
 
     init() {
-      void this.fetchStudents();
       window.addEventListener('student:saved', (e) => {
         const detail = (e as CustomEvent<StudentMutationEventDetail>).detail;
         this.showToast(detail.title, detail.message, false);
@@ -170,17 +174,24 @@ function studentPage(): StudentPageState {
       });
     },
 
-    async fetchStudents(options?: FetchStudentsOptions) {
+    async fetchStudents() {
       this.loading = true;
       this.errorMessage = '';
       try {
-        const response = await fetch('/api/students');
+        const params = new URLSearchParams({
+          offset: String(this.offset),
+          limit: String(this.limit),
+        });
+        if (this.searchQuery.trim() !== '') params.set('search', this.searchQuery.trim());
+        if (this.selectedGrade !== '') params.set('grade', this.selectedGrade);
+
+        const response = await fetch(`/api/students?${params.toString()}`);
         if (!response.ok) throw new Error('Failed to fetch students');
-        const payload = (await response.json()) as { data?: StudentApiRecord[] };
+        const payload = (await response.json()) as StudentListResponse;
         this.students = payload.data ?? [];
-        const requestedPage = options?.page ?? this.currentPage;
-        const targetPage = requestedPage === 'last' ? this.totalPages : requestedPage;
-        this.currentPage = Math.min(Math.max(targetPage, 1), this.totalPages);
+        this.totalStudents = payload.count ?? this.students.length;
+        this.offset = Math.min(payload.offset ?? this.offset, Math.max(0, this.totalStudents - this.limit));
+        this.limit = payload.limit ?? this.limit;
       } catch {
         this.errorMessage = "Couldn't load students";
       } finally {
@@ -191,20 +202,28 @@ function studentPage(): StudentPageState {
     onGradeFilterChange(event: Event) {
       const target = event.target as HTMLInputElement | HTMLSelectElement | null;
       this.selectedGrade = (target?.value ?? '') as Grade;
-      this.currentPage = 1;
+      this.offset = 0;
+      void this.fetchStudents();
     },
     clearFilters() {
       this.searchQuery = '';
       this.selectedGrade = '';
-      this.currentPage = 1;
+      this.offset = 0;
 
       resetTemplSelectboxValue('grade-filter');
+      void this.fetchStudents();
     },
     goToNextPage() {
-      if (this.currentPage < this.totalPages) this.currentPage += 1;
+      if (this.currentPage < this.totalPages) {
+        this.offset += this.limit;
+        void this.fetchStudents();
+      }
     },
     goToPreviousPage() {
-      if (this.currentPage > 1) this.currentPage -= 1;
+      if (this.currentPage > 1) {
+        this.offset = Math.max(0, this.offset - this.limit);
+        void this.fetchStudents();
+      }
     },
 
     openCreateModal() {
@@ -277,7 +296,11 @@ function studentPage(): StudentPageState {
     },
 
     async afterSave(action: StudentMutationAction = 'update') {
-      await this.fetchStudents({ page: action === 'create' ? 'last' : this.currentPage });
+      const nextOffset = action === 'create'
+        ? Math.floor(this.totalStudents / this.limit) * this.limit
+        : this.offset;
+      this.offset = nextOffset;
+      await this.fetchStudents();
     },
     setError(message: string) {
       this.errorMessage = message;

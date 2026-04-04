@@ -34,7 +34,7 @@ templ StudentPage() {
 			Description: "Search, filter, create, edit, and delete students using the sample API endpoints.",
 			Tags:        []string{"Interactive", "CRUD", "Alpine.js"},
 		}) {
-			<div x-data="studentPage" class="space-y-6">
+			<div x-data="studentPage" x-init="fetchStudents()" class="space-y-6">
 				@StudentFilterPanel()
 				@StudentLoadingState()
 				@StudentErrorState()
@@ -138,7 +138,7 @@ templ StudentFilterPanel() {
 					Class:       "w-full",
 					Attributes: templ.Attributes{
 						"x-model":    "searchQuery",
-						"x-on:input": "currentPage = 1",
+						"x-on:input": "offset = 0; fetchStudents()",
 					},
 				})
 			</div>
@@ -212,7 +212,7 @@ templ StudentActiveFilters() {
 				"x-text": "`📚 ${selectedGrade}`",
 			},
 		}) {}
-		<span x-text="`Showing ${paginatedStudents.length} of ${filteredStudents.length} students`"></span>
+		<span x-text="`Showing ${paginatedStudents.length} of ${totalStudents} students`"></span>
 	</div>
 }
 
@@ -300,7 +300,7 @@ templ StudentTable() {
 // StudentPagination: prev/page/next controls; boundaries disabled via x-bind:disabled.
 templ StudentPagination() {
 	<div class="flex flex-col gap-3 border-t border-border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-		<div class="text-muted-foreground" x-text="`Showing ${startItem}-${endItem} of ${filteredStudents.length}`"></div>
+		<div class="text-muted-foreground" x-text="`Showing ${startItem}-${endItem} of ${totalStudents}`"></div>
 		@pagination.Pagination() {
 			@pagination.Content() {
 				@pagination.Item() {
