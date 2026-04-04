@@ -1,11 +1,19 @@
 package main
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
+
+func validateStudentPayload(student Student) error {
+	if student.Age <= 0 {
+		return fmt.Errorf("age must be greater than 0")
+	}
+
+	return nil
+}
 
 // StudentHandler handles student-related HTTP requests
 type StudentHandler struct {
@@ -56,7 +64,6 @@ func (h *StudentHandler) getStudentByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "Student updated successfully",
 		"data":    student,
 	})
 }
@@ -72,7 +79,7 @@ func (h *StudentHandler) createStudent(c *gin.Context) {
 		return
 	}
 
-	if err := validateStudent(student); err != nil {
+	if err := validateStudentPayload(student); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
 			"error":   err.Error(),
@@ -83,7 +90,6 @@ func (h *StudentHandler) createStudent(c *gin.Context) {
 	createdStudent := h.studentService.CreateStudent(student)
 	c.JSON(http.StatusCreated, gin.H{
 		"success": true,
-		"message": "Student added successfully",
 		"data":    createdStudent,
 	})
 }
@@ -101,7 +107,7 @@ func (h *StudentHandler) updateStudent(c *gin.Context) {
 		return
 	}
 
-	if err := validateStudent(updatedStudent); err != nil {
+	if err := validateStudentPayload(updatedStudent); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
 			"error":   err.Error(),
@@ -140,12 +146,4 @@ func (h *StudentHandler) deleteStudent(c *gin.Context) {
 		"success": true,
 		"message": "Student deleted successfully",
 	})
-}
-
-func validateStudent(student Student) error {
-	if student.Age <= 0 {
-		return errors.New("Age must be greater than 0")
-	}
-
-	return nil
 }

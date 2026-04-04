@@ -42,16 +42,16 @@ import (
 	"github.com/templui/templui/components/button"
 	"github.com/templui/templui/components/card"
 	"github.com/templui/templui/components/dialog"
-	"github.com/templui/templui/components/icon"
 	"github.com/templui/templui/components/form"
-	"github.com/templui/templui/components/label"
+	"github.com/templui/templui/components/icon"
 	"github.com/templui/templui/components/input"
+	"github.com/templui/templui/components/label"
 	"github.com/templui/templui/components/pagination"
 	"github.com/templui/templui/components/separator"
 	"github.com/templui/templui/components/selectbox"
 	"github.com/templui/templui/components/skeleton"
-	"github.com/templui/templui/components/toast"
 	"github.com/templui/templui/components/table"
+	"github.com/templui/templui/components/toast"
 	"github.com/templui/templui/components/tooltip"
 )
 
@@ -83,10 +83,24 @@ templ StudentPage() {
 // All child templates share this Alpine scope via the DOM tree.
 templ StudentContent() {
 	<div x-data="studentPage" class="space-y-6"
-		x-on:student:saved.window="afterSave($event.detail.message)"
-		x-on:student:error.window="setError($event.detail.message)">
-		@StudentShowcasePanel()
-		@separator.Separator(separator.Props{ID: "student-page-separator", Class: "my-2"})
+		x-on:student:saved.window="afterSave($event.detail.message, $event.detail.action)"
+		x-on:student:error.window="setError($event.detail.message)"
+		x-on:student:saved.window="showToast($event.detail.message, 'success')"
+		x-on:student:error.window="showToast($event.detail.message, 'error')"
+		x-init="showToast = function(message, variant) {
+			const el = document.getElementById('toast-container');
+			if (!el) return;
+			const toastTemplate = document.getElementById('student-toast-template');
+			if (!toastTemplate) return;
+			const toastVariant = variant === 'error' ? 'destructive' : 'success';
+			const toastMarkup = toastTemplate.innerHTML.replace('__STUDENT_TOAST_MESSAGE__', message);
+			const fragment = document.createElement('div');
+			fragment.innerHTML = toastMarkup.trim();
+			const toastNode = fragment.firstElementChild;
+			if (!toastNode) return;
+			toastNode.dataset.variant = toastVariant;
+			el.replaceChildren(toastNode);
+		}">
 		@StudentFilterPanel()
 		@StudentLoadingState()
 		@StudentErrorState()
@@ -95,150 +109,19 @@ templ StudentContent() {
 		// Dialog wrappers stay inside x-data scope; only their Content teleports to <body>.
 		// Communication parent->dialog uses CustomEvents (see student.ts + Section 6 comments).
 		@StudentFormModal()
-		@StudentDeleteModal()
-		// Toast target: student.ts injects a minimal [data-tui-toast] node here.
+		// Toast target: student.ts clones the templUI toast template and injects it here.
 		<div id="toast-container"></div>
-	</div>
-}
-
-// StudentShowcasePanel highlights templUI building blocks used on this page.
-templ StudentShowcasePanel() {
-	<div class="grid gap-4 lg:grid-cols-3">
-		@card.Card(card.Props{Class: "h-full overflow-hidden"}) {
-			@card.Header() {
-				<div class="flex items-center justify-between gap-3">
-					<div class="flex items-center gap-2">
-						@icon.LayoutGrid(icon.Props{Class: "size-5 text-emerald-600"})
-						<h3 class="text-lg font-semibold">Student UI toolkit</h3>
-					</div>
-					@tooltip.Tooltip(tooltip.Props{ID: "student-toolkit-tooltip"}) {
-						@tooltip.Trigger(tooltip.TriggerProps{ID: "student-toolkit-trigger", Class: "inline-flex"}) {
-							@icon.CircleQuestionMark(icon.Props{Class: "size-4 text-muted-foreground"})
-						}
-						@tooltip.Content(tooltip.ContentProps{Class: "max-w-xs text-sm"}) {
-							Cards, separators, icons, tooltips, and toasts all work together here.
-						}
-					}
-				</div>
-			}
-			@card.Content() {
-				<p class="text-sm text-muted-foreground">
-					This demo uses templUI primitives to structure the student experience without losing the Alpine.js interactions.
-				</p>
-				@separator.Separator(separator.Props{ID: "student-toolkit-content-separator", Class: "my-4"})
-				<div class="space-y-3">
-					<div class="flex items-start gap-3">
-						@icon.Sparkles(icon.Props{Class: "mt-0.5 size-4 text-primary"})
-						<div>
-							<p class="font-medium">Card layout</p>
-							<p class="text-sm text-muted-foreground">Keeps page sections visually consistent and easy to scan.</p>
-						</div>
-					</div>
-					<div class="flex items-start gap-3">
-						@icon.SeparatorHorizontal(icon.Props{Class: "mt-0.5 size-4 text-primary"})
-						<div>
-							<p class="font-medium">Separator</p>
-							<p class="text-sm text-muted-foreground">Creates a clear boundary before the interactive CRUD controls.</p>
-						</div>
-					</div>
-				</div>
-			}
-		}
-
-		@card.Card(card.Props{Class: "h-full overflow-hidden"}) {
-			@card.Header() {
-				<div class="flex items-center gap-2">
-					@icon.Bell(icon.Props{Class: "size-5 text-sky-600"})
-					<h3 class="text-lg font-semibold">Toast composer</h3>
-				</div>
-			}
-			@card.Content() {
-				<p class="text-sm text-muted-foreground">
-					templUI toast is already loaded by the base layout; this panel shows a label-driven input plus a live notification trigger.
-				</p>
-				@separator.Separator(separator.Props{ID: "student-toast-composer-separator", Class: "my-4"})
-				<div class="grid gap-3">
-					<div class="grid gap-2">
-						@label.Label(label.Props{For: "student-toast-message", Class: "text-sm font-medium"}) {
-							Toast message
-						}
-						@input.Input(input.Props{
-							ID:    "student-toast-message",
-							Type:  input.TypeText,
-							Value: "TemplUI toast demo: student tools are ready.",
-							Class: "w-full",
-						})
-					</div>
-					<p class="text-sm text-muted-foreground">
-						The button below reads the input value and forwards it to the shared toast pipeline.
-					</p>
-					@toast.Toast(toast.Props{
-						Title:       "Toast component preview",
-						Description: "This is the templUI toast component rendered directly in the student demo.",
-						Variant:     toast.VariantInfo,
-						Position:    toast.PositionBottomRight,
-						Duration:    5000,
-						Dismissible: true,
-						Icon:        true,
-					})
-				</div>
-			}
-			@card.Footer() {
-				@button.Button(button.Props{
-					Type: button.TypeButton,
-					Attributes: templ.Attributes{
-						"x-on:click": "showToast(document.getElementById('student-toast-message').value || 'TemplUI toast demo: student tools are ready.', 'success')",
-					},
-				}) {
-					<span class="inline-flex items-center gap-2">
-						@icon.Sparkles(icon.Props{Class: "size-4"})
-						Show Toast
-					</span>
-				}
-			}
-		}
-
-		@card.Card(card.Props{Class: "h-full overflow-hidden"}) {
-			@card.Header() {
-				<div class="flex items-center justify-between gap-3">
-					<div class="flex items-center gap-2">
-						@icon.Bell(icon.Props{Class: "size-5 text-amber-600"})
-						<h3 class="text-lg font-semibold">Toast and tooltip</h3>
-					</div>
-					@tooltip.Tooltip(tooltip.Props{ID: "student-toast-tooltip"}) {
-						@tooltip.Trigger(tooltip.TriggerProps{ID: "student-toast-trigger", Class: "inline-flex"}) {
-							@icon.Info(icon.Props{Class: "size-4 text-muted-foreground"})
-						}
-						@tooltip.Content(tooltip.ContentProps{Class: "max-w-xs text-sm"}) {
-							The toast system is already loaded by the base layout and driven by student.ts.
-						}
-					}
-				</div>
-			}
-			@card.Content() {
-				<p class="text-sm text-muted-foreground">
-					Use the button below to fire a live templUI toast and verify the shared notification pipeline.
-				</p>
-				@separator.Separator(separator.Props{ID: "student-toast-content-separator", Class: "my-4"})
-				<div class="rounded-2xl border border-dashed border-border bg-muted/20 p-4">
-					<p class="text-sm font-medium">Toast preview</p>
-					<p class="mt-1 text-sm text-muted-foreground">A toast is injected into <code>#toast-container</code> and rendered by templUI.</p>
-				</div>
-			}
-			@card.Footer() {
-				@button.Button(button.Props{
-					Type: button.TypeButton,
-					Attributes: templ.Attributes{
-						"x-on:click": "showToast(`TemplUI toast demo: student tools are ready.`, 'success')",
-					},
-				}) {
-					<span class="inline-flex items-center gap-2">
-						@icon.Sparkles(icon.Props{Class: "size-4"})
-						Show Toast
-					</span>
-				}
-			}
-		}
+		<template id="student-toast-template">
+			@toast.Toast(toast.Props{
+				Title:       "Student update",
+				Description: "__STUDENT_TOAST_MESSAGE__",
+				Variant:     toast.VariantSuccess,
+				Position:    toast.PositionTopRight,
+				Duration:    3000,
+				Dismissible: true,
+				Icon:        true,
+			})
+		</template>
 	</div>
 }
 
@@ -290,11 +173,36 @@ templ StudentGradeOptions(placeholder string) {
 //   3. Action buttons — templUI button.Button with x-on:click handlers
 
 templ StudentFilterPanel() {
-	<div class="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-6">
-		<div class="flex flex-col gap-4 lg:flex-row lg:items-center">
+	@card.Card(card.Props{Class: "rounded-3xl border-border shadow-sm"}) {
+		@card.Header() {
+			<div class="flex items-start justify-between gap-3">
+				<div>
+					<h3 class="text-lg font-semibold inline-flex items-center gap-2">
+						@icon.Icon("filter")(icon.Props{Class: "h-4 w-4"})
+						<span>Student filters</span>
+					</h3>
+					<p class="text-sm text-muted-foreground">Use search and grade filters, then add or manage records.</p>
+				</div>
+				@tooltip.Tooltip() {
+					@tooltip.Trigger() {
+						<button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground" aria-label="Filter tips">
+							@icon.Icon("circle-question-mark")(icon.Props{Class: "h-4 w-4"})
+						</button>
+					}
+					@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop, ShowArrow: true}) {
+						Tip: try Age 0 while saving to see backend validation.
+					}
+				}
+			</div>
+		}
+		@card.Content() {
+			<div class="flex flex-col gap-4 lg:flex-row lg:items-end">
 			// Search: x-model binds this input directly to Alpine's searchQuery state.
 			// Typing here immediately updates filteredStudents via Alpine's computed getter.
 			<div class="w-full lg:flex-1">
+				@label.Label(label.Props{For: "search-students", Class: "mb-2 inline-flex text-sm font-medium"}) {
+					Search Students
+				}
 				@input.Input(input.Props{
 					Type:        input.TypeText,
 					Placeholder: "🔍 Search students...",
@@ -310,6 +218,9 @@ templ StudentFilterPanel() {
 			// selectbox.Trigger fires a native change event when the user picks a grade.
 			// Alpine catches it via x-on:change -> onGradeFilterChange() in student.ts.
 			<div class="w-full sm:w-56">
+				@label.Label(label.Props{For: "grade-filter", Class: "mb-2 inline-flex text-sm font-medium"}) {
+					Grade
+				}
 				@selectbox.SelectBox() {
 					@selectbox.Trigger(selectbox.TriggerProps{
 						ID:   "grade-filter",
@@ -346,12 +257,17 @@ templ StudentFilterPanel() {
 						"x-on:click": "openCreateModal()",
 					},
 				}) {
-					+ Add Student
+					<span class="inline-flex items-center gap-2">
+						@icon.Icon("plus")(icon.Props{Class: "h-4 w-4"})
+						<span>Add Student</span>
+					</span>
 				}
 			</div>
 		</div>
+		@separator.Separator(separator.Props{ID: "student-filter-separator", Class: "my-4"})
 		@StudentActiveFilters()
-	</div>
+		}
+	}
 }
 
 // StudentActiveFilters shows live filter badges below the toolbar.
@@ -394,8 +310,19 @@ templ StudentActiveFilters() {
 // the semantic HTML and styling. Alpine populates the rows at runtime.
 
 templ StudentTable() {
-	<div x-show="!loading" class="rounded-3xl border border-border bg-card shadow-sm overflow-x-auto">
-		@table.Table(table.Props{Class: "min-w-[760px]"}) {
+	<div x-show="!loading">
+		@card.Card(card.Props{Class: "rounded-3xl border-border shadow-sm overflow-hidden"}) {
+			@card.Header() {
+				<div>
+					<h3 class="text-lg font-semibold inline-flex items-center gap-2">
+						@icon.Icon("table")(icon.Props{Class: "h-4 w-4"})
+						<span>Student records</span>
+					</h3>
+					<p class="text-sm text-muted-foreground">Page size is 4, with toast feedback on create, update, and delete.</p>
+				</div>
+			}
+			@card.Content(card.ContentProps{Class: "p-0 overflow-x-auto"}) {
+			@table.Table(table.Props{Class: "min-w-[760px]"}) {
 			@table.Header(table.HeaderProps{Class: "bg-muted/30 text-xs uppercase tracking-wide"}) {
 				@table.Row() {
 					@table.Head() { ID }
@@ -434,18 +361,33 @@ templ StudentTable() {
 									Type:    button.TypeButton,
 									Class:   "h-8 px-3 text-xs",
 									Attributes: templ.Attributes{
-										"x-on:click": "openDeleteModal(student)",
+										"x-on:click": "requestDelete(student)",
+										"x-show":     "pendingDeleteId !== student.id",
 									},
 								}) {
 									🗑️ Delete
 								}
+								@button.Button(button.Props{
+									Variant: button.VariantOutline,
+									Type:    button.TypeButton,
+									Class:   "h-8 px-3 text-xs",
+									Attributes: templ.Attributes{
+										"x-on:click": "undoDelete()",
+										"x-show":     "pendingDeleteId === student.id",
+										"x-text":     "`↩ Undo (${pendingDeleteSeconds}s)`",
+									},
+								}) {}
 							</div>
 						}
 					}
 				</template>
 			}
 		}
-		@StudentPagination()
+			}
+			@card.Footer(card.FooterProps{Class: "p-0"}) {
+				@StudentPagination()
+			}
+		}
 	</div>
 }
 
@@ -611,7 +553,7 @@ templ StudentFormModal() {
 					@form.Item() {
 						@form.Label(form.LabelProps{For: "s-age"}) { Age }
 						@input.Input(input.Props{ID: "s-age", Type: "number",
-							Attributes: templ.Attributes{"name": "age", "min": "1"}})
+							Attributes: templ.Attributes{"name": "age"}})
 					}
 					// Grade: native <select> — templUI selectbox also teleports its dropdown
 					@form.Item() {
@@ -649,32 +591,3 @@ templ StudentTextField(fieldID string, labelText string, name string) {
 	}
 }
 
-// StudentDeleteModal confirms before deleting.
-// student.ts sets #s-delete-name text and #s-delete-id value before opening.
-// On confirm, studentDeleteConfirm() reads those DOM values directly.
-templ StudentDeleteModal() {
-	@dialog.Dialog(dialog.Props{ID: "student-delete-dialog"}) {
-		@dialog.Content(dialog.ContentProps{HideCloseButton: true}) {
-			<input type="hidden" id="s-delete-id"/>
-			@dialog.Header() {
-				@dialog.Title() { Delete Student }
-				@dialog.Description() {
-					<span>Are you sure you want to remove </span>
-					<strong id="s-delete-name"></strong>
-					<span>?</span>
-				}
-			}
-			@dialog.Footer() {
-				@dialog.Close() {
-					@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton}) {
-						Cancel
-					}
-				}
-				@button.Button(button.Props{Variant: button.VariantDestructive, Type: button.TypeButton,
-					Attributes: templ.Attributes{"onclick": "studentDeleteConfirm()"}}) {
-					Delete
-				}
-			}
-		}
-	}
-}

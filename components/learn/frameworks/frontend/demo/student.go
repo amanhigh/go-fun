@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"sort"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -54,6 +56,21 @@ func sampleStudents() []Student {
 		{FirstName: "Mike", LastName: "Johnson", Email: "mike.johnson@school.edu", Age: 19, Grade: "Freshman"},
 		{FirstName: "Sarah", LastName: "Williams", Email: "sarah.williams@school.edu", Age: 22, Grade: "Senior"},
 		{FirstName: "David", LastName: "Brown", Email: "david.brown@school.edu", Age: 20, Grade: "Sophomore"},
+		{FirstName: "Emma", LastName: "Davis", Email: "emma.davis@school.edu", Age: 18, Grade: "Freshman"},
+		{FirstName: "Liam", LastName: "Miller", Email: "liam.miller@school.edu", Age: 23, Grade: "Senior"},
+		{FirstName: "Olivia", LastName: "Wilson", Email: "olivia.wilson@school.edu", Age: 20, Grade: "Junior"},
+		{FirstName: "Noah", LastName: "Moore", Email: "noah.moore@school.edu", Age: 19, Grade: "Sophomore"},
+		{FirstName: "Ava", LastName: "Taylor", Email: "ava.taylor@school.edu", Age: 21, Grade: "Senior"},
+		{FirstName: "Ethan", LastName: "Anderson", Email: "ethan.anderson@school.edu", Age: 18, Grade: "Freshman"},
+		{FirstName: "Sophia", LastName: "Thomas", Email: "sophia.thomas@school.edu", Age: 22, Grade: "Junior"},
+		{FirstName: "Lucas", LastName: "Jackson", Email: "lucas.jackson@school.edu", Age: 20, Grade: "Sophomore"},
+		{FirstName: "Mia", LastName: "White", Email: "mia.white@school.edu", Age: 19, Grade: "Freshman"},
+		{FirstName: "Mason", LastName: "Harris", Email: "mason.harris@school.edu", Age: 23, Grade: "Senior"},
+		{FirstName: "Isabella", LastName: "Martin", Email: "isabella.martin@school.edu", Age: 20, Grade: "Junior"},
+		{FirstName: "Logan", LastName: "Thompson", Email: "logan.thompson@school.edu", Age: 18, Grade: "Freshman"},
+		{FirstName: "Amelia", LastName: "Garcia", Email: "amelia.garcia@school.edu", Age: 21, Grade: "Senior"},
+		{FirstName: "Elijah", LastName: "Martinez", Email: "elijah.martinez@school.edu", Age: 19, Grade: "Sophomore"},
+		{FirstName: "Harper", LastName: "Robinson", Email: "harper.robinson@school.edu", Age: 22, Grade: "Junior"},
 	}
 }
 
@@ -65,6 +82,14 @@ func (s *InMemoryStudentService) GetAllStudents() []Student {
 	for _, student := range s.students {
 		students = append(students, student)
 	}
+	sort.Slice(students, func(i, j int) bool {
+		left, leftErr := strconv.Atoi(students[i].ID)
+		right, rightErr := strconv.Atoi(students[j].ID)
+		if leftErr != nil || rightErr != nil {
+			return students[i].ID < students[j].ID
+		}
+		return left < right
+	})
 	return students
 }
 
