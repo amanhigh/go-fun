@@ -58,7 +58,7 @@ interface StudentDataState {
 
 interface StudentFilterState {
   name: string;
-  selectedGrade: Grade;
+  grade: Grade;
 }
 
 interface StudentPaginationState {
@@ -98,12 +98,12 @@ interface StudentPageState extends StudentDataState, StudentFilterState, Student
   readonly startItem: number;
   readonly endItem: number;
   init(): void;
-  fetchStudents(this: StudentPageState): Promise<void>;
+  listStudents(this: StudentPageState): Promise<void>;
   onGradeFilterChange(this: StudentPageState, event: Event): void;
   clearFilters(this: StudentPageState): void;
   goToNextPage(this: StudentPageState): void;
   goToPreviousPage(this: StudentPageState): void;
-  openCreateModal(this: StudentPageState): void;
+  resetForm(): void;
   openEditModal(this: StudentPageState, student: StudentApiRecord): void;
   requestDelete(this: StudentPageState, student: StudentApiRecord): void;
   undoDelete(this: StudentPageState): void;
@@ -141,7 +141,7 @@ function studentPage(): StudentPageState {
     errorMessage: '',
     totalStudents: 0,
     name: '',
-    selectedGrade: '',
+    grade: '',
     page: 1,
     pageSize: 4,
     pendingDeleteId: '',
@@ -149,12 +149,13 @@ function studentPage(): StudentPageState {
     pendingDeleteTimer: null,
 
     get currentPage() { return this.page; },
+    get hasFilters() { return this.name !== '' || this.grade !== ''; },
     get filteredStudents() {
       const query = this.name.toLowerCase().trim();
       return this.students.filter((student) => {
         const studentName = `${student.first_name} ${student.last_name}`.toLowerCase();
         return (!query || studentName.includes(query))
-          && (!this.selectedGrade || student.grade === this.selectedGrade);
+          && (!this.grade || student.grade === this.grade);
       });
     },
     get totalPages() { return Math.max(1, Math.ceil(this.totalStudents / this.pageSize)); },
@@ -174,7 +175,7 @@ function studentPage(): StudentPageState {
       });
     },
 
-    async fetchStudents() {
+    async listStudents() {
       this.loading = true;
       this.errorMessage = '';
       try {
@@ -184,7 +185,7 @@ function studentPage(): StudentPageState {
           limit: String(this.pageSize),
         });
         if (this.name.trim() !== '') params.set('name', this.name.trim());
-        if (this.selectedGrade !== '') params.set('grade', this.selectedGrade);
+        if (this.grade !== '') params.set('grade', this.grade);
 
         const response = await fetch(`/api/students?${params.toString()}`);
         if (!response.ok) throw new Error('Failed to fetch students');
@@ -204,34 +205,33 @@ function studentPage(): StudentPageState {
 
     onGradeFilterChange(event: Event) {
       const target = event.target as HTMLInputElement | HTMLSelectElement | null;
-      this.selectedGrade = (target?.value ?? '') as Grade;
+      this.grade = (target?.value ?? '') as Grade;
       this.page = 1;
-      void this.fetchStudents();
+      void this.listStudents();
     },
     clearFilters() {
       this.name = '';
-      this.selectedGrade = '';
+      this.grade = '';
       this.page = 1;
 
       resetTemplSelectboxValue('grade-filter');
-      void this.fetchStudents();
+      void this.listStudents();
     },
     goToNextPage() {
       if (this.currentPage < this.totalPages) {
         this.page += 1;
-        void this.fetchStudents();
+        void this.listStudents();
       }
     },
     goToPreviousPage() {
       if (this.currentPage > 1) {
         this.page -= 1;
-        void this.fetchStudents();
+        void this.listStudents();
       }
     },
 
-    openCreateModal() {
+    resetForm() {
       setFormFields(emptyStudentFormValues);
-      window.tui?.dialog.open('student-form-dialog');
     },
 
     openEditModal(student) {
@@ -243,7 +243,7 @@ function studentPage(): StudentPageState {
         age: student.age,
         grade: student.grade,
       });
-      window.tui?.dialog.open('student-form-dialog');
+      window.tui?.dialog.open('student-form');
     },
 
     requestDelete(student) {
@@ -303,7 +303,7 @@ function studentPage(): StudentPageState {
         ? Math.max(1, Math.ceil((this.totalStudents + 1) / this.pageSize))
         : this.page;
       this.page = nextPage;
-      await this.fetchStudents();
+      await this.listStudents();
     },
     setError(message: string) {
       this.errorMessage = message;
@@ -424,7 +424,7 @@ async function studentFormSubmit(event: SubmitEvent): Promise<boolean> {
       const errorMessage = await readErrorMessage(response, fallback);
       throw new Error(errorMessage);
     }
-    window.tui?.dialog.close('student-form-dialog');
+    window.tui?.dialog.close('student-form');
     emitStudentEvent(
       'student:saved',
       isEdit ? 'Student updated' : 'Student added',
