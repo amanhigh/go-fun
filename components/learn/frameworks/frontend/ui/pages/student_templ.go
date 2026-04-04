@@ -573,11 +573,11 @@ func StudentFilterPanel() templ.Component {
 				}
 				templ_7745c5c3_Err = input.Input(input.Props{
 					Type:        input.TypeText,
-					Placeholder: "🔍 Search students...",
+					Placeholder: "🔍 Search by name...",
 					ID:          "search-students",
 					Class:       "w-full",
 					Attributes: templ.Attributes{
-						"x-model":    "searchQuery",
+						"x-model":    "name",
 						"x-on:input": "offset = 0; fetchStudents()",
 					},
 				}).Render(ctx, templ_7745c5c3_Buffer)
@@ -823,15 +823,15 @@ func StudentActiveFilters() templ.Component {
 			templ_7745c5c3_Var28 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<div class=\"mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground\"><span x-show=\"searchQuery !== '' || selectedGrade !== ''\">Active filters:</span>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<div class=\"mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground\"><span x-show=\"name !== '' || selectedGrade !== ''\">Active filters:</span>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = badge.Badge(badge.Props{
 			Variant: badge.VariantSecondary,
 			Attributes: templ.Attributes{
-				"x-show": "searchQuery !== ''",
-				"x-text": "`🔍 ${searchQuery}`", // backtick template literal in Alpine expression
+				"x-show": "name !== ''",
+				"x-text": "`🔍 ${name}`",
 			},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

@@ -3,26 +3,9 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
-
-type studentListResponse struct {
-	Success    bool      `json:"success"`
-	Data       []Student `json:"data"`
-	Count      int       `json:"count"`
-	Offset     int       `json:"offset"`
-	Limit      int       `json:"limit"`
-	TotalPages int       `json:"total_pages"`
-}
-
-type studentListQuery struct {
-	offset      int
-	limit       int
-	searchQuery string
-	grade       string
-}
 
 func validateStudentPayload(student Student) error {
 	if student.Age <= 0 {
@@ -48,7 +31,7 @@ func NewStudentHandler() *StudentHandler {
 func (h *StudentHandler) RegisterRoutes(r *gin.Engine) {
 	api := r.Group("/api/students")
 	{
-		api.GET("", h.getAllStudents)
+		api.GET("", h.listStudents)
 		api.GET("/:id", h.getStudentByID)
 		api.POST("", h.createStudent)
 		api.PUT("/:id", h.updateStudent)
@@ -56,55 +39,15 @@ func (h *StudentHandler) RegisterRoutes(r *gin.Engine) {
 	}
 }
 
-// getAllStudents returns a paginated student list as JSON.
-func (h *StudentHandler) getAllStudents(c *gin.Context) {
-	query := readStudentListQuery(c)
-	students, count := h.studentService.GetAllStudents(query.offset, query.limit, query.searchQuery, query.grade)
-	writeStudentListResponse(c, students, count, query.offset, query.limit)
-}
-
-func readStudentListQuery(c *gin.Context) studentListQuery {
-	query := studentListQuery{
-		offset: 0,
-		limit:  4,
+// listStudents returns a paginated student list as JSON.
+func (h *StudentHandler) listStudents(c *gin.Context) {
+	var query StudentListQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
+		return
 	}
-
-	if value := c.Query("offset"); value != "" {
-		if parsed, err := strconv.Atoi(value); err == nil && parsed >= 0 {
-			query.offset = parsed
-		}
-	}
-	if value := c.Query("limit"); value != "" {
-		if parsed, err := strconv.Atoi(value); err == nil && parsed > 0 {
-			query.limit = parsed
-		}
-	}
-	query.searchQuery = c.Query("search")
-	query.grade = c.Query("grade")
-
-	return query
-}
-
-func writeStudentListResponse(c *gin.Context, students []Student, count, offset, limit int) {
-	if offset >= count && count > 0 {
-		offset = max(0, count-limit)
-	}
-	totalPages := count / limit
-	if count%limit != 0 {
-		totalPages++
-	}
-	if totalPages == 0 {
-		totalPages = 1
-	}
-
-	c.JSON(http.StatusOK, studentListResponse{
-		Success:    true,
-		Data:       students,
-		Count:      count,
-		Offset:     offset,
-		Limit:      limit,
-		TotalPages: totalPages,
-	})
+	response := h.studentService.ListStudents(query.Offset, query.Limit, query.SearchQuery, query.Grade)
+	c.JSON(http.StatusOK, response)
 }
 
 // getStudentByID returns a specific student by ID

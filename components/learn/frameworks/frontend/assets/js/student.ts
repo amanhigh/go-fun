@@ -57,13 +57,13 @@ interface StudentDataState {
 }
 
 interface StudentFilterState {
-  searchQuery: string;
+  name: string;
   selectedGrade: Grade;
 }
 
 interface StudentPaginationState {
-  offset: number;
-  limit: number;
+  page: number;
+  pageSize: number;
 }
 
 interface StudentDeleteState {
@@ -140,27 +140,27 @@ function studentPage(): StudentPageState {
     loading: false,
     errorMessage: '',
     totalStudents: 0,
-    searchQuery: '',
+    name: '',
     selectedGrade: '',
-    offset: 0,
-    limit: 4,
+    page: 1,
+    pageSize: 4,
     pendingDeleteId: '',
     pendingDeleteSeconds: 0,
     pendingDeleteTimer: null,
 
-    get currentPage() { return Math.floor(this.offset / this.limit) + 1; },
+    get currentPage() { return this.page; },
     get filteredStudents() {
-      const query = this.searchQuery.toLowerCase().trim();
+      const query = this.name.toLowerCase().trim();
       return this.students.filter((student) => {
-        const name = `${student.first_name} ${student.last_name}`.toLowerCase();
-        return (!query || name.includes(query) || student.email.toLowerCase().includes(query))
+        const studentName = `${student.first_name} ${student.last_name}`.toLowerCase();
+        return (!query || studentName.includes(query))
           && (!this.selectedGrade || student.grade === this.selectedGrade);
       });
     },
-    get totalPages() { return Math.max(1, Math.ceil(this.totalStudents / this.limit)); },
+    get totalPages() { return Math.max(1, Math.ceil(this.totalStudents / this.pageSize)); },
     get paginatedStudents() { return this.filteredStudents; },
-    get startItem() { return this.totalStudents ? this.offset + 1 : 0; },
-    get endItem() { return this.totalStudents ? Math.min(this.offset + this.students.length, this.totalStudents) : 0; },
+    get startItem() { return this.totalStudents ? ((this.page - 1) * this.pageSize) + 1 : 0; },
+    get endItem() { return this.totalStudents ? Math.min(this.page * this.pageSize, this.totalStudents) : 0; },
 
     init() {
       window.addEventListener('student:saved', (e) => {
@@ -178,11 +178,12 @@ function studentPage(): StudentPageState {
       this.loading = true;
       this.errorMessage = '';
       try {
+        const offset = (this.page - 1) * this.pageSize;
         const params = new URLSearchParams({
-          offset: String(this.offset),
-          limit: String(this.limit),
+          offset: String(offset),
+          limit: String(this.pageSize),
         });
-        if (this.searchQuery.trim() !== '') params.set('search', this.searchQuery.trim());
+        if (this.name.trim() !== '') params.set('name', this.name.trim());
         if (this.selectedGrade !== '') params.set('grade', this.selectedGrade);
 
         const response = await fetch(`/api/students?${params.toString()}`);
@@ -190,8 +191,10 @@ function studentPage(): StudentPageState {
         const payload = (await response.json()) as StudentListResponse;
         this.students = payload.data ?? [];
         this.totalStudents = payload.count ?? this.students.length;
-        this.offset = Math.min(payload.offset ?? this.offset, Math.max(0, this.totalStudents - this.limit));
-        this.limit = payload.limit ?? this.limit;
+        const responsePageSize = payload.limit ?? this.pageSize;
+        const responseOffset = payload.offset ?? offset;
+        this.pageSize = responsePageSize;
+        this.page = Math.floor(responseOffset / responsePageSize) + 1;
       } catch {
         this.errorMessage = "Couldn't load students";
       } finally {
@@ -202,26 +205,26 @@ function studentPage(): StudentPageState {
     onGradeFilterChange(event: Event) {
       const target = event.target as HTMLInputElement | HTMLSelectElement | null;
       this.selectedGrade = (target?.value ?? '') as Grade;
-      this.offset = 0;
+      this.page = 1;
       void this.fetchStudents();
     },
     clearFilters() {
-      this.searchQuery = '';
+      this.name = '';
       this.selectedGrade = '';
-      this.offset = 0;
+      this.page = 1;
 
       resetTemplSelectboxValue('grade-filter');
       void this.fetchStudents();
     },
     goToNextPage() {
       if (this.currentPage < this.totalPages) {
-        this.offset += this.limit;
+        this.page += 1;
         void this.fetchStudents();
       }
     },
     goToPreviousPage() {
       if (this.currentPage > 1) {
-        this.offset = Math.max(0, this.offset - this.limit);
+        this.page -= 1;
         void this.fetchStudents();
       }
     },
@@ -296,10 +299,10 @@ function studentPage(): StudentPageState {
     },
 
     async afterSave(action: StudentMutationAction = 'update') {
-      const nextOffset = action === 'create'
-        ? Math.floor(this.totalStudents / this.limit) * this.limit
-        : this.offset;
-      this.offset = nextOffset;
+      const nextPage = action === 'create'
+        ? Math.max(1, Math.ceil((this.totalStudents + 1) / this.pageSize))
+        : this.page;
+      this.page = nextPage;
       await this.fetchStudents();
     },
     setError(message: string) {

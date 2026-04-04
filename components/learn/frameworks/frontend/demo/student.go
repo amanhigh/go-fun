@@ -9,21 +9,9 @@ import (
 	"time"
 )
 
-// Student represents a student entity with simplified fields for demo
-type Student struct {
-	ID        string    `json:"id"`
-	FirstName string    `json:"first_name"`
-	LastName  string    `json:"last_name"`
-	Email     string    `json:"email"`
-	Age       int       `json:"age"`
-	Grade     string    `json:"grade"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
 // StudentService interface for student operations
 type StudentService interface {
-	GetAllStudents(offset, limit int, searchQuery, grade string) ([]Student, int)
+	ListStudents(offset, limit int, searchQuery, grade string) StudentListResponse
 	GetStudentByID(id string) *Student
 	CreateStudent(student Student) *Student
 	UpdateStudent(id string, student Student) *Student
@@ -75,7 +63,7 @@ func sampleStudents() []Student {
 	}
 }
 
-func (s *InMemoryStudentService) GetAllStudents(offset, limit int, searchQuery, grade string) ([]Student, int) {
+func (s *InMemoryStudentService) ListStudents(offset, limit int, searchQuery, grade string) StudentListResponse {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -85,7 +73,7 @@ func (s *InMemoryStudentService) GetAllStudents(offset, limit int, searchQuery, 
 		limit = total
 	}
 	if limit <= 0 {
-		return students, total
+		return buildStudentListResponse(students, total, offset, limit)
 	}
 	if offset < 0 {
 		offset = 0
@@ -93,7 +81,8 @@ func (s *InMemoryStudentService) GetAllStudents(offset, limit int, searchQuery, 
 	if offset >= total {
 		offset = max(0, total-limit)
 	}
-	return sliceOffset(students, offset, limit), total
+	pageStudents := sliceOffset(students, offset, limit)
+	return buildStudentListResponse(pageStudents, total, offset, limit)
 }
 
 func (s *InMemoryStudentService) filteredStudents(searchQuery, grade string) []Student {
@@ -147,6 +136,25 @@ func sliceOffset(students []Student, offset, limit int) []Student {
 	}
 	end := min(offset+limit, len(students))
 	return students[offset:end]
+}
+
+func buildStudentListResponse(students []Student, total, offset, limit int) StudentListResponse {
+	totalPages := total / limit
+	if total%limit != 0 {
+		totalPages++
+	}
+	if totalPages == 0 {
+		totalPages = 1
+	}
+
+	return StudentListResponse{
+		Success:    true,
+		Data:       students,
+		Count:      total,
+		Offset:     offset,
+		Limit:      limit,
+		TotalPages: totalPages,
+	}
 }
 
 func (s *InMemoryStudentService) GetStudentByID(id string) *Student {

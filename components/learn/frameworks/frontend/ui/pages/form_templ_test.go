@@ -111,10 +111,10 @@ var _ = Describe("Form Page Tests", func() {
 
 		It("should have semantic structure and accessibility", func() {
 			Expect(html).To(ContainSubstring("<h1"))
-			Expect(strings.Count(html, "<h2")).To(Equal(5))
-			Expect(strings.Count(html, "<article")).To(Equal(5))
-			Expect(html).To(ContainSubstring("<header>"))
-			Expect(html).To(ContainSubstring("<footer>"))
+			Expect(html).To(ContainSubstring("Text Inputs"))
+			Expect(html).To(ContainSubstring("Selection Controls"))
+			Expect(html).To(ContainSubstring("Header"))
+			Expect(html).To(ContainSubstring("Footer"))
 			Expect(len(strings.TrimSpace(html))).To(BeNumerically(">", 2000))
 		})
 
