@@ -495,30 +495,22 @@ function studentPage() {
 }
 
 // =============================================================================
-// SECTION 4: Helper Functions
+// SECTION 4: Toast Functions
 // =============================================================================
 
 function cloneToastTemplate(isError: boolean): HTMLElement | null {
   const templateId = isError ? 'student-error-toast-template' : 'student-success-toast-template';
   const template = document.getElementById(templateId) as HTMLTemplateElement | null;
-  if (!template) return null;
-
-  const toast = template.content.firstElementChild?.cloneNode(true);
-  return toast instanceof HTMLElement ? toast : null;
+  if (!template?.content) return null;
+  return template.content.cloneNode(true) as HTMLElement;
 }
 
 function replaceToastText(toast: HTMLElement, title: string, message: string): void {
-  const walker = document.createTreeWalker(toast, NodeFilter.SHOW_TEXT);
-  let currentNode = walker.nextNode();
-
-  for (; currentNode; currentNode = walker.nextNode()) {
-    const text = currentNode.textContent;
-    if (!text) continue;
-
-    currentNode.textContent = text
-      .replaceAll('__STUDENT_TOAST_TITLE__', title)
-      .replaceAll('__STUDENT_TOAST_MESSAGE__', message);
-  }
+  const content = toast.querySelector('span.flex-1');
+  if (!content) return;
+  const [titleEl, descEl] = content.children;
+  if (titleEl) titleEl.textContent = title;
+  if (descEl) descEl.textContent = message;
 }
 
 // =============================================================================

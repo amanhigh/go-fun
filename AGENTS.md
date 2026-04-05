@@ -4,6 +4,9 @@ This file contains guidelines for coding, testing, and examples on coding style 
 
 ## Coding
 
+### UI Development
+- **Prioritize TemplUI components** (JS+CSS bundled) for all UI work; use Tailwind for styling and layout; use Alpine.js only where TemplUI is insufficient to provide that experience.
+
 ### Interfaces and Implementations
 - Include constructor for each class in the same file with interface and class.
   - Example: FileManager (Interface), FileManagerImpl (Class), NewFileManager (*FileManagerImpl) (Constructor) - Return Pointer

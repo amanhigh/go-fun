@@ -20,7 +20,6 @@ import (
 	"github.com/templui/templui/components/pagination"
 	"github.com/templui/templui/components/selectbox"
 	"github.com/templui/templui/components/separator"
-	"github.com/templui/templui/components/skeleton"
 	"github.com/templui/templui/components/table"
 	"github.com/templui/templui/components/toast"
 	"github.com/templui/templui/components/tooltip"
@@ -540,15 +539,11 @@ templ StudentInitializingState() {
 	</div>
 }
 
-// StudentLoadingState: skeleton placeholders shown while listStudents() is running.
-// x-show: displays skeletons when loading AFTER initial load.
+// StudentLoadingState: spinner shown while listStudents() is running after initial load.
+// x-show: displays spinner when loading AFTER initial load.
 templ StudentLoadingState() {
-	<div x-show="isInitialized() && isLoading()" class="p-6">
-		<div class="space-y-3">
-			@skeleton.Skeleton(skeleton.Props{Class: "h-10 w-full"})
-			@skeleton.Skeleton(skeleton.Props{Class: "h-10 w-full"})
-			@skeleton.Skeleton(skeleton.Props{Class: "h-10 w-full"})
-		</div>
+	<div x-show="isInitialized() && isLoading()" class="flex items-center justify-center p-12">
+		@components.Spinner()
 	</div>
 }
 
@@ -561,16 +556,13 @@ templ StudentErrorState() {
 			"x-show": "isApiError()",
 		},
 	}) {
-		@alert.Title() {
-			<span x-text="apiError"></span>
-		}
+		@alert.Title(alert.TitleProps{Attributes: templ.Attributes{"x-text": "apiError"}}) {}
 		@alert.Description() {
 			@button.Button(button.Props{
 				Variant: button.VariantOutline,
 				Type:    button.TypeButton,
-				Class:   "h-8 px-3 text-xs",
 				Attributes: templ.Attributes{
-					"x-on:click": "listStudents()", // retry: refetch students
+					"x-on:click": "listStudents()",
 				},
 			}) {
 				Retry
@@ -580,34 +572,36 @@ templ StudentErrorState() {
 }
 
 // StudentEmptyState: shown when loaded but no students match active filters.
-// x-show: displays when not loading and filteredResults.length === 0.
 templ StudentEmptyState() {
-	<div x-show="!isLoading() && isEmpty()" class="rounded-3xl border border-dashed border-border bg-card px-6 py-14 text-center">
-		<div class="mx-auto max-w-sm space-y-3">
-			<p class="text-2xl">📭</p>
-			<h3 class="text-lg font-semibold">No students found</h3>
-			<p class="text-sm text-muted-foreground">Try adjusting search and grade filters, or add your first student.</p>
-			<div class="flex justify-center gap-2">
+	@card.Card(card.Props{
+		Class: "rounded-none border-x-0 border-dashed",
+		Attributes: templ.Attributes{"x-show": "!isLoading() && isEmpty()"},
+	}) {
+		@card.Content(card.ContentProps{Class: "flex flex-col items-center justify-center py-12 text-center gap-4"}) {
+			<span class="text-4xl">📭</span>
+			<div class="space-y-1">
+				@card.Title(card.TitleProps{}) { No students found }
+				@card.Description(card.DescriptionProps{}) {
+					Try adjusting search and grade filters, or add your first student.
+				}
+			</div>
+			<div class="flex gap-2">
 				@button.Button(button.Props{
 					Variant: button.VariantOutline,
 					Type:    button.TypeButton,
-					Attributes: templ.Attributes{
-						"x-on:click": "clearFilters()",
-					},
+					Attributes: templ.Attributes{"x-on:click": "clearFilters()"},
 				}) {
 					Clear Filters
 				}
 				@button.Button(button.Props{
 					Type: button.TypeButton,
-					Attributes: templ.Attributes{
-						"x-on:click": "openCreateModal()",
-					},
+					Attributes: templ.Attributes{"x-on:click": "openCreateModal()"},
 				}) {
 					Add Student
 				}
 			</div>
-		</div>
-	</div>
+		}
+	}
 }
 
 // =============================================================================
@@ -622,33 +616,29 @@ templ StudentEmptyState() {
 // =============================================================================
 
 // StudentToasts provides hidden templUI toast templates cloned by showToast() in student.ts.
-// templUI handles the dismiss animation, indicator, and removal after the duration.
-// templUI Auto initializes Cloned Nodes.
 templ StudentToasts() {
 	<template id="student-success-toast-template">
 		@toast.Toast(toast.Props{
-			Title:         "__STUDENT_TOAST_TITLE__",
-			Description:   "__STUDENT_TOAST_MESSAGE__",
-			Variant:       toast.VariantSuccess,
-			Position:      toast.PositionBottomRight,
-			Duration:      4000,
-			Dismissible:   true,
-			ShowIndicator: true,
-			Icon:          true,
-			Class:         "z-[9999]",
+			Title:       "",
+			Description: "",
+			Variant:     toast.VariantSuccess,
+			Position:    toast.PositionBottomRight,
+			Duration:    4000,
+			Dismissible: true,
+			Icon:        true,
+			Class:       "z-[9999]",
 		})
 	</template>
 	<template id="student-error-toast-template">
 		@toast.Toast(toast.Props{
-			Title:         "__STUDENT_TOAST_TITLE__",
-			Description:   "__STUDENT_TOAST_MESSAGE__",
-			Variant:       toast.VariantError,
-			Position:      toast.PositionBottomRight,
-			Duration:      4000,
-			Dismissible:   true,
-			ShowIndicator: true,
-			Icon:          true,
-			Class:         "z-[9999]",
+			Title:       "",
+			Description: "",
+			Variant:     toast.VariantError,
+			Position:    toast.PositionBottomRight,
+			Duration:    4000,
+			Dismissible: true,
+			Icon:        true,
+			Class:       "z-[9999]",
 		})
 	</template>
 }
