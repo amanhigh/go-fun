@@ -42,7 +42,7 @@ func Page(props PageProps) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section class=\"mx-auto flex w-full max-w-6xl flex-col gap-8\"><div class=\"relative overflow-hidden rounded-[2rem] border border-border/80 bg-card shadow-[0_24px_80px_-48px_rgba(15,23,42,0.85)]\"><div class=\"absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_32%),radial-gradient(circle_at_85%_20%,rgba(14,165,233,0.12),transparent_24%)]\"></div><div class=\"relative px-5 py-5 sm:px-8 sm:py-7 xl:px-10 xl:py-9\"><div class=\"max-w-4xl space-y-8\"><div class=\"flex flex-wrap items-center gap-3 text-[1.05rem] text-muted-foreground sm:text-[1.125rem]\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section class=\"mx-auto flex w-full max-w-6xl flex-col gap-8\"><div class=\"relative overflow-hidden rounded-[2rem] border border-border/80 bg-card shadow-[0_24px_80px_-48px_rgba(15,23,42,0.85)]\"><div class=\"absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_32%),radial-gradient(circle_at_85%_20%,rgba(14,165,233,0.12),transparent_24%)]\"></div><div class=\"relative px-5 py-4 sm:px-6 sm:py-5\"><div class=\"max-w-4xl space-y-4\"><div class=\"flex flex-wrap items-center gap-3 text-sm text-muted-foreground\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -184,14 +184,14 @@ func Page(props PageProps) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<hgroup class=\"space-y-5\"><h1 class=\"max-w-4xl text-3xl font-semibold leading-[0.98] tracking-[-0.05em] text-foreground sm:text-4xl xl:text-[3.75rem]\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<hgroup class=\"space-y-3\"><h1 class=\"max-w-4xl text-2xl font-semibold leading-[0.98] tracking-[-0.05em] text-foreground sm:text-3xl\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(props.Heading)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/layout/page.templ`, Line: 41, Col: 147}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/layout/page.templ`, Line: 41, Col: 129}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -202,14 +202,14 @@ func Page(props PageProps) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if props.Description != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<p class=\"max-w-3xl pt-1 text-[15px] leading-8 text-muted-foreground sm:text-base\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<p class=\"max-w-3xl pt-1 text-sm leading-6 text-muted-foreground\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(props.Description)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/layout/page.templ`, Line: 43, Col: 110}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/layout/page.templ`, Line: 43, Col: 93}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {

@@ -35,7 +35,7 @@ import (
 // Main Components:
 //   - StudentFilterPanel: Search and filter controls
 //   - StudentTable: Data table with pagination
-//   - StudentFormModal: Create/Edit dialog
+//   - StudentDialog: Create/Edit dialog
 //
 // State & Feedback Components (see Section 5):
 //   - StudentLoadingState: Skeleton loading placeholders
@@ -50,9 +50,9 @@ templ StudentPage() {
 		@layout.Page(layout.PageProps{
 			CurrentPage: "Student Management",
 			Eyebrow:     "CRUD Interface",
-			Heading:     "👥 Student List Management",
-			Description: "Search, filter, create, edit, and delete students using the sample API endpoints.",
-			Tags:        []string{"Interactive", "CRUD", "Alpine.js"},
+			Heading:     "👥 Student Management",
+			Description: "Search, filter, create, edit, and delete students",
+			Tags:        []string{"templUI", "Tailwind CSS", "Alpine.js"},
 		}) {
 			// x-data: registers Alpine state | x-init: fetches students on mount.
 			<div x-data="studentPage" x-init="listStudents()" class="rounded-3xl border border-border bg-card shadow-sm overflow-hidden">
@@ -62,7 +62,7 @@ templ StudentPage() {
 				@StudentErrorState()
 				@StudentTable()
 				@StudentEmptyState()
-				@StudentFormModal()
+				@StudentDialog()
 				@StudentToasts()
 			</div>
 		}
@@ -90,16 +90,14 @@ templ StudentPage() {
 templ StudentFilterPanel() {
 	@card.Card(card.Props{Class: "rounded-none border-x-0 border-t-0"}) {
 		@card.Header() {
-			<div class="flex items-start justify-between gap-3">
-				<div>
-					@card.Title(card.TitleProps{Class: "text-lg font-semibold inline-flex items-center gap-2"}) {
-						@icon.Funnel(icon.Props{Class: "h-4 w-4"})
-						<span>Student filters</span>
-					}
-					@card.Description(card.DescriptionProps{Class: "text-sm text-muted-foreground"}) {
-						Use search and grade filters, then add or manage records.
-					}
-				</div>
+		<div class="flex items-start justify-between gap-3">
+			@card.Title(card.TitleProps{Class: "text-lg font-semibold inline-flex items-center gap-2"}) {
+				@icon.Funnel(icon.Props{Class: "h-4 w-4"})
+				<span>Student filters</span>
+			}
+			@card.Description(card.DescriptionProps{Class: "text-sm text-muted-foreground"}) {
+				Use search and grade filters, then add or manage records.
+			}
 			@StudentFilterTip()
 		</div>
 	}
@@ -231,6 +229,7 @@ templ StudentAddButton() {
 // Components:
 //   - StudentTable: Card-wrapped table with headers and dynamic rows
 //   - StudentRow: Individual table row with student data and action buttons
+//   - StudentRowButtons: Edit, delete, and undo action buttons for each row
 //   - StudentPagination: Page navigation controls showing student count
 // =============================================================================
 
@@ -239,27 +238,25 @@ templ StudentAddButton() {
 templ StudentTable() {
 	@card.Card(card.Props{
 		Class:        "rounded-none border-x-0 border-b-0",
-		Attributes:   templ.Attributes{"x-show": "!loading"},
+		Attributes:   templ.Attributes{"x-show": "!isLoading()"},
 	}) {
-		@card.Content() {
-			<div class="overflow-x-auto">
-				@table.Table(table.Props{Class: "min-w-[760px]"}) {
-					@table.Header(table.HeaderProps{Class: "bg-muted/30 text-xs uppercase tracking-wide"}) {
-						@table.Row() {
-							@table.Head() { ID }
-							@table.Head() { Name }
-							@table.Head() { Email }
-							@table.Head() { Grade }
-							@table.Head(table.HeadProps{Class: "text-right"}) { Actions }
-						}
-					}
-					@table.Body() {
-						<template x-for="student in paginatedStudents" x-bind:key="student.id">
-							@StudentRow()
-						</template>
+		@card.Content(card.ContentProps{Class: "overflow-x-auto p-0"}) {
+			@table.Table(table.Props{Class: "min-w-[760px]"}) {
+				@table.Header(table.HeaderProps{Class: "bg-muted/30 text-xs uppercase tracking-wide"}) {
+					@table.Row() {
+						@table.Head() { ID }
+						@table.Head() { Name }
+						@table.Head() { Email }
+						@table.Head() { Grade }
+						@table.Head(table.HeadProps{Class: "text-right"}) { Actions }
 					}
 				}
-			</div>
+				@table.Body() {
+					<template x-for="student in paginatedStudents" x-bind:key="student.id">
+						@StudentRow()
+					</template>
+				}
+			}
 		}
 		@StudentPagination()
 	}
@@ -276,158 +273,202 @@ templ StudentRow() {
 			@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"x-text": "student.grade"}}) {}
 		}
 		@table.Cell(table.CellProps{Class: "text-right"}) {
-			<div class="flex justify-end gap-2">
-				@button.Button(button.Props{
-					Variant: button.VariantOutline,
-					Type:    button.TypeButton,
-					Class:   "h-8 px-3 text-xs",
-					Attributes: templ.Attributes{
-						"x-on:click": "openEditModal(student)",
-					},
-				}) {
-					✏️ Edit
-				}
-				@button.Button(button.Props{
-					Variant: button.VariantDestructive,
-					Type:    button.TypeButton,
-					Class:   "h-8 px-3 text-xs",
-					Attributes: templ.Attributes{
-						"x-on:click": "requestDelete(student)",
-						"x-show":     "pendingDeleteId !== student.id",
-					},
-				}) {
-					🗑️ Delete
-				}
-				@button.Button(button.Props{
-					Variant: button.VariantOutline,
-					Type:    button.TypeButton,
-					Class:   "h-8 px-3 text-xs",
-					Attributes: templ.Attributes{
-						"x-on:click": "undoDelete()",
-						"x-show":     "pendingDeleteId === student.id",
-						"x-text":     "`↩ Undo (${pendingDeleteSeconds}s)`",
-					},
-				}) {}
-			</div>
+			@StudentRowButtons()
 		}
 	}
 }
 
-// StudentPagination: prev/page/next controls.
-// x-text: displays filtered count | x-bind:disabled: disables prev/next at boundaries.
-templ StudentPagination() {
-	<div class="flex flex-col gap-3 border-t border-border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-		<div class="text-muted-foreground" x-text="`Showing ${filteredStudents.length} of ${totalStudents} students`"></div>
-		@pagination.Pagination() {
-			@pagination.Content() {
-				@pagination.Item() {
-					@pagination.Previous(pagination.PreviousProps{
-						Attributes: templ.Attributes{
-							"x-on:click":      "goToPreviousPage()", // navigate to previous page
-							"x-bind:disabled": "currentPage === 1", // disable on first page
-						},
-					})
+// StudentRowButtons: edit, delete, and undo action buttons for each row.
+templ StudentRowButtons() {
+	<div class="flex justify-end gap-2">
+		@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "!isDeleting(student)"}}) {
+			@tooltip.Trigger() {
+				@button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Type:    button.TypeButton,
+					Size:    button.SizeSm,
+					Attributes: templ.Attributes{
+						"x-on:click": "openEditModal(student.id)",
+					},
+				}) {
+					✏️ Edit
 				}
-				@pagination.Item() {
-					<span class="rounded-md bg-muted px-3 py-1 text-xs" x-text="currentPage"></span>
+			}
+			@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop}) {
+				Edit student
+			}
+		}
+		@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "!isDeleting(student)"}}) {
+			@tooltip.Trigger() {
+				@button.Button(button.Props{
+					Variant: button.VariantDestructive,
+					Type:    button.TypeButton,
+					Size:    button.SizeSm,
+					Attributes: templ.Attributes{
+						"x-on:click": "requestDelete(student)",
+					},
+				}) {
+					🗑️ Delete
 				}
-				@pagination.Item() {
-					@pagination.Next(pagination.NextProps{
-						Attributes: templ.Attributes{
-							"x-on:click":      "goToNextPage()", // navigate to next page
-							"x-bind:disabled": "currentPage >= totalPages", // disable on last page
-						},
-					})
-				}
+			}
+			@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop}) {
+				Delete student (Undo 3s)
+			}
+		}
+		@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "isDeleting(student)"}}) {
+			@tooltip.Trigger() {
+				@button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Type:    button.TypeButton,
+					Size:    button.SizeSm,
+					Attributes: templ.Attributes{
+						"x-on:click": "undoDelete()",
+						"x-text":     "`↩ Undo (${pendingDeleteSeconds}s)`",
+					},
+				}) {}
+			}
+			@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop}) {
+				Cancel delete
 			}
 		}
 	</div>
 }
 
-// =============================================================================
-// SECTION 4: Student Form Components
-// =============================================================================
-// This section contains the form modal for creating and editing students.
-// The dialog uses native form fields (not templUI components) to ensure
-// Alpine.js x-model bindings work correctly.
-//
-// Components:
-//   - StudentFormModal: Shared create/edit dialog
-//   - StudentTextField: Reusable labelled text input helper
-// =============================================================================
-
-// StudentFormModal: shared create/edit dialog.
-// dialog.Content teleports to <body>, so Alpine scope doesn't cross the portal.
-// student.ts populates fields via DOM before opening; submit reads FormData directly.
-templ StudentFormModal() {
-	@dialog.Dialog(dialog.Props{ID: "student-form"}) {
-		@dialog.Content(dialog.ContentProps{HideCloseButton: true}) {
-			@dialog.Header() {
-				@dialog.Title() { Student }
-				@dialog.Description() { Fill all required details before saving. }
+// StudentPagination: prev/page/next controls.
+// x-text: displays filtered count | x-bind:disabled: disables prev/next at boundaries.
+templ StudentPagination() {
+	@card.Footer(card.FooterProps{Class: "flex flex-col gap-3 border-t border-border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"}) {
+		@pagination.Pagination() {
+			@pagination.Content() {
+				@pagination.Item() {
+					@pagination.Previous(pagination.PreviousProps{
+						Attributes: templ.Attributes{
+							"x-on:click":      "prevPage()",
+							"x-bind:disabled": "!hasPrev()",
+						},
+					})
+				}
+				@pagination.Item() {
+					<span class="text-muted-foreground text-xs" x-text="`Page ${currentPage} of ${totalPages}`"></span>
+				}
+				@pagination.Item() {
+					@pagination.Next(pagination.NextProps{
+						Attributes: templ.Attributes{
+							"x-on:click":      "nextPage()",
+							"x-bind:disabled": "!hasNext()",
+						},
+					})
+				}
 			}
-			<form id="student-form" class="space-y-4" onsubmit="return studentFormSubmit(event)">
-				<input type="hidden" id="s-student-id"/>
-				<div class="grid gap-4 sm:grid-cols-2">
-					@StudentTextField("s-first-name", "First Name *", "first_name")
-					@StudentTextField("s-last-name", "Last Name *", "last_name")
-				</div>
-				@form.Item() {
-					@form.Label(form.LabelProps{For: "s-email"}) { Email * }
-					@input.Input(input.Props{ID: "s-email", Type: input.TypeEmail, Required: true,
-						Attributes: templ.Attributes{"name": "email"}})
-				}
-				<div class="grid gap-4 sm:grid-cols-2">
-					@form.Item() {
-						@form.Label(form.LabelProps{For: "s-age"}) { Age }
-						@input.Input(input.Props{ID: "s-age", Type: "number",
-							Attributes: templ.Attributes{"name": "age"}})
-					}
-					// Grade: templUI selectbox (form doesn't use x-model, so teleport is fine)
-					@form.Item() {
-						@form.Label(form.LabelProps{For: "s-grade"}) { Grade * }
-						@selectbox.SelectBox() {
-							@selectbox.Trigger(selectbox.TriggerProps{
-								ID:   "s-grade",
-								Name: "s-grade",
-							}) {
-								@selectbox.Value(selectbox.ValueProps{Placeholder: "Select grade"})
-							}
-							@selectbox.Content() {
-								@selectbox.Group() {
-									@selectbox.Item(selectbox.ItemProps{Value: "Freshman"}) { Freshman }
-									@selectbox.Item(selectbox.ItemProps{Value: "Sophomore"}) { Sophomore }
-									@selectbox.Item(selectbox.ItemProps{Value: "Junior"}) { Junior }
-									@selectbox.Item(selectbox.ItemProps{Value: "Senior"}) { Senior }
-								}
-							}
-						}
-					}
-				</div>
-				@dialog.Footer() {
-					@dialog.Close() {
-						@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton}) {
-							Cancel
-						}
-					}
-					@button.Button(button.Props{Type: button.TypeSubmit}) { Save }
-				}
-			</form>
 		}
 	}
 }
 
-// StudentTextField: labelled text input; name attr enables FormData.get() on submit.
-templ StudentTextField(fieldID string, labelText string, name string) {
-	@form.Item() {
-		@form.Label(form.LabelProps{For: fieldID}) { { labelText } }
-		@input.Input(input.Props{
-			ID:       fieldID,
-			Type:     input.TypeText,
-			Required: true,
-			Attributes: templ.Attributes{"name": name},
-		})
+// =============================================================================
+// SECTION 4: Student Form Components
+// =============================================================================
+// This section contains the form dialog for creating and editing students.
+// The dialog uses native form fields (not templUI components) to ensure
+// Alpine.js x-model bindings work correctly.
+//
+// Components:
+//   - StudentDialog: Dialog wrapper for create/edit
+//   - StudentFormModel: Reusable form with fields
+//   - StudentTextField: Reusable labelled text input helper
+// =============================================================================
+
+// StudentDialog: dialog wrapper for create/edit operations.
+templ StudentDialog() {
+	@dialog.Dialog(dialog.Props{ID: "student-form"}) {
+		@dialog.Content(dialog.ContentProps{}) {
+			@dialog.Header() {
+				@dialog.Title(dialog.TitleProps{Attributes: templ.Attributes{"x-text": "isEditing() ? 'Edit Student' : 'Add Student'"}}) {}
+				@dialog.Description() { Fill all required details before saving. }
+			}
+			@StudentFormModel()
+			@dialog.Footer() {
+				@dialog.Close() {
+					@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton}) {
+						Cancel
+					}
+				}
+				@button.Button(button.Props{Type: button.TypeSubmit}) { Save }
+			}
+			// FIXME: Add Loading State, Saving State.
+		
+		}
 	}
+}
+
+// StudentFormModel: form fields for student create/edit.
+templ StudentFormModel() {
+	<form class="space-y-4" x-on:submit.prevent="submitForm()">
+		<div class="grid gap-4 sm:grid-cols-2">
+			@form.Item() {
+				@form.Label(form.LabelProps{For: "firstName"}) { First Name }
+				@input.Input(input.Props{
+					ID:          "firstName",
+					Type:        input.TypeText,
+					Required:    true,
+					Placeholder: "Enter first name",
+					Attributes:  templ.Attributes{"x-model": "form.firstName"},
+				})
+			}
+			@form.Item() {
+				@form.Label(form.LabelProps{For: "lastName"}) { Last Name }
+				@input.Input(input.Props{
+					ID:          "lastName",
+					Type:        input.TypeText,
+					Required:    true,
+					Placeholder: "Enter last name",
+					Attributes:  templ.Attributes{"x-model": "form.lastName"},
+				})
+			}
+		</div>
+		@form.Item() {
+			@form.Label(form.LabelProps{For: "email"}) { Email }
+			@input.Input(input.Props{
+				ID:          "email",
+				Type:        input.TypeEmail,
+				Required:    true,
+				Placeholder: "Enter email address",
+				Attributes:  templ.Attributes{"x-model": "form.email"},
+			})
+		}
+		<div class="grid gap-4 sm:grid-cols-2">
+			@form.Item() {
+				@form.Label(form.LabelProps{For: "age"}) { Age }
+				@input.Input(input.Props{
+					ID:          "age",
+					Type:        "number",
+					Placeholder: "Enter age",
+					Attributes:  templ.Attributes{"x-model": "form.age"},
+				})
+			}
+			@form.Item() {
+				@form.Label(form.LabelProps{For: "grade"}) { Grade }
+				@selectbox.SelectBox() {
+					@selectbox.Trigger(selectbox.TriggerProps{
+						ID:   "grade",
+						Name: "grade",
+						Attributes: templ.Attributes{
+							"x-model": "form.grade",
+						},
+					}) {
+						@selectbox.Value(selectbox.ValueProps{Placeholder: "Select grade"})
+					}
+					@selectbox.Content() {
+						@selectbox.Group() {
+							@selectbox.Item(selectbox.ItemProps{Value: "Freshman"}) { Freshman }
+							@selectbox.Item(selectbox.ItemProps{Value: "Sophomore"}) { Sophomore }
+							@selectbox.Item(selectbox.ItemProps{Value: "Junior"}) { Junior }
+							@selectbox.Item(selectbox.ItemProps{Value: "Senior"}) { Senior }
+						}
+					}
+				}
+			}
+		</div>
+	</form>
 }
 
 // =============================================================================
@@ -445,7 +486,7 @@ templ StudentTextField(fieldID string, labelText string, name string) {
 // StudentLoadingState: skeleton placeholders shown while listStudents() is running.
 // x-show: displays skeletons while loading.
 templ StudentLoadingState() {
-	<div x-show="loading" class="p-6">
+	<div x-show="isLoading()" class="p-6">
 		<div class="space-y-3">
 			@skeleton.Skeleton(skeleton.Props{Class: "h-10 w-full"})
 			@skeleton.Skeleton(skeleton.Props{Class: "h-10 w-full"})
@@ -460,7 +501,7 @@ templ StudentErrorState() {
 	@alert.Alert(alert.Props{
 		Variant: alert.VariantDestructive,
 		Attributes: templ.Attributes{
-			"x-show": "errorMessage !== ''",
+			"x-show": "hasError()",
 		},
 	}) {
 		@alert.Title() {
@@ -484,7 +525,7 @@ templ StudentErrorState() {
 // StudentEmptyState: shown when loaded but no students match active filters.
 // x-show: displays when not loading and filteredResults.length === 0.
 templ StudentEmptyState() {
-	<div x-show="!loading && filteredStudents.length === 0" class="rounded-3xl border border-dashed border-border bg-card px-6 py-14 text-center">
+	<div x-show="!isLoading() && isEmpty()" class="rounded-3xl border border-dashed border-border bg-card px-6 py-14 text-center">
 		<div class="mx-auto max-w-sm space-y-3">
 			<p class="text-2xl">📭</p>
 			<h3 class="text-lg font-semibold">No students found</h3>

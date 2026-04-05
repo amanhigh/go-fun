@@ -72,6 +72,20 @@ interface StudentDeleteState {
   pendingDeleteTimer: number | null;
 }
 
+interface StudentFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  age: number;
+  grade: Grade;
+}
+
+interface StudentFormState {
+  editingId: string;
+  form: StudentFormData;
+  submitForm(): Promise<void>;
+}
+
 const studentFormFieldIds = {
   id: 's-student-id',
   firstName: 's-first-name',
@@ -97,14 +111,22 @@ interface StudentPageState extends StudentDataState, StudentFilterState, Student
   readonly paginatedStudents: StudentApiRecord[];
   readonly startItem: number;
   readonly endItem: number;
+  isLoading(): boolean;
+  isDeleting(student: StudentApiRecord): boolean;
+  isEditing(): boolean;
+  hasNext(): boolean;
+  hasPrev(): boolean;
+  hasError(): boolean;
+  isEmpty(): boolean;
   init(): void;
   listStudents(this: StudentPageState): Promise<void>;
   onGradeFilterChange(this: StudentPageState, event: Event): void;
   clearFilters(this: StudentPageState): void;
-  goToNextPage(this: StudentPageState): void;
-  goToPreviousPage(this: StudentPageState): void;
-  resetForm(): void;
-  openEditModal(this: StudentPageState, student: StudentApiRecord): void;
+  nextPage(this: StudentPageState): void;
+  prevPage(this: StudentPageState): void;
+resetForm(): void;
+  submitForm(): Promise<void>;
+  openEditModal(this: StudentPageState, studentId: string): Promise<void>;
   requestDelete(this: StudentPageState, student: StudentApiRecord): void;
   undoDelete(this: StudentPageState): void;
   confirmPendingDelete(this: StudentPageState): Promise<void>;
@@ -147,6 +169,14 @@ function studentPage(): StudentPageState {
     pendingDeleteId: '',
     pendingDeleteSeconds: 0,
     pendingDeleteTimer: null,
+    editingId: '',
+    form: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      age: 18,
+      grade: '' as Grade,
+    },
 
     get currentPage() { return this.page; },
     get hasFilters() { return this.name !== '' || this.grade !== ''; },
@@ -162,6 +192,14 @@ function studentPage(): StudentPageState {
     get paginatedStudents() { return this.filteredStudents; },
     get startItem() { return this.totalStudents ? ((this.page - 1) * this.pageSize) + 1 : 0; },
     get endItem() { return this.totalStudents ? Math.min(this.page * this.pageSize, this.totalStudents) : 0; },
+
+    isLoading() { return this.loading; },
+    isDeleting(student) { return this.pendingDeleteId === student.id; },
+    isEditing() { return this.form.firstName !== '' || this.form.lastName !== '' || this.editingId !== ''; },
+    hasNext() { return this.currentPage < this.totalPages; },
+    hasPrev() { return this.currentPage > 1; },
+    hasError() { return this.errorMessage !== ''; },
+    isEmpty() { return this.filteredStudents.length === 0; },
 
     init() {
       window.addEventListener('student:saved', (e) => {
@@ -217,13 +255,13 @@ function studentPage(): StudentPageState {
       resetTemplSelectboxValue('grade-filter');
       void this.listStudents();
     },
-    goToNextPage() {
+    nextPage() {
       if (this.currentPage < this.totalPages) {
         this.page += 1;
         void this.listStudents();
       }
     },
-    goToPreviousPage() {
+    prevPage() {
       if (this.currentPage > 1) {
         this.page -= 1;
         void this.listStudents();
@@ -231,19 +269,74 @@ function studentPage(): StudentPageState {
     },
 
     resetForm() {
-      setFormFields(emptyStudentFormValues);
+      this.editingId = '';
+      this.form.firstName = '';
+      this.form.lastName = '';
+      this.form.email = '';
+      this.form.age = 18;
+      this.form.grade = '' as Grade;
     },
 
-    openEditModal(student) {
-      setFormFields({
-        id: student.id,
-        firstName: student.first_name,
-        lastName: student.last_name,
-        email: student.email,
-        age: student.age,
-        grade: student.grade,
-      });
-      window.tui?.dialog.open('student-form');
+    async submitForm() {
+      const isEdit = this.editingId !== '';
+      const body: StudentApiPayload = {
+        first_name: this.form.firstName,
+        last_name: this.form.lastName,
+        email: this.form.email,
+        age: Number.isFinite(this.form.age) ? this.form.age : 0,
+        grade: this.form.grade as Grade,
+      };
+
+      try {
+        const response = await fetch(isEdit ? `/api/students/${this.editingId}` : '/api/students', {
+          method: isEdit ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!response.ok) {
+          const fallback = isEdit ? 'Failed to update student' : 'Failed to create student';
+          const errorMessage = await readErrorMessage(response, fallback);
+          throw new Error(errorMessage);
+        }
+        window.tui?.dialog.close('student-form');
+        this.resetForm();
+        emitStudentEvent(
+          'student:saved',
+          isEdit ? 'Student updated' : 'Student added',
+          isEdit ? 'The student details were saved successfully.' : 'The student record was created successfully.',
+          isEdit ? 'update' : 'create',
+        );
+      } catch (error) {
+        const fallback = isEdit ? 'Failed to update student' : 'Failed to create student';
+        const message = error instanceof Error ? error.message : fallback;
+        emitStudentEvent('student:error', isEdit ? 'Update failed' : 'Create failed', message);
+      }
+    },
+
+    async openEditModal(studentId: string) {
+      try {
+        const response = await fetch(`/api/students/${studentId}`);
+        if (!response.ok) throw new Error('Failed to fetch student');
+        const json = await response.json();
+        const student = json?.data as StudentApiRecord | undefined;
+        if (!student) throw new Error('Student not found');
+        
+        // Open dialog first
+        window.tui?.dialog.open('student-form');
+        
+        // Then set form values after dialog is open
+        this.form = {
+          firstName: student.first_name,
+          lastName: student.last_name,
+          email: student.email,
+          age: student.age,
+          grade: student.grade,
+        };
+        this.editingId = student.id;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to fetch student';
+        this.showToast('Error', message, true);
+      }
     },
 
     requestDelete(student) {
@@ -315,7 +408,6 @@ function studentPage(): StudentPageState {
 // Global helpers: dialog Content is teleported, so DOM helpers are used for pre-filling forms.
 function setFormFields(fields: StudentFormValues): void {
   const mappings: Array<[string, string | number]> = [
-    [studentFormFieldIds.id, fields.id],
     [studentFormFieldIds.firstName, fields.firstName],
     [studentFormFieldIds.lastName, fields.lastName],
     [studentFormFieldIds.email, fields.email],

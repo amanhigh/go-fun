@@ -18,9 +18,9 @@ templ Page(props PageProps) {
 	<section class="mx-auto flex w-full max-w-6xl flex-col gap-8">
 		<div class="relative overflow-hidden rounded-[2rem] border border-border/80 bg-card shadow-[0_24px_80px_-48px_rgba(15,23,42,0.85)]">
 			<div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_32%),radial-gradient(circle_at_85%_20%,rgba(14,165,233,0.12),transparent_24%)]"></div>
-			<div class="relative px-5 py-5 sm:px-8 sm:py-7 xl:px-10 xl:py-9">
-				<div class="max-w-4xl space-y-8">
-					<div class="flex flex-wrap items-center gap-3 text-[1.05rem] text-muted-foreground sm:text-[1.125rem]">
+			<div class="relative px-5 py-4 sm:px-6 sm:py-5">
+				<div class="max-w-4xl space-y-4">
+					<div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
 						@breadcrumb.Breadcrumb() {
 							@breadcrumb.List() {
 								@breadcrumb.Item() {
@@ -37,10 +37,10 @@ templ Page(props PageProps) {
 								{ props.Eyebrow }
 							</div>
 						}
-						<hgroup class="space-y-5">
-							<h1 class="max-w-4xl text-3xl font-semibold leading-[0.98] tracking-[-0.05em] text-foreground sm:text-4xl xl:text-[3.75rem]">{ props.Heading }</h1>
+						<hgroup class="space-y-3">
+							<h1 class="max-w-4xl text-2xl font-semibold leading-[0.98] tracking-[-0.05em] text-foreground sm:text-3xl">{ props.Heading }</h1>
 							if props.Description != "" {
-								<p class="max-w-3xl pt-1 text-[15px] leading-8 text-muted-foreground sm:text-base">{ props.Description }</p>
+								<p class="max-w-3xl pt-1 text-sm leading-6 text-muted-foreground">{ props.Description }</p>
 							}
 						</hgroup>
 					</div>
