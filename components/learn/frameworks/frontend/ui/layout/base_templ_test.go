@@ -101,7 +101,7 @@ var _ = Describe("Base Template Tests", func() {
 		It("should include CSS and JS dependencies", func() {
 			Expect(html).To(ContainSubstring("<link rel=\"stylesheet\" href=\"/assets/css/app.css\">"))
 			Expect(html).To(ContainSubstring("selectbox.min.js"))
-			Expect(html).To(ContainSubstring("<script src=\"/assets/js/app.js\"></script>"))
+			Expect(html).To(ContainSubstring("<script defer src=\"/assets/js/app.js\"></script>"))
 			Expect(html).To(ContainSubstring("<script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script>"))
 		})
 	})
