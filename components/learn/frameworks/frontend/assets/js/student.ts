@@ -204,6 +204,7 @@ function studentPage() {
     // Data State
     // ─────────────────────────────────────────────────────────────
     students: [] as StudentResponse[],
+    gradeOptions: [] as string[],
 
     // ─────────────────────────────────────────────────────────────
     // Filter State (delegated to FilterTracker)
@@ -330,6 +331,16 @@ function studentPage() {
       } finally {
         this.loading = false;
       }
+    },
+
+    async loadGradeOptions() {
+      const response = await fetch('/api/students/grades');
+      const payload = (await response.json()) as { success: boolean; data: string[] };
+      this.gradeOptions = payload.data;
+    },
+
+    async initData() {
+      await Promise.all([this.listStudents(), this.loadGradeOptions()]);
     },
 
     // ─────────────────────────────────────────────────────────────

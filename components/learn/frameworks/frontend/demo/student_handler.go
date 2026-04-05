@@ -32,6 +32,7 @@ func (h *StudentHandler) RegisterRoutes(r *gin.Engine) {
 	api := r.Group("/api/students")
 	{
 		api.GET("", h.listStudents)
+		api.GET("/grades", h.getGradeOptions)
 		api.GET("/:id", h.getStudentByID)
 		api.POST("", h.createStudent)
 		api.PUT("/:id", h.updateStudent)
@@ -48,6 +49,14 @@ func (h *StudentHandler) listStudents(c *gin.Context) {
 	}
 	response := h.studentService.ListStudents(query.Offset, query.Limit, query.SearchQuery, query.Grade)
 	c.JSON(http.StatusOK, response)
+}
+
+// getGradeOptions returns available grade options
+func (h *StudentHandler) getGradeOptions(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    []string{"Freshman", "Sophomore", "Junior", "Senior"},
+	})
 }
 
 // getStudentByID returns a specific student by ID

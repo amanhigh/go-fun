@@ -47,9 +47,10 @@ templ StudentPage() {
 			Description: "Search, filter, create, edit, and delete students",
 			Tags:        []string{"templUI", "Tailwind CSS", "Alpine.js"},
 		}) {
-			// x-data: registers Alpine state | x-init: fetches students on mount.
-			<div x-data="studentPage()" x-init="listStudents()" class="rounded-3xl border border-border bg-card shadow-sm overflow-hidden">
+			// x-data: registers Alpine state | x-init: initializes all data on mount.
+			<div x-data="studentPage()" x-init="await initData()" class="rounded-3xl border border-border bg-card shadow-sm overflow-hidden">
 				@StudentFilterPanel()
+				// FIXME: Add Date Filter on CreateAt
 				@separator.Separator(separator.Props{Class: "my-0 bg-border"})
 				@StudentFeedbackComponents()
 				@StudentTable()
@@ -171,10 +172,11 @@ templ StudentGradeSelect(id string, model string, isFilter bool) {
 				if isFilter {
 					@selectbox.Item(selectbox.ItemProps{Value: ""}) { All Grades }
 				}
-				@selectbox.Item(selectbox.ItemProps{Value: "Freshman"}) { Freshman }
-				@selectbox.Item(selectbox.ItemProps{Value: "Sophomore"}) { Sophomore }
-				@selectbox.Item(selectbox.ItemProps{Value: "Junior"}) { Junior }
-				@selectbox.Item(selectbox.ItemProps{Value: "Senior"}) { Senior }
+				<template x-for="grade in gradeOptions" :key="grade">
+					@selectbox.Item(selectbox.ItemProps{Value: "{{ grade }}"}) {
+						<span x-text="grade"></span>
+					}
+				</template>
 			}
 		}
 	}
