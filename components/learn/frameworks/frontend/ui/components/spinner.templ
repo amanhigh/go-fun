@@ -1,0 +1,54 @@
+package components
+
+import "github.com/a-h/templ"
+import "github.com/templui/templui/components/icon"
+import "github.com/templui/templui/utils"
+
+// SpinnerSize defines the size of the spinner
+type SpinnerSize string
+
+const (
+	SpinnerSizeSm SpinnerSize = "sm"
+	SpinnerSizeMd SpinnerSize = "md"
+	SpinnerSizeLg SpinnerSize = "lg"
+)
+
+// SpinnerProps configures the spinner appearance
+type SpinnerProps struct {
+	Size  SpinnerSize      // Size of the spinner (sm, md, lg)
+	Class string           // Additional custom classes
+	Attrs templ.Attributes // Extra HTML attributes
+}
+
+// spinnerSizeClass returns CSS classes based on spinner size
+func spinnerSizeClass(size SpinnerSize) string {
+	switch size {
+	case SpinnerSizeSm:
+		return "h-4 w-4"
+	case SpinnerSizeMd:
+		return "h-6 w-6"
+	case SpinnerSizeLg:
+		return "h-8 w-8"
+	default:
+		return "h-6 w-6"
+	}
+}
+
+// Spinner displays an animated loading indicator with default size.
+templ Spinner(props ...SpinnerProps) {
+	if len(props) > 0 {
+		@SpinnerWithProps(props[0])
+	} else {
+		@SpinnerWithProps(SpinnerProps{Size: SpinnerSizeMd})
+	}
+}
+
+// SpinnerWithProps displays an animated loading indicator with full props control.
+templ SpinnerWithProps(props SpinnerProps) {
+	<div
+		class={ utils.TwMerge("flex items-center justify-center", props.Class) }
+		{ props.Attrs... }
+	>
+		@icon.Icon("hourglass")(icon.Props{Class: spinnerSizeClass(props.Size) + " animate-spin text-primary"})
+	</div>
+}

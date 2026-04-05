@@ -12,20 +12,26 @@ import (
 // CreateComponents creates the standard set of UI components
 func CreateComponents() []components.Component {
 	return []components.Component{
-		pages.NewFormShowcaseComponent(),
 		pages.NewHelloComponent(),
+		pages.NewFormShowcaseComponent(),
+		pages.NewStudentListComponent(),
 	}
 }
 
 // SetupRoutes configures all routes on the given gin engine with provided components
 func SetupRoutes(r *gin.Engine, components []components.Component) {
-	// Serve static files (JS, CSS, images) - path relative to demo directory
+	// Serve static files (JS, CSS, images) from the frontend assets directory.
+	// Air runs the binary with CWD = demo/, so ../assets is the correct relative path.
 	r.Static("/assets", "../assets")
 
 	// Serve templui JavaScript files using embedded assets
 	mux := http.NewServeMux()
 	utils.SetupScriptRoutes(mux, true) // true for development
 	r.Any("/templui/*filepath", gin.WrapH(mux))
+
+	// Initialize and register student API routes
+	studentHandler := NewStudentHandler()
+	studentHandler.RegisterRoutes(r)
 
 	// Index page - shows all available components
 	r.GET("/", func(c *gin.Context) {

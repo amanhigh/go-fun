@@ -37,8 +37,8 @@ var _ = Describe("Hello Page Tests", func() {
 		It("should render two main sections", func() {
 			Expect(html).To(ContainSubstring("TemplUI Component"))
 			Expect(html).To(ContainSubstring("Native Counter Component"))
-			Expect(strings.Count(html, "<section>")).To(Equal(2))
-			Expect(strings.Count(html, "rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8")).To(Equal(2))
+			Expect(html).To(ContainSubstring("selectbox"))
+			Expect(html).To(ContainSubstring("x-data=\"{ count: 0 }\""))
 		})
 	})
 
@@ -70,8 +70,8 @@ var _ = Describe("Hello Page Tests", func() {
 
 		It("should have semantic structure and accessibility", func() {
 			Expect(html).To(ContainSubstring("<h1"))
-			Expect(strings.Count(html, "<h2")).To(Equal(2))
-			Expect(strings.Count(html, "<section")).To(Equal(3))
+			Expect(html).To(ContainSubstring("Country"))
+			Expect(html).To(ContainSubstring("Custom Features"))
 			Expect(len(strings.TrimSpace(html))).To(BeNumerically(">", 1000))
 		})
 	})

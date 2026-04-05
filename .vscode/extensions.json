@@ -5,6 +5,7 @@
 		"golang.go",
 		"bierner.markdown-mermaid",
 		"cherrymarkdownpublisher.cherry-markdown",
-		"imaken.any-markdown"
+		"imaken.any-markdown",
+		"hoovercj.vscode-power-mode"
 	]
 }

@@ -10,6 +10,8 @@ import (
 	templruntime "github.com/a-h/templ/runtime"
 	"github.com/templui/templui/components/dialog"
 	"github.com/templui/templui/components/selectbox"
+	"github.com/templui/templui/components/toast"
+	"github.com/templui/templui/components/tooltip"
 )
 
 func Base(title string) templ.Component {
@@ -40,13 +42,13 @@ func Base(title string) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/layout/base.templ`, Line: 14, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/layout/base.templ`, Line: 16, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><!-- Consolidated CSS (Tailwind + Custom) --><link rel=\"stylesheet\" href=\"/assets/css/app.css\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><!-- Consolidated CSS (Tailwind + Custom) --><link rel=\"stylesheet\" href=\"/assets/css/app.css\"><!-- Custom JS must load BEFORE Alpine.js to register alpine:init listener --><script defer src=\"/assets/js/app.js\"></script><!-- Alpine.js must load before templUI scripts so x-data is ready first --><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -58,6 +60,14 @@ func Base(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		templ_7745c5c3_Err = toast.Script().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = tooltip.Script().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</head><body class=\"h-full bg-background text-foreground\"><div class=\"min-h-screen flex flex-col\"><!-- Header --><header class=\"border-b border-border bg-card\"><div class=\"container mx-auto px-4 py-4\"><nav class=\"flex items-center justify-between\"><h1 class=\"text-xl font-semibold text-foreground\">UI Framework</h1><div class=\"flex gap-4\"><a href=\"/\" class=\"text-sm text-muted-foreground hover:text-foreground transition-colors\">Home</a> <a href=\"/form\" class=\"text-sm text-muted-foreground hover:text-foreground transition-colors\">Forms</a> <a href=\"/hello\" class=\"text-sm text-muted-foreground hover:text-foreground transition-colors\">Hello</a></div></nav></div></header><!-- Main Content --><main class=\"flex-1 container mx-auto px-4 py-8\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -66,7 +76,7 @@ func Base(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</main><!-- Footer --><footer class=\"border-t border-border bg-card mt-auto\"><div class=\"container mx-auto px-4 py-4\"><p class=\"text-sm text-muted-foreground text-center\">Built with TemplUI & Tailwind CSS</p></div></footer></div><!-- Scripts at end of body for proper loading order --><!-- Custom JS must load BEFORE Alpine.js to register alpine:init listener --><script src=\"/assets/js/app.js\"></script><!-- Alpine.js loads last and triggers alpine:init event --><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</main><!-- Footer --><footer class=\"border-t border-border bg-card mt-auto\"><div class=\"container mx-auto px-4 py-4\"><p class=\"text-sm text-muted-foreground text-center\">Built with TemplUI & Tailwind CSS, powered by AlpineJS</p></div></footer></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -1,0 +1,635 @@
+//go:generate templ generate
+package pages
+
+// Student CRUD page — templUI components + Alpine.js state (student.ts) + Tailwind CSS.
+// templ renders static HTML with Alpine attrs; Alpine makes it reactive at runtime.
+// All state, API calls, and computed properties live in assets/js/student.ts.
+
+import (
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
+	"github.com/templui/templui/components/alert"
+	"github.com/templui/templui/components/badge"
+	"github.com/templui/templui/components/button"
+	"github.com/templui/templui/components/card"
+	"github.com/templui/templui/components/dialog"
+	"github.com/templui/templui/components/form"
+	"github.com/templui/templui/components/icon"
+	"github.com/templui/templui/components/input"
+	"github.com/templui/templui/components/label"
+	"github.com/templui/templui/components/pagination"
+	"github.com/templui/templui/components/selectbox"
+	"github.com/templui/templui/components/separator"
+	"github.com/templui/templui/components/table"
+	"github.com/templui/templui/components/toast"
+	"github.com/templui/templui/components/tooltip"
+)
+
+// =============================================================================
+// SECTION 1: Student Page Entry Point
+// =============================================================================
+// Top-level StudentPage component serving as entry point for /students.
+//
+// Main Components:
+//   - StudentFilterPanel: Search and filter controls
+//   - StudentTable: Data table with pagination
+//   - StudentDialog: Create/Edit dialog
+//   - State Feedback: See Section 5
+// =============================================================================
+
+// StudentPage is the top-level entry point for /students.
+templ StudentPage() {
+	@layout.Base("Student Management") {
+		@layout.Page(layout.PageProps{
+			CurrentPage: "Student Management",
+			Eyebrow:     "CRUD Interface",
+			Heading:     "👥 Student Management",
+			Description: "Search, filter, create, edit, and delete students",
+			Tags:        []string{"templUI", "Tailwind CSS", "Alpine.js"},
+		}) {
+			// x-data: registers Alpine state | x-init: initializes all data on mount.
+			<div x-data="studentPage()" x-init="await initData()" class="rounded-3xl border border-border bg-card shadow-sm overflow-hidden">
+				@StudentFilterPanel()
+				// FIXME: Add Date Filter on CreateAt
+				@separator.Separator(separator.Props{Class: "my-0 bg-border"})
+				@StudentFeedbackComponents()
+				@StudentTable()
+				@StudentEmptyState()
+				@StudentDialog()
+			</div>
+		}
+	}
+}
+
+// =============================================================================
+// SECTION 2: Student Filter Components
+// =============================================================================
+// This section contains all components related to filtering and searching students.
+// It includes the filter panel, grade dropdown options, and active filter badges.
+//
+// Components:
+//   - StudentFilterPanel: Main filter UI orchestrating all sub-components
+//   - StudentFilterTip: Tooltip with help button for filter tips
+//   - StudentSearchInput: Search input field for filtering by name
+//   - StudentGradeSelect: Grade dropdown for filtering by grade
+//   - StudentFilterActions: Clear and Add Student buttons
+//   - StudentActiveFilters: Displays currently active filter badges
+//   - StudentGradeSelectItems: Grade options for the filter dropdown (helper)
+//   - StudentGradeOptions: Grade options for the form modal dropdown (helper)
+// =============================================================================
+
+// StudentFilterPanel: search input (x-model), grade selectbox (x-on:change), and action buttons.
+templ StudentFilterPanel() {
+	@card.Card(card.Props{Class: "rounded-none border-x-0 border-t-0"}) {
+		@card.Header() {
+		<div class="flex items-start justify-between gap-3">
+			@card.Title(card.TitleProps{Class: "text-lg font-semibold inline-flex items-center gap-2"}) {
+				@icon.Funnel(icon.Props{Class: "h-4 w-4"})
+				Student filters
+			}
+			@card.Description(card.DescriptionProps{Class: "text-sm text-muted-foreground"}) {
+				Use search and grade filters, then add or manage records.
+			}
+			@StudentFilterTip()
+		</div>
+	}
+	@card.Content() {
+		<div class="flex flex-col gap-4 lg:flex-row lg:items-end">
+			@StudentNameFilter()
+			<div class="w-full sm:w-56">
+				@label.Label(label.Props{For: "grade-filter", Class: "mb-2 inline-flex text-sm font-medium"}) { Grade }
+				@StudentGradeSelect("grade-filter", "filterTracker.grade", true)
+			</div>
+			<div class="flex items-center gap-2">
+				@StudentClearButton()
+				@StudentAddButton()
+			</div>
+		</div>
+	}
+}
+}
+
+// StudentFilterTip: tooltip with help button for filter tips.
+templ StudentFilterTip() {
+	@tooltip.Tooltip() {
+		@tooltip.Trigger() {
+			@button.Button(button.Props{
+				Type:    button.TypeButton,
+				Variant: button.VariantOutline,
+				Class:   "h-8 w-8 p-0",
+				Attributes: templ.Attributes{
+					"aria-label": "Filter tips",
+				},
+			}) {
+				@icon.Icon("circle-question-mark")(icon.Props{Class: "h-4 w-4"})
+			}
+		}
+		@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop, ShowArrow: true}) {
+			Tip: try Age 0 while saving to see backend validation.
+		}
+	}
+}
+
+// StudentNameFilter: search input field for filtering by name.
+templ StudentNameFilter() {
+	<div class="w-full lg:flex-1">
+		@label.Label(label.Props{For: "filter-name", Class: "mb-2 inline-flex text-sm font-medium"}) {
+			Filter Name
+		}
+		// x-model: two-way binding | x-on:input: triggers refetch on typing.
+		@input.Input(input.Props{
+			Type:        input.TypeSearch,
+			Placeholder: "🔍 Filter by name...",
+			ID:          "filter-name",
+			Class:       "w-full",
+			Attributes: templ.Attributes{
+				"x-model.debounce.300ms":     "filterTracker.name",
+				"x-on:input.debounce.300ms": "applyFilters()",
+			},
+		})
+	</div>
+}
+
+// StudentGradeSelect is a reusable grade dropdown.
+// Parameters:
+//   - id: form element ID (also used as name)
+//   - model: Alpine x-model binding
+//   - isFilter: true for filter (with "All Grades" option), false for form
+templ StudentGradeSelect(id string, model string, isFilter bool) {
+	@selectbox.SelectBox() {
+		@selectbox.Trigger(selectbox.TriggerProps{
+			ID:   id,
+			Name: id,
+			Attributes: templ.Attributes{
+				"x-model":                 model,
+				"x-on:change.debounce.300ms": map[bool]string{true: "applyFilters()", false: ""}[isFilter],
+			},
+		}) {
+			@selectbox.Value(selectbox.ValueProps{Placeholder: map[bool]string{true: "All Grades", false: "Select grade"}[isFilter]})
+		}
+		@selectbox.Content() {
+			@selectbox.Group() {
+				if isFilter {
+					@selectbox.Item(selectbox.ItemProps{Value: ""}) { All Grades }
+				}
+				<template x-for="grade in gradeOptions" :key="grade">
+					@selectbox.Item(selectbox.ItemProps{Attributes: templ.Attributes{":data-tui-selectbox-value": "grade"}}) {
+						<span x-text="grade"></span>
+					}
+				</template>
+			}
+		}
+	}
+}
+
+// StudentClearButton: clears active filters.
+// x-on:click: clearFilters() clears filters | x-bind:disabled: hasFilters checks any filter set.
+templ StudentClearButton() {
+	@button.Button(button.Props{
+		Variant: button.VariantOutline,
+		Type:    button.TypeButton,
+		Class:   "whitespace-nowrap",
+		Attributes: templ.Attributes{
+			"x-on:click":      "clearFilters()",
+			"x-bind:disabled": "!hasFilters",
+		},
+	}) {
+		Clear
+	}
+}
+
+// StudentAddButton: opens create student dialog via dialog.Trigger.
+templ StudentAddButton() {
+	@dialog.Trigger(dialog.TriggerProps{For: "student-form"}) {
+		@button.Button(button.Props{
+			Type:  button.TypeButton,
+			Class: "whitespace-nowrap inline-flex items-center gap-2",
+			Attributes: templ.Attributes{
+				"x-on:click": "resetForm()",
+			},
+		}) {
+			@icon.Icon("plus")(icon.Props{Class: "h-4 w-4"})
+			Add Student
+		}
+	}
+}
+
+// =============================================================================
+// SECTION 3: Student Table Components
+// =============================================================================
+// This section contains the data table and pagination components for displaying
+// the list of students. The table uses Alpine.js x-for for reactive row rendering.
+//
+// Components:
+//   - StudentTable: Card-wrapped table with headers and dynamic rows
+//   - StudentRow: Individual table row with student data and action buttons
+//   - StudentRowButtons: Edit, delete, and undo action buttons for each row
+//   - StudentPagination: Page navigation controls showing student count
+// =============================================================================
+
+// StudentTable: templUI card wrapping table with Alpine x-for rows; hidden while loading.
+// x-show: hides table while loading | x-for: iterates over paginatedStudents.
+templ StudentTable() {
+	@card.Card(card.Props{
+		Class:        "rounded-none border-x-0 border-b-0",
+		Attributes:   templ.Attributes{"x-show": "!isLoading()"},
+	}) {
+		@card.Content(card.ContentProps{Class: "overflow-x-auto p-0"}) {
+			@table.Table(table.Props{Class: "min-w-[760px]"}) {
+				@table.Header(table.HeaderProps{Class: "bg-muted/30 text-xs uppercase tracking-wide"}) {
+					@table.Row() {
+						@table.Head() { ID }
+						@table.Head() { Name }
+						@table.Head() { Email }
+						@table.Head() { Grade }
+						@table.Head(table.HeadProps{Class: "text-right"}) { Actions }
+					}
+				}
+				@table.Body() {
+					<template x-for="student in paginatedStudents" x-bind:key="student.id">
+						@StudentRow()
+					</template>
+				}
+			}
+		}
+		@StudentPagination()
+	}
+}
+
+// StudentRow: individual table row with student data and action buttons.
+// x-text: binds cell content | x-on:click: handles edit/delete actions.
+templ StudentRow() {
+	@table.Row() {
+		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "student.id"}}) {}
+		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "`${student.first_name} ${student.last_name}`"}}) {}
+		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "student.email"}}) {}
+		@table.Cell() {
+			@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"x-text": "student.grade"}}) {}
+		}
+		@table.Cell(table.CellProps{Class: "text-right"}) {
+			@StudentRowButtons()
+		}
+	}
+}
+
+// StudentRowButtons: edit, delete, and undo action buttons for each row.
+templ StudentRowButtons() {
+	<div class="flex justify-end gap-2">
+		@components.Spinner(components.SpinnerProps{
+			Size: components.SpinnerSizeSm,
+			Class: "w-14",
+			Attrs: templ.Attributes{"x-show": "deleteTracker.isDeletingId(student.id)"},
+		})
+		@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "!deleteTracker.isDeletingId(student.id) && !deleteTracker.isPendingDelete(student.id)"}}) {
+			@tooltip.Trigger() {
+				@button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Type:    button.TypeButton,
+					Size:    button.SizeSm,
+					Attributes: templ.Attributes{
+						"x-on:click": "openEditModal(student.id)",
+					},
+				}) {
+					✏️ Edit
+				}
+			}
+			@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop}) {
+				Edit student
+			}
+		}
+		@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "!deleteTracker.isDeletingId(student.id) && !deleteTracker.isPendingDelete(student.id)"}}) {
+			@tooltip.Trigger() {
+				@button.Button(button.Props{
+					Variant: button.VariantDestructive,
+					Type:    button.TypeButton,
+					Size:    button.SizeSm,
+					Attributes: templ.Attributes{
+						"x-on:click": "requestDelete(student)",
+					},
+				}) {
+					🗑️ Delete
+				}
+			}
+			@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop}) {
+				Delete student (Undo 3s)
+			}
+		}
+		@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "deleteTracker.isPendingDelete(student.id)"}}) {
+			@tooltip.Trigger() {
+				@button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Type:    button.TypeButton,
+					Size:    button.SizeSm,
+					Attributes: templ.Attributes{
+						"x-on:click": "deleteTracker.clearAll()",
+						"x-text":     "`↩ Undo (${deleteTracker.getPendingDeleteSeconds()}s)`",
+					},
+				}) {
+					Cancel
+				}
+			}
+			@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop}) {
+				Cancel delete
+			}
+		}
+	</div>
+}
+
+// StudentPagination: prev/page/next controls.
+// x-text: displays filtered count | x-bind:disabled: disables prev/next at boundaries.
+templ StudentPagination() {
+	@card.Footer(card.FooterProps{Class: "flex flex-col gap-3 border-t border-border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"}) {
+		@pagination.Pagination() {
+			@pagination.Content() {
+				@pagination.Item() {
+					@pagination.Previous(pagination.PreviousProps{
+						Attributes: templ.Attributes{
+							"x-on:click":      "prevPage()",
+							"x-bind:disabled": "!pagination.hasPrev()",
+						},
+					})
+				}
+				@pagination.Item(pagination.ItemProps{Attributes: templ.Attributes{"class": "text-muted-foreground text-xs", "x-text": "`Page ${pagination.getPage()} of ${pagination.getTotalPages()}`"}}) {}
+				@pagination.Item() {
+					@pagination.Next(pagination.NextProps{
+						Attributes: templ.Attributes{
+							"x-on:click":      "nextPage()",
+							"x-bind:disabled": "!pagination.hasNext()",
+						},
+					})
+				}
+			}
+		}
+	}
+}
+
+// =============================================================================
+// SECTION 4: Student Form Components
+// =============================================================================
+// This section contains the form dialog for creating and editing students.
+// The dialog uses native form fields (not templUI components) to ensure
+// Alpine.js x-model bindings work correctly.
+//
+// Components:
+//   - StudentDialog: Dialog wrapper for create/edit
+//   - StudentFormModel: Reusable form with fields
+//   - StudentTextField: Reusable labelled text input helper
+// =============================================================================
+
+// StudentDialog: dialog wrapper for create/edit operations.
+templ StudentDialog() {
+	@dialog.Dialog(dialog.Props{ID: "student-form"}) {
+		@dialog.Content(dialog.ContentProps{}) {
+			@dialog.Header() {
+				@dialog.Title(dialog.TitleProps{Attributes: templ.Attributes{"x-text": "isEditing() ? 'Edit Student' : 'Add Student'"}}) {}
+				@dialog.Description() { Fill all required details before saving. }
+			}
+			<div x-show="isLoadingEdit()" class="flex items-center justify-center py-12">
+				@components.Spinner()
+			</div>
+			<div x-show="!isLoadingEdit()">
+				@StudentFormModel()
+			</div>
+		}
+	}
+}
+
+// StudentFormModel: form fields for student create/edit.
+templ StudentFormModel() {
+	<form class="space-y-4" x-on:submit.prevent="submitForm()">
+		<div class="grid gap-4 sm:grid-cols-2">
+			@form.Item() {
+				@form.Label(form.LabelProps{For: "firstName"}) { First Name }
+				@input.Input(input.Props{
+					ID:          "firstName",
+					Type:        input.TypeText,
+					Required:    true,
+					Placeholder: "Enter first name",
+					Attributes:  templ.Attributes{"x-model": "form.firstName"},
+				})
+			}
+			@form.Item() {
+				@form.Label(form.LabelProps{For: "lastName"}) { Last Name }
+				@input.Input(input.Props{
+					ID:          "lastName",
+					Type:        input.TypeText,
+					Required:    true,
+					Placeholder: "Enter last name",
+					Attributes:  templ.Attributes{"x-model": "form.lastName"},
+				})
+			}
+		</div>
+		@form.Item() {
+			@form.Label(form.LabelProps{For: "email"}) { Email }
+			@input.Input(input.Props{
+				ID:          "email",
+				Type:        input.TypeEmail,
+				Required:    true,
+				Placeholder: "Enter email address",
+				Attributes:  templ.Attributes{"x-model": "form.email"},
+			})
+		}
+		<div class="grid gap-4 sm:grid-cols-2">
+			@form.Item() {
+				@form.Label(form.LabelProps{For: "age"}) { Age }
+				@input.Input(input.Props{
+					ID:          "age",
+					Type:        "number",
+					Placeholder: "Enter age",
+					Attributes: templ.Attributes{
+						"x-model":          "form.age",
+						":aria-invalid":    "form.age < 0",
+						":class":           "form.age < 0 ? 'border-destructive ring-destructive/20 dark:ring-destructive/40' : ''",
+					},
+				})
+			}
+			@form.Item() {
+				@form.Label(form.LabelProps{For: "grade"}) { Grade }
+				@StudentGradeSelect("grade", "form.grade", false)
+			}
+		</div>
+		@StudentFormFooter()
+	</form>
+}
+
+// StudentFormFooter: separator, error message, and action buttons.
+templ StudentFormFooter() {
+	@separator.Separator(separator.Props{Class: "my-2 bg-border", Decoration: separator.DecorationDashed})
+	@form.Message(form.MessageProps{
+		Variant: form.MessageVariantError,
+		Class:   "rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-600",
+		Attributes: templ.Attributes{"x-show": "isFormError()", "x-text": "formError"},
+	})
+	<div class="flex justify-end gap-2">
+		@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "window.tui?.dialog.close('student-form')"}}) {
+			Cancel
+		}
+		<div x-show="isSaving()" class="flex items-center justify-center w-20 h-9">
+			@components.Spinner(components.SpinnerProps{Size: components.SpinnerSizeSm})
+		</div>
+		@button.Button(button.Props{Type: button.TypeSubmit, Attributes: templ.Attributes{"x-show": "!isSaving()", "x-text": "isEditing() ? 'Update' : 'Create'"}}) {
+			Save
+		}
+	</div>
+}
+
+// =============================================================================
+// =============================================================================
+// SECTION 5: State Indicators (Loading, Error, Empty)
+// =============================================================================
+// State Indicators provide visual feedback for different UI conditions.
+// These components are controlled by Alpine.js state functions.
+//
+// UI States (from student.ts):
+//   - initialized: Page has not made initial fetch yet
+//   - loading: Currently fetching student list
+//   - editing: Edit/Create dialog is open
+//   - saving: Form is being submitted
+//   - pendingDeleteId: Row has pending delete countdown
+//   - apiError: API/operation errors
+//   - formError: Inline form validation errors
+//
+// Helper Functions:
+//   - isReady(): !isInitialized() && isLoading() - First load in progress
+//   - isInitialized(): Page has loaded at least once
+//   - isLoading(): Fetching student list
+//   - isEditing(): Dialog is open for edit/create
+//   - isSaving(): Form submission in progress
+//   - isApiError(): Error state (apiError !== '')
+//   - isFormError(): Form validation error (formError !== '')
+//   - isPendingDelete(student): Row has pending delete
+// =============================================================================
+// SECTION 5: Feedback Components
+// =============================================================================
+// Pre-created state and toast components wrapped into single function call.
+//
+// Components (in order):
+//   - StudentFeedbackComponents: Wrapper calling all feedback components
+//   - StudentInitializingState: Full-page spinner on first load
+//   - StudentLoadingState: Skeleton placeholders on subsequent loads
+//   - StudentErrorState: Error message with retry button
+//   - StudentToasts: Toast notification templates
+// =============================================================================
+
+// StudentFeedbackComponents wraps all pre-created state and toast components.
+templ StudentFeedbackComponents() {
+	@StudentInitializingState()
+	@StudentLoadingState()
+	@StudentErrorState()
+	@StudentToasts()
+}
+
+// StudentInitializingState: full-page spinner shown only on first load.
+// x-show: displays spinner when page has not loaded yet (initial load).
+templ StudentInitializingState() {
+	<div x-show="isReady()" class="flex items-center justify-center p-12">
+		@components.Spinner()
+	</div>
+}
+
+// StudentLoadingState: spinner shown while listStudents() is running after initial load.
+// x-show: displays spinner when loading AFTER initial load.
+templ StudentLoadingState() {
+	<div x-show="isInitialized() && isLoading()" class="flex items-center justify-center p-12">
+		@components.Spinner()
+	</div>
+}
+
+// StudentErrorState: shown when apiError is non-empty; retry button re-fetches.
+// x-show: displays alert when error exists | x-text: binds error message.
+templ StudentErrorState() {
+	@alert.Alert(alert.Props{
+		Variant: alert.VariantDestructive,
+		Attributes: templ.Attributes{
+			"x-show": "isApiError()",
+		},
+	}) {
+		@alert.Title(alert.TitleProps{Attributes: templ.Attributes{"x-text": "apiError"}}) {}
+		@alert.Description() {
+			@button.Button(button.Props{
+				Variant: button.VariantOutline,
+				Type:    button.TypeButton,
+				Attributes: templ.Attributes{
+					"x-on:click": "listStudents()",
+				},
+			}) {
+				Retry
+			}
+		}
+	}
+}
+
+// StudentEmptyState: shown when loaded but no students match active filters.
+templ StudentEmptyState() {
+	@card.Card(card.Props{
+		Class: "rounded-none border-x-0 border-dashed",
+		Attributes: templ.Attributes{"x-show": "!isLoading() && isEmpty()"},
+	}) {
+		@card.Content(card.ContentProps{Class: "flex flex-col items-center justify-center py-12 text-center gap-4"}) {
+			<span class="text-4xl">📭</span>
+			<div class="space-y-1">
+				@card.Title(card.TitleProps{}) { No students found }
+				@card.Description(card.DescriptionProps{}) {
+					Try adjusting search and grade filters, or add your first student.
+				}
+			</div>
+			<div class="flex gap-2">
+				@button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Type:    button.TypeButton,
+					Attributes: templ.Attributes{"x-on:click": "clearFilters()"},
+				}) {
+					Clear Filters
+				}
+				@button.Button(button.Props{
+					Type: button.TypeButton,
+					Attributes: templ.Attributes{"x-on:click": "openCreateModal()"},
+				}) {
+					Add Student
+				}
+			</div>
+		}
+	}
+}
+
+// =============================================================================
+// SECTION 6: Toast Templates
+// =============================================================================
+// This section contains hidden toast templates that are cloned at runtime
+// by the showToast() function in student.ts. templUI handles the animations
+// and auto-initialization of cloned nodes.
+//
+// Components:
+//   - StudentToasts: Hidden template elements for success/error notifications
+// =============================================================================
+
+// StudentToasts provides hidden templUI toast templates cloned by showToast() in student.ts.
+// FIXME: Add URL for Student Page auto set filter.
+templ StudentToasts() {
+	<template id="student-success-toast-template">
+		@toast.Toast(toast.Props{
+			Title:          " ",
+			Description:    " ",
+			Variant:        toast.VariantSuccess,
+			Position:       toast.PositionBottomRight,
+			Duration:       4000,
+			Dismissible:    true,
+			Icon:           true,
+			ShowIndicator: true,
+			Class:          "z-[9999]",
+		})
+	</template>
+	<template id="student-error-toast-template">
+		@toast.Toast(toast.Props{
+			Title:          " ",
+			Description:    " ",
+			Variant:        toast.VariantError,
+			Position:       toast.PositionBottomRight,
+			Duration:       4000,
+			Dismissible:    true,
+			Icon:           true,
+			ShowIndicator: true,
+			Class:          "z-[9999]",
+		})
+	</template>
+}
