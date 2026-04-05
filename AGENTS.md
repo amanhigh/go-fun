@@ -6,6 +6,7 @@ This file contains guidelines for coding, testing, and examples on coding style 
 
 ### UI Development
 - **Prioritize TemplUI components** (JS+CSS bundled) for all UI work; use Tailwind for styling and layout; use Alpine.js only where TemplUI is insufficient to provide that experience.
+- **Avoid unnecessary divs/spans**; use `templ.Attributes` to add any Alpine.js or custom attributes directly to components instead of wrapping in extra HTML elements.
 
 ### Interfaces and Implementations
 - Include constructor for each class in the same file with interface and class.

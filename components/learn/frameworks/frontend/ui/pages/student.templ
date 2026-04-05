@@ -84,7 +84,7 @@ templ StudentFilterPanel() {
 		<div class="flex items-start justify-between gap-3">
 			@card.Title(card.TitleProps{Class: "text-lg font-semibold inline-flex items-center gap-2"}) {
 				@icon.Funnel(icon.Props{Class: "h-4 w-4"})
-				<span>Student filters</span>
+				Student filters
 			}
 			@card.Description(card.DescriptionProps{Class: "text-sm text-muted-foreground"}) {
 				Use search and grade filters, then add or manage records.
@@ -198,15 +198,13 @@ templ StudentAddButton() {
 	@dialog.Trigger(dialog.TriggerProps{For: "student-form"}) {
 		@button.Button(button.Props{
 			Type:  button.TypeButton,
-			Class: "whitespace-nowrap",
+			Class: "whitespace-nowrap inline-flex items-center gap-2",
 			Attributes: templ.Attributes{
 				"x-on:click": "resetForm()",
 			},
 		}) {
-			<span class="inline-flex items-center gap-2">
-				@icon.Icon("plus")(icon.Props{Class: "h-4 w-4"})
-				Add Student
-			</span>
+			@icon.Icon("plus")(icon.Props{Class: "h-4 w-4"})
+			Add Student
 		}
 	}
 }
@@ -272,48 +270,41 @@ templ StudentRow() {
 // StudentRowButtons: edit, delete, and undo action buttons for each row.
 templ StudentRowButtons() {
 	<div class="flex justify-end gap-2">
-		// Spinner during actual API delete
-		<div x-show="deleteTracker.isDeletingId(student.id)" class="flex items-center justify-center w-14">
-			@components.Spinner(components.SpinnerProps{Size: components.SpinnerSizeSm})
-		</div>
-		// Edit/Delete buttons - hide during delete
-		<div x-show="!deleteTracker.isDeletingId(student.id)" class="flex gap-2">
-			@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "!deleteTracker.isPendingDelete(student.id)"}}) {
-				@tooltip.Trigger() {
-					@button.Button(button.Props{
-						Variant: button.VariantOutline,
-						Type:    button.TypeButton,
-						Size:    button.SizeSm,
-						Attributes: templ.Attributes{
-							"x-on:click": "openEditModal(student.id)",
-						},
-					}) {
-						✏️ Edit
-					}
-				}
-				@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop}) {
-					Edit student
+		@components.Spinner(components.SpinnerProps{Size: components.SpinnerSizeSm, Attrs: templ.Attributes{"x-show": "deleteTracker.isDeletingId(student.id)"}})
+		@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "!deleteTracker.isDeletingId(student.id) && !deleteTracker.isPendingDelete(student.id)"}}) {
+			@tooltip.Trigger() {
+				@button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Type:    button.TypeButton,
+					Size:    button.SizeSm,
+					Attributes: templ.Attributes{
+						"x-on:click": "openEditModal(student.id)",
+					},
+				}) {
+					✏️ Edit
 				}
 			}
-			@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "!deleteTracker.isPendingDelete(student.id)"}}) {
-				@tooltip.Trigger() {
-					@button.Button(button.Props{
-						Variant: button.VariantDestructive,
-						Type:    button.TypeButton,
-						Size:    button.SizeSm,
-						Attributes: templ.Attributes{
-							"x-on:click": "requestDelete(student)",
-						},
-					}) {
-						🗑️ Delete
-					}
-				}
-				@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop}) {
-					Delete student (Undo 3s)
+			@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop}) {
+				Edit student
+			}
+		}
+		@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "!deleteTracker.isDeletingId(student.id) && !deleteTracker.isPendingDelete(student.id)"}}) {
+			@tooltip.Trigger() {
+				@button.Button(button.Props{
+					Variant: button.VariantDestructive,
+					Type:    button.TypeButton,
+					Size:    button.SizeSm,
+					Attributes: templ.Attributes{
+						"x-on:click": "requestDelete(student)",
+					},
+				}) {
+					🗑️ Delete
 				}
 			}
-		</div>
-		// Undo button - shown during countdown
+			@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop}) {
+				Delete student (Undo 3s)
+			}
+		}
 		@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "deleteTracker.isPendingDelete(student.id)"}}) {
 			@tooltip.Trigger() {
 				@button.Button(button.Props{
@@ -324,7 +315,9 @@ templ StudentRowButtons() {
 						"x-on:click": "deleteTracker.clearAll()",
 						"x-text":     "`↩ Undo (${deleteTracker.getPendingDeleteSeconds()}s)`",
 					},
-				}) {}
+				}) {
+					Cancel
+				}
 			}
 			@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop}) {
 				Cancel delete
@@ -347,9 +340,7 @@ templ StudentPagination() {
 						},
 					})
 				}
-				@pagination.Item() {
-					<span class="text-muted-foreground text-xs" x-text="`Page ${pagination.getPage()} of ${pagination.getTotalPages()}`"></span>
-				}
+				@pagination.Item(pagination.ItemProps{Attributes: templ.Attributes{"class": "text-muted-foreground text-xs", "x-text": "`Page ${pagination.getPage()} of ${pagination.getTotalPages()}`"}}) {}
 				@pagination.Item() {
 					@pagination.Next(pagination.NextProps{
 						Attributes: templ.Attributes{
@@ -469,8 +460,8 @@ templ StudentFormModel() {
 // StudentFormFooter: separator, error message, and action buttons.
 templ StudentFormFooter() {
 	@separator.Separator(separator.Props{Class: "my-2 bg-border"})
-	<div x-show="isFormError()" class="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
-		<span x-text="formError" class="text-sm font-medium text-yellow-600"></span>
+	<div x-show="isFormError()" class="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm font-medium text-yellow-600">
+		<span x-text="formError"></span>
 	</div>
 	<div class="flex justify-end gap-2">
 		@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "window.tui?.dialog.close('student-form')"}}) {
