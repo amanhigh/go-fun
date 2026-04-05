@@ -95,7 +95,10 @@ templ StudentFilterPanel() {
 	@card.Content() {
 		<div class="flex flex-col gap-4 lg:flex-row lg:items-end">
 			@StudentNameFilter()
-			@StudentGradeSelect()
+			<div class="w-full sm:w-56">
+				@label.Label(label.Props{For: "grade-filter", Class: "mb-2 inline-flex text-sm font-medium"}) { Grade }
+				@StudentGradeSelect("grade-filter", "filterTracker.grade", true)
+			</div>
 			<div class="flex items-center gap-2">
 				@StudentClearButton()
 				@StudentAddButton()
@@ -146,35 +149,35 @@ templ StudentNameFilter() {
 	</div>
 }
 
-// StudentGradeSelect: grade dropdown for filtering by grade.
-templ StudentGradeSelect() {
-	<div class="w-full sm:w-56">
-		@label.Label(label.Props{For: "grade-filter", Class: "mb-2 inline-flex text-sm font-medium"}) {
-			Grade
+// StudentGradeSelect is a reusable grade dropdown.
+// Parameters:
+//   - id: form element ID (also used as name)
+//   - model: Alpine x-model binding
+//   - isFilter: true for filter (with "All Grades" option), false for form
+templ StudentGradeSelect(id string, model string, isFilter bool) {
+	@selectbox.SelectBox() {
+		@selectbox.Trigger(selectbox.TriggerProps{
+			ID:   id,
+			Name: id,
+			Attributes: templ.Attributes{
+				"x-model":                 model,
+				"x-on:change.debounce.300ms": map[bool]string{true: "applyFilters()", false: ""}[isFilter],
+			},
+		}) {
+			@selectbox.Value(selectbox.ValueProps{Placeholder: map[bool]string{true: "All Grades", false: "Select grade"}[isFilter]})
 		}
-		// x-model: binds to grade | x-on:change: triggers refetch.
-		@selectbox.SelectBox() {
-			@selectbox.Trigger(selectbox.TriggerProps{
-				ID:   "grade-filter",
-				Name: "grade-filter",
-				Attributes: templ.Attributes{
-					"x-model":        "filterTracker.grade",
-					"x-on:change.debounce.300ms": "applyFilters()",
-				},
-			}) {
-				@selectbox.Value(selectbox.ValueProps{Placeholder: "All Grades"})
-			}
-			@selectbox.Content() {
-				@selectbox.Group() {
+		@selectbox.Content() {
+			@selectbox.Group() {
+				if isFilter {
 					@selectbox.Item(selectbox.ItemProps{Value: ""}) { All Grades }
-					@selectbox.Item(selectbox.ItemProps{Value: "Freshman"}) { Freshman }
-					@selectbox.Item(selectbox.ItemProps{Value: "Sophomore"}) { Sophomore }
-					@selectbox.Item(selectbox.ItemProps{Value: "Junior"}) { Junior }
-					@selectbox.Item(selectbox.ItemProps{Value: "Senior"}) { Senior }
 				}
+				@selectbox.Item(selectbox.ItemProps{Value: "Freshman"}) { Freshman }
+				@selectbox.Item(selectbox.ItemProps{Value: "Sophomore"}) { Sophomore }
+				@selectbox.Item(selectbox.ItemProps{Value: "Junior"}) { Junior }
+				@selectbox.Item(selectbox.ItemProps{Value: "Senior"}) { Senior }
 			}
 		}
-	</div>
+	}
 }
 
 // StudentClearButton: clears active filters.
@@ -436,25 +439,7 @@ templ StudentFormModel() {
 			}
 			@form.Item() {
 				@form.Label(form.LabelProps{For: "grade"}) { Grade }
-				@selectbox.SelectBox() {
-					@selectbox.Trigger(selectbox.TriggerProps{
-						ID:   "grade",
-						Name: "grade",
-						Attributes: templ.Attributes{
-							"x-model": "form.grade",
-						},
-					}) {
-						@selectbox.Value(selectbox.ValueProps{Placeholder: "Select grade"})
-					}
-					@selectbox.Content() {
-						@selectbox.Group() {
-							@selectbox.Item(selectbox.ItemProps{Value: "Freshman"}) { Freshman }
-							@selectbox.Item(selectbox.ItemProps{Value: "Sophomore"}) { Sophomore }
-							@selectbox.Item(selectbox.ItemProps{Value: "Junior"}) { Junior }
-							@selectbox.Item(selectbox.ItemProps{Value: "Senior"}) { Senior }
-						}
-					}
-				}
+				@StudentGradeSelect("grade", "form.grade", false)
 			}
 		</div>
 		@StudentFormFooter()
