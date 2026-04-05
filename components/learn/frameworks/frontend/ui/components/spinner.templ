@@ -34,14 +34,21 @@ func spinnerSizeClass(size SpinnerSize) string {
 	}
 }
 
-// Spinner displays an animated loading indicator.
+// Spinner displays an animated loading indicator with default size.
 templ Spinner(props ...SpinnerProps) {
-	@SpinnerWithProps(SpinnerSizeMd, "", nil)
+	if len(props) > 0 {
+		@SpinnerWithProps(props[0])
+	} else {
+		@SpinnerWithProps(SpinnerProps{Size: SpinnerSizeMd})
+	}
 }
 
 // SpinnerWithProps displays an animated loading indicator with full props control.
-templ SpinnerWithProps(size SpinnerSize, class string, attrs templ.Attributes) {
-	<div class={ utils.TwMerge("flex items-center justify-center", class) }>
-		@icon.Loader(icon.Props{Class: spinnerSizeClass(size) + " animate-spin text-primary"})
+templ SpinnerWithProps(props SpinnerProps) {
+	<div
+		class={ utils.TwMerge("flex items-center justify-center", props.Class) }
+		{ props.Attrs... }
+	>
+		@icon.Icon("hourglass")(icon.Props{Class: spinnerSizeClass(props.Size) + " animate-spin text-primary"})
 	</div>
 }

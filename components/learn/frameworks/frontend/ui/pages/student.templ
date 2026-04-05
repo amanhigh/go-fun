@@ -270,7 +270,11 @@ templ StudentRow() {
 // StudentRowButtons: edit, delete, and undo action buttons for each row.
 templ StudentRowButtons() {
 	<div class="flex justify-end gap-2">
-		@components.Spinner(components.SpinnerProps{Size: components.SpinnerSizeSm, Attrs: templ.Attributes{"x-show": "deleteTracker.isDeletingId(student.id)"}})
+		@components.Spinner(components.SpinnerProps{
+			Size: components.SpinnerSizeSm,
+			Class: "w-14",
+			Attrs: templ.Attributes{"x-show": "deleteTracker.isDeletingId(student.id)"},
+		})
 		@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "!deleteTracker.isDeletingId(student.id) && !deleteTracker.isPendingDelete(student.id)"}}) {
 			@tooltip.Trigger() {
 				@button.Button(button.Props{
@@ -607,6 +611,7 @@ templ StudentEmptyState() {
 // =============================================================================
 
 // StudentToasts provides hidden templUI toast templates cloned by showToast() in student.ts.
+// FIXME: Add URL for Student Page auto set filter.
 templ StudentToasts() {
 	<template id="student-success-toast-template">
 		@toast.Toast(toast.Props{

@@ -1366,7 +1366,11 @@ func StudentRowButtons() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = components.Spinner(components.SpinnerProps{Size: components.SpinnerSizeSm, Attrs: templ.Attributes{"x-show": "deleteTracker.isDeletingId(student.id)"}}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Spinner(components.SpinnerProps{
+			Size:  components.SpinnerSizeSm,
+			Class: "w-14",
+			Attrs: templ.Attributes{"x-show": "deleteTracker.isDeletingId(student.id)"},
+		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2977,6 +2981,7 @@ func StudentEmptyState() templ.Component {
 // =============================================================================
 
 // StudentToasts provides hidden templUI toast templates cloned by showToast() in student.ts.
+// FIXME: Add URL for Student Page auto set filter.
 func StudentToasts() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
