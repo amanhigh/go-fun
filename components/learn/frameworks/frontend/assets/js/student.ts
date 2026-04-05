@@ -82,9 +82,6 @@ function studentPage() {
     // Data State
     // ─────────────────────────────────────────────────────────────
     students: [] as StudentResponse[],
-    loading: false,
-    saving: false,
-    errorMessage: '',
     totalStudents: 0,
 
     // ─────────────────────────────────────────────────────────────
@@ -102,7 +99,6 @@ function studentPage() {
     // ─────────────────────────────────────────────────────────────
     // Delete State
     // ─────────────────────────────────────────────────────────────
-    pendingDeleteId: '',
     pendingDeleteSeconds: 0,
     pendingDeleteTimer: null as number | null,
 
@@ -111,6 +107,58 @@ function studentPage() {
     // ─────────────────────────────────────────────────────────────
     editingId: '',
     form: { ...emptyFormValues },
+
+    // ═══════════════════════════════════════════════════════════════
+    // SECTION: UI States
+    // ═══════════════════════════════════════════════════════════════
+    //
+    // These states represent mutually exclusive UI conditions.
+    // They control what the user sees and interacts with.
+    //
+    // State Transitions (varies based on user actions):
+    // ┌────────────────┐     ┌─────────────┐     ┌─────────────┐
+    // │  ✱Initialized  │────▶│   Loading   │────▶│   Loaded    │
+    // │  (not loaded)  │     │ (fetching)  │     │  (success)  │
+    // └────────────────┘     └─────────────┘     └─────────────┘
+    //                              │                    │
+    //                              ▼                    ▼
+    //                        ┌───────────┐      ┌──────────────┐
+    //                        │  Errored  │      │   Editing    │
+    //                        │  (failed) │      │  (dialog open)│
+    //                        └───────────┘      └──────────────┘
+    //                              │                    │
+    //                              ▼                    ▼
+    //                        ┌───────────┐      ┌──────────────┐
+    //                        │  Loading  │      │   Saving     │
+    //                        │  (retry)  │      │ (submitting) │
+    //                        └───────────┘      └──────────────┘
+    //                                                     │
+    //                                                     ▼
+    //                                              ┌──────────────┐
+    //                                              │   Loaded     │
+    //                                              │  (success)   │
+    //                                              └──────────────┘
+    //
+    // States:
+    //   - initialized: Page has not made initial fetch yet
+    //   - loading: Currently fetching student list (pagination/filter)
+    //   - editing: Edit/Create dialog is open
+    //   - saving: Form is being submitted
+    //   - pendingDeleteId: Row has pending delete countdown
+    //   - errorMessage: Error state for API/operation errors
+    //   - formError: Inline form validation errors
+    //
+    // Mutually Exclusive Groups:
+    //   1. Load States: initialized ↔ loading ↔ loaded (via initialized)
+    //   2. Edit States: idle ↔ editing ↔ saving
+    //   3. Error States: hasError() ↔ isFormError() (can coexist)
+    // ═══════════════════════════════════════════════════════════════
+    initialized: false,
+    loading: false,
+    saving: false,
+    editing: false,
+    pendingDeleteId: '',
+    errorMessage: '',
     formError: '',
 
     // ─────────────────────────────────────────────────────────────
@@ -127,15 +175,16 @@ function studentPage() {
     },
     get totalPages() { return Math.max(1, Math.ceil(this.totalStudents / this.pageSize)); },
     get paginatedStudents() { return this.filteredStudents; },
-    isEditing() { return this.form.firstName !== '' || this.form.lastName !== '' || this.editingId !== ''; },
+    isInitialized() { return this.initialized; },
+    isEditing() { return this.editing; },
     isLoading() { return this.loading; },
-    isEmpty() { return this.filteredStudents.length === 0; },
-    hasError() { return this.errorMessage !== ''; },
-    isFormError() { return this.formError !== ''; },
     isSaving() { return this.saving; },
+    isEmpty() { return this.filteredStudents.length === 0; },
+    isErrored() { return this.errorMessage !== ''; },
+    isFormError() { return this.formError !== ''; },
+    isPendingDelete(student: StudentResponse) { return this.pendingDeleteId === student.id; },
     hasNext() { return this.currentPage < this.totalPages; },
     hasPrev() { return this.currentPage > 1; },
-    isDeleting(student: StudentResponse) { return this.pendingDeleteId === student.id; },
 
     // ─────────────────────────────────────────────────────────────
     // Methods - List
@@ -159,6 +208,7 @@ function studentPage() {
         this.totalStudents = payload.count ?? this.students.length;
         this.pageSize = payload.limit ?? this.pageSize;
         this.page = Math.floor((payload.offset ?? offset) / this.pageSize) + 1;
+        this.initialized = true;
       } catch {
         this.errorMessage = "Couldn't load students";
       } finally {
@@ -203,6 +253,7 @@ function studentPage() {
     // ─────────────────────────────────────────────────────────────
     resetForm() {
       this.editingId = '';
+      this.editing = false;
       this.form = { ...emptyFormValues };
       this.formError = '';
     },
@@ -268,6 +319,7 @@ function studentPage() {
           grade: student.grade,
         };
         this.editingId = student.id;
+        this.editing = true;
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Failed to fetch student';
         this.showToast('Error', message, true);
