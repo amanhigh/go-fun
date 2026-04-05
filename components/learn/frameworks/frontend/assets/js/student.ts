@@ -104,7 +104,7 @@ interface DeleteTracker {
   isPendingDelete(studentId: string): boolean;
   isDeletingId(studentId: string): boolean;
   getPendingDeleteSeconds(): number;
-  startCountdown(studentId: string, onExpire: () => void): void;
+  startCountdown(studentId: string, onExpire: (id: string) => void): void;
   cancelCountdown(): void;
   clearAll(): void;
 }
@@ -118,13 +118,14 @@ function createDeleteTracker(): DeleteTracker {
     isPendingDelete(studentId: string) { return this.pendingDeleteId === studentId; },
     isDeletingId(studentId: string) { return this.deletingId === studentId; },
     getPendingDeleteSeconds() { return this.pendingDeleteSeconds; },
-    startCountdown(studentId: string, onExpire: () => void) {
+    startCountdown(studentId: string, onExpire: (id: string) => void) {
       this.pendingDeleteId = studentId;
       this.pendingDeleteSeconds = 3;
       this.pendingDeleteTimer = window.setInterval(() => {
         if (this.pendingDeleteSeconds <= 1) {
+          const id = this.pendingDeleteId; // Capture ID before clearing
           this.cancelCountdown();
-          onExpire();
+          onExpire(id);
           return;
         }
         this.pendingDeleteSeconds -= 1;
@@ -440,17 +441,17 @@ function studentPage() {
     // ─────────────────────────────────────────────────────────────
     requestDelete(student: StudentResponse) {
       this.deleteTracker.clearAll();
-      this.deleteTracker.startCountdown(student.id, () => void this.confirmPendingDelete());
+      this.deleteTracker.startCountdown(student.id, (id) => void this.confirmPendingDelete(id));
     },
-    async confirmPendingDelete() {
-      const id = this.deleteTracker.pendingDeleteId;
-      if (!id) return;
+    async confirmPendingDelete(id?: string) {
+      const studentId = id ?? this.deleteTracker.pendingDeleteId;
+      if (!studentId) return;
 
       this.deleteTracker.clearAll();
-      this.deleteTracker.deletingId = id;
+      this.deleteTracker.deletingId = studentId;
 
       try {
-        const response = await fetch(`/api/students/${id}`, { method: 'DELETE' });
+        const response = await fetch(`/api/students/${studentId}`, { method: 'DELETE' });
         if (!response.ok) throw new Error('Failed to delete student');
         this.showToast('Student deleted', 'The student record was removed.', false);
         await this.afterSave('delete');

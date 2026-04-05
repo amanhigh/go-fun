@@ -3003,8 +3003,8 @@ func StudentToasts() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = toast.Toast(toast.Props{
-			Title:       "",
-			Description: "",
+			Title:       " ",
+			Description: " ",
 			Variant:     toast.VariantSuccess,
 			Position:    toast.PositionBottomRight,
 			Duration:    4000,
@@ -3020,8 +3020,8 @@ func StudentToasts() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = toast.Toast(toast.Props{
-			Title:       "",
-			Description: "",
+			Title:       " ",
+			Description: " ",
 			Variant:     toast.VariantError,
 			Position:    toast.PositionBottomRight,
 			Duration:    4000,
