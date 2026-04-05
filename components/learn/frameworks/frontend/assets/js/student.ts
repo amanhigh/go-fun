@@ -399,7 +399,9 @@ function studentPage() {
         if (!response.ok) {
           const fallback = isEdit ? 'Failed to update student' : 'Failed to create student';
           const payload = (await response.json().catch(() => ({}))) as { error?: string };
-          this.formError = payload.error || fallback;
+          const errorMessage = payload.error || fallback;
+          this.formError = errorMessage;
+          this.showToast(isEdit ? 'Update failed' : 'Create failed', errorMessage, true);
           return;
         }
         window.tui?.dialog.close('student-form');

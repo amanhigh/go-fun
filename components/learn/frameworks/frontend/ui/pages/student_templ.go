@@ -2112,7 +2112,11 @@ func StudentFormModel() templ.Component {
 				ID:          "age",
 				Type:        "number",
 				Placeholder: "Enter age",
-				Attributes:  templ.Attributes{"x-model": "form.age"},
+				Attributes: templ.Attributes{
+					"x-model":       "form.age",
+					":aria-invalid": "form.age < 0",
+					":class":        "form.age < 0 ? 'border-destructive ring-destructive/20 dark:ring-destructive/40' : ''",
+				},
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -2209,11 +2213,19 @@ func StudentFormFooter() templ.Component {
 			templ_7745c5c3_Var81 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = separator.Separator(separator.Props{Class: "my-2 bg-border"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = separator.Separator(separator.Props{Class: "my-2 bg-border", Decoration: separator.DecorationDashed}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "<div x-show=\"isFormError()\" class=\"rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm font-medium text-yellow-600\"><span x-text=\"formError\"></span></div><div class=\"flex justify-end gap-2\">")
+		templ_7745c5c3_Err = form.Message(form.MessageProps{
+			Variant:    form.MessageVariantError,
+			Class:      "rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-600",
+			Attributes: templ.Attributes{"x-show": "isFormError()", "x-text": "formError"},
+		}).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "<div class=\"flex justify-end gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

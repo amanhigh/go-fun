@@ -436,7 +436,11 @@ templ StudentFormModel() {
 					ID:          "age",
 					Type:        "number",
 					Placeholder: "Enter age",
-					Attributes:  templ.Attributes{"x-model": "form.age"},
+					Attributes: templ.Attributes{
+						"x-model":          "form.age",
+						":aria-invalid":    "form.age < 0",
+						":class":           "form.age < 0 ? 'border-destructive ring-destructive/20 dark:ring-destructive/40' : ''",
+					},
 				})
 			}
 			@form.Item() {
@@ -450,10 +454,12 @@ templ StudentFormModel() {
 
 // StudentFormFooter: separator, error message, and action buttons.
 templ StudentFormFooter() {
-	@separator.Separator(separator.Props{Class: "my-2 bg-border"})
-	<div x-show="isFormError()" class="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm font-medium text-yellow-600">
-		<span x-text="formError"></span>
-	</div>
+	@separator.Separator(separator.Props{Class: "my-2 bg-border", Decoration: separator.DecorationDashed})
+	@form.Message(form.MessageProps{
+		Variant: form.MessageVariantError,
+		Class:   "rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-600",
+		Attributes: templ.Attributes{"x-show": "isFormError()", "x-text": "formError"},
+	})
 	<div class="flex justify-end gap-2">
 		@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "window.tui?.dialog.close('student-form')"}}) {
 			Cancel

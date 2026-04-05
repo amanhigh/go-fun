@@ -11,8 +11,23 @@ func validateStudentPayload(student Student) error {
 	if student.Age <= 0 {
 		return fmt.Errorf("age must be greater than 0")
 	}
+	if containsInvalidChar(student.FirstName, '#') {
+		return fmt.Errorf("first name cannot contain '#'")
+	}
+	if containsInvalidChar(student.LastName, '#') {
+		return fmt.Errorf("last name cannot contain '#'")
+	}
 
 	return nil
+}
+
+func containsInvalidChar(s string, invalid rune) bool {
+	for _, c := range s {
+		if c == invalid {
+			return true
+		}
+	}
+	return false
 }
 
 // StudentHandler handles student-related HTTP requests
