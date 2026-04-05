@@ -687,7 +687,7 @@ func StudentGradeSelect(id string, model string, isFilter bool) templ.Component 
 						}
 						return nil
 					})
-					templ_7745c5c3_Err = selectbox.Item(selectbox.ItemProps{Value: "{{ grade }}"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var24), templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = selectbox.Item(selectbox.ItemProps{Attributes: templ.Attributes{":data-tui-selectbox-value": "grade"}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var24), templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -2754,14 +2754,15 @@ func StudentToasts() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = toast.Toast(toast.Props{
-			Title:       " ",
-			Description: " ",
-			Variant:     toast.VariantSuccess,
-			Position:    toast.PositionBottomRight,
-			Duration:    4000,
-			Dismissible: true,
-			Icon:        true,
-			Class:       "z-[9999]",
+			Title:         " ",
+			Description:   " ",
+			Variant:       toast.VariantSuccess,
+			Position:      toast.PositionBottomRight,
+			Duration:      4000,
+			Dismissible:   true,
+			Icon:          true,
+			ShowIndicator: true,
+			Class:         "z-[9999]",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -2771,14 +2772,15 @@ func StudentToasts() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = toast.Toast(toast.Props{
-			Title:       " ",
-			Description: " ",
-			Variant:     toast.VariantError,
-			Position:    toast.PositionBottomRight,
-			Duration:    4000,
-			Dismissible: true,
-			Icon:        true,
-			Class:       "z-[9999]",
+			Title:         " ",
+			Description:   " ",
+			Variant:       toast.VariantError,
+			Position:      toast.PositionBottomRight,
+			Duration:      4000,
+			Dismissible:   true,
+			Icon:          true,
+			ShowIndicator: true,
+			Class:         "z-[9999]",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

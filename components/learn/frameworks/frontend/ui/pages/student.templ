@@ -173,7 +173,7 @@ templ StudentGradeSelect(id string, model string, isFilter bool) {
 					@selectbox.Item(selectbox.ItemProps{Value: ""}) { All Grades }
 				}
 				<template x-for="grade in gradeOptions" :key="grade">
-					@selectbox.Item(selectbox.ItemProps{Value: "{{ grade }}"}) {
+					@selectbox.Item(selectbox.ItemProps{Attributes: templ.Attributes{":data-tui-selectbox-value": "grade"}}) {
 						<span x-text="grade"></span>
 					}
 				</template>
@@ -602,26 +602,28 @@ templ StudentEmptyState() {
 templ StudentToasts() {
 	<template id="student-success-toast-template">
 		@toast.Toast(toast.Props{
-			Title:       " ",
-			Description: " ",
-			Variant:     toast.VariantSuccess,
-			Position:    toast.PositionBottomRight,
-			Duration:    4000,
-			Dismissible: true,
-			Icon:        true,
-			Class:       "z-[9999]",
+			Title:          " ",
+			Description:    " ",
+			Variant:        toast.VariantSuccess,
+			Position:       toast.PositionBottomRight,
+			Duration:       4000,
+			Dismissible:    true,
+			Icon:           true,
+			ShowIndicator: true,
+			Class:          "z-[9999]",
 		})
 	</template>
 	<template id="student-error-toast-template">
 		@toast.Toast(toast.Props{
-			Title:       " ",
-			Description: " ",
-			Variant:     toast.VariantError,
-			Position:    toast.PositionBottomRight,
-			Duration:    4000,
-			Dismissible: true,
-			Icon:        true,
-			Class:       "z-[9999]",
+			Title:          " ",
+			Description:    " ",
+			Variant:        toast.VariantError,
+			Position:       toast.PositionBottomRight,
+			Duration:       4000,
+			Dismissible:    true,
+			Icon:           true,
+			ShowIndicator: true,
+			Class:          "z-[9999]",
 		})
 	</template>
 }
