@@ -15,8 +15,8 @@
 // This is the esbuild entrypoint used by Makefile generate-js.
 // Only modules imported here are bundled into app.js.
 
-import './custom.ts';
-import './student.ts';
+import './custom';
+import './student';
 
 // SECTION 2 — WHY THERE IS NO EXTRA CODE HERE
 // app.js should remain a composition layer. Real behavior belongs in the

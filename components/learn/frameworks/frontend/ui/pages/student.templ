@@ -6,6 +6,7 @@ package pages
 // All state, API calls, and computed properties live in assets/js/student.ts.
 
 import (
+	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
 	"github.com/templui/templui/components/alert"
 	"github.com/templui/templui/components/badge"
@@ -28,20 +29,13 @@ import (
 // =============================================================================
 // SECTION 1: Student Page Entry Point
 // =============================================================================
-// This section contains the top-level StudentPage component that serves as the
-// entry point for the student management interface. It sets up the layout,
-// page metadata, and orchestrates all child components.
+// Top-level StudentPage component serving as entry point for /students.
 //
 // Main Components:
 //   - StudentFilterPanel: Search and filter controls
 //   - StudentTable: Data table with pagination
 //   - StudentDialog: Create/Edit dialog
-//
-// State & Feedback Components (see Section 5):
-//   - StudentLoadingState: Skeleton loading placeholders
-//   - StudentErrorState: Error display with retry
-//   - StudentEmptyState: Empty state when no results
-//   - StudentToasts: Toast notification templates
+//   - State Feedback: See Section 5
 // =============================================================================
 
 // StudentPage is the top-level entry point for /students.
@@ -58,12 +52,10 @@ templ StudentPage() {
 			<div x-data="studentPage()" x-init="listStudents()" class="rounded-3xl border border-border bg-card shadow-sm overflow-hidden">
 				@StudentFilterPanel()
 				@separator.Separator(separator.Props{Class: "my-0 bg-border"})
-				@StudentLoadingState()
-				@StudentErrorState()
+				@StudentFeedbackComponents()
 				@StudentTable()
 				@StudentEmptyState()
 				@StudentDialog()
-				@StudentToasts()
 			</div>
 		}
 	}
@@ -148,8 +140,8 @@ templ StudentNameFilter() {
 			ID:          "filter-name",
 			Class:       "w-full",
 			Attributes: templ.Attributes{
-				"x-model.debounce.300ms":    "name",
-				"x-on:input.debounce.300ms": "page = 1; listStudents()",
+				"x-model.debounce.300ms":     "filterTracker.name",
+				"x-on:input.debounce.300ms": "applyFilters()",
 			},
 		})
 	</div>
@@ -167,8 +159,8 @@ templ StudentGradeSelect() {
 				ID:   "grade-filter",
 				Name: "grade-filter",
 				Attributes: templ.Attributes{
-					"x-model":        "grade",
-					"x-on:change":    "page = 1; listStudents()",
+					"x-model":        "filterTracker.grade",
+					"x-on:change.debounce.300ms": "applyFilters()",
 				},
 			}) {
 				@selectbox.Value(selectbox.ValueProps{Placeholder: "All Grades"})
@@ -281,49 +273,57 @@ templ StudentRow() {
 // StudentRowButtons: edit, delete, and undo action buttons for each row.
 templ StudentRowButtons() {
 	<div class="flex justify-end gap-2">
-		@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "!isDeleting(student)"}}) {
+		// Spinner during actual API delete
+		<div x-show="deleteTracker.isDeletingId(student.id)" class="flex items-center justify-center w-14">
+			@components.Spinner(components.SpinnerProps{Size: components.SpinnerSizeSm})
+		</div>
+		// Edit/Delete buttons - hide during delete
+		<div x-show="!deleteTracker.isDeletingId(student.id)" class="flex gap-2">
+			@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "!deleteTracker.isPendingDelete(student.id)"}}) {
+				@tooltip.Trigger() {
+					@button.Button(button.Props{
+						Variant: button.VariantOutline,
+						Type:    button.TypeButton,
+						Size:    button.SizeSm,
+						Attributes: templ.Attributes{
+							"x-on:click": "openEditModal(student.id)",
+						},
+					}) {
+						✏️ Edit
+					}
+				}
+				@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop}) {
+					Edit student
+				}
+			}
+			@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "!deleteTracker.isPendingDelete(student.id)"}}) {
+				@tooltip.Trigger() {
+					@button.Button(button.Props{
+						Variant: button.VariantDestructive,
+						Type:    button.TypeButton,
+						Size:    button.SizeSm,
+						Attributes: templ.Attributes{
+							"x-on:click": "requestDelete(student)",
+						},
+					}) {
+						🗑️ Delete
+					}
+				}
+				@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop}) {
+					Delete student (Undo 3s)
+				}
+			}
+		</div>
+		// Undo button - shown during countdown
+		@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "deleteTracker.isPendingDelete(student.id)"}}) {
 			@tooltip.Trigger() {
 				@button.Button(button.Props{
 					Variant: button.VariantOutline,
 					Type:    button.TypeButton,
 					Size:    button.SizeSm,
 					Attributes: templ.Attributes{
-						"x-on:click": "openEditModal(student.id)",
-					},
-				}) {
-					✏️ Edit
-				}
-			}
-			@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop}) {
-				Edit student
-			}
-		}
-		@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "!isDeleting(student)"}}) {
-			@tooltip.Trigger() {
-				@button.Button(button.Props{
-					Variant: button.VariantDestructive,
-					Type:    button.TypeButton,
-					Size:    button.SizeSm,
-					Attributes: templ.Attributes{
-						"x-on:click": "requestDelete(student)",
-					},
-				}) {
-					🗑️ Delete
-				}
-			}
-			@tooltip.Content(tooltip.ContentProps{Position: tooltip.PositionTop}) {
-				Delete student (Undo 3s)
-			}
-		}
-		@tooltip.Tooltip(tooltip.Props{Attributes: templ.Attributes{"x-show": "isDeleting(student)"}}) {
-			@tooltip.Trigger() {
-				@button.Button(button.Props{
-					Variant: button.VariantOutline,
-					Type:    button.TypeButton,
-					Size:    button.SizeSm,
-					Attributes: templ.Attributes{
-						"x-on:click": "undoDelete()",
-						"x-text":     "`↩ Undo (${pendingDeleteSeconds}s)`",
+						"x-on:click": "deleteTracker.clearAll()",
+						"x-text":     "`↩ Undo (${deleteTracker.getPendingDeleteSeconds()}s)`",
 					},
 				}) {}
 			}
@@ -344,18 +344,18 @@ templ StudentPagination() {
 					@pagination.Previous(pagination.PreviousProps{
 						Attributes: templ.Attributes{
 							"x-on:click":      "prevPage()",
-							"x-bind:disabled": "!hasPrev()",
+							"x-bind:disabled": "!pagination.hasPrev()",
 						},
 					})
 				}
 				@pagination.Item() {
-					<span class="text-muted-foreground text-xs" x-text="`Page ${currentPage} of ${totalPages}`"></span>
+					<span class="text-muted-foreground text-xs" x-text="`Page ${pagination.getPage()} of ${pagination.getTotalPages()}`"></span>
 				}
 				@pagination.Item() {
 					@pagination.Next(pagination.NextProps{
 						Attributes: templ.Attributes{
 							"x-on:click":      "nextPage()",
-							"x-bind:disabled": "!hasNext()",
+							"x-bind:disabled": "!pagination.hasNext()",
 						},
 					})
 				}
@@ -385,9 +385,12 @@ templ StudentDialog() {
 				@dialog.Title(dialog.TitleProps{Attributes: templ.Attributes{"x-text": "isEditing() ? 'Edit Student' : 'Add Student'"}}) {}
 				@dialog.Description() { Fill all required details before saving. }
 			}
-			@StudentFormModel()
-			// FIXME: Add Loading State, Saving State.
-		
+			<div x-show="isLoadingEdit()" class="flex items-center justify-center py-12">
+				@components.Spinner()
+			</div>
+			<div x-show="!isLoadingEdit()">
+				@StudentFormModel()
+			</div>
 		}
 	}
 }
@@ -474,26 +477,73 @@ templ StudentFormFooter() {
 		@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "window.tui?.dialog.close('student-form')"}}) {
 			Cancel
 		}
-		@button.Button(button.Props{Type: button.TypeSubmit, Disabled: true, Attributes: templ.Attributes{"x-bind:disabled": "isSaving()"}}) { Save }
+		<div x-show="isSaving()" class="flex items-center justify-center w-20 h-9">
+			@components.Spinner(components.SpinnerProps{Size: components.SpinnerSizeSm})
+		</div>
+		@button.Button(button.Props{Type: button.TypeSubmit, Attributes: templ.Attributes{"x-show": "!isSaving()", "x-text": "isEditing() ? 'Update' : 'Create'"}}) {
+			Save
+		}
 	</div>
 }
 
 // =============================================================================
+// =============================================================================
 // SECTION 5: State Indicators (Loading, Error, Empty)
 // =============================================================================
-// This section contains placeholder states shown during different UI conditions.
-// These components provide visual feedback for loading, error, and empty states.
+// State Indicators provide visual feedback for different UI conditions.
+// These components are controlled by Alpine.js state functions.
 //
-// Components:
-//   - StudentLoadingState: Skeleton placeholders during data fetch
+// UI States (from student.ts):
+//   - initialized: Page has not made initial fetch yet
+//   - loading: Currently fetching student list
+//   - editing: Edit/Create dialog is open
+//   - saving: Form is being submitted
+//   - pendingDeleteId: Row has pending delete countdown
+//   - apiError: API/operation errors
+//   - formError: Inline form validation errors
+//
+// Helper Functions:
+//   - isReady(): !isInitialized() && isLoading() - First load in progress
+//   - isInitialized(): Page has loaded at least once
+//   - isLoading(): Fetching student list
+//   - isEditing(): Dialog is open for edit/create
+//   - isSaving(): Form submission in progress
+//   - isApiError(): Error state (apiError !== '')
+//   - isFormError(): Form validation error (formError !== '')
+//   - isPendingDelete(student): Row has pending delete
+// =============================================================================
+// SECTION 5: Feedback Components
+// =============================================================================
+// Pre-created state and toast components wrapped into single function call.
+//
+// Components (in order):
+//   - StudentFeedbackComponents: Wrapper calling all feedback components
+//   - StudentInitializingState: Full-page spinner on first load
+//   - StudentLoadingState: Skeleton placeholders on subsequent loads
 //   - StudentErrorState: Error message with retry button
-//   - StudentEmptyState: Empty state when no students match filters
+//   - StudentToasts: Toast notification templates
 // =============================================================================
 
+// StudentFeedbackComponents wraps all pre-created state and toast components.
+templ StudentFeedbackComponents() {
+	@StudentInitializingState()
+	@StudentLoadingState()
+	@StudentErrorState()
+	@StudentToasts()
+}
+
+// StudentInitializingState: full-page spinner shown only on first load.
+// x-show: displays spinner when page has not loaded yet (initial load).
+templ StudentInitializingState() {
+	<div x-show="isReady()" class="flex items-center justify-center p-12">
+		@components.Spinner()
+	</div>
+}
+
 // StudentLoadingState: skeleton placeholders shown while listStudents() is running.
-// x-show: displays skeletons while loading.
+// x-show: displays skeletons when loading AFTER initial load.
 templ StudentLoadingState() {
-	<div x-show="isLoading()" class="p-6">
+	<div x-show="isInitialized() && isLoading()" class="p-6">
 		<div class="space-y-3">
 			@skeleton.Skeleton(skeleton.Props{Class: "h-10 w-full"})
 			@skeleton.Skeleton(skeleton.Props{Class: "h-10 w-full"})
@@ -502,17 +552,17 @@ templ StudentLoadingState() {
 	</div>
 }
 
-// StudentErrorState: shown when errorMessage is non-empty; retry button re-fetches.
+// StudentErrorState: shown when apiError is non-empty; retry button re-fetches.
 // x-show: displays alert when error exists | x-text: binds error message.
 templ StudentErrorState() {
 	@alert.Alert(alert.Props{
 		Variant: alert.VariantDestructive,
 		Attributes: templ.Attributes{
-			"x-show": "hasError()",
+			"x-show": "isApiError()",
 		},
 	}) {
 		@alert.Title() {
-			<span x-text="errorMessage"></span>
+			<span x-text="apiError"></span>
 		}
 		@alert.Description() {
 			@button.Button(button.Props{

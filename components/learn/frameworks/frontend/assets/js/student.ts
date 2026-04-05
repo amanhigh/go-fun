@@ -53,7 +53,128 @@ const emptyFormValues: StudentFormData = {
 };
 
 // =============================================================================
-// SECTION 2: Global Declarations
+// SECTION 2: Pagination Tracker
+// =============================================================================
+
+interface PaginationTracker {
+  page: number;
+  pageSize: number;
+  totalStudents: number;
+  getPage(): number;
+  getPageSize(): number;
+  getTotalStudents(): number;
+  getTotalPages(): number;
+  hasNext(): boolean;
+  hasPrev(): boolean;
+  setTotalStudents(count: number): void;
+  setPageFromResponse(offset: number): void;
+  nextPage(): void;
+  prevPage(): void;
+  resetPage(): void;
+}
+
+function createPaginationTracker(pageSize: number): PaginationTracker {
+  return {
+    page: 1,
+    pageSize,
+    totalStudents: 0,
+    getPage() { return this.page; },
+    getPageSize() { return this.pageSize; },
+    getTotalStudents() { return this.totalStudents; },
+    getTotalPages() { return Math.max(1, Math.ceil(this.totalStudents / this.pageSize)); },
+    hasNext() { return this.page < this.getTotalPages(); },
+    hasPrev() { return this.page > 1; },
+    setTotalStudents(count: number) { this.totalStudents = count; },
+    setPageFromResponse(offset: number) { this.page = Math.floor(offset / this.pageSize) + 1; },
+    nextPage() { if (this.hasNext()) this.page += 1; },
+    prevPage() { if (this.hasPrev()) this.page -= 1; },
+    resetPage() { this.page = 1; },
+  };
+}
+
+// =============================================================================
+// SECTION 3: Delete Tracker
+// =============================================================================
+
+interface DeleteTracker {
+  pendingDeleteId: string;
+  pendingDeleteSeconds: number;
+  pendingDeleteTimer: number | null;
+  deletingId: string;
+  isPendingDelete(studentId: string): boolean;
+  isDeletingId(studentId: string): boolean;
+  getPendingDeleteSeconds(): number;
+  startCountdown(studentId: string, onExpire: () => void): void;
+  cancelCountdown(): void;
+  clearAll(): void;
+}
+
+function createDeleteTracker(): DeleteTracker {
+  return {
+    pendingDeleteId: '',
+    pendingDeleteSeconds: 0,
+    pendingDeleteTimer: null,
+    deletingId: '',
+    isPendingDelete(studentId: string) { return this.pendingDeleteId === studentId; },
+    isDeletingId(studentId: string) { return this.deletingId === studentId; },
+    getPendingDeleteSeconds() { return this.pendingDeleteSeconds; },
+    startCountdown(studentId: string, onExpire: () => void) {
+      this.pendingDeleteId = studentId;
+      this.pendingDeleteSeconds = 3;
+      this.pendingDeleteTimer = window.setInterval(() => {
+        if (this.pendingDeleteSeconds <= 1) {
+          this.cancelCountdown();
+          onExpire();
+          return;
+        }
+        this.pendingDeleteSeconds -= 1;
+      }, 1000);
+    },
+    cancelCountdown() {
+      if (this.pendingDeleteTimer !== null) {
+        window.clearInterval(this.pendingDeleteTimer);
+      }
+      this.pendingDeleteId = '';
+      this.pendingDeleteSeconds = 0;
+      this.pendingDeleteTimer = null;
+    },
+    clearAll() {
+      this.cancelCountdown();
+      this.deletingId = '';
+    },
+  };
+}
+
+// =============================================================================
+// SECTION 4: Filter Tracker
+// =============================================================================
+
+interface FilterTracker {
+  name: string;
+  grade: string;
+  getName(): string;
+  getGrade(): string;
+  hasFilters(): boolean;
+  setName(name: string): void;
+  setGrade(grade: string): void;
+  clear(): void;
+}
+
+function createFilterTracker(): FilterTracker {
+  return {
+    name: '',
+    grade: '' as Grade,
+    getName() { return this.name.trim(); },
+    getGrade() { return this.grade; },
+    hasFilters() { return this.name !== '' || this.grade !== ''; },
+    setName(name: string) { this.name = name.trim(); },
+    setGrade(grade: string) { this.grade = grade; },
+    clear() { this.name = ''; this.grade = '' as Grade; },
+  };
+}
+
+// =============================================================================
+// SECTION 5: Global Declarations
 // =============================================================================
 
 declare global {
@@ -82,25 +203,21 @@ function studentPage() {
     // Data State
     // ─────────────────────────────────────────────────────────────
     students: [] as StudentResponse[],
-    totalStudents: 0,
 
     // ─────────────────────────────────────────────────────────────
-    // Filter State
+    // Filter State (delegated to FilterTracker)
     // ─────────────────────────────────────────────────────────────
-    name: '',
-    grade: '' as Grade,
+    filterTracker: createFilterTracker(),
+
+// ─────────────────────────────────────────────────────────────
+// Pagination State (delegated to PaginationTracker)
+// ─────────────────────────────────────────────────────────────
+    pagination: createPaginationTracker(4),
 
     // ─────────────────────────────────────────────────────────────
-    // Pagination State
+    // Delete State (delegated to DeleteTracker)
     // ─────────────────────────────────────────────────────────────
-    page: 1,
-    pageSize: 4,
-
-    // ─────────────────────────────────────────────────────────────
-    // Delete State
-    // ─────────────────────────────────────────────────────────────
-    pendingDeleteSeconds: 0,
-    pendingDeleteTimer: null as number | null,
+    deleteTracker: createDeleteTracker(),
 
     // ─────────────────────────────────────────────────────────────
     // Form State
@@ -142,75 +259,73 @@ function studentPage() {
     // States:
     //   - initialized: Page has not made initial fetch yet
     //   - loading: Currently fetching student list (pagination/filter)
-    //   - editing: Edit/Create dialog is open
+    //   - editingId: Edit mode uses ID, create mode has empty ID
     //   - saving: Form is being submitted
-    //   - pendingDeleteId: Row has pending delete countdown
-    //   - errorMessage: Error state for API/operation errors
+    //   - deleteTracker: Row delete state (pending countdown, API delete)
+    //   - apiError: Error state for API/operation errors
     //   - formError: Inline form validation errors
     //
     // Mutually Exclusive Groups:
     //   1. Load States: initialized ↔ loading ↔ loaded (via initialized)
-    //   2. Edit States: idle ↔ editing ↔ saving
+    //   2. Edit States: idle (no editingId) ↔ editing (has editingId) ↔ saving
     //   3. Error States: hasError() ↔ isFormError() (can coexist)
     // ═══════════════════════════════════════════════════════════════
     initialized: false,
     loading: false,
     saving: false,
-    editing: false,
-    pendingDeleteId: '',
-    errorMessage: '',
+    editLoading: false,
+    apiError: '',
     formError: '',
 
     // ─────────────────────────────────────────────────────────────
     // Computed Properties
     // ─────────────────────────────────────────────────────────────
-    get currentPage() { return this.page; },
-    get hasFilters() { return this.name !== '' || this.grade !== ''; },
+    get hasFilters() { return this.filterTracker.hasFilters(); },
     get filteredStudents() {
-      const query = this.name.toLowerCase().trim();
+      const query = this.filterTracker.getName().toLowerCase().trim();
       return this.students.filter((s) => {
         const fullName = `${s.first_name} ${s.last_name}`.toLowerCase();
-        return (!query || fullName.includes(query)) && (!this.grade || s.grade === this.grade);
+        return (!query || fullName.includes(query)) && (!this.filterTracker.getGrade() || s.grade === this.filterTracker.getGrade());
       });
     },
-    get totalPages() { return Math.max(1, Math.ceil(this.totalStudents / this.pageSize)); },
     get paginatedStudents() { return this.filteredStudents; },
     isInitialized() { return this.initialized; },
-    isEditing() { return this.editing; },
+    isEditing() { return this.editingId !== ''; },
     isLoading() { return this.loading; },
     isSaving() { return this.saving; },
+    isLoadingEdit() { return this.editLoading; },
     isEmpty() { return this.filteredStudents.length === 0; },
-    isErrored() { return this.errorMessage !== ''; },
+    isApiError() { return this.apiError !== ''; },
     isFormError() { return this.formError !== ''; },
-    isPendingDelete(student: StudentResponse) { return this.pendingDeleteId === student.id; },
-    hasNext() { return this.currentPage < this.totalPages; },
-    hasPrev() { return this.currentPage > 1; },
+    isReady() { return !this.initialized && this.loading; },
 
     // ─────────────────────────────────────────────────────────────
     // Methods - List
     // ─────────────────────────────────────────────────────────────
     async listStudents() {
       this.loading = true;
-      this.errorMessage = '';
+      this.apiError = '';
       try {
-        const offset = (this.page - 1) * this.pageSize;
+        const page = this.pagination.getPage();
+        const pageSize = this.pagination.getPageSize();
         const params = new URLSearchParams({
-          offset: String(offset),
-          limit: String(this.pageSize),
+          offset: String((page - 1) * pageSize),
+          limit: String(pageSize),
         });
-        if (this.name.trim() !== '') params.set('name', this.name.trim());
-        if (this.grade !== '') params.set('grade', this.grade);
+        const name = this.filterTracker.getName();
+        const grade = this.filterTracker.getGrade();
+        if (name) params.set('name', name);
+        if (grade) params.set('grade', grade);
 
         const response = await fetch(`/api/students?${params.toString()}`);
         if (!response.ok) throw new Error('Failed to fetch students');
         const payload = (await response.json()) as StudentListResponse;
         this.students = payload.data ?? [];
-        this.totalStudents = payload.count ?? this.students.length;
-        this.pageSize = payload.limit ?? this.pageSize;
-        this.page = Math.floor((payload.offset ?? offset) / this.pageSize) + 1;
+        this.pagination.setTotalStudents(payload.count ?? this.students.length);
+        this.pagination.setPageFromResponse(payload.offset ?? 0);
         this.initialized = true;
       } catch {
-        this.errorMessage = "Couldn't load students";
+        this.apiError = "Couldn't load students";
       } finally {
         this.loading = false;
       }
@@ -219,33 +334,25 @@ function studentPage() {
     // ─────────────────────────────────────────────────────────────
     // Methods - Filter
     // ─────────────────────────────────────────────────────────────
-    onGradeFilterChange(event: Event) {
-      const target = event.target as HTMLInputElement | HTMLSelectElement | null;
-      this.grade = (target?.value ?? '') as Grade;
-      this.page = 1;
+    applyFilters() {
+      this.pagination.resetPage();
       void this.listStudents();
     },
     clearFilters() {
-      this.name = '';
-      this.grade = '';
-      this.page = 1;
-      void this.listStudents();
+      this.filterTracker.clear();
+      this.applyFilters();
     },
 
     // ─────────────────────────────────────────────────────────────
     // Methods - Pagination
     // ─────────────────────────────────────────────────────────────
-    nextPage() {
-      if (this.currentPage < this.totalPages) {
-        this.page += 1;
-        void this.listStudents();
-      }
+    async nextPage() {
+      this.pagination.nextPage();
+      await this.listStudents();
     },
-    prevPage() {
-      if (this.currentPage > 1) {
-        this.page -= 1;
-        void this.listStudents();
-      }
+    async prevPage() {
+      this.pagination.prevPage();
+      await this.listStudents();
     },
 
     // ─────────────────────────────────────────────────────────────
@@ -253,13 +360,16 @@ function studentPage() {
     // ─────────────────────────────────────────────────────────────
     resetForm() {
       this.editingId = '';
-      this.editing = false;
       this.form = { ...emptyFormValues };
       this.formError = '';
     },
+    openCreateModal() {
+      this.resetForm();
+      window.tui?.dialog.open('student-form');
+    },
     async submitForm() {
       this.saving = true;
-      const isEdit = this.editingId !== '';
+      const isEdit = this.isEditing();
       const body: StudentRequest = {
         first_name: this.form.firstName,
         last_name: this.form.lastName,
@@ -297,18 +407,15 @@ function studentPage() {
       }
     },
     async openEditModal(studentId: string) {
+      this.resetForm();
+      window.tui?.dialog.open('student-form');
+      this.editLoading = true;
       try {
-        // Reset form first
-        this.resetForm();
-
         const response = await fetch(`/api/students/${studentId}`);
         if (!response.ok) throw new Error('Failed to fetch student');
         const json = (await response.json()) as { data?: StudentResponse };
         const student = json?.data;
         if (!student) throw new Error('Student not found');
-
-        // Open dialog
-        window.tui?.dialog.open('student-form');
 
         // Set form values from API
         this.form = {
@@ -319,37 +426,28 @@ function studentPage() {
           grade: student.grade,
         };
         this.editingId = student.id;
-        this.editing = true;
       } catch (error) {
+        window.tui?.dialog.close('student-form');
         const message = error instanceof Error ? error.message : 'Failed to fetch student';
         this.showToast('Error', message, true);
+      } finally {
+        this.editLoading = false;
       }
     },
 
     // ─────────────────────────────────────────────────────────────
-    // Methods - Delete
+    // Methods - Delete (confirm needs studentPage context)
     // ─────────────────────────────────────────────────────────────
     requestDelete(student: StudentResponse) {
-      this.clearPendingDelete();
-      this.pendingDeleteId = student.id;
-      this.pendingDeleteSeconds = 3;
-
-      this.pendingDeleteTimer = window.setInterval(() => {
-        if (this.pendingDeleteSeconds <= 1) {
-          void this.confirmPendingDelete();
-          return;
-        }
-        this.pendingDeleteSeconds -= 1;
-      }, 1000);
-    },
-    undoDelete() {
-      this.clearPendingDelete();
+      this.deleteTracker.clearAll();
+      this.deleteTracker.startCountdown(student.id, () => void this.confirmPendingDelete());
     },
     async confirmPendingDelete() {
-      const id = this.pendingDeleteId;
+      const id = this.deleteTracker.pendingDeleteId;
       if (!id) return;
 
-      this.clearPendingDelete();
+      this.deleteTracker.clearAll();
+      this.deleteTracker.deletingId = id;
 
       try {
         const response = await fetch(`/api/students/${id}`, { method: 'DELETE' });
@@ -359,15 +457,8 @@ function studentPage() {
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Failed to delete student';
         this.showToast('Delete failed', message, true);
+        this.deleteTracker.deletingId = '';
       }
-    },
-    clearPendingDelete() {
-      if (this.pendingDeleteTimer !== null) {
-        window.clearInterval(this.pendingDeleteTimer);
-      }
-      this.pendingDeleteId = '';
-      this.pendingDeleteSeconds = 0;
-      this.pendingDeleteTimer = null;
     },
 
     // ─────────────────────────────────────────────────────────────
@@ -381,14 +472,16 @@ function studentPage() {
       document.body.appendChild(toast);
     },
     async afterSave(action: StudentMutationAction = 'update') {
-      const nextPage = action === 'create'
-        ? Math.max(1, Math.ceil((this.totalStudents + 1) / this.pageSize))
-        : this.page;
-      this.page = nextPage;
+      if (action === 'create') {
+        const totalAfterCreate = this.pagination.getTotalStudents() + 1;
+        this.pagination.setTotalStudents(totalAfterCreate);
+        const newPage = Math.max(1, Math.ceil(totalAfterCreate / this.pagination.getPageSize()));
+        this.pagination.setPageFromResponse((newPage - 1) * this.pagination.getPageSize());
+      }
       await this.listStudents();
     },
     setError(message: string) {
-      this.errorMessage = message;
+      this.apiError = message;
       this.showToast('Error', message, true);
     },
 

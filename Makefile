@@ -499,7 +499,11 @@ generate-css: generate-css-sources
 	@printf $(_TITLE) "Generate" "CSS"
 	@cd $(FRONTEND_DIR) && $(TAILWINDCSS) build --input $(FRONTEND_CSS_INPUT) --output $(FRONTEND_CSS_OUTPUT)
 
-generate-js:
+check-ts:
+	@printf $(_TITLE) "Check" "TypeScript"
+	@cd $(FRONTEND_DIR)/assets/js && tsc --noEmit --strict --skipLibCheck --lib ES2021,DOM --target ES2020 --module ESNext --moduleResolution bundler *.ts 2>&1 || true
+
+generate-js: check-ts
 	@printf $(_TITLE) "Generate" "JavaScript"
 	@cd $(FRONTEND_DIR) && $(ESBUILD) $(FRONTEND_JS_ENTRY) --bundle --outfile=$(FRONTEND_JS_OUTPUT) --format=iife --target=es2020 || printf $(_WARN) "JS" "esbuild failed, skipping JS bundling"
 
