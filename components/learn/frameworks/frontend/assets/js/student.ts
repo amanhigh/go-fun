@@ -1,21 +1,13 @@
-// Student page state + helpers for Alpine.js CRUD page.
-// Loaded for side-effects: registers Alpine data factory and global form helpers.
+// =============================================================================
+// SECTION 1: Type Definitions
+// =============================================================================
+// Core types for Student CRUD operations - API requests, responses, and form data.
 
 type Grade = '' | 'Freshman' | 'Sophomore' | 'Junior' | 'Senior';
 type StudentMutationAction = 'create' | 'update' | 'delete';
 
-interface StudentErrorResponse {
-  error?: string;
-}
-
-interface StudentMutationEventDetail {
-  title: string;
-  message: string;
-  action?: StudentMutationAction;
-}
-
-
-interface StudentApiRecord {
+// Student Response - student data from API
+interface StudentResponse {
   id: string;
   first_name: string;
   last_name: string;
@@ -24,54 +16,7 @@ interface StudentApiRecord {
   grade: Grade;
 }
 
-interface StudentFormValues {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  age: number;
-  grade: Grade;
-}
-
-interface StudentApiPayload {
-  first_name: string;
-  last_name: string;
-  email: string;
-  age: number;
-  grade: Grade;
-}
-
-interface StudentListResponse {
-  data?: StudentApiRecord[];
-  count?: number;
-  offset?: number;
-  limit?: number;
-  total_pages?: number;
-}
-
-interface StudentDataState {
-  students: StudentApiRecord[];
-  loading: boolean;
-  errorMessage: string;
-  totalStudents: number;
-}
-
-interface StudentFilterState {
-  name: string;
-  grade: Grade;
-}
-
-interface StudentPaginationState {
-  page: number;
-  pageSize: number;
-}
-
-interface StudentDeleteState {
-  pendingDeleteId: string;
-  pendingDeleteSeconds: number;
-  pendingDeleteTimer: number | null;
-}
-
+// Student Form Data - Alpine x-model binding
 interface StudentFormData {
   firstName: string;
   lastName: string;
@@ -80,61 +25,36 @@ interface StudentFormData {
   grade: Grade;
 }
 
-interface StudentFormState {
-  editingId: string;
-  form: StudentFormData;
-  submitForm(): Promise<void>;
+// Student Request - request body for create/update
+interface StudentRequest {
+  first_name: string;
+  last_name: string;
+  email: string;
+  age: number;
+  grade: Grade;
 }
 
-const studentFormFieldIds = {
-  id: 's-student-id',
-  firstName: 's-first-name',
-  lastName: 's-last-name',
-  email: 's-email',
-  age: 's-age',
-  grade: 's-grade',
-} as const;
+// Student List Response - paginated API response
+interface StudentListResponse {
+  data?: StudentResponse[];
+  count?: number;
+  offset?: number;
+  limit?: number;
+  total_pages?: number;
+}
 
-const emptyStudentFormValues: StudentFormValues = {
-  id: '',
+// Empty form values for reset
+const emptyFormValues: StudentFormData = {
   firstName: '',
   lastName: '',
   email: '',
   age: 18,
-  grade: '',
+  grade: '' as Grade,
 };
 
-interface StudentPageState extends StudentDataState, StudentFilterState, StudentPaginationState, StudentDeleteState {
-  readonly filteredStudents: StudentApiRecord[];
-  readonly currentPage: number;
-  readonly totalPages: number;
-  readonly paginatedStudents: StudentApiRecord[];
-  readonly startItem: number;
-  readonly endItem: number;
-  isLoading(): boolean;
-  isDeleting(student: StudentApiRecord): boolean;
-  isEditing(): boolean;
-  hasNext(): boolean;
-  hasPrev(): boolean;
-  hasError(): boolean;
-  isEmpty(): boolean;
-  init(): void;
-  listStudents(this: StudentPageState): Promise<void>;
-  onGradeFilterChange(this: StudentPageState, event: Event): void;
-  clearFilters(this: StudentPageState): void;
-  nextPage(this: StudentPageState): void;
-  prevPage(this: StudentPageState): void;
-resetForm(): void;
-  submitForm(): Promise<void>;
-  openEditModal(this: StudentPageState, studentId: string): Promise<void>;
-  requestDelete(this: StudentPageState, student: StudentApiRecord): void;
-  undoDelete(this: StudentPageState): void;
-  confirmPendingDelete(this: StudentPageState): Promise<void>;
-  clearPendingDelete(this: StudentPageState): void;
-  showToast(this: StudentPageState, title: string, message: string, isError: boolean): void;
-  afterSave(this: StudentPageState, action?: StudentMutationAction): Promise<void>;
-  setError(this: StudentPageState, message: string): void;
-}
+// =============================================================================
+// SECTION 2: Global Declarations
+// =============================================================================
 
 declare global {
   interface Window {
@@ -142,77 +62,84 @@ declare global {
       dialog: {
         open(id: string): void;
         close(id: string): void;
-        toggle(id: string): void;
-        isOpen(id: string): boolean;
       };
     };
-    studentPage: typeof studentPage;
-    setFormFields: typeof setFormFields;
-    studentFormSubmit: typeof studentFormSubmit;
   }
 
   const Alpine: {
-    data(name: string, callback: () => StudentPageState): void;
+    data(name: string, callback: () => ReturnType<typeof studentPage>): void;
   };
 }
 
-function studentPage(): StudentPageState {
+// =============================================================================
+// SECTION 3: Alpine Factory
+// =============================================================================
+// Factory function to create Alpine.js component with all state and methods.
+
+function studentPage() {
   return {
-    students: [],
+    // ─────────────────────────────────────────────────────────────
+    // Data State
+    // ─────────────────────────────────────────────────────────────
+    students: [] as StudentResponse[],
     loading: false,
+    saving: false,
     errorMessage: '',
     totalStudents: 0,
+
+    // ─────────────────────────────────────────────────────────────
+    // Filter State
+    // ─────────────────────────────────────────────────────────────
     name: '',
-    grade: '',
+    grade: '' as Grade,
+
+    // ─────────────────────────────────────────────────────────────
+    // Pagination State
+    // ─────────────────────────────────────────────────────────────
     page: 1,
     pageSize: 4,
+
+    // ─────────────────────────────────────────────────────────────
+    // Delete State
+    // ─────────────────────────────────────────────────────────────
     pendingDeleteId: '',
     pendingDeleteSeconds: 0,
-    pendingDeleteTimer: null,
-    editingId: '',
-    form: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      age: 18,
-      grade: '' as Grade,
-    },
+    pendingDeleteTimer: null as number | null,
 
+    // ─────────────────────────────────────────────────────────────
+    // Form State
+    // ─────────────────────────────────────────────────────────────
+    editingId: '',
+    form: { ...emptyFormValues },
+    formError: '',
+
+    // ─────────────────────────────────────────────────────────────
+    // Computed Properties
+    // ─────────────────────────────────────────────────────────────
     get currentPage() { return this.page; },
     get hasFilters() { return this.name !== '' || this.grade !== ''; },
     get filteredStudents() {
       const query = this.name.toLowerCase().trim();
-      return this.students.filter((student) => {
-        const studentName = `${student.first_name} ${student.last_name}`.toLowerCase();
-        return (!query || studentName.includes(query))
-          && (!this.grade || student.grade === this.grade);
+      return this.students.filter((s) => {
+        const fullName = `${s.first_name} ${s.last_name}`.toLowerCase();
+        return (!query || fullName.includes(query)) && (!this.grade || s.grade === this.grade);
       });
     },
     get totalPages() { return Math.max(1, Math.ceil(this.totalStudents / this.pageSize)); },
     get paginatedStudents() { return this.filteredStudents; },
-    get startItem() { return this.totalStudents ? ((this.page - 1) * this.pageSize) + 1 : 0; },
-    get endItem() { return this.totalStudents ? Math.min(this.page * this.pageSize, this.totalStudents) : 0; },
-
-    isLoading() { return this.loading; },
-    isDeleting(student) { return this.pendingDeleteId === student.id; },
     isEditing() { return this.form.firstName !== '' || this.form.lastName !== '' || this.editingId !== ''; },
+    isLoading() { return this.loading; },
+    isEmpty() { return this.filteredStudents.length === 0; },
+    hasError() { return this.errorMessage !== ''; },
+    isFormError() { return this.formError !== ''; },
+    isSaving() { return this.saving; },
     hasNext() { return this.currentPage < this.totalPages; },
     hasPrev() { return this.currentPage > 1; },
-    hasError() { return this.errorMessage !== ''; },
-    isEmpty() { return this.filteredStudents.length === 0; },
+    isDeleting(student: StudentResponse) { return this.pendingDeleteId === student.id; },
 
-    init() {
-      window.addEventListener('student:saved', (e) => {
-        const detail = (e as CustomEvent<StudentMutationEventDetail>).detail;
-        this.showToast(detail.title, detail.message, false);
-        void this.afterSave(detail.action);
-      });
-      window.addEventListener('student:error', (e) => {
-        const detail = (e as CustomEvent<StudentMutationEventDetail>).detail;
-        this.showToast(detail.title, detail.message, true);
-      });
-    },
-
+    // ─────────────────────────────────────────────────────────────
+    // Methods - List
+    // ─────────────────────────────────────────────────────────────
     async listStudents() {
       this.loading = true;
       this.errorMessage = '';
@@ -230,10 +157,8 @@ function studentPage(): StudentPageState {
         const payload = (await response.json()) as StudentListResponse;
         this.students = payload.data ?? [];
         this.totalStudents = payload.count ?? this.students.length;
-        const responsePageSize = payload.limit ?? this.pageSize;
-        const responseOffset = payload.offset ?? offset;
-        this.pageSize = responsePageSize;
-        this.page = Math.floor(responseOffset / responsePageSize) + 1;
+        this.pageSize = payload.limit ?? this.pageSize;
+        this.page = Math.floor((payload.offset ?? offset) / this.pageSize) + 1;
       } catch {
         this.errorMessage = "Couldn't load students";
       } finally {
@@ -241,6 +166,9 @@ function studentPage(): StudentPageState {
       }
     },
 
+    // ─────────────────────────────────────────────────────────────
+    // Methods - Filter
+    // ─────────────────────────────────────────────────────────────
     onGradeFilterChange(event: Event) {
       const target = event.target as HTMLInputElement | HTMLSelectElement | null;
       this.grade = (target?.value ?? '') as Grade;
@@ -251,10 +179,12 @@ function studentPage(): StudentPageState {
       this.name = '';
       this.grade = '';
       this.page = 1;
-
-      resetTemplSelectboxValue('grade-filter');
       void this.listStudents();
     },
+
+    // ─────────────────────────────────────────────────────────────
+    // Methods - Pagination
+    // ─────────────────────────────────────────────────────────────
     nextPage() {
       if (this.currentPage < this.totalPages) {
         this.page += 1;
@@ -268,18 +198,18 @@ function studentPage(): StudentPageState {
       }
     },
 
+    // ─────────────────────────────────────────────────────────────
+    // Methods - Form
+    // ─────────────────────────────────────────────────────────────
     resetForm() {
       this.editingId = '';
-      this.form.firstName = '';
-      this.form.lastName = '';
-      this.form.email = '';
-      this.form.age = 18;
-      this.form.grade = '' as Grade;
+      this.form = { ...emptyFormValues };
+      this.formError = '';
     },
-
     async submitForm() {
+      this.saving = true;
       const isEdit = this.editingId !== '';
-      const body: StudentApiPayload = {
+      const body: StudentRequest = {
         first_name: this.form.firstName,
         last_name: this.form.lastName,
         email: this.form.email,
@@ -295,36 +225,41 @@ function studentPage(): StudentPageState {
         });
         if (!response.ok) {
           const fallback = isEdit ? 'Failed to update student' : 'Failed to create student';
-          const errorMessage = await readErrorMessage(response, fallback);
-          throw new Error(errorMessage);
+          const payload = (await response.json().catch(() => ({}))) as { error?: string };
+          this.formError = payload.error || fallback;
+          return;
         }
         window.tui?.dialog.close('student-form');
         this.resetForm();
-        emitStudentEvent(
-          'student:saved',
+        this.showToast(
           isEdit ? 'Student updated' : 'Student added',
           isEdit ? 'The student details were saved successfully.' : 'The student record was created successfully.',
-          isEdit ? 'update' : 'create',
+          false,
         );
+        await this.afterSave(isEdit ? 'update' : 'create');
       } catch (error) {
         const fallback = isEdit ? 'Failed to update student' : 'Failed to create student';
         const message = error instanceof Error ? error.message : fallback;
-        emitStudentEvent('student:error', isEdit ? 'Update failed' : 'Create failed', message);
+        this.showToast(isEdit ? 'Update failed' : 'Create failed', message, true);
+      } finally {
+        this.saving = false;
       }
     },
-
     async openEditModal(studentId: string) {
       try {
+        // Reset form first
+        this.resetForm();
+
         const response = await fetch(`/api/students/${studentId}`);
         if (!response.ok) throw new Error('Failed to fetch student');
-        const json = await response.json();
-        const student = json?.data as StudentApiRecord | undefined;
+        const json = (await response.json()) as { data?: StudentResponse };
+        const student = json?.data;
         if (!student) throw new Error('Student not found');
-        
-        // Open dialog first
+
+        // Open dialog
         window.tui?.dialog.open('student-form');
-        
-        // Then set form values after dialog is open
+
+        // Set form values from API
         this.form = {
           firstName: student.first_name,
           lastName: student.last_name,
@@ -339,7 +274,10 @@ function studentPage(): StudentPageState {
       }
     },
 
-    requestDelete(student) {
+    // ─────────────────────────────────────────────────────────────
+    // Methods - Delete
+    // ─────────────────────────────────────────────────────────────
+    requestDelete(student: StudentResponse) {
       this.clearPendingDelete();
       this.pendingDeleteId = student.id;
       this.pendingDeleteSeconds = 3;
@@ -352,11 +290,9 @@ function studentPage(): StudentPageState {
         this.pendingDeleteSeconds -= 1;
       }, 1000);
     },
-
     undoDelete() {
       this.clearPendingDelete();
     },
-
     async confirmPendingDelete() {
       const id = this.pendingDeleteId;
       if (!id) return;
@@ -373,7 +309,6 @@ function studentPage(): StudentPageState {
         this.showToast('Delete failed', message, true);
       }
     },
-
     clearPendingDelete() {
       if (this.pendingDeleteTimer !== null) {
         window.clearInterval(this.pendingDeleteTimer);
@@ -383,6 +318,9 @@ function studentPage(): StudentPageState {
       this.pendingDeleteTimer = null;
     },
 
+    // ─────────────────────────────────────────────────────────────
+    // Methods - Toast / Feedback
+    // ─────────────────────────────────────────────────────────────
     showToast(title: string, message: string, isError: boolean) {
       const toast = cloneToastTemplate(isError);
       if (!toast) return;
@@ -390,7 +328,6 @@ function studentPage(): StudentPageState {
       replaceToastText(toast, title, message);
       document.body.appendChild(toast);
     },
-
     async afterSave(action: StudentMutationAction = 'update') {
       const nextPage = action === 'create'
         ? Math.max(1, Math.ceil((this.totalStudents + 1) / this.pageSize))
@@ -402,65 +339,19 @@ function studentPage(): StudentPageState {
       this.errorMessage = message;
       this.showToast('Error', message, true);
     },
+
+    // ─────────────────────────────────────────────────────────────
+    // Methods - Init
+    // ─────────────────────────────────────────────────────────────
+    init() {
+      void this.listStudents();
+    },
   };
 }
 
-// Global helpers: dialog Content is teleported, so DOM helpers are used for pre-filling forms.
-function setFormFields(fields: StudentFormValues): void {
-  const mappings: Array<[string, string | number]> = [
-    [studentFormFieldIds.firstName, fields.firstName],
-    [studentFormFieldIds.lastName, fields.lastName],
-    [studentFormFieldIds.email, fields.email],
-    [studentFormFieldIds.age, fields.age],
-    [studentFormFieldIds.grade, fields.grade],
-  ];
-
-  for (const [id, value] of mappings) {
-    setInputValue(id, value);
-  }
-}
-
-function setInputValue(id: string, value: string | number): void {
-  const el = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null;
-  if (el) el.value = String(value);
-}
-
-function resetTemplSelectboxValue(triggerId: string): void {
-  const trigger = document.getElementById(triggerId) as HTMLButtonElement | null;
-  const hiddenValue = trigger?.querySelector('input[type="hidden"]') as HTMLInputElement | null;
-  if (!hiddenValue) return;
-
-  hiddenValue.value = '';
-  hiddenValue.dispatchEvent(new Event('input', { bubbles: true }));
-  hiddenValue.dispatchEvent(new Event('change', { bubbles: true }));
-}
-
-function readInputValue(id: string): string {
-  return (document.getElementById(id) as HTMLInputElement | null)?.value ?? '';
-}
-
-function readStudentFormPayload(form: HTMLFormElement): StudentApiPayload {
-  const formData = new FormData(form);
-  const ageValue = String(formData.get('age') ?? '').trim();
-  const ageNumber = Number(ageValue);
-
-  return {
-    first_name: String(formData.get('first_name') ?? ''),
-    last_name: String(formData.get('last_name') ?? ''),
-    email: String(formData.get('email') ?? ''),
-    age: Number.isFinite(ageNumber) ? ageNumber : 0,
-    grade: String(formData.get('grade') ?? '') as Grade,
-  };
-}
-
-async function readErrorMessage(response: Response, fallback: string): Promise<string> {
-  try {
-    const payload = (await response.json()) as StudentErrorResponse;
-    return payload.error || fallback;
-  } catch {
-    return fallback;
-  }
-}
+// =============================================================================
+// SECTION 4: Helper Functions
+// =============================================================================
 
 function cloneToastTemplate(isError: boolean): HTMLElement | null {
   const templateId = isError ? 'student-error-toast-template' : 'student-success-toast-template';
@@ -485,58 +376,13 @@ function replaceToastText(toast: HTMLElement, title: string, message: string): v
   }
 }
 
-function emitStudentEvent(
-  type: 'student:saved' | 'student:error',
-  title: string,
-  message: string,
-  action?: StudentMutationAction,
-): void {
-  const detail: StudentMutationEventDetail = action ? { title, message, action } : { title, message };
-  window.dispatchEvent(new CustomEvent(type, { detail }));
-}
-
-// studentFormSubmit: reads FormData, calls API, dispatches student:saved/student:error event.
-async function studentFormSubmit(event: SubmitEvent): Promise<boolean> {
-  event.preventDefault();
-  const form = event.target as HTMLFormElement | null;
-  if (!form) return false;
-
-  const id = readInputValue(studentFormFieldIds.id);
-  const isEdit = id !== '';
-  const body = readStudentFormPayload(form);
-
-  try {
-    const response = await fetch(isEdit ? `/api/students/${id}` : '/api/students', {
-      method: isEdit ? 'PUT' : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (!response.ok) {
-      const fallback = isEdit ? 'Failed to update student' : 'Failed to create student';
-      const errorMessage = await readErrorMessage(response, fallback);
-      throw new Error(errorMessage);
-    }
-    window.tui?.dialog.close('student-form');
-    emitStudentEvent(
-      'student:saved',
-      isEdit ? 'Student updated' : 'Student added',
-      isEdit ? 'The student details were saved successfully.' : 'The student record was created successfully.',
-      isEdit ? 'update' : 'create',
-    );
-  } catch (error) {
-    const fallback = isEdit ? 'Failed to update student' : 'Failed to create student';
-    const message = error instanceof Error ? error.message : fallback;
-    emitStudentEvent('student:error', isEdit ? 'Update failed' : 'Create failed', message);
-  }
-  return false;
-}
+// =============================================================================
+// SECTION 5: Alpine Registration
+// =============================================================================
+// Register the studentPage component with Alpine.js
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('studentPage', studentPage);
 });
-
-window.studentPage = studentPage;
-window.setFormFields = setFormFields;
-window.studentFormSubmit = studentFormSubmit;
 
 export {};

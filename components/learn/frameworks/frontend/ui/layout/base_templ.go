@@ -48,7 +48,7 @@ func Base(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><!-- Consolidated CSS (Tailwind + Custom) --><link rel=\"stylesheet\" href=\"/assets/css/app.css\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><!-- Consolidated CSS (Tailwind + Custom) --><link rel=\"stylesheet\" href=\"/assets/css/app.css\"><!-- Custom JS must load BEFORE Alpine.js to register alpine:init listener --><script defer src=\"/assets/js/app.js\"></script><!-- Alpine.js must load before templUI scripts so x-data is ready first --><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -76,7 +76,7 @@ func Base(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</main><!-- Footer --><footer class=\"border-t border-border bg-card mt-auto\"><div class=\"container mx-auto px-4 py-4\"><p class=\"text-sm text-muted-foreground text-center\">Built with templUI & Tailwind CSS, powered by AlpineJS</p></div></footer></div><!-- Scripts at end of body for proper loading order --><!-- Custom JS must load BEFORE Alpine.js to register alpine:init listener --><script src=\"/assets/js/app.js\"></script><!-- Alpine.js loads last and triggers alpine:init event --><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</main><!-- Footer --><footer class=\"border-t border-border bg-card mt-auto\"><div class=\"container mx-auto px-4 py-4\"><p class=\"text-sm text-muted-foreground text-center\">Built with TemplUI & Tailwind CSS, powered by AlpineJS</p></div></footer></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

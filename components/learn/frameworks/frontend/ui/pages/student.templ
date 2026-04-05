@@ -55,7 +55,7 @@ templ StudentPage() {
 			Tags:        []string{"templUI", "Tailwind CSS", "Alpine.js"},
 		}) {
 			// x-data: registers Alpine state | x-init: fetches students on mount.
-			<div x-data="studentPage" x-init="listStudents()" class="rounded-3xl border border-border bg-card shadow-sm overflow-hidden">
+			<div x-data="studentPage()" x-init="listStudents()" class="rounded-3xl border border-border bg-card shadow-sm overflow-hidden">
 				@StudentFilterPanel()
 				@separator.Separator(separator.Props{Class: "my-0 bg-border"})
 				@StudentLoadingState()
@@ -386,14 +386,6 @@ templ StudentDialog() {
 				@dialog.Description() { Fill all required details before saving. }
 			}
 			@StudentFormModel()
-			@dialog.Footer() {
-				@dialog.Close() {
-					@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton}) {
-						Cancel
-					}
-				}
-				@button.Button(button.Props{Type: button.TypeSubmit}) { Save }
-			}
 			// FIXME: Add Loading State, Saving State.
 		
 		}
@@ -468,7 +460,22 @@ templ StudentFormModel() {
 				}
 			}
 		</div>
+		@StudentFormFooter()
 	</form>
+}
+
+// StudentFormFooter: separator, error message, and action buttons.
+templ StudentFormFooter() {
+	@separator.Separator(separator.Props{Class: "my-2 bg-border"})
+	<div x-show="isFormError()" class="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+		<span x-text="formError" class="text-sm font-medium text-yellow-600"></span>
+	</div>
+	<div class="flex justify-end gap-2">
+		@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "window.tui?.dialog.close('student-form')"}}) {
+			Cancel
+		}
+		@button.Button(button.Props{Type: button.TypeSubmit, Disabled: true, Attributes: templ.Attributes{"x-bind:disabled": "isSaving()"}}) { Save }
+	</div>
 }
 
 // =============================================================================
