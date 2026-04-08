@@ -1,0 +1,22 @@
+root = "."
+tmp_dir = "/tmp/kohan-server"
+
+[build]
+  cmd = "make -C ../.. build-kohan-air"
+  entrypoint = "/tmp/kohan-server/entrypoint.sh"
+  delay = 1000
+  include_ext = ["go"]
+  include_dir = ["."]
+  exclude_regex = ["_test\\.go", "_templ\\.go", "testdata/.*", "\\.git/.*"]
+  kill_delay = "0s"
+  send_interrupt = false
+  stop_on_error = true
+
+[log]
+  time = false
+
+[color]
+  main = "magenta"
+  watcher = "cyan"
+  build = "yellow"
+  runner = "green"

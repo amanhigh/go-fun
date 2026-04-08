@@ -116,7 +116,7 @@ func NewServerError(err error) HttpError {
 
 const (
 	// Base API routes
-	APIV1 = "/v1"
+	APIV1 = "/v1/api"
 
 	// OS routes
 	OSBase = APIV1 + "/os"

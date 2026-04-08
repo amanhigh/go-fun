@@ -481,6 +481,7 @@ generate-mocks:
 generate-templ:
 	printf $(_TITLE) "Generate" "Templ Components"
 	$(TEMPL) generate -path components/learn
+	$(TEMPL) generate -path components/kohan
 	$(MAKE) format
 
 generate-css-sources:

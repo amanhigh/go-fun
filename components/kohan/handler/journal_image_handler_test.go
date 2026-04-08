@@ -71,7 +71,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 		imageHandler = handler.NewImageHandler(imgMgr)
 
 		router = util.CreateTestGinRouter()
-		v1 := router.Group("/v1")
+		v1 := router.Group("/v1/api")
 		journalGroup := v1.Group("/journals")
 		handler.SetupImageRoutes(journalGroup, imageHandler)
 

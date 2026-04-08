@@ -71,7 +71,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 		noteHandler = handler.NewNoteHandler(noteMgr)
 
 		router = util.CreateTestGinRouter()
-		v1 := router.Group("/v1")
+		v1 := router.Group("/v1/api")
 		journalGroup := v1.Group("/journals")
 		handler.SetupNoteRoutes(journalGroup, noteHandler)
 

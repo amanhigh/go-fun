@@ -19,6 +19,7 @@ type KohanServerLifecycle struct {
 	ImageHandler   handler.ImageHandler   `container:"type"`
 	NoteHandler    handler.NoteHandler    `container:"type"`
 	TagHandler     handler.TagHandler     `container:"type"`
+	IndexPortal    handler.IndexPortal    `container:"type"`
 }
 
 var _ util.ServerLifecycle = (*KohanServerLifecycle)(nil)
@@ -26,19 +27,22 @@ var _ util.ServerLifecycle = (*KohanServerLifecycle)(nil)
 // NewKohanServerLifecycle creates a KohanServerLifecycle for testing with explicit handler injection.
 func NewKohanServerLifecycle(osHandler handler.OSHandler,
 	journalHandler handler.JournalHandler, imageHandler handler.ImageHandler,
-	noteHandler handler.NoteHandler, tagHandler handler.TagHandler) *KohanServerLifecycle {
+	noteHandler handler.NoteHandler, tagHandler handler.TagHandler,
+	indexPortal handler.IndexPortal) *KohanServerLifecycle {
 	return &KohanServerLifecycle{
 		OSHandler:      osHandler,
 		JournalHandler: journalHandler,
 		ImageHandler:   imageHandler,
 		NoteHandler:    noteHandler,
 		TagHandler:     tagHandler,
+		IndexPortal:    indexPortal,
 	}
 }
 
 func (s *KohanServerLifecycle) RegisterRoutes(engine *gin.Engine) {
 	s.registerOSRoutes(engine)
 	s.registerJournalRoutes(engine)
+	handler.SetupPortalRoutes(engine, s.IndexPortal)
 }
 
 func (s *KohanServerLifecycle) RegisterSwagger(engine *gin.Engine) {
