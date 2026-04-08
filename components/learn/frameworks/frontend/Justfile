@@ -3,22 +3,21 @@ set shell := ["bash", "-cu"]
 # Import shared library
 import '../../../../lib.just'
 
-tmp_dir := "/tmp/ui-demo"
+binary := "/tmp/ui-demo"
 frontend_dir := justfile_directory()
-demo_dir := justfile_directory() / "demo"
 frontend_port := "9090"
 
 default:
     just --list
 
-# Build frontend demo binary for Air hot reload.
+# Build Frontend Demo binary.
 [group('build')]
 build: templ css format js
-    mkdir -p {{tmp_dir}}
-    cd {{demo_dir}} && go build -o {{tmp_dir}}/main .
+    go build -o {{binary}} {{frontend_dir}}/demo
     just _title "Build" "Frontend Demo Ready"
 
 # Run frontend demo server with Air hot reload.
 [group('run')]
 air:
+    export BINARY := "{{binary}}"
     just _air_run {{frontend_dir}} {{frontend_port}}

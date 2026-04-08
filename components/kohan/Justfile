@@ -1,0 +1,23 @@
+set shell := ["bash", "-cu"]
+
+# Import shared library
+import '../../lib.just'
+
+binary := "/tmp/kohan-server"
+kohan_dir := justfile_directory()
+
+default:
+    just --list
+
+# Build Kohan binary.
+[group('build')]
+build: templ format
+    go build -o {{binary}} {{kohan_dir}}
+    just _title "Build" "Kohan Ready"
+
+# Run Kohan server with Air hot reload.
+[group('run')]
+air:
+    mkdir -p /tmp/pics
+    export KOHAN_BINARY="{{binary}} auto serve /tmp/pics"
+    just _air_run {{kohan_dir}}

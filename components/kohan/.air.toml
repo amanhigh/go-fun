@@ -1,16 +1,12 @@
 root = "."
-tmp_dir = "/tmp/kohan-server"
+tmp_dir = "/tmp"
 
 [build]
-  cmd = "just build-air"
-  entrypoint = "/tmp/kohan-server/entrypoint.sh"
+  cmd = "just build"
+  full_bin = "${KOHAN_BINARY}"
   delay = 1000
-  include_ext = ["go"]
-  include_dir = ["."]
-  exclude_regex = ["_test\\.go", "_templ\\.go", "testdata/.*", "\\.git/.*"]
-  kill_delay = "0s"
-  send_interrupt = false
-  stop_on_error = true
+  include_ext = ["go", "templ"]
+  exclude_regex = ["_test\\.go", "_templ\\.go", "testdata/.*"]
 
 [log]
   time = false

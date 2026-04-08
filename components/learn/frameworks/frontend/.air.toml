@@ -1,16 +1,12 @@
 root = "."
-tmp_dir = "/tmp/ui-demo"
+tmp_dir = "/tmp"
 
 [build]
   cmd = "just build"
-  entrypoint = "/tmp/ui-demo/main"
+  full_bin = "${BINARY}"
   delay = 1000
   include_ext = ["go", "templ", "ts"]
-  include_dir = ["."]
-  exclude_regex = ["_test\\.go", "_templ\\.go"]
-  kill_delay = "0s"
-  send_interrupt = false
-  stop_on_error = true
+  exclude_regex = ["_test\\.go", "_templ\\.go", "testdata/.*"]
 
 [log]
   time = false
