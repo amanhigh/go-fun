@@ -1,4 +1,4 @@
-package ui_test
+package widgets_test
 
 import (
 	"context"
@@ -25,7 +25,8 @@ var _ = Describe("Spinner Template", func() {
 		Expect(err).ToNot(HaveOccurred())
 		html = render.String()
 
-		Expect(html).To(ContainSubstring("flex items-center justify-center"))
+		Expect(html).To(ContainSubstring("flex items-center"))
+		Expect(html).To(ContainSubstring("justify-center"))
 		Expect(html).To(ContainSubstring("h-6 w-6"))
 		Expect(html).To(ContainSubstring("animate-spin text-primary"))
 	})

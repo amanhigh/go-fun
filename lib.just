@@ -6,6 +6,7 @@ tsc := "tsc"
 esbuild := "esbuild"
 templ := "go run github.com/a-h/templ/cmd/templ@latest"
 goimports := "go run golang.org/x/tools/cmd/goimports@latest"
+root := justfile_directory()
 
 # Print helpers (private)
 _info task info:
@@ -43,6 +44,7 @@ _css_sources dir=".":
             dir=$(dirname "$file")
             echo "@source \"./${dir}/**/*.templ\";"
         done | sort -u
+        echo "@source \"{{root}}/common/ui/**/*.templ\";"
         echo "@source \"${TEMPLUI_PATH}/components/**/*.templ\";"
     ) > ./assets/css/sources.generated.css
 

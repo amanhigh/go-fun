@@ -10,13 +10,13 @@ package pages
 import (
 	"github.com/a-h/templ"
 	templruntime "github.com/a-h/templ/runtime"
+	"github.com/amanhigh/go-fun/common/ui/layout"
 
 	// Student CRUD page — templUI components + Alpine.js state (student.ts) + Tailwind CSS.
 	// templ renders static HTML with Alpine attrs; Alpine makes it reactive at runtime.
 	// All state, API calls, and computed properties live in assets/js/student.ts.
 
-	ui "github.com/amanhigh/go-fun/common/ui"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
+	widgets "github.com/amanhigh/go-fun/common/ui/widgets"
 	"github.com/templui/templui/components/alert"
 	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/button"
@@ -1295,8 +1295,8 @@ func StudentRowButtons() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ui.Spinner(ui.SpinnerProps{
-			Size:  ui.SpinnerSizeSm,
+		templ_7745c5c3_Err = widgets.Spinner(widgets.SpinnerProps{
+			Size:  widgets.SpinnerSizeSm,
 			Class: "w-14",
 			Attrs: templ.Attributes{"x-show": "deleteTracker.isDeletingId(student.id)"},
 		}).Render(ctx, templ_7745c5c3_Buffer)
@@ -1843,7 +1843,7 @@ func StudentDialog() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = ui.Spinner().Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = widgets.Spinner().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -2256,7 +2256,7 @@ func StudentFormFooter() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ui.Spinner(ui.SpinnerProps{Size: ui.SpinnerSizeSm}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = widgets.Spinner(widgets.SpinnerProps{Size: widgets.SpinnerSizeSm}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2401,7 +2401,7 @@ func StudentInitializingState() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ui.Spinner().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = widgets.Spinner().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2440,7 +2440,7 @@ func StudentLoadingState() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ui.Spinner().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = widgets.Spinner().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

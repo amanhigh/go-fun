@@ -1,4 +1,4 @@
-package ui_test
+package widgets_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestSpinner(t *testing.T) {
+func TestWidgets(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Spinner Suite")
+	RunSpecs(t, "Widget Suite")
 }
