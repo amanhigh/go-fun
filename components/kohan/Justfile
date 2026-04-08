@@ -12,7 +12,7 @@ default:
 
 # Build Kohan binary.
 [group('build')]
-build: templ format
+build: templ css format js
     go build -o {{binary}} {{kohan_dir}}
     just _title "Build" "Kohan Ready"
 

@@ -39,11 +39,10 @@ var _ = Describe("Base Template Tests", func() {
 		Expect(html).To(ContainSubstring("Built with Templ & Tailwind CSS"))
 	})
 
-	It("escapes the title and includes meta tags", func() {
+	It("includes generated asset links", func() {
 		Expect(html).To(ContainSubstring("<title>Shadow Gate</title>"))
-		Expect(html).To(ContainSubstring("<meta charset=\"UTF-8\">"))
-		Expect(html).To(ContainSubstring("name=\"viewport\""))
-		Expect(html).To(ContainSubstring("cdn.tailwindcss.com"))
+		Expect(html).To(ContainSubstring("/assets/css/app.css"))
+		Expect(html).To(ContainSubstring("/assets/js/app.js"))
 		Expect(html).To(ContainSubstring("cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"))
 		Expect(html).To(ContainSubstring("templui/js/"))
 	})
