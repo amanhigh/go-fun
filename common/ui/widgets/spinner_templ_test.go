@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	ui "github.com/amanhigh/go-fun/common/ui"
+	widgets "github.com/amanhigh/go-fun/common/ui/widgets"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -21,7 +21,7 @@ var _ = Describe("Spinner Template", func() {
 
 	It("renders the default spinner", func() {
 		var render strings.Builder
-		err := ui.Spinner().Render(ctx, &render)
+		err := widgets.Spinner().Render(ctx, &render)
 		Expect(err).ToNot(HaveOccurred())
 		html = render.String()
 
@@ -32,7 +32,7 @@ var _ = Describe("Spinner Template", func() {
 
 	It("renders custom size and class", func() {
 		var render strings.Builder
-		err := ui.SpinnerWithProps(ui.SpinnerProps{Size: ui.SpinnerSizeSm, Class: "mt-2"}).Render(ctx, &render)
+		err := widgets.SpinnerWithProps(widgets.SpinnerProps{Size: widgets.SpinnerSizeSm, Class: "mt-2"}).Render(ctx, &render)
 		Expect(err).ToNot(HaveOccurred())
 		html = render.String()
 
