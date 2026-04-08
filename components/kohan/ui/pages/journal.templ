@@ -1,0 +1,23 @@
+package pages
+
+import "github.com/amanhigh/go-fun/common/ui/layout"
+
+templ JournalPage() {
+	@layout.Base("Shadow Gate") {
+		@layout.Page(layout.PageProps{
+			CurrentPage: "Journal",
+			Eyebrow:     "Kohan Portal",
+			Heading:     "Journal",
+			Description: "Journal workspace is ready. Content will be added next.",
+			Tags:        []string{"Empty State"},
+		}) {
+			@layout.Card(
+				"First Page",
+				"No entries yet",
+				"This is an empty starting page for Journal.",
+			) {
+				<p class="text-sm text-muted-foreground">Create your first journal entry from here in upcoming iterations.</p>
+			}
+		}
+	}
+}

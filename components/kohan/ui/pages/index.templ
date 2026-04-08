@@ -4,19 +4,22 @@ import "github.com/amanhigh/go-fun/common/ui/layout"
 
 templ IndexPage() {
 	@layout.Base("Shadow Gate") {
-		<div class="max-w-4xl mx-auto">
-			<div class="text-center py-12">
-				<h1 class="text-5xl font-bold text-gray-900 mb-4">Shadow Gate</h1>
-				<p class="text-xl text-gray-600 mb-8">
-					Welcome to Shadow Gate
-				</p>
-				<div class="bg-white rounded-lg shadow-md p-8">
-					<h2 class="text-2xl font-semibold text-gray-900 mb-4">Getting Started</h2>
-					<p class="text-gray-600">
-						This is the first page of Shadow Gate. More components and pages will be added here.
-					</p>
-				</div>
-			</div>
-		</div>
+		@layout.Page(layout.PageProps{
+			CurrentPage: "Shadow Gate",
+			Eyebrow:     "Kohan Portal",
+			Heading:     "Shadow Gate",
+			Description: "Welcome to the Kohan portal.",
+			Tags:        []string{"Portal", "Journal"},
+		}) {
+			@layout.Card(
+				"Start",
+				"Journal",
+				"Begin with the Journal page. This page is intentionally minimal for now.",
+			) {
+				<a class="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted" href="/journal">
+					Open Journal
+				</a>
+			}
+		}
 	}
 }

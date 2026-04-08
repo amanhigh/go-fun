@@ -30,7 +30,9 @@ var _ = Describe("Index Page Tests", func() {
 	It("renders the Shadow Gate landing page", func() {
 		Expect(html).To(ContainSubstring("<title>Shadow Gate</title>"))
 		Expect(html).To(ContainSubstring("Shadow Gate"))
-		Expect(html).To(ContainSubstring("Welcome to Shadow Gate"))
+		Expect(html).To(ContainSubstring("Welcome to the Kohan portal."))
+		Expect(html).To(ContainSubstring("href=\"/journal\""))
+		Expect(html).To(ContainSubstring("Open Journal"))
 	})
 
 	It("includes the base layout", func() {

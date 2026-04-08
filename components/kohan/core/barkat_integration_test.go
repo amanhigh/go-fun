@@ -59,7 +59,16 @@ var _ = Describe("Barkat E2E Test", func() {
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 			Expect(resp.Header().Get("Content-Type")).To(ContainSubstring("text/html"))
 			Expect(resp.String()).To(ContainSubstring("Shadow Gate"))
-			Expect(resp.String()).To(ContainSubstring("Welcome to Shadow Gate"))
+			Expect(resp.String()).To(ContainSubstring("Welcome to the Kohan portal."))
+		})
+
+		It("should render the journal page", func() {
+			resp, err := client.R().Get("/journal")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+			Expect(resp.Header().Get("Content-Type")).To(ContainSubstring("text/html"))
+			Expect(resp.String()).To(ContainSubstring("Journal"))
+			Expect(resp.String()).To(ContainSubstring("No entries yet"))
 		})
 	})
 

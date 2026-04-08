@@ -11,7 +11,7 @@ import (
 	"github.com/amanhigh/go-fun/common/ui/layout"
 )
 
-func IndexPage() templ.Component {
+func JournalPage() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -68,16 +68,16 @@ func IndexPage() templ.Component {
 						}()
 					}
 					ctx = templ.InitializeContext(ctx)
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<a class=\"inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted\" href=\"/journal\">Open Journal</a>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<p class=\"text-sm text-muted-foreground\">Create your first journal entry from here in upcoming iterations.</p>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					return nil
 				})
 				templ_7745c5c3_Err = layout.Card(
-					"Start",
-					"Journal",
-					"Begin with the Journal page. This page is intentionally minimal for now.",
+					"First Page",
+					"No entries yet",
+					"This is an empty starting page for Journal.",
 				).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -85,11 +85,11 @@ func IndexPage() templ.Component {
 				return nil
 			})
 			templ_7745c5c3_Err = layout.Page(layout.PageProps{
-				CurrentPage: "Shadow Gate",
+				CurrentPage: "Journal",
 				Eyebrow:     "Kohan Portal",
-				Heading:     "Shadow Gate",
-				Description: "Welcome to the Kohan portal.",
-				Tags:        []string{"Portal", "Journal"},
+				Heading:     "Journal",
+				Description: "Journal workspace is ready. Content will be added next.",
+				Tags:        []string{"Empty State"},
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

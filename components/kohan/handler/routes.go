@@ -2,12 +2,6 @@ package handler
 
 import "github.com/gin-gonic/gin"
 
-// SetupPortalRoutes configures UI portal routes.
-func SetupPortalRoutes(engine *gin.Engine, indexPortal IndexPortal) {
-	engine.Static("/assets", "assets")
-	engine.GET("/", indexPortal.HandleIndex)
-}
-
 // SetupOSRoutes configures OS-related routes
 func SetupOSRoutes(os *gin.RouterGroup, osHandler OSHandler) {
 	os.GET("/ticker/:ticker/record", osHandler.HandleRecordTicker)

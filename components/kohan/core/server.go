@@ -20,6 +20,12 @@ type KohanServerLifecycle struct {
 	NoteHandler    handler.NoteHandler    `container:"type"`
 	TagHandler     handler.TagHandler     `container:"type"`
 	IndexPortal    handler.IndexPortal    `container:"type"`
+	JournalPortal  handler.JournalPortal  `container:"type"`
+}
+
+type PortalHandlers struct {
+	IndexPortal   handler.IndexPortal
+	JournalPortal handler.JournalPortal
 }
 
 var _ util.ServerLifecycle = (*KohanServerLifecycle)(nil)
@@ -28,21 +34,22 @@ var _ util.ServerLifecycle = (*KohanServerLifecycle)(nil)
 func NewKohanServerLifecycle(osHandler handler.OSHandler,
 	journalHandler handler.JournalHandler, imageHandler handler.ImageHandler,
 	noteHandler handler.NoteHandler, tagHandler handler.TagHandler,
-	indexPortal handler.IndexPortal) *KohanServerLifecycle {
+	portalHandlers PortalHandlers) *KohanServerLifecycle {
 	return &KohanServerLifecycle{
 		OSHandler:      osHandler,
 		JournalHandler: journalHandler,
 		ImageHandler:   imageHandler,
 		NoteHandler:    noteHandler,
 		TagHandler:     tagHandler,
-		IndexPortal:    indexPortal,
+		IndexPortal:    portalHandlers.IndexPortal,
+		JournalPortal:  portalHandlers.JournalPortal,
 	}
 }
 
 func (s *KohanServerLifecycle) RegisterRoutes(engine *gin.Engine) {
 	s.registerOSRoutes(engine)
 	s.registerJournalRoutes(engine)
-	handler.SetupPortalRoutes(engine, s.IndexPortal)
+	s.registerPortalRoutes(engine)
 }
 
 func (s *KohanServerLifecycle) RegisterSwagger(engine *gin.Engine) {
@@ -67,4 +74,10 @@ func (s *KohanServerLifecycle) registerJournalRoutes(engine *gin.Engine) {
 	handler.SetupImageRoutes(journal, s.ImageHandler)
 	handler.SetupNoteRoutes(journal, s.NoteHandler)
 	handler.SetupTagRoutes(journal, s.TagHandler)
+}
+
+func (s *KohanServerLifecycle) registerPortalRoutes(engine *gin.Engine) {
+	engine.Static("/assets", "assets")
+	engine.GET("/", s.IndexPortal.HandleIndex)
+	engine.GET("/journal", s.JournalPortal.HandleJournal)
 }
