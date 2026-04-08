@@ -466,9 +466,7 @@ generate-mocks:
 # Generate Templ components to Go code
 generate-templ:
 	printf $(_TITLE) "Generate" "Templ Components"
-	$(TEMPL) generate -path components/learn
-	$(TEMPL) generate -path components/kohan
-	$(MAKE) format
+	just template
 
 generate: generate-mocks generate-swagger generate-templ ## Generate Files (skip UI for CI)
 

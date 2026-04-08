@@ -6,7 +6,7 @@ package pages
 // All state, API calls, and computed properties live in assets/js/student.ts.
 
 import (
-	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
+	ui "github.com/amanhigh/go-fun/common/ui"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
 	"github.com/templui/templui/components/alert"
 	"github.com/templui/templui/components/badge"
@@ -275,8 +275,8 @@ templ StudentRow() {
 // StudentRowButtons: edit, delete, and undo action buttons for each row.
 templ StudentRowButtons() {
 	<div class="flex justify-end gap-2">
-		@components.Spinner(components.SpinnerProps{
-			Size: components.SpinnerSizeSm,
+		@ui.Spinner(ui.SpinnerProps{
+			Size: ui.SpinnerSizeSm,
 			Class: "w-14",
 			Attrs: templ.Attributes{"x-show": "deleteTracker.isDeletingId(student.id)"},
 		})
@@ -385,7 +385,7 @@ templ StudentDialog() {
 				@dialog.Description() { Fill all required details before saving. }
 			}
 			<div x-show="isLoadingEdit()" class="flex items-center justify-center py-12">
-				@components.Spinner()
+				@ui.Spinner()
 			</div>
 			<div x-show="!isLoadingEdit()">
 				@StudentFormModel()
@@ -465,7 +465,7 @@ templ StudentFormFooter() {
 			Cancel
 		}
 		<div x-show="isSaving()" class="flex items-center justify-center w-20 h-9">
-			@components.Spinner(components.SpinnerProps{Size: components.SpinnerSizeSm})
+		@ui.Spinner(ui.SpinnerProps{Size: ui.SpinnerSizeSm})
 		</div>
 		@button.Button(button.Props{Type: button.TypeSubmit, Attributes: templ.Attributes{"x-show": "!isSaving()", "x-text": "isEditing() ? 'Update' : 'Create'"}}) {
 			Save
@@ -523,7 +523,7 @@ templ StudentFeedbackComponents() {
 // x-show: displays spinner when page has not loaded yet (initial load).
 templ StudentInitializingState() {
 	<div x-show="isReady()" class="flex items-center justify-center p-12">
-		@components.Spinner()
+		@ui.Spinner()
 	</div>
 }
 
@@ -531,7 +531,7 @@ templ StudentInitializingState() {
 // x-show: displays spinner when loading AFTER initial load.
 templ StudentLoadingState() {
 	<div x-show="isInitialized() && isLoading()" class="flex items-center justify-center p-12">
-		@components.Spinner()
+		@ui.Spinner()
 	</div>
 }
 

@@ -1,10 +1,9 @@
-package components
+package ui
 
 import "github.com/a-h/templ"
 import "github.com/templui/templui/components/icon"
 import "github.com/templui/templui/utils"
 
-// SpinnerSize defines the size of the spinner
 type SpinnerSize string
 
 const (
@@ -13,20 +12,16 @@ const (
 	SpinnerSizeLg SpinnerSize = "lg"
 )
 
-// SpinnerProps configures the spinner appearance
 type SpinnerProps struct {
-	Size  SpinnerSize      // Size of the spinner (sm, md, lg)
-	Class string           // Additional custom classes
-	Attrs templ.Attributes // Extra HTML attributes
+	Size  SpinnerSize
+	Class string
+	Attrs templ.Attributes
 }
 
-// spinnerSizeClass returns CSS classes based on spinner size
 func spinnerSizeClass(size SpinnerSize) string {
 	switch size {
 	case SpinnerSizeSm:
 		return "h-4 w-4"
-	case SpinnerSizeMd:
-		return "h-6 w-6"
 	case SpinnerSizeLg:
 		return "h-8 w-8"
 	default:
@@ -34,7 +29,6 @@ func spinnerSizeClass(size SpinnerSize) string {
 	}
 }
 
-// Spinner displays an animated loading indicator with default size.
 templ Spinner(props ...SpinnerProps) {
 	if len(props) > 0 {
 		@SpinnerWithProps(props[0])
@@ -43,12 +37,8 @@ templ Spinner(props ...SpinnerProps) {
 	}
 }
 
-// SpinnerWithProps displays an animated loading indicator with full props control.
 templ SpinnerWithProps(props SpinnerProps) {
-	<div
-		class={ utils.TwMerge("flex items-center justify-center", props.Class) }
-		{ props.Attrs... }
-	>
+	<div class={ utils.TwMerge("flex items-center justify-center", props.Class) } { props.Attrs... }>
 		@icon.Icon("hourglass")(icon.Props{Class: spinnerSizeClass(props.Size) + " animate-spin text-primary"})
 	</div>
 }

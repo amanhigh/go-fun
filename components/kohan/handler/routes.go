@@ -4,6 +4,7 @@ import "github.com/gin-gonic/gin"
 
 // SetupPortalRoutes configures UI portal routes.
 func SetupPortalRoutes(engine *gin.Engine, indexPortal IndexPortal) {
+	engine.Static("/assets", "assets")
 	engine.GET("/", indexPortal.HandleIndex)
 }
 
