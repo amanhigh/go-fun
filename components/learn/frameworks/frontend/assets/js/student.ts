@@ -340,7 +340,39 @@ function studentPage() {
     },
 
     async initData() {
+      // BUG: Grade Filter is not properly setup.
+      this.urlToFilter();
       await Promise.all([this.listStudents(), this.loadGradeOptions()]);
+    },
+
+    // ─────────────────────────────────────────────────────────────
+    // Methods - URL Sync (for bookmarkable filters)
+    // ─────────────────────────────────────────────────────────────
+    urlToFilter() {
+      const params = new URLSearchParams(window.location.search);
+      const urlName = params.get('name') || '';
+      const urlGrade = params.get('grade') || '';
+      
+      if (urlName) {
+        this.filterTracker.setName(urlName);
+      }
+      if (urlGrade) {
+        this.filterTracker.setGrade(urlGrade);
+      }
+    },
+    filterToUrl() {
+      const params = new URLSearchParams();
+      const name = this.filterTracker.getName();
+      const grade = this.filterTracker.getGrade();
+      
+      if (name) params.set('name', name);
+      if (grade) params.set('grade', grade);
+      
+      const newURL = params.toString() 
+        ? `${window.location.pathname}?${params.toString()}`
+        : window.location.pathname;
+      
+      window.history.replaceState({}, '', newURL);
     },
 
     // ─────────────────────────────────────────────────────────────
@@ -348,10 +380,12 @@ function studentPage() {
     // ─────────────────────────────────────────────────────────────
     applyFilters() {
       this.pagination.resetPage();
+      this.filterToUrl();
       void this.listStudents();
     },
     clearFilters() {
       this.filterTracker.clear();
+      this.filterToUrl();
       this.applyFilters();
     },
 

@@ -2739,7 +2739,7 @@ func StudentEmptyState() templ.Component {
 // =============================================================================
 
 // StudentToasts provides hidden templUI toast templates cloned by showToast() in student.ts.
-// FIXME: Add URL for Student Page auto set filter.
+// URL filters are synced via Alpine.js in student.ts - see urlToFilter() and filterToUrl()
 func StudentToasts() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context

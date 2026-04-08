@@ -604,7 +604,7 @@ templ StudentEmptyState() {
 // =============================================================================
 
 // StudentToasts provides hidden templUI toast templates cloned by showToast() in student.ts.
-// FIXME: Add URL for Student Page auto set filter.
+// URL filters are synced via Alpine.js in student.ts - see urlToFilter() and filterToUrl()
 templ StudentToasts() {
 	<template id="student-success-toast-template">
 		@toast.Toast(toast.Props{
