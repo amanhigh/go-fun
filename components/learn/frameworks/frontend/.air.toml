@@ -2,11 +2,11 @@ root = "."
 tmp_dir = "/tmp/ui-demo"
 
 [build]
-  cmd = "make -C ../../../../../ build-air"
+  cmd = "just build"
   entrypoint = "/tmp/ui-demo/main"
   delay = 1000
   include_ext = ["go", "templ", "ts"]
-  include_dir = [".", "../components", "../pages", ".."]
+  include_dir = ["."]
   exclude_regex = ["_test\\.go", "_templ\\.go"]
   kill_delay = "0s"
   send_interrupt = false

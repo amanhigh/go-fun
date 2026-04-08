@@ -138,7 +138,7 @@ func ComponentCard(comp components.Component) templ.Component {
 					var templ_7745c5c3_Var7 string
 					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(comp.Name())
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/index.templ`, Line: 56, Col: 18}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/index.templ`, Line: 56, Col: 18}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 					if templ_7745c5c3_Err != nil {
@@ -205,7 +205,7 @@ func ComponentCard(comp components.Component) templ.Component {
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(comp.Description())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/index.templ`, Line: 62, Col: 26}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/index.templ`, Line: 62, Col: 26}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -256,7 +256,7 @@ func ComponentCard(comp components.Component) templ.Component {
 					var templ_7745c5c3_Var13 string
 					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(comp.Name())
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/pages/index.templ`, Line: 66, Col: 22}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/index.templ`, Line: 66, Col: 22}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 					if templ_7745c5c3_Err != nil {

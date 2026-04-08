@@ -2,7 +2,7 @@ root = "."
 tmp_dir = "/tmp/kohan-server"
 
 [build]
-  cmd = "make -C ../.. build-kohan-air"
+  cmd = "just build-air"
   entrypoint = "/tmp/kohan-server/entrypoint.sh"
   delay = 1000
   include_ext = ["go"]
