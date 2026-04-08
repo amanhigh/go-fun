@@ -36,6 +36,6 @@ var _ = Describe("Index Page Tests", func() {
 	It("includes the base layout", func() {
 		Expect(html).To(ContainSubstring("<html lang=\"en\" class=\"h-full\">"))
 		Expect(html).To(ContainSubstring("Shadow Gate"))
-		Expect(html).To(ContainSubstring("Built with Templ & Tailwind CSS"))
+		Expect(html).To(ContainSubstring("Built with TemplUI & Tailwind CSS, powered by AlpineJS"))
 	})
 })

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
+	"github.com/amanhigh/go-fun/common/ui/layout"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -14,7 +14,7 @@ import (
 var baseTestData = struct {
 	Title string
 }{
-	Title: "UI Framework - Home",
+	Title: "Shadow Gate",
 }
 
 var _ = Describe("Base Template Tests", func() {
@@ -62,29 +62,21 @@ var _ = Describe("Base Template Tests", func() {
 			Expect(html).To(ContainSubstring("<title>" + baseTestData.Title + "</title>"))
 		})
 
-		It("should render header with navigation", func() {
+		It("should render header with brand title", func() {
 			Expect(doc.Find("header").Length()).To(Equal(1))
 			Expect(doc.Find("header").AttrOr("class", "")).To(ContainSubstring("border-b border-border bg-card"))
-			Expect(doc.Find("nav").Length()).To(Equal(1))
-			Expect(doc.Find("nav").AttrOr("class", "")).To(Equal("flex items-center justify-between"))
+			Expect(doc.Find("nav").Length()).To(Equal(0))
 		})
 
-		It("should display UI Framework title", func() {
+		It("should display page title in header", func() {
 			h1 := doc.Find("h1")
 			Expect(h1.Length()).To(Equal(1))
-			Expect(h1.Text()).To(Equal("UI Framework"))
+			Expect(h1.Text()).To(Equal(baseTestData.Title))
 			Expect(h1.AttrOr("class", "")).To(Equal("text-xl font-semibold text-foreground"))
 		})
 
-		It("should include navigation links", func() {
-			links := doc.Find("nav a")
-			Expect(links.Length()).To(Equal(3))
-			Expect(links.Eq(0).AttrOr("href", "")).To(Equal("/"))
-			Expect(links.Eq(0).Text()).To(Equal("Home"))
-			Expect(links.Eq(1).AttrOr("href", "")).To(Equal("/form"))
-			Expect(links.Eq(1).Text()).To(Equal("Forms"))
-			Expect(links.Eq(2).AttrOr("href", "")).To(Equal("/hello"))
-			Expect(links.Eq(2).Text()).To(Equal("Hello"))
+		It("should not include global navigation links", func() {
+			Expect(doc.Find("a").Length()).To(Equal(0))
 		})
 
 		It("should render main content area", func() {
@@ -93,7 +85,7 @@ var _ = Describe("Base Template Tests", func() {
 
 		It("should render footer with attribution", func() {
 			Expect(html).To(ContainSubstring("<footer class=\"border-t border-border bg-card mt-auto\">"))
-			Expect(html).To(ContainSubstring("Built with TemplUI & Tailwind CSS"))
+			Expect(html).To(ContainSubstring("Built with TemplUI & Tailwind CSS, powered by AlpineJS"))
 		})
 	})
 
@@ -142,9 +134,9 @@ var _ = Describe("Base Template Tests", func() {
 		It("should use proper theme color classes", func() {
 			Expect(html).To(ContainSubstring("bg-background text-foreground"))
 			Expect(html).To(ContainSubstring("text-muted-foreground"))
-			Expect(html).To(ContainSubstring("hover:text-foreground"))
 			Expect(html).To(ContainSubstring("bg-card"))
 			Expect(html).To(ContainSubstring("border-border"))
 		})
 	})
+
 })

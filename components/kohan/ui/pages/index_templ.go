@@ -8,7 +8,7 @@ package pages
 import (
 	"github.com/a-h/templ"
 	templruntime "github.com/a-h/templ/runtime"
-	"github.com/amanhigh/go-fun/components/kohan/ui/layout"
+	"github.com/amanhigh/go-fun/common/ui/layout"
 )
 
 func IndexPage() templ.Component {

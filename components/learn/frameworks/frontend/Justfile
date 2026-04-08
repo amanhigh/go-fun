@@ -19,5 +19,4 @@ build: templ css format js
 # Run frontend demo server with Air hot reload.
 [group('run')]
 air:
-    export BINARY := "{{binary}}"
-    just _air_run {{frontend_dir}} {{frontend_port}}
+    BINARY="{{binary}}" just _air_run {{frontend_dir}} {{frontend_port}}

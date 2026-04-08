@@ -5,6 +5,7 @@ tmp_dir = "/tmp"
   cmd = "just build"
   full_bin = "${KOHAN_BINARY}"
   delay = 1000
+  include_dir = [".", "../../common/ui"]
   include_ext = ["go", "templ"]
   exclude_regex = ["_test\\.go", "_templ\\.go", "testdata/.*"]
 
