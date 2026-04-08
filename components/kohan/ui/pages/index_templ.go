@@ -44,13 +44,13 @@ func IndexPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-4xl mx-auto\"><div class=\"text-center py-12\"><h1 class=\"text-5xl font-bold text-gray-900 mb-4\">Ahriman's Gift</h1><p class=\"text-xl text-gray-600 mb-8\">Welcome to the Kohan UI Framework</p><div class=\"bg-white rounded-lg shadow-md p-8\"><h2 class=\"text-2xl font-semibold text-gray-900 mb-4\">Getting Started</h2><p class=\"text-gray-600\">This is the first page of the Kohan UI framework. More components and pages will be added here.</p></div></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-4xl mx-auto\"><div class=\"text-center py-12\"><h1 class=\"text-5xl font-bold text-gray-900 mb-4\">Shadow Gate</h1><p class=\"text-xl text-gray-600 mb-8\">Welcome to Shadow Gate</p><div class=\"bg-white rounded-lg shadow-md p-8\"><h2 class=\"text-2xl font-semibold text-gray-900 mb-4\">Getting Started</h2><p class=\"text-gray-600\">This is the first page of Shadow Gate. More components and pages will be added here.</p></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = layout.Base("Ahriman's Gift").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layout.Base("Shadow Gate").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

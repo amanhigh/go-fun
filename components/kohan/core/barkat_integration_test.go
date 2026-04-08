@@ -58,8 +58,8 @@ var _ = Describe("Barkat E2E Test", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 			Expect(resp.Header().Get("Content-Type")).To(ContainSubstring("text/html"))
-			Expect(resp.String()).To(ContainSubstring("Ahriman's Gift"))
-			Expect(resp.String()).To(ContainSubstring("Welcome to the Kohan UI Framework"))
+			Expect(resp.String()).To(ContainSubstring("Shadow Gate"))
+			Expect(resp.String()).To(ContainSubstring("Welcome to Shadow Gate"))
 		})
 	})
 

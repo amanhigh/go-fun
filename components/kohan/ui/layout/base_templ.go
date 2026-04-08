@@ -8,6 +8,10 @@ package layout
 import (
 	"github.com/a-h/templ"
 	templruntime "github.com/a-h/templ/runtime"
+	"github.com/templui/templui/components/dialog"
+	"github.com/templui/templui/components/selectbox"
+	"github.com/templui/templui/components/toast"
+	"github.com/templui/templui/components/tooltip"
 )
 
 func Base(title string) templ.Component {
@@ -38,13 +42,33 @@ func Base(title string) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layout/base.templ`, Line: 9, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layout/base.templ`, Line: 16, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><!-- Tailwind CSS --><script src=\"https://cdn.tailwindcss.com\"></script></head><body class=\"h-full bg-gray-50 text-gray-900\"><div class=\"min-h-screen flex flex-col\"><!-- Header --><header class=\"border-b border-gray-200 bg-white\"><div class=\"container mx-auto px-4 py-4\"><nav class=\"flex items-center justify-between\"><h1 class=\"text-xl font-semibold text-gray-900\">Kohan UI</h1><div class=\"flex gap-4\"><a href=\"/\" class=\"text-sm text-gray-600 hover:text-gray-900 transition-colors\">Home</a></div></nav></div></header><!-- Main Content --><main class=\"flex-1 container mx-auto px-4 py-8\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script src=\"https://cdn.tailwindcss.com\"></script><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = dialog.Script().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = selectbox.Script().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = toast.Script().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = tooltip.Script().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</head><body class=\"h-full bg-gray-50 text-gray-900\"><div class=\"min-h-screen flex flex-col\"><!-- Header --><header class=\"border-b border-gray-200 bg-white\"><div class=\"container mx-auto px-4 py-4\"><nav class=\"flex items-center justify-between\"><h1 class=\"text-xl font-semibold text-gray-900\">Shadow Gate</h1><div class=\"flex gap-4\"><a href=\"/\" class=\"text-sm text-gray-600 hover:text-gray-900 transition-colors\">Home</a></div></nav></div></header><!-- Main Content --><main class=\"flex-1 container mx-auto px-4 py-8\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -52,7 +76,7 @@ func Base(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</main><!-- Footer --><footer class=\"border-t border-gray-200 bg-white mt-auto\"><div class=\"container mx-auto px-4 py-4\"><p class=\"text-sm text-gray-600 text-center\">Built with Templ & Tailwind CSS</p></div></footer></div></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</main><!-- Footer --><footer class=\"border-t border-gray-200 bg-white mt-auto\"><div class=\"container mx-auto px-4 py-4\"><p class=\"text-sm text-gray-600 text-center\">Built with Templ & Tailwind CSS</p></div></footer></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
