@@ -6,7 +6,7 @@ tsc := "tsc"
 esbuild := "esbuild"
 templ := "go run github.com/a-h/templ/cmd/templ@latest"
 goimports := "go run golang.org/x/tools/cmd/goimports@latest"
-root := justfile_directory()
+root := `git rev-parse --show-toplevel`
 
 # Print helpers (private)
 _info task info:
