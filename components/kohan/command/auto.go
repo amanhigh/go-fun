@@ -9,9 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	KohanServerPort = 9010
-)
+var servePort = 9010
 
 var autoCmd = &cobra.Command{
 	Use:   "auto",
@@ -41,7 +39,7 @@ var serveCmd = &cobra.Command{
 		log.Info().Dur("Wait", wait).Str("Screenshots", args[0]).Msg("Starting Kohan Server")
 		// TODO: Retry When Disk not Mounted, Watermill Exponential Backoff ?
 		autoManager := core.GetKohanInterface().GetAutoManager(wait, args[0])
-		server, err := core.GetKohanInterface().GetKohanServer(KohanServerPort, args[0], wait)
+		server, err := core.GetKohanInterface().GetKohanServer(servePort, args[0], wait)
 		if err != nil {
 			return fmt.Errorf("failed to build kohan server: %w", err)
 		}
@@ -71,6 +69,7 @@ var openTickerCmd = &cobra.Command{
 func init() {
 	// Flags
 	serveCmd.Flags().DurationVarP(&wait, "wait", "w", wait, "OS Wait Interval")
+	serveCmd.Flags().IntVarP(&servePort, "port", "p", servePort, "Kohan server port")
 
 	// Commands
 	autoCmd.AddCommand(runOrFocusCmd)

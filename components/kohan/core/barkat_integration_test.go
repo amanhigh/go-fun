@@ -52,6 +52,17 @@ var _ = Describe("Barkat E2E Test", func() {
 		client.SetBaseURL(fmt.Sprintf("http://localhost:%d", testPort))
 	})
 
+	Context("Portal", func() {
+		It("should render the index page", func() {
+			resp, err := client.R().Get("/")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+			Expect(resp.Header().Get("Content-Type")).To(ContainSubstring("text/html"))
+			Expect(resp.String()).To(ContainSubstring("Ahriman's Gift"))
+			Expect(resp.String()).To(ContainSubstring("Welcome to the Kohan UI Framework"))
+		})
+	})
+
 	// Admin Endpoints - Tests server administration functionality
 	Context("Admin Endpoints", func() {
 		It("should handle health endpoint", func() {

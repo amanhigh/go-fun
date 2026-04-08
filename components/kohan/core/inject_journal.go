@@ -138,12 +138,6 @@ func provideTagHandler(mgr manager.TagManager) handler.TagHandler {
 	return handler.NewTagHandler(mgr)
 }
 
-// ---- Portal ----
-
-func provideIndexPortalHandler() handler.IndexPortal {
-	return handler.NewIndexPortal()
-}
-
 // registerJournalDependencies registers all dependencies for the journal feature.
 func (ki *KohanInjector) registerJournalDependencies() error {
 	container.MustSingleton(ki.di, ki.provideBarkatDB)
@@ -167,9 +161,6 @@ func (ki *KohanInjector) registerJournalDependencies() error {
 	container.MustSingleton(ki.di, provideTagRepository)
 	container.MustSingleton(ki.di, provideTagManager)
 	container.MustSingleton(ki.di, provideTagHandler)
-
-	// Portal
-	container.MustSingleton(ki.di, provideIndexPortalHandler)
 
 	// Lifecycle
 	container.MustSingleton(ki.di, ProvideKohanLifecycle)

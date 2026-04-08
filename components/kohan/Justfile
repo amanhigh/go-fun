@@ -4,6 +4,7 @@ set shell := ["bash", "-cu"]
 import '../../lib.just'
 
 binary := "/tmp/kohan-server"
+port := "9091"
 kohan_dir := justfile_directory()
 
 default:
@@ -19,5 +20,4 @@ build: templ format
 [group('run')]
 air:
     mkdir -p /tmp/pics
-    export KOHAN_BINARY="{{binary}} auto serve /tmp/pics"
-    just _air_run {{kohan_dir}}
+    KOHAN_BINARY="{{binary}} auto serve /tmp/pics -p {{port}}" just _air_run {{kohan_dir}} {{port}}

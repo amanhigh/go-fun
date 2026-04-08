@@ -70,6 +70,7 @@ var _ = BeforeSuite(func() {
 	imageHandler := handler.NewImageHandler(manager.NewImageManager(journalMgr, repository.NewImageRepository(db)))
 	noteHandler := handler.NewNoteHandler(manager.NewNoteManager(journalMgr, repository.NewNoteRepository(db)))
 	tagHandler := handler.NewTagHandler(manager.NewTagManager(journalMgr, repository.NewTagRepository(db)))
+	indexPortal := handler.NewIndexPortal()
 
 	// Create mock OS handler for testing (safe - no real OS operations)
 	osHandler := configureMockOSHandler()
@@ -81,6 +82,7 @@ var _ = BeforeSuite(func() {
 		imageHandler,
 		noteHandler,
 		tagHandler,
+		indexPortal,
 	)
 
 	shutdown := util.NewGracefulShutdown()
