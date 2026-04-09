@@ -79,6 +79,16 @@ function journalPage() {
 			this.filterToUrl();
 			void this.loadJournals();
 		},
+		toggleSort(field: string) {
+			if (this.filterTracker.sortBy !== field) {
+				this.filterTracker.sortBy = field;
+				this.filterTracker.sortOrder = 'asc';
+				this.applyFilters();
+				return;
+			}
+			this.filterTracker.sortOrder = this.filterTracker.sortOrder === 'asc' ? 'desc' : 'asc';
+			this.applyFilters();
+		},
 		clearFilters() {
 			this.filterTracker.clear();
 			this.filterToUrl();

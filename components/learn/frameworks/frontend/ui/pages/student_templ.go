@@ -1001,7 +1001,7 @@ func StudentTable() templ.Component {
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
-									templ_7745c5c3_Err = icon.Icon("arrow-up-down")(icon.Props{Class: "h-3.5 w-3.5"}).Render(ctx, templ_7745c5c3_Buffer)
+									templ_7745c5c3_Err = icon.Icon("arrow-up-down")(icon.Props{Class: "h-3.5 w-3.5 text-muted-foreground"}).Render(ctx, templ_7745c5c3_Buffer)
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
@@ -1009,7 +1009,7 @@ func StudentTable() templ.Component {
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
-									templ_7745c5c3_Err = icon.Icon("arrow-up")(icon.Props{Class: "h-3.5 w-3.5"}).Render(ctx, templ_7745c5c3_Buffer)
+									templ_7745c5c3_Err = icon.Icon("arrow-up")(icon.Props{Class: "h-3.5 w-3.5 text-emerald-500"}).Render(ctx, templ_7745c5c3_Buffer)
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
@@ -1017,7 +1017,7 @@ func StudentTable() templ.Component {
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
-									templ_7745c5c3_Err = icon.Icon("arrow-down")(icon.Props{Class: "h-3.5 w-3.5"}).Render(ctx, templ_7745c5c3_Buffer)
+									templ_7745c5c3_Err = icon.Icon("arrow-down")(icon.Props{Class: "h-3.5 w-3.5 text-rose-500"}).Render(ctx, templ_7745c5c3_Buffer)
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}

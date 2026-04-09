@@ -6,6 +6,7 @@ import (
 	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/button"
 	"github.com/templui/templui/components/card"
+	"github.com/templui/templui/components/icon"
 	"github.com/templui/templui/components/input"
 	"github.com/templui/templui/components/label"
 	"github.com/templui/templui/components/pagination"
@@ -26,7 +27,7 @@ templ JournalPage() {
 				@layout.Card(
 					"Filter",
 					"Filter journals",
-					"Narrow the journal list by ticker, type, status, sequence, date, review state, and sort order.",
+					"Narrow the journal list by ticker, type, status, sequence, date, and review state.",
 				) {
 					<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
 						<div class="space-y-2">
@@ -106,39 +107,7 @@ templ JournalPage() {
 								}
 							}
 						</div>
-						<div class="space-y-2">
-							@label.Label(label.Props{For: "journal-sort-by", Class: "text-sm font-medium"}) { Sort By }
-							@selectbox.SelectBox() {
-							@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sort-by", Name: "journal-sort-by", Attributes: templ.Attributes{"x-model": "filterTracker.sortBy", "x-on:change": "applyFilters()"}}) {
-									@selectbox.Value(selectbox.ValueProps{Placeholder: "Created"})
-								}
-								@selectbox.Content() {
-									@selectbox.Group() {
-										@selectbox.Item(selectbox.ItemProps{Value: ""}) { Created }
-										@selectbox.Item(selectbox.ItemProps{Value: "created_at"}) { Created }
-										@selectbox.Item(selectbox.ItemProps{Value: "ticker"}) { Ticker }
-										@selectbox.Item(selectbox.ItemProps{Value: "sequence"}) { Sequence }
-									}
-								}
-							}
-						</div>
-						<div class="space-y-2">
-							@label.Label(label.Props{For: "journal-sort-order", Class: "text-sm font-medium"}) { Sort Order }
-							@selectbox.SelectBox() {
-							@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sort-order", Name: "journal-sort-order", Attributes: templ.Attributes{"x-model": "filterTracker.sortOrder", "x-on:change": "applyFilters()"}}) {
-									@selectbox.Value(selectbox.ValueProps{Placeholder: "Desc"})
-								}
-								@selectbox.Content() {
-									@selectbox.Group() {
-										@selectbox.Item(selectbox.ItemProps{Value: ""}) { Desc }
-										@selectbox.Item(selectbox.ItemProps{Value: "asc"}) { Ascending }
-										@selectbox.Item(selectbox.ItemProps{Value: "desc"}) { Descending }
-									}
-								}
-							}
-						</div>
 						<div class="flex items-end gap-3 xl:col-span-3">
-							@button.Button(button.Props{Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "applyFilters()"}}) { Apply Filters }
 							@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "clearFilters()"}}) { Clear }
 						</div>
 					</div>
@@ -194,18 +163,57 @@ templ JournalEmptyState() {
 	</div>
 }
 
-templ JournalTable() {
+	templ JournalTable() {
 	@card.Card(card.Props{Class: "rounded-none border-x-0 border-b-0", Attributes: templ.Attributes{"x-show": "!loading && !hasError() && !isEmpty()"}}) {
 		@card.Content(card.ContentProps{Class: "overflow-x-auto p-0"}) {
 			@table.Table(table.Props{Class: "min-w-[860px]"}) {
 				@table.Header(table.HeaderProps{Class: "bg-muted/30 text-xs uppercase tracking-wide"}) {
 					@table.Row() {
 						@table.Head() { ID }
-						@table.Head() { Ticker }
-						@table.Head() { Sequence }
+						@table.Head(table.HeadProps{Attributes: templ.Attributes{"x-bind:aria-sort": "filterTracker.sortBy === 'ticker' ? (filterTracker.sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'"}}) {
+							@button.Button(button.Props{Type: button.TypeButton, Variant: button.VariantGhost, Size: button.SizeSm, Class: "h-auto p-0 inline-flex items-center gap-1 hover:text-foreground", Attributes: templ.Attributes{"x-on:click": "toggleSort('ticker')"}}) {
+								Ticker
+								<span x-show="filterTracker.sortBy !== 'ticker'">
+									@icon.Icon("arrow-up-down")(icon.Props{Class: "h-3.5 w-3.5 text-muted-foreground"})
+								</span>
+								<span x-show="filterTracker.sortBy === 'ticker' && filterTracker.sortOrder === 'asc'">
+									@icon.Icon("arrow-up")(icon.Props{Class: "h-3.5 w-3.5 text-emerald-500"})
+								</span>
+								<span x-show="filterTracker.sortBy === 'ticker' && filterTracker.sortOrder === 'desc'">
+									@icon.Icon("arrow-down")(icon.Props{Class: "h-3.5 w-3.5 text-rose-500"})
+								</span>
+							}
+						}
+						@table.Head(table.HeadProps{Attributes: templ.Attributes{"x-bind:aria-sort": "filterTracker.sortBy === 'sequence' ? (filterTracker.sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'"}}) {
+							@button.Button(button.Props{Type: button.TypeButton, Variant: button.VariantGhost, Size: button.SizeSm, Class: "h-auto p-0 inline-flex items-center gap-1 hover:text-foreground", Attributes: templ.Attributes{"x-on:click": "toggleSort('sequence')"}}) {
+								Sequence
+								<span x-show="filterTracker.sortBy !== 'sequence'">
+									@icon.Icon("arrow-up-down")(icon.Props{Class: "h-3.5 w-3.5 text-muted-foreground"})
+								</span>
+								<span x-show="filterTracker.sortBy === 'sequence' && filterTracker.sortOrder === 'asc'">
+									@icon.Icon("arrow-up")(icon.Props{Class: "h-3.5 w-3.5 text-emerald-500"})
+								</span>
+								<span x-show="filterTracker.sortBy === 'sequence' && filterTracker.sortOrder === 'desc'">
+									@icon.Icon("arrow-down")(icon.Props{Class: "h-3.5 w-3.5 text-rose-500"})
+								</span>
+							}
+						}
 						@table.Head() { Type }
 						@table.Head() { Status }
-						@table.Head() { Created }
+						@table.Head(table.HeadProps{Attributes: templ.Attributes{"x-bind:aria-sort": "filterTracker.sortBy === 'created_at' ? (filterTracker.sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'"}}) {
+							@button.Button(button.Props{Type: button.TypeButton, Variant: button.VariantGhost, Size: button.SizeSm, Class: "h-auto p-0 inline-flex items-center gap-1 hover:text-foreground", Attributes: templ.Attributes{"x-on:click": "toggleSort('created_at')"}}) {
+								Created
+								<span x-show="filterTracker.sortBy !== 'created_at'">
+									@icon.Icon("arrow-up-down")(icon.Props{Class: "h-3.5 w-3.5 text-muted-foreground"})
+								</span>
+								<span x-show="filterTracker.sortBy === 'created_at' && filterTracker.sortOrder === 'asc'">
+									@icon.Icon("arrow-up")(icon.Props{Class: "h-3.5 w-3.5 text-emerald-500"})
+								</span>
+								<span x-show="filterTracker.sortBy === 'created_at' && filterTracker.sortOrder === 'desc'">
+									@icon.Icon("arrow-down")(icon.Props{Class: "h-3.5 w-3.5 text-rose-500"})
+								</span>
+							}
+						}
 					}
 				}
 				@table.Body() {

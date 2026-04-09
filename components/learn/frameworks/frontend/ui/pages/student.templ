@@ -243,13 +243,13 @@ templ StudentTable() {
 							@button.Button(button.Props{Type: button.TypeButton, Variant: button.VariantGhost, Size: button.SizeSm, Class: "h-auto p-0 inline-flex items-center gap-1 hover:text-foreground", Attributes: templ.Attributes{"x-on:click": "toggleSort('name')"}}) {
 								Name
 								<span x-show="filterTracker.sortBy !== 'name'">
-									@icon.Icon("arrow-up-down")(icon.Props{Class: "h-3.5 w-3.5"})
+									@icon.Icon("arrow-up-down")(icon.Props{Class: "h-3.5 w-3.5 text-muted-foreground"})
 								</span>
 								<span x-show="filterTracker.sortBy === 'name' && filterTracker.sortOrder === 'asc'">
-									@icon.Icon("arrow-up")(icon.Props{Class: "h-3.5 w-3.5"})
+									@icon.Icon("arrow-up")(icon.Props{Class: "h-3.5 w-3.5 text-emerald-500"})
 								</span>
 								<span x-show="filterTracker.sortBy === 'name' && filterTracker.sortOrder === 'desc'">
-									@icon.Icon("arrow-down")(icon.Props{Class: "h-3.5 w-3.5"})
+									@icon.Icon("arrow-down")(icon.Props{Class: "h-3.5 w-3.5 text-rose-500"})
 								</span>
 							}
 						}
