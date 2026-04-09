@@ -34,4 +34,10 @@ var _ = Describe("Journal Page Tests", func() {
 		Expect(html).To(ContainSubstring("Browse journals with client-side loading powered by Alpine.js."))
 		Expect(html).To(ContainSubstring("Loading journals..."))
 	})
+
+	It("binds dynamic status and type badge classes", func() {
+		Expect(html).To(ContainSubstring("x-bind:class=\"statusBadgeClass(journal.status)\""))
+		Expect(html).To(ContainSubstring("x-bind:class=\"typeBadgeClass(journal.type)\""))
+		Expect(html).To(ContainSubstring("x-text=\"normalizeStatus(journal.status)\""))
+	})
 })

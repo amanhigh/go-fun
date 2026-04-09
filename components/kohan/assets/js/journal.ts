@@ -6,6 +6,24 @@ declare const Alpine: {
 	data(name: string, callback: () => ReturnType<typeof journalPage>): void;
 };
 
+const defaultBadgeClass = 'border-slate-300 bg-slate-50 text-slate-700';
+
+const statusBadgeClassMap: Record<string, string> = {
+	SUCCESS: 'border-emerald-300 bg-emerald-50 text-emerald-800',
+	FAIL: 'border-rose-300 bg-rose-50 text-rose-800',
+	RUNNING: 'border-sky-300 bg-sky-50 text-sky-800',
+	SET: 'border-amber-300 bg-amber-50 text-amber-800',
+	REJECTED: 'border-violet-300 bg-violet-50 text-violet-800',
+};
+
+const typeBadgeClassMap: Record<string, string> = {
+	REJECTED: 'border-rose-300 bg-rose-50 text-rose-800',
+	RESULT: 'border-emerald-300 bg-emerald-50 text-emerald-800',
+	SET: 'border-indigo-300 bg-indigo-50 text-indigo-800',
+};
+
+const normalizeTag = (value: string): string => (value ?? '').trim().toUpperCase();
+
 function journalPage() {
 	const client = new JournalClient();
 	const pagination = createPaginationTracker(10);
@@ -16,9 +34,21 @@ function journalPage() {
 		journals: [] as Journal[],
 		pagination,
 		filterTracker,
+		requestCounter: 0,
 		loading: false,
 		errorMessage: '',
+		normalizeStatus(value: string) {
+			return normalizeTag(value);
+		},
+		statusBadgeClass(value: string) {
+			return statusBadgeClassMap[normalizeTag(value)] ?? defaultBadgeClass;
+		},
+		typeBadgeClass(value: string) {
+			return typeBadgeClassMap[normalizeTag(value)] ?? defaultBadgeClass;
+		},
 		async loadJournals() {
+			const requestId = this.requestCounter + 1;
+			this.requestCounter = requestId;
 			this.loading = true;
 			this.errorMessage = '';
 			try {
@@ -27,13 +57,16 @@ function journalPage() {
 					this.pagination.getPageSize(),
 					this.filterTracker.toQueryParams(),
 				);
+				if (requestId !== this.requestCounter) return;
 				const data = resp.data ?? {};
 				this.journals = data.journals ?? [];
 				this.pagination.setTotalItems(data.metadata?.total ?? this.journals.length);
 				this.pagination.setPageFromOffset(data.metadata?.offset ?? 0);
 			} catch {
+				if (requestId !== this.requestCounter) return;
 				this.errorMessage = 'Unable to load journals. Please try again.';
 			} finally {
+				if (requestId !== this.requestCounter) return;
 				this.loading = false;
 			}
 		},
@@ -62,7 +95,9 @@ function journalPage() {
 		},
 		formatTimestamp(value: string) {
 			if (!value) return '—';
-			return new Date(value).toLocaleString();
+			const parsed = new Date(value);
+			if (Number.isNaN(parsed.getTime())) return '—';
+			return parsed.toLocaleString();
 		},
 		toDateInputValue(date: Date) {
 			const year = date.getFullYear();
@@ -73,14 +108,16 @@ function journalPage() {
 		applyCreatedPreset(preset: string) {
 			const today = new Date();
 			const endDate = this.toDateInputValue(today);
-			if (preset === 'today') {
+			const daysMap: Record<string, number> = { today: 0, last7: 7, last30: 30 };
+			const days = daysMap[preset] ?? 7;
+			if (days === 0) {
 				this.filterTracker.createdAfter = endDate;
 				this.filterTracker.createdBefore = endDate;
 				this.applyFilters();
 				return;
 			}
 			const startDate = new Date(today);
-			startDate.setDate(today.getDate() - (preset === 'last30' ? 30 : 7));
+			startDate.setDate(today.getDate() - days);
 			this.filterTracker.createdAfter = this.toDateInputValue(startDate);
 			this.filterTracker.createdBefore = endDate;
 			this.applyFilters();
@@ -105,18 +142,14 @@ function journalPage() {
 			this.applyFilters();
 		},
 		toggleSort(field: string) {
-			if (this.filterTracker.sortBy !== field) {
-				this.filterTracker.sortBy = field;
-				this.filterTracker.sortOrder = 'asc';
-				this.applyFilters();
-				return;
-			}
-			this.filterTracker.sortOrder = this.filterTracker.sortOrder === 'asc' ? 'desc' : 'asc';
+			this.filterTracker.sortOrder = this.filterTracker.sortBy !== field
+				? 'asc'
+				: this.filterTracker.sortOrder === 'asc' ? 'desc' : 'asc';
+			this.filterTracker.sortBy = field;
 			this.applyFilters();
 		},
 		clearFilters() {
 			this.filterTracker.clear();
-			this.filterToUrl();
 			this.applyFilters();
 		},
 		init() {
