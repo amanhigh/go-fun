@@ -2,11 +2,11 @@ package pages
 
 import (
 	"github.com/amanhigh/go-fun/common/ui/layout"
+	widgets "github.com/amanhigh/go-fun/common/ui/widgets"
 	"github.com/templui/templui/components/alert"
 	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/button"
 	"github.com/templui/templui/components/card"
-	"github.com/templui/templui/components/icon"
 	"github.com/templui/templui/components/input"
 	"github.com/templui/templui/components/label"
 	"github.com/templui/templui/components/pagination"
@@ -171,48 +171,15 @@ templ JournalEmptyState() {
 					@table.Row() {
 						@table.Head() { ID }
 						@table.Head(table.HeadProps{Attributes: templ.Attributes{"x-bind:aria-sort": "filterTracker.sortBy === 'ticker' ? (filterTracker.sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'"}}) {
-							@button.Button(button.Props{Type: button.TypeButton, Variant: button.VariantGhost, Size: button.SizeSm, Class: "h-auto p-0 inline-flex items-center gap-1 hover:text-foreground", Attributes: templ.Attributes{"x-on:click": "toggleSort('ticker')"}}) {
-								Ticker
-								<span x-show="filterTracker.sortBy !== 'ticker'">
-									@icon.Icon("arrow-up-down")(icon.Props{Class: "h-3.5 w-3.5 text-muted-foreground"})
-								</span>
-								<span x-show="filterTracker.sortBy === 'ticker' && filterTracker.sortOrder === 'asc'">
-									@icon.Icon("arrow-up")(icon.Props{Class: "h-3.5 w-3.5 text-emerald-500"})
-								</span>
-								<span x-show="filterTracker.sortBy === 'ticker' && filterTracker.sortOrder === 'desc'">
-									@icon.Icon("arrow-down")(icon.Props{Class: "h-3.5 w-3.5 text-rose-500"})
-								</span>
-							}
+							@widgets.SortButton(widgets.SortButtonProps{Label: "Ticker", Field: "ticker", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('ticker')"})
 						}
 						@table.Head(table.HeadProps{Attributes: templ.Attributes{"x-bind:aria-sort": "filterTracker.sortBy === 'sequence' ? (filterTracker.sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'"}}) {
-							@button.Button(button.Props{Type: button.TypeButton, Variant: button.VariantGhost, Size: button.SizeSm, Class: "h-auto p-0 inline-flex items-center gap-1 hover:text-foreground", Attributes: templ.Attributes{"x-on:click": "toggleSort('sequence')"}}) {
-								Sequence
-								<span x-show="filterTracker.sortBy !== 'sequence'">
-									@icon.Icon("arrow-up-down")(icon.Props{Class: "h-3.5 w-3.5 text-muted-foreground"})
-								</span>
-								<span x-show="filterTracker.sortBy === 'sequence' && filterTracker.sortOrder === 'asc'">
-									@icon.Icon("arrow-up")(icon.Props{Class: "h-3.5 w-3.5 text-emerald-500"})
-								</span>
-								<span x-show="filterTracker.sortBy === 'sequence' && filterTracker.sortOrder === 'desc'">
-									@icon.Icon("arrow-down")(icon.Props{Class: "h-3.5 w-3.5 text-rose-500"})
-								</span>
-							}
+							@widgets.SortButton(widgets.SortButtonProps{Label: "Sequence", Field: "sequence", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('sequence')"})
 						}
 						@table.Head() { Type }
 						@table.Head() { Status }
 						@table.Head(table.HeadProps{Attributes: templ.Attributes{"x-bind:aria-sort": "filterTracker.sortBy === 'created_at' ? (filterTracker.sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'"}}) {
-							@button.Button(button.Props{Type: button.TypeButton, Variant: button.VariantGhost, Size: button.SizeSm, Class: "h-auto p-0 inline-flex items-center gap-1 hover:text-foreground", Attributes: templ.Attributes{"x-on:click": "toggleSort('created_at')"}}) {
-								Created
-								<span x-show="filterTracker.sortBy !== 'created_at'">
-									@icon.Icon("arrow-up-down")(icon.Props{Class: "h-3.5 w-3.5 text-muted-foreground"})
-								</span>
-								<span x-show="filterTracker.sortBy === 'created_at' && filterTracker.sortOrder === 'asc'">
-									@icon.Icon("arrow-up")(icon.Props{Class: "h-3.5 w-3.5 text-emerald-500"})
-								</span>
-								<span x-show="filterTracker.sortBy === 'created_at' && filterTracker.sortOrder === 'desc'">
-									@icon.Icon("arrow-down")(icon.Props{Class: "h-3.5 w-3.5 text-rose-500"})
-								</span>
-							}
+							@widgets.SortButton(widgets.SortButtonProps{Label: "Created", Field: "created_at", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('created_at')"})
 						}
 					}
 				}
