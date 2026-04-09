@@ -140,12 +140,12 @@ templ JournalFilters() {
 
 templ JournalActiveFilters() {
 	<div class="flex flex-wrap items-center gap-2" x-show="filterTracker.hasFilters()">
-		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"class": "bg-sky-100 text-sky-800 border border-sky-200", "x-show": "filterTracker.ticker !== ''", "x-text": "'Ticker: ' + filterTracker.ticker"}}) {}
-		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"class": "bg-indigo-100 text-indigo-800 border border-indigo-200", "x-show": "filterTracker.type !== ''", "x-text": "'Type: ' + filterTracker.type"}}) {}
-		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"class": "bg-rose-100 text-rose-800 border border-rose-200", "x-show": "filterTracker.status !== ''", "x-text": "'Status: ' + filterTracker.status"}}) {}
-		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"class": "bg-violet-100 text-violet-800 border border-violet-200", "x-show": "filterTracker.sequence !== ''", "x-text": "'Sequence: ' + filterTracker.sequence"}}) {}
-		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"class": "bg-emerald-100 text-emerald-800 border border-emerald-200", "x-show": "filterTracker.createdAfter !== ''", "x-text": "'Created: ' + filterTracker.createdAfter"}}) {}
-		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"class": "bg-amber-100 text-amber-800 border border-amber-200", "x-show": "filterTracker.reviewed !== ''", "x-text": "'Reviewed: ' + filterTracker.reviewed"}}) {}
+		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "bg-sky-100 text-sky-800 border border-sky-200", Attributes: templ.Attributes{"x-show": "filterTracker.ticker !== ''", "x-text": "'Ticker: ' + filterTracker.ticker"}}) {}
+		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "bg-indigo-100 text-indigo-800 border border-indigo-200", Attributes: templ.Attributes{"x-show": "filterTracker.type !== ''", "x-text": "'Type: ' + filterTracker.type"}}) {}
+		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "bg-rose-100 text-rose-800 border border-rose-200", Attributes: templ.Attributes{"x-show": "filterTracker.status !== ''", "x-text": "'Status: ' + filterTracker.status"}}) {}
+		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "bg-violet-100 text-violet-800 border border-violet-200", Attributes: templ.Attributes{"x-show": "filterTracker.sequence !== ''", "x-text": "'Sequence: ' + filterTracker.sequence"}}) {}
+		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "bg-emerald-100 text-emerald-800 border border-emerald-200", Attributes: templ.Attributes{"x-show": "filterTracker.createdAfter !== ''", "x-text": "'Created: ' + filterTracker.createdAfter"}}) {}
+		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "bg-amber-100 text-amber-800 border border-amber-200", Attributes: templ.Attributes{"x-show": "filterTracker.reviewed !== ''", "x-text": "'Reviewed: ' + filterTracker.reviewed"}}) {}
 	</div>
 }
 
@@ -160,17 +160,11 @@ templ JournalTable() {
 				@table.Header(table.HeaderProps{Class: "bg-gradient-to-r from-sky-100/70 via-indigo-100/60 to-emerald-100/70 text-xs uppercase tracking-wide text-slate-700"}) {
 					@table.Row() {
 						@table.Head() { ID }
-						@table.Head(table.HeadProps{Attributes: templ.Attributes{"x-bind:aria-sort": "filterTracker.sortBy === 'ticker' ? (filterTracker.sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'"}}) {
-							@widgets.SortButton(widgets.SortButtonProps{Label: "Ticker", Field: "ticker", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('ticker')"})
-						}
-						@table.Head(table.HeadProps{Attributes: templ.Attributes{"x-bind:aria-sort": "filterTracker.sortBy === 'sequence' ? (filterTracker.sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'"}}) {
-							@widgets.SortButton(widgets.SortButtonProps{Label: "Sequence", Field: "sequence", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('sequence')"})
-						}
+						@widgets.SortHead(widgets.SortHeadProps{Label: "Ticker", Field: "ticker", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('ticker')"})
+						@widgets.SortHead(widgets.SortHeadProps{Label: "Sequence", Field: "sequence", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('sequence')"})
 						@table.Head() { Type }
 						@table.Head() { Status }
-						@table.Head(table.HeadProps{Attributes: templ.Attributes{"x-bind:aria-sort": "filterTracker.sortBy === 'created_at' ? (filterTracker.sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'"}}) {
-							@widgets.SortButton(widgets.SortButtonProps{Label: "Created", Field: "created_at", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('created_at')"})
-						}
+						@widgets.SortHead(widgets.SortHeadProps{Label: "Created", Field: "created_at", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('created_at')"})
 					}
 				}
 				@table.Body() {
@@ -183,16 +177,21 @@ templ JournalTable() {
 	}
 }
 
-	templ JournalRow() {
+templ JournalRow() {
 	@table.Row() {
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "journal.id"}}) {}
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "journal.ticker"}}) {}
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "journal.sequence"}}) {}
 		@table.Cell() {
-			@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"class": "bg-indigo-100 text-indigo-800 border border-indigo-200", "x-text": "journal.type"}}) {}
+			@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "bg-indigo-100 text-indigo-800 border border-indigo-200", Attributes: templ.Attributes{"x-text": "journal.type"}}) {}
 		}
 		@table.Cell() {
-			@badge.Badge(badge.Props{Variant: badge.VariantOutline, Attributes: templ.Attributes{"class": "border-amber-300 text-amber-800 bg-amber-50", "x-text": "journal.status"}}) {}
+			@badge.Badge(badge.Props{Variant: badge.VariantOutline, Class: "border-emerald-300 bg-emerald-50 text-emerald-800", Attributes: templ.Attributes{"x-show": "journal.status === 'SUCCESS'", "x-text": "journal.status"}}) {}
+			@badge.Badge(badge.Props{Variant: badge.VariantOutline, Class: "border-rose-300 bg-rose-50 text-rose-800", Attributes: templ.Attributes{"x-show": "journal.status === 'FAIL'", "x-text": "journal.status"}}) {}
+			@badge.Badge(badge.Props{Variant: badge.VariantOutline, Class: "border-sky-300 bg-sky-50 text-sky-800", Attributes: templ.Attributes{"x-show": "journal.status === 'RUNNING'", "x-text": "journal.status"}}) {}
+			@badge.Badge(badge.Props{Variant: badge.VariantOutline, Class: "border-amber-300 bg-amber-50 text-amber-800", Attributes: templ.Attributes{"x-show": "journal.status === 'SET'", "x-text": "journal.status"}}) {}
+			@badge.Badge(badge.Props{Variant: badge.VariantOutline, Class: "border-violet-300 bg-violet-50 text-violet-800", Attributes: templ.Attributes{"x-show": "journal.status === 'REJECTED'", "x-text": "journal.status"}}) {}
+			@badge.Badge(badge.Props{Variant: badge.VariantOutline, Class: "border-slate-300 bg-slate-50 text-slate-700", Attributes: templ.Attributes{"x-show": "!['SUCCESS','FAIL','RUNNING','SET','REJECTED'].includes(journal.status)", "x-text": "journal.status"}}) {}
 		}
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "formatTimestamp(journal.created_at)"}}) {}
 	}

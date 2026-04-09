@@ -239,9 +239,7 @@ templ StudentTable() {
 				@table.Header(table.HeaderProps{Class: "bg-muted/30 text-xs uppercase tracking-wide"}) {
 					@table.Row() {
 						@table.Head() { ID }
-						@table.Head(table.HeadProps{Attributes: templ.Attributes{"x-bind:aria-sort": "filterTracker.sortBy === 'name' ? (filterTracker.sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'"}}) {
-							@widgets.SortButton(widgets.SortButtonProps{Label: "Name", Field: "name", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('name')"})
-						}
+						@widgets.SortHead(widgets.SortHeadProps{Label: "Name", Field: "name", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('name')"})
 						@table.Head() { Email }
 						@table.Head() { Grade }
 						@table.Head(table.HeadProps{Class: "text-right"}) { Actions }

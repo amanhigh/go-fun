@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("SortButton Template", func() {
+var _ = Describe("SortHead Template", func() {
 	var (
 		ctx  context.Context
 		html string
@@ -21,7 +21,7 @@ var _ = Describe("SortButton Template", func() {
 
 	JustBeforeEach(func() {
 		var render strings.Builder
-		err := widgets.SortButton(widgets.SortButtonProps{
+		err := widgets.SortHead(widgets.SortHeadProps{
 			Label:         "Ticker",
 			Field:         "ticker",
 			SortByExpr:    "filterTracker.sortBy",
@@ -31,6 +31,10 @@ var _ = Describe("SortButton Template", func() {
 		}).Render(ctx, &render)
 		Expect(err).ToNot(HaveOccurred())
 		html = render.String()
+	})
+
+	It("renders table head with aria sort expression", func() {
+		Expect(html).To(ContainSubstring("x-bind:aria-sort=\"filterTracker.sortBy === &#39;ticker&#39; ? (filterTracker.sortOrder === &#39;asc&#39; ? &#39;ascending&#39; : &#39;descending&#39;) : &#39;none&#39;\""))
 	})
 
 	It("renders label, click action, and merged classes", func() {
