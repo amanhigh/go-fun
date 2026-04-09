@@ -64,6 +64,27 @@ function journalPage() {
 			if (!value) return '—';
 			return new Date(value).toLocaleString();
 		},
+		toDateInputValue(date: Date) {
+			const year = date.getFullYear();
+			const month = `${date.getMonth() + 1}`.padStart(2, '0');
+			const day = `${date.getDate()}`.padStart(2, '0');
+			return `${year}-${month}-${day}`;
+		},
+		applyCreatedPreset(preset: string) {
+			const today = new Date();
+			const endDate = this.toDateInputValue(today);
+			if (preset === 'today') {
+				this.filterTracker.createdAfter = endDate;
+				this.filterTracker.createdBefore = endDate;
+				this.applyFilters();
+				return;
+			}
+			const startDate = new Date(today);
+			startDate.setDate(today.getDate() - (preset === 'last30' ? 30 : 7));
+			this.filterTracker.createdAfter = this.toDateInputValue(startDate);
+			this.filterTracker.createdBefore = endDate;
+			this.applyFilters();
+		},
 		async prevPage() {
 			if (!this.pagination.hasPrev()) return;
 			this.pagination.prevPage();
@@ -78,6 +99,10 @@ function journalPage() {
 			this.pagination.resetPage();
 			this.filterToUrl();
 			void this.loadJournals();
+		},
+		onCreatedDateChange() {
+			this.filterTracker.createdBefore = this.filterTracker.createdAfter;
+			this.applyFilters();
 		},
 		toggleSort(field: string) {
 			if (this.filterTracker.sortBy !== field) {
