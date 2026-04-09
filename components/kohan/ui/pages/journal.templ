@@ -6,7 +6,10 @@ import (
 	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/button"
 	"github.com/templui/templui/components/card"
+	"github.com/templui/templui/components/input"
+	"github.com/templui/templui/components/label"
 	"github.com/templui/templui/components/pagination"
+	"github.com/templui/templui/components/selectbox"
 	"github.com/templui/templui/components/table"
 )
 
@@ -20,6 +23,127 @@ templ JournalPage() {
 			Tags:        []string{"Public", "Read-only", "Alpine.js"},
 		}) {
 			<div x-data="journalPage()" x-init="init()" class="space-y-6">
+				@layout.Card(
+					"Filter",
+					"Filter journals",
+					"Narrow the journal list by ticker, type, status, sequence, date, review state, and sort order.",
+				) {
+					<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+						<div class="space-y-2">
+							@label.Label(label.Props{For: "journal-ticker", Class: "text-sm font-medium"}) { Ticker }
+							@input.Input(input.Props{ID: "journal-ticker", Type: input.TypeText, Placeholder: "AAPL", Class: "w-full", Attributes: templ.Attributes{"x-model": "filterTracker.ticker"}})
+						</div>
+						<div class="space-y-2">
+							@label.Label(label.Props{For: "journal-type", Class: "text-sm font-medium"}) { Type }
+							@selectbox.SelectBox() {
+							@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-type", Name: "journal-type", Attributes: templ.Attributes{"x-model": "filterTracker.type", "x-on:change": "applyFilters()"}}) {
+									@selectbox.Value(selectbox.ValueProps{Placeholder: "All"})
+								}
+								@selectbox.Content() {
+									@selectbox.Group() {
+										@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
+										@selectbox.Item(selectbox.ItemProps{Value: "REJECTED"}) { REJECTED }
+										@selectbox.Item(selectbox.ItemProps{Value: "RESULT"}) { RESULT }
+										@selectbox.Item(selectbox.ItemProps{Value: "SET"}) { SET }
+									}
+								}
+							}
+						</div>
+						<div class="space-y-2">
+							@label.Label(label.Props{For: "journal-status", Class: "text-sm font-medium"}) { Status }
+							@selectbox.SelectBox() {
+							@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-status", Name: "journal-status", Attributes: templ.Attributes{"x-model": "filterTracker.status", "x-on:change": "applyFilters()"}}) {
+									@selectbox.Value(selectbox.ValueProps{Placeholder: "All"})
+								}
+								@selectbox.Content() {
+									@selectbox.Group() {
+										@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
+										@selectbox.Item(selectbox.ItemProps{Value: "SET"}) { SET }
+										@selectbox.Item(selectbox.ItemProps{Value: "RUNNING"}) { RUNNING }
+										@selectbox.Item(selectbox.ItemProps{Value: "SUCCESS"}) { SUCCESS }
+										@selectbox.Item(selectbox.ItemProps{Value: "FAIL"}) { FAIL }
+										@selectbox.Item(selectbox.ItemProps{Value: "REJECTED"}) { REJECTED }
+									}
+								}
+							}
+						</div>
+						<div class="space-y-2">
+							@label.Label(label.Props{For: "journal-sequence", Class: "text-sm font-medium"}) { Sequence }
+							@selectbox.SelectBox() {
+							@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sequence", Name: "journal-sequence", Attributes: templ.Attributes{"x-model": "filterTracker.sequence", "x-on:change": "applyFilters()"}}) {
+									@selectbox.Value(selectbox.ValueProps{Placeholder: "All"})
+								}
+								@selectbox.Content() {
+									@selectbox.Group() {
+										@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
+										@selectbox.Item(selectbox.ItemProps{Value: "MWD"}) { MWD }
+										@selectbox.Item(selectbox.ItemProps{Value: "YR"}) { YR }
+										@selectbox.Item(selectbox.ItemProps{Value: "WDH"}) { WDH }
+									}
+								}
+							}
+						</div>
+						<div class="space-y-2">
+							@label.Label(label.Props{For: "journal-created-after", Class: "text-sm font-medium"}) { Created After }
+							@input.Input(input.Props{ID: "journal-created-after", Type: input.TypeDate, Class: "w-full", Attributes: templ.Attributes{"x-model": "filterTracker.createdAfter"}})
+						</div>
+						<div class="space-y-2">
+							@label.Label(label.Props{For: "journal-created-before", Class: "text-sm font-medium"}) { Created Before }
+							@input.Input(input.Props{ID: "journal-created-before", Type: input.TypeDate, Class: "w-full", Attributes: templ.Attributes{"x-model": "filterTracker.createdBefore"}})
+						</div>
+						<div class="space-y-2">
+							@label.Label(label.Props{For: "journal-reviewed", Class: "text-sm font-medium"}) { Reviewed }
+							@selectbox.SelectBox() {
+							@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-reviewed", Name: "journal-reviewed", Attributes: templ.Attributes{"x-model": "filterTracker.reviewed", "x-on:change": "applyFilters()"}}) {
+									@selectbox.Value(selectbox.ValueProps{Placeholder: "All"})
+								}
+								@selectbox.Content() {
+									@selectbox.Group() {
+										@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
+										@selectbox.Item(selectbox.ItemProps{Value: "true"}) { Reviewed }
+										@selectbox.Item(selectbox.ItemProps{Value: "false"}) { Not reviewed }
+									}
+								}
+							}
+						</div>
+						<div class="space-y-2">
+							@label.Label(label.Props{For: "journal-sort-by", Class: "text-sm font-medium"}) { Sort By }
+							@selectbox.SelectBox() {
+							@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sort-by", Name: "journal-sort-by", Attributes: templ.Attributes{"x-model": "filterTracker.sortBy", "x-on:change": "applyFilters()"}}) {
+									@selectbox.Value(selectbox.ValueProps{Placeholder: "Created"})
+								}
+								@selectbox.Content() {
+									@selectbox.Group() {
+										@selectbox.Item(selectbox.ItemProps{Value: ""}) { Created }
+										@selectbox.Item(selectbox.ItemProps{Value: "created_at"}) { Created }
+										@selectbox.Item(selectbox.ItemProps{Value: "ticker"}) { Ticker }
+										@selectbox.Item(selectbox.ItemProps{Value: "sequence"}) { Sequence }
+									}
+								}
+							}
+						</div>
+						<div class="space-y-2">
+							@label.Label(label.Props{For: "journal-sort-order", Class: "text-sm font-medium"}) { Sort Order }
+							@selectbox.SelectBox() {
+							@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sort-order", Name: "journal-sort-order", Attributes: templ.Attributes{"x-model": "filterTracker.sortOrder", "x-on:change": "applyFilters()"}}) {
+									@selectbox.Value(selectbox.ValueProps{Placeholder: "Desc"})
+								}
+								@selectbox.Content() {
+									@selectbox.Group() {
+										@selectbox.Item(selectbox.ItemProps{Value: ""}) { Desc }
+										@selectbox.Item(selectbox.ItemProps{Value: "asc"}) { Ascending }
+										@selectbox.Item(selectbox.ItemProps{Value: "desc"}) { Descending }
+									}
+								}
+							}
+						</div>
+						<div class="flex items-end gap-3 xl:col-span-3">
+							@button.Button(button.Props{Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "applyFilters()"}}) { Apply Filters }
+							@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "clearFilters()"}}) { Clear }
+						</div>
+					</div>
+				}
+
 				@layout.Card(
 					"Browse",
 					"Journal entries",

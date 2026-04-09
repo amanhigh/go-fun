@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/handler"
@@ -10,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/templui/templui/utils"
 )
 
 // KohanServerLifecycle implements ServerLifecycle for the Kohan HTTP server.
@@ -78,6 +80,9 @@ func (s *KohanServerLifecycle) registerJournalRoutes(engine *gin.Engine) {
 
 func (s *KohanServerLifecycle) registerPortalRoutes(engine *gin.Engine) {
 	engine.Static("/assets", "assets")
+	mux := http.NewServeMux()
+	utils.SetupScriptRoutes(mux, true)
+	engine.Any("/templui/*filepath", gin.WrapH(mux))
 	engine.GET("/", s.IndexPortal.HandleIndex)
 	engine.GET("/journal", s.JournalPortal.HandleJournal)
 }

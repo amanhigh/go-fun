@@ -1,6 +1,6 @@
 import { JournalClient } from './journal_client';
-import type { Journal } from './journal_models';
-import { createPaginationTracker } from './journal_state';
+import { journalQueryKeyMap, journalReverseQueryKeyMap, type Journal } from './journal_models';
+import { createFilterTracker, createPaginationTracker } from './journal_state';
 
 declare const Alpine: {
 	data(name: string, callback: () => ReturnType<typeof journalPage>): void;
@@ -9,16 +9,24 @@ declare const Alpine: {
 function journalPage() {
 	const client = new JournalClient();
 	const pagination = createPaginationTracker(10);
+	const filterTracker = createFilterTracker();
+	const trackedFilters = filterTracker as unknown as Record<string, string>;
+	const reverseQueryKeyMap = journalReverseQueryKeyMap as Record<string, keyof typeof filterTracker>;
 	return {
 		journals: [] as Journal[],
 		pagination,
+		filterTracker,
 		loading: false,
 		errorMessage: '',
 		async loadJournals() {
 			this.loading = true;
 			this.errorMessage = '';
 			try {
-				const resp = await client.list(this.pagination.getPage() === 1 ? 0 : (this.pagination.getPage() - 1) * this.pagination.getPageSize(), this.pagination.getPageSize());
+				const resp = await client.list(
+					this.pagination.getPage() === 1 ? 0 : (this.pagination.getPage() - 1) * this.pagination.getPageSize(),
+					this.pagination.getPageSize(),
+					this.filterTracker.toQueryParams(),
+				);
 				const data = resp.data ?? {};
 				this.journals = data.journals ?? [];
 				this.pagination.setTotalItems(data.metadata?.total ?? this.journals.length);
@@ -28,6 +36,23 @@ function journalPage() {
 			} finally {
 				this.loading = false;
 			}
+		},
+		urlToFilter() {
+			const params = new URLSearchParams(window.location.search);
+			params.forEach((value, key) => {
+				const filterKey = reverseQueryKeyMap[key];
+				if (filterKey) {
+					trackedFilters[filterKey] = value;
+				}
+			});
+		},
+		filterToUrl() {
+			const params = new URLSearchParams();
+			Object.entries(filterTracker.toQueryParams()).forEach(([key, value]) => {
+				if (value !== '') params.set(journalQueryKeyMap[key] ?? key, value);
+			});
+			const nextUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+			window.history.replaceState({}, '', nextUrl);
 		},
 		hasError() {
 			return this.errorMessage !== '';
@@ -49,7 +74,18 @@ function journalPage() {
 			this.pagination.nextPage();
 			await this.loadJournals();
 		},
+		applyFilters() {
+			this.pagination.resetPage();
+			this.filterToUrl();
+			void this.loadJournals();
+		},
+		clearFilters() {
+			this.filterTracker.clear();
+			this.filterToUrl();
+			this.applyFilters();
+		},
 		init() {
+			this.urlToFilter();
 			void this.loadJournals();
 		},
 	};
