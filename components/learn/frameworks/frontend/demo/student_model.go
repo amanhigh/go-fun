@@ -30,4 +30,6 @@ type StudentListQuery struct {
 	Limit       int    `form:"limit,default=4"`
 	SearchQuery string `form:"search"`
 	Grade       string `form:"grade"`
+	SortBy      string `form:"sortBy"`
+	SortOrder   string `form:"sortOrder"`
 }
