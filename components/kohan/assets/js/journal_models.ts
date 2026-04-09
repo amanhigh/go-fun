@@ -35,6 +35,7 @@ export type Envelope<T> = {
 };
 
 export const journalQueryKeyMap: Record<string, string> = {
+	ticker: 'search',
 	createdAfter: 'created-after',
 	createdBefore: 'created-before',
 	sortBy: 'sort-by',
@@ -42,6 +43,7 @@ export const journalQueryKeyMap: Record<string, string> = {
 };
 
 export const journalReverseQueryKeyMap: Record<string, string> = {
+	search: 'ticker',
 	ticker: 'ticker',
 	type: 'type',
 	status: 'status',

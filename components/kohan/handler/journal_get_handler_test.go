@@ -278,6 +278,40 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				})
 			})
 
+			Context("Search Filter", func() {
+				Context("Allowed Values", func() {
+					It("should filter by case-insensitive ticker substring", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?search=rs", nil)
+						router.ServeHTTP(w, req)
+						response := decodeJournalList(w, http.StatusOK)
+						Expect(response.Journals).To(HaveLen(1))
+						Expect(response.Journals[0].Ticker).To(Equal("GRSE"))
+					})
+
+					It("should combine search with exact ticker filter", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?search=rs&ticker=GRSE", nil)
+						router.ServeHTTP(w, req)
+						response := decodeJournalList(w, http.StatusOK)
+						Expect(response.Journals).To(HaveLen(1))
+						Expect(response.Journals[0].Ticker).To(Equal("GRSE"))
+					})
+				})
+
+				Context("Bad Values", func() {
+					It("should return 400 for invalid search format", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?search=RE*", nil)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Search", "alphanum")
+					})
+
+					It("should return 400 for invalid search length", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?search=ABCDEFGHIJK", nil)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Search", "max")
+					})
+				})
+			})
+
 			Context("Type Filter", func() {
 				Context("Allowed Values", func() {
 					It("should filter by type = REJECTED", func() {
