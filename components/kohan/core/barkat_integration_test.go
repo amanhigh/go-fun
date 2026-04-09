@@ -68,7 +68,7 @@ var _ = Describe("Barkat E2E Test", func() {
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 			Expect(resp.Header().Get("Content-Type")).To(ContainSubstring("text/html"))
 			Expect(resp.String()).To(ContainSubstring("Journal"))
-			Expect(resp.String()).To(ContainSubstring("No entries yet"))
+			Expect(resp.String()).To(ContainSubstring("Kohan Portal"))
 		})
 	})
 

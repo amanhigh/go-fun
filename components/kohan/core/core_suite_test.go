@@ -71,7 +71,7 @@ var _ = BeforeSuite(func() {
 	noteHandler := handler.NewNoteHandler(manager.NewNoteManager(journalMgr, repository.NewNoteRepository(db)))
 	tagHandler := handler.NewTagHandler(manager.NewTagManager(journalMgr, repository.NewTagRepository(db)))
 	indexPortal := handler.NewIndexPortal()
-	journalPortal := handler.NewJournalPortal()
+	journalPortal := handler.NewJournalPortal(journalMgr)
 
 	// Create mock OS handler for testing (safe - no real OS operations)
 	osHandler := configureMockOSHandler()
