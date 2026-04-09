@@ -20,4 +20,4 @@ build: templ css format js
 [group('run')]
 air:
     mkdir -p /tmp/pics
-    KOHAN_BINARY="{{binary}} auto serve /tmp/pics -p {{port}}" just _air_run {{kohan_dir}} {{port}}
+    BARKAT_DB_PATH="$HOME/Downloads/barkat.db" KOHAN_BINARY="{{binary}} auto serve /tmp/pics -p {{port}}" just _air_run {{kohan_dir}} {{port}}
