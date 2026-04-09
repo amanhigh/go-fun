@@ -30,7 +30,7 @@ var _ = Describe("Journal Page Tests", func() {
 	It("renders empty journal page", func() {
 		Expect(html).To(ContainSubstring("<title>Shadow Gate</title>"))
 		Expect(html).To(ContainSubstring("Journal Browser"))
-		Expect(html).To(ContainSubstring("Filter journals"))
+		Expect(html).To(ContainSubstring("Journal entries"))
 		Expect(html).To(ContainSubstring("Browse journals with client-side loading powered by Alpine.js."))
 		Expect(html).To(ContainSubstring("Loading journals..."))
 	})

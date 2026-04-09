@@ -8,11 +8,14 @@ import (
 	"github.com/templui/templui/components/button"
 	"github.com/templui/templui/components/card"
 	"github.com/templui/templui/components/input"
-	"github.com/templui/templui/components/label"
 	"github.com/templui/templui/components/pagination"
 	"github.com/templui/templui/components/selectbox"
 	"github.com/templui/templui/components/table"
 )
+
+// ============================================================
+// MAIN PAGE FLOW
+// ============================================================
 
 templ JournalPage() {
 	@layout.Base("Shadow Gate") {
@@ -24,115 +27,16 @@ templ JournalPage() {
 			Tags:        []string{"Public", "Read-only", "Alpine.js"},
 		}) {
 			<div x-data="journalPage()" x-init="init()" class="space-y-6">
-				@layout.Card(
-					"Filter",
-					"Filter journals",
-					"Narrow the journal list by ticker, type, status, sequence, date, and review state.",
-				) {
-					<div class="space-y-4">
-						<div class="rounded-xl border border-border/70 bg-muted/20 p-3">
-							<div class="flex flex-wrap items-center gap-2">
-								<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Quick Date</span>
-								@button.Button(button.Props{Type: button.TypeButton, Size: button.SizeSm, Variant: button.VariantOutline, Class: "h-7 px-2.5", Attributes: templ.Attributes{"x-on:click": "applyCreatedPreset('today')"}}) { Today }
-								@button.Button(button.Props{Type: button.TypeButton, Size: button.SizeSm, Variant: button.VariantOutline, Class: "h-7 px-2.5", Attributes: templ.Attributes{"x-on:click": "applyCreatedPreset('last7')"}}) { Last 7 days }
-								@button.Button(button.Props{Type: button.TypeButton, Size: button.SizeSm, Variant: button.VariantOutline, Class: "h-7 px-2.5", Attributes: templ.Attributes{"x-on:click": "applyCreatedPreset('last30')"}}) { Last 30 days }
-							</div>
+				@layout.Card("Browse", "Journal entries", "Latest journal entries are loaded in the browser from the existing Kohan API.") {
+					<div class="rounded-xl border border-sky-200/60 bg-gradient-to-r from-sky-50/70 via-indigo-50/50 to-emerald-50/70 p-4 mb-4 shadow-sm">
+						@JournalQuickFilters()
+						<div class="mt-4">
+							@JournalFilters()
 						</div>
-						<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-						<div class="space-y-2">
-							@label.Label(label.Props{For: "journal-ticker", Class: "text-sm font-medium"}) { Ticker }
-							@input.Input(input.Props{ID: "journal-ticker", Type: input.TypeText, Placeholder: "AAPL", Class: "w-full", Attributes: templ.Attributes{"x-model": "filterTracker.ticker"}})
-						</div>
-						<div class="space-y-2">
-							@label.Label(label.Props{For: "journal-type", Class: "text-sm font-medium"}) { Type }
-							@selectbox.SelectBox() {
-							@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-type", Name: "journal-type", Attributes: templ.Attributes{"x-model": "filterTracker.type", "x-on:change": "applyFilters()"}}) {
-									@selectbox.Value(selectbox.ValueProps{Placeholder: "All"})
-								}
-								@selectbox.Content() {
-									@selectbox.Group() {
-										@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
-										@selectbox.Item(selectbox.ItemProps{Value: "REJECTED"}) { REJECTED }
-										@selectbox.Item(selectbox.ItemProps{Value: "RESULT"}) { RESULT }
-										@selectbox.Item(selectbox.ItemProps{Value: "SET"}) { SET }
-									}
-								}
-							}
-						</div>
-						<div class="space-y-2">
-							@label.Label(label.Props{For: "journal-status", Class: "text-sm font-medium"}) { Status }
-							@selectbox.SelectBox() {
-							@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-status", Name: "journal-status", Attributes: templ.Attributes{"x-model": "filterTracker.status", "x-on:change": "applyFilters()"}}) {
-									@selectbox.Value(selectbox.ValueProps{Placeholder: "All"})
-								}
-								@selectbox.Content() {
-									@selectbox.Group() {
-										@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
-										@selectbox.Item(selectbox.ItemProps{Value: "SET"}) { SET }
-										@selectbox.Item(selectbox.ItemProps{Value: "RUNNING"}) { RUNNING }
-										@selectbox.Item(selectbox.ItemProps{Value: "SUCCESS"}) { SUCCESS }
-										@selectbox.Item(selectbox.ItemProps{Value: "FAIL"}) { FAIL }
-										@selectbox.Item(selectbox.ItemProps{Value: "REJECTED"}) { REJECTED }
-									}
-								}
-							}
-						</div>
-						<div class="space-y-2">
-							@label.Label(label.Props{For: "journal-sequence", Class: "text-sm font-medium"}) { Sequence }
-							@selectbox.SelectBox() {
-							@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sequence", Name: "journal-sequence", Attributes: templ.Attributes{"x-model": "filterTracker.sequence", "x-on:change": "applyFilters()"}}) {
-									@selectbox.Value(selectbox.ValueProps{Placeholder: "All"})
-								}
-								@selectbox.Content() {
-									@selectbox.Group() {
-										@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
-										@selectbox.Item(selectbox.ItemProps{Value: "MWD"}) { MWD }
-										@selectbox.Item(selectbox.ItemProps{Value: "YR"}) { YR }
-										@selectbox.Item(selectbox.ItemProps{Value: "WDH"}) { WDH }
-									}
-								}
-							}
-						</div>
-						<div class="space-y-2">
-							@label.Label(label.Props{For: "journal-created-on", Class: "text-sm font-medium"}) { Created }
-							@input.Input(input.Props{ID: "journal-created-on", Type: input.TypeDate, Class: "w-full", Attributes: templ.Attributes{"x-model": "filterTracker.createdAfter", "x-on:change": "onCreatedDateChange()"}})
-							<p class="text-xs text-muted-foreground">Selecting a date filters journals created on that day.</p>
-						</div>
-						<div class="space-y-2">
-							@label.Label(label.Props{For: "journal-reviewed", Class: "text-sm font-medium"}) { Reviewed }
-							@selectbox.SelectBox() {
-							@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-reviewed", Name: "journal-reviewed", Attributes: templ.Attributes{"x-model": "filterTracker.reviewed", "x-on:change": "applyFilters()"}}) {
-									@selectbox.Value(selectbox.ValueProps{Placeholder: "All"})
-								}
-								@selectbox.Content() {
-									@selectbox.Group() {
-										@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
-										@selectbox.Item(selectbox.ItemProps{Value: "true"}) { Reviewed }
-										@selectbox.Item(selectbox.ItemProps{Value: "false"}) { Not reviewed }
-									}
-								}
-							}
-						</div>
-						<div class="flex items-end gap-3 xl:col-span-3">
-							@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Attributes: templ.Attributes{"x-on:click": "clearFilters()"}}) { Clear }
-						</div>
-						<div class="flex flex-wrap items-center gap-2 xl:col-span-3" x-show="filterTracker.hasFilters()">
-							@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"x-show": "filterTracker.ticker !== ''", "x-text": "'Ticker: ' + filterTracker.ticker"}}) {}
-							@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"x-show": "filterTracker.type !== ''", "x-text": "'Type: ' + filterTracker.type"}}) {}
-							@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"x-show": "filterTracker.status !== ''", "x-text": "'Status: ' + filterTracker.status"}}) {}
-							@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"x-show": "filterTracker.sequence !== ''", "x-text": "'Sequence: ' + filterTracker.sequence"}}) {}
-							@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"x-show": "filterTracker.createdAfter !== ''", "x-text": "'Created: ' + filterTracker.createdAfter"}}) {}
-							@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"x-show": "filterTracker.reviewed !== ''", "x-text": "'Reviewed: ' + filterTracker.reviewed"}}) {}
-						</div>
+						<div class="mt-3">
+							@JournalActiveFilters()
 						</div>
 					</div>
-				}
-
-				@layout.Card(
-					"Browse",
-					"Journal entries",
-					"Latest journal entries are loaded in the browser from the existing Kohan API.",
-				) {
 					@JournalStatusAlert()
 					@JournalLoadingState()
 					@JournalEmptyState()
@@ -144,45 +48,116 @@ templ JournalPage() {
 	}
 }
 
-templ JournalStatusAlert() {
-	@alert.Alert(alert.Props{
-		Variant: alert.VariantDestructive,
-		Attributes: templ.Attributes{
-			"x-show": "hasError()",
-		},
-	}) {
-		@alert.Title(alert.TitleProps{Attributes: templ.Attributes{"x-text": "errorMessage"}}) {}
-		@alert.Description() {
-			@button.Button(button.Props{
-				Variant: button.VariantOutline,
-				Type:    button.TypeButton,
-				Attributes: templ.Attributes{
-					"x-on:click": "loadJournals()",
-				},
-			}) {
-				Retry
+// ============================================================
+// FILTER FLOW
+// ============================================================
+
+templ JournalQuickFilters() {
+	<div class="flex items-center gap-2">
+		<span class="text-xs font-semibold text-sky-700">Quick</span>
+		<div class="flex gap-1">
+			@button.Button(button.Props{Type: button.TypeButton, Size: button.SizeSm, Variant: button.VariantOutline, Class: "h-8 border-sky-300/70 bg-sky-100/60 px-2 text-xs text-sky-800 hover:bg-sky-200/70", Attributes: templ.Attributes{"x-on:click": "applyCreatedPreset('today')"}}) { Today }
+			@button.Button(button.Props{Type: button.TypeButton, Size: button.SizeSm, Variant: button.VariantOutline, Class: "h-8 border-indigo-300/70 bg-indigo-100/60 px-2 text-xs text-indigo-800 hover:bg-indigo-200/70", Attributes: templ.Attributes{"x-on:click": "applyCreatedPreset('last7')"}}) { 7d }
+			@button.Button(button.Props{Type: button.TypeButton, Size: button.SizeSm, Variant: button.VariantOutline, Class: "h-8 border-emerald-300/70 bg-emerald-100/60 px-2 text-xs text-emerald-800 hover:bg-emerald-200/70", Attributes: templ.Attributes{"x-on:click": "applyCreatedPreset('last30')"}}) { 30d }
+		</div>
+	</div>
+}
+
+templ JournalFilters() {
+	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+		<div>
+			@input.Input(input.Props{ID: "journal-ticker", Type: input.TypeText, Placeholder: "Ticker", Class: "h-9 w-full border-sky-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.ticker", "x-on:input": "applyFilters()"}})
+		</div>
+		<div>
+			@selectbox.SelectBox() {
+				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-type", Name: "journal-type", Class: "h-9 w-full border-indigo-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.type", "x-on:change": "applyFilters()"}}) {
+					@selectbox.Value(selectbox.ValueProps{Placeholder: "Type"})
+				}
+				@selectbox.Content() {
+					@selectbox.Group() {
+						@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
+						@selectbox.Item(selectbox.ItemProps{Value: "REJECTED"}) { REJECTED }
+						@selectbox.Item(selectbox.ItemProps{Value: "RESULT"}) { RESULT }
+						@selectbox.Item(selectbox.ItemProps{Value: "SET"}) { SET }
+					}
+				}
 			}
-		}
-	}
-}
-
-templ JournalLoadingState() {
-	<div class="rounded-2xl border border-dashed border-border px-6 py-10 text-center text-sm text-muted-foreground" x-show="loading && !hasError()">
-		Loading journals...
+		</div>
+		<div>
+			@selectbox.SelectBox() {
+				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-status", Name: "journal-status", Class: "h-9 w-full border-rose-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.status", "x-on:change": "applyFilters()"}}) {
+					@selectbox.Value(selectbox.ValueProps{Placeholder: "Status"})
+				}
+				@selectbox.Content() {
+					@selectbox.Group() {
+						@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
+						@selectbox.Item(selectbox.ItemProps{Value: "SET"}) { SET }
+						@selectbox.Item(selectbox.ItemProps{Value: "RUNNING"}) { RUNNING }
+						@selectbox.Item(selectbox.ItemProps{Value: "SUCCESS"}) { SUCCESS }
+						@selectbox.Item(selectbox.ItemProps{Value: "FAIL"}) { FAIL }
+						@selectbox.Item(selectbox.ItemProps{Value: "REJECTED"}) { REJECTED }
+					}
+				}
+			}
+		</div>
+		<div>
+			@selectbox.SelectBox() {
+				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sequence", Name: "journal-sequence", Class: "h-9 w-full border-violet-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.sequence", "x-on:change": "applyFilters()"}}) {
+					@selectbox.Value(selectbox.ValueProps{Placeholder: "Sequence"})
+				}
+				@selectbox.Content() {
+					@selectbox.Group() {
+						@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
+						@selectbox.Item(selectbox.ItemProps{Value: "MWD"}) { MWD }
+						@selectbox.Item(selectbox.ItemProps{Value: "YR"}) { YR }
+						@selectbox.Item(selectbox.ItemProps{Value: "WDH"}) { WDH }
+					}
+				}
+			}
+		</div>
+		<div>
+			@input.Input(input.Props{ID: "journal-created-on", Type: input.TypeDate, Class: "h-9 w-full border-emerald-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.createdAfter", "x-on:change": "onCreatedDateChange()"}})
+		</div>
+		<div>
+			@selectbox.SelectBox() {
+				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-reviewed", Name: "journal-reviewed", Class: "h-9 w-full border-amber-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.reviewed", "x-on:change": "applyFilters()"}}) {
+					@selectbox.Value(selectbox.ValueProps{Placeholder: "Reviewed"})
+				}
+				@selectbox.Content() {
+					@selectbox.Group() {
+						@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
+						@selectbox.Item(selectbox.ItemProps{Value: "true"}) { Reviewed }
+						@selectbox.Item(selectbox.ItemProps{Value: "false"}) { Not reviewed }
+					}
+				}
+			}
+		</div>
+		<div class="flex items-end">
+			@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Size: button.SizeSm, Class: "h-9 w-full border-rose-300/70 bg-rose-100/60 text-rose-800 hover:bg-rose-200/70", Attributes: templ.Attributes{"x-on:click": "clearFilters()"}}) { Clear }
+		</div>
 	</div>
 }
 
-templ JournalEmptyState() {
-	<div class="rounded-2xl border border-dashed border-border px-6 py-10 text-center text-sm text-muted-foreground" x-show="!loading && !hasError() && isEmpty()">
-		No journals found.
+templ JournalActiveFilters() {
+	<div class="flex flex-wrap items-center gap-2" x-show="filterTracker.hasFilters()">
+		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"class": "bg-sky-100 text-sky-800 border border-sky-200", "x-show": "filterTracker.ticker !== ''", "x-text": "'Ticker: ' + filterTracker.ticker"}}) {}
+		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"class": "bg-indigo-100 text-indigo-800 border border-indigo-200", "x-show": "filterTracker.type !== ''", "x-text": "'Type: ' + filterTracker.type"}}) {}
+		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"class": "bg-rose-100 text-rose-800 border border-rose-200", "x-show": "filterTracker.status !== ''", "x-text": "'Status: ' + filterTracker.status"}}) {}
+		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"class": "bg-violet-100 text-violet-800 border border-violet-200", "x-show": "filterTracker.sequence !== ''", "x-text": "'Sequence: ' + filterTracker.sequence"}}) {}
+		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"class": "bg-emerald-100 text-emerald-800 border border-emerald-200", "x-show": "filterTracker.createdAfter !== ''", "x-text": "'Created: ' + filterTracker.createdAfter"}}) {}
+		@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"class": "bg-amber-100 text-amber-800 border border-amber-200", "x-show": "filterTracker.reviewed !== ''", "x-text": "'Reviewed: ' + filterTracker.reviewed"}}) {}
 	</div>
 }
 
-	templ JournalTable() {
-	@card.Card(card.Props{Class: "rounded-none border-x-0 border-b-0", Attributes: templ.Attributes{"x-show": "!loading && !hasError() && !isEmpty()"}}) {
+// ============================================================
+// TABLE FLOW
+// ============================================================
+
+templ JournalTable() {
+	@card.Card(card.Props{Class: "rounded-none border-x-0 border-b-0 border-t border-t-sky-200/70 shadow-sm", Attributes: templ.Attributes{"x-show": "!loading && !hasError() && !isEmpty()"}}) {
 		@card.Content(card.ContentProps{Class: "overflow-x-auto p-0"}) {
 			@table.Table(table.Props{Class: "min-w-[860px]"}) {
-				@table.Header(table.HeaderProps{Class: "bg-muted/30 text-xs uppercase tracking-wide"}) {
+				@table.Header(table.HeaderProps{Class: "bg-gradient-to-r from-sky-100/70 via-indigo-100/60 to-emerald-100/70 text-xs uppercase tracking-wide text-slate-700"}) {
 					@table.Row() {
 						@table.Head() { ID }
 						@table.Head(table.HeadProps{Attributes: templ.Attributes{"x-bind:aria-sort": "filterTracker.sortBy === 'ticker' ? (filterTracker.sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'"}}) {
@@ -208,20 +183,24 @@ templ JournalEmptyState() {
 	}
 }
 
-templ JournalRow() {
+	templ JournalRow() {
 	@table.Row() {
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "journal.id"}}) {}
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "journal.ticker"}}) {}
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "journal.sequence"}}) {}
 		@table.Cell() {
-			@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"x-text": "journal.type"}}) {}
+			@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Attributes: templ.Attributes{"class": "bg-indigo-100 text-indigo-800 border border-indigo-200", "x-text": "journal.type"}}) {}
 		}
 		@table.Cell() {
-			@badge.Badge(badge.Props{Variant: badge.VariantOutline, Attributes: templ.Attributes{"x-text": "journal.status"}}) {}
+			@badge.Badge(badge.Props{Variant: badge.VariantOutline, Attributes: templ.Attributes{"class": "border-amber-300 text-amber-800 bg-amber-50", "x-text": "journal.status"}}) {}
 		}
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "formatTimestamp(journal.created_at)"}}) {}
 	}
 }
+
+// ============================================================
+// PAGINATION FLOW
+// ============================================================
 
 templ JournalPagination() {
 	@card.Footer(card.FooterProps{Class: "flex flex-col gap-3 border-t border-border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"}) {
@@ -237,4 +216,42 @@ templ JournalPagination() {
 			}
 		}
 	}
+}
+
+// ============================================================
+// STATE FLOW
+// ============================================================
+
+templ JournalStatusAlert() {
+	@alert.Alert(alert.Props{
+		Variant: alert.VariantDestructive,
+		Attributes: templ.Attributes{
+			"x-show": "hasError()",
+		},
+	}) {
+		@alert.Title(alert.TitleProps{Attributes: templ.Attributes{"x-text": "errorMessage"}}) {}
+		@alert.Description() {
+			@button.Button(button.Props{
+				Variant: button.VariantOutline,
+				Type:    button.TypeButton,
+				Attributes: templ.Attributes{
+					"x-on:click": "loadJournals()",
+				},
+			}) {
+				Retry
+			}
+		}
+	}
+}
+
+templ JournalLoadingState() {
+	<div class="rounded-2xl border border-dashed border-sky-300 bg-sky-50/70 px-6 py-10 text-center text-sm text-sky-700" x-show="loading && !hasError()">
+		Loading journals...
+	</div>
+}
+
+templ JournalEmptyState() {
+	<div class="rounded-2xl border border-dashed border-violet-300 bg-violet-50/70 px-6 py-10 text-center text-sm text-violet-700" x-show="!loading && !hasError() && isEmpty()">
+		No journals found.
+	</div>
 }
