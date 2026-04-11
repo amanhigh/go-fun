@@ -1,3 +1,4 @@
+//nolint:dupl
 package pages_test
 
 import (
@@ -39,5 +40,11 @@ var _ = Describe("Journal Page Tests", func() {
 		Expect(html).To(ContainSubstring("x-bind:class=\"statusBadgeClass(journal.status)\""))
 		Expect(html).To(ContainSubstring("x-bind:class=\"typeBadgeClass(journal.type)\""))
 		Expect(html).To(ContainSubstring("x-text=\"normalizeStatus(journal.status)\""))
+	})
+
+	It("links journal id to the detail page", func() {
+		Expect(html).To(ContainSubstring("x-bind:href=\"'/journal/' + journal.id\""))
+		Expect(html).To(ContainSubstring("x-text=\"journal.id\""))
+		Expect(html).To(ContainSubstring("x-text=\"journal.ticker\""))
 	})
 })

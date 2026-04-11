@@ -48,6 +48,8 @@ templ JournalPage() {
 	}
 }
 
+
+
 // ============================================================
 // FILTER FLOW
 // ============================================================
@@ -185,9 +187,11 @@ templ JournalTable() {
 	}
 }
 
-templ JournalRow() {
+	templ JournalRow() {
 	@table.Row() {
-		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "journal.id"}}) {}
+		@table.Cell() {
+			<a class="font-medium text-sky-700 hover:text-sky-900 hover:underline" x-bind:href="'/journal/' + journal.id" x-text="journal.id"></a>
+		}
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "journal.ticker"}}) {}
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "journal.sequence"}}) {}
 		@table.Cell() {

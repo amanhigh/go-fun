@@ -70,6 +70,15 @@ var _ = Describe("Barkat E2E Test", func() {
 			Expect(resp.String()).To(ContainSubstring("Journal"))
 			Expect(resp.String()).To(ContainSubstring("Kohan Portal"))
 		})
+
+		It("should render journal detail page", func() {
+			resp, err := client.R().Get("/journal/jrn_1234abcd")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+			Expect(resp.Header().Get("Content-Type")).To(ContainSubstring("text/html"))
+			Expect(resp.String()).To(ContainSubstring("Journal Detail"))
+			Expect(resp.String()).To(ContainSubstring("jrn_1234abcd"))
+		})
 	})
 
 	// Admin Endpoints - Tests server administration functionality

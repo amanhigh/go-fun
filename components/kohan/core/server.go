@@ -84,5 +84,6 @@ func (s *KohanServerLifecycle) registerPortalRoutes(engine *gin.Engine) {
 	utils.SetupScriptRoutes(mux, true)
 	engine.Any("/templui/*filepath", gin.WrapH(mux))
 	engine.GET("/", s.IndexPortal.HandleIndex)
-	engine.GET("/journal", s.JournalPortal.HandleJournal)
+	engine.GET("/journal", s.JournalPortal.ListJournals)
+	engine.GET("/journal/:id", s.JournalPortal.DisplayJournal)
 }
