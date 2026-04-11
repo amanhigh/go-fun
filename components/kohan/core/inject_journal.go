@@ -62,7 +62,6 @@ func ProvideKohanLifecycle(
 	noteHandler handler.NoteHandler,
 	tagHandler handler.TagHandler,
 	portalHandlers PortalHandlers,
-	barkatConfig config.BarkatConfig,
 ) util.ServerLifecycle {
 	return &KohanServerLifecycle{
 		OSHandler:      osHandler,
@@ -72,7 +71,6 @@ func ProvideKohanLifecycle(
 		TagHandler:     tagHandler,
 		IndexPortal:    portalHandlers.IndexPortal,
 		JournalPortal:  portalHandlers.JournalPortal,
-		ImagePath:      barkatConfig.ImagePath,
 	}
 }
 

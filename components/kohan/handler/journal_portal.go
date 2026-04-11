@@ -14,20 +14,28 @@ type JournalPortal interface {
 	ListJournals(ctx *gin.Context)
 	// DisplayJournal renders the dedicated journal detail page.
 	DisplayJournal(ctx *gin.Context)
+	// ImagePath returns the base path for journal images.
+	ImagePath() string
 }
 
 type JournalDetailPath struct {
 	JournalID string `uri:"id" binding:"required,journal_id"`
 }
 
-type JournalPortalImpl struct{}
+type JournalPortalImpl struct {
+	imagePath string
+}
 
 // NewJournalPortal creates a new JournalPortal.
-func NewJournalPortal() *JournalPortalImpl {
-	return &JournalPortalImpl{}
+func NewJournalPortal(imagePath string) *JournalPortalImpl {
+	return &JournalPortalImpl{imagePath: imagePath}
 }
 
 var _ JournalPortal = (*JournalPortalImpl)(nil)
+
+func (h *JournalPortalImpl) ImagePath() string {
+	return h.imagePath
+}
 
 func (h *JournalPortalImpl) ListJournals(ctx *gin.Context) {
 	ctx.Header("Content-Type", "text/html")

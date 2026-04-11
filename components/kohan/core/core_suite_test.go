@@ -71,12 +71,10 @@ var _ = BeforeSuite(func() {
 	noteHandler := handler.NewNoteHandler(manager.NewNoteManager(journalMgr, repository.NewNoteRepository(db)))
 	tagHandler := handler.NewTagHandler(manager.NewTagManager(journalMgr, repository.NewTagRepository(db)))
 	indexPortal := handler.NewIndexPortal()
-	journalPortal := handler.NewJournalPortal()
+	journalPortal := handler.NewJournalPortal("")
 
-	// Create mock OS handler for testing (safe - no real OS operations)
 	osHandler := configureMockOSHandler()
 
-	// Use provider function to create lifecycle (in sync with production)
 	lifecycle := core.ProvideKohanLifecycle(
 		osHandler,
 		journalHandler,
@@ -87,7 +85,6 @@ var _ = BeforeSuite(func() {
 			IndexPortal:   indexPortal,
 			JournalPortal: journalPortal,
 		},
-		config.BarkatConfig{},
 	)
 
 	shutdown := util.NewGracefulShutdown()

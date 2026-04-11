@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/amanhigh/go-fun/components/kohan/handler"
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/golobby/container/v3"
 )
 
@@ -9,8 +10,8 @@ func provideIndexPortalHandler() handler.IndexPortal {
 	return handler.NewIndexPortal()
 }
 
-func provideJournalPortalHandler() handler.JournalPortal {
-	return handler.NewJournalPortal()
+func provideJournalPortalHandler(cfg config.BarkatConfig) handler.JournalPortal {
+	return handler.NewJournalPortal(cfg.Images)
 }
 
 func providePortalHandlers(indexPortal handler.IndexPortal, journalPortal handler.JournalPortal) PortalHandlers {

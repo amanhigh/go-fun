@@ -39,6 +39,12 @@ func SetupTagRoutes(journal *gin.RouterGroup, tagHandler TagHandler) {
 	}
 }
 
+// SetupStaticRoutes configures all static file serving.
+func SetupStaticRoutes(engine *gin.Engine, assetsPath, imagePath string) {
+	engine.Static("/assets", assetsPath)
+	engine.Static("/journal-images", imagePath)
+}
+
 // SetupJournalRoutes configures basic journal routes
 func SetupJournalRoutes(journal *gin.RouterGroup, journalHandler JournalHandler) {
 	{
