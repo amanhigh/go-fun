@@ -2,9 +2,8 @@ package main
 
 import (
 	"net/http"
-	"path/filepath"
-	"runtime"
 
+	frontendassets "github.com/amanhigh/go-fun/components/learn/frameworks/frontend/assets"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/pages"
 	"github.com/gin-gonic/gin"
@@ -22,7 +21,7 @@ func CreateComponents() []components.Component {
 
 // SetupRoutes configures all routes on the given gin engine with provided components
 func SetupRoutes(r *gin.Engine, components []components.Component) {
-	r.Static("/assets", assetsDir())
+	r.StaticFS("/assets", http.FS(frontendassets.FS))
 
 	// Serve templui JavaScript files using embedded assets
 	mux := http.NewServeMux()
@@ -46,11 +45,6 @@ func SetupRoutes(r *gin.Engine, components []components.Component) {
 			comp.Render().Render(c.Request.Context(), c.Writer)
 		})
 	}
-}
-
-func assetsDir() string {
-	_, currentFile, _, _ := runtime.Caller(0)
-	return filepath.Join(filepath.Dir(currentFile), "..", "assets")
 }
 
 // UIServer holds the HTTP server configuration and components

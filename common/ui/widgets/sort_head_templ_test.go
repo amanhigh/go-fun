@@ -34,7 +34,9 @@ var _ = Describe("SortHead Template", func() {
 	})
 
 	It("renders table head with aria sort expression", func() {
-		Expect(html).To(ContainSubstring("x-bind:aria-sort=\"filterTracker.sortBy === &#39;ticker&#39; ? (filterTracker.sortOrder === &#39;asc&#39; ? &#39;ascending&#39; : &#39;descending&#39;) : &#39;none&#39;\""))
+		Expect(html).To(ContainSubstring("x-bind:aria-sort=\"filterTracker.sortBy === &#39;ticker&#39;"))
+		Expect(html).To(ContainSubstring("? (filterTracker.sortOrder === &#39;asc&#39; ? &#39;ascending&#39;"))
+		Expect(html).To(ContainSubstring(": &#39;descending&#39;) : &#39;none&#39;\""))
 	})
 
 	It("renders label, click action, and merged classes", func() {
