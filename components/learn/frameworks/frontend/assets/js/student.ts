@@ -5,6 +5,7 @@
 
 type Grade = '' | 'Freshman' | 'Sophomore' | 'Junior' | 'Senior';
 type StudentMutationAction = 'create' | 'update' | 'delete';
+type SortField = '' | 'name';
 
 // Student Response - student data from API
 interface StudentResponse {
@@ -153,11 +154,16 @@ function createDeleteTracker(): DeleteTracker {
 interface FilterTracker {
   name: string;
   grade: string;
+  sortBy: SortField;
+  sortOrder: 'asc' | 'desc';
   getName(): string;
   getGrade(): string;
+  getSortBy(): SortField;
+  getSortOrder(): 'asc' | 'desc';
   hasFilters(): boolean;
   setName(name: string): void;
   setGrade(grade: string): void;
+  setSort(sortBy: SortField, sortOrder: 'asc' | 'desc'): void;
   clear(): void;
 }
 
@@ -165,12 +171,25 @@ function createFilterTracker(): FilterTracker {
   return {
     name: '',
     grade: '' as Grade,
+    sortBy: '' as SortField,
+    sortOrder: 'asc' as 'asc' | 'desc',
     getName() { return this.name.trim(); },
     getGrade() { return this.grade; },
-    hasFilters() { return this.name !== '' || this.grade !== ''; },
+    getSortBy() { return this.sortBy; },
+    getSortOrder() { return this.sortOrder; },
+    hasFilters() { return this.name !== '' || this.grade !== '' || this.sortBy !== ''; },
     setName(name: string) { this.name = name.trim(); },
     setGrade(grade: string) { this.grade = grade; },
-    clear() { this.name = ''; this.grade = '' as Grade; },
+    setSort(sortBy: SortField, sortOrder: 'asc' | 'desc') {
+      this.sortBy = sortBy;
+      this.sortOrder = sortOrder;
+    },
+    clear() {
+      this.name = '';
+      this.grade = '' as Grade;
+      this.sortBy = '' as SortField;
+      this.sortOrder = 'asc';
+    },
   };
 }
 
@@ -318,6 +337,8 @@ function studentPage() {
         const grade = this.filterTracker.getGrade();
         if (name) params.set('name', name);
         if (grade) params.set('grade', grade);
+        if (this.filterTracker.getSortBy()) params.set('sortBy', this.filterTracker.getSortBy());
+        if (this.filterTracker.getSortBy()) params.set('sortOrder', this.filterTracker.getSortOrder());
 
         const response = await fetch(`/api/students?${params.toString()}`);
         if (!response.ok) throw new Error('Failed to fetch students');
@@ -340,7 +361,49 @@ function studentPage() {
     },
 
     async initData() {
+      // BUG: Grade Filter is not properly setup.
+      this.urlToFilter();
       await Promise.all([this.listStudents(), this.loadGradeOptions()]);
+    },
+
+    // ─────────────────────────────────────────────────────────────
+    // Methods - URL Sync (for bookmarkable filters)
+    // ─────────────────────────────────────────────────────────────
+    urlToFilter() {
+      const params = new URLSearchParams(window.location.search);
+      const urlName = params.get('name') || '';
+      const urlGrade = params.get('grade') || '';
+      const urlSortBy = params.get('sortBy') || '';
+      const urlSortOrder = params.get('sortOrder') || '';
+      
+      if (urlName) {
+        this.filterTracker.setName(urlName);
+      }
+      if (urlGrade) {
+        this.filterTracker.setGrade(urlGrade);
+      }
+      if (urlSortBy === 'name') {
+        this.filterTracker.setSort('name', this.filterTracker.getSortOrder());
+      }
+      if (urlSortOrder === 'asc' || urlSortOrder === 'desc') {
+        this.filterTracker.setSort(this.filterTracker.getSortBy(), urlSortOrder);
+      }
+    },
+    filterToUrl() {
+      const params = new URLSearchParams();
+      const name = this.filterTracker.getName();
+      const grade = this.filterTracker.getGrade();
+      
+      if (name) params.set('name', name);
+      if (grade) params.set('grade', grade);
+      if (this.filterTracker.getSortBy()) params.set('sortBy', this.filterTracker.getSortBy());
+      if (this.filterTracker.getSortBy()) params.set('sortOrder', this.filterTracker.getSortOrder());
+      
+      const newURL = params.toString() 
+        ? `${window.location.pathname}?${params.toString()}`
+        : window.location.pathname;
+      
+      window.history.replaceState({}, '', newURL);
     },
 
     // ─────────────────────────────────────────────────────────────
@@ -348,11 +411,26 @@ function studentPage() {
     // ─────────────────────────────────────────────────────────────
     applyFilters() {
       this.pagination.resetPage();
+      this.filterToUrl();
       void this.listStudents();
     },
     clearFilters() {
       this.filterTracker.clear();
+      this.filterToUrl();
       this.applyFilters();
+    },
+    toggleSort(field: SortField) {
+      if (this.filterTracker.getSortBy() !== field) {
+        this.filterTracker.setSort(field, 'asc');
+        this.pagination.resetPage();
+        this.filterToUrl();
+        void this.listStudents();
+        return;
+      }
+      this.filterTracker.setSort(field, this.filterTracker.getSortOrder() === 'asc' ? 'desc' : 'asc');
+      this.pagination.resetPage();
+      this.filterToUrl();
+      void this.listStudents();
     },
 
     // ─────────────────────────────────────────────────────────────

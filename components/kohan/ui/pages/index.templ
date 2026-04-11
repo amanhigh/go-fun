@@ -1,0 +1,25 @@
+package pages
+
+import "github.com/amanhigh/go-fun/common/ui/layout"
+
+templ IndexPage() {
+	@layout.Base("Shadow Gate") {
+		@layout.Page(layout.PageProps{
+			CurrentPage: "Shadow Gate",
+			Eyebrow:     "Kohan Portal",
+			Heading:     "Shadow Gate",
+			Description: "Welcome to the Kohan portal.",
+			Tags:        []string{"Portal", "Journal"},
+		}) {
+			@layout.Card(
+				"Start",
+				"Journal",
+				"Begin with the Journal page. This page is intentionally minimal for now.",
+			) {
+				<a class="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted" href="/journal">
+					Open Journal
+				</a>
+			}
+		}
+	}
+}

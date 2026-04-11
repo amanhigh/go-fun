@@ -3,6 +3,7 @@ module github.com/amanhigh/go-fun/components/kohan
 go 1.26.0
 
 require (
+	github.com/a-h/templ v0.3.1001
 	github.com/amanhigh/go-fun/common v1.0.1
 	github.com/amanhigh/go-fun/models v1.0.0
 	github.com/bitfield/script v0.22.0
@@ -23,12 +24,14 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
+	github.com/templui/templui v1.9.1
 	github.com/xuri/excelize/v2 v2.9.1
 	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
 )
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
+	github.com/Oudwins/tailwind-merge-go v0.2.0 // indirect
 	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect
@@ -78,7 +81,6 @@ require (
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.4 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect

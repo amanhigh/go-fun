@@ -58,6 +58,9 @@ func (r *JournalRepositoryImpl) ListJournals(ctx context.Context, query barkat.J
 }
 
 func (r *JournalRepositoryImpl) applyJournalFilters(tx *gorm.DB, query barkat.JournalQuery) *gorm.DB {
+	if query.Search != "" {
+		tx = tx.Where("LOWER(ticker) LIKE LOWER(?)", "%"+query.Search+"%")
+	}
 	if query.Ticker != "" {
 		tx = tx.Where("ticker = ?", query.Ticker)
 	}

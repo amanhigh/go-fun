@@ -1,0 +1,23 @@
+set shell := ["bash", "-cu"]
+
+# Import shared library
+import '../../lib.just'
+
+binary := "/tmp/kohan-server"
+port := "9091"
+kohan_dir := justfile_directory()
+
+default:
+    just --list
+
+# Build Kohan binary.
+[group('build')]
+build: templ css format js
+    go build -o {{binary}} {{kohan_dir}}
+    just _title "Build" "Kohan Ready"
+
+# Run Kohan server with Air hot reload.
+[group('run')]
+air:
+    mkdir -p /tmp/pics
+    BARKAT_DB_PATH="$HOME/Downloads/barkat.db" KOHAN_BINARY="{{binary}} auto serve /tmp/pics -p {{port}}" just _air_run {{kohan_dir}} {{port}}

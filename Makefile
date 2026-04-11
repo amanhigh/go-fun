@@ -22,17 +22,9 @@ GINKGO := $(GOBIN)/ginkgo
 SWAG := $(GOBIN)/swag
 MOCKERY := $(GOBIN)/mockery
 TEMPL := $(GOBIN)/templ
-TAILWINDCSS := tailwindcss
 AIR := github.com/air-verse/air@latest
-ESBUILD := esbuild
 
 FRONTEND_DIR := components/learn/frameworks/frontend
-FRONTEND_DEMO_DIR := $(FRONTEND_DIR)/demo
-FRONTEND_DEMO_URL := http://localhost:9090
-FRONTEND_CSS_INPUT := ./assets/css/input.css
-FRONTEND_CSS_OUTPUT := ./assets/css/app.css
-FRONTEND_JS_ENTRY := assets/js/input.ts
-FRONTEND_JS_OUTPUT := assets/js/app.js
 
 ### Variables
 BUILD_OPTS := CGO_ENABLED=0 GOARCH=amd64
@@ -98,12 +90,6 @@ test-slow: ## Run slow tests
 	mkdir -p $(SLOW_COVER_DIR)
 	# Generate binary coverage for accurate conversion  
 	$(GINKGO) -r '--label-filter=slow' -cover . -- -test.gocoverdir=$(SLOW_COVER_DIR) > $(OUT)
-
-ui: ## Run UI Demo Server with hot reload
-	printf $(_TITLE) "Starting UI Demo Server"
-	printf $(_INFO) "Server" "$(FRONTEND_DEMO_URL)"
-	printf $(_DETAIL) "Note" "Auto-reloads on .go and .templ changes (manual browser refresh)"
-	cd $(FRONTEND_DEMO_DIR) && go run $(AIR) -c .air.toml
 
 cover-analyse: combine-coverage
 	printf $(_TITLE) "Analysing Coverage Reports"
@@ -480,39 +466,7 @@ generate-mocks:
 # Generate Templ components to Go code
 generate-templ:
 	printf $(_TITLE) "Generate" "Templ Components"
-	$(TEMPL) generate -path components/learn
-	$(MAKE) format
-
-generate-css-sources:
-	@printf $(_TITLE) "Generate" "CSS Sources"
-	@cd $(FRONTEND_DIR) && \
-	TEMPLUI_PATH="$$(go list -m -f '{{.Dir}}' github.com/templui/templui)" && \
-	( \
-		find . -name "*.templ" -type f | sed 's|^\./||' | while read -r file; do \
-			dir=$$(dirname "$$file"); \
-			echo "@source \"./$$dir/**/*.templ\";"; \
-		done | sort -u; \
-		echo "@source \"$$TEMPLUI_PATH/components/**/*.templ\";"; \
-	) > ./assets/css/sources.generated.css
-
-generate-css: generate-css-sources
-	@printf $(_TITLE) "Generate" "CSS"
-	@cd $(FRONTEND_DIR) && $(TAILWINDCSS) build --input $(FRONTEND_CSS_INPUT) --output $(FRONTEND_CSS_OUTPUT)
-
-check-ts:
-	@printf $(_TITLE) "Check" "TypeScript"
-	@cd $(FRONTEND_DIR)/assets/js && tsc --noEmit --strict --skipLibCheck --lib ES2021,DOM --target ES2020 --module ESNext --moduleResolution bundler *.ts 2>&1 || true
-
-generate-js: check-ts
-	@printf $(_TITLE) "Generate" "JavaScript"
-	@cd $(FRONTEND_DIR) && $(ESBUILD) $(FRONTEND_JS_ENTRY) --bundle --outfile=$(FRONTEND_JS_OUTPUT) --format=iife --target=es2020 || printf $(_WARN) "JS" "esbuild failed, skipping JS bundling"
-
-generate-ui: generate-css generate-js
-
-
-build-air: generate-templ generate-ui
-	@printf $(_TITLE) "Build" "Frontend Demo"
-	@cd $(FRONTEND_DEMO_DIR) && go build -o /tmp/ui-demo/main .
+	just template
 
 generate: generate-mocks generate-swagger generate-templ ## Generate Files (skip UI for CI)
 

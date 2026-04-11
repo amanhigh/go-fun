@@ -6,8 +6,8 @@ package pages
 // All state, API calls, and computed properties live in assets/js/student.ts.
 
 import (
-	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
+	widgets "github.com/amanhigh/go-fun/common/ui/widgets"
+	"github.com/amanhigh/go-fun/common/ui/layout"
 	"github.com/templui/templui/components/alert"
 	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/button"
@@ -239,7 +239,7 @@ templ StudentTable() {
 				@table.Header(table.HeaderProps{Class: "bg-muted/30 text-xs uppercase tracking-wide"}) {
 					@table.Row() {
 						@table.Head() { ID }
-						@table.Head() { Name }
+						@widgets.SortHead(widgets.SortHeadProps{Label: "Name", Field: "name", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('name')"})
 						@table.Head() { Email }
 						@table.Head() { Grade }
 						@table.Head(table.HeadProps{Class: "text-right"}) { Actions }
@@ -275,8 +275,8 @@ templ StudentRow() {
 // StudentRowButtons: edit, delete, and undo action buttons for each row.
 templ StudentRowButtons() {
 	<div class="flex justify-end gap-2">
-		@components.Spinner(components.SpinnerProps{
-			Size: components.SpinnerSizeSm,
+			@widgets.Spinner(widgets.SpinnerProps{
+				Size: widgets.SpinnerSizeSm,
 			Class: "w-14",
 			Attrs: templ.Attributes{"x-show": "deleteTracker.isDeletingId(student.id)"},
 		})
@@ -385,7 +385,7 @@ templ StudentDialog() {
 				@dialog.Description() { Fill all required details before saving. }
 			}
 			<div x-show="isLoadingEdit()" class="flex items-center justify-center py-12">
-				@components.Spinner()
+				@widgets.Spinner()
 			</div>
 			<div x-show="!isLoadingEdit()">
 				@StudentFormModel()
@@ -465,7 +465,7 @@ templ StudentFormFooter() {
 			Cancel
 		}
 		<div x-show="isSaving()" class="flex items-center justify-center w-20 h-9">
-			@components.Spinner(components.SpinnerProps{Size: components.SpinnerSizeSm})
+			@widgets.Spinner(widgets.SpinnerProps{Size: widgets.SpinnerSizeSm})
 		</div>
 		@button.Button(button.Props{Type: button.TypeSubmit, Attributes: templ.Attributes{"x-show": "!isSaving()", "x-text": "isEditing() ? 'Update' : 'Create'"}}) {
 			Save
@@ -523,7 +523,7 @@ templ StudentFeedbackComponents() {
 // x-show: displays spinner when page has not loaded yet (initial load).
 templ StudentInitializingState() {
 	<div x-show="isReady()" class="flex items-center justify-center p-12">
-		@components.Spinner()
+			@widgets.Spinner()
 	</div>
 }
 
@@ -531,7 +531,7 @@ templ StudentInitializingState() {
 // x-show: displays spinner when loading AFTER initial load.
 templ StudentLoadingState() {
 	<div x-show="isInitialized() && isLoading()" class="flex items-center justify-center p-12">
-		@components.Spinner()
+			@widgets.Spinner()
 	</div>
 }
 
@@ -604,7 +604,7 @@ templ StudentEmptyState() {
 // =============================================================================
 
 // StudentToasts provides hidden templUI toast templates cloned by showToast() in student.ts.
-// FIXME: Add URL for Student Page auto set filter.
+// URL filters are synced via Alpine.js in student.ts - see urlToFilter() and filterToUrl()
 templ StudentToasts() {
 	<template id="student-success-toast-template">
 		@toast.Toast(toast.Props{

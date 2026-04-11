@@ -62,7 +62,7 @@ func (h *StudentHandler) listStudents(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return
 	}
-	response := h.studentService.ListStudents(query.Offset, query.Limit, query.SearchQuery, query.Grade)
+	response := h.studentService.ListStudents(query.Offset, query.Limit, query.SearchQuery, query.Grade, query.SortBy, query.SortOrder)
 	c.JSON(http.StatusOK, response)
 }
 

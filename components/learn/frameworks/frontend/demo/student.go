@@ -11,7 +11,7 @@ import (
 
 // StudentService interface for student operations
 type StudentService interface {
-	ListStudents(offset, limit int, searchQuery, grade string) StudentListResponse
+	ListStudents(offset, limit int, searchQuery, grade, sortBy, sortOrder string) StudentListResponse
 	GetStudentByID(id string) *Student
 	CreateStudent(student Student) *Student
 	UpdateStudent(id string, student Student) *Student
@@ -63,11 +63,11 @@ func sampleStudents() []Student {
 	}
 }
 
-func (s *InMemoryStudentService) ListStudents(offset, limit int, searchQuery, grade string) StudentListResponse {
+func (s *InMemoryStudentService) ListStudents(offset, limit int, searchQuery, grade, sortBy, sortOrder string) StudentListResponse {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	students := s.filteredStudents(searchQuery, grade)
+	students := s.filteredStudents(searchQuery, grade, sortBy, sortOrder)
 	total := len(students)
 	if limit <= 0 {
 		limit = total
@@ -85,8 +85,8 @@ func (s *InMemoryStudentService) ListStudents(offset, limit int, searchQuery, gr
 	return buildStudentListResponse(pageStudents, total, offset, limit)
 }
 
-func (s *InMemoryStudentService) filteredStudents(searchQuery, grade string) []Student {
-	students := s.sortedStudents()
+func (s *InMemoryStudentService) filteredStudents(searchQuery, grade, sortBy, sortOrder string) []Student {
+	students := s.sortedStudents(sortBy, sortOrder)
 	query := strings.ToLower(strings.TrimSpace(searchQuery))
 	grade = strings.TrimSpace(grade)
 	if query == "" && grade == "" {
@@ -114,10 +114,25 @@ func matchesStudentFilters(student Student, query, grade string) bool {
 	return strings.Contains(name, query)
 }
 
-func (s *InMemoryStudentService) sortedStudents() []Student {
+func (s *InMemoryStudentService) sortedStudents(sortBy, sortOrder string) []Student {
 	students := make([]Student, 0, len(s.students))
 	for _, student := range s.students {
 		students = append(students, student)
+	}
+	sortBy = strings.TrimSpace(sortBy)
+	sortOrder = strings.ToLower(strings.TrimSpace(sortOrder))
+	isAsc := sortOrder == "" || sortOrder == "asc"
+	if sortBy == "name" {
+		sort.Slice(students, func(i, j int) bool {
+			left := strings.TrimSpace(students[i].FirstName + " " + students[i].LastName)
+			right := strings.TrimSpace(students[j].FirstName + " " + students[j].LastName)
+			compared := strings.Compare(left, right)
+			if isAsc {
+				return compared < 0
+			}
+			return compared > 0
+		})
+		return students
 	}
 	sort.Slice(students, func(i, j int) bool {
 		left, leftErr := strconv.Atoi(students[i].ID)

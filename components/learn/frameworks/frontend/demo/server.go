@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 
+	frontendassets "github.com/amanhigh/go-fun/components/learn/frameworks/frontend/assets"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/pages"
 	"github.com/gin-gonic/gin"
@@ -20,9 +21,7 @@ func CreateComponents() []components.Component {
 
 // SetupRoutes configures all routes on the given gin engine with provided components
 func SetupRoutes(r *gin.Engine, components []components.Component) {
-	// Serve static files (JS, CSS, images) from the frontend assets directory.
-	// Air runs the binary with CWD = demo/, so ../assets is the correct relative path.
-	r.Static("/assets", "../assets")
+	r.StaticFS("/assets", http.FS(frontendassets.FS))
 
 	// Serve templui JavaScript files using embedded assets
 	mux := http.NewServeMux()
@@ -56,11 +55,9 @@ type UIServer struct {
 
 // NewUIServer creates a new UI server instance
 func NewUIServer(port string) *UIServer {
-	components := CreateComponents()
-
 	return &UIServer{
 		port:       port,
-		components: components,
+		components: CreateComponents(),
 	}
 }
 
@@ -80,6 +77,3 @@ func (s *UIServer) SetupRoutes(r *gin.Engine) {
 func (s *UIServer) Components() []components.Component {
 	return s.components
 }
-
-// Ensure UIServer is not used directly
-var _ = http.StatusOK

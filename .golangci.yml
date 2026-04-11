@@ -130,27 +130,28 @@ linters:
       - legacy
       - std-error-handling
     rules:
-       - linters:
-           - bodyclose
-           - noctx
-           - wrapcheck
-         path: _test\.go
-       - linters:
-           - revive
-         path: _test\.go
-         text: '^dot-imports:'
-       - linters:
-           - bodyclose
-         path: common/clients/http_client.go
-       - linters:
-           - errcheck
-           - govet
-           - mnd
-           - wrapcheck
-         path: components/learn/
-       - linters:
-           - cyclop
-         path: ".*_templ.go"
+      - linters:
+          - bodyclose
+          - noctx
+          - wrapcheck
+        path: _test\.go
+      - linters:
+          - revive
+        path: _test\.go
+        text: '^dot-imports:'
+      - linters:
+          - bodyclose
+        path: common/clients/http_client.go
+      - linters:
+          - errcheck
+          - govet
+          - mnd
+          - wrapcheck
+        path: components/learn/
+      - linters:
+          - cyclop
+          - dupl
+        path: '.*(_templ|_templ_test)\.go'
     paths:
 issues:
   max-issues-per-linter: 15

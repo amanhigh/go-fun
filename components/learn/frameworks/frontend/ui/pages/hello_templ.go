@@ -8,8 +8,8 @@ package pages
 import (
 	"github.com/a-h/templ"
 	templruntime "github.com/a-h/templ/runtime"
+	"github.com/amanhigh/go-fun/common/ui/layout"
 	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/components"
-	"github.com/amanhigh/go-fun/components/learn/frameworks/frontend/ui/layout"
 	"github.com/templui/templui/components/form"
 	"github.com/templui/templui/components/selectbox"
 )

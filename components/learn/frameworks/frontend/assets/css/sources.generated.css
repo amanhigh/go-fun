@@ -1,4 +1,4 @@
 @source "./ui/components/**/*.templ";
-@source "./ui/layout/**/*.templ";
 @source "./ui/pages/**/*.templ";
+@source "/home/aman/Projects/go-fun/common/ui/**/*.templ";
 @source "/home/aman/go/pkg/mod/github.com/templui/templui@v1.9.1/components/**/*.templ";

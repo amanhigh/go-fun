@@ -56,6 +56,7 @@ type JournalPath struct {
 // JournalQuery holds query parameters for listing/filtering journals.
 type JournalQuery struct {
 	common.Pagination
+	Search        string `form:"search" binding:"omitempty,min=1,max=10,alphanum"`
 	Ticker        string `form:"ticker" binding:"omitempty,min=1,max=10,ticker"`
 	Type          string `form:"type" binding:"omitempty,oneof=REJECTED RESULT SET"`
 	Status        string `form:"status" binding:"omitempty,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`

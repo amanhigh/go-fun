@@ -42,7 +42,7 @@ func Base(title string) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frameworks/frontend/ui/layout/base.templ`, Line: 16, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout/base.templ`, Line: 16, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -68,7 +68,20 @@ func Base(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</head><body class=\"h-full bg-background text-foreground\"><div class=\"min-h-screen flex flex-col\"><!-- Header --><header class=\"border-b border-border bg-card\"><div class=\"container mx-auto px-4 py-4\"><nav class=\"flex items-center justify-between\"><h1 class=\"text-xl font-semibold text-foreground\">UI Framework</h1><div class=\"flex gap-4\"><a href=\"/\" class=\"text-sm text-muted-foreground hover:text-foreground transition-colors\">Home</a> <a href=\"/form\" class=\"text-sm text-muted-foreground hover:text-foreground transition-colors\">Forms</a> <a href=\"/hello\" class=\"text-sm text-muted-foreground hover:text-foreground transition-colors\">Hello</a></div></nav></div></header><!-- Main Content --><main class=\"flex-1 container mx-auto px-4 py-8\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</head><body class=\"h-full bg-background text-foreground\"><div class=\"min-h-screen flex flex-col\"><!-- Header --><header class=\"border-b border-border bg-card\"><div class=\"container mx-auto px-4 py-4\"><h1 class=\"text-xl font-semibold text-foreground\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var3 string
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(title)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `layout/base.templ`, Line: 33, Col: 63}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</h1></div></header><!-- Main Content --><main class=\"flex-1 container mx-auto px-4 py-8\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -76,7 +89,7 @@ func Base(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</main><!-- Footer --><footer class=\"border-t border-border bg-card mt-auto\"><div class=\"container mx-auto px-4 py-4\"><p class=\"text-sm text-muted-foreground text-center\">Built with TemplUI & Tailwind CSS, powered by AlpineJS</p></div></footer></div></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</main><!-- Footer --><footer class=\"border-t border-border bg-card mt-auto\"><div class=\"container mx-auto px-4 py-4\"><p class=\"text-sm text-muted-foreground text-center\">Built with TemplUI & Tailwind CSS, powered by AlpineJS</p></div></footer></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

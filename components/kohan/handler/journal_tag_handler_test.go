@@ -70,7 +70,7 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 		tagHandler = handler.NewTagHandler(tagMgr)
 
 		router = util.CreateTestGinRouter()
-		v1 := router.Group("/v1")
+		v1 := router.Group("/v1/api")
 		journalGroup := v1.Group("/journals")
 		handler.SetupTagRoutes(journalGroup, tagHandler)
 
