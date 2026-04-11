@@ -23,6 +23,7 @@ export type JournalTag = {
 	id: string;
 	tag: string;
 	type?: string;
+	override?: string;
 	created_at?: string;
 };
 

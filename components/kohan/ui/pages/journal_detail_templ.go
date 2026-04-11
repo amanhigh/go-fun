@@ -355,7 +355,7 @@ func JournalDetailHeader() templ.Component {
 			Variant: badge.VariantSecondary,
 			Class:   "border",
 			Attributes: templ.Attributes{
-				"x-text": "tag.tag + (tag.type ? ' • ' + tag.type : '')",
+				"x-text": "tag.tag + (tag.override ? ' - ' + tag.override : '') + (tag.type ? ' • ' + tag.type : '')",
 			},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -390,7 +390,7 @@ func JournalDetailImages() templ.Component {
 			templ_7745c5c3_Var11 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"relative left-1/2 w-[min(100vw-2rem,1500px)] -translate-x-1/2 rounded-3xl border border-border bg-card shadow-sm p-4 sm:p-6\" x-show=\"journal.images && journal.images.length > 0\"><div class=\"mb-5\"><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Images</h3><p class=\"text-sm text-muted-foreground\" x-text=\"journal.images.length + ' timeframe images · click any image to zoom'\"></p></div><div class=\"grid grid-cols-1 gap-5 lg:grid-cols-2\"><template x-for=\"(image, index) in sortedImages()\" x-bind:key=\"image.id\"><div class=\"space-y-2\"><div class=\"flex items-center justify-between gap-2 px-1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"relative left-1/2 w-[min(100vw-2rem,1500px)] -translate-x-1/2 rounded-3xl border border-border bg-card shadow-sm p-4 sm:p-6\" x-show=\"journal.images && journal.images.length > 0\"><div class=\"mb-5\"><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Images</h3><p class=\"text-sm text-muted-foreground\" x-text=\"journal.images.length + ' timeframe images · click any image to zoom'\"></p></div><div class=\"grid grid-cols-1 gap-5 lg:grid-cols-2\"><template x-for=\"(image, index) in sortedImages()\" x-bind:key=\"image.id\"><div class=\"space-y-2\"><div class=\"flex items-center px-1\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -398,7 +398,7 @@ func JournalDetailImages() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div class=\"truncate text-xs text-muted-foreground\" x-text=\"image.file_name\"></div></div><div class=\"group relative overflow-hidden rounded-2xl border border-border bg-muted\" x-bind:class=\"index < 2 ? 'aspect-[16/9]' : 'aspect-[15/10]'\"><button class=\"h-full w-full text-left\" type=\"button\" x-on:click=\"openImagePreview(index)\"><img class=\"h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]\" x-bind:src=\"resolveImageSrc(image.file_name, image.created_at)\" x-bind:alt=\"image.timeframe + ' image'\" x-on:error=\"$el.style.opacity='0.35'\" loading=\"lazy\"></button></div></div></template></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</div><div class=\"group relative overflow-hidden rounded-2xl border border-border bg-muted\" x-bind:class=\"index < 2 ? 'aspect-[16/9]' : 'aspect-[15/10]'\"><button class=\"h-full w-full text-left\" type=\"button\" x-on:click=\"openImagePreview(index)\" x-bind:title=\"image.file_name\"><img class=\"h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]\" x-bind:src=\"resolveImageSrc(image.file_name, image.created_at)\" x-bind:alt=\"image.timeframe + ' image'\" x-bind:title=\"image.file_name\" x-on:error=\"$el.style.opacity='0.35'\" loading=\"lazy\"></button></div></div></template></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -427,7 +427,7 @@ func JournalImagePreviewModal() templ.Component {
 			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"fixed inset-0 z-50 flex flex-col bg-black/90 p-4\" x-show=\"hasImagePreview()\" x-on:keydown.escape.window=\"closeImagePreview()\" x-on:keydown.arrow-left.window=\"prevImage()\" x-on:keydown.arrow-right.window=\"nextImage()\" x-cloak><div class=\"absolute inset-0\" x-on:click=\"closeImagePreview()\"></div><div class=\"relative z-10 flex w-full items-center justify-between gap-4\"><button class=\"rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30\" type=\"button\" x-bind:disabled=\"!canPrevImage()\" x-on:click=\"prevImage()\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m15 18-6-6 6-6\"></path></svg></button><div class=\"flex flex-col items-center gap-2\"><div class=\"rounded-lg border-2 px-5 py-2 text-2xl font-black tracking-widest\" x-bind:class=\"timeframeChipClass(previewImageTimeframe())\" x-text=\"previewImageTimeframe()\"></div><div class=\"text-sm font-medium text-white/60\" x-text=\"(selectedImageIndex + 1) + ' / ' + sortedImages().length\"></div></div><button class=\"rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30\" type=\"button\" x-bind:disabled=\"!canNextImage()\" x-on:click=\"nextImage()\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 18 6-6-6-6\"></path></svg></button> <button class=\"ml-2 rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20\" type=\"button\" x-on:click=\"closeImagePreview()\">ESC</button></div><div class=\"mt-4 flex flex-1 items-center justify-center\"><img class=\"max-h-[82vh] w-full cursor-pointer rounded-xl border border-white/20 object-contain\" x-bind:src=\"previewImageSrc()\" x-bind:alt=\"previewImageLabel()\" x-on:click.stop=\"nextImage(true)\" x-on:contextmenu.prevent.stop=\"prevImage(true)\"></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"fixed inset-0 z-50 flex flex-col bg-black/90 p-4\" x-show=\"hasImagePreview()\" x-on:keydown.escape.window=\"closeImagePreview()\" x-on:keydown.arrow-left.window=\"prevImage()\" x-on:keydown.arrow-right.window=\"nextImage()\" x-cloak><div class=\"absolute inset-0\" x-on:click=\"closeImagePreview()\"></div><div class=\"relative z-10 flex w-full items-center justify-between gap-4\"><button class=\"rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30\" type=\"button\" x-bind:disabled=\"!canPrevImage()\" x-on:click=\"prevImage()\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m15 18-6-6 6-6\"></path></svg></button><div class=\"flex flex-col items-center gap-2\"><div class=\"rounded-lg border-2 px-5 py-2 text-2xl font-black tracking-widest\" x-bind:class=\"timeframeChipClass(previewImageTimeframe())\" x-text=\"previewImageTimeframe()\"></div><div class=\"text-sm font-medium text-white/60\" x-text=\"(selectedImageIndex + 1) + ' / ' + sortedImages().length\"></div></div><button class=\"rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30\" type=\"button\" x-bind:disabled=\"!canNextImage()\" x-on:click=\"nextImage()\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 18 6-6-6-6\"></path></svg></button> <button class=\"ml-2 rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20\" type=\"button\" x-on:click=\"closeImagePreview()\">ESC</button></div><div class=\"mt-4 flex flex-1 items-center justify-center\"><div class=\"relative w-full\"><img class=\"max-h-[82vh] w-full rounded-xl border border-white/20 object-contain\" x-bind:src=\"previewImageSrc()\" x-bind:alt=\"previewImageLabel()\"> <button class=\"absolute inset-0 cursor-pointer rounded-xl\" type=\"button\" aria-label=\"Next image on click, previous on right-click\" x-on:click.stop=\"nextImage(true)\" x-on:contextmenu.prevent.stop=\"prevImage(true)\"></button></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -456,21 +456,22 @@ func JournalDetailNotes() templ.Component {
 			templ_7745c5c3_Var13 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"rounded-3xl border border-border bg-card shadow-sm p-6\" x-show=\"journal.notes && journal.notes.length > 0\"><div class=\"mb-4\"><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Notes</h3></div><div class=\"space-y-3\"><template x-for=\"note in journal.notes\" x-bind:key=\"note.id\"><div class=\"rounded-xl border border-border bg-muted/50 p-4\"><div class=\"mb-2 flex items-center justify-between\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"rounded-3xl border border-border bg-card shadow-sm p-6\"><div class=\"mb-4\"><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Notes</h3><p class=\"text-sm text-muted-foreground\" x-text=\"(journal.notes ? journal.notes.length : 0) + ' note(s)'\"></p></div><div class=\"space-y-3\" x-show=\"journal.notes && journal.notes.length > 0\"><template x-for=\"note in journal.notes\" x-bind:key=\"note.id\"><div class=\"rounded-xl border border-border bg-muted/40 p-4\"><div class=\"mb-3 flex items-center justify-between gap-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = badge.Badge(badge.Props{
 			Variant: badge.VariantSecondary,
-			Class:   "border",
+			Class:   "border font-semibold",
 			Attributes: templ.Attributes{
-				"x-text": "note.status",
+				"x-bind:class": "statusBadgeClass(note.status)",
+				"x-text":       "note.status",
 			},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<span class=\"text-xs text-muted-foreground\" x-text=\"formatTimestamp(note.created_at)\"></span></div><div class=\"prose prose-sm max-w-none\"><pre class=\"whitespace-pre-wrap text-sm text-foreground\" x-text=\"note.content\"></pre></div></div></template></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div class=\"inline-flex items-center gap-2 rounded-md border border-sky-300/70 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-900\"><span class=\"uppercase tracking-wide text-sky-700/80\">Created</span> <span x-text=\"formatTimestamp(note.created_at)\"></span></div></div><div class=\"prose prose-sm max-w-none\"><pre class=\"whitespace-pre-wrap text-sm text-foreground\" x-text=\"note.content\"></pre></div></div></template></div><div class=\"rounded-xl border border-dashed border-muted-foreground/35 bg-muted/20 px-4 py-6 text-sm text-muted-foreground\" x-show=\"!journal.notes || journal.notes.length === 0\">No notes available for this journal.</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
