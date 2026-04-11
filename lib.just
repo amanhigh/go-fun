@@ -7,6 +7,8 @@ esbuild := "esbuild"
 templ := "go run github.com/a-h/templ/cmd/templ@latest"
 goimports := "go run golang.org/x/tools/cmd/goimports@latest"
 root := `git rev-parse --show-toplevel`
+golangci_lint := "go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.2"
+mockery := "go run github.com/vektra/mockery/v3@v3.5.5"
 
 # Print helpers (private)
 _info task info:
@@ -29,7 +31,7 @@ format dir=".":
 
 # Generate templ files in specified directory (recursive).
 [group('go')]
-templ dir=".":
+_templ dir=".":
     just _info "Templ" "Generating templ files"
     cd {{dir}} && {{templ}} generate
 
@@ -57,14 +59,14 @@ _air_run dir port="8080":
 
 # Generate Tailwind CSS bundle.
 [group('css')]
-css dir=".":
+_css dir=".":
     just _css_sources {{dir}}
     just _info "CSS" "Generating Tailwind bundle"
     cd {{dir}} && {{tailwind}} build --input ./assets/css/input.css --output ./assets/css/app.css
 
 # Type-check TypeScript sources.
 [group('js')]
-tsc dir=".":
+_tsc dir=".":
     #!/usr/bin/env bash
     if command -v {{tsc}} >/dev/null 2>&1; then
         just _info "JS" "Type-checking TypeScript"
@@ -76,7 +78,7 @@ tsc dir=".":
 
 # Bundle TypeScript into JavaScript.
 [group('js')]
-js dir=".":
-    just tsc {{dir}}
+_js dir=".":
+    just _tsc {{dir}}
     just _info "JS" "Bundling with esbuild"
     cd {{dir}} && {{esbuild}} assets/js/input.ts --bundle --outfile=assets/js/app.js --format=iife --target=es2020

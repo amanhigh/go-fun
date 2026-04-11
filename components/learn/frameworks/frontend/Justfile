@@ -12,7 +12,7 @@ default:
 
 # Build Frontend Demo binary.
 [group('build')]
-build: templ css format js
+build: _templ _css format _js
     go build -o {{binary}} {{frontend_dir}}/demo
     just _title "Build" "Frontend Demo Ready"
 

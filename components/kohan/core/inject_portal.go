@@ -22,6 +22,9 @@ func providePortalHandlers(indexPortal handler.IndexPortal, journalPortal handle
 }
 
 func (ki *KohanInjector) registerPortalDependencies() {
+	container.MustSingleton(ki.di, func() config.BarkatConfig {
+		return ki.config.Barkat
+	})
 	container.MustSingleton(ki.di, provideIndexPortalHandler)
 	container.MustSingleton(ki.di, provideJournalPortalHandler)
 	container.MustSingleton(ki.di, providePortalHandlers)
