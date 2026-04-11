@@ -26,6 +26,7 @@ function journalDetailPage() {
 	return {
 		journalId: '',
 		journal: null as Journal | null,
+		selectedImageIndex: -1,
 		loading: false,
 		errorMessage: '',
 		normalizeStatus(value: string) {
@@ -33,6 +34,17 @@ function journalDetailPage() {
 		},
 		statusBadgeClass(value: string) {
 			return statusBadgeClassMap[normalizeTag(value)] ?? defaultBadgeClass;
+		},
+		timeframeChipClass(value: string) {
+			const classes: Record<string, string> = {
+				YR: 'border-fuchsia-400 bg-fuchsia-200 text-fuchsia-950',
+				SMN: 'border-indigo-400 bg-indigo-200 text-indigo-950',
+				TMN: 'border-cyan-400 bg-cyan-200 text-cyan-950',
+				MN: 'border-emerald-400 bg-emerald-200 text-emerald-950',
+				WK: 'border-amber-400 bg-amber-200 text-amber-950',
+				DL: 'border-slate-400 bg-slate-200 text-slate-950',
+			};
+			return classes[normalizeTag(value)] ?? 'border-zinc-300 bg-zinc-100 text-zinc-900';
 		},
 		typeBadgeClass(value: string) {
 			return typeBadgeClassMap[normalizeTag(value)] ?? defaultBadgeClass;
@@ -59,12 +71,87 @@ function journalDetailPage() {
 		hasError() {
 			return this.errorMessage !== '';
 		},
-		resolveImageSrc(fileName: string) {
+		timeframeRank(value: string) {
+			const ranks: Record<string, number> = {
+				YR: 600,
+				SMN: 500,
+				TMN: 400,
+				MN: 300,
+				WK: 200,
+				DL: 100,
+			};
+			return ranks[normalizeTag(value)] ?? 0;
+		},
+		sortedImages() {
+			const images = this.journal?.images ?? [];
+			return [...images].sort((a, b) => this.timeframeRank(b.timeframe) - this.timeframeRank(a.timeframe));
+		},
+		hasImagePreview() {
+			return this.selectedImageIndex >= 0 && this.selectedImageIndex < this.sortedImages().length;
+		},
+		openImagePreview(index: number) {
+			this.selectedImageIndex = index;
+		},
+		closeImagePreview() {
+			this.selectedImageIndex = -1;
+		},
+		canPrevImage() {
+			return this.selectedImageIndex > 0;
+		},
+		canNextImage() {
+			return this.selectedImageIndex >= 0 && this.selectedImageIndex < this.sortedImages().length - 1;
+		},
+		prevImage(wrap = false) {
+			if (this.canPrevImage()) {
+				this.selectedImageIndex -= 1;
+				return;
+			}
+			if (wrap && this.sortedImages().length > 0) {
+				this.selectedImageIndex = this.sortedImages().length - 1;
+			}
+		},
+		nextImage(wrap = false) {
+			if (this.canNextImage()) {
+				this.selectedImageIndex += 1;
+				return;
+			}
+			if (wrap && this.sortedImages().length > 0) {
+				this.selectedImageIndex = 0;
+			}
+		},
+		previewImage() {
+			if (!this.hasImagePreview()) return null;
+			return this.sortedImages()[this.selectedImageIndex] ?? null;
+		},
+		previewImageSrc() {
+			const image = this.previewImage();
+			if (!image) return '';
+			return this.resolveImageSrc(image.file_name, image.created_at);
+		},
+		previewImageLabel() {
+			const image = this.previewImage();
+			if (!image) return '';
+			return image.timeframe ? `${image.timeframe} • ${image.file_name}` : image.file_name;
+		},
+		previewImageTimeframe() {
+			const image = this.previewImage();
+			if (!image) return '';
+			return image.timeframe ?? '';
+		},
+		resolveImageSrc(fileName: string, createdAt?: string) {
 			if (!fileName) return '';
 			if (fileName.startsWith('http://') || fileName.startsWith('https://') || fileName.startsWith('/')) {
 				return fileName;
 			}
-			return '/assets/' + fileName;
+			if (createdAt) {
+				const date = new Date(createdAt);
+				if (!Number.isNaN(date.getTime())) {
+					const year = date.getFullYear();
+					const month = String(date.getMonth() + 1).padStart(2, '0');
+					return `/journal-images/${year}/${month}/${fileName}`;
+				}
+			}
+			return '/journal-images/' + fileName;
 		},
 		formatTimestamp(value: string | null | undefined) {
 			if (!value) return '—';

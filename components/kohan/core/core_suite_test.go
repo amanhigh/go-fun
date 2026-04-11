@@ -87,6 +87,7 @@ var _ = BeforeSuite(func() {
 			IndexPortal:   indexPortal,
 			JournalPortal: journalPortal,
 		},
+		config.BarkatConfig{},
 	)
 
 	shutdown := util.NewGracefulShutdown()

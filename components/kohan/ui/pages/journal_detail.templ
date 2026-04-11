@@ -33,10 +33,9 @@ templ JournalDetailPage(journalID string) {
 					@JournalDetailHeader()
 					@JournalDetailHighlights()
 					@JournalDetailImages()
-					@JournalDetailTags()
 					@JournalDetailNotes()
-					@JournalDetailMetadata()
 				</div>
+				@JournalImagePreviewModal()
 			</div>
 		}
 	}
@@ -147,24 +146,47 @@ templ JournalDetailHeader() {
 					</svg>
 					<span x-text="'Reviewed: ' + formatTimestamp(journal.reviewed_at)"></span>
 				</div>
+				<div x-show="!journal.reviewed_at" class="flex items-center gap-1 text-amber-700">
+					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4">
+						<circle cx="12" cy="12" r="10"/>
+						<path d="M12 8v4"/>
+						<path d="M12 16h.01"/>
+					</svg>
+					<span>Never reviewed</span>
+				</div>
+			</div>
+			<div class="flex flex-wrap gap-2" x-show="journal.tags && journal.tags.length > 0">
+				<template x-for="tag in journal.tags" x-bind:key="tag.id">
+					@badge.Badge(badge.Props{
+						Variant: badge.VariantSecondary,
+						Class:   "border",
+						Attributes: templ.Attributes{
+							"x-text": "tag.tag + (tag.type ? ' • ' + tag.type : '')",
+						},
+					}) {}
+				</template>
 			</div>
 		</div>
 	</div>
 }
 
 templ JournalDetailImages() {
-	<div class="rounded-3xl border border-border bg-card shadow-sm p-6" x-show="journal.images && journal.images.length > 0">
-		<div class="mb-4">
+	<div class="relative left-1/2 w-[min(100vw-2rem,1500px)] -translate-x-1/2 rounded-3xl border border-border bg-card shadow-sm p-4 sm:p-6" x-show="journal.images && journal.images.length > 0">
+		<div class="mb-5">
 			<h3 class="text-lg font-semibold tracking-tight text-foreground">Images</h3>
-			<p class="text-sm text-muted-foreground" x-text="journal.images.length + ' timeframe images'"></p>
+			<p class="text-sm text-muted-foreground" x-text="journal.images.length + ' timeframe images · click any image to zoom'"></p>
 		</div>
-		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-			<template x-for="image in journal.images" x-bind:key="image.id">
-				<div class="group relative aspect-video overflow-hidden rounded-xl border border-border bg-muted">
-					<img class="h-full w-full object-cover" x-bind:src="resolveImageSrc(image.file_name)" x-bind:alt="image.timeframe + ' image'" x-on:error="$el.style.opacity='0.35'" loading="lazy"/>
-					<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100">
-						<div class="text-xs font-medium text-white" x-text="image.timeframe"></div>
-						<div class="text-xs text-white/70" x-text="image.file_name"></div>
+		<div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+			<template x-for="(image, index) in sortedImages()" x-bind:key="image.id">
+				<div class="space-y-2">
+					<div class="flex items-center justify-between gap-2 px-1">
+						@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border text-sm font-semibold", Attributes: templ.Attributes{"x-bind:class": "timeframeChipClass(image.timeframe)", "x-text": "image.timeframe"}}) {}
+						<div class="truncate text-xs text-muted-foreground" x-text="image.file_name"></div>
+					</div>
+					<div class="group relative overflow-hidden rounded-2xl border border-border bg-muted" x-bind:class="index < 2 ? 'aspect-[16/9]' : 'aspect-[15/10]'">
+						<button class="h-full w-full text-left" type="button" x-on:click="openImagePreview(index)">
+							<img class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" x-bind:src="resolveImageSrc(image.file_name, image.created_at)" x-bind:alt="image.timeframe + ' image'" x-on:error="$el.style.opacity='0.35'" loading="lazy"/>
+						</button>
 					</div>
 				</div>
 			</template>
@@ -172,21 +194,24 @@ templ JournalDetailImages() {
 	</div>
 }
 
-templ JournalDetailTags() {
-	<div class="rounded-3xl border border-border bg-card shadow-sm p-6" x-show="journal.tags && journal.tags.length > 0">
-		<div class="mb-4">
-			<h3 class="text-lg font-semibold tracking-tight text-foreground">Tags</h3>
+	templ JournalImagePreviewModal() {
+	<div class="fixed inset-0 z-50 flex flex-col bg-black/90 p-4" x-show="hasImagePreview()" x-on:keydown.escape.window="closeImagePreview()" x-on:keydown.arrow-left.window="prevImage()" x-on:keydown.arrow-right.window="nextImage()" x-cloak>
+		<div class="absolute inset-0" x-on:click="closeImagePreview()"></div>
+		<div class="relative z-10 flex w-full items-center justify-between gap-4">
+			<button class="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30" type="button" x-bind:disabled="!canPrevImage()" x-on:click="prevImage()">
+				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+			</button>
+			<div class="flex flex-col items-center gap-2">
+				<div class="rounded-lg border-2 px-5 py-2 text-2xl font-black tracking-widest" x-bind:class="timeframeChipClass(previewImageTimeframe())" x-text="previewImageTimeframe()"></div>
+				<div class="text-sm font-medium text-white/60" x-text="(selectedImageIndex + 1) + ' / ' + sortedImages().length"></div>
+			</div>
+			<button class="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30" type="button" x-bind:disabled="!canNextImage()" x-on:click="nextImage()">
+				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+			</button>
+			<button class="ml-2 rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20" type="button" x-on:click="closeImagePreview()">ESC</button>
 		</div>
-		<div class="flex flex-wrap gap-2">
-			<template x-for="tag in journal.tags" x-bind:key="tag.id">
-				@badge.Badge(badge.Props{
-					Variant: badge.VariantSecondary,
-					Class:   "border",
-					Attributes: templ.Attributes{
-						"x-text": "tag.tag + (tag.type ? ' (' + tag.type + ')' : '')",
-					},
-				}) {}
-			</template>
+		<div class="mt-4 flex flex-1 items-center justify-center">
+			<img class="max-h-[82vh] w-full cursor-pointer rounded-xl border border-white/20 object-contain" x-bind:src="previewImageSrc()" x-bind:alt="previewImageLabel()" x-on:click.stop="nextImage(true)" x-on:contextmenu.prevent.stop="prevImage(true)"/>
 		</div>
 	</div>
 }

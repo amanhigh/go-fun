@@ -110,19 +110,19 @@ func JournalDetailPage(journalID string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = JournalDetailTags().Render(ctx, templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
 				templ_7745c5c3_Err = JournalDetailNotes().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = JournalDetailMetadata().Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div></div>")
+				templ_7745c5c3_Err = JournalImagePreviewModal().Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -169,7 +169,7 @@ func JournalDetailHighlights() templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4\"><div class=\"rounded-2xl border border-rose-200/70 bg-rose-50/60 p-4\"><p class=\"text-[11px] font-semibold uppercase tracking-[0.2em] text-rose-700/80\">Status</p><p class=\"mt-2 text-lg font-semibold text-rose-900\" x-text=\"normalizeStatus(journal.status)\"></p></div><div class=\"rounded-2xl border border-indigo-200/70 bg-indigo-50/60 p-4\"><p class=\"text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-700/80\">Type</p><p class=\"mt-2 text-lg font-semibold text-indigo-900\" x-text=\"journal.type\"></p></div><div class=\"rounded-2xl border border-violet-200/70 bg-violet-50/60 p-4\"><p class=\"text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-700/80\">Sequence</p><p class=\"mt-2 text-lg font-semibold text-violet-900\" x-text=\"journal.sequence\"></p></div><div class=\"rounded-2xl border border-emerald-200/70 bg-emerald-50/60 p-4\"><p class=\"text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700/80\">Created</p><p class=\"mt-2 text-sm font-semibold text-emerald-900\" x-text=\"formatTimestamp(journal.created_at)\"></p></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4\"><div class=\"rounded-2xl border border-rose-200/70 bg-rose-50/60 p-4\"><p class=\"text-[11px] font-semibold uppercase tracking-[0.2em] text-rose-700/80\">Status</p><p class=\"mt-2 text-lg font-semibold text-rose-900\" x-text=\"normalizeStatus(journal.status)\"></p></div><div class=\"rounded-2xl border border-indigo-200/70 bg-indigo-50/60 p-4\"><p class=\"text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-700/80\">Type</p><p class=\"mt-2 text-lg font-semibold text-indigo-900\" x-text=\"journal.type\"></p></div><div class=\"rounded-2xl border border-violet-200/70 bg-violet-50/60 p-4\"><p class=\"text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-700/80\">Sequence</p><p class=\"mt-2 text-lg font-semibold text-violet-900\" x-text=\"journal.sequence\"></p></div><div class=\"rounded-2xl border border-emerald-200/70 bg-emerald-50/60 p-4\"><p class=\"text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700/80\">Created</p><p class=\"mt-2 text-sm font-semibold text-emerald-900\" x-text=\"formatTimestamp(journal.created_at)\"></p></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -198,7 +198,7 @@ func JournalDetailBackNav() templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div x-show=\"!loading\"><a class=\"inline-flex items-center rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-muted\" href=\"/journal\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-3.5 mr-1\"><path d=\"m15 18-6-6 6-6\"></path></svg> Back to Journal List</a></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div x-show=\"!loading\"><a class=\"inline-flex items-center rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-muted\" href=\"/journal\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-3.5 mr-1\"><path d=\"m15 18-6-6 6-6\"></path></svg> Back to Journal List</a></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -227,7 +227,7 @@ func JournalDetailLoading() templ.Component {
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"rounded-2xl border border-dashed border-sky-300 bg-sky-50/70 px-6 py-10 text-center text-sm text-sky-700\" x-show=\"loading\"><div class=\"flex items-center justify-center gap-2\"><svg class=\"size-4 animate-spin\" xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12a9 9 0 1 1-6.219-8.56\"></path></svg> Loading journal details...</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div class=\"rounded-2xl border border-dashed border-sky-300 bg-sky-50/70 px-6 py-10 text-center text-sm text-sky-700\" x-show=\"loading\"><div class=\"flex items-center justify-center gap-2\"><svg class=\"size-4 animate-spin\" xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12a9 9 0 1 1-6.219-8.56\"></path></svg> Loading journal details...</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -256,7 +256,7 @@ func JournalDetailError() templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div class=\"rounded-2xl border border-dashed border-rose-300 bg-rose-50/70 px-6 py-10 text-center text-sm text-rose-700\" x-show=\"hasError()\"><div class=\"space-y-3\"><div class=\"font-medium\" x-text=\"errorMessage\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"rounded-2xl border border-dashed border-rose-300 bg-rose-50/70 px-6 py-10 text-center text-sm text-rose-700\" x-show=\"hasError()\"><div class=\"space-y-3\"><div class=\"font-medium\" x-text=\"errorMessage\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -272,7 +272,7 @@ func JournalDetailError() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "Retry")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "Retry")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -288,7 +288,7 @@ func JournalDetailError() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -317,7 +317,7 @@ func JournalDetailHeader() templ.Component {
 			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div class=\"rounded-3xl border border-border bg-card shadow-sm p-6\"><div class=\"flex flex-col gap-4\"><div class=\"flex items-center justify-between\"><div class=\"text-xs font-mono text-muted-foreground\" x-text=\"'ID: ' + journal.id\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"rounded-3xl border border-border bg-card shadow-sm p-6\"><div class=\"flex flex-col gap-4\"><div class=\"flex items-center justify-between\"><div class=\"text-xs font-mono text-muted-foreground\" x-text=\"'ID: ' + journal.id\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -332,7 +332,7 @@ func JournalDetailHeader() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</div><div class=\"space-y-2\"><h2 class=\"text-3xl font-bold tracking-tight text-foreground\" x-text=\"journal.ticker\"></h2><div class=\"flex items-center gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</div><div class=\"space-y-2\"><h2 class=\"text-3xl font-bold tracking-tight text-foreground\" x-text=\"journal.ticker\"></h2><div class=\"flex items-center gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -347,7 +347,21 @@ func JournalDetailHeader() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<span class=\"text-sm text-muted-foreground\" x-text=\"'Sequence: ' + journal.sequence\"></span></div></div><div class=\"flex flex-wrap gap-4 text-sm text-muted-foreground\"><div class=\"flex items-center gap-1\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-4\"><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" ry=\"2\"></rect> <line x1=\"16\" x2=\"16\" y1=\"2\" y2=\"6\"></line> <line x1=\"8\" x2=\"8\" y1=\"2\" y2=\"6\"></line> <line x1=\"3\" x2=\"21\" y1=\"10\" y2=\"10\"></line></svg> <span x-text=\"'Created: ' + formatTimestamp(journal.created_at)\"></span></div><div x-show=\"journal.reviewed_at\" class=\"flex items-center gap-1\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-4\"><path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\"></path> <path d=\"m9 12 2 2 4-4\"></path></svg> <span x-text=\"'Reviewed: ' + formatTimestamp(journal.reviewed_at)\"></span></div></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<span class=\"text-sm text-muted-foreground\" x-text=\"'Sequence: ' + journal.sequence\"></span></div></div><div class=\"flex flex-wrap gap-4 text-sm text-muted-foreground\"><div class=\"flex items-center gap-1\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-4\"><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" ry=\"2\"></rect> <line x1=\"16\" x2=\"16\" y1=\"2\" y2=\"6\"></line> <line x1=\"8\" x2=\"8\" y1=\"2\" y2=\"6\"></line> <line x1=\"3\" x2=\"21\" y1=\"10\" y2=\"10\"></line></svg> <span x-text=\"'Created: ' + formatTimestamp(journal.created_at)\"></span></div><div x-show=\"journal.reviewed_at\" class=\"flex items-center gap-1\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-4\"><path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\"></path> <path d=\"m9 12 2 2 4-4\"></path></svg> <span x-text=\"'Reviewed: ' + formatTimestamp(journal.reviewed_at)\"></span></div><div x-show=\"!journal.reviewed_at\" class=\"flex items-center gap-1 text-amber-700\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-4\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle> <path d=\"M12 8v4\"></path> <path d=\"M12 16h.01\"></path></svg> <span>Never reviewed</span></div></div><div class=\"flex flex-wrap gap-2\" x-show=\"journal.tags && journal.tags.length > 0\"><template x-for=\"tag in journal.tags\" x-bind:key=\"tag.id\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = badge.Badge(badge.Props{
+			Variant: badge.VariantSecondary,
+			Class:   "border",
+			Attributes: templ.Attributes{
+				"x-text": "tag.tag + (tag.type ? ' • ' + tag.type : '')",
+			},
+		}).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</template></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -376,7 +390,15 @@ func JournalDetailImages() templ.Component {
 			templ_7745c5c3_Var11 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div class=\"rounded-3xl border border-border bg-card shadow-sm p-6\" x-show=\"journal.images && journal.images.length > 0\"><div class=\"mb-4\"><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Images</h3><p class=\"text-sm text-muted-foreground\" x-text=\"journal.images.length + ' timeframe images'\"></p></div><div class=\"grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4\"><template x-for=\"image in journal.images\" x-bind:key=\"image.id\"><div class=\"group relative aspect-video overflow-hidden rounded-xl border border-border bg-muted\"><img class=\"h-full w-full object-cover\" x-bind:src=\"resolveImageSrc(image.file_name)\" x-bind:alt=\"image.timeframe + ' image'\" x-on:error=\"$el.style.opacity='0.35'\" loading=\"lazy\"><div class=\"absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100\"><div class=\"text-xs font-medium text-white\" x-text=\"image.timeframe\"></div><div class=\"text-xs text-white/70\" x-text=\"image.file_name\"></div></div></div></template></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"relative left-1/2 w-[min(100vw-2rem,1500px)] -translate-x-1/2 rounded-3xl border border-border bg-card shadow-sm p-4 sm:p-6\" x-show=\"journal.images && journal.images.length > 0\"><div class=\"mb-5\"><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Images</h3><p class=\"text-sm text-muted-foreground\" x-text=\"journal.images.length + ' timeframe images · click any image to zoom'\"></p></div><div class=\"grid grid-cols-1 gap-5 lg:grid-cols-2\"><template x-for=\"(image, index) in sortedImages()\" x-bind:key=\"image.id\"><div class=\"space-y-2\"><div class=\"flex items-center justify-between gap-2 px-1\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border text-sm font-semibold", Attributes: templ.Attributes{"x-bind:class": "timeframeChipClass(image.timeframe)", "x-text": "image.timeframe"}}).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div class=\"truncate text-xs text-muted-foreground\" x-text=\"image.file_name\"></div></div><div class=\"group relative overflow-hidden rounded-2xl border border-border bg-muted\" x-bind:class=\"index < 2 ? 'aspect-[16/9]' : 'aspect-[15/10]'\"><button class=\"h-full w-full text-left\" type=\"button\" x-on:click=\"openImagePreview(index)\"><img class=\"h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]\" x-bind:src=\"resolveImageSrc(image.file_name, image.created_at)\" x-bind:alt=\"image.timeframe + ' image'\" x-on:error=\"$el.style.opacity='0.35'\" loading=\"lazy\"></button></div></div></template></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -384,7 +406,7 @@ func JournalDetailImages() templ.Component {
 	})
 }
 
-func JournalDetailTags() templ.Component {
+func JournalImagePreviewModal() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -405,21 +427,7 @@ func JournalDetailTags() templ.Component {
 			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div class=\"rounded-3xl border border-border bg-card shadow-sm p-6\" x-show=\"journal.tags && journal.tags.length > 0\"><div class=\"mb-4\"><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Tags</h3></div><div class=\"flex flex-wrap gap-2\"><template x-for=\"tag in journal.tags\" x-bind:key=\"tag.id\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = badge.Badge(badge.Props{
-			Variant: badge.VariantSecondary,
-			Class:   "border",
-			Attributes: templ.Attributes{
-				"x-text": "tag.tag + (tag.type ? ' (' + tag.type + ')' : '')",
-			},
-		}).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</template></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"fixed inset-0 z-50 flex flex-col bg-black/90 p-4\" x-show=\"hasImagePreview()\" x-on:keydown.escape.window=\"closeImagePreview()\" x-on:keydown.arrow-left.window=\"prevImage()\" x-on:keydown.arrow-right.window=\"nextImage()\" x-cloak><div class=\"absolute inset-0\" x-on:click=\"closeImagePreview()\"></div><div class=\"relative z-10 flex w-full items-center justify-between gap-4\"><button class=\"rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30\" type=\"button\" x-bind:disabled=\"!canPrevImage()\" x-on:click=\"prevImage()\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m15 18-6-6 6-6\"></path></svg></button><div class=\"flex flex-col items-center gap-2\"><div class=\"rounded-lg border-2 px-5 py-2 text-2xl font-black tracking-widest\" x-bind:class=\"timeframeChipClass(previewImageTimeframe())\" x-text=\"previewImageTimeframe()\"></div><div class=\"text-sm font-medium text-white/60\" x-text=\"(selectedImageIndex + 1) + ' / ' + sortedImages().length\"></div></div><button class=\"rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30\" type=\"button\" x-bind:disabled=\"!canNextImage()\" x-on:click=\"nextImage()\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 18 6-6-6-6\"></path></svg></button> <button class=\"ml-2 rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20\" type=\"button\" x-on:click=\"closeImagePreview()\">ESC</button></div><div class=\"mt-4 flex flex-1 items-center justify-center\"><img class=\"max-h-[82vh] w-full cursor-pointer rounded-xl border border-white/20 object-contain\" x-bind:src=\"previewImageSrc()\" x-bind:alt=\"previewImageLabel()\" x-on:click.stop=\"nextImage(true)\" x-on:contextmenu.prevent.stop=\"prevImage(true)\"></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -448,7 +456,7 @@ func JournalDetailNotes() templ.Component {
 			templ_7745c5c3_Var13 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div class=\"rounded-3xl border border-border bg-card shadow-sm p-6\" x-show=\"journal.notes && journal.notes.length > 0\"><div class=\"mb-4\"><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Notes</h3></div><div class=\"space-y-3\"><template x-for=\"note in journal.notes\" x-bind:key=\"note.id\"><div class=\"rounded-xl border border-border bg-muted/50 p-4\"><div class=\"mb-2 flex items-center justify-between\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"rounded-3xl border border-border bg-card shadow-sm p-6\" x-show=\"journal.notes && journal.notes.length > 0\"><div class=\"mb-4\"><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Notes</h3></div><div class=\"space-y-3\"><template x-for=\"note in journal.notes\" x-bind:key=\"note.id\"><div class=\"rounded-xl border border-border bg-muted/50 p-4\"><div class=\"mb-2 flex items-center justify-between\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -462,7 +470,7 @@ func JournalDetailNotes() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<span class=\"text-xs text-muted-foreground\" x-text=\"formatTimestamp(note.created_at)\"></span></div><div class=\"prose prose-sm max-w-none\"><pre class=\"whitespace-pre-wrap text-sm text-foreground\" x-text=\"note.content\"></pre></div></div></template></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<span class=\"text-xs text-muted-foreground\" x-text=\"formatTimestamp(note.created_at)\"></span></div><div class=\"prose prose-sm max-w-none\"><pre class=\"whitespace-pre-wrap text-sm text-foreground\" x-text=\"note.content\"></pre></div></div></template></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -491,7 +499,7 @@ func JournalDetailMetadata() templ.Component {
 			templ_7745c5c3_Var14 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"rounded-3xl border border-border bg-card shadow-sm p-6\"><div class=\"mb-4\"><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Metadata</h3></div><dl class=\"grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3\"><div class=\"space-y-1\"><dt class=\"text-xs uppercase tracking-wider text-muted-foreground\">External ID</dt><dd class=\"font-mono text-sm\" x-text=\"journal.id\"></dd></div><div class=\"space-y-1\"><dt class=\"text-xs uppercase tracking-wider text-muted-foreground\">Ticker</dt><dd class=\"text-sm font-medium text-foreground\" x-text=\"journal.ticker\"></dd></div><div class=\"space-y-1\"><dt class=\"text-xs uppercase tracking-wider text-muted-foreground\">Sequence</dt><dd class=\"text-sm\" x-text=\"journal.sequence\"></dd></div><div class=\"space-y-1\"><dt class=\"text-xs uppercase tracking-wider text-muted-foreground\">Type</dt><dd class=\"text-sm\" x-text=\"journal.type\"></dd></div><div class=\"space-y-1\"><dt class=\"text-xs uppercase tracking-wider text-muted-foreground\">Status</dt><dd class=\"text-sm\" x-text=\"journal.status\"></dd></div><div class=\"space-y-1\"><dt class=\"text-xs uppercase tracking-wider text-muted-foreground\">Created At</dt><dd class=\"text-sm\" x-text=\"formatTimestamp(journal.created_at)\"></dd></div></dl></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<div class=\"rounded-3xl border border-border bg-card shadow-sm p-6\"><div class=\"mb-4\"><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Metadata</h3></div><dl class=\"grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3\"><div class=\"space-y-1\"><dt class=\"text-xs uppercase tracking-wider text-muted-foreground\">External ID</dt><dd class=\"font-mono text-sm\" x-text=\"journal.id\"></dd></div><div class=\"space-y-1\"><dt class=\"text-xs uppercase tracking-wider text-muted-foreground\">Ticker</dt><dd class=\"text-sm font-medium text-foreground\" x-text=\"journal.ticker\"></dd></div><div class=\"space-y-1\"><dt class=\"text-xs uppercase tracking-wider text-muted-foreground\">Sequence</dt><dd class=\"text-sm\" x-text=\"journal.sequence\"></dd></div><div class=\"space-y-1\"><dt class=\"text-xs uppercase tracking-wider text-muted-foreground\">Type</dt><dd class=\"text-sm\" x-text=\"journal.type\"></dd></div><div class=\"space-y-1\"><dt class=\"text-xs uppercase tracking-wider text-muted-foreground\">Status</dt><dd class=\"text-sm\" x-text=\"journal.status\"></dd></div><div class=\"space-y-1\"><dt class=\"text-xs uppercase tracking-wider text-muted-foreground\">Created At</dt><dd class=\"text-sm\" x-text=\"formatTimestamp(journal.created_at)\"></dd></div></dl></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

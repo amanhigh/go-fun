@@ -62,15 +62,17 @@ func ProvideKohanLifecycle(
 	noteHandler handler.NoteHandler,
 	tagHandler handler.TagHandler,
 	portalHandlers PortalHandlers,
+	barkatConfig config.BarkatConfig,
 ) util.ServerLifecycle {
 	return &KohanServerLifecycle{
-		OSHandler:      osHandler,
-		JournalHandler: journalHandler,
-		ImageHandler:   imageHandler,
-		NoteHandler:    noteHandler,
-		TagHandler:     tagHandler,
-		IndexPortal:    portalHandlers.IndexPortal,
-		JournalPortal:  portalHandlers.JournalPortal,
+		OSHandler:       osHandler,
+		JournalHandler:  journalHandler,
+		ImageHandler:    imageHandler,
+		NoteHandler:     noteHandler,
+		TagHandler:      tagHandler,
+		IndexPortal:     portalHandlers.IndexPortal,
+		JournalPortal:   portalHandlers.JournalPortal,
+		ImageAssetsPath: barkatConfig.ImageAssetsPath,
 	}
 }
 
@@ -141,6 +143,9 @@ func provideTagHandler(mgr manager.TagManager) handler.TagHandler {
 
 // registerJournalDependencies registers all dependencies for the journal feature.
 func (ki *KohanInjector) registerJournalDependencies() error {
+	container.MustSingleton(ki.di, func() config.BarkatConfig {
+		return ki.config.Barkat
+	})
 	container.MustSingleton(ki.di, ki.provideBarkatDB)
 
 	// Journal
