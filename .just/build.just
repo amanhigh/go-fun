@@ -37,3 +37,15 @@ _clean-build:
 [group('clean')]
 [doc('Clean build and test artifacts')]
 clean: _clean-test _clean-build
+
+[group('info')]
+[doc('Show release tags and Docker image information')]
+info: _info-release _info-docker
+
+[group('info')]
+[doc('Show release info plus devspace information')]
+infos: info space-info
+
+
+
+

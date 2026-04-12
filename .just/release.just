@@ -1,11 +1,3 @@
-[group('info')]
-[doc('Show release tags and Docker image information')]
-info: _info-release _info-docker
-
-[group('info')]
-[doc('Show release info plus devspace information')]
-infos: info space-info
-
 # FIXME: VER variable accept via just variable.
 [confirm("Release Helm charts?")]
 [group('release')]
@@ -57,20 +49,6 @@ unrelease:
     git push --delete origin ${VER}
     just _info-release
 
-[group('info')]
-_info-release:
-    just _info "INFO" "Go Modules"
-    git tag | grep "models" | tail -2
-    git tag | grep "common" | tail -2
-    git tag | grep "v" | grep -v "/" | tail -2
-
-[group('info')]
-_info-docker:
-    just _info "INFO" "FunApp DockerHub: https://hub.docker.com/r/amanfdk/fun-app/tags"
-    curl -s "https://hub.docker.com/v2/repositories/amanfdk/fun-app/tags/?page_size=25&page=1&name&ordering" | jq -r '.results[]|.name' | head -3
-    just _info "INFO" "Docker Images: amanfdk/fun-app"
-    docker images | grep fun-app
-
 [group('release')]
 _helm-package:
     #!/usr/bin/env bash
@@ -105,6 +83,13 @@ _release-common:
     git tag | grep common | tail -2
     just _title "RELEASE" "Pushing Tags"
     git push --tags && just _title "RELEASE" "Common Released: ${VER}"
+
+[group('info')]
+_info-release:
+    just _info "INFO" "Go Modules"
+    git tag | grep "models" | tail -2
+    git tag | grep "common" | tail -2
+    git tag | grep "v" | grep -v "/" | tail -2
 
 [group('release')]
 _release-fun:

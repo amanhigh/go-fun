@@ -43,3 +43,10 @@ docker-exec:
 docker-clean:
     just _warn "Docker" "Deleting FunApp"
     -docker rmi -f `docker images amanfdk/fun-app -q`
+
+[group('info')]
+_info-docker:
+    just _info "INFO" "FunApp DockerHub: https://hub.docker.com/r/amanfdk/fun-app/tags"
+    curl -s "https://hub.docker.com/v2/repositories/amanfdk/fun-app/tags/?page_size=25&page=1&name&ordering" | jq -r '.results[]|.name' | head -3
+    just _info "INFO" "Docker Images: amanfdk/fun-app"
+    docker images | grep fun-app
