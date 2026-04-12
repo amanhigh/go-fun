@@ -34,6 +34,7 @@ type KohanConfig struct {
 // Database: SQLite file path for journal entries
 type BarkatConfig struct {
 	DbPath string `env:"BARKAT_DB_PATH" envDefault:"~/Downloads/barkat.db"`
+	Images string `env:"BARKAT_IMAGE_PATH" envDefault:"~/Downloads/images"`
 }
 
 // TaxConfig defines all paths and URLs for tax computation
@@ -104,6 +105,7 @@ func NewKohanConfig() (config KohanConfig, err error) {
 
 	applyTaxPaths(&config.Tax, homeDir)
 	config.Barkat.DbPath = replaceHome(config.Barkat.DbPath, homeDir)
+	config.Barkat.Images = replaceHome(config.Barkat.Images, homeDir)
 
 	return
 }

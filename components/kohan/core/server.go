@@ -28,6 +28,7 @@ type KohanServerLifecycle struct {
 type PortalHandlers struct {
 	IndexPortal   handler.IndexPortal
 	JournalPortal handler.JournalPortal
+	ImagePath     string
 }
 
 var _ util.ServerLifecycle = (*KohanServerLifecycle)(nil)
@@ -79,10 +80,11 @@ func (s *KohanServerLifecycle) registerJournalRoutes(engine *gin.Engine) {
 }
 
 func (s *KohanServerLifecycle) registerPortalRoutes(engine *gin.Engine) {
-	engine.Static("/assets", "assets")
+	handler.SetupStaticRoutes(engine, s.JournalPortal.ImagePath())
 	mux := http.NewServeMux()
 	utils.SetupScriptRoutes(mux, true)
 	engine.Any("/templui/*filepath", gin.WrapH(mux))
 	engine.GET("/", s.IndexPortal.HandleIndex)
-	engine.GET("/journal", s.JournalPortal.HandleJournal)
+	engine.GET("/journal", s.JournalPortal.ListJournals)
+	engine.GET("/journal/:id", s.JournalPortal.DisplayJournal)
 }

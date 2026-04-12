@@ -70,6 +70,43 @@ var _ = Describe("Barkat E2E Test", func() {
 			Expect(resp.String()).To(ContainSubstring("Journal"))
 			Expect(resp.String()).To(ContainSubstring("Kohan Portal"))
 		})
+
+		It("should render journal detail page", func() {
+			resp, err := client.R().Get("/journal/jrn_1234abcd")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+			Expect(resp.Header().Get("Content-Type")).To(ContainSubstring("text/html"))
+			Expect(resp.String()).To(ContainSubstring("Journal Detail"))
+			Expect(resp.String()).To(ContainSubstring("jrn_1234abcd"))
+		})
+
+		It("should serve journal images from static route", func() {
+			resp, err := client.R().Get("/journal/images/2024/01/sample.png")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+			Expect(resp.String()).To(Equal("sample-image"))
+		})
+
+		It("should serve embedded css assets", func() {
+			resp, err := client.R().Get("/assets/css/input.css")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+			Expect(resp.Header().Get("Content-Type")).To(ContainSubstring("text/css"))
+			Expect(resp.String()).To(ContainSubstring(`@import "tailwindcss"`))
+		})
+
+		It("should serve embedded javascript assets", func() {
+			resp, err := client.R().Get("/assets/js/input.ts")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+			Expect(resp.String()).To(ContainSubstring("import './journal'"))
+		})
+
+		It("should return not found for missing embedded assets", func() {
+			resp, err := client.R().Get("/assets/css/missing.css")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusNotFound))
+		})
 	})
 
 	// Admin Endpoints - Tests server administration functionality

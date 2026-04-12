@@ -1,6 +1,11 @@
 package handler
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
+
+	kohanassets "github.com/amanhigh/go-fun/components/kohan/assets"
+	"github.com/gin-gonic/gin"
+)
 
 // SetupOSRoutes configures OS-related routes
 func SetupOSRoutes(os *gin.RouterGroup, osHandler OSHandler) {
@@ -37,6 +42,12 @@ func SetupTagRoutes(journal *gin.RouterGroup, tagHandler TagHandler) {
 		tags.GET("", tagHandler.HandleListTags)
 		tags.DELETE("/:tagId", tagHandler.HandleDeleteTag)
 	}
+}
+
+// SetupStaticRoutes configures all static file serving.
+func SetupStaticRoutes(engine *gin.Engine, imagePath string) {
+	engine.StaticFS("/assets", http.FS(kohanassets.FS))
+	engine.Static("/journal/images", imagePath)
 }
 
 // SetupJournalRoutes configures basic journal routes

@@ -42,12 +42,12 @@ jobs:
       - name: SETUP -> Onetime
         run: |
           export GOTOOLCHAIN=local
-          make prepare
+          just prepare
 
       - name: SETUP -> Build
         run: |
           export GOTOOLCHAIN=local
-          make reset OUT=/dev/stdout
+          just reset
 
       - name: COVERAGE -> Report
         uses: codecov/codecov-action@v3

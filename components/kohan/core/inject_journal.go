@@ -141,6 +141,9 @@ func provideTagHandler(mgr manager.TagManager) handler.TagHandler {
 
 // registerJournalDependencies registers all dependencies for the journal feature.
 func (ki *KohanInjector) registerJournalDependencies() error {
+	container.MustSingleton(ki.di, func() config.BarkatConfig {
+		return ki.config.Barkat
+	})
 	container.MustSingleton(ki.di, ki.provideBarkatDB)
 
 	// Journal

@@ -6,6 +6,33 @@ export type Journal = {
 	status: string;
 	created_at: string;
 	reviewed_at?: string | null;
+	images?: JournalImage[];
+	tags?: JournalTag[];
+	notes?: JournalNote[];
+	deleted_at?: string | null;
+};
+
+export type JournalImage = {
+	id: string;
+	timeframe: string;
+	file_name: string;
+	created_at?: string;
+};
+
+export type JournalTag = {
+	id: string;
+	tag: string;
+	type?: string;
+	override?: string;
+	created_at?: string;
+};
+
+export type JournalNote = {
+	id: string;
+	status: string;
+	content: string;
+	format?: string;
+	created_at?: string;
 };
 
 export type JournalList = {
