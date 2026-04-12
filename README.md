@@ -12,26 +12,26 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 	FunApp is a Sample Rest App which tries to use various golang Frameworks commonly required. It tries to follow good practices and standards. It runs without any dependencies with in memory [sqlite3](https://github.com/mattn/go-sqlite3) database by default.  
 	- ### Setup
 		- #### Onetime
-			- We will use [Make](https://www.make.com/en) for Project Management.
-			- Installs required dependencies and tools, `make prepare`
-			- To check what all is available run `make` to display Help.
-		- Run `make reset` will do Complete Build, Test, Coverage and Show Info.
-		- Use `make info` (or `infos`) for displaying Info.
+			- We will use [Just](https://github.com/casey/just) for project management.
+			- Installs required dependencies and tools, `just prepare`
+			- To check what all is available run `just` to display help.
+		- Run `just reset` to do a complete build, test, coverage, and info pass.
+		- Use `just info` (or `infos`) for displaying info.
 	- ### Play
 		Easy ways to Play with **FunApp** without Dev Setup.  
 		- Start
-			- Golang: `make run`
+			- Golang: `just run`
 				![Go Run](common/images/fun-app/go-run.gif)  
 			- Docker [Image](https://hub.docker.com/r/amanfdk/fun-app): `docker run amanfdk/fun-app`
 		- Testing
 			- Unit and Integration Testing is done via [Ginkgo](https://github.com/onsi/ginkgo).
-			- Run Tests: `make test test-slow` (Excludes that require separate setup.)
+			- Run Tests: `just test test-slow` (Excludes suites that require separate setup.)
 		- Performance Test
 			[Vegeta](https://github.com/tsenart/vegeta) is the tool of choice here. [Gum](https://github.com/charmbracelet/gum) helps in prompts.  
 			- Installation: `brew install gum vegeta`
 			- Run: `make -C ./components/fun-app/it setup`
 		- Linting
-			- `make lint` will do Code Linting using [golangci-lint](https://github.com/golangci/golangci-lint)
+			- `just lint` will do code linting using [golangci-lint](https://github.com/golangci/golangci-lint)
 	- ### Dev Setup
 		This section guides on setup for Development Setup for this Repository. We are using Vscode and Kubernetes  for this example.  
 		- ### Vscode
@@ -43,10 +43,10 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 			- It is configured to Auto Reload Code Changes.
 			- This Sets Up Dev Container in `fun-app` Namespace.
 			- Try:
-				- Run `make space`, Open http://localhost:8080/metrics
-				- Tests: `make space-test`
-				- Cleanup: `make space-purge`
-				- Check Environment Vars: `make infos`
+				- Run `just space`, Open http://localhost:8080/metrics
+				- Tests: `just space-test`
+				- Cleanup: `just space-purge`
+				- Check Environment Vars: `just infos`
 				- Override Vars:  `devspace list vars --var DB="mysql-primary",RATE_LIMIT=10`
 			- ![Devcode](common/images/fun-app/devcode.gif)
 		- ### Kubernetes Cluster
@@ -131,6 +131,6 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 			- Remove Release involves deleting Tag with `git push --delete origin common/v1.0.0`
 	- ### Release Management
 	  Release management includes  build and release of Artifacts like binaries, dockers etc.  
-		- Build Only - `make build docker-build` (add `clean` to remove residue)
-		- Release - `make release release-docker VER=v1.0.3`
-		- Delete Release - `make unrelease VER=v1.0.3` (Not Recommended)
+		- Build Only - `just build docker-build` (add `clean` to remove residue)
+		- Release - `just release release-docker VER=v1.0.3`
+		- Delete Release - `just unrelease VER=v1.0.3` (Not Recommended)

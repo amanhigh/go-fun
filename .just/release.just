@@ -6,6 +6,7 @@ info: _info-release _info-docker
 [doc('Show release info plus devspace information')]
 infos: info space-info
 
+# FIXME: VER variable accept via just variable.
 [confirm("Release Helm charts?")]
 [group('release')]
 [doc('Package and commit the Helm chart release')]

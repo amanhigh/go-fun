@@ -42,7 +42,7 @@ jobs:
       - name: SETUP -> Onetime
         run: |
           export GOTOOLCHAIN=local
-          make prepare
+          just prepare
 
       - name: SETUP -> Build
         run: |
