@@ -3,6 +3,8 @@ package core_test
 import (
 	"context"
 	"net/http"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/amanhigh/go-fun/common/util"
@@ -21,8 +23,20 @@ import (
 const testPort = 19020
 
 var (
-	server util.HttpServer
+	server       util.HttpServer
+	testImageDir string
 )
+
+func createTestImageDir() string {
+	imageDir, err := os.MkdirTemp("", "kohan-e2e-images-*")
+	Expect(err).ToNot(HaveOccurred())
+
+	sampleImageDir := filepath.Join(imageDir, "2024", "01")
+	Expect(os.MkdirAll(sampleImageDir, 0o755)).To(Succeed())
+	Expect(os.WriteFile(filepath.Join(sampleImageDir, "sample.png"), []byte("sample-image"), 0o644)).To(Succeed())
+
+	return imageDir
+}
 
 // configureMockOSHandler creates and configures a mock OS handler for safe testing
 func configureMockOSHandler() *handlerMocks.OSHandler {
@@ -61,6 +75,9 @@ func TestCore(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
+	testImageDir = createTestImageDir()
+
+	var err error
 	db, err := core.CreateTestBarkatDB()
 	Expect(err).ToNot(HaveOccurred())
 
@@ -71,7 +88,7 @@ var _ = BeforeSuite(func() {
 	noteHandler := handler.NewNoteHandler(manager.NewNoteManager(journalMgr, repository.NewNoteRepository(db)))
 	tagHandler := handler.NewTagHandler(manager.NewTagManager(journalMgr, repository.NewTagRepository(db)))
 	indexPortal := handler.NewIndexPortal()
-	journalPortal := handler.NewJournalPortal("")
+	journalPortal := handler.NewJournalPortal(testImageDir)
 
 	osHandler := configureMockOSHandler()
 
@@ -102,5 +119,8 @@ var _ = BeforeSuite(func() {
 var _ = AfterSuite(func() {
 	if server != nil {
 		server.Stop(context.Background())
+	}
+	if testImageDir != "" {
+		Expect(os.RemoveAll(testImageDir)).To(Succeed())
 	}
 })

@@ -79,6 +79,13 @@ var _ = Describe("Barkat E2E Test", func() {
 			Expect(resp.String()).To(ContainSubstring("Journal Detail"))
 			Expect(resp.String()).To(ContainSubstring("jrn_1234abcd"))
 		})
+
+		It("should serve journal images from static route", func() {
+			resp, err := client.R().Get("/journal/images/2024/01/sample.png")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+			Expect(resp.String()).To(Equal("sample-image"))
+		})
 	})
 
 	// Admin Endpoints - Tests server administration functionality

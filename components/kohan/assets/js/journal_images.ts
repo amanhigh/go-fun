@@ -33,10 +33,10 @@ export function createImageHelper(): ImageHelper {
 		resolve(fileName, createdAt) {
 			if (!fileName) return '';
 			if (fileName.startsWith('http://') || fileName.startsWith('https://') || fileName.startsWith('/')) return fileName;
-			if (!createdAt) return '/journal-images/' + fileName;
+			if (!createdAt) return '/journal/images/' + fileName;
 			const date = new Date(createdAt);
-			if (Number.isNaN(date.getTime())) return '/journal-images/' + fileName;
-			return `/journal-images/${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${fileName}`;
+			if (Number.isNaN(date.getTime())) return '/journal/images/' + fileName;
+			return `/journal/images/${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${fileName}`;
 		},
 		label(image) {
 			if (!image) return '';
