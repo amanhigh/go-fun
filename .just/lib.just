@@ -4,14 +4,24 @@ set quiet := true
 tailwind := "tailwindcss"
 tsc := "tsc"
 esbuild := "esbuild"
-templ := "go run github.com/a-h/templ/cmd/templ@latest"
-goimports := "go run golang.org/x/tools/cmd/goimports@latest"
+gobin := `go env GOPATH 2>/dev/null` + "/bin"
+templ_install := "github.com/a-h/templ/cmd/templ@latest"
+templ := gobin + "/templ"
+goimports_install := "golang.org/x/tools/cmd/goimports@latest"
+goimports := gobin + "/goimports"
+golangci_lint_install := "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.2"
+golangci_lint := gobin + "/golangci-lint"
+ginkgo_install := "github.com/onsi/ginkgo/v2/ginkgo@v2.13.2"
+ginkgo := gobin + "/ginkgo"
+deadcode_install := "golang.org/x/tools/cmd/deadcode@latest"
+deadcode := gobin + "/deadcode"
+swag_install := "github.com/swaggo/swag/cmd/swag@latest"
+swag := gobin + "/swag"
+mockery_install := "github.com/vektra/mockery/v3@v3.5.5"
+mockery := gobin + "/mockery"
+air_install := "github.com/air-verse/air@latest"
+air := gobin + "/air"
 root := `git rev-parse --show-toplevel`
-golangci_lint := "go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.2"
-ginkgo := "go run github.com/onsi/ginkgo/v2/ginkgo@v2.13.2"
-deadcode := "go run golang.org/x/tools/cmd/deadcode@latest"
-swag := "go run github.com/swaggo/swag/cmd/swag@latest"
-mockery := "go run github.com/vektra/mockery/v3@v3.5.5"
 
 # Print helpers (private)
 _info task info:
@@ -26,14 +36,11 @@ _title task info:
 _warn task info:
     echo '{{YELLOW}}[{{task}}]{{NORMAL}} {{info}} ⚠️'
 
-# Format Go code in specified directory (recursive).
-[group('go')]
-format dir=".":
+_format dir=".":
     just _info "GO" "Format"
     cd {{dir}} && {{goimports}} -w .
 
-# Generate templ files in specified directory (recursive).
-[group('go')]
+[group('build')]
 _templ dir=".":
     just _info "Templ" "Generating templ files"
     cd {{dir}} && {{templ}} generate
@@ -53,23 +60,14 @@ _css_sources dir=".":
         echo "@source \"${TEMPLUI_PATH}/components/**/*.templ\";"
     ) > ./assets/css/sources.generated.css
 
-# Run server with Air hot reload in specified directory.
-[group('run')]
-_air_run dir port="8080":
-    just _title "Air" "Starting server"
-    just _detail "URL" "http://localhost:{{port}}"
-    cd {{dir}} && go run github.com/air-verse/air@latest -c .air.toml
-
-# Generate Tailwind CSS bundle.
-[group('css')]
+[group('build')]
 _css dir=".":
     just _css_sources {{dir}}
     just _info "CSS" "Generating Tailwind bundle"
     cd {{dir}} && {{tailwind}} build --input ./assets/css/input.css --output ./assets/css/app.css
 
-# Type-check TypeScript sources.
-[group('js')]
-_tsc dir=".":
+[group('build')]
+_js dir=".":
     #!/usr/bin/env bash
     if command -v {{tsc}} >/dev/null 2>&1; then
         just _info "JS" "Type-checking TypeScript"
@@ -78,10 +76,11 @@ _tsc dir=".":
     else
         just _warn "JS" "TypeScript not found, skipping type-check"
     fi
-
-# Bundle TypeScript into JavaScript.
-[group('js')]
-_js dir=".":
-    just _tsc {{dir}}
     just _info "JS" "Bundling with esbuild"
     cd {{dir}} && {{esbuild}} assets/js/input.ts --bundle --outfile=assets/js/app.js --format=iife --target=es2020
+
+[group('run')]
+_air-run dir port="8080":
+    just _title "Air" "Starting server"
+    just _detail "URL" "http://localhost:{{port}}"
+    cd {{dir}} && {{air}} -c .air.toml
