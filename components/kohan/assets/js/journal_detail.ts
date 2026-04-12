@@ -37,11 +37,19 @@ function journalDetailPage() {
 		typeBadgeClass: (value: string) => badgeClassMap.type[normalizeTag(value)] ?? defaultBadgeClass,
 		// Image helpers
 		timeframeChipClass: image.chipClass,
-		sortedImages: () => image.sorted(this.journal?.images),
+		sortedImages(this: any) {
+			return image.sorted(this.journal?.images);
+		},
 		resolveImageSrc: image.resolve,
-		previewImageSrc: () => image.resolve(this.previewImage()?.file_name ?? '', this.previewImage()?.created_at),
-		previewImageLabel: () => image.label(this.previewImage()),
-		previewImageCounter: () => image.counter(this.selectedImageIndex, this.sortedImages().length),
+		previewImageSrc(this: any) {
+			return image.resolve(this.previewImage()?.file_name ?? '', this.previewImage()?.created_at);
+		},
+		previewImageLabel(this: any) {
+			return image.label(this.previewImage());
+		},
+		previewImageCounter(this: any) {
+			return image.counter(this.selectedImageIndex, this.sortedImages().length);
+		},
 		async loadJournal() {
 			this.loading = true;
 			this.errorMessage = '';
@@ -56,22 +64,38 @@ function journalDetailPage() {
 				this.loading = false;
 			}
 		},
-		hasError: () => this.errorMessage !== '',
-		hasImagePreview: () => this.selectedImageIndex >= 0 && this.selectedImageIndex < this.sortedImages().length,
-		openImagePreview: (index: number) => { this.selectedImageIndex = index; },
-		closeImagePreview: () => { this.selectedImageIndex = -1; },
-		canPrevImage: () => this.selectedImageIndex > 0,
-		canNextImage: () => this.selectedImageIndex >= 0 && this.selectedImageIndex < this.sortedImages().length - 1,
-		prevImage: (wrap = false) => {
+		hasError(this: any) {
+			return this.errorMessage !== '';
+		},
+		hasImagePreview(this: any) {
+			return this.selectedImageIndex >= 0 && this.selectedImageIndex < this.sortedImages().length;
+		},
+		openImagePreview(this: any, index: number) {
+			this.selectedImageIndex = index;
+		},
+		closeImagePreview(this: any) {
+			this.selectedImageIndex = -1;
+		},
+		canPrevImage(this: any) {
+			return this.selectedImageIndex > 0;
+		},
+		canNextImage(this: any) {
+			return this.selectedImageIndex >= 0 && this.selectedImageIndex < this.sortedImages().length - 1;
+		},
+		prevImage(this: any, wrap = false) {
 			if (this.canPrevImage()) this.selectedImageIndex--;
 			else if (wrap && this.sortedImages().length > 0) this.selectedImageIndex = this.sortedImages().length - 1;
 		},
-		nextImage: (wrap = false) => {
+		nextImage(this: any, wrap = false) {
 			if (this.canNextImage()) this.selectedImageIndex++;
 			else if (wrap && this.sortedImages().length > 0) this.selectedImageIndex = 0;
 		},
-		previewImage: () => this.sortedImages()[this.selectedImageIndex] ?? null,
-		previewImageTimeframe: () => this.previewImage()?.timeframe ?? '',
+		previewImage(this: any) {
+			return this.sortedImages()[this.selectedImageIndex] ?? null;
+		},
+		previewImageTimeframe(this: any) {
+			return this.previewImage()?.timeframe ?? '';
+		},
 		formatTimestamp: (value: string | null | undefined) => {
 			if (!value) return '—';
 			const parsed = new Date(value);

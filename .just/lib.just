@@ -69,15 +69,20 @@ _css dir=".":
 [group('build')]
 _js dir=".":
     #!/usr/bin/env bash
+    set -euo pipefail
+    js_dir="{{dir}}/assets/js"
+    bundle_entry="./assets/js/input.ts"
+    bundle_output="./assets/js/app.js"
+
     if command -v {{tsc}} >/dev/null 2>&1; then
         just _info "JS" "Type-checking TypeScript"
-        set -euo pipefail
-        cd {{dir}}/assets/js && {{tsc}} --noEmit --strict --skipLibCheck --lib ES2021,DOM --target ES2020 --module ESNext --moduleResolution bundler *.ts
+        (cd "$js_dir" && {{tsc}} --noEmit --strict --skipLibCheck --lib ES2021,DOM --target ES2020 --module ESNext --moduleResolution bundler *.ts)
     else
         just _warn "JS" "TypeScript not found, skipping type-check"
     fi
+
     just _info "JS" "Bundling with esbuild"
-    cd {{dir}} && {{esbuild}} assets/js/input.ts --bundle --outfile=assets/js/app.js --format=iife --target=es2020
+    (cd {{dir}} && {{esbuild}} "$bundle_entry" --bundle --outfile="$bundle_output" --format=iife --target=es2020)
 
 [group('run')]
 _air-run dir port="8080":
