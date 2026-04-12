@@ -24,7 +24,7 @@ infos: info _space-info
 install: _install-kohan
 
 [group('go')]
-prepare: _setup-tools setup-k8 _install-deadcode
+prepare: _setup-tools setup-k8
 
 [group('go')]
 setup: _setup
@@ -333,9 +333,9 @@ _generate-mocks:
     {{mockery}}
 
 [group('go')]
-_install-deadcode:
-    just _title "Installing" "DeadCode"
-    go install golang.org/x/tools/cmd/deadcode@latest
+_setup-tools:
+    just _title "SETUP" "Installing Shared Go Tools"
+    just _install_shared_go_tools
 
 [group('go')]
 _generate-swagger:
@@ -379,17 +379,6 @@ _helm-package:
     else
         make -C components/fun-app/charts package
     fi
-
-[group('go')]
-_setup-tools:
-    just _title "Setting up" "Tools"
-    go install github.com/onsi/ginkgo/v2/ginkgo
-    go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.2
-    go install github.com/swaggo/swag/cmd/swag
-    go install golang.org/x/tools/cmd/goimports@latest
-    go install github.com/vektra/mockery/v3@v3.5.5
-    go install github.com/a-h/templ/cmd/templ@latest
-    go install github.com/air-verse/air@latest
 
 [group('go')]
 _docker-fun: _build-fun
