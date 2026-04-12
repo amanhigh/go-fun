@@ -80,7 +80,7 @@ func (s *KohanServerLifecycle) registerJournalRoutes(engine *gin.Engine) {
 }
 
 func (s *KohanServerLifecycle) registerPortalRoutes(engine *gin.Engine) {
-	handler.SetupStaticRoutes(engine, "assets", s.JournalPortal.ImagePath())
+	handler.SetupStaticRoutes(engine, s.JournalPortal.ImagePath())
 	mux := http.NewServeMux()
 	utils.SetupScriptRoutes(mux, true)
 	engine.Any("/templui/*filepath", gin.WrapH(mux))
