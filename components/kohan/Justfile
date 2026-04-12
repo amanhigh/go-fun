@@ -14,7 +14,7 @@ default:
 [group('build')]
 build: _templ _css format _js
     go build -o {{binary}} {{kohan_dir}}
-    just _title "Build" "Kohan Ready"
+    just _title "BUILD" "Kohan Ready"
 
 # Run Kohan server with Air hot reload.
 [group('run')]

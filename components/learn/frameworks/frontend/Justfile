@@ -14,7 +14,7 @@ default:
 [group('build')]
 build: _templ _css format _js
     go build -o {{binary}} {{frontend_dir}}/demo
-    just _title "Build" "Frontend Demo Ready"
+    just _title "BUILD" "Frontend Demo Ready"
 
 # Run frontend demo server with Air hot reload.
 [group('run')]

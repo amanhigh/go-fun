@@ -8,6 +8,9 @@ templ := "go run github.com/a-h/templ/cmd/templ@latest"
 goimports := "go run golang.org/x/tools/cmd/goimports@latest"
 root := `git rev-parse --show-toplevel`
 golangci_lint := "go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.2"
+ginkgo := "go run github.com/onsi/ginkgo/v2/ginkgo@v2.13.2"
+deadcode := "go run golang.org/x/tools/cmd/deadcode@latest"
+swag := "go run github.com/swaggo/swag/cmd/swag@latest"
 mockery := "go run github.com/vektra/mockery/v3@v3.5.5"
 
 # Print helpers (private)
