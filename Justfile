@@ -59,7 +59,7 @@ release-helm:
         exit 1
     fi
     just _title "RELEASE" "Release Helm Charts: ${VER}"
-    just _helm-package
+    VERSION="${VER}" just _helm-package
     git add components/fun-app/charts/Chart.yaml
     git commit -m "Helm Released: ${VER}"
     just _info "RELEASE" "Release: https://github.com/amanhigh/go-fun/actions/workflows/release.yml"
@@ -261,7 +261,7 @@ _cover-analyse: combine-coverage _cover-report
     go tool cover -func=/tmp/cover/coverage-combined.out
     echo ""
     go tool cover -html=/tmp/cover/coverage-combined.out -o /tmp/coverage.html
-    just _info "HTML Report: file:///tmp/coverage.html"
+    just _info "COVER" "HTML Report: file:///tmp/coverage.html"
     just _info "Vscode" "go.apply.coverprofile /tmp/cover/coverage-combined.out"
 
 [group('go')]
@@ -372,7 +372,13 @@ _install-kohan:
 
 [group('go')]
 _helm-package:
-    VERSION="${VERSION:-${VER:-}}" make -C components/fun-app/charts package
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "${VERSION:-}" || -n "${VER:-}" ]]; then
+        VERSION="${VERSION:-${VER:-}}" make -C components/fun-app/charts package
+    else
+        make -C components/fun-app/charts package
+    fi
 
 [group('go')]
 _setup-tools:

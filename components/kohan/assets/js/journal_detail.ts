@@ -1,4 +1,5 @@
 import { type Journal, type Envelope } from './journal_models';
+import { createImageHelper } from './journal_images';
 
 declare const Alpine: {
 	data(name: string, callback: () => ReturnType<typeof journalDetailPage>): void;
@@ -19,21 +20,12 @@ const badgeClassMap: Record<string, Record<string, string>> = {
 		RESULT: 'border-emerald-300 bg-emerald-50 text-emerald-800',
 		SET: 'border-indigo-300 bg-indigo-50 text-indigo-800',
 	},
-	timeframe: {
-		YR: 'border-fuchsia-400 bg-fuchsia-200 text-fuchsia-950',
-		SMN: 'border-indigo-400 bg-indigo-200 text-indigo-950',
-		TMN: 'border-cyan-400 bg-cyan-200 text-cyan-950',
-		MN: 'border-emerald-400 bg-emerald-200 text-emerald-950',
-		WK: 'border-amber-400 bg-amber-200 text-amber-950',
-		DL: 'border-slate-400 bg-slate-200 text-slate-950',
-	},
 };
-
-const timeframeRankMap: Record<string, number> = { YR: 600, SMN: 500, TMN: 400, MN: 300, WK: 200, DL: 100 };
 
 const normalizeTag = (value: string): string => (value ?? '').trim().toUpperCase();
 
 function journalDetailPage() {
+	const image = createImageHelper();
 	return {
 		journalId: '',
 		journal: null as Journal | null,
@@ -42,8 +34,14 @@ function journalDetailPage() {
 		errorMessage: '',
 		normalizeStatus: normalizeTag,
 		statusBadgeClass: (value: string) => badgeClassMap.status[normalizeTag(value)] ?? defaultBadgeClass,
-		timeframeChipClass: (value: string) => badgeClassMap.timeframe[normalizeTag(value)] ?? 'border-zinc-300 bg-zinc-100 text-zinc-900',
 		typeBadgeClass: (value: string) => badgeClassMap.type[normalizeTag(value)] ?? defaultBadgeClass,
+		// Image helpers
+		timeframeChipClass: image.chipClass,
+		sortedImages: () => image.sorted(this.journal?.images),
+		resolveImageSrc: image.resolve,
+		previewImageSrc: () => image.resolve(this.previewImage()?.file_name ?? '', this.previewImage()?.created_at),
+		previewImageLabel: () => image.label(this.previewImage()),
+		previewImageCounter: () => image.counter(this.selectedImageIndex, this.sortedImages().length),
 		async loadJournal() {
 			this.loading = true;
 			this.errorMessage = '';
@@ -59,64 +57,22 @@ function journalDetailPage() {
 			}
 		},
 		hasError: () => this.errorMessage !== '',
-		timeframeRank: (value: string) => timeframeRankMap[normalizeTag(value)] ?? 0,
-		sortedImages() {
-			const images = this.journal?.images ?? [];
-			return [...images].sort((a, b) => this.timeframeRank(b.timeframe) - this.timeframeRank(a.timeframe));
+		hasImagePreview: () => this.selectedImageIndex >= 0 && this.selectedImageIndex < this.sortedImages().length,
+		openImagePreview: (index: number) => { this.selectedImageIndex = index; },
+		closeImagePreview: () => { this.selectedImageIndex = -1; },
+		canPrevImage: () => this.selectedImageIndex > 0,
+		canNextImage: () => this.selectedImageIndex >= 0 && this.selectedImageIndex < this.sortedImages().length - 1,
+		prevImage: (wrap = false) => {
+			if (this.canPrevImage()) this.selectedImageIndex--;
+			else if (wrap && this.sortedImages().length > 0) this.selectedImageIndex = this.sortedImages().length - 1;
 		},
-		hasImagePreview() {
-			return this.selectedImageIndex >= 0 && this.selectedImageIndex < this.sortedImages().length;
+		nextImage: (wrap = false) => {
+			if (this.canNextImage()) this.selectedImageIndex++;
+			else if (wrap && this.sortedImages().length > 0) this.selectedImageIndex = 0;
 		},
-		openImagePreview(index: number) {
-			this.selectedImageIndex = index;
-		},
-		closeImagePreview() {
-			this.selectedImageIndex = -1;
-		},
-		canPrevImage() {
-			return this.selectedImageIndex > 0;
-		},
-		canNextImage() {
-			return this.selectedImageIndex >= 0 && this.selectedImageIndex < this.sortedImages().length - 1;
-		},
-		prevImage(wrap = false) {
-			if (this.canPrevImage()) {
-				this.selectedImageIndex--;
-			} else if (wrap && this.sortedImages().length > 0) {
-				this.selectedImageIndex = this.sortedImages().length - 1;
-			}
-		},
-		nextImage(wrap = false) {
-			if (this.canNextImage()) {
-				this.selectedImageIndex++;
-			} else if (wrap && this.sortedImages().length > 0) {
-				this.selectedImageIndex = 0;
-			}
-		},
-		previewImage() {
-			return this.sortedImages()[this.selectedImageIndex] ?? null;
-		},
-		previewImageSrc() {
-			const image = this.previewImage();
-			return image ? this.resolveImageSrc(image.file_name, image.created_at) : '';
-		},
-		previewImageLabel() {
-			const image = this.previewImage();
-			return image ? (image.timeframe ? `${image.timeframe} • ${image.file_name}` : image.file_name) : '';
-		},
-		previewImageTimeframe() {
-			return this.previewImage()?.timeframe ?? '';
-		},
-		resolveImageSrc(fileName: string, createdAt?: string) {
-			if (!fileName || fileName.startsWith('http://') || fileName.startsWith('https://') || fileName.startsWith('/')) {
-				return fileName || '';
-			}
-			if (!createdAt) return '/journal-images/' + fileName;
-			const date = new Date(createdAt);
-			if (Number.isNaN(date.getTime())) return '/journal-images/' + fileName;
-			return `/journal-images/${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${fileName}`;
-		},
-		formatTimestamp(value: string | null | undefined) {
+		previewImage: () => this.sortedImages()[this.selectedImageIndex] ?? null,
+		previewImageTimeframe: () => this.previewImage()?.timeframe ?? '',
+		formatTimestamp: (value: string | null | undefined) => {
 			if (!value) return '—';
 			const parsed = new Date(value);
 			return Number.isNaN(parsed.getTime()) ? '—' : parsed.toLocaleString();
