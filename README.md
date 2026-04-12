@@ -116,14 +116,14 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 		- `BUG` Small Bug which is observed but need Fix.
 		- `XXX` Someday Tasks which may or may not be Done.
 		- `#A` `#B` `#C` for Priortizations. Eg. `BUG: #A Some Message`
-- ## Golang
-  This section covers common practices and tools for Golang.  
-	- ### Module Management
-	  This is multi module project. Each module has its own go mod file. Modules can be managed using [semver](https://semver.org/) tags. Eg. v1.0.0  
-		- Sync Modules using `make sync`. This is automatically done before builds.
-		- Mod
-			- New Module run `go mod init github.com/amanhigh/go-fun/components/fun-app` and to work using `go work use ./components/fun-app`
-			- Link Module to new Release using `go mod tidy` or `go get -u github.com/amanhigh/go-fun/models`
+ - ## Golang
+   This section covers common practices and tools for Golang.  
+ 	- ### Module Management
+   	  This is multi module project. Each module has its own go mod file. Modules can be managed using [semver](https://semver.org/) tags. Eg. v1.0.0  
+		- Sync modules using `just _sync`. This is automatically done before builds.
+ 		- Mod
+ 			- New Module run `go mod init github.com/amanhigh/go-fun/components/fun-app` and to work using `go work use ./components/fun-app`
+ 			- Link Module to new Release using `go mod tidy` or `go get -u github.com/amanhigh/go-fun/models`
 			- Recursive Depdency Update `find . -name "go.mod" -execdir sh -c 'go get -u && go mod tidy';` (Run it in ProjectBase Dir)
 		- Tags
 			- See existing tags. `git tag | grep common`
