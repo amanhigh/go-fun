@@ -13,20 +13,20 @@ _test-operator:
 _test-unit:
     just _title "TEST" "Running Unit Tests"
     mkdir -p /tmp/cover/unit
-    {{ginkgo}} -r --label-filter=\!setup\ \&\&\ \!slow --skip-package=components/fun-app/it -cover . -- -test.gocoverdir=/tmp/cover/unit
+    just _run "{{ginkgo}} -r --label-filter=\!setup\ \&\&\ \!slow --skip-package=components/fun-app/it -cover . -- -test.gocoverdir=/tmp/cover/unit"
 
 [group('quality')]
 [doc('Run slow test suites')]
 test-slow:
     just _title "TEST" "Running Slow Tests"
     mkdir -p /tmp/cover/slow
-    {{ginkgo}} -r '--label-filter=slow' -cover . -- -test.gocoverdir=/tmp/cover/slow
+    just _run "{{ginkgo}} -r '--label-filter=slow' -cover . -- -test.gocoverdir=/tmp/cover/slow"
 
 [group('quality')]
 _run-fun-cover: _build-fun-cover
     just _title "COVER" "Running Fun App with Coverage"
     mkdir -p /tmp/cover/integration
-    GOCOVERDIR=/tmp/cover/integration PORT=8085 bin/fun >/dev/null 2>&1 &
+    just _run "GOCOVERDIR=/tmp/cover/integration PORT=8085 bin/fun &"
 
 [group('quality')]
 _cover-report:
@@ -38,11 +38,11 @@ _cover-report:
     fi
     just _title "COVER" "Coverage Analysis Report"
     go tool cover -func=/tmp/cover/coverage-combined.out
-    overall=$(go tool cover -func=/tmp/cover/coverage-combined.out 2>/dev/null | tail -1 | awk '{print $3}')
+    overall=$(just _run-no-output "go tool cover -func=/tmp/cover/coverage-combined.out" | tail -1 | awk '{print $3}')
     echo "Overall Coverage: $overall"
     echo ""
     just _title "COVER" "Packages by Coverage (Lowest to Highest)"
-    go tool cover -func=/tmp/cover/coverage-combined.out 2>/dev/null | \
+    just _run-no-output "go tool cover -func=/tmp/cover/coverage-combined.out" | \
         awk '/github.com\/amanhigh\/go-fun\// { \
             gsub(/github.com\/amanhigh\/go-fun\//, "", $1); \
             gsub(/\/[^\/]*\.go:.*/, "", $1); \
@@ -126,4 +126,4 @@ _clean-test:
 [group('quality')]
 _test-focus:
     just _title "TEST" "Running Focus Tests"
-    {{ginkgo}} --focus "should create & get person" components/fun-app/it
+    just _run "{{ginkgo}} --focus 'should create & get person' components/fun-app/it"

@@ -33,7 +33,7 @@ func createTestImageDir() string {
 
 	sampleImageDir := filepath.Join(imageDir, "2024", "01")
 	Expect(os.MkdirAll(sampleImageDir, 0o755)).To(Succeed())
-	Expect(os.WriteFile(filepath.Join(sampleImageDir, "sample.png"), []byte("sample-image"), 0o644)).To(Succeed())
+	Expect(os.WriteFile(filepath.Join(sampleImageDir, "sample.png"), []byte("sample-image"), 0o600)).To(Succeed())
 
 	return imageDir
 }

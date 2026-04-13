@@ -3,8 +3,7 @@
 [group('run')]
 run: _build-fun
     just _title "RUN" "Running Fun App"
-    out="${OUT:-/dev/stdout}"
-    bin/fun > "$out"
+    just _run "bin/fun"
 
 [group('build')]
 _build-fun:
@@ -32,7 +31,7 @@ build: format lint _build-fun _build-kohan
 _clean-build:
     just _warn "CLEAN" "Cleaning Build"
     -rm -rf bin
-    -make -C components/operator/ clean
+    -just _run "make -C components/operator/ clean"
 
 [group('clean')]
 [doc('Clean build and test artifacts')]

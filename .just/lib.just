@@ -49,6 +49,9 @@ _run command:
         }; \
     fi
 
+_run-no-output command:
+    eval '{{command}}' 2>/dev/null
+
 _format dir=".":
     just _info "GO" "Format"
     cd {{dir}} && {{goimports}} -w .
