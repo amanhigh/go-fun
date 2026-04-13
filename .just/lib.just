@@ -21,6 +21,7 @@ mockery_install := "github.com/vektra/mockery/v3@v3.5.5"
 mockery := gobin + "/mockery"
 air_install := "github.com/air-verse/air@latest"
 air := gobin + "/air"
+log_file := "/tmp/go-fun-build.log"
 root := `git rev-parse --show-toplevel`
 
 # Print helpers (private)
@@ -35,6 +36,18 @@ _title task info:
 
 _warn task info:
     echo '{{YELLOW}}[{{task}}]{{NORMAL}} {{info}} ⚠️'
+
+_run command:
+    if [ "${GF_CONCISE:-0}" != "1" ]; then \
+        eval '{{command}}'; \
+    else \
+        { printf '\n=== %s ===\n' "$(date '+%Y-%m-%d %H:%M:%S')"; eval '{{command}}'; } >>'{{log_file}}' 2>&1 || { \
+            just _warn "RUN" "Command failed. Last 40 log lines:"; \
+            just _detail "RUN" "Detailed log: {{log_file}}"; \
+            tail -n 40 '{{log_file}}' >&2 || true; \
+            exit 1; \
+        }; \
+    fi
 
 _format dir=".":
     just _info "GO" "Format"

@@ -7,7 +7,7 @@ verify: _test-focus
 _test-operator:
     just _title "TEST" "Running Operator Tests"
     mkdir -p /tmp/cover/operator
-    make -C components/operator/ test GOCOVERDIR=/tmp/cover/operator
+    just _run "make -C components/operator/ test GOCOVERDIR=/tmp/cover/operator"
 
 [group('quality')]
 _test-unit:
