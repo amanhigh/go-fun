@@ -324,7 +324,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 					It("should return 400 for content exceeding max length (PRD: max 2000 chars)", func() {
 						var longContent strings.Builder
-						for range 2001 {
+						for range barkat.NoteContentMaxLength + 1 {
 							longContent.WriteString("X")
 						}
 						note := barkat.Note{Status: "SET", Content: longContent.String(), Format: "MARKDOWN"}

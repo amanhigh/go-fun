@@ -703,8 +703,8 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						util.AssertError(w, "Status", "oneof")
 					})
 
-					It("should return 400 for note content exceeding max length (PRD: max 2000 chars)", func() {
-						longContent := string(make([]byte, 2001))
+					It("should return 400 for note content exceeding max length (PRD: max 5000 chars)", func() {
+						longContent := string(make([]byte, barkat.NoteContentMaxLength+1))
 						for i := range longContent {
 							longContent = longContent[:i] + "a" + longContent[i+1:]
 						}

@@ -89,11 +89,11 @@ _clean-package:
     just _warn "HELM" "Deleting Helm Package(s)"
     just _run "rm -f ./*.tgz"
 
-[group('setup')]
+[group('helm')]
 [doc('Show Fun App and Vegeta information')]
 info: _info-fun _info-vegeta
 
-[group('setup')]
+[group('helm')]
 [doc('Show extended chart information including Istio and notes')]
 infos: info _info-istio _info-fun-notes
 
