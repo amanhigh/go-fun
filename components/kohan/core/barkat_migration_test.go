@@ -32,7 +32,7 @@ const (
 
 	// RealServerURL - set to URL of real server for testing against live database
 	// If empty, tests will run against in-memory database (default behavior)
-	// Note: Set to "http://localhost:9010" to test against real server
+	// Note: Set to "http://localhost:9091" to test against real server
 	RealServerURL = "" // Using in-memory DB - data already loaded in real DB
 )
 
