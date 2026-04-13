@@ -16,6 +16,14 @@ import glob
 from collections import Counter, defaultdict
 from datetime import datetime
 
+ALLOWED_SEQUENCES = {"MWD", "YR", "WDH"}
+ALLOWED_TYPES = {"REJECTED", "RESULT", "SET"}
+ALLOWED_STATUSES = {"SET", "RUNNING", "DROPPED", "TAKEN", "REJECTED", "SUCCESS", "FAIL", "MISSED", "JUST_LOSS", "BROKEN"}
+ALLOWED_IMAGE_TIMEFRAMES = {"DL", "WK", "MN", "TMN", "SMN", "YR"}
+ALLOWED_TAG_TYPES = {"REASON", "MANAGEMENT", "DIRECTION"}
+IMAGE_TIMEFRAME_ORDER = ["DL", "WK", "MN", "TMN"]
+NOTE_CONTENT_MAX_LENGTH = 5000
+
 # Line categories
 PROCESSED = "PROCESSED"  # Data that will be migrated
 SKIPPED = "SKIPPED"      # Understood but not migrated (e.g., SNF header, collapsed::)
@@ -46,6 +54,10 @@ class LineAccountant:
         self.ticker_occurrences = []
         self.date_range = {'earliest': None, 'latest': None}
         self.file_count = 0
+        self.projection_issues = []
+        self.projection_stats = defaultdict(int)
+        self.unknown_trade_tags = Counter()
+        self.entry_count = 0
         
     def process_line(self, file_name, line_num, line, category, subcategory, status):
         """Record a line's status."""
@@ -72,6 +84,291 @@ class LineAccountant:
         """Verify all lines are accounted for."""
         accounted = self.processed_lines + self.skipped_lines + self.flagged_lines
         return accounted == self.total_lines, accounted, self.total_lines
+
+
+def sanitize_ticker(ticker):
+    sanitized = ticker
+    if sanitized.endswith("!"):
+        sanitized = sanitized[:-1]
+    return sanitized.replace("_", "")
+
+
+def sanitize_filename(name):
+    return re.sub(r'[!@#$%^&*()+=\[\]{}|;:\'",<>?/\\]', '_', name)
+
+
+def derive_status_from_type(journal_type):
+    if journal_type == "SET":
+        return "SET"
+    if journal_type == "RESULT":
+        return "SUCCESS"
+    return "FAIL"
+
+
+def parse_legacy_tags(tags_part, entry, accountant):
+    tags = re.findall(r'#([trm])\.([a-z0-9-]+)', tags_part)
+    for prefix, value in tags:
+        if prefix == 't':
+            if value in ('mwd', 'yr'):
+                entry['sequence'] = value.upper()
+            elif value == 'wdh':
+                entry['sequence'] = 'WDH'
+            elif value == 'rejected':
+                entry['type'] = 'REJECTED'
+            elif value == 'set':
+                entry['type'] = 'SET'
+            elif value == 'result':
+                entry['type'] = 'RESULT'
+            elif value in ('fail', 'taken', 'success', 'running', 'broken', 'missed', 'miss', 'justloss', 'dropped'):
+                entry['status'] = {
+                    'fail': 'FAIL',
+                    'taken': 'TAKEN',
+                    'success': 'SUCCESS',
+                    'running': 'RUNNING',
+                    'broken': 'BROKEN',
+                    'missed': 'MISSED',
+                    'miss': 'MISSED',
+                    'justloss': 'JUST_LOSS',
+                    'dropped': 'DROPPED',
+                }[value]
+            elif value in ('trend', 'ctrend'):
+                entry['direction'] = value
+            else:
+                accountant.unknown_trade_tags[f't.{value}'] += 1
+        elif prefix == 'r':
+            entry['reason_tags'].append(value)
+        elif prefix == 'm':
+            entry['management_tags'].append(value)
+
+    if '#important' in tags_part:
+        entry['is_important'] = True
+
+
+def finalize_entry(entries, current_entry, raw_lines, note_lines):
+    if current_entry is None:
+        return
+
+    if note_lines and not current_entry['note']:
+        current_entry['note'] = '\n'.join(note_lines).strip()
+
+    current_entry['raw_markdown'] = '\n'.join(raw_lines).strip()
+    entries.append(current_entry)
+
+
+def parse_legacy_entries(file_path, accountant):
+    entries = []
+    current_entry = None
+    in_code_block = False
+    note_lines = []
+    raw_lines = []
+    entry_pattern = re.compile(r'\|\s*`([A-Z0-9_!]+)`\s*\|(.+)\|')
+    image_pattern = re.compile(r'!\[.*?\]\(([^)]+)\)')
+
+    with open(file_path, 'r', encoding='utf-8') as handle:
+        for line_num, raw_line in enumerate(handle, 1):
+            line = raw_line.rstrip('\n')
+            matches = entry_pattern.search(line)
+            if matches:
+                finalize_entry(entries, current_entry, raw_lines, note_lines)
+                current_entry = {
+                    'ticker': matches.group(1),
+                    'sequence': '',
+                    'type': '',
+                    'status': '',
+                    'direction': '',
+                    'reason_tags': [],
+                    'management_tags': [],
+                    'is_important': False,
+                    'images': [],
+                    'note': '',
+                    'simple_notes': [],
+                    'raw_markdown': '',
+                    'line_number': line_num,
+                    'file_name': os.path.basename(file_path),
+                }
+                raw_lines = [line]
+                note_lines = []
+                in_code_block = False
+                parse_legacy_tags(matches.group(2), current_entry, accountant)
+                continue
+
+            if current_entry is None:
+                continue
+
+            raw_lines.append(line)
+
+            if '```' in line:
+                if in_code_block:
+                    current_entry['note'] = '\n'.join(note_lines).strip()
+                    note_lines = []
+                in_code_block = not in_code_block
+                continue
+
+            if in_code_block:
+                note_lines.append(line)
+                continue
+
+            image_match = image_pattern.search(line)
+            if image_match:
+                current_entry['images'].append(image_match.group(1))
+
+            stripped = line.strip()
+            if stripped.startswith('-'):
+                content = stripped[1:].strip()
+                if content and '::' not in content:
+                    current_entry['simple_notes'].append(content)
+
+    finalize_entry(entries, current_entry, raw_lines, note_lines)
+    return entries
+
+
+def build_journal_projection(entry, journal_date):
+    ticker = sanitize_ticker(entry['ticker'])
+    images = []
+    for index, image_path in enumerate(entry['images']):
+        images.append({
+            'timeframe': IMAGE_TIMEFRAME_ORDER[index % len(IMAGE_TIMEFRAME_ORDER)],
+            'file_name': sanitize_filename(os.path.basename(image_path)),
+        })
+
+    while len(images) < 4:
+        images.append({
+            'timeframe': IMAGE_TIMEFRAME_ORDER[len(images)],
+            'file_name': f'placeholder_{len(images)}.png',
+        })
+
+    if len(images) > 16:
+        images = images[:16]
+
+    tags = []
+    if entry['direction']:
+        tags.append({'tag': entry['direction'], 'type': 'DIRECTION', 'override': None})
+
+    for reason_tag in entry['reason_tags']:
+        parts = reason_tag.split('-', 1)
+        tags.append({
+            'tag': parts[0],
+            'type': 'REASON',
+            'override': parts[1] if len(parts) > 1 else None,
+        })
+
+    for management_tag in entry['management_tags']:
+        tags.append({'tag': management_tag, 'type': 'MANAGEMENT', 'override': None})
+
+    if entry['is_important']:
+        tags.append({'tag': 'important', 'type': 'MANAGEMENT', 'override': None})
+
+    raw_markdown = entry['raw_markdown'].strip()
+    plan_note = entry['note'].strip()
+    sections = []
+    if raw_markdown:
+        sections.append(f'=== ORIGINAL MARKDOWN ===\n{raw_markdown}')
+    elif plan_note:
+        sections.append(f'=== PLAN NOTES ===\n{plan_note}')
+
+    if entry['simple_notes']:
+        review_lines = ['=== REVIEW NOTES ===']
+        review_lines.extend(f'- {note}' for note in entry['simple_notes'])
+        sections.append('\n'.join(review_lines))
+
+    notes = []
+    if sections:
+        notes.append({
+            'status': entry['status'] or derive_status_from_type(entry['type']),
+            'content': '\n\n'.join(sections),
+            'format': 'MARKDOWN',
+        })
+
+    return {
+        'ticker': ticker,
+        'sequence': entry['sequence'] or 'MWD',
+        'type': entry['type'] or 'REJECTED',
+        'status': entry['status'] or derive_status_from_type(entry['type']),
+        'created_at': journal_date.strftime('%Y-%m-%d'),
+        'images': images,
+        'tags': tags,
+        'notes': notes,
+    }
+
+
+def validate_projection(journal, entry, accountant):
+    location = f"{entry['file_name']}:{entry['line_number']}:{entry['ticker']}"
+
+    if not journal['ticker'] or len(journal['ticker']) > 10 or not re.fullmatch(r'[A-Z0-9]+', journal['ticker']):
+        accountant.projection_issues.append(f'{location} invalid ticker after sanitization: {journal["ticker"]}')
+
+    if journal['sequence'] not in ALLOWED_SEQUENCES:
+        accountant.projection_issues.append(f'{location} invalid sequence: {journal["sequence"]}')
+
+    if journal['type'] not in ALLOWED_TYPES:
+        accountant.projection_issues.append(f'{location} invalid type: {journal["type"]}')
+
+    if journal['status'] not in ALLOWED_STATUSES:
+        accountant.projection_issues.append(f'{location} invalid status: {journal["status"]}')
+
+    if not 4 <= len(journal['images']) <= 16:
+        accountant.projection_issues.append(f'{location} invalid image count: {len(journal["images"])}')
+
+    for image in journal['images']:
+        if image['timeframe'] not in ALLOWED_IMAGE_TIMEFRAMES:
+            accountant.projection_issues.append(f'{location} invalid image timeframe: {image["timeframe"]}')
+        if not image['file_name'] or len(image['file_name']) > 255:
+            accountant.projection_issues.append(f'{location} invalid image filename: {image["file_name"]}')
+
+    if len(journal['tags']) > 10:
+        accountant.projection_issues.append(f'{location} tag count exceeds model limit: {len(journal["tags"])}')
+
+    seen_tags = set()
+    for tag in journal['tags']:
+        key = (tag['tag'], tag['type'])
+        if key in seen_tags:
+            accountant.projection_issues.append(f'{location} duplicate tag/type generated: {tag["tag"]}/{tag["type"]}')
+        seen_tags.add(key)
+
+        if not tag['tag'] or len(tag['tag']) > 10:
+            accountant.projection_issues.append(f'{location} invalid tag value: {tag["tag"]}')
+        if tag['type'] not in ALLOWED_TAG_TYPES:
+            accountant.projection_issues.append(f'{location} invalid tag type: {tag["type"]}')
+        if tag['override'] is not None and len(tag['override']) > 5:
+            accountant.projection_issues.append(f'{location} invalid tag override length: {tag["override"]}')
+
+    if len(journal['notes']) > 1:
+        accountant.projection_issues.append(f'{location} note count exceeds model limit: {len(journal["notes"])}')
+
+    if journal['notes']:
+        note = journal['notes'][0]
+        content = note['content'].strip()
+        if note['status'] not in ALLOWED_STATUSES:
+            accountant.projection_issues.append(f'{location} invalid note status: {note["status"]}')
+        if note['format'] not in ('MARKDOWN', 'PLAINTEXT'):
+            accountant.projection_issues.append(f'{location} invalid note format: {note["format"]}')
+        if not content or len(content) > NOTE_CONTENT_MAX_LENGTH:
+            accountant.projection_issues.append(f'{location} invalid note content length: {len(content)}')
+        if content in ('=== ORIGINAL MARKDOWN ===', '=== PLAN NOTES ==='):
+            accountant.projection_issues.append(f'{location} placeholder-only note content detected')
+
+    accountant.projection_stats['journals'] += 1
+    accountant.projection_stats['images'] += len(journal['images'])
+    accountant.projection_stats['tags'] += len(journal['tags'])
+    accountant.projection_stats['notes'] += len(journal['notes'])
+
+
+def run_projection_validation(files, accountant):
+    for file_path in files:
+        file_name = os.path.basename(file_path)
+        try:
+            journal_date = datetime.strptime(file_name.replace('.md', ''), '%Y_%m_%d')
+        except ValueError:
+            try:
+                journal_date = datetime.strptime(file_name.replace('.md', ''), '%Y-%m-%d')
+            except ValueError:
+                accountant.projection_issues.append(f'{file_name} invalid filename date format')
+                continue
+
+        entries = parse_legacy_entries(file_path, accountant)
+        accountant.entry_count += len(entries)
+        for entry in entries:
+            validate_projection(build_journal_projection(entry, journal_date), entry, accountant)
 
 
 def analyze_journal_line(line, line_stripped, in_code_block, prev_line_type, file_name, line_num, accountant):
@@ -241,6 +538,8 @@ def validate_journals():
             
             accountant.process_line(file_name, line_num, line, category, category, status)
             prev_line_type = line_type
+
+    run_projection_validation(files, accountant)
     
     # === VERIFICATION ===
     print("=" * 80)
@@ -276,12 +575,18 @@ def validate_journals():
     print(f"  Important Tags (#important): {len(accountant.important_tags)}")
     print(f"  Code Block Notes: {len(accountant.notes['code_block'])}")
     print(f"  Plan Notes: {len(accountant.notes['plan'])}")
-    print(f"  Simple Notes (CRITICAL): {len(accountant.notes['simple'])}")
+    print(f"  Simple Notes (review notes): {len(accountant.notes['simple'])}")
+
+    print("\n--- Projected Migration Shape ---")
+    print(f"  Projected Journals: {accountant.projection_stats['journals']}")
+    print(f"  Projected Images: {accountant.projection_stats['images']}")
+    print(f"  Projected Tags: {accountant.projection_stats['tags']}")
+    print(f"  Projected Notes: {accountant.projection_stats['notes']}")
     
     # === SIMPLE NOTES DETAIL (CRITICAL) ===
     if accountant.notes['simple']:
         print("\n" + "=" * 80)
-        print("SIMPLE NOTES - MUST BE MIGRATED (Outside Code Blocks)")
+        print("SIMPLE NOTES CAPTURED FROM SOURCE (Outside Code Blocks)")
         print("=" * 80)
         print(f"\nFound {len(accountant.notes['simple'])} simple notes that need migration:")
         for i, note in enumerate(accountant.notes['simple'], 1):
@@ -403,18 +708,33 @@ def validate_journals():
         't.wdh': 'sequence -> WDH',
         't.rejected': 'type -> REJECTED',
         't.set': 'type -> SET',
-        't.taken': 'type -> TAKEN',
+        't.taken': 'status -> TAKEN',
         't.fail': 'status -> FAIL',
         't.success': 'status -> SUCCESS',
         't.broken': 'status -> BROKEN',
-        't.miss': 'status -> MISSED',
-        't.justloss': 'status -> JUST_LOSS',
         't.running': 'status -> RUNNING',
-        't.full': 'tags -> tag: double, type: MANAGEMENT',
+        't.miss': 'status -> MISSED',
+        't.missed': 'status -> MISSED',
+        't.justloss': 'status -> JUST_LOSS',
     }
     for tag, count in trade_counter.most_common():
         mapping = trade_mappings.get(tag, 'UNKNOWN - needs mapping')
         print(f"   {count:4d} {tag} -> {mapping}")
+
+    if accountant.unknown_trade_tags:
+        print("\n--- Unknown Trade Tags In Source ---")
+        for tag, count in accountant.unknown_trade_tags.most_common():
+            print(f"  {tag}: {count}")
+
+    print("\n=== Projected Migration Validation ===")
+    if accountant.projection_issues:
+        print(f"Found {len(accountant.projection_issues)} projected migration issues:")
+        for issue in accountant.projection_issues[:50]:
+            print(f"  {issue}")
+        if len(accountant.projection_issues) > 50:
+            print(f"  ... and {len(accountant.projection_issues) - 50} more")
+    else:
+        print("  ✓ No projection issues detected against current migration rules")
     
     print("\nReason Tag Mappings (all map to tags with type: REASON):")
     for tag, count in reason_counter.most_common():
@@ -441,14 +761,17 @@ def validate_journals():
     if accountant.flagged_lines > 0:
         issues.append(f"⚠️  {accountant.flagged_lines} unexplained lines need investigation")
     
-    if accountant.notes['simple']:
-        issues.append(f"⚠️  {len(accountant.notes['simple'])} simple notes must be migrated (currently may be lost)")
-    
     if accountant.important_tags:
         issues.append(f"ℹ️  {len(accountant.important_tags)} #important tags found - ensure they're captured")
     
     if accountant.tags['other']:
         issues.append(f"ℹ️  {len(accountant.tags['other'])} non-standard tags found - verify handling")
+
+    if accountant.unknown_trade_tags:
+        issues.append(f"⚠️  {sum(accountant.unknown_trade_tags.values())} trade tags are not mapped by current migration")
+
+    if accountant.projection_issues:
+        issues.append(f"⚠️  {len(accountant.projection_issues)} projected migration issues violate current Barkat constraints")
     
     if issues:
         print("\nISSUES FOUND:")
@@ -460,6 +783,7 @@ def validate_journals():
     print("\n--- Migration Counts (for comparison with migration script) ---")
     print(f"  Files: {len(files)}")
     print(f"  Journal Entries (tickers): {len(accountant.tickers)}")
+    print(f"  Parsed Entries: {accountant.entry_count}")
     print(f"  Images: {len(accountant.images)}")
     print(f"  Total Tags: {len(accountant.tags['trade']) + len(accountant.tags['reason']) + len(accountant.tags['management'])}")
     print(f"  Notes (code block + simple + plan): {len(accountant.notes['code_block']) + len(accountant.notes['simple']) + len(accountant.notes['plan'])}")

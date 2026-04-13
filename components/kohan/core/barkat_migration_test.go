@@ -297,8 +297,8 @@ func parseLegacyMarkdownWithLogging(filePath string, _ *MigrationLogger) ([]Lega
 		entries:      entries,
 		counts:       counts,
 		inCodeBlock:  inCodeBlock,
-		rawMarkdown:  rawMarkdown,
-		noteContent:  noteContent,
+		rawMarkdown:  &rawMarkdown,
+		noteContent:  &noteContent,
 		entryPattern: entryPattern,
 		imagePattern: imagePattern,
 	})
@@ -324,8 +324,8 @@ type markdownProcessContext struct {
 	entries      []LegacyJournalEntry
 	counts       ProcessingCounts
 	inCodeBlock  bool
-	rawMarkdown  strings.Builder
-	noteContent  strings.Builder
+	rawMarkdown  *strings.Builder
+	noteContent  *strings.Builder
 	entryPattern *regexp.Regexp
 	imagePattern *regexp.Regexp
 }
@@ -379,14 +379,19 @@ type lineProcessContext struct {
 	entries      []LegacyJournalEntry
 	counts       ProcessingCounts
 	inCodeBlock  bool
-	rawMarkdown  strings.Builder
-	noteContent  strings.Builder
+	rawMarkdown  *strings.Builder
+	noteContent  *strings.Builder
 	entryPattern *regexp.Regexp
 	imagePattern *regexp.Regexp
 }
 
 // processLine handles individual line processing during parsing
 func processLine(ctx lineProcessContext) lineProcessResult {
+	// Check for entry line (table row with ticker)
+	if matches := ctx.entryPattern.FindStringSubmatch(ctx.line); matches != nil {
+		return handleEntryLine(ctx, matches)
+	}
+
 	// Track raw markdown for current entry
 	updateRawMarkdown(ctx)
 
@@ -397,11 +402,6 @@ func processLine(ctx lineProcessContext) lineProcessResult {
 
 	if ctx.inCodeBlock {
 		return handleInCodeBlockLine(ctx)
-	}
-
-	// Check for entry line (table row with ticker)
-	if matches := ctx.entryPattern.FindStringSubmatch(ctx.line); matches != nil {
-		return handleEntryLine(ctx, matches)
 	}
 
 	// Check for image line
@@ -443,6 +443,7 @@ func handleEntryLine(ctx lineProcessContext, matches []string) lineProcessResult
 
 	// Reset raw markdown for new entry
 	ctx.rawMarkdown.Reset()
+	ctx.noteContent.Reset()
 	ctx.rawMarkdown.WriteString(ctx.line + "\n")
 
 	// Parse and store raw tags
@@ -476,7 +477,7 @@ func handleImageLine(ctx lineProcessContext) lineProcessResult {
 }
 
 // handleCodeBlock processes code block start/end markers
-func handleCodeBlock(_ string, inCodeBlock bool, currentEntry *LegacyJournalEntry, noteContent strings.Builder, counts ProcessingCounts) (*LegacyJournalEntry, ProcessingCounts) {
+func handleCodeBlock(_ string, inCodeBlock bool, currentEntry *LegacyJournalEntry, noteContent *strings.Builder, counts ProcessingCounts) (*LegacyJournalEntry, ProcessingCounts) {
 	if inCodeBlock {
 		// End of code block
 		if currentEntry != nil {
@@ -543,7 +544,7 @@ func processTradeTag(value string, entry *LegacyJournalEntry) *LegacyJournalEntr
 		entry.Type = "SET"
 	case "result":
 		entry.Type = "RESULT"
-	case "fail", "taken", "success", "running", "broken", "missed", "dropped":
+	case "fail", "taken", "success", "running", "broken", "missed", "miss", "justloss", "dropped":
 		entry.Status = mapStatusTag(value)
 	case "trend", "ctrend":
 		entry.Direction = value
@@ -728,37 +729,63 @@ func buildManagementTags(mgmtTags []string, journalDate time.Time) []barkat.Tag 
 // Simple notes (review comments) have FINAL status (success/fail outcome)
 // Note: Model allows max=1 note, so we combine all content into one note
 func buildNotesFromLegacy(entry LegacyJournalEntry, journalDate time.Time) []barkat.Note {
-	var notes []barkat.Note
-
-	// Determine the FINAL status for review notes
-	finalStatus := entry.Status
-	if finalStatus == "" {
-		finalStatus = deriveStatusFromType(entry.Type)
+	sections := buildNoteSections(entry)
+	if len(sections) == 0 {
+		return nil
 	}
 
-	// Build combined note content (model allows max=1 note)
-	var contentBuilder strings.Builder
-	contentBuilder.WriteString("=== ORIGINAL MARKDOWN ===\n")
-	contentBuilder.WriteString(entry.RawMarkdown)
-
-	// Append simple notes (review comments) to the same note
-	if len(entry.SimpleNotes) > 0 {
-		contentBuilder.WriteString("\n=== REVIEW NOTES ===\n")
-		for _, simpleNote := range entry.SimpleNotes {
-			contentBuilder.WriteString("- ")
-			contentBuilder.WriteString(simpleNote)
-			contentBuilder.WriteString("\n")
-		}
-	}
-
-	notes = append(notes, barkat.Note{
-		Status:    finalStatus,
-		Content:   contentBuilder.String(),
+	return []barkat.Note{{
+		Status:    finalStatusForLegacyNote(entry),
+		Content:   strings.Join(sections, "\n\n"),
 		Format:    "MARKDOWN",
 		CreatedAt: journalDate,
-	})
+	}}
+}
 
-	return notes
+func buildNoteSections(entry LegacyJournalEntry) []string {
+	rawMarkdown := strings.TrimSpace(entry.RawMarkdown)
+	planNote := strings.TrimSpace(entry.Note)
+	sections := buildPrimaryNoteSections(rawMarkdown, planNote)
+
+	if reviewSection := buildReviewNoteSection(entry.SimpleNotes); reviewSection != "" {
+		sections = append(sections, reviewSection)
+	}
+
+	return sections
+}
+
+func buildPrimaryNoteSections(rawMarkdown, planNote string) []string {
+	if rawMarkdown != "" {
+		return []string{"=== ORIGINAL MARKDOWN ===\n" + rawMarkdown}
+	}
+	if planNote != "" {
+		return []string{"=== PLAN NOTES ===\n" + planNote}
+	}
+	return nil
+}
+
+func buildReviewNoteSection(simpleNotes []string) string {
+	if len(simpleNotes) == 0 {
+		return ""
+	}
+
+	var reviewBuilder strings.Builder
+	reviewBuilder.WriteString("=== REVIEW NOTES ===\n")
+	for _, simpleNote := range simpleNotes {
+		reviewBuilder.WriteString("- ")
+		reviewBuilder.WriteString(simpleNote)
+		reviewBuilder.WriteString("\n")
+	}
+
+	return strings.TrimSpace(reviewBuilder.String())
+}
+
+func finalStatusForLegacyNote(entry LegacyJournalEntry) string {
+	if entry.Status != "" {
+		return entry.Status
+	}
+
+	return deriveStatusFromType(entry.Type)
 }
 
 // deriveStatusFromType maps journal type to default status
@@ -869,6 +896,61 @@ var _ = Describe("Barkat Migration Test", func() {
 		}
 	})
 
+	Context("Parser helpers", func() {
+		It("should preserve raw markdown and code block note content for a parsed entry", func() {
+			tempDir := GinkgoT().TempDir()
+			filePath := filepath.Join(tempDir, "2023_06_15.md")
+			content := strings.Join([]string{
+				"| `SBIN` | #t.set #t.running #r.dep-loc #m.ntr |",
+				"- review note",
+				"```md",
+				"plan line 1",
+				"plan line 2",
+				"```",
+				"![chart](images/sbin.png)",
+				"",
+			}, "\n")
+
+			Expect(os.WriteFile(filePath, []byte(content), 0o600)).To(Succeed())
+
+			entries, parsedCounts, err := parseLegacyMarkdownWithLogging(filePath, logger)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(entries).To(HaveLen(1))
+			Expect(parsedCounts.ParsedTickers).To(Equal(1))
+			Expect(parsedCounts.ParsedImages).To(Equal(1))
+			Expect(parsedCounts.ParsedNotes).To(Equal(2))
+
+			entry := entries[0]
+			Expect(entry.Note).To(Equal("plan line 1\nplan line 2"))
+			Expect(entry.SimpleNotes).To(Equal([]string{"review note"}))
+			Expect(entry.RawMarkdown).To(ContainSubstring("| `SBIN` | #t.set #t.running #r.dep-loc #m.ntr |"))
+			Expect(entry.RawMarkdown).To(ContainSubstring("- review note"))
+			Expect(entry.RawMarkdown).To(ContainSubstring("plan line 1"))
+			Expect(entry.RawMarkdown).To(ContainSubstring("![chart](images/sbin.png)"))
+		})
+
+		It("should map legacy trade status aliases without changing unsupported tags", func() {
+			entry := &LegacyJournalEntry{}
+
+			entry = processTradeTag("taken", entry)
+			Expect(entry.Status).To(Equal("TAKEN"))
+
+			entry = processTradeTag("miss", entry)
+			Expect(entry.Status).To(Equal("MISSED"))
+
+			entry = processTradeTag("justloss", entry)
+			Expect(entry.Status).To(Equal("JUST_LOSS"))
+
+			entry = processTradeTag("full", entry)
+			Expect(entry.Status).To(Equal("JUST_LOSS"))
+		})
+
+		It("should skip creating placeholder notes when the entry has no note content", func() {
+			notes := buildNotesFromLegacy(LegacyJournalEntry{Type: "SET"}, time.Date(2023, time.June, 15, 0, 0, 0, 0, time.UTC))
+			Expect(notes).To(BeEmpty())
+		})
+	})
+
 	Context("Single File Migration", func() {
 		var (
 			testFilePath = filepath.Join(ProcessedFolder, TestFile)
@@ -943,6 +1025,42 @@ var _ = Describe("Barkat Migration Test", func() {
 			GinkgoWriter.Printf("Log file: %s\n", logger.GetLogPath())
 
 			Expect(stats.FailureCount).To(Equal(0), "All migrations should succeed")
+		})
+
+		It("should keep sampled migrated note content meaningful", func() {
+			journalDate, err := extractDateFromFilename(testFilePath)
+			Expect(err).ToNot(HaveOccurred())
+
+			sampled := 0
+			for _, entry := range entries {
+				journal := convertToJournalWithLogging(entry, journalDate, testFilePath, logger)
+				if len(journal.Notes) == 0 {
+					continue
+				}
+
+				resp, reqErr := client.R().SetBody(journal).Post(barkat.JournalBase)
+				Expect(reqErr).ToNot(HaveOccurred())
+				Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
+
+				var envelope common.Envelope[barkat.Journal]
+				Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
+				Expect(envelope.Data.Notes).ToNot(BeEmpty())
+
+				noteContent := strings.TrimSpace(envelope.Data.Notes[0].Content)
+				Expect(noteContent).ToNot(Equal("=== ORIGINAL MARKDOWN ==="))
+				Expect(noteContent).ToNot(Equal("=== PLAN NOTES ==="))
+
+				if after, ok := strings.CutPrefix(noteContent, "=== ORIGINAL MARKDOWN ==="); ok {
+					Expect(strings.TrimSpace(after)).ToNot(BeEmpty())
+				}
+
+				sampled++
+				if sampled == 3 {
+					break
+				}
+			}
+
+			Expect(sampled).To(Equal(3))
 		})
 	})
 
