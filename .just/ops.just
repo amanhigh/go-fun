@@ -22,7 +22,7 @@ profile:
 [doc('Analyse Fun App logs with GoAccess')]
 analyse: _build-fun
     just _title "Analyse" "Fun App Logs"
-    just _run-no-output "bin/fun" | grep GIN | goaccess --log-format='%^ %d - %t | %s | %~%D | %b | %~%h | %^ | %m %U' --date-format='%Y/%m/%d' --time-format='%H:%M:%S'
+    bin/fun 2>/dev/null | grep GIN | goaccess --log-format='%^ %d - %t | %s | %~%D | %b | %~%h | %^ | %m %U' --date-format='%Y/%m/%d' --time-format='%H:%M:%S'
 
 # TODO: Replace with air tool enstead of entr ?
 [group('run')]

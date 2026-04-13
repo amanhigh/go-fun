@@ -37,12 +37,12 @@ _cover-report:
         exit 1
     fi
     just _title "COVER" "Coverage Analysis Report"
-    go tool cover -func=/tmp/cover/coverage-combined.out
-    overall=$(just _run-no-output "go tool cover -func=/tmp/cover/coverage-combined.out" | tail -1 | awk '{print $3}')
+    just _run-no-output "go tool cover -func=/tmp/cover/coverage-combined.out"
+    overall=$(go tool cover -func=/tmp/cover/coverage-combined.out 2>/dev/null | tail -1 | awk '{print $3}')
     echo "Overall Coverage: $overall"
     echo ""
     just _title "COVER" "Packages by Coverage (Lowest to Highest)"
-    just _run-no-output "go tool cover -func=/tmp/cover/coverage-combined.out" | \
+    go tool cover -func=/tmp/cover/coverage-combined.out 2>/dev/null | \
         awk '/github.com\/amanhigh\/go-fun\// { \
             gsub(/github.com\/amanhigh\/go-fun\//, "", $1); \
             gsub(/\/[^\/]*\.go:.*/, "", $1); \
@@ -91,7 +91,7 @@ cover: _clean-test _test-unit _run-fun-cover _combine-coverage
     just _title "COVER" "Analysing Coverage Reports"
     just _cover-report
     echo ""
-    go tool cover -html=/tmp/cover/coverage-combined.out -o /tmp/coverage.html
+    just _run-no-output "go tool cover -html=/tmp/cover/coverage-combined.out -o /tmp/coverage.html"
     just _info "COVER" "HTML Report: file:///tmp/coverage.html"
     just _info "Vscode" "go.apply.coverprofile /tmp/cover/coverage-combined.out"
 

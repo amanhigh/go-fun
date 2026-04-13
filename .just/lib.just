@@ -21,6 +21,7 @@ mockery_install := "github.com/vektra/mockery/v3@v3.5.5"
 mockery := gobin + "/mockery"
 air_install := "github.com/air-verse/air@latest"
 air := gobin + "/air"
+export concise := env('concise', '0')
 log_file := "/tmp/go-fun-build.log"
 root := `git rev-parse --show-toplevel`
 
@@ -38,7 +39,7 @@ _warn task info:
     echo '{{YELLOW}}[{{task}}]{{NORMAL}} {{info}} ⚠️'
 
 _run command:
-    if [ "${GF_CONCISE:-0}" != "1" ]; then \
+    if [ "{{concise}}" != "1" ]; then \
         eval '{{command}}'; \
     else \
         { printf '\n=== %s ===\n' "$(date '+%Y-%m-%d %H:%M:%S')"; eval '{{command}}'; } >>'{{log_file}}' 2>&1 || { \
@@ -50,7 +51,7 @@ _run command:
     fi
 
 _run-no-output command:
-    eval '{{command}}' 2>/dev/null
+    eval '{{command}}' >/dev/null 2>&1
 
 _format dir=".":
     just _info "GO" "Format"
