@@ -83,15 +83,14 @@ templ JournalFilters() {
 				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-type", Name: "journal-type", Class: "h-9 w-full border-indigo-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.type", "x-on:change": "applyFilters()"}}) {
 					@selectbox.Value(selectbox.ValueProps{Placeholder: "Type"})
 				}
-				@selectbox.Content() {
-					@selectbox.Group() {
-						@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
-						@selectbox.Item(selectbox.ItemProps{Value: "REJECTED"}) { REJECTED }
-						@selectbox.Item(selectbox.ItemProps{Value: "RESULT"}) { RESULT }
-						@selectbox.Item(selectbox.ItemProps{Value: "SET"}) { SET }
+					@selectbox.Content() {
+						@selectbox.Group() {
+							@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
+							@selectbox.Item(selectbox.ItemProps{Value: "REJECTED"}) { REJECTED }
+							@selectbox.Item(selectbox.ItemProps{Value: "TAKEN"}) { TAKEN }
+						}
 					}
 				}
-			}
 		</div>
 		<div>
 			@selectbox.SelectBox() {

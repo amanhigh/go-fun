@@ -29,11 +29,31 @@ const (
 
 	// TestFile is the specific test file used for single file migration
 	TestFile = "2023_06_15.md"
+)
 
-	// RealServerURL - set to URL of real server for testing against live database
-	// If empty, tests will run against in-memory database (default behavior)
-	// Note: Set to "http://localhost:9091" to test against real server
-	RealServerURL = "" // Using in-memory DB - data already loaded in real DB
+var (
+	// RealServerURL - set BARKAT_REAL_SERVER_URL to test against live database.
+	// If empty, tests run against the in-memory test server.
+	RealServerURL = os.Getenv("BARKAT_REAL_SERVER_URL")
+)
+
+var (
+	entryPattern                     = regexp.MustCompile(`\|\s*` + "`" + `([A-Z0-9_!]+)` + "`" + `\s*\|(.+)\|`)
+	imagePattern                     = regexp.MustCompile(`!\[.*?\]\(([^)]+)\)`)
+	tagPattern                       = regexp.MustCompile(`#([trm])\.([a-z0-9-]+)`)
+	fileNameSanitizer                = regexp.MustCompile(`[!@#$%^&*()+=\[\]{}|;:'\",<>?/\\]`)
+	imageDashDatePattern             = regexp.MustCompile(`--(\d{4}-\d{2}-\d{2})-\d+\.(?i:jpg|jpeg|png)$`)
+	imageDoubleUnderscoreDatePattern = regexp.MustCompile(`__(\d{8})__\d{6}\.(?i:jpg|jpeg|png)$`)
+	imageSingleUnderscoreDatePattern = regexp.MustCompile(`_(\d{8})_\d{6}\.(?i:jpg|jpeg|png)$`)
+	statusTagMap                     = map[string]string{
+		"fail":     "FAIL",
+		"success":  "SUCCESS",
+		"running":  "RUNNING",
+		"broken":   "BROKEN",
+		"missed":   "MISSED",
+		"miss":     "MISSED",
+		"justloss": "JUST_LOSS",
+	}
 )
 
 // ============================================================================
@@ -96,6 +116,57 @@ type ProcessingCounts struct {
 	MigratedImages   int `json:"migrated_images"`
 	MigratedNotes    int `json:"migrated_notes"`
 	MigratedTags     int `json:"migrated_tags"`
+}
+
+type ImageBuildStats struct {
+	SourceRefs             int `json:"source_refs"`
+	MigratedSourceRefs     int `json:"migrated_source_refs"`
+	SkippedClipboardRefs   int `json:"skipped_clipboard_refs"`
+	TruncatedSourceRefs    int `json:"truncated_source_refs"`
+	PlaceholderImagesAdded int `json:"placeholder_images_added"`
+	FinalImageCount        int `json:"final_image_count"`
+}
+
+type ConvertedJournal struct {
+	Journal    barkat.Journal
+	ImageStats ImageBuildStats
+}
+
+type MigrationAccounting struct {
+	SourceEntries            int
+	SourceImageRefs          int
+	MigratedSourceImageRefs  int
+	SkippedClipboardRefs     int
+	TruncatedSourceImageRefs int
+	PlaceholderImagesAdded   int
+	FinalImageRecords        int
+	ProjectedNotes           int
+	ProjectedTags            int
+}
+
+func (a *MigrationAccounting) RecordConversion(converted ConvertedJournal) {
+	a.SourceEntries++
+	a.SourceImageRefs += converted.ImageStats.SourceRefs
+	a.MigratedSourceImageRefs += converted.ImageStats.MigratedSourceRefs
+	a.SkippedClipboardRefs += converted.ImageStats.SkippedClipboardRefs
+	a.TruncatedSourceImageRefs += converted.ImageStats.TruncatedSourceRefs
+	a.PlaceholderImagesAdded += converted.ImageStats.PlaceholderImagesAdded
+	a.FinalImageRecords += converted.ImageStats.FinalImageCount
+	a.ProjectedNotes += len(converted.Journal.Notes)
+	a.ProjectedTags += len(converted.Journal.Tags)
+}
+
+func (a MigrationAccounting) VerifySourceImageAccounting() {
+	Expect(a.MigratedSourceImageRefs+a.SkippedClipboardRefs+a.TruncatedSourceImageRefs).To(Equal(a.SourceImageRefs),
+		"source image refs should reconcile to migrated + skipped + truncated refs")
+}
+
+func (a MigrationAccounting) VerifyMigratedCounts(migratedCounts ProcessingCounts) {
+	a.VerifySourceImageAccounting()
+	Expect(migratedCounts.MigratedJournals).To(Equal(a.SourceEntries), "every parsed entry should migrate")
+	Expect(migratedCounts.MigratedImages).To(Equal(a.FinalImageRecords), "persisted image records should match projection")
+	Expect(migratedCounts.MigratedNotes).To(Equal(a.ProjectedNotes), "persisted note records should match projection")
+	Expect(migratedCounts.MigratedTags).To(Equal(a.ProjectedTags), "persisted tag records should match projection")
 }
 
 func NewMigrationLogger(logDir string) (*MigrationLogger, error) {
@@ -249,16 +320,11 @@ func extractDateFromFilename(filename string) (time.Time, error) {
 	base := filepath.Base(filename)
 	base = strings.TrimSuffix(base, ".md")
 
-	// Try format: 2023_06_15
-	t, err := time.Parse("2006_01_02", base)
-	if err == nil {
-		return t, nil
-	}
-
-	// Try format: 2023-06-15
-	t, err = time.Parse("2006-01-02", base)
-	if err == nil {
-		return t, nil
+	for _, format := range []string{"2006_01_02", "2006-01-02"} {
+		t, err := time.Parse(format, base)
+		if err == nil {
+			return t, nil
+		}
 	}
 
 	return time.Time{}, fmt.Errorf("cannot parse date from filename: %s", filename)
@@ -285,10 +351,6 @@ func parseLegacyMarkdownWithLogging(filePath string, _ *MigrationLogger) ([]Lega
 	var lineNumber int
 
 	scanner := bufio.NewScanner(file)
-	// Regex patterns
-	entryPattern := regexp.MustCompile(`\|\s*` + "`" + `([A-Z0-9_!]+)` + "`" + `\s*\|(.+)\|`)
-	imagePattern := regexp.MustCompile(`!\[.*?\]\(([^)]+)\)`)
-	// tagPattern is defined in parseLegacyTags helper function
 
 	result := processMarkdownLines(markdownProcessContext{
 		scanner:      scanner,
@@ -503,7 +565,6 @@ func parseEntryLine(matches []string, line string, lineNumber int) *LegacyJourna
 
 // parseLegacyTags extracts and categorizes legacy tags from tag string
 func parseLegacyTags(tagsPart string, entry *LegacyJournalEntry) *LegacyJournalEntry {
-	tagPattern := regexp.MustCompile(`#([trm])\.([a-z0-9-]+)`)
 	tags := tagPattern.FindAllStringSubmatch(tagsPart, -1)
 
 	for _, tag := range tags {
@@ -539,31 +600,29 @@ func processTradeTag(value string, entry *LegacyJournalEntry) *LegacyJournalEntr
 	case "wdh":
 		entry.Sequence = "WDH"
 	case "rejected":
-		entry.Type = "REJECTED"
+		entry.Type = chooseTradeType(entry.Type, "REJECTED")
+	case "taken":
+		entry.Type = chooseTradeType(entry.Type, "TAKEN")
 	case "set":
-		entry.Type = "SET"
-	case "result":
-		entry.Type = "RESULT"
-	case "fail", "taken", "success", "running", "broken", "missed", "miss", "justloss", "dropped":
-		entry.Status = mapStatusTag(value)
+		entry.Status = "SET"
+	case "fail", "success", "running", "broken", "missed", "miss", "justloss":
+		entry.Status = statusTagMap[value]
 	case "trend", "ctrend":
 		entry.Direction = value
 	}
 	return entry
 }
 
-// mapStatusTag maps status tag values to journal status
-func mapStatusTag(value string) string {
-	statusMap := map[string]string{
-		"fail":    "FAIL",
-		"taken":   "TAKEN",
-		"success": "SUCCESS",
-		"running": "RUNNING",
-		"broken":  "BROKEN",
-		"missed":  "MISSED",
-		"dropped": "DROPPED",
+func chooseTradeType(current, candidate string) string {
+	priority := map[string]int{
+		"":         0,
+		"REJECTED": 1,
+		"TAKEN":    2,
 	}
-	return statusMap[value]
+	if priority[candidate] >= priority[current] {
+		return candidate
+	}
+	return current
 }
 
 // ============================================================================
@@ -572,8 +631,7 @@ func mapStatusTag(value string) string {
 
 // sanitizeFileNameWithLogging removes invalid characters and logs changes
 func sanitizeFileNameWithLogging(name, file, ticker string, logger *MigrationLogger) string {
-	invalidChars := regexp.MustCompile(`[!@#$%^&*()+=\[\]{}|;:'",<>?/\\]`)
-	sanitized := invalidChars.ReplaceAllString(name, "_")
+	sanitized := fileNameSanitizer.ReplaceAllString(name, "_")
 
 	if sanitized != name {
 		logger.LogSanitization(file, ticker, "filename", name, sanitized, "invalid_characters_removed")
@@ -604,11 +662,11 @@ func sanitizeTickerWithLogging(ticker, file string, logger *MigrationLogger) str
 }
 
 // convertToJournalWithLogging converts legacy entry with full logging
-func convertToJournalWithLogging(entry LegacyJournalEntry, journalDate time.Time, filePath string, logger *MigrationLogger) barkat.Journal {
+func convertToJournalWithLogging(entry LegacyJournalEntry, journalDate time.Time, filePath string, logger *MigrationLogger) ConvertedJournal {
 	ticker := sanitizeTickerWithLogging(entry.Ticker, filePath, logger)
 
 	// Build images with logging
-	images, originalImageCount := buildImagesWithLogging(entry.Images, ticker, journalDate, filePath, logger)
+	images, imageStats := buildImagesWithLogging(entry.Images, ticker, journalDate, filePath, logger)
 
 	// Build tags per PRD 4.8.6.3
 	tags := buildTagsFromLegacy(entry, journalDate)
@@ -620,56 +678,156 @@ func convertToJournalWithLogging(entry LegacyJournalEntry, journalDate time.Time
 	sequence, status, journalType := applyDefaultsWithLogging(entry, ticker, filePath, logger)
 
 	// Log image count changes
-	logImageCountChanges(originalImageCount, len(entry.Images), len(images), ticker, filePath, logger)
+	logImageCountChanges(imageStats.SourceRefs, len(entry.Images), len(images), ticker, filePath, logger)
 
-	return barkat.Journal{
-		Ticker:    ticker,
-		Sequence:  sequence,
-		Type:      journalType,
-		Status:    status,
-		CreatedAt: journalDate,
-		Images:    images,
-		Tags:      tags,
-		Notes:     notes,
+	return ConvertedJournal{
+		Journal: barkat.Journal{
+			Ticker:    ticker,
+			Sequence:  sequence,
+			Type:      journalType,
+			Status:    status,
+			CreatedAt: journalDate,
+			Images:    images,
+			Tags:      tags,
+			Notes:     notes,
+		},
+		ImageStats: imageStats,
 	}
 }
 
-// buildImagesWithLogging creates and validates image list
-func buildImagesWithLogging(imagePaths []string, ticker string, journalDate time.Time, filePath string, logger *MigrationLogger) ([]barkat.Image, int) {
-	images := make([]barkat.Image, 0, len(imagePaths))
-	timeframes := []string{"DL", "WK", "MN", "TMN"}
-
-	for i, imgPath := range imagePaths {
-		timeframe := timeframes[i%len(timeframes)]
-		sanitizedName := sanitizeFileNameWithLogging(filepath.Base(imgPath), filePath, ticker, logger)
-		images = append(images, barkat.Image{
-			Timeframe: timeframe,
-			FileName:  sanitizedName,
-			CreatedAt: journalDate,
-		})
+// extractImageDateFromFilename extracts the date from an image filename.
+// Returns journalDate if no date is found (fallback).
+func extractImageDateFromFilename(basename string, journalDate time.Time) time.Time {
+	for _, candidate := range []struct {
+		pattern *regexp.Regexp
+		format  string
+	}{
+		{pattern: imageDashDatePattern, format: "2006-01-02"},
+		{pattern: imageDoubleUnderscoreDatePattern, format: "20060102"},
+		{pattern: imageSingleUnderscoreDatePattern, format: "20060102"},
+	} {
+		matches := candidate.pattern.FindStringSubmatch(basename)
+		if len(matches) < 2 {
+			continue
+		}
+		parsed, err := time.Parse(candidate.format, matches[1])
+		if err == nil {
+			return parsed
+		}
 	}
 
-	// Log placeholder additions
+	return journalDate
+}
+
+func finalizeImagesWithLogging(images []barkat.Image, ticker, filePath string, logger *MigrationLogger, journalDate time.Time, stats ImageBuildStats) ([]barkat.Image, ImageBuildStats) {
 	if len(images) < 4 {
 		logger.LogModification(filePath, ticker, "images", "placeholder_added",
-			fmt.Sprintf("added %d placeholder images (had %d, need 4)", 4-len(images), len(images)))
+			fmt.Sprintf("added %d placeholder images (had %d valid, need 4)", 4-len(images), len(images)))
 	}
 	for len(images) < 4 {
 		images = append(images, barkat.Image{
-			Timeframe: timeframes[len(images)],
+			Timeframe: []string{"DL", "WK", "MN", "TMN"}[len(images)],
 			FileName:  fmt.Sprintf("placeholder_%d.png", len(images)),
 			CreatedAt: journalDate,
 		})
+		stats.PlaceholderImagesAdded++
 	}
 
-	// Log truncation
-	if len(images) > 16 {
+	stats.FinalImageCount = len(images)
+	return images, stats
+}
+
+// buildImagesWithLogging creates and validates image list
+func buildImagesWithLogging(imagePaths []string, ticker string, journalDate time.Time, filePath string, logger *MigrationLogger) ([]barkat.Image, ImageBuildStats) {
+	images := make([]barkat.Image, 0, len(imagePaths))
+	timeframes := []string{"DL", "WK", "MN", "TMN"}
+	stats := ImageBuildStats{SourceRefs: len(imagePaths)}
+
+	for _, imgPath := range imagePaths {
+		basename := filepath.Base(imgPath)
+
+		// Skip Logseq clipboard paste images — they reference files that were never on disk.
+		// These have names like "image_XXXXXXXXXXXXX_X.png" and are stored in Logseq's
+		// assets folder, not in the trading image directory. Creating DB records for them
+		// produces broken image references in the UI ("Cannot read clipboard" error).
+		if strings.HasPrefix(basename, "image_") {
+			logger.LogModification(filePath, ticker, "images", "skipped_clipboard_paste",
+				fmt.Sprintf("skipped clipboard paste image: %s (file never existed on disk)", basename))
+			stats.SkippedClipboardRefs++
+			continue
+		}
+
+		if len(images) >= 16 {
+			stats.TruncatedSourceRefs++
+			continue
+		}
+
+		timeframe := timeframes[len(images)%len(timeframes)]
+		sanitizedName := sanitizeFileNameWithLogging(basename, filePath, ticker, logger)
+		imageDate := extractImageDateFromFilename(basename, journalDate)
+		images = append(images, barkat.Image{
+			Timeframe: timeframe,
+			FileName:  sanitizedName,
+			CreatedAt: imageDate,
+		})
+		stats.MigratedSourceRefs++
+	}
+
+	if stats.TruncatedSourceRefs > 0 {
 		logger.LogModification(filePath, ticker, "images", "truncated",
-			fmt.Sprintf("truncated from %d to 16 images", len(images)))
-		images = images[:16]
+			fmt.Sprintf("skipped %d source images beyond 16-image limit", stats.TruncatedSourceRefs))
 	}
 
-	return images, len(imagePaths)
+	return finalizeImagesWithLogging(images, ticker, filePath, logger, journalDate, stats)
+}
+
+func verifyMigratedJournalMatchesProjection(actual, expected barkat.Journal) {
+	Expect(actual.Ticker).To(Equal(expected.Ticker))
+	Expect(actual.Sequence).To(Equal(expected.Sequence))
+	Expect(actual.Type).To(Equal(expected.Type))
+	Expect(actual.Status).To(Equal(expected.Status))
+	Expect(actual.CreatedAt.Format(time.DateOnly)).To(Equal(expected.CreatedAt.Format(time.DateOnly)))
+	Expect(actual.Images).To(HaveLen(len(expected.Images)))
+	Expect(actual.Tags).To(HaveLen(len(expected.Tags)))
+	Expect(actual.Notes).To(HaveLen(len(expected.Notes)))
+	verifyProjectedImages(actual.Images, expected.Images)
+	verifyProjectedTags(actual.Tags, expected.Tags)
+	verifyProjectedNotes(actual.Notes, expected.Notes)
+}
+
+func verifyProjectedImages(actualImages, expectedImages []barkat.Image) {
+	for i, expectedImage := range expectedImages {
+		actualImage := actualImages[i]
+		Expect(actualImage.ExternalID).To(HavePrefix("img_"))
+		Expect(actualImage.Timeframe).To(Equal(expectedImage.Timeframe))
+		Expect(actualImage.FileName).To(Equal(expectedImage.FileName))
+		Expect(actualImage.CreatedAt.Format(time.DateOnly)).To(Equal(expectedImage.CreatedAt.Format(time.DateOnly)))
+	}
+}
+
+func verifyProjectedTags(actualTags, expectedTags []barkat.Tag) {
+	for i, expectedTag := range expectedTags {
+		actualTag := actualTags[i]
+		Expect(actualTag.ExternalID).To(HavePrefix("tag_"))
+		Expect(actualTag.Tag).To(Equal(expectedTag.Tag))
+		Expect(actualTag.Type).To(Equal(expectedTag.Type))
+		if expectedTag.Override == nil {
+			Expect(actualTag.Override).To(BeNil())
+		} else {
+			Expect(actualTag.Override).ToNot(BeNil())
+			Expect(*actualTag.Override).To(Equal(*expectedTag.Override))
+		}
+	}
+}
+
+func verifyProjectedNotes(actualNotes, expectedNotes []barkat.Note) {
+	for i, expectedNote := range expectedNotes {
+		actualNote := actualNotes[i]
+		Expect(actualNote.ExternalID).To(HavePrefix("not_"))
+		Expect(actualNote.Status).To(Equal(expectedNote.Status))
+		Expect(actualNote.Format).To(Equal(expectedNote.Format))
+		Expect(actualNote.Content).To(Equal(expectedNote.Content))
+	}
 }
 
 // buildTagsFromLegacy converts legacy tags to barkat.Tags
@@ -790,16 +948,10 @@ func finalStatusForLegacyNote(entry LegacyJournalEntry) string {
 
 // deriveStatusFromType maps journal type to default status
 func deriveStatusFromType(journalType string) string {
-	switch journalType {
-	case "REJECTED":
-		return "FAIL"
-	case "SET":
+	if journalType == "TAKEN" {
 		return "SET"
-	case "RESULT":
-		return "SUCCESS"
-	default:
-		return "FAIL"
 	}
+	return "FAIL"
 }
 
 // applyDefaultsWithLogging applies default values and logs changes
@@ -811,20 +963,20 @@ func applyDefaultsWithLogging(entry LegacyJournalEntry, ticker, filePath string,
 		sequence = "MWD"
 	}
 
-	// Handle status with logging
-	status := entry.Status
-	if status == "" {
-		defaultStatus := deriveStatusFromType(entry.Type)
-		logger.LogModification(filePath, ticker, "status", "default_applied",
-			fmt.Sprintf("set to %s based on type %s (was empty)", defaultStatus, entry.Type))
-		status = defaultStatus
-	}
-
 	// Handle type with logging
 	journalType := entry.Type
 	if journalType == "" {
 		logger.LogModification(filePath, ticker, "type", "default_applied", "set to REJECTED (was empty)")
 		journalType = "REJECTED"
+	}
+
+	// Handle status with logging
+	status := entry.Status
+	if status == "" {
+		defaultStatus := deriveStatusFromType(journalType)
+		logger.LogModification(filePath, ticker, "status", "default_applied",
+			fmt.Sprintf("set to %s based on type %s (was empty)", defaultStatus, journalType))
+		status = defaultStatus
 	}
 
 	return sequence, status, journalType
@@ -901,7 +1053,7 @@ var _ = Describe("Barkat Migration Test", func() {
 			tempDir := GinkgoT().TempDir()
 			filePath := filepath.Join(tempDir, "2023_06_15.md")
 			content := strings.Join([]string{
-				"| `SBIN` | #t.set #t.running #r.dep-loc #m.ntr |",
+				"| `SBIN` | #t.set #t.running #t.full #r.dep-loc #m.ntr |",
 				"- review note",
 				"```md",
 				"plan line 1",
@@ -923,17 +1075,20 @@ var _ = Describe("Barkat Migration Test", func() {
 			entry := entries[0]
 			Expect(entry.Note).To(Equal("plan line 1\nplan line 2"))
 			Expect(entry.SimpleNotes).To(Equal([]string{"review note"}))
-			Expect(entry.RawMarkdown).To(ContainSubstring("| `SBIN` | #t.set #t.running #r.dep-loc #m.ntr |"))
+			Expect(entry.RawMarkdown).To(ContainSubstring("| `SBIN` | #t.set #t.running #t.full #r.dep-loc #m.ntr |"))
 			Expect(entry.RawMarkdown).To(ContainSubstring("- review note"))
 			Expect(entry.RawMarkdown).To(ContainSubstring("plan line 1"))
 			Expect(entry.RawMarkdown).To(ContainSubstring("![chart](images/sbin.png)"))
+			Expect(entry.RawMarkdown).To(ContainSubstring("#t.full"))
 		})
 
 		It("should map legacy trade status aliases without changing unsupported tags", func() {
 			entry := &LegacyJournalEntry{}
 
+			entry = processTradeTag("rejected", entry)
 			entry = processTradeTag("taken", entry)
-			Expect(entry.Status).To(Equal("TAKEN"))
+			Expect(entry.Type).To(Equal("TAKEN"))
+			Expect(entry.Status).To(BeEmpty())
 
 			entry = processTradeTag("miss", entry)
 			Expect(entry.Status).To(Equal("MISSED"))
@@ -946,8 +1101,36 @@ var _ = Describe("Barkat Migration Test", func() {
 		})
 
 		It("should skip creating placeholder notes when the entry has no note content", func() {
-			notes := buildNotesFromLegacy(LegacyJournalEntry{Type: "SET"}, time.Date(2023, time.June, 15, 0, 0, 0, 0, time.UTC))
+			notes := buildNotesFromLegacy(LegacyJournalEntry{Type: "TAKEN"}, time.Date(2023, time.June, 15, 0, 0, 0, 0, time.UTC))
 			Expect(notes).To(BeEmpty())
+		})
+
+		It("should extract image dates from both jpg and png filename patterns", func() {
+			journalDate := time.Date(2023, time.June, 15, 0, 0, 0, 0, time.UTC)
+
+			Expect(extractImageDateFromFilename("SNAG--2023-06-12-014.jpg", journalDate).Format(time.DateOnly)).To(Equal("2023-06-12"))
+			Expect(extractImageDateFromFilename("AETHER.mwd.trend.result__20230901__223855.png", journalDate).Format(time.DateOnly)).To(Equal("2023-09-01"))
+			Expect(extractImageDateFromFilename("JSL.mwd.trend.rejected.ooa_20230726_224243.png", journalDate).Format(time.DateOnly)).To(Equal("2023-07-26"))
+			Expect(extractImageDateFromFilename("unknown.png", journalDate)).To(Equal(journalDate))
+		})
+
+		It("should reconcile skipped clipboard and placeholder image accounting", func() {
+			journalDate := time.Date(2023, time.June, 15, 0, 0, 0, 0, time.UTC)
+
+			images, stats := buildImagesWithLogging([]string{
+				"../assets/image_1686845892831_0.png",
+				"../assets/trading/2023/09/AETHER.mwd.trend.result__20230901__223855.png",
+			}, "AETHER", journalDate, TestFile, logger)
+
+			Expect(stats.SourceRefs).To(Equal(2))
+			Expect(stats.SkippedClipboardRefs).To(Equal(1))
+			Expect(stats.MigratedSourceRefs).To(Equal(1))
+			Expect(stats.PlaceholderImagesAdded).To(Equal(3))
+			Expect(stats.TruncatedSourceRefs).To(Equal(0))
+			Expect(stats.FinalImageCount).To(Equal(4))
+			Expect(images).To(HaveLen(4))
+			Expect(images[0].FileName).To(Equal("AETHER.mwd.trend.result__20230901__223855.png"))
+			Expect(images[0].CreatedAt.Format(time.DateOnly)).To(Equal("2023-09-01"))
 		})
 	})
 
@@ -987,14 +1170,24 @@ var _ = Describe("Barkat Migration Test", func() {
 
 			stats := MigrationStats{}
 			var migratedCounts ProcessingCounts
+			var accounting MigrationAccounting
+
+			defer func() {
+				GinkgoWriter.Printf("\n=== Migration Stats ===\n")
+				GinkgoWriter.Printf("Total Entries: %d\n", stats.TotalEntries)
+				GinkgoWriter.Printf("Success: %d\n", stats.SuccessCount)
+				GinkgoWriter.Printf("Failures: %d\n", stats.FailureCount)
+				GinkgoWriter.Printf("Log file: %s\n", logger.GetLogPath())
+			}()
 
 			for _, entry := range entries {
-				journal := convertToJournalWithLogging(entry, journalDate, testFilePath, logger)
+				stats.TotalEntries++
+				converted := convertToJournalWithLogging(entry, journalDate, testFilePath, logger)
+				journal := converted.Journal
+				accounting.RecordConversion(converted)
 
 				resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
 				Expect(err).ToNot(HaveOccurred())
-
-				stats.TotalEntries++
 
 				if resp.StatusCode() == http.StatusCreated {
 					stats.SuccessCount++
@@ -1006,6 +1199,7 @@ var _ = Describe("Barkat Migration Test", func() {
 					migratedCounts.MigratedImages += len(envelope.Data.Images)
 					migratedCounts.MigratedNotes += len(envelope.Data.Notes)
 					migratedCounts.MigratedTags += len(envelope.Data.Tags)
+					verifyMigratedJournalMatchesProjection(envelope.Data, journal)
 
 					logger.LogSuccess(testFilePath, entry.Ticker, envelope.Data.ExternalID,
 						len(envelope.Data.Images), len(envelope.Data.Notes) > 0, len(envelope.Data.Tags) > 0)
@@ -1015,16 +1209,27 @@ var _ = Describe("Barkat Migration Test", func() {
 					stats.FailureMessages = append(stats.FailureMessages, string(resp.Body()))
 					logger.LogError(testFilePath, entry.Ticker, entry.LineNumber, string(resp.Body()), entry.RawLine)
 				}
+
+				Expect(resp.StatusCode()).To(Equal(http.StatusCreated),
+					"Migration should succeed for %s: status=%d body=%s",
+					entry.Ticker, resp.StatusCode(), string(resp.Body()))
+
 			}
 
-			// Report stats
-			GinkgoWriter.Printf("\n=== Migration Stats ===\n")
-			GinkgoWriter.Printf("Total Entries: %d\n", stats.TotalEntries)
-			GinkgoWriter.Printf("Success: %d\n", stats.SuccessCount)
-			GinkgoWriter.Printf("Failures: %d\n", stats.FailureCount)
-			GinkgoWriter.Printf("Log file: %s\n", logger.GetLogPath())
+			GinkgoWriter.Printf("\n=== Parsing Results ===\n")
+			GinkgoWriter.Printf("Parsed tickers: %d\n", parsedCounts.ParsedTickers)
+			GinkgoWriter.Printf("Parsed images: %d\n", parsedCounts.ParsedImages)
+			GinkgoWriter.Printf("Parsed notes: %d\n", parsedCounts.ParsedNotes)
 
-			Expect(stats.FailureCount).To(Equal(0), "All migrations should succeed")
+			GinkgoWriter.Printf("\n=== Migration Results ===\n")
+			GinkgoWriter.Printf("Migrated journals: %d\n", migratedCounts.MigratedJournals)
+			GinkgoWriter.Printf("Migrated images: %d\n", migratedCounts.MigratedImages)
+			GinkgoWriter.Printf("Migrated notes: %d\n", migratedCounts.MigratedNotes)
+			GinkgoWriter.Printf("Migrated tags: %d\n", migratedCounts.MigratedTags)
+
+			Expect(accounting.SourceEntries).To(Equal(parsedCounts.ParsedTickers))
+			Expect(accounting.SourceImageRefs).To(Equal(parsedCounts.ParsedImages))
+			accounting.VerifyMigratedCounts(migratedCounts)
 		})
 
 		It("should keep sampled migrated note content meaningful", func() {
@@ -1033,7 +1238,8 @@ var _ = Describe("Barkat Migration Test", func() {
 
 			sampled := 0
 			for _, entry := range entries {
-				journal := convertToJournalWithLogging(entry, journalDate, testFilePath, logger)
+				converted := convertToJournalWithLogging(entry, journalDate, testFilePath, logger)
+				journal := converted.Journal
 				if len(journal.Notes) == 0 {
 					continue
 				}
@@ -1092,6 +1298,60 @@ var _ = Describe("Barkat Migration Test", func() {
 			var totalParsedCounts ProcessingCounts
 			var totalMigratedCounts ProcessingCounts
 			totalStats := MigrationStats{}
+			var accounting MigrationAccounting
+
+			defer func() {
+				logger.WriteSummary(totalParsedCounts, len(allFiles))
+
+				GinkgoWriter.Printf("\n" + strings.Repeat("=", 80) + "\n")
+				GinkgoWriter.Printf("MIGRATION SUMMARY REPORT\n")
+				GinkgoWriter.Printf(strings.Repeat("=", 80) + "\n\n")
+
+				GinkgoWriter.Printf("FILES PROCESSED: %d\n\n", len(allFiles))
+
+				GinkgoWriter.Printf("--- PROCESSING SUMMARY ---\n")
+				GinkgoWriter.Printf("  Files Processed:     %d\n", len(allFiles))
+
+				GinkgoWriter.Printf("--- PARSING RESULTS ---\n")
+				GinkgoWriter.Printf("  Parsed Tickers: %d\n", totalParsedCounts.ParsedTickers)
+				GinkgoWriter.Printf("  Parsed Images:  %d\n", totalParsedCounts.ParsedImages)
+				GinkgoWriter.Printf("  Parsed Notes:   %d\n\n", totalParsedCounts.ParsedNotes)
+
+				GinkgoWriter.Printf("--- MIGRATION RESULTS ---\n")
+				GinkgoWriter.Printf("  Migrated Journals: %d\n", totalMigratedCounts.MigratedJournals)
+				GinkgoWriter.Printf("  Migrated Images:   %d\n", totalMigratedCounts.MigratedImages)
+				GinkgoWriter.Printf("  Migrated Notes:    %d\n", totalMigratedCounts.MigratedNotes)
+				GinkgoWriter.Printf("  Migrated Tags:     %d\n\n", totalMigratedCounts.MigratedTags)
+
+				GinkgoWriter.Printf("--- PROCESSING STATUS ---\n")
+				if totalStats.TotalEntries > 0 {
+					GinkgoWriter.Printf("  Total Entries Processed: %d\n", totalStats.TotalEntries)
+					GinkgoWriter.Printf("  Success Rate: %.2f%%\n\n", float64(totalStats.SuccessCount)/float64(totalStats.TotalEntries)*100)
+				}
+
+				GinkgoWriter.Printf("--- PROCESSING STATS ---\n")
+				GinkgoWriter.Printf("  Total Entries:   %d\n", totalStats.TotalEntries)
+				GinkgoWriter.Printf("  Success:         %d\n", totalStats.SuccessCount)
+				GinkgoWriter.Printf("  Failures:        %d\n", totalStats.FailureCount)
+				GinkgoWriter.Printf("  Sanitizations:   %d\n", logger.GetSanitizationCount())
+				GinkgoWriter.Printf("  Modifications:   %d\n\n", logger.GetModificationCount())
+
+				if totalStats.FailureCount > 0 {
+					GinkgoWriter.Printf("--- FAILED ENTRIES (first 20) ---\n")
+					limit := min(len(totalStats.FailedTickers), 20)
+					for i := range limit {
+						GinkgoWriter.Printf("  - %s: %s\n", totalStats.FailedTickers[i], totalStats.FailureMessages[i])
+					}
+					if len(totalStats.FailedTickers) > 20 {
+						GinkgoWriter.Printf("  ... and %d more (see log file)\n", len(totalStats.FailedTickers)-20)
+					}
+					GinkgoWriter.Printf("\n")
+				}
+
+				GinkgoWriter.Printf("LOG FILE: %s\n", logger.GetLogPath())
+				GinkgoWriter.Printf(strings.Repeat("=", 80) + "\n")
+				GinkgoWriter.Printf("Migration completed with detailed logging\n")
+			}()
 
 			for _, filePath := range allFiles {
 				// Parse with logging
@@ -1120,30 +1380,28 @@ var _ = Describe("Barkat Migration Test", func() {
 
 				// Migrate entries
 				for _, entry := range entries {
-					journal := convertToJournalWithLogging(entry, journalDate, filePath, logger)
+					totalStats.TotalEntries++
+					converted := convertToJournalWithLogging(entry, journalDate, filePath, logger)
+					journal := converted.Journal
+					accounting.RecordConversion(converted)
 
 					resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
-					if err != nil {
-						logger.LogError(filePath, entry.Ticker, entry.LineNumber, fmt.Sprintf("http error: %v", err), entry.RawLine)
-						totalStats.FailureCount++
-						continue
-					}
-
-					totalStats.TotalEntries++
+					Expect(err).ToNot(HaveOccurred())
 
 					if resp.StatusCode() == http.StatusCreated {
 						totalStats.SuccessCount++
 
 						var envelope common.Envelope[barkat.Journal]
-						if json.Unmarshal(resp.Body(), &envelope) == nil {
-							totalMigratedCounts.MigratedJournals++
-							totalMigratedCounts.MigratedImages += len(envelope.Data.Images)
-							totalMigratedCounts.MigratedNotes += len(envelope.Data.Notes)
-							totalMigratedCounts.MigratedTags += len(envelope.Data.Tags)
+						Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
 
-							logger.LogSuccess(filePath, entry.Ticker, envelope.Data.ExternalID,
-								len(envelope.Data.Images), len(envelope.Data.Notes) > 0, len(envelope.Data.Tags) > 0)
-						}
+						totalMigratedCounts.MigratedJournals++
+						totalMigratedCounts.MigratedImages += len(envelope.Data.Images)
+						totalMigratedCounts.MigratedNotes += len(envelope.Data.Notes)
+						totalMigratedCounts.MigratedTags += len(envelope.Data.Tags)
+						verifyMigratedJournalMatchesProjection(envelope.Data, journal)
+
+						logger.LogSuccess(filePath, entry.Ticker, envelope.Data.ExternalID,
+							len(envelope.Data.Images), len(envelope.Data.Notes) > 0, len(envelope.Data.Tags) > 0)
 					} else {
 						totalStats.FailureCount++
 						totalStats.FailedTickers = append(totalStats.FailedTickers,
@@ -1151,68 +1409,15 @@ var _ = Describe("Barkat Migration Test", func() {
 						totalStats.FailureMessages = append(totalStats.FailureMessages, string(resp.Body()))
 						logger.LogError(filePath, entry.Ticker, entry.LineNumber, string(resp.Body()), entry.RawLine)
 					}
+					Expect(resp.StatusCode()).To(Equal(http.StatusCreated),
+						"Migration failed for %s in %s: status=%d body=%s",
+						entry.Ticker, filepath.Base(filePath), resp.StatusCode(), string(resp.Body()))
 				}
 			}
 
-			// Write comprehensive summary
-			logger.WriteSummary(totalParsedCounts, len(allFiles))
-
-			// Print detailed report
-			GinkgoWriter.Printf("\n" + strings.Repeat("=", 80) + "\n")
-			GinkgoWriter.Printf("MIGRATION SUMMARY REPORT\n")
-			GinkgoWriter.Printf(strings.Repeat("=", 80) + "\n\n")
-
-			GinkgoWriter.Printf("FILES PROCESSED: %d\n\n", len(allFiles))
-
-			GinkgoWriter.Printf("--- PROCESSING SUMMARY ---\n")
-			GinkgoWriter.Printf("  Files Processed:     %d\n", len(allFiles))
-
-			GinkgoWriter.Printf("--- PARSING RESULTS ---\n")
-			GinkgoWriter.Printf("  Parsed Tickers: %d\n", totalParsedCounts.ParsedTickers)
-			GinkgoWriter.Printf("  Parsed Images:  %d\n", totalParsedCounts.ParsedImages)
-			GinkgoWriter.Printf("  Parsed Notes:   %d\n\n", totalParsedCounts.ParsedNotes)
-
-			GinkgoWriter.Printf("--- MIGRATION RESULTS ---\n")
-			GinkgoWriter.Printf("  Migrated Journals: %d\n", totalMigratedCounts.MigratedJournals)
-			GinkgoWriter.Printf("  Migrated Images:   %d\n", totalMigratedCounts.MigratedImages)
-			GinkgoWriter.Printf("  Migrated Notes:    %d\n", totalMigratedCounts.MigratedNotes)
-			GinkgoWriter.Printf("  Migrated Tags:     %d\n\n", totalMigratedCounts.MigratedTags)
-
-			GinkgoWriter.Printf("--- PROCESSING STATUS ---\n")
-			GinkgoWriter.Printf("  Total Entries Processed: %d\n", totalStats.TotalEntries)
-			GinkgoWriter.Printf("  Success Rate: %.2f%%\n\n", float64(totalStats.SuccessCount)/float64(totalStats.TotalEntries)*100)
-
-			GinkgoWriter.Printf("--- PROCESSING STATS ---\n")
-			GinkgoWriter.Printf("  Total Entries:   %d\n", totalStats.TotalEntries)
-			GinkgoWriter.Printf("  Success:         %d\n", totalStats.SuccessCount)
-			GinkgoWriter.Printf("  Failures:        %d\n", totalStats.FailureCount)
-			GinkgoWriter.Printf("  Sanitizations:   %d\n", logger.GetSanitizationCount())
-			GinkgoWriter.Printf("  Modifications:   %d\n\n", logger.GetModificationCount())
-
-			if totalStats.FailureCount > 0 {
-				GinkgoWriter.Printf("--- FAILED ENTRIES (first 20) ---\n")
-				limit := min(len(totalStats.FailedTickers), 20)
-				for i := range limit {
-					GinkgoWriter.Printf("  - %s: %s\n", totalStats.FailedTickers[i], totalStats.FailureMessages[i])
-				}
-				if len(totalStats.FailedTickers) > 20 {
-					GinkgoWriter.Printf("  ... and %d more (see log file)\n", len(totalStats.FailedTickers)-20)
-				}
-				// HACK: Ensure No Tag is Lost #t, #r, #m or anything else.
-				GinkgoWriter.Printf("\n")
-			}
-
-			GinkgoWriter.Printf("LOG FILE: %s\n", logger.GetLogPath())
-			GinkgoWriter.Printf(strings.Repeat("=", 80) + "\n")
-
-			// Log completion
-			GinkgoWriter.Printf("Migration completed with detailed logging\n")
-
-			// Allow up to 5% failure rate as per PRD
-			if totalStats.TotalEntries > 0 {
-				failureRate := float64(totalStats.FailureCount) / float64(totalStats.TotalEntries)
-				Expect(failureRate).To(BeNumerically("<", 0.05), "Failure rate should be < 5%")
-			}
+			Expect(accounting.SourceEntries).To(Equal(totalParsedCounts.ParsedTickers))
+			Expect(accounting.SourceImageRefs).To(Equal(totalParsedCounts.ParsedImages))
+			accounting.VerifyMigratedCounts(totalMigratedCounts)
 		})
 	})
 })

@@ -512,8 +512,8 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					emptyJournal = barkat.Journal{
 						Ticker:   "EMPTY",
 						Sequence: "YR",
-						Type:     "SET",
-						Status:   "TAKEN",
+						Type:     "TAKEN",
+						Status:   "SET",
 						Images: []barkat.Image{
 							{Timeframe: "DL"},
 							{Timeframe: "WK"},

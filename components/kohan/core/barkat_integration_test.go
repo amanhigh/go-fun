@@ -149,7 +149,7 @@ var _ = Describe("Barkat E2E Test", func() {
 			journal := barkat.Journal{
 				Ticker:   "LIFECYCLE",
 				Sequence: "MWD",
-				Type:     "SET",
+				Type:     "TAKEN",
 				Status:   "RUNNING",
 				Images:   standardImages,
 				Tags:     []barkat.Tag{{Tag: "oe", Type: "REASON"}},
@@ -218,7 +218,7 @@ var _ = Describe("Barkat E2E Test", func() {
 			journal := barkat.Journal{
 				Ticker:   "IMGTEST",
 				Sequence: "MWD",
-				Type:     "SET",
+				Type:     "TAKEN",
 				Status:   "RUNNING",
 				Images:   standardImages,
 			}
@@ -287,7 +287,7 @@ var _ = Describe("Barkat E2E Test", func() {
 			journal := barkat.Journal{
 				Ticker:   "NOTETEST",
 				Sequence: "YR",
-				Type:     "RESULT",
+				Type:     "TAKEN",
 				Status:   "SUCCESS",
 				Images:   standardImages,
 			}
@@ -460,7 +460,7 @@ var _ = Describe("Barkat E2E Test", func() {
 			journal := barkat.Journal{
 				Ticker:   "REVIEW",
 				Sequence: "YR",
-				Type:     "RESULT",
+				Type:     "TAKEN",
 				Status:   "SUCCESS",
 				Images:   standardImages,
 			}
@@ -507,7 +507,7 @@ var _ = Describe("Barkat E2E Test", func() {
 			journal := barkat.Journal{
 				Ticker:   "lowercase", // PRD: must be uppercase
 				Sequence: "MWD",
-				Type:     "SET",
+				Type:     "TAKEN",
 				Status:   "RUNNING",
 				Images:   standardImages,
 			}
@@ -520,7 +520,7 @@ var _ = Describe("Barkat E2E Test", func() {
 			journal := barkat.Journal{
 				Ticker:   "VALID",
 				Sequence: "MWD",
-				Type:     "SET",
+				Type:     "TAKEN",
 				Status:   "RUNNING",
 				Images:   []barkat.Image{{Timeframe: "DL", FileName: "only_one.png"}}, // PRD: min 4
 			}
@@ -534,7 +534,7 @@ var _ = Describe("Barkat E2E Test", func() {
 			journal := barkat.Journal{
 				Ticker:   "FUTURE",
 				Sequence: "MWD",
-				Type:     "SET",
+				Type:     "TAKEN",
 				Status:   "RUNNING",
 				Images:   standardImages,
 			}
