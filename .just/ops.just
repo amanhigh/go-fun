@@ -2,7 +2,7 @@
 [doc('Run the Fun App integration load tests')]
 load:
     just _title "Load" "Test Fun App"
-    just _run "make -C components/fun-app/it all"
+    just _run "just --justfile components/fun-app/it/Justfile --working-directory components/fun-app/it all"
 
 [group('ops')]
 [doc('Open heap and CPU pprof sessions for the running app')]

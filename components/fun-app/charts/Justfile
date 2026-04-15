@@ -65,7 +65,7 @@ _info-vegeta:
     just _detail "INFO" "Login Vegeta Pod"
     just _detail "HELM" "echo 'GET http://fun-app:9090/v1/person/all' | vegeta attack | vegeta report"
     just _detail "DEVSPACE" "echo 'GET http://app:8080/v1/person/all' | vegeta attack | vegeta report"
-    just _detail "LOAD" "Portforward 8080: http://localhost:8080/metrics and fun-app/it Make"
+    just _detail "LOAD" "Portforward 8080: http://localhost:8080/metrics and fun-app/it Justfile"
     just _detail "PROMETHEUS" "http://prometheus.docker/graph?g0.expr=funapp_create_person&g0.tab=0&g0.display_mode=stacked&g0.show_exemplars=0&g0.range_input=15m"
 
 [doc('Show Istio and Grafana references for the chart')]
