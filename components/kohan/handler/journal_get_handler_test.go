@@ -74,12 +74,12 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				Type:     "REJECTED",
 				Status:   "FAIL",
 				Images: []barkat.Image{
-					{Timeframe: "DL"},
-					{Timeframe: "WK"},
-					{Timeframe: "MN"},
-					{Timeframe: "TMN"},
-					{Timeframe: "SMN"},
-					{Timeframe: "YR"},
+					{Timeframe: "WK", CreatedAt: time.Date(2023, time.June, 1, 10, 0, 0, 0, time.UTC)},
+					{Timeframe: "DL", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC)},
+					{Timeframe: "MN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC)},
+					{Timeframe: "TMN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC)},
+					{Timeframe: "SMN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC)},
+					{Timeframe: "YR", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC)},
 				},
 			}
 			Expect(journalMgr.CreateJournal(testCtx, &journal)).To(Succeed())
@@ -112,12 +112,19 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					Expect(response.Status).To(Equal("FAIL"))
 					Expect(response.CreatedAt).ToNot(BeZero())
 					Expect(response.Images).To(HaveLen(6))
-					Expect(response.Images[0].Timeframe).To(Equal("DL"))
-					Expect(response.Images[1].Timeframe).To(Equal("WK"))
-					Expect(response.Images[2].Timeframe).To(Equal("MN"))
+				})
+
+				It("should return images sorted by date then timeframe", func() {
+					response = decodeJournal(w, http.StatusOK)
+
+					Expect(response.Images[0].CreatedAt).To(Equal(time.Date(2023, time.June, 1, 10, 0, 0, 0, time.UTC)))
+					Expect(response.Images[0].Timeframe).To(Equal("WK"))
+
+					Expect(response.Images[1].Timeframe).To(Equal("YR"))
+					Expect(response.Images[2].Timeframe).To(Equal("SMN"))
 					Expect(response.Images[3].Timeframe).To(Equal("TMN"))
-					Expect(response.Images[4].Timeframe).To(Equal("SMN"))
-					Expect(response.Images[5].Timeframe).To(Equal("YR"))
+					Expect(response.Images[4].Timeframe).To(Equal("MN"))
+					Expect(response.Images[5].Timeframe).To(Equal("DL"))
 				})
 			})
 		})
@@ -328,9 +335,10 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?type=TAKEN", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
-						Expect(response.Journals).To(HaveLen(1))
-						journals := response.Journals
-						Expect(journals[0].Type).To(Equal("TAKEN"))
+						Expect(response.Journals).To(HaveLen(3))
+						Expect(response.Journals[0].Type).To(Equal("TAKEN"))
+						Expect(response.Journals[1].Type).To(Equal("TAKEN"))
+						Expect(response.Journals[2].Type).To(Equal("TAKEN"))
 					})
 				})
 
