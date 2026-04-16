@@ -167,15 +167,15 @@ func JournalDetailHighlights() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = JournalDetailCard("Status", "rose", "normalizeStatus(journal.status)").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = JournalDetailCard("Status", "rose", "({'RUNNING':'🏃','SET':'🎯','SUCCESS':'✅','FAIL':'❌','BROKEN':'💥','MISSED':'🚫','JUST_LOSS':'💔'}[journal.status] || '🏷️') + ' ' + normalizeStatus(journal.status)").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = JournalDetailCard("Type", "indigo", "journal.type").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = JournalDetailCard("Type", "indigo", "({'TAKEN':'📈','REJECTED':'📉'}[journal.type] || '🏷️') + ' ' + journal.type").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = JournalDetailCard("Sequence", "violet", "journal.sequence").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = JournalDetailCard("Sequence", "violet", "('🔢 ' + journal.sequence)").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -453,7 +453,7 @@ func JournalDetailHeader() templ.Component {
 		templ_7745c5c3_Err = badge.Badge(badge.Props{
 			Variant:    badge.VariantOutline,
 			Class:      "border",
-			Attributes: templ.Attributes{"x-bind:class": "statusBadgeClass(journal.status)", "x-text": "normalizeStatus(journal.status)"},
+			Attributes: templ.Attributes{"x-bind:class": "statusBadgeClass(journal.status)", "x-text": "({'RUNNING':'🏃','SET':'🎯','SUCCESS':'✅','FAIL':'❌','BROKEN':'💥','MISSED':'🚫','JUST_LOSS':'💔'}[journal.status] || '🏷️') + ' ' + normalizeStatus(journal.status)"},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

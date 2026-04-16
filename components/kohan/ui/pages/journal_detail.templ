@@ -35,11 +35,11 @@ templ JournalDetailPage(journalID string) {
 	}
 }
 
-templ JournalDetailHighlights() {
+	templ JournalDetailHighlights() {
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-		@JournalDetailCard("Status", "rose", "normalizeStatus(journal.status)")
-		@JournalDetailCard("Type", "indigo", "journal.type")
-		@JournalDetailCard("Sequence", "violet", "journal.sequence")
+		@JournalDetailCard("Status", "rose", "({'RUNNING':'🏃','SET':'🎯','SUCCESS':'✅','FAIL':'❌','BROKEN':'💥','MISSED':'🚫','JUST_LOSS':'💔'}[journal.status] || '🏷️') + ' ' + normalizeStatus(journal.status)")
+		@JournalDetailCard("Type", "indigo", "({'TAKEN':'📈','REJECTED':'📉'}[journal.type] || '🏷️') + ' ' + journal.type")
+		@JournalDetailCard("Sequence", "violet", "('🔢 ' + journal.sequence)")
 		@JournalDetailCard("Created", "emerald", "formatTimestamp(journal.created_at)")
 	</div>
 }
@@ -96,7 +96,7 @@ templ JournalDetailHeader() {
 				@badge.Badge(badge.Props{
 					Variant:    badge.VariantOutline,
 					Class:      "border",
-					Attributes: templ.Attributes{"x-bind:class": "statusBadgeClass(journal.status)", "x-text": "normalizeStatus(journal.status)"},
+					Attributes: templ.Attributes{"x-bind:class": "statusBadgeClass(journal.status)", "x-text": "({'RUNNING':'🏃','SET':'🎯','SUCCESS':'✅','FAIL':'❌','BROKEN':'💥','MISSED':'🚫','JUST_LOSS':'💔'}[journal.status] || '🏷️') + ' ' + normalizeStatus(journal.status)"},
 				}) {}
 			</div>
 			<div class="space-y-2">

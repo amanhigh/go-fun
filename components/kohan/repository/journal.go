@@ -40,7 +40,7 @@ const ImageTimeframeOrder = "CASE timeframe WHEN 'DL' THEN 1 WHEN 'WK' THEN 2 WH
 func (r *JournalRepositoryImpl) GetJournal(ctx context.Context, journalExternalId string) (barkat.Journal, error) {
 	var journal barkat.Journal
 	err := r.SafeTx(ctx).Preload("Images", func(db *gorm.DB) *gorm.DB {
-		return db.Order(ImageTimeframeOrder)
+		return db.Order("DATE(created_at) ASC").Order(ImageTimeframeOrder + " DESC").Order("file_name ASC")
 	}).Preload("Tags").Preload("Notes").First(&journal, "external_id = ?", journalExternalId).Error
 	return journal, err
 }
