@@ -42,7 +42,7 @@ func Page(props PageProps) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section class=\"flex w-full flex-col gap-8\"><div class=\"flex w-full justify-start\"><div class=\"relative w-full max-w-4xl overflow-hidden rounded-[2rem] border border-border/80 bg-card shadow-[0_24px_80px_-48px_rgba(15,23,42,0.85)]\"><div class=\"absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_32%),radial-gradient(circle_at_85%_20%,rgba(14,165,233,0.12),transparent_24%)]\"></div><div class=\"relative px-5 py-4 sm:px-6 sm:py-5\"><div class=\"max-w-4xl space-y-4\"><div class=\"flex flex-wrap items-center gap-3 text-sm text-muted-foreground\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section class=\"flex w-full flex-col gap-8\"><div class=\"flex w-full justify-start\"><div class=\"relative w-full max-w-4xl overflow-hidden rounded-[2rem] border border-border/80 bg-card shadow-[0_24px_80px_-48px_rgba(15,23,42,0.85)] xl:w-1/2 xl:max-w-none\"><div class=\"absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_32%),radial-gradient(circle_at_85%_20%,rgba(14,165,233,0.12),transparent_24%)]\"></div><div class=\"relative px-5 py-4 sm:px-6 sm:py-5\"><div class=\"max-w-4xl space-y-4\"><div class=\"flex flex-wrap items-center gap-3 text-sm text-muted-foreground\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

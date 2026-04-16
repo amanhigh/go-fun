@@ -52,7 +52,12 @@ function journalDetailPage() {
 		feedbackClass: (type: string) =>
 			type === 'success' ? 'text-emerald-700' : 'text-rose-700',
 		reviewToggleLabel(this: any) {
-			return this.journal?.reviewed_at ? 'Not Review' : 'Review';
+			return this.journal?.reviewed_at ? 'Mark Pending' : 'Mark Reviewed';
+		},
+		reviewButtonClass(this: any) {
+			return this.journal?.reviewed_at
+				? 'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 focus:border-amber-400 focus:ring-amber-200'
+				: 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 focus:border-emerald-400 focus:ring-emerald-200';
 		},
 		// Image helpers
 		timeframeChipClass: image.chipClass,

@@ -44,7 +44,7 @@ var _ = Describe("Page Template Tests", func() {
 
 	It("keeps the hero card compact and left aligned", func() {
 		Expect(html).To(ContainSubstring("justify-start"))
-		Expect(html).To(ContainSubstring("relative w-full max-w-4xl"))
+		Expect(html).To(ContainSubstring("xl:w-1/2"))
 		Expect(doc.Find("h1").First().AttrOr("class", "")).To(ContainSubstring("max-w-4xl"))
 		Expect(doc.Find("hgroup p").First().AttrOr("class", "")).To(ContainSubstring("max-w-3xl"))
 	})
