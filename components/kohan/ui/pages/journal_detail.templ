@@ -24,11 +24,82 @@ templ JournalDetailPage(journalID string) {
 					No journal details available.
 				</div>
 				<div class="space-y-6" x-show="journal && !loading && !hasError()">
-					@JournalDetailHeader()
-					@JournalDetailHighlights()
+					<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
+						<div class="space-y-6 min-w-0">
+							@JournalDetailHeader()
+							@JournalDetailHighlights()
+						</div>
+						<div class="xl:sticky xl:top-6">
+							<div class="space-y-4">
+								<div class="rounded-3xl border border-border bg-card shadow-sm p-6">
+									<div class="space-y-4">
+										<div class="space-y-2">
+											<h3 class="text-lg font-semibold tracking-tight text-foreground">Review Journal</h3>
+											<p class="text-sm text-muted-foreground" x-show="journal.reviewed_at" x-text="'Reviewed on ' + formatTimestamp(journal.reviewed_at)"></p>
+											<p class="text-sm text-muted-foreground" x-show="!journal.reviewed_at">Add today's review mark with one click.</p>
+										</div>
+										<div class="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 text-sm text-emerald-900">
+											<div class="font-semibold">Today’s review date</div>
+											<div x-text="localToday()"></div>
+										</div>
+										<div class="space-y-3">
+											<div class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Current Status</div>
+											<div class="flex items-center gap-2">
+												@badge.Badge(badge.Props{Variant: badge.VariantOutline, Class: "border", Attributes: templ.Attributes{"x-bind:class": "statusBadgeClass(journal.status)", "x-text": "normalizeStatus(journal.status)"}}) {}
+											</div>
+										</div>
+										<div class="space-y-2">
+											@button.Button(button.Props{
+												Variant: button.VariantOutline,
+												Type:    button.TypeButton,
+												Class:   "w-full",
+												Attributes: templ.Attributes{
+													"x-on:click":      "toggleReview()",
+													"x-bind:disabled": "reviewSubmitting",
+													"x-bind:class":    "reviewSubmitting ? 'opacity-70' : ''",
+													"x-text":          "reviewSubmitting ? 'Saving...' : reviewToggleLabel()",
+												},
+											}) {}
+											<p class="text-sm" x-show="reviewMessage" x-bind:class="feedbackClass(reviewMessageType)" x-text="reviewMessage"></p>
+										</div>
+									</div>
+								</div>
+								<div class="rounded-3xl border border-border bg-card shadow-sm p-6">
+									<div class="space-y-4">
+										<div class="space-y-2">
+											<h3 class="text-lg font-semibold tracking-tight text-foreground">Add Note</h3>
+											<p class="text-sm text-muted-foreground">The note status will match the current journal status.</p>
+											<p class="text-sm text-muted-foreground">Latest note appears on top instantly.</p>
+										</div>
+										<div class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Note status</div>
+										<div class="flex items-center gap-2">
+											@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border", Attributes: templ.Attributes{"x-bind:class": "statusBadgeClass(journal.status)", "x-text": "normalizeStatus(journal.status)"}}) {}
+										</div>
+										<div>
+											<textarea class="min-h-[140px] w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200" placeholder="Write a note about this journal..." x-model="noteContent"></textarea>
+										</div>
+										<div class="space-y-2">
+											@button.Button(button.Props{
+												Variant: button.VariantOutline,
+												Type:    button.TypeButton,
+												Class:   "w-full",
+												Attributes: templ.Attributes{
+													"x-on:click":      "submitNote()",
+													"x-bind:disabled": "noteSubmitting || !noteContent.trim()",
+													"x-text":          "noteSubmitting ? 'Saving note...' : 'Add Note'",
+												},
+											}) {}
+											<p class="text-sm" x-show="noteMessage" x-bind:class="feedbackClass(noteMessageType)" x-text="noteMessage"></p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
 					@JournalDetailImages()
 					@JournalDetailNotes()
 				</div>
+				
 				@JournalImagePreviewModal()
 			</div>
 		}
@@ -150,7 +221,7 @@ templ JournalDetailHeader() {
 }
 
 templ JournalDetailImages() {
-	<div class="relative left-1/2 w-[min(100vw-2rem,1500px)] -translate-x-1/2 rounded-3xl border border-border bg-card shadow-sm p-4 sm:p-6" x-show="journal.images?.length">
+	<div class="rounded-3xl border border-border bg-card shadow-sm p-4 sm:p-6" x-show="journal.images?.length">
 		<div class="mb-5">
 			<h3 class="text-lg font-semibold tracking-tight text-foreground">Images</h3>
 			<p class="text-sm text-muted-foreground" x-text="`${journal.images.length} timeframe images · click to zoom`"></p>
@@ -204,7 +275,7 @@ templ JournalDetailNotes() {
 			<p class="text-sm text-muted-foreground" x-text="`${journal.notes?.length || 0} note(s)`"></p>
 		</div>
 		<div class="space-y-3" x-show="journal.notes?.length">
-			<template x-for="note in journal.notes" x-bind:key="note.id">
+			<template x-for="note in sortedNotes()" x-bind:key="note.id">
 				<div class="rounded-xl border border-border bg-muted/40 p-4">
 					<div class="mb-3 flex items-center justify-between gap-3">
 						@badge.Badge(badge.Props{

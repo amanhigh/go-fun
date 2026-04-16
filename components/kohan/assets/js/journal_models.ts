@@ -35,6 +35,21 @@ export type JournalNote = {
 	created_at?: string;
 };
 
+export type JournalReviewUpdate = {
+	reviewed_at: string | null;
+};
+
+export type JournalReviewStatusResponse = {
+	id: string;
+	reviewed_at: string | null;
+};
+
+export type JournalNoteCreate = {
+	status: string;
+	content: string;
+	format: 'MARKDOWN' | 'PLAINTEXT';
+};
+
 export type JournalList = {
 	journals?: Journal[];
 	metadata?: {

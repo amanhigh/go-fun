@@ -1,4 +1,11 @@
-import { type Journal, type Envelope } from './journal_models';
+import {
+	type Journal,
+	type Envelope,
+	type JournalNote,
+	type JournalNoteCreate,
+	type JournalReviewStatusResponse,
+	type JournalReviewUpdate,
+} from './journal_models';
 import { createImageHelper } from './journal_images';
 
 declare const Alpine: {
@@ -32,9 +39,21 @@ function journalDetailPage() {
 		selectedImageIndex: -1,
 		loading: false,
 		errorMessage: '',
+		reviewSubmitting: false,
+		noteSubmitting: false,
+		noteContent: '',
+		reviewMessage: '',
+		reviewMessageType: 'error',
+		noteMessage: '',
+		noteMessageType: 'error',
 		normalizeStatus: normalizeTag,
 		statusBadgeClass: (value: string) => badgeClassMap.status[normalizeTag(value)] ?? defaultBadgeClass,
 		typeBadgeClass: (value: string) => badgeClassMap.type[normalizeTag(value)] ?? defaultBadgeClass,
+		feedbackClass: (type: string) =>
+			type === 'success' ? 'text-emerald-700' : 'text-rose-700',
+		reviewToggleLabel(this: any) {
+			return this.journal?.reviewed_at ? 'Not Review' : 'Review';
+		},
 		// Image helpers
 		timeframeChipClass: image.chipClass,
 		sortedImages(this: any) {
@@ -50,6 +69,13 @@ function journalDetailPage() {
 		previewImageCounter(this: any) {
 			return image.counter(this.selectedImageIndex, this.sortedImages().length);
 		},
+		sortedNotes(this: any) {
+			return [...(this.journal?.notes ?? [])].sort((left: JournalNote, right: JournalNote) => {
+				const leftTime = left.created_at ? new Date(left.created_at).getTime() : 0;
+				const rightTime = right.created_at ? new Date(right.created_at).getTime() : 0;
+				return rightTime - leftTime;
+			});
+		},
 		async loadJournal() {
 			this.loading = true;
 			this.errorMessage = '';
@@ -62,6 +88,77 @@ function journalDetailPage() {
 				this.errorMessage = err instanceof Error ? err.message : 'Unable to load journal details. Please try again.';
 			} finally {
 				this.loading = false;
+			}
+		},
+		localToday() {
+			const today = new Date();
+			const year = today.getFullYear();
+			const month = `${today.getMonth() + 1}`.padStart(2, '0');
+			const day = `${today.getDate()}`.padStart(2, '0');
+			return `${year}-${month}-${day}`;
+		},
+		async toggleReview() {
+			if (!this.journal || this.reviewSubmitting) return;
+			this.reviewSubmitting = true;
+			this.reviewMessage = '';
+			this.reviewMessageType = 'error';
+			try {
+				const reviewedAt = this.journal.reviewed_at ? null : this.localToday();
+				const payload: JournalReviewUpdate = { reviewed_at: reviewedAt };
+				const response = await fetch(`/v1/api/journals/${this.journalId}`, {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload),
+				});
+				if (!response.ok) throw new Error(response.status === 404 ? 'Journal not found' : 'Failed to update review date');
+				const envelope = (await response.json()) as Envelope<JournalReviewStatusResponse>;
+				if (this.journal) {
+					this.journal.reviewed_at = envelope.data.reviewed_at;
+				}
+				this.reviewMessageType = 'success';
+				this.reviewMessage = envelope.data.reviewed_at ? 'Journal marked reviewed.' : 'Journal marked not reviewed.';
+			} catch (err) {
+				this.reviewMessage = err instanceof Error ? err.message : 'Unable to update review date.';
+				this.reviewMessageType = 'error';
+			} finally {
+				this.reviewSubmitting = false;
+			}
+		},
+		async submitNote() {
+			if (!this.journal || this.noteSubmitting) return;
+			const content = this.noteContent.trim();
+			if (!content) {
+				this.noteMessage = 'Note content is required.';
+				this.noteMessageType = 'error';
+				return;
+			}
+			this.noteSubmitting = true;
+			this.noteMessage = '';
+			this.noteMessageType = 'error';
+			try {
+				const payload: JournalNoteCreate = {
+					status: this.journal.status,
+					content,
+					format: 'MARKDOWN',
+				};
+				const response = await fetch(`/v1/api/journals/${this.journalId}/notes`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload),
+				});
+				if (!response.ok) throw new Error(response.status === 404 ? 'Journal not found' : 'Failed to save note');
+				const envelope = (await response.json()) as Envelope<JournalNote>;
+				const notes = this.journal.notes ?? [];
+				notes.unshift(envelope.data);
+				this.journal.notes = notes;
+				this.noteContent = '';
+				this.noteMessageType = 'success';
+				this.noteMessage = 'Note added.';
+			} catch (err) {
+				this.noteMessage = err instanceof Error ? err.message : 'Unable to save note.';
+				this.noteMessageType = 'error';
+			} finally {
+				this.noteSubmitting = false;
 			}
 		},
 		hasError(this: any) {

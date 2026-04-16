@@ -78,6 +78,9 @@ var _ = Describe("Barkat E2E Test", func() {
 			Expect(resp.Header().Get("Content-Type")).To(ContainSubstring("text/html"))
 			Expect(resp.String()).To(ContainSubstring("Journal Detail"))
 			Expect(resp.String()).To(ContainSubstring("jrn_1234abcd"))
+			Expect(resp.String()).To(ContainSubstring("Review Journal"))
+			Expect(resp.String()).To(ContainSubstring("Mark Reviewed Today"))
+			Expect(resp.String()).To(ContainSubstring("Add Note"))
 		})
 
 		It("should serve journal images from static route", func() {
