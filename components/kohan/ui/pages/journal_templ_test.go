@@ -57,6 +57,6 @@ var _ = Describe("Journal Page Tests", func() {
 
 	It("shows a month-only badge for the active review preset", func() {
 		Expect(html).To(ContainSubstring("currentReviewPresetLabel()"))
-		Expect(html).To(ContainSubstring("bg-cyan-100"))
+		Expect(html).To(ContainSubstring("bg-amber-100"))
 	})
 })

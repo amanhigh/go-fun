@@ -1039,7 +1039,7 @@ func JournalActiveFilters() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-cyan-100 text-cyan-900 border border-cyan-200", "currentReviewPresetLabel() !== ''", "currentReviewPresetLabel()").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-amber-100 text-amber-900 border border-amber-200", "currentReviewPresetLabel() !== ''", "currentReviewPresetLabel()").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

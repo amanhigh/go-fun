@@ -25,13 +25,15 @@ const typeBadgeClassMap: Record<string, string> = {
 const normalizeTag = (value: string): string => (value ?? '').trim().toUpperCase();
 
 type ReviewPreset = {
+	isAnchor: boolean;
 	label: string;
 	createdAfter: string;
 	createdBefore: string;
 };
 
 const reviewPresetBaseClass = 'border-cyan-200/70 bg-white/80 text-cyan-800 hover:bg-cyan-50';
-const reviewPresetActiveClass = 'border-cyan-400 bg-cyan-100/90 text-cyan-950 hover:bg-cyan-100';
+const reviewPresetAnchorClass = 'border-2 border-amber-200 bg-white/80 text-cyan-800';
+const reviewPresetActiveClass = 'border-amber-300 bg-amber-100/90 text-amber-950 hover:bg-amber-100';
 
 function formatReviewPresetLabel(date: Date): string {
 	const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -46,6 +48,7 @@ function createReviewPresets(): ReviewPreset[] {
 		const createdAfter = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
 		const createdBefore = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
 		return {
+			isAnchor: offset === 0,
 			label: formatReviewPresetLabel(monthDate),
 			createdAfter: `${createdAfter.getFullYear()}-${String(createdAfter.getMonth() + 1).padStart(2, '0')}-${String(createdAfter.getDate()).padStart(2, '0')}`,
 			createdBefore: `${createdBefore.getFullYear()}-${String(createdBefore.getMonth() + 1).padStart(2, '0')}-${String(createdBefore.getDate()).padStart(2, '0')}`,
@@ -84,7 +87,10 @@ function journalPage() {
 			this.activeReviewPreset = '';
 		},
 		reviewPresetButtonClass(reviewPreset: ReviewPreset) {
-			return this.activeReviewPreset === reviewPreset.label ? reviewPresetActiveClass : reviewPresetBaseClass;
+			if (this.activeReviewPreset === reviewPreset.label) {
+				return reviewPresetActiveClass;
+			}
+			return reviewPreset.isAnchor ? reviewPresetAnchorClass : reviewPresetBaseClass;
 		},
 		normalizeStatus(value: string) {
 			return normalizeTag(value);
