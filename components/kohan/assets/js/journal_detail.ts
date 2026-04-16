@@ -1,5 +1,6 @@
 import {
 	type Journal,
+	type JournalList,
 	type Envelope,
 	type JournalNote,
 	type JournalNoteCreate,
@@ -47,6 +48,9 @@ function journalDetailPage() {
 		reviewMessageType: 'error',
 		noteMessage: '',
 		noteMessageType: 'error',
+		reviewQueue: [] as Journal[],
+		reviewQueueLoading: false,
+		reviewQueueError: '',
 		normalizeStatus: normalizeTag,
 		statusBadgeClass: (value: string) => badgeClassMap.status[normalizeTag(value)] ?? defaultBadgeClass,
 		typeBadgeClass: (value: string) => badgeClassMap.type[normalizeTag(value)] ?? defaultBadgeClass,
@@ -123,6 +127,7 @@ function journalDetailPage() {
 				}
 				this.reviewMessageType = 'success';
 				this.reviewMessage = envelope.data.reviewed_at ? 'Journal marked reviewed.' : 'Journal marked not reviewed.';
+				await this.loadReviewQueue();
 			} catch (err) {
 				this.reviewMessage = err instanceof Error ? err.message : 'Unable to update review date.';
 				this.reviewMessageType = 'error';
@@ -223,6 +228,25 @@ function journalDetailPage() {
 			if (!value) return '—';
 			const parsed = new Date(value);
 			return Number.isNaN(parsed.getTime()) ? '—' : parsed.toLocaleString();
+		},
+		formatDate: (value: string | null | undefined) => {
+			if (!value) return '—';
+			const parsed = new Date(value);
+			return Number.isNaN(parsed.getTime()) ? '—' : parsed.toLocaleDateString();
+		},
+		async loadReviewQueue() {
+			this.reviewQueueLoading = true;
+			this.reviewQueueError = '';
+			try {
+				const response = await fetch('/v1/api/journals?reviewed=false&sort-by=created_at&sort-order=asc&limit=10');
+				if (!response.ok) throw new Error('Failed to load review queue');
+				const envelope = (await response.json()) as Envelope<JournalList>;
+				this.reviewQueue = envelope.data?.journals ?? [];
+			} catch (err) {
+				this.reviewQueueError = err instanceof Error ? err.message : 'Unable to load review queue.';
+			} finally {
+				this.reviewQueueLoading = false;
+			}
 		},
 	};
 }
