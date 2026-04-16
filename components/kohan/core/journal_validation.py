@@ -17,7 +17,7 @@ from collections import Counter, defaultdict
 from datetime import datetime
 
 # Environment variable configuration
-BARKAT_PATH = os.environ.get("BARKAT_PATH", "/mnt/videos/Unwritten/Assets/trading")
+BARKAT_PATH = os.environ.get("BARKAT_PATH")
 
 # Image filenames embed a date in multiple legacy formats.
 IMAGE_DASH_DATE_PATTERN = re.compile(

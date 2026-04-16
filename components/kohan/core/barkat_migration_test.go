@@ -1006,6 +1006,55 @@ type MigrationStats struct {
 	FailureMessages []string
 }
 
+type migrationRunContext struct {
+	client         *resty.Client
+	logger         *MigrationLogger
+	stats          *MigrationStats
+	migratedCounts *ProcessingCounts
+	accounting     *MigrationAccounting
+}
+
+func assertCreatedJournal(resp *resty.Response) common.Envelope[barkat.Journal] {
+	Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
+
+	var envelope common.Envelope[barkat.Journal]
+	Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
+
+	return envelope
+}
+
+func migrateJournalWithLogging(ctx migrationRunContext, entry LegacyJournalEntry, converted ConvertedJournal, filePath string) {
+	journal := converted.Journal
+	ctx.stats.TotalEntries++
+	ctx.accounting.RecordConversion(converted)
+
+	resp, err := ctx.client.R().SetBody(journal).Post(barkat.JournalBase)
+	Expect(err).ToNot(HaveOccurred())
+
+	if resp.StatusCode() == http.StatusCreated {
+		ctx.stats.SuccessCount++
+
+		envelope := assertCreatedJournal(resp)
+		ctx.migratedCounts.MigratedJournals++
+		ctx.migratedCounts.MigratedImages += len(envelope.Data.Images)
+		ctx.migratedCounts.MigratedNotes += len(envelope.Data.Notes)
+		ctx.migratedCounts.MigratedTags += len(envelope.Data.Tags)
+		verifyMigratedJournalMatchesProjection(envelope.Data, journal)
+
+		ctx.logger.LogSuccess(filePath, entry.Ticker, envelope.Data.ExternalID,
+			len(envelope.Data.Images), len(envelope.Data.Notes) > 0, len(envelope.Data.Tags) > 0)
+	} else {
+		ctx.stats.FailureCount++
+		ctx.stats.FailedTickers = append(ctx.stats.FailedTickers, entry.Ticker)
+		ctx.stats.FailureMessages = append(ctx.stats.FailureMessages, string(resp.Body()))
+		ctx.logger.LogError(filePath, entry.Ticker, entry.LineNumber, string(resp.Body()), entry.RawLine)
+	}
+
+	Expect(resp.StatusCode()).To(Equal(http.StatusCreated),
+		"Migration should succeed for %s: status=%d body=%s",
+		entry.Ticker, resp.StatusCode(), string(resp.Body()))
+}
+
 // ============================================================================
 // TEST SUITE
 // ============================================================================
@@ -1016,17 +1065,26 @@ var _ = Describe("Barkat Migration Test", func() {
 		logger *MigrationLogger
 	)
 
-	BeforeEach(func() {
-		client = resty.New()
-		client.SetTimeout(10 * time.Second)
-		client.SetHeader("Content-Type", "application/json")
+	newMigrationTestClient := func(baseURL string) *resty.Client {
+		baseClient := resty.New()
+		baseClient.SetTimeout(10 * time.Second)
+		baseClient.SetHeader("Content-Type", "application/json")
+		baseClient.SetBaseURL(baseURL)
+		return baseClient
+	}
 
-		// Use real server URL if provided, otherwise use test port for in-memory DB
+	printParsedCounts := func(counts ProcessingCounts) {
+		GinkgoWriter.Printf("Parsed tickers: %d\n", counts.ParsedTickers)
+		GinkgoWriter.Printf("Parsed images: %d\n", counts.ParsedImages)
+		GinkgoWriter.Printf("Parsed notes: %d\n", counts.ParsedNotes)
+	}
+
+	BeforeEach(func() {
 		if RealServerURL != "" {
-			client.SetBaseURL(RealServerURL)
+			client = newMigrationTestClient(RealServerURL)
 			GinkgoWriter.Printf("Using real server: %s\n", RealServerURL)
 		} else {
-			client.SetBaseURL(fmt.Sprintf("http://localhost:%d", testPort))
+			client = newMigrationTestClient(fmt.Sprintf("http://localhost:%d", testPort))
 			GinkgoWriter.Printf("Using test server: http://localhost:%d (in-memory DB)\n", testPort)
 		}
 
@@ -1159,9 +1217,7 @@ var _ = Describe("Barkat Migration Test", func() {
 
 			// Log parsing results
 			GinkgoWriter.Printf("\n=== Parsing Results ===\n")
-			GinkgoWriter.Printf("Parsed tickers: %d\n", parsedCounts.ParsedTickers)
-			GinkgoWriter.Printf("Parsed images: %d\n", parsedCounts.ParsedImages)
-			GinkgoWriter.Printf("Parsed notes: %d\n", parsedCounts.ParsedNotes)
+			printParsedCounts(parsedCounts)
 		})
 
 		It("should migrate entries via POST API with logging", func() {
@@ -1171,6 +1227,7 @@ var _ = Describe("Barkat Migration Test", func() {
 			stats := MigrationStats{}
 			var migratedCounts ProcessingCounts
 			var accounting MigrationAccounting
+			migrationCtx := migrationRunContext{client: client, logger: logger, stats: &stats, migratedCounts: &migratedCounts, accounting: &accounting}
 
 			defer func() {
 				GinkgoWriter.Printf("\n=== Migration Stats ===\n")
@@ -1181,45 +1238,13 @@ var _ = Describe("Barkat Migration Test", func() {
 			}()
 
 			for _, entry := range entries {
-				stats.TotalEntries++
 				converted := convertToJournalWithLogging(entry, journalDate, testFilePath, logger)
-				journal := converted.Journal
-				accounting.RecordConversion(converted)
-
-				resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
-				Expect(err).ToNot(HaveOccurred())
-
-				if resp.StatusCode() == http.StatusCreated {
-					stats.SuccessCount++
-
-					var envelope common.Envelope[barkat.Journal]
-					Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
-
-					migratedCounts.MigratedJournals++
-					migratedCounts.MigratedImages += len(envelope.Data.Images)
-					migratedCounts.MigratedNotes += len(envelope.Data.Notes)
-					migratedCounts.MigratedTags += len(envelope.Data.Tags)
-					verifyMigratedJournalMatchesProjection(envelope.Data, journal)
-
-					logger.LogSuccess(testFilePath, entry.Ticker, envelope.Data.ExternalID,
-						len(envelope.Data.Images), len(envelope.Data.Notes) > 0, len(envelope.Data.Tags) > 0)
-				} else {
-					stats.FailureCount++
-					stats.FailedTickers = append(stats.FailedTickers, entry.Ticker)
-					stats.FailureMessages = append(stats.FailureMessages, string(resp.Body()))
-					logger.LogError(testFilePath, entry.Ticker, entry.LineNumber, string(resp.Body()), entry.RawLine)
-				}
-
-				Expect(resp.StatusCode()).To(Equal(http.StatusCreated),
-					"Migration should succeed for %s: status=%d body=%s",
-					entry.Ticker, resp.StatusCode(), string(resp.Body()))
+				migrateJournalWithLogging(migrationCtx, entry, converted, testFilePath)
 
 			}
 
 			GinkgoWriter.Printf("\n=== Parsing Results ===\n")
-			GinkgoWriter.Printf("Parsed tickers: %d\n", parsedCounts.ParsedTickers)
-			GinkgoWriter.Printf("Parsed images: %d\n", parsedCounts.ParsedImages)
-			GinkgoWriter.Printf("Parsed notes: %d\n", parsedCounts.ParsedNotes)
+			printParsedCounts(parsedCounts)
 
 			GinkgoWriter.Printf("\n=== Migration Results ===\n")
 			GinkgoWriter.Printf("Migrated journals: %d\n", migratedCounts.MigratedJournals)
@@ -1299,6 +1324,7 @@ var _ = Describe("Barkat Migration Test", func() {
 			var totalMigratedCounts ProcessingCounts
 			totalStats := MigrationStats{}
 			var accounting MigrationAccounting
+			migrationCtx := migrationRunContext{client: client, logger: logger, stats: &totalStats, migratedCounts: &totalMigratedCounts, accounting: &accounting}
 
 			defer func() {
 				logger.WriteSummary(totalParsedCounts, len(allFiles))
@@ -1380,38 +1406,8 @@ var _ = Describe("Barkat Migration Test", func() {
 
 				// Migrate entries
 				for _, entry := range entries {
-					totalStats.TotalEntries++
 					converted := convertToJournalWithLogging(entry, journalDate, filePath, logger)
-					journal := converted.Journal
-					accounting.RecordConversion(converted)
-
-					resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
-					Expect(err).ToNot(HaveOccurred())
-
-					if resp.StatusCode() == http.StatusCreated {
-						totalStats.SuccessCount++
-
-						var envelope common.Envelope[barkat.Journal]
-						Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
-
-						totalMigratedCounts.MigratedJournals++
-						totalMigratedCounts.MigratedImages += len(envelope.Data.Images)
-						totalMigratedCounts.MigratedNotes += len(envelope.Data.Notes)
-						totalMigratedCounts.MigratedTags += len(envelope.Data.Tags)
-						verifyMigratedJournalMatchesProjection(envelope.Data, journal)
-
-						logger.LogSuccess(filePath, entry.Ticker, envelope.Data.ExternalID,
-							len(envelope.Data.Images), len(envelope.Data.Notes) > 0, len(envelope.Data.Tags) > 0)
-					} else {
-						totalStats.FailureCount++
-						totalStats.FailedTickers = append(totalStats.FailedTickers,
-							fmt.Sprintf("%s:%s", filepath.Base(filePath), entry.Ticker))
-						totalStats.FailureMessages = append(totalStats.FailureMessages, string(resp.Body()))
-						logger.LogError(filePath, entry.Ticker, entry.LineNumber, string(resp.Body()), entry.RawLine)
-					}
-					Expect(resp.StatusCode()).To(Equal(http.StatusCreated),
-						"Migration failed for %s in %s: status=%d body=%s",
-						entry.Ticker, filepath.Base(filePath), resp.StatusCode(), string(resp.Body()))
+					migrateJournalWithLogging(migrationCtx, entry, converted, filePath)
 				}
 			}
 
