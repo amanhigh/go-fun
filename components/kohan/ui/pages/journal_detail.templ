@@ -4,6 +4,7 @@ import (
 	"github.com/amanhigh/go-fun/common/ui/layout"
 	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/button"
+	"github.com/templui/templui/components/icon"
 )
 
 // JournalDetailPage renders a dedicated page for viewing a single journal entry.
@@ -243,16 +244,32 @@ templ JournalDetailNotes() {
 		<div class="space-y-3" x-show="journal.notes?.length">
 			<template x-for="note in sortedNotes()" x-bind:key="note.id">
 				<div class="rounded-xl border border-border bg-muted/40 p-4">
-					<div class="mb-3 flex items-center justify-between gap-3">
-						@badge.Badge(badge.Props{
-							Variant:    badge.VariantSecondary,
-							Class:      "border font-semibold",
-							Attributes: templ.Attributes{"x-bind:class": "statusBadgeClass(note.status)", "x-text": "note.status"},
-						}) {}
-						<div class="inline-flex items-center gap-2 rounded-md border border-sky-300/70 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-900">
-							<span class="uppercase tracking-wide text-sky-700/80">Created</span>
-							<span x-text="formatTimestamp(note.created_at)"></span>
+					<div class="mb-3 flex items-start justify-between gap-3">
+						<div class="flex flex-wrap items-center gap-3">
+							@badge.Badge(badge.Props{
+								Variant:    badge.VariantSecondary,
+								Class:      "border font-semibold",
+								Attributes: templ.Attributes{"x-bind:class": "statusBadgeClass(note.status)", "x-text": "note.status"},
+							}) {}
+							<div class="inline-flex items-center gap-2 rounded-md border border-sky-300/70 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-900">
+								<span class="uppercase tracking-wide text-sky-700/80">Created</span>
+								<span x-text="formatTimestamp(note.created_at)"></span>
+							</div>
 						</div>
+						@button.Button(button.Props{
+							Variant: button.VariantOutline,
+							Type:    button.TypeButton,
+							Class:   "h-8 w-8 p-0 border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100",
+							Attributes: templ.Attributes{
+								"x-on:click":      "deleteNote(note.id)",
+								"x-bind:disabled": "noteDeletingId === note.id",
+								"x-bind:class":    "noteDeletingId === note.id ? 'opacity-70' : ''",
+								"aria-label":      "Delete Note",
+								"title":           "Delete Note",
+							},
+						}) {
+							@icon.Icon("trash-2")(icon.Props{Class: "h-4 w-4"})
+						}
 					</div>
 					<pre class="whitespace-pre-wrap text-sm text-foreground" x-text="note.content"></pre>
 				</div>

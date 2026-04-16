@@ -41,6 +41,7 @@ function journalDetailPage() {
 		errorMessage: '',
 		reviewSubmitting: false,
 		noteSubmitting: false,
+		noteDeletingId: '' as string,
 		noteContent: '',
 		reviewMessage: '',
 		reviewMessageType: 'error',
@@ -164,6 +165,26 @@ function journalDetailPage() {
 				this.noteMessageType = 'error';
 			} finally {
 				this.noteSubmitting = false;
+			}
+		},
+		async deleteNote(noteId: string) {
+			if (!this.journal || this.noteDeletingId) return;
+			this.noteDeletingId = noteId;
+			this.noteMessage = '';
+			this.noteMessageType = 'error';
+			try {
+				const response = await fetch(`/v1/api/journals/${this.journalId}/notes/${noteId}`, {
+					method: 'DELETE',
+				});
+				if (!response.ok) throw new Error(response.status === 404 ? 'Note not found' : 'Failed to delete note');
+				this.journal.notes = (this.journal.notes ?? []).filter((note) => note.id !== noteId);
+				this.noteMessageType = 'success';
+				this.noteMessage = 'Note deleted.';
+			} catch (err) {
+				this.noteMessage = err instanceof Error ? err.message : 'Unable to delete note.';
+				this.noteMessageType = 'error';
+			} finally {
+				this.noteDeletingId = '';
 			}
 		},
 		hasError(this: any) {
