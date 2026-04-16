@@ -101,6 +101,18 @@ function journalPage() {
 		typeBadgeClass(value: string) {
 			return typeBadgeClassMap[normalizeTag(value)] ?? defaultBadgeClass;
 		},
+		toggleTypeFilter() {
+			this.filterTracker.type = this.filterTracker.type === 'TAKEN' ? 'REJECTED' : 'TAKEN';
+			this.applyManualFilters();
+		},
+		typeToggleButtonLabel() {
+			return this.filterTracker.type === 'TAKEN' ? 'Rejected' : 'Taken';
+		},
+		typeToggleButtonClass() {
+			return this.typeToggleButtonLabel() === 'Taken'
+				? '!border-emerald-300 !bg-emerald-200 !text-emerald-800'
+				: '!border-rose-300 !bg-rose-200 !text-rose-800';
+		},
 		async loadJournals() {
 			const requestId = this.requestCounter + 1;
 			this.requestCounter = requestId;
