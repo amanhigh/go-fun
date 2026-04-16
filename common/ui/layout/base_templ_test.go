@@ -49,6 +49,8 @@ var _ = Describe("Base Template Tests", func() {
 			Expect(doc.Find("title").Text()).To(Equal(title))
 			Expect(doc.Find("h1").Text()).To(Equal(title))
 			Expect(doc.Find("main").Length()).To(Equal(1))
+			Expect(doc.Find("main").AttrOr("class", "")).To(ContainSubstring("w-full"))
+			Expect(doc.Find("main").AttrOr("class", "")).ToNot(ContainSubstring("container"))
 			Expect(doc.Find("footer").Length()).To(Equal(1))
 			Expect(html).To(ContainSubstring("Built with TemplUI & Tailwind CSS, powered by AlpineJS"))
 		})

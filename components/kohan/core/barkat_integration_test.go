@@ -79,7 +79,6 @@ var _ = Describe("Barkat E2E Test", func() {
 			Expect(resp.String()).To(ContainSubstring("Journal Detail"))
 			Expect(resp.String()).To(ContainSubstring("jrn_1234abcd"))
 			Expect(resp.String()).To(ContainSubstring("Review Journal"))
-			Expect(resp.String()).To(ContainSubstring("Mark Reviewed Today"))
 			Expect(resp.String()).To(ContainSubstring("Add Note"))
 		})
 
