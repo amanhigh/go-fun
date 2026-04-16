@@ -46,4 +46,17 @@ var _ = Describe("Journal Page Tests", func() {
 		Expect(html).To(ContainSubstring("x-text=\"journal.id\""))
 		Expect(html).To(ContainSubstring("x-text=\"journal.ticker\""))
 	})
+
+	It("renders review presets and removes the reviewed dropdown", func() {
+		Expect(html).To(ContainSubstring("Review"))
+		Expect(html).To(ContainSubstring("x-for=\"reviewPreset in reviewPresets\""))
+		Expect(html).To(ContainSubstring("x-text=\"reviewPreset.label\""))
+		Expect(html).To(ContainSubstring("x-on:click=\"applyReviewPreset(reviewPreset)\""))
+		Expect(html).ToNot(ContainSubstring("id=\"journal-reviewed\""))
+	})
+
+	It("shows a month-only badge for the active review preset", func() {
+		Expect(html).To(ContainSubstring("currentReviewPresetLabel()"))
+		Expect(html).To(ContainSubstring("bg-cyan-100"))
+	})
 })

@@ -7,6 +7,7 @@ import (
 	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/button"
 	"github.com/templui/templui/components/card"
+	"github.com/templui/templui/components/icon"
 	"github.com/templui/templui/components/input"
 	"github.com/templui/templui/components/pagination"
 	"github.com/templui/templui/components/selectbox"
@@ -63,12 +64,27 @@ templ JournalActiveFilterBadge(className string, showExpr string, textExpr strin
 }
 
 templ JournalQuickFilters() {
-	<div class="flex items-center gap-2">
-		<span class="text-xs font-semibold text-sky-700">Quick</span>
-		<div class="flex gap-1">
-			@JournalQuickFilterButton("Today", "h-8 border-sky-300/70 bg-sky-100/60 px-2 text-xs text-sky-800 hover:bg-sky-200/70", "applyCreatedPreset('today')")
-			@JournalQuickFilterButton("7d", "h-8 border-indigo-300/70 bg-indigo-100/60 px-2 text-xs text-indigo-800 hover:bg-indigo-200/70", "applyCreatedPreset('last7')")
-			@JournalQuickFilterButton("30d", "h-8 border-emerald-300/70 bg-emerald-100/60 px-2 text-xs text-emerald-800 hover:bg-emerald-200/70", "applyCreatedPreset('last30')")
+	<div class="flex flex-wrap items-center gap-3 lg:gap-8">
+		<div class="flex items-center gap-2">
+			<span class="text-xs font-semibold text-sky-700">Quick</span>
+			<div class="flex gap-1">
+				@JournalQuickFilterButton("Today", "h-8 border-sky-300/70 bg-sky-100/60 px-2 text-xs text-sky-800 hover:bg-sky-200/70", "applyCreatedPreset('today')")
+				@JournalQuickFilterButton("7d", "h-8 border-indigo-300/70 bg-indigo-100/60 px-2 text-xs text-indigo-800 hover:bg-indigo-200/70", "applyCreatedPreset('last7')")
+				@JournalQuickFilterButton("30d", "h-8 border-emerald-300/70 bg-emerald-100/60 px-2 text-xs text-emerald-800 hover:bg-emerald-200/70", "applyCreatedPreset('last30')")
+			</div>
+		</div>
+		<div class="flex items-center gap-2 lg:ml-2">
+			<span class="inline-flex items-center gap-1 text-xs font-semibold text-cyan-700">
+				@icon.Icon("calendar")(icon.Props{Class: "h-3.5 w-3.5"})
+				<span>Review</span>
+			</span>
+			<div class="flex gap-1">
+				<template x-for="reviewPreset in reviewPresets" x-bind:key="reviewPreset.label">
+					@button.Button(button.Props{Type: button.TypeButton, Size: button.SizeSm, Variant: button.VariantOutline, Class: "h-8 px-2 text-xs", Attributes: templ.Attributes{"x-on:click": "applyReviewPreset(reviewPreset)", "x-bind:class": "reviewPresetButtonClass(reviewPreset)"}}) {
+						<span x-text="reviewPreset.label"></span>
+					}
+				</template>
+			</div>
 		</div>
 	</div>
 }
@@ -76,11 +92,11 @@ templ JournalQuickFilters() {
 templ JournalFilters() {
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 		<div>
-			@input.Input(input.Props{ID: "journal-ticker", Type: input.TypeText, Placeholder: "Ticker", Class: "h-9 w-full border-sky-200/70 bg-white/80", Attributes: templ.Attributes{"x-model.debounce.300ms": "filterTracker.ticker", "x-on:input.debounce.300ms": "applyFilters()"}})
+			@input.Input(input.Props{ID: "journal-ticker", Type: input.TypeText, Placeholder: "Ticker", Class: "h-9 w-full border-sky-200/70 bg-white/80", Attributes: templ.Attributes{"x-model.debounce.300ms": "filterTracker.ticker", "x-on:input.debounce.300ms": "applyManualFilters()"}})
 		</div>
 		<div>
 			@selectbox.SelectBox() {
-				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-type", Name: "journal-type", Class: "h-9 w-full border-indigo-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.type", "x-on:change": "applyFilters()"}}) {
+				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-type", Name: "journal-type", Class: "h-9 w-full border-indigo-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.type", "x-on:change": "applyManualFilters()"}}) {
 					@selectbox.Value(selectbox.ValueProps{Placeholder: "Type"})
 				}
 					@selectbox.Content() {
@@ -94,7 +110,7 @@ templ JournalFilters() {
 		</div>
 		<div>
 			@selectbox.SelectBox() {
-				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-status", Name: "journal-status", Class: "h-9 w-full border-rose-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.status", "x-on:change": "applyFilters()"}}) {
+				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-status", Name: "journal-status", Class: "h-9 w-full border-rose-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.status", "x-on:change": "applyManualFilters()"}}) {
 					@selectbox.Value(selectbox.ValueProps{Placeholder: "Status"})
 				}
 				@selectbox.Content() {
@@ -111,7 +127,7 @@ templ JournalFilters() {
 		</div>
 		<div>
 			@selectbox.SelectBox() {
-				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sequence", Name: "journal-sequence", Class: "h-9 w-full border-violet-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.sequence", "x-on:change": "applyFilters()"}}) {
+				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sequence", Name: "journal-sequence", Class: "h-9 w-full border-violet-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.sequence", "x-on:change": "applyManualFilters()"}}) {
 					@selectbox.Value(selectbox.ValueProps{Placeholder: "Sequence"})
 				}
 				@selectbox.Content() {
@@ -127,20 +143,6 @@ templ JournalFilters() {
 		<div>
 			@input.Input(input.Props{ID: "journal-created-on", Type: input.TypeDate, Class: "h-9 w-full border-emerald-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.createdAfter", "x-on:change": "onCreatedDateChange()"}})
 		</div>
-		<div>
-			@selectbox.SelectBox() {
-				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-reviewed", Name: "journal-reviewed", Class: "h-9 w-full border-amber-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.reviewed", "x-on:change": "applyFilters()"}}) {
-					@selectbox.Value(selectbox.ValueProps{Placeholder: "Reviewed"})
-				}
-				@selectbox.Content() {
-					@selectbox.Group() {
-						@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
-						@selectbox.Item(selectbox.ItemProps{Value: "true"}) { Reviewed }
-						@selectbox.Item(selectbox.ItemProps{Value: "false"}) { Not reviewed }
-					}
-				}
-			}
-		</div>
 		<div class="flex items-end">
 			@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Size: button.SizeSm, Class: "h-9 w-full border-rose-300/70 bg-rose-100/60 text-rose-800 hover:bg-rose-200/70", Attributes: templ.Attributes{"x-on:click": "clearFilters()"}}) { Clear }
 		</div>
@@ -153,8 +155,8 @@ templ JournalActiveFilters() {
 		@JournalActiveFilterBadge("bg-indigo-100 text-indigo-800 border border-indigo-200", "filterTracker.type !== ''", "'Type: ' + filterTracker.type")
 		@JournalActiveFilterBadge("bg-rose-100 text-rose-800 border border-rose-200", "filterTracker.status !== ''", "'Status: ' + filterTracker.status")
 		@JournalActiveFilterBadge("bg-violet-100 text-violet-800 border border-violet-200", "filterTracker.sequence !== ''", "'Sequence: ' + filterTracker.sequence")
-		@JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filterTracker.createdAfter !== ''", "'Created: ' + filterTracker.createdAfter")
-		@JournalActiveFilterBadge("bg-amber-100 text-amber-800 border border-amber-200", "filterTracker.reviewed !== ''", "'Reviewed: ' + filterTracker.reviewed")
+		@JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filterTracker.createdAfter !== '' && currentReviewPresetLabel() === ''", "'Created: ' + filterTracker.createdAfter")
+		@JournalActiveFilterBadge("bg-cyan-100 text-cyan-900 border border-cyan-200", "currentReviewPresetLabel() !== ''", "currentReviewPresetLabel()")
 	</div>
 }
 
