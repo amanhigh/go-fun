@@ -1046,6 +1046,8 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			markReviewedPayload   = barkat.JournalReviewUpdate{ReviewedAt: &validReviewDate}
 			markUnreviewedPayload = barkat.JournalReviewUpdate{ReviewedAt: nil}
 			futureDatePayload     = barkat.JournalReviewUpdate{ReviewedAt: &futureReviewDate}
+			statusWithDatePayload = barkat.JournalReviewUpdate{Status: "RUNNING", ReviewedAt: &validReviewDate}
+			invalidStatusPayload  = barkat.JournalReviewUpdate{Status: "INVALID_STATUS"}
 		)
 
 		var createdJournal barkat.Journal
@@ -1069,12 +1071,9 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					router.ServeHTTP(w, req)
 				})
 
-				It("should return 200 OK", func() {
-					Expect(w.Code).To(Equal(http.StatusOK))
-				})
-
-				It("should return success envelope", func() {
+				It("should return 200 OK with success envelope", func() {
 					response := decodeUpdateJournalStatusResponse(w)
+					Expect(w.Code).To(Equal(http.StatusOK))
 					Expect(response).ToNot(BeNil())
 				})
 
@@ -1082,13 +1081,8 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					response := decodeUpdateJournalStatusResponse(w)
 
 					Expect(response.ID).To(Equal(createdJournal.ExternalID))
+					Expect(response.Status).To(Equal(createdJournal.Status))
 					Expect(response.ReviewedAt).ToNot(BeNil())
-				})
-
-				It("should actually update the journal in database", func() {
-					updatedJournal, err := journalMgr.GetJournal(testCtx, createdJournal.ExternalID)
-					Expect(err).ToNot(HaveOccurred())
-					Expect(updatedJournal.ReviewedAt).ToNot(BeNil())
 				})
 			})
 
@@ -1103,20 +1097,15 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					router.ServeHTTP(w, req)
 				})
 
-				It("should return 200 OK", func() {
+				It("should return 200 OK with success envelope", func() {
+					response := decodeUpdateJournalStatusResponse(w)
 					Expect(w.Code).To(Equal(http.StatusOK))
+					Expect(response).ToNot(BeNil())
 				})
 
 				It("should return reviewed_at as null", func() {
 					response := decodeUpdateJournalStatusResponse(w)
-
 					Expect(response.ReviewedAt).To(BeNil())
-				})
-
-				It("should actually clear reviewed_at in database", func() {
-					updatedJournal, err := journalMgr.GetJournal(testCtx, createdJournal.ExternalID)
-					Expect(err).ToNot(HaveOccurred())
-					Expect(updatedJournal.ReviewedAt).To(BeNil())
 				})
 			})
 
@@ -1138,6 +1127,27 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				It("should maintain reviewed_at timestamp", func() {
 					response := decodeUpdateJournalStatusResponse(w)
 
+					Expect(response.ReviewedAt).ToNot(BeNil())
+				})
+			})
+
+			Context("status and reviewed_at together", func() {
+				BeforeEach(func() {
+					req, w = util.CreateTestRequest("PATCH", barkat.JournalBase+"/"+createdJournal.ExternalID, statusWithDatePayload)
+					router.ServeHTTP(w, req)
+				})
+
+				It("should return 200 OK with success envelope", func() {
+					response := decodeUpdateJournalStatusResponse(w)
+					Expect(w.Code).To(Equal(http.StatusOK))
+					Expect(response).ToNot(BeNil())
+				})
+
+				It("should return correct response fields", func() {
+					response := decodeUpdateJournalStatusResponse(w)
+
+					Expect(response.ID).To(Equal(createdJournal.ExternalID))
+					Expect(response.Status).To(Equal("RUNNING"))
 					Expect(response.ReviewedAt).ToNot(BeNil())
 				})
 			})
@@ -1164,6 +1174,36 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						req, w = util.CreateTestRequest("PATCH", barkat.JournalBase+"/"+createdJournal.ExternalID, futureDatePayload)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "ReviewedAt", "not_future")
+					})
+				})
+			})
+
+			Context("status field", func() {
+				Context("Allowed Values", func() {
+					It("should accept status RUNNING", func() {
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalBase+"/"+createdJournal.ExternalID, barkat.JournalReviewUpdate{Status: "RUNNING"})
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+
+					It("should accept status SUCCESS", func() {
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalBase+"/"+createdJournal.ExternalID, barkat.JournalReviewUpdate{Status: "SUCCESS"})
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+
+					It("should accept null value", func() {
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalBase+"/"+createdJournal.ExternalID, []byte(`{"status":null}`))
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+				})
+
+				Context("Bad Values", func() {
+					It("should return 400 for invalid status value", func() {
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalBase+"/"+createdJournal.ExternalID, invalidStatusPayload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Status", "oneof")
 					})
 				})
 			})

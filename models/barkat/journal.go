@@ -81,14 +81,17 @@ type JournalList struct {
 	Metadata common.PaginatedResponse `json:"metadata"`
 }
 
-// JournalReviewUpdate represents the request body for updating journal review status.
+// JournalReviewUpdate represents the request body for PATCH journal updates.
+// Both Status and ReviewedAt are optional; only provided fields are updated.
 type JournalReviewUpdate struct {
+	Status     string      `json:"status" binding:"omitempty,oneof=SET RUNNING SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
 	ReviewedAt *civil.Date `json:"reviewed_at" binding:"omitempty,not_future"`
 }
 
-// UpdateJournalStatusResponse represents the response for PATCH review status updates.
-// This follows the PRD specification for minimal PATCH responses.
+// UpdateJournalStatusResponse represents the response for PATCH journal updates.
+// Returns id, status, and reviewed_at as per PRD specification.
 type UpdateJournalStatusResponse struct {
 	ID         string      `json:"id"`
-	ReviewedAt *civil.Date `json:"reviewed_at"`
+	Status     string      `json:"status"`
+	ReviewedAt *civil.Date `json:"reviewed_at,omitempty"`
 }

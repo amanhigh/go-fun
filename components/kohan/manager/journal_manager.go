@@ -88,6 +88,11 @@ func (m *JournalManagerImpl) UpdateReviewStatus(ctx context.Context, journalExte
 			return httpErr
 		}
 
+		// Update status only if provided (partial update)
+		if update.Status != "" {
+			journal.Status = update.Status
+		}
+
 		// Update reviewed_at based on the update request
 		if update.ReviewedAt != nil {
 			// Convert civil.Date to time.Time for GORM using the In() function
