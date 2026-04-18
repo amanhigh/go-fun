@@ -12,6 +12,7 @@ import (
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/gin-gonic/gin"
 	"github.com/golobby/container/v3"
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -41,6 +42,7 @@ func CreateTestBarkatDB() (*gorm.DB, error) {
 // ---- Journal Providers ----
 
 func (ki *KohanInjector) provideBarkatDB() (*gorm.DB, error) {
+	log.Info().Str("db_path", ki.config.Barkat.DbPath).Msg("Opening Barkat database")
 	// Create database first
 	db, err := util.CreateSqliteDb(ki.config.Barkat.DbPath, logger.Warn)
 	if err != nil {

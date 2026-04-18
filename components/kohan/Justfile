@@ -24,7 +24,7 @@ build: _templ _css _format _js
 [group('run')]
 air: kill-server
 	mkdir -p {{pics_dir}}
-	BARKAT_DB_PATH="$HOME/Downloads/barkat.db" KOHAN_BINARY="{{binary}} auto serve {{pics_dir}} -p {{port}}" just _air-run {{kohan_dir}} {{port}}
+	KOHAN_BINARY="{{binary}} auto serve {{pics_dir}} -p {{port}}" just _air-run {{kohan_dir}} {{port}}
 
 [doc('Kill Kohan server on the configured port')]
 [group('run')]

@@ -4,6 +4,8 @@ import {
 	type Envelope,
 	type JournalNote,
 	type JournalNoteCreate,
+	type JournalTag,
+	type JournalTagCreate,
 	type JournalReviewStatusResponse,
 	type JournalReviewUpdate,
 } from './journal_models';
@@ -54,6 +56,12 @@ function journalDetailPage() {
 		reviewQueue: [] as Journal[],
 		reviewQueueLoading: false,
 		reviewQueueError: '',
+		reasonTagInput: '',
+		reasonTagOverride: '',
+		reasonTagSubmitting: false,
+		reasonTagDeletingId: '',
+		reasonTagMessage: '',
+		reasonTagMessageType: 'error',
 		normalizeStatus: normalizeTag,
 		statusBadgeClass: (value: string) => badgeClassMap.status[normalizeTag(value)] ?? defaultBadgeClass,
 		typeBadgeClass: (value: string) => badgeClassMap.type[normalizeTag(value)] ?? defaultBadgeClass,
@@ -127,6 +135,14 @@ function journalDetailPage() {
 				const leftTime = left.created_at ? new Date(left.created_at).getTime() : 0;
 				const rightTime = right.created_at ? new Date(right.created_at).getTime() : 0;
 				return rightTime - leftTime;
+			});
+		},
+		reasonTags(this: any) {
+			return (this.journal?.tags ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'REASON');
+		},
+		focusReasonTagOverride(this: any) {
+			this.$nextTick(() => {
+				this.$refs?.reasonTagOverride?.focus?.();
 			});
 		},
 		async loadJournal() {
@@ -225,6 +241,64 @@ function journalDetailPage() {
 				this.noteMessageType = 'error';
 			} finally {
 				this.noteSubmitting = false;
+			}
+		},
+		async submitReasonTag() {
+			if (!this.journal || this.reasonTagSubmitting) return;
+			const tag = this.reasonTagInput.trim();
+			if (!tag) {
+				this.reasonTagMessage = 'Tag is required.';
+				this.reasonTagMessageType = 'error';
+				return;
+			}
+			const override = this.reasonTagOverride.trim();
+			this.reasonTagSubmitting = true;
+			this.reasonTagMessage = '';
+			this.reasonTagMessageType = 'error';
+			try {
+				const payload: JournalTagCreate = {
+					tag,
+					type: 'REASON',
+					...(override ? { override } : {}),
+				};
+				const response = await fetch(`/v1/api/journals/${this.journalId}/tags`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload),
+				});
+				if (!response.ok) throw new Error(response.status === 404 ? 'Journal not found' : 'Failed to save reason tag');
+				const envelope = (await response.json()) as Envelope<JournalTag>;
+				const tags = this.journal.tags ?? [];
+				this.journal.tags = [envelope.data, ...tags.filter((item: JournalTag) => item.id !== envelope.data.id)];
+				this.reasonTagInput = '';
+				this.reasonTagOverride = '';
+				this.reasonTagMessageType = 'success';
+				this.reasonTagMessage = 'Reason tag added.';
+			} catch (err) {
+				this.reasonTagMessage = err instanceof Error ? err.message : 'Unable to save reason tag.';
+				this.reasonTagMessageType = 'error';
+			} finally {
+				this.reasonTagSubmitting = false;
+			}
+		},
+		async deleteReasonTag(tagId: string) {
+			if (!this.journal || this.reasonTagDeletingId) return;
+			this.reasonTagDeletingId = tagId;
+			this.reasonTagMessage = '';
+			this.reasonTagMessageType = 'error';
+			try {
+				const response = await fetch(`/v1/api/journals/${this.journalId}/tags/${tagId}`, {
+					method: 'DELETE',
+				});
+				if (!response.ok) throw new Error(response.status === 404 ? 'Reason tag not found' : 'Failed to delete reason tag');
+				this.journal.tags = (this.journal.tags ?? []).filter((tag: JournalTag) => tag.id !== tagId);
+				this.reasonTagMessageType = 'success';
+				this.reasonTagMessage = 'Reason tag deleted.';
+			} catch (err) {
+				this.reasonTagMessage = err instanceof Error ? err.message : 'Unable to delete reason tag.';
+				this.reasonTagMessageType = 'error';
+			} finally {
+				this.reasonTagDeletingId = '';
 			}
 		},
 		async deleteNote(noteId: string) {

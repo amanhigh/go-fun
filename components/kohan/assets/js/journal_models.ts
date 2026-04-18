@@ -27,6 +27,12 @@ export type JournalTag = {
 	created_at?: string;
 };
 
+export type JournalTagCreate = {
+	tag: string;
+	type: string;
+	override?: string;
+};
+
 export type JournalNote = {
 	id: string;
 	status: string;
