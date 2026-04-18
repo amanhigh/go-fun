@@ -75,9 +75,9 @@ templ JournalDetailPage(journalID string) {
 										<p class="py-2 text-xs text-muted-foreground" x-show="!reviewQueueLoading && !reviewQueueError && reviewQueue.length === 0">All caught up — no pending reviews.</p>
 										<div class="space-y-1" x-show="!reviewQueueLoading && !reviewQueueError && reviewQueue.length > 0">
 											<template x-for="item in reviewQueue" x-bind:key="item.id">
-												<a class="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-3 py-2 text-sm transition hover:bg-muted/70 hover:text-foreground" x-bind:href="'/journal/' + item.id">
-													<span class="font-semibold text-foreground" x-text="item.ticker"></span>
-													<span class="text-xs text-muted-foreground" x-text="formatDate(item.created_at)"></span>
+												<a class="flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition" x-bind:class="reviewQueueItemClass(item.type)" x-bind:href="'/journal/' + item.id">
+													<span class="font-semibold" x-text="item.ticker"></span>
+													<span class="text-xs font-medium" x-text="formatReviewQueueDate(item.created_at)"></span>
 												</a>
 											</template>
 										</div>

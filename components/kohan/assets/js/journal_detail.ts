@@ -36,6 +36,7 @@ const badgeClassMap: Record<string, Record<string, string>> = {
 };
 
 const normalizeTag = (value: string): string => (value ?? '').trim().toUpperCase();
+const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function journalDetailPage() {
 	const image = createImageHelper();
@@ -67,6 +68,16 @@ function journalDetailPage() {
 		typeBadgeClass: (value: string) => badgeClassMap.type[normalizeTag(value)] ?? defaultBadgeClass,
 		feedbackClass: (type: string) =>
 			type === 'success' ? 'text-emerald-700' : 'text-rose-700',
+		reviewQueueItemClass: (value: string) => {
+			const journalType = normalizeTag(value);
+			if (journalType === 'TAKEN') {
+				return 'border-emerald-300 bg-emerald-50/70 hover:bg-emerald-100/80 text-emerald-900';
+			}
+			if (journalType === 'REJECTED') {
+				return 'border-rose-300 bg-rose-50/70 hover:bg-rose-100/80 text-rose-900';
+			}
+			return 'border-border bg-muted/30 hover:bg-muted/70 hover:text-foreground';
+		},
 		reviewToggleLabel(this: any) {
 			return this.journal?.reviewed_at ? 'Mark Pending' : 'Mark Reviewed';
 		},
@@ -362,6 +373,15 @@ function journalDetailPage() {
 			if (!value) return '—';
 			const parsed = new Date(value);
 			return Number.isNaN(parsed.getTime()) ? '—' : parsed.toLocaleDateString();
+		},
+		formatReviewQueueDate: (value: string | null | undefined) => {
+			if (!value) return '—';
+			const parsed = new Date(value);
+			if (Number.isNaN(parsed.getTime())) return '—';
+			const day = parsed.getUTCDate();
+			const month = shortMonthNames[parsed.getUTCMonth()] ?? '—';
+			const year = `${parsed.getUTCFullYear()}`.slice(-2);
+			return `${day} ${month}, ${year}`;
 		},
 		async loadReviewQueue() {
 			this.reviewQueueLoading = true;

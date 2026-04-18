@@ -44,6 +44,8 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-on:click="submitReasonTag()"`))
 			Expect(html).To(ContainSubstring(`x-show="reasonTags().length"`))
 			Expect(html).To(ContainSubstring(`x-on:click="deleteReasonTag(tag.id)"`))
+			Expect(html).To(ContainSubstring(`x-bind:class="reviewQueueItemClass(item.type)"`))
+			Expect(html).To(ContainSubstring(`x-text="formatReviewQueueDate(item.created_at)"`))
 			Expect(html).To(ContainSubstring(`aria-label="Delete Note"`))
 			Expect(html).To(ContainSubstring("h-4 w-4"))
 		})
