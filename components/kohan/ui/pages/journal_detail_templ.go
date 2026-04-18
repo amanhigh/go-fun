@@ -123,6 +123,21 @@ func JournalDetailPage(journalID string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
+				templ_7745c5c3_Err = button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Type:    button.TypeButton,
+					Class:   "w-full",
+					Attributes: templ.Attributes{
+						"x-show":          "hasQuickReviewAction()",
+						"x-on:click":      "applyQuickReviewStatus()",
+						"x-bind:disabled": "reviewSubmitting",
+						"x-bind:class":    "reviewSubmitting ? 'opacity-70 ' + quickReviewButtonClass() : quickReviewButtonClass()",
+						"x-text":          "reviewSubmitting ? 'Saving...' : quickReviewLabel()",
+					},
+				}).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<p class=\"text-sm\" x-show=\"reviewMessage\" x-bind:class=\"feedbackClass(reviewMessageType)\" x-text=\"reviewMessage\"></p></div><hr class=\"border-border\"><div class=\"space-y-2\"><p class=\"text-xs font-semibold uppercase tracking-widest text-muted-foreground\">To Review</p><div class=\"flex items-center gap-2 py-3 text-xs text-sky-700\" x-show=\"reviewQueueLoading\"><svg class=\"size-3.5 animate-spin\" xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12a9 9 0 1 1-6.219-8.56\"></path></svg> <span>Loading queue...</span></div><p class=\"py-2 text-xs text-rose-600\" x-show=\"!reviewQueueLoading && reviewQueueError\" x-text=\"reviewQueueError\"></p><p class=\"py-2 text-xs text-muted-foreground\" x-show=\"!reviewQueueLoading && !reviewQueueError && reviewQueue.length === 0\">All caught up — no pending reviews.</p><div class=\"space-y-1\" x-show=\"!reviewQueueLoading && !reviewQueueError && reviewQueue.length > 0\"><template x-for=\"item in reviewQueue\" x-bind:key=\"item.id\"><a class=\"flex items-center justify-between rounded-xl border border-border bg-muted/30 px-3 py-2 text-sm transition hover:bg-muted/70 hover:text-foreground\" x-bind:href=\"'/journal/' + item.id\"><span class=\"font-semibold text-foreground\" x-text=\"item.ticker\"></span> <span class=\"text-xs text-muted-foreground\" x-text=\"formatDate(item.created_at)\"></span></a></template></div></div></div></div><div class=\"rounded-3xl border border-border bg-card shadow-sm p-6\"><div class=\"space-y-4\"><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Note</h3><div><textarea class=\"min-h-[140px] w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200\" placeholder=\"Write a note about this journal...\" x-model=\"noteContent\"></textarea></div><div class=\"space-y-2\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -291,7 +306,7 @@ func JournalDetailCard(label string, color string, xExpression string) templ.Com
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/journal_detail.templ`, Line: 118, Col: 103}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/journal_detail.templ`, Line: 130, Col: 103}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -326,7 +341,7 @@ func JournalDetailCard(label string, color string, xExpression string) templ.Com
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(xExpression)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/journal_detail.templ`, Line: 119, Col: 87}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/journal_detail.templ`, Line: 131, Col: 87}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {

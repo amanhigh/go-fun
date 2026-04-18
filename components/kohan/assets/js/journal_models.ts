@@ -36,11 +36,13 @@ export type JournalNote = {
 };
 
 export type JournalReviewUpdate = {
+	status?: string;
 	reviewed_at: string | null;
 };
 
 export type JournalReviewStatusResponse = {
 	id: string;
+	status: string;
 	reviewed_at: string | null;
 };
 

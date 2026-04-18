@@ -41,15 +41,27 @@ templ JournalDetailPage(journalID string) {
 											Variant: button.VariantOutline,
 											Type:    button.TypeButton,
 											Class:   "w-full",
-											Attributes: templ.Attributes{
-												"x-on:click":      "toggleReview()",
-												"x-bind:disabled": "reviewSubmitting",
-												"x-bind:class":    "reviewSubmitting ? 'opacity-70 ' + reviewButtonClass() : reviewButtonClass()",
-												"x-text":          "reviewSubmitting ? 'Saving...' : reviewToggleLabel()",
-											},
-										}) {}
-										<p class="text-sm" x-show="reviewMessage" x-bind:class="feedbackClass(reviewMessageType)" x-text="reviewMessage"></p>
-									</div>
+										Attributes: templ.Attributes{
+											"x-on:click":      "toggleReview()",
+											"x-bind:disabled": "reviewSubmitting",
+											"x-bind:class":    "reviewSubmitting ? 'opacity-70 ' + reviewButtonClass() : reviewButtonClass()",
+											"x-text":          "reviewSubmitting ? 'Saving...' : reviewToggleLabel()",
+										},
+									}) {}
+									@button.Button(button.Props{
+										Variant: button.VariantOutline,
+										Type:    button.TypeButton,
+										Class:   "w-full",
+										Attributes: templ.Attributes{
+											"x-show":          "hasQuickReviewAction()",
+											"x-on:click":      "applyQuickReviewStatus()",
+											"x-bind:disabled": "reviewSubmitting",
+											"x-bind:class":    "reviewSubmitting ? 'opacity-70 ' + quickReviewButtonClass() : quickReviewButtonClass()",
+											"x-text":          "reviewSubmitting ? 'Saving...' : quickReviewLabel()",
+										},
+									}) {}
+									<p class="text-sm" x-show="reviewMessage" x-bind:class="feedbackClass(reviewMessageType)" x-text="reviewMessage"></p>
+								</div>
 									<hr class="border-border"/>
 									<div class="space-y-2">
 										<p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">To Review</p>

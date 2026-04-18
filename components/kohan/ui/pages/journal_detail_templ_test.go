@@ -28,9 +28,13 @@ var _ = Describe("Journal Detail Page Tests", func() {
 	})
 
 	Context("Sidebar Actions", func() {
-		It("should render icon delete action for notes", func() {
+		It("should render review and note actions", func() {
 			Expect(html).To(ContainSubstring("Review"))
 			Expect(html).To(ContainSubstring("Note"))
+			Expect(html).To(ContainSubstring(`x-on:click="toggleReview()"`))
+			Expect(html).To(ContainSubstring(`x-on:click="applyQuickReviewStatus()"`))
+			Expect(html).To(ContainSubstring(`x-show="hasQuickReviewAction()"`))
+			Expect(html).To(ContainSubstring(`x-text="reviewSubmitting ? &#39;Saving...&#39; : quickReviewLabel()"`))
 			Expect(html).To(ContainSubstring(`aria-label="Delete Note"`))
 			Expect(html).To(ContainSubstring("h-4 w-4"))
 		})
