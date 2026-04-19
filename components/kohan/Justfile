@@ -7,6 +7,7 @@ binary := "/tmp/kohan-server"
 port := "9091"
 kohan_dir := justfile_directory()
 pics_dir := "/tmp/pics"
+barkat_db_path := "/tmp/barkat.db"
 
 [doc('Show available Kohan recipes')]
 default:
@@ -24,7 +25,7 @@ build: _templ _css _format _js
 [group('run')]
 air: kill-server
 	mkdir -p {{pics_dir}}
-	KOHAN_BINARY="{{binary}} auto serve {{pics_dir}} -p {{port}}" just _air-run {{kohan_dir}} {{port}}
+	BARKAT_DB_PATH="{{barkat_db_path}}" KOHAN_BINARY="{{binary}} auto serve {{pics_dir}} -p {{port}}" just _air-run {{kohan_dir}} {{port}}
 
 [doc('Kill Kohan server on the configured port')]
 [group('run')]
@@ -34,5 +35,5 @@ kill-server:
 [doc('Reset Barkat DB files and restart Air')]
 [group('run')]
 reset-db:
-	rm -f "$HOME/Downloads/barkat.db" "$HOME/Downloads/barkat.db-wal" "$HOME/Downloads/barkat.db-shm"
+	rm -f "{{barkat_db_path}}" "{{barkat_db_path}}-wal" "{{barkat_db_path}}-shm"
 	just air

@@ -30,12 +30,18 @@ var _ = Describe("Journal Detail Page Tests", func() {
 	Context("Sidebar Actions", func() {
 		It("should render review and note actions", func() {
 			Expect(html).To(ContainSubstring("Review"))
+			Expect(html).To(ContainSubstring("Management"))
 			Expect(html).To(ContainSubstring("Note"))
 			Expect(html).To(ContainSubstring("Reason Tags"))
 			Expect(html).To(ContainSubstring(`x-on:click="toggleReview()"`))
 			Expect(html).To(ContainSubstring(`x-on:click="applyQuickReviewStatus()"`))
 			Expect(html).To(ContainSubstring(`x-show="hasQuickReviewAction()"`))
 			Expect(html).To(ContainSubstring(`x-text="reviewSubmitting ? &#39;Saving...&#39; : quickReviewLabel()"`))
+			Expect(html).To(ContainSubstring(`x-show="hasManagementBar()"`))
+			Expect(html).To(ContainSubstring(`x-for="preset in managementTagPresets"`))
+			Expect(html).To(ContainSubstring(`x-on:click="submitManagementTag(preset.value)"`))
+			Expect(html).To(ContainSubstring(`x-bind:disabled="managementTagSubmitting || hasManagementTag(preset.value)"`))
+			Expect(html).To(ContainSubstring(`x-bind:class="managementTagButtonClass(preset.value)"`))
 			Expect(html).To(ContainSubstring(`x-model="reasonTagInput"`))
 			Expect(html).To(ContainSubstring(`x-model="reasonTagOverride"`))
 			Expect(html).To(ContainSubstring(`x-on:keydown.enter.prevent="focusReasonTagOverride()"`))

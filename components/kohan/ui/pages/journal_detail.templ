@@ -57,11 +57,23 @@ templ JournalDetailPage(journalID string) {
 											"x-on:click":      "applyQuickReviewStatus()",
 											"x-bind:disabled": "reviewSubmitting",
 											"x-bind:class":    "reviewSubmitting ? 'opacity-70 ' + quickReviewButtonClass() : quickReviewButtonClass()",
-											"x-text":          "reviewSubmitting ? 'Saving...' : quickReviewLabel()",
-										},
-									}) {}
-									<p class="text-sm" x-show="reviewMessage" x-bind:class="feedbackClass(reviewMessageType)" x-text="reviewMessage"></p>
+										"x-text":          "reviewSubmitting ? 'Saving...' : quickReviewLabel()",
+									},
+								}) {}
+								<p class="text-sm" x-show="reviewMessage" x-bind:class="feedbackClass(reviewMessageType)" x-text="reviewMessage"></p>
+								<div class="space-y-3" x-show="hasManagementBar()">
+									<div>
+										<p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Management</p>
+										<p class="mt-1 text-sm text-muted-foreground">Quick add management tags for taken journals.</p>
+									</div>
+									<div class="flex flex-wrap gap-2">
+										<template x-for="preset in managementTagPresets" x-bind:key="preset.value">
+											<button class="rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition disabled:cursor-not-allowed" type="button" x-on:click="submitManagementTag(preset.value)" x-bind:disabled="managementTagSubmitting || hasManagementTag(preset.value)" x-bind:class="managementTagButtonClass(preset.value)" x-text="preset.label"></button>
+										</template>
+									</div>
+									<p class="text-sm" x-show="managementTagMessage" x-bind:class="feedbackClass(managementTagMessageType)" x-text="managementTagMessage"></p>
 								</div>
+							</div>
 									<hr class="border-border"/>
 									<div class="space-y-2">
 										<p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">To Review</p>
