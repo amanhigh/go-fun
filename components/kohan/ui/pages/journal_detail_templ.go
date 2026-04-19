@@ -155,7 +155,7 @@ func JournalDetailPage(journalID string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<p class=\"text-sm\" x-show=\"noteMessage\" x-bind:class=\"feedbackClass(noteMessageType)\" x-text=\"noteMessage\"></p></div></div></div><div class=\"rounded-3xl border border-border bg-card shadow-sm p-6\"><div class=\"space-y-4\"><div><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Reason Tags</h3><p class=\"text-sm text-muted-foreground\">Add one or more reason tags for this journal.</p></div><div class=\"grid gap-3\"><input class=\"w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200\" placeholder=\"Reason tag\" x-model=\"reasonTagInput\" x-on:keydown.enter.prevent=\"focusReasonTagOverride()\"> <input class=\"w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200\" placeholder=\"Override (optional)\" x-model=\"reasonTagOverride\" x-ref=\"reasonTagOverride\" x-on:keydown.enter.prevent=\"submitReasonTag()\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<p class=\"text-sm\" x-show=\"noteMessage\" x-bind:class=\"feedbackClass(noteMessageType)\" x-text=\"noteMessage\"></p></div></div></div><div class=\"rounded-3xl border border-border bg-card shadow-sm p-6\"><div class=\"space-y-4\"><div><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Tags</h3><p class=\"text-sm text-muted-foreground\">Add reason tags for this journal and delete any existing tag below.</p></div><div class=\"grid gap-3\"><input class=\"w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200\" placeholder=\"Reason tag\" x-model=\"reasonTagInput\" x-on:keydown.enter.prevent=\"focusReasonTagOverride()\"> <input class=\"w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200\" placeholder=\"Override (optional)\" x-model=\"reasonTagOverride\" x-ref=\"reasonTagOverride\" x-on:keydown.enter.prevent=\"submitReasonTag()\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -172,7 +172,7 @@ func JournalDetailPage(journalID string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<p class=\"text-sm\" x-show=\"reasonTagMessage\" x-bind:class=\"feedbackClass(reasonTagMessageType)\" x-text=\"reasonTagMessage\"></p></div><div class=\"space-y-3\" x-show=\"reasonTags().length\"><template x-for=\"tag in reasonTags()\" x-bind:key=\"tag.id\"><div class=\"flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/30 px-4 py-3\"><div class=\"flex min-w-0 flex-wrap items-center gap-2\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<p class=\"text-sm\" x-show=\"reasonTagMessage\" x-bind:class=\"feedbackClass(reasonTagMessageType)\" x-text=\"reasonTagMessage\"></p></div><div class=\"space-y-3\" x-show=\"deletableTags().length\"><template x-for=\"tag in deletableTags()\" x-bind:key=\"tag.id\"><div class=\"flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/30 px-4 py-3\"><div class=\"flex min-w-0 flex-wrap items-center gap-2\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -180,7 +180,7 @@ func JournalDetailPage(journalID string) templ.Component {
 					Variant: badge.VariantSecondary,
 					Class:   "border",
 					Attributes: templ.Attributes{
-						"x-text": "[tag.tag, tag.override].filter(Boolean).join(' • ')",
+						"x-text": "[tag.tag, tag.override, tag.type].filter(Boolean).join(' • ')",
 					},
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
@@ -213,17 +213,17 @@ func JournalDetailPage(journalID string) templ.Component {
 					Type:    button.TypeButton,
 					Class:   "h-8 w-8 p-0 border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100",
 					Attributes: templ.Attributes{
-						"x-on:click":      "deleteReasonTag(tag.id)",
-						"x-bind:disabled": "reasonTagDeletingId === tag.id",
-						"x-bind:class":    "reasonTagDeletingId === tag.id ? 'opacity-70' : ''",
-						"aria-label":      "Delete Reason Tag",
-						"title":           "Delete Reason Tag",
+						"x-on:click":      "deleteTag(tag.id)",
+						"x-bind:disabled": "tagDeletingId === tag.id",
+						"x-bind:class":    "tagDeletingId === tag.id ? 'opacity-70' : ''",
+						"aria-label":      "Delete Tag",
+						"title":           "Delete Tag",
 					},
 				}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></template></div><div class=\"rounded-xl border border-dashed border-muted-foreground/35 bg-muted/20 px-4 py-6 text-sm text-muted-foreground\" x-show=\"!reasonTags().length\">No reason tags added yet.</div></div></div></div></div></div></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></template></div><div class=\"rounded-xl border border-dashed border-muted-foreground/35 bg-muted/20 px-4 py-6 text-sm text-muted-foreground\" x-show=\"!deletableTags().length\">No tags added yet.</div></div></div></div></div></div></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

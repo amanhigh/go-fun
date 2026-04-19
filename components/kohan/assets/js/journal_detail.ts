@@ -86,7 +86,7 @@ function journalDetailPage() {
 		reasonTagInput: '',
 		reasonTagOverride: '',
 		reasonTagSubmitting: false,
-		reasonTagDeletingId: '',
+		tagDeletingId: '',
 		reasonTagMessage: '',
 		reasonTagMessageType: 'error',
 		normalizeStatus: normalizeTag,
@@ -176,6 +176,9 @@ function journalDetailPage() {
 		},
 		reasonTags(this: any) {
 			return (this.journal?.tags ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'REASON');
+		},
+		deletableTags(this: any) {
+			return this.journal?.tags ?? [];
 		},
 		managementTags(this: any) {
 			return (this.journal?.tags ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'MANAGEMENT');
@@ -387,24 +390,24 @@ function journalDetailPage() {
 				this.managementTagPendingValue = '';
 			}
 		},
-		async deleteReasonTag(tagId: string) {
-			if (!this.journal || this.reasonTagDeletingId) return;
-			this.reasonTagDeletingId = tagId;
+		async deleteTag(tagId: string) {
+			if (!this.journal || this.tagDeletingId) return;
+			this.tagDeletingId = tagId;
 			this.reasonTagMessage = '';
 			this.reasonTagMessageType = 'error';
 			try {
 				const response = await fetch(`/v1/api/journals/${this.journalId}/tags/${tagId}`, {
 					method: 'DELETE',
 				});
-				if (!response.ok) throw new Error(response.status === 404 ? 'Reason tag not found' : 'Failed to delete reason tag');
+				if (!response.ok) throw new Error(response.status === 404 ? 'Tag not found' : 'Failed to delete tag');
 				this.journal.tags = (this.journal.tags ?? []).filter((tag: JournalTag) => tag.id !== tagId);
 				this.reasonTagMessageType = 'success';
-				this.reasonTagMessage = 'Reason tag deleted.';
+				this.reasonTagMessage = 'Tag deleted.';
 			} catch (err) {
-				this.reasonTagMessage = err instanceof Error ? err.message : 'Unable to delete reason tag.';
+				this.reasonTagMessage = err instanceof Error ? err.message : 'Unable to delete tag.';
 				this.reasonTagMessageType = 'error';
 			} finally {
-				this.reasonTagDeletingId = '';
+				this.tagDeletingId = '';
 			}
 		},
 		async deleteNote(noteId: string) {
