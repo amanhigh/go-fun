@@ -80,7 +80,7 @@ templ JournalQuickFilters() {
 			</span>
 			<div class="flex gap-1">
 				<template x-for="reviewPreset in reviewPresets" x-bind:key="reviewPreset.label">
-					@button.Button(button.Props{Type: button.TypeButton, Size: button.SizeSm, Variant: button.VariantOutline, Class: "h-8 px-2 text-xs", Attributes: templ.Attributes{"x-on:click": "applyReviewPreset(reviewPreset)", "x-bind:class": "reviewPresetButtonClass(reviewPreset)"}}) {
+					@button.Button(button.Props{Type: button.TypeButton, Size: button.SizeSm, Variant: button.VariantOutline, Class: "h-8 px-2 text-xs", Attributes: templ.Attributes{"x-on:click": "applyReviewPreset(reviewPreset)", "x-bind:class": "reviewPresetClass(reviewPreset)"}}) {
 						<span x-text="reviewPreset.label"></span>
 					}
 				</template>
@@ -91,7 +91,7 @@ templ JournalQuickFilters() {
 				<span>Quick</span>
 			</span>
 			<div class="flex gap-1">
-				<button type="button" class="h-8 px-2 text-xs rounded-md border transition-colors" x-on:click="toggleTypeFilter()" x-bind:class="typeToggleButtonClass()" x-text="typeToggleButtonLabel()"></button>
+					<button type="button" class="h-8 px-2 text-xs rounded-md border transition-colors" x-on:click="toggleType()" x-bind:class="typeToggleClass()" x-text="typeToggleLabel()"></button>
 			</div>
 		</div>
 	</div>
@@ -150,8 +150,8 @@ templ JournalActiveFilters() {
 		@JournalActiveFilterBadge("bg-rose-100 text-rose-800 border border-rose-200", "filterTracker.type === 'REJECTED'", "'Type: REJECTED'")
 		@JournalActiveFilterBadge("bg-rose-100 text-rose-800 border border-rose-200", "filterTracker.status !== ''", "'Status: ' + filterTracker.status")
 		@JournalActiveFilterBadge("bg-violet-100 text-violet-800 border border-violet-200", "filterTracker.sequence !== ''", "'Sequence: ' + filterTracker.sequence")
-		@JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filterTracker.createdAfter !== '' && currentReviewPresetLabel() === ''", "'Created: ' + filterTracker.createdAfter")
-		@JournalActiveFilterBadge("bg-amber-100 text-amber-900 border border-amber-200", "currentReviewPresetLabel() !== ''", "currentReviewPresetLabel()")
+		@JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filterTracker.createdAfter !== '' && activeReviewPreset === ''", "'Created: ' + filterTracker.createdAfter")
+		@JournalActiveFilterBadge("bg-amber-100 text-amber-900 border border-amber-200", "activeReviewPreset !== ''", "activeReviewPreset")
 	</div>
 }
 

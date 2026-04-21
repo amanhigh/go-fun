@@ -2,9 +2,9 @@ import { BaseClient, type Envelope, type QueryValue } from './base';
 import type { JournalImage } from './journal_image';
 import type { JournalNote } from './journal_note';
 import type { JournalTag } from './journal_tag';
-import type { JournalFilterState, JournalFilterValues } from '../journal/filter_state';
-import { journalFilterKeys } from '../journal/filter_state';
-import { journalQueryKeyMap } from '../journal/filter_config';
+import type { JournalFilterState, JournalFilters } from '../journal/filter_state';
+import { journalFields } from '../journal/filter_state';
+import { journalQueryMap } from '../journal/filter_config';
 
 export type Journal = {
 	id: string;
@@ -55,9 +55,9 @@ export class JournalClientImpl extends BaseClient implements JournalClient {
 
 	async list(offset: number, limit: number, filters: JournalListRequest = {}): Promise<Envelope<JournalList>> {
 		const query: Record<string, QueryValue> = { offset, limit };
-		journalFilterKeys.forEach((key) => {
-			const value = filters[key as keyof JournalFilterValues];
-			if (value !== undefined && value !== '') query[journalQueryKeyMap[key] ?? key] = value;
+		journalFields.forEach((key) => {
+			const value = filters[key as keyof JournalFilters];
+			if (value !== undefined && value !== '') query[journalQueryMap[key] ?? key] = value;
 		});
 		return this.requestJson<Envelope<JournalList>>('/journals', 'GET', 'Failed to load journals', 'Journal not found', query);
 	}

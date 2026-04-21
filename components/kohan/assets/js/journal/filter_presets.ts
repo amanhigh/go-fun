@@ -16,15 +16,15 @@ export type ReviewPreset = {
 	createdBefore: string;
 };
 
-type CreatedPresetName = 'today' | 'last7' | 'last30';
+type CreatedPreset = 'today' | 'last7' | 'last30';
 
-const createdPresetDays: Record<CreatedPresetName, number> = {
+const createdPresetMap: Record<CreatedPreset, number> = {
 	today: 0,
 	last7: 7,
 	last30: 30,
 };
 
-function buildCreatedPresetRange(days: number, today: Date): { createdAfter: string; createdBefore: string } {
+function makeCreatedRange(days: number, today: Date): { createdAfter: string; createdBefore: string } {
 	const endDate = formatDateInputValue(today);
 	if (days === 0) {
 		return {
@@ -57,7 +57,7 @@ export function createReviewPresets(): ReviewPreset[] {
 	});
 }
 
-export function reviewPresetButtonClass(activeReviewPreset: string, reviewPreset: ReviewPreset): string {
+export function reviewPresetClass(activeReviewPreset: string, reviewPreset: ReviewPreset): string {
 	if (activeReviewPreset === reviewPreset.label) {
 		return reviewPresetActiveClass;
 	}
@@ -66,9 +66,6 @@ export function reviewPresetButtonClass(activeReviewPreset: string, reviewPreset
 
 export function createFilterPresetActions() {
 	return {
-		currentReviewPresetLabel(this: any) {
-			return this.activeReviewPreset;
-		},
 		syncActiveReviewPreset(this: any) {
 			const matchingPreset = this.reviewPresets.find((reviewPreset: ReviewPreset) => (
 				reviewPreset.createdAfter === this.filter.createdAfter
@@ -80,15 +77,15 @@ export function createFilterPresetActions() {
 		clearActiveReviewPreset(this: any) {
 			this.activeReviewPreset = '';
 		},
-		reviewPresetButtonClass(this: any, reviewPreset: ReviewPreset) {
-			return reviewPresetButtonClass(this.activeReviewPreset, reviewPreset);
+		reviewPresetClass(this: any, reviewPreset: ReviewPreset) {
+			return reviewPresetClass(this.activeReviewPreset, reviewPreset);
 		},
-		applyCreatedPreset(this: any, preset: CreatedPresetName) {
+		applyCreatedPreset(this: any, preset: CreatedPreset) {
 			this.filter.clear();
 			this.clearActiveReviewPreset();
 			const today = new Date();
-			const days = createdPresetDays[preset] ?? createdPresetDays.last7;
-			const range = buildCreatedPresetRange(days, today);
+			const days = createdPresetMap[preset] ?? createdPresetMap.last7;
+			const range = makeCreatedRange(days, today);
 			this.filter.createdAfter = range.createdAfter;
 			this.filter.createdBefore = range.createdBefore;
 			this.applyFilters();

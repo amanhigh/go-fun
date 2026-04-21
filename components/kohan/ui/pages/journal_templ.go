@@ -333,11 +333,11 @@ func JournalQuickFilters() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = button.Button(button.Props{Type: button.TypeButton, Size: button.SizeSm, Variant: button.VariantOutline, Class: "h-8 px-2 text-xs", Attributes: templ.Attributes{"x-on:click": "applyReviewPreset(reviewPreset)", "x-bind:class": "reviewPresetButtonClass(reviewPreset)"}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = button.Button(button.Props{Type: button.TypeButton, Size: button.SizeSm, Variant: button.VariantOutline, Class: "h-8 px-2 text-xs", Attributes: templ.Attributes{"x-on:click": "applyReviewPreset(reviewPreset)", "x-bind:class": "reviewPresetClass(reviewPreset)"}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</template></div></div><div class=\"flex items-center gap-2\"><span class=\"inline-flex items-center gap-1 text-xs font-semibold text-slate-600\"><span>Quick</span></span><div class=\"flex gap-1\"><button type=\"button\" class=\"h-8 px-2 text-xs rounded-md border transition-colors\" x-on:click=\"toggleTypeFilter()\" x-bind:class=\"typeToggleButtonClass()\" x-text=\"typeToggleButtonLabel()\"></button></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</template></div></div><div class=\"flex items-center gap-2\"><span class=\"inline-flex items-center gap-1 text-xs font-semibold text-slate-600\"><span>Quick</span></span><div class=\"flex gap-1\"><button type=\"button\" class=\"h-8 px-2 text-xs rounded-md border transition-colors\" x-on:click=\"toggleType()\" x-bind:class=\"typeToggleClass()\" x-text=\"typeToggleLabel()\"></button></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -881,11 +881,11 @@ func JournalActiveFilters() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filterTracker.createdAfter !== '' && currentReviewPresetLabel() === ''", "'Created: ' + filterTracker.createdAfter").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filterTracker.createdAfter !== '' && activeReviewPreset === ''", "'Created: ' + filterTracker.createdAfter").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-amber-100 text-amber-900 border border-amber-200", "currentReviewPresetLabel() !== ''", "currentReviewPresetLabel()").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-amber-100 text-amber-900 border border-amber-200", "activeReviewPreset !== ''", "activeReviewPreset").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

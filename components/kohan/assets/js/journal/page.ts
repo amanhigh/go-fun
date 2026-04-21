@@ -29,36 +29,36 @@ function journalPage() {
 		...createFilterPresetActions(),
 		...createFilterUrlActions(filter),
 		...createFilterActions(filter),
-		beginJournalLoad(this: any) {
+		startLoad(this: any) {
 			this.requestCounter += 1;
 			this.loading = true;
 			this.errorMessage = '';
 			return this.requestCounter;
 		},
-		isCurrentJournalLoad(this: any, requestId: number) {
+		isCurrentLoad(this: any, requestId: number) {
 			return requestId === this.requestCounter;
 		},
-		applyJournalResponse(this: any, resp: Awaited<ReturnType<typeof client.list>>) {
+		applyResponse(this: any, resp: Awaited<ReturnType<typeof client.list>>) {
 			const data = resp.data ?? {};
 			this.journals = data.journals ?? [];
 			this.pagination.setTotalItems(data.metadata?.total ?? this.journals.length);
 			this.pagination.setPageFromOffset(data.metadata?.offset ?? 0);
 		},
 		async loadJournals(this: any) {
-			const requestId = this.beginJournalLoad();
+			const requestId = this.startLoad();
 			try {
 				const resp = await client.list(
 					this.pagination.getOffset(),
 					this.pagination.getPageSize(),
 					this.filter.toQueryParams(),
 				);
-				if (!this.isCurrentJournalLoad(requestId)) return;
-				this.applyJournalResponse(resp);
+				if (!this.isCurrentLoad(requestId)) return;
+				this.applyResponse(resp);
 			} catch {
-				if (!this.isCurrentJournalLoad(requestId)) return;
+				if (!this.isCurrentLoad(requestId)) return;
 				this.errorMessage = 'Unable to load journals. Please try again.';
 			} finally {
-				if (!this.isCurrentJournalLoad(requestId)) return;
+				if (!this.isCurrentLoad(requestId)) return;
 				this.loading = false;
 			}
 		},

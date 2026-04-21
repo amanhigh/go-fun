@@ -1,16 +1,16 @@
-export const journalFilterKeys = ['ticker', 'type', 'status', 'sequence', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'] as const;
+export const journalFields = ['ticker', 'type', 'status', 'sequence', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'] as const;
 
-export type JournalFilterKey = typeof journalFilterKeys[number];
+export type JournalFilterKey = typeof journalFields[number];
 
-export type JournalFilterValues = Record<JournalFilterKey, string>;
+export type JournalFilters = Record<JournalFilterKey, string>;
 
-export interface JournalFilterState extends JournalFilterValues {
+export interface JournalFilterState extends JournalFilters {
 	hasFilters(): boolean;
 	clear(): void;
-	toQueryParams(): JournalFilterValues;
+	toQueryParams(): JournalFilters;
 }
 
-const journalFilterDefaults: JournalFilterValues = {
+const journalDefaults: JournalFilters = {
 	ticker: '',
 	type: '',
 	status: '',
@@ -24,18 +24,18 @@ const journalFilterDefaults: JournalFilterValues = {
 
 export function createJournalFilterState(): JournalFilterState {
 	return {
-		...journalFilterDefaults,
+		...journalDefaults,
 		hasFilters(this: JournalFilterState) {
-			return journalFilterKeys.some((field) => this[field] !== '');
+			return journalFields.some((field) => this[field] !== '');
 		},
 		clear(this: JournalFilterState) {
-			journalFilterKeys.forEach((field) => {
+			journalFields.forEach((field) => {
 				this[field] = '';
 			});
 		},
 		toQueryParams(this: JournalFilterState) {
-			const params = {} as JournalFilterValues;
-			journalFilterKeys.forEach((field) => {
+			const params = {} as JournalFilters;
+			journalFields.forEach((field) => {
 				params[field] = this[field];
 			});
 			return params;

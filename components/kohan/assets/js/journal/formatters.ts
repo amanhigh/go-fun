@@ -1,6 +1,6 @@
 import { formatTimestamp } from '../shared/date';
 import { normalizeTag } from '../shared/tags';
-import { getJournalTypeToggleState } from './filter_actions';
+import { resolveTypeToggle } from './filter_actions';
 
 const defaultBadgeClass = 'border-slate-300 bg-slate-50 text-slate-700';
 
@@ -29,11 +29,11 @@ export function createJournalListFormatters() {
 		typeBadgeClass(value: string) {
 			return typeBadgeClassMap[normalizeTag(value)] ?? defaultBadgeClass;
 		},
-		typeToggleButtonLabel(this: any) {
-			return getJournalTypeToggleState(this.filter.type).label;
+		typeToggleLabel(this: any) {
+			return resolveTypeToggle(this.filter.type).label;
 		},
-		typeToggleButtonClass(this: any) {
-			return getJournalTypeToggleState(this.filter.type).buttonClass;
+		typeToggleClass(this: any) {
+			return resolveTypeToggle(this.filter.type).className;
 		},
 		formatTimestamp,
 	};
