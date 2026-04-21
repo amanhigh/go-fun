@@ -370,7 +370,7 @@ func JournalFilters() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = input.Input(input.Props{ID: "journal-ticker", Type: input.TypeText, Placeholder: "Ticker", Class: "h-9 w-full border-sky-200/70 bg-white/80", Attributes: templ.Attributes{"x-model.debounce.300ms": "filterTracker.ticker", "x-on:input.debounce.300ms": "applyManualFilters()"}}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = input.Input(input.Props{ID: "journal-ticker", Type: input.TypeText, Placeholder: "Ticker", Class: "h-9 w-full border-sky-200/70 bg-white/80", Attributes: templ.Attributes{"x-model.debounce.300ms": "filter.ticker", "x-on:input.debounce.300ms": "applyManualFilters()"}}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -408,7 +408,7 @@ func JournalFilters() templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = selectbox.Trigger(selectbox.TriggerProps{ID: "journal-status", Name: "journal-status", Class: "h-9 w-full border-rose-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.status", "x-on:change": "applyManualFilters()"}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = selectbox.Trigger(selectbox.TriggerProps{ID: "journal-status", Name: "journal-status", Class: "h-9 w-full border-rose-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.status", "x-on:change": "applyManualFilters()"}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -644,7 +644,7 @@ func JournalFilters() templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sequence", Name: "journal-sequence", Class: "h-9 w-full border-violet-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.sequence", "x-on:change": "applyManualFilters()"}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var23), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sequence", Name: "journal-sequence", Class: "h-9 w-full border-violet-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.sequence", "x-on:change": "applyManualFilters()"}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var23), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -798,7 +798,7 @@ func JournalFilters() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = input.Input(input.Props{ID: "journal-created-on", Type: input.TypeDate, Class: "h-9 w-full border-emerald-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.createdAfter", "x-on:change": "onCreatedDateChange()"}}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = input.Input(input.Props{ID: "journal-created-on", Type: input.TypeDate, Class: "h-9 w-full border-emerald-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.createdAfter", "x-on:change": "onCreatedDateChange()"}}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -857,31 +857,31 @@ func JournalActiveFilters() templ.Component {
 			templ_7745c5c3_Var31 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<div class=\"flex flex-wrap items-center gap-2\" x-show=\"filterTracker.hasFilters()\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<div class=\"flex flex-wrap items-center gap-2\" x-show=\"filter.hasFilters()\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-sky-100 text-sky-800 border border-sky-200", "filterTracker.ticker !== ''", "'Ticker: ' + filterTracker.ticker").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-sky-100 text-sky-800 border border-sky-200", "filter.ticker !== ''", "'Ticker: ' + filter.ticker").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filterTracker.type === 'TAKEN'", "'Type: TAKEN'").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filter.type === 'TAKEN'", "'Type: TAKEN'").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-rose-100 text-rose-800 border border-rose-200", "filterTracker.type === 'REJECTED'", "'Type: REJECTED'").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-rose-100 text-rose-800 border border-rose-200", "filter.type === 'REJECTED'", "'Type: REJECTED'").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-rose-100 text-rose-800 border border-rose-200", "filterTracker.status !== ''", "'Status: ' + filterTracker.status").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-rose-100 text-rose-800 border border-rose-200", "filter.status !== ''", "'Status: ' + filter.status").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-violet-100 text-violet-800 border border-violet-200", "filterTracker.sequence !== ''", "'Sequence: ' + filterTracker.sequence").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-violet-100 text-violet-800 border border-violet-200", "filter.sequence !== ''", "'Sequence: ' + filter.sequence").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filterTracker.createdAfter !== '' && activeReviewPreset === ''", "'Created: ' + filterTracker.createdAfter").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filter.createdAfter !== '' && activeReviewPreset === ''", "'Created: ' + filter.createdAfter").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1007,7 +1007,7 @@ func JournalTable() templ.Component {
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Err = widgets.SortHead(widgets.SortHeadProps{Label: "Ticker", Field: "ticker", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('ticker')"}).Render(ctx, templ_7745c5c3_Buffer)
+							templ_7745c5c3_Err = widgets.SortHead(widgets.SortHeadProps{Label: "Ticker", Field: "ticker", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "toggleSort('ticker')"}).Render(ctx, templ_7745c5c3_Buffer)
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -1015,7 +1015,7 @@ func JournalTable() templ.Component {
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Err = widgets.SortHead(widgets.SortHeadProps{Label: "Sequence", Field: "sequence", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('sequence')"}).Render(ctx, templ_7745c5c3_Buffer)
+							templ_7745c5c3_Err = widgets.SortHead(widgets.SortHeadProps{Label: "Sequence", Field: "sequence", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "toggleSort('sequence')"}).Render(ctx, templ_7745c5c3_Buffer)
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -1075,7 +1075,7 @@ func JournalTable() templ.Component {
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Err = widgets.SortHead(widgets.SortHeadProps{Label: "Created", Field: "created_at", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('created_at')"}).Render(ctx, templ_7745c5c3_Buffer)
+							templ_7745c5c3_Err = widgets.SortHead(widgets.SortHeadProps{Label: "Created", Field: "created_at", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "toggleSort('created_at')"}).Render(ctx, templ_7745c5c3_Buffer)
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}

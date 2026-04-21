@@ -100,11 +100,11 @@ templ JournalQuickFilters() {
 templ JournalFilters() {
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 		<div>
-			@input.Input(input.Props{ID: "journal-ticker", Type: input.TypeText, Placeholder: "Ticker", Class: "h-9 w-full border-sky-200/70 bg-white/80", Attributes: templ.Attributes{"x-model.debounce.300ms": "filterTracker.ticker", "x-on:input.debounce.300ms": "applyManualFilters()"}})
+			@input.Input(input.Props{ID: "journal-ticker", Type: input.TypeText, Placeholder: "Ticker", Class: "h-9 w-full border-sky-200/70 bg-white/80", Attributes: templ.Attributes{"x-model.debounce.300ms": "filter.ticker", "x-on:input.debounce.300ms": "applyManualFilters()"}})
 		</div>
 		<div>
 			@selectbox.SelectBox() {
-				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-status", Name: "journal-status", Class: "h-9 w-full border-rose-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.status", "x-on:change": "applyManualFilters()"}}) {
+				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-status", Name: "journal-status", Class: "h-9 w-full border-rose-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.status", "x-on:change": "applyManualFilters()"}}) {
 					@selectbox.Value(selectbox.ValueProps{Placeholder: "Status"})
 				}
 				@selectbox.Content() {
@@ -121,7 +121,7 @@ templ JournalFilters() {
 		</div>
 		<div>
 			@selectbox.SelectBox() {
-				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sequence", Name: "journal-sequence", Class: "h-9 w-full border-violet-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.sequence", "x-on:change": "applyManualFilters()"}}) {
+				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sequence", Name: "journal-sequence", Class: "h-9 w-full border-violet-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.sequence", "x-on:change": "applyManualFilters()"}}) {
 					@selectbox.Value(selectbox.ValueProps{Placeholder: "Sequence"})
 				}
 				@selectbox.Content() {
@@ -135,7 +135,7 @@ templ JournalFilters() {
 			}
 		</div>
 		<div>
-			@input.Input(input.Props{ID: "journal-created-on", Type: input.TypeDate, Class: "h-9 w-full border-emerald-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filterTracker.createdAfter", "x-on:change": "onCreatedDateChange()"}})
+			@input.Input(input.Props{ID: "journal-created-on", Type: input.TypeDate, Class: "h-9 w-full border-emerald-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.createdAfter", "x-on:change": "onCreatedDateChange()"}})
 		</div>
 		<div class="flex items-end">
 			@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Size: button.SizeSm, Class: "h-9 w-full border-rose-300/70 bg-rose-100/60 text-rose-800 hover:bg-rose-200/70", Attributes: templ.Attributes{"x-on:click": "clearFilters()"}}) { Clear }
@@ -144,13 +144,13 @@ templ JournalFilters() {
 }
 
 templ JournalActiveFilters() {
-	<div class="flex flex-wrap items-center gap-2" x-show="filterTracker.hasFilters()">
-		@JournalActiveFilterBadge("bg-sky-100 text-sky-800 border border-sky-200", "filterTracker.ticker !== ''", "'Ticker: ' + filterTracker.ticker")
-		@JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filterTracker.type === 'TAKEN'", "'Type: TAKEN'")
-		@JournalActiveFilterBadge("bg-rose-100 text-rose-800 border border-rose-200", "filterTracker.type === 'REJECTED'", "'Type: REJECTED'")
-		@JournalActiveFilterBadge("bg-rose-100 text-rose-800 border border-rose-200", "filterTracker.status !== ''", "'Status: ' + filterTracker.status")
-		@JournalActiveFilterBadge("bg-violet-100 text-violet-800 border border-violet-200", "filterTracker.sequence !== ''", "'Sequence: ' + filterTracker.sequence")
-		@JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filterTracker.createdAfter !== '' && activeReviewPreset === ''", "'Created: ' + filterTracker.createdAfter")
+	<div class="flex flex-wrap items-center gap-2" x-show="filter.hasFilters()">
+		@JournalActiveFilterBadge("bg-sky-100 text-sky-800 border border-sky-200", "filter.ticker !== ''", "'Ticker: ' + filter.ticker")
+		@JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filter.type === 'TAKEN'", "'Type: TAKEN'")
+		@JournalActiveFilterBadge("bg-rose-100 text-rose-800 border border-rose-200", "filter.type === 'REJECTED'", "'Type: REJECTED'")
+		@JournalActiveFilterBadge("bg-rose-100 text-rose-800 border border-rose-200", "filter.status !== ''", "'Status: ' + filter.status")
+		@JournalActiveFilterBadge("bg-violet-100 text-violet-800 border border-violet-200", "filter.sequence !== ''", "'Sequence: ' + filter.sequence")
+		@JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filter.createdAfter !== '' && activeReviewPreset === ''", "'Created: ' + filter.createdAfter")
 		@JournalActiveFilterBadge("bg-amber-100 text-amber-900 border border-amber-200", "activeReviewPreset !== ''", "activeReviewPreset")
 	</div>
 }
@@ -166,11 +166,11 @@ templ JournalTable() {
 				@table.Header(table.HeaderProps{Class: "bg-gradient-to-r from-sky-100/70 via-indigo-100/60 to-emerald-100/70 text-xs uppercase tracking-wide text-slate-700"}) {
 					@table.Row() {
 						@table.Head() { ID }
-						@widgets.SortHead(widgets.SortHeadProps{Label: "Ticker", Field: "ticker", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('ticker')"})
-						@widgets.SortHead(widgets.SortHeadProps{Label: "Sequence", Field: "sequence", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('sequence')"})
+						@widgets.SortHead(widgets.SortHeadProps{Label: "Ticker", Field: "ticker", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "toggleSort('ticker')"})
+						@widgets.SortHead(widgets.SortHeadProps{Label: "Sequence", Field: "sequence", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "toggleSort('sequence')"})
 						@table.Head() { Type }
 						@table.Head() { Status }
-						@widgets.SortHead(widgets.SortHeadProps{Label: "Created", Field: "created_at", SortByExpr: "filterTracker.sortBy", SortOrderExpr: "filterTracker.sortOrder", OnClick: "toggleSort('created_at')"})
+						@widgets.SortHead(widgets.SortHeadProps{Label: "Created", Field: "created_at", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "toggleSort('created_at')"})
 					}
 				}
 				@table.Body() {
