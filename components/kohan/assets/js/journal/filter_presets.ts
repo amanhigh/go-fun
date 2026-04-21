@@ -1,13 +1,8 @@
+import { formatDateInputValue } from '../shared/date';
+
 const reviewPresetBaseClass = 'border-cyan-200/70 bg-white/80 text-cyan-800 hover:bg-cyan-50';
 const reviewPresetAnchorClass = 'border-2 border-amber-200 bg-white/80 text-cyan-800';
 const reviewPresetActiveClass = 'border-amber-300 bg-amber-100/90 text-amber-950 hover:bg-amber-100';
-
-function formatDateInputValue(date: Date): string {
-	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, '0');
-	const day = `${date.getDate()}`.padStart(2, '0');
-	return `${year}-${month}-${day}`;
-}
 
 function formatReviewPresetLabel(date: Date): string {
 	const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
