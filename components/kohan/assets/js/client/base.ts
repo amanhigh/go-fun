@@ -5,8 +5,10 @@ export type Envelope<T> = {
 	data: T;
 };
 
+const apiBaseUrl = '/v1/api';
+
 export abstract class BaseClient {
-	protected constructor(protected readonly baseUrl = '/v1/api') {}
+	protected constructor(protected readonly baseUrl = apiBaseUrl) {}
 
 	protected buildUrl(path: string, query: Record<string, QueryValue> = {}): string {
 		const searchParams = new URLSearchParams(
@@ -18,37 +20,35 @@ export abstract class BaseClient {
 		return queryString ? `${this.baseUrl}${path}?${queryString}` : `${this.baseUrl}${path}`;
 	}
 
-	protected requestJsonBody<T>(
+	protected async requestJson<T>(
 		path: string,
-		method: string,
-		payload: unknown,
+		init: RequestInit = {},
 		errorMessage: string,
 		notFoundMessage = errorMessage,
 		query: Record<string, QueryValue> = {},
-		init: RequestInit = {},
+		payload?: unknown,
 	): Promise<T> {
-		const headers = new Headers(init.headers);
-		headers.set('Content-Type', 'application/json');
+		const requestInit = payload === undefined
+			? init
+			: {
+				...init,
+				headers: new Headers(init.headers),
+				body: JSON.stringify(payload),
+			};
 
-		return this.requestJson<T>(
-			path,
-			{ ...init, method, headers, body: JSON.stringify(payload) },
-			errorMessage,
-			notFoundMessage,
-			query,
-		);
+		if (payload !== undefined) {
+			(requestInit.headers as Headers).set('Content-Type', 'application/json');
+		}
+
+		const response = await this.request(path, requestInit, errorMessage, notFoundMessage, query);
+		return response.json() as Promise<T>;
 	}
 
-	protected async request(path: string, init: RequestInit = {}, errorMessage: string, notFoundMessage = errorMessage, query: Record<string, QueryValue> = {}): Promise<Response> {
+	private async request(path: string, init: RequestInit = {}, errorMessage: string, notFoundMessage = errorMessage, query: Record<string, QueryValue> = {}): Promise<Response> {
 		const response = await fetch(this.buildUrl(path, query), init);
 		if (!response.ok) {
 			throw new Error(response.status === 404 ? notFoundMessage : errorMessage);
 		}
 		return response;
-	}
-
-	protected async requestJson<T>(path: string, init: RequestInit = {}, errorMessage: string, notFoundMessage = errorMessage, query: Record<string, QueryValue> = {}): Promise<T> {
-		const response = await this.request(path, init, errorMessage, notFoundMessage, query);
-		return response.json() as Promise<T>;
 	}
 }
