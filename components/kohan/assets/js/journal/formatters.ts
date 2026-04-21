@@ -1,3 +1,6 @@
+import { formatTimestamp } from '../shared/date';
+import { normalizeTag } from '../shared/tags';
+
 const defaultBadgeClass = 'border-slate-300 bg-slate-50 text-slate-700';
 
 const statusBadgeClassMap: Record<string, string> = {
@@ -14,8 +17,6 @@ const typeBadgeClassMap: Record<string, string> = {
 	SET: 'border-indigo-300 bg-indigo-50 text-indigo-800',
 };
 
-const normalizeTag = (value: string): string => (value ?? '').trim().toUpperCase();
-
 export function createJournalListFormatters() {
 	return {
 		normalizeStatus(value: string) {
@@ -28,18 +29,13 @@ export function createJournalListFormatters() {
 			return typeBadgeClassMap[normalizeTag(value)] ?? defaultBadgeClass;
 		},
 		typeToggleButtonLabel(this: any) {
-			return this.filterTracker.type === 'TAKEN' ? 'Rejected' : 'Taken';
+			return this.filter.type === 'TAKEN' ? 'Rejected' : 'Taken';
 		},
 		typeToggleButtonClass(this: any) {
 			return this.typeToggleButtonLabel() === 'Taken'
 				? '!border-emerald-300 !bg-emerald-200 !text-emerald-800'
 				: '!border-rose-300 !bg-rose-200 !text-rose-800';
 		},
-		formatTimestamp(value: string) {
-			if (!value) return '—';
-			const parsed = new Date(value);
-			if (Number.isNaN(parsed.getTime())) return '—';
-			return parsed.toLocaleString();
-		},
+		formatTimestamp,
 	};
 }

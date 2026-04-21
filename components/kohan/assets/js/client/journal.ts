@@ -2,8 +2,7 @@ import { BaseClient, type Envelope, type QueryValue } from './base';
 import type { JournalImage } from './journal_image';
 import type { JournalNote } from './journal_note';
 import type { JournalTag } from './journal_tag';
-import { journalQueryKeyMap } from '../journal_list_filters';
-import type { JournalListRequest } from '../journal_list_filters';
+import { journalQueryKeyMap } from '../journal/filter_config';
 
 export type Journal = {
 	id: string;

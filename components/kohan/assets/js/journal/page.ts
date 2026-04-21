@@ -1,17 +1,19 @@
-import { JournalClient } from './journal_client';
-import type { Journal } from './journal_models';
-import { createJournalListFilterActions, createReviewPresets } from './journal_list_filters';
-import { createJournalListFormatters } from './journal_list_formatters';
-import { createFilterTracker, createPaginationTracker } from './journal_state';
+import { NewJournalClient, type Journal } from '../client/journal';
+import { createFilterActions } from './filter_actions';
+import { createFilterPresetActions, createReviewPresets } from './filter_presets';
+import { createFilterUrlActions } from './filter_url';
+import { createJournalListFormatters } from './formatters';
+import { createJournalFilterState } from './filter_state';
+import { createPaginationState } from './pagination';
 
 declare const Alpine: {
 	data(name: string, callback: () => ReturnType<typeof journalPage>): void;
 };
 
 function journalPage() {
-	const client = new JournalClient();
-	const pagination = createPaginationTracker(10);
-	const filterTracker = createFilterTracker();
+	const client = NewJournalClient();
+	const pagination = createPaginationState(10);
+	const filter = createJournalFilterState();
 	const reviewPresets = createReviewPresets();
 
 	return {
@@ -19,22 +21,24 @@ function journalPage() {
 		reviewPresets,
 		activeReviewPreset: '',
 		pagination,
-		filterTracker,
+		filter,
 		requestCounter: 0,
 		loading: false,
 		errorMessage: '',
 		...createJournalListFormatters(),
-		...createJournalListFilterActions(filterTracker as unknown as Record<string, string>),
+		...createFilterPresetActions(),
+		...createFilterUrlActions(filter),
+		...createFilterActions(filter),
 		async loadJournals(this: any) {
 			const requestId = this.requestCounter + 1;
 			this.requestCounter = requestId;
 			this.loading = true;
 			this.errorMessage = '';
 			try {
-				const resp = await client.list(
+			const resp = await client.list(
 					this.pagination.getPage() === 1 ? 0 : (this.pagination.getPage() - 1) * this.pagination.getPageSize(),
 					this.pagination.getPageSize(),
-					this.filterTracker.toQueryParams(),
+					this.filter.toQueryParams(),
 				);
 				if (requestId !== this.requestCounter) return;
 				const data = resp.data ?? {};
