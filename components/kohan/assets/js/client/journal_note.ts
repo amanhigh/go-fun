@@ -20,27 +20,16 @@ export interface JournalNoteClient {
 }
 
 export class JournalNoteClientImpl extends BaseClient implements JournalNoteClient {
-	constructor(baseUrl?: string) {
-		super(baseUrl);
+	constructor() {
+		super();
 	}
 
 	async create(journalId: string, payload: JournalNoteRequest): Promise<Envelope<JournalNote>> {
-		return this.requestJsonBody<Envelope<JournalNote>>(
-			`/journals/${journalId}/notes`,
-			'POST',
-			payload,
-			'Failed to save note',
-			'Journal not found',
-		);
+		return this.requestJson<Envelope<JournalNote>>(`/journals/${journalId}/notes`, 'POST', 'Failed to save note', 'Journal not found', {}, payload);
 	}
 
 	async delete(journalId: string, noteId: string): Promise<void> {
-		await this.request(
-			`/journals/${journalId}/notes/${noteId}`,
-			{ method: 'DELETE' },
-			'Failed to delete note',
-			'Note not found',
-		);
+		await this.request(`/journals/${journalId}/notes/${noteId}`, { method: 'DELETE' }, 'Failed to delete note', 'Note not found');
 	}
 }
 

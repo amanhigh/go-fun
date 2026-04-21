@@ -39,7 +39,7 @@ export type JournalUpdate = {
 	reviewed_at: string | null;
 };
 
-export type JournalListRequest = Partial<ReturnType<JournalFilterState['toQueryParams']>>;
+export type JournalListRequest = ReturnType<JournalFilterState['toQueryParams']>;
 
 export interface JournalClient {
 	list(offset: number, limit: number, filters?: JournalListRequest): Promise<Envelope<JournalList>>;
@@ -48,8 +48,8 @@ export interface JournalClient {
 }
 
 export class JournalClientImpl extends BaseClient implements JournalClient {
-	constructor(baseUrl?: string) {
-		super(baseUrl);
+	constructor() {
+		super();
 	}
 
 	async list(offset: number, limit: number, filters: JournalListRequest = {}): Promise<Envelope<JournalList>> {
@@ -57,21 +57,15 @@ export class JournalClientImpl extends BaseClient implements JournalClient {
 		Object.entries(filters).forEach(([key, value]) => {
 			if (value !== undefined && value !== '') query[journalQueryKeyMap[key] ?? key] = value;
 		});
-		return this.requestJson<Envelope<JournalList>>('/journals', {}, 'Failed to load journals', 'Journal not found', query);
+		return this.requestJson<Envelope<JournalList>>('/journals', 'GET', 'Failed to load journals', 'Journal not found', query);
 	}
 
 	async get(journalId: string): Promise<Envelope<Journal>> {
-		return this.requestJson<Envelope<Journal>>(`/journals/${journalId}`, {}, 'Failed to load journal', 'Journal not found');
+		return this.requestJson<Envelope<Journal>>(`/journals/${journalId}`, 'GET', 'Failed to load journal', 'Journal not found');
 	}
 
 	async updateReview(journalId: string, payload: JournalUpdateRequest): Promise<Envelope<JournalUpdate>> {
-		return this.requestJsonBody<Envelope<JournalUpdate>>(
-			`/journals/${journalId}`,
-			'PATCH',
-			payload,
-			'Failed to update journal status',
-			'Journal not found',
-		);
+		return this.requestJson<Envelope<JournalUpdate>>(`/journals/${journalId}`, 'PATCH', 'Failed to update journal status', 'Journal not found', {}, payload);
 	}
 
 }

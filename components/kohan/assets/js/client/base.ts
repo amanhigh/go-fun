@@ -22,29 +22,27 @@ export abstract class BaseClient {
 
 	protected async requestJson<T>(
 		path: string,
-		init: RequestInit = {},
+		method: string,
 		errorMessage: string,
 		notFoundMessage = errorMessage,
 		query: Record<string, QueryValue> = {},
 		payload?: unknown,
 	): Promise<T> {
 		const requestInit = payload === undefined
-			? init
-			: {
-				...init,
-				headers: new Headers(init.headers),
-				body: JSON.stringify(payload),
-			};
+			? { method }
+			: { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) };
 
-		if (payload !== undefined) {
-			(requestInit.headers as Headers).set('Content-Type', 'application/json');
-		}
-
-		const response = await this.request(path, requestInit, errorMessage, notFoundMessage, query);
+		const response = await this.request(
+			path,
+			requestInit,
+			errorMessage,
+			notFoundMessage,
+			query,
+		);
 		return response.json() as Promise<T>;
 	}
 
-	private async request(path: string, init: RequestInit = {}, errorMessage: string, notFoundMessage = errorMessage, query: Record<string, QueryValue> = {}): Promise<Response> {
+	protected async request(path: string, init: RequestInit = {}, errorMessage: string, notFoundMessage = errorMessage, query: Record<string, QueryValue> = {}): Promise<Response> {
 		const response = await fetch(this.buildUrl(path, query), init);
 		if (!response.ok) {
 			throw new Error(response.status === 404 ? notFoundMessage : errorMessage);

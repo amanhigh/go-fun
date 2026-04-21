@@ -20,27 +20,16 @@ export interface JournalTagClient {
 }
 
 export class JournalTagClientImpl extends BaseClient implements JournalTagClient {
-	constructor(baseUrl?: string) {
-		super(baseUrl);
+	constructor() {
+		super();
 	}
 
 	async create(journalId: string, payload: JournalTagRequest): Promise<Envelope<JournalTag>> {
-		return this.requestJsonBody<Envelope<JournalTag>>(
-			`/journals/${journalId}/tags`,
-			'POST',
-			payload,
-			'Failed to save tag',
-			'Journal not found',
-		);
+		return this.requestJson<Envelope<JournalTag>>(`/journals/${journalId}/tags`, 'POST', 'Failed to save tag', 'Journal not found', {}, payload);
 	}
 
 	async delete(journalId: string, tagId: string): Promise<void> {
-		await this.request(
-			`/journals/${journalId}/tags/${tagId}`,
-			{ method: 'DELETE' },
-			'Failed to delete tag',
-			'Tag not found',
-		);
+		await this.request(`/journals/${journalId}/tags/${tagId}`, { method: 'DELETE' }, 'Failed to delete tag', 'Tag not found');
 	}
 }
 
