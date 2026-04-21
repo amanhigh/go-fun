@@ -35,8 +35,8 @@ function journalPage() {
 			this.loading = true;
 			this.errorMessage = '';
 			try {
-			const resp = await client.list(
-					this.pagination.getPage() === 1 ? 0 : (this.pagination.getPage() - 1) * this.pagination.getPageSize(),
+				const resp = await client.list(
+					this.pagination.getOffset(),
 					this.pagination.getPageSize(),
 					this.filter.toQueryParams(),
 				);

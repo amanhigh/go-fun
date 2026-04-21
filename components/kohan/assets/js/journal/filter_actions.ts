@@ -12,26 +12,23 @@ export function createFilterActions(filter: JournalFilterState) {
 			void this.loadJournals();
 		},
 		onCreatedDateChange(this: any) {
-			this.clearActiveReviewPreset();
 			this.filter.createdBefore = this.filter.createdAfter;
-			this.applyFilters();
+			this.applyManualFilters();
 		},
 		applyManualFilters(this: any) {
 			this.clearActiveReviewPreset();
 			this.applyFilters();
 		},
 		toggleSort(this: any, field: string) {
-			this.clearActiveReviewPreset();
 			this.filter.sortOrder = this.filter.sortBy !== field
 				? 'asc'
 				: this.filter.sortOrder === 'asc' ? 'desc' : 'asc';
 			this.filter.sortBy = field;
-			this.applyFilters();
+			this.applyManualFilters();
 		},
 		clearFilters(this: any) {
-			this.clearActiveReviewPreset();
 			this.filter.clear();
-			this.applyFilters();
+			this.applyManualFilters();
 		},
 	};
 }

@@ -4,6 +4,7 @@ export interface PaginationState {
 	totalItems: number;
 	getPage(): number;
 	getPageSize(): number;
+	getOffset(): number;
 	getTotalItems(): number;
 	getTotalPages(): number;
 	hasNext(): boolean;
@@ -22,6 +23,7 @@ export function createPaginationState(pageSize: number): PaginationState {
 		totalItems: 0,
 		getPage() { return this.page; },
 		getPageSize() { return this.pageSize; },
+		getOffset() { return (this.page - 1) * this.pageSize; },
 		getTotalItems() { return this.totalItems; },
 		getTotalPages() { return Math.max(1, Math.ceil(this.totalItems / this.pageSize)); },
 		hasNext() { return this.page < this.getTotalPages(); },

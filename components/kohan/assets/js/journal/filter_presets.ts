@@ -2,6 +2,13 @@ const reviewPresetBaseClass = 'border-cyan-200/70 bg-white/80 text-cyan-800 hove
 const reviewPresetAnchorClass = 'border-2 border-amber-200 bg-white/80 text-cyan-800';
 const reviewPresetActiveClass = 'border-amber-300 bg-amber-100/90 text-amber-950 hover:bg-amber-100';
 
+function formatDateInputValue(date: Date): string {
+	const year = date.getFullYear();
+	const month = `${date.getMonth() + 1}`.padStart(2, '0');
+	const day = `${date.getDate()}`.padStart(2, '0');
+	return `${year}-${month}-${day}`;
+}
+
 function formatReviewPresetLabel(date: Date): string {
 	const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 	return `${monthLabels[date.getMonth()]}-${String(date.getFullYear() % 100).padStart(2, '0')}`;
@@ -24,8 +31,8 @@ export function createReviewPresets(): ReviewPreset[] {
 		return {
 			isAnchor: offset === 0,
 			label: formatReviewPresetLabel(monthDate),
-			createdAfter: `${createdAfter.getFullYear()}-${String(createdAfter.getMonth() + 1).padStart(2, '0')}-${String(createdAfter.getDate()).padStart(2, '0')}`,
-			createdBefore: `${createdBefore.getFullYear()}-${String(createdBefore.getMonth() + 1).padStart(2, '0')}-${String(createdBefore.getDate()).padStart(2, '0')}`,
+			createdAfter: formatDateInputValue(createdAfter),
+			createdBefore: formatDateInputValue(createdBefore),
 		};
 	});
 }
@@ -56,17 +63,11 @@ export function createFilterPresetActions() {
 		reviewPresetButtonClass(this: any, reviewPreset: ReviewPreset) {
 			return reviewPresetButtonClass(this.activeReviewPreset, reviewPreset);
 		},
-		toDateInputValue(date: Date) {
-			const year = date.getFullYear();
-			const month = `${date.getMonth() + 1}`.padStart(2, '0');
-			const day = `${date.getDate()}`.padStart(2, '0');
-			return `${year}-${month}-${day}`;
-		},
 		applyCreatedPreset(this: any, preset: string) {
 			this.filter.clear();
 			this.clearActiveReviewPreset();
 			const today = new Date();
-			const endDate = this.toDateInputValue(today);
+			const endDate = formatDateInputValue(today);
 			const daysMap: Record<string, number> = { today: 0, last7: 7, last30: 30 };
 			const days = daysMap[preset] ?? 7;
 			if (days === 0) {
@@ -77,7 +78,7 @@ export function createFilterPresetActions() {
 			}
 			const startDate = new Date(today);
 			startDate.setDate(today.getDate() - days);
-			this.filter.createdAfter = this.toDateInputValue(startDate);
+			this.filter.createdAfter = formatDateInputValue(startDate);
 			this.filter.createdBefore = endDate;
 			this.applyFilters();
 		},
