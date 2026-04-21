@@ -25,6 +25,8 @@ export const journalReverseMap: Record<string, JournalFilterKey> = {
 
 export type JournalFilters = Record<JournalFilterKey, string>;
 
+type JournalFilterSnapshot = Pick<JournalFilterState, JournalFilterKey>;
+
 export interface JournalFilterState extends JournalFilters {
 	hasFilters(): boolean;
 	clear(): void;
@@ -43,7 +45,15 @@ const journalDefaults: JournalFilters = {
 	sortOrder: '',
 };
 
-export function createJournalFilterState(): JournalFilterState {
+function snapshotJournalFilters(filter: JournalFilterSnapshot): JournalFilters {
+	const params = {} as JournalFilters;
+	journalFields.forEach((field) => {
+		params[field] = filter[field];
+	});
+	return params;
+}
+
+export function createJournalFilter(): JournalFilterState {
 	return {
 		...journalDefaults,
 		hasFilters(this: JournalFilterState) {
@@ -55,11 +65,7 @@ export function createJournalFilterState(): JournalFilterState {
 			});
 		},
 		toQueryParams(this: JournalFilterState) {
-			const params = {} as JournalFilters;
-			journalFields.forEach((field) => {
-				params[field] = this[field];
-			});
-			return params;
+			return snapshotJournalFilters(this);
 		},
 	};
 }

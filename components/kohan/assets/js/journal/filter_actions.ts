@@ -1,10 +1,18 @@
-import type { JournalFilterState } from './filter_state';
+import { syncStateToUrl, syncUrlToState } from '../shared/url_state';
+import type { JournalFilterState } from './filter';
+import { journalFields, journalQueryMap, journalReverseMap } from './filter';
 
 type TypeToggle = {
 	label: string;
 	className: string;
 	nextType: string;
 };
+
+const journalFilterUrlMapping = {
+	fields: journalFields,
+	queryMap: journalQueryMap,
+	reverseMap: journalReverseMap,
+} as const;
 
 const takenToggle: TypeToggle = {
 	label: 'Rejected',
@@ -22,35 +30,45 @@ export function resolveTypeToggle(type: string): TypeToggle {
 	return type === 'TAKEN' ? takenToggle : rejectedToggle;
 }
 
-export function createFilterActions(filter: JournalFilterState) {
+function nextSortOrder(sortBy: string, sortOrder: string, field: string): string {
+	if (sortBy !== field) {
+		return 'asc';
+	}
+
+	return sortOrder === 'asc' ? 'desc' : 'asc';
+}
+
+type FilterActionDeps = {
+	filter: JournalFilterState;
+	applyManualFilters: () => void;
+};
+
+export function createFilterActions(deps: FilterActionDeps) {
+	const { filter, applyManualFilters } = deps;
+
 	return {
-		toggleType(this: any) {
-			this.filter.type = resolveTypeToggle(this.filter.type).nextType;
-			this.applyManualFilters();
+		urlToFilter() {
+			syncUrlToState(filter, journalFilterUrlMapping);
 		},
-		applyFilters(this: any) {
-			this.pagination.resetPage();
-			this.filterToUrl();
-			void this.loadJournals();
+		filterToUrl() {
+			syncStateToUrl(filter, journalFilterUrlMapping);
 		},
-		onCreatedDateChange(this: any) {
-			this.filter.createdBefore = this.filter.createdAfter;
-			this.applyManualFilters();
+		toggleType() {
+			filter.type = resolveTypeToggle(filter.type).nextType;
+			applyManualFilters();
 		},
-		applyManualFilters(this: any) {
-			this.clearActiveReviewPreset();
-			this.applyFilters();
+		onCreatedDateChange() {
+			filter.createdBefore = filter.createdAfter;
+			applyManualFilters();
 		},
-		toggleSort(this: any, field: string) {
-			this.filter.sortOrder = this.filter.sortBy !== field
-				? 'asc'
-				: this.filter.sortOrder === 'asc' ? 'desc' : 'asc';
-			this.filter.sortBy = field;
-			this.applyManualFilters();
+		toggleSort(field: string) {
+			filter.sortOrder = nextSortOrder(filter.sortBy, filter.sortOrder, field);
+			filter.sortBy = field;
+			applyManualFilters();
 		},
-		clearFilters(this: any) {
-			this.filter.clear();
-			this.applyManualFilters();
+		clearFilters() {
+			filter.clear();
+			applyManualFilters();
 		},
 	};
 }

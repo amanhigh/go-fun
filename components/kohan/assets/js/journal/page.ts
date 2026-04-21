@@ -1,10 +1,11 @@
-import { NewJournalClient, type Journal } from '../client/journal';
+import { NewJournalClient } from '../client/journal';
 import { createFilterActions } from './filter_actions';
-import { createReviewPresets } from './filter_presets';
-import { createFilterUrlActions } from './filter_url';
+import { createReviewPresets } from './presets';
 import { createJournalListFormatters } from './formatters';
-import { createJournalFilterState } from './filter_state';
+import { createJournalFilter } from './filter';
 import { createJournalPageActions } from './page_actions';
+import { createJournalPageState } from './page_state';
+import { createPresetActions } from './preset_actions';
 import { createPaginationState } from './pagination';
 
 declare const Alpine: {
@@ -14,36 +15,29 @@ declare const Alpine: {
 function journalPage() {
 	const client = NewJournalClient();
 	const pagination = createPaginationState(10);
-	const filter = createJournalFilterState();
+	const filter = createJournalFilter();
 	const reviewPresets = createReviewPresets();
-	const urlActions = createFilterUrlActions(filter);
-	const state = {
-		journals: [] as Journal[],
-		reviewPresets,
-		activeReviewPreset: '',
-		pagination,
+	const formatters = createJournalListFormatters(filter);
+	const filterActions = createFilterActions({ filter, applyManualFilters: () => pageActions.applyManualFilters() });
+	const state = createJournalPageState({ filter, pagination, reviewPresets });
+	const presetActions = createPresetActions({
 		filter,
-		requestCounter: 0,
-		loading: false,
-		errorMessage: '',
-	};
+		state,
+		applyFilters: () => pageActions.applyFilters(),
+		clearFilters: () => filter.clear(),
+	});
 	const pageActions = createJournalPageActions({
 		client,
 		filter,
 		pagination,
-		reviewPresets,
 		state,
-		filterToUrl: urlActions.filterToUrl,
-		urlToFilter: urlActions.urlToFilter,
+		filterToUrl: filterActions.filterToUrl,
+		urlToFilter: filterActions.urlToFilter,
+		clearActiveReviewPreset: presetActions.clearActiveReviewPreset,
+		syncActiveReviewPreset: presetActions.syncActiveReviewPreset,
 	});
 
-	return Object.assign(
-		state,
-		createJournalListFormatters(filter),
-		urlActions,
-		pageActions,
-		createFilterActions({ filter, applyManualFilters: pageActions.applyManualFilters }),
-	);
+	return Object.assign(state, formatters, presetActions, pageActions, filterActions);
 }
 
 document.addEventListener('alpine:init', () => {
