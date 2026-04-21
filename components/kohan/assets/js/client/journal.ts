@@ -2,7 +2,7 @@ import { BaseClient, type Envelope, type QueryValue } from './base';
 import type { JournalImage } from './journal_image';
 import type { JournalNote } from './journal_note';
 import type { JournalTag } from './journal_tag';
-import type { JournalFilterState, JournalFilters } from '../journal/filter';
+import type { JournalFilters } from '../journal/filter';
 import { journalFields, journalQueryMap } from '../journal/filter';
 
 export type Journal = {
@@ -39,7 +39,7 @@ export type JournalUpdate = {
 	reviewed_at: string | null;
 };
 
-export type JournalListRequest = Partial<ReturnType<JournalFilterState['toQueryParams']>>;
+export type JournalListRequest = Partial<JournalFilters>;
 
 export interface JournalClient {
 	list(offset: number, limit: number, filters?: JournalListRequest): Promise<Envelope<JournalList>>;

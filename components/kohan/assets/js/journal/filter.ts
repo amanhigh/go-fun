@@ -1,71 +1,91 @@
-export const journalFields = ['ticker', 'type', 'status', 'sequence', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'] as const;
+const journalFilterConfig = {
+	ticker: {
+		queryKey: 'search',
+		aliases: ['ticker'],
+	},
+	type: {},
+	status: {},
+	sequence: {},
+	createdAfter: {
+		queryKey: 'created-after',
+	},
+	createdBefore: {
+		queryKey: 'created-before',
+	},
+	reviewed: {},
+	sortBy: {
+		queryKey: 'sort-by',
+	},
+	sortOrder: {
+		queryKey: 'sort-order',
+	},
+} as const;
 
-export type JournalFilterKey = typeof journalFields[number];
-
-export const journalQueryMap: Partial<Record<JournalFilterKey, string>> = {
-	ticker: 'search',
-	createdAfter: 'created-after',
-	createdBefore: 'created-before',
-	sortBy: 'sort-by',
-	sortOrder: 'sort-order',
-};
-
-export const journalReverseMap: Record<string, JournalFilterKey> = {
-	search: 'ticker',
-	ticker: 'ticker',
-	type: 'type',
-	status: 'status',
-	sequence: 'sequence',
-	'created-after': 'createdAfter',
-	'created-before': 'createdBefore',
-	reviewed: 'reviewed',
-	'sort-by': 'sortBy',
-	'sort-order': 'sortOrder',
-};
+export type JournalFilterKey = keyof typeof journalFilterConfig;
 
 export type JournalFilters = Record<JournalFilterKey, string>;
 
-type JournalFilterSnapshot = Pick<JournalFilterState, JournalFilterKey>;
-
 export interface JournalFilterState extends JournalFilters {
-	hasFilters(): boolean;
 	clear(): void;
 	toQueryParams(): JournalFilters;
+	hasActiveState(): boolean;
 }
 
-const journalDefaults: JournalFilters = {
-	ticker: '',
-	type: '',
-	status: '',
-	sequence: '',
-	createdAfter: '',
-	createdBefore: '',
-	reviewed: '',
-	sortBy: '',
-	sortOrder: '',
-};
+export const journalFields = Object.keys(journalFilterConfig) as JournalFilterKey[];
 
-function snapshotJournalFilters(filter: JournalFilterSnapshot): JournalFilters {
-	const params = {} as JournalFilters;
-	journalFields.forEach((field) => {
-		params[field] = filter[field];
-	});
-	return params;
+function createDefaultJournalFilters(): JournalFilters {
+	return journalFields.reduce<JournalFilters>((defaults, field) => ({
+		...defaults,
+		[field]: '',
+	}), {} as JournalFilters);
 }
+
+export const journalQueryMap: Partial<Record<JournalFilterKey, string>> = journalFields.reduce((queryMap, field) => {
+	const queryKey = journalFilterConfig[field].queryKey;
+	if (!queryKey) {
+		return queryMap;
+	}
+
+	return {
+		...queryMap,
+		[field]: queryKey,
+	};
+}, {} as Partial<Record<JournalFilterKey, string>>);
+
+export const journalReverseMap: Record<string, JournalFilterKey> = journalFields.reduce((reverseMap, field) => {
+	const queryKey = journalQueryMap[field] ?? field;
+	const aliases = journalFilterConfig[field].aliases ?? [];
+
+	return {
+		...reverseMap,
+		[queryKey]: field,
+		...aliases.reduce<Record<string, JournalFilterKey>>((aliasMap, alias) => ({
+			...aliasMap,
+			[alias]: field,
+		}), {}),
+	};
+}, {} as Record<string, JournalFilterKey>);
+
+export const journalFilterUrlMapping = {
+	fields: journalFields,
+	queryMap: journalQueryMap,
+	reverseMap: journalReverseMap,
+} as const;
 
 export function createJournalFilter(): JournalFilterState {
-	return {
-		...journalDefaults,
-		hasFilters(this: JournalFilterState) {
-			return journalFields.some((field) => this[field] !== '');
-		},
-		clear(this: JournalFilterState) {
-			journalFields.forEach((field) => {
-				this[field] = '';
-			});
-		},
-		toQueryParams(this: JournalFilterState) {
-			return snapshotJournalFilters(this);
-		},
+	const state = { ...createDefaultJournalFilters() } as JournalFilterState;
+
+	state.clear = function clear() {
+		Object.assign(state, createDefaultJournalFilters());
 	};
+
+	state.toQueryParams = function toQueryParams() {
+		return { ...state };
+	};
+
+	state.hasActiveState = function hasActiveState() {
+		return journalFields.some((field) => state[field] !== '');
+	};
+
+	return state;
 }

@@ -1,18 +1,12 @@
 import { syncStateToUrl, syncUrlToState } from '../shared/url_state';
 import type { JournalFilterState } from './filter';
-import { journalFields, journalQueryMap, journalReverseMap } from './filter';
+import { journalFilterUrlMapping } from './filter';
 
 type TypeToggle = {
 	label: string;
 	className: string;
 	nextType: string;
 };
-
-const journalFilterUrlMapping = {
-	fields: journalFields,
-	queryMap: journalQueryMap,
-	reverseMap: journalReverseMap,
-} as const;
 
 const takenToggle: TypeToggle = {
 	label: 'Rejected',
