@@ -21,9 +21,7 @@ const typeBadgeClassMap: Record<string, string> = {
 
 export function createJournalListFormatters(filter: JournalFilterState) {
 	return {
-		normalizeStatus(value: string) {
-			return normalizeTag(value);
-		},
+		normalizeStatus: normalizeTag,
 		statusBadgeClass(value: string) {
 			return statusBadgeClassMap[normalizeTag(value)] ?? defaultBadgeClass;
 		},
