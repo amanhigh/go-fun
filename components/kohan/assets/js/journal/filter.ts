@@ -2,7 +2,7 @@ export const journalFields = ['ticker', 'type', 'status', 'sequence', 'createdAf
 
 export type JournalFilterKey = typeof journalFields[number];
 
-export const journalQueryMap: Record<JournalFilterKey, string> = {
+export const journalQueryMap: Partial<Record<JournalFilterKey, string>> = {
 	ticker: 'search',
 	createdAfter: 'created-after',
 	createdBefore: 'created-before',

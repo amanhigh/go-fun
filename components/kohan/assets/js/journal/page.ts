@@ -1,6 +1,6 @@
 import { NewJournalClient } from '../client/journal';
 import { createFilterActions } from './filter_actions';
-import { createReviewPresets } from './presets';
+import { buildReviewPresetList } from './presets';
 import { createJournalListFormatters } from './formatters';
 import { createJournalFilter } from './filter';
 import { createJournalPageActions } from './page_actions';
@@ -16,7 +16,7 @@ function journalPage() {
 	const client = NewJournalClient();
 	const pagination = createPaginationState(10);
 	const filter = createJournalFilter();
-	const reviewPresets = createReviewPresets();
+	const reviewPresets = buildReviewPresetList();
 	const formatters = createJournalListFormatters(filter);
 	const filterActions = createFilterActions({ filter, applyManualFilters: () => pageActions.applyManualFilters() });
 	const state = createJournalPageState({ filter, pagination, reviewPresets });

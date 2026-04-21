@@ -1,6 +1,10 @@
 import type { JournalFilterState } from './filter';
 import type { JournalPageState } from './page_state';
-import { findMatchingReviewPreset, getCreatedPresetRange, getReviewPresetClass, type CreatedPreset, type ReviewPreset } from './presets';
+import { buildDatePresetRange, findReviewPreset, type DatePreset, type ReviewPreset } from './presets';
+
+const reviewPresetBaseClass = 'border-cyan-200/70 bg-white/80 text-cyan-800 hover:bg-cyan-50';
+const reviewPresetAnchorClass = 'border-2 border-amber-200 bg-white/80 text-cyan-800';
+const reviewPresetActiveClass = 'border-amber-300 bg-amber-100/90 text-amber-950 hover:bg-amber-100';
 
 type PresetActionDeps = {
 	filter: JournalFilterState;
@@ -9,45 +13,38 @@ type PresetActionDeps = {
 	clearFilters: () => void;
 };
 
-function setCreatedRange(filter: JournalFilterState, createdAfter: string, createdBefore: string) {
-	filter.createdAfter = createdAfter;
-	filter.createdBefore = createdBefore;
-}
-
 export function createPresetActions(deps: PresetActionDeps) {
 	const { filter, state, applyFilters, clearFilters } = deps;
 
-	function setActiveReviewPreset(label: string) {
-		state.activeReviewPreset = label;
-	}
-
-	function clearActiveReviewPreset() {
-		setActiveReviewPreset('');
-	}
-
-	function syncActiveReviewPreset() {
-		const matchingPreset = findMatchingReviewPreset(state.reviewPresets, filter);
-		setActiveReviewPreset(matchingPreset?.label ?? '');
-	}
-
 	return {
-		clearActiveReviewPreset,
-		syncActiveReviewPreset,
-		reviewPresetClass(reviewPreset: ReviewPreset) {
-			return getReviewPresetClass(state.activeReviewPreset, reviewPreset);
+		clearActiveReviewPreset() {
+			state.activeReviewPreset = '';
 		},
-		applyCreatedPreset(preset: CreatedPreset) {
+		syncActiveReviewPreset() {
+			const matchingPreset = findReviewPreset(state.reviewPresets, filter);
+			state.activeReviewPreset = matchingPreset?.label ?? '';
+		},
+		reviewPresetClass(reviewPreset: ReviewPreset) {
+			if (state.activeReviewPreset === reviewPreset.label) {
+				return reviewPresetActiveClass;
+			}
+
+			return reviewPreset.isAnchor ? reviewPresetAnchorClass : reviewPresetBaseClass;
+		},
+		applyCreatedPreset(preset: DatePreset) {
 			clearFilters();
-			const range = getCreatedPresetRange(preset);
-			setCreatedRange(filter, range.createdAfter, range.createdBefore);
-			clearActiveReviewPreset();
+			const range = buildDatePresetRange(preset);
+			filter.createdAfter = range.createdAfter;
+			filter.createdBefore = range.createdBefore;
+			state.activeReviewPreset = '';
 			applyFilters();
 		},
 		applyReviewPreset(reviewPreset: ReviewPreset) {
 			clearFilters();
-			setCreatedRange(filter, reviewPreset.createdAfter, reviewPreset.createdBefore);
+			filter.createdAfter = reviewPreset.createdAfter;
+			filter.createdBefore = reviewPreset.createdBefore;
 			filter.reviewed = 'false';
-			setActiveReviewPreset(reviewPreset.label);
+			state.activeReviewPreset = reviewPreset.label;
 			applyFilters();
 		},
 	};
