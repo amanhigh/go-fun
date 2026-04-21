@@ -1,4 +1,6 @@
-export const journalQueryKeyMap: Record<string, string> = {
+import type { JournalFilterKey } from './filter_state';
+
+export const journalQueryKeyMap: Record<JournalFilterKey, string> = {
 	ticker: 'search',
 	createdAfter: 'created-after',
 	createdBefore: 'created-before',
@@ -6,7 +8,7 @@ export const journalQueryKeyMap: Record<string, string> = {
 	sortOrder: 'sort-order',
 };
 
-export const journalReverseQueryKeyMap: Record<string, string> = {
+export const journalReverseQueryKeyMap: Record<string, JournalFilterKey> = {
 	search: 'ticker',
 	ticker: 'ticker',
 	type: 'type',

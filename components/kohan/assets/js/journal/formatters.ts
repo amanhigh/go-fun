@@ -1,5 +1,6 @@
 import { formatTimestamp } from '../shared/date';
 import { normalizeTag } from '../shared/tags';
+import { getJournalTypeToggleState } from './filter_actions';
 
 const defaultBadgeClass = 'border-slate-300 bg-slate-50 text-slate-700';
 
@@ -29,12 +30,10 @@ export function createJournalListFormatters() {
 			return typeBadgeClassMap[normalizeTag(value)] ?? defaultBadgeClass;
 		},
 		typeToggleButtonLabel(this: any) {
-			return this.filter.type === 'TAKEN' ? 'Rejected' : 'Taken';
+			return getJournalTypeToggleState(this.filter.type).label;
 		},
 		typeToggleButtonClass(this: any) {
-			return this.typeToggleButtonLabel() === 'Taken'
-				? '!border-emerald-300 !bg-emerald-200 !text-emerald-800'
-				: '!border-rose-300 !bg-rose-200 !text-rose-800';
+			return getJournalTypeToggleState(this.filter.type).buttonClass;
 		},
 		formatTimestamp,
 	};

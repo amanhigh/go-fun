@@ -1,55 +1,44 @@
-export interface JournalFilterState {
-	ticker: string;
-	type: string;
-	status: string;
-	sequence: string;
-	createdAfter: string;
-	createdBefore: string;
-	reviewed: string;
-	sortBy: string;
-	sortOrder: string;
+export const journalFilterKeys = ['ticker', 'type', 'status', 'sequence', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'] as const;
+
+export type JournalFilterKey = typeof journalFilterKeys[number];
+
+export type JournalFilterValues = Record<JournalFilterKey, string>;
+
+export interface JournalFilterState extends JournalFilterValues {
 	hasFilters(): boolean;
 	clear(): void;
-	toQueryParams(): Record<string, string>;
+	toQueryParams(): JournalFilterValues;
 }
+
+const journalFilterDefaults: JournalFilterValues = {
+	ticker: '',
+	type: '',
+	status: '',
+	sequence: '',
+	createdAfter: '',
+	createdBefore: '',
+	reviewed: '',
+	sortBy: '',
+	sortOrder: '',
+};
 
 export function createJournalFilterState(): JournalFilterState {
 	return {
-		ticker: '',
-		type: '',
-		status: '',
-		sequence: '',
-		createdAfter: '',
-		createdBefore: '',
-		reviewed: '',
-		sortBy: '',
-		sortOrder: '',
-		hasFilters() {
-			return [this.ticker, this.type, this.status, this.sequence, this.createdAfter, this.createdBefore, this.reviewed, this.sortBy, this.sortOrder].some((value) => value !== '');
+		...journalFilterDefaults,
+		hasFilters(this: JournalFilterState) {
+			return journalFilterKeys.some((field) => this[field] !== '');
 		},
-		clear() {
-			this.ticker = '';
-			this.type = '';
-			this.status = '';
-			this.sequence = '';
-			this.createdAfter = '';
-			this.createdBefore = '';
-			this.reviewed = '';
-			this.sortBy = '';
-			this.sortOrder = '';
+		clear(this: JournalFilterState) {
+			journalFilterKeys.forEach((field) => {
+				this[field] = '';
+			});
 		},
-		toQueryParams() {
-			return {
-				ticker: this.ticker,
-				type: this.type,
-				status: this.status,
-				sequence: this.sequence,
-				createdAfter: this.createdAfter,
-				createdBefore: this.createdBefore,
-				reviewed: this.reviewed,
-				sortBy: this.sortBy,
-				sortOrder: this.sortOrder,
-			};
+		toQueryParams(this: JournalFilterState) {
+			const params = {} as JournalFilterValues;
+			journalFilterKeys.forEach((field) => {
+				params[field] = this[field];
+			});
+			return params;
 		},
 	};
 }

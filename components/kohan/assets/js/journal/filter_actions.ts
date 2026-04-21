@@ -1,9 +1,31 @@
 import type { JournalFilterState } from './filter_state';
 
+type TypeToggleState = {
+	label: string;
+	buttonClass: string;
+	nextType: string;
+};
+
+const takenToggleState: TypeToggleState = {
+	label: 'Rejected',
+	buttonClass: '!border-emerald-300 !bg-emerald-200 !text-emerald-800',
+	nextType: 'REJECTED',
+};
+
+const rejectedToggleState: TypeToggleState = {
+	label: 'Taken',
+	buttonClass: '!border-rose-300 !bg-rose-200 !text-rose-800',
+	nextType: 'TAKEN',
+};
+
+export function getJournalTypeToggleState(type: string): TypeToggleState {
+	return type === 'TAKEN' ? takenToggleState : rejectedToggleState;
+}
+
 export function createFilterActions(filter: JournalFilterState) {
 	return {
 		toggleTypeFilter(this: any) {
-			this.filter.type = this.filter.type === 'TAKEN' ? 'REJECTED' : 'TAKEN';
+			this.filter.type = getJournalTypeToggleState(this.filter.type).nextType;
 			this.applyManualFilters();
 		},
 		applyFilters(this: any) {
