@@ -5,10 +5,8 @@ import { createJournalDetailFormatters } from './formatters';
 import { createImageHelper } from '../journal_images';
 import { createJournalDetailPageState } from './page_state';
 import { createJournalDetailPageActions } from './page_actions';
-import { createJournalDetailNotes } from './notes_actions';
 import { createJournalDetailPreview } from './preview_actions';
-import { createJournalDetailReview } from './review_actions';
-import { createJournalDetailTags } from './tags_actions';
+import { createSideBar } from './side_bar';
 
 declare const Alpine: {
 	data(name: string, callback: () => ReturnType<typeof journalDetailPage>): void;
@@ -23,16 +21,18 @@ function journalDetailPage() {
 	const state = createJournalDetailPageState();
 	const formatters = createJournalDetailFormatters();
 	const pageActions = createJournalDetailPageActions({ journalClient });
+	const preview = createJournalDetailPreview(image);
 
-	return Object.assign(
-		state,
-		formatters,
-		pageActions,
-		createJournalDetailPreview(image),
-		createJournalDetailReview(journalClient),
-		createJournalDetailNotes(noteClient),
-		createJournalDetailTags(tagClient),
-	);
+	const page: any = {
+		...state,
+		...formatters,
+		...pageActions,
+		...preview,
+	};
+
+	page.sidebar = createSideBar(page, journalClient, noteClient, tagClient);
+
+	return page;
 }
 
 document.addEventListener('alpine:init', () => {

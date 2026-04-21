@@ -23,19 +23,19 @@ const managementTagToneMap: Record<string, string> = {
 	BE: 'orange',
 };
 
-export function createJournalDetailTags(tagClient: JournalTagClient) {
+export function createJournalDetailTags(parent: any, tagClient: JournalTagClient) {
 	return {
 		reasonTags(this: any) {
-			return (this.journal?.tags ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'REASON');
+			return (parent.journal?.tags ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'REASON');
 		},
 		deletableTags(this: any) {
-			return this.journal?.tags ?? [];
+			return parent.journal?.tags ?? [];
 		},
 		managementTags(this: any) {
-			return (this.journal?.tags ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'MANAGEMENT');
+			return (parent.journal?.tags ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'MANAGEMENT');
 		},
 		hasManagementBar(this: any) {
-			return normalizeTag(this.journal?.type ?? '') === 'TAKEN';
+			return normalizeTag(parent.journal?.type ?? '') === 'TAKEN';
 		},
 		hasManagementTag(this: any, value: string) {
 			const normalizedValue = normalizeTag(value);
@@ -73,12 +73,12 @@ export function createJournalDetailTags(tagClient: JournalTagClient) {
 			return isPending ? `opacity-70 ${baseClass}` : baseClass;
 		},
 		focusReasonTagOverride(this: any) {
-			this.$nextTick(() => {
-				this.$refs?.reasonTagOverride?.focus?.();
+			parent.$nextTick(() => {
+				parent.$refs?.reasonTagOverride?.focus?.();
 			});
 		},
 		async submitReasonTag(this: any) {
-			if (!this.journal || this.reasonTagSubmitting) return;
+			if (!parent.journal || this.reasonTagSubmitting) return;
 			const tag = this.reasonTagInput.trim();
 			if (!tag) {
 				this.reasonTagMessage = 'Tag is required.';
@@ -95,9 +95,9 @@ export function createJournalDetailTags(tagClient: JournalTagClient) {
 					type: 'REASON',
 					...(override ? { override } : {}),
 				};
-				const envelope = await tagClient.create(this.journalId, payload);
-				const tags = this.journal.tags ?? [];
-				this.journal.tags = [envelope.data, ...tags.filter((item: JournalTag) => item.id !== envelope.data.id)];
+				const envelope = await tagClient.create(parent.journalId, payload);
+				const tags = parent.journal.tags ?? [];
+				parent.journal.tags = [envelope.data, ...tags.filter((item: JournalTag) => item.id !== envelope.data.id)];
 				this.reasonTagInput = '';
 				this.reasonTagOverride = '';
 				this.reasonTagMessageType = 'success';
@@ -110,7 +110,7 @@ export function createJournalDetailTags(tagClient: JournalTagClient) {
 			}
 		},
 		async submitManagementTag(this: any, tagValue: string) {
-			if (!this.journal || this.managementTagSubmitting || !this.hasManagementBar() || !this.hasManagementTag || this.hasManagementTag(tagValue)) return;
+			if (!parent.journal || this.managementTagSubmitting || !this.hasManagementBar() || !this.hasManagementTag || this.hasManagementTag(tagValue)) return;
 			this.managementTagSubmitting = true;
 			this.managementTagPendingValue = tagValue;
 			this.managementTagMessage = '';
@@ -120,9 +120,9 @@ export function createJournalDetailTags(tagClient: JournalTagClient) {
 					tag: tagValue,
 					type: 'MANAGEMENT',
 				};
-				const envelope = await tagClient.create(this.journalId, payload);
-				const tags = this.journal.tags ?? [];
-				this.journal.tags = [envelope.data, ...tags.filter((item: JournalTag) => item.id !== envelope.data.id)];
+				const envelope = await tagClient.create(parent.journalId, payload);
+				const tags = parent.journal.tags ?? [];
+				parent.journal.tags = [envelope.data, ...tags.filter((item: JournalTag) => item.id !== envelope.data.id)];
 				this.managementTagMessageType = 'success';
 				this.managementTagMessage = `${normalizeTag(tagValue)} tag added.`;
 			} catch (err) {
@@ -134,13 +134,13 @@ export function createJournalDetailTags(tagClient: JournalTagClient) {
 			}
 		},
 		async deleteTag(this: any, tagId: string) {
-			if (!this.journal || this.tagDeletingId) return;
+			if (!parent.journal || this.tagDeletingId) return;
 			this.tagDeletingId = tagId;
 			this.reasonTagMessage = '';
 			this.reasonTagMessageType = 'error';
 			try {
-				await tagClient.delete(this.journalId, tagId);
-				this.journal.tags = (this.journal.tags ?? []).filter((tag: JournalTag) => tag.id !== tagId);
+				await tagClient.delete(parent.journalId, tagId);
+				parent.journal.tags = (parent.journal.tags ?? []).filter((tag: JournalTag) => tag.id !== tagId);
 				this.reasonTagMessageType = 'success';
 				this.reasonTagMessage = 'Tag deleted.';
 			} catch (err) {

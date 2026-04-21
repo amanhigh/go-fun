@@ -9,18 +9,18 @@ function localToday(): string {
 	return `${year}-${month}-${day}`;
 }
 
-export function createJournalDetailReview(journalClient: JournalClient) {
+export function createJournalDetailReview(parent: any, journalClient: JournalClient) {
 	return {
 		reviewToggleLabel(this: any) {
-			return this.journal?.reviewed_at ? 'Mark Pending' : 'Mark Reviewed';
+			return parent.journal?.reviewed_at ? 'Mark Pending' : 'Mark Reviewed';
 		},
 		reviewButtonClass(this: any) {
-			return this.journal?.reviewed_at
+			return parent.journal?.reviewed_at
 				? 'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 focus:border-amber-400 focus:ring-amber-200'
 				: 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 focus:border-emerald-400 focus:ring-emerald-200';
 		},
 		quickReviewStatus(this: any) {
-			const journalType = normalizeTag(this.journal?.type ?? '');
+			const journalType = normalizeTag(parent.journal?.type ?? '');
 			if (journalType === 'TAKEN') return 'JUST_LOSS';
 			if (journalType === 'REJECTED') return 'BROKEN';
 			return '';
@@ -33,8 +33,8 @@ export function createJournalDetailReview(journalClient: JournalClient) {
 		},
 		hasQuickReviewAction(this: any) {
 			const targetStatus = this.quickReviewStatus();
-			if (!targetStatus || !this.journal) return false;
-			return normalizeTag(this.journal.status) !== targetStatus;
+			if (!targetStatus || !parent.journal) return false;
+			return normalizeTag(parent.journal.status) !== targetStatus;
 		},
 		quickReviewButtonClass(this: any) {
 			return this.quickReviewStatus() === 'JUST_LOSS'
@@ -43,10 +43,10 @@ export function createJournalDetailReview(journalClient: JournalClient) {
 		},
 		applyReviewUpdate(this: any, payload: JournalUpdateRequest, successMessage: string) {
 			return (async () => {
-				const envelope = await journalClient.updateReview(this.journalId, payload);
-				if (this.journal) {
-					this.journal.status = envelope.data.status;
-					this.journal.reviewed_at = envelope.data.reviewed_at;
+				const envelope = await journalClient.updateReview(parent.journalId, payload);
+				if (parent.journal) {
+					parent.journal.status = envelope.data.status;
+					parent.journal.reviewed_at = envelope.data.reviewed_at;
 				}
 				this.reviewMessageType = 'success';
 				this.reviewMessage = successMessage;
@@ -54,12 +54,12 @@ export function createJournalDetailReview(journalClient: JournalClient) {
 			})();
 		},
 		async toggleReview(this: any) {
-			if (!this.journal || this.reviewSubmitting) return;
+			if (!parent.journal || this.reviewSubmitting) return;
 			this.reviewSubmitting = true;
 			this.reviewMessage = '';
 			this.reviewMessageType = 'error';
 			try {
-				const reviewedAt = this.journal.reviewed_at ? null : localToday();
+				const reviewedAt = parent.journal.reviewed_at ? null : localToday();
 				const payload: JournalUpdateRequest = { reviewed_at: reviewedAt };
 				await this.applyReviewUpdate(
 					payload,
@@ -73,7 +73,7 @@ export function createJournalDetailReview(journalClient: JournalClient) {
 			}
 		},
 		async applyQuickReviewStatus(this: any) {
-			if (!this.journal || this.reviewSubmitting || !this.hasQuickReviewAction()) return;
+			if (!parent.journal || this.reviewSubmitting || !this.hasQuickReviewAction()) return;
 			const status = this.quickReviewStatus();
 			if (!status) return;
 			this.reviewSubmitting = true;
