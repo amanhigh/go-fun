@@ -20,10 +20,15 @@ export interface JournalTagClient {
 }
 
 export class JournalTagClientImpl extends BaseClient implements JournalTagClient {
+	constructor(baseUrl?: string) {
+		super(baseUrl);
+	}
+
 	async create(journalId: string, payload: JournalTagRequest): Promise<Envelope<JournalTag>> {
-		return this.requestJson<Envelope<JournalTag>>(
+		return this.requestJsonBody<Envelope<JournalTag>>(
 			`/journals/${journalId}/tags`,
-			{ method: 'POST', headers: this.jsonHeaders(), body: JSON.stringify(payload) },
+			'POST',
+			payload,
 			'Failed to save tag',
 			'Journal not found',
 		);

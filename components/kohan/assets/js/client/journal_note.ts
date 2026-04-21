@@ -20,10 +20,15 @@ export interface JournalNoteClient {
 }
 
 export class JournalNoteClientImpl extends BaseClient implements JournalNoteClient {
+	constructor(baseUrl?: string) {
+		super(baseUrl);
+	}
+
 	async create(journalId: string, payload: JournalNoteRequest): Promise<Envelope<JournalNote>> {
-		return this.requestJson<Envelope<JournalNote>>(
+		return this.requestJsonBody<Envelope<JournalNote>>(
 			`/journals/${journalId}/notes`,
-			{ method: 'POST', headers: this.jsonHeaders(), body: JSON.stringify(payload) },
+			'POST',
+			payload,
 			'Failed to save note',
 			'Journal not found',
 		);

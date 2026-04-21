@@ -8,19 +8,35 @@ export type Envelope<T> = {
 export abstract class BaseClient {
 	protected constructor(protected readonly baseUrl = '/v1/api') {}
 
-	protected jsonHeaders(): Record<string, string> {
-		return { 'Content-Type': 'application/json' };
-	}
-
 	protected buildUrl(path: string, query: Record<string, QueryValue> = {}): string {
-		const searchParams = new URLSearchParams();
-		Object.entries(query).forEach(([key, value]) => {
-			if (value !== undefined && value !== null && value !== '') {
-				searchParams.set(key, String(value));
-			}
-		});
+		const searchParams = new URLSearchParams(
+			Object.entries(query)
+				.filter(([, value]) => value !== undefined && value !== null && value !== '')
+				.map(([key, value]) => [key, String(value)]),
+		);
 		const queryString = searchParams.toString();
 		return queryString ? `${this.baseUrl}${path}?${queryString}` : `${this.baseUrl}${path}`;
+	}
+
+	protected requestJsonBody<T>(
+		path: string,
+		method: string,
+		payload: unknown,
+		errorMessage: string,
+		notFoundMessage = errorMessage,
+		query: Record<string, QueryValue> = {},
+		init: RequestInit = {},
+	): Promise<T> {
+		const headers = new Headers(init.headers);
+		headers.set('Content-Type', 'application/json');
+
+		return this.requestJson<T>(
+			path,
+			{ ...init, method, headers, body: JSON.stringify(payload) },
+			errorMessage,
+			notFoundMessage,
+			query,
+		);
 	}
 
 	protected async request(path: string, init: RequestInit = {}, errorMessage: string, notFoundMessage = errorMessage, query: Record<string, QueryValue> = {}): Promise<Response> {

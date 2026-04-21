@@ -2,6 +2,7 @@ import { BaseClient, type Envelope, type QueryValue } from './base';
 import type { JournalImage } from './journal_image';
 import type { JournalNote } from './journal_note';
 import type { JournalTag } from './journal_tag';
+import type { JournalFilterState } from '../journal/filter_state';
 import { journalQueryKeyMap } from '../journal/filter_config';
 
 export type Journal = {
@@ -38,6 +39,8 @@ export type JournalUpdate = {
 	reviewed_at: string | null;
 };
 
+export type JournalListRequest = Partial<ReturnType<JournalFilterState['toQueryParams']>>;
+
 export interface JournalClient {
 	list(offset: number, limit: number, filters?: JournalListRequest): Promise<Envelope<JournalList>>;
 	get(journalId: string): Promise<Envelope<Journal>>;
@@ -45,6 +48,10 @@ export interface JournalClient {
 }
 
 export class JournalClientImpl extends BaseClient implements JournalClient {
+	constructor(baseUrl?: string) {
+		super(baseUrl);
+	}
+
 	async list(offset: number, limit: number, filters: JournalListRequest = {}): Promise<Envelope<JournalList>> {
 		const query: Record<string, QueryValue> = { offset, limit };
 		Object.entries(filters).forEach(([key, value]) => {
@@ -58,9 +65,10 @@ export class JournalClientImpl extends BaseClient implements JournalClient {
 	}
 
 	async updateReview(journalId: string, payload: JournalUpdateRequest): Promise<Envelope<JournalUpdate>> {
-		return this.requestJson<Envelope<JournalUpdate>>(
+		return this.requestJsonBody<Envelope<JournalUpdate>>(
 			`/journals/${journalId}`,
-			{ method: 'PATCH', headers: this.jsonHeaders(), body: JSON.stringify(payload) },
+			'PATCH',
+			payload,
 			'Failed to update journal status',
 			'Journal not found',
 		);
