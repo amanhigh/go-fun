@@ -1,5 +1,5 @@
-import type { Envelope, JournalTag, JournalTagCreate } from './journal_models';
-import { normalizeTag } from './journal_detail_formatters';
+import type { JournalTag, JournalTagClient, JournalTagRequest } from '../client/journal_tag';
+import { normalizeTag } from '../shared/tags';
 
 export const managementTagPresets = [
 	{ value: 'ntr', label: 'NTR' },
@@ -23,7 +23,7 @@ const managementTagToneMap: Record<string, string> = {
 	BE: 'orange',
 };
 
-export function createJournalDetailTags() {
+export function createJournalDetailTags(tagClient: JournalTagClient) {
 	return {
 		reasonTags(this: any) {
 			return (this.journal?.tags ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'REASON');
@@ -90,18 +90,12 @@ export function createJournalDetailTags() {
 			this.reasonTagMessage = '';
 			this.reasonTagMessageType = 'error';
 			try {
-				const payload: JournalTagCreate = {
+				const payload: JournalTagRequest = {
 					tag,
 					type: 'REASON',
 					...(override ? { override } : {}),
 				};
-				const response = await fetch(`/v1/api/journals/${this.journalId}/tags`, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(payload),
-				});
-				if (!response.ok) throw new Error(response.status === 404 ? 'Journal not found' : 'Failed to save reason tag');
-				const envelope = (await response.json()) as Envelope<JournalTag>;
+				const envelope = await tagClient.create(this.journalId, payload);
 				const tags = this.journal.tags ?? [];
 				this.journal.tags = [envelope.data, ...tags.filter((item: JournalTag) => item.id !== envelope.data.id)];
 				this.reasonTagInput = '';
@@ -116,23 +110,17 @@ export function createJournalDetailTags() {
 			}
 		},
 		async submitManagementTag(this: any, tagValue: string) {
-			if (!this.journal || this.managementTagSubmitting || !this.hasManagementBar() || this.hasManagementTag(tagValue)) return;
+			if (!this.journal || this.managementTagSubmitting || !this.hasManagementBar() || !this.hasManagementTag || this.hasManagementTag(tagValue)) return;
 			this.managementTagSubmitting = true;
 			this.managementTagPendingValue = tagValue;
 			this.managementTagMessage = '';
 			this.managementTagMessageType = 'error';
 			try {
-				const payload: JournalTagCreate = {
+				const payload: JournalTagRequest = {
 					tag: tagValue,
 					type: 'MANAGEMENT',
 				};
-				const response = await fetch(`/v1/api/journals/${this.journalId}/tags`, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(payload),
-				});
-				if (!response.ok) throw new Error(response.status === 404 ? 'Journal not found' : 'Failed to save management tag');
-				const envelope = (await response.json()) as Envelope<JournalTag>;
+				const envelope = await tagClient.create(this.journalId, payload);
 				const tags = this.journal.tags ?? [];
 				this.journal.tags = [envelope.data, ...tags.filter((item: JournalTag) => item.id !== envelope.data.id)];
 				this.managementTagMessageType = 'success';
@@ -151,10 +139,7 @@ export function createJournalDetailTags() {
 			this.reasonTagMessage = '';
 			this.reasonTagMessageType = 'error';
 			try {
-				const response = await fetch(`/v1/api/journals/${this.journalId}/tags/${tagId}`, {
-					method: 'DELETE',
-				});
-				if (!response.ok) throw new Error(response.status === 404 ? 'Tag not found' : 'Failed to delete tag');
+				await tagClient.delete(this.journalId, tagId);
 				this.journal.tags = (this.journal.tags ?? []).filter((tag: JournalTag) => tag.id !== tagId);
 				this.reasonTagMessageType = 'success';
 				this.reasonTagMessage = 'Tag deleted.';

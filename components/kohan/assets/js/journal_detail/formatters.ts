@@ -1,3 +1,6 @@
+import { formatTimestamp } from '../shared/date';
+import { normalizeTag } from '../shared/tags';
+
 const defaultBadgeClass = 'border-slate-300 bg-slate-50 text-slate-700';
 
 const badgeClassMap: Record<string, Record<string, string>> = {
@@ -20,8 +23,6 @@ const badgeClassMap: Record<string, Record<string, string>> = {
 
 const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export const normalizeTag = (value: string): string => (value ?? '').trim().toUpperCase();
-
 export function createJournalDetailFormatters() {
 	return {
 		normalizeStatus: normalizeTag,
@@ -38,11 +39,7 @@ export function createJournalDetailFormatters() {
 			}
 			return 'border-border bg-muted/30 hover:bg-muted/70 hover:text-foreground';
 		},
-		formatTimestamp: (value: string | null | undefined) => {
-			if (!value) return '—';
-			const parsed = new Date(value);
-			return Number.isNaN(parsed.getTime()) ? '—' : parsed.toLocaleString();
-		},
+		formatTimestamp,
 		formatDate: (value: string | null | undefined) => {
 			if (!value) return '—';
 			const parsed = new Date(value);

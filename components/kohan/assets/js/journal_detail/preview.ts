@@ -1,5 +1,5 @@
-import type { JournalImage } from './journal_models';
-import type { ImageHelper } from './journal_images';
+import type { JournalImage } from '../client/journal_image';
+import type { ImageHelper } from '../journal_images';
 
 export function createJournalDetailPreview(image: ImageHelper) {
 	return {

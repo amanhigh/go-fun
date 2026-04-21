@@ -1,16 +1,21 @@
-import type { Envelope, Journal } from './journal_models';
-import { createJournalDetailFormatters } from './journal_detail_formatters';
-import { createImageHelper } from './journal_images';
-import { createJournalDetailNotes } from './journal_detail_notes';
-import { createJournalDetailPreview } from './journal_detail_preview';
-import { createJournalDetailReview } from './journal_detail_review';
-import { createJournalDetailTags, managementTagPresets } from './journal_detail_tags';
+import { NewJournalClient, type Journal } from '../client/journal';
+import { NewJournalNoteClient } from '../client/journal_note';
+import { NewJournalTagClient } from '../client/journal_tag';
+import { createJournalDetailFormatters } from './formatters';
+import { createImageHelper } from '../journal_images';
+import { createJournalDetailNotes } from './notes';
+import { createJournalDetailPreview } from './preview';
+import { createJournalDetailReview } from './review';
+import { createJournalDetailTags, managementTagPresets } from './tags';
 
 declare const Alpine: {
 	data(name: string, callback: () => ReturnType<typeof journalDetailPage>): void;
 };
 
 function journalDetailPage() {
+	const journalClient = NewJournalClient();
+	const noteClient = NewJournalNoteClient();
+	const tagClient = NewJournalTagClient();
 	const image = createImageHelper();
 
 	return {
@@ -43,16 +48,14 @@ function journalDetailPage() {
 		reasonTagMessageType: 'error',
 		...createJournalDetailFormatters(),
 		...createJournalDetailPreview(image),
-		...createJournalDetailReview(),
-		...createJournalDetailNotes(),
-		...createJournalDetailTags(),
+		...createJournalDetailReview(journalClient),
+		...createJournalDetailNotes(noteClient),
+		...createJournalDetailTags(tagClient),
 		async loadJournal(this: any) {
 			this.loading = true;
 			this.errorMessage = '';
 			try {
-				const response = await fetch(`/v1/api/journals/${this.journalId}`);
-				if (!response.ok) throw new Error(response.status === 404 ? 'Journal not found' : 'Failed to load journal');
-				const envelope = (await response.json()) as Envelope<Journal>;
+				const envelope = await journalClient.get(this.journalId);
 				this.journal = envelope.data ?? null;
 			} catch (err) {
 				this.errorMessage = err instanceof Error ? err.message : 'Unable to load journal details. Please try again.';

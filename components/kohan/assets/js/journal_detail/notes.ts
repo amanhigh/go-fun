@@ -1,6 +1,6 @@
-import type { Envelope, JournalNote, JournalNoteCreate } from './journal_models';
+import type { JournalNote, JournalNoteClient, JournalNoteRequest } from '../client/journal_note';
 
-export function createJournalDetailNotes() {
+export function createJournalDetailNotes(noteClient: JournalNoteClient) {
 	return {
 		sortedNotes(this: any) {
 			return [...(this.journal?.notes ?? [])].sort((left: JournalNote, right: JournalNote) => {
@@ -21,18 +21,12 @@ export function createJournalDetailNotes() {
 			this.noteMessage = '';
 			this.noteMessageType = 'error';
 			try {
-				const payload: JournalNoteCreate = {
+				const payload: JournalNoteRequest = {
 					status: this.journal.status,
 					content,
 					format: 'MARKDOWN',
 				};
-				const response = await fetch(`/v1/api/journals/${this.journalId}/notes`, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(payload),
-				});
-				if (!response.ok) throw new Error(response.status === 404 ? 'Journal not found' : 'Failed to save note');
-				const envelope = (await response.json()) as Envelope<JournalNote>;
+				const envelope = await noteClient.create(this.journalId, payload);
 				const notes = this.journal.notes ?? [];
 				notes.unshift(envelope.data);
 				this.journal.notes = notes;
@@ -52,10 +46,7 @@ export function createJournalDetailNotes() {
 			this.noteMessage = '';
 			this.noteMessageType = 'error';
 			try {
-				const response = await fetch(`/v1/api/journals/${this.journalId}/notes/${noteId}`, {
-					method: 'DELETE',
-				});
-				if (!response.ok) throw new Error(response.status === 404 ? 'Note not found' : 'Failed to delete note');
+				await noteClient.delete(this.journalId, noteId);
 				this.journal.notes = (this.journal.notes ?? []).filter((note: JournalNote) => note.id !== noteId);
 				this.noteMessageType = 'success';
 				this.noteMessage = 'Note deleted.';
