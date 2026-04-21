@@ -1,6 +1,5 @@
 import type { JournalFilterState } from './filter_state';
-import { journalFields } from './filter_state';
-import { journalQueryMap, journalReverseMap } from './filter_config';
+import { journalFields, journalQueryMap, journalReverseMap } from './filter_state';
 
 export function createFilterUrlActions(filter: JournalFilterState) {
 	return {

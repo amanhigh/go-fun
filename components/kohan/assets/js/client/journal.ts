@@ -3,8 +3,7 @@ import type { JournalImage } from './journal_image';
 import type { JournalNote } from './journal_note';
 import type { JournalTag } from './journal_tag';
 import type { JournalFilterState, JournalFilters } from '../journal/filter_state';
-import { journalFields } from '../journal/filter_state';
-import { journalQueryMap } from '../journal/filter_config';
+import { journalFields, journalQueryMap } from '../journal/filter_state';
 
 export type Journal = {
 	id: string;
