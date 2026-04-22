@@ -1,20 +1,33 @@
 package tools
 
 import (
+	"fmt"
+
 	"github.com/bitfield/script"
 )
 
 func Screenshot() (err error) {
-	err = script.Exec("hyprshot -c -s -m output").Error()
+	var monitor string
+	if monitor, err = GetActiveMonitor(); err != nil {
+		return
+	}
+	err = script.Exec(fmt.Sprintf("grim -o %s - | wl-copy", monitor)).Error()
 	return
 }
+
 func NamedScreenshot(dir, name string) (err error) {
-	err = script.Exec("hyprshot -m active -s -m output -o " + dir + " -f" + name).Error()
+	var monitor string
+	if monitor, err = GetActiveMonitor(); err != nil {
+		return
+	}
+	fullPath := dir + "/" + name
+	err = script.Exec(fmt.Sprintf("grim -o %s %s", monitor, fullPath)).Error()
 	return
 }
 
 func NamedRegionScreenshot(dir, name string) (err error) {
-	err = script.Exec("hyprshot -s -m region -o " + dir + " -f" + name).Error()
+	fullPath := dir + "/" + name
+	err = script.Exec("sh -c 'grim -g \"$(slurp)\" " + fullPath + "'").Error()
 	return
 }
 
