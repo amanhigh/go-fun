@@ -3,7 +3,10 @@ package components
 import (
 	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/button"
+	"github.com/templui/templui/components/card"
 	"github.com/templui/templui/components/icon"
+	"github.com/templui/templui/components/input"
+	"github.com/templui/templui/components/textarea"
 )
 
 templ JournalSidebar() {
@@ -17,49 +20,62 @@ templ JournalSidebar() {
 	</div>
 }
 
-templ sidebarBtn(attrs templ.Attributes) {
-	@button.Button(button.Props{
-		Variant:    button.VariantOutline,
-		Type:       button.TypeButton,
-		Class:      "w-full",
-		Attributes: attrs,
-	}) {}
-}
-
 templ journalSidebarReviewCard() {
-	<div class="rounded-3xl border border-border bg-card shadow-sm p-6">
-		<div class="space-y-4">
-			<h3 class="text-lg font-semibold tracking-tight text-foreground">Review</h3>
-			<div class="space-y-2">
-				@sidebarBtn(templ.Attributes{
-					"x-on:click":      "sidebar.toggleReview()",
-					"x-bind:disabled": "sidebar.reviewSubmitting",
-					"x-bind:class":    "sidebar.reviewSubmitting ? 'opacity-70 ' + sidebar.reviewButtonClass() : sidebar.reviewButtonClass()",
-					"x-text":          "sidebar.reviewSubmitting ? 'Saving...' : sidebar.reviewToggleLabel()",
-				})
-				@sidebarBtn(templ.Attributes{
-					"x-show":          "sidebar.hasQuickReviewAction()",
-					"x-on:click":      "sidebar.applyQuickReviewStatus()",
-					"x-bind:disabled": "sidebar.reviewSubmitting",
-					"x-bind:class":    "sidebar.reviewSubmitting ? 'opacity-70 ' + sidebar.quickReviewButtonClass() : sidebar.quickReviewButtonClass()",
-					"x-text":          "sidebar.reviewSubmitting ? 'Saving...' : sidebar.quickReviewLabel()",
-				})
-				<p class="text-sm" x-show="sidebar.reviewMessage" x-bind:class="sidebar.reviewFeedbackClass" x-text="sidebar.reviewMessage"></p>
-				<div class="space-y-3" x-show="sidebar.hasManagementBar()">
-					<div>
-						<p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Management</p>
-						<p class="mt-1 text-sm text-muted-foreground">Quick add management tags for taken journals.</p>
-					</div>
-					<div class="flex flex-wrap gap-2">
-						<template x-for="preset in sidebar.managementTagPresets" x-bind:key="preset.value">
-							<button class="rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition disabled:cursor-not-allowed" type="button" x-on:click="sidebar.submitManagementTag(preset.value)" x-bind:disabled="sidebar.managementTagSubmitting || sidebar.hasManagementTag(preset.value)" x-bind:class="sidebar.managementTagButtonClass(preset.value)" x-text="preset.label"></button>
-						</template>
-					</div>
-					<p class="text-sm" x-show="sidebar.managementTagMessage" x-bind:class="sidebar.managementTagFeedbackClass" x-text="sidebar.managementTagMessage"></p>
+	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
+		@card.Header(card.HeaderProps{Class: "space-y-4"}) {
+			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Review }
+		}
+		@card.Content(card.ContentProps{Class: "space-y-2 pt-0"}) {
+			@AsyncButton(AsyncButtonProps{
+				OnClickExpr:   "sidebar.toggleReview()",
+				DisabledExpr:  "sidebar.reviewSubmitting",
+				LoadingExpr:   "sidebar.reviewSubmitting",
+				LoadingText:   "Saving...",
+				DefaultText:   "sidebar.reviewToggleLabel()",
+				ClassExpr:     "sidebar.reviewButtonClass()",
+			})
+			@AsyncButton(AsyncButtonProps{
+				OnClickExpr:   "sidebar.applyQuickReviewStatus()",
+				DisabledExpr:  "sidebar.reviewSubmitting",
+				LoadingExpr:   "sidebar.reviewSubmitting",
+				LoadingText:   "Saving...",
+				DefaultText:   "sidebar.quickReviewLabel()",
+				ClassExpr:     "sidebar.quickReviewButtonClass()",
+			})
+			@FeedbackMessage(FeedbackMessageProps{
+				ShowExpr:  "sidebar.reviewMessage",
+				ClassExpr: "sidebar.reviewFeedbackClass",
+				TextExpr:  "sidebar.reviewMessage",
+			})
+			<div class="space-y-3" x-show="sidebar.hasManagementBar()">
+				<div>
+					<p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Management</p>
+					<p class="mt-1 text-sm text-muted-foreground">Quick add management tags for taken journals.</p>
 				</div>
+				<div class="flex flex-wrap gap-2">
+					<template x-for="preset in sidebar.managementTagPresets" x-bind:key="preset.value">
+						@button.Button(button.Props{
+							Variant: button.VariantOutline,
+							Type:    button.TypeButton,
+							Size:    button.SizeSm,
+							Class:   "rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide",
+							Attributes: templ.Attributes{
+								"x-on:click":      "sidebar.submitManagementTag(preset.value)",
+								"x-bind:disabled": "sidebar.managementTagSubmitting || sidebar.hasManagementTag(preset.value)",
+								"x-bind:class":    "sidebar.managementTagButtonClass(preset.value)",
+								"x-text":          "preset.label",
+							},
+						}) {}
+					</template>
+				</div>
+				@FeedbackMessage(FeedbackMessageProps{
+					ShowExpr:  "sidebar.managementTagMessage",
+					ClassExpr: "sidebar.managementTagFeedbackClass",
+					TextExpr:  "sidebar.managementTagMessage",
+				})
 			</div>
-		</div>
-	</div>
+		}
+	}
 }
 
 templ journalSidebarQueue() {
@@ -84,16 +100,30 @@ templ journalSidebarQueue() {
 }
 
 templ journalSidebarNoteCard() {
-	<div class="rounded-3xl border border-border bg-card shadow-sm p-6 space-y-3">
-		<h3 class="text-lg font-semibold tracking-tight text-foreground">Note</h3>
-		<textarea class="min-h-[140px] w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200" placeholder="Write a note about this journal..." x-model="sidebar.noteContent"></textarea>
-		@sidebarBtn(templ.Attributes{
-			"x-on:click":      "sidebar.submitNote()",
-			"x-bind:disabled": "sidebar.noteSubmitting || !sidebar.noteContent.trim()",
-			"x-text":          "sidebar.noteSubmitting ? 'Saving note...' : 'Add Note'",
-		})
-		<p class="text-sm" x-show="sidebar.noteMessage" x-bind:class="sidebar.noteFeedbackClass" x-text="sidebar.noteMessage"></p>
-	</div>
+	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
+		@card.Header(card.HeaderProps{}) {
+			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Note }
+		}
+		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
+			@textarea.Textarea(textarea.Props{
+				Placeholder: "Write a note about this journal...",
+				Class:       "min-h-[140px] w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
+				Attributes:  templ.Attributes{"x-model": "sidebar.noteContent"},
+			})
+			@AsyncButton(AsyncButtonProps{
+				OnClickExpr:   "sidebar.submitNote()",
+				DisabledExpr:  "sidebar.noteSubmitting || !sidebar.noteContent.trim()",
+				LoadingExpr:   "sidebar.noteSubmitting",
+				LoadingText:   "Saving note...",
+				DefaultText:   "Add Note",
+			})
+			@FeedbackMessage(FeedbackMessageProps{
+				ShowExpr:  "sidebar.noteMessage",
+				ClassExpr: "sidebar.noteFeedbackClass",
+				TextExpr:  "sidebar.noteMessage",
+			})
+		}
+	}
 }
 
 templ sidebarTagRow() {
@@ -107,46 +137,52 @@ templ sidebarTagRow() {
 				},
 			}) {}
 		</div>
-		@button.Button(button.Props{
-			Variant: button.VariantOutline,
-			Type:    button.TypeButton,
-			Class:   "h-8 w-8 p-0 border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100",
-			Attributes: templ.Attributes{
-				"x-on:click":      "sidebar.deleteTag(tag.id)",
-				"x-bind:disabled": "sidebar.tagDeletingId === tag.id",
-				"x-bind:class":    "sidebar.tagDeletingId === tag.id ? 'opacity-70' : ''",
-				"aria-label":      "Delete Tag",
-				"title":           "Delete Tag",
-			},
-		}) {
-			@icon.Icon("trash-2")(icon.Props{Class: "h-4 w-4"})
-		}
+		@DeleteButton(DeleteButtonProps{
+			OnClickExpr:  "sidebar.deleteTag(tag.id)",
+			DisabledExpr: "sidebar.tagDeletingId === tag.id",
+			AriaLabel:    "Delete Tag",
+			Title:        "Delete Tag",
+		})
 	</div>
 }
 
 templ journalSidebarTagsCard() {
-	<div class="rounded-3xl border border-border bg-card shadow-sm p-6 space-y-4">
-		<div>
-			<h3 class="text-lg font-semibold tracking-tight text-foreground">Tags</h3>
-			<p class="text-sm text-muted-foreground">Add reason tags for this journal and delete any existing tag below.</p>
-		</div>
-		<div class="grid gap-3">
-			<input class="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200" placeholder="Reason tag" x-model="sidebar.reasonTagInput" x-on:keydown.enter.prevent="sidebar.focusReasonTagOverride()"/>
-			<input class="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200" placeholder="Override (optional)" x-model="sidebar.reasonTagOverride" x-ref="reasonTagOverride" x-on:keydown.enter.prevent="sidebar.submitReasonTag()"/>
-			@sidebarBtn(templ.Attributes{
-				"x-on:click":      "sidebar.submitReasonTag()",
-				"x-bind:disabled": "sidebar.reasonTagSubmitting || !sidebar.reasonTagInput.trim()",
-				"x-text":          "sidebar.reasonTagSubmitting ? 'Saving reason tag...' : 'Add Reason Tag'",
+	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
+		@card.Header(card.HeaderProps{}) {
+			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Tags }
+			@card.Description(card.DescriptionProps{}) { Add reason tags for this journal and delete any existing tag below. }
+		}
+		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
+			@input.Input(input.Props{
+				Placeholder: "Reason tag",
+				Class:       "w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
+				Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagInput", "x-on:keydown.enter.prevent": "sidebar.focusReasonTagOverride()"},
 			})
-			<p class="text-sm" x-show="sidebar.reasonTagMessage" x-bind:class="sidebar.reasonTagFeedbackClass" x-text="sidebar.reasonTagMessage"></p>
-		</div>
-		<div class="space-y-3" x-show="sidebar.deletableTags().length">
-			<template x-for="tag in sidebar.deletableTags()" x-bind:key="tag.id">
-				@sidebarTagRow()
-			</template>
-		</div>
-		<div class="rounded-xl border border-dashed border-muted-foreground/35 bg-muted/20 px-4 py-6 text-sm text-muted-foreground" x-show="!sidebar.deletableTags().length">
-			No tags added yet.
-		</div>
-	</div>
+			@input.Input(input.Props{
+				Placeholder: "Override (optional)",
+				Class:       "w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
+				Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagOverride", "x-ref": "reasonTagOverride", "x-on:keydown.enter.prevent": "sidebar.submitReasonTag()"},
+			})
+			@AsyncButton(AsyncButtonProps{
+				OnClickExpr:   "sidebar.submitReasonTag()",
+				DisabledExpr:  "sidebar.reasonTagSubmitting || !sidebar.reasonTagInput.trim()",
+				LoadingExpr:   "sidebar.reasonTagSubmitting",
+				LoadingText:   "Saving reason tag...",
+				DefaultText:   "Add Reason Tag",
+			})
+			@FeedbackMessage(FeedbackMessageProps{
+				ShowExpr:  "sidebar.reasonTagMessage",
+				ClassExpr: "sidebar.reasonTagFeedbackClass",
+				TextExpr:  "sidebar.reasonTagMessage",
+			})
+			<div class="space-y-3" x-show="sidebar.deletableTags().length">
+				<template x-for="tag in sidebar.deletableTags()" x-bind:key="tag.id">
+					@sidebarTagRow()
+				</template>
+			</div>
+			<div class="rounded-xl border border-dashed border-muted-foreground/35 bg-muted/20 px-4 py-6 text-sm text-muted-foreground" x-show="!sidebar.deletableTags().length">
+				No tags added yet.
+			</div>
+		}
+	}
 }

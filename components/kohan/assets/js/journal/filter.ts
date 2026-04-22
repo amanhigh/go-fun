@@ -1,4 +1,9 @@
-const journalFilterConfig = {
+interface FilterConfigEntry {
+	queryKey?: string;
+	aliases?: readonly string[];
+}
+
+const journalFilterConfig: Record<string, FilterConfigEntry> = {
 	ticker: {
 		queryKey: 'search',
 		aliases: ['ticker'],
@@ -19,9 +24,9 @@ const journalFilterConfig = {
 	sortOrder: {
 		queryKey: 'sort-order',
 	},
-} as const;
+};
 
-export type JournalFilterKey = keyof typeof journalFilterConfig;
+export type JournalFilterKey = 'ticker' | 'type' | 'status' | 'sequence' | 'createdAfter' | 'createdBefore' | 'reviewed' | 'sortBy' | 'sortOrder';
 
 export type JournalFilters = Record<JournalFilterKey, string>;
 
@@ -31,7 +36,7 @@ export interface JournalFilterState extends JournalFilters {
 	hasActiveState(): boolean;
 }
 
-export const journalFields = Object.keys(journalFilterConfig) as JournalFilterKey[];
+export const journalFields: JournalFilterKey[] = ['ticker', 'type', 'status', 'sequence', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'];
 
 function createDefaultJournalFilters(): JournalFilters {
 	return journalFields.reduce<JournalFilters>((defaults, field) => ({
@@ -41,14 +46,14 @@ function createDefaultJournalFilters(): JournalFilters {
 }
 
 export const journalQueryMap: Partial<Record<JournalFilterKey, string>> = journalFields.reduce((queryMap, field) => {
-	const queryKey = journalFilterConfig[field].queryKey;
-	if (!queryKey) {
+	const entry = journalFilterConfig[field];
+	if (!entry.queryKey) {
 		return queryMap;
 	}
 
 	return {
 		...queryMap,
-		[field]: queryKey,
+		[field]: entry.queryKey,
 	};
 }, {} as Partial<Record<JournalFilterKey, string>>);
 
