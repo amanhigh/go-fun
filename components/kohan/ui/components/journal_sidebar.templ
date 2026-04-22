@@ -1,0 +1,169 @@
+package components
+
+import (
+	"github.com/templui/templui/components/badge"
+	"github.com/templui/templui/components/button"
+	"github.com/templui/templui/components/icon"
+)
+
+templ JournalSidebar() {
+	<div class="xl:sticky xl:top-6">
+		<div class="space-y-4">
+			@journalSidebarReviewCard()
+			@journalSidebarQueue()
+			@journalSidebarNoteCard()
+			@journalSidebarTagsCard()
+		</div>
+	</div>
+}
+
+templ journalSidebarReviewCard() {
+	<div class="rounded-3xl border border-border bg-card shadow-sm p-6">
+		<div class="space-y-4">
+			<h3 class="text-lg font-semibold tracking-tight text-foreground">Review</h3>
+			<div class="space-y-2">
+				@button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Type:    button.TypeButton,
+					Class:   "w-full",
+					Attributes: templ.Attributes{
+						"x-on:click":      "sidebar.toggleReview()",
+						"x-bind:disabled": "sidebar.reviewSubmitting",
+						"x-bind:class":    "sidebar.reviewSubmitting ? 'opacity-70 ' + sidebar.reviewButtonClass() : sidebar.reviewButtonClass()",
+						"x-text":          "sidebar.reviewSubmitting ? 'Saving...' : sidebar.reviewToggleLabel()",
+					},
+				}) {}
+				@button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Type:    button.TypeButton,
+					Class:   "w-full",
+					Attributes: templ.Attributes{
+						"x-show":          "sidebar.hasQuickReviewAction()",
+						"x-on:click":      "sidebar.applyQuickReviewStatus()",
+						"x-bind:disabled": "sidebar.reviewSubmitting",
+						"x-bind:class":    "sidebar.reviewSubmitting ? 'opacity-70 ' + sidebar.quickReviewButtonClass() : sidebar.quickReviewButtonClass()",
+						"x-text":          "sidebar.reviewSubmitting ? 'Saving...' : sidebar.quickReviewLabel()",
+					},
+				}) {}
+				<p class="text-sm" x-show="sidebar.reviewMessage" x-bind:class="feedbackClass(sidebar.reviewMessageType)" x-text="sidebar.reviewMessage"></p>
+				<div class="space-y-3" x-show="sidebar.hasManagementBar()">
+					<div>
+						<p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Management</p>
+						<p class="mt-1 text-sm text-muted-foreground">Quick add management tags for taken journals.</p>
+					</div>
+					<div class="flex flex-wrap gap-2">
+						<template x-for="preset in sidebar.managementTagPresets" x-bind:key="preset.value">
+							<button class="rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition disabled:cursor-not-allowed" type="button" x-on:click="sidebar.submitManagementTag(preset.value)" x-bind:disabled="sidebar.managementTagSubmitting || sidebar.hasManagementTag(preset.value)" x-bind:class="sidebar.managementTagButtonClass(preset.value)" x-text="preset.label"></button>
+						</template>
+					</div>
+					<p class="text-sm" x-show="sidebar.managementTagMessage" x-bind:class="feedbackClass(sidebar.managementTagMessageType)" x-text="sidebar.managementTagMessage"></p>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+templ journalSidebarQueue() {
+	<hr class="border-border"/>
+	<div class="space-y-2">
+		<p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">To Review</p>
+		<div class="flex items-center gap-2 py-3 text-xs text-sky-700" x-show="sidebar.reviewQueueLoading">
+			<svg class="size-3.5 animate-spin" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+			</svg>
+			<span>Loading queue...</span>
+		</div>
+		<p class="py-2 text-xs text-rose-600" x-show="!sidebar.reviewQueueLoading && sidebar.reviewQueueError" x-text="sidebar.reviewQueueError"></p>
+		<p class="py-2 text-xs text-muted-foreground" x-show="!sidebar.reviewQueueLoading && !sidebar.reviewQueueError && sidebar.reviewQueue.length === 0">All caught up — no pending reviews.</p>
+		<div class="space-y-1" x-show="!sidebar.reviewQueueLoading && !sidebar.reviewQueueError && sidebar.reviewQueue.length > 0">
+			<template x-for="item in sidebar.reviewQueue" x-bind:key="item.id">
+				<a class="flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition" x-bind:class="sidebar.reviewQueueItemClass(item.type)" x-bind:href="'/journal/' + item.id">
+					<span class="font-semibold" x-text="item.ticker"></span>
+					<span class="text-xs font-medium" x-text="formatReviewQueueDate(item.created_at)"></span>
+				</a>
+			</template>
+		</div>
+	</div>
+}
+
+templ journalSidebarNoteCard() {
+	<div class="rounded-3xl border border-border bg-card shadow-sm p-6">
+		<div class="space-y-4">
+			<h3 class="text-lg font-semibold tracking-tight text-foreground">Note</h3>
+			<div>
+				<textarea class="min-h-[140px] w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200" placeholder="Write a note about this journal..." x-model="sidebar.noteContent"></textarea>
+			</div>
+			<div class="space-y-2">
+				@button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Type:    button.TypeButton,
+					Class:   "w-full",
+					Attributes: templ.Attributes{
+						"x-on:click":      "sidebar.submitNote()",
+						"x-bind:disabled": "sidebar.noteSubmitting || !sidebar.noteContent.trim()",
+						"x-text":          "sidebar.noteSubmitting ? 'Saving note...' : 'Add Note'",
+					},
+				}) {}
+				<p class="text-sm" x-show="sidebar.noteMessage" x-bind:class="feedbackClass(sidebar.noteMessageType)" x-text="sidebar.noteMessage"></p>
+			</div>
+		</div>
+	</div>
+}
+
+templ journalSidebarTagsCard() {
+	<div class="rounded-3xl border border-border bg-card shadow-sm p-6">
+		<div class="space-y-4">
+			<div>
+				<h3 class="text-lg font-semibold tracking-tight text-foreground">Tags</h3>
+				<p class="text-sm text-muted-foreground">Add reason tags for this journal and delete any existing tag below.</p>
+			</div>
+			<div class="grid gap-3">
+				<input class="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200" placeholder="Reason tag" x-model="sidebar.reasonTagInput" x-on:keydown.enter.prevent="sidebar.focusReasonTagOverride()"/>
+				<input class="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200" placeholder="Override (optional)" x-model="sidebar.reasonTagOverride" x-ref="reasonTagOverride" x-on:keydown.enter.prevent="sidebar.submitReasonTag()"/>
+				@button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Type:    button.TypeButton,
+					Class:   "w-full",
+					Attributes: templ.Attributes{
+						"x-on:click":      "sidebar.submitReasonTag()",
+						"x-bind:disabled": "sidebar.reasonTagSubmitting || !sidebar.reasonTagInput.trim()",
+						"x-text":          "sidebar.reasonTagSubmitting ? 'Saving reason tag...' : 'Add Reason Tag'",
+					},
+				}) {}
+				<p class="text-sm" x-show="sidebar.reasonTagMessage" x-bind:class="feedbackClass(sidebar.reasonTagMessageType)" x-text="sidebar.reasonTagMessage"></p>
+			</div>
+			<div class="space-y-3" x-show="sidebar.deletableTags().length">
+				<template x-for="tag in sidebar.deletableTags()" x-bind:key="tag.id">
+					<div class="flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/30 px-4 py-3">
+						<div class="flex min-w-0 flex-wrap items-center gap-2">
+							@badge.Badge(badge.Props{
+								Variant: badge.VariantSecondary,
+								Class:   "border",
+								Attributes: templ.Attributes{
+									"x-text": "[tag.tag, tag.override, tag.type].filter(Boolean).join(' • ')",
+								},
+							}) {}
+						</div>
+						@button.Button(button.Props{
+							Variant: button.VariantOutline,
+							Type:    button.TypeButton,
+							Class:   "h-8 w-8 p-0 border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100",
+							Attributes: templ.Attributes{
+								"x-on:click":      "sidebar.deleteTag(tag.id)",
+								"x-bind:disabled": "sidebar.tagDeletingId === tag.id",
+								"x-bind:class":    "sidebar.tagDeletingId === tag.id ? 'opacity-70' : ''",
+								"aria-label":      "Delete Tag",
+								"title":           "Delete Tag",
+							},
+						}) {
+							@icon.Icon("trash-2")(icon.Props{Class: "h-4 w-4"})
+						}
+					</div>
+				</template>
+			</div>
+			<div class="rounded-xl border border-dashed border-muted-foreground/35 bg-muted/20 px-4 py-6 text-sm text-muted-foreground" x-show="!sidebar.deletableTags().length">
+				No tags added yet.
+			</div>
+		</div>
+	</div>
+}

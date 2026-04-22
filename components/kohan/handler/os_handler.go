@@ -34,10 +34,11 @@ type OSHandlerImpl struct {
 var _ OSHandler = (*OSHandlerImpl)(nil)
 
 // NewOSHandler creates a new OSHandler.
-func NewOSHandler(capturePath string, autoManager manager.AutoManagerInterface) *OSHandlerImpl {
+func NewOSHandler(capturePath string, autoManager manager.AutoManagerInterface, screenshotDirs []string) *OSHandlerImpl {
+	allowedPaths := append([]string{capturePath}, screenshotDirs...)
 	return &OSHandlerImpl{
 		capturePath:  capturePath,
-		allowedPaths: []string{capturePath},
+		allowedPaths: allowedPaths,
 		autoManager:  autoManager,
 	}
 }
@@ -52,12 +53,18 @@ func (h *OSHandlerImpl) HandleScreenshot(ctx *gin.Context) {
 	}
 
 	cleanPath := filepath.Clean(req.SavePath)
-	if filepath.IsAbs(cleanPath) || strings.Contains(cleanPath, "..") {
+	if strings.Contains(cleanPath, "..") {
 		ctx.JSON(http.StatusBadRequest, common.NewFailEnvelope(map[string]string{"save_path": "path traversal not allowed"}))
 		return
 	}
 
-	resolvedDir := filepath.Join(h.capturePath, cleanPath)
+	var resolvedDir string
+	if filepath.IsAbs(cleanPath) {
+		resolvedDir = cleanPath
+	} else {
+		resolvedDir = filepath.Join(h.capturePath, cleanPath)
+	}
+
 	if !h.isPathAllowed(resolvedDir) {
 		ctx.JSON(http.StatusBadRequest, common.NewFailEnvelope(map[string]string{"save_path": "invalid directory"}))
 		return

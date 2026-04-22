@@ -31,7 +31,7 @@ var _ = Describe("OS Handler Integration Tests", func() {
 		gin.SetMode(gin.TestMode)
 		core.RegisterJournalValidators()
 		autoManager = managerMocks.NewAutoManagerInterface(GinkgoT())
-		osHandler = handler.NewOSHandler("/tmp/kohan-capture", autoManager)
+		osHandler = handler.NewOSHandler("/tmp/kohan-capture", autoManager, []string{"/tmp/allowed-dir"})
 
 		router = gin.New()
 		v1 := router.Group("/v1/api")
@@ -165,7 +165,7 @@ var _ = Describe("OS Handler Integration Tests", func() {
 					util.AssertError(w, "SavePath", "save_path")
 				})
 
-				It("should return 400 for absolute SavePath", func() {
+				It("should return 400 for absolute SavePath outside whitelist", func() {
 					payload := map[string]string{
 						"file_name": "test.png",
 						"save_path": "/root",
@@ -173,7 +173,7 @@ var _ = Describe("OS Handler Integration Tests", func() {
 					}
 					req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
 					router.ServeHTTP(w, req)
-					util.AssertError(w, "SavePath", "save_path")
+					Expect(w.Code).To(Equal(http.StatusBadRequest))
 				})
 			})
 

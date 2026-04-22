@@ -28,8 +28,8 @@ var (
 	imageIDRegex = regexp.MustCompile(`^img_[a-zA-Z0-9]{8}$`)
 	// ImageFile: alphanumeric with dots, hyphens, underscores, valid image extensions
 	imageFileRegex = regexp.MustCompile(`^[a-zA-Z0-9._-]+\.(png|jpg|jpeg)$`)
-	// SavePath: relative directories only (e.g., "2025/08", "trade/set-1")
-	savePathRegex = regexp.MustCompile(`^[a-zA-Z0-9._-]+(?:/[a-zA-Z0-9._-]+)*$`)
+	// SavePath: relative or absolute directories (e.g., "2025/08", "/home/user/Downloads")
+	savePathRegex = regexp.MustCompile(`^/?[a-zA-Z0-9._-]+(?:/[a-zA-Z0-9._-]+)*$`)
 )
 
 // RegisterJournalValidators registers custom validators for journal fields.
