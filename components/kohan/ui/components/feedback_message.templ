@@ -1,0 +1,21 @@
+package components
+
+import "github.com/a-h/templ"
+
+type FeedbackMessageProps struct {
+	ShowExpr   string
+	ClassExpr  string
+	TextExpr   string
+	Class      string
+	Attributes templ.Attributes
+}
+
+templ FeedbackMessage(props FeedbackMessageProps) {
+	<p
+		class={ "text-sm " + props.Class }
+		x-show={ props.ShowExpr }
+		x-bind:class={ props.ClassExpr }
+		x-text={ props.TextExpr }
+		{ props.Attributes... }
+	></p>
+}

@@ -1,0 +1,32 @@
+package components
+
+import (
+	"github.com/a-h/templ"
+	"github.com/templui/templui/components/button"
+	"github.com/templui/templui/components/icon"
+)
+
+type DeleteButtonProps struct {
+	OnClickExpr   string
+	DisabledExpr  string
+	AriaLabel     string
+	Title         string
+	Class         string
+}
+
+templ DeleteButton(props DeleteButtonProps) {
+	@button.Button(button.Props{
+		Variant: button.VariantOutline,
+		Type:    button.TypeButton,
+		Class:   "h-8 w-8 p-0 border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 " + props.Class,
+		Attributes: templ.Attributes{
+			"x-on:click":      props.OnClickExpr,
+			"x-bind:disabled": props.DisabledExpr,
+			"x-bind:class":    props.DisabledExpr + " ? 'opacity-70' : ''",
+			"aria-label":      props.AriaLabel,
+			"title":           props.Title,
+		},
+	}) {
+		@icon.Icon("trash-2")(icon.Props{Class: "h-4 w-4"})
+	}
+}

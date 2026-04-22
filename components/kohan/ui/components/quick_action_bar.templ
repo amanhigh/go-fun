@@ -1,0 +1,29 @@
+package components
+
+import (
+	"github.com/a-h/templ"
+	"github.com/templui/templui/components/icon"
+)
+
+type QuickActionBarProps struct {
+	Label      string
+	IconName   string
+	Class      string
+	Attributes templ.Attributes
+}
+
+templ QuickActionBar(props QuickActionBarProps) {
+	<div class={ "flex items-center gap-2 " + props.Class } { props.Attributes... }>
+		if props.IconName != "" {
+			<span class="inline-flex items-center gap-1 text-xs font-semibold text-slate-600">
+				@icon.Icon(props.IconName)(icon.Props{Class: "h-3.5 w-3.5"})
+				<span>{ props.Label }</span>
+			</span>
+		} else {
+			<span class="text-xs font-semibold text-slate-600">{ props.Label }</span>
+		}
+		<div class="flex gap-1">
+			{ children... }
+		</div>
+	</div>
+}

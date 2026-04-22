@@ -22,17 +22,21 @@ export function createSideBar(
 		createJournalDetailReview(parent, journalClient),
 		createJournalDetailTags(parent, tagClient),
 		{
-			get reviewFeedbackClass(this: any) {
-				return this.reviewMessageType === 'success' ? 'text-emerald-700' : 'text-rose-700';
+			get reviewFeedbackClass() {
+				const self = this as any;
+				return self.reviewMessageType === 'success' ? 'text-emerald-700' : 'text-rose-700';
 			},
-			get noteFeedbackClass(this: any) {
-				return this.noteMessageType === 'success' ? 'text-emerald-700' : 'text-rose-700';
+			get noteFeedbackClass() {
+				const self = this as any;
+				return self.noteMessageType === 'success' ? 'text-emerald-700' : 'text-rose-700';
 			},
-			get reasonTagFeedbackClass(this: any) {
-				return this.reasonTagMessageType === 'success' ? 'text-emerald-700' : 'text-rose-700';
+			get reasonTagFeedbackClass() {
+				const self = this as any;
+				return self.reasonTagMessageType === 'success' ? 'text-emerald-700' : 'text-rose-700';
 			},
-			get managementTagFeedbackClass(this: any) {
-				return this.managementTagMessageType === 'success' ? 'text-emerald-700' : 'text-rose-700';
+			get managementTagFeedbackClass() {
+				const self = this as any;
+				return self.managementTagMessageType === 'success' ? 'text-emerald-700' : 'text-rose-700';
 			},
 		},
 	);
