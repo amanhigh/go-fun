@@ -62,7 +62,7 @@ func JournalSidebar() templ.Component {
 	})
 }
 
-func journalSidebarReviewCard() templ.Component {
+func sidebarBtn(attrs templ.Attributes) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -83,40 +83,64 @@ func journalSidebarReviewCard() templ.Component {
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = button.Button(button.Props{
+			Variant:    button.VariantOutline,
+			Type:       button.TypeButton,
+			Class:      "w-full",
+			Attributes: attrs,
+		}).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func journalSidebarReviewCard() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var3 == nil {
+			templ_7745c5c3_Var3 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"rounded-3xl border border-border bg-card shadow-sm p-6\"><div class=\"space-y-4\"><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Review</h3><div class=\"space-y-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = button.Button(button.Props{
-			Variant: button.VariantOutline,
-			Type:    button.TypeButton,
-			Class:   "w-full",
-			Attributes: templ.Attributes{
-				"x-on:click":      "sidebar.toggleReview()",
-				"x-bind:disabled": "sidebar.reviewSubmitting",
-				"x-bind:class":    "sidebar.reviewSubmitting ? 'opacity-70 ' + sidebar.reviewButtonClass() : sidebar.reviewButtonClass()",
-				"x-text":          "sidebar.reviewSubmitting ? 'Saving...' : sidebar.reviewToggleLabel()",
-			},
+		templ_7745c5c3_Err = sidebarBtn(templ.Attributes{
+			"x-on:click":      "sidebar.toggleReview()",
+			"x-bind:disabled": "sidebar.reviewSubmitting",
+			"x-bind:class":    "sidebar.reviewSubmitting ? 'opacity-70 ' + sidebar.reviewButtonClass() : sidebar.reviewButtonClass()",
+			"x-text":          "sidebar.reviewSubmitting ? 'Saving...' : sidebar.reviewToggleLabel()",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = button.Button(button.Props{
-			Variant: button.VariantOutline,
-			Type:    button.TypeButton,
-			Class:   "w-full",
-			Attributes: templ.Attributes{
-				"x-show":          "sidebar.hasQuickReviewAction()",
-				"x-on:click":      "sidebar.applyQuickReviewStatus()",
-				"x-bind:disabled": "sidebar.reviewSubmitting",
-				"x-bind:class":    "sidebar.reviewSubmitting ? 'opacity-70 ' + sidebar.quickReviewButtonClass() : sidebar.quickReviewButtonClass()",
-				"x-text":          "sidebar.reviewSubmitting ? 'Saving...' : sidebar.quickReviewLabel()",
-			},
+		templ_7745c5c3_Err = sidebarBtn(templ.Attributes{
+			"x-show":          "sidebar.hasQuickReviewAction()",
+			"x-on:click":      "sidebar.applyQuickReviewStatus()",
+			"x-bind:disabled": "sidebar.reviewSubmitting",
+			"x-bind:class":    "sidebar.reviewSubmitting ? 'opacity-70 ' + sidebar.quickReviewButtonClass() : sidebar.quickReviewButtonClass()",
+			"x-text":          "sidebar.reviewSubmitting ? 'Saving...' : sidebar.quickReviewLabel()",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<p class=\"text-sm\" x-show=\"sidebar.reviewMessage\" x-bind:class=\"feedbackClass(sidebar.reviewMessageType)\" x-text=\"sidebar.reviewMessage\"></p><div class=\"space-y-3\" x-show=\"sidebar.hasManagementBar()\"><div><p class=\"text-xs font-semibold uppercase tracking-widest text-muted-foreground\">Management</p><p class=\"mt-1 text-sm text-muted-foreground\">Quick add management tags for taken journals.</p></div><div class=\"flex flex-wrap gap-2\"><template x-for=\"preset in sidebar.managementTagPresets\" x-bind:key=\"preset.value\"><button class=\"rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition disabled:cursor-not-allowed\" type=\"button\" x-on:click=\"sidebar.submitManagementTag(preset.value)\" x-bind:disabled=\"sidebar.managementTagSubmitting || sidebar.hasManagementTag(preset.value)\" x-bind:class=\"sidebar.managementTagButtonClass(preset.value)\" x-text=\"preset.label\"></button></template></div><p class=\"text-sm\" x-show=\"sidebar.managementTagMessage\" x-bind:class=\"feedbackClass(sidebar.managementTagMessageType)\" x-text=\"sidebar.managementTagMessage\"></p></div></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<p class=\"text-sm\" x-show=\"sidebar.reviewMessage\" x-bind:class=\"sidebar.reviewFeedbackClass\" x-text=\"sidebar.reviewMessage\"></p><div class=\"space-y-3\" x-show=\"sidebar.hasManagementBar()\"><div><p class=\"text-xs font-semibold uppercase tracking-widest text-muted-foreground\">Management</p><p class=\"mt-1 text-sm text-muted-foreground\">Quick add management tags for taken journals.</p></div><div class=\"flex flex-wrap gap-2\"><template x-for=\"preset in sidebar.managementTagPresets\" x-bind:key=\"preset.value\"><button class=\"rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition disabled:cursor-not-allowed\" type=\"button\" x-on:click=\"sidebar.submitManagementTag(preset.value)\" x-bind:disabled=\"sidebar.managementTagSubmitting || sidebar.hasManagementTag(preset.value)\" x-bind:class=\"sidebar.managementTagButtonClass(preset.value)\" x-text=\"preset.label\"></button></template></div><p class=\"text-sm\" x-show=\"sidebar.managementTagMessage\" x-bind:class=\"sidebar.managementTagFeedbackClass\" x-text=\"sidebar.managementTagMessage\"></p></div></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -140,12 +164,20 @@ func journalSidebarQueue() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var3 == nil {
-			templ_7745c5c3_Var3 = templ.NopComponent
+		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var4 == nil {
+			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<hr class=\"border-border\"><div class=\"space-y-2\"><p class=\"text-xs font-semibold uppercase tracking-widest text-muted-foreground\">To Review</p><div class=\"flex items-center gap-2 py-3 text-xs text-sky-700\" x-show=\"sidebar.reviewQueueLoading\"><svg class=\"size-3.5 animate-spin\" xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12a9 9 0 1 1-6.219-8.56\"></path></svg> <span>Loading queue...</span></div><p class=\"py-2 text-xs text-rose-600\" x-show=\"!sidebar.reviewQueueLoading && sidebar.reviewQueueError\" x-text=\"sidebar.reviewQueueError\"></p><p class=\"py-2 text-xs text-muted-foreground\" x-show=\"!sidebar.reviewQueueLoading && !sidebar.reviewQueueError && sidebar.reviewQueue.length === 0\">All caught up — no pending reviews.</p><div class=\"space-y-1\" x-show=\"!sidebar.reviewQueueLoading && !sidebar.reviewQueueError && sidebar.reviewQueue.length > 0\"><template x-for=\"item in sidebar.reviewQueue\" x-bind:key=\"item.id\"><a class=\"flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition\" x-bind:class=\"sidebar.reviewQueueItemClass(item.type)\" x-bind:href=\"'/journal/' + item.id\"><span class=\"font-semibold\" x-text=\"item.ticker\"></span> <span class=\"text-xs font-medium\" x-text=\"formatReviewQueueDate(item.created_at)\"></span></a></template></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<hr class=\"border-border\"><div class=\"space-y-2\"><p class=\"text-xs font-semibold uppercase tracking-widest text-muted-foreground\">To Review</p><div class=\"flex items-center gap-2 py-3 text-xs text-sky-700\" x-show=\"sidebar.reviewQueueLoading\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = icon.Icon("refresh-cw")(icon.Props{Class: "size-3.5 animate-spin"}).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<span>Loading queue...</span></div><p class=\"py-2 text-xs text-rose-600\" x-show=\"!sidebar.reviewQueueLoading && sidebar.reviewQueueError\" x-text=\"sidebar.reviewQueueError\"></p><p class=\"py-2 text-xs text-muted-foreground\" x-show=\"!sidebar.reviewQueueLoading && !sidebar.reviewQueueError && sidebar.reviewQueue.length === 0\">All caught up — no pending reviews.</p><div class=\"space-y-1\" x-show=\"!sidebar.reviewQueueLoading && !sidebar.reviewQueueError && sidebar.reviewQueue.length > 0\"><template x-for=\"item in sidebar.reviewQueue\" x-bind:key=\"item.id\"><a class=\"flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition\" x-bind:class=\"sidebar.reviewQueueItemClass(item.type)\" x-bind:href=\"'/journal/' + item.id\"><span class=\"font-semibold\" x-text=\"item.ticker\"></span> <span class=\"text-xs font-medium\" x-text=\"formatReviewQueueDate(item.created_at)\"></span></a></template></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -169,29 +201,24 @@ func journalSidebarNoteCard() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var4 == nil {
-			templ_7745c5c3_Var4 = templ.NopComponent
+		templ_7745c5c3_Var5 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var5 == nil {
+			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"rounded-3xl border border-border bg-card shadow-sm p-6\"><div class=\"space-y-4\"><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Note</h3><div><textarea class=\"min-h-[140px] w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200\" placeholder=\"Write a note about this journal...\" x-model=\"sidebar.noteContent\"></textarea></div><div class=\"space-y-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"rounded-3xl border border-border bg-card shadow-sm p-6 space-y-3\"><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Note</h3><textarea class=\"min-h-[140px] w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200\" placeholder=\"Write a note about this journal...\" x-model=\"sidebar.noteContent\"></textarea>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = button.Button(button.Props{
-			Variant: button.VariantOutline,
-			Type:    button.TypeButton,
-			Class:   "w-full",
-			Attributes: templ.Attributes{
-				"x-on:click":      "sidebar.submitNote()",
-				"x-bind:disabled": "sidebar.noteSubmitting || !sidebar.noteContent.trim()",
-				"x-text":          "sidebar.noteSubmitting ? 'Saving note...' : 'Add Note'",
-			},
+		templ_7745c5c3_Err = sidebarBtn(templ.Attributes{
+			"x-on:click":      "sidebar.submitNote()",
+			"x-bind:disabled": "sidebar.noteSubmitting || !sidebar.noteContent.trim()",
+			"x-text":          "sidebar.noteSubmitting ? 'Saving note...' : 'Add Note'",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<p class=\"text-sm\" x-show=\"sidebar.noteMessage\" x-bind:class=\"feedbackClass(sidebar.noteMessageType)\" x-text=\"sidebar.noteMessage\"></p></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<p class=\"text-sm\" x-show=\"sidebar.noteMessage\" x-bind:class=\"sidebar.noteFeedbackClass\" x-text=\"sidebar.noteMessage\"></p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -199,7 +226,7 @@ func journalSidebarNoteCard() templ.Component {
 	})
 }
 
-func journalSidebarTagsCard() templ.Component {
+func sidebarTagRow() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -215,29 +242,12 @@ func journalSidebarTagsCard() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var5 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var5 == nil {
-			templ_7745c5c3_Var5 = templ.NopComponent
+		templ_7745c5c3_Var6 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var6 == nil {
+			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div class=\"rounded-3xl border border-border bg-card shadow-sm p-6\"><div class=\"space-y-4\"><div><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Tags</h3><p class=\"text-sm text-muted-foreground\">Add reason tags for this journal and delete any existing tag below.</p></div><div class=\"grid gap-3\"><input class=\"w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200\" placeholder=\"Reason tag\" x-model=\"sidebar.reasonTagInput\" x-on:keydown.enter.prevent=\"sidebar.focusReasonTagOverride()\"> <input class=\"w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200\" placeholder=\"Override (optional)\" x-model=\"sidebar.reasonTagOverride\" x-ref=\"reasonTagOverride\" x-on:keydown.enter.prevent=\"sidebar.submitReasonTag()\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = button.Button(button.Props{
-			Variant: button.VariantOutline,
-			Type:    button.TypeButton,
-			Class:   "w-full",
-			Attributes: templ.Attributes{
-				"x-on:click":      "sidebar.submitReasonTag()",
-				"x-bind:disabled": "sidebar.reasonTagSubmitting || !sidebar.reasonTagInput.trim()",
-				"x-text":          "sidebar.reasonTagSubmitting ? 'Saving reason tag...' : 'Add Reason Tag'",
-			},
-		}).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<p class=\"text-sm\" x-show=\"sidebar.reasonTagMessage\" x-bind:class=\"feedbackClass(sidebar.reasonTagMessageType)\" x-text=\"sidebar.reasonTagMessage\"></p></div><div class=\"space-y-3\" x-show=\"sidebar.deletableTags().length\"><template x-for=\"tag in sidebar.deletableTags()\" x-bind:key=\"tag.id\"><div class=\"flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/30 px-4 py-3\"><div class=\"flex min-w-0 flex-wrap items-center gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/30 px-4 py-3\"><div class=\"flex min-w-0 flex-wrap items-center gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -255,7 +265,7 @@ func journalSidebarTagsCard() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var6 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var7 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -284,11 +294,60 @@ func journalSidebarTagsCard() templ.Component {
 				"aria-label":      "Delete Tag",
 				"title":           "Delete Tag",
 			},
-		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
+		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div></template></div><div class=\"rounded-xl border border-dashed border-muted-foreground/35 bg-muted/20 px-4 py-6 text-sm text-muted-foreground\" x-show=\"!sidebar.deletableTags().length\">No tags added yet.</div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func journalSidebarTagsCard() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var8 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var8 == nil {
+			templ_7745c5c3_Var8 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"rounded-3xl border border-border bg-card shadow-sm p-6 space-y-4\"><div><h3 class=\"text-lg font-semibold tracking-tight text-foreground\">Tags</h3><p class=\"text-sm text-muted-foreground\">Add reason tags for this journal and delete any existing tag below.</p></div><div class=\"grid gap-3\"><input class=\"w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200\" placeholder=\"Reason tag\" x-model=\"sidebar.reasonTagInput\" x-on:keydown.enter.prevent=\"sidebar.focusReasonTagOverride()\"> <input class=\"w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200\" placeholder=\"Override (optional)\" x-model=\"sidebar.reasonTagOverride\" x-ref=\"reasonTagOverride\" x-on:keydown.enter.prevent=\"sidebar.submitReasonTag()\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = sidebarBtn(templ.Attributes{
+			"x-on:click":      "sidebar.submitReasonTag()",
+			"x-bind:disabled": "sidebar.reasonTagSubmitting || !sidebar.reasonTagInput.trim()",
+			"x-text":          "sidebar.reasonTagSubmitting ? 'Saving reason tag...' : 'Add Reason Tag'",
+		}).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<p class=\"text-sm\" x-show=\"sidebar.reasonTagMessage\" x-bind:class=\"sidebar.reasonTagFeedbackClass\" x-text=\"sidebar.reasonTagMessage\"></p></div><div class=\"space-y-3\" x-show=\"sidebar.deletableTags().length\"><template x-for=\"tag in sidebar.deletableTags()\" x-bind:key=\"tag.id\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = sidebarTagRow().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</template></div><div class=\"rounded-xl border border-dashed border-muted-foreground/35 bg-muted/20 px-4 py-6 text-sm text-muted-foreground\" x-show=\"!sidebar.deletableTags().length\">No tags added yet.</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

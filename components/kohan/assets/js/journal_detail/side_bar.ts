@@ -21,5 +21,19 @@ export function createSideBar(
 		createJournalDetailNotes(parent, noteClient),
 		createJournalDetailReview(parent, journalClient),
 		createJournalDetailTags(parent, tagClient),
+		{
+			get reviewFeedbackClass(this: any) {
+				return this.reviewMessageType === 'success' ? 'text-emerald-700' : 'text-rose-700';
+			},
+			get noteFeedbackClass(this: any) {
+				return this.noteMessageType === 'success' ? 'text-emerald-700' : 'text-rose-700';
+			},
+			get reasonTagFeedbackClass(this: any) {
+				return this.reasonTagMessageType === 'success' ? 'text-emerald-700' : 'text-rose-700';
+			},
+			get managementTagFeedbackClass(this: any) {
+				return this.managementTagMessageType === 'success' ? 'text-emerald-700' : 'text-rose-700';
+			},
+		},
 	);
 }
