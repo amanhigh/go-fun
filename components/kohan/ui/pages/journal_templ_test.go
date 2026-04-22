@@ -32,6 +32,8 @@ var _ = Describe("Journal Page Tests", func() {
 		Expect(html).To(ContainSubstring("Journal Browser"))
 		Expect(html).To(ContainSubstring("Journal entries"))
 		Expect(html).To(ContainSubstring("Browse journals with client-side loading powered by Alpine.js."))
+		Expect(html).To(ContainSubstring("x-data=\"journalPage()\""))
+		Expect(html).To(ContainSubstring("x-init=\"init()\""))
 		Expect(html).To(ContainSubstring("Loading journals..."))
 	})
 

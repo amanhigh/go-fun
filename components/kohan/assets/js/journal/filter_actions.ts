@@ -8,28 +8,34 @@ type TypeToggle = {
 	nextType: string;
 };
 
-const takenToggle: TypeToggle = {
-	label: 'Rejected',
-	className: '!border-emerald-300 !bg-emerald-200 !text-emerald-800',
-	nextType: 'REJECTED',
+const typeToggleMap: Record<string, TypeToggle> = {
+	'': {
+		label: 'Taken',
+		className: 'border-rose-300/70 bg-rose-100/60 text-rose-800 hover:bg-rose-200/70',
+		nextType: 'TAKEN',
+	},
+	TAKEN: {
+		label: 'Rejected',
+		className: 'border-violet-300/70 bg-violet-100/60 text-violet-800 hover:bg-violet-200/70',
+		nextType: 'REJECTED',
+	},
+	REJECTED: {
+		label: 'All',
+		className: 'border-slate-300/70 bg-slate-100/70 text-slate-700 hover:bg-slate-200/80',
+		nextType: '',
+	},
 };
 
-const rejectedToggle: TypeToggle = {
-	label: 'Taken',
-	className: '!border-rose-300 !bg-rose-200 !text-rose-800',
-	nextType: 'TAKEN',
-};
-
-export function resolveTypeToggle(type: string): TypeToggle {
-	return type === 'TAKEN' ? takenToggle : rejectedToggle;
+export function resolveTypeToggle(currentType: string): TypeToggle {
+	return typeToggleMap[currentType] ?? typeToggleMap[''];
 }
 
-function nextSortOrder(sortBy: string, sortOrder: string, field: string): string {
-	if (sortBy !== field) {
+export function nextSortOrder(currentSortBy: string, currentSortOrder: string, nextField: string): string {
+	if (currentSortBy !== nextField) {
 		return 'asc';
 	}
 
-	return sortOrder === 'asc' ? 'desc' : 'asc';
+	return currentSortOrder === 'asc' ? 'desc' : 'asc';
 }
 
 type FilterActionDeps = {
