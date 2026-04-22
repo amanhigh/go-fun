@@ -21,6 +21,7 @@ export type JournalDetailPageState = {
 	journal: Journal | null;
 	selectedImageIndex: number;
 	loading: boolean;
+	journalDeleting: boolean;
 	errorMessage: string;
 };
 
@@ -30,6 +31,7 @@ export function createJournalDetailPageState(): JournalDetailPageState {
 		journal: createEmptyJournal(),
 		selectedImageIndex: -1,
 		loading: true,
-		errorMessage: '',
+		journalDeleting: false,
+	errorMessage: '',
 	};
 }

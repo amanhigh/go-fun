@@ -175,12 +175,12 @@ templ journalSidebarTagsCard() {
 				ClassExpr: "sidebar.reasonTagFeedbackClass",
 				TextExpr:  "sidebar.reasonTagMessage",
 			})
-			<div class="space-y-3" x-show="sidebar.deletableTags().length">
-				<template x-for="tag in sidebar.deletableTags()" x-bind:key="tag.id">
+			<div class="space-y-3" x-show="journal.tags?.length">
+				<template x-for="tag in journal.tags" x-bind:key="tag.id">
 					@sidebarTagRow()
 				</template>
 			</div>
-			<div class="rounded-xl border border-dashed border-muted-foreground/35 bg-muted/20 px-4 py-6 text-sm text-muted-foreground" x-show="!sidebar.deletableTags().length">
+			<div class="rounded-xl border border-dashed border-muted-foreground/35 bg-muted/20 px-4 py-6 text-sm text-muted-foreground" x-show="!journal.tags?.length">
 				No tags added yet.
 			</div>
 		}

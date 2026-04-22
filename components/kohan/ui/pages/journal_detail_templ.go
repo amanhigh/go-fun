@@ -578,11 +578,11 @@ func JournalDetailImages() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = components.SectionHeader(components.SectionHeaderProps{Title: "Images", Description: "${journal.images.length} timeframe images · click to zoom"}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = components.SectionHeader(components.SectionHeaderProps{Title: "Images", Description: "Timeframe images · click to zoom"}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<div class=\"mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2\"><template x-for=\"(image, index) in sortedImages()\" x-bind:key=\"image.id\"><div class=\"space-y-2\"><div class=\"flex items-center px-1\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<p class=\"mt-1 text-sm text-muted-foreground\"><span x-text=\"journal.images?.length ?? 0\"></span> timeframe image(s)</p><div class=\"mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2\"><template x-for=\"(image, index) in sortedImages()\" x-bind:key=\"image.id\"><div class=\"space-y-2\"><div class=\"flex items-center px-1\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -658,8 +658,7 @@ func JournalImagePreviewModal() templ.Component {
 			Type:    button.TypeButton,
 			Class:   "rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30",
 			Attributes: templ.Attributes{
-				"x-bind:disabled": "!canPrevImage()",
-				"x-on:click":      "prevImage()",
+				"x-on:click": "prevImage(true)",
 			},
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var26), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -692,8 +691,7 @@ func JournalImagePreviewModal() templ.Component {
 			Type:    button.TypeButton,
 			Class:   "rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30",
 			Attributes: templ.Attributes{
-				"x-bind:disabled": "!canNextImage()",
-				"x-on:click":      "nextImage()",
+				"x-on:click": "nextImage(true)",
 			},
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -797,11 +795,11 @@ func JournalDetailNotes() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = components.SectionHeader(components.SectionHeaderProps{Title: "Notes", Description: "${journal.notes?.length || 0} note(s)"}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = components.SectionHeader(components.SectionHeaderProps{Title: "Notes", Description: "Add notes for this journal and delete existing notes below."}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, " <div class=\"mt-4 space-y-3\" x-show=\"journal.notes?.length\"><template x-for=\"note in sidebar.sortedNotes()\" x-bind:key=\"note.id\"><div class=\"rounded-xl border border-border bg-muted/40 p-4\"><div class=\"mb-3 flex items-start justify-between gap-3\"><div class=\"flex flex-wrap items-center gap-3\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, " <p class=\"mt-1 text-sm text-muted-foreground\"><span x-text=\"journal.notes?.length ?? 0\"></span> note(s)</p><div class=\"mt-4 space-y-3\" x-show=\"journal.notes?.length\"><template x-for=\"note in journal.notes\" x-bind:key=\"note.id\"><div class=\"rounded-xl border border-border bg-muted/40 p-4\"><div class=\"mb-3 flex items-start justify-between gap-3\"><div class=\"flex flex-wrap items-center gap-3\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

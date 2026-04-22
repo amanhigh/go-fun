@@ -113,13 +113,14 @@ templ JournalDetailHeader() {
 	}
 }
 
-templ JournalDetailImages() {
-	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
-		@card.Content(card.ContentProps{}) {
-			<div x-show="journal.images?.length">
-				@components.SectionHeader(components.SectionHeaderProps{Title: "Images", Description: "${journal.images.length} timeframe images · click to zoom"})
-				<div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
-					<template x-for="(image, index) in sortedImages()" x-bind:key="image.id">
+	templ JournalDetailImages() {
+		@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
+			@card.Content(card.ContentProps{}) {
+				<div x-show="journal.images?.length">
+					@components.SectionHeader(components.SectionHeaderProps{Title: "Images", Description: "Timeframe images · click to zoom"})
+					<p class="mt-1 text-sm text-muted-foreground"><span x-text="journal.images?.length ?? 0"></span> timeframe image(s)</p>
+					<div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
+						<template x-for="(image, index) in sortedImages()" x-bind:key="image.id">
 						<div class="space-y-2">
 							<div class="flex items-center px-1">
 								@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border text-sm font-semibold", Attributes: templ.Attributes{"x-bind:class": "timeframeChipClass(image.timeframe)", "x-text": "image.timeframe"}}) {}
@@ -140,16 +141,15 @@ templ JournalDetailImages() {
 templ JournalImagePreviewModal() {
 	<div class="fixed inset-0 z-50 flex flex-col bg-black/90 p-4" x-show="hasImagePreview()" x-on:keydown.escape.window="closeImagePreview()" x-on:keydown.arrow-left.window="prevImage()" x-on:keydown.arrow-right.window="nextImage()" x-cloak>
 		<div class="absolute inset-0" x-on:click="closeImagePreview()"></div>
-		<div class="relative z-10 flex w-full items-center justify-between gap-4">
-			@button.Button(button.Props{
-			Variant: button.VariantGhost,
-			Type:    button.TypeButton,
-			Class:   "rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30",
-			Attributes: templ.Attributes{
-				"x-bind:disabled": "!canPrevImage()",
-				"x-on:click":      "prevImage()",
-			},
-		}) {
+			<div class="relative z-10 flex w-full items-center justify-between gap-4">
+				@button.Button(button.Props{
+				Variant: button.VariantGhost,
+				Type:    button.TypeButton,
+				Class:   "rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30",
+				Attributes: templ.Attributes{
+					"x-on:click": "prevImage(true)",
+				},
+			}) {
 				@icon.Icon("chevron-left")(icon.Props{Class: "size-6"})
 			}
 			<div class="flex flex-col items-center gap-2">
@@ -157,14 +157,13 @@ templ JournalImagePreviewModal() {
 				<div class="text-sm font-medium text-white/60" x-text="`${selectedImageIndex + 1} / ${sortedImages().length}`"></div>
 			</div>
 			@button.Button(button.Props{
-			Variant: button.VariantGhost,
-			Type:    button.TypeButton,
-			Class:   "rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30",
-			Attributes: templ.Attributes{
-				"x-bind:disabled": "!canNextImage()",
-				"x-on:click":      "nextImage()",
-			},
-		}) {
+				Variant: button.VariantGhost,
+				Type:    button.TypeButton,
+				Class:   "rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30",
+				Attributes: templ.Attributes{
+					"x-on:click": "nextImage(true)",
+				},
+			}) {
 				@icon.Icon("chevron-right")(icon.Props{Class: "size-6"})
 			}
 			@button.Button(button.Props{
@@ -198,9 +197,10 @@ templ JournalImagePreviewModal() {
 templ JournalDetailNotes() {
 	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
 		@card.Content(card.ContentProps{}) {
-			@components.SectionHeader(components.SectionHeaderProps{Title: "Notes", Description: "${journal.notes?.length || 0} note(s)"})
+			@components.SectionHeader(components.SectionHeaderProps{Title: "Notes", Description: "Add notes for this journal and delete existing notes below."})
+			<p class="mt-1 text-sm text-muted-foreground"><span x-text="journal.notes?.length ?? 0"></span> note(s)</p>
 			<div class="mt-4 space-y-3" x-show="journal.notes?.length">
-				<template x-for="note in sidebar.sortedNotes()" x-bind:key="note.id">
+				<template x-for="note in journal.notes" x-bind:key="note.id">
 					<div class="rounded-xl border border-border bg-muted/40 p-4">
 						<div class="mb-3 flex items-start justify-between gap-3">
 							<div class="flex flex-wrap items-center gap-3">

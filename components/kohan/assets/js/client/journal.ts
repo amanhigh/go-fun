@@ -45,6 +45,7 @@ export interface JournalClient {
 	list(offset: number, limit: number, filters?: JournalListRequest): Promise<Envelope<JournalList>>;
 	get(journalId: string): Promise<Envelope<Journal>>;
 	updateReview(journalId: string, payload: JournalUpdateRequest): Promise<Envelope<JournalUpdate>>;
+	delete(journalId: string): Promise<void>;
 }
 
 export class JournalClientImpl extends BaseClient implements JournalClient {
@@ -67,6 +68,10 @@ export class JournalClientImpl extends BaseClient implements JournalClient {
 
 	async updateReview(journalId: string, payload: JournalUpdateRequest): Promise<Envelope<JournalUpdate>> {
 		return this.requestJson<Envelope<JournalUpdate>>(`/journals/${journalId}`, 'PATCH', 'Failed to update journal status', 'Journal not found', {}, payload);
+	}
+
+	async delete(journalId: string): Promise<void> {
+		await this.request(`/journals/${journalId}`, { method: 'DELETE' }, 'Failed to delete journal', 'Journal not found');
 	}
 
 }
