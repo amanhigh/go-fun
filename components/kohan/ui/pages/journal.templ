@@ -146,7 +146,7 @@ templ JournalFilters() {
 }
 
 templ JournalActiveFilters() {
-	<div class="flex flex-wrap items-center gap-2" x-show="filter.hasFilters()">
+	<div class="flex flex-wrap items-center gap-2" x-show="filter.hasActiveState()">
 		@JournalActiveFilterBadge("bg-sky-100 text-sky-800 border border-sky-200", "filter.ticker !== ''", "'Ticker: ' + filter.ticker")
 		@JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filter.type === 'TAKEN'", "'Type: TAKEN'")
 		@JournalActiveFilterBadge("bg-rose-100 text-rose-800 border border-rose-200", "filter.type === 'REJECTED'", "'Type: REJECTED'")
