@@ -30,7 +30,7 @@ templ journalSidebarReviewCard() {
 				OnClickExpr:   "sidebar.toggleReview()",
 				DisabledExpr:  "sidebar.reviewSubmitting",
 				LoadingExpr:   "sidebar.reviewSubmitting",
-				LoadingText:   "Saving...",
+				LoadingText:   "'Saving...'",
 				DefaultText:   "sidebar.reviewToggleLabel()",
 				ClassExpr:     "sidebar.reviewButtonClass()",
 			})
@@ -38,7 +38,7 @@ templ journalSidebarReviewCard() {
 				OnClickExpr:   "sidebar.applyQuickReviewStatus()",
 				DisabledExpr:  "sidebar.reviewSubmitting",
 				LoadingExpr:   "sidebar.reviewSubmitting",
-				LoadingText:   "Saving...",
+				LoadingText:   "'Saving...'",
 				DefaultText:   "sidebar.quickReviewLabel()",
 				ClassExpr:     "sidebar.quickReviewButtonClass()",
 			})
@@ -90,7 +90,7 @@ templ journalSidebarQueue() {
 		<p class="py-2 text-xs text-muted-foreground" x-show="!sidebar.reviewQueueLoading && !sidebar.reviewQueueError && sidebar.reviewQueue.length === 0">All caught up — no pending reviews.</p>
 		<div class="space-y-1" x-show="!sidebar.reviewQueueLoading && !sidebar.reviewQueueError && sidebar.reviewQueue.length > 0">
 			<template x-for="item in sidebar.reviewQueue" x-bind:key="item.id">
-				<a class="flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition" x-bind:class="sidebar.reviewQueueItemClass(item.type)" x-bind:href="'/journal/' + item.id">
+				<a class="flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition" x-bind:class="reviewQueueItemClass(item.type)" x-bind:href="'/journal/' + item.id">
 					<span class="font-semibold" x-text="item.ticker"></span>
 					<span class="text-xs font-medium" x-text="formatReviewQueueDate(item.created_at)"></span>
 				</a>
@@ -114,8 +114,8 @@ templ journalSidebarNoteCard() {
 				OnClickExpr:   "sidebar.submitNote()",
 				DisabledExpr:  "sidebar.noteSubmitting || !sidebar.noteContent.trim()",
 				LoadingExpr:   "sidebar.noteSubmitting",
-				LoadingText:   "Saving note...",
-				DefaultText:   "Add Note",
+				LoadingText:   "'Saving note...'",
+				DefaultText:   "'Add Note'",
 			})
 			@FeedbackMessage(FeedbackMessageProps{
 				ShowExpr:  "sidebar.noteMessage",
@@ -167,8 +167,8 @@ templ journalSidebarTagsCard() {
 				OnClickExpr:   "sidebar.submitReasonTag()",
 				DisabledExpr:  "sidebar.reasonTagSubmitting || !sidebar.reasonTagInput.trim()",
 				LoadingExpr:   "sidebar.reasonTagSubmitting",
-				LoadingText:   "Saving reason tag...",
-				DefaultText:   "Add Reason Tag",
+				LoadingText:   "'Saving reason tag...'",
+				DefaultText:   "'Add Reason Tag'",
 			})
 			@FeedbackMessage(FeedbackMessageProps{
 				ShowExpr:  "sidebar.reasonTagMessage",

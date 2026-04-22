@@ -49,7 +49,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-show="sidebar.deletableTags().length"`))
 			Expect(html).To(ContainSubstring(`x-on:click="sidebar.deleteTag(tag.id)"`))
 			Expect(html).To(ContainSubstring(`tag.type].filter(Boolean).join(`))
-			Expect(html).To(ContainSubstring(`x-bind:class="sidebar.reviewQueueItemClass(item.type)"`))
+			Expect(html).To(ContainSubstring(`x-bind:class="reviewQueueItemClass(item.type)"`))
 			Expect(html).To(ContainSubstring(`x-text="formatReviewQueueDate(item.created_at)"`))
 			Expect(html).To(ContainSubstring(`aria-label="Delete Note"`))
 			Expect(html).To(ContainSubstring("h-4 w-4"))

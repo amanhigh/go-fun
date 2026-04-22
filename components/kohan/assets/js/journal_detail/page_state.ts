@@ -1,5 +1,21 @@
 import type { Journal } from '../client/journal';
 
+function createEmptyJournal(): Journal {
+	return {
+		id: '',
+		ticker: '',
+		sequence: '',
+		type: '',
+		status: '',
+		created_at: '',
+		reviewed_at: null,
+		images: [],
+		tags: [],
+		notes: [],
+		deleted_at: null,
+	};
+}
+
 export type JournalDetailPageState = {
 	journalId: string;
 	journal: Journal | null;
@@ -11,9 +27,9 @@ export type JournalDetailPageState = {
 export function createJournalDetailPageState(): JournalDetailPageState {
 	return {
 		journalId: '',
-		journal: null,
+		journal: createEmptyJournal(),
 		selectedImageIndex: -1,
-		loading: false,
+		loading: true,
 		errorMessage: '',
 	};
 }

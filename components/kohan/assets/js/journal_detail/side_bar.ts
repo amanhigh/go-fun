@@ -38,6 +38,9 @@ export function createSideBar(
 				const self = this as any;
 				return self.managementTagMessageType === 'success' ? 'text-emerald-700' : 'text-rose-700';
 			},
+			reviewQueueItemClass(value: string) {
+				return parent.reviewQueueItemClass(value);
+			},
 		},
 	);
 }

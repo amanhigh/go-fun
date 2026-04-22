@@ -49,8 +49,13 @@ func AsyncButton(props AsyncButtonProps) templ.Component {
 			Attributes: templ.Attributes{
 				"x-on:click":      props.OnClickExpr,
 				"x-bind:disabled": props.DisabledExpr,
-				"x-bind:class":    props.LoadingExpr + " ? 'opacity-70 ' + " + props.ClassExpr + " : " + props.ClassExpr,
-				"x-text":          props.LoadingExpr + " ? '" + props.LoadingText + "' : '" + props.DefaultText + "'",
+				"x-bind:class": func() string {
+					if props.ClassExpr == "" {
+						return props.LoadingExpr + " ? 'opacity-70' : ''"
+					}
+					return props.LoadingExpr + " ? ('opacity-70 ' + (" + props.ClassExpr + ")) : (" + props.ClassExpr + ")"
+				}(),
+				"x-text": props.LoadingExpr + " ? (" + props.LoadingText + ") : (" + props.DefaultText + ")",
 			},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
