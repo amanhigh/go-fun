@@ -1,4 +1,6 @@
 import type { JournalNote, JournalNoteClient, JournalNoteRequest } from '../client/journal_note';
+import { prependById, removeById } from '../shared/collection';
+import { getErrorMessage } from '../shared/error';
 
 export function createJournalDetailNotes(parent: any, noteClient: JournalNoteClient) {
 	return {
@@ -27,14 +29,12 @@ export function createJournalDetailNotes(parent: any, noteClient: JournalNoteCli
 					format: 'MARKDOWN',
 				};
 				const envelope = await noteClient.create(parent.journalId, payload);
-				const notes = parent.journal.notes ?? [];
-				notes.unshift(envelope.data);
-				parent.journal.notes = notes;
+				parent.journal.notes = prependById(parent.journal.notes ?? [], envelope.data);
 				this.noteContent = '';
 				this.noteMessageType = 'success';
 				this.noteMessage = 'Note added.';
 			} catch (err) {
-				this.noteMessage = err instanceof Error ? err.message : 'Unable to save note.';
+				this.noteMessage = getErrorMessage(err, 'Unable to save note.');
 				this.noteMessageType = 'error';
 			} finally {
 				this.noteSubmitting = false;
@@ -47,11 +47,11 @@ export function createJournalDetailNotes(parent: any, noteClient: JournalNoteCli
 			this.noteMessageType = 'error';
 			try {
 				await noteClient.delete(parent.journalId, noteId);
-				parent.journal.notes = (parent.journal.notes ?? []).filter((note: JournalNote) => note.id !== noteId);
+				parent.journal.notes = removeById(parent.journal.notes ?? [], noteId);
 				this.noteMessageType = 'success';
 				this.noteMessage = 'Note deleted.';
 			} catch (err) {
-				this.noteMessage = err instanceof Error ? err.message : 'Unable to delete note.';
+				this.noteMessage = getErrorMessage(err, 'Unable to delete note.');
 				this.noteMessageType = 'error';
 			} finally {
 				this.noteDeletingId = '';

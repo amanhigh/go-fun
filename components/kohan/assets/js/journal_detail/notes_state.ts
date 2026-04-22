@@ -1,17 +1,17 @@
+import { createAsyncFeedbackState, type FeedbackType } from '../shared/async_feedback';
+
 export type NotesState = {
 	noteSubmitting: boolean;
 	noteDeletingId: string;
 	noteContent: string;
 	noteMessage: string;
-	noteMessageType: 'error' | 'success';
+	noteMessageType: FeedbackType;
 };
 
 export function createNotesState(): NotesState {
 	return {
-		noteSubmitting: false,
+		...createAsyncFeedbackState('noteSubmitting', 'noteMessage', 'noteMessageType'),
 		noteDeletingId: '',
 		noteContent: '',
-		noteMessage: '',
-		noteMessageType: 'error',
 	};
 }

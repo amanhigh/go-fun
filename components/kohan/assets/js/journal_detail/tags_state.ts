@@ -1,31 +1,28 @@
 import { managementTagPresets } from './tags_actions';
+import { createAsyncFeedbackState, type FeedbackType } from '../shared/async_feedback';
 
 export type TagsState = {
 	managementTagPresets: typeof managementTagPresets;
 	managementTagSubmitting: boolean;
 	managementTagPendingValue: string;
 	managementTagMessage: string;
-	managementTagMessageType: 'error' | 'success';
+	managementTagMessageType: FeedbackType;
 	reasonTagInput: string;
 	reasonTagOverride: string;
 	reasonTagSubmitting: boolean;
 	tagDeletingId: string;
 	reasonTagMessage: string;
-	reasonTagMessageType: 'error' | 'success';
+	reasonTagMessageType: FeedbackType;
 };
 
 export function createTagsState(): TagsState {
 	return {
+		...createAsyncFeedbackState('managementTagSubmitting', 'managementTagMessage', 'managementTagMessageType'),
+		...createAsyncFeedbackState('reasonTagSubmitting', 'reasonTagMessage', 'reasonTagMessageType'),
 		managementTagPresets,
-		managementTagSubmitting: false,
 		managementTagPendingValue: '',
-		managementTagMessage: '',
-		managementTagMessageType: 'error',
 		reasonTagInput: '',
 		reasonTagOverride: '',
-		reasonTagSubmitting: false,
 		tagDeletingId: '',
-		reasonTagMessage: '',
-		reasonTagMessageType: 'error',
 	};
 }

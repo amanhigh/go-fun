@@ -1,12 +1,10 @@
 import type { JournalClient, JournalUpdateRequest } from '../client/journal';
+import { formatDateInputValue } from '../shared/date';
+import { getErrorMessage } from '../shared/error';
 import { normalizeTag } from '../shared/tags';
 
 function localToday(): string {
-	const today = new Date();
-	const year = today.getFullYear();
-	const month = `${today.getMonth() + 1}`.padStart(2, '0');
-	const day = `${today.getDate()}`.padStart(2, '0');
-	return `${year}-${month}-${day}`;
+	return formatDateInputValue(new Date());
 }
 
 export function createJournalDetailReview(parent: any, journalClient: JournalClient) {
@@ -66,7 +64,7 @@ export function createJournalDetailReview(parent: any, journalClient: JournalCli
 					reviewedAt ? 'Journal marked reviewed.' : 'Journal marked not reviewed.',
 				);
 			} catch (err) {
-				this.reviewMessage = err instanceof Error ? err.message : 'Unable to update review date.';
+				this.reviewMessage = getErrorMessage(err, 'Unable to update review date.');
 				this.reviewMessageType = 'error';
 			} finally {
 				this.reviewSubmitting = false;
@@ -85,7 +83,7 @@ export function createJournalDetailReview(parent: any, journalClient: JournalCli
 					`${this.quickReviewLabel()} applied and journal marked reviewed.`,
 				);
 			} catch (err) {
-				this.reviewMessage = err instanceof Error ? err.message : 'Unable to update journal status.';
+				this.reviewMessage = getErrorMessage(err, 'Unable to update journal status.');
 				this.reviewMessageType = 'error';
 			} finally {
 				this.reviewSubmitting = false;
@@ -98,7 +96,7 @@ export function createJournalDetailReview(parent: any, journalClient: JournalCli
 				const envelope = await journalClient.list(0, 10, { reviewed: 'false', sortBy: 'created_at', sortOrder: 'asc' });
 				this.reviewQueue = envelope.data?.journals ?? [];
 			} catch (err) {
-				this.reviewQueueError = err instanceof Error ? err.message : 'Unable to load review queue.';
+				this.reviewQueueError = getErrorMessage(err, 'Unable to load review queue.');
 			} finally {
 				this.reviewQueueLoading = false;
 			}

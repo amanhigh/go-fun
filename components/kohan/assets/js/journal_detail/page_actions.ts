@@ -1,4 +1,5 @@
 import type { JournalClient } from '../client/journal';
+import { getErrorMessage } from '../shared/error';
 
 type CreateJournalDetailPageActionsInput = {
 	journalClient: JournalClient;
@@ -13,7 +14,7 @@ export function createJournalDetailPageActions({ journalClient }: CreateJournalD
 				const envelope = await journalClient.get(this.journalId);
 				this.journal = envelope.data ?? null;
 			} catch (err) {
-				this.errorMessage = err instanceof Error ? err.message : 'Unable to load journal details. Please try again.';
+				this.errorMessage = getErrorMessage(err, 'Unable to load journal details. Please try again.');
 			} finally {
 				this.loading = false;
 			}

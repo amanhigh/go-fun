@@ -109,9 +109,9 @@ var _ = Describe("OS Handler Integration Tests", func() {
 					util.AssertError(w, "FileName", "max")
 				})
 
-				It("should return 400 for non-png FileName", func() {
+				It("should return 400 for invalid FileName extension", func() {
 					payload := map[string]string{
-						"file_name": "test.jpg",
+						"file_name": "test.gif",
 						"save_path": ".",
 						"type":      "FULL",
 					}

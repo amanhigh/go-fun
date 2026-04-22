@@ -39,6 +39,7 @@ var serveCmd = &cobra.Command{
 		log.Info().Dur("Wait", wait).Str("Screenshots", args[0]).Msg("Starting Kohan Server")
 		// TODO: Retry When Disk not Mounted, Watermill Exponential Backoff ?
 		autoManager := core.GetKohanInterface().GetAutoManager(wait, args[0])
+		// HACK: Avoid Args directly take via Config.
 		server, err := core.GetKohanInterface().GetKohanServer(servePort, args[0], wait)
 		if err != nil {
 			return fmt.Errorf("failed to build kohan server: %w", err)

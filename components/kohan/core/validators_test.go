@@ -23,6 +23,7 @@ var _ = Describe("Validators", func() {
 		_ = v.RegisterValidation("tag", core.TagValidator)
 		_ = v.RegisterValidation("override", core.OverrideValidator)
 		_ = v.RegisterValidation("image_file", core.ImageFileValidator)
+		_ = v.RegisterValidation("save_path", core.SavePathValidator)
 		_ = v.RegisterValidation("not_future", core.NotFutureValidator)
 		_ = v.RegisterValidation("journal_id", core.JournalIDValidator)
 		_ = v.RegisterValidation("note_id", core.NoteIDValidator)
@@ -276,6 +277,62 @@ var _ = Describe("Validators", func() {
 			It("should reject files without extension", func() {
 				Expect(v.Var("image", "image_file")).ToNot(Succeed())
 				Expect(v.Var("test-file", "image_file")).ToNot(Succeed())
+			})
+		})
+	})
+
+	Describe("save_path validator", func() {
+		Context("valid save paths", func() {
+			It("should accept single directory", func() {
+				Expect(v.Var("2025", "save_path")).To(Succeed())
+				Expect(v.Var("trade", "save_path")).To(Succeed())
+			})
+
+			It("should accept nested directories", func() {
+				Expect(v.Var("2025/08", "save_path")).To(Succeed())
+				Expect(v.Var("trade/set-1", "save_path")).To(Succeed())
+				Expect(v.Var("a/b/c/d", "save_path")).To(Succeed())
+			})
+
+			It("should accept names with dots and underscores", func() {
+				Expect(v.Var("set_1.v2", "save_path")).To(Succeed())
+				Expect(v.Var("my.dir/test_path", "save_path")).To(Succeed())
+			})
+
+			It("should accept empty string", func() {
+				Expect(v.Var("", "save_path")).To(Succeed())
+			})
+		})
+
+		Context("invalid save paths", func() {
+			It("should reject path traversal", func() {
+				Expect(v.Var("../etc", "save_path")).ToNot(Succeed())
+				Expect(v.Var("a/../b", "save_path")).ToNot(Succeed())
+				Expect(v.Var("a/b/../../c", "save_path")).ToNot(Succeed())
+			})
+
+			It("should reject absolute paths", func() {
+				Expect(v.Var("/root", "save_path")).ToNot(Succeed())
+				Expect(v.Var("/var/log", "save_path")).ToNot(Succeed())
+			})
+
+			It("should reject spaces", func() {
+				Expect(v.Var("my dir", "save_path")).ToNot(Succeed())
+				Expect(v.Var("a/b c/d", "save_path")).ToNot(Succeed())
+			})
+
+			It("should reject special characters", func() {
+				Expect(v.Var("a@b", "save_path")).ToNot(Succeed())
+				Expect(v.Var("a#b", "save_path")).ToNot(Succeed())
+				Expect(v.Var("a&b", "save_path")).ToNot(Succeed())
+			})
+
+			It("should reject trailing slash", func() {
+				Expect(v.Var("2025/", "save_path")).ToNot(Succeed())
+			})
+
+			It("should reject leading slash", func() {
+				Expect(v.Var("/2025", "save_path")).ToNot(Succeed())
 			})
 		})
 	})

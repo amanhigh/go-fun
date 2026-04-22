@@ -1,4 +1,6 @@
 import type { JournalTag, JournalTagClient, JournalTagRequest } from '../client/journal_tag';
+import { prependById, removeById } from '../shared/collection';
+import { getErrorMessage } from '../shared/error';
 import { normalizeTag } from '../shared/tags';
 
 export const managementTagPresets = [
@@ -96,14 +98,13 @@ export function createJournalDetailTags(parent: any, tagClient: JournalTagClient
 					...(override ? { override } : {}),
 				};
 				const envelope = await tagClient.create(parent.journalId, payload);
-				const tags = parent.journal.tags ?? [];
-				parent.journal.tags = [envelope.data, ...tags.filter((item: JournalTag) => item.id !== envelope.data.id)];
+				parent.journal.tags = prependById(parent.journal.tags ?? [], envelope.data);
 				this.reasonTagInput = '';
 				this.reasonTagOverride = '';
 				this.reasonTagMessageType = 'success';
 				this.reasonTagMessage = 'Reason tag added.';
 			} catch (err) {
-				this.reasonTagMessage = err instanceof Error ? err.message : 'Unable to save reason tag.';
+				this.reasonTagMessage = getErrorMessage(err, 'Unable to save reason tag.');
 				this.reasonTagMessageType = 'error';
 			} finally {
 				this.reasonTagSubmitting = false;
@@ -121,12 +122,11 @@ export function createJournalDetailTags(parent: any, tagClient: JournalTagClient
 					type: 'MANAGEMENT',
 				};
 				const envelope = await tagClient.create(parent.journalId, payload);
-				const tags = parent.journal.tags ?? [];
-				parent.journal.tags = [envelope.data, ...tags.filter((item: JournalTag) => item.id !== envelope.data.id)];
+				parent.journal.tags = prependById(parent.journal.tags ?? [], envelope.data);
 				this.managementTagMessageType = 'success';
 				this.managementTagMessage = `${normalizeTag(tagValue)} tag added.`;
 			} catch (err) {
-				this.managementTagMessage = err instanceof Error ? err.message : 'Unable to save management tag.';
+				this.managementTagMessage = getErrorMessage(err, 'Unable to save management tag.');
 				this.managementTagMessageType = 'error';
 			} finally {
 				this.managementTagSubmitting = false;
@@ -140,11 +140,11 @@ export function createJournalDetailTags(parent: any, tagClient: JournalTagClient
 			this.reasonTagMessageType = 'error';
 			try {
 				await tagClient.delete(parent.journalId, tagId);
-				parent.journal.tags = (parent.journal.tags ?? []).filter((tag: JournalTag) => tag.id !== tagId);
+				parent.journal.tags = removeById(parent.journal.tags ?? [], tagId);
 				this.reasonTagMessageType = 'success';
 				this.reasonTagMessage = 'Tag deleted.';
 			} catch (err) {
-				this.reasonTagMessage = err instanceof Error ? err.message : 'Unable to delete tag.';
+				this.reasonTagMessage = getErrorMessage(err, 'Unable to delete tag.');
 				this.reasonTagMessageType = 'error';
 			} finally {
 				this.tagDeletingId = '';

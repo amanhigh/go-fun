@@ -1,9 +1,10 @@
 import type { Journal } from '../client/journal';
+import { createAsyncFeedbackState, type FeedbackType } from '../shared/async_feedback';
 
 export type ReviewState = {
 	reviewSubmitting: boolean;
 	reviewMessage: string;
-	reviewMessageType: 'error' | 'success';
+	reviewMessageType: FeedbackType;
 	reviewQueue: Journal[];
 	reviewQueueLoading: boolean;
 	reviewQueueError: string;
@@ -11,9 +12,7 @@ export type ReviewState = {
 
 export function createReviewState(): ReviewState {
 	return {
-		reviewSubmitting: false,
-		reviewMessage: '',
-		reviewMessageType: 'error',
+		...createAsyncFeedbackState('reviewSubmitting', 'reviewMessage', 'reviewMessageType'),
 		reviewQueue: [],
 		reviewQueueLoading: false,
 		reviewQueueError: '',
