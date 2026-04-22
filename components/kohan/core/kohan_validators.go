@@ -2,6 +2,7 @@ package core
 
 import (
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin/binding"
@@ -25,8 +26,10 @@ var (
 	tagIDRegex = regexp.MustCompile(`^tag_[a-zA-Z0-9]{8}$`)
 	// ImageID: img_ prefix followed by 8 alphanumeric characters (e.g., "img_12345678")
 	imageIDRegex = regexp.MustCompile(`^img_[a-zA-Z0-9]{8}$`)
-	// FileName: alphanumeric with dots, hyphens, underscores, valid image extensions
-	fileNameRegex = regexp.MustCompile(`^[a-zA-Z0-9._-]+\.(png|jpg|jpeg)$`)
+	// ImageFile: alphanumeric with dots, hyphens, underscores, valid image extensions
+	imageFileRegex = regexp.MustCompile(`^[a-zA-Z0-9._-]+\.(png|jpg|jpeg)$`)
+	// SavePath: relative directories only (e.g., "2025/08", "trade/set-1")
+	savePathRegex = regexp.MustCompile(`^[a-zA-Z0-9._-]+(?:/[a-zA-Z0-9._-]+)*$`)
 )
 
 // RegisterJournalValidators registers custom validators for journal fields.
@@ -36,7 +39,8 @@ func RegisterJournalValidators() {
 		_ = v.RegisterValidation("ticker", TickerValidator)
 		_ = v.RegisterValidation("tag", TagValidator)
 		_ = v.RegisterValidation("override", OverrideValidator)
-		_ = v.RegisterValidation("file_name", FileNameValidator)
+		_ = v.RegisterValidation("image_file", ImageFileValidator)
+		_ = v.RegisterValidation("save_path", SavePathValidator)
 		_ = v.RegisterValidation("not_future", NotFutureValidator)
 		_ = v.RegisterValidation("journal_id", JournalIDValidator)
 		_ = v.RegisterValidation("note_id", NoteIDValidator)
@@ -63,10 +67,23 @@ func OverrideValidator(fl validator.FieldLevel) bool {
 	return field == "" || overrideRegex.MatchString(field)
 }
 
-// FileNameValidator validates file name format using pre-compiled regex
-func FileNameValidator(fl validator.FieldLevel) bool {
+// ImageFileValidator validates image file name format using pre-compiled regex
+func ImageFileValidator(fl validator.FieldLevel) bool {
 	field := fl.Field().String()
-	return field == "" || fileNameRegex.MatchString(field)
+	return field == "" || imageFileRegex.MatchString(field)
+}
+
+// SavePathValidator validates save path format using pre-compiled regex
+func SavePathValidator(fl validator.FieldLevel) bool {
+	field := fl.Field().String()
+	if field == "" {
+		return true
+	}
+	// Reject path traversal patterns explicitly
+	if strings.Contains(field, "..") {
+		return false
+	}
+	return savePathRegex.MatchString(field)
 }
 
 // NotFutureValidator validates business rule: date should not be in the future

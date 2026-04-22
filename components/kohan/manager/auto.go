@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/models/kohan"
 	"github.com/bitfield/script"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -38,6 +40,7 @@ Support:
 )
 
 type AutoManagerInterface interface {
+	Screenshot(ctx context.Context, screenshotType kohan.ScreenshotType, window, fullPath string) error
 	RecordTicker(ctx context.Context, ticker, path string) error
 	TryOpenTicker(ctx context.Context, ticker string)
 	MonitorInternetConnection(ctx context.Context)
@@ -57,6 +60,26 @@ func NewAutoManager(wait time.Duration, capturePath string) AutoManagerInterface
 }
 
 // Copy existing implementations preserving comments but as methods
+func (a *AutoManagerImpl) Screenshot(_ context.Context, screenshotType kohan.ScreenshotType, window, fullPath string) error {
+	if window != "" {
+		if err := tools.FocusWindow(window); err != nil {
+			return err
+		}
+	}
+
+	dir := filepath.Dir(fullPath)
+	name := filepath.Base(fullPath)
+
+	log.Info().Str("Dir", dir).Str("Name", name).Str("Type", string(screenshotType)).Msg("Capturing Screenshot")
+
+	switch screenshotType {
+	case kohan.ScreenshotTypeRegion:
+		return tools.NamedRegionScreenshot(dir, name)
+	default:
+		return tools.NamedScreenshot(dir, name)
+	}
+}
+
 func (a *AutoManagerImpl) RecordTicker(_ context.Context, ticker, path string) (err error) {
 	if err = tools.FocusWindow("TradingView"); err == nil {
 		log.Info().Str("Ticker", ticker).Msg("Recording Ticker")

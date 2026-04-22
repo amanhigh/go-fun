@@ -7,6 +7,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/amanhigh/go-fun/models/kohan"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -136,6 +137,75 @@ func (_c *AutoManagerInterface_RecordTicker_Call) Return(err error) *AutoManager
 }
 
 func (_c *AutoManagerInterface_RecordTicker_Call) RunAndReturn(run func(ctx context.Context, ticker string, path string) error) *AutoManagerInterface_RecordTicker_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Screenshot provides a mock function for the type AutoManagerInterface
+func (_mock *AutoManagerInterface) Screenshot(ctx context.Context, screenshotType kohan.ScreenshotType, window string, fullPath string) error {
+	ret := _mock.Called(ctx, screenshotType, window, fullPath)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Screenshot")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, kohan.ScreenshotType, string, string) error); ok {
+		r0 = returnFunc(ctx, screenshotType, window, fullPath)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// AutoManagerInterface_Screenshot_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Screenshot'
+type AutoManagerInterface_Screenshot_Call struct {
+	*mock.Call
+}
+
+// Screenshot is a helper method to define mock.On call
+//   - ctx context.Context
+//   - screenshotType kohan.ScreenshotType
+//   - window string
+//   - fullPath string
+func (_e *AutoManagerInterface_Expecter) Screenshot(ctx interface{}, screenshotType interface{}, window interface{}, fullPath interface{}) *AutoManagerInterface_Screenshot_Call {
+	return &AutoManagerInterface_Screenshot_Call{Call: _e.mock.On("Screenshot", ctx, screenshotType, window, fullPath)}
+}
+
+func (_c *AutoManagerInterface_Screenshot_Call) Run(run func(ctx context.Context, screenshotType kohan.ScreenshotType, window string, fullPath string)) *AutoManagerInterface_Screenshot_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 kohan.ScreenshotType
+		if args[1] != nil {
+			arg1 = args[1].(kohan.ScreenshotType)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *AutoManagerInterface_Screenshot_Call) Return(err error) *AutoManagerInterface_Screenshot_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *AutoManagerInterface_Screenshot_Call) RunAndReturn(run func(ctx context.Context, screenshotType kohan.ScreenshotType, window string, fullPath string) error) *AutoManagerInterface_Screenshot_Call {
 	_c.Call.Return(run)
 	return _c
 }

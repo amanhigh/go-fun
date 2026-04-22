@@ -116,6 +116,46 @@ func (_c *OSHandler_HandleRecordTicker_Call) RunAndReturn(run func(ctx *gin.Cont
 	return _c
 }
 
+// HandleScreenshot provides a mock function for the type OSHandler
+func (_mock *OSHandler) HandleScreenshot(ctx *gin.Context) {
+	_mock.Called(ctx)
+	return
+}
+
+// OSHandler_HandleScreenshot_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'HandleScreenshot'
+type OSHandler_HandleScreenshot_Call struct {
+	*mock.Call
+}
+
+// HandleScreenshot is a helper method to define mock.On call
+//   - ctx *gin.Context
+func (_e *OSHandler_Expecter) HandleScreenshot(ctx interface{}) *OSHandler_HandleScreenshot_Call {
+	return &OSHandler_HandleScreenshot_Call{Call: _e.mock.On("HandleScreenshot", ctx)}
+}
+
+func (_c *OSHandler_HandleScreenshot_Call) Run(run func(ctx *gin.Context)) *OSHandler_HandleScreenshot_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 *gin.Context
+		if args[0] != nil {
+			arg0 = args[0].(*gin.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *OSHandler_HandleScreenshot_Call) Return() *OSHandler_HandleScreenshot_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *OSHandler_HandleScreenshot_Call) RunAndReturn(run func(ctx *gin.Context)) *OSHandler_HandleScreenshot_Call {
+	_c.Run(run)
+	return _c
+}
+
 // HandleSubmapControl provides a mock function for the type OSHandler
 func (_mock *OSHandler) HandleSubmapControl(ctx *gin.Context) {
 	_mock.Called(ctx)

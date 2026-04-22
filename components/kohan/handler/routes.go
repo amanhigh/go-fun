@@ -9,6 +9,7 @@ import (
 
 // SetupOSRoutes configures OS-related routes
 func SetupOSRoutes(os *gin.RouterGroup, osHandler OSHandler) {
+	os.POST("/screenshot", osHandler.HandleScreenshot)
 	os.GET("/ticker/:ticker/record", osHandler.HandleRecordTicker)
 	os.GET("/clip/", osHandler.HandleReadClip)
 	os.POST("/submap/:action", osHandler.HandleSubmapControl)
