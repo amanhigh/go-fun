@@ -1,95 +1,69 @@
 import type { JournalClient } from '../client/journal';
-import type { JournalFilterState } from './filter';
-import type { PaginationState } from './pagination';
-import type { JournalPageState } from './page_state';
 
 type PageActionDeps = {
 	client: JournalClient;
-	filter: JournalFilterState;
-	pagination: PaginationState;
-	state: JournalPageState;
-	filterToUrl: () => void;
-	urlToFilter: () => void;
-	clearActiveReviewPreset: () => void;
-	syncActiveReviewPreset: () => void;
 };
 
 export function createJournalPageActions(deps: PageActionDeps) {
-	const { client, filter, pagination, state, filterToUrl, urlToFilter, clearActiveReviewPreset, syncActiveReviewPreset } = deps;
+	const { client } = deps;
 
-	function applyFilters() {
-		pagination.resetPage();
-		filterToUrl();
-		void loadJournals();
-	}
-
-	function applyManualFilters() {
-		clearActiveReviewPreset();
-		applyFilters();
-	}
-
-	function applyResponse(resp: Awaited<ReturnType<JournalClient['list']>>) {
-		const data = resp.data ?? {};
-		state.journals = data.journals ?? [];
-		pagination.setTotalItems(data.metadata?.total ?? state.journals.length);
-		pagination.setPageFromOffset(data.metadata?.offset ?? 0);
-	}
-
-	async function loadJournals() {
-		state.requestCounter += 1;
-		const requestId = state.requestCounter;
-		state.loading = true;
-		state.errorMessage = '';
+	async function loadJournals(this: any) {
+		this.loading = true;
+		this.errorMessage = '';
 
 		try {
-			const resp = await client.list(
-				pagination.getOffset(),
-				pagination.getPageSize(),
-				filter.toQueryParams(),
+			const response = await client.list(
+				this.pagination.getOffset(),
+				this.pagination.getPageSize(),
+				this.filter.toQueryParams(),
 			);
 
-			if (requestId !== state.requestCounter) {
-				return;
-			}
-
-			applyResponse(resp);
-		} catch {
-			if (requestId !== state.requestCounter) {
-				return;
-			}
-
-			state.errorMessage = 'Unable to load journals. Please try again.';
+			const data = response.data ?? {};
+			this.journals = data.journals ?? [];
+			this.pagination.setTotalItems(data.metadata?.total ?? this.journals.length);
+			this.pagination.setPageFromOffset(data.metadata?.offset ?? 0);
 		} finally {
-			if (requestId === state.requestCounter) {
-				state.loading = false;
-			}
+			this.loading = false;
 		}
+	}
+
+	function applyFilters(this: any) {
+		this.pagination.resetPage();
+		this.filterToUrl();
+		void this.loadJournals();
+	}
+
+	function applyManualFilters(this: any) {
+		this.clearActiveReviewPreset();
+		this.applyFilters();
 	}
 
 	return {
 		applyFilters,
 		applyManualFilters,
 		loadJournals,
-		hasError() {
-			return state.errorMessage !== '';
+		hasError(this: any) {
+			return this.errorMessage !== '';
 		},
-		isEmpty() {
-			return state.journals.length === 0;
+		isEmpty(this: any) {
+			return this.journals.length === 0;
 		},
-		async prevPage() {
-			if (!pagination.hasPrev()) return;
-			pagination.prevPage();
-			await loadJournals();
+		async prevPage(this: any) {
+			if (!this.pagination.hasPrev()) return;
+			this.pagination.prevPage();
+			await this.loadJournals();
 		},
-		async nextPage() {
-			if (!pagination.hasNext()) return;
-			pagination.nextPage();
-			await loadJournals();
+		async nextPage(this: any) {
+			if (!this.pagination.hasNext()) return;
+			this.pagination.nextPage();
+			await this.loadJournals();
 		},
-		init() {
-			urlToFilter();
-			syncActiveReviewPreset();
-			void loadJournals();
+		init(this: any) {
+			console.log('[DEBUG] init() called');
+			this.urlToFilter();
+			this.syncActiveReviewPreset();
+			console.log('[DEBUG] init() starting loadJournals');
+			void this.loadJournals();
 		},
 	};
 }

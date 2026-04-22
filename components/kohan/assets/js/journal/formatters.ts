@@ -1,7 +1,6 @@
 import { formatTimestamp } from '../shared/date';
 import { normalizeTag } from '../shared/tags';
 import { resolveTypeToggle } from './filter_actions';
-import type { JournalFilterState } from './filter';
 
 const defaultBadgeClass = 'border-slate-300 bg-slate-50 text-slate-700';
 
@@ -19,20 +18,20 @@ const typeBadgeClassMap: Record<string, string> = {
 	SET: 'border-indigo-300 bg-indigo-50 text-indigo-800',
 };
 
-export function createJournalListFormatters(filter: JournalFilterState) {
+export function createJournalListFormatters() {
 	return {
 		normalizeStatus: normalizeTag,
-		statusBadgeClass(value: string) {
+		statusBadgeClass(this: any, value: string) {
 			return statusBadgeClassMap[normalizeTag(value)] ?? defaultBadgeClass;
 		},
-		typeBadgeClass(value: string) {
+		typeBadgeClass(this: any, value: string) {
 			return typeBadgeClassMap[normalizeTag(value)] ?? defaultBadgeClass;
 		},
-		typeToggleLabel() {
-			return resolveTypeToggle(filter.type).label;
+		typeToggleLabel(this: any) {
+			return resolveTypeToggle((this.filter as { type: string }).type).label;
 		},
-		typeToggleClass() {
-			return resolveTypeToggle(filter.type).className;
+		typeToggleClass(this: any) {
+			return resolveTypeToggle((this.filter as { type: string }).type).className;
 		},
 		formatTimestamp,
 	};

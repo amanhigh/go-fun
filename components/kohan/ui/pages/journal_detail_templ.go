@@ -493,7 +493,7 @@ func JournalDetailHeader() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = components.InfoRow(components.InfoRowProps{IconName: "alert-circle", Label: "Never reviewed", Variant: components.InfoRowWarning}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = components.InfoRow(components.InfoRowProps{IconName: "circle-alert", Label: "Never reviewed", Variant: components.InfoRowWarning}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

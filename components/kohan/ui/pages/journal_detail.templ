@@ -96,7 +96,7 @@ templ JournalDetailHeader() {
 						@components.InfoRow(components.InfoRowProps{IconName: "shield-check", Label: "Reviewed: ", ValueExpr: "formatTimestamp(journal.reviewed_at)"})
 					</div>
 					<div x-show="!journal.reviewed_at">
-						@components.InfoRow(components.InfoRowProps{IconName: "alert-circle", Label: "Never reviewed", Variant: components.InfoRowWarning})
+						@components.InfoRow(components.InfoRowProps{IconName: "circle-alert", Label: "Never reviewed", Variant: components.InfoRowWarning})
 					</div>
 				</div>
 				<div class="flex flex-wrap gap-2" x-show="journal.tags?.length">

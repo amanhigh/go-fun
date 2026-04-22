@@ -9,7 +9,7 @@ import { createPresetActions } from './preset_actions';
 import { createPaginationState } from './pagination';
 
 declare const Alpine: {
-	data(name: string, callback: () => ReturnType<typeof journalPage>): void;
+	data(name: string, callback: () => any): void;
 };
 
 function journalPage() {
@@ -17,25 +17,11 @@ function journalPage() {
 	const pagination = createPaginationState(10);
 	const filter = createJournalFilter();
 	const reviewPresets = buildReviewPresetList();
-	const formatters = createJournalListFormatters(filter);
-	const filterActions = createFilterActions({ filter, applyManualFilters: () => pageActions.applyManualFilters() });
+	const formatters = createJournalListFormatters();
+	const filterActions = createFilterActions();
 	const state = createJournalPageState({ filter, pagination, reviewPresets });
-	const presetActions = createPresetActions({
-		filter,
-		state,
-		applyFilters: () => pageActions.applyFilters(),
-		clearFilters: () => filter.clear(),
-	});
-	const pageActions = createJournalPageActions({
-		client,
-		filter,
-		pagination,
-		state,
-		filterToUrl: filterActions.filterToUrl,
-		urlToFilter: filterActions.urlToFilter,
-		clearActiveReviewPreset: presetActions.clearActiveReviewPreset,
-		syncActiveReviewPreset: presetActions.syncActiveReviewPreset,
-	});
+	const presetActions = createPresetActions();
+	const pageActions = createJournalPageActions({ client });
 
 	return Object.assign(state, formatters, presetActions, pageActions, filterActions);
 }

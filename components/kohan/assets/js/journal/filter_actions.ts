@@ -38,37 +38,30 @@ export function nextSortOrder(currentSortBy: string, currentSortOrder: string, n
 	return currentSortOrder === 'asc' ? 'desc' : 'asc';
 }
 
-type FilterActionDeps = {
-	filter: JournalFilterState;
-	applyManualFilters: () => void;
-};
-
-export function createFilterActions(deps: FilterActionDeps) {
-	const { filter, applyManualFilters } = deps;
-
+export function createFilterActions() {
 	return {
-		urlToFilter() {
-			syncUrlToState(filter, journalFilterUrlMapping);
+		urlToFilter(this: any) {
+			syncUrlToState(this.filter as JournalFilterState, journalFilterUrlMapping);
 		},
-		filterToUrl() {
-			syncStateToUrl(filter, journalFilterUrlMapping);
+		filterToUrl(this: any) {
+			syncStateToUrl(this.filter as JournalFilterState, journalFilterUrlMapping);
 		},
-		toggleType() {
-			filter.type = resolveTypeToggle(filter.type).nextType;
-			applyManualFilters();
+		toggleType(this: any) {
+			this.filter.type = resolveTypeToggle(this.filter.type).nextType;
+			this.applyManualFilters();
 		},
-		onCreatedDateChange() {
-			filter.createdBefore = filter.createdAfter;
-			applyManualFilters();
+		onCreatedDateChange(this: any) {
+			this.filter.createdBefore = this.filter.createdAfter;
+			this.applyManualFilters();
 		},
-		toggleSort(field: string) {
-			filter.sortOrder = nextSortOrder(filter.sortBy, filter.sortOrder, field);
-			filter.sortBy = field;
-			applyManualFilters();
+		toggleSort(this: any, field: string) {
+			this.filter.sortOrder = nextSortOrder(this.filter.sortBy, this.filter.sortOrder, field);
+			this.filter.sortBy = field;
+			this.applyManualFilters();
 		},
-		clearFilters() {
-			filter.clear();
-			applyManualFilters();
+		clearFilters(this: any) {
+			this.filter.clear();
+			this.applyManualFilters();
 		},
 	};
 }

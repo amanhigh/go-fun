@@ -80,16 +80,16 @@ export const journalFilterUrlMapping = {
 export function createJournalFilter(): JournalFilterState {
 	const state = { ...createDefaultJournalFilters() } as JournalFilterState;
 
-	state.clear = function clear() {
-		Object.assign(state, createDefaultJournalFilters());
+	state.clear = function clear(this: JournalFilterState) {
+		Object.assign(this, createDefaultJournalFilters());
 	};
 
-	state.toQueryParams = function toQueryParams() {
-		return { ...state };
+	state.toQueryParams = function toQueryParams(this: JournalFilterState) {
+		return { ...this };
 	};
 
-	state.hasActiveState = function hasActiveState() {
-		return journalFields.some((field) => state[field] !== '');
+	state.hasActiveState = function hasActiveState(this: JournalFilterState) {
+		return journalFields.some((field) => this[field] !== '');
 	};
 
 	return state;
