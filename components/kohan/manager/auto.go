@@ -40,49 +40,68 @@ Support:
 )
 
 type AutoManagerInterface interface {
-	Screenshot(ctx context.Context, screenshotType kohan.ScreenshotType, window, fullPath string) error
-	RecordTicker(ctx context.Context, ticker, path string) error
+	// HACK: Remove Unwanted Methods and Rename to OSManager.
+	Screenshot(ctx context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, error)
+	RecordTicker(ctx context.Context, ticker string) error
 	TryOpenTicker(ctx context.Context, ticker string)
 	MonitorInternetConnection(ctx context.Context)
 }
 
 type AutoManagerImpl struct {
-	wait        time.Duration
-	capturePath string
+	wait           time.Duration
+	screenshotPath string
 }
 
-func NewAutoManager(wait time.Duration, capturePath string) AutoManagerInterface {
+func NewAutoManager(wait time.Duration, screenshotPath string) AutoManagerInterface {
 	// TODO: #C Move to Kohan Config and Inject directly via Kohan Injector.
 	return &AutoManagerImpl{
-		wait:        wait,
-		capturePath: capturePath,
+		wait:           wait,
+		screenshotPath: screenshotPath,
 	}
 }
 
 // Copy existing implementations preserving comments but as methods
-func (a *AutoManagerImpl) Screenshot(_ context.Context, screenshotType kohan.ScreenshotType, window, fullPath string) error {
+func (a *AutoManagerImpl) Screenshot(_ context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, error) {
 	if window != "" {
 		if err := tools.FocusWindow(window); err != nil {
-			return err
+			return "", err
 		}
 	}
 
-	dir := filepath.Dir(fullPath)
-	name := filepath.Base(fullPath)
+	dir := a.resolveDir(directoryType)
+	fullPath := filepath.Join(dir, fileName)
 
-	log.Info().Str("Dir", dir).Str("Name", name).Str("Type", string(screenshotType)).Msg("Capturing Screenshot")
+	log.Info().Str("Dir", dir).Str("Name", fileName).Str("Type", string(screenshotType)).Msg("Capturing Screenshot")
 
 	switch screenshotType {
 	case kohan.ScreenshotTypeRegion:
-		return tools.NamedRegionScreenshot(dir, name)
+		return fullPath, tools.NamedRegionScreenshot(dir, fileName)
 	default:
-		return tools.NamedScreenshot(dir, name)
+		return fullPath, tools.NamedScreenshot(dir, fileName)
 	}
 }
 
-func (a *AutoManagerImpl) RecordTicker(_ context.Context, ticker, path string) (err error) {
+func (a *AutoManagerImpl) resolveDir(directoryType kohan.ScreenshotDirectoryType) string {
+	switch directoryType {
+	case kohan.ScreenshotDirectoryTypeDownload:
+		return defaultDownloadsDir()
+	default:
+		return a.screenshotPath
+	}
+}
+
+func defaultDownloadsDir() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return filepath.Join(os.TempDir(), "Downloads")
+	}
+	return filepath.Join(homeDir, "Downloads")
+}
+
+func (a *AutoManagerImpl) RecordTicker(_ context.Context, ticker string) (err error) {
 	if err = tools.FocusWindow("TradingView"); err == nil {
 		log.Info().Str("Ticker", ticker).Msg("Recording Ticker")
+		path := a.resolveDir(kohan.ScreenshotDirectoryTypeJournal)
 		err = a.takeScreenshots(ticker, path)
 		if err == nil && strings.Contains(ticker, ".set") {
 			err = a.recordTradeInfo(ticker, path)

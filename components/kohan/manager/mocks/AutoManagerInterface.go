@@ -79,16 +79,16 @@ func (_c *AutoManagerInterface_MonitorInternetConnection_Call) RunAndReturn(run 
 }
 
 // RecordTicker provides a mock function for the type AutoManagerInterface
-func (_mock *AutoManagerInterface) RecordTicker(ctx context.Context, ticker string, path string) error {
-	ret := _mock.Called(ctx, ticker, path)
+func (_mock *AutoManagerInterface) RecordTicker(ctx context.Context, ticker string) error {
+	ret := _mock.Called(ctx, ticker)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RecordTicker")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = returnFunc(ctx, ticker, path)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = returnFunc(ctx, ticker)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -103,12 +103,11 @@ type AutoManagerInterface_RecordTicker_Call struct {
 // RecordTicker is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ticker string
-//   - path string
-func (_e *AutoManagerInterface_Expecter) RecordTicker(ctx interface{}, ticker interface{}, path interface{}) *AutoManagerInterface_RecordTicker_Call {
-	return &AutoManagerInterface_RecordTicker_Call{Call: _e.mock.On("RecordTicker", ctx, ticker, path)}
+func (_e *AutoManagerInterface_Expecter) RecordTicker(ctx interface{}, ticker interface{}) *AutoManagerInterface_RecordTicker_Call {
+	return &AutoManagerInterface_RecordTicker_Call{Call: _e.mock.On("RecordTicker", ctx, ticker)}
 }
 
-func (_c *AutoManagerInterface_RecordTicker_Call) Run(run func(ctx context.Context, ticker string, path string)) *AutoManagerInterface_RecordTicker_Call {
+func (_c *AutoManagerInterface_RecordTicker_Call) Run(run func(ctx context.Context, ticker string)) *AutoManagerInterface_RecordTicker_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -118,14 +117,9 @@ func (_c *AutoManagerInterface_RecordTicker_Call) Run(run func(ctx context.Conte
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
-		var arg2 string
-		if args[2] != nil {
-			arg2 = args[2].(string)
-		}
 		run(
 			arg0,
 			arg1,
-			arg2,
 		)
 	})
 	return _c
@@ -136,26 +130,35 @@ func (_c *AutoManagerInterface_RecordTicker_Call) Return(err error) *AutoManager
 	return _c
 }
 
-func (_c *AutoManagerInterface_RecordTicker_Call) RunAndReturn(run func(ctx context.Context, ticker string, path string) error) *AutoManagerInterface_RecordTicker_Call {
+func (_c *AutoManagerInterface_RecordTicker_Call) RunAndReturn(run func(ctx context.Context, ticker string) error) *AutoManagerInterface_RecordTicker_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Screenshot provides a mock function for the type AutoManagerInterface
-func (_mock *AutoManagerInterface) Screenshot(ctx context.Context, screenshotType kohan.ScreenshotType, window string, fullPath string) error {
-	ret := _mock.Called(ctx, screenshotType, window, fullPath)
+func (_mock *AutoManagerInterface) Screenshot(ctx context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, error) {
+	ret := _mock.Called(ctx, directoryType, fileName, screenshotType, window)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Screenshot")
 	}
 
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, kohan.ScreenshotType, string, string) error); ok {
-		r0 = returnFunc(ctx, screenshotType, window, fullPath)
-	} else {
-		r0 = ret.Error(0)
+	var r0 string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, kohan.ScreenshotDirectoryType, string, kohan.ScreenshotType, string) (string, error)); ok {
+		return returnFunc(ctx, directoryType, fileName, screenshotType, window)
 	}
-	return r0
+	if returnFunc, ok := ret.Get(0).(func(context.Context, kohan.ScreenshotDirectoryType, string, kohan.ScreenshotType, string) string); ok {
+		r0 = returnFunc(ctx, directoryType, fileName, screenshotType, window)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, kohan.ScreenshotDirectoryType, string, kohan.ScreenshotType, string) error); ok {
+		r1 = returnFunc(ctx, directoryType, fileName, screenshotType, window)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
 }
 
 // AutoManagerInterface_Screenshot_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Screenshot'
@@ -165,47 +168,53 @@ type AutoManagerInterface_Screenshot_Call struct {
 
 // Screenshot is a helper method to define mock.On call
 //   - ctx context.Context
+//   - directoryType kohan.ScreenshotDirectoryType
+//   - fileName string
 //   - screenshotType kohan.ScreenshotType
 //   - window string
-//   - fullPath string
-func (_e *AutoManagerInterface_Expecter) Screenshot(ctx interface{}, screenshotType interface{}, window interface{}, fullPath interface{}) *AutoManagerInterface_Screenshot_Call {
-	return &AutoManagerInterface_Screenshot_Call{Call: _e.mock.On("Screenshot", ctx, screenshotType, window, fullPath)}
+func (_e *AutoManagerInterface_Expecter) Screenshot(ctx interface{}, directoryType interface{}, fileName interface{}, screenshotType interface{}, window interface{}) *AutoManagerInterface_Screenshot_Call {
+	return &AutoManagerInterface_Screenshot_Call{Call: _e.mock.On("Screenshot", ctx, directoryType, fileName, screenshotType, window)}
 }
 
-func (_c *AutoManagerInterface_Screenshot_Call) Run(run func(ctx context.Context, screenshotType kohan.ScreenshotType, window string, fullPath string)) *AutoManagerInterface_Screenshot_Call {
+func (_c *AutoManagerInterface_Screenshot_Call) Run(run func(ctx context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string)) *AutoManagerInterface_Screenshot_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 kohan.ScreenshotType
+		var arg1 kohan.ScreenshotDirectoryType
 		if args[1] != nil {
-			arg1 = args[1].(kohan.ScreenshotType)
+			arg1 = args[1].(kohan.ScreenshotDirectoryType)
 		}
 		var arg2 string
 		if args[2] != nil {
 			arg2 = args[2].(string)
 		}
-		var arg3 string
+		var arg3 kohan.ScreenshotType
 		if args[3] != nil {
-			arg3 = args[3].(string)
+			arg3 = args[3].(kohan.ScreenshotType)
+		}
+		var arg4 string
+		if args[4] != nil {
+			arg4 = args[4].(string)
 		}
 		run(
 			arg0,
 			arg1,
 			arg2,
 			arg3,
+			arg4,
 		)
 	})
 	return _c
 }
 
-func (_c *AutoManagerInterface_Screenshot_Call) Return(err error) *AutoManagerInterface_Screenshot_Call {
-	_c.Call.Return(err)
+func (_c *AutoManagerInterface_Screenshot_Call) Return(s string, err error) *AutoManagerInterface_Screenshot_Call {
+	_c.Call.Return(s, err)
 	return _c
 }
 
-func (_c *AutoManagerInterface_Screenshot_Call) RunAndReturn(run func(ctx context.Context, screenshotType kohan.ScreenshotType, window string, fullPath string) error) *AutoManagerInterface_Screenshot_Call {
+func (_c *AutoManagerInterface_Screenshot_Call) RunAndReturn(run func(ctx context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, error)) *AutoManagerInterface_Screenshot_Call {
 	_c.Call.Return(run)
 	return _c
 }

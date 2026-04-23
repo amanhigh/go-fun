@@ -2,7 +2,6 @@ package core
 
 import (
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin/binding"
@@ -28,8 +27,6 @@ var (
 	imageIDRegex = regexp.MustCompile(`^img_[a-zA-Z0-9]{8}$`)
 	// ImageFile: alphanumeric with dots, hyphens, underscores, valid image extensions
 	imageFileRegex = regexp.MustCompile(`^[a-zA-Z0-9._-]+\.(png|jpg|jpeg)$`)
-	// SavePath: relative or absolute directories (e.g., "2025/08", "/home/user/Downloads")
-	savePathRegex = regexp.MustCompile(`^/?[a-zA-Z0-9._-]+(?:/[a-zA-Z0-9._-]+)*$`)
 )
 
 // RegisterJournalValidators registers custom validators for journal fields.
@@ -40,7 +37,6 @@ func RegisterJournalValidators() {
 		_ = v.RegisterValidation("tag", TagValidator)
 		_ = v.RegisterValidation("override", OverrideValidator)
 		_ = v.RegisterValidation("image_file", ImageFileValidator)
-		_ = v.RegisterValidation("save_path", SavePathValidator)
 		_ = v.RegisterValidation("not_future", NotFutureValidator)
 		_ = v.RegisterValidation("journal_id", JournalIDValidator)
 		_ = v.RegisterValidation("note_id", NoteIDValidator)
@@ -71,19 +67,6 @@ func OverrideValidator(fl validator.FieldLevel) bool {
 func ImageFileValidator(fl validator.FieldLevel) bool {
 	field := fl.Field().String()
 	return field == "" || imageFileRegex.MatchString(field)
-}
-
-// SavePathValidator validates save path format using pre-compiled regex
-func SavePathValidator(fl validator.FieldLevel) bool {
-	field := fl.Field().String()
-	if field == "" {
-		return true
-	}
-	// Reject path traversal patterns explicitly
-	if strings.Contains(field, "..") {
-		return false
-	}
-	return savePathRegex.MatchString(field)
 }
 
 // NotFutureValidator validates business rule: date should not be in the future

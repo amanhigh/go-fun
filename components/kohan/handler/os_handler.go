@@ -2,9 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/common/util"
@@ -26,20 +23,15 @@ type OSHandler interface {
 }
 
 type OSHandlerImpl struct {
-	capturePath  string
-	allowedPaths []string
-	autoManager  manager.AutoManagerInterface
+	autoManager manager.AutoManagerInterface
 }
 
 var _ OSHandler = (*OSHandlerImpl)(nil)
 
 // NewOSHandler creates a new OSHandler.
-func NewOSHandler(capturePath string, autoManager manager.AutoManagerInterface, screenshotDirs []string) *OSHandlerImpl {
-	allowedPaths := append([]string{capturePath}, screenshotDirs...)
+func NewOSHandler(autoManager manager.AutoManagerInterface) *OSHandlerImpl {
 	return &OSHandlerImpl{
-		capturePath:  capturePath,
-		allowedPaths: allowedPaths,
-		autoManager:  autoManager,
+		autoManager: autoManager,
 	}
 }
 
@@ -52,52 +44,17 @@ func (h *OSHandlerImpl) HandleScreenshot(ctx *gin.Context) {
 		return
 	}
 
-	cleanPath := filepath.Clean(req.SavePath)
-	if strings.Contains(cleanPath, "..") {
-		ctx.JSON(http.StatusBadRequest, common.NewFailEnvelope(map[string]string{"save_path": "path traversal not allowed"}))
-		return
-	}
-
-	var resolvedDir string
-	if filepath.IsAbs(cleanPath) {
-		resolvedDir = cleanPath
-	} else {
-		resolvedDir = filepath.Join(h.capturePath, cleanPath)
-	}
-
-	if !h.isPathAllowed(resolvedDir) {
-		ctx.JSON(http.StatusBadRequest, common.NewFailEnvelope(map[string]string{"save_path": "invalid directory"}))
-		return
-	}
-	if _, err := os.Stat(resolvedDir); os.IsNotExist(err) {
-		if mkdirErr := os.MkdirAll(resolvedDir, 0o755); mkdirErr != nil {
-			ctx.JSON(http.StatusBadRequest, common.NewFailEnvelope(map[string]string{"save_path": "directory not writable"}))
-			return
-		}
-	}
-
-	fullPath := filepath.Join(resolvedDir, req.FileName)
-	if err := h.autoManager.Screenshot(ctx, req.Type, req.Window, fullPath); err != nil {
-		log.Error().Str("file_name", req.FileName).Str("save_path", req.SavePath).Err(err).Msg("Screenshot failed")
+	fullPath, err := h.autoManager.Screenshot(ctx, req.DirectoryType, req.FileName, req.Type, req.Window)
+	if err != nil {
+		log.Error().Str("file_name", req.FileName).Str("directory_type", string(req.DirectoryType)).Err(err).Msg("Screenshot failed")
 		ctx.JSON(http.StatusInternalServerError, common.NewErrorEnvelope("Unable to capture screenshot", 50001))
 		return
 	}
 
 	ctx.JSON(http.StatusOK, common.NewEnvelope(kohan.ScreenshotResponse{
-		FileName:     req.FileName,
-		RelativePath: filepath.Join(req.SavePath, req.FileName),
-		FullPath:     fullPath,
+		FileName: req.FileName,
+		FullPath: fullPath,
 	}))
-}
-
-// isPathAllowed checks whether the resolved path falls within one of the allowed base directories.
-func (h *OSHandlerImpl) isPathAllowed(resolvedPath string) bool {
-	for _, allowed := range h.allowedPaths {
-		if strings.HasPrefix(resolvedPath, allowed) {
-			return true
-		}
-	}
-	return false
 }
 
 // HandleReadClip handles GET /v1/clip/
@@ -113,7 +70,7 @@ func (h *OSHandlerImpl) HandleReadClip(ctx *gin.Context) {
 // HandleRecordTicker handles GET /v1/os/ticker/:ticker/record
 func (h *OSHandlerImpl) HandleRecordTicker(ctx *gin.Context) {
 	ticker := ctx.Param("ticker")
-	if err := h.autoManager.RecordTicker(ctx, ticker, h.capturePath); err == nil {
+	if err := h.autoManager.RecordTicker(ctx, ticker); err == nil {
 		ctx.JSON(http.StatusOK, "Success")
 	} else {
 		log.Error().Str("Ticker", ticker).Err(err).Msg("Record Ticker Failed")

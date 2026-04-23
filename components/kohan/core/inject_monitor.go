@@ -6,14 +6,14 @@ import (
 	"github.com/golobby/container/v3"
 )
 
-// provideOSHandler creates a OSHandler with the given capture path, auto manager, and screenshot dirs.
-func provideOSHandler(capturePath string, autoManager manager.AutoManagerInterface, screenshotDirs []string) handler.OSHandler {
-	return handler.NewOSHandler(capturePath, autoManager, screenshotDirs)
+// provideOSHandler creates an OSHandler with the configured screenshot path.
+func provideOSHandler(autoManager manager.AutoManagerInterface) handler.OSHandler {
+	return handler.NewOSHandler(autoManager)
 }
 
 // registerOSDependencies registers all dependencies for the OS feature.
-func (ki *KohanInjector) registerOSDependencies(capturePath string, autoManager manager.AutoManagerInterface, screenshotDirs []string) {
+func (ki *KohanInjector) registerOSDependencies(autoManager manager.AutoManagerInterface) {
 	container.MustSingleton(ki.di, func() handler.OSHandler {
-		return provideOSHandler(capturePath, autoManager, screenshotDirs)
+		return provideOSHandler(autoManager)
 	})
 }

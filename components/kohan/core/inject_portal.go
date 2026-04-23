@@ -11,7 +11,7 @@ func provideIndexPortalHandler() handler.IndexPortal {
 }
 
 func provideJournalPortalHandler(cfg config.BarkatConfig) handler.JournalPortal {
-	return handler.NewJournalPortal(cfg.Images)
+	return handler.NewJournalPortal(cfg.ScreenshotPath)
 }
 
 func providePortalHandlers(indexPortal handler.IndexPortal, journalPortal handler.JournalPortal) PortalHandlers {
