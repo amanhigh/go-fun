@@ -181,7 +181,8 @@ templ JournalImagePreviewModal() {
 			@button.Button(button.Props{
 				Variant: button.VariantGhost,
 				Type:    button.TypeButton,
-				Class:   "rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30",
+				Size:    button.SizeIcon,
+				Class:   "rounded-full bg-white/10 text-white hover:bg-white/20",
 				Attributes: templ.Attributes{
 					"x-on:click": "prevImage(true)",
 				},
@@ -195,7 +196,8 @@ templ JournalImagePreviewModal() {
 			@button.Button(button.Props{
 				Variant: button.VariantGhost,
 				Type:    button.TypeButton,
-				Class:   "rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30",
+				Size:    button.SizeIcon,
+				Class:   "rounded-full bg-white/10 text-white hover:bg-white/20",
 				Attributes: templ.Attributes{
 					"x-on:click": "nextImage(true)",
 				},
@@ -205,7 +207,7 @@ templ JournalImagePreviewModal() {
 			@button.Button(button.Props{
 				Variant: button.VariantGhost,
 				Type:    button.TypeButton,
-				Class:   "ml-2 rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20",
+				Class:   "ml-2 bg-white/10 text-xs font-medium text-white hover:bg-white/20",
 				Attributes: templ.Attributes{
 					"x-on:click": "closeImagePreview()",
 				},
@@ -219,9 +221,10 @@ templ JournalImagePreviewModal() {
 				@button.Button(button.Props{
 					Variant: button.VariantGhost,
 					Type:    button.TypeButton,
-					Class:   "absolute inset-0 cursor-pointer rounded-xl",
+					Class:   "absolute inset-0 h-auto w-auto cursor-pointer rounded-xl p-0 text-transparent hover:bg-transparent",
 					Attributes: templ.Attributes{
-						"x-on:click.stop":            "nextImage(true)",
+						"aria-label":                    "Preview Image Navigation Overlay",
+						"x-on:click.stop":               "nextImage(true)",
 						"x-on:contextmenu.prevent.stop": "prevImage(true)",
 					},
 				}) {}

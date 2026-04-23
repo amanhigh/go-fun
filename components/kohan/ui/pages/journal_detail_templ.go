@@ -674,7 +674,8 @@ func JournalImagePreviewModal() templ.Component {
 		templ_7745c5c3_Err = button.Button(button.Props{
 			Variant: button.VariantGhost,
 			Type:    button.TypeButton,
-			Class:   "rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30",
+			Size:    button.SizeIcon,
+			Class:   "rounded-full bg-white/10 text-white hover:bg-white/20",
 			Attributes: templ.Attributes{
 				"x-on:click": "prevImage(true)",
 			},
@@ -707,7 +708,8 @@ func JournalImagePreviewModal() templ.Component {
 		templ_7745c5c3_Err = button.Button(button.Props{
 			Variant: button.VariantGhost,
 			Type:    button.TypeButton,
-			Class:   "rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30",
+			Size:    button.SizeIcon,
+			Class:   "rounded-full bg-white/10 text-white hover:bg-white/20",
 			Attributes: templ.Attributes{
 				"x-on:click": "nextImage(true)",
 			},
@@ -736,7 +738,7 @@ func JournalImagePreviewModal() templ.Component {
 		templ_7745c5c3_Err = button.Button(button.Props{
 			Variant: button.VariantGhost,
 			Type:    button.TypeButton,
-			Class:   "ml-2 rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20",
+			Class:   "ml-2 bg-white/10 text-xs font-medium text-white hover:bg-white/20",
 			Attributes: templ.Attributes{
 				"x-on:click": "closeImagePreview()",
 			},
@@ -751,8 +753,9 @@ func JournalImagePreviewModal() templ.Component {
 		templ_7745c5c3_Err = button.Button(button.Props{
 			Variant: button.VariantGhost,
 			Type:    button.TypeButton,
-			Class:   "absolute inset-0 cursor-pointer rounded-xl",
+			Class:   "absolute inset-0 h-auto w-auto cursor-pointer rounded-xl p-0 text-transparent hover:bg-transparent",
 			Attributes: templ.Attributes{
+				"aria-label":                    "Preview Image Navigation Overlay",
 				"x-on:click.stop":               "nextImage(true)",
 				"x-on:contextmenu.prevent.stop": "prevImage(true)",
 			},
@@ -928,7 +931,7 @@ func JournalDetailEmptyState(message string, showExpr string) templ.Component {
 		var templ_7745c5c3_Var34 string
 		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(showExpr)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/journal_detail.templ`, Line: 262, Col: 147}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/journal_detail.templ`, Line: 265, Col: 147}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 		if templ_7745c5c3_Err != nil {
@@ -941,7 +944,7 @@ func JournalDetailEmptyState(message string, showExpr string) templ.Component {
 		var templ_7745c5c3_Var35 string
 		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/journal_detail.templ`, Line: 263, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/journal_detail.templ`, Line: 266, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 		if templ_7745c5c3_Err != nil {

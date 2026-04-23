@@ -57,8 +57,22 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-text="formatReviewQueueDate(item.created_at)"`))
 			Expect(html).To(ContainSubstring(`aria-label="Delete Note"`))
 			Expect(html).To(ContainSubstring("h-4 w-4"))
+		})
+	})
+
+	Context("Image Preview Modal", func() {
+		It("should render keyboard navigation bindings for preview mode", func() {
+			Expect(html).To(ContainSubstring(`x-on:keydown.escape.window="closeImagePreview()"`))
+			Expect(html).To(ContainSubstring(`x-on:keydown.arrow-left.window="prevImage()"`))
+			Expect(html).To(ContainSubstring(`x-on:keydown.arrow-right.window="nextImage()"`))
+		})
+
+		It("should render mouse navigation bindings for preview mode", func() {
 			Expect(html).To(ContainSubstring(`x-on:click="prevImage(true)"`))
 			Expect(html).To(ContainSubstring(`x-on:click="nextImage(true)"`))
+			Expect(html).To(ContainSubstring(`x-on:click.stop="nextImage(true)"`))
+			Expect(html).To(ContainSubstring(`x-on:contextmenu.prevent.stop="prevImage(true)"`))
+			Expect(html).To(ContainSubstring(`aria-label="Preview Image Navigation Overlay"`))
 		})
 	})
 })
