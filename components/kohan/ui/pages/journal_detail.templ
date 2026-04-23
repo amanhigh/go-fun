@@ -50,48 +50,64 @@ templ JournalDetailPage(journalID string) {
 templ JournalDetailHeader() {
 	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
 		@card.Content(card.ContentProps{}) {
-			<div class="flex flex-col gap-4">
-					<div class="flex items-center justify-between">
-						<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + journal.id"></div>
-						<div class="flex items-center gap-2">
-							@components.StatusBadge(components.StatusBadgeProps{StatusExpr: "journal.status"})
-							@components.DeleteButton(components.DeleteButtonProps{
-								OnClickExpr:  "deleteJournal()",
-								DisabledExpr: "journalDeleting",
-								AriaLabel:    "Delete Journal",
-								Title:        "Delete Journal",
-								Class:        "h-9 w-9",
-							})
-						</div>
-					</div>
-				<div class="space-y-2">
-					<h2 class="text-3xl font-bold tracking-tight text-foreground" x-text="journal.ticker"></h2>
-					<div class="flex items-center gap-2">
-						@components.TypeBadge(components.TypeBadgeProps{TypeExpr: "journal.type"})
-						<span class="text-sm text-muted-foreground" x-text="'Sequence: ' + journal.sequence"></span>
-					</div>
-				</div>
-				<div class="flex flex-wrap gap-4 text-sm text-muted-foreground">
-					@components.InfoRow(components.InfoRowProps{IconName: "calendar", Label: "Created: ", ValueExpr: "formatTimestamp(journal.created_at)"})
-					<div x-show="journal.reviewed_at">
-						@components.InfoRow(components.InfoRowProps{IconName: "shield-check", Label: "Reviewed: ", ValueExpr: "formatTimestamp(journal.reviewed_at)"})
-					</div>
-					<div x-show="!journal.reviewed_at">
-						@components.InfoRow(components.InfoRowProps{IconName: "circle-alert", Label: "Never reviewed", Variant: components.InfoRowWarning})
-					</div>
-				</div>
-				<div class="flex flex-wrap gap-2" x-show="sidebar.deletableTags().length">
-					<template x-for="tag in sidebar.deletableTags()" x-bind:key="tag.id">
-						@badge.Badge(badge.Props{
-							Variant:    badge.VariantSecondary,
-							Class:      "border",
-							Attributes: templ.Attributes{"x-text": "[tag.tag, tag.override, tag.type].filter(Boolean).join(' • ')"},
-						}) {}
-					</template>
-				</div>
+			<div class="space-y-4">
+				@JournalDetailHeaderMeta()
+				@JournalDetailHeaderIdentity()
+				@JournalDetailHeaderTimeline()
+				@JournalDetailHeaderTags()
 			</div>
 		}
 	}
+}
+
+templ JournalDetailHeaderMeta() {
+	<div class="flex items-center justify-between gap-3">
+		<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + journal.id"></div>
+		<div class="flex items-center gap-2">
+			@components.StatusBadge(components.StatusBadgeProps{StatusExpr: "journal.status"})
+			@components.DeleteButton(components.DeleteButtonProps{
+				OnClickExpr:  "deleteJournal()",
+				DisabledExpr: "journalDeleting",
+				AriaLabel:    "Delete Journal",
+				Title:        "Delete Journal",
+				Class:        "h-9 w-9",
+			})
+		</div>
+	</div>
+}
+
+templ JournalDetailHeaderIdentity() {
+	<div class="space-y-2">
+		<h2 class="text-3xl font-bold tracking-tight text-foreground" x-text="journal.ticker"></h2>
+		<div class="flex items-center gap-2">
+			@components.TypeBadge(components.TypeBadgeProps{TypeExpr: "journal.type"})
+			<span class="text-sm text-muted-foreground" x-text="'Sequence: ' + journal.sequence"></span>
+		</div>
+	</div>
+}
+
+templ JournalDetailHeaderTimeline() {
+	<div class="flex flex-wrap gap-4 text-sm text-muted-foreground">
+		@components.InfoRow(components.InfoRowProps{IconName: "calendar", Label: "Created: ", ValueExpr: "formatTimestamp(journal.created_at)"})
+		<div x-show="journal.reviewed_at">
+			@components.InfoRow(components.InfoRowProps{IconName: "shield-check", Label: "Reviewed: ", ValueExpr: "formatTimestamp(journal.reviewed_at)"})
+		</div>
+		<div x-show="!journal.reviewed_at">
+			@components.InfoRow(components.InfoRowProps{IconName: "circle-alert", Label: "Never reviewed", Variant: components.InfoRowWarning})
+		</div>
+	</div>
+}
+
+templ JournalDetailHeaderTags() {
+	<div class="flex flex-wrap gap-2" x-show="sidebar.deletableTags().length">
+		<template x-for="tag in sidebar.deletableTags()" x-bind:key="tag.id">
+			@badge.Badge(badge.Props{
+				Variant:    badge.VariantSecondary,
+				Class:      "border",
+				Attributes: templ.Attributes{"x-text": "[tag.tag, tag.override, tag.type].filter(Boolean).join(' • ')"},
+			}) {}
+		</template>
+	</div>
 }
 
 templ JournalDetailHighlights() {
@@ -117,21 +133,25 @@ templ JournalDetailImages() {
 			<p class="mt-1 text-sm text-muted-foreground"><span x-text="journal.images?.length ?? 0"></span> timeframe image(s)</p>
 			<div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2" x-show="journal.images?.length">
 				<template x-for="(image, index) in sortedImages()" x-bind:key="image.id">
-					<div class="space-y-2">
-						<div class="flex items-center px-1">
-							@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border text-sm font-semibold", Attributes: templ.Attributes{"x-bind:class": "timeframeChipClass(image.timeframe)", "x-text": "image.timeframe"}}) {}
-						</div>
-						<div class="group relative overflow-hidden rounded-2xl border border-border bg-muted" x-bind:class="index < 2 ? 'aspect-[16/9]' : 'aspect-[15/10]'">
-							<button class="h-full w-full text-left" type="button" x-on:click="openImagePreview(index)" x-bind:title="image.file_name">
-								<img class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" x-bind:src="resolveImageSrc(image.file_name, image.created_at)" x-bind:alt="image.timeframe + ' image'" x-on:error="$el.style.opacity='0.35'" loading="lazy"/>
-							</button>
-						</div>
-					</div>
+					@JournalDetailImageTile()
 				</template>
 			</div>
 			@JournalDetailEmptyState("No images available for this journal.", "!journal.images?.length")
 		}
 	}
+}
+
+templ JournalDetailImageTile() {
+	<div class="space-y-2">
+		<div class="flex items-center px-1">
+			@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border text-sm font-semibold", Attributes: templ.Attributes{"x-bind:class": "timeframeChipClass(image.timeframe)", "x-text": "image.timeframe"}}) {}
+		</div>
+		<div class="group relative overflow-hidden rounded-2xl border border-border bg-muted" x-bind:class="index < 2 ? 'aspect-[16/9]' : 'aspect-[15/10]'">
+			<button class="h-full w-full text-left" type="button" x-on:click="openImagePreview(index)" x-bind:title="image.file_name">
+				<img class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" x-bind:src="resolveImageSrc(image.file_name, image.created_at)" x-bind:alt="image.timeframe + ' image'" x-on:error="$el.style.opacity='0.35'" loading="lazy"/>
+			</button>
+		</div>
+	</div>
 }
 
 templ JournalDetailNotes() {
@@ -141,33 +161,37 @@ templ JournalDetailNotes() {
 			<p class="mt-1 text-sm text-muted-foreground"><span x-text="sidebar.sortedNotes().length"></span> note(s)</p>
 			<div class="mt-4 space-y-3" x-show="sidebar.sortedNotes().length">
 				<template x-for="note in sidebar.sortedNotes()" x-bind:key="note.id">
-					<div class="rounded-xl border border-border bg-muted/40 p-4">
-						<div class="mb-3 flex items-start justify-between gap-3">
-							<div class="flex flex-wrap items-center gap-3">
-								@badge.Badge(badge.Props{
-									Variant:    badge.VariantSecondary,
-									Class:      "border font-semibold",
-									Attributes: templ.Attributes{"x-bind:class": "statusBadgeClass(note.status)", "x-text": "note.status"},
-								}) {}
-								<div class="inline-flex items-center gap-2 rounded-md border border-sky-300/70 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-900">
-									<span class="uppercase tracking-wide text-sky-700/80">Created</span>
-									<span x-text="formatTimestamp(note.created_at)"></span>
-								</div>
-							</div>
-							@components.DeleteButton(components.DeleteButtonProps{
-								OnClickExpr:  "sidebar.deleteNote(note.id)",
-								DisabledExpr: "sidebar.noteDeletingId === note.id",
-								AriaLabel:    "Delete Note",
-								Title:        "Delete Note",
-							})
-						</div>
-						<pre class="whitespace-pre-wrap text-sm text-foreground" x-text="note.content"></pre>
-					</div>
+					@JournalDetailNoteRow()
 				</template>
 			</div>
 			@JournalDetailEmptyState("No notes available for this journal.", "!sidebar.sortedNotes().length")
 		}
 	}
+}
+
+templ JournalDetailNoteRow() {
+	<div class="rounded-xl border border-border bg-muted/40 p-4">
+		<div class="mb-3 flex items-start justify-between gap-3">
+			<div class="flex flex-wrap items-center gap-3">
+				@badge.Badge(badge.Props{
+					Variant:    badge.VariantSecondary,
+					Class:      "border font-semibold",
+					Attributes: templ.Attributes{"x-bind:class": "statusBadgeClass(note.status)", "x-text": "note.status"},
+				}) {}
+				<div class="inline-flex items-center gap-2 rounded-md border border-sky-300/70 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-900">
+					<span class="uppercase tracking-wide text-sky-700/80">Created</span>
+					<span x-text="formatTimestamp(note.created_at)"></span>
+				</div>
+			</div>
+			@components.DeleteButton(components.DeleteButtonProps{
+				OnClickExpr:  "sidebar.deleteNote(note.id)",
+				DisabledExpr: "sidebar.noteDeletingId === note.id",
+				AriaLabel:    "Delete Note",
+				Title:        "Delete Note",
+			})
+		</div>
+		<pre class="whitespace-pre-wrap text-sm text-foreground" x-text="note.content"></pre>
+	</div>
 }
 
 // ============================================================
@@ -262,7 +286,5 @@ templ JournalDetailStateSection() {
 }
 
 templ JournalDetailEmptyState(message string, showExpr string) {
-	<div class="mt-5 rounded-xl border border-dashed border-muted-foreground/35 bg-muted/20 px-4 py-6 text-sm text-muted-foreground" x-show={ showExpr }>
-		{ message }
-	</div>
+	@components.EmptyState(components.EmptyStateProps{Message: message, ShowExpr: showExpr, Class: "mt-5"})
 }
