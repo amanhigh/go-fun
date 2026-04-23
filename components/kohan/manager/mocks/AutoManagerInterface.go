@@ -7,6 +7,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/kohan"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -79,18 +80,20 @@ func (_c *AutoManagerInterface_MonitorInternetConnection_Call) RunAndReturn(run 
 }
 
 // RecordTicker provides a mock function for the type AutoManagerInterface
-func (_mock *AutoManagerInterface) RecordTicker(ctx context.Context, ticker string) error {
+func (_mock *AutoManagerInterface) RecordTicker(ctx context.Context, ticker string) common.HttpError {
 	ret := _mock.Called(ctx, ticker)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RecordTicker")
 	}
 
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
+	var r0 common.HttpError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) common.HttpError); ok {
 		r0 = returnFunc(ctx, ticker)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(common.HttpError)
+		}
 	}
 	return r0
 }
@@ -125,18 +128,18 @@ func (_c *AutoManagerInterface_RecordTicker_Call) Run(run func(ctx context.Conte
 	return _c
 }
 
-func (_c *AutoManagerInterface_RecordTicker_Call) Return(err error) *AutoManagerInterface_RecordTicker_Call {
-	_c.Call.Return(err)
+func (_c *AutoManagerInterface_RecordTicker_Call) Return(httpError common.HttpError) *AutoManagerInterface_RecordTicker_Call {
+	_c.Call.Return(httpError)
 	return _c
 }
 
-func (_c *AutoManagerInterface_RecordTicker_Call) RunAndReturn(run func(ctx context.Context, ticker string) error) *AutoManagerInterface_RecordTicker_Call {
+func (_c *AutoManagerInterface_RecordTicker_Call) RunAndReturn(run func(ctx context.Context, ticker string) common.HttpError) *AutoManagerInterface_RecordTicker_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Screenshot provides a mock function for the type AutoManagerInterface
-func (_mock *AutoManagerInterface) Screenshot(ctx context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, error) {
+func (_mock *AutoManagerInterface) Screenshot(ctx context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, common.HttpError) {
 	ret := _mock.Called(ctx, directoryType, fileName, screenshotType, window)
 
 	if len(ret) == 0 {
@@ -144,8 +147,8 @@ func (_mock *AutoManagerInterface) Screenshot(ctx context.Context, directoryType
 	}
 
 	var r0 string
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, kohan.ScreenshotDirectoryType, string, kohan.ScreenshotType, string) (string, error)); ok {
+	var r1 common.HttpError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, kohan.ScreenshotDirectoryType, string, kohan.ScreenshotType, string) (string, common.HttpError)); ok {
 		return returnFunc(ctx, directoryType, fileName, screenshotType, window)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, kohan.ScreenshotDirectoryType, string, kohan.ScreenshotType, string) string); ok {
@@ -153,10 +156,12 @@ func (_mock *AutoManagerInterface) Screenshot(ctx context.Context, directoryType
 	} else {
 		r0 = ret.Get(0).(string)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, kohan.ScreenshotDirectoryType, string, kohan.ScreenshotType, string) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, kohan.ScreenshotDirectoryType, string, kohan.ScreenshotType, string) common.HttpError); ok {
 		r1 = returnFunc(ctx, directoryType, fileName, screenshotType, window)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(common.HttpError)
+		}
 	}
 	return r0, r1
 }
@@ -209,12 +214,12 @@ func (_c *AutoManagerInterface_Screenshot_Call) Run(run func(ctx context.Context
 	return _c
 }
 
-func (_c *AutoManagerInterface_Screenshot_Call) Return(s string, err error) *AutoManagerInterface_Screenshot_Call {
-	_c.Call.Return(s, err)
+func (_c *AutoManagerInterface_Screenshot_Call) Return(s string, httpError common.HttpError) *AutoManagerInterface_Screenshot_Call {
+	_c.Call.Return(s, httpError)
 	return _c
 }
 
-func (_c *AutoManagerInterface_Screenshot_Call) RunAndReturn(run func(ctx context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, error)) *AutoManagerInterface_Screenshot_Call {
+func (_c *AutoManagerInterface_Screenshot_Call) RunAndReturn(run func(ctx context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, common.HttpError)) *AutoManagerInterface_Screenshot_Call {
 	_c.Call.Return(run)
 	return _c
 }

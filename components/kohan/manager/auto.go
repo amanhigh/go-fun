@@ -11,6 +11,7 @@ import (
 
 	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/kohan"
 	"github.com/bitfield/script"
 	"github.com/rs/zerolog"
@@ -41,8 +42,8 @@ Support:
 
 type AutoManagerInterface interface {
 	// HACK: Remove Unwanted Methods and Rename to OSManager.
-	Screenshot(ctx context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, error)
-	RecordTicker(ctx context.Context, ticker string) error
+	Screenshot(ctx context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, common.HttpError)
+	RecordTicker(ctx context.Context, ticker string) common.HttpError
 	TryOpenTicker(ctx context.Context, ticker string)
 	MonitorInternetConnection(ctx context.Context)
 }
@@ -61,10 +62,10 @@ func NewAutoManager(wait time.Duration, screenshotPath string) AutoManagerInterf
 }
 
 // Copy existing implementations preserving comments but as methods
-func (a *AutoManagerImpl) Screenshot(_ context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, error) {
+func (a *AutoManagerImpl) Screenshot(_ context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, common.HttpError) {
 	if window != "" {
 		if err := tools.FocusWindow(window); err != nil {
-			return "", err
+			return "", common.NewServerError(err)
 		}
 	}
 
@@ -73,18 +74,27 @@ func (a *AutoManagerImpl) Screenshot(_ context.Context, directoryType kohan.Scre
 
 	log.Info().Str("Dir", dir).Str("Name", fileName).Str("Type", string(screenshotType)).Msg("Capturing Screenshot")
 
+	var screenshotErr error
 	switch screenshotType {
 	case kohan.ScreenshotTypeRegion:
-		return fullPath, tools.NamedRegionScreenshot(dir, fileName)
+		screenshotErr = tools.NamedRegionScreenshot(dir, fileName)
+	case kohan.ScreenshotTypeFull:
+		screenshotErr = tools.NamedScreenshot(dir, fileName)
 	default:
-		return fullPath, tools.NamedScreenshot(dir, fileName)
+		screenshotErr = tools.NamedScreenshot(dir, fileName)
 	}
+	if screenshotErr != nil {
+		return fullPath, common.NewServerError(screenshotErr)
+	}
+	return fullPath, nil
 }
 
 func (a *AutoManagerImpl) resolveDir(directoryType kohan.ScreenshotDirectoryType) string {
 	switch directoryType {
 	case kohan.ScreenshotDirectoryTypeDownload:
 		return defaultDownloadsDir()
+	case kohan.ScreenshotDirectoryTypeJournal:
+		return a.screenshotPath
 	default:
 		return a.screenshotPath
 	}
@@ -98,7 +108,8 @@ func defaultDownloadsDir() string {
 	return filepath.Join(homeDir, "Downloads")
 }
 
-func (a *AutoManagerImpl) RecordTicker(_ context.Context, ticker string) (err error) {
+func (a *AutoManagerImpl) RecordTicker(_ context.Context, ticker string) common.HttpError {
+	var err error
 	if err = tools.FocusWindow("TradingView"); err == nil {
 		log.Info().Str("Ticker", ticker).Msg("Recording Ticker")
 		path := a.resolveDir(kohan.ScreenshotDirectoryTypeJournal)
@@ -108,7 +119,10 @@ func (a *AutoManagerImpl) RecordTicker(_ context.Context, ticker string) (err er
 		}
 		a.sendNotification(ticker)
 	}
-	return
+	if err != nil {
+		return common.NewServerError(err)
+	}
+	return nil
 }
 
 func (a *AutoManagerImpl) takeScreenshots(ticker, path string) (err error) {

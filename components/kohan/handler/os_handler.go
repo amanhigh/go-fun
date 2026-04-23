@@ -44,10 +44,10 @@ func (h *OSHandlerImpl) HandleScreenshot(ctx *gin.Context) {
 		return
 	}
 
-	fullPath, err := h.autoManager.Screenshot(ctx, req.DirectoryType, req.FileName, req.Type, req.Window)
-	if err != nil {
-		log.Error().Str("file_name", req.FileName).Str("directory_type", string(req.DirectoryType)).Err(err).Msg("Screenshot failed")
-		ctx.JSON(http.StatusInternalServerError, common.NewErrorEnvelope("Unable to capture screenshot", 50001))
+	fullPath, httpErr := h.autoManager.Screenshot(ctx, req.DirectoryType, req.FileName, req.Type, req.Window)
+	if httpErr != nil {
+		log.Error().Str("file_name", req.FileName).Str("directory_type", string(req.DirectoryType)).Err(httpErr).Msg("Screenshot failed")
+		ctx.JSON(httpErr.Code(), httpErr)
 		return
 	}
 
@@ -70,11 +70,11 @@ func (h *OSHandlerImpl) HandleReadClip(ctx *gin.Context) {
 // HandleRecordTicker handles GET /v1/os/ticker/:ticker/record
 func (h *OSHandlerImpl) HandleRecordTicker(ctx *gin.Context) {
 	ticker := ctx.Param("ticker")
-	if err := h.autoManager.RecordTicker(ctx, ticker); err == nil {
+	if httpErr := h.autoManager.RecordTicker(ctx, ticker); httpErr == nil {
 		ctx.JSON(http.StatusOK, "Success")
 	} else {
-		log.Error().Str("Ticker", ticker).Err(err).Msg("Record Ticker Failed")
-		ctx.JSON(http.StatusInternalServerError, err.Error())
+		log.Error().Str("Ticker", ticker).Err(httpErr).Msg("Record Ticker Failed")
+		ctx.JSON(httpErr.Code(), httpErr)
 	}
 }
 

@@ -1,12 +1,9 @@
-//nolint:dupl // Intentional repetition for field validation contexts
 package handler_test
 
 import (
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path/filepath"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
@@ -210,7 +207,7 @@ var _ = Describe("OS Handler Integration Tests", func() {
 			})
 
 			It("should return 500 when auto manager fails", func() {
-				autoManager.EXPECT().Screenshot(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New("screenshot failed"))
+				autoManager.EXPECT().Screenshot(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", common.NewHttpError("screenshot failed", http.StatusInternalServerError))
 
 				payload := kohan.ScreenshotRequest{
 					FileName:      "test.png",
@@ -227,7 +224,7 @@ var _ = Describe("OS Handler Integration Tests", func() {
 	Describe("Legacy OS Endpoints", func() {
 		Context("GET /v1/api/os/ticker/:ticker/record", func() {
 			It("should still handle legacy ticker recording", func() {
-				autoManager.EXPECT().RecordTicker(mock.Anything, "AAPL", screenShotTmpDir).Return(nil)
+				autoManager.EXPECT().RecordTicker(mock.Anything, "AAPL").Return(nil)
 
 				req, w = util.CreateTestRequest("GET", "/v1/api/os/ticker/AAPL/record", nil)
 				router.ServeHTTP(w, req)
