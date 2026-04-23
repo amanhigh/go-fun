@@ -79,10 +79,19 @@ templ JournalDetailHeader() {
 	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
 		@card.Content(card.ContentProps{}) {
 			<div class="flex flex-col gap-4">
-				<div class="flex items-center justify-between">
-					<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + journal.id"></div>
-					@components.StatusBadge(components.StatusBadgeProps{StatusExpr: "journal.status"})
-				</div>
+					<div class="flex items-center justify-between">
+						<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + journal.id"></div>
+						<div class="flex items-center gap-2">
+							@components.StatusBadge(components.StatusBadgeProps{StatusExpr: "journal.status"})
+							@components.DeleteButton(components.DeleteButtonProps{
+								OnClickExpr:  "deleteJournal()",
+								DisabledExpr: "journalDeleting",
+								AriaLabel:    "Delete Journal",
+								Title:        "Delete Journal",
+								Class:        "h-9 w-9",
+							})
+						</div>
+					</div>
 				<div class="space-y-2">
 					<h2 class="text-3xl font-bold tracking-tight text-foreground" x-text="journal.ticker"></h2>
 					<div class="flex items-center gap-2">
@@ -99,8 +108,8 @@ templ JournalDetailHeader() {
 						@components.InfoRow(components.InfoRowProps{IconName: "circle-alert", Label: "Never reviewed", Variant: components.InfoRowWarning})
 					</div>
 				</div>
-				<div class="flex flex-wrap gap-2" x-show="journal.tags?.length">
-					<template x-for="tag in journal.tags" x-bind:key="tag.id">
+				<div class="flex flex-wrap gap-2" x-show="sidebar.deletableTags().length">
+					<template x-for="tag in sidebar.deletableTags()" x-bind:key="tag.id">
 						@badge.Badge(badge.Props{
 							Variant:    badge.VariantSecondary,
 							Class:      "border",
@@ -113,36 +122,37 @@ templ JournalDetailHeader() {
 	}
 }
 
-	templ JournalDetailImages() {
-		@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
-			@card.Content(card.ContentProps{}) {
-				<div x-show="journal.images?.length">
-					@components.SectionHeader(components.SectionHeaderProps{Title: "Images", Description: "Timeframe images · click to zoom"})
-					<p class="mt-1 text-sm text-muted-foreground"><span x-text="journal.images?.length ?? 0"></span> timeframe image(s)</p>
-					<div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
-						<template x-for="(image, index) in sortedImages()" x-bind:key="image.id">
-						<div class="space-y-2">
-							<div class="flex items-center px-1">
-								@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border text-sm font-semibold", Attributes: templ.Attributes{"x-bind:class": "timeframeChipClass(image.timeframe)", "x-text": "image.timeframe"}}) {}
-							</div>
-							<div class="group relative overflow-hidden rounded-2xl border border-border bg-muted" x-bind:class="index < 2 ? 'aspect-[16/9]' : 'aspect-[15/10]'">
-								<button class="h-full w-full text-left" type="button" x-on:click="openImagePreview(index)" x-bind:title="image.file_name">
-									<img class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" x-bind:src="resolveImageSrc(image.file_name, image.created_at)" x-bind:alt="image.timeframe + ' image'" x-on:error="$el.style.opacity='0.35'" loading="lazy"/>
-								</button>
-							</div>
+templ JournalDetailImages() {
+	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
+		@card.Content(card.ContentProps{}) {
+			@components.SectionHeader(components.SectionHeaderProps{Title: "Images", Description: "Timeframe images · click to zoom"})
+			<p class="mt-1 text-sm text-muted-foreground"><span x-text="journal.images?.length ?? 0"></span> timeframe image(s)</p>
+			<div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2" x-show="journal.images?.length">
+				<template x-for="(image, index) in sortedImages()" x-bind:key="image.id">
+					<div class="space-y-2">
+						<div class="flex items-center px-1">
+							@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border text-sm font-semibold", Attributes: templ.Attributes{"x-bind:class": "timeframeChipClass(image.timeframe)", "x-text": "image.timeframe"}}) {}
 						</div>
-					</template>
-				</div>
+						<div class="group relative overflow-hidden rounded-2xl border border-border bg-muted" x-bind:class="index < 2 ? 'aspect-[16/9]' : 'aspect-[15/10]'">
+							<button class="h-full w-full text-left" type="button" x-on:click="openImagePreview(index)" x-bind:title="image.file_name">
+								<img class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" x-bind:src="resolveImageSrc(image.file_name, image.created_at)" x-bind:alt="image.timeframe + ' image'" x-on:error="$el.style.opacity='0.35'" loading="lazy"/>
+							</button>
+						</div>
+					</div>
+				</template>
+			</div>
+			<div class="mt-5 rounded-xl border border-dashed border-muted-foreground/35 bg-muted/20 px-4 py-6 text-sm text-muted-foreground" x-show="!journal.images?.length">
+				No images available for this journal.
 			</div>
 		}
 	}
 }
 
-templ JournalImagePreviewModal() {
+	templ JournalImagePreviewModal() {
 	<div class="fixed inset-0 z-50 flex flex-col bg-black/90 p-4" x-show="hasImagePreview()" x-on:keydown.escape.window="closeImagePreview()" x-on:keydown.arrow-left.window="prevImage()" x-on:keydown.arrow-right.window="nextImage()" x-cloak>
 		<div class="absolute inset-0" x-on:click="closeImagePreview()"></div>
-			<div class="relative z-10 flex w-full items-center justify-between gap-4">
-				@button.Button(button.Props{
+		<div class="relative z-10 flex w-full items-center justify-between gap-4">
+			@button.Button(button.Props{
 				Variant: button.VariantGhost,
 				Type:    button.TypeButton,
 				Class:   "rounded-full bg-white/10 p-2 text-white hover:bg-white/20 disabled:opacity-30",
@@ -198,9 +208,9 @@ templ JournalDetailNotes() {
 	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
 		@card.Content(card.ContentProps{}) {
 			@components.SectionHeader(components.SectionHeaderProps{Title: "Notes", Description: "Add notes for this journal and delete existing notes below."})
-			<p class="mt-1 text-sm text-muted-foreground"><span x-text="journal.notes?.length ?? 0"></span> note(s)</p>
-			<div class="mt-4 space-y-3" x-show="journal.notes?.length">
-				<template x-for="note in journal.notes" x-bind:key="note.id">
+			<p class="mt-1 text-sm text-muted-foreground"><span x-text="sidebar.sortedNotes().length"></span> note(s)</p>
+			<div class="mt-4 space-y-3" x-show="sidebar.sortedNotes().length">
+				<template x-for="note in sidebar.sortedNotes()" x-bind:key="note.id">
 					<div class="rounded-xl border border-border bg-muted/40 p-4">
 						<div class="mb-3 flex items-start justify-between gap-3">
 							<div class="flex flex-wrap items-center gap-3">
@@ -225,7 +235,7 @@ templ JournalDetailNotes() {
 					</div>
 				</template>
 			</div>
-			<div class="rounded-xl border border-dashed border-muted-foreground/35 bg-muted/20 px-4 py-6 text-sm text-muted-foreground" x-show="!journal.notes?.length">
+			<div class="rounded-xl border border-dashed border-muted-foreground/35 bg-muted/20 px-4 py-6 text-sm text-muted-foreground" x-show="!sidebar.sortedNotes().length">
 				No notes available for this journal.
 			</div>
 		}

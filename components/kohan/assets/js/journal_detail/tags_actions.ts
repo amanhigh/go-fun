@@ -27,14 +27,17 @@ const managementTagToneMap: Record<string, string> = {
 
 export function createJournalDetailTags(parent: any, tagClient: JournalTagClient) {
 	return {
+		syncTags(this: any, tags: JournalTag[] | undefined) {
+			this.tagItems = [...(tags ?? [])];
+		},
 		reasonTags(this: any) {
-			return (parent.journal?.tags ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'REASON');
+			return (this.tagItems ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'REASON');
 		},
 		deletableTags(this: any) {
-			return parent.journal?.tags ?? [];
+			return this.tagItems ?? [];
 		},
 		managementTags(this: any) {
-			return (parent.journal?.tags ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'MANAGEMENT');
+			return (this.tagItems ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'MANAGEMENT');
 		},
 		hasManagementBar(this: any) {
 			return normalizeTag(parent.journal?.type ?? '') === 'TAKEN';
@@ -98,7 +101,7 @@ export function createJournalDetailTags(parent: any, tagClient: JournalTagClient
 					...(override ? { override } : {}),
 				};
 				const envelope = await tagClient.create(parent.journalId, payload);
-				parent.journal.tags = prependById(parent.journal.tags ?? [], envelope.data);
+				this.tagItems = prependById(this.tagItems ?? [], envelope.data);
 				this.reasonTagInput = '';
 				this.reasonTagOverride = '';
 				this.reasonTagMessageType = 'success';
@@ -122,7 +125,7 @@ export function createJournalDetailTags(parent: any, tagClient: JournalTagClient
 					type: 'MANAGEMENT',
 				};
 				const envelope = await tagClient.create(parent.journalId, payload);
-				parent.journal.tags = prependById(parent.journal.tags ?? [], envelope.data);
+				this.tagItems = prependById(this.tagItems ?? [], envelope.data);
 				this.managementTagMessageType = 'success';
 				this.managementTagMessage = `${normalizeTag(tagValue)} tag added.`;
 			} catch (err) {
@@ -140,7 +143,7 @@ export function createJournalDetailTags(parent: any, tagClient: JournalTagClient
 			this.reasonTagMessageType = 'error';
 			try {
 				await tagClient.delete(parent.journalId, tagId);
-				parent.journal.tags = removeById(parent.journal.tags ?? [], tagId);
+				this.tagItems = removeById(this.tagItems ?? [], tagId);
 				this.reasonTagMessageType = 'success';
 				this.reasonTagMessage = 'Tag deleted.';
 			} catch (err) {

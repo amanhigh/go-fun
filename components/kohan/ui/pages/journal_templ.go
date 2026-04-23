@@ -5,11 +5,11 @@ package pages
 
 //lint:file-ignore SA4006 This context is only used if a nested component is present.
 
-import (
-	"github.com/a-h/templ"
-	templruntime "github.com/a-h/templ/runtime"
-	"github.com/amanhigh/go-fun/common/ui/layout"
+import "github.com/a-h/templ"
+import templruntime "github.com/a-h/templ/runtime"
 
+import (
+	"github.com/amanhigh/go-fun/common/ui/layout"
 	widgets "github.com/amanhigh/go-fun/common/ui/widgets"
 	"github.com/amanhigh/go-fun/components/kohan/ui/components"
 	"github.com/templui/templui/components/alert"
@@ -257,7 +257,7 @@ func JournalQuickFilterButton(label string, className string, onClick string) te
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/journal.templ`, Line: 62, Col: 188}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/journal.templ`, Line: 61, Col: 188}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {

@@ -1,3 +1,4 @@
+import type { JournalTag } from '../client/journal_tag';
 import { managementTagPresets } from './tags_actions';
 import { createAsyncFeedbackState, type FeedbackType } from '../shared/async_feedback';
 
@@ -10,6 +11,7 @@ export type TagsState = {
 	reasonTagInput: string;
 	reasonTagOverride: string;
 	reasonTagSubmitting: boolean;
+	tagItems: JournalTag[];
 	tagDeletingId: string;
 	reasonTagMessage: string;
 	reasonTagMessageType: FeedbackType;
@@ -23,6 +25,7 @@ export function createTagsState(): TagsState {
 		managementTagPendingValue: '',
 		reasonTagInput: '',
 		reasonTagOverride: '',
+		tagItems: [],
 		tagDeletingId: '',
 	};
 }

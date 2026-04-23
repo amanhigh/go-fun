@@ -2,14 +2,21 @@ import type { JournalNote, JournalNoteClient, JournalNoteRequest } from '../clie
 import { prependById, removeById } from '../shared/collection';
 import { getErrorMessage } from '../shared/error';
 
+function sortNotes(notes: JournalNote[]): JournalNote[] {
+	return [...notes].sort((left: JournalNote, right: JournalNote) => {
+		const leftTime = left.created_at ? new Date(left.created_at).getTime() : 0;
+		const rightTime = right.created_at ? new Date(right.created_at).getTime() : 0;
+		return rightTime - leftTime;
+	});
+}
+
 export function createJournalDetailNotes(parent: any, noteClient: JournalNoteClient) {
 	return {
+		syncNotes(this: any, notes: JournalNote[] | undefined) {
+			this.noteItems = sortNotes(notes ?? []);
+		},
 		sortedNotes(this: any) {
-			return [...(parent.journal?.notes ?? [])].sort((left: JournalNote, right: JournalNote) => {
-				const leftTime = left.created_at ? new Date(left.created_at).getTime() : 0;
-				const rightTime = right.created_at ? new Date(right.created_at).getTime() : 0;
-				return rightTime - leftTime;
-			});
+			return sortNotes(this.noteItems ?? []);
 		},
 		async submitNote(this: any) {
 			if (!parent.journal || this.noteSubmitting) return;
@@ -29,7 +36,7 @@ export function createJournalDetailNotes(parent: any, noteClient: JournalNoteCli
 					format: 'MARKDOWN',
 				};
 				const envelope = await noteClient.create(parent.journalId, payload);
-				parent.journal.notes = prependById(parent.journal.notes ?? [], envelope.data);
+				this.noteItems = sortNotes(prependById(this.noteItems ?? [], envelope.data));
 				this.noteContent = '';
 				this.noteMessageType = 'success';
 				this.noteMessage = 'Note added.';
@@ -47,7 +54,7 @@ export function createJournalDetailNotes(parent: any, noteClient: JournalNoteCli
 			this.noteMessageType = 'error';
 			try {
 				await noteClient.delete(parent.journalId, noteId);
-				parent.journal.notes = removeById(parent.journal.notes ?? [], noteId);
+				this.noteItems = sortNotes(removeById(this.noteItems ?? [], noteId));
 				this.noteMessageType = 'success';
 				this.noteMessage = 'Note deleted.';
 			} catch (err) {
