@@ -34,5 +34,8 @@ export function createJournalListFormatters() {
 			return resolveTypeToggle((this.filter as { type: string }).type).className;
 		},
 		formatTimestamp,
+		journalPageSummary(this: any) {
+			return `Page ${this.pagination.getPage()} of ${this.pagination.getTotalPages()}`;
+		},
 	};
 }

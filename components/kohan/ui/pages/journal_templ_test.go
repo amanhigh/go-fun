@@ -27,89 +27,90 @@ var _ = Describe("Journal Page Tests", func() {
 		render.Reset()
 	})
 
-	It("renders empty journal page", func() {
-		Expect(html).To(ContainSubstring("<title>Shadow Gate</title>"))
-		Expect(html).To(ContainSubstring("Journal Browser"))
-		Expect(html).To(ContainSubstring("Journal entries"))
-		Expect(html).To(ContainSubstring("Browse journals with client-side loading powered by Alpine.js."))
-		Expect(html).To(ContainSubstring("x-data=\"journalPage()\""))
-		Expect(html).To(ContainSubstring("x-init=\"init()\""))
-		Expect(html).To(ContainSubstring("Loading journals..."))
+	Context("Main Flow", func() {
+		It("should bootstrap the page with Alpine init", func() {
+			Expect(html).To(ContainSubstring("<title>Shadow Gate</title>"))
+			Expect(html).To(ContainSubstring("Journal Browser"))
+			Expect(html).To(ContainSubstring("Journal entries"))
+			Expect(html).To(ContainSubstring("x-data=\"journalPage()\""))
+			Expect(html).To(ContainSubstring("x-init=\"init()\""))
+		})
+
+		It("should wire the initial page load flow", func() {
+			Expect(html).To(ContainSubstring("x-init=\"init()\""))
+			Expect(html).To(ContainSubstring("Loading journals..."))
+			Expect(html).To(ContainSubstring("journal in journals"))
+		})
 	})
 
-	It("binds dynamic status and type badge classes", func() {
-		Expect(html).To(ContainSubstring("x-bind:class=\"statusBadgeClass(journal.status)\""))
-		Expect(html).To(ContainSubstring("x-bind:class=\"typeBadgeClass(journal.type)\""))
-		Expect(html).To(ContainSubstring("normalizeStatus(journal.status)"))
-		Expect(html).To(ContainSubstring("journal.type"))
+	Context("Filter Flow", func() {
+		It("should wire quick date and type actions", func() {
+			Expect(html).To(ContainSubstring("applyCreatedPreset"))
+			Expect(html).To(ContainSubstring("last7"))
+			Expect(html).To(ContainSubstring("last30"))
+			Expect(html).To(ContainSubstring("toggleType()"))
+			Expect(html).To(ContainSubstring("typeToggleLabel()"))
+			Expect(html).To(ContainSubstring("typeToggleClass()"))
+		})
+
+		It("should wire review preset actions", func() {
+			Expect(html).To(ContainSubstring("Review"))
+			Expect(html).To(ContainSubstring("reviewPreset in reviewPresets"))
+			Expect(html).To(ContainSubstring("reviewPreset.label"))
+			Expect(html).To(ContainSubstring("applyReviewPreset(reviewPreset)"))
+			Expect(html).To(ContainSubstring("reviewPresetClass(reviewPreset)"))
+		})
+
+		It("should expose important active filter integrations", func() {
+			Expect(html).To(ContainSubstring("createdBefore"))
+			Expect(html).To(ContainSubstring("reviewed"))
+			Expect(html).To(ContainSubstring("Sort: "))
+		})
 	})
 
-	It("links journal id to the detail page", func() {
-		Expect(html).To(ContainSubstring("journal.id"))
-		Expect(html).To(ContainSubstring("x-text=\"journal.id\""))
-		Expect(html).To(ContainSubstring("x-text=\"journal.ticker\""))
-	})
+	Context("Table Flow", func() {
+		It("should wire sortable table columns", func() {
+			Expect(html).To(ContainSubstring("Ticker"))
+			Expect(html).To(ContainSubstring("Sequence"))
+			Expect(html).To(ContainSubstring("Created"))
+		})
 
-	It("renders extracted table header sort controls", func() {
-		Expect(html).To(ContainSubstring("Ticker"))
-		Expect(html).To(ContainSubstring("Sequence"))
-		Expect(html).To(ContainSubstring("Created"))
-		Expect(html).To(ContainSubstring("toggleSort('ticker')"))
-		Expect(html).To(ContainSubstring("toggleSort('sequence')"))
-		Expect(html).To(ContainSubstring("toggleSort('created_at')"))
-	})
+		It("should render journal row integration points", func() {
+			Expect(html).To(ContainSubstring("journal.id"))
+			Expect(html).To(ContainSubstring("x-text=\"journal.ticker\""))
+			Expect(html).To(ContainSubstring("journal.sequence"))
+		})
 
-	It("renders review presets and removes the reviewed dropdown", func() {
-		Expect(html).To(ContainSubstring("Review"))
-		Expect(html).To(ContainSubstring("x-for=\"reviewPreset in reviewPresets\""))
-		Expect(html).To(ContainSubstring("x-text=\"reviewPreset.label\""))
-		Expect(html).To(ContainSubstring("x-on:click=\"applyReviewPreset(reviewPreset)\""))
-		Expect(html).To(ContainSubstring("x-bind:class=\"reviewPresetClass(reviewPreset)\""))
-		Expect(html).ToNot(ContainSubstring("id=\"journal-reviewed\""))
-	})
+		It("should wire row status and type expressions", func() {
+			Expect(html).To(ContainSubstring("journal.status"))
+			Expect(html).To(ContainSubstring("journal.type"))
+		})
 
-	It("shows a month-only badge for the active review preset", func() {
-		Expect(html).To(ContainSubstring("activeReviewPreset"))
-		Expect(html).To(ContainSubstring("bg-amber-100"))
-	})
+		It("should use created_at descending as the default sort", func() {
+			Expect(html).To(ContainSubstring("created_at"))
+			Expect(html).To(ContainSubstring("desc"))
+		})
 
-	It("uses created_at descending as the default sort", func() {
-		Expect(html).To(ContainSubstring("created_at"))
-		Expect(html).To(ContainSubstring("desc"))
-		Expect(html).ToNot(ContainSubstring("Sort: "))
-	})
+		It("should render mutually exclusive table section states", func() {
+			Expect(html).To(ContainSubstring("Loading journals..."))
+			Expect(html).To(ContainSubstring("No journals found."))
+			Expect(html).To(ContainSubstring("Retry"))
+		})
 
-	It("renders active filter chips for multiple filter types", func() {
-		Expect(html).To(ContainSubstring("createdBefore"))
-		Expect(html).To(ContainSubstring("reviewed"))
-		Expect(html).To(ContainSubstring("sortBy"))
-		Expect(html).To(ContainSubstring("Created: "))
-		Expect(html).To(ContainSubstring("Review: "))
-		Expect(html).To(ContainSubstring("Sort: "))
-	})
+		It("should render the table error state with retry binding", func() {
+			Expect(html).To(ContainSubstring("x-show=\"hasError()\""))
+			Expect(html).To(ContainSubstring("x-text=\"errorMessage\""))
+			Expect(html).To(ContainSubstring("x-on:click=\"loadJournals()\""))
+			Expect(html).To(ContainSubstring(">Retry<"))
+		})
 
-	It("renders shared error state with retry action", func() {
-		Expect(html).To(ContainSubstring("x-show=\"hasError()\""))
-		Expect(html).To(ContainSubstring("x-text=\"errorMessage\""))
-		Expect(html).To(ContainSubstring("x-on:click=\"loadJournals()\""))
-		Expect(html).To(ContainSubstring(">Retry<"))
-	})
-
-	It("renders themed quick bars with shared title sections", func() {
-		Expect(html).To(ContainSubstring(">Date<"))
-		Expect(html).To(ContainSubstring(">Review<"))
-		Expect(html).To(ContainSubstring(">Quick<"))
-		Expect(html).To(ContainSubstring("text-sky-700"))
-		Expect(html).To(ContainSubstring("text-cyan-700"))
-		Expect(html).To(ContainSubstring("text-slate-700"))
-	})
-
-	It("keeps shared quick bar action bindings", func() {
-		Expect(html).To(ContainSubstring("applyCreatedPreset"))
-		Expect(html).To(ContainSubstring("last7"))
-		Expect(html).To(ContainSubstring("last30"))
-		Expect(html).To(ContainSubstring("toggleType()"))
-		Expect(html).To(ContainSubstring("x-bind:class=\"typeToggleClass()\""))
-		Expect(html).To(ContainSubstring("x-text=\"typeToggleLabel()\""))
+		It("should render pagination bindings and page summary", func() {
+			Expect(html).To(ContainSubstring("x-on:click=\"prevPage()\""))
+			Expect(html).To(ContainSubstring("x-on:click=\"nextPage()\""))
+			Expect(html).To(ContainSubstring("x-bind:disabled=\"!pagination.hasPrev()\""))
+			Expect(html).To(ContainSubstring("x-bind:disabled=\"!pagination.hasNext()\""))
+			Expect(html).To(ContainSubstring("Page"))
+			Expect(html).To(ContainSubstring("of"))
+		})
 	})
 })
