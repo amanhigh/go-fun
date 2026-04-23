@@ -70,6 +70,9 @@ func (a *AutoManagerImpl) Screenshot(_ context.Context, directoryType kohan.Scre
 	}
 
 	dir := a.resolveDir(directoryType)
+	if err := os.MkdirAll(dir, util.DIR_DEFAULT_PERM); err != nil {
+		return "", common.NewServerError(err)
+	}
 	fullPath := filepath.Join(dir, fileName)
 
 	log.Info().Str("Dir", dir).Str("Name", fileName).Str("Type", string(screenshotType)).Msg("Capturing Screenshot")
@@ -94,9 +97,9 @@ func (a *AutoManagerImpl) resolveDir(directoryType kohan.ScreenshotDirectoryType
 	case kohan.ScreenshotDirectoryTypeDownload:
 		return defaultDownloadsDir()
 	case kohan.ScreenshotDirectoryTypeJournal:
-		return a.screenshotPath
+		return filepath.Join(a.screenshotPath, time.Now().Format("2006"), time.Now().Format("01"))
 	default:
-		return a.screenshotPath
+		return filepath.Join(a.screenshotPath, time.Now().Format("2006"), time.Now().Format("01"))
 	}
 }
 
@@ -113,6 +116,9 @@ func (a *AutoManagerImpl) RecordTicker(_ context.Context, ticker string) common.
 	if err = tools.FocusWindow("TradingView"); err == nil {
 		log.Info().Str("Ticker", ticker).Msg("Recording Ticker")
 		path := a.resolveDir(kohan.ScreenshotDirectoryTypeJournal)
+		if mkErr := os.MkdirAll(path, util.DIR_DEFAULT_PERM); mkErr != nil {
+			return common.NewServerError(mkErr)
+		}
 		err = a.takeScreenshots(ticker, path)
 		if err == nil && strings.Contains(ticker, ".set") {
 			err = a.recordTradeInfo(ticker, path)
