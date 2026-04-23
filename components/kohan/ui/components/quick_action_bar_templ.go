@@ -8,17 +8,103 @@ package components
 import (
 	"github.com/a-h/templ"
 	templruntime "github.com/a-h/templ/runtime"
+	"github.com/templui/templui/components/button"
 	"github.com/templui/templui/components/icon"
 )
 
-type QuickActionBarProps struct {
+type QuickBarTheme string
+
+const (
+	QuickBarThemeBlue  QuickBarTheme = "blue"
+	QuickBarThemeGreen QuickBarTheme = "green"
+	QuickBarThemeCyan  QuickBarTheme = "cyan"
+	QuickBarThemeSlate QuickBarTheme = "slate"
+)
+
+type QuickActionTint string
+
+const (
+	QuickActionTintBlue   QuickActionTint = "blue"
+	QuickActionTintIndigo QuickActionTint = "indigo"
+	QuickActionTintGreen  QuickActionTint = "green"
+	QuickActionTintCyan   QuickActionTint = "cyan"
+	QuickActionTintRose   QuickActionTint = "rose"
+	QuickActionTintAmber  QuickActionTint = "amber"
+	QuickActionTintSlate  QuickActionTint = "slate"
+)
+
+type QuickBarProps struct {
 	Label      string
 	IconName   string
+	Theme      QuickBarTheme
 	Class      string
 	Attributes templ.Attributes
 }
 
-func QuickActionBar(props QuickActionBarProps) templ.Component {
+type QuickActionProps struct {
+	Label       string
+	TextExpr    string
+	OnClickExpr string
+	Tint        QuickActionTint
+	Class       string
+	ClassExpr   string
+	AriaLabel   string
+	Attributes  templ.Attributes
+}
+
+func quickBarThemeClass(theme QuickBarTheme) string {
+	switch theme {
+	case QuickBarThemeBlue:
+		return "text-sky-700"
+	case QuickBarThemeGreen:
+		return "text-emerald-700"
+	case QuickBarThemeCyan:
+		return "text-cyan-700"
+	default:
+		return "text-slate-700"
+	}
+}
+
+func quickActionTintClass(tint QuickActionTint) string {
+	switch tint {
+	case QuickActionTintBlue:
+		return "border-sky-300/70 bg-sky-100/70 text-sky-800 hover:bg-sky-200/80"
+	case QuickActionTintIndigo:
+		return "border-indigo-300/70 bg-indigo-100/70 text-indigo-800 hover:bg-indigo-200/80"
+	case QuickActionTintGreen:
+		return "border-emerald-300/70 bg-emerald-100/70 text-emerald-800 hover:bg-emerald-200/80"
+	case QuickActionTintCyan:
+		return "border-cyan-300/70 bg-cyan-100/70 text-cyan-800 hover:bg-cyan-200/80"
+	case QuickActionTintRose:
+		return "border-rose-300/70 bg-rose-100/70 text-rose-800 hover:bg-rose-200/80"
+	case QuickActionTintAmber:
+		return "border-amber-300/70 bg-amber-100/80 text-amber-900 hover:bg-amber-200/80"
+	default:
+		return "border-slate-300/70 bg-white/80 text-slate-700 hover:bg-slate-100/80"
+	}
+}
+
+func quickActionAttrs(props QuickActionProps) templ.Attributes {
+	attrs := templ.Attributes{}
+	for key, value := range props.Attributes {
+		attrs[key] = value
+	}
+	if props.OnClickExpr != "" {
+		attrs["x-on:click"] = props.OnClickExpr
+	}
+	if props.TextExpr != "" {
+		attrs["x-text"] = props.TextExpr
+	}
+	if props.ClassExpr != "" {
+		attrs["x-bind:class"] = props.ClassExpr
+	}
+	if props.AriaLabel != "" {
+		attrs["aria-label"] = props.AriaLabel
+	}
+	return attrs
+}
+
+func QuickBar(props QuickBarProps) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -39,7 +125,7 @@ func QuickActionBar(props QuickActionBarProps) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var2 = []any{"flex items-center gap-2 " + props.Class}
+		var templ_7745c5c3_Var2 = []any{"flex flex-wrap items-center gap-2 lg:gap-3 " + props.Class}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -69,52 +155,48 @@ func QuickActionBar(props QuickActionBarProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		var templ_7745c5c3_Var4 = []any{"inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 " + quickBarThemeClass(props.Theme)}
+		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var4...)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<span class=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var5 string
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var4).String())
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 1, Col: 0}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
 		if props.IconName != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<span class=\"inline-flex items-center gap-1 text-xs font-semibold text-slate-600\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
 			templ_7745c5c3_Err = icon.Icon(props.IconName)(icon.Props{Class: "h-3.5 w-3.5"}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<span>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var4 string
-			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(props.Label)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 17, Col: 23}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</span></span>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<span class=\"text-xs font-semibold text-slate-600\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var5 string
-			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(props.Label)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 20, Col: 67}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</span>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"flex gap-1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<span>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var6 string
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(props.Label)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 104, Col: 22}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</span></span><div class=\"flex flex-wrap gap-1.5\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -122,7 +204,67 @@ func QuickActionBar(props QuickActionBarProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func QuickAction(props QuickActionProps) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var7 == nil {
+			templ_7745c5c3_Var7 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Var8 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+			if !templ_7745c5c3_IsBuffer {
+				defer func() {
+					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err == nil {
+						templ_7745c5c3_Err = templ_7745c5c3_BufErr
+					}
+				}()
+			}
+			ctx = templ.InitializeContext(ctx)
+			if props.TextExpr == "" {
+				var templ_7745c5c3_Var9 string
+				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(props.Label)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 121, Col: 16}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			return nil
+		})
+		templ_7745c5c3_Err = button.Button(button.Props{
+			Variant:    button.VariantOutline,
+			Type:       button.TypeButton,
+			Size:       button.SizeSm,
+			Class:      "h-8 rounded-md border px-2 text-xs font-medium shadow-sm transition-colors " + quickActionTintClass(props.Tint) + " " + props.Class,
+			Attributes: quickActionAttrs(props),
+		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

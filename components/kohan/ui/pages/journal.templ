@@ -28,24 +28,8 @@ templ JournalPage() {
 		}) {
 			<div x-data="journalPage()" x-init="init()" class="space-y-6">
 				@layout.Card("Browse", "Journal entries", "Latest journal entries are loaded in the browser from the existing Kohan API.") {
-					<div class="rounded-xl border border-sky-200/60 bg-gradient-to-r from-sky-50/70 via-indigo-50/50 to-emerald-50/70 p-4 mb-4 shadow-sm">
-						@JournalQuickFilters()
-						<div class="mt-4">
-							@JournalFilters()
-						</div>
-						<div class="mt-3">
-							@JournalActiveFilters()
-						</div>
-					</div>
-					@JournalStatusAlert()
-					@components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "loading && !hasError()"}) {
-						Loading journals...
-					}
-					@components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!loading && !hasError() && isEmpty()"}) {
-						No journals found.
-					}
-					@JournalTable()
-					@JournalPagination()
+					@JournalFilterSection()
+					@JournalTableSection()
 				}
 			</div>
 		}
@@ -56,90 +40,99 @@ templ JournalPage() {
 // FILTER FLOW
 // ============================================================
 
-templ JournalQuickFilterButton(label string, className string, onClick string) {
-	@button.Button(button.Props{Type: button.TypeButton, Size: button.SizeSm, Variant: button.VariantOutline, Class: className, Attributes: templ.Attributes{"x-on:click": onClick}}) { { label } }
-}
-
-templ JournalActiveFilterBadge(className string, showExpr string, textExpr string) {
-	@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: className, Attributes: templ.Attributes{"x-show": showExpr, "x-text": textExpr}}) {}
+templ JournalFilterSection() {
+	<div class="rounded-xl border border-sky-200/60 bg-gradient-to-r from-sky-50/70 via-indigo-50/50 to-emerald-50/70 p-4 mb-4 shadow-sm">
+		@JournalQuickFilters()
+		<div class="mt-4">
+			@JournalFilters()
+		</div>
+		<div class="mt-3">
+			@JournalActiveFilters()
+		</div>
+	</div>
 }
 
 templ JournalQuickFilters() {
 	<div class="flex flex-wrap items-center gap-3 lg:gap-8">
-		@components.QuickActionBar(components.QuickActionBarProps{Label: "Date", Class: "text-sky-700"}) {
-			@JournalQuickFilterButton("Today", "h-8 border-sky-300/70 bg-sky-100/60 px-2 text-xs text-sky-800 hover:bg-sky-200/70", "applyCreatedPreset('today')")
-			@JournalQuickFilterButton("7d", "h-8 border-indigo-300/70 bg-indigo-100/60 px-2 text-xs text-indigo-800 hover:bg-indigo-200/70", "applyCreatedPreset('last7')")
-			@JournalQuickFilterButton("30d", "h-8 border-emerald-300/70 bg-emerald-100/60 px-2 text-xs text-emerald-800 hover:bg-emerald-200/70", "applyCreatedPreset('last30')")
+		@components.QuickBar(components.QuickBarProps{Label: "Date", IconName: "calendar", Theme: components.QuickBarThemeBlue}) {
+			@components.QuickAction(components.QuickActionProps{Label: "Today", OnClickExpr: "applyCreatedPreset('today')", Tint: components.QuickActionTintBlue})
+			@components.QuickAction(components.QuickActionProps{Label: "7d", OnClickExpr: "applyCreatedPreset('last7')", Tint: components.QuickActionTintIndigo})
+			@components.QuickAction(components.QuickActionProps{Label: "30d", OnClickExpr: "applyCreatedPreset('last30')", Tint: components.QuickActionTintGreen})
 		}
-		@components.QuickActionBar(components.QuickActionBarProps{Label: "Review", IconName: "calendar", Class: "text-cyan-700"}) {
+		@components.QuickBar(components.QuickBarProps{Label: "Review", IconName: "calendar", Theme: components.QuickBarThemeCyan}) {
 			<template x-for="reviewPreset in reviewPresets" x-bind:key="reviewPreset.label">
-				@button.Button(button.Props{Type: button.TypeButton, Size: button.SizeSm, Variant: button.VariantOutline, Class: "h-8 px-2 text-xs", Attributes: templ.Attributes{"x-on:click": "applyReviewPreset(reviewPreset)", "x-bind:class": "reviewPresetClass(reviewPreset)"}}) {
-					<span x-text="reviewPreset.label"></span>
-				}
+				@components.QuickAction(components.QuickActionProps{TextExpr: "reviewPreset.label", OnClickExpr: "applyReviewPreset(reviewPreset)", Tint: components.QuickActionTintCyan, ClassExpr: "reviewPresetClass(reviewPreset)"})
 			</template>
 		}
-		<div class="flex items-center gap-2">
-			<span class="text-xs font-semibold text-slate-600">Quick</span>
-			<div class="flex gap-1">
-				@button.Button(button.Props{
-				Variant: button.VariantOutline,
-				Type:    button.TypeButton,
-				Size:    button.SizeSm,
-				Class:   "h-8 px-2 text-xs rounded-md",
-				Attributes: templ.Attributes{
-					"x-on:click":   "toggleType()",
-					"x-bind:class": "typeToggleClass()",
-					"x-text":       "typeToggleLabel()",
-				},
-			}) {}
-			</div>
-		</div>
+		@components.QuickBar(components.QuickBarProps{Label: "Quick", IconName: "zap", Theme: components.QuickBarThemeSlate}) {
+			@components.QuickAction(components.QuickActionProps{TextExpr: "typeToggleLabel()", OnClickExpr: "toggleType()", Tint: components.QuickActionTintRose, ClassExpr: "typeToggleClass()"})
+		}
 	</div>
 }
 
 templ JournalFilters() {
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-		<div>
-			@input.Input(input.Props{ID: "journal-ticker", Type: input.TypeText, Placeholder: "Ticker", Class: "h-9 w-full border-sky-200/70 bg-white/80", Attributes: templ.Attributes{"x-model.debounce.300ms": "filter.ticker", "x-on:input.debounce.300ms": "applyManualFilters()"}})
-		</div>
-		<div>
-			@selectbox.SelectBox() {
-				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-status", Name: "journal-status", Class: "h-9 w-full border-rose-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.status", "x-on:change": "applyManualFilters()"}}) {
-					@selectbox.Value(selectbox.ValueProps{Placeholder: "Status"})
-				}
-				@selectbox.Content() {
-					@selectbox.Group() {
-						@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
-						@selectbox.Item(selectbox.ItemProps{Value: "SET"}) { SET }
-						@selectbox.Item(selectbox.ItemProps{Value: "RUNNING"}) { RUNNING }
-						@selectbox.Item(selectbox.ItemProps{Value: "SUCCESS"}) { SUCCESS }
-						@selectbox.Item(selectbox.ItemProps{Value: "FAIL"}) { FAIL }
-						@selectbox.Item(selectbox.ItemProps{Value: "REJECTED"}) { REJECTED }
-					}
+		@JournalTickerFilter()
+		@JournalStatusSelect()
+		@JournalSequenceSelect()
+		@JournalCreatedDateFilter()
+		@JournalClearFiltersButton()
+	</div>
+}
+
+templ JournalTickerFilter() {
+	<div>
+		@input.Input(input.Props{ID: "journal-ticker", Type: input.TypeText, Placeholder: "Ticker", Class: "h-9 w-full border-sky-200/70 bg-white/80", Attributes: templ.Attributes{"x-model.debounce.300ms": "filter.ticker", "x-on:input.debounce.300ms": "applyManualFilters()"}})
+	</div>
+}
+
+templ JournalStatusSelect() {
+	<div>
+		@selectbox.SelectBox() {
+			@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-status", Name: "journal-status", Class: "h-9 w-full border-rose-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.status", "x-on:change": "applyManualFilters()"}}) {
+				@selectbox.Value(selectbox.ValueProps{Placeholder: "Status"})
+			}
+			@selectbox.Content() {
+				@selectbox.Group() {
+					@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
+					@selectbox.Item(selectbox.ItemProps{Value: "SET"}) { SET }
+					@selectbox.Item(selectbox.ItemProps{Value: "RUNNING"}) { RUNNING }
+					@selectbox.Item(selectbox.ItemProps{Value: "SUCCESS"}) { SUCCESS }
+					@selectbox.Item(selectbox.ItemProps{Value: "FAIL"}) { FAIL }
+					@selectbox.Item(selectbox.ItemProps{Value: "REJECTED"}) { REJECTED }
 				}
 			}
-		</div>
-		<div>
-			@selectbox.SelectBox() {
-				@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sequence", Name: "journal-sequence", Class: "h-9 w-full border-violet-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.sequence", "x-on:change": "applyManualFilters()"}}) {
-					@selectbox.Value(selectbox.ValueProps{Placeholder: "Sequence"})
-				}
-				@selectbox.Content() {
-					@selectbox.Group() {
-						@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
-						@selectbox.Item(selectbox.ItemProps{Value: "MWD"}) { MWD }
-						@selectbox.Item(selectbox.ItemProps{Value: "YR"}) { YR }
-						@selectbox.Item(selectbox.ItemProps{Value: "WDH"}) { WDH }
-					}
+		}
+	</div>
+}
+
+templ JournalSequenceSelect() {
+	<div>
+		@selectbox.SelectBox() {
+			@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sequence", Name: "journal-sequence", Class: "h-9 w-full border-violet-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.sequence", "x-on:change": "applyManualFilters()"}}) {
+				@selectbox.Value(selectbox.ValueProps{Placeholder: "Sequence"})
+			}
+			@selectbox.Content() {
+				@selectbox.Group() {
+					@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
+					@selectbox.Item(selectbox.ItemProps{Value: "MWD"}) { MWD }
+					@selectbox.Item(selectbox.ItemProps{Value: "YR"}) { YR }
+					@selectbox.Item(selectbox.ItemProps{Value: "WDH"}) { WDH }
 				}
 			}
-		</div>
-		<div>
-			@input.Input(input.Props{ID: "journal-created-on", Type: input.TypeDate, Class: "h-9 w-full border-emerald-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.createdAfter", "x-on:change": "onCreatedDateChange()"}})
-		</div>
-		<div class="flex items-end">
-			@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Size: button.SizeSm, Class: "h-9 w-full border-rose-300/70 bg-rose-100/60 text-rose-800 hover:bg-rose-200/70", Attributes: templ.Attributes{"x-on:click": "clearFilters()"}}) { Clear }
-		</div>
+		}
+	</div>
+}
+
+templ JournalCreatedDateFilter() {
+	<div>
+		@input.Input(input.Props{ID: "journal-created-on", Type: input.TypeDate, Class: "h-9 w-full border-emerald-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.createdAfter", "x-on:change": "onCreatedDateChange()"}})
+	</div>
+}
+
+templ JournalClearFiltersButton() {
+	<div class="flex items-end">
+		@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Size: button.SizeSm, Class: "h-9 w-full border-rose-300/70 bg-rose-100/60 text-rose-800 hover:bg-rose-200/70", Attributes: templ.Attributes{"x-on:click": "clearFilters()"}}) { Clear }
 	</div>
 }
 
@@ -155,9 +148,25 @@ templ JournalActiveFilters() {
 	</div>
 }
 
+templ JournalActiveFilterBadge(className string, showExpr string, textExpr string) {
+	@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: className, Attributes: templ.Attributes{"x-show": showExpr, "x-text": textExpr}}) {}
+}
+
 // ============================================================
 // TABLE FLOW
 // ============================================================
+
+templ JournalTableSection() {
+	@JournalStatusAlert()
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "loading && !hasError()"}) {
+		Loading journals...
+	}
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!loading && !hasError() && isEmpty()"}) {
+		No journals found.
+	}
+	@JournalTable()
+	@JournalPagination()
+}
 
 templ JournalTable() {
 	@card.Card(card.Props{Class: "rounded-none border-x-0 border-b-0 border-t border-t-sky-200/70 shadow-sm", Attributes: templ.Attributes{"x-show": "!loading && !hasError() && !isEmpty()"}}) {
@@ -200,29 +209,6 @@ templ JournalTable() {
 	}
 }
 
-// ============================================================
-// PAGINATION FLOW
-// ============================================================
-
-templ JournalPagination() {
-	@card.Footer(card.FooterProps{Class: "flex flex-col gap-3 border-t border-border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"}) {
-		@pagination.Pagination() {
-			@pagination.Content() {
-				@pagination.Item() {
-					@pagination.Previous(pagination.PreviousProps{Attributes: templ.Attributes{"x-on:click": "prevPage()", "x-bind:disabled": "!pagination.hasPrev()"}})
-				}
-				@pagination.Item() {
-					@pagination.Next(pagination.NextProps{Attributes: templ.Attributes{"x-on:click": "nextPage()", "x-bind:disabled": "!pagination.hasNext()"}})
-				}
-			}
-		}
-	}
-}
-
-// ============================================================
-// STATE FLOW
-// ============================================================
-
 templ JournalStatusAlert() {
 	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxError, ShowExpr: "hasError()"}) {
 		<div class="space-y-3">
@@ -237,5 +223,20 @@ templ JournalStatusAlert() {
 				Retry
 			}
 		</div>
+	}
+}
+
+templ JournalPagination() {
+	@card.Footer(card.FooterProps{Class: "flex flex-col gap-3 border-t border-border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"}) {
+		@pagination.Pagination() {
+			@pagination.Content() {
+				@pagination.Item() {
+					@pagination.Previous(pagination.PreviousProps{Attributes: templ.Attributes{"x-on:click": "prevPage()", "x-bind:disabled": "!pagination.hasPrev()"}})
+				}
+				@pagination.Item() {
+					@pagination.Next(pagination.NextProps{Attributes: templ.Attributes{"x-on:click": "nextPage()", "x-bind:disabled": "!pagination.hasNext()"}})
+				}
+			}
+		}
 	}
 }

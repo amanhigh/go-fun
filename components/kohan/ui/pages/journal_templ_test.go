@@ -55,6 +55,7 @@ var _ = Describe("Journal Page Tests", func() {
 		Expect(html).To(ContainSubstring("x-for=\"reviewPreset in reviewPresets\""))
 		Expect(html).To(ContainSubstring("x-text=\"reviewPreset.label\""))
 		Expect(html).To(ContainSubstring("x-on:click=\"applyReviewPreset(reviewPreset)\""))
+		Expect(html).To(ContainSubstring("x-bind:class=\"reviewPresetClass(reviewPreset)\""))
 		Expect(html).ToNot(ContainSubstring("id=\"journal-reviewed\""))
 	})
 
@@ -68,5 +69,23 @@ var _ = Describe("Journal Page Tests", func() {
 		Expect(html).To(ContainSubstring("x-text=\"errorMessage\""))
 		Expect(html).To(ContainSubstring("x-on:click=\"loadJournals()\""))
 		Expect(html).To(ContainSubstring(">Retry<"))
+	})
+
+	It("renders themed quick bars with shared title sections", func() {
+		Expect(html).To(ContainSubstring(">Date<"))
+		Expect(html).To(ContainSubstring(">Review<"))
+		Expect(html).To(ContainSubstring(">Quick<"))
+		Expect(html).To(ContainSubstring("text-sky-700"))
+		Expect(html).To(ContainSubstring("text-cyan-700"))
+		Expect(html).To(ContainSubstring("text-slate-700"))
+	})
+
+	It("keeps shared quick bar action bindings", func() {
+		Expect(html).To(ContainSubstring("applyCreatedPreset"))
+		Expect(html).To(ContainSubstring("last7"))
+		Expect(html).To(ContainSubstring("last30"))
+		Expect(html).To(ContainSubstring("toggleType()"))
+		Expect(html).To(ContainSubstring("x-bind:class=\"typeToggleClass()\""))
+		Expect(html).To(ContainSubstring("x-text=\"typeToggleLabel()\""))
 	})
 })
