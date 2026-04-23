@@ -40,7 +40,8 @@ var _ = Describe("Journal Page Tests", func() {
 	It("binds dynamic status and type badge classes", func() {
 		Expect(html).To(ContainSubstring("x-bind:class=\"statusBadgeClass(journal.status)\""))
 		Expect(html).To(ContainSubstring("x-bind:class=\"typeBadgeClass(journal.type)\""))
-		Expect(html).To(ContainSubstring("x-text=\"normalizeStatus(journal.status)\""))
+		Expect(html).To(ContainSubstring("normalizeStatus(journal.status)"))
+		Expect(html).To(ContainSubstring("journal.type"))
 	})
 
 	It("links journal id to the detail page", func() {
@@ -60,5 +61,12 @@ var _ = Describe("Journal Page Tests", func() {
 	It("shows a month-only badge for the active review preset", func() {
 		Expect(html).To(ContainSubstring("activeReviewPreset"))
 		Expect(html).To(ContainSubstring("bg-amber-100"))
+	})
+
+	It("renders shared error state with retry action", func() {
+		Expect(html).To(ContainSubstring("x-show=\"hasError()\""))
+		Expect(html).To(ContainSubstring("x-text=\"errorMessage\""))
+		Expect(html).To(ContainSubstring("x-on:click=\"loadJournals()\""))
+		Expect(html).To(ContainSubstring(">Retry<"))
 	})
 })
