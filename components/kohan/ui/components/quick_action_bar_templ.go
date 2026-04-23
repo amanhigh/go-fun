@@ -12,31 +12,10 @@ import (
 	"github.com/templui/templui/components/icon"
 )
 
-type QuickBarTheme string
-
-const (
-	QuickBarThemeBlue  QuickBarTheme = "blue"
-	QuickBarThemeGreen QuickBarTheme = "green"
-	QuickBarThemeCyan  QuickBarTheme = "cyan"
-	QuickBarThemeSlate QuickBarTheme = "slate"
-)
-
-type QuickActionTint string
-
-const (
-	QuickActionTintBlue   QuickActionTint = "blue"
-	QuickActionTintIndigo QuickActionTint = "indigo"
-	QuickActionTintGreen  QuickActionTint = "green"
-	QuickActionTintCyan   QuickActionTint = "cyan"
-	QuickActionTintRose   QuickActionTint = "rose"
-	QuickActionTintAmber  QuickActionTint = "amber"
-	QuickActionTintSlate  QuickActionTint = "slate"
-)
-
 type QuickBarProps struct {
 	Label      string
 	IconName   string
-	Theme      QuickBarTheme
+	Theme      Tone
 	Class      string
 	Attributes templ.Attributes
 }
@@ -45,39 +24,39 @@ type QuickActionProps struct {
 	Label       string
 	TextExpr    string
 	OnClickExpr string
-	Tint        QuickActionTint
+	Tint        Tone
 	Class       string
 	ClassExpr   string
 	AriaLabel   string
 	Attributes  templ.Attributes
 }
 
-func quickBarThemeClass(theme QuickBarTheme) string {
+func quickBarThemeClass(theme Tone) string {
 	switch theme {
-	case QuickBarThemeBlue:
+	case ToneBlue:
 		return "text-sky-700"
-	case QuickBarThemeGreen:
+	case ToneGreen:
 		return "text-emerald-700"
-	case QuickBarThemeCyan:
+	case ToneCyan:
 		return "text-cyan-700"
 	default:
 		return "text-slate-700"
 	}
 }
 
-func quickActionTintClass(tint QuickActionTint) string {
+func quickActionTintClass(tint Tone) string {
 	switch tint {
-	case QuickActionTintBlue:
+	case ToneBlue:
 		return "border-sky-300/70 bg-sky-100/70 text-sky-800 hover:bg-sky-200/80"
-	case QuickActionTintIndigo:
+	case ToneIndigo:
 		return "border-indigo-300/70 bg-indigo-100/70 text-indigo-800 hover:bg-indigo-200/80"
-	case QuickActionTintGreen:
+	case ToneGreen:
 		return "border-emerald-300/70 bg-emerald-100/70 text-emerald-800 hover:bg-emerald-200/80"
-	case QuickActionTintCyan:
+	case ToneCyan:
 		return "border-cyan-300/70 bg-cyan-100/70 text-cyan-800 hover:bg-cyan-200/80"
-	case QuickActionTintRose:
+	case ToneRose:
 		return "border-rose-300/70 bg-rose-100/70 text-rose-800 hover:bg-rose-200/80"
-	case QuickActionTintAmber:
+	case ToneAmber:
 		return "border-amber-300/70 bg-amber-100/80 text-amber-900 hover:bg-amber-200/80"
 	default:
 		return "border-slate-300/70 bg-white/80 text-slate-700 hover:bg-slate-100/80"
@@ -190,7 +169,7 @@ func QuickBar(props QuickBarProps) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(props.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 104, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 83, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -249,7 +228,7 @@ func QuickAction(props QuickActionProps) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(props.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 121, Col: 16}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 100, Col: 16}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {

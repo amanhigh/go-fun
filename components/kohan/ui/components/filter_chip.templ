@@ -1,0 +1,59 @@
+package components
+
+import "github.com/templui/templui/components/badge"
+
+type FilterChipProps struct {
+	ShowExpr   string
+	TextExpr   string
+	Tone       Tone
+	Emoji      string
+	Class      string
+	Attributes templ.Attributes
+}
+
+func filterChipToneClass(tone Tone) string {
+	switch tone {
+	case ToneBlue:
+		return "bg-sky-100 text-sky-800 border border-sky-200"
+	case ToneGreen:
+		return "bg-emerald-100 text-emerald-800 border border-emerald-200"
+	case ToneRose:
+		return "bg-rose-100 text-rose-800 border border-rose-200"
+	case ToneViolet:
+		return "bg-violet-100 text-violet-800 border border-violet-200"
+	case ToneAmber:
+		return "bg-amber-100 text-amber-900 border border-amber-200"
+	default:
+		return "bg-slate-100 text-slate-800 border border-slate-200"
+	}
+}
+
+func filterChipTextExpr(props FilterChipProps) string {
+	if props.Emoji == "" {
+		return props.TextExpr
+	}
+
+	return "'" + props.Emoji + " ' + (" + props.TextExpr + ")"
+}
+
+func filterChipAttrs(props FilterChipProps) templ.Attributes {
+	attrs := templ.Attributes{}
+	for key, value := range props.Attributes {
+		attrs[key] = value
+	}
+	if props.ShowExpr != "" {
+		attrs["x-show"] = props.ShowExpr
+	}
+	if props.TextExpr != "" {
+		attrs["x-text"] = filterChipTextExpr(props)
+	}
+	return attrs
+}
+
+templ FilterChip(props FilterChipProps) {
+	@badge.Badge(badge.Props{
+		Variant:    badge.VariantSecondary,
+		Class:      filterChipToneClass(props.Tone) + " " + props.Class,
+		Attributes: filterChipAttrs(props),
+	}) {}
+}

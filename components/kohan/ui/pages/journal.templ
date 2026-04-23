@@ -54,18 +54,18 @@ templ JournalFilterSection() {
 
 templ JournalQuickFilters() {
 	<div class="flex flex-wrap items-center gap-3 lg:gap-8">
-		@components.QuickBar(components.QuickBarProps{Label: "Date", IconName: "calendar", Theme: components.QuickBarThemeBlue}) {
-			@components.QuickAction(components.QuickActionProps{Label: "Today", OnClickExpr: "applyCreatedPreset('today')", Tint: components.QuickActionTintBlue})
-			@components.QuickAction(components.QuickActionProps{Label: "7d", OnClickExpr: "applyCreatedPreset('last7')", Tint: components.QuickActionTintIndigo})
-			@components.QuickAction(components.QuickActionProps{Label: "30d", OnClickExpr: "applyCreatedPreset('last30')", Tint: components.QuickActionTintGreen})
+		@components.QuickBar(components.QuickBarProps{Label: "Date", IconName: "calendar", Theme: components.ToneBlue}) {
+			@components.QuickAction(components.QuickActionProps{Label: "Today", OnClickExpr: "applyCreatedPreset('today')", Tint: components.ToneBlue})
+			@components.QuickAction(components.QuickActionProps{Label: "7d", OnClickExpr: "applyCreatedPreset('last7')", Tint: components.ToneIndigo})
+			@components.QuickAction(components.QuickActionProps{Label: "30d", OnClickExpr: "applyCreatedPreset('last30')", Tint: components.ToneGreen})
 		}
-		@components.QuickBar(components.QuickBarProps{Label: "Review", IconName: "calendar", Theme: components.QuickBarThemeCyan}) {
+		@components.QuickBar(components.QuickBarProps{Label: "Review", IconName: "calendar", Theme: components.ToneCyan}) {
 			<template x-for="reviewPreset in reviewPresets" x-bind:key="reviewPreset.label">
-				@components.QuickAction(components.QuickActionProps{TextExpr: "reviewPreset.label", OnClickExpr: "applyReviewPreset(reviewPreset)", Tint: components.QuickActionTintCyan, ClassExpr: "reviewPresetClass(reviewPreset)"})
+				@components.QuickAction(components.QuickActionProps{TextExpr: "reviewPreset.label", OnClickExpr: "applyReviewPreset(reviewPreset)", Tint: components.ToneCyan, ClassExpr: "reviewPresetClass(reviewPreset)"})
 			</template>
 		}
-		@components.QuickBar(components.QuickBarProps{Label: "Quick", IconName: "zap", Theme: components.QuickBarThemeSlate}) {
-			@components.QuickAction(components.QuickActionProps{TextExpr: "typeToggleLabel()", OnClickExpr: "toggleType()", Tint: components.QuickActionTintRose, ClassExpr: "typeToggleClass()"})
+		@components.QuickBar(components.QuickBarProps{Label: "Quick", IconName: "zap", Theme: components.ToneSlate}) {
+			@components.QuickAction(components.QuickActionProps{TextExpr: "typeToggleLabel()", OnClickExpr: "toggleType()", Tint: components.ToneRose, ClassExpr: "typeToggleClass()"})
 		}
 	</div>
 }
@@ -138,18 +138,18 @@ templ JournalClearFiltersButton() {
 
 templ JournalActiveFilters() {
 	<div class="flex flex-wrap items-center gap-2" x-show="filter.hasActiveState()">
-		@JournalActiveFilterBadge("bg-sky-100 text-sky-800 border border-sky-200", "filter.ticker !== ''", "'Ticker: ' + filter.ticker")
-		@JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filter.type === 'TAKEN'", "'Type: TAKEN'")
-		@JournalActiveFilterBadge("bg-rose-100 text-rose-800 border border-rose-200", "filter.type === 'REJECTED'", "'Type: REJECTED'")
-		@JournalActiveFilterBadge("bg-rose-100 text-rose-800 border border-rose-200", "filter.status !== ''", "'Status: ' + filter.status")
-		@JournalActiveFilterBadge("bg-violet-100 text-violet-800 border border-violet-200", "filter.sequence !== ''", "'Sequence: ' + filter.sequence")
-		@JournalActiveFilterBadge("bg-emerald-100 text-emerald-800 border border-emerald-200", "filter.createdAfter !== '' && activeReviewPreset === ''", "'Created: ' + filter.createdAfter")
-		@JournalActiveFilterBadge("bg-amber-100 text-amber-900 border border-amber-200", "activeReviewPreset !== ''", "activeReviewPreset")
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneBlue, Emoji: "🔎", ShowExpr: "filter.ticker !== ''", TextExpr: "'Ticker: ' + filter.ticker"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, Emoji: "📈", ShowExpr: "filter.type === 'TAKEN'", TextExpr: "'Type: TAKEN'"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneRose, Emoji: "📉", ShowExpr: "filter.type === 'REJECTED'", TextExpr: "'Type: REJECTED'"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneRose, Emoji: "🏷️", ShowExpr: "filter.status !== ''", TextExpr: "'Status: ' + filter.status"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneViolet, Emoji: "🔢", ShowExpr: "filter.sequence !== ''", TextExpr: "'Sequence: ' + filter.sequence"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, Emoji: "📅", ShowExpr: "filter.createdAfter !== '' && filter.createdBefore !== '' && activeReviewPreset === ''", TextExpr: "'Created: ' + filter.createdAfter + ' → ' + filter.createdBefore"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, Emoji: "📅", ShowExpr: "filter.createdAfter !== '' && filter.createdBefore === '' && activeReviewPreset === ''", TextExpr: "'Created from: ' + filter.createdAfter"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, Emoji: "📅", ShowExpr: "filter.createdBefore !== '' && filter.createdAfter === '' && activeReviewPreset === ''", TextExpr: "'Created until: ' + filter.createdBefore"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Emoji: "🗓️", ShowExpr: "activeReviewPreset !== ''", TextExpr: "'Review: ' + activeReviewPreset"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Emoji: "🕒", ShowExpr: "filter.reviewed !== '' && activeReviewPreset === ''", TextExpr: "filter.reviewed === 'false' ? 'Reviewed: Pending' : 'Reviewed: ' + filter.reviewed"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, Emoji: "↕️", ShowExpr: "filter.sortBy !== '' || filter.sortOrder !== ''", TextExpr: "'Sort: ' + [filter.sortBy, filter.sortOrder].filter(Boolean).join(' · ')"})
 	</div>
-}
-
-templ JournalActiveFilterBadge(className string, showExpr string, textExpr string) {
-	@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: className, Attributes: templ.Attributes{"x-show": showExpr, "x-text": textExpr}}) {}
 }
 
 // ============================================================

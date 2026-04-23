@@ -64,6 +64,15 @@ var _ = Describe("Journal Page Tests", func() {
 		Expect(html).To(ContainSubstring("bg-amber-100"))
 	})
 
+	It("renders active filter chips for multiple filter types", func() {
+		Expect(html).To(ContainSubstring("filter.createdBefore !== ''"))
+		Expect(html).To(ContainSubstring("filter.reviewed !== '' && activeReviewPreset === ''"))
+		Expect(html).To(ContainSubstring("filter.sortBy !== '' || filter.sortOrder !== ''"))
+		Expect(html).To(ContainSubstring("'Created: ' + filter.createdAfter + ' → ' + filter.createdBefore"))
+		Expect(html).To(ContainSubstring("'Review: ' + activeReviewPreset"))
+		Expect(html).To(ContainSubstring("'Sort: ' + [filter.sortBy, filter.sortOrder].filter(Boolean).join(' · ')"))
+	})
+
 	It("renders shared error state with retry action", func() {
 		Expect(html).To(ContainSubstring("x-show=\"hasError()\""))
 		Expect(html).To(ContainSubstring("x-text=\"errorMessage\""))
