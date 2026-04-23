@@ -14,7 +14,7 @@ var servePort = 9010
 var autoCmd = &cobra.Command{
 	Use:   "auto",
 	Short: "Automation Related Commands",
-	PersistentPreRun: func(_ *cobra.Command, args []string) {
+	PersistentPreRun: func(_ *cobra.Command, _ []string) {
 		setLogLevel()
 	},
 }

@@ -1193,7 +1193,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					})
 
 					It("should accept null value", func() {
-						req, w = util.CreateTestRequest("PATCH", barkat.JournalBase+"/"+createdJournal.ExternalID, []byte(`{"status":null}`))
+						req, w = util.CreateTestRequest("PATCH", barkat.JournalBase+"/"+createdJournal.ExternalID, map[string]any{"status": nil})
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
