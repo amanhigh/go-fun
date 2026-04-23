@@ -1,0 +1,26 @@
+package components
+
+type CellLinkProps struct {
+	HrefExpr   string
+	TextExpr   string
+	Class      string
+	Attributes templ.Attributes
+}
+
+func cellLinkAttrs(props CellLinkProps) templ.Attributes {
+	attrs := templ.Attributes{}
+	for key, value := range props.Attributes {
+		attrs[key] = value
+	}
+	if props.HrefExpr != "" {
+		attrs["x-bind:href"] = props.HrefExpr
+	}
+	if props.TextExpr != "" {
+		attrs["x-text"] = props.TextExpr
+	}
+	return attrs
+}
+
+templ CellLink(props CellLinkProps) {
+	<a class={ "font-medium text-sky-700 hover:text-sky-900 hover:underline " + props.Class } { cellLinkAttrs(props)... }></a>
+}

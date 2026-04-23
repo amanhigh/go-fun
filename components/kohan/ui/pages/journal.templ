@@ -148,7 +148,7 @@ templ JournalActiveFilters() {
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, Emoji: "📅", ShowExpr: "filter.createdBefore !== '' && filter.createdAfter === '' && activeReviewPreset === ''", TextExpr: "'Created until: ' + filter.createdBefore"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Emoji: "🗓️", ShowExpr: "activeReviewPreset !== ''", TextExpr: "'Review: ' + activeReviewPreset"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Emoji: "🕒", ShowExpr: "filter.reviewed !== '' && activeReviewPreset === ''", TextExpr: "filter.reviewed === 'false' ? 'Reviewed: Pending' : 'Reviewed: ' + filter.reviewed"})
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, Emoji: "↕️", ShowExpr: "filter.sortBy !== '' || filter.sortOrder !== ''", TextExpr: "'Sort: ' + [filter.sortBy, filter.sortOrder].filter(Boolean).join(' · ')"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, Emoji: "↕️", ShowExpr: "filter.sortBy !== 'created_at' || filter.sortOrder !== 'desc'", TextExpr: "'Sort: ' + [filter.sortBy, filter.sortOrder].filter(Boolean).join(' · ')"})
 	</div>
 }
 
@@ -157,7 +157,20 @@ templ JournalActiveFilters() {
 // ============================================================
 
 templ JournalTableSection() {
-	@JournalStatusAlert()
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxError, ShowExpr: "hasError()"}) {
+		<div class="space-y-3">
+			<div class="font-medium" x-text="errorMessage"></div>
+			@button.Button(button.Props{
+				Variant: button.VariantOutline,
+				Type:    button.TypeButton,
+				Attributes: templ.Attributes{
+					"x-on:click": "loadJournals()",
+				},
+			}) {
+				Retry
+			}
+		</div>
+	}
 	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "loading && !hasError()"}) {
 		Loading journals...
 	}
@@ -172,16 +185,7 @@ templ JournalTable() {
 	@card.Card(card.Props{Class: "rounded-none border-x-0 border-b-0 border-t border-t-sky-200/70 shadow-sm", Attributes: templ.Attributes{"x-show": "!loading && !hasError() && !isEmpty()"}}) {
 		@card.Content(card.ContentProps{Class: "overflow-x-auto p-0"}) {
 			@table.Table(table.Props{Class: "min-w-[860px]"}) {
-				@table.Header(table.HeaderProps{Class: "bg-gradient-to-r from-sky-100/70 via-indigo-100/60 to-emerald-100/70 text-xs uppercase tracking-wide text-slate-700"}) {
-					@table.Row() {
-						@table.Head() { ID }
-						@widgets.SortHead(widgets.SortHeadProps{Label: "Ticker", Field: "ticker", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "toggleSort('ticker')"})
-						@widgets.SortHead(widgets.SortHeadProps{Label: "Sequence", Field: "sequence", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "toggleSort('sequence')"})
-						@table.Head() { Type }
-						@table.Head() { Status }
-						@widgets.SortHead(widgets.SortHeadProps{Label: "Created", Field: "created_at", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "toggleSort('created_at')"})
-					}
-				}
+				@JournalTableHeader()
 				@table.Body() {
 					<template x-for="journal in journals" x-bind:key="journal.id">
 						@JournalRow()
@@ -192,10 +196,23 @@ templ JournalTable() {
 	}
 }
 
-	templ JournalRow() {
+templ JournalTableHeader() {
+	@table.Header(table.HeaderProps{Class: "bg-gradient-to-r from-sky-100/70 via-indigo-100/60 to-emerald-100/70 text-xs uppercase tracking-wide text-slate-700"}) {
+		@table.Row() {
+			@table.Head() { ID }
+			@widgets.SortHead(widgets.SortHeadProps{Label: "Ticker", Field: "ticker", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "toggleSort('ticker')"})
+			@widgets.SortHead(widgets.SortHeadProps{Label: "Sequence", Field: "sequence", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "toggleSort('sequence')"})
+			@table.Head() { Type }
+			@table.Head() { Status }
+			@widgets.SortHead(widgets.SortHeadProps{Label: "Created", Field: "created_at", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "toggleSort('created_at')"})
+		}
+	}
+}
+
+templ JournalRow() {
 	@table.Row() {
 		@table.Cell() {
-			<a class="font-medium text-sky-700 hover:text-sky-900 hover:underline" x-bind:href="'/journal/' + journal.id" x-text="journal.id"></a>
+			@components.CellLink(components.CellLinkProps{HrefExpr: "'/journal/' + journal.id", TextExpr: "journal.id"})
 		}
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "journal.ticker"}}) {}
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "journal.sequence"}}) {}
@@ -206,23 +223,6 @@ templ JournalTable() {
 			@components.StatusBadge(components.StatusBadgeProps{StatusExpr: "journal.status"})
 		}
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "formatTimestamp(journal.created_at)"}}) {}
-	}
-}
-
-templ JournalStatusAlert() {
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxError, ShowExpr: "hasError()"}) {
-		<div class="space-y-3">
-			<div class="font-medium" x-text="errorMessage"></div>
-			@button.Button(button.Props{
-				Variant: button.VariantOutline,
-				Type:    button.TypeButton,
-				Attributes: templ.Attributes{
-					"x-on:click": "loadJournals()",
-				},
-			}) {
-				Retry
-			}
-		</div>
 	}
 }
 

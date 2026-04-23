@@ -12,6 +12,7 @@ import (
 )
 
 type FilterChipProps struct {
+	// TODO: Cover Component Package with Test
 	ShowExpr   string
 	TextExpr   string
 	Tone       Tone

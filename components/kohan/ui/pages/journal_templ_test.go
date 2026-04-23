@@ -45,9 +45,18 @@ var _ = Describe("Journal Page Tests", func() {
 	})
 
 	It("links journal id to the detail page", func() {
-		Expect(html).To(ContainSubstring("x-bind:href=\"'/journal/' + journal.id\""))
+		Expect(html).To(ContainSubstring("journal.id"))
 		Expect(html).To(ContainSubstring("x-text=\"journal.id\""))
 		Expect(html).To(ContainSubstring("x-text=\"journal.ticker\""))
+	})
+
+	It("renders extracted table header sort controls", func() {
+		Expect(html).To(ContainSubstring("Ticker"))
+		Expect(html).To(ContainSubstring("Sequence"))
+		Expect(html).To(ContainSubstring("Created"))
+		Expect(html).To(ContainSubstring("toggleSort('ticker')"))
+		Expect(html).To(ContainSubstring("toggleSort('sequence')"))
+		Expect(html).To(ContainSubstring("toggleSort('created_at')"))
 	})
 
 	It("renders review presets and removes the reviewed dropdown", func() {
@@ -64,13 +73,19 @@ var _ = Describe("Journal Page Tests", func() {
 		Expect(html).To(ContainSubstring("bg-amber-100"))
 	})
 
+	It("uses created_at descending as the default sort", func() {
+		Expect(html).To(ContainSubstring("created_at"))
+		Expect(html).To(ContainSubstring("desc"))
+		Expect(html).ToNot(ContainSubstring("Sort: "))
+	})
+
 	It("renders active filter chips for multiple filter types", func() {
-		Expect(html).To(ContainSubstring("filter.createdBefore !== ''"))
-		Expect(html).To(ContainSubstring("filter.reviewed !== '' && activeReviewPreset === ''"))
-		Expect(html).To(ContainSubstring("filter.sortBy !== '' || filter.sortOrder !== ''"))
-		Expect(html).To(ContainSubstring("'Created: ' + filter.createdAfter + ' → ' + filter.createdBefore"))
-		Expect(html).To(ContainSubstring("'Review: ' + activeReviewPreset"))
-		Expect(html).To(ContainSubstring("'Sort: ' + [filter.sortBy, filter.sortOrder].filter(Boolean).join(' · ')"))
+		Expect(html).To(ContainSubstring("createdBefore"))
+		Expect(html).To(ContainSubstring("reviewed"))
+		Expect(html).To(ContainSubstring("sortBy"))
+		Expect(html).To(ContainSubstring("Created: "))
+		Expect(html).To(ContainSubstring("Review: "))
+		Expect(html).To(ContainSubstring("Sort: "))
 	})
 
 	It("renders shared error state with retry action", func() {

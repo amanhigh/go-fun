@@ -41,7 +41,7 @@ export const journalFields: JournalFilterKey[] = ['ticker', 'type', 'status', 's
 function createDefaultJournalFilters(): JournalFilters {
 	return journalFields.reduce<JournalFilters>((defaults, field) => ({
 		...defaults,
-		[field]: '',
+		[field]: field === 'sortBy' ? 'created_at' : field === 'sortOrder' ? 'desc' : '',
 	}), {} as JournalFilters);
 }
 
@@ -89,7 +89,15 @@ export function createJournalFilter(): JournalFilterState {
 	};
 
 	state.hasActiveState = function hasActiveState(this: JournalFilterState) {
-		return journalFields.some((field) => this[field] !== '');
+		return journalFields.some((field) => {
+			if (field === 'sortBy') {
+				return this.sortBy !== 'created_at';
+			}
+			if (field === 'sortOrder') {
+				return this.sortOrder !== 'desc';
+			}
+			return this[field] !== '';
+		});
 	};
 
 	return state;
