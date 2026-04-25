@@ -21,7 +21,7 @@ export function createPresetActions() {
 			return reviewPreset.isAnchor ? reviewPresetAnchorClass : reviewPresetBaseClass;
 		},
 		applyCreatedPreset(this: any, preset: DatePreset) {
-			this.clearFilters();
+			this.filter.clear();
 			const range = buildDatePresetRange(preset);
 			this.filter.createdAfter = range.createdAfter;
 			this.filter.createdBefore = range.createdBefore;
@@ -29,7 +29,7 @@ export function createPresetActions() {
 			this.applyFilters();
 		},
 		applyReviewPreset(this: any, reviewPreset: ReviewPreset) {
-			this.clearFilters();
+			this.filter.clear();
 			this.filter.createdAfter = reviewPreset.createdAfter;
 			this.filter.createdBefore = reviewPreset.createdBefore;
 			this.filter.reviewed = 'false';

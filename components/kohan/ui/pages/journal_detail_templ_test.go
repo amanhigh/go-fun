@@ -61,20 +61,40 @@ var _ = Describe("Journal Detail Page Tests", func() {
 	})
 
 	Context("Header Summary", func() {
-		It("should render a compact summary card without duplicate highlight strip", func() {
+		It("should render a compact summary card with new two-column layout", func() {
+			// Identity unchanged
 			Expect(html).To(ContainSubstring(`x-text="journal.ticker"`))
 			Expect(html).To(ContainSubstring(`x-text="'ID: ' + journal.id"`))
-			Expect(html).To(ContainSubstring(`🕒 Created`))
-			Expect(html).To(ContainSubstring(`🧬`))
-			Expect(html).To(ContainSubstring(`Summary Tags`))
-			Expect(html).To(ContainSubstring(`x-show="sidebar.deletableTags().length"`))
-			Expect(html).To(ContainSubstring(`x-show="tag.tag"`))
-			Expect(html).To(ContainSubstring(`x-show="tag.override"`))
-			Expect(html).To(ContainSubstring(`x-show="tag.type"`))
+			// Delete action
+			Expect(html).To(ContainSubstring(`x-on:click="deleteJournal()"`))
+
+			// Primary info row: type + status + timeframe
+			Expect(html).To(ContainSubstring(`📅`))
+			Expect(html).To(ContainSubstring(`📈`))
+			Expect(html).To(ContainSubstring(`FAIL`))
+
+			// Right metadata: created + pending/review
+			Expect(html).To(ContainSubstring(`🕒`))
+			Expect(html).To(ContainSubstring(`x-text="formatTimestamp(journal.created_at)"`))
+			Expect(html).To(ContainSubstring(`x-show="!journal.reviewed_at"`))
+			Expect(html).To(ContainSubstring(`x-show="journal.reviewed_at"`))
+
+			// Tags rendered directly without section label
+			Expect(html).ToNot(ContainSubstring(`Summary Tags`))
+			Expect(html).ToNot(ContainSubstring(`Signal Tags`))
+
+			// No old highlight card labels
 			Expect(html).ToNot(ContainSubstring(`>STATUS</p>`))
 			Expect(html).ToNot(ContainSubstring(`>TYPE</p>`))
 			Expect(html).ToNot(ContainSubstring(`>SEQUENCE</p>`))
 			Expect(html).ToNot(ContainSubstring(`>CREATED</p>`))
+		})
+	})
+	Context("Header Tags", func() {
+		It("should render separate primary and secondary tag sections", func() {
+			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.deletableTags()"`))
+			Expect(html).To(ContainSubstring(`REASON&#39;,&#39;MANAGEMENT`))
+			Expect(html).To(ContainSubstring(`DIRECTION&#39;,&#39;LEGACY`))
 		})
 	})
 

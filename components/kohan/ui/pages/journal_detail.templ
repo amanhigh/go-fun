@@ -48,69 +48,50 @@ templ JournalDetailPage(journalID string) {
 
 templ JournalDetailHeader() {
 	@card.Card(card.Props{Class: "overflow-hidden rounded-3xl border border-violet-200/70 bg-gradient-to-br from-white via-violet-50/70 to-sky-50/80 shadow-sm"}) {
-		@card.Content(card.ContentProps{Class: "space-y-4 p-6"}) {
-			<div class="space-y-4">
-				@JournalDetailHeaderMeta()
-				@JournalDetailHeaderSummary()
-				@JournalDetailHeaderMetadata()
-				@JournalDetailHeaderTags()
+		@card.Content(card.ContentProps{Class: "p-6"}) {
+			<div class="space-y-3">
+				<div class="flex items-start justify-between gap-3">
+					<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + journal.id"></div>
+					@components.DeleteButton(components.DeleteButtonProps{
+						OnClickExpr:  "deleteJournal()",
+						DisabledExpr: "journalDeleting",
+						AriaLabel:    "Delete Journal",
+						Title:        "Delete Journal",
+						Class:        "h-9 w-9",
+					})
+				</div>
+				<h2 class="text-3xl font-bold tracking-tight text-foreground" x-text="journal.ticker"></h2>
+				<div class="flex justify-between gap-6">
+					<div class="flex flex-wrap items-center gap-2.5">
+						@components.TypeBadge(components.TypeBadgeProps{TypeExpr: "journal.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+						@components.StatusBadge(components.StatusBadgeProps{StatusExpr: "journal.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+						@components.FilterChip(components.FilterChipProps{TextExpr: "journal.sequence", Tone: components.ToneViolet, Emoji: "📅", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm", Attributes: templ.Attributes{"x-text": "journal.sequence === 'MWD' ? '🕐 ' + journal.sequence : '📅 ' + journal.sequence"}})
+					</div>
+					<div class="flex flex-col items-end gap-1">
+						@components.InfoRow(components.InfoRowProps{Label: "🕒", ValueExpr: "formatTimestamp(journal.created_at)", Class: "text-xs"})
+						<div x-show="!journal.reviewed_at">
+							@components.FilterChip(components.FilterChipProps{TextExpr: "'⏳ Pending Review'", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
+						</div>
+						<div x-show="journal.reviewed_at">
+							@components.InfoRow(components.InfoRowProps{Label: "✅", ValueExpr: "formatTimestamp(journal.reviewed_at)", Class: "text-xs text-emerald-600"})
+						</div>
+					</div>
+				</div>
+				<div class="flex justify-between gap-6" x-show="sidebar.deletableTags().length">
+					<div class="flex flex-wrap gap-2">
+						<template x-for="tag in sidebar.deletableTags()" x-bind:key="tag.id">
+							@components.FilterChip(components.FilterChipProps{ShowExpr: "['REASON','MANAGEMENT'].includes(tag.type)", Tone: components.ToneAmber, Class: "rounded-full font-semibold", Attributes: templ.Attributes{"x-text": "(tag.tag.toLowerCase().includes('trend') ? '📈 ' : '⚡ ') + tag.tag + (tag.override ? ' → ' + tag.override : '')"}})
+						</template>
+					</div>
+					<div class="flex flex-wrap gap-2">
+						<template x-for="tag in sidebar.deletableTags()" x-bind:key="tag.id">
+							@components.FilterChip(components.FilterChipProps{ShowExpr: "['DIRECTION','LEGACY'].includes(tag.type)", TextExpr: "tag.tag", Tone: components.ToneSlate, Emoji: "🏷", Class: "rounded-full text-xs"})
+						</template>
+					</div>
+				</div>
 			</div>
 		}
 	}
-}
-
-templ JournalDetailHeaderMeta() {
-	<div class="flex items-center justify-between gap-3">
-		<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + journal.id"></div>
-		<div class="flex items-center gap-2">
-			@components.StatusBadge(components.StatusBadgeProps{StatusExpr: "journal.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
-			@components.DeleteButton(components.DeleteButtonProps{
-				OnClickExpr:  "deleteJournal()",
-				DisabledExpr: "journalDeleting",
-				AriaLabel:    "Delete Journal",
-				Title:        "Delete Journal",
-				Class:        "h-9 w-9",
-			})
-		</div>
-	</div>
-}
-
-templ JournalDetailHeaderSummary() {
-	<div class="space-y-3">
-		<h2 class="text-3xl font-bold tracking-tight text-foreground" x-text="journal.ticker"></h2>
-		<div class="flex flex-wrap items-center gap-2.5">
-			@components.TypeBadge(components.TypeBadgeProps{TypeExpr: "journal.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
-			@components.FilterChip(components.FilterChipProps{TextExpr: "journal.reviewed_at ? 'Reviewed' : 'Pending Review'", Tone: components.ToneGreen, Emoji: "🛡", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm", Attributes: templ.Attributes{"x-bind:class": "journal.reviewed_at ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' : 'bg-amber-100 text-amber-900 border border-amber-200'", "x-text": "journal.reviewed_at ? '🛡 Reviewed' : '⏳ Pending Review'"}})
-			@components.FilterChip(components.FilterChipProps{TextExpr: "journal.sequence", Tone: components.ToneViolet, Emoji: "🧬", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm", Attributes: templ.Attributes{"x-text": "'🧬 ' + journal.sequence"}})
-		</div>
-	</div>
-}
-
-templ JournalDetailHeaderMetadata() {
-	<div class="flex flex-wrap items-center gap-2.5 text-sm">
-		@components.FilterChip(components.FilterChipProps{TextExpr: "'🕒 Created ' + formatTimestamp(journal.created_at)", Tone: components.ToneBlue, Class: "rounded-full px-3 py-1 text-sm font-medium shadow-sm"})
-		<div x-show="journal.reviewed_at">
-			@components.FilterChip(components.FilterChipProps{TextExpr: "'✅ Reviewed at ' + formatTimestamp(journal.reviewed_at)", Tone: components.ToneGreen, Class: "rounded-full px-3 py-1 text-sm font-medium shadow-sm"})
-		</div>
-		<div x-show="!journal.reviewed_at">
-			@components.FilterChip(components.FilterChipProps{TextExpr: "'⌛ Awaiting review'", Tone: components.ToneAmber, Class: "rounded-full px-3 py-1 text-sm font-medium shadow-sm"})
-		</div>
-	</div>
-}
-
-templ JournalDetailHeaderTags() {
-	<div class="space-y-2" x-show="sidebar.deletableTags().length">
-		<div class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Summary Tags</div>
-		<div class="flex flex-wrap gap-2">
-			<template x-for="tag in sidebar.deletableTags()" x-bind:key="tag.id">
-				<div class="flex flex-wrap gap-2 rounded-2xl border border-border/60 bg-white/70 px-2.5 py-2 shadow-sm backdrop-blur-sm">
-					@components.FilterChip(components.FilterChipProps{ShowExpr: "tag.tag", TextExpr: "tag.tag", Tone: components.ToneViolet, Emoji: "🏷", Class: "rounded-full font-semibold"})
-					@components.FilterChip(components.FilterChipProps{ShowExpr: "tag.override", TextExpr: "tag.override", Tone: components.ToneBlue, Emoji: "✏️", Class: "rounded-full font-semibold"})
-					@components.FilterChip(components.FilterChipProps{ShowExpr: "tag.type", TextExpr: "tag.type", Tone: components.ToneAmber, Emoji: "🗂", Class: "rounded-full font-semibold"})
-				</div>
-			</template>
-		</div>
-	</div>
 }
 
 templ JournalDetailImages() {
