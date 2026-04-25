@@ -2,7 +2,9 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -86,10 +88,19 @@ func (a *AutoManagerImpl) Screenshot(_ context.Context, directoryType kohan.Scre
 	default:
 		screenshotErr = tools.NamedScreenshot(dir, fileName)
 	}
-	if screenshotErr != nil {
-		return fullPath, common.NewServerError(screenshotErr)
+	return fullPath, a.mapScreenshotError(screenshotErr)
+}
+
+// mapScreenshotError converts screenshot tool errors into the appropriate HttpError.
+// User aborts → 409 Conflict; genuine tool/framework failures → 500.
+func (a *AutoManagerImpl) mapScreenshotError(err error) common.HttpError {
+	if err == nil {
+		return nil
 	}
-	return fullPath, nil
+	if errors.Is(err, tools.ErrScreenshotAborted) {
+		return common.NewHttpError(err.Error(), http.StatusConflict)
+	}
+	return common.NewServerError(err)
 }
 
 func (a *AutoManagerImpl) resolveDir(directoryType kohan.ScreenshotDirectoryType) string {

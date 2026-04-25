@@ -218,6 +218,20 @@ var _ = Describe("OS Handler Integration Tests", func() {
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusInternalServerError))
 			})
+
+			It("should return 409 Conflict when user aborts screenshot", func() {
+				autoManager.EXPECT().Screenshot(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", common.NewHttpError("screenshot aborted", http.StatusConflict))
+
+				payload := kohan.ScreenshotRequest{
+					FileName:      "test.png",
+					DirectoryType: kohan.ScreenshotDirectoryTypeJournal,
+					Type:          kohan.ScreenshotTypeRegion,
+				}
+				req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+				router.ServeHTTP(w, req)
+				Expect(w.Code).To(Equal(http.StatusConflict))
+				Expect(w.Body.String()).To(ContainSubstring("\"status\":\"fail\""))
+			})
 		})
 	})
 
