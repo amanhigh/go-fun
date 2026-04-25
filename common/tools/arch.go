@@ -42,7 +42,7 @@ func NamedRegionScreenshot(dir, name string) (err error) {
 	// Step 2: Use the geometry string for grim capture.
 	fullPath := dir + "/" + name
 	geometry = strings.TrimSpace(geometry)
-	err = script.Exec(fmt.Sprintf("grim -g %s %s", geometry, fullPath)).Error()
+	err = script.Exec(fmt.Sprintf(`grim -g "%s" "%s"`, geometry, fullPath)).Error()
 	return
 }
 

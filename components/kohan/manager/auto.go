@@ -167,7 +167,9 @@ func (a *AutoManagerImpl) recordTradeInfo(ticker, path string) (err error) {
 
 		// Record Check Screenshot
 		checkFile := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format(DATE_FORMAT))
-		_ = tools.NamedRegionScreenshot(path, checkFile)
+		if checkErr := tools.NamedRegionScreenshot(path, checkFile); checkErr != nil {
+			log.Warn().Str("Ticker", ticker).Err(checkErr).Msg("Checklist screenshot not saved (user may have aborted)")
+		}
 	} else {
 		log.Error().Str("Ticker", ticker).Err(err).Msg("Read TradeInfo Failed")
 	}
