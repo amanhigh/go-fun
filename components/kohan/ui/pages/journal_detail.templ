@@ -30,7 +30,6 @@ templ JournalDetailPage(journalID string) {
 					<div class="grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)] xl:items-start">
 						<div class="space-y-6 min-w-0">
 							@JournalDetailHeader()
-							@JournalDetailHighlights()
 							@JournalDetailImages()
 							@JournalDetailNotes()
 						</div>
@@ -48,12 +47,12 @@ templ JournalDetailPage(journalID string) {
 // ============================================================
 
 templ JournalDetailHeader() {
-	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
-		@card.Content(card.ContentProps{}) {
+	@card.Card(card.Props{Class: "overflow-hidden rounded-3xl border border-violet-200/70 bg-gradient-to-br from-white via-violet-50/70 to-sky-50/80 shadow-sm"}) {
+		@card.Content(card.ContentProps{Class: "space-y-4 p-6"}) {
 			<div class="space-y-4">
 				@JournalDetailHeaderMeta()
-				@JournalDetailHeaderIdentity()
-				@JournalDetailHeaderTimeline()
+				@JournalDetailHeaderSummary()
+				@JournalDetailHeaderMetadata()
 				@JournalDetailHeaderTags()
 			</div>
 		}
@@ -64,7 +63,7 @@ templ JournalDetailHeaderMeta() {
 	<div class="flex items-center justify-between gap-3">
 		<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + journal.id"></div>
 		<div class="flex items-center gap-2">
-			@components.StatusBadge(components.StatusBadgeProps{StatusExpr: "journal.status"})
+			@components.StatusBadge(components.StatusBadgeProps{StatusExpr: "journal.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
 			@components.DeleteButton(components.DeleteButtonProps{
 				OnClickExpr:  "deleteJournal()",
 				DisabledExpr: "journalDeleting",
@@ -76,53 +75,41 @@ templ JournalDetailHeaderMeta() {
 	</div>
 }
 
-templ JournalDetailHeaderIdentity() {
-	<div class="space-y-2">
+templ JournalDetailHeaderSummary() {
+	<div class="space-y-3">
 		<h2 class="text-3xl font-bold tracking-tight text-foreground" x-text="journal.ticker"></h2>
-		<div class="flex items-center gap-2">
-			@components.TypeBadge(components.TypeBadgeProps{TypeExpr: "journal.type"})
-			<span class="text-sm text-muted-foreground" x-text="'Sequence: ' + journal.sequence"></span>
+		<div class="flex flex-wrap items-center gap-2.5">
+			@components.TypeBadge(components.TypeBadgeProps{TypeExpr: "journal.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+			@components.FilterChip(components.FilterChipProps{TextExpr: "journal.reviewed_at ? 'Reviewed' : 'Pending Review'", Tone: components.ToneGreen, Emoji: "🛡", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm", Attributes: templ.Attributes{"x-bind:class": "journal.reviewed_at ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' : 'bg-amber-100 text-amber-900 border border-amber-200'", "x-text": "journal.reviewed_at ? '🛡 Reviewed' : '⏳ Pending Review'"}})
+			@components.FilterChip(components.FilterChipProps{TextExpr: "journal.sequence", Tone: components.ToneViolet, Emoji: "🧬", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm", Attributes: templ.Attributes{"x-text": "'🧬 ' + journal.sequence"}})
 		</div>
 	</div>
 }
 
-templ JournalDetailHeaderTimeline() {
-	<div class="flex flex-wrap gap-4 text-sm text-muted-foreground">
-		@components.InfoRow(components.InfoRowProps{IconName: "calendar", Label: "Created: ", ValueExpr: "formatTimestamp(journal.created_at)"})
+templ JournalDetailHeaderMetadata() {
+	<div class="flex flex-wrap items-center gap-2.5 text-sm">
+		@components.FilterChip(components.FilterChipProps{TextExpr: "'🕒 Created ' + formatTimestamp(journal.created_at)", Tone: components.ToneBlue, Class: "rounded-full px-3 py-1 text-sm font-medium shadow-sm"})
 		<div x-show="journal.reviewed_at">
-			@components.InfoRow(components.InfoRowProps{IconName: "shield-check", Label: "Reviewed: ", ValueExpr: "formatTimestamp(journal.reviewed_at)"})
+			@components.FilterChip(components.FilterChipProps{TextExpr: "'✅ Reviewed at ' + formatTimestamp(journal.reviewed_at)", Tone: components.ToneGreen, Class: "rounded-full px-3 py-1 text-sm font-medium shadow-sm"})
 		</div>
 		<div x-show="!journal.reviewed_at">
-			@components.InfoRow(components.InfoRowProps{IconName: "circle-alert", Label: "Never reviewed", Variant: components.InfoRowWarning})
+			@components.FilterChip(components.FilterChipProps{TextExpr: "'⌛ Awaiting review'", Tone: components.ToneAmber, Class: "rounded-full px-3 py-1 text-sm font-medium shadow-sm"})
 		</div>
 	</div>
 }
 
 templ JournalDetailHeaderTags() {
-	<div class="flex flex-wrap gap-2" x-show="sidebar.deletableTags().length">
-		<template x-for="tag in sidebar.deletableTags()" x-bind:key="tag.id">
-			@badge.Badge(badge.Props{
-				Variant:    badge.VariantSecondary,
-				Class:      "border",
-				Attributes: templ.Attributes{"x-text": "[tag.tag, tag.override, tag.type].filter(Boolean).join(' • ')"},
-			}) {}
-		</template>
-	</div>
-}
-
-templ JournalDetailHighlights() {
-	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-		@JournalDetailCard("Status", "rose", "({'RUNNING':'🏃','SET':'🎯','SUCCESS':'✅','FAIL':'❌','BROKEN':'💥','MISSED':'🚫','JUST_LOSS':'💔'}[journal.status] || '🏷️') + ' ' + normalizeStatus(journal.status)")
-		@JournalDetailCard("Type", "indigo", "({'TAKEN':'📈','REJECTED':'📉'}[journal.type] || '🏷️') + ' ' + journal.type")
-		@JournalDetailCard("Sequence", "violet", "('🔢 ' + journal.sequence)")
-		@JournalDetailCard("Created", "emerald", "formatTimestamp(journal.created_at)")
-	</div>
-}
-
-templ JournalDetailCard(label string, color string, xExpression string) {
-	<div class={ "rounded-2xl border p-4 border-" + color + "-200/70 bg-" + color + "-50/60" }>
-		<p class={ "text-[11px] font-semibold uppercase tracking-[0.2em] text-" + color + "-700/80" }>{ label }</p>
-		<p class={ "mt-2 text-lg font-semibold text-" + color + "-900" } x-text={ xExpression }></p>
+	<div class="space-y-2" x-show="sidebar.deletableTags().length">
+		<div class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Summary Tags</div>
+		<div class="flex flex-wrap gap-2">
+			<template x-for="tag in sidebar.deletableTags()" x-bind:key="tag.id">
+				<div class="flex flex-wrap gap-2 rounded-2xl border border-border/60 bg-white/70 px-2.5 py-2 shadow-sm backdrop-blur-sm">
+					@components.FilterChip(components.FilterChipProps{ShowExpr: "tag.tag", TextExpr: "tag.tag", Tone: components.ToneViolet, Emoji: "🏷", Class: "rounded-full font-semibold"})
+					@components.FilterChip(components.FilterChipProps{ShowExpr: "tag.override", TextExpr: "tag.override", Tone: components.ToneBlue, Emoji: "✏️", Class: "rounded-full font-semibold"})
+					@components.FilterChip(components.FilterChipProps{ShowExpr: "tag.type", TextExpr: "tag.type", Tone: components.ToneAmber, Emoji: "🗂", Class: "rounded-full font-semibold"})
+				</div>
+			</template>
+		</div>
 	</div>
 }
 

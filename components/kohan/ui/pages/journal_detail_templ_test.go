@@ -60,6 +60,24 @@ var _ = Describe("Journal Detail Page Tests", func() {
 		})
 	})
 
+	Context("Header Summary", func() {
+		It("should render a compact summary card without duplicate highlight strip", func() {
+			Expect(html).To(ContainSubstring(`x-text="journal.ticker"`))
+			Expect(html).To(ContainSubstring(`x-text="'ID: ' + journal.id"`))
+			Expect(html).To(ContainSubstring(`🕒 Created`))
+			Expect(html).To(ContainSubstring(`🧬`))
+			Expect(html).To(ContainSubstring(`Summary Tags`))
+			Expect(html).To(ContainSubstring(`x-show="sidebar.deletableTags().length"`))
+			Expect(html).To(ContainSubstring(`x-show="tag.tag"`))
+			Expect(html).To(ContainSubstring(`x-show="tag.override"`))
+			Expect(html).To(ContainSubstring(`x-show="tag.type"`))
+			Expect(html).ToNot(ContainSubstring(`>STATUS</p>`))
+			Expect(html).ToNot(ContainSubstring(`>TYPE</p>`))
+			Expect(html).ToNot(ContainSubstring(`>SEQUENCE</p>`))
+			Expect(html).ToNot(ContainSubstring(`>CREATED</p>`))
+		})
+	})
+
 	Context("Image Preview Modal", func() {
 		It("should render keyboard navigation bindings for preview mode", func() {
 			Expect(html).To(ContainSubstring(`x-on:keydown.escape.window="closeImagePreview()"`))
