@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS journals (
     external_id VARCHAR(26) UNIQUE NOT NULL,
     ticker VARCHAR(10) NOT NULL,
     sequence VARCHAR(3) NOT NULL CHECK (sequence IN ('MWD', 'YR', 'WDH')),
-    type VARCHAR(8) NOT NULL CHECK (type IN ('REJECTED', 'RESULT', 'SET')),
-    status VARCHAR(10) NOT NULL CHECK (status IN ('SET', 'RUNNING', 'DROPPED', 'TAKEN', 'REJECTED', 'SUCCESS', 'FAIL', 'MISSED', 'JUST_LOSS', 'BROKEN')),
+    type VARCHAR(8) NOT NULL CHECK (type IN ('REJECTED', 'TAKEN')),
+    status VARCHAR(10) NOT NULL CHECK (status IN ('SET', 'RUNNING', 'SUCCESS', 'FAIL', 'MISSED', 'JUST_LOSS', 'BROKEN')),
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     reviewed_at DATETIME,
     deleted_at DATETIME
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS notes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     external_id VARCHAR(26) UNIQUE NOT NULL,
     journal_id INTEGER NOT NULL,
-    status VARCHAR(10) NOT NULL CHECK (status IN ('SET', 'RUNNING', 'DROPPED', 'TAKEN', 'REJECTED', 'SUCCESS', 'FAIL', 'MISSED', 'JUST_LOSS', 'BROKEN')),
+    status VARCHAR(10) NOT NULL CHECK (status IN ('SET', 'RUNNING', 'SUCCESS', 'FAIL', 'MISSED', 'JUST_LOSS', 'BROKEN')),
     content TEXT NOT NULL,
     format VARCHAR(10) NOT NULL CHECK (format IN ('MARKDOWN', 'PLAINTEXT')),
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -63,4 +63,3 @@ CREATE TABLE IF NOT EXISTS notes (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_note_external_id ON notes (external_id);
 CREATE INDEX IF NOT EXISTS idx_note_journal_id ON notes (journal_id);
 CREATE INDEX IF NOT EXISTS idx_note_status ON notes (status);
-

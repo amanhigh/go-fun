@@ -1,4 +1,4 @@
-import './journal';
-import './journal_detail';
+import './journal/page';
+import './journal_detail/page';
 
 export {};

@@ -1,0 +1,41 @@
+import { formatTimestamp } from '../shared/date';
+import { normalizeTag } from '../shared/tags';
+import { resolveTypeToggle } from './filter_actions';
+
+const defaultBadgeClass = 'border-slate-300 bg-slate-50 text-slate-700';
+
+const statusBadgeClassMap: Record<string, string> = {
+	SUCCESS: 'border-emerald-300 bg-emerald-50 text-emerald-800',
+	FAIL: 'border-rose-300 bg-rose-50 text-rose-800',
+	RUNNING: 'border-sky-300 bg-sky-50 text-sky-800',
+	SET: 'border-amber-300 bg-amber-50 text-amber-800',
+	REJECTED: 'border-violet-300 bg-violet-50 text-violet-800',
+};
+
+const typeBadgeClassMap: Record<string, string> = {
+	REJECTED: 'border-rose-300 bg-rose-50 text-rose-800',
+	RESULT: 'border-emerald-300 bg-emerald-50 text-emerald-800',
+	SET: 'border-indigo-300 bg-indigo-50 text-indigo-800',
+};
+
+export function createJournalListFormatters() {
+	return {
+		normalizeStatus: normalizeTag,
+		statusBadgeClass(this: any, value: string) {
+			return statusBadgeClassMap[normalizeTag(value)] ?? defaultBadgeClass;
+		},
+		typeBadgeClass(this: any, value: string) {
+			return typeBadgeClassMap[normalizeTag(value)] ?? defaultBadgeClass;
+		},
+		typeToggleLabel(this: any) {
+			return resolveTypeToggle((this.filter as { type: string }).type).label;
+		},
+		typeToggleClass(this: any) {
+			return resolveTypeToggle((this.filter as { type: string }).type).className;
+		},
+		formatTimestamp,
+		journalPageSummary(this: any) {
+			return `Page ${this.pagination.getPage()} of ${this.pagination.getTotalPages()}`;
+		},
+	};
+}

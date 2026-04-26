@@ -23,7 +23,7 @@ docker-build: _docker-fun
 _docker-fun: _build-fun
     just _title "Docker" "Building FunApp"
     cp bin/fun components/fun-app/fun
-    docker buildx build -t amanfdk/fun-app -f components/fun-app/Dockerfile components/fun-app 2>/dev/null
+    just _run "docker buildx build -t amanfdk/fun-app -f components/fun-app/Dockerfile components/fun-app"
     rm components/fun-app/fun
 
 [doc('Run the Fun App Docker image interactively')]
@@ -42,7 +42,7 @@ docker-exec:
 [group('clean')]
 docker-clean:
     just _warn "Docker" "Deleting FunApp"
-    -docker rmi -f `docker images amanfdk/fun-app -q`
+    -just _run "docker rmi -f $(docker images amanfdk/fun-app -q)"
 
 [group('info')]
 _info-docker:

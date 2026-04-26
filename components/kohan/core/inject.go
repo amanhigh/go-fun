@@ -18,10 +18,10 @@ import (
 // KohanInterface defines the public API for the Kohan dependency injection system
 type KohanInterface interface {
 	GetDariusApp(cfg config.DariusConfig) (*DariusV1, error)
-	GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface
+	GetAutoManager(wait time.Duration) manager.AutoManagerInterface
 	GetTaxManager() (manager.TaxManager, error)
 	GetBrokerageManager() (manager.BrokerageManager, error)
-	GetKohanServer(port int, capturePath string, wait time.Duration) (util.HttpServer, error)
+	GetKohanServer(port int, wait time.Duration) (util.HttpServer, error)
 }
 
 // =============================================================================
@@ -53,15 +53,15 @@ func GetKohanInterface() KohanInterface {
 // =============================================================================
 // These methods implement the KohanInterface and resolve dependencies from the injector
 
-func (ki *KohanInjector) GetAutoManager(wait time.Duration, capturePath string) manager.AutoManagerInterface {
-	return manager.NewAutoManager(wait, capturePath)
+func (ki *KohanInjector) GetAutoManager(wait time.Duration) manager.AutoManagerInterface {
+	return manager.NewAutoManager(wait, ki.config.Barkat.ScreenshotPath)
 }
 
-func (ki *KohanInjector) GetKohanServer(port int, capturePath string, wait time.Duration) (util.HttpServer, error) {
-	autoManager := ki.GetAutoManager(wait, capturePath)
+func (ki *KohanInjector) GetKohanServer(port int, wait time.Duration) (util.HttpServer, error) {
+	autoManager := ki.GetAutoManager(wait)
 
 	// Register all dependencies
-	ki.registerOSDependencies(capturePath, autoManager)
+	ki.registerOSDependencies(autoManager)
 	ki.registerPortalDependencies()
 	if err := ki.registerJournalDependencies(); err != nil {
 		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)

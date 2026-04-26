@@ -2,14 +2,19 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/common/util"
+	"github.com/amanhigh/go-fun/models/common"
+	"github.com/amanhigh/go-fun/models/kohan"
 	"github.com/bitfield/script"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -38,35 +43,103 @@ Support:
 )
 
 type AutoManagerInterface interface {
-	RecordTicker(ctx context.Context, ticker, path string) error
+	// HACK: Remove Unwanted Methods and Rename to OSManager.
+	Screenshot(ctx context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, common.HttpError)
+	RecordTicker(ctx context.Context, ticker string) common.HttpError
 	TryOpenTicker(ctx context.Context, ticker string)
 	MonitorInternetConnection(ctx context.Context)
 }
 
 type AutoManagerImpl struct {
-	wait        time.Duration
-	capturePath string
+	wait           time.Duration
+	screenshotPath string
 }
 
-func NewAutoManager(wait time.Duration, capturePath string) AutoManagerInterface {
+func NewAutoManager(wait time.Duration, screenshotPath string) AutoManagerInterface {
 	// TODO: #C Move to Kohan Config and Inject directly via Kohan Injector.
 	return &AutoManagerImpl{
-		wait:        wait,
-		capturePath: capturePath,
+		wait:           wait,
+		screenshotPath: screenshotPath,
 	}
 }
 
 // Copy existing implementations preserving comments but as methods
-func (a *AutoManagerImpl) RecordTicker(_ context.Context, ticker, path string) (err error) {
+func (a *AutoManagerImpl) Screenshot(_ context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, common.HttpError) {
+	if window != "" {
+		if err := tools.FocusWindow(window); err != nil {
+			return "", common.NewServerError(err)
+		}
+	}
+
+	dir := a.resolveDir(directoryType)
+	if err := os.MkdirAll(dir, util.DIR_DEFAULT_PERM); err != nil {
+		return "", common.NewServerError(err)
+	}
+	fullPath := filepath.Join(dir, fileName)
+
+	log.Info().Str("Dir", dir).Str("Name", fileName).Str("Type", string(screenshotType)).Msg("Capturing Screenshot")
+
+	var screenshotErr error
+	switch screenshotType {
+	case kohan.ScreenshotTypeRegion:
+		screenshotErr = tools.NamedRegionScreenshot(dir, fileName)
+	case kohan.ScreenshotTypeFull:
+		screenshotErr = tools.NamedScreenshot(dir, fileName)
+	default:
+		screenshotErr = tools.NamedScreenshot(dir, fileName)
+	}
+	return fullPath, a.mapScreenshotError(screenshotErr)
+}
+
+// mapScreenshotError converts screenshot tool errors into the appropriate HttpError.
+// User aborts → 409 Conflict; genuine tool/framework failures → 500.
+func (a *AutoManagerImpl) mapScreenshotError(err error) common.HttpError {
+	if err == nil {
+		return nil
+	}
+	if errors.Is(err, tools.ErrScreenshotAborted) {
+		return common.NewHttpError(err.Error(), http.StatusConflict)
+	}
+	return common.NewServerError(err)
+}
+
+func (a *AutoManagerImpl) resolveDir(directoryType kohan.ScreenshotDirectoryType) string {
+	switch directoryType {
+	case kohan.ScreenshotDirectoryTypeDownload:
+		return defaultDownloadsDir()
+	case kohan.ScreenshotDirectoryTypeJournal:
+		return filepath.Join(a.screenshotPath, time.Now().Format("2006"), time.Now().Format("01"))
+	default:
+		return filepath.Join(a.screenshotPath, time.Now().Format("2006"), time.Now().Format("01"))
+	}
+}
+
+func defaultDownloadsDir() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return filepath.Join(os.TempDir(), "Downloads")
+	}
+	return filepath.Join(homeDir, "Downloads")
+}
+
+func (a *AutoManagerImpl) RecordTicker(_ context.Context, ticker string) common.HttpError {
+	var err error
 	if err = tools.FocusWindow("TradingView"); err == nil {
 		log.Info().Str("Ticker", ticker).Msg("Recording Ticker")
+		path := a.resolveDir(kohan.ScreenshotDirectoryTypeJournal)
+		if mkErr := os.MkdirAll(path, util.DIR_DEFAULT_PERM); mkErr != nil {
+			return common.NewServerError(mkErr)
+		}
 		err = a.takeScreenshots(ticker, path)
 		if err == nil && strings.Contains(ticker, ".set") {
 			err = a.recordTradeInfo(ticker, path)
 		}
 		a.sendNotification(ticker)
 	}
-	return
+	if err != nil {
+		return common.NewServerError(err)
+	}
+	return nil
 }
 
 func (a *AutoManagerImpl) takeScreenshots(ticker, path string) (err error) {
@@ -94,7 +167,9 @@ func (a *AutoManagerImpl) recordTradeInfo(ticker, path string) (err error) {
 
 		// Record Check Screenshot
 		checkFile := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format(DATE_FORMAT))
-		_ = tools.NamedRegionScreenshot(path, checkFile)
+		if checkErr := tools.NamedRegionScreenshot(path, checkFile); checkErr != nil {
+			log.Warn().Str("Ticker", ticker).Err(checkErr).Msg("Checklist screenshot not saved (user may have aborted)")
+		}
 	} else {
 		log.Error().Str("Ticker", ticker).Err(err).Msg("Read TradeInfo Failed")
 	}

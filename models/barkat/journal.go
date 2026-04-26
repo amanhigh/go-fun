@@ -29,8 +29,8 @@ type Journal struct {
 	ExternalID string     `gorm:"column:external_id;uniqueIndex;not null" json:"id"`
 	Ticker     string     `gorm:"column:ticker;not null;index:idx_journal_ticker" json:"ticker" binding:"required,max=10,ticker"`
 	Sequence   string     `gorm:"column:sequence;not null" json:"sequence" binding:"required,oneof=MWD YR WDH"`
-	Type       string     `gorm:"column:type;not null" json:"type" binding:"required,oneof=REJECTED RESULT SET"`
-	Status     string     `gorm:"column:status;not null" json:"status" binding:"required,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
+	Type       string     `gorm:"column:type;not null" json:"type" binding:"required,oneof=REJECTED TAKEN"`
+	Status     string     `gorm:"column:status;not null" json:"status" binding:"required,oneof=SET RUNNING SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
 	CreatedAt  time.Time  `gorm:"column:created_at;not null;index:idx_journal_created_at" json:"created_at"`
 	ReviewedAt *time.Time `gorm:"column:reviewed_at" json:"reviewed_at,omitempty"`
 	DeletedAt  *time.Time `gorm:"column:deleted_at" json:"deleted_at,omitempty"`
@@ -58,8 +58,8 @@ type JournalQuery struct {
 	common.Pagination
 	Search        string `form:"search" binding:"omitempty,min=1,max=10,alphanum"`
 	Ticker        string `form:"ticker" binding:"omitempty,min=1,max=10,ticker"`
-	Type          string `form:"type" binding:"omitempty,oneof=REJECTED RESULT SET"`
-	Status        string `form:"status" binding:"omitempty,oneof=SET RUNNING DROPPED TAKEN REJECTED SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
+	Type          string `form:"type" binding:"omitempty,oneof=REJECTED TAKEN"`
+	Status        string `form:"status" binding:"omitempty,oneof=SET RUNNING SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
 	Sequence      string `form:"sequence" binding:"omitempty,oneof=MWD YR WDH"`
 	CreatedAfter  string `form:"created-after" binding:"omitempty,datetime=2006-01-02"`
 	CreatedBefore string `form:"created-before" binding:"omitempty,datetime=2006-01-02"`
@@ -81,14 +81,17 @@ type JournalList struct {
 	Metadata common.PaginatedResponse `json:"metadata"`
 }
 
-// JournalReviewUpdate represents the request body for updating journal review status.
+// JournalReviewUpdate represents the request body for PATCH journal updates.
+// Both Status and ReviewedAt are optional; only provided fields are updated.
 type JournalReviewUpdate struct {
+	Status     string      `json:"status" binding:"omitempty,oneof=SET RUNNING SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
 	ReviewedAt *civil.Date `json:"reviewed_at" binding:"omitempty,not_future"`
 }
 
-// UpdateJournalStatusResponse represents the response for PATCH review status updates.
-// This follows the PRD specification for minimal PATCH responses.
+// UpdateJournalStatusResponse represents the response for PATCH journal updates.
+// Returns id, status, and reviewed_at as per PRD specification.
 type UpdateJournalStatusResponse struct {
 	ID         string      `json:"id"`
-	ReviewedAt *civil.Date `json:"reviewed_at"`
+	Status     string      `json:"status"`
+	ReviewedAt *civil.Date `json:"reviewed_at,omitempty"`
 }

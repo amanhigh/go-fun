@@ -320,35 +320,35 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 						image := barkat.Image{Timeframe: "TMN", FileName: "RELIANCE.mwd.test"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "FileName", "file_name")
+						util.AssertError(w, "FileName", "image_file")
 					})
 
 					It("should return 400 for file_name with invalid extension", func() {
 						image := barkat.Image{Timeframe: "SMN", FileName: "RELIANCE.mwd.test.txt"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "FileName", "file_name")
+						util.AssertError(w, "FileName", "image_file")
 					})
 
 					It("should return 400 for file_name with invalid characters (PRD: alphanumeric, dots, hyphens, underscores only)", func() {
 						image := barkat.Image{Timeframe: "YR", FileName: "RELIANCE@mwd.test.png"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "FileName", "file_name")
+						util.AssertError(w, "FileName", "image_file")
 					})
 
 					It("should return 400 for file_name with spaces", func() {
 						image := barkat.Image{Timeframe: "WK", FileName: "RELIANCE mwd test.png"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "FileName", "file_name")
+						util.AssertError(w, "FileName", "image_file")
 					})
 
 					It("should return 400 for file_name with path separators", func() {
 						image := barkat.Image{Timeframe: "MN", FileName: "path/RELIANCE.mwd.test.png"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "FileName", "file_name")
+						util.AssertError(w, "FileName", "image_file")
 					})
 				})
 			})
@@ -512,8 +512,8 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					emptyJournal = barkat.Journal{
 						Ticker:   "EMPTY",
 						Sequence: "YR",
-						Type:     "SET",
-						Status:   "TAKEN",
+						Type:     "TAKEN",
+						Status:   "SET",
 						Images: []barkat.Image{
 							{Timeframe: "DL"},
 							{Timeframe: "WK"},

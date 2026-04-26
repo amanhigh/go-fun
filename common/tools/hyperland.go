@@ -21,12 +21,39 @@ type HyperWindow struct {
 	Fullscreen int    `json:"fullscreen"`
 }
 
+type HyperMonitor struct {
+	Name    string `json:"name"`
+	Focused bool   `json:"focused"`
+}
+
 func GetHyperWindow() (window HyperWindow, err error) {
 	var result string
 	if result, err = script.Exec("hyprctl activewindow -j").String(); err == nil {
 		err = json.Unmarshal([]byte(result), &window)
 	}
 
+	return
+}
+
+func GetActiveMonitor() (name string, err error) {
+	var result string
+	if result, err = script.Exec("hyprctl monitors -j").String(); err != nil {
+		return
+	}
+
+	var monitors []HyperMonitor
+	if err = json.Unmarshal([]byte(result), &monitors); err != nil {
+		return
+	}
+
+	for _, m := range monitors {
+		if m.Focused {
+			name = m.Name
+			return
+		}
+	}
+
+	err = fmt.Errorf("no focused monitor found")
 	return
 }
 

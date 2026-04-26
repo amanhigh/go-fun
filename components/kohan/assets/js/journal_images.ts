@@ -1,4 +1,4 @@
-import type { JournalImage } from './journal_models';
+import type { JournalImage } from './client/journal_image';
 
 export interface ImageHelper {
 	chipClass(timeframe: string): string;
@@ -28,7 +28,14 @@ export function createImageHelper(): ImageHelper {
 		},
 		sorted(images) {
 			if (!images?.length) return [];
-			return [...images].sort((a, b) => (rankMap[normalize(b.timeframe)] ?? 0) - (rankMap[normalize(a.timeframe)] ?? 0));
+			return [...images].sort((a, b) => {
+				const aDate = a.created_at ? new Date(a.created_at).getTime() : Number.POSITIVE_INFINITY;
+				const bDate = b.created_at ? new Date(b.created_at).getTime() : Number.POSITIVE_INFINITY;
+				if (aDate !== bDate) return aDate - bDate;
+				const timeframeDiff = (rankMap[normalize(b.timeframe)] ?? 0) - (rankMap[normalize(a.timeframe)] ?? 0);
+				if (timeframeDiff !== 0) return timeframeDiff;
+				return normalize(a.file_name).localeCompare(normalize(b.file_name));
+			});
 		},
 		resolve(fileName, createdAt) {
 			if (!fileName) return '';

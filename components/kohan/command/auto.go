@@ -14,9 +14,7 @@ var servePort = 9010
 var autoCmd = &cobra.Command{
 	Use:   "auto",
 	Short: "Automation Related Commands",
-	Args:  cobra.ExactArgs(1),
-	PersistentPreRun: func(_ *cobra.Command, args []string) {
-		cluster = args[0]
+	PersistentPreRun: func(_ *cobra.Command, _ []string) {
 		setLogLevel()
 	},
 }
@@ -31,15 +29,15 @@ var runOrFocusCmd = &cobra.Command{
 	},
 }
 
-var serveCmd = &cobra.Command{
-	Use:   "serve [CapturePath]",
+var kohanServerCmd = &cobra.Command{
+	Use:   "serve",
 	Short: "Start Kohan Server",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		log.Info().Dur("Wait", wait).Str("Screenshots", args[0]).Msg("Starting Kohan Server")
+	Args:  cobra.NoArgs,
+	RunE: func(cmd *cobra.Command, _ []string) (err error) {
+		log.Info().Dur("Wait", wait).Msg("Starting Kohan Server")
 		// TODO: Retry When Disk not Mounted, Watermill Exponential Backoff ?
-		autoManager := core.GetKohanInterface().GetAutoManager(wait, args[0])
-		server, err := core.GetKohanInterface().GetKohanServer(servePort, args[0], wait)
+		autoManager := core.GetKohanInterface().GetAutoManager(wait)
+		server, err := core.GetKohanInterface().GetKohanServer(servePort, wait)
 		if err != nil {
 			return fmt.Errorf("failed to build kohan server: %w", err)
 		}
@@ -60,7 +58,7 @@ var openTickerCmd = &cobra.Command{
 	Short: "Opens Ticker",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		autoManager := core.GetKohanInterface().GetAutoManager(wait, "")
+		autoManager := core.GetKohanInterface().GetAutoManager(wait)
 		autoManager.TryOpenTicker(cmd.Context(), args[0])
 		return
 	},
@@ -68,12 +66,13 @@ var openTickerCmd = &cobra.Command{
 
 func init() {
 	// Flags
-	serveCmd.Flags().DurationVarP(&wait, "wait", "w", wait, "OS Wait Interval")
-	serveCmd.Flags().IntVarP(&servePort, "port", "p", servePort, "Kohan server port")
+	// HACK: Change to Config rather than Flags.
+	kohanServerCmd.Flags().DurationVarP(&wait, "wait", "w", wait, "OS Wait Interval")
+	kohanServerCmd.Flags().IntVarP(&servePort, "port", "p", servePort, "Kohan server port")
 
 	// Commands
 	autoCmd.AddCommand(runOrFocusCmd)
-	autoCmd.AddCommand(serveCmd)
+	autoCmd.AddCommand(kohanServerCmd)
 	autoCmd.AddCommand(openTickerCmd)
 	RootCmd.AddCommand(autoCmd)
 }

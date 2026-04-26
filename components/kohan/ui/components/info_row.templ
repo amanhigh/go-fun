@@ -1,0 +1,41 @@
+package components
+
+import "github.com/templui/templui/components/icon"
+
+type InfoRowVariant string
+
+const (
+	InfoRowDefault InfoRowVariant = "default"
+	InfoRowWarning InfoRowVariant = "warning"
+)
+
+type InfoRowProps struct {
+	IconName    string
+	Label       string
+	ValueExpr   string
+	Variant     InfoRowVariant
+	Class       string
+	Attributes  templ.Attributes
+}
+
+func infoRowVariantClasses(variant InfoRowVariant) string {
+	if variant == InfoRowWarning {
+		return "text-amber-700"
+	}
+	return "text-muted-foreground"
+}
+
+templ InfoRow(props InfoRowProps) {
+	<div class={ "flex items-center gap-1 text-sm " + infoRowVariantClasses(props.Variant) + " " + props.Class } { props.Attributes... }>
+		if props.IconName != "" {
+			@icon.Icon(props.IconName)(icon.Props{Class: "size-4"})
+		}
+		if props.Label != "" {
+			<span>{ props.Label }</span>
+		}
+		if props.ValueExpr != "" {
+			<span x-text={ props.ValueExpr }></span>
+		}
+		{ children... }
+	</div>
+}

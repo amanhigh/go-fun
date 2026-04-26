@@ -1,6 +1,7 @@
 package repository
 
 // ImageRepository provides persistence operations for journal images.
+// Images are ordered by date first, then higher-to-lower timeframe.
 // Images are screenshots captured across multiple timeframes for each journal.
 
 import (
@@ -34,7 +35,11 @@ func NewImageRepository(db *gorm.DB) *ImageRepositoryImpl {
 func (r *ImageRepositoryImpl) ListImages(ctx context.Context, journalID uint64) ([]barkat.Image, common.HttpError) {
 	var images []barkat.Image
 	var txErr error
-	if txErr = r.SafeTx(ctx).Where("journal_id = ?", journalID).Order("timeframe").Find(&images).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+	if txErr = r.SafeTx(ctx).
+		Where("journal_id = ?", journalID).
+		Order("DATE(created_at) ASC").
+		Order(ImageTimeframeOrder + " DESC").
+		Find(&images).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		return nil, util.GormErrorMapper(txErr)
 	}
 	return images, nil

@@ -1,0 +1,14 @@
+package components
+
+type EmptyStateProps struct {
+	Message    string
+	ShowExpr   string
+	Class      string
+	Attributes templ.Attributes
+}
+
+templ EmptyState(props EmptyStateProps) {
+	<div class={ "rounded-xl border border-dashed border-muted-foreground/35 bg-muted/20 px-4 py-6 text-sm text-muted-foreground " + props.Class } x-show={ props.ShowExpr } { props.Attributes... }>
+		{ props.Message }
+	</div>
+}

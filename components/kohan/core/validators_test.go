@@ -22,7 +22,7 @@ var _ = Describe("Validators", func() {
 		_ = v.RegisterValidation("ticker", core.TickerValidator)
 		_ = v.RegisterValidation("tag", core.TagValidator)
 		_ = v.RegisterValidation("override", core.OverrideValidator)
-		_ = v.RegisterValidation("file_name", core.FileNameValidator)
+		_ = v.RegisterValidation("image_file", core.ImageFileValidator)
 		_ = v.RegisterValidation("not_future", core.NotFutureValidator)
 		_ = v.RegisterValidation("journal_id", core.JournalIDValidator)
 		_ = v.RegisterValidation("note_id", core.NoteIDValidator)
@@ -224,58 +224,58 @@ var _ = Describe("Validators", func() {
 		})
 	})
 
-	Describe("file_name validator", func() {
+	Describe("image_file validator", func() {
 		Context("valid file names", func() {
 			It("should accept png files", func() {
-				Expect(v.Var("image.png", "file_name")).To(Succeed())
-				Expect(v.Var("test-image.png", "file_name")).To(Succeed())
-				Expect(v.Var("file_name_123.png", "file_name")).To(Succeed())
+				Expect(v.Var("image.png", "image_file")).To(Succeed())
+				Expect(v.Var("test-image.png", "image_file")).To(Succeed())
+				Expect(v.Var("file_name_123.png", "image_file")).To(Succeed())
 			})
 
 			It("should accept jpg files", func() {
-				Expect(v.Var("image.jpg", "file_name")).To(Succeed())
-				Expect(v.Var("test-image.jpg", "file_name")).To(Succeed())
-				Expect(v.Var("file_name_123.jpg", "file_name")).To(Succeed())
+				Expect(v.Var("image.jpg", "image_file")).To(Succeed())
+				Expect(v.Var("test-image.jpg", "image_file")).To(Succeed())
+				Expect(v.Var("file_name_123.jpg", "image_file")).To(Succeed())
 			})
 
 			It("should accept jpeg files", func() {
-				Expect(v.Var("image.jpeg", "file_name")).To(Succeed())
-				Expect(v.Var("test-image.jpeg", "file_name")).To(Succeed())
-				Expect(v.Var("file_name_123.jpeg", "file_name")).To(Succeed())
+				Expect(v.Var("image.jpeg", "image_file")).To(Succeed())
+				Expect(v.Var("test-image.jpeg", "image_file")).To(Succeed())
+				Expect(v.Var("file_name_123.jpeg", "image_file")).To(Succeed())
 			})
 
 			It("should accept complex names with valid characters", func() {
-				Expect(v.Var("test-image_123.file.png", "file_name")).To(Succeed())
-				Expect(v.Var("my_image.test.jpg", "file_name")).To(Succeed())
-				Expect(v.Var("complex-file_name.jpeg", "file_name")).To(Succeed())
+				Expect(v.Var("test-image_123.file.png", "image_file")).To(Succeed())
+				Expect(v.Var("my_image.test.jpg", "image_file")).To(Succeed())
+				Expect(v.Var("complex-file_name.jpeg", "image_file")).To(Succeed())
 			})
 
 			It("should accept empty string", func() {
-				Expect(v.Var("", "file_name")).To(Succeed())
+				Expect(v.Var("", "image_file")).To(Succeed())
 			})
 		})
 
 		Context("invalid file names", func() {
 			It("should reject invalid file extensions", func() {
-				Expect(v.Var("image.gif", "file_name")).ToNot(Succeed())
-				Expect(v.Var("file.txt", "file_name")).ToNot(Succeed())
-				Expect(v.Var("document.pdf", "file_name")).ToNot(Succeed())
+				Expect(v.Var("image.gif", "image_file")).ToNot(Succeed())
+				Expect(v.Var("file.txt", "image_file")).ToNot(Succeed())
+				Expect(v.Var("document.pdf", "image_file")).ToNot(Succeed())
 			})
 
 			It("should reject special characters", func() {
-				Expect(v.Var("image@file.png", "file_name")).ToNot(Succeed())
-				Expect(v.Var("test#image.jpg", "file_name")).ToNot(Succeed())
-				Expect(v.Var("file&name.jpeg", "file_name")).ToNot(Succeed())
+				Expect(v.Var("image@file.png", "image_file")).ToNot(Succeed())
+				Expect(v.Var("test#image.jpg", "image_file")).ToNot(Succeed())
+				Expect(v.Var("file&name.jpeg", "image_file")).ToNot(Succeed())
 			})
 
 			It("should reject spaces", func() {
-				Expect(v.Var("image file.png", "file_name")).ToNot(Succeed())
-				Expect(v.Var("test image.jpg", "file_name")).ToNot(Succeed())
+				Expect(v.Var("image file.png", "image_file")).ToNot(Succeed())
+				Expect(v.Var("test image.jpg", "image_file")).ToNot(Succeed())
 			})
 
 			It("should reject files without extension", func() {
-				Expect(v.Var("image", "file_name")).ToNot(Succeed())
-				Expect(v.Var("test-file", "file_name")).ToNot(Succeed())
+				Expect(v.Var("image", "image_file")).ToNot(Succeed())
+				Expect(v.Var("test-file", "image_file")).ToNot(Succeed())
 			})
 		})
 	})

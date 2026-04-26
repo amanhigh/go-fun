@@ -2,7 +2,7 @@
 [doc('Run the Fun App integration load tests')]
 load:
     just _title "Load" "Test Fun App"
-    make -C components/fun-app/it all
+    just _run "just --justfile components/fun-app/it/Justfile --working-directory components/fun-app/it all"
 
 [group('ops')]
 [doc('Open heap and CPU pprof sessions for the running app')]
@@ -12,17 +12,17 @@ profile:
     endpoint="${ENDPOINT:-http://localhost:8080}"
     just _title "PROFILE" "ENDPOINT=${endpoint} | http://app.docker/app"
     just _detail "PROFILE" "Profiling Heap"
-    go tool pprof -http=:8001 "${endpoint}/debug/pprof/heap" 2>/dev/null &
+    just _run-no-output "go tool pprof -http=:8001 '${endpoint}/debug/pprof/heap' &"
     just _detail "PROFILE" "Profiling CPU"
-    go tool pprof -http=:8000 --seconds=30 "${endpoint}/debug/pprof/profile" 2>/dev/null
+    just _run-no-output "go tool pprof -http=:8000 --seconds=30 '${endpoint}/debug/pprof/profile'"
     just _warn "PROFILE" "Killing Profilers"
     kill %1
 
 [group('ops')]
 [doc('Analyse Fun App logs with GoAccess')]
-analyse:
+analyse: _build-fun
     just _title "Analyse" "Fun App Logs"
-    OUT=/dev/stdout just run 2>/dev/null | grep GIN | goaccess --log-format='%^ %d - %t | %s | %~%D | %b | %~%h | %^ | %m %U' --date-format='%Y/%m/%d' --time-format='%H:%M:%S'
+    bin/fun 2>/dev/null | grep GIN | goaccess --log-format='%^ %d - %t | %s | %~%D | %b | %~%h | %^ | %m %U' --date-format='%Y/%m/%d' --time-format='%H:%M:%S'
 
 # TODO: Replace with air tool enstead of entr ?
 [group('run')]

@@ -1,0 +1,82 @@
+set shell := ["bash", "-cu"]
+
+import '../../../.just/lib.just'
+
+url := "http://localhost:8080/v1"
+duration := "5s"
+result_file := "result.bin"
+id_file := "id.txt"
+batch_size := "10"
+total_records := "500"
+
+[doc('Show available load test recipes')]
+default:
+    just --list
+
+[doc('Remove generated load test artifacts')]
+clean-file:
+    just _title "CLEAN" "Removing load test artifacts"
+    rm -f {{id_file}} {{result_file}}
+
+[doc('Run the read load test')]
+load-read:
+    just _title "LOAD" "Get Load Test"
+    URL="{{url}}" jq -R -ncM 'inputs as $id | {method: "GET", url: "\(env.URL)/person/\($id)"}' < {{id_file}} | vegeta attack -format=json -duration={{duration}} | vegeta report
+
+[doc('Run the list load test')]
+load-list:
+    just _title "LOAD" "List Load Test"
+    URL="{{url}}" BATCH_SIZE="{{batch_size}}" TOTAL_RECORDS="{{total_records}}" jq -ncM 'range(0; env.TOTAL_RECORDS | tonumber; env.BATCH_SIZE | tonumber) | {method: "GET", url: "\(env.URL)/person?offset=\(. | tostring)&limit=\(env.BATCH_SIZE)&sort_by=name&order=asc"}' | vegeta attack -format=json -duration={{duration}} | vegeta report
+
+[doc('Run the write load test')]
+load-write:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    just _title "LOAD" "Write Load Test"
+    URL="{{url}}" jq -ncM --slurpfile a payload.json \
+        'while(true; .+1) as $i | $a | $a[0].name="\($a[0].name)-\($i)" | {method: "POST", header: {"Content-Type": ["application/json"]}, url: "\(env.URL)/person", body: .[0] | @base64}' \
+        | vegeta attack -lazy -format=json -duration={{duration}} -output={{result_file}}
+    just _detail "LOAD" "Extracting IDs"
+    vegeta encode {{result_file}} | jq -r '.body | @base64d | fromjson | .id' > {{id_file}}
+    just _detail "LOAD" "Test Result"
+    vegeta report {{result_file}}
+
+[group('run')]
+[doc('Run the full load workflow')]
+load: load-write load-list load-read
+
+[doc('Show load test configuration')]
+info-load:
+    just _title "INFO" "Load Info"
+    just _info "INFO" "URL: {{url}}"
+    just _info "INFO" "DURATION: {{duration}}"
+    just _info "INFO" "BATCH_SIZE: {{batch_size}}"
+    just _info "INFO" "TOTAL_RECORDS: {{total_records}}"
+
+[group('info')]
+[doc('Show load test information')]
+info: info-load
+
+[group('info')]
+[doc('Show extended load test information')]
+infos: info
+
+[doc('Onetime setup hook')]
+prepare:
+    @:
+
+[group('setup')]
+[doc('Run the load test setup and workload')]
+setup: info load
+
+[group('setup')]
+[doc('Clean load test artifacts')]
+clean: clean-file
+
+[group('setup')]
+[doc('Reset load test state')]
+reset: setup clean
+
+[group('setup')]
+[doc('Run the complete load test workflow')]
+all: prepare reset

@@ -7,26 +7,26 @@ verify: _test-focus
 _test-operator:
     just _title "TEST" "Running Operator Tests"
     mkdir -p /tmp/cover/operator
-    make -C components/operator/ test GOCOVERDIR=/tmp/cover/operator
+    just _run "make -C components/operator/ test GOCOVERDIR=/tmp/cover/operator"
 
 [group('quality')]
 _test-unit:
     just _title "TEST" "Running Unit Tests"
     mkdir -p /tmp/cover/unit
-    {{ginkgo}} -r --label-filter=\!setup\ \&\&\ \!slow --skip-package=components/fun-app/it -cover . -- -test.gocoverdir=/tmp/cover/unit
+    just _run "{{ginkgo}} -r --label-filter=\!setup\ \&\&\ \!slow --skip-package=components/fun-app/it -cover . -- -test.gocoverdir=/tmp/cover/unit"
 
 [group('quality')]
 [doc('Run slow test suites')]
 test-slow:
     just _title "TEST" "Running Slow Tests"
     mkdir -p /tmp/cover/slow
-    {{ginkgo}} -r '--label-filter=slow' -cover . -- -test.gocoverdir=/tmp/cover/slow
+    just _run "{{ginkgo}} -r '--label-filter=slow' -cover . -- -test.gocoverdir=/tmp/cover/slow"
 
 [group('quality')]
 _run-fun-cover: _build-fun-cover
     just _title "COVER" "Running Fun App with Coverage"
     mkdir -p /tmp/cover/integration
-    GOCOVERDIR=/tmp/cover/integration PORT=8085 bin/fun >/dev/null 2>&1 &
+    just _run "GOCOVERDIR=/tmp/cover/integration PORT=8085 bin/fun &"
 
 [group('quality')]
 _cover-report:
@@ -37,7 +37,7 @@ _cover-report:
         exit 1
     fi
     just _title "COVER" "Coverage Analysis Report"
-    go tool cover -func=/tmp/cover/coverage-combined.out
+    just _run-no-output "go tool cover -func=/tmp/cover/coverage-combined.out"
     overall=$(go tool cover -func=/tmp/cover/coverage-combined.out 2>/dev/null | tail -1 | awk '{print $3}')
     echo "Overall Coverage: $overall"
     echo ""
@@ -91,7 +91,7 @@ cover: _clean-test _test-unit _run-fun-cover _combine-coverage
     just _title "COVER" "Analysing Coverage Reports"
     just _cover-report
     echo ""
-    go tool cover -html=/tmp/cover/coverage-combined.out -o /tmp/coverage.html
+    just _run-no-output "go tool cover -html=/tmp/cover/coverage-combined.out -o /tmp/coverage.html"
     just _info "COVER" "HTML Report: file:///tmp/coverage.html"
     just _info "Vscode" "go.apply.coverprofile /tmp/cover/coverage-combined.out"
 
@@ -126,4 +126,4 @@ _clean-test:
 [group('quality')]
 _test-focus:
     just _title "TEST" "Running Focus Tests"
-    {{ginkgo}} --focus "should create & get person" components/fun-app/it
+    just _run "{{ginkgo}} --focus 'should create & get person' components/fun-app/it"

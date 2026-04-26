@@ -54,9 +54,9 @@ _helm-package:
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ -n "${VERSION:-}" || -n "${VER:-}" ]]; then
-        VERSION="${VERSION:-${VER:-}}" make -C components/fun-app/charts package
+        just --justfile components/fun-app/charts/Justfile --working-directory components/fun-app/charts --set version "${VERSION:-${VER:-}}" package
     else
-        make -C components/fun-app/charts package
+        just --justfile components/fun-app/charts/Justfile --working-directory components/fun-app/charts package
     fi
 
 [group('release')]

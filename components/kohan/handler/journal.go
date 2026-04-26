@@ -119,7 +119,7 @@ func (h *JournalHandlerImpl) HandleUpdateReviewStatus(c *gin.Context) {
 		return
 	}
 
-	// Return minimal response as per PATCH best practices
+	// Return minimal response with id, status, and reviewed_at as per PRD
 	var reviewedAt *civil.Date
 	if journal.ReviewedAt != nil {
 		civilDate := civil.DateOf(*journal.ReviewedAt)
@@ -127,6 +127,7 @@ func (h *JournalHandlerImpl) HandleUpdateReviewStatus(c *gin.Context) {
 	}
 	response := barkat.UpdateJournalStatusResponse{
 		ID:         journal.ExternalID,
+		Status:     journal.Status,
 		ReviewedAt: reviewedAt,
 	}
 	c.JSON(http.StatusOK, common.NewEnvelope(response))

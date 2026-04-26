@@ -4,7 +4,10 @@ import (
 	"net/http"
 
 	"github.com/amanhigh/go-fun/common/tools"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/models/common"
+	"github.com/amanhigh/go-fun/models/kohan"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
@@ -13,21 +16,45 @@ import (
 //
 //go:generate mockery --name OSHandler
 type OSHandler interface {
+	HandleScreenshot(ctx *gin.Context)
 	HandleReadClip(ctx *gin.Context)
 	HandleRecordTicker(ctx *gin.Context)
 	HandleSubmapControl(ctx *gin.Context)
 }
 
 type OSHandlerImpl struct {
-	capturePath string
 	autoManager manager.AutoManagerInterface
 }
 
 var _ OSHandler = (*OSHandlerImpl)(nil)
 
 // NewOSHandler creates a new OSHandler.
-func NewOSHandler(capturePath string, autoManager manager.AutoManagerInterface) *OSHandlerImpl {
-	return &OSHandlerImpl{capturePath: capturePath, autoManager: autoManager}
+func NewOSHandler(autoManager manager.AutoManagerInterface) *OSHandlerImpl {
+	return &OSHandlerImpl{
+		autoManager: autoManager,
+	}
+}
+
+// HandleScreenshot handles POST /v1/os/screenshot.
+func (h *OSHandlerImpl) HandleScreenshot(ctx *gin.Context) {
+	var req kohan.ScreenshotRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		httpErr := util.ProcessValidationError(err)
+		ctx.JSON(httpErr.Code(), httpErr)
+		return
+	}
+
+	fullPath, httpErr := h.autoManager.Screenshot(ctx, req.DirectoryType, req.FileName, req.Type, req.Window)
+	if httpErr != nil {
+		log.Error().Str("file_name", req.FileName).Str("directory_type", string(req.DirectoryType)).Err(httpErr).Msg("Screenshot failed")
+		ctx.JSON(httpErr.Code(), httpErr)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, common.NewEnvelope(kohan.ScreenshotResponse{
+		FileName: req.FileName,
+		FullPath: fullPath,
+	}))
 }
 
 // HandleReadClip handles GET /v1/clip/
@@ -43,11 +70,11 @@ func (h *OSHandlerImpl) HandleReadClip(ctx *gin.Context) {
 // HandleRecordTicker handles GET /v1/os/ticker/:ticker/record
 func (h *OSHandlerImpl) HandleRecordTicker(ctx *gin.Context) {
 	ticker := ctx.Param("ticker")
-	if err := h.autoManager.RecordTicker(ctx, ticker, h.capturePath); err == nil {
+	if httpErr := h.autoManager.RecordTicker(ctx, ticker); httpErr == nil {
 		ctx.JSON(http.StatusOK, "Success")
 	} else {
-		log.Error().Str("Ticker", ticker).Err(err).Msg("Record Ticker Failed")
-		ctx.JSON(http.StatusInternalServerError, err.Error())
+		log.Error().Str("Ticker", ticker).Err(httpErr).Msg("Record Ticker Failed")
+		ctx.JSON(httpErr.Code(), httpErr)
 	}
 }
 

@@ -74,12 +74,12 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				Type:     "REJECTED",
 				Status:   "FAIL",
 				Images: []barkat.Image{
-					{Timeframe: "DL"},
-					{Timeframe: "WK"},
-					{Timeframe: "MN"},
-					{Timeframe: "TMN"},
-					{Timeframe: "SMN"},
-					{Timeframe: "YR"},
+					{Timeframe: "WK", CreatedAt: time.Date(2023, time.June, 1, 10, 0, 0, 0, time.UTC)},
+					{Timeframe: "DL", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC)},
+					{Timeframe: "MN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC)},
+					{Timeframe: "TMN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC)},
+					{Timeframe: "SMN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC)},
+					{Timeframe: "YR", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC)},
 				},
 			}
 			Expect(journalMgr.CreateJournal(testCtx, &journal)).To(Succeed())
@@ -112,12 +112,19 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					Expect(response.Status).To(Equal("FAIL"))
 					Expect(response.CreatedAt).ToNot(BeZero())
 					Expect(response.Images).To(HaveLen(6))
-					Expect(response.Images[0].Timeframe).To(Equal("DL"))
-					Expect(response.Images[1].Timeframe).To(Equal("WK"))
-					Expect(response.Images[2].Timeframe).To(Equal("MN"))
+				})
+
+				It("should return images sorted by date then timeframe", func() {
+					response = decodeJournal(w, http.StatusOK)
+
+					Expect(response.Images[0].CreatedAt).To(Equal(time.Date(2023, time.June, 1, 10, 0, 0, 0, time.UTC)))
+					Expect(response.Images[0].Timeframe).To(Equal("WK"))
+
+					Expect(response.Images[1].Timeframe).To(Equal("YR"))
+					Expect(response.Images[2].Timeframe).To(Equal("SMN"))
 					Expect(response.Images[3].Timeframe).To(Equal("TMN"))
-					Expect(response.Images[4].Timeframe).To(Equal("SMN"))
-					Expect(response.Images[5].Timeframe).To(Equal("YR"))
+					Expect(response.Images[4].Timeframe).To(Equal("MN"))
+					Expect(response.Images[5].Timeframe).To(Equal("DL"))
 				})
 			})
 		})
@@ -161,10 +168,10 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 			journals := []barkat.Journal{
 				{Ticker: "GRSE", Sequence: "MWD", Type: "REJECTED", Status: "FAIL"},
-				{Ticker: "PDSL", Sequence: "YR", Type: "SET", Status: "TAKEN"},
-				{Ticker: "SNF", Sequence: "MWD", Type: "RESULT", Status: "SUCCESS"},
-				{Ticker: "TCS", Sequence: "YR", Type: "REJECTED", Status: "REJECTED"},
-				{Ticker: "INFY", Sequence: "MWD", Type: "SET", Status: "RUNNING"},
+				{Ticker: "PDSL", Sequence: "YR", Type: "TAKEN", Status: "SET"},
+				{Ticker: "SNF", Sequence: "MWD", Type: "TAKEN", Status: "SUCCESS"},
+				{Ticker: "TCS", Sequence: "YR", Type: "REJECTED", Status: "BROKEN"},
+				{Ticker: "INFY", Sequence: "MWD", Type: "TAKEN", Status: "RUNNING"},
 			}
 
 			// Copy default images for each journal to avoid shared slice mutation
@@ -324,23 +331,14 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						}
 					})
 
-					It("should filter by type = SET", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?type=SET", nil)
+					It("should filter by type = TAKEN", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?type=TAKEN", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
-						Expect(response.Journals).To(HaveLen(2))
-						for _, journal := range response.Journals {
-							Expect(journal.Type).To(Equal("SET"))
-						}
-					})
-
-					It("should filter by type = RESULT", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?type=RESULT", nil)
-						router.ServeHTTP(w, req)
-						response := decodeJournalList(w, http.StatusOK)
-						Expect(response.Journals).To(HaveLen(1))
-						journals := response.Journals
-						Expect(journals[0].Type).To(Equal("RESULT"))
+						Expect(response.Journals).To(HaveLen(3))
+						Expect(response.Journals[0].Type).To(Equal("TAKEN"))
+						Expect(response.Journals[1].Type).To(Equal("TAKEN"))
+						Expect(response.Journals[2].Type).To(Equal("TAKEN"))
 					})
 				})
 
@@ -364,12 +362,12 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						Expect(journals[0].Status).To(Equal("FAIL"))
 					})
 
-					It("should filter by status = TAKEN", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?status=TAKEN", nil)
+					It("should filter by status = SET", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?status=SET", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(1))
-						Expect(response.Journals[0].Status).To(Equal("TAKEN"))
+						Expect(response.Journals[0].Status).To(Equal("SET"))
 					})
 
 					It("should filter by status = SUCCESS", func() {
@@ -388,12 +386,12 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						Expect(response.Journals[0].Status).To(Equal("RUNNING"))
 					})
 
-					It("should filter by status = REJECTED", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?status=REJECTED", nil)
+					It("should filter by status = BROKEN", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?status=BROKEN", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(1))
-						Expect(response.Journals[0].Status).To(Equal("REJECTED"))
+						Expect(response.Journals[0].Status).To(Equal("BROKEN"))
 					})
 				})
 
@@ -450,20 +448,20 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				})
 
 				It("should apply sequence + status filters", func() {
-					req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sequence=YR&status=TAKEN", nil)
+					req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sequence=YR&status=SET", nil)
 					router.ServeHTTP(w, req)
 					response := decodeJournalList(w, http.StatusOK)
 					Expect(response.Journals).To(HaveLen(1))
 					Expect(response.Journals[0].Sequence).To(Equal("YR"))
-					Expect(response.Journals[0].Status).To(Equal("TAKEN"))
+					Expect(response.Journals[0].Status).To(Equal("SET"))
 				})
 
 				It("should apply type + status + sequence filters", func() {
-					req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?type=SET&status=RUNNING&sequence=MWD", nil)
+					req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?type=TAKEN&status=RUNNING&sequence=MWD", nil)
 					router.ServeHTTP(w, req)
 					response := decodeJournalList(w, http.StatusOK)
 					Expect(response.Journals).To(HaveLen(1))
-					Expect(response.Journals[0].Type).To(Equal("SET"))
+					Expect(response.Journals[0].Type).To(Equal("TAKEN"))
 					Expect(response.Journals[0].Status).To(Equal("RUNNING"))
 					Expect(response.Journals[0].Sequence).To(Equal("MWD"))
 				})

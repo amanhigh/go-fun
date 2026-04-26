@@ -33,7 +33,7 @@ func createTestImageDir() string {
 
 	sampleImageDir := filepath.Join(imageDir, "2024", "01")
 	Expect(os.MkdirAll(sampleImageDir, 0o755)).To(Succeed())
-	Expect(os.WriteFile(filepath.Join(sampleImageDir, "sample.png"), []byte("sample-image"), 0o644)).To(Succeed())
+	Expect(os.WriteFile(filepath.Join(sampleImageDir, "sample.png"), []byte("sample-image"), 0o600)).To(Succeed())
 
 	return imageDir
 }
@@ -43,26 +43,21 @@ func configureMockOSHandler() *handlerMocks.OSHandler {
 	osHandler := handlerMocks.NewOSHandler(GinkgoT())
 
 	// Configure mock to return safe responses instead of executing real OS operations
-	osHandler.On("HandleSubmapControl", mock.Anything).Run(func(args mock.Arguments) {
-		ctx, ok := args.Get(0).(*gin.Context)
-		if !ok {
-			return
-		}
+	osHandler.EXPECT().HandleScreenshot(mock.Anything).Run(func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, gin.H{"status": "success", "data": gin.H{
+			"file_name":     "mock.png",
+			"relative_path": "mock.png",
+			"full_path":     "/mock/path/mock.png",
+		}})
+	}).Maybe()
+	osHandler.EXPECT().HandleSubmapControl(mock.Anything).Run(func(ctx *gin.Context) {
 		action := ctx.Param("action")
 		ctx.JSON(http.StatusOK, gin.H{"status": "success", "action": action})
-	})
-	osHandler.On("HandleRecordTicker", mock.Anything).Run(func(args mock.Arguments) {
-		ctx, ok := args.Get(0).(*gin.Context)
-		if !ok {
-			return
-		}
+	}).Maybe()
+	osHandler.EXPECT().HandleRecordTicker(mock.Anything).Run(func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, "Success")
-	})
-	osHandler.On("HandleReadClip", mock.Anything).Run(func(args mock.Arguments) {
-		ctx, ok := args.Get(0).(*gin.Context)
-		if !ok {
-			return
-		}
+	}).Maybe()
+	osHandler.EXPECT().HandleReadClip(mock.Anything).Run(func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, "mock_clipboard_content")
 	}).Maybe()
 

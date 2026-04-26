@@ -10,13 +10,13 @@ _lint-ci:
         just _warn "LINT" "Skipping in GitHub Actions Environment"
     else
         just _title "LINT" "Golang CLI"
-        go work edit -json | jq -r '.Use[].DiskPath' | xargs -I{} {{golangci_lint}} run {}/...
+        go work edit -json | jq -r '.Use[].DiskPath' | xargs -I{} {{golangci_lint}} run --show-stats=false {}/...
     fi
 
 [group('quality')]
 _lint-fix:
     just _title "LINT" "Auto-fixing Modernize Issues"
-    go work edit -json | jq -r '.Use[].DiskPath' | xargs -I{} {{golangci_lint}} run --enable-only=modernize --fix {}/...
+    go work edit -json | jq -r '.Use[].DiskPath' | xargs -I{} {{golangci_lint}} run --show-stats=false --enable-only=modernize --fix {}/...
 
 [group('quality')]
 [doc('Detect dead code in selected modules')]

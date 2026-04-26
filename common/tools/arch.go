@@ -1,20 +1,48 @@
 package tools
 
 import (
+	"errors"
+	"fmt"
+	"strings"
+
 	"github.com/bitfield/script"
 )
 
+// ErrScreenshotAborted is returned when the user cancels a region screenshot
+// (e.g., pressing Escape during slurp region selection).
+var ErrScreenshotAborted = errors.New("screenshot aborted")
+
 func Screenshot() (err error) {
-	err = script.Exec("hyprshot -c -s -m output").Error()
+	var monitor string
+	if monitor, err = GetActiveMonitor(); err != nil {
+		return
+	}
+	err = script.Exec(fmt.Sprintf("grim -o %s - | wl-copy", monitor)).Error()
 	return
 }
+
 func NamedScreenshot(dir, name string) (err error) {
-	err = script.Exec("hyprshot -m active -s -m output -o " + dir + " -f" + name).Error()
+	var monitor string
+	if monitor, err = GetActiveMonitor(); err != nil {
+		return
+	}
+	fullPath := dir + "/" + name
+	err = script.Exec(fmt.Sprintf("grim -o %s %s", monitor, fullPath)).Error()
 	return
 }
 
 func NamedRegionScreenshot(dir, name string) (err error) {
-	err = script.Exec("hyprshot -s -m region -o " + dir + " -f" + name).Error()
+	// Step 1: Run slurp to get the selected region geometry.
+	// slurp exits with code 1 when the user cancels (Escape).
+	geometry, err := script.Exec("slurp").String()
+	if err != nil {
+		return ErrScreenshotAborted
+	}
+
+	// Step 2: Use the geometry string for grim capture.
+	fullPath := dir + "/" + name
+	geometry = strings.TrimSpace(geometry)
+	err = script.Exec(fmt.Sprintf(`grim -g "%s" "%s"`, geometry, fullPath)).Error()
 	return
 }
 

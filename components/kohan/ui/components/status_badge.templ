@@ -1,0 +1,16 @@
+package components
+
+import "github.com/templui/templui/components/badge"
+
+type StatusBadgeProps struct {
+	StatusExpr string
+	Class      string
+}
+
+templ StatusBadge(props StatusBadgeProps) {
+	@badge.Badge(badge.Props{
+		Variant:    badge.VariantOutline,
+		Class:      "border " + props.Class,
+		Attributes: templ.Attributes{"x-bind:class": "statusBadgeClass(" + props.StatusExpr + ")", "x-text": "({'RUNNING':'🏃','SET':'🎯','SUCCESS':'✅','FAIL':'❌','BROKEN':'💥','MISSED':'🚫','JUST_LOSS':'💔'}[" + props.StatusExpr + "] || '🏷️') + ' ' + normalizeStatus(" + props.StatusExpr + ")"},
+	}) {}
+}

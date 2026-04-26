@@ -9,12 +9,13 @@ import (
 
 // Image represents a screenshot attached to a journal.
 type Image struct {
-	ID         uint64    `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
-	ExternalID string    `gorm:"column:external_id;uniqueIndex;not null" json:"id"`
-	JournalID  uint64    `gorm:"column:journal_id;not null;index" json:"journal_id"`
-	Timeframe  string    `gorm:"column:timeframe;not null" json:"timeframe" binding:"required,oneof=DL WK MN TMN SMN YR"`
-	FileName   string    `gorm:"column:file_name;not null" json:"file_name" binding:"required,max=255,file_name"`
-	CreatedAt  time.Time `gorm:"column:created_at;not null" json:"created_at"`
+	ID         uint64 `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
+	ExternalID string `gorm:"column:external_id;uniqueIndex;not null" json:"id"`
+	JournalID  uint64 `gorm:"column:journal_id;not null;index" json:"journal_id"`
+	// FIXME: add an image type so set/info/result screenshots can be segregated explicitly.
+	Timeframe string    `gorm:"column:timeframe;not null" json:"timeframe" binding:"required,oneof=DL WK MN TMN SMN YR"`
+	FileName  string    `gorm:"column:file_name;not null" json:"file_name" binding:"required,max=255,image_file"`
+	CreatedAt time.Time `gorm:"column:created_at;not null" json:"created_at"`
 }
 
 func (i *Image) BeforeCreate(_ *gorm.DB) error {

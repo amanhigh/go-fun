@@ -190,28 +190,28 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 						Expect(response.Status).To(Equal("RUNNING"))
 					})
 
-					It("should accept status = DROPPED", func() {
-						note := barkat.Note{Status: "DROPPED", Content: "Test content", Format: "MARKDOWN"}
+					It("should accept status = FAIL", func() {
+						note := barkat.Note{Status: "FAIL", Content: "Test content", Format: "MARKDOWN"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
-						Expect(response.Status).To(Equal("DROPPED"))
+						Expect(response.Status).To(Equal("FAIL"))
 					})
 
-					It("should accept status = TAKEN", func() {
-						note := barkat.Note{Status: "TAKEN", Content: "Test content", Format: "MARKDOWN"}
+					It("should accept status = JUST_LOSS", func() {
+						note := barkat.Note{Status: "JUST_LOSS", Content: "Test content", Format: "MARKDOWN"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
-						Expect(response.Status).To(Equal("TAKEN"))
+						Expect(response.Status).To(Equal("JUST_LOSS"))
 					})
 
-					It("should accept status = REJECTED", func() {
-						note := barkat.Note{Status: "REJECTED", Content: "Test content", Format: "MARKDOWN"}
+					It("should accept status = BROKEN", func() {
+						note := barkat.Note{Status: "BROKEN", Content: "Test content", Format: "MARKDOWN"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/notes", note)
 						router.ServeHTTP(w, req)
 						response := decodeNoteResponse(w)
-						Expect(response.Status).To(Equal("REJECTED"))
+						Expect(response.Status).To(Equal("BROKEN"))
 					})
 
 					It("should accept status = SUCCESS", func() {
@@ -324,7 +324,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 					It("should return 400 for content exceeding max length (PRD: max 2000 chars)", func() {
 						var longContent strings.Builder
-						for range 2001 {
+						for range barkat.NoteContentMaxLength + 1 {
 							longContent.WriteString("X")
 						}
 						note := barkat.Note{Status: "SET", Content: longContent.String(), Format: "MARKDOWN"}
@@ -475,7 +475,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 					_, err := noteMgr.CreateNote(testCtx, journal.ExternalID, note1)
 					Expect(err).ToNot(HaveOccurred())
 
-					note2 := barkat.Note{Status: "TAKEN", Content: "Second note", Format: "PLAINTEXT"}
+					note2 := barkat.Note{Status: "BROKEN", Content: "Second note", Format: "PLAINTEXT"}
 					_, err = noteMgr.CreateNote(testCtx, journal.ExternalID, note2)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -498,7 +498,7 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 					for _, note := range notes {
 						statuses = append(statuses, note.Status)
 					}
-					Expect(statuses).To(ContainElements("SET", "TAKEN"))
+					Expect(statuses).To(ContainElements("SET", "BROKEN"))
 				})
 
 				It("should return notes with external IDs", func() {

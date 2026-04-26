@@ -9,13 +9,13 @@ space: space-purge
 [group('devspace')]
 space-purge:
     just _title "Purging" "Devspace"
-    -devspace purge
+    -just _run "devspace purge"
 
 [doc('Run the devspace Ginkgo test workflow')]
 [group('devspace')]
 space-test:
     just _title "TEST" "Devspace Tests"
-    devspace run ginkgo
+    just _run "devspace run ginkgo"
     CMD="devspace run fun-test" just watch
 
 [group('devspace')]
