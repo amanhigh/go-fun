@@ -93,6 +93,7 @@ var _ = Describe("OS Handler Integration Tests", func() {
 		})
 
 		Context("Field Validations - Binding Errors", func() {
+			// FIXME: Missing Good Values not api-test format.
 			Context("FileName field", func() {
 				It("should return 400 for missing FileName", func() {
 					payload := map[string]string{

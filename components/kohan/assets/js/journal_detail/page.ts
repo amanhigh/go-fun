@@ -20,6 +20,7 @@ function journalDetailPage() {
 
 	const state = createJournalDetailPageState();
 	const formatters = createJournalDetailFormatters();
+	// FIXME: Review all journal_detail ts files.
 	const pageActions = createJournalDetailPageActions({ journalClient });
 	const preview = createJournalDetailPreview(image);
 
