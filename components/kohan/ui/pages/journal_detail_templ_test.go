@@ -115,7 +115,18 @@ var _ = Describe("Journal Detail Page Tests", func() {
 
 	Context("Image Tiles", func() {
 		It("should render full-image friendly classes for journal screenshots", func() {
-			Expect(html).To(ContainSubstring(`block w-full overflow-hidden rounded-2xl border border-border bg-muted text-left`))
+			Expect(html).To(ContainSubstring(`group`))
+			Expect(html).To(ContainSubstring(`h-auto`))
+			Expect(html).To(ContainSubstring(`p-0`))
+			Expect(html).To(ContainSubstring(`items-start`))
+			Expect(html).To(ContainSubstring(`justify-start`))
+			Expect(html).To(ContainSubstring(`overflow-hidden`))
+			Expect(html).To(ContainSubstring(`rounded-2xl`))
+			Expect(html).To(ContainSubstring(`border-border`))
+			Expect(html).To(ContainSubstring(`bg-muted`))
+			Expect(html).To(ContainSubstring(`text-left`))
+			Expect(html).To(ContainSubstring(`x-on:click="openImagePreview(index)"`))
+			Expect(html).To(ContainSubstring(`x-bind:title="imageTileTitle(image)"`))
 			Expect(html).To(ContainSubstring(`class="block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]"`))
 			Expect(html).ToNot(ContainSubstring(`aspect-[15/10]`))
 			Expect(html).ToNot(ContainSubstring(`object-cover`))
