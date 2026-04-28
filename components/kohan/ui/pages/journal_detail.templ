@@ -114,11 +114,9 @@ templ JournalDetailImageTile() {
 		<div class="flex items-center px-1">
 			@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border text-sm font-semibold", Attributes: templ.Attributes{"x-bind:class": "timeframeChipClass(image.timeframe)", "x-text": "image.timeframe"}}) {}
 		</div>
-		<div class="group relative overflow-hidden rounded-2xl border border-border bg-muted" x-bind:class="index < 2 ? 'aspect-[16/9]' : 'aspect-[15/10]'">
-			<button class="h-full w-full text-left" type="button" x-on:click="openImagePreview(index)" x-bind:title="image.file_name">
-				<img class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" x-bind:src="resolveImageSrc(image.file_name, image.created_at)" x-bind:alt="image.timeframe + ' image'" x-on:error="$el.style.opacity='0.35'" loading="lazy"/>
-			</button>
-		</div>
+			<button class="group block w-full overflow-hidden rounded-2xl border border-border bg-muted text-left" type="button" x-on:click="openImagePreview(index)" x-bind:title="image.file_name">
+			<img class="block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]" x-bind:src="resolveImageSrc(image.file_name, image.created_at)" x-bind:alt="image.timeframe + ' image'" x-on:error="$el.style.opacity='0.35'"/>
+		</button>
 	</div>
 }
 

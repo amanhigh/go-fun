@@ -113,4 +113,13 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`aria-label="Preview Image Navigation Overlay"`))
 		})
 	})
+
+	Context("Image Tiles", func() {
+		It("should render full-image friendly classes for journal screenshots", func() {
+			Expect(html).To(ContainSubstring(`block w-full overflow-hidden rounded-2xl border border-border bg-muted text-left`))
+			Expect(html).To(ContainSubstring(`class="block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]"`))
+			Expect(html).ToNot(ContainSubstring(`aspect-[15/10]`))
+			Expect(html).ToNot(ContainSubstring(`object-cover`))
+		})
+	})
 })

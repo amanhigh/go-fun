@@ -394,7 +394,7 @@ func JournalDetailImageTile() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</div><div class=\"group relative overflow-hidden rounded-2xl border border-border bg-muted\" x-bind:class=\"index < 2 ? 'aspect-[16/9]' : 'aspect-[15/10]'\"><button class=\"h-full w-full text-left\" type=\"button\" x-on:click=\"openImagePreview(index)\" x-bind:title=\"image.file_name\"><img class=\"h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]\" x-bind:src=\"resolveImageSrc(image.file_name, image.created_at)\" x-bind:alt=\"image.timeframe + ' image'\" x-on:error=\"$el.style.opacity='0.35'\" loading=\"lazy\"></button></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</div><button class=\"group block w-full overflow-hidden rounded-2xl border border-border bg-muted text-left\" type=\"button\" x-on:click=\"openImagePreview(index)\" x-bind:title=\"image.file_name\"><img class=\"block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]\" x-bind:src=\"resolveImageSrc(image.file_name, image.created_at)\" x-bind:alt=\"image.timeframe + ' image'\" x-on:error=\"$el.style.opacity='0.35'\"></button></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
