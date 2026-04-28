@@ -101,6 +101,7 @@ templ JournalDetailImages() {
 			<p class="mt-1 text-sm text-muted-foreground"><span x-text="journal.images?.length ?? 0"></span> timeframe image(s)</p>
 			<div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2" x-show="journal.images?.length">
 				<template x-for="(image, index) in sortedImages()" x-bind:key="image.id">
+				    // TODO: First Load Renders last two images half, fixed on reload only.
 					@JournalDetailImageTile()
 				</template>
 			</div>
