@@ -100,6 +100,12 @@ var _ = Describe("Journal Detail Page Tests", func() {
 	})
 
 	Context("Image Preview Modal", func() {
+		It("should render a visible timeframe chip and counter", func() {
+			Expect(html).To(ContainSubstring(`x-bind:class="timeframeChipClass(previewImageTimeframe())"`))
+			Expect(html).To(ContainSubstring(`x-text="previewImageTimeframe()"`))
+			Expect(html).To(ContainSubstring(`x-text="previewImageCounter()"`))
+		})
+
 		It("should render keyboard navigation bindings for preview mode", func() {
 			Expect(html).To(ContainSubstring(`x-on:keydown.escape.window="closeImagePreview()"`))
 			Expect(html).To(ContainSubstring(`x-on:keydown.arrow-left.window="prevImage()"`))
@@ -125,6 +131,8 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`border-border`))
 			Expect(html).To(ContainSubstring(`bg-muted`))
 			Expect(html).To(ContainSubstring(`text-left`))
+			Expect(html).To(ContainSubstring(`x-bind:class="timeframeChipClass(image.timeframe)"`))
+			Expect(html).To(ContainSubstring(`x-text="image.timeframe"`))
 			Expect(html).To(ContainSubstring(`x-on:click="openImagePreview(index)"`))
 			Expect(html).To(ContainSubstring(`x-bind:title="imageTileTitle(image)"`))
 			Expect(html).To(ContainSubstring(`class="block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]"`))

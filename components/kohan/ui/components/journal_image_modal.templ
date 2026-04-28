@@ -26,7 +26,7 @@ templ JournalImageModal(props JournalImageModalProps) {
 		<div class="absolute inset-0" x-on:click={ props.CloseExpr }></div>
 		<div class="relative z-10 flex w-full items-center justify-end gap-4">
 			<div class="flex flex-col items-center gap-2">
-				@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "rounded-lg border-2 px-5 py-2 text-2xl font-black tracking-widest bg-transparent", Attributes: templ.Attributes{"x-bind:class": props.TimeframeClassExpr, "x-text": props.TimeframeExpr}}) {}
+				@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "rounded-lg border-2 px-5 py-2 text-2xl font-black tracking-widest shadow-sm", Attributes: templ.Attributes{"x-bind:class": props.TimeframeClassExpr, "x-text": props.TimeframeExpr}}) {}
 				<div class="text-sm font-medium text-white/60" x-text={ props.CounterExpr }></div>
 			</div>
 			@button.Button(button.Props{

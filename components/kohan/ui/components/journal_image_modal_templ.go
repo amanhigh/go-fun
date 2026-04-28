@@ -144,7 +144,7 @@ func JournalImageModal(props JournalImageModalProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "rounded-lg border-2 px-5 py-2 text-2xl font-black tracking-widest bg-transparent", Attributes: templ.Attributes{"x-bind:class": props.TimeframeClassExpr, "x-text": props.TimeframeExpr}}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "rounded-lg border-2 px-5 py-2 text-2xl font-black tracking-widest shadow-sm", Attributes: templ.Attributes{"x-bind:class": props.TimeframeClassExpr, "x-text": props.TimeframeExpr}}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

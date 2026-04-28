@@ -10,10 +10,10 @@ export interface ImageHelper {
 
 const chipClassMap: Record<string, string> = {
 	YR: 'border-fuchsia-400 bg-fuchsia-200 text-fuchsia-950',
-	SMN: 'border-indigo-400 bg-indigo-200 text-indigo-950',
-	TMN: 'border-cyan-400 bg-cyan-200 text-cyan-950',
-	MN: 'border-emerald-400 bg-emerald-200 text-emerald-950',
-	WK: 'border-amber-400 bg-amber-200 text-amber-950',
+	SMN: 'border-sky-400 bg-sky-200 text-sky-950',
+	TMN: 'border-emerald-400 bg-emerald-200 text-emerald-950',
+	MN: 'border-orange-400 bg-orange-200 text-orange-950',
+	WK: 'border-yellow-400 bg-yellow-200 text-yellow-950',
 	DL: 'border-slate-400 bg-slate-200 text-slate-950',
 };
 
