@@ -126,7 +126,7 @@ templ JournalDetailImages() {
 	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
 		@card.Content(card.ContentProps{}) {
 			@components.SectionHeader(components.SectionHeaderProps{Title: "Images", Description: "Timeframe images · click to zoom"})
-			<p class="mt-1 text-sm text-muted-foreground"><span x-text="journal.images?.length ?? 0"></span> timeframe image(s)</p>
+			<p class="mt-1 text-sm text-muted-foreground" x-text="imageCountLabel()"></p>
 			<div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2" x-show="journal.images?.length">
 				<template x-for="(image, index) in sortedImages()" x-bind:key="image.id">
 				    // TODO: First Load Renders last two images half, fixed on reload only.
@@ -143,8 +143,8 @@ templ JournalDetailImageTile() {
 		<div class="flex items-center px-1">
 			@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border text-sm font-semibold", Attributes: templ.Attributes{"x-bind:class": "timeframeChipClass(image.timeframe)", "x-text": "image.timeframe"}}) {}
 		</div>
-			<button class="group block w-full overflow-hidden rounded-2xl border border-border bg-muted text-left" type="button" x-on:click="openImagePreview(index)" x-bind:title="image.file_name">
-			<img class="block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]" x-bind:src="resolveImageSrc(image.file_name, image.created_at)" x-bind:alt="image.timeframe + ' image'" x-on:error="$el.style.opacity='0.35'"/>
+			<button class="group block w-full overflow-hidden rounded-2xl border border-border bg-muted text-left" type="button" x-on:click="openImagePreview(index)" x-bind:title="imageTileTitle(image)">
+			<img class="block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]" x-bind:src="imageTileSrc(image)" x-bind:alt="imageTileAlt(image)" x-on:error="$el.style.opacity='0.35'"/>
 		</button>
 	</div>
 }
@@ -200,60 +200,50 @@ templ JournalDetailNoteRow() {
 templ JournalImagePreviewModal() {
 	<div class="fixed inset-0 z-50 flex flex-col bg-black/90 p-4" x-show="hasImagePreview()" x-on:keydown.escape.window="closeImagePreview()" x-on:keydown.arrow-left.window="prevImage()" x-on:keydown.arrow-right.window="nextImage()" x-cloak>
 		<div class="absolute inset-0" x-on:click="closeImagePreview()"></div>
-		<div class="relative z-10 flex w-full items-center justify-between gap-4">
-			@button.Button(button.Props{
-				Variant: button.VariantGhost,
-				Type:    button.TypeButton,
-				Size:    button.SizeIcon,
-				Class:   "rounded-full bg-white/10 text-white hover:bg-white/20",
-				Attributes: templ.Attributes{
-					"x-on:click": "prevImage(true)",
-				},
-			}) {
-				@icon.Icon("chevron-left")(icon.Props{Class: "size-6"})
-			}
-			<div class="flex flex-col items-center gap-2">
-				<div class="rounded-lg border-2 px-5 py-2 text-2xl font-black tracking-widest" x-bind:class="timeframeChipClass(previewImageTimeframe())" x-text="previewImageTimeframe()"></div>
-				<div class="text-sm font-medium text-white/60" x-text="`${selectedImageIndex + 1} / ${sortedImages().length}`"></div>
-			</div>
-			@button.Button(button.Props{
-				Variant: button.VariantGhost,
-				Type:    button.TypeButton,
-				Size:    button.SizeIcon,
-				Class:   "rounded-full bg-white/10 text-white hover:bg-white/20",
-				Attributes: templ.Attributes{
-					"x-on:click": "nextImage(true)",
-				},
-			}) {
-				@icon.Icon("chevron-right")(icon.Props{Class: "size-6"})
-			}
-			@button.Button(button.Props{
-				Variant: button.VariantGhost,
-				Type:    button.TypeButton,
-				Class:   "ml-2 bg-white/10 text-xs font-medium text-white hover:bg-white/20",
-				Attributes: templ.Attributes{
-					"x-on:click": "closeImagePreview()",
-				},
-			}) {
-				ESC
-			}
+		@JournalDetailImagePreviewHeader()
+		@JournalDetailImagePreviewStage()
+	</div>
+}
+
+templ JournalDetailImagePreviewHeader() {
+	<div class="relative z-10 flex w-full items-center justify-end gap-4">
+		<div class="flex flex-col items-center gap-2">
+			<div class="rounded-lg border-2 px-5 py-2 text-2xl font-black tracking-widest" x-bind:class="timeframeChipClass(previewImageTimeframe())" x-text="previewImageTimeframe()"></div>
+			<div class="text-sm font-medium text-white/60" x-text="previewImageCounter()"></div>
 		</div>
-		<div class="mt-4 flex flex-1 items-center justify-center">
-				<div class="relative w-full">
-					<img class="max-h-[82vh] w-full rounded-xl border border-white/20 object-contain" x-bind:src="previewImageSrc()" x-bind:alt="previewImageLabel()"/>
-					@button.Button(button.Props{
-						Variant: button.VariantGhost,
-						Type:    button.TypeButton,
-						Class:   "absolute inset-0 h-auto w-auto cursor-pointer rounded-xl p-0 text-transparent hover:bg-transparent",
-						Attributes: templ.Attributes{
-							"aria-label":                    "Preview Image Navigation Overlay",
-							"x-on:click.stop":               "nextImage(true)",
-							"x-on:contextmenu.prevent.stop": "prevImage(true)",
-						},
-					}) {}
-			</div>
+		@button.Button(button.Props{
+			Variant: button.VariantGhost,
+			Type:    button.TypeButton,
+			Class:   "ml-2 bg-white/10 text-xs font-medium text-white hover:bg-white/20",
+			Attributes: templ.Attributes{
+				"x-on:click": "closeImagePreview()",
+			},
+		}) {
+			ESC
+		}
+	</div>
+}
+
+templ JournalDetailImagePreviewStage() {
+	<div class="mt-4 flex flex-1 items-center justify-center">
+		<div class="relative w-full">
+			<img class="max-h-[82vh] w-full rounded-xl border border-white/20 object-contain" x-bind:src="previewImageSrc()" x-bind:alt="previewImageLabel()"/>
+			@JournalDetailImagePreviewOverlay()
 		</div>
 	</div>
+}
+
+templ JournalDetailImagePreviewOverlay() {
+	@button.Button(button.Props{
+		Variant: button.VariantGhost,
+		Type:    button.TypeButton,
+		Class:   "absolute inset-0 h-auto w-auto cursor-pointer rounded-xl p-0 text-transparent hover:bg-transparent",
+		Attributes: templ.Attributes{
+			"aria-label":                    "Preview Image Navigation Overlay",
+			"x-on:click.stop":               "nextImage(true)",
+			"x-on:contextmenu.prevent.stop": "prevImage(true)",
+		},
+	}) {}
 }
 
 // ============================================================

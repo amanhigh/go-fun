@@ -107,8 +107,6 @@ var _ = Describe("Journal Detail Page Tests", func() {
 		})
 
 		It("should render mouse navigation bindings for preview mode", func() {
-			Expect(html).To(ContainSubstring(`x-on:click="prevImage(true)"`))
-			Expect(html).To(ContainSubstring(`x-on:click="nextImage(true)"`))
 			Expect(html).To(ContainSubstring(`x-on:click.stop="nextImage(true)"`))
 			Expect(html).To(ContainSubstring(`x-on:contextmenu.prevent.stop="prevImage(true)"`))
 			Expect(html).To(ContainSubstring(`aria-label="Preview Image Navigation Overlay"`))

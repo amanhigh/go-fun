@@ -4,8 +4,21 @@ import type { ImageHelper } from '../journal_images';
 export function createJournalDetailPreview(image: ImageHelper) {
 	return {
 		timeframeChipClass: image.chipClass,
+		imageCountLabel(this: any) {
+			const count = this.sortedImages().length;
+			return `${count} timeframe image${count === 1 ? '' : 's'}`;
+		},
 		sortedImages(this: any) {
 			return image.sorted(this.journal?.images);
+		},
+		imageTileTitle(this: any, imageItem: JournalImage) {
+			return imageItem.file_name;
+		},
+		imageTileSrc(this: any, imageItem: JournalImage) {
+			return image.resolve(imageItem.file_name, imageItem.created_at);
+		},
+		imageTileAlt(this: any, imageItem: JournalImage) {
+			return image.label(imageItem);
 		},
 		resolveImageSrc: image.resolve,
 		previewImageSrc(this: any) {
