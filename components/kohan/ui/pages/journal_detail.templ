@@ -43,7 +43,7 @@ templ JournalDetailPage(journalID string) {
 }
 
 // ============================================================
-// CONTENT FLOW
+// HEADER FLOW
 // ============================================================
 
 templ JournalDetailHeader() {
@@ -65,34 +65,62 @@ templ JournalDetailHeader() {
 					<div class="flex flex-wrap items-center gap-2.5">
 						@components.TypeBadge(components.TypeBadgeProps{TypeExpr: "journal.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
 						@components.StatusBadge(components.StatusBadgeProps{StatusExpr: "journal.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
-						@components.FilterChip(components.FilterChipProps{TextExpr: "journal.sequence", Tone: components.ToneViolet, Emoji: "📅", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm", Attributes: templ.Attributes{"x-text": "journal.sequence === 'MWD' ? '🕐 ' + journal.sequence : '📅 ' + journal.sequence"}})
+						@JournalDetailSequenceChip()
 					</div>
-					<div class="flex flex-col items-end gap-1">
-						@components.InfoRow(components.InfoRowProps{Label: "🕒", ValueExpr: "formatTimestamp(journal.created_at)", Class: "text-xs"})
-						<div x-show="!journal.reviewed_at">
-							@components.FilterChip(components.FilterChipProps{TextExpr: "'⏳ Pending Review'", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
-						</div>
-						<div x-show="journal.reviewed_at">
-							@components.InfoRow(components.InfoRowProps{Label: "✅", ValueExpr: "formatTimestamp(journal.reviewed_at)", Class: "text-xs text-emerald-600"})
-						</div>
-					</div>
+					@JournalDetailReviewDates()
 				</div>
-				<div class="flex justify-between gap-6" x-show="sidebar.deletableTags().length">
-					<div class="flex flex-wrap gap-2">
-						<template x-for="tag in sidebar.deletableTags()" x-bind:key="tag.id">
-							@components.FilterChip(components.FilterChipProps{ShowExpr: "['REASON','MANAGEMENT'].includes(tag.type)", Tone: components.ToneAmber, Class: "rounded-full font-semibold", Attributes: templ.Attributes{"x-text": "(tag.tag.toLowerCase().includes('trend') ? '📈 ' : '⚡ ') + tag.tag + (tag.override ? ' → ' + tag.override : '')"}})
-						</template>
-					</div>
-					<div class="flex flex-wrap gap-2">
-						<template x-for="tag in sidebar.deletableTags()" x-bind:key="tag.id">
-							@components.FilterChip(components.FilterChipProps{ShowExpr: "['DIRECTION','LEGACY'].includes(tag.type)", TextExpr: "tag.tag", Tone: components.ToneSlate, Emoji: "🏷", Class: "rounded-full text-xs"})
-						</template>
-					</div>
+				<div class="flex justify-between gap-6" x-show="sidebar.tags().length">
+					@JournalDetailReasonTags()
+					@JournalDetailDirectionalTags()
 				</div>
 			</div>
 		}
 	}
 }
+
+templ JournalDetailCreatedAt() {
+	@components.InfoRow(components.InfoRowProps{Label: "🕒", ValueExpr: "formatTimestamp(journal.created_at)", Class: "text-xs"})
+}
+
+templ JournalDetailReviewDate() {
+	@components.FilterChip(components.FilterChipProps{ShowExpr: "journal.reviewed_at", TextExpr: "'✅ ' + formatTimestamp(journal.reviewed_at)", Tone: components.ToneGreen, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
+}
+
+templ JournalDetailPendingDate() {
+	@components.FilterChip(components.FilterChipProps{ShowExpr: "!journal.reviewed_at", TextExpr: "'⏳ Pending Review'", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
+}
+
+templ JournalDetailReviewDates() {
+	<div class="flex flex-col items-end gap-1">
+		@JournalDetailCreatedAt()
+		@JournalDetailPendingDate()
+		@JournalDetailReviewDate()
+	</div>
+}
+
+templ JournalDetailSequenceChip() {
+	@components.FilterChip(components.FilterChipProps{TextExpr: "sequenceLabel(journal.sequence)", Tone: components.ToneViolet, Emoji: "📅", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+}
+
+templ JournalDetailReasonTags() {
+	<div class="flex flex-wrap gap-2">
+		<template x-for="tag in sidebar.tags()" x-bind:key="tag.id">
+			@components.FilterChip(components.FilterChipProps{ShowExpr: "['REASON','MANAGEMENT'].includes(tag.type)", Tone: components.ToneAmber, Class: "rounded-full font-semibold", Attributes: templ.Attributes{"x-text": "(tag.tag.toLowerCase().includes('trend') ? '📈 ' : '⚡ ') + tag.tag + (tag.override ? ' → ' + tag.override : '')"}})
+		</template>
+	</div>
+}
+
+templ JournalDetailDirectionalTags() {
+	<div class="flex flex-wrap gap-2">
+		<template x-for="tag in sidebar.tags()" x-bind:key="tag.id">
+			@components.FilterChip(components.FilterChipProps{ShowExpr: "['DIRECTION','LEGACY'].includes(tag.type)", TextExpr: "tag.tag", Tone: components.ToneSlate, Emoji: "🏷", Class: "rounded-full text-xs"})
+		</template>
+	</div>
+}
+
+// ============================================================
+// IMAGE TILES FLOW
+// ============================================================
 
 templ JournalDetailImages() {
 	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
@@ -120,6 +148,10 @@ templ JournalDetailImageTile() {
 		</button>
 	</div>
 }
+
+// ============================================================
+// NOTES FLOW
+// ============================================================
 
 templ JournalDetailNotes() {
 	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
@@ -207,18 +239,18 @@ templ JournalImagePreviewModal() {
 			}
 		</div>
 		<div class="mt-4 flex flex-1 items-center justify-center">
-			<div class="relative w-full">
-				<img class="max-h-[82vh] w-full rounded-xl border border-white/20 object-contain" x-bind:src="previewImageSrc()" x-bind:alt="previewImageLabel()"/>
-				@button.Button(button.Props{
-					Variant: button.VariantGhost,
-					Type:    button.TypeButton,
-					Class:   "absolute inset-0 h-auto w-auto cursor-pointer rounded-xl p-0 text-transparent hover:bg-transparent",
-					Attributes: templ.Attributes{
-						"aria-label":                    "Preview Image Navigation Overlay",
-						"x-on:click.stop":               "nextImage(true)",
-						"x-on:contextmenu.prevent.stop": "prevImage(true)",
-					},
-				}) {}
+				<div class="relative w-full">
+					<img class="max-h-[82vh] w-full rounded-xl border border-white/20 object-contain" x-bind:src="previewImageSrc()" x-bind:alt="previewImageLabel()"/>
+					@button.Button(button.Props{
+						Variant: button.VariantGhost,
+						Type:    button.TypeButton,
+						Class:   "absolute inset-0 h-auto w-auto cursor-pointer rounded-xl p-0 text-transparent hover:bg-transparent",
+						Attributes: templ.Attributes{
+							"aria-label":                    "Preview Image Navigation Overlay",
+							"x-on:click.stop":               "nextImage(true)",
+							"x-on:contextmenu.prevent.stop": "prevImage(true)",
+						},
+					}) {}
 			</div>
 		</div>
 	</div>

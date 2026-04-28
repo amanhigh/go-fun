@@ -54,5 +54,10 @@ export function createJournalDetailFormatters() {
 			const year = `${parsed.getUTCFullYear()}`.slice(-2);
 			return `${day} ${month}, ${year}`;
 		},
+		sequenceLabel: (sequence: string | null | undefined) => {
+			if (!sequence) return '';
+			const label = sequence === 'MWD' ? '🕐 ' + sequence : '📅 ' + sequence;
+			return label;
+		},
 	};
 }

@@ -47,8 +47,8 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-ref="reasonTagOverride"`))
 			Expect(html).To(ContainSubstring(`x-on:keydown.enter.prevent="sidebar.submitReasonTag()"`))
 			Expect(html).To(ContainSubstring(`x-on:click="sidebar.submitReasonTag()"`))
-			Expect(html).To(ContainSubstring(`x-show="sidebar.deletableTags().length"`))
-			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.deletableTags()"`))
+			Expect(html).To(ContainSubstring(`x-show="sidebar.tags().length"`))
+			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.tags()"`))
 			Expect(html).To(ContainSubstring(`x-on:click="sidebar.deleteTag(tag.id)"`))
 			Expect(html).To(ContainSubstring(`x-show="sidebar.sortedNotes().length"`))
 			Expect(html).To(ContainSubstring(`x-for="note in sidebar.sortedNotes()"`))
@@ -92,7 +92,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 	})
 	Context("Header Tags", func() {
 		It("should render separate primary and secondary tag sections", func() {
-			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.deletableTags()"`))
+			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.tags()"`))
 			Expect(html).To(ContainSubstring(`REASON&#39;,&#39;MANAGEMENT`))
 			Expect(html).To(ContainSubstring(`DIRECTION&#39;,&#39;LEGACY`))
 		})

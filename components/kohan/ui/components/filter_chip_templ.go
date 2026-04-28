@@ -13,12 +13,12 @@ import (
 
 type FilterChipProps struct {
 	// TODO: Cover Component Package with Test
-	ShowExpr   string
 	TextExpr   string
 	Tone       Tone
 	Emoji      string
 	Class      string
 	Attributes templ.Attributes
+	ShowExpr   string
 }
 
 func filterChipToneClass(tone Tone) string {

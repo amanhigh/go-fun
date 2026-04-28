@@ -33,7 +33,7 @@ export function createJournalDetailTags(parent: any, tagClient: JournalTagClient
 		reasonTags(this: any) {
 			return (this.tagItems ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'REASON');
 		},
-		deletableTags(this: any) {
+		tags(this: any) {
 			return this.tagItems ?? [];
 		},
 		managementTags(this: any) {

@@ -636,7 +636,7 @@ func journalSidebarTagsCard() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, " <div class=\"space-y-3\" x-show=\"sidebar.deletableTags().length\"><template x-for=\"tag in sidebar.deletableTags()\" x-bind:key=\"tag.id\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, " <div class=\"space-y-3\" x-show=\"sidebar.tags().length\"><template x-for=\"tag in sidebar.tags()\" x-bind:key=\"tag.id\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -648,7 +648,7 @@ func journalSidebarTagsCard() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = EmptyState(EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.deletableTags().length"}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = EmptyState(EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags().length"}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

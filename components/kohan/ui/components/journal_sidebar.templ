@@ -175,12 +175,12 @@ templ journalSidebarTagsCard() {
 				ClassExpr: "sidebar.reasonTagFeedbackClass",
 				TextExpr:  "sidebar.reasonTagMessage",
 			})
-			<div class="space-y-3" x-show="sidebar.deletableTags().length">
-				<template x-for="tag in sidebar.deletableTags()" x-bind:key="tag.id">
+			<div class="space-y-3" x-show="sidebar.tags().length">
+				<template x-for="tag in sidebar.tags()" x-bind:key="tag.id">
 					@sidebarTagRow()
 				</template>
 			</div>
-			@EmptyState(EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.deletableTags().length"})
+			@EmptyState(EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags().length"})
 		}
 	}
 }
