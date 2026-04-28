@@ -446,11 +446,11 @@ func JournalDetailReasonTags() templ.Component {
 			templ_7745c5c3_Var13 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div class=\"flex flex-wrap gap-2\"><template x-for=\"tag in sidebar.tags()\" x-bind:key=\"tag.id\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div class=\"flex flex-wrap gap-2\"><template x-for=\"tag in sidebar.reasonTags()\" x-bind:key=\"tag.id\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{ShowExpr: "['REASON','MANAGEMENT'].includes(tag.type)", Tone: components.ToneAmber, Class: "rounded-full font-semibold", Attributes: templ.Attributes{"x-text": "(tag.tag.toLowerCase().includes('trend') ? '📈 ' : '⚡ ') + tag.tag + (tag.override ? ' → ' + tag.override : '')"}}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Class: "rounded-full font-semibold", Attributes: templ.Attributes{"x-text": "sidebar.reasonTagLabel(tag)"}}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -483,11 +483,11 @@ func JournalDetailDirectionalTags() templ.Component {
 			templ_7745c5c3_Var14 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"flex flex-wrap gap-2\"><template x-for=\"tag in sidebar.tags()\" x-bind:key=\"tag.id\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"flex flex-wrap gap-2\"><template x-for=\"tag in sidebar.directionalTags()\" x-bind:key=\"tag.id\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{ShowExpr: "['DIRECTION','LEGACY'].includes(tag.type)", TextExpr: "tag.tag", Tone: components.ToneSlate, Emoji: "🏷", Class: "rounded-full text-xs"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, Emoji: "🏷", Class: "rounded-full text-xs", Attributes: templ.Attributes{"x-text": "sidebar.directionalTagLabel(tag)"}}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

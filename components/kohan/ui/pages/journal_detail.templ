@@ -104,16 +104,16 @@ templ JournalDetailSequenceChip() {
 
 templ JournalDetailReasonTags() {
 	<div class="flex flex-wrap gap-2">
-		<template x-for="tag in sidebar.tags()" x-bind:key="tag.id">
-			@components.FilterChip(components.FilterChipProps{ShowExpr: "['REASON','MANAGEMENT'].includes(tag.type)", Tone: components.ToneAmber, Class: "rounded-full font-semibold", Attributes: templ.Attributes{"x-text": "(tag.tag.toLowerCase().includes('trend') ? '📈 ' : '⚡ ') + tag.tag + (tag.override ? ' → ' + tag.override : '')"}})
+		<template x-for="tag in sidebar.reasonTags()" x-bind:key="tag.id">
+			@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Class: "rounded-full font-semibold", Attributes: templ.Attributes{"x-text": "sidebar.reasonTagLabel(tag)"}})
 		</template>
 	</div>
 }
 
 templ JournalDetailDirectionalTags() {
 	<div class="flex flex-wrap gap-2">
-		<template x-for="tag in sidebar.tags()" x-bind:key="tag.id">
-			@components.FilterChip(components.FilterChipProps{ShowExpr: "['DIRECTION','LEGACY'].includes(tag.type)", TextExpr: "tag.tag", Tone: components.ToneSlate, Emoji: "🏷", Class: "rounded-full text-xs"})
+		<template x-for="tag in sidebar.directionalTags()" x-bind:key="tag.id">
+			@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, Emoji: "🏷", Class: "rounded-full text-xs", Attributes: templ.Attributes{"x-text": "sidebar.directionalTagLabel(tag)"}})
 		</template>
 	</div>
 }

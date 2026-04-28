@@ -31,10 +31,22 @@ export function createJournalDetailTags(parent: any, tagClient: JournalTagClient
 			this.tagItems = [...(tags ?? [])];
 		},
 		reasonTags(this: any) {
-			return (this.tagItems ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'REASON');
+			return (this.tagItems ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'REASON' || normalizeTag(tag.type ?? '') === 'MANAGEMENT');
 		},
 		tags(this: any) {
 			return this.tagItems ?? [];
+		},
+		directionalTags(this: any) {
+			return (this.tagItems ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'DIRECTION' || normalizeTag(tag.type ?? '') === 'LEGACY');
+		},
+		reasonTagLabel(this: any, tag: JournalTag) {
+			const name = tag.tag ?? '';
+			const prefix = name.toLowerCase().includes('trend') ? '📈 ' : '⚡ ';
+			const override = tag.override ? ` → ${tag.override}` : '';
+			return `${prefix}${name}${override}`;
+		},
+		directionalTagLabel(this: any, tag: JournalTag) {
+			return tag.tag ?? '';
 		},
 		managementTags(this: any) {
 			return (this.tagItems ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'MANAGEMENT');
