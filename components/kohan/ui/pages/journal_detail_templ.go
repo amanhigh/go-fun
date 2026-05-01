@@ -150,6 +150,7 @@ func JournalDetailPage(journalID string) templ.Component {
 					TimeframeExpr:      "previewImageTimeframe()",
 					TimeframeClassExpr: "timeframeChipClass(previewImageTimeframe())",
 					CounterExpr:        "previewImageCounter()",
+					FilenameExpr:       "previewImage()?.file_name ?? ''",
 					SrcExpr:            "previewImageSrc()",
 					AltExpr:            "previewImageLabel()",
 				}).Render(ctx, templ_7745c5c3_Buffer)

@@ -38,63 +38,83 @@ templ journalSidebarActionSection(title string, description string, openExpr str
 }
 
 templ journalSidebarActionCard() {
-	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
-		@card.Header(card.HeaderProps{Class: "space-y-4"}) {
-			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Action }
-		}
-		@card.Content(card.ContentProps{Class: "space-y-2 pt-0"}) {
-			@components.AsyncButton(components.AsyncButtonProps{
-				OnClickExpr:   "sidebar.toggleReview()",
-				DisabledExpr:  "sidebar.reviewSubmitting",
-				LoadingExpr:   "sidebar.reviewSubmitting",
-				LoadingText:   "'Saving...'",
-				DefaultText:   "sidebar.reviewToggleLabel()",
-				ClassExpr:     "sidebar.reviewButtonClass()",
-			})
-			<div x-show="sidebar.hasQuickReviewAction()">
-				@components.AsyncButton(components.AsyncButtonProps{
-					OnClickExpr:   "sidebar.applyQuickReviewStatus()",
-					DisabledExpr:  "sidebar.reviewSubmitting",
-					LoadingExpr:   "sidebar.reviewSubmitting",
-					LoadingText:   "'Saving...'",
-					DefaultText:   "sidebar.quickReviewLabel()",
-					ClassExpr:     "sidebar.quickReviewButtonClass()",
-				})
-			</div>
-			@components.FeedbackMessage(components.FeedbackMessageProps{
-				ShowExpr:  "sidebar.reviewMessage",
-				ClassExpr: "sidebar.reviewFeedbackClass",
-				TextExpr:  "sidebar.reviewMessage",
-			})
-			<div class="space-y-3" x-show="sidebar.hasManagementBar()">
-				<div>
-					<p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Management</p>
-					<p class="mt-1 text-sm text-muted-foreground">Quick add management tags for taken journals.</p>
-				</div>
-				<div class="flex flex-wrap gap-2">
-					<template x-for="preset in sidebar.managementTagPresets" x-bind:key="preset.value">
-						@button.Button(button.Props{
-							Variant: button.VariantOutline,
-							Type:    button.TypeButton,
-							Size:    button.SizeSm,
-							Class:   "rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide",
-							Attributes: templ.Attributes{
-								"x-on:click":      "sidebar.submitManagementTag(preset.value)",
-								"x-bind:disabled": "sidebar.managementTagSubmitting || sidebar.hasManagementTag(preset.value)",
-								"x-bind:class":    "sidebar.managementTagButtonClass(preset.value)",
-								"x-text":          "preset.label",
-							},
-						}) {}
-					</template>
-				</div>
-				@components.FeedbackMessage(components.FeedbackMessageProps{
-					ShowExpr:  "sidebar.managementTagMessage",
-					ClassExpr: "sidebar.managementTagFeedbackClass",
-					TextExpr:  "sidebar.managementTagMessage",
-				})
-			</div>
-		}
+	<div class="space-y-4 rounded-3xl border border-border bg-card p-4 shadow-sm">
+		@journalSidebarActionBar()
+		@components.FeedbackMessage(components.FeedbackMessageProps{
+			ShowExpr:  "sidebar.reviewMessage",
+			ClassExpr: "sidebar.reviewFeedbackClass",
+			TextExpr:  "sidebar.reviewMessage",
+		})
+		@journalSidebarManagementActions()
+	</div>
+}
+
+templ journalSidebarActionBar() {
+	@components.QuickBar(components.QuickBarProps{
+		Label:    "Quick actions",
+		IconName: "sparkles",
+		Theme:    components.ToneGreen,
+		Class:    "rounded-2xl border border-border bg-muted/30 px-4 py-3",
+	}) {
+		@journalSidebarReviewToggleAction()
+		@journalSidebarQuickReviewAction()
 	}
+}
+
+templ journalSidebarReviewToggleAction() {
+	@components.QuickAction(components.QuickActionProps{
+		OnClickExpr: "sidebar.toggleReview()",
+		TextExpr:    "sidebar.reviewSubmitting ? 'Saving...' : sidebar.reviewToggleLabel()",
+		Tint:        components.ToneGreen,
+		ClassExpr:   "sidebar.reviewButtonClass()",
+		Attributes: templ.Attributes{
+			"x-bind:disabled": "sidebar.reviewSubmitting",
+		},
+	})
+}
+
+templ journalSidebarQuickReviewAction() {
+	<div x-show="sidebar.hasQuickReviewAction()">
+		@components.QuickAction(components.QuickActionProps{
+			OnClickExpr: "sidebar.applyQuickReviewStatus()",
+			TextExpr:    "sidebar.reviewSubmitting ? 'Saving...' : sidebar.quickReviewLabel()",
+			Tint:        components.ToneBlue,
+			ClassExpr:   "sidebar.quickReviewButtonClass()",
+			Attributes: templ.Attributes{
+				"x-bind:disabled": "sidebar.reviewSubmitting",
+			},
+		})
+	</div>
+}
+
+templ journalSidebarManagementActions() {
+	<div class="space-y-3" x-show="sidebar.hasManagementBar()">
+		<div>
+			<p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Management</p>
+			<p class="mt-1 text-sm text-muted-foreground">Quick add management tags for taken journals.</p>
+		</div>
+		<div class="flex flex-wrap gap-2">
+			<template x-for="preset in sidebar.managementTagPresets" x-bind:key="preset.value">
+				@button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Type:    button.TypeButton,
+					Size:    button.SizeSm,
+					Class:   "rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide",
+					Attributes: templ.Attributes{
+						"x-on:click":      "sidebar.submitManagementTag(preset.value)",
+						"x-bind:disabled": "sidebar.managementTagSubmitting || sidebar.hasManagementTag(preset.value)",
+						"x-bind:class":    "sidebar.managementTagButtonClass(preset.value)",
+						"x-text":          "preset.label",
+					},
+				}) {}
+			</template>
+		</div>
+		@components.FeedbackMessage(components.FeedbackMessageProps{
+			ShowExpr:  "sidebar.managementTagMessage",
+			ClassExpr: "sidebar.managementTagFeedbackClass",
+			TextExpr:  "sidebar.managementTagMessage",
+		})
+	</div>
 }
 
 templ journalSidebarQueueCard() {

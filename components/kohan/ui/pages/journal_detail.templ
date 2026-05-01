@@ -42,6 +42,7 @@ templ JournalDetailPage(journalID string) {
 					TimeframeExpr:      "previewImageTimeframe()",
 					TimeframeClassExpr: "timeframeChipClass(previewImageTimeframe())",
 					CounterExpr:        "previewImageCounter()",
+					FilenameExpr:       "previewImage()?.file_name ?? ''",
 					SrcExpr:            "previewImageSrc()",
 					AltExpr:            "previewImageLabel()",
 				})

@@ -15,6 +15,7 @@ type JournalImageModalProps struct {
 	TimeframeExpr      string
 	TimeframeClassExpr string
 	CounterExpr        string
+	FilenameExpr       string
 	SrcExpr            string
 	AltExpr            string
 	Class              string
@@ -29,20 +30,23 @@ templ JournalImageModal(props JournalImageModalProps) {
 				@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "rounded-lg border-2 px-5 py-2 text-2xl font-black tracking-widest shadow-sm", Attributes: templ.Attributes{"x-bind:class": props.TimeframeClassExpr, "x-text": props.TimeframeExpr}}) {}
 				<div class="text-sm font-medium text-white/60" x-text={ props.CounterExpr }></div>
 			</div>
-			@button.Button(button.Props{
-				Variant: button.VariantGhost,
-				Type:    button.TypeButton,
-				Class:   "ml-2 bg-white/10 text-xs font-medium text-white hover:bg-white/20",
-				Attributes: templ.Attributes{
-					"x-on:click": props.CloseExpr,
-				},
-			}) {
-				ESC
-			}
-		</div>
-		<div class="mt-4 flex flex-1 items-center justify-center">
-			<div class="relative w-full">
-				<img class="max-h-[82vh] w-full rounded-xl border border-white/20 object-contain" x-bind:src={ props.SrcExpr } x-bind:alt={ props.AltExpr }/>
+						@button.Button(button.Props{
+							Variant: button.VariantGhost,
+							Type:    button.TypeButton,
+							Class:   "ml-2 bg-white/10 text-xs font-medium text-white hover:bg-white/20",
+							Attributes: templ.Attributes{
+								"x-on:click": props.CloseExpr,
+							},
+						}) {
+							ESC
+						}
+					</div>
+					<div class="mt-3 flex justify-center px-4">
+						<div class="w-full max-w-[90vw] truncate text-center text-sm font-medium text-white/80" x-text={ props.FilenameExpr }></div>
+					</div>
+					<div class="mt-4 flex flex-1 items-center justify-center">
+						<div class="relative w-full">
+							<img class="max-h-[82vh] w-full rounded-xl border border-white/20 object-contain" x-bind:src={ props.SrcExpr } x-bind:alt={ props.AltExpr }/>
 				@button.Button(button.Props{
 					Variant: button.VariantGhost,
 					Type:    button.TypeButton,
