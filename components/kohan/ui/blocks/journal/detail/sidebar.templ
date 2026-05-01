@@ -11,25 +11,25 @@ import (
 
 templ JournalSidebar() {
 	<div class="xl:sticky xl:top-6 space-y-4">
-		@journalSidebarSection("Actions", "Journal Actions", "sidebar.actionOpen", "sidebar.setActionOpen($el.open)") {
-			@journalSidebarReviewCard()
+		@journalSidebarActionSection("Actions", "Journal Actions", "sidebar.actionOpen", "sidebar.setActionOpen($el.open)") {
+			@journalSidebarActionCard()
 			@journalSidebarTagsCard()
 		}
-		@journalSidebarSection("Review", "Journal Review", "sidebar.reviewMode", "sidebar.setReviewMode($el.open)") {
-			@journalSidebarNoteCard()
+		@journalSidebarActionSection("Review", "Journal Review", "sidebar.reviewMode", "sidebar.setReviewMode($el.open)") {
 			@journalSidebarQueueCard()
+			@journalSidebarNoteCard()
 		}
 	</div>
 }
 
-templ journalSidebarSection(title string, description string, openExpr string, toggleExpr string) {
+templ journalSidebarActionSection(title string, description string, openExpr string, toggleExpr string) {
 	<details class="rounded-3xl border border-border bg-card shadow-sm" x-bind:open={ openExpr } x-on:toggle={ toggleExpr }>
 		<summary class="flex cursor-pointer list-none items-start justify-between gap-4 px-4 py-4 outline-none transition hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-violet-300">
 			<div class="space-y-1">
 				<h3 class="text-lg font-semibold tracking-tight text-foreground">{ title }</h3>
 				<p class="text-sm text-muted-foreground">{ description }</p>
 			</div>
-			<div class="mt-0.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground">Toggle</div>
+			<div class="mt-0.5 rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700">🟣 Toggle</div>
 		</summary>
 		<div class="border-t border-border px-4 pb-4 pt-4 space-y-4">
 			{ children... }
@@ -37,10 +37,10 @@ templ journalSidebarSection(title string, description string, openExpr string, t
 	</details>
 }
 
-templ journalSidebarReviewCard() {
+templ journalSidebarActionCard() {
 	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
 		@card.Header(card.HeaderProps{Class: "space-y-4"}) {
-			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Review }
+			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Action }
 		}
 		@card.Content(card.ContentProps{Class: "space-y-2 pt-0"}) {
 			@components.AsyncButton(components.AsyncButtonProps{

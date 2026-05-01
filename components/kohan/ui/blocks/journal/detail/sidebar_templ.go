@@ -53,7 +53,7 @@ func JournalSidebar() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = journalSidebarReviewCard().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = journalSidebarActionCard().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -67,7 +67,7 @@ func JournalSidebar() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = journalSidebarSection("Actions", "Journal Actions", "sidebar.actionOpen", "sidebar.setActionOpen($el.open)").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = journalSidebarActionSection("Actions", "Journal Actions", "sidebar.actionOpen", "sidebar.setActionOpen($el.open)").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -83,7 +83,7 @@ func JournalSidebar() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = journalSidebarNoteCard().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = journalSidebarQueueCard().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -91,13 +91,13 @@ func JournalSidebar() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = journalSidebarQueueCard().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = journalSidebarNoteCard().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = journalSidebarSection("Review", "Journal Review", "sidebar.reviewMode", "sidebar.setReviewMode($el.open)").Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = journalSidebarActionSection("Review", "Journal Review", "sidebar.reviewMode", "sidebar.setReviewMode($el.open)").Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -109,7 +109,7 @@ func JournalSidebar() templ.Component {
 	})
 }
 
-func journalSidebarSection(title string, description string, openExpr string, toggleExpr string) templ.Component {
+func journalSidebarActionSection(title string, description string, openExpr string, toggleExpr string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -182,7 +182,7 @@ func journalSidebarSection(title string, description string, openExpr string, to
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</p></div><div class=\"mt-0.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground\">Toggle</div></summary><div class=\"border-t border-border px-4 pb-4 pt-4 space-y-4\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</p></div><div class=\"mt-0.5 rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700\">🟣 Toggle</div></summary><div class=\"border-t border-border px-4 pb-4 pt-4 space-y-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -198,7 +198,7 @@ func journalSidebarSection(title string, description string, openExpr string, to
 	})
 }
 
-func journalSidebarReviewCard() templ.Component {
+func journalSidebarActionCard() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -255,7 +255,7 @@ func journalSidebarReviewCard() templ.Component {
 						}()
 					}
 					ctx = templ.InitializeContext(ctx)
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "Review ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "Action ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
