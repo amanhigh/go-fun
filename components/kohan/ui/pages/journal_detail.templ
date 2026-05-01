@@ -3,7 +3,6 @@ package pages
 import (
 	"github.com/amanhigh/go-fun/common/ui/layout"
 	detailblocks "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/detail"
-	"github.com/amanhigh/go-fun/components/kohan/ui/components"
 )
 
 // ============================================================
@@ -29,10 +28,10 @@ templ JournalDetailPage(journalID string) {
 							@detailblocks.JournalDetailImages()
 							@detailblocks.JournalDetailNotes()
 						</div>
-						@components.JournalSidebar()
+						@detailblocks.JournalSidebar()
 					</div>
 				</div>
-				@components.JournalImageModal(components.JournalImageModalProps{
+				@detailblocks.JournalImageModal(detailblocks.JournalImageModalProps{
 					ShowExpr:           "hasImagePreview()",
 					CloseExpr:          "closeImagePreview()",
 					PrevExpr:           "prevImage()",

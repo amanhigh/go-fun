@@ -1,3 +1,4 @@
+@source "./ui/blocks/journal/common/**/*.templ";
 @source "./ui/blocks/journal/detail/**/*.templ";
 @source "./ui/components/**/*.templ";
 @source "./ui/pages/**/*.templ";

@@ -2,7 +2,7 @@ package detail
 
 import (
 	"github.com/amanhigh/go-fun/components/kohan/ui/components"
-	"github.com/templui/templui/components/badge"
+	journalcommon "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/common"
 	"github.com/templui/templui/components/card"
 )
 
@@ -27,8 +27,8 @@ templ JournalDetailHeader() {
 				<h2 class="text-3xl font-bold tracking-tight text-foreground" x-text="journal.ticker"></h2>
 				<div class="flex justify-between gap-6">
 					<div class="flex flex-wrap items-center gap-2.5">
-						@components.TypeBadge(components.TypeBadgeProps{TypeExpr: "journal.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
-						@components.StatusBadge(components.StatusBadgeProps{StatusExpr: "journal.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+						@journalcommon.TypeBadge(journalcommon.TypeBadgeProps{TypeExpr: "journal.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+						@journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "journal.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
 						@JournalDetailSequenceChip()
 					</div>
 					@JournalDetailReviewDates()

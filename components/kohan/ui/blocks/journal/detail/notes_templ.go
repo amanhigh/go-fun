@@ -8,8 +8,9 @@ package detail
 import (
 	"github.com/a-h/templ"
 	templruntime "github.com/a-h/templ/runtime"
+
+	journalcommon "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/common"
 	"github.com/amanhigh/go-fun/components/kohan/ui/components"
-	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/card"
 )
 
@@ -122,11 +123,7 @@ func JournalDetailNoteRow() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = badge.Badge(badge.Props{
-			Variant:    badge.VariantSecondary,
-			Class:      "border font-semibold",
-			Attributes: templ.Attributes{"x-bind:class": "statusBadgeClass(note.status)", "x-text": "note.status"},
-		}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "note.status", Class: "font-semibold"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

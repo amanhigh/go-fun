@@ -8,6 +8,8 @@ package detail
 import (
 	"github.com/a-h/templ"
 	templruntime "github.com/a-h/templ/runtime"
+
+	journalcommon "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/common"
 	"github.com/amanhigh/go-fun/components/kohan/ui/components"
 	"github.com/templui/templui/components/card"
 )
@@ -78,11 +80,11 @@ func JournalDetailHeader() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = components.TypeBadge(components.TypeBadgeProps{TypeExpr: "journal.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = journalcommon.TypeBadge(journalcommon.TypeBadgeProps{TypeExpr: "journal.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = components.StatusBadge(components.StatusBadgeProps{StatusExpr: "journal.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "journal.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

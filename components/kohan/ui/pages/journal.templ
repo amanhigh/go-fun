@@ -3,8 +3,8 @@ package pages
 import (
 	"github.com/amanhigh/go-fun/common/ui/layout"
 	widgets "github.com/amanhigh/go-fun/common/ui/widgets"
+	journalcommon "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/common"
 	"github.com/amanhigh/go-fun/components/kohan/ui/components"
-	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/button"
 	"github.com/templui/templui/components/card"
 	"github.com/templui/templui/components/input"
@@ -217,10 +217,10 @@ templ JournalRow() {
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "journal.ticker"}}) {}
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "journal.sequence"}}) {}
 		@table.Cell() {
-			@components.TypeBadge(components.TypeBadgeProps{TypeExpr: "journal.type"})
+			@journalcommon.TypeBadge(journalcommon.TypeBadgeProps{TypeExpr: "journal.type"})
 		}
 		@table.Cell() {
-			@components.StatusBadge(components.StatusBadgeProps{StatusExpr: "journal.status"})
+			@journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "journal.status"})
 		}
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "formatTimestamp(journal.created_at)"}}) {}
 	}

@@ -11,7 +11,6 @@ import (
 	"github.com/amanhigh/go-fun/common/ui/layout"
 
 	detailblocks "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/detail"
-	"github.com/amanhigh/go-fun/components/kohan/ui/components"
 )
 
 // ============================================================
@@ -71,7 +70,7 @@ func JournalDetailPage(journalID string) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("journalId='" + journalID + "'; loadJournal(); sidebar.loadReviewQueue()")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/journal_detail.templ`, Line: 23, Col: 119}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/pages/journal_detail.templ`, Line: 22, Col: 119}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -105,7 +104,7 @@ func JournalDetailPage(journalID string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = components.JournalSidebar().Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = detailblocks.JournalSidebar().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -113,7 +112,7 @@ func JournalDetailPage(journalID string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = components.JournalImageModal(components.JournalImageModalProps{
+				templ_7745c5c3_Err = detailblocks.JournalImageModal(detailblocks.JournalImageModalProps{
 					ShowExpr:           "hasImagePreview()",
 					CloseExpr:          "closeImagePreview()",
 					PrevExpr:           "prevImage()",
