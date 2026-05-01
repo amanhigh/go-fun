@@ -2,11 +2,8 @@ package pages
 
 import (
 	"github.com/amanhigh/go-fun/common/ui/layout"
-	"github.com/amanhigh/go-fun/common/ui/widgets"
+	detailblocks "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/detail"
 	"github.com/amanhigh/go-fun/components/kohan/ui/components"
-	"github.com/templui/templui/components/badge"
-	"github.com/templui/templui/components/button"
-	"github.com/templui/templui/components/card"
 )
 
 // ============================================================
@@ -24,13 +21,13 @@ templ JournalDetailPage(journalID string) {
 			Tags:        []string{"Public", "Read-only", "Detail"},
 		}) {
 			<div x-data="journalDetailPage()" x-init={ "journalId='" + journalID + "'; loadJournal(); sidebar.loadReviewQueue()" } class="space-y-6">
-				@JournalDetailStateSection()
+				@detailblocks.JournalDetailStateSection()
 				<div class="space-y-6" x-show="journal && !loading && !hasError()">
 					<div class="grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)] xl:items-start">
 						<div class="space-y-6 min-w-0">
-							@JournalDetailHeader()
-							@JournalDetailImages()
-							@JournalDetailNotes()
+							@detailblocks.JournalDetailHeader()
+							@detailblocks.JournalDetailImages()
+							@detailblocks.JournalDetailNotes()
 						</div>
 						@components.JournalSidebar()
 					</div>
@@ -51,195 +48,4 @@ templ JournalDetailPage(journalID string) {
 			</div>
 		}
 	}
-}
-
-// ============================================================
-// HEADER FLOW
-// ============================================================
-
-templ JournalDetailHeader() {
-	@card.Card(card.Props{Class: "overflow-hidden rounded-3xl border border-violet-200/70 bg-gradient-to-br from-white via-violet-50/70 to-sky-50/80 shadow-sm"}) {
-		@card.Content(card.ContentProps{Class: "p-6"}) {
-			<div class="space-y-3">
-				<div class="flex items-start justify-between gap-3">
-					<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + journal.id"></div>
-					@components.DeleteButton(components.DeleteButtonProps{
-						OnClickExpr:  "deleteJournal()",
-						DisabledExpr: "journalDeleting",
-						AriaLabel:    "Delete Journal",
-						Title:        "Delete Journal",
-						Class:        "h-9 w-9",
-					})
-				</div>
-				<h2 class="text-3xl font-bold tracking-tight text-foreground" x-text="journal.ticker"></h2>
-				<div class="flex justify-between gap-6">
-					<div class="flex flex-wrap items-center gap-2.5">
-						@components.TypeBadge(components.TypeBadgeProps{TypeExpr: "journal.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
-						@components.StatusBadge(components.StatusBadgeProps{StatusExpr: "journal.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
-						@JournalDetailSequenceChip()
-					</div>
-					@JournalDetailReviewDates()
-				</div>
-				<div class="flex justify-between gap-6" x-show="sidebar.tags().length">
-					@JournalDetailReasonTags()
-					@JournalDetailDirectionalTags()
-				</div>
-			</div>
-		}
-	}
-}
-
-templ JournalDetailCreatedAt() {
-	@components.InfoRow(components.InfoRowProps{Label: "🕒", ValueExpr: "formatTimestamp(journal.created_at)", Class: "text-xs"})
-}
-
-templ JournalDetailReviewDate() {
-	@components.FilterChip(components.FilterChipProps{ShowExpr: "journal.reviewed_at", TextExpr: "'✅ ' + formatTimestamp(journal.reviewed_at)", Tone: components.ToneGreen, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
-}
-
-templ JournalDetailPendingDate() {
-	@components.FilterChip(components.FilterChipProps{ShowExpr: "!journal.reviewed_at", TextExpr: "'⏳ Pending Review'", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
-}
-
-templ JournalDetailReviewDates() {
-	<div class="flex flex-col items-end gap-1">
-		@JournalDetailCreatedAt()
-		@JournalDetailPendingDate()
-		@JournalDetailReviewDate()
-	</div>
-}
-
-templ JournalDetailSequenceChip() {
-	@components.FilterChip(components.FilterChipProps{TextExpr: "sequenceLabel(journal.sequence)", Tone: components.ToneViolet, Emoji: "📅", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
-}
-
-templ JournalDetailReasonTags() {
-	<div class="flex flex-wrap gap-2">
-		<template x-for="tag in sidebar.reasonTags()" x-bind:key="tag.id">
-			@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Class: "rounded-full font-semibold", Attributes: templ.Attributes{"x-text": "sidebar.reasonTagLabel(tag)"}})
-		</template>
-	</div>
-}
-
-templ JournalDetailDirectionalTags() {
-	<div class="flex flex-wrap gap-2">
-		<template x-for="tag in sidebar.directionalTags()" x-bind:key="tag.id">
-			@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, Emoji: "🏷", Class: "rounded-full text-xs", Attributes: templ.Attributes{"x-text": "sidebar.directionalTagLabel(tag)"}})
-		</template>
-	</div>
-}
-
-// ============================================================
-// IMAGE TILES FLOW
-// ============================================================
-
-templ JournalDetailImages() {
-	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
-		@card.Content(card.ContentProps{}) {
-			@components.SectionHeader(components.SectionHeaderProps{Title: "Images", Description: "Timeframe images · click to zoom"})
-			<p class="mt-1 text-sm text-muted-foreground" x-text="imageCountLabel()"></p>
-			<div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2" x-show="journal.images?.length">
-				<template x-for="(image, index) in sortedImages()" x-bind:key="image.id">
-				    // TODO: First Load Renders last two images half, fixed on reload only.
-					@JournalDetailImageTile()
-				</template>
-			</div>
-			@JournalDetailEmptyState("No images available for this journal.", "!journal.images?.length")
-		}
-	}
-}
-
-templ JournalDetailImageTile() {
-		<div class="space-y-2">
-			<div class="flex items-center px-1">
-				@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border text-sm font-semibold shadow-sm", Attributes: templ.Attributes{"x-bind:class": "timeframeChipClass(image.timeframe)", "x-text": "image.timeframe"}}) {}
-			</div>
-			@button.Button(button.Props{
-				Variant: button.VariantGhost,
-				Type:    button.TypeButton,
-				Class:   "group block w-full h-auto p-0 items-start justify-start overflow-hidden rounded-2xl border border-border bg-muted text-left",
-				Attributes: templ.Attributes{
-					"x-on:click":   "openImagePreview(index)",
-					"x-bind:title": "imageTileTitle(image)",
-				},
-			}) {
-				<img class="block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]" x-bind:src="imageTileSrc(image)" x-bind:alt="imageTileAlt(image)" x-on:error="$el.style.opacity='0.35'"/>
-			}
-	</div>
-}
-
-// ============================================================
-// NOTES FLOW
-// ============================================================
-
-templ JournalDetailNotes() {
-	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
-		@card.Content(card.ContentProps{}) {
-			@components.SectionHeader(components.SectionHeaderProps{Title: "Notes", Description: "Add notes for this journal and delete existing notes below."})
-			<p class="mt-1 text-sm text-muted-foreground"><span x-text="sidebar.sortedNotes().length"></span> note(s)</p>
-			<div class="mt-4 space-y-3" x-show="sidebar.sortedNotes().length">
-				<template x-for="note in sidebar.sortedNotes()" x-bind:key="note.id">
-					@JournalDetailNoteRow()
-				</template>
-			</div>
-			@JournalDetailEmptyState("No notes available for this journal.", "!sidebar.sortedNotes().length")
-		}
-	}
-}
-
-templ JournalDetailNoteRow() {
-	<div class="rounded-xl border border-border bg-muted/40 p-4">
-		<div class="mb-3 flex items-start justify-between gap-3">
-			<div class="flex flex-wrap items-center gap-3">
-				@badge.Badge(badge.Props{
-					Variant:    badge.VariantSecondary,
-					Class:      "border font-semibold",
-					Attributes: templ.Attributes{"x-bind:class": "statusBadgeClass(note.status)", "x-text": "note.status"},
-				}) {}
-				<div class="inline-flex items-center gap-2 rounded-md border border-sky-300/70 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-900">
-					<span class="uppercase tracking-wide text-sky-700/80">Created</span>
-					<span x-text="formatTimestamp(note.created_at)"></span>
-				</div>
-			</div>
-			@components.DeleteButton(components.DeleteButtonProps{
-				OnClickExpr:  "sidebar.deleteNote(note.id)",
-				DisabledExpr: "sidebar.noteDeletingId === note.id",
-				AriaLabel:    "Delete Note",
-				Title:        "Delete Note",
-			})
-		</div>
-		<pre class="whitespace-pre-wrap text-sm text-foreground" x-text="note.content"></pre>
-	</div>
-}
-
-// ============================================================
-// STATE FLOW
-// ============================================================
-
-templ JournalDetailStateSection() {
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "loading"}) {
-		<div class="flex items-center justify-center gap-2">
-			@widgets.Spinner(widgets.SpinnerProps{Size: widgets.SpinnerSizeSm, Class: "text-sky-700"})
-			<span>Loading journal details...</span>
-		</div>
-	}
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxError, ShowExpr: "hasError()"}) {
-		<div class="space-y-3">
-			<div class="font-medium" x-text="errorMessage"></div>
-			@button.Button(button.Props{
-				Variant:    button.VariantOutline,
-				Type:       button.TypeButton,
-				Attributes: templ.Attributes{"x-on:click": "loadJournal()"},
-			}) {
-				Retry
-			}
-		</div>
-	}
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!loading && !hasError() && !journal"}) {
-		No journal details available.
-	}
-}
-
-templ JournalDetailEmptyState(message string, showExpr string) {
-	@components.EmptyState(components.EmptyStateProps{Message: message, ShowExpr: showExpr, Class: "mt-5"})
 }

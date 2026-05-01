@@ -1,3 +1,4 @@
+@source "./ui/blocks/journal/detail/**/*.templ";
 @source "./ui/components/**/*.templ";
 @source "./ui/pages/**/*.templ";
 @source "/home/aman/Projects/go-fun/common/ui/**/*.templ";

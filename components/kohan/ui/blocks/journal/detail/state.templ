@@ -1,0 +1,39 @@
+package detail
+
+import (
+	"github.com/amanhigh/go-fun/components/kohan/ui/components"
+	"github.com/amanhigh/go-fun/common/ui/widgets"
+	"github.com/templui/templui/components/button"
+)
+
+// ============================================================
+// STATE FLOW
+// ============================================================
+
+templ JournalDetailStateSection() {
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "loading"}) {
+		<div class="flex items-center justify-center gap-2">
+			@widgets.Spinner(widgets.SpinnerProps{Size: widgets.SpinnerSizeSm, Class: "text-sky-700"})
+			<span>Loading journal details...</span>
+		</div>
+	}
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxError, ShowExpr: "hasError()"}) {
+		<div class="space-y-3">
+			<div class="font-medium" x-text="errorMessage"></div>
+			@button.Button(button.Props{
+				Variant:    button.VariantOutline,
+				Type:       button.TypeButton,
+				Attributes: templ.Attributes{"x-on:click": "loadJournal()"},
+			}) {
+				Retry
+			}
+		</div>
+	}
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!loading && !hasError() && !journal"}) {
+		No journal details available.
+	}
+}
+
+templ JournalDetailEmptyState(message string, showExpr string) {
+	@components.EmptyState(components.EmptyStateProps{Message: message, ShowExpr: showExpr, Class: "mt-5"})
+}
