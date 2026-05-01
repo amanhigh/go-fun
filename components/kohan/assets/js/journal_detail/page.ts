@@ -13,6 +13,11 @@ declare const Alpine: {
 };
 
 function journalDetailPage() {
+	const root = document.querySelector<HTMLElement>('[data-journal-detail-page]');
+	const journalId = root?.dataset.journalId ?? '';
+	const actionOpenStorageKey = root?.dataset.actionOpenStorageKey ?? '';
+	const reviewModeStorageKey = root?.dataset.reviewModeStorageKey ?? '';
+	console.log('[journalDetailPage] factory', { journalId, actionOpenStorageKey, reviewModeStorageKey });
 	const journalClient = NewJournalClient();
 	const noteClient = NewJournalNoteClient();
 	const tagClient = NewJournalTagClient();
@@ -29,6 +34,12 @@ function journalDetailPage() {
 		...formatters,
 		...pageActions,
 		...preview,
+		init(this: any) {
+			this.journalId = journalId;
+			this.sidebar.initSidebarUiState(actionOpenStorageKey, reviewModeStorageKey);
+			void this.loadJournal();
+			void this.sidebar.loadReviewQueue();
+		},
 	};
 
 	page.sidebar = createSideBar(page, journalClient, noteClient, tagClient);

@@ -2,6 +2,7 @@ package pages
 
 import (
 	"github.com/amanhigh/go-fun/common/ui/layout"
+	blockscommon "github.com/amanhigh/go-fun/components/kohan/ui/blocks/common"
 	detailblocks "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/detail"
 )
 
@@ -12,15 +13,15 @@ import (
 // JournalDetailPage renders a dedicated page for viewing a single journal entry.
 templ JournalDetailPage(journalID string) {
 	@layout.Base("Shadow Gate") {
-		@layout.Page(layout.PageProps{
-			CurrentPage: "Journal",
-			Eyebrow:     "Kohan Portal",
-			Heading:     "Journal Detail",
-			Description: "View complete journal entry with all associated data.",
-			Tags:        []string{"Public", "Read-only", "Detail"},
-		}) {
-			<div x-data="journalDetailPage()" x-init={ "journalId='" + journalID + "'; loadJournal(); sidebar.loadReviewQueue()" } class="space-y-6">
-				@detailblocks.JournalDetailStateSection()
+			@layout.Page(layout.PageProps{
+					CurrentPage: "Journal",
+					Eyebrow:     "Kohan Portal",
+					Heading:     "Journal Detail",
+					Description: "View complete journal entry with all associated data.",
+					Tags:        []string{"Public", "Read-only", "Detail"},
+				}) {
+				<div data-journal-detail-page data-journal-id={ journalID } data-action-open-storage-key={ blockscommon.SidebarActionOpenStorageKey } data-review-mode-storage-key={ blockscommon.SidebarReviewModeStorageKey } x-data="journalDetailPage()" x-init="init()" class="space-y-6">
+					@detailblocks.JournalDetailStateSection()
 				<div class="space-y-6" x-show="journal && !loading && !hasError()">
 					<div class="grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)] xl:items-start">
 						<div class="space-y-6 min-w-0">

@@ -29,6 +29,11 @@ var _ = Describe("Journal Detail Page Tests", func() {
 
 	Context("Sidebar Actions", func() {
 		It("should render review and note actions", func() {
+			Expect(html).To(ContainSubstring(`x-bind:open="sidebar.actionOpen"`))
+			Expect(html).To(ContainSubstring(`x-bind:open="sidebar.reviewMode"`))
+			Expect(html).To(ContainSubstring(`x-on:toggle="sidebar.setActionOpen($el.open)"`))
+			Expect(html).To(ContainSubstring(`x-on:toggle="sidebar.setReviewMode($el.open)"`))
+			Expect(html).To(ContainSubstring("Actions"))
 			Expect(html).To(ContainSubstring("Review"))
 			Expect(html).To(ContainSubstring("Management"))
 			Expect(html).To(ContainSubstring("Note"))
@@ -36,6 +41,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-on:click="deleteJournal()"`))
 			Expect(html).To(ContainSubstring(`x-on:click="sidebar.toggleReview()"`))
 			Expect(html).To(ContainSubstring(`x-on:click="sidebar.applyQuickReviewStatus()"`))
+			Expect(html).To(ContainSubstring(`x-show="sidebar.hasQuickReviewAction()"`))
 			Expect(html).To(ContainSubstring(`x-show="sidebar.hasManagementBar()"`))
 			Expect(html).To(ContainSubstring(`x-for="preset in sidebar.managementTagPresets"`))
 			Expect(html).To(ContainSubstring(`x-on:click="sidebar.submitManagementTag(preset.value)"`))
@@ -52,6 +58,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-on:click="sidebar.deleteTag(tag.id)"`))
 			Expect(html).To(ContainSubstring(`x-show="sidebar.sortedNotes().length"`))
 			Expect(html).To(ContainSubstring(`x-for="note in sidebar.sortedNotes()"`))
+			Expect(html).To(ContainSubstring(`x-on:click="sidebar.enterReviewMode()"`))
 			Expect(html).To(ContainSubstring(`tag.type].filter(Boolean).join(`))
 			Expect(html).To(ContainSubstring(`x-bind:class="reviewQueueItemClass(item.type)"`))
 			Expect(html).To(ContainSubstring(`x-text="formatReviewQueueDate(item.created_at)"`))

@@ -10,42 +10,61 @@ import (
 )
 
 templ JournalSidebar() {
-	<div class="xl:sticky xl:top-6">
-		<div class="space-y-4">
+	<div class="xl:sticky xl:top-6 space-y-4">
+		@journalSidebarSection("Actions", "Journal Actions", "sidebar.actionOpen", "sidebar.setActionOpen($el.open)") {
 			@journalSidebarReviewCard()
-			@journalSidebarQueue()
-			@journalSidebarNoteCard()
 			@journalSidebarTagsCard()
-		</div>
+		}
+		@journalSidebarSection("Review", "Journal Review", "sidebar.reviewMode", "sidebar.setReviewMode($el.open)") {
+			@journalSidebarNoteCard()
+			@journalSidebarQueueCard()
+		}
 	</div>
 }
 
+templ journalSidebarSection(title string, description string, openExpr string, toggleExpr string) {
+	<details class="rounded-3xl border border-border bg-card shadow-sm" x-bind:open={ openExpr } x-on:toggle={ toggleExpr }>
+		<summary class="flex cursor-pointer list-none items-start justify-between gap-4 px-4 py-4 outline-none transition hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-violet-300">
+			<div class="space-y-1">
+				<h3 class="text-lg font-semibold tracking-tight text-foreground">{ title }</h3>
+				<p class="text-sm text-muted-foreground">{ description }</p>
+			</div>
+			<div class="mt-0.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground">Toggle</div>
+		</summary>
+		<div class="border-t border-border px-4 pb-4 pt-4 space-y-4">
+			{ children... }
+		</div>
+	</details>
+}
+
 templ journalSidebarReviewCard() {
-		@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
-			@card.Header(card.HeaderProps{Class: "space-y-4"}) {
-				@card.Title(card.TitleProps{Class: "tracking-tight"}) { Review }
-			}
-			@card.Content(card.ContentProps{Class: "space-y-2 pt-0"}) {
-				@components.AsyncButton(components.AsyncButtonProps{
-					OnClickExpr:   "sidebar.toggleReview()",
-					DisabledExpr:  "sidebar.reviewSubmitting",
-					LoadingExpr:   "sidebar.reviewSubmitting",
+	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
+		@card.Header(card.HeaderProps{Class: "space-y-4"}) {
+			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Review }
+		}
+		@card.Content(card.ContentProps{Class: "space-y-2 pt-0"}) {
+			@components.AsyncButton(components.AsyncButtonProps{
+				OnClickExpr:   "sidebar.toggleReview()",
+				DisabledExpr:  "sidebar.reviewSubmitting",
+				LoadingExpr:   "sidebar.reviewSubmitting",
 				LoadingText:   "'Saving...'",
 				DefaultText:   "sidebar.reviewToggleLabel()",
 				ClassExpr:     "sidebar.reviewButtonClass()",
 			})
+			<div x-show="sidebar.hasQuickReviewAction()">
 				@components.AsyncButton(components.AsyncButtonProps{
 					OnClickExpr:   "sidebar.applyQuickReviewStatus()",
 					DisabledExpr:  "sidebar.reviewSubmitting",
 					LoadingExpr:   "sidebar.reviewSubmitting",
-				LoadingText:   "'Saving...'",
-				DefaultText:   "sidebar.quickReviewLabel()",
-				ClassExpr:     "sidebar.quickReviewButtonClass()",
-			})
-				@components.FeedbackMessage(components.FeedbackMessageProps{
-					ShowExpr:  "sidebar.reviewMessage",
-					ClassExpr: "sidebar.reviewFeedbackClass",
-					TextExpr:  "sidebar.reviewMessage",
+					LoadingText:   "'Saving...'",
+					DefaultText:   "sidebar.quickReviewLabel()",
+					ClassExpr:     "sidebar.quickReviewButtonClass()",
+				})
+			</div>
+			@components.FeedbackMessage(components.FeedbackMessageProps{
+				ShowExpr:  "sidebar.reviewMessage",
+				ClassExpr: "sidebar.reviewFeedbackClass",
+				TextExpr:  "sidebar.reviewMessage",
 			})
 			<div class="space-y-3" x-show="sidebar.hasManagementBar()">
 				<div>
@@ -78,25 +97,28 @@ templ journalSidebarReviewCard() {
 	}
 }
 
-templ journalSidebarQueue() {
-	<hr class="border-border"/>
-	<div class="space-y-2">
-		<p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">To Review</p>
-		<div class="flex items-center gap-2 py-3 text-xs text-sky-700" x-show="sidebar.reviewQueueLoading">
-			@icon.Icon("refresh-cw")(icon.Props{Class: "size-3.5 animate-spin"})
-			<span>Loading queue...</span>
-		</div>
-		<p class="py-2 text-xs text-rose-600" x-show="!sidebar.reviewQueueLoading && sidebar.reviewQueueError" x-text="sidebar.reviewQueueError"></p>
-		<p class="py-2 text-xs text-muted-foreground" x-show="!sidebar.reviewQueueLoading && !sidebar.reviewQueueError && sidebar.reviewQueue.length === 0">All caught up — no pending reviews.</p>
-		<div class="space-y-1" x-show="!sidebar.reviewQueueLoading && !sidebar.reviewQueueError && sidebar.reviewQueue.length > 0">
-			<template x-for="item in sidebar.reviewQueue" x-bind:key="item.id">
-				<a class="flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition" x-bind:class="reviewQueueItemClass(item.type)" x-bind:href="'/journal/' + item.id">
-					<span class="font-semibold" x-text="item.ticker"></span>
-					<span class="text-xs font-medium" x-text="formatReviewQueueDate(item.created_at)"></span>
-				</a>
-			</template>
-		</div>
-	</div>
+templ journalSidebarQueueCard() {
+	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
+		@card.Header(card.HeaderProps{}) {
+			@card.Title(card.TitleProps{Class: "tracking-tight"}) { To Review }
+		}
+		@card.Content(card.ContentProps{Class: "space-y-2 pt-0"}) {
+			<div class="flex items-center gap-2 py-3 text-xs text-sky-700" x-show="sidebar.reviewQueueLoading">
+				@icon.Icon("refresh-cw")(icon.Props{Class: "size-3.5 animate-spin"})
+				<span>Loading queue...</span>
+			</div>
+			<p class="py-2 text-xs text-rose-600" x-show="!sidebar.reviewQueueLoading && sidebar.reviewQueueError" x-text="sidebar.reviewQueueError"></p>
+			<p class="py-2 text-xs text-muted-foreground" x-show="!sidebar.reviewQueueLoading && !sidebar.reviewQueueError && sidebar.reviewQueue.length === 0">All caught up — no pending reviews.</p>
+			<div class="space-y-1" x-show="!sidebar.reviewQueueLoading && !sidebar.reviewQueueError && sidebar.reviewQueue.length > 0">
+				<template x-for="item in sidebar.reviewQueue" x-bind:key="item.id">
+					<a class="flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition" x-on:click="sidebar.enterReviewMode()" x-bind:class="reviewQueueItemClass(item.type)" x-bind:href="'/journal/' + item.id">
+						<span class="font-semibold" x-text="item.ticker"></span>
+						<span class="text-xs font-medium" x-text="formatReviewQueueDate(item.created_at)"></span>
+					</a>
+				</template>
+			</div>
+		}
+	}
 }
 
 templ journalSidebarNoteCard() {
@@ -126,13 +148,13 @@ templ journalSidebarNoteCard() {
 	}
 }
 
-	templ sidebarTagRow() {
-		<div class="flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/30 px-4 py-3">
-			<div class="flex min-w-0 flex-wrap items-center gap-2">
-				@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, TextExpr: "[tag.tag, tag.override, tag.type].filter(Boolean).join(' • ')", Class: "font-semibold"})
-			</div>
-			@components.DeleteButton(components.DeleteButtonProps{
-				OnClickExpr:  "sidebar.deleteTag(tag.id)",
+templ sidebarTagRow() {
+	<div class="flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/30 px-4 py-3">
+		<div class="flex min-w-0 flex-wrap items-center gap-2">
+			@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, TextExpr: "[tag.tag, tag.override, tag.type].filter(Boolean).join(' • ')", Class: "font-semibold"})
+		</div>
+		@components.DeleteButton(components.DeleteButtonProps{
+			OnClickExpr:  "sidebar.deleteTag(tag.id)",
 			DisabledExpr: "sidebar.tagDeletingId === tag.id",
 			AriaLabel:    "Delete Tag",
 			Title:        "Delete Tag",
