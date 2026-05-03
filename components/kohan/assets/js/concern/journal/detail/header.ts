@@ -1,5 +1,5 @@
-import { formatTimestamp } from '../shared/date';
-import { normalizeTag } from '../shared/tags';
+import { formatTimestamp } from '../../../shared/date';
+import { normalizeTag } from '../../../shared/tags';
 
 const defaultBadgeClass = 'border-slate-300 bg-slate-50 text-slate-700';
 
@@ -56,8 +56,7 @@ export function createJournalDetailFormatters() {
 		},
 		sequenceLabel: (sequence: string | null | undefined) => {
 			if (!sequence) return '';
-			const label = sequence === 'MWD' ? '🕐 ' + sequence : '📅 ' + sequence;
-			return label;
+			return sequence === 'MWD' ? '🕐 ' + sequence : '📅 ' + sequence;
 		},
 	};
 }

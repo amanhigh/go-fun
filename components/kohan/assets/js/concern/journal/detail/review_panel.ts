@@ -1,13 +1,25 @@
-import type { JournalClient, JournalUpdateRequest } from '../client/journal';
-import { formatDateInputValue } from '../shared/date';
-import { getErrorMessage } from '../shared/error';
-import { normalizeTag } from '../shared/tags';
+import type { JournalClient } from '../../../client/journal';
+import { createAsyncFeedbackState } from '../../../shared/async_feedback';
+import { formatDateInputValue } from '../../../shared/date';
+import { getErrorMessage } from '../../../shared/error';
+import { normalizeTag } from '../../../shared/tags';
+import type { JournalUpdateRequest } from '../../../types/journal_api';
+import type { DetailAlpineContext, ReviewState } from '../../../types/journal_detail_state';
 
 function localToday(): string {
 	return formatDateInputValue(new Date());
 }
 
-export function createJournalDetailReview(parent: any, journalClient: JournalClient) {
+export function createReviewState(): ReviewState {
+	return {
+		...createAsyncFeedbackState('reviewSubmitting', 'reviewMessage', 'reviewMessageType'),
+		reviewQueue: [],
+		reviewQueueLoading: false,
+		reviewQueueError: '',
+	};
+}
+
+export function createJournalDetailReview(parent: DetailAlpineContext, journalClient: JournalClient) {
 	return {
 		reviewToggleLabel(this: any) {
 			return parent.journal?.reviewed_at ? 'Mark Pending' : 'Mark Reviewed';

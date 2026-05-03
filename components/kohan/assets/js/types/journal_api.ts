@@ -1,3 +1,30 @@
+// ===== Request Types =====
+
+export type JournalFilterKey = 'ticker' | 'type' | 'status' | 'sequence' | 'createdAfter' | 'createdBefore' | 'reviewed' | 'sortBy' | 'sortOrder';
+
+export type JournalFilters = Record<JournalFilterKey, string>;
+
+export type JournalListRequest = Partial<JournalFilters>;
+
+export type JournalUpdateRequest = {
+	status?: string;
+	reviewed_at: string | null;
+};
+
+export type JournalNoteRequest = {
+	status: string;
+	content: string;
+	format: 'MARKDOWN' | 'PLAINTEXT';
+};
+
+export type JournalTagRequest = {
+	tag: string;
+	type: string;
+	override?: string;
+};
+
+// ===== Response Types =====
+
 export type JournalImage = {
 	id: string;
 	timeframe: string;
@@ -44,31 +71,8 @@ export type JournalList = {
 	};
 };
 
-export type JournalUpdateRequest = {
-	status?: string;
-	reviewed_at: string | null;
-};
-
 export type JournalUpdate = {
 	id: string;
 	status: string;
 	reviewed_at: string | null;
 };
-
-export type JournalNoteRequest = {
-	status: string;
-	content: string;
-	format: 'MARKDOWN' | 'PLAINTEXT';
-};
-
-export type JournalTagRequest = {
-	tag: string;
-	type: string;
-	override?: string;
-};
-
-export type JournalFilterKey = 'ticker' | 'type' | 'status' | 'sequence' | 'createdAfter' | 'createdBefore' | 'reviewed' | 'sortBy' | 'sortOrder';
-
-export type JournalFilters = Record<JournalFilterKey, string>;
-
-export type JournalListRequest = Partial<JournalFilters>;

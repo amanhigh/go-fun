@@ -19,6 +19,4 @@ export type AlpineContext = {
 	$refs?: AlpineRefs;
 };
 
-export type BrowserWindow = Window & typeof globalThis;
-
 export {};

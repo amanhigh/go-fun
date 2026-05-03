@@ -1,52 +1,12 @@
-import type { Journal } from './journal';
+import type { Journal, JournalFilterKey } from './journal_api';
 
-export type JournalFilterKey = 'ticker' | 'type' | 'status' | 'sequence' | 'createdAfter' | 'createdBefore' | 'reviewed' | 'sortBy' | 'sortOrder';
-
-export type JournalFilters = Record<JournalFilterKey, string>;
-
-export type JournalListRequest = Partial<JournalFilters>;
-
-type FilterConfigEntry = {
-	queryKey?: string;
-	aliases?: readonly string[];
+export type JournalPageData = JournalListFormatters & {
+	filter: JournalFilterState;
+	pagination: PaginationState;
+	presets: PresetState;
+	table: JournalTableState;
+	init(): void;
 };
-
-const journalFilterConfig: Record<JournalFilterKey, FilterConfigEntry> = {
-	ticker: { queryKey: 'search', aliases: ['ticker'] },
-	type: {},
-	status: {},
-	sequence: {},
-	createdAfter: { queryKey: 'created-after' },
-	createdBefore: { queryKey: 'created-before' },
-	reviewed: {},
-	sortBy: { queryKey: 'sort-by' },
-	sortOrder: { queryKey: 'sort-order' },
-};
-
-export const journalFields: JournalFilterKey[] = ['ticker', 'type', 'status', 'sequence', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'];
-
-export const journalQueryMap: Partial<Record<JournalFilterKey, string>> = journalFields.reduce((queryMap, field) => {
-	const entry = journalFilterConfig[field];
-	if (!entry.queryKey) return queryMap;
-	return { ...queryMap, [field]: entry.queryKey };
-}, {} as Partial<Record<JournalFilterKey, string>>);
-
-export const journalReverseMap: Record<string, JournalFilterKey> = journalFields.reduce((reverseMap, field) => {
-	const queryKey = journalQueryMap[field] ?? field;
-	const aliases = journalFilterConfig[field].aliases ?? [];
-
-	return {
-		...reverseMap,
-		[queryKey]: field,
-		...aliases.reduce<Record<string, JournalFilterKey>>((aliasMap, alias) => ({ ...aliasMap, [alias]: field }), {}),
-	};
-}, {} as Record<string, JournalFilterKey>);
-
-export const journalFilterUrlMapping = {
-	fields: journalFields,
-	queryMap: journalQueryMap,
-	reverseMap: journalReverseMap,
-} as const;
 
 export type PaginationState = {
 	page: number;
@@ -64,12 +24,24 @@ export type PaginationState = {
 	nextPage(): void;
 	prevPage(): void;
 	resetPage(): void;
+	previousPage(): Promise<void>;
+	nextJournalPage(): Promise<void>;
+	summary(): string;
 };
 
 export type JournalFilterState = Record<JournalFilterKey, string> & {
 	clear(): void;
 	toQueryParams(): Record<JournalFilterKey, string>;
 	hasActiveState(): boolean;
+	urlToFilter(): void;
+	filterToUrl(): void;
+	toggleType(): void;
+	typeToggleLabel(): string;
+	typeToggleClass(): string;
+	onCreatedDateChange(): void;
+	toggleSort(field: string): void;
+	applyManualFilters(): void;
+	clearFilters(): void;
 };
 
 export type ReviewPreset = {
@@ -79,19 +51,31 @@ export type ReviewPreset = {
 	createdBefore: string;
 };
 
-export type JournalPageState = {
-	journals: Journal[];
+export type PresetState = {
 	reviewPresets: ReviewPreset[];
 	activeReviewPreset: string;
-	pagination: PaginationState;
-	filter: JournalFilterState;
+	clearActiveReviewPreset(): void;
+	syncActiveReviewPreset(): void;
+	reviewPresetClass(reviewPreset: ReviewPreset): string;
+	applyCreatedPreset(preset: 'today' | 'last7' | 'last30'): void;
+	applyReviewPreset(reviewPreset: ReviewPreset): void;
+};
+
+export type JournalTableState = {
+	journals: Journal[];
 	requestCounter: number;
 	loading: boolean;
 	errorMessage: string;
+	applyFilters(): void;
+	applyManualFilters(): void;
+	loadJournals(): Promise<void>;
+	hasError(): boolean;
+	isEmpty(): boolean;
 };
 
-export type CreateJournalPageStateInput = {
-	filter: JournalFilterState;
-	pagination: PaginationState;
-	reviewPresets: ReviewPreset[];
+export type JournalListFormatters = {
+	normalizeStatus(value: string): string;
+	statusBadgeClass(value: string): string;
+	typeBadgeClass(value: string): string;
+	formatTimestamp(value: string | null | undefined): string;
 };

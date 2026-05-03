@@ -1,5 +1,48 @@
 import { syncStateToUrl, syncUrlToState } from '../../../shared/url_state';
-import { journalFields, journalFilterUrlMapping, type JournalFilterKey, type JournalFilters, type JournalFilterState } from '../../../types/journal_list_state';
+import type { JournalFilterKey, JournalFilters } from '../../../types/journal_api';
+import type { JournalFilterState, JournalPageData } from '../../../types/journal_list_state';
+
+type FilterConfigEntry = {
+	queryKey?: string;
+	aliases?: readonly string[];
+};
+
+const journalFilterConfig: Record<JournalFilterKey, FilterConfigEntry> = {
+	ticker: { queryKey: 'search', aliases: ['ticker'] },
+	type: {},
+	status: {},
+	sequence: {},
+	createdAfter: { queryKey: 'created-after' },
+	createdBefore: { queryKey: 'created-before' },
+	reviewed: {},
+	sortBy: { queryKey: 'sort-by' },
+	sortOrder: { queryKey: 'sort-order' },
+};
+
+const journalFields: JournalFilterKey[] = ['ticker', 'type', 'status', 'sequence', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'];
+
+const journalQueryMap: Partial<Record<JournalFilterKey, string>> = journalFields.reduce((queryMap, field) => {
+	const entry = journalFilterConfig[field];
+	if (!entry.queryKey) return queryMap;
+	return { ...queryMap, [field]: entry.queryKey };
+}, {} as Partial<Record<JournalFilterKey, string>>);
+
+const journalReverseMap: Record<string, JournalFilterKey> = journalFields.reduce((reverseMap, field) => {
+	const queryKey = journalQueryMap[field] ?? field;
+	const aliases = journalFilterConfig[field].aliases ?? [];
+
+	return {
+		...reverseMap,
+		[queryKey]: field,
+		...aliases.reduce<Record<string, JournalFilterKey>>((aliasMap, alias) => ({ ...aliasMap, [alias]: field }), {}),
+	};
+}, {} as Record<string, JournalFilterKey>);
+
+const journalFilterUrlMapping = {
+	fields: journalFields,
+	queryMap: journalQueryMap,
+	reverseMap: journalReverseMap,
+} as const;
 
 type TypeToggle = {
 	label: string;
@@ -31,7 +74,7 @@ function createDefaultJournalFilters(): JournalFilterState {
 	} as JournalFilterState;
 }
 
-export function createJournalFilter(): JournalFilterState {
+export function createJournalFilter(page: JournalPageData): JournalFilterState {
 	const state = { ...createDefaultJournalFilters() } as JournalFilterState;
 
 	state.clear = function clear(this: JournalFilterState) {
@@ -50,6 +93,47 @@ export function createJournalFilter(): JournalFilterState {
 		});
 	};
 
+	state.urlToFilter = function urlToFilter(this: JournalFilterState) {
+		syncJournalUrlToFilter(this);
+	};
+
+	state.filterToUrl = function filterToUrl(this: JournalFilterState) {
+		syncJournalFilterToUrl(this);
+	};
+
+	state.toggleType = function toggleType(this: JournalFilterState) {
+		this.type = resolveTypeToggle(this.type).nextType;
+		this.applyManualFilters();
+	};
+
+	state.typeToggleLabel = function typeToggleLabel(this: JournalFilterState) {
+		return resolveTypeToggle(this.type).label;
+	};
+
+	state.typeToggleClass = function typeToggleClass(this: JournalFilterState) {
+		return resolveTypeToggle(this.type).className;
+	};
+
+	state.onCreatedDateChange = function onCreatedDateChange(this: JournalFilterState) {
+		this.createdBefore = this.createdAfter;
+		this.applyManualFilters();
+	};
+
+	state.toggleSort = function toggleSort(this: JournalFilterState, field: string) {
+		this.sortOrder = this.sortBy !== field ? 'asc' : this.sortOrder === 'asc' ? 'desc' : 'asc';
+		this.sortBy = field;
+		this.applyManualFilters();
+	};
+
+	state.applyManualFilters = function applyManualFilters() {
+		page.table.applyManualFilters();
+	};
+
+	state.clearFilters = function clearFilters(this: JournalFilterState) {
+		this.clear();
+		this.applyManualFilters();
+	};
+
 	return state;
 }
 
@@ -63,15 +147,4 @@ export function syncJournalUrlToFilter(filter: JournalFilterState) {
 
 export function resolveTypeToggle(currentType: string): TypeToggle {
 	return typeToggleMap[currentType] ?? typeToggleMap[''];
-}
-
-export function createFilterActions() {
-	return {
-		urlToFilter(this: any) { syncJournalUrlToFilter(this.filter); },
-		filterToUrl(this: any) { syncJournalFilterToUrl(this.filter); },
-		toggleType(this: any) { this.filter.type = resolveTypeToggle(this.filter.type).nextType; this.applyManualFilters(); },
-		onCreatedDateChange(this: any) { this.filter.createdBefore = this.filter.createdAfter; this.applyManualFilters(); },
-		toggleSort(this: any, field: string) { this.filter.sortOrder = this.filter.sortBy !== field ? 'asc' : this.filter.sortOrder === 'asc' ? 'desc' : 'asc'; this.filter.sortBy = field; this.applyManualFilters(); },
-		clearFilters(this: any) { this.filter.clear(); this.applyManualFilters(); },
-	};
 }

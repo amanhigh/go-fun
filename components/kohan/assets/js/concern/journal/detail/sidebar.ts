@@ -1,16 +1,14 @@
-import type { JournalClient } from '../client/journal';
-import type { JournalNoteClient } from '../client/journal_note';
-import type { JournalTagClient } from '../client/journal_tag';
-import { createLocalStorageClient } from '../client/local_storage';
-import { createNotesState } from './notes_state';
-import { createJournalDetailNotes } from './notes_actions';
-import { createReviewState } from './review_state';
-import { createJournalDetailReview } from './review_actions';
-import { createTagsState } from './tags_state';
-import { createJournalDetailTags } from './tags_actions';
+import type { JournalClient } from '../../../client/journal';
+import type { JournalNoteClient } from '../../../client/journal_note';
+import type { JournalTagClient } from '../../../client/journal_tag';
+import { createLocalStorageClient } from '../../../client/local_storage';
+import { createJournalDetailNotes, createNotesState } from './notes';
+import { createJournalDetailReview, createReviewState } from './review_panel';
+import { createJournalDetailTags, createTagsState, managementTagPresets } from './tags';
+import type { DetailAlpineContext } from '../../../types/journal_detail_state';
 
 export function createSideBar(
-	parent: any,
+	parent: DetailAlpineContext,
 	journalClient: JournalClient,
 	noteClient: JournalNoteClient,
 	tagClient: JournalTagClient,
@@ -20,7 +18,7 @@ export function createSideBar(
 	return Object.assign(
 		createNotesState(),
 		createReviewState(),
-		createTagsState(),
+		createTagsState(managementTagPresets),
 		createJournalDetailNotes(parent, noteClient),
 		createJournalDetailReview(parent, journalClient),
 		createJournalDetailTags(parent, tagClient),

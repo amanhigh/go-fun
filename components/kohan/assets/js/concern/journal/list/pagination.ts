@@ -1,6 +1,6 @@
-import type { PaginationState } from '../../../types/journal_list_state';
+import type { JournalPageData, PaginationState } from '../../../types/journal_list_state';
 
-export function createPaginationState(pageSize: number): PaginationState {
+export function createPaginationState(page: JournalPageData, pageSize: number): PaginationState {
 	return {
 		page: 1,
 		pageSize,
@@ -17,5 +17,16 @@ export function createPaginationState(pageSize: number): PaginationState {
 		nextPage() { if (this.hasNext()) this.page += 1; },
 		prevPage() { if (this.hasPrev()) this.page -= 1; },
 		resetPage() { this.page = 1; },
+		async previousPage() {
+			if (!this.hasPrev()) return;
+			this.prevPage();
+			await page.table.loadJournals();
+		},
+		async nextJournalPage() {
+			if (!this.hasNext()) return;
+			this.nextPage();
+			await page.table.loadJournals();
+		},
+		summary() { return `Page ${this.getPage()} of ${this.getTotalPages()}`; },
 	};
 }

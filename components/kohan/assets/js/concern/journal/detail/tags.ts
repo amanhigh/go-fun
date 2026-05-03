@@ -1,7 +1,10 @@
-import type { JournalTag, JournalTagClient, JournalTagRequest } from '../client/journal_tag';
-import { prependById, removeById } from '../shared/collection';
-import { getErrorMessage } from '../shared/error';
-import { normalizeTag } from '../shared/tags';
+import type { JournalTagClient } from '../../../client/journal_tag';
+import { createAsyncFeedbackState } from '../../../shared/async_feedback';
+import { prependById, removeById } from '../../../shared/collection';
+import { getErrorMessage } from '../../../shared/error';
+import { normalizeTag } from '../../../shared/tags';
+import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
+import type { DetailAlpineContext, TagsState } from '../../../types/journal_detail_state';
 
 export const managementTagPresets = [
 	{ value: 'ntr', label: 'NTR' },
@@ -12,7 +15,7 @@ export const managementTagPresets = [
 	{ value: 'ws', label: 'WS' },
 	{ value: 'important', label: 'IMPORTANT' },
 	{ value: 'be', label: 'BE' },
-];
+] as const;
 
 const managementTagToneMap: Record<string, string> = {
 	NTR: 'emerald',
@@ -25,7 +28,20 @@ const managementTagToneMap: Record<string, string> = {
 	BE: 'orange',
 };
 
-export function createJournalDetailTags(parent: any, tagClient: JournalTagClient) {
+export function createTagsState(tagPresets: typeof managementTagPresets): TagsState {
+	return {
+		...createAsyncFeedbackState('managementTagSubmitting', 'managementTagMessage', 'managementTagMessageType'),
+		...createAsyncFeedbackState('reasonTagSubmitting', 'reasonTagMessage', 'reasonTagMessageType'),
+		managementTagPresets: tagPresets,
+		managementTagPendingValue: '',
+		reasonTagInput: '',
+		reasonTagOverride: '',
+		tagItems: [],
+		tagDeletingId: '',
+	};
+}
+
+export function createJournalDetailTags(parent: DetailAlpineContext, tagClient: JournalTagClient) {
 	return {
 		syncTags(this: any, tags: JournalTag[] | undefined) {
 			this.tagItems = [...(tags ?? [])];

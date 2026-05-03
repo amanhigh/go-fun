@@ -1,6 +1,9 @@
-import type { JournalNote, JournalNoteClient, JournalNoteRequest } from '../client/journal_note';
-import { prependById, removeById } from '../shared/collection';
-import { getErrorMessage } from '../shared/error';
+import type { JournalNoteClient } from '../../../client/journal_note';
+import { createAsyncFeedbackState } from '../../../shared/async_feedback';
+import { prependById, removeById } from '../../../shared/collection';
+import { getErrorMessage } from '../../../shared/error';
+import type { JournalNote, JournalNoteRequest } from '../../../types/journal_api';
+import type { DetailAlpineContext, NotesState } from '../../../types/journal_detail_state';
 
 function sortNotes(notes: JournalNote[]): JournalNote[] {
 	return [...notes].sort((left: JournalNote, right: JournalNote) => {
@@ -10,7 +13,16 @@ function sortNotes(notes: JournalNote[]): JournalNote[] {
 	});
 }
 
-export function createJournalDetailNotes(parent: any, noteClient: JournalNoteClient) {
+export function createNotesState(): NotesState {
+	return {
+		...createAsyncFeedbackState('noteSubmitting', 'noteMessage', 'noteMessageType'),
+		noteDeletingId: '',
+		noteContent: '',
+		noteItems: [],
+	};
+}
+
+export function createJournalDetailNotes(parent: DetailAlpineContext, noteClient: JournalNoteClient) {
 	return {
 		syncNotes(this: any, notes: JournalNote[] | undefined) {
 			this.noteItems = sortNotes(notes ?? []);

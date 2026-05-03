@@ -1,7 +1,7 @@
 import { NewJournalClient } from '../client/journal';
 import { NewJournalNoteClient } from '../client/journal_note';
 import { NewJournalTagClient } from '../client/journal_tag';
-import type { Journal } from '../types/journal';
+import type { Journal } from '../types/journal_api';
 import type { JournalClient } from '../client/journal';
 import type { JournalDetailPageState } from '../types/journal_detail_state';
 import { getErrorMessage } from '../shared/error';
@@ -9,10 +9,7 @@ import { createJournalDetailFormatters } from '../concern/journal/detail/header'
 import { createImageHelper } from '../concern/journal/detail/images';
 import { createJournalDetailPreview } from '../concern/journal/detail/modal';
 import { createSideBar } from '../concern/journal/detail/sidebar';
-
-declare const Alpine: {
-	data(name: string, callback: () => ReturnType<typeof journalDetailPage>): void;
-};
+import '../types/platform';
 
 function createEmptyJournal(): Journal {
 	return {
@@ -77,7 +74,7 @@ function createJournalDetailPageActions(journalClient: JournalClient) {
 		},
 		async deleteJournal(this: any) {
 			if (!this.journal || this.journalDeleting) return;
-			if (typeof window !== 'undefined' && !window.confirm('Delete this journal? This cannot be undone.')) return;
+			if (!window.confirm('Delete this journal? This cannot be undone.')) return;
 			this.journalDeleting = true;
 			try {
 				await journalClient.delete(this.journalId);
@@ -126,7 +123,7 @@ function journalDetailPage() {
 }
 
 document.addEventListener('alpine:init', () => {
-	Alpine.data('journalDetailPage', journalDetailPage);
+	window.Alpine.data('journalDetailPage', journalDetailPage);
 });
 
 export {};

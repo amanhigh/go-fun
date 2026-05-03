@@ -1,4 +1,4 @@
-import type { JournalImage } from './client/journal_image';
+import type { JournalImage } from '../../../types/journal_api';
 
 export interface ImageHelper {
 	chipClass(timeframe: string): string;

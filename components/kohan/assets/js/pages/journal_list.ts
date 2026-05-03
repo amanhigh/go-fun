@@ -1,95 +1,39 @@
 import { NewJournalClient } from '../client/journal';
-import type { CreateJournalPageStateInput, JournalPageState } from '../types/journal_list_state';
-import type { JournalClient } from '../client/journal';
-import { createFilterActions, createJournalFilter } from '../concern/journal/list/filter';
-import { buildReviewPresetList, createPresetActions } from '../concern/journal/list/presets';
+import type { JournalPageData } from '../types/journal_list_state';
+import { createJournalFilter } from '../concern/journal/list/filter';
+import { createPresetConcern } from '../concern/journal/list/presets';
 import { createJournalListFormatters } from '../concern/journal/list/formatters';
 import { createPaginationState } from '../concern/journal/list/pagination';
+import { createJournalTableConcern } from '../concern/journal/list/table';
+import '../types/platform';
 
-declare const Alpine: {
-	data(name: string, callback: () => any): void;
-};
+const journalPageSize = 10;
 
-function createJournalPageState(input: CreateJournalPageStateInput): JournalPageState {
-	return {
-		journals: [],
-		reviewPresets: input.reviewPresets,
-		activeReviewPreset: '',
-		pagination: input.pagination,
-		filter: input.filter,
-		requestCounter: 0,
-		loading: false,
-		errorMessage: '',
-	};
-}
-
-function createJournalPageActions(client: JournalClient) {
-	async function loadJournals(this: any) {
-		this.loading = true;
-		this.errorMessage = '';
-
-		try {
-			const response = await client.list(this.pagination.getOffset(), this.pagination.getPageSize(), this.filter.toQueryParams());
-			const data = response.data ?? {};
-			this.journals = data.journals ?? [];
-			this.pagination.setTotalItems(data.metadata?.total ?? this.journals.length);
-			this.pagination.setPageFromOffset(data.metadata?.offset ?? 0);
-		} finally {
-			this.loading = false;
-		}
-	}
-
-	function applyFilters(this: any) {
-		this.pagination.resetPage();
-		this.filterToUrl();
-		void this.loadJournals();
-	}
-
-	function applyManualFilters(this: any) {
-		this.clearActiveReviewPreset();
-		this.applyFilters();
-	}
-
-	return {
-		applyFilters,
-		applyManualFilters,
-		loadJournals,
-		hasError(this: any) { return this.errorMessage !== ''; },
-		isEmpty(this: any) { return this.journals.length === 0; },
-		async prevPage(this: any) {
-			if (!this.pagination.hasPrev()) return;
-			this.pagination.prevPage();
-			await this.loadJournals();
-		},
-		async nextPage(this: any) {
-			if (!this.pagination.hasNext()) return;
-			this.pagination.nextPage();
-			await this.loadJournals();
-		},
-		init(this: any) {
-			this.urlToFilter();
-			this.syncActiveReviewPreset();
-			void this.loadJournals();
-		},
-	};
-}
-
-function journalPage() {
+function createJournalPageData() {
 	const client = NewJournalClient();
-	const pagination = createPaginationState(10);
-	const filter = createJournalFilter();
-	const reviewPresets = buildReviewPresetList();
-	const formatters = createJournalListFormatters();
-	const filterActions = createFilterActions();
-	const state = createJournalPageState({ filter, pagination, reviewPresets });
-	const presetActions = createPresetActions();
-	const pageActions = createJournalPageActions(client);
+	const page = {} as JournalPageData;
 
-	return Object.assign(state, formatters, presetActions, pageActions, filterActions);
+	const formatters = createJournalListFormatters();
+	page.table = createJournalTableConcern(page, client);
+	page.pagination = createPaginationState(page, journalPageSize);
+	page.filter = createJournalFilter(page);
+	page.presets = createPresetConcern(page);
+	page.init = function init() {
+		page.filter.urlToFilter();
+		page.presets.syncActiveReviewPreset();
+		void page.table.loadJournals();
+	};
+
+	page.normalizeStatus = formatters.normalizeStatus;
+	page.statusBadgeClass = formatters.statusBadgeClass;
+	page.typeBadgeClass = formatters.typeBadgeClass;
+	page.formatTimestamp = formatters.formatTimestamp;
+
+	return page;
 }
 
 document.addEventListener('alpine:init', () => {
-	Alpine.data('journalPage', journalPage);
+	window.Alpine.data('journalPage', createJournalPageData);
 });
 
 export {};
