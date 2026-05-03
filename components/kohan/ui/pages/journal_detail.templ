@@ -29,7 +29,10 @@ templ JournalDetailPage(journalID string) {
 							@detailblocks.JournalDetailImages()
 							@detailblocks.JournalDetailNotes()
 						</div>
-						@detailblocks.JournalSidebar()
+						<div class="space-y-4 xl:sticky xl:top-6">
+							@detailblocks.JournalDetailActionsPanel()
+							@detailblocks.JournalDetailReviewPanel()
+						</div>
 					</div>
 				</div>
 				@detailblocks.JournalImageModal(detailblocks.JournalImageModalProps{
