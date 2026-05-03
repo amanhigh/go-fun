@@ -38,22 +38,16 @@ export function createJournalFilter(page: JournalPageData): JournalFilterState {
 		clear(this: JournalFilterState) {
 			Object.assign(this, journalFilterDefaults);
 		},
-		toQueryParams(this: JournalFilterState) {
-			return { ...this };
-		},
 		hasActiveState(this: JournalFilterState) {
 			return Object.entries(journalFilterDefaults).some(([field, defaultValue]) => this[field as JournalFilterKey] !== defaultValue);
 		},
+		typeToggle(this: JournalFilterState) {
+			return resolveTypeToggle(this.type);
+		},
 		toggleType(this: JournalFilterState) {
 			applyMutationAndRefresh(page, () => {
-				this.type = resolveTypeToggle(this.type).nextType;
+				this.type = this.typeToggle().nextType;
 			});
-		},
-		typeToggleLabel(this: JournalFilterState) {
-			return resolveTypeToggle(this.type).label;
-		},
-		typeToggleClass(this: JournalFilterState) {
-			return resolveTypeToggle(this.type).className;
 		},
 		onCreatedDateChange(this: JournalFilterState) {
 			applyMutationAndRefresh(page, () => {

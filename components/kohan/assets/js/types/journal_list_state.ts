@@ -34,11 +34,9 @@ export type PaginationState = {
 
 export type JournalFilterState = Record<JournalFilterKey, string> & {
 	clear(): void;
-	toQueryParams(): Record<JournalFilterKey, string>;
 	hasActiveState(): boolean;
 	toggleType(): void;
-	typeToggleLabel(): string;
-	typeToggleClass(): string;
+	typeToggle(): { label: string; className: string; nextType: string };
 	onCreatedDateChange(): void;
 	toggleSort(field: 'ticker' | 'sequence' | 'created_at'): void;
 	applyManualFilters(): void;

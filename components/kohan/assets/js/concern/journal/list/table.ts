@@ -21,7 +21,7 @@ export function createJournalTableConcern(page: JournalPageData, client: Journal
 			table.errorMessage = '';
 
 			try {
-				const response = await client.list(page.pagination.getOffset(), page.pagination.getPageSize(), page.filter.toQueryParams());
+				const response = await client.list(page.pagination.getOffset(), page.pagination.getPageSize(), page.filter);
 				const data = response.data ?? {};
 				table.journals = data.journals ?? [];
 				page.pagination.setTotalItems(data.metadata?.total ?? table.journals.length);
