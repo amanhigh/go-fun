@@ -39,7 +39,7 @@ var _ = Describe("Journal Page Tests", func() {
 		It("should wire the initial page load flow", func() {
 			Expect(html).To(ContainSubstring("x-init=\"init()\""))
 			Expect(html).To(ContainSubstring("Loading journals..."))
-			Expect(html).To(ContainSubstring("journal in journals"))
+			Expect(html).To(ContainSubstring("journal in table.journals"))
 		})
 	})
 
@@ -55,10 +55,10 @@ var _ = Describe("Journal Page Tests", func() {
 
 		It("should wire review preset actions", func() {
 			Expect(html).To(ContainSubstring("Review"))
-			Expect(html).To(ContainSubstring("reviewPreset in reviewPresets"))
+			Expect(html).To(ContainSubstring("reviewPreset in presets.reviewPresets"))
 			Expect(html).To(ContainSubstring("reviewPreset.label"))
-			Expect(html).To(ContainSubstring("applyReviewPreset(reviewPreset)"))
-			Expect(html).To(ContainSubstring("reviewPresetClass(reviewPreset)"))
+			Expect(html).To(ContainSubstring("presets.applyReviewPreset(reviewPreset)"))
+			Expect(html).To(ContainSubstring("presets.reviewPresetClass(reviewPreset)"))
 		})
 
 		It("should expose important active filter integrations", func() {
@@ -98,15 +98,15 @@ var _ = Describe("Journal Page Tests", func() {
 		})
 
 		It("should render the table error state with retry binding", func() {
-			Expect(html).To(ContainSubstring("x-show=\"hasError()\""))
-			Expect(html).To(ContainSubstring("x-text=\"errorMessage\""))
-			Expect(html).To(ContainSubstring("x-on:click=\"loadJournals()\""))
+			Expect(html).To(ContainSubstring("x-show=\"table.hasError()\""))
+			Expect(html).To(ContainSubstring("x-text=\"table.errorMessage\""))
+			Expect(html).To(ContainSubstring("x-on:click=\"table.loadJournals()\""))
 			Expect(html).To(ContainSubstring(">Retry<"))
 		})
 
 		It("should render pagination bindings and page summary", func() {
-			Expect(html).To(ContainSubstring("x-on:click=\"prevPage()\""))
-			Expect(html).To(ContainSubstring("x-on:click=\"nextPage()\""))
+			Expect(html).To(ContainSubstring("x-on:click=\"pagination.previousPage()\""))
+			Expect(html).To(ContainSubstring("x-on:click=\"pagination.nextJournalPage()\""))
 			Expect(html).To(ContainSubstring("x-bind:disabled=\"!pagination.hasPrev()\""))
 			Expect(html).To(ContainSubstring("x-bind:disabled=\"!pagination.hasNext()\""))
 			Expect(html).To(ContainSubstring("Page"))

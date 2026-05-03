@@ -1,6 +1,6 @@
 import { formatTimestamp } from '../../../shared/date';
 import { normalizeTag } from '../../../shared/tags';
-import type { JournalListFormatters } from '../../../types/journal_list_state';
+import type { JournalPresentationState } from '../../../types/journal_common_state';
 
 const defaultBadgeClass = 'border-slate-300 bg-slate-50 text-slate-700';
 
@@ -18,14 +18,18 @@ const typeBadgeClassMap: Record<string, string> = {
 	SET: 'border-indigo-300 bg-indigo-50 text-indigo-800',
 };
 
-export function createJournalListFormatters(): JournalListFormatters {
+function resolveBadgeClass(map: Record<string, string>, value: string): string {
+	return map[normalizeTag(value)] ?? defaultBadgeClass;
+}
+
+export function createJournalPresentation(): JournalPresentationState {
 	return {
 		normalizeStatus: normalizeTag,
 		statusBadgeClass(value: string) {
-			return statusBadgeClassMap[normalizeTag(value)] ?? defaultBadgeClass;
+			return resolveBadgeClass(statusBadgeClassMap, value);
 		},
 		typeBadgeClass(value: string) {
-			return typeBadgeClassMap[normalizeTag(value)] ?? defaultBadgeClass;
+			return resolveBadgeClass(typeBadgeClassMap, value);
 		},
 		formatTimestamp,
 	};

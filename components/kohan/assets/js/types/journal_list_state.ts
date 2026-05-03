@@ -1,7 +1,10 @@
 import type { Journal, JournalFilterKey } from './journal_api';
+import type { JournalPresentationState } from './journal_common_state';
 
-export type JournalPageData = JournalListFormatters & {
+export type JournalPageData = {
+	presentation: JournalPresentationState;
 	filter: JournalFilterState;
+	filterUrl: JournalFilterUrlState;
 	pagination: PaginationState;
 	presets: PresetState;
 	table: JournalTableState;
@@ -33,15 +36,18 @@ export type JournalFilterState = Record<JournalFilterKey, string> & {
 	clear(): void;
 	toQueryParams(): Record<JournalFilterKey, string>;
 	hasActiveState(): boolean;
-	urlToFilter(): void;
-	filterToUrl(): void;
 	toggleType(): void;
 	typeToggleLabel(): string;
 	typeToggleClass(): string;
 	onCreatedDateChange(): void;
-	toggleSort(field: string): void;
+	toggleSort(field: 'ticker' | 'sequence' | 'created_at'): void;
 	applyManualFilters(): void;
 	clearFilters(): void;
+};
+
+export type JournalFilterUrlState = {
+	urlToFilter(): void;
+	filterToUrl(): void;
 };
 
 export type ReviewPreset = {
@@ -71,11 +77,4 @@ export type JournalTableState = {
 	loadJournals(): Promise<void>;
 	hasError(): boolean;
 	isEmpty(): boolean;
-};
-
-export type JournalListFormatters = {
-	normalizeStatus(value: string): string;
-	statusBadgeClass(value: string): string;
-	typeBadgeClass(value: string): string;
-	formatTimestamp(value: string | null | undefined): string;
 };

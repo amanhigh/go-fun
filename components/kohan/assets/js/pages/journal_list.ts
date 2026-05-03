@@ -1,8 +1,9 @@
 import { NewJournalClient } from '../client/journal';
 import type { JournalPageData } from '../types/journal_list_state';
+import { createJournalPresentation } from '../concern/journal/common/presentation';
+import { createJournalFilterUrlConcern } from '../concern/journal/list/filter_url';
 import { createJournalFilter } from '../concern/journal/list/filter';
 import { createPresetConcern } from '../concern/journal/list/presets';
-import { createJournalListFormatters } from '../concern/journal/list/formatters';
 import { createPaginationState } from '../concern/journal/list/pagination';
 import { createJournalTableConcern } from '../concern/journal/list/table';
 import '../types/platform';
@@ -13,21 +14,17 @@ function createJournalPageData() {
 	const client = NewJournalClient();
 	const page = {} as JournalPageData;
 
-	const formatters = createJournalListFormatters();
+	page.presentation = createJournalPresentation();
+	page.filter = createJournalFilter(page);
+	page.filterUrl = createJournalFilterUrlConcern(page.filter);
+	page.presets = createPresetConcern(page);
 	page.table = createJournalTableConcern(page, client);
 	page.pagination = createPaginationState(page, journalPageSize);
-	page.filter = createJournalFilter(page);
-	page.presets = createPresetConcern(page);
 	page.init = function init() {
-		page.filter.urlToFilter();
+		page.filterUrl.urlToFilter();
 		page.presets.syncActiveReviewPreset();
 		void page.table.loadJournals();
 	};
-
-	page.normalizeStatus = formatters.normalizeStatus;
-	page.statusBadgeClass = formatters.statusBadgeClass;
-	page.typeBadgeClass = formatters.typeBadgeClass;
-	page.formatTimestamp = formatters.formatTimestamp;
 
 	return page;
 }

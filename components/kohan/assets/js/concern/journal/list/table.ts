@@ -9,7 +9,7 @@ export function createJournalTableConcern(page: JournalPageData, client: Journal
 		errorMessage: '',
 		applyFilters() {
 			page.pagination.resetPage();
-			page.filter.filterToUrl();
+			page.filterUrl.filterToUrl();
 			void table.loadJournals();
 		},
 		applyManualFilters() {

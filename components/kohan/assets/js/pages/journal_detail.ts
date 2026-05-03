@@ -6,6 +6,7 @@ import type { JournalClient } from '../client/journal';
 import type { JournalDetailPageState } from '../types/journal_detail_state';
 import { getErrorMessage } from '../shared/error';
 import { createJournalDetailFormatters } from '../concern/journal/detail/header';
+import { createJournalPresentation } from '../concern/journal/common/presentation';
 import { createImageHelper } from '../concern/journal/detail/images';
 import { createJournalDetailPreview } from '../concern/journal/detail/modal';
 import { createSideBar } from '../concern/journal/detail/sidebar';
@@ -106,6 +107,7 @@ function journalDetailPage() {
 
 	const page: any = {
 		...state,
+		presentation: createJournalPresentation(),
 		...formatters,
 		...pageActions,
 		...preview,
