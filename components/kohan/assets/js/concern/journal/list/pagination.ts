@@ -1,20 +1,4 @@
-export interface PaginationState {
-	page: number;
-	pageSize: number;
-	totalItems: number;
-	getPage(): number;
-	getPageSize(): number;
-	getOffset(): number;
-	getTotalItems(): number;
-	getTotalPages(): number;
-	hasNext(): boolean;
-	hasPrev(): boolean;
-	setTotalItems(count: number): void;
-	setPageFromOffset(offset: number): void;
-	nextPage(): void;
-	prevPage(): void;
-	resetPage(): void;
-}
+import type { PaginationState } from '../../../types/journal_list_state';
 
 export function createPaginationState(pageSize: number): PaginationState {
 	return {

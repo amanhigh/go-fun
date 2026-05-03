@@ -1,15 +1,8 @@
-import type { JournalFilterState } from './filter';
-import { formatDateInputValue } from '../shared/date';
+import type { JournalFilterState, ReviewPreset } from '../../../types/journal_list_state';
+import { formatDateInputValue } from '../../../shared/date';
 
 const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const reviewPresetOffsets = [-2, -1, 0, 1, 2] as const;
-
-export type ReviewPreset = {
-	isAnchor: boolean;
-	label: string;
-	createdAfter: string;
-	createdBefore: string;
-};
 
 export type DatePreset = 'today' | 'last7' | 'last30';
 

@@ -1,4 +1,5 @@
-import { buildDatePresetRange, findReviewPreset, type DatePreset, type ReviewPreset } from './presets';
+import { buildDatePresetRange, findReviewPreset, type DatePreset } from './presets';
+import type { ReviewPreset } from '../../../types/journal_list_state';
 
 const reviewPresetBaseClass = 'border-cyan-200/70 bg-white/80 text-cyan-800 hover:bg-cyan-50';
 const reviewPresetAnchorClass = 'border-2 border-amber-200 bg-white/80 text-cyan-800';

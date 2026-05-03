@@ -1,6 +1,6 @@
-import { formatTimestamp } from '../shared/date';
-import { normalizeTag } from '../shared/tags';
-import { resolveTypeToggle } from './filter_actions';
+import { formatTimestamp } from '../../../shared/date';
+import { normalizeTag } from '../../../shared/tags';
+import { resolveTypeToggle } from './filter';
 
 const defaultBadgeClass = 'border-slate-300 bg-slate-50 text-slate-700';
 
