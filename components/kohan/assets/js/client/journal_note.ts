@@ -1,5 +1,5 @@
 import { BaseClient, type Envelope } from './base';
-import type { JournalNote, JournalNoteRequest } from '../types/journal';
+import type { JournalNote, JournalNoteRequest } from '../types/journal_api';
 
 export interface JournalNoteClient {
 	create(journalId: string, payload: JournalNoteRequest): Promise<Envelope<JournalNote>>;

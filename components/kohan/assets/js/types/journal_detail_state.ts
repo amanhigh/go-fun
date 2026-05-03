@@ -1,4 +1,5 @@
-import type { Journal, JournalNote, JournalTag } from './journal';
+import type { Journal, JournalNote, JournalTag } from './journal_api';
+import type { AlpineContext } from './platform';
 
 export type JournalDetailPageState = {
 	journalId: string;
@@ -49,12 +50,6 @@ export type TagsState = {
 
 export type DetailStateBundle = JournalDetailPageState & NotesState & ReviewState & TagsState;
 
-export type DetailAlpineContext = DetailStateBundle & {
+export type DetailAlpineContext = DetailStateBundle & AlpineContext & {
 	reviewQueueItemClass(value: string): string;
-	$nextTick(callback: () => void): void;
-	$refs?: {
-		reasonTagOverride?: {
-			focus?: () => void;
-		};
-	};
 };

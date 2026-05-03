@@ -1,6 +1,12 @@
-export type AlpineGlobal<TFactory extends (...args: never[]) => unknown> = {
-	data(name: string, callback: TFactory): void;
+export type AlpineStatic = {
+	data<T>(name: string, callback: () => T): void;
 };
+
+declare global {
+	interface Window {
+		Alpine: AlpineStatic;
+	}
+}
 
 export type AlpineRefs = {
 	reasonTagOverride?: {
@@ -14,3 +20,5 @@ export type AlpineContext = {
 };
 
 export type BrowserWindow = Window & typeof globalThis;
+
+export {};

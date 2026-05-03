@@ -1,5 +1,15 @@
 import { BaseClient, type Envelope, type QueryValue } from './base';
-import { journalFields, journalQueryMap, type Journal, type JournalList, type JournalListRequest, type JournalUpdate, type JournalUpdateRequest } from '../types/journal';
+import type { Journal, JournalFilterKey, JournalList, JournalListRequest, JournalUpdate, JournalUpdateRequest } from '../types/journal_api';
+
+const journalApiFields: JournalFilterKey[] = ['ticker', 'type', 'status', 'sequence', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'];
+
+const journalApiQueryMap: Partial<Record<JournalFilterKey, string>> = {
+	ticker: 'search',
+	createdAfter: 'created-after',
+	createdBefore: 'created-before',
+	sortBy: 'sort-by',
+	sortOrder: 'sort-order',
+};
 
 export interface JournalClient {
 	list(offset: number, limit: number, filters?: JournalListRequest): Promise<Envelope<JournalList>>;
@@ -15,9 +25,9 @@ export class JournalClientImpl extends BaseClient implements JournalClient {
 
 	async list(offset: number, limit: number, filters: JournalListRequest = {}): Promise<Envelope<JournalList>> {
 		const query: Record<string, QueryValue> = { offset, limit };
-		journalFields.forEach((key) => {
+		journalApiFields.forEach((key) => {
 			const value = filters[key];
-			if (value !== undefined && value !== '') query[journalQueryMap[key] ?? key] = value;
+			if (value !== undefined && value !== '') query[journalApiQueryMap[key] ?? key] = value;
 		});
 		return this.requestJson<Envelope<JournalList>>('/journals', 'GET', 'Failed to load journals', 'Journal not found', query);
 	}

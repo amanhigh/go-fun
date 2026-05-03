@@ -1,5 +1,5 @@
 import { BaseClient, type Envelope } from './base';
-import type { JournalTag, JournalTagRequest } from '../types/journal';
+import type { JournalTag, JournalTagRequest } from '../types/journal_api';
 
 export interface JournalTagClient {
 	create(journalId: string, payload: JournalTagRequest): Promise<Envelope<JournalTag>>;
