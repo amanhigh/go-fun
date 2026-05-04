@@ -32,12 +32,14 @@ export type PaginationState = {
 	summary(): string;
 };
 
+export type DatePresetName = '' | 'today' | 'last7' | 'last30';
+
 export type JournalFilterState = Record<JournalFilterKey, string> & {
+	datePreset: DatePresetName;
 	clear(): void;
 	hasActiveState(): boolean;
 	toggleType(): void;
 	typeToggle(): { label: string; className: string; nextType: string };
-	onCreatedDateChange(): void;
 	toggleSort(field: 'ticker' | 'sequence' | 'created_at'): void;
 	applyManualFilters(): void;
 	clearFilters(): void;
@@ -60,8 +62,9 @@ export type PresetState = {
 	activeReviewPreset: string;
 	clearActiveReviewPreset(): void;
 	syncActiveReviewPreset(): void;
+	syncDatePreset(): void;
 	reviewPresetClass(reviewPreset: ReviewPreset): string;
-	applyCreatedPreset(preset: 'today' | 'last7' | 'last30'): void;
+	applyCreatedPreset(preset: DatePresetName): void;
 	applyReviewPreset(reviewPreset: ReviewPreset): void;
 };
 

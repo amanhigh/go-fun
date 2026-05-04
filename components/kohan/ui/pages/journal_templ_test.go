@@ -62,7 +62,7 @@ var _ = Describe("Journal Page Tests", func() {
 		})
 
 		It("should expose important active filter integrations", func() {
-			Expect(html).To(ContainSubstring("createdBefore"))
+			Expect(html).To(ContainSubstring("datePreset"))
 			Expect(html).To(ContainSubstring("reviewed"))
 			Expect(html).To(ContainSubstring("Sort: "))
 		})

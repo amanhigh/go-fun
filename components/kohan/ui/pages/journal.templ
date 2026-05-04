@@ -75,7 +75,6 @@ templ JournalFilters() {
 		@JournalTickerFilter()
 		@JournalStatusSelect()
 		@JournalSequenceSelect()
-		@JournalCreatedDateFilter()
 		@JournalClearFiltersButton()
 	</div>
 }
@@ -124,12 +123,6 @@ templ JournalSequenceSelect() {
 	</div>
 }
 
-templ JournalCreatedDateFilter() {
-	<div>
-		@input.Input(input.Props{ID: "journal-created-on", Type: input.TypeDate, Class: "h-9 w-full border-emerald-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.createdAfter", "x-on:change": "filter.onCreatedDateChange()"}})
-	</div>
-}
-
 templ JournalClearFiltersButton() {
 	<div class="flex items-end">
 		@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Size: button.SizeSm, Class: "h-9 w-full border-rose-300/70 bg-rose-100/60 text-rose-800 hover:bg-rose-200/70", Attributes: templ.Attributes{"x-on:click": "filter.clearFilters()"}}) { Clear }
@@ -143,9 +136,7 @@ templ JournalActiveFilters() {
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneRose, Emoji: "📉", ShowExpr: "filter.type === 'REJECTED'", TextExpr: "'Type: REJECTED'"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneRose, Emoji: "🏷️", ShowExpr: "filter.status !== ''", TextExpr: "'Status: ' + filter.status"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneViolet, Emoji: "🔢", ShowExpr: "filter.sequence !== ''", TextExpr: "'Sequence: ' + filter.sequence"})
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, Emoji: "📅", ShowExpr: "filter.createdAfter !== '' && filter.createdBefore !== '' && presets.activeReviewPreset === ''", TextExpr: "'Created: ' + filter.createdAfter + ' → ' + filter.createdBefore"})
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, Emoji: "📅", ShowExpr: "filter.createdAfter !== '' && filter.createdBefore === '' && presets.activeReviewPreset === ''", TextExpr: "'Created from: ' + filter.createdAfter"})
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, Emoji: "📅", ShowExpr: "filter.createdBefore !== '' && filter.createdAfter === '' && presets.activeReviewPreset === ''", TextExpr: "'Created until: ' + filter.createdBefore"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, Emoji: "📅", ShowExpr: "filter.datePreset !== '' && presets.activeReviewPreset === ''", TextExpr: "'Date: ' + filter.datePreset"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Emoji: "🗓️", ShowExpr: "presets.activeReviewPreset !== ''", TextExpr: "'Review: ' + presets.activeReviewPreset"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Emoji: "🕒", ShowExpr: "filter.reviewed !== '' && presets.activeReviewPreset === ''", TextExpr: "filter.reviewed === 'false' ? 'Reviewed: Pending' : 'Reviewed: ' + filter.reviewed"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, Emoji: "↕️", ShowExpr: "filter.sortBy !== 'created_at' || filter.sortOrder !== 'desc'", TextExpr: "'Sort: ' + [filter.sortBy, filter.sortOrder].filter(Boolean).join(' · ')"})

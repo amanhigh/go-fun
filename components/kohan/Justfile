@@ -30,5 +30,5 @@ air: kill-server
 [doc('Kill Kohan server on the configured port')]
 [group('run')]
 kill-server:
-	pkill -f "[a]ir -c {{kohan_dir}}/.air.toml" 2>/dev/null || true
-	pkill -f "[k]ohan-server auto serve -p {{port}}" 2>/dev/null || true
+	pkill air 2>/dev/null || true
+	lsof -ti :{{port}} | xargs -r kill 2>/dev/null || true

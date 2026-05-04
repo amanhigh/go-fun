@@ -23,6 +23,7 @@ function createJournalPageData() {
 	page.init = function init(this: any) {
 		console.error('journalPage:init', window.location.search);
 		this.filterUrl.urlToFilter();
+		this.presets.syncDatePreset();
 		this.presets.syncActiveReviewPreset();
 		void this.table.loadJournals();
 	};
