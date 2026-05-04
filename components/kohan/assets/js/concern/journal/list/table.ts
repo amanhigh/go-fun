@@ -7,31 +7,31 @@ export function createJournalTableConcern(page: JournalPageData, client: Journal
 		requestCounter: 0,
 		loading: false,
 		errorMessage: '',
-		applyFilters() {
+		applyFilters(this: JournalTableState) {
 			page.pagination.resetPage();
 			page.filterUrl.filterToUrl();
-			void table.loadJournals();
+			void this.loadJournals();
 		},
-		applyManualFilters() {
+		applyManualFilters(this: JournalTableState) {
 			page.presets.clearActiveReviewPreset();
-			table.applyFilters();
+			this.applyFilters();
 		},
-		async loadJournals() {
-			table.loading = true;
-			table.errorMessage = '';
+		async loadJournals(this: JournalTableState) {
+			this.loading = true;
+			this.errorMessage = '';
 
 			try {
 				const response = await client.list(page.pagination.getOffset(), page.pagination.getPageSize(), page.filter);
 				const data = response.data ?? {};
-				table.journals = data.journals ?? [];
-				page.pagination.setTotalItems(data.metadata?.total ?? table.journals.length);
+				this.journals = data.journals ?? [];
+				page.pagination.setTotalItems(data.metadata?.total ?? this.journals.length);
 				page.pagination.setPageFromOffset(data.metadata?.offset ?? 0);
 			} finally {
-				table.loading = false;
+				this.loading = false;
 			}
 		},
-		hasError() { return table.errorMessage !== ''; },
-		isEmpty() { return table.journals.length === 0; },
+		hasError(this: JournalTableState) { return this.errorMessage !== ''; },
+		isEmpty(this: JournalTableState) { return this.journals.length === 0; },
 	};
 
 	return table;

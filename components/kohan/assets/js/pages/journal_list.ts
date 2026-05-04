@@ -20,10 +20,11 @@ function createJournalPageData() {
 	page.presets = createPresetConcern(page);
 	page.table = createJournalTableConcern(page, client);
 	page.pagination = createPaginationState(page, journalPageSize);
-	page.init = function init() {
-		page.filterUrl.urlToFilter();
-		page.presets.syncActiveReviewPreset();
-		void page.table.loadJournals();
+	page.init = function init(this: any) {
+		console.error('journalPage:init', window.location.search);
+		this.filterUrl.urlToFilter();
+		this.presets.syncActiveReviewPreset();
+		void this.table.loadJournals();
 	};
 
 	return page;
