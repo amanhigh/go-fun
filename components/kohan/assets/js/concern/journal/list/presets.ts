@@ -1,4 +1,4 @@
-import type { JournalPageData, PresetState, ReviewPreset } from '../../../types/journal_list_state';
+import type { DatePresetName, JournalPageData, PresetState, ReviewPreset } from '../../../types/journal_list_state';
 import { formatDateInputValue } from '../../../shared/date';
 
 const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -9,16 +9,15 @@ type PresetPageContext = Pick<JournalPageData, 'filter' | 'table'>;
 
 type ReviewPresetFilter = Pick<JournalPageData['filter'], 'createdAfter' | 'createdBefore' | 'reviewed'>;
 
-export type DatePreset = 'today' | 'last7' | 'last30';
-
-const datePresetMap: Record<DatePreset, number> = {
+const datePresetMap: Record<Exclude<DatePresetName, ''>, number> = {
 	today: 0,
 	last7: 7,
 	last30: 30,
 };
 
-export function buildDatePresetRange(preset: DatePreset, today: Date = new Date()): { createdAfter: string; createdBefore: string } {
-	const days = datePresetMap[preset] ?? datePresetMap.last7;
+export function buildDatePresetRange(preset: DatePresetName, today: Date = new Date()): { createdAfter: string; createdBefore: string } {
+	if (!preset) return { createdAfter: '', createdBefore: '' };
+	const days = datePresetMap[preset];
 	const endDate = formatDateInputValue(today);
 	const startDate = new Date(today);
 	startDate.setDate(today.getDate() - days);
@@ -27,6 +26,14 @@ export function buildDatePresetRange(preset: DatePreset, today: Date = new Date(
 		createdAfter: formatDateInputValue(startDate),
 		createdBefore: endDate,
 	};
+}
+
+export function syncDatePreset(filter: JournalPageData['filter']) {
+	if (filter.datePreset) {
+		const range = buildDatePresetRange(filter.datePreset);
+		filter.createdAfter = range.createdAfter;
+		filter.createdBefore = range.createdBefore;
+	}
 }
 
 function buildReviewPresetAnchorDate(today: Date = new Date()): Date {
@@ -68,10 +75,11 @@ const reviewPresetAnchorClass = 'border-2 border-amber-200 bg-white/80 text-cyan
 const reviewPresetActiveClass = 'border-amber-300 bg-amber-100/90 text-amber-950 hover:bg-amber-100';
 
 function applyPresetChanges(page: PresetPageContext, presets: PresetState, activeReviewPreset: string, mutate: () => void) {
-	page.filter.clear();
+	const context = (page as any).__runtime ?? page;
+	context.filter.clear();
 	mutate();
 	presets.activeReviewPreset = activeReviewPreset;
-	page.table.applyFilters();
+	context.table.applyFilters();
 }
 
 export function createPresetConcern(page: PresetPageContext): PresetState {
@@ -79,20 +87,30 @@ export function createPresetConcern(page: PresetPageContext): PresetState {
 		reviewPresets: buildReviewPresetList(),
 		activeReviewPreset: '',
 		clearActiveReviewPreset() { presets.activeReviewPreset = ''; },
-		syncActiveReviewPreset() { presets.activeReviewPreset = findReviewPreset(presets.reviewPresets, page.filter)?.label ?? ''; },
+		syncActiveReviewPreset() {
+			const context = (page as any).__runtime ?? page;
+			presets.activeReviewPreset = findReviewPreset(presets.reviewPresets, context.filter)?.label ?? '';
+		},
+		syncDatePreset() {
+			const context = (page as any).__runtime ?? page;
+			syncDatePreset(context.filter);
+		},
 		reviewPresetClass(reviewPreset: ReviewPreset) { return resolveReviewPresetClass(reviewPreset, presets.activeReviewPreset); },
-		applyCreatedPreset(preset: DatePreset) {
+		applyCreatedPreset(preset: DatePresetName) {
 			applyPresetChanges(page, presets, '', () => {
+				const context = (page as any).__runtime ?? page;
+				context.filter.datePreset = preset;
 				const range = buildDatePresetRange(preset);
-				page.filter.createdAfter = range.createdAfter;
-				page.filter.createdBefore = range.createdBefore;
+				context.filter.createdAfter = range.createdAfter;
+				context.filter.createdBefore = range.createdBefore;
 			});
 		},
 		applyReviewPreset(reviewPreset: ReviewPreset) {
 			applyPresetChanges(page, presets, reviewPreset.label, () => {
-				page.filter.createdAfter = reviewPreset.createdAfter;
-				page.filter.createdBefore = reviewPreset.createdBefore;
-				page.filter.reviewed = 'false';
+				const context = (page as any).__runtime ?? page;
+				context.filter.createdAfter = reviewPreset.createdAfter;
+				context.filter.createdBefore = reviewPreset.createdBefore;
+				context.filter.reviewed = 'false';
 			});
 		},
 	};

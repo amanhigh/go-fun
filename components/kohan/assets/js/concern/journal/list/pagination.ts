@@ -20,12 +20,14 @@ export function createPaginationState(page: JournalPageData, pageSize: number): 
 		async previousPage() {
 			if (!this.hasPrev()) return;
 			this.prevPage();
-			await page.table.loadJournals();
+			const context = (page as any).__runtime ?? page;
+			await context.table.loadJournals();
 		},
 		async nextJournalPage() {
 			if (!this.hasNext()) return;
 			this.nextPage();
-			await page.table.loadJournals();
+			const context = (page as any).__runtime ?? page;
+			await context.table.loadJournals();
 		},
 		summary() { return `Page ${this.getPage()} of ${this.getTotalPages()}`; },
 	};

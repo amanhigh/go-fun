@@ -1,5 +1,4 @@
-import { syncStateToUrl, syncUrlToState } from '../../../shared/url_state';
-import type { JournalFilterKey, JournalFilters } from '../../../types/journal_api';
+import type { JournalFilterKey } from '../../../types/journal_api';
 import type { JournalFilterState, JournalFilterUrlState } from '../../../types/journal_list_state';
 
 type FilterConfigEntry = {
@@ -38,23 +37,51 @@ const journalReverseMap: Record<string, JournalFilterKey> = journalFilterFields.
 	};
 }, {} as Record<string, JournalFilterKey>);
 
-export const journalFilterUrlMapping = {
-	fields: journalFilterFields,
-	queryMap: journalQueryMap,
-	reverseMap: journalReverseMap,
-} as const;
+function urlToFilterState(filter: JournalFilterState) {
+	const params = new URLSearchParams(window.location.search);
 
-function asJournalFilters(filter: JournalFilterState): JournalFilters {
-	return filter as unknown as JournalFilters;
+	// Read date preset from URL (relative values, not absolute dates)
+	const raw = params.get('date');
+	filter.datePreset = (raw === 'today' || raw === 'last7' || raw === 'last30') ? raw : '';
+
+	// Read all other filter fields from URL query params
+	params.forEach((value, key) => {
+		const stateKey = journalReverseMap[key];
+		if (stateKey) {
+			filter[stateKey] = value;
+		}
+	});
+}
+
+function filterStateToUrl(filter: JournalFilterState) {
+	const params = new URLSearchParams();
+
+	// Write date preset if active (instead of absolute createdAfter/createdBefore)
+	if (filter.datePreset) {
+		params.set('date', filter.datePreset);
+	}
+
+	// Write all filter fields, skipping date range when a preset is active
+	const skipDates = !!filter.datePreset;
+	journalFilterFields.forEach((key) => {
+		if (skipDates && (key === 'createdAfter' || key === 'createdBefore')) return;
+		const value = filter[key];
+		if (value !== '') {
+			params.set(journalQueryMap[key] ?? key, value);
+		}
+	});
+
+	const nextUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+	window.history.replaceState({}, '', nextUrl);
 }
 
 export function createJournalFilterUrlConcern(filter: JournalFilterState): JournalFilterUrlState {
 	return {
 		urlToFilter() {
-			syncUrlToState(asJournalFilters(filter), journalFilterUrlMapping);
+			urlToFilterState(filter);
 		},
 		filterToUrl() {
-			syncStateToUrl(asJournalFilters(filter), journalFilterUrlMapping);
+			filterStateToUrl(filter);
 		},
 	};
 }

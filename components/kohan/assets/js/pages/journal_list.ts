@@ -21,7 +21,7 @@ function createJournalPageData() {
 	page.table = createJournalTableConcern(page, client);
 	page.pagination = createPaginationState(page, journalPageSize);
 	page.init = function init(this: any) {
-		console.error('journalPage:init', window.location.search);
+		this.__runtime = this;
 		this.filterUrl.urlToFilter();
 		this.presets.syncDatePreset();
 		this.presets.syncActiveReviewPreset();

@@ -1,5 +1,5 @@
 import type { JournalFilterKey } from '../../../types/journal_api';
-import type { JournalFilterState, JournalPageData } from '../../../types/journal_list_state';
+import type { DatePresetName, JournalFilterState, JournalPageData } from '../../../types/journal_list_state';
 
 type TypeToggle = {
 	label: string;
@@ -29,14 +29,17 @@ const journalFilterDefaults: Record<JournalFilterKey, string> = {
 
 function applyMutationAndRefresh(page: JournalPageData, mutate: () => void) {
 	mutate();
-	page.table.applyManualFilters();
+	const context = (page as any).__runtime ?? page;
+	context.table.applyManualFilters();
 }
 
 export function createJournalFilter(page: JournalPageData): JournalFilterState {
 	return {
 		...journalFilterDefaults,
+		datePreset: '' as DatePresetName,
 		clear(this: JournalFilterState) {
 			Object.assign(this, journalFilterDefaults);
+			this.datePreset = '';
 		},
 		hasActiveState(this: JournalFilterState) {
 			return Object.entries(journalFilterDefaults).some(([field, defaultValue]) => this[field as JournalFilterKey] !== defaultValue);
@@ -49,11 +52,6 @@ export function createJournalFilter(page: JournalPageData): JournalFilterState {
 				this.type = this.typeToggle().nextType;
 			});
 		},
-		onCreatedDateChange(this: JournalFilterState) {
-			applyMutationAndRefresh(page, () => {
-				this.createdBefore = this.createdAfter;
-			});
-		},
 		toggleSort(this: JournalFilterState, field: SortField) {
 			applyMutationAndRefresh(page, () => {
 				this.sortOrder = this.sortBy !== field ? 'asc' : this.sortOrder === 'asc' ? 'desc' : 'asc';
@@ -61,7 +59,8 @@ export function createJournalFilter(page: JournalPageData): JournalFilterState {
 			});
 		},
 		applyManualFilters() {
-			page.table.applyManualFilters();
+			const context = (page as any).__runtime ?? page;
+			context.table.applyManualFilters();
 		},
 		clearFilters(this: JournalFilterState) {
 			applyMutationAndRefresh(page, () => {

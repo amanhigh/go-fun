@@ -8,24 +8,28 @@ export function createJournalTableConcern(page: JournalPageData, client: Journal
 		loading: false,
 		errorMessage: '',
 		applyFilters(this: JournalTableState) {
-			page.pagination.resetPage();
-			page.filterUrl.filterToUrl();
+			const context = (page as any).__runtime ?? page;
+			context.pagination.resetPage();
+			context.filterUrl.filterToUrl();
 			void this.loadJournals();
 		},
 		applyManualFilters(this: JournalTableState) {
-			page.presets.clearActiveReviewPreset();
+			const context = (page as any).__runtime ?? page;
+			context.presets.clearActiveReviewPreset();
+			context.filter.datePreset = '';
 			this.applyFilters();
 		},
 		async loadJournals(this: JournalTableState) {
+			const context = (page as any).__runtime ?? page;
 			this.loading = true;
 			this.errorMessage = '';
 
 			try {
-				const response = await client.list(page.pagination.getOffset(), page.pagination.getPageSize(), page.filter);
+				const response = await client.list(context.pagination.getOffset(), context.pagination.getPageSize(), context.filter);
 				const data = response.data ?? {};
 				this.journals = data.journals ?? [];
-				page.pagination.setTotalItems(data.metadata?.total ?? this.journals.length);
-				page.pagination.setPageFromOffset(data.metadata?.offset ?? 0);
+				context.pagination.setTotalItems(data.metadata?.total ?? this.journals.length);
+				context.pagination.setPageFromOffset(data.metadata?.offset ?? 0);
 			} finally {
 				this.loading = false;
 			}
