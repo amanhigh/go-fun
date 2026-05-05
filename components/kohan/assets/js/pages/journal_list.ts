@@ -12,7 +12,8 @@ const journalPageSize = 10;
 
 function createJournalPageData() {
 	const client = NewJournalClient();
-	const page = {} as JournalPageData;
+	let page = {} as JournalPageData;
+	const getPage = () => page;
 
 	page.presentation = createJournalPresentation();
 	// Order: concerns created before their dependents at construction time,
@@ -20,9 +21,10 @@ function createJournalPageData() {
 	page.table = createJournalTableConcern(page, client);
 	page.pagination = createPaginationState(page, journalPageSize);
 	page.presets = createPresetConcern(page);
-	page.filter = createJournalFilter(page);
+	page.filter = createJournalFilter(getPage);
 	page.filterUrl = createJournalFilterUrlConcern(page.filter);
 	page.init = function init(this: any) {
+		page = this;
 		this.__runtime = this;
 		this.filterUrl.urlToFilter();
 		this.presets.syncDatePreset();

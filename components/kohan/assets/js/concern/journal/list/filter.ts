@@ -1,6 +1,8 @@
 import type { JournalFilterKey } from '../../../types/journal_api';
 import type { DatePresetName, JournalFilterState, JournalPageData } from '../../../types/journal_list_state';
 
+type GetJournalPage = () => JournalPageData;
+
 type TypeToggle = {
 	label: string;
 	className: string;
@@ -27,7 +29,7 @@ const journalFilterDefaults: Record<JournalFilterKey, string> = {
 	sortOrder: 'desc',
 };
 
-export function createJournalFilter(page: JournalPageData): JournalFilterState {
+export function createJournalFilter(getPage: GetJournalPage): JournalFilterState {
 	return {
 		...journalFilterDefaults,
 		datePreset: '' as DatePresetName,
@@ -43,19 +45,19 @@ export function createJournalFilter(page: JournalPageData): JournalFilterState {
 		},
 		toggleType(this: JournalFilterState) {
 			this.type = this.typeToggle().nextType;
-			page.table.applyManualFilters();
+			getPage().table.applyManualFilters();
 		},
 		toggleSort(this: JournalFilterState, field: SortField) {
 			this.sortOrder = this.sortBy !== field ? 'asc' : this.sortOrder === 'asc' ? 'desc' : 'asc';
 			this.sortBy = field;
-			page.table.applyManualFilters();
+			getPage().table.applyManualFilters();
 		},
 		applyManualFilters() {
-			page.table.applyManualFilters();
+			getPage().table.applyManualFilters();
 		},
 		clearFilters(this: JournalFilterState) {
 			this.clear();
-			page.table.applyManualFilters();
+			getPage().table.applyManualFilters();
 		},
 	} as JournalFilterState;
 }
