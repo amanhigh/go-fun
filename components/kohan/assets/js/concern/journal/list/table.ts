@@ -1,22 +1,22 @@
-import type { JournalPageProvider, JournalTableState } from '../../../types/journal_list_state';
+import type { JournalPageProvider, JournalTableConcern } from '../../../types/journal_list_concern';
 
-export function createJournalTableConcern(pg: JournalPageProvider): JournalTableState {
-	const table: JournalTableState = {
+export function newTableConcern(pg: JournalPageProvider): JournalTableConcern {
+	const table: JournalTableConcern = {
 		journals: [],
 		requestCounter: 0,
 		loading: false,
 		errorMessage: '',
-		applyFilters(this: JournalTableState) {
+		applyFilters(this: JournalTableConcern) {
 			pg().pagination.resetPage();
 			pg().filterUrl.filterToUrl();
 			void this.loadJournals();
 		},
-		applyManualFilters(this: JournalTableState) {
+		applyManualFilters(this: JournalTableConcern) {
 			pg().presets.clearActiveReviewPreset();
 			pg().filter.datePreset = '';
 			this.applyFilters();
 		},
-		async loadJournals(this: JournalTableState) {
+		async loadJournals(this: JournalTableConcern) {
 			this.loading = true;
 			this.errorMessage = '';
 
@@ -30,8 +30,8 @@ export function createJournalTableConcern(pg: JournalPageProvider): JournalTable
 				this.loading = false;
 			}
 		},
-		hasError(this: JournalTableState) { return this.errorMessage !== ''; },
-		isEmpty(this: JournalTableState) { return this.journals.length === 0; },
+		hasError(this: JournalTableConcern) { return this.errorMessage !== ''; },
+		isEmpty(this: JournalTableConcern) { return this.journals.length === 0; },
 	};
 
 	return table;

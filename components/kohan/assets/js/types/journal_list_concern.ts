@@ -7,15 +7,15 @@ export type JournalPageProvider = () => JournalPageData;
 export type JournalPageData = {
 	client: JournalClient;
 	presentation: JournalPresentationState;
-	filter: JournalFilterState;
-	filterUrl: JournalFilterUrlState;
-	pagination: PaginationState;
-	presets: PresetState;
-	table: JournalTableState;
+	filter: JournalFilterConcern;
+	filterUrl: JournalFilterUrlConcern;
+	pagination: PaginationConcern;
+	presets: PresetConcern;
+	table: JournalTableConcern;
 	init(): void;
 };
 
-export type PaginationState = {
+export type PaginationConcern = {
 	page: number;
 	pageSize: number;
 	totalItems: number;
@@ -38,7 +38,7 @@ export type PaginationState = {
 
 export type DatePresetName = '' | 'today' | 'last7' | 'last30';
 
-export type JournalFilterState = Record<JournalFilterKey, string> & {
+export type JournalFilterConcern = Record<JournalFilterKey, string> & {
 	datePreset: DatePresetName;
 	clear(): void;
 	hasActiveState(): boolean;
@@ -49,7 +49,7 @@ export type JournalFilterState = Record<JournalFilterKey, string> & {
 	clearFilters(): void;
 };
 
-export type JournalFilterUrlState = {
+export type JournalFilterUrlConcern = {
 	urlToFilter(): void;
 	filterToUrl(): void;
 };
@@ -61,7 +61,7 @@ export type ReviewPreset = {
 	createdBefore: string;
 };
 
-export type PresetState = {
+export type PresetConcern = {
 	reviewPresets: ReviewPreset[];
 	activeReviewPreset: string;
 	clearActiveReviewPreset(): void;
@@ -72,7 +72,7 @@ export type PresetState = {
 	applyReviewPreset(reviewPreset: ReviewPreset): void;
 };
 
-export type JournalTableState = {
+export type JournalTableConcern = {
 	journals: Journal[];
 	requestCounter: number;
 	loading: boolean;

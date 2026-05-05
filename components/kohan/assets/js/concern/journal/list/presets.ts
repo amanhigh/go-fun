@@ -1,4 +1,4 @@
-import type { DatePresetName, JournalPageData, JournalPageProvider, PresetState, ReviewPreset } from '../../../types/journal_list_state';
+import type { DatePresetName, JournalPageData, JournalPageProvider, PresetConcern, ReviewPreset } from '../../../types/journal_list_concern';
 import { formatDateInputValue } from '../../../shared/date';
 
 const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -72,15 +72,15 @@ const reviewPresetBaseClass = 'border-cyan-200/70 bg-white/80 text-cyan-800 hove
 const reviewPresetAnchorClass = 'border-2 border-amber-200 bg-white/80 text-cyan-800';
 const reviewPresetActiveClass = 'border-amber-300 bg-amber-100/90 text-amber-950 hover:bg-amber-100';
 
-function applyPresetChanges(pg: JournalPageProvider, presets: PresetState, activeReviewPreset: string, mutate: () => void) {
+function applyPresetChanges(pg: JournalPageProvider, presets: PresetConcern, activeReviewPreset: string, mutate: () => void) {
 	pg().filter.clear();
 	mutate();
 	presets.activeReviewPreset = activeReviewPreset;
 	pg().table.applyFilters();
 }
 
-export function createPresetConcern(pg: JournalPageProvider): PresetState {
-	const presets: PresetState = {
+export function newPresetConcern(pg: JournalPageProvider): PresetConcern {
+	const presets: PresetConcern = {
 		reviewPresets: buildReviewPresetList(),
 		activeReviewPreset: '',
 		clearActiveReviewPreset() { presets.activeReviewPreset = ''; },

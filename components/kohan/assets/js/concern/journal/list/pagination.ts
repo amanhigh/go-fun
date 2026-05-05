@@ -1,8 +1,8 @@
-import type { JournalPageProvider, PaginationState } from '../../../types/journal_list_state';
+import type { JournalPageProvider, PaginationConcern } from '../../../types/journal_list_concern';
 
 const defaultPageSize = 10;
 
-export function createPaginationConcern(pg: JournalPageProvider): PaginationState {
+export function newPaginationConcern(pg: JournalPageProvider): PaginationConcern {
 	return {
 		page: 1,
 		pageSize: defaultPageSize,

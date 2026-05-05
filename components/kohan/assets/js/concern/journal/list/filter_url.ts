@@ -1,5 +1,5 @@
 import type { JournalFilterKey } from '../../../types/journal_api';
-import type { JournalFilterState, JournalFilterUrlState, JournalPageData } from '../../../types/journal_list_state';
+import type { JournalFilterConcern, JournalFilterUrlConcern, JournalPageData } from '../../../types/journal_list_concern';
 
 type FilterConfigEntry = {
 	queryKey?: string;
@@ -37,7 +37,7 @@ const journalReverseMap: Record<string, JournalFilterKey> = journalFilterFields.
 	};
 }, {} as Record<string, JournalFilterKey>);
 
-function urlToFilterState(filter: JournalFilterState) {
+function urlToFilterState(filter: JournalFilterConcern) {
 	const params = new URLSearchParams(window.location.search);
 
 	// Read date preset from URL (relative values, not absolute dates)
@@ -53,7 +53,7 @@ function urlToFilterState(filter: JournalFilterState) {
 	});
 }
 
-function filterStateToUrl(filter: JournalFilterState) {
+function filterStateToUrl(filter: JournalFilterConcern) {
 	const params = new URLSearchParams();
 
 	// Write date preset if active (instead of absolute createdAfter/createdBefore)
