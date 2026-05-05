@@ -1,11 +1,9 @@
-import type { DatePresetName, JournalPageData, PresetState, ReviewPreset } from '../../../types/journal_list_state';
+import type { DatePresetName, JournalPageData, JournalPageProvider, PresetState, ReviewPreset } from '../../../types/journal_list_state';
 import { formatDateInputValue } from '../../../shared/date';
 
 const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const reviewPresetOffsets = [-2, -1, 0, 1, 2] as const;
 const reviewPresetAnchorMonthOffset = 9;
-
-type PresetPageContext = Pick<JournalPageData, 'filter' | 'table'>;
 
 type ReviewPresetFilter = Pick<JournalPageData['filter'], 'createdAfter' | 'createdBefore' | 'reviewed'>;
 
@@ -74,43 +72,38 @@ const reviewPresetBaseClass = 'border-cyan-200/70 bg-white/80 text-cyan-800 hove
 const reviewPresetAnchorClass = 'border-2 border-amber-200 bg-white/80 text-cyan-800';
 const reviewPresetActiveClass = 'border-amber-300 bg-amber-100/90 text-amber-950 hover:bg-amber-100';
 
-function applyPresetChanges(page: PresetPageContext, presets: PresetState, activeReviewPreset: string, mutate: () => void) {
-	const context = (page as any).__runtime ?? page;
-	context.filter.clear();
+function applyPresetChanges(pg: JournalPageProvider, presets: PresetState, activeReviewPreset: string, mutate: () => void) {
+	pg().filter.clear();
 	mutate();
 	presets.activeReviewPreset = activeReviewPreset;
-	context.table.applyFilters();
+	pg().table.applyFilters();
 }
 
-export function createPresetConcern(page: PresetPageContext): PresetState {
+export function createPresetConcern(pg: JournalPageProvider): PresetState {
 	const presets: PresetState = {
 		reviewPresets: buildReviewPresetList(),
 		activeReviewPreset: '',
 		clearActiveReviewPreset() { presets.activeReviewPreset = ''; },
 		syncActiveReviewPreset() {
-			const context = (page as any).__runtime ?? page;
-			presets.activeReviewPreset = findReviewPreset(presets.reviewPresets, context.filter)?.label ?? '';
+			presets.activeReviewPreset = findReviewPreset(presets.reviewPresets, pg().filter)?.label ?? '';
 		},
 		syncDatePreset() {
-			const context = (page as any).__runtime ?? page;
-			syncDatePreset(context.filter);
+			syncDatePreset(pg().filter);
 		},
 		reviewPresetClass(reviewPreset: ReviewPreset) { return resolveReviewPresetClass(reviewPreset, presets.activeReviewPreset); },
 		applyCreatedPreset(preset: DatePresetName) {
-			applyPresetChanges(page, presets, '', () => {
-				const context = (page as any).__runtime ?? page;
-				context.filter.datePreset = preset;
+			applyPresetChanges(pg, presets, '', () => {
+				pg().filter.datePreset = preset;
 				const range = buildDatePresetRange(preset);
-				context.filter.createdAfter = range.createdAfter;
-				context.filter.createdBefore = range.createdBefore;
+				pg().filter.createdAfter = range.createdAfter;
+				pg().filter.createdBefore = range.createdBefore;
 			});
 		},
 		applyReviewPreset(reviewPreset: ReviewPreset) {
-			applyPresetChanges(page, presets, reviewPreset.label, () => {
-				const context = (page as any).__runtime ?? page;
-				context.filter.createdAfter = reviewPreset.createdAfter;
-				context.filter.createdBefore = reviewPreset.createdBefore;
-				context.filter.reviewed = 'false';
+			applyPresetChanges(pg, presets, reviewPreset.label, () => {
+				pg().filter.createdAfter = reviewPreset.createdAfter;
+				pg().filter.createdBefore = reviewPreset.createdBefore;
+				pg().filter.reviewed = 'false';
 			});
 		},
 	};

@@ -1,35 +1,31 @@
-import type { JournalClient } from '../../../client/journal';
-import type { JournalPageData, JournalTableState } from '../../../types/journal_list_state';
+import type { JournalPageProvider, JournalTableState } from '../../../types/journal_list_state';
 
-export function createJournalTableConcern(page: JournalPageData, client: JournalClient): JournalTableState {
+export function createJournalTableConcern(pg: JournalPageProvider): JournalTableState {
 	const table: JournalTableState = {
 		journals: [],
 		requestCounter: 0,
 		loading: false,
 		errorMessage: '',
 		applyFilters(this: JournalTableState) {
-			const context = (page as any).__runtime ?? page;
-			context.pagination.resetPage();
-			context.filterUrl.filterToUrl();
+			pg().pagination.resetPage();
+			pg().filterUrl.filterToUrl();
 			void this.loadJournals();
 		},
 		applyManualFilters(this: JournalTableState) {
-			const context = (page as any).__runtime ?? page;
-			context.presets.clearActiveReviewPreset();
-			context.filter.datePreset = '';
+			pg().presets.clearActiveReviewPreset();
+			pg().filter.datePreset = '';
 			this.applyFilters();
 		},
 		async loadJournals(this: JournalTableState) {
-			const context = (page as any).__runtime ?? page;
 			this.loading = true;
 			this.errorMessage = '';
 
 			try {
-				const response = await client.list(context.pagination.getOffset(), context.pagination.getPageSize(), context.filter);
+				const response = await pg().client.list(pg().pagination.getOffset(), pg().pagination.getPageSize(), pg().filter);
 				const data = response.data ?? {};
 				this.journals = data.journals ?? [];
-				context.pagination.setTotalItems(data.metadata?.total ?? this.journals.length);
-				context.pagination.setPageFromOffset(data.metadata?.offset ?? 0);
+				pg().pagination.setTotalItems(data.metadata?.total ?? this.journals.length);
+				pg().pagination.setPageFromOffset(data.metadata?.offset ?? 0);
 			} finally {
 				this.loading = false;
 			}

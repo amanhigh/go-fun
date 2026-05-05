@@ -4,28 +4,23 @@ import { createJournalPresentation } from '../concern/journal/common/presentatio
 import { createJournalFilterUrlConcern } from '../concern/journal/list/filter_url';
 import { createJournalFilter } from '../concern/journal/list/filter';
 import { createPresetConcern } from '../concern/journal/list/presets';
-import { createPaginationState } from '../concern/journal/list/pagination';
+import { createPaginationConcern } from '../concern/journal/list/pagination';
 import { createJournalTableConcern } from '../concern/journal/list/table';
 import '../types/platform';
 
-const journalPageSize = 10;
-
 function createJournalPageData() {
-	const client = NewJournalClient();
 	let page = {} as JournalPageData;
-	const getPage = () => page;
+	const pg = () => page;
 
+	page.client = NewJournalClient();
 	page.presentation = createJournalPresentation();
-	// Order: concerns created before their dependents at construction time,
-	// but cross-concern calls use closures resolved at call time.
-	page.table = createJournalTableConcern(page, client);
-	page.pagination = createPaginationState(page, journalPageSize);
-	page.presets = createPresetConcern(page);
-	page.filter = createJournalFilter(getPage);
-	page.filterUrl = createJournalFilterUrlConcern(page.filter);
+	page.table = createJournalTableConcern(pg);
+	page.pagination = createPaginationConcern(pg);
+	page.presets = createPresetConcern(pg);
+	page.filter = createJournalFilter(pg);
+	page.filterUrl = createJournalFilterUrlConcern(page);
 	page.init = function init(this: any) {
 		page = this;
-		this.__runtime = this;
 		this.filterUrl.urlToFilter();
 		this.presets.syncDatePreset();
 		this.presets.syncActiveReviewPreset();

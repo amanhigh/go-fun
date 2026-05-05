@@ -1,5 +1,5 @@
 import type { JournalFilterKey } from '../../../types/journal_api';
-import type { JournalFilterState, JournalFilterUrlState } from '../../../types/journal_list_state';
+import type { JournalFilterState, JournalFilterUrlState, JournalPageData } from '../../../types/journal_list_state';
 
 type FilterConfigEntry = {
 	queryKey?: string;
@@ -75,7 +75,8 @@ function filterStateToUrl(filter: JournalFilterState) {
 	window.history.replaceState({}, '', nextUrl);
 }
 
-export function createJournalFilterUrlConcern(filter: JournalFilterState): JournalFilterUrlState {
+export function createJournalFilterUrlConcern(page: JournalPageData): JournalFilterUrlState {
+	const filter = page.filter;
 	return {
 		urlToFilter() {
 			urlToFilterState(filter);

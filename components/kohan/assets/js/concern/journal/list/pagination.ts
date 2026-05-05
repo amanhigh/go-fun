@@ -1,9 +1,11 @@
-import type { JournalPageData, PaginationState } from '../../../types/journal_list_state';
+import type { JournalPageProvider, PaginationState } from '../../../types/journal_list_state';
 
-export function createPaginationState(page: JournalPageData, pageSize: number): PaginationState {
+const defaultPageSize = 10;
+
+export function createPaginationConcern(pg: JournalPageProvider): PaginationState {
 	return {
 		page: 1,
-		pageSize,
+		pageSize: defaultPageSize,
 		totalItems: 0,
 		getPage() { return this.page; },
 		getPageSize() { return this.pageSize; },
@@ -20,14 +22,12 @@ export function createPaginationState(page: JournalPageData, pageSize: number): 
 		async previousPage() {
 			if (!this.hasPrev()) return;
 			this.prevPage();
-			const context = (page as any).__runtime ?? page;
-			await context.table.loadJournals();
+			await pg().table.loadJournals();
 		},
 		async nextJournalPage() {
 			if (!this.hasNext()) return;
 			this.nextPage();
-			const context = (page as any).__runtime ?? page;
-			await context.table.loadJournals();
+			await pg().table.loadJournals();
 		},
 		summary() { return `Page ${this.getPage()} of ${this.getTotalPages()}`; },
 	};
