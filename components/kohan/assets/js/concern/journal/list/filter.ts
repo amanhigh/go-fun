@@ -27,12 +27,6 @@ const journalFilterDefaults: Record<JournalFilterKey, string> = {
 	sortOrder: 'desc',
 };
 
-function applyMutationAndRefresh(page: JournalPageData, mutate: () => void) {
-	mutate();
-	const context = (page as any).__runtime ?? page;
-	context.table.applyManualFilters();
-}
-
 export function createJournalFilter(page: JournalPageData): JournalFilterState {
 	return {
 		...journalFilterDefaults,
@@ -48,24 +42,20 @@ export function createJournalFilter(page: JournalPageData): JournalFilterState {
 			return resolveTypeToggle(this.type);
 		},
 		toggleType(this: JournalFilterState) {
-			applyMutationAndRefresh(page, () => {
-				this.type = this.typeToggle().nextType;
-			});
+			this.type = this.typeToggle().nextType;
+			page.table.applyManualFilters();
 		},
 		toggleSort(this: JournalFilterState, field: SortField) {
-			applyMutationAndRefresh(page, () => {
-				this.sortOrder = this.sortBy !== field ? 'asc' : this.sortOrder === 'asc' ? 'desc' : 'asc';
-				this.sortBy = field;
-			});
+			this.sortOrder = this.sortBy !== field ? 'asc' : this.sortOrder === 'asc' ? 'desc' : 'asc';
+			this.sortBy = field;
+			page.table.applyManualFilters();
 		},
 		applyManualFilters() {
-			const context = (page as any).__runtime ?? page;
-			context.table.applyManualFilters();
+			page.table.applyManualFilters();
 		},
 		clearFilters(this: JournalFilterState) {
-			applyMutationAndRefresh(page, () => {
-				this.clear();
-			});
+			this.clear();
+			page.table.applyManualFilters();
 		},
 	} as JournalFilterState;
 }

@@ -15,11 +15,13 @@ function createJournalPageData() {
 	const page = {} as JournalPageData;
 
 	page.presentation = createJournalPresentation();
-	page.filter = createJournalFilter(page);
-	page.filterUrl = createJournalFilterUrlConcern(page.filter);
-	page.presets = createPresetConcern(page);
+	// Order: concerns created before their dependents at construction time,
+	// but cross-concern calls use closures resolved at call time.
 	page.table = createJournalTableConcern(page, client);
 	page.pagination = createPaginationState(page, journalPageSize);
+	page.presets = createPresetConcern(page);
+	page.filter = createJournalFilter(page);
+	page.filterUrl = createJournalFilterUrlConcern(page.filter);
 	page.init = function init(this: any) {
 		this.__runtime = this;
 		this.filterUrl.urlToFilter();
