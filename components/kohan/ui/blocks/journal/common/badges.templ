@@ -11,7 +11,7 @@ templ TypeBadge(props TypeBadgeProps) {
 	@badge.Badge(badge.Props{
 		Variant:    badge.VariantSecondary,
 		Class:      "border " + props.Class,
-		Attributes: templ.Attributes{"x-bind:class": "presentation.typeBadgeClass(" + props.TypeExpr + ")", "x-text": "presentation.typeDisplay(" + props.TypeExpr + ")"},
+		Attributes: templ.Attributes{"x-bind:class": "presentation.type(" + props.TypeExpr + ").badgeClass", "x-text": "presentation.type(" + props.TypeExpr + ").text"},
 	}) {}
 }
 
@@ -24,6 +24,6 @@ templ StatusBadge(props StatusBadgeProps) {
 	@badge.Badge(badge.Props{
 		Variant:    badge.VariantOutline,
 		Class:      "border " + props.Class,
-		Attributes: templ.Attributes{"x-bind:class": "presentation.statusBadgeClass(" + props.StatusExpr + ")", "x-text": "presentation.statusDisplay(" + props.StatusExpr + ")"},
+		Attributes: templ.Attributes{"x-bind:class": "presentation.status(" + props.StatusExpr + ").badgeClass", "x-text": "presentation.status(" + props.StatusExpr + ").text"},
 	}) {}
 }

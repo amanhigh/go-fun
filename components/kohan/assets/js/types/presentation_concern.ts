@@ -16,6 +16,9 @@ export type PresentationConcern = {
 	reasonTag(tag: JournalTag): DisplaySpec;
 	directionalTag(tag: JournalTag): DisplaySpec;
 
+	reviewedAt(value: string | null | undefined): DisplaySpec;
+	pendingReview(): DisplaySpec;
+
 	formatTimestamp(value: string | null | undefined): string;
 	formatReviewQueueDate(value: string | null | undefined): string;
 };

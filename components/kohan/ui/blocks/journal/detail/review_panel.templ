@@ -29,7 +29,7 @@ templ journalDetailQueueCard() {
 			<p class="py-2 text-xs text-muted-foreground" x-show="!sidebar.reviewQueue.loading && !sidebar.reviewQueue.error && sidebar.reviewQueue.items.length === 0">All caught up — no pending reviews.</p>
 			<div class="space-y-1" x-show="!sidebar.reviewQueue.loading && !sidebar.reviewQueue.error && sidebar.reviewQueue.items.length > 0">
 				<template x-for="item in sidebar.reviewQueue.items" x-bind:key="item.id">
-					<a class="flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition" x-on:click="sidebar.ui.enterReviewMode()" x-bind:class="presentation.reviewQueueItemClass(item.type)" x-bind:href="'/journal/' + item.id">
+					<a class="flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition" x-on:click="sidebar.ui.enterReviewMode()" x-bind:class="presentation.type(item.type).badgeClass" x-bind:href="'/journal/' + item.id">
 						<span class="font-semibold" x-text="item.ticker"></span>
 						<span class="text-xs font-medium" x-text="presentation.formatReviewQueueDate(item.created_at)"></span>
 					</a>

@@ -153,7 +153,7 @@ func JournalDetailCreatedAt() templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = components.InfoRow(components.InfoRowProps{Label: "🕒", ValueExpr: "presentation.formatTimestamp(current.journal.created_at)", Class: "text-xs"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.InfoRow(components.InfoRowProps{IconName: "clock", ValueExpr: "presentation.formatTimestamp(current.journal.created_at)", Class: "text-xs"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -182,7 +182,7 @@ func JournalDetailReviewDate() templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{ShowExpr: "current.journal.reviewed_at", TextExpr: "'✅ ' + presentation.formatTimestamp(current.journal.reviewed_at)", Tone: components.ToneGreen, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{ShowExpr: "current.journal.reviewed_at", TextExpr: "presentation.reviewedAt(current.journal.reviewed_at).text", Tone: components.ToneGreen, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -211,7 +211,7 @@ func JournalDetailPendingDate() templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{ShowExpr: "!current.journal.reviewed_at", TextExpr: "'⏳ Pending Review'", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{ShowExpr: "!current.journal.reviewed_at", TextExpr: "presentation.pendingReview().text", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -285,7 +285,7 @@ func JournalDetailSequenceChip() templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{TextExpr: "presentation.sequenceLabel(current.journal.sequence)", Tone: components.ToneViolet, Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{TextExpr: "presentation.sequence(current.journal.sequence).text", Tone: components.ToneViolet, Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -318,7 +318,7 @@ func JournalDetailReasonTags() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Class: "rounded-full font-semibold", Attributes: templ.Attributes{"x-text": "presentation.reasonTagLabel(tag)"}}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Class: "rounded-full font-semibold", Attributes: templ.Attributes{"x-text": "presentation.reasonTag(tag).text"}}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -355,7 +355,7 @@ func JournalDetailDirectionalTags() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, Emoji: "🏷", Class: "rounded-full text-xs", Attributes: templ.Attributes{"x-text": "presentation.directionalTagLabel(tag)"}}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, Class: "rounded-full text-xs", Attributes: templ.Attributes{"x-text": "presentation.directionalTag(tag).text"}}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

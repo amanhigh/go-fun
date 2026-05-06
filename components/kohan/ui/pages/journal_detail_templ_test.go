@@ -66,7 +66,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-for="note in sidebar.notes.sorted()"`))
 			Expect(html).To(ContainSubstring(`x-on:click="sidebar.ui.enterReviewMode()"`))
 			Expect(html).To(ContainSubstring(`tag.type].filter(Boolean).join(`))
-			Expect(html).To(ContainSubstring(`x-bind:class="presentation.reviewQueueItemClass(item.type)"`))
+			Expect(html).To(ContainSubstring(`x-bind:class="presentation.type(item.type).badgeClass"`))
 			Expect(html).To(ContainSubstring(`x-text="presentation.formatReviewQueueDate(item.created_at)"`))
 			Expect(html).To(ContainSubstring(`aria-label="Delete Note"`))
 			Expect(html).To(ContainSubstring("h-4 w-4"))
@@ -82,15 +82,16 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-on:click="header.deleteJournal()"`))
 
 			// Primary info row: type + status + sequence
-			Expect(html).To(ContainSubstring(`presentation.sequenceLabel(current.journal.sequence)`))
-			Expect(html).To(ContainSubstring(`presentation.typeDisplay(current.journal.type)`))
-			Expect(html).To(ContainSubstring(`presentation.statusDisplay(current.journal.status)`))
+			Expect(html).To(ContainSubstring(`presentation.sequence(current.journal.sequence).text`))
+			Expect(html).To(ContainSubstring(`presentation.type(current.journal.type).text`))
+			Expect(html).To(ContainSubstring(`presentation.status(current.journal.status).text`))
 
 			// Right metadata: created + pending/review
-			Expect(html).To(ContainSubstring(`🕒`))
 			Expect(html).To(ContainSubstring(`x-text="presentation.formatTimestamp(current.journal.created_at)"`))
 			Expect(html).To(ContainSubstring(`x-show="!current.journal.reviewed_at"`))
 			Expect(html).To(ContainSubstring(`x-show="current.journal.reviewed_at"`))
+			Expect(html).To(ContainSubstring(`presentation.reviewedAt(current.journal.reviewed_at).text`))
+			Expect(html).To(ContainSubstring(`presentation.pendingReview().text`))
 
 			// Tags rendered directly without section label
 			Expect(html).ToNot(ContainSubstring(`Summary Tags`))
@@ -107,14 +108,14 @@ var _ = Describe("Journal Detail Page Tests", func() {
 		It("should render separate primary and secondary tag sections", func() {
 			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.tags.reason()"`))
 			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.tags.directional()"`))
-			Expect(html).To(ContainSubstring(`x-text="presentation.reasonTagLabel(tag)"`))
-			Expect(html).To(ContainSubstring(`x-text="presentation.directionalTagLabel(tag)"`))
+			Expect(html).To(ContainSubstring(`x-text="presentation.reasonTag(tag).text"`))
+			Expect(html).To(ContainSubstring(`x-text="presentation.directionalTag(tag).text"`))
 		})
 	})
 
 	Context("Image Preview Modal", func() {
 		It("should render a visible timeframe chip and counter", func() {
-			Expect(html).To(ContainSubstring(`x-bind:class="presentation.timeframeBadgeClass(preview.timeframe())"`))
+			Expect(html).To(ContainSubstring(`x-bind:class="presentation.timeframe(preview.timeframe()).badgeClass"`))
 			Expect(html).To(ContainSubstring(`x-text="preview.timeframe()"`))
 			Expect(html).To(ContainSubstring(`x-text="preview.counter()"`))
 		})
@@ -144,7 +145,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`border-border`))
 			Expect(html).To(ContainSubstring(`bg-muted`))
 			Expect(html).To(ContainSubstring(`text-left`))
-			Expect(html).To(ContainSubstring(`x-bind:class="presentation.timeframeBadgeClass(image.timeframe)"`))
+			Expect(html).To(ContainSubstring(`x-bind:class="presentation.timeframe(image.timeframe).badgeClass"`))
 			Expect(html).To(ContainSubstring(`x-text="image.timeframe"`))
 			Expect(html).To(ContainSubstring(`x-on:click="preview.open(index)"`))
 			Expect(html).To(ContainSubstring(`x-bind:title="images.tileTitle(image)"`))

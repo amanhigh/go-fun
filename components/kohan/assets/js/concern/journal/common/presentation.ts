@@ -44,11 +44,10 @@ const timeframeDisplayMap: Record<string, DisplaySpec> = {
 
 // --- Sequence ---
 
-const sequenceDisplayMap: Record<string, { icon: string; text: string }> = {
-	MWD: { icon: '🕐', text: '🕐 MWD' },
+const sequenceDisplayMap: Record<string, DisplaySpec> = {
+	MWD: { icon: '🕐', text: '🕐 MWD', badgeClass: '' },
+	YR: { icon: '📅', text: '📅 YR', badgeClass: '' },
 };
-
-const defaultSequenceText = '📅 ';
 
 // --- Date ---
 
@@ -84,9 +83,7 @@ export function NewPresentationConcern(): PresentationConcern {
 		sequence(value: string | null | undefined): DisplaySpec {
 			const key = normalizeTag(value ?? '');
 			if (!key) return { icon: '', text: '', badgeClass: '' };
-			const spec = sequenceDisplayMap[key];
-			if (spec) return { ...spec, badgeClass: '' };
-			return { icon: '📅', text: `${defaultSequenceText}${key}`, badgeClass: '' };
+			return sequenceDisplayMap[key] ?? { icon: '📅', text: `📅 ${key}`, badgeClass: '' };
 		},
 
 		// --- Reason Tag ---
@@ -100,7 +97,17 @@ export function NewPresentationConcern(): PresentationConcern {
 		// --- Directional Tag ---
 		directionalTag(tag: JournalTag): DisplaySpec {
 			const name = tag.tag ?? '';
-			return { icon: '', text: name, badgeClass: '' };
+			const icon = '🏷';
+			return { icon, text: `${icon} ${name}`, badgeClass: '' };
+		},
+
+		// --- Review State ---
+		reviewedAt(value: string | null | undefined): DisplaySpec {
+			const label = value ? formatTimestamp(value) : '—';
+			return { icon: '✅', text: `✅ ${label}`, badgeClass: '' };
+		},
+		pendingReview(): DisplaySpec {
+			return { icon: '⏳', text: '⏳ Pending Review', badgeClass: '' };
 		},
 
 		// --- Timestamp / Date ---

@@ -43,7 +43,7 @@ templ JournalDetailPage(journalID string) {
 					OverlayPrevExpr:    "preview.prev(true)",
 					OverlayNextExpr:    "preview.next(true)",
 					TimeframeExpr:      "preview.timeframe()",
-					TimeframeClassExpr: "presentation.timeframeBadgeClass(preview.timeframe())",
+					TimeframeClassExpr: "presentation.timeframe(preview.timeframe()).badgeClass",
 					CounterExpr:        "preview.counter()",
 					FilenameExpr:       "preview.current()?.file_name ?? ''",
 					SrcExpr:            "preview.src()",

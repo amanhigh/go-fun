@@ -40,7 +40,7 @@ func TypeBadge(props TypeBadgeProps) templ.Component {
 		templ_7745c5c3_Err = badge.Badge(badge.Props{
 			Variant:    badge.VariantSecondary,
 			Class:      "border " + props.Class,
-			Attributes: templ.Attributes{"x-bind:class": "presentation.typeBadgeClass(" + props.TypeExpr + ")", "x-text": "presentation.typeDisplay(" + props.TypeExpr + ")"},
+			Attributes: templ.Attributes{"x-bind:class": "presentation.type(" + props.TypeExpr + ").badgeClass", "x-text": "presentation.type(" + props.TypeExpr + ").text"},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -78,7 +78,7 @@ func StatusBadge(props StatusBadgeProps) templ.Component {
 		templ_7745c5c3_Err = badge.Badge(badge.Props{
 			Variant:    badge.VariantOutline,
 			Class:      "border " + props.Class,
-			Attributes: templ.Attributes{"x-bind:class": "presentation.statusBadgeClass(" + props.StatusExpr + ")", "x-text": "presentation.statusDisplay(" + props.StatusExpr + ")"},
+			Attributes: templ.Attributes{"x-bind:class": "presentation.status(" + props.StatusExpr + ").badgeClass", "x-text": "presentation.status(" + props.StatusExpr + ").text"},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
