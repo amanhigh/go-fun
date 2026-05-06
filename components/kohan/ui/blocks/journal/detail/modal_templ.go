@@ -259,4 +259,47 @@ func JournalImageModal(props JournalImageModalProps) templ.Component {
 	})
 }
 
+// JournalDetailPreviewModal is a zero-prop wrapper with fixed preview expressions.
+func JournalDetailPreviewModal() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var14 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var14 == nil {
+			templ_7745c5c3_Var14 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = JournalImageModal(JournalImageModalProps{
+			ShowExpr:           "preview.hasPreview()",
+			CloseExpr:          "preview.close()",
+			PrevExpr:           "preview.prev()",
+			NextExpr:           "preview.next()",
+			OverlayPrevExpr:    "preview.prev(true)",
+			OverlayNextExpr:    "preview.next(true)",
+			TimeframeExpr:      "preview.timeframe()",
+			TimeframeClassExpr: "presentation.timeframe(preview.timeframe()).badgeClass",
+			CounterExpr:        "preview.counter()",
+			FilenameExpr:       "preview.current()?.file_name ?? ''",
+			SrcExpr:            "preview.src()",
+			AltExpr:            "preview.label()",
+		}).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
 var _ = templruntime.GeneratedTemplate

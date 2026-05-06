@@ -61,3 +61,21 @@ templ JournalImageModal(props JournalImageModalProps) {
 		</div>
 	</div>
 }
+
+// JournalDetailPreviewModal is a zero-prop wrapper with fixed preview expressions.
+templ JournalDetailPreviewModal() {
+	@JournalImageModal(JournalImageModalProps{
+		ShowExpr:           "preview.hasPreview()",
+		CloseExpr:          "preview.close()",
+		PrevExpr:           "preview.prev()",
+		NextExpr:           "preview.next()",
+		OverlayPrevExpr:    "preview.prev(true)",
+		OverlayNextExpr:    "preview.next(true)",
+		TimeframeExpr:      "preview.timeframe()",
+		TimeframeClassExpr: "presentation.timeframe(preview.timeframe()).badgeClass",
+		CounterExpr:        "preview.counter()",
+		FilenameExpr:       "preview.current()?.file_name ?? ''",
+		SrcExpr:            "preview.src()",
+		AltExpr:            "preview.label()",
+	})
+}

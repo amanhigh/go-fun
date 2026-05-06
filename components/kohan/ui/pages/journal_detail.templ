@@ -10,46 +10,49 @@ import (
 // MAIN PAGE FLOW
 // ============================================================
 
+func journalDetailPageAttrs(journalID string) templ.Attributes {
+	return templ.Attributes{
+		"data-journal-detail-page":     true,
+		"data-journal-id":              journalID,
+		"data-action-open-storage-key": blockscommon.SidebarActionOpenStorageKey,
+		"data-review-mode-storage-key": blockscommon.SidebarReviewModeStorageKey,
+		"x-data":                       "journalDetailPage()",
+		"x-init":                       "init()",
+	}
+}
+
 // JournalDetailPage renders a dedicated page for viewing a single journal entry.
 templ JournalDetailPage(journalID string) {
 	@layout.Base("Shadow Gate") {
-			@layout.Page(layout.PageProps{
-					CurrentPage: "Journal",
-					Eyebrow:     "Kohan Portal",
-					Heading:     "Journal Detail",
-					Description: "View complete journal entry with all associated data.",
-					Tags:        []string{"Public", "Read-only", "Detail"},
-				}) {
-				<div data-journal-detail-page data-journal-id={ journalID } data-action-open-storage-key={ blockscommon.SidebarActionOpenStorageKey } data-review-mode-storage-key={ blockscommon.SidebarReviewModeStorageKey } x-data="journalDetailPage()" x-init="init()" class="space-y-6">
-					@detailblocks.JournalDetailStateSection()
-				<div class="space-y-6" x-show="current.journal && !current.loading && !current.hasError()">
-					<div class="grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)] xl:items-start">
-						<div class="space-y-6 min-w-0">
-							@detailblocks.JournalDetailHeader()
-							@detailblocks.JournalDetailImages()
-							@detailblocks.JournalDetailNotes()
-						</div>
-						<div class="space-y-4 xl:sticky xl:top-6">
-							@detailblocks.JournalDetailActionsPanel()
-							@detailblocks.JournalDetailReviewPanel()
-						</div>
-					</div>
-				</div>
-				@detailblocks.JournalImageModal(detailblocks.JournalImageModalProps{
-					ShowExpr:           "preview.hasPreview()",
-					CloseExpr:          "preview.close()",
-					PrevExpr:           "preview.prev()",
-					NextExpr:           "preview.next()",
-					OverlayPrevExpr:    "preview.prev(true)",
-					OverlayNextExpr:    "preview.next(true)",
-					TimeframeExpr:      "preview.timeframe()",
-					TimeframeClassExpr: "presentation.timeframe(preview.timeframe()).badgeClass",
-					CounterExpr:        "preview.counter()",
-					FilenameExpr:       "preview.current()?.file_name ?? ''",
-					SrcExpr:            "preview.src()",
-					AltExpr:            "preview.label()",
-				})
+		@layout.Page(layout.PageProps{
+			CurrentPage: "Journal",
+			Eyebrow:     "Kohan Portal",
+			Heading:     "Journal Detail",
+			Description: "View complete journal entry with all associated data.",
+			Tags:        []string{"Public", "Read-only", "Detail"},
+		}) {
+			<div class="space-y-6" { journalDetailPageAttrs(journalID)... }>
+				@detailblocks.JournalDetailStateSection()
+				@journalDetailLoadedContent()
+				@detailblocks.JournalDetailPreviewModal()
 			</div>
 		}
 	}
+}
+
+// journalDetailLoadedContent renders the main journal content when loaded.
+templ journalDetailLoadedContent() {
+	<div class="space-y-6" x-show="current.journal && !current.loading && !current.hasError()">
+		<div class="grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)] xl:items-start">
+			<div class="space-y-6 min-w-0">
+				@detailblocks.JournalDetailHeader()
+				@detailblocks.JournalDetailImages()
+				@detailblocks.JournalDetailNotes()
+			</div>
+			<div class="space-y-4 xl:sticky xl:top-6">
+				@detailblocks.JournalDetailActionsPanel()
+				@detailblocks.JournalDetailReviewPanel()
+			</div>
+		</div>
+	</div>
 }
