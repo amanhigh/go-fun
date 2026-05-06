@@ -1,13 +1,15 @@
-import type { DatePresetName, JournalPageData, JournalPageProvider, PresetConcern, ReviewPreset } from '../../../types/journal_list_concern';
+import type { DatePresetName, JournalPageData, JournalPageProvider, NonEmptyDatePresetName, PresetConcern, ReviewPreset } from '../../../types/journal_list_concern';
 import { formatDateInputValue } from '../../../shared/date';
 
 const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const reviewPresetOffsets = [-2, -1, 0, 1, 2] as const;
-const reviewPresetAnchorMonthOffset = 9;
+const reviewPresetMonthOffsets = [-11, -10, -9, -8, -7] as const;
+const reviewPresetAnchorOffset = -9;
+
+const pendingReviewValue = 'false';
 
 type ReviewPresetFilter = Pick<JournalPageData['filter'], 'createdAfter' | 'createdBefore' | 'reviewed'>;
 
-const datePresetMap: Record<Exclude<DatePresetName, ''>, number> = {
+const datePresetMap: Record<NonEmptyDatePresetName, number> = {
 	today: 0,
 	last7: 7,
 	last30: 30,
@@ -27,15 +29,25 @@ export function buildDatePresetRange(preset: DatePresetName, today: Date = new D
 }
 
 export function syncDatePreset(filter: JournalPageData['filter']) {
-	if (filter.datePreset) {
-		const range = buildDatePresetRange(filter.datePreset);
-		filter.createdAfter = range.createdAfter;
-		filter.createdBefore = range.createdBefore;
-	}
+	if (!filter.datePreset) return;
+	const range = buildDatePresetRange(filter.datePreset);
+	filter.createdAfter = range.createdAfter;
+	filter.createdBefore = range.createdBefore;
 }
 
-function buildReviewPresetAnchorDate(today: Date = new Date()): Date {
-	return new Date(today.getFullYear(), today.getMonth() - reviewPresetAnchorMonthOffset, 1);
+export function buildReviewPresetList(): ReviewPreset[] {
+	const today = new Date();
+	return reviewPresetMonthOffsets.map((offset) => {
+		const monthDate = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+		const createdAfterDate = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+		const createdBeforeDate = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+		return {
+			isAnchor: offset === reviewPresetAnchorOffset,
+			label: `${monthLabels[monthDate.getMonth()]}-${String(monthDate.getFullYear() % 100).padStart(2, '0')}`,
+			createdAfter: formatDateInputValue(createdAfterDate),
+			createdBefore: formatDateInputValue(createdBeforeDate),
+		};
+	});
 }
 
 function resolveReviewPresetClass(reviewPreset: ReviewPreset, activeReviewPreset: string): string {
@@ -44,27 +56,11 @@ function resolveReviewPresetClass(reviewPreset: ReviewPreset, activeReviewPreset
 	return reviewPresetBaseClass;
 }
 
-export function buildReviewPresetList(): ReviewPreset[] {
-	const today = new Date();
-	const anchorDate = buildReviewPresetAnchorDate(today);
-	return reviewPresetOffsets.map((offset) => {
-		const monthDate = new Date(anchorDate.getFullYear(), anchorDate.getMonth() + offset, 1);
-		const createdAfterDate = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
-		const createdBeforeDate = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
-		return {
-			isAnchor: offset === 0,
-			label: `${monthLabels[monthDate.getMonth()]}-${String(monthDate.getFullYear() % 100).padStart(2, '0')}`,
-			createdAfter: formatDateInputValue(createdAfterDate),
-			createdBefore: formatDateInputValue(createdBeforeDate),
-		};
-	});
-}
-
 export function findReviewPreset(reviewPresets: ReviewPreset[], filter: ReviewPresetFilter): ReviewPreset | undefined {
 	return reviewPresets.find((reviewPreset) => (
 		reviewPreset.createdAfter === filter.createdAfter
 		&& reviewPreset.createdBefore === filter.createdBefore
-		&& filter.reviewed === 'false'
+		&& filter.reviewed === pendingReviewValue
 	));
 }
 
@@ -91,20 +87,22 @@ export function NewPresetConcern(pg: JournalPageProvider): PresetConcern {
 			syncDatePreset(pg().filter);
 		},
 		reviewPresetClass(reviewPreset: ReviewPreset) { return resolveReviewPresetClass(reviewPreset, presets.activeReviewPreset); },
-		applyCreatedPreset(preset: DatePresetName) {
-			applyPresetChanges(pg, presets, '', () => {
-				pg().filter.datePreset = preset;
-				const range = buildDatePresetRange(preset);
-				pg().filter.createdAfter = range.createdAfter;
-				pg().filter.createdBefore = range.createdBefore;
-			});
+		applyCreatedPreset(preset: NonEmptyDatePresetName) {
+			const filter = pg().filter;
+			filter.clear();
+			filter.datePreset = preset;
+			syncDatePreset(filter);
+			presets.activeReviewPreset = '';
+			filter.applyFilters();
 		},
 		applyReviewPreset(reviewPreset: ReviewPreset) {
-			applyPresetChanges(pg, presets, reviewPreset.label, () => {
-				pg().filter.createdAfter = reviewPreset.createdAfter;
-				pg().filter.createdBefore = reviewPreset.createdBefore;
-				pg().filter.reviewed = 'false';
-			});
+			const filter = pg().filter;
+			filter.clear();
+			filter.createdAfter = reviewPreset.createdAfter;
+			filter.createdBefore = reviewPreset.createdBefore;
+			filter.reviewed = pendingReviewValue;
+			presets.activeReviewPreset = reviewPreset.label;
+			filter.applyFilters();
 		},
 	};
 

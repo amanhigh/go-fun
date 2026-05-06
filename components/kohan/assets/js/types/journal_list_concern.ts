@@ -37,6 +37,7 @@ export type PaginationConcern = {
 };
 
 export type DatePresetName = '' | 'today' | 'last7' | 'last30';
+export type NonEmptyDatePresetName = Exclude<DatePresetName, ''>;
 
 export type JournalFilterConcern = Record<JournalFilterKey, string> & {
 	datePreset: DatePresetName;
@@ -69,7 +70,7 @@ export type PresetConcern = {
 	syncActiveReviewPreset(): void;
 	syncDatePreset(): void;
 	reviewPresetClass(reviewPreset: ReviewPreset): string;
-	applyCreatedPreset(preset: DatePresetName): void;
+	applyCreatedPreset(preset: NonEmptyDatePresetName): void;
 	applyReviewPreset(reviewPreset: ReviewPreset): void;
 };
 
