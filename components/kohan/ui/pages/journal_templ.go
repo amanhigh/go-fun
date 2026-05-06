@@ -70,7 +70,7 @@ func JournalPage() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div x-data=\"journalPage()\" x-init=\"init()\" class=\"space-y-6\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"space-y-6\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -116,6 +116,10 @@ func JournalPage() templ.Component {
 				Heading:     "Journal Browser",
 				Description: "Browse journals with client-side loading powered by Alpine.js.",
 				Tags:        []string{"Public", "Read-only", "Alpine.js"},
+				Attributes: templ.Attributes{
+					"x-data": "journalPage()",
+					"x-init": "init()",
+				},
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

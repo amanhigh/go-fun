@@ -92,7 +92,7 @@ func StudentPage() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <div x-data=\"studentPage()\" x-init=\"await initData()\" class=\"rounded-3xl border border-border bg-card shadow-sm overflow-hidden\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"rounded-3xl border border-border bg-card shadow-sm overflow-hidden\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -132,6 +132,10 @@ func StudentPage() templ.Component {
 				Heading:     "👥 Student Management",
 				Description: "Search, filter, create, edit, and delete students",
 				Tags:        []string{"templUI", "Tailwind CSS", "Alpine.js"},
+				Attributes: templ.Attributes{
+					"x-data": "studentPage()",
+					"x-init": "await initData()",
+				},
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

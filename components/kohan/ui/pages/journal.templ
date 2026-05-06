@@ -19,20 +19,24 @@ import (
 
 templ JournalPage() {
 	@layout.Base("Shadow Gate") {
-		@layout.Page(layout.PageProps{
-			CurrentPage: "Journal",
-			Eyebrow:     "Kohan Portal",
-			Heading:     "Journal Browser",
-			Description: "Browse journals with client-side loading powered by Alpine.js.",
-			Tags:        []string{"Public", "Read-only", "Alpine.js"},
-		}) {
-			<div x-data="journalPage()" x-init="init()" class="space-y-6">
-				@layout.Card("Browse", "Journal entries", "Latest journal entries are loaded in the browser from the existing Kohan API.") {
-					@JournalFilterSection()
-					@JournalTableSection()
-				}
-			</div>
-		}
+	@layout.Page(layout.PageProps{
+		CurrentPage: "Journal",
+		Eyebrow:     "Kohan Portal",
+		Heading:     "Journal Browser",
+		Description: "Browse journals with client-side loading powered by Alpine.js.",
+		Tags:        []string{"Public", "Read-only", "Alpine.js"},
+		Attributes: templ.Attributes{
+			"x-data": "journalPage()",
+			"x-init": "init()",
+		},
+	}) {
+		<div class="space-y-6">
+			@layout.Card("Browse", "Journal entries", "Latest journal entries are loaded in the browser from the existing Kohan API.") {
+				@JournalFilterSection()
+				@JournalTableSection()
+			}
+		</div>
+	}
 	}
 }
 

@@ -46,9 +46,12 @@ templ StudentPage() {
 			Heading:     "👥 Student Management",
 			Description: "Search, filter, create, edit, and delete students",
 			Tags:        []string{"templUI", "Tailwind CSS", "Alpine.js"},
+			Attributes: templ.Attributes{
+				"x-data": "studentPage()",
+				"x-init": "await initData()",
+			},
 		}) {
-			// x-data: registers Alpine state | x-init: initializes all data on mount.
-			<div x-data="studentPage()" x-init="await initData()" class="rounded-3xl border border-border bg-card shadow-sm overflow-hidden">
+			<div class="rounded-3xl border border-border bg-card shadow-sm overflow-hidden">
 				@StudentFilterPanel()
 				// FIXME: Add Date Filter on CreateAt
 				@separator.Separator(separator.Props{Class: "my-0 bg-border"})
