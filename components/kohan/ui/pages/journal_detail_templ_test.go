@@ -83,8 +83,8 @@ var _ = Describe("Journal Detail Page Tests", func() {
 
 			// Primary info row: type + status + timeframe
 			Expect(html).To(ContainSubstring(`📅`))
-			Expect(html).To(ContainSubstring(`📈`))
-			Expect(html).To(ContainSubstring(`FAIL`))
+			Expect(html).To(ContainSubstring(`presentation.typeDisplay(current.journal.type)`))
+			Expect(html).To(ContainSubstring(`presentation.statusDisplay(current.journal.status)`))
 
 			// Right metadata: created + pending/review
 			Expect(html).To(ContainSubstring(`🕒`))
@@ -107,14 +107,14 @@ var _ = Describe("Journal Detail Page Tests", func() {
 		It("should render separate primary and secondary tag sections", func() {
 			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.tags.reason()"`))
 			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.tags.directional()"`))
-			Expect(html).To(ContainSubstring(`x-text="sidebar.tags.reasonLabel(tag)"`))
-			Expect(html).To(ContainSubstring(`x-text="sidebar.tags.directionalLabel(tag)"`))
+			Expect(html).To(ContainSubstring(`x-text="presentation.reasonTagLabel(tag)"`))
+			Expect(html).To(ContainSubstring(`x-text="presentation.directionalTagLabel(tag)"`))
 		})
 	})
 
 	Context("Image Preview Modal", func() {
 		It("should render a visible timeframe chip and counter", func() {
-			Expect(html).To(ContainSubstring(`x-bind:class="images.timeframeChipClass(preview.timeframe())"`))
+			Expect(html).To(ContainSubstring(`x-bind:class="presentation.timeframeChipClass(preview.timeframe())"`))
 			Expect(html).To(ContainSubstring(`x-text="preview.timeframe()"`))
 			Expect(html).To(ContainSubstring(`x-text="preview.counter()"`))
 		})
@@ -144,7 +144,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`border-border`))
 			Expect(html).To(ContainSubstring(`bg-muted`))
 			Expect(html).To(ContainSubstring(`text-left`))
-			Expect(html).To(ContainSubstring(`x-bind:class="images.timeframeChipClass(image.timeframe)"`))
+			Expect(html).To(ContainSubstring(`x-bind:class="presentation.timeframeChipClass(image.timeframe)"`))
 			Expect(html).To(ContainSubstring(`x-text="image.timeframe"`))
 			Expect(html).To(ContainSubstring(`x-on:click="preview.open(index)"`))
 			Expect(html).To(ContainSubstring(`x-bind:title="images.tileTitle(image)"`))

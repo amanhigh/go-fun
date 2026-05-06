@@ -25,15 +25,6 @@ export function NewTagCollectionConcern(pg: JournalDetailPageProvider) {
 				(tag: JournalTag) => normalizeTag(tag.type ?? '') === 'DIRECTION' || normalizeTag(tag.type ?? '') === 'LEGACY',
 			);
 		},
-		reasonLabel(this: any, tag: JournalTag) {
-			const name = tag.tag ?? '';
-			const prefix = name.toLowerCase().includes('trend') ? '📈 ' : '⚡ ';
-			const override = tag.override ? ` → ${tag.override}` : '';
-			return `${prefix}${name}${override}`;
-		},
-		directionalLabel(this: any, tag: JournalTag) {
-			return tag.tag ?? '';
-		},
 		management(this: any) {
 			return (this.items ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'MANAGEMENT');
 		},

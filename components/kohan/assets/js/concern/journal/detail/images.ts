@@ -2,21 +2,11 @@ import type { JournalImage } from '../../../types/journal_api';
 import type { JournalDetailPageProvider, JournalImagesConcern } from '../../../types/journal_detail_concern';
 
 export interface ImageHelper {
-	chipClass(timeframe: string): string;
 	sorted(images: JournalImage[] | undefined): JournalImage[];
 	resolve(fileName: string, createdAt?: string): string;
 	label(image: JournalImage | null | undefined): string;
 	counter(current: number, total: number): string;
 }
-
-const chipClassMap: Record<string, string> = {
-	YR: 'border-fuchsia-400 bg-fuchsia-200 text-fuchsia-950',
-	SMN: 'border-sky-400 bg-sky-200 text-sky-950',
-	TMN: 'border-emerald-400 bg-emerald-200 text-emerald-950',
-	MN: 'border-orange-400 bg-orange-200 text-orange-950',
-	WK: 'border-yellow-400 bg-yellow-200 text-yellow-950',
-	DL: 'border-slate-400 bg-slate-200 text-slate-950',
-};
 
 const rankMap: Record<string, number> = { YR: 600, SMN: 500, TMN: 400, MN: 300, WK: 200, DL: 100 };
 
@@ -24,9 +14,6 @@ const normalize = (value: string): string => (value ?? '').trim().toUpperCase();
 
 export function createImageHelper(): ImageHelper {
 	return {
-		chipClass(timeframe) {
-			return chipClassMap[normalize(timeframe)] ?? 'border-zinc-300 bg-zinc-100 text-zinc-900';
-		},
 		sorted(images) {
 			if (!images?.length) return [];
 			return [...images].sort((a, b) => {
@@ -59,7 +46,6 @@ export function createImageHelper(): ImageHelper {
 export function NewImagesConcern(pg: JournalDetailPageProvider, image: ImageHelper): JournalImagesConcern {
 	return {
 		resolveImageSrc: image.resolve,
-		timeframeChipClass: image.chipClass,
 		countLabel(this: any) {
 			const count = this.sorted().length;
 			return `${count} timeframe image${count === 1 ? '' : 's'}`;

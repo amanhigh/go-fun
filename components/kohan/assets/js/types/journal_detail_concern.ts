@@ -44,7 +44,6 @@ export type JournalHeaderConcern = {
 
 export type JournalImagesConcern = {
 	resolveImageSrc(fileName: string, createdAt?: string): string;
-	timeframeChipClass(timeframe: string): string;
 	countLabel(): string;
 	sorted(): JournalImage[];
 	tileTitle(imageItem: JournalImage): string;

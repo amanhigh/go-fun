@@ -40,7 +40,7 @@ func TypeBadge(props TypeBadgeProps) templ.Component {
 		templ_7745c5c3_Err = badge.Badge(badge.Props{
 			Variant:    badge.VariantSecondary,
 			Class:      "border " + props.Class,
-			Attributes: templ.Attributes{"x-bind:class": "presentation.typeBadgeClass(" + props.TypeExpr + ")", "x-text": "({'TAKEN':'📈','REJECTED':'📉'}[" + props.TypeExpr + "] || '🏷️') + ' ' + " + props.TypeExpr},
+			Attributes: templ.Attributes{"x-bind:class": "presentation.typeBadgeClass(" + props.TypeExpr + ")", "x-text": "presentation.typeDisplay(" + props.TypeExpr + ")"},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -78,7 +78,7 @@ func StatusBadge(props StatusBadgeProps) templ.Component {
 		templ_7745c5c3_Err = badge.Badge(badge.Props{
 			Variant:    badge.VariantOutline,
 			Class:      "border " + props.Class,
-			Attributes: templ.Attributes{"x-bind:class": "presentation.statusBadgeClass(" + props.StatusExpr + ")", "x-text": "({'RUNNING':'🏃','SET':'🎯','SUCCESS':'✅','FAIL':'❌','BROKEN':'💥','MISSED':'🚫','JUST_LOSS':'💔'}[" + props.StatusExpr + "] || '🏷️') + ' ' + presentation.normalizeStatus(" + props.StatusExpr + ")"},
+			Attributes: templ.Attributes{"x-bind:class": "presentation.statusBadgeClass(" + props.StatusExpr + ")", "x-text": "presentation.statusDisplay(" + props.StatusExpr + ")"},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

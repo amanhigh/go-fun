@@ -67,8 +67,6 @@ export type TagCollectionConcern = {
 	all(): JournalTag[];
 	reason(): JournalTag[];
 	directional(): JournalTag[];
-	reasonLabel(tag: JournalTag): string;
-	directionalLabel(tag: JournalTag): string;
 	management(): JournalTag[];
 	delete(tagId: string): Promise<void>;
 };
