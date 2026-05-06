@@ -30,8 +30,9 @@ templ JournalDetailPage(journalID string) {
 			Heading:     "Journal Detail",
 			Description: "View complete journal entry with all associated data.",
 			Tags:        []string{"Public", "Read-only", "Detail"},
+			Attributes:  journalDetailPageAttrs(journalID),
 		}) {
-			<div class="space-y-6" { journalDetailPageAttrs(journalID)... }>
+			<div class="space-y-6">
 				@detailblocks.JournalDetailStateSection()
 				@journalDetailLoadedContent()
 				@detailblocks.JournalDetailPreviewModal()

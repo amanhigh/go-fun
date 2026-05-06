@@ -58,6 +58,33 @@ var _ = Describe("Page Template Tests", func() {
 		})
 	})
 
+	Context("Page root attributes", func() {
+		It("renders custom attributes on the root section", func() {
+			customAttrs := templ.Attributes{
+				"x-data":       "journalDetailPage()",
+				"data-test-id": "jrn_1234",
+			}
+			props.Attributes = customAttrs
+			_, attrDoc := renderPage(ctx, props)
+
+			section := attrDoc.Find("section").First()
+			val, exists := section.Attr("x-data")
+			Expect(exists).To(BeTrue())
+			Expect(val).To(Equal("journalDetailPage()"))
+
+			val, exists = section.Attr("data-test-id")
+			Expect(exists).To(BeTrue())
+			Expect(val).To(Equal("jrn_1234"))
+		})
+
+		It("omits attributes when none are set", func() {
+			props.Attributes = nil
+			_, attrDoc := renderPage(ctx, props)
+			section := attrDoc.Find("section").First()
+			Expect(section.AttrOr("x-data", "")).To(BeEmpty())
+		})
+	})
+
 	Context("PageBreadcrumb", func() {
 		It("uses breadcrumb reuse with current-page semantics", func() {
 			Expect(html).To(ContainSubstring(`href="/"`))
