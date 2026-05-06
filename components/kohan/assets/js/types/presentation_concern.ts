@@ -1,31 +1,21 @@
 import type { JournalTag } from './journal_api';
 
-export type DisplaySpec = { icon: string; badgeClass: string };
+export type DisplaySpec = {
+	icon: string;
+	text: string;
+	badgeClass: string;
+};
 
 export type PresentationConcern = {
-	// --- Type ---
-	typeBadgeClass(value: string): string;
-	typeDisplay(value: string): string;
+	type(value: string): DisplaySpec;
+	status(value: string): DisplaySpec;
+	timeframe(value: string): DisplaySpec;
 
-	// --- Status ---
-	statusBadgeClass(value: string): string;
-	statusDisplay(value: string): string;
+	sequence(value: string | null | undefined): DisplaySpec;
 
-	// --- Timeframe ---
-	timeframeBadgeClass(value: string): string;
-	timeframeDisplay(value: string): string;
+	reasonTag(tag: JournalTag): DisplaySpec;
+	directionalTag(tag: JournalTag): DisplaySpec;
 
-	// --- Sequence ---
-	sequenceLabel(sequence: string | null | undefined): string;
-
-	// --- Tag Labels ---
-	reasonTagLabel(tag: JournalTag): string;
-	directionalTagLabel(tag: JournalTag): string;
-
-	// --- Timestamp / Date ---
 	formatTimestamp(value: string | null | undefined): string;
 	formatReviewQueueDate(value: string | null | undefined): string;
-
-	// --- Review Queue ---
-	reviewQueueItemClass(value: string): string;
 };

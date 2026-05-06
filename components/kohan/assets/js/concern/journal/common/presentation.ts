@@ -5,46 +5,50 @@ import type { DisplaySpec, PresentationConcern } from '../../../types/presentati
 
 // --- Type ---
 
-const defaultTypeSpec: DisplaySpec = { icon: '🏷️', badgeClass: 'border-slate-300 bg-slate-50 text-slate-700' };
+const defaultTypeSpec: DisplaySpec = { icon: '🏷️', text: '🏷️', badgeClass: 'journal-display-default' };
 
 const typeDisplayMap: Record<string, DisplaySpec> = {
-	TAKEN: { icon: '📈', badgeClass: 'border-slate-300 bg-slate-50 text-slate-700' },
-	REJECTED: { icon: '📉', badgeClass: 'border-rose-300 bg-rose-50 text-rose-800' },
-	RESULT: { icon: '🏷️', badgeClass: 'border-emerald-300 bg-emerald-50 text-emerald-800' },
-	SET: { icon: '🏷️', badgeClass: 'border-indigo-300 bg-indigo-50 text-indigo-800' },
+	TAKEN: { icon: '📈', text: '📈 TAKEN', badgeClass: 'journal-type-taken' },
+	REJECTED: { icon: '📉', text: '📉 REJECTED', badgeClass: 'journal-type-rejected' },
+	RESULT: { icon: '🏷️', text: '🏷️ RESULT', badgeClass: 'journal-type-result' },
+	SET: { icon: '🏷️', text: '🏷️ SET', badgeClass: 'journal-type-set' },
 };
 
 // --- Status ---
 
-const defaultStatusSpec: DisplaySpec = { icon: '🏷️', badgeClass: 'border-slate-300 bg-slate-50 text-slate-700' };
+const defaultStatusSpec: DisplaySpec = { icon: '🏷️', text: '🏷️', badgeClass: 'journal-display-default' };
 
 const statusDisplayMap: Record<string, DisplaySpec> = {
-	SUCCESS: { icon: '✅', badgeClass: 'border-emerald-300 bg-emerald-50 text-emerald-800' },
-	FAIL: { icon: '❌', badgeClass: 'border-rose-300 bg-rose-50 text-rose-800' },
-	RUNNING: { icon: '🏃', badgeClass: 'border-sky-300 bg-sky-50 text-sky-800' },
-	SET: { icon: '🎯', badgeClass: 'border-amber-300 bg-amber-50 text-amber-800' },
-	JUST_LOSS: { icon: '💔', badgeClass: 'border-rose-300 bg-rose-50 text-rose-800' },
-	BROKEN: { icon: '💥', badgeClass: 'border-violet-300 bg-violet-50 text-violet-800' },
-	MISSED: { icon: '🚫', badgeClass: 'border-slate-300 bg-slate-50 text-slate-700' },
-	REJECTED: { icon: '🏷️', badgeClass: 'border-violet-300 bg-violet-50 text-violet-800' },
+	SUCCESS: { icon: '✅', text: '✅ SUCCESS', badgeClass: 'journal-status-success' },
+	FAIL: { icon: '❌', text: '❌ FAIL', badgeClass: 'journal-status-fail' },
+	RUNNING: { icon: '🏃', text: '🏃 RUNNING', badgeClass: 'journal-status-running' },
+	SET: { icon: '🎯', text: '🎯 SET', badgeClass: 'journal-status-set' },
+	JUST_LOSS: { icon: '💔', text: '💔 JUST_LOSS', badgeClass: 'journal-status-just-loss' },
+	BROKEN: { icon: '💥', text: '💥 BROKEN', badgeClass: 'journal-status-broken' },
+	MISSED: { icon: '🚫', text: '🚫 MISSED', badgeClass: 'journal-status-missed' },
+	REJECTED: { icon: '🏷️', text: '🏷️ REJECTED', badgeClass: 'journal-status-rejected' },
 };
 
 // --- Timeframe ---
 
-const defaultTimeframeSpec: DisplaySpec = { icon: '', badgeClass: 'border-zinc-300 bg-zinc-100 text-zinc-900' };
+const defaultTimeframeSpec: DisplaySpec = { icon: '', text: '', badgeClass: 'journal-timeframe-default' };
 
 const timeframeDisplayMap: Record<string, DisplaySpec> = {
-	YR: { icon: '🗓️', badgeClass: 'border-fuchsia-400 bg-fuchsia-200 text-fuchsia-950' },
-	SMN: { icon: '📅', badgeClass: 'border-sky-400 bg-sky-200 text-sky-950' },
-	TMN: { icon: '📈', badgeClass: 'border-emerald-400 bg-emerald-200 text-emerald-950' },
-	MN: { icon: '📊', badgeClass: 'border-orange-400 bg-orange-200 text-orange-950' },
-	WK: { icon: '📆', badgeClass: 'border-yellow-400 bg-yellow-200 text-yellow-950' },
-	DL: { icon: '🔍', badgeClass: 'border-slate-400 bg-slate-200 text-slate-950' },
+	YR: { icon: '🗓️', text: '🗓️ YR', badgeClass: 'journal-timeframe-yr' },
+	SMN: { icon: '📅', text: '📅 SMN', badgeClass: 'journal-timeframe-smn' },
+	TMN: { icon: '📈', text: '📈 TMN', badgeClass: 'journal-timeframe-tmn' },
+	MN: { icon: '📊', text: '📊 MN', badgeClass: 'journal-timeframe-mn' },
+	WK: { icon: '📆', text: '📆 WK', badgeClass: 'journal-timeframe-wk' },
+	DL: { icon: '🔍', text: '🔍 DL', badgeClass: 'journal-timeframe-dl' },
 };
 
-// --- Review Queue ---
+// --- Sequence ---
 
-const defaultReviewQueueItemClass = 'border-border bg-muted/30 hover:bg-muted/70 hover:text-foreground';
+const sequenceDisplayMap: Record<string, { icon: string; text: string }> = {
+	MWD: { icon: '🕐', text: '🕐 MWD' },
+};
+
+const defaultSequenceText = '📅 ';
 
 // --- Date ---
 
@@ -53,55 +57,50 @@ const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
 // --- Tag helpers ---
 
 function reasonTagIcon(tagName: string): string {
-	return tagName.toLowerCase().includes('trend') ? '📈 ' : '⚡ ';
+	return tagName.toLowerCase().includes('trend') ? '📈' : '⚡';
 }
 
 export function NewPresentationConcern(): PresentationConcern {
 	return {
 		// --- Type ---
-		typeBadgeClass(value: string) {
-			return (typeDisplayMap[normalizeTag(value)] ?? defaultTypeSpec).badgeClass;
-		},
-		typeDisplay(value: string) {
+		type(value: string): DisplaySpec {
 			const key = normalizeTag(value);
-			const spec = typeDisplayMap[key] ?? defaultTypeSpec;
-			return `${spec.icon} ${key}`;
+			return typeDisplayMap[key] ?? { ...defaultTypeSpec, text: `${defaultTypeSpec.icon} ${key}` };
 		},
 
 		// --- Status ---
-		statusBadgeClass(value: string) {
-			return (statusDisplayMap[normalizeTag(value)] ?? defaultStatusSpec).badgeClass;
-		},
-		statusDisplay(value: string) {
+		status(value: string): DisplaySpec {
 			const key = normalizeTag(value);
-			const spec = statusDisplayMap[key] ?? defaultStatusSpec;
-			return `${spec.icon} ${key}`;
+			return statusDisplayMap[key] ?? { ...defaultStatusSpec, text: `${defaultStatusSpec.icon} ${key}` };
 		},
 
 		// --- Timeframe ---
-		timeframeBadgeClass(value: string) {
-			return (timeframeDisplayMap[normalizeTag(value)] ?? defaultTimeframeSpec).badgeClass;
-		},
-		timeframeDisplay(value: string) {
+		timeframe(value: string): DisplaySpec {
 			const key = normalizeTag(value);
-			const spec = timeframeDisplayMap[key] ?? defaultTimeframeSpec;
-			return spec.icon ? `${spec.icon} ${key}` : key;
+			return timeframeDisplayMap[key] ?? { ...defaultTimeframeSpec, text: key };
 		},
 
 		// --- Sequence ---
-		sequenceLabel(sequence: string | null | undefined) {
-			if (!sequence) return '';
-			return sequence === 'MWD' ? '🕐 ' + sequence : '📅 ' + sequence;
+		sequence(value: string | null | undefined): DisplaySpec {
+			const key = normalizeTag(value ?? '');
+			if (!key) return { icon: '', text: '', badgeClass: '' };
+			const spec = sequenceDisplayMap[key];
+			if (spec) return { ...spec, badgeClass: '' };
+			return { icon: '📅', text: `${defaultSequenceText}${key}`, badgeClass: '' };
 		},
 
-		// --- Tag Labels ---
-		reasonTagLabel(tag: JournalTag) {
+		// --- Reason Tag ---
+		reasonTag(tag: JournalTag): DisplaySpec {
 			const name = tag.tag ?? '';
+			const icon = reasonTagIcon(name);
 			const override = tag.override ? ` → ${tag.override}` : '';
-			return `${reasonTagIcon(name)}${name}${override}`;
+			return { icon, text: `${icon} ${name}${override}`, badgeClass: '' };
 		},
-		directionalTagLabel(tag: JournalTag) {
-			return tag.tag ?? '';
+
+		// --- Directional Tag ---
+		directionalTag(tag: JournalTag): DisplaySpec {
+			const name = tag.tag ?? '';
+			return { icon: '', text: name, badgeClass: '' };
 		},
 
 		// --- Timestamp / Date ---
@@ -114,11 +113,6 @@ export function NewPresentationConcern(): PresentationConcern {
 			const month = shortMonthNames[parsed.getUTCMonth()] ?? '—';
 			const year = `${parsed.getUTCFullYear()}`.slice(-2);
 			return `${day} ${month}, ${year}`;
-		},
-
-		// --- Review Queue ---
-		reviewQueueItemClass(value: string) {
-			return typeDisplayMap[normalizeTag(value)]?.badgeClass ?? defaultReviewQueueItemClass;
 		},
 	};
 }

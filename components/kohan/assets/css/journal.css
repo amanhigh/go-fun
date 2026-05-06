@@ -1,0 +1,75 @@
+@layer components {
+  .journal-display-default {
+    @apply border-slate-300 bg-slate-50 text-slate-700;
+  }
+
+  .journal-type-taken {
+    @apply border-slate-300 bg-slate-50 text-slate-700;
+  }
+
+  .journal-type-rejected {
+    @apply border-rose-300 bg-rose-50 text-rose-800;
+  }
+
+  .journal-type-result {
+    @apply border-emerald-300 bg-emerald-50 text-emerald-800;
+  }
+
+  .journal-type-set {
+    @apply border-indigo-300 bg-indigo-50 text-indigo-800;
+  }
+
+  .journal-status-success {
+    @apply border-emerald-300 bg-emerald-50 text-emerald-800;
+  }
+
+  .journal-status-fail,
+  .journal-status-just-loss {
+    @apply border-rose-300 bg-rose-50 text-rose-800;
+  }
+
+  .journal-status-running {
+    @apply border-sky-300 bg-sky-50 text-sky-800;
+  }
+
+  .journal-status-set {
+    @apply border-amber-300 bg-amber-50 text-amber-800;
+  }
+
+  .journal-status-broken,
+  .journal-status-rejected {
+    @apply border-violet-300 bg-violet-50 text-violet-800;
+  }
+
+  .journal-status-missed {
+    @apply border-slate-300 bg-slate-50 text-slate-700;
+  }
+
+  .journal-timeframe-default {
+    @apply border-zinc-300 bg-zinc-100 text-zinc-900;
+  }
+
+  .journal-timeframe-yr {
+    @apply border-fuchsia-400 bg-fuchsia-200 text-fuchsia-950;
+  }
+
+  .journal-timeframe-smn {
+    @apply border-sky-400 bg-sky-200 text-sky-950;
+  }
+
+  .journal-timeframe-tmn {
+    @apply border-emerald-400 bg-emerald-200 text-emerald-950;
+  }
+
+  .journal-timeframe-mn {
+    @apply border-orange-400 bg-orange-200 text-orange-950;
+  }
+
+  .journal-timeframe-wk {
+    @apply border-yellow-400 bg-yellow-200 text-yellow-950;
+  }
+
+  .journal-timeframe-dl {
+    @apply border-slate-400 bg-slate-200 text-slate-950;
+  }
+}
