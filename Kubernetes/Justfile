@@ -1,0 +1,195 @@
+set shell := ["bash", "-cu"]
+
+# Import shared library for formatting and run helpers
+import '../.just/lib.just'
+
+### Variables
+port := "8091"
+cpu := "4"
+memory := "4096"
+mini_bkp_dir := "~/Downloads/minibkp"
+service_files := justfile_directory() + "/services/files"
+
+[doc('Show available Minikube recipes')]
+default:
+    just --list
+
+### Lifecycle
+
+_prepare:
+    just _title "MINIKUBE" "Preparing"
+    mkdir -p /tmp/mini
+    chmod 777 /tmp/mini
+    make -C ./services prepare > /dev/null
+
+[doc('Start Minikube cluster')]
+start:
+    just _title "MINIKUBE" "Starting: {{cpu}} CPUs, {{memory}} MB Memory"
+    minikube -p minikube start --memory={{memory}} --cpus={{cpu}} --addons=metrics-server \
+        --mount-string="{{service_files}}:/etc/files" --mount --cache-images=true \
+        --host-only-cidr="24.1.1.100/24" > /dev/null
+    screen -S mini-mount -dmL bash -c 'minikube mount /tmp/mini:/tmp/mini'
+
+_wait:
+    just _info "MINIKUBE" "Waiting for Minikube to be Ready"
+    sleep 30
+    kubectl wait --for=condition=Ready pod -l k8s-app=kube-dns -n kube-system --timeout=60s > /dev/null
+
+[doc('Stop and delete Minikube cluster')]
+stop:
+    just _warn "MINIKUBE" "Deleting Minikube Clusters"
+    minikube -p minikube delete > /dev/null
+
+### Info
+
+[group('info')]
+[doc('Show Minikube info')]
+info: _info-mini
+
+[group('info')]
+[doc('Show extended Minikube info')]
+infos: info _info-extra
+
+_info-mini:
+    just _title "MINIKUBE" "Info"
+    just _info "CONTEXT" "$(kubectl config current-context)"
+    just _detail "MOUNTED" "{{service_files}}"
+    just _info "TRAEFIK" "http://docker:9000/dashboard/#/"
+
+_info-extra:
+    just _title "MINIKUBE" "Extra Info"
+    just _info "ELB" "Run 'minikube tunnel'"
+    just _info "DASHBOARD" "http://localhost:{{port}}/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/#"
+    just _info "SWAGGER" "http://localhost:{{port}}/swagger-ui"
+    just _info "K9S" "k9s --context minikube"
+
+### Addons
+
+[doc('Start Minikube dashboard')]
+dashboard:
+    just _title "MINIKUBE" "Dashboard & Addons"
+    minikube -p minikube dashboard --port={{port}} --url=true > /dev/null 2>&1 &
+
+_secret:
+    just _title "MINIKUBE" "Bootstrapping Secrets"
+    kubectl create secret generic secret-keys --from-env-file=${SECRET_ENV} > /dev/null
+
+_bootstrap: _secret
+    just _title "MINIKUBE" "Bootstrapping Services"
+    make -C ./services bootstrap > /dev/null
+
+[doc('Reset Minikube with Istio')]
+istio:
+    just _title "ISTIO" "Resetting with Istio"
+    make reset XTRA=istio
+
+### Port Forwarding
+
+_port-fwd:
+    just _info "PORT" "Please enter password for Port 80 and 443 Forward"
+    sudo -v
+    screen -S http -dmL bash -c 'sudo kubectl port-forward deployment/traefik 80:8000'
+    screen -S secure -dmL bash -c 'sudo kubectl port-forward deployment/traefik 443:8443'
+    screen -S traefik -dmL bash -c 'kubectl port-forward deployment/traefik 9000:9000'
+
+_port-ls:
+    just _title "PORT" "Listing Screens"
+    screen -ls
+
+_port-kill:
+    just _warn "PORT" "Killing Port Forward"
+    -screen -XS http quit
+    -screen -XS secure quit
+    -screen -XS traefik quit
+
+_proxy:
+    kubectl proxy --port={{port}}
+
+[doc('Restart port forwarding: kill, forward, list')]
+port: _port-kill _port-fwd _port-ls
+
+### Backup and Restore
+
+_backup:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    just _title "BACKUP" "Minikube Images → {{mini_bkp_dir}}"
+    mkdir -p "{{mini_bkp_dir}}"
+    minikube image ls | grep -v none > "{{mini_bkp_dir}}/current_image_list.txt"
+    just _info "BACKUP" "Saving $(wc -l < "{{mini_bkp_dir}}/current_image_list.txt") images"
+    while IFS= read -r IMG; do
+        FILENAME=$(echo "$IMG" | sed 's/\//+/g').tar
+        if [ ! -f "{{mini_bkp_dir}}/$FILENAME" ]; then
+            minikube image save "$IMG" "{{mini_bkp_dir}}/$FILENAME"
+            just _detail "SAVED" "$IMG → $FILENAME"
+        else
+            just _warn "SKIPPED" "$IMG ($FILENAME exists)"
+        fi
+    done < "{{mini_bkp_dir}}/current_image_list.txt"
+
+_restore:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    just _title "RESTORE" "Minikube Images ← {{mini_bkp_dir}}"
+    minikube image ls | grep -v none > "{{mini_bkp_dir}}/loaded_image_list.txt"
+    for FILE in "{{mini_bkp_dir}}"/*.tar; do
+        [ -f "$FILE" ] || continue
+        IMG=$(basename "$FILE" .tar | sed 's/+/\//g')
+        if grep -q -e "^$IMG$" "{{mini_bkp_dir}}/loaded_image_list.txt"; then
+            just _warn "SKIPPED" "$IMG ($FILE already loaded)"
+        else
+            minikube image load "$FILE"
+            just _detail "LOADED" "$IMG ← $FILE"
+        fi
+    done
+
+### Workflows
+
+[group('setup')]
+[doc('Setup Minikube: start, wait, bootstrap, port forward')]
+setup: start _wait _bootstrap _port-fwd
+
+[group('setup')]
+[doc('Stop Minikube')]
+clean: stop
+
+[group('setup')]
+[doc('Rebuild Minikube: clean → setup → info')]
+reset: clean setup info
+
+[group('setup')]
+[doc('Run all targets: prepare, istio, dashboard, info, port')]
+all: _prepare istio dashboard infos port
+
+## k9s
+# k9s --readonly , -n <namespace>, -l <loglevel>
+# k9s :pu (pulse), :dp (deployments), :po (pods), :ns (namespace),:rb (Role Bindings) ,:a (aliases), :hpa (autoscaler)
+# Switch Namespace :po <namespace> to see pods of that namespace
+# Portforward: Select Pod, Shift+f (Create PF), f (Show PF)
+
+## kompose: brew install kompose
+# Convert:  kompose convert -f jira.yml
+# Apply: kubectl apply $(ls jira*.yaml | awk ' { print " -f " $NF } ')
+
+## Docker
+# Docker Start: sudo service docker start
+# Docker Image to Minikube: eval $(minikube docker-env); docker build -t fun-app .
+
+## Kubectl
+# Port Forward (Local Port 9090 to Container Port 8080) - kubectl port-forward `kubectl get pods -o name | grep fun-app | head  -1` 9090:8080
+# Logs - kubectl logs `kubectl get pods -o name | grep fun-app | head  -1` --since=1m -f
+# Login - kubectl -it exec `kubectl get pods -o name | grep fun-app | head  -1` bash
+# Delete All - kubectl delete all --all
+
+## Minkikube
+# Tunnel (Emulate Load Balancer) - minikube tunnel
+# List Emulated Services URL's - minikube service list
+
+# https://minikube.sigs.k8s.io/docs/handbook/pushing/
+# Load Image from Host - minikube image load amanfdk/controller
+# Minikube Docker ENV Connect - eval $(minikube docker-env)
+
+## Minikube Images (Cache: ~/.minikube/cache)
+# Image List - minikube image ls
+# Cache Save - minikube image save docker.io/bitnami/mysql:8.0.32-debian-11-r0 --daemon
+# Cache Load - minikube image load docker.io/bitnami/mysql:8.0.32-debian-11-r0 --daemon
