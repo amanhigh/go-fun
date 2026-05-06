@@ -44,9 +44,19 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 		typeToggle() {
 			return resolveTypeToggle(this.type);
 		},
+		applyFilters() {
+			pg().pagination.resetPage();
+			pg().filterUrl.filterToUrl();
+			void pg().table.loadJournals();
+		},
+		applyManualFilters() {
+			pg().presets.clearActiveReviewPreset();
+			this.datePreset = '';
+			this.applyFilters();
+		},
 		toggleType() {
 			this.type = this.typeToggle().nextType;
-			pg().table.applyManualFilters();
+			this.applyManualFilters();
 		},
 		toggleSort(field: SortField) {
 			if (this.sortBy !== field) {
@@ -55,14 +65,11 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 				this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
 			}
 			this.sortBy = field;
-			pg().table.applyManualFilters();
-		},
-		applyManualFilters() {
-			pg().table.applyManualFilters();
+			this.applyManualFilters();
 		},
 		clearFilters() {
 			this.clear();
-			pg().table.applyManualFilters();
+			this.applyManualFilters();
 		},
 	} as JournalFilterConcern;
 }

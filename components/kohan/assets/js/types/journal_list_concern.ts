@@ -45,6 +45,7 @@ export type JournalFilterConcern = Record<JournalFilterKey, string> & {
 	toggleType(): void;
 	typeToggle(): { label: string; className: string; nextType: string };
 	toggleSort(field: 'ticker' | 'sequence' | 'created_at'): void;
+	applyFilters(): void;
 	applyManualFilters(): void;
 	clearFilters(): void;
 };
@@ -74,12 +75,7 @@ export type PresetConcern = {
 
 export type JournalTableConcern = {
 	journals: Journal[];
-	requestCounter: number;
 	loading: boolean;
-	errorMessage: string;
-	applyFilters(): void;
-	applyManualFilters(): void;
 	loadJournals(): Promise<void>;
-	hasError(): boolean;
 	isEmpty(): boolean;
 };

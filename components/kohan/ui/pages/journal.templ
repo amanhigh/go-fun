@@ -148,24 +148,10 @@ templ JournalActiveFilters() {
 // ============================================================
 
 templ JournalTableSection() {
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxError, ShowExpr: "table.hasError()"}) {
-		<div class="space-y-3">
-			<div class="font-medium" x-text="table.errorMessage"></div>
-			@button.Button(button.Props{
-				Variant: button.VariantOutline,
-				Type:    button.TypeButton,
-				Attributes: templ.Attributes{
-					"x-on:click": "table.loadJournals()",
-				},
-			}) {
-				Retry
-			}
-		</div>
-	}
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "table.loading && !table.hasError()"}) {
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "table.loading"}) {
 		Loading journals...
 	}
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!table.loading && !table.hasError() && table.isEmpty()"}) {
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!table.loading && table.isEmpty()"}) {
 		No journals found.
 	}
 	@JournalTable()
@@ -173,7 +159,7 @@ templ JournalTableSection() {
 }
 
 templ JournalTable() {
-	@card.Card(card.Props{Class: "rounded-none border-x-0 border-b-0 border-t border-t-sky-200/70 shadow-sm", Attributes: templ.Attributes{"x-show": "!table.loading && !table.hasError() && !table.isEmpty()"}}) {
+	@card.Card(card.Props{Class: "rounded-none border-x-0 border-b-0 border-t border-t-sky-200/70 shadow-sm", Attributes: templ.Attributes{"x-show": "!table.loading && !table.isEmpty()"}}) {
 		@card.Content(card.ContentProps{Class: "overflow-x-auto p-0"}) {
 			@table.Table(table.Props{Class: "min-w-[860px]"}) {
 				@JournalTableHeader()

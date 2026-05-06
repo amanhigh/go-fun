@@ -94,14 +94,6 @@ var _ = Describe("Journal Page Tests", func() {
 		It("should render mutually exclusive table section states", func() {
 			Expect(html).To(ContainSubstring("Loading journals..."))
 			Expect(html).To(ContainSubstring("No journals found."))
-			Expect(html).To(ContainSubstring("Retry"))
-		})
-
-		It("should render the table error state with retry binding", func() {
-			Expect(html).To(ContainSubstring("x-show=\"table.hasError()\""))
-			Expect(html).To(ContainSubstring("x-text=\"table.errorMessage\""))
-			Expect(html).To(ContainSubstring("x-on:click=\"table.loadJournals()\""))
-			Expect(html).To(ContainSubstring(">Retry<"))
 		})
 
 		It("should render pagination bindings and page summary", func() {

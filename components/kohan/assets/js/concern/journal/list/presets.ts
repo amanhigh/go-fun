@@ -76,7 +76,7 @@ function applyPresetChanges(pg: JournalPageProvider, presets: PresetConcern, act
 	pg().filter.clear();
 	mutate();
 	presets.activeReviewPreset = activeReviewPreset;
-	pg().table.applyFilters();
+	pg().filter.applyFilters();
 }
 
 export function NewPresetConcern(pg: JournalPageProvider): PresetConcern {

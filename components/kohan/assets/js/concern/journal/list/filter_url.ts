@@ -1,5 +1,5 @@
 import type { JournalFilterKey } from '../../../types/journal_api';
-import type { JournalFilterConcern, JournalFilterUrlConcern, JournalPageProvider } from '../../../types/journal_list_concern';
+import type { JournalFilterUrlConcern, JournalPageProvider } from '../../../types/journal_list_concern';
 
 // Direct mapping from filter state field to URL query key
 const journalQueryMap: Record<JournalFilterKey, string> = {
