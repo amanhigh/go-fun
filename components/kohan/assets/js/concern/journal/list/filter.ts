@@ -4,12 +4,14 @@ import type { DatePresetName, JournalFilterConcern, JournalPageProvider } from '
 type TypeToggle = {
 	label: string;
 	className: string;
-	nextType: string;
+	nextType: TypeFilterValue;
 };
 
 type SortField = 'ticker' | 'sequence' | 'created_at';
 
-const typeToggleMap: Record<string, TypeToggle> = {
+type TypeFilterValue = '' | 'TAKEN' | 'REJECTED';
+
+const typeToggleMap: Record<TypeFilterValue, TypeToggle> = {
 	'': { label: 'Taken', className: 'border-rose-300/70 bg-rose-100/60 text-rose-800 hover:bg-rose-200/70', nextType: 'TAKEN' },
 	TAKEN: { label: 'Rejected', className: 'border-violet-300/70 bg-violet-100/60 text-violet-800 hover:bg-violet-200/70', nextType: 'REJECTED' },
 	REJECTED: { label: 'All', className: 'border-slate-300/70 bg-slate-100/70 text-slate-700 hover:bg-slate-200/80', nextType: '' },
@@ -36,6 +38,7 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 			this.datePreset = '';
 		},
 		hasActiveState() {
+			if (this.datePreset !== '') return true;
 			return Object.entries(journalFilterDefaults).some(([field, defaultValue]) => this[field as JournalFilterKey] !== defaultValue);
 		},
 		typeToggle() {
@@ -46,7 +49,11 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 			pg().table.applyManualFilters();
 		},
 		toggleSort(field: SortField) {
-			this.sortOrder = this.sortBy !== field ? 'asc' : this.sortOrder === 'asc' ? 'desc' : 'asc';
+			if (this.sortBy !== field) {
+				this.sortOrder = 'asc';
+			} else {
+				this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+			}
 			this.sortBy = field;
 			pg().table.applyManualFilters();
 		},
@@ -61,5 +68,8 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 }
 
 export function resolveTypeToggle(currentType: string): TypeToggle {
-	return typeToggleMap[currentType] ?? typeToggleMap[''];
+	if (currentType === 'TAKEN' || currentType === 'REJECTED') {
+		return typeToggleMap[currentType];
+	}
+	return typeToggleMap[''];
 }

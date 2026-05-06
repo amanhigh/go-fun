@@ -1,43 +1,33 @@
 import type { JournalFilterKey } from '../../../types/journal_api';
 import type { JournalFilterConcern, JournalFilterUrlConcern, JournalPageProvider } from '../../../types/journal_list_concern';
 
-type FilterConfigEntry = {
-	queryKey?: string;
-	aliases?: readonly string[];
+// Direct mapping from filter state field to URL query key
+const journalQueryMap: Record<JournalFilterKey, string> = {
+	ticker: 'search',
+	type: 'type',
+	status: 'status',
+	sequence: 'sequence',
+	createdAfter: 'created-after',
+	createdBefore: 'created-before',
+	reviewed: 'reviewed',
+	sortBy: 'sort-by',
+	sortOrder: 'sort-order',
 };
 
-const journalFilterConfig: Record<JournalFilterKey, FilterConfigEntry> = {
-	ticker: { queryKey: 'search', aliases: ['ticker'] },
-	type: {},
-	status: {},
-	sequence: {},
-	createdAfter: { queryKey: 'created-after' },
-	createdBefore: { queryKey: 'created-before' },
-	reviewed: {},
-	sortBy: { queryKey: 'sort-by' },
-	sortOrder: { queryKey: 'sort-order' },
-};
+// Reverse mapping from URL query key to filter state field
+const journalReverseMap: Record<string, JournalFilterKey> = {};
+for (const [field, queryKey] of Object.entries(journalQueryMap)) {
+	journalReverseMap[queryKey] = field as JournalFilterKey;
+}
 
 export const journalFilterFields: JournalFilterKey[] = ['ticker', 'type', 'status', 'sequence', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'];
 
-const journalQueryMap: Partial<Record<JournalFilterKey, string>> = journalFilterFields.reduce((queryMap, field) => {
-	const entry = journalFilterConfig[field];
-	if (!entry.queryKey) return queryMap;
-	return { ...queryMap, [field]: entry.queryKey };
-}, {} as Partial<Record<JournalFilterKey, string>>);
+// Only these type values are accepted when reading from URL
+const knownTypeValues = new Set(['', 'TAKEN', 'REJECTED']);
 
-const journalReverseMap: Record<string, JournalFilterKey> = journalFilterFields.reduce((reverseMap, field) => {
-	const queryKey = journalQueryMap[field] ?? field;
-	const aliases = journalFilterConfig[field].aliases ?? [];
-
-	return {
-		...reverseMap,
-		[queryKey]: field,
-		...aliases.reduce<Record<string, JournalFilterKey>>((aliasMap, alias) => ({ ...aliasMap, [alias]: field }), {}),
-	};
-}, {} as Record<string, JournalFilterKey>);
-
-function urlToFilterState(filter: JournalFilterConcern) {
+/** Read filter state from browser URL query params. */
+export function urlToFilter(pg: JournalPageProvider) {
+	const filter = pg().filter;
 	const params = new URLSearchParams(window.location.search);
 
 	// Read date preset from URL (relative values, not absolute dates)
@@ -47,13 +37,22 @@ function urlToFilterState(filter: JournalFilterConcern) {
 	// Read all other filter fields from URL query params
 	params.forEach((value, key) => {
 		const stateKey = journalReverseMap[key];
-		if (stateKey) {
-			filter[stateKey] = value;
+		if (!stateKey) return;
+
+		// Only accept known type values from URL; warn and reject unknown values
+		if (stateKey === 'type' && !knownTypeValues.has(value)) {
+			console.warn('Unknown type value from URL:', value);
+			filter.type = '';
+			return;
 		}
+
+		filter[stateKey] = value;
 	});
 }
 
-function filterStateToUrl(filter: JournalFilterConcern) {
+/** Build a URL query string from the current filter state. */
+function buildFilterUrl(pg: JournalPageProvider): string {
+	const filter = pg().filter;
 	const params = new URLSearchParams();
 
 	// Write date preset if active (instead of absolute createdAfter/createdBefore)
@@ -67,22 +66,22 @@ function filterStateToUrl(filter: JournalFilterConcern) {
 		if (skipDates && (key === 'createdAfter' || key === 'createdBefore')) return;
 		const value = filter[key];
 		if (value !== '') {
-			params.set(journalQueryMap[key] ?? key, value);
+			params.set(journalQueryMap[key], value);
 		}
 	});
 
-	const nextUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+	return params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+}
+
+/** Replace the browser history entry with the current filter URL. */
+export function filterToUrl(pg: JournalPageProvider): void {
+	const nextUrl = buildFilterUrl(pg);
 	window.history.replaceState({}, '', nextUrl);
 }
 
 export function NewFilterUrlConcern(pg: JournalPageProvider): JournalFilterUrlConcern {
-	const filter = pg().filter;
 	return {
-		urlToFilter() {
-			urlToFilterState(filter);
-		},
-		filterToUrl() {
-			filterStateToUrl(filter);
-		},
+		urlToFilter() { urlToFilter(pg); },
+		filterToUrl() { filterToUrl(pg); },
 	};
 }
