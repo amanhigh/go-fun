@@ -75,7 +75,7 @@ function filterStateToUrl(filter: JournalFilterConcern) {
 	window.history.replaceState({}, '', nextUrl);
 }
 
-export function createJournalFilterUrlConcern(page: JournalPageData): JournalFilterUrlState {
+export function newFilterUrlConcern(page: JournalPageData): JournalFilterUrlConcern {
 	const filter = page.filter;
 	return {
 		urlToFilter() {

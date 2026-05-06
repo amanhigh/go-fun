@@ -6,17 +6,17 @@ export function newTableConcern(pg: JournalPageProvider): JournalTableConcern {
 		requestCounter: 0,
 		loading: false,
 		errorMessage: '',
-		applyFilters(this: JournalTableConcern) {
+		applyFilters() {
 			pg().pagination.resetPage();
 			pg().filterUrl.filterToUrl();
 			void this.loadJournals();
 		},
-		applyManualFilters(this: JournalTableConcern) {
+		applyManualFilters() {
 			pg().presets.clearActiveReviewPreset();
 			pg().filter.datePreset = '';
 			this.applyFilters();
 		},
-		async loadJournals(this: JournalTableConcern) {
+		async loadJournals() {
 			this.loading = true;
 			this.errorMessage = '';
 
@@ -30,8 +30,8 @@ export function newTableConcern(pg: JournalPageProvider): JournalTableConcern {
 				this.loading = false;
 			}
 		},
-		hasError(this: JournalTableConcern) { return this.errorMessage !== ''; },
-		isEmpty(this: JournalTableConcern) { return this.journals.length === 0; },
+		hasError() { return this.errorMessage !== ''; },
+		isEmpty() { return this.journals.length === 0; },
 	};
 
 	return table;

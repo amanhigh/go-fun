@@ -22,7 +22,7 @@ function resolveBadgeClass(map: Record<string, string>, value: string): string {
 	return map[normalizeTag(value)] ?? defaultBadgeClass;
 }
 
-export function createJournalPresentation(): JournalPresentationState {
+export function newPresentationConcern(): JournalPresentationState {
 	return {
 		normalizeStatus: normalizeTag,
 		statusBadgeClass(value: string) {

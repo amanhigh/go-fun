@@ -1,11 +1,11 @@
 import { NewJournalClient } from '../client/journal';
-import type { JournalPageData } from '../types/journal_list_state';
-import { createJournalPresentation } from '../concern/journal/common/presentation';
-import { createJournalFilterUrlConcern } from '../concern/journal/list/filter_url';
-import { createJournalFilter } from '../concern/journal/list/filter';
-import { createPresetConcern } from '../concern/journal/list/presets';
-import { createPaginationConcern } from '../concern/journal/list/pagination';
-import { createJournalTableConcern } from '../concern/journal/list/table';
+import type { JournalPageData } from '../types/journal_list_concern';
+import { newPresentationConcern } from '../concern/journal/common/presentation';
+import { newFilterUrlConcern } from '../concern/journal/list/filter_url';
+import { newFilterConcern } from '../concern/journal/list/filter';
+import { newPresetConcern } from '../concern/journal/list/presets';
+import { newPaginationConcern } from '../concern/journal/list/pagination';
+import { newTableConcern } from '../concern/journal/list/table';
 import '../types/platform';
 
 function createJournalPageData() {
@@ -13,12 +13,12 @@ function createJournalPageData() {
 	const pg = () => page;
 
 	page.client = NewJournalClient();
-	page.presentation = createJournalPresentation();
-	page.table = createJournalTableConcern(pg);
-	page.pagination = createPaginationConcern(pg);
-	page.presets = createPresetConcern(pg);
-	page.filter = createJournalFilter(pg);
-	page.filterUrl = createJournalFilterUrlConcern(page);
+	page.presentation = newPresentationConcern();
+	page.table = newTableConcern(pg);
+	page.pagination = newPaginationConcern(pg);
+	page.presets = newPresetConcern(pg);
+	page.filter = newFilterConcern(pg);
+	page.filterUrl = newFilterUrlConcern(page);
 	page.init = function init(this: any) {
 		page = this;
 		this.filterUrl.urlToFilter();
