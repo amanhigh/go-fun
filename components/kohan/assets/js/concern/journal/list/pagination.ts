@@ -2,7 +2,7 @@ import type { JournalPageProvider, PaginationConcern } from '../../../types/jour
 
 const defaultPageSize = 10;
 
-export function newPaginationConcern(pg: JournalPageProvider): PaginationConcern {
+export function NewPaginationConcern(pg: JournalPageProvider): PaginationConcern {
 	return {
 		page: 1,
 		pageSize: defaultPageSize,

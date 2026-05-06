@@ -1,6 +1,6 @@
 import type { JournalPageProvider, JournalTableConcern } from '../../../types/journal_list_concern';
 
-export function newTableConcern(pg: JournalPageProvider): JournalTableConcern {
+export function NewTableConcern(pg: JournalPageProvider): JournalTableConcern {
 	const table: JournalTableConcern = {
 		journals: [],
 		requestCounter: 0,

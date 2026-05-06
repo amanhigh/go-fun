@@ -79,7 +79,7 @@ function applyPresetChanges(pg: JournalPageProvider, presets: PresetConcern, act
 	pg().table.applyFilters();
 }
 
-export function newPresetConcern(pg: JournalPageProvider): PresetConcern {
+export function NewPresetConcern(pg: JournalPageProvider): PresetConcern {
 	const presets: PresetConcern = {
 		reviewPresets: buildReviewPresetList(),
 		activeReviewPreset: '',

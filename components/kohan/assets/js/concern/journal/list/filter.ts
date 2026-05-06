@@ -27,7 +27,7 @@ const journalFilterDefaults: Record<JournalFilterKey, string> = {
 	sortOrder: 'desc',
 };
 
-export function newFilterConcern(pg: JournalPageProvider): JournalFilterConcern {
+export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern {
 	return {
 		...journalFilterDefaults,
 		datePreset: '' as DatePresetName,
