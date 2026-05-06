@@ -1,0 +1,149 @@
+set shell := ["bash", "-cu"]
+
+# Import shared library for formatting and run helpers
+import '../../../../.just/lib.just'
+
+### Variables
+default_dbname := "play"
+restore_db_name := default_dbname + "_restore"
+user := "postgres"
+pass := "root"
+url := "postgresql://{{user}}:{{pass}}@localhost"
+
+# Dynamic K8s commands (evaluated at recipe runtime via shell substitution)
+k8_cmd := "kubectl exec -it $(kubectl get pod --selector=app.kubernetes.io/component=primary -o name)"
+pg := "{{k8_cmd}} -- psql {{url}}"
+
+[doc('Show available Postgres recipes')]
+default:
+    just --list
+
+[group('show')]
+[doc('Show available databases')]
+show-dblist:
+    just _title "PG" "Available Databases"
+    {{pg}} -l
+
+[group('show')]
+[doc('Show current database')]
+show-db:
+    just _title "PG" "Current Database"
+    {{k8_cmd}} -- psql {{url}}/{{default_dbname}} -c "\\c"
+
+[group('show')]
+[doc('Show available schemas')]
+show-schema:
+    just _title "PG" "Available Schemas"
+    {{k8_cmd}} -- psql {{url}}/{{default_dbname}} -c "\\dn"
+
+[group('show')]
+[doc('Show available tables')]
+show-tables:
+    just _title "PG" "Available Tables"
+    {{k8_cmd}} -- psql {{url}}/{{default_dbname}} -c "\\dt"
+
+[group('show')]
+[doc('Show available indexes')]
+show-index:
+    just _title "PG" "Available Indexes"
+    {{k8_cmd}} -- psql {{url}}/{{default_dbname}} -c "\\di"
+
+[group('show')]
+[doc('Show available sequences')]
+show-sequence:
+    just _title "PG" "Available Sequences"
+    {{k8_cmd}} -- psql {{url}}/{{default_dbname}} -c "\\d"
+
+[group('create')]
+[doc('Create database')]
+create-db dbname="{{default_dbname}}":
+    just _title "PG" "Creating Database: {{dbname}}"
+    {{pg}} -c "create database {{dbname}};"
+
+[group('create')]
+[doc('Create cloned database for restore')]
+create-clone:
+    just _title "PG" "Creating Clone Database"
+    just create-db dbname="{{restore_db_name}}"
+
+[group('create')]
+[doc('Seed database from /tmp/seed.sql')]
+seed:
+    just _title "PG" "Seeding Database: {{default_dbname}}"
+    {{k8_cmd}} -- bash -c 'psql {{url}}/{{default_dbname}} -f /tmp/seed.sql'
+
+[group('delete')]
+[doc('Delete database')]
+delete-db dbname="{{default_dbname}}":
+    just _warn "PG" "Deleting Database: {{dbname}}"
+    -{{pg}} -c "drop database {{dbname}};"
+
+[group('delete')]
+[doc('Delete backup directory')]
+delete-backup:
+    just _warn "PG" "Deleting Backup Directory"
+    {{k8_cmd}} -- bash -c 'rm -rf /tmp/backup'
+
+[group('delete')]
+[doc('Delete cloned database')]
+delete-clone: delete-backup
+    just _warn "PG" "Deleting Clone Database"
+    just delete-db dbname="{{restore_db_name}}"
+
+[group('housekeeping')]
+[doc('Prepare pod for test setup')]
+prepare:
+    just _title "PG" "Preparing Pod"
+    kubectl cp ../mysql/seed.sql $(basename $(kubectl get pod --selector=app.kubernetes.io/component=primary -o name)):/tmp/
+
+[group('housekeeping')]
+[doc('Backup database')]
+backup:
+    just _title "PG" "Backing up Database: {{default_dbname}}"
+    {{k8_cmd}} -- bash -c 'pg_dump {{url}}/{{default_dbname}} -v -Fd -j 2 -f /tmp/backup -Z4' > /dev/null
+
+[group('housekeeping')]
+[doc('Restore database from backup')]
+restore:
+    just _title "PG" "Restoring to Database: {{restore_db_name}}"
+    {{k8_cmd}} -- bash -c 'pg_restore -d {{url}}/{{restore_db_name}} -v -Fd -j 2 /tmp/backup' > /dev/null
+
+[group('exec')]
+[doc('Connect to Postgres via psql')]
+exec:
+    {{pg}}
+
+[group('exec')]
+[doc('SSH into Postgres pod')]
+ssh:
+    {{k8_cmd}} bash
+
+### Workflows
+
+[group('info')]
+[doc('Show Postgres info')]
+info: show-db show-tables
+
+[group('info')]
+[doc('Show extended Postgres info')]
+infos: info show-dblist show-schema show-index show-sequence
+
+[group('setup')]
+[doc('Setup database')]
+setup: create-db seed
+
+[group('setup')]
+[doc('Clean up database')]
+clean: delete-db delete-clone
+
+[group('setup')]
+[doc('Clone database')]
+clone: delete-clone backup create-clone restore
+
+[group('setup')]
+[doc('Reset database')]
+reset: clean setup info
+
+[group('setup')]
+[doc('Run all targets')]
+all: prepare reset clone infos
