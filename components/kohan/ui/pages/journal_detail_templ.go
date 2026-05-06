@@ -112,7 +112,7 @@ func JournalDetailPage(journalID string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"space-y-6\" x-show=\"journal && !loading && !hasError()\"><div class=\"grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)] xl:items-start\"><div class=\"space-y-6 min-w-0\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"space-y-6\" x-show=\"current.journal && !current.loading && !current.hasError()\"><div class=\"grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)] xl:items-start\"><div class=\"space-y-6 min-w-0\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -145,18 +145,18 @@ func JournalDetailPage(journalID string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				templ_7745c5c3_Err = detailblocks.JournalImageModal(detailblocks.JournalImageModalProps{
-					ShowExpr:           "hasImagePreview()",
-					CloseExpr:          "closeImagePreview()",
-					PrevExpr:           "prevImage()",
-					NextExpr:           "nextImage()",
-					OverlayPrevExpr:    "prevImage(true)",
-					OverlayNextExpr:    "nextImage(true)",
-					TimeframeExpr:      "previewImageTimeframe()",
-					TimeframeClassExpr: "timeframeChipClass(previewImageTimeframe())",
-					CounterExpr:        "previewImageCounter()",
-					FilenameExpr:       "previewImage()?.file_name ?? ''",
-					SrcExpr:            "previewImageSrc()",
-					AltExpr:            "previewImageLabel()",
+					ShowExpr:           "preview.hasPreview()",
+					CloseExpr:          "preview.close()",
+					PrevExpr:           "preview.prev()",
+					NextExpr:           "preview.next()",
+					OverlayPrevExpr:    "preview.prev(true)",
+					OverlayNextExpr:    "preview.next(true)",
+					TimeframeExpr:      "preview.timeframe()",
+					TimeframeClassExpr: "images.timeframeChipClass(preview.timeframe())",
+					CounterExpr:        "preview.counter()",
+					FilenameExpr:       "preview.current()?.file_name ?? ''",
+					SrcExpr:            "preview.src()",
+					AltExpr:            "preview.label()",
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

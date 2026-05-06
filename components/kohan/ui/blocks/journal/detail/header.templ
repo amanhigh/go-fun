@@ -15,25 +15,25 @@ templ JournalDetailHeader() {
 		@card.Content(card.ContentProps{Class: "p-6"}) {
 			<div class="space-y-3">
 				<div class="flex items-start justify-between gap-3">
-					<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + journal.id"></div>
+					<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + current.journal.id"></div>
 					@components.DeleteButton(components.DeleteButtonProps{
-						OnClickExpr:  "deleteJournal()",
-						DisabledExpr: "journalDeleting",
+						OnClickExpr:  "header.deleteJournal()",
+						DisabledExpr: "header.deleting",
 						AriaLabel:    "Delete Journal",
 						Title:        "Delete Journal",
 						Class:        "h-9 w-9",
 					})
 				</div>
-				<h2 class="text-3xl font-bold tracking-tight text-foreground" x-text="journal.ticker"></h2>
+				<h2 class="text-3xl font-bold tracking-tight text-foreground" x-text="current.journal.ticker"></h2>
 				<div class="flex justify-between gap-6">
 					<div class="flex flex-wrap items-center gap-2.5">
-						@journalcommon.TypeBadge(journalcommon.TypeBadgeProps{TypeExpr: "journal.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
-						@journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "journal.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+						@journalcommon.TypeBadge(journalcommon.TypeBadgeProps{TypeExpr: "current.journal.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+						@journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "current.journal.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
 						@JournalDetailSequenceChip()
 					</div>
 					@JournalDetailReviewDates()
 				</div>
-				<div class="flex justify-between gap-6" x-show="sidebar.tags().length">
+				<div class="flex justify-between gap-6" x-show="sidebar.tags.all().length">
 					@JournalDetailReasonTags()
 					@JournalDetailDirectionalTags()
 				</div>
@@ -43,15 +43,15 @@ templ JournalDetailHeader() {
 }
 
 templ JournalDetailCreatedAt() {
-	@components.InfoRow(components.InfoRowProps{Label: "🕒", ValueExpr: "formatTimestamp(journal.created_at)", Class: "text-xs"})
+	@components.InfoRow(components.InfoRowProps{Label: "🕒", ValueExpr: "presentation.formatTimestamp(current.journal.created_at)", Class: "text-xs"})
 }
 
 templ JournalDetailReviewDate() {
-	@components.FilterChip(components.FilterChipProps{ShowExpr: "journal.reviewed_at", TextExpr: "'✅ ' + formatTimestamp(journal.reviewed_at)", Tone: components.ToneGreen, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
+	@components.FilterChip(components.FilterChipProps{ShowExpr: "current.journal.reviewed_at", TextExpr: "'✅ ' + presentation.formatTimestamp(current.journal.reviewed_at)", Tone: components.ToneGreen, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
 }
 
 templ JournalDetailPendingDate() {
-	@components.FilterChip(components.FilterChipProps{ShowExpr: "!journal.reviewed_at", TextExpr: "'⏳ Pending Review'", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
+	@components.FilterChip(components.FilterChipProps{ShowExpr: "!current.journal.reviewed_at", TextExpr: "'⏳ Pending Review'", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
 }
 
 templ JournalDetailReviewDates() {
@@ -63,21 +63,21 @@ templ JournalDetailReviewDates() {
 }
 
 templ JournalDetailSequenceChip() {
-	@components.FilterChip(components.FilterChipProps{TextExpr: "sequenceLabel(journal.sequence)", Tone: components.ToneViolet, Emoji: "📅", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+	@components.FilterChip(components.FilterChipProps{TextExpr: "presentation.sequenceLabel(current.journal.sequence)", Tone: components.ToneViolet, Emoji: "📅", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
 }
 
 templ JournalDetailReasonTags() {
 	<div class="flex flex-wrap gap-2">
-		<template x-for="tag in sidebar.reasonTags()" x-bind:key="tag.id">
-			@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Class: "rounded-full font-semibold", Attributes: templ.Attributes{"x-text": "sidebar.reasonTagLabel(tag)"}})
+		<template x-for="tag in sidebar.tags.reason()" x-bind:key="tag.id">
+			@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Class: "rounded-full font-semibold", Attributes: templ.Attributes{"x-text": "sidebar.tags.reasonLabel(tag)"}})
 		</template>
 	</div>
 }
 
 templ JournalDetailDirectionalTags() {
 	<div class="flex flex-wrap gap-2">
-		<template x-for="tag in sidebar.directionalTags()" x-bind:key="tag.id">
-			@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, Emoji: "🏷", Class: "rounded-full text-xs", Attributes: templ.Attributes{"x-text": "sidebar.directionalTagLabel(tag)"}})
+		<template x-for="tag in sidebar.tags.directional()" x-bind:key="tag.id">
+			@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, Emoji: "🏷", Class: "rounded-full text-xs", Attributes: templ.Attributes{"x-text": "sidebar.tags.directionalLabel(tag)"}})
 		</template>
 	</div>
 }

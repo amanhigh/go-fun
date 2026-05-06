@@ -67,7 +67,7 @@ func JournalDetailActionsPanel() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = commondetail.JournalDetailSection("Actions", "Journal Actions", "sidebar.actionOpen", "sidebar.setActionOpen($el.open)").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = commondetail.JournalDetailSection("Actions", "Journal Actions", "sidebar.ui.actionOpen", "sidebar.ui.setActionOpen($el.open)").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -105,9 +105,9 @@ func journalDetailActionCard() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.reviewMessage",
-			ClassExpr: "sidebar.reviewFeedbackClass",
-			TextExpr:  "sidebar.reviewMessage",
+			ShowExpr:  "sidebar.reviewActions.message",
+			ClassExpr: "sidebar.reviewActions.feedbackClass",
+			TextExpr:  "sidebar.reviewActions.message",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -206,12 +206,12 @@ func journalDetailReviewToggleAction() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{
-			OnClickExpr: "sidebar.toggleReview()",
-			TextExpr:    "sidebar.reviewSubmitting ? 'Saving...' : sidebar.reviewToggleLabel()",
+			OnClickExpr: "sidebar.reviewActions.toggle()",
+			TextExpr:    "sidebar.reviewActions.submitting ? 'Saving...' : sidebar.reviewActions.toggleLabel()",
 			Tint:        components.ToneGreen,
-			ClassExpr:   "sidebar.reviewButtonClass()",
+			ClassExpr:   "sidebar.reviewActions.buttonClass()",
 			Attributes: templ.Attributes{
-				"x-bind:disabled": "sidebar.reviewSubmitting",
+				"x-bind:disabled": "sidebar.reviewActions.submitting",
 			},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -242,17 +242,17 @@ func journalDetailQuickReviewAction() templ.Component {
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div x-show=\"sidebar.hasQuickReviewAction()\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div x-show=\"sidebar.reviewActions.hasQuickAction()\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{
-			OnClickExpr: "sidebar.applyQuickReviewStatus()",
-			TextExpr:    "sidebar.reviewSubmitting ? 'Saving...' : sidebar.quickReviewLabel()",
+			OnClickExpr: "sidebar.reviewActions.applyQuickStatus()",
+			TextExpr:    "sidebar.reviewActions.submitting ? 'Saving...' : sidebar.reviewActions.quickLabel()",
 			Tint:        components.ToneBlue,
-			ClassExpr:   "sidebar.quickReviewButtonClass()",
+			ClassExpr:   "sidebar.reviewActions.quickButtonClass()",
 			Attributes: templ.Attributes{
-				"x-bind:disabled": "sidebar.reviewSubmitting",
+				"x-bind:disabled": "sidebar.reviewActions.submitting",
 			},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -287,7 +287,7 @@ func journalDetailManagementActions() templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div class=\"space-y-3\" x-show=\"sidebar.hasManagementBar()\"><div><p class=\"text-xs font-semibold uppercase tracking-widest text-muted-foreground\">Management</p><p class=\"mt-1 text-sm text-muted-foreground\">Quick add management tags for taken journals.</p></div><div class=\"flex flex-wrap gap-2\"><template x-for=\"preset in sidebar.managementTagPresets\" x-bind:key=\"preset.value\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div class=\"space-y-3\" x-show=\"sidebar.managementTags.hasBar()\"><div><p class=\"text-xs font-semibold uppercase tracking-widest text-muted-foreground\">Management</p><p class=\"mt-1 text-sm text-muted-foreground\">Quick add management tags for taken journals.</p></div><div class=\"flex flex-wrap gap-2\"><template x-for=\"preset in sidebar.managementTags.presets\" x-bind:key=\"preset.value\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -297,9 +297,9 @@ func journalDetailManagementActions() templ.Component {
 			Size:    button.SizeSm,
 			Class:   "rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide",
 			Attributes: templ.Attributes{
-				"x-on:click":      "sidebar.submitManagementTag(preset.value)",
-				"x-bind:disabled": "sidebar.managementTagSubmitting || sidebar.hasManagementTag(preset.value)",
-				"x-bind:class":    "sidebar.managementTagButtonClass(preset.value)",
+				"x-on:click":      "sidebar.managementTags.submit(preset.value)",
+				"x-bind:disabled": "sidebar.managementTags.submitting || sidebar.managementTags.hasTag(preset.value)",
+				"x-bind:class":    "sidebar.managementTags.buttonClass(preset.value)",
 				"x-text":          "preset.label",
 			},
 		}).Render(ctx, templ_7745c5c3_Buffer)
@@ -311,9 +311,9 @@ func journalDetailManagementActions() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.managementTagMessage",
-			ClassExpr: "sidebar.managementTagFeedbackClass",
-			TextExpr:  "sidebar.managementTagMessage",
+			ShowExpr:  "sidebar.managementTags.message",
+			ClassExpr: "sidebar.managementTags.feedbackClass",
+			TextExpr:  "sidebar.managementTags.message",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -450,9 +450,9 @@ func journalDetailTagsCard() templ.Component {
 					return templ_7745c5c3_Err
 				}
 				templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-					ShowExpr:  "sidebar.reasonTagMessage",
-					ClassExpr: "sidebar.reasonTagFeedbackClass",
-					TextExpr:  "sidebar.reasonTagMessage",
+					ShowExpr:  "sidebar.reasonTagForm.message",
+					ClassExpr: "sidebar.reasonTagForm.feedbackClass",
+					TextExpr:  "sidebar.reasonTagForm.message",
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -469,7 +469,7 @@ func journalDetailTagsCard() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags().length"}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.all().length"}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -517,7 +517,7 @@ func journalDetailTagForm() templ.Component {
 		templ_7745c5c3_Err = input.Input(input.Props{
 			Placeholder: "Reason tag",
 			Class:       "w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
-			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagInput", "x-on:keydown.enter.prevent": "sidebar.focusReasonTagOverride()"},
+			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.input", "x-on:keydown.enter.prevent": "sidebar.reasonTagForm.focusOverride()"},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -525,15 +525,15 @@ func journalDetailTagForm() templ.Component {
 		templ_7745c5c3_Err = input.Input(input.Props{
 			Placeholder: "Override (optional)",
 			Class:       "w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
-			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagOverride", "x-ref": "reasonTagOverride", "x-on:keydown.enter.prevent": "sidebar.submitReasonTag()"},
+			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.override", "x-ref": "reasonTagOverride", "x-on:keydown.enter.prevent": "sidebar.reasonTagForm.submit()"},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.AsyncButton(components.AsyncButtonProps{
-			OnClickExpr:  "sidebar.submitReasonTag()",
-			DisabledExpr: "sidebar.reasonTagSubmitting || !sidebar.reasonTagInput.trim()",
-			LoadingExpr:  "sidebar.reasonTagSubmitting",
+			OnClickExpr:  "sidebar.reasonTagForm.submit()",
+			DisabledExpr: "sidebar.reasonTagForm.submitting || !sidebar.reasonTagForm.input.trim()",
+			LoadingExpr:  "sidebar.reasonTagForm.submitting",
 			LoadingText:  "'Saving reason tag...'",
 			DefaultText:  "'Add Reason Tag'",
 		}).Render(ctx, templ_7745c5c3_Buffer)
@@ -569,7 +569,7 @@ func journalDetailTagInputs() templ.Component {
 			templ_7745c5c3_Var16 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div class=\"space-y-3\" x-show=\"sidebar.tags().length\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div class=\"space-y-3\" x-show=\"sidebar.tags.all().length\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -606,7 +606,7 @@ func journalDetailTagRows() templ.Component {
 			templ_7745c5c3_Var17 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<template x-for=\"tag in sidebar.tags()\" x-bind:key=\"tag.id\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<template x-for=\"tag in sidebar.tags.all()\" x-bind:key=\"tag.id\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -656,8 +656,8 @@ func journalDetailTagRow() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.DeleteButton(components.DeleteButtonProps{
-			OnClickExpr:  "sidebar.deleteTag(tag.id)",
-			DisabledExpr: "sidebar.tagDeletingId === tag.id",
+			OnClickExpr:  "sidebar.tags.delete(tag.id)",
+			DisabledExpr: "sidebar.tags.deletingId === tag.id",
 			AriaLabel:    "Delete Tag",
 			Title:        "Delete Tag",
 		}).Render(ctx, templ_7745c5c3_Buffer)

@@ -1,4 +1,5 @@
 import type { JournalImage } from '../../../types/journal_api';
+import type { JournalDetailPageProvider, JournalImagesConcern } from '../../../types/journal_detail_concern';
 
 export interface ImageHelper {
 	chipClass(timeframe: string): string;
@@ -51,6 +52,29 @@ export function createImageHelper(): ImageHelper {
 		},
 		counter(current, total) {
 			return `${current + 1} / ${total}`;
+		},
+	};
+}
+
+export function NewImagesConcern(pg: JournalDetailPageProvider, image: ImageHelper): JournalImagesConcern {
+	return {
+		resolveImageSrc: image.resolve,
+		timeframeChipClass: image.chipClass,
+		countLabel(this: any) {
+			const count = this.sorted().length;
+			return `${count} timeframe image${count === 1 ? '' : 's'}`;
+		},
+		sorted() {
+			return image.sorted(pg().current.journal?.images);
+		},
+		tileTitle(this: any, imageItem: JournalImage) {
+			return imageItem.file_name;
+		},
+		tileSrc(this: any, imageItem: JournalImage) {
+			return image.resolve(imageItem.file_name, imageItem.created_at);
+		},
+		tileAlt(this: any, imageItem: JournalImage) {
+			return image.label(imageItem);
 		},
 	};
 }

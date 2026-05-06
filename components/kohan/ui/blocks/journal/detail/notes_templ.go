@@ -66,7 +66,7 @@ func JournalDetailNotes() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <p class=\"mt-1 text-sm text-muted-foreground\"><span x-text=\"sidebar.sortedNotes().length\"></span> note(s)</p><div class=\"mt-4 space-y-3\" x-show=\"sidebar.sortedNotes().length\"><template x-for=\"note in sidebar.sortedNotes()\" x-bind:key=\"note.id\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <p class=\"mt-1 text-sm text-muted-foreground\"><span x-text=\"sidebar.notes.sorted().length\"></span> note(s)</p><div class=\"mt-4 space-y-3\" x-show=\"sidebar.notes.sorted().length\"><template x-for=\"note in sidebar.notes.sorted()\" x-bind:key=\"note.id\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -78,7 +78,7 @@ func JournalDetailNotes() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = JournalDetailEmptyState("No notes available for this journal.", "!sidebar.sortedNotes().length").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = JournalDetailEmptyState("No notes available for this journal.", "!sidebar.notes.sorted().length").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -127,13 +127,13 @@ func JournalDetailNoteRow() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"inline-flex items-center gap-2 rounded-md border border-sky-300/70 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-900\"><span class=\"uppercase tracking-wide text-sky-700/80\">Created</span> <span x-text=\"formatTimestamp(note.created_at)\"></span></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"inline-flex items-center gap-2 rounded-md border border-sky-300/70 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-900\"><span class=\"uppercase tracking-wide text-sky-700/80\">Created</span> <span x-text=\"presentation.formatTimestamp(note.created_at)\"></span></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.DeleteButton(components.DeleteButtonProps{
-			OnClickExpr:  "sidebar.deleteNote(note.id)",
-			DisabledExpr: "sidebar.noteDeletingId === note.id",
+			OnClickExpr:  "sidebar.notes.delete(note.id)",
+			DisabledExpr: "sidebar.notes.deletingId === note.id",
 			AriaLabel:    "Delete Note",
 			Title:        "Delete Note",
 		}).Render(ctx, templ_7745c5c3_Buffer)

@@ -66,7 +66,7 @@ func JournalDetailImages() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <p class=\"mt-1 text-sm text-muted-foreground\" x-text=\"imageCountLabel()\"></p><div class=\"mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2\" x-show=\"journal.images?.length\"><template x-for=\"(image, index) in sortedImages()\" x-bind:key=\"image.id\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <p class=\"mt-1 text-sm text-muted-foreground\" x-text=\"images.countLabel()\"></p><div class=\"mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2\" x-show=\"current.journal.images?.length\"><template x-for=\"(image, index) in images.sorted()\" x-bind:key=\"image.id\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -78,7 +78,7 @@ func JournalDetailImages() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = JournalDetailEmptyState("No images available for this journal.", "!journal.images?.length").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = JournalDetailEmptyState("No images available for this journal.", "!current.journal.images?.length").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -123,7 +123,7 @@ func JournalDetailImageTile() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border text-sm font-semibold shadow-sm", Attributes: templ.Attributes{"x-bind:class": "timeframeChipClass(image.timeframe)", "x-text": "image.timeframe"}}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border text-sm font-semibold shadow-sm", Attributes: templ.Attributes{"x-bind:class": "images.timeframeChipClass(image.timeframe)", "x-text": "image.timeframe"}}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -143,7 +143,7 @@ func JournalDetailImageTile() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<img class=\"block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]\" x-bind:src=\"imageTileSrc(image)\" x-bind:alt=\"imageTileAlt(image)\" x-on:error=\"$el.style.opacity='0.35'\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<img class=\"block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]\" x-bind:src=\"images.tileSrc(image)\" x-bind:alt=\"images.tileAlt(image)\" x-on:error=\"$el.style.opacity='0.35'\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -154,8 +154,8 @@ func JournalDetailImageTile() templ.Component {
 			Type:    button.TypeButton,
 			Class:   "group block w-full h-auto p-0 items-start justify-start overflow-hidden rounded-2xl border border-border bg-muted text-left",
 			Attributes: templ.Attributes{
-				"x-on:click":   "openImagePreview(index)",
-				"x-bind:title": "imageTileTitle(image)",
+				"x-on:click":   "preview.open(index)",
+				"x-bind:title": "images.tileTitle(image)",
 			},
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

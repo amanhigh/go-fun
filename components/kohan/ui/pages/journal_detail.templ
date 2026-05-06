@@ -22,7 +22,7 @@ templ JournalDetailPage(journalID string) {
 				}) {
 				<div data-journal-detail-page data-journal-id={ journalID } data-action-open-storage-key={ blockscommon.SidebarActionOpenStorageKey } data-review-mode-storage-key={ blockscommon.SidebarReviewModeStorageKey } x-data="journalDetailPage()" x-init="init()" class="space-y-6">
 					@detailblocks.JournalDetailStateSection()
-				<div class="space-y-6" x-show="journal && !loading && !hasError()">
+				<div class="space-y-6" x-show="current.journal && !current.loading && !current.hasError()">
 					<div class="grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)] xl:items-start">
 						<div class="space-y-6 min-w-0">
 							@detailblocks.JournalDetailHeader()
@@ -36,18 +36,18 @@ templ JournalDetailPage(journalID string) {
 					</div>
 				</div>
 				@detailblocks.JournalImageModal(detailblocks.JournalImageModalProps{
-					ShowExpr:           "hasImagePreview()",
-					CloseExpr:          "closeImagePreview()",
-					PrevExpr:           "prevImage()",
-					NextExpr:           "nextImage()",
-					OverlayPrevExpr:    "prevImage(true)",
-					OverlayNextExpr:    "nextImage(true)",
-					TimeframeExpr:      "previewImageTimeframe()",
-					TimeframeClassExpr: "timeframeChipClass(previewImageTimeframe())",
-					CounterExpr:        "previewImageCounter()",
-					FilenameExpr:       "previewImage()?.file_name ?? ''",
-					SrcExpr:            "previewImageSrc()",
-					AltExpr:            "previewImageLabel()",
+					ShowExpr:           "preview.hasPreview()",
+					CloseExpr:          "preview.close()",
+					PrevExpr:           "preview.prev()",
+					NextExpr:           "preview.next()",
+					OverlayPrevExpr:    "preview.prev(true)",
+					OverlayNextExpr:    "preview.next(true)",
+					TimeframeExpr:      "preview.timeframe()",
+					TimeframeClassExpr: "images.timeframeChipClass(preview.timeframe())",
+					CounterExpr:        "preview.counter()",
+					FilenameExpr:       "preview.current()?.file_name ?? ''",
+					SrcExpr:            "preview.src()",
+					AltExpr:            "preview.label()",
 				})
 			</div>
 		}

@@ -1,12 +1,12 @@
 import type { Journal, JournalFilterKey } from './journal_api';
 import type { JournalClient } from '../client/journal';
-import type { JournalPresentationState } from './journal_state';
+import type { PresentationConcern } from './presentation_concern';
 
 export type JournalPageProvider = () => JournalPageData;
 
 export type JournalPageData = {
 	client: JournalClient;
-	presentation: JournalPresentationState;
+	presentation: PresentationConcern;
 	filter: JournalFilterConcern;
 	filterUrl: JournalFilterUrlConcern;
 	pagination: PaginationConcern;

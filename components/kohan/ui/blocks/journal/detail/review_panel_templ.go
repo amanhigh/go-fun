@@ -63,7 +63,7 @@ func JournalDetailReviewPanel() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = commondetail.JournalDetailSection("Review", "Journal Review", "sidebar.reviewMode", "sidebar.setReviewMode($el.open)").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = commondetail.JournalDetailSection("Review", "Journal Review", "sidebar.ui.reviewMode", "sidebar.ui.setReviewMode($el.open)").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -160,7 +160,7 @@ func journalDetailQueueCard() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"flex items-center gap-2 py-3 text-xs text-sky-700\" x-show=\"sidebar.reviewQueueLoading\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"flex items-center gap-2 py-3 text-xs text-sky-700\" x-show=\"sidebar.reviewQueue.loading\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -168,7 +168,7 @@ func journalDetailQueueCard() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<span>Loading queue...</span></div><p class=\"py-2 text-xs text-rose-600\" x-show=\"!sidebar.reviewQueueLoading && sidebar.reviewQueueError\" x-text=\"sidebar.reviewQueueError\"></p><p class=\"py-2 text-xs text-muted-foreground\" x-show=\"!sidebar.reviewQueueLoading && !sidebar.reviewQueueError && sidebar.reviewQueue.length === 0\">All caught up — no pending reviews.</p><div class=\"space-y-1\" x-show=\"!sidebar.reviewQueueLoading && !sidebar.reviewQueueError && sidebar.reviewQueue.length > 0\"><template x-for=\"item in sidebar.reviewQueue\" x-bind:key=\"item.id\"><a class=\"flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition\" x-on:click=\"sidebar.enterReviewMode()\" x-bind:class=\"reviewQueueItemClass(item.type)\" x-bind:href=\"'/journal/' + item.id\"><span class=\"font-semibold\" x-text=\"item.ticker\"></span> <span class=\"text-xs font-medium\" x-text=\"formatReviewQueueDate(item.created_at)\"></span></a></template></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<span>Loading queue...</span></div><p class=\"py-2 text-xs text-rose-600\" x-show=\"!sidebar.reviewQueue.loading && sidebar.reviewQueue.error\" x-text=\"sidebar.reviewQueue.error\"></p><p class=\"py-2 text-xs text-muted-foreground\" x-show=\"!sidebar.reviewQueue.loading && !sidebar.reviewQueue.error && sidebar.reviewQueue.items.length === 0\">All caught up — no pending reviews.</p><div class=\"space-y-1\" x-show=\"!sidebar.reviewQueue.loading && !sidebar.reviewQueue.error && sidebar.reviewQueue.items.length > 0\"><template x-for=\"item in sidebar.reviewQueue.items\" x-bind:key=\"item.id\"><a class=\"flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition\" x-on:click=\"sidebar.ui.enterReviewMode()\" x-bind:class=\"presentation.reviewQueueItemClass(item.type)\" x-bind:href=\"'/journal/' + item.id\"><span class=\"font-semibold\" x-text=\"item.ticker\"></span> <span class=\"text-xs font-medium\" x-text=\"presentation.formatReviewQueueDate(item.created_at)\"></span></a></template></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -280,7 +280,7 @@ func journalDetailNoteCard() templ.Component {
 				templ_7745c5c3_Err = textarea.Textarea(textarea.Props{
 					Placeholder: "Write a note about this journal...",
 					Class:       "min-h-[140px] w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
-					Attributes:  templ.Attributes{"x-model": "sidebar.noteContent"},
+					Attributes:  templ.Attributes{"x-model": "sidebar.noteForm.content"},
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -290,9 +290,9 @@ func journalDetailNoteCard() templ.Component {
 					return templ_7745c5c3_Err
 				}
 				templ_7745c5c3_Err = components.AsyncButton(components.AsyncButtonProps{
-					OnClickExpr:  "sidebar.submitNote()",
-					DisabledExpr: "sidebar.noteSubmitting || !sidebar.noteContent.trim()",
-					LoadingExpr:  "sidebar.noteSubmitting",
+					OnClickExpr:  "sidebar.noteForm.submit()",
+					DisabledExpr: "sidebar.noteForm.submitting || !sidebar.noteForm.content.trim()",
+					LoadingExpr:  "sidebar.noteForm.submitting",
 					LoadingText:  "'Saving note...'",
 					DefaultText:  "'Add Note'",
 				}).Render(ctx, templ_7745c5c3_Buffer)
@@ -304,9 +304,9 @@ func journalDetailNoteCard() templ.Component {
 					return templ_7745c5c3_Err
 				}
 				templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-					ShowExpr:  "sidebar.noteMessage",
-					ClassExpr: "sidebar.noteFeedbackClass",
-					TextExpr:  "sidebar.noteMessage",
+					ShowExpr:  "sidebar.noteForm.message",
+					ClassExpr: "sidebar.noteForm.feedbackClass",
+					TextExpr:  "sidebar.noteForm.message",
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

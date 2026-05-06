@@ -9,7 +9,7 @@ import (
 )
 
 templ JournalDetailActionsPanel() {
-	@commondetail.JournalDetailSection("Actions", "Journal Actions", "sidebar.actionOpen", "sidebar.setActionOpen($el.open)") {
+	@commondetail.JournalDetailSection("Actions", "Journal Actions", "sidebar.ui.actionOpen", "sidebar.ui.setActionOpen($el.open)") {
 		<div class="space-y-4">
 			@journalDetailActionCard()
 			@journalDetailTagsCard()
@@ -21,9 +21,9 @@ templ journalDetailActionCard() {
 	<div class="space-y-4 rounded-3xl border border-border bg-card p-4 shadow-sm">
 		@journalDetailActionBar()
 		@components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.reviewMessage",
-			ClassExpr: "sidebar.reviewFeedbackClass",
-			TextExpr:  "sidebar.reviewMessage",
+			ShowExpr:  "sidebar.reviewActions.message",
+			ClassExpr: "sidebar.reviewActions.feedbackClass",
+			TextExpr:  "sidebar.reviewActions.message",
 		})
 		@journalDetailManagementActions()
 	</div>
@@ -43,56 +43,56 @@ templ journalDetailActionBar() {
 
 templ journalDetailReviewToggleAction() {
 	@components.QuickAction(components.QuickActionProps{
-		OnClickExpr: "sidebar.toggleReview()",
-		TextExpr:    "sidebar.reviewSubmitting ? 'Saving...' : sidebar.reviewToggleLabel()",
+		OnClickExpr: "sidebar.reviewActions.toggle()",
+		TextExpr:    "sidebar.reviewActions.submitting ? 'Saving...' : sidebar.reviewActions.toggleLabel()",
 		Tint:        components.ToneGreen,
-		ClassExpr:   "sidebar.reviewButtonClass()",
+		ClassExpr:   "sidebar.reviewActions.buttonClass()",
 		Attributes: templ.Attributes{
-			"x-bind:disabled": "sidebar.reviewSubmitting",
+			"x-bind:disabled": "sidebar.reviewActions.submitting",
 		},
 	})
 }
 
 templ journalDetailQuickReviewAction() {
-	<div x-show="sidebar.hasQuickReviewAction()">
+	<div x-show="sidebar.reviewActions.hasQuickAction()">
 		@components.QuickAction(components.QuickActionProps{
-			OnClickExpr: "sidebar.applyQuickReviewStatus()",
-			TextExpr:    "sidebar.reviewSubmitting ? 'Saving...' : sidebar.quickReviewLabel()",
+			OnClickExpr: "sidebar.reviewActions.applyQuickStatus()",
+			TextExpr:    "sidebar.reviewActions.submitting ? 'Saving...' : sidebar.reviewActions.quickLabel()",
 			Tint:        components.ToneBlue,
-			ClassExpr:   "sidebar.quickReviewButtonClass()",
+			ClassExpr:   "sidebar.reviewActions.quickButtonClass()",
 			Attributes: templ.Attributes{
-				"x-bind:disabled": "sidebar.reviewSubmitting",
+				"x-bind:disabled": "sidebar.reviewActions.submitting",
 			},
 		})
 	</div>
 }
 
 templ journalDetailManagementActions() {
-	<div class="space-y-3" x-show="sidebar.hasManagementBar()">
+	<div class="space-y-3" x-show="sidebar.managementTags.hasBar()">
 		<div>
 			<p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Management</p>
 			<p class="mt-1 text-sm text-muted-foreground">Quick add management tags for taken journals.</p>
 		</div>
 		<div class="flex flex-wrap gap-2">
-			<template x-for="preset in sidebar.managementTagPresets" x-bind:key="preset.value">
+			<template x-for="preset in sidebar.managementTags.presets" x-bind:key="preset.value">
 				@button.Button(button.Props{
 					Variant: button.VariantOutline,
 					Type:    button.TypeButton,
 					Size:    button.SizeSm,
 					Class:   "rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide",
 					Attributes: templ.Attributes{
-						"x-on:click":      "sidebar.submitManagementTag(preset.value)",
-						"x-bind:disabled": "sidebar.managementTagSubmitting || sidebar.hasManagementTag(preset.value)",
-						"x-bind:class":    "sidebar.managementTagButtonClass(preset.value)",
+						"x-on:click":      "sidebar.managementTags.submit(preset.value)",
+						"x-bind:disabled": "sidebar.managementTags.submitting || sidebar.managementTags.hasTag(preset.value)",
+						"x-bind:class":    "sidebar.managementTags.buttonClass(preset.value)",
 						"x-text":          "preset.label",
 					},
 				}) {}
 			</template>
 		</div>
 		@components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.managementTagMessage",
-			ClassExpr: "sidebar.managementTagFeedbackClass",
-			TextExpr:  "sidebar.managementTagMessage",
+			ShowExpr:  "sidebar.managementTags.message",
+			ClassExpr: "sidebar.managementTags.feedbackClass",
+			TextExpr:  "sidebar.managementTags.message",
 		})
 	</div>
 }
@@ -106,12 +106,12 @@ templ journalDetailTagsCard() {
 		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
 			@journalDetailTagForm()
 			@components.FeedbackMessage(components.FeedbackMessageProps{
-				ShowExpr:  "sidebar.reasonTagMessage",
-				ClassExpr: "sidebar.reasonTagFeedbackClass",
-				TextExpr:  "sidebar.reasonTagMessage",
+				ShowExpr:  "sidebar.reasonTagForm.message",
+				ClassExpr: "sidebar.reasonTagForm.feedbackClass",
+				TextExpr:  "sidebar.reasonTagForm.message",
 			})
 			@journalDetailTagInputs()
-			@components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags().length"})
+			@components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.all().length"})
 		}
 	}
 }
@@ -121,17 +121,17 @@ templ journalDetailTagForm() {
 		@input.Input(input.Props{
 			Placeholder: "Reason tag",
 			Class:       "w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
-			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagInput", "x-on:keydown.enter.prevent": "sidebar.focusReasonTagOverride()"},
+			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.input", "x-on:keydown.enter.prevent": "sidebar.reasonTagForm.focusOverride()"},
 		})
 		@input.Input(input.Props{
 			Placeholder: "Override (optional)",
 			Class:       "w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
-			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagOverride", "x-ref": "reasonTagOverride", "x-on:keydown.enter.prevent": "sidebar.submitReasonTag()"},
+			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.override", "x-ref": "reasonTagOverride", "x-on:keydown.enter.prevent": "sidebar.reasonTagForm.submit()"},
 		})
 		@components.AsyncButton(components.AsyncButtonProps{
-			OnClickExpr:   "sidebar.submitReasonTag()",
-			DisabledExpr:  "sidebar.reasonTagSubmitting || !sidebar.reasonTagInput.trim()",
-			LoadingExpr:   "sidebar.reasonTagSubmitting",
+			OnClickExpr:   "sidebar.reasonTagForm.submit()",
+			DisabledExpr:  "sidebar.reasonTagForm.submitting || !sidebar.reasonTagForm.input.trim()",
+			LoadingExpr:   "sidebar.reasonTagForm.submitting",
 			LoadingText:   "'Saving reason tag...'",
 			DefaultText:   "'Add Reason Tag'",
 		})
@@ -139,13 +139,13 @@ templ journalDetailTagForm() {
 }
 
 templ journalDetailTagInputs() {
-	<div class="space-y-3" x-show="sidebar.tags().length">
+	<div class="space-y-3" x-show="sidebar.tags.all().length">
 		@journalDetailTagRows()
 	</div>
 }
 
 templ journalDetailTagRows() {
-	<template x-for="tag in sidebar.tags()" x-bind:key="tag.id">
+	<template x-for="tag in sidebar.tags.all()" x-bind:key="tag.id">
 		@journalDetailTagRow()
 	</template>
 }
@@ -156,8 +156,8 @@ templ journalDetailTagRow() {
 			@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, TextExpr: "[tag.tag, tag.override, tag.type].filter(Boolean).join(' • ')", Class: "font-semibold"})
 		</div>
 		@components.DeleteButton(components.DeleteButtonProps{
-			OnClickExpr:  "sidebar.deleteTag(tag.id)",
-			DisabledExpr: "sidebar.tagDeletingId === tag.id",
+			OnClickExpr:  "sidebar.tags.delete(tag.id)",
+			DisabledExpr: "sidebar.tags.deletingId === tag.id",
 			AriaLabel:    "Delete Tag",
 			Title:        "Delete Tag",
 		})
