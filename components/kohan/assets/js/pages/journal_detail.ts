@@ -10,7 +10,7 @@ import { NewImagePreviewConcern } from '../concern/journal/detail/image_preview'
 import { NewSidebarConcern } from '../concern/journal/sidebar';
 import '../types/platform';
 
-function createJournalDetailPageData() {
+function createJournalDetailPageData(journalId = '') {
 	let page = {} as JournalDetailPageData;
 	const pg = () => page;
 	const image = createImageHelper();
@@ -29,12 +29,8 @@ function createJournalDetailPageData() {
 	page.init = function init(this: any) {
 		page = this;
 
-		const el = this.$el as HTMLElement;
-		this.current.journalId = el.dataset.journalId ?? '';
-		this.sidebar.ui.initSidebarUiState(
-			el.dataset.actionOpenStorageKey ?? '',
-			el.dataset.reviewModeStorageKey ?? '',
-		);
+		this.current.journalId = journalId;
+		this.sidebar.ui.initSidebarUiState();
 
 		void this.current.loadJournal();
 		void this.sidebar.reviewQueue.load();

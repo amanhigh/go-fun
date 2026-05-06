@@ -10,25 +10,8 @@ import (
 	templruntime "github.com/a-h/templ/runtime"
 	"github.com/amanhigh/go-fun/common/ui/layout"
 
-	blockscommon "github.com/amanhigh/go-fun/components/kohan/ui/blocks/common"
-
 	detailblocks "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/detail"
 )
-
-// ============================================================
-// MAIN PAGE FLOW
-// ============================================================
-
-func journalDetailPageAttrs(journalID string) templ.Attributes {
-	return templ.Attributes{
-		"data-journal-detail-page":     true,
-		"data-journal-id":              journalID,
-		"data-action-open-storage-key": blockscommon.SidebarActionOpenStorageKey,
-		"data-review-mode-storage-key": blockscommon.SidebarReviewModeStorageKey,
-		"x-data":                       "journalDetailPage()",
-		"x-init":                       "init()",
-	}
-}
 
 // JournalDetailPage renders a dedicated page for viewing a single journal entry.
 func JournalDetailPage(journalID string) templ.Component {
@@ -104,7 +87,10 @@ func JournalDetailPage(journalID string) templ.Component {
 				Heading:     "Journal Detail",
 				Description: "View complete journal entry with all associated data.",
 				Tags:        []string{"Public", "Read-only", "Detail"},
-				Attributes:  journalDetailPageAttrs(journalID),
+				Attributes: templ.Attributes{
+					"x-data": `journalDetailPage("` + journalID + `")`,
+					"x-init": "init()",
+				},
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

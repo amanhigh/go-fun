@@ -1,5 +1,8 @@
 import { createLocalStorageClient } from '../../../client/local_storage';
 
+const ACTION_OPEN_STORAGE_KEY = 'kohan.journalDetail.sidebar.actionOpen';
+const REVIEW_MODE_STORAGE_KEY = 'kohan.journalDetail.reviewMode';
+
 export function NewSidebarUiConcern() {
 	const localStorageClient = createLocalStorageClient();
 
@@ -7,9 +10,9 @@ export function NewSidebarUiConcern() {
 		actionOpen: true,
 		reviewMode: false,
 
-		initSidebarUiState(this: any, actionOpenStorageKey: string, reviewModeStorageKey: string) {
-			this.actionOpen = localStorageClient.getBool(actionOpenStorageKey, true);
-			this.reviewMode = localStorageClient.getBool(reviewModeStorageKey, false);
+		initSidebarUiState(this: any) {
+			this.actionOpen = localStorageClient.getBool(ACTION_OPEN_STORAGE_KEY, true);
+			this.reviewMode = localStorageClient.getBool(REVIEW_MODE_STORAGE_KEY, false);
 		},
 		setActionOpen(this: any, isOpen: boolean) {
 			this.actionOpen = isOpen;

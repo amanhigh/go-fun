@@ -10,7 +10,7 @@ export type ManagementTagPreset = {
 export type SidebarUiConcern = {
 	actionOpen: boolean;
 	reviewMode: boolean;
-	initSidebarUiState(actionOpenStorageKey: string, reviewModeStorageKey: string): void;
+	initSidebarUiState(): void;
 	setActionOpen(isOpen: boolean): void;
 	setReviewMode(isReviewMode: boolean): void;
 	toggleActionOpen(): void;
