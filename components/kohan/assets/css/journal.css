@@ -1,33 +1,25 @@
 @layer components {
   /* --- Presentation Display --- */
 
-  .journal-display-default {
+  .journal-display-default,
+  .journal-type-taken,
+  .journal-status-missed {
     @apply border-slate-300 bg-slate-50 text-slate-700;
   }
 
-  .journal-type-taken {
-    @apply border-slate-300 bg-slate-50 text-slate-700;
-  }
-
-  .journal-type-rejected {
+  .journal-type-rejected,
+  .journal-status-fail,
+  .journal-status-just-loss {
     @apply border-rose-300 bg-rose-50 text-rose-800;
   }
 
-  .journal-type-result {
+  .journal-type-result,
+  .journal-status-success {
     @apply border-emerald-300 bg-emerald-50 text-emerald-800;
   }
 
   .journal-type-set {
     @apply border-indigo-300 bg-indigo-50 text-indigo-800;
-  }
-
-  .journal-status-success {
-    @apply border-emerald-300 bg-emerald-50 text-emerald-800;
-  }
-
-  .journal-status-fail,
-  .journal-status-just-loss {
-    @apply border-rose-300 bg-rose-50 text-rose-800;
   }
 
   .journal-status-running {
@@ -41,10 +33,6 @@
   .journal-status-broken,
   .journal-status-rejected {
     @apply border-violet-300 bg-violet-50 text-violet-800;
-  }
-
-  .journal-status-missed {
-    @apply border-slate-300 bg-slate-50 text-slate-700;
   }
 
   .journal-timeframe-default {
@@ -170,34 +158,45 @@
   }
 
   .journal-management-active-emerald {
-    @apply border-emerald-400 bg-emerald-100 text-emerald-900 opacity-90;
+    @apply border-emerald-400 bg-emerald-100 text-emerald-900;
   }
 
   .journal-management-active-sky {
-    @apply border-sky-400 bg-sky-100 text-sky-900 opacity-90;
+    @apply border-sky-400 bg-sky-100 text-sky-900;
   }
 
   .journal-management-active-rose {
-    @apply border-rose-400 bg-rose-100 text-rose-900 opacity-90;
+    @apply border-rose-400 bg-rose-100 text-rose-900;
   }
 
   .journal-management-active-violet {
-    @apply border-violet-400 bg-violet-100 text-violet-900 opacity-90;
+    @apply border-violet-400 bg-violet-100 text-violet-900;
   }
 
   .journal-management-active-amber {
-    @apply border-amber-400 bg-amber-100 text-amber-900 opacity-90;
+    @apply border-amber-400 bg-amber-100 text-amber-900;
   }
 
   .journal-management-active-slate {
-    @apply border-slate-400 bg-slate-100 text-slate-900 opacity-90;
+    @apply border-slate-400 bg-slate-100 text-slate-900;
   }
 
   .journal-management-active-fuchsia {
-    @apply border-fuchsia-400 bg-fuchsia-100 text-fuchsia-900 opacity-90;
+    @apply border-fuchsia-400 bg-fuchsia-100 text-fuchsia-900;
   }
 
   .journal-management-active-orange {
-    @apply border-orange-400 bg-orange-100 text-orange-900 opacity-90;
+    @apply border-orange-400 bg-orange-100 text-orange-900;
+  }
+
+  .journal-management-active-emerald,
+  .journal-management-active-sky,
+  .journal-management-active-rose,
+  .journal-management-active-violet,
+  .journal-management-active-amber,
+  .journal-management-active-slate,
+  .journal-management-active-fuchsia,
+  .journal-management-active-orange {
+    @apply opacity-90;
   }
 }
