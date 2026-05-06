@@ -1,6 +1,6 @@
 import { formatTimestamp } from '../../../shared/date';
 import { normalizeTag } from '../../../shared/tags';
-import type { JournalPresentationState } from '../../../types/journal_common_state';
+import type { JournalPresentationState } from '../../../types/journal_state';
 
 const defaultBadgeClass = 'border-slate-300 bg-slate-50 text-slate-700';
 

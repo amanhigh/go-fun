@@ -1,10 +1,9 @@
-import type { JournalClient } from '../../../client/journal';
 import { createAsyncFeedbackState } from '../../../shared/async_feedback';
 import { formatDateInputValue } from '../../../shared/date';
 import { getErrorMessage } from '../../../shared/error';
 import { normalizeTag } from '../../../shared/tags';
 import type { JournalUpdateRequest } from '../../../types/journal_api';
-import type { DetailAlpineContext, ReviewState } from '../../../types/journal_detail_state';
+import type { JournalDetailPageProvider, ReviewState } from '../../../types/journal_detail_concern';
 
 function localToday(): string {
 	return formatDateInputValue(new Date());
@@ -19,18 +18,18 @@ export function createReviewState(): ReviewState {
 	};
 }
 
-export function createJournalDetailReview(parent: DetailAlpineContext, journalClient: JournalClient) {
+export function NewReviewConcern(pg: JournalDetailPageProvider) {
 	return {
 		reviewToggleLabel(this: any) {
-			return parent.journal?.reviewed_at ? 'Mark Pending' : 'Mark Reviewed';
+			return pg().journal?.reviewed_at ? 'Mark Pending' : 'Mark Reviewed';
 		},
 		reviewButtonClass(this: any) {
-			return parent.journal?.reviewed_at
+			return pg().journal?.reviewed_at
 				? 'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 focus:border-amber-400 focus:ring-amber-200'
 				: 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 focus:border-emerald-400 focus:ring-emerald-200';
 		},
 		quickReviewStatus(this: any) {
-			const journalType = normalizeTag(parent.journal?.type ?? '');
+			const journalType = normalizeTag(pg().journal?.type ?? '');
 			if (journalType === 'TAKEN') return 'JUST_LOSS';
 			if (journalType === 'REJECTED') return 'BROKEN';
 			return '';
@@ -43,8 +42,9 @@ export function createJournalDetailReview(parent: DetailAlpineContext, journalCl
 		},
 		hasQuickReviewAction(this: any) {
 			const targetStatus = this.quickReviewStatus();
-			if (!targetStatus || !parent.journal) return false;
-			return normalizeTag(parent.journal.status) !== targetStatus;
+			const journal = pg().journal;
+			if (!targetStatus || !journal) return false;
+			return normalizeTag(journal.status) !== targetStatus;
 		},
 		quickReviewButtonClass(this: any) {
 			return this.quickReviewStatus() === 'JUST_LOSS'
@@ -53,10 +53,11 @@ export function createJournalDetailReview(parent: DetailAlpineContext, journalCl
 		},
 		applyReviewUpdate(this: any, payload: JournalUpdateRequest, successMessage: string) {
 			return (async () => {
-				const envelope = await journalClient.updateReview(parent.journalId, payload);
-				if (parent.journal) {
-					parent.journal.status = envelope.data.status;
-					parent.journal.reviewed_at = envelope.data.reviewed_at;
+				const envelope = await pg().client.updateReview(pg().journalId, payload);
+				const journal = pg().journal;
+				if (journal) {
+					journal.status = envelope.data.status;
+					journal.reviewed_at = envelope.data.reviewed_at;
 				}
 				this.reviewMessageType = 'success';
 				this.reviewMessage = successMessage;
@@ -64,12 +65,13 @@ export function createJournalDetailReview(parent: DetailAlpineContext, journalCl
 			})();
 		},
 		async toggleReview(this: any) {
-			if (!parent.journal || this.reviewSubmitting) return;
+			const journal = pg().journal;
+			if (!journal || this.reviewSubmitting) return;
 			this.reviewSubmitting = true;
 			this.reviewMessage = '';
 			this.reviewMessageType = 'error';
 			try {
-				const reviewedAt = parent.journal.reviewed_at ? null : localToday();
+				const reviewedAt = journal.reviewed_at ? null : localToday();
 				const payload: JournalUpdateRequest = { reviewed_at: reviewedAt };
 				await this.applyReviewUpdate(
 					payload,
@@ -83,7 +85,8 @@ export function createJournalDetailReview(parent: DetailAlpineContext, journalCl
 			}
 		},
 		async applyQuickReviewStatus(this: any) {
-			if (!parent.journal || this.reviewSubmitting || !this.hasQuickReviewAction()) return;
+			if (!pg().journal || this.reviewSubmitting || !this.hasQuickReviewAction()) return;
+			// journal guard is in hasQuickReviewAction, safe to use optional chaining below
 			const status = this.quickReviewStatus();
 			if (!status) return;
 			this.reviewSubmitting = true;
@@ -105,7 +108,7 @@ export function createJournalDetailReview(parent: DetailAlpineContext, journalCl
 			this.reviewQueueLoading = true;
 			this.reviewQueueError = '';
 			try {
-				const envelope = await journalClient.list(0, 10, { reviewed: 'false', sortBy: 'created_at', sortOrder: 'asc' });
+				const envelope = await pg().client.list(0, 10, { reviewed: 'false', sortBy: 'created_at', sortOrder: 'asc' });
 				this.reviewQueue = envelope.data?.journals ?? [];
 			} catch (err) {
 				this.reviewQueueError = getErrorMessage(err, 'Unable to load review queue.');

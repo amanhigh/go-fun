@@ -1,6 +1,6 @@
 import type { Journal, JournalFilterKey } from './journal_api';
 import type { JournalClient } from '../client/journal';
-import type { JournalPresentationState } from './journal_common_state';
+import type { JournalPresentationState } from './journal_state';
 
 export type JournalPageProvider = () => JournalPageData;
 

@@ -1,10 +1,9 @@
-import type { JournalTagClient } from '../../../client/journal_tag';
 import { createAsyncFeedbackState } from '../../../shared/async_feedback';
 import { prependById, removeById } from '../../../shared/collection';
 import { getErrorMessage } from '../../../shared/error';
 import { normalizeTag } from '../../../shared/tags';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
-import type { DetailAlpineContext, TagsState } from '../../../types/journal_detail_state';
+import type { JournalDetailPageProvider, TagsState } from '../../../types/journal_detail_concern';
 
 export const managementTagPresets = [
 	{ value: 'ntr', label: 'NTR' },
@@ -41,7 +40,7 @@ export function createTagsState(tagPresets: typeof managementTagPresets): TagsSt
 	};
 }
 
-export function createJournalDetailTags(parent: DetailAlpineContext, tagClient: JournalTagClient) {
+export function NewTagsConcern(pg: JournalDetailPageProvider) {
 	return {
 		syncTags(this: any, tags: JournalTag[] | undefined) {
 			this.tagItems = [...(tags ?? [])];
@@ -68,7 +67,7 @@ export function createJournalDetailTags(parent: DetailAlpineContext, tagClient: 
 			return (this.tagItems ?? []).filter((tag: JournalTag) => normalizeTag(tag.type ?? '') === 'MANAGEMENT');
 		},
 		hasManagementBar(this: any) {
-			return normalizeTag(parent.journal?.type ?? '') === 'TAKEN';
+			return normalizeTag(pg().journal?.type ?? '') === 'TAKEN';
 		},
 		hasManagementTag(this: any, value: string) {
 			const normalizedValue = normalizeTag(value);
@@ -106,12 +105,12 @@ export function createJournalDetailTags(parent: DetailAlpineContext, tagClient: 
 			return isPending ? `opacity-70 ${baseClass}` : baseClass;
 		},
 		focusReasonTagOverride(this: any) {
-			parent.$nextTick(() => {
-				parent.$refs?.reasonTagOverride?.focus?.();
+			pg().$nextTick(() => {
+				pg().$refs?.reasonTagOverride?.focus?.();
 			});
 		},
 		async submitReasonTag(this: any) {
-			if (!parent.journal || this.reasonTagSubmitting) return;
+			if (!pg().journal || this.reasonTagSubmitting) return;
 			const tag = this.reasonTagInput.trim();
 			if (!tag) {
 				this.reasonTagMessage = 'Tag is required.';
@@ -128,7 +127,7 @@ export function createJournalDetailTags(parent: DetailAlpineContext, tagClient: 
 					type: 'REASON',
 					...(override ? { override } : {}),
 				};
-				const envelope = await tagClient.create(parent.journalId, payload);
+				const envelope = await pg().tagClient.create(pg().journalId, payload);
 				this.tagItems = prependById(this.tagItems ?? [], envelope.data);
 				this.reasonTagInput = '';
 				this.reasonTagOverride = '';
@@ -142,7 +141,7 @@ export function createJournalDetailTags(parent: DetailAlpineContext, tagClient: 
 			}
 		},
 		async submitManagementTag(this: any, tagValue: string) {
-			if (!parent.journal || this.managementTagSubmitting || !this.hasManagementBar() || !this.hasManagementTag || this.hasManagementTag(tagValue)) return;
+			if (!pg().journal || this.managementTagSubmitting || !this.hasManagementBar() || !this.hasManagementTag || this.hasManagementTag(tagValue)) return;
 			this.managementTagSubmitting = true;
 			this.managementTagPendingValue = tagValue;
 			this.managementTagMessage = '';
@@ -152,7 +151,7 @@ export function createJournalDetailTags(parent: DetailAlpineContext, tagClient: 
 					tag: tagValue,
 					type: 'MANAGEMENT',
 				};
-				const envelope = await tagClient.create(parent.journalId, payload);
+				const envelope = await pg().tagClient.create(pg().journalId, payload);
 				this.tagItems = prependById(this.tagItems ?? [], envelope.data);
 				this.managementTagMessageType = 'success';
 				this.managementTagMessage = `${normalizeTag(tagValue)} tag added.`;
@@ -165,12 +164,12 @@ export function createJournalDetailTags(parent: DetailAlpineContext, tagClient: 
 			}
 		},
 		async deleteTag(this: any, tagId: string) {
-			if (!parent.journal || this.tagDeletingId) return;
+			if (!pg().journal || this.tagDeletingId) return;
 			this.tagDeletingId = tagId;
 			this.reasonTagMessage = '';
 			this.reasonTagMessageType = 'error';
 			try {
-				await tagClient.delete(parent.journalId, tagId);
+				await pg().tagClient.delete(pg().journalId, tagId);
 				this.tagItems = removeById(this.tagItems ?? [], tagId);
 				this.reasonTagMessageType = 'success';
 				this.reasonTagMessage = 'Tag deleted.';

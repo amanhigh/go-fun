@@ -1,9 +1,8 @@
-import type { JournalNoteClient } from '../../../client/journal_note';
 import { createAsyncFeedbackState } from '../../../shared/async_feedback';
 import { prependById, removeById } from '../../../shared/collection';
 import { getErrorMessage } from '../../../shared/error';
 import type { JournalNote, JournalNoteRequest } from '../../../types/journal_api';
-import type { DetailAlpineContext, NotesState } from '../../../types/journal_detail_state';
+import type { JournalDetailPageProvider, NotesState } from '../../../types/journal_detail_concern';
 
 function sortNotes(notes: JournalNote[]): JournalNote[] {
 	return [...notes].sort((left: JournalNote, right: JournalNote) => {
@@ -22,7 +21,7 @@ export function createNotesState(): NotesState {
 	};
 }
 
-export function createJournalDetailNotes(parent: DetailAlpineContext, noteClient: JournalNoteClient) {
+export function NewNotesConcern(pg: JournalDetailPageProvider) {
 	return {
 		syncNotes(this: any, notes: JournalNote[] | undefined) {
 			this.noteItems = sortNotes(notes ?? []);
@@ -31,7 +30,8 @@ export function createJournalDetailNotes(parent: DetailAlpineContext, noteClient
 			return sortNotes(this.noteItems ?? []);
 		},
 		async submitNote(this: any) {
-			if (!parent.journal || this.noteSubmitting) return;
+			const journal = pg().journal;
+			if (!journal || this.noteSubmitting) return;
 			const content = this.noteContent.trim();
 			if (!content) {
 				this.noteMessage = 'Note content is required.';
@@ -43,11 +43,11 @@ export function createJournalDetailNotes(parent: DetailAlpineContext, noteClient
 			this.noteMessageType = 'error';
 			try {
 				const payload: JournalNoteRequest = {
-					status: parent.journal.status,
+					status: journal.status,
 					content,
 					format: 'MARKDOWN',
 				};
-				const envelope = await noteClient.create(parent.journalId, payload);
+				const envelope = await pg().noteClient.create(pg().journalId, payload);
 				this.noteItems = sortNotes(prependById(this.noteItems ?? [], envelope.data));
 				this.noteContent = '';
 				this.noteMessageType = 'success';
@@ -60,12 +60,12 @@ export function createJournalDetailNotes(parent: DetailAlpineContext, noteClient
 			}
 		},
 		async deleteNote(this: any, noteId: string) {
-			if (!parent.journal || this.noteDeletingId) return;
+			if (!pg().journal || this.noteDeletingId) return;
 			this.noteDeletingId = noteId;
 			this.noteMessage = '';
 			this.noteMessageType = 'error';
 			try {
-				await noteClient.delete(parent.journalId, noteId);
+				await pg().noteClient.delete(pg().journalId, noteId);
 				this.noteItems = sortNotes(removeById(this.noteItems ?? [], noteId));
 				this.noteMessageType = 'success';
 				this.noteMessage = 'Note deleted.';

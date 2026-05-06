@@ -1,27 +1,19 @@
-import type { JournalClient } from '../../../client/journal';
-import type { JournalNoteClient } from '../../../client/journal_note';
-import type { JournalTagClient } from '../../../client/journal_tag';
 import { createLocalStorageClient } from '../../../client/local_storage';
-import { createJournalDetailNotes, createNotesState } from './notes';
-import { createJournalDetailReview, createReviewState } from './review_panel';
-import { createJournalDetailTags, createTagsState, managementTagPresets } from './tags';
-import type { DetailAlpineContext } from '../../../types/journal_detail_state';
+import { NewNotesConcern, createNotesState } from './notes';
+import { NewReviewConcern, createReviewState } from './review_panel';
+import { NewTagsConcern, createTagsState, managementTagPresets } from './tags';
+import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
-export function createSideBar(
-	parent: DetailAlpineContext,
-	journalClient: JournalClient,
-	noteClient: JournalNoteClient,
-	tagClient: JournalTagClient,
-) {
+export function NewSidebarConcern(pg: JournalDetailPageProvider) {
 	const localStorageClient = createLocalStorageClient();
 
 	return Object.assign(
 		createNotesState(),
 		createReviewState(),
 		createTagsState(managementTagPresets),
-		createJournalDetailNotes(parent, noteClient),
-		createJournalDetailReview(parent, journalClient),
-		createJournalDetailTags(parent, tagClient),
+		NewNotesConcern(pg),
+		NewReviewConcern(pg),
+		NewTagsConcern(pg),
 		{
 			actionOpen: true,
 			reviewMode: false,
@@ -78,7 +70,7 @@ export function createSideBar(
 				return self.managementTagMessageType === 'success' ? 'text-emerald-700' : 'text-rose-700';
 			},
 			reviewQueueItemClass(value: string) {
-				return parent.reviewQueueItemClass(value);
+				return pg().reviewQueueItemClass(value);
 			},
 		},
 	);

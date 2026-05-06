@@ -23,7 +23,7 @@ const badgeClassMap: Record<string, Record<string, string>> = {
 
 const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export function createJournalDetailFormatters() {
+export function NewHeaderConcern() {
 	return {
 		normalizeStatus: normalizeTag,
 		statusBadgeClass: (value: string) => badgeClassMap.status[normalizeTag(value)] ?? defaultBadgeClass,

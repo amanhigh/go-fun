@@ -1,15 +1,16 @@
 import type { JournalImage } from '../../../types/journal_api';
+import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 import type { ImageHelper } from './images';
 
-export function createJournalDetailPreview(image: ImageHelper) {
+export function NewPreviewConcern(pg: JournalDetailPageProvider, image: ImageHelper) {
 	return {
 		timeframeChipClass: image.chipClass,
-		imageCountLabel(this: any) {
+		imageCountLabel() {
 			const count = this.sortedImages().length;
 			return `${count} timeframe image${count === 1 ? '' : 's'}`;
 		},
-		sortedImages(this: any) {
-			return image.sorted(this.journal?.images);
+		sortedImages() {
+			return image.sorted(pg().journal?.images);
 		},
 		imageTileTitle(this: any, imageItem: JournalImage) {
 			return imageItem.file_name;
@@ -21,42 +22,42 @@ export function createJournalDetailPreview(image: ImageHelper) {
 			return image.label(imageItem);
 		},
 		resolveImageSrc: image.resolve,
-		previewImageSrc(this: any) {
+		previewImageSrc() {
 			return image.resolve(this.previewImage()?.file_name ?? '', this.previewImage()?.created_at);
 		},
-		previewImageLabel(this: any) {
+		previewImageLabel() {
 			return image.label(this.previewImage());
 		},
-		previewImageCounter(this: any) {
-			return image.counter(this.selectedImageIndex, this.sortedImages().length);
+		previewImageCounter() {
+			return image.counter(pg().selectedImageIndex, this.sortedImages().length);
 		},
-		hasImagePreview(this: any) {
-			return this.selectedImageIndex >= 0 && this.selectedImageIndex < this.sortedImages().length;
+		hasImagePreview() {
+			return pg().selectedImageIndex >= 0 && pg().selectedImageIndex < this.sortedImages().length;
 		},
-		openImagePreview(this: any, index: number) {
-			this.selectedImageIndex = index;
+		openImagePreview(index: number) {
+			pg().selectedImageIndex = index;
 		},
-		closeImagePreview(this: any) {
-			this.selectedImageIndex = -1;
+		closeImagePreview() {
+			pg().selectedImageIndex = -1;
 		},
-		canPrevImage(this: any) {
-			return this.selectedImageIndex > 0;
+		canPrevImage() {
+			return pg().selectedImageIndex > 0;
 		},
-		canNextImage(this: any) {
-			return this.selectedImageIndex >= 0 && this.selectedImageIndex < this.sortedImages().length - 1;
+		canNextImage() {
+			return pg().selectedImageIndex >= 0 && pg().selectedImageIndex < this.sortedImages().length - 1;
 		},
-		prevImage(this: any, wrap = false) {
-			if (this.canPrevImage()) this.selectedImageIndex--;
-			else if (wrap && this.sortedImages().length > 0) this.selectedImageIndex = this.sortedImages().length - 1;
+		prevImage(wrap = false) {
+			if (this.canPrevImage()) pg().selectedImageIndex--;
+			else if (wrap && this.sortedImages().length > 0) pg().selectedImageIndex = this.sortedImages().length - 1;
 		},
-		nextImage(this: any, wrap = false) {
-			if (this.canNextImage()) this.selectedImageIndex++;
-			else if (wrap && this.sortedImages().length > 0) this.selectedImageIndex = 0;
+		nextImage(wrap = false) {
+			if (this.canNextImage()) pg().selectedImageIndex++;
+			else if (wrap && this.sortedImages().length > 0) pg().selectedImageIndex = 0;
 		},
-		previewImage(this: any): JournalImage | null {
-			return this.sortedImages()[this.selectedImageIndex] ?? null;
+		previewImage(): JournalImage | null {
+			return this.sortedImages()[pg().selectedImageIndex] ?? null;
 		},
-		previewImageTimeframe(this: any) {
+		previewImageTimeframe() {
 			return this.previewImage()?.timeframe ?? '';
 		},
 	};
