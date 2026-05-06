@@ -64,9 +64,9 @@ export function findReviewPreset(reviewPresets: ReviewPreset[], filter: ReviewPr
 	));
 }
 
-const reviewPresetBaseClass = 'border-cyan-200/70 bg-white/80 text-cyan-800 hover:bg-cyan-50';
-const reviewPresetAnchorClass = 'border-2 border-amber-200 bg-white/80 text-cyan-800';
-const reviewPresetActiveClass = 'border-amber-300 bg-amber-100/90 text-amber-950 hover:bg-amber-100';
+const reviewPresetBaseClass = 'journal-review-preset-base';
+const reviewPresetAnchorClass = 'journal-review-preset-anchor';
+const reviewPresetActiveClass = 'journal-review-preset-active';
 
 function applyPresetChanges(pg: JournalPageProvider, presets: PresetConcern, activeReviewPreset: string, mutate: () => void) {
 	pg().filter.clear();

@@ -18,7 +18,7 @@ export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 		...createReviewActionsState(),
 
 		get feedbackClass(): string {
-			return this.messageType === 'success' ? 'text-emerald-700' : 'text-rose-700';
+			return this.messageType === 'success' ? 'journal-feedback-success' : 'journal-feedback-error';
 		},
 
 		toggleLabel(this: any) {
@@ -26,8 +26,8 @@ export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 		},
 		buttonClass(this: any) {
 			return pg().current.journal?.reviewed_at
-				? 'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 focus:border-amber-400 focus:ring-amber-200'
-				: 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 focus:border-emerald-400 focus:ring-emerald-200';
+				? 'journal-review-toggle-pending'
+				: 'journal-review-toggle-reviewed';
 		},
 		quickStatus(this: any) {
 			const journalType = normalizeTag(pg().current.journal?.type ?? '');
@@ -49,8 +49,8 @@ export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 		},
 		quickButtonClass(this: any) {
 			return this.quickStatus() === 'JUST_LOSS'
-				? 'border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100 focus:border-rose-400 focus:ring-rose-200'
-				: 'border-violet-300 bg-violet-50 text-violet-800 hover:bg-violet-100 focus:border-violet-400 focus:ring-violet-200';
+				? 'journal-quick-status-loss'
+				: 'journal-quick-status-broken';
 		},
 
 		async toggle(this: any) {

@@ -17,7 +17,7 @@ export function NewReasonTagFormConcern(pg: JournalDetailPageProvider) {
 		...createReasonTagFormState(),
 
 		get feedbackClass(): string {
-			return this.messageType === 'success' ? 'text-emerald-700' : 'text-rose-700';
+			return this.messageType === 'success' ? 'journal-feedback-success' : 'journal-feedback-error';
 		},
 
 		focusOverride(this: any) {

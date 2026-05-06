@@ -1,4 +1,6 @@
 @layer components {
+  /* --- Presentation Display --- */
+
   .journal-display-default {
     @apply border-slate-300 bg-slate-50 text-slate-700;
   }
@@ -71,5 +73,131 @@
 
   .journal-timeframe-dl {
     @apply border-slate-400 bg-slate-200 text-slate-950;
+  }
+
+  /* --- Feedback --- */
+
+  .journal-feedback-success {
+    @apply text-emerald-700;
+  }
+
+  .journal-feedback-error {
+    @apply text-rose-700;
+  }
+
+  /* --- Review Actions --- */
+
+  .journal-review-toggle-pending {
+    @apply border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 focus:border-amber-400 focus:ring-amber-200;
+  }
+
+  .journal-review-toggle-reviewed {
+    @apply border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 focus:border-emerald-400 focus:ring-emerald-200;
+  }
+
+  .journal-quick-status-loss {
+    @apply border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100 focus:border-rose-400 focus:ring-rose-200;
+  }
+
+  .journal-quick-status-broken {
+    @apply border-violet-300 bg-violet-50 text-violet-800 hover:bg-violet-100 focus:border-violet-400 focus:ring-violet-200;
+  }
+
+  /* --- Type Toggle --- */
+
+  .journal-type-toggle-taken {
+    @apply border-rose-300/70 bg-rose-100/60 text-rose-800 hover:bg-rose-200/70;
+  }
+
+  .journal-type-toggle-rejected {
+    @apply border-violet-300/70 bg-violet-100/60 text-violet-800 hover:bg-violet-200/70;
+  }
+
+  .journal-type-toggle-all {
+    @apply border-slate-300/70 bg-slate-100/70 text-slate-700 hover:bg-slate-200/80;
+  }
+
+  /* --- Review Presets --- */
+
+  .journal-review-preset-base {
+    @apply border-cyan-200/70 bg-white/80 text-cyan-800 hover:bg-cyan-50;
+  }
+
+  .journal-review-preset-anchor {
+    @apply border-2 border-amber-200 bg-white/80 text-cyan-800;
+  }
+
+  .journal-review-preset-active {
+    @apply border-amber-300 bg-amber-100/90 text-amber-950 hover:bg-amber-100;
+  }
+
+  /* --- Management Tags --- */
+
+  .journal-management-pending {
+    @apply opacity-70;
+  }
+
+  .journal-management-base-emerald {
+    @apply border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 focus:border-emerald-400 focus:ring-emerald-200;
+  }
+
+  .journal-management-base-sky {
+    @apply border-sky-300 bg-sky-50 text-sky-800 hover:bg-sky-100 focus:border-sky-400 focus:ring-sky-200;
+  }
+
+  .journal-management-base-rose {
+    @apply border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100 focus:border-rose-400 focus:ring-rose-200;
+  }
+
+  .journal-management-base-violet {
+    @apply border-violet-300 bg-violet-50 text-violet-800 hover:bg-violet-100 focus:border-violet-400 focus:ring-violet-200;
+  }
+
+  .journal-management-base-amber {
+    @apply border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 focus:border-amber-400 focus:ring-amber-200;
+  }
+
+  .journal-management-base-slate {
+    @apply border-slate-300 bg-slate-50 text-slate-800 hover:bg-slate-100 focus:border-slate-400 focus:ring-slate-200;
+  }
+
+  .journal-management-base-fuchsia {
+    @apply border-fuchsia-300 bg-fuchsia-50 text-fuchsia-800 hover:bg-fuchsia-100 focus:border-fuchsia-400 focus:ring-fuchsia-200;
+  }
+
+  .journal-management-base-orange {
+    @apply border-orange-300 bg-orange-50 text-orange-800 hover:bg-orange-100 focus:border-orange-400 focus:ring-orange-200;
+  }
+
+  .journal-management-active-emerald {
+    @apply border-emerald-400 bg-emerald-100 text-emerald-900 opacity-90;
+  }
+
+  .journal-management-active-sky {
+    @apply border-sky-400 bg-sky-100 text-sky-900 opacity-90;
+  }
+
+  .journal-management-active-rose {
+    @apply border-rose-400 bg-rose-100 text-rose-900 opacity-90;
+  }
+
+  .journal-management-active-violet {
+    @apply border-violet-400 bg-violet-100 text-violet-900 opacity-90;
+  }
+
+  .journal-management-active-amber {
+    @apply border-amber-400 bg-amber-100 text-amber-900 opacity-90;
+  }
+
+  .journal-management-active-slate {
+    @apply border-slate-400 bg-slate-100 text-slate-900 opacity-90;
+  }
+
+  .journal-management-active-fuchsia {
+    @apply border-fuchsia-400 bg-fuchsia-100 text-fuchsia-900 opacity-90;
+  }
+
+  .journal-management-active-orange {
+    @apply border-orange-400 bg-orange-100 text-orange-900 opacity-90;
   }
 }
