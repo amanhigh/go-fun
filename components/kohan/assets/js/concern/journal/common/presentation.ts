@@ -31,21 +31,18 @@ const statusDisplayMap: Record<string, DisplaySpec> = {
 
 // --- Timeframe ---
 
-const timeframeChipClassMap: Record<string, string> = {
-	YR: 'border-fuchsia-400 bg-fuchsia-200 text-fuchsia-950',
-	SMN: 'border-sky-400 bg-sky-200 text-sky-950',
-	TMN: 'border-emerald-400 bg-emerald-200 text-emerald-950',
-	MN: 'border-orange-400 bg-orange-200 text-orange-950',
-	WK: 'border-yellow-400 bg-yellow-200 text-yellow-950',
-	DL: 'border-slate-400 bg-slate-200 text-slate-950',
+const defaultTimeframeSpec: DisplaySpec = { icon: '', badgeClass: 'border-zinc-300 bg-zinc-100 text-zinc-900' };
+
+const timeframeDisplayMap: Record<string, DisplaySpec> = {
+	YR: { icon: '🗓️', badgeClass: 'border-fuchsia-400 bg-fuchsia-200 text-fuchsia-950' },
+	SMN: { icon: '📅', badgeClass: 'border-sky-400 bg-sky-200 text-sky-950' },
+	TMN: { icon: '📈', badgeClass: 'border-emerald-400 bg-emerald-200 text-emerald-950' },
+	MN: { icon: '📊', badgeClass: 'border-orange-400 bg-orange-200 text-orange-950' },
+	WK: { icon: '📆', badgeClass: 'border-yellow-400 bg-yellow-200 text-yellow-950' },
+	DL: { icon: '🔍', badgeClass: 'border-slate-400 bg-slate-200 text-slate-950' },
 };
 
 // --- Review Queue ---
-
-const reviewQueueItemClassMap: Record<string, string> = {
-	TAKEN: 'border-emerald-300 bg-emerald-50/70 hover:bg-emerald-100/80 text-emerald-900',
-	REJECTED: 'border-rose-300 bg-rose-50/70 hover:bg-rose-100/80 text-rose-900',
-};
 
 const defaultReviewQueueItemClass = 'border-border bg-muted/30 hover:bg-muted/70 hover:text-foreground';
 
@@ -82,8 +79,13 @@ export function NewPresentationConcern(): PresentationConcern {
 		},
 
 		// --- Timeframe ---
-		timeframeChipClass(value: string) {
-			return timeframeChipClassMap[normalizeTag(value)] ?? 'border-zinc-300 bg-zinc-100 text-zinc-900';
+		timeframeBadgeClass(value: string) {
+			return (timeframeDisplayMap[normalizeTag(value)] ?? defaultTimeframeSpec).badgeClass;
+		},
+		timeframeDisplay(value: string) {
+			const key = normalizeTag(value);
+			const spec = timeframeDisplayMap[key] ?? defaultTimeframeSpec;
+			return spec.icon ? `${spec.icon} ${key}` : key;
 		},
 
 		// --- Sequence ---
@@ -116,7 +118,7 @@ export function NewPresentationConcern(): PresentationConcern {
 
 		// --- Review Queue ---
 		reviewQueueItemClass(value: string) {
-			return reviewQueueItemClassMap[normalizeTag(value)] ?? defaultReviewQueueItemClass;
+			return typeDisplayMap[normalizeTag(value)]?.badgeClass ?? defaultReviewQueueItemClass;
 		},
 	};
 }

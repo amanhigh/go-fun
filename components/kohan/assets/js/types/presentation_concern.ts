@@ -12,7 +12,8 @@ export type PresentationConcern = {
 	statusDisplay(value: string): string;
 
 	// --- Timeframe ---
-	timeframeChipClass(value: string): string;
+	timeframeBadgeClass(value: string): string;
+	timeframeDisplay(value: string): string;
 
 	// --- Sequence ---
 	sequenceLabel(sequence: string | null | undefined): string;

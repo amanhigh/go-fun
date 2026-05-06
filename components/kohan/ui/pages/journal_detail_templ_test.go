@@ -81,8 +81,8 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			// Delete action
 			Expect(html).To(ContainSubstring(`x-on:click="header.deleteJournal()"`))
 
-			// Primary info row: type + status + timeframe
-			Expect(html).To(ContainSubstring(`📅`))
+			// Primary info row: type + status + sequence
+			Expect(html).To(ContainSubstring(`presentation.sequenceLabel(current.journal.sequence)`))
 			Expect(html).To(ContainSubstring(`presentation.typeDisplay(current.journal.type)`))
 			Expect(html).To(ContainSubstring(`presentation.statusDisplay(current.journal.status)`))
 
@@ -114,7 +114,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 
 	Context("Image Preview Modal", func() {
 		It("should render a visible timeframe chip and counter", func() {
-			Expect(html).To(ContainSubstring(`x-bind:class="presentation.timeframeChipClass(preview.timeframe())"`))
+			Expect(html).To(ContainSubstring(`x-bind:class="presentation.timeframeBadgeClass(preview.timeframe())"`))
 			Expect(html).To(ContainSubstring(`x-text="preview.timeframe()"`))
 			Expect(html).To(ContainSubstring(`x-text="preview.counter()"`))
 		})
@@ -144,7 +144,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`border-border`))
 			Expect(html).To(ContainSubstring(`bg-muted`))
 			Expect(html).To(ContainSubstring(`text-left`))
-			Expect(html).To(ContainSubstring(`x-bind:class="presentation.timeframeChipClass(image.timeframe)"`))
+			Expect(html).To(ContainSubstring(`x-bind:class="presentation.timeframeBadgeClass(image.timeframe)"`))
 			Expect(html).To(ContainSubstring(`x-text="image.timeframe"`))
 			Expect(html).To(ContainSubstring(`x-on:click="preview.open(index)"`))
 			Expect(html).To(ContainSubstring(`x-bind:title="images.tileTitle(image)"`))

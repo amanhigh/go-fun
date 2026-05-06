@@ -63,7 +63,7 @@ templ JournalDetailReviewDates() {
 }
 
 templ JournalDetailSequenceChip() {
-	@components.FilterChip(components.FilterChipProps{TextExpr: "presentation.sequenceLabel(current.journal.sequence)", Tone: components.ToneViolet, Emoji: "📅", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+	@components.FilterChip(components.FilterChipProps{TextExpr: "presentation.sequenceLabel(current.journal.sequence)", Tone: components.ToneViolet, Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
 }
 
 templ JournalDetailReasonTags() {

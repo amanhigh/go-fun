@@ -152,7 +152,7 @@ func JournalDetailPage(journalID string) templ.Component {
 					OverlayPrevExpr:    "preview.prev(true)",
 					OverlayNextExpr:    "preview.next(true)",
 					TimeframeExpr:      "preview.timeframe()",
-					TimeframeClassExpr: "presentation.timeframeChipClass(preview.timeframe())",
+					TimeframeClassExpr: "presentation.timeframeBadgeClass(preview.timeframe())",
 					CounterExpr:        "preview.counter()",
 					FilenameExpr:       "preview.current()?.file_name ?? ''",
 					SrcExpr:            "preview.src()",

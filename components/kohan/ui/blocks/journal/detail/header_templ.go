@@ -285,7 +285,7 @@ func JournalDetailSequenceChip() templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{TextExpr: "presentation.sequenceLabel(current.journal.sequence)", Tone: components.ToneViolet, Emoji: "📅", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{TextExpr: "presentation.sequenceLabel(current.journal.sequence)", Tone: components.ToneViolet, Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
