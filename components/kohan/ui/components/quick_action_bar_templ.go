@@ -24,7 +24,6 @@ type QuickActionProps struct {
 	Label       string
 	TextExpr    string
 	OnClickExpr string
-	Tint        Tone
 	Class       string
 	ClassExpr   string
 	AriaLabel   string
@@ -41,25 +40,6 @@ func quickBarThemeClass(theme Tone) string {
 		return "text-cyan-700"
 	default:
 		return "text-slate-700"
-	}
-}
-
-func quickActionTintClass(tint Tone) string {
-	switch tint {
-	case ToneBlue:
-		return "border-sky-300/70 bg-sky-100/70 text-sky-800 hover:bg-sky-200/80"
-	case ToneIndigo:
-		return "border-indigo-300/70 bg-indigo-100/70 text-indigo-800 hover:bg-indigo-200/80"
-	case ToneGreen:
-		return "border-emerald-300/70 bg-emerald-100/70 text-emerald-800 hover:bg-emerald-200/80"
-	case ToneCyan:
-		return "border-cyan-300/70 bg-cyan-100/70 text-cyan-800 hover:bg-cyan-200/80"
-	case ToneRose:
-		return "border-rose-300/70 bg-rose-100/70 text-rose-800 hover:bg-rose-200/80"
-	case ToneAmber:
-		return "border-amber-300/70 bg-amber-100/80 text-amber-900 hover:bg-amber-200/80"
-	default:
-		return "border-slate-300/70 bg-white/80 text-slate-700 hover:bg-slate-100/80"
 	}
 }
 
@@ -169,7 +149,7 @@ func QuickBar(props QuickBarProps) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(props.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 83, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 63, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -228,7 +208,7 @@ func QuickAction(props QuickActionProps) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(props.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 100, Col: 16}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 80, Col: 16}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -241,7 +221,7 @@ func QuickAction(props QuickActionProps) templ.Component {
 			Variant:    button.VariantOutline,
 			Type:       button.TypeButton,
 			Size:       button.SizeSm,
-			Class:      "h-8 rounded-md border px-2 text-xs font-medium shadow-sm transition-colors " + quickActionTintClass(props.Tint) + " " + props.Class,
+			Class:      "h-8 rounded-md border px-2 text-xs font-medium shadow-sm transition-colors " + props.Class,
 			Attributes: quickActionAttrs(props),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

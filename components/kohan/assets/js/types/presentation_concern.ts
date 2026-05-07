@@ -3,7 +3,7 @@ import type { JournalTag } from './journal_api';
 export type DisplaySpec = {
 	icon: string;
 	text: string;
-	badgeClass: string;
+	class: string;
 };
 
 export type PresentationConcern = {

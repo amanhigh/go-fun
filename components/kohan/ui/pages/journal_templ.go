@@ -227,7 +227,7 @@ func JournalQuickFilters() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{Label: "Today", OnClickExpr: "presets.applyCreatedPreset('today')", Tint: components.ToneBlue}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{Label: "Today", OnClickExpr: "presets.applyCreatedPreset('today')", Class: "journal-date-preset-today"}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -235,7 +235,7 @@ func JournalQuickFilters() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{Label: "7d", OnClickExpr: "presets.applyCreatedPreset('last7')", Tint: components.ToneIndigo}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{Label: "7d", OnClickExpr: "presets.applyCreatedPreset('last7')", Class: "journal-date-preset-last7"}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -243,7 +243,7 @@ func JournalQuickFilters() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{Label: "30d", OnClickExpr: "presets.applyCreatedPreset('last30')", Tint: components.ToneGreen}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{Label: "30d", OnClickExpr: "presets.applyCreatedPreset('last30')", Class: "journal-date-preset-last30"}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -269,7 +269,7 @@ func JournalQuickFilters() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{TextExpr: "reviewPreset.label", OnClickExpr: "presets.applyReviewPreset(reviewPreset)", Tint: components.ToneCyan, ClassExpr: "presets.reviewPresetClass(reviewPreset)"}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{TextExpr: "reviewPreset.label", OnClickExpr: "presets.applyReviewPreset(reviewPreset)", ClassExpr: "presets.reviewPresetClass(reviewPreset)"}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -295,7 +295,7 @@ func JournalQuickFilters() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{TextExpr: "filter.typeToggle().label", OnClickExpr: "filter.toggleType()", Tint: components.ToneRose, ClassExpr: "filter.typeToggle().className"}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{TextExpr: "filter.typeToggle().label", OnClickExpr: "filter.toggleType()", ClassExpr: "filter.typeToggle().className"}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

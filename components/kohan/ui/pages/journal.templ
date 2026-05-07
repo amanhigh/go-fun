@@ -59,17 +59,17 @@ templ JournalFilterSection() {
 templ JournalQuickFilters() {
 	<div class="flex flex-wrap items-center gap-3 lg:gap-8">
 		@components.QuickBar(components.QuickBarProps{Label: "Date", IconName: "calendar", Theme: components.ToneBlue}) {
-			@components.QuickAction(components.QuickActionProps{Label: "Today", OnClickExpr: "presets.applyCreatedPreset('today')", Tint: components.ToneBlue})
-			@components.QuickAction(components.QuickActionProps{Label: "7d", OnClickExpr: "presets.applyCreatedPreset('last7')", Tint: components.ToneIndigo})
-			@components.QuickAction(components.QuickActionProps{Label: "30d", OnClickExpr: "presets.applyCreatedPreset('last30')", Tint: components.ToneGreen})
+			@components.QuickAction(components.QuickActionProps{Label: "Today", OnClickExpr: "presets.applyCreatedPreset('today')", Class: "journal-date-preset-today"})
+			@components.QuickAction(components.QuickActionProps{Label: "7d", OnClickExpr: "presets.applyCreatedPreset('last7')", Class: "journal-date-preset-last7"})
+			@components.QuickAction(components.QuickActionProps{Label: "30d", OnClickExpr: "presets.applyCreatedPreset('last30')", Class: "journal-date-preset-last30"})
 		}
 		@components.QuickBar(components.QuickBarProps{Label: "Review", IconName: "calendar", Theme: components.ToneCyan}) {
 			<template x-for="reviewPreset in presets.reviewPresets" x-bind:key="reviewPreset.label">
-				@components.QuickAction(components.QuickActionProps{TextExpr: "reviewPreset.label", OnClickExpr: "presets.applyReviewPreset(reviewPreset)", Tint: components.ToneCyan, ClassExpr: "presets.reviewPresetClass(reviewPreset)"})
+				@components.QuickAction(components.QuickActionProps{TextExpr: "reviewPreset.label", OnClickExpr: "presets.applyReviewPreset(reviewPreset)", ClassExpr: "presets.reviewPresetClass(reviewPreset)"})
 			</template>
 		}
 		@components.QuickBar(components.QuickBarProps{Label: "Quick", IconName: "zap", Theme: components.ToneSlate}) {
-			@components.QuickAction(components.QuickActionProps{TextExpr: "filter.typeToggle().label", OnClickExpr: "filter.toggleType()", Tint: components.ToneRose, ClassExpr: "filter.typeToggle().className"})
+			@components.QuickAction(components.QuickActionProps{TextExpr: "filter.typeToggle().label", OnClickExpr: "filter.toggleType()", ClassExpr: "filter.typeToggle().className"})
 		}
 	</div>
 }

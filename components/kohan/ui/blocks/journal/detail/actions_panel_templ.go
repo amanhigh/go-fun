@@ -242,15 +242,15 @@ func journalDetailQuickReviewAction() templ.Component {
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div x-show=\"sidebar.reviewActions.quickAction().status\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div x-show=\"sidebar.reviewActions.quickAction()?.status\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{
 			OnClickExpr: "sidebar.reviewActions.applyQuickStatus()",
-			TextExpr:    "sidebar.reviewActions.submitting ? 'Saving...' : sidebar.reviewActions.quickAction().label",
+			TextExpr:    "sidebar.reviewActions.submitting ? 'Saving...' : (sidebar.reviewActions.quickAction()?.label || '')",
 			Tint:        components.ToneBlue,
-			ClassExpr:   "sidebar.reviewActions.quickAction().className",
+			ClassExpr:   "sidebar.reviewActions.quickAction()?.className || ''",
 			Attributes: templ.Attributes{
 				"x-bind:disabled": "sidebar.reviewActions.submitting",
 			},

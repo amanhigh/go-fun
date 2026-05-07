@@ -5,48 +5,48 @@ import type { DisplaySpec, PresentationConcern } from '../types/presentation_con
 
 // --- Type ---
 
-const defaultTypeSpec: DisplaySpec = { icon: '🏷️', text: '🏷️', badgeClass: 'journal-display-default' };
+const defaultTypeSpec: DisplaySpec = { icon: '🏷️', text: '🏷️', class: 'journal-display-default' };
 
 const typeDisplayMap: Record<string, DisplaySpec> = {
-	TAKEN: { icon: '📈', text: '📈 TAKEN', badgeClass: 'journal-type-taken' },
-	REJECTED: { icon: '📉', text: '📉 REJECTED', badgeClass: 'journal-type-rejected' },
-	RESULT: { icon: '🏷️', text: '🏷️ RESULT', badgeClass: 'journal-type-result' },
-	SET: { icon: '🏷️', text: '🏷️ SET', badgeClass: 'journal-type-set' },
+	TAKEN: { icon: '📈', text: '📈 TAKEN', class: 'journal-type-taken' },
+	REJECTED: { icon: '📉', text: '📉 REJECTED', class: 'journal-type-rejected' },
+	RESULT: { icon: '🏷️', text: '🏷️ RESULT', class: 'journal-type-result' },
+	SET: { icon: '🏷️', text: '🏷️ SET', class: 'journal-type-set' },
 };
 
 // --- Status ---
 
-const defaultStatusSpec: DisplaySpec = { icon: '🏷️', text: '🏷️', badgeClass: 'journal-display-default' };
+const defaultStatusSpec: DisplaySpec = { icon: '🏷️', text: '🏷️', class: 'journal-display-default' };
 
 const statusDisplayMap: Record<string, DisplaySpec> = {
-	SUCCESS: { icon: '✅', text: '✅ SUCCESS', badgeClass: 'journal-status-success' },
-	FAIL: { icon: '❌', text: '❌ FAIL', badgeClass: 'journal-status-fail' },
-	RUNNING: { icon: '🏃', text: '🏃 RUNNING', badgeClass: 'journal-status-running' },
-	SET: { icon: '🎯', text: '🎯 SET', badgeClass: 'journal-status-set' },
-	JUST_LOSS: { icon: '💔', text: '💔 JUST_LOSS', badgeClass: 'journal-status-just-loss' },
-	BROKEN: { icon: '💥', text: '💥 BROKEN', badgeClass: 'journal-status-broken' },
-	MISSED: { icon: '🚫', text: '🚫 MISSED', badgeClass: 'journal-status-missed' },
-	REJECTED: { icon: '🏷️', text: '🏷️ REJECTED', badgeClass: 'journal-status-rejected' },
+	SUCCESS: { icon: '✅', text: '✅ SUCCESS', class: 'journal-status-success' },
+	FAIL: { icon: '❌', text: '❌ FAIL', class: 'journal-status-fail' },
+	RUNNING: { icon: '🏃', text: '🏃 RUNNING', class: 'journal-status-running' },
+	SET: { icon: '🎯', text: '🎯 SET', class: 'journal-status-set' },
+	JUST_LOSS: { icon: '💔', text: '💔 JUST_LOSS', class: 'journal-status-just-loss' },
+	BROKEN: { icon: '💥', text: '💥 BROKEN', class: 'journal-status-broken' },
+	MISSED: { icon: '🚫', text: '🚫 MISSED', class: 'journal-status-missed' },
+	REJECTED: { icon: '🏷️', text: '🏷️ REJECTED', class: 'journal-status-rejected' },
 };
 
 // --- Timeframe ---
 
-const defaultTimeframeSpec: DisplaySpec = { icon: '', text: '', badgeClass: 'journal-timeframe-default' };
+const defaultTimeframeSpec: DisplaySpec = { icon: '', text: '', class: 'journal-timeframe-default' };
 
 const timeframeDisplayMap: Record<string, DisplaySpec> = {
-	YR: { icon: '🗓️', text: '🗓️ YR', badgeClass: 'journal-timeframe-yr' },
-	SMN: { icon: '📅', text: '📅 SMN', badgeClass: 'journal-timeframe-smn' },
-	TMN: { icon: '📈', text: '📈 TMN', badgeClass: 'journal-timeframe-tmn' },
-	MN: { icon: '📊', text: '📊 MN', badgeClass: 'journal-timeframe-mn' },
-	WK: { icon: '📆', text: '📆 WK', badgeClass: 'journal-timeframe-wk' },
-	DL: { icon: '🔍', text: '🔍 DL', badgeClass: 'journal-timeframe-dl' },
+	YR: { icon: '🗓️', text: '🗓️ YR', class: 'journal-timeframe-yr' },
+	SMN: { icon: '📅', text: '📅 SMN', class: 'journal-timeframe-smn' },
+	TMN: { icon: '📈', text: '📈 TMN', class: 'journal-timeframe-tmn' },
+	MN: { icon: '📊', text: '📊 MN', class: 'journal-timeframe-mn' },
+	WK: { icon: '📆', text: '📆 WK', class: 'journal-timeframe-wk' },
+	DL: { icon: '🔍', text: '🔍 DL', class: 'journal-timeframe-dl' },
 };
 
 // --- Sequence ---
 
 const sequenceDisplayMap: Record<string, DisplaySpec> = {
-	MWD: { icon: '🕐', text: '🕐 MWD', badgeClass: '' },
-	YR: { icon: '📅', text: '📅 YR', badgeClass: '' },
+	MWD: { icon: '🕐', text: '🕐 MWD', class: '' },
+	YR: { icon: '📅', text: '📅 YR', class: '' },
 };
 
 // --- Date ---
@@ -82,8 +82,8 @@ export function NewPresentationConcern(): PresentationConcern {
 		// --- Sequence ---
 		sequence(value: string | null | undefined): DisplaySpec {
 			const key = normalizeTag(value ?? '');
-			if (!key) return { icon: '', text: '', badgeClass: '' };
-			return sequenceDisplayMap[key] ?? { icon: '📅', text: `📅 ${key}`, badgeClass: '' };
+			if (!key) return { icon: '', text: '', class: '' };
+			return sequenceDisplayMap[key] ?? { icon: '📅', text: `📅 ${key}`, class: '' };
 		},
 
 		// --- Reason Tag ---
@@ -91,23 +91,23 @@ export function NewPresentationConcern(): PresentationConcern {
 			const name = tag.tag ?? '';
 			const icon = reasonTagIcon(name);
 			const override = tag.override ? ` → ${tag.override}` : '';
-			return { icon, text: `${icon} ${name}${override}`, badgeClass: '' };
+			return { icon, text: `${icon} ${name}${override}`, class: '' };
 		},
 
 		// --- Directional Tag ---
 		directionalTag(tag: JournalTag): DisplaySpec {
 			const name = tag.tag ?? '';
 			const icon = '🏷';
-			return { icon, text: `${icon} ${name}`, badgeClass: '' };
+			return { icon, text: `${icon} ${name}`, class: '' };
 		},
 
 		// --- Review State ---
 		reviewedAt(value: string | null | undefined): DisplaySpec {
 			const label = value ? formatTimestamp(value) : '—';
-			return { icon: '✅', text: `✅ ${label}`, badgeClass: '' };
+			return { icon: '✅', text: `✅ ${label}`, class: '' };
 		},
 		pendingReview(): DisplaySpec {
-			return { icon: '⏳', text: '⏳ Pending Review', badgeClass: '' };
+			return { icon: '⏳', text: '⏳ Pending Review', class: '' };
 		},
 
 		// --- Timestamp / Date ---
