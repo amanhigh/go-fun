@@ -15,21 +15,26 @@ export function NewNotesConcern(pg: JournalDetailPageProvider) {
 	return {
 		items: [] as JournalNote[],
 		deletingId: '',
+		deleteError: '',
 
-		sync(this: any, notes: JournalNote[] | undefined) {
-			this.items = sortNotes(notes ?? []);
+		sync(notes: JournalNote[] | undefined) {
+			this.items = [...(notes ?? [])];
 		},
-		sorted(this: any) {
+		sorted() {
 			return sortNotes(this.items ?? []);
 		},
-		async delete(this: any, noteId: string) {
+		hasNotes() {
+			return this.sorted().length > 0;
+		},
+		async delete(noteId: string) {
 			if (!pg().current.journal || this.deletingId) return;
 			this.deletingId = noteId;
+			this.deleteError = '';
 			try {
 				await pg().noteClient.delete(pg().current.journalId, noteId);
-				this.items = sortNotes(removeById(this.items ?? [], noteId));
+				this.items = removeById(this.items ?? [], noteId);
 			} catch (err) {
-				getErrorMessage(err, 'Unable to delete note.');
+				this.deleteError = getErrorMessage(err, 'Unable to delete note.');
 			} finally {
 				this.deletingId = '';
 			}

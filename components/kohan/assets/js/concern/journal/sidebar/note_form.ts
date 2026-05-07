@@ -19,7 +19,7 @@ export function NewNoteFormConcern(pg: JournalDetailPageProvider) {
 			return this.messageType === 'success' ? 'journal-feedback-success' : 'journal-feedback-error';
 		},
 
-		async submit(this: any) {
+		async submit() {
 			const journal = pg().current.journal;
 			if (!journal || this.submitting) return;
 			const content = this.content.trim();

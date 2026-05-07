@@ -21,39 +21,38 @@ export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 			return this.messageType === 'success' ? 'journal-feedback-success' : 'journal-feedback-error';
 		},
 
-		toggleLabel(this: any) {
+		toggleLabel() {
 			return pg().current.journal?.reviewed_at ? 'Mark Pending' : 'Mark Reviewed';
 		},
-		buttonClass(this: any) {
+		buttonClass() {
 			return pg().current.journal?.reviewed_at
 				? 'journal-review-toggle-pending'
 				: 'journal-review-toggle-reviewed';
 		},
-		quickStatus(this: any) {
-			const journalType = normalizeTag(pg().current.journal?.type ?? '');
-			if (journalType === 'TAKEN') return 'JUST_LOSS';
-			if (journalType === 'REJECTED') return 'BROKEN';
-			return '';
-		},
-		quickLabel(this: any) {
-			const status = this.quickStatus();
-			if (status === 'JUST_LOSS') return 'Mark Just Loss';
-			if (status === 'BROKEN') return 'Mark Broken';
-			return 'Update Status';
-		},
-		hasQuickAction(this: any) {
-			const targetStatus = this.quickStatus();
+		quickAction() {
 			const journal = pg().current.journal;
-			if (!targetStatus || !journal) return false;
-			return normalizeTag(journal.status) !== targetStatus;
-		},
-		quickButtonClass(this: any) {
-			return this.quickStatus() === 'JUST_LOSS'
+			const journalType = normalizeTag(journal?.type ?? '');
+			if (journalType !== 'TAKEN' && journalType !== 'REJECTED') return null;
+			const status = journalType === 'TAKEN' ? 'JUST_LOSS' : 'BROKEN';
+			const label = status === 'JUST_LOSS' ? 'Mark Just Loss' : 'Mark Broken';
+			const className = status === 'JUST_LOSS'
 				? 'journal-quick-status-loss'
 				: 'journal-quick-status-broken';
+			if (!journal) return null;
+			const isActive = normalizeTag(journal.status) === status;
+			return isActive ? null : { status, label, className };
+		},
+		hasQuickAction() {
+			return this.quickAction() !== null;
+		},
+		quickLabel() {
+			return this.quickAction()?.label ?? 'Update Status';
+		},
+		quickButtonClass() {
+			return this.quickAction()?.className ?? '';
 		},
 
-		async toggle(this: any) {
+		async toggle() {
 			const journal = pg().current.journal;
 			if (!journal || this.submitting) return;
 			this.submitting = true;
@@ -77,11 +76,11 @@ export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 			}
 		},
 
-		async applyQuickStatus(this: any) {
+		async applyQuickStatus() {
 			const journal = pg().current.journal;
-			if (!journal || this.submitting || !this.hasQuickAction()) return;
-			const status = this.quickStatus();
-			if (!status) return;
+			const action = this.quickAction();
+			if (!journal || this.submitting || !action) return;
+			const { status } = action;
 			this.submitting = true;
 			this.message = '';
 			this.messageType = 'error';
@@ -93,7 +92,7 @@ export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 					current.reviewed_at = envelope.data.reviewed_at;
 				}
 				this.messageType = 'success';
-				this.message = `${this.quickLabel()} applied and journal marked reviewed.`;
+				this.message = `${action.label} applied and journal marked reviewed.`;
 				await pg().sidebar.reviewQueue.load();
 			} catch (err) {
 				this.message = getErrorMessage(err, 'Unable to update journal status.');

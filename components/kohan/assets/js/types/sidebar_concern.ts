@@ -1,4 +1,5 @@
 import type { Journal, JournalNote, JournalTag } from './journal_api';
+import type { FeedbackType } from '../shared/async_feedback';
 
 // ===== Sidebar Sub-Concerns =====
 
@@ -13,23 +14,26 @@ export type SidebarUiConcern = {
 	initSidebarUiState(): void;
 	setActionOpen(isOpen: boolean): void;
 	setReviewMode(isReviewMode: boolean): void;
-	toggleActionOpen(): void;
 	enterReviewMode(): void;
-	exitReviewMode(): void;
-	toggleReviewMode(): void;
+};
+
+export type QuickActionResult = {
+	status: string;
+	label: string;
+	className: string;
 };
 
 export type ReviewActionsConcern = {
 	submitting: boolean;
 	message: string;
-	messageType: 'success' | 'error';
+	messageType: FeedbackType;
 	readonly feedbackClass: string;
 
 	toggleLabel(): string;
 	buttonClass(): string;
-	quickStatus(): string;
-	quickLabel(): string;
+	quickAction(): QuickActionResult | null;
 	hasQuickAction(): boolean;
+	quickLabel(): string;
 	quickButtonClass(): string;
 	toggle(): Promise<void>;
 	applyQuickStatus(): Promise<void>;
@@ -54,17 +58,21 @@ export type NoteFormConcern = {
 export type NotesConcern = {
 	items: JournalNote[];
 	deletingId: string;
+	deleteError: string;
 	sync(items: JournalNote[] | undefined): void;
 	sorted(): JournalNote[];
+	hasNotes(): boolean;
 	delete(noteId: string): Promise<void>;
 };
 
 export type TagCollectionConcern = {
 	items: JournalTag[];
 	deletingId: string;
+	deleteError: string;
 
 	sync(items: JournalTag[] | undefined): void;
 	all(): JournalTag[];
+	hasTags(): boolean;
 	reason(): JournalTag[];
 	directional(): JournalTag[];
 	management(): JournalTag[];

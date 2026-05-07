@@ -8,7 +8,7 @@ export function NewReviewQueueConcern(pg: JournalDetailPageProvider) {
 		loading: false,
 		error: '',
 
-		async load(this: any) {
+		async load() {
 			this.loading = true;
 			this.error = '';
 			try {

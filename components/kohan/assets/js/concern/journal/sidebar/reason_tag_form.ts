@@ -20,13 +20,13 @@ export function NewReasonTagFormConcern(pg: JournalDetailPageProvider) {
 			return this.messageType === 'success' ? 'journal-feedback-success' : 'journal-feedback-error';
 		},
 
-		focusOverride(this: any) {
+		focusOverride() {
 			(pg() as any).$nextTick?.(() => {
 				(pg() as any).$refs?.reasonTagOverride?.focus?.();
 			});
 		},
 
-		async submit(this: any) {
+		async submit() {
 			if (!pg().current.journal || this.submitting) return;
 			const tag = this.input.trim();
 			if (!tag) {

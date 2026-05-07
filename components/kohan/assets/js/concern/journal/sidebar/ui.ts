@@ -10,31 +10,20 @@ export function NewSidebarUiConcern() {
 		actionOpen: true,
 		reviewMode: false,
 
-		initSidebarUiState(this: any) {
+		initSidebarUiState() {
 			this.actionOpen = localStorageClient.getBool(ACTION_OPEN_STORAGE_KEY, true);
 			this.reviewMode = localStorageClient.getBool(REVIEW_MODE_STORAGE_KEY, false);
 		},
-		setActionOpen(this: any, isOpen: boolean) {
+		setActionOpen(isOpen: boolean) {
 			this.actionOpen = isOpen;
+			localStorageClient.setBool(ACTION_OPEN_STORAGE_KEY, isOpen);
 		},
-		setReviewMode(this: any, isReviewMode: boolean) {
+		setReviewMode(isReviewMode: boolean) {
 			this.reviewMode = isReviewMode;
+			localStorageClient.setBool(REVIEW_MODE_STORAGE_KEY, isReviewMode);
 		},
-		toggleActionOpen(this: any) {
-			this.setActionOpen(!this.actionOpen);
-		},
-		enterReviewMode(this: any) {
+		enterReviewMode() {
 			this.setReviewMode(true);
-		},
-		exitReviewMode(this: any) {
-			this.setReviewMode(false);
-		},
-		toggleReviewMode(this: any) {
-			if (this.reviewMode) {
-				this.exitReviewMode();
-				return;
-			}
-			this.enterReviewMode();
 		},
 	};
 }

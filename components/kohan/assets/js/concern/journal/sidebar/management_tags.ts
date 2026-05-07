@@ -6,26 +6,20 @@ import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
 const managementTagPresets = [
-	{ value: 'ntr', label: 'NTR' },
-	{ value: 'enl', label: 'ENL' },
-	{ value: 'slt', label: 'SLT' },
-	{ value: 'fz', label: 'FZ' },
-	{ value: 'nbe', label: 'NBE' },
-	{ value: 'ws', label: 'WS' },
-	{ value: 'important', label: 'IMPORTANT' },
-	{ value: 'be', label: 'BE' },
+	{ value: 'ntr', label: 'NTR', tone: 'emerald' },
+	{ value: 'enl', label: 'ENL', tone: 'sky' },
+	{ value: 'slt', label: 'SLT', tone: 'rose' },
+	{ value: 'fz', label: 'FZ', tone: 'violet' },
+	{ value: 'nbe', label: 'NBE', tone: 'amber' },
+	{ value: 'ws', label: 'WS', tone: 'slate' },
+	{ value: 'important', label: 'IMPORTANT', tone: 'fuchsia' },
+	{ value: 'be', label: 'BE', tone: 'orange' },
 ] as const;
 
-const managementTagToneMap: Record<string, string> = {
-	NTR: 'emerald',
-	ENL: 'sky',
-	SLT: 'rose',
-	FZ: 'violet',
-	NBE: 'amber',
-	WS: 'slate',
-	IMPORTANT: 'fuchsia',
-	BE: 'orange',
-};
+function toneForValue(value: string): string {
+	const preset = managementTagPresets.find((p) => normalizeTag(p.value) === normalizeTag(value));
+	return preset?.tone ?? 'slate';
+}
 
 export function createManagementTagsState() {
 	return {
@@ -43,22 +37,22 @@ export function NewManagementTagsConcern(pg: JournalDetailPageProvider) {
 			return this.messageType === 'success' ? 'journal-feedback-success' : 'journal-feedback-error';
 		},
 
-		hasBar(this: any) {
+		hasBar() {
 			return normalizeTag(pg().current.journal?.type ?? '') === 'TAKEN';
 		},
-		hasTag(this: any, value: string) {
+		hasTag(value: string) {
 			const normalizedValue = normalizeTag(value);
 			return pg().sidebar.tags.management().some((tag: JournalTag) => normalizeTag(tag.tag ?? '') === normalizedValue);
 		},
-		buttonClass(this: any, value: string) {
+		buttonClass(value: string) {
 			const normalizedValue = normalizeTag(value);
-			const tone = managementTagToneMap[normalizedValue] ?? 'slate';
+			const tone = toneForValue(normalizedValue);
 			const isActive = this.hasTag(value);
 			const isPending = this.submitting && normalizeTag(this.pendingValue) === normalizedValue;
 			const baseClass = isActive ? `journal-management-active-${tone}` : `journal-management-base-${tone}`;
 			return isPending ? `journal-management-pending ${baseClass}` : baseClass;
 		},
-		async submit(this: any, tagValue: string) {
+		async submit(tagValue: string) {
 			if (!pg().current.journal || this.submitting) return;
 			this.submitting = true;
 			this.pendingValue = tagValue;

@@ -15,12 +15,13 @@ templ JournalDetailNotes() {
 		@card.Content(card.ContentProps{}) {
 			@components.SectionHeader(components.SectionHeaderProps{Title: "Notes", Description: "Add notes for this journal and delete existing notes below."})
 			<p class="mt-1 text-sm text-muted-foreground"><span x-text="sidebar.notes.sorted().length"></span> note(s)</p>
-			<div class="mt-4 space-y-3" x-show="sidebar.notes.sorted().length">
+			<div class="mt-4 space-y-3" x-show="sidebar.notes.hasNotes()">
 				<template x-for="note in sidebar.notes.sorted()" x-bind:key="note.id">
 					@JournalDetailNoteRow()
 				</template>
 			</div>
-			@JournalDetailEmptyState("No notes available for this journal.", "!sidebar.notes.sorted().length")
+			<p class="mt-2 text-xs text-rose-600" x-show="sidebar.notes.deleteError" x-text="sidebar.notes.deleteError"></p>
+			@JournalDetailEmptyState("No notes available for this journal.", "!sidebar.notes.hasNotes()")
 		}
 	}
 }
