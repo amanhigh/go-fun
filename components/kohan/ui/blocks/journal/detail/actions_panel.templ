@@ -111,7 +111,7 @@ templ journalDetailTagsCard() {
 				TextExpr:  "sidebar.reasonTagForm.message",
 			})
 			@journalDetailTagInputs()
-			@components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.hasTags()"})
+			@components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.hasItems()"})
 		}
 	}
 }
@@ -139,7 +139,7 @@ templ journalDetailTagForm() {
 }
 
 templ journalDetailTagInputs() {
-	<div class="space-y-3" x-show="sidebar.tags.hasTags()">
+	<div class="space-y-3" x-show="sidebar.tags.hasItems()">
 		@journalDetailTagRows()
 	</div>
 }

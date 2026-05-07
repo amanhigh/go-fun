@@ -1,6 +1,37 @@
 import type { Journal, JournalNote, JournalTag } from './journal_api';
 import type { FeedbackType } from '../shared/async_feedback';
 
+// ===== Base Collection Types =====
+
+type Identifiable = { id: string };
+
+export type SyncedCollection<T extends Identifiable> = {
+	items: T[];
+
+	sync(items: T[] | undefined): void;
+	all(): T[];
+	sorted(): T[];
+	hasItems(): boolean;
+	prepend(item: T): void;
+	remove(itemId: string): void;
+};
+
+export type DeletableSyncedCollection<T extends Identifiable> = SyncedCollection<T> & {
+	deletingId: string;
+	delete(itemId: string): Promise<void>;
+};
+
+export type LoadableCollection<T> = {
+	items: T[];
+	loading: boolean;
+	error: string;
+
+	isLoading(): boolean;
+	isError(): boolean;
+	hasItems(): boolean;
+	load(): Promise<void>;
+};
+
 // ===== Sidebar Sub-Concerns =====
 
 export type ManagementTagPreset = {
@@ -36,14 +67,7 @@ export type ReviewActionsConcern = {
 	applyQuickStatus(): Promise<void>;
 };
 
-export type ReviewQueueConcern = {
-	items: Journal[];
-	loading: boolean;
-	error: string;
-
-	hasItems(): boolean;
-	load(): Promise<void>;
-};
+export type ReviewQueueConcern = LoadableCollection<Journal>;
 
 export type NoteFormConcern = {
 	content: string;
@@ -54,32 +78,12 @@ export type NoteFormConcern = {
 	submit(): Promise<void>;
 };
 
-export type NotesConcern = {
-	items: JournalNote[];
-	deletingId: string;
+export type NotesConcern = DeletableSyncedCollection<JournalNote>;
 
-	sync(items: JournalNote[] | undefined): void;
-	all(): JournalNote[];
-	hasItems(): boolean;
-	prepend(item: JournalNote): void;
-	remove(itemId: string): void;
-	sorted(): JournalNote[];
-	delete(noteId: string): Promise<void>;
-};
-
-export type TagCollectionConcern = {
-	items: JournalTag[];
-	deletingId: string;
-
-	sync(tags: JournalTag[] | undefined): void;
-	all(): JournalTag[];
-	hasItems(): boolean;
-	prepend(item: JournalTag): void;
-	remove(itemId: string): void;
+export type TagCollectionConcern = DeletableSyncedCollection<JournalTag> & {
 	reason(): JournalTag[];
 	directional(): JournalTag[];
 	management(): JournalTag[];
-	delete(tagId: string): Promise<void>;
 };
 
 export type ReasonTagFormConcern = {
