@@ -1,4 +1,4 @@
-import { getErrorMessage } from '../../../shared/error';
+import { getErrorMessage } from '../../../lib/error';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
 function normalizeJournal(journal: any) {

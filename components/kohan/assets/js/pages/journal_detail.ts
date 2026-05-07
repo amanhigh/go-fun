@@ -2,7 +2,7 @@ import { NewJournalClient } from '../client/journal';
 import { NewJournalNoteClient } from '../client/journal_note';
 import { NewJournalTagClient } from '../client/journal_tag';
 import type { JournalDetailPageData } from '../types/journal_detail_concern';
-import { NewPresentationConcern } from '../concern/journal/common/presentation';
+import { NewPresentationConcern } from '../lib/presentation';
 import { NewCurrentJournalConcern } from '../concern/journal/detail/current_journal';
 import { NewHeaderConcern } from '../concern/journal/detail/header';
 import { createImageHelper, NewImagesConcern } from '../concern/journal/detail/images';

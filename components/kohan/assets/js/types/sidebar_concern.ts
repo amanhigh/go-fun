@@ -1,5 +1,5 @@
 import type { Journal, JournalNote, JournalTag } from './journal_api';
-import type { FeedbackType } from '../shared/async_feedback';
+import type { FeedbackType } from '../lib/async_feedback';
 import type { DeletableSyncedCollection, LoadableCollection } from './collection';
 
 // ===== Sidebar Sub-Concerns =====

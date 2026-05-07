@@ -1,6 +1,6 @@
-import { createAsyncFeedbackState } from '../../../shared/async_feedback';
-import { getErrorMessage } from '../../../shared/error';
-import { normalizeTag } from '../../../shared/tags';
+import { createAsyncFeedbackState } from '../../../lib/async_feedback';
+import { getErrorMessage } from '../../../lib/error';
+import { normalizeTag } from '../../../lib/tags';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 

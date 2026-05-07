@@ -1,5 +1,5 @@
-import { prependById, removeById } from '../../../shared/collection';
-import { getErrorMessage } from '../../../shared/error';
+import { prependById, removeById } from '../../../lib/collection';
+import { getErrorMessage } from '../../../lib/error';
 import type { Identifiable, SyncedCollectionOptions } from '../../../types/collection';
 
 // ===== Base Synced Collection =====

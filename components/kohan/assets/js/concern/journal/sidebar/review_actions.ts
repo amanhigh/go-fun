@@ -1,7 +1,7 @@
-import { createAsyncFeedbackState } from '../../../shared/async_feedback';
-import { formatDateInputValue } from '../../../shared/date';
-import { getErrorMessage } from '../../../shared/error';
-import { normalizeTag } from '../../../shared/tags';
+import { createAsyncFeedbackState } from '../../../lib/async_feedback';
+import { formatDateInputValue } from '../../../lib/date';
+import { getErrorMessage } from '../../../lib/error';
+import { normalizeTag } from '../../../lib/tags';
 import type { JournalUpdateRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 

@@ -1,5 +1,5 @@
 import type { DatePresetName, JournalPageData, JournalPageProvider, NonEmptyDatePresetName, PresetConcern, ReviewPreset } from '../../../types/journal_list_concern';
-import { formatDateInputValue } from '../../../shared/date';
+import { formatDateInputValue } from '../../../lib/date';
 
 const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const reviewPresetMonthOffsets = [-11, -10, -9, -8, -7] as const;

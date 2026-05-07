@@ -1,5 +1,5 @@
 import { createDeletableSyncedCollectionState } from './collection';
-import { normalizeTag } from '../../../shared/tags';
+import { normalizeTag } from '../../../lib/tags';
 import type { JournalTag } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 

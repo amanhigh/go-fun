@@ -1,7 +1,7 @@
-import { formatTimestamp } from '../../../shared/date';
-import { normalizeTag } from '../../../shared/tags';
-import type { JournalTag } from '../../../types/journal_api';
-import type { DisplaySpec, PresentationConcern } from '../../../types/presentation_concern';
+import { formatTimestamp } from './date';
+import { normalizeTag } from './tags';
+import type { JournalTag } from '../types/journal_api';
+import type { DisplaySpec, PresentationConcern } from '../types/presentation_concern';
 
 // --- Type ---
 
@@ -119,7 +119,7 @@ export function NewPresentationConcern(): PresentationConcern {
 			const day = parsed.getUTCDate();
 			const month = shortMonthNames[parsed.getUTCMonth()] ?? '—';
 			const year = `${parsed.getUTCFullYear()}`.slice(-2);
-			return `${day} ${month}, ${year}`;
+			return `${day} ${month}, '${year}`;
 		},
 	};
 }
