@@ -29,10 +29,10 @@ var _ = Describe("Journal Detail Page Tests", func() {
 
 	Context("Sidebar Actions", func() {
 		It("should render review and note actions", func() {
-			Expect(html).To(ContainSubstring(`x-bind:open="sidebar.ui.actionOpen"`))
-			Expect(html).To(ContainSubstring(`x-bind:open="sidebar.ui.reviewMode"`))
-			Expect(html).To(ContainSubstring(`x-on:toggle="sidebar.ui.setActionOpen($el.open)"`))
-			Expect(html).To(ContainSubstring(`x-on:toggle="sidebar.ui.setReviewMode($el.open)"`))
+			Expect(html).To(ContainSubstring(`x-bind:open="sidebar.state.actionOpen"`))
+			Expect(html).To(ContainSubstring(`x-bind:open="sidebar.state.reviewOpen"`))
+			Expect(html).To(ContainSubstring(`x-on:toggle="sidebar.state.setActionOpen($el.open)"`))
+			Expect(html).To(ContainSubstring(`x-on:toggle="sidebar.state.setReviewOpen($el.open)"`))
 			Expect(html).To(ContainSubstring("Actions"))
 			Expect(html).To(ContainSubstring("Review"))
 			Expect(html).To(ContainSubstring("Quick actions"))
@@ -64,7 +64,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-on:click="sidebar.tags.delete(tag.id)"`))
 			Expect(html).To(ContainSubstring(`x-show="sidebar.notes.hasNotes()"`))
 			Expect(html).To(ContainSubstring(`x-for="note in sidebar.notes.sorted()"`))
-			Expect(html).To(ContainSubstring(`x-on:click="sidebar.ui.enterReviewMode()"`))
+			Expect(html).To(ContainSubstring(`x-on:click="sidebar.state.enterReviewMode()"`))
 			Expect(html).To(ContainSubstring(`tag.type].filter(Boolean).join(`))
 			Expect(html).To(ContainSubstring(`x-bind:class="presentation.type(item.type).badgeClass"`))
 			Expect(html).To(ContainSubstring(`x-text="presentation.formatReviewQueueDate(item.created_at)"`))

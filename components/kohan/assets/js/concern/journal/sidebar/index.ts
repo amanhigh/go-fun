@@ -1,4 +1,4 @@
-import { NewSidebarUiConcern } from './ui';
+import { NewSidebarStateConcern } from './state';
 import { NewReviewActionsConcern } from './review_actions';
 import { NewReviewQueueConcern } from './review_queue';
 import { NewNoteFormConcern } from './note_form';
@@ -10,7 +10,7 @@ import type { JournalDetailPageProvider } from '../../../types/journal_detail_co
 
 export function NewSidebarConcern(pg: JournalDetailPageProvider) {
 	return {
-		ui: NewSidebarUiConcern(),
+		state: NewSidebarStateConcern(),
 		reviewActions: NewReviewActionsConcern(pg),
 		reviewQueue: NewReviewQueueConcern(pg),
 		noteForm: NewNoteFormConcern(pg),

@@ -30,7 +30,7 @@ function createJournalDetailPageData(journalId = '') {
 		page = this;
 
 		this.current.journalId = journalId;
-		this.sidebar.ui.initSidebarUiState();
+		this.sidebar.state.restorePersistedSidebarState();
 
 		void this.current.loadJournal();
 		void this.sidebar.reviewQueue.load();

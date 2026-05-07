@@ -9,7 +9,7 @@ import (
 )
 
 templ JournalDetailActionsPanel() {
-	@commondetail.JournalDetailSection("Actions", "Journal Actions", "sidebar.ui.actionOpen", "sidebar.ui.setActionOpen($el.open)") {
+	@commondetail.JournalDetailSection("Actions", "Journal Actions", "sidebar.state.actionOpen", "sidebar.state.setActionOpen($el.open)") {
 		<div class="space-y-4">
 			@journalDetailActionCard()
 			@journalDetailTagsCard()

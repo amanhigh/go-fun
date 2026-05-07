@@ -8,12 +8,12 @@ export type ManagementTagPreset = {
 	label: string;
 };
 
-export type SidebarUiConcern = {
+export type SidebarStateConcern = {
 	actionOpen: boolean;
-	reviewMode: boolean;
-	initSidebarUiState(): void;
+	reviewOpen: boolean;
+	restorePersistedSidebarState(): void;
 	setActionOpen(isOpen: boolean): void;
-	setReviewMode(isReviewMode: boolean): void;
+	setReviewOpen(isReviewOpen: boolean): void;
 	enterReviewMode(): void;
 };
 
@@ -106,7 +106,7 @@ export type ManagementTagsConcern = {
 };
 
 export type JournalDetailSidebarConcern = {
-	ui: SidebarUiConcern;
+	state: SidebarStateConcern;
 	reviewActions: ReviewActionsConcern;
 	reviewQueue: ReviewQueueConcern;
 	noteForm: NoteFormConcern;
