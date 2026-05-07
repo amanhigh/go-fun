@@ -1,13 +1,9 @@
 import type { Journal, JournalNote, JournalTag } from './journal_api';
 import type { FeedbackType } from '../lib/async_feedback';
 import type { DeletableSyncedCollection, LoadableCollection } from './collection';
+import type { ManagementTagPreset } from '../lib/management_tags';
 
 // ===== Sidebar Sub-Concerns =====
-
-export type ManagementTagPreset = {
-	value: string;
-	label: string;
-};
 
 export type SidebarStateConcern = {
 	actionOpen: boolean;
@@ -32,7 +28,7 @@ export type ReviewActionsConcern = {
 
 	toggleLabel(): string;
 	buttonClass(): string;
-	quickAction(): QuickActionResult;
+	quickAction(): QuickActionResult | null;
 	toggle(): Promise<void>;
 	applyQuickStatus(): Promise<void>;
 };

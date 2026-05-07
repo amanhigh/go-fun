@@ -1,24 +1,9 @@
 import { createAsyncFeedbackState } from '../../../lib/async_feedback';
 import { getErrorMessage } from '../../../lib/error';
 import { normalizeTag } from '../../../lib/tags';
+import { managementTagPresets, managementTagTone } from '../../../lib/management_tags';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
-
-const managementTagPresets = [
-	{ value: 'ntr', label: 'NTR', tone: 'emerald' },
-	{ value: 'enl', label: 'ENL', tone: 'sky' },
-	{ value: 'slt', label: 'SLT', tone: 'rose' },
-	{ value: 'fz', label: 'FZ', tone: 'violet' },
-	{ value: 'nbe', label: 'NBE', tone: 'amber' },
-	{ value: 'ws', label: 'WS', tone: 'slate' },
-	{ value: 'important', label: 'IMPORTANT', tone: 'fuchsia' },
-	{ value: 'be', label: 'BE', tone: 'orange' },
-] as const;
-
-function toneForValue(value: string): string {
-	const preset = managementTagPresets.find((p) => normalizeTag(p.value) === normalizeTag(value));
-	return preset?.tone ?? 'slate';
-}
 
 export function NewManagementTagsConcern(pg: JournalDetailPageProvider) {
 	return {
@@ -38,10 +23,10 @@ export function NewManagementTagsConcern(pg: JournalDetailPageProvider) {
 			return pg().sidebar.tags.management().some((tag: JournalTag) => normalizeTag(tag.tag ?? '') === normalizedValue);
 		},
 		buttonClass(value: string) {
-			const normalizedValue = normalizeTag(value);
-			const tone = toneForValue(normalizedValue);
+			const tagKey = normalizeTag(value);
+			const tone = managementTagTone(tagKey);
 			const isActive = this.hasTag(value);
-			const isPending = this.submitting && normalizeTag(this.pendingValue) === normalizedValue;
+			const isPending = this.submitting && normalizeTag(this.pendingValue) === tagKey;
 			const baseClass = isActive ? `journal-management-active-${tone}` : `journal-management-base-${tone}`;
 			return isPending ? `journal-management-pending ${baseClass}` : baseClass;
 		},
