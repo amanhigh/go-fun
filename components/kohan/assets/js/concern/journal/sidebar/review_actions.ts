@@ -9,6 +9,18 @@ function localToday(): string {
 	return formatDateInputValue(new Date());
 }
 
+/** Shared sentinel returned when no quick action is applicable. */
+const NO_QUICK_ACTION = { status: '', label: '', className: '' };
+
+/**
+ * Map from journal type to the quick action definition.
+ * Only TAKEN and REJECTED journals qualify for a quick action.
+ */
+const QUICK_ACTION_MAP: Record<string, { status: string; label: string; className: string }> = {
+	TAKEN: { status: 'JUST_LOSS', label: 'Mark Just Loss', className: 'journal-quick-status-loss' },
+	REJECTED: { status: 'BROKEN', label: 'Mark Broken', className: 'journal-quick-status-broken' },
+};
+
 export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 	return {
 		...createAsyncFeedbackState('submitting', 'message', 'messageType'),
@@ -27,34 +39,31 @@ export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 		},
 		quickAction() {
 			const journal = pg().current.journal;
-			if (!journal) return { status: '', label: '', className: '' };
+			if (!journal) return NO_QUICK_ACTION;
 			const journalType = normalizeTag(journal.type ?? '');
-			if (journalType !== 'TAKEN' && journalType !== 'REJECTED') return { status: '', label: '', className: '' };
-			const status = journalType === 'TAKEN' ? 'JUST_LOSS' : 'BROKEN';
-			const label = status === 'JUST_LOSS' ? 'Mark Just Loss' : 'Mark Broken';
-			const className = status === 'JUST_LOSS'
-				? 'journal-quick-status-loss'
-				: 'journal-quick-status-broken';
-			const isActive = normalizeTag(journal.status) === status;
-			return isActive ? { status: '', label: '', className: '' } : { status, label, className };
+			const action = QUICK_ACTION_MAP[journalType];
+			if (!action) return NO_QUICK_ACTION;
+			return normalizeTag(journal.status) === action.status ? NO_QUICK_ACTION : action;
 		},
 
 		async toggle() {
-			const journal = pg().current.journal;
+			const { current, client } = pg();
+			const { journal, journalId } = current;
 			if (!journal || this.submitting) return;
 			this.submitting = true;
 			this.message = '';
 			this.messageType = 'error';
 			try {
-				const reviewedAt = journal.reviewed_at ? null : localToday();
+				const markingReviewed = !journal.reviewed_at;
+				const reviewedAt = markingReviewed ? localToday() : null;
 				const payload: JournalUpdateRequest = { reviewed_at: reviewedAt };
-				const envelope = await pg().client.updateReview(pg().current.journalId, payload);
-				const current = pg().current.journal;
-				if (current) {
-					current.reviewed_at = envelope.data.reviewed_at;
+				const envelope = await client.updateReview(journalId, payload);
+				const updatedJournal = current.journal;
+				if (updatedJournal) {
+					updatedJournal.reviewed_at = envelope.data.reviewed_at;
 				}
 				this.messageType = 'success';
-				this.message = reviewedAt ? 'Journal marked reviewed.' : 'Journal marked not reviewed.';
+				this.message = markingReviewed ? 'Journal marked reviewed.' : 'Journal marked not reviewed.';
 			} catch (err) {
 				this.message = getErrorMessage(err, 'Unable to update review date.');
 				this.messageType = 'error';
@@ -64,22 +73,24 @@ export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 		},
 
 		async applyQuickStatus() {
-			const journal = pg().current.journal;
+			const { current, client } = pg();
+			const { journalId } = current;
 			const action = this.quickAction();
-			if (!journal || this.submitting || !action.status) return;
-			const { status } = action;
+			if (this.submitting || !action.status) return;
+			const { status, label } = action;
+			const payload: JournalUpdateRequest = { status, reviewed_at: localToday() };
 			this.submitting = true;
 			this.message = '';
 			this.messageType = 'error';
 			try {
-				const envelope = await pg().client.updateReview(pg().current.journalId, { status, reviewed_at: localToday() });
-				const current = pg().current.journal;
-				if (current) {
-					current.status = envelope.data.status;
-					current.reviewed_at = envelope.data.reviewed_at;
+				const envelope = await client.updateReview(journalId, payload);
+				const updatedJournal = current.journal;
+				if (updatedJournal) {
+					updatedJournal.status = envelope.data.status;
+					updatedJournal.reviewed_at = envelope.data.reviewed_at;
 				}
 				this.messageType = 'success';
-				this.message = `${action.label} applied and journal marked reviewed.`;
+				this.message = `${label} applied and journal marked reviewed.`;
 				await pg().sidebar.reviewQueue.load();
 			} catch (err) {
 				this.message = getErrorMessage(err, 'Unable to update journal status.');
