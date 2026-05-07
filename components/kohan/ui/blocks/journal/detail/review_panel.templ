@@ -1,0 +1,67 @@
+package detail
+
+import (
+	commondetail "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/common"
+	"github.com/amanhigh/go-fun/components/kohan/ui/components"
+	"github.com/templui/templui/components/card"
+	"github.com/templui/templui/components/icon"
+	"github.com/templui/templui/components/textarea"
+)
+
+templ JournalDetailReviewPanel() {
+	@commondetail.JournalDetailSection("Review", "Journal Review", "sidebar.ui.reviewMode", "sidebar.ui.setReviewMode($el.open)") {
+		@journalDetailQueueCard()
+		@journalDetailNoteCard()
+	}
+}
+
+templ journalDetailQueueCard() {
+	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
+		@card.Header(card.HeaderProps{}) {
+			@card.Title(card.TitleProps{Class: "tracking-tight"}) { To Review }
+		}
+		@card.Content(card.ContentProps{Class: "space-y-2 pt-0"}) {
+			<div class="flex items-center gap-2 py-3 text-xs text-sky-700" x-show="sidebar.reviewQueue.loading">
+				@icon.Icon("refresh-cw")(icon.Props{Class: "size-3.5 animate-spin"})
+				<span>Loading queue...</span>
+			</div>
+			<p class="py-2 text-xs text-rose-600" x-show="!sidebar.reviewQueue.loading && sidebar.reviewQueue.error" x-text="sidebar.reviewQueue.error"></p>
+			<p class="py-2 text-xs text-muted-foreground" x-show="!sidebar.reviewQueue.loading && !sidebar.reviewQueue.error && sidebar.reviewQueue.items.length === 0">All caught up — no pending reviews.</p>
+			<div class="space-y-1" x-show="!sidebar.reviewQueue.loading && !sidebar.reviewQueue.error && sidebar.reviewQueue.items.length > 0">
+				<template x-for="item in sidebar.reviewQueue.items" x-bind:key="item.id">
+					<a class="flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition" x-on:click="sidebar.ui.enterReviewMode()" x-bind:class="presentation.type(item.type).badgeClass" x-bind:href="'/journal/' + item.id">
+						<span class="font-semibold" x-text="item.ticker"></span>
+						<span class="text-xs font-medium" x-text="presentation.formatReviewQueueDate(item.created_at)"></span>
+					</a>
+				</template>
+			</div>
+		}
+	}
+}
+
+templ journalDetailNoteCard() {
+	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
+		@card.Header(card.HeaderProps{}) {
+			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Note }
+		}
+		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
+			@textarea.Textarea(textarea.Props{
+				Placeholder: "Write a note about this journal...",
+				Class:       "min-h-[140px] w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
+				Attributes:  templ.Attributes{"x-model": "sidebar.noteForm.content"},
+			})
+			@components.AsyncButton(components.AsyncButtonProps{
+				OnClickExpr:   "sidebar.noteForm.submit()",
+				DisabledExpr:  "sidebar.noteForm.submitting || !sidebar.noteForm.content.trim()",
+				LoadingExpr:   "sidebar.noteForm.submitting",
+				LoadingText:   "'Saving note...'",
+				DefaultText:   "'Add Note'",
+			})
+			@components.FeedbackMessage(components.FeedbackMessageProps{
+				ShowExpr:  "sidebar.noteForm.message",
+				ClassExpr: "sidebar.noteForm.feedbackClass",
+				TextExpr:  "sidebar.noteForm.message",
+			})
+		}
+	}
+}

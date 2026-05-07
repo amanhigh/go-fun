@@ -892,9 +892,15 @@ func buildNotesFromLegacy(entry LegacyJournalEntry, journalDate time.Time) []bar
 		return nil
 	}
 
+	content := strings.Join(sections, "\n\n")
+	// Truncate content to respect max length constraint (PRD: notes max 5000 chars)
+	if len(content) > barkat.NoteContentMaxLength {
+		content = content[:barkat.NoteContentMaxLength]
+	}
+
 	return []barkat.Note{{
 		Status:    finalStatusForLegacyNote(entry),
-		Content:   strings.Join(sections, "\n\n"),
+		Content:   content,
 		Format:    "MARKDOWN",
 		CreatedAt: journalDate,
 	}}

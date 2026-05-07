@@ -1,0 +1,47 @@
+package detail
+
+import (
+	journalcommon "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/common"
+	"github.com/amanhigh/go-fun/components/kohan/ui/components"
+	"github.com/templui/templui/components/card"
+)
+
+// ============================================================
+// NOTES FLOW
+// ============================================================
+
+templ JournalDetailNotes() {
+	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
+		@card.Content(card.ContentProps{}) {
+			@components.SectionHeader(components.SectionHeaderProps{Title: "Notes", Description: "Add notes for this journal and delete existing notes below."})
+			<p class="mt-1 text-sm text-muted-foreground"><span x-text="sidebar.notes.sorted().length"></span> note(s)</p>
+			<div class="mt-4 space-y-3" x-show="sidebar.notes.sorted().length">
+				<template x-for="note in sidebar.notes.sorted()" x-bind:key="note.id">
+					@JournalDetailNoteRow()
+				</template>
+			</div>
+			@JournalDetailEmptyState("No notes available for this journal.", "!sidebar.notes.sorted().length")
+		}
+	}
+}
+
+templ JournalDetailNoteRow() {
+	<div class="rounded-xl border border-border bg-muted/40 p-4">
+		<div class="mb-3 flex items-start justify-between gap-3">
+			<div class="flex flex-wrap items-center gap-3">
+				@journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "note.status", Class: "font-semibold"})
+				<div class="inline-flex items-center gap-2 rounded-md border border-sky-300/70 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-900">
+					<span class="uppercase tracking-wide text-sky-700/80">Created</span>
+					<span x-text="presentation.formatTimestamp(note.created_at)"></span>
+				</div>
+			</div>
+			@components.DeleteButton(components.DeleteButtonProps{
+				OnClickExpr:  "sidebar.notes.delete(note.id)",
+				DisabledExpr: "sidebar.notes.deletingId === note.id",
+				AriaLabel:    "Delete Note",
+				Title:        "Delete Note",
+			})
+		</div>
+		<pre class="whitespace-pre-wrap text-sm text-foreground" x-text="note.content"></pre>
+	</div>
+}

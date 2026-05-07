@@ -101,7 +101,7 @@ var _ = Describe("Barkat E2E Test", func() {
 			resp, err := client.R().Get("/assets/js/input.ts")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
-			Expect(resp.String()).To(ContainSubstring("import './journal/page'"))
+			Expect(resp.String()).To(ContainSubstring("import './pages/journal_list'"))
 		})
 
 		It("should return not found for missing embedded assets", func() {

@@ -6,7 +6,8 @@ tmp_dir = "/tmp"
   full_bin = "${KOHAN_BINARY}"
   delay = 1000
   include_dir = [".", "../../common/ui"]
-  include_ext = ["go", "templ"]
+  include_ext = ["go", "templ", "ts"]
+  exclude_dir = ["tmp", "vendor", "testdata"]
   exclude_regex = ["_test\\.go", "_templ\\.go", "testdata/.*"]
 
 [log]

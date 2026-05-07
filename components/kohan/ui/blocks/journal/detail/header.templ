@@ -1,0 +1,83 @@
+package detail
+
+import (
+	"github.com/amanhigh/go-fun/components/kohan/ui/components"
+	journalcommon "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/common"
+	"github.com/templui/templui/components/card"
+)
+
+// ============================================================
+// HEADER FLOW
+// ============================================================
+
+templ JournalDetailHeader() {
+	@card.Card(card.Props{Class: "overflow-hidden rounded-3xl border border-violet-200/70 bg-gradient-to-br from-white via-violet-50/70 to-sky-50/80 shadow-sm"}) {
+		@card.Content(card.ContentProps{Class: "p-6"}) {
+			<div class="space-y-3">
+				<div class="flex items-start justify-between gap-3">
+					<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + current.journal.id"></div>
+					@components.DeleteButton(components.DeleteButtonProps{
+						OnClickExpr:  "header.deleteJournal()",
+						DisabledExpr: "header.deleting",
+						AriaLabel:    "Delete Journal",
+						Title:        "Delete Journal",
+						Class:        "h-9 w-9",
+					})
+				</div>
+				<h2 class="text-3xl font-bold tracking-tight text-foreground" x-text="current.journal.ticker"></h2>
+				<div class="flex justify-between gap-6">
+					<div class="flex flex-wrap items-center gap-2.5">
+						@journalcommon.TypeBadge(journalcommon.TypeBadgeProps{TypeExpr: "current.journal.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+						@journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "current.journal.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+						@JournalDetailSequenceChip()
+					</div>
+					@JournalDetailReviewDates()
+				</div>
+				<div class="flex justify-between gap-6" x-show="sidebar.tags.all().length">
+					@JournalDetailReasonTags()
+					@JournalDetailDirectionalTags()
+				</div>
+			</div>
+		}
+	}
+}
+
+templ JournalDetailCreatedAt() {
+	@components.InfoRow(components.InfoRowProps{IconName: "clock", ValueExpr: "presentation.formatTimestamp(current.journal.created_at)", Class: "text-xs"})
+}
+
+templ JournalDetailReviewDate() {
+	@components.FilterChip(components.FilterChipProps{ShowExpr: "current.journal.reviewed_at", TextExpr: "presentation.reviewedAt(current.journal.reviewed_at).text", Tone: components.ToneGreen, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
+}
+
+templ JournalDetailPendingDate() {
+	@components.FilterChip(components.FilterChipProps{ShowExpr: "!current.journal.reviewed_at", TextExpr: "presentation.pendingReview().text", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
+}
+
+templ JournalDetailReviewDates() {
+	<div class="flex flex-col items-end gap-1">
+		@JournalDetailCreatedAt()
+		@JournalDetailPendingDate()
+		@JournalDetailReviewDate()
+	</div>
+}
+
+templ JournalDetailSequenceChip() {
+	@components.FilterChip(components.FilterChipProps{TextExpr: "presentation.sequence(current.journal.sequence).text", Tone: components.ToneViolet, Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+}
+
+templ JournalDetailReasonTags() {
+	<div class="flex flex-wrap gap-2">
+		<template x-for="tag in sidebar.tags.reason()" x-bind:key="tag.id">
+			@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Class: "rounded-full font-semibold", Attributes: templ.Attributes{"x-text": "presentation.reasonTag(tag).text"}})
+		</template>
+	</div>
+}
+
+templ JournalDetailDirectionalTags() {
+	<div class="flex flex-wrap gap-2">
+		<template x-for="tag in sidebar.tags.directional()" x-bind:key="tag.id">
+			@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, Class: "rounded-full text-xs", Attributes: templ.Attributes{"x-text": "presentation.directionalTag(tag).text"}})
+		</template>
+	</div>
+}

@@ -30,10 +30,5 @@ air: kill-server
 [doc('Kill Kohan server on the configured port')]
 [group('run')]
 kill-server:
-	lsof -ti:{{port}} | xargs kill -9 2>/dev/null || true
-
-[doc('Reset Barkat DB files and restart Air')]
-[group('run')]
-reset-db:
-	rm -f "{{barkat_db_path}}" "{{barkat_db_path}}-wal" "{{barkat_db_path}}-shm"
-	just air
+	pkill air 2>/dev/null || true
+	lsof -ti :{{port}} | xargs -r kill 2>/dev/null || true

@@ -3,8 +3,8 @@ package pages
 import (
 	"github.com/amanhigh/go-fun/common/ui/layout"
 	widgets "github.com/amanhigh/go-fun/common/ui/widgets"
+	journalcommon "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/common"
 	"github.com/amanhigh/go-fun/components/kohan/ui/components"
-	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/button"
 	"github.com/templui/templui/components/card"
 	"github.com/templui/templui/components/input"
@@ -19,20 +19,24 @@ import (
 
 templ JournalPage() {
 	@layout.Base("Shadow Gate") {
-		@layout.Page(layout.PageProps{
-			CurrentPage: "Journal",
-			Eyebrow:     "Kohan Portal",
-			Heading:     "Journal Browser",
-			Description: "Browse journals with client-side loading powered by Alpine.js.",
-			Tags:        []string{"Public", "Read-only", "Alpine.js"},
-		}) {
-			<div x-data="journalPage()" x-init="init()" class="space-y-6">
-				@layout.Card("Browse", "Journal entries", "Latest journal entries are loaded in the browser from the existing Kohan API.") {
-					@JournalFilterSection()
-					@JournalTableSection()
-				}
-			</div>
-		}
+	@layout.Page(layout.PageProps{
+		CurrentPage: "Journal",
+		Eyebrow:     "Kohan Portal",
+		Heading:     "Journal Browser",
+		Description: "Browse journals with client-side loading powered by Alpine.js.",
+		Tags:        []string{"Public", "Read-only", "Alpine.js"},
+		Attributes: templ.Attributes{
+			"x-data": "journalPage()",
+			"x-init": "init()",
+		},
+	}) {
+		<div class="space-y-6">
+			@layout.Card("Browse", "Journal entries", "Latest journal entries are loaded in the browser from the existing Kohan API.") {
+				@JournalFilterSection()
+				@JournalTableSection()
+			}
+		</div>
+	}
 	}
 }
 
@@ -55,17 +59,17 @@ templ JournalFilterSection() {
 templ JournalQuickFilters() {
 	<div class="flex flex-wrap items-center gap-3 lg:gap-8">
 		@components.QuickBar(components.QuickBarProps{Label: "Date", IconName: "calendar", Theme: components.ToneBlue}) {
-			@components.QuickAction(components.QuickActionProps{Label: "Today", OnClickExpr: "applyCreatedPreset('today')", Tint: components.ToneBlue})
-			@components.QuickAction(components.QuickActionProps{Label: "7d", OnClickExpr: "applyCreatedPreset('last7')", Tint: components.ToneIndigo})
-			@components.QuickAction(components.QuickActionProps{Label: "30d", OnClickExpr: "applyCreatedPreset('last30')", Tint: components.ToneGreen})
+			@components.QuickAction(components.QuickActionProps{Label: "Today", OnClickExpr: "presets.applyCreatedPreset('today')", Tint: components.ToneBlue})
+			@components.QuickAction(components.QuickActionProps{Label: "7d", OnClickExpr: "presets.applyCreatedPreset('last7')", Tint: components.ToneIndigo})
+			@components.QuickAction(components.QuickActionProps{Label: "30d", OnClickExpr: "presets.applyCreatedPreset('last30')", Tint: components.ToneGreen})
 		}
 		@components.QuickBar(components.QuickBarProps{Label: "Review", IconName: "calendar", Theme: components.ToneCyan}) {
-			<template x-for="reviewPreset in reviewPresets" x-bind:key="reviewPreset.label">
-				@components.QuickAction(components.QuickActionProps{TextExpr: "reviewPreset.label", OnClickExpr: "applyReviewPreset(reviewPreset)", Tint: components.ToneCyan, ClassExpr: "reviewPresetClass(reviewPreset)"})
+			<template x-for="reviewPreset in presets.reviewPresets" x-bind:key="reviewPreset.label">
+				@components.QuickAction(components.QuickActionProps{TextExpr: "reviewPreset.label", OnClickExpr: "presets.applyReviewPreset(reviewPreset)", Tint: components.ToneCyan, ClassExpr: "presets.reviewPresetClass(reviewPreset)"})
 			</template>
 		}
 		@components.QuickBar(components.QuickBarProps{Label: "Quick", IconName: "zap", Theme: components.ToneSlate}) {
-			@components.QuickAction(components.QuickActionProps{TextExpr: "typeToggleLabel()", OnClickExpr: "toggleType()", Tint: components.ToneRose, ClassExpr: "typeToggleClass()"})
+			@components.QuickAction(components.QuickActionProps{TextExpr: "filter.typeToggle().label", OnClickExpr: "filter.toggleType()", Tint: components.ToneRose, ClassExpr: "filter.typeToggle().className"})
 		}
 	</div>
 }
@@ -75,21 +79,20 @@ templ JournalFilters() {
 		@JournalTickerFilter()
 		@JournalStatusSelect()
 		@JournalSequenceSelect()
-		@JournalCreatedDateFilter()
 		@JournalClearFiltersButton()
 	</div>
 }
 
 templ JournalTickerFilter() {
 	<div>
-		@input.Input(input.Props{ID: "journal-ticker", Type: input.TypeText, Placeholder: "Ticker", Class: "h-9 w-full border-sky-200/70 bg-white/80", Attributes: templ.Attributes{"x-model.debounce.300ms": "filter.ticker", "x-on:input.debounce.300ms": "applyManualFilters()"}})
+		@input.Input(input.Props{ID: "journal-ticker", Type: input.TypeText, Placeholder: "Ticker", Class: "h-9 w-full border-sky-200/70 bg-white/80", Attributes: templ.Attributes{"x-model.debounce.300ms": "filter.ticker", "x-on:input.debounce.300ms": "filter.applyManualFilters()"}})
 	</div>
 }
 
 templ JournalStatusSelect() {
 	<div>
 		@selectbox.SelectBox() {
-			@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-status", Name: "journal-status", Class: "h-9 w-full border-rose-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.status", "x-on:change": "applyManualFilters()"}}) {
+			@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-status", Name: "journal-status", Class: "h-9 w-full border-rose-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.status", "x-on:change": "filter.applyManualFilters()"}}) {
 				@selectbox.Value(selectbox.ValueProps{Placeholder: "Status"})
 			}
 			@selectbox.Content() {
@@ -109,7 +112,7 @@ templ JournalStatusSelect() {
 templ JournalSequenceSelect() {
 	<div>
 		@selectbox.SelectBox() {
-			@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sequence", Name: "journal-sequence", Class: "h-9 w-full border-violet-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.sequence", "x-on:change": "applyManualFilters()"}}) {
+			@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sequence", Name: "journal-sequence", Class: "h-9 w-full border-violet-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.sequence", "x-on:change": "filter.applyManualFilters()"}}) {
 				@selectbox.Value(selectbox.ValueProps{Placeholder: "Sequence"})
 			}
 			@selectbox.Content() {
@@ -124,31 +127,22 @@ templ JournalSequenceSelect() {
 	</div>
 }
 
-templ JournalCreatedDateFilter() {
-	<div>
-		@input.Input(input.Props{ID: "journal-created-on", Type: input.TypeDate, Class: "h-9 w-full border-emerald-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.createdAfter", "x-on:change": "onCreatedDateChange()"}})
-	</div>
-}
-
 templ JournalClearFiltersButton() {
 	<div class="flex items-end">
-		@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Size: button.SizeSm, Class: "h-9 w-full border-rose-300/70 bg-rose-100/60 text-rose-800 hover:bg-rose-200/70", Attributes: templ.Attributes{"x-on:click": "clearFilters()"}}) { Clear }
+		@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton, Size: button.SizeSm, Class: "h-9 w-full border-rose-300/70 bg-rose-100/60 text-rose-800 hover:bg-rose-200/70", Attributes: templ.Attributes{"x-on:click": "filter.clearFilters()"}}) { Clear }
 	</div>
 }
 
 templ JournalActiveFilters() {
 	<div class="flex flex-wrap items-center gap-2" x-show="filter.hasActiveState()">
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneBlue, Emoji: "🔎", ShowExpr: "filter.ticker !== ''", TextExpr: "'Ticker: ' + filter.ticker"})
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, Emoji: "📈", ShowExpr: "filter.type === 'TAKEN'", TextExpr: "'Type: TAKEN'"})
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneRose, Emoji: "📉", ShowExpr: "filter.type === 'REJECTED'", TextExpr: "'Type: REJECTED'"})
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneRose, Emoji: "🏷️", ShowExpr: "filter.status !== ''", TextExpr: "'Status: ' + filter.status"})
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneViolet, Emoji: "🔢", ShowExpr: "filter.sequence !== ''", TextExpr: "'Sequence: ' + filter.sequence"})
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, Emoji: "📅", ShowExpr: "filter.createdAfter !== '' && filter.createdBefore !== '' && activeReviewPreset === ''", TextExpr: "'Created: ' + filter.createdAfter + ' → ' + filter.createdBefore"})
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, Emoji: "📅", ShowExpr: "filter.createdAfter !== '' && filter.createdBefore === '' && activeReviewPreset === ''", TextExpr: "'Created from: ' + filter.createdAfter"})
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, Emoji: "📅", ShowExpr: "filter.createdBefore !== '' && filter.createdAfter === '' && activeReviewPreset === ''", TextExpr: "'Created until: ' + filter.createdBefore"})
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Emoji: "🗓️", ShowExpr: "activeReviewPreset !== ''", TextExpr: "'Review: ' + activeReviewPreset"})
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Emoji: "🕒", ShowExpr: "filter.reviewed !== '' && activeReviewPreset === ''", TextExpr: "filter.reviewed === 'false' ? 'Reviewed: Pending' : 'Reviewed: ' + filter.reviewed"})
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, Emoji: "↕️", ShowExpr: "filter.sortBy !== 'created_at' || filter.sortOrder !== 'desc'", TextExpr: "'Sort: ' + [filter.sortBy, filter.sortOrder].filter(Boolean).join(' · ')"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneBlue, ShowExpr: "filter.ticker !== ''", TextExpr: "'🔎 Ticker: ' + filter.ticker"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, ShowExpr: "filter.type !== ''", TextExpr: "presentation.type(filter.type).text"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneRose, ShowExpr: "filter.status !== ''", TextExpr: "presentation.status(filter.status).text"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneViolet, ShowExpr: "filter.sequence !== ''", TextExpr: "presentation.sequence(filter.sequence).text"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, ShowExpr: "filter.datePreset !== '' && presets.activeReviewPreset === ''", TextExpr: "'📅 Date: ' + filter.datePreset"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, ShowExpr: "presets.activeReviewPreset !== ''", TextExpr: "'🗓️ Review: ' + presets.activeReviewPreset"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, ShowExpr: "filter.reviewed !== '' && presets.activeReviewPreset === ''", TextExpr: "'🕒 ' + (filter.reviewed === 'false' ? 'Reviewed: Pending' : 'Reviewed: ' + filter.reviewed)"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, ShowExpr: "filter.sortBy !== 'created_at' || filter.sortOrder !== 'desc'", TextExpr: "'↕️ Sort: ' + [filter.sortBy, filter.sortOrder].filter(Boolean).join(' · ')"})
 	</div>
 }
 
@@ -157,24 +151,10 @@ templ JournalActiveFilters() {
 // ============================================================
 
 templ JournalTableSection() {
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxError, ShowExpr: "hasError()"}) {
-		<div class="space-y-3">
-			<div class="font-medium" x-text="errorMessage"></div>
-			@button.Button(button.Props{
-				Variant: button.VariantOutline,
-				Type:    button.TypeButton,
-				Attributes: templ.Attributes{
-					"x-on:click": "loadJournals()",
-				},
-			}) {
-				Retry
-			}
-		</div>
-	}
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "loading && !hasError()"}) {
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "table.loading"}) {
 		Loading journals...
 	}
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!loading && !hasError() && isEmpty()"}) {
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!table.loading && table.isEmpty()"}) {
 		No journals found.
 	}
 	@JournalTable()
@@ -182,12 +162,12 @@ templ JournalTableSection() {
 }
 
 templ JournalTable() {
-	@card.Card(card.Props{Class: "rounded-none border-x-0 border-b-0 border-t border-t-sky-200/70 shadow-sm", Attributes: templ.Attributes{"x-show": "!loading && !hasError() && !isEmpty()"}}) {
+	@card.Card(card.Props{Class: "rounded-none border-x-0 border-b-0 border-t border-t-sky-200/70 shadow-sm", Attributes: templ.Attributes{"x-show": "!table.loading && !table.isEmpty()"}}) {
 		@card.Content(card.ContentProps{Class: "overflow-x-auto p-0"}) {
 			@table.Table(table.Props{Class: "min-w-[860px]"}) {
 				@JournalTableHeader()
 				@table.Body() {
-					<template x-for="journal in journals" x-bind:key="journal.id">
+					<template x-for="journal in table.journals" x-bind:key="journal.id">
 						@JournalRow()
 					</template>
 				}
@@ -200,11 +180,11 @@ templ JournalTableHeader() {
 	@table.Header(table.HeaderProps{Class: "bg-gradient-to-r from-sky-100/70 via-indigo-100/60 to-emerald-100/70 text-xs uppercase tracking-wide text-slate-700"}) {
 		@table.Row() {
 			@table.Head() { ID }
-			@widgets.SortHead(widgets.SortHeadProps{Label: "Ticker", Field: "ticker", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "toggleSort('ticker')"})
-			@widgets.SortHead(widgets.SortHeadProps{Label: "Sequence", Field: "sequence", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "toggleSort('sequence')"})
+			@widgets.SortHead(widgets.SortHeadProps{Label: "Ticker", Field: "ticker", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "filter.toggleSort('ticker')"})
+			@widgets.SortHead(widgets.SortHeadProps{Label: "Sequence", Field: "sequence", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "filter.toggleSort('sequence')"})
 			@table.Head() { Type }
 			@table.Head() { Status }
-			@widgets.SortHead(widgets.SortHeadProps{Label: "Created", Field: "created_at", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "toggleSort('created_at')"})
+			@widgets.SortHead(widgets.SortHeadProps{Label: "Created", Field: "created_at", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "filter.toggleSort('created_at')"})
 		}
 	}
 }
@@ -217,27 +197,27 @@ templ JournalRow() {
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "journal.ticker"}}) {}
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "journal.sequence"}}) {}
 		@table.Cell() {
-			@components.TypeBadge(components.TypeBadgeProps{TypeExpr: "journal.type"})
+			@journalcommon.TypeBadge(journalcommon.TypeBadgeProps{TypeExpr: "journal.type"})
 		}
 		@table.Cell() {
-			@components.StatusBadge(components.StatusBadgeProps{StatusExpr: "journal.status"})
+			@journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "journal.status"})
 		}
-		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "formatTimestamp(journal.created_at)"}}) {}
+						@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "presentation.formatTimestamp(journal.created_at)"}}) {}
 	}
 }
 
 templ JournalPagination() {
 	@card.Footer(card.FooterProps{Class: "border-t border-sky-200/70 bg-gradient-to-r from-sky-50 via-indigo-50 to-emerald-50 px-4 py-3 text-sm shadow-inner sm:flex-row sm:items-center sm:justify-between"}) {
 		<div class="flex flex-col gap-1 text-sm">
-			<span class="font-semibold text-sky-700" x-text="journalPageSummary()"></span>
+			<span class="font-semibold text-sky-700" x-text="pagination.summary()"></span>
 		</div>
 		@pagination.Pagination() {
 			@pagination.Content() {
 				@pagination.Item() {
-					@pagination.Previous(pagination.PreviousProps{Attributes: templ.Attributes{"x-on:click": "prevPage()", "x-bind:disabled": "!pagination.hasPrev()"}})
+					@pagination.Previous(pagination.PreviousProps{Attributes: templ.Attributes{"x-on:click": "pagination.previousPage()", "x-bind:disabled": "!pagination.hasPrev()"}})
 				}
 				@pagination.Item() {
-					@pagination.Next(pagination.NextProps{Attributes: templ.Attributes{"x-on:click": "nextPage()", "x-bind:disabled": "!pagination.hasNext()"}})
+					@pagination.Next(pagination.NextProps{Attributes: templ.Attributes{"x-on:click": "pagination.nextJournalPage()", "x-bind:disabled": "!pagination.hasNext()"}})
 				}
 			}
 		}

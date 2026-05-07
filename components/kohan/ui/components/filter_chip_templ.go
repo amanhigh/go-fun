@@ -13,12 +13,11 @@ import (
 
 type FilterChipProps struct {
 	// TODO: Cover Component Package with Test
-	ShowExpr   string
 	TextExpr   string
 	Tone       Tone
-	Emoji      string
 	Class      string
 	Attributes templ.Attributes
+	ShowExpr   string
 }
 
 func filterChipToneClass(tone Tone) string {
@@ -38,14 +37,6 @@ func filterChipToneClass(tone Tone) string {
 	}
 }
 
-func filterChipTextExpr(props FilterChipProps) string {
-	if props.Emoji == "" {
-		return props.TextExpr
-	}
-
-	return "'" + props.Emoji + " ' + (" + props.TextExpr + ")"
-}
-
 func filterChipAttrs(props FilterChipProps) templ.Attributes {
 	attrs := templ.Attributes{}
 	for key, value := range props.Attributes {
@@ -55,7 +46,7 @@ func filterChipAttrs(props FilterChipProps) templ.Attributes {
 		attrs["x-show"] = props.ShowExpr
 	}
 	if props.TextExpr != "" {
-		attrs["x-text"] = filterChipTextExpr(props)
+		attrs["x-text"] = props.TextExpr
 	}
 	return attrs
 }

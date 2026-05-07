@@ -39,7 +39,7 @@ var _ = Describe("Journal Page Tests", func() {
 		It("should wire the initial page load flow", func() {
 			Expect(html).To(ContainSubstring("x-init=\"init()\""))
 			Expect(html).To(ContainSubstring("Loading journals..."))
-			Expect(html).To(ContainSubstring("journal in journals"))
+			Expect(html).To(ContainSubstring("journal in table.journals"))
 		})
 	})
 
@@ -49,22 +49,25 @@ var _ = Describe("Journal Page Tests", func() {
 			Expect(html).To(ContainSubstring("last7"))
 			Expect(html).To(ContainSubstring("last30"))
 			Expect(html).To(ContainSubstring("toggleType()"))
-			Expect(html).To(ContainSubstring("typeToggleLabel()"))
-			Expect(html).To(ContainSubstring("typeToggleClass()"))
+			Expect(html).To(ContainSubstring("typeToggle().label"))
+			Expect(html).To(ContainSubstring("typeToggle().className"))
 		})
 
 		It("should wire review preset actions", func() {
 			Expect(html).To(ContainSubstring("Review"))
-			Expect(html).To(ContainSubstring("reviewPreset in reviewPresets"))
+			Expect(html).To(ContainSubstring("reviewPreset in presets.reviewPresets"))
 			Expect(html).To(ContainSubstring("reviewPreset.label"))
-			Expect(html).To(ContainSubstring("applyReviewPreset(reviewPreset)"))
-			Expect(html).To(ContainSubstring("reviewPresetClass(reviewPreset)"))
+			Expect(html).To(ContainSubstring("presets.applyReviewPreset(reviewPreset)"))
+			Expect(html).To(ContainSubstring("presets.reviewPresetClass(reviewPreset)"))
 		})
 
 		It("should expose important active filter integrations", func() {
-			Expect(html).To(ContainSubstring("createdBefore"))
+			Expect(html).To(ContainSubstring("datePreset"))
 			Expect(html).To(ContainSubstring("reviewed"))
 			Expect(html).To(ContainSubstring("Sort: "))
+			Expect(html).To(ContainSubstring(`presentation.type(filter.type).text`))
+			Expect(html).To(ContainSubstring(`presentation.status(filter.status).text`))
+			Expect(html).To(ContainSubstring(`presentation.sequence(filter.sequence).text`))
 		})
 	})
 
@@ -94,19 +97,11 @@ var _ = Describe("Journal Page Tests", func() {
 		It("should render mutually exclusive table section states", func() {
 			Expect(html).To(ContainSubstring("Loading journals..."))
 			Expect(html).To(ContainSubstring("No journals found."))
-			Expect(html).To(ContainSubstring("Retry"))
-		})
-
-		It("should render the table error state with retry binding", func() {
-			Expect(html).To(ContainSubstring("x-show=\"hasError()\""))
-			Expect(html).To(ContainSubstring("x-text=\"errorMessage\""))
-			Expect(html).To(ContainSubstring("x-on:click=\"loadJournals()\""))
-			Expect(html).To(ContainSubstring(">Retry<"))
 		})
 
 		It("should render pagination bindings and page summary", func() {
-			Expect(html).To(ContainSubstring("x-on:click=\"prevPage()\""))
-			Expect(html).To(ContainSubstring("x-on:click=\"nextPage()\""))
+			Expect(html).To(ContainSubstring("x-on:click=\"pagination.previousPage()\""))
+			Expect(html).To(ContainSubstring("x-on:click=\"pagination.nextJournalPage()\""))
 			Expect(html).To(ContainSubstring("x-bind:disabled=\"!pagination.hasPrev()\""))
 			Expect(html).To(ContainSubstring("x-bind:disabled=\"!pagination.hasNext()\""))
 			Expect(html).To(ContainSubstring("Page"))

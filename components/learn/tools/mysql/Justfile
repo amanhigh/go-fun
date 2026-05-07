@@ -1,0 +1,124 @@
+set shell := ["bash", "-cu"]
+
+# Import shared library for formatting and run helpers
+import '../../../../.just/lib.just'
+
+### Variables
+default_dbname := "play"
+restore_db_name := default_dbname + "_restore"
+config := "/tmp/mysql.cnf"
+
+# Dynamic K8s commands (evaluated at recipe runtime via shell substitution)
+k8_cmd := "kubectl exec -it $(kubectl get pod --selector=app.kubernetes.io/component=primary -o name)"
+mysql := "{{k8_cmd}} -- mysql --defaults-extra-file={{config}}"
+
+[doc('Show available MySQL recipes')]
+default:
+    just --list
+
+[group('show')]
+[doc('Show available databases')]
+show-db:
+    just _title "MySQL" "Available Databases"
+    {{mysql}} -e "show databases;"
+
+[group('show')]
+[doc('Show available tables')]
+show-tables:
+    just _title "MySQL" "Available Tables"
+    {{mysql}} {{default_dbname}} -e "show tables;"
+
+[group('show')]
+[doc('Show MySQL process list')]
+show-process:
+    just _title "MySQL" "Process List"
+    {{mysql}} -e "show processlist;"
+
+[group('create')]
+[doc('Create database')]
+create-db dbname="{{default_dbname}}":
+    just _title "MySQL" "Creating Database: {{dbname}}"
+    {{mysql}} -e "create database {{dbname}};"
+
+[group('create')]
+[doc('Create cloned database for restore')]
+create-clone:
+    just _title "MySQL" "Creating Clone Database"
+    just create-db dbname="{{restore_db_name}}"
+
+[group('create')]
+[doc('Seed database from /tmp/seed.sql')]
+seed:
+    just _title "MySQL" "Seeding Database: {{default_dbname}}"
+    {{k8_cmd}} -- bash -c 'mysql --defaults-extra-file={{config}} {{default_dbname}} < /tmp/seed.sql'
+
+[group('delete')]
+[doc('Delete database')]
+delete-db dbname="{{default_dbname}}":
+    just _warn "MySQL" "Deleting Database: {{dbname}}"
+    -{{mysql}} -e "drop database {{dbname}};"
+
+[group('delete')]
+[doc('Delete cloned database')]
+delete-clone:
+    just _warn "MySQL" "Deleting Clone Database"
+    just delete-db dbname="{{restore_db_name}}"
+
+[group('housekeeping')]
+[doc('Prepare pod for test setup')]
+prepare:
+    just _title "MySQL" "Preparing Pod"
+    kubectl cp seed.sql $(basename $(kubectl get pod --selector=app.kubernetes.io/component=primary -o name)):/tmp
+    kubectl cp mysql.cnf $(basename $(kubectl get pod --selector=app.kubernetes.io/component=primary -o name)):/tmp
+
+[group('housekeeping')]
+[doc('Backup database')]
+backup:
+    just _title "MySQL" "Backing up Database: {{default_dbname}}"
+    {{k8_cmd}} -- bash -c 'mysqldump --defaults-extra-file={{config}} {{default_dbname}} --routines > /tmp/backup.sql'
+
+[group('housekeeping')]
+[doc('Restore database from backup')]
+restore:
+    just _title "MySQL" "Restoring to Database: {{restore_db_name}}"
+    {{k8_cmd}} -- bash -c 'mysql --defaults-extra-file={{config}} {{restore_db_name}} < /tmp/backup.sql'
+
+[group('exec')]
+[doc('Connect to MySQL')]
+exec:
+    {{mysql}}
+
+[group('exec')]
+[doc('SSH into MySQL pod')]
+ssh:
+    {{k8_cmd}} bash
+
+### Workflows
+
+[group('info')]
+[doc('Show MySQL info')]
+info: show-db show-tables
+
+[group('info')]
+[doc('Show extended MySQL info')]
+infos: info show-process
+
+[group('setup')]
+[doc('Setup database')]
+setup: create-db seed
+
+[group('setup')]
+[doc('Clean up database')]
+clean: delete-db delete-clone
+
+[group('setup')]
+[doc('Clone database')]
+clone: delete-clone backup create-clone restore
+
+[group('setup')]
+[doc('Reset database')]
+reset: clean setup info
+
+[group('setup')]
+[doc('Run all targets')]
+all: prepare reset clone infos
