@@ -1,7 +1,6 @@
 import { createAsyncFeedbackState } from '../../../shared/async_feedback';
 import { getErrorMessage } from '../../../shared/error';
 import { normalizeTag } from '../../../shared/tags';
-import { prependById } from '../../../shared/collection';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
@@ -64,7 +63,7 @@ export function NewManagementTagsConcern(pg: JournalDetailPageProvider) {
 					type: 'MANAGEMENT',
 				};
 				const envelope = await pg().tagClient.create(pg().current.journalId, payload);
-				pg().sidebar.tags.items = prependById(pg().sidebar.tags.items ?? [], envelope.data as JournalTag);
+				pg().sidebar.tags.prepend(envelope.data as JournalTag);
 				this.messageType = 'success';
 				this.message = `${normalizeTag(tagValue)} tag added.`;
 			} catch (err) {

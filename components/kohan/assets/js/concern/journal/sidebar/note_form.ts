@@ -1,6 +1,5 @@
 import { createAsyncFeedbackState } from '../../../shared/async_feedback';
 import { getErrorMessage } from '../../../shared/error';
-import { prependById } from '../../../shared/collection';
 import type { JournalNote, JournalNoteRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
@@ -38,7 +37,7 @@ export function NewNoteFormConcern(pg: JournalDetailPageProvider) {
 					format: 'MARKDOWN',
 				};
 				const envelope = await pg().noteClient.create(pg().current.journalId, payload);
-				pg().sidebar.notes.items = prependById(pg().sidebar.notes.items ?? [], envelope.data as JournalNote);
+				pg().sidebar.notes.prepend(envelope.data as JournalNote);
 				this.content = '';
 				this.messageType = 'success';
 				this.message = 'Note added.';

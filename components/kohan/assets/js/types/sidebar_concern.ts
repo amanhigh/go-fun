@@ -40,6 +40,8 @@ export type ReviewQueueConcern = {
 	items: Journal[];
 	loading: boolean;
 	error: string;
+
+	hasItems(): boolean;
 	load(): Promise<void>;
 };
 
@@ -57,8 +59,11 @@ export type NotesConcern = {
 	deletingId: string;
 
 	sync(items: JournalNote[] | undefined): void;
+	all(): JournalNote[];
+	hasItems(): boolean;
+	prepend(item: JournalNote): void;
+	remove(itemId: string): void;
 	sorted(): JournalNote[];
-	hasNotes(): boolean;
 	delete(noteId: string): Promise<void>;
 };
 
@@ -68,7 +73,9 @@ export type TagCollectionConcern = {
 
 	sync(tags: JournalTag[] | undefined): void;
 	all(): JournalTag[];
-	hasTags(): boolean;
+	hasItems(): boolean;
+	prepend(item: JournalTag): void;
+	remove(itemId: string): void;
 	reason(): JournalTag[];
 	directional(): JournalTag[];
 	management(): JournalTag[];
