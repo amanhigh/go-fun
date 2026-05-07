@@ -9,13 +9,9 @@ function localToday(): string {
 	return formatDateInputValue(new Date());
 }
 
-function createReviewActionsState() {
-	return createAsyncFeedbackState('submitting', 'message', 'messageType');
-}
-
 export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 	return {
-		...createReviewActionsState(),
+		...createAsyncFeedbackState('submitting', 'message', 'messageType'),
 
 		get feedbackClass(): string {
 			return this.messageType === 'success' ? 'journal-feedback-success' : 'journal-feedback-error';

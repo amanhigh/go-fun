@@ -20,17 +20,11 @@ function toneForValue(value: string): string {
 	return preset?.tone ?? 'slate';
 }
 
-function createManagementTagsState() {
+export function NewManagementTagsConcern(pg: JournalDetailPageProvider) {
 	return {
 		...createAsyncFeedbackState('submitting', 'message', 'messageType'),
 		presets: managementTagPresets,
 		pendingValue: '',
-	};
-}
-
-export function NewManagementTagsConcern(pg: JournalDetailPageProvider) {
-	return {
-		...createManagementTagsState(),
 
 		get feedbackClass(): string {
 			return this.messageType === 'success' ? 'journal-feedback-success' : 'journal-feedback-error';

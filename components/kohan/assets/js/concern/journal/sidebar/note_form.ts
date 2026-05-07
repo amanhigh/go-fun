@@ -3,16 +3,10 @@ import { getErrorMessage } from '../../../shared/error';
 import type { JournalNote, JournalNoteRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
-function createNoteFormState() {
+export function NewNoteFormConcern(pg: JournalDetailPageProvider) {
 	return {
 		...createAsyncFeedbackState('submitting', 'message', 'messageType'),
 		content: '',
-	};
-}
-
-export function NewNoteFormConcern(pg: JournalDetailPageProvider) {
-	return {
-		...createNoteFormState(),
 
 		get feedbackClass(): string {
 			return this.messageType === 'success' ? 'journal-feedback-success' : 'journal-feedback-error';

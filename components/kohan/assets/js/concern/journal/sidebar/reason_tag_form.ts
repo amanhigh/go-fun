@@ -3,17 +3,11 @@ import { getErrorMessage } from '../../../shared/error';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
-function createReasonTagFormState() {
+export function NewReasonTagFormConcern(pg: JournalDetailPageProvider) {
 	return {
 		...createAsyncFeedbackState('submitting', 'message', 'messageType'),
 		input: '',
 		override: '',
-	};
-}
-
-export function NewReasonTagFormConcern(pg: JournalDetailPageProvider) {
-	return {
-		...createReasonTagFormState(),
 
 		get feedbackClass(): string {
 			return this.messageType === 'success' ? 'journal-feedback-success' : 'journal-feedback-error';
