@@ -31,10 +31,7 @@ export type ReviewActionsConcern = {
 
 	toggleLabel(): string;
 	buttonClass(): string;
-	quickAction(): QuickActionResult | null;
-	hasQuickAction(): boolean;
-	quickLabel(): string;
-	quickButtonClass(): string;
+	quickAction(): QuickActionResult;
 	toggle(): Promise<void>;
 	applyQuickStatus(): Promise<void>;
 };
@@ -58,7 +55,7 @@ export type NoteFormConcern = {
 export type NotesConcern = {
 	items: JournalNote[];
 	deletingId: string;
-	deleteError: string;
+
 	sync(items: JournalNote[] | undefined): void;
 	sorted(): JournalNote[];
 	hasNotes(): boolean;
@@ -68,9 +65,8 @@ export type NotesConcern = {
 export type TagCollectionConcern = {
 	items: JournalTag[];
 	deletingId: string;
-	deleteError: string;
 
-	sync(items: JournalTag[] | undefined): void;
+	sync(tags: JournalTag[] | undefined): void;
 	all(): JournalTag[];
 	hasTags(): boolean;
 	reason(): JournalTag[];

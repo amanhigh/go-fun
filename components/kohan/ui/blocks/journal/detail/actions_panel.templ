@@ -54,12 +54,12 @@ templ journalDetailReviewToggleAction() {
 }
 
 templ journalDetailQuickReviewAction() {
-	<div x-show="sidebar.reviewActions.hasQuickAction()">
+	<div x-show="sidebar.reviewActions.quickAction().status">
 		@components.QuickAction(components.QuickActionProps{
 			OnClickExpr: "sidebar.reviewActions.applyQuickStatus()",
-			TextExpr:    "sidebar.reviewActions.submitting ? 'Saving...' : sidebar.reviewActions.quickLabel()",
+			TextExpr:    "sidebar.reviewActions.submitting ? 'Saving...' : sidebar.reviewActions.quickAction().label",
 			Tint:        components.ToneBlue,
-			ClassExpr:   "sidebar.reviewActions.quickButtonClass()",
+			ClassExpr:   "sidebar.reviewActions.quickAction().className",
 			Attributes: templ.Attributes{
 				"x-bind:disabled": "sidebar.reviewActions.submitting",
 			},

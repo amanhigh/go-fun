@@ -4,7 +4,7 @@ import { prependById } from '../../../shared/collection';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
-export function createReasonTagFormState() {
+function createReasonTagFormState() {
 	return {
 		...createAsyncFeedbackState('submitting', 'message', 'messageType'),
 		input: '',

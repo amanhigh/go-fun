@@ -9,7 +9,7 @@ function localToday(): string {
 	return formatDateInputValue(new Date());
 }
 
-export function createReviewActionsState() {
+function createReviewActionsState() {
 	return createAsyncFeedbackState('submitting', 'message', 'messageType');
 }
 
@@ -31,25 +31,16 @@ export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 		},
 		quickAction() {
 			const journal = pg().current.journal;
-			const journalType = normalizeTag(journal?.type ?? '');
-			if (journalType !== 'TAKEN' && journalType !== 'REJECTED') return null;
+			if (!journal) return { status: '', label: '', className: '' };
+			const journalType = normalizeTag(journal.type ?? '');
+			if (journalType !== 'TAKEN' && journalType !== 'REJECTED') return { status: '', label: '', className: '' };
 			const status = journalType === 'TAKEN' ? 'JUST_LOSS' : 'BROKEN';
 			const label = status === 'JUST_LOSS' ? 'Mark Just Loss' : 'Mark Broken';
 			const className = status === 'JUST_LOSS'
 				? 'journal-quick-status-loss'
 				: 'journal-quick-status-broken';
-			if (!journal) return null;
 			const isActive = normalizeTag(journal.status) === status;
-			return isActive ? null : { status, label, className };
-		},
-		hasQuickAction() {
-			return this.quickAction() !== null;
-		},
-		quickLabel() {
-			return this.quickAction()?.label ?? 'Update Status';
-		},
-		quickButtonClass() {
-			return this.quickAction()?.className ?? '';
+			return isActive ? { status: '', label: '', className: '' } : { status, label, className };
 		},
 
 		async toggle() {
@@ -79,7 +70,7 @@ export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 		async applyQuickStatus() {
 			const journal = pg().current.journal;
 			const action = this.quickAction();
-			if (!journal || this.submitting || !action) return;
+			if (!journal || this.submitting || !action.status) return;
 			const { status } = action;
 			this.submitting = true;
 			this.message = '';

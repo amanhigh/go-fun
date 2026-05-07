@@ -21,7 +21,7 @@ function toneForValue(value: string): string {
 	return preset?.tone ?? 'slate';
 }
 
-export function createManagementTagsState() {
+function createManagementTagsState() {
 	return {
 		...createAsyncFeedbackState('submitting', 'message', 'messageType'),
 		presets: managementTagPresets,

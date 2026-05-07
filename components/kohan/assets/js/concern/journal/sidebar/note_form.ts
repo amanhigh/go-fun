@@ -4,7 +4,7 @@ import { prependById } from '../../../shared/collection';
 import type { JournalNote, JournalNoteRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
-export function createNoteFormState() {
+function createNoteFormState() {
 	return {
 		...createAsyncFeedbackState('submitting', 'message', 'messageType'),
 		content: '',

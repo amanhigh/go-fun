@@ -20,7 +20,6 @@ templ JournalDetailNotes() {
 					@JournalDetailNoteRow()
 				</template>
 			</div>
-			<p class="mt-2 text-xs text-rose-600" x-show="sidebar.notes.deleteError" x-text="sidebar.notes.deleteError"></p>
 			@JournalDetailEmptyState("No notes available for this journal.", "!sidebar.notes.hasNotes()")
 		}
 	}
