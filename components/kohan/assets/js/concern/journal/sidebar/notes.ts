@@ -1,4 +1,4 @@
-import { createDeletableSyncedCollectionState } from './collection';
+import { createDeletableSyncedCollectionState } from '../../../lib/collection';
 import type { JournalNote } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 

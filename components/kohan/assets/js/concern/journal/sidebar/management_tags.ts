@@ -1,5 +1,4 @@
-import { createAsyncFeedbackState } from '../../../lib/async_feedback';
-import { getErrorMessage } from '../../../lib/error';
+import { createAsyncFeedback } from '../../../lib/async_feedback';
 import { normalizeTag } from '../../../lib/tags';
 import { managementTagPresets, managementTagTone } from '../../../lib/management_tags';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
@@ -7,13 +6,9 @@ import type { JournalDetailPageProvider } from '../../../types/journal_detail_co
 
 export function NewManagementTagsConcern(pg: JournalDetailPageProvider) {
 	return {
-		...createAsyncFeedbackState(),
+		...createAsyncFeedback(),
 		presets: managementTagPresets,
 		pendingValue: '',
-
-		get feedbackClass(): string {
-			return this.messageType === 'success' ? 'journal-feedback-success' : 'journal-feedback-error';
-		},
 
 		hasBar() {
 			return normalizeTag(pg().current.journal?.type ?? '') === 'TAKEN';
@@ -32,26 +27,16 @@ export function NewManagementTagsConcern(pg: JournalDetailPageProvider) {
 		},
 		async submit(tagValue: string) {
 			if (!pg().current.journal || this.submitting) return;
-			this.submitting = true;
 			this.pendingValue = tagValue;
-			this.message = '';
-			this.messageType = 'error';
-			try {
+			await this.run(async () => {
 				const payload: JournalTagRequest = {
 					tag: tagValue,
 					type: 'MANAGEMENT',
 				};
 				const envelope = await pg().tagClient.create(pg().current.journalId, payload);
 				pg().sidebar.tags.prepend(envelope.data as JournalTag);
-				this.messageType = 'success';
-				this.message = `${normalizeTag(tagValue)} tag added.`;
-			} catch (err) {
-				this.message = getErrorMessage(err, 'Unable to save management tag.');
-				this.messageType = 'error';
-			} finally {
-				this.submitting = false;
-				this.pendingValue = '';
-			}
+			}, `${normalizeTag(tagValue)} tag added.`, 'Unable to save management tag.');
+			this.pendingValue = '';
 		},
 	};
 }

@@ -1,17 +1,12 @@
-import { createAsyncFeedbackState } from '../../../lib/async_feedback';
-import { getErrorMessage } from '../../../lib/error';
+import { createAsyncFeedback } from '../../../lib/async_feedback';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
 export function NewReasonTagFormConcern(pg: JournalDetailPageProvider) {
 	return {
-		...createAsyncFeedbackState(),
+		...createAsyncFeedback(),
 		input: '',
 		override: '',
-
-		get feedbackClass(): string {
-			return this.messageType === 'success' ? 'journal-feedback-success' : 'journal-feedback-error';
-		},
 
 		focusOverride() {
 			(pg() as any).$nextTick?.(() => {
@@ -23,15 +18,11 @@ export function NewReasonTagFormConcern(pg: JournalDetailPageProvider) {
 			if (!pg().current.journal || this.submitting) return;
 			const tag = this.input.trim();
 			if (!tag) {
-				this.message = 'Tag is required.';
-				this.messageType = 'error';
+				this.setError('Tag is required.');
 				return;
 			}
 			const override = this.override.trim();
-			this.submitting = true;
-			this.message = '';
-			this.messageType = 'error';
-			try {
+			await this.run(async () => {
 				const payload: JournalTagRequest = {
 					tag,
 					type: 'REASON',
@@ -41,14 +32,7 @@ export function NewReasonTagFormConcern(pg: JournalDetailPageProvider) {
 				pg().sidebar.tags.prepend(envelope.data as JournalTag);
 				this.input = '';
 				this.override = '';
-				this.messageType = 'success';
-				this.message = 'Reason tag added.';
-			} catch (err) {
-				this.message = getErrorMessage(err, 'Unable to save reason tag.');
-				this.messageType = 'error';
-			} finally {
-				this.submitting = false;
-			}
+			}, 'Reason tag added.', 'Unable to save reason tag.');
 		},
 	};
 }

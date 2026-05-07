@@ -1,5 +1,5 @@
 import type { Journal, JournalNote, JournalTag } from './journal_api';
-import type { FeedbackType } from '../lib/async_feedback';
+import type { AsyncFeedback } from '../lib/async_feedback';
 import type { DeletableSyncedCollection, LoadableCollection } from './collection';
 import type { ManagementTagPreset } from '../lib/management_tags';
 import type { QuickAction } from './quick_action';
@@ -15,24 +15,14 @@ export type SidebarStateConcern = {
 	enterReviewMode(): void;
 };
 
-export type ReviewActionsConcern = {
-	submitting: boolean;
-	message: string;
-	messageType: FeedbackType;
-	readonly feedbackClass: string;
-
-	isSubmitting(): boolean;
+export type ReviewActionsConcern = AsyncFeedback & {
 	actions(): QuickAction[];
 };
 
 export type ReviewQueueConcern = LoadableCollection<Journal>;
 
-export type NoteFormConcern = {
+export type NoteFormConcern = AsyncFeedback & {
 	content: string;
-	submitting: boolean;
-	message: string;
-	messageType: 'success' | 'error';
-	readonly feedbackClass: string;
 	submit(): Promise<void>;
 };
 
@@ -44,25 +34,17 @@ export type TagCollectionConcern = DeletableSyncedCollection<JournalTag> & {
 	management(): JournalTag[];
 };
 
-export type ReasonTagFormConcern = {
+export type ReasonTagFormConcern = AsyncFeedback & {
 	input: string;
 	override: string;
-	submitting: boolean;
-	message: string;
-	messageType: 'success' | 'error';
-	readonly feedbackClass: string;
 
 	focusOverride(): void;
 	submit(): Promise<void>;
 };
 
-export type ManagementTagsConcern = {
+export type ManagementTagsConcern = AsyncFeedback & {
 	presets: readonly ManagementTagPreset[];
-	submitting: boolean;
 	pendingValue: string;
-	message: string;
-	messageType: 'success' | 'error';
-	readonly feedbackClass: string;
 
 	hasBar(): boolean;
 	hasTag(value: string): boolean;

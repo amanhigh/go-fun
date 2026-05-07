@@ -1,4 +1,4 @@
-import { createDeletableSyncedCollectionState } from './collection';
+import { createDeletableSyncedCollectionState } from '../../../lib/collection';
 import { normalizeTag } from '../../../lib/tags';
 import type { JournalTag } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';

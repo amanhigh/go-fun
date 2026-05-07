@@ -37,7 +37,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring("Review"))
 			Expect(html).To(ContainSubstring("Quick actions"))
 			Expect(html).To(ContainSubstring(`flex flex-wrap items-center gap-2 lg:gap-3`))
-			Expect(html).To(ContainSubstring(`sidebar.reviewActions.isSubmitting()`))
+			Expect(html).To(ContainSubstring(`sidebar.reviewActions.submitting`))
 			Expect(html).To(ContainSubstring(`sidebar.reviewActions.actions()`))
 			Expect(html).To(ContainSubstring(`action.display().text`))
 			Expect(html).To(ContainSubstring(`Saving...`))

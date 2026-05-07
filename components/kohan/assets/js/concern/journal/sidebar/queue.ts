@@ -1,4 +1,4 @@
-import { createLoadableCollectionState } from './collection';
+import { createLoadableCollectionState } from '../../../lib/collection';
 import type { Journal } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 

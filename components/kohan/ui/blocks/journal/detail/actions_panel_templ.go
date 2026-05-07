@@ -163,10 +163,10 @@ func journalDetailActionBar() templ.Component {
 			}
 			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{
 				OnClickExpr: "action.apply()",
-				TextExpr:    "sidebar.reviewActions.isSubmitting() ? 'Saving...' : action.display().text",
+				TextExpr:    "sidebar.reviewActions.submitting ? 'Saving...' : action.display().text",
 				ClassExpr:   "action.display().class",
 				Attributes: templ.Attributes{
-					"x-bind:disabled": "sidebar.reviewActions.isSubmitting()",
+					"x-bind:disabled": "sidebar.reviewActions.submitting",
 				},
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {

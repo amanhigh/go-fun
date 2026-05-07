@@ -1,5 +1,4 @@
-import { createAsyncFeedbackState, runAsyncFeedback } from '../../../lib/async_feedback';
-import type { FeedbackState } from '../../../lib/async_feedback';
+import { createAsyncFeedback, type AsyncFeedback } from '../../../lib/async_feedback';
 import { formatDateInputValue } from '../../../lib/date';
 import { createQuickAction } from '../../../lib/quick_action';
 import type { DisplaySpec } from '../../../types/presentation_concern';
@@ -40,23 +39,23 @@ function isStatusActive(journal: Journal): boolean {
 
 // ===== Async Action Handlers =====
 
-async function toggleReviewedAt(feedback: FeedbackState, pg: JournalDetailPageProvider): Promise<void> {
+async function toggleReviewedAt(feedback: AsyncFeedback, pg: JournalDetailPageProvider): Promise<void> {
 	const journal = pg().current.journal!;
 	const reviewedAt = journal.reviewed_at ? null : localToday();
 	const successMsg = reviewedAt ? 'Journal marked reviewed.' : 'Journal marked not reviewed.';
-	await runAsyncFeedback(feedback, async () => {
+	await feedback.run(async () => {
 		const envelope = await pg().client.updateReview(pg().current.journalId, { reviewed_at: reviewedAt });
 		journal.reviewed_at = envelope.data.reviewed_at;
 		journal.status = envelope.data.status;
 	}, successMsg, 'Unable to update review date.');
 }
 
-async function applyReviewStatus(feedback: FeedbackState, pg: JournalDetailPageProvider): Promise<void> {
+async function applyReviewStatus(feedback: AsyncFeedback, pg: JournalDetailPageProvider): Promise<void> {
 	const journal = pg().current.journal!;
 	const isTaken = journal.type === 'TAKEN';
 	const targetStatus = isTaken ? 'JUST_LOSS' : 'BROKEN';
 
-	await runAsyncFeedback(feedback, async () => {
+	await feedback.run(async () => {
 		const envelope = await pg().client.updateReview(pg().current.journalId, { status: targetStatus, reviewed_at: localToday() });
 		journal.reviewed_at = envelope.data.reviewed_at;
 		journal.status = envelope.data.status;
@@ -68,15 +67,7 @@ async function applyReviewStatus(feedback: FeedbackState, pg: JournalDetailPageP
 
 export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 	return {
-		...createAsyncFeedbackState(),
-
-		get feedbackClass(): string {
-			return this.messageType === 'success' ? 'journal-feedback-success' : 'journal-feedback-error';
-		},
-
-		isSubmitting() {
-			return this.submitting;
-		},
+		...createAsyncFeedback(),
 
 		actions(): QuickAction[] {
 			const journal = pg().current.journal;

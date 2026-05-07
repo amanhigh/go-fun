@@ -39,10 +39,10 @@ templ journalDetailActionBar() {
 		<template x-for="action in sidebar.reviewActions.actions()" x-bind:key="action.id">
 			@components.QuickAction(components.QuickActionProps{
 				OnClickExpr: "action.apply()",
-				TextExpr:    "sidebar.reviewActions.isSubmitting() ? 'Saving...' : action.display().text",
+				TextExpr:    "sidebar.reviewActions.submitting ? 'Saving...' : action.display().text",
 				ClassExpr:   "action.display().class",
 				Attributes: templ.Attributes{
-					"x-bind:disabled": "sidebar.reviewActions.isSubmitting()",
+					"x-bind:disabled": "sidebar.reviewActions.submitting",
 				},
 			})
 		</template>

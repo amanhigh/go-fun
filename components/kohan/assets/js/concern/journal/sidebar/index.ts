@@ -1,6 +1,6 @@
 import { NewSidebarStateConcern } from './state';
-import { NewReviewActionsConcern } from './review_actions';
-import { NewReviewQueueConcern } from './review_queue';
+import { NewReviewActionsConcern } from './action';
+import { NewReviewQueueConcern } from './queue';
 import { NewNoteFormConcern } from './note_form';
 import { NewNotesConcern } from './notes';
 import { NewTagCollectionConcern } from './tags';
