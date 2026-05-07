@@ -2,6 +2,7 @@ import type { Journal, JournalNote, JournalTag } from './journal_api';
 import type { FeedbackType } from '../lib/async_feedback';
 import type { DeletableSyncedCollection, LoadableCollection } from './collection';
 import type { ManagementTagPreset } from '../lib/management_tags';
+import type { QuickAction } from './quick_action';
 
 // ===== Sidebar Sub-Concerns =====
 
@@ -14,23 +15,14 @@ export type SidebarStateConcern = {
 	enterReviewMode(): void;
 };
 
-export type QuickActionResult = {
-	status: string;
-	label: string;
-	className: string;
-};
-
 export type ReviewActionsConcern = {
 	submitting: boolean;
 	message: string;
 	messageType: FeedbackType;
 	readonly feedbackClass: string;
 
-	toggleLabel(): string;
-	buttonClass(): string;
-	quickAction(): QuickActionResult | null;
-	toggle(): Promise<void>;
-	applyQuickStatus(): Promise<void>;
+	isSubmitting(): boolean;
+	actions(): QuickAction[];
 };
 
 export type ReviewQueueConcern = LoadableCollection<Journal>;

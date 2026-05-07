@@ -36,35 +36,17 @@ templ journalDetailActionBar() {
 		Theme:    components.ToneGreen,
 		Class:    "rounded-2xl border border-border bg-muted/30 px-4 py-3",
 	}) {
-		@journalDetailReviewToggleAction()
-		@journalDetailQuickReviewAction()
+		<template x-for="action in sidebar.reviewActions.actions()" x-bind:key="action.id">
+			@components.QuickAction(components.QuickActionProps{
+				OnClickExpr: "action.apply()",
+				TextExpr:    "sidebar.reviewActions.isSubmitting() ? 'Saving...' : action.display().text",
+				ClassExpr:   "action.display().class",
+				Attributes: templ.Attributes{
+					"x-bind:disabled": "sidebar.reviewActions.isSubmitting()",
+				},
+			})
+		</template>
 	}
-}
-
-templ journalDetailReviewToggleAction() {
-	@components.QuickAction(components.QuickActionProps{
-		OnClickExpr: "sidebar.reviewActions.toggle()",
-		TextExpr:    "sidebar.reviewActions.submitting ? 'Saving...' : sidebar.reviewActions.toggleLabel()",
-		Tint:        components.ToneGreen,
-		ClassExpr:   "sidebar.reviewActions.buttonClass()",
-		Attributes: templ.Attributes{
-			"x-bind:disabled": "sidebar.reviewActions.submitting",
-		},
-	})
-}
-
-templ journalDetailQuickReviewAction() {
-	<div x-show="sidebar.reviewActions.quickAction().status">
-		@components.QuickAction(components.QuickActionProps{
-			OnClickExpr: "sidebar.reviewActions.applyQuickStatus()",
-			TextExpr:    "sidebar.reviewActions.submitting ? 'Saving...' : sidebar.reviewActions.quickAction().label",
-			Tint:        components.ToneBlue,
-			ClassExpr:   "sidebar.reviewActions.quickAction().className",
-			Attributes: templ.Attributes{
-				"x-bind:disabled": "sidebar.reviewActions.submitting",
-			},
-		})
-	</div>
 }
 
 templ journalDetailManagementActions() {
