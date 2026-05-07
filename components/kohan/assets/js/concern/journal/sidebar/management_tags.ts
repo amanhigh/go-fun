@@ -7,7 +7,7 @@ import type { JournalDetailPageProvider } from '../../../types/journal_detail_co
 
 export function NewManagementTagsConcern(pg: JournalDetailPageProvider) {
 	return {
-		...createAsyncFeedbackState('submitting', 'message', 'messageType'),
+		...createAsyncFeedbackState(),
 		presets: managementTagPresets,
 		pendingValue: '',
 

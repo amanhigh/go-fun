@@ -5,7 +5,7 @@ import type { JournalDetailPageProvider } from '../../../types/journal_detail_co
 
 export function NewReasonTagFormConcern(pg: JournalDetailPageProvider) {
 	return {
-		...createAsyncFeedbackState('submitting', 'message', 'messageType'),
+		...createAsyncFeedbackState(),
 		input: '',
 		override: '',
 

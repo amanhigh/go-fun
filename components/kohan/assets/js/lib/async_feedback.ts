@@ -2,26 +2,12 @@ import { getErrorMessage } from './error';
 
 export type FeedbackType = 'error' | 'success';
 
-export type AsyncFeedbackState<
-	SubmittingKey extends string,
-	MessageKey extends string,
-	MessageTypeKey extends string,
-> = Record<SubmittingKey, boolean> & Record<MessageKey, string> & Record<MessageTypeKey, FeedbackType>;
-
-export function createAsyncFeedbackState<
-	SubmittingKey extends string,
-	MessageKey extends string,
-	MessageTypeKey extends string,
->(
-	submittingKey: SubmittingKey,
-	messageKey: MessageKey,
-	messageTypeKey: MessageTypeKey,
-): AsyncFeedbackState<SubmittingKey, MessageKey, MessageTypeKey> {
+export function createAsyncFeedbackState(): FeedbackState {
 	return {
-		[submittingKey]: false,
-		[messageKey]: '',
-		[messageTypeKey]: 'error',
-	} as AsyncFeedbackState<SubmittingKey, MessageKey, MessageTypeKey>;
+		submitting: false,
+		message: '',
+		messageType: 'error',
+	};
 }
 
 export type FeedbackState = {
@@ -32,13 +18,12 @@ export type FeedbackState = {
 
 /**
  * Wraps an async action with the standard feedback lifecycle:
- * guard on submitting → set up error state → run action → error handling → cleanup.
- *
- * The action should set `message` and `messageType` on success before returning.
+ * guard on submitting → set up error state → run action → auto-set feedback → error handling → cleanup.
  */
 export async function runAsyncFeedback(
 	state: FeedbackState,
 	action: () => Promise<void>,
+	successMessage: string,
 	errorFallback: string,
 ): Promise<void> {
 	if (state.submitting) return;
@@ -47,6 +32,8 @@ export async function runAsyncFeedback(
 	state.messageType = 'error';
 	try {
 		await action();
+		state.message = successMessage;
+		state.messageType = 'success';
 	} catch (err) {
 		state.message = getErrorMessage(err, errorFallback);
 		state.messageType = 'error';

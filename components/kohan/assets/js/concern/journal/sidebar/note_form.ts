@@ -5,7 +5,7 @@ import type { JournalDetailPageProvider } from '../../../types/journal_detail_co
 
 export function NewNoteFormConcern(pg: JournalDetailPageProvider) {
 	return {
-		...createAsyncFeedbackState('submitting', 'message', 'messageType'),
+		...createAsyncFeedbackState(),
 		content: '',
 
 		get feedbackClass(): string {
