@@ -1,17 +1,32 @@
 import { createAsyncFeedback } from '../../../lib/async_feedback';
 import { normalizeTag } from '../../../lib/tags';
-import { managementTagPresets } from '../../../lib/management_tags';
-import type { ManagementTagPreset } from '../../../lib/management_tags';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
-export function NewManagementTagsConcern(pg: JournalDetailPageProvider) {
+type ManagementTagPreset = {
+	value: string;
+	label: string;
+	tone: string;
+};
+
+const managementTagPresets: ManagementTagPreset[] = [
+	{ value: 'ntr', label: 'NTR', tone: 'emerald' },
+	{ value: 'enl', label: 'ENL', tone: 'sky' },
+	{ value: 'slt', label: 'SLT', tone: 'rose' },
+	{ value: 'fz', label: 'FZ', tone: 'violet' },
+	{ value: 'nbe', label: 'NBE', tone: 'amber' },
+	{ value: 'ws', label: 'WS', tone: 'slate' },
+	{ value: 'important', label: 'IMPORTANT', tone: 'fuchsia' },
+	{ value: 'be', label: 'BE', tone: 'orange' },
+];
+
+export function MgmntTagConcern(pg: JournalDetailPageProvider) {
 	return {
 		...createAsyncFeedback(),
 		presets: managementTagPresets,
 		pendingValue: '',
 
-		hasBar() {
+		showTakenTags() {
 			return normalizeTag(pg().current.journal?.type ?? '') === 'TAKEN';
 		},
 		hasTag(value: string) {

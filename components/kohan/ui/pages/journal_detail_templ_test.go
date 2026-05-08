@@ -47,7 +47,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).ToNot(ContainSubstring(`>Action<`))
 			Expect(html).To(ContainSubstring(`x-on:click="header.deleteJournal()"`))
 			Expect(html).To(ContainSubstring(`action.apply()`))
-			Expect(html).To(ContainSubstring(`x-show="sidebar.managementTags.hasBar()"`))
+			Expect(html).To(ContainSubstring(`x-show="sidebar.managementTags.showTakenTags()"`))
 			Expect(html).To(ContainSubstring(`x-for="preset in sidebar.managementTags.presets"`))
 			Expect(html).To(ContainSubstring(`x-on:click="sidebar.managementTags.submit(preset.value)"`))
 			Expect(html).To(ContainSubstring(`x-bind:disabled="sidebar.managementTags.submitting || sidebar.managementTags.hasTag(preset.value)"`))

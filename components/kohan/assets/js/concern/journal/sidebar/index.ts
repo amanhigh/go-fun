@@ -5,7 +5,7 @@ import { NewNoteFormConcern } from './note_form';
 import { NewNotesConcern } from './notes';
 import { NewTagCollectionConcern } from './tags';
 import { TagFormConcern } from './tag_form';
-import { NewManagementTagsConcern } from './management_tags';
+import { MgmntTagConcern } from './mgmnt_tag';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
 export function NewSidebarConcern(pg: JournalDetailPageProvider) {
@@ -17,6 +17,6 @@ export function NewSidebarConcern(pg: JournalDetailPageProvider) {
 		notes: NewNotesConcern(pg),
 		tags: NewTagCollectionConcern(pg),
 		reasonTagForm: TagFormConcern(pg),
-		managementTags: NewManagementTagsConcern(pg),
+		managementTags: MgmntTagConcern(pg),
 	};
 }

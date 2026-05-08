@@ -50,7 +50,7 @@ templ journalDetailActionBar() {
 }
 
 templ journalDetailManagementActions() {
-	<div class="space-y-3" x-show="sidebar.managementTags.hasBar()">
+	<div class="space-y-3" x-show="sidebar.managementTags.showTakenTags()">
 		<div>
 			<p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Management</p>
 			<p class="mt-1 text-sm text-muted-foreground">Quick add management tags for taken journals.</p>
