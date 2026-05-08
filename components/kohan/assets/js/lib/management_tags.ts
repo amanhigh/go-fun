@@ -19,11 +19,4 @@ export const managementTagPresets: readonly ManagementTagPreset[] = [
 	{ value: 'be', label: 'BE', tone: 'orange' },
 ];
 
-// ===== Tone Lookup =====
 
-const DEFAULT_MANAGEMENT_TONE = 'slate';
-
-export function managementTagTone(value: string): string {
-	const preset = managementTagPresets.find((p) => p.value === value);
-	return preset?.tone ?? DEFAULT_MANAGEMENT_TONE;
-}

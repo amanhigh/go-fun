@@ -1,6 +1,7 @@
 import { createAsyncFeedback } from '../../../lib/async_feedback';
 import { normalizeTag } from '../../../lib/tags';
-import { managementTagPresets, managementTagTone } from '../../../lib/management_tags';
+import { managementTagPresets } from '../../../lib/management_tags';
+import type { ManagementTagPreset } from '../../../lib/management_tags';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
@@ -17,12 +18,11 @@ export function NewManagementTagsConcern(pg: JournalDetailPageProvider) {
 			const normalizedValue = normalizeTag(value);
 			return pg().sidebar.tags.management().some((tag: JournalTag) => normalizeTag(tag.tag ?? '') === normalizedValue);
 		},
-		buttonClass(value: string) {
-			const tagKey = normalizeTag(value);
-			const tone = managementTagTone(value);
-			const isActive = this.hasTag(value);
+		buttonClass(preset: ManagementTagPreset) {
+			const tagKey = normalizeTag(preset.value);
+			const isActive = this.hasTag(preset.value);
 			const isPending = this.submitting && normalizeTag(this.pendingValue) === tagKey;
-			const baseClass = isActive ? `journal-management-active-${tone}` : `journal-management-base-${tone}`;
+			const baseClass = isActive ? `journal-management-active-${preset.tone}` : `journal-management-base-${preset.tone}`;
 			return isPending ? `journal-management-pending ${baseClass}` : baseClass;
 		},
 		async submit(tagValue: string) {

@@ -65,7 +65,7 @@ templ journalDetailManagementActions() {
 					Attributes: templ.Attributes{
 						"x-on:click":      "sidebar.managementTags.submit(preset.value)",
 						"x-bind:disabled": "sidebar.managementTags.submitting || sidebar.managementTags.hasTag(preset.value)",
-						"x-bind:class":    "sidebar.managementTags.buttonClass(preset.value)",
+						"x-bind:class":    "sidebar.managementTags.buttonClass(preset)",
 						"x-text":          "preset.label",
 					},
 				}) {}

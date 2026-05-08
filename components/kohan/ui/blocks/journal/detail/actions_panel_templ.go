@@ -224,7 +224,7 @@ func journalDetailManagementActions() templ.Component {
 			Attributes: templ.Attributes{
 				"x-on:click":      "sidebar.managementTags.submit(preset.value)",
 				"x-bind:disabled": "sidebar.managementTags.submitting || sidebar.managementTags.hasTag(preset.value)",
-				"x-bind:class":    "sidebar.managementTags.buttonClass(preset.value)",
+				"x-bind:class":    "sidebar.managementTags.buttonClass(preset)",
 				"x-text":          "preset.label",
 			},
 		}).Render(ctx, templ_7745c5c3_Buffer)

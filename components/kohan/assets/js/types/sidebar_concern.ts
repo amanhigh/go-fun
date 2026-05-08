@@ -47,7 +47,7 @@ export type ManagementTagsConcern = AsyncFeedback & {
 
 	hasBar(): boolean;
 	hasTag(value: string): boolean;
-	buttonClass(value: string): string;
+	buttonClass(preset: ManagementTagPreset): string;
 	submit(tagValue: string): Promise<void>;
 };
 
