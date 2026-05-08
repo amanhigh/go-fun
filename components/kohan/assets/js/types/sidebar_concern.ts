@@ -41,11 +41,10 @@ export type TagFormConcern = AsyncFeedback & {
 	submit(): Promise<void>;
 };
 
-export type MgmntTagConcern = AsyncFeedback & {
-	presets: readonly DisplaySpec[];
-	pendingValue: string;
+export type TakenTagConcern = AsyncFeedback & {
+	tags: readonly DisplaySpec[];
 
-	showTakenTags(): boolean;
+	show(): boolean;
 	hasTag(value: string): boolean;
 	submit(tagValue: string): Promise<void>;
 };
@@ -58,5 +57,5 @@ export type JournalDetailSidebarConcern = {
 	notes: NotesConcern;
 	tags: TagCollectionConcern;
 	reasonTagForm: TagFormConcern;
-	mgmntTakenTags: MgmntTagConcern;
+	takenTag: TakenTagConcern;
 };

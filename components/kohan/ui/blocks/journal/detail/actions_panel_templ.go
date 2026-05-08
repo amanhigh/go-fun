@@ -112,7 +112,7 @@ func journalDetailActionCard() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = journalDetailManagementActions().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = takenTagActions().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -191,7 +191,7 @@ func journalDetailActionBar() templ.Component {
 	})
 }
 
-func journalDetailManagementActions() templ.Component {
+func takenTagActions() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -212,7 +212,7 @@ func journalDetailManagementActions() templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"space-y-3\" x-show=\"sidebar.mgmntTakenTags.showTakenTags()\"><div><p class=\"text-xs font-semibold uppercase tracking-widest text-muted-foreground\">Management</p><p class=\"mt-1 text-sm text-muted-foreground\">Quick add management tags for taken journals.</p></div><div class=\"flex flex-wrap gap-2\"><template x-for=\"preset in sidebar.mgmntTakenTags.presets\" x-bind:key=\"preset.text\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"space-y-3\" x-show=\"sidebar.takenTag.show()\"><div><p class=\"text-xs font-semibold uppercase tracking-widest text-muted-foreground\">Management</p><p class=\"mt-1 text-sm text-muted-foreground\">Quick add management tags for taken journals.</p></div><div class=\"flex flex-wrap gap-2\"><template x-for=\"tag in sidebar.takenTag.tags\" x-bind:key=\"tag.text\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -222,10 +222,10 @@ func journalDetailManagementActions() templ.Component {
 			Size:    button.SizeSm,
 			Class:   "rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide",
 			Attributes: templ.Attributes{
-				"x-on:click":      "sidebar.mgmntTakenTags.submit(preset.text)",
-				"x-bind:disabled": "sidebar.mgmntTakenTags.submitting || sidebar.mgmntTakenTags.hasTag(preset.text)",
-				"x-bind:class":    "preset.class",
-				"x-text":          "preset.text",
+				"x-on:click":      "sidebar.takenTag.submit(tag.text)",
+				"x-bind:disabled": "sidebar.takenTag.submitting || sidebar.takenTag.hasTag(tag.text)",
+				"x-bind:class":    "tag.class",
+				"x-text":          "tag.text",
 			},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -236,9 +236,9 @@ func journalDetailManagementActions() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.mgmntTakenTags.message",
-			ClassExpr: "sidebar.mgmntTakenTags.feedbackClass",
-			TextExpr:  "sidebar.mgmntTakenTags.message",
+			ShowExpr:  "sidebar.takenTag.message",
+			ClassExpr: "sidebar.takenTag.feedbackClass",
+			TextExpr:  "sidebar.takenTag.message",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

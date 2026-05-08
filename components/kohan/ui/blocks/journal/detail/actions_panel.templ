@@ -25,7 +25,7 @@ templ journalDetailActionCard() {
 			ClassExpr: "sidebar.reviewActions.feedbackClass",
 			TextExpr:  "sidebar.reviewActions.message",
 		})
-		@journalDetailManagementActions()
+		@takenTagActions()
 	</div>
 }
 
@@ -49,32 +49,32 @@ templ journalDetailActionBar() {
 	}
 }
 
-templ journalDetailManagementActions() {
-	<div class="space-y-3" x-show="sidebar.mgmntTakenTags.showTakenTags()">
+templ takenTagActions() {
+	<div class="space-y-3" x-show="sidebar.takenTag.show()">
 		<div>
 			<p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Management</p>
 			<p class="mt-1 text-sm text-muted-foreground">Quick add management tags for taken journals.</p>
 		</div>
 		<div class="flex flex-wrap gap-2">
-			<template x-for="preset in sidebar.mgmntTakenTags.presets" x-bind:key="preset.text">
+			<template x-for="tag in sidebar.takenTag.tags" x-bind:key="tag.text">
 				@button.Button(button.Props{
 					Variant: button.VariantOutline,
 					Type:    button.TypeButton,
 					Size:    button.SizeSm,
 					Class:   "rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide",
 					Attributes: templ.Attributes{
-						"x-on:click":      "sidebar.mgmntTakenTags.submit(preset.text)",
-						"x-bind:disabled": "sidebar.mgmntTakenTags.submitting || sidebar.mgmntTakenTags.hasTag(preset.text)",
-						"x-bind:class":    "preset.class",
-						"x-text":          "preset.text",
+						"x-on:click":      "sidebar.takenTag.submit(tag.text)",
+						"x-bind:disabled": "sidebar.takenTag.submitting || sidebar.takenTag.hasTag(tag.text)",
+						"x-bind:class":    "tag.class",
+						"x-text":          "tag.text",
 					},
 				}) {}
 			</template>
 		</div>
 		@components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.mgmntTakenTags.message",
-			ClassExpr: "sidebar.mgmntTakenTags.feedbackClass",
-			TextExpr:  "sidebar.mgmntTakenTags.message",
+			ShowExpr:  "sidebar.takenTag.message",
+			ClassExpr: "sidebar.takenTag.feedbackClass",
+			TextExpr:  "sidebar.takenTag.message",
 		})
 	</div>
 }

@@ -16,15 +16,19 @@ export function NewNoteFormConcern(pg: JournalDetailPageProvider) {
 				return;
 			}
 			await this.run(async () => {
-				const payload: JournalNoteRequest = {
-					status: journal.status,
-					content,
-					format: 'MARKDOWN',
-				};
-				const envelope = await pg().noteClient.create(pg().current.journalId, payload);
-				pg().sidebar.notes.prepend(envelope.data as JournalNote);
-				this.content = '';
+				await this.createNote(journal.status, content);
 			}, 'Note added.', 'Unable to save note.');
+		},
+
+		async createNote(status: string, content: string) {
+			const payload: JournalNoteRequest = {
+				status,
+				content,
+				format: 'MARKDOWN',
+			};
+			const envelope = await pg().noteClient.create(pg().current.journalId, payload);
+			pg().sidebar.notes.prepend(envelope.data as JournalNote);
+			this.content = '';
 		},
 	};
 }

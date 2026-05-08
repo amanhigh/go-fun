@@ -3,10 +3,10 @@ import { normalizeTag } from '../../../lib/tags';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
-export function MgmntTagConcern(pg: JournalDetailPageProvider) {
+export function TakenTagConcern(pg: JournalDetailPageProvider) {
 	return {
 		...createAsyncFeedback(),
-		presets: [
+		tags: [
 			{ icon: '', text: 'ntr', class: 'journal-management-base-emerald' },
 			{ icon: '', text: 'enl', class: 'journal-management-base-sky' },
 			{ icon: '', text: 'slt', class: 'journal-management-base-rose' },
@@ -16,9 +16,8 @@ export function MgmntTagConcern(pg: JournalDetailPageProvider) {
 			{ icon: '', text: 'important', class: 'journal-management-base-fuchsia' },
 			{ icon: '', text: 'be', class: 'journal-management-base-orange' },
 		],
-		pendingValue: '',
 
-		showTakenTags() {
+		show() {
 			return normalizeTag(pg().current.journal?.type ?? '') === 'TAKEN';
 		},
 		hasTag(value: string) {
@@ -27,13 +26,11 @@ export function MgmntTagConcern(pg: JournalDetailPageProvider) {
 		},
 		async submit(tagValue: string) {
 			if (!pg().current.journal || this.submitting) return;
-			this.pendingValue = tagValue;
 			await this.run(
 				() => this.addTag(tagValue),
 				`${normalizeTag(tagValue)} tag added.`,
 				'Unable to save management tag.',
 			);
-			this.pendingValue = '';
 		},
 
 		async addTag(tagValue: string) {
