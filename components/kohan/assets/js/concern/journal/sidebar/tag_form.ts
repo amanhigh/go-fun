@@ -1,20 +1,12 @@
 import { createAsyncFeedback } from '../../../lib/async_feedback';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
-import type { AlpineContext } from '../../../types/platform';
 
 export function TagFormConcern(pg: JournalDetailPageProvider) {
 	return {
 		...createAsyncFeedback(),
 		input: '',
 		override: '',
-
-		focusOverride() {
-			const alpine = pg() as unknown as AlpineContext;
-			alpine.$nextTick?.(() => {
-				alpine.$refs?.reasonTagOverride?.focus?.();
-			});
-		},
 
 		async submit() {
 			const page = pg();

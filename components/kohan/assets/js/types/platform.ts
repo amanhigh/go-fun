@@ -8,15 +8,6 @@ declare global {
 	}
 }
 
-export type AlpineRefs = {
-	reasonTagOverride?: {
-		focus?: () => void;
-	};
-};
 
-export type AlpineContext = {
-	$nextTick(callback: () => void): void;
-	$refs?: AlpineRefs;
-};
 
 export {};

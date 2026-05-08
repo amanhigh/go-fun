@@ -1,10 +1,14 @@
 import { normalizeTag } from './tags';
 
+// ===== Types =====
+
 export type ManagementTagPreset = {
 	value: string;
 	label: string;
 	tone: string;
 };
+
+// ===== Presets =====
 
 export const managementTagPresets: readonly ManagementTagPreset[] = [
 	{ value: 'ntr', label: 'NTR', tone: 'emerald' },
@@ -17,11 +21,12 @@ export const managementTagPresets: readonly ManagementTagPreset[] = [
 	{ value: 'be', label: 'BE', tone: 'orange' },
 ];
 
-const toneMap: Record<string, string> = {};
-for (const preset of managementTagPresets) {
-	toneMap[normalizeTag(preset.value)] = preset.tone;
-}
+// ===== Tone Lookup =====
+
+const DEFAULT_MANAGEMENT_TONE = 'slate';
 
 export function managementTagTone(value: string): string {
-	return toneMap[normalizeTag(value)] ?? 'slate';
+	const tag = normalizeTag(value);
+	const preset = managementTagPresets.find((p) => normalizeTag(p.value) === tag);
+	return preset?.tone ?? DEFAULT_MANAGEMENT_TONE;
 }

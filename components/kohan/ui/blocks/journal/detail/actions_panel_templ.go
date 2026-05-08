@@ -442,7 +442,7 @@ func journalDetailTagForm() templ.Component {
 		templ_7745c5c3_Err = input.Input(input.Props{
 			Placeholder: "Reason tag",
 			Class:       "w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
-			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.input", "x-on:keydown.enter.prevent": "sidebar.reasonTagForm.focusOverride()"},
+			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.input", "x-on:keydown.enter.prevent": "$refs.reasonTagOverride.focus()"},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

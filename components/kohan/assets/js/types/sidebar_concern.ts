@@ -38,7 +38,6 @@ export type TagFormConcern = AsyncFeedback & {
 	input: string;
 	override: string;
 
-	focusOverride(): void;
 	submit(): Promise<void>;
 };
 

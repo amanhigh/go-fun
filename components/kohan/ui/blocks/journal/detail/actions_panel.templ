@@ -103,7 +103,7 @@ templ journalDetailTagForm() {
 		@input.Input(input.Props{
 			Placeholder: "Reason tag",
 			Class:       "w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
-			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.input", "x-on:keydown.enter.prevent": "sidebar.reasonTagForm.focusOverride()"},
+			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.input", "x-on:keydown.enter.prevent": "$refs.reasonTagOverride.focus()"},
 		})
 		@input.Input(input.Props{
 			Placeholder: "Override (optional)",
