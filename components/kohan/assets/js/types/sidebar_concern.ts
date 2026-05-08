@@ -34,7 +34,7 @@ export type TagCollectionConcern = DeletableSyncedCollection<JournalTag> & {
 	management(): JournalTag[];
 };
 
-export type ReasonTagFormConcern = AsyncFeedback & {
+export type TagFormConcern = AsyncFeedback & {
 	input: string;
 	override: string;
 
@@ -59,6 +59,6 @@ export type JournalDetailSidebarConcern = {
 	noteForm: NoteFormConcern;
 	notes: NotesConcern;
 	tags: TagCollectionConcern;
-	reasonTagForm: ReasonTagFormConcern;
+	reasonTagForm: TagFormConcern;
 	managementTags: ManagementTagsConcern;
 };
