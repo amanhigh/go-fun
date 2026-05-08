@@ -17,6 +17,6 @@ export function NewSidebarConcern(pg: JournalDetailPageProvider) {
 		notes: NewNotesConcern(pg),
 		tags: NewTagCollectionConcern(pg),
 		reasonTagForm: TagFormConcern(pg),
-		managementTags: MgmntTagConcern(pg),
+		mgmntTakenTags: MgmntTagConcern(pg),
 	};
 }

@@ -1,11 +1,7 @@
 import type { Journal, JournalNote, JournalTag } from './journal_api';
 import type { AsyncFeedback } from '../lib/async_feedback';
 import type { DeletableSyncedCollection, LoadableCollection } from './collection';
-type ManagementTagPreset = {
-	value: string;
-	label: string;
-	tone: string;
-};
+import type { DisplaySpec } from './presentation_concern';
 import type { QuickAction } from './quick_action';
 
 // ===== Sidebar Sub-Concerns =====
@@ -46,12 +42,11 @@ export type TagFormConcern = AsyncFeedback & {
 };
 
 export type MgmntTagConcern = AsyncFeedback & {
-	presets: readonly ManagementTagPreset[];
+	presets: readonly DisplaySpec[];
 	pendingValue: string;
 
 	showTakenTags(): boolean;
 	hasTag(value: string): boolean;
-	buttonClass(preset: ManagementTagPreset): string;
 	submit(tagValue: string): Promise<void>;
 };
 
@@ -63,5 +58,5 @@ export type JournalDetailSidebarConcern = {
 	notes: NotesConcern;
 	tags: TagCollectionConcern;
 	reasonTagForm: TagFormConcern;
-	managementTags: MgmntTagConcern;
+	mgmntTakenTags: MgmntTagConcern;
 };

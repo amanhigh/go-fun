@@ -212,7 +212,7 @@ func journalDetailManagementActions() templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"space-y-3\" x-show=\"sidebar.managementTags.showTakenTags()\"><div><p class=\"text-xs font-semibold uppercase tracking-widest text-muted-foreground\">Management</p><p class=\"mt-1 text-sm text-muted-foreground\">Quick add management tags for taken journals.</p></div><div class=\"flex flex-wrap gap-2\"><template x-for=\"preset in sidebar.managementTags.presets\" x-bind:key=\"preset.value\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"space-y-3\" x-show=\"sidebar.mgmntTakenTags.showTakenTags()\"><div><p class=\"text-xs font-semibold uppercase tracking-widest text-muted-foreground\">Management</p><p class=\"mt-1 text-sm text-muted-foreground\">Quick add management tags for taken journals.</p></div><div class=\"flex flex-wrap gap-2\"><template x-for=\"preset in sidebar.mgmntTakenTags.presets\" x-bind:key=\"preset.text\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -222,10 +222,10 @@ func journalDetailManagementActions() templ.Component {
 			Size:    button.SizeSm,
 			Class:   "rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide",
 			Attributes: templ.Attributes{
-				"x-on:click":      "sidebar.managementTags.submit(preset.value)",
-				"x-bind:disabled": "sidebar.managementTags.submitting || sidebar.managementTags.hasTag(preset.value)",
-				"x-bind:class":    "sidebar.managementTags.buttonClass(preset)",
-				"x-text":          "preset.label",
+				"x-on:click":      "sidebar.mgmntTakenTags.submit(preset.text)",
+				"x-bind:disabled": "sidebar.mgmntTakenTags.submitting || sidebar.mgmntTakenTags.hasTag(preset.text)",
+				"x-bind:class":    "preset.class",
+				"x-text":          "preset.text",
 			},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -236,9 +236,9 @@ func journalDetailManagementActions() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.managementTags.message",
-			ClassExpr: "sidebar.managementTags.feedbackClass",
-			TextExpr:  "sidebar.managementTags.message",
+			ShowExpr:  "sidebar.mgmntTakenTags.message",
+			ClassExpr: "sidebar.mgmntTakenTags.feedbackClass",
+			TextExpr:  "sidebar.mgmntTakenTags.message",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
