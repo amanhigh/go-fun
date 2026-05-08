@@ -1,5 +1,3 @@
-import { normalizeTag } from './tags';
-
 // ===== Types =====
 
 export type ManagementTagPreset = {
@@ -26,7 +24,6 @@ export const managementTagPresets: readonly ManagementTagPreset[] = [
 const DEFAULT_MANAGEMENT_TONE = 'slate';
 
 export function managementTagTone(value: string): string {
-	const tag = normalizeTag(value);
-	const preset = managementTagPresets.find((p) => normalizeTag(p.value) === tag);
+	const preset = managementTagPresets.find((p) => p.value === value);
 	return preset?.tone ?? DEFAULT_MANAGEMENT_TONE;
 }

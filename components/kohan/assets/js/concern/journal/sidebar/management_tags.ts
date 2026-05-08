@@ -19,7 +19,7 @@ export function NewManagementTagsConcern(pg: JournalDetailPageProvider) {
 		},
 		buttonClass(value: string) {
 			const tagKey = normalizeTag(value);
-			const tone = managementTagTone(tagKey);
+			const tone = managementTagTone(value);
 			const isActive = this.hasTag(value);
 			const isPending = this.submitting && normalizeTag(this.pendingValue) === tagKey;
 			const baseClass = isActive ? `journal-management-active-${tone}` : `journal-management-base-${tone}`;
@@ -28,15 +28,19 @@ export function NewManagementTagsConcern(pg: JournalDetailPageProvider) {
 		async submit(tagValue: string) {
 			if (!pg().current.journal || this.submitting) return;
 			this.pendingValue = tagValue;
-			await this.run(async () => {
-				const payload: JournalTagRequest = {
-					tag: tagValue,
-					type: 'MANAGEMENT',
-				};
-				const envelope = await pg().tagClient.create(pg().current.journalId, payload);
-				pg().sidebar.tags.prepend(envelope.data as JournalTag);
-			}, `${normalizeTag(tagValue)} tag added.`, 'Unable to save management tag.');
+			await this.run(
+				() => this.addTag(tagValue),
+				`${normalizeTag(tagValue)} tag added.`,
+				'Unable to save management tag.',
+			);
 			this.pendingValue = '';
+		},
+
+		async addTag(tagValue: string) {
+			const payload: JournalTagRequest = { tag: tagValue, type: 'MANAGEMENT' };
+			const page = pg();
+			const envelope = await page.tagClient.create(page.current.journalId, payload);
+			page.sidebar.tags.prepend(envelope.data as JournalTag);
 		},
 	};
 }
