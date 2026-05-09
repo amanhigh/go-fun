@@ -20,6 +20,4 @@ export type PresentationConcern = {
 	pendingReview(): DisplaySpec;
 
 	display(spec: DisplaySpec): string;
-	formatTimestamp(value: string | null | undefined): string;
-	formatReviewQueueDate(value: string | null | undefined): string;
 };

@@ -205,7 +205,7 @@ templ JournalRow() {
 		@table.Cell() {
 			@journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "journal.status"})
 		}
-						@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "presentation.formatTimestamp(journal.created_at)"}}) {}
+						@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "present.date.format(journal.created_at)"}}) {}
 	}
 }
 

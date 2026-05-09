@@ -16,10 +16,16 @@ export interface Presenter<T = DisplayValue> {
 export interface TagPresenter extends Presenter<JournalTag> {
 }
 
+export interface DatePresenter {
+	format(value: DisplayValue): string;
+	formatReviewQueueDate(value: DisplayValue): string;
+}
+
 export interface PresentationConcern {
 	status: Presenter;
 	type: Presenter;
 	timeframe: Presenter;
 	tag: TagPresenter;
 	sequence: Presenter;
+	date: DatePresenter;
 }

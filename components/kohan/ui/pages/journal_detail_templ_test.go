@@ -89,7 +89,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-on:click="sidebar.state.enterReviewMode()"`))
 			Expect(html).To(ContainSubstring(`present.tag.label(tag)`))
 			Expect(html).To(ContainSubstring(`x-bind:class="present.type.spec(item.type).class"`))
-			Expect(html).To(ContainSubstring(`x-text="presentation.formatReviewQueueDate(item.created_at)"`))
+			Expect(html).To(ContainSubstring(`x-text="present.date.formatReviewQueueDate(item.created_at)"`))
 			Expect(html).To(ContainSubstring(`sidebar.reviewQueue.isLoading()`))
 			Expect(html).To(ContainSubstring(`sidebar.reviewQueue.isError()`))
 			Expect(html).To(ContainSubstring(`aria-label="Delete Note"`))
@@ -112,7 +112,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`present.status.spec(current.journal.status).class`))
 
 			// Right metadata: created + pending/review
-			Expect(html).To(ContainSubstring(`x-text="presentation.formatTimestamp(current.journal.created_at)"`))
+			Expect(html).To(ContainSubstring(`x-text="present.date.format(current.journal.created_at)"`))
 			Expect(html).To(ContainSubstring(`x-show="!current.journal.reviewed_at"`))
 			Expect(html).To(ContainSubstring(`x-show="current.journal.reviewed_at"`))
 			Expect(html).To(ContainSubstring(`presentation.display(presentation.reviewedAt(current.journal.reviewed_at))`))

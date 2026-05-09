@@ -49,7 +49,7 @@ templ JournalDetailHeader() {
 }
 
 templ JournalDetailCreatedAt() {
-	@components.InfoRow(components.InfoRowProps{IconName: "clock", ValueExpr: "presentation.formatTimestamp(current.journal.created_at)", Class: "text-xs"})
+	@components.InfoRow(components.InfoRowProps{IconName: "clock", ValueExpr: "present.date.format(current.journal.created_at)", Class: "text-xs"})
 }
 
 templ JournalDetailReviewDate() {

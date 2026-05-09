@@ -1,4 +1,3 @@
-import { formatTimestamp } from './date';
 import { normalizeTag } from './tags';
 import type { JournalTag, JournalTimeframe } from '../types/journal_api';
 import type { DisplaySpec, PresentationConcern } from '../types/presentation_concern';
@@ -46,17 +45,6 @@ const timeframeDisplayMap: Record<JournalTimeframe, DisplaySpec> = {
 	DL: { icon: '🔍', text: 'DL', class: 'journal-timeframe-dl' },
 };
 
-// --- Sequence ---
-
-const sequenceDisplayMap: Record<string, DisplaySpec> = {
-	MWD: { icon: '🕐', text: 'MWD', class: '' },
-	YR: { icon: '📅', text: 'YR', class: '' },
-};
-
-// --- Date ---
-
-const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
 // --- Tag helpers ---
 
 function reasonTagIcon(tagName: string): string {
@@ -88,7 +76,11 @@ export function NewPresentationConcern(): PresentationConcern {
 		sequence(value: string | null | undefined): DisplaySpec {
 			const key = normalizeTag(value ?? '');
 			if (!key) return { text: '', class: '' };
-			return sequenceDisplayMap[key] ?? { icon: '📅', text: key, class: '' };
+			const seqCatalog: Record<string, DisplaySpec> = {
+				MWD: { icon: '🕐', text: 'MWD', class: '' },
+				YR: { icon: '📅', text: 'YR', class: '' },
+			};
+			return seqCatalog[key] ?? { icon: '📅', text: key, class: '' };
 		},
 
 		// --- Reason Tag ---
@@ -107,23 +99,15 @@ export function NewPresentationConcern(): PresentationConcern {
 
 		// --- Review State ---
 		reviewedAt(value: string | null | undefined): DisplaySpec {
-			const label = value ? formatTimestamp(value) : '—';
+			let label = '—';
+			if (value) {
+				const parsed = new Date(value);
+				label = Number.isNaN(parsed.getTime()) ? '—' : parsed.toLocaleString();
+			}
 			return { icon: '✅', text: label, class: '' };
 		},
 		pendingReview(): DisplaySpec {
 			return { icon: '⏳', text: 'Pending Review', class: '' };
-		},
-
-		// --- Timestamp / Date ---
-		formatTimestamp,
-		formatReviewQueueDate(value: string | null | undefined) {
-			if (!value) return '—';
-			const parsed = new Date(value);
-			if (Number.isNaN(parsed.getTime())) return '—';
-			const day = parsed.getUTCDate();
-			const month = shortMonthNames[parsed.getUTCMonth()] ?? '—';
-			const year = `${parsed.getUTCFullYear()}`.slice(-2);
-			return `${day} ${month}, '${year}`;
 		},
 	};
 }
