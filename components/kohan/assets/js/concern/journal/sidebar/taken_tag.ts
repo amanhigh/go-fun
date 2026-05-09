@@ -1,11 +1,11 @@
-import { createAsyncFeedback } from '../../../lib/async_feedback';
+import { createFeedback } from '../../../lib/feedback';
 import { normalizeTag } from '../../../lib/tags';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
 export function TakenTagConcern(pg: JournalDetailPageProvider) {
 	return {
-		...createAsyncFeedback(),
+		...createFeedback(),
 		tags: [
 			{ text: 'ntr', class: 'journal-management-base-emerald' },
 			{ text: 'enl', class: 'journal-management-base-sky' },

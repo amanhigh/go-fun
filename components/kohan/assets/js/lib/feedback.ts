@@ -7,7 +7,7 @@ const feedbackClassMap: Record<FeedbackKind, string> = {
 	success: 'journal-feedback-success',
 };
 
-export type AsyncFeedback = {
+export type Feedback = {
 	submitting: boolean;
 	message: string;
 	feedbackKind: FeedbackKind;
@@ -17,7 +17,7 @@ export type AsyncFeedback = {
 	run(action: () => Promise<void>, successMessage: string, errorFallback: string): Promise<void>;
 };
 
-export function createAsyncFeedback(): AsyncFeedback {
+export function createFeedback(): Feedback {
 	return {
 		submitting: false,
 		message: '',

@@ -1,4 +1,4 @@
-import { createAsyncFeedback, type AsyncFeedback } from '../../../lib/async_feedback';
+import { createFeedback, type Feedback } from '../../../lib/feedback';
 import { formatDateInputValue } from '../../../lib/date';
 import { createQuickAction } from '../../../lib/quick_action';
 import type { DisplaySpec } from '../../../types/presentation_concern';
@@ -38,7 +38,7 @@ function isStatusActive(journal: Journal): boolean {
 
 // ===== Async Action Handlers =====
 
-async function toggleReviewedAt(feedback: AsyncFeedback, pg: JournalDetailPageProvider): Promise<void> {
+async function toggleReviewedAt(feedback: Feedback, pg: JournalDetailPageProvider): Promise<void> {
 	const journal = pg().current.journal!;
 	const reviewedAt = journal.reviewed_at ? null : localToday();
 	const successMsg = reviewedAt ? 'Journal marked reviewed.' : 'Journal marked not reviewed.';
@@ -49,7 +49,7 @@ async function toggleReviewedAt(feedback: AsyncFeedback, pg: JournalDetailPagePr
 	}, successMsg, 'Unable to update review date.');
 }
 
-async function applyReviewStatus(feedback: AsyncFeedback, pg: JournalDetailPageProvider): Promise<void> {
+async function applyReviewStatus(feedback: Feedback, pg: JournalDetailPageProvider): Promise<void> {
 	const journal = pg().current.journal!;
 	const isTaken = journal.type === 'TAKEN';
 	const targetStatus = isTaken ? 'JUST_LOSS' : 'BROKEN';
@@ -66,7 +66,7 @@ async function applyReviewStatus(feedback: AsyncFeedback, pg: JournalDetailPageP
 
 export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 	return {
-		...createAsyncFeedback(),
+		...createFeedback(),
 
 		actions(): QuickAction[] {
 			const journal = pg().current.journal;

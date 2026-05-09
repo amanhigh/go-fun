@@ -1,10 +1,10 @@
-import { createAsyncFeedback } from '../../../lib/async_feedback';
+import { createFeedback } from '../../../lib/feedback';
 import type { JournalNote, JournalNoteRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
 export function NewNoteFormConcern(pg: JournalDetailPageProvider) {
 	return {
-		...createAsyncFeedback(),
+		...createFeedback(),
 		content: '',
 
 		async submit() {

@@ -1,10 +1,10 @@
-import { createAsyncFeedback } from '../../../lib/async_feedback';
+import { createFeedback } from '../../../lib/feedback';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
 export function TagFormConcern(pg: JournalDetailPageProvider) {
 	return {
-		...createAsyncFeedback(),
+		...createFeedback(),
 		input: '',
 		override: '',
 
