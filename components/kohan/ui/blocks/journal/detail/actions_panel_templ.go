@@ -223,7 +223,7 @@ func takenTagActions() templ.Component {
 			Class:   "rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide",
 			Attributes: templ.Attributes{
 				"x-on:click":      "sidebar.takenTag.submit(tag.tag)",
-				"x-bind:disabled": "sidebar.takenTag.submitting || sidebar.takenTag.hasTag(tag.tag)",
+				"x-bind:disabled": "sidebar.takenTag.submitter.submitting || sidebar.takenTag.hasTag(tag.tag)",
 				"x-bind:class":    "present.tag.spec(tag).class",
 				"x-text":          "present.tag.label(tag)",
 			},
@@ -236,9 +236,9 @@ func takenTagActions() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.takenTag.message",
-			ClassExpr: "sidebar.takenTag.feedbackClass",
-			TextExpr:  "sidebar.takenTag.message",
+			ShowExpr:  "sidebar.takenTag.submitter.hasMessage()",
+			ClassExpr: "sidebar.takenTag.submitter.messageClass",
+			TextExpr:  "sidebar.takenTag.submitter.message",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

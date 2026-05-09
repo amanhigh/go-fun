@@ -21,7 +21,7 @@ export type Submitter = {
 
 	hasMessage(): boolean;
 	setError(message: string): void;
-	run(action: () => Promise<void>, messages: SubmitMessages): Promise<void>;
+	run(action: () => Promise<void>, messages: SubmitMessages): Promise<boolean>;
 };
 
 // ===== Factory =====
@@ -41,9 +41,9 @@ export function createSubmitter(): Submitter {
 			this.message = message;
 		},
 
-		async run(this: Submitter, action: () => Promise<void>, messages: SubmitMessages) {
+		async run(this: Submitter, action: () => Promise<void>, messages: SubmitMessages): Promise<boolean> {
 			// Lifecycle: guard duplicate submit → clear previous message → run action → set success/error → reset submitting
-			if (this.submitting) return;
+			if (this.submitting) return false;
 
 			this.submitting = true;
 			this.message = '';
@@ -52,8 +52,10 @@ export function createSubmitter(): Submitter {
 				await action();
 				this.messageClass = successMessageClass;
 				this.message = messages.success ?? '';
+				return true;
 			} catch (err) {
 				this.setError(getErrorMessage(err, messages.error));
+				return false;
 			} finally {
 				this.submitting = false;
 			}

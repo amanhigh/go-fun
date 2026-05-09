@@ -22,8 +22,10 @@ export type ReviewActionsConcern = Feedback & {
 
 export type ReviewQueueConcern = LoadableCollection<Journal>;
 
-export type NoteFormConcern = Feedback & {
+export type NoteFormConcern = {
+	submitter: Submitter;
 	content: string;
+	canSubmit(): boolean;
 	submit(): Promise<void>;
 };
 
@@ -35,7 +37,8 @@ export type TagFormConcern = {
 	submit(): Promise<void>;
 };
 
-export type TakenTagConcern = Feedback & {
+export type TakenTagConcern = {
+	submitter: Submitter;
 	tags: readonly JournalTag[];
 	show(): boolean;
 	hasTag(value: string): boolean;

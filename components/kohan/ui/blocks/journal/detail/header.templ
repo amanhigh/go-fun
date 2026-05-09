@@ -18,10 +18,16 @@ templ JournalDetailHeader() {
 					<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + current.journal.id"></div>
 					@components.DeleteButton(components.DeleteButtonProps{
 						OnClickExpr:  "header.deleteJournal()",
-						DisabledExpr: "header.submitting",
+						DisabledExpr: "header.submitter.submitting",
 						AriaLabel:    "Delete Journal",
 						Title:        "Delete Journal",
 						Class:        "h-9 w-9",
+					})
+					@components.FeedbackMessage(components.FeedbackMessageProps{
+						ShowExpr:  "header.submitter.hasMessage()",
+						ClassExpr: "header.submitter.messageClass",
+						TextExpr:  "header.submitter.message",
+						Class:     "text-xs",
 					})
 				</div>
 				<h2 class="text-3xl font-bold tracking-tight text-foreground" x-text="current.journal.ticker"></h2>

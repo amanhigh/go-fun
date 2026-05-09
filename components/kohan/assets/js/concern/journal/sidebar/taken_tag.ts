@@ -1,11 +1,11 @@
-import { createFeedback } from '../../../lib/feedback';
+import { createSubmitter } from '../../../lib/submitter';
 import { normalizeTag } from '../../../lib/tags';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
 export function TakenTagConcern(pg: JournalDetailPageProvider) {
 	return {
-		...createFeedback(),
+		submitter: createSubmitter(),
 		tags: [
 			{ id: 'ntr', tag: 'ntr', type: 'MANAGEMENT' },
 			{ id: 'enl', tag: 'enl', type: 'MANAGEMENT' },
@@ -25,11 +25,10 @@ export function TakenTagConcern(pg: JournalDetailPageProvider) {
 			return pg().sidebar.tags.management().some((tag: JournalTag) => normalizeTag(tag.tag ?? '') === normalizedValue);
 		},
 		async submit(tagValue: string) {
-			if (!pg().current.journal || this.submitting) return;
-			await this.run(
+			if (!pg().current.journal) return;
+			await this.submitter.run(
 				() => this.addTag(tagValue),
-				`${normalizeTag(tagValue)} tag added.`,
-				'Unable to save management tag.',
+				{ success: `${normalizeTag(tagValue)} tag added.`, error: 'Unable to save management tag.' },
 			);
 		},
 

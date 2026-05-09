@@ -52,15 +52,15 @@ templ journalDetailNoteCard() {
 			})
 			@components.AsyncButton(components.AsyncButtonProps{
 				OnClickExpr:   "sidebar.noteForm.submit()",
-				DisabledExpr:  "sidebar.noteForm.submitting || !sidebar.noteForm.content.trim()",
-				LoadingExpr:   "sidebar.noteForm.submitting",
+				DisabledExpr:  "sidebar.noteForm.submitter.submitting || !sidebar.noteForm.canSubmit()",
+				LoadingExpr:   "sidebar.noteForm.submitter.submitting",
 				LoadingText:   "'Saving note...'",
 				DefaultText:   "'Add Note'",
 			})
 			@components.FeedbackMessage(components.FeedbackMessageProps{
-				ShowExpr:  "sidebar.noteForm.message",
-				ClassExpr: "sidebar.noteForm.feedbackClass",
-				TextExpr:  "sidebar.noteForm.message",
+				ShowExpr:  "sidebar.noteForm.submitter.hasMessage()",
+				ClassExpr: "sidebar.noteForm.submitter.messageClass",
+				TextExpr:  "sidebar.noteForm.submitter.message",
 			})
 		}
 	}
