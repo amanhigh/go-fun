@@ -1,4 +1,4 @@
-import type { DisplaySpec } from '../types/presentation_concern';
+import type { DisplaySpec } from '../types/present';
 import type { QuickAction } from '../types/quick_action';
 
 export function createQuickAction(

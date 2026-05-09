@@ -1,6 +1,7 @@
 import { NewJournalClient } from '../client/journal';
 import type { JournalPageData } from '../types/journal_list_concern';
 import { NewPresentationConcern } from '../lib/presentation';
+import { NewPresentationConcern as NewPresentConcern } from '../concern/present/factory';
 import { NewFilterUrlConcern } from '../concern/journal/list/filter_url';
 import { NewFilterConcern } from '../concern/journal/list/filter';
 import { NewPresetConcern } from '../concern/journal/list/presets';
@@ -14,6 +15,7 @@ function createJournalPageData() {
 
 	page.client = NewJournalClient();
 	page.presentation = NewPresentationConcern();
+	page.present = NewPresentConcern();
 	page.table = NewTableConcern(pg);
 	page.pagination = NewPaginationConcern(pg);
 	page.presets = NewPresetConcern(pg);

@@ -24,6 +24,6 @@ templ StatusBadge(props StatusBadgeProps) {
 	@badge.Badge(badge.Props{
 		Variant:    badge.VariantOutline,
 		Class:      "border " + props.Class,
-		Attributes: templ.Attributes{"x-bind:class": "presentation.status(" + props.StatusExpr + ").class", "x-text": "presentation.display(presentation.status(" + props.StatusExpr + "))"},
+		Attributes: templ.Attributes{"x-bind:class": "present.status.spec(" + props.StatusExpr + ").class", "x-text": "present.status.label(" + props.StatusExpr + ")"},
 	}) {}
 }

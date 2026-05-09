@@ -85,7 +85,8 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			// Primary info row: type + status + sequence
 			Expect(html).To(ContainSubstring(`presentation.display(presentation.sequence(current.journal.sequence))`))
 			Expect(html).To(ContainSubstring(`presentation.display(presentation.type(current.journal.type))`))
-			Expect(html).To(ContainSubstring(`presentation.display(presentation.status(current.journal.status))`))
+			Expect(html).To(ContainSubstring(`present.status.label(current.journal.status)`))
+			Expect(html).To(ContainSubstring(`present.status.spec(current.journal.status).class`))
 
 			// Right metadata: created + pending/review
 			Expect(html).To(ContainSubstring(`x-text="presentation.formatTimestamp(current.journal.created_at)"`))

@@ -137,7 +137,7 @@ templ JournalActiveFilters() {
 	<div class="flex flex-wrap items-center gap-2" x-show="filter.hasActiveState()">
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneBlue, ShowExpr: "filter.ticker !== ''", TextExpr: "'🔎 Ticker: ' + filter.ticker"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, ShowExpr: "filter.type !== ''", TextExpr: "presentation.display(presentation.type(filter.type))"})
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneRose, ShowExpr: "filter.status !== ''", TextExpr: "presentation.display(presentation.status(filter.status))"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneRose, ShowExpr: "filter.status !== ''", TextExpr: "present.status.label(filter.status)"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneViolet, ShowExpr: "filter.sequence !== ''", TextExpr: "presentation.display(presentation.sequence(filter.sequence))"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, ShowExpr: "filter.datePreset !== '' && presets.activeReviewPreset === ''", TextExpr: "'📅 Date: ' + filter.datePreset"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, ShowExpr: "presets.activeReviewPreset !== ''", TextExpr: "'🗓️ Review: ' + presets.activeReviewPreset"})

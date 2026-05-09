@@ -1,7 +1,7 @@
 import { createFeedback, type Feedback } from '../../../lib/feedback';
 import { formatDateInputValue } from '../../../lib/date';
 import { createQuickAction } from '../../../lib/quick_action';
-import type { DisplaySpec } from '../../../types/presentation_concern';
+import type { DisplaySpec } from '../../../types/present';
 import type { QuickAction } from '../../../types/quick_action';
 import type { Journal } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';

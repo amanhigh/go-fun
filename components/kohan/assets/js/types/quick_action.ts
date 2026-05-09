@@ -1,4 +1,4 @@
-import type { DisplaySpec } from './presentation_concern';
+import type { DisplaySpec } from './present';
 
 export type QuickAction = {
 	id: string;
