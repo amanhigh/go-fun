@@ -65,7 +65,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-for="note in sidebar.notes.sorted()"`))
 			Expect(html).To(ContainSubstring(`x-on:click="sidebar.state.enterReviewMode()"`))
 			Expect(html).To(ContainSubstring(`tag.type].filter(Boolean).join(`))
-			Expect(html).To(ContainSubstring(`x-bind:class="presentation.type(item.type).class"`))
+			Expect(html).To(ContainSubstring(`x-bind:class="present.type.spec(item.type).class"`))
 			Expect(html).To(ContainSubstring(`x-text="presentation.formatReviewQueueDate(item.created_at)"`))
 			Expect(html).To(ContainSubstring(`sidebar.reviewQueue.isLoading()`))
 			Expect(html).To(ContainSubstring(`sidebar.reviewQueue.isError()`))
@@ -84,7 +84,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 
 			// Primary info row: type + status + sequence
 			Expect(html).To(ContainSubstring(`presentation.display(presentation.sequence(current.journal.sequence))`))
-			Expect(html).To(ContainSubstring(`presentation.display(presentation.type(current.journal.type))`))
+			Expect(html).To(ContainSubstring(`present.type.label(current.journal.type)`))
 			Expect(html).To(ContainSubstring(`present.status.label(current.journal.status)`))
 			Expect(html).To(ContainSubstring(`present.status.spec(current.journal.status).class`))
 
@@ -117,7 +117,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 
 	Context("Image Preview Modal", func() {
 		It("should render a visible timeframe chip and counter", func() {
-			Expect(html).To(ContainSubstring(`x-bind:class="presentation.timeframe(preview.timeframe()).class"`))
+			Expect(html).To(ContainSubstring(`x-bind:class="present.timeframe.spec(preview.timeframe()).class"`))
 			Expect(html).To(ContainSubstring(`x-text="preview.timeframe()"`))
 			Expect(html).To(ContainSubstring(`x-text="preview.counter()"`))
 		})
@@ -147,7 +147,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`border-border`))
 			Expect(html).To(ContainSubstring(`bg-muted`))
 			Expect(html).To(ContainSubstring(`text-left`))
-			Expect(html).To(ContainSubstring(`x-bind:class="presentation.timeframe(image.timeframe).class"`))
+			Expect(html).To(ContainSubstring(`x-bind:class="present.timeframe.spec(image.timeframe).class"`))
 			Expect(html).To(ContainSubstring(`x-text="image.timeframe"`))
 			Expect(html).To(ContainSubstring(`x-on:click="preview.open(index)"`))
 			Expect(html).To(ContainSubstring(`x-bind:title="image.file_name"`))

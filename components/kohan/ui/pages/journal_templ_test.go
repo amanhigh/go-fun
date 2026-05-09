@@ -65,7 +65,7 @@ var _ = Describe("Journal Page Tests", func() {
 			Expect(html).To(ContainSubstring("datePreset"))
 			Expect(html).To(ContainSubstring("reviewed"))
 			Expect(html).To(ContainSubstring("Sort: "))
-			Expect(html).To(ContainSubstring(`presentation.display(presentation.type(filter.type))`))
+			Expect(html).To(ContainSubstring(`present.type.label(filter.type)`))
 			Expect(html).To(ContainSubstring(`present.status.label(filter.status)`))
 			Expect(html).To(ContainSubstring(`presentation.display(presentation.sequence(filter.sequence))`))
 		})

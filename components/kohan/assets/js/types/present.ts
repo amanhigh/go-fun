@@ -22,4 +22,6 @@ export abstract class BasePresenter implements Presenter {
 
 export interface PresentationConcern {
 	status: Presenter;
+	type: Presenter;
+	timeframe: Presenter;
 }

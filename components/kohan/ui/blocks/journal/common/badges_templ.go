@@ -40,7 +40,7 @@ func TypeBadge(props TypeBadgeProps) templ.Component {
 		templ_7745c5c3_Err = badge.Badge(badge.Props{
 			Variant:    badge.VariantSecondary,
 			Class:      "border " + props.Class,
-			Attributes: templ.Attributes{"x-bind:class": "presentation.type(" + props.TypeExpr + ").class", "x-text": "presentation.display(presentation.type(" + props.TypeExpr + "))"},
+			Attributes: templ.Attributes{"x-bind:class": "present.type.spec(" + props.TypeExpr + ").class", "x-text": "present.type.label(" + props.TypeExpr + ")"},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

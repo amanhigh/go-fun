@@ -289,7 +289,7 @@ func JournalDetailPreviewModal() templ.Component {
 			OverlayPrevExpr:    "preview.wrapPrev()",
 			OverlayNextExpr:    "preview.wrapNext()",
 			TimeframeExpr:      "preview.timeframe()",
-			TimeframeClassExpr: "presentation.timeframe(preview.timeframe()).class",
+			TimeframeClassExpr: "present.timeframe.spec(preview.timeframe()).class",
 			CounterExpr:        "preview.counter()",
 			FilenameExpr:       "preview.fileName()",
 			SrcExpr:            "preview.src()",
