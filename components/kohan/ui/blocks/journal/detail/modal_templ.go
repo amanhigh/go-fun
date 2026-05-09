@@ -288,12 +288,12 @@ func JournalDetailPreviewModal() templ.Component {
 			NextExpr:           "preview.next()",
 			OverlayPrevExpr:    "preview.wrapPrev()",
 			OverlayNextExpr:    "preview.wrapNext()",
-			TimeframeExpr:      "preview.timeframe()",
-			TimeframeClassExpr: "presentation.timeframe(preview.timeframe()).class",
+			TimeframeExpr:      "preview.current()?.timeframe ?? ''",
+			TimeframeClassExpr: "presentation.timeframe(preview.current()?.timeframe ?? '').class",
 			CounterExpr:        "preview.counter()",
 			FilenameExpr:       "preview.current()?.file_name ?? ''",
-			SrcExpr:            "preview.src()",
-			AltExpr:            "preview.label()",
+			SrcExpr:            "preview.current()?.src ?? ''",
+			AltExpr:            "preview.current()?.label ?? ''",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

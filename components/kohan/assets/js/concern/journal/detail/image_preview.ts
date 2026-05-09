@@ -12,9 +12,6 @@ export function NewImagePreviewConcern(pg: JournalDetailPageProvider) {
 			const images = pg().images.sorted();
 			return images[this.index] ?? null;
 		},
-		timeframe() { return this.current()?.timeframe ?? ''; },
-		src() { return this.current()?.src ?? ''; },
-		label() { return this.current()?.label ?? ''; },
 		counter() {
 			const total = pg().images.sorted().length;
 			return `${this.index + 1} / ${total}`;
@@ -24,16 +21,12 @@ export function NewImagePreviewConcern(pg: JournalDetailPageProvider) {
 			const images = pg().images.sorted();
 			return this.index >= 0 && this.index < images.length;
 		},
-		canPrev() { return this.index > 0; },
-		canNext() {
-			const images = pg().images.sorted();
-			return this.index >= 0 && this.index < images.length - 1;
-		},
 		prev() {
-			if (this.canPrev()) this.index--;
+			if (this.index > 0) this.index--;
 		},
 		next() {
-			if (this.canNext()) this.index++;
+			const images = pg().images.sorted();
+			if (this.index >= 0 && this.index < images.length - 1) this.index++;
 		},
 		wrapPrev() {
 			const total = pg().images.sorted().length;

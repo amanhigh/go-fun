@@ -4,6 +4,27 @@ import type { JournalDetailPageProvider } from '../../../types/journal_detail_co
 
 const TIMEFRAME_RANK: Record<JournalTimeframe, number> = { YR: 600, SMN: 500, TMN: 400, MN: 300, WK: 200, DL: 100 };
 
+function toImageView(image: JournalImage): JournalImageView {
+	return {
+		...image,
+		src: imageSrc(image),
+		label: imageLabel(image),
+	};
+}
+
+function imageSrc(image: JournalImage): string {
+	if (!image.file_name) return '';
+	if (image.file_name.startsWith('http://') || image.file_name.startsWith('https://') || image.file_name.startsWith('/')) return image.file_name;
+	if (!image.created_at) return '/journal/images/' + image.file_name;
+	const date = new Date(image.created_at);
+	if (Number.isNaN(date.getTime())) return '/journal/images/' + image.file_name;
+	return `/journal/images/${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${image.file_name}`;
+}
+
+function imageLabel(image: JournalImage): string {
+	return image.timeframe ? `${image.timeframe} • ${image.file_name}` : image.file_name;
+}
+
 function compareImages(a: JournalImage, b: JournalImage): number {
 	const aDate = a.created_at ? new Date(a.created_at).getTime() : Number.POSITIVE_INFINITY;
 	const bDate = b.created_at ? new Date(b.created_at).getTime() : Number.POSITIVE_INFINITY;
@@ -18,7 +39,7 @@ export function NewImagesConcern(pg: JournalDetailPageProvider) {
 		sorted(): JournalImageView[] {
 			const images = pg().current.journal?.images;
 			if (!images?.length) return [];
-			return [...images].sort(compareImages) as JournalImageView[];
+			return [...images].map(toImageView).sort(compareImages);
 		},
 
 		countLabel(): string {

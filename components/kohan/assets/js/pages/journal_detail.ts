@@ -3,7 +3,7 @@ import { NewJournalNoteClient } from '../client/journal_note';
 import { NewJournalTagClient } from '../client/journal_tag';
 import type { JournalDetailPageData } from '../types/journal_detail_concern';
 import { NewPresentationConcern } from '../lib/presentation';
-import { NewCurrentJournalConcern } from '../concern/journal/detail/current_journal';
+import { NewJournalConcern } from '../concern/journal/detail/journal';
 import { NewHeaderConcern } from '../concern/journal/detail/header';
 import { NewImagesConcern } from '../concern/journal/detail/images';
 import { NewImagePreviewConcern } from '../concern/journal/detail/image_preview';
@@ -19,7 +19,7 @@ function createJournalDetailPageData(journalId = '') {
 	page.tagClient = NewJournalTagClient();
 
 	page.presentation = NewPresentationConcern();
-	page.current = NewCurrentJournalConcern(pg);
+	page.current = NewJournalConcern(pg);
 	page.header = NewHeaderConcern(pg);
 	page.images = NewImagesConcern(pg);
 	page.preview = NewImagePreviewConcern(pg);

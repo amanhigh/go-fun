@@ -1,4 +1,4 @@
-import type { Journal, JournalImage, JournalTimeframe } from './journal_api';
+import type { Journal, JournalImage } from './journal_api';
 import type { JournalClient } from '../client/journal';
 import type { JournalNoteClient } from '../client/journal_note';
 import type { JournalTagClient } from '../client/journal_tag';
@@ -16,7 +16,7 @@ export type JournalDetailPageData = {
 	tagClient: JournalTagClient;
 
 	presentation: PresentationConcern;
-	current: CurrentJournalConcern;
+	current: JournalConcern;
 	header: JournalHeaderConcern;
 	images: JournalImagesConcern;
 	preview: ImagePreviewConcern;
@@ -27,7 +27,7 @@ export type JournalDetailPageData = {
 
 // ===== Page-Level Concerns =====
 
-export type CurrentJournalConcern = {
+export type JournalConcern = {
 	journalId: string;
 	journal: Journal | null;
 	loading: boolean;
@@ -54,19 +54,14 @@ export type JournalImagesConcern = {
 
 export type ImagePreviewConcern = {
 	index: number;
-	src(): string;
-	label(): string;
 	counter(): string;
 	hasPreview(): boolean;
 	close(): void;
-	canPrev(): boolean;
-	canNext(): boolean;
 	prev(): void;
 	next(): void;
 	wrapPrev(): void;
 	wrapNext(): void;
 	current(): JournalImageView | null;
-	timeframe(): string;
 	open(idx: number): void;
 };
 
