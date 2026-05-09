@@ -1,4 +1,4 @@
-import type { Journal, JournalImage } from './journal_api';
+import type { Journal, JournalImage, JournalTimeframe } from './journal_api';
 import type { JournalClient } from '../client/journal';
 import type { JournalNoteClient } from '../client/journal_note';
 import type { JournalTagClient } from '../client/journal_tag';
@@ -42,11 +42,14 @@ export type JournalHeaderConcern = {
 	deleteJournal(): Promise<void>;
 };
 
+export type JournalImageView = JournalImage & {
+	src: string;
+	label: string;
+};
+
 export type JournalImagesConcern = {
-	src(image: JournalImage): string;
-	label(image: JournalImage | null | undefined): string;
 	countLabel(): string;
-	sorted(): JournalImage[];
+	sorted(): JournalImageView[];
 };
 
 export type ImagePreviewConcern = {
@@ -58,9 +61,11 @@ export type ImagePreviewConcern = {
 	close(): void;
 	canPrev(): boolean;
 	canNext(): boolean;
-	prev(wrap?: boolean): void;
-	next(wrap?: boolean): void;
-	current(): JournalImage | null;
+	prev(): void;
+	next(): void;
+	wrapPrev(): void;
+	wrapNext(): void;
+	current(): JournalImageView | null;
 	timeframe(): string;
 	open(idx: number): void;
 };

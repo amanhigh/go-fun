@@ -1,4 +1,4 @@
-import type { JournalImage } from '../../../types/journal_api';
+import type { JournalImageView } from '../../../types/journal_detail_concern';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
 export function NewImagePreviewConcern(pg: JournalDetailPageProvider) {
@@ -8,19 +8,13 @@ export function NewImagePreviewConcern(pg: JournalDetailPageProvider) {
 		open(idx: number) { this.index = idx; },
 		close() { this.index = -1; },
 
-		current(): JournalImage | null {
+		current(): JournalImageView | null {
 			const images = pg().images.sorted();
 			return images[this.index] ?? null;
 		},
 		timeframe() { return this.current()?.timeframe ?? ''; },
-		src() {
-			const img = this.current();
-			return img ? pg().images.src(img) : '';
-		},
-		label() {
-			const img = this.current();
-			return img ? pg().images.label(img) : '';
-		},
+		src() { return this.current()?.src ?? ''; },
+		label() { return this.current()?.label ?? ''; },
 		counter() {
 			const total = pg().images.sorted().length;
 			return `${this.index + 1} / ${total}`;

@@ -25,9 +25,11 @@ export type JournalTagRequest = {
 
 // ===== Response Types =====
 
+export type JournalTimeframe = 'DL' | 'WK' | 'MN' | 'TMN' | 'SMN' | 'YR';
+
 export type JournalImage = {
 	id: string;
-	timeframe: string;
+	timeframe: JournalTimeframe;
 	file_name: string;
 	created_at?: string;
 };

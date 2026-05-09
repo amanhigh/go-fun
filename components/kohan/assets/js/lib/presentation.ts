@@ -1,6 +1,6 @@
 import { formatTimestamp } from './date';
 import { normalizeTag } from './tags';
-import type { JournalTag } from '../types/journal_api';
+import type { JournalTag, JournalTimeframe } from '../types/journal_api';
 import type { DisplaySpec, PresentationConcern } from '../types/presentation_concern';
 
 // --- Type ---
@@ -33,7 +33,7 @@ const statusDisplayMap: Record<string, DisplaySpec> = {
 
 const defaultTimeframeSpec: DisplaySpec = { icon: '', text: '', class: 'journal-timeframe-default' };
 
-const timeframeDisplayMap: Record<string, DisplaySpec> = {
+const timeframeDisplayMap: Record<JournalTimeframe, DisplaySpec> = {
 	YR: { icon: '🗓️', text: '🗓️ YR', class: 'journal-timeframe-yr' },
 	SMN: { icon: '📅', text: '📅 SMN', class: 'journal-timeframe-smn' },
 	TMN: { icon: '📈', text: '📈 TMN', class: 'journal-timeframe-tmn' },
@@ -75,8 +75,7 @@ export function NewPresentationConcern(): PresentationConcern {
 
 		// --- Timeframe ---
 		timeframe(value: string): DisplaySpec {
-			const key = normalizeTag(value);
-			return timeframeDisplayMap[key] ?? { ...defaultTimeframeSpec, text: key };
+			return timeframeDisplayMap[value as JournalTimeframe] ?? { ...defaultTimeframeSpec, text: value };
 		},
 
 		// --- Sequence ---

@@ -40,7 +40,7 @@ templ JournalDetailImageTile() {
 				"x-bind:title": "image.file_name",
 			},
 		}) {
-			<img class="block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]" x-bind:src="images.src(image)" x-bind:alt="images.label(image)" x-on:error="$el.style.opacity='0.35'"/>
+			<img class="block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]" x-bind:src="image.src" x-bind:alt="image.label" x-on:error="$el.style.opacity='0.35'"/>
 		}
 	</div>
 }
