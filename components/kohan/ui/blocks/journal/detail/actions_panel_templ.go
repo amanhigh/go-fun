@@ -375,9 +375,9 @@ func journalDetailTagsCard() templ.Component {
 					return templ_7745c5c3_Err
 				}
 				templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-					ShowExpr:  "sidebar.reasonTagForm.message",
-					ClassExpr: "sidebar.reasonTagForm.feedbackClass",
-					TextExpr:  "sidebar.reasonTagForm.message",
+					ShowExpr:  "sidebar.reasonTagForm.submitter.hasMessage()",
+					ClassExpr: "sidebar.reasonTagForm.submitter.messageClass",
+					TextExpr:  "sidebar.reasonTagForm.submitter.message",
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -457,8 +457,8 @@ func journalDetailTagForm() templ.Component {
 		}
 		templ_7745c5c3_Err = components.AsyncButton(components.AsyncButtonProps{
 			OnClickExpr:  "sidebar.reasonTagForm.submit()",
-			DisabledExpr: "sidebar.reasonTagForm.submitting || !sidebar.reasonTagForm.input.trim()",
-			LoadingExpr:  "sidebar.reasonTagForm.submitting",
+			DisabledExpr: "sidebar.reasonTagForm.submitter.submitting || !sidebar.reasonTagForm.canSubmit()",
+			LoadingExpr:  "sidebar.reasonTagForm.submitter.submitting",
 			LoadingText:  "'Saving reason tag...'",
 			DefaultText:  "'Add Reason Tag'",
 		}).Render(ctx, templ_7745c5c3_Buffer)

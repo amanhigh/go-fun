@@ -1,5 +1,6 @@
 import type { Journal, JournalNote, JournalTag } from './journal_api';
 import type { Feedback } from '../lib/feedback';
+import type { Submitter } from '../lib/submitter';
 import type { DeletableSyncedCollection, LoadableCollection } from './collection';
 import type { DisplaySpec } from './presentation_concern';
 import type { QuickAction } from './quick_action';
@@ -16,14 +17,39 @@ export type SidebarStateConcern = {
 };
 
 export type ReviewActionsConcern = Feedback & {
+	actions(): QuickAction[];
+};
+
+export type ReviewQueueConcern = LoadableCollection<Journal>;
+
 export type NoteFormConcern = Feedback & {
-export type TagFormConcern = Feedback & {
+	content: string;
+	submit(): Promise<void>;
+};
+
+export type TagFormConcern = {
+	submitter: Submitter;
+	input: string;
+	override: string;
+	canSubmit(): boolean;
+	submit(): Promise<void>;
+};
+
 export type TakenTagConcern = Feedback & {
 	tags: readonly DisplaySpec[];
-
 	show(): boolean;
 	hasTag(value: string): boolean;
 	submit(tagValue: string): Promise<void>;
+};
+
+export type TagCollectionConcern = DeletableSyncedCollection<JournalTag> & {
+	reason(): JournalTag[];
+	directional(): JournalTag[];
+	management(): JournalTag[];
+};
+
+export type NotesConcern = DeletableSyncedCollection<JournalNote> & {
+	sorted(): JournalNote[];
 };
 
 export type JournalDetailSidebarConcern = {
