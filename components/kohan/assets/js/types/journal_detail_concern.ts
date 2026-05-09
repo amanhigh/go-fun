@@ -54,6 +54,10 @@ export type JournalImagesConcern = {
 
 export type ImagePreviewConcern = {
 	index: number;
+	timeframe(): string;
+	src(): string;
+	label(): string;
+	fileName(): string;
 	counter(): string;
 	hasPreview(): boolean;
 	close(): void;
@@ -61,7 +65,6 @@ export type ImagePreviewConcern = {
 	next(): void;
 	wrapPrev(): void;
 	wrapNext(): void;
-	current(): JournalImageView | null;
 	open(idx: number): void;
 };
 

@@ -1,5 +1,5 @@
 import { getErrorMessage } from './error';
-import type { Identifiable, SyncedCollectionOptions } from '../types/collection';
+import type { Identifiable } from '../types/collection';
 
 // ===== Array Helpers =====
 
@@ -13,7 +13,7 @@ export function removeById<T extends Identifiable>(items: T[], itemId: string): 
 
 // ===== Base Synced Collection =====
 
-export function createSyncedCollectionState<T extends Identifiable>(options?: SyncedCollectionOptions<T>) {
+export function createSyncedCollectionState<T extends Identifiable>() {
 	return {
 		items: [] as T[],
 
@@ -22,9 +22,6 @@ export function createSyncedCollectionState<T extends Identifiable>(options?: Sy
 		},
 		all() {
 			return this.items;
-		},
-		sorted() {
-			return options?.sort?.(this.items) ?? this.items;
 		},
 		hasItems() {
 			return this.items.length > 0;
@@ -43,10 +40,9 @@ export function createSyncedCollectionState<T extends Identifiable>(options?: Sy
 export function createDeletableSyncedCollectionState<T extends Identifiable>(
 	canDelete: () => boolean,
 	deleteItem: (itemId: string) => Promise<void>,
-	options?: SyncedCollectionOptions<T>,
 ) {
 	return {
-		...createSyncedCollectionState<T>(options),
+		...createSyncedCollectionState<T>(),
 		deletingId: '',
 
 		async delete(itemId: string) {

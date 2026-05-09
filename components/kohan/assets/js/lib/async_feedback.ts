@@ -1,8 +1,16 @@
 import { getErrorMessage } from './error';
 
+export type FeedbackKind = 'error' | 'success';
+
+const feedbackClassMap: Record<FeedbackKind, string> = {
+	error: 'journal-feedback-error',
+	success: 'journal-feedback-success',
+};
+
 export type AsyncFeedback = {
 	submitting: boolean;
 	message: string;
+	feedbackKind: FeedbackKind;
 	feedbackClass: string;
 	setError(message: string): void;
 	setSuccess(message: string): void;
@@ -13,23 +21,27 @@ export function createAsyncFeedback(): AsyncFeedback {
 	return {
 		submitting: false,
 		message: '',
-		feedbackClass: 'journal-feedback-error',
+		feedbackKind: 'error',
+		feedbackClass: feedbackClassMap.error,
 
 		setError(message: string) {
+			this.feedbackKind = 'error';
+			this.feedbackClass = feedbackClassMap.error;
 			this.message = message;
-			this.feedbackClass = 'journal-feedback-error';
 		},
 
 		setSuccess(message: string) {
+			this.feedbackKind = 'success';
+			this.feedbackClass = feedbackClassMap.success;
 			this.message = message;
-			this.feedbackClass = 'journal-feedback-success';
 		},
 
 		async run(action, successMessage, errorFallback) {
 			if (this.submitting) return;
 			this.submitting = true;
 			this.message = '';
-			this.feedbackClass = 'journal-feedback-error';
+			this.feedbackKind = 'error';
+			this.feedbackClass = feedbackClassMap.error;
 
 			try {
 				await action();

@@ -26,7 +26,9 @@ export type NoteFormConcern = AsyncFeedback & {
 	submit(): Promise<void>;
 };
 
-export type NotesConcern = DeletableSyncedCollection<JournalNote>;
+export type NotesConcern = DeletableSyncedCollection<JournalNote> & {
+	sorted(): JournalNote[];
+};
 
 export type TagCollectionConcern = DeletableSyncedCollection<JournalTag> & {
 	reason(): JournalTag[];

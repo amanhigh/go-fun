@@ -7,14 +7,13 @@ export function NewNotesConcern(pg: JournalDetailPageProvider) {
 		...createDeletableSyncedCollectionState<JournalNote>(
 			() => !!pg().current.journal,
 			(noteId) => pg().noteClient.delete(pg().current.journalId, noteId),
-			{
-				sort: (notes) =>
-					[...notes].sort((left, right) => {
-						const leftTime = left.created_at ? new Date(left.created_at).getTime() : 0;
-						const rightTime = right.created_at ? new Date(right.created_at).getTime() : 0;
-						return rightTime - leftTime;
-					}),
-			},
 		),
+		sorted() {
+			return [...this.items].sort((left, right) => {
+				const leftTime = left.created_at ? new Date(left.created_at).getTime() : 0;
+				const rightTime = right.created_at ? new Date(right.created_at).getTime() : 0;
+				return rightTime - leftTime;
+			});
+		},
 	};
 }

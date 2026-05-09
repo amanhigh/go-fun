@@ -10,13 +10,13 @@ export function NewTagCollectionConcern(pg: JournalDetailPageProvider) {
 			(tagId) => pg().tagClient.delete(pg().current.journalId, tagId),
 		),
 		reason() {
-			return this.items.filter((tag) => normalizeTag(tag.type ?? '') === 'REASON');
+			return this.all().filter((tag) => normalizeTag(tag.type ?? '') === 'REASON');
 		},
 		directional() {
-			return this.items.filter((tag) => normalizeTag(tag.type ?? '') === 'DIRECTION');
+			return this.all().filter((tag) => normalizeTag(tag.type ?? '') === 'DIRECTION');
 		},
 		management() {
-			return this.items.filter((tag) => normalizeTag(tag.type ?? '') === 'MANAGEMENT');
+			return this.all().filter((tag) => normalizeTag(tag.type ?? '') === 'MANAGEMENT');
 		},
 	};
 }

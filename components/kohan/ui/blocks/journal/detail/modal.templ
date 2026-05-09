@@ -74,7 +74,7 @@ templ JournalDetailPreviewModal() {
 		TimeframeExpr:      "preview.timeframe()",
 		TimeframeClassExpr: "presentation.timeframe(preview.timeframe()).class",
 		CounterExpr:        "preview.counter()",
-		FilenameExpr:       "preview.current()?.file_name ?? ''",
+		FilenameExpr:       "preview.fileName()",
 		SrcExpr:            "preview.src()",
 		AltExpr:            "preview.label()",
 	})
