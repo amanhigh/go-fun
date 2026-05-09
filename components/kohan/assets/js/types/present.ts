@@ -21,4 +21,5 @@ export interface PresentationConcern {
 	type: Presenter;
 	timeframe: Presenter;
 	tag: TagPresenter;
+	sequence: Presenter;
 }

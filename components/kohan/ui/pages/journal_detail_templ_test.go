@@ -91,7 +91,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-on:click="header.deleteJournal()"`))
 
 			// Primary info row: type + status + sequence
-			Expect(html).To(ContainSubstring(`presentation.display(presentation.sequence(current.journal.sequence))`))
+			Expect(html).To(ContainSubstring(`present.sequence.label(current.journal.sequence)`))
 			Expect(html).To(ContainSubstring(`present.type.label(current.journal.type)`))
 			Expect(html).To(ContainSubstring(`present.status.label(current.journal.status)`))
 			Expect(html).To(ContainSubstring(`present.status.spec(current.journal.status).class`))
