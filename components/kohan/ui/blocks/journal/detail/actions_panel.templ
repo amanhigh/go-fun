@@ -56,18 +56,18 @@ templ takenTagActions() {
 			<p class="mt-1 text-sm text-muted-foreground">Quick add management tags for taken journals.</p>
 		</div>
 		<div class="flex flex-wrap gap-2">
-			<template x-for="tag in sidebar.takenTag.tags" x-bind:key="tag.text">
+			<template x-for="tag in sidebar.takenTag.tags" x-bind:key="tag.id">
 				@button.Button(button.Props{
 					Variant: button.VariantOutline,
 					Type:    button.TypeButton,
 					Size:    button.SizeSm,
 					Class:   "rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide",
-					Attributes: templ.Attributes{
-						"x-on:click":      "sidebar.takenTag.submit(tag.text)",
-						"x-bind:disabled": "sidebar.takenTag.submitting || sidebar.takenTag.hasTag(tag.text)",
-						"x-bind:class":    "tag.class",
-						"x-text":          "tag.text",
-					},
+				Attributes: templ.Attributes{
+					"x-on:click":      "sidebar.takenTag.submit(tag.tag)",
+					"x-bind:disabled": "sidebar.takenTag.submitting || sidebar.takenTag.hasTag(tag.tag)",
+					"x-bind:class":    "present.tag.spec(tag).class",
+					"x-text":          "present.tag.label(tag)",
+				},
 				}) {}
 			</template>
 		</div>
@@ -88,9 +88,9 @@ templ journalDetailTagsCard() {
 		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
 			@journalDetailTagForm()
 			@components.FeedbackMessage(components.FeedbackMessageProps{
-				ShowExpr:  "sidebar.reasonTagForm.message",
-				ClassExpr: "sidebar.reasonTagForm.feedbackClass",
-				TextExpr:  "sidebar.reasonTagForm.message",
+				ShowExpr:  "sidebar.reasonTagForm.submitter.hasMessage()",
+				ClassExpr: "sidebar.reasonTagForm.submitter.messageClass",
+				TextExpr:  "sidebar.reasonTagForm.submitter.message",
 			})
 			@journalDetailTagInputs()
 			@components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.hasItems()"})
@@ -112,8 +112,8 @@ templ journalDetailTagForm() {
 		})
 		@components.AsyncButton(components.AsyncButtonProps{
 			OnClickExpr:   "sidebar.reasonTagForm.submit()",
-			DisabledExpr:  "sidebar.reasonTagForm.submitting || !sidebar.reasonTagForm.input.trim()",
-			LoadingExpr:   "sidebar.reasonTagForm.submitting",
+			DisabledExpr:  "sidebar.reasonTagForm.submitter.submitting || !sidebar.reasonTagForm.canSubmit()",
+			LoadingExpr:   "sidebar.reasonTagForm.submitter.submitting",
 			LoadingText:   "'Saving reason tag...'",
 			DefaultText:   "'Add Reason Tag'",
 		})
@@ -135,7 +135,7 @@ templ journalDetailTagRows() {
 templ journalDetailTagRow() {
 	<div class="flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/30 px-4 py-3">
 		<div class="flex min-w-0 flex-wrap items-center gap-2">
-			@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, TextExpr: "[tag.tag, tag.override, tag.type].filter(Boolean).join(' • ')", Class: "font-semibold"})
+			@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, TextExpr: "present.tag.label(tag)", Class: "font-semibold"})
 		</div>
 		@components.DeleteButton(components.DeleteButtonProps{
 			OnClickExpr:  "sidebar.tags.delete(tag.id)",

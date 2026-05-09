@@ -7,14 +7,14 @@ export function TakenTagConcern(pg: JournalDetailPageProvider) {
 	return {
 		...createFeedback(),
 		tags: [
-			{ text: 'ntr', class: 'journal-management-base-emerald' },
-			{ text: 'enl', class: 'journal-management-base-sky' },
-			{ text: 'slt', class: 'journal-management-base-rose' },
-			{ text: 'fz', class: 'journal-management-base-violet' },
-			{ text: 'nbe', class: 'journal-management-base-amber' },
-			{ text: 'ws', class: 'journal-management-base-slate' },
-			{ text: 'important', class: 'journal-management-base-fuchsia' },
-			{ text: 'be', class: 'journal-management-base-orange' },
+			{ id: 'ntr', tag: 'ntr', type: 'MANAGEMENT' },
+			{ id: 'enl', tag: 'enl', type: 'MANAGEMENT' },
+			{ id: 'slt', tag: 'slt', type: 'MANAGEMENT' },
+			{ id: 'fz', tag: 'fz', type: 'MANAGEMENT' },
+			{ id: 'nbe', tag: 'nbe', type: 'MANAGEMENT' },
+			{ id: 'ws', tag: 'ws', type: 'MANAGEMENT' },
+			{ id: 'important', tag: 'important', type: 'MANAGEMENT' },
+			{ id: 'be', tag: 'be', type: 'MANAGEMENT' },
 		],
 
 		show() {

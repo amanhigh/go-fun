@@ -14,8 +14,6 @@ export interface Presenter<T = DisplayValue> {
 }
 
 export interface TagPresenter extends Presenter<JournalTag> {
-	managementSpec(value: DisplayValue): DisplaySpec;
-	managementLabel(value: DisplayValue): string;
 }
 
 export interface PresentationConcern {

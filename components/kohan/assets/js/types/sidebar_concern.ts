@@ -36,7 +36,7 @@ export type TagFormConcern = {
 };
 
 export type TakenTagConcern = Feedback & {
-	tags: readonly DisplaySpec[];
+	tags: readonly JournalTag[];
 	show(): boolean;
 	hasTag(value: string): boolean;
 	submit(tagValue: string): Promise<void>;

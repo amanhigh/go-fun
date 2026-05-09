@@ -7,12 +7,10 @@ export type SubmitMessages = {
 	error: string;
 };
 
-// ===== CSS Class Helpers =====
+// ===== CSS Class Constants =====
 
-const messageClassMap: Record<string, string> = {
-	success: 'journal-feedback-success',
-	error: 'journal-feedback-error',
-};
+const successMessageClass = 'journal-feedback-success';
+const errorMessageClass = 'journal-feedback-error';
 
 // ===== Submitter Type =====
 
@@ -29,26 +27,22 @@ export type Submitter = {
 // ===== Factory =====
 
 export function createSubmitter(): Submitter {
-	function setSuccess(this: Submitter, message: string) {
-		this.messageClass = messageClassMap.success;
-		this.message = message;
-	}
-
 	return {
 		submitting: false,
 		message: '',
-		messageClass: messageClassMap.error,
+		messageClass: errorMessageClass,
 
 		hasMessage(this: Submitter) {
 			return this.message !== '';
 		},
 
 		setError(this: Submitter, message: string) {
-			this.messageClass = messageClassMap.error;
+			this.messageClass = errorMessageClass;
 			this.message = message;
 		},
 
 		async run(this: Submitter, action: () => Promise<void>, messages: SubmitMessages) {
+			// Lifecycle: guard duplicate submit → clear previous message → run action → set success/error → reset submitting
 			if (this.submitting) return;
 
 			this.submitting = true;
@@ -56,7 +50,8 @@ export function createSubmitter(): Submitter {
 
 			try {
 				await action();
-				setSuccess.call(this, messages.success ?? '');
+				this.messageClass = successMessageClass;
+				this.message = messages.success ?? '';
 			} catch (err) {
 				this.setError(getErrorMessage(err, messages.error));
 			} finally {

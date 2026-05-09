@@ -212,7 +212,7 @@ func takenTagActions() templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"space-y-3\" x-show=\"sidebar.takenTag.show()\"><div><p class=\"text-xs font-semibold uppercase tracking-widest text-muted-foreground\">Management</p><p class=\"mt-1 text-sm text-muted-foreground\">Quick add management tags for taken journals.</p></div><div class=\"flex flex-wrap gap-2\"><template x-for=\"tag in sidebar.takenTag.tags\" x-bind:key=\"tag.text\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"space-y-3\" x-show=\"sidebar.takenTag.show()\"><div><p class=\"text-xs font-semibold uppercase tracking-widest text-muted-foreground\">Management</p><p class=\"mt-1 text-sm text-muted-foreground\">Quick add management tags for taken journals.</p></div><div class=\"flex flex-wrap gap-2\"><template x-for=\"tag in sidebar.takenTag.tags\" x-bind:key=\"tag.id\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -222,10 +222,10 @@ func takenTagActions() templ.Component {
 			Size:    button.SizeSm,
 			Class:   "rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide",
 			Attributes: templ.Attributes{
-				"x-on:click":      "sidebar.takenTag.submit(tag.text)",
-				"x-bind:disabled": "sidebar.takenTag.submitting || sidebar.takenTag.hasTag(tag.text)",
-				"x-bind:class":    "present.tag.managementSpec(tag.text).class",
-				"x-text":          "present.tag.managementLabel(tag.text)",
+				"x-on:click":      "sidebar.takenTag.submit(tag.tag)",
+				"x-bind:disabled": "sidebar.takenTag.submitting || sidebar.takenTag.hasTag(tag.tag)",
+				"x-bind:class":    "present.tag.spec(tag).class",
+				"x-text":          "present.tag.label(tag)",
 			},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
