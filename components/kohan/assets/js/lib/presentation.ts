@@ -3,50 +3,54 @@ import { normalizeTag } from './tags';
 import type { JournalTag, JournalTimeframe } from '../types/journal_api';
 import type { DisplaySpec, PresentationConcern } from '../types/presentation_concern';
 
+function display(spec: DisplaySpec): string {
+	return spec.icon ? `${spec.icon} ${spec.text}` : spec.text;
+}
+
 // --- Type ---
 
-const defaultTypeSpec: DisplaySpec = { icon: '🏷️', text: '🏷️', class: 'journal-display-default' };
+const defaultTypeSpec: DisplaySpec = { icon: '🏷️', text: 'Unknown', class: 'journal-display-default' };
 
 const typeDisplayMap: Record<string, DisplaySpec> = {
-	TAKEN: { icon: '📈', text: '📈 TAKEN', class: 'journal-type-taken' },
-	REJECTED: { icon: '📉', text: '📉 REJECTED', class: 'journal-type-rejected' },
-	RESULT: { icon: '🏷️', text: '🏷️ RESULT', class: 'journal-type-result' },
-	SET: { icon: '🏷️', text: '🏷️ SET', class: 'journal-type-set' },
+	TAKEN: { icon: '📈', text: 'TAKEN', class: 'journal-type-taken' },
+	REJECTED: { icon: '📉', text: 'REJECTED', class: 'journal-type-rejected' },
+	RESULT: { icon: '🏷️', text: 'RESULT', class: 'journal-type-result' },
+	SET: { icon: '🏷️', text: 'SET', class: 'journal-type-set' },
 };
 
 // --- Status ---
 
-const defaultStatusSpec: DisplaySpec = { icon: '🏷️', text: '🏷️', class: 'journal-display-default' };
+const defaultStatusSpec: DisplaySpec = { icon: '🏷️', text: 'Unknown', class: 'journal-display-default' };
 
 const statusDisplayMap: Record<string, DisplaySpec> = {
-	SUCCESS: { icon: '✅', text: '✅ SUCCESS', class: 'journal-status-success' },
-	FAIL: { icon: '❌', text: '❌ FAIL', class: 'journal-status-fail' },
-	RUNNING: { icon: '🏃', text: '🏃 RUNNING', class: 'journal-status-running' },
-	SET: { icon: '🎯', text: '🎯 SET', class: 'journal-status-set' },
-	JUST_LOSS: { icon: '💔', text: '💔 JUST_LOSS', class: 'journal-status-just-loss' },
-	BROKEN: { icon: '💥', text: '💥 BROKEN', class: 'journal-status-broken' },
-	MISSED: { icon: '🚫', text: '🚫 MISSED', class: 'journal-status-missed' },
-	REJECTED: { icon: '🏷️', text: '🏷️ REJECTED', class: 'journal-status-rejected' },
+	SUCCESS: { icon: '✅', text: 'SUCCESS', class: 'journal-status-success' },
+	FAIL: { icon: '❌', text: 'FAIL', class: 'journal-status-fail' },
+	RUNNING: { icon: '🏃', text: 'RUNNING', class: 'journal-status-running' },
+	SET: { icon: '🎯', text: 'SET', class: 'journal-status-set' },
+	JUST_LOSS: { icon: '💔', text: 'JUST_LOSS', class: 'journal-status-just-loss' },
+	BROKEN: { icon: '💥', text: 'BROKEN', class: 'journal-status-broken' },
+	MISSED: { icon: '🚫', text: 'MISSED', class: 'journal-status-missed' },
+	REJECTED: { icon: '🏷️', text: 'REJECTED', class: 'journal-status-rejected' },
 };
 
 // --- Timeframe ---
 
-const defaultTimeframeSpec: DisplaySpec = { icon: '', text: '', class: 'journal-timeframe-default' };
+const defaultTimeframeSpec: DisplaySpec = { text: '', class: 'journal-timeframe-default' };
 
 const timeframeDisplayMap: Record<JournalTimeframe, DisplaySpec> = {
-	YR: { icon: '🗓️', text: '🗓️ YR', class: 'journal-timeframe-yr' },
-	SMN: { icon: '📅', text: '📅 SMN', class: 'journal-timeframe-smn' },
-	TMN: { icon: '📈', text: '📈 TMN', class: 'journal-timeframe-tmn' },
-	MN: { icon: '📊', text: '📊 MN', class: 'journal-timeframe-mn' },
-	WK: { icon: '📆', text: '📆 WK', class: 'journal-timeframe-wk' },
-	DL: { icon: '🔍', text: '🔍 DL', class: 'journal-timeframe-dl' },
+	YR: { icon: '🗓️', text: 'YR', class: 'journal-timeframe-yr' },
+	SMN: { icon: '📅', text: 'SMN', class: 'journal-timeframe-smn' },
+	TMN: { icon: '📈', text: 'TMN', class: 'journal-timeframe-tmn' },
+	MN: { icon: '📊', text: 'MN', class: 'journal-timeframe-mn' },
+	WK: { icon: '📆', text: 'WK', class: 'journal-timeframe-wk' },
+	DL: { icon: '🔍', text: 'DL', class: 'journal-timeframe-dl' },
 };
 
 // --- Sequence ---
 
 const sequenceDisplayMap: Record<string, DisplaySpec> = {
-	MWD: { icon: '🕐', text: '🕐 MWD', class: '' },
-	YR: { icon: '📅', text: '📅 YR', class: '' },
+	MWD: { icon: '🕐', text: 'MWD', class: '' },
+	YR: { icon: '📅', text: 'YR', class: '' },
 };
 
 // --- Date ---
@@ -61,28 +65,30 @@ function reasonTagIcon(tagName: string): string {
 
 export function NewPresentationConcern(): PresentationConcern {
 	return {
+		display,
+
 		// --- Type ---
 		type(value: string): DisplaySpec {
 			const key = normalizeTag(value);
-			return typeDisplayMap[key] ?? { ...defaultTypeSpec, text: `${defaultTypeSpec.icon} ${key}` };
+			return typeDisplayMap[key] ?? { ...defaultTypeSpec, text: key };
 		},
 
 		// --- Status ---
 		status(value: string): DisplaySpec {
 			const key = normalizeTag(value);
-			return statusDisplayMap[key] ?? { ...defaultStatusSpec, text: `${defaultStatusSpec.icon} ${key}` };
+			return statusDisplayMap[key] ?? { ...defaultStatusSpec, text: key };
 		},
 
 		// --- Timeframe ---
 		timeframe(value: string): DisplaySpec {
-			return timeframeDisplayMap[value as JournalTimeframe] ?? { ...defaultTimeframeSpec, text: value };
+			return timeframeDisplayMap[value as JournalTimeframe] ?? { text: value, class: 'journal-timeframe-default' };
 		},
 
 		// --- Sequence ---
 		sequence(value: string | null | undefined): DisplaySpec {
 			const key = normalizeTag(value ?? '');
-			if (!key) return { icon: '', text: '', class: '' };
-			return sequenceDisplayMap[key] ?? { icon: '📅', text: `📅 ${key}`, class: '' };
+			if (!key) return { text: '', class: '' };
+			return sequenceDisplayMap[key] ?? { icon: '📅', text: key, class: '' };
 		},
 
 		// --- Reason Tag ---
@@ -90,23 +96,22 @@ export function NewPresentationConcern(): PresentationConcern {
 			const name = tag.tag ?? '';
 			const icon = reasonTagIcon(name);
 			const override = tag.override ? ` → ${tag.override}` : '';
-			return { icon, text: `${icon} ${name}${override}`, class: '' };
+			return { icon, text: `${name}${override}`, class: '' };
 		},
 
 		// --- Directional Tag ---
 		directionalTag(tag: JournalTag): DisplaySpec {
 			const name = tag.tag ?? '';
-			const icon = '🏷';
-			return { icon, text: `${icon} ${name}`, class: '' };
+			return { icon: '🏷', text: name, class: '' };
 		},
 
 		// --- Review State ---
 		reviewedAt(value: string | null | undefined): DisplaySpec {
 			const label = value ? formatTimestamp(value) : '—';
-			return { icon: '✅', text: `✅ ${label}`, class: '' };
+			return { icon: '✅', text: label, class: '' };
 		},
 		pendingReview(): DisplaySpec {
-			return { icon: '⏳', text: '⏳ Pending Review', class: '' };
+			return { icon: '⏳', text: 'Pending Review', class: '' };
 		},
 
 		// --- Timestamp / Date ---

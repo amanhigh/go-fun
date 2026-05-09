@@ -1,18 +1,26 @@
 import type { JournalImageView } from '../../../types/journal_detail_concern';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
-export function NewImagePreviewConcern(pg: JournalDetailPageProvider) {
+function currentImage(pg: JournalDetailPageProvider, index: number): JournalImageView | null {
+	const images = pg().images.sorted();
+	return images[index] ?? null;
+}
+
+export function NewPreviewConcern(pg: JournalDetailPageProvider) {
 	return {
 		index: -1,
 
 		open(idx: number) { this.index = idx; },
 		close() { this.index = -1; },
 
-		current(): JournalImageView | null {
-			const images = pg().images.sorted();
-			return images[this.index] ?? null;
-		},
+		timeframe() { return currentImage(pg, this.index)?.timeframe ?? ''; },
+		src() { return currentImage(pg, this.index)?.src ?? ''; },
+		label() { return currentImage(pg, this.index)?.label ?? ''; },
+		fileName() { return currentImage(pg, this.index)?.file_name ?? ''; },
+
 		counter() {
+			const img = currentImage(pg, this.index);
+			if (!img) return '';
 			const total = pg().images.sorted().length;
 			return `${this.index + 1} / ${total}`;
 		},

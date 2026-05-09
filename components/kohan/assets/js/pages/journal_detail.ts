@@ -6,7 +6,7 @@ import { NewPresentationConcern } from '../lib/presentation';
 import { NewJournalConcern } from '../concern/journal/detail/journal';
 import { NewHeaderConcern } from '../concern/journal/detail/header';
 import { NewImagesConcern } from '../concern/journal/detail/images';
-import { NewImagePreviewConcern } from '../concern/journal/detail/image_preview';
+import { NewPreviewConcern } from '../concern/journal/detail/preview';
 import { NewSidebarConcern } from '../concern/journal/sidebar';
 import '../types/platform';
 
@@ -22,7 +22,7 @@ function createJournalDetailPageData(journalId = '') {
 	page.current = NewJournalConcern(pg);
 	page.header = NewHeaderConcern(pg);
 	page.images = NewImagesConcern(pg);
-	page.preview = NewImagePreviewConcern(pg);
+	page.preview = NewPreviewConcern(pg);
 	page.sidebar = NewSidebarConcern(pg);
 
 	page.init = function init(this: any) {

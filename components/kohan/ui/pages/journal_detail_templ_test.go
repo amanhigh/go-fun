@@ -83,16 +83,16 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-on:click="header.deleteJournal()"`))
 
 			// Primary info row: type + status + sequence
-			Expect(html).To(ContainSubstring(`presentation.sequence(current.journal.sequence).text`))
-			Expect(html).To(ContainSubstring(`presentation.type(current.journal.type).text`))
-			Expect(html).To(ContainSubstring(`presentation.status(current.journal.status).text`))
+			Expect(html).To(ContainSubstring(`presentation.display(presentation.sequence(current.journal.sequence))`))
+			Expect(html).To(ContainSubstring(`presentation.display(presentation.type(current.journal.type))`))
+			Expect(html).To(ContainSubstring(`presentation.display(presentation.status(current.journal.status))`))
 
 			// Right metadata: created + pending/review
 			Expect(html).To(ContainSubstring(`x-text="presentation.formatTimestamp(current.journal.created_at)"`))
 			Expect(html).To(ContainSubstring(`x-show="!current.journal.reviewed_at"`))
 			Expect(html).To(ContainSubstring(`x-show="current.journal.reviewed_at"`))
-			Expect(html).To(ContainSubstring(`presentation.reviewedAt(current.journal.reviewed_at).text`))
-			Expect(html).To(ContainSubstring(`presentation.pendingReview().text`))
+			Expect(html).To(ContainSubstring(`presentation.display(presentation.reviewedAt(current.journal.reviewed_at))`))
+			Expect(html).To(ContainSubstring(`presentation.display(presentation.pendingReview())`))
 
 			// Tags rendered directly without section label
 			Expect(html).ToNot(ContainSubstring(`Summary Tags`))
@@ -109,8 +109,8 @@ var _ = Describe("Journal Detail Page Tests", func() {
 		It("should render separate primary and secondary tag sections", func() {
 			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.tags.reason()"`))
 			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.tags.directional()"`))
-			Expect(html).To(ContainSubstring(`x-text="presentation.reasonTag(tag).text"`))
-			Expect(html).To(ContainSubstring(`x-text="presentation.directionalTag(tag).text"`))
+			Expect(html).To(ContainSubstring(`x-text="presentation.display(presentation.reasonTag(tag))"`))
+			Expect(html).To(ContainSubstring(`x-text="presentation.display(presentation.directionalTag(tag))"`))
 		})
 	})
 

@@ -19,7 +19,7 @@ export type JournalDetailPageData = {
 	current: JournalConcern;
 	header: JournalHeaderConcern;
 	images: JournalImagesConcern;
-	preview: ImagePreviewConcern;
+	preview: PreviewConcern;
 	sidebar: JournalDetailSidebarConcern;
 
 	init(): void;
@@ -52,7 +52,7 @@ export type JournalImagesConcern = {
 	sorted(): JournalImageView[];
 };
 
-export type ImagePreviewConcern = {
+export type PreviewConcern = {
 	index: number;
 	timeframe(): string;
 	src(): string;

@@ -1,7 +1,7 @@
 import type { JournalTag } from './journal_api';
 
 export type DisplaySpec = {
-	icon: string;
+	icon?: string;
 	text: string;
 	class: string;
 };
@@ -19,6 +19,7 @@ export type PresentationConcern = {
 	reviewedAt(value: string | null | undefined): DisplaySpec;
 	pendingReview(): DisplaySpec;
 
+	display(spec: DisplaySpec): string;
 	formatTimestamp(value: string | null | undefined): string;
 	formatReviewQueueDate(value: string | null | undefined): string;
 };

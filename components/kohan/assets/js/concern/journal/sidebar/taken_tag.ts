@@ -7,14 +7,14 @@ export function TakenTagConcern(pg: JournalDetailPageProvider) {
 	return {
 		...createAsyncFeedback(),
 		tags: [
-			{ icon: '', text: 'ntr', class: 'journal-management-base-emerald' },
-			{ icon: '', text: 'enl', class: 'journal-management-base-sky' },
-			{ icon: '', text: 'slt', class: 'journal-management-base-rose' },
-			{ icon: '', text: 'fz', class: 'journal-management-base-violet' },
-			{ icon: '', text: 'nbe', class: 'journal-management-base-amber' },
-			{ icon: '', text: 'ws', class: 'journal-management-base-slate' },
-			{ icon: '', text: 'important', class: 'journal-management-base-fuchsia' },
-			{ icon: '', text: 'be', class: 'journal-management-base-orange' },
+			{ text: 'ntr', class: 'journal-management-base-emerald' },
+			{ text: 'enl', class: 'journal-management-base-sky' },
+			{ text: 'slt', class: 'journal-management-base-rose' },
+			{ text: 'fz', class: 'journal-management-base-violet' },
+			{ text: 'nbe', class: 'journal-management-base-amber' },
+			{ text: 'ws', class: 'journal-management-base-slate' },
+			{ text: 'important', class: 'journal-management-base-fuchsia' },
+			{ text: 'be', class: 'journal-management-base-orange' },
 		],
 
 		show() {

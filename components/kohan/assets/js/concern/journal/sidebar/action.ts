@@ -15,7 +15,6 @@ function localToday(): string {
 function reviewDisplay(journal: Journal): DisplaySpec {
 	const hasReview = !!journal.reviewed_at;
 	return {
-		icon: '',
 		text: hasReview ? 'Mark Pending' : 'Mark Reviewed',
 		class: hasReview ? 'journal-review-toggle-pending' : 'journal-review-toggle-reviewed',
 	};
@@ -23,8 +22,8 @@ function reviewDisplay(journal: Journal): DisplaySpec {
 
 function statusDisplay(journal: Journal): DisplaySpec {
 	switch (journal.type) {
-		case 'TAKEN': return { icon: '', text: 'Mark Just Loss', class: 'journal-quick-status-loss' };
-		default: return { icon: '', text: 'Mark Broken', class: 'journal-quick-status-broken' };
+		case 'TAKEN': return { text: 'Mark Just Loss', class: 'journal-quick-status-loss' };
+		default: return { text: 'Mark Broken', class: 'journal-quick-status-broken' };
 	}
 }
 
