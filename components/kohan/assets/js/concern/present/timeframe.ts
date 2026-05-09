@@ -1,8 +1,7 @@
 import type { DisplaySpec, DisplayValue, Presenter } from '../../types/present';
-import { BasePresenter } from '../../types/present';
-import type { JournalTimeframe } from '../../types/journal_api';
+import { BasePresenter } from './base';
 
-const timeframeCatalog: Record<JournalTimeframe, DisplaySpec> = {
+const timeframeCatalog: Record<string, DisplaySpec> = {
 	YR: { icon: '🗓️', text: 'YR', class: 'journal-timeframe-yr' },
 	SMN: { icon: '📅', text: 'SMN', class: 'journal-timeframe-smn' },
 	TMN: { icon: '📈', text: 'TMN', class: 'journal-timeframe-tmn' },
@@ -14,9 +13,11 @@ const timeframeCatalog: Record<JournalTimeframe, DisplaySpec> = {
 const fallbackSpec: DisplaySpec = { text: '', class: 'journal-timeframe-default' };
 
 class TimeframePresenterImpl extends BasePresenter {
-	spec(value: DisplayValue): DisplaySpec {
-		const key = (value ?? '').trim().toUpperCase() as JournalTimeframe;
-		return timeframeCatalog[key] ?? { text: value ?? '', class: 'journal-timeframe-default' };
+	protected catalog = timeframeCatalog;
+	protected fallbackSpec = fallbackSpec;
+
+	protected fallbackText(value: DisplayValue): string {
+		return value ?? '';
 	}
 }
 

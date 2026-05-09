@@ -1,5 +1,5 @@
-import type { DisplaySpec, DisplayValue, Presenter } from '../../types/present';
-import { BasePresenter } from '../../types/present';
+import type { DisplaySpec, Presenter } from '../../types/present';
+import { BasePresenter } from './base';
 
 const statusCatalog: Record<string, DisplaySpec> = {
 	SUCCESS: { icon: '✅', text: 'SUCCESS', class: 'journal-status-success' },
@@ -15,10 +15,8 @@ const statusCatalog: Record<string, DisplaySpec> = {
 const fallbackSpec: DisplaySpec = { icon: '🏷️', text: 'Unknown', class: 'journal-display-default' };
 
 class StatusPresenterImpl extends BasePresenter {
-	spec(value: DisplayValue): DisplaySpec {
-		const key = (value ?? '').trim().toUpperCase();
-		return statusCatalog[key] ?? { ...fallbackSpec, text: key || fallbackSpec.text };
-	}
+	protected catalog = statusCatalog;
+	protected fallbackSpec = fallbackSpec;
 }
 
 export function NewStatusPresenter(): Presenter {
