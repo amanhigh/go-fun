@@ -1,5 +1,5 @@
 import { createSubmitter } from '../../../lib/submitter';
-import { normalizeTag } from '../../../lib/tags';
+import { normalizeTag } from '../../../lib/date';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 

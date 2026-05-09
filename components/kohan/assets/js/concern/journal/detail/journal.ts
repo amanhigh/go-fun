@@ -1,4 +1,3 @@
-import { getErrorMessage } from '../../../lib/error';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
 function normalizeJournal(journal: any) {
@@ -29,7 +28,7 @@ export function NewJournalConcern(pg: JournalDetailPageProvider) {
 				pg().sidebar.tags.sync(this.journal?.tags);
 				pg().sidebar.notes.sync(this.journal?.notes);
 			} catch (err) {
-				this.errorMessage = getErrorMessage(err, 'Unable to load journal details. Please try again.');
+				this.errorMessage = (err as Error).message;
 			} finally {
 				this.loading = false;
 			}

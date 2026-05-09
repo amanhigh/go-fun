@@ -4,3 +4,7 @@ export function formatDateInputValue(date: Date): string {
 	const day = `${date.getDate()}`.padStart(2, '0');
 	return `${year}-${month}-${day}`;
 }
+
+export function normalizeTag(value: string): string {
+	return value.trim().toUpperCase();
+}

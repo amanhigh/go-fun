@@ -1,4 +1,4 @@
-import { getErrorMessage } from './error';
+
 
 export type FeedbackKind = 'error' | 'success';
 
@@ -47,7 +47,7 @@ export function createFeedback(): Feedback {
 				await action();
 				this.setSuccess(successMessage);
 			} catch (err) {
-				this.setError(getErrorMessage(err, errorFallback));
+				this.setError((err as Error).message);
 			} finally {
 				this.submitting = false;
 			}

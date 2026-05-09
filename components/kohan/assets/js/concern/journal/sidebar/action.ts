@@ -1,6 +1,5 @@
 import { createFeedback, type Feedback } from '../../../lib/feedback';
 import { formatDateInputValue } from '../../../lib/date';
-import { createQuickAction } from '../../../lib/quick_action';
 import type { DisplaySpec } from '../../../types/present';
 import type { QuickAction } from '../../../types/quick_action';
 import type { Journal } from '../../../types/journal_api';
@@ -73,8 +72,8 @@ export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 			if (!journal) return [];
 
 			return [
-				createQuickAction('review-toggle', () => true, reviewDisplay(journal), () => toggleReviewedAt(this, pg)),
-				createQuickAction('review-status', () => isStatusActive(journal), statusDisplay(journal), () => applyReviewStatus(this, pg)),
+				{ id: 'review-toggle', isActive: () => true, display: reviewDisplay(journal), apply: () => toggleReviewedAt(this, pg) },
+				{ id: 'review-status', isActive: () => isStatusActive(journal), display: statusDisplay(journal), apply: () => applyReviewStatus(this, pg) },
 			].filter((action) => action.isActive());
 		},
 	};

@@ -1,4 +1,3 @@
-import { getErrorMessage } from './error';
 import type { Identifiable } from '../types/collection';
 
 // ===== Array Helpers =====
@@ -88,7 +87,7 @@ export function createLoadableCollectionState<T>(
 			try {
 				this.items = await loader();
 			} catch (err) {
-				this.error = getErrorMessage(err, fallbackMessage);
+				this.error = (err as Error).message;
 			} finally {
 				this.loading = false;
 			}

@@ -1,6 +1,6 @@
 import type { DisplaySpec, TagPresenter } from '../../types/present';
 import type { JournalTag } from '../../types/journal_api';
-import { normalizeTag } from '../../lib/tags';
+import { normalizeTag } from '../../lib/date';
 
 const reasonIcons = { trend: '📈', default: '⚡' };
 

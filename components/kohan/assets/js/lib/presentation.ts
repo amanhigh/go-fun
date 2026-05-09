@@ -1,4 +1,4 @@
-import { normalizeTag } from './tags';
+import { normalizeTag } from './date';
 import type { JournalTag, JournalTimeframe } from '../types/journal_api';
 import type { DisplaySpec, PresentationConcern } from '../types/presentation_concern';
 

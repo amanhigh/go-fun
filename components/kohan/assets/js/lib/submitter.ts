@@ -1,5 +1,3 @@
-import { getErrorMessage } from './error';
-
 // ===== Types =====
 
 export type SubmitMessages = {
@@ -54,7 +52,7 @@ export function createSubmitter(): Submitter {
 				this.message = messages.success ?? '';
 				return true;
 			} catch (err) {
-				this.setError(getErrorMessage(err, messages.error));
+				this.setError((err as Error).message);
 				return false;
 			} finally {
 				this.submitting = false;
