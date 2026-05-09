@@ -18,7 +18,7 @@ templ JournalDetailHeader() {
 					<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + current.journal.id"></div>
 					@components.DeleteButton(components.DeleteButtonProps{
 						OnClickExpr:  "header.deleteJournal()",
-						DisabledExpr: "header.deleting",
+						DisabledExpr: "header.submitting",
 						AriaLabel:    "Delete Journal",
 						Title:        "Delete Journal",
 						Class:        "h-9 w-9",

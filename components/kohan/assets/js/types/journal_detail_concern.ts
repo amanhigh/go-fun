@@ -1,4 +1,5 @@
 import type { Journal, JournalImage } from './journal_api';
+import type { Feedback } from '../lib/feedback';
 import type { JournalClient } from '../client/journal';
 import type { JournalNoteClient } from '../client/journal_note';
 import type { JournalTagClient } from '../client/journal_tag';
@@ -37,8 +38,7 @@ export type JournalConcern = {
 	hasError(): boolean;
 };
 
-export type JournalHeaderConcern = {
-	deleting: boolean;
+export type JournalHeaderConcern = Feedback & {
 	deleteJournal(): Promise<void>;
 };
 
