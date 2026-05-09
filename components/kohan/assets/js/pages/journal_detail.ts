@@ -5,7 +5,7 @@ import type { JournalDetailPageData } from '../types/journal_detail_concern';
 import { NewPresentationConcern } from '../lib/presentation';
 import { NewCurrentJournalConcern } from '../concern/journal/detail/current_journal';
 import { NewHeaderConcern } from '../concern/journal/detail/header';
-import { createImageHelper, NewImagesConcern } from '../concern/journal/detail/images';
+import { NewImagesConcern } from '../concern/journal/detail/images';
 import { NewImagePreviewConcern } from '../concern/journal/detail/image_preview';
 import { NewSidebarConcern } from '../concern/journal/sidebar';
 import '../types/platform';
@@ -13,7 +13,6 @@ import '../types/platform';
 function createJournalDetailPageData(journalId = '') {
 	let page = {} as JournalDetailPageData;
 	const pg = () => page;
-	const image = createImageHelper();
 
 	page.client = NewJournalClient();
 	page.noteClient = NewJournalNoteClient();
@@ -22,7 +21,7 @@ function createJournalDetailPageData(journalId = '') {
 	page.presentation = NewPresentationConcern();
 	page.current = NewCurrentJournalConcern(pg);
 	page.header = NewHeaderConcern(pg);
-	page.images = NewImagesConcern(pg, image);
+	page.images = NewImagesConcern(pg);
 	page.preview = NewImagePreviewConcern(pg);
 	page.sidebar = NewSidebarConcern(pg);
 

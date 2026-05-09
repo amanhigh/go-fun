@@ -37,10 +37,10 @@ templ JournalDetailImageTile() {
 			Class:   "group block w-full h-auto p-0 items-start justify-start overflow-hidden rounded-2xl border border-border bg-muted text-left",
 			Attributes: templ.Attributes{
 				"x-on:click":   "preview.open(index)",
-				"x-bind:title": "images.tileTitle(image)",
+				"x-bind:title": "image.file_name",
 			},
 		}) {
-			<img class="block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]" x-bind:src="images.tileSrc(image)" x-bind:alt="images.tileAlt(image)" x-on:error="$el.style.opacity='0.35'"/>
+			<img class="block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]" x-bind:src="images.src(image)" x-bind:alt="images.label(image)" x-on:error="$el.style.opacity='0.35'"/>
 		}
 	</div>
 }

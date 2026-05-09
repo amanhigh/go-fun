@@ -128,8 +128,8 @@ var _ = Describe("Journal Detail Page Tests", func() {
 		})
 
 		It("should render mouse navigation bindings for preview mode", func() {
-			Expect(html).To(ContainSubstring(`x-on:click.stop="preview.next(true)"`))
-			Expect(html).To(ContainSubstring(`x-on:contextmenu.prevent.stop="preview.prev(true)"`))
+			Expect(html).To(ContainSubstring(`x-on:click.stop="preview.wrapNext()"`))
+			Expect(html).To(ContainSubstring(`x-on:contextmenu.prevent.stop="preview.wrapPrev()"`))
 			Expect(html).To(ContainSubstring(`aria-label="Preview Image Navigation Overlay"`))
 		})
 	})
@@ -149,7 +149,9 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-bind:class="presentation.timeframe(image.timeframe).class"`))
 			Expect(html).To(ContainSubstring(`x-text="image.timeframe"`))
 			Expect(html).To(ContainSubstring(`x-on:click="preview.open(index)"`))
-			Expect(html).To(ContainSubstring(`x-bind:title="images.tileTitle(image)"`))
+			Expect(html).To(ContainSubstring(`x-bind:title="image.file_name"`))
+			Expect(html).To(ContainSubstring(`x-bind:src="images.src(image)"`))
+			Expect(html).To(ContainSubstring(`x-bind:alt="images.label(image)"`))
 			Expect(html).To(ContainSubstring(`class="block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]"`))
 			Expect(html).ToNot(ContainSubstring(`aspect-[15/10]`))
 			Expect(html).ToNot(ContainSubstring(`object-cover`))

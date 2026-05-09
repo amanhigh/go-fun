@@ -5,44 +5,49 @@ export function NewImagePreviewConcern(pg: JournalDetailPageProvider) {
 	return {
 		index: -1,
 
-		open(idx: number) { pg().preview.index = idx; },
-		close() { pg().preview.index = -1; },
+		open(idx: number) { this.index = idx; },
+		close() { this.index = -1; },
 
 		current(): JournalImage | null {
-			return pg().images.sorted()[pg().preview.index] ?? null;
+			const images = pg().images.sorted();
+			return images[this.index] ?? null;
 		},
 		timeframe() { return this.current()?.timeframe ?? ''; },
 		src() {
 			const img = this.current();
-			return img ? pg().images.resolveImageSrc(img.file_name, img.created_at) : '';
+			return img ? pg().images.src(img) : '';
 		},
 		label() {
 			const img = this.current();
-			return img ? `${img.timeframe} • ${img.file_name}` : '';
+			return img ? pg().images.label(img) : '';
 		},
 		counter() {
 			const total = pg().images.sorted().length;
-			return `${pg().preview.index + 1} / ${total}`;
+			return `${this.index + 1} / ${total}`;
 		},
 
 		hasPreview() {
-			const idx = pg().preview.index;
-			return idx >= 0 && idx < pg().images.sorted().length;
+			const images = pg().images.sorted();
+			return this.index >= 0 && this.index < images.length;
 		},
-		canPrev() { return pg().preview.index > 0; },
+		canPrev() { return this.index > 0; },
 		canNext() {
-			const idx = pg().preview.index;
-			return idx >= 0 && idx < pg().images.sorted().length - 1;
+			const images = pg().images.sorted();
+			return this.index >= 0 && this.index < images.length - 1;
 		},
-		prev(this: any, wrap = false) {
-			const total = pg().images.sorted().length;
-			if (this.canPrev()) pg().preview.index--;
-			else if (wrap && total > 0) pg().preview.index = total - 1;
+		prev() {
+			if (this.canPrev()) this.index--;
 		},
-		next(this: any, wrap = false) {
+		next() {
+			if (this.canNext()) this.index++;
+		},
+		wrapPrev() {
 			const total = pg().images.sorted().length;
-			if (this.canNext()) pg().preview.index++;
-			else if (wrap && total > 0) pg().preview.index = 0;
+			if (total > 0) this.index = this.index > 0 ? this.index - 1 : total - 1;
+		},
+		wrapNext() {
+			const total = pg().images.sorted().length;
+			if (total > 0) this.index = this.index < total - 1 ? this.index + 1 : 0;
 		},
 	};
 }

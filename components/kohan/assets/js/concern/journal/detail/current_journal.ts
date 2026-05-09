@@ -7,11 +7,7 @@ function normalizeJournal(journal: any) {
 		...journal,
 		images: journal.images ?? [],
 		tags: journal.tags ?? [],
-		notes: [...(journal.notes ?? [])].sort((left: any, right: any) => {
-			const leftTime = left.created_at ? new Date(left.created_at).getTime() : 0;
-			const rightTime = right.created_at ? new Date(right.created_at).getTime() : 0;
-			return rightTime - leftTime;
-		}),
+		notes: journal.notes ?? [],
 	};
 }
 

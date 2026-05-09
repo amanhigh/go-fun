@@ -143,7 +143,7 @@ func JournalDetailImageTile() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<img class=\"block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]\" x-bind:src=\"images.tileSrc(image)\" x-bind:alt=\"images.tileAlt(image)\" x-on:error=\"$el.style.opacity='0.35'\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<img class=\"block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]\" x-bind:src=\"images.src(image)\" x-bind:alt=\"images.label(image)\" x-on:error=\"$el.style.opacity='0.35'\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -155,7 +155,7 @@ func JournalDetailImageTile() templ.Component {
 			Class:   "group block w-full h-auto p-0 items-start justify-start overflow-hidden rounded-2xl border border-border bg-muted text-left",
 			Attributes: templ.Attributes{
 				"x-on:click":   "preview.open(index)",
-				"x-bind:title": "images.tileTitle(image)",
+				"x-bind:title": "image.file_name",
 			},
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

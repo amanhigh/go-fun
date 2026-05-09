@@ -43,12 +43,10 @@ export type JournalHeaderConcern = {
 };
 
 export type JournalImagesConcern = {
-	resolveImageSrc(fileName: string, createdAt?: string): string;
+	src(image: JournalImage): string;
+	label(image: JournalImage | null | undefined): string;
 	countLabel(): string;
 	sorted(): JournalImage[];
-	tileTitle(imageItem: JournalImage): string;
-	tileSrc(imageItem: JournalImage): string;
-	tileAlt(imageItem: JournalImage): string;
 };
 
 export type ImagePreviewConcern = {
