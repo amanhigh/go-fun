@@ -1,3 +1,5 @@
+import type { JournalTag } from './journal_api';
+
 export type DisplayValue = string | null | undefined;
 
 export type DisplaySpec = {
@@ -6,13 +8,19 @@ export type DisplaySpec = {
 	class: string;
 };
 
-export interface Presenter {
-	spec(value: DisplayValue): DisplaySpec;
-	label(value: DisplayValue): string;
+export interface Presenter<T = DisplayValue> {
+	spec(value: T): DisplaySpec;
+	label(value: T): string;
+}
+
+export interface TagPresenter extends Presenter<JournalTag> {
+	managementSpec(value: DisplayValue): DisplaySpec;
+	managementLabel(value: DisplayValue): string;
 }
 
 export interface PresentationConcern {
 	status: Presenter;
 	type: Presenter;
 	timeframe: Presenter;
+	tag: TagPresenter;
 }

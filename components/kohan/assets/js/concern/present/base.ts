@@ -1,6 +1,6 @@
 import type { DisplaySpec, DisplayValue, Presenter } from '../../types/present';
 
-export abstract class BasePresenter implements Presenter {
+export abstract class BasePresenter implements Presenter<DisplayValue> {
 	protected abstract catalog: Record<string, DisplaySpec>;
 	protected abstract fallbackSpec: DisplaySpec;
 

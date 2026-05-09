@@ -224,8 +224,8 @@ func takenTagActions() templ.Component {
 			Attributes: templ.Attributes{
 				"x-on:click":      "sidebar.takenTag.submit(tag.text)",
 				"x-bind:disabled": "sidebar.takenTag.submitting || sidebar.takenTag.hasTag(tag.text)",
-				"x-bind:class":    "tag.class",
-				"x-text":          "tag.text",
+				"x-bind:class":    "present.tag.managementSpec(tag.text).class",
+				"x-text":          "present.tag.managementLabel(tag.text)",
 			},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -572,7 +572,7 @@ func journalDetailTagRow() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, TextExpr: "[tag.tag, tag.override, tag.type].filter(Boolean).join(' • ')", Class: "font-semibold"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, TextExpr: "present.tag.label(tag)", Class: "font-semibold"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
