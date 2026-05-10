@@ -105,9 +105,9 @@ func journalDetailActionCard() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.reviewActions.submitter.hasMessage()",
+			ShowExpr:  "sidebar.reviewActions.submitter.hasError()",
 			ClassExpr: "sidebar.reviewActions.submitter.messageClass",
-			TextExpr:  "sidebar.reviewActions.submitter.message",
+			TextExpr:  "sidebar.reviewActions.submitter.error",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -163,10 +163,10 @@ func journalDetailActionBar() templ.Component {
 			}
 			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{
 				OnClickExpr: "action.apply()",
-				TextExpr:    "sidebar.reviewActions.submitter.submitting ? 'Saving...' : action.display.text",
+				TextExpr:    "sidebar.reviewActions.submitter.isBusy() ? 'Saving...' : action.display.text",
 				ClassExpr:   "action.display.class",
 				Attributes: templ.Attributes{
-					"x-bind:disabled": "sidebar.reviewActions.submitter.submitting",
+					"x-bind:disabled": "sidebar.reviewActions.submitter.isBusy()",
 				},
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -223,7 +223,7 @@ func takenTagActions() templ.Component {
 			Class:   "rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide",
 			Attributes: templ.Attributes{
 				"x-on:click":      "sidebar.takenTag.submit(tag.tag)",
-				"x-bind:disabled": "sidebar.takenTag.submitter.submitting || sidebar.takenTag.hasTag(tag.tag)",
+				"x-bind:disabled": "sidebar.takenTag.submitter.isBusy() || sidebar.takenTag.hasTag(tag.tag)",
 				"x-bind:class":    "present.tag.spec(tag).class",
 				"x-text":          "present.tag.label(tag)",
 			},
@@ -236,9 +236,9 @@ func takenTagActions() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.takenTag.submitter.hasMessage()",
+			ShowExpr:  "sidebar.takenTag.submitter.hasError()",
 			ClassExpr: "sidebar.takenTag.submitter.messageClass",
-			TextExpr:  "sidebar.takenTag.submitter.message",
+			TextExpr:  "sidebar.takenTag.submitter.error",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -375,9 +375,9 @@ func journalDetailTagsCard() templ.Component {
 					return templ_7745c5c3_Err
 				}
 				templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-					ShowExpr:  "sidebar.reasonTagForm.submitter.hasMessage()",
+					ShowExpr:  "sidebar.reasonTagForm.submitter.hasError()",
 					ClassExpr: "sidebar.reasonTagForm.submitter.messageClass",
-					TextExpr:  "sidebar.reasonTagForm.submitter.message",
+					TextExpr:  "sidebar.reasonTagForm.submitter.error",
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -457,8 +457,8 @@ func journalDetailTagForm() templ.Component {
 		}
 		templ_7745c5c3_Err = components.AsyncButton(components.AsyncButtonProps{
 			OnClickExpr:  "sidebar.reasonTagForm.submit()",
-			DisabledExpr: "sidebar.reasonTagForm.submitter.submitting || !sidebar.reasonTagForm.canSubmit()",
-			LoadingExpr:  "sidebar.reasonTagForm.submitter.submitting",
+			DisabledExpr: "sidebar.reasonTagForm.submitter.isBusy() || !sidebar.reasonTagForm.canSubmit()",
+			LoadingExpr:  "sidebar.reasonTagForm.submitter.isBusy()",
 			LoadingText:  "'Saving reason tag...'",
 			DefaultText:  "'Add Reason Tag'",
 		}).Render(ctx, templ_7745c5c3_Buffer)

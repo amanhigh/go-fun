@@ -291,8 +291,8 @@ func journalDetailNoteCard() templ.Component {
 				}
 				templ_7745c5c3_Err = components.AsyncButton(components.AsyncButtonProps{
 					OnClickExpr:  "sidebar.noteForm.submit()",
-					DisabledExpr: "sidebar.noteForm.submitter.submitting || !sidebar.noteForm.canSubmit()",
-					LoadingExpr:  "sidebar.noteForm.submitter.submitting",
+					DisabledExpr: "sidebar.noteForm.submitter.isBusy() || !sidebar.noteForm.canSubmit()",
+					LoadingExpr:  "sidebar.noteForm.submitter.isBusy()",
 					LoadingText:  "'Saving note...'",
 					DefaultText:  "'Add Note'",
 				}).Render(ctx, templ_7745c5c3_Buffer)
@@ -304,9 +304,9 @@ func journalDetailNoteCard() templ.Component {
 					return templ_7745c5c3_Err
 				}
 				templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-					ShowExpr:  "sidebar.noteForm.submitter.hasMessage()",
+					ShowExpr:  "sidebar.noteForm.submitter.hasError()",
 					ClassExpr: "sidebar.noteForm.submitter.messageClass",
-					TextExpr:  "sidebar.noteForm.submitter.message",
+					TextExpr:  "sidebar.noteForm.submitter.error",
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

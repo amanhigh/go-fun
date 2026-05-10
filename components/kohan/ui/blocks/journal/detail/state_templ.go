@@ -62,7 +62,7 @@ func JournalDetailStateSection() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "current.loader.isLoading()"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "current.loader.isBusy()"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -88,7 +88,7 @@ func JournalDetailStateSection() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!current.loader.isLoading() && !current.loader.hasError() && !current.journal"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!current.loader.isBusy() && !current.loader.hasError() && !current.journal"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

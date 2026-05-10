@@ -1092,7 +1092,7 @@ func JournalTableSection() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "table.loader.isLoading()"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var38), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "table.loader.isBusy()"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var38), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1118,7 +1118,7 @@ func JournalTableSection() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!table.loader.isLoading() && !table.loader.hasError() && table.isEmpty()"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var39), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!table.loader.isBusy() && !table.loader.hasError() && table.isEmpty()"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var39), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1243,7 +1243,7 @@ func JournalTable() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = card.Card(card.Props{Class: "rounded-none border-x-0 border-b-0 border-t border-t-sky-200/70 shadow-sm", Attributes: templ.Attributes{"x-show": "!table.loader.isLoading() && !table.loader.hasError() && !table.isEmpty()"}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var41), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = card.Card(card.Props{Class: "rounded-none border-x-0 border-b-0 border-t border-t-sky-200/70 shadow-sm", Attributes: templ.Attributes{"x-show": "!table.loader.isBusy() && !table.loader.hasError() && !table.isEmpty()"}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var41), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

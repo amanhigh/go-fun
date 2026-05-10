@@ -40,7 +40,7 @@ var _ = Describe("Journal Page Tests", func() {
 			Expect(html).To(ContainSubstring("x-init=\"init()\""))
 			Expect(html).To(ContainSubstring("Loading journals..."))
 			Expect(html).To(ContainSubstring("journal in table.journals"))
-			Expect(html).To(ContainSubstring(`table.loader.isLoading()`))
+			Expect(html).To(ContainSubstring(`table.loader.isBusy()`))
 		})
 	})
 
@@ -98,7 +98,7 @@ var _ = Describe("Journal Page Tests", func() {
 		It("should render mutually exclusive table section states", func() {
 			Expect(html).To(ContainSubstring("Loading journals..."))
 			Expect(html).To(ContainSubstring("No journals found."))
-			Expect(html).To(ContainSubstring(`table.loader.isLoading()`))
+			Expect(html).To(ContainSubstring(`table.loader.isBusy()`))
 			Expect(html).To(ContainSubstring(`table.loader.hasError()`))
 			Expect(html).To(ContainSubstring(`table.loader.error`))
 		})

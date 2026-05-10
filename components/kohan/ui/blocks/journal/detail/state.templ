@@ -10,14 +10,14 @@ import (
 // ============================================================
 
 templ JournalDetailStateSection() {
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "current.loader.isLoading()"}) {
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "current.loader.isBusy()"}) {
 		<div class="flex items-center justify-center gap-2">
 			@widgets.Spinner(widgets.SpinnerProps{Size: widgets.SpinnerSizeSm, Class: "text-sky-700"})
 			<span>Loading journal details...</span>
 		</div>
 	}
 	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxError, ShowExpr: "current.loader.hasError()", TextExpr: "current.loader.error", RetryExpr: "current.loadJournal()"}) {}
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!current.loader.isLoading() && !current.loader.hasError() && !current.journal"}) {
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!current.loader.isBusy() && !current.loader.hasError() && !current.journal"}) {
 		No journal details available.
 	}
 }
