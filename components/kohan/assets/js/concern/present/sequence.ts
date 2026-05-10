@@ -4,6 +4,7 @@ import { BasePresenter } from './base';
 const sequenceDisplayMap: Record<string, DisplaySpec> = {
 	MWD: { icon: '🕐', text: 'MWD', class: '' },
 	YR: { icon: '📅', text: 'YR', class: '' },
+	WDH: { icon: '📅', text: 'WDH', class: '' },
 };
 
 class SequencePresenterImpl extends BasePresenter {
@@ -11,7 +12,7 @@ class SequencePresenterImpl extends BasePresenter {
 	protected fallbackSpec: DisplaySpec = { icon: '📅', text: '', class: '' };
 
 	spec(value: DisplayValue): DisplaySpec {
-		const key = this.normalize(value);
+		const key = value ?? '';
 		if (!key) return { text: '', class: '' };
 		return this.catalog[key] ?? { icon: '📅', text: key, class: '' };
 	}

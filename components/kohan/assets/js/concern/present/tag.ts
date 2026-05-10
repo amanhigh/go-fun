@@ -1,9 +1,6 @@
 import type { DisplaySpec, TagPresenter } from '../../types/present';
 import type { JournalTag } from '../../types/journal_api';
-
-function tagKey(value: string): string {
-	return value.trim().toUpperCase();
-}
+import { JournalTagType } from '../../types/journal_api';
 
 const reasonIcons = { trend: '📈', default: '⚡' };
 
@@ -30,13 +27,12 @@ function fallbackTagText(tag: JournalTag): string {
 
 class TagPresenterImpl implements TagPresenter {
 	spec(tag: JournalTag): DisplaySpec {
-		const type = tagKey(tag.type ?? '');
-		switch (type) {
-			case 'REASON':
+		switch (tag.type) {
+			case JournalTagType.REASON:
 				return this.reasonSpec(tag);
-			case 'DIRECTION':
+			case JournalTagType.DIRECTION:
 				return this.directionSpec(tag);
-			case 'MANAGEMENT':
+			case JournalTagType.MANAGEMENT:
 				return this.managementTagSpec(tag);
 			default:
 				return this.fallbackSpec(tag);
@@ -60,7 +56,7 @@ class TagPresenterImpl implements TagPresenter {
 	}
 
 	private managementTagSpec(tag: JournalTag): DisplaySpec {
-		const key = tagKey(tag.tag ?? '');
+		const key = tag.tag ?? '';
 		return managementDisplayMap[key] ?? { icon: '🔧', text: key, class: '' };
 	}
 

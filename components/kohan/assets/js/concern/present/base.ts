@@ -4,16 +4,12 @@ export abstract class BasePresenter implements Presenter<DisplayValue> {
 	protected abstract catalog: Record<string, DisplaySpec>;
 	protected abstract fallbackSpec: DisplaySpec;
 
-	protected normalize(value: DisplayValue): string {
-		return (value ?? '').trim().toUpperCase();
-	}
-
 	protected fallbackText(_value: DisplayValue, key: string): string {
 		return key || this.fallbackSpec.text;
 	}
 
 	spec(value: DisplayValue): DisplaySpec {
-		const key = this.normalize(value);
+		const key = value ?? '';
 		return this.catalog[key] ?? { ...this.fallbackSpec, text: this.fallbackText(value, key) };
 	}
 
