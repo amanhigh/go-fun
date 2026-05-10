@@ -1102,7 +1102,7 @@ func JournalTableSection() templ.Component {
 		})
 		templ_7745c5c3_Err = components.Loader(components.LoaderProps{
 			Loader:       "table.loader",
-			ReadyExpr:    "table.hasItems()",
+			ReadyExpr:    "table.items.length",
 			EmptyMessage: "No journals found.",
 			RetryExpr:    "table.load()",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var38), templ_7745c5c3_Buffer)

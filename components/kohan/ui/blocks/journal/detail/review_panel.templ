@@ -22,7 +22,7 @@ templ journalDetailQueueCard() {
 		@card.Content(card.ContentProps{Class: "space-y-2 pt-0"}) {
 			@components.Loader(components.LoaderProps{
 				Loader:       "sidebar.reviewQueue.loader",
-				ReadyExpr:    "sidebar.reviewQueue.hasItems()",
+				ReadyExpr:    "sidebar.reviewQueue.items.length",
 				EmptyMessage: "All caught up — no pending reviews.",
 				RetryExpr:    "sidebar.reviewQueue.load()",
 			}) {
