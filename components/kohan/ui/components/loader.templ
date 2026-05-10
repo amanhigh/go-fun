@@ -12,7 +12,7 @@ import (
 // collection-backed and single-object flows.
 //
 // Loader   — JS expression for the loader state object (e.g. "sidebar.reviewQueue.loader").
-// ReadyExpr — JS expression for the content-ready condition (e.g. "table.items.length" or "journal.detail").
+// ReadyExpr — JS expression for the content-ready condition (e.g. "table.hasItems()" or "journal.detail").
 // RetryExpr — JS expression called on retry click (e.g. "table.load()").
 // Children  — rendered when idle (not busy, no error) and ReadyExpr is truthy.
 

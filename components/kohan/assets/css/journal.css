@@ -27,11 +27,11 @@
 
   /* --- Filter Chips --- */
 
-  .filter-chip-sky {
+  .filter-chip-blue {
     @apply border border-sky-200 bg-sky-100 text-sky-800;
   }
 
-  .filter-chip-emerald {
+  .filter-chip-green {
     @apply border border-emerald-200 bg-emerald-100 text-emerald-800;
   }
 

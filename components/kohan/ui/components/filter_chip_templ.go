@@ -13,49 +13,16 @@ import (
 
 // FilterChipProps configures a FilterChip display element.
 //
-//	Tone  — semantic color variant (controls bg/text/border via CSS class).
-//	Class — layout/shape overrides only (e.g. "rounded-full px-3 py-1 text-xs").
-//	Attributes — escape hatch for non-standard Alpine bindings only.
+//	Tone     — semantic color variant (controls bg/text/border via CSS class).
+//	TextExpr — Alpine expression for badge text content (x-text).
+//	ShowExpr — Alpine expression for visibility (x-show).
+//	Class    — layout/shape overrides only (e.g. "rounded-full px-3 py-1 text-xs").
 type FilterChipProps struct {
 	// TODO: Cover Component Package with Test
-	TextExpr   string
-	Tone       Tone
-	Class      string
-	Attributes templ.Attributes
-	ShowExpr   string
-}
-
-func filterChipToneClass(tone Tone) string {
-	switch tone {
-	case ToneBlue:
-		return "filter-chip-sky"
-	case ToneGreen:
-		return "filter-chip-emerald"
-	case ToneRose:
-		return "filter-chip-rose"
-	case ToneViolet:
-		return "filter-chip-violet"
-	case ToneAmber:
-		return "filter-chip-amber"
-	case ToneSlate:
-		return "filter-chip-slate"
-	default:
-		return "filter-chip-slate"
-	}
-}
-
-func filterChipAttrs(props FilterChipProps) templ.Attributes {
-	attrs := templ.Attributes{}
-	for key, value := range props.Attributes {
-		attrs[key] = value
-	}
-	if props.ShowExpr != "" {
-		attrs["x-show"] = props.ShowExpr
-	}
-	if props.TextExpr != "" {
-		attrs["x-text"] = props.TextExpr
-	}
-	return attrs
+	TextExpr string
+	Tone     Tone
+	ShowExpr string
+	Class    string
 }
 
 func FilterChip(props FilterChipProps) templ.Component {
@@ -80,9 +47,16 @@ func FilterChip(props FilterChipProps) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = badge.Badge(badge.Props{
-			Variant:    badge.VariantSecondary,
-			Class:      filterChipToneClass(props.Tone) + " " + props.Class,
-			Attributes: filterChipAttrs(props),
+			Variant: badge.VariantSecondary,
+			Class:   "filter-chip-" + string(props.Tone) + " " + props.Class,
+			Attributes: func() templ.Attributes {
+				attrs := templ.Attributes{}
+				if props.ShowExpr != "" {
+					attrs["x-show"] = props.ShowExpr
+				}
+				attrs["x-text"] = props.TextExpr
+				return attrs
+			}(),
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
