@@ -67,8 +67,6 @@ export type JournalFilterConcern = JournalFilterValues & {
 	datePreset: DatePresetName;
 	clear(): void;
 	hasActiveState(): boolean;
-	toggleType(): void;
-	typeToggle(): { label: string; className: string; nextType: JournalType | '' };
 	toggleSort(field: JournalSortBy): void;
 	applyFilters(): void;
 	applyManualFilters(): void;

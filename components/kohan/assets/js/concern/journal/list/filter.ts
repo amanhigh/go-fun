@@ -1,23 +1,6 @@
-import { JournalType, JournalStatus, JournalSortBy, JournalSortOrder } from '../../../types/api/journal/enums';
+import { JournalSortBy, JournalSortOrder } from '../../../types/api/journal/enums';
 import { ReviewedFilter } from '../../../types/api/journal/request';
 import type { JournalFilterValues, DatePresetName, JournalFilterConcern, JournalPageProvider } from '../../../types/journal/list';
-
-type TypeToggle = {
-	label: string;
-	className: string;
-	nextType: JournalType | '';
-};
-
-const allToggleSpec: { label: string; className: string } = {
-	label: 'All',
-	className: 'journal-display-default',
-};
-
-const typeTransitionMap: Record<string, { nextType: JournalType | '' }> = {
-	'': { nextType: JournalType.TAKEN },
-	[JournalType.TAKEN]: { nextType: JournalType.REJECTED },
-	[JournalType.REJECTED]: { nextType: '' },
-};
 
 const journalFilterDefaults: JournalFilterValues = {
 	ticker: '',
@@ -43,9 +26,6 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 			if (this.datePreset !== '') return true;
 			return (Object.keys(journalFilterDefaults) as (keyof JournalFilterValues)[]).some((field) => this[field] !== journalFilterDefaults[field]);
 		},
-		typeToggle() {
-			return resolveTypeToggle(pg, this.type);
-		},
 		applyFilters() {
 			pg().pagination.resetPage();
 			pg().filterUrl.filterToUrl();
@@ -55,10 +35,6 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 			pg().presets.clearActiveReviewPreset();
 			this.datePreset = '';
 			this.applyFilters();
-		},
-		toggleType() {
-			this.type = this.typeToggle().nextType;
-			this.applyManualFilters();
 		},
 		toggleSort(field: JournalSortBy) {
 			if (this.sortBy !== field) {
@@ -75,17 +51,3 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 		},
 	} as JournalFilterConcern;
 }
-
-export function resolveTypeToggle(pg: JournalPageProvider, currentType: JournalType | ''): TypeToggle {
-	const transition = typeTransitionMap[currentType] ?? typeTransitionMap[''];
-	if (transition.nextType === '') {
-		return { label: allToggleSpec.label, className: allToggleSpec.className, nextType: '' };
-	}
-	return {
-		label: pg().present.type.label(transition.nextType),
-		className: pg().present.type.spec(transition.nextType).class,
-		nextType: transition.nextType,
-	};
-}
-
-

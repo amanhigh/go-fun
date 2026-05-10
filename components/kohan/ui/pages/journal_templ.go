@@ -296,7 +296,7 @@ func JournalQuickFilters() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{TextExpr: "filter.typeToggle().label", OnClickExpr: "filter.toggleType()", ClassExpr: "filter.typeToggle().className"}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{TextExpr: "quick.type.button().label", OnClickExpr: "quick.type.toggle()", ClassExpr: "quick.type.button().className"}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

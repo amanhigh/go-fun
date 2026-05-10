@@ -14,5 +14,6 @@ export interface QuickFilterButton {
 }
 
 export type QuickConcern = {
+	type: QuickFilterButton;
 	status: QuickFilterButton;
 };
