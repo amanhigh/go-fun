@@ -7,15 +7,19 @@ export function NewTableConcern(pg: JournalPageProvider): JournalTableConcern {
 		journals: [],
 		loader: createLoader(),
 		async loadJournals() {
-			await this.loader.run(async () => {
-				const page = pg();
-				const pagination = page.pagination;
-				const response = await page.client.list(pagination.getOffset(), pagination.getPageSize(), page.filter);
-				const data = response.data ?? {};
-				this.journals = data.journals ?? [];
-				pagination.setTotalItems(data.metadata?.total ?? this.journals.length);
-				pagination.setPageFromOffset(data.metadata?.offset ?? 0);
-			}, { error: 'Unable to load journals.' });
+			const page = pg();
+			const pagination = page.pagination;
+
+			const loaded = await this.loader.loadData(
+				() => page.client.list(pagination.getOffset(), pagination.getPageSize(), page.filter),
+				{ error: 'Unable to load journals.' },
+			);
+
+			if (!loaded) return;
+
+			this.journals = loaded.result.journals ?? [];
+			pagination.setTotalItems(loaded.metadata?.total ?? this.journals.length);
+			pagination.setPageFromOffset(loaded.metadata?.offset ?? 0);
 		},
 		isEmpty() { return this.journals.length === 0; },
 	};
