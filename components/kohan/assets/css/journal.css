@@ -13,6 +13,10 @@
     @apply border-rose-300 bg-rose-50/70 text-rose-700;
   }
 
+  .statebox-success {
+    @apply border-emerald-300 bg-emerald-50/70 text-emerald-700;
+  }
+
   .statebox-empty {
     @apply border-violet-300 bg-violet-50/70 text-violet-700;
   }

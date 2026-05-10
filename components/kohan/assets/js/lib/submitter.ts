@@ -1,4 +1,4 @@
-import { createRunnerState, type Runner } from './runner';
+import { createRunnerState, errorVariant, type Runner } from './runner';
 
 // ===== Types =====
 
@@ -9,6 +9,7 @@ export type SubmitMessages = {
 // ===== Submitter Type =====
 
 export type Submitter = Runner & {
+	hasError(): boolean;
 	run(action: () => Promise<void>, messages: SubmitMessages): Promise<boolean>;
 };
 
@@ -17,6 +18,10 @@ export type Submitter = Runner & {
 export function createSubmitter(): Submitter {
 	return {
 		...createRunnerState(),
+
+		hasError(this: Submitter) {
+			return this.variant === errorVariant;
+		},
 
 		async run(this: Submitter, action: () => Promise<void>, messages: SubmitMessages): Promise<boolean> {
 			const outcome = await this.tryRun(action);

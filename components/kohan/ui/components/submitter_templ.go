@@ -14,7 +14,8 @@ import (
 // ============================================================
 // SUBMITTER WRAPPER
 // ============================================================
-// Shows a spinner during submission, then feedback message on result.
+// Shows a spinner during submission, then a statebox-styled
+// feedback message on success or error.
 // Submitter is the JS expression for the submitter state object (e.g. "header.submitter").
 
 type SubmitterProps struct {
@@ -49,7 +50,7 @@ func Submitter(props SubmitterProps) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(props.Submitter + ".isBusy()")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/submitter.templ`, Line: 18, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/submitter.templ`, Line: 19, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -63,14 +64,14 @@ func Submitter(props SubmitterProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><p class=\"text-sm\" x-show=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><div class=\"statebox-base\" x-show=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(props.Submitter + ".hasMessage()")
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs("!" + props.Submitter + ".isBusy() && " + props.Submitter + ".hasMessage()")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/submitter.templ`, Line: 21, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/submitter.templ`, Line: 22, Col: 112}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -81,28 +82,28 @@ func Submitter(props SubmitterProps) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(props.Submitter + ".variant")
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(props.Submitter + ".hasError() ? 'statebox-error' : 'statebox-success'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/submitter.templ`, Line: 21, Col: 108}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/submitter.templ`, Line: 22, Col: 201}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" x-text=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\"><div class=\"font-medium\" x-text=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(props.Submitter + ".message")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/submitter.templ`, Line: 21, Col: 148}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/submitter.templ`, Line: 23, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\"></p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\"></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

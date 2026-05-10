@@ -7,7 +7,8 @@ import (
 // ============================================================
 // SUBMITTER WRAPPER
 // ============================================================
-// Shows a spinner during submission, then feedback message on result.
+// Shows a spinner during submission, then a statebox-styled
+// feedback message on success or error.
 // Submitter is the JS expression for the submitter state object (e.g. "header.submitter").
 
 type SubmitterProps struct {
@@ -18,5 +19,7 @@ templ Submitter(props SubmitterProps) {
 	<div x-show={ props.Submitter + ".isBusy()" }>
 		@widgets.Spinner(widgets.SpinnerProps{Size: widgets.SpinnerSizeSm})
 	</div>
-	<p class="text-sm" x-show={ props.Submitter + ".hasMessage()" } x-bind:class={ props.Submitter + ".variant" } x-text={ props.Submitter + ".message" }></p>
+	<div class="statebox-base" x-show={ "!" + props.Submitter + ".isBusy() && " + props.Submitter + ".hasMessage()" } x-bind:class={ props.Submitter + ".hasError() ? 'statebox-error' : 'statebox-success'" }>
+		<div class="font-medium" x-text={ props.Submitter + ".message" }></div>
+	</div>
 }
