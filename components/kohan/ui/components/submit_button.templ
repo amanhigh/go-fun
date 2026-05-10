@@ -3,10 +3,10 @@ package components
 import "github.com/templui/templui/components/button"
 
 type SubmitButtonProps struct {
-	OnClickExpr    string
-	DisabledExpr   string
-	BusyExpr       string
 	Label          string
+	BusyExpr       string
+	DisabledExpr   string
+	OnClickExpr    string
 }
 
 templ SubmitButton(props SubmitButtonProps) {

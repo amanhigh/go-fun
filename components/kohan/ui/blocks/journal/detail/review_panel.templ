@@ -51,10 +51,10 @@ templ journalDetailNoteCard() {
 				Attributes:  templ.Attributes{"x-model": "sidebar.noteForm.content"},
 			})
 			@components.SubmitButton(components.SubmitButtonProps{
-				OnClickExpr:   "sidebar.noteForm.submit()",
-				DisabledExpr:  "sidebar.noteForm.submitter.isBusy() || !sidebar.noteForm.canSubmit()",
-				BusyExpr:      "sidebar.noteForm.submitter.isBusy()",
 				Label:         "Add Note",
+				BusyExpr:      "sidebar.noteForm.submitter.isBusy()",
+				DisabledExpr:  "sidebar.noteForm.submitter.isBusy() || !sidebar.noteForm.canSubmit()",
+				OnClickExpr:   "sidebar.noteForm.submit()",
 			})
 			@components.Submitter(components.SubmitterProps{Submitter: "sidebar.noteForm.submitter"})
 		}

@@ -97,10 +97,10 @@ templ journalDetailTagForm() {
 			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.override", "x-ref": "reasonTagOverride", "x-on:keydown.enter.prevent": "sidebar.reasonTagForm.submit()"},
 		})
 		@components.SubmitButton(components.SubmitButtonProps{
-			OnClickExpr:   "sidebar.reasonTagForm.submit()",
-			DisabledExpr:  "sidebar.reasonTagForm.submitter.isBusy() || !sidebar.reasonTagForm.canSubmit()",
-			BusyExpr:      "sidebar.reasonTagForm.submitter.isBusy()",
 			Label:         "Add Reason Tag",
+			BusyExpr:      "sidebar.reasonTagForm.submitter.isBusy()",
+			DisabledExpr:  "sidebar.reasonTagForm.submitter.isBusy() || !sidebar.reasonTagForm.canSubmit()",
+			OnClickExpr:   "sidebar.reasonTagForm.submit()",
 		})
 	</div>
 }

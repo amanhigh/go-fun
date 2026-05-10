@@ -12,10 +12,10 @@ import (
 )
 
 type SubmitButtonProps struct {
-	OnClickExpr  string
-	DisabledExpr string
-	BusyExpr     string
 	Label        string
+	BusyExpr     string
+	DisabledExpr string
+	OnClickExpr  string
 }
 
 func SubmitButton(props SubmitButtonProps) templ.Component {
