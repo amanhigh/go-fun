@@ -39,6 +39,8 @@ templ JournalDetailHeader() {
 				<div class="flex justify-between gap-6" x-show="sidebar.tags.all().length">
 					@JournalDetailReasonTags()
 					@JournalDetailDirectionalTags()
+					// FIXME: Management tags created via taken_tag.ts are synced to sidebar.tags via prepend()
+					// but never render in the header. Add JournalDetailManagementTags() section iterating sidebar.tags.management().
 				</div>
 			</div>
 		}

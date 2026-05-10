@@ -49,6 +49,9 @@ function isStatusActive(journal: Journal): boolean {
 	}
 }
 
+// FIXME: Add new QuickActions to transition journals to SUCCESS or FAIL status.
+// Currently only JUST_LOSS (TAKEN) / BROKEN (default) are supported via review-status.
+// Runner-up trades from RUNNING have no buttons for explicit SUCCESS/FAIL transitions.
 // ===== Async Action Handlers =====
 
 async function toggleReviewedAt(submitter: Submitter, pg: JournalDetailPageProvider): Promise<void> {
