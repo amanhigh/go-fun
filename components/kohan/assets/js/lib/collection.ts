@@ -12,7 +12,7 @@ export function removeById<T extends Identifiable>(items: T[], itemId: string): 
 
 // ===== Base Synced Collection =====
 
-export function createSyncedCollectionState<T extends Identifiable>() {
+export function createCollection<T extends Identifiable>() {
 	return {
 		items: [] as T[],
 
@@ -41,7 +41,7 @@ export function createDeletableSyncedCollectionState<T extends Identifiable>(
 	deleteItem: (itemId: string) => Promise<void>,
 ) {
 	return {
-		...createSyncedCollectionState<T>(),
+		...createCollection<T>(),
 		deletingId: '',
 
 		async delete(itemId: string) {
