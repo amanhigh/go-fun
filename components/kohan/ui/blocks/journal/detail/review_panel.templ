@@ -8,7 +8,7 @@ import (
 )
 
 templ JournalDetailReviewPanel() {
-	@commondetail.JournalDetailSection("Review", "Journal Review", "sidebar.state.reviewOpen", "sidebar.state.setReviewOpen($el.open)") {
+	@commondetail.JournalDetailSection("Review", "Face your trade. No hiding.", "sidebar.state.reviewOpen", "sidebar.state.setReviewOpen($el.open)") {
 		@journalDetailQueueCard()
 		@journalDetailNoteCard()
 	}
@@ -17,7 +17,7 @@ templ JournalDetailReviewPanel() {
 templ journalDetailQueueCard() {
 	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
 		@card.Header(card.HeaderProps{}) {
-			@card.Title(card.TitleProps{Class: "tracking-tight"}) { To Review }
+			@card.Title(card.TitleProps{Class: "tracking-tight"}) { The Lineup }
 		}
 		@card.Content(card.ContentProps{Class: "space-y-2 pt-0"}) {
 			@components.Loader(components.LoaderProps{
@@ -42,7 +42,7 @@ templ journalDetailQueueCard() {
 templ journalDetailNoteCard() {
 	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
 		@card.Header(card.HeaderProps{}) {
-			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Note }
+			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Speak Now }
 		}
 		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
 			@textarea.Textarea(textarea.Props{
