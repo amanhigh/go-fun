@@ -19,14 +19,11 @@ type QuickBarProps struct {
 //   TextExpr     — Alpine expression for button text content (x-text).
 //   OnClickExpr  — Alpine expression for click handler (x-on:click).
 //   DisabledExpr — Alpine expression for disabled state (x-bind:disabled).
-//   ClassExpr    — Alpine expression for dynamic class binding (x-bind:class).
-//   Class        — static layout overrides only.
+//   ClassExpr    — Alpine expression for class binding (x-bind:class); static classes use quoted strings.
 type QuickActionProps struct {
-	Label        string
 	TextExpr     string
 	OnClickExpr  string
 	DisabledExpr string
-	Class        string
 	ClassExpr    string
 }
 
@@ -49,20 +46,12 @@ templ QuickAction(props QuickActionProps) {
 		Variant: button.VariantOutline,
 		Type:    button.TypeButton,
 		Size:    button.SizeSm,
-		Class:   "h-8 rounded-md border px-2 text-xs font-medium shadow-sm transition-colors " + props.Class,
-		Attributes: func() templ.Attributes {
-			attrs := templ.Attributes{}
-			attrs["x-on:click"] = props.OnClickExpr
-			attrs["x-text"] = props.TextExpr
-			if props.ClassExpr != "" {
-				attrs["x-bind:class"] = props.ClassExpr
-			}
-			attrs["x-bind:disabled"] = props.DisabledExpr
-			return attrs
-		}(),
-	}) {
-		if props.TextExpr == "" {
-			{ props.Label }
-		}
-	}
+		Class:   "h-8 rounded-md border px-2 text-xs font-medium shadow-sm transition-colors",
+		Attributes: templ.Attributes{
+			"x-on:click":      props.OnClickExpr,
+			"x-text":          props.TextExpr,
+			"x-bind:class":    props.ClassExpr,
+			"x-bind:disabled": props.DisabledExpr,
+		},
+	}) {}
 }

@@ -28,14 +28,11 @@ type QuickBarProps struct {
 //	TextExpr     — Alpine expression for button text content (x-text).
 //	OnClickExpr  — Alpine expression for click handler (x-on:click).
 //	DisabledExpr — Alpine expression for disabled state (x-bind:disabled).
-//	ClassExpr    — Alpine expression for dynamic class binding (x-bind:class).
-//	Class        — static layout overrides only.
+//	ClassExpr    — Alpine expression for class binding (x-bind:class); static classes use quoted strings.
 type QuickActionProps struct {
-	Label        string
 	TextExpr     string
 	OnClickExpr  string
 	DisabledExpr string
-	Class        string
 	ClassExpr    string
 }
 
@@ -117,7 +114,7 @@ func QuickBar(props QuickBarProps) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(props.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 39, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 36, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -160,47 +157,18 @@ func QuickAction(props QuickActionProps) templ.Component {
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Var8 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-			if !templ_7745c5c3_IsBuffer {
-				defer func() {
-					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-					if templ_7745c5c3_Err == nil {
-						templ_7745c5c3_Err = templ_7745c5c3_BufErr
-					}
-				}()
-			}
-			ctx = templ.InitializeContext(ctx)
-			if props.TextExpr == "" {
-				var templ_7745c5c3_Var9 string
-				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(props.Label)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 65, Col: 16}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-			}
-			return nil
-		})
 		templ_7745c5c3_Err = button.Button(button.Props{
 			Variant: button.VariantOutline,
 			Type:    button.TypeButton,
 			Size:    button.SizeSm,
-			Class:   "h-8 rounded-md border px-2 text-xs font-medium shadow-sm transition-colors " + props.Class,
-			Attributes: func() templ.Attributes {
-				attrs := templ.Attributes{}
-				attrs["x-on:click"] = props.OnClickExpr
-				attrs["x-text"] = props.TextExpr
-				if props.ClassExpr != "" {
-					attrs["x-bind:class"] = props.ClassExpr
-				}
-				attrs["x-bind:disabled"] = props.DisabledExpr
-				return attrs
-			}(),
-		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
+			Class:   "h-8 rounded-md border px-2 text-xs font-medium shadow-sm transition-colors",
+			Attributes: templ.Attributes{
+				"x-on:click":      props.OnClickExpr,
+				"x-text":          props.TextExpr,
+				"x-bind:class":    props.ClassExpr,
+				"x-bind:disabled": props.DisabledExpr,
+			},
+		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
