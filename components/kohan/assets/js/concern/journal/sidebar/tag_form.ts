@@ -1,7 +1,8 @@
 import { createSubmitter } from '../../../lib/submitter';
-import { JournalTagType } from '../../../types/journal_api';
-import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
-import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
+import { JournalTagType } from '../../../types/api/journal/enums';
+import type { JournalTag } from '../../../types/api/journal/response';
+import type { JournalTagRequest } from '../../../types/api/journal/request';
+import type { JournalDetailPageProvider } from '../../../types/journal/detail';
 
 export function TagFormConcern(pg: JournalDetailPageProvider) {
 	return {

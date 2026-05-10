@@ -6,7 +6,7 @@ import { NewNotesConcern } from './notes';
 import { NewTagCollectionConcern } from './tags';
 import { TagFormConcern } from './tag_form';
 import { TakenTagConcern } from './taken_tag';
-import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
+import type { JournalDetailPageProvider } from '../../../types/journal/detail';
 
 export function NewSidebarConcern(pg: JournalDetailPageProvider) {
 	return {

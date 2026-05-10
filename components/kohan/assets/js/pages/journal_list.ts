@@ -1,5 +1,5 @@
 import { NewJournalClient } from '../client/journal';
-import type { JournalPageData } from '../types/journal_list_concern';
+import type { JournalPageData } from '../types/journal/list';
 import { NewPresentationConcern } from '../concern/present/factory';
 import { NewFilterUrlConcern } from '../concern/journal/list/filter_url';
 import { NewFilterConcern } from '../concern/journal/list/filter';

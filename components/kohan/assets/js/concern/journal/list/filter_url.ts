@@ -1,6 +1,7 @@
-import { JournalType, JournalStatus, JournalSequence, JournalSortBy, JournalSortOrder, ReviewedFilter } from '../../../types/journal_api';
-import type { JournalFilterKey } from '../../../types/journal_api';
-import type { JournalFilterUrlConcern, JournalPageProvider } from '../../../types/journal_list_concern';
+import { JournalType, JournalStatus, JournalSequence, JournalSortBy, JournalSortOrder } from '../../../types/api/journal/enums';
+import { ReviewedFilter } from '../../../types/api/journal/request';
+import type { JournalFilterKey } from '../../../types/api/journal/request';
+import type { JournalFilterUrlConcern, JournalPageProvider } from '../../../types/journal/list';
 
 // Direct mapping from filter state field to URL query key
 const journalQueryMap: Record<JournalFilterKey, string> = {

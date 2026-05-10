@@ -1,5 +1,5 @@
 import { createSubmitter } from '../../../lib/submitter';
-import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
+import type { JournalDetailPageProvider } from '../../../types/journal/detail';
 
 export function NewHeaderConcern(pg: JournalDetailPageProvider) {
 	return {

@@ -1,5 +1,5 @@
 import type { JournalTimeframe, JournalStatus, JournalNoteFormat, JournalTagType, JournalType, JournalSequence } from './enums';
-import type { PaginatedResponse } from '../api/common';
+import type { PaginatedResponse } from '../common';
 
 export type JournalImage = {
 	id: string;

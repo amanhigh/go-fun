@@ -1,6 +1,6 @@
 import { createDeletableSyncedCollectionState } from '../../../lib/collection';
-import type { JournalNote } from '../../../types/journal_api';
-import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
+import type { JournalNote } from '../../../types/api/journal/response';
+import type { JournalDetailPageProvider } from '../../../types/journal/detail';
 
 export function NewNotesConcern(pg: JournalDetailPageProvider) {
 	return {

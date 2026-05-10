@@ -1,7 +1,7 @@
 import { NewJournalClient } from '../client/journal';
 import { NewJournalNoteClient } from '../client/journal_note';
 import { NewJournalTagClient } from '../client/journal_tag';
-import type { JournalDetailPageData } from '../types/journal_detail_concern';
+import type { JournalDetailPageData } from '../types/journal/detail';
 import { NewPresentationConcern } from '../concern/present/factory';
 import { NewJournalConcern } from '../concern/journal/detail/journal';
 import { NewHeaderConcern } from '../concern/journal/detail/header';

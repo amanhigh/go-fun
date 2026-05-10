@@ -1,4 +1,4 @@
-import type { Envelope } from '../types/journal_api';
+import type { Envelope } from '../types/api/common';
 
 // ===== Loader Type =====
 

@@ -1,5 +1,5 @@
-import type { JournalDetail } from '../../../types/journal_api';
-import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
+import type { JournalDetail } from '../../../types/api/journal/response';
+import type { JournalDetailPageProvider } from '../../../types/journal/detail';
 
 function normalizeJournal(journal: unknown): JournalDetail | null {
 	if (!journal) return null;

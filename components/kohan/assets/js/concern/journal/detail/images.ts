@@ -1,6 +1,6 @@
-import type { JournalImage, JournalTimeframe } from '../../../types/journal_api';
-import type { JournalImageView } from '../../../types/journal_detail_concern';
-import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
+import type { JournalImage } from '../../../types/api/journal/response';
+import type { JournalTimeframe } from '../../../types/api/journal/enums';
+import type { JournalImageView, JournalDetailPageProvider } from '../../../types/journal/detail';
 
 const TIMEFRAME_RANK: Record<JournalTimeframe, number> = { YR: 600, SMN: 500, TMN: 400, MN: 300, WK: 200, DL: 100 };
 

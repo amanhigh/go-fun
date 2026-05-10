@@ -1,7 +1,9 @@
 import { createSubmitter } from '../../../lib/submitter';
-import { JournalNoteFormat } from '../../../types/journal_api';
-import type { JournalStatus, JournalNote, JournalNoteRequest } from '../../../types/journal_api';
-import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
+import { JournalNoteFormat } from '../../../types/api/journal/enums';
+import type { JournalStatus } from '../../../types/api/journal/enums';
+import type { JournalNote } from '../../../types/api/journal/response';
+import type { JournalNoteRequest } from '../../../types/api/journal/request';
+import type { JournalDetailPageProvider } from '../../../types/journal/detail';
 
 export function NewNoteFormConcern(pg: JournalDetailPageProvider) {
 	return {

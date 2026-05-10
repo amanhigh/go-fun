@@ -1,9 +1,9 @@
 import { createSubmitter, type Submitter } from '../../../lib/submitter';
 import type { DisplaySpec } from '../../../types/present';
 import type { QuickAction } from '../../../types/quick_action';
-import { JournalType, JournalStatus } from '../../../types/journal_api';
-import type { Journal } from '../../../types/journal_api';
-import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
+import { JournalType, JournalStatus } from '../../../types/api/journal/enums';
+import type { Journal } from '../../../types/api/journal/response';
+import type { JournalDetailPageProvider } from '../../../types/journal/detail';
 
 function localToday(pg: JournalDetailPageProvider): string {
 	return pg().present.date.humanDate(new Date());

@@ -1,6 +1,6 @@
 import { createLoader } from '../../../lib/loader';
 import type { Loader } from '../../../lib/loader';
-import type { JournalPageProvider, JournalTableConcern } from '../../../types/journal_list_concern';
+import type { JournalPageProvider, JournalTableConcern } from '../../../types/journal/list';
 
 export function NewTableConcern(pg: JournalPageProvider): JournalTableConcern {
 	return {

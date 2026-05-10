@@ -1,4 +1,4 @@
-import type { EnvelopeErrorBody, EnvelopeFailBody } from '../types/journal_api';
+import type { EnvelopeErrorBody, EnvelopeFailBody } from '../types/api/common';
 
 export type QueryValue = string | number | boolean | null | undefined;
 

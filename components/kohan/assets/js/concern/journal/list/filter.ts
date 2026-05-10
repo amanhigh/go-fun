@@ -1,5 +1,6 @@
-import { JournalType, JournalSortBy, JournalSortOrder, ReviewedFilter } from '../../../types/journal_api';
-import type { JournalFilterValues, DatePresetName, JournalFilterConcern, JournalPageProvider } from '../../../types/journal_list_concern';
+import { JournalType, JournalSortBy, JournalSortOrder } from '../../../types/api/journal/enums';
+import { ReviewedFilter } from '../../../types/api/journal/request';
+import type { JournalFilterValues, DatePresetName, JournalFilterConcern, JournalPageProvider } from '../../../types/journal/list';
 
 type TypeToggle = {
 	label: string;

@@ -1,5 +1,4 @@
-import type { JournalImageView } from '../../../types/journal_detail_concern';
-import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
+import type { JournalImageView, JournalDetailPageProvider } from '../../../types/journal/detail';
 
 function currentImage(pg: JournalDetailPageProvider, index: number): JournalImageView | null {
 	const images = pg().images.sorted();

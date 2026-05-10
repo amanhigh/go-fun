@@ -1,7 +1,7 @@
 import { createDeletableSyncedCollectionState } from '../../../lib/collection';
-import { JournalTagType } from '../../../types/journal_api';
-import type { JournalTag } from '../../../types/journal_api';
-import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
+import { JournalTagType } from '../../../types/api/journal/enums';
+import type { JournalTag } from '../../../types/api/journal/response';
+import type { JournalDetailPageProvider } from '../../../types/journal/detail';
 
 export function NewTagCollectionConcern(pg: JournalDetailPageProvider) {
 	return {

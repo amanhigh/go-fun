@@ -1,4 +1,4 @@
-import type { JournalTag } from './journal_api';
+import type { JournalTag } from './api/journal/response';
 
 export type DisplayValue = string | null | undefined;
 

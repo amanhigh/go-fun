@@ -1,7 +1,8 @@
 import { createLoadableCollectionState } from '../../../lib/collection';
-import { JournalSortBy, JournalSortOrder, ReviewedFilter } from '../../../types/journal_api';
-import type { Journal } from '../../../types/journal_api';
-import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
+import { JournalSortBy, JournalSortOrder } from '../../../types/api/journal/enums';
+import { ReviewedFilter } from '../../../types/api/journal/request';
+import type { Journal } from '../../../types/api/journal/response';
+import type { JournalDetailPageProvider } from '../../../types/journal/detail';
 
 export function NewReviewQueueConcern(pg: JournalDetailPageProvider) {
 	return {
