@@ -1,8 +1,6 @@
 package components
 
 import (
-	"fmt"
-
 	"github.com/amanhigh/go-fun/common/ui/widgets"
 	"github.com/templui/templui/components/button"
 )
@@ -29,7 +27,7 @@ type LoaderProps struct {
 templ Loader(props LoaderProps) {
 	@loaderStateBox(loaderStateBoxProps{
 		Variant:  loaderStateLoading,
-		ShowExpr: loaderLoadingShowExpr(props.Loader),
+		ShowExpr: props.Loader + ".isBusy()",
 	}) {
 		<div class="loader-loading-inner">
 			@widgets.Spinner(widgets.SpinnerProps{Size: widgets.SpinnerSizeSm})
@@ -39,55 +37,24 @@ templ Loader(props LoaderProps) {
 
 	@loaderStateBox(loaderStateBoxProps{
 		Variant:   loaderStateError,
-		ShowExpr:  loaderErrorShowExpr(props.Loader),
-		TextExpr:  props.Loader + ".message",
+		ShowExpr:  "!" + props.Loader + ".isBusy() && " + props.Loader + ".hasError()",
 		RetryExpr: props.RetryExpr,
-	}) {}
+	}) {
+		<div class="font-medium" x-text={ props.Loader + ".message" }></div>
+	}
 
 	if props.EmptyMessage != "" {
 		@loaderStateBox(loaderStateBoxProps{
 			Variant:  loaderStateEmpty,
-			ShowExpr: loaderEmptyShowExpr(props),
+			ShowExpr: "!" + props.Loader + ".isBusy() && !" + props.Loader + ".hasError() && !(" + props.ReadyExpr + ")",
 		}) {
 			{ props.EmptyMessage }
 		}
 	}
 
-	<div x-show={ loaderContentShowExpr(props) }>
+	<div x-show={ "!" + props.Loader + ".isBusy() && !" + props.Loader + ".hasError() && (" + props.ReadyExpr + ")" }>
 		{ children... }
 	</div>
-}
-
-// ============================================================
-// PRIVATE EXPRESSION HELPERS
-// ============================================================
-
-func loaderBusyExpr(loader string) string {
-	return loader + ".isBusy()"
-}
-
-func loaderErrorExpr(loader string) string {
-	return loader + ".hasError()"
-}
-
-func loaderIdleExpr(loader string) string {
-	return "!" + loaderBusyExpr(loader) + " && !" + loaderErrorExpr(loader)
-}
-
-func loaderLoadingShowExpr(loader string) string {
-	return loaderBusyExpr(loader)
-}
-
-func loaderErrorShowExpr(loader string) string {
-	return "!" + loaderBusyExpr(loader) + " && " + loaderErrorExpr(loader)
-}
-
-func loaderEmptyShowExpr(props LoaderProps) string {
-	return loaderIdleExpr(props.Loader) + " && !(" + props.ReadyExpr + ")"
-}
-
-func loaderContentShowExpr(props LoaderProps) string {
-	return loaderIdleExpr(props.Loader) + " && (" + props.ReadyExpr + ")"
 }
 
 // ============================================================
@@ -105,49 +72,15 @@ const (
 type loaderStateBoxProps struct {
 	Variant   loaderStateVariant
 	ShowExpr  string
-	Message   string
-	TextExpr  string
 	RetryExpr string
-	Class     string
-	Attrs     templ.Attributes
 }
 
 // ============================================================
 // PRIVATE STATE BOX RENDERING
 // ============================================================
 
-func loaderStateColorClasses(variant loaderStateVariant) string {
-	switch variant {
-	case loaderStateLoading:
-		return "statebox-base statebox-loading"
-	case loaderStateError:
-		return "statebox-base statebox-error"
-	case loaderStateEmpty:
-		return "statebox-base statebox-empty"
-	default:
-		return "statebox-base"
-	}
-}
-
-func loaderStateBoxAttrs(props loaderStateBoxProps) templ.Attributes {
-	attrs := templ.Attributes{}
-	for key, value := range props.Attrs {
-		attrs[key] = value
-	}
-	if props.ShowExpr != "" {
-		attrs["x-show"] = props.ShowExpr
-	}
-	return attrs
-}
-
 templ loaderStateBox(props loaderStateBoxProps) {
-	<div class={ fmt.Sprintf("%s %s", loaderStateColorClasses(props.Variant), props.Class) } { loaderStateBoxAttrs(props)... }>
-		if props.Message != "" {
-			<div class="font-medium">{ props.Message }</div>
-		}
-		if props.TextExpr != "" {
-			<div class="font-medium" x-text={ props.TextExpr }></div>
-		}
+	<div class={ "statebox-base statebox-" + string(props.Variant) } x-show={ props.ShowExpr }>
 		if props.RetryExpr != "" {
 			@button.Button(button.Props{
 				Variant:    button.VariantOutline,
