@@ -78,7 +78,7 @@ func JournalDetailNotes() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = JournalDetailEmptyState("No notes available for this journal.", "!sidebar.notes.hasItems()").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = components.EmptyState(components.EmptyStateProps{Message: "No notes available for this journal.", ShowExpr: "!sidebar.notes.hasItems()", Class: "mt-5"}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

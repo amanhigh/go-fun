@@ -22,6 +22,9 @@ const (
 	StateBoxInfo    StateBoxVariant = "info"
 )
 
+// Deprecated: use Loader for loading/error/empty/ready state flows.
+// StateBox is retained as an internal primitive used by Loader.
+// Direct page/block usage should be migrated to Loader.
 type StateBoxProps struct {
 	Variant    StateBoxVariant
 	ShowExpr   string
@@ -117,7 +120,7 @@ func StateBox(props StateBoxProps) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(props.Message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/state_box.templ`, Line: 57, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/state_box.templ`, Line: 60, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -136,7 +139,7 @@ func StateBox(props StateBoxProps) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(props.TextExpr)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/state_box.templ`, Line: 60, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/state_box.templ`, Line: 63, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {

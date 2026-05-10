@@ -62,7 +62,7 @@ func JournalDetailHeader() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"space-y-3\"><div class=\"flex items-start justify-between gap-3\"><div class=\"text-xs font-mono text-muted-foreground\" x-text=\"'ID: ' + current.journal.id\"></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"space-y-3\"><div class=\"flex items-start justify-between gap-3\"><div class=\"text-xs font-mono text-muted-foreground\" x-text=\"'ID: ' + journal.journal.id\"></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -82,15 +82,15 @@ func JournalDetailHeader() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><h2 class=\"text-3xl font-bold tracking-tight text-foreground\" x-text=\"current.journal.ticker\"></h2><div class=\"flex justify-between gap-6\"><div class=\"flex flex-wrap items-center gap-2.5\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><h2 class=\"text-3xl font-bold tracking-tight text-foreground\" x-text=\"journal.journal.ticker\"></h2><div class=\"flex justify-between gap-6\"><div class=\"flex flex-wrap items-center gap-2.5\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = journalcommon.TypeBadge(journalcommon.TypeBadgeProps{TypeExpr: "current.journal.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = journalcommon.TypeBadge(journalcommon.TypeBadgeProps{TypeExpr: "journal.journal.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "current.journal.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "journal.journal.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -159,7 +159,7 @@ func JournalDetailCreatedAt() templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = components.InfoRow(components.InfoRowProps{IconName: "clock", ValueExpr: "present.date.format(current.journal.created_at)", Class: "text-xs"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.InfoRow(components.InfoRowProps{IconName: "clock", ValueExpr: "present.date.format(journal.journal.created_at)", Class: "text-xs"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -188,7 +188,7 @@ func JournalDetailReviewDate() templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{ShowExpr: "current.journal.reviewed_at", TextExpr: "present.review.label(current.journal.reviewed_at)", Tone: components.ToneGreen, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{ShowExpr: "journal.journal.reviewed_at", TextExpr: "present.review.label(journal.journal.reviewed_at)", Tone: components.ToneGreen, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -217,7 +217,7 @@ func JournalDetailPendingDate() templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{ShowExpr: "!current.journal.reviewed_at", TextExpr: "present.review.label(current.journal.reviewed_at)", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{ShowExpr: "!journal.journal.reviewed_at", TextExpr: "present.review.label(journal.journal.reviewed_at)", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -291,7 +291,7 @@ func JournalDetailSequenceChip() templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{TextExpr: "present.sequence.label(current.journal.sequence)", Tone: components.ToneViolet, Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{TextExpr: "present.sequence.label(journal.journal.sequence)", Tone: components.ToneViolet, Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

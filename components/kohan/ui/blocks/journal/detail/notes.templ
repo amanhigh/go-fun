@@ -20,7 +20,7 @@ templ JournalDetailNotes() {
 					@JournalDetailNoteRow()
 				</template>
 			</div>
-			@JournalDetailEmptyState("No notes available for this journal.", "!sidebar.notes.hasItems()")
+			@components.EmptyState(components.EmptyStateProps{Message: "No notes available for this journal.", ShowExpr: "!sidebar.notes.hasItems()", Class: "mt-5"})
 		}
 	}
 }

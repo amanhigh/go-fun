@@ -21,7 +21,7 @@ templ JournalDetailImages() {
 					@JournalDetailImageTile()
 				</template>
 			</div>
-			@JournalDetailEmptyState("No images available for this journal.", "!current.journal.images?.length")
+			@components.EmptyState(components.EmptyStateProps{Message: "No images available for this journal.", ShowExpr: "!current.journal.images?.length", Class: "mt-5"})
 		}
 	}
 }

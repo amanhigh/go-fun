@@ -8,18 +8,23 @@ package components
 import (
 	"github.com/a-h/templ"
 	templruntime "github.com/a-h/templ/runtime"
+	"github.com/amanhigh/go-fun/common/ui/widgets"
 )
 
 // ============================================================
 // LOADER WRAPPER
 // ============================================================
+// Loader manages loading, error, empty, and ready states for both
+// collection-backed and single-object flows.
+//
 // Loader is the JS expression for the loader state object (e.g. "sidebar.reviewQueue.loader").
-// Collection is the JS expression for the collection state object (e.g. "sidebar.reviewQueue").
-// Children are rendered when loader is not busy, no error, and collection has items.
+// ReadyExpr is the JS expression for the content-ready condition (e.g. "table.hasItems()" or "journal.journal").
+// RetryExpr is the JS expression called on retry button click (e.g. "table.load()").
+// Children are rendered when loader is not busy, no error, and ReadyExpr is truthy.
 
 type LoaderProps struct {
 	Loader         string
-	Collection     string
+	ReadyExpr      string
 	LoadingMessage string
 	EmptyMessage   string
 	RetryExpr      string
@@ -58,12 +63,28 @@ func Loader(props LoaderProps) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex items-center justify-center gap-2\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = widgets.Spinner(widgets.SpinnerProps{Size: widgets.SpinnerSizeSm}).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<span>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(props.LoadingMessage)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/loader.templ`, Line: 23, Col: 24}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/loader.templ`, Line: 33, Col: 31}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</span></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -85,7 +106,7 @@ func Loader(props LoaderProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if props.Collection != "" && props.EmptyMessage != "" {
+		if props.ReadyExpr != "" && props.EmptyMessage != "" {
 			templ_7745c5c3_Var4 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -101,7 +122,7 @@ func Loader(props LoaderProps) templ.Component {
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(props.EmptyMessage)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/loader.templ`, Line: 36, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/loader.templ`, Line: 47, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -111,27 +132,27 @@ func Loader(props LoaderProps) templ.Component {
 			})
 			templ_7745c5c3_Err = StateBox(StateBoxProps{
 				Variant:  StateBoxEmpty,
-				ShowExpr: "!" + props.Loader + ".isBusy() && !" + props.Loader + ".hasError() && !" + props.Collection + ".hasItems()",
+				ShowExpr: "!" + props.Loader + ".isBusy() && !" + props.Loader + ".hasError() && !(" + props.ReadyExpr + ")",
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		if props.Collection != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div x-show=\"")
+		if props.ReadyExpr != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div x-show=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var6 string
-			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs("!" + props.Loader + ".isBusy() && !" + props.Loader + ".hasError() && " + props.Collection + ".hasItems()")
+			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs("!" + props.Loader + ".isBusy() && !" + props.Loader + ".hasError() && (" + props.ReadyExpr + ")")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/loader.templ`, Line: 40, Col: 123}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/loader.templ`, Line: 51, Col: 113}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -139,7 +160,7 @@ func Loader(props LoaderProps) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
