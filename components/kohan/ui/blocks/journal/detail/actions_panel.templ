@@ -34,12 +34,10 @@ templ journalDetailActionBar() {
 	}) {
 		<template x-for="action in sidebar.reviewActions.actions()" x-bind:key="action.id">
 			@components.QuickAction(components.QuickActionProps{
-				OnClickExpr: "action.apply()",
-				TextExpr:    "sidebar.reviewActions.submitter.isBusy() ? 'Saving...' : action.display.text",
-				ClassExpr:   "action.display.class",
-				Attributes: templ.Attributes{
-					"x-bind:disabled": "sidebar.reviewActions.submitter.isBusy()",
-				},
+				OnClickExpr:  "action.apply()",
+				TextExpr:     "sidebar.reviewActions.submitter.isBusy() ? 'Saving...' : action.display.text",
+				ClassExpr:    "action.display.class",
+				DisabledExpr: "sidebar.reviewActions.submitter.isBusy()",
 			})
 		</template>
 	}

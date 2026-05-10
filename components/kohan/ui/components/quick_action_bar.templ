@@ -52,9 +52,7 @@ templ QuickAction(props QuickActionProps) {
 		Class:   "h-8 rounded-md border px-2 text-xs font-medium shadow-sm transition-colors " + props.Class,
 		Attributes: func() templ.Attributes {
 			attrs := templ.Attributes{}
-			if props.OnClickExpr != "" {
-				attrs["x-on:click"] = props.OnClickExpr
-			}
+			attrs["x-on:click"] = props.OnClickExpr
 			attrs["x-text"] = props.TextExpr
 			if props.ClassExpr != "" {
 				attrs["x-bind:class"] = props.ClassExpr

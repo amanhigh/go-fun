@@ -176,7 +176,7 @@ func QuickAction(props QuickActionProps) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(props.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 67, Col: 16}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 65, Col: 16}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -192,9 +192,7 @@ func QuickAction(props QuickActionProps) templ.Component {
 			Class:   "h-8 rounded-md border px-2 text-xs font-medium shadow-sm transition-colors " + props.Class,
 			Attributes: func() templ.Attributes {
 				attrs := templ.Attributes{}
-				if props.OnClickExpr != "" {
-					attrs["x-on:click"] = props.OnClickExpr
-				}
+				attrs["x-on:click"] = props.OnClickExpr
 				attrs["x-text"] = props.TextExpr
 				if props.ClassExpr != "" {
 					attrs["x-bind:class"] = props.ClassExpr
