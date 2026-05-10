@@ -1,6 +1,7 @@
 import { createSubmitter, type Submitter } from '../../../lib/submitter';
 import type { DisplaySpec } from '../../../types/present';
 import type { QuickAction } from '../../../types/quick_action';
+import { JournalType, JournalStatus } from '../../../types/journal_api';
 import type { Journal } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
@@ -20,7 +21,7 @@ function reviewDisplay(journal: Journal): DisplaySpec {
 
 function statusDisplay(journal: Journal): DisplaySpec {
 	switch (journal.type) {
-		case 'TAKEN': return { text: 'Mark Just Loss', class: 'journal-quick-status-loss' };
+		case JournalType.TAKEN: return { text: 'Mark Just Loss', class: 'journal-quick-status-loss' };
 		default: return { text: 'Mark Broken', class: 'journal-quick-status-broken' };
 	}
 }
@@ -29,8 +30,8 @@ function statusDisplay(journal: Journal): DisplaySpec {
 
 function isStatusActive(journal: Journal): boolean {
 	switch (journal.type) {
-		case 'TAKEN': return journal.status !== 'JUST_LOSS';
-		default: return journal.status !== 'BROKEN';
+		case JournalType.TAKEN: return journal.status !== JournalStatus.JUST_LOSS;
+		default: return journal.status !== JournalStatus.BROKEN;
 	}
 }
 
@@ -49,8 +50,8 @@ async function toggleReviewedAt(submitter: Submitter, pg: JournalDetailPageProvi
 
 async function applyReviewStatus(submitter: Submitter, pg: JournalDetailPageProvider): Promise<void> {
 	const journal = pg().current.journal!;
-	const isTaken = journal.type === 'TAKEN';
-	const targetStatus = isTaken ? 'JUST_LOSS' : 'BROKEN';
+	const isTaken = journal.type === JournalType.TAKEN;
+	const targetStatus = isTaken ? JournalStatus.JUST_LOSS : JournalStatus.BROKEN;
 
 	await submitter.run(async () => {
 		const envelope = await pg().client.updateReview(pg().current.journalId, { status: targetStatus, reviewed_at: localToday(pg) });

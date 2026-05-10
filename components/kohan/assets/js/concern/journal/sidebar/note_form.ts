@@ -1,5 +1,6 @@
 import { createSubmitter } from '../../../lib/submitter';
-import type { JournalNote, JournalNoteRequest } from '../../../types/journal_api';
+import { JournalNoteFormat } from '../../../types/journal_api';
+import type { JournalStatus, JournalNote, JournalNoteRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
 export function NewNoteFormConcern(pg: JournalDetailPageProvider) {
@@ -26,11 +27,11 @@ export function NewNoteFormConcern(pg: JournalDetailPageProvider) {
 			);
 		},
 
-		async createNote(status: string, content: string) {
+		async createNote(status: JournalStatus, content: string) {
 			const payload: JournalNoteRequest = {
 				status,
 				content,
-				format: 'MARKDOWN',
+				format: JournalNoteFormat.MARKDOWN,
 			};
 			const envelope = await pg().noteClient.create(pg().current.journalId, payload);
 			pg().sidebar.notes.prepend(envelope.data as JournalNote);

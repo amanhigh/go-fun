@@ -1,3 +1,4 @@
+import { JournalType, JournalSortBy, JournalSortOrder } from '../../../types/journal_api';
 import type { JournalFilterKey } from '../../../types/journal_api';
 import type { DatePresetName, JournalFilterConcern, JournalPageProvider } from '../../../types/journal_list_concern';
 
@@ -7,14 +8,14 @@ type TypeToggle = {
 	nextType: TypeFilterValue;
 };
 
-type SortField = 'ticker' | 'sequence' | 'created_at';
+type SortField = typeof JournalSortBy[keyof typeof JournalSortBy];
 
-type TypeFilterValue = '' | 'TAKEN' | 'REJECTED';
+type TypeFilterValue = '' | JournalType;
 
-const typeToggleMap: Record<TypeFilterValue, TypeToggle> = {
-	'': { label: 'Taken', className: 'journal-type-toggle-taken', nextType: 'TAKEN' },
-	TAKEN: { label: 'Rejected', className: 'journal-type-toggle-rejected', nextType: 'REJECTED' },
-	REJECTED: { label: 'All', className: 'journal-type-toggle-all', nextType: '' },
+const typeToggleMap: Record<string, TypeToggle> = {
+	'': { label: 'Taken', className: 'journal-type-toggle-taken', nextType: JournalType.TAKEN },
+	[JournalType.TAKEN]: { label: 'Rejected', className: 'journal-type-toggle-rejected', nextType: JournalType.REJECTED },
+	[JournalType.REJECTED]: { label: 'All', className: 'journal-type-toggle-all', nextType: '' },
 };
 
 const journalFilterDefaults: Record<JournalFilterKey, string> = {
@@ -25,8 +26,8 @@ const journalFilterDefaults: Record<JournalFilterKey, string> = {
 	createdAfter: '',
 	createdBefore: '',
 	reviewed: '',
-	sortBy: 'created_at',
-	sortOrder: 'desc',
+	sortBy: JournalSortBy.CREATED_AT,
+	sortOrder: JournalSortOrder.DESC,
 };
 
 export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern {
@@ -60,9 +61,9 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 		},
 		toggleSort(field: SortField) {
 			if (this.sortBy !== field) {
-				this.sortOrder = 'asc';
+				this.sortOrder = JournalSortOrder.ASC;
 			} else {
-				this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+				this.sortOrder = this.sortOrder === JournalSortOrder.ASC ? JournalSortOrder.DESC : JournalSortOrder.ASC;
 			}
 			this.sortBy = field;
 			this.applyManualFilters();
@@ -75,7 +76,7 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 }
 
 export function resolveTypeToggle(currentType: string): TypeToggle {
-	if (currentType === 'TAKEN' || currentType === 'REJECTED') {
+	if (currentType === JournalType.TAKEN || currentType === JournalType.REJECTED) {
 		return typeToggleMap[currentType];
 	}
 	return typeToggleMap[''];

@@ -1,3 +1,4 @@
+import { JournalType } from '../../../types/journal_api';
 import type { JournalFilterKey } from '../../../types/journal_api';
 import type { JournalFilterUrlConcern, JournalPageProvider } from '../../../types/journal_list_concern';
 
@@ -23,7 +24,7 @@ for (const [field, queryKey] of Object.entries(journalQueryMap)) {
 export const journalFilterFields: JournalFilterKey[] = ['ticker', 'type', 'status', 'sequence', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'];
 
 // Only these type values are accepted when reading from URL
-const knownTypeValues = new Set(['', 'TAKEN', 'REJECTED']);
+const knownTypeValues = new Set(['', JournalType.TAKEN, JournalType.REJECTED]);
 
 /** Read filter state from browser URL query params. */
 export function urlToFilter(pg: JournalPageProvider) {

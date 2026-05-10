@@ -103,7 +103,9 @@ templ JournalStatusSelect() {
 					@selectbox.Item(selectbox.ItemProps{Value: "RUNNING"}) { RUNNING }
 					@selectbox.Item(selectbox.ItemProps{Value: "SUCCESS"}) { SUCCESS }
 					@selectbox.Item(selectbox.ItemProps{Value: "FAIL"}) { FAIL }
-					@selectbox.Item(selectbox.ItemProps{Value: "REJECTED"}) { REJECTED }
+					@selectbox.Item(selectbox.ItemProps{Value: "MISSED"}) { MISSED }
+					@selectbox.Item(selectbox.ItemProps{Value: "JUST_LOSS"}) { JUST_LOSS }
+					@selectbox.Item(selectbox.ItemProps{Value: "BROKEN"}) { BROKEN }
 				}
 			}
 		}

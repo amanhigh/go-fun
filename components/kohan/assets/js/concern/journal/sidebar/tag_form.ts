@@ -1,4 +1,5 @@
 import { createSubmitter } from '../../../lib/submitter';
+import { JournalTagType } from '../../../types/journal_api';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
@@ -36,7 +37,7 @@ export function TagFormConcern(pg: JournalDetailPageProvider) {
 
 		async createTag(tag: string, override: string) {
 			const page = pg();
-			const payload: JournalTagRequest = { tag, type: 'REASON' };
+			const payload: JournalTagRequest = { tag, type: JournalTagType.REASON };
 			if (override) {
 				payload.override = override;
 			}
