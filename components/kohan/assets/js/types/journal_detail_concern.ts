@@ -3,8 +3,7 @@ import type { Submitter } from '../lib/submitter';
 import type { JournalClient } from '../client/journal';
 import type { JournalNoteClient } from '../client/journal_note';
 import type { JournalTagClient } from '../client/journal_tag';
-import type { PresentationConcern } from './presentation_concern';
-import type { PresentationConcern as PresentConcern } from './present';
+import type { PresentationConcern } from './present';
 
 // ===== Provider =====
 
@@ -17,8 +16,7 @@ export type JournalDetailPageData = {
 	noteClient: JournalNoteClient;
 	tagClient: JournalTagClient;
 
-	presentation: PresentationConcern;
-	present: PresentConcern;
+	present: PresentationConcern;
 	current: JournalConcern;
 	header: JournalHeaderConcern;
 	images: JournalImagesConcern;

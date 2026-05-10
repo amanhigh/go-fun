@@ -191,7 +191,7 @@ func JournalDetailReviewDate() templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{ShowExpr: "current.journal.reviewed_at", TextExpr: "presentation.display(presentation.reviewedAt(current.journal.reviewed_at))", Tone: components.ToneGreen, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{ShowExpr: "current.journal.reviewed_at", TextExpr: "present.review.label(current.journal.reviewed_at)", Tone: components.ToneGreen, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -220,7 +220,7 @@ func JournalDetailPendingDate() templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{ShowExpr: "!current.journal.reviewed_at", TextExpr: "presentation.display(presentation.pendingReview())", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{ShowExpr: "!current.journal.reviewed_at", TextExpr: "present.review.label(current.journal.reviewed_at)", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

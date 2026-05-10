@@ -1,15 +1,13 @@
 import type { Journal, JournalFilterKey, JournalType, JournalStatus, JournalSequence, JournalSortBy, JournalSortOrder, ReviewedFilter } from './journal_api';
 import type { JournalClient } from '../client/journal';
-import type { PresentationConcern } from './presentation_concern';
-import type { PresentationConcern as PresentConcern } from './present';
+import type { PresentationConcern } from './present';
 import type { Loader } from '../lib/loader';
 
 export type JournalPageProvider = () => JournalPageData;
 
 export type JournalPageData = {
 	client: JournalClient;
-	presentation: PresentationConcern;
-	present: PresentConcern;
+	present: PresentationConcern;
 	filter: JournalFilterConcern;
 	filterUrl: JournalFilterUrlConcern;
 	pagination: PaginationConcern;

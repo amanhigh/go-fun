@@ -118,8 +118,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-text="present.date.format(current.journal.created_at)"`))
 			Expect(html).To(ContainSubstring(`x-show="!current.journal.reviewed_at"`))
 			Expect(html).To(ContainSubstring(`x-show="current.journal.reviewed_at"`))
-			Expect(html).To(ContainSubstring(`presentation.display(presentation.reviewedAt(current.journal.reviewed_at))`))
-			Expect(html).To(ContainSubstring(`presentation.display(presentation.pendingReview())`))
+			Expect(html).To(ContainSubstring(`present.review.label(current.journal.reviewed_at)`))
 
 			// Tags rendered directly without section label
 			Expect(html).ToNot(ContainSubstring(`Summary Tags`))

@@ -29,4 +29,5 @@ export interface PresentationConcern {
 	tag: TagPresenter;
 	sequence: Presenter;
 	date: DatePresenter;
+	review: Presenter;
 }

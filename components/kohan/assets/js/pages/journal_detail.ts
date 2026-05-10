@@ -2,8 +2,7 @@ import { NewJournalClient } from '../client/journal';
 import { NewJournalNoteClient } from '../client/journal_note';
 import { NewJournalTagClient } from '../client/journal_tag';
 import type { JournalDetailPageData } from '../types/journal_detail_concern';
-import { NewPresentationConcern } from '../lib/presentation';
-import { NewPresentationConcern as NewPresentConcern } from '../concern/present/factory';
+import { NewPresentationConcern } from '../concern/present/factory';
 import { NewJournalConcern } from '../concern/journal/detail/journal';
 import { NewHeaderConcern } from '../concern/journal/detail/header';
 import { NewImagesConcern } from '../concern/journal/detail/images';
@@ -19,8 +18,7 @@ function createJournalDetailPageData(journalId = '') {
 	page.noteClient = NewJournalNoteClient();
 	page.tagClient = NewJournalTagClient();
 
-	page.presentation = NewPresentationConcern();
-	page.present = NewPresentConcern();
+	page.present = NewPresentationConcern();
 	page.current = NewJournalConcern(pg);
 	page.header = NewHeaderConcern(pg);
 	page.images = NewImagesConcern(pg);

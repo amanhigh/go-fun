@@ -1,7 +1,6 @@
 import type { Journal, JournalNote, JournalTag } from './journal_api';
 import type { Submitter } from '../lib/submitter';
 import type { DeletableSyncedCollection, LoadableCollection } from './collection';
-import type { DisplaySpec } from './presentation_concern';
 import type { QuickAction } from './quick_action';
 
 // ===== Sidebar Sub-Concerns =====

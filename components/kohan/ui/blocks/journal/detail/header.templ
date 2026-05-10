@@ -53,11 +53,11 @@ templ JournalDetailCreatedAt() {
 }
 
 templ JournalDetailReviewDate() {
-	@components.FilterChip(components.FilterChipProps{ShowExpr: "current.journal.reviewed_at", TextExpr: "presentation.display(presentation.reviewedAt(current.journal.reviewed_at))", Tone: components.ToneGreen, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
+	@components.FilterChip(components.FilterChipProps{ShowExpr: "current.journal.reviewed_at", TextExpr: "present.review.label(current.journal.reviewed_at)", Tone: components.ToneGreen, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
 }
 
 templ JournalDetailPendingDate() {
-	@components.FilterChip(components.FilterChipProps{ShowExpr: "!current.journal.reviewed_at", TextExpr: "presentation.display(presentation.pendingReview())", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
+	@components.FilterChip(components.FilterChipProps{ShowExpr: "!current.journal.reviewed_at", TextExpr: "present.review.label(current.journal.reviewed_at)", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
 }
 
 templ JournalDetailReviewDates() {
