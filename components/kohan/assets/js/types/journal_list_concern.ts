@@ -2,6 +2,7 @@ import type { Journal, JournalFilterKey } from './journal_api';
 import type { JournalClient } from '../client/journal';
 import type { PresentationConcern } from './presentation_concern';
 import type { PresentationConcern as PresentConcern } from './present';
+import type { Loader } from '../lib/loader';
 
 export type JournalPageProvider = () => JournalPageData;
 
@@ -78,7 +79,7 @@ export type PresetConcern = {
 
 export type JournalTableConcern = {
 	journals: Journal[];
-	loading: boolean;
+	loader: Loader;
 	loadJournals(): Promise<void>;
 	isEmpty(): boolean;
 };
