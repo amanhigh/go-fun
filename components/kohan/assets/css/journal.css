@@ -25,6 +25,32 @@
     @apply flex items-center justify-center gap-2;
   }
 
+  /* --- Filter Chips --- */
+
+  .filter-chip-sky {
+    @apply border border-sky-200 bg-sky-100 text-sky-800;
+  }
+
+  .filter-chip-emerald {
+    @apply border border-emerald-200 bg-emerald-100 text-emerald-800;
+  }
+
+  .filter-chip-rose {
+    @apply border border-rose-200 bg-rose-100 text-rose-800;
+  }
+
+  .filter-chip-violet {
+    @apply border border-violet-200 bg-violet-100 text-violet-800;
+  }
+
+  .filter-chip-amber {
+    @apply border border-amber-200 bg-amber-100 text-amber-900;
+  }
+
+  .filter-chip-slate {
+    @apply border border-slate-200 bg-slate-100 text-slate-800;
+  }
+
   /* --- Presentation Display --- */
 
   .journal-display-default,

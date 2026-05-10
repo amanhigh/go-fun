@@ -2,6 +2,10 @@ package components
 
 import "github.com/templui/templui/components/badge"
 
+// FilterChipProps configures a FilterChip display element.
+//   Tone  — semantic color variant (controls bg/text/border via CSS class).
+//   Class — layout/shape overrides only (e.g. "rounded-full px-3 py-1 text-xs").
+//   Attributes — escape hatch for non-standard Alpine bindings only.
 type FilterChipProps struct {
 	// TODO: Cover Component Package with Test
 	TextExpr   string
@@ -14,17 +18,19 @@ type FilterChipProps struct {
 func filterChipToneClass(tone Tone) string {
 	switch tone {
 	case ToneBlue:
-		return "bg-sky-100 text-sky-800 border border-sky-200"
+		return "filter-chip-sky"
 	case ToneGreen:
-		return "bg-emerald-100 text-emerald-800 border border-emerald-200"
+		return "filter-chip-emerald"
 	case ToneRose:
-		return "bg-rose-100 text-rose-800 border border-rose-200"
+		return "filter-chip-rose"
 	case ToneViolet:
-		return "bg-violet-100 text-violet-800 border border-violet-200"
+		return "filter-chip-violet"
 	case ToneAmber:
-		return "bg-amber-100 text-amber-900 border border-amber-200"
+		return "filter-chip-amber"
+	case ToneSlate:
+		return "filter-chip-slate"
 	default:
-		return "bg-slate-100 text-slate-800 border border-slate-200"
+		return "filter-chip-slate"
 	}
 }
 

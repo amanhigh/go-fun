@@ -72,7 +72,7 @@ templ JournalDetailSequenceChip() {
 templ JournalDetailReasonTags() {
 	<div class="flex flex-wrap gap-2">
 		<template x-for="tag in sidebar.tags.reason()" x-bind:key="tag.id">
-			@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Class: "rounded-full font-semibold", Attributes: templ.Attributes{"x-text": "present.tag.label(tag)"}})
+			@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Class: "rounded-full font-semibold", TextExpr: "present.tag.label(tag)"})
 		</template>
 	</div>
 }
@@ -80,7 +80,7 @@ templ JournalDetailReasonTags() {
 templ JournalDetailDirectionalTags() {
 	<div class="flex flex-wrap gap-2">
 		<template x-for="tag in sidebar.tags.directional()" x-bind:key="tag.id">
-			@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, Class: "rounded-full text-xs", Attributes: templ.Attributes{"x-text": "present.tag.label(tag)"}})
+			@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, Class: "rounded-full text-xs", TextExpr: "present.tag.label(tag)"})
 		</template>
 	</div>
 }
