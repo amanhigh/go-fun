@@ -1,12 +1,14 @@
+import { createCollection } from '../../../lib/collection';
 import { createLoader } from '../../../lib/loader';
-import type { Loader } from '../../../lib/loader';
-import type { JournalPageProvider, JournalTableConcern } from '../../../types/journal/list';
+import type { Journal } from '../../../types/api/journal/response';
+import type { JournalPageProvider } from '../../../types/journal/list';
 
-export function NewTableConcern(pg: JournalPageProvider): JournalTableConcern {
+export function NewTableConcern(pg: JournalPageProvider) {
 	return {
-		journals: [],
+		...createCollection<Journal>(),
 		loader: createLoader(),
-		async loadJournals() {
+
+		async load() {
 			const page = pg();
 			const pagination = page.pagination;
 
@@ -16,10 +18,9 @@ export function NewTableConcern(pg: JournalPageProvider): JournalTableConcern {
 
 			if (!data) return;
 
-			this.journals = data.journals;
+			this.sync(data.journals);
 			pagination.setTotalItems(data.metadata.total);
 			pagination.setPageFromOffset(data.metadata.offset);
 		},
-		isEmpty() { return this.journals.length === 0; },
 	};
 }

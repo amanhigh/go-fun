@@ -139,7 +139,7 @@ templ journalDetailTagRow() {
 		</div>
 		@components.DeleteButton(components.DeleteButtonProps{
 			OnClickExpr:  "sidebar.tags.delete(tag.id)",
-			DisabledExpr: "sidebar.tags.deletingId === tag.id",
+			DisabledExpr: "sidebar.tags.loader.isBusy()",
 			AriaLabel:    "Delete Tag",
 			Title:        "Delete Tag",
 		})

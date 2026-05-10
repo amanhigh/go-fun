@@ -24,7 +24,7 @@ function createJournalPageData() {
 		this.filterUrl.urlToFilter();
 		this.presets.syncDatePreset();
 		this.presets.syncActiveReviewPreset();
-		void this.table.loadJournals();
+		void this.table.load();
 	};
 
 	return page;

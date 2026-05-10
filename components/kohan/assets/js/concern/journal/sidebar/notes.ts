@@ -1,13 +1,21 @@
-import { createDeletableSyncedCollectionState } from '../../../lib/collection';
+import { createCollection } from '../../../lib/collection';
+import { createLoader } from '../../../lib/loader';
 import type { JournalNote } from '../../../types/api/journal/response';
 import type { JournalDetailPageProvider } from '../../../types/journal/detail';
 
 export function NewNotesConcern(pg: JournalDetailPageProvider) {
 	return {
-		...createDeletableSyncedCollectionState<JournalNote>(
-			() => !!pg().current.journal,
-			(noteId) => pg().noteClient.delete(pg().current.journalId, noteId),
-		),
+		...createCollection<JournalNote>(),
+		loader: createLoader(),
+
+		async delete(noteId: string) {
+			if (!pg().current.journal) return;
+			await this.loader.tryRun(
+				() => pg().noteClient.delete(pg().current.journalId, noteId),
+			);
+			this.remove(noteId);
+		},
+
 		sorted() {
 			return [...this.items].sort((left, right) => {
 				const leftTime = left.created_at ? new Date(left.created_at).getTime() : 0;

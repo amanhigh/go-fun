@@ -112,7 +112,7 @@ func Loader(props LoaderProps) templ.Component {
 			})
 			templ_7745c5c3_Err = StateBox(StateBoxProps{
 				Variant:  StateBoxEmpty,
-				ShowExpr: "!" + props.Loader + ".hasError() && !" + props.Collection + ".hasItems()",
+				ShowExpr: "!" + props.Loader + ".isBusy() && !" + props.Loader + ".hasMessage() && !" + props.Collection + ".hasItems()",
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

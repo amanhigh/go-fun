@@ -37,7 +37,7 @@ templ JournalDetailNoteRow() {
 			</div>
 			@components.DeleteButton(components.DeleteButtonProps{
 				OnClickExpr:  "sidebar.notes.delete(note.id)",
-				DisabledExpr: "sidebar.notes.deletingId === note.id",
+				DisabledExpr: "sidebar.notes.loader.isBusy()",
 				AriaLabel:    "Delete Note",
 				Title:        "Delete Note",
 			})

@@ -32,7 +32,7 @@ templ Loader(props LoaderProps) {
 	if props.Collection != "" && props.EmptyMessage != "" {
 		@StateBox(StateBoxProps{
 			Variant:  StateBoxEmpty,
-			ShowExpr: "!" + props.Loader + ".hasError() && !" + props.Collection + ".hasItems()",
+			ShowExpr: "!" + props.Loader + ".isBusy() && !" + props.Loader + ".hasMessage() && !" + props.Collection + ".hasItems()",
 		}) {
 			{ props.EmptyMessage }
 		}

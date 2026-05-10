@@ -168,7 +168,7 @@ func journalDetailQueueCard() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, " <div class=\"space-y-1\" x-show=\"!sidebar.reviewQueue.loader.hasError() && sidebar.reviewQueue.hasItems()\"><template x-for=\"item in sidebar.reviewQueue.all()\" x-bind:key=\"item.id\"><a class=\"flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition\" x-on:click=\"sidebar.state.enterReviewMode()\" x-bind:class=\"present.type.spec(item.type).class\" x-bind:href=\"'/journal/' + item.id\"><span class=\"font-semibold\" x-text=\"item.ticker\"></span> <span class=\"text-xs font-medium\" x-text=\"present.date.formatReviewQueueDate(item.created_at)\"></span></a></template></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, " <div class=\"space-y-1\" x-show=\"!sidebar.reviewQueue.loader.isBusy() && !sidebar.reviewQueue.loader.hasMessage() && sidebar.reviewQueue.hasItems()\"><template x-for=\"item in sidebar.reviewQueue.all()\" x-bind:key=\"item.id\"><a class=\"flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition\" x-on:click=\"sidebar.state.enterReviewMode()\" x-bind:class=\"present.type.spec(item.type).class\" x-bind:href=\"'/journal/' + item.id\"><span class=\"font-semibold\" x-text=\"item.ticker\"></span> <span class=\"text-xs font-medium\" x-text=\"present.date.formatReviewQueueDate(item.created_at)\"></span></a></template></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

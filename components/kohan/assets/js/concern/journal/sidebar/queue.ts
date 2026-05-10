@@ -21,7 +21,7 @@ export function NewReviewQueueConcern(pg: JournalDetailPageProvider) {
 
 			if (!data) return;
 
-			this.items = data.journals;
+			this.sync(data.journals);
 		},
 	};
 }
