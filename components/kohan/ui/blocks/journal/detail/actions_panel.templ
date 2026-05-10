@@ -81,7 +81,7 @@ templ journalDetailTagsCard() {
 			@journalDetailTagForm()
 			@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reasonTagForm.submitter"})
 			@journalDetailTagInputs()
-			@components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.items.length"})
+			@components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.hasItems()"})
 		}
 	}
 }
@@ -109,7 +109,7 @@ templ journalDetailTagForm() {
 }
 
 templ journalDetailTagInputs() {
-	<div class="space-y-3" x-show="sidebar.tags.items.length">
+	<div class="space-y-3" x-show="sidebar.tags.hasItems()">
 		@journalDetailTagRows()
 	</div>
 }

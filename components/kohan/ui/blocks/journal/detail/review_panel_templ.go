@@ -179,7 +179,7 @@ func journalDetailQueueCard() templ.Component {
 				})
 				templ_7745c5c3_Err = components.Loader(components.LoaderProps{
 					Loader:       "sidebar.reviewQueue.loader",
-					ReadyExpr:    "sidebar.reviewQueue.items.length",
+					ReadyExpr:    "sidebar.reviewQueue.hasItems()",
 					EmptyMessage: "All caught up — no pending reviews.",
 					RetryExpr:    "sidebar.reviewQueue.load()",
 				}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
