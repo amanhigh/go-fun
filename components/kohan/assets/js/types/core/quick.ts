@@ -1,21 +1,13 @@
-export type QuickButtonResult = {
-	label: string;
-	className: string;
-	nextValue: string;
-};
+import type { JournalType, JournalStatus } from '../api/journal/enums';
 
-export interface QuickButton {
-	resolve(currentValue: string): QuickButtonResult;
-}
-
-export interface QuickFilterButton {
+export interface QuickFilterButton<T extends string = string> {
 	readonly label: string;
 	readonly className: string;
-	readonly nextValue: string;
+	readonly nextValue: T;
 	toggle(): void;
 }
 
 export type QuickConcern = {
-	type: QuickFilterButton;
-	status: QuickFilterButton;
+	type: QuickFilterButton<JournalType>;
+	status: QuickFilterButton<JournalStatus>;
 };
