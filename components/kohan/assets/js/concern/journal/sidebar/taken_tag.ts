@@ -8,14 +8,14 @@ export function TakenTagConcern(pg: JournalDetailPageProvider) {
 	return {
 		submitter: createSubmitter(),
 		tags: [
-			{ id: 'ntr', tag: 'ntr', type: JournalTagType.MANAGEMENT },
-			{ id: 'enl', tag: 'enl', type: JournalTagType.MANAGEMENT },
-			{ id: 'slt', tag: 'slt', type: JournalTagType.MANAGEMENT },
-			{ id: 'fz', tag: 'fz', type: JournalTagType.MANAGEMENT },
-			{ id: 'nbe', tag: 'nbe', type: JournalTagType.MANAGEMENT },
-			{ id: 'ws', tag: 'ws', type: JournalTagType.MANAGEMENT },
-			{ id: 'important', tag: 'important', type: JournalTagType.MANAGEMENT },
-			{ id: 'be', tag: 'be', type: JournalTagType.MANAGEMENT },
+			{ id: 'ntr', tag: 'ntr', type: JournalTagType.MANAGEMENT, created_at: '' },
+			{ id: 'enl', tag: 'enl', type: JournalTagType.MANAGEMENT, created_at: '' },
+			{ id: 'slt', tag: 'slt', type: JournalTagType.MANAGEMENT, created_at: '' },
+			{ id: 'fz', tag: 'fz', type: JournalTagType.MANAGEMENT, created_at: '' },
+			{ id: 'nbe', tag: 'nbe', type: JournalTagType.MANAGEMENT, created_at: '' },
+			{ id: 'ws', tag: 'ws', type: JournalTagType.MANAGEMENT, created_at: '' },
+			{ id: 'important', tag: 'important', type: JournalTagType.MANAGEMENT, created_at: '' },
+			{ id: 'be', tag: 'be', type: JournalTagType.MANAGEMENT, created_at: '' },
 		],
 
 		show() {
