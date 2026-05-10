@@ -242,7 +242,7 @@ func journalDetailManagementTagCard() templ.Component {
 						}()
 					}
 					ctx = templ.InitializeContext(ctx)
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "Trade Debrief ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "Oh, So You Took the Trade? ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -268,7 +268,7 @@ func journalDetailManagementTagCard() templ.Component {
 						}()
 					}
 					ctx = templ.InitializeContext(ctx)
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "Did you manage your trade well? ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "How did it go? Confess your sins. ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -312,7 +312,7 @@ func journalDetailManagementTagCard() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = card.Card(card.Props{Class: "rounded-3xl shadow-sm"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = card.Card(card.Props{Class: "rounded-3xl shadow-sm", Attributes: templ.Attributes{"x-show": "journal.detail.type === 'TAKEN'"}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -44,10 +44,10 @@ templ journalDetailActionBar() {
 }
 
 templ journalDetailManagementTagCard() {
-	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
+	@card.Card(card.Props{Class: "rounded-3xl shadow-sm", Attributes: templ.Attributes{"x-show": "journal.detail.type === 'TAKEN'"}}) {
 		@card.Header(card.HeaderProps{}) {
-			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Trade Debrief }
-			@card.Description(card.DescriptionProps{}) { Did you manage your trade well? }
+			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Oh, So You Took the Trade? }
+			@card.Description(card.DescriptionProps{}) { How did it go? Confess your sins. }
 		}
 		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
 			@takenTagControls()
