@@ -306,9 +306,8 @@ func journalDetailNoteCard() templ.Component {
 				templ_7745c5c3_Err = components.SubmitButton(components.SubmitButtonProps{
 					OnClickExpr:  "sidebar.noteForm.submit()",
 					DisabledExpr: "sidebar.noteForm.submitter.isBusy() || !sidebar.noteForm.canSubmit()",
-					LoadingExpr:  "sidebar.noteForm.submitter.isBusy()",
-					LoadingText:  "Saving note...",
-					DefaultText:  "Add Note",
+					BusyExpr:     "sidebar.noteForm.submitter.isBusy()",
+					Label:        "Add Note",
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

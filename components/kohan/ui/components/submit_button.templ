@@ -6,8 +6,7 @@ type SubmitButtonProps struct {
 	OnClickExpr    string
 	DisabledExpr   string
 	BusyExpr       string
-	BusyText       string
-	DefaultText    string
+	Label          string
 }
 
 templ SubmitButton(props SubmitButtonProps) {
@@ -19,7 +18,7 @@ templ SubmitButton(props SubmitButtonProps) {
 			"x-on:click":      props.OnClickExpr,
 			"x-bind:disabled": props.DisabledExpr,
 			"x-bind:class":    props.BusyExpr + " ? 'opacity-70' : ''",
-			"x-text":          props.BusyExpr + " ? '" + props.BusyText + "' : '" + props.DefaultText + "'",
+			"x-text":          props.BusyExpr + " ? 'Submitting...' : '" + props.Label + "'",
 		},
 	}) {}
 }

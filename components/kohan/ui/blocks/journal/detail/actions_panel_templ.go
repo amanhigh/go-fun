@@ -444,9 +444,8 @@ func journalDetailTagForm() templ.Component {
 		templ_7745c5c3_Err = components.SubmitButton(components.SubmitButtonProps{
 			OnClickExpr:  "sidebar.reasonTagForm.submit()",
 			DisabledExpr: "sidebar.reasonTagForm.submitter.isBusy() || !sidebar.reasonTagForm.canSubmit()",
-			LoadingExpr:  "sidebar.reasonTagForm.submitter.isBusy()",
-			LoadingText:  "Saving reason tag...",
-			DefaultText:  "Add Reason Tag",
+			BusyExpr:     "sidebar.reasonTagForm.submitter.isBusy()",
+			Label:        "Add Reason Tag",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

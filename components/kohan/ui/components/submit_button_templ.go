@@ -15,8 +15,7 @@ type SubmitButtonProps struct {
 	OnClickExpr  string
 	DisabledExpr string
 	BusyExpr     string
-	BusyText     string
-	DefaultText  string
+	Label        string
 }
 
 func SubmitButton(props SubmitButtonProps) templ.Component {
@@ -48,7 +47,7 @@ func SubmitButton(props SubmitButtonProps) templ.Component {
 				"x-on:click":      props.OnClickExpr,
 				"x-bind:disabled": props.DisabledExpr,
 				"x-bind:class":    props.BusyExpr + " ? 'opacity-70' : ''",
-				"x-text":          props.BusyExpr + " ? '" + props.BusyText + "' : '" + props.DefaultText + "'",
+				"x-text":          props.BusyExpr + " ? 'Submitting...' : '" + props.Label + "'",
 			},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
