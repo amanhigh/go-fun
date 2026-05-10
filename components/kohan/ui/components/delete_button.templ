@@ -6,10 +6,9 @@ import (
 )
 
 type DeleteButtonProps struct {
-	OnClickExpr   string
+	Label         string
 	DisabledExpr  string
-	AriaLabel     string
-	Title         string
+	OnClickExpr   string
 	Class         string
 }
 
@@ -22,8 +21,8 @@ templ DeleteButton(props DeleteButtonProps) {
 			"x-on:click":      props.OnClickExpr,
 			"x-bind:disabled": props.DisabledExpr,
 			"x-bind:class":    props.DisabledExpr + " ? 'opacity-70' : ''",
-			"aria-label":      props.AriaLabel,
-			"title":           props.Title,
+			"aria-label":      props.Label,
+			"title":           props.Label,
 		},
 	}) {
 		@icon.Icon("trash-2")(icon.Props{Class: "h-4 w-4"})

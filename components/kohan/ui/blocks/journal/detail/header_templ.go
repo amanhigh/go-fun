@@ -67,10 +67,9 @@ func JournalDetailHeader() templ.Component {
 					return templ_7745c5c3_Err
 				}
 				templ_7745c5c3_Err = components.DeleteButton(components.DeleteButtonProps{
-					OnClickExpr:  "header.deleteJournal()",
+					Label:        "Delete Journal",
 					DisabledExpr: "header.submitter.isBusy()",
-					AriaLabel:    "Delete Journal",
-					Title:        "Delete Journal",
+					OnClickExpr:  "header.deleteJournal()",
 					Class:        "h-9 w-9",
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {

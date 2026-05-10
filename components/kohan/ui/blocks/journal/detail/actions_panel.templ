@@ -124,10 +124,9 @@ templ journalDetailTagRow() {
 			@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, TextExpr: "present.tag.label(tag)", Class: "font-semibold"})
 		</div>
 		@components.DeleteButton(components.DeleteButtonProps{
-			OnClickExpr:  "sidebar.tags.delete(tag.id)",
+			Label:        "Delete Tag",
 			DisabledExpr: "sidebar.tags.submitter.isBusy()",
-			AriaLabel:    "Delete Tag",
-			Title:        "Delete Tag",
+			OnClickExpr:  "sidebar.tags.delete(tag.id)",
 		})
 	</div>
 }

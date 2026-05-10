@@ -570,10 +570,9 @@ func journalDetailTagRow() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.DeleteButton(components.DeleteButtonProps{
-			OnClickExpr:  "sidebar.tags.delete(tag.id)",
+			Label:        "Delete Tag",
 			DisabledExpr: "sidebar.tags.submitter.isBusy()",
-			AriaLabel:    "Delete Tag",
-			Title:        "Delete Tag",
+			OnClickExpr:  "sidebar.tags.delete(tag.id)",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

@@ -13,10 +13,9 @@ import (
 )
 
 type DeleteButtonProps struct {
-	OnClickExpr  string
+	Label        string
 	DisabledExpr string
-	AriaLabel    string
-	Title        string
+	OnClickExpr  string
 	Class        string
 }
 
@@ -67,8 +66,8 @@ func DeleteButton(props DeleteButtonProps) templ.Component {
 				"x-on:click":      props.OnClickExpr,
 				"x-bind:disabled": props.DisabledExpr,
 				"x-bind:class":    props.DisabledExpr + " ? 'opacity-70' : ''",
-				"aria-label":      props.AriaLabel,
-				"title":           props.Title,
+				"aria-label":      props.Label,
+				"title":           props.Label,
 			},
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

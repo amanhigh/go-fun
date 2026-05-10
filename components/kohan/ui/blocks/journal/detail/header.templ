@@ -17,10 +17,9 @@ templ JournalDetailHeader() {
 				<div class="flex items-start justify-between gap-3">
 					<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + journal.detail.id"></div>
 					@components.DeleteButton(components.DeleteButtonProps{
-						OnClickExpr:  "header.deleteJournal()",
+						Label:        "Delete Journal",
 						DisabledExpr: "header.submitter.isBusy()",
-						AriaLabel:    "Delete Journal",
-						Title:        "Delete Journal",
+						OnClickExpr:  "header.deleteJournal()",
 						Class:        "h-9 w-9",
 					})
 					@components.Submitter(components.SubmitterProps{

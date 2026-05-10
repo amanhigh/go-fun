@@ -140,10 +140,9 @@ func JournalDetailNoteRow() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.DeleteButton(components.DeleteButtonProps{
-			OnClickExpr:  "sidebar.notes.delete(note.id)",
+			Label:        "Delete Note",
 			DisabledExpr: "sidebar.notes.submitter.isBusy()",
-			AriaLabel:    "Delete Note",
-			Title:        "Delete Note",
+			OnClickExpr:  "sidebar.notes.delete(note.id)",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
