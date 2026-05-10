@@ -1,19 +1,20 @@
 package components
 
 import (
+	"github.com/amanhigh/go-fun/common/ui/widgets"
 	"github.com/templui/templui/components/button"
 )
 
 // ============================================================
 // LOADER — Standard state-flow component
 // ============================================================
-// Loader manages error, empty, and ready states.
-// Loading is invisible — content shows on success, error on failure.
+// Loader manages loading, error, empty, and ready states for
+// collection-backed and single-object flows.
 //
 // Loader   — JS expression for the loader state object (e.g. "sidebar.reviewQueue.loader").
 // ReadyExpr — JS expression for the content-ready condition (e.g. "table.hasItems()" or "journal.detail").
 // RetryExpr — JS expression called on retry click (e.g. "table.load()").
-// Children  — rendered when idle and ReadyExpr is truthy.
+// Children  — rendered when idle (not busy, no error) and ReadyExpr is truthy.
 
 type LoaderProps struct {
 	Loader       string
@@ -23,7 +24,10 @@ type LoaderProps struct {
 }
 
 templ Loader(props LoaderProps) {
-	<div class="statebox-base statebox-error" x-show={ props.Loader + ".hasError()" }>
+	<div class="statebox-base statebox-loading" x-show={ props.Loader + ".isBusy()" }>
+		@widgets.Spinner(widgets.SpinnerProps{Size: widgets.SpinnerSizeSm})
+	</div>
+	<div class="statebox-base statebox-error" x-show={ "!" + props.Loader + ".isBusy() && " + props.Loader + ".hasError()" }>
 		<div class="font-medium" x-text={ props.Loader + ".message" }></div>
 		if props.RetryExpr != "" {
 			@button.Button(button.Props{

@@ -1,9 +1,13 @@
 package components
 
+import (
+	"github.com/amanhigh/go-fun/common/ui/widgets"
+)
+
 // ============================================================
 // SUBMITTER WRAPPER
 // ============================================================
-// Renders feedback (message text) bound to a submitter state object.
+// Shows a spinner during submission, then feedback message on result.
 // Submitter is the JS expression for the submitter state object (e.g. "header.submitter").
 
 type SubmitterProps struct {
@@ -11,5 +15,8 @@ type SubmitterProps struct {
 }
 
 templ Submitter(props SubmitterProps) {
+	<div x-show={ props.Submitter + ".isBusy()" }>
+		@widgets.Spinner(widgets.SpinnerProps{Size: widgets.SpinnerSizeSm})
+	</div>
 	<p class="text-sm" x-show={ props.Submitter + ".hasMessage()" } x-bind:class={ props.Submitter + ".variant" } x-text={ props.Submitter + ".message" }></p>
 }
