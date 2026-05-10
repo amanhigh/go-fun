@@ -1,6 +1,9 @@
-import { normalizeTag } from './date';
 import type { JournalTag, JournalTimeframe } from '../types/journal_api';
 import type { DisplaySpec, PresentationConcern } from '../types/presentation_concern';
+
+function displayKey(value: string): string {
+	return value.trim().toUpperCase();
+}
 
 function display(spec: DisplaySpec): string {
 	return spec.icon ? `${spec.icon} ${spec.text}` : spec.text;
@@ -57,13 +60,13 @@ export function NewPresentationConcern(): PresentationConcern {
 
 		// --- Type ---
 		type(value: string): DisplaySpec {
-			const key = normalizeTag(value);
+			const key = displayKey(value);
 			return typeDisplayMap[key] ?? { ...defaultTypeSpec, text: key };
 		},
 
 		// --- Status ---
 		status(value: string): DisplaySpec {
-			const key = normalizeTag(value);
+			const key = displayKey(value);
 			return statusDisplayMap[key] ?? { ...defaultStatusSpec, text: key };
 		},
 
@@ -74,7 +77,7 @@ export function NewPresentationConcern(): PresentationConcern {
 
 		// --- Sequence ---
 		sequence(value: string | null | undefined): DisplaySpec {
-			const key = normalizeTag(value ?? '');
+			const key = displayKey(value ?? '');
 			if (!key) return { text: '', class: '' };
 			const seqCatalog: Record<string, DisplaySpec> = {
 				MWD: { icon: '🕐', text: 'MWD', class: '' },
