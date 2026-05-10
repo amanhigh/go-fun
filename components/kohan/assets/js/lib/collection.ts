@@ -16,8 +16,8 @@ export function createSyncedCollectionState<T extends Identifiable>() {
 	return {
 		items: [] as T[],
 
-		sync(items: T[] | undefined) {
-			this.items = [...(items ?? [])];
+		sync(items: T[]) {
+			this.items = [...items];
 		},
 		all() {
 			return this.items;

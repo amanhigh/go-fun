@@ -3,15 +3,13 @@ import type { Loader } from '../../../lib/loader';
 import type { JournalDetail } from '../../../types/api/journal/response';
 import type { JournalDetailPageProvider } from '../../../types/journal/detail';
 
-function normalizeJournal(journal: unknown): JournalDetail | null {
-	if (!journal) return null;
-	const src = journal as Record<string, unknown>;
+function normalizeJournal(journal: JournalDetail): JournalDetail {
 	return {
-		...src,
-		images: (src.images as JournalDetail['images']) ?? [],
-		tags: (src.tags as JournalDetail['tags']) ?? [],
-		notes: (src.notes as JournalDetail['notes']) ?? [],
-	} as JournalDetail;
+		...journal,
+		images: journal.images ?? [],
+		tags: journal.tags ?? [],
+		notes: journal.notes ?? [],
+	};
 }
 
 export function NewJournalConcern(pg: JournalDetailPageProvider) {
@@ -28,8 +26,8 @@ export function NewJournalConcern(pg: JournalDetailPageProvider) {
 			if (!data) return;
 
 			this.journal = normalizeJournal(data);
-			pg().sidebar.tags.sync(this.journal?.tags);
-			pg().sidebar.notes.sync(this.journal?.notes);
+			pg().sidebar.tags.sync(this.journal.tags);
+			pg().sidebar.notes.sync(this.journal.notes);
 		},
 	};
 }

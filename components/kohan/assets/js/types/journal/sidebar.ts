@@ -3,14 +3,6 @@ import type { Submitter } from '../../lib/submitter';
 import type { DeletableSyncedCollection, LoadableCollection } from '../core/collection';
 import type { DisplaySpec } from '../core/present';
 
-
-export type QuickAction = {
-	id: string;
-	isActive(): boolean;
-	display: DisplaySpec;
-	apply(): Promise<void>;
-};
-
 // ===== Main Concern =====
 
 export type JournalDetailSidebarConcern = {
@@ -38,6 +30,13 @@ export type SidebarStateConcern = {
 export type ReviewActionsConcern = {
 	submitter: Submitter;
 	actions(): QuickAction[];
+};
+
+export type QuickAction = {
+	id: string;
+	isActive(): boolean;
+	display: DisplaySpec;
+	apply(): Promise<void>;
 };
 
 export type ReviewQueueConcern = LoadableCollection<Journal>;
