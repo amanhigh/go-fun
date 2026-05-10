@@ -16,7 +16,7 @@ export function TagFormConcern(pg: JournalDetailPageProvider) {
 
 		async submit() {
 			const page = pg();
-			const journal = page.current.journal;
+			const journal = page.journal.detail;
 			if (!journal) return;
 
 			const tag = this.input.trim();
@@ -39,7 +39,7 @@ export function TagFormConcern(pg: JournalDetailPageProvider) {
 			if (override) {
 				payload.override = override;
 			}
-			const envelope = await page.tagClient.create(page.current.journalId, payload);
+			const envelope = await page.tagClient.create(page.journal.detail!.id, payload);
 			page.sidebar.tags.prepend(envelope.data as JournalTag);
 			this.input = '';
 			this.override = '';

@@ -96,7 +96,9 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`sidebar.reviewQueue.loader.isBusy()`))
 			Expect(html).To(ContainSubstring(`sidebar.reviewQueue.loader.hasError()`))
 			Expect(html).To(ContainSubstring(`sidebar.reviewQueue.loader.message`))
-			Expect(html).To(ContainSubstring(`sidebar.reviewQueue.loader.hasError() &amp;&amp; sidebar.reviewQueue.hasItems()`))
+			Expect(html).To(ContainSubstring(`sidebar.reviewQueue.loader.hasError()`))
+			Expect(html).To(ContainSubstring(`x-on:click="sidebar.reviewQueue.load()"`))
+			Expect(html).To(ContainSubstring("animate-spin"))
 			Expect(html).To(ContainSubstring(`aria-label="Delete Note"`))
 			Expect(html).To(ContainSubstring("h-4 w-4"))
 		})
@@ -105,22 +107,22 @@ var _ = Describe("Journal Detail Page Tests", func() {
 	Context("Header Summary", func() {
 		It("should render a compact summary card with new two-column layout", func() {
 			// Identity unchanged
-			Expect(html).To(ContainSubstring(`x-text="current.journal.ticker"`))
-			Expect(html).To(ContainSubstring(`x-text="'ID: ' + current.journal.id"`))
+			Expect(html).To(ContainSubstring(`x-text="journal.detail.ticker"`))
+			Expect(html).To(ContainSubstring(`x-text="'ID: ' + journal.detail.id"`))
 			// Delete action
 			Expect(html).To(ContainSubstring(`x-on:click="header.deleteJournal()"`))
 
 			// Primary info row: type + status + sequence
-			Expect(html).To(ContainSubstring(`present.sequence.label(current.journal.sequence)`))
-			Expect(html).To(ContainSubstring(`present.type.label(current.journal.type)`))
-			Expect(html).To(ContainSubstring(`present.status.label(current.journal.status)`))
-			Expect(html).To(ContainSubstring(`present.status.spec(current.journal.status).class`))
+			Expect(html).To(ContainSubstring(`present.sequence.label(journal.detail.sequence)`))
+			Expect(html).To(ContainSubstring(`present.type.label(journal.detail.type)`))
+			Expect(html).To(ContainSubstring(`present.status.label(journal.detail.status)`))
+			Expect(html).To(ContainSubstring(`present.status.spec(journal.detail.status).class`))
 
 			// Right metadata: created + pending/review
-			Expect(html).To(ContainSubstring(`x-text="present.date.format(current.journal.created_at)"`))
-			Expect(html).To(ContainSubstring(`x-show="!current.journal.reviewed_at"`))
-			Expect(html).To(ContainSubstring(`x-show="current.journal.reviewed_at"`))
-			Expect(html).To(ContainSubstring(`present.review.label(current.journal.reviewed_at)`))
+			Expect(html).To(ContainSubstring(`x-text="present.date.format(journal.detail.created_at)"`))
+			Expect(html).To(ContainSubstring(`x-show="!journal.detail.reviewed_at"`))
+			Expect(html).To(ContainSubstring(`x-show="journal.detail.reviewed_at"`))
+			Expect(html).To(ContainSubstring(`present.review.label(journal.detail.reviewed_at)`))
 
 			// Tags rendered directly without section label
 			Expect(html).ToNot(ContainSubstring(`Summary Tags`))
@@ -187,18 +189,18 @@ var _ = Describe("Journal Detail Page Tests", func() {
 
 	Context("Loader State Bindings", func() {
 		It("should wire loading and error states via loader", func() {
-			Expect(html).To(ContainSubstring(`current.loader.isBusy()`))
-			Expect(html).To(ContainSubstring(`current.loader.hasMessage()`))
+			Expect(html).To(ContainSubstring(`journal.loader.isBusy()`))
+			Expect(html).To(ContainSubstring(`journal.loader.hasError()`))
 		})
 
 		It("should render loader error text and retry binding", func() {
-			Expect(html).To(ContainSubstring(`x-text="current.loader.message"`))
-			Expect(html).To(ContainSubstring(`x-on:click="current.loadJournal()"`))
+			Expect(html).To(ContainSubstring(`x-text="journal.loader.message"`))
+			Expect(html).To(ContainSubstring(`x-on:click="journal.loadJournal(&#39;jrn_1234abcd&#39;)"`))
 			Expect(html).To(ContainSubstring("Retry"))
 		})
 
 		It("should gate loaded content behind loader states", func() {
-			Expect(html).To(ContainSubstring(`x-show="current.journal && !current.loader.isBusy() && !current.loader.hasMessage()"`))
+			Expect(html).To(ContainSubstring(`x-show="!journal.loader.isBusy() &amp;&amp; !journal.loader.hasError() &amp;&amp; (journal.detail)"`))
 		})
 	})
 })

@@ -9,9 +9,9 @@ export function NewNotesConcern(pg: JournalDetailPageProvider) {
 		loader: createLoader(),
 
 		async delete(noteId: string) {
-			if (!pg().current.journal) return;
+			if (!pg().journal.detail) return;
 			await this.loader.tryRun(
-				() => pg().noteClient.delete(pg().current.journalId, noteId),
+				() => pg().noteClient.delete(pg().journal.detail!.id, noteId),
 			);
 			this.remove(noteId);
 		},

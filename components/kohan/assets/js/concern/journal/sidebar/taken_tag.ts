@@ -19,13 +19,13 @@ export function TakenTagConcern(pg: JournalDetailPageProvider) {
 		],
 
 		show() {
-			return pg().current.journal?.type === JournalType.TAKEN;
+			return pg().journal.detail?.type === JournalType.TAKEN;
 		},
 		hasTag(value: string) {
 			return pg().sidebar.tags.management().some((tag: JournalTag) => tag.tag === value);
 		},
 		async submit(tagValue: string) {
-			if (!pg().current.journal) return;
+			if (!pg().journal.detail) return;
 			await this.submitter.run(
 				() => this.addTag(tagValue),
 				{ success: `${tagValue} tag added.` },
@@ -35,7 +35,7 @@ export function TakenTagConcern(pg: JournalDetailPageProvider) {
 		async addTag(tagValue: string) {
 			const payload: JournalTagRequest = { tag: tagValue, type: JournalTagType.MANAGEMENT };
 			const page = pg();
-			const envelope = await page.tagClient.create(page.current.journalId, payload);
+			const envelope = await page.tagClient.create(page.journal.detail!.id, payload);
 			page.sidebar.tags.prepend(envelope.data as JournalTag);
 		},
 	};

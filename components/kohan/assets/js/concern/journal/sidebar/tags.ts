@@ -10,9 +10,9 @@ export function NewTagCollectionConcern(pg: JournalDetailPageProvider) {
 		loader: createLoader(),
 
 		async delete(tagId: string) {
-			if (!pg().current.journal) return;
+			if (!pg().journal.detail) return;
 			await this.loader.tryRun(
-				() => pg().tagClient.delete(pg().current.journalId, tagId),
+				() => pg().tagClient.delete(pg().journal.detail!.id, tagId),
 			);
 			this.remove(tagId);
 		},

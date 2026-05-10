@@ -101,6 +101,7 @@ var _ = Describe("Journal Page Tests", func() {
 			Expect(html).To(ContainSubstring(`table.loader.isBusy()`))
 			Expect(html).To(ContainSubstring(`table.loader.hasError()`))
 			Expect(html).To(ContainSubstring(`table.loader.message`))
+			Expect(html).To(ContainSubstring("animate-spin"))
 		})
 
 		It("should render table loader error and retry bindings", func() {

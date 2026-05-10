@@ -13,7 +13,7 @@ export type JournalDetailPage = JournalPageBase & {
 	noteClient: JournalNoteClient;
 	tagClient: JournalTagClient;
 
-	current: JournalConcern;
+	journal: JournalConcern;
 	header: JournalHeaderConcern;
 	images: JournalImagesConcern;
 	preview: PreviewConcern;
@@ -25,11 +25,10 @@ export type JournalDetailPageProvider = PageProvider<JournalDetailPage>;
 // ===== Page Sub-Concerns =====
 
 export type JournalConcern = {
-	journalId: string;
-	journal: JournalDetail | null;
+	detail: JournalDetail | null;
 	loader: Loader;
 
-	loadJournal(): Promise<void>;
+	loadJournal(id: string): Promise<void>;
 };
 
 export type JournalHeaderConcern = {

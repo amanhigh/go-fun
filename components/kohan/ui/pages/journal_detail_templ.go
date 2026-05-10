@@ -84,10 +84,10 @@ func JournalDetailPage(journalID string) templ.Component {
 				})
 				templ_7745c5c3_Err = components.Loader(components.LoaderProps{
 					Loader:         "journal.loader",
-					ReadyExpr:      "journal.journal",
+					ReadyExpr:      "journal.detail",
 					LoadingMessage: "Loading journal details...",
 					EmptyMessage:   "No journal details available.",
-					RetryExpr:      "journal.loadJournal()",
+					RetryExpr:      "journal.loadJournal('" + journalID + "')",
 				}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
