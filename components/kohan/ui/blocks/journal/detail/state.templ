@@ -3,7 +3,6 @@ package detail
 import (
 	"github.com/amanhigh/go-fun/components/kohan/ui/components"
 	"github.com/amanhigh/go-fun/common/ui/widgets"
-	"github.com/templui/templui/components/button"
 )
 
 // ============================================================
@@ -11,25 +10,14 @@ import (
 // ============================================================
 
 templ JournalDetailStateSection() {
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "current.loading"}) {
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "current.loader.isLoading()"}) {
 		<div class="flex items-center justify-center gap-2">
 			@widgets.Spinner(widgets.SpinnerProps{Size: widgets.SpinnerSizeSm, Class: "text-sky-700"})
 			<span>Loading journal details...</span>
 		</div>
 	}
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxError, ShowExpr: "current.hasError()"}) {
-		<div class="space-y-3">
-			<div class="font-medium" x-text="current.errorMessage"></div>
-			@button.Button(button.Props{
-				Variant:    button.VariantOutline,
-				Type:       button.TypeButton,
-				Attributes: templ.Attributes{"x-on:click": "current.loadJournal()"},
-			}) {
-				Retry
-			}
-		</div>
-	}
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!current.loading && !current.hasError() && !current.journal"}) {
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxError, ShowExpr: "current.loader.hasError()", TextExpr: "current.loader.error", RetryExpr: "current.loadJournal()"}) {}
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!current.loader.isLoading() && !current.loader.hasError() && !current.journal"}) {
 		No journal details available.
 	}
 }

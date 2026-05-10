@@ -1,4 +1,4 @@
-import type { JournalPageProvider, PaginationConcern } from '../../../types/journal_list_concern';
+import type { JournalPageProvider, PaginationConcern } from '../../../types/journal/list';
 
 const defaultPageSize = 10;
 

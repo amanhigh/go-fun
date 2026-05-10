@@ -1,5 +1,7 @@
-import { BaseClient, type Envelope } from './base';
-import type { JournalTag, JournalTagRequest } from '../types/journal_api';
+import { BaseClient, HttpMethod } from './base';
+import type { Envelope } from '../types/api/common';
+import type { JournalTag } from '../types/api/journal/response';
+import type { JournalTagRequest } from '../types/api/journal/request';
 
 export interface JournalTagClient {
 	create(journalId: string, payload: JournalTagRequest): Promise<Envelope<JournalTag>>;
@@ -12,11 +14,11 @@ export class JournalTagClientImpl extends BaseClient implements JournalTagClient
 	}
 
 	async create(journalId: string, payload: JournalTagRequest): Promise<Envelope<JournalTag>> {
-		return this.requestJson<Envelope<JournalTag>>(`/journals/${journalId}/tags`, 'POST', 'Failed to save tag', 'Journal not found', {}, payload);
+		return this.requestJson<Envelope<JournalTag>>(`/journals/${journalId}/tags`, HttpMethod.POST, {}, payload);
 	}
 
 	async delete(journalId: string, tagId: string): Promise<void> {
-		await this.request(`/journals/${journalId}/tags/${tagId}`, { method: 'DELETE' }, 'Failed to delete tag', 'Tag not found');
+		await this.request(`/journals/${journalId}/tags/${tagId}`, { method: HttpMethod.DELETE });
 	}
 }
 

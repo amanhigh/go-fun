@@ -1,53 +1,43 @@
-import { createAsyncFeedbackState } from '../../../shared/async_feedback';
-import { getErrorMessage } from '../../../shared/error';
-import { prependById } from '../../../shared/collection';
-import type { JournalNote, JournalNoteRequest } from '../../../types/journal_api';
-import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
-
-export function createNoteFormState() {
-	return {
-		...createAsyncFeedbackState('submitting', 'message', 'messageType'),
-		content: '',
-	};
-}
+import { createSubmitter } from '../../../lib/submitter';
+import { JournalNoteFormat } from '../../../types/api/journal/enums';
+import type { JournalStatus } from '../../../types/api/journal/enums';
+import type { JournalNote } from '../../../types/api/journal/response';
+import type { JournalNoteRequest } from '../../../types/api/journal/request';
+import type { JournalDetailPageProvider } from '../../../types/journal/detail';
 
 export function NewNoteFormConcern(pg: JournalDetailPageProvider) {
 	return {
-		...createNoteFormState(),
+		submitter: createSubmitter(),
+		content: '',
 
-		get feedbackClass(): string {
-			return this.messageType === 'success' ? 'journal-feedback-success' : 'journal-feedback-error';
+		canSubmit() {
+			return this.content.trim() !== '';
 		},
 
-		async submit(this: any) {
+		async submit() {
 			const journal = pg().current.journal;
-			if (!journal || this.submitting) return;
+			if (!journal) return;
+
 			const content = this.content.trim();
 			if (!content) {
-				this.message = 'Note content is required.';
-				this.messageType = 'error';
+				this.submitter.setError('Note content is required.');
 				return;
 			}
-			this.submitting = true;
-			this.message = '';
-			this.messageType = 'error';
-			try {
-				const payload: JournalNoteRequest = {
-					status: journal.status,
-					content,
-					format: 'MARKDOWN',
-				};
-				const envelope = await pg().noteClient.create(pg().current.journalId, payload);
-				pg().sidebar.notes.items = prependById(pg().sidebar.notes.items ?? [], envelope.data as JournalNote);
-				this.content = '';
-				this.messageType = 'success';
-				this.message = 'Note added.';
-			} catch (err) {
-				this.message = getErrorMessage(err, 'Unable to save note.');
-				this.messageType = 'error';
-			} finally {
-				this.submitting = false;
-			}
+			await this.submitter.run(
+				() => this.createNote(journal.status, content),
+				{ success: 'Note added.' },
+			);
+		},
+
+		async createNote(status: JournalStatus, content: string) {
+			const payload: JournalNoteRequest = {
+				status,
+				content,
+				format: JournalNoteFormat.MARKDOWN,
+			};
+			const envelope = await pg().noteClient.create(pg().current.journalId, payload);
+			pg().sidebar.notes.prepend(envelope.data as JournalNote);
+			this.content = '';
 		},
 	};
 }

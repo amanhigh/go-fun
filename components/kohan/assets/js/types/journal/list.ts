@@ -1,19 +1,22 @@
-import type { Journal, JournalFilterKey } from './journal_api';
-import type { JournalClient } from '../client/journal';
-import type { PresentationConcern } from './presentation_concern';
+import type { Journal } from '../api/journal/response';
+import type { ReviewedFilter } from '../api/journal/request';
+import type { JournalType, JournalStatus, JournalSequence, JournalSortBy, JournalSortOrder } from '../api/journal/enums';
+import type { Loader } from '../../lib/loader';
+import type { JournalPageBase, PageProvider } from './page';
 
-export type JournalPageProvider = () => JournalPageData;
+// ===== Main Page Composition =====
 
-export type JournalPageData = {
-	client: JournalClient;
-	presentation: PresentationConcern;
+export type JournalPage = JournalPageBase & {
 	filter: JournalFilterConcern;
 	filterUrl: JournalFilterUrlConcern;
 	pagination: PaginationConcern;
 	presets: PresetConcern;
 	table: JournalTableConcern;
-	init(): void;
 };
+
+export type JournalPageProvider = PageProvider<JournalPage>;
+
+// ===== Page Sub-Concerns =====
 
 export type PaginationConcern = {
 	page: number;
@@ -36,16 +39,34 @@ export type PaginationConcern = {
 	summary(): string;
 };
 
-export type DatePresetName = '' | 'today' | 'last7' | 'last30';
+export const DatePresetName = {
+	ALL: '' as const,
+	TODAY: 'today' as const,
+	LAST7: 'last7' as const,
+	LAST30: 'last30' as const,
+} as const;
+export type DatePresetName = (typeof DatePresetName)[keyof typeof DatePresetName];
 export type NonEmptyDatePresetName = Exclude<DatePresetName, ''>;
 
-export type JournalFilterConcern = Record<JournalFilterKey, string> & {
+export type JournalFilterValues = {
+	ticker: string;
+	type: JournalType | '';
+	status: JournalStatus | '';
+	sequence: JournalSequence | '';
+	createdAfter: string;
+	createdBefore: string;
+	reviewed: ReviewedFilter;
+	sortBy: JournalSortBy;
+	sortOrder: JournalSortOrder;
+};
+
+export type JournalFilterConcern = JournalFilterValues & {
 	datePreset: DatePresetName;
 	clear(): void;
 	hasActiveState(): boolean;
 	toggleType(): void;
-	typeToggle(): { label: string; className: string; nextType: string };
-	toggleSort(field: 'ticker' | 'sequence' | 'created_at'): void;
+	typeToggle(): { label: string; className: string; nextType: JournalType | '' };
+	toggleSort(field: JournalSortBy): void;
 	applyFilters(): void;
 	applyManualFilters(): void;
 	clearFilters(): void;
@@ -76,7 +97,7 @@ export type PresetConcern = {
 
 export type JournalTableConcern = {
 	journals: Journal[];
-	loading: boolean;
+	loader: Loader;
 	loadJournals(): Promise<void>;
 	isEmpty(): boolean;
 };

@@ -1,5 +1,7 @@
-import { BaseClient, type Envelope, type QueryValue } from './base';
-import type { Journal, JournalFilterKey, JournalList, JournalListRequest, JournalUpdate, JournalUpdateRequest } from '../types/journal_api';
+import { BaseClient, HttpMethod, type QueryValue } from './base';
+import type { Envelope } from '../types/api/common';
+import type { Journal, JournalList, JournalUpdate } from '../types/api/journal/response';
+import type { JournalFilterKey, JournalListRequest, JournalUpdateRequest } from '../types/api/journal/request';
 
 const journalApiFields: JournalFilterKey[] = ['ticker', 'type', 'status', 'sequence', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'];
 
@@ -29,19 +31,19 @@ export class JournalClientImpl extends BaseClient implements JournalClient {
 			const value = filters[key];
 			if (value !== undefined && value !== '') query[journalApiQueryMap[key] ?? key] = value;
 		});
-		return this.requestJson<Envelope<JournalList>>('/journals', 'GET', 'Failed to load journals', 'Journal not found', query);
+		return this.requestJson<Envelope<JournalList>>('/journals', HttpMethod.GET, query);
 	}
 
 	async get(journalId: string): Promise<Envelope<Journal>> {
-		return this.requestJson<Envelope<Journal>>(`/journals/${journalId}`, 'GET', 'Failed to load journal', 'Journal not found');
+		return this.requestJson<Envelope<Journal>>(`/journals/${journalId}`, HttpMethod.GET);
 	}
 
 	async updateReview(journalId: string, payload: JournalUpdateRequest): Promise<Envelope<JournalUpdate>> {
-		return this.requestJson<Envelope<JournalUpdate>>(`/journals/${journalId}`, 'PATCH', 'Failed to update journal status', 'Journal not found', {}, payload);
+		return this.requestJson<Envelope<JournalUpdate>>(`/journals/${journalId}`, HttpMethod.PATCH, {}, payload);
 	}
 
 	async delete(journalId: string): Promise<void> {
-		await this.request(`/journals/${journalId}`, { method: 'DELETE' }, 'Failed to delete journal', 'Journal not found');
+		await this.request(`/journals/${journalId}`, { method: HttpMethod.DELETE });
 	}
 
 }

@@ -2,6 +2,8 @@ package components
 
 import (
 	"fmt"
+
+	"github.com/templui/templui/components/button"
 )
 
 type StateBoxVariant string
@@ -17,6 +19,8 @@ type StateBoxProps struct {
 	Variant    StateBoxVariant
 	ShowExpr   string
 	Message    string
+	TextExpr   string
+	RetryExpr  string
 	Class      string
 	Attributes templ.Attributes
 }
@@ -36,15 +40,35 @@ func stateBoxColorClasses(variant StateBoxVariant) string {
 	}
 }
 
-func stateBoxShowAttr(showExpr string) templ.Attributes {
-	if showExpr != "" {
-		return templ.Attributes{"x-show": showExpr}
+func stateBoxAttrs(props StateBoxProps) templ.Attributes {
+	attrs := templ.Attributes{}
+	for key, value := range props.Attributes {
+		attrs[key] = value
 	}
-	return nil
+	if props.ShowExpr != "" {
+		attrs["x-show"] = props.ShowExpr
+	}
+	return attrs
 }
 
 templ StateBox(props StateBoxProps) {
-	<div class={ fmt.Sprintf("rounded-2xl border border-dashed px-6 py-10 text-center text-sm %s %s", stateBoxColorClasses(props.Variant), props.Class) } { stateBoxShowAttr(props.ShowExpr)... } { props.Attributes... }>
+	<div class={ fmt.Sprintf("rounded-2xl border border-dashed px-6 py-10 text-center text-sm %s %s", stateBoxColorClasses(props.Variant), props.Class) } { stateBoxAttrs(props)... }>
+		if props.Message != "" {
+			<div class="font-medium">{ props.Message }</div>
+		}
+		if props.TextExpr != "" {
+			<div class="font-medium" x-text={ props.TextExpr }></div>
+		}
+		if props.RetryExpr != "" {
+			@button.Button(button.Props{
+				Variant:    button.VariantOutline,
+				Type:       button.TypeButton,
+				Class:      "mt-3",
+				Attributes: templ.Attributes{"x-on:click": props.RetryExpr},
+			}) {
+				Retry
+			}
+		}
 		{ children... }
 	</div>
 }

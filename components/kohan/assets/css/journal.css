@@ -105,6 +105,20 @@
     @apply border-slate-300/70 bg-slate-100/70 text-slate-700 hover:bg-slate-200/80;
   }
 
+  /* --- Date Presets --- */
+
+  .journal-date-preset-today {
+    @apply border-sky-300/70 bg-sky-100/70 text-sky-800 hover:bg-sky-200/80;
+  }
+
+  .journal-date-preset-last7 {
+    @apply border-indigo-300/70 bg-indigo-100/70 text-indigo-800 hover:bg-indigo-200/80;
+  }
+
+  .journal-date-preset-last30 {
+    @apply border-emerald-300/70 bg-emerald-100/70 text-emerald-800 hover:bg-emerald-200/80;
+  }
+
   /* --- Review Presets --- */
 
   .journal-review-preset-base {

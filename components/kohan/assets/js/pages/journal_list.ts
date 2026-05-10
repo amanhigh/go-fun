@@ -1,19 +1,19 @@
 import { NewJournalClient } from '../client/journal';
-import type { JournalPageData } from '../types/journal_list_concern';
-import { NewPresentationConcern } from '../concern/journal/common/presentation';
+import type { JournalPage } from '../types/journal/list';
+import { NewPresentationConcern } from '../concern/present/factory';
 import { NewFilterUrlConcern } from '../concern/journal/list/filter_url';
 import { NewFilterConcern } from '../concern/journal/list/filter';
 import { NewPresetConcern } from '../concern/journal/list/presets';
 import { NewPaginationConcern } from '../concern/journal/list/pagination';
 import { NewTableConcern } from '../concern/journal/list/table';
-import '../types/platform';
+import '../types/core/platform';
 
 function createJournalPageData() {
-	let page = {} as JournalPageData;
+	let page = {} as JournalPage;
 	const pg = () => page;
 
 	page.client = NewJournalClient();
-	page.presentation = NewPresentationConcern();
+	page.present = NewPresentationConcern();
 	page.table = NewTableConcern(pg);
 	page.pagination = NewPaginationConcern(pg);
 	page.presets = NewPresetConcern(pg);

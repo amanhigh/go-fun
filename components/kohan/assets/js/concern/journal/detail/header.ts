@@ -1,22 +1,20 @@
-import { getErrorMessage } from '../../../shared/error';
-import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
+import { createSubmitter } from '../../../lib/submitter';
+import type { JournalDetailPageProvider } from '../../../types/journal/detail';
 
 export function NewHeaderConcern(pg: JournalDetailPageProvider) {
 	return {
-		deleting: false,
+		submitter: createSubmitter(),
 
 		async deleteJournal(this: any) {
-			if (!pg().current.journal || this.deleting) return;
+			if (!pg().current.journal) return;
 			if (!window.confirm('Delete this journal? This cannot be undone.')) return;
-			this.deleting = true;
-			try {
-				await pg().client.delete(pg().current.journalId);
-				window.location.href = '/journal';
-			} catch (err) {
-				pg().current.errorMessage = getErrorMessage(err, 'Unable to delete journal.');
-			} finally {
-				this.deleting = false;
-			}
+			await this.submitter.run(
+				async () => {
+					await pg().client.delete(pg().current.journalId);
+					window.location.href = '/journal';
+				},
+				{ success: 'Journal deleted.' },
+			);
 		},
 	};
 }
