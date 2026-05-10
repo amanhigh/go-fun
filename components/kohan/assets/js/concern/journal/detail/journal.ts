@@ -18,15 +18,14 @@ export function NewJournalConcern(pg: JournalDetailPageProvider) {
 		loader: createLoader(),
 
 		async loadJournal(this: any, id: string) {
-			const data = await this.loader.loadData(
+			await this.loader.load(
 				() => pg().client.get(id),
+				(data) => {
+					this.detail = normalizeJournal(data);
+					pg().sidebar.tags.sync(this.detail.tags);
+					pg().sidebar.notes.sync(this.detail.notes);
+				},
 			);
-
-			if (!data) return;
-
-			this.detail = normalizeJournal(data);
-			pg().sidebar.tags.sync(this.detail.tags);
-			pg().sidebar.notes.sync(this.detail.notes);
 		},
 	};
 }

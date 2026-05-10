@@ -4,9 +4,10 @@ import type { Envelope } from '../types/api/common';
 // ===== Loader Type =====
 
 export type Loader = Runner & {
-	loadData<TData>(
+	load<TData>(
 		action: () => Promise<Envelope<TData>>,
-	): Promise<TData | undefined>;
+		onSuccess: (data: TData) => void | Promise<void>,
+	): Promise<boolean>;
 };
 
 // ===== Factory =====
@@ -15,10 +16,19 @@ export function createLoader(): Loader {
 	return {
 		...createRunnerState(),
 
-		async loadData<TData>(this: Loader, action: () => Promise<Envelope<TData>>): Promise<TData | undefined> {
-			const outcome = await this.tryRun(action);
-			const envelope = outcome.result;
-			return envelope?.data;
+		async load<TData>(
+			this: Loader,
+			action: () => Promise<Envelope<TData>>,
+			onSuccess: (data: TData) => void | Promise<void>,
+		): Promise<boolean> {
+			const outcome = await this.tryRun(async () => {
+				const envelope = await action();
+				if (envelope.data) {
+					await onSuccess(envelope.data);
+				}
+			});
+
+			return outcome.success;
 		},
 	};
 }
