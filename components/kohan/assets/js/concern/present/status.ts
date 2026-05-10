@@ -9,7 +9,6 @@ const statusCatalog: Record<string, DisplaySpec> = {
 	JUST_LOSS: { icon: '💔', text: 'JUST_LOSS', class: 'journal-status-just-loss' },
 	BROKEN: { icon: '💥', text: 'BROKEN', class: 'journal-status-broken' },
 	MISSED: { icon: '🚫', text: 'MISSED', class: 'journal-status-missed' },
-	REJECTED: { icon: '🏷️', text: 'REJECTED', class: 'journal-status-rejected' },
 };
 
 const fallbackSpec: DisplaySpec = { icon: '🏷️', text: 'Unknown', class: 'journal-display-default' };

@@ -1,16 +1,11 @@
-import { JournalType, JournalSortBy, JournalSortOrder } from '../../../types/journal_api';
-import type { JournalFilterKey } from '../../../types/journal_api';
-import type { DatePresetName, JournalFilterConcern, JournalPageProvider } from '../../../types/journal_list_concern';
+import { JournalType, JournalSortBy, JournalSortOrder, ReviewedFilter } from '../../../types/journal_api';
+import type { JournalFilterValues, DatePresetName, JournalFilterConcern, JournalPageProvider } from '../../../types/journal_list_concern';
 
 type TypeToggle = {
 	label: string;
 	className: string;
-	nextType: TypeFilterValue;
+	nextType: JournalType | '';
 };
-
-type SortField = typeof JournalSortBy[keyof typeof JournalSortBy];
-
-type TypeFilterValue = '' | JournalType;
 
 const typeToggleMap: Record<string, TypeToggle> = {
 	'': { label: 'Taken', className: 'journal-type-toggle-taken', nextType: JournalType.TAKEN },
@@ -18,14 +13,14 @@ const typeToggleMap: Record<string, TypeToggle> = {
 	[JournalType.REJECTED]: { label: 'All', className: 'journal-type-toggle-all', nextType: '' },
 };
 
-const journalFilterDefaults: Record<JournalFilterKey, string> = {
+const journalFilterDefaults: JournalFilterValues = {
 	ticker: '',
 	type: '',
 	status: '',
 	sequence: '',
 	createdAfter: '',
 	createdBefore: '',
-	reviewed: '',
+	reviewed: ReviewedFilter.ALL,
 	sortBy: JournalSortBy.CREATED_AT,
 	sortOrder: JournalSortOrder.DESC,
 };
@@ -40,7 +35,7 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 		},
 		hasActiveState() {
 			if (this.datePreset !== '') return true;
-			return Object.entries(journalFilterDefaults).some(([field, defaultValue]) => this[field as JournalFilterKey] !== defaultValue);
+			return (Object.keys(journalFilterDefaults) as (keyof JournalFilterValues)[]).some((field) => this[field] !== journalFilterDefaults[field]);
 		},
 		typeToggle() {
 			return resolveTypeToggle(this.type);
@@ -59,7 +54,7 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 			this.type = this.typeToggle().nextType;
 			this.applyManualFilters();
 		},
-		toggleSort(field: SortField) {
+		toggleSort(field: JournalSortBy) {
 			if (this.sortBy !== field) {
 				this.sortOrder = JournalSortOrder.ASC;
 			} else {
@@ -75,7 +70,7 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 	} as JournalFilterConcern;
 }
 
-export function resolveTypeToggle(currentType: string): TypeToggle {
+export function resolveTypeToggle(currentType: JournalType | ''): TypeToggle {
 	if (currentType === JournalType.TAKEN || currentType === JournalType.REJECTED) {
 		return typeToggleMap[currentType];
 	}

@@ -1,4 +1,4 @@
-import type { Journal, JournalImage } from './journal_api';
+import type { JournalDetail, JournalImage, JournalTimeframe } from './journal_api';
 import type { Submitter } from '../lib/submitter';
 import type { JournalClient } from '../client/journal';
 import type { JournalNoteClient } from '../client/journal_note';
@@ -32,7 +32,7 @@ export type JournalDetailPageData = {
 
 export type JournalConcern = {
 	journalId: string;
-	journal: Journal | null;
+	journal: JournalDetail | null;
 	loading: boolean;
 	errorMessage: string;
 
@@ -57,7 +57,7 @@ export type JournalImagesConcern = {
 
 export type PreviewConcern = {
 	index: number;
-	timeframe(): string;
+	timeframe(): JournalTimeframe | '';
 	src(): string;
 	label(): string;
 	fileName(): string;

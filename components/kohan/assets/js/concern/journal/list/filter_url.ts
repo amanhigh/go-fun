@@ -1,4 +1,4 @@
-import { JournalType } from '../../../types/journal_api';
+import { JournalType, JournalStatus, JournalSequence, JournalSortBy, JournalSortOrder, ReviewedFilter } from '../../../types/journal_api';
 import type { JournalFilterKey } from '../../../types/journal_api';
 import type { JournalFilterUrlConcern, JournalPageProvider } from '../../../types/journal_list_concern';
 
@@ -23,8 +23,15 @@ for (const [field, queryKey] of Object.entries(journalQueryMap)) {
 
 export const journalFilterFields: JournalFilterKey[] = ['ticker', 'type', 'status', 'sequence', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'];
 
-// Only these type values are accepted when reading from URL
-const knownTypeValues = new Set(['', JournalType.TAKEN, JournalType.REJECTED]);
+// Valid value sets for enum-backed filter fields when reading from URL
+const knownFilterValues: Record<string, ReadonlySet<string>> = {
+	type: new Set(['', JournalType.TAKEN, JournalType.REJECTED]),
+	status: new Set(['', ...Object.values(JournalStatus)]),
+	sequence: new Set(['', ...Object.values(JournalSequence)]),
+	sortBy: new Set(Object.values(JournalSortBy)),
+	sortOrder: new Set(Object.values(JournalSortOrder)),
+	reviewed: new Set(Object.values(ReviewedFilter)),
+};
 
 /** Read filter state from browser URL query params. */
 export function urlToFilter(pg: JournalPageProvider) {
@@ -40,14 +47,14 @@ export function urlToFilter(pg: JournalPageProvider) {
 		const stateKey = journalReverseMap[key];
 		if (!stateKey) return;
 
-		// Only accept known type values from URL; warn and reject unknown values
-		if (stateKey === 'type' && !knownTypeValues.has(value)) {
-			console.warn('Unknown type value from URL:', value);
-			filter.type = '';
+		// Validate enum-backed fields against known sets; warn and skip unknown
+		const validValues = knownFilterValues[stateKey];
+		if (validValues && !validValues.has(value)) {
+			console.warn(`Unknown ${stateKey} value from URL:`, value);
 			return;
 		}
 
-		filter[stateKey] = value;
+		(filter as Record<string, string>)[stateKey] = value;
 	});
 }
 

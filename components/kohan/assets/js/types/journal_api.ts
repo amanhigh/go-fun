@@ -1,3 +1,5 @@
+import type { PaginatedResponse } from '../client/base';
+
 // ===== Enums =====
 
 export const JournalType = {
@@ -60,6 +62,15 @@ export const JournalSortOrder = {
 } as const;
 export type JournalSortOrder = (typeof JournalSortOrder)[keyof typeof JournalSortOrder];
 
+// ===== Frontend-owned Consts =====
+
+export const ReviewedFilter = {
+	ALL: '' as const,
+	PENDING: 'false' as const,
+	REVIEWED: 'true' as const,
+} as const;
+export type ReviewedFilter = (typeof ReviewedFilter)[keyof typeof ReviewedFilter];
+
 // ===== Request Types =====
 
 export type JournalFilterKey = 'ticker' | 'type' | 'status' | 'sequence' | 'createdAfter' | 'createdBefore' | 'reviewed' | 'sortBy' | 'sortOrder';
@@ -70,7 +81,7 @@ export type JournalListRequest = Partial<JournalFilters>;
 
 export type JournalUpdateRequest = {
 	status?: JournalStatus;
-	reviewed_at: string | null;
+	reviewed_at?: string | null;
 };
 
 export type JournalNoteRequest = {
@@ -91,7 +102,7 @@ export type JournalImage = {
 	id: string;
 	timeframe: JournalTimeframe;
 	file_name: string;
-	created_at?: string;
+	created_at: string;
 };
 
 export type JournalNote = {
@@ -99,7 +110,7 @@ export type JournalNote = {
 	status: JournalStatus;
 	content: string;
 	format: JournalNoteFormat;
-	created_at?: string;
+	created_at: string;
 };
 
 export type JournalTag = {
@@ -107,7 +118,7 @@ export type JournalTag = {
 	tag: string;
 	type: JournalTagType;
 	override?: string;
-	created_at?: string;
+	created_at: string;
 };
 
 export type Journal = {
@@ -125,16 +136,19 @@ export type Journal = {
 };
 
 export type JournalList = {
-	journals?: Journal[];
-	metadata?: {
-		total?: number;
-		offset?: number;
-		limit?: number;
-	};
+	journals: Journal[];
+	metadata: PaginatedResponse;
 };
 
 export type JournalUpdate = {
 	id: string;
 	status: JournalStatus;
-	reviewed_at: string | null;
+	reviewed_at?: string | null;
+};
+
+/** Normalized detail view with always-present association arrays. */
+export type JournalDetail = Journal & {
+	images: JournalImage[];
+	tags: JournalTag[];
+	notes: JournalNote[];
 };

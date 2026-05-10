@@ -12,8 +12,6 @@ const defaultTypeSpec: DisplaySpec = { icon: '🏷️', text: 'Unknown', class: 
 const typeDisplayMap: Record<string, DisplaySpec> = {
 	TAKEN: { icon: '📈', text: 'TAKEN', class: 'journal-type-taken' },
 	REJECTED: { icon: '📉', text: 'REJECTED', class: 'journal-type-rejected' },
-	RESULT: { icon: '🏷️', text: 'RESULT', class: 'journal-type-result' },
-	SET: { icon: '🏷️', text: 'SET', class: 'journal-type-set' },
 };
 
 // --- Status ---
@@ -28,7 +26,6 @@ const statusDisplayMap: Record<string, DisplaySpec> = {
 	JUST_LOSS: { icon: '💔', text: 'JUST_LOSS', class: 'journal-status-just-loss' },
 	BROKEN: { icon: '💥', text: 'BROKEN', class: 'journal-status-broken' },
 	MISSED: { icon: '🚫', text: 'MISSED', class: 'journal-status-missed' },
-	REJECTED: { icon: '🏷️', text: 'REJECTED', class: 'journal-status-rejected' },
 };
 
 // --- Timeframe ---

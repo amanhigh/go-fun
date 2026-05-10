@@ -1,4 +1,4 @@
-import type { Journal, JournalFilterKey } from './journal_api';
+import type { Journal, JournalFilterKey, JournalType, JournalStatus, JournalSequence, JournalSortBy, JournalSortOrder, ReviewedFilter } from './journal_api';
 import type { JournalClient } from '../client/journal';
 import type { PresentationConcern } from './presentation_concern';
 import type { PresentationConcern as PresentConcern } from './present';
@@ -39,16 +39,34 @@ export type PaginationConcern = {
 	summary(): string;
 };
 
-export type DatePresetName = '' | 'today' | 'last7' | 'last30';
+export const DatePresetName = {
+	ALL: '' as const,
+	TODAY: 'today' as const,
+	LAST7: 'last7' as const,
+	LAST30: 'last30' as const,
+} as const;
+export type DatePresetName = (typeof DatePresetName)[keyof typeof DatePresetName];
 export type NonEmptyDatePresetName = Exclude<DatePresetName, ''>;
 
-export type JournalFilterConcern = Record<JournalFilterKey, string> & {
+export type JournalFilterValues = {
+	ticker: string;
+	type: JournalType | '';
+	status: JournalStatus | '';
+	sequence: JournalSequence | '';
+	createdAfter: string;
+	createdBefore: string;
+	reviewed: ReviewedFilter;
+	sortBy: JournalSortBy;
+	sortOrder: JournalSortOrder;
+};
+
+export type JournalFilterConcern = JournalFilterValues & {
 	datePreset: DatePresetName;
 	clear(): void;
 	hasActiveState(): boolean;
 	toggleType(): void;
-	typeToggle(): { label: string; className: string; nextType: string };
-	toggleSort(field: 'ticker' | 'sequence' | 'created_at'): void;
+	typeToggle(): { label: string; className: string; nextType: JournalType | '' };
+	toggleSort(field: JournalSortBy): void;
 	applyFilters(): void;
 	applyManualFilters(): void;
 	clearFilters(): void;

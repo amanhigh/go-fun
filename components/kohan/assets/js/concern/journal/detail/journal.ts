@@ -1,13 +1,15 @@
+import type { JournalDetail } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
-function normalizeJournal(journal: any) {
+function normalizeJournal(journal: unknown): JournalDetail | null {
 	if (!journal) return null;
+	const src = journal as Record<string, unknown>;
 	return {
-		...journal,
-		images: journal.images ?? [],
-		tags: journal.tags ?? [],
-		notes: journal.notes ?? [],
-	};
+		...src,
+		images: (src.images as JournalDetail['images']) ?? [],
+		tags: (src.tags as JournalDetail['tags']) ?? [],
+		notes: (src.notes as JournalDetail['notes']) ?? [],
+	} as JournalDetail;
 }
 
 export function NewJournalConcern(pg: JournalDetailPageProvider) {

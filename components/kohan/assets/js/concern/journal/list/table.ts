@@ -17,7 +17,7 @@ export function NewTableConcern(pg: JournalPageProvider): JournalTableConcern {
 
 			if (!loaded) return;
 
-			this.journals = loaded.result.journals ?? [];
+			this.journals = loaded.result.journals;
 			pagination.setTotalItems(loaded.metadata?.total ?? this.journals.length);
 			pagination.setPageFromOffset(loaded.metadata?.offset ?? 0);
 		},
