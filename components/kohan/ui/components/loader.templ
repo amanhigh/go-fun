@@ -7,6 +7,7 @@ package components
 // Loader is the JS expression for the loader state object (e.g. "sidebar.reviewQueue.loader").
 // Collection is the JS expression for the collection state object (e.g. "sidebar.reviewQueue");
 // when provided, an empty state is rendered using Collection.hasItems().
+// Children are rendered when loader is ready, no error, and collection has items.
 
 type LoaderProps struct {
 	Loader         string
@@ -28,13 +29,19 @@ templ Loader(props LoaderProps) {
 		Variant:  StateBoxError,
 		ShowExpr: props.Loader + ".hasError()",
 		TextExpr: props.Loader + ".message",
+		RetryExpr: props.RetryExpr,
 	}) {}
 	if props.Collection != "" && props.EmptyMessage != "" {
 		@StateBox(StateBoxProps{
 			Variant:  StateBoxEmpty,
-			ShowExpr: "!" + props.Loader + ".isBusy() && !" + props.Loader + ".hasMessage() && !" + props.Collection + ".hasItems()",
+			ShowExpr: "!" + props.Loader + ".isBusy() && !" + props.Loader + ".hasError() && !" + props.Collection + ".hasItems()",
 		}) {
 			{ props.EmptyMessage }
 		}
+	}
+	if props.Collection != "" {
+		<div x-show={ "!" + props.Loader + ".isBusy() && !" + props.Loader + ".hasError() && " + props.Collection + ".hasItems()" } class={ props.Class }>
+			{ children... }
+		</div>
 	}
 }
