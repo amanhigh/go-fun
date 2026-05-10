@@ -1,22 +1,17 @@
-import type { Presenter } from '../types/core/present';
+import type { Presenter, DisplaySpec } from '../types/core/present';
 import type { QuickFilterButton } from '../types/core/quick';
 
-type QuickButtonState<T extends string> = {
-	label: string;
-	className: string;
-	nextValue: T;
-};
-
-export type AllSpec = {
+type QuickButtonView = {
 	label: string;
 	className: string;
 };
 
 export abstract class BaseQuickButton<T extends string> implements QuickFilterButton<T> {
-	protected abstract states: T[];
+	protected abstract states: readonly T[];
 	protected abstract getPresenter: () => Presenter;
-	protected abstract currentValue(): T | '';
-	protected allSpec: AllSpec = { label: 'All', className: 'journal-display-default' };
+	protected abstract getFilter: () => T | '';
+	protected abstract applyFilter: (value: T | '') => void;
+	private readonly allSpec: DisplaySpec = { text: 'All', class: 'journal-display-default' };
 
 	/** Current label for the button display. */
 	get label(): string {
@@ -28,54 +23,45 @@ export abstract class BaseQuickButton<T extends string> implements QuickFilterBu
 		return this.current().className;
 	}
 
-	/** The state value the toggle will cycle to next. */
-	get nextValue(): T {
-		return this.current().nextValue;
-	}
+	/** Cycle to the next state: empty → first state, middle → next, last/unknown → clear. */
+	toggle(): void {
+		const currentValue = this.getFilter();
 
-	resolve(currentValue: T | ''): QuickButtonState<T> {
 		if (currentValue === '') {
-			return this.resolveEmpty();
+			this.applyFilter(this.states[0]);
+			return;
 		}
-		if (this.isLastOrUnknown(currentValue)) {
-			return this.resolveAll();
-		}
-		return this.resolveNext(currentValue);
-	}
 
-	abstract toggle(): void;
-
-	private current(): QuickButtonState<T> {
-		return this.resolve(this.currentValue());
-	}
-
-	// Show first state in the cycle.
-	private resolveEmpty(): QuickButtonState<T> {
-		return this.presentResult(this.states[0]);
-	}
-
-	// Show the "All" spec at end of cycle; nextValue wraps to first state.
-	private resolveAll(): QuickButtonState<T> {
-		return { label: this.allSpec.label, className: this.allSpec.className, nextValue: this.states[0] };
-	}
-
-	// Show the state immediately after currentValue.
-	private resolveNext(currentValue: T): QuickButtonState<T> {
 		const idx = this.states.indexOf(currentValue);
-		return this.presentResult(this.states[idx + 1]);
+
+		if (idx === -1 || idx === this.states.length - 1) {
+			this.applyFilter('');
+			return;
+		}
+
+		this.applyFilter(this.states[idx + 1]);
 	}
 
-	// Build a result for a real enum value using the Presenter.
-	private presentResult(value: T): QuickButtonState<T> {
+	private current(): QuickButtonView {
+		const currentValue = this.getFilter();
+
+		if (currentValue === '') {
+			return this.presentView(this.states[0]);
+		}
+
+		const idx = this.states.indexOf(currentValue);
+
+		if (idx === -1 || idx === this.states.length - 1) {
+			return { label: this.allSpec.text, className: this.allSpec.class };
+		}
+
+		return this.presentView(this.states[idx + 1]);
+	}
+
+	private presentView(value: T): QuickButtonView {
 		return {
 			label: this.getPresenter().label(value),
 			className: this.getPresenter().spec(value).class,
-			nextValue: value,
 		};
-	}
-
-	private isLastOrUnknown(currentValue: T): boolean {
-		const idx = this.states.indexOf(currentValue);
-		return idx === -1 || idx === this.states.length - 1;
 	}
 }
