@@ -23,10 +23,8 @@ templ JournalDetailHeader() {
 						Title:        "Delete Journal",
 						Class:        "h-9 w-9",
 					})
-					@components.FeedbackMessage(components.FeedbackMessageProps{
-						ShowExpr:  "header.submitter.hasMessage()",
-						ClassExpr: "header.submitter.variant",
-						TextExpr:  "header.submitter.message",
+					@components.Submitter(components.SubmitterProps{
+						Submitter: "header.submitter",
 						Class:     "text-xs",
 					})
 				</div>

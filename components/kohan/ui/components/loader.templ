@@ -1,0 +1,37 @@
+package components
+
+// ============================================================
+// LOADER WRAPPER
+// ============================================================
+// Wraps loading/error/empty StateBox calls around a Loader state object expression.
+// Loader is the JS expression for the loader state object (e.g. "sidebar.reviewQueue.loader").
+// EmptyExpr is the additional condition for the empty state (e.g. "!sidebar.reviewQueue.hasItems()").
+
+type LoaderProps struct {
+	Loader         string
+	LoadingMessage string
+	EmptyExpr      string
+	EmptyMessage   string
+	RetryExpr      string
+	Class          string
+}
+
+templ Loader(props LoaderProps) {
+	@StateBox(StateBoxProps{
+		Variant:  StateBoxLoading,
+		ShowExpr: props.Loader + ".isBusy()",
+	}) {
+		{ props.LoadingMessage }
+	}
+	@StateBox(StateBoxProps{
+		Variant:  StateBoxError,
+		ShowExpr: props.Loader + ".hasError()",
+		TextExpr: props.Loader + ".message",
+	}) {}
+	@StateBox(StateBoxProps{
+		Variant:  StateBoxEmpty,
+		ShowExpr: "!" + props.Loader + ".hasError() && (" + props.EmptyExpr + ")",
+	}) {
+		{ props.EmptyMessage }
+	}
+}

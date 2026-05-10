@@ -1,0 +1,23 @@
+package components
+
+// ============================================================
+// SUBMITTER WRAPPER
+// ============================================================
+// Wraps FeedbackMessage around a Submitter state object expression.
+// Submitter is the JS expression for the submitter state object (e.g. "header.submitter").
+
+type SubmitterProps struct {
+	Submitter   string
+	Class       string
+	Attributes templ.Attributes
+}
+
+templ Submitter(props SubmitterProps) {
+	@FeedbackMessage(FeedbackMessageProps{
+		ShowExpr:  props.Submitter + ".hasMessage()",
+		ClassExpr: props.Submitter + ".variant",
+		TextExpr:  props.Submitter + ".message",
+		Class:     props.Class,
+		Attributes: props.Attributes,
+	}) {}
+}
