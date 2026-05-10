@@ -8,7 +8,7 @@ import type { DisplaySpec } from '../core/present';
 
 export type JournalDetailSidebarConcern = {
 	state: SidebarStateConcern;
-	reviewActions: ReviewActionsConcern;
+	reviewBar: ReviewBarConcern;
 	reviewQueue: ReviewQueueConcern;
 	noteForm: NoteFormConcern;
 	notes: NotesConcern;
@@ -28,8 +28,9 @@ export type SidebarStateConcern = {
 	enterReviewMode(): void;
 };
 
-export type ReviewActionsConcern = {
+export type ReviewBarConcern = {
 	submitter: Submitter;
+	show(): boolean;
 	actions(): QuickAction[];
 };
 

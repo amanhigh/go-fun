@@ -9,46 +9,62 @@ import (
 )
 
 templ JournalDetailActionsPanel() {
-	@commondetail.JournalDetailSection("Actions", "Journal Actions", "sidebar.state.actionOpen", "sidebar.state.setActionOpen($el.open)") {
+	@commondetail.JournalDetailSection("Actions", "Command Center", "sidebar.state.actionOpen", "sidebar.state.setActionOpen($el.open)") {
 		<div class="space-y-4">
-			@journalDetailActionCard()
+			@journalDetailReviewCard()
+			@journalDetailManagementTagCard()
 			@journalDetailTagsCard()
 		</div>
 	}
 }
 
-templ journalDetailActionCard() {
-	<div class="space-y-4 rounded-3xl border border-border bg-card p-4 shadow-sm">
-		@journalDetailActionBar()
-		@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reviewActions.submitter"})
-		@takenTagActions()
-	</div>
+templ journalDetailReviewCard() {
+	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
+		@card.Header(card.HeaderProps{}) {
+			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Reviews }
+			@card.Description(card.DescriptionProps{}) { Final-call shortcuts for closing out completed journal outcomes. }
+		}
+		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
+			<div x-show="sidebar.reviewBar.show()">
+				@journalDetailActionBar()
+				@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reviewBar.submitter"})
+			</div>
+		}
+	}
 }
 
 templ journalDetailActionBar() {
 	@components.QuickBar(components.QuickBarProps{
-		Label:    "Quick actions",
-		IconName: "sparkles",
+		Label:    "Review",
+		IconName: "clipboard-check",
 		Theme:    components.ToneGreen,
 		Class:    "rounded-2xl border border-border bg-muted/30 px-4 py-3",
 	}) {
-		<template x-for="action in sidebar.reviewActions.actions()" x-bind:key="action.id">
+		<template x-for="action in sidebar.reviewBar.actions()" x-bind:key="action.id">
 			@components.QuickAction(components.QuickActionProps{
 				OnClickExpr:  "action.apply()",
-				TextExpr:     "sidebar.reviewActions.submitter.isBusy() ? 'Saving...' : action.display.text",
+				TextExpr:     "sidebar.reviewBar.submitter.isBusy() ? 'Saving...' : action.display.text",
 				ClassExpr:    "action.display.class",
-				DisabledExpr: "sidebar.reviewActions.submitter.isBusy()",
+				DisabledExpr: "sidebar.reviewBar.submitter.isBusy()",
 			})
 		</template>
 	}
 }
 
-templ takenTagActions() {
+templ journalDetailManagementTagCard() {
+	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
+		@card.Header(card.HeaderProps{}) {
+			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Management Tags }
+			@card.Description(card.DescriptionProps{}) { Fast tactical tags for taken trades — mark what mattered before the trail goes cold. }
+		}
+		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
+			@takenTagControls()
+		}
+	}
+}
+
+templ takenTagControls() {
 	<div class="space-y-3" x-show="sidebar.takenTag.show()">
-		<div>
-			<p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Management</p>
-			<p class="mt-1 text-sm text-muted-foreground">Quick add management tags for taken journals.</p>
-		</div>
 		<div class="flex flex-wrap gap-2">
 			<template x-for="tag in sidebar.takenTag.tags" x-bind:key="tag.id">
 				@button.Button(button.Props{
@@ -73,7 +89,7 @@ templ journalDetailTagsCard() {
 	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
 		@card.Header(card.HeaderProps{}) {
 			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Tags }
-			@card.Description(card.DescriptionProps{}) { Add reason tags for this journal and delete any existing tag below. }
+			@card.Description(card.DescriptionProps{}) { Capture the reason, mistake, or setup notes that explain the trade. }
 		}
 		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
 			@journalDetailTagForm()

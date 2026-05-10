@@ -9,6 +9,20 @@ function localToday(pg: JournalDetailPageProvider): string {
 	return pg().present.date.humanDate(new Date());
 }
 
+// ===== Terminal Status Check =====
+
+const TERMINAL_STATUSES: ReadonlySet<JournalStatus> = new Set([
+	JournalStatus.SUCCESS,
+	JournalStatus.FAIL,
+	JournalStatus.MISSED,
+	JournalStatus.JUST_LOSS,
+	JournalStatus.BROKEN,
+]);
+
+function isTerminalStatus(journal: Journal): boolean {
+	return TERMINAL_STATUSES.has(journal.status);
+}
+
 // ===== Display Helpers =====
 
 function reviewDisplay(journal: Journal): DisplaySpec {
@@ -63,9 +77,15 @@ async function applyReviewStatus(submitter: Submitter, pg: JournalDetailPageProv
 
 // ===== Exported Concern =====
 
-export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
+export function NewReviewBarConcern(pg: JournalDetailPageProvider) {
 	return {
 		submitter: createSubmitter(),
+
+		show(): boolean {
+			const journal = pg().journal.detail;
+			if (!journal) return false;
+			return isTerminalStatus(journal);
+		},
 
 		actions(): QuickAction[] {
 			const journal = pg().journal.detail;
