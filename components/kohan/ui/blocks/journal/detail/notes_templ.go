@@ -78,6 +78,14 @@ func JournalDetailNotes() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
+				templ_7745c5c3_Err = components.Submitter(components.SubmitterProps{Submitter: "sidebar.notes.submitter"}).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " ")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 				templ_7745c5c3_Err = components.EmptyState(components.EmptyStateProps{Message: "No notes available for this journal.", ShowExpr: "!sidebar.notes.hasItems()", Class: "mt-5"}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -119,7 +127,7 @@ func JournalDetailNoteRow() templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"rounded-xl border border-border bg-muted/40 p-4\"><div class=\"mb-3 flex items-start justify-between gap-3\"><div class=\"flex flex-wrap items-center gap-3\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"rounded-xl border border-border bg-muted/40 p-4\"><div class=\"mb-3 flex items-start justify-between gap-3\"><div class=\"flex flex-wrap items-center gap-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -127,20 +135,20 @@ func JournalDetailNoteRow() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"inline-flex items-center gap-2 rounded-md border border-sky-300/70 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-900\"><span class=\"uppercase tracking-wide text-sky-700/80\">Created</span> <span x-text=\"present.date.format(note.created_at)\"></span></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"inline-flex items-center gap-2 rounded-md border border-sky-300/70 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-900\"><span class=\"uppercase tracking-wide text-sky-700/80\">Created</span> <span x-text=\"present.date.format(note.created_at)\"></span></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.DeleteButton(components.DeleteButtonProps{
 			OnClickExpr:  "sidebar.notes.delete(note.id)",
-			DisabledExpr: "sidebar.notes.loader.isBusy()",
+			DisabledExpr: "sidebar.notes.submitter.isBusy()",
 			AriaLabel:    "Delete Note",
 			Title:        "Delete Note",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div><pre class=\"whitespace-pre-wrap text-sm text-foreground\" x-text=\"note.content\"></pre></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div><pre class=\"whitespace-pre-wrap text-sm text-foreground\" x-text=\"note.content\"></pre></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

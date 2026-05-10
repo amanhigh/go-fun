@@ -531,6 +531,10 @@ func journalDetailTagRows() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		templ_7745c5c3_Err = components.Submitter(components.SubmitterProps{Submitter: "sidebar.tags.submitter"}).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
 		return nil
 	})
 }
@@ -570,7 +574,7 @@ func journalDetailTagRow() templ.Component {
 		}
 		templ_7745c5c3_Err = components.DeleteButton(components.DeleteButtonProps{
 			OnClickExpr:  "sidebar.tags.delete(tag.id)",
-			DisabledExpr: "sidebar.tags.loader.isBusy()",
+			DisabledExpr: "sidebar.tags.submitter.isBusy()",
 			AriaLabel:    "Delete Tag",
 			Title:        "Delete Tag",
 		}).Render(ctx, templ_7745c5c3_Buffer)

@@ -20,6 +20,7 @@ templ JournalDetailNotes() {
 					@JournalDetailNoteRow()
 				</template>
 			</div>
+			@components.Submitter(components.SubmitterProps{Submitter: "sidebar.notes.submitter"})
 			@components.EmptyState(components.EmptyStateProps{Message: "No notes available for this journal.", ShowExpr: "!sidebar.notes.hasItems()", Class: "mt-5"})
 		}
 	}
@@ -37,7 +38,7 @@ templ JournalDetailNoteRow() {
 			</div>
 			@components.DeleteButton(components.DeleteButtonProps{
 				OnClickExpr:  "sidebar.notes.delete(note.id)",
-				DisabledExpr: "sidebar.notes.loader.isBusy()",
+				DisabledExpr: "sidebar.notes.submitter.isBusy()",
 				AriaLabel:    "Delete Note",
 				Title:        "Delete Note",
 			})

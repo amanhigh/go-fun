@@ -118,6 +118,7 @@ templ journalDetailTagRows() {
 	<template x-for="tag in sidebar.tags.all()" x-bind:key="tag.id">
 		@journalDetailTagRow()
 	</template>
+	@components.Submitter(components.SubmitterProps{Submitter: "sidebar.tags.submitter"})
 }
 
 templ journalDetailTagRow() {
@@ -127,7 +128,7 @@ templ journalDetailTagRow() {
 		</div>
 		@components.DeleteButton(components.DeleteButtonProps{
 			OnClickExpr:  "sidebar.tags.delete(tag.id)",
-			DisabledExpr: "sidebar.tags.loader.isBusy()",
+			DisabledExpr: "sidebar.tags.submitter.isBusy()",
 			AriaLabel:    "Delete Tag",
 			Title:        "Delete Tag",
 		})

@@ -1,19 +1,20 @@
 import { createCollection } from '../../../lib/collection';
-import { createLoader } from '../../../lib/loader';
+import { createSubmitter } from '../../../lib/submitter';
 import type { JournalNote } from '../../../types/api/journal/response';
 import type { JournalDetailPageProvider } from '../../../types/journal/detail';
 
 export function NewNotesConcern(pg: JournalDetailPageProvider) {
 	return {
 		...createCollection<JournalNote>(),
-		loader: createLoader(),
+		submitter: createSubmitter(),
 
-		async delete(noteId: string) {
+		async delete(this: any, noteId: string) {
 			if (!pg().journal.detail) return;
-			await this.loader.tryRun(
+			const ok = await this.submitter.run(
 				() => pg().noteClient.delete(pg().journal.detail!.id, noteId),
+				{ success: 'Note deleted' },
 			);
-			this.remove(noteId);
+			if (ok) this.remove(noteId);
 		},
 
 		sorted() {

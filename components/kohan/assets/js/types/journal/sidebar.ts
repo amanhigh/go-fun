@@ -69,7 +69,7 @@ export type TakenTagConcern = {
 };
 
 export type TagCollectionConcern = Collection<JournalTag> & {
-	loader: Loader;
+	submitter: Submitter;
 	delete(tagId: string): Promise<void>;
 	reason(): JournalTag[];
 	directional(): JournalTag[];
@@ -77,7 +77,7 @@ export type TagCollectionConcern = Collection<JournalTag> & {
 };
 
 export type NotesConcern = Collection<JournalNote> & {
-	loader: Loader;
+	submitter: Submitter;
 	delete(noteId: string): Promise<void>;
 	sorted(): JournalNote[];
 };
