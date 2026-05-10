@@ -19,7 +19,7 @@ export interface TagPresenter extends Presenter<JournalTag> {
 export interface DatePresenter {
 	format(value: DisplayValue): string;
 	formatReviewQueueDate(value: DisplayValue): string;
-	formatInputValue(date: Date): string;
+	humanDate(date: Date): string;
 }
 
 export interface PresentationConcern {

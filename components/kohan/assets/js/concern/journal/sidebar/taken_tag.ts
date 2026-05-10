@@ -1,7 +1,10 @@
 import { createSubmitter } from '../../../lib/submitter';
-import { normalizeTag } from '../../../lib/date';
 import type { JournalTag, JournalTagRequest } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
+
+function managementTagKey(value: string): string {
+	return value.trim().toUpperCase();
+}
 
 export function TakenTagConcern(pg: JournalDetailPageProvider) {
 	return {
@@ -18,17 +21,17 @@ export function TakenTagConcern(pg: JournalDetailPageProvider) {
 		],
 
 		show() {
-			return normalizeTag(pg().current.journal?.type ?? '') === 'TAKEN';
+			return pg().current.journal?.type === 'TAKEN';
 		},
 		hasTag(value: string) {
-			const normalizedValue = normalizeTag(value);
-			return pg().sidebar.tags.management().some((tag: JournalTag) => normalizeTag(tag.tag ?? '') === normalizedValue);
+			const normalizedValue = managementTagKey(value);
+			return pg().sidebar.tags.management().some((tag: JournalTag) => managementTagKey(tag.tag ?? '') === normalizedValue);
 		},
 		async submit(tagValue: string) {
 			if (!pg().current.journal) return;
 			await this.submitter.run(
 				() => this.addTag(tagValue),
-				{ success: `${normalizeTag(tagValue)} tag added.`, error: 'Unable to save management tag.' },
+				{ success: `${managementTagKey(tagValue)} tag added.`, error: 'Unable to save management tag.' },
 			);
 		},
 

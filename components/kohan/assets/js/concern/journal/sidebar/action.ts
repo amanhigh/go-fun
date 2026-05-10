@@ -1,12 +1,11 @@
 import { createSubmitter, type Submitter } from '../../../lib/submitter';
-import { formatDateInputValue } from '../../../lib/date';
 import type { DisplaySpec } from '../../../types/present';
 import type { QuickAction } from '../../../types/quick_action';
 import type { Journal } from '../../../types/journal_api';
 import type { JournalDetailPageProvider } from '../../../types/journal_detail_concern';
 
-function localToday(): string {
-	return formatDateInputValue(new Date());
+function localToday(pg: JournalDetailPageProvider): string {
+	return pg().present.date.humanDate(new Date());
 }
 
 // ===== Display Helpers =====
@@ -39,7 +38,7 @@ function isStatusActive(journal: Journal): boolean {
 
 async function toggleReviewedAt(submitter: Submitter, pg: JournalDetailPageProvider): Promise<void> {
 	const journal = pg().current.journal!;
-	const reviewedAt = journal.reviewed_at ? null : localToday();
+	const reviewedAt = journal.reviewed_at ? null : localToday(pg);
 	const successMsg = reviewedAt ? 'Journal marked reviewed.' : 'Journal marked not reviewed.';
 	await submitter.run(async () => {
 		const envelope = await pg().client.updateReview(pg().current.journalId, { reviewed_at: reviewedAt });
@@ -54,7 +53,7 @@ async function applyReviewStatus(submitter: Submitter, pg: JournalDetailPageProv
 	const targetStatus = isTaken ? 'JUST_LOSS' : 'BROKEN';
 
 	await submitter.run(async () => {
-		const envelope = await pg().client.updateReview(pg().current.journalId, { status: targetStatus, reviewed_at: localToday() });
+		const envelope = await pg().client.updateReview(pg().current.journalId, { status: targetStatus, reviewed_at: localToday(pg) });
 		journal.reviewed_at = envelope.data.reviewed_at;
 		journal.status = envelope.data.status;
 		await pg().sidebar.reviewQueue.load();

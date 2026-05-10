@@ -3,7 +3,7 @@ import type { DatePresenter, DisplayValue } from '../../types/present';
 const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 class DatePresenterImpl implements DatePresenter {
-	formatInputValue(date: Date): string {
+	humanDate(date: Date): string {
 		const year = date.getFullYear();
 		const month = `${date.getMonth() + 1}`.padStart(2, '0');
 		const day = `${date.getDate()}`.padStart(2, '0');

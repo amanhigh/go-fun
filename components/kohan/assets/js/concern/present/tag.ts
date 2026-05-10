@@ -1,6 +1,9 @@
 import type { DisplaySpec, TagPresenter } from '../../types/present';
 import type { JournalTag } from '../../types/journal_api';
-import { normalizeTag } from '../../lib/date';
+
+function tagKey(value: string): string {
+	return value.trim().toUpperCase();
+}
 
 const reasonIcons = { trend: '📈', default: '⚡' };
 
@@ -27,7 +30,7 @@ function fallbackTagText(tag: JournalTag): string {
 
 class TagPresenterImpl implements TagPresenter {
 	spec(tag: JournalTag): DisplaySpec {
-		const type = normalizeTag(tag.type ?? '');
+		const type = tagKey(tag.type ?? '');
 		switch (type) {
 			case 'REASON':
 				return this.reasonSpec(tag);
@@ -57,7 +60,7 @@ class TagPresenterImpl implements TagPresenter {
 	}
 
 	private managementTagSpec(tag: JournalTag): DisplaySpec {
-		const key = normalizeTag(tag.tag ?? '');
+		const key = tagKey(tag.tag ?? '');
 		return managementDisplayMap[key] ?? { icon: '🔧', text: key, class: '' };
 	}
 
