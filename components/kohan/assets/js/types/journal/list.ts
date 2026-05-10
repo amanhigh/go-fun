@@ -3,6 +3,7 @@ import type { ReviewedFilter } from '../api/journal/request';
 import type { JournalType, JournalStatus, JournalSequence, JournalSortBy, JournalSortOrder } from '../api/journal/enums';
 import type { Loader } from '../../lib/loader';
 import type { Collection } from '../core/collection';
+import type { QuickButtonResult } from '../../lib/quick_button';
 import type { JournalPageBase, PageProvider } from './page';
 
 // ===== Main Page Composition =====
@@ -68,7 +69,7 @@ export type JournalFilterConcern = JournalFilterValues & {
 	toggleType(): void;
 	typeToggle(): { label: string; className: string; nextType: JournalType | '' };
 	toggleStatus(): void;
-	statusToggle(): { label: string; className: string; nextStatus: JournalStatus | '' };
+	statusToggle(): QuickButtonResult<JournalStatus>;
 	toggleSort(field: JournalSortBy): void;
 	applyFilters(): void;
 	applyManualFilters(): void;

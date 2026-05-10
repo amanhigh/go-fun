@@ -1,6 +1,7 @@
 import { JournalType, JournalStatus, JournalSortBy, JournalSortOrder } from '../../../types/api/journal/enums';
 import { ReviewedFilter } from '../../../types/api/journal/request';
 import type { JournalFilterValues, DatePresetName, JournalFilterConcern, JournalPageProvider } from '../../../types/journal/list';
+import { BaseQuickButton, type QuickButtonResult } from '../../../lib/quick_button';
 
 type TypeToggle = {
 	label: string;
@@ -8,11 +9,7 @@ type TypeToggle = {
 	nextType: JournalType | '';
 };
 
-type StatusToggle = {
-	label: string;
-	className: string;
-	nextStatus: JournalStatus | '';
-};
+type StatusToggle = QuickButtonResult<JournalStatus>;
 
 const allToggleSpec: { label: string; className: string } = {
 	label: 'All',
@@ -23,12 +20,6 @@ const typeTransitionMap: Record<string, { nextType: JournalType | '' }> = {
 	'': { nextType: JournalType.TAKEN },
 	[JournalType.TAKEN]: { nextType: JournalType.REJECTED },
 	[JournalType.REJECTED]: { nextType: '' },
-};
-
-const statusTransitionMap: Record<string, { nextStatus: JournalStatus | '' }> = {
-	'': { nextStatus: JournalStatus.SET },
-	[JournalStatus.SET]: { nextStatus: JournalStatus.RUNNING },
-	[JournalStatus.RUNNING]: { nextStatus: '' },
 };
 
 const journalFilterDefaults: JournalFilterValues = {
@@ -44,6 +35,11 @@ const journalFilterDefaults: JournalFilterValues = {
 };
 
 export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern {
+	const statusQuickButton = new BaseQuickButton<JournalStatus>(
+		[JournalStatus.SET, JournalStatus.RUNNING],
+		() => pg().present.status,
+		allToggleSpec,
+	);
 	return {
 		...journalFilterDefaults,
 		datePreset: '' as DatePresetName,
@@ -59,10 +55,10 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 			return resolveTypeToggle(pg, this.type);
 		},
 		statusToggle() {
-			return resolveStatusToggle(pg, this.status);
+			return statusQuickButton.resolve(this.status);
 		},
 		toggleStatus() {
-			this.status = this.statusToggle().nextStatus;
+			this.status = this.statusToggle().nextValue;
 			this.applyManualFilters();
 		},
 		applyFilters() {
@@ -107,14 +103,4 @@ export function resolveTypeToggle(pg: JournalPageProvider, currentType: JournalT
 	};
 }
 
-export function resolveStatusToggle(pg: JournalPageProvider, currentStatus: JournalStatus | ''): StatusToggle {
-	const transition = statusTransitionMap[currentStatus] ?? statusTransitionMap[''];
-	if (transition.nextStatus === '') {
-		return { label: allToggleSpec.label, className: allToggleSpec.className, nextStatus: '' };
-	}
-	return {
-		label: pg().present.status.label(transition.nextStatus),
-		className: pg().present.status.spec(transition.nextStatus).class,
-		nextStatus: transition.nextStatus,
-	};
-}
+
