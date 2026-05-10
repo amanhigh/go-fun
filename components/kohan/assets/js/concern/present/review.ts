@@ -1,4 +1,4 @@
-import type { DisplaySpec, DisplayValue, Presenter } from '../../types/present';
+import type { DisplaySpec, DisplayValue, Presenter } from '../../types/core/present';
 
 function formatDate(value: string): string {
 	const parsed = new Date(value);

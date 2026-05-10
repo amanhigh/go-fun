@@ -1,4 +1,4 @@
-import type { Identifiable } from '../types/collection';
+import type { Identifiable } from '../types/core/collection';
 
 // ===== Array Helpers =====
 

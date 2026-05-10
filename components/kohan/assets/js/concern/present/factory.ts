@@ -1,4 +1,4 @@
-import type { PresentationConcern } from '../../types/present';
+import type { PresentationConcern } from '../../types/core/present';
 import { NewStatusPresenter } from './status';
 import { NewTypePresenter } from './type';
 import { NewTimeframePresenter } from './timeframe';

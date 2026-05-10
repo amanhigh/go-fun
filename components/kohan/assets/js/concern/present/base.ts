@@ -1,4 +1,4 @@
-import type { DisplaySpec, DisplayValue, Presenter } from '../../types/present';
+import type { DisplaySpec, DisplayValue, Presenter } from '../../types/core/present';
 
 export abstract class BasePresenter implements Presenter<DisplayValue> {
 	protected abstract catalog: Record<string, DisplaySpec>;

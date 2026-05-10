@@ -1,4 +1,4 @@
-import type { DatePresenter, DisplayValue } from '../../types/present';
+import type { DatePresenter, DisplayValue } from '../../types/core/present';
 
 const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 

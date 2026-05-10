@@ -6,7 +6,7 @@ import { NewFilterConcern } from '../concern/journal/list/filter';
 import { NewPresetConcern } from '../concern/journal/list/presets';
 import { NewPaginationConcern } from '../concern/journal/list/pagination';
 import { NewTableConcern } from '../concern/journal/list/table';
-import '../types/platform';
+import '../types/core/platform';
 
 function createJournalPageData() {
 	let page = {} as JournalPage;

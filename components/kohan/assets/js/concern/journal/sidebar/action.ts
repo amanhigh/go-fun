@@ -1,6 +1,6 @@
 import { createSubmitter, type Submitter } from '../../../lib/submitter';
-import type { DisplaySpec } from '../../../types/present';
-import type { QuickAction } from '../../../types/quick_action';
+import type { DisplaySpec } from '../../../types/core/present';
+import type { QuickAction } from '../../../types/journal/sidebar';
 import { JournalType, JournalStatus } from '../../../types/api/journal/enums';
 import type { Journal } from '../../../types/api/journal/response';
 import type { JournalDetailPageProvider } from '../../../types/journal/detail';

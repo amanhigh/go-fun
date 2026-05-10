@@ -8,7 +8,7 @@ import { NewHeaderConcern } from '../concern/journal/detail/header';
 import { NewImagesConcern } from '../concern/journal/detail/images';
 import { NewPreviewConcern } from '../concern/journal/detail/preview';
 import { NewSidebarConcern } from '../concern/journal/sidebar';
-import '../types/platform';
+import '../types/core/platform';
 
 function createJournalDetailPageData(journalId = '') {
 	let page = {} as JournalDetailPage;

@@ -1,5 +1,5 @@
 import type { JournalClient } from '../../client/journal';
-import type { PresentationConcern } from '../present';
+import type { PresentationConcern } from '../core/present';
 
 /** Shared base contract for all journal Alpine page objects. */
 export interface JournalPageBase {

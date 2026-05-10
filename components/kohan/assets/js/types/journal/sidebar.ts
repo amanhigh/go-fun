@@ -1,7 +1,15 @@
 import type { Journal, JournalNote, JournalTag } from '../api/journal/response';
 import type { Submitter } from '../../lib/submitter';
-import type { DeletableSyncedCollection, LoadableCollection } from '../collection';
-import type { QuickAction } from '../quick_action';
+import type { DeletableSyncedCollection, LoadableCollection } from '../core/collection';
+import type { DisplaySpec } from '../core/present';
+
+
+export type QuickAction = {
+	id: string;
+	isActive(): boolean;
+	display: DisplaySpec;
+	apply(): Promise<void>;
+};
 
 // ===== Main Concern =====
 

@@ -1,4 +1,4 @@
-import type { DisplaySpec, TagPresenter } from '../../types/present';
+import type { DisplaySpec, TagPresenter } from '../../types/core/present';
 import type { JournalTag } from '../../types/api/journal/response';
 import { JournalTagType } from '../../types/api/journal/enums';
 

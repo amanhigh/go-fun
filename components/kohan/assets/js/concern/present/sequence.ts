@@ -1,4 +1,4 @@
-import type { DisplaySpec, DisplayValue, Presenter } from '../../types/present';
+import type { DisplaySpec, DisplayValue, Presenter } from '../../types/core/present';
 import { BasePresenter } from './base';
 
 const sequenceDisplayMap: Record<string, DisplaySpec> = {

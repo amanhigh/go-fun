@@ -1,4 +1,4 @@
-import type { DisplaySpec, Presenter } from '../../types/present';
+import type { DisplaySpec, Presenter } from '../../types/core/present';
 import { BasePresenter } from './base';
 
 const statusCatalog: Record<string, DisplaySpec> = {
