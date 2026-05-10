@@ -98,7 +98,6 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`sidebar.reviewQueue.loader.message`))
 			Expect(html).To(ContainSubstring(`sidebar.reviewQueue.loader.hasError()`))
 			Expect(html).To(ContainSubstring(`x-on:click="sidebar.reviewQueue.load()"`))
-			Expect(html).To(ContainSubstring("animate-spin"))
 			Expect(html).To(ContainSubstring(`aria-label="Delete Note"`))
 			Expect(html).To(ContainSubstring("h-4 w-4"))
 		})

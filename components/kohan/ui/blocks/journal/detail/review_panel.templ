@@ -57,11 +57,7 @@ templ journalDetailNoteCard() {
 				LoadingText:   "'Saving note...'",
 				DefaultText:   "'Add Note'",
 			})
-			@components.FeedbackMessage(components.FeedbackMessageProps{
-				ShowExpr:  "sidebar.noteForm.submitter.hasMessage()",
-				ClassExpr: "sidebar.noteForm.submitter.variant",
-				TextExpr:  "sidebar.noteForm.submitter.message",
-			})
+			@components.Submitter(components.SubmitterProps{Submitter: "sidebar.noteForm.submitter"})
 		}
 	}
 }
