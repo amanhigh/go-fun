@@ -1,4 +1,26 @@
 @layer components {
+  /* --- State Box (Loader) --- */
+
+  .statebox-base {
+    @apply rounded-2xl border border-dashed px-6 py-10 text-center text-sm;
+  }
+
+  .statebox-loading {
+    @apply border-sky-300 bg-sky-50/70 text-sky-700;
+  }
+
+  .statebox-error {
+    @apply border-rose-300 bg-rose-50/70 text-rose-700;
+  }
+
+  .statebox-empty {
+    @apply border-violet-300 bg-violet-50/70 text-violet-700;
+  }
+
+  .loader-loading-inner {
+    @apply flex items-center justify-center gap-2;
+  }
+
   /* --- Presentation Display --- */
 
   .journal-display-default,

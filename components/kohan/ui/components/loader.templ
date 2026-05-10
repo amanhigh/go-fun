@@ -26,7 +26,41 @@ type LoaderProps struct {
 	RetryExpr      string
 }
 
-// ===== Expression Helpers =====
+templ Loader(props LoaderProps) {
+	@loaderStateBox(loaderStateBoxProps{
+		Variant:  loaderStateLoading,
+		ShowExpr: loaderLoadingShowExpr(props.Loader),
+	}) {
+		<div class="loader-loading-inner">
+			@widgets.Spinner(widgets.SpinnerProps{Size: widgets.SpinnerSizeSm})
+			<span>{ props.LoadingMessage }</span>
+		</div>
+	}
+
+	@loaderStateBox(loaderStateBoxProps{
+		Variant:   loaderStateError,
+		ShowExpr:  loaderErrorShowExpr(props.Loader),
+		TextExpr:  props.Loader + ".message",
+		RetryExpr: props.RetryExpr,
+	}) {}
+
+	if props.EmptyMessage != "" {
+		@loaderStateBox(loaderStateBoxProps{
+			Variant:  loaderStateEmpty,
+			ShowExpr: loaderEmptyShowExpr(props),
+		}) {
+			{ props.EmptyMessage }
+		}
+	}
+
+	<div x-show={ loaderContentShowExpr(props) }>
+		{ children... }
+	</div>
+}
+
+// ============================================================
+// PRIVATE EXPRESSION HELPERS
+// ============================================================
 
 func loaderBusyExpr(loader string) string {
 	return loader + ".isBusy()"
@@ -56,7 +90,9 @@ func loaderContentShowExpr(props LoaderProps) string {
 	return loaderIdleExpr(props.Loader) + " && (" + props.ReadyExpr + ")"
 }
 
-// ===== Private State Box Types =====
+// ============================================================
+// PRIVATE STATE BOX TYPES
+// ============================================================
 
 type loaderStateVariant string
 
@@ -76,18 +112,20 @@ type loaderStateBoxProps struct {
 	Attrs     templ.Attributes
 }
 
-// ===== Private State Box Rendering =====
+// ============================================================
+// PRIVATE STATE BOX RENDERING
+// ============================================================
 
 func loaderStateColorClasses(variant loaderStateVariant) string {
 	switch variant {
 	case loaderStateLoading:
-		return "border-sky-300 bg-sky-50/70 text-sky-700"
+		return "statebox-base statebox-loading"
 	case loaderStateError:
-		return "border-rose-300 bg-rose-50/70 text-rose-700"
+		return "statebox-base statebox-error"
 	case loaderStateEmpty:
-		return "border-violet-300 bg-violet-50/70 text-violet-700"
+		return "statebox-base statebox-empty"
 	default:
-		return "border-slate-300 bg-slate-50/70 text-slate-700"
+		return "statebox-base"
 	}
 }
 
@@ -103,7 +141,7 @@ func loaderStateBoxAttrs(props loaderStateBoxProps) templ.Attributes {
 }
 
 templ loaderStateBox(props loaderStateBoxProps) {
-	<div class={ fmt.Sprintf("rounded-2xl border border-dashed px-6 py-10 text-center text-sm %s %s", loaderStateColorClasses(props.Variant), props.Class) } { loaderStateBoxAttrs(props)... }>
+	<div class={ fmt.Sprintf("%s %s", loaderStateColorClasses(props.Variant), props.Class) } { loaderStateBoxAttrs(props)... }>
 		if props.Message != "" {
 			<div class="font-medium">{ props.Message }</div>
 		}
@@ -120,40 +158,6 @@ templ loaderStateBox(props loaderStateBoxProps) {
 				Retry
 			}
 		}
-		{ children... }
-	</div>
-}
-
-// ===== Public Loader =====
-
-templ Loader(props LoaderProps) {
-	@loaderStateBox(loaderStateBoxProps{
-		Variant:  loaderStateLoading,
-		ShowExpr: loaderLoadingShowExpr(props.Loader),
-	}) {
-		<div class="flex items-center justify-center gap-2">
-			@widgets.Spinner(widgets.SpinnerProps{Size: widgets.SpinnerSizeSm})
-			<span>{ props.LoadingMessage }</span>
-		</div>
-	}
-
-	@loaderStateBox(loaderStateBoxProps{
-		Variant:   loaderStateError,
-		ShowExpr:  loaderErrorShowExpr(props.Loader),
-		TextExpr:  props.Loader + ".message",
-		RetryExpr: props.RetryExpr,
-	}) {}
-
-	if props.EmptyMessage != "" {
-		@loaderStateBox(loaderStateBoxProps{
-			Variant:  loaderStateEmpty,
-			ShowExpr: loaderEmptyShowExpr(props),
-		}) {
-			{ props.EmptyMessage }
-		}
-	}
-
-	<div x-show={ loaderContentShowExpr(props) }>
 		{ children... }
 	</div>
 }
