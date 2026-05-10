@@ -1,8 +1,7 @@
 import { JournalStatus } from '../../types/api/journal/enums';
 import type { JournalPageProvider } from '../../types/journal/list';
-import type { QuickButtonResult } from '../../lib/quick_button';
+import type { QuickButtonResult, QuickFilterButton } from '../../types/core/quick';
 import { BaseQuickButton } from '../../lib/quick_button';
-import type { QuickFilterButton } from '../../types/journal/quick';
 
 export class QuickStatusButton extends BaseQuickButton implements QuickFilterButton {
 	private pg: JournalPageProvider;
@@ -20,7 +19,7 @@ export class QuickStatusButton extends BaseQuickButton implements QuickFilterBut
 	}
 
 	toggle(): void {
-		this.pg().filter.status = this.button().nextValue as JournalStatus | '';
+		this.pg().filter.status = this.button().nextValue as JournalStatus;
 		this.pg().filter.applyManualFilters();
 	}
 }

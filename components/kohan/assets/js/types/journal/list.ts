@@ -4,7 +4,7 @@ import type { JournalType, JournalStatus, JournalSequence, JournalSortBy, Journa
 import type { Loader } from '../../lib/loader';
 import type { Collection } from '../core/collection';
 import type { JournalPageBase, PageProvider } from './page';
-import type { QuickConcern } from './quick';
+import type { QuickConcern } from '../core/quick';
 
 // ===== Main Page Composition =====
 

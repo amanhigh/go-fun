@@ -1,14 +1,5 @@
 import type { Presenter } from '../types/core/present';
-
-export type QuickButtonResult = {
-	label: string;
-	className: string;
-	nextValue: string;
-};
-
-export interface QuickButton {
-	resolve(currentValue: string): QuickButtonResult;
-}
+import type { QuickButtonResult, QuickButton } from '../types/core/quick';
 
 export type AllSpec = {
 	label: string;
