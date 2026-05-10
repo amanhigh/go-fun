@@ -17,6 +17,7 @@ export interface Runner {
 
 	hasMessage(): boolean;
 	isBusy(): boolean;
+	hasError(): boolean;
 	setError(message: string): void;
 	setSuccess(message: string): void;
 
@@ -37,6 +38,10 @@ export function createRunnerState(): Runner {
 
 		isBusy(this: Runner) {
 			return this.busy;
+		},
+
+		hasError(this: Runner) {
+			return this.variant === errorVariant;
 		},
 
 		setError(this: Runner, message: string) {
