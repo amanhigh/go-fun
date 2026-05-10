@@ -9,7 +9,9 @@ export interface QuickButton {
 }
 
 export interface QuickFilterButton {
-	button(): QuickButtonResult;
+	readonly label: string;
+	readonly className: string;
+	readonly nextValue: string;
 	toggle(): void;
 }
 
