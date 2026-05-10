@@ -4,7 +4,6 @@ import (
 	commondetail "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/common"
 	"github.com/amanhigh/go-fun/components/kohan/ui/components"
 	"github.com/templui/templui/components/card"
-	"github.com/templui/templui/components/icon"
 	"github.com/templui/templui/components/textarea"
 )
 
@@ -21,20 +20,21 @@ templ journalDetailQueueCard() {
 			@card.Title(card.TitleProps{Class: "tracking-tight"}) { To Review }
 		}
 		@card.Content(card.ContentProps{Class: "space-y-2 pt-0"}) {
-			<div class="flex items-center gap-2 py-3 text-xs text-sky-700" x-show="sidebar.reviewQueue.isLoading()">
-				@icon.Icon("refresh-cw")(icon.Props{Class: "size-3.5 animate-spin"})
-				<span>Loading queue...</span>
-			</div>
-			<p class="py-2 text-xs text-rose-600" x-show="!sidebar.reviewQueue.isLoading() && sidebar.reviewQueue.isError()" x-text="sidebar.reviewQueue.error"></p>
-			<p class="py-2 text-xs text-muted-foreground" x-show="!sidebar.reviewQueue.isLoading() && !sidebar.reviewQueue.isError() && !sidebar.reviewQueue.hasItems()">All caught up — no pending reviews.</p>
-			<div class="space-y-1" x-show="!sidebar.reviewQueue.isLoading() && !sidebar.reviewQueue.isError() && sidebar.reviewQueue.hasItems()">
-				<template x-for="item in sidebar.reviewQueue.all()" x-bind:key="item.id">
-					<a class="flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition" x-on:click="sidebar.state.enterReviewMode()" x-bind:class="present.type.spec(item.type).class" x-bind:href="'/journal/' + item.id">
-						<span class="font-semibold" x-text="item.ticker"></span>
-						<span class="text-xs font-medium" x-text="present.date.formatReviewQueueDate(item.created_at)"></span>
-					</a>
-				</template>
-			</div>
+			@components.Loader(components.LoaderProps{
+				Loader:       "sidebar.reviewQueue.loader",
+				ReadyExpr:    "sidebar.reviewQueue.items.length",
+				EmptyMessage: "All caught up — no pending reviews.",
+				RetryExpr:    "sidebar.reviewQueue.load()",
+			}) {
+				<div class="space-y-1">
+					<template x-for="item in sidebar.reviewQueue.all()" x-bind:key="item.id">
+						<a class="flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition" x-on:click="sidebar.state.enterReviewMode()" x-bind:class="present.type.spec(item.type).class" x-bind:href="'/journal/' + item.id">
+							<span class="font-semibold" x-text="item.ticker"></span>
+							<span class="text-xs font-medium" x-text="present.date.formatReviewQueueDate(item.created_at)"></span>
+						</a>
+					</template>
+				</div>
+			}
 		}
 	}
 }
@@ -52,16 +52,12 @@ templ journalDetailNoteCard() {
 			})
 			@components.AsyncButton(components.AsyncButtonProps{
 				OnClickExpr:   "sidebar.noteForm.submit()",
-				DisabledExpr:  "sidebar.noteForm.submitter.submitting || !sidebar.noteForm.canSubmit()",
-				LoadingExpr:   "sidebar.noteForm.submitter.submitting",
+				DisabledExpr:  "sidebar.noteForm.submitter.isBusy() || !sidebar.noteForm.canSubmit()",
+				LoadingExpr:   "sidebar.noteForm.submitter.isBusy()",
 				LoadingText:   "'Saving note...'",
 				DefaultText:   "'Add Note'",
 			})
-			@components.FeedbackMessage(components.FeedbackMessageProps{
-				ShowExpr:  "sidebar.noteForm.submitter.hasMessage()",
-				ClassExpr: "sidebar.noteForm.submitter.messageClass",
-				TextExpr:  "sidebar.noteForm.submitter.message",
-			})
+			@components.Submitter(components.SubmitterProps{Submitter: "sidebar.noteForm.submitter"})
 		}
 	}
 }

@@ -2,6 +2,7 @@ package pages
 
 import (
 	"github.com/amanhigh/go-fun/common/ui/layout"
+	"github.com/amanhigh/go-fun/components/kohan/ui/components"
 	detailblocks "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/detail"
 )
 
@@ -20,8 +21,14 @@ templ JournalDetailPage(journalID string) {
 			},
 		}) {
 			<div class="space-y-6">
-				@detailblocks.JournalDetailStateSection()
-				@journalDetailLoadedContent()
+				@components.Loader(components.LoaderProps{
+					Loader:       "journal.loader",
+					ReadyExpr:    "journal.detail",
+					EmptyMessage: "No journal details available.",
+					RetryExpr:    "journal.loadJournal('" + journalID + "')",
+				}) {
+					@journalDetailLoadedContent()
+				}
 				@detailblocks.JournalDetailPreviewModal()
 			</div>
 		}
@@ -30,7 +37,7 @@ templ JournalDetailPage(journalID string) {
 
 // journalDetailLoadedContent renders the main journal content when loaded.
 templ journalDetailLoadedContent() {
-	<div class="space-y-6" x-show="current.journal && !current.loader.isLoading() && !current.loader.hasError()">
+	<div class="space-y-6">
 		<div class="grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)] xl:items-start">
 			<div class="space-y-6 min-w-0">
 				@detailblocks.JournalDetailHeader()

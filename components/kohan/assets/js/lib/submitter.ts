@@ -1,23 +1,14 @@
+import { createRunnerState, type Runner } from './runner';
+
 // ===== Types =====
 
 export type SubmitMessages = {
 	success?: string;
 };
 
-// ===== CSS Class Constants =====
-
-const successMessageClass = 'journal-feedback-success';
-const errorMessageClass = 'journal-feedback-error';
-
 // ===== Submitter Type =====
 
-export type Submitter = {
-	submitting: boolean;
-	message: string;
-	messageClass: string;
-
-	hasMessage(): boolean;
-	setError(message: string): void;
+export type Submitter = Runner & {
 	run(action: () => Promise<void>, messages: SubmitMessages): Promise<boolean>;
 };
 
@@ -25,37 +16,14 @@ export type Submitter = {
 
 export function createSubmitter(): Submitter {
 	return {
-		submitting: false,
-		message: '',
-		messageClass: errorMessageClass,
-
-		hasMessage(this: Submitter) {
-			return this.message !== '';
-		},
-
-		setError(this: Submitter, message: string) {
-			this.messageClass = errorMessageClass;
-			this.message = message;
-		},
+		...createRunnerState(),
 
 		async run(this: Submitter, action: () => Promise<void>, messages: SubmitMessages): Promise<boolean> {
-			// Lifecycle: guard duplicate submit → clear previous message → run action → set success/error → reset submitting
-			if (this.submitting) return false;
-
-			this.submitting = true;
-			this.message = '';
-
-			try {
-				await action();
-				this.messageClass = successMessageClass;
-				this.message = messages.success ?? '';
-				return true;
-			} catch (err) {
-				this.setError((err as Error).message);
-				return false;
-			} finally {
-				this.submitting = false;
+			const outcome = await this.tryRun(action);
+			if (outcome.success) {
+				this.setSuccess(messages.success ?? '');
 			}
+			return outcome.success;
 		},
 	};
 }

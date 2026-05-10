@@ -44,7 +44,7 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 		applyFilters() {
 			pg().pagination.resetPage();
 			pg().filterUrl.filterToUrl();
-			void pg().table.loadJournals();
+			void pg().table.load();
 		},
 		applyManualFilters() {
 			pg().presets.clearActiveReviewPreset();

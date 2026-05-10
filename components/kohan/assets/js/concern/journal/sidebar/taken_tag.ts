@@ -8,24 +8,24 @@ export function TakenTagConcern(pg: JournalDetailPageProvider) {
 	return {
 		submitter: createSubmitter(),
 		tags: [
-			{ id: 'ntr', tag: 'ntr', type: JournalTagType.MANAGEMENT },
-			{ id: 'enl', tag: 'enl', type: JournalTagType.MANAGEMENT },
-			{ id: 'slt', tag: 'slt', type: JournalTagType.MANAGEMENT },
-			{ id: 'fz', tag: 'fz', type: JournalTagType.MANAGEMENT },
-			{ id: 'nbe', tag: 'nbe', type: JournalTagType.MANAGEMENT },
-			{ id: 'ws', tag: 'ws', type: JournalTagType.MANAGEMENT },
-			{ id: 'important', tag: 'important', type: JournalTagType.MANAGEMENT },
-			{ id: 'be', tag: 'be', type: JournalTagType.MANAGEMENT },
+			{ id: 'ntr', tag: 'ntr', type: JournalTagType.MANAGEMENT, created_at: '' },
+			{ id: 'enl', tag: 'enl', type: JournalTagType.MANAGEMENT, created_at: '' },
+			{ id: 'slt', tag: 'slt', type: JournalTagType.MANAGEMENT, created_at: '' },
+			{ id: 'fz', tag: 'fz', type: JournalTagType.MANAGEMENT, created_at: '' },
+			{ id: 'nbe', tag: 'nbe', type: JournalTagType.MANAGEMENT, created_at: '' },
+			{ id: 'ws', tag: 'ws', type: JournalTagType.MANAGEMENT, created_at: '' },
+			{ id: 'important', tag: 'important', type: JournalTagType.MANAGEMENT, created_at: '' },
+			{ id: 'be', tag: 'be', type: JournalTagType.MANAGEMENT, created_at: '' },
 		],
 
 		show() {
-			return pg().current.journal?.type === JournalType.TAKEN;
+			return pg().journal.detail?.type === JournalType.TAKEN;
 		},
 		hasTag(value: string) {
 			return pg().sidebar.tags.management().some((tag: JournalTag) => tag.tag === value);
 		},
 		async submit(tagValue: string) {
-			if (!pg().current.journal) return;
+			if (!pg().journal.detail) return;
 			await this.submitter.run(
 				() => this.addTag(tagValue),
 				{ success: `${tagValue} tag added.` },
@@ -35,7 +35,7 @@ export function TakenTagConcern(pg: JournalDetailPageProvider) {
 		async addTag(tagValue: string) {
 			const payload: JournalTagRequest = { tag: tagValue, type: JournalTagType.MANAGEMENT };
 			const page = pg();
-			const envelope = await page.tagClient.create(page.current.journalId, payload);
+			const envelope = await page.tagClient.create(page.journal.detail!.id, payload);
 			page.sidebar.tags.prepend(envelope.data as JournalTag);
 		},
 	};

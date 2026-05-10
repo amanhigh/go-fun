@@ -38,23 +38,23 @@ function isStatusActive(journal: Journal): boolean {
 // ===== Async Action Handlers =====
 
 async function toggleReviewedAt(submitter: Submitter, pg: JournalDetailPageProvider): Promise<void> {
-	const journal = pg().current.journal!;
+	const journal = pg().journal.detail!;
 	const reviewedAt = journal.reviewed_at ? null : localToday(pg);
 	const successMsg = reviewedAt ? 'Journal marked reviewed.' : 'Journal marked not reviewed.';
 	await submitter.run(async () => {
-		const envelope = await pg().client.updateReview(pg().current.journalId, { reviewed_at: reviewedAt });
+		const envelope = await pg().client.updateReview(pg().journal.detail!.id, { reviewed_at: reviewedAt });
 		journal.reviewed_at = envelope.data.reviewed_at;
 		journal.status = envelope.data.status;
 	}, { success: successMsg });
 }
 
 async function applyReviewStatus(submitter: Submitter, pg: JournalDetailPageProvider): Promise<void> {
-	const journal = pg().current.journal!;
+	const journal = pg().journal.detail!;
 	const isTaken = journal.type === JournalType.TAKEN;
 	const targetStatus = isTaken ? JournalStatus.JUST_LOSS : JournalStatus.BROKEN;
 
 	await submitter.run(async () => {
-		const envelope = await pg().client.updateReview(pg().current.journalId, { status: targetStatus, reviewed_at: localToday(pg) });
+		const envelope = await pg().client.updateReview(pg().journal.detail!.id, { status: targetStatus, reviewed_at: localToday(pg) });
 		journal.reviewed_at = envelope.data.reviewed_at;
 		journal.status = envelope.data.status;
 		await pg().sidebar.reviewQueue.load();
@@ -68,7 +68,7 @@ export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 		submitter: createSubmitter(),
 
 		actions(): QuickAction[] {
-			const journal = pg().current.journal;
+			const journal = pg().journal.detail;
 			if (!journal) return [];
 
 			return [

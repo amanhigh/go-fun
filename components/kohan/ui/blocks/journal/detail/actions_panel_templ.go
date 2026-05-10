@@ -104,11 +104,7 @@ func journalDetailActionCard() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.reviewActions.submitter.hasMessage()",
-			ClassExpr: "sidebar.reviewActions.submitter.messageClass",
-			TextExpr:  "sidebar.reviewActions.submitter.message",
-		}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Submitter(components.SubmitterProps{Submitter: "sidebar.reviewActions.submitter"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -163,10 +159,10 @@ func journalDetailActionBar() templ.Component {
 			}
 			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{
 				OnClickExpr: "action.apply()",
-				TextExpr:    "sidebar.reviewActions.submitter.submitting ? 'Saving...' : action.display.text",
+				TextExpr:    "sidebar.reviewActions.submitter.isBusy() ? 'Saving...' : action.display.text",
 				ClassExpr:   "action.display.class",
 				Attributes: templ.Attributes{
-					"x-bind:disabled": "sidebar.reviewActions.submitter.submitting",
+					"x-bind:disabled": "sidebar.reviewActions.submitter.isBusy()",
 				},
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -223,7 +219,7 @@ func takenTagActions() templ.Component {
 			Class:   "rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide",
 			Attributes: templ.Attributes{
 				"x-on:click":      "sidebar.takenTag.submit(tag.tag)",
-				"x-bind:disabled": "sidebar.takenTag.submitter.submitting || sidebar.takenTag.hasTag(tag.tag)",
+				"x-bind:disabled": "sidebar.takenTag.submitter.isBusy() || sidebar.takenTag.hasTag(tag.tag)",
 				"x-bind:class":    "present.tag.spec(tag).class",
 				"x-text":          "present.tag.label(tag)",
 			},
@@ -235,11 +231,7 @@ func takenTagActions() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.takenTag.submitter.hasMessage()",
-			ClassExpr: "sidebar.takenTag.submitter.messageClass",
-			TextExpr:  "sidebar.takenTag.submitter.message",
-		}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Submitter(components.SubmitterProps{Submitter: "sidebar.takenTag.submitter"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -374,11 +366,7 @@ func journalDetailTagsCard() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-					ShowExpr:  "sidebar.reasonTagForm.submitter.hasMessage()",
-					ClassExpr: "sidebar.reasonTagForm.submitter.messageClass",
-					TextExpr:  "sidebar.reasonTagForm.submitter.message",
-				}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = components.Submitter(components.SubmitterProps{Submitter: "sidebar.reasonTagForm.submitter"}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -394,7 +382,7 @@ func journalDetailTagsCard() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.hasItems()"}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.items.length"}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -457,8 +445,8 @@ func journalDetailTagForm() templ.Component {
 		}
 		templ_7745c5c3_Err = components.AsyncButton(components.AsyncButtonProps{
 			OnClickExpr:  "sidebar.reasonTagForm.submit()",
-			DisabledExpr: "sidebar.reasonTagForm.submitter.submitting || !sidebar.reasonTagForm.canSubmit()",
-			LoadingExpr:  "sidebar.reasonTagForm.submitter.submitting",
+			DisabledExpr: "sidebar.reasonTagForm.submitter.isBusy() || !sidebar.reasonTagForm.canSubmit()",
+			LoadingExpr:  "sidebar.reasonTagForm.submitter.isBusy()",
 			LoadingText:  "'Saving reason tag...'",
 			DefaultText:  "'Add Reason Tag'",
 		}).Render(ctx, templ_7745c5c3_Buffer)
@@ -494,7 +482,7 @@ func journalDetailTagInputs() templ.Component {
 			templ_7745c5c3_Var14 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"space-y-3\" x-show=\"sidebar.tags.hasItems()\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"space-y-3\" x-show=\"sidebar.tags.items.length\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -543,6 +531,10 @@ func journalDetailTagRows() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		templ_7745c5c3_Err = components.Submitter(components.SubmitterProps{Submitter: "sidebar.tags.submitter"}).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
 		return nil
 	})
 }
@@ -582,7 +574,7 @@ func journalDetailTagRow() templ.Component {
 		}
 		templ_7745c5c3_Err = components.DeleteButton(components.DeleteButtonProps{
 			OnClickExpr:  "sidebar.tags.delete(tag.id)",
-			DisabledExpr: "sidebar.tags.deletingId === tag.id",
+			DisabledExpr: "sidebar.tags.submitter.isBusy()",
 			AriaLabel:    "Delete Tag",
 			Title:        "Delete Tag",
 		}).Render(ctx, templ_7745c5c3_Buffer)

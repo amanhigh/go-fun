@@ -1,6 +1,7 @@
 import type { Journal, JournalNote, JournalTag } from '../api/journal/response';
+import type { Loader } from '../../lib/loader';
 import type { Submitter } from '../../lib/submitter';
-import type { DeletableSyncedCollection, LoadableCollection } from '../core/collection';
+import type { Collection } from '../core/collection';
 import type { DisplaySpec } from '../core/present';
 
 // ===== Main Concern =====
@@ -39,7 +40,10 @@ export type QuickAction = {
 	apply(): Promise<void>;
 };
 
-export type ReviewQueueConcern = LoadableCollection<Journal>;
+export type ReviewQueueConcern = Collection<Journal> & {
+	loader: Loader;
+	load(): Promise<void>;
+};
 
 export type NoteFormConcern = {
 	submitter: Submitter;
@@ -64,12 +68,16 @@ export type TakenTagConcern = {
 	submit(tagValue: string): Promise<void>;
 };
 
-export type TagCollectionConcern = DeletableSyncedCollection<JournalTag> & {
+export type TagCollectionConcern = Collection<JournalTag> & {
+	submitter: Submitter;
+	delete(tagId: string): Promise<void>;
 	reason(): JournalTag[];
 	directional(): JournalTag[];
 	management(): JournalTag[];
 };
 
-export type NotesConcern = DeletableSyncedCollection<JournalNote> & {
+export type NotesConcern = Collection<JournalNote> & {
+	submitter: Submitter;
+	delete(noteId: string): Promise<void>;
 	sorted(): JournalNote[];
 };

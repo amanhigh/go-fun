@@ -15,7 +15,7 @@ export function NewNoteFormConcern(pg: JournalDetailPageProvider) {
 		},
 
 		async submit() {
-			const journal = pg().current.journal;
+			const journal = pg().journal.detail;
 			if (!journal) return;
 
 			const content = this.content.trim();
@@ -35,7 +35,7 @@ export function NewNoteFormConcern(pg: JournalDetailPageProvider) {
 				content,
 				format: JournalNoteFormat.MARKDOWN,
 			};
-			const envelope = await pg().noteClient.create(pg().current.journalId, payload);
+			const envelope = await pg().noteClient.create(pg().journal.detail!.id, payload);
 			pg().sidebar.notes.prepend(envelope.data as JournalNote);
 			this.content = '';
 		},

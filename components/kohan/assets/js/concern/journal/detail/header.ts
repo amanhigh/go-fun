@@ -6,11 +6,11 @@ export function NewHeaderConcern(pg: JournalDetailPageProvider) {
 		submitter: createSubmitter(),
 
 		async deleteJournal(this: any) {
-			if (!pg().current.journal) return;
+			if (!pg().journal.detail) return;
 			if (!window.confirm('Delete this journal? This cannot be undone.')) return;
 			await this.submitter.run(
 				async () => {
-					await pg().client.delete(pg().current.journalId);
+					await pg().client.delete(pg().journal.detail!.id);
 					window.location.href = '/journal';
 				},
 				{ success: 'Journal deleted.' },

@@ -22,12 +22,12 @@ export function NewPaginationConcern(pg: JournalPageProvider): PaginationConcern
 		async previousPage() {
 			if (!this.hasPrev()) return;
 			this.prevPage();
-			await pg().table.loadJournals();
+			await pg().table.load();
 		},
 		async nextJournalPage() {
 			if (!this.hasNext()) return;
 			this.nextPage();
-			await pg().table.loadJournals();
+			await pg().table.load();
 		},
 		summary() { return `Page ${this.getPage()} of ${this.getTotalPages()}`; },
 	};

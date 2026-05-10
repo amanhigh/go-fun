@@ -2,6 +2,7 @@ import type { Journal } from '../api/journal/response';
 import type { ReviewedFilter } from '../api/journal/request';
 import type { JournalType, JournalStatus, JournalSequence, JournalSortBy, JournalSortOrder } from '../api/journal/enums';
 import type { Loader } from '../../lib/loader';
+import type { Collection } from '../core/collection';
 import type { JournalPageBase, PageProvider } from './page';
 
 // ===== Main Page Composition =====
@@ -95,9 +96,7 @@ export type PresetConcern = {
 	applyReviewPreset(reviewPreset: ReviewPreset): void;
 };
 
-export type JournalTableConcern = {
-	journals: Journal[];
+export type JournalTableConcern = Collection<Journal> & {
 	loader: Loader;
-	loadJournals(): Promise<void>;
-	isEmpty(): boolean;
+	load(): Promise<void>;
 };

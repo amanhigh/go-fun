@@ -15,26 +15,23 @@ templ JournalDetailHeader() {
 		@card.Content(card.ContentProps{Class: "p-6"}) {
 			<div class="space-y-3">
 				<div class="flex items-start justify-between gap-3">
-					<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + current.journal.id"></div>
+					<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + journal.detail.id"></div>
 					@components.DeleteButton(components.DeleteButtonProps{
 						OnClickExpr:  "header.deleteJournal()",
-						DisabledExpr: "header.submitter.submitting",
+						DisabledExpr: "header.submitter.isBusy()",
 						AriaLabel:    "Delete Journal",
 						Title:        "Delete Journal",
 						Class:        "h-9 w-9",
 					})
-					@components.FeedbackMessage(components.FeedbackMessageProps{
-						ShowExpr:  "header.submitter.hasMessage()",
-						ClassExpr: "header.submitter.messageClass",
-						TextExpr:  "header.submitter.message",
-						Class:     "text-xs",
+					@components.Submitter(components.SubmitterProps{
+						Submitter: "header.submitter",
 					})
 				</div>
-				<h2 class="text-3xl font-bold tracking-tight text-foreground" x-text="current.journal.ticker"></h2>
+				<h2 class="text-3xl font-bold tracking-tight text-foreground" x-text="journal.detail.ticker"></h2>
 				<div class="flex justify-between gap-6">
 					<div class="flex flex-wrap items-center gap-2.5">
-						@journalcommon.TypeBadge(journalcommon.TypeBadgeProps{TypeExpr: "current.journal.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
-						@journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "current.journal.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+						@journalcommon.TypeBadge(journalcommon.TypeBadgeProps{TypeExpr: "journal.detail.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+						@journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "journal.detail.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
 						@JournalDetailSequenceChip()
 					</div>
 					@JournalDetailReviewDates()
@@ -49,15 +46,15 @@ templ JournalDetailHeader() {
 }
 
 templ JournalDetailCreatedAt() {
-	@components.InfoRow(components.InfoRowProps{IconName: "clock", ValueExpr: "present.date.format(current.journal.created_at)", Class: "text-xs"})
+	@components.InfoRow(components.InfoRowProps{IconName: "clock", ValueExpr: "present.date.format(journal.detail.created_at)", Class: "text-xs"})
 }
 
 templ JournalDetailReviewDate() {
-	@components.FilterChip(components.FilterChipProps{ShowExpr: "current.journal.reviewed_at", TextExpr: "present.review.label(current.journal.reviewed_at)", Tone: components.ToneGreen, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
+	@components.FilterChip(components.FilterChipProps{ShowExpr: "journal.detail.reviewed_at", TextExpr: "present.review.label(journal.detail.reviewed_at)", Tone: components.ToneGreen, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
 }
 
 templ JournalDetailPendingDate() {
-	@components.FilterChip(components.FilterChipProps{ShowExpr: "!current.journal.reviewed_at", TextExpr: "present.review.label(current.journal.reviewed_at)", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
+	@components.FilterChip(components.FilterChipProps{ShowExpr: "!journal.detail.reviewed_at", TextExpr: "present.review.label(journal.detail.reviewed_at)", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
 }
 
 templ JournalDetailReviewDates() {
@@ -69,7 +66,7 @@ templ JournalDetailReviewDates() {
 }
 
 templ JournalDetailSequenceChip() {
-	@components.FilterChip(components.FilterChipProps{TextExpr: "present.sequence.label(current.journal.sequence)", Tone: components.ToneViolet, Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+	@components.FilterChip(components.FilterChipProps{TextExpr: "present.sequence.label(journal.detail.sequence)", Tone: components.ToneViolet, Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
 }
 
 templ JournalDetailReasonTags() {

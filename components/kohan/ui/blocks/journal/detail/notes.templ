@@ -15,12 +15,13 @@ templ JournalDetailNotes() {
 		@card.Content(card.ContentProps{}) {
 			@components.SectionHeader(components.SectionHeaderProps{Title: "Notes", Description: "Add notes for this journal and delete existing notes below."})
 			<p class="mt-1 text-sm text-muted-foreground"><span x-text="sidebar.notes.sorted().length"></span> note(s)</p>
-			<div class="mt-4 space-y-3" x-show="sidebar.notes.hasItems()">
+			<div class="mt-4 space-y-3" x-show="sidebar.notes.items.length">
 				<template x-for="note in sidebar.notes.sorted()" x-bind:key="note.id">
 					@JournalDetailNoteRow()
 				</template>
 			</div>
-			@JournalDetailEmptyState("No notes available for this journal.", "!sidebar.notes.hasItems()")
+			@components.Submitter(components.SubmitterProps{Submitter: "sidebar.notes.submitter"})
+			@components.EmptyState(components.EmptyStateProps{Message: "No notes available for this journal.", ShowExpr: "!sidebar.notes.items.length", Class: "mt-5"})
 		}
 	}
 }
@@ -37,7 +38,7 @@ templ JournalDetailNoteRow() {
 			</div>
 			@components.DeleteButton(components.DeleteButtonProps{
 				OnClickExpr:  "sidebar.notes.delete(note.id)",
-				DisabledExpr: "sidebar.notes.deletingId === note.id",
+				DisabledExpr: "sidebar.notes.submitter.isBusy()",
 				AriaLabel:    "Delete Note",
 				Title:        "Delete Note",
 			})

@@ -14,20 +14,19 @@ function normalizeJournal(journal: JournalDetail): JournalDetail {
 
 export function NewJournalConcern(pg: JournalDetailPageProvider) {
 	return {
-		journalId: '',
-		journal: null,
-		loader: createLoader(true) as Loader,
+		detail: null,
+		loader: createLoader(),
 
-		async loadJournal(this: any) {
+		async loadJournal(this: any, id: string) {
 			const data = await this.loader.loadData(
-				() => pg().client.get(this.journalId),
+				() => pg().client.get(id),
 			);
 
 			if (!data) return;
 
-			this.journal = normalizeJournal(data);
-			pg().sidebar.tags.sync(this.journal.tags);
-			pg().sidebar.notes.sync(this.journal.notes);
+			this.detail = normalizeJournal(data);
+			pg().sidebar.tags.sync(this.detail.tags);
+			pg().sidebar.notes.sync(this.detail.notes);
 		},
 	};
 }

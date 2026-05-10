@@ -20,11 +20,7 @@ templ JournalDetailActionsPanel() {
 templ journalDetailActionCard() {
 	<div class="space-y-4 rounded-3xl border border-border bg-card p-4 shadow-sm">
 		@journalDetailActionBar()
-		@components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.reviewActions.submitter.hasMessage()",
-			ClassExpr: "sidebar.reviewActions.submitter.messageClass",
-			TextExpr:  "sidebar.reviewActions.submitter.message",
-		})
+		@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reviewActions.submitter"})
 		@takenTagActions()
 	</div>
 }
@@ -39,10 +35,10 @@ templ journalDetailActionBar() {
 		<template x-for="action in sidebar.reviewActions.actions()" x-bind:key="action.id">
 			@components.QuickAction(components.QuickActionProps{
 				OnClickExpr: "action.apply()",
-				TextExpr:    "sidebar.reviewActions.submitter.submitting ? 'Saving...' : action.display.text",
+				TextExpr:    "sidebar.reviewActions.submitter.isBusy() ? 'Saving...' : action.display.text",
 				ClassExpr:   "action.display.class",
 				Attributes: templ.Attributes{
-					"x-bind:disabled": "sidebar.reviewActions.submitter.submitting",
+					"x-bind:disabled": "sidebar.reviewActions.submitter.isBusy()",
 				},
 			})
 		</template>
@@ -64,18 +60,14 @@ templ takenTagActions() {
 					Class:   "rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide",
 				Attributes: templ.Attributes{
 					"x-on:click":      "sidebar.takenTag.submit(tag.tag)",
-					"x-bind:disabled": "sidebar.takenTag.submitter.submitting || sidebar.takenTag.hasTag(tag.tag)",
+					"x-bind:disabled": "sidebar.takenTag.submitter.isBusy() || sidebar.takenTag.hasTag(tag.tag)",
 					"x-bind:class":    "present.tag.spec(tag).class",
 					"x-text":          "present.tag.label(tag)",
 				},
 				}) {}
 			</template>
 		</div>
-		@components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.takenTag.submitter.hasMessage()",
-			ClassExpr: "sidebar.takenTag.submitter.messageClass",
-			TextExpr:  "sidebar.takenTag.submitter.message",
-		})
+		@components.Submitter(components.SubmitterProps{Submitter: "sidebar.takenTag.submitter"})
 	</div>
 }
 
@@ -87,13 +79,9 @@ templ journalDetailTagsCard() {
 		}
 		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
 			@journalDetailTagForm()
-			@components.FeedbackMessage(components.FeedbackMessageProps{
-				ShowExpr:  "sidebar.reasonTagForm.submitter.hasMessage()",
-				ClassExpr: "sidebar.reasonTagForm.submitter.messageClass",
-				TextExpr:  "sidebar.reasonTagForm.submitter.message",
-			})
+			@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reasonTagForm.submitter"})
 			@journalDetailTagInputs()
-			@components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.hasItems()"})
+			@components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.items.length"})
 		}
 	}
 }
@@ -112,8 +100,8 @@ templ journalDetailTagForm() {
 		})
 		@components.AsyncButton(components.AsyncButtonProps{
 			OnClickExpr:   "sidebar.reasonTagForm.submit()",
-			DisabledExpr:  "sidebar.reasonTagForm.submitter.submitting || !sidebar.reasonTagForm.canSubmit()",
-			LoadingExpr:   "sidebar.reasonTagForm.submitter.submitting",
+			DisabledExpr:  "sidebar.reasonTagForm.submitter.isBusy() || !sidebar.reasonTagForm.canSubmit()",
+			LoadingExpr:   "sidebar.reasonTagForm.submitter.isBusy()",
 			LoadingText:   "'Saving reason tag...'",
 			DefaultText:   "'Add Reason Tag'",
 		})
@@ -121,7 +109,7 @@ templ journalDetailTagForm() {
 }
 
 templ journalDetailTagInputs() {
-	<div class="space-y-3" x-show="sidebar.tags.hasItems()">
+	<div class="space-y-3" x-show="sidebar.tags.items.length">
 		@journalDetailTagRows()
 	</div>
 }
@@ -130,6 +118,7 @@ templ journalDetailTagRows() {
 	<template x-for="tag in sidebar.tags.all()" x-bind:key="tag.id">
 		@journalDetailTagRow()
 	</template>
+	@components.Submitter(components.SubmitterProps{Submitter: "sidebar.tags.submitter"})
 }
 
 templ journalDetailTagRow() {
@@ -139,7 +128,7 @@ templ journalDetailTagRow() {
 		</div>
 		@components.DeleteButton(components.DeleteButtonProps{
 			OnClickExpr:  "sidebar.tags.delete(tag.id)",
-			DisabledExpr: "sidebar.tags.deletingId === tag.id",
+			DisabledExpr: "sidebar.tags.submitter.isBusy()",
 			AriaLabel:    "Delete Tag",
 			Title:        "Delete Tag",
 		})

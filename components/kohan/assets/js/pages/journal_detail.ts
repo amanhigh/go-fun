@@ -19,7 +19,7 @@ function createJournalDetailPageData(journalId = '') {
 	page.tagClient = NewJournalTagClient();
 
 	page.present = NewPresentationConcern();
-	page.current = NewJournalConcern(pg);
+	page.journal = NewJournalConcern(pg);
 	page.header = NewHeaderConcern(pg);
 	page.images = NewImagesConcern(pg);
 	page.preview = NewPreviewConcern(pg);
@@ -28,10 +28,9 @@ function createJournalDetailPageData(journalId = '') {
 	page.init = function init(this: any) {
 		page = this;
 
-		this.current.journalId = journalId;
 		this.sidebar.state.restorePersistedSidebarState();
 
-		void this.current.loadJournal();
+		void this.journal.loadJournal(journalId);
 		void this.sidebar.reviewQueue.load();
 	};
 

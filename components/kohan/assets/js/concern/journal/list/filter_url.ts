@@ -55,7 +55,7 @@ export function urlToFilter(pg: JournalPageProvider) {
 			return;
 		}
 
-		(filter as Record<string, string>)[stateKey] = value;
+		(filter as unknown as Record<string, string>)[stateKey] = value;
 	});
 }
 

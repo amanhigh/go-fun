@@ -15,10 +15,15 @@ function toImageView(image: JournalImage): JournalImageView {
 function imageSrc(image: JournalImage): string {
 	if (!image.file_name) return '';
 	if (image.file_name.startsWith('http://') || image.file_name.startsWith('https://') || image.file_name.startsWith('/')) return image.file_name;
-	if (!image.created_at) return '/journal/images/' + image.file_name;
-	const date = new Date(image.created_at);
-	if (Number.isNaN(date.getTime())) return '/journal/images/' + image.file_name;
-	return `/journal/images/${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${image.file_name}`;
+	const path = (() => {
+		if (!image.created_at) return '/journal/images/' + image.file_name;
+		const date = new Date(image.created_at);
+		if (Number.isNaN(date.getTime())) return '/journal/images/' + image.file_name;
+		return `/journal/images/${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${image.file_name}`;
+	})();
+	// DONOT REMOVE: Cache-busting query param — prevents Brave/Firefox from serving stale partial screenshots
+	// IT WORKED. DO NOT DELETE. Append created_at so browser re-fetches after screenshot updates.
+	return path + '?t=' + encodeURIComponent(image.created_at || image.file_name);
 }
 
 function imageLabel(image: JournalImage): string {
@@ -37,13 +42,13 @@ function compareImages(a: JournalImage, b: JournalImage): number {
 export function NewImagesConcern(pg: JournalDetailPageProvider) {
 	return {
 		sorted(): JournalImageView[] {
-			const images = pg().current.journal?.images;
+			const images = pg().journal.detail!.images;
 			if (!images?.length) return [];
 			return [...images].map(toImageView).sort(compareImages);
 		},
 
 		countLabel(): string {
-			const count = pg().current.journal?.images?.length ?? 0;
+			const count = pg().journal.detail!.images.length;
 			return `${count} timeframe image${count === 1 ? '' : 's'}`;
 		},
 	};
