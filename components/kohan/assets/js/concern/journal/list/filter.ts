@@ -14,16 +14,21 @@ type StatusToggle = {
 	nextStatus: JournalStatus | '';
 };
 
-const typeToggleMap: Record<string, TypeToggle> = {
-	'': { label: 'Taken', className: 'journal-type-toggle-taken', nextType: JournalType.TAKEN },
-	[JournalType.TAKEN]: { label: 'Rejected', className: 'journal-type-toggle-rejected', nextType: JournalType.REJECTED },
-	[JournalType.REJECTED]: { label: 'All', className: 'journal-type-toggle-all', nextType: '' },
+const allToggleSpec: { label: string; className: string } = {
+	label: 'All',
+	className: 'journal-display-default',
 };
 
-const statusToggleMap: Record<string, StatusToggle> = {
-	'': { label: 'Set', className: 'journal-status-toggle-set', nextStatus: JournalStatus.SET },
-	[JournalStatus.SET]: { label: 'Running', className: 'journal-status-toggle-running', nextStatus: JournalStatus.RUNNING },
-	[JournalStatus.RUNNING]: { label: 'All', className: 'journal-status-toggle-all', nextStatus: '' },
+const typeTransitionMap: Record<string, { nextType: JournalType | '' }> = {
+	'': { nextType: JournalType.TAKEN },
+	[JournalType.TAKEN]: { nextType: JournalType.REJECTED },
+	[JournalType.REJECTED]: { nextType: '' },
+};
+
+const statusTransitionMap: Record<string, { nextStatus: JournalStatus | '' }> = {
+	'': { nextStatus: JournalStatus.SET },
+	[JournalStatus.SET]: { nextStatus: JournalStatus.RUNNING },
+	[JournalStatus.RUNNING]: { nextStatus: '' },
 };
 
 const journalFilterDefaults: JournalFilterValues = {
@@ -51,10 +56,10 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 			return (Object.keys(journalFilterDefaults) as (keyof JournalFilterValues)[]).some((field) => this[field] !== journalFilterDefaults[field]);
 		},
 		typeToggle() {
-			return resolveTypeToggle(this.type);
+			return resolveTypeToggle(pg, this.type);
 		},
 		statusToggle() {
-			return resolveStatusToggle(this.status);
+			return resolveStatusToggle(pg, this.status);
 		},
 		toggleStatus() {
 			this.status = this.statusToggle().nextStatus;
@@ -90,16 +95,26 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 	} as JournalFilterConcern;
 }
 
-export function resolveTypeToggle(currentType: JournalType | ''): TypeToggle {
-	if (currentType === JournalType.TAKEN || currentType === JournalType.REJECTED) {
-		return typeToggleMap[currentType];
+export function resolveTypeToggle(pg: JournalPageProvider, currentType: JournalType | ''): TypeToggle {
+	const transition = typeTransitionMap[currentType] ?? typeTransitionMap[''];
+	if (transition.nextType === '') {
+		return { label: allToggleSpec.label, className: allToggleSpec.className, nextType: '' };
 	}
-	return typeToggleMap[''];
+	return {
+		label: pg().present.type.label(transition.nextType),
+		className: pg().present.type.spec(transition.nextType).class,
+		nextType: transition.nextType,
+	};
 }
 
-export function resolveStatusToggle(currentStatus: JournalStatus | ''): StatusToggle {
-	if (currentStatus === JournalStatus.SET || currentStatus === JournalStatus.RUNNING) {
-		return statusToggleMap[currentStatus];
+export function resolveStatusToggle(pg: JournalPageProvider, currentStatus: JournalStatus | ''): StatusToggle {
+	const transition = statusTransitionMap[currentStatus] ?? statusTransitionMap[''];
+	if (transition.nextStatus === '') {
+		return { label: allToggleSpec.label, className: allToggleSpec.className, nextStatus: '' };
 	}
-	return statusToggleMap[''];
+	return {
+		label: pg().present.status.label(transition.nextStatus),
+		className: pg().present.status.spec(transition.nextStatus).class,
+		nextStatus: transition.nextStatus,
+	};
 }
