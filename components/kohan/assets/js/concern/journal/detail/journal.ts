@@ -1,3 +1,5 @@
+import { createLoader } from '../../../lib/loader';
+import type { Loader } from '../../../lib/loader';
 import type { JournalDetail } from '../../../types/api/journal/response';
 import type { JournalDetailPageProvider } from '../../../types/journal/detail';
 
@@ -16,24 +18,18 @@ export function NewJournalConcern(pg: JournalDetailPageProvider) {
 	return {
 		journalId: '',
 		journal: null,
-		loading: true,
-		errorMessage: '',
-
-		hasError(this: any) { return this.errorMessage !== ''; },
+		loader: createLoader(true) as Loader,
 
 		async loadJournal(this: any) {
-			this.loading = true;
-			this.errorMessage = '';
-			try {
-				const envelope = await pg().client.get(this.journalId);
-				this.journal = normalizeJournal(envelope.data);
-				pg().sidebar.tags.sync(this.journal?.tags);
-				pg().sidebar.notes.sync(this.journal?.notes);
-			} catch (err) {
-				this.errorMessage = (err as Error).message;
-			} finally {
-				this.loading = false;
-			}
+			const data = await this.loader.loadData(
+				() => pg().client.get(this.journalId),
+			);
+
+			if (!data) return;
+
+			this.journal = normalizeJournal(data);
+			pg().sidebar.tags.sync(this.journal?.tags);
+			pg().sidebar.notes.sync(this.journal?.notes);
 		},
 	};
 }

@@ -28,7 +28,7 @@ export function TakenTagConcern(pg: JournalDetailPageProvider) {
 			if (!pg().current.journal) return;
 			await this.submitter.run(
 				() => this.addTag(tagValue),
-				{ success: `${tagValue} tag added.`, error: 'Unable to save management tag.' },
+				{ success: `${tagValue} tag added.` },
 			);
 		},
 

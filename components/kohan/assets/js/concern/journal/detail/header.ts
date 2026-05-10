@@ -13,7 +13,7 @@ export function NewHeaderConcern(pg: JournalDetailPageProvider) {
 					await pg().client.delete(pg().current.journalId);
 					window.location.href = '/journal';
 				},
-				{ success: 'Journal deleted.', error: 'Unable to delete journal.' },
+				{ success: 'Journal deleted.' },
 			);
 		},
 	};

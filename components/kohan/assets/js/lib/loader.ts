@@ -7,7 +7,6 @@ export type Loader = {
 	error: string;
 
 	isLoading(): boolean;
-	isError(): boolean;
 	hasError(): boolean;
 	setError(message: string): void;
 
@@ -25,10 +24,6 @@ export function createLoader(initialLoading = false): Loader {
 
 		isLoading(this: Loader) {
 			return this.loading;
-		},
-
-		isError(this: Loader) {
-			return this.error !== '';
 		},
 
 		hasError(this: Loader) {

@@ -45,7 +45,7 @@ async function toggleReviewedAt(submitter: Submitter, pg: JournalDetailPageProvi
 		const envelope = await pg().client.updateReview(pg().current.journalId, { reviewed_at: reviewedAt });
 		journal.reviewed_at = envelope.data.reviewed_at;
 		journal.status = envelope.data.status;
-	}, { success: successMsg, error: 'Unable to update review date.' });
+	}, { success: successMsg });
 }
 
 async function applyReviewStatus(submitter: Submitter, pg: JournalDetailPageProvider): Promise<void> {
@@ -58,7 +58,7 @@ async function applyReviewStatus(submitter: Submitter, pg: JournalDetailPageProv
 		journal.reviewed_at = envelope.data.reviewed_at;
 		journal.status = envelope.data.status;
 		await pg().sidebar.reviewQueue.load();
-	}, { success: `${isTaken ? 'Mark Just Loss' : 'Mark Broken'} applied and journal marked reviewed.`, error: 'Unable to update journal status.' });
+	}, { success: `${isTaken ? 'Mark Just Loss' : 'Mark Broken'} applied and journal marked reviewed.` });
 }
 
 // ===== Exported Concern =====

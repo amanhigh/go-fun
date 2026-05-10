@@ -1,5 +1,6 @@
 import type { JournalDetail, JournalImage } from '../api/journal/response';
 import type { JournalTimeframe } from '../api/journal/enums';
+import type { Loader } from '../../lib/loader';
 import type { Submitter } from '../../lib/submitter';
 import type { JournalNoteClient } from '../../client/journal_note';
 import type { JournalTagClient } from '../../client/journal_tag';
@@ -26,11 +27,9 @@ export type JournalDetailPageProvider = PageProvider<JournalDetailPage>;
 export type JournalConcern = {
 	journalId: string;
 	journal: JournalDetail | null;
-	loading: boolean;
-	errorMessage: string;
+	loader: Loader;
 
 	loadJournal(): Promise<void>;
-	hasError(): boolean;
 };
 
 export type JournalHeaderConcern = {

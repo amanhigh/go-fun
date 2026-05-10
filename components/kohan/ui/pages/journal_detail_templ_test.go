@@ -182,4 +182,21 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).ToNot(ContainSubstring(`object-cover`))
 		})
 	})
+
+	Context("Loader State Bindings", func() {
+		It("should wire loading and error states via loader", func() {
+			Expect(html).To(ContainSubstring(`current.loader.isLoading()`))
+			Expect(html).To(ContainSubstring(`current.loader.hasError()`))
+		})
+
+		It("should render loader error text and retry binding", func() {
+			Expect(html).To(ContainSubstring(`x-text="current.loader.error"`))
+			Expect(html).To(ContainSubstring(`x-on:click="current.loadJournal()"`))
+			Expect(html).To(ContainSubstring("Retry"))
+		})
+
+		It("should gate loaded content behind loader states", func() {
+			Expect(html).To(ContainSubstring(`x-show="current.journal && !current.loader.isLoading() && !current.loader.hasError()"`))
+		})
+	})
 })

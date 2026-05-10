@@ -2,7 +2,6 @@
 
 export type SubmitMessages = {
 	success?: string;
-	error: string;
 };
 
 // ===== CSS Class Constants =====

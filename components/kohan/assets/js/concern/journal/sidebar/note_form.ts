@@ -25,7 +25,7 @@ export function NewNoteFormConcern(pg: JournalDetailPageProvider) {
 			}
 			await this.submitter.run(
 				() => this.createNote(journal.status, content),
-				{ success: 'Note added.', error: 'Unable to save note.' },
+				{ success: 'Note added.' },
 			);
 		},
 
