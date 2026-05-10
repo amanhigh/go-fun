@@ -157,8 +157,8 @@ templ JournalTableSection() {
 	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxLoading, ShowExpr: "table.loader.isBusy()"}) {
 		Loading journals...
 	}
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxError, ShowExpr: "table.loader.hasMessage()", TextExpr: "table.loader.message", RetryExpr: "table.loadJournals()"}) {}
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!table.loader.isBusy() && !table.loader.hasMessage() && table.isEmpty()"}) {
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxError, ShowExpr: "table.loader.hasMessage()", TextExpr: "table.loader.message", RetryExpr: "table.load()"}) {}
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!table.loader.isBusy() && !table.loader.hasMessage() && !table.hasItems()"}) {
 		No journals found.
 	}
 	@JournalTable()
@@ -166,12 +166,12 @@ templ JournalTableSection() {
 }
 
 templ JournalTable() {
-	@card.Card(card.Props{Class: "rounded-none border-x-0 border-b-0 border-t border-t-sky-200/70 shadow-sm", Attributes: templ.Attributes{"x-show": "!table.loader.isBusy() && !table.loader.hasMessage() && !table.isEmpty()"}}) {
+	@card.Card(card.Props{Class: "rounded-none border-x-0 border-b-0 border-t border-t-sky-200/70 shadow-sm", Attributes: templ.Attributes{"x-show": "!table.loader.isBusy() && !table.loader.hasMessage() && table.hasItems()"}}) {
 		@card.Content(card.ContentProps{Class: "overflow-x-auto p-0"}) {
 			@table.Table(table.Props{Class: "min-w-[860px]"}) {
 				@JournalTableHeader()
 				@table.Body() {
-					<template x-for="journal in table.journals" x-bind:key="journal.id">
+					<template x-for="journal in table.all()" x-bind:key="journal.id">
 						@JournalRow()
 					</template>
 				}
