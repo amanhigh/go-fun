@@ -17,7 +17,7 @@ export function NewReviewQueueConcern(pg: JournalDetailPageProvider) {
 					sortBy: JournalSortBy.CREATED_AT,
 					sortOrder: JournalSortOrder.ASC,
 				}),
-				(data) => this.sync(data.journals),
+				(data: any) => this.sync(data.journals),
 			);
 		},
 	};

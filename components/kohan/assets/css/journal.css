@@ -51,6 +51,24 @@
     @apply border border-slate-200 bg-slate-100 text-slate-800;
   }
 
+  /* --- Quick Bars --- */
+
+  .quick-bar-blue {
+    @apply text-sky-700;
+  }
+
+  .quick-bar-green {
+    @apply text-emerald-700;
+  }
+
+  .quick-bar-cyan {
+    @apply text-cyan-700;
+  }
+
+  .quick-bar-slate {
+    @apply text-slate-700;
+  }
+
   /* --- Presentation Display --- */
 
   .journal-display-default,

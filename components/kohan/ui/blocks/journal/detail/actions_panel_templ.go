@@ -158,12 +158,10 @@ func journalDetailActionBar() templ.Component {
 				return templ_7745c5c3_Err
 			}
 			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{
-				OnClickExpr: "action.apply()",
-				TextExpr:    "sidebar.reviewActions.submitter.isBusy() ? 'Saving...' : action.display.text",
-				ClassExpr:   "action.display.class",
-				Attributes: templ.Attributes{
-					"x-bind:disabled": "sidebar.reviewActions.submitter.isBusy()",
-				},
+				OnClickExpr:  "action.apply()",
+				TextExpr:     "sidebar.reviewActions.submitter.isBusy() ? 'Saving...' : action.display.text",
+				ClassExpr:    "action.display.class",
+				DisabledExpr: "sidebar.reviewActions.submitter.isBusy()",
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

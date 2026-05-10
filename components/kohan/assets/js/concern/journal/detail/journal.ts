@@ -20,7 +20,7 @@ export function NewJournalConcern(pg: JournalDetailPageProvider) {
 		async loadJournal(this: any, id: string) {
 			await this.loader.load(
 				() => pg().client.get(id),
-				(data) => {
+				(data: any) => {
 					this.detail = normalizeJournal(data);
 					pg().sidebar.tags.sync(this.detail.tags);
 					pg().sidebar.notes.sync(this.detail.notes);
