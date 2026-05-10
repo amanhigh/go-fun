@@ -11,6 +11,15 @@ export type Envelope<T> = {
 	data: T;
 };
 
+// 4xx: { status: "fail", data: { "message"|field: "..." } }
+export type EnvelopeFailBody = Record<string, string>;
+
+// 5xx: { status: "error", message: "...", code: ... }
+export type EnvelopeErrorBody = {
+	message: string;
+	code: number;
+};
+
 // ===== Enums =====
 
 export const JournalType = {

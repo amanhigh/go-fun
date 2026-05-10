@@ -12,7 +12,6 @@ export function NewTableConcern(pg: JournalPageProvider): JournalTableConcern {
 
 			const data = await this.loader.loadData(
 				() => page.client.list(pagination.getOffset(), pagination.getPageSize(), page.filter),
-				{ error: 'Unable to load journals.' },
 			);
 
 			if (!data) return;

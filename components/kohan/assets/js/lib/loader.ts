@@ -1,11 +1,5 @@
 import type { Envelope } from '../types/journal_api';
 
-// ===== Types =====
-
-export type LoadMessages = {
-	error: string;
-};
-
 // ===== Loader Type =====
 
 export type Loader = {
@@ -19,7 +13,6 @@ export type Loader = {
 
 	loadData<TData>(
 		action: () => Promise<Envelope<TData>>,
-		messages: LoadMessages,
 	): Promise<TData | undefined>;
 };
 
@@ -46,7 +39,7 @@ export function createLoader(initialLoading = false): Loader {
 			this.error = message;
 		},
 
-		async loadData<TData>(this: Loader, action: () => Promise<Envelope<TData>>, messages: LoadMessages): Promise<TData | undefined> {
+		async loadData<TData>(this: Loader, action: () => Promise<Envelope<TData>>): Promise<TData | undefined> {
 			this.loading = true;
 			this.error = '';
 
@@ -54,7 +47,7 @@ export function createLoader(initialLoading = false): Loader {
 				const envelope = await action();
 				return envelope.data;
 			} catch (err) {
-				this.error = (err as Error).message || messages.error;
+				this.error = (err as Error).message;
 				return undefined;
 			} finally {
 				this.loading = false;
