@@ -96,7 +96,7 @@ templ journalDetailTagForm() {
 			Class:       "w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
 			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.override", "x-ref": "reasonTagOverride", "x-on:keydown.enter.prevent": "sidebar.reasonTagForm.submit()"},
 		})
-		@components.AsyncButton(components.AsyncButtonProps{
+		@components.SubmitButton(components.SubmitButtonProps{
 			OnClickExpr:   "sidebar.reasonTagForm.submit()",
 			DisabledExpr:  "sidebar.reasonTagForm.submitter.isBusy() || !sidebar.reasonTagForm.canSubmit()",
 			LoadingExpr:   "sidebar.reasonTagForm.submitter.isBusy()",

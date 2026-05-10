@@ -303,7 +303,7 @@ func journalDetailNoteCard() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = components.AsyncButton(components.AsyncButtonProps{
+				templ_7745c5c3_Err = components.SubmitButton(components.SubmitButtonProps{
 					OnClickExpr:  "sidebar.noteForm.submit()",
 					DisabledExpr: "sidebar.noteForm.submitter.isBusy() || !sidebar.noteForm.canSubmit()",
 					LoadingExpr:  "sidebar.noteForm.submitter.isBusy()",

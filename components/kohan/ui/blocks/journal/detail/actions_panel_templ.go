@@ -441,7 +441,7 @@ func journalDetailTagForm() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = components.AsyncButton(components.AsyncButtonProps{
+		templ_7745c5c3_Err = components.SubmitButton(components.SubmitButtonProps{
 			OnClickExpr:  "sidebar.reasonTagForm.submit()",
 			DisabledExpr: "sidebar.reasonTagForm.submitter.isBusy() || !sidebar.reasonTagForm.canSubmit()",
 			LoadingExpr:  "sidebar.reasonTagForm.submitter.isBusy()",

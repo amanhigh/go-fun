@@ -11,15 +11,15 @@ import (
 	"github.com/templui/templui/components/button"
 )
 
-type AsyncButtonProps struct {
+type SubmitButtonProps struct {
 	OnClickExpr  string
 	DisabledExpr string
-	LoadingExpr  string
-	LoadingText  string
+	BusyExpr     string
+	BusyText     string
 	DefaultText  string
 }
 
-func AsyncButton(props AsyncButtonProps) templ.Component {
+func SubmitButton(props SubmitButtonProps) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -47,8 +47,8 @@ func AsyncButton(props AsyncButtonProps) templ.Component {
 			Attributes: templ.Attributes{
 				"x-on:click":      props.OnClickExpr,
 				"x-bind:disabled": props.DisabledExpr,
-				"x-bind:class":    props.LoadingExpr + " ? 'opacity-70' : ''",
-				"x-text":          props.LoadingExpr + " ? '" + props.LoadingText + "' : '" + props.DefaultText + "'",
+				"x-bind:class":    props.BusyExpr + " ? 'opacity-70' : ''",
+				"x-text":          props.BusyExpr + " ? '" + props.BusyText + "' : '" + props.DefaultText + "'",
 			},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
