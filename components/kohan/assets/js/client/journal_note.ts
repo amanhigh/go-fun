@@ -1,4 +1,4 @@
-import { BaseClient } from './base';
+import { BaseClient, HttpMethod } from './base';
 import type { JournalNote, JournalNoteRequest, Envelope } from '../types/journal_api';
 
 export interface JournalNoteClient {
@@ -12,11 +12,11 @@ export class JournalNoteClientImpl extends BaseClient implements JournalNoteClie
 	}
 
 	async create(journalId: string, payload: JournalNoteRequest): Promise<Envelope<JournalNote>> {
-		return this.requestJson<Envelope<JournalNote>>(`/journals/${journalId}/notes`, 'POST', 'Failed to save note', 'Journal not found', {}, payload);
+		return this.requestJson<Envelope<JournalNote>>(`/journals/${journalId}/notes`, HttpMethod.POST, {}, payload);
 	}
 
 	async delete(journalId: string, noteId: string): Promise<void> {
-		await this.request(`/journals/${journalId}/notes/${noteId}`, { method: 'DELETE' }, 'Failed to delete note', 'Note not found');
+		await this.request(`/journals/${journalId}/notes/${noteId}`, { method: HttpMethod.DELETE });
 	}
 }
 
