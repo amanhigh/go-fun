@@ -157,6 +157,20 @@
     @apply border-slate-300/70 bg-slate-100/70 text-slate-700 hover:bg-slate-200/80;
   }
 
+  /* --- Status Toggle --- */
+
+  .journal-status-toggle-set {
+    @apply border-amber-300/70 bg-amber-100/70 text-amber-800 hover:bg-amber-200/80;
+  }
+
+  .journal-status-toggle-running {
+    @apply border-sky-300/70 bg-sky-100/70 text-sky-800 hover:bg-sky-200/80;
+  }
+
+  .journal-status-toggle-all {
+    @apply border-slate-300/70 bg-slate-100/70 text-slate-700 hover:bg-slate-200/80;
+  }
+
   /* --- Date Presets --- */
 
   .journal-date-preset-today {

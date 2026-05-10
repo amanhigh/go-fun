@@ -67,6 +67,8 @@ export type JournalFilterConcern = JournalFilterValues & {
 	hasActiveState(): boolean;
 	toggleType(): void;
 	typeToggle(): { label: string; className: string; nextType: JournalType | '' };
+	toggleStatus(): void;
+	statusToggle(): { label: string; className: string; nextStatus: JournalStatus | '' };
 	toggleSort(field: JournalSortBy): void;
 	applyFilters(): void;
 	applyManualFilters(): void;

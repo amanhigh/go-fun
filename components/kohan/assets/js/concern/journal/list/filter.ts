@@ -1,4 +1,4 @@
-import { JournalType, JournalSortBy, JournalSortOrder } from '../../../types/api/journal/enums';
+import { JournalType, JournalStatus, JournalSortBy, JournalSortOrder } from '../../../types/api/journal/enums';
 import { ReviewedFilter } from '../../../types/api/journal/request';
 import type { JournalFilterValues, DatePresetName, JournalFilterConcern, JournalPageProvider } from '../../../types/journal/list';
 
@@ -8,10 +8,22 @@ type TypeToggle = {
 	nextType: JournalType | '';
 };
 
+type StatusToggle = {
+	label: string;
+	className: string;
+	nextStatus: JournalStatus | '';
+};
+
 const typeToggleMap: Record<string, TypeToggle> = {
 	'': { label: 'Taken', className: 'journal-type-toggle-taken', nextType: JournalType.TAKEN },
 	[JournalType.TAKEN]: { label: 'Rejected', className: 'journal-type-toggle-rejected', nextType: JournalType.REJECTED },
 	[JournalType.REJECTED]: { label: 'All', className: 'journal-type-toggle-all', nextType: '' },
+};
+
+const statusToggleMap: Record<string, StatusToggle> = {
+	'': { label: 'Set', className: 'journal-status-toggle-set', nextStatus: JournalStatus.SET },
+	[JournalStatus.SET]: { label: 'Running', className: 'journal-status-toggle-running', nextStatus: JournalStatus.RUNNING },
+	[JournalStatus.RUNNING]: { label: 'All', className: 'journal-status-toggle-all', nextStatus: '' },
 };
 
 const journalFilterDefaults: JournalFilterValues = {
@@ -40,6 +52,13 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 		},
 		typeToggle() {
 			return resolveTypeToggle(this.type);
+		},
+		statusToggle() {
+			return resolveStatusToggle(this.status);
+		},
+		toggleStatus() {
+			this.status = this.statusToggle().nextStatus;
+			this.applyManualFilters();
 		},
 		applyFilters() {
 			pg().pagination.resetPage();
@@ -76,4 +95,11 @@ export function resolveTypeToggle(currentType: JournalType | ''): TypeToggle {
 		return typeToggleMap[currentType];
 	}
 	return typeToggleMap[''];
+}
+
+export function resolveStatusToggle(currentStatus: JournalStatus | ''): StatusToggle {
+	if (currentStatus === JournalStatus.SET || currentStatus === JournalStatus.RUNNING) {
+		return statusToggleMap[currentStatus];
+	}
+	return statusToggleMap[''];
 }

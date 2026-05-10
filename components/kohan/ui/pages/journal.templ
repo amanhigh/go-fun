@@ -71,6 +71,7 @@ templ JournalQuickFilters() {
 		}
 		@components.QuickBar(components.QuickBarProps{Label: "Quick", IconName: "zap", Theme: components.ToneSlate}) {
 			@components.QuickAction(components.QuickActionProps{TextExpr: "filter.typeToggle().label", OnClickExpr: "filter.toggleType()", ClassExpr: "filter.typeToggle().className"})
+			@components.QuickAction(components.QuickActionProps{TextExpr: "filter.statusToggle().label", OnClickExpr: "filter.toggleStatus()", ClassExpr: "filter.statusToggle().className"})
 		}
 	</div>
 }

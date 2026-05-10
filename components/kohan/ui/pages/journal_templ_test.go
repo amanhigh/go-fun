@@ -44,13 +44,16 @@ var _ = Describe("Journal Page Tests", func() {
 	})
 
 	Context("Filter Flow", func() {
-		It("should wire quick date and type actions", func() {
+		It("should wire quick date, type, and status actions", func() {
 			Expect(html).To(ContainSubstring("applyCreatedPreset"))
 			Expect(html).To(ContainSubstring("last7"))
 			Expect(html).To(ContainSubstring("last30"))
 			Expect(html).To(ContainSubstring("toggleType()"))
 			Expect(html).To(ContainSubstring("typeToggle().label"))
 			Expect(html).To(ContainSubstring("typeToggle().className"))
+			Expect(html).To(ContainSubstring("toggleStatus()"))
+			Expect(html).To(ContainSubstring("statusToggle().label"))
+			Expect(html).To(ContainSubstring("statusToggle().className"))
 		})
 
 		It("should wire review preset actions", func() {
