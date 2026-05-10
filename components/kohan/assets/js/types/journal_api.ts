@@ -1,4 +1,15 @@
-import type { PaginatedResponse } from '../client/base';
+export type EnvelopeStatus = 'success' | 'fail' | 'error';
+
+export type PaginatedResponse = {
+	total: number;
+	offset: number;
+	limit: number;
+};
+
+export type Envelope<T> = {
+	status: EnvelopeStatus;
+	data: T;
+};
 
 // ===== Enums =====
 

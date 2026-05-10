@@ -1,10 +1,5 @@
 export type QueryValue = string | number | boolean | null | undefined;
 
-export type Envelope<T> = {
-	status: string;
-	data: T;
-};
-
 const apiBaseUrl = '/v1/api';
 
 export abstract class BaseClient {

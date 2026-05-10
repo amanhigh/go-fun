@@ -1,5 +1,5 @@
-import { BaseClient, type Envelope, type QueryValue } from './base';
-import type { Journal, JournalFilterKey, JournalList, JournalListRequest, JournalUpdate, JournalUpdateRequest } from '../types/journal_api';
+import { BaseClient, type QueryValue } from './base';
+import type { Journal, JournalFilterKey, JournalList, JournalListRequest, JournalUpdate, JournalUpdateRequest, Envelope } from '../types/journal_api';
 
 const journalApiFields: JournalFilterKey[] = ['ticker', 'type', 'status', 'sequence', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'];
 

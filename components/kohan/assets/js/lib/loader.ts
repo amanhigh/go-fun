@@ -1,3 +1,5 @@
+import type { Envelope } from '../types/journal_api';
+
 // ===== Types =====
 
 export type LoadMessages = {
@@ -14,7 +16,11 @@ export type Loader = {
 	isError(): boolean;
 	hasError(): boolean;
 	setError(message: string): void;
-	run(action: () => Promise<void>, messages: LoadMessages): Promise<boolean>;
+
+	loadData<TData>(
+		action: () => Promise<Envelope<TData>>,
+		messages: LoadMessages,
+	): Promise<TData | undefined>;
 };
 
 // ===== Factory =====
@@ -40,17 +46,16 @@ export function createLoader(initialLoading = false): Loader {
 			this.error = message;
 		},
 
-		async run(this: Loader, action: () => Promise<void>, messages: LoadMessages): Promise<boolean> {
-			// Lifecycle: clear previous error → run action → set error on failure → reset loading
+		async loadData<TData>(this: Loader, action: () => Promise<Envelope<TData>>, messages: LoadMessages): Promise<TData | undefined> {
 			this.loading = true;
 			this.error = '';
 
 			try {
-				await action();
-				return true;
+				const envelope = await action();
+				return envelope.data;
 			} catch (err) {
-				this.error = (err as Error).message;
-				return false;
+				this.error = (err as Error).message || messages.error;
+				return undefined;
 			} finally {
 				this.loading = false;
 			}
