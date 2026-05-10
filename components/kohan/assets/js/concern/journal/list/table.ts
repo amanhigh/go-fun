@@ -10,16 +10,16 @@ export function NewTableConcern(pg: JournalPageProvider): JournalTableConcern {
 			const page = pg();
 			const pagination = page.pagination;
 
-			const loaded = await this.loader.loadData(
+			const data = await this.loader.loadData(
 				() => page.client.list(pagination.getOffset(), pagination.getPageSize(), page.filter),
 				{ error: 'Unable to load journals.' },
 			);
 
-			if (!loaded) return;
+			if (!data) return;
 
-			this.journals = loaded.result.journals;
-			pagination.setTotalItems(loaded.metadata?.total ?? this.journals.length);
-			pagination.setPageFromOffset(loaded.metadata?.offset ?? 0);
+			this.journals = data.journals;
+			pagination.setTotalItems(data.metadata.total);
+			pagination.setPageFromOffset(data.metadata.offset);
 		},
 		isEmpty() { return this.journals.length === 0; },
 	};
