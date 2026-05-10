@@ -304,9 +304,9 @@ func journalDetailNoteCard() templ.Component {
 					return templ_7745c5c3_Err
 				}
 				templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-					ShowExpr:  "sidebar.noteForm.submitter.hasError()",
-					ClassExpr: "sidebar.noteForm.submitter.messageClass",
-					TextExpr:  "sidebar.noteForm.submitter.error",
+					ShowExpr:  "sidebar.noteForm.submitter.hasMessage()",
+					ClassExpr: "sidebar.noteForm.submitter.variant",
+					TextExpr:  "sidebar.noteForm.submitter.message",
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

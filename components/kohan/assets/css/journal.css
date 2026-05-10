@@ -65,11 +65,11 @@
 
   /* --- Feedback --- */
 
-  .journal-feedback-success {
+  .feedback-success {
     @apply text-emerald-700;
   }
 
-  .journal-feedback-error {
+  .feedback-error {
     @apply text-rose-700;
   }
 

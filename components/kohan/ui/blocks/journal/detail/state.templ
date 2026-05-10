@@ -16,8 +16,8 @@ templ JournalDetailStateSection() {
 			<span>Loading journal details...</span>
 		</div>
 	}
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxError, ShowExpr: "current.loader.hasError()", TextExpr: "current.loader.error", RetryExpr: "current.loadJournal()"}) {}
-	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!current.loader.isBusy() && !current.loader.hasError() && !current.journal"}) {
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxError, ShowExpr: "current.loader.hasMessage()", TextExpr: "current.loader.message", RetryExpr: "current.loadJournal()"}) {}
+	@components.StateBox(components.StateBoxProps{Variant: components.StateBoxEmpty, ShowExpr: "!current.loader.isBusy() && !current.loader.hasMessage() && !current.journal"}) {
 		No journal details available.
 	}
 }

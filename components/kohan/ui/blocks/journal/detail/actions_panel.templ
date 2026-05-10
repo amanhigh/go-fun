@@ -21,9 +21,9 @@ templ journalDetailActionCard() {
 	<div class="space-y-4 rounded-3xl border border-border bg-card p-4 shadow-sm">
 		@journalDetailActionBar()
 		@components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.reviewActions.submitter.hasError()",
-			ClassExpr: "sidebar.reviewActions.submitter.messageClass",
-			TextExpr:  "sidebar.reviewActions.submitter.error",
+			ShowExpr:  "sidebar.reviewActions.submitter.hasMessage()",
+			ClassExpr: "sidebar.reviewActions.submitter.variant",
+			TextExpr:  "sidebar.reviewActions.submitter.message",
 		})
 		@takenTagActions()
 	</div>
@@ -72,9 +72,9 @@ templ takenTagActions() {
 			</template>
 		</div>
 		@components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.takenTag.submitter.hasError()",
-			ClassExpr: "sidebar.takenTag.submitter.messageClass",
-			TextExpr:  "sidebar.takenTag.submitter.error",
+			ShowExpr:  "sidebar.takenTag.submitter.hasMessage()",
+			ClassExpr: "sidebar.takenTag.submitter.variant",
+			TextExpr:  "sidebar.takenTag.submitter.message",
 		})
 	</div>
 }
@@ -88,9 +88,9 @@ templ journalDetailTagsCard() {
 		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
 			@journalDetailTagForm()
 			@components.FeedbackMessage(components.FeedbackMessageProps{
-				ShowExpr:  "sidebar.reasonTagForm.submitter.hasError()",
-				ClassExpr: "sidebar.reasonTagForm.submitter.messageClass",
-				TextExpr:  "sidebar.reasonTagForm.submitter.error",
+				ShowExpr:  "sidebar.reasonTagForm.submitter.hasMessage()",
+				ClassExpr: "sidebar.reasonTagForm.submitter.variant",
+				TextExpr:  "sidebar.reasonTagForm.submitter.message",
 			})
 			@journalDetailTagInputs()
 			@components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.hasItems()"})

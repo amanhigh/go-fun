@@ -105,9 +105,9 @@ func journalDetailActionCard() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.reviewActions.submitter.hasError()",
-			ClassExpr: "sidebar.reviewActions.submitter.messageClass",
-			TextExpr:  "sidebar.reviewActions.submitter.error",
+			ShowExpr:  "sidebar.reviewActions.submitter.hasMessage()",
+			ClassExpr: "sidebar.reviewActions.submitter.variant",
+			TextExpr:  "sidebar.reviewActions.submitter.message",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -236,9 +236,9 @@ func takenTagActions() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.takenTag.submitter.hasError()",
-			ClassExpr: "sidebar.takenTag.submitter.messageClass",
-			TextExpr:  "sidebar.takenTag.submitter.error",
+			ShowExpr:  "sidebar.takenTag.submitter.hasMessage()",
+			ClassExpr: "sidebar.takenTag.submitter.variant",
+			TextExpr:  "sidebar.takenTag.submitter.message",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -375,9 +375,9 @@ func journalDetailTagsCard() templ.Component {
 					return templ_7745c5c3_Err
 				}
 				templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-					ShowExpr:  "sidebar.reasonTagForm.submitter.hasError()",
-					ClassExpr: "sidebar.reasonTagForm.submitter.messageClass",
-					TextExpr:  "sidebar.reasonTagForm.submitter.error",
+					ShowExpr:  "sidebar.reasonTagForm.submitter.hasMessage()",
+					ClassExpr: "sidebar.reasonTagForm.submitter.variant",
+					TextExpr:  "sidebar.reasonTagForm.submitter.message",
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

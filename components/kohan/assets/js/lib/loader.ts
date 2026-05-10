@@ -11,10 +11,9 @@ export type Loader = Runner & {
 
 // ===== Factory =====
 
-export function createLoader(initialLoading = false): Loader {
+export function createLoader(): Loader {
 	return {
 		...createRunnerState(),
-		busy: initialLoading,
 
 		async loadData<TData>(this: Loader, action: () => Promise<Envelope<TData>>): Promise<TData | undefined> {
 			const outcome = await this.tryRun(action);

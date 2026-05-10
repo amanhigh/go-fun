@@ -77,9 +77,9 @@ func JournalDetailHeader() templ.Component {
 					return templ_7745c5c3_Err
 				}
 				templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-					ShowExpr:  "header.submitter.hasError()",
-					ClassExpr: "header.submitter.messageClass",
-					TextExpr:  "header.submitter.error",
+					ShowExpr:  "header.submitter.hasMessage()",
+					ClassExpr: "header.submitter.variant",
+					TextExpr:  "header.submitter.message",
 					Class:     "text-xs",
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {

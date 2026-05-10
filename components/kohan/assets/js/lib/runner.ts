@@ -1,3 +1,8 @@
+// ===== CSS Class Constants =====
+
+export const errorVariant = 'feedback-error';
+export const successVariant = 'feedback-success';
+
 // ===== Types =====
 
 export type RunOutcome<T = void> = {
@@ -7,11 +12,13 @@ export type RunOutcome<T = void> = {
 
 export interface Runner {
 	busy: boolean;
-	error: string;
+	message: string;
+	variant: string;
 
-	hasError(): boolean;
+	hasMessage(): boolean;
 	isBusy(): boolean;
 	setError(message: string): void;
+	setSuccess(message: string): void;
 
 	tryRun<T>(action: () => Promise<T>): Promise<RunOutcome<T>>;
 }
@@ -21,10 +28,11 @@ export interface Runner {
 export function createRunnerState(): Runner {
 	return {
 		busy: false,
-		error: '',
+		message: '',
+		variant: '',
 
-		hasError(this: Runner) {
-			return this.error !== '';
+		hasMessage(this: Runner) {
+			return this.message !== '';
 		},
 
 		isBusy(this: Runner) {
@@ -32,14 +40,21 @@ export function createRunnerState(): Runner {
 		},
 
 		setError(this: Runner, message: string) {
-			this.error = message;
+			this.message = message;
+			this.variant = errorVariant;
+		},
+
+		setSuccess(this: Runner, message: string) {
+			this.message = message;
+			this.variant = successVariant;
 		},
 
 		async tryRun<T>(this: Runner, action: () => Promise<T>): Promise<RunOutcome<T>> {
 			if (this.busy) return { success: false };
 
 			this.busy = true;
-			this.error = '';
+			this.message = '';
+			this.variant = '';
 
 			try {
 				const result = await action();

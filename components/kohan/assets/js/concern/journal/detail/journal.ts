@@ -16,7 +16,7 @@ export function NewJournalConcern(pg: JournalDetailPageProvider) {
 	return {
 		journalId: '',
 		journal: null,
-		loader: createLoader(true) as Loader,
+		loader: createLoader(),
 
 		async loadJournal(this: any) {
 			const data = await this.loader.loadData(

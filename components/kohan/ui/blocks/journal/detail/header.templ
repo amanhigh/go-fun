@@ -24,9 +24,9 @@ templ JournalDetailHeader() {
 						Class:        "h-9 w-9",
 					})
 					@components.FeedbackMessage(components.FeedbackMessageProps{
-						ShowExpr:  "header.submitter.hasError()",
-						ClassExpr: "header.submitter.messageClass",
-						TextExpr:  "header.submitter.error",
+						ShowExpr:  "header.submitter.hasMessage()",
+						ClassExpr: "header.submitter.variant",
+						TextExpr:  "header.submitter.message",
 						Class:     "text-xs",
 					})
 				</div>
