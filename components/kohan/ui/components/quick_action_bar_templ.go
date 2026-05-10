@@ -12,55 +12,28 @@ import (
 	"github.com/templui/templui/components/icon"
 )
 
+// QuickBarProps configures a horizontal action bar.
+//
+//	Theme — semantic color variant for the label (uses .quick-bar-* CSS class).
+//	Class — layout/shape overrides only.
 type QuickBarProps struct {
-	Label      string
-	IconName   string
-	Theme      Tone
-	Class      string
-	Attributes templ.Attributes
+	Label    string
+	IconName string
+	Theme    Tone
+	Class    string
 }
 
+// QuickActionProps configures a single action button inside a QuickBar.
+//
+//	TextExpr     — Alpine expression for button text content (x-text).
+//	OnClickExpr  — Alpine expression for click handler (x-on:click).
+//	DisabledExpr — Alpine expression for disabled state (x-bind:disabled).
+//	ClassExpr    — Alpine expression for class binding (x-bind:class); static classes use quoted strings.
 type QuickActionProps struct {
-	Label       string
-	TextExpr    string
-	OnClickExpr string
-	Class       string
-	ClassExpr   string
-	AriaLabel   string
-	Attributes  templ.Attributes
-}
-
-func quickBarThemeClass(theme Tone) string {
-	switch theme {
-	case ToneBlue:
-		return "text-sky-700"
-	case ToneGreen:
-		return "text-emerald-700"
-	case ToneCyan:
-		return "text-cyan-700"
-	default:
-		return "text-slate-700"
-	}
-}
-
-func quickActionAttrs(props QuickActionProps) templ.Attributes {
-	attrs := templ.Attributes{}
-	for key, value := range props.Attributes {
-		attrs[key] = value
-	}
-	if props.OnClickExpr != "" {
-		attrs["x-on:click"] = props.OnClickExpr
-	}
-	if props.TextExpr != "" {
-		attrs["x-text"] = props.TextExpr
-	}
-	if props.ClassExpr != "" {
-		attrs["x-bind:class"] = props.ClassExpr
-	}
-	if props.AriaLabel != "" {
-		attrs["aria-label"] = props.AriaLabel
-	}
-	return attrs
+	TextExpr     string
+	OnClickExpr  string
+	DisabledExpr string
+	ClassExpr    string
 }
 
 func QuickBar(props QuickBarProps) templ.Component {
@@ -102,24 +75,16 @@ func QuickBar(props QuickBarProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, props.Attributes)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, ">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var4 = []any{"inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 " + quickBarThemeClass(props.Theme)}
+		var templ_7745c5c3_Var4 = []any{"inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 quick-bar-" + string(props.Theme)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var4...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<span class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<span class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -132,7 +97,7 @@ func QuickBar(props QuickBarProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -142,20 +107,20 @@ func QuickBar(props QuickBarProps) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<span>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<span>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(props.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 63, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 36, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</span></span><div class=\"flex flex-wrap gap-1.5\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</span></span><div class=\"flex flex-wrap gap-1.5\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -163,7 +128,7 @@ func QuickBar(props QuickBarProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -192,38 +157,18 @@ func QuickAction(props QuickActionProps) templ.Component {
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Var8 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-			if !templ_7745c5c3_IsBuffer {
-				defer func() {
-					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-					if templ_7745c5c3_Err == nil {
-						templ_7745c5c3_Err = templ_7745c5c3_BufErr
-					}
-				}()
-			}
-			ctx = templ.InitializeContext(ctx)
-			if props.TextExpr == "" {
-				var templ_7745c5c3_Var9 string
-				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(props.Label)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/quick_action_bar.templ`, Line: 80, Col: 16}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-			}
-			return nil
-		})
 		templ_7745c5c3_Err = button.Button(button.Props{
-			Variant:    button.VariantOutline,
-			Type:       button.TypeButton,
-			Size:       button.SizeSm,
-			Class:      "h-8 rounded-md border px-2 text-xs font-medium shadow-sm transition-colors " + props.Class,
-			Attributes: quickActionAttrs(props),
-		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
+			Variant: button.VariantOutline,
+			Type:    button.TypeButton,
+			Size:    button.SizeSm,
+			Class:   "h-8 rounded-md border px-2 text-xs font-medium shadow-sm transition-colors",
+			Attributes: templ.Attributes{
+				"x-on:click":      props.OnClickExpr,
+				"x-text":          props.TextExpr,
+				"x-bind:class":    props.ClassExpr,
+				"x-bind:disabled": props.DisabledExpr,
+			},
+		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

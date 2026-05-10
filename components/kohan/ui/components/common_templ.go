@@ -14,7 +14,6 @@ const (
 	ToneGreen  Tone = "green"
 	ToneCyan   Tone = "cyan"
 	ToneSlate  Tone = "slate"
-	ToneIndigo Tone = "indigo"
 	ToneRose   Tone = "rose"
 	ToneAmber  Tone = "amber"
 	ToneViolet Tone = "violet"

@@ -179,7 +179,7 @@ func journalDetailQueueCard() templ.Component {
 				})
 				templ_7745c5c3_Err = components.Loader(components.LoaderProps{
 					Loader:       "sidebar.reviewQueue.loader",
-					ReadyExpr:    "sidebar.reviewQueue.items.length",
+					ReadyExpr:    "sidebar.reviewQueue.hasItems()",
 					EmptyMessage: "All caught up — no pending reviews.",
 					RetryExpr:    "sidebar.reviewQueue.load()",
 				}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
@@ -303,12 +303,11 @@ func journalDetailNoteCard() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = components.AsyncButton(components.AsyncButtonProps{
-					OnClickExpr:  "sidebar.noteForm.submit()",
+				templ_7745c5c3_Err = components.SubmitButton(components.SubmitButtonProps{
+					Label:        "Add Note",
+					BusyExpr:     "sidebar.noteForm.submitter.isBusy()",
 					DisabledExpr: "sidebar.noteForm.submitter.isBusy() || !sidebar.noteForm.canSubmit()",
-					LoadingExpr:  "sidebar.noteForm.submitter.isBusy()",
-					LoadingText:  "'Saving note...'",
-					DefaultText:  "'Add Note'",
+					OnClickExpr:  "sidebar.noteForm.submit()",
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

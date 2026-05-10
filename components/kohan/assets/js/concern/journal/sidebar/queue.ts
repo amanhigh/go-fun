@@ -11,17 +11,14 @@ export function NewReviewQueueConcern(pg: JournalDetailPageProvider) {
 		loader: createLoader(),
 
 		async load(this: any) {
-			const data = await this.loader.loadData(
+			await this.loader.load(
 				() => pg().client.list(0, 10, {
 					reviewed: ReviewedFilter.PENDING,
 					sortBy: JournalSortBy.CREATED_AT,
 					sortOrder: JournalSortOrder.ASC,
 				}),
+				(data: any) => this.sync(data.journals),
 			);
-
-			if (!data) return;
-
-			this.sync(data.journals);
 		},
 	};
 }

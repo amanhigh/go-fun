@@ -1,0 +1,24 @@
+package components
+
+import "github.com/templui/templui/components/button"
+
+type SubmitButtonProps struct {
+	Label          string
+	BusyExpr       string
+	DisabledExpr   string
+	OnClickExpr    string
+}
+
+templ SubmitButton(props SubmitButtonProps) {
+	@button.Button(button.Props{
+		Variant: button.VariantOutline,
+		Type:    button.TypeButton,
+		Class:   "w-full",
+		Attributes: templ.Attributes{
+			"x-on:click":      props.OnClickExpr,
+			"x-bind:disabled": props.DisabledExpr,
+			"x-bind:class":    props.BusyExpr + " ? 'opacity-70' : ''",
+			"x-text":          props.BusyExpr + " ? 'Submitting...' : '" + props.Label + "'",
+		},
+	}) {}
+}

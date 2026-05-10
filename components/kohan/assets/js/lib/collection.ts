@@ -10,6 +10,9 @@ export function createCollection<T extends Identifiable>() {
 		all() {
 			return this.items;
 		},
+		hasItems() {
+			return this.items.length > 0;
+		},
 		prepend(item: T) {
 			this.items = [item, ...this.items.filter((c) => c.id !== item.id)];
 		},

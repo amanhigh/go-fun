@@ -60,9 +60,9 @@ templ JournalFilterSection() {
 templ JournalQuickFilters() {
 	<div class="flex flex-wrap items-center gap-3 lg:gap-8">
 		@components.QuickBar(components.QuickBarProps{Label: "Date", IconName: "calendar", Theme: components.ToneBlue}) {
-			@components.QuickAction(components.QuickActionProps{Label: "Today", OnClickExpr: "presets.applyCreatedPreset('today')", Class: "journal-date-preset-today"})
-			@components.QuickAction(components.QuickActionProps{Label: "7d", OnClickExpr: "presets.applyCreatedPreset('last7')", Class: "journal-date-preset-last7"})
-			@components.QuickAction(components.QuickActionProps{Label: "30d", OnClickExpr: "presets.applyCreatedPreset('last30')", Class: "journal-date-preset-last30"})
+			@components.QuickAction(components.QuickActionProps{TextExpr: "'Today'", OnClickExpr: "presets.applyCreatedPreset('today')", ClassExpr: "'journal-date-preset-today'"})
+			@components.QuickAction(components.QuickActionProps{TextExpr: "'7d'", OnClickExpr: "presets.applyCreatedPreset('last7')", ClassExpr: "'journal-date-preset-last7'"})
+			@components.QuickAction(components.QuickActionProps{TextExpr: "'30d'", OnClickExpr: "presets.applyCreatedPreset('last30')", ClassExpr: "'journal-date-preset-last30'"})
 		}
 		@components.QuickBar(components.QuickBarProps{Label: "Review", IconName: "calendar", Theme: components.ToneCyan}) {
 			<template x-for="reviewPreset in presets.reviewPresets" x-bind:key="reviewPreset.label">
@@ -156,7 +156,7 @@ templ JournalActiveFilters() {
 templ JournalTableSection() {
 	@components.Loader(components.LoaderProps{
 		Loader:       "table.loader",
-		ReadyExpr:    "table.items.length",
+		ReadyExpr:    "table.hasItems()",
 		EmptyMessage: "No journals found.",
 		RetryExpr:    "table.load()",
 	}) {

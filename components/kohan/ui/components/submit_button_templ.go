@@ -11,17 +11,14 @@ import (
 	"github.com/templui/templui/components/button"
 )
 
-type AsyncButtonProps struct {
-	OnClickExpr  string
+type SubmitButtonProps struct {
+	Label        string
+	BusyExpr     string
 	DisabledExpr string
-	LoadingExpr  string
-	LoadingText  string
-	DefaultText  string
-	ClassExpr    string
-	Class        string
+	OnClickExpr  string
 }
 
-func AsyncButton(props AsyncButtonProps) templ.Component {
+func SubmitButton(props SubmitButtonProps) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -45,17 +42,12 @@ func AsyncButton(props AsyncButtonProps) templ.Component {
 		templ_7745c5c3_Err = button.Button(button.Props{
 			Variant: button.VariantOutline,
 			Type:    button.TypeButton,
-			Class:   "w-full " + props.Class,
+			Class:   "w-full",
 			Attributes: templ.Attributes{
 				"x-on:click":      props.OnClickExpr,
 				"x-bind:disabled": props.DisabledExpr,
-				"x-bind:class": func() string {
-					if props.ClassExpr == "" {
-						return props.LoadingExpr + " ? 'opacity-70' : ''"
-					}
-					return props.LoadingExpr + " ? ('opacity-70 ' + (" + props.ClassExpr + ")) : (" + props.ClassExpr + ")"
-				}(),
-				"x-text": props.LoadingExpr + " ? (" + props.LoadingText + ") : (" + props.DefaultText + ")",
+				"x-bind:class":    props.BusyExpr + " ? 'opacity-70' : ''",
+				"x-text":          props.BusyExpr + " ? 'Submitting...' : '" + props.Label + "'",
 			},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

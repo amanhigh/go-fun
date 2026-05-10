@@ -1,5 +1,5 @@
 @layer components {
-  /* --- State Box (Loader) --- */
+  /* --- Shared UI: Loader State --- */
 
   .statebox-base {
     @apply rounded-2xl border border-dashed px-6 py-10 text-center text-sm;
@@ -25,7 +25,61 @@
     @apply flex items-center justify-center gap-2;
   }
 
-  /* --- Presentation Display --- */
+  /* --- Shared UI: Feedback Text --- */
+
+  .feedback-success {
+    @apply text-emerald-700;
+  }
+
+  .feedback-error {
+    @apply text-rose-700;
+  }
+
+  /* --- Shared UI: Filter Chips --- */
+
+  .filter-chip-blue {
+    @apply border border-sky-200 bg-sky-100 text-sky-800;
+  }
+
+  .filter-chip-green {
+    @apply border border-emerald-200 bg-emerald-100 text-emerald-800;
+  }
+
+  .filter-chip-rose {
+    @apply border border-rose-200 bg-rose-100 text-rose-800;
+  }
+
+  .filter-chip-violet {
+    @apply border border-violet-200 bg-violet-100 text-violet-800;
+  }
+
+  .filter-chip-amber {
+    @apply border border-amber-200 bg-amber-100 text-amber-900;
+  }
+
+  .filter-chip-slate {
+    @apply border border-slate-200 bg-slate-100 text-slate-800;
+  }
+
+  /* --- Shared UI: Quick Bars --- */
+
+  .quick-bar-blue {
+    @apply text-sky-700;
+  }
+
+  .quick-bar-green {
+    @apply text-emerald-700;
+  }
+
+  .quick-bar-cyan {
+    @apply text-cyan-700;
+  }
+
+  .quick-bar-slate {
+    @apply text-slate-700;
+  }
+
+  /* --- Journal Semantic Display --- */
 
   .journal-display-default,
   .journal-type-taken,
@@ -89,35 +143,7 @@
     @apply border-slate-400 bg-slate-200 text-slate-950;
   }
 
-  /* --- Feedback --- */
-
-  .feedback-success {
-    @apply text-emerald-700;
-  }
-
-  .feedback-error {
-    @apply text-rose-700;
-  }
-
-  /* --- Review Actions --- */
-
-  .journal-review-toggle-pending {
-    @apply border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 focus:border-amber-400 focus:ring-amber-200;
-  }
-
-  .journal-review-toggle-reviewed {
-    @apply border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 focus:border-emerald-400 focus:ring-emerald-200;
-  }
-
-  .journal-quick-status-loss {
-    @apply border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100 focus:border-rose-400 focus:ring-rose-200;
-  }
-
-  .journal-quick-status-broken {
-    @apply border-violet-300 bg-violet-50 text-violet-800 hover:bg-violet-100 focus:border-violet-400 focus:ring-violet-200;
-  }
-
-  /* --- Type Toggle --- */
+  /* --- Journal List Filter Controls --- */
 
   .journal-type-toggle-taken {
     @apply border-rose-300/70 bg-rose-100/60 text-rose-800 hover:bg-rose-200/70;
@@ -159,7 +185,25 @@
     @apply border-amber-300 bg-amber-100/90 text-amber-950 hover:bg-amber-100;
   }
 
-  /* --- Management Tags --- */
+  /* --- Journal Detail Action Controls --- */
+
+  .journal-review-toggle-pending {
+    @apply border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 focus:border-amber-400 focus:ring-amber-200;
+  }
+
+  .journal-review-toggle-reviewed {
+    @apply border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 focus:border-emerald-400 focus:ring-emerald-200;
+  }
+
+  .journal-quick-status-loss {
+    @apply border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100 focus:border-rose-400 focus:ring-rose-200;
+  }
+
+  .journal-quick-status-broken {
+    @apply border-violet-300 bg-violet-50 text-violet-800 hover:bg-violet-100 focus:border-violet-400 focus:ring-violet-200;
+  }
+
+  /* --- Journal Management Tag Controls --- */
 
   .journal-management-pending {
     @apply opacity-70;

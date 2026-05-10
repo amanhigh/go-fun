@@ -34,12 +34,10 @@ templ journalDetailActionBar() {
 	}) {
 		<template x-for="action in sidebar.reviewActions.actions()" x-bind:key="action.id">
 			@components.QuickAction(components.QuickActionProps{
-				OnClickExpr: "action.apply()",
-				TextExpr:    "sidebar.reviewActions.submitter.isBusy() ? 'Saving...' : action.display.text",
-				ClassExpr:   "action.display.class",
-				Attributes: templ.Attributes{
-					"x-bind:disabled": "sidebar.reviewActions.submitter.isBusy()",
-				},
+				OnClickExpr:  "action.apply()",
+				TextExpr:     "sidebar.reviewActions.submitter.isBusy() ? 'Saving...' : action.display.text",
+				ClassExpr:    "action.display.class",
+				DisabledExpr: "sidebar.reviewActions.submitter.isBusy()",
 			})
 		</template>
 	}
@@ -81,7 +79,7 @@ templ journalDetailTagsCard() {
 			@journalDetailTagForm()
 			@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reasonTagForm.submitter"})
 			@journalDetailTagInputs()
-			@components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.items.length"})
+			@components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.hasItems()"})
 		}
 	}
 }
@@ -98,18 +96,17 @@ templ journalDetailTagForm() {
 			Class:       "w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
 			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.override", "x-ref": "reasonTagOverride", "x-on:keydown.enter.prevent": "sidebar.reasonTagForm.submit()"},
 		})
-		@components.AsyncButton(components.AsyncButtonProps{
-			OnClickExpr:   "sidebar.reasonTagForm.submit()",
+		@components.SubmitButton(components.SubmitButtonProps{
+			Label:         "Add Reason Tag",
+			BusyExpr:      "sidebar.reasonTagForm.submitter.isBusy()",
 			DisabledExpr:  "sidebar.reasonTagForm.submitter.isBusy() || !sidebar.reasonTagForm.canSubmit()",
-			LoadingExpr:   "sidebar.reasonTagForm.submitter.isBusy()",
-			LoadingText:   "'Saving reason tag...'",
-			DefaultText:   "'Add Reason Tag'",
+			OnClickExpr:   "sidebar.reasonTagForm.submit()",
 		})
 	</div>
 }
 
 templ journalDetailTagInputs() {
-	<div class="space-y-3" x-show="sidebar.tags.items.length">
+	<div class="space-y-3" x-show="sidebar.tags.hasItems()">
 		@journalDetailTagRows()
 	</div>
 }
@@ -127,10 +124,9 @@ templ journalDetailTagRow() {
 			@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, TextExpr: "present.tag.label(tag)", Class: "font-semibold"})
 		</div>
 		@components.DeleteButton(components.DeleteButtonProps{
-			OnClickExpr:  "sidebar.tags.delete(tag.id)",
+			Label:        "Delete Tag",
 			DisabledExpr: "sidebar.tags.submitter.isBusy()",
-			AriaLabel:    "Delete Tag",
-			Title:        "Delete Tag",
+			OnClickExpr:  "sidebar.tags.delete(tag.id)",
 		})
 	</div>
 }

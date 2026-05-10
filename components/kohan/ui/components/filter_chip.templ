@@ -2,50 +2,30 @@ package components
 
 import "github.com/templui/templui/components/badge"
 
+// FilterChipProps configures a FilterChip display element.
+//   Tone     — semantic color variant (controls bg/text/border via CSS class).
+//   TextExpr — Alpine expression for badge text content (x-text).
+//   ShowExpr — Alpine expression for visibility (x-show).
+//   Class    — layout/shape overrides only (e.g. "rounded-full px-3 py-1 text-xs").
 type FilterChipProps struct {
 	// TODO: Cover Component Package with Test
-	TextExpr   string
-	Tone       Tone
-	Class      string
-	Attributes templ.Attributes
-	ShowExpr   string
-}
-
-func filterChipToneClass(tone Tone) string {
-	switch tone {
-	case ToneBlue:
-		return "bg-sky-100 text-sky-800 border border-sky-200"
-	case ToneGreen:
-		return "bg-emerald-100 text-emerald-800 border border-emerald-200"
-	case ToneRose:
-		return "bg-rose-100 text-rose-800 border border-rose-200"
-	case ToneViolet:
-		return "bg-violet-100 text-violet-800 border border-violet-200"
-	case ToneAmber:
-		return "bg-amber-100 text-amber-900 border border-amber-200"
-	default:
-		return "bg-slate-100 text-slate-800 border border-slate-200"
-	}
-}
-
-func filterChipAttrs(props FilterChipProps) templ.Attributes {
-	attrs := templ.Attributes{}
-	for key, value := range props.Attributes {
-		attrs[key] = value
-	}
-	if props.ShowExpr != "" {
-		attrs["x-show"] = props.ShowExpr
-	}
-	if props.TextExpr != "" {
-		attrs["x-text"] = props.TextExpr
-	}
-	return attrs
+	TextExpr string
+	Tone     Tone
+	ShowExpr string
+	Class    string
 }
 
 templ FilterChip(props FilterChipProps) {
 	@badge.Badge(badge.Props{
-		Variant:    badge.VariantSecondary,
-		Class:      filterChipToneClass(props.Tone) + " " + props.Class,
-		Attributes: filterChipAttrs(props),
+		Variant: badge.VariantSecondary,
+		Class:   "filter-chip-" + string(props.Tone) + " " + props.Class,
+		Attributes: func() templ.Attributes {
+			attrs := templ.Attributes{}
+			if props.ShowExpr != "" {
+				attrs["x-show"] = props.ShowExpr
+			}
+			attrs["x-text"] = props.TextExpr
+			return attrs
+		}(),
 	}) {}
 }

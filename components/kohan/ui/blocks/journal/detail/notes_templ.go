@@ -66,7 +66,7 @@ func JournalDetailNotes() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <p class=\"mt-1 text-sm text-muted-foreground\"><span x-text=\"sidebar.notes.sorted().length\"></span> note(s)</p><div class=\"mt-4 space-y-3\" x-show=\"sidebar.notes.items.length\"><template x-for=\"note in sidebar.notes.sorted()\" x-bind:key=\"note.id\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <p class=\"mt-1 text-sm text-muted-foreground\"><span x-text=\"sidebar.notes.sorted().length\"></span> note(s)</p><div class=\"mt-4 space-y-3\" x-show=\"sidebar.notes.hasItems()\"><template x-for=\"note in sidebar.notes.sorted()\" x-bind:key=\"note.id\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -86,7 +86,7 @@ func JournalDetailNotes() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = components.EmptyState(components.EmptyStateProps{Message: "No notes available for this journal.", ShowExpr: "!sidebar.notes.items.length", Class: "mt-5"}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = components.EmptyState(components.EmptyStateProps{Message: "No notes available for this journal.", ShowExpr: "!sidebar.notes.hasItems()", Class: "mt-5"}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -140,10 +140,9 @@ func JournalDetailNoteRow() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.DeleteButton(components.DeleteButtonProps{
-			OnClickExpr:  "sidebar.notes.delete(note.id)",
+			Label:        "Delete Note",
 			DisabledExpr: "sidebar.notes.submitter.isBusy()",
-			AriaLabel:    "Delete Note",
-			Title:        "Delete Note",
+			OnClickExpr:  "sidebar.notes.delete(note.id)",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

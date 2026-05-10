@@ -228,7 +228,7 @@ func JournalQuickFilters() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{Label: "Today", OnClickExpr: "presets.applyCreatedPreset('today')", Class: "journal-date-preset-today"}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{TextExpr: "'Today'", OnClickExpr: "presets.applyCreatedPreset('today')", ClassExpr: "'journal-date-preset-today'"}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -236,7 +236,7 @@ func JournalQuickFilters() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{Label: "7d", OnClickExpr: "presets.applyCreatedPreset('last7')", Class: "journal-date-preset-last7"}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{TextExpr: "'7d'", OnClickExpr: "presets.applyCreatedPreset('last7')", ClassExpr: "'journal-date-preset-last7'"}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -244,7 +244,7 @@ func JournalQuickFilters() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{Label: "30d", OnClickExpr: "presets.applyCreatedPreset('last30')", Class: "journal-date-preset-last30"}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{TextExpr: "'30d'", OnClickExpr: "presets.applyCreatedPreset('last30')", ClassExpr: "'journal-date-preset-last30'"}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1102,7 +1102,7 @@ func JournalTableSection() templ.Component {
 		})
 		templ_7745c5c3_Err = components.Loader(components.LoaderProps{
 			Loader:       "table.loader",
-			ReadyExpr:    "table.items.length",
+			ReadyExpr:    "table.hasItems()",
 			EmptyMessage: "No journals found.",
 			RetryExpr:    "table.load()",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var38), templ_7745c5c3_Buffer)

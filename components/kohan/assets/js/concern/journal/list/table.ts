@@ -12,15 +12,14 @@ export function NewTableConcern(pg: JournalPageProvider) {
 			const page = pg();
 			const pagination = page.pagination;
 
-			const data = await this.loader.loadData(
+			await this.loader.load(
 				() => page.client.list(pagination.getOffset(), pagination.getPageSize(), page.filter),
+				(data) => {
+					this.sync(data.journals);
+					pagination.setTotalItems(data.metadata.total);
+					pagination.setPageFromOffset(data.metadata.offset);
+				},
 			);
-
-			if (!data) return;
-
-			this.sync(data.journals);
-			pagination.setTotalItems(data.metadata.total);
-			pagination.setPageFromOffset(data.metadata.offset);
 		},
 	};
 }
