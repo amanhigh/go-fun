@@ -1,44 +1,159 @@
 package components
 
+import (
+	"fmt"
+
+	"github.com/amanhigh/go-fun/common/ui/widgets"
+	"github.com/templui/templui/components/button"
+)
+
 // ============================================================
-// LOADER WRAPPER
+// LOADER — Standard state-flow component
 // ============================================================
-// Loader is the JS expression for the loader state object (e.g. "sidebar.reviewQueue.loader").
-// Collection is the JS expression for the collection state object (e.g. "sidebar.reviewQueue").
-// Children are rendered when loader is not busy, no error, and collection has items.
+// Loader manages loading, error, empty, and ready states for
+// collection-backed and single-object flows.
+//
+// Loader   — JS expression for the loader state object (e.g. "sidebar.reviewQueue.loader").
+// ReadyExpr — JS expression for the content-ready condition (e.g. "table.hasItems()" or "journal.detail").
+// RetryExpr — JS expression called on retry click (e.g. "table.load()").
+// Children  — rendered when idle and ReadyExpr is truthy.
 
 type LoaderProps struct {
 	Loader         string
-	Collection     string
+	ReadyExpr      string
 	LoadingMessage string
 	EmptyMessage   string
 	RetryExpr      string
 }
 
-templ Loader(props LoaderProps) {
-	@StateBox(StateBoxProps{
-		Variant:  StateBoxLoading,
-		ShowExpr: props.Loader + ".isBusy()",
-	}) {
-		{ props.LoadingMessage }
+// ===== Expression Helpers =====
+
+func loaderBusyExpr(loader string) string {
+	return loader + ".isBusy()"
+}
+
+func loaderErrorExpr(loader string) string {
+	return loader + ".hasError()"
+}
+
+func loaderIdleExpr(loader string) string {
+	return "!" + loaderBusyExpr(loader) + " && !" + loaderErrorExpr(loader)
+}
+
+func loaderLoadingShowExpr(loader string) string {
+	return loaderBusyExpr(loader)
+}
+
+func loaderErrorShowExpr(loader string) string {
+	return "!" + loaderBusyExpr(loader) + " && " + loaderErrorExpr(loader)
+}
+
+func loaderEmptyShowExpr(props LoaderProps) string {
+	return loaderIdleExpr(props.Loader) + " && !(" + props.ReadyExpr + ")"
+}
+
+func loaderContentShowExpr(props LoaderProps) string {
+	return loaderIdleExpr(props.Loader) + " && (" + props.ReadyExpr + ")"
+}
+
+// ===== Private State Box Types =====
+
+type loaderStateVariant string
+
+const (
+	loaderStateLoading loaderStateVariant = "loading"
+	loaderStateError   loaderStateVariant = "error"
+	loaderStateEmpty   loaderStateVariant = "empty"
+)
+
+type loaderStateBoxProps struct {
+	Variant   loaderStateVariant
+	ShowExpr  string
+	Message   string
+	TextExpr  string
+	RetryExpr string
+	Class     string
+	Attrs     templ.Attributes
+}
+
+// ===== Private State Box Rendering =====
+
+func loaderStateColorClasses(variant loaderStateVariant) string {
+	switch variant {
+	case loaderStateLoading:
+		return "border-sky-300 bg-sky-50/70 text-sky-700"
+	case loaderStateError:
+		return "border-rose-300 bg-rose-50/70 text-rose-700"
+	case loaderStateEmpty:
+		return "border-violet-300 bg-violet-50/70 text-violet-700"
+	default:
+		return "border-slate-300 bg-slate-50/70 text-slate-700"
 	}
-	@StateBox(StateBoxProps{
-		Variant:   StateBoxError,
-		ShowExpr:  props.Loader + ".hasError()",
+}
+
+func loaderStateBoxAttrs(props loaderStateBoxProps) templ.Attributes {
+	attrs := templ.Attributes{}
+	for key, value := range props.Attrs {
+		attrs[key] = value
+	}
+	if props.ShowExpr != "" {
+		attrs["x-show"] = props.ShowExpr
+	}
+	return attrs
+}
+
+templ loaderStateBox(props loaderStateBoxProps) {
+	<div class={ fmt.Sprintf("rounded-2xl border border-dashed px-6 py-10 text-center text-sm %s %s", loaderStateColorClasses(props.Variant), props.Class) } { loaderStateBoxAttrs(props)... }>
+		if props.Message != "" {
+			<div class="font-medium">{ props.Message }</div>
+		}
+		if props.TextExpr != "" {
+			<div class="font-medium" x-text={ props.TextExpr }></div>
+		}
+		if props.RetryExpr != "" {
+			@button.Button(button.Props{
+				Variant:    button.VariantOutline,
+				Type:       button.TypeButton,
+				Class:      "mt-3",
+				Attributes: templ.Attributes{"x-on:click": props.RetryExpr},
+			}) {
+				Retry
+			}
+		}
+		{ children... }
+	</div>
+}
+
+// ===== Public Loader =====
+
+templ Loader(props LoaderProps) {
+	@loaderStateBox(loaderStateBoxProps{
+		Variant:  loaderStateLoading,
+		ShowExpr: loaderLoadingShowExpr(props.Loader),
+	}) {
+		<div class="flex items-center justify-center gap-2">
+			@widgets.Spinner(widgets.SpinnerProps{Size: widgets.SpinnerSizeSm})
+			<span>{ props.LoadingMessage }</span>
+		</div>
+	}
+
+	@loaderStateBox(loaderStateBoxProps{
+		Variant:   loaderStateError,
+		ShowExpr:  loaderErrorShowExpr(props.Loader),
 		TextExpr:  props.Loader + ".message",
 		RetryExpr: props.RetryExpr,
 	}) {}
-	if props.Collection != "" && props.EmptyMessage != "" {
-		@StateBox(StateBoxProps{
-			Variant:  StateBoxEmpty,
-			ShowExpr: "!" + props.Loader + ".isBusy() && !" + props.Loader + ".hasError() && !" + props.Collection + ".hasItems()",
+
+	if props.EmptyMessage != "" {
+		@loaderStateBox(loaderStateBoxProps{
+			Variant:  loaderStateEmpty,
+			ShowExpr: loaderEmptyShowExpr(props),
 		}) {
 			{ props.EmptyMessage }
 		}
 	}
-	if props.Collection != "" {
-		<div x-show={ "!" + props.Loader + ".isBusy() && !" + props.Loader + ".hasError() && " + props.Collection + ".hasItems()" }>
-			{ children... }
-		</div>
-	}
+
+	<div x-show={ loaderContentShowExpr(props) }>
+		{ children... }
+	</div>
 }
