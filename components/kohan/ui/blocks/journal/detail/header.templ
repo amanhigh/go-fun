@@ -4,6 +4,7 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/ui/components"
 	journalcommon "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/common"
 	"github.com/templui/templui/components/card"
+	"github.com/templui/templui/components/icon"
 )
 
 // ============================================================
@@ -45,7 +46,10 @@ templ JournalDetailHeader() {
 }
 
 templ JournalDetailCreatedAt() {
-	@components.InfoRow(components.InfoRowProps{IconName: "clock", ValueExpr: "present.date.format(journal.detail.created_at)", Class: "text-xs"})
+	<div class="flex items-center gap-1 text-sm text-muted-foreground text-xs">
+		@icon.Icon("clock")(icon.Props{Class: "size-4"})
+		<span x-text="present.date.format(journal.detail.created_at)"></span>
+	</div>
 }
 
 templ JournalDetailReviewDate() {
