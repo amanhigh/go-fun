@@ -3,11 +3,9 @@ package components
 // ============================================================
 // LOADER WRAPPER
 // ============================================================
-// Wraps loading/error/empty StateBox calls around a Loader + optional Collection.
 // Loader is the JS expression for the loader state object (e.g. "sidebar.reviewQueue.loader").
-// Collection is the JS expression for the collection state object (e.g. "sidebar.reviewQueue");
-// when provided, an empty state is rendered using Collection.hasItems().
-// Children are rendered when loader is ready, no error, and collection has items.
+// Collection is the JS expression for the collection state object (e.g. "sidebar.reviewQueue").
+// Children are rendered when loader is not busy, no error, and collection has items.
 
 type LoaderProps struct {
 	Loader         string
@@ -15,7 +13,6 @@ type LoaderProps struct {
 	LoadingMessage string
 	EmptyMessage   string
 	RetryExpr      string
-	Class          string
 }
 
 templ Loader(props LoaderProps) {
@@ -26,9 +23,9 @@ templ Loader(props LoaderProps) {
 		{ props.LoadingMessage }
 	}
 	@StateBox(StateBoxProps{
-		Variant:  StateBoxError,
-		ShowExpr: props.Loader + ".hasError()",
-		TextExpr: props.Loader + ".message",
+		Variant:   StateBoxError,
+		ShowExpr:  props.Loader + ".hasError()",
+		TextExpr:  props.Loader + ".message",
 		RetryExpr: props.RetryExpr,
 	}) {}
 	if props.Collection != "" && props.EmptyMessage != "" {
@@ -40,7 +37,7 @@ templ Loader(props LoaderProps) {
 		}
 	}
 	if props.Collection != "" {
-		<div x-show={ "!" + props.Loader + ".isBusy() && !" + props.Loader + ".hasError() && " + props.Collection + ".hasItems()" } class={ props.Class }>
+		<div x-show={ "!" + props.Loader + ".isBusy() && !" + props.Loader + ".hasError() && " + props.Collection + ".hasItems()" }>
 			{ children... }
 		</div>
 	}
