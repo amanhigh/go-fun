@@ -1,5 +1,4 @@
 import type { Journal, JournalNote, JournalTag } from './journal_api';
-import type { Feedback } from '../lib/feedback';
 import type { Submitter } from '../lib/submitter';
 import type { DeletableSyncedCollection, LoadableCollection } from './collection';
 import type { DisplaySpec } from './presentation_concern';
@@ -16,7 +15,8 @@ export type SidebarStateConcern = {
 	enterReviewMode(): void;
 };
 
-export type ReviewActionsConcern = Feedback & {
+export type ReviewActionsConcern = {
+	submitter: Submitter;
 	actions(): QuickAction[];
 };
 

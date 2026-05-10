@@ -105,9 +105,9 @@ func journalDetailActionCard() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.FeedbackMessage(components.FeedbackMessageProps{
-			ShowExpr:  "sidebar.reviewActions.message",
-			ClassExpr: "sidebar.reviewActions.feedbackClass",
-			TextExpr:  "sidebar.reviewActions.message",
+			ShowExpr:  "sidebar.reviewActions.submitter.hasMessage()",
+			ClassExpr: "sidebar.reviewActions.submitter.messageClass",
+			TextExpr:  "sidebar.reviewActions.submitter.message",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -163,10 +163,10 @@ func journalDetailActionBar() templ.Component {
 			}
 			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{
 				OnClickExpr: "action.apply()",
-				TextExpr:    "sidebar.reviewActions.submitting ? 'Saving...' : action.display.text",
+				TextExpr:    "sidebar.reviewActions.submitter.submitting ? 'Saving...' : action.display.text",
 				ClassExpr:   "action.display.class",
 				Attributes: templ.Attributes{
-					"x-bind:disabled": "sidebar.reviewActions.submitting",
+					"x-bind:disabled": "sidebar.reviewActions.submitter.submitting",
 				},
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
