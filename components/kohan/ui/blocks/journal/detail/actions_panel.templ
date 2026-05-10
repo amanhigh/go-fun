@@ -9,7 +9,7 @@ import (
 )
 
 templ JournalDetailActionsPanel() {
-	@commondetail.JournalDetailSection("Actions", "Command Center", "sidebar.state.actionOpen", "sidebar.state.setActionOpen($el.open)") {
+	@commondetail.JournalDetailSection("Command Center", "ਜਿਹੜੇ ਲੋਕ ਇਤਿਹਾਸ ਨੂੰ ਯਾਦ ਨਹੀਂ ਰੱਖਦੇ, ਉਹ ਇਸਨੂੰ ਦੁਹਰਾਉਣ ਲਈ ਸਰਾਪੇ ਜਾਂਦੇ ਹਨ। – ਜਾਰਜ ਸਾਂਤਾਯਾਨਾ", "sidebar.state.actionOpen", "sidebar.state.setActionOpen($el.open)") {
 		<div class="space-y-4">
 			@journalDetailReviewCard()
 			@journalDetailManagementTagCard()
@@ -19,18 +19,10 @@ templ JournalDetailActionsPanel() {
 }
 
 templ journalDetailReviewCard() {
-	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
-		@card.Header(card.HeaderProps{}) {
-			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Reviews }
-			@card.Description(card.DescriptionProps{}) { Final-call shortcuts for closing out completed journal outcomes. }
-		}
-		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
-			<div x-show="sidebar.reviewBar.show()">
-				@journalDetailActionBar()
-				@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reviewBar.submitter"})
-			</div>
-		}
-	}
+	<div x-show="sidebar.reviewBar.show()">
+		@journalDetailActionBar()
+		@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reviewBar.submitter"})
+	</div>
 }
 
 templ journalDetailActionBar() {
@@ -54,8 +46,8 @@ templ journalDetailActionBar() {
 templ journalDetailManagementTagCard() {
 	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
 		@card.Header(card.HeaderProps{}) {
-			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Management Tags }
-			@card.Description(card.DescriptionProps{}) { Fast tactical tags for taken trades — mark what mattered before the trail goes cold. }
+			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Trade Debrief }
+			@card.Description(card.DescriptionProps{}) { Did you manage your trade well? }
 		}
 		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
 			@takenTagControls()

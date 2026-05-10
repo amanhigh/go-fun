@@ -28,15 +28,15 @@ function isTerminalStatus(journal: Journal): boolean {
 function reviewDisplay(journal: Journal): DisplaySpec {
 	const hasReview = !!journal.reviewed_at;
 	return {
-		text: hasReview ? 'Mark Pending' : 'Mark Reviewed',
+		text: hasReview ? 'Unreviewed' : 'Reviewed',
 		class: hasReview ? 'journal-review-toggle-pending' : 'journal-review-toggle-reviewed',
 	};
 }
 
 function statusDisplay(journal: Journal): DisplaySpec {
 	switch (journal.type) {
-		case JournalType.TAKEN: return { text: 'Mark Just Loss', class: 'journal-quick-status-loss' };
-		default: return { text: 'Mark Broken', class: 'journal-quick-status-broken' };
+		case JournalType.TAKEN: return { text: 'Just Loss', class: 'journal-quick-status-loss' };
+		default: return { text: 'Broken', class: 'journal-quick-status-broken' };
 	}
 }
 
