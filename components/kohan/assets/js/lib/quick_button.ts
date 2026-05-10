@@ -35,9 +35,9 @@ export abstract class BaseQuickButton implements QuickButton {
 		return this.presentResult(this.states[0]);
 	}
 
-	// Show the "All" spec at end of cycle.
+	// Show the "All" spec at end of cycle; nextValue wraps to first state.
 	private resolveAll(): QuickButtonResult {
-		return { label: this.allSpec.label, className: this.allSpec.className, nextValue: '' };
+		return { label: this.allSpec.label, className: this.allSpec.className, nextValue: this.states[0] };
 	}
 
 	// Show the state immediately after currentValue.
