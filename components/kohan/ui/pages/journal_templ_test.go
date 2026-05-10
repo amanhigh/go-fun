@@ -51,9 +51,9 @@ var _ = Describe("Journal Page Tests", func() {
 			Expect(html).To(ContainSubstring("toggleType()"))
 			Expect(html).To(ContainSubstring("typeToggle().label"))
 			Expect(html).To(ContainSubstring("typeToggle().className"))
-			Expect(html).To(ContainSubstring("toggleStatus()"))
-			Expect(html).To(ContainSubstring("statusToggle().label"))
-			Expect(html).To(ContainSubstring("statusToggle().className"))
+			Expect(html).To(ContainSubstring("quick.status.toggle()"))
+			Expect(html).To(ContainSubstring("quick.status.button().label"))
+			Expect(html).To(ContainSubstring("quick.status.button().className"))
 		})
 
 		It("should wire review preset actions", func() {

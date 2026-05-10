@@ -1,15 +1,12 @@
 import { JournalType, JournalStatus, JournalSortBy, JournalSortOrder } from '../../../types/api/journal/enums';
 import { ReviewedFilter } from '../../../types/api/journal/request';
 import type { JournalFilterValues, DatePresetName, JournalFilterConcern, JournalPageProvider } from '../../../types/journal/list';
-import { BaseQuickButton, type QuickButtonResult } from '../../../lib/quick_button';
 
 type TypeToggle = {
 	label: string;
 	className: string;
 	nextType: JournalType | '';
 };
-
-type StatusToggle = QuickButtonResult<JournalStatus>;
 
 const allToggleSpec: { label: string; className: string } = {
 	label: 'All',
@@ -35,11 +32,6 @@ const journalFilterDefaults: JournalFilterValues = {
 };
 
 export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern {
-	const statusQuickButton = new BaseQuickButton<JournalStatus>(
-		[JournalStatus.SET, JournalStatus.RUNNING],
-		() => pg().present.status,
-		allToggleSpec,
-	);
 	return {
 		...journalFilterDefaults,
 		datePreset: '' as DatePresetName,
@@ -53,13 +45,6 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 		},
 		typeToggle() {
 			return resolveTypeToggle(pg, this.type);
-		},
-		statusToggle() {
-			return statusQuickButton.resolve(this.status);
-		},
-		toggleStatus() {
-			this.status = this.statusToggle().nextValue;
-			this.applyManualFilters();
 		},
 		applyFilters() {
 			pg().pagination.resetPage();

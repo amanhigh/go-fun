@@ -304,7 +304,7 @@ func JournalQuickFilters() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{TextExpr: "filter.statusToggle().label", OnClickExpr: "filter.toggleStatus()", ClassExpr: "filter.statusToggle().className"}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.QuickAction(components.QuickActionProps{TextExpr: "quick.status.button().label", OnClickExpr: "quick.status.toggle()", ClassExpr: "quick.status.button().className"}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
