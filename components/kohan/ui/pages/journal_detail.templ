@@ -22,11 +22,10 @@ templ JournalDetailPage(journalID string) {
 		}) {
 			<div class="space-y-6">
 				@components.Loader(components.LoaderProps{
-					Loader:         "journal.loader",
-					ReadyExpr:      "journal.detail",
-					LoadingMessage: "Loading journal details...",
-					EmptyMessage:   "No journal details available.",
-					RetryExpr:      "journal.loadJournal('" + journalID + "')",
+					Loader:       "journal.loader",
+					ReadyExpr:    "journal.detail",
+					EmptyMessage: "No journal details available.",
+					RetryExpr:    "journal.loadJournal('" + journalID + "')",
 				}) {
 					@journalDetailLoadedContent()
 				}

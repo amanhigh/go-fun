@@ -1101,11 +1101,10 @@ func JournalTableSection() templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = components.Loader(components.LoaderProps{
-			Loader:         "table.loader",
-			ReadyExpr:      "table.hasItems()",
-			LoadingMessage: "Loading journals...",
-			EmptyMessage:   "No journals found.",
-			RetryExpr:      "table.load()",
+			Loader:       "table.loader",
+			ReadyExpr:    "table.hasItems()",
+			EmptyMessage: "No journals found.",
+			RetryExpr:    "table.load()",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var38), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

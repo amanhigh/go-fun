@@ -21,11 +21,10 @@ templ journalDetailQueueCard() {
 		}
 		@card.Content(card.ContentProps{Class: "space-y-2 pt-0"}) {
 			@components.Loader(components.LoaderProps{
-				Loader:         "sidebar.reviewQueue.loader",
-				ReadyExpr:      "sidebar.reviewQueue.hasItems()",
-				LoadingMessage: "Loading queue...",
-				EmptyMessage:   "All caught up — no pending reviews.",
-				RetryExpr:      "sidebar.reviewQueue.load()",
+				Loader:       "sidebar.reviewQueue.loader",
+				ReadyExpr:    "sidebar.reviewQueue.hasItems()",
+				EmptyMessage: "All caught up — no pending reviews.",
+				RetryExpr:    "sidebar.reviewQueue.load()",
 			}) {
 				<div class="space-y-1">
 					<template x-for="item in sidebar.reviewQueue.all()" x-bind:key="item.id">

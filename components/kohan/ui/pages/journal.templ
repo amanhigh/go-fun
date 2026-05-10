@@ -155,11 +155,10 @@ templ JournalActiveFilters() {
 
 templ JournalTableSection() {
 	@components.Loader(components.LoaderProps{
-		Loader:         "table.loader",
-		ReadyExpr:      "table.hasItems()",
-		LoadingMessage: "Loading journals...",
-		EmptyMessage:   "No journals found.",
-		RetryExpr:      "table.load()",
+		Loader:       "table.loader",
+		ReadyExpr:    "table.hasItems()",
+		EmptyMessage: "No journals found.",
+		RetryExpr:    "table.load()",
 	}) {
 		@JournalTable()
 		@JournalPagination()
