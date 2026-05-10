@@ -1,5 +1,5 @@
 import { NewJournalClient } from '../client/journal';
-import type { JournalPageData } from '../types/journal/list';
+import type { JournalPage } from '../types/journal/list';
 import { NewPresentationConcern } from '../concern/present/factory';
 import { NewFilterUrlConcern } from '../concern/journal/list/filter_url';
 import { NewFilterConcern } from '../concern/journal/list/filter';
@@ -9,7 +9,7 @@ import { NewTableConcern } from '../concern/journal/list/table';
 import '../types/platform';
 
 function createJournalPageData() {
-	let page = {} as JournalPageData;
+	let page = {} as JournalPage;
 	const pg = () => page;
 
 	page.client = NewJournalClient();

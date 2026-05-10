@@ -1,30 +1,25 @@
 import type { JournalDetail, JournalImage } from '../api/journal/response';
 import type { JournalTimeframe } from '../api/journal/enums';
 import type { Submitter } from '../../lib/submitter';
-import type { JournalClient } from '../../client/journal';
 import type { JournalNoteClient } from '../../client/journal_note';
 import type { JournalTagClient } from '../../client/journal_tag';
-import type { PresentationConcern } from '../present';
 import type { JournalDetailSidebarConcern } from './sidebar';
+import type { JournalPageBase, PageProvider } from './page';
 
 // ===== Main Page Composition =====
 
-export type JournalDetailPageData = {
-	client: JournalClient;
+export type JournalDetailPage = JournalPageBase & {
 	noteClient: JournalNoteClient;
 	tagClient: JournalTagClient;
 
-	present: PresentationConcern;
 	current: JournalConcern;
 	header: JournalHeaderConcern;
 	images: JournalImagesConcern;
 	preview: PreviewConcern;
 	sidebar: JournalDetailSidebarConcern;
-
-	init(): void;
 };
 
-export type JournalDetailPageProvider = () => JournalDetailPageData;
+export type JournalDetailPageProvider = PageProvider<JournalDetailPage>;
 
 // ===== Page Sub-Concerns =====
 

@@ -1,24 +1,20 @@
 import type { Journal } from '../api/journal/response';
 import type { ReviewedFilter } from '../api/journal/request';
 import type { JournalType, JournalStatus, JournalSequence, JournalSortBy, JournalSortOrder } from '../api/journal/enums';
-import type { JournalClient } from '../../client/journal';
-import type { PresentationConcern } from '../present';
 import type { Loader } from '../../lib/loader';
+import type { JournalPageBase, PageProvider } from './page';
 
 // ===== Main Page Composition =====
 
-export type JournalPageData = {
-	client: JournalClient;
-	present: PresentationConcern;
+export type JournalPage = JournalPageBase & {
 	filter: JournalFilterConcern;
 	filterUrl: JournalFilterUrlConcern;
 	pagination: PaginationConcern;
 	presets: PresetConcern;
 	table: JournalTableConcern;
-	init(): void;
 };
 
-export type JournalPageProvider = () => JournalPageData;
+export type JournalPageProvider = PageProvider<JournalPage>;
 
 // ===== Page Sub-Concerns =====
 

@@ -1,4 +1,4 @@
-import type { DatePresetName, JournalPageData, JournalPageProvider, NonEmptyDatePresetName, PresetConcern, ReviewPreset } from '../../../types/journal/list';
+import type { DatePresetName, JournalPage, JournalPageProvider, NonEmptyDatePresetName, PresetConcern, ReviewPreset } from '../../../types/journal/list';
 
 const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const reviewPresetMonthOffsets = [-11, -10, -9, -8, -7] as const;
@@ -6,7 +6,7 @@ const reviewPresetAnchorOffset = -9;
 
 const pendingReviewValue = 'false';
 
-type ReviewPresetFilter = Pick<JournalPageData['filter'], 'createdAfter' | 'createdBefore' | 'reviewed'>;
+type ReviewPresetFilter = Pick<JournalPage['filter'], 'createdAfter' | 'createdBefore' | 'reviewed'>;
 
 const datePresetMap: Record<NonEmptyDatePresetName, number> = {
 	today: 0,
@@ -27,7 +27,7 @@ export function buildDatePresetRange(pg: JournalPageProvider, preset: DatePreset
 	};
 }
 
-export function syncDatePreset(pg: JournalPageProvider, filter: JournalPageData['filter']) {
+export function syncDatePreset(pg: JournalPageProvider, filter: JournalPage['filter']) {
 	if (!filter.datePreset) return;
 	const range = buildDatePresetRange(pg, filter.datePreset);
 	filter.createdAfter = range.createdAfter;
