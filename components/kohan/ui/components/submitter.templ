@@ -7,9 +7,7 @@ package components
 // Submitter is the JS expression for the submitter state object (e.g. "header.submitter").
 
 type SubmitterProps struct {
-	Submitter   string
-	Class       string
-	Attributes templ.Attributes
+	Submitter string
 }
 
 templ Submitter(props SubmitterProps) {
@@ -17,7 +15,5 @@ templ Submitter(props SubmitterProps) {
 		ShowExpr:  props.Submitter + ".hasMessage()",
 		ClassExpr: props.Submitter + ".variant",
 		TextExpr:  props.Submitter + ".message",
-		Class:     props.Class,
-		Attributes: props.Attributes,
 	}) {}
 }

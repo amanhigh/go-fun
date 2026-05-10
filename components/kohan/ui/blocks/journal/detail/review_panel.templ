@@ -22,8 +22,8 @@ templ journalDetailQueueCard() {
 		@card.Content(card.ContentProps{Class: "space-y-2 pt-0"}) {
 			@components.Loader(components.LoaderProps{
 				Loader:         "sidebar.reviewQueue.loader",
+				Collection:     "sidebar.reviewQueue",
 				LoadingMessage: "Loading queue...",
-				EmptyExpr:      "!sidebar.reviewQueue.hasItems()",
 				EmptyMessage:   "All caught up — no pending reviews.",
 			})
 			<div class="space-y-1" x-show="!sidebar.reviewQueue.loader.hasError() && sidebar.reviewQueue.hasItems()">

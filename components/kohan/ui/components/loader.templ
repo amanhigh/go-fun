@@ -3,14 +3,15 @@ package components
 // ============================================================
 // LOADER WRAPPER
 // ============================================================
-// Wraps loading/error/empty StateBox calls around a Loader state object expression.
+// Wraps loading/error/empty StateBox calls around a Loader + optional Collection.
 // Loader is the JS expression for the loader state object (e.g. "sidebar.reviewQueue.loader").
-// EmptyExpr is the additional condition for the empty state (e.g. "!sidebar.reviewQueue.hasItems()").
+// Collection is the JS expression for the collection state object (e.g. "sidebar.reviewQueue");
+// when provided, an empty state is rendered using Collection.hasItems().
 
 type LoaderProps struct {
 	Loader         string
+	Collection     string
 	LoadingMessage string
-	EmptyExpr      string
 	EmptyMessage   string
 	RetryExpr      string
 	Class          string
@@ -28,10 +29,12 @@ templ Loader(props LoaderProps) {
 		ShowExpr: props.Loader + ".hasError()",
 		TextExpr: props.Loader + ".message",
 	}) {}
-	@StateBox(StateBoxProps{
-		Variant:  StateBoxEmpty,
-		ShowExpr: "!" + props.Loader + ".hasError() && (" + props.EmptyExpr + ")",
-	}) {
-		{ props.EmptyMessage }
+	if props.Collection != "" && props.EmptyMessage != "" {
+		@StateBox(StateBoxProps{
+			Variant:  StateBoxEmpty,
+			ShowExpr: "!" + props.Loader + ".hasError() && !" + props.Collection + ".hasItems()",
+		}) {
+			{ props.EmptyMessage }
+		}
 	}
 }

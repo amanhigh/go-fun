@@ -17,9 +17,7 @@ import (
 // Submitter is the JS expression for the submitter state object (e.g. "header.submitter").
 
 type SubmitterProps struct {
-	Submitter  string
-	Class      string
-	Attributes templ.Attributes
+	Submitter string
 }
 
 func Submitter(props SubmitterProps) templ.Component {
@@ -44,11 +42,9 @@ func Submitter(props SubmitterProps) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = FeedbackMessage(FeedbackMessageProps{
-			ShowExpr:   props.Submitter + ".hasMessage()",
-			ClassExpr:  props.Submitter + ".variant",
-			TextExpr:   props.Submitter + ".message",
-			Class:      props.Class,
-			Attributes: props.Attributes,
+			ShowExpr:  props.Submitter + ".hasMessage()",
+			ClassExpr: props.Submitter + ".variant",
+			TextExpr:  props.Submitter + ".message",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
