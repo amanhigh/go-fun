@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/ThreeDotsLabs/watermill v1.5.1
-	github.com/a-h/templ v0.3.1001
+	github.com/a-h/templ v0.3.1020
 	github.com/amanhigh/go-fun/common v1.0.3
 	github.com/amanhigh/go-fun/components/operator v0.0.0-20231105173700-27dd61fe1606
 	github.com/amanhigh/go-fun/models v1.0.3
