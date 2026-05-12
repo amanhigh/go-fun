@@ -34,7 +34,7 @@ func NewTagManager(journalMgr JournalManager, repo repository.TagRepository) *Ta
 }
 
 func (m *TagManagerImpl) CreateTag(ctx context.Context, journalExternalId string, tag barkat.Tag) (*barkat.Tag, common.HttpError) {
-	// FIXME: Add explicit allowed-values validation for tags and overrides before persisting
+	// TODO: Add explicit allowed-values validation for tags and overrides before persisting
 	// - Validate tag value is in the allowed set (e.g., "dep", "nca", "oe", "ntr", "important")
 	// - Validate override value is in the allowed set (e.g., "loc", "egf", "loc1", "egf1")
 	// - Validate override is only provided for REASON type tags (not MANAGEMENT/DIRECTION)

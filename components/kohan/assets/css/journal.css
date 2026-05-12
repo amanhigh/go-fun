@@ -191,6 +191,22 @@
     @apply border-violet-300 bg-violet-50 text-violet-800 hover:bg-violet-100 focus:border-violet-400 focus:ring-violet-200;
   }
 
+  .journal-quick-status-running {
+    @apply border-sky-300 bg-sky-50 text-sky-800 hover:bg-sky-100 focus:border-sky-400 focus:ring-sky-200;
+  }
+
+  .journal-quick-status-success {
+    @apply border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 focus:border-emerald-400 focus:ring-emerald-200;
+  }
+
+  .journal-quick-status-fail {
+    @apply border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100 focus:border-rose-400 focus:ring-rose-200;
+  }
+
+  .journal-quick-status-set {
+    @apply border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 focus:border-amber-400 focus:ring-amber-200;
+  }
+
   /* --- Journal Management Tag Controls --- */
 
   .journal-management-pending {

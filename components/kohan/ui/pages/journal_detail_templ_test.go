@@ -145,6 +145,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 	Context("Header Tags", func() {
 		It("should render separate primary and secondary tag sections", func() {
 			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.tags.reason()"`))
+			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.tags.management()"`))
 			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.tags.directional()"`))
 			Expect(html).To(ContainSubstring(`x-text="present.tag.label(tag)"`))
 		})

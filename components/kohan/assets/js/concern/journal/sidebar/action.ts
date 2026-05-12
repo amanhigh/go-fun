@@ -9,18 +9,14 @@ function localToday(pg: JournalDetailPageProvider): string {
 	return pg().present.date.humanDate(new Date());
 }
 
-// ===== Terminal Status Check =====
+// ===== Type Helpers =====
 
-const TERMINAL_STATUSES: ReadonlySet<JournalStatus> = new Set([
-	JournalStatus.SUCCESS,
-	JournalStatus.FAIL,
-	JournalStatus.MISSED,
-	JournalStatus.JUST_LOSS,
-	JournalStatus.BROKEN,
-]);
+function isTaken(journal: Journal): boolean {
+	return journal.type === JournalType.TAKEN;
+}
 
-function isTerminalStatus(journal: Journal): boolean {
-	return TERMINAL_STATUSES.has(journal.status);
+function isRejected(journal: Journal): boolean {
+	return journal.type === JournalType.REJECTED;
 }
 
 // ===== Display Helpers =====
@@ -33,27 +29,33 @@ function reviewDisplay(journal: Journal): DisplaySpec {
 	};
 }
 
-function statusDisplay(journal: Journal): DisplaySpec {
-	switch (journal.type) {
-		case JournalType.TAKEN: return { text: 'Just Loss', class: 'journal-quick-status-loss' };
-		default: return { text: 'Broken', class: 'journal-quick-status-broken' };
-	}
+function runningDisplay(): DisplaySpec {
+	return { text: 'Running', class: 'journal-quick-status-running' };
 }
 
-// ===== Active Checks =====
-
-function isStatusActive(journal: Journal): boolean {
-	switch (journal.type) {
-		case JournalType.TAKEN: return journal.status !== JournalStatus.JUST_LOSS;
-		default: return journal.status !== JournalStatus.BROKEN;
-	}
+function successDisplay(): DisplaySpec {
+	return { text: 'Success', class: 'journal-quick-status-success' };
 }
 
-// FIXME: Add new QuickActions to transition journals to SUCCESS or FAIL status.
-// Currently only JUST_LOSS (TAKEN) / BROKEN (default) are supported via review-status.
-// Runner-up trades from RUNNING have no buttons for explicit SUCCESS/FAIL transitions.
+function failDisplay(): DisplaySpec {
+	return { text: 'Fail', class: 'journal-quick-status-fail' };
+}
+
+function justLossDisplay(): DisplaySpec {
+	return { text: 'Just Loss', class: 'journal-quick-status-loss' };
+}
+
+function brokenDisplay(): DisplaySpec {
+	return { text: 'Broken', class: 'journal-quick-status-broken' };
+}
+
+function setDisplay(): DisplaySpec {
+	return { text: 'Set', class: 'journal-quick-status-set' };
+}
+
 // ===== Async Action Handlers =====
 
+/** Reviewed/Unreviewed toggle — changes ONLY reviewed_at, never status. */
 async function toggleReviewedAt(submitter: Submitter, pg: JournalDetailPageProvider): Promise<void> {
 	const journal = pg().journal.detail!;
 	const reviewedAt = journal.reviewed_at ? null : localToday(pg);
@@ -61,21 +63,16 @@ async function toggleReviewedAt(submitter: Submitter, pg: JournalDetailPageProvi
 	await submitter.run(async () => {
 		const envelope = await pg().client.updateReview(pg().journal.detail!.id, { reviewed_at: reviewedAt });
 		journal.reviewed_at = envelope.data.reviewed_at;
-		journal.status = envelope.data.status;
+		// Intentionally NOT updating journal.status — review toggle only touches reviewed_at.
 	}, { success: successMsg });
 }
 
-async function applyReviewStatus(submitter: Submitter, pg: JournalDetailPageProvider): Promise<void> {
-	const journal = pg().journal.detail!;
-	const isTaken = journal.type === JournalType.TAKEN;
-	const targetStatus = isTaken ? JournalStatus.JUST_LOSS : JournalStatus.BROKEN;
-
+/** Status-only update — changes ONLY status, never reviewed_at. */
+async function applyStatusOnly(submitter: Submitter, pg: JournalDetailPageProvider, targetStatus: JournalStatus, successMsg: string): Promise<void> {
 	await submitter.run(async () => {
-		const envelope = await pg().client.updateReview(pg().journal.detail!.id, { status: targetStatus, reviewed_at: localToday(pg) });
-		journal.reviewed_at = envelope.data.reviewed_at;
-		journal.status = envelope.data.status;
-		await pg().sidebar.reviewQueue.load();
-	}, { success: `${isTaken ? 'Mark Just Loss' : 'Mark Broken'} applied and journal marked reviewed.` });
+		const envelope = await pg().client.updateReview(pg().journal.detail!.id, { status: targetStatus });
+		pg().journal.detail!.status = envelope.data.status;
+	}, { success: successMsg });
 }
 
 // ===== Exported Concern =====
@@ -89,8 +86,36 @@ export function NewReviewBarConcern(pg: JournalDetailPageProvider) {
 			if (!journal) return [];
 
 			return [
+				// Every journal gets the review toggle (reviewed_at only).
 				{ id: 'review-toggle', isActive: () => true, display: reviewDisplay(journal), apply: () => toggleReviewedAt(this.submitter, pg) },
-				{ id: 'review-status', isActive: () => isStatusActive(journal), display: statusDisplay(journal), apply: () => applyReviewStatus(this.submitter, pg) },
+
+				// SET → RUNNING (both TAKEN and REJECTED).
+				{ id: 'status-running', isActive: () => journal.status === JournalStatus.SET, display: runningDisplay(), apply: () => applyStatusOnly(this.submitter, pg, JournalStatus.RUNNING, 'Marked as Running') },
+
+				// TAKEN: RUNNING → SUCCESS
+				// REJECTED: FAIL → SUCCESS
+				{ id: 'status-success', isActive: () =>
+					(isTaken(journal) && journal.status === JournalStatus.RUNNING) ||
+					(isRejected(journal) && journal.status === JournalStatus.FAIL),
+					display: successDisplay(), apply: () => applyStatusOnly(this.submitter, pg, JournalStatus.SUCCESS, 'Marked as Success') },
+
+				// TAKEN: RUNNING → FAIL
+				// REJECTED: RUNNING → FAIL, SUCCESS → FAIL, BROKEN → FAIL
+				{ id: 'status-fail', isActive: () =>
+					(isTaken(journal) && journal.status === JournalStatus.RUNNING) ||
+					(isRejected(journal) && (journal.status === JournalStatus.RUNNING || journal.status === JournalStatus.SUCCESS || journal.status === JournalStatus.BROKEN)),
+					display: failDisplay(), apply: () => applyStatusOnly(this.submitter, pg, JournalStatus.FAIL, 'Marked as Fail') },
+
+				// TAKEN: FAIL / MISSED → JUST_LOSS (SUCCESS goes to SET instead)
+				{ id: 'status-just-loss', isActive: () =>
+					isTaken(journal) && ([JournalStatus.FAIL, JournalStatus.MISSED] as JournalStatus[]).includes(journal.status),
+					display: justLossDisplay(), apply: () => applyStatusOnly(this.submitter, pg, JournalStatus.JUST_LOSS, 'Marked as Just Loss') },
+
+				// TAKEN: SUCCESS → SET, JUST_LOSS → SET (full cycle reset)
+				{ id: 'status-set', isActive: () => isTaken(journal) && (journal.status === JournalStatus.SUCCESS || journal.status === JournalStatus.JUST_LOSS), display: setDisplay(), apply: () => applyStatusOnly(this.submitter, pg, JournalStatus.SET, 'Reset to Set') },
+
+				// REJECTED: FAIL → BROKEN
+				{ id: 'status-broken', isActive: () => isRejected(journal) && journal.status === JournalStatus.FAIL, display: brokenDisplay(), apply: () => applyStatusOnly(this.submitter, pg, JournalStatus.BROKEN, 'Marked as Broken') },
 			].filter((action) => action.isActive());
 		},
 	};
