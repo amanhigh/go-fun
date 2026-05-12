@@ -211,7 +211,7 @@ templ JournalRow() {
 			@journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "journal.status"})
 		}
 						@table.Cell() {
-						@button.Button(button.Props{Variant: button.VariantLink, Size: button.SizeSm, Class: "font-medium text-sky-700 hover:text-sky-900 p-0 h-auto", Attributes: templ.Attributes{"x-text": "present.date.format(journal.created_at)", "x-on:click": "filter.applyCreatedDate(journal.created_at)"}})
+						@components.CellLink(components.CellLinkProps{OnClickExpr: "filter.applyCreatedDate(journal.created_at)", TextExpr: "present.date.format(journal.created_at)"})
 					}
 	}
 }

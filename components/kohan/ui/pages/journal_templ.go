@@ -1558,7 +1558,7 @@ func JournalRow() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = button.Button(button.Props{Variant: button.VariantLink, Size: button.SizeSm, Class: "font-medium text-sky-700 hover:text-sky-900 p-0 h-auto", Attributes: templ.Attributes{"x-text": "present.date.format(journal.created_at)", "x-on:click": "filter.applyCreatedDate(journal.created_at)"}}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = components.CellLink(components.CellLinkProps{OnClickExpr: "filter.applyCreatedDate(journal.created_at)", TextExpr: "present.date.format(journal.created_at)"}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
