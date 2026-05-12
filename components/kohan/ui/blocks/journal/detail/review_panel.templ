@@ -55,6 +55,7 @@ templ journalDetailNoteCard() {
 				BusyExpr:      "sidebar.noteForm.submitter.isBusy()",
 				DisabledExpr:  "sidebar.noteForm.submitter.isBusy() || !sidebar.noteForm.canSubmit()",
 				OnClickExpr:   "sidebar.noteForm.submit()",
+				Class:         "w-full",
 			})
 			@components.Submitter(components.SubmitterProps{Submitter: "sidebar.noteForm.submitter"})
 		}
