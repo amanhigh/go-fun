@@ -4,9 +4,6 @@ package manager
 // TagManager provides business logic for journal tag operations.
 // Tags represent categorized labels (reason/management) attached to entries.
 
-// HACK: No DB backup strategy for journal SQLite file at data/journals.db
-// Consider adding automated backup to object storage (S3-compatible) with retention
-
 import (
 	"context"
 

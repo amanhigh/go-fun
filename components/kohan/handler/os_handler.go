@@ -23,15 +23,15 @@ type OSHandler interface {
 }
 
 type OSHandlerImpl struct {
-	autoManager manager.AutoManagerInterface
+	osManager manager.OSManagerInterface
 }
 
 var _ OSHandler = (*OSHandlerImpl)(nil)
 
 // NewOSHandler creates a new OSHandler.
-func NewOSHandler(autoManager manager.AutoManagerInterface) *OSHandlerImpl {
+func NewOSHandler(osManager manager.OSManagerInterface) *OSHandlerImpl {
 	return &OSHandlerImpl{
-		autoManager: autoManager,
+		osManager: osManager,
 	}
 }
 
@@ -44,7 +44,7 @@ func (h *OSHandlerImpl) HandleScreenshot(ctx *gin.Context) {
 		return
 	}
 
-	fullPath, httpErr := h.autoManager.Screenshot(ctx, req.DirectoryType, req.FileName, req.Type, req.Window)
+	fullPath, httpErr := h.osManager.Screenshot(ctx, req.DirectoryType, req.FileName, req.Type, req.Window)
 	if httpErr != nil {
 		log.Error().Str("file_name", req.FileName).Str("directory_type", string(req.DirectoryType)).Err(httpErr).Msg("Screenshot failed")
 		ctx.JSON(httpErr.Code(), httpErr)
@@ -70,7 +70,7 @@ func (h *OSHandlerImpl) HandleReadClip(ctx *gin.Context) {
 // HandleRecordTicker handles GET /v1/os/ticker/:ticker/record
 func (h *OSHandlerImpl) HandleRecordTicker(ctx *gin.Context) {
 	ticker := ctx.Param("ticker")
-	if httpErr := h.autoManager.RecordTicker(ctx, ticker); httpErr == nil {
+	if httpErr := h.osManager.RecordTicker(ctx, ticker); httpErr == nil {
 		ctx.JSON(http.StatusOK, "Success")
 	} else {
 		log.Error().Str("Ticker", ticker).Err(httpErr).Msg("Record Ticker Failed")

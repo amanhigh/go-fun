@@ -36,14 +36,14 @@ var kohanServerCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, _ []string) (err error) {
 		log.Info().Dur("Wait", wait).Msg("Starting Kohan Server")
 		// TODO: Retry When Disk not Mounted, Watermill Exponential Backoff ?
-		autoManager := core.GetKohanInterface().GetAutoManager(wait)
+		osManager := core.GetKohanInterface().GetOSManager(wait)
 		server, err := core.GetKohanInterface().GetKohanServer(servePort, wait)
 		if err != nil {
 			return fmt.Errorf("failed to build kohan server: %w", err)
 		}
 
 		// TODO: #C Should use new Cron Libraries in learn Module
-		go autoManager.MonitorInternetConnection(cmd.Context())
+		go osManager.MonitorInternetConnection(cmd.Context())
 
 		if err := server.Start(); err != nil {
 			log.Error().Err(err).Msg("Failed to start Kohan server")
@@ -58,8 +58,8 @@ var openTickerCmd = &cobra.Command{
 	Short: "Opens Ticker",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		autoManager := core.GetKohanInterface().GetAutoManager(wait)
-		autoManager.TryOpenTicker(cmd.Context(), args[0])
+		osManager := core.GetKohanInterface().GetOSManager(wait)
+		osManager.TryOpenTicker(cmd.Context(), args[0])
 		return
 	},
 }

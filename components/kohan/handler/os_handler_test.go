@@ -20,7 +20,7 @@ import (
 var _ = Describe("OS Handler Integration Tests", func() {
 	var (
 		osHandler        handler.OSHandler
-		autoManager      *managerMocks.AutoManagerInterface
+		osManager        *managerMocks.OSManagerInterface
 		router           *gin.Engine
 		req              *http.Request
 		w                *httptest.ResponseRecorder
@@ -30,11 +30,11 @@ var _ = Describe("OS Handler Integration Tests", func() {
 	BeforeEach(func() {
 		gin.SetMode(gin.TestMode)
 		core.RegisterJournalValidators()
-		autoManager = managerMocks.NewAutoManagerInterface(GinkgoT())
+		osManager = managerMocks.NewOSManagerInterface(GinkgoT())
 		dir, err := os.MkdirTemp("", "kohan-screenshots-*")
 		Expect(err).ToNot(HaveOccurred())
 		screenShotTmpDir = dir
-		osHandler = handler.NewOSHandler(autoManager)
+		osHandler = handler.NewOSHandler(osManager)
 
 		router = gin.New()
 		v1 := router.Group("/v1/api")
@@ -50,7 +50,7 @@ var _ = Describe("OS Handler Integration Tests", func() {
 		Context("Happy Path", func() {
 			Context("with valid FULL screenshot request", func() {
 				BeforeEach(func() {
-					autoManager.EXPECT().Screenshot(mock.Anything, kohan.ScreenshotDirectoryTypeJournal, "test.png", kohan.ScreenshotTypeFull, "").Return(screenShotTmpDir+"/test.png", nil)
+					osManager.EXPECT().Screenshot(mock.Anything, kohan.ScreenshotDirectoryTypeJournal, "test.png", kohan.ScreenshotTypeFull, "").Return(screenShotTmpDir+"/test.png", nil)
 
 					payload := kohan.ScreenshotRequest{
 						FileName:      "test.png",
@@ -72,7 +72,7 @@ var _ = Describe("OS Handler Integration Tests", func() {
 
 			Context("with valid REGION screenshot request and window", func() {
 				BeforeEach(func() {
-					autoManager.EXPECT().Screenshot(mock.Anything, kohan.ScreenshotDirectoryTypeDownload, "test.png", kohan.ScreenshotTypeRegion, "TradingView").Return("/home/Downloads/test.png", nil)
+					osManager.EXPECT().Screenshot(mock.Anything, kohan.ScreenshotDirectoryTypeDownload, "test.png", kohan.ScreenshotTypeRegion, "TradingView").Return("/home/Downloads/test.png", nil)
 
 					payload := kohan.ScreenshotRequest{
 						FileName:      "test.png",
@@ -208,7 +208,7 @@ var _ = Describe("OS Handler Integration Tests", func() {
 			})
 
 			It("should return 500 when auto manager fails", func() {
-				autoManager.EXPECT().Screenshot(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", common.NewHttpError("screenshot failed", http.StatusInternalServerError))
+				osManager.EXPECT().Screenshot(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", common.NewHttpError("screenshot failed", http.StatusInternalServerError))
 
 				payload := kohan.ScreenshotRequest{
 					FileName:      "test.png",
@@ -221,7 +221,7 @@ var _ = Describe("OS Handler Integration Tests", func() {
 			})
 
 			It("should return 409 Conflict when user aborts screenshot", func() {
-				autoManager.EXPECT().Screenshot(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", common.NewHttpError("screenshot aborted", http.StatusConflict))
+				osManager.EXPECT().Screenshot(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", common.NewHttpError("screenshot aborted", http.StatusConflict))
 
 				payload := kohan.ScreenshotRequest{
 					FileName:      "test.png",
@@ -239,7 +239,7 @@ var _ = Describe("OS Handler Integration Tests", func() {
 	Describe("Legacy OS Endpoints", func() {
 		Context("GET /v1/api/os/ticker/:ticker/record", func() {
 			It("should still handle legacy ticker recording", func() {
-				autoManager.EXPECT().RecordTicker(mock.Anything, "AAPL").Return(nil)
+				osManager.EXPECT().RecordTicker(mock.Anything, "AAPL").Return(nil)
 
 				req, w = util.CreateTestRequest("GET", "/v1/api/os/ticker/AAPL/record", nil)
 				router.ServeHTTP(w, req)
