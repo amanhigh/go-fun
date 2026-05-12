@@ -65,7 +65,7 @@ func (ki *KohanInjector) GetKohanServer() (util.HttpServer, error) {
 	if err := ki.registerJournalDependencies(); err != nil {
 		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)
 	}
-	ki.registerServerDependencies(ki.config.ServerPort)
+	ki.registerServerDependencies(ki.config.Server)
 
 	// Resolve server from DI
 	var server util.HttpServer
@@ -116,10 +116,8 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 // =============================================================================
 // These methods register dependencies with the container
 
-func (ki *KohanInjector) registerServerDependencies(port int) {
+func (ki *KohanInjector) registerServerDependencies(cfg config.HttpServerConfig) {
 	container.MustSingleton(ki.di, util.NewGracefulShutdown)
-	container.MustSingleton(ki.di, func() config.HttpServerConfig {
-		return config.HttpServerConfig{Name: "kohan", Port: port}
-	})
+	container.MustSingleton(ki.di, func() config.HttpServerConfig { return cfg })
 	container.MustSingleton(ki.di, provideHttpServer)
 }

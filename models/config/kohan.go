@@ -29,7 +29,7 @@ type DariusConfig struct {
 type KohanConfig struct {
 	Tax            TaxConfig
 	Barkat         BarkatConfig
-	ServerPort     int           `env:"KOHAN_SERVER_PORT" envDefault:"9010"`
+	Server         HttpServerConfig
 	OSWaitInterval time.Duration `env:"KOHAN_OS_WAIT_INTERVAL" envDefault:"1m"`
 }
 
@@ -109,6 +109,8 @@ func NewKohanConfig() (config KohanConfig, err error) {
 	applyTaxPaths(&config.Tax, homeDir)
 	config.Barkat.DbPath = replaceHome(config.Barkat.DbPath, homeDir)
 	config.Barkat.ScreenshotPath = replaceHome(config.Barkat.ScreenshotPath, homeDir)
+
+	config.Server.Name = "kohan"
 
 	return
 }

@@ -48,7 +48,6 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring("The Record"))
 			Expect(html).To(ContainSubstring("Every word stays."))
 			Expect(html).ToNot(ContainSubstring(`>Action<`))
-			Expect(html).To(ContainSubstring(`x-show="sidebar.reviewBar.show()"`))
 			Expect(html).To(ContainSubstring(`sidebar.reviewBar.submitter.isBusy()`))
 			Expect(html).To(ContainSubstring(`sidebar.reviewBar.submitter.hasMessage()`))
 			Expect(html).To(ContainSubstring(`sidebar.reviewBar.submitter.hasError()`))

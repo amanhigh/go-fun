@@ -13,11 +13,11 @@ function localToday(pg: JournalDetailPageProvider): string {
 
 const statusTransitions: Record<string, Record<string, JournalStatus[]>> = {
 	[JournalType.TAKEN]: {
-		[JournalStatus.SET]: [JournalStatus.RUNNING],
+		[JournalStatus.SET]: [JournalStatus.RUNNING, JournalStatus.MISSED],
 		[JournalStatus.RUNNING]: [JournalStatus.SUCCESS, JournalStatus.FAIL],
 		[JournalStatus.SUCCESS]: [JournalStatus.SET],
 		[JournalStatus.FAIL]: [JournalStatus.JUST_LOSS],
-		[JournalStatus.MISSED]: [JournalStatus.JUST_LOSS],
+		[JournalStatus.MISSED]: [JournalStatus.SET],
 		[JournalStatus.JUST_LOSS]: [JournalStatus.SET],
 	},
 	[JournalType.REJECTED]: {

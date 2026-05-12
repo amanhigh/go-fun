@@ -556,13 +556,13 @@ func journalDetailTagForm() templ.Component {
 			templ_7745c5c3_Var19 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<div class=\"flex flex-wrap items-start gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<div class=\"grid grid-cols-1 gap-1.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = input.Input(input.Props{
 			Placeholder: "Reason tag",
-			Class:       "min-w-[120px] flex-1 rounded-xl border-border bg-background px-3 py-2 text-xs text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
+			Class:       "h-8 rounded-lg border-border bg-background px-2.5 text-xs text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
 			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.input", "x-on:keydown.enter.prevent": "$refs.reasonTagOverride.focus()"},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -570,7 +570,7 @@ func journalDetailTagForm() templ.Component {
 		}
 		templ_7745c5c3_Err = input.Input(input.Props{
 			Placeholder: "Override (optional)",
-			Class:       "min-w-[90px] flex-1 rounded-xl border-border bg-background px-3 py-2 text-xs text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
+			Class:       "h-8 rounded-lg border-border bg-background px-2.5 text-xs text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
 			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.override", "x-ref": "reasonTagOverride", "x-on:keydown.enter.prevent": "sidebar.reasonTagForm.submit()"},
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -581,7 +581,7 @@ func journalDetailTagForm() templ.Component {
 			BusyExpr:     "sidebar.reasonTagForm.submitter.isBusy()",
 			DisabledExpr: "sidebar.reasonTagForm.submitter.isBusy() || !sidebar.reasonTagForm.canSubmit()",
 			OnClickExpr:  "sidebar.reasonTagForm.submit()",
-			Class:        "shrink-0 rounded-xl px-3 py-2 text-xs font-medium",
+			Class:        "h-8 shrink-0 rounded-lg px-3 text-xs font-medium",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -697,7 +697,19 @@ func journalDetailTagChip() templ.Component {
 			templ_7745c5c3_Var22 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<span class=\"inline-flex items-center gap-0.5 rounded-full border border-slate-200 bg-slate-100 pl-2 pr-1 py-0.5 text-xs font-medium text-slate-800\"><span x-text=\"present.tag.label(tag)\"></span> <button type=\"button\" class=\"inline-flex items-center justify-center h-4 w-4 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-100 transition-colors\" x-on:click=\"sidebar.tags.delete(tag.id)\" x-bind:disabled=\"sidebar.tags.submitter.isBusy()\" aria-label=\"Delete Tag\" title=\"Delete Tag\">&times;</button></span>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<span class=\"inline-flex items-center gap-0.5\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{
+			Tone:     components.ToneSlate,
+			TextExpr: "present.tag.label(tag)",
+			Class:    "text-xs px-2.5 py-1 font-semibold",
+		}).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<button type=\"button\" class=\"inline-flex items-center justify-center h-5 w-5 rounded-full text-xs text-slate-400 hover:text-rose-600 hover:bg-rose-100 transition-colors\" x-on:click=\"sidebar.tags.delete(tag.id)\" x-bind:disabled=\"sidebar.tags.submitter.isBusy()\" aria-label=\"Delete Tag\" title=\"Delete Tag\">&times;</button></span>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
