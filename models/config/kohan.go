@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/caarlos0/env/v6"
 )
@@ -26,8 +27,10 @@ type DariusConfig struct {
 }
 
 type KohanConfig struct {
-	Tax    TaxConfig
-	Barkat BarkatConfig
+	Tax            TaxConfig
+	Barkat         BarkatConfig
+	ServerPort     int           `env:"KOHAN_SERVER_PORT" envDefault:"9010"`
+	OSWaitInterval time.Duration `env:"KOHAN_OS_WAIT_INTERVAL" envDefault:"1m"`
 }
 
 // BarkatConfig defines configuration for the Barkat Journal Explorer

@@ -1,7 +1,7 @@
 set shell := ["bash", "-cu"]
 
 # Import shared library for formatting and run helpers
-import '../../../../.just/lib.just'
+import '../../../../.ust/lib.just'
 
 ### Variables
 default_dbname := "play"

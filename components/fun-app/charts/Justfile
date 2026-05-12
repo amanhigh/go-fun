@@ -1,6 +1,6 @@
 set shell := ["bash", "-cu"]
 
-import '../../../.just/lib.just'
+import '../../../.ust/lib.just'
 
 chart_version := trim(shell("grep '^version:' Chart.yaml | sed 's/^version: //'"))
 version := chart_version

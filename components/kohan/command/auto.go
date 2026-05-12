@@ -9,8 +9,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var servePort = 9010
-
 var autoCmd = &cobra.Command{
 	Use:   "auto",
 	Short: "Automation Related Commands",
@@ -34,10 +32,9 @@ var kohanServerCmd = &cobra.Command{
 	Short: "Start Kohan Server",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, _ []string) (err error) {
-		log.Info().Dur("Wait", wait).Msg("Starting Kohan Server")
 		// TODO: Retry When Disk not Mounted, Watermill Exponential Backoff ?
-		osManager := core.GetKohanInterface().GetOSManager(wait)
-		server, err := core.GetKohanInterface().GetKohanServer(servePort, wait)
+		osManager := core.GetKohanInterface().GetOSManager()
+		server, err := core.GetKohanInterface().GetKohanServer()
 		if err != nil {
 			return fmt.Errorf("failed to build kohan server: %w", err)
 		}
@@ -58,19 +55,13 @@ var openTickerCmd = &cobra.Command{
 	Short: "Opens Ticker",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		osManager := core.GetKohanInterface().GetOSManager(wait)
+		osManager := core.GetKohanInterface().GetOSManager()
 		osManager.TryOpenTicker(cmd.Context(), args[0])
 		return
 	},
 }
 
 func init() {
-	// Flags
-	// HACK: Change to Config rather than Flags.
-	kohanServerCmd.Flags().DurationVarP(&wait, "wait", "w", wait, "OS Wait Interval")
-	kohanServerCmd.Flags().IntVarP(&servePort, "port", "p", servePort, "Kohan server port")
-
-	// Commands
 	autoCmd.AddCommand(runOrFocusCmd)
 	autoCmd.AddCommand(kohanServerCmd)
 	autoCmd.AddCommand(openTickerCmd)

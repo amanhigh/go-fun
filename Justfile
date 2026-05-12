@@ -1,15 +1,15 @@
 set shell := ["bash", "-cu"]
 
-import './.just/lib.just'
-import './.just/bootstrap.just'
-import './.just/build.just'
-import './.just/generate.just'
-import './.just/quality.just'
-import './.just/test.just'
-import './.just/docker.just'
-import './.just/release.just'
-import './.just/devspace.just'
-import './.just/ops.just'
+import './.ust/lib.just'
+import './.ust/bootstrap.just'
+import './.ust/build.just'
+import './.ust/generate.just'
+import './.ust/quality.just'
+import './.ust/test.just'
+import './.ust/docker.just'
+import './.ust/release.just'
+import './.ust/devspace.just'
+import './.ust/ops.just'
 
 [doc('Show available recipes')]
 default:
