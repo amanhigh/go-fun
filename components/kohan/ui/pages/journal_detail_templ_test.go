@@ -38,7 +38,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring("Review"))
 			Expect(html).ToNot(ContainSubstring("Quick actions"))
 			Expect(html).To(ContainSubstring("Oh, So You Took the Trade?"))
-			Expect(html).To(ContainSubstring(`x-show="journal.detail.type === 'TAKEN'"`))
+			Expect(html).To(ContainSubstring(`x-show="journal.detail.type === &#39;TAKEN&#39;"`))
 			Expect(html).To(ContainSubstring("How did it go? Confess your sins."))
 			Expect(html).To(ContainSubstring("Speak Now"))
 			Expect(html).To(ContainSubstring("Fingerprints"))
