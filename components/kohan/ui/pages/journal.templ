@@ -144,6 +144,7 @@ templ JournalActiveFilters() {
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneRose, ShowExpr: "filter.status !== ''", TextExpr: "present.status.label(filter.status)"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneViolet, ShowExpr: "filter.sequence !== ''", TextExpr: "present.sequence.label(filter.sequence)"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, ShowExpr: "filter.datePreset !== '' && presets.activeReviewPreset === ''", TextExpr: "'📅 Date: ' + filter.datePreset"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, ShowExpr: "filter.datePreset === '' && filter.createdAfter !== '' && filter.createdAfter === filter.createdBefore", TextExpr: "'📅 Date: ' + filter.createdAfter"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, ShowExpr: "presets.activeReviewPreset !== ''", TextExpr: "'🗓️ Review: ' + presets.activeReviewPreset"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, ShowExpr: "filter.reviewed !== '' && presets.activeReviewPreset === ''", TextExpr: "'🕒 ' + (filter.reviewed === 'false' ? 'Reviewed: Pending' : 'Reviewed: ' + filter.reviewed)"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, ShowExpr: "filter.sortBy !== 'created_at' || filter.sortOrder !== 'desc'", TextExpr: "'↕️ Sort: ' + [filter.sortBy, filter.sortOrder].filter(Boolean).join(' · ')"})
@@ -209,7 +210,9 @@ templ JournalRow() {
 		@table.Cell() {
 			@journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "journal.status"})
 		}
-						@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "present.date.format(journal.created_at)"}}) {}
+						@table.Cell() {
+						<button class="font-medium text-sky-700 hover:text-sky-900 hover:underline" x-text="present.date.format(journal.created_at)" x-on:click="filter.applyCreatedDate(journal.created_at)"></button>
+					}
 	}
 }
 

@@ -71,6 +71,8 @@ var _ = Describe("Journal Page Tests", func() {
 			Expect(html).To(ContainSubstring(`present.type.label(filter.type)`))
 			Expect(html).To(ContainSubstring(`present.status.label(filter.status)`))
 			Expect(html).To(ContainSubstring(`present.sequence.label(filter.sequence)`))
+			Expect(html).To(ContainSubstring("filter.createdAfter === filter.createdBefore"))
+			Expect(html).To(ContainSubstring("&#39;📅 Date: &#39; + filter.createdAfter"))
 		})
 	})
 
@@ -79,6 +81,10 @@ var _ = Describe("Journal Page Tests", func() {
 			Expect(html).To(ContainSubstring("Ticker"))
 			Expect(html).To(ContainSubstring("Sequence"))
 			Expect(html).To(ContainSubstring("Created"))
+		})
+
+		It("should wire created date click to apply exact-date filter", func() {
+			Expect(html).To(ContainSubstring("filter.applyCreatedDate(journal.created_at)"))
 		})
 
 		It("should render journal row integration points", func() {

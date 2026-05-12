@@ -31,6 +31,14 @@ export function NewFilterConcern(pg: JournalPageProvider): JournalFilterConcern 
 			pg().filterUrl.filterToUrl();
 			void pg().table.load();
 		},
+		applyCreatedDate(createdAt: string) {
+			const date = pg().present.date.humanDate(new Date(createdAt));
+			this.createdAfter = date;
+			this.createdBefore = date;
+			this.datePreset = '';
+			pg().presets.clearActiveReviewPreset();
+			this.applyFilters();
+		},
 		applyManualFilters() {
 			pg().presets.clearActiveReviewPreset();
 			this.datePreset = '';

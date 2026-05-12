@@ -71,6 +71,7 @@ export type JournalFilterConcern = JournalFilterValues & {
 	applyFilters(): void;
 	applyManualFilters(): void;
 	clearFilters(): void;
+	applyCreatedDate(createdAt: string): void;
 };
 
 export type JournalFilterUrlConcern = {
