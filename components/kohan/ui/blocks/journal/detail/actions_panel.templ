@@ -83,7 +83,7 @@ templ journalDetailTagsCard() {
 			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Fingerprints }
 			@card.Description(card.DescriptionProps{}) { Tag what the trade left behind. }
 		}
-		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
+		@card.Content(card.ContentProps{Class: "space-y-2 pt-0"}) {
 			@journalDetailTagForm()
 			@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reasonTagForm.submitter"})
 			@journalDetailTagInputs()
@@ -93,48 +93,45 @@ templ journalDetailTagsCard() {
 }
 
 templ journalDetailTagForm() {
-	<div class="space-y-3">
+	<div class="flex flex-wrap items-start gap-2">
 		@input.Input(input.Props{
 			Placeholder: "Reason tag",
-			Class:       "w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
+			Class:       "min-w-[120px] flex-1 rounded-xl border-border bg-background px-3 py-2 text-xs text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
 			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.input", "x-on:keydown.enter.prevent": "$refs.reasonTagOverride.focus()"},
 		})
 		@input.Input(input.Props{
 			Placeholder: "Override (optional)",
-			Class:       "w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
+			Class:       "min-w-[90px] flex-1 rounded-xl border-border bg-background px-3 py-2 text-xs text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
 			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.override", "x-ref": "reasonTagOverride", "x-on:keydown.enter.prevent": "sidebar.reasonTagForm.submit()"},
 		})
 		@components.SubmitButton(components.SubmitButtonProps{
-			Label:         "Add Reason Tag",
+			Label:         "Add",
 			BusyExpr:      "sidebar.reasonTagForm.submitter.isBusy()",
 			DisabledExpr:  "sidebar.reasonTagForm.submitter.isBusy() || !sidebar.reasonTagForm.canSubmit()",
 			OnClickExpr:   "sidebar.reasonTagForm.submit()",
+			Class:         "shrink-0 rounded-xl px-3 py-2 text-xs font-medium",
 		})
 	</div>
 }
 
 templ journalDetailTagInputs() {
-	<div class="space-y-3" x-show="sidebar.tags.hasItems()">
-		@journalDetailTagRows()
+	<div x-show="sidebar.tags.hasItems()">
+		<div class="flex flex-wrap gap-1.5">
+			@journalDetailTagRows()
+		</div>
+		@components.Submitter(components.SubmitterProps{Submitter: "sidebar.tags.submitter"})
 	</div>
 }
 
 templ journalDetailTagRows() {
 	<template x-for="tag in sidebar.tags.all()" x-bind:key="tag.id">
-		@journalDetailTagRow()
+		@journalDetailTagChip()
 	</template>
-	@components.Submitter(components.SubmitterProps{Submitter: "sidebar.tags.submitter"})
 }
 
-templ journalDetailTagRow() {
-	<div class="flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/30 px-4 py-3">
-		<div class="flex min-w-0 flex-wrap items-center gap-2">
-			@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, TextExpr: "present.tag.label(tag)", Class: "font-semibold"})
-		</div>
-		@components.DeleteButton(components.DeleteButtonProps{
-			Label:        "Delete Tag",
-			DisabledExpr: "sidebar.tags.submitter.isBusy()",
-			OnClickExpr:  "sidebar.tags.delete(tag.id)",
-		})
-	</div>
+templ journalDetailTagChip() {
+	<span class="inline-flex items-center gap-0.5 rounded-full border border-slate-200 bg-slate-100 pl-2 pr-1 py-0.5 text-xs font-medium text-slate-800">
+		<span x-text="present.tag.label(tag)"></span>
+		<button type="button" class="inline-flex items-center justify-center h-4 w-4 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-100 transition-colors" x-on:click="sidebar.tags.delete(tag.id)" x-bind:disabled="sidebar.tags.submitter.isBusy()" aria-label="Delete Tag" title="Delete Tag">&times;</button>
+	</span>
 }
