@@ -93,109 +93,238 @@ var _ = Describe("OS Handler Integration Tests", func() {
 		})
 
 		Context("Field Validations - Binding Errors", func() {
-			// FIXME: Missing Good Values not api-test format.
 			Context("FileName field", func() {
-				It("should return 400 for missing FileName", func() {
-					payload := map[string]string{
-						"directory_type": "JOURNAL",
-						"type":           "FULL",
-					}
-					req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "FileName", "required")
-				})
+				Context("Allowed Values", func() {
+					It("should accept .png filename", func() {
+						osManager.EXPECT().Screenshot(mock.Anything, kohan.ScreenshotDirectoryTypeJournal, "image.png", kohan.ScreenshotTypeFull, "").Return(screenShotTmpDir+"/image.png", nil)
+						payload := kohan.ScreenshotRequest{
+							FileName:      "image.png",
+							DirectoryType: kohan.ScreenshotDirectoryTypeJournal,
+							Type:          kohan.ScreenshotTypeFull,
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						var envelope common.Envelope[kohan.ScreenshotResponse]
+						util.AssertSuccess(w, http.StatusOK, &envelope)
+					})
 
-				It("should return 400 for FileName exceeding max length", func() {
-					payload := map[string]string{
-						"file_name":      "this_is_a_very_long_filename_that_exceeds_fifty_chars_limit.png",
-						"directory_type": "JOURNAL",
-						"type":           "FULL",
-					}
-					req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "FileName", "max")
-				})
+					It("should accept .jpg filename", func() {
+						osManager.EXPECT().Screenshot(mock.Anything, kohan.ScreenshotDirectoryTypeJournal, "photo.jpg", kohan.ScreenshotTypeFull, "").Return(screenShotTmpDir+"/photo.jpg", nil)
+						payload := kohan.ScreenshotRequest{
+							FileName:      "photo.jpg",
+							DirectoryType: kohan.ScreenshotDirectoryTypeJournal,
+							Type:          kohan.ScreenshotTypeFull,
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						var envelope common.Envelope[kohan.ScreenshotResponse]
+						util.AssertSuccess(w, http.StatusOK, &envelope)
+					})
 
-				It("should return 400 for invalid FileName extension", func() {
-					payload := map[string]string{
-						"file_name":      "test.gif",
-						"directory_type": "JOURNAL",
-						"type":           "FULL",
-					}
-					req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "FileName", "image_file")
+					It("should accept .jpeg filename", func() {
+						osManager.EXPECT().Screenshot(mock.Anything, kohan.ScreenshotDirectoryTypeJournal, "snapshot.jpeg", kohan.ScreenshotTypeFull, "").Return(screenShotTmpDir+"/snapshot.jpeg", nil)
+						payload := kohan.ScreenshotRequest{
+							FileName:      "snapshot.jpeg",
+							DirectoryType: kohan.ScreenshotDirectoryTypeJournal,
+							Type:          kohan.ScreenshotTypeFull,
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						var envelope common.Envelope[kohan.ScreenshotResponse]
+						util.AssertSuccess(w, http.StatusOK, &envelope)
+					})
 				})
+				Context("Bad Values", func() {
+					It("should return 400 for missing FileName", func() {
+						payload := map[string]string{
+							"directory_type": "JOURNAL",
+							"type":           "FULL",
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "FileName", "required")
+					})
 
-				It("should return 400 for FileName with path separators", func() {
-					payload := map[string]string{
-						"file_name":      "../etc/passwd.png",
-						"directory_type": "JOURNAL",
-						"type":           "FULL",
-					}
-					req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "FileName", "image_file")
+					It("should return 400 for FileName exceeding max length", func() {
+						payload := map[string]string{
+							"file_name":      "this_is_a_very_long_filename_that_exceeds_fifty_chars_limit.png",
+							"directory_type": "JOURNAL",
+							"type":           "FULL",
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "FileName", "max")
+					})
+
+					It("should return 400 for invalid FileName extension", func() {
+						payload := map[string]string{
+							"file_name":      "test.gif",
+							"directory_type": "JOURNAL",
+							"type":           "FULL",
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "FileName", "image_file")
+					})
+
+					It("should return 400 for FileName with path separators", func() {
+						payload := map[string]string{
+							"file_name":      "../etc/passwd.png",
+							"directory_type": "JOURNAL",
+							"type":           "FULL",
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "FileName", "image_file")
+					})
 				})
 			})
 
 			Context("DirectoryType field", func() {
-				It("should return 400 for missing DirectoryType", func() {
-					payload := map[string]string{
-						"file_name": "test.png",
-						"type":      "FULL",
-					}
-					req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "DirectoryType", "required")
-				})
+				Context("Allowed Values", func() {
+					It("should accept JOURNAL directory type", func() {
+						osManager.EXPECT().Screenshot(mock.Anything, kohan.ScreenshotDirectoryTypeJournal, "test.png", kohan.ScreenshotTypeFull, "").Return(screenShotTmpDir+"/test.png", nil)
+						payload := kohan.ScreenshotRequest{
+							FileName:      "test.png",
+							DirectoryType: kohan.ScreenshotDirectoryTypeJournal,
+							Type:          kohan.ScreenshotTypeFull,
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						var envelope common.Envelope[kohan.ScreenshotResponse]
+						util.AssertSuccess(w, http.StatusOK, &envelope)
+					})
 
-				It("should return 400 for invalid DirectoryType", func() {
-					payload := map[string]string{
-						"file_name":      "test.png",
-						"directory_type": "OTHER",
-						"type":           "FULL",
-					}
-					req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "DirectoryType", "oneof")
+					It("should accept DOWNLOAD directory type", func() {
+						osManager.EXPECT().Screenshot(mock.Anything, kohan.ScreenshotDirectoryTypeDownload, "test.png", kohan.ScreenshotTypeFull, "").Return("/Downloads/test.png", nil)
+						payload := kohan.ScreenshotRequest{
+							FileName:      "test.png",
+							DirectoryType: kohan.ScreenshotDirectoryTypeDownload,
+							Type:          kohan.ScreenshotTypeFull,
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						var envelope common.Envelope[kohan.ScreenshotResponse]
+						util.AssertSuccess(w, http.StatusOK, &envelope)
+					})
+				})
+				Context("Bad Values", func() {
+					It("should return 400 for missing DirectoryType", func() {
+						payload := map[string]string{
+							"file_name": "test.png",
+							"type":      "FULL",
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "DirectoryType", "required")
+					})
+
+					It("should return 400 for invalid DirectoryType", func() {
+						payload := map[string]string{
+							"file_name":      "test.png",
+							"directory_type": "OTHER",
+							"type":           "FULL",
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "DirectoryType", "oneof")
+					})
 				})
 			})
 
 			Context("Type field", func() {
-				It("should return 400 for missing Type", func() {
-					payload := map[string]string{
-						"file_name":      "test.png",
-						"directory_type": "JOURNAL",
-					}
-					req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "Type", "required")
-				})
+				Context("Allowed Values", func() {
+					It("should accept FULL type", func() {
+						osManager.EXPECT().Screenshot(mock.Anything, kohan.ScreenshotDirectoryTypeJournal, "test.png", kohan.ScreenshotTypeFull, "").Return(screenShotTmpDir+"/test.png", nil)
+						payload := kohan.ScreenshotRequest{
+							FileName:      "test.png",
+							DirectoryType: kohan.ScreenshotDirectoryTypeJournal,
+							Type:          kohan.ScreenshotTypeFull,
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						var envelope common.Envelope[kohan.ScreenshotResponse]
+						util.AssertSuccess(w, http.StatusOK, &envelope)
+					})
 
-				It("should return 400 for invalid Type", func() {
-					payload := map[string]string{
-						"file_name":      "test.png",
-						"directory_type": "JOURNAL",
-						"type":           "INVALID",
-					}
-					req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "Type", "oneof")
+					It("should accept REGION type", func() {
+						osManager.EXPECT().Screenshot(mock.Anything, kohan.ScreenshotDirectoryTypeJournal, "test.png", kohan.ScreenshotTypeRegion, "").Return(screenShotTmpDir+"/test.png", nil)
+						payload := kohan.ScreenshotRequest{
+							FileName:      "test.png",
+							DirectoryType: kohan.ScreenshotDirectoryTypeJournal,
+							Type:          kohan.ScreenshotTypeRegion,
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						var envelope common.Envelope[kohan.ScreenshotResponse]
+						util.AssertSuccess(w, http.StatusOK, &envelope)
+					})
+				})
+				Context("Bad Values", func() {
+					It("should return 400 for missing Type", func() {
+						payload := map[string]string{
+							"file_name":      "test.png",
+							"directory_type": "JOURNAL",
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Type", "required")
+					})
+
+					It("should return 400 for invalid Type", func() {
+						payload := map[string]string{
+							"file_name":      "test.png",
+							"directory_type": "JOURNAL",
+							"type":           "INVALID",
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Type", "oneof")
+					})
 				})
 			})
 
 			Context("Window field", func() {
-				It("should return 400 for Window exceeding max length", func() {
-					payload := map[string]string{
-						"file_name":      "test.png",
-						"directory_type": "JOURNAL",
-						"type":           "FULL",
-						"window":         "this_is_a_very_long_window_name_exceeding_thirty",
-					}
-					req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "Window", "max")
+				Context("Allowed Values", func() {
+					It("should accept empty Window", func() {
+						osManager.EXPECT().Screenshot(mock.Anything, kohan.ScreenshotDirectoryTypeJournal, "test.png", kohan.ScreenshotTypeFull, "").Return(screenShotTmpDir+"/test.png", nil)
+						payload := kohan.ScreenshotRequest{
+							FileName:      "test.png",
+							DirectoryType: kohan.ScreenshotDirectoryTypeJournal,
+							Type:          kohan.ScreenshotTypeFull,
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						var envelope common.Envelope[kohan.ScreenshotResponse]
+						util.AssertSuccess(w, http.StatusOK, &envelope)
+					})
+
+					It("should accept valid Window text", func() {
+						osManager.EXPECT().Screenshot(mock.Anything, kohan.ScreenshotDirectoryTypeJournal, "test.png", kohan.ScreenshotTypeFull, "TradingView").Return(screenShotTmpDir+"/test.png", nil)
+						payload := kohan.ScreenshotRequest{
+							FileName:      "test.png",
+							DirectoryType: kohan.ScreenshotDirectoryTypeJournal,
+							Type:          kohan.ScreenshotTypeFull,
+							Window:        "TradingView",
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						var envelope common.Envelope[kohan.ScreenshotResponse]
+						util.AssertSuccess(w, http.StatusOK, &envelope)
+					})
+				})
+				Context("Bad Values", func() {
+					It("should return 400 for Window exceeding max length", func() {
+						payload := map[string]string{
+							"file_name":      "test.png",
+							"directory_type": "JOURNAL",
+							"type":           "FULL",
+							"window":         "this_is_a_very_long_window_name_exceeding_thirty",
+						}
+						req, w = util.CreateTestRequest("POST", "/v1/api/os/screenshot", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Window", "max")
+					})
 				})
 			})
 		})

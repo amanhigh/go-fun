@@ -74,7 +74,7 @@ function statusAction(pg: JournalDetailPageProvider, submitter: Submitter, targe
 	return {
 		id: `status-${targetStatus.toLowerCase()}`,
 		isActive: () => true,
-		display: { text: spec.text, class: spec.class },
+		display: { text: pg().present.status.label(targetStatus), class: spec.class },
 		apply: () => applyStatusOnly(submitter, pg, targetStatus, `Marked as ${spec.text}`),
 	};
 }
