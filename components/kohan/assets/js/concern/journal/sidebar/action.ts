@@ -84,12 +84,6 @@ export function NewReviewBarConcern(pg: JournalDetailPageProvider) {
 	return {
 		submitter: createSubmitter(),
 
-		show(): boolean {
-			const journal = pg().journal.detail;
-			if (!journal) return false;
-			return isTerminalStatus(journal);
-		},
-
 		actions(): QuickAction[] {
 			const journal = pg().journal.detail;
 			if (!journal) return [];

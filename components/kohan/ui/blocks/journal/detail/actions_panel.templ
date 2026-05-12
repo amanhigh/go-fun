@@ -19,7 +19,7 @@ templ JournalDetailActionsPanel() {
 }
 
 templ journalDetailReviewCard() {
-	<div x-show="sidebar.reviewBar.show()">
+	<div>
 		@journalDetailActionBar()
 		@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reviewBar.submitter"})
 	</div>

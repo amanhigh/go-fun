@@ -30,7 +30,6 @@ export type SidebarStateConcern = {
 
 export type ReviewBarConcern = {
 	submitter: Submitter;
-	show(): boolean;
 	actions(): QuickAction[];
 };
 
