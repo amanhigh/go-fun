@@ -1,6 +1,6 @@
 set shell := ["bash", "-cu"]
 
-import '../../../.ust/lib.just'
+import '../../../.just/lib.just'
 
 url := "http://localhost:8080/v1"
 duration := "5s"

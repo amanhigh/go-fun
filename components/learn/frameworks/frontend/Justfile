@@ -1,7 +1,7 @@
 set shell := ["bash", "-cu"]
 
 # Import shared library
-import '../../../../.ust/lib.just'
+import '../../../../.just/lib.just'
 
 binary := "/tmp/ui-demo"
 frontend_dir := justfile_directory()
