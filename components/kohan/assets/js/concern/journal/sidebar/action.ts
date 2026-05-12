@@ -9,14 +9,30 @@ function localToday(pg: JournalDetailPageProvider): string {
 	return pg().present.date.humanDate(new Date());
 }
 
-// ===== Type Helpers =====
+// ===== Transition Table =====
 
-function isTaken(journal: Journal): boolean {
-	return journal.type === JournalType.TAKEN;
-}
+const statusTransitions: Record<string, Record<string, JournalStatus[]>> = {
+	[JournalType.TAKEN]: {
+		[JournalStatus.SET]: [JournalStatus.RUNNING],
+		[JournalStatus.RUNNING]: [JournalStatus.SUCCESS, JournalStatus.FAIL],
+		[JournalStatus.SUCCESS]: [JournalStatus.SET],
+		[JournalStatus.FAIL]: [JournalStatus.JUST_LOSS],
+		[JournalStatus.MISSED]: [JournalStatus.JUST_LOSS],
+		[JournalStatus.JUST_LOSS]: [JournalStatus.SET],
+	},
+	[JournalType.REJECTED]: {
+		[JournalStatus.SET]: [JournalStatus.RUNNING],
+		[JournalStatus.RUNNING]: [JournalStatus.FAIL],
+		[JournalStatus.FAIL]: [JournalStatus.SUCCESS, JournalStatus.BROKEN],
+		[JournalStatus.SUCCESS]: [JournalStatus.FAIL],
+		[JournalStatus.BROKEN]: [JournalStatus.FAIL],
+	},
+};
 
-function isRejected(journal: Journal): boolean {
-	return journal.type === JournalType.REJECTED;
+function nextStatuses(journal: Journal): JournalStatus[] {
+	const typeTransitions = statusTransitions[journal.type];
+	if (!typeTransitions) return [];
+	return typeTransitions[journal.status] ?? [];
 }
 
 // ===== Display Helpers =====
@@ -27,30 +43,6 @@ function reviewDisplay(journal: Journal): DisplaySpec {
 		text: hasReview ? 'Unreviewed' : 'Reviewed',
 		class: hasReview ? 'journal-review-toggle-pending' : 'journal-review-toggle-reviewed',
 	};
-}
-
-function runningDisplay(): DisplaySpec {
-	return { text: 'Running', class: 'journal-quick-status-running' };
-}
-
-function successDisplay(): DisplaySpec {
-	return { text: 'Success', class: 'journal-quick-status-success' };
-}
-
-function failDisplay(): DisplaySpec {
-	return { text: 'Fail', class: 'journal-quick-status-fail' };
-}
-
-function justLossDisplay(): DisplaySpec {
-	return { text: 'Just Loss', class: 'journal-quick-status-loss' };
-}
-
-function brokenDisplay(): DisplaySpec {
-	return { text: 'Broken', class: 'journal-quick-status-broken' };
-}
-
-function setDisplay(): DisplaySpec {
-	return { text: 'Set', class: 'journal-quick-status-set' };
 }
 
 // ===== Async Action Handlers =====
@@ -75,6 +67,18 @@ async function applyStatusOnly(submitter: Submitter, pg: JournalDetailPageProvid
 	}, { success: successMsg });
 }
 
+// ===== Action Builders =====
+
+function statusAction(pg: JournalDetailPageProvider, submitter: Submitter, targetStatus: JournalStatus): QuickAction {
+	const spec = pg().present.status.spec(targetStatus);
+	return {
+		id: `status-${targetStatus.toLowerCase()}`,
+		isActive: () => true,
+		display: { text: spec.text, class: spec.class },
+		apply: () => applyStatusOnly(submitter, pg, targetStatus, `Marked as ${spec.text}`),
+	};
+}
+
 // ===== Exported Concern =====
 
 export function NewReviewBarConcern(pg: JournalDetailPageProvider) {
@@ -86,36 +90,8 @@ export function NewReviewBarConcern(pg: JournalDetailPageProvider) {
 			if (!journal) return [];
 
 			return [
-				// Every journal gets the review toggle (reviewed_at only).
 				{ id: 'review-toggle', isActive: () => true, display: reviewDisplay(journal), apply: () => toggleReviewedAt(this.submitter, pg) },
-
-				// SET → RUNNING (both TAKEN and REJECTED).
-				{ id: 'status-running', isActive: () => journal.status === JournalStatus.SET, display: runningDisplay(), apply: () => applyStatusOnly(this.submitter, pg, JournalStatus.RUNNING, 'Marked as Running') },
-
-				// TAKEN: RUNNING → SUCCESS
-				// REJECTED: FAIL → SUCCESS
-				{ id: 'status-success', isActive: () =>
-					(isTaken(journal) && journal.status === JournalStatus.RUNNING) ||
-					(isRejected(journal) && journal.status === JournalStatus.FAIL),
-					display: successDisplay(), apply: () => applyStatusOnly(this.submitter, pg, JournalStatus.SUCCESS, 'Marked as Success') },
-
-				// TAKEN: RUNNING → FAIL
-				// REJECTED: RUNNING → FAIL, SUCCESS → FAIL, BROKEN → FAIL
-				{ id: 'status-fail', isActive: () =>
-					(isTaken(journal) && journal.status === JournalStatus.RUNNING) ||
-					(isRejected(journal) && (journal.status === JournalStatus.RUNNING || journal.status === JournalStatus.SUCCESS || journal.status === JournalStatus.BROKEN)),
-					display: failDisplay(), apply: () => applyStatusOnly(this.submitter, pg, JournalStatus.FAIL, 'Marked as Fail') },
-
-				// TAKEN: FAIL / MISSED → JUST_LOSS (SUCCESS goes to SET instead)
-				{ id: 'status-just-loss', isActive: () =>
-					isTaken(journal) && ([JournalStatus.FAIL, JournalStatus.MISSED] as JournalStatus[]).includes(journal.status),
-					display: justLossDisplay(), apply: () => applyStatusOnly(this.submitter, pg, JournalStatus.JUST_LOSS, 'Marked as Just Loss') },
-
-				// TAKEN: SUCCESS → SET, JUST_LOSS → SET (full cycle reset)
-				{ id: 'status-set', isActive: () => isTaken(journal) && (journal.status === JournalStatus.SUCCESS || journal.status === JournalStatus.JUST_LOSS), display: setDisplay(), apply: () => applyStatusOnly(this.submitter, pg, JournalStatus.SET, 'Reset to Set') },
-
-				// REJECTED: FAIL → BROKEN
-				{ id: 'status-broken', isActive: () => isRejected(journal) && journal.status === JournalStatus.FAIL, display: brokenDisplay(), apply: () => applyStatusOnly(this.submitter, pg, JournalStatus.BROKEN, 'Marked as Broken') },
+				...nextStatuses(journal).map((target) => statusAction(pg, this.submitter, target)),
 			].filter((action) => action.isActive());
 		},
 	};
