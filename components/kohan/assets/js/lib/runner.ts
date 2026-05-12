@@ -20,6 +20,7 @@ export interface Runner {
 	hasError(): boolean;
 	setError(message: string): void;
 	setSuccess(message: string): void;
+	clearMessage(): void;
 
 	tryRun<T>(action: () => Promise<T>): Promise<RunOutcome<T>>;
 }
@@ -54,12 +55,16 @@ export function createRunnerState(): Runner {
 			this.variant = successVariant;
 		},
 
+		clearMessage(this: Runner) {
+			this.message = '';
+			this.variant = '';
+		},
+
 		async tryRun<T>(this: Runner, action: () => Promise<T>): Promise<RunOutcome<T>> {
 			if (this.busy) return { success: false };
 
 			this.busy = true;
-			this.message = '';
-			this.variant = '';
+			this.clearMessage();
 
 			try {
 				const result = await action();

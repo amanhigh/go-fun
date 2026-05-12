@@ -4,6 +4,7 @@ import type { JournalType, JournalStatus, JournalSequence, JournalSortBy, Journa
 import type { Loader } from '../../lib/loader';
 import type { Collection } from '../core/collection';
 import type { JournalPageBase, PageProvider } from './page';
+import type { QuickConcern } from '../core/quick';
 
 // ===== Main Page Composition =====
 
@@ -12,6 +13,7 @@ export type JournalPage = JournalPageBase & {
 	filterUrl: JournalFilterUrlConcern;
 	pagination: PaginationConcern;
 	presets: PresetConcern;
+	quick: QuickConcern;
 	table: JournalTableConcern;
 };
 
@@ -65,12 +67,11 @@ export type JournalFilterConcern = JournalFilterValues & {
 	datePreset: DatePresetName;
 	clear(): void;
 	hasActiveState(): boolean;
-	toggleType(): void;
-	typeToggle(): { label: string; className: string; nextType: JournalType | '' };
 	toggleSort(field: JournalSortBy): void;
 	applyFilters(): void;
 	applyManualFilters(): void;
 	clearFilters(): void;
+	applyCreatedDate(createdAt: string): void;
 };
 
 export type JournalFilterUrlConcern = {

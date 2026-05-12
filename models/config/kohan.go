@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/caarlos0/env/v6"
 )
@@ -26,8 +27,10 @@ type DariusConfig struct {
 }
 
 type KohanConfig struct {
-	Tax    TaxConfig
-	Barkat BarkatConfig
+	Tax            TaxConfig
+	Barkat         BarkatConfig
+	Server         HttpServerConfig
+	OSWaitInterval time.Duration `env:"KOHAN_OS_WAIT_INTERVAL" envDefault:"1m"`
 }
 
 // BarkatConfig defines configuration for the Barkat Journal Explorer
@@ -106,6 +109,8 @@ func NewKohanConfig() (config KohanConfig, err error) {
 	applyTaxPaths(&config.Tax, homeDir)
 	config.Barkat.DbPath = replaceHome(config.Barkat.DbPath, homeDir)
 	config.Barkat.ScreenshotPath = replaceHome(config.Barkat.ScreenshotPath, homeDir)
+
+	config.Server.Name = "kohan"
 
 	return
 }

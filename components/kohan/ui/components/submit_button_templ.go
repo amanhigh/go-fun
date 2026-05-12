@@ -16,6 +16,8 @@ type SubmitButtonProps struct {
 	BusyExpr     string
 	DisabledExpr string
 	OnClickExpr  string
+	// Class sets the button CSS class explicitly. Must be provided by the caller.
+	Class string
 }
 
 func SubmitButton(props SubmitButtonProps) templ.Component {
@@ -42,7 +44,7 @@ func SubmitButton(props SubmitButtonProps) templ.Component {
 		templ_7745c5c3_Err = button.Button(button.Props{
 			Variant: button.VariantOutline,
 			Type:    button.TypeButton,
-			Class:   "w-full",
+			Class:   props.Class,
 			Attributes: templ.Attributes{
 				"x-on:click":      props.OnClickExpr,
 				"x-bind:disabled": props.DisabledExpr,

@@ -62,7 +62,7 @@ func JournalDetailReviewPanel() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = commondetail.JournalDetailSection("Review", "Journal Review", "sidebar.state.reviewOpen", "sidebar.state.setReviewOpen($el.open)").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = commondetail.JournalDetailSection("Review", "Face your trade. No hiding.", "sidebar.state.reviewOpen", "sidebar.state.setReviewOpen($el.open)").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -127,7 +127,7 @@ func journalDetailQueueCard() templ.Component {
 						}()
 					}
 					ctx = templ.InitializeContext(ctx)
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "To Review ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "The Lineup ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -259,7 +259,7 @@ func journalDetailNoteCard() templ.Component {
 						}()
 					}
 					ctx = templ.InitializeContext(ctx)
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "Note ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "Speak Now ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -308,6 +308,7 @@ func journalDetailNoteCard() templ.Component {
 					BusyExpr:     "sidebar.noteForm.submitter.isBusy()",
 					DisabledExpr: "sidebar.noteForm.submitter.isBusy() || !sidebar.noteForm.canSubmit()",
 					OnClickExpr:  "sidebar.noteForm.submit()",
+					Class:        "w-full",
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

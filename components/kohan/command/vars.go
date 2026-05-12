@@ -1,7 +1,5 @@
 package command
 
-import "time"
-
 var (
 	cluster string
 	command string
@@ -10,9 +8,6 @@ var (
 	parallelism = -1
 	index       = -1
 	endIndex    = -1
-
-	// Auto
-	wait = time.Minute
 
 	// Darius
 	makeFileDir    = "/home/aman/Projects/go-fun/Kubernetes/"

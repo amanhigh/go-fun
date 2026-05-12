@@ -361,7 +361,7 @@ function studentPage() {
     },
 
     async initData() {
-      // BUG: Grade Filter is not properly setup.
+      // TODO: Grade Filter is not properly setup.
       this.urlToFilter();
       await Promise.all([this.listStudents(), this.loadGradeOptions()]);
     },

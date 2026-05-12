@@ -77,6 +77,9 @@ templ JournalDetailReasonTags() {
 		<template x-for="tag in sidebar.tags.reason()" x-bind:key="tag.id">
 			@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, Class: "rounded-full font-semibold", TextExpr: "present.tag.label(tag)"})
 		</template>
+		<template x-for="tag in sidebar.tags.management()" x-bind:key="tag.id">
+			@components.FilterChip(components.FilterChipProps{Tone: components.ToneViolet, Class: "rounded-full font-semibold", TextExpr: "present.tag.label(tag)"})
+		</template>
 	</div>
 }
 

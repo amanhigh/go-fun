@@ -5,8 +5,7 @@ github.com/KyleBanks/depth v1.2.1/go.mod h1:jzSb9d0L43HxTQfT+oSA1EEp2q+ne2uh6Xge
 github.com/Oudwins/tailwind-merge-go v0.2.0 h1:rtVHgYmLwwae4P+K6//ceRuUdyz3Bny6fo4664fOEmo=
 github.com/PuerkitoBio/goquery v1.8.1 h1:uQxhNlArOIdbrH1tr0UXwdVFgDcZDrZVdcpygAcwmWM=
 github.com/PuerkitoBio/goquery v1.8.1/go.mod h1:Q8ICL1kNUJ2sXGoAhPGUdYDJvgQgHzJsnnd3H7Ho5jQ=
-github.com/a-h/templ v0.3.1001 h1:yHDTgexACdJttyiyamcTHXr2QkIeVF1MukLy44EAhMY=
-github.com/a-h/templ v0.3.1001/go.mod h1:oCZcnKRf5jjsGpf2yELzQfodLphd2mwecwG4Crk5HBo=
+github.com/a-h/templ v0.3.1020 h1:ypAT/L5ySWEnZ6Zft/5yfoWXYYkhFNvEFOeeqecg4tw=
 github.com/amanhigh/go-fun/common v1.0.1 h1:n9NPgrC9RDuUQ7bq3scwA1GakKB16Pae+Dhy2lxoaWY=
 github.com/amanhigh/go-fun/common v1.0.1/go.mod h1:/IbnPhfHw6LPz2z34EcVkJeqehi86zZTNpWcdrLGI8A=
 github.com/amanhigh/go-fun/models v1.0.0 h1:sLtPVt+UFgfL4hDDFboPNSh+rPoBn5HZc309H9KFvik=

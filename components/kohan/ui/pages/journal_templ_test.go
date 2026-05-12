@@ -44,13 +44,16 @@ var _ = Describe("Journal Page Tests", func() {
 	})
 
 	Context("Filter Flow", func() {
-		It("should wire quick date and type actions", func() {
+		It("should wire quick date, type, and status actions", func() {
 			Expect(html).To(ContainSubstring("applyCreatedPreset"))
 			Expect(html).To(ContainSubstring("last7"))
 			Expect(html).To(ContainSubstring("last30"))
-			Expect(html).To(ContainSubstring("toggleType()"))
-			Expect(html).To(ContainSubstring("typeToggle().label"))
-			Expect(html).To(ContainSubstring("typeToggle().className"))
+			Expect(html).To(ContainSubstring("quick.type.toggle()"))
+			Expect(html).To(ContainSubstring("quick.type.label"))
+			Expect(html).To(ContainSubstring("quick.type.className"))
+			Expect(html).To(ContainSubstring("quick.status.toggle()"))
+			Expect(html).To(ContainSubstring("quick.status.label"))
+			Expect(html).To(ContainSubstring("quick.status.className"))
 		})
 
 		It("should wire review preset actions", func() {
@@ -68,6 +71,8 @@ var _ = Describe("Journal Page Tests", func() {
 			Expect(html).To(ContainSubstring(`present.type.label(filter.type)`))
 			Expect(html).To(ContainSubstring(`present.status.label(filter.status)`))
 			Expect(html).To(ContainSubstring(`present.sequence.label(filter.sequence)`))
+			Expect(html).To(ContainSubstring("filter.createdAfter === filter.createdBefore"))
+			Expect(html).To(ContainSubstring("&#39;📅 Date: &#39; + filter.createdAfter"))
 		})
 	})
 
@@ -76,6 +81,10 @@ var _ = Describe("Journal Page Tests", func() {
 			Expect(html).To(ContainSubstring("Ticker"))
 			Expect(html).To(ContainSubstring("Sequence"))
 			Expect(html).To(ContainSubstring("Created"))
+		})
+
+		It("should wire created date click to apply exact-date filter", func() {
+			Expect(html).To(ContainSubstring("filter.applyCreatedDate(journal.created_at)"))
 		})
 
 		It("should render journal row integration points", func() {

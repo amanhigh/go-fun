@@ -1,10 +1,25 @@
 package components
 
+import "github.com/templui/templui/components/button"
+
 type CellLinkProps struct {
-	HrefExpr string
-	TextExpr string
+	HrefExpr    string
+	OnClickExpr string
+	TextExpr    string
 }
 
 templ CellLink(props CellLinkProps) {
-	<a class="font-medium text-sky-700 hover:text-sky-900 hover:underline" x-bind:href={ props.HrefExpr } x-text={ props.TextExpr }></a>
+	if props.HrefExpr != "" {
+		<a class="font-medium text-sky-700 hover:text-sky-900 hover:underline" x-bind:href={ props.HrefExpr } x-text={ props.TextExpr }></a>
+	} else {
+		@button.Button(button.Props{
+			Variant: button.VariantLink,
+			Size:    button.SizeSm,
+			Class:   "font-medium text-sky-700 hover:text-sky-900 p-0 h-auto",
+			Attributes: templ.Attributes{
+				"x-text":      props.TextExpr,
+				"x-on:click":  props.OnClickExpr,
+			},
+		})
+	}
 }

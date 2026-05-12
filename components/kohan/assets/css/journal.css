@@ -145,18 +145,6 @@
 
   /* --- Journal List Filter Controls --- */
 
-  .journal-type-toggle-taken {
-    @apply border-rose-300/70 bg-rose-100/60 text-rose-800 hover:bg-rose-200/70;
-  }
-
-  .journal-type-toggle-rejected {
-    @apply border-violet-300/70 bg-violet-100/60 text-violet-800 hover:bg-violet-200/70;
-  }
-
-  .journal-type-toggle-all {
-    @apply border-slate-300/70 bg-slate-100/70 text-slate-700 hover:bg-slate-200/80;
-  }
-
   /* --- Date Presets --- */
 
   .journal-date-preset-today {
@@ -193,14 +181,6 @@
 
   .journal-review-toggle-reviewed {
     @apply border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 focus:border-emerald-400 focus:ring-emerald-200;
-  }
-
-  .journal-quick-status-loss {
-    @apply border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100 focus:border-rose-400 focus:ring-rose-200;
-  }
-
-  .journal-quick-status-broken {
-    @apply border-violet-300 bg-violet-50 text-violet-800 hover:bg-violet-100 focus:border-violet-400 focus:ring-violet-200;
   }
 
   /* --- Journal Management Tag Controls --- */

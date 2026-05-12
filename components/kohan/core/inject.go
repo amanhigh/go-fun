@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
@@ -18,10 +17,10 @@ import (
 // KohanInterface defines the public API for the Kohan dependency injection system
 type KohanInterface interface {
 	GetDariusApp(cfg config.DariusConfig) (*DariusV1, error)
-	GetAutoManager(wait time.Duration) manager.AutoManagerInterface
+	GetOSManager() manager.OSManagerInterface
 	GetTaxManager() (manager.TaxManager, error)
 	GetBrokerageManager() (manager.BrokerageManager, error)
-	GetKohanServer(port int, wait time.Duration) (util.HttpServer, error)
+	GetKohanServer() (util.HttpServer, error)
 }
 
 // =============================================================================
@@ -53,20 +52,20 @@ func GetKohanInterface() KohanInterface {
 // =============================================================================
 // These methods implement the KohanInterface and resolve dependencies from the injector
 
-func (ki *KohanInjector) GetAutoManager(wait time.Duration) manager.AutoManagerInterface {
-	return manager.NewAutoManager(wait, ki.config.Barkat.ScreenshotPath)
+func (ki *KohanInjector) GetOSManager() manager.OSManagerInterface {
+	return manager.NewOSManager(ki.config.OSWaitInterval, ki.config.Barkat.ScreenshotPath)
 }
 
-func (ki *KohanInjector) GetKohanServer(port int, wait time.Duration) (util.HttpServer, error) {
-	autoManager := ki.GetAutoManager(wait)
+func (ki *KohanInjector) GetKohanServer() (util.HttpServer, error) {
+	osManager := ki.GetOSManager()
 
 	// Register all dependencies
-	ki.registerOSDependencies(autoManager)
+	ki.registerOSDependencies(osManager)
 	ki.registerPortalDependencies()
 	if err := ki.registerJournalDependencies(); err != nil {
 		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)
 	}
-	ki.registerServerDependencies(port)
+	ki.registerServerDependencies(ki.config.Server)
 
 	// Resolve server from DI
 	var server util.HttpServer
@@ -117,10 +116,8 @@ func (ki *KohanInjector) GetDariusApp(cfg config.DariusConfig) (*DariusV1, error
 // =============================================================================
 // These methods register dependencies with the container
 
-func (ki *KohanInjector) registerServerDependencies(port int) {
+func (ki *KohanInjector) registerServerDependencies(cfg config.HttpServerConfig) {
 	container.MustSingleton(ki.di, util.NewGracefulShutdown)
-	container.MustSingleton(ki.di, func() config.HttpServerConfig {
-		return config.HttpServerConfig{Name: "kohan", Port: port}
-	})
+	container.MustSingleton(ki.di, func() config.HttpServerConfig { return cfg })
 	container.MustSingleton(ki.di, provideHttpServer)
 }

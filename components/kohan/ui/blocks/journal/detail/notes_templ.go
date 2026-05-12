@@ -62,7 +62,7 @@ func JournalDetailNotes() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = components.SectionHeader(components.SectionHeaderProps{Title: "Notes", Description: "Add notes for this journal and delete existing notes below."}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = components.SectionHeader(components.SectionHeaderProps{Title: "The Record", Description: "Every word stays."}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

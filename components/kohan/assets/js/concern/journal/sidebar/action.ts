@@ -9,34 +9,45 @@ function localToday(pg: JournalDetailPageProvider): string {
 	return pg().present.date.humanDate(new Date());
 }
 
+// ===== Transition Table =====
+
+const statusTransitions: Record<string, Record<string, JournalStatus[]>> = {
+	[JournalType.TAKEN]: {
+		[JournalStatus.SET]: [JournalStatus.RUNNING, JournalStatus.MISSED],
+		[JournalStatus.RUNNING]: [JournalStatus.SUCCESS, JournalStatus.FAIL],
+		[JournalStatus.SUCCESS]: [JournalStatus.SET],
+		[JournalStatus.FAIL]: [JournalStatus.JUST_LOSS],
+		[JournalStatus.MISSED]: [JournalStatus.SET],
+		[JournalStatus.JUST_LOSS]: [JournalStatus.SET],
+	},
+	[JournalType.REJECTED]: {
+		[JournalStatus.SET]: [JournalStatus.RUNNING],
+		[JournalStatus.RUNNING]: [JournalStatus.FAIL],
+		[JournalStatus.FAIL]: [JournalStatus.SUCCESS, JournalStatus.BROKEN],
+		[JournalStatus.SUCCESS]: [JournalStatus.FAIL],
+		[JournalStatus.BROKEN]: [JournalStatus.FAIL],
+	},
+};
+
+function nextStatuses(journal: Journal): JournalStatus[] {
+	const typeTransitions = statusTransitions[journal.type];
+	if (!typeTransitions) return [];
+	return typeTransitions[journal.status] ?? [];
+}
+
 // ===== Display Helpers =====
 
 function reviewDisplay(journal: Journal): DisplaySpec {
 	const hasReview = !!journal.reviewed_at;
 	return {
-		text: hasReview ? 'Mark Pending' : 'Mark Reviewed',
+		text: hasReview ? 'Unreviewed' : 'Reviewed',
 		class: hasReview ? 'journal-review-toggle-pending' : 'journal-review-toggle-reviewed',
 	};
 }
 
-function statusDisplay(journal: Journal): DisplaySpec {
-	switch (journal.type) {
-		case JournalType.TAKEN: return { text: 'Mark Just Loss', class: 'journal-quick-status-loss' };
-		default: return { text: 'Mark Broken', class: 'journal-quick-status-broken' };
-	}
-}
-
-// ===== Active Checks =====
-
-function isStatusActive(journal: Journal): boolean {
-	switch (journal.type) {
-		case JournalType.TAKEN: return journal.status !== JournalStatus.JUST_LOSS;
-		default: return journal.status !== JournalStatus.BROKEN;
-	}
-}
-
 // ===== Async Action Handlers =====
 
+/** Reviewed/Unreviewed toggle — changes ONLY reviewed_at, never status. */
 async function toggleReviewedAt(submitter: Submitter, pg: JournalDetailPageProvider): Promise<void> {
 	const journal = pg().journal.detail!;
 	const reviewedAt = journal.reviewed_at ? null : localToday(pg);
@@ -44,26 +55,33 @@ async function toggleReviewedAt(submitter: Submitter, pg: JournalDetailPageProvi
 	await submitter.run(async () => {
 		const envelope = await pg().client.updateReview(pg().journal.detail!.id, { reviewed_at: reviewedAt });
 		journal.reviewed_at = envelope.data.reviewed_at;
-		journal.status = envelope.data.status;
+		// Intentionally NOT updating journal.status — review toggle only touches reviewed_at.
 	}, { success: successMsg });
 }
 
-async function applyReviewStatus(submitter: Submitter, pg: JournalDetailPageProvider): Promise<void> {
-	const journal = pg().journal.detail!;
-	const isTaken = journal.type === JournalType.TAKEN;
-	const targetStatus = isTaken ? JournalStatus.JUST_LOSS : JournalStatus.BROKEN;
-
+/** Status-only update — changes ONLY status, never reviewed_at. */
+async function applyStatusOnly(submitter: Submitter, pg: JournalDetailPageProvider, targetStatus: JournalStatus, successMsg: string): Promise<void> {
 	await submitter.run(async () => {
-		const envelope = await pg().client.updateReview(pg().journal.detail!.id, { status: targetStatus, reviewed_at: localToday(pg) });
-		journal.reviewed_at = envelope.data.reviewed_at;
-		journal.status = envelope.data.status;
-		await pg().sidebar.reviewQueue.load();
-	}, { success: `${isTaken ? 'Mark Just Loss' : 'Mark Broken'} applied and journal marked reviewed.` });
+		const envelope = await pg().client.updateReview(pg().journal.detail!.id, { status: targetStatus });
+		pg().journal.detail!.status = envelope.data.status;
+	}, { success: successMsg });
+}
+
+// ===== Action Builders =====
+
+function statusAction(pg: JournalDetailPageProvider, submitter: Submitter, targetStatus: JournalStatus): QuickAction {
+	const spec = pg().present.status.spec(targetStatus);
+	return {
+		id: `status-${targetStatus.toLowerCase()}`,
+		isActive: () => true,
+		display: { text: pg().present.status.label(targetStatus), class: spec.class },
+		apply: () => applyStatusOnly(submitter, pg, targetStatus, `Marked as ${spec.text}`),
+	};
 }
 
 // ===== Exported Concern =====
 
-export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
+export function NewReviewBarConcern(pg: JournalDetailPageProvider) {
 	return {
 		submitter: createSubmitter(),
 
@@ -73,7 +91,7 @@ export function NewReviewActionsConcern(pg: JournalDetailPageProvider) {
 
 			return [
 				{ id: 'review-toggle', isActive: () => true, display: reviewDisplay(journal), apply: () => toggleReviewedAt(this.submitter, pg) },
-				{ id: 'review-status', isActive: () => isStatusActive(journal), display: statusDisplay(journal), apply: () => applyReviewStatus(this.submitter, pg) },
+				...nextStatuses(journal).map((target) => statusAction(pg, this.submitter, target)),
 			].filter((action) => action.isActive());
 		},
 	};

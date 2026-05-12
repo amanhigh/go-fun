@@ -4,9 +4,6 @@ package manager
 // TagManager provides business logic for journal tag operations.
 // Tags represent categorized labels (reason/management) attached to entries.
 
-// HACK: No DB backup strategy for journal SQLite file at data/journals.db
-// Consider adding automated backup to object storage (S3-compatible) with retention
-
 import (
 	"context"
 
@@ -37,7 +34,7 @@ func NewTagManager(journalMgr JournalManager, repo repository.TagRepository) *Ta
 }
 
 func (m *TagManagerImpl) CreateTag(ctx context.Context, journalExternalId string, tag barkat.Tag) (*barkat.Tag, common.HttpError) {
-	// FIXME: Add explicit allowed-values validation for tags and overrides before persisting
+	// TODO: Add explicit allowed-values validation for tags and overrides before persisting
 	// - Validate tag value is in the allowed set (e.g., "dep", "nca", "oe", "ntr", "important")
 	// - Validate override value is in the allowed set (e.g., "loc", "egf", "loc1", "egf1")
 	// - Validate override is only provided for REASON type tags (not MANAGEMENT/DIRECTION)

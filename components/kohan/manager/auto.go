@@ -42,29 +42,28 @@ Support:
 -`
 )
 
-type AutoManagerInterface interface {
-	// HACK: Remove Unwanted Methods and Rename to OSManager.
+type OSManagerInterface interface {
 	Screenshot(ctx context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, common.HttpError)
 	RecordTicker(ctx context.Context, ticker string) common.HttpError
 	TryOpenTicker(ctx context.Context, ticker string)
 	MonitorInternetConnection(ctx context.Context)
 }
 
-type AutoManagerImpl struct {
+type OSManagerImpl struct {
 	wait           time.Duration
 	screenshotPath string
 }
 
-func NewAutoManager(wait time.Duration, screenshotPath string) AutoManagerInterface {
+func NewOSManager(wait time.Duration, screenshotPath string) OSManagerInterface {
 	// TODO: #C Move to Kohan Config and Inject directly via Kohan Injector.
-	return &AutoManagerImpl{
+	return &OSManagerImpl{
 		wait:           wait,
 		screenshotPath: screenshotPath,
 	}
 }
 
 // Copy existing implementations preserving comments but as methods
-func (a *AutoManagerImpl) Screenshot(_ context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, common.HttpError) {
+func (a *OSManagerImpl) Screenshot(_ context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, common.HttpError) {
 	if window != "" {
 		if err := tools.FocusWindow(window); err != nil {
 			return "", common.NewServerError(err)
@@ -93,7 +92,7 @@ func (a *AutoManagerImpl) Screenshot(_ context.Context, directoryType kohan.Scre
 
 // mapScreenshotError converts screenshot tool errors into the appropriate HttpError.
 // User aborts → 409 Conflict; genuine tool/framework failures → 500.
-func (a *AutoManagerImpl) mapScreenshotError(err error) common.HttpError {
+func (a *OSManagerImpl) mapScreenshotError(err error) common.HttpError {
 	if err == nil {
 		return nil
 	}
@@ -103,7 +102,7 @@ func (a *AutoManagerImpl) mapScreenshotError(err error) common.HttpError {
 	return common.NewServerError(err)
 }
 
-func (a *AutoManagerImpl) resolveDir(directoryType kohan.ScreenshotDirectoryType) string {
+func (a *OSManagerImpl) resolveDir(directoryType kohan.ScreenshotDirectoryType) string {
 	switch directoryType {
 	case kohan.ScreenshotDirectoryTypeDownload:
 		return defaultDownloadsDir()
@@ -122,7 +121,7 @@ func defaultDownloadsDir() string {
 	return filepath.Join(homeDir, "Downloads")
 }
 
-func (a *AutoManagerImpl) RecordTicker(_ context.Context, ticker string) common.HttpError {
+func (a *OSManagerImpl) RecordTicker(_ context.Context, ticker string) common.HttpError {
 	var err error
 	if err = tools.FocusWindow("TradingView"); err == nil {
 		log.Info().Str("Ticker", ticker).Msg("Recording Ticker")
@@ -142,7 +141,7 @@ func (a *AutoManagerImpl) RecordTicker(_ context.Context, ticker string) common.
 	return nil
 }
 
-func (a *AutoManagerImpl) takeScreenshots(ticker, path string) (err error) {
+func (a *OSManagerImpl) takeScreenshots(ticker, path string) (err error) {
 	for i := 4; i > 0; i-- {
 		if err = tools.SendKey("-k " + strconv.Itoa(i)); err == nil {
 			name := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format(DATE_FORMAT))
@@ -156,7 +155,7 @@ func (a *AutoManagerImpl) takeScreenshots(ticker, path string) (err error) {
 	return
 }
 
-func (a *AutoManagerImpl) recordTradeInfo(ticker, path string) (err error) {
+func (a *OSManagerImpl) recordTradeInfo(ticker, path string) (err error) {
 	var tradeInfo string
 	infoFile := fmt.Sprintf("%s/%s__%s.txt", path, ticker, time.Now().Format(DATE_FORMAT))
 	if tradeInfo, err = tools.PromptText(TRADE_INFO); err == nil {
@@ -176,13 +175,13 @@ func (a *AutoManagerImpl) recordTradeInfo(ticker, path string) (err error) {
 	return
 }
 
-func (a *AutoManagerImpl) sendNotification(ticker string) {
+func (a *OSManagerImpl) sendNotification(ticker string) {
 	if err := tools.Notify(zerolog.InfoLevel, "Recorded", ticker); err != nil {
 		log.Error().Err(err).Msg("Failed to send notification")
 	}
 }
 
-func (a *AutoManagerImpl) MonitorInternetConnection(_ context.Context) {
+func (a *OSManagerImpl) MonitorInternetConnection(_ context.Context) {
 	util.ScheduleJob(a.wait, func(_ bool) {
 		if tools.CheckInternetConnection() {
 			log.Info().Msg("Internet UP")
@@ -195,7 +194,7 @@ func (a *AutoManagerImpl) MonitorInternetConnection(_ context.Context) {
 	})
 }
 
-func (a *AutoManagerImpl) TryOpenTicker(_ context.Context, ticker string) {
+func (a *OSManagerImpl) TryOpenTicker(_ context.Context, ticker string) {
 	window, err := tools.GetHyperWindow()
 	if err == nil && window.Class == LOGSEQ_CLASS && window.Monitor == SIDE_MONITOR && window.Workspace.Name == MAIL_WORKSPACE {
 		if openErr := a.openTicker(ticker); openErr != nil {
@@ -212,7 +211,7 @@ func (a *AutoManagerImpl) TryOpenTicker(_ context.Context, ticker string) {
 	}
 }
 
-func (a *AutoManagerImpl) openTicker(ticker string) (err error) {
+func (a *OSManagerImpl) openTicker(ticker string) (err error) {
 	// Focus on the window named "TradingView"
 	log.Debug().Str("Ticker", ticker).Msg("OpenTicker")
 	if err = tools.FocusWindow("TradingView"); err == nil {
@@ -234,6 +233,6 @@ func (a *AutoManagerImpl) openTicker(ticker string) (err error) {
 	return
 }
 
-func (a *AutoManagerImpl) restartNetworkManager() {
+func (a *OSManagerImpl) restartNetworkManager() {
 	script.Exec("sudo systemctl restart NetworkManager").Wait()
 }

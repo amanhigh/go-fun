@@ -6,6 +6,7 @@ import { NewFilterConcern } from '../concern/journal/list/filter';
 import { NewPresetConcern } from '../concern/journal/list/presets';
 import { NewPaginationConcern } from '../concern/journal/list/pagination';
 import { NewTableConcern } from '../concern/journal/list/table';
+import { NewQuickConcern } from '../concern/quick/factory';
 import '../types/core/platform';
 
 function createJournalPageData() {
@@ -19,6 +20,7 @@ function createJournalPageData() {
 	page.presets = NewPresetConcern(pg);
 	page.filter = NewFilterConcern(pg);
 	page.filterUrl = NewFilterUrlConcern(pg);
+	page.quick = NewQuickConcern(pg);
 	page.init = function init(this: any) {
 		page = this;
 		this.filterUrl.urlToFilter();

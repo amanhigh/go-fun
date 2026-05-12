@@ -140,8 +140,8 @@ type ZoneMap map[string]Server
 
 // HttpServerConfig holds the minimal configuration needed to create a BaseHTTPServer.
 type HttpServerConfig struct {
-	Name string
-	Port int
+	Name string `env:"SERVER_NAME"`
+	Port int    `env:"SERVER_PORT" envDefault:"9001"`
 }
 
 func (s ZoneMap) GetUrl(zone, uri string) (url string, err error) {
