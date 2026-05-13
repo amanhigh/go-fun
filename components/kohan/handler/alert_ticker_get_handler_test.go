@@ -248,11 +248,6 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
-					It("should accept hyphen in symbol query", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=ABC-D", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusOK))
-					})
 					It("should return empty list for no symbol match", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=ZZZ", nil)
 						router.ServeHTTP(w, req)
@@ -273,6 +268,11 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 					})
 					It("should return 400 for symbol query with unsupported special character", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=MCIX@", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+					It("should return 400 for symbol query with hyphen", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=ABC-D", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})

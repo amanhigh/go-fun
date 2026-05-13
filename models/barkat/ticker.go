@@ -41,8 +41,8 @@ type AlertTicker struct {
 	Name      string    `gorm:"column:name;not null" json:"name" binding:"required,min=1,max=100,alert_name"`
 	Exchange  *string   `gorm:"column:exchange;index:idx_alert_ticker_exchange" json:"exchange" binding:"omitempty,min=1,max=10,alert_exchange"`
 	Ticker    string    `gorm:"-" json:"ticker,omitempty"`
-	CreatedAt time.Time `gorm:"column:created_at;not null" json:"created_at,omitempty"`
-	UpdatedAt time.Time `gorm:"column:updated_at;not null" json:"updated_at,omitempty"`
+	CreatedAt time.Time `gorm:"column:created_at;not null" json:"created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at;not null" json:"updated_at"`
 }
 
 // TableName maps AlertTicker to the PRD-defined alert_tickers table.

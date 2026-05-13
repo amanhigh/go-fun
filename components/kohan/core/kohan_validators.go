@@ -14,7 +14,7 @@ var (
 	// Ticker: uppercase A-Z, digits, dots, hyphens, ampersands (e.g., "TCS", "TCS.NS", "M&M")
 	tickerRegex = regexp.MustCompile(`^[A-Z0-9][A-Z0-9.\-&]*$`)
 	// Alert Symbol: alphanumeric first, then Investing-style symbol text.
-	alertSymbolRegex = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9 ._/=!-]*$`)
+	alertSymbolRegex = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._!]*$`)
 	// Alert Name: alphanumeric first, then sanitized display name characters.
 	alertNameRegex = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9 .&'()-]{0,99}$`)
 	// Ticker Exchange: uppercase letters, digits, dots, underscores only.

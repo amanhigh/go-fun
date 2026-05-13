@@ -20,8 +20,6 @@ import (
 	"gorm.io/gorm"
 )
 
-func tickerStringPtr(value string) *string { return &value }
-
 func decodeTickerCreateResponse(w *httptest.ResponseRecorder) barkat.Ticker {
 	var envelope common.Envelope[map[string]barkat.Ticker]
 	util.AssertSuccess(w, http.StatusCreated, &envelope)

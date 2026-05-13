@@ -166,12 +166,6 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
 						Expect(response.Symbol).To(Equal("MCIX50"))
 					})
-					It("should accept spaces after first character", func() {
-						payload := validAlertTickerPayload
-						payload.Symbol = "MC IX"
-						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(response.Symbol).To(Equal("MC IX"))
-					})
 					It("should accept dot", func() {
 						payload := validAlertTickerPayload
 						payload.Symbol = "MC.IX"
@@ -184,29 +178,11 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
 						Expect(response.Symbol).To(Equal("MC_IX"))
 					})
-					It("should accept slash", func() {
-						payload := validAlertTickerPayload
-						payload.Symbol = "MC/IX"
-						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(response.Symbol).To(Equal("MC/IX"))
-					})
-					It("should accept equals", func() {
-						payload := validAlertTickerPayload
-						payload.Symbol = "MC=IX"
-						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(response.Symbol).To(Equal("MC=IX"))
-					})
 					It("should accept exclamation", func() {
 						payload := validAlertTickerPayload
 						payload.Symbol = "MCIX!"
 						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
 						Expect(response.Symbol).To(Equal("MCIX!"))
-					})
-					It("should accept hyphen", func() {
-						payload := validAlertTickerPayload
-						payload.Symbol = "MC-IX"
-						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(response.Symbol).To(Equal("MC-IX"))
 					})
 				})
 				Context("Bad Values", func() {
@@ -241,6 +217,34 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 					It("should return 400 for symbol with tab or newline", func() {
 						payload := validAlertTickerPayload
 						payload.Symbol = "MC\tIX"
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Symbol", "alert_symbol")
+					})
+					It("should return 400 for symbol with space", func() {
+						payload := validAlertTickerPayload
+						payload.Symbol = "MC IX"
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Symbol", "alert_symbol")
+					})
+					It("should return 400 for symbol with slash", func() {
+						payload := validAlertTickerPayload
+						payload.Symbol = "MC/IX"
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Symbol", "alert_symbol")
+					})
+					It("should return 400 for symbol with equals", func() {
+						payload := validAlertTickerPayload
+						payload.Symbol = "MC=IX"
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Symbol", "alert_symbol")
+					})
+					It("should return 400 for symbol with hyphen", func() {
+						payload := validAlertTickerPayload
+						payload.Symbol = "MC-IX"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Symbol", "alert_symbol")
