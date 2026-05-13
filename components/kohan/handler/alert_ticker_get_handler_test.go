@@ -318,6 +318,11 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
+					It("should accept lowercase letters nse", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?exchange=nse", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
 					It("should accept digits in exchange code", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?exchange=NSE1", nil)
 						router.ServeHTTP(w, req)
@@ -342,11 +347,6 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 					})
 					It("should return 400 for exchange exceeding 10 characters", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?exchange="+strings.Repeat("A", 11), nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-					})
-					It("should return 400 for lowercase exchange", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?exchange=nse", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})

@@ -15,7 +15,7 @@ const (
 // Ticker represents a TradingView-side ticker imported from Barkat tickerRepo.
 type Ticker struct {
 	ID               uint64        `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
-	Ticker           string        `gorm:"column:tv_symbol;uniqueIndex;not null" json:"ticker" binding:"required,min=1,max=50,tv_ticker"`
+	Ticker           string        `gorm:"column:tv_symbol;uniqueIndex;not null" json:"ticker" binding:"required,min=1,max=50,ticker"`
 	Exchange         *string       `gorm:"column:exchange;index:idx_ticker_exchange" json:"exchange" binding:"omitempty,min=1,max=10,ticker_exchange"`
 	Timeframes       []string      `gorm:"column:timeframes;serializer:json;not null" json:"timeframes" binding:"required,min=1,max=6,dive,oneof=YR SMN TMN MN WK DL"`
 	Type             string        `gorm:"column:type;not null;index:idx_ticker_type" json:"type" binding:"required,oneof=EQUITY INDEX CRYPTO COMMODITY FX BOND COMPOSITE"`
@@ -38,8 +38,8 @@ type AlertTicker struct {
 	TickerID  uint64    `gorm:"column:ticker_id;not null;index:idx_alert_ticker_parent" json:"-"`
 	Symbol    string    `gorm:"column:symbol;uniqueIndex;not null" json:"symbol" binding:"required,min=1,max=25,alert_symbol"`
 	PairID    string    `gorm:"column:pair_id;not null;index:idx_alert_ticker_pair_id" json:"pair_id" binding:"required,min=1,max=64,numeric"`
-	Name      string    `gorm:"column:name;not null" json:"name" binding:"required,min=1,max=255,alert_name"`
-	Exchange  *string   `gorm:"column:exchange;index:idx_alert_ticker_exchange" json:"exchange" binding:"omitempty,min=1,max=10,ticker_exchange"`
+	Name      string    `gorm:"column:name;not null" json:"name" binding:"required,min=1,max=100,alert_name"`
+	Exchange  *string   `gorm:"column:exchange;index:idx_alert_ticker_exchange" json:"exchange" binding:"omitempty,min=1,max=10,alert_exchange"`
 	Ticker    string    `gorm:"-" json:"ticker,omitempty"`
 	CreatedAt time.Time `gorm:"column:created_at;not null" json:"created_at,omitempty"`
 	UpdatedAt time.Time `gorm:"column:updated_at;not null" json:"updated_at,omitempty"`
@@ -102,7 +102,7 @@ type AlertTickerQuery struct {
 	Symbol   string `form:"symbol" binding:"omitempty,min=1,max=25,alert_symbol"`
 	Ticker   string `form:"ticker" binding:"omitempty,tv_ticker_path"`
 	PairID   string `form:"pair-id" binding:"omitempty,min=1,max=64,numeric"`
-	Exchange string `form:"exchange" binding:"omitempty,min=1,max=10,ticker_exchange"`
+	Exchange string `form:"exchange" binding:"omitempty,min=1,max=10,alert_exchange"`
 }
 
 // NewAlertTickerQuery creates an AlertTickerQuery struct with default pagination values.

@@ -329,11 +329,11 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
 						Expect(response.Name).To(Equal("A"))
 					})
-					It("should accept maximum name length 255", func() {
+					It("should accept maximum name length 100", func() {
 						payload := validAlertTickerPayload()
-						payload.Name = strings.Repeat("A", 255)
+						payload.Name = strings.Repeat("A", 100)
 						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(response.Name).To(HaveLen(255))
+						Expect(response.Name).To(HaveLen(100))
 					})
 					It("should accept spaces", func() {
 						_, response := createAlertTickerRequest(router, createdTicker.Ticker, validAlertTickerPayload())
@@ -351,12 +351,7 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
 						Expect(response.Name).To(Equal("M&M"))
 					})
-					It("should accept comma", func() {
-						payload := validAlertTickerPayload()
-						payload.Name = "MCX, India"
-						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(response.Name).To(Equal("MCX, India"))
-					})
+
 					It("should accept apostrophe", func() {
 						payload := validAlertTickerPayload()
 						payload.Name = "Trader's Index"
@@ -384,9 +379,9 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Name", "required")
 					})
-					It("should return 400 for name exceeding 255 characters", func() {
+					It("should return 400 for name exceeding 100 characters", func() {
 						payload := validAlertTickerPayload()
-						payload.Name = strings.Repeat("A", 256)
+						payload.Name = strings.Repeat("A", 101)
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Name", "max")
@@ -394,6 +389,13 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 					It("should return 400 for name starting with unsupported character", func() {
 						payload := validAlertTickerPayload()
 						payload.Name = ".MCX"
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Name", "alert_name")
+					})
+					It("should return 400 for comma in name", func() {
+						payload := validAlertTickerPayload()
+						payload.Name = "MCX, India"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Name", "alert_name")
@@ -477,6 +479,12 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
 						Expect(*response.Exchange).To(Equal("N_SE"))
 					})
+					It("should accept lowercase letters nse", func() {
+						payload := validAlertTickerPayload()
+						payload.Exchange = tickerStringPtr("nse")
+						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
+						Expect(*response.Exchange).To(Equal("nse"))
+					})
 				})
 				Context("Bad Values", func() {
 					It("should return 400 for empty exchange string", func() {
@@ -493,40 +501,33 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Exchange", "max")
 					})
-					It("should return 400 for lowercase exchange", func() {
-						payload := validAlertTickerPayload()
-						payload.Exchange = tickerStringPtr("nse")
-						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
-					})
 					It("should return 400 for exchange with colon", func() {
 						payload := validAlertTickerPayload()
 						payload.Exchange = tickerStringPtr("NSE:MCX")
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
+						util.AssertError(w, "Exchange", "alert_exchange")
 					})
 					It("should return 400 for exchange with hyphen", func() {
 						payload := validAlertTickerPayload()
 						payload.Exchange = tickerStringPtr("N-SE")
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
+						util.AssertError(w, "Exchange", "alert_exchange")
 					})
 					It("should return 400 for exchange with whitespace", func() {
 						payload := validAlertTickerPayload()
 						payload.Exchange = tickerStringPtr("NS E")
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
+						util.AssertError(w, "Exchange", "alert_exchange")
 					})
 					It("should return 400 for exchange with unsupported special character", func() {
 						payload := validAlertTickerPayload()
 						payload.Exchange = tickerStringPtr("NSE@")
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
+						util.AssertError(w, "Exchange", "alert_exchange")
 					})
 				})
 			})

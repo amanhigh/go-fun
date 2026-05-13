@@ -241,28 +241,28 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 						payload.Ticker = ".MCX"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Ticker", "tv_ticker")
+						util.AssertError(w, "Ticker", "ticker")
 					})
 					It("should return 400 for ticker with whitespace", func() {
 						payload := validTickerPayload()
 						payload.Ticker = "MC X"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Ticker", "tv_ticker")
+						util.AssertError(w, "Ticker", "ticker")
 					})
 					It("should return 400 for ticker with lowercase characters", func() {
 						payload := validTickerPayload()
 						payload.Ticker = "mcx"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Ticker", "tv_ticker")
+						util.AssertError(w, "Ticker", "ticker")
 					})
 					It("should return 400 for ticker with unsupported special character @", func() {
 						payload := validTickerPayload()
 						payload.Ticker = "MCX@"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Ticker", "tv_ticker")
+						util.AssertError(w, "Ticker", "ticker")
 					})
 					It("should return 400 for composite expression when type is not COMPOSITE", func() {
 						payload := validTickerPayload()
