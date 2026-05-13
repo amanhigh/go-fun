@@ -243,6 +243,16 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
+					It("should accept slash in symbol query", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=ABC/D", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+					It("should accept equals in symbol query", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=ABC=D", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
 					It("should return empty list for no symbol match", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=ZZZ", nil)
 						router.ServeHTTP(w, req)
@@ -273,6 +283,11 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 					})
 					It("should return 400 for symbol query with hyphen", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=ABC-D", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+					It("should return 400 for symbol query with space", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=AB%20C", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})

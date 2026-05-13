@@ -311,12 +311,6 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 						_, response := createTickerRequest(router, payload)
 						Expect(response.Exchange).To(BeNil())
 					})
-					It("should accept null exchange on POST", func() {
-						payload := validTickerPayload
-						payload.Exchange = nil
-						_, response := createTickerRequest(router, payload)
-						Expect(response.Exchange).To(BeNil())
-					})
 					It("should accept minimum exchange length 1", func() {
 						payload := validTickerPayload
 						payload.Exchange = new("N")

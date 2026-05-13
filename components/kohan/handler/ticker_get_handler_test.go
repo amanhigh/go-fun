@@ -149,6 +149,14 @@ var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pr
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
 
+					It("should accept ticker path with underscore", func() {
+						payload := validTickerPayload
+						payload.Ticker = "ABC_DEF"
+						seedTicker(testCtx, db, payload)
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"/ABC_DEF", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
 				})
 
 				Context("Bad Values", func() {
@@ -164,6 +172,16 @@ var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pr
 					})
 					It("should return 400 for ticker path with unsupported special character", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"/MCX@", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+					It("should return 400 for ticker path with hyphen", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"/ABC-DEF", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+					It("should return 400 for ticker path with ampersand", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"/M%26M", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
