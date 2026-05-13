@@ -11,6 +11,8 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/amanhigh/go-fun/components/kohan/handler"
+	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
@@ -38,7 +40,7 @@ func seedTicker(ctx context.Context, db *gorm.DB, ticker barkat.Ticker) barkat.T
 
 // TickerHandler Integration GET/List Tests - Comprehensive Master Specification
 // Tests complete HTTP → Handler → Manager → Repository → Database flow for PRD Section 2.2.1.2 and 2.2.1.6.
-var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Primary Ticker APIs", func() {
+var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Primary Ticker APIs", func() {
 	var (
 		tickerHandler      handler.TickerHandler
 		router             *gin.Engine
@@ -52,6 +54,9 @@ var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pr
 		core.RegisterJournalValidators()
 		db, err = core.CreateTestBarkatDB()
 		Expect(err).ToNot(HaveOccurred())
+		tickerRepo := repository.NewTickerRepository(db)
+		tickerMgr := manager.NewBarkatTickerManager(tickerRepo)
+		tickerHandler = handler.NewTickerHandler(tickerMgr)
 		validTickerPayload = barkat.Ticker{
 			Ticker:       "MCX",
 			Exchange:     new("NSE"),

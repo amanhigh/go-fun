@@ -15,7 +15,7 @@ const (
 // Ticker represents a TradingView-side ticker imported from Barkat tickerRepo.
 type Ticker struct {
 	ID               uint64        `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
-	Ticker           string        `gorm:"column:tv_symbol;uniqueIndex;not null" json:"ticker" binding:"required,min=1,max=50,ticker"`
+	Ticker           string        `gorm:"column:external_id;uniqueIndex;not null" json:"ticker" binding:"required,min=1,max=50,ticker"`
 	Exchange         *string       `gorm:"column:exchange;index:idx_ticker_exchange" json:"exchange" binding:"omitempty,min=1,max=10,ticker_exchange"`
 	Timeframes       []string      `gorm:"column:timeframes;serializer:json;not null" json:"timeframes" binding:"required,min=1,max=6,dive,oneof=YR SMN TMN MN WK DL"`
 	Type             string        `gorm:"column:type;not null;index:idx_ticker_type" json:"type" binding:"required,oneof=EQUITY INDEX CRYPTO COMMODITY FX BOND COMPOSITE"`
@@ -36,7 +36,7 @@ func (Ticker) TableName() string { return "tradingview_tickers" }
 type AlertTicker struct {
 	ID        uint64    `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
 	TickerID  uint64    `gorm:"column:ticker_id;not null;index:idx_alert_ticker_parent" json:"-"`
-	Symbol    string    `gorm:"column:symbol;uniqueIndex;not null" json:"symbol" binding:"required,min=1,max=25,alert_symbol"`
+	Symbol    string    `gorm:"column:external_id;uniqueIndex;not null" json:"symbol" binding:"required,min=1,max=25,alert_symbol"`
 	PairID    string    `gorm:"column:pair_id;not null;index:idx_alert_ticker_pair_id" json:"pair_id" binding:"required,min=1,max=64,numeric"`
 	Name      string    `gorm:"column:name;not null" json:"name" binding:"required,min=1,max=100,alert_name"`
 	Exchange  *string   `gorm:"column:exchange;index:idx_alert_ticker_exchange" json:"exchange" binding:"omitempty,min=1,max=10,alert_exchange"`
@@ -114,6 +114,17 @@ func NewAlertTickerQuery() AlertTickerQuery {
 type AlertTickerList struct {
 	AlertTickers []AlertTicker            `json:"alert_tickers"`
 	Metadata     common.PaginatedResponse `json:"metadata"`
+}
+
+// TickerUpdateRequest represents PUT update ticker request body.
+// Ticker field is excluded (comes from URL path).
+type TickerUpdateRequest struct {
+	Exchange   *string  `json:"exchange" binding:"omitempty,min=1,max=10,ticker_exchange"`
+	Timeframes []string `json:"timeframes" binding:"required,min=1,max=6,dive,oneof=YR SMN TMN MN WK DL"`
+	Type       string   `json:"type" binding:"required,oneof=EQUITY INDEX CRYPTO COMMODITY FX BOND COMPOSITE"`
+	State      string   `json:"state" binding:"required,oneof=WATCHED READY BLACKLIST"`
+	Trend      string   `json:"trend" binding:"required,oneof=UPTREND SIDEWAYS DOWNTREND"`
+	IsFNO      *bool    `json:"is_fno" binding:"required"`
 }
 
 // TickerLastOpenedUpdate represents PATCH ticker last_opened_at request body.

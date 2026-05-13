@@ -65,6 +65,9 @@ func (ki *KohanInjector) GetKohanServer() (util.HttpServer, error) {
 	if err := ki.registerJournalDependencies(); err != nil {
 		return nil, fmt.Errorf("failed to register journal dependencies: %w", err)
 	}
+	if err := ki.registerBarkatDependencies(); err != nil {
+		return nil, fmt.Errorf("failed to register barkat dependencies: %w", err)
+	}
 	ki.registerServerDependencies(ki.config.Server)
 
 	// Resolve server from DI

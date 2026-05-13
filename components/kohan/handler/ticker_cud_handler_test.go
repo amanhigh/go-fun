@@ -12,6 +12,8 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/amanhigh/go-fun/components/kohan/handler"
+	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
@@ -78,7 +80,7 @@ func rawTickerRequest(method, url, body string) (*http.Request, *httptest.Respon
 //	   -> Context(Bad Values): All Variations of Missing,Regex,Min,Max Edge Cases (4xx)
 //
 // -> Context(Errors): 5xx Server Error Cases
-var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary Ticker APIs", func() {
+var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary Ticker APIs", func() {
 	var (
 		tickerHandler      handler.TickerHandler
 		router             *gin.Engine
@@ -91,6 +93,9 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 		core.RegisterJournalValidators()
 		db, err = core.CreateTestBarkatDB()
 		Expect(err).ToNot(HaveOccurred())
+		tickerRepo := repository.NewTickerRepository(db)
+		tickerMgr := manager.NewBarkatTickerManager(tickerRepo)
+		tickerHandler = handler.NewTickerHandler(tickerMgr)
 		validTickerPayload = barkat.Ticker{
 			Ticker:       "MCX",
 			Exchange:     new("NSE"),
