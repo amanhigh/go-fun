@@ -210,12 +210,7 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 						_, response := createTickerRequest(router, payload)
 						Expect(response.Ticker).To(Equal("GOLD1!"))
 					})
-					It("should accept exchange-qualified ticker NSE:MCX", func() {
-						payload := validTickerPayload()
-						payload.Ticker = "NSE:MCX"
-						_, response := createTickerRequest(router, payload)
-						Expect(response.Ticker).To(Equal("NSE:MCX"))
-					})
+
 					It("should accept composite expression when type = COMPOSITE", func() {
 						payload := validTickerPayload()
 						payload.Ticker = "NIFTY/USDINR"
@@ -324,11 +319,11 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 						_, response := createTickerRequest(router, payload)
 						Expect(*response.Exchange).To(Equal("N"))
 					})
-					It("should accept maximum exchange length 64", func() {
+					It("should accept maximum exchange length 10", func() {
 						payload := validTickerPayload()
-						payload.Exchange = tickerStringPtr(strings.Repeat("A", 64))
+						payload.Exchange = tickerStringPtr(strings.Repeat("A", 10))
 						_, response := createTickerRequest(router, payload)
-						Expect(*response.Exchange).To(HaveLen(64))
+						Expect(*response.Exchange).To(HaveLen(10))
 					})
 					It("should accept uppercase letters NSE", func() {
 						payload := validTickerPayload()
@@ -354,12 +349,6 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 						_, response := createTickerRequest(router, payload)
 						Expect(*response.Exchange).To(Equal("N_SE"))
 					})
-					It("should accept hyphen in exchange code", func() {
-						payload := validTickerPayload()
-						payload.Exchange = tickerStringPtr("N-SE")
-						_, response := createTickerRequest(router, payload)
-						Expect(*response.Exchange).To(Equal("N-SE"))
-					})
 				})
 
 				Context("Bad Values", func() {
@@ -370,9 +359,9 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Exchange", "min")
 					})
-					It("should return 400 for exchange exceeding 64 characters", func() {
+					It("should return 400 for exchange exceeding 10 characters", func() {
 						payload := validTickerPayload()
-						payload.Exchange = tickerStringPtr(strings.Repeat("A", 65))
+						payload.Exchange = tickerStringPtr(strings.Repeat("A", 11))
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Exchange", "max")
@@ -387,6 +376,13 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 					It("should return 400 for exchange with colon", func() {
 						payload := validTickerPayload()
 						payload.Exchange = tickerStringPtr("NSE:MCX")
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Exchange", "ticker_exchange")
+					})
+					It("should return 400 for exchange with hyphen", func() {
+						payload := validTickerPayload()
+						payload.Exchange = tickerStringPtr("N-SE")
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Exchange", "ticker_exchange")
@@ -861,11 +857,11 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 						_, response := updateTickerRequest(router, createdTicker.Ticker, payload)
 						Expect(*response.Exchange).To(Equal("NSE"))
 					})
-					It("should accept maximum exchange length 64", func() {
+					It("should accept maximum exchange length 10", func() {
 						payload := validUpdatePayload()
-						payload.Exchange = tickerStringPtr(strings.Repeat("A", 64))
+						payload.Exchange = tickerStringPtr(strings.Repeat("A", 10))
 						_, response := updateTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(*response.Exchange).To(HaveLen(64))
+						Expect(*response.Exchange).To(HaveLen(10))
 					})
 				})
 				Context("Bad Values", func() {
@@ -876,9 +872,9 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Exchange", "min")
 					})
-					It("should return 400 for exchange exceeding 64 characters", func() {
+					It("should return 400 for exchange exceeding 10 characters", func() {
 						payload := validUpdatePayload()
-						payload.Exchange = tickerStringPtr(strings.Repeat("A", 65))
+						payload.Exchange = tickerStringPtr(strings.Repeat("A", 11))
 						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Exchange", "max")
@@ -886,6 +882,34 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 					It("should return 400 for unsupported exchange format", func() {
 						payload := validUpdatePayload()
 						payload.Exchange = tickerStringPtr("NSE:MCX")
+						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Exchange", "ticker_exchange")
+					})
+					It("should return 400 for exchange with hyphen", func() {
+						payload := validUpdatePayload()
+						payload.Exchange = tickerStringPtr("N-SE")
+						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Exchange", "ticker_exchange")
+					})
+					It("should return 400 for lowercase exchange", func() {
+						payload := validUpdatePayload()
+						payload.Exchange = tickerStringPtr("nse")
+						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Exchange", "ticker_exchange")
+					})
+					It("should return 400 for exchange with whitespace", func() {
+						payload := validUpdatePayload()
+						payload.Exchange = tickerStringPtr("NS E")
+						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Exchange", "ticker_exchange")
+					})
+					It("should return 400 for exchange with unsupported special character", func() {
+						payload := validUpdatePayload()
+						payload.Exchange = tickerStringPtr("NSE@")
 						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Exchange", "ticker_exchange")

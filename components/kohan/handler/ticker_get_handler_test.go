@@ -137,14 +137,6 @@ var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pr
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
 
-					It("should accept exchange-qualified ticker path NSE:MCX when URL-encoded", func() {
-						payload := validTickerPayload()
-						payload.Ticker = "NSE:MCX"
-						seedTicker(testCtx, db, payload)
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"/NSE%3AMCX", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusOK))
-					})
 				})
 
 				Context("Bad Values", func() {

@@ -15,7 +15,7 @@ const (
 type Ticker struct {
 	ID                 uint64            `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
 	Ticker             string            `gorm:"column:tv_symbol;uniqueIndex;not null" json:"ticker" binding:"required,min=1,max=50,tv_ticker"`
-	Exchange           *string           `gorm:"column:exchange;index:idx_ticker_exchange" json:"exchange" binding:"omitempty,min=1,max=64,ticker_exchange"`
+	Exchange           *string           `gorm:"column:exchange;index:idx_ticker_exchange" json:"exchange" binding:"omitempty,min=1,max=10,ticker_exchange"`
 	Timeframes         []string          `gorm:"column:timeframes;serializer:json;not null" json:"timeframes" binding:"required,min=1,max=6,dive,oneof=YR SMN TMN MN WK DL"`
 	Type               string            `gorm:"column:type;not null;index:idx_ticker_type" json:"type" binding:"required,oneof=EQUITY INDEX CRYPTO COMMODITY FX BOND COMPOSITE"`
 	State              string            `gorm:"column:state;not null;default:WATCHED;index:idx_ticker_state" json:"state" binding:"required,oneof=WATCHED READY BLACKLIST"`
@@ -69,7 +69,7 @@ type TickerPath struct {
 type TickerQuery struct {
 	common.Pagination
 	Search      string `form:"search" binding:"omitempty,min=1,max=50"`
-	Exchange    string `form:"exchange" binding:"omitempty,min=1,max=64,ticker_exchange"`
+	Exchange    string `form:"exchange" binding:"omitempty,min=1,max=10,ticker_exchange"`
 	Type        string `form:"type" binding:"omitempty,oneof=EQUITY INDEX CRYPTO COMMODITY FX BOND COMPOSITE"`
 	State       string `form:"state" binding:"omitempty,oneof=WATCHED READY BLACKLIST"`
 	Trend       string `form:"trend" binding:"omitempty,oneof=UPTREND SIDEWAYS DOWNTREND"`
