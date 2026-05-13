@@ -40,10 +40,11 @@ func seedTicker(ctx context.Context, db *gorm.DB, ticker barkat.Ticker) barkat.T
 // Tests complete HTTP → Handler → Manager → Repository → Database flow for PRD Section 2.2.1.2 and 2.2.1.6.
 var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Primary Ticker APIs", func() {
 	var (
-		tickerHandler handler.TickerHandler
-		router        *gin.Engine
-		testCtx       = context.Background()
-		db            *gorm.DB
+		tickerHandler      handler.TickerHandler
+		router             *gin.Engine
+		testCtx            = context.Background()
+		db                 *gorm.DB
+		validTickerPayload barkat.Ticker
 	)
 
 	BeforeEach(func() {
@@ -51,6 +52,16 @@ var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pr
 		core.RegisterJournalValidators()
 		db, err = core.CreateTestBarkatDB()
 		Expect(err).ToNot(HaveOccurred())
+		validTickerPayload = barkat.Ticker{
+			Ticker:       "MCX",
+			Exchange:     new("NSE"),
+			Timeframes:   []string{"MN", "WK", "DL"},
+			Type:         "EQUITY",
+			State:        "WATCHED",
+			Trend:        "UPTREND",
+			LastOpenedAt: time.Date(2026, time.May, 5, 10, 30, 0, 0, time.UTC),
+			IsFNO:        true,
+		}
 		router = newTickerTestRouter(tickerHandler)
 	})
 
@@ -67,7 +78,7 @@ var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pr
 		var createdTicker barkat.Ticker
 
 		BeforeEach(func() {
-			createdTicker = seedTicker(testCtx, db, validTickerPayload())
+			createdTicker = seedTicker(testCtx, db, validTickerPayload)
 			alertExchange := "NSE"
 			Expect(db.Create(&barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCIX", PairID: "941982", Name: "Multi Commodity Exchange of India", Exchange: &alertExchange}).Error).ToNot(HaveOccurred())
 		})
@@ -98,7 +109,7 @@ var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pr
 
 				It("should return ticker with correct fields", func() {
 					Expect(response.Ticker).To(Equal("MCX"))
-					Expect(response.Exchange).To(Equal(tickerStringPtr("NSE")))
+					Expect(response.Exchange).To(Equal(new("NSE")))
 					Expect(response.Timeframes).To(Equal([]string{"MN", "WK", "DL"}))
 					Expect(response.Type).To(Equal("EQUITY"))
 					Expect(response.State).To(Equal("WATCHED"))
@@ -130,7 +141,7 @@ var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pr
 					})
 
 					It("should accept futures ticker path GOLD1!", func() {
-						payload := validTickerPayload()
+						payload := validTickerPayload
 						payload.Ticker = "GOLD1!"
 						seedTicker(testCtx, db, payload)
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"/GOLD1!", nil)
@@ -182,8 +193,8 @@ var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pr
 	// ============================================================================
 	Describe("GET /v1/api/tickers - List Primary Tickers (2.2.1.6)", func() {
 		BeforeEach(func() {
-			seedTicker(testCtx, db, barkat.Ticker{Ticker: "MCX", Exchange: tickerStringPtr("NSE"), Timeframes: []string{"MN", "WK", "DL"}, Type: "EQUITY", State: "WATCHED", Trend: "UPTREND", LastOpenedAt: time.Date(2026, time.May, 5, 10, 30, 0, 0, time.UTC), IsFNO: true})
-			seedTicker(testCtx, db, barkat.Ticker{Ticker: "BTCUSD", Exchange: tickerStringPtr("BINANCE"), Timeframes: []string{"DL"}, Type: "CRYPTO", State: "READY", Trend: "SIDEWAYS", LastOpenedAt: time.Date(2026, time.May, 6, 10, 30, 0, 0, time.UTC), IsFNO: false})
+			seedTicker(testCtx, db, barkat.Ticker{Ticker: "MCX", Exchange: new("NSE"), Timeframes: []string{"MN", "WK", "DL"}, Type: "EQUITY", State: "WATCHED", Trend: "UPTREND", LastOpenedAt: time.Date(2026, time.May, 5, 10, 30, 0, 0, time.UTC), IsFNO: true})
+			seedTicker(testCtx, db, barkat.Ticker{Ticker: "BTCUSD", Exchange: new("BINANCE"), Timeframes: []string{"DL"}, Type: "CRYPTO", State: "READY", Trend: "SIDEWAYS", LastOpenedAt: time.Date(2026, time.May, 6, 10, 30, 0, 0, time.UTC), IsFNO: false})
 			seedTicker(testCtx, db, barkat.Ticker{Ticker: "NIFTY/USDINR", Exchange: nil, Timeframes: []string{"YR", "MN"}, Type: "COMPOSITE", State: "BLACKLIST", Trend: "DOWNTREND", LastOpenedAt: time.Date(2026, time.May, 7, 10, 30, 0, 0, time.UTC), IsFNO: false})
 		})
 

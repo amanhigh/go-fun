@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
@@ -39,11 +40,12 @@ func seedAlertTicker(ctx context.Context, db *gorm.DB, alertTicker barkat.AlertT
 // Tests complete HTTP → Handler → Manager → Repository → Database flow for PRD Section 2.2.2.2 and 2.2.2.4.
 var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.2 Alert Ticker APIs", func() {
 	var (
-		alertTickerHandler handler.AlertTickerHandler
-		router             *gin.Engine
-		testCtx            = context.Background()
-		db                 *gorm.DB
-		createdTicker      barkat.Ticker
+		alertTickerHandler      handler.AlertTickerHandler
+		router                  *gin.Engine
+		testCtx                 = context.Background()
+		db                      *gorm.DB
+		createdTicker           barkat.Ticker
+		validAlertTickerPayload barkat.AlertTicker
 	)
 
 	BeforeEach(func() {
@@ -51,8 +53,23 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 		core.RegisterJournalValidators()
 		db, err = core.CreateTestBarkatDB()
 		Expect(err).ToNot(HaveOccurred())
-		createdTicker = validTickerPayload()
+		createdTicker = barkat.Ticker{
+			Ticker:       "MCX",
+			Exchange:     new("NSE"),
+			Timeframes:   []string{"MN", "WK", "DL"},
+			Type:         "EQUITY",
+			State:        "WATCHED",
+			Trend:        "UPTREND",
+			LastOpenedAt: time.Date(2026, time.May, 5, 10, 30, 0, 0, time.UTC),
+			IsFNO:        true,
+		}
 		Expect(db.Create(&createdTicker).Error).ToNot(HaveOccurred())
+		validAlertTickerPayload = barkat.AlertTicker{
+			Symbol:   "MCIX",
+			PairID:   "941982",
+			Name:     "Multi Commodity Exchange of India",
+			Exchange: new("NSE"),
+		}
 		router = newAlertTickerTestRouter(alertTickerHandler)
 	})
 
@@ -66,7 +83,7 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 		var createdAlertTicker barkat.AlertTicker
 
 		BeforeEach(func() {
-			createdAlertTicker = validAlertTickerPayload()
+			createdAlertTicker = validAlertTickerPayload
 			createdAlertTicker.TickerID = createdTicker.ID
 			createdAlertTicker = seedAlertTicker(testCtx, db, createdAlertTicker)
 		})
@@ -97,7 +114,7 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 					Expect(response.Symbol).To(Equal("MCIX"))
 					Expect(response.PairID).To(Equal("941982"))
 					Expect(response.Name).To(Equal("Multi Commodity Exchange of India"))
-					Expect(response.Exchange).To(Equal(tickerStringPtr("NSE")))
+					Expect(response.Exchange).To(Equal(new("NSE")))
 				})
 				It("should include parent ticker reference", func() { Expect(response.Ticker).To(Equal(createdTicker.Ticker)) })
 				It("should include created_at and updated_at", func() {
@@ -145,9 +162,9 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 
 	Describe("GET /v1/api/alert-tickers - List Alert Tickers (2.2.2.4)", func() {
 		BeforeEach(func() {
-			seedAlertTicker(testCtx, db, barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCIX", PairID: "941982", Name: "Multi Commodity Exchange of India", Exchange: tickerStringPtr("NSE")})
-			seedAlertTicker(testCtx, db, barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "GOLD1!", PairID: "100200", Name: "Gold Index", Exchange: tickerStringPtr("N.SE")})
-			seedAlertTicker(testCtx, db, barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "BTCUSD", PairID: "000777", Name: "Bitcoin USD", Exchange: tickerStringPtr("BINANCE")})
+			seedAlertTicker(testCtx, db, barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCIX", PairID: "941982", Name: "Multi Commodity Exchange of India", Exchange: new("NSE")})
+			seedAlertTicker(testCtx, db, barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "GOLD1!", PairID: "100200", Name: "Gold Index", Exchange: new("N.SE")})
+			seedAlertTicker(testCtx, db, barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "BTCUSD", PairID: "000777", Name: "Bitcoin USD", Exchange: new("BINANCE")})
 		})
 
 		Context("Happy Path", func() {
@@ -271,8 +288,16 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 						Expect(response.AlertTickers).To(HaveLen(3))
 					})
 					It("should return empty list for no child match under existing ticker", func() {
-						otherTicker := validTickerPayload()
-						otherTicker.Ticker = "NIFTY"
+						otherTicker := barkat.Ticker{
+							Ticker:       "NIFTY",
+							Exchange:     new("NSE"),
+							Timeframes:   []string{"MN", "WK", "DL"},
+							Type:         "EQUITY",
+							State:        "WATCHED",
+							Trend:        "UPTREND",
+							LastOpenedAt: time.Date(2026, time.May, 5, 10, 30, 0, 0, time.UTC),
+							IsFNO:        true,
+						}
 						Expect(db.Create(&otherTicker).Error).ToNot(HaveOccurred())
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?ticker=NIFTY", nil)
 						router.ServeHTTP(w, req)
