@@ -172,17 +172,17 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
 						Expect(response.Symbol).To(Equal("MC.IX"))
 					})
-					It("should accept underscore", func() {
+					It("should accept slash", func() {
 						payload := validAlertTickerPayload
-						payload.Symbol = "MC_IX"
+						payload.Symbol = "MC/IX"
 						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(response.Symbol).To(Equal("MC_IX"))
+						Expect(response.Symbol).To(Equal("MC/IX"))
 					})
-					It("should accept exclamation", func() {
+					It("should accept equals", func() {
 						payload := validAlertTickerPayload
-						payload.Symbol = "MCIX!"
+						payload.Symbol = "MC=IX"
 						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(response.Symbol).To(Equal("MCIX!"))
+						Expect(response.Symbol).To(Equal("MC=IX"))
 					})
 				})
 				Context("Bad Values", func() {
@@ -221,23 +221,23 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Symbol", "alert_symbol")
 					})
+					It("should return 400 for symbol with underscore", func() {
+						payload := validAlertTickerPayload
+						payload.Symbol = "MC_IX"
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Symbol", "alert_symbol")
+					})
+					It("should return 400 for symbol with exclamation", func() {
+						payload := validAlertTickerPayload
+						payload.Symbol = "MCIX!"
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Symbol", "alert_symbol")
+					})
 					It("should return 400 for symbol with space", func() {
 						payload := validAlertTickerPayload
 						payload.Symbol = "MC IX"
-						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "Symbol", "alert_symbol")
-					})
-					It("should return 400 for symbol with slash", func() {
-						payload := validAlertTickerPayload
-						payload.Symbol = "MC/IX"
-						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "Symbol", "alert_symbol")
-					})
-					It("should return 400 for symbol with equals", func() {
-						payload := validAlertTickerPayload
-						payload.Symbol = "MC=IX"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Symbol", "alert_symbol")
@@ -250,7 +250,8 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 						util.AssertError(w, "Symbol", "alert_symbol")
 					})
 					It("should return 400 for non-string symbol", func() {
-						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", `{"symbol":123,"pair_id":"941982","name":"Multi Commodity Exchange of India","exchange":"NSE"}`)
+						jsonPayload := `{"symbol":123,"pair_id":"941982","name":"Multi Commodity Exchange of India","exchange":"NSE"}`
+						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", jsonPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
@@ -326,7 +327,8 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 						util.AssertError(w, "PairID", "numeric")
 					})
 					It("should return 400 for non-string pair_id", func() {
-						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", `{"symbol":"MCIX","pair_id":941982,"name":"Multi Commodity Exchange of India","exchange":"NSE"}`)
+						jsonPayload := `{"symbol":"MCIX","pair_id":941982,"name":"Multi Commodity Exchange of India","exchange":"NSE"}`
+						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", jsonPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
@@ -434,7 +436,8 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 						util.AssertError(w, "Name", "alert_name")
 					})
 					It("should return 400 for non-string name", func() {
-						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", `{"symbol":"MCIX","pair_id":"941982","name":123,"exchange":"NSE"}`)
+						jsonPayload := `{"symbol":"MCIX","pair_id":"941982","name":123,"exchange":"NSE"}`
+						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", jsonPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
@@ -472,24 +475,6 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 						payload.Exchange = new("NSE")
 						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
 						Expect(*response.Exchange).To(Equal("NSE"))
-					})
-					It("should accept digits in exchange code", func() {
-						payload := validAlertTickerPayload
-						payload.Exchange = new("NSE1")
-						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(*response.Exchange).To(Equal("NSE1"))
-					})
-					It("should accept dot in exchange code", func() {
-						payload := validAlertTickerPayload
-						payload.Exchange = new("N.SE")
-						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(*response.Exchange).To(Equal("N.SE"))
-					})
-					It("should accept underscore in exchange code", func() {
-						payload := validAlertTickerPayload
-						payload.Exchange = new("N_SE")
-						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(*response.Exchange).To(Equal("N_SE"))
 					})
 					It("should accept lowercase letters nse", func() {
 						payload := validAlertTickerPayload
@@ -537,6 +522,34 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 					It("should return 400 for exchange with unsupported special character", func() {
 						payload := validAlertTickerPayload
 						payload.Exchange = new("NSE@")
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Exchange", "alert_exchange")
+					})
+					It("should return 400 for exchange with digit", func() {
+						payload := validAlertTickerPayload
+						payload.Exchange = new("NSE1")
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Exchange", "alert_exchange")
+					})
+					It("should return 400 for exchange with dot", func() {
+						payload := validAlertTickerPayload
+						payload.Exchange = new("N.SE")
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Exchange", "alert_exchange")
+					})
+					It("should return 400 for exchange with underscore", func() {
+						payload := validAlertTickerPayload
+						payload.Exchange = new("N_SE")
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Exchange", "alert_exchange")
+					})
+					It("should return 400 for exchange starting with digit", func() {
+						payload := validAlertTickerPayload
+						payload.Exchange = new("1abc")
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Exchange", "alert_exchange")

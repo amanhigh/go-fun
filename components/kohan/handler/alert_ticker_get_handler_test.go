@@ -243,11 +243,6 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
-					It("should accept underscore in symbol query", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=ABC_D", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusOK))
-					})
 					It("should return empty list for no symbol match", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=ZZZ", nil)
 						router.ServeHTTP(w, req)
@@ -268,6 +263,11 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 					})
 					It("should return 400 for symbol query with unsupported special character", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=MCIX@", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+					It("should return 400 for symbol query with underscore", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=ABC_D", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
@@ -405,21 +405,6 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
-					It("should accept digits in exchange code", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?exchange=NSE1", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusOK))
-					})
-					It("should accept dot in exchange code", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?exchange=N.SE", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusOK))
-					})
-					It("should accept underscore in exchange code", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?exchange=N_SE", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusOK))
-					})
 				})
 				Context("Bad Values", func() {
 					It("should return 400 for empty exchange query", func() {
@@ -449,6 +434,26 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 					})
 					It("should return 400 for exchange with unsupported special character", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?exchange=NSE@", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+					It("should return 400 for exchange with digit", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?exchange=NSE1", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+					It("should return 400 for exchange with dot", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?exchange=N.SE", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+					It("should return 400 for exchange with underscore", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?exchange=N_SE", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+					It("should return 400 for exchange starting with digit", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?exchange=1abc", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})

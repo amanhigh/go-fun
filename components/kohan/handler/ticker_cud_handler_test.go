@@ -194,12 +194,6 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 						_, response := createTickerRequest(router, payload)
 						Expect(response.Ticker).To(Equal("ABC_DEF"))
 					})
-					It("should accept ticker with hyphen ABC-DEF", func() {
-						payload := validTickerPayload
-						payload.Ticker = "ABC-DEF"
-						_, response := createTickerRequest(router, payload)
-						Expect(response.Ticker).To(Equal("ABC-DEF"))
-					})
 					It("should accept futures exclamation GOLD1!", func() {
 						payload := validTickerPayload
 						payload.Ticker = "GOLD1!"
@@ -256,6 +250,20 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 					It("should return 400 for ticker with unsupported special character @", func() {
 						payload := validTickerPayload
 						payload.Ticker = "MCX@"
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Ticker", "ticker")
+					})
+					It("should return 400 for ticker with hyphen", func() {
+						payload := validTickerPayload
+						payload.Ticker = "ABC-DEF"
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Ticker", "ticker")
+					})
+					It("should return 400 for ticker with ampersand", func() {
+						payload := validTickerPayload
+						payload.Ticker = "M&M"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "ticker")
@@ -327,11 +335,11 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 						_, response := createTickerRequest(router, payload)
 						Expect(*response.Exchange).To(Equal("NSE"))
 					})
-					It("should accept digits in exchange code", func() {
+					It("should accept underscore in exchange code", func() {
 						payload := validTickerPayload
-						payload.Exchange = new("NSE1")
+						payload.Exchange = new("FX_IDC")
 						_, response := createTickerRequest(router, payload)
-						Expect(*response.Exchange).To(Equal("NSE1"))
+						Expect(*response.Exchange).To(Equal("FX_IDC"))
 					})
 					It("should accept dot in exchange code", func() {
 						payload := validTickerPayload
@@ -339,14 +347,7 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 						_, response := createTickerRequest(router, payload)
 						Expect(*response.Exchange).To(Equal("N.SE"))
 					})
-					It("should accept underscore in exchange code", func() {
-						payload := validTickerPayload
-						payload.Exchange = new("N_SE")
-						_, response := createTickerRequest(router, payload)
-						Expect(*response.Exchange).To(Equal("N_SE"))
-					})
 				})
-
 				Context("Bad Values", func() {
 					It("should return 400 for empty exchange string", func() {
 						payload := validTickerPayload
@@ -393,6 +394,20 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 					It("should return 400 for exchange with unsupported special character", func() {
 						payload := validTickerPayload
 						payload.Exchange = new("NSE@")
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Exchange", "ticker_exchange")
+					})
+					It("should return 400 for exchange with digit", func() {
+						payload := validTickerPayload
+						payload.Exchange = new("NSE1")
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Exchange", "ticker_exchange")
+					})
+					It("should return 400 for exchange starting with digit", func() {
+						payload := validTickerPayload
+						payload.Exchange = new("1NSE")
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Exchange", "ticker_exchange")
@@ -495,12 +510,14 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 						util.AssertError(w, "Timeframes", "oneof")
 					})
 					It("should return 400 for numeric timeframe item", func() {
-						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, `{"ticker":"MCX","exchange":"NSE","timeframes":[1],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05T10:30:00Z","is_fno":true}`)
+						jsonPayload := `{"ticker":"MCX","exchange":"NSE","timeframes":[1],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05T10:30:00Z","is_fno":true}`
+						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, jsonPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 					It("should return 400 for null timeframe item", func() {
-						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, `{"ticker":"MCX","exchange":"NSE","timeframes":[null],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05T10:30:00Z","is_fno":true}`)
+						jsonPayload := `{"ticker":"MCX","exchange":"NSE","timeframes":[null],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05T10:30:00Z","is_fno":true}`
+						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, jsonPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
@@ -654,7 +671,8 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 						Expect(response.LastOpenedAt).To(Equal(payload.LastOpenedAt))
 					})
 					It("should accept RFC3339 timestamp with numeric timezone offset", func() {
-						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05T10:30:00+05:30","is_fno":true}`)
+						jsonPayload := `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05T10:30:00+05:30","is_fno":true}`
+						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, jsonPayload)
 						router.ServeHTTP(w, req)
 						response := decodeTickerCreateResponse(w)
 						Expect(response.LastOpenedAt).ToNot(BeZero())
@@ -669,32 +687,38 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 				Context("Bad Values", func() {
 					// HACK: Simplify Use Typed Payloads in Tests to Avoid Repetitive Raw JSON Strings and Reduce Risk of Syntax Errors in Test Cases
 					It("should return 400 for missing last_opened_at (PRD: required)", func() {
-						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","is_fno":true}`)
+						jsonPayload := `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","is_fno":true}`
+						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, jsonPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 					It("should return 400 for non-string last_opened_at", func() {
-						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":123,"is_fno":true}`)
+						jsonPayload := `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":123,"is_fno":true}`
+						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, jsonPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 					It("should return 400 for date-only value", func() {
-						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05","is_fno":true}`)
+						jsonPayload := `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05","is_fno":true}`
+						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, jsonPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 					It("should return 400 for timestamp without timezone", func() {
-						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05T10:30:00","is_fno":true}`)
+						jsonPayload := `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05T10:30:00","is_fno":true}`
+						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, jsonPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 					It("should return 400 for invalid timestamp text", func() {
-						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"not-a-date","is_fno":true}`)
+						jsonPayload := `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"not-a-date","is_fno":true}`
+						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, jsonPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 					It("should return 400 for empty timestamp string", func() {
-						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"","is_fno":true}`)
+						jsonPayload := `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"","is_fno":true}`
+						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, jsonPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
@@ -704,7 +728,8 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 			Context("Is FNO Field", func() {
 				Context("Allowed Values", func() {
 					It("should accept omitted is_fno on POST and default false", func() {
-						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05T10:30:00Z"}`)
+						jsonPayload := `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05T10:30:00Z"}`
+						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, jsonPayload)
 						router.ServeHTTP(w, req)
 						response := decodeTickerCreateResponse(w)
 						Expect(response.IsFNO).To(BeFalse())
@@ -725,12 +750,14 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 
 				Context("Bad Values", func() {
 					It("should return 400 for string is_fno", func() {
-						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05T10:30:00Z","is_fno":"true"}`)
+						jsonPayload := `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05T10:30:00Z","is_fno":"true"}`
+						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, jsonPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 					It("should return 400 for numeric is_fno", func() {
-						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05T10:30:00Z","is_fno":1}`)
+						jsonPayload := `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05T10:30:00Z","is_fno":1}`
+						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, jsonPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
@@ -858,6 +885,18 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 						_, response := updateTickerRequest(router, createdTicker.Ticker, payload)
 						Expect(*response.Exchange).To(HaveLen(10))
 					})
+					It("should accept underscore in exchange code", func() {
+						payload := validUpdatePayload
+						payload.Exchange = new("FX_IDC")
+						_, response := updateTickerRequest(router, createdTicker.Ticker, payload)
+						Expect(*response.Exchange).To(Equal("FX_IDC"))
+					})
+					It("should accept dot in exchange code", func() {
+						payload := validUpdatePayload
+						payload.Exchange = new("N.SE")
+						_, response := updateTickerRequest(router, createdTicker.Ticker, payload)
+						Expect(*response.Exchange).To(Equal("N.SE"))
+					})
 				})
 				Context("Bad Values", func() {
 					It("should return 400 for empty exchange string", func() {
@@ -905,6 +944,20 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 					It("should return 400 for exchange with unsupported special character", func() {
 						payload := validUpdatePayload
 						payload.Exchange = new("NSE@")
+						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Exchange", "ticker_exchange")
+					})
+					It("should return 400 for exchange with digit", func() {
+						payload := validUpdatePayload
+						payload.Exchange = new("NSE1")
+						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Exchange", "ticker_exchange")
+					})
+					It("should return 400 for exchange starting with digit", func() {
+						payload := validUpdatePayload
+						payload.Exchange = new("1NSE")
 						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Exchange", "ticker_exchange")
@@ -1099,12 +1152,14 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 				})
 				Context("Bad Values", func() {
 					It("should return 400 for string is_fno", func() {
-						req, w := rawTickerRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, `{"exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"READY","trend":"UPTREND","is_fno":"true"}`)
+						jsonPayload := `{"exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"READY","trend":"UPTREND","is_fno":"true"}`
+						req, w := rawTickerRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, jsonPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 					It("should return 400 for numeric is_fno", func() {
-						req, w := rawTickerRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, `{"exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"READY","trend":"UPTREND","is_fno":1}`)
+						jsonPayload := `{"exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"READY","trend":"UPTREND","is_fno":1}`
+						req, w := rawTickerRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, jsonPayload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})

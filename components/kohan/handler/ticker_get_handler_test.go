@@ -193,9 +193,39 @@ var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pr
 	// ============================================================================
 	Describe("GET /v1/api/tickers - List Primary Tickers (2.2.1.6)", func() {
 		BeforeEach(func() {
-			seedTicker(testCtx, db, barkat.Ticker{Ticker: "MCX", Exchange: new("NSE"), Timeframes: []string{"MN", "WK", "DL"}, Type: "EQUITY", State: "WATCHED", Trend: "UPTREND", LastOpenedAt: time.Date(2026, time.May, 5, 10, 30, 0, 0, time.UTC), IsFNO: true})
-			seedTicker(testCtx, db, barkat.Ticker{Ticker: "BTCUSD", Exchange: new("BINANCE"), Timeframes: []string{"DL"}, Type: "CRYPTO", State: "READY", Trend: "SIDEWAYS", LastOpenedAt: time.Date(2026, time.May, 6, 10, 30, 0, 0, time.UTC), IsFNO: false})
-			seedTicker(testCtx, db, barkat.Ticker{Ticker: "NIFTY/USDINR", Exchange: nil, Timeframes: []string{"YR", "MN"}, Type: "COMPOSITE", State: "BLACKLIST", Trend: "DOWNTREND", LastOpenedAt: time.Date(2026, time.May, 7, 10, 30, 0, 0, time.UTC), IsFNO: false})
+			mcxTicker := barkat.Ticker{
+				Ticker:       "MCX",
+				Exchange:     new("NSE"),
+				Timeframes:   []string{"MN", "WK", "DL"},
+				Type:         "EQUITY",
+				State:        "WATCHED",
+				Trend:        "UPTREND",
+				LastOpenedAt: time.Date(2026, time.May, 5, 10, 30, 0, 0, time.UTC),
+				IsFNO:        true,
+			}
+			seedTicker(testCtx, db, mcxTicker)
+			btcTicker := barkat.Ticker{
+				Ticker:       "BTCUSD",
+				Exchange:     new("BINANCE"),
+				Timeframes:   []string{"DL"},
+				Type:         "CRYPTO",
+				State:        "READY",
+				Trend:        "SIDEWAYS",
+				LastOpenedAt: time.Date(2026, time.May, 6, 10, 30, 0, 0, time.UTC),
+				IsFNO:        false,
+			}
+			seedTicker(testCtx, db, btcTicker)
+			niftyTicker := barkat.Ticker{
+				Ticker:       "NIFTY/USDINR",
+				Exchange:     nil,
+				Timeframes:   []string{"YR", "MN"},
+				Type:         "COMPOSITE",
+				State:        "BLACKLIST",
+				Trend:        "DOWNTREND",
+				LastOpenedAt: time.Date(2026, time.May, 7, 10, 30, 0, 0, time.UTC),
+				IsFNO:        false,
+			}
+			seedTicker(testCtx, db, niftyTicker)
 		})
 
 		Context("Happy Path", func() {
@@ -299,18 +329,13 @@ var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pr
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
-					It("should accept digits in exchange code", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=NSE1", nil)
+					It("should accept underscore in exchange code", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=FX_IDC", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
 					It("should accept dot in exchange code", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=N.SE", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusOK))
-					})
-					It("should accept underscore in exchange code", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=N_SE", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
@@ -348,6 +373,16 @@ var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pr
 					})
 					It("should return 400 for exchange with unsupported special character", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=NSE@", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+					It("should return 400 for exchange with digit", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=NSE1", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+					It("should return 400 for exchange starting with digit", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=1NSE", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})

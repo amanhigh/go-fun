@@ -11,16 +11,16 @@ import (
 
 // Pre-compiled regex patterns for validation (PRD Section 3.0)
 var (
-	// Ticker: uppercase A-Z, digits, dots, hyphens, ampersands (e.g., "TCS", "TCS.NS", "M&M")
-	tickerRegex = regexp.MustCompile(`^[A-Z0-9][A-Z0-9.\-&]*$`)
-	// Alert Symbol: alphanumeric first, then Investing-style symbol text.
-	alertSymbolRegex = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._!]*$`)
+	// Ticker: uppercase A-Z, digits, dots, underscores, exclamation (e.g., "TCS", "TCS.NS", "GOLD!")
+	tickerRegex = regexp.MustCompile(`^[A-Z0-9][A-Z0-9._!]*$`)
+	// Alert Symbol: alphanumeric first, then dot, slash, equals (e.g. "USDCAD", "BTC/USD").
+	alertSymbolRegex = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9./=]*$`)
 	// Alert Name: alphanumeric first, then sanitized display name characters.
-	alertNameRegex = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9 .&'()-]{0,99}$`)
-	// Ticker Exchange: uppercase letters, digits, dots, underscores only.
-	tickerExchangeRegex = regexp.MustCompile(`^[A-Z0-9][A-Z0-9._]*$`)
-	// Alert Exchange: mixed-case letters, digits, dots, underscores (source data from pairRepo).
-	alertExchangeRegex = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._]*$`)
+	alertNameRegex = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9 .&'()-]*$`)
+	// Ticker Exchange: uppercase letters, underscore, dot (source data from exchangeRepo, e.g. FX_IDC).
+	tickerExchangeRegex = regexp.MustCompile(`^[A-Z][A-Z._]*$`)
+	// Alert Exchange: letters only, mixed-case (source data from pairRepo).
+	alertExchangeRegex = regexp.MustCompile(`^[A-Za-z][A-Za-z]*$`)
 	// Tag: alphanumeric with hyphens (e.g., "oe", "dep-1")
 	tagRegex = regexp.MustCompile(`^[a-zA-Z0-9-]+$`)
 	// Override: letters only (e.g., "loc", "abc")
