@@ -206,6 +206,36 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 						Expect(response.AlertTickers).To(HaveLen(1))
 						Expect(response.AlertTickers[0].Symbol).To(Equal("MCIX"))
 					})
+					It("should accept minimum symbol length 1", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=A", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+					It("should accept maximum symbol length 25", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol="+strings.Repeat("A", 25), nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+					It("should accept letters and digits in symbol query", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=ABC123", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+					It("should accept dot in symbol query", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=ABC.D", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+					It("should accept underscore in symbol query", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=ABC_D", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+					It("should accept hyphen in symbol query", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=ABC-D", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
 					It("should return empty list for no symbol match", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=ZZZ", nil)
 						router.ServeHTTP(w, req)
@@ -214,13 +244,18 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 					})
 				})
 				Context("Bad Values", func() {
-					It("should return 400 for invalid symbol query", func() {
+					It("should return 400 for invalid symbol query starting with dot", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=.MCIX", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 					It("should return 400 for symbol query exceeding 25 characters", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol="+strings.Repeat("A", 26), nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+					It("should return 400 for symbol query with unsupported special character", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?symbol=MCIX@", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
@@ -268,6 +303,23 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 						Expect(response.AlertTickers).To(HaveLen(1))
 						Expect(response.AlertTickers[0].PairID).To(Equal("941982"))
 					})
+					It("should accept minimum pair-id length 1", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?pair-id=1", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+					It("should accept maximum pair-id length 64", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?pair-id="+strings.Repeat("1", 64), nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+					It("should preserve leading zeroes", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?pair-id=00123", nil)
+						router.ServeHTTP(w, req)
+						response := decodeAlertTickerListResponse(w)
+						Expect(response.AlertTickers).To(HaveLen(1))
+						Expect(response.AlertTickers[0].PairID).To(Equal("000777"))
+					})
 					It("should return empty list for no pair-id match", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?pair-id=999999", nil)
 						router.ServeHTTP(w, req)
@@ -286,8 +338,13 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
-					It("should return 400 for blank pair-id", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?pair-id=", nil)
+					It("should return 400 for negative pair-id", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?pair-id=-941982", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+					It("should return 400 for whitespace in pair-id", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?pair-id=941%20982", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
