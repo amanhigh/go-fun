@@ -671,6 +671,7 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 				})
 
 				Context("Bad Values", func() {
+					// HACK: Simplify Use Typed Payloads in Tests to Avoid Repetitive Raw JSON Strings and Reduce Risk of Syntax Errors in Test Cases
 					It("should return 400 for missing last_opened_at (PRD: required)", func() {
 						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","is_fno":true}`)
 						router.ServeHTTP(w, req)
@@ -1301,13 +1302,13 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 					var persisted barkat.Ticker
 					Expect(db.First(&persisted, "tv_symbol = ?", createdTicker.Ticker).Error).To(HaveOccurred())
 				})
-				It("should cascade delete linked Investing tickers and price alerts", func() {
+				It("should cascade delete linked Alert tickers and price alerts", func() {
 					req, w := util.CreateTestRequest(http.MethodDelete, barkat.TickerBase+"/"+createdTicker.Ticker, nil)
 					router.ServeHTTP(w, req)
 					Expect(w.Code).To(Equal(http.StatusNoContent))
-					var investingCount int64
-					Expect(db.Model(&barkat.InvestingTicker{}).Where("tradingview_ticker_id = ?", createdTicker.ID).Count(&investingCount).Error).ToNot(HaveOccurred())
-					Expect(investingCount).To(Equal(int64(0)))
+					var alertTickerCount int64
+					Expect(db.Model(&barkat.AlertTicker{}).Where("ticker_id = ?", createdTicker.ID).Count(&alertTickerCount).Error).ToNot(HaveOccurred())
+					Expect(alertTickerCount).To(Equal(int64(0)))
 				})
 			})
 		})

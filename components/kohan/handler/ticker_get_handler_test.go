@@ -67,8 +67,8 @@ var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pr
 
 		BeforeEach(func() {
 			createdTicker = seedTicker(testCtx, db, validTickerPayload())
-			investingExchange := "NSE"
-			Expect(db.Create(&barkat.InvestingTicker{TickerID: createdTicker.ID, Symbol: "MCIX", PairID: "941982", DisplayName: "Multi Commodity Exchange of India", Exchange: &investingExchange}).Error).ToNot(HaveOccurred())
+			alertExchange := "NSE"
+			Expect(db.Create(&barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCIX", PairID: "941982", Name: "Multi Commodity Exchange of India", Exchange: &alertExchange}).Error).ToNot(HaveOccurred())
 		})
 
 		Context("Happy Path", func() {
@@ -110,11 +110,11 @@ var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pr
 					Expect(response.UpdatedAt).ToNot(BeZero())
 				})
 
-				It("should include mapped investing_tickers array", func() {
-					Expect(response.InvestingTickers).To(HaveLen(1))
-					Expect(response.InvestingTickers[0].Symbol).To(Equal("MCIX"))
-					Expect(response.InvestingTickers[0].PairID).To(Equal("941982"))
-					Expect(response.InvestingTickers[0].DisplayName).To(Equal("Multi Commodity Exchange of India"))
+				It("should include mapped alert_tickers array", func() {
+					Expect(response.AlertTickers).To(HaveLen(1))
+					Expect(response.AlertTickers[0].Symbol).To(Equal("MCIX"))
+					Expect(response.AlertTickers[0].PairID).To(Equal("941982"))
+					Expect(response.AlertTickers[0].Name).To(Equal("Multi Commodity Exchange of India"))
 				})
 			})
 		})
@@ -232,7 +232,7 @@ var _ = PDescribe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pr
 				It("should include trend", func() { Expect(ticker.Trend).ToNot(BeEmpty()) })
 				It("should include last_opened_at", func() { Expect(ticker.LastOpenedAt).ToNot(BeZero()) })
 				It("should include is_fno", func() { Expect(ticker.IsFNO).To(BeAssignableToTypeOf(false)) })
-				It("should include investing_ticker_count", func() { Expect(ticker.InvestingTickCount).To(BeNumerically(">=", 0)) })
+				It("should include alert_ticker_count", func() { Expect(ticker.AlertTickerCount).To(BeNumerically(">=", 0)) })
 			})
 		})
 

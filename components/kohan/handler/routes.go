@@ -73,3 +73,19 @@ func SetupTickerRoutes(ticker *gin.RouterGroup, tickerHandler TickerHandler) {
 		ticker.DELETE("/:ticker", tickerHandler.HandleDeleteTicker)
 	}
 }
+
+// SetupTickerAlertRoutes configures nested Alert ticker routes under primary tickers.
+func SetupTickerAlertRoutes(ticker *gin.RouterGroup, alertTickerHandler AlertTickerHandler) {
+	{
+		ticker.POST("/:ticker/alert-tickers", alertTickerHandler.HandleCreateAlertTicker)
+	}
+}
+
+// SetupAlertTickerRoutes configures top-level Alert ticker routes.
+func SetupAlertTickerRoutes(alertTicker *gin.RouterGroup, alertTickerHandler AlertTickerHandler) {
+	{
+		alertTicker.GET("", alertTickerHandler.HandleListAlertTickers)
+		alertTicker.GET("/:symbol", alertTickerHandler.HandleGetAlertTicker)
+		alertTicker.DELETE("/:symbol", alertTickerHandler.HandleDeleteAlertTicker)
+	}
+}
