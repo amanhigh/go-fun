@@ -61,3 +61,15 @@ func SetupJournalRoutes(journal *gin.RouterGroup, journalHandler JournalHandler)
 		journal.DELETE("/:id", journalHandler.HandleDeleteJournal)
 	}
 }
+
+// SetupTickerRoutes configures Barkat ticker routes.
+func SetupTickerRoutes(ticker *gin.RouterGroup, tickerHandler TickerHandler) {
+	{
+		ticker.GET("", tickerHandler.HandleListTickers)
+		ticker.GET("/:ticker", tickerHandler.HandleGetTicker)
+		ticker.POST("", tickerHandler.HandleCreateTicker)
+		ticker.PUT("/:ticker", tickerHandler.HandleUpdateTicker)
+		ticker.PATCH("/:ticker", tickerHandler.HandlePatchTickerLastOpened)
+		ticker.DELETE("/:ticker", tickerHandler.HandleDeleteTicker)
+	}
+}
