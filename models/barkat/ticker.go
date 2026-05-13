@@ -28,6 +28,9 @@ type Ticker struct {
 	InvestingTickCount int64             `gorm:"-" json:"investing_ticker_count,omitempty"`
 }
 
+// TableName maps Ticker to the PRD-defined tradingview_tickers table.
+func (Ticker) TableName() string { return "tradingview_tickers" }
+
 // InvestingTicker represents an Investing.com ticker attached to a TradingView ticker.
 type InvestingTicker struct {
 	ID          uint64    `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
@@ -41,6 +44,9 @@ type InvestingTicker struct {
 	UpdatedAt   time.Time `gorm:"column:updated_at;not null" json:"updated_at,omitempty"`
 }
 
+// TableName maps InvestingTicker to the PRD-defined investing_tickers table.
+func (InvestingTicker) TableName() string { return "investing_tickers" }
+
 // PriceAlert represents a local Barkat price alert resolved to an Investing ticker.
 type PriceAlert struct {
 	ID                uint64    `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
@@ -50,6 +56,9 @@ type PriceAlert struct {
 	DisplayName       *string   `gorm:"column:display_name" json:"display_name"`
 	CreatedAt         time.Time `gorm:"column:created_at;not null" json:"created_at"`
 }
+
+// TableName maps PriceAlert to the PRD-defined price_alerts table.
+func (PriceAlert) TableName() string { return "price_alerts" }
 
 // TickerPath binds the :ticker path parameter.
 type TickerPath struct {
