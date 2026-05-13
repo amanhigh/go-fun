@@ -227,14 +227,7 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 				})
 
 				Context("Bad Values", func() {
-					It("should return 400 for missing ticker (PRD: required)", func() {
-						payload := validTickerPayload()
-						payload.Ticker = ""
-						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "Ticker", "required")
-					})
-					It("should return 400 for empty ticker", func() {
+					It("should return 400 for missing or empty ticker (PRD: required)", func() {
 						payload := validTickerPayload()
 						payload.Ticker = ""
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
@@ -850,6 +843,12 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 
 			Context("Exchange Field", func() {
 				Context("Allowed Values", func() {
+					It("should accept omitted exchange on PUT and leave existing value unchanged", func() {
+						req, w := rawTickerRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, `{"timeframes":["MN","WK","DL"],"type":"EQUITY","state":"READY","trend":"UPTREND","is_fno":true}`)
+						router.ServeHTTP(w, req)
+						response := decodeTickerOKResponse(w)
+						Expect(response.Exchange).To(Equal(createdTicker.Exchange))
+					})
 					It("should accept null exchange on PUT", func() {
 						payload := validUpdatePayload()
 						payload.Exchange = nil
@@ -870,11 +869,6 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 					})
 				})
 				Context("Bad Values", func() {
-					It("should return 400 for missing exchange field", func() {
-						req, w := rawTickerRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, `{"timeframes":["MN","WK","DL"],"type":"EQUITY","state":"READY","trend":"UPTREND","is_fno":true}`)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "required")
-					})
 					It("should return 400 for empty exchange string", func() {
 						payload := validUpdatePayload()
 						payload.Exchange = tickerStringPtr("")
@@ -1065,6 +1059,12 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 
 			Context("Is FNO Field", func() {
 				Context("Allowed Values", func() {
+					It("should accept omitted is_fno on PUT and leave existing value unchanged", func() {
+						req, w := rawTickerRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, `{"exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"READY","trend":"UPTREND"}`)
+						router.ServeHTTP(w, req)
+						response := decodeTickerOKResponse(w)
+						Expect(response.IsFNO).To(Equal(createdTicker.IsFNO))
+					})
 					It("should accept is_fno true", func() {
 						payload := validUpdatePayload()
 						payload.IsFNO = true
@@ -1079,11 +1079,6 @@ var _ = PDescribe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary
 					})
 				})
 				Context("Bad Values", func() {
-					It("should return 400 for missing is_fno", func() {
-						req, w := rawTickerRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, `{"exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"READY","trend":"UPTREND"}`)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "IsFNO", "required")
-					})
 					It("should return 400 for string is_fno", func() {
 						req, w := rawTickerRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, `{"exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"READY","trend":"UPTREND","is_fno":"true"}`)
 						router.ServeHTTP(w, req)
