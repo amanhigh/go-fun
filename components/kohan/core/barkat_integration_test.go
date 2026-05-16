@@ -524,7 +524,7 @@ var _ = Describe("Barkat E2E Test", func() {
 		})
 
 		AfterEach(func() {
-			client.R().Delete(barkat.TickerBase + "/" + encodedTickerPath)
+			_, _ = client.R().Delete(barkat.TickerBase + "/" + encodedTickerPath)
 		})
 
 		It("should retrieve composite ticker via encoded URL path", func() {

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/go-resty/resty/v2"
@@ -490,6 +491,21 @@ var _ = Describe("Error", func() {
 				Expect(result).To(HaveOccurred())
 				Expect(result.Code()).To(Equal(http.StatusBadRequest))
 				Expect(result.Error()).To(ContainSubstring("must be numeric"))
+			})
+		})
+
+		// --------------------------------------------------------------------
+		// 2.3a: Time Parse Errors
+		// --------------------------------------------------------------------
+		Context("Time Parse Errors", func() {
+			It("should handle time.ParseError from invalid time.Time JSON input", func() {
+				_, parseErr := time.Parse(time.RFC3339, "not-a-date")
+				result := util.ProcessValidationError(parseErr)
+
+				Expect(result).To(HaveOccurred())
+				Expect(result.Code()).To(Equal(http.StatusBadRequest))
+				Expect(result.Error()).To(ContainSubstring("Invalid time format"))
+				Expect(result.Error()).To(ContainSubstring("not-a-date"))
 			})
 		})
 
