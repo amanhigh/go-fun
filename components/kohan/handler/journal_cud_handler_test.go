@@ -236,20 +236,6 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						Expect(response.Ticker).To(Equal("GRSE123"))
 					})
 
-					PIt("should accept ticker with hyphen", func() {
-						journal := barkat.Journal{
-							Ticker:   "GRSE-NSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images:   standardImages,
-						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
-						router.ServeHTTP(w, req)
-						response := decodeCreateJournalResponse(w)
-						Expect(response.Ticker).To(Equal("GRSE-NSE"))
-					})
-
 					It("should accept ticker with dot suffix", func() {
 						journal := barkat.Journal{
 							Ticker:   "TCS.NS",

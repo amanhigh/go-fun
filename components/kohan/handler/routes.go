@@ -74,6 +74,7 @@ func SetupTickerRoutes(ticker *gin.RouterGroup, tickerHandler TickerHandler) {
 	}
 }
 
+// HACK: Merge Route Functions.
 // SetupTickerAlertRoutes configures nested Alert ticker routes under primary tickers.
 func SetupTickerAlertRoutes(ticker *gin.RouterGroup, alertTickerHandler AlertTickerHandler) {
 	{
