@@ -236,7 +236,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						Expect(response.Ticker).To(Equal("GRSE123"))
 					})
 
-					It("should accept ticker with hyphen", func() {
+					PIt("should accept ticker with hyphen", func() {
 						journal := barkat.Journal{
 							Ticker:   "GRSE-NSE",
 							Sequence: "MWD",

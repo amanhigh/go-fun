@@ -2,7 +2,6 @@ package manager
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/repository"
@@ -44,17 +43,17 @@ func (m *JournalManagerImpl) CreateJournal(ctx context.Context, journal *barkat.
 }
 
 func (m *JournalManagerImpl) GetJournal(ctx context.Context, journalExternalId string) (barkat.Journal, common.HttpError) {
-	journal, err := m.repo.GetJournal(ctx, journalExternalId)
-	if err != nil {
-		return barkat.Journal{}, common.ErrNotFound
+	journal, httpErr := m.repo.GetJournal(ctx, journalExternalId)
+	if httpErr != nil {
+		return barkat.Journal{}, httpErr
 	}
 	return journal, nil
 }
 
 func (m *JournalManagerImpl) ListJournals(ctx context.Context, query barkat.JournalQuery) (barkat.JournalList, common.HttpError) {
-	journals, total, err := m.repo.ListJournals(ctx, query)
-	if err != nil {
-		return barkat.JournalList{}, common.NewServerError(fmt.Errorf("failed to list journals: %w", err))
+	journals, total, httpErr := m.repo.ListJournals(ctx, query)
+	if httpErr != nil {
+		return barkat.JournalList{}, httpErr
 	}
 	return barkat.JournalList{
 		Journals: journals,

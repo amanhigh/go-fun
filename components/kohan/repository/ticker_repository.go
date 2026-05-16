@@ -23,8 +23,6 @@ var tickerSortFieldMap = map[string]string{
 // TickerRepository provides persistence operations for barkat tickers.
 type TickerRepository interface {
 	util.BaseDbRepositoryInterface
-	// GetTicker retrieves a single ticker by its external_id with AlertTickers preloaded.
-	GetTicker(ctx context.Context, externalId string) (barkat.Ticker, common.HttpError)
 	// ListTickers returns a filtered, paginated list of tickers.
 	ListTickers(ctx context.Context, query barkat.TickerQuery) ([]barkat.Ticker, int64, common.HttpError)
 }
@@ -43,12 +41,6 @@ func NewTickerRepository(db *gorm.DB) *TickerRepositoryImpl {
 }
 
 // ---- Ticker ----
-
-func (r *TickerRepositoryImpl) GetTicker(ctx context.Context, externalId string) (barkat.Ticker, common.HttpError) {
-	var ticker barkat.Ticker
-	err := r.SafeTx(ctx).Preload("AlertTickers").First(&ticker, "external_id = ?", externalId).Error
-	return ticker, util.GormErrorMapper(err)
-}
 
 func (r *TickerRepositoryImpl) ListTickers(ctx context.Context, query barkat.TickerQuery) ([]barkat.Ticker, int64, common.HttpError) {
 	tx := r.applyTickerFilters(r.SafeTx(ctx).Model(&barkat.Ticker{}), query)

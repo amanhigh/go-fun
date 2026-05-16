@@ -2,7 +2,6 @@ package manager
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
@@ -13,16 +12,16 @@ import (
 type BarkatTickerManager interface {
 	// CreateTicker creates a new ticker.
 	CreateTicker(ctx context.Context, ticker *barkat.Ticker) common.HttpError
-	// GetTicker retrieves a single ticker by tv_symbol with AlertTickers preloaded.
-	GetTicker(ctx context.Context, tvSymbol string) (barkat.Ticker, common.HttpError)
+	// GetTicker retrieves a single ticker by ticker identity.
+	GetTicker(ctx context.Context, ticker string) (barkat.Ticker, common.HttpError)
 	// ListTickers returns a filtered, paginated list of tickers.
 	ListTickers(ctx context.Context, query barkat.TickerQuery) (barkat.TickerList, common.HttpError)
 	// UpdateTicker replaces mutable fields on an existing ticker.
-	UpdateTicker(ctx context.Context, tvSymbol string, req barkat.TickerUpdateRequest) (barkat.Ticker, common.HttpError)
+	UpdateTicker(ctx context.Context, ticker string, req barkat.TickerUpdateRequest) (barkat.Ticker, common.HttpError)
 	// PatchTickerLastOpened updates only the last_opened_at timestamp.
-	PatchTickerLastOpened(ctx context.Context, tvSymbol string, update barkat.TickerLastOpenedUpdate) (barkat.Ticker, common.HttpError)
+	PatchTickerLastOpened(ctx context.Context, ticker string, update barkat.TickerLastOpenedUpdate) (barkat.Ticker, common.HttpError)
 	// DeleteTicker deletes a ticker and cascades to linked AlertTickers and PriceAlerts.
-	DeleteTicker(ctx context.Context, tvSymbol string) common.HttpError
+	DeleteTicker(ctx context.Context, ticker string) common.HttpError
 }
 
 type BarkatTickerManagerImpl struct {
@@ -44,20 +43,18 @@ func (m *BarkatTickerManagerImpl) CreateTicker(ctx context.Context, ticker *bark
 	})
 }
 
-func (m *BarkatTickerManagerImpl) GetTicker(ctx context.Context, tvSymbol string) (barkat.Ticker, common.HttpError) {
-	ticker, err := m.repo.GetByTvSymbol(ctx, tvSymbol)
-	if err != nil {
-		return barkat.Ticker{}, common.ErrNotFound
+func (m *BarkatTickerManagerImpl) GetTicker(ctx context.Context, ticker string) (barkat.Ticker, common.HttpError) {
+	var result barkat.Ticker
+	if httpErr := m.repo.GetByExternalId(ctx, ticker, &result); httpErr != nil {
+		return barkat.Ticker{}, httpErr
 	}
-	// Compute the non-persisted alert_ticker_count from the preloaded association
-	ticker.AlertTickerCount = int64(len(ticker.AlertTickers))
-	return ticker, nil
+	return result, nil
 }
 
 func (m *BarkatTickerManagerImpl) ListTickers(ctx context.Context, query barkat.TickerQuery) (barkat.TickerList, common.HttpError) {
-	tickers, total, err := m.repo.ListTickers(ctx, query)
-	if err != nil {
-		return barkat.TickerList{}, common.NewServerError(fmt.Errorf("failed to list tickers: %w", err))
+	tickers, total, httpErr := m.repo.ListTickers(ctx, query)
+	if httpErr != nil {
+		return barkat.TickerList{}, httpErr
 	}
 	return barkat.TickerList{
 		Tickers: tickers,
@@ -69,31 +66,31 @@ func (m *BarkatTickerManagerImpl) ListTickers(ctx context.Context, query barkat.
 	}, nil
 }
 
-func (m *BarkatTickerManagerImpl) UpdateTicker(ctx context.Context, tvSymbol string, req barkat.TickerUpdateRequest) (barkat.Ticker, common.HttpError) {
+func (m *BarkatTickerManagerImpl) UpdateTicker(ctx context.Context, ticker string, req barkat.TickerUpdateRequest) (barkat.Ticker, common.HttpError) {
 	var updatedTicker barkat.Ticker
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Fetch existing ticker
-		ticker, httpErr := m.GetTicker(c, tvSymbol)
+		existing, httpErr := m.GetTicker(c, ticker)
 		if httpErr != nil {
 			return httpErr
 		}
 
 		// Copy mutable fields from update request
 		if req.Exchange != nil {
-			ticker.Exchange = req.Exchange
+			existing.Exchange = req.Exchange
 		}
-		ticker.Timeframes = req.Timeframes
-		ticker.Type = req.Type
-		ticker.State = req.State
-		ticker.Trend = req.Trend
-		ticker.IsFNO = req.IsFNO
+		existing.Timeframes = req.Timeframes
+		existing.Type = req.Type
+		existing.State = req.State
+		existing.Trend = req.Trend
+		existing.IsFNO = req.IsFNO
 
 		// Save updated ticker
-		if httpErr := m.repo.Update(c, &ticker); httpErr != nil {
+		if httpErr := m.repo.Update(c, &existing); httpErr != nil {
 			return httpErr
 		}
 
-		updatedTicker = ticker
+		updatedTicker = existing
 		return nil
 	})
 	if err != nil {
@@ -102,24 +99,24 @@ func (m *BarkatTickerManagerImpl) UpdateTicker(ctx context.Context, tvSymbol str
 	return updatedTicker, nil
 }
 
-func (m *BarkatTickerManagerImpl) PatchTickerLastOpened(ctx context.Context, tvSymbol string, update barkat.TickerLastOpenedUpdate) (barkat.Ticker, common.HttpError) {
+func (m *BarkatTickerManagerImpl) PatchTickerLastOpened(ctx context.Context, ticker string, update barkat.TickerLastOpenedUpdate) (barkat.Ticker, common.HttpError) {
 	var updatedTicker barkat.Ticker
 	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Fetch existing ticker
-		ticker, httpErr := m.GetTicker(c, tvSymbol)
+		existing, httpErr := m.GetTicker(c, ticker)
 		if httpErr != nil {
 			return httpErr
 		}
 
 		// Update only last_opened_at
-		ticker.LastOpenedAt = update.LastOpenedAt
+		existing.LastOpenedAt = update.LastOpenedAt
 
 		// Save updated ticker
-		if httpErr := m.repo.Update(c, &ticker); httpErr != nil {
+		if httpErr := m.repo.Update(c, &existing); httpErr != nil {
 			return httpErr
 		}
 
-		updatedTicker = ticker
+		updatedTicker = existing
 		return nil
 	})
 	if err != nil {
@@ -128,15 +125,15 @@ func (m *BarkatTickerManagerImpl) PatchTickerLastOpened(ctx context.Context, tvS
 	return updatedTicker, nil
 }
 
-func (m *BarkatTickerManagerImpl) DeleteTicker(ctx context.Context, tvSymbol string) common.HttpError {
+func (m *BarkatTickerManagerImpl) DeleteTicker(ctx context.Context, ticker string) common.HttpError {
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Fetch existing ticker to get internal ID
-		ticker, httpErr := m.GetTicker(c, tvSymbol)
+		existing, httpErr := m.GetTicker(c, ticker)
 		if httpErr != nil {
 			return httpErr
 		}
 		// Delete by internal ID — cascade to AlertTickers/PriceAlerts is handled
 		// by DB foreign key constraints (ON DELETE CASCADE in production DBs).
-		return m.repo.DeleteById(c, ticker.ID, &barkat.Ticker{})
+		return m.repo.DeleteById(c, existing.ID, &barkat.Ticker{})
 	})
 }
