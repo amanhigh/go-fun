@@ -23,9 +23,9 @@ import (
 )
 
 func decodeTickerGetResponse(w *httptest.ResponseRecorder) barkat.Ticker {
-	var envelope common.Envelope[map[string]barkat.Ticker]
+	var envelope common.Envelope[barkat.Ticker]
 	util.AssertSuccess(w, http.StatusOK, &envelope)
-	return envelope.Data["ticker"]
+	return envelope.Data
 }
 
 func decodeTickerListResponse(w *httptest.ResponseRecorder) barkat.TickerList {
@@ -108,7 +108,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 				It("should return Envelope success", func() {
 					req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"/"+createdTicker.Ticker, nil)
 					router.ServeHTTP(w, req)
-					var envelope common.Envelope[map[string]barkat.Ticker]
+					var envelope common.Envelope[barkat.Ticker]
 					util.AssertSuccess(w, http.StatusOK, &envelope)
 					Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 				})

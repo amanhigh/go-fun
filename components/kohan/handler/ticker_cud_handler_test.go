@@ -23,16 +23,10 @@ import (
 	"gorm.io/gorm"
 )
 
-func decodeTickerCreateResponse(w *httptest.ResponseRecorder) barkat.Ticker {
-	var envelope common.Envelope[map[string]barkat.Ticker]
-	util.AssertSuccess(w, http.StatusCreated, &envelope)
-	return envelope.Data["ticker"]
-}
-
-func decodeTickerOKResponse(w *httptest.ResponseRecorder) barkat.Ticker {
-	var envelope common.Envelope[map[string]barkat.Ticker]
-	util.AssertSuccess(w, http.StatusOK, &envelope)
-	return envelope.Data["ticker"]
+func decodeTickerResponse(w *httptest.ResponseRecorder, expectedStatus int) barkat.Ticker {
+	var envelope common.Envelope[barkat.Ticker]
+	util.AssertSuccess(w, expectedStatus, &envelope)
+	return envelope.Data
 }
 
 func newTickerTestRouter(tickerHandler handler.TickerHandler) *gin.Engine {
@@ -45,19 +39,19 @@ func newTickerTestRouter(tickerHandler handler.TickerHandler) *gin.Engine {
 func createTickerRequest(router *gin.Engine, payload any) (*httptest.ResponseRecorder, barkat.Ticker) {
 	req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 	router.ServeHTTP(w, req)
-	return w, decodeTickerCreateResponse(w)
+	return w, decodeTickerResponse(w, http.StatusCreated)
 }
 
 func updateTickerRequest(router *gin.Engine, ticker string, payload any) (*httptest.ResponseRecorder, barkat.Ticker) {
 	req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+ticker, payload)
 	router.ServeHTTP(w, req)
-	return w, decodeTickerOKResponse(w)
+	return w, decodeTickerResponse(w, http.StatusOK)
 }
 
 func patchTickerRequest(router *gin.Engine, ticker string, payload any) (*httptest.ResponseRecorder, barkat.Ticker) {
 	req, w := util.CreateTestRequest(http.MethodPatch, barkat.TickerBase+"/"+ticker, payload)
 	router.ServeHTTP(w, req)
-	return w, decodeTickerOKResponse(w)
+	return w, decodeTickerResponse(w, http.StatusOK)
 }
 
 func rawTickerRequest(method, url, body string) (*http.Request, *httptest.ResponseRecorder) {
@@ -134,12 +128,12 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 				})
 
 				It("should return Envelope success", func() {
-					var envelope common.Envelope[map[string]barkat.Ticker]
+					var envelope common.Envelope[barkat.Ticker]
 					util.AssertSuccess(w, http.StatusCreated, &envelope)
 					Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 				})
 
-				It("should return created ticker inside data.ticker", func() {
+				It("should return created ticker in data", func() {
 					Expect(response.Ticker).To(Equal("MCX"))
 				})
 
@@ -694,7 +688,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 						jsonPayload := `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05T10:30:00+05:30","is_fno":true}`
 						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, jsonPayload)
 						router.ServeHTTP(w, req)
-						response := decodeTickerCreateResponse(w)
+						response := decodeTickerResponse(w, http.StatusCreated)
 						Expect(response.LastOpenedAt).ToNot(BeZero())
 					})
 					It("should preserve timestamp value", func() {
@@ -751,7 +745,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 						jsonPayload := `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","last_opened_at":"2026-05-05T10:30:00Z"}`
 						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, jsonPayload)
 						router.ServeHTTP(w, req)
-						response := decodeTickerCreateResponse(w)
+						response := decodeTickerResponse(w, http.StatusCreated)
 						Expect(response.IsFNO).To(BeFalse())
 					})
 					It("should accept is_fno true", func() {
@@ -842,7 +836,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 					Expect(w.Code).To(Equal(http.StatusOK))
 				})
 				It("should return Envelope success", func() {
-					var envelope common.Envelope[map[string]barkat.Ticker]
+					var envelope common.Envelope[barkat.Ticker]
 					util.AssertSuccess(w, http.StatusOK, &envelope)
 					Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 				})
@@ -909,7 +903,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 					It("should accept omitted exchange on PUT and leave existing value unchanged", func() {
 						req, w := rawTickerRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, `{"timeframes":["MN","WK","DL"],"type":"EQUITY","state":"READY","trend":"UPTREND","is_fno":true}`)
 						router.ServeHTTP(w, req)
-						response := decodeTickerOKResponse(w)
+						response := decodeTickerResponse(w, http.StatusOK)
 						Expect(response.Exchange).To(Equal(createdTicker.Exchange))
 					})
 					It("should accept valid exchange code", func() {
@@ -1253,7 +1247,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 					Expect(w.Code).To(Equal(http.StatusOK))
 				})
 				It("should return Envelope success", func() {
-					var envelope common.Envelope[map[string]barkat.Ticker]
+					var envelope common.Envelope[barkat.Ticker]
 					util.AssertSuccess(w, http.StatusOK, &envelope)
 					Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 				})
@@ -1311,7 +1305,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 					It("should accept RFC3339 timestamp with numeric timezone offset", func() {
 						req, w := rawTickerRequest(http.MethodPatch, barkat.TickerBase+"/"+createdTicker.Ticker, `{"last_opened_at":"2026-05-05T11:00:00+05:30"}`)
 						router.ServeHTTP(w, req)
-						response := decodeTickerOKResponse(w)
+						response := decodeTickerResponse(w, http.StatusOK)
 						Expect(response.LastOpenedAt).ToNot(BeZero())
 					})
 				})

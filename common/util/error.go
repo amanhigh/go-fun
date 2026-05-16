@@ -93,8 +93,9 @@ func handleValidatorError(err error) common.HttpError {
 	}
 
 	e := errs[0]
-	fieldName := e.Field()
-	msg := fmt.Sprintf("'%s' with Value '%v' Violates '%s (%s)'", e.Field(), e.Value(), e.Tag(), e.Param())
+	// Strip array index suffix (e.g. "Timeframes[0]" → "Timeframes") for cleaner error keys
+	fieldName := strings.SplitN(e.Field(), "[", 2)[0]
+	msg := fmt.Sprintf("'%s' with Value '%v' Violates '%s (%s)'", fieldName, e.Value(), e.Tag(), e.Param())
 	return common.NewFieldHttpError(fieldName, msg)
 }
 
@@ -130,11 +131,16 @@ func handleJSONError(err error) common.HttpError {
 	return nil
 }
 
-// handleTimeParseError processes time.ParseError from JSON binding (invalid timestamp formats).
+// handleTimeParseError processes errors from time.Time JSON binding (invalid timestamp formats).
+// Handles both *time.ParseError (bad format string) and Go 1.26+ *errors.errorString (non-string input).
 func handleTimeParseError(err error) common.HttpError {
 	var parseErr *time.ParseError
 	if errors.As(err, &parseErr) {
 		return common.NewHttpError(fmt.Sprintf("Invalid time format: '%s'", parseErr.Value), http.StatusBadRequest)
+	}
+	// Go 1.26+: time.Time.UnmarshalJSON returns *errors.errorString for non-string values
+	if err != nil && strings.Contains(err.Error(), "Time.UnmarshalJSON") {
+		return common.NewHttpError("Invalid time format: value must be a JSON string", http.StatusBadRequest)
 	}
 	return nil
 }

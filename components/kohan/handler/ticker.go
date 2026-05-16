@@ -65,7 +65,7 @@ func (h *TickerHandlerImpl) HandleGetTicker(c *gin.Context) {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusOK, common.NewEnvelope(map[string]barkat.Ticker{"ticker": ticker}))
+	c.JSON(http.StatusOK, common.NewEnvelope(ticker))
 }
 
 func (h *TickerHandlerImpl) HandleCreateTicker(c *gin.Context) {
@@ -81,7 +81,7 @@ func (h *TickerHandlerImpl) HandleCreateTicker(c *gin.Context) {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusCreated, common.NewEnvelope(map[string]barkat.Ticker{"ticker": ticker}))
+	c.JSON(http.StatusCreated, common.NewEnvelope(ticker))
 }
 
 func (h *TickerHandlerImpl) HandleUpdateTicker(c *gin.Context) {
@@ -105,7 +105,7 @@ func (h *TickerHandlerImpl) HandleUpdateTicker(c *gin.Context) {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusOK, common.NewEnvelope(map[string]barkat.Ticker{"ticker": ticker}))
+	c.JSON(http.StatusOK, common.NewEnvelope(ticker))
 }
 
 func (h *TickerHandlerImpl) HandlePatchTickerLastOpened(c *gin.Context) {
@@ -128,7 +128,7 @@ func (h *TickerHandlerImpl) HandlePatchTickerLastOpened(c *gin.Context) {
 		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
-	c.JSON(http.StatusOK, common.NewEnvelope(map[string]barkat.Ticker{"ticker": ticker}))
+	c.JSON(http.StatusOK, common.NewEnvelope(ticker))
 }
 
 func (h *TickerHandlerImpl) HandleDeleteTicker(c *gin.Context) {
