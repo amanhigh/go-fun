@@ -42,12 +42,9 @@ func (m *JournalManagerImpl) CreateJournal(ctx context.Context, journal *barkat.
 	})
 }
 
-func (m *JournalManagerImpl) GetJournal(ctx context.Context, journalExternalId string) (barkat.Journal, common.HttpError) {
-	journal, httpErr := m.repo.GetJournal(ctx, journalExternalId)
-	if httpErr != nil {
-		return barkat.Journal{}, httpErr
-	}
-	return journal, nil
+func (m *JournalManagerImpl) GetJournal(ctx context.Context, journalExternalId string) (journal barkat.Journal, httpErr common.HttpError) {
+	journal, httpErr = m.repo.GetJournal(ctx, journalExternalId)
+	return
 }
 
 func (m *JournalManagerImpl) ListJournals(ctx context.Context, query barkat.JournalQuery) (barkat.JournalList, common.HttpError) {
@@ -78,9 +75,8 @@ func (m *JournalManagerImpl) DeleteJournal(ctx context.Context, journalExternalI
 	})
 }
 
-func (m *JournalManagerImpl) UpdateReviewStatus(ctx context.Context, journalExternalId string, update barkat.JournalReviewUpdate) (barkat.Journal, common.HttpError) {
-	var updatedJournal barkat.Journal
-	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+func (m *JournalManagerImpl) UpdateReviewStatus(ctx context.Context, journalExternalId string, update barkat.JournalReviewUpdate) (updatedJournal barkat.Journal, err common.HttpError) {
+	err = m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Get journal to update
 		journal, httpErr := m.GetJournal(c, journalExternalId)
 		if httpErr != nil {
@@ -110,10 +106,5 @@ func (m *JournalManagerImpl) UpdateReviewStatus(ctx context.Context, journalExte
 		updatedJournal = journal
 		return nil
 	})
-
-	if err != nil {
-		return barkat.Journal{}, err
-	}
-
-	return updatedJournal, nil
+	return
 }

@@ -596,31 +596,50 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 						response := decodeTickerListResponse(w)
 						Expect(response.Tickers[0].Ticker).To(Equal("NIFTY/USDINR"))
 					})
-					It("should sort by exchange", func() {
+					It("should sort by exchange ascending", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?sort-by=exchange&sort-order=asc", nil)
 						router.ServeHTTP(w, req)
-						Expect(decodeTickerListResponse(w).Tickers).ToNot(BeEmpty())
+						tickers := decodeTickerListResponse(w).Tickers
+						Expect(tickers).To(HaveLen(3))
+						Expect(tickers[0].Ticker).To(Equal("NIFTY/USDINR"))
+						Expect(tickers[1].Ticker).To(Equal("BTCUSD"))
+						Expect(tickers[2].Ticker).To(Equal("MCX"))
 					})
-					It("should sort by type", func() {
+					It("should sort by type ascending", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?sort-by=type&sort-order=asc", nil)
 						router.ServeHTTP(w, req)
-						Expect(decodeTickerListResponse(w).Tickers).ToNot(BeEmpty())
+						tickers := decodeTickerListResponse(w).Tickers
+						Expect(tickers).To(HaveLen(3))
+						Expect(tickers[0].Ticker).To(Equal("NIFTY/USDINR"))
+						Expect(tickers[1].Ticker).To(Equal("BTCUSD"))
+						Expect(tickers[2].Ticker).To(Equal("MCX"))
 					})
-					It("should sort by state", func() {
+					It("should sort by state ascending", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?sort-by=state&sort-order=asc", nil)
 						router.ServeHTTP(w, req)
-						Expect(decodeTickerListResponse(w).Tickers).ToNot(BeEmpty())
+						tickers := decodeTickerListResponse(w).Tickers
+						Expect(tickers).To(HaveLen(3))
+						Expect(tickers[0].Ticker).To(Equal("NIFTY/USDINR"))
+						Expect(tickers[1].Ticker).To(Equal("BTCUSD"))
+						Expect(tickers[2].Ticker).To(Equal("MCX"))
 					})
-					It("should sort by trend", func() {
+					It("should sort by trend ascending", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?sort-by=trend&sort-order=asc", nil)
 						router.ServeHTTP(w, req)
-						Expect(decodeTickerListResponse(w).Tickers).ToNot(BeEmpty())
+						tickers := decodeTickerListResponse(w).Tickers
+						Expect(tickers).To(HaveLen(3))
+						Expect(tickers[0].Ticker).To(Equal("NIFTY/USDINR"))
+						Expect(tickers[1].Ticker).To(Equal("BTCUSD"))
+						Expect(tickers[2].Ticker).To(Equal("MCX"))
 					})
-					It("should sort by last_opened_at", func() {
+					It("should sort by last_opened_at ascending", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?sort-by=last_opened_at&sort-order=asc", nil)
 						router.ServeHTTP(w, req)
-						response := decodeTickerListResponse(w)
-						Expect(response.Tickers[0].LastOpenedAt).To(BeTemporally("<=", response.Tickers[1].LastOpenedAt))
+						tickers := decodeTickerListResponse(w).Tickers
+						Expect(tickers).To(HaveLen(3))
+						Expect(tickers[0].Ticker).To(Equal("MCX"))
+						Expect(tickers[1].Ticker).To(Equal("BTCUSD"))
+						Expect(tickers[2].Ticker).To(Equal("NIFTY/USDINR"))
 					})
 				})
 				Context("Bad Values", func() {

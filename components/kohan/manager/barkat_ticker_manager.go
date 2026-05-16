@@ -43,12 +43,9 @@ func (m *BarkatTickerManagerImpl) CreateTicker(ctx context.Context, ticker *bark
 	})
 }
 
-func (m *BarkatTickerManagerImpl) GetTicker(ctx context.Context, ticker string) (barkat.Ticker, common.HttpError) {
-	var result barkat.Ticker
-	if httpErr := m.repo.GetByExternalId(ctx, ticker, &result); httpErr != nil {
-		return barkat.Ticker{}, httpErr
-	}
-	return result, nil
+func (m *BarkatTickerManagerImpl) GetTicker(ctx context.Context, ticker string) (result barkat.Ticker, httpErr common.HttpError) {
+	httpErr = m.repo.GetByExternalId(ctx, ticker, &result)
+	return
 }
 
 func (m *BarkatTickerManagerImpl) ListTickers(ctx context.Context, query barkat.TickerQuery) (barkat.TickerList, common.HttpError) {
@@ -66,9 +63,8 @@ func (m *BarkatTickerManagerImpl) ListTickers(ctx context.Context, query barkat.
 	}, nil
 }
 
-func (m *BarkatTickerManagerImpl) UpdateTicker(ctx context.Context, ticker string, req barkat.TickerUpdateRequest) (barkat.Ticker, common.HttpError) {
-	var updatedTicker barkat.Ticker
-	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+func (m *BarkatTickerManagerImpl) UpdateTicker(ctx context.Context, ticker string, req barkat.TickerUpdateRequest) (updatedTicker barkat.Ticker, httpErr common.HttpError) {
+	httpErr = m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Fetch existing ticker
 		existing, httpErr := m.GetTicker(c, ticker)
 		if httpErr != nil {
@@ -93,15 +89,11 @@ func (m *BarkatTickerManagerImpl) UpdateTicker(ctx context.Context, ticker strin
 		updatedTicker = existing
 		return nil
 	})
-	if err != nil {
-		return barkat.Ticker{}, err
-	}
-	return updatedTicker, nil
+	return
 }
 
-func (m *BarkatTickerManagerImpl) PatchTickerLastOpened(ctx context.Context, ticker string, update barkat.TickerLastOpenedUpdate) (barkat.Ticker, common.HttpError) {
-	var updatedTicker barkat.Ticker
-	err := m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+func (m *BarkatTickerManagerImpl) PatchTickerLastOpened(ctx context.Context, ticker string, update barkat.TickerLastOpenedUpdate) (updatedTicker barkat.Ticker, httpErr common.HttpError) {
+	httpErr = m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Fetch existing ticker
 		existing, httpErr := m.GetTicker(c, ticker)
 		if httpErr != nil {
@@ -119,10 +111,7 @@ func (m *BarkatTickerManagerImpl) PatchTickerLastOpened(ctx context.Context, tic
 		updatedTicker = existing
 		return nil
 	})
-	if err != nil {
-		return barkat.Ticker{}, err
-	}
-	return updatedTicker, nil
+	return
 }
 
 func (m *BarkatTickerManagerImpl) DeleteTicker(ctx context.Context, ticker string) common.HttpError {
