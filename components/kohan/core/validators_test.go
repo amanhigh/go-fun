@@ -1,6 +1,8 @@
+//nolint:dupl
 package core_test
 
 import (
+	"errors"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -20,6 +22,11 @@ var _ = Describe("Validators", func() {
 		v = validator.New()
 		// Register validators with the test validator instance
 		_ = v.RegisterValidation("ticker", core.TickerValidator)
+		_ = v.RegisterValidation("tv_ticker_path", core.TickerPathValidator)
+		_ = v.RegisterValidation("alert_symbol", core.AlertSymbolValidator)
+		_ = v.RegisterValidation("alert_name", core.AlertNameValidator)
+		_ = v.RegisterValidation("ticker_exchange", core.TickerExchangeValidator)
+		_ = v.RegisterValidation("alert_exchange", core.AlertExchangeValidator)
 		_ = v.RegisterValidation("tag", core.TagValidator)
 		_ = v.RegisterValidation("override", core.OverrideValidator)
 		_ = v.RegisterValidation("image_file", core.ImageFileValidator)
@@ -31,49 +38,162 @@ var _ = Describe("Validators", func() {
 	})
 
 	Describe("ticker validator", func() {
-		Context("valid tickers", func() {
-			It("should accept uppercase letters", func() {
-				Expect(v.Var("TCS", "ticker")).To(Succeed())
+		type tickerTestStruct struct {
+			Ticker string `validate:"ticker"`
+			Type   string
+		}
+
+		Context("Standard Mode", func() {
+			Context("Valid", func() {
+				It("should accept uppercase letters", func() {
+					Expect(v.Var("TCS", "ticker")).To(Succeed())
+				})
+
+				It("should accept uppercase letters with digits", func() {
+					Expect(v.Var("NIFTY50", "ticker")).To(Succeed())
+				})
+
+				It("should accept dots", func() {
+					Expect(v.Var("BRK.B", "ticker")).To(Succeed())
+				})
+
+				It("should accept underscores", func() {
+					Expect(v.Var("ABC_DEF", "ticker")).To(Succeed())
+				})
+
+				It("should accept exclamation for futures", func() {
+					Expect(v.Var("GOLD1!", "ticker")).To(Succeed())
+				})
+
+				It("should accept empty string", func() {
+					Expect(v.Var("", "ticker")).To(Succeed())
+				})
 			})
 
-			It("should accept uppercase letters with digits", func() {
-				Expect(v.Var("TCS123", "ticker")).To(Succeed())
-			})
+			Context("Invalid", func() {
+				It("should reject lowercase letters", func() {
+					Expect(v.Var("tcs", "ticker")).ToNot(Succeed())
+				})
 
-			It("should accept dots", func() {
-				Expect(v.Var("TCS.NS", "ticker")).To(Succeed())
-			})
+				It("should reject spaces", func() {
+					Expect(v.Var("MC X", "ticker")).ToNot(Succeed())
+				})
 
-			It("should accept empty string", func() {
-				Expect(v.Var("", "ticker")).To(Succeed())
+				It("should reject @ symbol", func() {
+					Expect(v.Var("MCX@", "ticker")).ToNot(Succeed())
+				})
+
+				It("should reject # symbol", func() {
+					Expect(v.Var("TCS#TEST", "ticker")).ToNot(Succeed())
+				})
+
+				It("should reject hyphen", func() {
+					Expect(v.Var("ABC-DEF", "ticker")).ToNot(Succeed())
+				})
+
+				It("should reject ampersand", func() {
+					Expect(v.Var("M&M", "ticker")).ToNot(Succeed())
+				})
+
+				It("should reject starting with dot", func() {
+					Expect(v.Var(".MCX", "ticker")).ToNot(Succeed())
+				})
+
+				It("should reject starting with hyphen", func() {
+					Expect(v.Var("-TCS", "ticker")).ToNot(Succeed())
+				})
+
+				It("should reject starting with &", func() {
+					Expect(v.Var("&TCS", "ticker")).ToNot(Succeed())
+				})
+
+				It("should reject composite slash when type is not COMPOSITE", func() {
+					err := v.Struct(tickerTestStruct{Ticker: "NIFTY/USDINR", Type: "EQUITY"})
+					Expect(err).To(HaveOccurred())
+					var errs validator.ValidationErrors
+					Expect(errors.As(err, &errs)).To(BeTrue())
+					Expect(errs[0].Tag()).To(Equal("ticker"))
+					Expect(errs[0].Field()).To(Equal("Ticker"))
+				})
+
+				It("should reject composite plus when type is not COMPOSITE", func() {
+					err := v.Struct(tickerTestStruct{Ticker: "NIFTY+USDINR", Type: "EQUITY"})
+					Expect(err).To(HaveOccurred())
+					var errs validator.ValidationErrors
+					Expect(errors.As(err, &errs)).To(BeTrue())
+					Expect(errs[0].Tag()).To(Equal("ticker"))
+				})
 			})
 		})
 
-		Context("invalid tickers", func() {
-			It("should reject lowercase letters", func() {
-				Expect(v.Var("tcs", "ticker")).ToNot(Succeed())
+		Context("Composite Mode", func() {
+			Context("Valid", func() {
+				It("should accept slash", func() {
+					Expect(v.Struct(tickerTestStruct{Ticker: "NIFTY/USDINR", Type: "COMPOSITE"})).To(Succeed())
+				})
+
+				It("should accept plus operator", func() {
+					Expect(v.Struct(tickerTestStruct{Ticker: "NIFTY+USDINR", Type: "COMPOSITE"})).To(Succeed())
+				})
+
+				It("should accept minus operator", func() {
+					Expect(v.Struct(tickerTestStruct{Ticker: "US10Y-US02Y", Type: "COMPOSITE"})).To(Succeed())
+				})
+
+				It("should accept multiply operator", func() {
+					Expect(v.Struct(tickerTestStruct{Ticker: "XAUUSD*USDINR", Type: "COMPOSITE"})).To(Succeed())
+				})
+
+				It("should accept ^ operator", func() {
+					Expect(v.Struct(tickerTestStruct{Ticker: "NIFTY^USDINR", Type: "COMPOSITE"})).To(Succeed())
+				})
+
+				It("should accept parentheses (no balance enforcement)", func() {
+					Expect(v.Struct(tickerTestStruct{Ticker: "ABC(DEF", Type: "COMPOSITE"})).To(Succeed())
+				})
 			})
 
-			It("should reject spaces", func() {
-				Expect(v.Var("TCS NS", "ticker")).ToNot(Succeed())
-			})
+			Context("Invalid", func() {
+				It("should reject @", func() {
+					err := v.Struct(tickerTestStruct{Ticker: "NIFTY@USDINR", Type: "COMPOSITE"})
+					Expect(err).To(HaveOccurred())
+					var errs validator.ValidationErrors
+					Expect(errors.As(err, &errs)).To(BeTrue())
+					Expect(errs[0].Tag()).To(Equal("ticker"))
+					Expect(errs[0].Field()).To(Equal("Ticker"))
+				})
 
-			It("should reject special characters other than allowed ones", func() {
-				Expect(v.Var("TCS@NS", "ticker")).ToNot(Succeed())
-				Expect(v.Var("TCS#TEST", "ticker")).ToNot(Succeed())
-				Expect(v.Var("TCS+TEST", "ticker")).ToNot(Succeed())
-			})
+				It("should reject whitespace", func() {
+					err := v.Struct(tickerTestStruct{Ticker: "NIFTY / USDINR", Type: "COMPOSITE"})
+					Expect(err).To(HaveOccurred())
+					var errs validator.ValidationErrors
+					Expect(errors.As(err, &errs)).To(BeTrue())
+					Expect(errs[0].Tag()).To(Equal("ticker"))
+				})
 
-			It("should reject starting with special character", func() {
-				Expect(v.Var("-TCS", "ticker")).ToNot(Succeed())
-				Expect(v.Var(".TCS", "ticker")).ToNot(Succeed())
-				Expect(v.Var("&TCS", "ticker")).ToNot(Succeed())
+				It("should reject lowercase", func() {
+					err := v.Struct(tickerTestStruct{Ticker: "nifty/usdinr", Type: "COMPOSITE"})
+					Expect(err).To(HaveOccurred())
+					var errs validator.ValidationErrors
+					Expect(errors.As(err, &errs)).To(BeTrue())
+					Expect(errs[0].Tag()).To(Equal("ticker"))
+				})
+
+				It("should reject ampersand", func() {
+					err := v.Struct(tickerTestStruct{Ticker: "M&M", Type: "COMPOSITE"})
+					Expect(err).To(HaveOccurred())
+				})
+
+				It("should reject #", func() {
+					err := v.Struct(tickerTestStruct{Ticker: "NIFTY#USDINR", Type: "COMPOSITE"})
+					Expect(err).To(HaveOccurred())
+				})
 			})
 		})
 	})
 
 	Describe("tag validator", func() {
-		Context("valid tags", func() {
+		Context("Valid", func() {
 			It("should accept lowercase letters", func() {
 				Expect(v.Var("oe", "tag")).To(Succeed())
 			})
@@ -96,23 +216,6 @@ var _ = Describe("Validators", func() {
 				Expect(v.Var("dep-2-test", "tag")).To(Succeed())
 			})
 
-			It("should accept empty string", func() {
-				Expect(v.Var("", "tag")).To(Succeed())
-			})
-		})
-
-		Context("invalid tags", func() {
-			It("should reject spaces", func() {
-				Expect(v.Var("dep 1", "tag")).ToNot(Succeed())
-			})
-
-			It("should reject special characters", func() {
-				Expect(v.Var("dep@1", "tag")).ToNot(Succeed())
-				Expect(v.Var("dep#1", "tag")).ToNot(Succeed())
-				Expect(v.Var("dep.1", "tag")).ToNot(Succeed())
-				Expect(v.Var("dep&1", "tag")).ToNot(Succeed())
-			})
-
 			It("should accept starting with hyphen", func() {
 				Expect(v.Var("-tag", "tag")).To(Succeed())
 			})
@@ -124,11 +227,28 @@ var _ = Describe("Validators", func() {
 			It("should accept consecutive hyphens", func() {
 				Expect(v.Var("tag--name", "tag")).To(Succeed())
 			})
+
+			It("should accept empty string", func() {
+				Expect(v.Var("", "tag")).To(Succeed())
+			})
+		})
+
+		Context("Invalid", func() {
+			It("should reject spaces", func() {
+				Expect(v.Var("dep 1", "tag")).ToNot(Succeed())
+			})
+
+			It("should reject special characters", func() {
+				Expect(v.Var("dep@1", "tag")).ToNot(Succeed())
+				Expect(v.Var("dep#1", "tag")).ToNot(Succeed())
+				Expect(v.Var("dep.1", "tag")).ToNot(Succeed())
+				Expect(v.Var("dep&1", "tag")).ToNot(Succeed())
+			})
 		})
 	})
 
 	Describe("override validator", func() {
-		Context("valid overrides", func() {
+		Context("Valid", func() {
 			It("should accept lowercase letters", func() {
 				Expect(v.Var("loc", "override")).To(Succeed())
 			})
@@ -147,7 +267,7 @@ var _ = Describe("Validators", func() {
 			})
 		})
 
-		Context("invalid overrides", func() {
+		Context("Invalid", func() {
 			It("should reject spaces", func() {
 				Expect(v.Var("test location", "override")).ToNot(Succeed())
 			})
@@ -213,7 +333,7 @@ var _ = Describe("Validators", func() {
 	})
 
 	Describe("image_file validator", func() {
-		Context("valid file names", func() {
+		Context("Valid", func() {
 			It("should accept png files", func() {
 				Expect(v.Var("image.png", "image_file")).To(Succeed())
 				Expect(v.Var("test-image.png", "image_file")).To(Succeed())
@@ -243,7 +363,7 @@ var _ = Describe("Validators", func() {
 			})
 		})
 
-		Context("invalid file names", func() {
+		Context("Invalid", func() {
 			It("should reject invalid file extensions", func() {
 				Expect(v.Var("image.gif", "image_file")).ToNot(Succeed())
 				Expect(v.Var("file.txt", "image_file")).ToNot(Succeed())
@@ -268,9 +388,8 @@ var _ = Describe("Validators", func() {
 		})
 	})
 
-	//nolint:dupl
 	Describe("journal_id validator", func() {
-		Context("valid journal IDs", func() {
+		Context("Valid", func() {
 			It("should accept jrn_ prefix with 8 alphanumeric characters", func() {
 				Expect(v.Var("jrn_12345678", "journal_id")).To(Succeed())
 				Expect(v.Var("jrn_ABCDEFGH", "journal_id")).To(Succeed())
@@ -282,7 +401,7 @@ var _ = Describe("Validators", func() {
 			})
 		})
 
-		Context("invalid journal IDs", func() {
+		Context("Invalid", func() {
 			It("should reject wrong prefix", func() {
 				Expect(v.Var("journal_12345678", "journal_id")).ToNot(Succeed())
 				Expect(v.Var("jrn12345678", "journal_id")).ToNot(Succeed())
@@ -303,9 +422,8 @@ var _ = Describe("Validators", func() {
 		})
 	})
 
-	//nolint:dupl
 	Describe("note_id validator", func() {
-		Context("valid note IDs", func() {
+		Context("Valid", func() {
 			It("should accept not_ prefix with 8 alphanumeric characters", func() {
 				Expect(v.Var("not_12345678", "note_id")).To(Succeed())
 				Expect(v.Var("not_ABCDEFGH", "note_id")).To(Succeed())
@@ -317,7 +435,7 @@ var _ = Describe("Validators", func() {
 			})
 		})
 
-		Context("invalid note IDs", func() {
+		Context("Invalid", func() {
 			It("should reject wrong prefix", func() {
 				Expect(v.Var("note_12345678", "note_id")).ToNot(Succeed())
 				Expect(v.Var("not12345678", "note_id")).ToNot(Succeed())
@@ -338,9 +456,8 @@ var _ = Describe("Validators", func() {
 		})
 	})
 
-	//nolint:dupl
 	Describe("tag_id validator", func() {
-		Context("valid tag IDs", func() {
+		Context("Valid", func() {
 			It("should accept tag_ prefix with 8 alphanumeric characters", func() {
 				Expect(v.Var("tag_12345678", "tag_id")).To(Succeed())
 				Expect(v.Var("tag_ABCDEFGH", "tag_id")).To(Succeed())
@@ -352,7 +469,7 @@ var _ = Describe("Validators", func() {
 			})
 		})
 
-		Context("invalid tag IDs", func() {
+		Context("Invalid", func() {
 			It("should reject wrong prefix", func() {
 				Expect(v.Var("tags_12345678", "tag_id")).ToNot(Succeed())
 				Expect(v.Var("tag12345678", "tag_id")).ToNot(Succeed())
@@ -373,9 +490,8 @@ var _ = Describe("Validators", func() {
 		})
 	})
 
-	//nolint:dupl
 	Describe("image_id validator", func() {
-		Context("valid image IDs", func() {
+		Context("Valid", func() {
 			It("should accept img_ prefix with 8 alphanumeric characters", func() {
 				Expect(v.Var("img_12345678", "image_id")).To(Succeed())
 				Expect(v.Var("img_ABCDEFGH", "image_id")).To(Succeed())
@@ -387,7 +503,7 @@ var _ = Describe("Validators", func() {
 			})
 		})
 
-		Context("invalid image IDs", func() {
+		Context("Invalid", func() {
 			It("should reject wrong prefix", func() {
 				Expect(v.Var("image_12345678", "image_id")).ToNot(Succeed())
 				Expect(v.Var("img12345678", "image_id")).ToNot(Succeed())
@@ -404,6 +520,244 @@ var _ = Describe("Validators", func() {
 				Expect(v.Var("img_1234_5678", "image_id")).ToNot(Succeed())
 				Expect(v.Var("img_123-45678", "image_id")).ToNot(Succeed())
 				Expect(v.Var("img_123@45678", "image_id")).ToNot(Succeed())
+			})
+		})
+	})
+
+	Describe("ticker_path_validator", func() {
+		Context("Valid", func() {
+			It("should accept uppercase letters", func() {
+				Expect(v.Var("MCX", "tv_ticker_path")).To(Succeed())
+			})
+
+			It("should accept dots", func() {
+				Expect(v.Var("BRK.B", "tv_ticker_path")).To(Succeed())
+			})
+
+			It("should accept exclamation for futures", func() {
+				Expect(v.Var("GOLD1!", "tv_ticker_path")).To(Succeed())
+			})
+
+			It("should accept composite slash", func() {
+				Expect(v.Var("NIFTY/USDINR", "tv_ticker_path")).To(Succeed())
+			})
+
+			It("should accept parentheses", func() {
+				Expect(v.Var("ABC(DEF)", "tv_ticker_path")).To(Succeed())
+			})
+
+			It("should accept ^ char", func() {
+				Expect(v.Var("ABC^DEF", "tv_ticker_path")).To(Succeed())
+			})
+
+			It("should accept empty string", func() {
+				Expect(v.Var("", "tv_ticker_path")).To(Succeed())
+			})
+		})
+
+		Context("Invalid", func() {
+			It("should reject hyphens", func() {
+				Expect(v.Var("ABC-DEF", "tv_ticker_path")).ToNot(Succeed())
+			})
+
+			It("should reject plus", func() {
+				Expect(v.Var("ABC+DEF", "tv_ticker_path")).ToNot(Succeed())
+			})
+
+			It("should reject asterisk", func() {
+				Expect(v.Var("ABC*DEF", "tv_ticker_path")).ToNot(Succeed())
+			})
+
+			It("should reject @ symbol", func() {
+				Expect(v.Var("MCX@", "tv_ticker_path")).ToNot(Succeed())
+			})
+
+			It("should reject spaces", func() {
+				Expect(v.Var("MC X", "tv_ticker_path")).ToNot(Succeed())
+			})
+
+			It("should reject lowercase", func() {
+				Expect(v.Var("mcx", "tv_ticker_path")).ToNot(Succeed())
+			})
+		})
+	})
+
+	Describe("alert_symbol_validator", func() {
+		Context("Valid", func() {
+			It("should accept uppercase USDCAD", func() {
+				Expect(v.Var("USDCAD", "alert_symbol")).To(Succeed())
+			})
+
+			It("should accept lowercase usdcad", func() {
+				Expect(v.Var("usdcad", "alert_symbol")).To(Succeed())
+			})
+
+			It("should accept mixed-case", func() {
+				Expect(v.Var("UsdCad", "alert_symbol")).To(Succeed())
+			})
+
+			It("should accept slash BTC/USD", func() {
+				Expect(v.Var("BTC/USD", "alert_symbol")).To(Succeed())
+			})
+
+			It("should accept dot and equals", func() {
+				Expect(v.Var("ABC.DEF=GHI", "alert_symbol")).To(Succeed())
+			})
+
+			It("should accept digits ETH10", func() {
+				Expect(v.Var("ETH10", "alert_symbol")).To(Succeed())
+			})
+
+			It("should accept empty string", func() {
+				Expect(v.Var("", "alert_symbol")).To(Succeed())
+			})
+		})
+
+		Context("Invalid", func() {
+			It("should reject starting with dot", func() {
+				Expect(v.Var(".TEST", "alert_symbol")).ToNot(Succeed())
+			})
+
+			It("should reject spaces", func() {
+				Expect(v.Var("TEST SYM", "alert_symbol")).ToNot(Succeed())
+			})
+
+			It("should reject @", func() {
+				Expect(v.Var("TEST@SYM", "alert_symbol")).ToNot(Succeed())
+			})
+
+			It("should reject hyphen", func() {
+				Expect(v.Var("TEST-SYM", "alert_symbol")).ToNot(Succeed())
+			})
+		})
+	})
+
+	Describe("alert_name_validator", func() {
+		Context("Valid", func() {
+			It("should accept letters", func() {
+				Expect(v.Var("TestAlert", "alert_name")).To(Succeed())
+			})
+
+			It("should accept spaces", func() {
+				Expect(v.Var("Test Alert Name", "alert_name")).To(Succeed())
+			})
+
+			It("should accept hyphen", func() {
+				Expect(v.Var("Test-Alert", "alert_name")).To(Succeed())
+			})
+
+			It("should accept ampersand", func() {
+				Expect(v.Var("Test&Alert", "alert_name")).To(Succeed())
+			})
+
+			It("should accept parentheses", func() {
+				Expect(v.Var("Test(Alert)", "alert_name")).To(Succeed())
+			})
+
+			It("should accept apostrophe", func() {
+				Expect(v.Var("Test'Alert", "alert_name")).To(Succeed())
+			})
+
+			It("should accept empty string", func() {
+				Expect(v.Var("", "alert_name")).To(Succeed())
+			})
+		})
+
+		Context("Invalid", func() {
+			It("should reject starting with dot", func() {
+				Expect(v.Var(".Test", "alert_name")).ToNot(Succeed())
+			})
+
+			It("should reject @", func() {
+				Expect(v.Var("Test@Alert", "alert_name")).ToNot(Succeed())
+			})
+
+			It("should reject #", func() {
+				Expect(v.Var("Test#Alert", "alert_name")).ToNot(Succeed())
+			})
+		})
+	})
+
+	Describe("ticker_exchange_validator", func() {
+		Context("Valid", func() {
+			It("should accept uppercase NSE", func() {
+				Expect(v.Var("NSE", "ticker_exchange")).To(Succeed())
+			})
+
+			It("should accept underscore FX_IDC", func() {
+				Expect(v.Var("FX_IDC", "ticker_exchange")).To(Succeed())
+			})
+
+			It("should accept dot N.SE", func() {
+				Expect(v.Var("N.SE", "ticker_exchange")).To(Succeed())
+			})
+
+			It("should accept single letter", func() {
+				Expect(v.Var("N", "ticker_exchange")).To(Succeed())
+			})
+
+			It("should accept empty string", func() {
+				Expect(v.Var("", "ticker_exchange")).To(Succeed())
+			})
+		})
+
+		Context("Invalid", func() {
+			It("should reject lowercase", func() {
+				Expect(v.Var("nse", "ticker_exchange")).ToNot(Succeed())
+			})
+
+			It("should reject digits", func() {
+				Expect(v.Var("NSE1", "ticker_exchange")).ToNot(Succeed())
+			})
+
+			It("should reject hyphens", func() {
+				Expect(v.Var("N-SE", "ticker_exchange")).ToNot(Succeed())
+			})
+
+			It("should reject spaces", func() {
+				Expect(v.Var("N SE", "ticker_exchange")).ToNot(Succeed())
+			})
+
+			It("should reject @", func() {
+				Expect(v.Var("NSE@", "ticker_exchange")).ToNot(Succeed())
+			})
+		})
+	})
+
+	Describe("alert_exchange_validator", func() {
+		Context("Valid", func() {
+			It("should accept uppercase FX", func() {
+				Expect(v.Var("FX", "alert_exchange")).To(Succeed())
+			})
+
+			It("should accept lowercase fx", func() {
+				Expect(v.Var("fx", "alert_exchange")).To(Succeed())
+			})
+
+			It("should accept mixed-case", func() {
+				Expect(v.Var("FxCm", "alert_exchange")).To(Succeed())
+			})
+
+			It("should accept empty string", func() {
+				Expect(v.Var("", "alert_exchange")).To(Succeed())
+			})
+		})
+
+		Context("Invalid", func() {
+			It("should reject digits", func() {
+				Expect(v.Var("FX1", "alert_exchange")).ToNot(Succeed())
+			})
+
+			It("should reject underscore", func() {
+				Expect(v.Var("FX_IDC", "alert_exchange")).ToNot(Succeed())
+			})
+
+			It("should reject dot", func() {
+				Expect(v.Var("F.X", "alert_exchange")).ToNot(Succeed())
+			})
+
+			It("should reject hyphens", func() {
+				Expect(v.Var("F-X", "alert_exchange")).ToNot(Succeed())
 			})
 		})
 	})

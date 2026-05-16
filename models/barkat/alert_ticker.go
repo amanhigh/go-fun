@@ -22,19 +22,6 @@ type AlertTicker struct {
 // TableName maps AlertTicker to the PRD-defined alert_tickers table.
 func (AlertTicker) TableName() string { return "alert_tickers" }
 
-// PriceAlert represents a local Barkat price alert resolved to an Alert ticker.
-type PriceAlert struct {
-	ID            uint64    `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
-	AlertTickerID uint64    `gorm:"column:alert_ticker_id;not null;index:idx_price_alert_alert_ticker" json:"-"`
-	AlertID       string    `gorm:"column:alert_id;uniqueIndex;not null" json:"alert_id"`
-	TriggerPrice  float64   `gorm:"column:trigger_price;not null" json:"trigger_price"`
-	Name          *string   `gorm:"column:name" json:"name"`
-	CreatedAt     time.Time `gorm:"column:created_at;not null" json:"created_at"`
-}
-
-// TableName maps PriceAlert to the PRD-defined price_alerts table.
-func (PriceAlert) TableName() string { return "price_alerts" }
-
 // AlertTickerPath binds the :symbol path parameter for Alert ticker APIs.
 type AlertTickerPath struct {
 	Symbol string `uri:"symbol" binding:"required,alert_symbol"`

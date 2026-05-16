@@ -63,8 +63,9 @@ type TickerList struct {
 }
 
 // TickerUpdateRequest represents PUT update ticker request body.
-// Ticker field is excluded (comes from URL path).
+// Ticker field is populated from URI path by the handler for cross-field composite validation.
 type TickerUpdateRequest struct {
+	Ticker     string   `json:"-" binding:"omitempty,ticker"`
 	Exchange   *string  `json:"exchange" binding:"omitempty,min=1,max=10,ticker_exchange"`
 	Timeframes []string `json:"timeframes" binding:"required,min=1,max=6,dive,oneof=YR SMN TMN MN WK DL"`
 	Type       string   `json:"type" binding:"required,oneof=EQUITY INDEX CRYPTO COMMODITY FX BOND COMPOSITE"`

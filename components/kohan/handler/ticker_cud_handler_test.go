@@ -214,26 +214,33 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 						Expect(response.Type).To(Equal("COMPOSITE"))
 						Expect(response.Ticker).To(Equal("NIFTY/USDINR"))
 					})
-					PIt("should accept plus operator NIFTY+USDINR in composite expression", func() {
+					It("should accept plus operator NIFTY+USDINR in composite expression", func() {
 						payload := validTickerPayload
 						payload.Ticker = "NIFTY+USDINR"
 						payload.Type = "COMPOSITE"
 						_, response := createTickerRequest(router, payload)
 						Expect(response.Ticker).To(Equal("NIFTY+USDINR"))
 					})
-					PIt("should accept minus operator US10Y-US02Y in composite expression", func() {
+					It("should accept minus operator US10Y-US02Y in composite expression", func() {
 						payload := validTickerPayload
 						payload.Ticker = "US10Y-US02Y"
 						payload.Type = "COMPOSITE"
 						_, response := createTickerRequest(router, payload)
 						Expect(response.Ticker).To(Equal("US10Y-US02Y"))
 					})
-					PIt("should accept multiply operator XAUUSD*USDINR in composite expression", func() {
+					It("should accept multiply operator XAUUSD*USDINR in composite expression", func() {
 						payload := validTickerPayload
 						payload.Ticker = "XAUUSD*USDINR"
 						payload.Type = "COMPOSITE"
 						_, response := createTickerRequest(router, payload)
 						Expect(response.Ticker).To(Equal("XAUUSD*USDINR"))
+					})
+					It("should accept ^ operator NIFTY^USDINR in composite expression", func() {
+						payload := validTickerPayload
+						payload.Ticker = "NIFTY^USDINR"
+						payload.Type = "COMPOSITE"
+						_, response := createTickerRequest(router, payload)
+						Expect(response.Ticker).To(Equal("NIFTY^USDINR"))
 					})
 				})
 
@@ -300,39 +307,15 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 						payload.Type = "EQUITY"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Ticker", "composite")
+						util.AssertError(w, "Ticker", "ticker")
 					})
-					It("should return 400 for composite expression with unsupported operator", func() {
+					It("should return 400 for composite expression with non-math invalid char @", func() {
 						payload := validTickerPayload
-						payload.Ticker = "NIFTY^USDINR"
+						payload.Ticker = "NIFTY@USDINR"
 						payload.Type = "COMPOSITE"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Ticker", "composite")
-					})
-					PIt("should return 400 for empty middle operand NIFTY//USDINR", func() {
-						payload := validTickerPayload
-						payload.Ticker = "NIFTY//USDINR"
-						payload.Type = "COMPOSITE"
-						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-					})
-					PIt("should return 400 for leading operator /NIFTY", func() {
-						payload := validTickerPayload
-						payload.Ticker = "/NIFTY"
-						payload.Type = "COMPOSITE"
-						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-					})
-					PIt("should return 400 for trailing operator NIFTY/", func() {
-						payload := validTickerPayload
-						payload.Ticker = "NIFTY/"
-						payload.Type = "COMPOSITE"
-						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Ticker", "ticker")
 					})
 					It("should return 400 for composite expression containing whitespace", func() {
 						payload := validTickerPayload
@@ -898,7 +881,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 						req, w := util.CreateTestRequest(http.MethodPut,
 							barkat.TickerBase+"/"+compositeTicker.Ticker, updatePayload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Ticker", "composite")
+						util.AssertError(w, "Ticker", "ticker")
 					})
 					It("should return 404 for valid missing ticker path", func() {
 						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/NOTFOUND", validUpdatePayload)

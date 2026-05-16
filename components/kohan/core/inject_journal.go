@@ -34,7 +34,7 @@ func CreateTestBarkatDB() (*gorm.DB, error) {
 	// Use AutoMigrate for test database (faster and more reliable for in-memory DB)
 	if err := db.AutoMigrate(
 		&barkat.Journal{}, &barkat.Image{}, &barkat.Tag{}, &barkat.Note{},
-		&barkat.Ticker{}, &barkat.AlertTicker{}, &barkat.PriceAlert{},
+		&barkat.Ticker{}, &barkat.AlertTicker{},
 	); err != nil {
 		return nil, fmt.Errorf("failed to auto-migrate barkat tables: %w", err)
 	}
