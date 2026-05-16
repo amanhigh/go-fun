@@ -30,7 +30,7 @@ type Ticker struct {
 }
 
 // TableName maps Ticker to the PRD-defined tradingview_tickers table.
-func (Ticker) TableName() string { return "tradingview_tickers" }
+func (Ticker) TableName() string { return "tickers" }
 
 // TickerPath binds the :ticker path parameter.
 type TickerPath struct {
