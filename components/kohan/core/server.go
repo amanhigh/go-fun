@@ -21,6 +21,7 @@ type KohanServerLifecycle struct {
 	ImageHandler   handler.ImageHandler   `container:"type"`
 	NoteHandler    handler.NoteHandler    `container:"type"`
 	TagHandler     handler.TagHandler     `container:"type"`
+	TickerHandler  handler.TickerHandler  `container:"type"`
 	IndexPortal    handler.IndexPortal    `container:"type"`
 	JournalPortal  handler.JournalPortal  `container:"type"`
 }
@@ -34,9 +35,12 @@ type PortalHandlers struct {
 var _ util.ServerLifecycle = (*KohanServerLifecycle)(nil)
 
 // NewKohanServerLifecycle creates a KohanServerLifecycle for testing with explicit handler injection.
+//
+//nolint:revive
 func NewKohanServerLifecycle(osHandler handler.OSHandler,
 	journalHandler handler.JournalHandler, imageHandler handler.ImageHandler,
 	noteHandler handler.NoteHandler, tagHandler handler.TagHandler,
+	tickerHandler handler.TickerHandler,
 	portalHandlers PortalHandlers) *KohanServerLifecycle {
 	return &KohanServerLifecycle{
 		OSHandler:      osHandler,
@@ -44,6 +48,7 @@ func NewKohanServerLifecycle(osHandler handler.OSHandler,
 		ImageHandler:   imageHandler,
 		NoteHandler:    noteHandler,
 		TagHandler:     tagHandler,
+		TickerHandler:  tickerHandler,
 		IndexPortal:    portalHandlers.IndexPortal,
 		JournalPortal:  portalHandlers.JournalPortal,
 	}
@@ -52,6 +57,7 @@ func NewKohanServerLifecycle(osHandler handler.OSHandler,
 func (s *KohanServerLifecycle) RegisterRoutes(engine *gin.Engine) {
 	s.registerOSRoutes(engine)
 	s.registerJournalRoutes(engine)
+	s.registerBarkatRoutes(engine)
 	s.registerPortalRoutes(engine)
 }
 
@@ -77,6 +83,11 @@ func (s *KohanServerLifecycle) registerJournalRoutes(engine *gin.Engine) {
 	handler.SetupImageRoutes(journal, s.ImageHandler)
 	handler.SetupNoteRoutes(journal, s.NoteHandler)
 	handler.SetupTagRoutes(journal, s.TagHandler)
+}
+
+func (s *KohanServerLifecycle) registerBarkatRoutes(engine *gin.Engine) {
+	ticker := engine.Group(barkat.TickerBase)
+	handler.SetupTickerRoutes(ticker, s.TickerHandler)
 }
 
 func (s *KohanServerLifecycle) registerPortalRoutes(engine *gin.Engine) {

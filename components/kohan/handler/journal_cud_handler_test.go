@@ -236,20 +236,6 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						Expect(response.Ticker).To(Equal("GRSE123"))
 					})
 
-					It("should accept ticker with hyphen", func() {
-						journal := barkat.Journal{
-							Ticker:   "GRSE-NSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images:   standardImages,
-						}
-						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
-						router.ServeHTTP(w, req)
-						response := decodeCreateJournalResponse(w)
-						Expect(response.Ticker).To(Equal("GRSE-NSE"))
-					})
-
 					It("should accept ticker with dot suffix", func() {
 						journal := barkat.Journal{
 							Ticker:   "TCS.NS",
@@ -274,6 +260,28 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						response := decodeCreateJournalResponse(w)
 						Expect(response.Ticker).To(HaveLen(10))
 					})
+
+					It("should accept ticker with underscore", func() {
+						journal := barkat.Journal{
+							Ticker: "ABC_DEF", Sequence: "MWD", Type: "REJECTED", Status: "FAIL",
+							Images: standardImages,
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
+						router.ServeHTTP(w, req)
+						response := decodeCreateJournalResponse(w)
+						Expect(response.Ticker).To(Equal("ABC_DEF"))
+					})
+
+					It("should accept futures exclamation ticker", func() {
+						journal := barkat.Journal{
+							Ticker: "GOLD1!", Sequence: "MWD", Type: "REJECTED", Status: "FAIL",
+							Images: standardImages,
+						}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
+						router.ServeHTTP(w, req)
+						response := decodeCreateJournalResponse(w)
+						Expect(response.Ticker).To(Equal("GOLD1!"))
+					})
 				})
 
 				Context("Bad Values", func() {
@@ -293,6 +301,34 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should return 400 for lowercase ticker (PRD: uppercase only)", func() {
 						journal := barkat.Journal{Ticker: "grse", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: standardImages}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Ticker", "ticker")
+					})
+
+					It("should return 400 for ticker with hyphen", func() {
+						journal := barkat.Journal{Ticker: "ABC-DEF", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: standardImages}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Ticker", "ticker")
+					})
+
+					It("should return 400 for ticker starting with dot", func() {
+						journal := barkat.Journal{Ticker: ".MCX", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: standardImages}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Ticker", "ticker")
+					})
+
+					It("should return 400 for ticker with whitespace", func() {
+						journal := barkat.Journal{Ticker: "MC X", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: standardImages}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Ticker", "ticker")
+					})
+
+					It("should return 400 for ticker with unsupported special character", func() {
+						journal := barkat.Journal{Ticker: "MCX@", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "ticker")

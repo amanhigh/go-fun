@@ -82,6 +82,9 @@ var _ = BeforeSuite(func() {
 	imageHandler := handler.NewImageHandler(manager.NewImageManager(journalMgr, repository.NewImageRepository(db)))
 	noteHandler := handler.NewNoteHandler(manager.NewNoteManager(journalMgr, repository.NewNoteRepository(db)))
 	tagHandler := handler.NewTagHandler(manager.NewTagManager(journalMgr, repository.NewTagRepository(db)))
+	tickerRepo := repository.NewTickerRepository(db)
+	tickerMgr := manager.NewBarkatTickerManager(tickerRepo)
+	tickerHandler := handler.NewTickerHandler(tickerMgr)
 	indexPortal := handler.NewIndexPortal()
 	journalPortal := handler.NewJournalPortal(testImageDir)
 
@@ -93,6 +96,7 @@ var _ = BeforeSuite(func() {
 		imageHandler,
 		noteHandler,
 		tagHandler,
+		tickerHandler,
 		core.PortalHandlers{
 			IndexPortal:   indexPortal,
 			JournalPortal: journalPortal,
@@ -101,6 +105,8 @@ var _ = BeforeSuite(func() {
 
 	shutdown := util.NewGracefulShutdown()
 	engine := gin.Default()
+	engine.UseRawPath = true         // treat %2F as single path segment for composite tickers like NIFTY/USDINR
+	engine.UnescapePathValues = true // decode encoded path segments back to original ticker value
 	core.RegisterJournalValidators()
 	server = util.NewHttpServer(config.HttpServerConfig{Name: "kohan-e2e", Port: testPort}, engine, shutdown)
 	server.SetLifecycle(lifecycle)

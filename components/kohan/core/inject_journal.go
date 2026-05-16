@@ -32,7 +32,10 @@ func CreateTestBarkatDB() (*gorm.DB, error) {
 	}
 
 	// Use AutoMigrate for test database (faster and more reliable for in-memory DB)
-	if err := db.AutoMigrate(&barkat.Journal{}, &barkat.Image{}, &barkat.Tag{}, &barkat.Note{}); err != nil {
+	if err := db.AutoMigrate(
+		&barkat.Journal{}, &barkat.Image{}, &barkat.Tag{}, &barkat.Note{},
+		&barkat.Ticker{}, &barkat.AlertTicker{},
+	); err != nil {
 		return nil, fmt.Errorf("failed to auto-migrate barkat tables: %w", err)
 	}
 
@@ -57,12 +60,14 @@ func (ki *KohanInjector) provideBarkatDB() (*gorm.DB, error) {
 	return db, nil
 }
 
+//nolint:revive
 func ProvideKohanLifecycle(
 	osHandler handler.OSHandler,
 	journalHandler handler.JournalHandler,
 	imageHandler handler.ImageHandler,
 	noteHandler handler.NoteHandler,
 	tagHandler handler.TagHandler,
+	tickerHandler handler.TickerHandler,
 	portalHandlers PortalHandlers,
 ) util.ServerLifecycle {
 	return &KohanServerLifecycle{
@@ -71,6 +76,7 @@ func ProvideKohanLifecycle(
 		ImageHandler:   imageHandler,
 		NoteHandler:    noteHandler,
 		TagHandler:     tagHandler,
+		TickerHandler:  tickerHandler,
 		IndexPortal:    portalHandlers.IndexPortal,
 		JournalPortal:  portalHandlers.JournalPortal,
 	}
@@ -79,6 +85,8 @@ func ProvideKohanLifecycle(
 func provideHttpServer(cfg config.HttpServerConfig, shutdown util.Shutdown, lifecycle util.ServerLifecycle) util.HttpServer {
 	// Create Gin engine and register validators before setting up routes
 	engine := gin.Default()
+	engine.UseRawPath = true         // treat %2F as single path segment for composite tickers like NIFTY/USDINR
+	engine.UnescapePathValues = true // decode encoded path segments back to original ticker value
 	RegisterJournalValidators()
 	server := util.NewHttpServer(cfg, engine, shutdown)
 	server.SetLifecycle(lifecycle)

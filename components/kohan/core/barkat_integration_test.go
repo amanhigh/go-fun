@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/amanhigh/go-fun/models/barkat"
@@ -500,6 +501,42 @@ var _ = Describe("Barkat E2E Test", func() {
 			var envelope common.Envelope[barkat.UpdateJournalStatusResponse]
 			Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
 			Expect(envelope.Data.ReviewedAt).To(BeNil())
+		})
+	})
+
+	// Composite (Url Encoding) - Smoke test for composite ticker via encoded URL path
+	Context("Composite (Url Encoding)", func() {
+		compositeTickerID := "NIFTY/USDINR"
+		encodedTickerPath := url.PathEscape(compositeTickerID)
+
+		BeforeEach(func() {
+			ticker := barkat.Ticker{
+				Ticker:       compositeTickerID,
+				Timeframes:   []string{"MN", "WK", "DL"},
+				Type:         "COMPOSITE",
+				State:        "WATCHED",
+				Trend:        "SIDEWAYS",
+				LastOpenedAt: time.Date(2026, time.May, 5, 10, 30, 0, 0, time.UTC),
+			}
+			resp, err := client.R().SetBody(ticker).Post(barkat.TickerBase)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
+		})
+
+		AfterEach(func() {
+			_, _ = client.R().Delete(barkat.TickerBase + "/" + encodedTickerPath)
+		})
+
+		It("should retrieve composite ticker via encoded URL path", func() {
+			resp, err := client.R().Get(barkat.TickerBase + "/" + encodedTickerPath)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+
+			var envelope common.Envelope[barkat.Ticker]
+			Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
+			fetched := envelope.Data
+			Expect(fetched.Ticker).To(Equal(compositeTickerID))
+			Expect(fetched.Type).To(Equal("COMPOSITE"))
 		})
 	})
 

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/go-resty/resty/v2"
@@ -323,6 +324,26 @@ var _ = Describe("Error", func() {
 					Expect(fieldErr.Error()).To(ContainSubstring("Timeframe"))
 					Expect(fieldErr.Field()).To(Equal("Timeframe"))
 				})
+
+				It("should strip array index suffix from dive element field names", func() {
+					type Ticker struct {
+						Timeframes []string `validate:"dive,oneof=YR MN WK DL"`
+					}
+					testData := Ticker{Timeframes: []string{"HR"}}
+					validationErr := validate.Struct(testData)
+
+					result := util.ProcessValidationError(validationErr)
+
+					fieldErr, ok := result.(common.FieldHttpError)
+					Expect(ok).To(BeTrue())
+
+					Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+					// Field should be "Timeframes" not "Timeframes[0]"
+					Expect(fieldErr.Field()).To(Equal("Timeframes"))
+					// Message should also use stripped field name
+					Expect(fieldErr.Error()).To(ContainSubstring("Timeframes"))
+					Expect(fieldErr.Error()).To(ContainSubstring("oneof"))
+				})
 			})
 
 			Context("Datetime Validation", func() {
@@ -490,6 +511,21 @@ var _ = Describe("Error", func() {
 				Expect(result).To(HaveOccurred())
 				Expect(result.Code()).To(Equal(http.StatusBadRequest))
 				Expect(result.Error()).To(ContainSubstring("must be numeric"))
+			})
+		})
+
+		// --------------------------------------------------------------------
+		// 2.3a: Time Parse Errors
+		// --------------------------------------------------------------------
+		Context("Time Parse Errors", func() {
+			It("should handle time.ParseError from invalid time.Time JSON input", func() {
+				_, parseErr := time.Parse(time.RFC3339, "not-a-date")
+				result := util.ProcessValidationError(parseErr)
+
+				Expect(result).To(HaveOccurred())
+				Expect(result.Code()).To(Equal(http.StatusBadRequest))
+				Expect(result.Error()).To(ContainSubstring("Invalid time format"))
+				Expect(result.Error()).To(ContainSubstring("not-a-date"))
 			})
 		})
 

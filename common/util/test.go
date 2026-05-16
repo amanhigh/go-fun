@@ -78,7 +78,10 @@ func AssertSuccess(w *httptest.ResponseRecorder, expectedStatus int, v any) {
 // Used to eliminate duplication across handler integration tests
 func CreateTestGinRouter() *gin.Engine {
 	gin.SetMode(gin.TestMode)
-	return gin.New()
+	router := gin.New()
+	router.UseRawPath = true         // treat %2F as single path segment for composite tickers like NIFTY/USDINR
+	router.UnescapePathValues = true // decode encoded path segments back to original ticker value
+	return router
 }
 
 // AssertError validates error responses (primarily 4xx field validation errors)

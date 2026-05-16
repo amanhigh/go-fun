@@ -5,6 +5,7 @@ import (
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/barkat"
+	"github.com/amanhigh/go-fun/models/common"
 	"gorm.io/gorm"
 )
 
@@ -12,9 +13,9 @@ import (
 type JournalRepository interface {
 	util.BaseDbRepositoryInterface
 	// GetJournal retrieves a single journal by external ID with preloaded associations.
-	GetJournal(ctx context.Context, journalExternalId string) (barkat.Journal, error)
+	GetJournal(ctx context.Context, journalExternalId string) (barkat.Journal, common.HttpError)
 	// ListJournals returns a filtered, paginated list of journal summaries (no associations).
-	ListJournals(ctx context.Context, query barkat.JournalQuery) ([]barkat.Journal, int64, error)
+	ListJournals(ctx context.Context, query barkat.JournalQuery) ([]barkat.Journal, int64, common.HttpError)
 }
 
 type JournalRepositoryImpl struct {
@@ -37,24 +38,24 @@ const ImageTimeframeOrder = "CASE timeframe WHEN 'DL' THEN 1 WHEN 'WK' THEN 2 WH
 
 // ---- Journal ----
 
-func (r *JournalRepositoryImpl) GetJournal(ctx context.Context, journalExternalId string) (barkat.Journal, error) {
+func (r *JournalRepositoryImpl) GetJournal(ctx context.Context, journalExternalId string) (barkat.Journal, common.HttpError) {
 	var journal barkat.Journal
 	err := r.SafeTx(ctx).Preload("Images", func(db *gorm.DB) *gorm.DB {
 		return db.Order("DATE(created_at) ASC").Order(ImageTimeframeOrder + " DESC").Order("file_name ASC")
 	}).Preload("Tags").Preload("Notes").First(&journal, "external_id = ?", journalExternalId).Error
-	return journal, err
+	return journal, util.GormErrorMapper(err)
 }
 
-func (r *JournalRepositoryImpl) ListJournals(ctx context.Context, query barkat.JournalQuery) ([]barkat.Journal, int64, error) {
+func (r *JournalRepositoryImpl) ListJournals(ctx context.Context, query barkat.JournalQuery) ([]barkat.Journal, int64, common.HttpError) {
 	tx := r.applyJournalFilters(r.SafeTx(ctx).Model(&barkat.Journal{}), query)
 
 	var total int64
 	if err := tx.Count(&total).Error; err != nil {
-		return nil, 0, err
+		return nil, 0, util.GormErrorMapper(err)
 	}
 
 	journals, err := r.fetchJournals(tx, query)
-	return journals, total, err
+	return journals, total, util.GormErrorMapper(err)
 }
 
 func (r *JournalRepositoryImpl) applyJournalFilters(tx *gorm.DB, query barkat.JournalQuery) *gorm.DB {

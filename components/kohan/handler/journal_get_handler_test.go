@@ -282,6 +282,30 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "ticker")
 					})
+
+					It("should return 400 for ticker starting with dot", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?ticker=.MCX", nil)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Ticker", "ticker")
+					})
+
+					It("should return 400 for ticker with hyphen", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?ticker=ABC-DEF", nil)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Ticker", "ticker")
+					})
+
+					It("should return 400 for ticker with unsupported special character", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?ticker=MCX@", nil)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Ticker", "ticker")
+					})
+
+					It("should return 400 for ticker with whitespace", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?ticker=MC%20X", nil)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Ticker", "ticker")
+					})
 				})
 			})
 
