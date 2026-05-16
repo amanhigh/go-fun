@@ -19,12 +19,6 @@ import (
 	"gorm.io/gorm"
 )
 
-func decodeAlertTickerOKResponse(w *httptest.ResponseRecorder) barkat.AlertTicker {
-	var envelope common.Envelope[map[string]barkat.AlertTicker]
-	util.AssertSuccess(w, http.StatusOK, &envelope)
-	return envelope.Data["alert_ticker"]
-}
-
 func decodeAlertTickerListResponse(w *httptest.ResponseRecorder) barkat.AlertTickerList {
 	var envelope common.Envelope[barkat.AlertTickerList]
 	util.AssertSuccess(w, http.StatusOK, &envelope)
@@ -95,7 +89,7 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 				BeforeEach(func() {
 					req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"/"+createdAlertTicker.Symbol, nil)
 					router.ServeHTTP(w, req)
-					response = decodeAlertTickerOKResponse(w)
+					response = decodeAlertTickerResponse(w, http.StatusOK)
 				})
 
 				It("should return 200 OK", func() {
@@ -106,7 +100,7 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 				It("should return Envelope success", func() {
 					req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"/"+createdAlertTicker.Symbol, nil)
 					router.ServeHTTP(w, req)
-					var envelope common.Envelope[map[string]barkat.AlertTicker]
+					var envelope common.Envelope[barkat.AlertTicker]
 					util.AssertSuccess(w, http.StatusOK, &envelope)
 					Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 				})

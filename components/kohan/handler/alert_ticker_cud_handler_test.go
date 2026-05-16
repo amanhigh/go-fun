@@ -18,10 +18,10 @@ import (
 	"gorm.io/gorm"
 )
 
-func decodeAlertTickerCreateResponse(w *httptest.ResponseRecorder) barkat.AlertTicker {
-	var envelope common.Envelope[map[string]barkat.AlertTicker]
-	util.AssertSuccess(w, http.StatusCreated, &envelope)
-	return envelope.Data["alert_ticker"]
+func decodeAlertTickerResponse(w *httptest.ResponseRecorder, expectedStatus int) barkat.AlertTicker {
+	var envelope common.Envelope[barkat.AlertTicker]
+	util.AssertSuccess(w, expectedStatus, &envelope)
+	return envelope.Data
 }
 
 func newAlertTickerTestRouter(alertTickerHandler handler.AlertTickerHandler) *gin.Engine {
@@ -36,7 +36,7 @@ func newAlertTickerTestRouter(alertTickerHandler handler.AlertTickerHandler) *gi
 func createAlertTickerRequest(router *gin.Engine, ticker string, payload any) (*httptest.ResponseRecorder, barkat.AlertTicker) {
 	req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+ticker+"/alert-tickers", payload)
 	router.ServeHTTP(w, req)
-	return w, decodeAlertTickerCreateResponse(w)
+	return w, decodeAlertTickerResponse(w, http.StatusCreated)
 }
 
 // AlertTickerHandler Integration CUD Tests - Comprehensive Master Specification.
@@ -94,7 +94,7 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 
 				It("should return 201 Created", func() { Expect(w.Code).To(Equal(http.StatusCreated)) })
 				It("should return Envelope success", func() {
-					var envelope common.Envelope[map[string]barkat.AlertTicker]
+					var envelope common.Envelope[barkat.AlertTicker]
 					util.AssertSuccess(w, http.StatusCreated, &envelope)
 					Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 				})
