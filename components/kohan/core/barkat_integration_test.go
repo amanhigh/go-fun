@@ -532,9 +532,9 @@ var _ = Describe("Barkat E2E Test", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
 
-			var envelope common.Envelope[map[string]barkat.Ticker]
+			var envelope common.Envelope[barkat.Ticker]
 			Expect(json.Unmarshal(resp.Body(), &envelope)).To(Succeed())
-			fetched := envelope.Data["ticker"]
+			fetched := envelope.Data
 			Expect(fetched.Ticker).To(Equal(compositeTickerID))
 			Expect(fetched.Type).To(Equal("COMPOSITE"))
 		})
