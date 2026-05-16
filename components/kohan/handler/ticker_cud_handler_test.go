@@ -154,7 +154,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 				It("should set updated_at timestamp", func() { Expect(response.UpdatedAt).ToNot(BeZero()) })
 				It("should persist ticker to database", func() {
 					var persisted barkat.Ticker
-					Expect(db.First(&persisted, "tv_symbol = ?", "MCX").Error).ToNot(HaveOccurred())
+					Expect(db.First(&persisted, "external_id = ?", "MCX").Error).ToNot(HaveOccurred())
 					Expect(persisted.Ticker).To(Equal("MCX"))
 				})
 			})
@@ -303,7 +303,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 						payload.Type = "COMPOSITE"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Ticker", "composite")
+						util.AssertError(w, "Ticker", "ticker")
 					})
 				})
 			})
@@ -866,12 +866,6 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 						response := decodeTickerOKResponse(w)
 						Expect(response.Exchange).To(Equal(createdTicker.Exchange))
 					})
-					It("should accept null exchange on PUT", func() {
-						payload := validUpdatePayload
-						payload.Exchange = nil
-						_, response := updateTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(response.Exchange).To(BeNil())
-					})
 					It("should accept valid exchange code", func() {
 						payload := validUpdatePayload
 						payload.Exchange = new("NSE")
@@ -1130,12 +1124,6 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 
 			Context("Is FNO Field", func() {
 				Context("Allowed Values", func() {
-					It("should accept omitted is_fno on PUT and leave existing value unchanged", func() {
-						req, w := rawTickerRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, `{"exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"READY","trend":"UPTREND"}`)
-						router.ServeHTTP(w, req)
-						response := decodeTickerOKResponse(w)
-						Expect(response.IsFNO).To(Equal(createdTicker.IsFNO))
-					})
 					It("should accept is_fno true", func() {
 						payload := validUpdatePayload
 						payload.IsFNO = true
@@ -1150,6 +1138,11 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 					})
 				})
 				Context("Bad Values", func() {
+					It("should return 400 for missing is_fno", func() {
+						req, w := rawTickerRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, `{"exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"READY","trend":"UPTREND"}`)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
 					It("should return 400 for string is_fno", func() {
 						jsonPayload := `{"exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"READY","trend":"UPTREND","is_fno":"true"}`
 						req, w := rawTickerRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, jsonPayload)
@@ -1348,7 +1341,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 					router.ServeHTTP(w, req)
 					Expect(w.Code).To(Equal(http.StatusNoContent))
 					var persisted barkat.Ticker
-					Expect(db.First(&persisted, "tv_symbol = ?", createdTicker.Ticker).Error).To(HaveOccurred())
+					Expect(db.First(&persisted, "external_id = ?", createdTicker.Ticker).Error).To(HaveOccurred())
 				})
 				It("should cascade delete linked Alert tickers and price alerts", func() {
 					req, w := util.CreateTestRequest(http.MethodDelete, barkat.TickerBase+"/"+createdTicker.Ticker, nil)

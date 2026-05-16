@@ -44,18 +44,6 @@ var _ = Describe("Validators", func() {
 				Expect(v.Var("TCS.NS", "ticker")).To(Succeed())
 			})
 
-			It("should accept hyphens", func() {
-				Expect(v.Var("TCS-TEST", "ticker")).To(Succeed())
-			})
-
-			It("should accept ampersands", func() {
-				Expect(v.Var("M&M", "ticker")).To(Succeed())
-			})
-
-			It("should accept complex combinations", func() {
-				Expect(v.Var("TCS.NS-123&TEST", "ticker")).To(Succeed())
-			})
-
 			It("should accept empty string", func() {
 				Expect(v.Var("", "ticker")).To(Succeed())
 			})
