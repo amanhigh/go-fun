@@ -34,7 +34,7 @@ func (Ticker) TableName() string { return "tradingview_tickers" }
 
 // TickerPath binds the :ticker path parameter.
 type TickerPath struct {
-	Ticker string `uri:"ticker" binding:"required,tv_ticker_path"`
+	Ticker string `uri:"ticker" binding:"required,ticker_path"`
 }
 
 // TickerQuery holds query parameters for listing/filtering tickers.

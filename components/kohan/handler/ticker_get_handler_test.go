@@ -5,6 +5,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"time"
 
@@ -162,6 +163,34 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
+
+					It("should accept encoded composite slash ticker NIFTY/USDINR", func() {
+						payload := validTickerPayload
+						payload.Ticker = "NIFTY/USDINR"
+						payload.Type = "COMPOSITE"
+						seedTicker(testCtx, db, payload)
+						req, w := util.CreateTestRequest(http.MethodGet,
+							barkat.TickerBase+"/"+url.PathEscape("NIFTY/USDINR"), nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+						response := decodeTickerGetResponse(w)
+						Expect(response.Ticker).To(Equal("NIFTY/USDINR"))
+						Expect(response.Type).To(Equal("COMPOSITE"))
+					})
+
+					It("should accept composite minus ticker US10Y-US02Y", func() {
+						payload := validTickerPayload
+						payload.Ticker = "US10Y-US02Y"
+						payload.Type = "COMPOSITE"
+						seedTicker(testCtx, db, payload)
+						req, w := util.CreateTestRequest(http.MethodGet,
+							barkat.TickerBase+"/"+url.PathEscape("US10Y-US02Y"), nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+						response := decodeTickerGetResponse(w)
+						Expect(response.Ticker).To(Equal("US10Y-US02Y"))
+						Expect(response.Type).To(Equal("COMPOSITE"))
+					})
 				})
 
 				Context("Bad Values", func() {
@@ -177,11 +206,6 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 					})
 					It("should return 400 for ticker path with unsupported special character", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"/MCX@", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-					})
-					It("should return 400 for ticker path with hyphen", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"/ABC-DEF", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})

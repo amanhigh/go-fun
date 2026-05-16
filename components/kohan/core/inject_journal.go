@@ -85,6 +85,8 @@ func ProvideKohanLifecycle(
 func provideHttpServer(cfg config.HttpServerConfig, shutdown util.Shutdown, lifecycle util.ServerLifecycle) util.HttpServer {
 	// Create Gin engine and register validators before setting up routes
 	engine := gin.Default()
+	engine.UseRawPath = true         // treat %2F as single path segment for composite tickers like NIFTY/USDINR
+	engine.UnescapePathValues = true // decode encoded path segments back to original ticker value
 	RegisterJournalValidators()
 	server := util.NewHttpServer(cfg, engine, shutdown)
 	server.SetLifecycle(lifecycle)

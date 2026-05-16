@@ -47,7 +47,7 @@ var (
 func RegisterJournalValidators() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		_ = v.RegisterValidation("ticker", TickerValidator)
-		_ = v.RegisterValidation("tv_ticker_path", TickerPathValidator)
+		_ = v.RegisterValidation("ticker_path", TickerPathValidator)
 		_ = v.RegisterValidation("alert_symbol", AlertSymbolValidator)
 		_ = v.RegisterValidation("alert_name", AlertNameValidator)
 		_ = v.RegisterValidation("ticker_exchange", TickerExchangeValidator)

@@ -31,7 +31,7 @@ type AlertTickerPath struct {
 type AlertTickerQuery struct {
 	common.Pagination
 	Symbol   string `form:"symbol" binding:"omitempty,min=1,max=25,alert_symbol"`
-	Ticker   string `form:"ticker" binding:"omitempty,tv_ticker_path"`
+	Ticker   string `form:"ticker" binding:"omitempty,ticker_path"`
 	PairID   string `form:"pair-id" binding:"omitempty,min=1,max=64,numeric"`
 	Exchange string `form:"exchange" binding:"omitempty,min=1,max=10,alert_exchange"`
 }

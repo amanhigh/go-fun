@@ -6,6 +6,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"time"
 
@@ -863,6 +864,18 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 						_, response := updateTickerRequest(router, createdTicker.Ticker, validUpdatePayload)
 						Expect(response.Ticker).To(Equal(createdTicker.Ticker))
 					})
+					It("should accept encoded composite ticker path NIFTY/USDINR", func() {
+						compositePayload := validTickerPayload
+						compositePayload.Ticker = "NIFTY/USDINR"
+						compositePayload.Type = "COMPOSITE"
+						_, compositeTicker := createTickerRequest(router, compositePayload)
+
+						compositeUpdate := validUpdatePayload
+						compositeUpdate.Type = "COMPOSITE"
+						_, response := updateTickerRequest(router, url.PathEscape(compositeTicker.Ticker), compositeUpdate)
+						Expect(response.Ticker).To(Equal(compositeTicker.Ticker))
+						Expect(response.Type).To(Equal("COMPOSITE"))
+					})
 				})
 				Context("Bad Values", func() {
 					It("should return 400 for invalid ticker path", func() {
@@ -1265,6 +1278,15 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 						_, response := patchTickerRequest(router, createdTicker.Ticker, validPatchPayload)
 						Expect(response.Ticker).To(Equal(createdTicker.Ticker))
 					})
+					It("should accept encoded composite ticker path US10Y-US02Y", func() {
+						compositePayload := validTickerPayload
+						compositePayload.Ticker = "US10Y-US02Y"
+						compositePayload.Type = "COMPOSITE"
+						_, compositeTicker := createTickerRequest(router, compositePayload)
+						_, response := patchTickerRequest(router, url.PathEscape(compositeTicker.Ticker), validPatchPayload)
+						Expect(response.Ticker).To(Equal(compositeTicker.Ticker))
+						Expect(response.LastOpenedAt).To(Equal(validPatchPayload.LastOpenedAt))
+					})
 				})
 				Context("Bad Values", func() {
 					It("should return 400 for invalid ticker path", func() {
@@ -1392,6 +1414,16 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 				Context("Allowed Values", func() {
 					It("should accept valid existing ticker path", func() {
 						req, w := util.CreateTestRequest(http.MethodDelete, barkat.TickerBase+"/"+createdTicker.Ticker, nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusNoContent))
+					})
+					It("should accept encoded composite ticker path NIFTY/USDINR", func() {
+						compositePayload := validTickerPayload
+						compositePayload.Ticker = "NIFTY/USDINR"
+						compositePayload.Type = "COMPOSITE"
+						_, compositeTicker := createTickerRequest(router, compositePayload)
+						req, w := util.CreateTestRequest(http.MethodDelete,
+							barkat.TickerBase+"/"+url.PathEscape(compositeTicker.Ticker), nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNoContent))
 					})
