@@ -105,6 +105,8 @@ var _ = BeforeSuite(func() {
 
 	shutdown := util.NewGracefulShutdown()
 	engine := gin.Default()
+	engine.UseRawPath = true         // treat %2F as single path segment for composite tickers like NIFTY/USDINR
+	engine.UnescapePathValues = true // decode encoded path segments back to original ticker value
 	core.RegisterJournalValidators()
 	server = util.NewHttpServer(config.HttpServerConfig{Name: "kohan-e2e", Port: testPort}, engine, shutdown)
 	server.SetLifecycle(lifecycle)
