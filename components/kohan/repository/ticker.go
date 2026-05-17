@@ -49,7 +49,7 @@ func (r *TickerRepositoryImpl) ListTickers(ctx context.Context, query barkat.Tic
 		return nil, 0, util.GormErrorMapper(err)
 	}
 
-	tickers, err := r.fetchTickers(tx, query)
+	tickers, err := r.fetchTickers(ctx, tx, query)
 	return tickers, total, util.GormErrorMapper(err)
 }
 
@@ -83,9 +83,16 @@ func (r *TickerRepositoryImpl) applyTickerFilters(tx *gorm.DB, query barkat.Tick
 	return tx
 }
 
-func (r *TickerRepositoryImpl) fetchTickers(tx *gorm.DB, query barkat.TickerQuery) ([]barkat.Ticker, error) {
-	// Add alert_ticker_count via subquery
-	tx = tx.Select("tickers.*, (SELECT count(*) FROM alert_tickers WHERE alert_tickers.ticker_id = tickers.id) AS alert_ticker_count")
+func (r *TickerRepositoryImpl) fetchTickers(ctx context.Context, tx *gorm.DB, query barkat.TickerQuery) ([]barkat.Ticker, error) {
+	// Build an aggregate subquery that counts alert_tickers per ticker_id
+	alertCounts := r.SafeTx(ctx).Model(&barkat.AlertTicker{}).
+		Select("ticker_id, COUNT(*) AS alert_ticker_count").
+		Group("ticker_id")
+
+	// LEFT JOIN the count subquery to get per-row alert_ticker_count with zero-fill via COALESCE
+	tx = tx.
+		Select("tickers.*, COALESCE(alert_counts.alert_ticker_count, 0) AS alert_ticker_count").
+		Joins("LEFT JOIN (?) AS alert_counts ON alert_counts.ticker_id = tickers.id", alertCounts)
 
 	tx = util.ApplySort(tx, util.SortOptions{
 		SortBy:           query.SortBy,

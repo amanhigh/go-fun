@@ -239,8 +239,14 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 	// 2.2.1.6 GET /v1/api/tickers - List Primary Tickers
 	// ============================================================================
 	Describe("GET /v1/api/tickers - List Primary Tickers (2.2.1.6)", func() {
+		var (
+			mcxTicker   barkat.Ticker
+			btcTicker   barkat.Ticker
+			niftyTicker barkat.Ticker
+		)
+
 		BeforeEach(func() {
-			mcxTicker := barkat.Ticker{
+			mcxTicker = barkat.Ticker{
 				Ticker:       "MCX",
 				Exchange:     new("NSE"),
 				Timeframes:   []string{"MN", "WK", "DL"},
@@ -250,8 +256,8 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 				LastOpenedAt: time.Date(2026, time.May, 5, 10, 30, 0, 0, time.UTC),
 				IsFNO:        true,
 			}
-			seedTicker(testCtx, db, mcxTicker)
-			btcTicker := barkat.Ticker{
+			mcxTicker = seedTicker(testCtx, db, mcxTicker)
+			btcTicker = barkat.Ticker{
 				Ticker:       "BTCUSD",
 				Exchange:     new("BINANCE"),
 				Timeframes:   []string{"DL"},
@@ -261,8 +267,8 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 				LastOpenedAt: time.Date(2026, time.May, 6, 10, 30, 0, 0, time.UTC),
 				IsFNO:        false,
 			}
-			seedTicker(testCtx, db, btcTicker)
-			niftyTicker := barkat.Ticker{
+			btcTicker = seedTicker(testCtx, db, btcTicker)
+			niftyTicker = barkat.Ticker{
 				Ticker:       "NIFTY/USDINR",
 				Exchange:     nil,
 				Timeframes:   []string{"YR", "MN"},
@@ -272,7 +278,13 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 				LastOpenedAt: time.Date(2026, time.May, 7, 10, 30, 0, 0, time.UTC),
 				IsFNO:        false,
 			}
-			seedTicker(testCtx, db, niftyTicker)
+			niftyTicker = seedTicker(testCtx, db, niftyTicker)
+
+			// Seed alert tickers with distinct counts: MCX=2, BTCUSD=1, NIFTY/USDINR=0
+			alertExchange := "NSE"
+			Expect(db.Create(&barkat.AlertTicker{TickerID: mcxTicker.ID, Symbol: "MCIX1", PairID: "941982", Name: "MC Alert 1", Exchange: &alertExchange}).Error).ToNot(HaveOccurred())
+			Expect(db.Create(&barkat.AlertTicker{TickerID: mcxTicker.ID, Symbol: "MCIX2", PairID: "941983", Name: "MC Alert 2", Exchange: &alertExchange}).Error).ToNot(HaveOccurred())
+			Expect(db.Create(&barkat.AlertTicker{TickerID: btcTicker.ID, Symbol: "BTCALERT", PairID: "941984", Name: "BTC Alert", Exchange: &alertExchange}).Error).ToNot(HaveOccurred())
 		})
 
 		Context("Happy Path", func() {
@@ -305,12 +317,17 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 
 			Context("response shape", func() {
 				var ticker barkat.Ticker
+				var tickersBySymbol map[string]barkat.Ticker
 
 				BeforeEach(func() {
 					req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase, nil)
 					router.ServeHTTP(w, req)
 					response := decodeTickerListResponse(w)
 					ticker = response.Tickers[0]
+					tickersBySymbol = make(map[string]barkat.Ticker, len(response.Tickers))
+					for _, t := range response.Tickers {
+						tickersBySymbol[t.Ticker] = t
+					}
 				})
 
 				It("should include ticker", func() { Expect(ticker.Ticker).ToNot(BeEmpty()) })
@@ -321,7 +338,11 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 				It("should include trend", func() { Expect(ticker.Trend).ToNot(BeEmpty()) })
 				It("should include last_opened_at", func() { Expect(ticker.LastOpenedAt).ToNot(BeZero()) })
 				It("should include is_fno", func() { Expect(ticker.IsFNO).To(BeAssignableToTypeOf(false)) })
-				It("should include alert_ticker_count", func() { Expect(ticker.AlertTickerCount).To(BeNumerically(">=", 0)) })
+				It("should include alert_ticker_count", func() {
+					Expect(tickersBySymbol["MCX"].AlertTickerCount).To(Equal(int64(2)))
+					Expect(tickersBySymbol["BTCUSD"].AlertTickerCount).To(Equal(int64(1)))
+					Expect(tickersBySymbol["NIFTY/USDINR"].AlertTickerCount).To(Equal(int64(0)))
+				})
 			})
 		})
 
@@ -358,6 +379,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 						response := decodeTickerListResponse(w)
 						Expect(response.Tickers).To(HaveLen(1))
 						Expect(*response.Tickers[0].Exchange).To(Equal("NSE"))
+						Expect(response.Tickers[0].AlertTickerCount).To(Equal(int64(2)))
 					})
 					It("should accept minimum exchange length 1", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=N", nil)
