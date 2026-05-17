@@ -32,18 +32,6 @@ func NewAlertTickerManager(repo repository.AlertTickerRepository) *AlertTickerMa
 	return &AlertTickerManagerImpl{repo: repo}
 }
 
-// ---- Helpers ----
-
-// hydrateParentTicker populates the Ticker (parent external_id) field on an AlertTicker.
-func (m *AlertTickerManagerImpl) hydrateParentTicker(ctx context.Context, alert *barkat.AlertTicker) common.HttpError {
-	var parent barkat.Ticker
-	if httpErr := m.repo.FindById(ctx, alert.TickerID, &parent); httpErr != nil {
-		return httpErr
-	}
-	alert.Ticker = parent.Ticker
-	return nil
-}
-
 // ---- Alert Ticker ----
 
 func (m *AlertTickerManagerImpl) CreateAlertTicker(ctx context.Context, ticker string, alert *barkat.AlertTicker) (result barkat.AlertTicker, httpErr common.HttpError) {
@@ -67,13 +55,8 @@ func (m *AlertTickerManagerImpl) CreateAlertTicker(ctx context.Context, ticker s
 	return
 }
 
-func (m *AlertTickerManagerImpl) GetAlertTicker(ctx context.Context, symbol string) (result barkat.AlertTicker, httpErr common.HttpError) {
-	httpErr = m.repo.GetByExternalId(ctx, symbol, &result)
-	if httpErr != nil {
-		return
-	}
-	httpErr = m.hydrateParentTicker(ctx, &result)
-	return
+func (m *AlertTickerManagerImpl) GetAlertTicker(ctx context.Context, symbol string) (barkat.AlertTicker, common.HttpError) {
+	return m.repo.GetAlertTicker(ctx, symbol)
 }
 
 func (m *AlertTickerManagerImpl) DeleteAlertTicker(ctx context.Context, symbol string) common.HttpError {
@@ -101,13 +84,6 @@ func (m *AlertTickerManagerImpl) ListAlertTickers(ctx context.Context, query bar
 	alertTickers, total, httpErr := m.repo.ListAlertTickers(ctx, query)
 	if httpErr != nil {
 		return barkat.AlertTickerList{}, httpErr
-	}
-
-	// Hydrate parent ticker for each result
-	for i := range alertTickers {
-		if httpErr := m.hydrateParentTicker(ctx, &alertTickers[i]); httpErr != nil {
-			return barkat.AlertTickerList{}, httpErr
-		}
 	}
 
 	return barkat.AlertTickerList{

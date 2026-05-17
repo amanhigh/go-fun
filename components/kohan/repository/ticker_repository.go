@@ -7,18 +7,7 @@ import (
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
-
-// tickerSortColumn maps API sort-by field names to DB column names.
-func tickerSortColumn(sortBy string) string {
-	switch sortBy {
-	case "ticker", "":
-		return "external_id"
-	default:
-		return sortBy
-	}
-}
 
 // TickerRepository provides persistence operations for barkat tickers.
 type TickerRepository interface {
@@ -81,9 +70,17 @@ func (r *TickerRepositoryImpl) applyTickerFilters(tx *gorm.DB, query barkat.Tick
 }
 
 func (r *TickerRepositoryImpl) fetchTickers(tx *gorm.DB, query barkat.TickerQuery) ([]barkat.Ticker, error) {
-	tx = tx.Order(clause.OrderByColumn{
-		Column: clause.Column{Name: tickerSortColumn(query.SortBy)},
-		Desc:   query.SortOrder == common.SortOrderDesc,
+	// Add alert_ticker_count via subquery
+	tx = tx.Select("tickers.*, (SELECT count(*) FROM alert_tickers WHERE alert_tickers.ticker_id = tickers.id) AS alert_ticker_count")
+
+	tx = util.ApplySort(tx, util.SortOptions{
+		SortBy:           query.SortBy,
+		SortOrder:        query.SortOrder,
+		DefaultSortBy:    "ticker",
+		DefaultSortOrder: common.SortOrderAsc,
+		SortFieldMap: map[string]string{
+			"ticker": "external_id",
+		},
 	})
 
 	var tickers []barkat.Ticker

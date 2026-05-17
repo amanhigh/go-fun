@@ -93,18 +93,16 @@ func (r *JournalRepositoryImpl) applyJournalFilters(tx *gorm.DB, query barkat.Jo
 }
 
 func (r *JournalRepositoryImpl) fetchJournals(tx *gorm.DB, query barkat.JournalQuery) ([]barkat.Journal, error) {
-	orderClause := "created_at DESC"
-	if query.SortBy != "" {
-		direction := "DESC"
-		if query.SortOrder == "asc" {
-			direction = "ASC"
-		}
-		orderClause = query.SortBy + " " + direction
-	}
+	tx = util.ApplySort(tx, util.SortOptions{
+		SortBy:           query.SortBy,
+		SortOrder:        query.SortOrder,
+		DefaultSortBy:    "created_at",
+		DefaultSortOrder: common.SortOrderDesc,
+	})
 
 	var journals []barkat.Journal
 	err := tx.Preload("Images", func(db *gorm.DB) *gorm.DB {
 		return db.Order(ImageTimeframeOrder)
-	}).Order(orderClause).Offset(query.Offset).Limit(query.Limit).Find(&journals).Error
+	}).Offset(query.Offset).Limit(query.Limit).Find(&journals).Error
 	return journals, err
 }

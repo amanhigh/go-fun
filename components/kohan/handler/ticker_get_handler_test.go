@@ -128,7 +128,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 					Expect(response.UpdatedAt).ToNot(BeZero())
 				})
 
-				PIt("should include mapped alert_tickers array", func() {
+				It("should include mapped alert_tickers array", func() {
 					Expect(response.AlertTickers).To(HaveLen(1))
 					Expect(response.AlertTickers[0].Symbol).To(Equal("MCIX"))
 					Expect(response.AlertTickers[0].PairID).To(Equal("941982"))
@@ -321,7 +321,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 				It("should include trend", func() { Expect(ticker.Trend).ToNot(BeEmpty()) })
 				It("should include last_opened_at", func() { Expect(ticker.LastOpenedAt).ToNot(BeZero()) })
 				It("should include is_fno", func() { Expect(ticker.IsFNO).To(BeAssignableToTypeOf(false)) })
-				PIt("should include alert_ticker_count", func() { Expect(ticker.AlertTickerCount).To(BeNumerically(">=", 0)) })
+				It("should include alert_ticker_count", func() { Expect(ticker.AlertTickerCount).To(BeNumerically(">=", 0)) })
 			})
 		})
 
