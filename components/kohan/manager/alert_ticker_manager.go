@@ -22,33 +22,44 @@ type AlertTickerManager interface {
 }
 
 type AlertTickerManagerImpl struct {
-	alertRepo repository.AlertTickerRepository
+	repo repository.AlertTickerRepository
 }
 
 var _ AlertTickerManager = (*AlertTickerManagerImpl)(nil)
 
 // NewAlertTickerManager creates a new AlertTickerManager.
-func NewAlertTickerManager(alertRepo repository.AlertTickerRepository) *AlertTickerManagerImpl {
-	return &AlertTickerManagerImpl{alertRepo: alertRepo}
+func NewAlertTickerManager(repo repository.AlertTickerRepository) *AlertTickerManagerImpl {
+	return &AlertTickerManagerImpl{repo: repo}
+}
+
+// ---- Helpers ----
+
+// hydrateParentTicker populates the Ticker (parent external_id) field on an AlertTicker.
+func (m *AlertTickerManagerImpl) hydrateParentTicker(ctx context.Context, alert *barkat.AlertTicker) common.HttpError {
+	var parent barkat.Ticker
+	if httpErr := m.repo.FindById(ctx, alert.TickerID, &parent); httpErr != nil {
+		return httpErr
+	}
+	alert.Ticker = parent.Ticker
+	return nil
 }
 
 // ---- Alert Ticker ----
 
 func (m *AlertTickerManagerImpl) CreateAlertTicker(ctx context.Context, ticker string, alert *barkat.AlertTicker) (result barkat.AlertTicker, httpErr common.HttpError) {
-	httpErr = m.alertRepo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Look up parent ticker
+	httpErr = m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+		// Validate and look up parent ticker
 		var parent barkat.Ticker
-		if httpErr := m.alertRepo.GetByExternalId(c, ticker, &parent); httpErr != nil {
+		if httpErr := m.repo.GetByExternalId(c, ticker, &parent); httpErr != nil {
 			return httpErr
 		}
 
 		alert.TickerID = parent.ID
 
-		if httpErr := m.alertRepo.Create(c, alert); httpErr != nil {
+		if httpErr := m.repo.Create(c, alert); httpErr != nil {
 			return httpErr
 		}
 
-		// Populate parent ticker string for response
 		result = *alert
 		result.Ticker = parent.Ticker
 		return nil
@@ -56,19 +67,30 @@ func (m *AlertTickerManagerImpl) CreateAlertTicker(ctx context.Context, ticker s
 	return
 }
 
-func (m *AlertTickerManagerImpl) GetAlertTicker(ctx context.Context, symbol string) (barkat.AlertTicker, common.HttpError) {
-	return m.alertRepo.GetBySymbol(ctx, symbol)
+func (m *AlertTickerManagerImpl) GetAlertTicker(ctx context.Context, symbol string) (result barkat.AlertTicker, httpErr common.HttpError) {
+	httpErr = m.repo.GetByExternalId(ctx, symbol, &result)
+	if httpErr != nil {
+		return
+	}
+	httpErr = m.hydrateParentTicker(ctx, &result)
+	return
 }
 
 func (m *AlertTickerManagerImpl) DeleteAlertTicker(ctx context.Context, symbol string) common.HttpError {
-	return m.alertRepo.DeleteBySymbol(ctx, symbol)
+	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
+		var alert barkat.AlertTicker
+		if httpErr := m.repo.GetByExternalId(c, symbol, &alert); httpErr != nil {
+			return httpErr
+		}
+		return m.repo.DeleteById(c, alert.ID, &barkat.AlertTicker{})
+	})
 }
 
 func (m *AlertTickerManagerImpl) ListAlertTickers(ctx context.Context, query barkat.AlertTickerQuery) (barkat.AlertTickerList, common.HttpError) {
 	// When ticker filter is provided, validate parent ticker exists
 	if query.Ticker != "" {
 		var parent barkat.Ticker
-		if httpErr := m.alertRepo.GetByExternalId(ctx, query.Ticker, &parent); httpErr != nil {
+		if httpErr := m.repo.GetByExternalId(ctx, query.Ticker, &parent); httpErr != nil {
 			if httpErr.Code() == http.StatusNotFound {
 				return barkat.AlertTickerList{}, common.NewHttpError("Ticker not found", http.StatusNotFound)
 			}
@@ -76,9 +98,16 @@ func (m *AlertTickerManagerImpl) ListAlertTickers(ctx context.Context, query bar
 		}
 	}
 
-	alertTickers, total, httpErr := m.alertRepo.ListAlertTickers(ctx, query)
+	alertTickers, total, httpErr := m.repo.ListAlertTickers(ctx, query)
 	if httpErr != nil {
 		return barkat.AlertTickerList{}, httpErr
+	}
+
+	// Hydrate parent ticker for each result
+	for i := range alertTickers {
+		if httpErr := m.hydrateParentTicker(ctx, &alertTickers[i]); httpErr != nil {
+			return barkat.AlertTickerList{}, httpErr
+		}
 	}
 
 	return barkat.AlertTickerList{

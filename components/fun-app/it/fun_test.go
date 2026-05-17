@@ -431,7 +431,7 @@ var _ = Describe("Person Integration Test", func() {
 
 				It("should fail for invalid Order", func() {
 					personQuery.SortBy = "name"
-					personQuery.SortOrder = "invalid"
+					personQuery.SortOrder = common.SortOrder("invalid")
 					expectedErr = "asc"
 				})
 			})
