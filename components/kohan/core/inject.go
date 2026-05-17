@@ -60,6 +60,9 @@ func (ki *KohanInjector) GetKohanServer() (util.HttpServer, error) {
 	osManager := ki.GetOSManager()
 
 	// Register all dependencies
+	if err := ki.registerCoreDependencies(); err != nil {
+		return nil, fmt.Errorf("failed to register core dependencies: %w", err)
+	}
 	ki.registerOSDependencies(osManager)
 	ki.registerPortalDependencies()
 	if err := ki.registerBarkatDependencies(); err != nil {

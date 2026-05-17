@@ -564,14 +564,39 @@ func buildTickerPlan(dump *BarkatRepositoryDump, logger *MigrationLogger) ([]Tic
 		}
 		sort.Strings(compositeExprs)
 		for _, expr := range compositeExprs {
+			// Derive timeframes from sequenceRepo (same logic as main ticker loop)
+			timeframes := expandSequence(dump.SequenceRepo[expr])
+			if _, ok := dump.SequenceRepo[expr]; !ok {
+				logger.LogModification("data.json", expr, "timeframes",
+					"default_applied", "set to MN/WK/DL (no sequence found for composite)")
+			} else {
+				logger.LogInfo("composite_ticker_sequence", map[string]any{
+					"ticker":     expr,
+					"sequence":   dump.SequenceRepo[expr],
+					"timeframes": timeframes,
+				})
+			}
+
+			// Derive last_opened_at from recentRepo (same logic as main ticker loop)
+			var lastOpenedAt time.Time
+			if ts, ok := dump.RecentRepo[expr]; ok && ts > 0 {
+				lastOpenedAt = epochMsToTime(ts)
+				logger.LogInfo("composite_ticker_recent", map[string]any{
+					"ticker":         expr,
+					"last_opened_at": lastOpenedAt.Format(time.RFC3339),
+				})
+			} else {
+				lastOpenedAt = importTime.AddDate(0, -3, 0)
+			}
+
 			plan = append(plan, TickerPayload{
 				Ticker:       expr,
 				Exchange:     nil,
-				Timeframes:   []string{"MN", "WK", "DL"},
+				Timeframes:   timeframes,
 				Type:         "COMPOSITE",
 				State:        "WATCHED",
 				Trend:        "SIDEWAYS",
-				LastOpenedAt: importTime.AddDate(0, -3, 0),
+				LastOpenedAt: lastOpenedAt,
 				IsFNO:        false,
 			})
 			logger.LogInfo("composite_ticker", map[string]any{
