@@ -115,7 +115,7 @@ var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.
 					Expect(response.Name).To(Equal("Multi Commodity Exchange of India"))
 					Expect(response.Exchange).To(Equal(new("NSE")))
 				})
-				It("should include parent ticker reference", func() { Expect(response.Ticker).To(Equal(createdTicker.Ticker)) })
+				It("should include parent ticker reference", func() { Expect(response.TickerSymbol).To(Equal(createdTicker.Ticker)) })
 				It("should include created_at and updated_at", func() {
 					Expect(response.CreatedAt).ToNot(BeZero())
 					Expect(response.UpdatedAt).ToNot(BeZero())
@@ -208,7 +208,7 @@ var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.
 				It("should include pair_id", func() { Expect(alertTicker.PairID).ToNot(BeEmpty()) })
 				It("should include name", func() { Expect(alertTicker.Name).ToNot(BeEmpty()) })
 				It("should include exchange", func() { Expect(alertTicker.Exchange).ToNot(BeNil()) })
-				It("should include ticker", func() { Expect(alertTicker.Ticker).ToNot(BeEmpty()) })
+				It("should include ticker", func() { Expect(alertTicker.TickerSymbol).ToNot(BeEmpty()) })
 			})
 		})
 

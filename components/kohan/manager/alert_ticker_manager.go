@@ -49,7 +49,7 @@ func (m *AlertTickerManagerImpl) CreateAlertTicker(ctx context.Context, ticker s
 		}
 
 		result = *alert
-		result.Ticker = parent.Ticker
+		result.TickerSymbol = parent.Ticker
 		return nil
 	})
 	return

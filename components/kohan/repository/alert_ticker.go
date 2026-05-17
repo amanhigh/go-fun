@@ -12,9 +12,9 @@ import (
 // AlertTickerRepository provides persistence operations for Alert tickers.
 type AlertTickerRepository interface {
 	util.BaseDbRepositoryInterface
-	// GetAlertTicker retrieves a single Alert ticker by symbol with parent ticker populated.
+	// GetAlertTicker retrieves a single Alert ticker by symbol with parent Ticker preloaded.
 	GetAlertTicker(ctx context.Context, symbol string) (barkat.AlertTicker, common.HttpError)
-	// ListAlertTickers returns a filtered, paginated list of Alert tickers with parent ticker populated.
+	// ListAlertTickers returns a filtered, paginated list of Alert tickers with parent Ticker preloaded.
 	ListAlertTickers(ctx context.Context, query barkat.AlertTickerQuery) ([]barkat.AlertTicker, int64, common.HttpError)
 }
 
@@ -37,7 +37,7 @@ func (r *AlertTickerRepositoryImpl) GetAlertTicker(ctx context.Context, symbol s
 	var result barkat.AlertTicker
 	// FIXME: Remove Preload if Unused in UI.
 	err := r.SafeTx(ctx).Model(&barkat.AlertTicker{}).
-		Preload("ParentTicker").
+		Preload("Ticker").
 		First(&result, &barkat.AlertTicker{Symbol: symbol}).Error
 	return result, util.GormErrorMapper(err)
 }
@@ -51,7 +51,7 @@ func (r *AlertTickerRepositoryImpl) ListAlertTickers(ctx context.Context, query 
 	}
 
 	var alertTickers []barkat.AlertTicker
-	if err := tx.Preload("ParentTicker").Offset(query.Offset).Limit(query.Limit).Find(&alertTickers).Error; err != nil {
+	if err := tx.Preload("Ticker").Offset(query.Offset).Limit(query.Limit).Find(&alertTickers).Error; err != nil {
 		return nil, 0, util.GormErrorMapper(err)
 	}
 

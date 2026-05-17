@@ -108,7 +108,7 @@ var _ = Describe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Ale
 				It("should preserve pair_id", func() { Expect(response.PairID).To(Equal("941982")) })
 				It("should preserve name", func() { Expect(response.Name).To(Equal("Multi Commodity Exchange of India")) })
 				It("should preserve exchange", func() { Expect(response.Exchange).To(Equal(new("NSE"))) })
-				It("should include parent ticker", func() { Expect(response.Ticker).To(Equal(createdTicker.Ticker)) })
+				It("should include parent ticker", func() { Expect(response.TickerSymbol).To(Equal(createdTicker.Ticker)) })
 				It("should set created_at timestamp", func() { Expect(response.CreatedAt).ToNot(BeZero()) })
 				It("should set updated_at timestamp", func() { Expect(response.UpdatedAt).ToNot(BeZero()) })
 				It("should persist alert ticker linked to parent ticker", func() {
@@ -124,7 +124,7 @@ var _ = Describe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Ale
 				Context("Allowed Values", func() {
 					It("should accept existing valid parent ticker path", func() {
 						_, response := createAlertTickerRequest(router, createdTicker.Ticker, validAlertTickerPayload)
-						Expect(response.Ticker).To(Equal(createdTicker.Ticker))
+						Expect(response.TickerSymbol).To(Equal(createdTicker.Ticker))
 					})
 				})
 				Context("Bad Values", func() {
