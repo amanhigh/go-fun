@@ -65,6 +65,10 @@ var _ = Describe("Validators", func() {
 					Expect(v.Var("GOLD1!", "ticker")).To(Succeed())
 				})
 
+				It("should accept slash for FOREX pair EUR/USD", func() {
+					Expect(v.Var("EUR/USD", "ticker")).To(Succeed())
+				})
+
 				It("should accept empty string", func() {
 					Expect(v.Var("", "ticker")).To(Succeed())
 				})
@@ -105,15 +109,6 @@ var _ = Describe("Validators", func() {
 
 				It("should reject starting with &", func() {
 					Expect(v.Var("&TCS", "ticker")).ToNot(Succeed())
-				})
-
-				It("should reject composite slash when type is not COMPOSITE", func() {
-					err := v.Struct(tickerTestStruct{Ticker: "NIFTY/USDINR", Type: "EQUITY"})
-					Expect(err).To(HaveOccurred())
-					var errs validator.ValidationErrors
-					Expect(errors.As(err, &errs)).To(BeTrue())
-					Expect(errs[0].Tag()).To(Equal("ticker"))
-					Expect(errs[0].Field()).To(Equal("Ticker"))
 				})
 
 				It("should reject composite plus when type is not COMPOSITE", func() {
