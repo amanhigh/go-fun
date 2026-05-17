@@ -68,17 +68,19 @@ func ProvideKohanLifecycle(
 	noteHandler handler.NoteHandler,
 	tagHandler handler.TagHandler,
 	tickerHandler handler.TickerHandler,
+	alertTickerHandler handler.AlertTickerHandler,
 	portalHandlers PortalHandlers,
 ) util.ServerLifecycle {
 	return &KohanServerLifecycle{
-		OSHandler:      osHandler,
-		JournalHandler: journalHandler,
-		ImageHandler:   imageHandler,
-		NoteHandler:    noteHandler,
-		TagHandler:     tagHandler,
-		TickerHandler:  tickerHandler,
-		IndexPortal:    portalHandlers.IndexPortal,
-		JournalPortal:  portalHandlers.JournalPortal,
+		OSHandler:          osHandler,
+		JournalHandler:     journalHandler,
+		ImageHandler:       imageHandler,
+		NoteHandler:        noteHandler,
+		TagHandler:         tagHandler,
+		TickerHandler:      tickerHandler,
+		AlertTickerHandler: alertTickerHandler,
+		IndexPortal:        portalHandlers.IndexPortal,
+		JournalPortal:      portalHandlers.JournalPortal,
 	}
 }
 

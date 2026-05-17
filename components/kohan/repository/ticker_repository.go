@@ -2,22 +2,22 @@ package repository
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
-// tickerSortFieldMap maps API sort-by field names to DB column names.
-var tickerSortFieldMap = map[string]string{
-	"ticker":         "external_id",
-	"exchange":       "exchange",
-	"type":           "type",
-	"state":          "state",
-	"trend":          "trend",
-	"last_opened_at": "last_opened_at",
+// tickerSortColumn maps API sort-by field names to DB column names.
+func tickerSortColumn(sortBy string) string {
+	switch sortBy {
+	case "ticker", "":
+		return "external_id"
+	default:
+		return sortBy
+	}
 }
 
 // TickerRepository provides persistence operations for barkat tickers.
@@ -81,21 +81,12 @@ func (r *TickerRepositoryImpl) applyTickerFilters(tx *gorm.DB, query barkat.Tick
 }
 
 func (r *TickerRepositoryImpl) fetchTickers(tx *gorm.DB, query barkat.TickerQuery) ([]barkat.Ticker, error) {
-	orderClause := "external_id ASC"
-	if query.SortBy != "" {
-		direction := "ASC"
-		if query.SortOrder == "desc" {
-			direction = "DESC"
-		}
-		// Map API field name to DB column name (e.g. "ticker" → "external_id")
-		colName := query.SortBy
-		if mapped, ok := tickerSortFieldMap[query.SortBy]; ok {
-			colName = mapped
-		}
-		orderClause = fmt.Sprintf("%s %s", colName, direction)
-	}
+	tx = tx.Order(clause.OrderByColumn{
+		Column: clause.Column{Name: tickerSortColumn(query.SortBy)},
+		Desc:   query.SortOrder == common.SortOrderDesc,
+	})
 
 	var tickers []barkat.Ticker
-	err := tx.Order(orderClause).Offset(query.Offset).Limit(query.Limit).Find(&tickers).Error
+	err := tx.Offset(query.Offset).Limit(query.Limit).Find(&tickers).Error
 	return tickers, err
 }

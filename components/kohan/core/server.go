@@ -16,14 +16,15 @@ import (
 
 // KohanServerLifecycle implements ServerLifecycle for the Kohan HTTP server.
 type KohanServerLifecycle struct {
-	OSHandler      handler.OSHandler      `container:"type"`
-	JournalHandler handler.JournalHandler `container:"type"`
-	ImageHandler   handler.ImageHandler   `container:"type"`
-	NoteHandler    handler.NoteHandler    `container:"type"`
-	TagHandler     handler.TagHandler     `container:"type"`
-	TickerHandler  handler.TickerHandler  `container:"type"`
-	IndexPortal    handler.IndexPortal    `container:"type"`
-	JournalPortal  handler.JournalPortal  `container:"type"`
+	OSHandler          handler.OSHandler          `container:"type"`
+	JournalHandler     handler.JournalHandler     `container:"type"`
+	ImageHandler       handler.ImageHandler       `container:"type"`
+	NoteHandler        handler.NoteHandler        `container:"type"`
+	TagHandler         handler.TagHandler         `container:"type"`
+	TickerHandler      handler.TickerHandler      `container:"type"`
+	AlertTickerHandler handler.AlertTickerHandler `container:"type"`
+	IndexPortal        handler.IndexPortal        `container:"type"`
+	JournalPortal      handler.JournalPortal      `container:"type"`
 }
 
 type PortalHandlers struct {
@@ -41,16 +42,18 @@ func NewKohanServerLifecycle(osHandler handler.OSHandler,
 	journalHandler handler.JournalHandler, imageHandler handler.ImageHandler,
 	noteHandler handler.NoteHandler, tagHandler handler.TagHandler,
 	tickerHandler handler.TickerHandler,
+	alertTickerHandler handler.AlertTickerHandler,
 	portalHandlers PortalHandlers) *KohanServerLifecycle {
 	return &KohanServerLifecycle{
-		OSHandler:      osHandler,
-		JournalHandler: journalHandler,
-		ImageHandler:   imageHandler,
-		NoteHandler:    noteHandler,
-		TagHandler:     tagHandler,
-		TickerHandler:  tickerHandler,
-		IndexPortal:    portalHandlers.IndexPortal,
-		JournalPortal:  portalHandlers.JournalPortal,
+		OSHandler:          osHandler,
+		JournalHandler:     journalHandler,
+		ImageHandler:       imageHandler,
+		NoteHandler:        noteHandler,
+		TagHandler:         tagHandler,
+		TickerHandler:      tickerHandler,
+		AlertTickerHandler: alertTickerHandler,
+		IndexPortal:        portalHandlers.IndexPortal,
+		JournalPortal:      portalHandlers.JournalPortal,
 	}
 }
 
@@ -88,6 +91,11 @@ func (s *KohanServerLifecycle) registerJournalRoutes(engine *gin.Engine) {
 func (s *KohanServerLifecycle) registerBarkatRoutes(engine *gin.Engine) {
 	ticker := engine.Group(barkat.TickerBase)
 	handler.SetupTickerRoutes(ticker, s.TickerHandler)
+	// HACK: Single Route Registration
+	handler.SetupTickerAlertRoutes(ticker, s.AlertTickerHandler)
+
+	alertTicker := engine.Group(barkat.AlertTickerBase)
+	handler.SetupAlertTickerRoutes(alertTicker, s.AlertTickerHandler)
 }
 
 func (s *KohanServerLifecycle) registerPortalRoutes(engine *gin.Engine) {

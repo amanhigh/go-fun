@@ -85,6 +85,9 @@ var _ = BeforeSuite(func() {
 	tickerRepo := repository.NewTickerRepository(db)
 	tickerMgr := manager.NewBarkatTickerManager(tickerRepo)
 	tickerHandler := handler.NewTickerHandler(tickerMgr)
+	alertTickerRepo := repository.NewAlertTickerRepository(db)
+	alertTickerMgr := manager.NewAlertTickerManager(alertTickerRepo)
+	alertTickerHandler := handler.NewAlertTickerHandler(alertTickerMgr)
 	indexPortal := handler.NewIndexPortal()
 	journalPortal := handler.NewJournalPortal(testImageDir)
 
@@ -97,6 +100,7 @@ var _ = BeforeSuite(func() {
 		noteHandler,
 		tagHandler,
 		tickerHandler,
+		alertTickerHandler,
 		core.PortalHandlers{
 			IndexPortal:   indexPortal,
 			JournalPortal: journalPortal,

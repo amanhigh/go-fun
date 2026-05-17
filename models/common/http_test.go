@@ -264,21 +264,24 @@ var _ = Describe("Http Util", func() {
 	})
 
 	Context("Sort", func() {
-		It("should have correct field types", func() {
-			sort := common.Sort{
-				SortBy: "name",
-				Order:  "asc",
-			}
-
-			Expect(sort.SortBy).To(Equal("name"))
-			Expect(sort.Order).To(Equal("asc"))
+		It("should have SortOrderAsc value", func() {
+			Expect(string(common.SortOrderAsc)).To(Equal("asc"))
 		})
 
-		It("should work with empty values", func() {
-			sort := common.Sort{}
+		It("should have SortOrderDesc value", func() {
+			Expect(string(common.SortOrderDesc)).To(Equal("desc"))
+		})
 
-			Expect(sort.SortBy).To(Equal(""))
-			Expect(sort.Order).To(Equal(""))
+		It("should have SortOrderNone value", func() {
+			Expect(string(common.SortOrderNone)).To(Equal(""))
+		})
+
+		It("should accept constants in Sort struct", func() {
+			sort := common.Sort{
+				SortOrder: common.SortOrderAsc,
+			}
+
+			Expect(string(sort.SortOrder)).To(Equal("asc"))
 		})
 	})
 

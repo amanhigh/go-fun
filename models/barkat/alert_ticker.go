@@ -11,7 +11,7 @@ type AlertTicker struct {
 	ID        uint64    `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
 	TickerID  uint64    `gorm:"column:ticker_id;not null;index:idx_alert_ticker_parent" json:"-"`
 	Symbol    string    `gorm:"column:external_id;uniqueIndex;not null" json:"symbol" binding:"required,min=1,max=25,alert_symbol"`
-	PairID    string    `gorm:"column:pair_id;not null;index:idx_alert_ticker_pair_id" json:"pair_id" binding:"required,min=1,max=64,numeric"`
+	PairID    string    `gorm:"column:pair_id;not null;index:idx_alert_ticker_pair_id" json:"pair_id" binding:"required,min=1,max=64,number"`
 	Name      string    `gorm:"column:name;not null" json:"name" binding:"required,min=1,max=100,alert_name"`
 	Exchange  *string   `gorm:"column:exchange;index:idx_alert_ticker_exchange" json:"exchange" binding:"omitempty,min=1,max=10,alert_exchange"`
 	Ticker    string    `gorm:"-" json:"ticker,omitempty"`
@@ -32,7 +32,7 @@ type AlertTickerQuery struct {
 	common.Pagination
 	Symbol   string `form:"symbol" binding:"omitempty,min=1,max=25,alert_symbol"`
 	Ticker   string `form:"ticker" binding:"omitempty,ticker_path"`
-	PairID   string `form:"pair-id" binding:"omitempty,min=1,max=64,numeric"`
+	PairID   string `form:"pair-id" binding:"omitempty,min=1,max=64,number"`
 	Exchange string `form:"exchange" binding:"omitempty,min=1,max=10,alert_exchange"`
 }
 

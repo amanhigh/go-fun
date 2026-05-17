@@ -11,6 +11,8 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/amanhigh/go-fun/components/kohan/handler"
+	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
@@ -32,7 +34,7 @@ func seedAlertTicker(ctx context.Context, db *gorm.DB, alertTicker barkat.AlertT
 
 // AlertTickerHandler Integration GET/List Tests - Comprehensive Master Specification.
 // Tests complete HTTP → Handler → Manager → Repository → Database flow for PRD Section 2.2.2.2 and 2.2.2.4.
-var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.2 Alert Ticker APIs", func() {
+var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.2 Alert Ticker APIs", func() {
 	var (
 		alertTickerHandler      handler.AlertTickerHandler
 		router                  *gin.Engine
@@ -64,6 +66,9 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 			Name:     "Multi Commodity Exchange of India",
 			Exchange: new("NSE"),
 		}
+		alertTickerRepo := repository.NewAlertTickerRepository(db)
+		alertTickerMgr := manager.NewAlertTickerManager(alertTickerRepo)
+		alertTickerHandler = handler.NewAlertTickerHandler(alertTickerMgr)
 		router = newAlertTickerTestRouter(alertTickerHandler)
 	})
 
@@ -348,7 +353,7 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
 					It("should preserve leading zeroes", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?pair-id=00123", nil)
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?pair-id=000777", nil)
 						router.ServeHTTP(w, req)
 						response := decodeAlertTickerListResponse(w)
 						Expect(response.AlertTickers).To(HaveLen(1))
@@ -365,7 +370,7 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 					It("should return 400 for non-digit pair-id", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?pair-id=94A982", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "PairID", "number")
 					})
 					It("should return 400 for pair-id exceeding 64 characters", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?pair-id="+strings.Repeat("1", 65), nil)
@@ -416,10 +421,12 @@ var _ = PDescribe("AlertTickerHandler Integration - GET/List Tests - Section 2.2
 					})
 				})
 				Context("Bad Values", func() {
-					It("should return 400 for empty exchange query", func() {
+					It("should treat empty exchange as no filter", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?exchange=", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						Expect(w.Code).To(Equal(http.StatusOK))
+						response := decodeAlertTickerListResponse(w)
+						Expect(response.AlertTickers).To(HaveLen(3))
 					})
 					It("should return 400 for exchange exceeding 10 characters", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?exchange="+strings.Repeat("A", 11), nil)

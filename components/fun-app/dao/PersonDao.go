@@ -44,7 +44,7 @@ func (pd *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) 
 
 	// Add Sorting to Query
 	if personQuery.SortBy != "" {
-		txn = txn.Order(fmt.Sprintf("%s %s", personQuery.SortBy, personQuery.Order))
+		txn = txn.Order(fmt.Sprintf("%s %s", personQuery.SortBy, personQuery.SortOrder))
 	}
 
 	// Execute Query to Get Records and Count

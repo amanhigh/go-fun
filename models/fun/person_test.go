@@ -62,9 +62,9 @@ var _ = Describe("Person", func() {
 					Limit:  5,
 				},
 				Sort: common.Sort{
-					SortBy: "name",
-					Order:  "asc",
+					SortOrder: common.SortOrderDesc,
 				},
+				SortBy: "name",
 				Name:   "John",
 				Gender: "MALE",
 			}
@@ -72,7 +72,7 @@ var _ = Describe("Person", func() {
 			Expect(query.Offset).To(Equal(10))
 			Expect(query.Limit).To(Equal(5))
 			Expect(query.SortBy).To(Equal("name"))
-			Expect(query.Order).To(Equal("asc"))
+			Expect(query.SortOrder).To(Equal(common.SortOrderDesc))
 			Expect(query.Name).To(Equal("John"))
 			Expect(query.Gender).To(Equal("MALE"))
 		})
@@ -472,7 +472,7 @@ var _ = Describe("Person", func() {
 				params.Add("offset", "10")
 				params.Add("limit", "5")
 				params.Add("sort_by", "name")
-				params.Add("order", "asc")
+				params.Add("sort-order", "asc")
 				params.Add("name", "John")
 				params.Add("gender", "MALE")
 
@@ -486,7 +486,7 @@ var _ = Describe("Person", func() {
 				Expect(response.Offset).To(Equal(10))
 				Expect(response.Limit).To(Equal(5))
 				Expect(response.SortBy).To(Equal("name"))
-				Expect(response.Order).To(Equal("asc"))
+				Expect(response.SortOrder).To(Equal(common.SortOrderAsc))
 				Expect(response.Name).To(Equal("John"))
 				Expect(response.Gender).To(Equal("MALE"))
 			})

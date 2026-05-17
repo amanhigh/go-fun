@@ -10,6 +10,8 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/amanhigh/go-fun/components/kohan/handler"
+	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
@@ -42,7 +44,7 @@ func createAlertTickerRequest(router *gin.Engine, ticker string, payload any) (*
 // AlertTickerHandler Integration CUD Tests - Comprehensive Master Specification.
 // Tests complete HTTP → Handler → Manager → Repository → Database flow.
 // Covers PRD Section 2.2.2 Alert Ticker APIs and Section 2.3.2 Alert Ticker DTO validations.
-var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Alert Ticker APIs", func() {
+var _ = Describe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Alert Ticker APIs", func() {
 	var (
 		alertTickerHandler      handler.AlertTickerHandler
 		router                  *gin.Engine
@@ -73,6 +75,9 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 			Name:     "Multi Commodity Exchange of India",
 			Exchange: new("NSE"),
 		}
+		alertTickerRepo := repository.NewAlertTickerRepository(db)
+		alertTickerMgr := manager.NewAlertTickerManager(alertTickerRepo)
+		alertTickerHandler = handler.NewAlertTickerHandler(alertTickerMgr)
 		router = newAlertTickerTestRouter(alertTickerHandler)
 	})
 
@@ -108,7 +113,7 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 				It("should set updated_at timestamp", func() { Expect(response.UpdatedAt).ToNot(BeZero()) })
 				It("should persist alert ticker linked to parent ticker", func() {
 					var persisted barkat.AlertTicker
-					Expect(db.First(&persisted, "symbol = ?", "MCIX").Error).ToNot(HaveOccurred())
+					Expect(db.First(&persisted, "external_id = ?", "MCIX").Error).ToNot(HaveOccurred())
 					Expect(persisted.TickerID).To(Equal(createdTicker.ID))
 				})
 			})
@@ -303,28 +308,28 @@ var _ = PDescribe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Al
 						payload.PairID = "94A982"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "PairID", "numeric")
+						util.AssertError(w, "PairID", "number")
 					})
 					It("should return 400 for decimal pair_id", func() {
 						payload := validAlertTickerPayload
 						payload.PairID = "941.982"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "PairID", "numeric")
+						util.AssertError(w, "PairID", "number")
 					})
 					It("should return 400 for negative pair_id", func() {
 						payload := validAlertTickerPayload
 						payload.PairID = "-941982"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "PairID", "numeric")
+						util.AssertError(w, "PairID", "number")
 					})
 					It("should return 400 for whitespace in pair_id", func() {
 						payload := validAlertTickerPayload
 						payload.PairID = "941 982"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "PairID", "numeric")
+						util.AssertError(w, "PairID", "number")
 					})
 					It("should return 400 for non-string pair_id", func() {
 						jsonPayload := `{"symbol":"MCIX","pair_id":941982,"name":"Multi Commodity Exchange of India","exchange":"NSE"}`
