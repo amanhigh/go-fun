@@ -1,9 +1,12 @@
 package core
 
 import (
+	"fmt"
+
 	"github.com/amanhigh/go-fun/components/kohan/handler"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
+	"github.com/amanhigh/go-fun/models/config"
 	"github.com/golobby/container/v3"
 	"gorm.io/gorm"
 )
@@ -38,6 +41,16 @@ func provideAlertTickerHandler(mgr manager.AlertTickerManager) handler.AlertTick
 
 // registerBarkatDependencies registers all dependencies for the Barkat ticker feature.
 func (ki *KohanInjector) registerBarkatDependencies() error {
+	// Database — must be registered first since all repos depend on it.
+	container.MustSingleton(ki.di, func() config.BarkatConfig { return ki.config.Barkat })
+
+	// Eagerly create DB so we get a clear error if it fails, then register the concrete instance.
+	db, err := ki.provideBarkatDB()
+	if err != nil {
+		return fmt.Errorf("failed to open barkat database: %w", err)
+	}
+	container.MustSingleton(ki.di, func() *gorm.DB { return db })
+
 	// Ticker
 	container.MustSingleton(ki.di, provideTickerRepository)
 	container.MustSingleton(ki.di, provideBarkatTickerManager)
