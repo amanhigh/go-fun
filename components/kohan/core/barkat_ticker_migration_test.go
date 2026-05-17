@@ -359,16 +359,18 @@ func extractSimpleExchange(exchangeQualified string) string {
 }
 
 // expandSequence converts legacy sequence names to backend timeframe arrays.
+//   - YR (yearly, no daily) → SMN, TMN, MN, WK   (6M → weekly, 4 timeframes)
+//   - MWD (has daily)       → TMN, MN, WK, DL    (3M → daily, 4 timeframes)
+//   - WDH (has daily)       → TMN, MN, WK, DL    (3M → daily, 4 timeframes)
+//   - default               → nil                (caller decides based on exchange)
 func expandSequence(seq string) []string {
 	switch seq {
 	case "YR":
-		return []string{"YR", "SMN", "TMN", "MN", "WK"}
-	case "MWD":
-		return []string{"MN", "WK", "DL"}
-	case "WDH":
-		return []string{"WK", "DL", "DL"}
+		return []string{"SMN", "TMN", "MN", "WK"}
+	case "MWD", "WDH":
+		return []string{"TMN", "MN", "WK", "DL"}
 	default:
-		return []string{"MN", "WK", "DL"}
+		return nil
 	}
 }
 
@@ -490,11 +492,18 @@ func buildTickerPlan(dump *BarkatRepositoryDump, logger *MigrationLogger) ([]Tic
 				exVal, simple, "extracted_simple_exchange_code")
 		}
 
-		// Timeframes
+		// Timeframes — use sequenceRepo if available, else exchange-based default
 		timeframes := expandSequence(dump.SequenceRepo[tvTicker])
-		if _, ok := dump.SequenceRepo[tvTicker]; !ok {
-			logger.LogModification("data.json", tvTicker, "timeframes",
-				"default_applied", "set to MN/WK/DL (no sequence found)")
+		if timeframes == nil {
+			if exchange != nil && *exchange == "NSE" {
+				timeframes = []string{"TMN", "MN", "WK", "DL"} // NSE: same as MWD (3M → daily)
+				logger.LogModification("data.json", tvTicker, "timeframes",
+					"default_applied", "set to TMN/MN/WK/DL (NSE default)")
+			} else {
+				timeframes = []string{"SMN", "TMN", "MN", "WK"} // others: same as YR (6M → weekly)
+				logger.LogModification("data.json", tvTicker, "timeframes",
+					"default_applied", "set to SMN/TMN/MN/WK (non-NSE default)")
+			}
 		}
 
 		// Type (derived from watch/flag)
@@ -564,11 +573,13 @@ func buildTickerPlan(dump *BarkatRepositoryDump, logger *MigrationLogger) ([]Tic
 		}
 		sort.Strings(compositeExprs)
 		for _, expr := range compositeExprs {
-			// Derive timeframes from sequenceRepo (same logic as main ticker loop)
+			// Derive timeframes from sequenceRepo if available, else non-NSE default
+			// (composites always have NULL exchange, so they always get the non-NSE default)
 			timeframes := expandSequence(dump.SequenceRepo[expr])
-			if _, ok := dump.SequenceRepo[expr]; !ok {
+			if timeframes == nil {
+				timeframes = []string{"SMN", "TMN", "MN", "WK"} // non-NSE: same as YR (6M → weekly)
 				logger.LogModification("data.json", expr, "timeframes",
-					"default_applied", "set to MN/WK/DL (no sequence found for composite)")
+					"default_applied", "set to SMN/TMN/MN/WK (composite default)")
 			} else {
 				logger.LogInfo("composite_ticker_sequence", map[string]any{
 					"ticker":     expr,
@@ -1174,10 +1185,10 @@ var _ = Describe("Barkat Ticker API Migration", func() {
 		})
 
 		It("should expand sequence values into backend timeframes", func() {
-			Expect(expandSequence("YR")).To(Equal([]string{"YR", "SMN", "TMN", "MN", "WK"}))
-			Expect(expandSequence("MWD")).To(Equal([]string{"MN", "WK", "DL"}))
-			Expect(expandSequence("")).To(Equal([]string{"MN", "WK", "DL"}))
-			Expect(expandSequence("UNKNOWN")).To(Equal([]string{"MN", "WK", "DL"}))
+			Expect(expandSequence("YR")).To(Equal([]string{"SMN", "TMN", "MN", "WK"})) // 6M → weekly (4)
+			Expect(expandSequence("MWD")).To(Equal([]string{"TMN", "MN", "WK", "DL"})) // 3M → daily (4)
+			Expect(expandSequence("")).To(BeNil())                                     // nil → caller decides
+			Expect(expandSequence("UNKNOWN")).To(BeNil())                              // nil → caller decides
 		})
 
 		It("should derive ticker type from list 6/list 7 membership", func() {

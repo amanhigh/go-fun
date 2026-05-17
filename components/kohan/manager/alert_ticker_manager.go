@@ -35,6 +35,7 @@ func NewAlertTickerManager(repo repository.AlertTickerRepository) *AlertTickerMa
 // ---- Alert Ticker ----
 
 func (m *AlertTickerManagerImpl) CreateAlertTicker(ctx context.Context, ticker string, alert *barkat.AlertTicker) (result barkat.AlertTicker, httpErr common.HttpError) {
+	// FIXME: Check for existing pair_id duplicate; mark first occurrence as is_default for new alert creation auto-detection.
 	httpErr = m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		// Validate and look up parent ticker
 		var parent barkat.Ticker
