@@ -12,7 +12,9 @@ import (
 // AlertTickerRepository provides persistence operations for Alert tickers.
 type AlertTickerRepository interface {
 	util.BaseDbRepositoryInterface
-	// ListAlertTickers returns a filtered, paginated list of Alert tickers.
+	// GetAlertTicker retrieves a single Alert ticker by symbol with parent ticker populated.
+	GetAlertTicker(ctx context.Context, symbol string) (barkat.AlertTicker, common.HttpError)
+	// ListAlertTickers returns a filtered, paginated list of Alert tickers with parent ticker populated.
 	ListAlertTickers(ctx context.Context, query barkat.AlertTickerQuery) ([]barkat.AlertTicker, int64, common.HttpError)
 }
 
@@ -31,6 +33,15 @@ func NewAlertTickerRepository(db *gorm.DB) *AlertTickerRepositoryImpl {
 
 // ---- Alert Ticker ----
 
+func (r *AlertTickerRepositoryImpl) GetAlertTicker(ctx context.Context, symbol string) (barkat.AlertTicker, common.HttpError) {
+	var result barkat.AlertTicker
+	// FIXME: Remove Preload if Unused in UI.
+	err := r.SafeTx(ctx).Model(&barkat.AlertTicker{}).
+		Preload("ParentTicker").
+		First(&result, "external_id = ?", symbol).Error
+	return result, util.GormErrorMapper(err)
+}
+
 func (r *AlertTickerRepositoryImpl) ListAlertTickers(ctx context.Context, query barkat.AlertTickerQuery) ([]barkat.AlertTicker, int64, common.HttpError) {
 	tx := r.applyAlertTickerFilters(r.SafeTx(ctx).Model(&barkat.AlertTicker{}), query)
 
@@ -40,7 +51,7 @@ func (r *AlertTickerRepositoryImpl) ListAlertTickers(ctx context.Context, query 
 	}
 
 	var alertTickers []barkat.AlertTicker
-	if err := tx.Offset(query.Offset).Limit(query.Limit).Find(&alertTickers).Error; err != nil {
+	if err := tx.Preload("ParentTicker").Offset(query.Offset).Limit(query.Limit).Find(&alertTickers).Error; err != nil {
 		return nil, 0, util.GormErrorMapper(err)
 	}
 
