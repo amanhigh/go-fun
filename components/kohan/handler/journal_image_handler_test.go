@@ -156,9 +156,11 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 				Context("Allowed Values", func() {
 
 					It("should accept timeframe = DL", func() {
-						// DL timeframe already created as part of journal setup - no additional testing needed
-						// The journal.Images[0] already has Timeframe: "DL"
-						Skip("DL timeframe already validated in journal creation setup")
+						image := barkat.Image{Timeframe: "DL", FileName: "RELIANCE.mwd.test.png"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
+						router.ServeHTTP(w, req)
+						response := decodeImageResponse(w)
+						Expect(response.Timeframe).To(Equal("DL"))
 					})
 
 					It("should accept timeframe = WK", func() {
