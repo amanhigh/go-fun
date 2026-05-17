@@ -3,7 +3,6 @@ package dao
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
@@ -43,9 +42,10 @@ func (pd *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) 
 	}
 
 	// Add Sorting to Query
-	if personQuery.SortBy != "" {
-		txn = txn.Order(fmt.Sprintf("%s %s", personQuery.SortBy, personQuery.SortOrder))
-	}
+	txn = util.ApplySort(txn, util.SortOptions{
+		SortBy:    personQuery.SortBy,
+		SortOrder: personQuery.SortOrder,
+	})
 
 	// Execute Query to Get Records and Count
 	if txErr = txn.Find(&personList.Records).Count(&personList.Metadata.Total).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
