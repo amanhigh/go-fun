@@ -36,7 +36,7 @@ func (r *ImageRepositoryImpl) ListImages(ctx context.Context, journalID uint64) 
 	var images []barkat.Image
 	var txErr error
 	if txErr = r.SafeTx(ctx).
-		Where("journal_id = ?", journalID).
+		Where(&barkat.Image{JournalID: journalID}).
 		Order("DATE(created_at) ASC").
 		Order(ImageTimeframeOrder + " DESC").
 		Find(&images).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {

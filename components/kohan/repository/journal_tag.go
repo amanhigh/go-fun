@@ -37,10 +37,11 @@ func NewTagRepository(db *gorm.DB) *TagRepositoryImpl {
 func (r *TagRepositoryImpl) ListTags(ctx context.Context, journalID uint64, tagType string) ([]barkat.Tag, common.HttpError) {
 	var tags []barkat.Tag
 	var txErr error
-	query := r.SafeTx(ctx).Where("journal_id = ?", journalID)
+	where := barkat.Tag{JournalID: journalID}
 	if tagType != "" {
-		query = query.Where("type = ?", tagType)
+		where.Type = tagType
 	}
+	query := r.SafeTx(ctx).Where(&where)
 	if txErr = query.Order("created_at").Find(&tags).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		return nil, util.GormErrorMapper(txErr)
 	}

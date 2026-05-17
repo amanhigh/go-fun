@@ -38,7 +38,7 @@ func (r *AlertTickerRepositoryImpl) GetAlertTicker(ctx context.Context, symbol s
 	// FIXME: Remove Preload if Unused in UI.
 	err := r.SafeTx(ctx).Model(&barkat.AlertTicker{}).
 		Preload("ParentTicker").
-		First(&result, "external_id = ?", symbol).Error
+		First(&result, &barkat.AlertTicker{Symbol: symbol}).Error
 	return result, util.GormErrorMapper(err)
 }
 
@@ -59,17 +59,20 @@ func (r *AlertTickerRepositoryImpl) ListAlertTickers(ctx context.Context, query 
 }
 
 func (r *AlertTickerRepositoryImpl) applyAlertTickerFilters(tx *gorm.DB, query barkat.AlertTickerQuery) *gorm.DB {
+	where := barkat.AlertTicker{}
 	if query.Symbol != "" {
-		tx = tx.Where("external_id = ?", query.Symbol)
-	}
-	if query.Ticker != "" {
-		tx = tx.Where("ticker_id IN (SELECT id FROM tickers WHERE external_id = ?)", query.Ticker)
+		where.Symbol = query.Symbol
 	}
 	if query.PairID != "" {
-		tx = tx.Where("pair_id = ?", query.PairID)
+		where.PairID = query.PairID
 	}
 	if query.Exchange != "" {
-		tx = tx.Where("exchange = ?", query.Exchange)
+		where.Exchange = &query.Exchange
+	}
+	tx = tx.Where(&where)
+
+	if query.Ticker != "" {
+		tx = tx.Where("ticker_id IN (SELECT id FROM tickers WHERE external_id = ?)", query.Ticker)
 	}
 	return tx
 }

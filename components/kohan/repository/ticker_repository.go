@@ -37,7 +37,7 @@ func (r *TickerRepositoryImpl) GetTicker(ctx context.Context, ticker string) (ba
 	var result barkat.Ticker
 	err := r.SafeTx(ctx).Model(&barkat.Ticker{}).
 		Preload("AlertTickers").
-		First(&result, "external_id = ?", ticker).Error
+		First(&result, &barkat.Ticker{Ticker: ticker}).Error
 	return result, util.GormErrorMapper(err)
 }
 
@@ -54,21 +54,25 @@ func (r *TickerRepositoryImpl) ListTickers(ctx context.Context, query barkat.Tic
 }
 
 func (r *TickerRepositoryImpl) applyTickerFilters(tx *gorm.DB, query barkat.TickerQuery) *gorm.DB {
+	where := barkat.Ticker{}
+	if query.Exchange != "" {
+		exchange := query.Exchange
+		where.Exchange = &exchange
+	}
+	if query.Type != "" {
+		where.Type = query.Type
+	}
+	if query.State != "" {
+		where.State = query.State
+	}
+	if query.Trend != "" {
+		where.Trend = query.Trend
+	}
+	tx = tx.Where(&where)
+
 	if query.Search != "" {
 		like := "%" + query.Search + "%"
 		tx = tx.Where("(external_id LIKE ? OR exchange LIKE ?)", like, like)
-	}
-	if query.Exchange != "" {
-		tx = tx.Where("exchange = ?", query.Exchange)
-	}
-	if query.Type != "" {
-		tx = tx.Where("type = ?", query.Type)
-	}
-	if query.State != "" {
-		tx = tx.Where("state = ?", query.State)
-	}
-	if query.Trend != "" {
-		tx = tx.Where("trend = ?", query.Trend)
 	}
 	if query.IsFNO != nil {
 		tx = tx.Where("is_fno = ?", *query.IsFNO)
