@@ -308,6 +308,19 @@ var _ = Describe("Orm", func() {
 					})
 				})
 
+				It("should populate read-only projected column", func() {
+					// Product.FeatureCount has tag gorm:"column:feature_count;->;-:migration"
+					// The -> makes it read-only (accepts values from SELECT aliases but never writes to DB)
+					// The -:migration prevents creating a real column in the table
+
+					var result frameworks.Product
+					err := db.Raw(`SELECT *, 2 AS feature_count FROM "MeraProduct" WHERE id = ?`,
+						product.ID).Scan(&result).Error
+					Expect(err).ToNot(HaveOccurred())
+					// Without -> tag (i.e. gorm:"-"), GORM would ignore the alias entirely
+					Expect(result.FeatureCount).To(Equal(int64(2)))
+				})
+
 			})
 
 		})

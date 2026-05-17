@@ -26,7 +26,7 @@ type Ticker struct {
 	CreatedAt        time.Time     `gorm:"column:created_at;not null" json:"created_at"`
 	UpdatedAt        time.Time     `gorm:"column:updated_at;not null" json:"updated_at"`
 	AlertTickers     []AlertTicker `gorm:"foreignKey:TickerID;references:ID" json:"alert_tickers,omitempty"`
-	AlertTickerCount int64         `gorm:"-" json:"alert_ticker_count,omitempty"`
+	AlertTickerCount int64         `gorm:"column:alert_ticker_count;->;-:migration" json:"alert_ticker_count,omitempty"`
 }
 
 // TableName maps Ticker to the PRD-defined tradingview_tickers table.
