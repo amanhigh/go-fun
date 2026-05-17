@@ -9,13 +9,14 @@ import (
 // Field Tags - https://gorm.io/docs/models.html#Fields-Tags
 type Product struct {
 	gorm.Model
-	Code       string `gorm:"size 5,unique"`
-	Price      uint   `gorm:"not null"`
-	Version    int
-	IgnoreMe   string `gorm:"-"` // Ignore this field
-	Vertical   Vertical
-	VerticalID uint      // Must be vertical_id in DB or won't work automatically.
-	Features   []Feature `gorm:"many2many:product_features;"`
+	Code         string `gorm:"size 5,unique"`
+	Price        uint   `gorm:"not null"`
+	Version      int
+	IgnoreMe     string `gorm:"-"`                                                                  // Ignore this field entirely (never read/write from DB)
+	FeatureCount int64  `gorm:"column:feature_count;->;-:migration" json:"feature_count,omitempty"` // Read-only projected column, populated via SELECT subquery
+	Vertical     Vertical
+	VerticalID   uint      // Must be vertical_id in DB or won't work automatically.
+	Features     []Feature `gorm:"many2many:product_features;"`
 }
 
 type AuditLog struct {

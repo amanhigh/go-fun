@@ -35,10 +35,11 @@ func NewNoteRepository(db *gorm.DB) *NoteRepositoryImpl {
 func (r *NoteRepositoryImpl) ListNotes(ctx context.Context, journalID uint64, status string) ([]barkat.Note, common.HttpError) {
 	var notes []barkat.Note
 	var txErr error
-	query := r.SafeTx(ctx).Where("journal_id = ?", journalID)
+	where := barkat.Note{JournalID: journalID}
 	if status != "" {
-		query = query.Where("status = ?", status)
+		where.Status = status
 	}
+	query := r.SafeTx(ctx).Where(&where)
 	if txErr = query.Order("created_at").Find(&notes).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		return nil, util.GormErrorMapper(txErr)
 	}

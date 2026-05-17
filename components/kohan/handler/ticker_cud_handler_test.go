@@ -1178,11 +1178,6 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 					})
 				})
 				Context("Bad Values", func() {
-					PIt("should return 400 for missing is_fno", func() {
-						req, w := rawTickerRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, `{"exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"READY","trend":"UPTREND"}`)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-					})
 					It("should return 400 for string is_fno", func() {
 						jsonPayload := `{"exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"READY","trend":"UPTREND","is_fno":"true"}`
 						req, w := rawTickerRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, jsonPayload)

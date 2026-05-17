@@ -22,12 +22,31 @@ func provideTickerHandler(mgr manager.BarkatTickerManager) handler.TickerHandler
 	return handler.NewTickerHandler(mgr)
 }
 
+// ---- Alert Ticker Providers ----
+
+func provideAlertTickerRepository(db *gorm.DB) repository.AlertTickerRepository {
+	return repository.NewAlertTickerRepository(db)
+}
+
+func provideAlertTickerManager(repo repository.AlertTickerRepository) manager.AlertTickerManager {
+	return manager.NewAlertTickerManager(repo)
+}
+
+func provideAlertTickerHandler(mgr manager.AlertTickerManager) handler.AlertTickerHandler {
+	return handler.NewAlertTickerHandler(mgr)
+}
+
 // registerBarkatDependencies registers all dependencies for the Barkat ticker feature.
 func (ki *KohanInjector) registerBarkatDependencies() error {
 	// Ticker
 	container.MustSingleton(ki.di, provideTickerRepository)
 	container.MustSingleton(ki.di, provideBarkatTickerManager)
 	container.MustSingleton(ki.di, provideTickerHandler)
+
+	// Alert Ticker
+	container.MustSingleton(ki.di, provideAlertTickerRepository)
+	container.MustSingleton(ki.di, provideAlertTickerManager)
+	container.MustSingleton(ki.di, provideAlertTickerHandler)
 
 	return nil
 }

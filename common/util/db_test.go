@@ -10,6 +10,7 @@ import (
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/glebarez/sqlite"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -19,6 +20,13 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
+
+// testSortModel is a lightweight model for testing ApplySort.
+type testSortModel struct {
+	ID    uint   `gorm:"column:id;primaryKey"`
+	Name  string `gorm:"column:name"`
+	Value int    `gorm:"column:value"`
+}
 
 //go:embed testdata/migrations/*.sql
 var migrationFS embed.FS
@@ -213,6 +221,126 @@ var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
 			Expect(httpErr).To(HaveOccurred())
 			Expect(httpErr.Code()).To(Equal(500))
 			Expect(httpErr.Error()).To(Equal("some random error"))
+		})
+	})
+
+	Context("ApplySort", func() {
+		var (
+			db           *gorm.DB
+			sortFieldMap = map[string]string{
+				"name":     "name",
+				"value":    "value",
+				"api_name": "name",
+			}
+		)
+
+		BeforeEach(func() {
+			var err error
+			db, err = gorm.Open(sqlite.Open("file:memdb1?mode=memory&cache=shared"), &gorm.Config{
+				Logger: logger.Default.LogMode(logger.Silent),
+			})
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(db.AutoMigrate(&testSortModel{})).To(Succeed())
+			Expect(db.Create(&[]testSortModel{
+				{Name: "Charlie", Value: 30},
+				{Name: "Alice", Value: 10},
+				{Name: "Bob", Value: 20},
+			}).Error).To(Succeed())
+		})
+
+		It("should apply ascending sort on mapped field", func() {
+			var results []testSortModel
+			tx := util.ApplySort(db.Model(&testSortModel{}), util.SortOptions{
+				SortBy:       "name",
+				SortOrder:    common.SortOrderAsc,
+				SortFieldMap: sortFieldMap,
+			})
+			Expect(tx.Find(&results).Error).To(Succeed())
+			Expect(results).To(HaveLen(3))
+			Expect(results[0].Name).To(Equal("Alice"))
+			Expect(results[1].Name).To(Equal("Bob"))
+			Expect(results[2].Name).To(Equal("Charlie"))
+		})
+
+		It("should apply descending sort on mapped field", func() {
+			var results []testSortModel
+			tx := util.ApplySort(db.Model(&testSortModel{}), util.SortOptions{
+				SortBy:       "name",
+				SortOrder:    common.SortOrderDesc,
+				SortFieldMap: sortFieldMap,
+			})
+			Expect(tx.Find(&results).Error).To(Succeed())
+			Expect(results).To(HaveLen(3))
+			Expect(results[0].Name).To(Equal("Charlie"))
+			Expect(results[1].Name).To(Equal("Bob"))
+			Expect(results[2].Name).To(Equal("Alice"))
+		})
+
+		It("should use default descending sort when SortBy is empty", func() {
+			var results []testSortModel
+			tx := util.ApplySort(db.Model(&testSortModel{}), util.SortOptions{
+				SortOrder:        common.SortOrderNone,
+				DefaultSortBy:    "name",
+				DefaultSortOrder: common.SortOrderDesc,
+				SortFieldMap:     sortFieldMap,
+			})
+			Expect(tx.Find(&results).Error).To(Succeed())
+			Expect(results).To(HaveLen(3))
+			Expect(results[0].Name).To(Equal("Charlie"))
+			Expect(results[1].Name).To(Equal("Bob"))
+			Expect(results[2].Name).To(Equal("Alice"))
+		})
+
+		It("should use default ascending sort when SortBy is empty", func() {
+			var results []testSortModel
+			tx := util.ApplySort(db.Model(&testSortModel{}), util.SortOptions{
+				DefaultSortBy:    "name",
+				DefaultSortOrder: common.SortOrderAsc,
+				SortFieldMap:     sortFieldMap,
+			})
+			Expect(tx.Find(&results).Error).To(Succeed())
+			Expect(results).To(HaveLen(3))
+			Expect(results[0].Name).To(Equal("Alice"))
+			Expect(results[1].Name).To(Equal("Bob"))
+			Expect(results[2].Name).To(Equal("Charlie"))
+		})
+
+		It("should skip sorting when SortBy and DefaultSortBy are empty", func() {
+			var results []testSortModel
+			tx := util.ApplySort(db.Model(&testSortModel{}), util.SortOptions{
+				SortFieldMap: sortFieldMap,
+			})
+			Expect(tx.Find(&results).Error).To(Succeed())
+			Expect(results).To(HaveLen(3))
+		})
+
+		It("should pass through unmapped SortBy fields", func() {
+			var results []testSortModel
+			tx := util.ApplySort(db.Model(&testSortModel{}), util.SortOptions{
+				SortBy:       "value",
+				SortOrder:    common.SortOrderAsc,
+				SortFieldMap: sortFieldMap,
+			})
+			Expect(tx.Find(&results).Error).To(Succeed())
+			Expect(results).To(HaveLen(3))
+			Expect(results[0].Value).To(Equal(10))
+			Expect(results[1].Value).To(Equal(20))
+			Expect(results[2].Value).To(Equal(30))
+		})
+
+		It("should resolve API field name to DB column via field map", func() {
+			var results []testSortModel
+			tx := util.ApplySort(db.Model(&testSortModel{}), util.SortOptions{
+				SortBy:       "api_name",
+				SortOrder:    common.SortOrderAsc,
+				SortFieldMap: sortFieldMap,
+			})
+			Expect(tx.Find(&results).Error).To(Succeed())
+			Expect(results).To(HaveLen(3))
+			Expect(results[0].Name).To(Equal("Alice"))
+			Expect(results[1].Name).To(Equal("Bob"))
+			Expect(results[2].Name).To(Equal("Charlie"))
 		})
 	})
 })

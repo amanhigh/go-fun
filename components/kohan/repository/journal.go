@@ -42,7 +42,7 @@ func (r *JournalRepositoryImpl) GetJournal(ctx context.Context, journalExternalI
 	var journal barkat.Journal
 	err := r.SafeTx(ctx).Preload("Images", func(db *gorm.DB) *gorm.DB {
 		return db.Order("DATE(created_at) ASC").Order(ImageTimeframeOrder + " DESC").Order("file_name ASC")
-	}).Preload("Tags").Preload("Notes").First(&journal, "external_id = ?", journalExternalId).Error
+	}).Preload("Tags").Preload("Notes").First(&journal, &barkat.Journal{ExternalID: journalExternalId}).Error
 	return journal, util.GormErrorMapper(err)
 }
 
@@ -62,24 +62,26 @@ func (r *JournalRepositoryImpl) applyJournalFilters(tx *gorm.DB, query barkat.Jo
 	if query.Search != "" {
 		tx = tx.Where("LOWER(ticker) LIKE LOWER(?)", "%"+query.Search+"%")
 	}
+
+	where := barkat.Journal{}
 	if query.Ticker != "" {
-		tx = tx.Where("ticker = ?", query.Ticker)
+		where.Ticker = query.Ticker
 	}
 	if query.Type != "" {
-		tx = tx.Where("type = ?", query.Type)
+		where.Type = query.Type
 	}
 	if query.Status != "" {
-		tx = tx.Where("status = ?", query.Status)
+		where.Status = query.Status
 	}
 	if query.Sequence != "" {
-		tx = tx.Where("sequence = ?", query.Sequence)
+		where.Sequence = query.Sequence
 	}
+	tx = tx.Where(&where)
+
 	if query.CreatedAfter != "" {
-		// Use DATE() function to compare date strings with datetime fields
 		tx = tx.Where("DATE(created_at) >= ?", query.CreatedAfter)
 	}
 	if query.CreatedBefore != "" {
-		// Use DATE() function to compare date strings with datetime fields
 		tx = tx.Where("DATE(created_at) <= ?", query.CreatedBefore)
 	}
 	if query.Reviewed != nil {
@@ -93,18 +95,16 @@ func (r *JournalRepositoryImpl) applyJournalFilters(tx *gorm.DB, query barkat.Jo
 }
 
 func (r *JournalRepositoryImpl) fetchJournals(tx *gorm.DB, query barkat.JournalQuery) ([]barkat.Journal, error) {
-	orderClause := "created_at DESC"
-	if query.SortBy != "" {
-		direction := "DESC"
-		if query.SortOrder == "asc" {
-			direction = "ASC"
-		}
-		orderClause = query.SortBy + " " + direction
-	}
+	tx = util.ApplySort(tx, util.SortOptions{
+		SortBy:           query.SortBy,
+		SortOrder:        query.SortOrder,
+		DefaultSortBy:    "created_at",
+		DefaultSortOrder: common.SortOrderDesc,
+	})
 
 	var journals []barkat.Journal
 	err := tx.Preload("Images", func(db *gorm.DB) *gorm.DB {
 		return db.Order(ImageTimeframeOrder)
-	}).Order(orderClause).Offset(query.Offset).Limit(query.Limit).Find(&journals).Error
+	}).Offset(query.Offset).Limit(query.Limit).Find(&journals).Error
 	return journals, err
 }

@@ -56,6 +56,7 @@ type JournalPath struct {
 // JournalQuery holds query parameters for listing/filtering journals.
 type JournalQuery struct {
 	common.Pagination
+	common.Sort
 	Search        string `form:"search" binding:"omitempty,min=1,max=10,alphanum"`
 	Ticker        string `form:"ticker" binding:"omitempty,min=1,max=10,ticker"`
 	Type          string `form:"type" binding:"omitempty,oneof=REJECTED TAKEN"`
@@ -65,7 +66,6 @@ type JournalQuery struct {
 	CreatedBefore string `form:"created-before" binding:"omitempty,datetime=2006-01-02"`
 	Reviewed      *bool  `form:"reviewed" binding:"omitempty"`
 	SortBy        string `form:"sort-by" binding:"omitempty,oneof=created_at ticker sequence"`
-	SortOrder     string `form:"sort-order" binding:"omitempty,oneof=asc desc"`
 }
 
 // NewJournalQuery creates a JournalQuery struct with default pagination values

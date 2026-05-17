@@ -44,7 +44,7 @@ func (m *BarkatTickerManagerImpl) CreateTicker(ctx context.Context, ticker *bark
 }
 
 func (m *BarkatTickerManagerImpl) GetTicker(ctx context.Context, ticker string) (result barkat.Ticker, httpErr common.HttpError) {
-	httpErr = m.repo.GetByExternalId(ctx, ticker, &result)
+	result, httpErr = m.repo.GetTicker(ctx, ticker)
 	return
 }
 

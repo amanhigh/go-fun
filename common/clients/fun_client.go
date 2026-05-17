@@ -158,7 +158,7 @@ func (c *PersonService) listPersonUrl(personQuery fun.PersonQuery) (url string) 
 	// Add Sort Params
 	if personQuery.SortBy != "" {
 		url += "&sort_by=" + personQuery.SortBy
-		url += "&order=" + personQuery.Order
+		url += "&sort-order=" + string(personQuery.SortOrder)
 	}
 
 	// Add Name and Gender if Provided

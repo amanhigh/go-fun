@@ -127,9 +127,19 @@ type Pagination struct {
 	Limit  int `form:"limit,default=20" binding:"min=1,max=100"`
 }
 
+// SortOrder represents the sort direction for listing queries.
+type SortOrder string
+
+const (
+	SortOrderNone SortOrder = ""
+	SortOrderAsc  SortOrder = "asc"
+	SortOrderDesc SortOrder = "desc"
+)
+
+// Sort provides a reusable sort-order field for listing queries.
+// Each query type defines its own SortBy field since allowed sort columns vary.
 type Sort struct {
-	SortBy string `form:"sort_by" binding:"omitempty,eq=name|eq=age|eq=gender"`
-	Order  string `form:"order,default=asc" binding:"omitempty,eq=asc|eq=desc"`
+	SortOrder SortOrder `form:"sort-order,default=asc" binding:"omitempty,oneof=asc desc"`
 }
 
 type PaginatedResponse struct {

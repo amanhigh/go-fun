@@ -26,7 +26,7 @@ type Ticker struct {
 	CreatedAt        time.Time     `gorm:"column:created_at;not null" json:"created_at"`
 	UpdatedAt        time.Time     `gorm:"column:updated_at;not null" json:"updated_at"`
 	AlertTickers     []AlertTicker `gorm:"foreignKey:TickerID;references:ID" json:"alert_tickers,omitempty"`
-	AlertTickerCount int64         `gorm:"-" json:"alert_ticker_count,omitempty"`
+	AlertTickerCount int64         `gorm:"column:alert_ticker_count;->;-:migration" json:"alert_ticker_count,omitempty"`
 }
 
 // TableName maps Ticker to the PRD-defined tradingview_tickers table.
@@ -40,6 +40,7 @@ type TickerPath struct {
 // TickerQuery holds query parameters for listing/filtering tickers.
 type TickerQuery struct {
 	common.Pagination
+	common.Sort
 	Search      string `form:"search" binding:"omitempty,min=1,max=50"`
 	Exchange    string `form:"exchange" binding:"omitempty,min=1,max=10,ticker_exchange"`
 	Type        string `form:"type" binding:"omitempty,oneof=EQUITY INDEX CRYPTO COMMODITY FX BOND COMPOSITE"`
@@ -47,13 +48,14 @@ type TickerQuery struct {
 	Trend       string `form:"trend" binding:"omitempty,oneof=UPTREND SIDEWAYS DOWNTREND"`
 	IsFNO       *bool  `form:"is-fno" binding:"omitempty"`
 	OpenedAfter string `form:"opened-after" binding:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
-	SortBy      string `form:"sort-by" binding:"omitempty,oneof=ticker exchange type state trend last_opened_at"`
-	SortOrder   string `form:"sort-order" binding:"omitempty,oneof=asc desc"`
+	SortBy      string `form:"sort-by" binding:"omitempty,oneof=ticker last_opened_at"`
 }
 
 // NewTickerQuery creates a TickerQuery struct with default pagination values.
 func NewTickerQuery() TickerQuery {
-	return TickerQuery{Pagination: common.Pagination{}}
+	return TickerQuery{
+		Pagination: common.Pagination{},
+	}
 }
 
 // TickerList is the paginated response for tickers.

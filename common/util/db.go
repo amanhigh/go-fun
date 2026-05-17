@@ -26,6 +26,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
 )
 
@@ -153,10 +154,55 @@ func GormErrorMapper(err error) common.HttpError {
 	return common.NewServerError(err)
 }
 
-/*
-*
+// SortOptions defines the parameters for standardizing repository sort behavior.
+// Each repository provides its own field map and defaults.
+type SortOptions struct {
+	// SortBy is the API-level sort-by field from the query (e.g. "ticker", "created_at").
+	SortBy string
+	// SortOrder is the direction from the query (asc/desc).
+	SortOrder common.SortOrder
+	// DefaultSortBy is used when SortBy is empty (e.g. "created_at", "ticker").
+	DefaultSortBy string
+	// DefaultSortOrder is the direction used with DefaultSortBy.
+	DefaultSortOrder common.SortOrder
+	// SortFieldMap maps API field names to DB column names (e.g. "ticker" -> "external_id").
+	SortFieldMap map[string]string
+}
 
-	Transaction Handling
+// ApplySort applies a standard GORM order clause to the given query using SortOptions.
+// It resolves API sort-by fields to DB column names, applies the default when SortBy is empty,
+// and sets the correct ascending/descending direction.
+//
+// Returns the query unchanged when both SortBy and DefaultSortBy are empty.
+func ApplySort(tx *gorm.DB, options SortOptions) *gorm.DB {
+	sortBy := options.SortBy
+	sortOrder := options.SortOrder
+
+	// Use defaults when no explicit SortBy is provided
+	if sortBy == "" {
+		sortBy = options.DefaultSortBy
+		sortOrder = options.DefaultSortOrder
+	}
+
+	// No sort to apply
+	if sortBy == "" {
+		return tx
+	}
+
+	// Map API sort-by field name to DB column name
+	if dbColumn, ok := options.SortFieldMap[sortBy]; ok {
+		sortBy = dbColumn
+	}
+
+	desc := sortOrder == common.SortOrderDesc
+	return tx.Order(clause.OrderByColumn{
+		Column: clause.Column{Name: sortBy},
+		Desc:   desc,
+	})
+}
+
+/*
+Transaction Handling
 */
 func Tx(c context.Context) (tx *gorm.DB) {
 	if c != nil {

@@ -309,7 +309,7 @@ var _ = Describe("Person Integration Test", func() {
 				It("should sort by Name in ascending order", func() {
 					var personList fun.PersonList
 					personQuery.SortBy = "name"
-					personQuery.Order = "asc"
+					personQuery.SortOrder = common.SortOrderAsc
 					personList, err = client.PersonService.ListPerson(testCtx, personQuery)
 
 					Expect(err).ToNot(HaveOccurred())
@@ -327,7 +327,7 @@ var _ = Describe("Person Integration Test", func() {
 				It("should sort by Name in descending order", func() {
 					var personList fun.PersonList
 					personQuery.SortBy = "name"
-					personQuery.Order = "desc"
+					personQuery.SortOrder = common.SortOrderDesc
 					personList, err = client.PersonService.ListPerson(testCtx, personQuery)
 
 					Expect(err).ToNot(HaveOccurred())
@@ -346,7 +346,7 @@ var _ = Describe("Person Integration Test", func() {
 				It("should sort by Gender in ascending order", func() {
 					var personList fun.PersonList
 					personQuery.SortBy = "gender"
-					personQuery.Order = "asc"
+					personQuery.SortOrder = common.SortOrderAsc
 					personList, err = client.PersonService.ListPerson(testCtx, personQuery)
 
 					Expect(err).ToNot(HaveOccurred())
@@ -365,7 +365,7 @@ var _ = Describe("Person Integration Test", func() {
 				It("should sort by Gender in descending order", func() {
 					var personList fun.PersonList
 					personQuery.SortBy = "gender"
-					personQuery.Order = "desc"
+					personQuery.SortOrder = common.SortOrderDesc
 					personList, err = client.PersonService.ListPerson(testCtx, personQuery)
 
 					Expect(err).ToNot(HaveOccurred())
@@ -390,7 +390,7 @@ var _ = Describe("Person Integration Test", func() {
 					Expect(err.Error()).To(ContainSubstring(expectedErr))
 
 					// Pollutes AfterEach Cleanup so Reset
-					personQuery.Order = ""
+					personQuery.SortOrder = common.SortOrderNone
 					personQuery.SortBy = ""
 				})
 
@@ -431,7 +431,7 @@ var _ = Describe("Person Integration Test", func() {
 
 				It("should fail for invalid Order", func() {
 					personQuery.SortBy = "name"
-					personQuery.Order = "invalid"
+					personQuery.SortOrder = common.SortOrder("invalid")
 					expectedErr = "asc"
 				})
 			})
