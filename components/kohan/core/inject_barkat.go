@@ -36,6 +36,20 @@ func provideAlertTickerHandler(mgr manager.AlertTickerManager) handler.AlertTick
 	return handler.NewAlertTickerHandler(mgr)
 }
 
+// ---- Price Alert Providers ----
+
+func providePriceAlertRepository(db *gorm.DB) repository.PriceAlertRepository {
+	return repository.NewPriceAlertRepository(db)
+}
+
+func providePriceAlertManager(repo repository.PriceAlertRepository) manager.PriceAlertManager {
+	return manager.NewPriceAlertManager(repo)
+}
+
+func providePriceAlertHandler(mgr manager.PriceAlertManager) handler.PriceAlertHandler {
+	return handler.NewPriceAlertHandler(mgr)
+}
+
 // registerBarkatDependencies registers all dependencies for the Barkat ticker feature.
 func (ki *KohanInjector) registerBarkatDependencies() error {
 	// Ticker
@@ -47,6 +61,11 @@ func (ki *KohanInjector) registerBarkatDependencies() error {
 	container.MustSingleton(ki.di, provideAlertTickerRepository)
 	container.MustSingleton(ki.di, provideAlertTickerManager)
 	container.MustSingleton(ki.di, provideAlertTickerHandler)
+
+	// Price Alert
+	container.MustSingleton(ki.di, providePriceAlertRepository)
+	container.MustSingleton(ki.di, providePriceAlertManager)
+	container.MustSingleton(ki.di, providePriceAlertHandler)
 
 	return nil
 }

@@ -45,7 +45,7 @@ CREATE INDEX IF NOT EXISTS idx_alert_ticker_exchange ON alert_tickers (exchange)
 CREATE TABLE IF NOT EXISTS price_alerts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     alert_ticker_id INTEGER NOT NULL,
-    alert_id VARCHAR(128) UNIQUE NOT NULL,
+    alert_id VARCHAR(128) UNIQUE,
     trigger_price DECIMAL(18,6) NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (alert_ticker_id) REFERENCES alert_tickers(id) ON DELETE CASCADE
