@@ -146,7 +146,9 @@ type AlertTickerPayload struct {
 type MigrationPlan struct {
 	Tickers          []TickerPayload
 	AlertTickers     []AlertTickerPayload
+	PriceAlerts      []barkat.PriceAlertInput
 	AlertTickerSkips []string
+	PriceAlertSkips  []string
 }
 
 // TickerMigrationStats tracks progress and reconciliation.
@@ -157,8 +159,11 @@ type TickerMigrationStats struct {
 	CreatedAlertTickers  int
 	VerifiedAlertTickers int
 	SkippedAlertTickers  int
+	CreatedPriceAlerts   int
+	SkippedPriceAlerts   int
 	FailedTickers        []string
 	FailedAlertTickers   []string
+	FailedPriceAlerts    []string
 	TotalAPICalls        int
 	StartTime            time.Time
 }
@@ -171,6 +176,7 @@ var (
 	alertSymbolRegex   = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9./=]*$`)
 	alertNameRegex     = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9 .&'()-]*$`)
 	alertExchangeRegex = regexp.MustCompile(`^[A-Za-z][A-Za-z]*$`)
+	priceAlertIDRegex  = regexp.MustCompile(`^[0-9]+$`)
 )
 
 // ============================================================================
@@ -621,44 +627,163 @@ func buildTickerPlan(dump *BarkatRepositoryDump, logger *MigrationLogger) ([]Tic
 	return plan, analysis
 }
 
-// buildAlertDeferredLog logs the deferred alertRepo state.
-func buildAlertDeferredLog(dump *BarkatRepositoryDump, logger *MigrationLogger) {
-	// Per FR-010: alertRepo is deferred, log counts and anomalies
-	var totalAlerts int
-	emptyGroups := 0
-	emptyIDs := 0
-	emptyNames := 0
+// buildAlertTickerPlan constructs alert ticker payloads from tickerRepo + pairRepo.
+// Each TV ticker with a matching pairRepo entry becomes an AlertTickerPayload.
+// Tickers without pairRepo entries are tracked as skips.
+func buildAlertTickerPlan(dump *BarkatRepositoryDump, logger *MigrationLogger) ([]AlertTickerPayload, []string) {
+	tvTickers := make([]string, 0, len(dump.TickerRepo))
+	for k := range dump.TickerRepo {
+		tvTickers = append(tvTickers, k)
+	}
+	sort.Strings(tvTickers)
 
-	for pairID, alerts := range dump.AlertRepo {
-		if len(alerts) == 0 {
-			emptyGroups++
-			logger.LogSanitization("data.json", pairID, "alert_group",
-				"empty", "(deferred)", "empty_alert_group_skipped")
+	var alertTickers []AlertTickerPayload
+	var skips []string
+
+	for _, tvTicker := range tvTickers {
+		investingSymbol := dump.TickerRepo[tvTicker]
+		pairInfo, ok := dump.PairRepo[investingSymbol]
+		if !ok {
+			skips = append(skips, tvTicker)
+			logger.LogSanitization("data.json", tvTicker, "alert_ticker_mapping",
+				investingSymbol, "(skip)", "investing_symbol_not_found_in_pairRepo")
 			continue
 		}
-		for _, a := range alerts {
-			totalAlerts++
-			if a.ID == "" {
-				emptyIDs++
-				logger.LogSanitization("data.json", pairID, "alert_id",
-					"(empty)", "(deferred)", "empty_alert_id")
+
+		// Normalize symbol
+		normalizedSymbol, _ := normalizeAlertSymbol(investingSymbol)
+		if normalizedSymbol != investingSymbol {
+			logger.LogSanitization("data.json", tvTicker, "alert_symbol",
+				investingSymbol, normalizedSymbol, "normalized_alert_symbol")
+		}
+
+		// Normalize name
+		normalizedName := normalizeAlertName(pairInfo.Name)
+		if normalizedName != pairInfo.Name {
+			logger.LogSanitization("data.json", tvTicker, "alert_name",
+				pairInfo.Name, normalizedName, "normalized_alert_name")
+		}
+
+		// Normalize exchange
+		normalizedExchange := normalizeAlertExchange(pairInfo.Exchange, investingSymbol)
+		if (normalizedExchange == nil && pairInfo.Exchange != "") || (normalizedExchange != nil && *normalizedExchange != pairInfo.Exchange) {
+			oldVal := pairInfo.Exchange
+			newVal := "(nil)"
+			if normalizedExchange != nil {
+				newVal = *normalizedExchange
 			}
-			if a.Name == "" {
-				emptyNames++
-				logger.LogSanitization("data.json", pairID, "alert_name",
-					"(empty)", "(deferred)", "empty_alert_name")
+			logger.LogSanitization("data.json", tvTicker, "alert_exchange",
+				oldVal, newVal, "normalized_alert_exchange")
+		}
+
+		alertTickers = append(alertTickers, AlertTickerPayload{
+			ParentTicker: tvTicker,
+			Symbol:       normalizedSymbol,
+			PairID:       pairInfo.PairID,
+			Name:         normalizedName,
+			Exchange:     normalizedExchange,
+		})
+	}
+
+	return alertTickers, skips
+}
+
+// buildPriceAlertPlan constructs canonical price-alert payloads from alertRepo.
+// Only pair IDs that resolve to exactly one planned AlertTicker are migrated, because
+// PUT /v1/api/alerts rejects unresolved or ambiguous pair ownership.
+func buildPriceAlertPlan(dump *BarkatRepositoryDump, alertTickers []AlertTickerPayload, logger *MigrationLogger) ([]barkat.PriceAlertInput, []string) {
+	pairCounts := make(map[string]int, len(alertTickers))
+	for _, alertTicker := range alertTickers {
+		pairCounts[alertTicker.PairID]++
+	}
+
+	pairIDs := make([]string, 0, len(dump.AlertRepo))
+	for pairID := range dump.AlertRepo {
+		pairIDs = append(pairIDs, pairID)
+	}
+	sort.Strings(pairIDs)
+
+	seenAlertIDs := make(map[string]bool)
+	priceAlerts := make([]barkat.PriceAlertInput, 0)
+	skips := make([]string, 0)
+
+	for _, groupPairID := range pairIDs {
+		entries := dump.AlertRepo[groupPairID]
+		if len(entries) == 0 {
+			skips = append(skips, groupPairID)
+			logger.LogSanitization("data.json", groupPairID, "price_alert_group",
+				"empty", "(skip)", "empty_alert_group_skipped")
+			continue
+		}
+
+		for _, entry := range entries {
+			pairID := entry.PairID
+			if pairID == "" {
+				pairID = groupPairID
 			}
+			skipKey := fmt.Sprintf("%s:%s", pairID, entry.ID)
+
+			if pairID == "" || !priceAlertIDRegex.MatchString(pairID) {
+				skips = append(skips, skipKey)
+				logger.LogSanitization("data.json", groupPairID, "price_alert_pair_id",
+					pairID, "(skip)", "invalid_pair_id")
+				continue
+			}
+			if entry.ID == "" || !priceAlertIDRegex.MatchString(entry.ID) {
+				skips = append(skips, skipKey)
+				logger.LogSanitization("data.json", pairID, "price_alert_id",
+					entry.ID, "(skip)", "invalid_or_empty_alert_id")
+				continue
+			}
+			if seenAlertIDs[entry.ID] {
+				skips = append(skips, skipKey)
+				logger.LogSanitization("data.json", pairID, "price_alert_id",
+					entry.ID, "(skip)", "duplicate_alert_id")
+				continue
+			}
+			if entry.Price <= 0 {
+				skips = append(skips, skipKey)
+				logger.LogSanitization("data.json", pairID, "trigger_price",
+					fmt.Sprint(entry.Price), "(skip)", "non_positive_trigger_price")
+				continue
+			}
+			if entry.Name == "" {
+				logger.LogSanitization("data.json", pairID, "price_alert_name",
+					"(empty)", "(ignored)", "name_not_required_by_price_alert_api")
+			}
+
+			switch pairCounts[pairID] {
+			case 0:
+				skips = append(skips, skipKey)
+				logger.LogSanitization("data.json", pairID, "price_alert_pair_id",
+					pairID, "(skip)", "pair_id_has_no_planned_alert_ticker")
+				continue
+			case 1:
+				// valid
+			default:
+				skips = append(skips, skipKey)
+				logger.LogSanitization("data.json", pairID, "price_alert_pair_id",
+					pairID, "(skip)", "pair_id_has_ambiguous_alert_ticker_ownership")
+				continue
+			}
+
+			seenAlertIDs[entry.ID] = true
+			priceAlerts = append(priceAlerts, barkat.PriceAlertInput{
+				PairID:       pairID,
+				AlertID:      entry.ID,
+				TriggerPrice: entry.Price,
+			})
 		}
 	}
 
-	logger.LogInfo("alertRepo_deferred", map[string]any{
-		"fr010_status": "deferred_out_of_scope",
-		"groups":       len(dump.AlertRepo),
-		"total_alerts": totalAlerts,
-		"empty_groups": emptyGroups,
-		"empty_ids":    emptyIDs,
-		"empty_names":  emptyNames,
+	logger.LogInfo("price_alert_plan", map[string]any{
+		"groups":           len(dump.AlertRepo),
+		"alerts_planned":   len(priceAlerts),
+		"alerts_skipped":   len(skips),
+		"alert_ticker_ids": len(pairCounts),
 	})
+
+	return priceAlerts, skips
 }
 
 // ============================================================================
@@ -845,6 +970,72 @@ func migrateAlertTicker(client *resty.Client, payload AlertTickerPayload, logger
 	}
 }
 
+// buildPriceAlertBatches groups price alerts by pair ID and packs groups into API-sized batches.
+// Groups are never split because PUT /v1/api/alerts replaces all alerts for submitted pair IDs.
+func buildPriceAlertBatches(priceAlerts []barkat.PriceAlertInput) [][]barkat.PriceAlertInput {
+	byPairID := make(map[string][]barkat.PriceAlertInput)
+	for _, alert := range priceAlerts {
+		byPairID[alert.PairID] = append(byPairID[alert.PairID], alert)
+	}
+
+	pairIDs := make([]string, 0, len(byPairID))
+	for pairID := range byPairID {
+		pairIDs = append(pairIDs, pairID)
+	}
+	sort.Strings(pairIDs)
+
+	batches := make([][]barkat.PriceAlertInput, 0)
+	current := make([]barkat.PriceAlertInput, 0, barkat.MaxPriceAlertBatchSize)
+	for _, pairID := range pairIDs {
+		group := byPairID[pairID]
+		if len(current) > 0 && len(current)+len(group) > barkat.MaxPriceAlertBatchSize {
+			batches = append(batches, current)
+			current = make([]barkat.PriceAlertInput, 0, barkat.MaxPriceAlertBatchSize)
+		}
+		current = append(current, group...)
+	}
+	if len(current) > 0 {
+		batches = append(batches, current)
+	}
+
+	return batches
+}
+
+// migratePriceAlertBatch replaces canonical price alerts through PUT /v1/api/alerts.
+func migratePriceAlertBatch(client *resty.Client, batch []barkat.PriceAlertInput, logger *MigrationLogger) (int, bool) {
+	if len(batch) == 0 {
+		return 0, true
+	}
+	if len(batch) > barkat.MaxPriceAlertBatchSize {
+		logger.LogError("data.json", batch[0].PairID, 0,
+			fmt.Sprintf("price alert batch size %d exceeds max %d", len(batch), barkat.MaxPriceAlertBatchSize), "")
+		return 0, false
+	}
+
+	resp, err := client.R().SetBody(barkat.PriceAlertReplaceRequest{Alerts: batch}).Put(barkat.PriceAlertBase)
+	if err != nil {
+		logger.LogError("data.json", batch[0].PairID, 0,
+			fmt.Sprintf("PUT price alerts request failed: %v", err), "")
+		return 0, false
+	}
+	if resp.StatusCode() != http.StatusOK {
+		logger.LogError("data.json", batch[0].PairID, 0,
+			fmt.Sprintf("PUT price alerts returned %d: %s", resp.StatusCode(), string(resp.Body())), "")
+		return 0, false
+	}
+
+	var envelope common.Envelope[barkat.PriceAlertReplaceResult]
+	if err := json.Unmarshal(resp.Body(), &envelope); err != nil {
+		logger.LogError("data.json", batch[0].PairID, 0,
+			fmt.Sprintf("failed to parse price alert replace response: %v", err), "")
+		return 0, false
+	}
+
+	logger.LogSuccess("data.json", batch[0].PairID,
+		fmt.Sprintf("price_alert_batch_%d_pairs_%d_alerts", envelope.Data.PairsReplaced, envelope.Data.AlertsCreated), 0, false, false)
+	return envelope.Data.AlertsCreated, true
+}
+
 // runTickerMigration executes the full migration plan via the API.
 func runTickerMigration(client *resty.Client, plan *MigrationPlan, logger *MigrationLogger) *TickerMigrationStats {
 	stats := &TickerMigrationStats{StartTime: time.Now()}
@@ -866,6 +1057,19 @@ func runTickerMigration(client *resty.Client, plan *MigrationPlan, logger *Migra
 			stats.CreatedAlertTickers++
 		} else {
 			stats.FailedAlertTickers = append(stats.FailedAlertTickers, ap.Symbol)
+		}
+	}
+
+	// Migrate canonical price alerts after alert tickers exist.
+	stats.SkippedPriceAlerts = len(plan.PriceAlertSkips)
+	for _, batch := range buildPriceAlertBatches(plan.PriceAlerts) {
+		stats.TotalAPICalls++
+		created, ok := migratePriceAlertBatch(client, batch, logger)
+		if ok {
+			stats.CreatedPriceAlerts += created
+		} else {
+			stats.FailedPriceAlerts = append(stats.FailedPriceAlerts,
+				fmt.Sprintf("pair=%s size=%d", batch[0].PairID, len(batch)))
 		}
 	}
 
@@ -952,6 +1156,248 @@ func verifyAlertTickerListCounts(client *resty.Client, expectedTotal int, logger
 	return len(allAlertTickers) == expectedTotal
 }
 
+func loadMigratedTickers(client *resty.Client, logger *MigrationLogger) ([]barkat.Ticker, bool) {
+	var allTickers []barkat.Ticker
+	offset := 0
+	limit := 100
+
+	for {
+		resp, err := client.R().Get(fmt.Sprintf("%s?offset=%d&limit=%d", barkat.TickerBase, offset, limit))
+		if err != nil {
+			logger.LogError("data.json", "", 0, fmt.Sprintf("load tickers failed: %v", err), "")
+			return nil, false
+		}
+		if resp.StatusCode() != http.StatusOK {
+			logger.LogError("data.json", "", 0, fmt.Sprintf("load tickers returned status=%d", resp.StatusCode()), string(resp.Body()))
+			return nil, false
+		}
+
+		var envelope common.Envelope[barkat.TickerList]
+		if err := json.Unmarshal(resp.Body(), &envelope); err != nil {
+			logger.LogError("data.json", "", 0, fmt.Sprintf("failed to parse ticker list: %v", err), "")
+			return nil, false
+		}
+		allTickers = append(allTickers, envelope.Data.Tickers...)
+		if len(envelope.Data.Tickers) < limit {
+			break
+		}
+		offset += limit
+	}
+	return allTickers, true
+}
+
+func verifyTickerRows(client *resty.Client, plan []TickerPayload, logger *MigrationLogger) bool {
+	actualRows, ok := loadMigratedTickers(client, logger)
+	if !ok {
+		return false
+	}
+	actualByTicker := make(map[string]barkat.Ticker, len(actualRows))
+	for _, row := range actualRows {
+		actualByTicker[row.Ticker] = row
+	}
+
+	verified := 0
+	for _, expected := range plan {
+		actual, exists := actualByTicker[expected.Ticker]
+		if !exists {
+			logger.LogError("data.json", expected.Ticker, 0, "ticker row missing after migration", "")
+			continue
+		}
+		if !stringPtrEqual(actual.Exchange, expected.Exchange) || !slices.Equal(actual.Timeframes, expected.Timeframes) ||
+			actual.Type != expected.Type || actual.State != expected.State || actual.Trend != expected.Trend || actual.IsFNO != expected.IsFNO {
+			logger.LogError("data.json", expected.Ticker, 0, "ticker row mismatch after migration",
+				fmt.Sprintf("actual=%+v expected=%+v", actual, expected))
+			continue
+		}
+		verified++
+	}
+
+	logger.LogInfo("ticker_row_verification", map[string]any{
+		"expected": len(plan),
+		"verified": verified,
+		"match":    verified == len(plan),
+	})
+	return verified == len(plan)
+}
+
+func loadMigratedAlertTickers(client *resty.Client, logger *MigrationLogger) ([]barkat.AlertTicker, bool) {
+	var allAlertTickers []barkat.AlertTicker
+	offset := 0
+	limit := 100
+
+	for {
+		resp, err := client.R().Get(fmt.Sprintf("%s?offset=%d&limit=%d", barkat.AlertTickerBase, offset, limit))
+		if err != nil {
+			logger.LogError("data.json", "", 0, fmt.Sprintf("load alert tickers failed: %v", err), "")
+			return nil, false
+		}
+		if resp.StatusCode() != http.StatusOK {
+			logger.LogError("data.json", "", 0, fmt.Sprintf("load alert tickers returned status=%d", resp.StatusCode()), string(resp.Body()))
+			return nil, false
+		}
+
+		var envelope common.Envelope[barkat.AlertTickerList]
+		if err := json.Unmarshal(resp.Body(), &envelope); err != nil {
+			logger.LogError("data.json", "", 0, fmt.Sprintf("failed to parse alert ticker list: %v", err), "")
+			return nil, false
+		}
+		allAlertTickers = append(allAlertTickers, envelope.Data.AlertTickers...)
+		if len(envelope.Data.AlertTickers) < limit {
+			break
+		}
+		offset += limit
+	}
+	return allAlertTickers, true
+}
+
+func verifyAlertTickerRows(client *resty.Client, plan []AlertTickerPayload, logger *MigrationLogger) bool {
+	actualRows, ok := loadMigratedAlertTickers(client, logger)
+	if !ok {
+		return false
+	}
+	actualBySymbol := make(map[string]barkat.AlertTicker, len(actualRows))
+	for _, row := range actualRows {
+		actualBySymbol[row.Symbol] = row
+	}
+
+	verified := 0
+	for _, expected := range plan {
+		actual, exists := actualBySymbol[expected.Symbol]
+		if !exists {
+			logger.LogError("data.json", expected.Symbol, 0, "alert ticker row missing after migration", "")
+			continue
+		}
+		if actual.PairID != expected.PairID || actual.Name != expected.Name || actual.TickerSymbol != expected.ParentTicker ||
+			!stringPtrEqual(actual.Exchange, expected.Exchange) {
+			logger.LogError("data.json", expected.Symbol, 0, "alert ticker row mismatch after migration",
+				fmt.Sprintf("actual=%+v expected=%+v", actual, expected))
+			continue
+		}
+		verified++
+	}
+
+	logger.LogInfo("alert_ticker_row_verification", map[string]any{
+		"expected": len(plan),
+		"verified": verified,
+		"match":    verified == len(plan),
+	})
+	return verified == len(plan)
+}
+
+// verifyPriceAlertListCounts paginates through GET /alerts to verify total.
+func verifyPriceAlertListCounts(client *resty.Client, expectedTotal int, logger *MigrationLogger) bool {
+	var allPriceAlerts []barkat.PriceAlert
+	offset := 0
+	limit := barkat.DefaultPriceAlertLimit
+	metadataTotal := -1
+
+	for {
+		resp, err := client.R().Get(fmt.Sprintf("%s?offset=%d&limit=%d", barkat.PriceAlertBase, offset, limit))
+		if err != nil {
+			logger.LogError("data.json", "", 0, fmt.Sprintf("list price alerts failed: %v", err), "")
+			return false
+		}
+		if resp.StatusCode() != http.StatusOK {
+			logger.LogError("data.json", "", 0,
+				fmt.Sprintf("list price alerts returned %d", resp.StatusCode()), string(resp.Body()))
+			return false
+		}
+
+		var envelope common.Envelope[barkat.PriceAlertList]
+		if err := json.Unmarshal(resp.Body(), &envelope); err != nil {
+			logger.LogError("data.json", "", 0, fmt.Sprintf("failed to parse price alert list: %v", err), "")
+			return false
+		}
+		metadataTotal = int(envelope.Data.Metadata.Total)
+		allPriceAlerts = append(allPriceAlerts, envelope.Data.PriceAlerts...)
+
+		if len(envelope.Data.PriceAlerts) < limit {
+			break
+		}
+		offset += limit
+	}
+
+	logger.LogInfo("price_alert_list_verification", map[string]any{
+		"expected":       expectedTotal,
+		"actual":         len(allPriceAlerts),
+		"metadata_total": metadataTotal,
+		"match":          len(allPriceAlerts) == expectedTotal && metadataTotal == expectedTotal,
+	})
+	return len(allPriceAlerts) == expectedTotal && metadataTotal == expectedTotal
+}
+
+func verifyPriceAlertRows(client *resty.Client, plan []barkat.PriceAlertInput, logger *MigrationLogger) bool {
+	actualRows, ok := loadMigratedPriceAlerts(client, logger)
+	if !ok {
+		return false
+	}
+	actualByAlertID := make(map[string]barkat.PriceAlert, len(actualRows))
+	for _, row := range actualRows {
+		if row.AlertID != nil {
+			actualByAlertID[*row.AlertID] = row
+		}
+	}
+
+	verified := 0
+	for _, expected := range plan {
+		actual, exists := actualByAlertID[expected.AlertID]
+		if !exists {
+			logger.LogError("data.json", expected.AlertID, 0, "price alert row missing after migration", "")
+			continue
+		}
+		if actual.PairID != expected.PairID || actual.TriggerPrice != expected.TriggerPrice {
+			logger.LogError("data.json", expected.AlertID, 0, "price alert row mismatch after migration",
+				fmt.Sprintf("actual=%+v expected=%+v", actual, expected))
+			continue
+		}
+		verified++
+	}
+
+	logger.LogInfo("price_alert_row_verification", map[string]any{
+		"expected": len(plan),
+		"verified": verified,
+		"match":    verified == len(plan),
+	})
+	return verified == len(plan)
+}
+
+func loadMigratedPriceAlerts(client *resty.Client, logger *MigrationLogger) ([]barkat.PriceAlert, bool) {
+	var allPriceAlerts []barkat.PriceAlert
+	offset := 0
+	limit := barkat.DefaultPriceAlertLimit
+
+	for {
+		resp, err := client.R().Get(fmt.Sprintf("%s?offset=%d&limit=%d", barkat.PriceAlertBase, offset, limit))
+		if err != nil {
+			logger.LogError("data.json", "", 0, fmt.Sprintf("load price alerts failed: %v", err), "")
+			return nil, false
+		}
+		if resp.StatusCode() != http.StatusOK {
+			logger.LogError("data.json", "", 0, fmt.Sprintf("load price alerts returned status=%d", resp.StatusCode()), string(resp.Body()))
+			return nil, false
+		}
+
+		var envelope common.Envelope[barkat.PriceAlertList]
+		if err := json.Unmarshal(resp.Body(), &envelope); err != nil {
+			logger.LogError("data.json", "", 0, fmt.Sprintf("failed to parse price alert list: %v", err), "")
+			return nil, false
+		}
+		allPriceAlerts = append(allPriceAlerts, envelope.Data.PriceAlerts...)
+		if len(envelope.Data.PriceAlerts) < limit {
+			break
+		}
+		offset += limit
+	}
+	return allPriceAlerts, true
+}
+
+func stringPtrEqual(left, right *string) bool {
+	if left == nil || right == nil {
+		return left == nil && right == nil
+	}
+	return *left == *right
+}
+
 // ============================================================================
 // SUMMARY REPORTING
 // ============================================================================
@@ -981,13 +1427,18 @@ func writeTickerMigrationSummary(stats *TickerMigrationStats, analysis *DumpAnal
 		"migration_plan": map[string]any{
 			"tickers_planned":       len(plan.Tickers),
 			"alert_tickers_planned": len(plan.AlertTickers),
+			"price_alerts_planned":  len(plan.PriceAlerts),
 			"alert_ticker_skips":    len(plan.AlertTickerSkips),
+			"price_alert_skips":     len(plan.PriceAlertSkips),
 		},
 		"migration_results": map[string]any{
 			"created_tickers":       stats.CreatedTickers,
 			"alert_tickers_created": stats.CreatedAlertTickers,
+			"price_alerts_created":  stats.CreatedPriceAlerts,
 			"failed_tickers":        len(stats.FailedTickers),
 			"failed_alert_tickers":  len(stats.FailedAlertTickers),
+			"failed_price_alerts":   len(stats.FailedPriceAlerts),
+			"skipped_price_alerts":  stats.SkippedPriceAlerts,
 			"total_api_calls":       stats.TotalAPICalls,
 			"elapsed_seconds":       elapsed.Seconds(),
 		},
@@ -1084,11 +1535,19 @@ var _ = Describe("Barkat Ticker API Migration", func() {
 			})
 		})
 
-		It("should classify alertRepo as deferred and log anomalies", func() {
+		It("should classify alertRepo price-alert anomalies", func() {
 			Expect(analysis.AlertEntryCount).To(Equal(1099))
 			Expect(analysis.EmptyAlertIDs).To(Equal(7))
 			Expect(analysis.EmptyAlertNames).To(Equal(7))
 			Expect(analysis.EmptyAlertGroups).To(ContainElement("18311"))
+		})
+
+		It("should build a non-empty price alert plan from valid alertRepo rows", func() {
+			alertPlan, _ := buildAlertTickerPlan(dump, logger)
+			priceAlertPlan, priceAlertSkips := buildPriceAlertPlan(dump, alertPlan, logger)
+			Expect(priceAlertPlan).ToNot(BeEmpty())
+			Expect(priceAlertSkips).ToNot(BeEmpty())
+			Expect(len(priceAlertPlan) + len(priceAlertSkips)).To(Equal(analysis.AlertEntryCount + len(analysis.EmptyAlertGroups)))
 		})
 
 		It("should print ticker type classifications post-migration", func() {
@@ -1240,25 +1699,29 @@ var _ = Describe("Barkat Ticker API Migration", func() {
 			dump, err = loadBarkatDump(TickerDumpPath)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Log deferred alertRepo
-			buildAlertDeferredLog(dump, logger)
-
 			// Build migration plan
 			tickerPlan, preflight := buildTickerPlan(dump, logger)
 			analysis = preflight
-			alertPlan := []AlertTickerPayload{}
+			alertPlan, alertSkips := buildAlertTickerPlan(dump, logger)
+			priceAlertPlan, priceAlertSkips := buildPriceAlertPlan(dump, alertPlan, logger)
 
 			plan = &MigrationPlan{
 				Tickers:          tickerPlan,
 				AlertTickers:     alertPlan,
-				AlertTickerSkips: []string{},
+				PriceAlerts:      priceAlertPlan,
+				AlertTickerSkips: alertSkips,
+				PriceAlertSkips:  priceAlertSkips,
 			}
 
 			// Log preflight analysis
 			logger.LogInfo("preflight_analysis", map[string]any{
-				"tickers":            len(tickerPlan),
-				"alert_tickers":      len(alertPlan),
-				"unresolved_skipped": analysis.UnresolvedMappings,
+				"tickers":             len(tickerPlan),
+				"alert_tickers":       len(alertPlan),
+				"price_alerts":        len(priceAlertPlan),
+				"alert_ticker_skips":  len(alertSkips),
+				"price_alert_skips":   len(priceAlertSkips),
+				"pair_repo_entries":   analysis.PairCount,
+				"unresolved_mappings": analysis.UnresolvedMappings,
 			})
 
 			// Execute API migration
@@ -1272,20 +1735,37 @@ var _ = Describe("Barkat Ticker API Migration", func() {
 				"all %d tickers should be created/reconciled", len(plan.Tickers))
 		})
 
-		It("should defer alert ticker migration", func() {
-			Expect(plan.AlertTickers).To(BeEmpty())
+		It("should migrate alert tickers via /v1/api/tickers/{ticker}/alert-tickers", func() {
+			Expect(plan.AlertTickers).ToNot(BeEmpty(),
+				"alert ticker plan should not be empty (pairRepo has %d entries)", analysis.PairCount)
 			Expect(stats.FailedAlertTickers).To(BeEmpty(),
 				"alert ticker migration failures: %v", stats.FailedAlertTickers)
-			Expect(stats.CreatedAlertTickers).To(Equal(0),
-				"alert tickers are deferred for this migration pass")
+			Expect(stats.CreatedAlertTickers).To(Equal(len(plan.AlertTickers)),
+				"all %d alert tickers should be created", len(plan.AlertTickers))
+		})
+
+		It("should migrate valid alertRepo price alerts via /v1/api/alerts", func() {
+			Expect(plan.PriceAlerts).ToNot(BeEmpty(),
+				"price alert plan should not be empty (alertRepo has %d entries)", analysis.AlertEntryCount)
+			Expect(stats.FailedPriceAlerts).To(BeEmpty(),
+				"price alert migration failures: %v", stats.FailedPriceAlerts)
+			Expect(stats.CreatedPriceAlerts).To(Equal(len(plan.PriceAlerts)),
+				"all %d valid price alerts should be created", len(plan.PriceAlerts))
 		})
 
 		It("should verify paginated ticker list count", func() {
 			Expect(verifyTickerListCounts(client, len(plan.Tickers), logger)).To(BeTrue())
+			Expect(verifyTickerRows(client, plan.Tickers, logger)).To(BeTrue())
 		})
 
 		It("should verify paginated alert ticker list count", func() {
 			Expect(verifyAlertTickerListCounts(client, len(plan.AlertTickers), logger)).To(BeTrue())
+			Expect(verifyAlertTickerRows(client, plan.AlertTickers, logger)).To(BeTrue())
+		})
+
+		It("should verify paginated price alert list count", func() {
+			Expect(verifyPriceAlertListCounts(client, len(plan.PriceAlerts), logger)).To(BeTrue())
+			Expect(verifyPriceAlertRows(client, plan.PriceAlerts, logger)).To(BeTrue())
 		})
 
 		It("should write final reconciliation summary", func() {
