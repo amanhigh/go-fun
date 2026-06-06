@@ -106,3 +106,11 @@ func SetupPriceAlertRoutes(alert *gin.RouterGroup, priceAlertHandler PriceAlertH
 		alert.DELETE("/:alert-id", priceAlertHandler.HandleDeletePriceAlert)
 	}
 }
+
+// SetupAuditRoutes configures Barkat audit routes.
+func SetupAuditRoutes(audits *gin.RouterGroup, auditHandler AuditHandler) {
+	{
+		audits.GET("", auditHandler.HandleListAudits)
+		audits.GET("/:audit-id/results", auditHandler.HandleExecuteAudit)
+	}
+}

@@ -24,6 +24,7 @@ type KohanServerLifecycle struct {
 	TickerHandler      handler.TickerHandler      `container:"type"`
 	AlertTickerHandler handler.AlertTickerHandler `container:"type"`
 	PriceAlertHandler  handler.PriceAlertHandler  `container:"type"`
+	AuditHandler       handler.AuditHandler       `container:"type"`
 	IndexPortal        handler.IndexPortal        `container:"type"`
 	JournalPortal      handler.JournalPortal      `container:"type"`
 }
@@ -45,6 +46,7 @@ func NewKohanServerLifecycle(osHandler handler.OSHandler,
 	tickerHandler handler.TickerHandler,
 	alertTickerHandler handler.AlertTickerHandler,
 	priceAlertHandler handler.PriceAlertHandler,
+	auditHandler handler.AuditHandler,
 	portalHandlers PortalHandlers) *KohanServerLifecycle {
 	return &KohanServerLifecycle{
 		OSHandler:          osHandler,
@@ -55,6 +57,7 @@ func NewKohanServerLifecycle(osHandler handler.OSHandler,
 		TickerHandler:      tickerHandler,
 		AlertTickerHandler: alertTickerHandler,
 		PriceAlertHandler:  priceAlertHandler,
+		AuditHandler:       auditHandler,
 		IndexPortal:        portalHandlers.IndexPortal,
 		JournalPortal:      portalHandlers.JournalPortal,
 	}
@@ -103,6 +106,9 @@ func (s *KohanServerLifecycle) registerBarkatRoutes(engine *gin.Engine) {
 
 	alert := engine.Group(barkat.PriceAlertBase)
 	handler.SetupPriceAlertRoutes(alert, s.PriceAlertHandler)
+
+	audits := engine.Group(barkat.AuditBase)
+	handler.SetupAuditRoutes(audits, s.AuditHandler)
 }
 
 func (s *KohanServerLifecycle) registerPortalRoutes(engine *gin.Engine) {

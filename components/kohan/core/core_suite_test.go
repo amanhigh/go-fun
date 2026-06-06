@@ -91,6 +91,9 @@ var _ = BeforeSuite(func() {
 	priceAlertRepo := repository.NewPriceAlertRepository(db)
 	priceAlertMgr := manager.NewPriceAlertManager(priceAlertRepo)
 	priceAlertHandler := handler.NewPriceAlertHandler(priceAlertMgr)
+	auditRepo := repository.NewAuditRepository(db)
+	auditMgr := manager.NewAuditManager(auditRepo)
+	auditHandler := handler.NewAuditHandler(auditMgr)
 	indexPortal := handler.NewIndexPortal()
 	journalPortal := handler.NewJournalPortal(testImageDir)
 
@@ -105,6 +108,7 @@ var _ = BeforeSuite(func() {
 		tickerHandler,
 		alertTickerHandler,
 		priceAlertHandler,
+		auditHandler,
 		core.PortalHandlers{
 			IndexPortal:   indexPortal,
 			JournalPortal: journalPortal,

@@ -53,6 +53,7 @@ func ProvideKohanLifecycle(
 	tickerHandler handler.TickerHandler,
 	alertTickerHandler handler.AlertTickerHandler,
 	priceAlertHandler handler.PriceAlertHandler,
+	auditHandler handler.AuditHandler,
 	portalHandlers PortalHandlers,
 ) util.ServerLifecycle {
 	return &KohanServerLifecycle{
@@ -64,6 +65,7 @@ func ProvideKohanLifecycle(
 		TickerHandler:      tickerHandler,
 		AlertTickerHandler: alertTickerHandler,
 		PriceAlertHandler:  priceAlertHandler,
+		AuditHandler:       auditHandler,
 		IndexPortal:        portalHandlers.IndexPortal,
 		JournalPortal:      portalHandlers.JournalPortal,
 	}
