@@ -586,6 +586,16 @@ var _ = Describe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Ale
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusConflict))
 			})
+			It("should return 409 for duplicate pair_id", func() {
+				first := validAlertTickerPayload
+				first.Symbol = "MCIXD1"
+				_, _ = createAlertTickerRequest(router, createdTicker.Ticker, first)
+				second := validAlertTickerPayload
+				second.Symbol = "MCIXD2"
+				req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", second)
+				router.ServeHTTP(w, req)
+				Expect(w.Code).To(Equal(http.StatusConflict))
+			})
 			It("should return 500 for persistence failure", func() {
 				sqlDB, err := db.DB()
 				Expect(err).ToNot(HaveOccurred())

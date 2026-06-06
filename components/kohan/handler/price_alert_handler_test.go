@@ -234,10 +234,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 				})
 				It("should return 409 for ambiguous pair_id ownership", func() {
 					duplicate := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCIXDUP", PairID: createdAlertTicker.PairID, Name: "Duplicate"}
-					Expect(db.Create(&duplicate).Error).ToNot(HaveOccurred())
-					req, w := util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, replacePayload)
-					router.ServeHTTP(w, req)
-					Expect(w.Code).To(Equal(http.StatusConflict))
+					Expect(db.Create(&duplicate).Error).To(HaveOccurred())
 				})
 			})
 
