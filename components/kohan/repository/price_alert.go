@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/amanhigh/go-fun/common/util"
