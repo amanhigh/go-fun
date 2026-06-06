@@ -9,10 +9,10 @@ import (
 	"github.com/amanhigh/go-fun/models/common"
 )
 
-// AuditPlugin is the interface that every audit plugin must implement.
+// Plugin is the interface that every audit plugin must implement.
 // Plugins provide their own identity, catalog metadata, and execution logic.
-// This mirrors the frontend BaseAuditPlugin pattern.
-type AuditPlugin interface {
+// This mirrors the frontend BasePlugin pattern.
+type Plugin interface {
 	// ID returns the unique plugin identifier matching the `oneof` validation tag.
 	ID() barkat.AuditID
 
@@ -31,7 +31,7 @@ type AuditPlugin interface {
 }
 
 // Metadata returns the catalog Audit entry for this plugin.
-func Metadata(p AuditPlugin) barkat.Audit {
+func Metadata(p Plugin) barkat.Audit {
 	return barkat.Audit{
 		ID:          string(p.ID()),
 		Title:       p.Title(),

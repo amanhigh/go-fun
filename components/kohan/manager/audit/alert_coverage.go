@@ -18,7 +18,7 @@ type AlertCoveragePlugin struct {
 }
 
 // Compile-time interface check.
-var _ AuditPlugin = (*AlertCoveragePlugin)(nil)
+var _ Plugin = (*AlertCoveragePlugin)(nil)
 
 // NewAlertCoveragePlugin creates a new AlertCoveragePlugin.
 func NewAlertCoveragePlugin(repo repository.AuditRepository) *AlertCoveragePlugin {

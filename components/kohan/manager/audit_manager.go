@@ -17,13 +17,13 @@ type AuditManager interface {
 }
 
 type AuditManagerImpl struct {
-	registry *audit.AuditPluginRegistry
+	registry *audit.PluginRegistry
 }
 
 var _ AuditManager = (*AuditManagerImpl)(nil)
 
 // NewAuditManager creates a new AuditManager backed by a plugin registry.
-func NewAuditManager(registry *audit.AuditPluginRegistry) *AuditManagerImpl {
+func NewAuditManager(registry *audit.PluginRegistry) *AuditManagerImpl {
 	return &AuditManagerImpl{registry: registry}
 }
 

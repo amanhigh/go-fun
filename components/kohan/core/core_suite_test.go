@@ -93,7 +93,7 @@ var _ = BeforeSuite(func() {
 	priceAlertMgr := manager.NewPriceAlertManager(priceAlertRepo)
 	priceAlertHandler := handler.NewPriceAlertHandler(priceAlertMgr)
 	auditRepo := repository.NewAuditRepository(db)
-	auditRegistry := audit.NewAuditPluginRegistry()
+	auditRegistry := audit.NewPluginRegistry()
 	Expect(auditRegistry.RegisterPlugin(audit.NewAlertCoveragePlugin(auditRepo))).ToNot(HaveOccurred())
 	auditMgr := manager.NewAuditManager(auditRegistry)
 	auditHandler := handler.NewAuditHandler(auditMgr)

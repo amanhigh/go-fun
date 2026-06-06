@@ -58,15 +58,15 @@ func provideAuditRepository(db *gorm.DB) repository.AuditRepository {
 	return repository.NewAuditRepository(db)
 }
 
-func provideAuditPluginRegistry(repo repository.AuditRepository) *audit.AuditPluginRegistry {
-	registry := audit.NewAuditPluginRegistry()
+func provideAuditPluginRegistry(repo repository.AuditRepository) *audit.PluginRegistry {
+	registry := audit.NewPluginRegistry()
 	if err := registry.RegisterPlugin(audit.NewAlertCoveragePlugin(repo)); err != nil {
 		log.Fatal().Err(err).Msg("failed to register audit plugin")
 	}
 	return registry
 }
 
-func provideAuditManager(registry *audit.AuditPluginRegistry) manager.AuditManager {
+func provideAuditManager(registry *audit.PluginRegistry) manager.AuditManager {
 	return manager.NewAuditManager(registry)
 }
 

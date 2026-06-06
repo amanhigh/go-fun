@@ -8,19 +8,19 @@ import (
 	"github.com/amanhigh/go-fun/models/common"
 )
 
-// AuditPluginRegistry registers and resolves audit plugins.
+// PluginRegistry registers and resolves audit plugins.
 // Used by the manager to build the catalog and dispatch execution.
-type AuditPluginRegistry struct {
-	plugins map[barkat.AuditID]AuditPlugin
+type PluginRegistry struct {
+	plugins map[barkat.AuditID]Plugin
 }
 
-// NewAuditPluginRegistry creates an empty registry.
-func NewAuditPluginRegistry() *AuditPluginRegistry {
-	return &AuditPluginRegistry{plugins: make(map[barkat.AuditID]AuditPlugin)}
+// NewPluginRegistry creates an empty registry.
+func NewPluginRegistry() *PluginRegistry {
+	return &PluginRegistry{plugins: make(map[barkat.AuditID]Plugin)}
 }
 
 // RegisterPlugin adds a plugin. Returns error if ID or order conflicts.
-func (r *AuditPluginRegistry) RegisterPlugin(p AuditPlugin) error {
+func (r *PluginRegistry) RegisterPlugin(p Plugin) error {
 	id := p.ID()
 	if _, exists := r.plugins[id]; exists {
 		return fmt.Errorf("audit plugin %q is already registered", id)
@@ -36,7 +36,7 @@ func (r *AuditPluginRegistry) RegisterPlugin(p AuditPlugin) error {
 }
 
 // GetPlugin returns the plugin for id, or a 404 HttpError if not found.
-func (r *AuditPluginRegistry) GetPlugin(id barkat.AuditID) (AuditPlugin, common.HttpError) {
+func (r *PluginRegistry) GetPlugin(id barkat.AuditID) (Plugin, common.HttpError) {
 	p, exists := r.plugins[id]
 	if !exists {
 		return nil, common.ErrNotFound
@@ -45,8 +45,8 @@ func (r *AuditPluginRegistry) GetPlugin(id barkat.AuditID) (AuditPlugin, common.
 }
 
 // ListCatalog returns audit metadata sorted by order.
-func (r *AuditPluginRegistry) ListCatalog() []barkat.Audit {
-	plugins := make([]AuditPlugin, 0, len(r.plugins))
+func (r *PluginRegistry) ListCatalog() []barkat.Audit {
+	plugins := make([]Plugin, 0, len(r.plugins))
 	for _, p := range r.plugins {
 		plugins = append(plugins, p)
 	}
