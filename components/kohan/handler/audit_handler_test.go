@@ -10,6 +10,7 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/amanhigh/go-fun/components/kohan/handler"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/components/kohan/manager/audit"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
@@ -40,7 +41,9 @@ func newAuditTestRouter(auditHandler handler.AuditHandler) *gin.Engine {
 
 func newAuditTestHandler(db *gorm.DB) handler.AuditHandler {
 	auditRepo := repository.NewAuditRepository(db)
-	auditMgr := manager.NewAuditManager(auditRepo)
+	registry := audit.NewAuditPluginRegistry()
+	Expect(registry.RegisterPlugin(audit.NewAlertCoveragePlugin(auditRepo))).ToNot(HaveOccurred())
+	auditMgr := manager.NewAuditManager(registry)
 	return handler.NewAuditHandler(auditMgr)
 }
 
