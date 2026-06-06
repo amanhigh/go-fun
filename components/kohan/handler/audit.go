@@ -39,7 +39,8 @@ func (h *AuditHandlerImpl) HandleListAudits(c *gin.Context) {
 func (h *AuditHandlerImpl) HandleExecuteAudit(c *gin.Context) {
 	var path barkat.AuditPath
 	if bindErr := c.ShouldBindUri(&path); bindErr != nil {
-		c.JSON(http.StatusNotFound, common.NewFailEnvelope(map[string]string{"audit-id": "Audit not found"}))
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
 		return
 	}
 

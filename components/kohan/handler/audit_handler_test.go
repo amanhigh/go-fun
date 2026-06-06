@@ -258,7 +258,7 @@ var _ = Describe("AuditHandler Integration - Section 2.2 Audit APIs", func() {
 				var response map[string]any
 				Expect(json.Unmarshal(w.Body.Bytes(), &response)).ToNot(HaveOccurred())
 				Expect(response["status"]).To(Equal("fail"))
-				Expect(response["data"]).To(HaveKeyWithValue("audit-id", "Audit not found"))
+				Expect(response["data"]).To(HaveKeyWithValue("message", "Audit not found"))
 			})
 
 			It("should return 404 for snake_case audit id", func() {

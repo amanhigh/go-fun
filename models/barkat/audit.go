@@ -67,9 +67,9 @@ type AuditFinding struct {
 }
 
 // AuditPath binds and validates the :audit-id path parameter.
-// The oneof tag enforces that only registered audit IDs are accepted.
+// Audit ID validation is delegated to the plugin registry.
 type AuditPath struct {
-	AuditID string `uri:"audit-id" json:"-" binding:"required,oneof=alert-coverage"`
+	AuditID string `uri:"audit-id" json:"-" binding:"required"`
 }
 
 // AlertCoverageRow contains the repository projection used by the Alert Coverage audit.

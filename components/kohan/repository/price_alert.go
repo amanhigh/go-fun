@@ -24,8 +24,6 @@ type PriceAlertRepository interface {
 	DeleteByAlertID(ctx context.Context, alertID string) common.HttpError
 	// ListPriceAlerts returns filtered, sorted, paginated price alerts.
 	ListPriceAlerts(ctx context.Context, query barkat.PriceAlertQuery) ([]barkat.PriceAlert, int64, common.HttpError)
-	// TickerExists reports whether a primary ticker exists.
-	TickerExists(ctx context.Context, ticker string) (bool, common.HttpError)
 }
 
 type PriceAlertRepositoryImpl struct {
@@ -102,20 +100,19 @@ func (r *PriceAlertRepositoryImpl) ListPriceAlerts(ctx context.Context, query ba
 		return nil, 0, util.GormErrorMapper(err)
 	}
 
+	tx = util.ApplySort(tx, util.SortOptions{
+		SortBy:           query.SortBy,
+		SortOrder:        query.SortOrder,
+		DefaultSortBy:    "trigger_price",
+		DefaultSortOrder: common.SortOrderAsc,
+	})
+
 	var alerts []barkat.PriceAlert
-	if err := tx.Preload("AlertTicker").Order(fmt.Sprintf("%s %s", query.SortBy, query.SortOrder)).
+	if err := tx.Preload("AlertTicker").
 		Offset(query.Offset).Limit(query.Limit).Find(&alerts).Error; err != nil {
 		return nil, 0, util.GormErrorMapper(err)
 	}
 	return alerts, total, nil
-}
-
-func (r *PriceAlertRepositoryImpl) TickerExists(ctx context.Context, ticker string) (bool, common.HttpError) {
-	var count int64
-	if err := r.SafeTx(ctx).Model(&barkat.Ticker{}).Where("external_id = ?", ticker).Count(&count).Error; err != nil {
-		return false, util.GormErrorMapper(err)
-	}
-	return count > 0, nil
 }
 
 func (r *PriceAlertRepositoryImpl) applyPriceAlertFilters(tx *gorm.DB, query barkat.PriceAlertQuery) *gorm.DB {

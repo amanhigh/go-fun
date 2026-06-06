@@ -2,6 +2,7 @@ package audit
 
 import (
 	"fmt"
+	"net/http"
 	"sort"
 
 	"github.com/amanhigh/go-fun/models/barkat"
@@ -39,7 +40,7 @@ func (r *PluginRegistry) RegisterPlugin(p Plugin) error {
 func (r *PluginRegistry) GetPlugin(id barkat.AuditID) (Plugin, common.HttpError) {
 	p, exists := r.plugins[id]
 	if !exists {
-		return nil, common.ErrNotFound
+		return nil, common.NewHttpError("Audit not found", http.StatusNotFound)
 	}
 	return p, nil
 }

@@ -115,12 +115,8 @@ func (m *PriceAlertManagerImpl) DeletePriceAlert(ctx context.Context, alertID st
 
 func (m *PriceAlertManagerImpl) ListPriceAlerts(ctx context.Context, query barkat.PriceAlertQuery) (barkat.PriceAlertList, common.HttpError) {
 	if query.Ticker != "" {
-		exists, httpErr := m.repo.TickerExists(ctx, query.Ticker)
-		if httpErr != nil {
+		if httpErr := m.repo.GetByExternalId(ctx, query.Ticker, &barkat.Ticker{}); httpErr != nil {
 			return barkat.PriceAlertList{}, httpErr
-		}
-		if !exists {
-			return barkat.PriceAlertList{}, common.ErrNotFound
 		}
 	}
 
