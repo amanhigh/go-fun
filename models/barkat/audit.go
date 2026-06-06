@@ -11,9 +11,13 @@ const (
 	AuditBase = common.APIV1 + "/audits"
 )
 
+// AuditID is a typed identifier for audit plugins.
+// The zero value is invalid; use predefined constants.
+type AuditID string
+
 const (
 	// AuditIDAlertCoverage identifies the Alert Coverage audit plugin.
-	AuditIDAlertCoverage = "alert-coverage"
+	AuditIDAlertCoverage AuditID = "alert-coverage"
 )
 
 const (
@@ -60,6 +64,12 @@ type AuditFinding struct {
 	Target   string            `json:"target"`
 	Severity string            `json:"severity"`
 	Data     map[string]string `json:"data,omitempty"`
+}
+
+// AuditPath binds and validates the :audit-id path parameter.
+// The oneof tag enforces that only registered audit IDs are accepted.
+type AuditPath struct {
+	AuditID string `uri:"audit-id" json:"-" binding:"required,oneof=alert-coverage"`
 }
 
 // AlertCoverageRow contains the repository projection used by the Alert Coverage audit.

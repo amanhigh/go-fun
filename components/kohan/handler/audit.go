@@ -5,6 +5,7 @@ import (
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/gin-gonic/gin"
 )
@@ -36,8 +37,8 @@ func (h *AuditHandlerImpl) HandleListAudits(c *gin.Context) {
 }
 
 func (h *AuditHandlerImpl) HandleExecuteAudit(c *gin.Context) {
-	auditID := c.Param("audit-id")
-	if auditID == "" {
+	var path barkat.AuditPath
+	if bindErr := c.ShouldBindUri(&path); bindErr != nil {
 		c.JSON(http.StatusNotFound, common.NewFailEnvelope(map[string]string{"audit-id": "Audit not found"}))
 		return
 	}
@@ -49,7 +50,7 @@ func (h *AuditHandlerImpl) HandleExecuteAudit(c *gin.Context) {
 		return
 	}
 
-	response, httpErr := h.auditManager.ExecuteAudit(c.Request.Context(), auditID, query)
+	response, httpErr := h.auditManager.ExecuteAudit(c.Request.Context(), path.AuditID, query)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
