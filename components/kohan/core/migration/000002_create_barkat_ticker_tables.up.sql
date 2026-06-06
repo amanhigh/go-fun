@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS alert_tickers (
 -- Indexes for alert_tickers
 CREATE UNIQUE INDEX IF NOT EXISTS idx_alert_ticker_external_id ON alert_tickers (external_id);
 CREATE INDEX IF NOT EXISTS idx_alert_ticker_parent ON alert_tickers (ticker_id);
-CREATE INDEX IF NOT EXISTS idx_alert_ticker_pair_id ON alert_tickers (pair_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_alert_ticker_pair_id ON alert_tickers (pair_id);
 CREATE INDEX IF NOT EXISTS idx_alert_ticker_exchange ON alert_tickers (exchange);
 
 -- Create price_alerts table for local alert records (PRD Section 2.1.4)
