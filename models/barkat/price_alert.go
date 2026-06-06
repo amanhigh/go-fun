@@ -76,11 +76,6 @@ type PriceAlertQuery struct {
 	SortBy    string           `form:"sort-by,default=trigger_price" binding:"omitempty,oneof=trigger_price created_at"`
 }
 
-// NewPriceAlertQuery creates a PriceAlertQuery with default pagination and sorting values.
-func NewPriceAlertQuery() PriceAlertQuery {
-	return PriceAlertQuery{Limit: DefaultPriceAlertLimit, SortBy: "trigger_price", SortOrder: common.SortOrderAsc}
-}
-
 // PriceAlertList is the paginated response for Price alerts.
 type PriceAlertList struct {
 	PriceAlerts []PriceAlert             `json:"alerts"`

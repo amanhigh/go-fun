@@ -84,7 +84,7 @@ func (h *PriceAlertHandlerImpl) HandleDeletePriceAlert(c *gin.Context) {
 }
 
 func (h *PriceAlertHandlerImpl) HandleListPriceAlerts(c *gin.Context) {
-	query := barkat.NewPriceAlertQuery()
+	var query barkat.PriceAlertQuery
 	if bindErr := c.ShouldBindQuery(&query); bindErr != nil {
 		httpErr := util.ProcessValidationError(bindErr)
 		c.JSON(httpErr.Code(), httpErr)

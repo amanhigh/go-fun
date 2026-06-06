@@ -3,7 +3,6 @@ package manager
 import (
 	"context"
 	"net/http"
-	"slices"
 
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
@@ -44,7 +43,7 @@ func (m *PriceAlertManagerImpl) ReplacePriceAlerts(ctx context.Context, request 
 	}
 
 	httpErr = m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		alertTickerByPairID, alertTickerIDs, err := m.resolveAlertTickersForInputs(c, request.Alerts)
+		alertTickerByPairID, err := m.resolveAlertTickersForInputs(c, request.Alerts)
 		if err != nil {
 			return err
 		}
@@ -59,7 +58,7 @@ func (m *PriceAlertManagerImpl) ReplacePriceAlerts(ctx context.Context, request 
 			})
 		}
 
-		if err := m.repo.ReplaceAlerts(c, alertTickerIDs, alerts); err != nil {
+		if err := m.repo.ReplaceAlerts(c, alerts); err != nil {
 			return err
 		}
 		result = barkat.PriceAlertReplaceResult{PairsReplaced: len(alertTickerByPairID), AlertsCreated: len(alerts)}
@@ -68,9 +67,8 @@ func (m *PriceAlertManagerImpl) ReplacePriceAlerts(ctx context.Context, request 
 	return result, httpErr
 }
 
-func (m *PriceAlertManagerImpl) resolveAlertTickersForInputs(ctx context.Context, inputs []barkat.PriceAlertInput) (map[string]barkat.AlertTicker, []uint64, common.HttpError) {
+func (m *PriceAlertManagerImpl) resolveAlertTickersForInputs(ctx context.Context, inputs []barkat.PriceAlertInput) (map[string]barkat.AlertTicker, common.HttpError) {
 	alertTickerByPairID := make(map[string]barkat.AlertTicker)
-	var alertTickerIDs []uint64
 
 	for _, input := range inputs {
 		if _, ok := alertTickerByPairID[input.PairID]; ok {
@@ -78,15 +76,12 @@ func (m *PriceAlertManagerImpl) resolveAlertTickersForInputs(ctx context.Context
 		}
 		alertTicker, err := m.repo.ResolveAlertTickerByPairID(ctx, input.PairID)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		alertTickerByPairID[input.PairID] = alertTicker
-		if !slices.Contains(alertTickerIDs, alertTicker.ID) {
-			alertTickerIDs = append(alertTickerIDs, alertTicker.ID)
-		}
 	}
 
-	return alertTickerByPairID, alertTickerIDs, nil
+	return alertTickerByPairID, nil
 }
 
 func (m *PriceAlertManagerImpl) CreatePendingPriceAlert(ctx context.Context, ticker string, request barkat.PendingPriceAlertRequest) (result barkat.PriceAlert, httpErr common.HttpError) {

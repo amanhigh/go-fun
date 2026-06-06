@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/barkat"
@@ -18,7 +17,7 @@ type PriceAlertRepository interface {
 	// GetFirstAlertTickerForTicker resolves the first AlertTicker under a parent ticker.
 	GetFirstAlertTickerForTicker(ctx context.Context, ticker string) (barkat.AlertTicker, common.HttpError)
 	// ReplaceAlerts deletes existing alerts for owners and inserts replacement rows.
-	ReplaceAlerts(ctx context.Context, alertTickerIDs []uint64, alerts []barkat.PriceAlert) common.HttpError
+	ReplaceAlerts(ctx context.Context, alerts []barkat.PriceAlert) common.HttpError
 	// DeleteByAlertID deletes one canonical alert by external alert id.
 	DeleteByAlertID(ctx context.Context, alertID string) common.HttpError
 	// ListPriceAlerts returns filtered, sorted, paginated price alerts.
@@ -37,18 +36,11 @@ func NewPriceAlertRepository(db *gorm.DB) *PriceAlertRepositoryImpl {
 }
 
 func (r *PriceAlertRepositoryImpl) ResolveAlertTickerByPairID(ctx context.Context, pairID string) (barkat.AlertTicker, common.HttpError) {
-	var alertTickers []barkat.AlertTicker
-	if err := r.SafeTx(ctx).Where("pair_id = ?", pairID).Find(&alertTickers).Error; err != nil {
+	var alertTicker barkat.AlertTicker
+	if err := r.SafeTx(ctx).Where("pair_id = ?", pairID).First(&alertTicker).Error; err != nil {
 		return barkat.AlertTicker{}, util.GormErrorMapper(err)
 	}
-	switch len(alertTickers) {
-	case 0:
-		return barkat.AlertTicker{}, common.ErrNotFound
-	case 1:
-		return alertTickers[0], nil
-	default:
-		return barkat.AlertTicker{}, common.NewHttpError("Ambiguous pair id ownership", http.StatusConflict)
-	}
+	return alertTicker, nil
 }
 
 func (r *PriceAlertRepositoryImpl) GetFirstAlertTickerForTicker(ctx context.Context, ticker string) (barkat.AlertTicker, common.HttpError) {
@@ -64,17 +56,26 @@ func (r *PriceAlertRepositoryImpl) GetFirstAlertTickerForTicker(ctx context.Cont
 	return alertTicker, nil
 }
 
-func (r *PriceAlertRepositoryImpl) ReplaceAlerts(ctx context.Context, alertTickerIDs []uint64, alerts []barkat.PriceAlert) common.HttpError {
-	if len(alertTickerIDs) == 0 {
-		return nil
-	}
-	if err := r.SafeTx(ctx).Where("alert_ticker_id IN ?", alertTickerIDs).Delete(&barkat.PriceAlert{}).Error; err != nil {
-		return util.GormErrorMapper(err)
-	}
+func (r *PriceAlertRepositoryImpl) ReplaceAlerts(ctx context.Context, alerts []barkat.PriceAlert) common.HttpError {
 	if len(alerts) == 0 {
 		return nil
 	}
-	if err := r.SafeTx(ctx).Create(&alerts).Error; err != nil {
+
+	tx := r.SafeTx(ctx)
+
+	alertTickerIDs := make([]uint64, 0, len(alerts))
+	seen := make(map[uint64]bool, len(alerts))
+	for _, a := range alerts {
+		if !seen[a.AlertTickerID] {
+			alertTickerIDs = append(alertTickerIDs, a.AlertTickerID)
+			seen[a.AlertTickerID] = true
+		}
+	}
+
+	if err := tx.Where("alert_ticker_id IN ?", alertTickerIDs).Delete(&barkat.PriceAlert{}).Error; err != nil {
+		return util.GormErrorMapper(err)
+	}
+	if err := tx.Create(&alerts).Error; err != nil {
 		return util.GormErrorMapper(err)
 	}
 	return nil
@@ -92,14 +93,17 @@ func (r *PriceAlertRepositoryImpl) DeleteByAlertID(ctx context.Context, alertID 
 }
 
 func (r *PriceAlertRepositoryImpl) ListPriceAlerts(ctx context.Context, query barkat.PriceAlertQuery) ([]barkat.PriceAlert, int64, common.HttpError) {
-	tx := r.applyPriceAlertFilters(r.SafeTx(ctx).Model(&barkat.PriceAlert{}), query)
+	filteredTx := r.SafeTx(ctx).Model(&barkat.PriceAlert{})
+	if query.Ticker != "" {
+		filteredTx = filteredTx.Where("alert_ticker_id IN (SELECT at.id FROM alert_tickers at JOIN tickers t ON t.id = at.ticker_id WHERE t.external_id = ?)", query.Ticker)
+	}
 
 	var total int64
-	if err := tx.Count(&total).Error; err != nil {
+	if err := filteredTx.Count(&total).Error; err != nil {
 		return nil, 0, util.GormErrorMapper(err)
 	}
 
-	tx = util.ApplySort(tx, util.SortOptions{
+	sortedTx := util.ApplySort(filteredTx, util.SortOptions{
 		SortBy:           query.SortBy,
 		SortOrder:        query.SortOrder,
 		DefaultSortBy:    "trigger_price",
@@ -107,16 +111,9 @@ func (r *PriceAlertRepositoryImpl) ListPriceAlerts(ctx context.Context, query ba
 	})
 
 	var alerts []barkat.PriceAlert
-	if err := tx.Preload("AlertTicker").
+	if err := sortedTx.Preload("AlertTicker").
 		Offset(query.Offset).Limit(query.Limit).Find(&alerts).Error; err != nil {
 		return nil, 0, util.GormErrorMapper(err)
 	}
 	return alerts, total, nil
-}
-
-func (r *PriceAlertRepositoryImpl) applyPriceAlertFilters(tx *gorm.DB, query barkat.PriceAlertQuery) *gorm.DB {
-	if query.Ticker != "" {
-		tx = tx.Where("alert_ticker_id IN (SELECT at.id FROM alert_tickers at JOIN tickers t ON t.id = at.ticker_id WHERE t.external_id = ?)", query.Ticker)
-	}
-	return tx
 }
