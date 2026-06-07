@@ -11,8 +11,8 @@ import (
 )
 
 // AlertCoveragePlugin checks tracked instruments for missing or insufficient
-// price-alert coverage. It evaluates active READY-state tickers and skips
-// actively watched (WATCHED) and blacklisted (BLACKLIST) instruments.
+// price-alert coverage. It evaluates all non-blacklisted tickers
+// (WATCHED and READY) while excluding blacklisted (BLACKLIST) instruments.
 type AlertCoveragePlugin struct {
 	repo repository.AuditRepository
 }

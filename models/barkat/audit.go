@@ -35,7 +35,7 @@ const (
 
 const (
 	// DefaultStaleReviewThresholdDays is the default number of days after which a ticker is considered stale.
-	DefaultStaleReviewThresholdDays = 90
+	DefaultStaleReviewThresholdDays = 180
 )
 
 const (

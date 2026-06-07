@@ -143,7 +143,7 @@ var _ = Describe("AuditHandler Integration - Section 2.2 Audit APIs", func() {
 
 	Describe("GET /v1/api/audits/{audit-id}/results - Execute Single Audit (2.2.2)", func() {
 		Context("Happy Path", func() {
-			Context("When READY tickers have mixed alert coverage", func() {
+			Context("When tickers have mixed alert coverage", func() {
 				var response barkat.AuditResult
 
 				BeforeEach(func() {
@@ -177,30 +177,31 @@ var _ = Describe("AuditHandler Integration - Section 2.2 Audit APIs", func() {
 				It("should set generated_at", func() { Expect(response.GeneratedAt).ToNot(BeZero()) })
 				It("should include full-result counts by finding code", func() {
 					Expect(response.Counts).To(Equal(map[string]int{
-						"NO_ALERT_TICKER": 1,
+						"NO_ALERT_TICKER": 2,
 						"NO_ALERTS":       1,
 						"SINGLE_ALERT":    1,
 					}))
 				})
-				It("should return one finding for each coverage gap", func() { Expect(response.Findings).To(HaveLen(3)) })
+				It("should return one finding for each coverage gap", func() { Expect(response.Findings).To(HaveLen(4)) })
 				It("should mark total as the full unpaginated finding count", func() {
-					Expect(response.Metadata.Total).To(Equal(int64(3)))
+					Expect(response.Metadata.Total).To(Equal(int64(4)))
 					Expect(response.Metadata.Offset).To(Equal(0))
 					Expect(response.Metadata.Limit).To(Equal(20))
 				})
 				It("should distinguish missing mapping, no-alert, and single-alert gaps", func() {
 					Expect(response.Findings).To(ContainElements(
 						barkat.AuditFinding{Code: "NO_ALERT_TICKER", Target: "MCX", Severity: "HIGH", Data: map[string]string{"alert_ticker_count": "0", "price_alert_count": "0"}},
+						barkat.AuditFinding{Code: "NO_ALERT_TICKER", Target: "NIFTY", Severity: "HIGH", Data: map[string]string{"alert_ticker_count": "0", "price_alert_count": "0"}},
 						barkat.AuditFinding{Code: "NO_ALERTS", Target: "INFY", Severity: "MEDIUM", Data: map[string]string{"alert_ticker_count": "1", "price_alert_count": "0"}},
 						barkat.AuditFinding{Code: "SINGLE_ALERT", Target: "TCS", Severity: "HIGH", Data: map[string]string{"alert_ticker_count": "1", "price_alert_count": "1"}},
 					))
 				})
-				It("should skip actively watched and blacklisted instruments", func() {
+				It("should include watched tickers and skip only blacklisted instruments", func() {
 					targets := make([]string, 0, len(response.Findings))
 					for _, finding := range response.Findings {
 						targets = append(targets, finding.Target)
 					}
-					Expect(targets).ToNot(ContainElement("NIFTY"))
+					Expect(targets).To(ContainElement("NIFTY"))
 					Expect(targets).ToNot(ContainElement("BANNED"))
 				})
 			})
@@ -231,7 +232,7 @@ var _ = Describe("AuditHandler Integration - Section 2.2 Audit APIs", func() {
 			var response barkat.AuditResult
 
 			BeforeEach(func() {
-				// Ticker with old last_opened_at (stale - more than 90 days ago)
+				// Ticker with old last_opened_at (stale - more than 180 days ago)
 				staleTicker := barkat.Ticker{
 					Ticker:       "STALE1",
 					Exchange:     new("NSE"),
@@ -239,7 +240,7 @@ var _ = Describe("AuditHandler Integration - Section 2.2 Audit APIs", func() {
 					Type:         "EQUITY",
 					State:        "WATCHED",
 					Trend:        "UPTREND",
-					LastOpenedAt: time.Date(2026, time.January, 1, 10, 30, 0, 0, time.UTC),
+					LastOpenedAt: time.Date(2025, time.November, 1, 10, 30, 0, 0, time.UTC),
 				}
 				Expect(db.Create(&staleTicker).Error).ToNot(HaveOccurred())
 
@@ -255,7 +256,7 @@ var _ = Describe("AuditHandler Integration - Section 2.2 Audit APIs", func() {
 				}
 				Expect(db.Create(&recentTicker).Error).ToNot(HaveOccurred())
 
-				// BLACKLIST ticker with old last_opened_at (stale, but still included)
+				// BLACKLIST ticker with old last_opened_at (stale, but excluded by BLACKLIST filter)
 				blackTicker := barkat.Ticker{
 					Ticker:       "BLACK1",
 					Exchange:     new("NSE"),
@@ -263,7 +264,7 @@ var _ = Describe("AuditHandler Integration - Section 2.2 Audit APIs", func() {
 					Type:         "EQUITY",
 					State:        "BLACKLIST",
 					Trend:        "UPTREND",
-					LastOpenedAt: time.Date(2025, time.December, 1, 10, 30, 0, 0, time.UTC),
+					LastOpenedAt: time.Date(2025, time.November, 1, 10, 30, 0, 0, time.UTC),
 				}
 				Expect(db.Create(&blackTicker).Error).ToNot(HaveOccurred())
 
@@ -281,7 +282,7 @@ var _ = Describe("AuditHandler Integration - Section 2.2 Audit APIs", func() {
 					targets = append(targets, finding.Target)
 				}
 				Expect(targets).To(ContainElement("STALE1"))
-				Expect(targets).To(ContainElement("BLACK1"))
+				Expect(targets).ToNot(ContainElement("BLACK1"))
 			})
 			It("should exclude recently opened tickers", func() {
 				targets := make([]string, 0, len(response.Findings))
@@ -298,16 +299,16 @@ var _ = Describe("AuditHandler Integration - Section 2.2 Audit APIs", func() {
 					}
 				}
 			})
-			It("should include blacklisted stale tickers (no exclusion)", func() {
+			It("should exclude blacklisted tickers from stale review", func() {
 				targets := make([]string, 0, len(response.Findings))
 				for _, finding := range response.Findings {
 					targets = append(targets, finding.Target)
 				}
-				Expect(targets).To(ContainElement("BLACK1"))
+				Expect(targets).ToNot(ContainElement("BLACK1"))
 			})
 			It("should include STALE_TICKER code in counts", func() {
 				Expect(response.Counts).To(HaveKey("STALE_TICKER"))
-				Expect(response.Counts["STALE_TICKER"]).To(Equal(2))
+				Expect(response.Counts["STALE_TICKER"]).To(Equal(1))
 			})
 		})
 
