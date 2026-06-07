@@ -31,6 +31,8 @@ func NewPriceAlertManager(repo repository.PriceAlertRepository) *PriceAlertManag
 	return &PriceAlertManagerImpl{repo: repo}
 }
 
+// ---- Price Alerts ----
+
 func (m *PriceAlertManagerImpl) ReplacePriceAlerts(ctx context.Context, request barkat.PriceAlertReplaceRequest) (result barkat.PriceAlertReplaceResult, httpErr common.HttpError) {
 	httpErr = m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		alertTickerByPairID, err := m.resolveAlertTickersForInputs(c, request.Alerts)
@@ -38,22 +40,8 @@ func (m *PriceAlertManagerImpl) ReplacePriceAlerts(ctx context.Context, request 
 			return err
 		}
 
-		// Collect unique pair IDs from the resolved map.
-		pairIDs := make([]string, 0, len(alertTickerByPairID))
-		for pairID := range alertTickerByPairID {
-			pairIDs = append(pairIDs, pairID)
-		}
-
-		// Build replacement alerts.
-		alerts := make([]barkat.PriceAlert, 0, len(request.Alerts))
-		for _, input := range request.Alerts {
-			alertID := input.AlertID
-			alerts = append(alerts, barkat.PriceAlert{
-				AlertTickerID: alertTickerByPairID[input.PairID].ID,
-				AlertID:       &alertID,
-				TriggerPrice:  input.TriggerPrice,
-			})
-		}
+		pairIDs := m.collectPairIDs(alertTickerByPairID)
+		alerts := m.buildReplacementAlerts(request.Alerts, alertTickerByPairID)
 
 		// Delete existing alerts for submitted pair IDs, then create replacements.
 		if err := m.repo.DeleteByPairIDs(c, pairIDs); err != nil {
@@ -67,23 +55,6 @@ func (m *PriceAlertManagerImpl) ReplacePriceAlerts(ctx context.Context, request 
 		return nil
 	})
 	return result, httpErr
-}
-
-func (m *PriceAlertManagerImpl) resolveAlertTickersForInputs(ctx context.Context, inputs []barkat.PriceAlertInput) (map[string]barkat.AlertTicker, common.HttpError) {
-	alertTickerByPairID := make(map[string]barkat.AlertTicker)
-
-	for _, input := range inputs {
-		if _, ok := alertTickerByPairID[input.PairID]; ok {
-			continue
-		}
-		alertTicker, err := m.repo.GetByPairId(ctx, input.PairID)
-		if err != nil {
-			return nil, err
-		}
-		alertTickerByPairID[input.PairID] = alertTicker
-	}
-
-	return alertTickerByPairID, nil
 }
 
 func (m *PriceAlertManagerImpl) CreatePendingPriceAlert(ctx context.Context, ticker string, request barkat.PendingPriceAlertRequest) (result barkat.PriceAlert, httpErr common.HttpError) {
@@ -129,4 +100,44 @@ func (m *PriceAlertManagerImpl) ListPriceAlerts(ctx context.Context, query barka
 			Limit:  query.Limit,
 		},
 	}, nil
+}
+
+// ---- Private Replacement Helpers ----
+
+func (m *PriceAlertManagerImpl) collectPairIDs(alertTickerByPairID map[string]barkat.AlertTicker) []string {
+	pairIDs := make([]string, 0, len(alertTickerByPairID))
+	for pairID := range alertTickerByPairID {
+		pairIDs = append(pairIDs, pairID)
+	}
+	return pairIDs
+}
+
+func (m *PriceAlertManagerImpl) buildReplacementAlerts(inputs []barkat.PriceAlertInput, alertTickerByPairID map[string]barkat.AlertTicker) []barkat.PriceAlert {
+	alerts := make([]barkat.PriceAlert, 0, len(inputs))
+	for _, input := range inputs {
+		alertID := input.AlertID
+		alerts = append(alerts, barkat.PriceAlert{
+			AlertTickerID: alertTickerByPairID[input.PairID].ID,
+			AlertID:       &alertID,
+			TriggerPrice:  input.TriggerPrice,
+		})
+	}
+	return alerts
+}
+
+func (m *PriceAlertManagerImpl) resolveAlertTickersForInputs(ctx context.Context, inputs []barkat.PriceAlertInput) (map[string]barkat.AlertTicker, common.HttpError) {
+	alertTickerByPairID := make(map[string]barkat.AlertTicker)
+
+	for _, input := range inputs {
+		if _, ok := alertTickerByPairID[input.PairID]; ok {
+			continue
+		}
+		alertTicker, err := m.repo.GetByPairId(ctx, input.PairID)
+		if err != nil {
+			return nil, err
+		}
+		alertTickerByPairID[input.PairID] = alertTicker
+	}
+
+	return alertTickerByPairID, nil
 }
