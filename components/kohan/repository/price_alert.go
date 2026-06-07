@@ -82,14 +82,7 @@ func (r *PriceAlertRepositoryImpl) ReplaceAlerts(ctx context.Context, alerts []b
 }
 
 func (r *PriceAlertRepositoryImpl) DeleteByAlertID(ctx context.Context, alertID string) common.HttpError {
-	result := r.SafeTx(ctx).Where("alert_id = ?", alertID).Delete(&barkat.PriceAlert{})
-	if result.Error != nil {
-		return util.GormErrorMapper(result.Error)
-	}
-	if result.RowsAffected == 0 {
-		return common.ErrNotFound
-	}
-	return nil
+	return r.DeleteBy(ctx, &barkat.PriceAlert{}, "alert_id = ?", alertID)
 }
 
 func (r *PriceAlertRepositoryImpl) ListPriceAlerts(ctx context.Context, query barkat.PriceAlertQuery) ([]barkat.PriceAlert, int64, common.HttpError) {
