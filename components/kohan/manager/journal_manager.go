@@ -64,14 +64,7 @@ func (m *JournalManagerImpl) ListJournals(ctx context.Context, query barkat.Jour
 
 func (m *JournalManagerImpl) DeleteJournal(ctx context.Context, journalExternalId string) common.HttpError {
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// First fetch the journal by external_id to get internal ID
-		journal, httpErr := m.GetJournal(c, journalExternalId)
-		if httpErr != nil {
-			return httpErr
-		}
-
-		// Now delete by internal ID
-		return m.repo.DeleteById(c, journal.ID, &barkat.Journal{})
+		return m.repo.DeleteByExternalId(c, journalExternalId, &barkat.Journal{})
 	})
 }
 

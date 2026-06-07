@@ -123,17 +123,12 @@ func (p *PersonManager) UpdatePerson(c context.Context, id string, request fun.P
 }
 
 func (p *PersonManager) DeletePerson(c context.Context, id string) (err common.HttpError) {
-	var person fun.Person
 	ctx, span := p.Tracer.Start(c, "DeletePerson.Manager", trace.WithAttributes(attribute.String("id", id)))
 	defer span.End()
 
 	err = p.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
-		if person, err = p.GetPerson(c, id); err == nil {
-			span.AddEvent("Person Found for Deletion", trace.WithAttributes(attribute.String("Name", person.Name))) // Adds message in log section of Span
-			/* Delete from DB */
-			err = p.Dao.DeleteById(c, id, &person)
-		}
-		return
+		span.AddEvent("Person Found for Deletion", trace.WithAttributes(attribute.String("id", id)))
+		return p.Dao.DeleteById(c, id, &fun.Person{})
 	})
 
 	return

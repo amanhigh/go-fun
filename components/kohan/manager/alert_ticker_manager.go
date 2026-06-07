@@ -62,11 +62,7 @@ func (m *AlertTickerManagerImpl) GetAlertTicker(ctx context.Context, symbol stri
 
 func (m *AlertTickerManagerImpl) DeleteAlertTicker(ctx context.Context, symbol string) common.HttpError {
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		var alert barkat.AlertTicker
-		if httpErr := m.repo.GetByExternalId(c, symbol, &alert); httpErr != nil {
-			return httpErr
-		}
-		return m.repo.DeleteById(c, alert.ID, &barkat.AlertTicker{})
+		return m.repo.DeleteByExternalId(c, symbol, &barkat.AlertTicker{})
 	})
 }
 

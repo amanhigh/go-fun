@@ -114,6 +114,71 @@ func (_c *EnrollmentDaoInterface_Create_Call) RunAndReturn(run func(c context.Co
 	return _c
 }
 
+// DeleteByExternalId provides a mock function for the type EnrollmentDaoInterface
+func (_mock *EnrollmentDaoInterface) DeleteByExternalId(c context.Context, externalId string, entity any) common.HttpError {
+	ret := _mock.Called(c, externalId, entity)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteByExternalId")
+	}
+
+	var r0 common.HttpError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, any) common.HttpError); ok {
+		r0 = returnFunc(c, externalId, entity)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(common.HttpError)
+		}
+	}
+	return r0
+}
+
+// EnrollmentDaoInterface_DeleteByExternalId_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteByExternalId'
+type EnrollmentDaoInterface_DeleteByExternalId_Call struct {
+	*mock.Call
+}
+
+// DeleteByExternalId is a helper method to define mock.On call
+//   - c context.Context
+//   - externalId string
+//   - entity any
+func (_e *EnrollmentDaoInterface_Expecter) DeleteByExternalId(c interface{}, externalId interface{}, entity interface{}) *EnrollmentDaoInterface_DeleteByExternalId_Call {
+	return &EnrollmentDaoInterface_DeleteByExternalId_Call{Call: _e.mock.On("DeleteByExternalId", c, externalId, entity)}
+}
+
+func (_c *EnrollmentDaoInterface_DeleteByExternalId_Call) Run(run func(c context.Context, externalId string, entity any)) *EnrollmentDaoInterface_DeleteByExternalId_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 any
+		if args[2] != nil {
+			arg2 = args[2].(any)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *EnrollmentDaoInterface_DeleteByExternalId_Call) Return(err common.HttpError) *EnrollmentDaoInterface_DeleteByExternalId_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *EnrollmentDaoInterface_DeleteByExternalId_Call) RunAndReturn(run func(c context.Context, externalId string, entity any) common.HttpError) *EnrollmentDaoInterface_DeleteByExternalId_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DeleteById provides a mock function for the type EnrollmentDaoInterface
 func (_mock *EnrollmentDaoInterface) DeleteById(c context.Context, id any, entity any) common.HttpError {
 	ret := _mock.Called(c, id, entity)
