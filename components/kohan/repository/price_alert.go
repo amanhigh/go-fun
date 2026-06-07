@@ -16,8 +16,10 @@ type PriceAlertRepository interface {
 	GetByPairId(ctx context.Context, pairID string) (barkat.AlertTicker, common.HttpError)
 	// GetByTicker resolves the first AlertTicker under a parent ticker.
 	GetByTicker(ctx context.Context, ticker string) (barkat.AlertTicker, common.HttpError)
-	// ReplaceAlerts deletes existing alerts for owners and inserts replacement rows.
-	ReplaceAlerts(ctx context.Context, alerts []barkat.PriceAlert) common.HttpError
+	// CreateAlerts inserts new price alert rows.
+	CreateAlerts(ctx context.Context, alerts []barkat.PriceAlert) common.HttpError
+	// DeleteByPairIDs deletes all price alerts for the given pair IDs.
+	DeleteByPairIDs(ctx context.Context, pairIDs []string) common.HttpError
 	// DeleteByAlertID deletes one canonical alert by external alert id.
 	DeleteByAlertID(ctx context.Context, alertID string) common.HttpError
 	// ListPriceAlerts returns filtered, sorted, paginated price alerts.
@@ -56,26 +58,23 @@ func (r *PriceAlertRepositoryImpl) GetByTicker(ctx context.Context, ticker strin
 	return alertTicker, nil
 }
 
-func (r *PriceAlertRepositoryImpl) ReplaceAlerts(ctx context.Context, alerts []barkat.PriceAlert) common.HttpError {
+func (r *PriceAlertRepositoryImpl) CreateAlerts(ctx context.Context, alerts []barkat.PriceAlert) common.HttpError {
 	if len(alerts) == 0 {
 		return nil
 	}
-
-	tx := r.SafeTx(ctx)
-
-	alertTickerIDs := make([]uint64, 0, len(alerts))
-	seen := make(map[uint64]bool, len(alerts))
-	for _, a := range alerts {
-		if !seen[a.AlertTickerID] {
-			alertTickerIDs = append(alertTickerIDs, a.AlertTickerID)
-			seen[a.AlertTickerID] = true
-		}
-	}
-
-	if err := tx.Where("alert_ticker_id IN ?", alertTickerIDs).Delete(&barkat.PriceAlert{}).Error; err != nil {
+	if err := r.SafeTx(ctx).Create(&alerts).Error; err != nil {
 		return util.GormErrorMapper(err)
 	}
-	if err := tx.Create(&alerts).Error; err != nil {
+	return nil
+}
+
+func (r *PriceAlertRepositoryImpl) DeleteByPairIDs(ctx context.Context, pairIDs []string) common.HttpError {
+	if len(pairIDs) == 0 {
+		return nil
+	}
+	tx := r.SafeTx(ctx)
+	subQuery := tx.Model(&barkat.AlertTicker{}).Where("pair_id IN ?", pairIDs).Select("id")
+	if err := tx.Where("alert_ticker_id IN (?)", subQuery).Delete(&barkat.PriceAlert{}).Error; err != nil {
 		return util.GormErrorMapper(err)
 	}
 	return nil

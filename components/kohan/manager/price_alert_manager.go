@@ -38,6 +38,13 @@ func (m *PriceAlertManagerImpl) ReplacePriceAlerts(ctx context.Context, request 
 			return err
 		}
 
+		// Collect unique pair IDs from the resolved map.
+		pairIDs := make([]string, 0, len(alertTickerByPairID))
+		for pairID := range alertTickerByPairID {
+			pairIDs = append(pairIDs, pairID)
+		}
+
+		// Build replacement alerts.
 		alerts := make([]barkat.PriceAlert, 0, len(request.Alerts))
 		for _, input := range request.Alerts {
 			alertID := input.AlertID
@@ -48,9 +55,14 @@ func (m *PriceAlertManagerImpl) ReplacePriceAlerts(ctx context.Context, request 
 			})
 		}
 
-		if err := m.repo.ReplaceAlerts(c, alerts); err != nil {
+		// Delete existing alerts for submitted pair IDs, then create replacements.
+		if err := m.repo.DeleteByPairIDs(c, pairIDs); err != nil {
 			return err
 		}
+		if err := m.repo.CreateAlerts(c, alerts); err != nil {
+			return err
+		}
+
 		result = barkat.PriceAlertReplaceResult{PairsReplaced: len(alertTickerByPairID), AlertsCreated: len(alerts)}
 		return nil
 	})
