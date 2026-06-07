@@ -25,7 +25,6 @@ var _ = Describe("Validators", func() {
 		_ = v.RegisterValidation("ticker_path", core.TickerPathValidator)
 		_ = v.RegisterValidation("alert_symbol", core.AlertSymbolValidator)
 		_ = v.RegisterValidation("alert_name", core.AlertNameValidator)
-		_ = v.RegisterValidation("ticker_exchange", core.TickerExchangeValidator)
 		_ = v.RegisterValidation("alert_exchange", core.AlertExchangeValidator)
 		_ = v.RegisterValidation("tag", core.TagValidator)
 		_ = v.RegisterValidation("override", core.OverrideValidator)

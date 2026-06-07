@@ -60,7 +60,7 @@ var _ = Describe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Ale
 		Expect(err).ToNot(HaveOccurred())
 		createdTicker = barkat.Ticker{
 			Ticker:       "MCX",
-			Exchange:     new("NSE"),
+			Exchange:     "NSE",
 			Timeframes:   []string{"MN", "WK", "DL"},
 			Type:         "EQUITY",
 			State:        "WATCHED",
@@ -107,7 +107,7 @@ var _ = Describe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Ale
 				It("should preserve symbol", func() { Expect(response.Symbol).To(Equal("MCIX")) })
 				It("should preserve pair_id", func() { Expect(response.PairID).To(Equal("941982")) })
 				It("should preserve name", func() { Expect(response.Name).To(Equal("Multi Commodity Exchange of India")) })
-				It("should preserve exchange", func() { Expect(response.Exchange).To(Equal(new("NSE"))) })
+				It("should preserve exchange", func() { Expect(*response.Exchange).To(Equal("NSE")) })
 				It("should include parent ticker", func() { Expect(response.TickerSymbol).To(Equal(createdTicker.Ticker)) })
 				It("should set created_at timestamp", func() { Expect(response.CreatedAt).ToNot(BeZero()) })
 				It("should set updated_at timestamp", func() { Expect(response.UpdatedAt).ToNot(BeZero()) })

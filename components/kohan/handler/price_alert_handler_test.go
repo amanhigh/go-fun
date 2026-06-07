@@ -80,7 +80,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 
 		createdTicker = barkat.Ticker{
 			Ticker:       "MCX",
-			Exchange:     new("NSE"),
+			Exchange:     "NSE",
 			Timeframes:   []string{"MN", "WK", "DL"},
 			Type:         "EQUITY",
 			State:        "WATCHED",
@@ -154,7 +154,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 			})
 
 			It("should replace existing alerts for submitted pair ids only", func() {
-				otherTicker := barkat.Ticker{Ticker: "NIFTY", Exchange: new("NSE"), Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
+				otherTicker := barkat.Ticker{Ticker: "NIFTY", Exchange: "NSE", Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
 				Expect(db.Create(&otherTicker).Error).ToNot(HaveOccurred())
 				otherAlertTicker := barkat.AlertTicker{TickerID: otherTicker.ID, Symbol: "NIFTY50", PairID: "17940", Name: "Nifty 50"}
 				Expect(db.Create(&otherAlertTicker).Error).ToNot(HaveOccurred())
@@ -176,7 +176,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 			})
 
 			It("should replace alerts across multiple submitted pair ids", func() {
-				otherTicker := barkat.Ticker{Ticker: "NIFTY", Exchange: new("NSE"), Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
+				otherTicker := barkat.Ticker{Ticker: "NIFTY", Exchange: "NSE", Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
 				Expect(db.Create(&otherTicker).Error).ToNot(HaveOccurred())
 				otherAlertTicker := barkat.AlertTicker{TickerID: otherTicker.ID, Symbol: "NIFTY50", PairID: "17940", Name: "Nifty 50"}
 				Expect(db.Create(&otherAlertTicker).Error).ToNot(HaveOccurred())
@@ -437,7 +437,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 			})
 
 			It("should resolve the first alert ticker when ticker has multiple alert tickers", func() {
-				multiTicker := barkat.Ticker{Ticker: "NIFTY", Exchange: new("NSE"), Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
+				multiTicker := barkat.Ticker{Ticker: "NIFTY", Exchange: "NSE", Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
 				Expect(db.Create(&multiTicker).Error).ToNot(HaveOccurred())
 
 				// Create two alert tickers — the first (lower ID) should be used
@@ -477,7 +477,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 					})
 
 					It("should return 404 when ticker has no alert ticker mapping", func() {
-						other := barkat.Ticker{Ticker: "NIFTY", Exchange: new("NSE"), Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
+						other := barkat.Ticker{Ticker: "NIFTY", Exchange: "NSE", Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
 						Expect(db.Create(&other).Error).ToNot(HaveOccurred())
 						req, w = util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/NIFTY/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: 1})
 						router.ServeHTTP(w, req)
@@ -641,7 +641,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 			})
 
 			It("should filter by primary ticker without leaking other ticker alerts", func() {
-				otherTicker := barkat.Ticker{Ticker: "NIFTY", Exchange: new("NSE"), Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
+				otherTicker := barkat.Ticker{Ticker: "NIFTY", Exchange: "NSE", Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
 				Expect(db.Create(&otherTicker).Error).ToNot(HaveOccurred())
 				otherAlertTicker := barkat.AlertTicker{TickerID: otherTicker.ID, Symbol: "NIFTY50", PairID: "17940", Name: "Nifty 50"}
 				Expect(db.Create(&otherAlertTicker).Error).ToNot(HaveOccurred())

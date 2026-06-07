@@ -51,7 +51,7 @@ func newAuditTestHandler(db *gorm.DB) handler.AuditHandler {
 func seedAuditTicker(db *gorm.DB, ticker, state string) barkat.Ticker {
 	result := barkat.Ticker{
 		Ticker:       ticker,
-		Exchange:     new("NSE"),
+		Exchange:     "NSE",
 		Timeframes:   []string{"MN", "WK", "DL"},
 		Type:         "EQUITY",
 		State:        state,
@@ -235,7 +235,7 @@ var _ = Describe("AuditHandler Integration - Section 2.2 Audit APIs", func() {
 				// Ticker with old last_opened_at (stale - more than 180 days ago)
 				staleTicker := barkat.Ticker{
 					Ticker:       "STALE1",
-					Exchange:     new("NSE"),
+					Exchange:     "NSE",
 					Timeframes:   []string{"MN", "WK", "DL"},
 					Type:         "EQUITY",
 					State:        "WATCHED",
@@ -247,7 +247,7 @@ var _ = Describe("AuditHandler Integration - Section 2.2 Audit APIs", func() {
 				// Ticker opened recently (not stale)
 				recentTicker := barkat.Ticker{
 					Ticker:       "RECENT1",
-					Exchange:     new("NSE"),
+					Exchange:     "NSE",
 					Timeframes:   []string{"MN", "WK", "DL"},
 					Type:         "EQUITY",
 					State:        "WATCHED",
@@ -259,7 +259,7 @@ var _ = Describe("AuditHandler Integration - Section 2.2 Audit APIs", func() {
 				// BLACKLIST ticker with old last_opened_at (stale, but excluded by BLACKLIST filter)
 				blackTicker := barkat.Ticker{
 					Ticker:       "BLACK1",
-					Exchange:     new("NSE"),
+					Exchange:     "NSE",
 					Timeframes:   []string{"MN", "WK", "DL"},
 					Type:         "EQUITY",
 					State:        "BLACKLIST",
@@ -318,7 +318,7 @@ var _ = Describe("AuditHandler Integration - Section 2.2 Audit APIs", func() {
 			BeforeEach(func() {
 				recentTicker := barkat.Ticker{
 					Ticker:       "FRESH1",
-					Exchange:     new("NSE"),
+					Exchange:     "NSE",
 					Timeframes:   []string{"MN", "WK", "DL"},
 					Type:         "EQUITY",
 					State:        "WATCHED",
