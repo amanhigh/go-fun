@@ -222,14 +222,14 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 						util.AssertError(w, "Alerts", "required")
 					})
 
-					It("should return 413 for more than 100 alerts", func() {
+					It("should return 400 for more than 100 alerts", func() {
 						alerts := make([]barkat.PriceAlertInput, 101)
 						for i := range alerts {
 							alerts[i] = barkat.PriceAlertInput{PairID: "941982", AlertID: fmt.Sprintf("%d", 100000+i), TriggerPrice: 1}
 						}
 						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, barkat.PriceAlertReplaceRequest{Alerts: alerts})
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusRequestEntityTooLarge))
+						util.AssertError(w, "Alerts", "max")
 					})
 				})
 			})
@@ -339,12 +339,12 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 						util.AssertError(w, "AlertID", "number")
 					})
 
-					It("should return 409 for duplicate alert_id within the request", func() {
+					It("should return 400 for duplicate alert_id within the request", func() {
 						payload := replacePayload
 						payload.Alerts[1].AlertID = payload.Alerts[0].AlertID
 						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusConflict))
+						util.AssertError(w, "Alerts", "unique")
 					})
 				})
 			})

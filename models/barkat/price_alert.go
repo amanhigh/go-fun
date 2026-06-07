@@ -48,7 +48,7 @@ type PriceAlertInput struct {
 
 // PriceAlertReplaceRequest replaces all alerts for pair IDs included in Alerts.
 type PriceAlertReplaceRequest struct {
-	Alerts []PriceAlertInput `json:"alerts" binding:"required,dive"`
+	Alerts []PriceAlertInput `json:"alerts" binding:"required,max=100,unique=AlertID,dive"`
 }
 
 // PriceAlertReplaceResult summarizes replacement counts.

@@ -2,7 +2,6 @@ package manager
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
@@ -33,15 +32,6 @@ func NewPriceAlertManager(repo repository.PriceAlertRepository) *PriceAlertManag
 }
 
 func (m *PriceAlertManagerImpl) ReplacePriceAlerts(ctx context.Context, request barkat.PriceAlertReplaceRequest) (result barkat.PriceAlertReplaceResult, httpErr common.HttpError) {
-	if len(request.Alerts) > barkat.MaxPriceAlertBatchSize {
-		return barkat.PriceAlertReplaceResult{}, common.ErrPayloadTooLarge
-	}
-
-	duplicateAlertID := findDuplicateAlertID(request.Alerts)
-	if duplicateAlertID != "" {
-		return barkat.PriceAlertReplaceResult{}, common.NewHttpError("Duplicate alert id", http.StatusConflict)
-	}
-
 	httpErr = m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		alertTickerByPairID, err := m.resolveAlertTickersForInputs(c, request.Alerts)
 		if err != nil {
@@ -127,15 +117,4 @@ func (m *PriceAlertManagerImpl) ListPriceAlerts(ctx context.Context, query barka
 			Limit:  query.Limit,
 		},
 	}, nil
-}
-
-func findDuplicateAlertID(alerts []barkat.PriceAlertInput) string {
-	seen := make(map[string]bool, len(alerts))
-	for _, alert := range alerts {
-		if seen[alert.AlertID] {
-			return alert.AlertID
-		}
-		seen[alert.AlertID] = true
-	}
-	return ""
 }
