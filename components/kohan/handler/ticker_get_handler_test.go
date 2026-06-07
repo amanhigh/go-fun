@@ -270,7 +270,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 			btcTicker = seedTicker(testCtx, db, btcTicker)
 			niftyTicker = barkat.Ticker{
 				Ticker:       "NIFTY/USDINR",
-				Exchange:     nil,
+				Exchange:     new("NSE"),
 				Timeframes:   []string{"YR", "MN"},
 				Type:         "COMPOSITE",
 				State:        "BLACKLIST",
