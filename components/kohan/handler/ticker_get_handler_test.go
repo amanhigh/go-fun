@@ -377,32 +377,23 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=NSE", nil)
 						router.ServeHTTP(w, req)
 						response := decodeTickerListResponse(w)
-						Expect(response.Tickers).To(HaveLen(1))
+						Expect(response.Tickers).To(HaveLen(2))
 						Expect(*response.Tickers[0].Exchange).To(Equal("NSE"))
-						Expect(response.Tickers[0].AlertTickerCount).To(Equal(int64(2)))
-					})
-					It("should accept minimum exchange length 1", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=N", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusOK))
-					})
-					It("should accept maximum exchange length 10", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange="+strings.Repeat("A", 10), nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusOK))
 					})
 					It("should accept uppercase letters NSE", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=NSE", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
-					It("should accept underscore in exchange code", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=FX_IDC", nil)
+					It("should filter by BINANCE exchange", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=BINANCE", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusOK))
+						response := decodeTickerListResponse(w)
+						Expect(response.Tickers).To(HaveLen(1))
+						Expect(*response.Tickers[0].Exchange).To(Equal("BINANCE"))
 					})
-					It("should accept dot in exchange code", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=N.SE", nil)
+					It("should accept NASDAQ exchange", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=NASDAQ", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusOK))
 					})
@@ -421,37 +412,12 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 					It("should return 400 for lowercase exchange", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=nse", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Exchange", "oneof")
 					})
-					It("should return 400 for exchange with colon", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=NSE:MCX", nil)
+					It("should return 400 for European exchange LSE", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=LSE", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-					})
-					It("should return 400 for exchange with hyphen", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=N-SE", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-					})
-					It("should return 400 for exchange with whitespace", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=NS%20E", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-					})
-					It("should return 400 for exchange with unsupported special character", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=NSE@", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-					})
-					It("should return 400 for exchange with digit", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=NSE1", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
-					})
-					It("should return 400 for exchange starting with digit", func() {
-						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=1NSE", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusBadRequest))
+						util.AssertError(w, "Exchange", "oneof")
 					})
 				})
 			})
