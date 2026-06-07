@@ -435,6 +435,22 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 				Expect(db.Model(&barkat.PriceAlert{}).Where("alert_ticker_id = ? AND alert_id IS NULL", createdAlertTicker.ID).Count(&count).Error).ToNot(HaveOccurred())
 				Expect(count).To(Equal(int64(1)))
 			})
+
+			It("should resolve the first alert ticker when ticker has multiple alert tickers", func() {
+				multiTicker := barkat.Ticker{Ticker: "NIFTY", Exchange: new("NSE"), Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
+				Expect(db.Create(&multiTicker).Error).ToNot(HaveOccurred())
+
+				// Create two alert tickers — the first (lower ID) should be used
+				first := barkat.AlertTicker{TickerID: multiTicker.ID, Symbol: "NIFTY_FIRST", PairID: "17940", Name: "Nifty 50", Exchange: new("NSE")}
+				Expect(db.Create(&first).Error).ToNot(HaveOccurred())
+				second := barkat.AlertTicker{TickerID: multiTicker.ID, Symbol: "NIFTY_SECOND", PairID: "17941", Name: "Nifty 50 Bank", Exchange: new("NSE")}
+				Expect(db.Create(&second).Error).ToNot(HaveOccurred())
+
+				req, w = util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+multiTicker.Ticker+"/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: 99.99})
+				router.ServeHTTP(w, req)
+				response := decodePriceAlertResponse(w, http.StatusCreated)
+				Expect(response.PairID).To(Equal(first.PairID))
+			})
 		})
 
 		Context("Field Validations", func() {
