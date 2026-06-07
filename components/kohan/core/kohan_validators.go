@@ -12,8 +12,8 @@ import (
 
 // Pre-compiled regex patterns for validation (PRD Section 3.0)
 var (
-	// Standard Ticker: uppercase A-Z, digits, dots, underscores, exclamation (e.g., "TCS", "TCS.NS", "GOLD!")
-	standardTickerRegex = regexp.MustCompile(`^[A-Z0-9][A-Z0-9._!]*$`)
+	// Standard Ticker: uppercase A-Z, digits, dots, underscores, exclamation, slash for FOREX pairs (e.g., "TCS", "TCS.NS", "EUR/USD")
+	standardTickerRegex = regexp.MustCompile(`^[A-Z0-9][A-Z0-9._!/]*$`)
 	// Composite Ticker: standard chars plus /()^+*- for composite expressions (e.g., "NIFTY/USDINR", "US10Y-US02Y")
 	compositeTickerRegex = regexp.MustCompile(`^[A-Z0-9(][A-Z0-9._!()/^+*-]*$`)
 	// Ticker Path: permissive regex for URI path params (composite chars always allowed since Type is unavailable)

@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS price_alerts;
+DROP TABLE IF EXISTS alert_tickers;
+DROP TABLE IF EXISTS tickers;

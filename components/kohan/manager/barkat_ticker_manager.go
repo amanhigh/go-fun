@@ -116,13 +116,8 @@ func (m *BarkatTickerManagerImpl) PatchTickerLastOpened(ctx context.Context, tic
 
 func (m *BarkatTickerManagerImpl) DeleteTicker(ctx context.Context, ticker string) common.HttpError {
 	return m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		// Fetch existing ticker to get internal ID
-		existing, httpErr := m.GetTicker(c, ticker)
-		if httpErr != nil {
-			return httpErr
-		}
-		// Delete by internal ID — cascade to AlertTickers/PriceAlerts is handled
+		// Cascade to AlertTickers/PriceAlerts is handled
 		// by DB foreign key constraints (ON DELETE CASCADE in production DBs).
-		return m.repo.DeleteById(c, existing.ID, &barkat.Ticker{})
+		return m.repo.DeleteByExternalId(c, ticker, &barkat.Ticker{})
 	})
 }

@@ -23,6 +23,8 @@ type KohanServerLifecycle struct {
 	TagHandler         handler.TagHandler         `container:"type"`
 	TickerHandler      handler.TickerHandler      `container:"type"`
 	AlertTickerHandler handler.AlertTickerHandler `container:"type"`
+	PriceAlertHandler  handler.PriceAlertHandler  `container:"type"`
+	AuditHandler       handler.AuditHandler       `container:"type"`
 	IndexPortal        handler.IndexPortal        `container:"type"`
 	JournalPortal      handler.JournalPortal      `container:"type"`
 }
@@ -43,6 +45,8 @@ func NewKohanServerLifecycle(osHandler handler.OSHandler,
 	noteHandler handler.NoteHandler, tagHandler handler.TagHandler,
 	tickerHandler handler.TickerHandler,
 	alertTickerHandler handler.AlertTickerHandler,
+	priceAlertHandler handler.PriceAlertHandler,
+	auditHandler handler.AuditHandler,
 	portalHandlers PortalHandlers) *KohanServerLifecycle {
 	return &KohanServerLifecycle{
 		OSHandler:          osHandler,
@@ -52,6 +56,8 @@ func NewKohanServerLifecycle(osHandler handler.OSHandler,
 		TagHandler:         tagHandler,
 		TickerHandler:      tickerHandler,
 		AlertTickerHandler: alertTickerHandler,
+		PriceAlertHandler:  priceAlertHandler,
+		AuditHandler:       auditHandler,
 		IndexPortal:        portalHandlers.IndexPortal,
 		JournalPortal:      portalHandlers.JournalPortal,
 	}
@@ -93,9 +99,16 @@ func (s *KohanServerLifecycle) registerBarkatRoutes(engine *gin.Engine) {
 	handler.SetupTickerRoutes(ticker, s.TickerHandler)
 	// HACK: Single Route Registration
 	handler.SetupTickerAlertRoutes(ticker, s.AlertTickerHandler)
+	handler.SetupTickerPriceAlertRoutes(ticker, s.PriceAlertHandler)
 
 	alertTicker := engine.Group(barkat.AlertTickerBase)
 	handler.SetupAlertTickerRoutes(alertTicker, s.AlertTickerHandler)
+
+	alert := engine.Group(barkat.PriceAlertBase)
+	handler.SetupPriceAlertRoutes(alert, s.PriceAlertHandler)
+
+	audits := engine.Group(barkat.AuditBase)
+	handler.SetupAuditRoutes(audits, s.AuditHandler)
 }
 
 func (s *KohanServerLifecycle) registerPortalRoutes(engine *gin.Engine) {

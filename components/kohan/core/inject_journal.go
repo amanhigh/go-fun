@@ -12,7 +12,6 @@ import (
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/gin-gonic/gin"
 	"github.com/golobby/container/v3"
-	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -34,7 +33,7 @@ func CreateTestBarkatDB() (*gorm.DB, error) {
 	// Use AutoMigrate for test database (faster and more reliable for in-memory DB)
 	if err := db.AutoMigrate(
 		&barkat.Journal{}, &barkat.Image{}, &barkat.Tag{}, &barkat.Note{},
-		&barkat.Ticker{}, &barkat.AlertTicker{},
+		&barkat.Ticker{}, &barkat.AlertTicker{}, &barkat.PriceAlert{},
 	); err != nil {
 		return nil, fmt.Errorf("failed to auto-migrate barkat tables: %w", err)
 	}
@@ -43,22 +42,6 @@ func CreateTestBarkatDB() (*gorm.DB, error) {
 }
 
 // ---- Journal Providers ----
-
-func (ki *KohanInjector) provideBarkatDB() (*gorm.DB, error) {
-	log.Info().Str("db_path", ki.config.Barkat.DbPath).Msg("Opening Barkat database")
-	// Create database first
-	db, err := util.CreateSqliteDb(ki.config.Barkat.DbPath, logger.Warn)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create barkat db: %w", err)
-	}
-
-	// Run migrations using the created GORM DB
-	if err := util.RunMigrations(db, migrationFS, "migration"); err != nil {
-		return nil, fmt.Errorf("failed to run barkat migrations: %w", err)
-	}
-
-	return db, nil
-}
 
 //nolint:revive
 func ProvideKohanLifecycle(
@@ -69,6 +52,8 @@ func ProvideKohanLifecycle(
 	tagHandler handler.TagHandler,
 	tickerHandler handler.TickerHandler,
 	alertTickerHandler handler.AlertTickerHandler,
+	priceAlertHandler handler.PriceAlertHandler,
+	auditHandler handler.AuditHandler,
 	portalHandlers PortalHandlers,
 ) util.ServerLifecycle {
 	return &KohanServerLifecycle{
@@ -79,6 +64,8 @@ func ProvideKohanLifecycle(
 		TagHandler:         tagHandler,
 		TickerHandler:      tickerHandler,
 		AlertTickerHandler: alertTickerHandler,
+		PriceAlertHandler:  priceAlertHandler,
+		AuditHandler:       auditHandler,
 		IndexPortal:        portalHandlers.IndexPortal,
 		JournalPortal:      portalHandlers.JournalPortal,
 	}
@@ -153,11 +140,6 @@ func provideTagHandler(mgr manager.TagManager) handler.TagHandler {
 
 // registerJournalDependencies registers all dependencies for the journal feature.
 func (ki *KohanInjector) registerJournalDependencies() error {
-	container.MustSingleton(ki.di, func() config.BarkatConfig {
-		return ki.config.Barkat
-	})
-	container.MustSingleton(ki.di, ki.provideBarkatDB)
-
 	// Journal
 	container.MustSingleton(ki.di, provideJournalRepository)
 	container.MustSingleton(ki.di, provideJournalManager)

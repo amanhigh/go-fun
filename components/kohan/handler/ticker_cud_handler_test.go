@@ -237,6 +237,15 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 						_, response := createTickerRequest(router, payload)
 						Expect(response.Ticker).To(Equal("NIFTY^USDINR"))
 					})
+
+					It("should accept FOREX slash ticker EUR/USD with type FX", func() {
+						payload := validTickerPayload
+						payload.Ticker = "EUR/USD"
+						payload.Type = "FX"
+						_, response := createTickerRequest(router, payload)
+						Expect(response.Ticker).To(Equal("EUR/USD"))
+						Expect(response.Type).To(Equal("FX"))
+					})
 				})
 
 				Context("Bad Values", func() {
@@ -296,9 +305,9 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "ticker")
 					})
-					It("should return 400 for composite expression when type is not COMPOSITE", func() {
+					It("should return 400 for composite plus expression when type is not COMPOSITE", func() {
 						payload := validTickerPayload
-						payload.Ticker = "NIFTY/USDINR"
+						payload.Ticker = "NIFTY+USDINR"
 						payload.Type = "EQUITY"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)

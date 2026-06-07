@@ -82,11 +82,35 @@ func SetupTickerAlertRoutes(ticker *gin.RouterGroup, alertTickerHandler AlertTic
 	}
 }
 
+// SetupTickerPriceAlertRoutes configures nested price alert routes under primary tickers.
+func SetupTickerPriceAlertRoutes(ticker *gin.RouterGroup, priceAlertHandler PriceAlertHandler) {
+	{
+		ticker.POST("/:ticker/alerts", priceAlertHandler.HandleCreatePendingPriceAlert)
+	}
+}
+
 // SetupAlertTickerRoutes configures top-level Alert ticker routes.
 func SetupAlertTickerRoutes(alertTicker *gin.RouterGroup, alertTickerHandler AlertTickerHandler) {
 	{
 		alertTicker.GET("", alertTickerHandler.HandleListAlertTickers)
 		alertTicker.GET("/:symbol", alertTickerHandler.HandleGetAlertTicker)
 		alertTicker.DELETE("/:symbol", alertTickerHandler.HandleDeleteAlertTicker)
+	}
+}
+
+// SetupPriceAlertRoutes configures top-level price alert routes.
+func SetupPriceAlertRoutes(alert *gin.RouterGroup, priceAlertHandler PriceAlertHandler) {
+	{
+		alert.GET("", priceAlertHandler.HandleListPriceAlerts)
+		alert.PUT("", priceAlertHandler.HandleReplacePriceAlerts)
+		alert.DELETE("/:alert-id", priceAlertHandler.HandleDeletePriceAlert)
+	}
+}
+
+// SetupAuditRoutes configures Barkat audit routes.
+func SetupAuditRoutes(audits *gin.RouterGroup, auditHandler AuditHandler) {
+	{
+		audits.GET("", auditHandler.HandleListAudits)
+		audits.GET("/:audit-id/results", auditHandler.HandleExecuteAudit)
 	}
 }

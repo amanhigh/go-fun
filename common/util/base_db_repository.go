@@ -22,6 +22,7 @@ type BaseDbRepositoryInterface interface {
 	GetCount(c context.Context, entity any) (count int64, err common.HttpError)
 	UseOrCreateTx(c context.Context, run DbRun, readOnly ...bool) (err common.HttpError)
 	GetByExternalId(c context.Context, externalId string, entity any) (err common.HttpError)
+	DeleteByExternalId(c context.Context, externalId string, entity any) (err common.HttpError)
 }
 
 type BaseDbRepository struct {
@@ -79,9 +80,10 @@ func (b *BaseDbRepository) Update(c context.Context, entity any, omit ...string)
 	return
 }
 
-func (b *BaseDbRepository) DeleteById(c context.Context, id, entity any) (err common.HttpError) {
+// DeleteBy deletes an entity by a configurable condition and returns ErrNotFound if no rows affected.
+func (b *BaseDbRepository) DeleteBy(c context.Context, entity any, condition string, arg any) common.HttpError {
 	query := b.SafeTx(c)
-	result := query.Delete(entity, "id=?", id)
+	result := query.Delete(entity, condition, arg)
 	if result.Error != nil {
 		return GormErrorMapper(result.Error)
 	}
@@ -89,6 +91,14 @@ func (b *BaseDbRepository) DeleteById(c context.Context, id, entity any) (err co
 		return common.ErrNotFound
 	}
 	return nil
+}
+
+func (b *BaseDbRepository) DeleteById(c context.Context, id, entity any) (err common.HttpError) {
+	return b.DeleteBy(c, entity, "id=?", id)
+}
+
+func (b *BaseDbRepository) DeleteByExternalId(c context.Context, externalId string, entity any) (err common.HttpError) {
+	return b.DeleteBy(c, entity, "external_id = ?", externalId)
 }
 
 func (b *BaseDbRepository) GetCount(c context.Context, entity any) (count int64, err common.HttpError) {

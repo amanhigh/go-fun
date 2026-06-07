@@ -12,6 +12,7 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/handler"
 	handlerMocks "github.com/amanhigh/go-fun/components/kohan/handler/mocks"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/components/kohan/manager/audit"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/gin-gonic/gin"
@@ -88,6 +89,14 @@ var _ = BeforeSuite(func() {
 	alertTickerRepo := repository.NewAlertTickerRepository(db)
 	alertTickerMgr := manager.NewAlertTickerManager(alertTickerRepo)
 	alertTickerHandler := handler.NewAlertTickerHandler(alertTickerMgr)
+	priceAlertRepo := repository.NewPriceAlertRepository(db)
+	priceAlertMgr := manager.NewPriceAlertManager(priceAlertRepo)
+	priceAlertHandler := handler.NewPriceAlertHandler(priceAlertMgr)
+	auditRepo := repository.NewAuditRepository(db)
+	auditRegistry := audit.NewPluginRegistry()
+	Expect(auditRegistry.RegisterPlugin(audit.NewAlertCoveragePlugin(auditRepo))).ToNot(HaveOccurred())
+	auditMgr := manager.NewAuditManager(auditRegistry)
+	auditHandler := handler.NewAuditHandler(auditMgr)
 	indexPortal := handler.NewIndexPortal()
 	journalPortal := handler.NewJournalPortal(testImageDir)
 
@@ -101,6 +110,8 @@ var _ = BeforeSuite(func() {
 		tagHandler,
 		tickerHandler,
 		alertTickerHandler,
+		priceAlertHandler,
+		auditHandler,
 		core.PortalHandlers{
 			IndexPortal:   indexPortal,
 			JournalPortal: journalPortal,

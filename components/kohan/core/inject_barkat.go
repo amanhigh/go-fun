@@ -3,8 +3,10 @@ package core
 import (
 	"github.com/amanhigh/go-fun/components/kohan/handler"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/components/kohan/manager/audit"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/golobby/container/v3"
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
 
@@ -36,6 +38,42 @@ func provideAlertTickerHandler(mgr manager.AlertTickerManager) handler.AlertTick
 	return handler.NewAlertTickerHandler(mgr)
 }
 
+// ---- Price Alert Providers ----
+
+func providePriceAlertRepository(db *gorm.DB) repository.PriceAlertRepository {
+	return repository.NewPriceAlertRepository(db)
+}
+
+func providePriceAlertManager(repo repository.PriceAlertRepository) manager.PriceAlertManager {
+	return manager.NewPriceAlertManager(repo)
+}
+
+func providePriceAlertHandler(mgr manager.PriceAlertManager) handler.PriceAlertHandler {
+	return handler.NewPriceAlertHandler(mgr)
+}
+
+// ---- Audit Providers ----
+
+func provideAuditRepository(db *gorm.DB) repository.AuditRepository {
+	return repository.NewAuditRepository(db)
+}
+
+func provideAuditPluginRegistry(repo repository.AuditRepository) *audit.PluginRegistry {
+	registry := audit.NewPluginRegistry()
+	if err := registry.RegisterPlugin(audit.NewAlertCoveragePlugin(repo)); err != nil {
+		log.Fatal().Err(err).Msg("failed to register audit plugin")
+	}
+	return registry
+}
+
+func provideAuditManager(registry *audit.PluginRegistry) manager.AuditManager {
+	return manager.NewAuditManager(registry)
+}
+
+func provideAuditHandler(mgr manager.AuditManager) handler.AuditHandler {
+	return handler.NewAuditHandler(mgr)
+}
+
 // registerBarkatDependencies registers all dependencies for the Barkat ticker feature.
 func (ki *KohanInjector) registerBarkatDependencies() error {
 	// Ticker
@@ -47,6 +85,17 @@ func (ki *KohanInjector) registerBarkatDependencies() error {
 	container.MustSingleton(ki.di, provideAlertTickerRepository)
 	container.MustSingleton(ki.di, provideAlertTickerManager)
 	container.MustSingleton(ki.di, provideAlertTickerHandler)
+
+	// Price Alert
+	container.MustSingleton(ki.di, providePriceAlertRepository)
+	container.MustSingleton(ki.di, providePriceAlertManager)
+	container.MustSingleton(ki.di, providePriceAlertHandler)
+
+	// Audit
+	container.MustSingleton(ki.di, provideAuditRepository)
+	container.MustSingleton(ki.di, provideAuditPluginRegistry)
+	container.MustSingleton(ki.di, provideAuditManager)
+	container.MustSingleton(ki.di, provideAuditHandler)
 
 	return nil
 }
