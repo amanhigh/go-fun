@@ -18,6 +18,8 @@ type AuditID string
 const (
 	// AuditIDAlertCoverage identifies the Alert Coverage audit plugin.
 	AuditIDAlertCoverage AuditID = "alert-coverage"
+	// AuditIDStaleReview identifies the Stale Review audit plugin.
+	AuditIDStaleReview AuditID = "stale-review"
 )
 
 const (
@@ -27,6 +29,13 @@ const (
 	AuditFindingNoAlerts = "NO_ALERTS"
 	// AuditFindingSingleAlert identifies mapped tickers with only one price alert.
 	AuditFindingSingleAlert = "SINGLE_ALERT"
+	// AuditFindingStaleTicker identifies tickers not opened within the review window.
+	AuditFindingStaleTicker = "STALE_TICKER"
+)
+
+const (
+	// DefaultStaleReviewThresholdDays is the default number of days after which a ticker is considered stale.
+	DefaultStaleReviewThresholdDays = 90
 )
 
 const (
