@@ -57,7 +57,7 @@ func (r *TickerRepositoryImpl) applyTickerFilters(tx *gorm.DB, query barkat.Tick
 	where := barkat.Ticker{}
 	if query.Exchange != "" {
 		exchange := query.Exchange
-		where.Exchange = &exchange
+		where.Exchange = exchange
 	}
 	if query.Type != "" {
 		where.Type = query.Type
