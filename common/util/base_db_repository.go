@@ -80,9 +80,9 @@ func (b *BaseDbRepository) Update(c context.Context, entity any, omit ...string)
 }
 
 // DeleteBy deletes an entity by a configurable condition and returns ErrNotFound if no rows affected.
-func (b *BaseDbRepository) DeleteBy(c context.Context, entity any, condition string, args ...any) common.HttpError {
+func (b *BaseDbRepository) DeleteBy(c context.Context, entity any, condition string, arg any) common.HttpError {
 	query := b.SafeTx(c)
-	result := query.Delete(entity, condition, args...)
+	result := query.Delete(entity, condition, arg)
 	if result.Error != nil {
 		return GormErrorMapper(result.Error)
 	}
