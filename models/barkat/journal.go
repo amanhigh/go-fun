@@ -27,7 +27,7 @@ const (
 type Journal struct {
 	ID         uint64     `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
 	ExternalID string     `gorm:"column:external_id;uniqueIndex;not null" json:"id"`
-	Ticker     string     `gorm:"column:ticker;not null;index:idx_journal_ticker" json:"ticker" binding:"required,max=10,ticker"`
+	Ticker     string     `gorm:"column:ticker;not null;index:idx_journal_ticker" json:"ticker" binding:"required,max=30,ticker"`
 	Sequence   string     `gorm:"column:sequence;not null" json:"sequence" binding:"required,oneof=MWD YR WDH"`
 	Type       string     `gorm:"column:type;not null" json:"type" binding:"required,oneof=REJECTED TAKEN"`
 	Status     string     `gorm:"column:status;not null" json:"status" binding:"required,oneof=SET RUNNING SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
@@ -58,7 +58,7 @@ type JournalQuery struct {
 	common.Pagination
 	common.Sort
 	Search        string `form:"search" binding:"omitempty,min=1,max=10,alphanum"`
-	Ticker        string `form:"ticker" binding:"omitempty,min=1,max=10,ticker"`
+	Ticker        string `form:"ticker" binding:"omitempty,min=1,max=30,ticker"`
 	Type          string `form:"type" binding:"omitempty,oneof=REJECTED TAKEN"`
 	Status        string `form:"status" binding:"omitempty,oneof=SET RUNNING SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
 	Sequence      string `form:"sequence" binding:"omitempty,oneof=MWD YR WDH"`

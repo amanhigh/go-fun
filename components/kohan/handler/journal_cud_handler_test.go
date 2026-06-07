@@ -250,15 +250,15 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						Expect(response.Ticker).To(Equal("TCS.NS"))
 					})
 
-					It("should accept ticker at max length (10)", func() {
+					It("should accept ticker at max length (30)", func() {
 						journal := barkat.Journal{
-							Ticker: "1234567890", Sequence: "MWD", Type: "REJECTED", Status: "FAIL",
+							Ticker: "123456789012345678901234567890", Sequence: "MWD", Type: "REJECTED", Status: "FAIL",
 							Images: standardImages,
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
-						Expect(response.Ticker).To(HaveLen(10))
+						Expect(response.Ticker).To(HaveLen(30))
 					})
 
 					It("should accept ticker with underscore", func() {
@@ -292,11 +292,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 						util.AssertError(w, "Ticker", "required")
 					})
 
-					It("should return 400 for ticker exceeding max length (11)", func() {
-						journal := barkat.Journal{Ticker: "12345678901", Sequence: "MWD", Type: "REJECTED", Status: "FAIL"}
+					It("should return 400 for ticker exceeding max length (31)", func() {
+						journal := barkat.Journal{Ticker: "1234567890123456789012345678901", Sequence: "MWD", Type: "REJECTED", Status: "FAIL"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Ticker", "max (10)")
+						util.AssertError(w, "Ticker", "max (30)")
 					})
 
 					It("should return 400 for lowercase ticker (PRD: uppercase only)", func() {
