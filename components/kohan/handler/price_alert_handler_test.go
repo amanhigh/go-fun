@@ -51,18 +51,6 @@ func newPriceAlertTestRouter(alertTickerHandler handler.AlertTickerHandler, pric
 	return router
 }
 
-func createPriceAlertReplaceRequest(router *gin.Engine, payload any) (*httptest.ResponseRecorder, barkat.PriceAlertReplaceResult) {
-	req, w := util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
-	router.ServeHTTP(w, req)
-	return w, decodePriceAlertReplaceResponse(w)
-}
-
-func createPendingPriceAlertRequest(router *gin.Engine, ticker string, payload any) (*httptest.ResponseRecorder, barkat.PriceAlert) {
-	req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+ticker+"/alerts", payload)
-	router.ServeHTTP(w, req)
-	return w, decodePriceAlertResponse(w, http.StatusCreated)
-}
-
 func seedPriceAlert(ctx context.Context, db *gorm.DB, alert barkat.PriceAlert) barkat.PriceAlert {
 	Expect(db.WithContext(ctx).Create(&alert).Error).ToNot(HaveOccurred())
 	return alert
@@ -80,7 +68,8 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 		db                 *gorm.DB
 		createdTicker      barkat.Ticker
 		createdAlertTicker barkat.AlertTicker
-		replacePayload     barkat.PriceAlertReplaceRequest
+		req                *http.Request
+		w                  *httptest.ResponseRecorder
 	)
 
 	BeforeEach(func() {
@@ -110,11 +99,6 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 		}
 		Expect(db.Create(&createdAlertTicker).Error).ToNot(HaveOccurred())
 
-		replacePayload = barkat.PriceAlertReplaceRequest{Alerts: []barkat.PriceAlertInput{
-			{PairID: "941982", AlertID: "158741518", TriggerPrice: 1.0632},
-			{PairID: "941982", AlertID: "158741514", TriggerPrice: 1.2401},
-		}}
-
 		alertTickerRepo := repository.NewAlertTickerRepository(db)
 		alertTickerMgr := manager.NewAlertTickerManager(alertTickerRepo)
 		alertTickerHandler = handler.NewAlertTickerHandler(alertTickerMgr)
@@ -135,13 +119,23 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 	// 2.2.3.1 PUT /v1/api/alerts - Replace Price Alerts
 	// ============================================================================
 	Describe("PUT /v1/api/alerts - Replace Price Alerts (2.2.3.1)", func() {
+		var replacePayload barkat.PriceAlertReplaceRequest
+
+		BeforeEach(func() {
+			replacePayload = barkat.PriceAlertReplaceRequest{Alerts: []barkat.PriceAlertInput{
+				{PairID: "941982", AlertID: "158741518", TriggerPrice: 1.0632},
+				{PairID: "941982", AlertID: "158741514", TriggerPrice: 1.2401},
+			}}
+		})
+
 		Context("Happy Path", func() {
 			Context("with complete refreshed alert rows", func() {
 				var response barkat.PriceAlertReplaceResult
-				var w *httptest.ResponseRecorder
 
 				BeforeEach(func() {
-					w, response = createPriceAlertReplaceRequest(router, replacePayload)
+					req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, replacePayload)
+					router.ServeHTTP(w, req)
+					response = decodePriceAlertReplaceResponse(w)
 				})
 
 				It("should return 200 OK", func() { Expect(w.Code).To(Equal(http.StatusOK)) })
@@ -169,7 +163,9 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 				seedPriceAlert(testCtx, db, barkat.PriceAlert{AlertTickerID: createdAlertTicker.ID, AlertID: &oldID, TriggerPrice: 10})
 				seedPriceAlert(testCtx, db, barkat.PriceAlert{AlertTickerID: otherAlertTicker.ID, AlertID: &otherID, TriggerPrice: 20})
 
-				_, response := createPriceAlertReplaceRequest(router, replacePayload)
+				req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, replacePayload)
+				router.ServeHTTP(w, req)
+				response := decodePriceAlertReplaceResponse(w)
 				Expect(response.AlertsCreated).To(Equal(2))
 				var oldCount int64
 				Expect(db.Model(&barkat.PriceAlert{}).Where("alert_id = ?", oldID).Count(&oldCount).Error).ToNot(HaveOccurred())
@@ -178,122 +174,236 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 				Expect(db.Model(&barkat.PriceAlert{}).Where("alert_id = ?", otherID).Count(&otherCount).Error).ToNot(HaveOccurred())
 				Expect(otherCount).To(Equal(int64(1)))
 			})
+
+			It("should replace alerts across multiple submitted pair ids", func() {
+				otherTicker := barkat.Ticker{Ticker: "NIFTY", Exchange: new("NSE"), Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
+				Expect(db.Create(&otherTicker).Error).ToNot(HaveOccurred())
+				otherAlertTicker := barkat.AlertTicker{TickerID: otherTicker.ID, Symbol: "NIFTY50", PairID: "17940", Name: "Nifty 50"}
+				Expect(db.Create(&otherAlertTicker).Error).ToNot(HaveOccurred())
+
+				multiPairPayload := barkat.PriceAlertReplaceRequest{Alerts: []barkat.PriceAlertInput{
+					{PairID: createdAlertTicker.PairID, AlertID: "158741518", TriggerPrice: 1.0632},
+					{PairID: otherAlertTicker.PairID, AlertID: "158741515", TriggerPrice: 200.50},
+				}}
+				req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, multiPairPayload)
+				router.ServeHTTP(w, req)
+				response := decodePriceAlertReplaceResponse(w)
+				Expect(response.PairsReplaced).To(Equal(2))
+				Expect(response.AlertsCreated).To(Equal(2))
+			})
 		})
 
 		Context("Field Validations", func() {
 			Context("Alerts Field", func() {
-				It("should return 400 for missing alerts", func() {
-					req, w := rawTickerRequest(http.MethodPut, barkat.PriceAlertBase, `{}`)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "Alerts", "required")
+				Context("Allowed Values", func() {
+					It("should accept empty alerts array", func() {
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, barkat.PriceAlertReplaceRequest{Alerts: []barkat.PriceAlertInput{}})
+						router.ServeHTTP(w, req)
+						response := decodePriceAlertReplaceResponse(w)
+						Expect(response.PairsReplaced).To(Equal(0))
+						Expect(response.AlertsCreated).To(Equal(0))
+					})
+
+					It("should accept exactly 100 alerts", func() {
+						alerts := make([]barkat.PriceAlertInput, 100)
+						for i := range alerts {
+							alerts[i] = barkat.PriceAlertInput{PairID: "941982", AlertID: fmt.Sprintf("%d", 100000+i), TriggerPrice: 1}
+						}
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, barkat.PriceAlertReplaceRequest{Alerts: alerts})
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
 				})
-				It("should accept empty alerts array", func() {
-					_, response := createPriceAlertReplaceRequest(router, barkat.PriceAlertReplaceRequest{Alerts: []barkat.PriceAlertInput{}})
-					Expect(response.PairsReplaced).To(Equal(0))
-					Expect(response.AlertsCreated).To(Equal(0))
-				})
-				It("should return 413 for more than 100 alerts", func() {
-					alerts := make([]barkat.PriceAlertInput, 101)
-					for i := range alerts {
-						alerts[i] = barkat.PriceAlertInput{PairID: "941982", AlertID: fmt.Sprintf("%d", 100000+i), TriggerPrice: 1}
-					}
-					req, w := util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, barkat.PriceAlertReplaceRequest{Alerts: alerts})
-					router.ServeHTTP(w, req)
-					Expect(w.Code).To(Equal(http.StatusRequestEntityTooLarge))
+
+				Context("Bad Values", func() {
+					It("should return 400 for missing alerts", func() {
+						req, w = rawTickerRequest(http.MethodPut, barkat.PriceAlertBase, `{}`)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Alerts", "required")
+					})
+
+					It("should return 413 for more than 100 alerts", func() {
+						alerts := make([]barkat.PriceAlertInput, 101)
+						for i := range alerts {
+							alerts[i] = barkat.PriceAlertInput{PairID: "941982", AlertID: fmt.Sprintf("%d", 100000+i), TriggerPrice: 1}
+						}
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, barkat.PriceAlertReplaceRequest{Alerts: alerts})
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusRequestEntityTooLarge))
+					})
 				})
 			})
 
 			Context("Pair ID Field", func() {
-				It("should return 400 for missing pair_id", func() {
-					payload := replacePayload
-					payload.Alerts[0].PairID = ""
-					req, w := util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "PairID", "required")
+				Context("Allowed Values", func() {
+					It("should accept minimum pair_id length 1", func() {
+						minPairAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MINP", PairID: "1", Name: "Min Pair", Exchange: new("NSE")}
+						Expect(db.Create(&minPairAlertTicker).Error).ToNot(HaveOccurred())
+
+						payload := replacePayload
+						payload.Alerts[0].PairID = "1"
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+
+					It("should accept maximum pair_id length 64", func() {
+						maxPair := strings.Repeat("1", 64)
+						maxPairAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MAXP", PairID: maxPair, Name: "Max Pair", Exchange: new("NSE")}
+						Expect(db.Create(&maxPairAlertTicker).Error).ToNot(HaveOccurred())
+
+						payload := replacePayload
+						payload.Alerts[0].PairID = maxPair
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
 				})
-				It("should return 400 for pair_id exceeding 64 characters", func() {
-					payload := replacePayload
-					payload.Alerts[0].PairID = strings.Repeat("1", 65)
-					req, w := util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "PairID", "max")
-				})
-				It("should return 400 for non-digit pair_id", func() {
-					payload := replacePayload
-					payload.Alerts[0].PairID = "94A982"
-					req, w := util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "PairID", "number")
-				})
-				It("should return 404 for unresolved pair_id", func() {
-					payload := replacePayload
-					payload.Alerts[0].PairID = "999999"
-					req, w := util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
-					router.ServeHTTP(w, req)
-					Expect(w.Code).To(Equal(http.StatusNotFound))
-				})
-				It("should return 409 for ambiguous pair_id ownership", func() {
-					duplicate := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCIXDUP", PairID: createdAlertTicker.PairID, Name: "Duplicate"}
-					Expect(db.Create(&duplicate).Error).To(HaveOccurred())
+
+				Context("Bad Values", func() {
+					It("should return 400 for missing pair_id", func() {
+						payload := replacePayload
+						payload.Alerts[0].PairID = ""
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "PairID", "required")
+					})
+
+					It("should return 400 for pair_id exceeding 64 characters", func() {
+						payload := replacePayload
+						payload.Alerts[0].PairID = strings.Repeat("1", 65)
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "PairID", "max")
+					})
+
+					It("should return 400 for non-digit pair_id", func() {
+						payload := replacePayload
+						payload.Alerts[0].PairID = "94A982"
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "PairID", "number")
+					})
+
+					It("should return 404 for unresolved pair_id", func() {
+						payload := replacePayload
+						payload.Alerts[0].PairID = "999999"
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusNotFound))
+					})
 				})
 			})
 
 			Context("Alert ID Field", func() {
-				It("should return 400 for missing alert_id", func() {
-					payload := replacePayload
-					payload.Alerts[0].AlertID = ""
-					req, w := util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "AlertID", "required")
+				Context("Allowed Values", func() {
+					It("should accept minimum alert_id length 1", func() {
+						payload := replacePayload
+						payload.Alerts[0].AlertID = "1"
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+
+					It("should accept maximum alert_id length 128", func() {
+						payload := replacePayload
+						payload.Alerts[0].AlertID = strings.Repeat("1", 128)
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
 				})
-				It("should return 400 for alert_id exceeding 128 characters", func() {
-					payload := replacePayload
-					payload.Alerts[0].AlertID = strings.Repeat("1", 129)
-					req, w := util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "AlertID", "max")
-				})
-				It("should return 400 for non-digit alert_id", func() {
-					payload := replacePayload
-					payload.Alerts[0].AlertID = "158A"
-					req, w := util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "AlertID", "number")
-				})
-				It("should return 409 for duplicate alert_id within the request", func() {
-					payload := replacePayload
-					payload.Alerts[1].AlertID = payload.Alerts[0].AlertID
-					req, w := util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
-					router.ServeHTTP(w, req)
-					Expect(w.Code).To(Equal(http.StatusConflict))
+
+				Context("Bad Values", func() {
+					It("should return 400 for missing alert_id", func() {
+						payload := replacePayload
+						payload.Alerts[0].AlertID = ""
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "AlertID", "required")
+					})
+
+					It("should return 400 for alert_id exceeding 128 characters", func() {
+						payload := replacePayload
+						payload.Alerts[0].AlertID = strings.Repeat("1", 129)
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "AlertID", "max")
+					})
+
+					It("should return 400 for non-digit alert_id", func() {
+						payload := replacePayload
+						payload.Alerts[0].AlertID = "158A"
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "AlertID", "number")
+					})
+
+					It("should return 409 for duplicate alert_id within the request", func() {
+						payload := replacePayload
+						payload.Alerts[1].AlertID = payload.Alerts[0].AlertID
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusConflict))
+					})
 				})
 			})
 
 			Context("Trigger Price Field", func() {
-				It("should return 400 for missing trigger_price", func() {
-					req, w := rawTickerRequest(http.MethodPut, barkat.PriceAlertBase, `{"alerts":[{"pair_id":"941982","alert_id":"158741518"}]}`)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "TriggerPrice", "required")
+				Context("Allowed Values", func() {
+					It("should accept positive decimal trigger_price", func() {
+						payload := replacePayload
+						payload.Alerts[0].TriggerPrice = 0.0001
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
+						router.ServeHTTP(w, req)
+						response := decodePriceAlertReplaceResponse(w)
+						Expect(response.AlertsCreated).To(Equal(2))
+					})
 				})
-				It("should return 400 for zero trigger_price", func() {
-					payload := replacePayload
-					payload.Alerts[0].TriggerPrice = 0
-					req, w := util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "TriggerPrice", "required")
+
+				Context("Bad Values", func() {
+					It("should return 400 for missing trigger_price", func() {
+						req, w = rawTickerRequest(http.MethodPut, barkat.PriceAlertBase, `{"alerts":[{"pair_id":"941982","alert_id":"158741518"}]}`)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "TriggerPrice", "required")
+					})
+
+					It("should return 400 for zero trigger_price", func() {
+						payload := replacePayload
+						payload.Alerts[0].TriggerPrice = 0
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "TriggerPrice", "required")
+					})
+
+					It("should return 400 for negative trigger_price", func() {
+						payload := replacePayload
+						payload.Alerts[0].TriggerPrice = -1
+						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "TriggerPrice", "gt")
+					})
+
+					It("should return 400 for non-numeric trigger_price", func() {
+						req, w = rawTickerRequest(http.MethodPut, barkat.PriceAlertBase, `{"alerts":[{"pair_id":"941982","alert_id":"158741518","trigger_price":"1.2"}]}`)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
 				})
-				It("should return 400 for negative trigger_price", func() {
-					payload := replacePayload
-					payload.Alerts[0].TriggerPrice = -1
-					req, w := util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
-					router.ServeHTTP(w, req)
-					util.AssertError(w, "TriggerPrice", "gt")
-				})
-				It("should return 400 for non-numeric trigger_price", func() {
-					req, w := rawTickerRequest(http.MethodPut, barkat.PriceAlertBase, `{"alerts":[{"pair_id":"941982","alert_id":"158741518","trigger_price":"1.2"}]}`)
-					router.ServeHTTP(w, req)
-					Expect(w.Code).To(Equal(http.StatusBadRequest))
-				})
+			})
+		})
+
+		Context("Errors", func() {
+			It("should return 400 for malformed JSON", func() {
+				req, w = rawTickerRequest(http.MethodPut, barkat.PriceAlertBase, `{"alerts":[`)
+				router.ServeHTTP(w, req)
+				Expect(w.Code).To(Equal(http.StatusBadRequest))
+			})
+
+			It("should return 400 for null body", func() {
+				req, w = rawTickerRequest(http.MethodPut, barkat.PriceAlertBase, "null")
+				router.ServeHTTP(w, req)
+				Expect(w.Code).To(Equal(http.StatusBadRequest))
 			})
 		})
 	})
@@ -304,13 +414,19 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 	Describe("POST /v1/api/tickers/{ticker}/alerts - Create Pending Price Alert (2.2.3.2)", func() {
 		Context("Happy Path", func() {
 			var response barkat.PriceAlert
-			var w *httptest.ResponseRecorder
 
 			BeforeEach(func() {
-				w, response = createPendingPriceAlertRequest(router, createdTicker.Ticker, barkat.PendingPriceAlertRequest{TriggerPrice: 42.25})
+				req, w = util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: 42.25})
+				router.ServeHTTP(w, req)
+				response = decodePriceAlertResponse(w, http.StatusCreated)
 			})
 
 			It("should return 201 Created", func() { Expect(w.Code).To(Equal(http.StatusCreated)) })
+			It("should return Envelope success", func() {
+				var envelope common.Envelope[barkat.PriceAlert]
+				util.AssertSuccess(w, http.StatusCreated, &envelope)
+				Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
+			})
 			It("should derive pair_id from the parent ticker mapping", func() { Expect(response.PairID).To(Equal(createdAlertTicker.PairID)) })
 			It("should omit canonical alert_id until refresh", func() { Expect(response.AlertID).To(BeNil()) })
 			It("should preserve trigger_price", func() { Expect(response.TriggerPrice).To(Equal(42.25)) })
@@ -322,37 +438,86 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 		})
 
 		Context("Field Validations", func() {
-			It("should return 400 for invalid ticker path", func() {
-				req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/mcx/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: 1})
+			Context("Ticker Path Parameter", func() {
+				Context("Allowed Values", func() {
+					It("should accept existing valid parent ticker path", func() {
+						req, w = util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: 1})
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusCreated))
+					})
+				})
+
+				Context("Bad Values", func() {
+					It("should return 400 for invalid ticker path", func() {
+						req, w = util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/mcx/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: 1})
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+
+					It("should return 404 when primary ticker is missing", func() {
+						req, w = util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/NOTFOUND/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: 1})
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusNotFound))
+					})
+
+					It("should return 404 when ticker has no alert ticker mapping", func() {
+						other := barkat.Ticker{Ticker: "NIFTY", Exchange: new("NSE"), Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
+						Expect(db.Create(&other).Error).ToNot(HaveOccurred())
+						req, w = util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/NIFTY/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: 1})
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusNotFound))
+					})
+				})
+			})
+
+			Context("Trigger Price Field", func() {
+				Context("Allowed Values", func() {
+					It("should accept positive decimal trigger_price", func() {
+						req, w = util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: 0.0001})
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusCreated))
+					})
+				})
+
+				Context("Bad Values", func() {
+					It("should return 400 for missing trigger_price", func() {
+						req, w = rawTickerRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alerts", `{}`)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "TriggerPrice", "required")
+					})
+
+					It("should return 400 for zero trigger_price", func() {
+						req, w = util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: 0})
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "TriggerPrice", "required")
+					})
+
+					It("should return 400 for negative trigger_price", func() {
+						req, w = util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: -1})
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "TriggerPrice", "gt")
+					})
+
+					It("should return 400 for non-numeric trigger_price", func() {
+						req, w = rawTickerRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alerts", `{"trigger_price":"abc"}`)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+				})
+			})
+		})
+
+		Context("Errors", func() {
+			It("should return 400 for malformed JSON", func() {
+				req, w = rawTickerRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alerts", `{"trigger_price":`)
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 			})
-			It("should return 404 when primary ticker is missing", func() {
-				req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/NOTFOUND/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: 1})
+
+			It("should return 400 for null body", func() {
+				req, w = rawTickerRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alerts", "null")
 				router.ServeHTTP(w, req)
-				Expect(w.Code).To(Equal(http.StatusNotFound))
-			})
-			It("should return 404 when ticker has no alert ticker mapping", func() {
-				other := barkat.Ticker{Ticker: "NIFTY", Exchange: new("NSE"), Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
-				Expect(db.Create(&other).Error).ToNot(HaveOccurred())
-				req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/NIFTY/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: 1})
-				router.ServeHTTP(w, req)
-				Expect(w.Code).To(Equal(http.StatusNotFound))
-			})
-			It("should return 400 for missing trigger_price", func() {
-				req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alerts", `{}`)
-				router.ServeHTTP(w, req)
-				util.AssertError(w, "TriggerPrice", "required")
-			})
-			It("should return 400 for zero trigger_price", func() {
-				req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: 0})
-				router.ServeHTTP(w, req)
-				util.AssertError(w, "TriggerPrice", "required")
-			})
-			It("should return 400 for negative trigger_price", func() {
-				req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: -1})
-				router.ServeHTTP(w, req)
-				util.AssertError(w, "TriggerPrice", "gt")
+				Expect(w.Code).To(Equal(http.StatusBadRequest))
 			})
 		})
 	})
@@ -369,15 +534,16 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 		})
 
 		Context("Happy Path", func() {
-			It("should return 204 No Content", func() {
-				req, w := util.CreateTestRequest(http.MethodDelete, barkat.PriceAlertBase+"/"+alertID, nil)
+			BeforeEach(func() {
+				req, w = util.CreateTestRequest(http.MethodDelete, barkat.PriceAlertBase+"/"+alertID, nil)
 				router.ServeHTTP(w, req)
+			})
+
+			It("should return 204 No Content", func() {
 				Expect(w.Code).To(Equal(http.StatusNoContent))
 			})
+
 			It("should delete alert from database", func() {
-				req, w := util.CreateTestRequest(http.MethodDelete, barkat.PriceAlertBase+"/"+alertID, nil)
-				router.ServeHTTP(w, req)
-				Expect(w.Code).To(Equal(http.StatusNoContent))
 				var count int64
 				Expect(db.Model(&barkat.PriceAlert{}).Where("alert_id = ?", alertID).Count(&count).Error).ToNot(HaveOccurred())
 				Expect(count).To(Equal(int64(0)))
@@ -385,15 +551,34 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 		})
 
 		Context("Field Validations", func() {
-			It("should return 400 for invalid alert-id path", func() {
-				req, w := util.CreateTestRequest(http.MethodDelete, barkat.PriceAlertBase+"/ABC", nil)
-				router.ServeHTTP(w, req)
-				Expect(w.Code).To(Equal(http.StatusBadRequest))
-			})
-			It("should return 404 for missing alert-id", func() {
-				req, w := util.CreateTestRequest(http.MethodDelete, barkat.PriceAlertBase+"/999999", nil)
-				router.ServeHTTP(w, req)
-				Expect(w.Code).To(Equal(http.StatusNotFound))
+			Context("Alert ID Path Parameter", func() {
+				Context("Allowed Values", func() {
+					It("should accept valid numeric alert-id path", func() {
+						req, w = util.CreateTestRequest(http.MethodDelete, barkat.PriceAlertBase+"/"+alertID, nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusNoContent))
+					})
+				})
+
+				Context("Bad Values", func() {
+					It("should return 400 for invalid alert-id path", func() {
+						req, w = util.CreateTestRequest(http.MethodDelete, barkat.PriceAlertBase+"/ABC", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+
+					It("should return 400 for alert-id exceeding 128 characters", func() {
+						req, w = util.CreateTestRequest(http.MethodDelete, barkat.PriceAlertBase+"/"+strings.Repeat("1", 129), nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+
+					It("should return 404 for missing alert-id", func() {
+						req, w = util.CreateTestRequest(http.MethodDelete, barkat.PriceAlertBase+"/999999", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusNotFound))
+					})
+				})
 			})
 		})
 	})
@@ -410,67 +595,188 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 		})
 
 		Context("Happy Path", func() {
-			It("should return alerts array with default pagination", func() {
-				req, w := util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase, nil)
+			var response barkat.PriceAlertList
+
+			BeforeEach(func() {
+				req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase, nil)
 				router.ServeHTTP(w, req)
-				response := decodePriceAlertListResponse(w)
+				response = decodePriceAlertListResponse(w)
+			})
+
+			It("should return 200 OK", func() { Expect(w.Code).To(Equal(http.StatusOK)) })
+			It("should return Envelope success", func() {
+				var envelope common.Envelope[barkat.PriceAlertList]
+				util.AssertSuccess(w, http.StatusOK, &envelope)
+				Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
+			})
+			It("should return alerts array with default pagination", func() {
 				Expect(response.PriceAlerts).To(HaveLen(2))
 				Expect(response.Metadata.Offset).To(Equal(0))
 				Expect(response.Metadata.Limit).To(Equal(10))
 				Expect(response.Metadata.Total).To(Equal(int64(2)))
 			})
-			It("should filter by primary ticker", func() {
-				req, w := util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?ticker=MCX", nil)
-				router.ServeHTTP(w, req)
-				response := decodePriceAlertListResponse(w)
-				Expect(response.PriceAlerts).To(HaveLen(2))
+			It("should include pair_id, alert_id, trigger_price, and created_at in each alert", func() {
+				for _, alert := range response.PriceAlerts {
+					Expect(alert.PairID).To(Equal(createdAlertTicker.PairID))
+					Expect(alert.AlertID).ToNot(BeNil())
+					Expect(alert.TriggerPrice).To(BeNumerically(">", 0))
+					Expect(alert.CreatedAt).ToNot(BeZero())
+				}
 			})
+
+			It("should filter by primary ticker without leaking other ticker alerts", func() {
+				otherTicker := barkat.Ticker{Ticker: "NIFTY", Exchange: new("NSE"), Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
+				Expect(db.Create(&otherTicker).Error).ToNot(HaveOccurred())
+				otherAlertTicker := barkat.AlertTicker{TickerID: otherTicker.ID, Symbol: "NIFTY50", PairID: "17940", Name: "Nifty 50"}
+				Expect(db.Create(&otherAlertTicker).Error).ToNot(HaveOccurred())
+				otherAlertID := "222222"
+				seedPriceAlert(testCtx, db, barkat.PriceAlert{AlertTickerID: otherAlertTicker.ID, AlertID: &otherAlertID, TriggerPrice: 20})
+
+				req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?ticker=MCX", nil)
+				router.ServeHTTP(w, req)
+				listResponse := decodePriceAlertListResponse(w)
+				Expect(listResponse.PriceAlerts).To(HaveLen(2))
+				for _, alert := range listResponse.PriceAlerts {
+					Expect(alert.PairID).To(Equal(createdAlertTicker.PairID))
+				}
+			})
+
 			It("should sort by trigger_price descending", func() {
-				req, w := util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?sort-by=trigger_price&sort-order=desc", nil)
+				req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?sort-by=trigger_price&sort-order=desc", nil)
 				router.ServeHTTP(w, req)
-				response := decodePriceAlertListResponse(w)
-				Expect(response.PriceAlerts[0].TriggerPrice).To(BeNumerically(">", response.PriceAlerts[1].TriggerPrice))
+				listResponse := decodePriceAlertListResponse(w)
+				Expect(listResponse.PriceAlerts[0].TriggerPrice).To(BeNumerically(">", listResponse.PriceAlerts[1].TriggerPrice))
 			})
+
 			It("should paginate using limit and offset", func() {
-				req, w := util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?offset=1&limit=1", nil)
+				req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?offset=1&limit=1", nil)
 				router.ServeHTTP(w, req)
-				response := decodePriceAlertListResponse(w)
-				Expect(response.PriceAlerts).To(HaveLen(1))
-				Expect(response.Metadata.Offset).To(Equal(1))
-				Expect(response.Metadata.Limit).To(Equal(1))
+				listResponse := decodePriceAlertListResponse(w)
+				Expect(listResponse.PriceAlerts).To(HaveLen(1))
+				Expect(listResponse.Metadata.Offset).To(Equal(1))
+				Expect(listResponse.Metadata.Limit).To(Equal(1))
 			})
 		})
 
 		Context("Field Validations", func() {
-			It("should return 404 when ticker filter references missing parent", func() {
-				req, w := util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?ticker=NOTFOUND", nil)
-				router.ServeHTTP(w, req)
-				Expect(w.Code).To(Equal(http.StatusNotFound))
+			Context("Ticker Filter", func() {
+				Context("Allowed Values", func() {
+					It("should filter by existing primary ticker", func() {
+						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?ticker=MCX", nil)
+						router.ServeHTTP(w, req)
+						listResponse := decodePriceAlertListResponse(w)
+						Expect(listResponse.PriceAlerts).To(HaveLen(2))
+					})
+				})
+
+				Context("Bad Values", func() {
+					It("should return 404 when ticker filter references missing parent", func() {
+						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?ticker=NOTFOUND", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusNotFound))
+					})
+
+					It("should return 400 for invalid ticker filter", func() {
+						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?ticker=mcx", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+				})
 			})
-			It("should return 400 for invalid ticker filter", func() {
-				req, w := util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?ticker=mcx", nil)
-				router.ServeHTTP(w, req)
-				Expect(w.Code).To(Equal(http.StatusBadRequest))
+
+			Context("Sort By Field", func() {
+				Context("Allowed Values", func() {
+					It("should sort by trigger_price ascending (default)", func() {
+						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?sort-by=trigger_price&sort-order=asc", nil)
+						router.ServeHTTP(w, req)
+						listResponse := decodePriceAlertListResponse(w)
+						Expect(listResponse.PriceAlerts[0].TriggerPrice).To(BeNumerically("<", listResponse.PriceAlerts[1].TriggerPrice))
+					})
+
+					It("should sort by created_at", func() {
+						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?sort-by=created_at&sort-order=asc", nil)
+						router.ServeHTTP(w, req)
+						listResponse := decodePriceAlertListResponse(w)
+						Expect(listResponse.PriceAlerts).To(HaveLen(2))
+					})
+				})
+
+				Context("Bad Values", func() {
+					It("should return 400 for unsupported sort-by", func() {
+						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?sort-by=alert_id", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+				})
 			})
-			It("should return 400 for unsupported sort-by", func() {
-				req, w := util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?sort-by=alert_id", nil)
-				router.ServeHTTP(w, req)
-				Expect(w.Code).To(Equal(http.StatusBadRequest))
+
+			Context("Sort Order Field", func() {
+				Context("Allowed Values", func() {
+					It("should accept asc", func() {
+						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?sort-order=asc", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+
+					It("should accept desc", func() {
+						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?sort-order=desc", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusOK))
+					})
+				})
+
+				Context("Bad Values", func() {
+					It("should return 400 for unsupported sort-order", func() {
+						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?sort-order=up", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+				})
 			})
-			It("should return 400 for unsupported sort-order", func() {
-				req, w := util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?sort-order=up", nil)
-				router.ServeHTTP(w, req)
-				Expect(w.Code).To(Equal(http.StatusBadRequest))
+
+			Context("Offset Field", func() {
+				Context("Allowed Values", func() {
+					It("should accept positive offset with pagination", func() {
+						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?offset=1&limit=1", nil)
+						router.ServeHTTP(w, req)
+						listResponse := decodePriceAlertListResponse(w)
+						Expect(listResponse.PriceAlerts).To(HaveLen(1))
+						Expect(listResponse.Metadata.Offset).To(Equal(1))
+					})
+				})
+
+				Context("Bad Values", func() {
+					It("should return 400 for negative offset", func() {
+						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?offset=-1", nil)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Offset", "min")
+					})
+				})
 			})
-			It("should return 400 for negative offset", func() {
-				req, w := util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?offset=-1", nil)
-				router.ServeHTTP(w, req)
-				util.AssertError(w, "Offset", "min")
-			})
-			It("should return 400 for limit greater than 10", func() {
-				req, w := util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?limit=11", nil)
-				router.ServeHTTP(w, req)
-				util.AssertError(w, "Limit", "max")
+
+			Context("Limit Field", func() {
+				Context("Allowed Values", func() {
+					It("should accept max limit 10", func() {
+						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?limit=10", nil)
+						router.ServeHTTP(w, req)
+						listResponse := decodePriceAlertListResponse(w)
+						Expect(listResponse.Metadata.Limit).To(Equal(10))
+					})
+				})
+
+				Context("Bad Values", func() {
+					It("should return 400 for zero limit", func() {
+						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?limit=0", nil)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Limit", "min")
+					})
+
+					It("should return 400 for limit greater than 10", func() {
+						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?limit=11", nil)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Limit", "max")
+					})
+				})
 			})
 		})
 	})
