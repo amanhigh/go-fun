@@ -74,7 +74,7 @@ func (m *PriceAlertManagerImpl) resolveAlertTickersForInputs(ctx context.Context
 		if _, ok := alertTickerByPairID[input.PairID]; ok {
 			continue
 		}
-		alertTicker, err := m.repo.ResolveAlertTickerByPairID(ctx, input.PairID)
+		alertTicker, err := m.repo.GetByPairId(ctx, input.PairID)
 		if err != nil {
 			return nil, err
 		}
@@ -86,7 +86,7 @@ func (m *PriceAlertManagerImpl) resolveAlertTickersForInputs(ctx context.Context
 
 func (m *PriceAlertManagerImpl) CreatePendingPriceAlert(ctx context.Context, ticker string, request barkat.PendingPriceAlertRequest) (result barkat.PriceAlert, httpErr common.HttpError) {
 	httpErr = m.repo.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
-		alertTicker, err := m.repo.GetFirstAlertTickerForTicker(c, ticker)
+		alertTicker, err := m.repo.GetByTicker(c, ticker)
 		if err != nil {
 			return err
 		}

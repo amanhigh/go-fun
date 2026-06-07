@@ -12,10 +12,10 @@ import (
 // PriceAlertRepository provides persistence operations for price alerts.
 type PriceAlertRepository interface {
 	util.BaseDbRepositoryInterface
-	// ResolveAlertTickerByPairID resolves a pair id to exactly one AlertTicker.
-	ResolveAlertTickerByPairID(ctx context.Context, pairID string) (barkat.AlertTicker, common.HttpError)
-	// GetFirstAlertTickerForTicker resolves the first AlertTicker under a parent ticker.
-	GetFirstAlertTickerForTicker(ctx context.Context, ticker string) (barkat.AlertTicker, common.HttpError)
+	// GetByPairId resolves a pair id to exactly one AlertTicker.
+	GetByPairId(ctx context.Context, pairID string) (barkat.AlertTicker, common.HttpError)
+	// GetByTicker resolves the first AlertTicker under a parent ticker.
+	GetByTicker(ctx context.Context, ticker string) (barkat.AlertTicker, common.HttpError)
 	// ReplaceAlerts deletes existing alerts for owners and inserts replacement rows.
 	ReplaceAlerts(ctx context.Context, alerts []barkat.PriceAlert) common.HttpError
 	// DeleteByAlertID deletes one canonical alert by external alert id.
@@ -35,7 +35,7 @@ func NewPriceAlertRepository(db *gorm.DB) *PriceAlertRepositoryImpl {
 	return &PriceAlertRepositoryImpl{BaseDbRepository: util.NewBaseDbRepository(db)}
 }
 
-func (r *PriceAlertRepositoryImpl) ResolveAlertTickerByPairID(ctx context.Context, pairID string) (barkat.AlertTicker, common.HttpError) {
+func (r *PriceAlertRepositoryImpl) GetByPairId(ctx context.Context, pairID string) (barkat.AlertTicker, common.HttpError) {
 	var alertTicker barkat.AlertTicker
 	if err := r.SafeTx(ctx).Where("pair_id = ?", pairID).First(&alertTicker).Error; err != nil {
 		return barkat.AlertTicker{}, util.GormErrorMapper(err)
@@ -43,7 +43,7 @@ func (r *PriceAlertRepositoryImpl) ResolveAlertTickerByPairID(ctx context.Contex
 	return alertTicker, nil
 }
 
-func (r *PriceAlertRepositoryImpl) GetFirstAlertTickerForTicker(ctx context.Context, ticker string) (barkat.AlertTicker, common.HttpError) {
+func (r *PriceAlertRepositoryImpl) GetByTicker(ctx context.Context, ticker string) (barkat.AlertTicker, common.HttpError) {
 	var parent barkat.Ticker
 	if httpErr := r.GetByExternalId(ctx, ticker, &parent); httpErr != nil {
 		return barkat.AlertTicker{}, httpErr
