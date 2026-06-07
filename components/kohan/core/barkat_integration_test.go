@@ -512,6 +512,7 @@ var _ = Describe("Barkat E2E Test", func() {
 		BeforeEach(func() {
 			ticker := barkat.Ticker{
 				Ticker:       compositeTickerID,
+				Exchange:     "NSE",
 				Timeframes:   []string{"MN", "WK", "DL"},
 				Type:         "COMPOSITE",
 				State:        "WATCHED",
