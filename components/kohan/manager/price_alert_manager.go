@@ -6,6 +6,7 @@ import (
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
+	"github.com/samber/lo"
 )
 
 // PriceAlertManager provides business logic for price alert operations.
@@ -105,11 +106,7 @@ func (m *PriceAlertManagerImpl) ListPriceAlerts(ctx context.Context, query barka
 // ---- Private Replacement Helpers ----
 
 func (m *PriceAlertManagerImpl) collectPairIDs(alertTickerByPairID map[string]barkat.AlertTicker) []string {
-	pairIDs := make([]string, 0, len(alertTickerByPairID))
-	for pairID := range alertTickerByPairID {
-		pairIDs = append(pairIDs, pairID)
-	}
-	return pairIDs
+	return lo.Keys(alertTickerByPairID)
 }
 
 func (m *PriceAlertManagerImpl) buildReplacementAlerts(inputs []barkat.PriceAlertInput, alertTickerByPairID map[string]barkat.AlertTicker) []barkat.PriceAlert {
