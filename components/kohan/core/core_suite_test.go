@@ -95,6 +95,7 @@ var _ = BeforeSuite(func() {
 	auditRepo := repository.NewAuditRepository(db)
 	auditRegistry := audit.NewPluginRegistry()
 	Expect(auditRegistry.RegisterPlugin(audit.NewAlertCoveragePlugin(auditRepo))).ToNot(HaveOccurred())
+	Expect(auditRegistry.RegisterPlugin(audit.NewStaleReviewPlugin(auditRepo))).ToNot(HaveOccurred())
 	auditMgr := manager.NewAuditManager(auditRegistry)
 	auditHandler := handler.NewAuditHandler(auditMgr)
 	indexPortal := handler.NewIndexPortal()

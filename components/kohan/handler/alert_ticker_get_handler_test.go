@@ -51,7 +51,7 @@ var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.
 		Expect(err).ToNot(HaveOccurred())
 		createdTicker = barkat.Ticker{
 			Ticker:       "MCX",
-			Exchange:     new("NSE"),
+			Exchange:     "NSE",
 			Timeframes:   []string{"MN", "WK", "DL"},
 			Type:         "EQUITY",
 			State:        "WATCHED",
@@ -113,7 +113,7 @@ var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.
 					Expect(response.Symbol).To(Equal("MCIX"))
 					Expect(response.PairID).To(Equal("941982"))
 					Expect(response.Name).To(Equal("Multi Commodity Exchange of India"))
-					Expect(response.Exchange).To(Equal(new("NSE")))
+					Expect(*response.Exchange).To(Equal("NSE"))
 				})
 				It("should include parent ticker reference", func() { Expect(response.TickerSymbol).To(Equal(createdTicker.Ticker)) })
 				It("should include created_at and updated_at", func() {
@@ -304,7 +304,7 @@ var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.
 					It("should return empty list for no child match under existing ticker", func() {
 						otherTicker := barkat.Ticker{
 							Ticker:       "NIFTY",
-							Exchange:     new("NSE"),
+							Exchange:     "NSE",
 							Timeframes:   []string{"MN", "WK", "DL"},
 							Type:         "EQUITY",
 							State:        "WATCHED",

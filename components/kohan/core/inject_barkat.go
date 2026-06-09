@@ -63,6 +63,9 @@ func provideAuditPluginRegistry(repo repository.AuditRepository) *audit.PluginRe
 	if err := registry.RegisterPlugin(audit.NewAlertCoveragePlugin(repo)); err != nil {
 		log.Fatal().Err(err).Msg("failed to register audit plugin")
 	}
+	if err := registry.RegisterPlugin(audit.NewStaleReviewPlugin(repo)); err != nil {
+		log.Fatal().Err(err).Msg("failed to register audit plugin")
+	}
 	return registry
 }
 

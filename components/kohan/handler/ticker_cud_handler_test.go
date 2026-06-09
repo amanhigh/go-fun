@@ -93,7 +93,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 		tickerHandler = handler.NewTickerHandler(tickerMgr)
 		validTickerPayload = barkat.Ticker{
 			Ticker:       "MCX",
-			Exchange:     new("NSE"),
+			Exchange:     "NSE",
 			Timeframes:   []string{"MN", "WK", "DL"},
 			Type:         "EQUITY",
 			State:        "WATCHED",
@@ -138,7 +138,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 				})
 
 				It("should preserve ticker field", func() { Expect(response.Ticker).To(Equal("MCX")) })
-				It("should preserve exchange field", func() { Expect(response.Exchange).To(Equal(new("NSE"))) })
+				It("should preserve exchange field", func() { Expect(response.Exchange).To(Equal("NSE")) })
 				It("should preserve ordered timeframes", func() { Expect(response.Timeframes).To(Equal([]string{"MN", "WK", "DL"})) })
 				It("should preserve type field", func() { Expect(response.Type).To(Equal("EQUITY")) })
 				It("should preserve state field", func() { Expect(response.State).To(Equal("WATCHED")) })
@@ -334,106 +334,60 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 
 			Context("Exchange Field", func() {
 				Context("Allowed Values", func() {
-					It("should accept omitted exchange on POST", func() {
-						payload := validTickerPayload
-						payload.Exchange = nil
-						_, response := createTickerRequest(router, payload)
-						Expect(response.Exchange).To(BeNil())
-					})
-					It("should accept minimum exchange length 1", func() {
-						payload := validTickerPayload
-						payload.Exchange = new("N")
-						_, response := createTickerRequest(router, payload)
-						Expect(*response.Exchange).To(Equal("N"))
-					})
-					It("should accept maximum exchange length 10", func() {
-						payload := validTickerPayload
-						payload.Exchange = new(strings.Repeat("A", 10))
-						_, response := createTickerRequest(router, payload)
-						Expect(*response.Exchange).To(HaveLen(10))
-					})
 					It("should accept uppercase letters NSE", func() {
 						payload := validTickerPayload
-						payload.Exchange = new("NSE")
+						payload.Exchange = "NSE"
 						_, response := createTickerRequest(router, payload)
-						Expect(*response.Exchange).To(Equal("NSE"))
+						Expect(response.Exchange).To(Equal("NSE"))
 					})
-					It("should accept underscore in exchange code", func() {
+					It("should accept NASDAQ exchange", func() {
 						payload := validTickerPayload
-						payload.Exchange = new("FX_IDC")
+						payload.Exchange = "NASDAQ"
 						_, response := createTickerRequest(router, payload)
-						Expect(*response.Exchange).To(Equal("FX_IDC"))
+						Expect(response.Exchange).To(Equal("NASDAQ"))
 					})
-					It("should accept dot in exchange code", func() {
+					It("should accept BINANCE exchange", func() {
 						payload := validTickerPayload
-						payload.Exchange = new("N.SE")
+						payload.Exchange = "BINANCE"
 						_, response := createTickerRequest(router, payload)
-						Expect(*response.Exchange).To(Equal("N.SE"))
+						Expect(response.Exchange).To(Equal("BINANCE"))
 					})
 				})
 				Context("Bad Values", func() {
-					It("should return 400 for empty exchange string", func() {
+					It("should return 400 for missing exchange", func() {
 						payload := validTickerPayload
-						payload.Exchange = new("")
+						payload.Exchange = ""
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "min")
+						util.AssertError(w, "Exchange", "required")
+					})
+					It("should return 400 for empty exchange string", func() {
+						payload := validTickerPayload
+						payload.Exchange = ""
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Exchange", "required")
 					})
 					It("should return 400 for exchange exceeding 10 characters", func() {
 						payload := validTickerPayload
-						payload.Exchange = new(strings.Repeat("A", 11))
+						payload.Exchange = strings.Repeat("A", 11)
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "max")
+						util.AssertError(w, "Exchange", "oneof")
 					})
 					It("should return 400 for lowercase exchange", func() {
 						payload := validTickerPayload
-						payload.Exchange = new("nse")
+						payload.Exchange = "nse"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
+						util.AssertError(w, "Exchange", "oneof")
 					})
-					It("should return 400 for exchange with colon", func() {
+					It("should return 400 for European exchange LSE", func() {
 						payload := validTickerPayload
-						payload.Exchange = new("NSE:MCX")
+						payload.Exchange = "LSE"
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
-					})
-					It("should return 400 for exchange with hyphen", func() {
-						payload := validTickerPayload
-						payload.Exchange = new("N-SE")
-						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
-					})
-					It("should return 400 for exchange with whitespace", func() {
-						payload := validTickerPayload
-						payload.Exchange = new("NS E")
-						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
-					})
-					It("should return 400 for exchange with unsupported special character", func() {
-						payload := validTickerPayload
-						payload.Exchange = new("NSE@")
-						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
-					})
-					It("should return 400 for exchange with digit", func() {
-						payload := validTickerPayload
-						payload.Exchange = new("NSE1")
-						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
-					})
-					It("should return 400 for exchange starting with digit", func() {
-						payload := validTickerPayload
-						payload.Exchange = new("1NSE")
-						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
+						util.AssertError(w, "Exchange", "oneof")
 					})
 				})
 			})
@@ -831,7 +785,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 
 		BeforeEach(func() {
 			_, createdTicker = createTickerRequest(router, validTickerPayload)
-			validUpdatePayload = barkat.Ticker{Exchange: new("NSE"), Timeframes: []string{"YR", "SMN", "TMN", "MN", "WK"}, Type: "EQUITY", State: "READY", Trend: "UPTREND", IsFNO: true}
+			validUpdatePayload = barkat.Ticker{Exchange: "NSE", Timeframes: []string{"YR", "SMN", "TMN", "MN", "WK"}, Type: "EQUITY", State: "READY", Trend: "UPTREND", IsFNO: true}
 		})
 
 		Context("Happy Path", func() {
@@ -850,7 +804,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 					Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 				})
 				It("should preserve immutable ticker from path", func() { Expect(response.Ticker).To(Equal(createdTicker.Ticker)) })
-				It("should replace exchange", func() { Expect(response.Exchange).To(Equal(new("NSE"))) })
+				It("should replace exchange", func() { Expect(response.Exchange).To(Equal("NSE")) })
 				It("should replace timeframes", func() { Expect(response.Timeframes).To(Equal([]string{"YR", "SMN", "TMN", "MN", "WK"})) })
 				It("should replace type", func() { Expect(response.Type).To(Equal("EQUITY")) })
 				It("should replace state", func() { Expect(response.State).To(Equal("READY")) })
@@ -909,100 +863,60 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 
 			Context("Exchange Field", func() {
 				Context("Allowed Values", func() {
-					It("should accept omitted exchange on PUT and leave existing value unchanged", func() {
-						req, w := rawTickerRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, `{"timeframes":["MN","WK","DL"],"type":"EQUITY","state":"READY","trend":"UPTREND","is_fno":true}`)
-						router.ServeHTTP(w, req)
-						response := decodeTickerResponse(w, http.StatusOK)
-						Expect(response.Exchange).To(Equal(createdTicker.Exchange))
-					})
 					It("should accept valid exchange code", func() {
 						payload := validUpdatePayload
-						payload.Exchange = new("NSE")
+						payload.Exchange = "NSE"
 						_, response := updateTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(*response.Exchange).To(Equal("NSE"))
+						Expect(response.Exchange).To(Equal("NSE"))
 					})
-					It("should accept maximum exchange length 10", func() {
+					It("should accept NASDAQ exchange", func() {
 						payload := validUpdatePayload
-						payload.Exchange = new(strings.Repeat("A", 10))
+						payload.Exchange = "NASDAQ"
 						_, response := updateTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(*response.Exchange).To(HaveLen(10))
+						Expect(response.Exchange).To(Equal("NASDAQ"))
 					})
-					It("should accept underscore in exchange code", func() {
+					It("should accept BINANCE exchange", func() {
 						payload := validUpdatePayload
-						payload.Exchange = new("FX_IDC")
+						payload.Exchange = "BINANCE"
 						_, response := updateTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(*response.Exchange).To(Equal("FX_IDC"))
-					})
-					It("should accept dot in exchange code", func() {
-						payload := validUpdatePayload
-						payload.Exchange = new("N.SE")
-						_, response := updateTickerRequest(router, createdTicker.Ticker, payload)
-						Expect(*response.Exchange).To(Equal("N.SE"))
+						Expect(response.Exchange).To(Equal("BINANCE"))
 					})
 				})
 				Context("Bad Values", func() {
-					It("should return 400 for empty exchange string", func() {
+					It("should return 400 for missing exchange", func() {
 						payload := validUpdatePayload
-						payload.Exchange = new("")
+						payload.Exchange = ""
 						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "min")
+						util.AssertError(w, "Exchange", "required")
+					})
+					It("should return 400 for empty exchange string", func() {
+						payload := validUpdatePayload
+						payload.Exchange = ""
+						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Exchange", "required")
 					})
 					It("should return 400 for exchange exceeding 10 characters", func() {
 						payload := validUpdatePayload
-						payload.Exchange = new(strings.Repeat("A", 11))
+						payload.Exchange = strings.Repeat("A", 11)
 						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "max")
-					})
-					It("should return 400 for unsupported exchange format", func() {
-						payload := validUpdatePayload
-						payload.Exchange = new("NSE:MCX")
-						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
-					})
-					It("should return 400 for exchange with hyphen", func() {
-						payload := validUpdatePayload
-						payload.Exchange = new("N-SE")
-						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
+						util.AssertError(w, "Exchange", "oneof")
 					})
 					It("should return 400 for lowercase exchange", func() {
 						payload := validUpdatePayload
-						payload.Exchange = new("nse")
+						payload.Exchange = "nse"
 						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
+						util.AssertError(w, "Exchange", "oneof")
 					})
-					It("should return 400 for exchange with whitespace", func() {
+					It("should return 400 for European exchange LSE", func() {
 						payload := validUpdatePayload
-						payload.Exchange = new("NS E")
+						payload.Exchange = "LSE"
 						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
-					})
-					It("should return 400 for exchange with unsupported special character", func() {
-						payload := validUpdatePayload
-						payload.Exchange = new("NSE@")
-						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
-					})
-					It("should return 400 for exchange with digit", func() {
-						payload := validUpdatePayload
-						payload.Exchange = new("NSE1")
-						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
-					})
-					It("should return 400 for exchange starting with digit", func() {
-						payload := validUpdatePayload
-						payload.Exchange = new("1NSE")
-						req, w := util.CreateTestRequest(http.MethodPut, barkat.TickerBase+"/"+createdTicker.Ticker, payload)
-						router.ServeHTTP(w, req)
-						util.AssertError(w, "Exchange", "ticker_exchange")
+						util.AssertError(w, "Exchange", "oneof")
 					})
 				})
 			})

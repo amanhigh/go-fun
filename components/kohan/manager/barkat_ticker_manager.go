@@ -72,9 +72,7 @@ func (m *BarkatTickerManagerImpl) UpdateTicker(ctx context.Context, ticker strin
 		}
 
 		// Copy mutable fields from update request
-		if req.Exchange != nil {
-			existing.Exchange = req.Exchange
-		}
+		existing.Exchange = req.Exchange
 		existing.Timeframes = req.Timeframes
 		existing.Type = req.Type
 		existing.State = req.State

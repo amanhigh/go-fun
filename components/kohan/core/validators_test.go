@@ -25,7 +25,6 @@ var _ = Describe("Validators", func() {
 		_ = v.RegisterValidation("ticker_path", core.TickerPathValidator)
 		_ = v.RegisterValidation("alert_symbol", core.AlertSymbolValidator)
 		_ = v.RegisterValidation("alert_name", core.AlertNameValidator)
-		_ = v.RegisterValidation("ticker_exchange", core.TickerExchangeValidator)
 		_ = v.RegisterValidation("alert_exchange", core.AlertExchangeValidator)
 		_ = v.RegisterValidation("tag", core.TagValidator)
 		_ = v.RegisterValidation("override", core.OverrideValidator)
@@ -669,52 +668,6 @@ var _ = Describe("Validators", func() {
 
 			It("should reject #", func() {
 				Expect(v.Var("Test#Alert", "alert_name")).ToNot(Succeed())
-			})
-		})
-	})
-
-	Describe("ticker_exchange_validator", func() {
-		Context("Valid", func() {
-			It("should accept uppercase NSE", func() {
-				Expect(v.Var("NSE", "ticker_exchange")).To(Succeed())
-			})
-
-			It("should accept underscore FX_IDC", func() {
-				Expect(v.Var("FX_IDC", "ticker_exchange")).To(Succeed())
-			})
-
-			It("should accept dot N.SE", func() {
-				Expect(v.Var("N.SE", "ticker_exchange")).To(Succeed())
-			})
-
-			It("should accept single letter", func() {
-				Expect(v.Var("N", "ticker_exchange")).To(Succeed())
-			})
-
-			It("should accept empty string", func() {
-				Expect(v.Var("", "ticker_exchange")).To(Succeed())
-			})
-		})
-
-		Context("Invalid", func() {
-			It("should reject lowercase", func() {
-				Expect(v.Var("nse", "ticker_exchange")).ToNot(Succeed())
-			})
-
-			It("should reject digits", func() {
-				Expect(v.Var("NSE1", "ticker_exchange")).ToNot(Succeed())
-			})
-
-			It("should reject hyphens", func() {
-				Expect(v.Var("N-SE", "ticker_exchange")).ToNot(Succeed())
-			})
-
-			It("should reject spaces", func() {
-				Expect(v.Var("N SE", "ticker_exchange")).ToNot(Succeed())
-			})
-
-			It("should reject @", func() {
-				Expect(v.Var("NSE@", "ticker_exchange")).ToNot(Succeed())
 			})
 		})
 	})

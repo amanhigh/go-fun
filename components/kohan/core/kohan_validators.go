@@ -22,8 +22,6 @@ var (
 	alertSymbolRegex = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9./=]*$`)
 	// Alert Name: alphanumeric first, then sanitized display name characters.
 	alertNameRegex = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9 .&'()-]*$`)
-	// Ticker Exchange: uppercase letters, underscore, dot (source data from exchangeRepo, e.g. FX_IDC).
-	tickerExchangeRegex = regexp.MustCompile(`^[A-Z][A-Z._]*$`)
 	// Alert Exchange: letters only, mixed-case (source data from pairRepo).
 	alertExchangeRegex = regexp.MustCompile(`^[A-Za-z][A-Za-z]*$`)
 	// Tag: alphanumeric with hyphens (e.g., "oe", "dep-1")
@@ -50,7 +48,6 @@ func RegisterJournalValidators() {
 		_ = v.RegisterValidation("ticker_path", TickerPathValidator)
 		_ = v.RegisterValidation("alert_symbol", AlertSymbolValidator)
 		_ = v.RegisterValidation("alert_name", AlertNameValidator)
-		_ = v.RegisterValidation("ticker_exchange", TickerExchangeValidator)
 		_ = v.RegisterValidation("alert_exchange", AlertExchangeValidator)
 		_ = v.RegisterValidation("tag", TagValidator)
 		_ = v.RegisterValidation("override", OverrideValidator)
@@ -73,12 +70,6 @@ func AlertSymbolValidator(fl validator.FieldLevel) bool {
 func AlertNameValidator(fl validator.FieldLevel) bool {
 	field := fl.Field().String()
 	return field == "" || alertNameRegex.MatchString(field)
-}
-
-// TickerExchangeValidator validates exchange format using pre-compiled regex
-func TickerExchangeValidator(fl validator.FieldLevel) bool {
-	field := fl.Field().String()
-	return field == "" || tickerExchangeRegex.MatchString(field)
 }
 
 // AlertExchangeValidator validates Alert ticker exchange format using pre-compiled regex
