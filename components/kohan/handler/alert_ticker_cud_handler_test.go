@@ -74,6 +74,7 @@ var _ = Describe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Ale
 			PairID:   "941982",
 			Name:     "Multi Commodity Exchange of India",
 			Exchange: new("NSE"),
+			Type:     "PRIMARY",
 		}
 		alertTickerRepo := repository.NewAlertTickerRepository(db)
 		alertTickerMgr := manager.NewAlertTickerManager(alertTickerRepo)
@@ -108,6 +109,7 @@ var _ = Describe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Ale
 				It("should preserve pair_id", func() { Expect(response.PairID).To(Equal("941982")) })
 				It("should preserve name", func() { Expect(response.Name).To(Equal("Multi Commodity Exchange of India")) })
 				It("should preserve exchange", func() { Expect(*response.Exchange).To(Equal("NSE")) })
+				It("should preserve type", func() { Expect(response.Type).To(Equal("PRIMARY")) })
 				It("should include parent ticker", func() { Expect(response.TickerSymbol).To(Equal(createdTicker.Ticker)) })
 				It("should set created_at timestamp", func() { Expect(response.CreatedAt).ToNot(BeZero()) })
 				It("should set updated_at timestamp", func() { Expect(response.UpdatedAt).ToNot(BeZero()) })
@@ -561,6 +563,66 @@ var _ = Describe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Ale
 					})
 				})
 			})
+
+			Context("Type Field", func() {
+				Context("Allowed Values", func() {
+					It("should accept PRIMARY", func() {
+						payload := validAlertTickerPayload
+						payload.Type = "PRIMARY"
+						payload.Symbol = "TYPEPRIM"
+						payload.PairID = "100001"
+						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
+						Expect(response.Type).To(Equal("PRIMARY"))
+					})
+					It("should accept SECONDARY", func() {
+						payload := validAlertTickerPayload
+						payload.Type = "SECONDARY"
+						payload.Symbol = "TYPESEC"
+						payload.PairID = "100002"
+						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
+						Expect(response.Type).To(Equal("SECONDARY"))
+					})
+					It("should accept multiple SECONDARY alert tickers on same parent", func() {
+						payload := validAlertTickerPayload
+						payload.Type = "SECONDARY"
+						payload.Symbol = "TYSEC1"
+						payload.PairID = "300001"
+						_, _ = createAlertTickerRequest(router, createdTicker.Ticker, payload)
+						payload.Symbol = "TYSEC2"
+						payload.PairID = "300002"
+						_, _ = createAlertTickerRequest(router, createdTicker.Ticker, payload)
+					})
+				})
+				Context("Bad Values", func() {
+					It("should return 400 for missing type", func() {
+						payload := validAlertTickerPayload
+						payload.Type = ""
+						payload.Symbol = "TYPMISS"
+						payload.PairID = "100003"
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Type", "required")
+					})
+					It("should return 400 for lowercase primary", func() {
+						payload := validAlertTickerPayload
+						payload.Type = "primary"
+						payload.Symbol = "TYPLOW"
+						payload.PairID = "100004"
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Type", "oneof")
+					})
+					It("should return 400 for unsupported type", func() {
+						payload := validAlertTickerPayload
+						payload.Type = "DEFAULT"
+						payload.Symbol = "TYPINV"
+						payload.PairID = "100005"
+						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "Type", "oneof")
+					})
+				})
+			})
 		})
 
 		Context("Errors", func() {
@@ -593,6 +655,17 @@ var _ = Describe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Ale
 				second := validAlertTickerPayload
 				second.Symbol = "MCIXD2"
 				req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", second)
+				router.ServeHTTP(w, req)
+				Expect(w.Code).To(Equal(http.StatusConflict))
+			})
+			It("should return 409 for duplicate PRIMARY on same parent ticker", func() {
+				payload := validAlertTickerPayload
+				payload.Symbol = "TYPDUP1"
+				payload.PairID = "200001"
+				_, _ = createAlertTickerRequest(router, createdTicker.Ticker, payload)
+				payload.Symbol = "TYPDUP2"
+				payload.PairID = "200002"
+				req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", payload)
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusConflict))
 			})

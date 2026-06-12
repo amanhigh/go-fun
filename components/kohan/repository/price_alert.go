@@ -39,7 +39,7 @@ func NewPriceAlertRepository(db *gorm.DB) *PriceAlertRepositoryImpl {
 
 func (r *PriceAlertRepositoryImpl) GetByPairId(ctx context.Context, pairID string) (barkat.AlertTicker, common.HttpError) {
 	var alertTicker barkat.AlertTicker
-	if err := r.SafeTx(ctx).Where("pair_id = ?", pairID).First(&alertTicker).Error; err != nil {
+	if err := r.SafeTx(ctx).Where(&barkat.AlertTicker{PairID: pairID, Type: "PRIMARY"}).First(&alertTicker).Error; err != nil {
 		return barkat.AlertTicker{}, util.GormErrorMapper(err)
 	}
 	return alertTicker, nil
@@ -52,7 +52,7 @@ func (r *PriceAlertRepositoryImpl) GetByTicker(ctx context.Context, ticker strin
 	}
 
 	var alertTicker barkat.AlertTicker
-	if err := r.SafeTx(ctx).Where("ticker_id = ?", parent.ID).Order("id ASC").First(&alertTicker).Error; err != nil {
+	if err := r.SafeTx(ctx).Where(&barkat.AlertTicker{TickerID: parent.ID, Type: "PRIMARY"}).First(&alertTicker).Error; err != nil {
 		return barkat.AlertTicker{}, util.GormErrorMapper(err)
 	}
 	return alertTicker, nil

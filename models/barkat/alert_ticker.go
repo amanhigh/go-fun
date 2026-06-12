@@ -15,6 +15,7 @@ type AlertTicker struct {
 	PairID       string    `gorm:"column:pair_id;not null;uniqueIndex:idx_alert_ticker_pair_id" json:"pair_id" binding:"required,min=1,max=64,number"`
 	Name         string    `gorm:"column:name;not null" json:"name" binding:"required,min=1,max=100,alert_name"`
 	Exchange     *string   `gorm:"column:exchange;index:idx_alert_ticker_exchange" json:"exchange" binding:"omitempty,min=1,max=10,alert_exchange"`
+	Type         string    `gorm:"column:type;not null;default:SECONDARY" json:"type" binding:"required,oneof=PRIMARY SECONDARY"`
 	Ticker       *Ticker   `gorm:"foreignKey:TickerID;references:ID" json:"-"`
 	TickerSymbol string    `gorm:"-" json:"ticker,omitempty"`
 	CreatedAt    time.Time `gorm:"column:created_at;not null" json:"created_at"`
@@ -44,6 +45,7 @@ type AlertTickerQuery struct {
 	Ticker   string `form:"ticker" binding:"omitempty,ticker_path"`
 	PairID   string `form:"pair-id" binding:"omitempty,min=1,max=64,number"`
 	Exchange string `form:"exchange" binding:"omitempty,min=1,max=10,alert_exchange"`
+	Type     string `form:"type" binding:"omitempty,oneof=PRIMARY SECONDARY"`
 }
 
 // NewAlertTickerQuery creates an AlertTickerQuery struct with default pagination values.

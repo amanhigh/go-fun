@@ -16,7 +16,7 @@ const (
 type Ticker struct {
 	ID               uint64        `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
 	Ticker           string        `gorm:"column:external_id;uniqueIndex;not null" json:"ticker" binding:"required,min=1,max=50,ticker"`
-	Exchange         string        `gorm:"column:exchange;index:idx_ticker_exchange" json:"exchange" binding:"required,oneof=BINANCE BITFINEX BITSTAMP CME CRYPTOCAP EURONEXT FX_IDC ICE MCX NASDAQ NSE NYSE NYSE_ARCA OANDA SPCFD TVC"`
+	Exchange         string        `gorm:"column:exchange;index:idx_ticker_exchange" json:"exchange" binding:"required,oneof=BINANCE BITFINEX BITSTAMP CME CRYPTOCAP EURONEXT FX_IDC ICE MCX NASDAQ NSE NYSE NYSE_ARCA OANDA SPCFD TVC"` //nolint:lll
 	Timeframes       []string      `gorm:"column:timeframes;serializer:json;not null" json:"timeframes" binding:"required,min=1,max=6,dive,oneof=YR SMN TMN MN WK DL"`
 	Type             string        `gorm:"column:type;not null;index:idx_ticker_type" json:"type" binding:"required,oneof=EQUITY INDEX CRYPTO COMMODITY FX BOND COMPOSITE"`
 	State            string        `gorm:"column:state;not null;default:WATCHED;index:idx_ticker_state" json:"state" binding:"required,oneof=WATCHED READY BLACKLIST"`
