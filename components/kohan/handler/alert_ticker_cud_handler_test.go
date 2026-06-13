@@ -104,7 +104,6 @@ var _ = Describe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Ale
 					util.AssertSuccess(w, http.StatusCreated, &envelope)
 					Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 				})
-				It("should return created alert ticker inside data.alert_ticker", func() { Expect(response.Symbol).To(Equal("MCIX")) })
 				It("should preserve symbol", func() { Expect(response.Symbol).To(Equal("MCIX")) })
 				It("should preserve pair_id", func() { Expect(response.PairID).To(Equal("941982")) })
 				It("should preserve name", func() { Expect(response.Name).To(Equal("Multi Commodity Exchange of India")) })
@@ -454,9 +453,10 @@ var _ = Describe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Ale
 			Context("Exchange Field", func() {
 				Context("Allowed Values", func() {
 					It("should accept omitted exchange", func() {
-						payload := validAlertTickerPayload
-						payload.Exchange = nil
-						_, response := createAlertTickerRequest(router, createdTicker.Ticker, payload)
+						jsonPayload := `{"symbol":"MCIXO","pair_id":"941982","name":"Multi Commodity Exchange of India","type":"PRIMARY"}`
+						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase+"/"+createdTicker.Ticker+"/alert-tickers", jsonPayload)
+						router.ServeHTTP(w, req)
+						response := decodeAlertTickerResponse(w, http.StatusCreated)
 						Expect(response.Exchange).To(BeNil())
 					})
 					It("should accept null exchange", func() {
@@ -707,6 +707,18 @@ var _ = Describe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Ale
 					Expect(w.Code).To(Equal(http.StatusNoContent))
 					var persisted barkat.AlertTicker
 					Expect(db.First(&persisted, "symbol = ?", createdAlertTicker.Symbol).Error).To(HaveOccurred())
+				})
+
+				It("should delete SECONDARY alert ticker by symbol", func() {
+					secondary := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCXSEC", PairID: "600600", Name: "Secondary Delete Test", Exchange: new("NSE"), Type: "SECONDARY"}
+					Expect(db.Create(&secondary).Error).ToNot(HaveOccurred())
+
+					req, w := util.CreateTestRequest(http.MethodDelete, barkat.AlertTickerBase+"/MCXSEC", nil)
+					router.ServeHTTP(w, req)
+					Expect(w.Code).To(Equal(http.StatusNoContent))
+
+					var persisted barkat.AlertTicker
+					Expect(db.First(&persisted, "symbol = ?", "MCXSEC").Error).To(HaveOccurred())
 				})
 			})
 		})

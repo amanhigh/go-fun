@@ -122,6 +122,18 @@ var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.
 					Expect(response.CreatedAt).ToNot(BeZero())
 					Expect(response.UpdatedAt).ToNot(BeZero())
 				})
+
+				It("should retrieve SECONDARY alert ticker by symbol", func() {
+					secondary := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCXSECG", PairID: "700700", Name: "Secondary Get Test", Exchange: new("NSE"), Type: "SECONDARY"}
+					Expect(db.Create(&secondary).Error).ToNot(HaveOccurred())
+
+					req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"/MCXSECG", nil)
+					router.ServeHTTP(w, req)
+					resp := decodeAlertTickerResponse(w, http.StatusOK)
+					Expect(resp.Symbol).To(Equal("MCXSECG"))
+					Expect(resp.Type).To(Equal("SECONDARY"))
+					Expect(resp.PairID).To(Equal("700700"))
+				})
 			})
 		})
 
@@ -361,6 +373,14 @@ var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.
 						response := decodeAlertTickerListResponse(w)
 						Expect(response.AlertTickers).To(HaveLen(1))
 						Expect(response.AlertTickers[0].PairID).To(Equal("000777"))
+					})
+					It("should filter by SECONDARY pair-id", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?pair-id=100200", nil)
+						router.ServeHTTP(w, req)
+						response := decodeAlertTickerListResponse(w)
+						Expect(response.AlertTickers).To(HaveLen(1))
+						Expect(response.AlertTickers[0].PairID).To(Equal("100200"))
+						Expect(response.AlertTickers[0].Type).To(Equal("SECONDARY"))
 					})
 					It("should return empty list for no pair-id match", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?pair-id=999999", nil)

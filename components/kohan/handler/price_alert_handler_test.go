@@ -159,7 +159,6 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 				Expect(db.Create(&otherTicker).Error).ToNot(HaveOccurred())
 				otherAlertTicker := barkat.AlertTicker{TickerID: otherTicker.ID, Symbol: "NIFTY50", PairID: "17940", Name: "Nifty 50", Type: "PRIMARY"}
 				Expect(db.Create(&otherAlertTicker).Error).ToNot(HaveOccurred())
-				Expect(db.Create(&otherAlertTicker).Error).ToNot(HaveOccurred())
 				oldID := "111111"
 				otherID := "222222"
 				seedPriceAlert(testCtx, db, barkat.PriceAlert{AlertTickerID: createdAlertTicker.ID, AlertID: &oldID, TriggerPrice: 10})
@@ -589,6 +588,21 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 				Expect(db.Model(&barkat.PriceAlert{}).Where("alert_id = ?", alertID).Count(&count).Error).ToNot(HaveOccurred())
 				Expect(count).To(Equal(int64(0)))
 			})
+
+			It("should delete SECONDARY-linked canonical alert by alert_id", func() {
+				secondaryAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCISECD", PairID: "500600", Name: "Secondary Del", Exchange: new("NSE"), Type: "SECONDARY"}
+				Expect(db.Create(&secondaryAlertTicker).Error).ToNot(HaveOccurred())
+				secAlertID := "777777"
+				seedPriceAlert(testCtx, db, barkat.PriceAlert{AlertTickerID: secondaryAlertTicker.ID, AlertID: &secAlertID, TriggerPrice: 80})
+
+				req, w = util.CreateTestRequest(http.MethodDelete, barkat.PriceAlertBase+"/"+secAlertID, nil)
+				router.ServeHTTP(w, req)
+				Expect(w.Code).To(Equal(http.StatusNoContent))
+
+				var count int64
+				Expect(db.Model(&barkat.PriceAlert{}).Where("alert_id = ?", secAlertID).Count(&count).Error).ToNot(HaveOccurred())
+				Expect(count).To(Equal(int64(0)))
+			})
 		})
 
 		Context("Field Validations", func() {
@@ -682,6 +696,26 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 				}
 			})
 
+			It("should list both PRIMARY and SECONDARY linked alerts", func() {
+				secondaryAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCISEC", PairID: "500501", Name: "Secondary Alert Ticker", Exchange: new("NSE"), Type: "SECONDARY"}
+				Expect(db.Create(&secondaryAlertTicker).Error).ToNot(HaveOccurred())
+				secAlertID := "333333"
+				seedPriceAlert(testCtx, db, barkat.PriceAlert{AlertTickerID: secondaryAlertTicker.ID, AlertID: &secAlertID, TriggerPrice: 50})
+
+				req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase, nil)
+				router.ServeHTTP(w, req)
+				listResponse := decodePriceAlertListResponse(w)
+				Expect(listResponse.PriceAlerts).To(HaveLen(3))
+				Expect(listResponse.Metadata.Total).To(Equal(int64(3)))
+
+				var pairIDs []string
+				for _, a := range listResponse.PriceAlerts {
+					pairIDs = append(pairIDs, a.PairID)
+				}
+				Expect(pairIDs).To(ContainElement(createdAlertTicker.PairID))
+				Expect(pairIDs).To(ContainElement(secondaryAlertTicker.PairID))
+			})
+
 			It("should sort by trigger_price descending", func() {
 				req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?sort-by=trigger_price&sort-order=desc", nil)
 				router.ServeHTTP(w, req)
@@ -702,11 +736,29 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 		Context("Field Validations", func() {
 			Context("Ticker Filter", func() {
 				Context("Allowed Values", func() {
-					It("should filter by existing primary ticker", func() {
+					It("should filter by existing parent ticker and return all linked alerts", func() {
 						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?ticker=MCX", nil)
 						router.ServeHTTP(w, req)
 						listResponse := decodePriceAlertListResponse(w)
 						Expect(listResponse.PriceAlerts).To(HaveLen(2))
+					})
+
+					It("should return SECONDARY-linked alerts when ticker has SECONDARY alert tickers", func() {
+						secondaryAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCISEC3", PairID: "500503", Name: "Secondary Alert Ticker 3", Exchange: new("NSE"), Type: "SECONDARY"}
+						Expect(db.Create(&secondaryAlertTicker).Error).ToNot(HaveOccurred())
+						secAlertID := "555555"
+						seedPriceAlert(testCtx, db, barkat.PriceAlert{AlertTickerID: secondaryAlertTicker.ID, AlertID: &secAlertID, TriggerPrice: 70})
+
+						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?ticker=MCX", nil)
+						router.ServeHTTP(w, req)
+						listResponse := decodePriceAlertListResponse(w)
+						Expect(listResponse.PriceAlerts).To(HaveLen(3))
+						var pairIDs []string
+						for _, a := range listResponse.PriceAlerts {
+							pairIDs = append(pairIDs, a.PairID)
+						}
+						Expect(pairIDs).To(ContainElement(createdAlertTicker.PairID))
+						Expect(pairIDs).To(ContainElement(secondaryAlertTicker.PairID))
 					})
 				})
 
