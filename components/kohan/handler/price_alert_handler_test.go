@@ -286,15 +286,20 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 						util.AssertError(w, "PairID", "number")
 					})
 
-					It("should return 404 for unresolved pair_id", func() {
+					It("should return 404 for unresolved pair_id with offending entry in message", func() {
 						payload := replacePayload
 						payload.Alerts[0].PairID = "999999"
 						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
+						Expect(w.Body.String()).To(And(
+							ContainSubstring("pair_id=999999"),
+							ContainSubstring("alert_id=158741518"),
+							ContainSubstring("No alert ticker mapping exists in Barkat"),
+						))
 					})
 
-					It("should return 404 for SECONDARY pair_id", func() {
+					It("should return 404 for SECONDARY pair_id with readable fields in message", func() {
 						secondaryAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "SECALERT", PairID: "500500", Name: "Secondary Alert", Exchange: new("NSE"), Type: "SECONDARY"}
 						Expect(db.Create(&secondaryAlertTicker).Error).ToNot(HaveOccurred())
 
@@ -303,6 +308,13 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 						req, w = util.CreateTestRequest(http.MethodPut, barkat.PriceAlertBase, payload)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
+						Expect(w.Body.String()).To(And(
+							ContainSubstring("pair_id=500500"),
+							ContainSubstring("Found SECONDARY"),
+							ContainSubstring("symbol=SECALERT"),
+							ContainSubstring("Secondary Alert"),
+							ContainSubstring("exchange=NSE"),
+						))
 					})
 				})
 			})

@@ -12,8 +12,10 @@ import (
 // PriceAlertRepository provides persistence operations for price alerts.
 type PriceAlertRepository interface {
 	util.BaseDbRepositoryInterface
-	// GetByPairId resolves a pair id to exactly one AlertTicker.
-	GetByPairId(ctx context.Context, pairID string) (barkat.AlertTicker, common.HttpError)
+	// GetByPairId resolves a pair id to an AlertTicker. When types are provided,
+	// only the first type is matched (e.g. "PRIMARY"). When no type is given,
+	// any AlertTicker for the pair id is returned.
+	GetByPairId(ctx context.Context, pairID string, types ...string) (barkat.AlertTicker, common.HttpError)
 	// GetByTicker resolves the first AlertTicker under a parent ticker.
 	GetByTicker(ctx context.Context, ticker string) (barkat.AlertTicker, common.HttpError)
 	// CreateAlerts inserts new price alert rows.
@@ -37,9 +39,13 @@ func NewPriceAlertRepository(db *gorm.DB) *PriceAlertRepositoryImpl {
 	return &PriceAlertRepositoryImpl{BaseDbRepository: util.NewBaseDbRepository(db)}
 }
 
-func (r *PriceAlertRepositoryImpl) GetByPairId(ctx context.Context, pairID string) (barkat.AlertTicker, common.HttpError) {
+func (r *PriceAlertRepositoryImpl) GetByPairId(ctx context.Context, pairID string, types ...string) (barkat.AlertTicker, common.HttpError) {
 	var alertTicker barkat.AlertTicker
-	if err := r.SafeTx(ctx).Where(&barkat.AlertTicker{PairID: pairID, Type: "PRIMARY"}).First(&alertTicker).Error; err != nil {
+	tx := r.SafeTx(ctx).Where(&barkat.AlertTicker{PairID: pairID})
+	if len(types) > 0 {
+		tx = tx.Where("type = ?", types[0])
+	}
+	if err := tx.First(&alertTicker).Error; err != nil {
 		return barkat.AlertTicker{}, util.GormErrorMapper(err)
 	}
 	return alertTicker, nil
