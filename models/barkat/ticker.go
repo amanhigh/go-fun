@@ -25,7 +25,7 @@ type Ticker struct {
 	IsFNO            bool          `gorm:"column:is_fno;not null;default:false;index:idx_ticker_is_fno" json:"is_fno"`
 	CreatedAt        time.Time     `gorm:"column:created_at;not null" json:"created_at"`
 	UpdatedAt        time.Time     `gorm:"column:updated_at;not null" json:"updated_at"`
-	AlertTickers     []AlertTicker `gorm:"foreignKey:TickerID;references:ID" json:"alert_tickers,omitempty"`
+	AlertTickers     []AlertTicker `gorm:"foreignKey:TickerID;references:ID;constraint:OnDelete:CASCADE" json:"alert_tickers,omitempty"`
 	AlertTickerCount int64         `gorm:"column:alert_ticker_count;->;-:migration" json:"alert_ticker_count,omitempty"`
 }
 
