@@ -55,6 +55,7 @@ async function toggleReviewedAt(submitter: Submitter, pg: JournalDetailPageProvi
 	await submitter.run(async () => {
 		const envelope = await pg().client.updateReview(pg().journal.detail!.id, { reviewed_at: reviewedAt });
 		journal.reviewed_at = envelope.data.reviewed_at;
+		// BUG: Queue not refreshed after review toggle — reviewed journal stays in The Lineup until manual reload.
 		// Intentionally NOT updating journal.status — review toggle only touches reviewed_at.
 	}, { success: successMsg });
 }
