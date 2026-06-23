@@ -6,6 +6,7 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/models/config"
+	"github.com/go-co-op/gocron/v2"
 
 	"github.com/golobby/container/v3"
 )
@@ -53,7 +54,11 @@ func GetKohanInterface() KohanInterface {
 // These methods implement the KohanInterface and resolve dependencies from the injector
 
 func (ki *KohanInjector) GetOSManager() manager.OSManagerInterface {
-	return manager.NewOSManager(ki.config.OSWaitInterval, ki.config.Barkat.ScreenshotPath)
+	scheduler, err := gocron.NewScheduler()
+	if err != nil {
+		panic(fmt.Errorf("failed to create scheduler: %w", err))
+	}
+	return manager.NewOSManager(ki.config.OSWaitInterval, ki.config.Barkat.ScreenshotPath, scheduler)
 }
 
 func (ki *KohanInjector) GetKohanServer() (util.HttpServer, error) {

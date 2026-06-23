@@ -53,13 +53,15 @@ type OSManagerInterface interface {
 type OSManagerImpl struct {
 	wait           time.Duration
 	screenshotPath string
+	scheduler      gocron.Scheduler
 }
 
-func NewOSManager(wait time.Duration, screenshotPath string) *OSManagerImpl {
+func NewOSManager(wait time.Duration, screenshotPath string, scheduler gocron.Scheduler) *OSManagerImpl {
 	// TODO: #C Move to Kohan Config and Inject directly via Kohan Injector.
 	return &OSManagerImpl{
 		wait:           wait,
 		screenshotPath: screenshotPath,
+		scheduler:      scheduler,
 	}
 }
 
@@ -184,17 +186,37 @@ func (a *OSManagerImpl) sendNotification(ticker string) {
 	}
 }
 
-func (a *OSManagerImpl) MonitorInternetConnection(_ context.Context) {
-	util.ScheduleJob(a.wait, func(_ bool) {
-		if tools.CheckInternetConnection() {
-			log.Info().Msg("Internet UP")
-		} else {
-			log.Warn().Msg("Internet DOWN")
-			a.restartNetworkManager()
-			// Extra Wait for Network Manager
-			time.Sleep(NETWORK_RESTART_DELAY)
-		}
-	})
+func (a *OSManagerImpl) MonitorInternetConnection(ctx context.Context) {
+	_, err := a.scheduler.NewJob(
+		gocron.DurationJob(a.wait),
+		gocron.NewTask(func() {
+			a.monitorInternetConnection()
+		}),
+		gocron.WithSingletonMode(gocron.LimitModeReschedule),
+	)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to create internet monitor job")
+		return
+	}
+
+	a.scheduler.Start()
+
+	<-ctx.Done()
+
+	if err := a.scheduler.Shutdown(); err != nil {
+		log.Error().Err(err).Msg("Failed to shutdown internet monitor scheduler")
+	}
+}
+
+func (a *OSManagerImpl) monitorInternetConnection() {
+	if tools.CheckInternetConnection() {
+		log.Info().Msg("Internet UP")
+	} else {
+		log.Warn().Msg("Internet DOWN")
+		a.restartNetworkManager()
+		// Extra Wait for Network Manager
+		time.Sleep(NETWORK_RESTART_DELAY)
+	}
 }
 
 func (a *OSManagerImpl) TryOpenTicker(_ context.Context, ticker string) {
