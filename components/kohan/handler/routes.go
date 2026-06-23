@@ -74,19 +74,10 @@ func SetupTickerRoutes(ticker *gin.RouterGroup, tickerHandler TickerHandler) {
 	}
 }
 
-// HACK: Merge Route Functions.
-// SetupTickerAlertRoutes configures nested Alert ticker routes under primary tickers.
-func SetupTickerAlertRoutes(ticker *gin.RouterGroup, alertTickerHandler AlertTickerHandler) {
-	{
-		ticker.POST("/:ticker/alert-tickers", alertTickerHandler.HandleCreateAlertTicker)
-	}
-}
-
-// SetupTickerPriceAlertRoutes configures nested price alert routes under primary tickers.
-func SetupTickerPriceAlertRoutes(ticker *gin.RouterGroup, priceAlertHandler PriceAlertHandler) {
-	{
-		ticker.POST("/:ticker/alerts", priceAlertHandler.HandleCreatePendingPriceAlert)
-	}
+// SetupTickerNestedRoutes configures nested alert-ticker and price-alert routes under primary tickers.
+func SetupTickerNestedRoutes(ticker *gin.RouterGroup, alertTickerHandler AlertTickerHandler, priceAlertHandler PriceAlertHandler) {
+	ticker.POST("/:ticker/alert-tickers", alertTickerHandler.HandleCreateAlertTicker)
+	ticker.POST("/:ticker/alerts", priceAlertHandler.HandleCreatePendingPriceAlert)
 }
 
 // SetupAlertTickerRoutes configures top-level Alert ticker routes.

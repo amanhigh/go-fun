@@ -37,7 +37,7 @@ func NewAlertTickerRepository(db *gorm.DB) *AlertTickerRepositoryImpl {
 
 func (r *AlertTickerRepositoryImpl) GetAlertTicker(ctx context.Context, symbol string) (barkat.AlertTicker, common.HttpError) {
 	var result barkat.AlertTicker
-	// FIXME: Remove Preload if Unused in UI.
+	// Preload Ticker is required for AfterFind to populate TickerSymbol in API responses.
 	err := r.SafeTx(ctx).Model(&barkat.AlertTicker{}).
 		Preload("Ticker").
 		First(&result, &barkat.AlertTicker{Symbol: symbol}).Error
