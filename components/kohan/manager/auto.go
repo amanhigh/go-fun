@@ -16,6 +16,7 @@ import (
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/kohan"
 	"github.com/bitfield/script"
+	"github.com/go-co-op/gocron/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -54,13 +55,15 @@ type OSManagerImpl struct {
 	screenshotPath string
 }
 
-func NewOSManager(wait time.Duration, screenshotPath string) OSManagerInterface {
+func NewOSManager(wait time.Duration, screenshotPath string) *OSManagerImpl {
 	// TODO: #C Move to Kohan Config and Inject directly via Kohan Injector.
 	return &OSManagerImpl{
 		wait:           wait,
 		screenshotPath: screenshotPath,
 	}
 }
+
+var _ OSManagerInterface = (*OSManagerImpl)(nil)
 
 // Copy existing implementations preserving comments but as methods
 func (a *OSManagerImpl) Screenshot(_ context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, common.HttpError) {
