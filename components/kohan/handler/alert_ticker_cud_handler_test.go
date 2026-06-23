@@ -29,7 +29,7 @@ func decodeAlertTickerResponse(w *httptest.ResponseRecorder, expectedStatus int)
 func newAlertTickerTestRouter(alertTickerHandler handler.AlertTickerHandler) *gin.Engine {
 	router := util.CreateTestGinRouter()
 	tickers := router.Group(barkat.TickerBase)
-	handler.SetupTickerAlertRoutes(tickers, alertTickerHandler)
+	tickers.POST("/:ticker/alert-tickers", alertTickerHandler.HandleCreateAlertTicker)
 	alertTickers := router.Group(barkat.AlertTickerBase)
 	handler.SetupAlertTickerRoutes(alertTickers, alertTickerHandler)
 	return router

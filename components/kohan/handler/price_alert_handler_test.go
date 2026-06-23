@@ -42,8 +42,7 @@ func decodePriceAlertListResponse(w *httptest.ResponseRecorder) barkat.PriceAler
 func newPriceAlertTestRouter(alertTickerHandler handler.AlertTickerHandler, priceAlertHandler handler.PriceAlertHandler) *gin.Engine {
 	router := util.CreateTestGinRouter()
 	tickers := router.Group(barkat.TickerBase)
-	handler.SetupTickerAlertRoutes(tickers, alertTickerHandler)
-	handler.SetupTickerPriceAlertRoutes(tickers, priceAlertHandler)
+	handler.SetupTickerNestedRoutes(tickers, alertTickerHandler, priceAlertHandler)
 	alertTickers := router.Group(barkat.AlertTickerBase)
 	handler.SetupAlertTickerRoutes(alertTickers, alertTickerHandler)
 	alerts := router.Group(barkat.PriceAlertBase)
