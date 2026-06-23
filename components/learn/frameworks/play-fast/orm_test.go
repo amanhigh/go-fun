@@ -108,7 +108,10 @@ var _ = Describe("Orm", func() {
 				})
 
 				AfterEach(func() {
-					err := db.Delete(&product).Error
+					// Hard delete (Unscoped) to avoid FK issues from soft-delete leaving join table entries.
+					// Must clear join table first so FK on features doesn't block deletion.
+					db.Exec("DELETE FROM product_features")
+					err := db.Unscoped().Delete(&product).Error
 					Expect(err).ToNot(HaveOccurred())
 
 					// Existing Associations need to be deleted manually
@@ -174,12 +177,14 @@ var _ = Describe("Orm", func() {
 				})
 
 				Context("Bulk Products", func() {
-					var products = []frameworks.Product{
-						{Code: "L1212", Price: 1000, VerticalID: vertical.ID, Version: 1},
-						{Code: "L1213", Price: 2000, VerticalID: vertical.ID, Version: 1},
-						{Code: "L1214", Price: 3000, VerticalID: vertical.ID, Version: 1},
-					}
+					var products []frameworks.Product
+
 					BeforeEach(func() {
+						products = []frameworks.Product{
+							{Code: "L1212", Price: 1000, VerticalID: vertical.ID, Version: 1},
+							{Code: "L1213", Price: 2000, VerticalID: vertical.ID, Version: 1},
+							{Code: "L1214", Price: 3000, VerticalID: vertical.ID, Version: 1},
+						}
 						// Create multiple products for testing
 						for _, p := range products {
 							product := p // Create local copy
@@ -188,10 +193,10 @@ var _ = Describe("Orm", func() {
 						}
 					})
 					AfterEach(func() {
-						// Clean up the created products
+						// Clean up the created products (hard delete for FK safety)
 						for _, p := range products {
 							product := p // Create local copy
-							db.Delete(&product)
+							db.Unscoped().Delete(&product)
 						}
 					})
 
