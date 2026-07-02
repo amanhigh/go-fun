@@ -121,26 +121,25 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 		return tax.Valuation{}, err
 	}
 
-	// Step 2: Get opening position
-	openingPosition, err := v.getOpeningPositionForPeriod(ctx, tickerSymbol, year)
+	// Step 2: Get opening positions (FirstPosition from Origin metadata, holding for Peak/Closing from Quantity)
+	firstPosition, holdingPosition, err := v.getOpeningPositions(ctx, tickerSymbol, year)
 	if err != nil {
-		// getOpeningPositionForPeriod returns (tax.Position{}, nil) for common.ErrNotFound (fresh start)
-		// So, any non-nil err here is an actual error.
 		return tax.Valuation{}, common.NewServerError(fmt.Errorf("failed to get opening position for %s: %w", tickerSymbol, err))
 	}
 
 	// Step 3: Validate if trades exist or if there's a carry-over
-	if err := v.validateTradesExistOrCarryOver(trades, openingPosition, tickerSymbol); err != nil {
+	// Use holdingPosition for validation (it has the actual opening quantity)
+	if err := v.validateTradesExistOrCarryOver(trades, holdingPosition, tickerSymbol); err != nil {
 		return tax.Valuation{}, err
 	}
 
 	analysis := tax.Valuation{Ticker: tickerSymbol}
-	analysis.FirstPosition = openingPosition
-	analysis.PeakPosition = openingPosition
+	analysis.FirstPosition = firstPosition  // OriginQty-based for First/Initial metadata
+	analysis.PeakPosition = holdingPosition // Quantity-based for Peak calculation (may be overwritten)
 
 	// Step 4: Calculate daily peak value (Tax.md Line 124 compliance - MANDATORY)
 	// Daily peak calculation is the authoritative method for determining peak INR value
-	peakPosition, peakErr := v.calculateDailyPeak(ctx, tickerSymbol, year, openingPosition, trades)
+	peakPosition, peakErr := v.calculateDailyPeak(ctx, tickerSymbol, year, holdingPosition, trades)
 	if peakErr != nil {
 		return tax.Valuation{}, common.NewServerError(
 			fmt.Errorf("failed to calculate daily peak for %s: %w", tickerSymbol, peakErr))
@@ -148,7 +147,7 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 	analysis.PeakPosition = peakPosition
 
 	// Step 5: Determine current quantity at year end
-	currentQuantity, processErr := v.processTrades(&analysis, trades, openingPosition)
+	currentQuantity, processErr := v.processTrades(&analysis, trades, holdingPosition)
 	if processErr != nil {
 		return tax.Valuation{}, processErr
 	}
@@ -266,16 +265,18 @@ func (v *ValuationManagerImpl) validateTradesExistOrCarryOver(trades []tax.Trade
 	return nil
 }
 
-func (v *ValuationManagerImpl) getOpeningPositionForPeriod(ctx context.Context, ticker string, year int) (position tax.Position, err common.HttpError) {
-	// Last year's account record
+// getOpeningPositions returns two positions from a single GetRecord call:
+//   - firstPosition: OriginQty-based (for First/Initial metadata)
+//   - holdingPosition: Quantity-based (for Peak/Closing calculations)
+//
+// In a fresh-start scenario, both are returned as zero positions.
+func (v *ValuationManagerImpl) getOpeningPositions(ctx context.Context, ticker string, year int) (firstPosition, holdingPosition tax.Position, err common.HttpError) {
 	account, accErr := v.accountManager.GetRecord(ctx, ticker, year-1)
 	if accErr != nil {
 		if errors.Is(accErr, common.ErrNotFound) {
-			// No account record found -> fresh start for this period.
-			// Return a zero position. Its Date field will be the zero value for time.Time.
-			return tax.Position{}, nil
+			return tax.Position{}, tax.Position{}, nil
 		}
-		return tax.Position{}, accErr // Other errors from accountManager
+		return tax.Position{}, tax.Position{}, accErr
 	}
 
 	// Account record found (carry-over scenario)
@@ -283,14 +284,21 @@ func (v *ValuationManagerImpl) getOpeningPositionForPeriod(ctx context.Context, 
 	// OriginDate MUST be present for carry-over accounts - it's required for tax reporting
 	originDate, parseErr := time.Parse(time.DateOnly, account.OriginDate)
 	if parseErr != nil {
-		return tax.Position{}, tax.NewInvalidDateError(fmt.Sprintf("failed to parse OriginDate '%s' for carry-over account %s: %v", account.OriginDate, ticker, parseErr))
+		return tax.Position{}, tax.Position{}, tax.NewInvalidDateError(
+			fmt.Sprintf("failed to parse OriginDate '%s' for carry-over account %s: %v", account.OriginDate, ticker, parseErr))
 	}
 
-	return tax.Position{
+	firstPosition = tax.Position{
 		Date:     originDate,
 		Quantity: account.OriginQty,
 		USDPrice: account.OriginPrice,
-	}, nil
+	}
+	holdingPosition = tax.Position{
+		Date:     originDate,
+		Quantity: account.Quantity,
+		USDPrice: account.OriginPrice,
+	}
+	return firstPosition, holdingPosition, nil
 }
 
 // calculateDailyPeak evaluates (Quantity × Market_Price × SBI_Rate) for every day in the year

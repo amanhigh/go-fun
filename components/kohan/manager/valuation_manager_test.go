@@ -1193,12 +1193,11 @@ var _ = Describe("ValuationManager", func() {
 		BeforeEach(func() {
 			carryOverAccount = tax.Account{
 				Symbol:      AAPL,
-				Quantity:    50,
-				MarketValue: 8000.00, // Year-end market value: $160.00 per share
-				// Original cost basis
-				// NEW: FirstPosition metadata (original acquisition details)
+				Quantity:    120,
+				MarketValue: 19178.40, // Year-end market value: ~$159.82 per share
+				// Original cost basis (FirstPosition metadata)
 				OriginDate:  "2021-03-05",
-				OriginQty:   50.0,
+				OriginQty:   35.0,
 				OriginPrice: 130.00,
 			}
 		})
@@ -1243,37 +1242,36 @@ var _ = Describe("ValuationManager", func() {
 					Return(yearEndPrice, nil).Once()
 
 				tradesInYear = []tax.Trade{
-					tax.NewTrade(AAPL, "2023-03-15", "BUY", 20, 150.00),  // 50 (start) + 20 = 70 shares
-					tax.NewTrade(AAPL, "2023-06-01", "BUY", 30, 165.00),  // 70 + 30 = 100 shares (New Peak)
-					tax.NewTrade(AAPL, "2023-10-20", "SELL", 10, 170.00), // 100 - 10 = 90 shares
+					tax.NewTrade(AAPL, "2023-03-15", "BUY", 20, 150.00),  // 120 (Quantity carry-forward) + 20 = 140 shares
+					tax.NewTrade(AAPL, "2023-06-01", "BUY", 30, 165.00),  // 140 + 30 = 170 shares (New Peak)
+					tax.NewTrade(AAPL, "2023-10-20", "SELL", 10, 170.00), // 170 - 10 = 160 shares (YearEnd)
 				}
 			})
 
-			It("should correctly set FirstPosition based on carry-over and track subsequent trades to Peak and YearEnd", func() {
+			It("should use carry-forward Quantity for Peak/YearEnd while preserving OriginQty for FirstPosition", func() {
 				valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, tradesInYear, testYear)
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(valuation.Ticker).To(Equal(AAPL))
 
-				// 1. Assert FirstPosition (Opening balance preserves ORIGINAL acquisition from prior years)
-				// Should be: 2021-03-05 (original first acquisition), NOT 2022-12-31 (year-end)
+				// 1. Assert FirstPosition (preserves ORIGINAL acquisition metadata from Origin fields)
+				// Uses OriginQty (35), NOT Quantity (120)
 				expectedFirstPosDate := time.Date(2021, 3, 5, 0, 0, 0, 0, time.UTC)
 				Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
-				Expect(valuation.FirstPosition.Quantity).To(Equal(50.0))
-				Expect(valuation.FirstPosition.USDPrice).To(Equal(130.00)) // Original cost, NOT $160 market value
+				Expect(valuation.FirstPosition.Quantity).To(Equal(35.0))
+				Expect(valuation.FirstPosition.USDPrice).To(Equal(130.00)) // Original cost
 
 				// 2. Assert PeakPosition
-				// Start: 50. After Buy1 (20 shares @ $150 on Mar 15): 70 shares.
-				// After Buy2 (30 shares @ $165 on Jun 01): 100 shares. This is the new peak quantity.
+				// Opening quantity = Quantity (120 carry-forward). After Buy1 (20): 140. After Buy2 (30): 170. This is peak.
 				expectedPeakPosDate, _ := time.Parse(time.DateOnly, "2023-06-01")
 				Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(expectedPeakPosDate.Format(time.DateOnly)))
-				Expect(valuation.PeakPosition.Quantity).To(Equal(100.0))
+				Expect(valuation.PeakPosition.Quantity).To(Equal(170.0))
 				Expect(valuation.PeakPosition.USDPrice).To(Equal(165.00))
 
 				// 3. Assert YearEndPosition
-				// After Sell1 (10 shares): 100 - 10 = 90 shares remaining.
+				// After Sell1 (10 shares): 170 - 10 = 160 shares remaining.
 				Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
-				Expect(valuation.YearEndPosition.Quantity).To(Equal(90.0))
+				Expect(valuation.YearEndPosition.Quantity).To(Equal(160.0))
 				Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
 			})
 		})
@@ -1465,6 +1463,9 @@ var _ = Describe("ValuationManager", func() {
 			BeforeEach(func() {
 				carryOverAccount.Quantity = 50
 				carryOverAccount.MarketValue = 8000.00 // $160 per share
+				// Keep Origin consistent with Quantity for this sparse-price scenario
+				carryOverAccount.OriginQty = 50.0
+				carryOverAccount.OriginPrice = 130.00
 
 				tradesInYear = []tax.Trade{
 					tax.NewTrade(AAPL, "2023-03-15", "BUY", 20, 150.00),
