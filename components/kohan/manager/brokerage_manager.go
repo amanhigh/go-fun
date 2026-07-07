@@ -138,6 +138,9 @@ func (m *BrokerageManagerImpl) createGainsFile(ctx context.Context, trades []tax
 	return nil
 }
 
+// FIXME: Broker source is lost after merge — append does not tag which broker contributed each row.
+// Gains, Dividends, Interest sheets and Summary all show aggregated values with no per-broker
+// breakdown. Adding a broker field to models would let downstream output show DW vs IBKR splits.
 func mergeBrokerageInfo(a, b tax.BrokerageInfo) tax.BrokerageInfo {
 	return tax.BrokerageInfo{
 		Trades:    append(a.Trades, b.Trades...),

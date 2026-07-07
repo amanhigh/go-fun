@@ -45,7 +45,11 @@ Trades,Data,Order,Stocks,USD,SIVR,"2024-09-13, 11:15:37",-1,29.122,29.12,29.122,
 Dividends,Header,Currency,Date,Description,Amount
 Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share (Ordinary Dividend),7.28
 Withholding Tax,Header,Currency,Date,Description,Amount,Code
-Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share - US Tax,-1.82,`
+Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share - US Tax,-1.82,
+Interest,Header,Currency,Date,Description,Amount
+Interest,Data,USD,2024-12-15,USD Credit Interest for Nov-2024,2.50
+Interest,Data,USD,2025-01-05,USD Credit Interest for Dec-2024,1.75
+Interest,Data,Total,,,4.25`
 
 			err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
 			Expect(err).ToNot(HaveOccurred())
@@ -108,6 +112,32 @@ Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per
 				Expect(info.Dividends[0].Amount).To(Equal(7.28))
 				Expect(info.Dividends[0].Tax).To(Equal(1.82))
 				Expect(info.Dividends[0].Net).To(Equal(5.46))
+			})
+		})
+
+		Context("when parsing interest", func() {
+			var info tax.BrokerageInfo
+
+			BeforeEach(func() {
+				var err error
+				info, err = ibManager.Parse(testYear)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("should extract USD interest entries and skip Total rows", func() {
+				Expect(info.Interests).To(HaveLen(2))
+
+				Expect(info.Interests[0].Symbol).To(Equal("CASH"))
+				Expect(info.Interests[0].Date).To(Equal("2024-12-15"))
+				Expect(info.Interests[0].Amount).To(Equal(2.50))
+				Expect(info.Interests[0].Tax).To(Equal(0.0))
+				Expect(info.Interests[0].Net).To(Equal(2.50))
+
+				Expect(info.Interests[1].Symbol).To(Equal("CASH"))
+				Expect(info.Interests[1].Date).To(Equal("2025-01-05"))
+				Expect(info.Interests[1].Amount).To(Equal(1.75))
+				Expect(info.Interests[1].Tax).To(Equal(0.0))
+				Expect(info.Interests[1].Net).To(Equal(1.75))
 			})
 		})
 	})
@@ -219,6 +249,7 @@ Dividends,Header,Currency,Date,Description,Amount`
 			It("should return empty arrays", func() {
 				Expect(info.Trades).To(BeEmpty())
 				Expect(info.Dividends).To(BeEmpty())
+				Expect(info.Interests).To(BeEmpty())
 			})
 		})
 	})

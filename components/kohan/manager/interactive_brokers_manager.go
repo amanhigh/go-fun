@@ -48,11 +48,10 @@ func (m *InteractiveBrokersManagerImpl) Parse(year int) (info tax.BrokerageInfo,
 		return
 	}
 
-	// TODO: Parse Interest from IB Activity Statement (separate from Realized.csv)
-	// info.Interests, err = m.parseInterest(records)
-	// if err != nil {
-	// 	return
-	// }
+	info.Interests, err = m.parseInterest(records)
+	if err != nil {
+		return
+	}
 
 	info.Trades, err = m.parseTrades(records)
 	if err != nil {
@@ -65,6 +64,36 @@ func (m *InteractiveBrokersManagerImpl) Parse(year int) (info tax.BrokerageInfo,
 	}
 
 	return
+}
+
+func (m *InteractiveBrokersManagerImpl) parseInterest(records [][]string) ([]tax.Interest, error) {
+	var interests []tax.Interest
+
+	for _, record := range records {
+		if !m.isValidInterestRecord(record) {
+			continue
+		}
+
+		date := record[3]
+		amount, err := strconv.ParseFloat(record[5], 64)
+		if err != nil {
+			continue
+		}
+
+		interests = append(interests, tax.Interest{
+			Symbol: "CASH",
+			Date:   date,
+			Amount: amount,
+			Tax:    0,
+			Net:    amount,
+		})
+	}
+
+	return interests, nil
+}
+
+func (m *InteractiveBrokersManagerImpl) isValidInterestRecord(record []string) bool {
+	return len(record) >= 6 && record[0] == "Interest" && record[1] == "Data" && record[2] == "USD"
 }
 
 func (m *InteractiveBrokersManagerImpl) parseTrades(records [][]string) ([]tax.Trade, error) {
