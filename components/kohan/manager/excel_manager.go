@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/amanhigh/go-fun/models/tax"
@@ -85,6 +86,11 @@ func (e *ExcelManagerImpl) writeSheets(ctx context.Context, f *excelize.File, su
 	}
 
 	if err = e.writeInterestSheet(ctx, f, summary.INRInterest); err != nil {
+		return
+	}
+
+	// Write TT Rates sheet with FY month-end data
+	if err = e.writeTTRatesSheet(ctx, f, summary.Year, summary.TTMonthEndRates); err != nil {
 		return
 	}
 
@@ -546,6 +552,77 @@ func (e *ExcelManagerImpl) writeValuationsTotals(f *excelize.File, sheetName str
 		22: "V", // Column V: YearEnd ValINR = Qty * Price * TTRate
 		23: "W", // Column W: AmountPaid (INR)
 	})
+}
+
+// writeTTRatesSheet creates the "TT Rates" sheet with FY month-end rate reference data.
+// It contains 12 rows (Apr→Mar) with month/year labels, the actual SBI rate date, the TT buy rate,
+// a clickable PDF link when available, and the day of the week.
+func (e *ExcelManagerImpl) writeTTRatesSheet(ctx context.Context, f *excelize.File, year int, rates []tax.MonthEndRate) error {
+	sheetName := "TT Rates"
+	headers := []string{"Month", "Year", "TTDate", "TTRate", "PDF Link", "DayOfWeek"}
+	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
+		return err
+	}
+
+	for idx, rate := range rates {
+		rowNum := idx + 2 // Data starts from row 2
+
+		// Compute FY month label (index 0=APR through index 11=MAR)
+		fyMonth := time.Date(year, time.April, 1, 0, 0, 0, 0, time.UTC).AddDate(0, idx, 0)
+		monthLabel := strings.ToUpper(fyMonth.Format("Jan"))
+		fyYear := fyMonth.Year()
+
+		// Compute day of week from the actual SBI rate date
+		dayOfWeek := rate.ActualDate.Format("Monday")
+
+		rowData := []any{
+			monthLabel,
+			fyYear,
+			e.formatDateForExcel(rate.ActualDate),
+			rate.Rate,
+			"", // Placeholder for PDF Link - written with hyperlink below
+			dayOfWeek,
+		}
+		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
+			return err
+		}
+
+		// Write PDF Link in column E with clickable hyperlink if URL is present
+		if err := e.writePDFLink(f, sheetName, rowNum, rate.PDFFile); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// writePDFLink writes the PDF Link cell value and sets an external hyperlink if the
+// pdfFile string is an HTTP/HTTPS URL. Non-URL values are written as-is.
+func (e *ExcelManagerImpl) writePDFLink(f *excelize.File, sheetName string, rowNum int, pdfFile string) error {
+	const pdfLinkColumn = 5 // Column E
+
+	cellName, err := excelize.CoordinatesToCellName(pdfLinkColumn, rowNum)
+	if err != nil {
+		return fmt.Errorf("failed to get cell name for PDF link at row %d: %w", rowNum, err)
+	}
+
+	if strings.HasPrefix(pdfFile, "http://") || strings.HasPrefix(pdfFile, "https://") {
+		display := "PDF"
+		if err := f.SetCellValue(sheetName, cellName, display); err != nil {
+			return fmt.Errorf("failed to set PDF link display at %s: %w", cellName, err)
+		}
+		if err := f.SetCellHyperLink(sheetName, cellName, pdfFile, "External", excelize.HyperlinkOpts{
+			Display: &display,
+		}); err != nil {
+			return fmt.Errorf("failed to set hyperlink at %s: %w", cellName, err)
+		}
+	} else {
+		if err := f.SetCellValue(sheetName, cellName, pdfFile); err != nil {
+			return fmt.Errorf("failed to set PDF link value at %s: %w", cellName, err)
+		}
+	}
+
+	return nil
 }
 
 // writeSummarySheet creates the Summary sheet with cross-referenced formulas to detail sheets

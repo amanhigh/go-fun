@@ -478,7 +478,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			defer f.Close()
 
 			// Check for the presence of all required sheets
-			expectedSheets := []string{"Gains", "Dividends", "Valuations", "Interest"}
+			expectedSheets := []string{"Gains", "Dividends", "Valuations", "Interest", "TT Rates"}
 			for _, sheetName := range expectedSheets {
 				_, sheetErr := f.GetRows(sheetName)
 				Expect(sheetErr).ToNot(HaveOccurred(), "Sheet '%s' should exist and be readable", sheetName)
