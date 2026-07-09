@@ -539,10 +539,11 @@ func (e *ExcelManagerImpl) writeInterestTotals(f *excelize.File, sheetName strin
 	})
 }
 
-// writeValuationsTotals writes TOTALS row for Valuations sheet - ONLY AmountPaid (INR)
-// Column: W (AmountPaid INR) - No totals for position valuations as they're not meaningful
+// writeValuationsTotals writes TOTALS row for Valuations sheet
+// Columns: V (YearEnd ValINR), W (AmountPaid INR)
 func (e *ExcelManagerImpl) writeValuationsTotals(f *excelize.File, sheetName string, lastDataRow int) error {
 	return e.writeSimpleTotals(f, sheetName, lastDataRow, map[int]string{
+		22: "V", // Column V: YearEnd ValINR = Qty * Price * TTRate
 		23: "W", // Column W: AmountPaid (INR)
 	})
 }

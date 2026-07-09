@@ -549,9 +549,12 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(err).ToNot(HaveOccurred())
 				defer f.Close()
 
-				// Calculate expected value using lo.SumBy (1 total)
+				// Calculate expected totals using lo.SumBy (1 total)
 				totalAmountPaidINR := lo.SumBy(sampleSummary.INRValuations, func(v tax.INRValuation) float64 {
 					return v.AmountPaid
+				})
+				totalYearEndValINR := lo.SumBy(sampleSummary.INRValuations, func(v tax.INRValuation) float64 {
+					return v.YearEndPosition.INRValue()
 				})
 
 				// Verify TOTALS row position
@@ -562,6 +565,10 @@ var _ = Describe("ExcelManagerImpl", func() {
 				totalsLabel, err := f.GetCellValue(sheetName, fmt.Sprintf("A%d", totalsRow))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(totalsLabel).To(Equal("TOTALS"))
+
+				// Verify YearEnd ValINR (INR) column V
+				expectFormulaCell(f, sheetName, fmt.Sprintf("V%d", totalsRow),
+					fmt.Sprintf("=SUM(V2:V%d)", lastDataRow), totalYearEndValINR)
 
 				// Verify AmountPaid (INR) column W
 				expectFormulaCell(f, sheetName, fmt.Sprintf("W%d", totalsRow),
@@ -627,9 +634,12 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(err).ToNot(HaveOccurred())
 				defer f.Close()
 
-				// Calculate expected value using lo.SumBy (2 valuations)
+				// Calculate expected totals using lo.SumBy (2 valuations)
 				totalAmountPaidINR := lo.SumBy(nonZeroSummary.INRValuations, func(v tax.INRValuation) float64 {
 					return v.AmountPaid
+				})
+				totalYearEndValINR := lo.SumBy(nonZeroSummary.INRValuations, func(v tax.INRValuation) float64 {
+					return v.YearEndPosition.INRValue()
 				})
 
 				// Verify TOTALS row position
@@ -640,6 +650,10 @@ var _ = Describe("ExcelManagerImpl", func() {
 				totalsLabel, err := f.GetCellValue(sheetName, fmt.Sprintf("A%d", totalsRow))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(totalsLabel).To(Equal("TOTALS"))
+
+				// Verify YearEnd ValINR (INR) column V with non-zero total
+				expectFormulaCell(f, sheetName, fmt.Sprintf("V%d", totalsRow),
+					fmt.Sprintf("=SUM(V2:V%d)", lastDataRow), totalYearEndValINR)
 
 				// Verify AmountPaid (INR) column W with non-zero total
 				// Expected: 5432.10 + 3210.50 = 8642.60
