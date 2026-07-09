@@ -65,6 +65,7 @@ var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.
 			PairID:   "941982",
 			Name:     "Multi Commodity Exchange of India",
 			Exchange: new("NSE"),
+			Type:     "PRIMARY",
 		}
 		alertTickerRepo := repository.NewAlertTickerRepository(db)
 		alertTickerMgr := manager.NewAlertTickerManager(alertTickerRepo)
@@ -114,11 +115,24 @@ var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.
 					Expect(response.PairID).To(Equal("941982"))
 					Expect(response.Name).To(Equal("Multi Commodity Exchange of India"))
 					Expect(*response.Exchange).To(Equal("NSE"))
+					Expect(response.Type).To(Equal(barkat.AlertTickerTypePrimary))
 				})
 				It("should include parent ticker reference", func() { Expect(response.TickerSymbol).To(Equal(createdTicker.Ticker)) })
 				It("should include created_at and updated_at", func() {
 					Expect(response.CreatedAt).ToNot(BeZero())
 					Expect(response.UpdatedAt).ToNot(BeZero())
+				})
+
+				It("should retrieve SECONDARY alert ticker by symbol", func() {
+					secondary := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCXSECG", PairID: "700700", Name: "Secondary Get Test", Exchange: new("NSE"), Type: barkat.AlertTickerTypeSecondary}
+					Expect(db.Create(&secondary).Error).ToNot(HaveOccurred())
+
+					req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"/MCXSECG", nil)
+					router.ServeHTTP(w, req)
+					resp := decodeAlertTickerResponse(w, http.StatusOK)
+					Expect(resp.Symbol).To(Equal("MCXSECG"))
+					Expect(resp.Type).To(Equal(barkat.AlertTickerTypeSecondary))
+					Expect(resp.PairID).To(Equal("700700"))
 				})
 			})
 		})
@@ -161,9 +175,11 @@ var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.
 
 	Describe("GET /v1/api/alert-tickers - List Alert Tickers (2.2.2.4)", func() {
 		BeforeEach(func() {
-			seedAlertTicker(testCtx, db, barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCIX", PairID: "941982", Name: "Multi Commodity Exchange of India", Exchange: new("NSE")})
-			seedAlertTicker(testCtx, db, barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "GOLD1!", PairID: "100200", Name: "Gold Index", Exchange: new("N.SE")})
-			seedAlertTicker(testCtx, db, barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "BTCUSD", PairID: "000777", Name: "Bitcoin USD", Exchange: new("BINANCE")})
+			seedAlertTicker(testCtx, db, barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCIX", PairID: "941982",
+				Name: "Multi Commodity Exchange of India", Exchange: new("NSE"), Type: barkat.AlertTickerTypePrimary})
+			seedAlertTicker(testCtx, db, barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "GOLD1!", PairID: "100200", Name: "Gold Index", Exchange: new("N.SE"), Type: barkat.AlertTickerTypeSecondary})
+			seedAlertTicker(testCtx, db, barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "BTCUSD", PairID: "000777",
+				Name: "Bitcoin USD", Exchange: new("BINANCE"), Type: barkat.AlertTickerTypeSecondary})
 		})
 
 		Context("Happy Path", func() {
@@ -209,6 +225,7 @@ var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.
 				It("should include name", func() { Expect(alertTicker.Name).ToNot(BeEmpty()) })
 				It("should include exchange", func() { Expect(alertTicker.Exchange).ToNot(BeNil()) })
 				It("should include ticker", func() { Expect(alertTicker.TickerSymbol).ToNot(BeEmpty()) })
+				It("should include type", func() { Expect(alertTicker.Type).ToNot(BeEmpty()) })
 			})
 		})
 
@@ -359,6 +376,14 @@ var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.
 						Expect(response.AlertTickers).To(HaveLen(1))
 						Expect(response.AlertTickers[0].PairID).To(Equal("000777"))
 					})
+					It("should filter by SECONDARY pair-id", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?pair-id=100200", nil)
+						router.ServeHTTP(w, req)
+						response := decodeAlertTickerListResponse(w)
+						Expect(response.AlertTickers).To(HaveLen(1))
+						Expect(response.AlertTickers[0].PairID).To(Equal("100200"))
+						Expect(response.AlertTickers[0].Type).To(Equal(barkat.AlertTickerTypeSecondary))
+					})
 					It("should return empty list for no pair-id match", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?pair-id=999999", nil)
 						router.ServeHTTP(w, req)
@@ -470,6 +495,42 @@ var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.
 					})
 					It("should return 400 for exchange starting with digit", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?exchange=1abc", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+				})
+			})
+
+			Context("Type Query Parameter", func() {
+				Context("Allowed Values", func() {
+					It("should filter by PRIMARY", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?type=PRIMARY", nil)
+						router.ServeHTTP(w, req)
+						response := decodeAlertTickerListResponse(w)
+						Expect(response.AlertTickers).To(HaveLen(1))
+						Expect(response.AlertTickers[0].Type).To(Equal(barkat.AlertTickerTypePrimary))
+					})
+					It("should filter by SECONDARY", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?type=SECONDARY", nil)
+						router.ServeHTTP(w, req)
+						response := decodeAlertTickerListResponse(w)
+						Expect(response.AlertTickers).To(HaveLen(2))
+					})
+					It("should return empty list for valid type with no matches", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?type=PRIMARY&symbol=ZZZ", nil)
+						router.ServeHTTP(w, req)
+						response := decodeAlertTickerListResponse(w)
+						Expect(response.AlertTickers).To(BeEmpty())
+					})
+				})
+				Context("Bad Values", func() {
+					It("should return 400 for lowercase primary", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?type=primary", nil)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusBadRequest))
+					})
+					It("should return 400 for unsupported type", func() {
+						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?type=DEFAULT", nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})

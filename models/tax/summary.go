@@ -2,9 +2,10 @@ package tax
 
 // Summary contains all processed tax records for a given financial year.
 type Summary struct {
-	Year          int
-	INRGains      []INRGains    // Processed capital gains in INR
-	INRDividends  []INRDividend // Processed dividends in INR
-	INRInterest   []INRInterest
-	INRValuations []INRValuation
+	Year            int
+	INRGains        []INRGains    // Processed capital gains in INR
+	INRDividends    []INRDividend // Processed dividends in INR
+	INRInterest     []INRInterest
+	INRValuations   []INRValuation
+	TTMonthEndRates []MonthEndRate // SBI TT Buy rates for each FY month (Apr→Mar)
 }

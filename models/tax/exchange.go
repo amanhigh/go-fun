@@ -43,4 +43,5 @@ func (r SbiRate) GetDate() (time.Time, common.HttpError) {
 type MonthEndRate struct {
 	Rate       float64
 	ActualDate time.Time
+	PDFFile    string
 }

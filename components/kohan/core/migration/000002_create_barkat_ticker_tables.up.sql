@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS alert_tickers (
     pair_id VARCHAR(100) NOT NULL,
     name VARCHAR(255) NOT NULL,
     exchange VARCHAR(15),
+    type VARCHAR(15) NOT NULL DEFAULT 'SECONDARY' CHECK (type IN ('PRIMARY', 'SECONDARY')),
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ticker_id) REFERENCES tickers(id) ON DELETE CASCADE
@@ -40,6 +41,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_alert_ticker_external_id ON alert_tickers 
 CREATE INDEX IF NOT EXISTS idx_alert_ticker_parent ON alert_tickers (ticker_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_alert_ticker_pair_id ON alert_tickers (pair_id);
 CREATE INDEX IF NOT EXISTS idx_alert_ticker_exchange ON alert_tickers (exchange);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_alert_ticker_primary_per_ticker ON alert_tickers (ticker_id) WHERE type = 'PRIMARY';
 
 -- Create price_alerts table for local alert records (PRD Section 2.1.4)
 CREATE TABLE IF NOT EXISTS price_alerts (

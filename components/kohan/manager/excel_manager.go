@@ -6,11 +6,23 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/amanhigh/go-fun/models/tax"
 	"github.com/rs/zerolog/log"
 	"github.com/xuri/excelize/v2"
+)
+
+// Column width constants used across all sheets.
+// These replace magic number literals to satisfy the mnd linter.
+const (
+	colWidthNarrow    = 8
+	colWidthSemi      = 10
+	colWidthMedium    = 12
+	colWidthWide      = 14
+	colWidthExtraWide = 16
+	colWidthMax       = 18
 )
 
 type ExcelManager interface {
@@ -85,6 +97,11 @@ func (e *ExcelManagerImpl) writeSheets(ctx context.Context, f *excelize.File, su
 	}
 
 	if err = e.writeInterestSheet(ctx, f, summary.INRInterest); err != nil {
+		return
+	}
+
+	// Write TT Rates sheet with FY month-end data
+	if err = e.writeTTRatesSheet(ctx, f, summary.Year, summary.TTMonthEndRates); err != nil {
 		return
 	}
 
@@ -170,6 +187,10 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 		}
 	}
 
+	e.setColumnWidths(f, sheetName, map[string]float64{
+		"A": colWidthNarrow, "B": colWidthMedium, "C": colWidthMedium, "D": colWidthSemi, "E": colWidthMedium,
+		"F": colWidthExtraWide, "G": colWidthNarrow, "H": colWidthMedium, "I": colWidthSemi, "J": colWidthMedium,
+	})
 	return nil
 }
 
@@ -217,6 +238,10 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 		}
 	}
 
+	e.setColumnWidths(f, sheetName, map[string]float64{
+		"A": colWidthNarrow, "B": colWidthMedium, "C": colWidthWide, "D": colWidthMedium, "E": colWidthMedium,
+		"F": colWidthMedium, "G": colWidthSemi, "H": colWidthWide, "I": colWidthMedium, "J": colWidthMedium,
+	})
 	return nil
 }
 
@@ -262,6 +287,13 @@ func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize
 		}
 	}
 
+	e.setColumnWidths(f, sheetName, map[string]float64{
+		"A": colWidthNarrow,
+		"B": colWidthWide, "C": colWidthNarrow, "D": colWidthSemi, "E": colWidthSemi, "F": colWidthMedium, "G": colWidthSemi, "H": colWidthSemi,
+		"I": colWidthWide, "J": colWidthNarrow, "K": colWidthSemi, "L": colWidthSemi, "M": colWidthMedium, "N": colWidthSemi, "O": colWidthSemi,
+		"P": colWidthExtraWide, "Q": colWidthNarrow, "R": colWidthSemi, "S": colWidthSemi, "T": colWidthMedium, "U": colWidthSemi, "V": colWidthSemi,
+		"W": colWidthExtraWide,
+	})
 	return nil
 }
 
@@ -339,6 +371,10 @@ func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.F
 		}
 	}
 
+	e.setColumnWidths(f, sheetName, map[string]float64{
+		"A": colWidthNarrow, "B": colWidthMedium, "C": colWidthWide, "D": colWidthMedium, "E": colWidthMedium,
+		"F": colWidthMedium, "G": colWidthSemi, "H": colWidthWide, "I": colWidthMedium, "J": colWidthMedium,
+	})
 	return nil
 }
 
@@ -539,12 +575,97 @@ func (e *ExcelManagerImpl) writeInterestTotals(f *excelize.File, sheetName strin
 	})
 }
 
-// writeValuationsTotals writes TOTALS row for Valuations sheet - ONLY AmountPaid (INR)
-// Column: W (AmountPaid INR) - No totals for position valuations as they're not meaningful
+// writeValuationsTotals writes TOTALS row for Valuations sheet
+// Columns: V (YearEnd ValINR), W (AmountPaid INR)
 func (e *ExcelManagerImpl) writeValuationsTotals(f *excelize.File, sheetName string, lastDataRow int) error {
 	return e.writeSimpleTotals(f, sheetName, lastDataRow, map[int]string{
+		22: "V", // Column V: YearEnd ValINR = Qty * Price * TTRate
 		23: "W", // Column W: AmountPaid (INR)
 	})
+}
+
+// setColumnWidths sets custom column widths for the given sheet.
+// widths is a map of column letter to desired width.
+func (e *ExcelManagerImpl) setColumnWidths(f *excelize.File, sheetName string, widths map[string]float64) {
+	for col, width := range widths {
+		if err := f.SetColWidth(sheetName, col, col, width); err != nil {
+			log.Warn().Err(err).Str("sheet", sheetName).Str("col", col).Msg("Failed to set column width")
+		}
+	}
+}
+
+// writeTTRatesSheet creates the "TT Rates" sheet with FY month-end rate reference data.
+// It contains 12 rows (Apr→Mar) with month/year labels, the actual SBI rate date, the TT buy rate,
+// a clickable PDF link when available, and the day of the week.
+func (e *ExcelManagerImpl) writeTTRatesSheet(ctx context.Context, f *excelize.File, year int, rates []tax.MonthEndRate) error {
+	sheetName := "TT Rates"
+	headers := []string{"Month", "Year", "TTDate", "TTRate", "PDF Link", "DayOfWeek"}
+	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
+		return err
+	}
+
+	for idx, rate := range rates {
+		rowNum := idx + 2 // Data starts from row 2
+
+		// Compute FY month label (index 0=APR through index 11=MAR)
+		fyMonth := time.Date(year, time.April, 1, 0, 0, 0, 0, time.UTC).AddDate(0, idx, 0)
+		monthLabel := strings.ToUpper(fyMonth.Format("Jan"))
+		fyYear := fyMonth.Year()
+
+		// Compute day of week from the actual SBI rate date
+		dayOfWeek := rate.ActualDate.Format("Monday")
+
+		rowData := []any{
+			monthLabel,
+			fyYear,
+			e.formatDateForExcel(rate.ActualDate),
+			rate.Rate,
+			"", // Placeholder for PDF Link - written with hyperlink below
+			dayOfWeek,
+		}
+		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
+			return err
+		}
+
+		// Write PDF Link in column E with clickable hyperlink if URL is present
+		if err := e.writePDFLink(f, sheetName, rowNum, rate.PDFFile); err != nil {
+			return err
+		}
+	}
+
+	e.setColumnWidths(f, sheetName, map[string]float64{
+		"A": colWidthNarrow, "B": colWidthNarrow, "C": colWidthWide, "D": colWidthSemi, "E": colWidthMedium, "F": colWidthWide,
+	})
+	return nil
+}
+
+// writePDFLink writes the PDF Link cell value and sets an external hyperlink if the
+// pdfFile string is an HTTP/HTTPS URL. Non-URL values are written as-is.
+func (e *ExcelManagerImpl) writePDFLink(f *excelize.File, sheetName string, rowNum int, pdfFile string) error {
+	const pdfLinkColumn = 5 // Column E
+
+	cellName, err := excelize.CoordinatesToCellName(pdfLinkColumn, rowNum)
+	if err != nil {
+		return fmt.Errorf("failed to get cell name for PDF link at row %d: %w", rowNum, err)
+	}
+
+	if strings.HasPrefix(pdfFile, "http://") || strings.HasPrefix(pdfFile, "https://") {
+		display := "PDF"
+		if err := f.SetCellValue(sheetName, cellName, display); err != nil {
+			return fmt.Errorf("failed to set PDF link display at %s: %w", cellName, err)
+		}
+		if err := f.SetCellHyperLink(sheetName, cellName, pdfFile, "External", excelize.HyperlinkOpts{
+			Display: &display,
+		}); err != nil {
+			return fmt.Errorf("failed to set hyperlink at %s: %w", cellName, err)
+		}
+	} else {
+		if err := f.SetCellValue(sheetName, cellName, pdfFile); err != nil {
+			return fmt.Errorf("failed to set PDF link value at %s: %w", cellName, err)
+		}
+	}
+
+	return nil
 }
 
 // writeSummarySheet creates the Summary sheet with cross-referenced formulas to detail sheets
@@ -560,12 +681,16 @@ func (e *ExcelManagerImpl) writeSummarySheet(ctx context.Context, f *excelize.Fi
 		return err
 	}
 
-	// Calculate TOTALS row positions for all sheets
+	return e.writeSummarySections(f, sheetName, summary)
+}
+
+// writeSummarySections writes Gains, Dividends, and Interest sections into the Summary sheet.
+// This is extracted from writeSummarySheet to keep statement count within the funlen limit.
+func (e *ExcelManagerImpl) writeSummarySections(f *excelize.File, sheetName string, summary tax.Summary) error {
+	// Calculate TOTALS row positions for all sheets (re-calculated from summary)
 	gainsTotalsRow, gainsSTCGRow, gainsLTCGRow := e.calculateGainsRows(summary.INRGains)
 	dividendsTotalsRow := e.calculateTotalsRow(summary.INRDividends)
 	interestTotalsRow := e.calculateTotalsRow(summary.INRInterest)
-
-	// Write sections in order: Gains → Dividends → Interest
 	currentRow := 3 // Start after header and empty row
 
 	// Gains section (Short Term + Long Term) - only if data exists
@@ -586,9 +711,14 @@ func (e *ExcelManagerImpl) writeSummarySheet(ctx context.Context, f *excelize.Fi
 
 	// Interest section - only if data exists
 	if len(summary.INRInterest) > 0 {
-		return e.writeInterestSection(f, sheetName, currentRow, interestTotalsRow)
+		if err := e.writeInterestSection(f, sheetName, currentRow, interestTotalsRow); err != nil {
+			return err
+		}
 	}
 
+	e.setColumnWidths(f, sheetName, map[string]float64{
+		"A": colWidthMax, "B": colWidthMax, "C": colWidthMax, "D": colWidthMax, "E": colWidthMax, "F": colWidthMax,
+	})
 	return nil
 }
 

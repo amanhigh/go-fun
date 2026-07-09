@@ -97,9 +97,7 @@ func (s *KohanServerLifecycle) registerJournalRoutes(engine *gin.Engine) {
 func (s *KohanServerLifecycle) registerBarkatRoutes(engine *gin.Engine) {
 	ticker := engine.Group(barkat.TickerBase)
 	handler.SetupTickerRoutes(ticker, s.TickerHandler)
-	// HACK: Single Route Registration
-	handler.SetupTickerAlertRoutes(ticker, s.AlertTickerHandler)
-	handler.SetupTickerPriceAlertRoutes(ticker, s.PriceAlertHandler)
+	handler.SetupTickerNestedRoutes(ticker, s.AlertTickerHandler, s.PriceAlertHandler)
 
 	alertTicker := engine.Group(barkat.AlertTickerBase)
 	handler.SetupAlertTickerRoutes(alertTicker, s.AlertTickerHandler)

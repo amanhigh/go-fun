@@ -16,7 +16,7 @@ const (
 type Ticker struct {
 	ID               uint64        `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
 	Ticker           string        `gorm:"column:external_id;uniqueIndex;not null" json:"ticker" binding:"required,min=1,max=50,ticker"`
-	Exchange         string        `gorm:"column:exchange;index:idx_ticker_exchange" json:"exchange" binding:"required,oneof=BINANCE BITFINEX BITSTAMP CME EURONEXT FX_IDC ICE MCX NASDAQ NSE NYSE NYSE_ARCA OANDA SPCFD TVC"`
+	Exchange         string        `gorm:"column:exchange;index:idx_ticker_exchange" json:"exchange" binding:"required,oneof=AMEX BINANCE BITFINEX BITSTAMP CME CRYPTOCAP EURONEXT FX_IDC ICE MCX NASDAQ NSE NYSE OANDA SPCFD TVC"` //nolint:lll
 	Timeframes       []string      `gorm:"column:timeframes;serializer:json;not null" json:"timeframes" binding:"required,min=1,max=6,dive,oneof=YR SMN TMN MN WK DL"`
 	Type             string        `gorm:"column:type;not null;index:idx_ticker_type" json:"type" binding:"required,oneof=EQUITY INDEX CRYPTO COMMODITY FX BOND COMPOSITE"`
 	State            string        `gorm:"column:state;not null;default:WATCHED;index:idx_ticker_state" json:"state" binding:"required,oneof=WATCHED READY BLACKLIST"`
@@ -25,7 +25,7 @@ type Ticker struct {
 	IsFNO            bool          `gorm:"column:is_fno;not null;default:false;index:idx_ticker_is_fno" json:"is_fno"`
 	CreatedAt        time.Time     `gorm:"column:created_at;not null" json:"created_at"`
 	UpdatedAt        time.Time     `gorm:"column:updated_at;not null" json:"updated_at"`
-	AlertTickers     []AlertTicker `gorm:"foreignKey:TickerID;references:ID" json:"alert_tickers,omitempty"`
+	AlertTickers     []AlertTicker `gorm:"foreignKey:TickerID;references:ID;constraint:OnDelete:CASCADE" json:"alert_tickers,omitempty"`
 	AlertTickerCount int64         `gorm:"column:alert_ticker_count;->;-:migration" json:"alert_ticker_count,omitempty"`
 }
 
@@ -42,7 +42,7 @@ type TickerQuery struct {
 	common.Pagination
 	common.Sort
 	Search      string `form:"search" binding:"omitempty,min=1,max=50"`
-	Exchange    string `form:"exchange" binding:"omitempty,oneof=BINANCE BITFINEX BITSTAMP CME EURONEXT FX_IDC ICE MCX NASDAQ NSE NYSE NYSE_ARCA OANDA SPCFD TVC"`
+	Exchange    string `form:"exchange" binding:"omitempty,oneof=AMEX BINANCE BITFINEX BITSTAMP CME CRYPTOCAP EURONEXT FX_IDC ICE MCX NASDAQ NSE NYSE OANDA SPCFD TVC"`
 	Type        string `form:"type" binding:"omitempty,oneof=EQUITY INDEX CRYPTO COMMODITY FX BOND COMPOSITE"`
 	State       string `form:"state" binding:"omitempty,oneof=WATCHED READY BLACKLIST"`
 	Trend       string `form:"trend" binding:"omitempty,oneof=UPTREND SIDEWAYS DOWNTREND"`
@@ -68,7 +68,7 @@ type TickerList struct {
 // Ticker field is populated from URI path by the handler for cross-field composite validation.
 type TickerUpdateRequest struct {
 	Ticker     string   `json:"-" binding:"omitempty,ticker"`
-	Exchange   string   `json:"exchange" binding:"required,oneof=BINANCE BITFINEX BITSTAMP CME EURONEXT FX_IDC ICE MCX NASDAQ NSE NYSE NYSE_ARCA OANDA SPCFD TVC"`
+	Exchange   string   `json:"exchange" binding:"required,oneof=AMEX BINANCE BITFINEX BITSTAMP CME CRYPTOCAP EURONEXT FX_IDC ICE MCX NASDAQ NSE NYSE OANDA SPCFD TVC"`
 	Timeframes []string `json:"timeframes" binding:"required,min=1,max=6,dive,oneof=YR SMN TMN MN WK DL"`
 	Type       string   `json:"type" binding:"required,oneof=EQUITY INDEX CRYPTO COMMODITY FX BOND COMPOSITE"`
 	State      string   `json:"state" binding:"required,oneof=WATCHED READY BLACKLIST"`

@@ -175,6 +175,7 @@ func (s *SBIManagerImpl) buildMonthEndCache(ctx context.Context) common.HttpErro
 				monthMap[monthKey] = tax.MonthEndRate{
 					Rate:       rate.TTBuy,
 					ActualDate: rateDate,
+					PDFFile:    rate.PDFFile,
 				}
 			}
 		}

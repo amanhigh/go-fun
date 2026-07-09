@@ -32,11 +32,36 @@ func (m *InteractiveBrokersManagerImpl) resolveFilePath(year int) string {
 }
 
 func (m *InteractiveBrokersManagerImpl) Parse(year int) (info tax.BrokerageInfo, err error) {
+	records, err := m.readCSVRecords(year)
+	if err != nil {
+		return info, err
+	}
+
+	info.Interests, err = m.parseInterest(records)
+	if err != nil {
+		return info, err
+	}
+
+	info.Trades, err = m.parseTrades(records)
+	if err != nil {
+		return info, err
+	}
+
+	info.Dividends, err = m.parseDividends(records)
+	if err != nil {
+		return info, err
+	}
+
+	return info, nil
+}
+
+// readCSVRecords reads and parses all CSV records from the file for the given year.
+// Extracted from Parse to keep statement count within funlen limit.
+func (m *InteractiveBrokersManagerImpl) readCSVRecords(year int) ([][]string, error) {
 	filePath := m.resolveFilePath(year)
 	file, err := os.Open(filePath)
 	if err != nil {
-		err = fmt.Errorf("failed to open CSV file: %w", err)
-		return
+		return nil, fmt.Errorf("failed to open CSV file: %w", err)
 	}
 	defer file.Close()
 
@@ -44,27 +69,40 @@ func (m *InteractiveBrokersManagerImpl) Parse(year int) (info tax.BrokerageInfo,
 	reader.FieldsPerRecord = -1
 	records, err := reader.ReadAll()
 	if err != nil {
-		err = fmt.Errorf("failed to read CSV: %w", err)
-		return
+		return nil, fmt.Errorf("failed to read CSV: %w", err)
 	}
 
-	// TODO: Parse Interest from IB Activity Statement (separate from Realized.csv)
-	// info.Interests, err = m.parseInterest(records)
-	// if err != nil {
-	// 	return
-	// }
+	return records, nil
+}
 
-	info.Trades, err = m.parseTrades(records)
-	if err != nil {
-		return
+func (m *InteractiveBrokersManagerImpl) parseInterest(records [][]string) ([]tax.Interest, error) {
+	var interests []tax.Interest
+
+	for _, record := range records {
+		if !m.isValidInterestRecord(record) {
+			continue
+		}
+
+		date := record[3]
+		amount, err := strconv.ParseFloat(record[5], 64)
+		if err != nil {
+			continue
+		}
+
+		interests = append(interests, tax.Interest{
+			Symbol: "CASH",
+			Date:   date,
+			Amount: amount,
+			Tax:    0,
+			Net:    amount,
+		})
 	}
 
-	info.Dividends, err = m.parseDividends(records)
-	if err != nil {
-		return
-	}
+	return interests, nil
+}
 
-	return
+func (m *InteractiveBrokersManagerImpl) isValidInterestRecord(record []string) bool {
+	return len(record) >= 6 && record[0] == "Interest" && record[1] == "Data" && record[2] == "USD"
 }
 
 func (m *InteractiveBrokersManagerImpl) parseTrades(records [][]string) ([]tax.Trade, error) {

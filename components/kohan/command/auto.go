@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/amanhigh/go-fun/common/tools"
@@ -39,8 +40,9 @@ var kohanServerCmd = &cobra.Command{
 			return fmt.Errorf("failed to build kohan server: %w", err)
 		}
 
-		// FIXME: #C Should use new Cron Libraries in learn Module
-		go osManager.MonitorInternetConnection(cmd.Context())
+		monitorCtx, stopMonitor := context.WithCancel(cmd.Context())
+		defer stopMonitor()
+		go osManager.MonitorInternetConnection(monitorCtx)
 
 		if err := server.Start(); err != nil {
 			log.Error().Err(err).Msg("Failed to start Kohan server")

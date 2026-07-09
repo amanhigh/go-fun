@@ -16,6 +16,7 @@ import (
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/kohan"
 	"github.com/bitfield/script"
+	"github.com/go-co-op/gocron/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -52,15 +53,19 @@ type OSManagerInterface interface {
 type OSManagerImpl struct {
 	wait           time.Duration
 	screenshotPath string
+	scheduler      gocron.Scheduler
 }
 
-func NewOSManager(wait time.Duration, screenshotPath string) OSManagerInterface {
+func NewOSManager(wait time.Duration, screenshotPath string, scheduler gocron.Scheduler) *OSManagerImpl {
 	// TODO: #C Move to Kohan Config and Inject directly via Kohan Injector.
 	return &OSManagerImpl{
 		wait:           wait,
 		screenshotPath: screenshotPath,
+		scheduler:      scheduler,
 	}
 }
+
+var _ OSManagerInterface = (*OSManagerImpl)(nil)
 
 // Copy existing implementations preserving comments but as methods
 func (a *OSManagerImpl) Screenshot(_ context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, common.HttpError) {
@@ -181,17 +186,30 @@ func (a *OSManagerImpl) sendNotification(ticker string) {
 	}
 }
 
-func (a *OSManagerImpl) MonitorInternetConnection(_ context.Context) {
-	util.ScheduleJob(a.wait, func(_ bool) {
-		if tools.CheckInternetConnection() {
-			log.Info().Msg("Internet UP")
-		} else {
-			log.Warn().Msg("Internet DOWN")
-			a.restartNetworkManager()
-			// Extra Wait for Network Manager
-			time.Sleep(NETWORK_RESTART_DELAY)
-		}
-	})
+func (a *OSManagerImpl) MonitorInternetConnection(ctx context.Context) {
+	// NewJob cannot fail with static hardcoded inputs; Shutdown failing is benign
+	_, _ = a.scheduler.NewJob(
+		gocron.DurationJob(a.wait),
+		gocron.NewTask(func() {
+			a.monitorInternetConnection()
+		}),
+		gocron.WithSingletonMode(gocron.LimitModeReschedule),
+	)
+
+	a.scheduler.Start()
+	<-ctx.Done()
+	_ = a.scheduler.Shutdown()
+}
+
+func (a *OSManagerImpl) monitorInternetConnection() {
+	if tools.CheckInternetConnection() {
+		log.Info().Msg("Internet UP")
+	} else {
+		log.Warn().Msg("Internet DOWN")
+		a.restartNetworkManager()
+		// Extra Wait for Network Manager
+		time.Sleep(NETWORK_RESTART_DELAY)
+	}
 }
 
 func (a *OSManagerImpl) TryOpenTicker(_ context.Context, ticker string) {

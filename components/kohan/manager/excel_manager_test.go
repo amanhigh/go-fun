@@ -232,6 +232,23 @@ var _ = Describe("ExcelManagerImpl", func() {
 				// Column J has formula =E4*I4 and calculates PNL (INR)
 				expectFormulaCell(f, sheetName, "J4", "=E4*I4", gain3.PNL*gain3.TTRate)
 			})
+
+			It("should set custom column widths for Gains sheet", func() {
+				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				widthA, err := f.GetColWidth(sheetName, "A")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(widthA).To(BeNumerically("==", 8.0), "Column A (Symbol) should be width 8")
+
+				widthF, err := f.GetColWidth(sheetName, "F")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(widthF).To(BeNumerically("==", 16.0), "Column F (Commission) should be width 16")
+			})
 		})
 
 		Context("when INRGains slice is empty", func() {
@@ -549,9 +566,12 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(err).ToNot(HaveOccurred())
 				defer f.Close()
 
-				// Calculate expected value using lo.SumBy (1 total)
+				// Calculate expected totals using lo.SumBy (1 total)
 				totalAmountPaidINR := lo.SumBy(sampleSummary.INRValuations, func(v tax.INRValuation) float64 {
 					return v.AmountPaid
+				})
+				totalYearEndValINR := lo.SumBy(sampleSummary.INRValuations, func(v tax.INRValuation) float64 {
+					return v.YearEndPosition.INRValue()
 				})
 
 				// Verify TOTALS row position
@@ -562,6 +582,10 @@ var _ = Describe("ExcelManagerImpl", func() {
 				totalsLabel, err := f.GetCellValue(sheetName, fmt.Sprintf("A%d", totalsRow))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(totalsLabel).To(Equal("TOTALS"))
+
+				// Verify YearEnd ValINR (INR) column V
+				expectFormulaCell(f, sheetName, fmt.Sprintf("V%d", totalsRow),
+					fmt.Sprintf("=SUM(V2:V%d)", lastDataRow), totalYearEndValINR)
 
 				// Verify AmountPaid (INR) column W
 				expectFormulaCell(f, sheetName, fmt.Sprintf("W%d", totalsRow),
@@ -627,9 +651,12 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(err).ToNot(HaveOccurred())
 				defer f.Close()
 
-				// Calculate expected value using lo.SumBy (2 valuations)
+				// Calculate expected totals using lo.SumBy (2 valuations)
 				totalAmountPaidINR := lo.SumBy(nonZeroSummary.INRValuations, func(v tax.INRValuation) float64 {
 					return v.AmountPaid
+				})
+				totalYearEndValINR := lo.SumBy(nonZeroSummary.INRValuations, func(v tax.INRValuation) float64 {
+					return v.YearEndPosition.INRValue()
 				})
 
 				// Verify TOTALS row position
@@ -640,6 +667,10 @@ var _ = Describe("ExcelManagerImpl", func() {
 				totalsLabel, err := f.GetCellValue(sheetName, fmt.Sprintf("A%d", totalsRow))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(totalsLabel).To(Equal("TOTALS"))
+
+				// Verify YearEnd ValINR (INR) column V with non-zero total
+				expectFormulaCell(f, sheetName, fmt.Sprintf("V%d", totalsRow),
+					fmt.Sprintf("=SUM(V2:V%d)", lastDataRow), totalYearEndValINR)
 
 				// Verify AmountPaid (INR) column W with non-zero total
 				// Expected: 5432.10 + 3210.50 = 8642.60
@@ -845,6 +876,220 @@ var _ = Describe("ExcelManagerImpl", func() {
 			})
 		})
 
+		Context("when generating the 'TT Rates' sheet with data", func() {
+			var (
+				excelManager  manager.ExcelManager
+				tempOutputDir string
+				sampleSummary tax.Summary
+				sheetName     = "TT Rates"
+			)
+
+			BeforeEach(func() {
+				var err error
+				tempOutputDir, err = os.MkdirTemp(baseTempDir, "tt_rates_data_test_*")
+				Expect(err).ToNot(HaveOccurred())
+				tempOutputFilePath = filepath.Join(tempOutputDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
+
+				excelManager = manager.NewExcelManager(tempOutputDir)
+
+				marDate, _ := time.Parse(time.DateOnly, "2023-03-15")
+				aprDate, _ := time.Parse(time.DateOnly, "2023-04-15")
+				junDate, _ := time.Parse(time.DateOnly, "2023-06-15") // Thursday
+				febDate, _ := time.Parse(time.DateOnly, "2024-02-20") // Tuesday
+
+				sampleSummary = tax.Summary{
+					Year: testYear,
+					TTMonthEndRates: []tax.MonthEndRate{
+						{Rate: 82.00, ActualDate: marDate, PDFFile: "-"},
+						{Rate: 82.10, ActualDate: aprDate, PDFFile: "https://sbi.com/apr23.pdf"},
+						{Rate: 82.30, ActualDate: junDate, PDFFile: "https://sbi.com/jun23.pdf"},
+						{Rate: 83.05, ActualDate: febDate, PDFFile: "https://sbi.com/feb24.pdf"},
+					},
+				}
+			})
+
+			It("should create the 'TT Rates' sheet with correct headers", func() {
+				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				sheetFound := slices.Contains(f.GetSheetList(), sheetName)
+				Expect(sheetFound).To(BeTrue(), "Sheet 'TT Rates' should exist")
+
+				rows, err := f.GetRows(sheetName)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Header row + 4 data rows
+				Expect(rows).To(HaveLen(5), "Should have header + 4 data rows")
+
+				expectedHeaders := []string{
+					"Month", "Year", "TTDate", "TTRate", "PDF Link", "DayOfWeek",
+				}
+				Expect(rows[0]).To(Equal(expectedHeaders))
+			})
+
+			It("should write FY month labels in Apr→Mar order with correct year", func() {
+				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				// Row 2 (index 0) → APR, Year=2023
+				month0, err := f.GetCellValue(sheetName, "A2")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(month0).To(Equal("APR"))
+				year0, err := f.GetCellValue(sheetName, "B2")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(year0).To(Equal("2023"))
+
+				// Row 3 (index 1) → MAY, Year=2023
+				month1, err := f.GetCellValue(sheetName, "A3")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(month1).To(Equal("MAY"))
+				year1, err := f.GetCellValue(sheetName, "B3")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(year1).To(Equal("2023"))
+
+				// Row 4 (index 2) → JUN, Year=2023
+				month2, err := f.GetCellValue(sheetName, "A4")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(month2).To(Equal("JUN"))
+				year2, err := f.GetCellValue(sheetName, "B4")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(year2).To(Equal("2023"))
+
+				// Row 5 (index 3) → JUL, Year=2023
+				month3, err := f.GetCellValue(sheetName, "A5")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(month3).To(Equal("JUL"))
+				year3, err := f.GetCellValue(sheetName, "B5")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(year3).To(Equal("2023"))
+			})
+
+			It("should write TTDate, TTRate, and DayOfWeek correctly", func() {
+				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				// Row 2: Index 0 (APR) - preceding March 2023
+				ttDate2, err := f.GetCellValue(sheetName, "C2")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(ttDate2).To(Equal("2023-03-15"))
+				rate2, err := getCellFloat(f, sheetName, "D2")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rate2).To(BeNumerically("~", 82.00, 0.001))
+				dow2, err := f.GetCellValue(sheetName, "F2")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(dow2).To(Equal("Wednesday"))
+
+				// Row 3: Index 1 (MAY) - preceding April 2023
+				ttDate3, err := f.GetCellValue(sheetName, "C3")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(ttDate3).To(Equal("2023-04-15"))
+				rate3, err := getCellFloat(f, sheetName, "D3")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rate3).To(BeNumerically("~", 82.10, 0.001))
+
+				// Row 4: Index 2 (JUN) - Jun 15, 2023 = Thursday
+				dow4, err := f.GetCellValue(sheetName, "F4")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(dow4).To(Equal("Thursday"))
+
+				// Row 5: Index 3 (JUL) - preceding February 2024 (year boundary test)
+				ttDate5, err := f.GetCellValue(sheetName, "C5")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(ttDate5).To(Equal("2024-02-20"))
+				dow5, err := f.GetCellValue(sheetName, "F5")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(dow5).To(Equal("Tuesday"))
+			})
+
+			It("should write clickable PDF hyperlink for URL PDFFile values", func() {
+				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				// Row 2 (APR): PDFFile = "-" → should NOT have hyperlink
+				hasLink, target, err := f.GetCellHyperLink(sheetName, "E2")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(hasLink).To(BeFalse(), "Row 2 should not have a hyperlink for '-' PDFFile")
+				Expect(target).To(Equal(""))
+				val2, err := f.GetCellValue(sheetName, "E2")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(val2).To(Equal("-"))
+
+				// Row 3 (MAY): PDFFile = "https://sbi.com/apr23.pdf" → should have hyperlink
+				hasLink, target, err = f.GetCellHyperLink(sheetName, "E3")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(hasLink).To(BeTrue(), "Row 3 should have a hyperlink for URL PDFFile")
+				Expect(target).To(Equal("https://sbi.com/apr23.pdf"))
+				val3, err := f.GetCellValue(sheetName, "E3")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(val3).To(Equal("PDF"))
+
+				// Row 4 (JUL): PDFFile = "https://sbi.com/jun23.pdf" → should have hyperlink
+				hasLink, target, err = f.GetCellHyperLink(sheetName, "E4")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(hasLink).To(BeTrue(), "Row 4 should have a hyperlink for URL PDFFile")
+				Expect(target).To(Equal("https://sbi.com/jun23.pdf"))
+				val4, err := f.GetCellValue(sheetName, "E4")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(val4).To(Equal("PDF"))
+			})
+		})
+
+		Context("when TTMonthEndRates slice is empty", func() {
+			var (
+				excelManager  manager.ExcelManager
+				tempOutputDir string
+				sampleSummary tax.Summary
+				sheetName     = "TT Rates"
+			)
+
+			BeforeEach(func() {
+				var err error
+				tempOutputDir, err = os.MkdirTemp(baseTempDir, "empty_ttrates_test_*")
+				Expect(err).ToNot(HaveOccurred())
+				tempOutputFilePath = filepath.Join(tempOutputDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
+
+				excelManager = manager.NewExcelManager(tempOutputDir)
+				sampleSummary = tax.Summary{
+					Year:            testYear,
+					TTMonthEndRates: []tax.MonthEndRate{},
+				}
+			})
+
+			It("should create the 'TT Rates' sheet with only headers", func() {
+				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				rows, err := f.GetRows(sheetName)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rows).To(HaveLen(1), "Sheet should only contain the header row")
+
+				expectedHeaders := []string{
+					"Month", "Year", "TTDate", "TTRate", "PDF Link", "DayOfWeek",
+				}
+				Expect(rows[0]).To(Equal(expectedHeaders))
+			})
+		})
+
 		Context("when the tax summary is completely empty", func() {
 			var (
 				excelManager manager.ExcelManager
@@ -909,9 +1154,18 @@ var _ = Describe("ExcelManagerImpl", func() {
 					"TTDate", "TTRate", "Amount (INR)", "Tax (INR)", "Net (INR)",
 				}
 				Expect(rows[0]).To(Equal(expectedInterestHeaders))
+
+				// Check TT Rates Sheet
+				rows, err = f.GetRows("TT Rates")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rows).To(HaveLen(1), "TT Rates sheet should only contain the header row")
+				expectedTTRatesHeaders := []string{
+					"Month", "Year", "TTDate", "TTRate", "PDF Link", "DayOfWeek",
+				}
+				Expect(rows[0]).To(Equal(expectedTTRatesHeaders))
 			})
 
-			It("should create a file with exactly 4 sheets and no 'Sheet1'", func() {
+			It("should create a file with exactly 6 sheets and no 'Sheet1'", func() {
 				emptySummary := tax.Summary{}
 				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, emptySummary)
 				Expect(err).ToNot(HaveOccurred())
@@ -921,8 +1175,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				defer f.Close()
 
 				sheets := f.GetSheetList()
-				Expect(sheets).To(HaveLen(5), "There should be exactly 5 sheets")
-				Expect(sheets).To(ConsistOf("Summary", "Gains", "Dividends", "Valuations", "Interest"))
+				Expect(sheets).To(HaveLen(6), "There should be exactly 6 sheets")
+				Expect(sheets).To(ConsistOf("Summary", "Gains", "Dividends", "Valuations", "Interest", "TT Rates"))
 			})
 		})
 
@@ -1044,7 +1298,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 			It("should create Summary sheet as the first sheet", func() {
 				sheets := f.GetSheetList()
-				Expect(sheets).To(HaveLen(5)) // Summary, Gains, Dividends, Valuations, Interest
+				Expect(sheets).To(HaveLen(6)) // Summary, Gains, Dividends, Valuations, Interest, TT Rates
 				Expect(sheets[0]).To(Equal("Summary"))
 			})
 

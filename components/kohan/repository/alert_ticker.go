@@ -16,6 +16,8 @@ type AlertTickerRepository interface {
 	GetAlertTicker(ctx context.Context, symbol string) (barkat.AlertTicker, common.HttpError)
 	// ListAlertTickers returns a filtered, paginated list of Alert tickers with parent Ticker preloaded.
 	ListAlertTickers(ctx context.Context, query barkat.AlertTickerQuery) ([]barkat.AlertTicker, int64, common.HttpError)
+	// ExistsPrimaryAlertTicker checks if a PRIMARY Alert ticker already exists for the given ticker_id.
+	ExistsPrimaryAlertTicker(ctx context.Context, tickerID uint64) (bool, common.HttpError)
 }
 
 type AlertTickerRepositoryImpl struct {
@@ -35,7 +37,7 @@ func NewAlertTickerRepository(db *gorm.DB) *AlertTickerRepositoryImpl {
 
 func (r *AlertTickerRepositoryImpl) GetAlertTicker(ctx context.Context, symbol string) (barkat.AlertTicker, common.HttpError) {
 	var result barkat.AlertTicker
-	// FIXME: Remove Preload if Unused in UI.
+	// Preload Ticker is required for AfterFind to populate TickerSymbol in API responses.
 	err := r.SafeTx(ctx).Model(&barkat.AlertTicker{}).
 		Preload("Ticker").
 		First(&result, &barkat.AlertTicker{Symbol: symbol}).Error
@@ -69,10 +71,24 @@ func (r *AlertTickerRepositoryImpl) applyAlertTickerFilters(tx *gorm.DB, query b
 	if query.Exchange != "" {
 		where.Exchange = &query.Exchange
 	}
+	if query.Type != "" {
+		where.Type = query.Type
+	}
 	tx = tx.Where(&where)
 
 	if query.Ticker != "" {
 		tx = tx.Where("ticker_id IN (SELECT id FROM tickers WHERE external_id = ?)", query.Ticker)
 	}
 	return tx
+}
+
+func (r *AlertTickerRepositoryImpl) ExistsPrimaryAlertTicker(ctx context.Context, tickerID uint64) (bool, common.HttpError) {
+	var count int64
+	err := r.SafeTx(ctx).Model(&barkat.AlertTicker{}).
+		Where(&barkat.AlertTicker{TickerID: tickerID, Type: barkat.AlertTickerTypePrimary}).
+		Count(&count).Error
+	if err != nil {
+		return false, util.GormErrorMapper(err)
+	}
+	return count > 0, nil
 }

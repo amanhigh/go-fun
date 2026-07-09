@@ -8,7 +8,7 @@ if [[ "$1" == "--fresh-start" ]]; then
     FRESH_START=true
 fi
 
-echo "=== UAT: Parse & Compute 2022-2024 Multi-Year Taxes ==="
+echo "=== UAT: Parse & Compute 2022-2025 Multi-Year Taxes ==="
 if [[ "$FRESH_START" == true ]]; then
     echo "MODE: FRESH START (regenerating all reference data)"
 fi
@@ -149,6 +149,30 @@ else
 fi
 echo ""
 
+echo "Step 7: Parse & Compute 2025 Taxes (with carry-forward from 2024)"
+(cd "$PROJECT_ROOT" && go run ./components/kohan apps tax parse 2025)
+
+if [ ! -f "$FA_COMPUTE_DIR/Output/YearEndBalance/accounts_2024.csv" ]; then
+	echo "❌ accounts_2024.csv NOT FOUND - cannot proceed"
+	exit 1
+fi
+(cd "$PROJECT_ROOT" && go run ./components/kohan apps tax compute 2025)
+
+if [ -f "$FA_COMPUTE_DIR/Output/YearEndBalance/accounts_2025.csv" ]; then
+	echo "✅ accounts_2025.csv created"
+else
+	echo "❌ accounts_2025.csv NOT FOUND"
+	exit 1
+fi
+
+if [ -f "$FA_COMPUTE_DIR/Output/Reports/tax_summary_2025.xlsx" ]; then
+	echo "✅ tax_summary_2025.xlsx created"
+else
+	echo "❌ tax_summary_2025.xlsx NOT FOUND"
+	exit 1
+fi
+echo ""
+
 echo "✅ UAT COMPLETE"
 echo ""
 echo "Generated Files:"
@@ -156,6 +180,8 @@ echo "  ✅ Input/Parsed/trades.csv"
 echo "  ✅ Output/YearEndBalance/accounts_2022.csv"
 echo "  ✅ Output/YearEndBalance/accounts_2023.csv"
 echo "  ✅ Output/YearEndBalance/accounts_2024.csv"
+echo "  ✅ Output/YearEndBalance/accounts_2025.csv"
 echo "  ✅ Output/Reports/tax_summary_2022.xlsx"
 echo "  ✅ Output/Reports/tax_summary_2023.xlsx"
 echo "  ✅ Output/Reports/tax_summary_2024.xlsx"
+echo "  ✅ Output/Reports/tax_summary_2025.xlsx"

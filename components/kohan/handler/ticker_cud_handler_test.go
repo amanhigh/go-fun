@@ -662,7 +662,6 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 				})
 
 				Context("Bad Values", func() {
-					// HACK: Simplify Use Typed Payloads in Tests to Avoid Repetitive Raw JSON Strings and Reduce Risk of Syntax Errors in Test Cases
 					It("should return 400 for missing last_opened_at (PRD: required)", func() {
 						jsonPayload := `{"ticker":"MCX","exchange":"NSE","timeframes":["MN","WK","DL"],"type":"EQUITY","state":"WATCHED","trend":"UPTREND","is_fno":true}`
 						req, w := rawTickerRequest(http.MethodPost, barkat.TickerBase, jsonPayload)

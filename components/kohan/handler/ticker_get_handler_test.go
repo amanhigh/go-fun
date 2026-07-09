@@ -86,7 +86,10 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 		BeforeEach(func() {
 			createdTicker = seedTicker(testCtx, db, validTickerPayload)
 			alertExchange := "NSE"
-			Expect(db.Create(&barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCIX", PairID: "941982", Name: "Multi Commodity Exchange of India", Exchange: &alertExchange}).Error).ToNot(HaveOccurred())
+			Expect(db.Create(&barkat.AlertTicker{
+				TickerID: createdTicker.ID, Symbol: "MCIX", PairID: "941982",
+				Name: "Multi Commodity Exchange of India", Exchange: &alertExchange, Type: barkat.AlertTickerTypePrimary,
+			}).Error).ToNot(HaveOccurred())
 		})
 
 		Context("Happy Path", func() {
@@ -133,6 +136,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 					Expect(response.AlertTickers[0].Symbol).To(Equal("MCIX"))
 					Expect(response.AlertTickers[0].PairID).To(Equal("941982"))
 					Expect(response.AlertTickers[0].Name).To(Equal("Multi Commodity Exchange of India"))
+					Expect(response.AlertTickers[0].Type).To(Equal(barkat.AlertTickerTypePrimary))
 				})
 			})
 		})

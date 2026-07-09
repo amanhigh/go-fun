@@ -2,10 +2,13 @@ package manager
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
+	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
 )
 
@@ -129,12 +132,43 @@ func (m *PriceAlertManagerImpl) resolveAlertTickersForInputs(ctx context.Context
 		if _, ok := alertTickerByPairID[input.PairID]; ok {
 			continue
 		}
-		alertTicker, err := m.repo.GetByPairId(ctx, input.PairID)
+		alertTicker, err := m.repo.GetByPairId(ctx, input.PairID, string(barkat.AlertTickerTypePrimary))
 		if err != nil {
-			return nil, err
+			// Try secondary lookup to provide a readable message
+			msg := buildUnresolvedAlertMessage(ctx, m.repo, input)
+			log.Error().
+				Str("pair_id", input.PairID).
+				Str("alert_id", input.AlertID).
+				Float64("trigger_price", input.TriggerPrice).
+				Msg("ReplacePriceAlerts — unresolved alert ticker")
+			return nil, common.NewHttpError(msg, http.StatusNotFound)
 		}
 		alertTickerByPairID[input.PairID] = alertTicker
 	}
 
 	return alertTickerByPairID, nil
+}
+
+// buildUnresolvedAlertMessage attempts to find any alert ticker by pair_id to provide
+// a readable error message. If an alert ticker exists (e.g. SECONDARY), its human-readable
+// fields are included. If none exists, only the incoming request fields are shown.
+func buildUnresolvedAlertMessage(ctx context.Context, repo repository.PriceAlertRepository, input barkat.PriceAlertInput) string {
+	anyTicker, anyErr := repo.GetByPairId(ctx, input.PairID)
+	if anyErr == nil {
+		exchange := ""
+		if anyTicker.Exchange != nil {
+			exchange = *anyTicker.Exchange
+		}
+		return fmt.Sprintf(
+			"PRIMARY alert ticker not found for pair_id=%s, alert_id=%s, trigger_price=%.4f. "+
+				"Found %s alert ticker instead: symbol=%s, name=%q, exchange=%s.",
+			input.PairID, input.AlertID, input.TriggerPrice,
+			anyTicker.Type, anyTicker.Symbol, anyTicker.Name, exchange,
+		)
+	}
+	return fmt.Sprintf(
+		"PRIMARY alert ticker not found for pair_id=%s, alert_id=%s, trigger_price=%.4f. "+
+			"No alert ticker mapping exists in Barkat.",
+		input.PairID, input.AlertID, input.TriggerPrice,
+	)
 }

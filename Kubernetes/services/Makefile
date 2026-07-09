@@ -75,7 +75,8 @@ info-svc:
 ### Prepare
 helm-add:
 	printf $(_TITLE) "Helm" "Adding"
-	helm repo add onechart https://chart.onechart.dev
+	# FIXME: onechart.dev is archived (gimlet.io shut down). Find alternative: synkube/charts (OCI) or remove dependency.
+	-helm repo add onechart https://chart.onechart.dev 2>&1 || true
 	helm repo add go-fun https://amanhigh.github.io/go-fun
 	helm repo add stakater https://stakater.github.io/stakater-charts
 	helm repo add bitnami https://charts.bitnami.com/bitnami
