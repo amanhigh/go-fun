@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"time"
 
 	"fmt"
 
@@ -21,8 +22,10 @@ type TaxManagerImpl struct {
 	taxValuationManager TaxValuationManager
 	excelManager        ExcelManager
 	accountManager      AccountManager
+	sbiManager          SBIManager
 }
 
+//nolint:revive // argument-limit: 7 params matches existing pattern
 func NewTaxManager(
 	capitalGainManager CapitalGainManager,
 	dividendManager DividendManager,
@@ -30,6 +33,7 @@ func NewTaxManager(
 	taxValuationManager TaxValuationManager,
 	excelManager ExcelManager,
 	accountManager AccountManager,
+	sbiManager SBIManager,
 ) TaxManager {
 	return &TaxManagerImpl{
 		capitalGainManager:  capitalGainManager,
@@ -38,6 +42,7 @@ func NewTaxManager(
 		taxValuationManager: taxValuationManager,
 		excelManager:        excelManager,
 		accountManager:      accountManager,
+		sbiManager:          sbiManager,
 	}
 }
 
@@ -59,6 +64,11 @@ func (t *TaxManagerImpl) GetTaxSummary(ctx context.Context, year int) (summary t
 
 	// Process valuations
 	if summary.INRValuations, err = t.processValuations(ctx, year); err != nil {
+		return
+	}
+
+	// Process SBI TT month-end rates for the FY (Apr→Mar)
+	if summary.TTMonthEndRates, err = t.processTTMonthEndRates(ctx, year); err != nil {
 		return
 	}
 
@@ -114,6 +124,26 @@ func (t *TaxManagerImpl) processValuations(ctx context.Context, year int) ([]tax
 
 	// Always pass dividends to ProcessValuations (mandatory parameter)
 	return t.taxValuationManager.ProcessValuations(ctx, usdValuations, inrDividends)
+}
+
+// processTTMonthEndRates populates one SBI TT Buy month-end rate for each month
+// of the Indian financial year (April of "year" to March of "year+1").
+// Returns exactly 12 rates in Apr→Mar order by reusing the existing GetLastMonthEndRate method.
+func (t *TaxManagerImpl) processTTMonthEndRates(ctx context.Context, year int) ([]tax.MonthEndRate, common.HttpError) {
+	rates := make([]tax.MonthEndRate, 0, 12)
+
+	for i := range 12 {
+		monthDate := time.Date(year, time.April, 1, 0, 0, 0, 0, time.UTC).AddDate(0, i, 0)
+
+		rate, err := t.sbiManager.GetLastMonthEndRate(ctx, monthDate)
+		if err != nil {
+			return nil, err
+		}
+
+		rates = append(rates, rate)
+	}
+
+	return rates, nil
 }
 
 func (t *TaxManagerImpl) SaveTaxSummaryToExcel(ctx context.Context, year int, summary tax.Summary) error {
