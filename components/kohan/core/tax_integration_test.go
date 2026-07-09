@@ -66,6 +66,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 
 			Expect(err).ToNot(HaveOccurred()) // Verify no error during retrieval
 			Expect(summary).ToNot(BeNil())    // Verify the summary object itself is not nil
+			Expect(summary.Year).To(Equal(testYear), "Summary Year should match the requested year")
 		})
 	})
 

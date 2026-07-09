@@ -47,6 +47,8 @@ func NewTaxManager(
 }
 
 func (t *TaxManagerImpl) GetTaxSummary(ctx context.Context, year int) (summary tax.Summary, err common.HttpError) {
+	summary.Year = year
+
 	// Process gains
 	if summary.INRGains, err = t.processGains(ctx, year); err != nil {
 		return
