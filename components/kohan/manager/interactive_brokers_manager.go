@@ -32,11 +32,36 @@ func (m *InteractiveBrokersManagerImpl) resolveFilePath(year int) string {
 }
 
 func (m *InteractiveBrokersManagerImpl) Parse(year int) (info tax.BrokerageInfo, err error) {
+	records, err := m.readCSVRecords(year)
+	if err != nil {
+		return info, err
+	}
+
+	info.Interests, err = m.parseInterest(records)
+	if err != nil {
+		return info, err
+	}
+
+	info.Trades, err = m.parseTrades(records)
+	if err != nil {
+		return info, err
+	}
+
+	info.Dividends, err = m.parseDividends(records)
+	if err != nil {
+		return info, err
+	}
+
+	return info, nil
+}
+
+// readCSVRecords reads and parses all CSV records from the file for the given year.
+// Extracted from Parse to keep statement count within funlen limit.
+func (m *InteractiveBrokersManagerImpl) readCSVRecords(year int) ([][]string, error) {
 	filePath := m.resolveFilePath(year)
 	file, err := os.Open(filePath)
 	if err != nil {
-		err = fmt.Errorf("failed to open CSV file: %w", err)
-		return
+		return nil, fmt.Errorf("failed to open CSV file: %w", err)
 	}
 	defer file.Close()
 
@@ -44,26 +69,10 @@ func (m *InteractiveBrokersManagerImpl) Parse(year int) (info tax.BrokerageInfo,
 	reader.FieldsPerRecord = -1
 	records, err := reader.ReadAll()
 	if err != nil {
-		err = fmt.Errorf("failed to read CSV: %w", err)
-		return
+		return nil, fmt.Errorf("failed to read CSV: %w", err)
 	}
 
-	info.Interests, err = m.parseInterest(records)
-	if err != nil {
-		return
-	}
-
-	info.Trades, err = m.parseTrades(records)
-	if err != nil {
-		return
-	}
-
-	info.Dividends, err = m.parseDividends(records)
-	if err != nil {
-		return
-	}
-
-	return
+	return records, nil
 }
 
 func (m *InteractiveBrokersManagerImpl) parseInterest(records [][]string) ([]tax.Interest, error) {

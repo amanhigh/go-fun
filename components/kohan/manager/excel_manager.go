@@ -14,6 +14,17 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+// Column width constants used across all sheets.
+// These replace magic number literals to satisfy the mnd linter.
+const (
+	colWidthNarrow    = 8
+	colWidthSemi      = 10
+	colWidthMedium    = 12
+	colWidthWide      = 14
+	colWidthExtraWide = 16
+	colWidthMax       = 18
+)
+
 type ExcelManager interface {
 	GenerateTaxSummaryExcel(ctx context.Context, year int, summary tax.Summary) error
 }
@@ -177,8 +188,8 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 	}
 
 	e.setColumnWidths(f, sheetName, map[string]float64{
-		"A": 8, "B": 12, "C": 12, "D": 10, "E": 12,
-		"F": 16, "G": 8, "H": 12, "I": 10, "J": 12,
+		"A": colWidthNarrow, "B": colWidthMedium, "C": colWidthMedium, "D": colWidthSemi, "E": colWidthMedium,
+		"F": colWidthExtraWide, "G": colWidthNarrow, "H": colWidthMedium, "I": colWidthSemi, "J": colWidthMedium,
 	})
 	return nil
 }
@@ -228,8 +239,8 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 	}
 
 	e.setColumnWidths(f, sheetName, map[string]float64{
-		"A": 8, "B": 12, "C": 14, "D": 12, "E": 12,
-		"F": 12, "G": 10, "H": 14, "I": 12, "J": 12,
+		"A": colWidthNarrow, "B": colWidthMedium, "C": colWidthWide, "D": colWidthMedium, "E": colWidthMedium,
+		"F": colWidthMedium, "G": colWidthSemi, "H": colWidthWide, "I": colWidthMedium, "J": colWidthMedium,
 	})
 	return nil
 }
@@ -277,11 +288,11 @@ func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize
 	}
 
 	e.setColumnWidths(f, sheetName, map[string]float64{
-		"A": 8,
-		"B": 14, "C": 8, "D": 10, "E": 10, "F": 12, "G": 10, "H": 10,
-		"I": 14, "J": 8, "K": 10, "L": 10, "M": 12, "N": 10, "O": 10,
-		"P": 16, "Q": 8, "R": 10, "S": 10, "T": 12, "U": 10, "V": 10,
-		"W": 16,
+		"A": colWidthNarrow,
+		"B": colWidthWide, "C": colWidthNarrow, "D": colWidthSemi, "E": colWidthSemi, "F": colWidthMedium, "G": colWidthSemi, "H": colWidthSemi,
+		"I": colWidthWide, "J": colWidthNarrow, "K": colWidthSemi, "L": colWidthSemi, "M": colWidthMedium, "N": colWidthSemi, "O": colWidthSemi,
+		"P": colWidthExtraWide, "Q": colWidthNarrow, "R": colWidthSemi, "S": colWidthSemi, "T": colWidthMedium, "U": colWidthSemi, "V": colWidthSemi,
+		"W": colWidthExtraWide,
 	})
 	return nil
 }
@@ -361,8 +372,8 @@ func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.F
 	}
 
 	e.setColumnWidths(f, sheetName, map[string]float64{
-		"A": 8, "B": 12, "C": 14, "D": 12, "E": 12,
-		"F": 12, "G": 10, "H": 14, "I": 12, "J": 12,
+		"A": colWidthNarrow, "B": colWidthMedium, "C": colWidthWide, "D": colWidthMedium, "E": colWidthMedium,
+		"F": colWidthMedium, "G": colWidthSemi, "H": colWidthWide, "I": colWidthMedium, "J": colWidthMedium,
 	})
 	return nil
 }
@@ -623,7 +634,7 @@ func (e *ExcelManagerImpl) writeTTRatesSheet(ctx context.Context, f *excelize.Fi
 	}
 
 	e.setColumnWidths(f, sheetName, map[string]float64{
-		"A": 8, "B": 8, "C": 14, "D": 10, "E": 12, "F": 14,
+		"A": colWidthNarrow, "B": colWidthNarrow, "C": colWidthWide, "D": colWidthSemi, "E": colWidthMedium, "F": colWidthWide,
 	})
 	return nil
 }
@@ -670,12 +681,16 @@ func (e *ExcelManagerImpl) writeSummarySheet(ctx context.Context, f *excelize.Fi
 		return err
 	}
 
-	// Calculate TOTALS row positions for all sheets
+	return e.writeSummarySections(f, sheetName, summary)
+}
+
+// writeSummarySections writes Gains, Dividends, and Interest sections into the Summary sheet.
+// This is extracted from writeSummarySheet to keep statement count within the funlen limit.
+func (e *ExcelManagerImpl) writeSummarySections(f *excelize.File, sheetName string, summary tax.Summary) error {
+	// Calculate TOTALS row positions for all sheets (re-calculated from summary)
 	gainsTotalsRow, gainsSTCGRow, gainsLTCGRow := e.calculateGainsRows(summary.INRGains)
 	dividendsTotalsRow := e.calculateTotalsRow(summary.INRDividends)
 	interestTotalsRow := e.calculateTotalsRow(summary.INRInterest)
-
-	// Write sections in order: Gains → Dividends → Interest
 	currentRow := 3 // Start after header and empty row
 
 	// Gains section (Short Term + Long Term) - only if data exists
@@ -702,7 +717,7 @@ func (e *ExcelManagerImpl) writeSummarySheet(ctx context.Context, f *excelize.Fi
 	}
 
 	e.setColumnWidths(f, sheetName, map[string]float64{
-		"A": 18, "B": 18, "C": 18, "D": 18, "E": 18, "F": 18,
+		"A": colWidthMax, "B": colWidthMax, "C": colWidthMax, "D": colWidthMax, "E": colWidthMax, "F": colWidthMax,
 	})
 	return nil
 }
