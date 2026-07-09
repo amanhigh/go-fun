@@ -176,6 +176,10 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 		}
 	}
 
+	e.setColumnWidths(f, sheetName, map[string]float64{
+		"A": 8, "B": 12, "C": 12, "D": 10, "E": 12,
+		"F": 16, "G": 8, "H": 12, "I": 10, "J": 12,
+	})
 	return nil
 }
 
@@ -223,6 +227,10 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 		}
 	}
 
+	e.setColumnWidths(f, sheetName, map[string]float64{
+		"A": 8, "B": 12, "C": 14, "D": 12, "E": 12,
+		"F": 12, "G": 10, "H": 14, "I": 12, "J": 12,
+	})
 	return nil
 }
 
@@ -268,6 +276,13 @@ func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize
 		}
 	}
 
+	e.setColumnWidths(f, sheetName, map[string]float64{
+		"A": 8,
+		"B": 14, "C": 8, "D": 10, "E": 10, "F": 12, "G": 10, "H": 10,
+		"I": 14, "J": 8, "K": 10, "L": 10, "M": 12, "N": 10, "O": 10,
+		"P": 16, "Q": 8, "R": 10, "S": 10, "T": 12, "U": 10, "V": 10,
+		"W": 16,
+	})
 	return nil
 }
 
@@ -345,6 +360,10 @@ func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.F
 		}
 	}
 
+	e.setColumnWidths(f, sheetName, map[string]float64{
+		"A": 8, "B": 12, "C": 14, "D": 12, "E": 12,
+		"F": 12, "G": 10, "H": 14, "I": 12, "J": 12,
+	})
 	return nil
 }
 
@@ -554,6 +573,16 @@ func (e *ExcelManagerImpl) writeValuationsTotals(f *excelize.File, sheetName str
 	})
 }
 
+// setColumnWidths sets custom column widths for the given sheet.
+// widths is a map of column letter to desired width.
+func (e *ExcelManagerImpl) setColumnWidths(f *excelize.File, sheetName string, widths map[string]float64) {
+	for col, width := range widths {
+		if err := f.SetColWidth(sheetName, col, col, width); err != nil {
+			log.Warn().Err(err).Str("sheet", sheetName).Str("col", col).Msg("Failed to set column width")
+		}
+	}
+}
+
 // writeTTRatesSheet creates the "TT Rates" sheet with FY month-end rate reference data.
 // It contains 12 rows (Apr→Mar) with month/year labels, the actual SBI rate date, the TT buy rate,
 // a clickable PDF link when available, and the day of the week.
@@ -593,6 +622,9 @@ func (e *ExcelManagerImpl) writeTTRatesSheet(ctx context.Context, f *excelize.Fi
 		}
 	}
 
+	e.setColumnWidths(f, sheetName, map[string]float64{
+		"A": 8, "B": 8, "C": 14, "D": 10, "E": 12, "F": 14,
+	})
 	return nil
 }
 
@@ -664,9 +696,14 @@ func (e *ExcelManagerImpl) writeSummarySheet(ctx context.Context, f *excelize.Fi
 
 	// Interest section - only if data exists
 	if len(summary.INRInterest) > 0 {
-		return e.writeInterestSection(f, sheetName, currentRow, interestTotalsRow)
+		if err := e.writeInterestSection(f, sheetName, currentRow, interestTotalsRow); err != nil {
+			return err
+		}
 	}
 
+	e.setColumnWidths(f, sheetName, map[string]float64{
+		"A": 18, "B": 18, "C": 18, "D": 18, "E": 18, "F": 18,
+	})
 	return nil
 }
 

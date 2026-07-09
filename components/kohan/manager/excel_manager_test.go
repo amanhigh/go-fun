@@ -232,6 +232,23 @@ var _ = Describe("ExcelManagerImpl", func() {
 				// Column J has formula =E4*I4 and calculates PNL (INR)
 				expectFormulaCell(f, sheetName, "J4", "=E4*I4", gain3.PNL*gain3.TTRate)
 			})
+
+			It("should set custom column widths for Gains sheet", func() {
+				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer f.Close()
+
+				widthA, err := f.GetColWidth(sheetName, "A")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(widthA).To(BeNumerically("==", 8.0), "Column A (Symbol) should be width 8")
+
+				widthF, err := f.GetColWidth(sheetName, "F")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(widthF).To(BeNumerically("==", 16.0), "Column F (Commission) should be width 16")
+			})
 		})
 
 		Context("when INRGains slice is empty", func() {
