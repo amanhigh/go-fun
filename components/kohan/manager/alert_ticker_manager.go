@@ -45,7 +45,7 @@ func (m *AlertTickerManagerImpl) CreateAlertTicker(ctx context.Context, ticker s
 		alert.TickerID = parent.ID
 
 		// Enforce at most one PRIMARY Alert ticker per parent
-		if alert.Type == "PRIMARY" {
+		if alert.Type == barkat.AlertTickerTypePrimary {
 			exists, err := m.repo.ExistsPrimaryAlertTicker(c, parent.ID)
 			if err != nil {
 				return err

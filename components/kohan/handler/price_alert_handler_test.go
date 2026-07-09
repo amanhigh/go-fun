@@ -156,7 +156,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 			It("should replace existing alerts for submitted pair ids only", func() {
 				otherTicker := barkat.Ticker{Ticker: "NIFTY", Exchange: "NSE", Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
 				Expect(db.Create(&otherTicker).Error).ToNot(HaveOccurred())
-				otherAlertTicker := barkat.AlertTicker{TickerID: otherTicker.ID, Symbol: "NIFTY50", PairID: "17940", Name: "Nifty 50", Type: "PRIMARY"}
+				otherAlertTicker := barkat.AlertTicker{TickerID: otherTicker.ID, Symbol: "NIFTY50", PairID: "17940", Name: "Nifty 50", Type: barkat.AlertTickerTypePrimary}
 				Expect(db.Create(&otherAlertTicker).Error).ToNot(HaveOccurred())
 				oldID := "111111"
 				otherID := "222222"
@@ -178,7 +178,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 			It("should replace alerts across multiple submitted pair ids", func() {
 				otherTicker := barkat.Ticker{Ticker: "NIFTY", Exchange: "NSE", Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
 				Expect(db.Create(&otherTicker).Error).ToNot(HaveOccurred())
-				otherAlertTicker := barkat.AlertTicker{TickerID: otherTicker.ID, Symbol: "NIFTY50", PairID: "17940", Name: "Nifty 50", Type: "PRIMARY"}
+				otherAlertTicker := barkat.AlertTicker{TickerID: otherTicker.ID, Symbol: "NIFTY50", PairID: "17940", Name: "Nifty 50", Type: barkat.AlertTickerTypePrimary}
 				Expect(db.Create(&otherAlertTicker).Error).ToNot(HaveOccurred())
 
 				multiPairPayload := barkat.PriceAlertReplaceRequest{Alerts: []barkat.PriceAlertInput{
@@ -237,7 +237,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 			Context("Pair ID Field", func() {
 				Context("Allowed Values", func() {
 					It("should accept minimum pair_id length 1", func() {
-						minPairAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MINP", PairID: "1", Name: "Min Pair", Exchange: new("NSE"), Type: "PRIMARY"}
+						minPairAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MINP", PairID: "1", Name: "Min Pair", Exchange: new("NSE"), Type: barkat.AlertTickerTypePrimary}
 						Expect(db.Create(&minPairAlertTicker).Error).ToNot(HaveOccurred())
 
 						payload := replacePayload
@@ -249,7 +249,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 
 					It("should accept maximum pair_id length 64", func() {
 						maxPair := strings.Repeat("1", 64)
-						maxPairAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MAXP", PairID: maxPair, Name: "Max Pair", Exchange: new("NSE"), Type: "PRIMARY"}
+						maxPairAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MAXP", PairID: maxPair, Name: "Max Pair", Exchange: new("NSE"), Type: barkat.AlertTickerTypePrimary}
 						Expect(db.Create(&maxPairAlertTicker).Error).ToNot(HaveOccurred())
 
 						payload := replacePayload
@@ -299,7 +299,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 					})
 
 					It("should return 404 for SECONDARY pair_id with readable fields in message", func() {
-						secondaryAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "SECALERT", PairID: "500500", Name: "Secondary Alert", Exchange: new("NSE"), Type: "SECONDARY"}
+						secondaryAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "SECALERT", PairID: "500500", Name: "Secondary Alert", Exchange: new("NSE"), Type: barkat.AlertTickerTypeSecondary}
 						Expect(db.Create(&secondaryAlertTicker).Error).ToNot(HaveOccurred())
 
 						payload := replacePayload
@@ -464,9 +464,9 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 				Expect(db.Create(&multiTicker).Error).ToNot(HaveOccurred())
 
 				// Create SECONDARY first (lower ID) and PRIMARY second (higher ID) — PRIMARY should be chosen
-				secondary := barkat.AlertTicker{TickerID: multiTicker.ID, Symbol: "NIFTY_SECOND", PairID: "17941", Name: "Nifty 50 Bank", Exchange: new("NSE"), Type: "SECONDARY"}
+				secondary := barkat.AlertTicker{TickerID: multiTicker.ID, Symbol: "NIFTY_SECOND", PairID: "17941", Name: "Nifty 50 Bank", Exchange: new("NSE"), Type: barkat.AlertTickerTypeSecondary}
 				Expect(db.Create(&secondary).Error).ToNot(HaveOccurred())
-				primary := barkat.AlertTicker{TickerID: multiTicker.ID, Symbol: "NIFTY_FIRST", PairID: "17940", Name: "Nifty 50", Exchange: new("NSE"), Type: "PRIMARY"}
+				primary := barkat.AlertTicker{TickerID: multiTicker.ID, Symbol: "NIFTY_FIRST", PairID: "17940", Name: "Nifty 50", Exchange: new("NSE"), Type: barkat.AlertTickerTypePrimary}
 				Expect(db.Create(&primary).Error).ToNot(HaveOccurred())
 
 				req, w = util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+multiTicker.Ticker+"/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: 99.99})
@@ -511,7 +511,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 						secOnlyTicker := barkat.Ticker{Ticker: "WIPRO", Exchange: "NSE", Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
 						Expect(db.Create(&secOnlyTicker).Error).ToNot(HaveOccurred())
 
-						secOnly := barkat.AlertTicker{TickerID: secOnlyTicker.ID, Symbol: "WIPRO_SEC", PairID: "60001", Name: "Wipro Secondary", Exchange: new("NSE"), Type: "SECONDARY"}
+						secOnly := barkat.AlertTicker{TickerID: secOnlyTicker.ID, Symbol: "WIPRO_SEC", PairID: "60001", Name: "Wipro Secondary", Exchange: new("NSE"), Type: barkat.AlertTickerTypeSecondary}
 						Expect(db.Create(&secOnly).Error).ToNot(HaveOccurred())
 
 						req, w = util.CreateTestRequest(http.MethodPost, barkat.TickerBase+"/"+secOnlyTicker.Ticker+"/alerts", barkat.PendingPriceAlertRequest{TriggerPrice: 1})
@@ -601,7 +601,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 			})
 
 			It("should delete SECONDARY-linked canonical alert by alert_id", func() {
-				secondaryAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCISECD", PairID: "500600", Name: "Secondary Del", Exchange: new("NSE"), Type: "SECONDARY"}
+				secondaryAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCISECD", PairID: "500600", Name: "Secondary Del", Exchange: new("NSE"), Type: barkat.AlertTickerTypeSecondary}
 				Expect(db.Create(&secondaryAlertTicker).Error).ToNot(HaveOccurred())
 				secAlertID := "777777"
 				seedPriceAlert(testCtx, db, barkat.PriceAlert{AlertTickerID: secondaryAlertTicker.ID, AlertID: &secAlertID, TriggerPrice: 80})
@@ -693,7 +693,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 			It("should filter by primary ticker without leaking other ticker alerts", func() {
 				otherTicker := barkat.Ticker{Ticker: "NIFTY", Exchange: "NSE", Timeframes: []string{"MN"}, Type: "EQUITY", State: "WATCHED", Trend: "SIDEWAYS", LastOpenedAt: time.Now()}
 				Expect(db.Create(&otherTicker).Error).ToNot(HaveOccurred())
-				otherAlertTicker := barkat.AlertTicker{TickerID: otherTicker.ID, Symbol: "NIFTY50", PairID: "17940", Name: "Nifty 50", Type: "PRIMARY"}
+				otherAlertTicker := barkat.AlertTicker{TickerID: otherTicker.ID, Symbol: "NIFTY50", PairID: "17940", Name: "Nifty 50", Type: barkat.AlertTickerTypePrimary}
 				Expect(db.Create(&otherAlertTicker).Error).ToNot(HaveOccurred())
 				otherAlertID := "222222"
 				seedPriceAlert(testCtx, db, barkat.PriceAlert{AlertTickerID: otherAlertTicker.ID, AlertID: &otherAlertID, TriggerPrice: 20})
@@ -708,7 +708,8 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 			})
 
 			It("should list both PRIMARY and SECONDARY linked alerts", func() {
-				secondaryAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCISEC", PairID: "500501", Name: "Secondary Alert Ticker", Exchange: new("NSE"), Type: "SECONDARY"}
+				secondaryAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCISEC", PairID: "500501",
+					Name: "Secondary Alert Ticker", Exchange: new("NSE"), Type: barkat.AlertTickerTypeSecondary}
 				Expect(db.Create(&secondaryAlertTicker).Error).ToNot(HaveOccurred())
 				secAlertID := "333333"
 				seedPriceAlert(testCtx, db, barkat.PriceAlert{AlertTickerID: secondaryAlertTicker.ID, AlertID: &secAlertID, TriggerPrice: 50})
@@ -755,7 +756,8 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 					})
 
 					It("should return SECONDARY-linked alerts when ticker has SECONDARY alert tickers", func() {
-						secondaryAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCISEC3", PairID: "500503", Name: "Secondary Alert Ticker 3", Exchange: new("NSE"), Type: "SECONDARY"}
+						secondaryAlertTicker := barkat.AlertTicker{TickerID: createdTicker.ID, Symbol: "MCISEC3", PairID: "500503",
+							Name: "Secondary Alert Ticker 3", Exchange: new("NSE"), Type: barkat.AlertTickerTypeSecondary}
 						Expect(db.Create(&secondaryAlertTicker).Error).ToNot(HaveOccurred())
 						secAlertID := "555555"
 						seedPriceAlert(testCtx, db, barkat.PriceAlert{AlertTickerID: secondaryAlertTicker.ID, AlertID: &secAlertID, TriggerPrice: 70})

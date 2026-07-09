@@ -85,7 +85,7 @@ func (r *AlertTickerRepositoryImpl) applyAlertTickerFilters(tx *gorm.DB, query b
 func (r *AlertTickerRepositoryImpl) ExistsPrimaryAlertTicker(ctx context.Context, tickerID uint64) (bool, common.HttpError) {
 	var count int64
 	err := r.SafeTx(ctx).Model(&barkat.AlertTicker{}).
-		Where(&barkat.AlertTicker{TickerID: tickerID, Type: "PRIMARY"}).
+		Where(&barkat.AlertTicker{TickerID: tickerID, Type: barkat.AlertTickerTypePrimary}).
 		Count(&count).Error
 	if err != nil {
 		return false, util.GormErrorMapper(err)

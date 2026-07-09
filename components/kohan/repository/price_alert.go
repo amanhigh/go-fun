@@ -58,7 +58,7 @@ func (r *PriceAlertRepositoryImpl) GetByTicker(ctx context.Context, ticker strin
 	}
 
 	var alertTicker barkat.AlertTicker
-	if err := r.SafeTx(ctx).Where(&barkat.AlertTicker{TickerID: parent.ID, Type: "PRIMARY"}).First(&alertTicker).Error; err != nil {
+	if err := r.SafeTx(ctx).Where(&barkat.AlertTicker{TickerID: parent.ID, Type: barkat.AlertTickerTypePrimary}).First(&alertTicker).Error; err != nil {
 		return barkat.AlertTicker{}, util.GormErrorMapper(err)
 	}
 	return alertTicker, nil

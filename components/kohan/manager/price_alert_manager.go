@@ -132,7 +132,7 @@ func (m *PriceAlertManagerImpl) resolveAlertTickersForInputs(ctx context.Context
 		if _, ok := alertTickerByPairID[input.PairID]; ok {
 			continue
 		}
-		alertTicker, err := m.repo.GetByPairId(ctx, input.PairID, "PRIMARY")
+		alertTicker, err := m.repo.GetByPairId(ctx, input.PairID, string(barkat.AlertTickerTypePrimary))
 		if err != nil {
 			// Try secondary lookup to provide a readable message
 			msg := buildUnresolvedAlertMessage(ctx, m.repo, input)
