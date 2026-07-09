@@ -42,6 +42,12 @@ func seedTicker(ctx context.Context, db *gorm.DB, ticker barkat.Ticker) barkat.T
 // TickerHandler Integration GET/List Tests - Comprehensive Master Specification
 // Tests complete HTTP → Handler → Manager → Repository → Database flow for PRD Section 2.2.1.2 and 2.2.1.6.
 var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Primary Ticker APIs", func() {
+	const (
+		tickerTypeComposite = tickerTypeComposite
+		tickerNiftyUSDINR   = tickerNiftyUSDINR
+		exchangeNSE         = exchangeNSE
+		tickerUS10YUS02Y    = tickerUS10YUS02Y
+	)
 	var (
 		tickerHandler      handler.TickerHandler
 		router             *gin.Engine
@@ -60,7 +66,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 		tickerHandler = handler.NewTickerHandler(tickerMgr)
 		validTickerPayload = barkat.Ticker{
 			Ticker:       "MCX",
-			Exchange:     "NSE",
+			Exchange:     exchangeNSE,
 			Timeframes:   []string{"MN", "WK", "DL"},
 			Type:         "EQUITY",
 			State:        "WATCHED",
@@ -85,7 +91,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 
 		BeforeEach(func() {
 			createdTicker = seedTicker(testCtx, db, validTickerPayload)
-			alertExchange := "NSE"
+			alertExchange := exchangeNSE
 			Expect(db.Create(&barkat.AlertTicker{
 				TickerID: createdTicker.ID, Symbol: "MCIX", PairID: "941982",
 				Name: "Multi Commodity Exchange of India", Exchange: &alertExchange, Type: barkat.AlertTickerTypePrimary,
@@ -118,7 +124,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 
 				It("should return ticker with correct fields", func() {
 					Expect(response.Ticker).To(Equal("MCX"))
-					Expect(response.Exchange).To(Equal("NSE"))
+					Expect(response.Exchange).To(Equal(exchangeNSE))
 					Expect(response.Timeframes).To(Equal([]string{"MN", "WK", "DL"}))
 					Expect(response.Type).To(Equal("EQUITY"))
 					Expect(response.State).To(Equal("WATCHED"))
@@ -170,30 +176,30 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 
 					It("should accept encoded composite slash ticker NIFTY/USDINR", func() {
 						payload := validTickerPayload
-						payload.Ticker = "NIFTY/USDINR"
-						payload.Type = "COMPOSITE"
+						payload.Ticker = tickerNiftyUSDINR
+						payload.Type = tickerTypeComposite
 						seedTicker(testCtx, db, payload)
 						req, w := util.CreateTestRequest(http.MethodGet,
-							barkat.TickerBase+"/"+url.PathEscape("NIFTY/USDINR"), nil)
+							barkat.TickerBase+"/"+url.PathEscape(tickerNiftyUSDINR), nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusOK))
 						response := decodeTickerGetResponse(w)
-						Expect(response.Ticker).To(Equal("NIFTY/USDINR"))
-						Expect(response.Type).To(Equal("COMPOSITE"))
+						Expect(response.Ticker).To(Equal(tickerNiftyUSDINR))
+						Expect(response.Type).To(Equal(tickerTypeComposite))
 					})
 
 					It("should accept composite minus ticker US10Y-US02Y", func() {
 						payload := validTickerPayload
-						payload.Ticker = "US10Y-US02Y"
-						payload.Type = "COMPOSITE"
+						payload.Ticker = tickerUS10YUS02Y
+						payload.Type = tickerTypeComposite
 						seedTicker(testCtx, db, payload)
 						req, w := util.CreateTestRequest(http.MethodGet,
-							barkat.TickerBase+"/"+url.PathEscape("US10Y-US02Y"), nil)
+							barkat.TickerBase+"/"+url.PathEscape(tickerUS10YUS02Y), nil)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusOK))
 						response := decodeTickerGetResponse(w)
-						Expect(response.Ticker).To(Equal("US10Y-US02Y"))
-						Expect(response.Type).To(Equal("COMPOSITE"))
+						Expect(response.Ticker).To(Equal(tickerUS10YUS02Y))
+						Expect(response.Type).To(Equal(tickerTypeComposite))
 					})
 				})
 
@@ -252,7 +258,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 		BeforeEach(func() {
 			mcxTicker = barkat.Ticker{
 				Ticker:       "MCX",
-				Exchange:     "NSE",
+				Exchange:     exchangeNSE,
 				Timeframes:   []string{"MN", "WK", "DL"},
 				Type:         "EQUITY",
 				State:        "WATCHED",
@@ -273,10 +279,10 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 			}
 			btcTicker = seedTicker(testCtx, db, btcTicker)
 			niftyTicker = barkat.Ticker{
-				Ticker:       "NIFTY/USDINR",
-				Exchange:     "NSE",
+				Ticker:       tickerNiftyUSDINR,
+				Exchange:     exchangeNSE,
 				Timeframes:   []string{"YR", "MN"},
-				Type:         "COMPOSITE",
+				Type:         tickerTypeComposite,
 				State:        "BLACKLIST",
 				Trend:        "DOWNTREND",
 				LastOpenedAt: time.Date(2026, time.May, 7, 10, 30, 0, 0, time.UTC),
@@ -285,7 +291,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 			niftyTicker = seedTicker(testCtx, db, niftyTicker)
 
 			// Seed alert tickers with distinct counts: MCX=2, BTCUSD=1, NIFTY/USDINR=0
-			alertExchange := "NSE"
+			alertExchange := exchangeNSE
 			Expect(db.Create(&barkat.AlertTicker{TickerID: mcxTicker.ID, Symbol: "MCIX1", PairID: "941982", Name: "MC Alert 1", Exchange: &alertExchange}).Error).ToNot(HaveOccurred())
 			Expect(db.Create(&barkat.AlertTicker{TickerID: mcxTicker.ID, Symbol: "MCIX2", PairID: "941983", Name: "MC Alert 2", Exchange: &alertExchange}).Error).ToNot(HaveOccurred())
 			Expect(db.Create(&barkat.AlertTicker{TickerID: btcTicker.ID, Symbol: "BTCALERT", PairID: "941984", Name: "BTC Alert", Exchange: &alertExchange}).Error).ToNot(HaveOccurred())
@@ -345,7 +351,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 				It("should include alert_ticker_count", func() {
 					Expect(tickersBySymbol["MCX"].AlertTickerCount).To(Equal(int64(2)))
 					Expect(tickersBySymbol["BTCUSD"].AlertTickerCount).To(Equal(int64(1)))
-					Expect(tickersBySymbol["NIFTY/USDINR"].AlertTickerCount).To(Equal(int64(0)))
+					Expect(tickersBySymbol[tickerNiftyUSDINR].AlertTickerCount).To(Equal(int64(0)))
 				})
 			})
 		})
@@ -382,7 +388,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 						router.ServeHTTP(w, req)
 						response := decodeTickerListResponse(w)
 						Expect(response.Tickers).To(HaveLen(2))
-						Expect(response.Tickers[0].Exchange).To(Equal("NSE"))
+						Expect(response.Tickers[0].Exchange).To(Equal(exchangeNSE))
 					})
 					It("should accept uppercase letters NSE", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?exchange=NSE", nil)
@@ -428,7 +434,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 
 			Context("Type Query Parameter", func() {
 				Context("Allowed Values", func() {
-					for _, typeValue := range []string{"EQUITY", "INDEX", "CRYPTO", "COMMODITY", "FX", "BOND", "COMPOSITE"} {
+					for _, typeValue := range []string{"EQUITY", "INDEX", "CRYPTO", "COMMODITY", "FX", "BOND", tickerTypeComposite} {
 						value := typeValue
 						It("should filter by "+value, func() {
 							req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?type="+value, nil)
@@ -586,7 +592,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?sort-by=ticker&sort-order=desc", nil)
 						router.ServeHTTP(w, req)
 						response := decodeTickerListResponse(w)
-						Expect(response.Tickers[0].Ticker).To(Equal("NIFTY/USDINR"))
+						Expect(response.Tickers[0].Ticker).To(Equal(tickerNiftyUSDINR))
 					})
 
 					It("should sort by last_opened_at ascending", func() {
@@ -596,7 +602,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 						Expect(tickers).To(HaveLen(3))
 						Expect(tickers[0].Ticker).To(Equal("MCX"))
 						Expect(tickers[1].Ticker).To(Equal("BTCUSD"))
-						Expect(tickers[2].Ticker).To(Equal("NIFTY/USDINR"))
+						Expect(tickers[2].Ticker).To(Equal(tickerNiftyUSDINR))
 					})
 				})
 				Context("Bad Values", func() {

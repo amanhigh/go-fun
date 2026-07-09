@@ -33,6 +33,10 @@ var assertValuationPositions = func(valuation tax.Valuation, expectedFirst tax.P
 }
 
 var _ = Describe("ValuationManager", func() {
+	const (
+		AAPL = "AAPL"
+		MSFT = "MSFT"
+	)
 	var (
 		ctx                 = context.Background()
 		mockTickerManager   *mocks.TickerManager
@@ -43,8 +47,6 @@ var _ = Describe("ValuationManager", func() {
 		valuationManager    manager.ValuationManager
 
 		// Common variables
-		AAPL         = "AAPL"
-		MSFT         = "MSFT"
 		year         = 2024
 		yearEndDate  = time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
 		yearEndPrice = 150.00
@@ -1349,8 +1351,8 @@ var _ = Describe("ValuationManager", func() {
 			// - FirstPosition.Date = 2023-05-01 (preserves original acquisition from 2023)
 			// - YearEndPosition.Quantity = 0 (fully liquidated by Dec 31, 2024)
 			// Tax.md: This is carry-over scenario with full liquidation during current year
+			const MSFT = "MSFT"
 			var (
-				MSFT        = "MSFT"
 				testYear    = 2024
 				yearEndDate = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
 			)
@@ -1522,8 +1524,8 @@ var _ = Describe("ValuationManager", func() {
 			// - 2024-03-10: Re-acquired 25 shares @ $195
 			// - FirstPosition.Date RESETS to 2024-03-10 (new acquisition date)
 			// Tax.md Line 398-409: "FirstPosition resets to reflect new acquisition date from subsequent year"
+			const NVDA = "NVDA"
 			var (
-				NVDA        = "NVDA"
 				testYear    = 2024
 				yearEndDate = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
 			)

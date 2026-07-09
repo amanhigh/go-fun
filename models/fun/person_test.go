@@ -182,7 +182,7 @@ var _ = Describe("Person", func() {
 				Gender:    "MALE",
 				AuditID:   1,
 				Operation: "CREATE",
-				CreatedBy: "AMAN",
+				CreatedBy: fun.CreatedByAman,
 				CreatedAt: time.Now(),
 			}
 
@@ -192,7 +192,7 @@ var _ = Describe("Person", func() {
 			Expect(audit.Gender).To(Equal("MALE"))
 			Expect(audit.AuditID).To(Equal(uint(1)))
 			Expect(audit.Operation).To(Equal("CREATE"))
-			Expect(audit.CreatedBy).To(Equal("AMAN"))
+			Expect(audit.CreatedBy).To(Equal(fun.CreatedByAman))
 			Expect(audit.CreatedAt).NotTo(BeZero())
 		})
 
@@ -222,7 +222,7 @@ var _ = Describe("Person", func() {
 
 				audit := fun.CreatePersonAudit(person)
 				audit.Operation = "CREATE"
-				audit.CreatedBy = "AMAN"
+				audit.CreatedBy = fun.CreatedByAman
 				audit.CreatedAt = time.Now()
 
 				Expect(audit.Id).To(Equal("test123"))
@@ -230,7 +230,7 @@ var _ = Describe("Person", func() {
 				Expect(audit.Age).To(Equal(25))
 				Expect(audit.Gender).To(Equal("FEMALE"))
 				Expect(audit.Operation).To(Equal("CREATE"))
-				Expect(audit.CreatedBy).To(Equal("AMAN"))
+				Expect(audit.CreatedBy).To(Equal(fun.CreatedByAman))
 				Expect(audit.CreatedAt).NotTo(BeZero())
 			})
 
@@ -246,7 +246,7 @@ var _ = Describe("Person", func() {
 
 				audit := fun.CreatePersonAudit(person)
 				audit.Operation = "UPDATE"
-				audit.CreatedBy = "AMAN"
+				audit.CreatedBy = fun.CreatedByAman
 				audit.CreatedAt = time.Now()
 
 				Expect(audit.Operation).To(Equal("UPDATE"))
@@ -264,7 +264,7 @@ var _ = Describe("Person", func() {
 
 				audit := fun.CreatePersonAudit(person)
 				audit.Operation = "DELETE"
-				audit.CreatedBy = "AMAN"
+				audit.CreatedBy = fun.CreatedByAman
 				audit.CreatedAt = time.Now()
 
 				Expect(audit.Operation).To(Equal("DELETE"))

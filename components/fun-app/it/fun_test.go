@@ -18,6 +18,14 @@ import (
 // -s (use Shell), -c (Clear), Space/Q to Run, Quit.
 // Watch Mode: find `git rev-parse --show-toplevel` | entr -s "date +%M:%S;ginkgo $PWD | grep Pending"
 var _ = Describe("Person Integration Test", func() {
+	const (
+		invalidNameValue  = "A*B"
+		expectedGenderErr = "FEMALE"
+		nameFieldErr      = "Name"
+		maxValidationTag  = "max"
+		nameSortField     = "name"
+		reqdValidationTag = "required"
+	)
 	var (
 		request fun.PersonRequest
 
@@ -157,17 +165,17 @@ var _ = Describe("Person Integration Test", func() {
 
 				It("should fail for missing Name", func() {
 					updateRequest.Name = ""
-					expectedErr = "required"
+					expectedErr = reqdValidationTag
 				})
 
 				It("should fail for invalid Name", func() {
-					updateRequest.Name = "A*B"
-					expectedErr = "Name"
+					updateRequest.Name = invalidNameValue
+					expectedErr = nameFieldErr
 				})
 
 				It("should fail for max Name", func() {
 					updateRequest.Name = maxName
-					expectedErr = "max"
+					expectedErr = maxValidationTag
 				})
 
 				It("should fail for missing Age", func() {
@@ -182,17 +190,17 @@ var _ = Describe("Person Integration Test", func() {
 
 				It("should fail for max Age", func() {
 					updateRequest.Age = 200
-					expectedErr = "max"
+					expectedErr = maxValidationTag
 				})
 
 				It("should fail for missing Gender", func() {
 					updateRequest.Gender = ""
-					expectedErr = "required"
+					expectedErr = reqdValidationTag
 				})
 
 				It("should fail for invalid Gender", func() {
 					updateRequest.Gender = "GENDER"
-					expectedErr = "FEMALE"
+					expectedErr = expectedGenderErr
 				})
 
 			})
@@ -308,7 +316,7 @@ var _ = Describe("Person Integration Test", func() {
 
 				It("should sort by Name in ascending order", func() {
 					var personList fun.PersonList
-					personQuery.SortBy = "name"
+					personQuery.SortBy = nameSortField
 					personQuery.SortOrder = common.SortOrderAsc
 					personList, err = client.PersonService.ListPerson(testCtx, personQuery)
 
@@ -326,7 +334,7 @@ var _ = Describe("Person Integration Test", func() {
 
 				It("should sort by Name in descending order", func() {
 					var personList fun.PersonList
-					personQuery.SortBy = "name"
+					personQuery.SortBy = nameSortField
 					personQuery.SortOrder = common.SortOrderDesc
 					personList, err = client.PersonService.ListPerson(testCtx, personQuery)
 
@@ -410,18 +418,18 @@ var _ = Describe("Person Integration Test", func() {
 				})
 
 				It("should fail for invalid Name", func() {
-					personQuery.Name = "A*B"
-					expectedErr = "Name"
+					personQuery.Name = invalidNameValue
+					expectedErr = nameFieldErr
 				})
 
 				It("should fail for max Name", func() {
 					personQuery.Name = maxName
-					expectedErr = "max"
+					expectedErr = maxValidationTag
 				})
 
 				It("should fail for invalid Gender", func() {
 					personQuery.Gender = "OTHER"
-					expectedErr = "FEMALE"
+					expectedErr = expectedGenderErr
 				})
 
 				It("should fail for invalid SortBy", func() {
@@ -430,7 +438,7 @@ var _ = Describe("Person Integration Test", func() {
 				})
 
 				It("should fail for invalid Order", func() {
-					personQuery.SortBy = "name"
+					personQuery.SortBy = nameSortField
 					personQuery.SortOrder = common.SortOrder("invalid")
 					expectedErr = "asc"
 				})
@@ -448,17 +456,17 @@ var _ = Describe("Person Integration Test", func() {
 
 			It("should fail for missing Name", func() {
 				request.Name = ""
-				expectedErr = "required"
+				expectedErr = reqdValidationTag
 			})
 
 			It("should fail for invalid Name", func() {
-				request.Name = "A*B"
-				expectedErr = "Name"
+				request.Name = invalidNameValue
+				expectedErr = nameFieldErr
 			})
 
 			It("should fail for max Name", func() {
 				request.Name = maxName
-				expectedErr = "max"
+				expectedErr = maxValidationTag
 			})
 
 			It("should fail for minimum Age", func() {
@@ -468,7 +476,7 @@ var _ = Describe("Person Integration Test", func() {
 
 			It("should fail for max Age", func() {
 				request.Age = 200
-				expectedErr = "max"
+				expectedErr = maxValidationTag
 			})
 
 			It("should fail for missing Gender", func() {
@@ -478,7 +486,7 @@ var _ = Describe("Person Integration Test", func() {
 
 			It("should fail for invalid Gender", func() {
 				request.Gender = "OTHER"
-				expectedErr = "FEMALE"
+				expectedErr = expectedGenderErr
 			})
 		})
 	})
