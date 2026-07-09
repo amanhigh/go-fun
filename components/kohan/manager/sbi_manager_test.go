@@ -191,10 +191,10 @@ var _ = Describe("SBIManager", func() {
 
 		BeforeEach(func() {
 			allRates = []tax.SbiRate{
-				{Date: "2024-01-10", TTBuy: 82.40, TTSell: 83.40},
-				{Date: "2024-01-15", TTBuy: 82.50, TTSell: 83.50},
-				{Date: "2024-01-31", TTBuy: 82.75, TTSell: 83.75},
-				{Date: "2024-02-05", TTBuy: 83.00, TTSell: 84.00},
+				{Date: "2024-01-10", TTBuy: 82.40, TTSell: 83.40, PDFFile: "https://sbi.com/jan10.pdf"},
+				{Date: "2024-01-15", TTBuy: 82.50, TTSell: 83.50, PDFFile: "https://sbi.com/jan15.pdf"},
+				{Date: "2024-01-31", TTBuy: 82.75, TTSell: 83.75, PDFFile: "https://sbi.com/jan31.pdf"},
+				{Date: "2024-02-05", TTBuy: 83.00, TTSell: 84.00, PDFFile: "https://sbi.com/feb05.pdf"},
 			}
 		})
 
@@ -207,13 +207,14 @@ var _ = Describe("SBIManager", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(result.Rate).To(Equal(82.75))
 			Expect(result.ActualDate).To(Equal(time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)))
+			Expect(result.PDFFile).To(Equal("https://sbi.com/jan31.pdf"), "should preserve PDFFile from selected month-end rate")
 		})
 
 		It("should return last available rate when month-end date missing", func() {
 			ratesWithoutMonthEnd := []tax.SbiRate{
-				{Date: "2024-01-10", TTBuy: 82.40, TTSell: 83.40},
-				{Date: "2024-01-15", TTBuy: 82.50, TTSell: 83.50},
-				{Date: "2024-02-05", TTBuy: 83.00, TTSell: 84.00},
+				{Date: "2024-01-10", TTBuy: 82.40, TTSell: 83.40, PDFFile: "https://sbi.com/jan10.pdf"},
+				{Date: "2024-01-15", TTBuy: 82.50, TTSell: 83.50, PDFFile: "https://sbi.com/jan15.pdf"},
+				{Date: "2024-02-05", TTBuy: 83.00, TTSell: 84.00, PDFFile: "https://sbi.com/feb05.pdf"},
 			}
 
 			mockExchange.EXPECT().GetAllRecords(ctx).Return(ratesWithoutMonthEnd, nil).Once()
@@ -224,6 +225,7 @@ var _ = Describe("SBIManager", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(result.Rate).To(Equal(82.50))
 			Expect(result.ActualDate).To(Equal(time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)))
+			Expect(result.PDFFile).To(Equal("https://sbi.com/jan15.pdf"), "should preserve PDFFile from closest available rate when month-end is missing")
 		})
 
 		It("should cache results for subsequent calls", func() {
@@ -260,10 +262,10 @@ var _ = Describe("SBIManager", func() {
 
 		It("should skip zero TTBuy rates at month-end and use previous valid rate", func() {
 			ratesWithZeroAtMonthEnd := []tax.SbiRate{
-				{Date: "2024-01-27", TTBuy: 79.42, TTSell: 80.27},
-				{Date: "2024-01-29", TTBuy: 78.85, TTSell: 79.70},
+				{Date: "2024-01-27", TTBuy: 79.42, TTSell: 80.27, PDFFile: "https://sbi.com/jan27.pdf"},
+				{Date: "2024-01-29", TTBuy: 78.85, TTSell: 79.70, PDFFile: "https://sbi.com/jan29.pdf"},
 				{Date: "2024-01-30", TTBuy: 0.00, TTSell: 0.00}, // Invalid month-end
-				{Date: "2024-02-05", TTBuy: 83.00, TTSell: 84.00},
+				{Date: "2024-02-05", TTBuy: 83.00, TTSell: 84.00, PDFFile: "https://sbi.com/feb05.pdf"},
 			}
 
 			mockExchange.EXPECT().GetAllRecords(ctx).Return(ratesWithZeroAtMonthEnd, nil).Once()
@@ -274,6 +276,7 @@ var _ = Describe("SBIManager", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(result.Rate).To(Equal(78.85)) // Should use Jan 29, not Jan 30
 			Expect(result.ActualDate).To(Equal(time.Date(2024, 1, 29, 0, 0, 0, 0, time.UTC)))
+			Expect(result.PDFFile).To(Equal("https://sbi.com/jan29.pdf"), "should preserve PDFFile from non-zero fallback rate")
 		})
 
 		It("should handle different months independently", func() {

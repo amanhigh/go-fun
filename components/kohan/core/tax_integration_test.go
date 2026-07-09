@@ -398,6 +398,48 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		})
 	})
 
+	Context("TT Month-End Rates (FY Apr→Mar)", func() {
+		var (
+			allRates []tax.MonthEndRate
+		)
+
+		BeforeEach(func() {
+			summary, err := taxManager.GetTaxSummary(ctx, testYear)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(summary.TTMonthEndRates).ToNot(BeNil())
+
+			allRates = summary.TTMonthEndRates
+		})
+
+		It("should have exactly 12 month-end rates", func() {
+			Expect(allRates).To(HaveLen(12))
+		})
+
+		It("should cover FY months April 2023 through March 2024 when year=2023", func() {
+			for i := range 12 {
+				// Each FY month i uses the preceding month's TT Buy rate
+				// i=0 (Apr) → preceding = Mar 2023 → ActualDate must be in Mar 2023
+				// i=1 (May) → preceding = Apr 2023 → ActualDate must be in Apr 2023
+				// ...
+				fyMonth := time.Date(testYear, time.April, 1, 0, 0, 0, 0, time.UTC).AddDate(0, i, 0)
+				precedingMonth := fyMonth.AddDate(0, -1, 0)
+
+				actual := allRates[i]
+				Expect(actual.ActualDate.Year()).To(Equal(precedingMonth.Year()),
+					"rate[%d] ActualDate year should match preceding month of %s", i, fyMonth.Format("Jan 2006"))
+				Expect(actual.ActualDate.Month()).To(Equal(precedingMonth.Month()),
+					"rate[%d] ActualDate month should match preceding month of %s", i, fyMonth.Format("Jan 2006"))
+			}
+		})
+
+		It("should have non-zero rate and non-zero ActualDate for all 12 months", func() {
+			for i, rate := range allRates {
+				Expect(rate.Rate).To(BeNumerically(">", 0), "rate for month index %d should be non-zero", i)
+				Expect(rate.ActualDate.IsZero()).To(BeFalse(), "ActualDate for month index %d should not be zero", i)
+			}
+		})
+	})
+
 	Context("Fail-Fast Ticker Download", func() {
 		It("should fail fast when ticker data missing for positive positions", func() {
 			// Validates proper fail-fast behavior for tax systems
