@@ -17,7 +17,10 @@ type InteractiveBrokersManagerImpl struct {
 }
 
 // ibRecordTypeData is the IB CSV record type for data rows (vs header/summary rows).
-const ibRecordTypeData = ibRecordTypeData
+const ibRecordTypeData = "Data"
+
+// ibRecordTypeInterest is the IB CSV record type for interest data rows.
+const ibRecordTypeInterest = "Interest"
 
 func NewInteractiveBrokersManagerImpl(basePath string) Broker {
 	return &InteractiveBrokersManagerImpl{
@@ -105,7 +108,7 @@ func (m *InteractiveBrokersManagerImpl) parseInterest(records [][]string) ([]tax
 }
 
 func (m *InteractiveBrokersManagerImpl) isValidInterestRecord(record []string) bool {
-	return len(record) >= 6 && record[0] == "Interest" && record[1] == ibRecordTypeData && record[2] == "USD"
+	return len(record) >= 6 && record[0] == ibRecordTypeInterest && record[1] == ibRecordTypeData && record[2] == "USD"
 }
 
 func (m *InteractiveBrokersManagerImpl) parseTrades(records [][]string) ([]tax.Trade, error) {

@@ -23,6 +23,8 @@ const (
 	colWidthWide      = 14
 	colWidthExtraWide = 16
 	colWidthMax       = 18
+
+	sheetNameInterest = "Interest"
 )
 
 type ExcelManager interface {
@@ -330,7 +332,7 @@ func (e *ExcelManagerImpl) getPositionRowData(pos *tax.INRPosition) []any {
 
 // writeInterestSheet handles the creation and population of the "Interest" sheet.
 func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.File, interest []tax.INRInterest) error {
-	sheetName := "Interest"
+	sheetName := sheetNameInterest
 	headers := []string{
 		"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)",
 		"TTDate", "TTRate", "Amount (INR)", "Tax (INR)", "Net (INR)",

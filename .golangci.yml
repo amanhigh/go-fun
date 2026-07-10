@@ -29,6 +29,7 @@ linters:
     - modernize     # modern Go syntax and API usage
     - unused        # unused code detection
     - nolintlint    # nolint linter
+    - goconst       # repeated string literals should become constants
 
     # Consider enabling these linters later:
     - exhaustive     # enum switch statements
@@ -81,6 +82,16 @@ linters:
         - ^fmt\.Errorf$  # Already formatted errors
         - ^time\.Parse$  # Simple parsing errors
         - ^errors\.New$  # Basic error creation
+    goconst:
+      # Minimal length of string constant.
+      min-len: 3
+      # Minimum occurrences of constant string count to trigger issue.
+      min-occurrences: 3
+      # Look for existing constants matching the values.
+      match-constant: true
+      # Search also for duplicated numbers (already covered by mnd).
+      numbers: false
+
     # https://go-critic.com/overview
     gocritic:
       enabled-checks:

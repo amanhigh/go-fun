@@ -43,10 +43,10 @@ func seedTicker(ctx context.Context, db *gorm.DB, ticker barkat.Ticker) barkat.T
 // Tests complete HTTP → Handler → Manager → Repository → Database flow for PRD Section 2.2.1.2 and 2.2.1.6.
 var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Primary Ticker APIs", func() {
 	const (
-		tickerTypeComposite = tickerTypeComposite
-		tickerNiftyUSDINR   = tickerNiftyUSDINR
-		exchangeNSE         = exchangeNSE
-		tickerUS10YUS02Y    = tickerUS10YUS02Y
+		tickerTypeComposite = "COMPOSITE"
+		tickerNiftyUSDINR   = "NIFTY/USDINR"
+		exchangeNSE         = "NSE"
+		tickerUS10YUS02Y    = "US10Y-US02Y"
 	)
 	var (
 		tickerHandler      handler.TickerHandler

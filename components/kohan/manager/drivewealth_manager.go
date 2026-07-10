@@ -13,6 +13,8 @@ import (
 const (
 	// tradeRowLength is the expected number of columns in a trade row.
 	tradeRowLength = 10
+	// dwRecordTypeInterest is the DriveWealth CSV record type for interest data.
+	dwRecordTypeInterest = "Interest"
 )
 
 // DriveWealthManagerImpl handles parsing of DriveWealth reports and implements Broker interface.
@@ -171,7 +173,7 @@ func (m *DriveWealthManagerImpl) parseInterest(rows [][]string) ([]tax.Interest,
 
 	if len(rows) > 0 {
 		for _, row := range rows[1:] { // Skip header row
-			if len(row) >= 5 && row[2] == "Interest" {
+			if len(row) >= 5 && row[2] == dwRecordTypeInterest {
 				amount, err := strconv.ParseFloat(row[4], 64)
 				if err != nil {
 					// Potentially log the error or handle it more gracefully

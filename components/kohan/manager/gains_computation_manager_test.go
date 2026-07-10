@@ -10,6 +10,7 @@ import (
 )
 
 var _ = Describe("GainsComputationManager", func() {
+	const AAPL = "AAPL"
 	var (
 		gainsManager manager.GainsComputationManager
 		ctx          context.Context
@@ -25,8 +26,8 @@ var _ = Describe("GainsComputationManager", func() {
 
 		BeforeEach(func() {
 			trades = []tax.Trade{
-				{Symbol: "AAPL", Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
-				{Symbol: "AAPL", Date: "2024-01-17", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
+				{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
+				{Symbol: AAPL, Date: "2024-01-17", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
 				{Symbol: "MSFT", Date: "2022-01-10", Type: "BUY", Quantity: 50, USDPrice: 200.00, Commission: 5.00},
 				{Symbol: "MSFT", Date: "2024-02-15", Type: "SELL", Quantity: 50, USDPrice: 210.00, Commission: 5.00},
 			}
@@ -38,12 +39,12 @@ var _ = Describe("GainsComputationManager", func() {
 			Expect(gains).To(HaveLen(2))
 
 			// Find gains by symbol using helper function
-			aaplGain := findGainBySymbol(gains, "AAPL")
+			aaplGain := findGainBySymbol(gains, AAPL)
 			msftGain := findGainBySymbol(gains, "MSFT")
 
 			// Validate AAPL gain (STCG - 2 days holding)
 			Expect(aaplGain).ToNot(BeNil())
-			Expect(aaplGain.Symbol).To(Equal("AAPL"))
+			Expect(aaplGain.Symbol).To(Equal(AAPL))
 			Expect(aaplGain.BuyDate).To(Equal("2024-01-15"))
 			Expect(aaplGain.SellDate).To(Equal("2024-01-17"))
 			Expect(aaplGain.Quantity).To(Equal(100.0))
@@ -69,11 +70,11 @@ var _ = Describe("GainsComputationManager", func() {
 		BeforeEach(func() {
 			trades = []tax.Trade{
 				// Buy multiple lots of AAPL
-				{Symbol: "AAPL", Date: "2023-01-10", Type: "BUY", Quantity: 20, USDPrice: 150.00, Commission: 2.00},
-				{Symbol: "AAPL", Date: "2023-07-10", Type: "BUY", Quantity: 30, USDPrice: 165.00, Commission: 3.00},
-				{Symbol: "AAPL", Date: "2023-12-10", Type: "BUY", Quantity: 50, USDPrice: 180.00, Commission: 5.00},
+				{Symbol: AAPL, Date: "2023-01-10", Type: "BUY", Quantity: 20, USDPrice: 150.00, Commission: 2.00},
+				{Symbol: AAPL, Date: "2023-07-10", Type: "BUY", Quantity: 30, USDPrice: 165.00, Commission: 3.00},
+				{Symbol: AAPL, Date: "2023-12-10", Type: "BUY", Quantity: 50, USDPrice: 180.00, Commission: 5.00},
 				// Sell partial quantity - should match FIFO (oldest first)
-				{Symbol: "AAPL", Date: "2023-10-20", Type: "SELL", Quantity: 15, USDPrice: 170.00, Commission: 1.50},
+				{Symbol: AAPL, Date: "2023-10-20", Type: "SELL", Quantity: 15, USDPrice: 170.00, Commission: 1.50},
 			}
 		})
 
@@ -83,7 +84,7 @@ var _ = Describe("GainsComputationManager", func() {
 			Expect(gains).To(HaveLen(1))
 
 			gain := gains[0]
-			Expect(gain.Symbol).To(Equal("AAPL"))
+			Expect(gain.Symbol).To(Equal(AAPL))
 			Expect(gain.BuyDate).To(Equal("2023-01-10")) // Should match oldest buy
 			Expect(gain.SellDate).To(Equal("2023-10-20"))
 			Expect(gain.Quantity).To(Equal(15.0))
@@ -103,10 +104,10 @@ var _ = Describe("GainsComputationManager", func() {
 
 		BeforeEach(func() {
 			trades = []tax.Trade{
-				{Symbol: "AAPL", Date: "2023-01-10", Type: "BUY", Quantity: 20, USDPrice: 150.00, Commission: 2.00},
-				{Symbol: "AAPL", Date: "2023-07-10", Type: "BUY", Quantity: 30, USDPrice: 165.00, Commission: 3.00},
+				{Symbol: AAPL, Date: "2023-01-10", Type: "BUY", Quantity: 20, USDPrice: 150.00, Commission: 2.00},
+				{Symbol: AAPL, Date: "2023-07-10", Type: "BUY", Quantity: 30, USDPrice: 165.00, Commission: 3.00},
 				// Sell more than first lot - should span multiple lots
-				{Symbol: "AAPL", Date: "2024-01-15", Type: "SELL", Quantity: 35, USDPrice: 180.00, Commission: 3.50},
+				{Symbol: AAPL, Date: "2024-01-15", Type: "SELL", Quantity: 35, USDPrice: 180.00, Commission: 3.50},
 			}
 		})
 
@@ -122,7 +123,7 @@ var _ = Describe("GainsComputationManager", func() {
 
 			// First gain: Complete first lot (20 shares)
 			gain1 := gains[0]
-			Expect(gain1.Symbol).To(Equal("AAPL"))
+			Expect(gain1.Symbol).To(Equal(AAPL))
 			Expect(gain1.BuyDate).To(Equal("2023-01-10"))
 			Expect(gain1.Quantity).To(Equal(20.0))
 			// PNL: (180-150)*20 - commissions
@@ -134,7 +135,7 @@ var _ = Describe("GainsComputationManager", func() {
 
 			// Second gain: Partial second lot (15 out of 30 shares)
 			gain2 := gains[1]
-			Expect(gain2.Symbol).To(Equal("AAPL"))
+			Expect(gain2.Symbol).To(Equal(AAPL))
 			Expect(gain2.BuyDate).To(Equal("2023-07-10"))
 			Expect(gain2.Quantity).To(Equal(15.0))
 			// PNL: (180-165)*15 - commissions
@@ -196,7 +197,7 @@ var _ = Describe("GainsComputationManager", func() {
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
-					{Symbol: "AAPL", Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
 					{Symbol: "MSFT", Date: "2024-01-16", Type: "BUY", Quantity: 50, USDPrice: 200.00, Commission: 5.00},
 				}
 			})
@@ -213,7 +214,7 @@ var _ = Describe("GainsComputationManager", func() {
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
-					{Symbol: "AAPL", Date: "2024-01-15", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-15", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
 				}
 			})
 
@@ -229,8 +230,8 @@ var _ = Describe("GainsComputationManager", func() {
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
-					{Symbol: "AAPL", Date: "2024-01-15", Type: "BUY", Quantity: 50, USDPrice: 140.00, Commission: 5.00},
-					{Symbol: "AAPL", Date: "2024-01-17", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 50, USDPrice: 140.00, Commission: 5.00},
+					{Symbol: AAPL, Date: "2024-01-17", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
 				}
 			})
 
@@ -246,8 +247,8 @@ var _ = Describe("GainsComputationManager", func() {
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
-					{Symbol: "AAPL", Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
-					{Symbol: "AAPL", Date: "2024-01-15", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-15", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
 				}
 			})
 
@@ -257,7 +258,7 @@ var _ = Describe("GainsComputationManager", func() {
 				Expect(gains).To(HaveLen(1))
 
 				gain := gains[0]
-				Expect(gain.Symbol).To(Equal("AAPL"))
+				Expect(gain.Symbol).To(Equal(AAPL))
 				Expect(gain.BuyDate).To(Equal(gain.SellDate))
 				Expect(gain.Type).To(Equal(tax.GAIN_TYPE_STCG)) // Same day = 0 days < 2 years
 				Expect(gain.PNL).To(Equal(980.00))              // (150-140)*100 - 20 commission
@@ -270,7 +271,7 @@ var _ = Describe("GainsComputationManager", func() {
 			BeforeEach(func() {
 				trades = []tax.Trade{
 					// Note: Date validation also occurs in Trade Repository during CSV parsing
-					{Symbol: "AAPL", Date: "invalid-date", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "invalid-date", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
 				}
 			})
 
@@ -286,8 +287,8 @@ var _ = Describe("GainsComputationManager", func() {
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
-					{Symbol: "AAPL", Date: "2024-01-15", Type: "Buy", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
-					{Symbol: "AAPL", Date: "2024-01-17", Type: "Sell", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-15", Type: "Buy", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-17", Type: "Sell", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
 				}
 			})
 
@@ -297,7 +298,7 @@ var _ = Describe("GainsComputationManager", func() {
 				Expect(gains).To(HaveLen(1))
 
 				gain := gains[0]
-				Expect(gain.Symbol).To(Equal("AAPL"))
+				Expect(gain.Symbol).To(Equal(AAPL))
 				Expect(gain.PNL).To(Equal(980.00))
 			})
 		})
@@ -314,14 +315,14 @@ var _ = Describe("GainsComputationManager", func() {
 				{Symbol: "MSFT", Date: "2022-01-10", Type: "BUY", Quantity: 50, USDPrice: 200.00, Commission: 5.00},
 
 				// AAPL and MSFT transactions interleaved chronologically
-				{Symbol: "AAPL", Date: "2023-03-15", Type: "BUY", Quantity: 20, USDPrice: 150.00, Commission: 1.00},
+				{Symbol: AAPL, Date: "2023-03-15", Type: "BUY", Quantity: 20, USDPrice: 150.00, Commission: 1.00},
 				{Symbol: "MSFT", Date: "2023-05-01", Type: "BUY", Quantity: 20, USDPrice: 205.00, Commission: 2.00},
-				{Symbol: "AAPL", Date: "2023-07-10", Type: "BUY", Quantity: 30, USDPrice: 165.00, Commission: 1.00},
+				{Symbol: AAPL, Date: "2023-07-10", Type: "BUY", Quantity: 30, USDPrice: 165.00, Commission: 1.00},
 				{Symbol: "MSFT", Date: "2023-09-01", Type: "BUY", Quantity: 30, USDPrice: 215.00, Commission: 3.00},
-				{Symbol: "AAPL", Date: "2023-10-20", Type: "SELL", Quantity: 15, USDPrice: 170.00, Commission: 1.00},
+				{Symbol: AAPL, Date: "2023-10-20", Type: "SELL", Quantity: 15, USDPrice: 170.00, Commission: 1.00},
 
-				{Symbol: "AAPL", Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
-				{Symbol: "AAPL", Date: "2024-01-17", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
+				{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
+				{Symbol: AAPL, Date: "2024-01-17", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
 				{Symbol: "MSFT", Date: "2024-02-15", Type: "SELL", Quantity: 50, USDPrice: 210.00, Commission: 5.00},
 			}
 		})
@@ -337,7 +338,7 @@ var _ = Describe("GainsComputationManager", func() {
 
 			for _, gain := range gains {
 				switch gain.Symbol {
-				case "AAPL":
+				case AAPL:
 					aaplGains = append(aaplGains, gain)
 				case "MSFT":
 					msftGains = append(msftGains, gain)
@@ -350,7 +351,7 @@ var _ = Describe("GainsComputationManager", func() {
 			// All AAPL gains should be STCG (less than 2 years)
 			for _, gain := range aaplGains {
 				Expect(gain.Type).To(Equal(tax.GAIN_TYPE_STCG))
-				Expect(gain.Symbol).To(Equal("AAPL"))
+				Expect(gain.Symbol).To(Equal(AAPL))
 			}
 
 			// Validate MSFT gains (should have 1 gain)
