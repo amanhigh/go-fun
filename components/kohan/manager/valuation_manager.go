@@ -27,6 +27,7 @@ type ValuationManagerImpl struct {
 	tradeRepository repository.TradeRepository
 	fyManager       FinancialYearManager[tax.Trade]
 	sbiManager      SBIManager
+	splitManager    SplitManager
 }
 
 func NewValuationManager(
@@ -35,6 +36,7 @@ func NewValuationManager(
 	tradeRepository repository.TradeRepository,
 	fyManager FinancialYearManager[tax.Trade],
 	sbiManager SBIManager,
+	splitManager SplitManager,
 ) ValuationManager {
 	return &ValuationManagerImpl{
 		tickerManager:   tickerManager,
@@ -42,17 +44,25 @@ func NewValuationManager(
 		tradeRepository: tradeRepository,
 		fyManager:       fyManager,
 		sbiManager:      sbiManager,
+		splitManager:    splitManager,
 	}
 }
 
+//nolint:cyclop,gocyclo,funlen // Acceptable complexity from multi-step pipeline (fetch, filter, group, normalize)
 func (v *ValuationManagerImpl) GetYearlyValuationsUSD(ctx context.Context, year int) (valuations []tax.Valuation, err common.HttpError) {
 	allTrades, repoErr := v.tradeRepository.GetAllRecords(ctx)
 	if repoErr != nil {
 		return nil, repoErr // Return other errors
 	}
 
+	// Normalize trades onto split-adjusted basis before valuation calculations
+	normalizedTrades, normErr := v.splitManager.NormalizeTrades(ctx, allTrades)
+	if normErr != nil {
+		return nil, normErr
+	}
+
 	// Filter trades for the specified US financial year (calendar year) and sort them
-	yearTrades, filterErr := v.fyManager.FilterUS(ctx, allTrades, year)
+	yearTrades, filterErr := v.fyManager.FilterUS(ctx, normalizedTrades, year)
 	if filterErr != nil {
 		return nil, filterErr
 	}
@@ -280,23 +290,29 @@ func (v *ValuationManagerImpl) getOpeningPositions(ctx context.Context, ticker s
 	}
 
 	// Account record found (carry-over scenario)
+	// Normalize to split-adjusted basis (idempotent for already-normalized accounts)
+	normalizedAccount, normErr := v.splitManager.NormalizeAccount(ctx, account)
+	if normErr != nil {
+		return tax.Position{}, tax.Position{}, normErr
+	}
+
 	// Reconstruct FirstPosition from Account metadata (original acquisition date/price)
 	// OriginDate MUST be present for carry-over accounts - it's required for tax reporting
-	originDate, parseErr := time.Parse(time.DateOnly, account.OriginDate)
+	originDate, parseErr := time.Parse(time.DateOnly, normalizedAccount.OriginDate)
 	if parseErr != nil {
 		return tax.Position{}, tax.Position{}, tax.NewInvalidDateError(
-			fmt.Sprintf("failed to parse OriginDate '%s' for carry-over account %s: %v", account.OriginDate, ticker, parseErr))
+			fmt.Sprintf("failed to parse OriginDate '%s' for carry-over account %s: %v", normalizedAccount.OriginDate, ticker, parseErr))
 	}
 
 	firstPosition = tax.Position{
 		Date:     originDate,
-		Quantity: account.OriginQty,
-		USDPrice: account.OriginPrice,
+		Quantity: normalizedAccount.OriginQty,
+		USDPrice: normalizedAccount.OriginPrice,
 	}
 	holdingPosition = tax.Position{
 		Date:     originDate,
-		Quantity: account.Quantity,
-		USDPrice: account.OriginPrice,
+		Quantity: normalizedAccount.Quantity,
+		USDPrice: normalizedAccount.OriginPrice,
 	}
 	return firstPosition, holdingPosition, nil
 }
