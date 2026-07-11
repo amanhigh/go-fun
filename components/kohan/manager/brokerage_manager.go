@@ -22,6 +22,7 @@ type BrokerageManagerImpl struct {
 	DriveWealth  Broker                  `container:"name"`
 	IB           Broker                  `container:"name"`
 	GainsManager GainsComputationManager `container:"type"`
+	SplitManager SplitManager            `container:"type"`
 	Config       config.TaxConfig
 }
 
@@ -30,12 +31,14 @@ func NewBrokerageManager(
 	dwManager Broker,
 	ibManager Broker,
 	gainsManager GainsComputationManager,
+	splitManager SplitManager,
 	config config.TaxConfig,
 ) BrokerageManager {
 	return &BrokerageManagerImpl{
 		DriveWealth:  dwManager,
 		IB:           ibManager,
 		GainsManager: gainsManager,
+		SplitManager: splitManager,
 		Config:       config,
 	}
 }
@@ -70,6 +73,7 @@ func (m *BrokerageManagerImpl) writeCSVs(ctx context.Context, info tax.Brokerage
 	// Sort trades before writing to ensure correct ordering (BUY before SELL on same date)
 	sortedTrades := sortTradesByDate(info.Trades)
 
+	// Persist raw (broker-original) trades
 	if err := m.createTradeFile(sortedTrades); err != nil {
 		return err
 	}
@@ -78,7 +82,13 @@ func (m *BrokerageManagerImpl) writeCSVs(ctx context.Context, info tax.Brokerage
 		return err
 	}
 
-	return m.createGainsFile(ctx, sortedTrades)
+	// Normalize trades for gains computation — synthetic adjusted basis
+	normalizedTrades, normErr := m.SplitManager.NormalizeTrades(ctx, sortedTrades)
+	if normErr != nil {
+		return normErr
+	}
+
+	return m.createGainsFile(ctx, normalizedTrades)
 }
 
 func (m *BrokerageManagerImpl) createInterestFile(interests []tax.Interest) error {

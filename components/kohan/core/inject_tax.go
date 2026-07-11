@@ -74,14 +74,21 @@ func (ki *KohanInjector) provideAccountManager(accountRepo repository.AccountRep
 	return manager.NewAccountManager(accountRepo)
 }
 
+func (ki *KohanInjector) provideSplitManager(
+	tickerManager manager.TickerManager,
+) manager.SplitManager {
+	return manager.NewSplitManager(tickerManager)
+}
+
 func (ki *KohanInjector) provideValuationManager(
 	tickerManager manager.TickerManager,
 	accountManager manager.AccountManager,
 	tradeRepository repository.TradeRepository,
 	fyManager manager.FinancialYearManager[taxmodels.Trade],
 	sbiManager manager.SBIManager,
+	splitManager manager.SplitManager,
 ) manager.ValuationManager {
-	return manager.NewValuationManager(tickerManager, accountManager, tradeRepository, fyManager, sbiManager)
+	return manager.NewValuationManager(tickerManager, accountManager, tradeRepository, fyManager, sbiManager, splitManager)
 }
 
 func (ki *KohanInjector) provideTaxValuationManager(
@@ -217,6 +224,9 @@ func (ki *KohanInjector) registerCoreManagers() {
 	container.MustSingleton(ki.di, func() manager.TickerManager {
 		return ki.provideTickerManager(stockDataClient)
 	})
+
+	// Register SplitManager (depends on TickerManager)
+	container.MustSingleton(ki.di, ki.provideSplitManager)
 
 	// Register managers that depend on TickerManager and/or AccountManager/TradeRepository
 	container.MustSingleton(ki.di, ki.provideValuationManager)

@@ -15,6 +15,7 @@ import (
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/mock"
 )
 
 // Helper function to assert valuation positions
@@ -44,12 +45,17 @@ var _ = Describe("ValuationManager", func() {
 		mockTradeRepository *repoMocks.TradeRepository
 		mockFyManager       *mocks.FinancialYearManager[tax.Trade]
 		mockSBIManager      *mocks.SBIManager
+		mockSplitManager    *mocks.SplitManager
 		valuationManager    manager.ValuationManager
 
 		// Common variables
 		year         = 2024
 		yearEndDate  = time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
 		yearEndPrice = 150.00
+
+		// defaultNormalizer returns trades unchanged — no splits for test tickers
+		defaultNormalizer func(ctx context.Context, trades []tax.Trade) ([]tax.Trade, common.HttpError)
+		defaultAccounter  func(ctx context.Context, account tax.Account) (tax.Account, common.HttpError)
 	)
 
 	BeforeEach(func() {
@@ -58,7 +64,27 @@ var _ = Describe("ValuationManager", func() {
 		mockTradeRepository = repoMocks.NewTradeRepository(GinkgoT())
 		mockFyManager = mocks.NewFinancialYearManager[tax.Trade](GinkgoT())
 		mockSBIManager = mocks.NewSBIManager(GinkgoT())
-		valuationManager = manager.NewValuationManager(mockTickerManager, mockAccountManager, mockTradeRepository, mockFyManager, mockSBIManager)
+		mockSplitManager = mocks.NewSplitManager(GinkgoT())
+
+		// Default normalizer returns input unchanged
+		defaultNormalizer = func(_ context.Context, trades []tax.Trade) ([]tax.Trade, common.HttpError) {
+			out := make([]tax.Trade, len(trades))
+			copy(out, trades)
+			return out, nil
+		}
+		defaultAccounter = func(_ context.Context, account tax.Account) (tax.Account, common.HttpError) {
+			return account, nil
+		}
+		mockSplitManager.EXPECT().
+			NormalizeTrades(ctx, mock.Anything).
+			RunAndReturn(defaultNormalizer).
+			Maybe()
+		mockSplitManager.EXPECT().
+			NormalizeAccount(ctx, mock.Anything).
+			RunAndReturn(defaultAccounter).
+			Maybe()
+
+		valuationManager = manager.NewValuationManager(mockTickerManager, mockAccountManager, mockTradeRepository, mockFyManager, mockSBIManager, mockSplitManager)
 	})
 
 	Context("Analyse Valuation", func() {

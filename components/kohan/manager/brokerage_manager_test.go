@@ -25,14 +25,16 @@ func mockError(message string) common.HttpError {
 
 var _ = Describe("BrokerageManager", func() {
 	var (
-		tempTestDir      string
-		brokerageManager manager.BrokerageManager
-		taxConfig        config.TaxConfig
-		mockGainsManager *mocks.GainsComputationManager
-		mockDWBroker     *mocks.Broker
-		mockIBBroker     *mocks.Broker
-		ctx              = context.Background()
-		emptyInfo        tax.BrokerageInfo
+		tempTestDir       string
+		brokerageManager  manager.BrokerageManager
+		taxConfig         config.TaxConfig
+		mockGainsManager  *mocks.GainsComputationManager
+		mockSplitManager  *mocks.SplitManager
+		mockDWBroker      *mocks.Broker
+		mockIBBroker      *mocks.Broker
+		ctx               = context.Background()
+		emptyInfo         tax.BrokerageInfo
+		defaultNormalizer func(ctx context.Context, trades []tax.Trade) ([]tax.Trade, common.HttpError)
 	)
 
 	BeforeEach(func() {
@@ -48,15 +50,27 @@ var _ = Describe("BrokerageManager", func() {
 		}
 
 		mockGainsManager = mocks.NewGainsComputationManager(GinkgoT())
+		mockSplitManager = mocks.NewSplitManager(GinkgoT())
 		mockDWBroker = mocks.NewBroker(GinkgoT())
 		mockIBBroker = mocks.NewBroker(GinkgoT())
 
 		mockDWBroker.EXPECT().GetName().Return("DriveWealth").Maybe()
 		mockIBBroker.EXPECT().GetName().Return("InteractiveBrokers").Maybe()
 
+		// Default normalizer returns trades unchanged (no split adjustment)
+		defaultNormalizer = func(_ context.Context, trades []tax.Trade) ([]tax.Trade, common.HttpError) {
+			out := make([]tax.Trade, len(trades))
+			copy(out, trades)
+			return out, nil
+		}
+		mockSplitManager.EXPECT().
+			NormalizeTrades(ctx, mock.Anything).
+			RunAndReturn(defaultNormalizer).
+			Maybe()
+
 		emptyInfo = tax.BrokerageInfo{}
 
-		brokerageManager = manager.NewBrokerageManager(mockDWBroker, mockIBBroker, mockGainsManager, taxConfig)
+		brokerageManager = manager.NewBrokerageManager(mockDWBroker, mockIBBroker, mockGainsManager, mockSplitManager, taxConfig)
 	})
 
 	AfterEach(func() {
