@@ -25,16 +25,16 @@ func mockError(message string) common.HttpError {
 
 var _ = Describe("BrokerageManager", func() {
 	var (
-		tempTestDir       string
-		brokerageManager  manager.BrokerageManager
-		taxConfig         config.TaxConfig
-		mockGainsManager  *mocks.GainsComputationManager
-		mockSplitManager  *mocks.SplitManager
-		mockDWBroker      *mocks.Broker
-		mockIBBroker      *mocks.Broker
-		ctx               = context.Background()
-		emptyInfo         tax.BrokerageInfo
-		defaultNormalizer func(ctx context.Context, trades []tax.Trade) ([]tax.Trade, common.HttpError)
+		tempTestDir      string
+		brokerageManager manager.BrokerageManager
+		taxConfig        config.TaxConfig
+		mockGainsManager *mocks.GainsComputationManager
+		mockSplitManager *mocks.SplitManager
+		mockDWBroker     *mocks.Broker
+		mockIBBroker     *mocks.Broker
+		ctx              = context.Background()
+		emptyInfo        tax.BrokerageInfo
+		tradeNormalizer  func(ctx context.Context, trades []tax.Trade) ([]tax.Trade, common.HttpError)
 	)
 
 	BeforeEach(func() {
@@ -57,15 +57,17 @@ var _ = Describe("BrokerageManager", func() {
 		mockDWBroker.EXPECT().GetName().Return("DriveWealth").Maybe()
 		mockIBBroker.EXPECT().GetName().Return("InteractiveBrokers").Maybe()
 
-		// Default normalizer returns trades unchanged (no split adjustment)
-		defaultNormalizer = func(_ context.Context, trades []tax.Trade) ([]tax.Trade, common.HttpError) {
+		// Default normalizer returns trades unchanged (no split adjustment).
+		tradeNormalizer = func(_ context.Context, trades []tax.Trade) ([]tax.Trade, common.HttpError) {
 			out := make([]tax.Trade, len(trades))
 			copy(out, trades)
 			return out, nil
 		}
 		mockSplitManager.EXPECT().
 			NormalizeTrades(ctx, mock.Anything).
-			RunAndReturn(defaultNormalizer).
+			RunAndReturn(func(normalizeCtx context.Context, trades []tax.Trade) ([]tax.Trade, common.HttpError) {
+				return tradeNormalizer(normalizeCtx, trades)
+			}).
 			Maybe()
 
 		emptyInfo = tax.BrokerageInfo{}
@@ -260,6 +262,73 @@ var _ = Describe("BrokerageManager", func() {
 				Expect(trades[2].Symbol).To(Equal("AAPL"))
 				Expect(trades[2].Date).To(Equal("2024-08-05"))
 				Expect(trades[2].Type).To(Equal("SELL")) // SELL second
+			})
+		})
+
+		Context("split-adjusted gains computation", func() {
+			var (
+				rawTrade        tax.Trade
+				normalizedTrade tax.Trade
+				parseErr        error
+				persisted       []tax.Trade
+			)
+
+			BeforeEach(func() {
+				rawTrade = tax.Trade{
+					Symbol: "AAPL", Date: "2024-01-10", Type: tax.TRADE_TYPE_BUY,
+					Quantity: 10, USDPrice: 150, USDValue: 1500, Commission: 1,
+				}
+				normalizedTrade = rawTrade
+				normalizedTrade.Quantity = 20
+				normalizedTrade.USDPrice = 75
+
+				mockDWBroker.EXPECT().Parse(testYear).Return(tax.BrokerageInfo{Trades: []tax.Trade{rawTrade}}, nil)
+				mockIBBroker.EXPECT().Parse(testYear).Return(emptyInfo, nil)
+				tradeNormalizer = func(_ context.Context, _ []tax.Trade) ([]tax.Trade, common.HttpError) {
+					return []tax.Trade{normalizedTrade}, nil
+				}
+				mockGainsManager.EXPECT().
+					ComputeGainsFromTrades(ctx, []tax.Trade{normalizedTrade}).
+					Return([]tax.Gains{}, nil)
+
+				parseErr = brokerageManager.ParseAndGenerate(ctx, testYear)
+				persisted = readTradesCSV(taxConfig.TradesPath)
+			})
+
+			It("should persist raw trades and pass normalized copies to gains computation", func() {
+				Expect(parseErr).ToNot(HaveOccurred())
+				Expect(persisted).To(HaveLen(1))
+				Expect(persisted[0].Quantity).To(Equal(rawTrade.Quantity))
+				Expect(persisted[0].USDPrice).To(Equal(rawTrade.USDPrice))
+			})
+		})
+
+		Context("when SplitManager fails on normalization", func() {
+			var parseErr error
+
+			BeforeEach(func() {
+				mockDWBroker.EXPECT().Parse(testYear).Return(tax.BrokerageInfo{
+					Trades: []tax.Trade{
+						{Symbol: "AAPL", Date: "2024-01-10", Type: tax.TRADE_TYPE_BUY, Quantity: 10, USDPrice: 150, USDValue: 1500, Commission: 1},
+					},
+				}, nil)
+				mockIBBroker.EXPECT().Parse(testYear).Return(emptyInfo, nil)
+
+				tradeNormalizer = func(_ context.Context, _ []tax.Trade) ([]tax.Trade, common.HttpError) {
+					return nil, mockError("split normalization failed")
+				}
+
+				// No ComputeGainsFromTrades expectation — must not be called
+				parseErr = brokerageManager.ParseAndGenerate(ctx, testYear)
+			})
+
+			It("should return the normalization error without computing gains", func() {
+				Expect(parseErr).To(HaveOccurred())
+				Expect(parseErr.Error()).To(ContainSubstring("split normalization failed"))
+
+				// Gains file should not exist since normalization failed before gains computation
+				_, err := os.Stat(taxConfig.GainsFilePath)
+				Expect(os.IsNotExist(err)).To(BeTrue())
 			})
 		})
 	})

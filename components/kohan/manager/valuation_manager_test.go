@@ -1210,6 +1210,110 @@ var _ = Describe("ValuationManager", func() {
 				Expect(msftVal.YearEndPosition.USDPrice).To(Equal(210.0), "YearEndPosition price from year-end lookup")
 			})
 		})
+
+		Context("with real split normalization", func() {
+			const vo = "VO"
+
+			Context("for a fresh acquisition", func() {
+				var (
+					year             = 2025
+					yearEndDate      = time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
+					yearEndPrice     = 72.555
+					valuationResults []tax.Valuation
+					valuationErr     common.HttpError
+				)
+
+				BeforeEach(func() {
+					rawTrade := tax.Trade{
+						Symbol: vo, Date: "2025-12-31", Type: tax.TRADE_TYPE_BUY,
+						Quantity: 9, USDPrice: 292.11, USDValue: 2628.99,
+					}
+					normalizedTrade := rawTrade
+					normalizedTrade.Quantity = 36
+					normalizedTrade.USDPrice = 73.03
+
+					mockTradeRepository.EXPECT().GetAllRecords(ctx).Return([]tax.Trade{rawTrade}, nil).Once()
+					mockTickerManager.EXPECT().GetPrice(ctx, vo, yearEndDate).Return(yearEndPrice, nil).Twice()
+					mockFyManager.EXPECT().FilterUS(ctx, []tax.Trade{normalizedTrade}, year).Return([]tax.Trade{normalizedTrade}, nil).Once()
+					mockAccountManager.EXPECT().GetAllRecords(ctx, year-1).Return(nil, common.ErrNotFound).Once()
+					mockAccountManager.EXPECT().GetRecord(ctx, vo, year-1).Return(tax.Account{}, common.ErrNotFound).Once()
+					mockTickerManager.EXPECT().GetDailyPrices(ctx, vo, year).Return(map[string]float64{"2025-12-31": yearEndPrice}, nil).Once()
+					mockSBIManager.EXPECT().GetDailyRates(ctx, year).Return(map[string]float64{"2025-12-31": 89.47}, nil).Once()
+
+					valuationManager = manager.NewValuationManager(
+						mockTickerManager,
+						mockAccountManager,
+						mockTradeRepository,
+						mockFyManager,
+						mockSBIManager,
+						manager.NewSplitManager(mockTickerManager),
+					)
+					valuationResults, valuationErr = valuationManager.GetYearlyValuationsUSD(ctx, year)
+				})
+
+				It("should use normalized trade positions throughout valuation", func() {
+					Expect(valuationErr).ToNot(HaveOccurred())
+					Expect(valuationResults).To(HaveLen(1))
+					Expect(valuationResults[0].Ticker).To(Equal(vo))
+					assertValuationPositions(
+						valuationResults[0],
+						tax.Position{Date: yearEndDate, Quantity: 36, USDPrice: 73.03},
+						tax.Position{Date: yearEndDate, Quantity: 36, USDPrice: yearEndPrice},
+						tax.Position{Date: yearEndDate, Quantity: 36, USDPrice: yearEndPrice},
+					)
+				})
+			})
+
+			Context("for a carry-over position", func() {
+				var (
+					year             = 2025
+					yearEndDate      = time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
+					yearEndPrice     = 72.555
+					valuationResults []tax.Valuation
+					valuationErr     common.HttpError
+				)
+
+				BeforeEach(func() {
+					legacyAccount := tax.Account{
+						Symbol: vo, Quantity: 9, MarketValue: 653,
+						OriginDate: "2024-01-15", OriginQty: 9, OriginPrice: 292.11,
+					}
+
+					mockTradeRepository.EXPECT().GetAllRecords(ctx).Return([]tax.Trade{}, nil).Once()
+					mockFyManager.EXPECT().FilterUS(ctx, []tax.Trade{}, year).Return([]tax.Trade{}, nil).Once()
+					mockAccountManager.EXPECT().GetAllRecords(ctx, year-1).Return([]tax.Account{legacyAccount}, nil).Once()
+					mockAccountManager.EXPECT().GetRecord(ctx, vo, year-1).Return(legacyAccount, nil).Once()
+					mockTickerManager.EXPECT().
+						GetPrice(ctx, vo, time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)).
+						Return(yearEndPrice, nil).Once()
+					mockTickerManager.EXPECT().GetPrice(ctx, vo, yearEndDate).Return(yearEndPrice, nil).Once()
+					mockTickerManager.EXPECT().GetDailyPrices(ctx, vo, year).Return(map[string]float64{"2025-12-31": yearEndPrice}, nil).Once()
+					mockSBIManager.EXPECT().GetDailyRates(ctx, year).Return(map[string]float64{"2025-12-31": 89.47}, nil).Once()
+
+					valuationManager = manager.NewValuationManager(
+						mockTickerManager,
+						mockAccountManager,
+						mockTradeRepository,
+						mockFyManager,
+						mockSBIManager,
+						manager.NewSplitManager(mockTickerManager),
+					)
+					valuationResults, valuationErr = valuationManager.GetYearlyValuationsUSD(ctx, year)
+				})
+
+				It("should use normalized account positions throughout valuation", func() {
+					Expect(valuationErr).ToNot(HaveOccurred())
+					Expect(valuationResults).To(HaveLen(1))
+					Expect(valuationResults[0].Ticker).To(Equal(vo))
+					assertValuationPositions(
+						valuationResults[0],
+						tax.Position{Date: time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC), Quantity: 36, USDPrice: 73.03},
+						tax.Position{Date: yearEndDate, Quantity: 36, USDPrice: yearEndPrice},
+						tax.Position{Date: yearEndDate, Quantity: 36, USDPrice: yearEndPrice},
+					)
+				})
+			})
+		})
 	})
 
 	Context("With Carry-Over Position", func() {
