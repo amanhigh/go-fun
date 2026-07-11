@@ -156,6 +156,18 @@ var _ = Describe("SplitManager", func() {
 				Expect(results[1].USDPrice).To(Equal(30.0))
 				Expect(results[1].USDValue).To(Equal(450.0))
 			})
+			It("should produce a FIFO gain of $75 when passed through GainsComputationManager", func() {
+				gainsManager := manager.NewGainsComputationManager()
+				gains, err := gainsManager.ComputeGainsFromTrades(ctx, results)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(gains).To(HaveLen(1))
+				Expect(gains[0].Quantity).To(Equal(15.0))
+				Expect(gains[0].BuyDate).To(Equal("2024-06-01"))
+				Expect(gains[0].SellDate).To(Equal("2024-07-01"))
+				// PNL = 15 × ($30 - $25) - 0 commission = $75
+				Expect(gains[0].PNL).To(Equal(75.0))
+				Expect(gains[0].Commission).To(Equal(0.0))
+			})
 		})
 	})
 
