@@ -10,12 +10,25 @@ type YahooChart struct {
 	Error  any                `json:"error"`
 }
 
+// YahooSplit represents a stock split event from the Yahoo Finance API
+type YahooSplit struct {
+	Date        int64   `json:"date"`
+	Numerator   float64 `json:"numerator"`
+	Denominator float64 `json:"denominator"`
+}
+
+// YahooEvents contains optional event data from the Yahoo Finance API
+type YahooEvents struct {
+	Splits map[string]YahooSplit `json:"splits"`
+}
+
 // YahooChartResult contains all stock data for a ticker from Yahoo Finance
 type YahooChartResult struct {
 	Meta       YahooMeta       `json:"meta"`
 	Timestamp  []int64         `json:"timestamp"`
 	Indicators YahooIndicators `json:"indicators"`
 	AdjClose   []float64       `json:"adjclose,omitempty"`
+	Events     YahooEvents     `json:"events"`
 }
 
 // YahooMeta contains metadata about the stock
