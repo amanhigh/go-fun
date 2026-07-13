@@ -54,6 +54,7 @@ var _ = Describe("TickerManager", func() {
 				Prices: map[string]float64{
 					"2024-01-23": 100.00,
 				},
+				Splits: []tax.YahooSplit{},
 			}
 
 			filePath = filepath.Join(testDir, "TEST.json")
@@ -114,6 +115,7 @@ var _ = Describe("TickerManager", func() {
 					"2024-01-16": 101.00,
 					"2024-01-17": 102.00,
 				},
+				Splits: []tax.YahooSplit{},
 			}
 
 			// Save test data
@@ -194,6 +196,7 @@ var _ = Describe("TickerManager", func() {
 					"2024-01-15": 158.00,
 					"2024-12-31": 159.00,
 				},
+				Splits: []tax.YahooSplit{},
 			}
 
 			// Save test data to file
@@ -254,6 +257,7 @@ var _ = Describe("TickerManager", func() {
 				Prices: map[string]float64{
 					"2023-06-15": 120.00,
 				},
+				Splits: []tax.YahooSplit{},
 			}
 
 			singleYearPath := filepath.Join(testDir, "SINGLE.json")
@@ -277,6 +281,7 @@ var _ = Describe("TickerManager", func() {
 					// Another gap
 					"2023-12-31": 120.00,
 				},
+				Splits: []tax.YahooSplit{},
 			}
 
 			sparsePath := filepath.Join(testDir, "SPARSE.json")
@@ -344,6 +349,7 @@ var _ = Describe("TickerManager", func() {
 					"2023-12-31": 111.00,
 					"2024-01-01": 112.00,
 				},
+				Splits: []tax.YahooSplit{},
 			}
 
 			boundaryPath := filepath.Join(testDir, "BOUNDARY.json")

@@ -70,16 +70,11 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 		return err
 	}
 
-	// Save data to file
-	if jsonData, marshalErr := json.Marshal(data); marshalErr == nil {
-		if marshalErr = os.WriteFile(filePath, jsonData, util.DEFAULT_PERM); marshalErr != nil {
-			return common.NewServerError(marshalErr)
-		}
-		log.Info().Str("Ticker", ticker).Str("Path", filePath).Msg("Ticker data downloaded and saved")
-	} else {
-		return common.NewServerError(marshalErr)
+	if err := t.saveTickerData(data, ticker); err != nil {
+		return err
 	}
 
+	log.Info().Str("Ticker", ticker).Str("Path", filePath).Msg("Ticker data downloaded and saved")
 	return nil
 }
 
@@ -153,7 +148,7 @@ func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (d
 }
 
 // loadOrDownloadTickerData attempts to load ticker data from file,
-// and auto-downloads if file is missing
+// auto-downloads if file is missing.
 func (t *TickerManagerImpl) loadOrDownloadTickerData(ctx context.Context, ticker string) (tax.StockData, common.HttpError) {
 	// Try loading from file first
 	data, err := t.readTickerData(ticker)
@@ -194,6 +189,19 @@ func (t *TickerManagerImpl) readTickerData(ticker string) (tax.StockData, common
 	}
 
 	return stockData, nil
+}
+
+// saveTickerData marshals StockData and writes it to the ticker's JSON file.
+func (t *TickerManagerImpl) saveTickerData(data tax.StockData, ticker string) common.HttpError {
+	filePath := filepath.Join(t.downloads, ticker+".json")
+	jsonData, marshalErr := json.Marshal(data)
+	if marshalErr != nil {
+		return common.NewServerError(marshalErr)
+	}
+	if marshalErr = os.WriteFile(filePath, jsonData, util.DEFAULT_PERM); marshalErr != nil {
+		return common.NewServerError(marshalErr)
+	}
+	return nil
 }
 
 // GetDailyPrices returns all available closing prices for a given year
