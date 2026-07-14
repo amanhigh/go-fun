@@ -2,6 +2,7 @@ package manager_test
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
@@ -10,13 +11,18 @@ import (
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	mock "github.com/stretchr/testify/mock"
 )
+
+// SplitManager — Yahoo event-based normalization tests.
 
 var _ = Describe("SplitManager", func() {
 	const (
-		VO   = "VO"
-		AAPL = "AAPL"
-		BAD  = "BAD"
+		VO      = "VO"
+		AAPL    = "AAPL"
+		BAD     = "BAD"
+		BADDATE = "BADDATE"
+		COMP    = "COMP"
 	)
 	var (
 		ctx          = context.Background()
@@ -33,54 +39,58 @@ var _ = Describe("SplitManager", func() {
 		mockTicker.AssertExpectations(GinkgoT())
 	})
 
-	// -----------------------------------------------------------------------
-	// NormalizeTrades
-	// -----------------------------------------------------------------------
+	// ===================================================================
+	// NormalizeTrades — Yahoo event-based normalization
+	// ===================================================================
 	Describe("NormalizeTrades", func() {
-		Context("VO-like 4:1 inference", func() {
+
+		// -------- 1. forward split: pre-split trade --------
+		Context("forward split: pre-split trade", func() {
 			var (
-				input      []tax.Trade
-				output     []tax.Trade
-				tradeDt    = time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC)
-				yahooClose = 72.555
+				input  []tax.Trade
+				output []tax.Trade
+				err    common.HttpError
 			)
 
 			BeforeEach(func() {
 				input = []tax.Trade{
-					{Symbol: VO, Date: "2025-12-31", Type: "BUY", Quantity: 9, USDPrice: 292.11, USDValue: 2628.99, Commission: 0.33765725},
+					{Symbol: VO, Date: "2024-06-01", Type: "BUY", Quantity: 10, USDPrice: 100.00, USDValue: 1000, Commission: 1.0},
 				}
+				// 4:1 split on 2024-09-01 — trade is before the event
 				mockTicker.EXPECT().
-					GetPrice(ctx, VO, tradeDt).
-					Return(yahooClose, nil).Once()
-				var err common.HttpError
+					GetSplits(ctx, VO, time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC), mock.Anything).
+					Return([]tax.YahooSplit{
+						{Date: time.Date(2024, 9, 1, 0, 0, 0, 0, time.UTC).Unix(), Numerator: 4, Denominator: 1},
+					}, nil).Once()
 				output, err = splitManager.NormalizeTrades(ctx, input)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("should normalize quantity by factor 4", func() {
-				Expect(output[0].Quantity).To(Equal(36.0))
+			It("should multiply pre-split quantity by 4", func() {
+				Expect(output[0].Quantity).To(Equal(40.0))
 			})
-			It("should normalize price by factor 1/4", func() {
-				Expect(output[0].USDPrice).To(Equal(73.03))
+			It("should divide pre-split price by 4", func() {
+				Expect(output[0].USDPrice).To(Equal(25.0))
 			})
 			It("should preserve USDValue", func() {
-				Expect(output[0].USDValue).To(Equal(2628.99))
+				Expect(output[0].USDValue).To(Equal(1000.0))
 			})
 			It("should preserve commission", func() {
-				Expect(output[0].Commission).To(Equal(0.33765725))
+				Expect(output[0].Commission).To(Equal(1.0))
 			})
 			It("should preserve symbol, date and type", func() {
 				Expect(output[0].Symbol).To(Equal(VO))
-				Expect(output[0].Date).To(Equal("2025-12-31"))
+				Expect(output[0].Date).To(Equal("2024-06-01"))
 				Expect(output[0].Type).To(Equal("BUY"))
 			})
 		})
 
-		Context("no split", func() {
+		// -------- 2. no split events --------
+		Context("no split events", func() {
 			var (
-				input   []tax.Trade
-				output  []tax.Trade
-				tradeDt = time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
+				input  []tax.Trade
+				output []tax.Trade
+				err    common.HttpError
 			)
 
 			BeforeEach(func() {
@@ -88,9 +98,8 @@ var _ = Describe("SplitManager", func() {
 					{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 150.00, USDValue: 15000, Commission: 10.0},
 				}
 				mockTicker.EXPECT().
-					GetPrice(ctx, AAPL, tradeDt).
-					Return(150.50, nil).Once()
-				var err common.HttpError
+					GetSplits(ctx, AAPL, time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC), mock.Anything).
+					Return([]tax.YahooSplit{}, nil).Once()
 				output, err = splitManager.NormalizeTrades(ctx, input)
 				Expect(err).ToNot(HaveOccurred())
 			})
@@ -103,47 +112,94 @@ var _ = Describe("SplitManager", func() {
 			})
 		})
 
-		Context("ambiguous large mismatch", func() {
-			var err common.HttpError
+		// -------- 3. trade on event date (unchanged) --------
+		Context("trade on event date", func() {
+			var (
+				input  []tax.Trade
+				output []tax.Trade
+				err    common.HttpError
+			)
 
 			BeforeEach(func() {
-				trades := []tax.Trade{
-					{Symbol: BAD, Date: "2024-01-15", Type: "BUY", Quantity: 10, USDPrice: 100.00, USDValue: 1000},
+				input = []tax.Trade{
+					{Symbol: VO, Date: "2024-09-01", Type: "BUY", Quantity: 10, USDPrice: 25.00, USDValue: 250, Commission: 0.50},
 				}
+				// 4:1 split on same day — trade is on/after event date → unchanged
 				mockTicker.EXPECT().
-					GetPrice(ctx, BAD, time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)).
-					Return(31.0, nil).Once()
-				_, err = splitManager.NormalizeTrades(ctx, trades)
+					GetSplits(ctx, VO, time.Date(2024, 9, 1, 0, 0, 0, 0, time.UTC), mock.Anything).
+					Return([]tax.YahooSplit{
+						{Date: time.Date(2024, 9, 1, 0, 0, 0, 0, time.UTC).Unix(), Numerator: 4, Denominator: 1},
+					}, nil).Once()
+				output, err = splitManager.NormalizeTrades(ctx, input)
+				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("should fail rather than select an unsupported factor", func() {
-				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("unsupported split ratio"))
+			It("should leave the trade unchanged", func() {
+				Expect(output[0].Quantity).To(Equal(10.0))
+				Expect(output[0].USDPrice).To(Equal(25.0))
+				Expect(output[0].USDValue).To(Equal(250.0))
+				Expect(output[0].Commission).To(Equal(0.50))
 			})
 		})
 
-		Context("pre-split buy and post-split sale", func() {
+		// -------- 4. compound forward and reverse event --------
+		Context("compound forward and reverse event", func() {
 			var (
-				trades  []tax.Trade
-				results []tax.Trade
+				input  []tax.Trade
+				output []tax.Trade
+				err    common.HttpError
+			)
+
+			BeforeEach(func() {
+				input = []tax.Trade{
+					{Symbol: COMP, Date: "2024-03-01", Type: "BUY", Quantity: 100, USDPrice: 200.00, USDValue: 20000, Commission: 2.0},
+				}
+				// 4:1 forward then 1:4 reverse — cumulative ratio = 4 * 0.25 = 1
+				mockTicker.EXPECT().
+					GetSplits(ctx, COMP, time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC), mock.Anything).
+					Return([]tax.YahooSplit{
+						{Date: time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC).Unix(), Numerator: 4, Denominator: 1},
+						{Date: time.Date(2024, 9, 1, 0, 0, 0, 0, time.UTC).Unix(), Numerator: 1, Denominator: 4},
+					}, nil).Once()
+				output, err = splitManager.NormalizeTrades(ctx, input)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("should net to unchanged when forward and reverse compound to unity", func() {
+				Expect(output[0].Quantity).To(Equal(100.0))
+				Expect(output[0].USDPrice).To(Equal(200.0))
+				Expect(output[0].USDValue).To(Equal(20000.0))
+				Expect(output[0].Commission).To(Equal(2.0))
+			})
+		})
+
+		// -------- 5. FIFO gain across forward split --------
+		Context("FIFO gain across forward split", func() {
+			var (
+				trades   []tax.Trade
+				results  []tax.Trade
+				gains    []tax.Gains
+				gainsErr common.HttpError
 			)
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
 					{Symbol: VO, Date: "2024-06-01", Type: "BUY", Quantity: 10, USDPrice: 100.00, USDValue: 1000},
-					{Symbol: VO, Date: "2024-07-01", Type: "SELL", Quantity: 15, USDPrice: 30.00, USDValue: 450},
+					{Symbol: VO, Date: "2024-10-01", Type: "SELL", Quantity: 15, USDPrice: 30.00, USDValue: 450},
 				}
-				// Pre-split buy: Yahoo close $25 → factor 4
+				// 4:1 split between buy and sell dates
 				mockTicker.EXPECT().
-					GetPrice(ctx, VO, time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)).
-					Return(25.0, nil).Once()
-				// Post-split sell: Yahoo close $30.50 → ratio ≈ 0.98 → factor 1
-				mockTicker.EXPECT().
-					GetPrice(ctx, VO, time.Date(2024, 7, 1, 0, 0, 0, 0, time.UTC)).
-					Return(30.50, nil).Once()
+					GetSplits(ctx, VO, time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC), mock.Anything).
+					Return([]tax.YahooSplit{
+						{Date: time.Date(2024, 9, 1, 0, 0, 0, 0, time.UTC).Unix(), Numerator: 4, Denominator: 1},
+					}, nil).Once()
 				var err common.HttpError
 				results, err = splitManager.NormalizeTrades(ctx, trades)
 				Expect(err).ToNot(HaveOccurred())
+
+				gainsManager := manager.NewGainsComputationManager()
+				gains, gainsErr = gainsManager.ComputeGainsFromTrades(ctx, results)
+				Expect(gainsErr).ToNot(HaveOccurred())
 			})
 
 			It("should normalize pre-split buy to 40 @ $25", func() {
@@ -157,93 +213,63 @@ var _ = Describe("SplitManager", func() {
 				Expect(results[1].USDValue).To(Equal(450.0))
 			})
 			It("should produce a FIFO gain of $75 when passed through GainsComputationManager", func() {
-				gainsManager := manager.NewGainsComputationManager()
-				gains, err := gainsManager.ComputeGainsFromTrades(ctx, results)
-				Expect(err).ToNot(HaveOccurred())
 				Expect(gains).To(HaveLen(1))
 				Expect(gains[0].Quantity).To(Equal(15.0))
 				Expect(gains[0].BuyDate).To(Equal("2024-06-01"))
-				Expect(gains[0].SellDate).To(Equal("2024-07-01"))
-				// PNL = 15 × ($30 - $25) - 0 commission = $75
+				Expect(gains[0].SellDate).To(Equal("2024-10-01"))
+				// PNL = 15 x ($30 - $25) = $75
 				Expect(gains[0].PNL).To(Equal(75.0))
 				Expect(gains[0].Commission).To(Equal(0.0))
 			})
 		})
-	})
 
-	// -----------------------------------------------------------------------
-	// NormalizeAccount
-	// -----------------------------------------------------------------------
-	Describe("NormalizeAccount", func() {
-		Context("legacy broker-basis account", func() {
-			var (
-				input    tax.Account
-				output   tax.Account
-				originDt = time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC)
-			)
+		// -------- 6. malformed split event data --------
+		Context("malformed split event data", func() {
+			var err common.HttpError
 
 			BeforeEach(func() {
-				input = tax.Account{
-					Symbol:      VO,
-					Quantity:    9,
-					MarketValue: 653,
-					OriginDate:  "2025-12-31",
-					OriginQty:   9,
-					OriginPrice: 292.11,
+				trades := []tax.Trade{
+					{Symbol: BAD, Date: "2024-01-15", Type: "BUY", Quantity: 10, USDPrice: 100.00, USDValue: 1000},
 				}
+				// GetSplits succeeds but returns a split with invalid ratio
+				// (Denominator=0) — requires SplitManager to validate.
 				mockTicker.EXPECT().
-					GetPrice(ctx, VO, originDt).
-					Return(72.555, nil).Once()
-				var err common.HttpError
-				output, err = splitManager.NormalizeAccount(ctx, input)
-				Expect(err).ToNot(HaveOccurred())
+					GetSplits(ctx, BAD, time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC), mock.Anything).
+					Return([]tax.YahooSplit{
+						{Date: time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC).Unix(), Numerator: 4, Denominator: 0},
+					}, nil).Once()
+				_, err = splitManager.NormalizeTrades(ctx, trades)
 			})
 
-			It("should normalize quantity by factor 4", func() {
-				Expect(output.Quantity).To(Equal(36.0))
-			})
-			It("should scale MarketValue by factor 4", func() {
-				Expect(output.MarketValue).To(Equal(653.0 * 4))
-			})
-			It("should normalize origin qty by factor 4", func() {
-				Expect(output.OriginQty).To(Equal(36.0))
-			})
-			It("should normalize origin price by factor 1/4", func() {
-				Expect(output.OriginPrice).To(Equal(73.03))
+			It("should fail with BadRequest containing ticker context", func() {
+				Expect(err).To(HaveOccurred())
+				Expect(err.Code()).To(Equal(http.StatusBadRequest))
+				Expect(err.Error()).To(ContainSubstring(BAD))
 			})
 		})
 
-		Context("already normalized account", func() {
-			var (
-				input  tax.Account
-				output tax.Account
-			)
+		// -------- 9. invalid later trade date --------
+		Context("invalid later trade date", func() {
+			var err common.HttpError
 
 			BeforeEach(func() {
-				input = tax.Account{
-					Symbol:      VO,
-					Quantity:    36,
-					MarketValue: 2611.98,
-					OriginDate:  "2025-12-31",
-					OriginQty:   36,
-					OriginPrice: 73.0275,
+				trades := []tax.Trade{
+					{Symbol: BADDATE, Date: "2024-01-15", Type: "BUY", Quantity: 10, USDPrice: 100.00, USDValue: 1000},
+					{Symbol: BADDATE, Date: "not-a-date", Type: "BUY", Quantity: 5, USDPrice: 50.00, USDValue: 250},
 				}
-				// Origin price ≈ Yahoo close → factor stays 1
 				mockTicker.EXPECT().
-					GetPrice(ctx, VO, time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC)).
-					Return(72.555, nil).Once()
-				var err common.HttpError
-				output, err = splitManager.NormalizeAccount(ctx, input)
-				Expect(err).ToNot(HaveOccurred())
+					GetSplits(ctx, BADDATE, time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC), mock.Anything).
+					Return([]tax.YahooSplit{}, nil).Once()
+				_, err = splitManager.NormalizeTrades(ctx, trades)
 			})
 
-			It("should remain unchanged when normalized again", func() {
-				Expect(output.Quantity).To(Equal(36.0))
-				Expect(output.MarketValue).To(Equal(2611.98))
-				Expect(output.OriginQty).To(Equal(36.0))
-				// OriginPrice was already 73.0275 on input — factor ≈ 1, so unchanged
-				Expect(output.OriginPrice).To(Equal(73.0275))
+			It("should fail with BadRequest containing ticker context and the invalid date string", func() {
+				Expect(err).To(HaveOccurred())
+				Expect(err.Code()).To(Equal(http.StatusBadRequest))
+				Expect(err.Error()).To(ContainSubstring(BADDATE))
+				Expect(err.Error()).To(ContainSubstring("not-a-date"))
 			})
 		})
 	})
+
 })

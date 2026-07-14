@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -32,6 +34,10 @@ type TickerManager interface {
 	// Used for daily peak evaluation in valuation calculations.
 	// Date format in returned map: "YYYY-MM-DD"
 	GetDailyPrices(ctx context.Context, ticker string, year int) (map[string]float64, common.HttpError)
+
+	// GetSplits returns split events within the given date range (inclusive).
+	// Returns chronologically ordered defensive copy and non-nil empty slice.
+	GetSplits(ctx context.Context, ticker string, from, to time.Time) ([]tax.YahooSplit, common.HttpError)
 }
 
 type TickerManagerImpl struct {
@@ -79,27 +85,28 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 }
 
 func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date time.Time) (float64, common.HttpError) {
-	// Get cached/loaded data
 	data, err := t.getTickerData(ctx, ticker)
 	if err != nil {
 		return 0, err
 	}
 
-	// Format date for lookup
 	dateStr := date.Format(time.DateOnly)
+	dateUnix := date.Unix()
 
-	// Try exact date match first
+	var rawPrice float64
 	if closePrice, exists := data.Prices[dateStr]; exists {
-		return closePrice, nil
+		rawPrice = closePrice
+	} else if closePrice, findErr := t.findClosestPreviousPrice(ticker, data, dateStr); findErr == nil {
+		rawPrice = closePrice
+	} else {
+		return 0, common.NewHttpError("No price data found", http.StatusNotFound)
 	}
 
-	// Find closest previous date if exact not found
-	price, err := t.findClosestPreviousPrice(ticker, data, dateStr)
-	if err == nil {
-		return price, nil
+	adjustedPrice, adjErr := t.adjustPriceForSplits(rawPrice, dateUnix, data.Splits, ticker)
+	if adjErr != nil {
+		return 0, adjErr
 	}
-
-	return 0, common.NewHttpError("No price data found", http.StatusNotFound)
+	return adjustedPrice, nil
 }
 
 func (t *TickerManagerImpl) findClosestPreviousPrice(ticker string, data tax.StockData, dateStr string) (float64, common.HttpError) {
@@ -122,6 +129,36 @@ func (t *TickerManagerImpl) findClosestPreviousPrice(ticker string, data tax.Sto
 		}
 	}
 	return 0, common.NewHttpError("No price data found", http.StatusNotFound)
+}
+
+// hoursPerDay is the number of hours in a day, used for calendar-day truncation.
+const hoursPerDay = 24
+
+// calendarDay returns the Unix timestamp at midnight UTC for the given Unix timestamp,
+// normalizing any intraday timestamp to the start of its UTC calendar date.
+func calendarDay(ts int64) int64 {
+	return time.Unix(ts, 0).UTC().Truncate(hoursPerDay * time.Hour).Unix()
+}
+
+// adjustPriceForSplits returns the historical date's price expressed on the historical date's share basis
+// by multiplying the raw cached price by cumulative split ratios
+// for all split events on strictly later calendar dates.
+func (t *TickerManagerImpl) adjustPriceForSplits(price float64, dateUnix int64, splits []tax.YahooSplit, ticker string) (float64, common.HttpError) {
+	// Validate all splits before multiplying
+	for _, split := range splits {
+		if vErr := t.validateSplitEvent(split, ticker); vErr != nil {
+			return 0, vErr
+		}
+	}
+
+	refDay := calendarDay(dateUnix)
+	ratio := 1.0
+	for _, split := range splits {
+		if calendarDay(split.Date) > refDay {
+			ratio *= split.Numerator / split.Denominator
+		}
+	}
+	return price * ratio, nil
 }
 
 func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (data tax.StockData, err common.HttpError) {
@@ -204,6 +241,98 @@ func (t *TickerManagerImpl) saveTickerData(data tax.StockData, ticker string) co
 	return nil
 }
 
+// validateSplitEvent checks that a YahooSplit has valid event data:
+// positive finite numerator and denominator, and a valid usable Unix timestamp.
+// The error message includes the ticker and event timestamp for traceability.
+func (t *TickerManagerImpl) validateSplitEvent(split tax.YahooSplit, ticker string) common.HttpError {
+	prefix := fmt.Sprintf("ticker %s: split event timestamp %d", ticker, split.Date)
+	if split.Date <= 0 {
+		return common.NewHttpError(fmt.Sprintf("%s: non-positive timestamp %d", prefix, split.Date), http.StatusBadRequest)
+	}
+	if split.Numerator <= 0 || math.IsInf(split.Numerator, 0) || math.IsNaN(split.Numerator) {
+		return common.NewHttpError(fmt.Sprintf("%s: non-positive or non-finite numerator %f", prefix, split.Numerator), http.StatusBadRequest)
+	}
+	if split.Denominator <= 0 || math.IsInf(split.Denominator, 0) || math.IsNaN(split.Denominator) {
+		return common.NewHttpError(fmt.Sprintf("%s: non-positive or non-finite denominator %f", prefix, split.Denominator), http.StatusBadRequest)
+	}
+	return nil
+}
+
+// GetSplits returns split events within the given date range (inclusive).
+// Returns chronologically ordered defensive copy and non-nil empty slice.
+func (t *TickerManagerImpl) GetSplits(ctx context.Context, ticker string, from, to time.Time) ([]tax.YahooSplit, common.HttpError) {
+	if from.After(to) {
+		return nil, common.NewHttpError("from date must be before or equal to to date", http.StatusBadRequest)
+	}
+
+	data, err := t.getTickerData(ctx, ticker)
+	if err != nil {
+		return nil, err
+	}
+
+	// Validate all split events before filtering
+	for _, split := range data.Splits {
+		if vErr := t.validateSplitEvent(split, ticker); vErr != nil {
+			return nil, vErr
+		}
+	}
+
+	fromDay := calendarDay(from.Unix())
+	toDay := calendarDay(to.Unix())
+
+	result := make([]tax.YahooSplit, 0)
+	for _, split := range data.Splits {
+		splitDay := calendarDay(split.Date)
+		if splitDay >= fromDay && splitDay <= toDay {
+			result = append(result, split)
+		}
+	}
+
+	// Enforce chronological order regardless of storage order
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Date < result[j].Date
+	})
+
+	return result, nil
+}
+
+// filterYearPrices filters prices for a given year and applies split adjustments.
+func (t *TickerManagerImpl) filterYearPrices(data tax.StockData, yearStr, ticker string) (map[string]float64, common.HttpError) {
+	yearPrices := make(map[string]float64)
+	for date, price := range data.Prices {
+		if strings.HasPrefix(date, yearStr) {
+			parsedDate, parseErr := time.Parse(time.DateOnly, date)
+			if parseErr == nil {
+				adjustedPrice, adjErr := t.adjustPriceForSplits(price, parsedDate.Unix(), data.Splits, ticker)
+				if adjErr != nil {
+					return nil, adjErr
+				}
+				yearPrices[date] = adjustedPrice
+			} else {
+				yearPrices[date] = price
+			}
+		}
+	}
+	return yearPrices, nil
+}
+
+// addBackfillPrice includes the previous year-end price with split adjustment for carry-over.
+func (t *TickerManagerImpl) addBackfillPrice(yearPrices map[string]float64, data tax.StockData, year int, ticker string) common.HttpError {
+	prevYearEnd := fmt.Sprintf("%d-12-31", year-1)
+	if prevPrice, exists := data.Prices[prevYearEnd]; exists {
+		if prevDate, parseErr := time.Parse(time.DateOnly, prevYearEnd); parseErr == nil {
+			adjustedPrice, adjErr := t.adjustPriceForSplits(prevPrice, prevDate.Unix(), data.Splits, ticker)
+			if adjErr != nil {
+				return adjErr
+			}
+			yearPrices[prevYearEnd] = adjustedPrice
+		} else {
+			yearPrices[prevYearEnd] = prevPrice
+		}
+	}
+	return nil
+}
+
 // GetDailyPrices returns all available closing prices for a given year
 // as a map with date format "YYYY-MM-DD" as key and price as value.
 // Used for daily peak INR value evaluation during valuation calculations.
@@ -214,13 +343,9 @@ func (t *TickerManagerImpl) GetDailyPrices(ctx context.Context, ticker string, y
 	}
 
 	yearStr := strconv.Itoa(year)
-	yearPrices := make(map[string]float64)
-
-	// Filter prices for the specified year
-	for date, price := range data.Prices {
-		if strings.HasPrefix(date, yearStr) {
-			yearPrices[date] = price
-		}
+	yearPrices, filterErr := t.filterYearPrices(data, yearStr, ticker)
+	if filterErr != nil {
+		return nil, filterErr
 	}
 
 	// Return error if no prices found for the requested year
@@ -231,11 +356,8 @@ func (t *TickerManagerImpl) GetDailyPrices(ctx context.Context, ticker string, y
 		)
 	}
 
-	// Include previous year-end price for backfill support during peak calculation
-	// This enables proper price backfilling for carry-over positions in early-year dates
-	prevYearEnd := fmt.Sprintf("%d-12-31", year-1)
-	if prevPrice, exists := data.Prices[prevYearEnd]; exists {
-		yearPrices[prevYearEnd] = prevPrice
+	if backfillErr := t.addBackfillPrice(yearPrices, data, year, ticker); backfillErr != nil {
+		return nil, backfillErr
 	}
 
 	return yearPrices, nil

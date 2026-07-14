@@ -387,4 +387,389 @@ var _ = Describe("TickerManager", func() {
 			Expect(data2023).NotTo(Equal(data2022))
 		})
 	})
+
+	Context("GetSplits", func() {
+		var (
+			ticker    = "SPLIT"
+			stockData tax.StockData
+			from, to  time.Time
+			splits    []tax.YahooSplit
+			getErr    common.HttpError
+		)
+
+		BeforeEach(func() {
+			// Base test data with splits on 2024-01-15 (2:1), 2024-03-01 (3:1), 2024-05-01 (1:4 reverse)
+			stockData = tax.StockData{
+				Prices: map[string]float64{
+					"2024-01-10": 100.00,
+				},
+				Splits: []tax.YahooSplit{
+					{Date: 1705276800, Numerator: 2, Denominator: 1}, // 2024-01-15
+					{Date: 1709251200, Numerator: 3, Denominator: 1}, // 2024-03-01
+					{Date: 1714521600, Numerator: 1, Denominator: 4}, // 2024-05-01 (reverse)
+				},
+			}
+			filePath := filepath.Join(testDir, ticker+".json")
+			data, err := json.Marshal(stockData)
+			Expect(err).ToNot(HaveOccurred())
+			err = os.WriteFile(filePath, data, 0600)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		JustBeforeEach(func() {
+			splits, getErr = tickerManager.GetSplits(ctx, ticker, from, to)
+		})
+
+		Context("with overlapping date range", func() {
+			BeforeEach(func() {
+				from = time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
+				to = time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC)
+			})
+
+			It("should return splits within date range inclusively", func() {
+				Expect(getErr).ToNot(HaveOccurred())
+				Expect(splits).To(HaveLen(1))
+				Expect(splits[0].Date).To(Equal(int64(1709251200))) // 2024-03-01
+				Expect(splits[0].Numerator).To(Equal(3.0))
+				Expect(splits[0].Denominator).To(Equal(1.0))
+			})
+		})
+
+		Context("with no splits in stock data", func() {
+			BeforeEach(func() {
+				stockData = tax.StockData{
+					Prices: map[string]float64{"2024-01-10": 100.00},
+					Splits: []tax.YahooSplit{},
+				}
+				filePath := filepath.Join(testDir, ticker+".json")
+				data, err := json.Marshal(stockData)
+				Expect(err).ToNot(HaveOccurred())
+				err = os.WriteFile(filePath, data, 0600)
+				Expect(err).ToNot(HaveOccurred())
+				from = time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+				to = time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
+			})
+
+			It("should return empty non-nil slice when no splits exist", func() {
+				Expect(getErr).ToNot(HaveOccurred())
+				Expect(splits).ToNot(BeNil())
+				Expect(splits).To(BeEmpty())
+			})
+		})
+		Context("with inverted date range", func() {
+			BeforeEach(func() {
+				from = time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
+				to = time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+			})
+
+			It("should reject inverted date range", func() {
+				Expect(getErr).To(HaveOccurred())
+				Expect(getErr.Code()).To(Equal(http.StatusBadRequest))
+			})
+		})
+
+		Context("with malformed split ratio", func() {
+			BeforeEach(func() {
+				stockData = tax.StockData{
+					Prices: map[string]float64{"2024-01-10": 100.00},
+					Splits: []tax.YahooSplit{
+						{Date: 1705276800, Numerator: 0, Denominator: 1}, // zero numerator
+					},
+				}
+				filePath := filepath.Join(testDir, ticker+".json")
+				data, err := json.Marshal(stockData)
+				Expect(err).ToNot(HaveOccurred())
+				err = os.WriteFile(filePath, data, 0600)
+				Expect(err).ToNot(HaveOccurred())
+				from = time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+				to = time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
+			})
+
+			It("should reject malformed split ratios", func() {
+				Expect(getErr).To(HaveOccurred())
+				Expect(getErr.Code()).To(Equal(http.StatusBadRequest))
+				Expect(getErr.Error()).To(ContainSubstring(ticker))
+			})
+		})
+
+		Context("defensive copy behavior", func() {
+			var (
+				secondSplits []tax.YahooSplit
+				secondErr    common.HttpError
+			)
+
+			BeforeEach(func() {
+				from = time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+				to = time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
+			})
+
+			JustBeforeEach(func() {
+				// Second call, runs after parent JustBeforeEach (first call)
+				secondSplits, secondErr = tickerManager.GetSplits(ctx, ticker, from, to)
+
+				// Mutate first-call result to test defensive copy independence
+				if len(splits) > 0 {
+					splits[0] = tax.YahooSplit{}
+				}
+			})
+
+			It("should return a defensive copy", func() {
+				Expect(getErr).ToNot(HaveOccurred())
+				Expect(secondErr).ToNot(HaveOccurred())
+				Expect(splits).To(HaveLen(3))
+				Expect(secondSplits).To(HaveLen(3))
+
+				// First result is zero-valued after mutation
+				Expect(splits[0].Numerator).To(BeZero())
+				Expect(splits[0].Denominator).To(BeZero())
+
+				// Second result retains original values (independent defensive copy)
+				Expect(secondSplits[0].Numerator).To(Equal(2.0))
+				Expect(secondSplits[0].Denominator).To(Equal(1.0))
+
+				// They now differ
+				Expect(splits[0]).ToNot(Equal(secondSplits[0]))
+			})
+		})
+
+		Context("with from boundary split", func() {
+			BeforeEach(func() {
+				from = time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC) // Same as first split
+				to = time.Date(2024, 2, 15, 0, 0, 0, 0, time.UTC)
+			})
+
+			It("should include split exactly on from boundary", func() {
+				Expect(getErr).ToNot(HaveOccurred())
+				Expect(splits).To(HaveLen(1))
+				Expect(splits[0].Date).To(Equal(int64(1705276800))) // 2024-01-15
+			})
+		})
+
+		Context("with to boundary split", func() {
+			BeforeEach(func() {
+				from = time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
+				to = time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC) // Same as second split
+			})
+
+			It("should include split exactly on to boundary", func() {
+				Expect(getErr).ToNot(HaveOccurred())
+				Expect(splits).To(HaveLen(1))
+				Expect(splits[0].Date).To(Equal(int64(1709251200))) // 2024-03-01
+			})
+		})
+
+		Context("with unsorted splits", func() {
+			BeforeEach(func() {
+				stockData = tax.StockData{
+					Prices: map[string]float64{"2024-01-10": 100.00},
+					Splits: []tax.YahooSplit{
+						{Date: 1714521600, Numerator: 1, Denominator: 4}, // 2024-05-01 (reverse)
+						{Date: 1705276800, Numerator: 2, Denominator: 1}, // 2024-01-15
+						{Date: 1709251200, Numerator: 3, Denominator: 1}, // 2024-03-01
+					},
+				}
+				filePath := filepath.Join(testDir, ticker+".json")
+				data, err := json.Marshal(stockData)
+				Expect(err).ToNot(HaveOccurred())
+				err = os.WriteFile(filePath, data, 0600)
+				Expect(err).ToNot(HaveOccurred())
+				from = time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+				to = time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
+			})
+
+			It("should return splits in chronological order", func() {
+				Expect(getErr).ToNot(HaveOccurred())
+				Expect(splits).To(HaveLen(3))
+				Expect(splits[0].Date).To(Equal(int64(1705276800))) // 2024-01-15
+				Expect(splits[1].Date).To(Equal(int64(1709251200))) // 2024-03-01
+				Expect(splits[2].Date).To(Equal(int64(1714521600))) // 2024-05-01
+			})
+		})
+
+		Context("with intraday split timestamp on boundary", func() {
+			BeforeEach(func() {
+				stockData = tax.StockData{
+					Prices: map[string]float64{"2024-01-10": 100.00},
+					Splits: []tax.YahooSplit{
+						{Date: 1705276800, Numerator: 2, Denominator: 1}, // 2024-01-15 00:00 UTC
+						{Date: 1709251300, Numerator: 3, Denominator: 1}, // 2024-03-01 00:01:40 UTC
+					},
+				}
+				filePath := filepath.Join(testDir, ticker+".json")
+				data, err := json.Marshal(stockData)
+				Expect(err).ToNot(HaveOccurred())
+				err = os.WriteFile(filePath, data, 0600)
+				Expect(err).ToNot(HaveOccurred())
+				from = time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC)
+				to = time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC)
+			})
+
+			It("should include intraday split matching on calendar date boundary", func() {
+				Expect(getErr).ToNot(HaveOccurred())
+				Expect(splits).To(HaveLen(1))
+				Expect(splits[0].Date).To(Equal(int64(1709251300)))
+				Expect(splits[0].Numerator).To(Equal(3.0))
+				Expect(splits[0].Denominator).To(Equal(1.0))
+			})
+		})
+	})
+
+	Context("GetPrice with split adjustments", func() {
+		var (
+			ticker    = "SPLIT_ADJ"
+			stockData tax.StockData
+			queryDate time.Time
+			price     float64
+			priceErr  common.HttpError
+		)
+
+		BeforeEach(func() {
+			// StockData with a 2:1 split on 2024-03-01 and prices before/on the split
+			stockData = tax.StockData{
+				Prices: map[string]float64{
+					"2024-01-10": 100.00, // Pre-split price
+					"2024-03-01": 50.00,  // On split date (post-split trading price)
+				},
+				Splits: []tax.YahooSplit{
+					{Date: 1709251200, Numerator: 2, Denominator: 1}, // 2024-03-01 2:1 split
+				},
+			}
+			filePath := filepath.Join(testDir, ticker+".json")
+			data, err := json.Marshal(stockData)
+			Expect(err).ToNot(HaveOccurred())
+			err = os.WriteFile(filePath, data, 0600)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		Context("querying pre-split date", func() {
+			BeforeEach(func() {
+				queryDate = time.Date(2024, 1, 10, 0, 0, 0, 0, time.UTC)
+			})
+
+			JustBeforeEach(func() {
+				price, priceErr = tickerManager.GetPrice(ctx, ticker, queryDate)
+			})
+
+			It("should reconstruct pre-split price by future split factor", func() {
+				Expect(priceErr).ToNot(HaveOccurred())
+				// Pre-split cached price 100 * 2/1 (future split) = 200
+				Expect(price).To(Equal(200.00))
+			})
+		})
+
+		Context("querying on split date", func() {
+			BeforeEach(func() {
+				queryDate = time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC)
+			})
+
+			JustBeforeEach(func() {
+				price, priceErr = tickerManager.GetPrice(ctx, ticker, queryDate)
+			})
+
+			It("should return unchanged price on the split date", func() {
+				Expect(priceErr).ToNot(HaveOccurred())
+				// On split date, no adjustment: cached 50.00 stays 50.00
+				Expect(price).To(Equal(50.00))
+			})
+		})
+
+		Context("with malformed split data", func() {
+			BeforeEach(func() {
+				stockData = tax.StockData{
+					Prices: map[string]float64{"2024-01-10": 100.00},
+					Splits: []tax.YahooSplit{
+						{Date: 1709251200, Numerator: 0, Denominator: 1},
+					},
+				}
+				filePath := filepath.Join(testDir, ticker+".json")
+				data, err := json.Marshal(stockData)
+				Expect(err).ToNot(HaveOccurred())
+				err = os.WriteFile(filePath, data, 0600)
+				Expect(err).ToNot(HaveOccurred())
+				queryDate = time.Date(2024, 1, 10, 0, 0, 0, 0, time.UTC)
+			})
+
+			JustBeforeEach(func() {
+				price, priceErr = tickerManager.GetPrice(ctx, ticker, queryDate)
+			})
+
+			It("should fail with BadRequest on malformed split data", func() {
+				Expect(priceErr).To(HaveOccurred())
+				Expect(priceErr.Code()).To(Equal(http.StatusBadRequest))
+				Expect(priceErr.Error()).To(ContainSubstring(ticker))
+			})
+		})
+
+		Context("querying with intraday split timestamp", func() {
+			BeforeEach(func() {
+				stockData = tax.StockData{
+					Prices: map[string]float64{
+						"2024-01-10": 100.00,
+						"2024-03-01": 80.00,
+					},
+					Splits: []tax.YahooSplit{
+						{Date: 1709251300, Numerator: 2, Denominator: 1}, // 2024-03-01 00:01:40 UTC
+					},
+				}
+				filePath := filepath.Join(testDir, ticker+".json")
+				data, err := json.Marshal(stockData)
+				Expect(err).ToNot(HaveOccurred())
+				err = os.WriteFile(filePath, data, 0600)
+				Expect(err).ToNot(HaveOccurred())
+				queryDate = time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC)
+			})
+
+			JustBeforeEach(func() {
+				price, priceErr = tickerManager.GetPrice(ctx, ticker, queryDate)
+			})
+
+			It("should not adjust price when split has intraday timestamp on same calendar date", func() {
+				Expect(priceErr).ToNot(HaveOccurred())
+				Expect(price).To(Equal(80.00))
+			})
+		})
+	})
+
+	Context("GetDailyPrices with split adjustments", func() {
+		var (
+			ticker    = "SPLIT_ADJ_DLY"
+			stockData tax.StockData
+			year      = 2024
+			prices    map[string]float64
+			pricesErr common.HttpError
+		)
+
+		BeforeEach(func() {
+			stockData = tax.StockData{
+				Prices: map[string]float64{
+					"2024-01-10": 100.00, // Pre-split price
+					"2024-03-01": 50.00,  // On split date
+				},
+				Splits: []tax.YahooSplit{
+					{Date: 1709251200, Numerator: 2, Denominator: 1}, // 2024-03-01 2:1 split
+				},
+			}
+			filePath := filepath.Join(testDir, ticker+".json")
+			data, err := json.Marshal(stockData)
+			Expect(err).ToNot(HaveOccurred())
+			err = os.WriteFile(filePath, data, 0600)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		JustBeforeEach(func() {
+			prices, pricesErr = tickerManager.GetDailyPrices(ctx, ticker, year)
+		})
+
+		It("should adjust pre-split prices by future split factors", func() {
+			Expect(pricesErr).ToNot(HaveOccurred())
+			Expect(prices).To(HaveLen(2))
+			// Pre-split price should be multiplied by cumulative future split factor
+			Expect(prices["2024-01-10"]).To(Equal(200.00)) // 100 * 2/1
+		})
+
+		It("should not adjust prices on the split date", func() {
+			Expect(pricesErr).ToNot(HaveOccurred())
+			Expect(prices["2024-03-01"]).To(Equal(50.00))
+		})
+	})
 })
