@@ -385,7 +385,7 @@ func (v *ValuationManagerImpl) buildDailyQuantityTimeline(
 	for _, dateStr := range dates {
 		// Step 1: Apply all split events on this date first (before trades)
 		for _, split := range splitsByDate[dateStr] {
-			ratio := split.Numerator / split.Denominator
+			ratio := split.Ratio()
 			currentQuantity *= ratio
 		}
 

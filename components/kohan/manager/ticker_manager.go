@@ -144,7 +144,7 @@ func (t *TickerManagerImpl) adjustPriceForSplits(price float64, date time.Time, 
 	ratio := 1.0
 	for _, split := range splits {
 		if split.EffectiveDate().After(refDay) {
-			ratio *= split.Numerator / split.Denominator
+			ratio *= split.Ratio()
 		}
 	}
 	return price * ratio, nil

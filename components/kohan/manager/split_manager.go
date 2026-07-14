@@ -126,7 +126,7 @@ func (s *SplitManagerImpl) applySplitsToTrade(trade tax.Trade, splits []tax.Yaho
 	for _, split := range splits {
 		splitDay := split.EffectiveDate().Unix()
 		if splitDay > tradeDay {
-			factor *= split.Numerator / split.Denominator
+			factor *= split.Ratio()
 		}
 	}
 

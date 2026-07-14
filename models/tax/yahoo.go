@@ -43,6 +43,13 @@ func (s YahooSplit) Validate(ticker string) common.HttpError {
 	return nil
 }
 
+// Ratio returns the split ratio (Numerator / Denominator).
+// Callers must call Validate first — the result is undefined for
+// unvalidated or invalid splits with zero/infinity/NaN components.
+func (s YahooSplit) Ratio() float64 {
+	return s.Numerator / s.Denominator
+}
+
 // EffectiveDate returns the UTC calendar date of the split at midnight,
 // normalizing the Yahoo Unix timestamp to the start of its UTC day.
 func (s YahooSplit) EffectiveDate() time.Time {
